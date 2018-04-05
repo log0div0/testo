@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Release)
-	add_definitions(-O3 -DNDEBUG -g)
+	add_definitions(-O2 -DNDEBUG)
 elseif(CMAKE_BUILD_TYPE MATCHES Debug)
 	add_definitions(-O0 -D_DEBUG -g)
 	set(EXTRA_CFLAGS "-O0 -D_DEBUG -g")
