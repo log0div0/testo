@@ -62,20 +62,6 @@
 # endif /* !IN_VBOXCAPI */
 #endif /* WIN32 */
 
-#ifdef __cplusplus
-/* The C++ treatment in this file is not meant for SDK users, it only exists
- * so that this file can be used to produce the VBoxCAPI shared library which
- * has to use C++ as it does all the conversion magic. */
-# ifdef IN_VBOXCAPI
-#  include "VBox/com/VirtualBox.h"
-#  ifndef WIN32
-#   include "nsIEventQueue.h"
-#  endif /* !WIN32 */
-# else /* !IN_VBOXCAPI */
-#  error Do not include this header file from C++ code
-# endif /* !IN_VBOXCAPI */
-#endif /* __cplusplus */
-
 #ifdef __GNUC__
 # define VBOX_EXTERN_CONST(type, name) extern const type name __attribute__((nocommon))
 #else /* !__GNUC__ */
@@ -113,8 +99,6 @@ typedef const BSTR CBSTR;
 #else /* !IN_VBOXCAPI */
 # define VBOXCAPI_DECL(type) PR_IMPORT(type)
 #endif /* !IN_VBOXCAPI */
-
-#ifndef __cplusplus
 
 #if defined(WIN32)
 
@@ -706,8 +690,6 @@ typedef struct nsID nsID;
 typedef nsID nsIID;
 typedef nsID nsCID;
 
-#endif /* __cplusplus */
-
 #define VBOX_WINAPI
 
 /* Various COM types defined by their XPCOM equivalent */
@@ -786,8 +768,6 @@ typedef struct SAFEARRAY
 #else /* !CONST_VTABLE */
 # define CONST_VTBL
 #endif /* !CONST_VTABLE */
-
-#ifndef __cplusplus
 
 /** @todo this first batch of forward declarations (and the corresponding ones
  * generated for each interface) are 100% redundant, remove eventually. */
@@ -26499,8 +26479,6 @@ VBOX_EXTERN_CONST(nsCID, CLSID_Session);
 
 
 
-
-#endif /* __cplusplus */
 
 #endif /* !WIN32 */
 
