@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include "vbox/glue.hpp"
+#include "vbox/api.hpp"
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
 
@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 
 int main(int argc, char* argv[]) {
 	try {
-		vbox::Glue glue;
+		vbox::API api;
 		vbox::VirtualBoxClient virtual_box_client;
 		vbox::VirtualBox virtual_box = virtual_box_client.virtual_box();
 		std::vector<vbox::Machine> machines = virtual_box.machines();

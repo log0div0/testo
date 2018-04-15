@@ -38,7 +38,7 @@ std::string Machine::name() const {
 		}
 		return result;
 	}
-	catch (const std::exception& error) {
+	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }

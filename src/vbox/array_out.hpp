@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <VBoxCAPIGlue/VBoxCAPIGlue.h>
+#include "api.hpp"
 
 namespace vbox {
 
@@ -9,7 +9,7 @@ template <typename Value>
 struct ArrayOut {
 	~ArrayOut() {
 		if (values) {
-			g_pVBoxFuncs->pfnArrayOutFree(values);
+			api->pfnArrayOutFree(values);
 		}
 	}
 

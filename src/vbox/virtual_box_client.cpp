@@ -5,7 +5,7 @@
 namespace vbox {
 
 VirtualBoxClient::VirtualBoxClient() {
-	g_pVBoxFuncs->pfnClientInitialize(NULL, &handle);
+	api->pfnClientInitialize(NULL, &handle);
 	if (!handle)
 	{
 		throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -28,7 +28,7 @@ VirtualBox VirtualBoxClient::virtual_box() const {
 		}
 		return virtual_box;
 	}
-	catch (const std::exception& error) {
+	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }

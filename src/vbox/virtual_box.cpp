@@ -36,7 +36,7 @@ std::vector<Machine> VirtualBox::machines() const {
 		}
 		return safe_array.copy_out_iface_param();
 	}
-	catch (const std::exception& error) {
+	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }

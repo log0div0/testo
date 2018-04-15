@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <VBoxCAPIGlue/VBoxCAPIGlue.h>
 #include "virtual_box.hpp"
 
 namespace vbox {

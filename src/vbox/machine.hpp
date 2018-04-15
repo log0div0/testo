@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <VBoxCAPIGlue/VBoxCAPIGlue.h>
+#include "api.hpp"
 #include <string>
 
 namespace vbox {
