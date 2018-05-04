@@ -17,6 +17,7 @@ struct Machine {
 	Machine& operator=(Machine&& other);
 
 	std::string name() const;
+	void save_settings();
 
 	IMachine* handle = nullptr;
 };

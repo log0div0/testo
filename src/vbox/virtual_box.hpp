@@ -35,6 +35,7 @@ struct VirtualBox {
 		const std::string& flags
 	);
 
+	void register_machine(const Machine& machine);
 
 	IVirtualBox* handle = nullptr;
 };

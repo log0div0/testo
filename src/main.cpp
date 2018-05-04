@@ -38,7 +38,8 @@ int main(int argc, char* argv[]) {
 		const std::string settings_file = virtual_box.compose_machine_filename("my_vm", "/", {}, {});
 		std::cout << settings_file << std::endl;
 		vbox::Machine my_vm = virtual_box.create_machine(settings_file, "my_vm", {"/"}, "ubuntu_64", {});
-		std::cout << my_vm.name() << std::endl;
+		my_vm.save_settings();
+		virtual_box.register_machine(my_vm);
 		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;

@@ -138,4 +138,16 @@ Machine VirtualBox::create_machine(
 	}
 }
 
+void VirtualBox::register_machine(const Machine& machine) {
+	try {
+		HRESULT rc = IVirtualBox_RegisterMachine(handle, machine.handle);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 }

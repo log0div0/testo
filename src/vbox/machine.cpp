@@ -40,4 +40,16 @@ std::string Machine::name() const {
 	}
 }
 
+void Machine::save_settings() {
+	try {
+		HRESULT rc = IMachine_SaveSettings(handle);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 }
