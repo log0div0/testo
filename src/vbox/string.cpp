@@ -22,6 +22,10 @@ StringIn::~StringIn() {
 	}
 }
 
+StringIn::StringIn(StringIn&& other): data(other.data) {
+	other.data = nullptr;
+}
+
 StringIn::operator BSTR() const {
 	return data;
 }
@@ -48,12 +52,12 @@ StringOut::~StringOut() {
 	}
 }
 
-StringOut::operator std::string() const {
-	return data;
-}
-
 StringOut::StringOut(StringOut&& other): data(other.data) {
 	other.data = nullptr;
+}
+
+StringOut::operator std::string() const {
+	return data;
 }
 
 }

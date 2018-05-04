@@ -9,6 +9,7 @@ namespace vbox {
 
 struct SafeArray {
 	SafeArray();
+	SafeArray(VARTYPE vt, size_t size);
 	~SafeArray();
 
 	SafeArray(const SafeArray&) = delete;
@@ -18,7 +19,7 @@ struct SafeArray {
 	SafeArray& operator=(SafeArray&& other);
 
 	template <typename X, typename Y>
-	std::vector<Y> copy_out_iface_param() const {
+	std::vector<Y> copy_out_iface() const {
 		try {
 			ArrayOut<X> array_out;
 			HRESULT rc = api->pfnSafeArrayCopyOutIfaceParamHelper((IUnknown***)&array_out.values, &array_out.values_count, handle);
@@ -37,7 +38,7 @@ struct SafeArray {
 	}
 
 	template <typename X, typename Y>
-	std::vector<Y> copy_out_param(VARTYPE vt) const {
+	std::vector<Y> copy_out(VARTYPE vt) const {
 		try {
 			ArrayOut<X> array_out;
 			HRESULT rc = api->pfnSafeArrayCopyOutParamHelper((void**)&array_out.values, &array_out.values_count, vt, handle);
@@ -49,6 +50,19 @@ struct SafeArray {
 				result.push_back(Y(array_out.values[i]));
 			}
 			return result;
+		}
+		catch (const std::exception&) {
+			std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+		}
+	}
+
+	template <typename T>
+	void copy_in(const std::vector<T>& t) {
+		try {
+			HRESULT rc = api->pfnSafeArrayCopyInParamHelper(handle, t.data(), t.size() * sizeof(T));
+			if (FAILED(rc)) {
+				throw Error(rc);
+			}
 		}
 		catch (const std::exception&) {
 			std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

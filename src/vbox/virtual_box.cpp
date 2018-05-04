@@ -33,7 +33,7 @@ std::vector<Machine> VirtualBox::machines() const {
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		return safe_array.copy_out_iface_param<IMachine*, Machine>();
+		return safe_array.copy_out_iface<IMachine*, Machine>();
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -47,7 +47,7 @@ std::vector<std::string> VirtualBox::machine_groups() const {
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		auto machine_groups = safe_array.copy_out_param<BSTR, StringOut>(VT_BSTR);
+		auto machine_groups = safe_array.copy_out<BSTR, StringOut>(VT_BSTR);
 		std::vector<std::string> result;
 		for (auto& machine_group: machine_groups) {
 			result.push_back(machine_group);
@@ -77,6 +77,40 @@ std::string VirtualBox::compose_machine_filename(
 			throw Error(rc);
 		}
 		return StringOut(result);
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Machine VirtualBox::create_machine(
+	const std::string& settings_file,
+	const std::string& name,
+	const std::vector<std::string>& groups_,
+	const std::string& os_type_id,
+	const std::string& flags
+) {
+	try {
+		std::vector<StringIn> groups;
+		for (auto& group: groups_) {
+			groups.push_back(group);
+		}
+
+		SafeArray safe_array(VT_BSTR, groups.size());
+		safe_array.copy_in(groups);
+
+		IMachine* result = nullptr;
+		HRESULT rc = IVirtualBox_CreateMachine(handle,
+			StringIn(settings_file),
+			StringIn(name),
+			ComSafeArrayAsInParam(safe_array.handle, BSTR),
+			StringIn(os_type_id),
+			StringIn(flags),
+			&result);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

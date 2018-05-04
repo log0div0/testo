@@ -12,6 +12,13 @@ SafeArray::SafeArray() {
 #endif
 }
 
+SafeArray::SafeArray(VARTYPE vt, size_t size) {
+	handle = api->pfnSafeArrayCreateVector(vt, 0, size);
+	if (!handle) {
+		throw std::runtime_error(__PRETTY_FUNCTION__);
+	}
+}
+
 SafeArray::~SafeArray() {
 	if (handle) {
 		api->pfnSafeArrayDestroy(handle);

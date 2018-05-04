@@ -27,6 +27,15 @@ struct VirtualBox {
 		const std::string& base_folder
 	);
 
+	Machine create_machine(
+		const std::string& settings_file,
+		const std::string& name,
+		const std::vector<std::string>& groups,
+		const std::string& os_type_id,
+		const std::string& flags
+	);
+
+
 	IVirtualBox* handle = nullptr;
 };
 
