@@ -33,7 +33,16 @@ std::vector<Machine> VirtualBox::machines() const {
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		return safe_array.copy_out_iface<IMachine*, Machine>();
+		ArrayOut array_out;
+		rc = api->pfnSafeArrayCopyOutIfaceParamHelper((IUnknown***)&array_out.values, &array_out.values_count, safe_array.handle);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		std::vector<Machine> result;
+		for (ULONG i = 0; i < array_out.values_count; ++i) {
+			result.push_back(Machine(((IMachine**)array_out.values)[i]));
+		}
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -47,10 +56,14 @@ std::vector<std::string> VirtualBox::machine_groups() const {
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		auto machine_groups = safe_array.copy_out<BSTR, StringOut>(VT_BSTR);
+		ArrayOut array_out;
+		rc = api->pfnSafeArrayCopyOutParamHelper((void**)&array_out.values, &array_out.values_count, VT_BSTR, safe_array.handle);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
 		std::vector<std::string> result;
-		for (auto& machine_group: machine_groups) {
-			result.push_back(machine_group);
+		for (ULONG i = 0; i < array_out.values_count / sizeof(BSTR); ++i) {
+			result.push_back(StringOut(((BSTR*)array_out.values)[i]));
 		}
 		return result;
 	}
@@ -86,21 +99,29 @@ std::string VirtualBox::compose_machine_filename(
 Machine VirtualBox::create_machine(
 	const std::string& settings_file,
 	const std::string& name,
-	const std::vector<std::string>& groups_,
+	const std::vector<std::string>& groups,
 	const std::string& os_type_id,
 	const std::string& flags
 ) {
 	try {
-		std::vector<StringIn> groups;
-		for (auto& group: groups_) {
-			groups.push_back(group);
+		std::vector<StringIn> strings_in;
+		for (auto& group: groups) {
+			strings_in.push_back(group);
+		}
+		std::vector<BSTR> bstrs;
+		for (auto& string_in: strings_in) {
+			bstrs.push_back(string_in);
 		}
 
-		SafeArray safe_array(VT_BSTR, groups.size());
-		safe_array.copy_in(groups);
+		SafeArray safe_array(VT_BSTR, bstrs.size());
+
+		HRESULT rc = api->pfnSafeArrayCopyInParamHelper(safe_array.handle, bstrs.data(), bstrs.size() * sizeof(BSTR));
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
 
 		IMachine* result = nullptr;
-		HRESULT rc = IVirtualBox_CreateMachine(handle,
+		rc = IVirtualBox_CreateMachine(handle,
 			StringIn(settings_file),
 			StringIn(name),
 			ComSafeArrayAsInParam(safe_array.handle, BSTR),

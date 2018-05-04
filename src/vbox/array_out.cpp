@@ -3,4 +3,10 @@
 
 namespace vbox {
 
+ArrayOut::~ArrayOut() {
+	if (values) {
+		api->pfnArrayOutFree(values);
+	}
+}
+
 }
