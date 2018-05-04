@@ -18,6 +18,7 @@ struct VirtualBox {
 	VirtualBox& operator=(VirtualBox&& other);
 
 	std::vector<Machine> machines() const;
+	std::vector<String> machine_groups() const;
 
 	IVirtualBox* handle = nullptr;
 };

@@ -28,13 +28,28 @@ VirtualBox& VirtualBox::operator=(VirtualBox&& other) {
 
 std::vector<Machine> VirtualBox::machines() const {
 	try {
-		SafeArray<Machine> safe_array;
-		HRESULT rc = IVirtualBox_get_Machines(handle, SAFE_ARRAY_AS_OUT_IFACE_PARAM(safe_array));
+		SafeArray safe_array;
+		HRESULT rc = IVirtualBox_get_Machines(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMachine*));
 		if (FAILED(rc))
 		{
 			throw Error(rc);
 		}
-		return safe_array.copy_out_iface_param();
+		return safe_array.copy_out_iface_param<IMachine*, Machine>();
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+std::vector<String> VirtualBox::machine_groups() const {
+	try {
+		SafeArray safe_array;
+		HRESULT rc = IVirtualBox_get_MachineGroups(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, BSTR));
+		if (FAILED(rc))
+		{
+			throw Error(rc);
+		}
+		return safe_array.copy_out_param<BSTR, String>(VT_BSTR);
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

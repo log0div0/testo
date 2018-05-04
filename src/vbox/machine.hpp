@@ -2,7 +2,7 @@
 #pragma once
 
 #include "api.hpp"
-#include <string>
+#include "string.hpp"
 
 namespace vbox {
 
@@ -17,9 +17,8 @@ struct Machine {
 	Machine(Machine&& other);
 	Machine& operator=(Machine&& other);
 
-	std::string name() const;
+	String name() const;
 
-	using Iface = IMachine;
 	IMachine* handle = nullptr;
 };
 

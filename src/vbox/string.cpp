@@ -1,6 +1,7 @@
 
 #include "string.hpp"
 #include "error.hpp"
+#include <ostream>
 
 namespace vbox {
 
@@ -8,16 +9,22 @@ BaseUtf8String::operator std::string() const {
 	return data;
 }
 
-BaseUtf16String::operator std::string() const {
-	return Utf8String(*this);
-}
-
 BaseUtf8String::operator std::wstring() const {
 	return Utf16String(*this);
 }
 
+BaseUtf16String::operator std::string() const {
+	return Utf8String(*this);
+}
+
 BaseUtf16String::operator std::wstring() const {
 	return (wchar_t*)data;
+}
+
+BaseUtf16String::BaseUtf16String(BSTR data): data(data) {}
+
+BaseUtf16String::BaseUtf16String(BaseUtf16String&& other): data(other.data) {
+	other.data = nullptr;
 }
 
 Utf8String::Utf8String(const BaseUtf16String& other) {
@@ -38,6 +45,10 @@ Utf8String::~Utf8String() {
 	}
 }
 
+std::ostream& operator<<(std::ostream& stream, const Utf8String& string) {
+	return stream << string.data;
+}
+
 Utf16String::Utf16String(const BaseUtf8String& other) {
 	try {
 		HRESULT rc = api->pfnUtf8ToUtf16(other.data, &data);
@@ -56,9 +67,15 @@ Utf16String::~Utf16String() {
 	}
 }
 
-COMString::~COMString() {
+String::~String() {
 	if (data) {
 		api->pfnComUnallocString(data);
+	}
+}
+
+String::String(BSTR data): BaseUtf16String(data) {
+	if (!data) {
+		throw std::runtime_error(__PRETTY_FUNCTION__);
 	}
 }
 

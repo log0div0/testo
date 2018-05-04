@@ -1,7 +1,6 @@
 
 #include "machine.hpp"
 #include <stdexcept>
-#include "string.hpp"
 #include "error.hpp"
 
 namespace vbox {
@@ -29,9 +28,9 @@ Machine& Machine::operator=(Machine&& other) {
 	return *this;
 }
 
-std::string Machine::name() const {
+String Machine::name() const {
 	try {
-		COMString result;
+		String result;
 		HRESULT rc = IMachine_get_Name(handle, &result.data);
 		if (FAILED(rc)) {
 			throw Error(rc);
