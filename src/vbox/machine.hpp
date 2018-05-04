@@ -7,7 +7,6 @@
 namespace vbox {
 
 struct Machine {
-	Machine();
 	Machine(IMachine* handle);
 	~Machine();
 
@@ -17,7 +16,7 @@ struct Machine {
 	Machine(Machine&& other);
 	Machine& operator=(Machine&& other);
 
-	String name() const;
+	std::string name() const;
 
 	IMachine* handle = nullptr;
 };

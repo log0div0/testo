@@ -18,13 +18,13 @@ struct VirtualBox {
 	VirtualBox& operator=(VirtualBox&& other);
 
 	std::vector<Machine> machines() const;
-	std::vector<String> machine_groups() const;
+	std::vector<std::string> machine_groups() const;
 
-	String compose_machine_filename(
-		const Utf16String& name,
-		const Utf16String& group,
-		const Utf16String& create_flags,
-		const Utf16String& base_folder
+	std::string compose_machine_filename(
+		const std::string& name,
+		const std::string& group,
+		const std::string& create_flags,
+		const std::string& base_folder
 	);
 
 	IVirtualBox* handle = nullptr;

@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 		for (auto& machine: machines) {
 			std::cout << machine.name() << std::endl;
 		}
-		std::vector<vbox::String> machine_groups = virtual_box.machine_groups();
+		std::vector<std::string> machine_groups = virtual_box.machine_groups();
 		for (auto& machine_group: machine_groups) {
 			std::cout << machine_group << std::endl;
 		}

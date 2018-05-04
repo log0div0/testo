@@ -40,33 +40,43 @@ std::vector<Machine> VirtualBox::machines() const {
 	}
 }
 
-std::vector<String> VirtualBox::machine_groups() const {
+std::vector<std::string> VirtualBox::machine_groups() const {
 	try {
 		SafeArray safe_array;
 		HRESULT rc = IVirtualBox_get_MachineGroups(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, BSTR));
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		return safe_array.copy_out_param<BSTR, String>(VT_BSTR);
+		auto machine_groups = safe_array.copy_out_param<BSTR, StringOut>(VT_BSTR);
+		std::vector<std::string> result;
+		for (auto& machine_group: machine_groups) {
+			result.push_back(machine_group);
+		}
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
-String VirtualBox::compose_machine_filename(
-	const Utf16String& name,
-	const Utf16String& group,
-	const Utf16String& create_flags,
-	const Utf16String& base_folder
+std::string VirtualBox::compose_machine_filename(
+	const std::string& name,
+	const std::string& group,
+	const std::string& create_flags,
+	const std::string& base_folder
 ) {
 	try {
-		String result;
-		HRESULT rc = IVirtualBox_ComposeMachineFilename(handle, name.data, group.data, create_flags.data, base_folder.data, &result.data);
+		BSTR result = nullptr;
+		HRESULT rc = IVirtualBox_ComposeMachineFilename(handle,
+			StringIn(name),
+			StringIn(group),
+			StringIn(create_flags),
+			StringIn(base_folder),
+			&result);
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		return result;
+		return StringOut(result);
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

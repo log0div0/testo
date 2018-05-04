@@ -6,65 +6,34 @@
 
 namespace vbox {
 
-struct Utf8String;
-struct Utf16String;
+struct StringIn {
+	StringIn(const std::string& str);
+	~StringIn();
 
-struct BaseUtf8String {
-	char* data = nullptr;
-	operator std::string() const;
-	operator std::wstring() const;
+	operator BSTR() const;
 
-	BaseUtf8String() = default;
+	StringIn(const StringIn&) = delete;
+	StringIn& operator=(const StringIn&) = delete;
+	StringIn(StringIn&&);
+	StringIn& operator=(StringIn&&);
 
-	BaseUtf8String(const BaseUtf8String&) = delete;
-	BaseUtf8String& operator=(const BaseUtf8String&) = delete;
-	BaseUtf8String(BaseUtf8String&&);
-	BaseUtf8String& operator=(BaseUtf8String&&);
-
-protected:
-	BaseUtf8String(char* data);
-};
-
-struct BaseUtf16String {
+private:
 	BSTR data = nullptr;
+};
+
+struct StringOut {
+	StringOut(BSTR data);
+	~StringOut();
+
 	operator std::string() const;
-	operator std::wstring() const;
 
-	BaseUtf16String() = default;
+	StringOut(const StringOut&) = delete;
+	StringOut& operator=(const StringOut&) = delete;
+	StringOut(StringOut&&);
+	StringOut& operator=(StringOut&&);
 
-	BaseUtf16String(const BaseUtf16String&) = delete;
-	BaseUtf16String& operator=(const BaseUtf16String&) = delete;
-	BaseUtf16String(BaseUtf16String&&);
-	BaseUtf16String& operator=(BaseUtf16String&&);
-
-protected:
-	BaseUtf16String(BSTR data);
-};
-
-struct Utf8String: BaseUtf8String {
-	Utf8String() = default;
-	Utf8String(const BaseUtf16String& utf16);
-	~Utf8String();
-};
-
-std::ostream& operator<<(std::ostream& stream, const Utf8String&);
-
-struct Utf16String: BaseUtf16String {
-	Utf16String() = default;
-	Utf16String(const char* str);
-	Utf16String(const BaseUtf8String& utf8);
-	~Utf16String();
-};
-
-std::wostream& operator<<(std::wostream& stream, const Utf16String&);
-
-struct String: BaseUtf16String {
-	String() = default;
-	String(BSTR data);
-	~String();
-
-	String(String&&) = default;
-	String& operator=(String&&) = default;
+private:
+	char* data = nullptr;
 };
 
 }

@@ -1,35 +1,12 @@
 
 #include "string.hpp"
 #include "error.hpp"
-#include <ostream>
 
 namespace vbox {
 
-BaseUtf8String::operator std::string() const {
-	return data;
-}
-
-BaseUtf8String::operator std::wstring() const {
-	return Utf16String(*this);
-}
-
-BaseUtf16String::operator std::string() const {
-	return Utf8String(*this);
-}
-
-BaseUtf16String::operator std::wstring() const {
-	return (wchar_t*)data;
-}
-
-BaseUtf16String::BaseUtf16String(BSTR data): data(data) {}
-
-BaseUtf16String::BaseUtf16String(BaseUtf16String&& other): data(other.data) {
-	other.data = nullptr;
-}
-
-Utf8String::Utf8String(const BaseUtf16String& other) {
+StringIn::StringIn(const std::string& str) {
 	try {
-		HRESULT rc = api->pfnUtf16ToUtf8(other.data, &data);
+		HRESULT rc = api->pfnUtf8ToUtf16(str.c_str(), &data);
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
@@ -39,47 +16,44 @@ Utf8String::Utf8String(const BaseUtf16String& other) {
 	}
 }
 
-Utf8String::~Utf8String() {
-	if (data) {
-		api->pfnUtf8Free(data);
-	}
-}
-
-std::ostream& operator<<(std::ostream& stream, const Utf8String& string) {
-	return stream << string.data;
-}
-
-Utf16String::Utf16String(const char* str) {
-	try {
-		HRESULT rc = api->pfnUtf8ToUtf16(str, &data);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
-	}
-	catch (const std::exception&) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-Utf16String::Utf16String(const BaseUtf8String& other): Utf16String(other.data)  {
-}
-
-Utf16String::~Utf16String() {
+StringIn::~StringIn() {
 	if (data) {
 		api->pfnUtf16Free(data);
 	}
 }
 
-String::~String() {
-	if (data) {
-		api->pfnComUnallocString(data);
+StringIn::operator BSTR() const {
+	return data;
+}
+
+StringOut::StringOut(BSTR str) {
+	try {
+		if (!str) {
+			throw std::runtime_error("Invalid argument");
+		}
+		HRESULT rc = api->pfnUtf16ToUtf8(str, &data);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		api->pfnComUnallocString(str);
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
-String::String(BSTR data): BaseUtf16String(data) {
-	if (!data) {
-		throw std::runtime_error(__PRETTY_FUNCTION__);
+StringOut::~StringOut() {
+	if (data) {
+		api->pfnUtf8Free(data);
 	}
+}
+
+StringOut::operator std::string() const {
+	return data;
+}
+
+StringOut::StringOut(StringOut&& other): data(other.data) {
+	other.data = nullptr;
 }
 
 }

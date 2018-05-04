@@ -5,8 +5,6 @@
 
 namespace vbox {
 
-Machine::Machine() {}
-
 Machine::Machine(IMachine* handle): handle(handle) {
 	if (!handle) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -28,14 +26,14 @@ Machine& Machine::operator=(Machine&& other) {
 	return *this;
 }
 
-String Machine::name() const {
+std::string Machine::name() const {
 	try {
-		String result;
-		HRESULT rc = IMachine_get_Name(handle, &result.data);
+		BSTR name = nullptr;
+		HRESULT rc = IMachine_get_Name(handle, &name);
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		return result;
+		return StringOut(name);
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
