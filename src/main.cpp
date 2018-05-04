@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
 		for (auto& machine_group: machine_groups) {
 			std::cout << machine_group << std::endl;
 		}
+		std::cout << virtual_box.compose_machine_filename("ubuntu", "/", {}, {}) << std::endl;
 		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;

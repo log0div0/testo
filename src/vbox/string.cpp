@@ -49,9 +49,9 @@ std::ostream& operator<<(std::ostream& stream, const Utf8String& string) {
 	return stream << string.data;
 }
 
-Utf16String::Utf16String(const BaseUtf8String& other) {
+Utf16String::Utf16String(const char* str) {
 	try {
-		HRESULT rc = api->pfnUtf8ToUtf16(other.data, &data);
+		HRESULT rc = api->pfnUtf8ToUtf16(str, &data);
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
@@ -59,6 +59,9 @@ Utf16String::Utf16String(const BaseUtf8String& other) {
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
+}
+
+Utf16String::Utf16String(const BaseUtf8String& other): Utf16String(other.data)  {
 }
 
 Utf16String::~Utf16String() {

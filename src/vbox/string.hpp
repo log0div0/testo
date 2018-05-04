@@ -51,6 +51,7 @@ std::ostream& operator<<(std::ostream& stream, const Utf8String&);
 
 struct Utf16String: BaseUtf16String {
 	Utf16String() = default;
+	Utf16String(const char* str);
 	Utf16String(const BaseUtf8String& utf8);
 	~Utf16String();
 };

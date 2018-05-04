@@ -20,6 +20,13 @@ struct VirtualBox {
 	std::vector<Machine> machines() const;
 	std::vector<String> machine_groups() const;
 
+	String compose_machine_filename(
+		const Utf16String& name,
+		const Utf16String& group,
+		const Utf16String& create_flags,
+		const Utf16String& base_folder
+	);
+
 	IVirtualBox* handle = nullptr;
 };
 
