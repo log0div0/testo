@@ -17,7 +17,6 @@ struct Machine {
 
 	Machine(const Machine&) = delete;
 	Machine& operator=(const Machine&) = delete;
-
 	Machine(Machine&& other);
 	Machine& operator=(Machine&& other);
 
