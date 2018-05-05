@@ -18,6 +18,7 @@ struct VirtualBox {
 	VirtualBox& operator=(VirtualBox&& other);
 
 	std::vector<Machine> machines() const;
+	Machine find_machine(const std::string& name) const;
 	std::vector<std::string> machine_groups() const;
 
 	std::string compose_machine_filename(
@@ -25,7 +26,7 @@ struct VirtualBox {
 		const std::string& group,
 		const std::string& create_flags,
 		const std::string& base_folder
-	);
+	) const;
 
 	Machine create_machine(
 		const std::string& settings_file,

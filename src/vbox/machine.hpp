@@ -2,7 +2,8 @@
 #pragma once
 
 #include "api.hpp"
-#include "string.hpp"
+#include "storage_controller.hpp"
+#include <vector>
 
 namespace vbox {
 
@@ -18,6 +19,8 @@ struct Machine {
 
 	std::string name() const;
 	void save_settings();
+
+	std::vector<StorageController> storage_controllers() const;
 
 	IMachine* handle = nullptr;
 };

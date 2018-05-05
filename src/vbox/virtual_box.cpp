@@ -49,6 +49,20 @@ std::vector<Machine> VirtualBox::machines() const {
 	}
 }
 
+Machine VirtualBox::find_machine(const std::string& name) const {
+	try {
+		IMachine* machine = nullptr;
+		HRESULT rc = IVirtualBox_FindMachine(handle, StringIn(name), &machine);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return machine;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::vector<std::string> VirtualBox::machine_groups() const {
 	try {
 		SafeArray safe_array;
@@ -77,7 +91,7 @@ std::string VirtualBox::compose_machine_filename(
 	const std::string& group,
 	const std::string& create_flags,
 	const std::string& base_folder
-) {
+) const {
 	try {
 		BSTR result = nullptr;
 		HRESULT rc = IVirtualBox_ComposeMachineFilename(handle,
