@@ -5,10 +5,14 @@
 namespace vbox {
 
 VirtualBoxClient::VirtualBoxClient() {
-	api->pfnClientInitialize(NULL, &handle);
-	if (!handle)
-	{
-		throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		HRESULT rc = api->pfnClientInitialize(NULL, &handle);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

@@ -16,6 +16,8 @@ struct Session {
 
 	std::string name() const;
 
+	void unlock_machine();
+
 	ISession* handle = nullptr;
 };
 

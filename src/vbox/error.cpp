@@ -1,5 +1,6 @@
 
 #include "error.hpp"
+#include "string.hpp"
 #include <sstream>
 
 namespace vbox {
@@ -21,6 +22,15 @@ struct ErrorInfo {
 		return handle != nullptr;
 	}
 
+	std::string message() const {
+		BSTR result = nullptr;
+		HRESULT rc = IErrorInfo_get_Message(handle, &result);
+		if (FAILED(rc)) {
+			throw std::runtime_error(__PRETTY_FUNCTION__);
+		}
+		return StringOut(result);
+	}
+
 	IErrorInfo* handle = nullptr;
 };
 
@@ -28,7 +38,7 @@ Error::Error(HRESULT rc) {
 	try {
 		ErrorInfo error_info;
 		if (error_info) {
-			_what = "TODO";
+			_what = error_info.message();
 		} else {
 			std::stringstream ss;
 			ss << "Error code: " << std::hex << rc << std::dec;

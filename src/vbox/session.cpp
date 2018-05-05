@@ -41,4 +41,16 @@ std::string Session::name() const {
 	}
 }
 
+void Session::unlock_machine() {
+	try {
+		HRESULT rc = ISession_UnlockMachine(handle);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 }

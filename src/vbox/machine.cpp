@@ -110,6 +110,18 @@ Progress Machine::delete_config(std::vector<Medium> mediums) {
 	}
 }
 
+void Machine::lock_machine(Session& session, LockType lock_type) {
+	try {
+		HRESULT rc = IMachine_LockMachine(handle, session.handle, lock_type);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::ostream& operator<<(std::ostream& stream, const Machine& machine) {
 	stream << machine.name() << std::endl;
 	stream << "Storage Controllers:" << std::endl;

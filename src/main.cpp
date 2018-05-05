@@ -3,6 +3,7 @@
 #include "vbox/api.hpp"
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
+#include "vbox/lock.hpp"
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();
@@ -29,23 +30,24 @@ int main(int argc, char* argv[]) {
 		vbox::VirtualBox virtual_box = virtual_box_client.virtual_box();
 		vbox::Session session = virtual_box_client.session();
 
-		try {
-			vbox::Machine machine = virtual_box.find_machine("ubuntu_2");
-			std::vector<vbox::Medium> mediums = machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly);
-			vbox::Progress progress = machine.delete_config(std::move(mediums));
-			progress.wait_for_completion();
-		} catch (...) {
-
+		std::vector<vbox::Machine> machines = virtual_box.machines();
+		for (auto& machine: machines) {
+			if (machine.name() == "ubuntu_2") {
+				std::vector<vbox::Medium> mediums = machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly);
+				vbox::Progress progress = machine.delete_config(std::move(mediums));
+				progress.wait_for_completion();
+			}
 		}
 
 		vbox::Machine machine = virtual_box.find_machine("ubuntu");
 		std::cout << machine << std::endl;
 
-		const std::string settings_file = virtual_box.compose_machine_filename("ubuntu_2", "/", {}, {});
+		std::string settings_file = virtual_box.compose_machine_filename("ubuntu_2", "/", {}, {});
 		std::cout << settings_file << std::endl;
 		machine = virtual_box.create_machine(settings_file, "ubuntu_2", {"/"}, "ubuntu_64", {});
 		machine.save_settings();
 		virtual_box.register_machine(machine);
+		vbox::WriteLock lock(machine, session);
 		std::cout << machine << std::endl;
 		return 0;
 	} catch (const std::exception& error) {
