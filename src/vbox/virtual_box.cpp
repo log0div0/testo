@@ -33,11 +33,7 @@ std::vector<Machine> VirtualBox::machines() const {
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		ArrayOut array_out;
-		rc = api->pfnSafeArrayCopyOutIfaceParamHelper((IUnknown***)&array_out.values, &array_out.values_count, safe_array.handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		ArrayOut array_out = safe_array.copy_out();
 		std::vector<Machine> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(Machine(((IMachine**)array_out.values)[i]));
@@ -70,11 +66,7 @@ std::vector<std::string> VirtualBox::machine_groups() const {
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		ArrayOut array_out;
-		rc = api->pfnSafeArrayCopyOutParamHelper((void**)&array_out.values, &array_out.values_count, VT_BSTR, safe_array.handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
 		std::vector<std::string> result;
 		for (ULONG i = 0; i < array_out.values_count / sizeof(BSTR); ++i) {
 			result.push_back(StringOut(((BSTR*)array_out.values)[i]));
@@ -128,13 +120,7 @@ Machine VirtualBox::create_machine(
 		}
 
 		SafeArray safe_array(VT_BSTR, bstrs.size());
-
-		if (bstrs.size()) {
-			HRESULT rc = api->pfnSafeArrayCopyInParamHelper(safe_array.handle, bstrs.data(), bstrs.size() * sizeof(BSTR));
-			if (FAILED(rc)) {
-				throw Error(rc);
-			}
-		}
+		safe_array.copy_in(bstrs.data(), bstrs.size() * sizeof(BSTR));
 
 		IMachine* result = nullptr;
 		HRESULT rc = IVirtualBox_CreateMachine(handle,

@@ -18,6 +18,10 @@ struct SafeArray {
 	SafeArray(SafeArray&& other);
 	SafeArray& operator=(SafeArray&& other);
 
+	void copy_in(void* data, size_t size);
+	ArrayOut copy_out(VARTYPE vartype);
+	ArrayOut copy_out();
+
 	SAFEARRAY* handle = nullptr;
 };
 

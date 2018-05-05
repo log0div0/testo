@@ -60,11 +60,7 @@ std::vector<StorageController> Machine::storage_controllers() const {
 		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		ArrayOut array_out;
-		rc = api->pfnSafeArrayCopyOutIfaceParamHelper((IUnknown***)&array_out.values, &array_out.values_count, safe_array.handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		ArrayOut array_out = safe_array.copy_out();
 		std::vector<StorageController> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(StorageController(((IStorageController**)array_out.values)[i]));
@@ -82,11 +78,7 @@ std::vector<Medium> Machine::unregister(CleanupMode cleanup_mode) {
 	if (FAILED(rc)) {
 		throw Error(rc);
 	}
-	ArrayOut array_out;
-	rc = api->pfnSafeArrayCopyOutIfaceParamHelper((IUnknown***)&array_out.values, &array_out.values_count, safe_array.handle);
-	if (FAILED(rc)) {
-		throw Error(rc);
-	}
+	ArrayOut array_out = safe_array.copy_out();
 	std::vector<Medium> result;
 	for (ULONG i = 0; i < array_out.values_count; ++i) {
 		result.push_back(Medium(((IMedium**)array_out.values)[i]));
@@ -97,13 +89,7 @@ std::vector<Medium> Machine::unregister(CleanupMode cleanup_mode) {
 Progress Machine::delete_config(std::vector<Medium> mediums) {
 	try {
 		SafeArray safe_array(VT_UNKNOWN, mediums.size());
-
-		if (mediums.size()) {
-			HRESULT rc = api->pfnSafeArrayCopyInParamHelper(safe_array.handle, mediums.data(), mediums.size());
-			if (FAILED(rc)) {
-				throw Error(rc);
-			}
-		}
+		safe_array.copy_in(mediums.data(), mediums.size());
 
 		IProgress* result = nullptr;
 		HRESULT rc = IMachine_DeleteConfig(handle,
