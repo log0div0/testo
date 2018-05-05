@@ -4,6 +4,7 @@
 #include "api.hpp"
 #include "storage_controller.hpp"
 #include <vector>
+#include <ostream>
 
 namespace vbox {
 
@@ -24,5 +25,7 @@ struct Machine {
 
 	IMachine* handle = nullptr;
 };
+
+std::ostream& operator<<(std::ostream& stream, const Machine& machine);
 
 }

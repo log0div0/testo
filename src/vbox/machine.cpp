@@ -76,4 +76,13 @@ std::vector<StorageController> Machine::storage_controllers() const {
 	}
 }
 
+std::ostream& operator<<(std::ostream& stream, const Machine& machine) {
+	stream << machine.name() << std::endl;
+	stream << "Storage Controllers:" << std::endl;
+	for (auto& storage_controller: machine.storage_controllers()) {
+		stream << storage_controller << std::endl;
+	}
+	return stream;
+}
+
 }
