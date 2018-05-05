@@ -57,9 +57,16 @@ struct ErrorInfo {
 		return handle != nullptr;
 	}
 
-	void* query_interface(const IID& iid) const {
+	template <typename IID>
+	void* query_interface(IID&& iid) const {
 		void* result = nullptr;
-		HRESULT rc = IErrorInfo_QueryInterface(handle, iid, &result);
+		HRESULT rc = IErrorInfo_QueryInterface(handle,
+#ifdef WIN32
+			iid,
+#else
+			&iid,
+#endif
+			&result);
 		if (FAILED(rc)) {
 			throw std::runtime_error(__PRETTY_FUNCTION__);
 		}

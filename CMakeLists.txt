@@ -13,4 +13,5 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
 )
 
+add_subdirectory(3rd_party/VBoxCAPI)
 add_subdirectory(src)
