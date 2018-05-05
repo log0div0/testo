@@ -6,6 +6,7 @@ file(GLOB_RECURSE SRCS *.cpp)
 
 add_executable(testo ${SRCS})
 
+target_link_libraries(testo vboxcapi)
 if (UNIX)
-	target_link_libraries(testo dl pthread vboxcapi)
+	target_link_libraries(testo dl pthread)
 endif()

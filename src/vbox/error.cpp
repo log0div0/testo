@@ -60,13 +60,11 @@ struct ErrorInfo {
 	template <typename IID>
 	void* query_interface(IID&& iid) const {
 		void* result = nullptr;
-		HRESULT rc = IErrorInfo_QueryInterface(handle,
 #ifdef WIN32
-			iid,
+		HRESULT rc = IErrorInfo_QueryInterface(handle, iid, &result);
 #else
-			&iid,
+		HRESULT rc = IErrorInfo_QueryInterface(handle, &iid, &result);
 #endif
-			&result);
 		if (FAILED(rc)) {
 			throw std::runtime_error(__PRETTY_FUNCTION__);
 		}
