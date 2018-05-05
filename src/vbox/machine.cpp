@@ -73,17 +73,22 @@ std::vector<StorageController> Machine::storage_controllers() const {
 }
 
 std::vector<Medium> Machine::unregister(CleanupMode cleanup_mode) {
-	SafeArray safe_array;
-	HRESULT rc = IMachine_Unregister(handle, cleanup_mode, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*));
-	if (FAILED(rc)) {
-		throw Error(rc);
+	try {
+		SafeArray safe_array;
+		HRESULT rc = IMachine_Unregister(handle, cleanup_mode, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*));
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		ArrayOut array_out = safe_array.copy_out();
+		std::vector<Medium> result;
+		for (ULONG i = 0; i < array_out.values_count; ++i) {
+			result.push_back(Medium(((IMedium**)array_out.values)[i]));
+		}
+		return result;
 	}
-	ArrayOut array_out = safe_array.copy_out();
-	std::vector<Medium> result;
-	for (ULONG i = 0; i < array_out.values_count; ++i) {
-		result.push_back(Medium(((IMedium**)array_out.values)[i]));
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
-	return result;
 }
 
 Progress Machine::delete_config(std::vector<Medium> mediums) {

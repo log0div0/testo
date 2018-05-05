@@ -20,13 +20,26 @@ VirtualBoxClient::~VirtualBoxClient() {
 
 VirtualBox VirtualBoxClient::virtual_box() const {
 	try {
-		VirtualBox virtual_box;
-		HRESULT rc = IVirtualBoxClient_get_VirtualBox(handle, &virtual_box.handle);
-		if (FAILED(rc))
-		{
+		IVirtualBox* result = nullptr;
+		HRESULT rc = IVirtualBoxClient_get_VirtualBox(handle, &result);
+		if (FAILED(rc)) {
 			throw Error(rc);
 		}
-		return virtual_box;
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Session VirtualBoxClient::session() const {
+	try {
+		ISession* result = nullptr;
+		HRESULT rc = IVirtualBoxClient_get_Session(handle, &result);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

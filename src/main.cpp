@@ -27,6 +27,7 @@ int main(int argc, char* argv[]) {
 		vbox::API api;
 		vbox::VirtualBoxClient virtual_box_client;
 		vbox::VirtualBox virtual_box = virtual_box_client.virtual_box();
+		vbox::Session session = virtual_box_client.session();
 
 		try {
 			vbox::Machine machine = virtual_box.find_machine("ubuntu_2");
