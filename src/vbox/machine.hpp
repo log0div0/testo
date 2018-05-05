@@ -3,6 +3,8 @@
 
 #include "api.hpp"
 #include "storage_controller.hpp"
+#include "medium.hpp"
+#include "progress.hpp"
 #include <vector>
 #include <ostream>
 
@@ -22,6 +24,8 @@ struct Machine {
 	void save_settings();
 
 	std::vector<StorageController> storage_controllers() const;
+	std::vector<Medium> unregister(CleanupMode cleanup_mode);
+	Progress delete_config(std::vector<Medium> mediums);
 
 	IMachine* handle = nullptr;
 };

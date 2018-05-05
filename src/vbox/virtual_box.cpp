@@ -129,13 +129,15 @@ Machine VirtualBox::create_machine(
 
 		SafeArray safe_array(VT_BSTR, bstrs.size());
 
-		HRESULT rc = api->pfnSafeArrayCopyInParamHelper(safe_array.handle, bstrs.data(), bstrs.size() * sizeof(BSTR));
-		if (FAILED(rc)) {
-			throw Error(rc);
+		if (bstrs.size()) {
+			HRESULT rc = api->pfnSafeArrayCopyInParamHelper(safe_array.handle, bstrs.data(), bstrs.size() * sizeof(BSTR));
+			if (FAILED(rc)) {
+				throw Error(rc);
+			}
 		}
 
 		IMachine* result = nullptr;
-		rc = IVirtualBox_CreateMachine(handle,
+		HRESULT rc = IVirtualBox_CreateMachine(handle,
 			StringIn(settings_file),
 			StringIn(name),
 			ComSafeArrayAsInParam(safe_array.handle, BSTR),

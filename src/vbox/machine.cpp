@@ -76,6 +76,49 @@ std::vector<StorageController> Machine::storage_controllers() const {
 	}
 }
 
+std::vector<Medium> Machine::unregister(CleanupMode cleanup_mode) {
+	SafeArray safe_array;
+	HRESULT rc = IMachine_Unregister(handle, cleanup_mode, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*));
+	if (FAILED(rc)) {
+		throw Error(rc);
+	}
+	ArrayOut array_out;
+	rc = api->pfnSafeArrayCopyOutIfaceParamHelper((IUnknown***)&array_out.values, &array_out.values_count, safe_array.handle);
+	if (FAILED(rc)) {
+		throw Error(rc);
+	}
+	std::vector<Medium> result;
+	for (ULONG i = 0; i < array_out.values_count; ++i) {
+		result.push_back(Medium(((IMedium**)array_out.values)[i]));
+	}
+	return result;
+}
+
+Progress Machine::delete_config(std::vector<Medium> mediums) {
+	try {
+		SafeArray safe_array(VT_UNKNOWN, mediums.size());
+
+		if (mediums.size()) {
+			HRESULT rc = api->pfnSafeArrayCopyInParamHelper(safe_array.handle, mediums.data(), mediums.size());
+			if (FAILED(rc)) {
+				throw Error(rc);
+			}
+		}
+
+		IProgress* result = nullptr;
+		HRESULT rc = IMachine_DeleteConfig(handle,
+			ComSafeArrayAsInParam(safe_array.handle, IMedium*),
+			&result);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::ostream& operator<<(std::ostream& stream, const Machine& machine) {
 	stream << machine.name() << std::endl;
 	stream << "Storage Controllers:" << std::endl;

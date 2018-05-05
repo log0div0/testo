@@ -27,19 +27,25 @@ int main(int argc, char* argv[]) {
 		vbox::API api;
 		vbox::VirtualBoxClient virtual_box_client;
 		vbox::VirtualBox virtual_box = virtual_box_client.virtual_box();
-		std::vector<vbox::Machine> machines = virtual_box.machines();
-		for (auto& machine: machines) {
-			std::cout << machine.name() << std::endl;
+
+		try {
+			vbox::Machine machine = virtual_box.find_machine("ubuntu_2");
+			std::vector<vbox::Medium> mediums = machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly);
+			vbox::Progress progress = machine.delete_config(std::move(mediums));
+			progress.wait_for_completion();
+		} catch (...) {
+
 		}
-		std::vector<std::string> machine_groups = virtual_box.machine_groups();
-		for (auto& machine_group: machine_groups) {
-			std::cout << machine_group << std::endl;
-		}
-		const std::string settings_file = virtual_box.compose_machine_filename("my_vm", "/", {}, {});
+
+		vbox::Machine machine = virtual_box.find_machine("ubuntu");
+		std::cout << machine << std::endl;
+
+		const std::string settings_file = virtual_box.compose_machine_filename("ubuntu_2", "/", {}, {});
 		std::cout << settings_file << std::endl;
-		vbox::Machine my_vm = virtual_box.create_machine(settings_file, "my_vm", {"/"}, "ubuntu_64", {});
-		my_vm.save_settings();
-		virtual_box.register_machine(my_vm);
+		machine = virtual_box.create_machine(settings_file, "ubuntu_2", {"/"}, "ubuntu_64", {});
+		machine.save_settings();
+		virtual_box.register_machine(machine);
+		std::cout << machine << std::endl;
 		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;
