@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <VBoxCAPI/VBoxCAPI_v5_2.h>
+#include "enums.hpp"
 #include "dynlib.hpp"
 
 namespace vbox {

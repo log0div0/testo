@@ -119,12 +119,15 @@ bool StorageController::bootable() const {
 }
 
 std::ostream& operator<<(std::ostream& stream, const StorageController& storage_controller) {
-	return stream << storage_controller.name()
+	stream << std::boolalpha;
+	stream << storage_controller.name()
 		<< " bus=" << storage_controller.bus()
 		<< " controller_type=" << storage_controller.controller_type()
 		<< " port_count=" << storage_controller.port_count()
 		<< " host_io_cache=" << storage_controller.host_io_cache()
 		<< " bootable=" << storage_controller.bootable();
+	stream << std::noboolalpha;
+	return stream;
 }
 
 }
