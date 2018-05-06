@@ -2,6 +2,7 @@
 #pragma once
 
 #include "api.hpp"
+#include "machine.hpp"
 
 namespace vbox {
 
@@ -15,6 +16,8 @@ struct Session {
 	Session& operator=(Session&& other);
 
 	std::string name() const;
+
+	Machine machine() const;
 
 	void unlock_machine();
 

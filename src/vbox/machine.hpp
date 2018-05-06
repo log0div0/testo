@@ -5,11 +5,12 @@
 #include "storage_controller.hpp"
 #include "medium.hpp"
 #include "progress.hpp"
-#include "session.hpp"
 #include <vector>
 #include <ostream>
 
 namespace vbox {
+
+struct Session;
 
 struct Machine {
 	Machine(IMachine* handle);
@@ -24,6 +25,7 @@ struct Machine {
 	void save_settings();
 
 	std::vector<StorageController> storage_controllers() const;
+	StorageController add_storage_controller(const std::string& name, StorageBus storage_bus);
 	std::vector<Medium> unregister(CleanupMode cleanup_mode);
 	Progress delete_config(std::vector<Medium> mediums);
 

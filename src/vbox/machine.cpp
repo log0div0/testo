@@ -2,6 +2,7 @@
 #include "machine.hpp"
 #include <stdexcept>
 #include "error.hpp"
+#include "session.hpp"
 #include "safe_array.hpp"
 
 namespace vbox {
@@ -64,6 +65,20 @@ std::vector<StorageController> Machine::storage_controllers() const {
 		std::vector<StorageController> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(StorageController(((IStorageController**)array_out.values)[i]));
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+StorageController Machine::add_storage_controller(const std::string& name, StorageBus storage_bus) {
+	try {
+		IStorageController* result = nullptr;
+		HRESULT rc = IMachine_AddStorageController(handle, StringIn(name), storage_bus, &result);
+		if (FAILED(rc)) {
+			throw Error(rc);
 		}
 		return result;
 	}

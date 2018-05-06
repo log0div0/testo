@@ -41,6 +41,20 @@ std::string Session::name() const {
 	}
 }
 
+Machine Session::machine() const {
+	try {
+		IMachine* machine = nullptr;
+		HRESULT rc = ISession_get_Machine(handle, &machine);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return machine;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void Session::unlock_machine() {
 	try {
 		HRESULT rc = ISession_UnlockMachine(handle);

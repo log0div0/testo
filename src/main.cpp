@@ -47,7 +47,13 @@ int main(int argc, char* argv[]) {
 		machine = virtual_box.create_machine(settings_file, "ubuntu_2", {"/"}, "ubuntu_64", {});
 		machine.save_settings();
 		virtual_box.register_machine(machine);
-		vbox::WriteLock lock(machine, session);
+		{
+			vbox::WriteLock lock(machine, session);
+			vbox::Machine machine = session.machine();
+			machine.add_storage_controller("IDE", StorageBus_IDE);
+			machine.add_storage_controller("SATA", StorageBus_SATA);
+			machine.save_settings();
+		}
 		std::cout << machine << std::endl;
 		return 0;
 	} catch (const std::exception& error) {
