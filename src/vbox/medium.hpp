@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "api.hpp"
+#include "progress.hpp"
 #include <set>
 
 namespace vbox {
@@ -18,6 +18,7 @@ struct Medium {
 
 	std::string name() const;
 	std::set<MediumVariant> variant() const;
+	Progress create_base_storage(size_t size, std::set<MediumVariant> variant);
 
 	operator bool() const;
 

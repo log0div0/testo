@@ -62,6 +62,31 @@ std::set<MediumVariant> Medium::variant() const {
 	}
 }
 
+Progress Medium::create_base_storage(size_t size, std::set<MediumVariant> variants) {
+	try {
+		std::vector<MediumVariant> what_the_fucking_shit(sizeof(MediumVariant) * 8, MediumVariant_Standard);
+		for (auto& variant: variants) {
+			what_the_fucking_shit[variant] = variant;
+		}
+
+		SafeArray safe_array(VT_I4, (ULONG)what_the_fucking_shit.size());
+		safe_array.copy_in(what_the_fucking_shit.data(), (ULONG)(what_the_fucking_shit.size() * sizeof(MediumVariant)));
+
+		IProgress* result = nullptr;
+		HRESULT rc = IMedium_CreateBaseStorage(handle,
+			size,
+			ComSafeArrayAsInParam(safe_array.handle, MediumVariant),
+			&result);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 Medium::operator bool() const {
 	return handle != nullptr;
 }

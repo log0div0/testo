@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 			fs::path hard_disk_path = fs::path(machine.settings_file_path()).replace_extension("vdi");
 			std::cout << hard_disk_path << std::endl;
 			vbox::Medium hard_disk = virtual_box.create_medium("vdi", hard_disk_path.string(), AccessMode_ReadWrite, DeviceType_HardDisk);
-			// hard_disk.create_base_storage(8 * 1024 * 1024 * 1024, {MediumVariant_Standard}).wait_for_completion();
+			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, {}).wait_for_completion();
 			machine.save_settings();
 		}
 		std::cout << machine << std::endl;
