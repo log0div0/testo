@@ -103,4 +103,25 @@ std::ostream& operator<<(std::ostream& stream, MediumVariant medium_variant) {
 	}
 }
 
+std::ostream& operator<<(std::ostream& stream, MediumState medium_state) {
+	switch (medium_state) {
+		case MediumState_NotCreated:
+			return stream << "NotCreated";
+		case MediumState_Created:
+			return stream << "Created";
+		case MediumState_LockedRead:
+			return stream << "LockedRead";
+		case MediumState_LockedWrite:
+			return stream << "LockedWrite";
+		case MediumState_Inaccessible:
+			return stream << "Inaccessible";
+		case MediumState_Creating:
+			return stream << "Creating";
+		case MediumState_Deleting:
+			return stream << "Deleting";
+		default:
+			return stream << "Unknown";
+	}
+}
+
 }

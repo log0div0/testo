@@ -1,7 +1,8 @@
 
 #include "progress.hpp"
 #include <stdexcept>
-#include "error.hpp"
+#include <sstream>
+#include "throw_if_failed.hpp"
 #include "string.hpp"
 
 namespace vbox {
@@ -30,10 +31,7 @@ Progress& Progress::operator=(Progress&& other) {
 std::string Progress::description() const {
 	try {
 		BSTR result = nullptr;
-		HRESULT rc = IProgress_get_Description(handle, &result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IProgress_get_Description(handle, &result));
 		return StringOut(result);
 	}
 	catch (const std::exception&) {
@@ -43,9 +41,53 @@ std::string Progress::description() const {
 
 void Progress::wait_for_completion(long timeout) const {
 	try {
-		HRESULT rc = IProgress_WaitForCompletion(handle, timeout);
+		throw_if_failed(IProgress_WaitForCompletion(handle, timeout));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Progress::wait_and_throw_if_failed() const {
+	try {
+		wait_for_completion();
+
+		HRESULT rc = result_code();
 		if (FAILED(rc)) {
-			throw Error(rc);
+			vbox::VirtualBoxErrorInfo error = error_info();
+			if (error) {
+				throw std::runtime_error(error.text());
+			} else {
+				std::stringstream ss;
+				ss << "Error code: " << std::hex << rc << std::dec;
+				throw std::runtime_error(ss.str());
+			}
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+HRESULT Progress::result_code() const {
+	try {
+		HRESULT result = 0;
+		throw_if_failed(IProgress_get_ResultCode(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+VirtualBoxErrorInfo Progress::error_info() const {
+	try {
+		IVirtualBoxErrorInfo* result = nullptr;
+		throw_if_failed(IProgress_get_ErrorInfo(handle, &result));
+		if (result) {
+			return result;
+		} else {
+			return {};
 		}
 	}
 	catch (const std::exception&) {

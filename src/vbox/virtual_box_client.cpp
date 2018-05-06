@@ -1,15 +1,12 @@
 
 #include "virtual_box_client.hpp"
-#include "error.hpp"
+#include "throw_if_failed.hpp"
 
 namespace vbox {
 
 VirtualBoxClient::VirtualBoxClient() {
 	try {
-		HRESULT rc = api->pfnClientInitialize(NULL, &handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(api->pfnClientInitialize(NULL, &handle));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -25,10 +22,7 @@ VirtualBoxClient::~VirtualBoxClient() {
 VirtualBox VirtualBoxClient::virtual_box() const {
 	try {
 		IVirtualBox* result = nullptr;
-		HRESULT rc = IVirtualBoxClient_get_VirtualBox(handle, &result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IVirtualBoxClient_get_VirtualBox(handle, &result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -39,10 +33,7 @@ VirtualBox VirtualBoxClient::virtual_box() const {
 Session VirtualBoxClient::session() const {
 	try {
 		ISession* result = nullptr;
-		HRESULT rc = IVirtualBoxClient_get_Session(handle, &result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IVirtualBoxClient_get_Session(handle, &result));
 		return result;
 	}
 	catch (const std::exception&) {

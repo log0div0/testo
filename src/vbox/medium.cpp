@@ -2,7 +2,7 @@
 #include "medium.hpp"
 #include <stdexcept>
 #include <ostream>
-#include "error.hpp"
+#include "throw_if_failed.hpp"
 #include "string.hpp"
 #include "safe_array.hpp"
 
@@ -32,11 +32,30 @@ Medium& Medium::operator=(Medium&& other) {
 std::string Medium::name() const {
 	try {
 		BSTR name = nullptr;
-		HRESULT rc = IMedium_get_Name(handle, &name);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMedium_get_Name(handle, &name));
 		return StringOut(name);
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+MediumState Medium::state() const {
+	try {
+		MediumState state = MediumState_NotCreated;
+		throw_if_failed(IMedium_get_State(handle, &state));
+		return state;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+MediumState Medium::refresh_state() const {
+	try {
+		MediumState state = MediumState_NotCreated;
+		throw_if_failed(IMedium_RefreshState(handle, &state));
+		return state;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -46,10 +65,7 @@ std::string Medium::name() const {
 std::set<MediumVariant> Medium::variant() const {
 	try {
 		SafeArray safe_array;
-		HRESULT rc = IMedium_get_Variant(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, MediumVariant));
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMedium_get_Variant(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, MediumVariant)));
 		ArrayOut array_out = safe_array.copy_out(VT_I4);
 		std::set<MediumVariant> result;
 		for (ULONG i = 0; i < array_out.values_count / sizeof(int); ++i) {
@@ -73,13 +89,10 @@ Progress Medium::create_base_storage(size_t size, std::set<MediumVariant> varian
 		safe_array.copy_in(what_the_fucking_shit.data(), (ULONG)(what_the_fucking_shit.size() * sizeof(MediumVariant)));
 
 		IProgress* result = nullptr;
-		HRESULT rc = IMedium_CreateBaseStorage(handle,
+		throw_if_failed(IMedium_CreateBaseStorage(handle,
 			size,
 			ComSafeArrayAsInParam(safe_array.handle, MediumVariant),
-			&result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+			&result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -102,6 +115,7 @@ std::ostream& operator<<(std::ostream& stream, const Medium& medium) {
 		stream << variant;
 		++i;
 	}
+	stream << " state=" << medium.state();
 	return stream;
 }
 

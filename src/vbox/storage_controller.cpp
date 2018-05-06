@@ -1,7 +1,7 @@
 
 #include "storage_controller.hpp"
 #include <stdexcept>
-#include "error.hpp"
+#include "throw_if_failed.hpp"
 
 namespace vbox {
 
@@ -29,10 +29,7 @@ StorageController& StorageController::operator=(StorageController&& other) {
 std::string StorageController::name() const {
 	try {
 		BSTR name = nullptr;
-		HRESULT rc = IStorageController_get_Name(handle, &name);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IStorageController_get_Name(handle, &name));
 		return StringOut(name);
 	}
 	catch (const std::exception&) {
@@ -44,13 +41,10 @@ StorageBus StorageController::bus() const {
 	try {
 		StorageBus result = StorageBus_Null;
 #ifdef WIN32
-		HRESULT rc = IStorageController_get_Bus(handle, &result);
+		throw_if_failed(IStorageController_get_Bus(handle, &result));
 #else
-		HRESULT rc = IStorageController_get_Bus(handle, (uint32_t*)&result);
+		throw_if_failed(IStorageController_get_Bus(handle, (uint32_t*)&result));
 #endif
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
 		return result;
 	}
 	catch (const std::exception&) {
@@ -62,13 +56,10 @@ StorageControllerType StorageController::controller_type() const {
 	try {
 		StorageControllerType result = StorageControllerType_Null;
 #ifdef WIN32
-		HRESULT rc = IStorageController_get_ControllerType(handle, &result);
+		throw_if_failed(IStorageController_get_ControllerType(handle, &result));
 #else
-		HRESULT rc = IStorageController_get_ControllerType(handle, (uint32_t*)&result);
+		throw_if_failed(IStorageController_get_ControllerType(handle, (uint32_t*)&result));
 #endif
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
 		return result;
 	}
 	catch (const std::exception&) {
@@ -79,10 +70,7 @@ StorageControllerType StorageController::controller_type() const {
 size_t StorageController::port_count() const {
 	try {
 		ULONG result = 0;
-		HRESULT rc = IStorageController_get_PortCount(handle, &result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IStorageController_get_PortCount(handle, &result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -93,10 +81,7 @@ size_t StorageController::port_count() const {
 bool StorageController::host_io_cache() const {
 	try {
 		BOOL result = 0;
-		HRESULT rc = IStorageController_get_UseHostIOCache(handle, &result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IStorageController_get_UseHostIOCache(handle, &result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -107,10 +92,7 @@ bool StorageController::host_io_cache() const {
 bool StorageController::bootable() const {
 	try {
 		BOOL result = 0;
-		HRESULT rc = IStorageController_get_Bootable(handle, &result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IStorageController_get_Bootable(handle, &result));
 		return result;
 	}
 	catch (const std::exception&) {

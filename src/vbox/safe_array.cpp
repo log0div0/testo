@@ -1,5 +1,6 @@
 
 #include "safe_array.hpp"
+#include "throw_if_failed.hpp"
 
 namespace vbox {
 
@@ -25,13 +26,24 @@ SafeArray::~SafeArray() {
 	}
 }
 
+SafeArray::SafeArray(SafeArray&& other): handle(other.handle) {
+	other.handle = nullptr;
+}
+
+SafeArray& SafeArray::operator=(SafeArray&& other) {
+	std::swap(handle, other.handle);
+	return *this;
+}
+
 void SafeArray::copy_in(void* data, ULONG size) {
-	if (!data || !size) {
-		return;
+	try {
+		if (!data || !size) {
+			return;
+		}
+		throw_if_failed(api->pfnSafeArrayCopyInParamHelper(handle, data, size));
 	}
-	HRESULT rc = api->pfnSafeArrayCopyInParamHelper(handle, data, size);
-	if (FAILED(rc)) {
-		throw Error(rc);
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -39,10 +51,7 @@ ArrayOut SafeArray::copy_out(VARTYPE vartype) {
 	try {
 		void* data = nullptr;
 		ULONG size = 0;
-		HRESULT rc = api->pfnSafeArrayCopyOutParamHelper(&data, &size, vartype, handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper(&data, &size, vartype, handle));
 		return {data, size};
 	}
 	catch (const std::exception&) {
@@ -54,10 +63,7 @@ ArrayOut SafeArray::copy_out() {
 	try {
 		IUnknown** data = nullptr;
 		ULONG size = 0;
-		HRESULT rc = api->pfnSafeArrayCopyOutIfaceParamHelper(&data, &size, handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(api->pfnSafeArrayCopyOutIfaceParamHelper(&data, &size, handle));
 		return {data, size};
 	}
 	catch (const std::exception&) {

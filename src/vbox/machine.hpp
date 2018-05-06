@@ -6,6 +6,7 @@
 #include "medium_attachment.hpp"
 #include "medium.hpp"
 #include "progress.hpp"
+#include "safe_array.hpp"
 #include <vector>
 #include <ostream>
 
@@ -31,8 +32,8 @@ struct Machine {
 	StorageController add_storage_controller(const std::string& name, StorageBus storage_bus);
 	void attach_device_without_medium(const std::string& name, int controller_port, int device, DeviceType device_type);
 	void attach_device(const std::string& name, int controller_port, int device, DeviceType device_type, const Medium& medium);
-	std::vector<Medium> unregister(CleanupMode cleanup_mode);
-	Progress delete_config(std::vector<Medium> mediums);
+	SafeArray unregister(CleanupMode cleanup_mode);
+	Progress delete_config(SafeArray mediums);
 
 	void lock_machine(Session& session, LockType lock_type);
 

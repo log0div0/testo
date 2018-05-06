@@ -1,9 +1,8 @@
 
 #include "machine.hpp"
 #include <stdexcept>
-#include "error.hpp"
+#include "throw_if_failed.hpp"
 #include "session.hpp"
-#include "safe_array.hpp"
 
 namespace vbox {
 
@@ -31,10 +30,7 @@ Machine& Machine::operator=(Machine&& other) {
 std::string Machine::name() const {
 	try {
 		BSTR name = nullptr;
-		HRESULT rc = IMachine_get_Name(handle, &name);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_get_Name(handle, &name));
 		return StringOut(name);
 	}
 	catch (const std::exception&) {
@@ -44,10 +40,7 @@ std::string Machine::name() const {
 
 void Machine::save_settings() {
 	try {
-		HRESULT rc = IMachine_SaveSettings(handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_SaveSettings(handle));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -57,10 +50,7 @@ void Machine::save_settings() {
 std::string Machine::settings_file_path() const {
 	try {
 		BSTR name = nullptr;
-		HRESULT rc = IMachine_get_SettingsFilePath(handle, &name);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_get_SettingsFilePath(handle, &name));
 		return StringOut(name);
 	}
 	catch (const std::exception&) {
@@ -71,10 +61,7 @@ std::string Machine::settings_file_path() const {
 std::vector<StorageController> Machine::storage_controllers() const {
 	try {
 		SafeArray safe_array;
-		HRESULT rc = IMachine_get_StorageControllers(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IStorageController*));
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_get_StorageControllers(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IStorageController*)));
 		ArrayOut array_out = safe_array.copy_out();
 		std::vector<StorageController> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -90,10 +77,7 @@ std::vector<StorageController> Machine::storage_controllers() const {
 std::vector<MediumAttachment> Machine::medium_attachments() const {
 	try {
 		SafeArray safe_array;
-		HRESULT rc = IMachine_get_MediumAttachments(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMediumAttachment*));
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_get_MediumAttachments(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMediumAttachment*)));
 		ArrayOut array_out = safe_array.copy_out();
 		std::vector<MediumAttachment> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -109,10 +93,7 @@ std::vector<MediumAttachment> Machine::medium_attachments() const {
 StorageController Machine::add_storage_controller(const std::string& name, StorageBus storage_bus) {
 	try {
 		IStorageController* result = nullptr;
-		HRESULT rc = IMachine_AddStorageController(handle, StringIn(name), storage_bus, &result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_AddStorageController(handle, StringIn(name), storage_bus, &result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -122,10 +103,7 @@ StorageController Machine::add_storage_controller(const std::string& name, Stora
 
 void Machine::attach_device_without_medium(const std::string& name, int controller_port, int device, DeviceType device_type) {
 	try {
-		HRESULT rc = IMachine_AttachDeviceWithoutMedium(handle, StringIn(name), controller_port, device, device_type);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_AttachDeviceWithoutMedium(handle, StringIn(name), controller_port, device, device_type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -134,47 +112,30 @@ void Machine::attach_device_without_medium(const std::string& name, int controll
 
 void Machine::attach_device(const std::string& name, int controller_port, int device, DeviceType device_type, const Medium& medium) {
 	try {
-		HRESULT rc = IMachine_AttachDevice(handle, StringIn(name), controller_port, device, device_type, medium.handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_AttachDevice(handle, StringIn(name), controller_port, device, device_type, medium.handle));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
-std::vector<Medium> Machine::unregister(CleanupMode cleanup_mode) {
+SafeArray Machine::unregister(CleanupMode cleanup_mode) {
 	try {
 		SafeArray safe_array;
-		HRESULT rc = IMachine_Unregister(handle, cleanup_mode, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*));
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
-		ArrayOut array_out = safe_array.copy_out();
-		std::vector<Medium> result;
-		for (ULONG i = 0; i < array_out.values_count; ++i) {
-			result.push_back(Medium(((IMedium**)array_out.values)[i]));
-		}
-		return result;
+		throw_if_failed(IMachine_Unregister(handle, cleanup_mode, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
+		return safe_array;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
-Progress Machine::delete_config(std::vector<Medium> mediums) {
+Progress Machine::delete_config(SafeArray mediums) {
 	try {
-		SafeArray safe_array(VT_UNKNOWN, (ULONG)mediums.size());
-		safe_array.copy_in(mediums.data(), (ULONG)mediums.size());
-
 		IProgress* result = nullptr;
-		HRESULT rc = IMachine_DeleteConfig(handle,
-			ComSafeArrayAsInParam(safe_array.handle, IMedium*),
-			&result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_DeleteConfig(handle,
+			ComSafeArrayAsInParam(mediums.handle, IMedium*),
+			&result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -184,10 +145,7 @@ Progress Machine::delete_config(std::vector<Medium> mediums) {
 
 void Machine::lock_machine(Session& session, LockType lock_type) {
 	try {
-		HRESULT rc = IMachine_LockMachine(handle, session.handle, lock_type);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IMachine_LockMachine(handle, session.handle, lock_type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

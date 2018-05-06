@@ -17,6 +17,8 @@ struct Medium {
 	Medium& operator=(Medium&& other);
 
 	std::string name() const;
+	MediumState state() const;
+	MediumState refresh_state() const;
 	std::set<MediumVariant> variant() const;
 	Progress create_base_storage(size_t size, std::set<MediumVariant> variant);
 

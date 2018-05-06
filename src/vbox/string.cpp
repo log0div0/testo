@@ -1,15 +1,12 @@
 
 #include "string.hpp"
-#include "error.hpp"
+#include "throw_if_failed.hpp"
 
 namespace vbox {
 
 StringIn::StringIn(const std::string& str) {
 	try {
-		HRESULT rc = api->pfnUtf8ToUtf16(str.c_str(), &data);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(api->pfnUtf8ToUtf16(str.c_str(), &data));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -35,10 +32,7 @@ StringOut::StringOut(BSTR str) {
 		if (!str) {
 			throw std::runtime_error("Invalid argument");
 		}
-		HRESULT rc = api->pfnUtf16ToUtf8(str, &data);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(api->pfnUtf16ToUtf8(str, &data));
 		api->pfnComUnallocString(str);
 	}
 	catch (const std::exception&) {

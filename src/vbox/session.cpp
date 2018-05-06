@@ -1,7 +1,7 @@
 
 #include "session.hpp"
 #include <stdexcept>
-#include "error.hpp"
+#include "throw_if_failed.hpp"
 #include "string.hpp"
 
 namespace vbox {
@@ -30,10 +30,7 @@ Session& Session::operator=(Session&& other) {
 std::string Session::name() const {
 	try {
 		BSTR name = nullptr;
-		HRESULT rc = ISession_get_Name(handle, &name);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(ISession_get_Name(handle, &name));
 		return StringOut(name);
 	}
 	catch (const std::exception&) {
@@ -44,10 +41,7 @@ std::string Session::name() const {
 Machine Session::machine() const {
 	try {
 		IMachine* machine = nullptr;
-		HRESULT rc = ISession_get_Machine(handle, &machine);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(ISession_get_Machine(handle, &machine));
 		return machine;
 	}
 	catch (const std::exception&) {
@@ -57,10 +51,7 @@ Machine Session::machine() const {
 
 void Session::unlock_machine() {
 	try {
-		HRESULT rc = ISession_UnlockMachine(handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(ISession_UnlockMachine(handle));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

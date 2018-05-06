@@ -5,6 +5,7 @@
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
 #include "vbox/lock.hpp"
+#include "vbox/virtual_box_error_info.hpp"
 
 namespace fs = std::experimental::filesystem;
 
@@ -36,8 +37,7 @@ int main(int argc, char* argv[]) {
 		std::vector<vbox::Machine> machines = virtual_box.machines();
 		for (auto& machine: machines) {
 			if (machine.name() == "ubuntu_2") {
-				std::vector<vbox::Medium> mediums = machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly);
-				machine.delete_config(std::move(mediums)).wait_for_completion();
+				machine.delete_config(machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly)).wait_and_throw_if_failed();
 			}
 		}
 
@@ -52,15 +52,19 @@ int main(int argc, char* argv[]) {
 		{
 			vbox::WriteLock lock(machine, session);
 			vbox::Machine machine = session.machine();
+
 			vbox::StorageController ide = machine.add_storage_controller("IDE", StorageBus_IDE);
 			vbox::StorageController sata = machine.add_storage_controller("SATA", StorageBus_SATA);
+
 			vbox::Medium dvd = virtual_box.open_medium("C:\\Users\\log0div0\\Downloads\\ubuntu-16.04.4-server-amd64.iso",
 				DeviceType_DVD, AccessMode_ReadOnly, false);
 			machine.attach_device(ide.name(), 1, 0, DeviceType_DVD, dvd);
+
 			fs::path hard_disk_path = fs::path(machine.settings_file_path()).replace_extension("vdi");
 			std::cout << hard_disk_path << std::endl;
 			vbox::Medium hard_disk = virtual_box.create_medium("vdi", hard_disk_path.string(), AccessMode_ReadWrite, DeviceType_HardDisk);
-			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, {}).wait_for_completion();
+			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, {}).wait_and_throw_if_failed();
+			machine.attach_device(sata.name(), 0, 0, DeviceType_HardDisk, hard_disk);
 			machine.save_settings();
 		}
 		std::cout << machine << std::endl;

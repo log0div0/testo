@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "error.hpp"
 #include "array_out.hpp"
 #include <vector>
 
@@ -14,7 +13,6 @@ struct SafeArray {
 
 	SafeArray(const SafeArray&) = delete;
 	SafeArray& operator=(const SafeArray&) = delete;
-
 	SafeArray(SafeArray&& other);
 	SafeArray& operator=(SafeArray&& other);
 

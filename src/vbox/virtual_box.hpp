@@ -18,6 +18,7 @@ struct VirtualBox {
 
 	std::vector<Machine> machines() const;
 	std::vector<Medium> dvd_images() const;
+	std::vector<Medium> hard_disks() const;
 	Machine find_machine(const std::string& name) const;
 	std::vector<std::string> machine_groups() const;
 

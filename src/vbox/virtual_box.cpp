@@ -1,6 +1,7 @@
 
 #include "virtual_box.hpp"
 #include "safe_array.hpp"
+#include "throw_if_failed.hpp"
 #include <stdexcept>
 
 namespace vbox {
@@ -29,10 +30,7 @@ VirtualBox& VirtualBox::operator=(VirtualBox&& other) {
 std::vector<Machine> VirtualBox::machines() const {
 	try {
 		SafeArray safe_array;
-		HRESULT rc = IVirtualBox_get_Machines(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMachine*));
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IVirtualBox_get_Machines(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMachine*)));
 		ArrayOut array_out = safe_array.copy_out();
 		std::vector<Machine> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -48,10 +46,23 @@ std::vector<Machine> VirtualBox::machines() const {
 std::vector<Medium> VirtualBox::dvd_images() const {
 	try {
 		SafeArray safe_array;
-		HRESULT rc = IVirtualBox_get_DVDImages(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*));
-		if (FAILED(rc)) {
-			throw Error(rc);
+		throw_if_failed(IVirtualBox_get_DVDImages(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
+		ArrayOut array_out = safe_array.copy_out();
+		std::vector<Medium> result;
+		for (ULONG i = 0; i < array_out.values_count; ++i) {
+			result.push_back(Medium(((IMedium**)array_out.values)[i]));
 		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+std::vector<Medium> VirtualBox::hard_disks() const {
+	try {
+		SafeArray safe_array;
+		throw_if_failed(IVirtualBox_get_HardDisks(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
 		ArrayOut array_out = safe_array.copy_out();
 		std::vector<Medium> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -67,10 +78,7 @@ std::vector<Medium> VirtualBox::dvd_images() const {
 Machine VirtualBox::find_machine(const std::string& name) const {
 	try {
 		IMachine* machine = nullptr;
-		HRESULT rc = IVirtualBox_FindMachine(handle, StringIn(name), &machine);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IVirtualBox_FindMachine(handle, StringIn(name), &machine));
 		return machine;
 	}
 	catch (const std::exception&) {
@@ -81,10 +89,7 @@ Machine VirtualBox::find_machine(const std::string& name) const {
 std::vector<std::string> VirtualBox::machine_groups() const {
 	try {
 		SafeArray safe_array;
-		HRESULT rc = IVirtualBox_get_MachineGroups(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, BSTR));
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IVirtualBox_get_MachineGroups(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, BSTR)));
 		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
 		std::vector<std::string> result;
 		for (ULONG i = 0; i < array_out.values_count / sizeof(BSTR); ++i) {
@@ -105,15 +110,12 @@ std::string VirtualBox::compose_machine_filename(
 ) const {
 	try {
 		BSTR result = nullptr;
-		HRESULT rc = IVirtualBox_ComposeMachineFilename(handle,
+		throw_if_failed(IVirtualBox_ComposeMachineFilename(handle,
 			StringIn(name),
 			StringIn(group),
 			StringIn(create_flags),
 			StringIn(base_folder),
-			&result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+			&result));
 		return StringOut(result);
 	}
 	catch (const std::exception&) {
@@ -142,16 +144,13 @@ Machine VirtualBox::create_machine(
 		safe_array.copy_in(bstrs.data(), (ULONG)(bstrs.size() * sizeof(BSTR)));
 
 		IMachine* result = nullptr;
-		HRESULT rc = IVirtualBox_CreateMachine(handle,
+		throw_if_failed(IVirtualBox_CreateMachine(handle,
 			StringIn(settings_file),
 			StringIn(name),
 			ComSafeArrayAsInParam(safe_array.handle, BSTR),
 			StringIn(os_type_id),
 			StringIn(flags),
-			&result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+			&result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -167,15 +166,12 @@ Medium VirtualBox::create_medium(
 ) {
 	try {
 		IMedium* result = nullptr;
-		HRESULT rc = IVirtualBox_CreateMedium(handle,
+		throw_if_failed(IVirtualBox_CreateMedium(handle,
 			StringIn(format),
 			StringIn(location),
 			access_mode,
 			device_type,
-			&result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+			&result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -191,15 +187,12 @@ Medium VirtualBox::open_medium(
 ) {
 	try {
 		IMedium* result = nullptr;
-		HRESULT rc = IVirtualBox_OpenMedium(handle,
+		throw_if_failed(IVirtualBox_OpenMedium(handle,
 			StringIn(location),
 			device_type,
 			access_mode,
 			force_new_uuid,
-			&result);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+			&result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -209,10 +202,7 @@ Medium VirtualBox::open_medium(
 
 void VirtualBox::register_machine(const Machine& machine) {
 	try {
-		HRESULT rc = IVirtualBox_RegisterMachine(handle, machine.handle);
-		if (FAILED(rc)) {
-			throw Error(rc);
-		}
+		throw_if_failed(IVirtualBox_RegisterMachine(handle, machine.handle));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "api.hpp"
+#include "virtual_box_error_info.hpp"
 
 namespace vbox {
 
@@ -16,6 +16,9 @@ struct Progress {
 
 	std::string description() const;
 	void wait_for_completion(long timeout = -1) const;
+	void wait_and_throw_if_failed() const;
+	HRESULT result_code() const;
+	VirtualBoxErrorInfo error_info() const;
 
 	IProgress* handle = nullptr;
 };
