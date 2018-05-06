@@ -28,6 +28,8 @@ struct Machine {
 	std::vector<StorageController> storage_controllers() const;
 	std::vector<MediumAttachment> medium_attachments() const;
 	StorageController add_storage_controller(const std::string& name, StorageBus storage_bus);
+	void attach_device_without_medium(const std::string& name, int controller_port, int device, DeviceType device_type);
+	void attach_device(const std::string& name, int controller_port, int device, DeviceType device_type, const Medium& medium);
 	std::vector<Medium> unregister(CleanupMode cleanup_mode);
 	Progress delete_config(std::vector<Medium> mediums);
 

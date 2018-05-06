@@ -17,6 +17,7 @@ struct VirtualBox {
 	VirtualBox& operator=(VirtualBox&& other);
 
 	std::vector<Machine> machines() const;
+	std::vector<Medium> dvd_images() const;
 	Machine find_machine(const std::string& name) const;
 	std::vector<std::string> machine_groups() const;
 
@@ -33,6 +34,13 @@ struct VirtualBox {
 		const std::vector<std::string>& groups,
 		const std::string& os_type_id,
 		const std::string& flags
+	);
+
+	Medium open_medium(
+		const std::string& location,
+		DeviceType device_type,
+		AccessMode access_mode,
+		bool force_new_uuid
 	);
 
 	void register_machine(const Machine& machine);

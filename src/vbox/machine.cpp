@@ -106,6 +106,30 @@ StorageController Machine::add_storage_controller(const std::string& name, Stora
 	}
 }
 
+void Machine::attach_device_without_medium(const std::string& name, int controller_port, int device, DeviceType device_type) {
+	try {
+		HRESULT rc = IMachine_AttachDeviceWithoutMedium(handle, StringIn(name), controller_port, device, device_type);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Machine::attach_device(const std::string& name, int controller_port, int device, DeviceType device_type, const Medium& medium) {
+	try {
+		HRESULT rc = IMachine_AttachDevice(handle, StringIn(name), controller_port, device, device_type, medium.handle);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::vector<Medium> Machine::unregister(CleanupMode cleanup_mode) {
 	try {
 		SafeArray safe_array;

@@ -45,6 +45,25 @@ std::vector<Machine> VirtualBox::machines() const {
 	}
 }
 
+std::vector<Medium> VirtualBox::dvd_images() const {
+	try {
+		SafeArray safe_array;
+		HRESULT rc = IVirtualBox_get_DVDImages(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*));
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		ArrayOut array_out = safe_array.copy_out();
+		std::vector<Medium> result;
+		for (ULONG i = 0; i < array_out.values_count; ++i) {
+			result.push_back(Medium(((IMedium**)array_out.values)[i]));
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 Machine VirtualBox::find_machine(const std::string& name) const {
 	try {
 		IMachine* machine = nullptr;
@@ -129,6 +148,30 @@ Machine VirtualBox::create_machine(
 			ComSafeArrayAsInParam(safe_array.handle, BSTR),
 			StringIn(os_type_id),
 			StringIn(flags),
+			&result);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Medium VirtualBox::open_medium(
+	const std::string& location,
+	DeviceType device_type,
+	AccessMode access_mode,
+	bool force_new_uuid
+) {
+	try {
+		IMedium* result = nullptr;
+		HRESULT rc = IVirtualBox_OpenMedium(handle,
+			StringIn(location),
+			device_type,
+			access_mode,
+			force_new_uuid,
 			&result);
 		if (FAILED(rc)) {
 			throw Error(rc);

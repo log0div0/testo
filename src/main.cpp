@@ -50,8 +50,11 @@ int main(int argc, char* argv[]) {
 		{
 			vbox::WriteLock lock(machine, session);
 			vbox::Machine machine = session.machine();
-			machine.add_storage_controller("IDE", StorageBus_IDE);
-			machine.add_storage_controller("SATA", StorageBus_SATA);
+			vbox::StorageController ide = machine.add_storage_controller("IDE", StorageBus_IDE);
+			vbox::StorageController sata = machine.add_storage_controller("SATA", StorageBus_SATA);
+			vbox::Medium medium = virtual_box.open_medium("/Users/log0div0/Downloads/ubuntu-18.04-live-server-amd64.iso",
+				DeviceType_DVD, AccessMode_ReadOnly, false);
+			machine.attach_device(ide.name(), 1, 0, DeviceType_DVD, medium);
 			machine.save_settings();
 		}
 		std::cout << machine << std::endl;
