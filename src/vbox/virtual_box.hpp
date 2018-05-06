@@ -36,6 +36,13 @@ struct VirtualBox {
 		const std::string& flags
 	);
 
+	Medium create_medium(
+		const std::string& format,
+		const std::string& location,
+		AccessMode access_mode,
+		DeviceType device_type
+	);
+
 	Medium open_medium(
 		const std::string& location,
 		DeviceType device_type,

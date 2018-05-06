@@ -106,11 +106,13 @@ DeviceType MediumAttachment::type() const {
 
 std::ostream& operator<<(std::ostream& stream, const MediumAttachment& medium_attachment) {
 	Medium medium = medium_attachment.medium();
+	stream << "medium={";
 	if (medium) {
 		stream << medium;
 	} else {
-		stream << "EMPTY";
+		stream << "NONE";
 	}
+	stream << "}";
 	return stream
 		<< " controller=" << medium_attachment.controller()
 		<< " port=" << medium_attachment.port()

@@ -159,6 +159,30 @@ Machine VirtualBox::create_machine(
 	}
 }
 
+Medium VirtualBox::create_medium(
+	const std::string& format,
+	const std::string& location,
+	AccessMode access_mode,
+	DeviceType device_type
+) {
+	try {
+		IMedium* result = nullptr;
+		HRESULT rc = IVirtualBox_CreateMedium(handle,
+			StringIn(format),
+			StringIn(location),
+			access_mode,
+			device_type,
+			&result);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 Medium VirtualBox::open_medium(
 	const std::string& location,
 	DeviceType device_type,

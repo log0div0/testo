@@ -47,7 +47,7 @@ Medium::operator bool() const {
 }
 
 std::ostream& operator<<(std::ostream& stream, const Medium& medium) {
-	stream << medium.name();
+	stream << "name=" << medium.name();
 	return stream;
 }
 
