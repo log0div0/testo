@@ -138,8 +138,8 @@ Machine VirtualBox::create_machine(
 			bstrs.push_back(string_in);
 		}
 
-		SafeArray safe_array(VT_BSTR, bstrs.size());
-		safe_array.copy_in(bstrs.data(), bstrs.size() * sizeof(BSTR));
+		SafeArray safe_array(VT_BSTR, (ULONG)bstrs.size());
+		safe_array.copy_in(bstrs.data(), (ULONG)(bstrs.size() * sizeof(BSTR)));
 
 		IMachine* result = nullptr;
 		HRESULT rc = IVirtualBox_CreateMachine(handle,

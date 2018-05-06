@@ -25,7 +25,7 @@ SafeArray::~SafeArray() {
 	}
 }
 
-void SafeArray::copy_in(void* data, size_t size) {
+void SafeArray::copy_in(void* data, ULONG size) {
 	if (!data || !size) {
 		return;
 	}

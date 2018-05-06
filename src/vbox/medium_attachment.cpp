@@ -57,9 +57,9 @@ std::string MediumAttachment::controller() const {
 	}
 }
 
-int MediumAttachment::port() const {
+LONG MediumAttachment::port() const {
 	try {
-		int result = 0;
+		LONG result = 0;
 		HRESULT rc = IMediumAttachment_get_Port(handle, &result);
 		if (FAILED(rc)) {
 			throw Error(rc);
@@ -71,9 +71,9 @@ int MediumAttachment::port() const {
 	}
 }
 
-int MediumAttachment::device() const {
+LONG MediumAttachment::device() const {
 	try {
-		int result = 0;
+		LONG result = 0;
 		HRESULT rc = IMediumAttachment_get_Device(handle, &result);
 		if (FAILED(rc)) {
 			throw Error(rc);

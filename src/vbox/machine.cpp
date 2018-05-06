@@ -165,8 +165,8 @@ std::vector<Medium> Machine::unregister(CleanupMode cleanup_mode) {
 
 Progress Machine::delete_config(std::vector<Medium> mediums) {
 	try {
-		SafeArray safe_array(VT_UNKNOWN, mediums.size());
-		safe_array.copy_in(mediums.data(), mediums.size());
+		SafeArray safe_array(VT_UNKNOWN, (ULONG)mediums.size());
+		safe_array.copy_in(mediums.data(), (ULONG)mediums.size());
 
 		IProgress* result = nullptr;
 		HRESULT rc = IMachine_DeleteConfig(handle,

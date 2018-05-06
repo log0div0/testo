@@ -16,8 +16,8 @@ struct MediumAttachment {
 
 	Medium medium() const;
 	std::string controller() const;
-	int port() const;
-	int device() const;
+	LONG port() const;
+	LONG device() const;
 	DeviceType type() const;
 
 	IMediumAttachment* handle = nullptr;
