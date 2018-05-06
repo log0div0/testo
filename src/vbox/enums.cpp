@@ -55,4 +55,27 @@ std::ostream& operator<<(std::ostream& stream, StorageControllerType storage_con
 	}
 }
 
+std::ostream& operator<<(std::ostream& stream, DeviceType device_type) {
+	switch (device_type) {
+		case DeviceType_Null:
+			return stream << "Null";
+		case DeviceType_Floppy:
+			return stream << "Floppy";
+		case DeviceType_DVD:
+			return stream << "DVD";
+		case DeviceType_HardDisk:
+			return stream << "HardDisk";
+		case DeviceType_Network:
+			return stream << "Network";
+		case DeviceType_USB:
+			return stream << "USB";
+		case DeviceType_SharedFolder:
+			return stream << "SharedFolder";
+		case DeviceType_Graphics3D:
+			return stream << "Graphics3D";
+		default:
+			return stream << "Unknown";
+	}
+}
+
 }

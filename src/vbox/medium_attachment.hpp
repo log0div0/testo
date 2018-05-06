@@ -15,6 +15,10 @@ struct MediumAttachment {
 	MediumAttachment& operator=(MediumAttachment&& other);
 
 	Medium medium() const;
+	std::string controller() const;
+	int port() const;
+	int device() const;
+	DeviceType type() const;
 
 	IMediumAttachment* handle = nullptr;
 };

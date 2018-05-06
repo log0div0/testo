@@ -9,7 +9,7 @@ namespace vbox {
 
 struct SafeArray {
 	SafeArray();
-	SafeArray(VARTYPE vt, size_t size);
+	SafeArray(VARTYPE vt, ULONG size);
 	~SafeArray();
 
 	SafeArray(const SafeArray&) = delete;
