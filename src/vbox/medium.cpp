@@ -4,6 +4,7 @@
 #include <ostream>
 #include "error.hpp"
 #include "string.hpp"
+#include "safe_array.hpp"
 
 namespace vbox {
 
@@ -42,12 +43,40 @@ std::string Medium::name() const {
 	}
 }
 
+std::set<MediumVariant> Medium::variant() const {
+	try {
+		SafeArray safe_array;
+		HRESULT rc = IMedium_get_Variant(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, MediumVariant));
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		ArrayOut array_out = safe_array.copy_out(VT_I4);
+		std::set<MediumVariant> result;
+		for (ULONG i = 0; i < array_out.values_count / sizeof(int); ++i) {
+			result.insert(((MediumVariant*)array_out.values)[i]);
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 Medium::operator bool() const {
 	return handle != nullptr;
 }
 
 std::ostream& operator<<(std::ostream& stream, const Medium& medium) {
 	stream << "name=" << medium.name();
+	stream << " variant=";
+	size_t i = 0;
+	for (auto& variant: medium.variant()) {
+		if (i != 0) {
+			stream << "|";
+		}
+		stream << variant;
+		++i;
+	}
 	return stream;
 }
 

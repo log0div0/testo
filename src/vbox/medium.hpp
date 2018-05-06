@@ -2,6 +2,7 @@
 #pragma once
 
 #include "api.hpp"
+#include <set>
 
 namespace vbox {
 
@@ -16,6 +17,7 @@ struct Medium {
 	Medium& operator=(Medium&& other);
 
 	std::string name() const;
+	std::set<MediumVariant> variant() const;
 
 	operator bool() const;
 

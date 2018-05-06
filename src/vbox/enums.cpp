@@ -78,4 +78,29 @@ std::ostream& operator<<(std::ostream& stream, DeviceType device_type) {
 	}
 }
 
+std::ostream& operator<<(std::ostream& stream, MediumVariant medium_variant) {
+	switch (medium_variant) {
+		case MediumVariant_Standard:
+			return stream << "Standard";
+		case MediumVariant_VmdkSplit2G:
+			return stream << "VmdkSplit2G";
+		case MediumVariant_VmdkRawDisk:
+			return stream << "VmdkRawDisk";
+		case MediumVariant_VmdkStreamOptimized:
+			return stream << "VmdkStreamOptimized";
+		case MediumVariant_VmdkESX:
+			return stream << "VmdkESX";
+		case MediumVariant_VdiZeroExpand:
+			return stream << "VdiZeroExpand";
+		case MediumVariant_Fixed:
+			return stream << "Fixed";
+		case MediumVariant_Diff:
+			return stream << "Diff";
+		case MediumVariant_NoCreateDir:
+			return stream << "NoCreateDir";
+		default:
+			return stream << "Unknown";
+	}
+}
+
 }
