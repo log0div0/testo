@@ -6,6 +6,7 @@
 namespace vbox {
 
 struct Medium {
+	Medium() = default;
 	Medium(IMedium* handle);
 	~Medium();
 
@@ -16,7 +17,11 @@ struct Medium {
 
 	std::string name() const;
 
+	operator bool() const;
+
 	IMedium* handle = nullptr;
 };
+
+std::ostream& operator<<(std::ostream& stream, const Medium& medium);
 
 }

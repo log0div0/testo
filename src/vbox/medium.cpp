@@ -1,6 +1,7 @@
 
 #include "medium.hpp"
 #include <stdexcept>
+#include <ostream>
 #include "error.hpp"
 #include "string.hpp"
 
@@ -39,6 +40,15 @@ std::string Medium::name() const {
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
+}
+
+Medium::operator bool() const {
+	return handle != nullptr;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Medium& medium) {
+	stream << medium.name();
+	return stream;
 }
 
 }

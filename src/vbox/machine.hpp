@@ -3,6 +3,7 @@
 
 #include "api.hpp"
 #include "storage_controller.hpp"
+#include "medium_attachment.hpp"
 #include "medium.hpp"
 #include "progress.hpp"
 #include <vector>
@@ -25,6 +26,7 @@ struct Machine {
 	void save_settings();
 
 	std::vector<StorageController> storage_controllers() const;
+	std::vector<MediumAttachment> medium_attachments() const;
 	StorageController add_storage_controller(const std::string& name, StorageBus storage_bus);
 	std::vector<Medium> unregister(CleanupMode cleanup_mode);
 	Progress delete_config(std::vector<Medium> mediums);

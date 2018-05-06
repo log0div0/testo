@@ -73,6 +73,25 @@ std::vector<StorageController> Machine::storage_controllers() const {
 	}
 }
 
+std::vector<MediumAttachment> Machine::medium_attachments() const {
+	try {
+		SafeArray safe_array;
+		HRESULT rc = IMachine_get_MediumAttachments(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMediumAttachment*));
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		ArrayOut array_out = safe_array.copy_out();
+		std::vector<MediumAttachment> result;
+		for (ULONG i = 0; i < array_out.values_count; ++i) {
+			result.push_back(MediumAttachment(((IMediumAttachment**)array_out.values)[i]));
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 StorageController Machine::add_storage_controller(const std::string& name, StorageBus storage_bus) {
 	try {
 		IStorageController* result = nullptr;
@@ -142,6 +161,10 @@ std::ostream& operator<<(std::ostream& stream, const Machine& machine) {
 	stream << "Storage Controllers:" << std::endl;
 	for (auto& storage_controller: machine.storage_controllers()) {
 		stream << storage_controller << std::endl;
+	}
+	stream << "Medium Attachments:" << std::endl;
+	for (auto& medium_attachment: machine.medium_attachments()) {
+		stream << medium_attachment << std::endl;
 	}
 	return stream;
 }
