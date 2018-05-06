@@ -24,6 +24,7 @@ struct Machine {
 
 	std::string name() const;
 	void save_settings();
+	std::string settings_file_path() const;
 
 	std::vector<StorageController> storage_controllers() const;
 	std::vector<MediumAttachment> medium_attachments() const;

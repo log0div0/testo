@@ -54,6 +54,20 @@ void Machine::save_settings() {
 	}
 }
 
+std::string Machine::settings_file_path() const {
+	try {
+		BSTR name = nullptr;
+		HRESULT rc = IMachine_get_SettingsFilePath(handle, &name);
+		if (FAILED(rc)) {
+			throw Error(rc);
+		}
+		return StringOut(name);
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::vector<StorageController> Machine::storage_controllers() const {
 	try {
 		SafeArray safe_array;
