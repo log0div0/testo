@@ -52,8 +52,8 @@ void Progress::wait_and_throw_if_failed() const {
 	try {
 		wait_for_completion();
 
-		HRESULT rc = result_code();
-		if (FAILED(rc)) {
+		LONG rc = result_code();
+		if (rc) {
 			vbox::VirtualBoxErrorInfo error = error_info();
 			if (error) {
 				throw std::runtime_error(error.text());
@@ -69,9 +69,9 @@ void Progress::wait_and_throw_if_failed() const {
 	}
 }
 
-HRESULT Progress::result_code() const {
+LONG Progress::result_code() const {
 	try {
-		HRESULT result = 0;
+		LONG result = 0;
 		throw_if_failed(IProgress_get_ResultCode(handle, &result));
 		return result;
 	}

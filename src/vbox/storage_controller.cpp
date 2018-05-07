@@ -40,11 +40,7 @@ std::string StorageController::name() const {
 StorageBus StorageController::bus() const {
 	try {
 		StorageBus result = StorageBus_Null;
-#ifdef WIN32
-		throw_if_failed(IStorageController_get_Bus(handle, &result));
-#else
-		throw_if_failed(IStorageController_get_Bus(handle, (uint32_t*)&result));
-#endif
+		throw_if_failed(IStorageController_get_Bus(handle, IF_UNIX((uint32_t*))&result));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -55,11 +51,7 @@ StorageBus StorageController::bus() const {
 StorageControllerType StorageController::controller_type() const {
 	try {
 		StorageControllerType result = StorageControllerType_Null;
-#ifdef WIN32
-		throw_if_failed(IStorageController_get_ControllerType(handle, &result));
-#else
-		throw_if_failed(IStorageController_get_ControllerType(handle, (uint32_t*)&result));
-#endif
+		throw_if_failed(IStorageController_get_ControllerType(handle, IF_UNIX((uint32_t*))&result));
 		return result;
 	}
 	catch (const std::exception&) {

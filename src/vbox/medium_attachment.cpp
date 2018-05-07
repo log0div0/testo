@@ -76,11 +76,7 @@ LONG MediumAttachment::device() const {
 DeviceType MediumAttachment::type() const {
 	try {
 		DeviceType result = DeviceType_Null;
-#ifdef WIN32
-		throw_if_failed(IMediumAttachment_get_Type(handle, &result));
-#else
-		throw_if_failed(IMediumAttachment_get_Type(handle, (uint32_t*)&result));
-#endif
+		throw_if_failed(IMediumAttachment_get_Type(handle, IF_UNIX((uint32_t*))&result));
 		return result;
 	}
 	catch (const std::exception&) {
