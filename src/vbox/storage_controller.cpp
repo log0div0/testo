@@ -59,11 +59,20 @@ StorageControllerType StorageController::controller_type() const {
 	}
 }
 
-size_t StorageController::port_count() const {
+ULONG StorageController::port_count() const {
 	try {
 		ULONG result = 0;
 		throw_if_failed(IStorageController_get_PortCount(handle, &result));
 		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void StorageController::port_count(ULONG n) {
+	try {
+		throw_if_failed(IStorageController_put_PortCount(handle, n));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

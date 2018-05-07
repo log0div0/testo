@@ -20,7 +20,8 @@ struct StorageController {
 	std::string name() const;
 	StorageBus bus() const;
 	StorageControllerType controller_type() const;
-	size_t port_count() const;
+	ULONG port_count() const;
+	void port_count(ULONG n);
 	bool host_io_cache() const;
 	bool bootable() const;
 

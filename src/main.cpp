@@ -55,6 +55,8 @@ int main(int argc, char* argv[]) {
 
 			vbox::StorageController ide = machine.add_storage_controller("IDE", StorageBus_IDE);
 			vbox::StorageController sata = machine.add_storage_controller("SATA", StorageBus_SATA);
+			ide.port_count(2);
+			sata.port_count(1);
 
 			vbox::Medium dvd = virtual_box.open_medium("C:\\Users\\log0div0\\Downloads\\ubuntu-16.04.4-server-amd64.iso",
 				DeviceType_DVD, AccessMode_ReadOnly, false);
