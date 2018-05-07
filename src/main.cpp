@@ -70,6 +70,10 @@ int main(int argc, char* argv[]) {
 			machine.save_settings();
 		}
 		std::cout << machine << std::endl;
+		{
+			machine.launch_vm_process(session, "headless").wait_and_throw_if_failed();
+			session.unlock_machine();
+		}
 		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;

@@ -34,6 +34,7 @@ struct Machine {
 	void attach_device(const std::string& name, int controller_port, int device, DeviceType device_type, const Medium& medium);
 	SafeArray unregister(CleanupMode cleanup_mode);
 	Progress delete_config(SafeArray mediums);
+	Progress launch_vm_process(Session& session, const std::string& name, const std::string& environment = "");
 
 	void lock_machine(Session& session, LockType lock_type);
 

@@ -143,6 +143,21 @@ Progress Machine::delete_config(SafeArray mediums) {
 	}
 }
 
+Progress Machine::launch_vm_process(Session& session, const std::string& name, const std::string& environment) {
+	try {
+		IProgress* result = nullptr;
+		throw_if_failed(IMachine_LaunchVMProcess(handle,
+			session.handle,
+			StringIn(name),
+			StringIn(environment),
+			&result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void Machine::lock_machine(Session& session, LockType lock_type) {
 	try {
 		throw_if_failed(IMachine_LockMachine(handle, session.handle, lock_type));
