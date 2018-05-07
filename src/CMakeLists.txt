@@ -8,5 +8,5 @@ add_executable(testo ${SRCS})
 
 target_link_libraries(testo vboxcapi)
 if (UNIX)
-	target_link_libraries(testo dl pthread stdc++fs)
+	target_link_libraries(testo dl pthread)
 endif()

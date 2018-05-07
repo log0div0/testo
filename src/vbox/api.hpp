@@ -4,7 +4,7 @@
 #include "enums.hpp"
 #include "dynlib.hpp"
 
-#ifdef unix
+#if defined(__unix__) || defined(__APPLE__)
 #define IF_UNIX(X) X
 #else
 #define IF_UNIX(X)
