@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "api.hpp"
 #include "machine.hpp"
+#include "console.hpp"
 
 namespace vbox {
 
@@ -18,6 +18,7 @@ struct Session {
 	std::string name() const;
 
 	Machine machine() const;
+	Console console() const;
 
 	void unlock_machine();
 

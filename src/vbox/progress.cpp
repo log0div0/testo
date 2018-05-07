@@ -65,7 +65,7 @@ void Progress::wait_and_throw_if_failed() const {
 		}
 	}
 	catch (const std::exception&) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+		std::throw_with_nested(std::runtime_error(description()));
 	}
 }
 

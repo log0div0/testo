@@ -40,9 +40,20 @@ std::string Session::name() const {
 
 Machine Session::machine() const {
 	try {
-		IMachine* machine = nullptr;
-		throw_if_failed(ISession_get_Machine(handle, &machine));
-		return machine;
+		IMachine* result = nullptr;
+		throw_if_failed(ISession_get_Machine(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Console Session::console() const {
+	try {
+		IConsole* result = nullptr;
+		throw_if_failed(ISession_get_Console(handle, &result));
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
