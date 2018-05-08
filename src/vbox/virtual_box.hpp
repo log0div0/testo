@@ -2,6 +2,7 @@
 #pragma once
 
 #include "machine.hpp"
+#include "guest_os_type.hpp"
 #include <vector>
 
 namespace vbox {
@@ -19,6 +20,7 @@ struct VirtualBox {
 	std::vector<Machine> machines() const;
 	std::vector<Medium> dvd_images() const;
 	std::vector<Medium> hard_disks() const;
+	std::vector<GuestOSType> guest_os_types() const;
 	Machine find_machine(const std::string& name) const;
 	std::vector<std::string> machine_groups() const;
 

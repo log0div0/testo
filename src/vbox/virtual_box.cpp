@@ -75,6 +75,22 @@ std::vector<Medium> VirtualBox::hard_disks() const {
 	}
 }
 
+std::vector<GuestOSType> VirtualBox::guest_os_types() const {
+	try {
+		SafeArray safe_array;
+		throw_if_failed(IVirtualBox_get_GuestOSTypes(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IGuestOSType*)));
+		ArrayOut array_out = safe_array.copy_out();
+		std::vector<GuestOSType> result;
+		for (ULONG i = 0; i < array_out.values_count; ++i) {
+			result.push_back(GuestOSType(((IGuestOSType**)array_out.values)[i]));
+		}
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 Machine VirtualBox::find_machine(const std::string& name) const {
 	try {
 		IMachine* machine = nullptr;
