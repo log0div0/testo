@@ -19,6 +19,9 @@ struct GuestOSType {
 	std::string family_id() const;
 	std::string family_description() const;
 
+	ULONG recommended_ram() const;
+	ULONG recommended_vram() const;
+
 	IGuestOSType* handle = nullptr;
 };
 

@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <regex>
 #include "vbox/api.hpp"
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
@@ -41,9 +42,13 @@ int main(int argc, char* argv[]) {
 		vbox::Machine machine = virtual_box.find_machine("ubuntu");
 		std::cout << machine << std::endl;
 
+		vbox::GuestOSType guest_os_type = virtual_box.get_guest_os_type("ubuntu_64");
+
 		std::string settings_file_path = virtual_box.compose_machine_filename("ubuntu_2", "/", {}, {});
 		std::cout << settings_file_path << std::endl;
-		machine = virtual_box.create_machine(settings_file_path, "ubuntu_2", {"/"}, "ubuntu_64", {});
+		machine = virtual_box.create_machine(settings_file_path, "ubuntu_2", {"/"}, guest_os_type.id(), {});
+		machine.memory_size(guest_os_type.recommended_ram());
+		machine.vram_size(guest_os_type.recommended_vram());
 		machine.save_settings();
 		virtual_box.register_machine(machine);
 		{
@@ -61,7 +66,7 @@ int main(int argc, char* argv[]) {
 				DeviceType_DVD, AccessMode_ReadOnly, false);
 			machine.attach_device(ide.name(), 1, 0, DeviceType_DVD, dvd);
 
-			std::string hard_disk_path = settings_file_path.substr(0, settings_file_path.size() - 4) + ".vdi";
+			std::string hard_disk_path = std::regex_replace(settings_file_path, std::regex("\\.vbox$"), ".vdi");
 			std::cout << hard_disk_path << std::endl;
 			vbox::Medium hard_disk = virtual_box.create_medium("vdi", hard_disk_path, AccessMode_ReadWrite, DeviceType_HardDisk);
 			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, {}).wait_and_throw_if_failed();

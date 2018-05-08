@@ -93,9 +93,20 @@ std::vector<GuestOSType> VirtualBox::guest_os_types() const {
 
 Machine VirtualBox::find_machine(const std::string& name) const {
 	try {
-		IMachine* machine = nullptr;
-		throw_if_failed(IVirtualBox_FindMachine(handle, StringIn(name), &machine));
-		return machine;
+		IMachine* result = nullptr;
+		throw_if_failed(IVirtualBox_FindMachine(handle, StringIn(name), &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+GuestOSType VirtualBox::get_guest_os_type(const std::string& name) const {
+	try {
+		IGuestOSType* result = nullptr;
+		throw_if_failed(IVirtualBox_GetGuestOSType(handle, StringIn(name), &result));
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

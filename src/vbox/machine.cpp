@@ -158,6 +158,24 @@ Progress Machine::launch_vm_process(Session& session, const std::string& name, c
 	}
 }
 
+void Machine::memory_size(ULONG size) {
+	try {
+		throw_if_failed(IMachine_put_MemorySize(handle, size));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Machine::vram_size(ULONG size) {
+	try {
+		throw_if_failed(IMachine_put_VRAMSize(handle, size));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void Machine::lock_machine(Session& session, LockType lock_type) {
 	try {
 		throw_if_failed(IMachine_LockMachine(handle, session.handle, lock_type));

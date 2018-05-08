@@ -22,6 +22,7 @@ struct VirtualBox {
 	std::vector<Medium> hard_disks() const;
 	std::vector<GuestOSType> guest_os_types() const;
 	Machine find_machine(const std::string& name) const;
+	GuestOSType get_guest_os_type(const std::string& name) const;
 	std::vector<std::string> machine_groups() const;
 
 	std::string compose_machine_filename(

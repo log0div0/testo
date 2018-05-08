@@ -70,12 +70,36 @@ std::string GuestOSType::family_description() const {
 	}
 }
 
+ULONG GuestOSType::recommended_ram() const {
+	try {
+		ULONG result = 0;
+		throw_if_failed(IGuestOSType_get_RecommendedRAM(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+ULONG GuestOSType::recommended_vram() const {
+	try {
+		ULONG result = 0;
+		throw_if_failed(IGuestOSType_get_RecommendedVRAM(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::ostream& operator<<(std::ostream& stream, const GuestOSType& guest_os_type) {
 	stream
 		<< "id=" << guest_os_type.id()
 		<< " description=" << guest_os_type.description()
 		<< " family_id=" << guest_os_type.family_id()
 		<< " family_description=" << guest_os_type.family_description()
+		<< " recommended_ram=" << guest_os_type.recommended_ram() << "Mb"
+		<< " recommended_vram=" << guest_os_type.recommended_vram() << "Mb"
 	;
 	return stream;
 }

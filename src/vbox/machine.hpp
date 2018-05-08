@@ -36,6 +36,9 @@ struct Machine {
 	Progress delete_config(SafeArray mediums);
 	Progress launch_vm_process(Session& session, const std::string& name, const std::string& environment = "");
 
+	void vram_size(ULONG size);
+	void memory_size(ULONG size);
+
 	void lock_machine(Session& session, LockType lock_type);
 
 	IMachine* handle = nullptr;
