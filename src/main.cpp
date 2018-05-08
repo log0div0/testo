@@ -77,6 +77,9 @@ int main(int argc, char* argv[]) {
 		{
 			machine.launch_vm_process(session, "headless").wait_and_throw_if_failed();
 			vbox::Unlocker unlocker(session);
+			vbox::Console console = session.console();
+			vbox::Display display = console.display();
+			console.power_down().wait_and_throw_if_failed();
 		}
 		return 0;
 	} catch (const std::exception& error) {

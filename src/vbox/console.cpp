@@ -36,4 +36,26 @@ Progress Console::power_up() const {
 	}
 }
 
+Progress Console::power_down() const {
+	try {
+		IProgress* result = nullptr;
+		throw_if_failed(IConsole_PowerDown(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Display Console::display() const {
+	try {
+		IDisplay* result = nullptr;
+		throw_if_failed(IConsole_get_Display(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 }
