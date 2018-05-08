@@ -39,6 +39,8 @@ struct Machine {
 	void vram_size(ULONG size);
 	void memory_size(ULONG size);
 
+	MachineState state() const;
+
 	void lock_machine(Session& session, LockType lock_type);
 
 	IMachine* handle = nullptr;

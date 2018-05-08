@@ -35,6 +35,11 @@ int main(int argc, char* argv[]) {
 		std::vector<vbox::Machine> machines = virtual_box.machines();
 		for (auto& machine: machines) {
 			if (machine.name() == "ubuntu_2") {
+				if (machine.state() == MachineState_Running) {
+					machine.lock_machine(session, LockType_Shared);
+					vbox::Unlocker unlocker(session);
+					session.console().power_down().wait_and_throw_if_failed();
+				}
 				machine.delete_config(machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly)).wait_and_throw_if_failed();
 			}
 		}
