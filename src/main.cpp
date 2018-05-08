@@ -1,11 +1,15 @@
 
 #include <iostream>
 #include <regex>
+#include <chrono>
+#include <thread>
 #include "vbox/api.hpp"
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
 #include "vbox/unlocker.hpp"
 #include "vbox/virtual_box_error_info.hpp"
+
+using namespace std::chrono_literals;
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();
@@ -35,10 +39,13 @@ int main(int argc, char* argv[]) {
 		std::vector<vbox::Machine> machines = virtual_box.machines();
 		for (auto& machine: machines) {
 			if (machine.name() == "ubuntu_2") {
-				if (machine.state() == MachineState_Running) {
+				if (machine.session_state() != SessionState_Unlocked) {
 					machine.lock_machine(session, LockType_Shared);
 					vbox::Unlocker unlocker(session);
 					session.console().power_down().wait_and_throw_if_failed();
+				}
+				while (machine.session_state() != SessionState_Unlocked) {
+					std::this_thread::sleep_for(100ms);
 				}
 				machine.delete_config(machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly)).wait_and_throw_if_failed();
 			}

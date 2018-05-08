@@ -1,8 +1,6 @@
 
 #include "enums.hpp"
 
-namespace vbox {
-
 std::ostream& operator<<(std::ostream& stream, StorageBus storage_bus) {
 	switch (storage_bus) {
 		case StorageBus_Null:
@@ -124,4 +122,74 @@ std::ostream& operator<<(std::ostream& stream, MediumState medium_state) {
 	}
 }
 
+std::ostream& operator<<(std::ostream& stream, MachineState machine_state) {
+	switch (machine_state) {
+		case MachineState_Null:
+			return stream << "Null";
+		case MachineState_PoweredOff:
+			return stream << "PoweredOff";
+		case MachineState_Saved:
+			return stream << "Saved";
+		case MachineState_Teleported:
+			return stream << "Teleported";
+		case MachineState_Aborted:
+			return stream << "Aborted";
+		case MachineState_Running:
+			return stream << "Running";
+		case MachineState_Paused:
+			return stream << "Paused";
+		case MachineState_Stuck:
+			return stream << "Stuck";
+		case MachineState_Teleporting:
+			return stream << "Teleporting";
+		case MachineState_LiveSnapshotting:
+			return stream << "LiveSnapshotting";
+		case MachineState_Starting:
+			return stream << "Starting";
+		case MachineState_Stopping:
+			return stream << "Stopping";
+		case MachineState_Saving:
+			return stream << "Saving";
+		case MachineState_Restoring:
+			return stream << "Restoring";
+		case MachineState_TeleportingPausedVM:
+			return stream << "TeleportingPausedVM";
+		case MachineState_TeleportingIn:
+			return stream << "TeleportingIn";
+		case MachineState_FaultTolerantSyncing:
+			return stream << "FaultTolerantSyncing";
+		case MachineState_DeletingSnapshotOnline:
+			return stream << "DeletingSnapshotOnline";
+		case MachineState_DeletingSnapshotPaused:
+			return stream << "DeletingSnapshotPaused";
+		case MachineState_OnlineSnapshotting:
+			return stream << "OnlineSnapshotting";
+		case MachineState_RestoringSnapshot:
+			return stream << "RestoringSnapshot";
+		case MachineState_DeletingSnapshot:
+			return stream << "DeletingSnapshot";
+		case MachineState_SettingUp:
+			return stream << "SettingUp";
+		case MachineState_Snapshotting:
+			return stream << "Snapshotting";
+		default:
+			return stream << "Unknown";
+	}
+}
+
+std::ostream& operator<<(std::ostream& stream, SessionState session_state) {
+	switch (session_state) {
+		case SessionState_Null:
+			return stream << "Null";
+		case SessionState_Unlocked:
+			return stream << "Unlocked";
+		case SessionState_Locked:
+			return stream << "Locked";
+		case SessionState_Spawning:
+			return stream << "Spawning";
+		case SessionState_Unlocking:
+			return stream << "Unlocking";
+		default:
+			return stream << "Unknown";
+	}
 }
