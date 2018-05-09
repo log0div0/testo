@@ -91,6 +91,11 @@ int main(int argc, char* argv[]) {
 			vbox::Unlocker unlocker(session);
 			vbox::Console console = session.console();
 			vbox::Display display = console.display();
+
+			vbox::Framebuffer framebuffer(new vbox::IFramebuffer);
+			std::string uuid = display.attach_framebuffer(0, framebuffer);
+			std::cout << uuid << std::endl;
+
 			console.power_down().wait_and_throw_if_failed();
 		}
 		return 0;

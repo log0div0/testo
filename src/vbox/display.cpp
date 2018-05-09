@@ -1,6 +1,7 @@
 
 #include "display.hpp"
 #include "throw_if_failed.hpp"
+#include "string.hpp"
 
 namespace vbox {
 
@@ -23,6 +24,12 @@ Display::Display(Display&& other): handle(other.handle) {
 Display& Display::operator=(Display&& other) {
 	std::swap(handle, other.handle);
 	return *this;
+}
+
+std::string Display::attach_framebuffer(ULONG screen_id, const Framebuffer& framebuffer) {
+	BSTR result = nullptr;
+	throw_if_failed(IDisplay_AttachFramebuffer(handle, screen_id, framebuffer.handle, &result));
+	return StringOut(result);
 }
 
 }
