@@ -2,6 +2,7 @@
 #include "framebuffer.hpp"
 #include <cassert>
 #include "throw_if_failed.hpp"
+#include "safe_array.hpp"
 
 namespace vbox {
 
@@ -20,6 +21,7 @@ static ULONG Release(::IFramebuffer* self) {
 	return fb->refcnt;
 }
 
+#ifdef WIN32
 static HRESULT QueryInterface(::IFramebuffer* self, const IID& iid, void** result) {
 	if (iid == IID_IFramebuffer || iid == IID_IUnknown) {
 		AddRef(self);
@@ -29,39 +31,52 @@ static HRESULT QueryInterface(::IFramebuffer* self, const IID& iid, void** resul
 	*result = nullptr;
 	return E_NOINTERFACE;
 }
-static HRESULT get_Width(::IFramebuffer* self, ULONG *width) {
+#else
+const nsIID IID_nsISupports = NS_ISUPPORTS_IID;
+static HRESULT QueryInterface(::IFramebuffer* self, const nsIID* iid, void** result) {
+	if (!memcmp(iid, &IID_IFramebuffer, sizeof(nsIID)) || !memcmp(iid, &IID_nsISupports, sizeof(nsIID))) {
+		AddRef(self);
+		*result = self;
+		return S_OK;
+	}
+	*result = nullptr;
+	return E_NOINTERFACE;
+}
+#endif
+
+static HRESULT get_Width(::IFramebuffer* self, ULONG* width) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_Height(::IFramebuffer* self, ULONG *height) {
+static HRESULT get_Height(::IFramebuffer* self, ULONG* height) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_BitsPerPixel(::IFramebuffer* self, ULONG *bitsPerPixel) {
+static HRESULT get_BitsPerPixel(::IFramebuffer* self, ULONG* bits_per_pixel) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_BytesPerLine(::IFramebuffer* self, ULONG *bytesPerLine) {
+static HRESULT get_BytesPerLine(::IFramebuffer* self, ULONG* bytes_per_line) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_PixelFormat(::IFramebuffer* self, BitmapFormat *pixelFormat) {
+static HRESULT get_PixelFormat(::IFramebuffer* self, BitmapFormat_T* pixel_format) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_HeightReduction(::IFramebuffer* self, ULONG *heightReduction) {
+static HRESULT get_HeightReduction(::IFramebuffer* self, ULONG* height_reduction) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_Overlay(::IFramebuffer* self, IFramebufferOverlay * *overlay) {
+static HRESULT get_Overlay(::IFramebuffer* self, IFramebufferOverlay** overlay) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_WinId(::IFramebuffer* self, LONG64 *winId) {
+static HRESULT get_WinId(::IFramebuffer* self, LONG64* win_id) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_Capabilities(::IFramebuffer* self, SAFEARRAY **capabilities) {
+static HRESULT get_Capabilities(::IFramebuffer* self, ComSafeArrayOut(FramebufferCapabilities_T, capabilities)) {
 	assert(false);
 	return 0;
 }
@@ -69,31 +84,31 @@ static HRESULT NotifyUpdate(::IFramebuffer* self, ULONG x, ULONG y, ULONG width,
 	assert(false);
 	return 0;
 }
-static HRESULT NotifyUpdateImage(::IFramebuffer* self, ULONG x, ULONG y, ULONG width, ULONG height, SAFEARRAY* image) {
+static HRESULT NotifyUpdateImage(::IFramebuffer* self, ULONG x, ULONG y, ULONG width, ULONG height, ComSafeArrayIn(uint8_t, image)) {
 	assert(false);
 	return 0;
 }
-static HRESULT NotifyChange(::IFramebuffer* self, ULONG screenId, ULONG xOrigin, ULONG yOrigin, ULONG width, ULONG height) {
+static HRESULT NotifyChange(::IFramebuffer* self, ULONG screen_id, ULONG x_origin, ULONG y_origin, ULONG width, ULONG height) {
 	assert(false);
 	return 0;
 }
-static HRESULT VideoModeSupported(::IFramebuffer* self, ULONG width, ULONG height, ULONG bpp, BOOL * supported) {
+static HRESULT VideoModeSupported(::IFramebuffer* self, ULONG width, ULONG height, ULONG, BOOL* supported) {
 	assert(false);
 	return 0;
 }
-static HRESULT GetVisibleRegion(::IFramebuffer* self, uint8_t * rectangles, ULONG count, ULONG * countCopied) {
+static HRESULT GetVisibleRegion(::IFramebuffer* self, uint8_t* rectangles, ULONG count, ULONG* count_copied) {
 	assert(false);
 	return 0;
 }
-static HRESULT SetVisibleRegion(::IFramebuffer* self, uint8_t * rectangles, ULONG count) {
+static HRESULT SetVisibleRegion(::IFramebuffer* self, uint8_t* rectangles, ULONG count) {
 	assert(false);
 	return 0;
 }
-static HRESULT ProcessVHWACommand(::IFramebuffer* self, uint8_t * command) {
+static HRESULT ProcessVHWACommand(::IFramebuffer* self, uint8_t* command) {
 	assert(false);
 	return 0;
 }
-static HRESULT Notify3DEvent(::IFramebuffer* self, ULONG type, SAFEARRAY* data) {
+static HRESULT Notify3DEvent(::IFramebuffer* self, ULONG type, ComSafeArrayIn(uint8_t, data)) {
 	assert(false);
 	return 0;
 }
@@ -102,10 +117,12 @@ static IFramebufferVtbl framebuffer_vtbl = {
 	QueryInterface,
 	AddRef,
 	Release,
+#ifdef WIN32
 	nullptr,
 	nullptr,
 	nullptr,
 	nullptr,
+#endif
 	get_Width,
 	get_Height,
 	get_BitsPerPixel,

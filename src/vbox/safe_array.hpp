@@ -4,6 +4,14 @@
 #include "array_out.hpp"
 #include <vector>
 
+#ifdef WIN32
+#define ComSafeArrayIn(type, name) SAFEARRAY* name
+#define ComSafeArrayOut(type, name) SAFEARRAY** name
+#else
+#define ComSafeArrayIn(type, name) ULONG name##_size, type* name
+#define ComSafeArrayOut(type, name) ULONG* name##_size, type** name
+#endif
+
 namespace vbox {
 
 struct SafeArray {
