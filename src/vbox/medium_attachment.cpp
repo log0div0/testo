@@ -75,9 +75,9 @@ LONG MediumAttachment::device() const {
 
 DeviceType MediumAttachment::type() const {
 	try {
-		DeviceType result = DeviceType_Null;
-		throw_if_failed(IMediumAttachment_get_Type(handle, IF_UNIX((uint32_t*))&result));
-		return result;
+		DeviceType_T result = DeviceType_Null;
+		throw_if_failed(IMediumAttachment_get_Type(handle, &result));
+		return (DeviceType)result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

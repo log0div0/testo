@@ -39,9 +39,9 @@ std::string StorageController::name() const {
 
 StorageBus StorageController::bus() const {
 	try {
-		StorageBus result = StorageBus_Null;
-		throw_if_failed(IStorageController_get_Bus(handle, IF_UNIX((uint32_t*))&result));
-		return result;
+		StorageBus_T result = StorageBus_Null;
+		throw_if_failed(IStorageController_get_Bus(handle, &result));
+		return (StorageBus)result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -50,9 +50,9 @@ StorageBus StorageController::bus() const {
 
 StorageControllerType StorageController::controller_type() const {
 	try {
-		StorageControllerType result = StorageControllerType_Null;
-		throw_if_failed(IStorageController_get_ControllerType(handle, IF_UNIX((uint32_t*))&result));
-		return result;
+		StorageControllerType_T result = StorageControllerType_Null;
+		throw_if_failed(IStorageController_get_ControllerType(handle, &result));
+		return (StorageControllerType)result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

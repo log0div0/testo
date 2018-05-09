@@ -42,9 +42,9 @@ std::string Medium::name() const {
 
 MediumState Medium::state() const {
 	try {
-		MediumState state = MediumState_NotCreated;
-		throw_if_failed(IMedium_get_State(handle, IF_UNIX((uint32_t*))&state));
-		return state;
+		MediumState_T state = MediumState_NotCreated;
+		throw_if_failed(IMedium_get_State(handle, &state));
+		return (MediumState)state;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -53,9 +53,9 @@ MediumState Medium::state() const {
 
 MediumState Medium::refresh_state() const {
 	try {
-		MediumState state = MediumState_NotCreated;
-		throw_if_failed(IMedium_RefreshState(handle, IF_UNIX((uint32_t*))&state));
-		return state;
+		MediumState_T state = MediumState_NotCreated;
+		throw_if_failed(IMedium_RefreshState(handle, &state));
+		return (MediumState)state;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -65,8 +65,7 @@ MediumState Medium::refresh_state() const {
 std::set<MediumVariant> Medium::variant() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IMedium_get_Variant(handle,
-			ComSafeArrayAsOutTypeParam(safe_array.handle, IF_WIN32(MediumVariant) IF_UNIX(uint32_t))));
+		throw_if_failed(IMedium_get_Variant(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, MediumVariant_T)));
 		ArrayOut array_out = safe_array.copy_out(VT_I4);
 		std::set<MediumVariant> result;
 		for (ULONG i = 0; i < array_out.values_count / sizeof(int); ++i) {
@@ -92,7 +91,7 @@ Progress Medium::create_base_storage(size_t size, std::set<MediumVariant> varian
 		IProgress* result = nullptr;
 		throw_if_failed(IMedium_CreateBaseStorage(handle,
 			size,
-			ComSafeArrayAsInParam(safe_array.handle, IF_WIN32(MediumVariant) IF_UNIX(uint32_t)),
+			ComSafeArrayAsInParam(safe_array.handle, MediumVariant_T),
 			&result));
 		return result;
 	}

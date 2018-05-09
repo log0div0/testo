@@ -178,9 +178,9 @@ void Machine::vram_size(ULONG size) {
 
 MachineState Machine::state() const {
 	try {
-		MachineState result = MachineState_Null;
-		throw_if_failed(IMachine_get_State(handle, IF_UNIX((uint32_t*))&result));
-		return result;
+		MachineState_T result = MachineState_Null;
+		throw_if_failed(IMachine_get_State(handle, &result));
+		return (MachineState)result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -189,9 +189,9 @@ MachineState Machine::state() const {
 
 SessionState Machine::session_state() const {
 	try {
-		SessionState result = SessionState_Null;
-		throw_if_failed(IMachine_get_SessionState(handle, IF_UNIX((uint32_t*))&result));
-		return result;
+		SessionState_T result = SessionState_Null;
+		throw_if_failed(IMachine_get_SessionState(handle, &result));
+		return (SessionState)result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
