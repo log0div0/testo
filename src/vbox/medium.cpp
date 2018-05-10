@@ -65,7 +65,7 @@ MediumState Medium::refresh_state() const {
 std::set<MediumVariant> Medium::variant() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IMedium_get_Variant(handle, ComSafeArrayOutArg(safe_array.handle, MediumVariant_T)));
+		throw_if_failed(IMedium_get_Variant(handle, SAFEARRAY_AS_OUT_PARAM(MediumVariant_T, safe_array)));
 		ArrayOut array_out = safe_array.copy_out(VT_I4);
 		std::set<MediumVariant> result;
 		for (ULONG i = 0; i < array_out.values_count / sizeof(int); ++i) {
@@ -80,18 +80,18 @@ std::set<MediumVariant> Medium::variant() const {
 
 Progress Medium::create_base_storage(size_t size, std::set<MediumVariant> variants) {
 	try {
-		std::vector<MediumVariant> what_the_fucking_shit(sizeof(MediumVariant) * 8, MediumVariant_Standard);
+		std::vector<MediumVariant> vector(sizeof(MediumVariant) * 8, MediumVariant_Standard);
 		for (auto& variant: variants) {
-			what_the_fucking_shit[variant] = variant;
+			vector[variant] = variant;
 		}
 
-		SafeArray safe_array(VT_I4, (ULONG)what_the_fucking_shit.size());
-		safe_array.copy_in(what_the_fucking_shit.data(), (ULONG)(what_the_fucking_shit.size() * sizeof(MediumVariant)));
+		SafeArray safe_array(VT_I4, (ULONG)vector.size());
+		safe_array.copy_in(vector.data(), (ULONG)(vector.size() * sizeof(MediumVariant)));
 
 		IProgress* result = nullptr;
 		throw_if_failed(IMedium_CreateBaseStorage(handle,
 			size,
-			ComSafeArrayInArg(safe_array.handle, MediumVariant_T),
+			SAFEARRAY_AS_IN_PARAM(MediumVariant_T, safe_array),
 			&result));
 		return result;
 	}

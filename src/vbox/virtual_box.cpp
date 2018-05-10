@@ -30,7 +30,7 @@ VirtualBox& VirtualBox::operator=(VirtualBox&& other) {
 std::vector<Machine> VirtualBox::machines() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_Machines(handle, ComSafeArrayOutArg(safe_array.handle, IMachine*)));
+		throw_if_failed(IVirtualBox_get_Machines(handle, SAFEARRAY_AS_OUT_PARAM(IMachine*, safe_array)));
 		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<Machine> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -46,7 +46,7 @@ std::vector<Machine> VirtualBox::machines() const {
 std::vector<Medium> VirtualBox::dvd_images() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_DVDImages(handle, ComSafeArrayOutArg(safe_array.handle, IMedium*)));
+		throw_if_failed(IVirtualBox_get_DVDImages(handle, SAFEARRAY_AS_OUT_PARAM(IMedium*, safe_array)));
 		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<Medium> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -62,7 +62,7 @@ std::vector<Medium> VirtualBox::dvd_images() const {
 std::vector<Medium> VirtualBox::hard_disks() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_HardDisks(handle, ComSafeArrayOutArg(safe_array.handle, IMedium*)));
+		throw_if_failed(IVirtualBox_get_HardDisks(handle, SAFEARRAY_AS_OUT_PARAM(IMedium*, safe_array)));
 		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<Medium> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -78,7 +78,7 @@ std::vector<Medium> VirtualBox::hard_disks() const {
 std::vector<GuestOSType> VirtualBox::guest_os_types() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_GuestOSTypes(handle, ComSafeArrayOutArg(safe_array.handle, IGuestOSType*)));
+		throw_if_failed(IVirtualBox_get_GuestOSTypes(handle, SAFEARRAY_AS_OUT_PARAM(IGuestOSType*, safe_array)));
 		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<GuestOSType> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
@@ -116,7 +116,7 @@ GuestOSType VirtualBox::get_guest_os_type(const std::string& name) const {
 std::vector<std::string> VirtualBox::machine_groups() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_MachineGroups(handle, ComSafeArrayOutArg(safe_array.handle, BSTR)));
+		throw_if_failed(IVirtualBox_get_MachineGroups(handle, SAFEARRAY_AS_OUT_PARAM(BSTR, safe_array)));
 		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
 		std::vector<std::string> result;
 		for (ULONG i = 0; i < array_out.values_count / sizeof(BSTR); ++i) {
@@ -174,7 +174,7 @@ Machine VirtualBox::create_machine(
 		throw_if_failed(IVirtualBox_CreateMachine(handle,
 			StringIn(settings_file),
 			StringIn(name),
-			ComSafeArrayInArg(safe_array.handle, BSTR),
+			SAFEARRAY_AS_IN_PARAM(BSTR, safe_array),
 			StringIn(os_type_id),
 			StringIn(flags),
 			&result));

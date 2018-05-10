@@ -1,6 +1,7 @@
 
 #include "framebuffer.hpp"
 #include <cassert>
+#include <set>
 #include <cstring>
 #include "throw_if_failed.hpp"
 #include "safe_array.hpp"
@@ -77,15 +78,30 @@ static HRESULT get_WinId(::IFramebuffer* self, LONG64* win_id) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_Capabilities(::IFramebuffer* self, ComSafeArrayOut(FramebufferCapabilities_T, capabilities)) {
-	assert(false);
-	return 0;
+static HRESULT get_Capabilities(::IFramebuffer* self, SAFEARRAY_OUT_PARAM(FramebufferCapabilities_T, result)) {
+	try {
+		std::set<FramebufferCapabilities> capabilities = { FramebufferCapabilities_UpdateImage };
+
+		std::vector<FramebufferCapabilities_T> vector(sizeof(FramebufferCapabilities_T) * 8, 0);
+		for (auto& capability: capabilities) {
+			vector[capability] = capability;
+		}
+
+		SafeArray safe_array(VT_I4, (ULONG)vector.size());
+		safe_array.copy_in(vector.data(), (ULONG)(vector.size() * sizeof(FramebufferCapabilities)));
+
+		SAFEARRAY_TO_OUT_PARAM(FramebufferCapabilities_T, safe_array, result);
+
+		return S_OK;
+	} catch (const std::exception&) {
+		return E_UNEXPECTED;
+	}
 }
 static HRESULT NotifyUpdate(::IFramebuffer* self, ULONG x, ULONG y, ULONG width, ULONG height) {
 	assert(false);
 	return 0;
 }
-static HRESULT NotifyUpdateImage(::IFramebuffer* self, ULONG x, ULONG y, ULONG width, ULONG height, ComSafeArrayIn(uint8_t, image)) {
+static HRESULT NotifyUpdateImage(::IFramebuffer* self, ULONG x, ULONG y, ULONG width, ULONG height, SAFEARRAY_IN_PARAM(uint8_t, image)) {
 	assert(false);
 	return 0;
 }
@@ -109,7 +125,7 @@ static HRESULT ProcessVHWACommand(::IFramebuffer* self, uint8_t* command) {
 	assert(false);
 	return 0;
 }
-static HRESULT Notify3DEvent(::IFramebuffer* self, ULONG type, ComSafeArrayIn(uint8_t, data)) {
+static HRESULT Notify3DEvent(::IFramebuffer* self, ULONG type, SAFEARRAY_IN_PARAM(uint8_t, data)) {
 	assert(false);
 	return 0;
 }

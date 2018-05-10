@@ -5,15 +5,19 @@
 #include <vector>
 
 #ifdef WIN32
-#define ComSafeArrayIn(type, name) SAFEARRAY* name
-#define ComSafeArrayOut(type, name) SAFEARRAY** name
-#define ComSafeArrayInArg(f,t) (f)
-#define ComSafeArrayOutArg(f,t) (&(f))
+#define SAFEARRAY_AS_IN_PARAM(TYPE, safe_array) safe_array.handle
+#define SAFEARRAY_AS_OUT_PARAM(TYPE, safe_array) &safe_array.handle
+#define SAFEARRAY_IN_PARAM(TYPE, param) SAFEARRAY* param
+#define SAFEARRAY_OUT_PARAM(TYPE, param) SAFEARRAY** param
+#define SAFEARRAY_FROM_IN_PARAM(TYPE, safe_array, param) safe_array = param
+#define SAFEARRAY_TO_OUT_PARAM(TYPE, safe_array, param) *param = safe_array
 #else
-#define ComSafeArrayIn(type, name) ULONG name##_size, type* name
-#define ComSafeArrayOut(type, name) ULONG* name##_size, type** name
-#define ComSafeArrayInArg(f,t) ((f) ? (f)->c : 0), ((f) ? (t*)((f)->pv) : NULL)
-#define ComSafeArrayOutArg(f,t) (&((f)->c)), (t**)(&((f)->pv))
+#define SAFEARRAY_AS_IN_PARAM(TYPE, safe_array) safe_array.handle->c, (TYPE*)safe_array.handle->pv
+#define SAFEARRAY_AS_OUT_PARAM(TYPE, safe_array) &safe_array.handle->c, (TYPE**)&safe_array.handle->pv
+#define SAFEARRAY_IN_PARAM(TYPE, param) ULONG param##_size, TYPE* param
+#define SAFEARRAY_OUT_PARAM(TYPE, param) ULONG* param##_size, TYPE** param
+#define SAFEARRAY_FROM_IN_PARAM(TYPE, safe_array, param) safe_array.handle->c = param##_size, safe_array.handle->pv = param
+#define SAFEARRAY_TO_OUT_PARAM(TYPE, safe_array, param) *param##_size = safe_array.handle->c, *param = (TYPE*)safe_array.handle->pv, safe_array.handle->c = 0, safe_array.handle->pv = nullptr
 #endif
 
 namespace vbox {
