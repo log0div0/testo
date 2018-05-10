@@ -7,9 +7,13 @@
 #ifdef WIN32
 #define ComSafeArrayIn(type, name) SAFEARRAY* name
 #define ComSafeArrayOut(type, name) SAFEARRAY** name
+#define ComSafeArrayInArg(f,t) (f)
+#define ComSafeArrayOutArg(f,t) (&(f))
 #else
 #define ComSafeArrayIn(type, name) ULONG name##_size, type* name
 #define ComSafeArrayOut(type, name) ULONG* name##_size, type** name
+#define ComSafeArrayInArg(f,t) ((f) ? (f)->c : 0), ((f) ? (t*)((f)->pv) : NULL)
+#define ComSafeArrayOutArg(f,t) (&((f)->c)), (t**)(&((f)->pv))
 #endif
 
 namespace vbox {
