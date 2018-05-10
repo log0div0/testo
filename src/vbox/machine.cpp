@@ -62,7 +62,7 @@ std::vector<StorageController> Machine::storage_controllers() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IMachine_get_StorageControllers(handle, ComSafeArrayOutArg(safe_array.handle, IStorageController*)));
-		ArrayOut array_out = safe_array.copy_out();
+		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<StorageController> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(StorageController(((IStorageController**)array_out.values)[i]));
@@ -78,7 +78,7 @@ std::vector<MediumAttachment> Machine::medium_attachments() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IMachine_get_MediumAttachments(handle, ComSafeArrayOutArg(safe_array.handle, IMediumAttachment*)));
-		ArrayOut array_out = safe_array.copy_out();
+		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<MediumAttachment> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(MediumAttachment(((IMediumAttachment**)array_out.values)[i]));

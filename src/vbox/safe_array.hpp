@@ -30,7 +30,7 @@ struct SafeArray {
 
 	void copy_in(void* data, ULONG size);
 	ArrayOut copy_out(VARTYPE vartype);
-	ArrayOut copy_out();
+	ArrayOut copy_out_iface();
 
 	SAFEARRAY* handle = nullptr;
 };

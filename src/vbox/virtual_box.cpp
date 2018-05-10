@@ -31,7 +31,7 @@ std::vector<Machine> VirtualBox::machines() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_Machines(handle, ComSafeArrayOutArg(safe_array.handle, IMachine*)));
-		ArrayOut array_out = safe_array.copy_out();
+		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<Machine> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(Machine(((IMachine**)array_out.values)[i]));
@@ -47,7 +47,7 @@ std::vector<Medium> VirtualBox::dvd_images() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_DVDImages(handle, ComSafeArrayOutArg(safe_array.handle, IMedium*)));
-		ArrayOut array_out = safe_array.copy_out();
+		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<Medium> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(Medium(((IMedium**)array_out.values)[i]));
@@ -63,7 +63,7 @@ std::vector<Medium> VirtualBox::hard_disks() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_HardDisks(handle, ComSafeArrayOutArg(safe_array.handle, IMedium*)));
-		ArrayOut array_out = safe_array.copy_out();
+		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<Medium> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(Medium(((IMedium**)array_out.values)[i]));
@@ -79,7 +79,7 @@ std::vector<GuestOSType> VirtualBox::guest_os_types() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_GuestOSTypes(handle, ComSafeArrayOutArg(safe_array.handle, IGuestOSType*)));
-		ArrayOut array_out = safe_array.copy_out();
+		ArrayOut array_out = safe_array.copy_out_iface();
 		std::vector<GuestOSType> result;
 		for (ULONG i = 0; i < array_out.values_count; ++i) {
 			result.push_back(GuestOSType(((IGuestOSType**)array_out.values)[i]));

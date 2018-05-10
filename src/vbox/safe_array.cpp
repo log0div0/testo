@@ -59,7 +59,7 @@ ArrayOut SafeArray::copy_out(VARTYPE vartype) {
 	}
 }
 
-ArrayOut SafeArray::copy_out() {
+ArrayOut SafeArray::copy_out_iface() {
 	try {
 		IUnknown** data = nullptr;
 		ULONG size = 0;
