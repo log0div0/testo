@@ -1,6 +1,7 @@
 
 #include "framebuffer.hpp"
 #include <cassert>
+#include <cstring>
 #include "throw_if_failed.hpp"
 #include "safe_array.hpp"
 
@@ -32,8 +33,8 @@ static HRESULT QueryInterface(::IFramebuffer* self, const IID& iid, void** resul
 	return E_NOINTERFACE;
 }
 #else
-const nsIID IID_nsISupports = NS_ISUPPORTS_IID;
 static HRESULT QueryInterface(::IFramebuffer* self, const nsIID* iid, void** result) {
+	const nsIID IID_nsISupports = NS_ISUPPORTS_IID;
 	if (!memcmp(iid, &IID_IFramebuffer, sizeof(nsIID)) || !memcmp(iid, &IID_nsISupports, sizeof(nsIID))) {
 		AddRef(self);
 		*result = self;
