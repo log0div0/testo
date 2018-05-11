@@ -15,6 +15,7 @@ struct Display {
 	Display& operator=(Display&& other);
 
 	std::string attach_framebuffer(ULONG screen_id, const Framebuffer& framebuffer);
+	void detach_framebuffer(ULONG screen_id, const std::string& uuid);
 
 	IDisplay* handle = nullptr;
 };

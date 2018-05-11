@@ -32,4 +32,8 @@ std::string Display::attach_framebuffer(ULONG screen_id, const Framebuffer& fram
 	return StringOut(result);
 }
 
+void Display::detach_framebuffer(ULONG screen_id, const std::string& uuid) {
+	throw_if_failed(IDisplay_DetachFramebuffer(handle, screen_id, StringIn(uuid)));
+}
+
 }
