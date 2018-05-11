@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 			std::string hard_disk_path = std::regex_replace(settings_file_path, std::regex("\\.vbox$"), ".vdi");
 			std::cout << hard_disk_path << std::endl;
 			vbox::Medium hard_disk = virtual_box.create_medium("vdi", hard_disk_path, AccessMode_ReadWrite, DeviceType_HardDisk);
-			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, {}).wait_and_throw_if_failed();
+			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, MediumVariant_Standard).wait_and_throw_if_failed();
 			machine.attach_device(sata.name(), 0, 0, DeviceType_HardDisk, hard_disk);
 			machine.save_settings();
 		}

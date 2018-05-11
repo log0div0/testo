@@ -78,20 +78,11 @@ static HRESULT get_WinId(::IFramebuffer* self, LONG64* win_id) {
 	assert(false);
 	return 0;
 }
-static HRESULT get_Capabilities(::IFramebuffer* self, SAFEARRAY_OUT_PARAM(FramebufferCapabilities_T, result)) {
+static HRESULT get_Capabilities(::IFramebuffer* self, SAFEARRAY_OUT_PARAM(FramebufferCapabilities_T, out)) {
 	try {
-		std::set<FramebufferCapabilities> capabilities = { FramebufferCapabilities_UpdateImage };
-
-		std::vector<FramebufferCapabilities_T> vector(sizeof(FramebufferCapabilities_T) * 8, 0);
-		for (auto& capability: capabilities) {
-			vector[capability] = capability;
-		}
-
-		SafeArray safe_array(VT_I4, (ULONG)vector.size());
-		safe_array.copy_in(vector.data(), (ULONG)(vector.size() * sizeof(FramebufferCapabilities)));
-
-		SAFEARRAY_TO_OUT_PARAM(FramebufferCapabilities_T, safe_array, result);
-
+		FramebufferCapabilities capabilities = FramebufferCapabilities_UpdateImage;
+		SafeArray safe_array = SafeArray::bitset(capabilities);
+		SAFEARRAY_MOVE_TO_OUT_PARAM(safe_array, out);
 		return S_OK;
 	} catch (const std::exception&) {
 		return E_UNEXPECTED;
@@ -101,7 +92,10 @@ static HRESULT NotifyUpdate(::IFramebuffer* self, ULONG x, ULONG y, ULONG width,
 	assert(false);
 	return 0;
 }
-static HRESULT NotifyUpdateImage(::IFramebuffer* self, ULONG x, ULONG y, ULONG width, ULONG height, SAFEARRAY_IN_PARAM(uint8_t, image)) {
+static HRESULT NotifyUpdateImage(::IFramebuffer* self, ULONG x, ULONG y, ULONG width, ULONG height, SAFEARRAY_IN_PARAM(uint8_t, in)) {
+	SAFEARRAY handle;
+	ISafeArray safe_array = {&handle};
+	SAFEARRAY_MOVE_FROM_IN_PARAM(safe_array, in);
 	assert(false);
 	return 0;
 }

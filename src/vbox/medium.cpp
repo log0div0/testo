@@ -62,31 +62,20 @@ MediumState Medium::refresh_state() const {
 	}
 }
 
-std::set<MediumVariant> Medium::variant() const {
+MediumVariant Medium::variant() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IMedium_get_Variant(handle, SAFEARRAY_AS_OUT_PARAM(MediumVariant_T, safe_array)));
-		ArrayOut array_out = safe_array.copy_out(VT_I4);
-		std::set<MediumVariant> result;
-		for (ULONG i = 0; i < array_out.values_count / sizeof(int); ++i) {
-			result.insert(((MediumVariant*)array_out.values)[i]);
-		}
-		return result;
+		return (MediumVariant)safe_array.bitset();
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
-Progress Medium::create_base_storage(size_t size, std::set<MediumVariant> variants) {
+Progress Medium::create_base_storage(size_t size, MediumVariant variant) {
 	try {
-		std::vector<MediumVariant> vector(sizeof(MediumVariant) * 8, MediumVariant_Standard);
-		for (auto& variant: variants) {
-			vector[variant] = variant;
-		}
-
-		SafeArray safe_array(VT_I4, (ULONG)vector.size());
-		safe_array.copy_in(vector.data(), (ULONG)(vector.size() * sizeof(MediumVariant)));
+		SafeArray safe_array = SafeArray::bitset(variant);
 
 		IProgress* result = nullptr;
 		throw_if_failed(IMedium_CreateBaseStorage(handle,
@@ -106,15 +95,7 @@ Medium::operator bool() const {
 
 std::ostream& operator<<(std::ostream& stream, const Medium& medium) {
 	stream << "name=" << medium.name();
-	stream << " variant=";
-	size_t i = 0;
-	for (auto& variant: medium.variant()) {
-		if (i != 0) {
-			stream << "|";
-		}
-		stream << variant;
-		++i;
-	}
+	stream << " variant=" << medium.variant();
 	stream << " state=" << medium.state();
 	return stream;
 }

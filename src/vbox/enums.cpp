@@ -77,28 +77,48 @@ std::ostream& operator<<(std::ostream& stream, DeviceType device_type) {
 }
 
 std::ostream& operator<<(std::ostream& stream, MediumVariant medium_variant) {
-	switch (medium_variant) {
-		case MediumVariant_Standard:
-			return stream << "Standard";
-		case MediumVariant_VmdkSplit2G:
-			return stream << "VmdkSplit2G";
-		case MediumVariant_VmdkRawDisk:
-			return stream << "VmdkRawDisk";
-		case MediumVariant_VmdkStreamOptimized:
-			return stream << "VmdkStreamOptimized";
-		case MediumVariant_VmdkESX:
-			return stream << "VmdkESX";
-		case MediumVariant_VdiZeroExpand:
-			return stream << "VdiZeroExpand";
-		case MediumVariant_Fixed:
-			return stream << "Fixed";
-		case MediumVariant_Diff:
-			return stream << "Diff";
-		case MediumVariant_NoCreateDir:
-			return stream << "NoCreateDir";
-		default:
-			return stream << "Unknown";
+	stream << "{";
+	size_t counter = 0;
+	for (size_t i = 0; i < sizeof(int) * 8; ++i) {
+		int bit = 1 << i;
+		if (medium_variant & bit) {
+			if (counter != 0) {
+				stream << "|";
+			}
+			switch (bit) {
+				case MediumVariant_VmdkSplit2G:
+					stream << "VmdkSplit2G";
+					break;
+				case MediumVariant_VmdkRawDisk:
+					stream << "VmdkRawDisk";
+					break;
+				case MediumVariant_VmdkStreamOptimized:
+					stream << "VmdkStreamOptimized";
+					break;
+				case MediumVariant_VmdkESX:
+					stream << "VmdkESX";
+					break;
+				case MediumVariant_VdiZeroExpand:
+					stream << "VdiZeroExpand";
+					break;
+				case MediumVariant_Fixed:
+					stream << "Fixed";
+					break;
+				case MediumVariant_Diff:
+					stream << "Diff";
+					break;
+				case MediumVariant_NoCreateDir:
+					stream << "NoCreateDir";
+					break;
+				default:
+					stream << "Unknown";
+					break;
+			}
+			++counter;
+		}
 	}
+	stream << "}";
+	return stream;
 }
 
 std::ostream& operator<<(std::ostream& stream, MediumState medium_state) {

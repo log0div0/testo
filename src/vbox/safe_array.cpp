@@ -26,7 +26,7 @@ SafeArray::~SafeArray() {
 	}
 }
 
-SafeArray::SafeArray(SafeArray&& other): handle(other.handle) {
+SafeArray::SafeArray(SafeArray&& other): ISafeArray{other.handle} {
 	other.handle = nullptr;
 }
 
@@ -35,7 +35,7 @@ SafeArray& SafeArray::operator=(SafeArray&& other) {
 	return *this;
 }
 
-void SafeArray::copy_in(void* data, ULONG size) {
+void ISafeArray::copy_in(void* data, ULONG size) {
 	try {
 		if (!data || !size) {
 			return;
@@ -47,7 +47,7 @@ void SafeArray::copy_in(void* data, ULONG size) {
 	}
 }
 
-ArrayOut SafeArray::copy_out(VARTYPE vartype) {
+ArrayOut ISafeArray::copy_out(VARTYPE vartype) const {
 	try {
 		void* data = nullptr;
 		ULONG size = 0;
@@ -59,7 +59,7 @@ ArrayOut SafeArray::copy_out(VARTYPE vartype) {
 	}
 }
 
-ArrayOut SafeArray::copy_out_iface() {
+ArrayOut ISafeArray::copy_out_iface() const {
 	try {
 		IUnknown** data = nullptr;
 		ULONG size = 0;
@@ -69,6 +69,28 @@ ArrayOut SafeArray::copy_out_iface() {
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
+}
+
+SafeArray SafeArray::bitset(int bitset) {
+	std::vector<int> bits;
+	for (size_t i = 0; i < sizeof(int) * 8; ++i) {
+		int bit = 1 << i;
+		if (bitset & bit) {
+			bits.push_back(bit);
+		}
+	}
+	SafeArray safe_array(VT_I4, (ULONG)bits.size());
+	safe_array.copy_in(bits.data(), (ULONG)(bits.size() * sizeof(int)));
+	return safe_array;
+}
+
+int ISafeArray::bitset() const {
+	ArrayOut array_out = copy_out(VT_I4);
+    int bitset = 0;
+    for (ULONG i = 0; i < array_out.values_count / sizeof(int); ++i) {
+      bitset |= ((int*)array_out.values)[i];
+    }
+    return bitset;
 }
 
 }
