@@ -81,7 +81,7 @@ typedef const BSTR CBSTR;
 
 #define VBOX_WINAPI WINAPI
 
-#define ComSafeArrayAsInParam(f, t) (f)
+#define ComSafeArrayAsInParam(f) (f)
 #define ComSafeArrayAsOutParam(f) (&(f))
 #define ComSafeArrayAsOutTypeParam(f,t) (&(f))
 #define ComSafeArrayAsOutIfaceParam(f,t) (&(f))
@@ -748,7 +748,7 @@ typedef struct SAFEARRAY
     ULONG c;
 } SAFEARRAY;
 
-#define ComSafeArrayAsInParam(f, t) ((f) ? (f)->c : 0), ((f) ? (t*)((f)->pv) : NULL)
+#define ComSafeArrayAsInParam(f) ((f) ? (f)->c : 0), ((f) ? (f)->pv : NULL)
 #define ComSafeArrayAsOutParam(f) (&((f)->c)), (&((f)->pv))
 #define ComSafeArrayAsOutTypeParam(f,t) (&((f)->c)), (t**)(&((f)->pv))
 #define ComSafeArrayAsOutIfaceParam(f,t) (&((f)->c)), (t**)(&((f)->pv))

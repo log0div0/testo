@@ -30,7 +30,7 @@ VirtualBox& VirtualBox::operator=(VirtualBox&& other) {
 std::vector<Machine> VirtualBox::machines() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_Machines(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMachine*)));
+		throw_if_failed(IVirtualBox_get_Machines(handle, SAFEARRAY_AS_OUT_PARAM(IMachine*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IMachine**)array_out.ifaces, (IMachine**)(array_out.ifaces + array_out.ifaces_count)};
 	}
@@ -42,7 +42,7 @@ std::vector<Machine> VirtualBox::machines() const {
 std::vector<Medium> VirtualBox::dvd_images() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_DVDImages(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
+		throw_if_failed(IVirtualBox_get_DVDImages(handle, SAFEARRAY_AS_OUT_PARAM(IMedium*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IMedium**)array_out.ifaces, (IMedium**)(array_out.ifaces + array_out.ifaces_count)};
 	}
@@ -54,7 +54,7 @@ std::vector<Medium> VirtualBox::dvd_images() const {
 std::vector<Medium> VirtualBox::hard_disks() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_HardDisks(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
+		throw_if_failed(IVirtualBox_get_HardDisks(handle, SAFEARRAY_AS_OUT_PARAM(IMedium*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IMedium**)array_out.ifaces, (IMedium**)(array_out.ifaces + array_out.ifaces_count)};
 	}
@@ -66,7 +66,7 @@ std::vector<Medium> VirtualBox::hard_disks() const {
 std::vector<GuestOSType> VirtualBox::guest_os_types() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_GuestOSTypes(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IGuestOSType*)));
+		throw_if_failed(IVirtualBox_get_GuestOSTypes(handle, SAFEARRAY_AS_OUT_PARAM(IGuestOSType*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IGuestOSType**)array_out.ifaces, (IGuestOSType**)(array_out.ifaces + array_out.ifaces_count)};
 	}
@@ -100,7 +100,7 @@ GuestOSType VirtualBox::get_guest_os_type(const std::string& name) const {
 std::vector<std::string> VirtualBox::machine_groups() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IVirtualBox_get_MachineGroups(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, BSTR)));
+		throw_if_failed(IVirtualBox_get_MachineGroups(handle, SAFEARRAY_AS_OUT_PARAM(BSTR, safe_array)));
 		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
 		std::vector<StringOut> strings_out {(BSTR*)array_out.data, (BSTR*)(array_out.data + array_out.data_size)};
 		return {strings_out.begin(), strings_out.end()};
@@ -149,7 +149,7 @@ Machine VirtualBox::create_machine(
 		throw_if_failed(IVirtualBox_CreateMachine(handle,
 			StringIn(settings_file),
 			StringIn(name),
-			ComSafeArrayAsInParam(safe_array.handle, BSTR),
+			SAFEARRAY_AS_IN_PARAM(BSTR, safe_array),
 			StringIn(os_type_id),
 			StringIn(flags),
 			&result));

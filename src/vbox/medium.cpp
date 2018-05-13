@@ -65,7 +65,7 @@ MediumState Medium::refresh_state() const {
 MediumVariant Medium::variant() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IMedium_get_Variant(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, MediumVariant_T)));
+		throw_if_failed(IMedium_get_Variant(handle, SAFEARRAY_AS_OUT_PARAM(MediumVariant_T, safe_array)));
 		return (MediumVariant)safe_array.bitset();
 	}
 	catch (const std::exception&) {
@@ -80,7 +80,7 @@ Progress Medium::create_base_storage(size_t size, MediumVariant variant) {
 		IProgress* result = nullptr;
 		throw_if_failed(IMedium_CreateBaseStorage(handle,
 			size,
-			ComSafeArrayAsInParam(safe_array.handle, MediumVariant_T),
+			SAFEARRAY_AS_IN_PARAM(MediumVariant_T, safe_array),
 			&result));
 		return result;
 	}

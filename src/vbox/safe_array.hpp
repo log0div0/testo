@@ -4,6 +4,14 @@
 #include "array_out.hpp"
 #include <vector>
 
+#ifdef WIN32
+#define SAFEARRAY_AS_IN_PARAM(TYPE, safe_array) safe_array.handle
+#define SAFEARRAY_AS_OUT_PARAM(TYPE, safe_array) &safe_array.handle
+#else
+#define SAFEARRAY_AS_IN_PARAM(TYPE, safe_array) safe_array.handle->c, (TYPE*)safe_array.handle->pv
+#define SAFEARRAY_AS_OUT_PARAM(TYPE, safe_array) &safe_array.handle->c, (TYPE**)&safe_array.handle->pv
+#endif
+
 namespace vbox {
 
 struct SafeArray {

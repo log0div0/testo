@@ -61,7 +61,7 @@ std::string Machine::settings_file_path() const {
 std::vector<StorageController> Machine::storage_controllers() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IMachine_get_StorageControllers(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IStorageController*)));
+		throw_if_failed(IMachine_get_StorageControllers(handle, SAFEARRAY_AS_OUT_PARAM(IStorageController*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IStorageController**)array_out.ifaces, (IStorageController**)(array_out.ifaces + array_out.ifaces_count)};
 	}
@@ -73,7 +73,7 @@ std::vector<StorageController> Machine::storage_controllers() const {
 std::vector<MediumAttachment> Machine::medium_attachments() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IMachine_get_MediumAttachments(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMediumAttachment*)));
+		throw_if_failed(IMachine_get_MediumAttachments(handle, SAFEARRAY_AS_OUT_PARAM(IMediumAttachment*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IMediumAttachment**)array_out.ifaces, (IMediumAttachment**)(array_out.ifaces + array_out.ifaces_count)};
 	}
@@ -114,7 +114,7 @@ void Machine::attach_device(const std::string& name, int controller_port, int de
 SafeArray Machine::unregister(CleanupMode cleanup_mode) {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IMachine_Unregister(handle, cleanup_mode, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
+		throw_if_failed(IMachine_Unregister(handle, cleanup_mode, SAFEARRAY_AS_OUT_PARAM(IMedium*, safe_array)));
 		return safe_array;
 	}
 	catch (const std::exception&) {
@@ -126,7 +126,7 @@ Progress Machine::delete_config(SafeArray mediums) {
 	try {
 		IProgress* result = nullptr;
 		throw_if_failed(IMachine_DeleteConfig(handle,
-			ComSafeArrayAsInParam(mediums.handle, IMedium*),
+			SAFEARRAY_AS_IN_PARAM(IMedium*, mediums),
 			&result));
 		return result;
 	}
