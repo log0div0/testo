@@ -7,8 +7,14 @@ namespace vbox {
 
 struct ArrayOut {
 	~ArrayOut();
-	void* values = nullptr;
-	ULONG values_count = 0;
+	uint8_t* data = nullptr;
+	ULONG data_size = 0;
+};
+
+struct ArrayOutIface {
+	~ArrayOutIface();
+	IUnknown** ifaces = nullptr;
+	ULONG ifaces_count = 0;
 };
 
 }

@@ -31,12 +31,8 @@ std::vector<Machine> VirtualBox::machines() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_Machines(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMachine*)));
-		ArrayOut array_out = safe_array.copy_out();
-		std::vector<Machine> result;
-		for (ULONG i = 0; i < array_out.values_count; ++i) {
-			result.push_back(Machine(((IMachine**)array_out.values)[i]));
-		}
-		return result;
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IMachine**)array_out.ifaces, (IMachine**)(array_out.ifaces + array_out.ifaces_count)};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -47,12 +43,8 @@ std::vector<Medium> VirtualBox::dvd_images() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_DVDImages(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
-		ArrayOut array_out = safe_array.copy_out();
-		std::vector<Medium> result;
-		for (ULONG i = 0; i < array_out.values_count; ++i) {
-			result.push_back(Medium(((IMedium**)array_out.values)[i]));
-		}
-		return result;
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IMedium**)array_out.ifaces, (IMedium**)(array_out.ifaces + array_out.ifaces_count)};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -63,12 +55,8 @@ std::vector<Medium> VirtualBox::hard_disks() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_HardDisks(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMedium*)));
-		ArrayOut array_out = safe_array.copy_out();
-		std::vector<Medium> result;
-		for (ULONG i = 0; i < array_out.values_count; ++i) {
-			result.push_back(Medium(((IMedium**)array_out.values)[i]));
-		}
-		return result;
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IMedium**)array_out.ifaces, (IMedium**)(array_out.ifaces + array_out.ifaces_count)};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -79,12 +67,8 @@ std::vector<GuestOSType> VirtualBox::guest_os_types() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_GuestOSTypes(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IGuestOSType*)));
-		ArrayOut array_out = safe_array.copy_out();
-		std::vector<GuestOSType> result;
-		for (ULONG i = 0; i < array_out.values_count; ++i) {
-			result.push_back(GuestOSType(((IGuestOSType**)array_out.values)[i]));
-		}
-		return result;
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IGuestOSType**)array_out.ifaces, (IGuestOSType**)(array_out.ifaces + array_out.ifaces_count)};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -118,11 +102,8 @@ std::vector<std::string> VirtualBox::machine_groups() const {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_MachineGroups(handle, ComSafeArrayAsOutTypeParam(safe_array.handle, BSTR)));
 		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
-		std::vector<std::string> result;
-		for (ULONG i = 0; i < array_out.values_count / sizeof(BSTR); ++i) {
-			result.push_back(StringOut(((BSTR*)array_out.values)[i]));
-		}
-		return result;
+		std::vector<StringOut> strings_out {(BSTR*)array_out.data, (BSTR*)(array_out.data + array_out.data_size)};
+		return {strings_out.begin(), strings_out.end()};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -158,14 +139,8 @@ Machine VirtualBox::create_machine(
 	const std::string& flags
 ) {
 	try {
-		std::vector<StringIn> strings_in;
-		for (auto& group: groups) {
-			strings_in.push_back(group);
-		}
-		std::vector<BSTR> bstrs;
-		for (auto& string_in: strings_in) {
-			bstrs.push_back(string_in);
-		}
+		std::vector<StringIn> strings_in {groups.begin(), groups.end()};
+		std::vector<BSTR> bstrs {strings_in.begin(), strings_in.end()};
 
 		SafeArray safe_array(VT_BSTR, (ULONG)bstrs.size());
 		safe_array.copy_in(bstrs.data(), (ULONG)(bstrs.size() * sizeof(BSTR)));

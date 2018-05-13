@@ -62,12 +62,8 @@ std::vector<StorageController> Machine::storage_controllers() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IMachine_get_StorageControllers(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IStorageController*)));
-		ArrayOut array_out = safe_array.copy_out();
-		std::vector<StorageController> result;
-		for (ULONG i = 0; i < array_out.values_count; ++i) {
-			result.push_back(StorageController(((IStorageController**)array_out.values)[i]));
-		}
-		return result;
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IStorageController**)array_out.ifaces, (IStorageController**)(array_out.ifaces + array_out.ifaces_count)};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -78,12 +74,8 @@ std::vector<MediumAttachment> Machine::medium_attachments() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IMachine_get_MediumAttachments(handle, ComSafeArrayAsOutIfaceParam(safe_array.handle, IMediumAttachment*)));
-		ArrayOut array_out = safe_array.copy_out();
-		std::vector<MediumAttachment> result;
-		for (ULONG i = 0; i < array_out.values_count; ++i) {
-			result.push_back(MediumAttachment(((IMediumAttachment**)array_out.values)[i]));
-		}
-		return result;
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IMediumAttachment**)array_out.ifaces, (IMediumAttachment**)(array_out.ifaces + array_out.ifaces_count)};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

@@ -18,7 +18,7 @@ struct SafeArray {
 
 	void copy_in(void* data, ULONG size);
 	ArrayOut copy_out(VARTYPE vartype) const;
-	ArrayOut copy_out() const;
+	ArrayOutIface copy_out_iface() const;
 
 	int bitset() const;
 	static SafeArray bitset(int bitset);

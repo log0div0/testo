@@ -49,22 +49,22 @@ void SafeArray::copy_in(void* data, ULONG size) {
 
 ArrayOut SafeArray::copy_out(VARTYPE vartype) const {
 	try {
-		void* data = nullptr;
-		ULONG size = 0;
-		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper(&data, &size, vartype, handle));
-		return {data, size};
+		uint8_t* data = nullptr;
+		ULONG data_size = 0;
+		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&data, &data_size, vartype, handle));
+		return {data, data_size};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
-ArrayOut SafeArray::copy_out() const {
+ArrayOutIface SafeArray::copy_out_iface() const {
 	try {
-		IUnknown** data = nullptr;
-		ULONG size = 0;
-		throw_if_failed(api->pfnSafeArrayCopyOutIfaceParamHelper(&data, &size, handle));
-		return {data, size};
+		IUnknown** ifaces = nullptr;
+		ULONG ifaces_count = 0;
+		throw_if_failed(api->pfnSafeArrayCopyOutIfaceParamHelper(&ifaces, &ifaces_count, handle));
+		return {ifaces, ifaces_count};
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -87,8 +87,8 @@ SafeArray SafeArray::bitset(int bitset) {
 int SafeArray::bitset() const {
 	ArrayOut array_out = copy_out(VT_I4);
     int bitset = 0;
-    for (ULONG i = 0; i < array_out.values_count / sizeof(int); ++i) {
-      bitset |= ((int*)array_out.values)[i];
+    for (ULONG i = 0; i < array_out.data_size / sizeof(int); ++i) {
+      bitset |= ((int*)array_out.data)[i];
     }
     return bitset;
 }

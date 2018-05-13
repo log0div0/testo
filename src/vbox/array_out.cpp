@@ -4,8 +4,14 @@
 namespace vbox {
 
 ArrayOut::~ArrayOut() {
-	if (values) {
-		api->pfnArrayOutFree(values);
+	if (data) {
+		api->pfnArrayOutFree(data);
+	}
+}
+
+ArrayOutIface::~ArrayOutIface() {
+	if (ifaces) {
+		api->pfnArrayOutFree(ifaces);
 	}
 }
 
