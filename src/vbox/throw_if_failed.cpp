@@ -28,14 +28,15 @@ struct ErrorInfo {
 		return handle != nullptr;
 	}
 
-	template <typename IID>
-	void* query_interface(IID&& iid) const {
-		void* result = nullptr;
+	void* query_interface(
 #ifdef WIN32
-		HRESULT rc = IErrorInfo_QueryInterface(handle, iid, &result);
+		IID&& iid
 #else
-		HRESULT rc = IErrorInfo_QueryInterface(handle, &iid, &result);
+		const nsID* iid
 #endif
+	) const {
+		void* result = nullptr;
+		HRESULT rc = IErrorInfo_QueryInterface(handle, iid, &result);
 		if (FAILED(rc)) {
 			throw std::runtime_error(__PRETTY_FUNCTION__);
 		}
@@ -50,7 +51,13 @@ void throw_if_failed(HRESULT rc) {
 		if (FAILED(rc)) {
 			ErrorInfo error_info;
 			if (error_info) {
-				VirtualBoxErrorInfo virtual_box_error_info = (IVirtualBoxErrorInfo*)error_info.query_interface(IID_IVirtualBoxErrorInfo);
+				VirtualBoxErrorInfo virtual_box_error_info = (IVirtualBoxErrorInfo*)error_info.query_interface(
+#ifdef WIN32
+					IID_IVirtualBoxErrorInfo
+#else
+					&IID_IVirtualBoxErrorInfo
+#endif
+				);
 				throw std::runtime_error(virtual_box_error_info.text());
 			} else {
 				std::stringstream ss;
