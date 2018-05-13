@@ -8,7 +8,11 @@ namespace vbox {
 struct Unlocker {
 	Unlocker(Session& session): session(session) {}
 	~Unlocker() {
-		session.unlock_machine();
+		try {
+			session.unlock_machine();
+		} catch (...) {
+			// деструктор не может бросать исключение
+		}
 	}
 
 	Unlocker(const Unlocker&) = delete;
