@@ -30,9 +30,9 @@ struct ErrorInfo {
 
 	void* query_interface(
 #ifdef WIN32
-		IID&& iid
+		const IID& iid
 #else
-		const nsID* iid
+		const nsIID* iid
 #endif
 	) const {
 		void* result = nullptr;
