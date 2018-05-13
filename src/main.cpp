@@ -91,6 +91,10 @@ int main(int argc, char* argv[]) {
 			vbox::Unlocker unlocker(session);
 			vbox::Console console = session.console();
 			vbox::Display display = console.display();
+			for (size_t i = 0; i < 100; ++i) {
+				std::cout << display.get_screen_resolution() << std::endl;
+				std::this_thread::sleep_for(1s);
+			}
 			console.power_down().wait_and_throw_if_failed();
 		}
 		return 0;
