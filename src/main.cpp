@@ -8,6 +8,7 @@
 #include "vbox/virtual_box.hpp"
 #include "vbox/unlocker.hpp"
 #include "vbox/virtual_box_error_info.hpp"
+#include <SDL2/SDL.h>
 
 using namespace std::chrono_literals;
 
@@ -86,6 +87,7 @@ int main(int argc, char* argv[]) {
 			machine.save_settings();
 		}
 		std::cout << machine << std::endl;
+		/*
 		{
 			machine.launch_vm_process(session, "headless").wait_and_throw_if_failed();
 			vbox::Unlocker unlocker(session);
@@ -101,6 +103,27 @@ int main(int argc, char* argv[]) {
 
 			console.power_down().wait_and_throw_if_failed();
 		}
+		*/
+		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+			fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
+			return 1;
+		}
+		SDL_Window* window = SDL_CreateWindow(
+			"hello_sdl2",
+			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+			600, 400,
+			SDL_WINDOW_SHOWN
+		);
+		if (window == NULL) {
+			fprintf(stderr, "could not create window: %s\n", SDL_GetError());
+			return 1;
+		}
+		SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
+		SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
+		SDL_UpdateWindowSurface(window);
+		SDL_Delay(2000);
+		SDL_DestroyWindow(window);
+		SDL_Quit();
 		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;
