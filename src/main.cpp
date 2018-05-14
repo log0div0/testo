@@ -105,14 +105,17 @@ int main(int argc, char* argv[]) {
 			console.power_down().wait_and_throw_if_failed();
 		}
 		*/
+		int width = 600;
+		int height = 400;
 		sdl::API sdl(SDL_INIT_VIDEO);
 		sdl::Window window(
 			"testo",
 			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-			600, 400,
+			width, height,
 			SDL_WINDOW_SHOWN
 		);
 		sdl::Renderer renderer = window.create_renderer();
+		sdl::Texture texture = renderer.create_texture(SDL_PIXELFORMAT_BGR888, SDL_TEXTUREACCESS_STATIC, width, height);
 
 		SDL_Event event;
 		while (true) {
