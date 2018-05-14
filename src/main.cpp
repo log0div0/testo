@@ -112,6 +112,7 @@ int main(int argc, char* argv[]) {
 			600, 400,
 			SDL_WINDOW_SHOWN
 		);
+		sdl::Renderer renderer = window.create_renderer();
 
 		SDL_Event event;
 		while (true) {
