@@ -37,8 +37,7 @@ static HRESULT QueryInterface(::IFramebuffer* self, const IID& iid, void** resul
 }
 #else
 static HRESULT QueryInterface(::IFramebuffer* self, const nsIID* iid, void** result) {
-	const nsIID IID_ISupports = NS_ISUPPORTS_IID;
-	if (!memcmp(iid, &IID_IFramebuffer, sizeof(nsIID)) || !memcmp(iid, &IID_ISupports, sizeof(nsIID))) {
+	if (!memcmp(iid, &IID_IFramebuffer, sizeof(nsIID))) {
 		AddRef(self);
 		*result = self;
 		return S_OK;
