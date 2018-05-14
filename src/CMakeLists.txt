@@ -5,6 +5,7 @@ add_definitions(-std=gnu++14)
 file(GLOB_RECURSE SRCS *.cpp)
 
 add_executable(testo ${SRCS})
+add_dependencies(testo sdl2)
 
 target_link_libraries(testo vboxcapi)
 if (UNIX)
