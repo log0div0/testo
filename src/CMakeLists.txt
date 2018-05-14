@@ -21,4 +21,16 @@ if (WIN32)
 	)
 else()
 	target_link_libraries(testo dl pthread SDL2)
+	if (APPLE)
+		target_link_libraries(testo
+			"-framework AudioToolbox"
+			"-framework CoreAudio"
+			"-framework CoreVideo"
+			"-framework ForceFeedback"
+			"-framework IOKit"
+			"-framework Cocoa"
+			"-framework Carbon"
+			iconv
+		)
+	endif()
 endif()
