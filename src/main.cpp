@@ -8,7 +8,8 @@
 #include "vbox/virtual_box.hpp"
 #include "vbox/unlocker.hpp"
 #include "vbox/virtual_box_error_info.hpp"
-#include <SDL2/SDL.h>
+#include "sdl/api.hpp"
+#include "sdl/window.hpp"
 
 using namespace std::chrono_literals;
 
@@ -32,7 +33,7 @@ std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 
 int main(int argc, char* argv[]) {
 	try {
-		vbox::API api;
+		vbox::API vbox;
 		vbox::VirtualBoxClient virtual_box_client;
 		vbox::VirtualBox virtual_box = virtual_box_client.virtual_box();
 		vbox::Session session = virtual_box_client.session();
@@ -104,26 +105,23 @@ int main(int argc, char* argv[]) {
 			console.power_down().wait_and_throw_if_failed();
 		}
 		*/
-		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-			fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
-			return 1;
-		}
-		SDL_Window* window = SDL_CreateWindow(
-			"hello_sdl2",
+		sdl::API sdl(SDL_INIT_VIDEO);
+		sdl::Window window(
+			"testo",
 			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 			600, 400,
 			SDL_WINDOW_SHOWN
 		);
-		if (window == NULL) {
-			fprintf(stderr, "could not create window: %s\n", SDL_GetError());
-			return 1;
+
+		SDL_Event event;
+		while (true) {
+			SDL_WaitEvent(&event);
+			switch (event.type) {
+				case SDL_QUIT:
+					return 0;
+			}
 		}
-		SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
-		SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));
-		SDL_UpdateWindowSurface(window);
-		SDL_Delay(2000);
-		SDL_DestroyWindow(window);
-		SDL_Quit();
+
 		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;
