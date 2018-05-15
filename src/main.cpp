@@ -6,7 +6,6 @@
 #include "vbox/api.hpp"
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
-#include "vbox/unlocker.hpp"
 #include "vbox/virtual_box_error_info.hpp"
 #include "sdl/api.hpp"
 #include "sdl/window.hpp"
@@ -43,8 +42,8 @@ int main(int argc, char* argv[]) {
 			if (machine.name() == "ubuntu_2") {
 				if (machine.session_state() != SessionState_Unlocked) {
 					machine.lock_machine(session, LockType_Shared);
-					vbox::Unlocker unlocker(session);
 					session.console().power_down().wait_and_throw_if_failed();
+					session.unlock_machine();
 				}
 				while (machine.session_state() != SessionState_Unlocked) {
 					std::this_thread::sleep_for(100ms);
@@ -67,7 +66,6 @@ int main(int argc, char* argv[]) {
 		virtual_box.register_machine(machine);
 		{
 			machine.lock_machine(session, LockType_Write);
-			vbox::Unlocker unlocker(session);
 
 			vbox::Machine machine = session.machine();
 
@@ -86,12 +84,13 @@ int main(int argc, char* argv[]) {
 			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, MediumVariant_Standard).wait_and_throw_if_failed();
 			machine.attach_device(sata.name(), 0, 0, DeviceType_HardDisk, hard_disk);
 			machine.save_settings();
+
+			session.unlock_machine();
 		}
 		std::cout << machine << std::endl;
 		/*
 		{
 			machine.launch_vm_process(session, "headless").wait_and_throw_if_failed();
-			vbox::Unlocker unlocker(session);
 			vbox::Console console = session.console();
 			vbox::Display display = console.display();
 
@@ -103,6 +102,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			console.power_down().wait_and_throw_if_failed();
+			session.unlock_machine();
 		}
 		*/
 		int width = 600;
