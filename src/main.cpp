@@ -6,7 +6,7 @@
 #include "vbox/api.hpp"
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
-#include "vbox/virtual_box_error_info.hpp"
+#include "vbox/event_loop.hpp"
 #include "sdl/api.hpp"
 #include "sdl/window.hpp"
 
@@ -85,18 +85,42 @@ void step_2() {
 	session.unlock_machine();
 }
 
-void step_3() {
+void gui() {
+	int width = 600;
+	int height = 400;
+	sdl::API sdl(SDL_INIT_VIDEO);
+	sdl::Window window(
+		"testo",
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		width, height,
+		SDL_WINDOW_SHOWN
+	);
+	sdl::Renderer renderer = window.create_renderer();
+	sdl::Texture texture = renderer.create_texture(SDL_PIXELFORMAT_BGR888, SDL_TEXTUREACCESS_STATIC, width, height);
+
+	SDL_Event event;
+	while (true) {
+		SDL_WaitEvent(&event);
+		switch (event.type) {
+			case SDL_QUIT:
+				return;
+		}
+	}
+}
+
+void set_up() {
+	vbox::Framebuffer framebuffer(new vbox::IFramebuffer);
+
 	virtual_box.find_machine("ubuntu_2").launch_vm_process(session, "headless").wait_and_throw_if_failed();
 	vbox::Console console = session.console();
 	vbox::Display display = console.display();
-
-	vbox::Framebuffer framebuffer(new vbox::IFramebuffer);
 	display.attach_framebuffer(0, framebuffer);
+	session.unlock_machine();
+}
 
-	for (size_t i = 0; i < 2000; ++i) {
-		vbox::api->pfnProcessEventQueue(100);
-	}
-
+void tear_down() {
+	virtual_box.find_machine("ubuntu_2").lock_machine(session, LockType_Shared);
+	vbox::Console console = session.console();
 	console.power_down().wait_and_throw_if_failed();
 	session.unlock_machine();
 }
@@ -117,28 +141,10 @@ int main(int argc, char* argv[]) {
 
 		std::cout << virtual_box.find_machine("ubuntu_2") << std::endl;
 
-		// step_3();
-
-		int width = 600;
-		int height = 400;
-		sdl::API sdl(SDL_INIT_VIDEO);
-		sdl::Window window(
-			"testo",
-			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-			width, height,
-			SDL_WINDOW_SHOWN
-		);
-		sdl::Renderer renderer = window.create_renderer();
-		sdl::Texture texture = renderer.create_texture(SDL_PIXELFORMAT_BGR888, SDL_TEXTUREACCESS_STATIC, width, height);
-
-		SDL_Event event;
-		while (true) {
-			SDL_WaitEvent(&event);
-			switch (event.type) {
-				case SDL_QUIT:
-					return 0;
-			}
-		}
+		vbox::EventLoop event_loop;
+		set_up();
+		gui();
+		tear_down();
 
 		return 0;
 	} catch (const std::exception& error) {
