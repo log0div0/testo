@@ -7,6 +7,7 @@
 namespace vbox {
 
 struct Session {
+	Session() = default;
 	Session(ISession* handle);
 	~Session();
 

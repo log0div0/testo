@@ -8,6 +8,7 @@
 namespace vbox {
 
 struct VirtualBox {
+	VirtualBox() = default;
 	VirtualBox(IVirtualBox* handle);
 	~VirtualBox();
 

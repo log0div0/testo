@@ -30,81 +30,95 @@ std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 	return stream;
 }
 
+vbox::VirtualBox virtual_box;
+vbox::Session session;
+
+void step_0() {
+	std::vector<vbox::Machine> machines = virtual_box.machines();
+	for (auto& machine: machines) {
+		if (machine.name() == "ubuntu_2") {
+			if (machine.session_state() != SessionState_Unlocked) {
+				machine.lock_machine(session, LockType_Shared);
+				session.console().power_down().wait_and_throw_if_failed();
+				session.unlock_machine();
+			}
+			while (machine.session_state() != SessionState_Unlocked) {
+				std::this_thread::sleep_for(100ms);
+			}
+			machine.delete_config(machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly)).wait_and_throw_if_failed();
+		}
+	}
+}
+
+void step_1() {
+	vbox::GuestOSType guest_os_type = virtual_box.get_guest_os_type("ubuntu_64");
+	std::string settings_file_path = virtual_box.compose_machine_filename("ubuntu_2", "/", {}, {});
+	std::cout << settings_file_path << std::endl;
+	vbox::Machine machine = virtual_box.create_machine(settings_file_path, "ubuntu_2", {"/"}, guest_os_type.id(), {});
+	machine.memory_size(guest_os_type.recommended_ram());
+	machine.vram_size(guest_os_type.recommended_vram());
+	machine.save_settings();
+	virtual_box.register_machine(machine);
+}
+
+void step_2() {
+	virtual_box.find_machine("ubuntu_2").lock_machine(session, LockType_Write);
+
+	vbox::Machine machine = session.machine();
+
+	vbox::StorageController ide = machine.add_storage_controller("IDE", StorageBus_IDE);
+	vbox::StorageController sata = machine.add_storage_controller("SATA", StorageBus_SATA);
+	ide.port_count(2);
+	sata.port_count(1);
+
+	vbox::Medium dvd = virtual_box.open_medium("/Users/log0div0/Downloads/ubuntu-18.04-live-server-amd64.iso",
+		DeviceType_DVD, AccessMode_ReadOnly, false);
+	machine.attach_device(ide.name(), 1, 0, DeviceType_DVD, dvd);
+
+	std::string hard_disk_path = std::regex_replace(machine.settings_file_path(), std::regex("\\.vbox$"), ".vdi");
+	std::cout << hard_disk_path << std::endl;
+	vbox::Medium hard_disk = virtual_box.create_medium("vdi", hard_disk_path, AccessMode_ReadWrite, DeviceType_HardDisk);
+	hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, MediumVariant_Standard).wait_and_throw_if_failed();
+	machine.attach_device(sata.name(), 0, 0, DeviceType_HardDisk, hard_disk);
+	machine.save_settings();
+
+	session.unlock_machine();
+}
+
+void step_3() {
+	virtual_box.find_machine("ubuntu_2").launch_vm_process(session, "headless").wait_and_throw_if_failed();
+	vbox::Console console = session.console();
+	vbox::Display display = console.display();
+
+	vbox::Framebuffer framebuffer(new vbox::IFramebuffer);
+	display.attach_framebuffer(0, framebuffer);
+
+	for (size_t i = 0; i < 2000; ++i) {
+		vbox::api->pfnProcessEventQueue(100);
+	}
+
+	console.power_down().wait_and_throw_if_failed();
+	session.unlock_machine();
+}
+
 int main(int argc, char* argv[]) {
 	try {
 		vbox::API vbox;
 		vbox::VirtualBoxClient virtual_box_client;
-		vbox::VirtualBox virtual_box = virtual_box_client.virtual_box();
-		vbox::Session session = virtual_box_client.session();
+		virtual_box = virtual_box_client.virtual_box();
+		session = virtual_box_client.session();
 
-		std::vector<vbox::Machine> machines = virtual_box.machines();
-		for (auto& machine: machines) {
-			if (machine.name() == "ubuntu_2") {
-				if (machine.session_state() != SessionState_Unlocked) {
-					machine.lock_machine(session, LockType_Shared);
-					session.console().power_down().wait_and_throw_if_failed();
-					session.unlock_machine();
-				}
-				while (machine.session_state() != SessionState_Unlocked) {
-					std::this_thread::sleep_for(100ms);
-				}
-				machine.delete_config(machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly)).wait_and_throw_if_failed();
-			}
-		}
+		step_0();
 
-		vbox::Machine machine = virtual_box.find_machine("ubuntu");
-		std::cout << machine << std::endl;
+		std::cout << virtual_box.find_machine("ubuntu") << std::endl;
 
-		vbox::GuestOSType guest_os_type = virtual_box.get_guest_os_type("ubuntu_64");
+		step_1();
+		step_2();
 
-		std::string settings_file_path = virtual_box.compose_machine_filename("ubuntu_2", "/", {}, {});
-		std::cout << settings_file_path << std::endl;
-		machine = virtual_box.create_machine(settings_file_path, "ubuntu_2", {"/"}, guest_os_type.id(), {});
-		machine.memory_size(guest_os_type.recommended_ram());
-		machine.vram_size(guest_os_type.recommended_vram());
-		machine.save_settings();
-		virtual_box.register_machine(machine);
-		{
-			machine.lock_machine(session, LockType_Write);
+		std::cout << virtual_box.find_machine("ubuntu_2") << std::endl;
 
-			vbox::Machine machine = session.machine();
+		// step_3();
 
-			vbox::StorageController ide = machine.add_storage_controller("IDE", StorageBus_IDE);
-			vbox::StorageController sata = machine.add_storage_controller("SATA", StorageBus_SATA);
-			ide.port_count(2);
-			sata.port_count(1);
-
-			vbox::Medium dvd = virtual_box.open_medium("C:\\Users\\log0div0\\Downloads\\ubuntu-16.04.4-server-amd64.iso",
-				DeviceType_DVD, AccessMode_ReadOnly, false);
-			machine.attach_device(ide.name(), 1, 0, DeviceType_DVD, dvd);
-
-			std::string hard_disk_path = std::regex_replace(settings_file_path, std::regex("\\.vbox$"), ".vdi");
-			std::cout << hard_disk_path << std::endl;
-			vbox::Medium hard_disk = virtual_box.create_medium("vdi", hard_disk_path, AccessMode_ReadWrite, DeviceType_HardDisk);
-			hard_disk.create_base_storage(8ull * 1024 * 1024 * 1024, MediumVariant_Standard).wait_and_throw_if_failed();
-			machine.attach_device(sata.name(), 0, 0, DeviceType_HardDisk, hard_disk);
-			machine.save_settings();
-
-			session.unlock_machine();
-		}
-		std::cout << machine << std::endl;
-		/*
-		{
-			machine.launch_vm_process(session, "headless").wait_and_throw_if_failed();
-			vbox::Console console = session.console();
-			vbox::Display display = console.display();
-
-			vbox::Framebuffer framebuffer(new vbox::IFramebuffer);
-			display.attach_framebuffer(0, framebuffer);
-
-			for (size_t i = 0; i < 2000; ++i) {
-				vbox::api->pfnProcessEventQueue(100);
-			}
-
-			console.power_down().wait_and_throw_if_failed();
-			session.unlock_machine();
-		}
-		*/
 		int width = 600;
 		int height = 400;
 		sdl::API sdl(SDL_INIT_VIDEO);
