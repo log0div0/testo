@@ -6,7 +6,6 @@
 #include "vbox/api.hpp"
 #include "vbox/virtual_box_client.hpp"
 #include "vbox/virtual_box.hpp"
-#include "vbox/event_loop.hpp"
 #include "sdl/api.hpp"
 #include "sdl/window.hpp"
 
@@ -100,11 +99,13 @@ void gui() {
 
 	SDL_Event event;
 	while (true) {
-		SDL_WaitEvent(&event);
-		switch (event.type) {
-			case SDL_QUIT:
-				return;
+		while (SDL_PollEvent(&event)) {
+			switch (event.type) {
+				case SDL_QUIT:
+					return;
+			}
 		}
+		vbox::api->pfnProcessEventQueue(10);
 	}
 }
 
@@ -152,7 +153,6 @@ int main(int argc, char* argv[]) {
 
 		std::cout << virtual_box.find_machine("ubuntu_2") << std::endl;
 
-		vbox::EventLoop event_loop;
 		set_up();
 		gui();
 		tear_down();
