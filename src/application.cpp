@@ -9,15 +9,6 @@
 
 using namespace std::chrono_literals;
 
-struct Framebuffer: vbox::IFramebuffer {
-	virtual void notify_update(ULONG x, ULONG y, ULONG width, ULONG height) override {
-		std::cout << "notify_update" << std::endl;
-	};
-	virtual void notify_change(ULONG screen_id, ULONG x_origin, ULONG y_origin, ULONG width, ULONG height) override {
-		std::cout << "notify_change" << std::endl;
-	};
-};
-
 Application::Application() {
 	virtual_box = virtual_box_client.virtual_box();
 	session = virtual_box_client.session();
@@ -116,19 +107,10 @@ void Application::gui() {
 
 void Application::set_up() {
 	virtual_box.find_machine("ubuntu_2").launch_vm_process(session, "headless").wait_and_throw_if_failed();
-	vbox::Console console = session.console();
-	vbox::Display display = console.display();
-
-	display.attach_framebuffer(0, new Framebuffer);
-
-	session.unlock_machine();
+	session.console().display().attach_framebuffer(0, new vbox::IFramebuffer);
 }
 
 void Application::tear_down() {
-	virtual_box.find_machine("ubuntu_2").lock_machine(session, LockType_Shared);
-	vbox::Console console = session.console();
-
-	console.power_down().wait_and_throw_if_failed();
-
+	session.console().power_down().wait_and_throw_if_failed();
 	session.unlock_machine();
 }

@@ -42,4 +42,16 @@ struct SafeArray {
 	SAFEARRAY* handle = nullptr;
 };
 
+struct SafeArrayView {
+	SafeArrayView();
+	~SafeArrayView();
+
+	SafeArrayView(const SafeArrayView&) = delete;
+	SafeArrayView& operator=(const SafeArrayView&) = delete;
+	SafeArrayView(SafeArrayView&& other);
+	SafeArrayView& operator=(SafeArrayView&& other);
+
+	SAFEARRAY* handle = nullptr;
+};
+
 }

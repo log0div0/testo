@@ -1,6 +1,7 @@
 
 #include "framebuffer.hpp"
 #include <cassert>
+#include <iostream>
 #include <cstring>
 #include "throw_if_failed.hpp"
 #include "safe_array.hpp"
@@ -98,8 +99,14 @@ static HRESULT NotifyUpdate(::IFramebuffer* framebuffer, ULONG x, ULONG y, ULONG
 	}
 }
 static HRESULT NotifyUpdateImage(::IFramebuffer* framebuffer, ULONG x, ULONG y, ULONG width, ULONG height, SAFEARRAY_IN_PARAM(uint8_t, image)) {
-	assert(false);
-	return S_OK;
+	try {
+		SafeArrayView safe_array_view;
+		SAFEARRAY_MOVE_FROM_IN_PARAM(safe_array_view, image);
+		((IFramebuffer*)framebuffer)->notify_update_image(x, y, width, height, safe_array_view);
+		return S_OK;
+	} catch (const std::exception&) {
+		return E_UNEXPECTED;
+	}
 }
 static HRESULT NotifyChange(::IFramebuffer* framebuffer, ULONG screen_id, ULONG x_origin, ULONG y_origin, ULONG width, ULONG height) {
 	try {
@@ -177,6 +184,18 @@ IFramebuffer::~IFramebuffer() {
 #ifdef WIN32
 	IMarshal_Release(marshal);
 #endif
+}
+
+void IFramebuffer::notify_change(ULONG screen_id, ULONG x_origin, ULONG y_origin, ULONG width, ULONG height) {
+	std::cout << "notify_change" << std::endl;
+}
+
+void IFramebuffer::notify_update(ULONG x, ULONG y, ULONG width, ULONG height) {
+	std::cout << "notify_update" << std::endl;
+}
+
+void IFramebuffer::notify_update_image(ULONG x, ULONG y, ULONG width, ULONG height, const SafeArrayView& image) {
+	std::cout << "notify_update_image" << std::endl;
 }
 
 Framebuffer::Framebuffer(IFramebuffer* handle): handle(handle) {

@@ -93,4 +93,27 @@ int SafeArray::bitset() const {
     return bitset;
 }
 
+SafeArrayView::SafeArrayView() {
+#ifndef _MSC_VER
+	handle = new SAFEARRAY;
+#endif
+}
+
+SafeArrayView::~SafeArrayView() {
+#ifndef _MSC_VER
+	if (handle) {
+		delete handle;
+	}
+#endif
+}
+
+SafeArrayView::SafeArrayView(SafeArrayView&& other): handle(other.handle) {
+	other.handle = nullptr;
+}
+
+SafeArrayView& SafeArrayView::operator=(SafeArrayView&& other) {
+	std::swap(handle, other.handle);
+	return *this;
+}
+
 }
