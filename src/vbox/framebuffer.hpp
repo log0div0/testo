@@ -2,6 +2,7 @@
 #pragma once
 
 #include "safe_array.hpp"
+#include <mutex>
 
 namespace vbox {
 
