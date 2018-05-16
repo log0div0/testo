@@ -5,17 +5,6 @@
 
 namespace vbox {
 
-struct ScreenResolution {
-	ULONG width = 0;
-	ULONG height = 0;
-	ULONG bits_per_pixel = 0;
-	LONG x_origin = 0;
-	LONG y_origin = 0;
-	GuestMonitorStatus guest_monitor_status = GuestMonitorStatus_Disabled;
-};
-
-std::ostream& operator<<(std::ostream& stream, const ScreenResolution& screen_resolution);
-
 struct Display {
 	Display(IDisplay* handle);
 	~Display();
@@ -28,7 +17,15 @@ struct Display {
 	std::string attach_framebuffer(ULONG screen_id, const Framebuffer& framebuffer);
 	void detach_framebuffer(ULONG screen_id, const std::string& uuid);
 
-	ScreenResolution get_screen_resolution(ULONG screen_id = 0) const;
+	void get_screen_resolution(ULONG screen_id,
+		ULONG* width,
+		ULONG* height,
+		ULONG* bits_per_pixel,
+		LONG* x_origin,
+		LONG* y_origin,
+		GuestMonitorStatus* guest_monitor_status
+	) const;
+	SafeArray take_screen_shot_to_array(ULONG screen_id, ULONG width, ULONG height, BitmapFormat bitmap_format) const;
 
 	IDisplay* handle = nullptr;
 };

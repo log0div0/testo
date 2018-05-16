@@ -5,18 +5,6 @@
 
 namespace vbox {
 
-std::ostream& operator<<(std::ostream& stream, const ScreenResolution& screen_resolution) {
-	stream
-		<< "width=" << screen_resolution.width
-		<< " height=" << screen_resolution.height
-		<< " bits_per_pixel=" << screen_resolution.bits_per_pixel
-		<< " x_origin=" << screen_resolution.x_origin
-		<< " y_origin=" << screen_resolution.y_origin
-		<< " guest_monitor_status=" << screen_resolution.guest_monitor_status
-	;
-	return stream;
-}
-
 Display::Display(IDisplay* handle): handle(handle) {
 	if (!handle) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -48,16 +36,37 @@ void Display::detach_framebuffer(ULONG screen_id, const std::string& uuid) {
 	throw_if_failed(IDisplay_DetachFramebuffer(handle, screen_id, StringIn(uuid)));
 }
 
-ScreenResolution Display::get_screen_resolution(ULONG screen_id) const {
+void Display::get_screen_resolution(ULONG screen_id,
+	ULONG* width,
+	ULONG* height,
+	ULONG* bits_per_pixel,
+	LONG* x_origin,
+	LONG* y_origin,
+	GuestMonitorStatus* guest_monitor_status
+) const {
 	try {
-		ScreenResolution result;
 		throw_if_failed(IDisplay_GetScreenResolution(handle, screen_id,
-			&result.width,
-			&result.height,
-			&result.bits_per_pixel,
-			&result.x_origin,
-			&result.y_origin,
-			(GuestMonitorStatus_T*)&result.guest_monitor_status
+			width,
+			height,
+			bits_per_pixel,
+			x_origin,
+			y_origin,
+			(GuestMonitorStatus_T*)guest_monitor_status
+		));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+SafeArray Display::take_screen_shot_to_array(ULONG screen_id, ULONG width, ULONG height, BitmapFormat bitmap_format) const {
+	try {
+		SafeArray result;
+		throw_if_failed(IDisplay_TakeScreenShotToArray(handle, screen_id,
+			width,
+			height,
+			bitmap_format,
+			SAFEARRAY_AS_OUT_PARAM(uint8_t, result)
 		));
 		return result;
 	}

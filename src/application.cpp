@@ -82,16 +82,11 @@ void Application::step_2() {
 }
 
 void Application::gui() {
-	int width = 600;
-	int height = 400;
-	sdl::Window window(
-		"testo",
-		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		width, height,
-		SDL_WINDOW_SHOWN
-	);
-	sdl::Renderer renderer = window.create_renderer();
-	sdl::Texture texture = renderer.create_texture(SDL_PIXELFORMAT_BGR888, SDL_TEXTUREACCESS_STATIC, width, height);
+	sdl::Window window;
+	sdl::Renderer renderer;
+	sdl::Texture texture;
+
+	vbox::Display display = session.console().display();
 
 	SDL_Event event;
 	while (true) {
@@ -102,12 +97,43 @@ void Application::gui() {
 			}
 		}
 		vbox::api->pfnProcessEventQueue(10);
+
+		ULONG width = 0;
+		ULONG height = 0;
+		ULONG bits_per_pixel = 0;
+		LONG x_origin = 0;
+		LONG y_origin = 0;
+		GuestMonitorStatus guest_monitor_status = GuestMonitorStatus_Disabled;
+
+		display.get_screen_resolution(0, &width, &height, &bits_per_pixel, &x_origin, &y_origin, &guest_monitor_status);
+
+		if (!width || !height) {
+			continue;
+		}
+
+		vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_RGBA);
+		if (!window) {
+			window = sdl::Window(
+				"testo",
+				SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+				width, height,
+				SDL_WINDOW_SHOWN
+			);
+			renderer = window.create_renderer();
+		} else {
+			window.set_size(width, height);
+		}
+		texture = renderer.create_texture(SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC, width, height);
+		vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
+		texture.update(array_out.data, width * 4);
+		renderer.copy(texture);
+		renderer.present();
 	}
 }
 
 void Application::set_up() {
 	virtual_box.find_machine("ubuntu_2").launch_vm_process(session, "headless").wait_and_throw_if_failed();
-	session.console().display().attach_framebuffer(0, new vbox::IFramebuffer);
+	// session.console().display().attach_framebuffer(0, new vbox::IFramebuffer);
 }
 
 void Application::tear_down() {

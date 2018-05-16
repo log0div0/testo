@@ -22,6 +22,19 @@ Window::~Window() {
 	}
 }
 
+Window::Window(Window&& other): handle(other.handle) {
+	other.handle = nullptr;
+}
+
+Window& Window::operator=(Window&& other) {
+	std::swap(handle, other.handle);
+	return *this;
+}
+
+Window::operator bool() const {
+	return handle != nullptr;
+}
+
 Renderer Window::create_renderer(int index, uint32_t flags) {
 	try {
 		SDL_Renderer* result = SDL_CreateRenderer(handle, index, flags);
@@ -33,6 +46,10 @@ Renderer Window::create_renderer(int index, uint32_t flags) {
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
+}
+
+void Window::set_size(int w, int h) {
+	SDL_SetWindowSize(handle, w, h);
 }
 
 }
