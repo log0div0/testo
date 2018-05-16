@@ -116,4 +116,16 @@ SafeArrayView& SafeArrayView::operator=(SafeArrayView&& other) {
 	return *this;
 }
 
+ArrayOut SafeArrayView::copy_out(VARTYPE vartype) const {
+	try {
+		uint8_t* data = nullptr;
+		ULONG data_size = 0;
+		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&data, &data_size, vartype, handle));
+		return {data, data_size};
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 }

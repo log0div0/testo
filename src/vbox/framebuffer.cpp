@@ -49,11 +49,11 @@ static HRESULT QueryInterface(::IFramebuffer* framebuffer, const nsIID* iid, voi
 #endif
 
 static HRESULT get_Width(::IFramebuffer* framebuffer, ULONG* result) {
-	assert(false);
+	*result = ((IFramebuffer*)framebuffer)->width;
 	return S_OK;
 }
 static HRESULT get_Height(::IFramebuffer* framebuffer, ULONG* result) {
-	assert(false);
+	*result = ((IFramebuffer*)framebuffer)->height;
 	return S_OK;
 }
 static HRESULT get_BitsPerPixel(::IFramebuffer* framebuffer, ULONG* result) {
@@ -91,18 +91,15 @@ static HRESULT get_Capabilities(::IFramebuffer* framebuffer, SAFEARRAY_OUT_PARAM
 	}
 }
 static HRESULT NotifyUpdate(::IFramebuffer* framebuffer, ULONG x, ULONG y, ULONG width, ULONG height) {
-	try {
-		((IFramebuffer*)framebuffer)->notify_update(x, y, width, height);
-		return S_OK;
-	} catch (const std::exception&) {
-		return E_UNEXPECTED;
-	}
+	assert(false);
+	return S_OK;
 }
 static HRESULT NotifyUpdateImage(::IFramebuffer* framebuffer, ULONG x, ULONG y, ULONG width, ULONG height, SAFEARRAY_IN_PARAM(uint8_t, image)) {
 	try {
 		SafeArrayView safe_array_view;
 		SAFEARRAY_MOVE_FROM_IN_PARAM(safe_array_view, image);
-		((IFramebuffer*)framebuffer)->notify_update_image(x, y, width, height, safe_array_view);
+		ArrayOut array_out = safe_array_view.copy_out(VT_UI1);
+		((IFramebuffer*)framebuffer)->notify_update_image(x, y, width, height, (uint32_t*)array_out.data);
 		return S_OK;
 	} catch (const std::exception&) {
 		return E_UNEXPECTED;
@@ -187,15 +184,20 @@ IFramebuffer::~IFramebuffer() {
 }
 
 void IFramebuffer::notify_change(ULONG screen_id, ULONG x_origin, ULONG y_origin, ULONG width, ULONG height) {
-	std::cout << "notify_change" << std::endl;
+	std::lock_guard<std::mutex> lock_guard(mutex);
+	this->width = width;
+	this->height = height;
+	image = std::vector<uint32_t>(width * height, 0);
 }
 
-void IFramebuffer::notify_update(ULONG x, ULONG y, ULONG width, ULONG height) {
-	std::cout << "notify_update" << std::endl;
-}
-
-void IFramebuffer::notify_update_image(ULONG x, ULONG y, ULONG width, ULONG height, const SafeArrayView& image) {
-	std::cout << "notify_update_image" << std::endl;
+void IFramebuffer::notify_update_image(ULONG x, ULONG y, ULONG width, ULONG height, const uint32_t* image) {
+	std::lock_guard<std::mutex> lock_guard(mutex);
+	for (ULONG i = 0; i < width; ++i) {
+		for (ULONG j = 0; j < height; ++j) {
+			this->image[(y + j) * this->width + (x + i)] = image[j * width + i];
+		}
+	}
+	++update_counter;
 }
 
 Framebuffer::Framebuffer(IFramebuffer* handle): handle(handle) {

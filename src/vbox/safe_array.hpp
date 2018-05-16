@@ -51,6 +51,8 @@ struct SafeArrayView {
 	SafeArrayView(SafeArrayView&& other);
 	SafeArrayView& operator=(SafeArrayView&& other);
 
+	ArrayOut copy_out(VARTYPE vartype) const;
+
 	SAFEARRAY* handle = nullptr;
 };
 
