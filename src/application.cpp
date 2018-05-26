@@ -80,7 +80,7 @@ void Application::step_2() {
 	session.unlock_machine();
 }
 
-void Application::update_window(int width, int height, void* data) {
+void Application::update_window(int width, int height, ARGB* data) {
 	if (!width || !height) {
 		return;
 	}
@@ -95,6 +95,15 @@ void Application::update_window(int width, int height, void* data) {
 	} else {
 		window.set_size(width, height);
 	}
+
+
+	for (size_t i = 0; i < width / 2; ++i) {
+		for (size_t j = 0; j < height / 2; ++j) {
+			data[j * width + i] = ARGB::blue();
+		}
+	}
+
+
 	texture = renderer.create_texture(SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height);
 	texture.update(data, width * 4);
 	renderer.copy(texture);
@@ -125,7 +134,7 @@ void Application::event_loop() {
 			if (last_update_counter != framebuffer->update_counter) {
 				std::lock_guard<std::mutex> lock_guard(framebuffer->mutex);
 				last_update_counter = framebuffer->update_counter;
-				update_window(framebuffer->width, framebuffer->height, framebuffer->image.data());
+				update_window(framebuffer->width, framebuffer->height, (ARGB*)framebuffer->image.data());
 			}
 		} else {
 			ULONG width = 0;
@@ -144,7 +153,7 @@ void Application::event_loop() {
 			vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
 			vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
 
-			update_window(width, height, array_out.data);
+			update_window(width, height, (ARGB*)array_out.data);
 		}
 	}
 }
