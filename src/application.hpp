@@ -16,7 +16,7 @@ struct Application {
 	void event_loop();
 	void tear_down();
 
-	void update_window(int width, int height, uint32_t format, void* data);
+	void update_window(int width, int height, void* data);
 
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
