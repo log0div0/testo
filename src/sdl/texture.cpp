@@ -25,7 +25,7 @@ Texture& Texture::operator=(Texture&& other) {
 	return *this;
 }
 
-void Texture::update(const void* pixels, int pitch, const SDL_Rect* rect) {
+void Texture::update(const SDL_Rect* rect, const void* pixels, int pitch) {
 	try {
 		int error_code = SDL_UpdateTexture(handle, rect, pixels, pitch);
 		if (error_code) {

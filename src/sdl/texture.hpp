@@ -15,7 +15,7 @@ struct Texture {
 	Texture(Texture&& other);
 	Texture& operator=(Texture&& other);
 
-	void update(const void* pixels, int pitch, const SDL_Rect* rect = nullptr);
+	void update(const SDL_Rect* rect, const void* pixels, int pitch);
 
 	SDL_Texture* handle = nullptr;
 };
