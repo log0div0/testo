@@ -48,6 +48,32 @@ void Application::run() {
 	}
 }
 
+struct ARGB {
+	static ARGB blue() {
+		return {0xff, 0, 0, 0};
+	}
+	static ARGB green() {
+		return {0, 0xff, 0, 0};
+	}
+	static ARGB red() {
+		return {0, 0, 0xff, 0};
+	}
+	uint8_t b, g, r, a;
+};
+
+struct ImageView {
+	ImageView(ARGB* p, size_t w, size_t h):
+		pixels(p), width(w), height(h) {}
+
+	ARGB& operator()(size_t x, size_t y) {
+		return pixels[width * y + x];
+	}
+
+	ARGB* pixels;
+	size_t width;
+	size_t height;
+};
+
 void Application::update() {
 	ULONG width = 0;
 	ULONG height = 0;
@@ -66,11 +92,17 @@ void Application::update() {
 
 	vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
 	vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
+	ImageView src((ARGB*)array_out.data, width, height);
 
-	uint8_t* pixels = nullptr;
+	void* pixels = nullptr;
 	int pitch = 0;
-	texture.lock(nullptr, (void**)&pixels, &pitch);
-	std::copy(array_out.data, array_out.data + array_out.data_size, pixels);
+	texture.lock(nullptr, &pixels, &pitch);
+	ImageView dst((ARGB*)pixels, width, height);
+	for (size_t x = 0; x < width; ++x) {
+		for (size_t y = 0; y < height; ++y) {
+			dst(x, y) = src(x, y);
+		}
+	}
 	texture.unlock();
 
 	renderer.copy(texture);
