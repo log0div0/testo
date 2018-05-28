@@ -7,6 +7,7 @@
 namespace vbox {
 
 struct Console {
+	Console() = default;
 	Console(IConsole* handle);
 	~Console();
 

@@ -37,4 +37,20 @@ void Texture::update(const SDL_Rect* rect, const void* pixels, int pitch) {
 	}
 }
 
+void Texture::lock(const SDL_Rect* rect, void** pixels, int* pitch) {
+	try {
+		int error_code = SDL_LockTexture(handle, rect, pixels, pitch);
+		if (error_code) {
+			throw std::runtime_error(SDL_GetError());
+		}
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Texture::unlock() {
+	SDL_UnlockTexture(handle);
+}
+
 }

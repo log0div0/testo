@@ -11,10 +11,17 @@ struct Application {
 	void run();
 
 	void update();
+	void resize(size_t w, size_t h);
 
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
-	vbox::Machine machine;
 	vbox::Session session;
+	vbox::Machine machine;
+	vbox::Console console;
+	vbox::Display display;
+	size_t width = 0;
+	size_t height = 0;
 	sdl::Window window;
+	sdl::Renderer renderer;
+	sdl::Texture texture;
 };

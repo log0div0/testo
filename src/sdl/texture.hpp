@@ -16,6 +16,8 @@ struct Texture {
 	Texture& operator=(Texture&& other);
 
 	void update(const SDL_Rect* rect, const void* pixels, int pitch);
+	void lock(const SDL_Rect* rect, void** pixels, int* pitch);
+	void unlock();
 
 	SDL_Texture* handle = nullptr;
 };

@@ -6,6 +6,7 @@
 namespace vbox {
 
 struct Display {
+	Display() = default;
 	Display(IDisplay* handle);
 	~Display();
 
