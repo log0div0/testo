@@ -24,7 +24,11 @@ Application::Application(const std::string& vm_name) {
 }
 
 void Application::run() {
+#ifdef WIN32
 	auto max_time = 40ms;
+#else
+	auto max_time = 80ms;
+#endif
 	SDL_Event event;
 	while (true) {
 		auto t0 = std::chrono::high_resolution_clock::now();
