@@ -27,7 +27,12 @@ int main(int argc, char* argv[]) {
 		vbox::API vbox_api;
 		sdl::API sdl_api(SDL_INIT_VIDEO);
 
-		Application application;
+		if (argc == 1) {
+			std::cerr << "Usage: testo <vm_name>" << std::endl;
+			return 1;
+		}
+
+		Application application(argv[1]);
 		application.run();
 		return 0;
 	} catch (const std::exception& error) {
