@@ -20,7 +20,7 @@ if (WIN32)
 		Winmm
 	)
 else()
-	target_link_libraries(testo dl pthread SDL2)
+	target_link_libraries(testo dl SDL2 pthread)
 	if (APPLE)
 		target_link_libraries(testo
 			"-framework AudioToolbox"
