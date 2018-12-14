@@ -2,7 +2,6 @@
 #pragma once
 
 #include "api.hpp"
-#include "event_source.hpp"
 #include <vector>
 
 namespace vbox {
@@ -24,8 +23,6 @@ struct GuestProcess {
 	LONG exit_code() const;
 	ProcessStatus status() const;
 	bool is_alive() const;
-
-	EventSource event_source() const;
 
 	IGuestProcess* handle = nullptr;
 };

@@ -104,15 +104,4 @@ bool GuestProcess::is_alive() const {
 		(state == ProcessStatus_Terminating));
 }
 
-EventSource GuestProcess::event_source() const {
-	try {
-		IEventSource* result = nullptr;
-		throw_if_failed(IGuestProcess_get_EventSource(handle, &result));
-		return result;
-	}
-	catch (const std::exception&) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
 }
