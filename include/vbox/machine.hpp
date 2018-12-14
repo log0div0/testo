@@ -18,6 +18,7 @@ namespace vbox {
 struct Session;
 
 struct Machine {
+	Machine() = default;
 	Machine(IMachine* handle);
 	~Machine();
 
