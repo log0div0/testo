@@ -3,17 +3,9 @@
 
 #include <Node.hpp>
 #include <Global.hpp>
-#include <QemuVmController.hpp>
-#include <VboxVmController.hpp>
+#include <VmController.hpp>
 
 struct VisitorInterpreter {
-
-#ifdef QEMU
-	using VmController = QemuVmController;
-#else
-	using VmController = VboxVmController;
-#endif
-
 	VisitorInterpreter(Global& global):
 		global(global) {}
 
