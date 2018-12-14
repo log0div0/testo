@@ -1,7 +1,7 @@
 
-#include "throw_if_failed.hpp"
-#include "string.hpp"
-#include "virtual_box_error_info.hpp"
+#include <vbox/throw_if_failed.hpp>
+#include <vbox/string.hpp>
+#include <vbox/virtual_box_error_info.hpp>
 #include <sstream>
 
 namespace vbox {

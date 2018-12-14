@@ -1,6 +1,6 @@
 
-#include "console.hpp"
-#include "throw_if_failed.hpp"
+#include <vbox/console.hpp>
+#include <vbox/throw_if_failed.hpp>
 
 namespace vbox {
 
@@ -47,10 +47,51 @@ Progress Console::power_down() const {
 	}
 }
 
+void Console::pause() const {
+	try {
+		throw_if_failed(IConsole_Pause(handle));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Console::resume() const {
+	try {
+		throw_if_failed(IConsole_Resume(handle));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+
 Display Console::display() const {
 	try {
 		IDisplay* result = nullptr;
 		throw_if_failed(IConsole_get_Display(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Keyboard Console::keyboard() const {
+	try {
+		IKeyboard* result = nullptr;
+		throw_if_failed(IConsole_get_Keyboard(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Guest Console::guest() const {
+	try {
+		IGuest* result = nullptr;
+		throw_if_failed(IConsole_get_Guest(handle, &result));
 		return result;
 	}
 	catch (const std::exception&) {

@@ -1,6 +1,6 @@
 
-#include "virtual_box_error_info.hpp"
-#include "string.hpp"
+#include <vbox/virtual_box_error_info.hpp>
+#include <vbox/string.hpp>
 
 namespace vbox {
 

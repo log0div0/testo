@@ -1,8 +1,10 @@
 
-#include "machine.hpp"
+#include <vbox/machine.hpp>
 #include <stdexcept>
-#include "throw_if_failed.hpp"
-#include "session.hpp"
+#include <vbox/throw_if_failed.hpp>
+#include <vbox/session.hpp>
+
+#include <iostream>
 
 namespace vbox {
 
@@ -70,10 +72,56 @@ std::vector<StorageController> Machine::storage_controllers() const {
 	}
 }
 
+StorageController Machine::storage_controller_by_name(const std::string& name) const {
+	try {
+		IStorageController* result = nullptr;
+		throw_if_failed(IMachine_GetStorageControllerByName(handle, StringIn(name), &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+std::vector<USBController> Machine::usb_controllers() const {
+	try {
+		SafeArray safe_array;
+		throw_if_failed(IMachine_get_USBControllers(handle, SAFEARRAY_AS_OUT_PARAM(IUSBController*, safe_array)));
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IUSBController**)array_out.ifaces, (IUSBController**)(array_out.ifaces + array_out.ifaces_count)};
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+USBController Machine::usb_controller_by_name(const std::string& name) const {
+	try {
+		IUSBController* result = nullptr;
+		throw_if_failed(IMachine_GetUSBControllerByName(handle, StringIn(name), &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::vector<MediumAttachment> Machine::medium_attachments() const {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IMachine_get_MediumAttachments(handle, SAFEARRAY_AS_OUT_PARAM(IMediumAttachment*, safe_array)));
+		ArrayOutIface array_out = safe_array.copy_out_iface();
+		return {(IMediumAttachment**)array_out.ifaces, (IMediumAttachment**)(array_out.ifaces + array_out.ifaces_count)};
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+std::vector<MediumAttachment> Machine::medium_attachments_of_controller(const std::string& name) const {
+	try {
+		SafeArray safe_array;
+		throw_if_failed(IMachine_GetMediumAttachmentsOfController(handle, StringIn(name), SAFEARRAY_AS_OUT_PARAM(IMediumAttachment*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IMediumAttachment**)array_out.ifaces, (IMediumAttachment**)(array_out.ifaces + array_out.ifaces_count)};
 	}
@@ -93,6 +141,35 @@ StorageController Machine::add_storage_controller(const std::string& name, Stora
 	}
 }
 
+void Machine::mount_medium(const std::string& controller, int controller_port, int device, Medium& medium, bool force) {
+	try {
+		throw_if_failed(IMachine_MountMedium(handle, StringIn(controller), controller_port, device, medium.handle, force));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Machine::unmount_medium(const std::string& controller, int controller_port, int device, bool force) {
+	try {
+		throw_if_failed(IMachine_UnmountMedium(handle, StringIn(controller), controller_port, device, force));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+USBController Machine::add_usb_controller(const std::string& name, USBControllerType type) {
+	try {
+		IUSBController* result = nullptr;
+		throw_if_failed(IMachine_AddUSBController(handle, StringIn(name), type, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void Machine::attach_device_without_medium(const std::string& name, int controller_port, int device, DeviceType device_type) {
 	try {
 		throw_if_failed(IMachine_AttachDeviceWithoutMedium(handle, StringIn(name), controller_port, device, device_type));
@@ -105,6 +182,119 @@ void Machine::attach_device_without_medium(const std::string& name, int controll
 void Machine::attach_device(const std::string& name, int controller_port, int device, DeviceType device_type, const Medium& medium) {
 	try {
 		throw_if_failed(IMachine_AttachDevice(handle, StringIn(name), controller_port, device, device_type, medium.handle));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Machine::detach_device(const std::string& name, int controller_port, int device) {
+	try {
+		throw_if_failed(IMachine_DetachDevice(handle, StringIn(name), controller_port, device));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+std::string Machine::getExtraData(const std::string& key) const {
+	try {
+		BSTR result = nullptr;
+		throw_if_failed(IMachine_GetExtraData(handle, StringIn(key), &result));
+		return StringOut(result);
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Machine::setExtraData(const std::string& key, const std::string& value) const {
+	try {
+		throw_if_failed(IMachine_SetExtraData(handle, StringIn(key), StringIn(value)));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+NetworkAdapter Machine::getNetworkAdapter(ULONG slot) const {
+	try {
+		INetworkAdapter* result;
+		throw_if_failed(IMachine_GetNetworkAdapter(handle, slot, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+bool Machine::hasSnapshot(const std::string& name) const {
+	try {
+		ISnapshot* result = nullptr;
+		throw_if_failed(IMachine_FindSnapshot(handle, StringIn(name), &result));
+		return true;
+	}
+	catch (const std::exception&) {
+		return false;
+	}
+}
+
+Snapshot Machine::findSnapshot(const std::string& name) const {
+	try {
+		ISnapshot* result = nullptr;
+		throw_if_failed(IMachine_FindSnapshot(handle, StringIn(name), &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Progress Machine::takeSnapshot(const std::string& name, const std::string& description, bool pause) {
+	try {
+		IProgress* result = nullptr;
+		BSTR id = nullptr;
+		throw_if_failed(IMachine_TakeSnapshot(handle,
+			StringIn(name),
+			StringIn(description),
+			pause,
+			&id,
+			&result));
+		StringOut tmp(id);
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Progress Machine::restoreSnapshot(Snapshot& snapshot) {
+	try {
+		IProgress* result;
+		throw_if_failed(IMachine_RestoreSnapshot(handle, snapshot.handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Progress Machine::deleteSnapshot(Snapshot& snapshot) {
+	try {
+		IProgress* result = nullptr;
+		throw_if_failed(IMachine_DeleteSnapshot(handle, StringIn(snapshot.id()), &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Progress Machine::saveState() const {
+	try {
+		IProgress* result = nullptr;
+		throw_if_failed(IMachine_SaveState(handle, &result));
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -168,6 +358,15 @@ void Machine::vram_size(ULONG size) {
 	}
 }
 
+void Machine::cpus(ULONG num) {
+	try {
+		throw_if_failed(IMachine_SetCPUCount(handle, num));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 MachineState Machine::state() const {
 	try {
 		MachineState_T result = MachineState_Null;
@@ -184,15 +383,6 @@ SessionState Machine::session_state() const {
 		SessionState_T result = SessionState_Null;
 		throw_if_failed(IMachine_get_SessionState(handle, &result));
 		return (SessionState)result;
-	}
-	catch (const std::exception&) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-void Machine::lock_machine(Session& session, LockType lock_type) {
-	try {
-		throw_if_failed(IMachine_LockMachine(handle, session.handle, lock_type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

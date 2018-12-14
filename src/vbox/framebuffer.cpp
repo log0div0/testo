@@ -1,10 +1,10 @@
 
-#include "framebuffer.hpp"
+#include <vbox/framebuffer.hpp>
 #include <cassert>
 #include <iostream>
 #include <cstring>
-#include "throw_if_failed.hpp"
-#include "safe_array.hpp"
+#include <vbox/throw_if_failed.hpp>
+#include <vbox/safe_array.hpp>
 
 namespace vbox {
 

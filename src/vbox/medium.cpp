@@ -1,10 +1,10 @@
 
-#include "medium.hpp"
+#include <vbox/medium.hpp>
 #include <stdexcept>
 #include <ostream>
-#include "throw_if_failed.hpp"
-#include "string.hpp"
-#include "safe_array.hpp"
+#include <vbox/throw_if_failed.hpp>
+#include <vbox/string.hpp>
+#include <vbox/safe_array.hpp>
 
 namespace vbox {
 
@@ -51,6 +51,16 @@ MediumState Medium::state() const {
 	}
 }
 
+std::string Medium::location() const {
+	try {
+		BSTR location = nullptr;
+		throw_if_failed(IMedium_GetLocation(handle, &location));
+		return StringOut(location);
+	} catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 MediumState Medium::refresh_state() const {
 	try {
 		MediumState_T state = MediumState_NotCreated;
@@ -83,6 +93,26 @@ Progress Medium::create_base_storage(size_t size, MediumVariant variant) {
 			SAFEARRAY_AS_IN_PARAM(MediumVariant_T, safe_array),
 			&result));
 		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+Progress Medium::delete_storage() {
+	try {
+		IProgress* result = nullptr;
+		throw_if_failed(IMedium_DeleteStorage(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Medium::close() {
+	try {
+		throw_if_failed(IMedium_Close(handle));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

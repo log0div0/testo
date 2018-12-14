@@ -1,9 +1,9 @@
 
-#include "medium_attachment.hpp"
+#include <vbox/medium_attachment.hpp>
 #include <stdexcept>
 #include <ostream>
-#include "throw_if_failed.hpp"
-#include "string.hpp"
+#include <vbox/throw_if_failed.hpp>
+#include <vbox/string.hpp>
 
 namespace vbox {
 

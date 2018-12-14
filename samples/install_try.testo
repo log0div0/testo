@@ -1,0 +1,104 @@
+
+flash testo_flash {
+	fs: "ntfs"
+	size: 256
+	folder: "/home/alex/work/nf2/build/tmp/testo_flash/"
+}
+
+machine testo {
+	ram: 512
+	iso: "/home/alex/Downloads/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 4
+	nic nat: {
+		network: "default"
+	}
+
+	nic client_side: {
+		network: "net2"
+	}
+
+	nic server_side: {
+		network: "net3"
+	}
+}
+
+snapshot snap1 {
+	wait for 4s
+	press Enter, Enter
+	wait "Choose the language";	press Enter
+	wait "Select your location"; press Enter
+	wait "Detect keyboard layout?";	press Enter
+	wait "Country of origin for the keyboard"; press Enter
+	wait "Keyboard layout"; press Enter
+	#wait "Configure the network" for 5m
+	wait "Primary network interface" for 5m; press Enter
+	wait "Hostname:" for 30s
+	press Backspace*6; type "testo"; press Enter
+	wait "Full name for the new user"; type "testo-user"; press Enter
+	wait "Username for your account"; press Enter
+	wait "Choose a password for the new user"; type "1111"; press Enter
+	wait "Re-enter password to verify"; type "1111"; press Enter
+	wait "Use weak password?"; press Left, Enter
+	wait "Encrypt your home directory?"; press Enter
+	wait "Select your time zone" for 2m; press Enter
+	#wait "Moscow" for 2m; press Enter
+	wait "Partitioning method"; press Enter
+	wait "Select disk to partition"; press Enter
+	wait "Write the changes to disks and configure LVM?"; press Left, Enter
+	wait "Amount of volume group to use for guided partitioning"; press Enter
+	wait "Write changes to disks?"; press Left, Enter
+	wait "HTTP proxy information" for 3m; press Enter
+	wait "How do you want to manage upgrades" for 5m; press Enter
+	wait "Choose software to install"; press Enter
+	wait "Install the GRUB boot loader to the master boot record?" for 5m; press Enter
+	wait "Installation complete" for 1m; press Enter
+	start
+	wait "testo login:" for 1m;
+}
+
+snapshot snap2: snap1 {
+	type "testo-user"; press Enter
+	wait "Password:"; type "1111"; press Enter
+	wait "Welcome to Ubuntu"; type "Hello world3!"
+	wait "Hello world3!"
+}
+
+snapshot snap2_5: snap2 {
+	press Enter
+	type "This is snap2_5 MOTHERFUCKERS"
+	press Enter
+	type "Haha!"
+	wait "Haha!"
+}
+
+snapshot snap4: snap2_5 {
+	press Enter
+	type "This is snap4awdwd MOTHERFUCKERS"
+	press Enter
+	type "Haha!"
+	wait "Haha!"
+}
+
+snapshot snap5: snap4 {
+	press Enter
+	type "This is snap5 MOTHERFUCKERS"
+	press Enter
+	type "Haha!"
+	wait "Haha!"
+}
+
+
+test hello_world: testo(snap5) {
+	testo {
+		press Enter
+		type "This is test \"talking\""; press Enter
+		plug flash testo_flash
+		type "sudo mkdir /mnt/flash"; press Enter; type "1111"; press Enter
+		type "sudo mount /dev/vdb1 /mnt/flash"; press Enter
+		wait for 3s
+		type "cp -r /mnt/flash ~"; press Enter
+		type "sudo umount /mnt/flash"; press Enter
+		wait for 3s
+		unplug flash testo_flash
+	} 
+}

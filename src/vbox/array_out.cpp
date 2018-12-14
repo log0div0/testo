@@ -1,5 +1,5 @@
 
-#include "array_out.hpp"
+#include <vbox/array_out.hpp>
 
 namespace vbox {
 

@@ -1,7 +1,7 @@
 
-#include "virtual_box.hpp"
-#include "safe_array.hpp"
-#include "throw_if_failed.hpp"
+#include <vbox/virtual_box.hpp>
+#include <vbox/safe_array.hpp>
+#include <vbox/throw_if_failed.hpp>
 #include <stdexcept>
 
 namespace vbox {

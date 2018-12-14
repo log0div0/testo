@@ -1,9 +1,9 @@
 
-#include "progress.hpp"
+#include <vbox/progress.hpp>
 #include <stdexcept>
 #include <sstream>
-#include "throw_if_failed.hpp"
-#include "string.hpp"
+#include <vbox/throw_if_failed.hpp>
+#include <vbox/string.hpp>
 
 namespace vbox {
 

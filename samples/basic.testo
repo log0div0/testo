@@ -1,0 +1,14 @@
+
+
+$ifdef HAHA
+testo type "Hello world"
+testo wait "Otsosi"
+
+
+	testo wait "Hello otsosi" for 50s
+	testo press enter
+	testo press LEFT, right
+testo press ESC*6
+testo press ESC+LEFT + RIGHT
+testo press ESC+HOME+SPACE*6, w*7
+$else

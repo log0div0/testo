@@ -1,6 +1,6 @@
 
-#include "safe_array.hpp"
-#include "throw_if_failed.hpp"
+#include <vbox/safe_array.hpp>
+#include <vbox/throw_if_failed.hpp>
 
 namespace vbox {
 

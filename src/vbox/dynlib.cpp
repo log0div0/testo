@@ -1,5 +1,5 @@
 
-#include "dynlib.hpp"
+#include <vbox/dynlib.hpp>
 #include <stdexcept>
 
 namespace vbox {

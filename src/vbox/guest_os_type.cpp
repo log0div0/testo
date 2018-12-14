@@ -1,7 +1,7 @@
 
-#include "guest_os_type.hpp"
-#include "throw_if_failed.hpp"
-#include "string.hpp"
+#include <vbox/guest_os_type.hpp>
+#include <vbox/throw_if_failed.hpp>
+#include <vbox/string.hpp>
 
 namespace vbox {
 

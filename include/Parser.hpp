@@ -1,0 +1,54 @@
+
+#pragma once
+
+#include <Lexer.hpp>
+#include <Node.hpp>
+#include <set>
+
+struct Parser {
+	Parser(const std::string& file);
+
+	std::shared_ptr<AST::Program> parse();
+private:
+	//inner helpers
+	void match(Token::category type);
+	void consume();
+
+	Token LT(size_t i) const;
+	Token::category LA(size_t i) const;
+
+	bool test_assignment() const;
+	bool test_stmt() const;
+	bool test_controller() const;
+	bool test_command() const;
+	bool test_action() const;
+	bool is_button(const Token& t) const;
+
+	void newline_list();
+	std::shared_ptr<AST::IStmt> stmt();
+	std::shared_ptr<AST::Stmt<AST::Snapshot>> snapshot();
+	std::shared_ptr<AST::Stmt<AST::Test>> test();
+	std::shared_ptr<AST::VmState> vm_state();
+	std::shared_ptr<AST::Assignment> assignment();
+	std::shared_ptr<AST::Attr> attr();
+	std::shared_ptr<AST::AttrBlock> attr_block();
+	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
+	std::shared_ptr<AST::Cmd> command();
+	std::shared_ptr<AST::CmdBlock> command_block();
+	std::shared_ptr<AST::KeySpec> key_spec();
+	std::shared_ptr<AST::IAction> action();
+	std::shared_ptr<AST::Action<AST::Type>> type();
+	std::shared_ptr<AST::Action<AST::Wait>> wait();
+	std::shared_ptr<AST::Action<AST::Press>> press();
+	std::shared_ptr<AST::Action<AST::Plug>> plug();
+	std::shared_ptr<AST::Action<AST::Start>> start();
+	std::shared_ptr<AST::Action<AST::Stop>> stop();
+	std::shared_ptr<AST::Action<AST::Exec>> exec();
+	std::shared_ptr<AST::Action<AST::Set>> set();
+	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
+	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
+
+	Lexer lex;
+	std::array<Token, 2> lookahead;
+	size_t p = 0; //current position in lookahead buffer
+};

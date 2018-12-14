@@ -1,6 +1,6 @@
 
-#include "virtual_box_client.hpp"
-#include "throw_if_failed.hpp"
+#include <vbox/virtual_box_client.hpp>
+#include <vbox/throw_if_failed.hpp>
 
 namespace vbox {
 
