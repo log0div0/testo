@@ -243,7 +243,7 @@ snapshot additions_installed: internet_configured {
 	type "m-a prepare"; press Enter
 	wait for 5s
 	plug dvd "../iso/VBoxGuestAdditions_5.2.22.iso"
-	wait for 3s
+	wait for 4s
 	type "mount /dev/cdrom /media/cdrom"; press Enter
 	wait for 3s
 	type "/media/cdrom/VBoxLinuxAdditions.run"; press Enter
@@ -252,7 +252,6 @@ snapshot additions_installed: internet_configured {
 	wait for 30s
 	type "testo-user"; press Enter
 	wait for 2s; type "1111"; press Enter
-	wait for 3s;
 }
 
 snapshot additions_master_installed: internet_master_configured {
@@ -270,7 +269,6 @@ snapshot additions_master_installed: internet_master_configured {
 	wait for 30s
 	type "testo-user"; press Enter
 	wait for 2s; type "1111"; press Enter
-	wait for 3s;
 }
 
 snapshot ready: additions_installed {
@@ -285,7 +283,7 @@ snapshot ready: additions_installed {
 	type "1111"; press Enter
 	wait for 1s;
 	type "passwd -u root"; press Enter
-	wait for 1s;
+	wait for 2s;
 	stop
 	unplug nic nat
 	start
@@ -304,7 +302,7 @@ snapshot master_ready: additions_master_installed {
 	type "1111"; press Enter
 	wait for 1s;
 	type "passwd -u root"; press Enter
-	type "apt-get install -y python conntrack conntrackd isc-dhcp-server arping"; press Enter
+	type "apt-get install -y python conntrack conntrackd isc-dhcp-server arping nftables"; press Enter
 	wait for 30s
 	stop
 	unplug nic nat
@@ -314,80 +312,99 @@ snapshot master_ready: additions_master_installed {
 
 snapshot client_ifaces_renamed: ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:00:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot client2_ifaces_renamed: ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:11:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot server_ifaces_renamed: ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:22:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot master_ifaces_renamed: master_ready {
 	set login="root" password="1111"
 
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:33:00:aa client_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:33:00:bb server_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:33:00:cc slave_side"
+
+	exec bash "sysctl -w net.ipv4.ip_forward=1"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot slave_ifaces_renamed: master_ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:aa client_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:bb server_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:cc master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 
 #firewall folder
+
 test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
 	master set login="root" password="1111"
 	client set login="root" password="1111"
 	server set login="root" password="1111"
+
 	master {
-		copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-		exec bash """
-			mkdir /mnt/huge
-			echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-			sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-			update-grub
-			echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-			mount /mnt/huge
-			dpkg -i /tmp/pkg/*.deb
-			nf2 version
-			nf2 reconfigure --debug
-		"""
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	client {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	server {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
 	}
 
 	master exec bash """
-		service nf2 start
-		sleep 5
-
-		ip-nf2 a a 1.1.1.1/24 dev client_side
-		ip-nf2 a a 2.2.2.1/24 dev server_side
-		ip-nf2 l s client_side up
-		ip-nf2 l s server_side up
-
 		ip a a 1.1.1.1/24 dev client_side
 		ip a a 2.2.2.1/24 dev server_side
 		ip l s client_side up
 		ip l s server_side up
-
-		nf2 status
 	"""
 
 	client exec bash """
@@ -396,7 +413,6 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 		ip r a 2.2.2.0/24 via 1.1.1.1
 	"""
 
-
 	server exec bash """
 		ip a a 2.2.2.2/24 dev master_side
 		ip l s master_side up
@@ -404,336 +420,15 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 	"""
 
 	client exec bash "ping -c 10 2.2.2.2"
+
 	master exec bash """
-		nft-nf2 add table my_table
-		nft-nf2 add chain my_table my_chain '{ type filter hook forward priority 0 ; policy drop ; }'
+		nft add table my_table
+		nft add chain my_table my_chain '{ type filter hook forward priority 0 ; policy drop ; }'
 	"""
 
 	client exec bash "! ping -c 10 2.2.2.2"
 
-	master exec bash "nft-nf2 add rule my_table my_chain ip protocol icmp accept"
+	master exec bash "nft add rule my_table my_chain ip protocol icmp accept"
+
 	client exec bash "ping -c 10 2.2.2.2"
-}
-
-
-test firewall_logger: master(master_ifaces_renamed), client(client_ifaces_renamed),
-	client2(client2_ifaces_renamed), server(server_ifaces_renamed)
-{
-	master set login="root" password="1111"
-	client set login="root" password="1111"
-	client2 set login="root" password="1111"
-	server set login="root" password="1111"
-	master {
-		copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-		exec bash """
-			mkdir /mnt/huge
-			echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-			sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-			update-grub
-			echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-			mount /mnt/huge
-			dpkg -i /tmp/pkg/*.deb
-			nf2 version
-			nf2 reconfigure --debug
-		"""
-	}
-
-	master exec bash """
-		service nf2 start
-		sleep 5
-
-		ip-nf2 a a 1.1.1.1/24 dev client_side
-		ip-nf2 a a 2.2.2.1/24 dev server_side
-		ip-nf2 l s client_side up
-		ip-nf2 l s server_side up
-
-		ip a a 1.1.1.1/24 dev client_side
-		ip a a 2.2.2.1/24 dev server_side
-		ip l s client_side up
-		ip l s server_side up
-
-		nft-nf2 add table my_table
-		nft-nf2 add chain my_table my_chain '{ type filter hook forward priority 0 ; policy accept ; }'
-		nft-nf2 add rule my_table my_chain ip daddr 1.1.1.3 log prefix trololo
-
-		nf2 status
-	"""
-
-	client exec bash """
-		ip a a 1.1.1.2/24 dev master_side
-		ip l s master_side up
-		ip r a 2.2.2.0/24 via 1.1.1.1
-	"""
-
-	client2 exec bash """
-		ip a a 1.1.1.3/24 dev master_side
-		ip l s master_side up
-		ip r a 2.2.2.0/24 via 1.1.1.1
-	"""
-
-	server exec bash """
-		ip a a 2.2.2.2/24 dev master_side
-		ip l s master_side up
-		ip r a 1.1.1.0/24 via 2.2.2.1
-	"""
-
-	server exec bash """
-		ping -c 10 1.1.1.2
-		ping -c 10 1.1.1.3
-	"""
-
-	master exec bash """
-		! cat /var/log/nf2/packet.log | fgrep 1.1.1.2
-		cat /var/log/nf2/packet.log | fgrep 1.1.1.3
-		cat /var/log/nf2/packet.log | fgrep trololo
-	"""
-}
-
-#link folder
-
-
-#bond
-
-test link_bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
-	master set login="root" password="1111"
-	slave set login="root" password="1111"
-	master copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-	master exec bash """
-		mkdir /mnt/huge
-		echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-		sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-		update-grub
-		echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-		mount /mnt/huge
-		dpkg -i /tmp/pkg/*.deb
-		nf2 version
-		nf2 reconfigure --debug
-	"""
-
-	master exec bash """
-		service nf2 start
-		sleep 5
-
-		ip-nf2 l a abc type bond mode 0
-		ip-nf2 l s abc up
-		ip-nf2 a a 1.1.1.1/24 dev abc
-
-		ip-nf2 l s slave_side up
-		ip-nf2 a a 10.0.0.1/24 dev slave_side
-
-		ip l s slave_side up
-		ip a a 10.0.0.1/24 dev slave_side
-
-		nf2 status
-	"""
-
-	slave exec bash """
-		ip l s client_side up
-		ip a a 10.0.0.2/24 dev client_side
-		ip r a 1.1.1.0/24 via 10.0.0.1
-	"""
-
-	slave exec bash "! ping -c 10 1.1.1.111"
-	master exec bash "nf2 status"
-}
-
-test link_delete_address: master(master_ifaces_renamed) {
-	master set login="root" password="1111"
-	master copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-	master exec bash """
-		mkdir /mnt/huge
-		echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-		sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-		update-grub
-		echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-		mount /mnt/huge
-		dpkg -i /tmp/pkg/*.deb
-		nf2 version
-		nf2 reconfigure --debug
-	"""
-
-	master exec bash """
-		service nf2 start
-		sleep 5
-
-		ip-nf2 l a abc type bond mode 0
-		ip-nf2 l s client_side nomaster
-		ip-nf2 l s server_side nomaster
-		ip-nf2 l s client_side down
-		ip-nf2 l s server_side down
-		ip-nf2 l s abc down
-		ip-nf2 l s client_side master abc
-		ip-nf2 l s server_side master abc
-		ip-nf2 l s client_side up
-		ip-nf2 l s server_side up
-		ip-nf2 l s abc up
-		ip-nf2 a a 1.1.1.1/24 dev abc
-		ip-nf2 l s client_side nomaster
-		ip-nf2 l s server_side nomaster
-		ip-nf2 a d 1.1.1.1/24 dev abc
-
-		nft-nf2 add table my_table
-
-		nf2 status
-	"""
-}
-
-#bond+vlan
-test link_bond_vlan_basic: master(master_ifaces_renamed)
-{
-	master set login="root" password="1111"
-	master copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-	master exec bash """
-		mkdir /mnt/huge
-		echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-		sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-		update-grub
-		echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-		mount /mnt/huge
-		dpkg -i /tmp/pkg/*.deb
-		nf2 version
-		nf2 reconfigure --debug
-	"""
-	master exec bash """
-		service nf2 start
-		sleep 5
-
-		ip-nf2 link add bond0 type bond mode 1 miimon 10 updelay 100 downdelay 100 primary server_side primary_reselect 0
-		ip-nf2 link set server_side master bond0
-		ip-nf2 link set client_side master bond0
-
-		ip-nf2 l s server_side up
-		ip-nf2 l s client_side up
-		ip-nf2 l s bond0 up
-
-		ip-nf2 l s slave_side up
-
-		ip-nf2 link add link slave_side name slave_side.2267 type vlan id 2267
-		ip-nf2 addr add 10.7.3.1/24 brd + dev slave_side.2267
-
-		ip-nf2 link set dev slave_side.2267 mtu 1500 up
-
-		ip-nf2 link add link bond0 name bond0.2269 type vlan id 2269
-
-		nf2 status
-	"""
-}
-
-#route
-test link_route_basic: master(master_ifaces_renamed)
-{
-	master set login="root" password="1111"
-	master copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-	master exec bash """
-		mkdir /mnt/huge
-		echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-		sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-		update-grub
-		echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-		mount /mnt/huge
-		dpkg -i /tmp/pkg/*.deb
-		nf2 version
-		nf2 reconfigure --debug
-	"""
-	master exec bash """
-		service nf2 start
-
-		ip-nf2 a a 2.2.2.1/24 dev client_side
-		ip-nf2 a a 3.3.3.1/24 dev server_side
-		! ip-nf2 r s | fgrep 2.2.2.0/24
-		! ip-nf2 r s | fgrep 3.3.3.0/24
-
-		ip-nf2 l s client_side up
-		ip-nf2 l s server_side up
-		ip-nf2 r s | fgrep 2.2.2.0/24
-		ip-nf2 r s | fgrep 3.3.3.0/24
-
-		ip-nf2 r a 7.7.7.0/24 dev client_side via 2.2.2.5
-		ip-nf2 r a 8.8.8.0/24 dev server_side via 3.3.3.3
-
-		ip-nf2 r s | fgrep 7.7.7.0/24
-		ip-nf2 r s | fgrep 8.8.8.0/24
-
-		ip-nf2 a d 2.2.2.1/24 dev client_side
-		ip-nf2 a d 3.3.3.1/24 dev server_side
-
-		ip-nf2 a a 4.4.4.1/24 dev client_side
-		ip-nf2 a a 5.5.5.1/24 dev server_side
-
-		ip-nf2 r s | fgrep 4.4.4.0/24
-		ip-nf2 r s | fgrep 5.5.5.0/24
-		! ip-nf2 r s | fgrep 7.7.7.0/24
-		! ip-nf2 r s | fgrep 8.8.8.0/24
-
-		ip-nf2 a d 2.2.2.1/24 dev client_side
-		ip-nf2 a d 3.3.3.1/24 dev server_side
-
-		! ip-nf2 r s | fgrep 2.2.2.0/24
-		! ip-nf2 r s | fgrep 3.3.3.0/24
-		! ip-nf2 r s | fgrep 7.7.7.0/24
-		! ip-nf2 r s | fgrep 8.8.8.0/24
-
-		nf2 status
-	"""
-}
-
-test link_route_bond: master(master_ifaces_renamed)
-{
-	master set login="root" password="1111"
-	master copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-	master exec bash """
-		mkdir /mnt/huge
-		echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-		sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-		update-grub
-		echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-		mount /mnt/huge
-		dpkg -i /tmp/pkg/*.deb
-		nf2 version
-		nf2 reconfigure --debug
-	"""
-	master exec bash """
-		service nf2 start
-		sleep 5
-
-		ip-nf2 l a abc type bond mode 0
-		ip-nf2 l s client_side up
-		ip-nf2 l s server_side up
-		ip-nf2 a a 1.1.1.1/24 dev client_side
-		ip-nf2 a a 2.2.2.2/24 dev server_side
-		ip-nf2 r a 4.4.4.0/24 dev client_side via 1.1.1.5
-
-		#check local routes
-		ip-nf2 r s | grep 1.1.1.0/24
-		ip-nf2 r s | grep 2.2.2.0/24
-		ip-nf2 r s | grep 4.4.4.0/24
-
-		ip-nf2 l s client_side master abc
-		ip-nf2 l s server_side master abc
-
-		! ip-nf2 r s | grep 1.1.1.0/24
-		! ip-nf2 r s | grep 2.2.2.0/24
-		! ip-nf2 r s | grep 4.4.4.0/24
-
-		#set bond up, assign address, add a route
-
-		ip-nf2 l s abc up
-		ip-nf2 a a 3.3.3.3/24 dev abc
-
-		#check routes for bonding
-		ip-nf2 r s | grep 3.3.3.0/24
-
-		#add some route to see it deleted further
-		ip-nf2 r a 4.4.4.0/24 dev abc via 3.3.3.15
-		ip-nf2 r s | grep 4.4.4.0/24
-
-		#deattach a NIC from bonding - we should get our local route back
-		ip-nf2 l s client_side nomaster
-		ip-nf2 r s | grep 1.1.1.0/24
-
-		#delete bonding - all corresponding routes should be deleted as well
-		ip-nf2 l d dev abc
-		! ip-nf2 r s | grep 3.3.3.0/24
-		! ip-nf2 r s | grep 4.4.4.0/24
-	"""
 }

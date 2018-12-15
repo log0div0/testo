@@ -440,11 +440,9 @@ int VmController::rollback(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		if (is_running()) {
-			/*vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-			auto machine = work_session.machine();
-			machine.saveState().wait_and_throw_if_failed();*/
 			stop();
 		}
+
 		{
 			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 			auto machine = work_session.machine();
@@ -452,6 +450,7 @@ int VmController::rollback(const std::string& snapshot) {
 			machine.restoreSnapshot(snap).wait_and_throw_if_failed();
 		}
 
+		
 		lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
 
@@ -578,7 +577,7 @@ int VmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	}
 }
 
-int VmController::plug_dvd(const std::string& path) {
+int VmController::plug_dvd(fs::path path) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		
@@ -592,12 +591,11 @@ int VmController::plug_dvd(const std::string& path) {
 			}
 		}
 		
-		auto img_path = fs::path(path);
-		if (img_path.is_relative()) {
-			img_path = fs::absolute(img_path);
+		if (path.is_relative()) {
+			path = fs::absolute(path);
 		}
 
-		vbox::Medium dvd = virtual_box.open_medium(img_path,
+		vbox::Medium dvd = virtual_box.open_medium(path,
 				DeviceType_DVD, AccessMode_ReadOnly, false);
 
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);

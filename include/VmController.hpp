@@ -21,7 +21,7 @@ struct VmController {
 	int unplug_nic(const std::string& nic);
 	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd);
 	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd);
-	int plug_dvd(const std::string& path);
+	int plug_dvd(fs::path path);
 	int unplug_dvd();
 	int start();
 	int stop();
