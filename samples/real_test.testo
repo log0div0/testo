@@ -374,7 +374,7 @@ snapshot slave_ifaces_renamed: master_ready {
 	type "root"; press Enter; wait for 1s
 	type "1111"; press Enter; wait for 2s
 	type "pkill VBoxService"; press Enter; wait for 2s;
-	type "rmmod vboxsf"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 5s;
 }
 
 
@@ -431,4 +431,68 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 	master exec bash "nft add rule my_table my_chain ip protocol icmp accept"
 
 	client exec bash "ping -c 10 2.2.2.2"
+}
+
+#link folder
+#bond
+
+test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+
+		ip l s slave_side up
+		ip a a 10.0.0.1/24 dev slave_side
+	"""
+
+	slave exec bash """
+		ip l s master_side up
+		ip a a 10.0.0.2/24 dev master_side
+		ip r a 1.1.1.0/24 via 10.0.0.1
+	"""
+
+	slave exec bash "! ping -c 10 1.1.1.111"
+}
+
+test bond_delete_address: master(master_ifaces_renamed) {
+	master set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip a d 1.1.1.1/24 dev abc
+
+		nft add table my_table
+	"""
 }

@@ -170,6 +170,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 		visit_vm_state(state);
 	}
 	visit_command_block(test->cmd_block);
+	global.local_vms.clear();
 }
 
 void VisitorSemantic::visit_vm_state(std::shared_ptr<VmState> vm_state) {
