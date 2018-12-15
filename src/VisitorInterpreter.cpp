@@ -221,6 +221,8 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vm, std::s
 void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	if (plug->type.value() == "nic") {
 		return visit_plug_nic(vm, plug);
+	} else if (plug->type.value() == "link") {
+		return visit_plug_link(vm, plug);
 	} else if (plug->type.value() == "dvd") {
 		return visit_plug_dvd(vm, plug);
 	} else if (plug->type.value() == "flash") {
@@ -253,6 +255,27 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
 			" nic on vm " + vm->name());
+	}
+}
+
+void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+	//we have to do it only while interpreting because we can't be sure we know
+	//the vm while semantic analisys
+	auto nics = vm->nics();
+	if (nics.find(plug->name()) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name() + 
+			" in VM " + vm->name());
+	}
+
+	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
+	std::cout << plug_unplug << " link " << plug->name() << " on vm " << vm->name() << std::endl;
+
+	int result = 0;
+	result = vm->set_link(plug->name(), plug->is_on());
+
+	if (result) {
+		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
+			" link on vm " + vm->name());
 	}
 }
 

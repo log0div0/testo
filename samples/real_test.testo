@@ -377,7 +377,6 @@ snapshot slave_ifaces_renamed: master_ready {
 	type "rmmod vboxsf"; press Enter; wait for 5s;
 }
 
-
 #firewall folder
 
 test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
@@ -495,4 +494,156 @@ test bond_delete_address: master(master_ifaces_renamed) {
 
 		nft add table my_table
 	"""
+}
+
+test bond_mode_0: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0 fail_over_mac 1
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+	"""
+
+	slave exec bash """
+		ip l a abc type bond mode 0 fail_over_mac 1
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.2/24 dev abc
+	"""
+
+	master exec bash "ping -c 10 1.1.1.2"
+	master exec bash "arping 1.1.1.2 -I abc -c 10"
+	slave exec bash "ping -c 10 1.1.1.1"
+}
+
+test bond_mode_0_reordered: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0 fail_over_mac 1
+		ip a a 1.1.1.1/24 dev abc
+		ip l s abc up
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		#ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+	"""
+
+	slave exec bash """
+		ip l a abc type bond mode 0 fail_over_mac 1
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.2/24 dev abc
+	"""
+
+	master exec bash "ping -c 10 1.1.1.2"
+	slave exec bash "ping -c 10 1.1.1.1"
+}
+
+test bond_mode_1: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 1 primary client_side miimon 100 fail_over_mac active
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+	"""
+
+	slave exec bash """
+		ip l a abc type bond mode 1 primary client_side miimon 100 fail_over_mac active
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.2/24 dev abc
+	"""
+
+	master exec bash "ping -c 10 1.1.1.2"
+	slave exec bash "ping -c 10 1.1.1.1"
+
+	#Fucking vbox doesn't do shit
+	master unplug link client_side
+	slave unplug link client_side
+
+	master exec bash "ping -c 10 1.1.1.2"
+	slave exec bash "ping -c 10 1.1.1.1"
 }

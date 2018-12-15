@@ -26,6 +26,7 @@ struct VisitorInterpreter {
 	void visit_key_spec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
 	void visit_plug_nic(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
+	void visit_plug_link(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
 	void visit_plug_dvd(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
 	void plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
 	void unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);

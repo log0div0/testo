@@ -506,6 +506,34 @@ int VmController::set_nic(const std::string& nic, bool is_enabled) {
 	}
 }
 
+int VmController::set_link(const std::string& nic, bool is_connected) {
+	try {
+		if (!config.count("nic")) {
+			throw std::runtime_error("There's no nics in this vm");
+		}
+
+		auto& nics = config.at("nic");
+
+		for (auto& nic_it: nics) {
+			if (nic_it.at("name") == nic) {
+				auto lock_machine = virtual_box.find_machine(name());
+
+				vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+				auto machine = work_session.machine();
+				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
+				network_adapter.setCableConnected(is_connected);
+				return 0;
+			}
+		}
+
+		throw std::runtime_error(std::string("There's no nic with name ") + nic);
+	}
+	catch (const std::exception& error) {
+		std::cout << "(Un)Plugging link on vm " << name() << ": " << error << std::endl;
+		return -1;
+	}
+}
+
 bool VmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {
 	return (plugged_fds.find(fd) != plugged_fds.end());
 }
