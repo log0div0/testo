@@ -358,7 +358,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 	if (exec->process_token.value() == "bash") {
 		//In future this should be a function
 
-		std::string script = "set -e; set -x;";
+		std::string script = "set -e; set -o pipefail; set -x;";
 		script += exec->script();
 
 		//copy the script to tmp folder
