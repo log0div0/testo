@@ -2,20 +2,12 @@
 #pragma once
 
 #include <API.hpp>
-#include <QemuVmController.hpp>
-#include <VboxVmController.hpp>
+#include <VmController.hpp>
 #include <FlashDriveController.hpp>
 #include <Node.hpp>
 #include <unordered_map>
 
 struct Global {
-
-#ifdef QEMU
-	using VmController = QemuVmController;
-#else
-	using VmController = VboxVmController;
-#endif
-
 	Global();
 	~Global();
 

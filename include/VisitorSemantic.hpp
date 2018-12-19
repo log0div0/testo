@@ -4,19 +4,11 @@
 #include <Node.hpp>
 #include <Global.hpp>
 
-#include <QemuVmController.hpp>
-#include <VboxVmController.hpp>
+#include <VmController.hpp>
 
 #include <set>
 
 struct VisitorSemantic {
-
-#ifdef QEMU
-	using VmController = QemuVmController;
-#else
-	using VmController = VboxVmController;
-#endif
-
 	VisitorSemantic(Global& global);
 
 	void visit(std::shared_ptr<AST::Program> program);

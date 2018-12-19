@@ -26,11 +26,20 @@ NetworkAdapter& NetworkAdapter::operator=(NetworkAdapter&& other) {
 	return *this;
 }
 
+void NetworkAdapter::setCableConnected(bool is_connected) {
+	try {
+		throw_if_failed(INetworkAdapter_SetCableConnected(handle, is_connected));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void NetworkAdapter::setEnabled(bool is_enabled) const {
 	try {
 		throw_if_failed(INetworkAdapter_SetEnabled(handle, is_enabled));
 	}
-	catch (std::exception&) {
+	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
@@ -39,7 +48,7 @@ void NetworkAdapter::setInternalNetwork(const std::string& network) const {
 	try {
 		throw_if_failed(INetworkAdapter_SetInternalNetwork(handle, StringIn(network)));
 	}
-	catch (std::exception&) {
+	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
@@ -48,7 +57,7 @@ void NetworkAdapter::setAttachmentType(NetworkAttachmentType type) const {
 	try {
 		throw_if_failed(INetworkAdapter_SetAttachmentType(handle, type));
 	}
-	catch (std::exception&) {
+	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
@@ -57,7 +66,7 @@ void NetworkAdapter::setMAC(const std::string& mac) {
 	try {
 		throw_if_failed(INetworkAdapter_SetMACAddress(handle, StringIn(mac)));
 	}
-	catch (std::exception&) {
+	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }

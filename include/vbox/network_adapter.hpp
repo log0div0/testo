@@ -16,6 +16,8 @@ struct NetworkAdapter {
 	NetworkAdapter(NetworkAdapter&& other);
 	NetworkAdapter& operator=(NetworkAdapter&& other);
 
+	void setCableConnected(bool is_connected);
+
 	void setEnabled(bool is_enabled) const;
 	void setInternalNetwork(const std::string& network) const;
 	void setAttachmentType(NetworkAttachmentType type) const;

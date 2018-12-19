@@ -416,7 +416,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 		match(Token::category::dvd);	
 	}
 	else {
-		if (LT(1).value() != "nic") {
+		if (LT(1).value() != "nic" && LT(1).value() != "link") {
 			throw std::runtime_error(std::string(LT(1).pos() + ": Error: Unknown device type for plug/unplug"));
 		}
 		match(Token::category::id);
