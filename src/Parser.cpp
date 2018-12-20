@@ -102,6 +102,12 @@ void Parser::handle_include() {
 
 	//check for cycles
 
+	for (auto& ctx: lexers) {
+		if (ctx.lex.file() == dest_file) {
+			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: cyclic include detected: $include " + std::string(dest_file_token));
+		}
+	}
+
 	Ctx new_ctx(dest_file);
 	lexers.push_back(new_ctx);
 
