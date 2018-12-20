@@ -12,12 +12,12 @@ Interpreter::Interpreter(const fs::path& file):
 
 int Interpreter::run() {
 	auto program = parser.parse();
-	//VisitorSemantic semantic(global);
+	VisitorSemantic semantic(global);
 
-	//global.setup(); //prepare the environment
-	//semantic.visit(program);
+	global.setup(); //prepare the environment
+	semantic.visit(program);
 
-	//VisitorInterpreter runner(global);
-	//runner.visit(program);
+	VisitorInterpreter runner(global);
+	runner.visit(program);
 	return 0;
 }
