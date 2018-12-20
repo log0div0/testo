@@ -3,10 +3,11 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include <Utils.hpp>
 
 struct Pos {
 	Pos() = default;
-	Pos(const std::string& input): input(input) {}
+	Pos(const fs::path& file, const std::string& input): file(file), input(input) {}
 
 	void advance(size_t shift = 1) {
 		while (shift != 0) {
@@ -27,7 +28,7 @@ struct Pos {
 
 	operator std::string() const {
 		std::string result("");
-		result += "Line: " + std::to_string(line) + " Column: " + std::to_string(column);
+		result += std::string(file) + ":" + std::to_string(line) + ":" + std::to_string(column);
 		return result;
 	}
 
@@ -38,6 +39,8 @@ struct Pos {
 	size_t offset = 0;
 	uint32_t line = 1;
 	uint32_t column = 1;
+
+	fs::path file; //should always be in canonical form
 
 private:
 	std::string input;

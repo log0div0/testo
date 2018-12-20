@@ -2,14 +2,18 @@
 #pragma once
 #include <Pos.hpp>
 #include <Token.hpp>
+#include <Utils.hpp>
 #include <string>
 #include <unordered_map>
 #include <functional>
 
 struct Lexer {
-	Lexer(const std::string& file);
+	Lexer(const fs::path& file);
 
 	Token get_next_token();
+	fs::path file() const {
+		return current_pos.file;
+	}
 
 private:
 
@@ -61,7 +65,7 @@ private:
 	void skip_spaces();
 	void skip_comments();
 
-	void handle_ppd(); //preprocessor directive
+	Token handle_ppd(); //preprocessor directive
 	void handle_ifdef();
 	void handle_else(bool should_happen);
 	void handle_endif();
@@ -105,6 +109,7 @@ private:
 	Token ifdef();
 	Token endif();
 	Token else_();
+	Token include();
 
 	Pos current_pos;
 	std::string input;

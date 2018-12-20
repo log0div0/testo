@@ -43,6 +43,7 @@ struct Token {
 		ifndef, //$ifndef
 		endif, //$ifndef
 		else_, //$ifndef
+		include, //$include
 
 		//fake categories
 		none, //not initialized

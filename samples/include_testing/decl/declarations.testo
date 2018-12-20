@@ -1,3 +1,5 @@
+$include "../tests.testo"
+
 machine client {
 	cpus: 1
 	os_type: "ubuntu_64"
@@ -243,7 +245,7 @@ snapshot additions_installed: internet_configured {
 	type "m-a prepare"; press Enter
 	wait for 5s
 	plug dvd "../iso/VBoxGuestAdditions_5.2.22.iso"
-	wait for 3s
+	wait for 4s
 	type "mount /dev/cdrom /media/cdrom"; press Enter
 	wait for 3s
 	type "/media/cdrom/VBoxLinuxAdditions.run"; press Enter
@@ -252,7 +254,6 @@ snapshot additions_installed: internet_configured {
 	wait for 30s
 	type "testo-user"; press Enter
 	wait for 2s; type "1111"; press Enter
-	wait for 3s;
 }
 
 snapshot additions_master_installed: internet_master_configured {
@@ -270,7 +271,6 @@ snapshot additions_master_installed: internet_master_configured {
 	wait for 30s
 	type "testo-user"; press Enter
 	wait for 2s; type "1111"; press Enter
-	wait for 3s;
 }
 
 snapshot ready: additions_installed {
@@ -285,9 +285,7 @@ snapshot ready: additions_installed {
 	type "1111"; press Enter
 	wait for 1s;
 	type "passwd -u root"; press Enter
-	wait for 1s;
-	type "apt-get install -y arping"; press Enter
-	wait for 30s
+	wait for 2s;
 	stop
 	unplug nic nat
 	start
@@ -306,7 +304,7 @@ snapshot master_ready: additions_master_installed {
 	type "1111"; press Enter
 	wait for 1s;
 	type "passwd -u root"; press Enter
-	type "apt-get install -y python conntrack conntrackd isc-dhcp-server arping gdb"; press Enter
+	type "apt-get install -y python conntrack conntrackd isc-dhcp-server arping nftables"; press Enter
 	wait for 30s
 	stop
 	unplug nic nat
@@ -316,120 +314,67 @@ snapshot master_ready: additions_master_installed {
 
 snapshot client_ifaces_renamed: ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:00:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot client2_ifaces_renamed: ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:11:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot server_ifaces_renamed: ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:22:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot master_ifaces_renamed: master_ready {
 	set login="root" password="1111"
 
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:33:00:aa client_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:33:00:bb server_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:33:00:cc slave_side"
+
+	exec bash "sysctl -w net.ipv4.ip_forward=1"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot slave_ifaces_renamed: master_ready {
 	set login="root" password="1111"
-	copyto "/home/alex/work/nf2/test-tools/generator/rename_net.sh" "/tmp/"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:aa client_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:bb server_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:cc master_side"
-}
 
-
-#route folder
-test route_basic: master(master_ifaces_renamed)
-{
-	master set login="root" password="1111"
-	#client set login="root" password="1111"
-	#client2 set login="root" password="1111"
-	#server set login="root" password="1111"
-	#slave set login="root" password="1111"
-	master copyto "/home/alex/work/tmp/build/pkg" "/tmp/"
-	master exec bash """
-		mkdir /mnt/huge
-		echo 512 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
-		sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/ s/"$/ hugepages=512"/' /etc/default/grub
-		update-grub
-		echo 'nodev /mnt/huge hugetlbfs defaults 0 0' >> /etc/fstab
-		mount /mnt/huge
-		dpkg -i /tmp/pkg/*.deb
-		nf2 version
-		nf2 reconfigure --debug
-	"""
-
-	master exec bash "mkdir -p /home/alex/work/tmp/build/src"
-
-	master copyto "/home/alex/work/tmp/build/src/dpdk-sandybridge.tar.xz" "/home/alex/work/tmp/build/src"
-	master copyto "/home/alex/work/tmp/nf2.tar.xz" "/home/alex/work/tmp"
-
-	#master exec bash """
-	#	service nf2 start
-	#	sleep 5
-#
-#		ip l a name vlan1 link client_side type vlan id 1
-#		ip l a name vlan2 link client_side type vlan id 2
-#		ip a a 192.168.1.1/24 dev vlan1
-#		ip a a 192.168.2.1/24 dev vlan2
-#		ip a a 10.0.0.1/24 dev server_side
-#		ip l s client_side up
-#		ip l s vlan1 up
-#		ip l s vlan2 up
-#		ip l s server_side up
-#
-#		ip-nf2 l a name vlan1 link client_side type vlan id 1
-#		ip-nf2 l a name vlan2 link client_side type vlan id 2
-#		ip-nf2 a a 192.168.1.1/24 dev vlan1
-#		ip-nf2 a a 192.168.2.1/24 dev vlan2
-#		ip-nf2 a a 10.0.0.1/24 dev server_side
-#		ip-nf2 l s client_side up
-#		ip-nf2 l s vlan1 up
-#		ip-nf2 l s vlan2 up
-#		ip-nf2 l s server_side up
-#
-#		nf2 status
-#	"""
-
-#	client exec bash """
-#		ip l a name vlan1 link master_side type vlan id 1
-#		ip a a 192.168.1.2/24 dev vlan1
-#		ip l s vlan1 up
-#		ip r a default via 192.168.1.1
-#	"""
-
-	#client2 exec bash """
-	#	ip l a name vlan2 link master_side type vlan id 2
-	#	ip a a 192.168.2.2/24 dev vlan2
-	#	ip l s vlan2 up
-	#	ip r a default via 192.168.2.1
-	#"""
-
-	#server exec bash """
-	#	ip a a 10.0.0.2/24 dev master_side
-	#	ip l s master_side up
-	#	ip r a default via 10.0.0.1
-	#"""
-
-#	master exec bash "arping 192.168.1.2 -I vlan1 -c 10"
-#	@master arping 192.168.1.2 -I vlan1 -c 10
-#@client ping -c 10 192.168.2.2
-#@client ping -c 10 10.0.0.2
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 5s;
 }

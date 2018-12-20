@@ -1,8 +1,10 @@
-
-$include "declarations.testo"
-
 #firewall folder
 
+$ifdef HTTP_PROXY
+$include "decl/declarations.testo"
+$else
+$include "decl/declarations.testo"
+$endif
 test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
 	master set login="root" password="1111"
 	client set login="root" password="1111"

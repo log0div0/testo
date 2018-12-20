@@ -3,9 +3,10 @@
 
 #include <Parser.hpp>
 #include <Global.hpp>
+#include <Utils.hpp>
 
 struct Interpreter {
-	Interpreter(const std::string& file);
+	Interpreter(const fs::path& file);
 	int run();
 	Global global;
 private:

@@ -3,13 +3,22 @@
 
 #include <Lexer.hpp>
 #include <Node.hpp>
+#include <Utils.hpp>
 #include <set>
 
 struct Parser {
-	Parser(const std::string& file);
+	Parser(const fs::path& file);
 
 	std::shared_ptr<AST::Program> parse();
 private:
+
+	struct Ctx {
+		Ctx(const fs::path& file): lex(file) {}
+		Lexer lex;
+		std::array<Token, 2> lookahead;
+		size_t p = 0; //current position in lookahead buffer
+	};
+
 	//inner helpers
 	void match(Token::category type);
 	void consume();
@@ -22,9 +31,12 @@ private:
 	bool test_controller() const;
 	bool test_command() const;
 	bool test_action() const;
+	bool test_include() const;
 	bool is_button(const Token& t) const;
 
 	void newline_list();
+
+	void handle_include();
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Snapshot>> snapshot();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
@@ -48,7 +60,5 @@ private:
 	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 
-	Lexer lex;
-	std::array<Token, 2> lookahead;
-	size_t p = 0; //current position in lookahead buffer
+	std::vector<Ctx> lexers;
 };

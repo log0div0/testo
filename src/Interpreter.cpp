@@ -5,7 +5,7 @@
 
 using namespace AST;
 
-Interpreter::Interpreter(const std::string& file):
+Interpreter::Interpreter(const fs::path& file):
 	global(),
 	parser(file)
 {}

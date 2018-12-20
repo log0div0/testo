@@ -1,19 +1,23 @@
 
 #include <Parser.hpp>
+#include <Utils.hpp>
 
 using namespace AST;
 
-Parser::Parser(const std::string& file):
-	lex(file)
+Parser::Parser(const fs::path& file)
 {
+	Ctx ctx(file);
+	lexers.push_back(ctx);
 	for (int i = 0; i < 2; i++) {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }
 
 void Parser::consume() {
-	lookahead[p] = lex.get_next_token();
-	p = (p + 1) % 2;
+	Ctx& current_lexer = lexers[lexers.size() - 1];
+
+	current_lexer.lookahead[current_lexer.p] = current_lexer.lex.get_next_token();
+	current_lexer.p = (current_lexer.p + 1) % 2;
 }
 
 void Parser::match(Token::category type) {
@@ -27,7 +31,7 @@ void Parser::match(Token::category type) {
 }
 
 Token Parser::LT(size_t i) const {
-	return lookahead[(p + i - 1) % 2]; //circular fetch
+	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % 2]; //circular fetch
 }
 
 Token::category Parser::LA(size_t i) const {
@@ -43,6 +47,10 @@ bool Parser::test_stmt() const {
 	return ((LA(1) == Token::category::snapshot) || 
 		(LA(1) == Token::category::test) ||
 		test_controller());
+}
+
+bool Parser::test_include() const {
+	return (LA(1) == Token::category::include);
 }
 
 bool Parser::test_controller() const {
@@ -74,17 +82,56 @@ void Parser::newline_list() {
 	}
 }
 
+void Parser::handle_include() {
+	//Get new Lexer
+	auto include_token = LT(1);
+	match(Token::category::include);
+
+	auto dest_file_token = LT(1);
+	match(Token::category::dbl_quoted_string);
+	match(Token::category::newline);
+	fs::path dest_file = dest_file_token.value().substr(1, dest_file_token.value().length() - 2);
+
+	if (dest_file.is_relative()) {
+		fs::path combined = lexers[lexers.size() - 1].lex.file().parent_path() / dest_file;
+		if (!fs::exists(combined)) {
+			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: no such file: " + std::string(dest_file));
+		}
+		dest_file = fs::canonical(combined);
+	}
+
+	//check for cycles
+
+	for (auto& ctx: lexers) {
+		if (ctx.lex.file() == dest_file) {
+			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: cyclic include detected: $include " + std::string(dest_file_token));
+		}
+	}
+
+	Ctx new_ctx(dest_file);
+	lexers.push_back(new_ctx);
+
+	for (int i = 0; i < 2; i++) {
+		consume();	//Populate lookahead buffer with tokens
+	}
+}
+
 std::shared_ptr<Program> Parser::parse() {
 	std::vector<std::shared_ptr<IStmt>> stmts;
 
-	newline_list();
-
-	while (LA(1) != Token::category::eof) {
-		if (!test_stmt()) {
-			throw std::runtime_error(std::string(LT(1).pos()) + ": expected declaration");
-		}
-		stmts.push_back(stmt());
+	//we expect include command only between the declarations
+	while (!lexers.empty()) {
 		newline_list();
+		if (LA(1) == Token::category::eof) {
+			lexers.pop_back();
+		} else if (test_stmt()) {
+			stmts.push_back(stmt());
+			newline_list();
+		} else if (test_include()) {
+			handle_include();
+		} else {
+			throw std::runtime_error(std::string(LT(1).pos()) + ":error: expected declaration or include");
+		}
 	}
 
 	return std::shared_ptr<Program>(new Program(stmts));

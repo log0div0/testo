@@ -1,0 +1,378 @@
+machwine client {
+	cpus: 1
+	os_type: "ubuntu_64"
+	ram: 512Mb
+	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+	}
+
+	nic master_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:AA"
+	}
+}
+
+machine client2 {
+	cpus: 1
+	os_type: "ubuntu_64"
+	ram: 512Mb
+	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+	}
+
+	nic master_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:11:00:aa"
+	}
+}
+
+machine server {
+	cpus: 1
+	os_type: "ubuntu_64"
+	ram: 512Mb
+	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+	}
+
+	nic master_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:22:00:aa"
+	}
+}
+
+machine master {
+	cpus: 2
+	os_type: "ubuntu_64"
+	ram: 2048Mb
+	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 5Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+	}
+
+	nic client_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:33:00:aa"
+	}
+
+	nic server_side: {
+		slot: 2
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:33:00:bb"
+	}
+
+	nic slave_side: {
+		slot: 3
+		attached_to: "internal"
+		network: "net3"
+		mac: "52:54:00:33:00:cc"
+	}
+}
+
+machine slave {
+	cpus: 2
+	os_type: "ubuntu_64"
+	ram: 2Gb
+	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 5Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+	}
+
+	nic client_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:44:00:aa"
+	}
+
+	nic server_side: {
+		slot: 2
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:44:00:bb"
+	}
+
+	nic master_side: {
+		slot: 3
+		attached_to: "internal"
+		network: "net3"
+		mac: "52:54:00:44:00:cc"
+	}
+}
+
+snapshot ubuntu_installed {
+	wait "Tibetan"; press Enter
+	wait for 4s
+	#wait "Install Ubuntu Server"; press Enter
+	press Enter
+	#wait "Amharic";	press Enter
+	wait "Choose the language";	press Enter
+	wait "Country, territory or area"; press Enter
+	wait "You can try to have";	press Enter
+	wait "country of origin for the keyboard"; press Enter
+	wait "Keyboard layout"; press Enter
+	wait "Primary network interface" for 2m; press Enter
+	wait "Hostname:" for 55s
+	press Backspace*6; type "testo"; press Enter
+	wait "Full name for the new user"; type "testo-user"; press Enter
+	wait "Username for your account"; press Enter
+	wait "Choose a password for the new user"; type "1111"; press Enter
+	wait "Re-enter password to verify"; type "1111"; press Enter
+	wait "Use weak password?"; press Left; press Enter
+	wait "Encrypt your"; press Enter
+$ifdef HTTP_PROXY
+	wait "Select your time zone" for 1m; press Enter
+$else
+	#wait "Moscow" for 2m; press Enter
+$endif
+	wait "Partitioning method"; press Enter
+	wait "Select disk to partition"; press Enter
+	wait "configure LVM?"; press Left, Enter
+	wait "Amount of volume group to use for guided partitioning"; press Enter
+	wait "If you continue, the changes listed below"; press Left, Enter
+	wait "HTTP proxy information" for 2m; press Enter
+	wait "How do you want to manage upgrades" for 5m; press Enter
+	wait "At the moment, only the core of the system is installed"; press Enter
+	wait "Install the GRUB" for 1m; press Enter
+	wait "Installation complete" for 30s; press Enter
+	#wait "Ubuntu 16.04.5 LTS" for 30s;
+	wait for 30s;
+	type "testo-user"; press Enter
+	wait for 3s; type "1111"; press Enter
+	wait for 3s;
+	#wait "Password:"; type "1111"; press Enter
+	#wait "GNU/Linux 4.4.0-131-generic";
+}
+
+snapshot master_installed {
+	wait "Tibetan"; press Enter
+	wait for 4s
+	#wait "Install Ubuntu Server"; press Enter
+	press Enter
+	#wait "Amharic";	press Enter
+	wait "Choose the language";	press Enter
+	wait "Country, territory or area"; press Enter
+	wait "You can try to have";	press Enter
+	wait "country of origin for the keyboard"; press Enter
+	wait "Keyboard layout"; press Enter
+	wait "Primary network interface" for 2m; press Down, Enter
+	wait "Hostname:" for 55s
+	press Backspace*6; type "testo"; press Enter
+	wait "Full name for the new user"; type "testo-user"; press Enter
+	wait "Username for your account"; press Enter
+	wait "Choose a password for the new user"; type "1111"; press Enter
+	wait "Re-enter password to verify"; type "1111"; press Enter
+	wait "Use weak password?"; press Left; press Enter
+	wait "Encrypt your"; press Enter
+$ifdef HTTP_PROXY
+	wait "Select your time zone" for 1m; press Enter
+$else
+	#wait "Moscow" for 2m; press Enter
+$endif
+	wait "Partitioning method"; press Enter
+	wait "Select disk to partition"; press Enter
+	wait "configure LVM?"; press Left, Enter
+	wait "Amount of volume group to use for guided partitioning"; press Enter
+	wait "If you continue, the changes listed below"; press Left, Enter
+	wait "HTTP proxy information" for 2m; press Enter
+	wait "How do you want to manage upgrades" for 5m; press Enter
+	wait "At the moment, only the core of the system is installed"; press Enter
+	wait "Install the GRUB" for 1m; press Enter
+	wait "Installation complete" for 30s; press Enter
+	#wait "Ubuntu 16.04.5 LTS" for 30s;
+	wait for 30s;
+	type "testo-user"; press Enter
+	wait for 3s; type "1111"; press Enter
+	wait for 3s;
+	#wait "Password:"; type "1111"; press Enter
+	#wait "GNU/Linux 4.4.0-131-generic";
+}
+
+snapshot internet_configured: ubuntu_installed {
+	type "sudo su"; press Enter
+	type "1111"; press Enter
+	wait for 3s
+	type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
+	wait for 5s
+	type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
+	type "Acquire::https::Proxy \"http://172.17.5.92:3128\";"
+	press leftctrl+x; wait for 1s;
+	press leftshift+y; press Enter
+	type "apt-get update"; press Enter
+	wait for 20s
+}
+
+snapshot internet_master_configured: master_installed {
+	type "sudo su"; press Enter
+	type "1111"; press Enter
+	wait for 3s
+	type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
+	wait for 5s
+	type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
+	type "Acquire::https::Proxy \"http://172.17.5.92:3128\";"
+	press leftctrl+x; wait for 1s;
+	press leftshift+y; press Enter
+	type "apt-get update"; press Enter
+	wait for 20s
+}
+
+snapshot additions_installed: internet_configured {
+	type "apt-get install -y build-essential module-assistant"; press Enter
+	wait for 40s
+	type "m-a prepare"; press Enter
+	wait for 5s
+	plug dvd "../iso/VBoxGuestAdditions_5.2.22.iso"
+	wait for 4s
+	type "mount /dev/cdrom /media/cdrom"; press Enter
+	wait for 3s
+	type "/media/cdrom/VBoxLinuxAdditions.run"; press Enter
+	wait for 1m
+	type "reboot"; press Enter
+	wait for 30s
+	type "testo-user"; press Enter
+	wait for 2s; type "1111"; press Enter
+}
+
+snapshot additions_master_installed: internet_master_configured {
+	type "apt-get install -y build-essential module-assistant"; press Enter
+	wait for 40s
+	type "m-a prepare"; press Enter
+	wait for 5s
+	plug dvd "../iso/VBoxGuestAdditions_5.2.22.iso"
+	wait for 3s
+	type "mount /dev/cdrom /media/cdrom"; press Enter
+	wait for 3s
+	type "/media/cdrom/VBoxLinuxAdditions.run"; press Enter
+	wait for 1m
+	type "reboot"; press Enter
+	wait for 30s
+	type "testo-user"; press Enter
+	wait for 2s; type "1111"; press Enter
+}
+
+snapshot ready: additions_installed {
+	type "sudo su"; press Enter
+	wait for 1s
+	type "1111"; press Enter
+	wait for 1s;
+	type "passwd root"; press Enter
+	wait for 1s
+	type "1111"; press Enter
+	wait for 1s
+	type "1111"; press Enter
+	wait for 1s;
+	type "passwd -u root"; press Enter
+	wait for 2s;
+	stop
+	unplug nic nat
+	start
+	wait for 30s
+}
+
+snapshot master_ready: additions_master_installed {
+	type "sudo su"; press Enter
+	wait for 1s
+	type "1111"; press Enter
+	wait for 1s;
+	type "passwd root"; press Enter
+	wait for 1s
+	type "1111"; press Enter
+	wait for 1s
+	type "1111"; press Enter
+	wait for 1s;
+	type "passwd -u root"; press Enter
+	type "apt-get install -y python conntrack conntrackd isc-dhcp-server arping nftables"; press Enter
+	wait for 30s
+	stop
+	unplug nic nat
+	start
+	wait for 30s
+}
+
+snapshot client_ifaces_renamed: ready {
+	set login="root" password="1111"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
+	exec bash "chmod +x /tmp/rename_net.sh"
+	exec bash "/tmp/rename_net.sh 52:54:00:00:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
+}
+
+snapshot client2_ifaces_renamed: ready {
+	set login="root" password="1111"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
+	exec bash "chmod +x /tmp/rename_net.sh"
+	exec bash "/tmp/rename_net.sh 52:54:00:11:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
+}
+
+snapshot server_ifaces_renamed: ready {
+	set login="root" password="1111"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
+	exec bash "chmod +x /tmp/rename_net.sh"
+	exec bash "/tmp/rename_net.sh 52:54:00:22:00:aa master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
+}
+
+snapshot master_ifaces_renamed: master_ready {
+	set login="root" password="1111"
+
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
+	exec bash "chmod +x /tmp/rename_net.sh"
+	exec bash "/tmp/rename_net.sh 52:54:00:33:00:aa client_side"
+	exec bash "/tmp/rename_net.sh 52:54:00:33:00:bb server_side"
+	exec bash "/tmp/rename_net.sh 52:54:00:33:00:cc slave_side"
+
+	exec bash "sysctl -w net.ipv4.ip_forward=1"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 2s;
+}
+
+snapshot slave_ifaces_renamed: master_ready {
+	set login="root" password="1111"
+	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
+	exec bash "chmod +x /tmp/rename_net.sh"
+	exec bash "/tmp/rename_net.sh 52:54:00:44:00:aa client_side"
+	exec bash "/tmp/rename_net.sh 52:54:00:44:00:bb server_side"
+	exec bash "/tmp/rename_net.sh 52:54:00:44:00:cc master_side"
+
+	type "root"; press Enter; wait for 1s
+	type "1111"; press Enter; wait for 2s
+	type "pkill VBoxService"; press Enter; wait for 2s;
+	type "rmmod vboxsf"; press Enter; wait for 5s;
+}
