@@ -1,0 +1,531 @@
+#firewall folder
+
+$include "../decl/declarations.testo"
+test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
+	master set login="root" password="1111"
+	client set login="root" password="1111"
+	server set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	client {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	server {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip a a 1.1.1.1/24 dev client_side
+		ip a a 2.2.2.1/24 dev server_side
+		ip l s client_side up
+		ip l s server_side up
+	"""
+
+	client exec bash """
+		ip a a 1.1.1.2/24 dev master_side
+		ip l s master_side up
+		ip r a 2.2.2.0/24 via 1.1.1.1
+	"""
+
+	server exec bash """
+		ip a a 2.2.2.2/24 dev master_side
+		ip l s master_side up
+		ip r a 1.1.1.0/24 via 2.2.2.1
+	"""
+
+	client exec bash "ping -c 10 2.2.2.2"
+
+	master exec bash """
+		nft add table my_table
+		nft add chain my_table my_chain '{ type filter hook forward priority 0 ; policy drop ; }'
+	"""
+
+	client exec bash "! ping -c 10 2.2.2.2"
+
+	master exec bash "nft add rule my_table my_chain ip protocol icmp accept"
+
+	client exec bash "ping -c 10 2.2.2.2"
+}
+
+#link folder
+#bond
+
+test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+
+		ip l s slave_side up
+		ip a a 10.0.0.1/24 dev slave_side
+	"""
+
+	slave exec bash """
+		ip l s master_side up
+		ip a a 10.0.0.2/24 dev master_side
+		ip r a 1.1.1.0/24 via 10.0.0.1
+	"""
+
+	slave exec bash "! ping -c 10 1.1.1.111"
+}
+
+test bond_delete_address: master(master_ifaces_renamed) {
+	master set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip a d 1.1.1.1/24 dev abc
+
+		nft add table my_table
+	"""
+}
+
+test bond_mode_1: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 1 primary client_side miimon 100 fail_over_mac active
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+	"""
+
+	slave exec bash """
+		ip l a abc type bond mode 1 primary client_side miimon 100 fail_over_mac active
+		ip l s client_side nomaster
+		ip l s server_side nomaster
+		ip l s client_side down
+		ip l s server_side down
+		ip l s abc down
+		ip l s client_side master abc
+		ip l s server_side master abc
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 1.1.1.2/24 dev abc
+	"""
+
+	master exec bash "ping -c 10 1.1.1.2"
+	slave exec bash "ping -c 10 1.1.1.1"
+
+	#Fucking vbox doesn't do shit
+	master unplug link client_side
+	slave unplug link client_side
+
+	master exec bash "ping -c 10 1.1.1.2"
+	slave exec bash "ping -c 10 1.1.1.1"
+}
+
+#bond+vlan
+test bond_vlan_basic: master(master_ifaces_renamed) {
+	master set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l s server_side down
+		ip l s client_side down
+		ip link add abc type bond mode 1 miimon 10 updelay 100 downdelay 100 primary server_side primary_reselect 0
+		ip link set server_side master abc
+		ip link set client_side master abc
+
+		ip l s server_side up
+		ip l s client_side up
+		ip l s abc up
+
+		ip l s slave_side up
+
+		ip link add link slave_side name slave_side.2267 type vlan id 2267
+		ip addr add 10.7.3.1/24 brd + dev slave_side.2267
+
+		ip link set dev slave_side.2267 mtu 1500 up
+
+		ip link add link abc name abc.2269 type vlan id 2269
+	"""
+}
+
+
+#route
+test route_basic: master(master_ifaces_renamed) {
+	master set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l s client_side down
+		ip l s server_side down
+
+		ip a a 2.2.2.1/24 dev client_side
+		ip a a 3.3.3.1/24 dev server_side
+		! ip r s | fgrep 2.2.2.0/24
+		! ip r s | fgrep 3.3.3.0/24
+
+		ip l s client_side up
+		ip l s server_side up
+		ip r s | fgrep 2.2.2.0/24
+		ip r s | fgrep 3.3.3.0/24
+
+		ip r a 7.7.7.0/24 dev client_side via 2.2.2.5
+		ip r a 8.8.8.0/24 dev server_side via 3.3.3.3
+
+		ip r s | fgrep 7.7.7.0/24
+		ip r s | fgrep 8.8.8.0/24
+
+		ip a d 2.2.2.1/24 dev client_side
+		ip a d 3.3.3.1/24 dev server_side
+
+		ip a a 4.4.4.1/24 dev client_side
+		ip a a 5.5.5.1/24 dev server_side
+
+		ip r s | fgrep 4.4.4.0/24
+		ip r s | fgrep 5.5.5.0/24
+		! ip r s | fgrep 7.7.7.0/24
+		! ip r s | fgrep 8.8.8.0/24
+
+		ip a d 4.4.4.1/24 dev client_side
+		ip a d 5.5.5.1/24 dev server_side
+
+		! ip r s | fgrep 2.2.2.0/24
+		! ip r s | fgrep 3.3.3.0/24
+		! ip r s | fgrep 7.7.7.0/24
+		! ip r s | fgrep 8.8.8.0/24
+	"""
+}
+
+test route_bond: master(master_ifaces_renamed) {
+	master set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0
+		ip l s client_side up
+		ip l s server_side up
+		ip a a 1.1.1.1/24 dev client_side
+		ip a a 2.2.2.2/24 dev server_side
+		ip r a 4.4.4.0/24 dev client_side via 1.1.1.5
+
+		#check local routes
+		ip r s | grep 1.1.1.0/24
+		ip r s | grep 2.2.2.0/24
+		ip r s | grep 4.4.4.0/24
+
+		#insert NICs into bond - client_side-2 routes should be gone
+		ip l s client_side down
+		ip l s server_side down
+
+		ip l s client_side master abc
+		ip l s server_side master abc
+
+		! ip r s | grep 1.1.1.0/24
+		! ip r s | grep 2.2.2.0/24
+		! ip r s | grep 4.4.4.0/24
+
+		#set bond up, assign address, add a route
+
+		ip l s client_side up
+		ip l s server_side up
+		ip l s abc up
+		ip a a 3.3.3.3/24 dev abc
+
+		#check routes for bonding
+		ip r s | grep 3.3.3.0/24
+
+		#add some route to see it deleted further
+		ip r a 4.4.4.0/24 dev abc via 3.3.3.15
+		ip r s | grep 4.4.4.0/24
+
+		#deattach a NIC from bonding - we should get our local route back
+		ip l s client_side nomaster
+		ip l s client_side up
+		ip r s | grep 1.1.1.0/24
+
+		#delete bonding - all corresponding routes should be deleted as well
+		ip l d dev abc
+		! ip r s | grep 3.3.3.0/24
+		! ip r s | grep 4.4.4.0/24
+	"""
+}
+
+#vlan
+test vlan_basic: master(master_ifaces_renamed), client(client_ifaces_renamed),
+	client2(client2_ifaces_renamed),
+	server(server_ifaces_renamed) 
+{
+	master set login="root" password="1111"
+	client set login="root" password="1111"
+	client2 set login="root" password="1111"
+	server set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	client {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	client2 {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	server {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a name vlan1 link client_side type vlan id 1
+		ip l a name vlan2 link client_side type vlan id 2
+		ip a a 192.168.1.1/24 dev vlan1
+		ip a a 192.168.2.1/24 dev vlan2
+		ip a a 10.0.0.1/24 dev server_side
+		ip l s client_side up
+		ip l s vlan1 up
+		ip l s vlan2 up
+		ip l s server_side up
+	"""
+
+	client exec bash """
+		ip l a name vlan1 link master_side type vlan id 1
+		ip a a 192.168.1.2/24 dev vlan1
+		ip l s vlan1 up
+		ip r a default via 192.168.1.1
+	"""
+
+	client2 exec bash """
+		ip l a name vlan2 link master_side type vlan id 2
+		ip a a 192.168.2.2/24 dev vlan2
+		ip l s vlan2 up
+		ip r a default via 192.168.2.1
+	"""
+
+	server exec bash """
+		ip a a 10.0.0.2/24 dev master_side
+		ip l s master_side up
+		ip r a default via 10.0.0.1
+	"""
+
+	master exec bash "arping 192.168.1.2 -I vlan1 -c 10"
+	client exec bash "ping -c 10 192.168.2.2"
+	client exec bash "ping -c 10 10.0.0.2"
+}
+
+test vlan_tun_with_vlan: master(master_ifaces_renamed), server(server_ifaces_renamed)
+{
+	master set login="root" password="1111"
+	server set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	server {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a name vlan123 link server_side type vlan id 123
+		ip a a 10.0.0.1/24 dev vlan123
+		ip l s server_side up
+		ip l s vlan123 up
+	"""
+
+	server exec bash """
+		ip l a name vlan123 link master_side type vlan id 123
+		ip a a 10.0.0.2/24 dev vlan123
+		ip l s master_side up
+		ip l s vlan123 up
+	"""
+
+	server exec bash "ping -c 10 10.0.0.1"
+	master exec bash "ping -c 10 10.0.0.2"
+}
+
+
+test iif_running_flag: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l s slave_side up
+		ip a a 1.1.1.1/24 dev slave_side
+	"""
+
+	slave exec bash """
+		ip l s master_side up
+		ip a a 1.1.1.2/24 dev master_side
+	"""
+
+	master exec bash """
+		sleep 5
+		ifconfig slave_side | grep RUNNING
+	"""
+
+	slave exec bash "ping -c 10 1.1.1.1"
+
+	master unplug link slave_side
+	slave unplug link master_side
+
+	master exec bash """
+		sleep 5
+		! ifconfig slave_side | grep RUNNING
+	"""
+
+	slave exec bash "! ping -c 10 1.1.1.1"
+
+	master plug link slave_side
+	slave plug link master_side
+
+	master exec bash """
+		sleep 5
+		ifconfig slave_side | grep RUNNING
+	"""
+
+	slave exec bash "ping -c 10 1.1.1.1"
+}
+
+#neigh
+
+test arping_basic: master(master_ifaces_renamed), server(server_ifaces_renamed) {
+	master set login="root" password="1111"
+	server set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	server {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip a a 2.2.2.1/24 dev server_side
+		ip l s server_side up
+	"""
+
+	server exec bash """
+		ip a a 2.2.2.2/24 dev master_side
+		ip l s master_side up
+	"""
+
+	master exec bash "arping 2.2.2.2 -I server_side -c 10"
+}
+
+#router
+#dhcp
+
+test dhcp_basic: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master set login="root" password="1111"
+	slave set login="root" password="1111"
+
+	master {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master {
+		exec bash "rm /etc/dhcp/dhcpd.conf"
+		exec bash "rm /etc/default/isc-dhcp-server"
+		copyto "/home/alex/work/vbox/testo/samples/additional_files/dhcp/master/dhcpd.conf" "/etc/dhcp/"
+		copyto "/home/alex/work/vbox/testo/samples/additional_files/dhcp/master/isc-dhcp-server" "/etc/default/"
+		exec bash """
+			ip a a 192.168.1.1/24 dev client_side
+			ip l s client_side up
+			service isc-dhcp-server restart
+		"""
+	}
+
+	slave exec bash """
+		ip l s client_side up
+		dhclient -v client_side
+	"""
+}

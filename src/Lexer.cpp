@@ -4,15 +4,15 @@
 #include <stdexcept>
 #include <string.h>
 
-Lexer::Lexer(const std::string& file) {
+Lexer::Lexer(const fs::path& file) {
 	std::ifstream input_stream(file);
 
 	if (!input_stream) {
-		throw std::runtime_error("Can't open file: " + file);
+		throw std::runtime_error("Can't open file: " + std::string(file));
 	}
 
 	input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
-	current_pos = Pos(input);
+	current_pos = Pos(file, input);
 }
 
 void Lexer::skip_spaces() {
@@ -126,12 +126,11 @@ void Lexer::handle_endif() {
 	}
 
 	if (!test_newline()) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: $endif directive has be finished with a newline");
+		throw std::runtime_error(std::string(current_pos) + ": Error: $endif directive has to be finished with a newline");
 	}
 
 	current_pos.advance(); //newline
 }
-
 
 Token Lexer::get_ppd() {
 	Pos tmp_pos = current_pos;
@@ -154,6 +153,8 @@ Token Lexer::get_ppd() {
 		return else_();
 	} else if (value == "$endif") {
 		return endif();
+	} else if (value == "$include") {
+		return include();
 	} else {
 		throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: Unknown ppd directive: " + value);
 	}
@@ -161,15 +162,19 @@ Token Lexer::get_ppd() {
 	return Token(); //keep compiler happy
 }
 
-void Lexer::handle_ppd() {
+Token Lexer::handle_ppd() {
 	Token ppd = get_ppd();
 	if (ppd.type() == Token::category::ifdef) {
-		return handle_ifdef();
+		handle_ifdef();
 	} else if (ppd.type() == Token::category::else_) {
-		return handle_else();
+		handle_else();
 	} else if (ppd.type() == Token::category::endif) {
-		return handle_endif();
+		handle_endif();
+	} else if (ppd.type() == Token::category::include) {
+		return ppd;
 	}
+
+	return Token();
 }
 
 bool Lexer::test_size_specifier() const {
@@ -564,6 +569,13 @@ Token Lexer::else_() {
 	return Token(Token::category::else_, value, tmp_pos);
 }
 
+Token Lexer::include() {
+	Pos tmp_pos = current_pos;
+	std::string value("$include");
+	current_pos.advance(value.length());
+	return Token(Token::category::include, value, tmp_pos);
+}
+
 Token Lexer::get_next_token() {
 	while (!test_eof()) {
 		if (test_newline()) {
@@ -597,7 +609,10 @@ Token Lexer::get_next_token() {
 		} else if (test_colon()) {
 			return colon();
 		} else if (test_ppd()) {
-			handle_ppd();
+			auto res = handle_ppd();
+			if (res.type() == Token::category::include) {
+				return res;
+			} 
 			continue;
 		} else if (test_space()) {
 			skip_spaces();

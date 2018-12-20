@@ -636,7 +636,7 @@ struct Attr: public Node {
 		value(value) {}
 
 	Pos begin() const {
-		return name.value();
+		return name.pos();
 	}
 
 	Pos end() const {
