@@ -100,6 +100,8 @@ void Parser::handle_include() {
 		dest_file = fs::canonical(combined);
 	}
 
+	//check for cycles
+
 	Ctx new_ctx(dest_file);
 	lexers.push_back(new_ctx);
 
@@ -111,11 +113,9 @@ void Parser::handle_include() {
 std::shared_ptr<Program> Parser::parse() {
 	std::vector<std::shared_ptr<IStmt>> stmts;
 
-	newline_list();
-
 	//we expect include command only between the declarations
 	while (!lexers.empty()) {
-
+		newline_list();
 		if (LA(1) == Token::category::eof) {
 			lexers.pop_back();
 		} else if (test_stmt()) {

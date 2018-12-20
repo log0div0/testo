@@ -1,3 +1,5 @@
+$include "../tests.testo"
+
 machine client {
 	cpus: 1
 	os_type: "ubuntu_64"

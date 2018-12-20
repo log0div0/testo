@@ -60,6 +60,7 @@ void Lexer::handle_ifdef() {
 			return;
 		}
 
+		skipping:
 		while (!test_ppd()) {
 			if (test_eof()) {
 				return;
@@ -72,6 +73,9 @@ void Lexer::handle_ifdef() {
 			return handle_endif();
 		} else if (ppd.type() == Token::category::else_) {
 			return handle_else(true);
+		} else if (ppd.type() == Token::category::include) {
+			current_pos.advance();
+			goto skipping;
 		} else {
 			throw std::runtime_error(std::string(current_pos) + ": expected $endif");
 		}
@@ -98,6 +102,7 @@ void Lexer::handle_else(bool should_happen = false) {
 			return;
 		}
 
+		skipping:
 		while (!test_ppd()) {
 			if (test_eof()) {
 				return;
@@ -108,6 +113,9 @@ void Lexer::handle_else(bool should_happen = false) {
 		Token ppd = get_ppd();
 		if (ppd.type() == Token::category::endif) {
 			return handle_endif();
+		} else if (ppd.type() == Token::category::include) {
+			current_pos.advance();
+			goto skipping;
 		} else {
 			throw std::runtime_error(std::string(current_pos) + ": expected $endif");
 		}
