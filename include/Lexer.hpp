@@ -25,6 +25,21 @@ private:
 			(input[current_pos + shift] == '_'));
 	}
 	bool test_comments() const { return (input[current_pos] == '#'); }
+	bool test_begin_multiline_comments() const {
+		if (test_eof(1)) {
+			return false;
+		}
+		return ((input[current_pos] == '/') &&
+			(input[current_pos + 1] == '*'));
+	}
+
+	bool test_end_multiline_comments() const {
+		if (test_eof(1)) {
+			return false;
+		}
+		return ((input[current_pos] == '*') &&
+			(input[current_pos + 1] == '/'));
+	}
 	bool test_space(size_t shift = 0) const {
 		char c = input[current_pos + shift];
 
@@ -64,6 +79,7 @@ private:
 
 	void skip_spaces();
 	void skip_comments();
+	void skip_multiline_comments();
 
 	Token handle_ppd(); //preprocessor directive
 	void handle_ifdef();

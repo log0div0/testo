@@ -5,7 +5,9 @@ $include "decl/declarations.testo"
 $else
 $include "decl/declarations.testo"
 $endif
-test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
+
+
+/*test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
 	master set login="root" password="1111"
 	client set login="root" password="1111"
 	server set login="root" password="1111"
@@ -14,7 +16,6 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
-
 	client {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
@@ -56,7 +57,7 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 	master exec bash "nft add rule my_table my_chain ip protocol icmp accept"
 
 	client exec bash "ping -c 10 2.2.2.2"
-}
+}*/
 
 #link folder
 #bond

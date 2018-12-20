@@ -27,6 +27,22 @@ void Lexer::skip_comments() {
 	}
 }
 
+void Lexer::skip_multiline_comments() {
+	while(!test_end_multiline_comments()) {
+		current_pos.advance();
+		if (test_eof()) {
+			throw std::runtime_error("Error: can't find end of multiline comments");
+		}
+
+		if (test_begin_multiline_comments()) {
+			throw std::runtime_error(std::string(current_pos) + ":Error: nested multiline comments are not allowed");
+		}
+	}
+
+	current_pos.advance();
+	current_pos.advance();
+}
+
 void Lexer::handle_ifdef() {
 	if (is_inside_if) {
 		throw std::runtime_error(std::string(current_pos) + ": Error: nested ifdefs are not supported");
@@ -627,6 +643,9 @@ Token Lexer::get_next_token() {
 			continue;
 		} else if (test_comments()) {
 			skip_comments();
+			continue;
+		} else if (test_begin_multiline_comments()) {
+			skip_multiline_comments();
 			continue;
 		} else {
 			throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unknown lexem: " + input[current_pos]);
