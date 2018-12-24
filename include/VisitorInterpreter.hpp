@@ -35,6 +35,7 @@ struct VisitorInterpreter {
 	void visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Exec> exec);
 	void visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
 	void visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<AST::CopyTo> copyto);
+	void visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
 	
 	void apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot, bool recursive = false);
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);

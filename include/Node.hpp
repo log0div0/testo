@@ -536,7 +536,8 @@ struct Snapshot: public Node {
 struct Macro: public Node {
 	Macro(const Token& macro, const Token& name, std::shared_ptr<Action<ActionBlock>> action_block):
 		Node(macro),
-		name(name) {}
+		name(name),
+		action_block(action_block) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -552,6 +553,29 @@ struct Macro: public Node {
 
 	Token name;
 	std::shared_ptr<Action<ActionBlock>> action_block;
+};
+
+struct MacroCall: public Node {
+	MacroCall(const Token& macro_name):
+		Node(macro_name) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	Token name() const {
+		return t;
+	}
+
+	std::shared_ptr<Macro> macro;
 };
 
 struct VmState: public Node {

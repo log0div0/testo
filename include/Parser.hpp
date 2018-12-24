@@ -60,6 +60,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Set>> set();
 	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
+	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
 
 	std::vector<Ctx> lexers;
 };

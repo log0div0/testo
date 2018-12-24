@@ -25,7 +25,7 @@ struct VisitorSemantic {
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<AST::Plug> plug);
 	void visit_exec(std::shared_ptr<AST::Exec> exec);
-	void visit_set(std::shared_ptr<AST::Set> set);
+	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
 
 	void visit_controller(std::shared_ptr<AST::Controller> controller);
 	void visit_machine(std::shared_ptr<AST::Controller> machine);

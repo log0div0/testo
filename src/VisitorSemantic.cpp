@@ -242,8 +242,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<IAction> action) {
 		return visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
-		return visit_set(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
+		return visit_macro_call(p->action);
 	}
 }
 
@@ -276,14 +276,12 @@ void VisitorSemantic::visit_exec(std::shared_ptr<Exec> exec) {
 	}
 }
 
-void VisitorSemantic::visit_set(std::shared_ptr<Set> set) {
-	for (auto assign: set->assignments) {
-		auto attr = assign->left.value();
-		if ((attr != "login") &&
-			(attr != "password")) {
-			throw std::runtime_error(std::string(assign->begin()) + ": error: unknown attribute: " + attr);
-		}
+void VisitorSemantic::visit_macro_call(std::shared_ptr<MacroCall> macro_call) {
+	auto macro = global.macros.find(macro_call->name());
+	if (macro == global.macros.end()) {
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
 	}
+	macro_call->macro = macro->second;
 }
 
 void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {
