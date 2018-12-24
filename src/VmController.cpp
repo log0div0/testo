@@ -310,10 +310,44 @@ void VmController::create_vm() {
 	}
 }
 
+int VmController::set_metadata(const nlohmann::json& metadata) {
+	try {
+		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
+			auto lock_machine = virtual_box.find_machine(name());
+			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+			auto machine = work_session.machine();
+			machine.setExtraData(key_value.key(), key_value.value());
+		}
+
+		return 0;		
+	}
+	catch (const std::exception& error) {
+		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
+		return -1;
+	}
+}
+
+int VmController::set_metadata(const std::string& key, const std::string& value) {
+	try {
+		auto lock_machine = virtual_box.find_machine(name());
+		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+		auto machine = work_session.machine();
+		machine.setExtraData(key, value);
+		return 0;
+	}
+	catch (const std::exception& error) {
+		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
+		return -1;
+	}
+}
+
 int VmController::install() {	
 	try {
 		remove_if_exists();
 		create_vm();
+		if (config.count("metadata")) {
+			set_metadata(config.at("metadata"));
+		}
 		set_config_cksum(config_cksum());
 		if (start()) {
 			throw std::runtime_error("Start while performing install action");
@@ -454,7 +488,6 @@ int VmController::rollback(const std::string& snapshot) {
 		lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
 
-		attrs = nlohmann::json({});
 		return 0;
 	}
 	catch (const std::exception& error) {
@@ -786,13 +819,20 @@ int VmController::run(const fs::path& exe, std::vector<std::string> args) {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		//1) Open the session
-		if (!attrs.count("login")) {
+
+		auto machine = work_session.machine();
+		auto login = machine.getExtraData("login");
+		auto password = machine.getExtraData("password");
+
+		if (!login.length()) {
 			throw std::runtime_error("Attribute login is not specified");
 		}
-		if (!attrs.count("password")) {
-			throw std::runtime_error("Attribute password is not specified");
+
+		if (!password.length()) {
+			throw std::runtime_error("Attribute login is not specified");
 		}
-		auto gsession = work_session.console().guest().create_session(attrs.at("login").get<std::string>(), attrs.at("password").get<std::string>());
+
+		auto gsession = work_session.console().guest().create_session(login, password);
 
 		std::vector<ProcessCreateFlag> create_flags = {ProcessCreateFlag_WaitForStdOut, ProcessCreateFlag_WaitForStdErr};
 		std::vector<ProcessWaitForFlag> wait_for_flags = {ProcessWaitForFlag_StdOut, ProcessWaitForFlag_StdErr, ProcessWaitForFlag_Terminate};
@@ -935,17 +975,22 @@ int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 			throw std::runtime_error(std::string("Source file/folder doens't exist on host: ") + std::string(src));
 		}
 
-		if (!attrs.count("login")) {
-			throw std::runtime_error("Attribute login is not specified");
-		}
-		if (!attrs.count("password")) {
-			throw std::runtime_error("Attribute password is not specified");
-		}
-
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+
+		auto machine = work_session.machine();
+		auto login = machine.getExtraData("login");
+		auto password = machine.getExtraData("password");
+
+		if (!login.length()) {
+			throw std::runtime_error("Attribute login is not specified");
+		}
+
+		if (!password.length()) {
+			throw std::runtime_error("Attribute login is not specified");
+		}
 		//1) Open the session
-		auto gsession = work_session.console().guest().create_session(attrs.at("login").get<std::string>(), attrs.at("password").get<std::string>());
+		auto gsession = work_session.console().guest().create_session(login, password);
 		
 		//2) if dst doesn't exist on guest - fuck you
 		if (!gsession.directory_exists(dst)) {
@@ -975,17 +1020,22 @@ int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 
 int VmController::remove_from_guest(const fs::path& obj) {
 	try {
-		if (!attrs.count("login")) {
-			throw std::runtime_error("Attribute login is not specified");
-		}
-		if (!attrs.count("password")) {
-			throw std::runtime_error("Attribute password is not specified");
-		}
-
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		//1) Open the session
-		auto gsession = work_session.console().guest().create_session(attrs.at("login").get<std::string>(), attrs.at("password").get<std::string>());
+
+		auto machine = work_session.machine();
+		auto login = machine.getExtraData("login");
+		auto password = machine.getExtraData("password");
+
+		if (!login.length()) {
+			throw std::runtime_error("Attribute login is not specified");
+		}
+
+		if (!password.length()) {
+			throw std::runtime_error("Attribute login is not specified");
+		}
+
+		auto gsession = work_session.console().guest().create_session(login, password);
 
 		//directory handling differs from file handling
 		if (gsession.directory_exists(obj)) {

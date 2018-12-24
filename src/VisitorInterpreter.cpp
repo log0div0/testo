@@ -395,9 +395,10 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<Set> set) {
 	std::cout << "Setting attributes on vm " << vm->name() << std::endl;
 
+	//TODO: redo!
 	for (auto assign: set->assignments) {
 		std::cout << assign->left.value() << " -> " << assign->value() << std::endl;
-		vm->attrs[assign->left.value()] = assign->value();
+		vm->set_metadata(assign->left.value(), assign->value());
 	}
 }
 

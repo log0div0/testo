@@ -88,6 +88,7 @@ VisitorSemantic::VisitorSemantic(Global& global):
 		vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 		vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 		vm_global_ctx.insert({"os_type", std::make_pair(false, Token::category::dbl_quoted_string)});
+		vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
 		attr_ctxs.insert({"vm_global", vm_global_ctx});
 
@@ -315,39 +316,45 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AttrBlock> attr
 
 
 void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
-	auto ctx = attr_ctxs.find(ctx_name);
-	if (ctx == attr_ctxs.end()) {
-		throw std::runtime_error("Unknown ctx"); //should never happen
-	}
-
-	auto found = ctx->second.find(attr->name);
-
-	if (found == ctx->second.end()) {
-		throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
-	}
-
-	auto match = found->second;
-	if (attr->id != match.first) {
-		if (match.first) {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() + 
-				" requires a name");
-		} else {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() + 
-				" must have no name");
+	if (ctx_name == "metadata") {
+		if (value.type() != Token::category::dbl_quoted_string) {
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only double qouted strings: " + value.value()); 
 		}
-	}
+	} else {
+		auto ctx = attr_ctxs.find(ctx_name);
+		if (ctx == attr_ctxs.end()) {
+			throw std::runtime_error("Unknown ctx"); //should never happen
+		}
 
-	if (attr->value->t.type() != match.second) {
-		throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
-			Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " + 
-			Token::type_to_string(match.second));
+		auto found = ctx->second.find(attr->name);
+
+		if (found == ctx->second.end()) {
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
+		}
+
+		auto match = found->second;
+		if (attr->id != match.first) {
+			if (match.first) {
+				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() + 
+					" requires a name");
+			} else {
+				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() + 
+					" must have no name");
+			}
+		}
+
+		if (attr->value->t.type() != match.second) {
+			throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
+				Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " + 
+				Token::type_to_string(match.second));
+		}
 	}
 
 	if (auto p = std::dynamic_pointer_cast<AttrValue<SimpleAttr>>(attr->value)) { 
 		auto value = p->attr_value->t; 
 		if (value.type() == Token::category::number) {
 			config[attr->name.value()] = std::stoul(value.value()); 
-		} else if (value.type() == Token::category::dbl_quoted_string) { 
+		} else if (value.type() == Token::category::dbl_quoted_string) {
 			config[attr->name.value()] = value.value().substr(1, value.value().length() - 2); //discard double qoutes 
 		} else if (value.type() == Token::category::size) {
 			config[attr->name.value()] = size_to_mb(value);
