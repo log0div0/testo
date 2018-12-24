@@ -11,6 +11,8 @@ struct VmController {
 	VmController(const nlohmann::json& config);
 	int install();
 	int make_snapshot(const std::string& snapshot);
+	int set_metadata(const nlohmann::json& metadata);
+	int set_metadata(const std::string& key, const std::string& value);
 	int set_config_cksum(const std::string& cksum);
 	std::string get_config_cksum();
 	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum);
@@ -45,7 +47,6 @@ struct VmController {
 
 	std::set<std::string> nics() const;
 	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
-	nlohmann::json attrs;
 
 private:
 	void copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::GuestSession& gsession);

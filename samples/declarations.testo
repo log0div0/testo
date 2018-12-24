@@ -237,7 +237,7 @@ $endif
 snapshot internet_configured: ubuntu_installed {
 	type "sudo su"; press Enter
 	type "1111"; press Enter
-	wait for 3s
+	wait for 4s;
 	type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
 	wait for 5s
 	type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
@@ -251,7 +251,7 @@ snapshot internet_configured: ubuntu_installed {
 snapshot internet_master_configured: master_installed {
 	type "sudo su"; press Enter
 	type "1111"; press Enter
-	wait for 3s
+	wait for 4s;
 	type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
 	wait for 5s
 	type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
@@ -336,7 +336,6 @@ snapshot master_ready: additions_master_installed {
 }
 
 snapshot client_ifaces_renamed: ready {
-	set login="root" password="1111"
 	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:00:00:aa master_side"
@@ -348,7 +347,6 @@ snapshot client_ifaces_renamed: ready {
 }
 
 snapshot client2_ifaces_renamed: ready {
-	set login="root" password="1111"
 	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:11:00:aa master_side"
@@ -360,7 +358,6 @@ snapshot client2_ifaces_renamed: ready {
 }
 
 snapshot server_ifaces_renamed: ready {
-	set login="root" password="1111"
 	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:22:00:aa master_side"
@@ -372,8 +369,6 @@ snapshot server_ifaces_renamed: ready {
 }
 
 snapshot master_ifaces_renamed: master_ready {
-	set login="root" password="1111"
-
 	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:33:00:aa client_side"
@@ -389,7 +384,6 @@ snapshot master_ifaces_renamed: master_ready {
 }
 
 snapshot slave_ifaces_renamed: master_ready {
-	set login="root" password="1111"
 	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:aa client_side"
