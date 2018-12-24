@@ -40,6 +40,7 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Snapshot>> snapshot();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
+	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
 	std::shared_ptr<AST::VmState> vm_state();
 	std::shared_ptr<AST::Assignment> assignment();
 	std::shared_ptr<AST::Attr> attr();

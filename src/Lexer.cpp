@@ -335,6 +335,8 @@ Token Lexer::id() {
 		return machine();
 	} else if (value == "flash") {
 		return flash();
+	} else if (value == "macro") {
+		return macro();
 	} else if (value == "dvd") {
 		return dvd();
 	} else {
@@ -446,6 +448,13 @@ Token Lexer::flash() {
 	std::string value("flash");
 	current_pos.advance(value.length());
 	return Token(Token::category::flash, value, tmp_pos);
+}
+
+Token Lexer::macro() {
+	Pos tmp_pos = current_pos;
+	std::string value("macro");
+	current_pos.advance(value.length());
+	return Token(Token::category::macro, value, tmp_pos);
 }
 
 Token Lexer::dvd() {

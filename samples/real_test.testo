@@ -1,6 +1,35 @@
 
 $include "declarations.testo"
 
+
+#link folder
+#bond
+
+test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+	master, slave {
+		type "modprobe vboxsf"; press Enter
+		type "VBoxService"; press Enter; wait for 4s
+	}
+
+	master exec bash """
+		ip l a abc type bond mode 0
+		ip l s abc up
+		ip a a 1.1.1.1/24 dev abc
+
+		ip l s slave_side up
+		ip a a 10.0.0.1/24 dev slave_side
+	"""
+
+	slave exec bash """
+		ip l s master_side up
+		ip a a 10.0.0.2/24 dev master_side
+		ip r a 1.1.1.0/24 via 10.0.0.1
+	"""
+
+	slave exec bash "! ping -c 10 1.1.1.111"
+}
+
+
 #firewall folder
 
 test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
@@ -42,32 +71,6 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 	client exec bash "ping -c 10 2.2.2.2"
 }
 
-#link folder
-#bond
-
-test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
-	master, slave {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	master exec bash """
-		ip l a abc type bond mode 0
-		ip l s abc up
-		ip a a 1.1.1.1/24 dev abc
-
-		ip l s slave_side up
-		ip a a 10.0.0.1/24 dev slave_side
-	"""
-
-	slave exec bash """
-		ip l s master_side up
-		ip a a 10.0.0.2/24 dev master_side
-		ip r a 1.1.1.0/24 via 10.0.0.1
-	"""
-
-	slave exec bash "! ping -c 10 1.1.1.111"
-}
 
 test bond_delete_address: master(master_ifaces_renamed) {
 	master {

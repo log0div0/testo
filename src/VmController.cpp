@@ -379,6 +379,15 @@ int VmController::make_snapshot(const std::string& snapshot) {
 			auto machine = work_session.machine();
 
 			machine.saveState().wait_and_throw_if_failed();
+			for (int i = 0; i < 10; i++) {
+				if (lock_machine.session_state() == SessionState_Unlocked) {
+					break;
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			}
+			if (lock_machine.session_state() != SessionState_Unlocked) {
+				throw std::runtime_error("timeout for unlocking exspired");
+			}
 		}
 
 		{
@@ -798,7 +807,6 @@ int VmController::wait(const std::string& text, const std::string& time) {
 			std::cout << out_string << std::endl;
 
 			if (out_string.find(text) != std::string::npos) {
-				std::cout << "FOUND! YEAH\n";
 				return 0;
 			}
 

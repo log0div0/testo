@@ -23,6 +23,7 @@ struct Token {
 		test,
 		machine,
 		flash,
+		macro,
 		dvd,
 		number,
 		time_interval,
