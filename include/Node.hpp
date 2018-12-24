@@ -417,13 +417,13 @@ struct ActionBlock: public Node {
 };
 
 struct Cmd: public Node {
-	Cmd(const Token& vm, std::shared_ptr<IAction> action):
+	Cmd(const std::vector<Token>& vms, std::shared_ptr<IAction> action):
 		Node(Token(Token::category::cmd, "cmd", Pos())),
-		vm(vm),
+		vms(vms),
 		action(action) {}
 
 	Pos begin() const {
-		return vm.pos();
+		return vms.begin()->pos();
 	}
 
 	Pos end() const {
@@ -431,10 +431,16 @@ struct Cmd: public Node {
 	}
 
 	operator std::string() const {
-		return vm.value() + " " + std::string(*action);
+		std::string result = vms.begin()->value();
+		for (size_t i = 1; i < vms.size() - 1; i++) {
+			result += ", ";
+			result += vms[i].value();
+		}
+		result += " " + std::string(*action);
+		return result;
 	}
 
-	Token vm;
+	std::vector<Token> vms;
 	std::shared_ptr<IAction> action;
 };
 

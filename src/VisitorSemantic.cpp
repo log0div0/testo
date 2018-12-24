@@ -198,11 +198,13 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
 
 
 void VisitorSemantic::visit_command(std::shared_ptr<Cmd> cmd) {
-	auto vm = global.local_vms.find(cmd->vm.value());
-	//TODO: macke the check for locals
-	if (vm == global.local_vms.end()) {
-		throw std::runtime_error(std::string(cmd->begin()) + ": Error: unknown vm name: " + cmd->vm.value());
+	for (auto vm_token: cmd->vms) {
+		auto vm = global.local_vms.find(vm_token.value());
+		if (vm == global.local_vms.end()) {
+			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: unknown vm name: " + vm_token.value());
+		}
 	}
+
 	visit_action(cmd->action);
 }
 
