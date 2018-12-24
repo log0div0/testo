@@ -119,8 +119,10 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<CmdBlock> block) {
 }
 
 void VisitorInterpreter::visit_command(std::shared_ptr<Cmd> cmd) {
-	auto vm = global.local_vms.find(cmd->vm.value());
-	visit_action(vm->second, cmd->action);
+	for (auto vm_token: cmd->vms) {
+		auto vm = global.local_vms.find(vm_token.value());
+		visit_action(vm->second, cmd->action);
+	}
 }
 
 

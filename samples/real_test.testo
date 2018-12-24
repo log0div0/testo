@@ -4,21 +4,9 @@ $include "declarations.testo"
 #firewall folder
 
 test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
-	master set login="root" password="1111"
-	client set login="root" password="1111"
-	server set login="root" password="1111"
+	master, client, server set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	client {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	server {
+	master, client, server {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
@@ -60,15 +48,9 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 #bond
 
 test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
-	master set login="root" password="1111"
-	slave set login="root" password="1111"
+	master, slave set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	slave {
+	master, slave {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
@@ -121,15 +103,9 @@ test bond_delete_address: master(master_ifaces_renamed) {
 }
 
 test bond_mode_1: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
-	master set login="root" password="1111"
-	slave set login="root" password="1111"
+	master, slave set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	slave {
+	master, slave {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
@@ -320,27 +296,9 @@ test vlan_basic: master(master_ifaces_renamed), client(client_ifaces_renamed),
 	client2(client2_ifaces_renamed),
 	server(server_ifaces_renamed) 
 {
-	master set login="root" password="1111"
-	client set login="root" password="1111"
-	client2 set login="root" password="1111"
-	server set login="root" password="1111"
+	master, client, client2, server set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	client {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	client2 {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	server {
+	master, client, client2, server {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
@@ -384,15 +342,9 @@ test vlan_basic: master(master_ifaces_renamed), client(client_ifaces_renamed),
 
 test vlan_tun_with_vlan: master(master_ifaces_renamed), server(server_ifaces_renamed)
 {
-	master set login="root" password="1111"
-	server set login="root" password="1111"
+	master, server set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	server {
+	master, server {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
@@ -417,15 +369,9 @@ test vlan_tun_with_vlan: master(master_ifaces_renamed), server(server_ifaces_ren
 
 
 test iif_running_flag: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
-	master set login="root" password="1111"
-	slave set login="root" password="1111"
+	master, slave set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	slave {
+	master, slave {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
@@ -471,15 +417,9 @@ test iif_running_flag: master(master_ifaces_renamed), slave(slave_ifaces_renamed
 #neigh
 
 test arping_basic: master(master_ifaces_renamed), server(server_ifaces_renamed) {
-	master set login="root" password="1111"
-	server set login="root" password="1111"
+	master, server set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	server {
+	master, server {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
@@ -501,15 +441,9 @@ test arping_basic: master(master_ifaces_renamed), server(server_ifaces_renamed) 
 #dhcp
 
 test dhcp_basic: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
-	master set login="root" password="1111"
-	slave set login="root" password="1111"
+	master, slave set login="root" password="1111"
 
-	master {
-		type "modprobe vboxsf"; press Enter
-		type "VBoxService"; press Enter; wait for 4s
-	}
-
-	slave {
+	master, slave {
 		type "modprobe vboxsf"; press Enter
 		type "VBoxService"; press Enter; wait for 4s
 	}
