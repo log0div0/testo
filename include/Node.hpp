@@ -475,7 +475,7 @@ struct CmdBlock: public Node {
 };
 
 //High-level constructions
-//may be machine declaration, snapshot declaration and test
+//may be machine, flash, snapshot, macro or test declaration
 struct IStmt: public Node {
 	using Node::Node;
 };
@@ -531,6 +531,51 @@ struct Snapshot: public Node {
 	Token parent_name;
 	std::shared_ptr<Action<ActionBlock>> action_block;
 	std::shared_ptr<Snapshot> parent;
+};
+
+struct Macro: public Node {
+	Macro(const Token& macro, const Token& name, std::shared_ptr<Action<ActionBlock>> action_block):
+		Node(macro),
+		name(name),
+		action_block(action_block) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return action_block->end();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + name.value() + " " + std::string(*action_block);
+	}
+
+	Token name;
+	std::shared_ptr<Action<ActionBlock>> action_block;
+};
+
+struct MacroCall: public Node {
+	MacroCall(const Token& macro_name):
+		Node(macro_name) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	Token name() const {
+		return t;
+	}
+
+	std::shared_ptr<Macro> macro;
 };
 
 struct VmState: public Node {

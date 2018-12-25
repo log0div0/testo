@@ -151,6 +151,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_set(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<CopyTo>>(action)) {
 		return visit_copyto(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
+		return visit_macro_call(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
 	} else {
@@ -416,6 +418,11 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 	if (vm->copy_to_guest(copyto->from(), copyto->to())) {
 		throw std::runtime_error(std::string(copyto->begin()) + ": Error: copy to command failed");
 	}
+}
+
+void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
+	std::cout << "Calling macro " << macro_call->name().value() << " on vm " << vm->name() << std::endl;
+	visit_action_block(vm, macro_call->macro->action_block->action);
 }
 
 void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot, bool recursive) {

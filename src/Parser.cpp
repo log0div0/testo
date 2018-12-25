@@ -46,6 +46,7 @@ bool Parser::test_assignment() const {
 bool Parser::test_stmt() const {
 	return ((LA(1) == Token::category::snapshot) || 
 		(LA(1) == Token::category::test) ||
+		(LA(1) == Token::category::macro) ||
 		test_controller());
 }
 
@@ -73,7 +74,8 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::exec) ||
 		(LA(1) == Token::category::set) ||
 		(LA(1) == Token::category::copyto) ||
-		(LA(1) == Token::category::lbrace));
+		(LA(1) == Token::category::lbrace) ||
+		(LA(1) == Token::category::id)); //macro call
 }
 
 void Parser::newline_list() {
@@ -142,6 +144,8 @@ std::shared_ptr<IStmt> Parser::stmt() {
 		return snapshot();
 	} else if (LA(1) == Token::category::test) {
 		return test();
+	} else if (LA(1) == Token::category::macro) {
+		return macro();
 	} else if (test_controller()) {
 		return controller();
 	} else {
@@ -193,6 +197,20 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	auto commands = command_block();
 	auto stmt = std::shared_ptr<Test>(new Test(test, name, vms, commands));
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
+}
+
+std::shared_ptr<Stmt<Macro>> Parser::macro() {
+	Token macro = LT(1);
+	match(Token::category::macro);
+
+	Token name = LT(1);
+	match(Token::category::id);
+
+	newline_list();
+	auto actions = action_block();
+
+	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, actions));
+	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
 
 std::shared_ptr<VmState> Parser::vm_state() {
@@ -376,6 +394,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = copyto();
 	} else if (LA(1) == Token::category::lbrace) {
 		action = action_block();
+	} else if (LA(1) == Token::category::id) {
+		action = macro_call();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown action: " + LT(1).value());
 	}
@@ -576,5 +596,13 @@ std::shared_ptr<Action<ActionBlock>> Parser::action_block() {
 
 	auto action = std::shared_ptr<ActionBlock>(new ActionBlock(lbrace, rbrace,  actions));
 	return std::shared_ptr<Action<ActionBlock>>(new Action<ActionBlock>(action));
+}
+
+std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
+	Token macro_name = LT(1);
+	match(Token::category::id);
+
+	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name));
+	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
 }
 

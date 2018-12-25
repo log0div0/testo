@@ -132,6 +132,8 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<IStmt> stmt) {
 		return visit_snapshot(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
 		return visit_test(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<Stmt<Macro>>(stmt)) {
+		return visit_macro(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
 		return visit_controller(p->stmt);
 	} else {
@@ -164,6 +166,22 @@ void VisitorSemantic::visit_snapshot(std::shared_ptr<Snapshot> snapshot) {
 	}
 
 	visit_action_block(snapshot->action_block->action); //dummy controller to match the interface
+}
+
+void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
+	std::cout << "Registering macro " << macro->name.value() << std::endl;
+
+	if (global.macros.find(macro->name) != global.macros.end()) {
+		throw std::runtime_error(std::string(macro->begin()) + ": Error: macros with name " + macro->name.value() + 
+			" already exists");
+	}
+
+	if (!global.macros.insert({macro->name, macro}).second) {
+		throw std::runtime_error(std::string(macro->begin()) + ": Error while registering macro with name " +
+			macro->name.value());
+	}
+
+	visit_action_block(macro->action_block->action); //dummy controller to match the interface
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
@@ -224,8 +242,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<IAction> action) {
 		return visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
-		return visit_set(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
+		return visit_macro_call(p->action);
 	}
 }
 
@@ -258,14 +276,12 @@ void VisitorSemantic::visit_exec(std::shared_ptr<Exec> exec) {
 	}
 }
 
-void VisitorSemantic::visit_set(std::shared_ptr<Set> set) {
-	for (auto assign: set->assignments) {
-		auto attr = assign->left.value();
-		if ((attr != "login") &&
-			(attr != "password")) {
-			throw std::runtime_error(std::string(assign->begin()) + ": error: unknown attribute: " + attr);
-		}
+void VisitorSemantic::visit_macro_call(std::shared_ptr<MacroCall> macro_call) {
+	auto macro = global.macros.find(macro_call->name());
+	if (macro == global.macros.end()) {
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
 	}
+	macro_call->macro = macro->second;
 }
 
 void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {
@@ -317,8 +333,8 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AttrBlock> attr
 
 void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
 	if (ctx_name == "metadata") {
-		if (value.type() != Token::category::dbl_quoted_string) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only double qouted strings: " + value.value()); 
+		if (attr->value->t.type() != Token::category::dbl_quoted_string) {
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only double qouted strings: " + attr->value->t.value()); 
 		}
 	} else {
 		auto ctx = attr_ctxs.find(ctx_name);

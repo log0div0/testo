@@ -40,6 +40,7 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Snapshot>> snapshot();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
+	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
 	std::shared_ptr<AST::VmState> vm_state();
 	std::shared_ptr<AST::Assignment> assignment();
 	std::shared_ptr<AST::Attr> attr();
@@ -59,6 +60,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Set>> set();
 	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
+	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
 
 	std::vector<Ctx> lexers;
 };
