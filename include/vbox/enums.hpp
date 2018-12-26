@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <VBoxCAPI/VBoxCAPI_v5_2.h>
+#include <VBoxCAPI/VBoxCAPI_v6_0.h>
 #include <ostream>
 
 std::ostream& operator<<(std::ostream& stream, StorageBus storage_bus);

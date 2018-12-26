@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "framebuffer.hpp"
+#include "safe_array.hpp"
 
 namespace vbox {
 
@@ -14,9 +14,6 @@ struct Display {
 	Display& operator=(const Display&) = delete;
 	Display(Display&& other);
 	Display& operator=(Display&& other);
-
-	std::string attach_framebuffer(ULONG screen_id, const Framebuffer& framebuffer);
-	void detach_framebuffer(ULONG screen_id, const std::string& uuid);
 
 	void get_screen_resolution(ULONG screen_id,
 		ULONG* width,

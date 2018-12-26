@@ -26,6 +26,8 @@ struct GuestSession {
 	bool file_exists(const fs::path& dir, bool follow_links = false);
 	void file_remove(const fs::path& path);
 	void directory_create(const fs::path& dir, uint32_t mode = 0x1FD);
+	void directory_remove(const fs::path& dir);
+	void directory_remove_recursive(const fs::path& dir);
 	Progress file_copy_to_guest(const fs::path& src, const fs::path& destination);
 	GuestProcess process_create(const fs::path& executable,
 		const std::vector<std::string>& arguments,

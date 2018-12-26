@@ -78,6 +78,26 @@ void GuestSession::directory_create(const fs::path& dir, uint32_t mode) {
 	}
 }
 
+void GuestSession::directory_remove(const fs::path& dir) {
+	try {
+		throw_if_failed(IGuestSession_DirectoryRemove(handle, StringIn(dir)));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void GuestSession::directory_remove_recursive(const fs::path& dir) {
+	try {
+		SafeArray safe_array;
+		IProgress* result = nullptr;
+		throw_if_failed(IGuestSession_DirectoryRemoveRecursive(handle, StringIn(dir), SAFEARRAY_AS_IN_PARAM(uint32_t, safe_array), &result));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 bool GuestSession::file_exists(const fs::path& dir, bool follow_links) {
 	try {
 		int result = false;

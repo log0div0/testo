@@ -52,7 +52,7 @@ struct Machine {
 
 	bool hasSnapshot(const std::string& name) const;
 	Snapshot findSnapshot(const std::string& name) const;
-	Progress takeSnapshot(const std::string& name, const std::string& description = "", bool pause = false);
+	Progress takeSnapshot(const std::string& name, const std::string& description = "", bool pause = true);
 	Progress restoreSnapshot(Snapshot& snapshot);
 	Progress deleteSnapshot(Snapshot& snapshot);
 
