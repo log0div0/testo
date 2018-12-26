@@ -367,28 +367,38 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 
 		//copy the script to tmp folder
 		std::hash<std::string> h;
-		auto script_name = std::to_string(h(script)) + ".sh";
-		auto script_path = std::string(scripts_tmp_dir()) + script_name;
 
-		std::ofstream script_file(script_path);
-		if (!script_file.is_open()) {
+		std::string hash = std::to_string(h(script));
+
+		fs::path host_script_dir = scripts_tmp_dir() / hash;
+		fs::path guest_script_dir = fs::path("/tmp") / hash;
+
+		if (!fs::create_directory(host_script_dir)) {
+			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't create tmp script file on host");
+		}
+
+		fs::path host_script_file = host_script_dir / std::string(hash + ".sh");
+		fs::path guest_script_file = guest_script_dir / std::string(hash + ".sh");
+		std::ofstream script_stream(host_script_file);
+		if (!script_stream.is_open()) {
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: Can't open tmp file for writing the script");
 		}
 
-		script_file << script;
-		script_file.close();
+		script_stream << script;
+		script_stream.close();
 
-		if (vm->copy_to_guest(script_path, "/tmp")) {
+		if (vm->copy_to_guest(host_script_dir, fs::path("/tmp"))) {
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't copy script file to vm");
 		}
-		
-		fs::remove(std::string(script_path));
 
-		if (vm->run("/bin/bash", {std::string("/tmp/") + script_name})) {
+		fs::remove(std::string(host_script_file));
+		fs::remove(std::string(host_script_dir));
+
+		if (vm->run("/bin/bash", {guest_script_file})) {
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: one of the commands failed");
 		}
 
-		if (vm->remove_from_guest(std::string("/tmp/") + script_name)) {
+		if (vm->remove_from_guest(guest_script_dir)) {
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't cleanup tmp file with script from guest");
 		}
 	}

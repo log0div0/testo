@@ -372,24 +372,6 @@ int VmController::make_snapshot(const std::string& snapshot) {
 			}
 		}
 
-		if (is_running()) {
-			auto lock_machine = virtual_box.find_machine(name());
-			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-
-			auto machine = work_session.machine();
-
-			machine.saveState().wait_and_throw_if_failed();
-			for (int i = 0; i < 10; i++) {
-				if (lock_machine.session_state() == SessionState_Unlocked) {
-					break;
-				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			}
-			if (lock_machine.session_state() != SessionState_Unlocked) {
-				throw std::runtime_error("timeout for unlocking exspired");
-			}
-		}
-
 		{
 			auto lock_machine = virtual_box.find_machine(name());
 			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -398,10 +380,12 @@ int VmController::make_snapshot(const std::string& snapshot) {
 			machine.takeSnapshot(snapshot).wait_and_throw_if_failed();
 		}
 
-		auto lock_machine = virtual_box.find_machine(name());
-		lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
-		start_session.unlock_machine();
-
+		if (!is_running()) {
+			auto lock_machine = virtual_box.find_machine(name());
+			lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
+			start_session.unlock_machine();
+		}
+		
 		return 0;
 	}
 	catch (const std::exception& error) {
@@ -493,7 +477,6 @@ int VmController::rollback(const std::string& snapshot) {
 			machine.restoreSnapshot(snap).wait_and_throw_if_failed();
 		}
 
-		
 		lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
 
@@ -1047,7 +1030,7 @@ int VmController::remove_from_guest(const fs::path& obj) {
 
 		//directory handling differs from file handling
 		if (gsession.directory_exists(obj)) {
-			throw std::runtime_error("TODO");
+			gsession.directory_remove_recursive(obj);
 		} else if (gsession.file_exists(obj)) {
 			gsession.file_remove(obj);
 		} else {

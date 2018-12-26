@@ -263,35 +263,19 @@ snapshot internet_master_configured: master_installed {
 }
 
 snapshot additions_installed: internet_configured {
-	type "apt-get install -y build-essential module-assistant"; press Enter
-	wait for 40s
-	type "m-a prepare"; press Enter
-	wait for 5s
-	plug dvd "../iso/VBoxGuestAdditions_5.2.22.iso"
-	wait for 4s
-	type "mount /dev/cdrom /media/cdrom"; press Enter
-	wait for 3s
-	type "/media/cdrom/VBoxLinuxAdditions.run"; press Enter
-	wait for 1m
+	type "apt-get install -y virtualbox-guest-dkms"; press Enter
+	wait for 2m
 	type "reboot"; press Enter
-	wait for 30s
+	wait for 35s
 	type "testo-user"; press Enter
 	wait for 2s; type "1111"; press Enter
 }
 
 snapshot additions_master_installed: internet_master_configured {
-	type "apt-get install -y build-essential module-assistant"; press Enter
-	wait for 40s
-	type "m-a prepare"; press Enter
-	wait for 5s
-	plug dvd "../iso/VBoxGuestAdditions_5.2.22.iso"
-	wait for 3s
-	type "mount /dev/cdrom /media/cdrom"; press Enter
-	wait for 3s
-	type "/media/cdrom/VBoxLinuxAdditions.run"; press Enter
-	wait for 1m
+	type "apt-get install -y virtualbox-guest-dkms"; press Enter
+	wait for 2m
 	type "reboot"; press Enter
-	wait for 30s
+	wait for 35s
 	type "testo-user"; press Enter
 	wait for 2s; type "1111"; press Enter
 }
@@ -340,10 +324,10 @@ snapshot client_ifaces_renamed: ready {
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:00:00:aa master_side"
 
-	type "root"; press Enter; wait for 1s
-	type "1111"; press Enter; wait for 2s
-	type "pkill VBoxService"; press Enter; wait for 2s;
-	type "rmmod vboxsf"; press Enter; wait for 2s;
+	#type "root"; press Enter; wait for 1s
+	#type "1111"; press Enter; wait for 2s
+	#type "pkill VBoxService"; press Enter; wait for 2s;
+	#type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot client2_ifaces_renamed: ready {
@@ -351,10 +335,10 @@ snapshot client2_ifaces_renamed: ready {
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:11:00:aa master_side"
 
-	type "root"; press Enter; wait for 1s
-	type "1111"; press Enter; wait for 2s
-	type "pkill VBoxService"; press Enter; wait for 2s;
-	type "rmmod vboxsf"; press Enter; wait for 2s;
+	#type "root"; press Enter; wait for 1s
+	#type "1111"; press Enter; wait for 2s
+	#type "pkill VBoxService"; press Enter; wait for 2s;
+	#type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot server_ifaces_renamed: ready {
@@ -362,10 +346,10 @@ snapshot server_ifaces_renamed: ready {
 	exec bash "chmod +x /tmp/rename_net.sh"
 	exec bash "/tmp/rename_net.sh 52:54:00:22:00:aa master_side"
 
-	type "root"; press Enter; wait for 1s
-	type "1111"; press Enter; wait for 2s
-	type "pkill VBoxService"; press Enter; wait for 2s;
-	type "rmmod vboxsf"; press Enter; wait for 2s;
+	#type "root"; press Enter; wait for 1s
+	#type "1111"; press Enter; wait for 2s
+	#type "pkill VBoxService"; press Enter; wait for 2s;
+	#type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot master_ifaces_renamed: master_ready {
@@ -377,10 +361,10 @@ snapshot master_ifaces_renamed: master_ready {
 
 	exec bash "sysctl -w net.ipv4.ip_forward=1"
 
-	type "root"; press Enter; wait for 1s
-	type "1111"; press Enter; wait for 2s
-	type "pkill VBoxService"; press Enter; wait for 2s;
-	type "rmmod vboxsf"; press Enter; wait for 2s;
+	#type "root"; press Enter; wait for 1s
+	#type "1111"; press Enter; wait for 2s
+	#type "pkill VBoxService"; press Enter; wait for 2s;
+	#type "rmmod vboxsf"; press Enter; wait for 2s;
 }
 
 snapshot slave_ifaces_renamed: master_ready {
@@ -390,8 +374,8 @@ snapshot slave_ifaces_renamed: master_ready {
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:bb server_side"
 	exec bash "/tmp/rename_net.sh 52:54:00:44:00:cc master_side"
 
-	type "root"; press Enter; wait for 1s
-	type "1111"; press Enter; wait for 2s
-	type "pkill VBoxService"; press Enter; wait for 2s;
-	type "rmmod vboxsf"; press Enter; wait for 5s;
+	#type "root"; press Enter; wait for 1s
+	#type "1111"; press Enter; wait for 2s
+	#type "pkill VBoxService"; press Enter; wait for 2s;
+	#type "rmmod vboxsf"; press Enter; wait for 5s;
 }
