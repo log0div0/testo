@@ -49,7 +49,6 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 
 test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
 	#master, slave start_vbox_additions
-
 	master exec bash """
 		ip l a abc type bond mode 0
 		ip l s abc up

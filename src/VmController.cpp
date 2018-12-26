@@ -477,7 +477,6 @@ int VmController::rollback(const std::string& snapshot) {
 			machine.restoreSnapshot(snap).wait_and_throw_if_failed();
 		}
 
-		
 		lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
 
