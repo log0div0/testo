@@ -21,6 +21,7 @@ struct NetworkAdapter {
 	void setEnabled(bool is_enabled) const;
 	void setInternalNetwork(const std::string& network) const;
 	void setAttachmentType(NetworkAttachmentType type) const;
+	void setAdapterType(NetworkAdapterType type) const;
 	void setMAC(const std::string& mac);
 
 	INetworkAdapter* handle = nullptr;

@@ -62,6 +62,16 @@ void NetworkAdapter::setAttachmentType(NetworkAttachmentType type) const {
 	}
 }
 
+
+void NetworkAdapter::setAdapterType(NetworkAdapterType type) const {
+	try {
+		throw_if_failed(INetworkAdapter_SetAdapterType(handle, type));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void NetworkAdapter::setMAC(const std::string& mac) {
 	try {
 		throw_if_failed(INetworkAdapter_SetMACAddress(handle, StringIn(mac)));

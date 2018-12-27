@@ -298,6 +298,25 @@ void VmController::create_vm() {
 						network_adapter.setMAC(normalized_mac(mac));
 					}
 
+					if (nic.count("adapter_type")) {
+						std::string type = nic.at("adapter_type").get<std::string>();
+						if (type == "Am79C970A") {
+							network_adapter.setAdapterType(NetworkAdapterType_Am79C970A);
+						} else if (type == "Am79C973") {
+							network_adapter.setAdapterType(NetworkAdapterType_Am79C973);
+						} else if (type == "82540EM") {
+							network_adapter.setAdapterType(NetworkAdapterType_I82540EM);
+						} else if (type == "82543GC") {
+							network_adapter.setAdapterType(NetworkAdapterType_I82543GC);
+						} else if (type == "82545EM") {
+							network_adapter.setAdapterType(NetworkAdapterType_I82545EM);
+						} else if (type == "virtio-net") {
+							network_adapter.setAdapterType(NetworkAdapterType_Virtio);
+						} else {
+							throw std::runtime_error(std::string("Unknown adapter type: ") + type);
+						}
+					}
+
 					network_adapter.setEnabled(true);
 				}
 

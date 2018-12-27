@@ -97,6 +97,7 @@ VisitorSemantic::VisitorSemantic(Global& global):
 		vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::dbl_quoted_string)});
 		vm_network_ctx.insert({"network", std::make_pair(false, Token::category::dbl_quoted_string)});
 		vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::dbl_quoted_string)});
+		vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::dbl_quoted_string)});
 
 		attr_ctxs.insert({"nic", vm_network_ctx});
 

@@ -79,6 +79,7 @@ machine master {
 	nic nat: {
 		slot: 0
 		attached_to: "nat"
+		adapter_type: "virtio-net"
 	}
 
 	nic client_side: {
