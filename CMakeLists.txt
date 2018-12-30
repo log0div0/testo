@@ -1,20 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/sbin)
+project(testo)
 
-if (WIN32)
-	add_definitions(-D__PRETTY_FUNCTION__=__FUNCSIG__ -DCOBJMACROS -DCINTERFACE -D_CRT_SECURE_NO_WARNINGS)
-else()
-	add_definitions(-DVBOX_WITH_GLUE)
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-include_directories(
-	${CMAKE_BINARY_DIR}/out/include
-	${CMAKE_CURRENT_SOURCE_DIR}/include
-	${CMAKE_CURRENT_SOURCE_DIR}/3rd_party
-)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/sbin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 
 add_subdirectory(3rd_party)
 add_subdirectory(src)
-
-add_dependencies(testo json)
