@@ -40,7 +40,7 @@ std::string USBController::name() const {
 USBControllerType USBController::controller_type() const {
 	try {
 		USBControllerType_T result = USBControllerType_Null;
-		throw_if_failed(IUSBController_GetType(handle, &result));
+		throw_if_failed(IUSBController_get_Type(handle, &result));
 		return (USBControllerType)result;
 	}
 	catch (const std::exception&) {
@@ -50,7 +50,7 @@ USBControllerType USBController::controller_type() const {
 
 void USBController::controller_type(USBControllerType type) {
 	try {
-		throw_if_failed(IUSBController_SetType(handle, type));
+		throw_if_failed(IUSBController_put_Type(handle, type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

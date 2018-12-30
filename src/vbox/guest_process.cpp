@@ -88,7 +88,7 @@ LONG GuestProcess::exit_code() const {
 ProcessStatus GuestProcess::status() const {
 	try {
 		ProcessStatus_T result = ProcessStatus_Undefined;
-		IGuestProcess_GetStatus(handle, &result);
+		IGuestProcess_get_Status(handle, &result);
 		return (ProcessStatus) result;
 	}
 	catch (const std::exception&) {

@@ -56,7 +56,7 @@ GuestSession Guest::create_session(const std::string& user,
 std::vector<AdditionsFacility> Guest::facilities() const {
 	try {
 		SafeArray safe_array;
-		throw_if_failed(IGuest_GetFacilities(handle, SAFEARRAY_AS_OUT_PARAM(IAdditionsFacility*, safe_array)));
+		throw_if_failed(IGuest_get_Facilities(handle, SAFEARRAY_AS_OUT_PARAM(IAdditionsFacility*, safe_array)));
 		ArrayOutIface array_out = safe_array.copy_out_iface();
 		return {(IAdditionsFacility**)array_out.ifaces, (IAdditionsFacility**)(array_out.ifaces + array_out.ifaces_count)};
 	}

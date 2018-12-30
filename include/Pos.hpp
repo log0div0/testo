@@ -28,7 +28,7 @@ struct Pos {
 
 	operator std::string() const {
 		std::string result("");
-		result += std::string(file) + ":" + std::to_string(line) + ":" + std::to_string(column);
+		result += file.generic_string() + ":" + std::to_string(line) + ":" + std::to_string(column);
 		return result;
 	}
 

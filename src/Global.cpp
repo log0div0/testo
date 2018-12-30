@@ -21,9 +21,9 @@ void Global::setup() {
 	}
 
 	//std::cout << flash_drives_img_dir() << std::endl;
-	exec_and_throw_if_failed(std::string("mkdir -p ") + std::string(flash_drives_img_dir()));
-	exec_and_throw_if_failed(std::string("mkdir -p ") + std::string(flash_drives_mount_dir()));
-	exec_and_throw_if_failed(std::string("mkdir -p ") + std::string(scripts_tmp_dir()));
+	exec_and_throw_if_failed("mkdir -p " + flash_drives_img_dir().generic_string());
+	exec_and_throw_if_failed("mkdir -p " + flash_drives_mount_dir().generic_string());
+	exec_and_throw_if_failed("mkdir -p " + scripts_tmp_dir().generic_string());
 }
 
 
@@ -59,7 +59,7 @@ void Global::cleanup() {
 	auto img_dir = flash_drives_img_dir();
 	for (auto& p: fs::directory_iterator(img_dir)) {
 		for (auto& hdd: hdds) {
-			if (std::string(fs::path(p)) == hdd.location()) {
+			if (fs::path(p).generic_string() == hdd.location()) {
 				hdd.delete_storage().wait_and_throw_if_failed();
 				break;
 			}
@@ -68,5 +68,5 @@ void Global::cleanup() {
 
 	//now we need to close all the open 
 
-	exec_and_throw_if_failed(std::string("rm -rf ") + std::string(flash_drives_img_dir()));
+	exec_and_throw_if_failed("rm -rf " + flash_drives_img_dir().generic_string());
 }

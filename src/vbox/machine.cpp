@@ -360,7 +360,7 @@ void Machine::vram_size(ULONG size) {
 
 void Machine::cpus(ULONG num) {
 	try {
-		throw_if_failed(IMachine_SetCPUCount(handle, num));
+		throw_if_failed(IMachine_put_CPUCount(handle, num));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

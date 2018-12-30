@@ -1,8 +1,8 @@
 
 #include <VisitorInterpreter.hpp>
-#include <unistd.h>
 
 #include <fstream>
+#include <thread>
 
 using namespace AST;
 
@@ -18,7 +18,7 @@ static void sleep(const std::string& interval) {
 		throw std::runtime_error("Unknown time specifier"); //should not happen ever
 	}
 
-	sleep(seconds_to_sleep);
+	std::this_thread::sleep_for(std::chrono::seconds(seconds_to_sleep));
 }
 
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
@@ -391,10 +391,10 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't copy script file to vm");
 		}
 
-		fs::remove(std::string(host_script_file));
-		fs::remove(std::string(host_script_dir));
+		fs::remove(host_script_file.generic_string());
+		fs::remove(host_script_dir.generic_string());
 
-		if (vm->run("/bin/bash", {guest_script_file})) {
+		if (vm->run("/bin/bash", {guest_script_file.generic_string()})) {
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: one of the commands failed");
 		}
 

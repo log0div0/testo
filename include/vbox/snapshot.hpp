@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include "enums.hpp"
 #include <vector>
 

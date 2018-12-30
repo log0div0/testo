@@ -5,13 +5,10 @@
 
 #include <API.hpp>
 #include <Utils.hpp>
-#include <leptonica/allheaders.h>
 
 #include <chrono>
 #include <thread>
 #include <regex>
-
-#include <experimental/filesystem>
 
 VmController::VmController(const nlohmann::json& config): config(config) {
 	if (!config.count("name")) {
@@ -261,7 +258,7 @@ void VmController::create_vm() {
 			
 			std::experimental::filesystem::path iso_path(config.at("iso").get<std::string>());
 			auto abs_iso_path = std::experimental::filesystem::absolute(iso_path);
-			vbox::Medium dvd = virtual_box.open_medium(abs_iso_path,
+			vbox::Medium dvd = virtual_box.open_medium(abs_iso_path.generic_string(),
 				DeviceType_DVD, AccessMode_ReadOnly, false);
 			machine.attach_device("IDE", 1, 0, DeviceType_DVD, dvd);
 
@@ -667,7 +664,7 @@ int VmController::plug_dvd(fs::path path) {
 			path = fs::absolute(path);
 		}
 
-		vbox::Medium dvd = virtual_box.open_medium(path,
+		vbox::Medium dvd = virtual_box.open_medium(path.generic_string(),
 				DeviceType_DVD, AccessMode_ReadOnly, false);
 
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -798,17 +795,7 @@ int VmController::wait(const std::string& text, const std::string& time) {
 			vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_PNG);
 			vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
 
-			PIX* img = pixReadMemPng(array_out.data, array_out.data_size);
-			API::instance().tesseract_api->SetImage(img);
-
-			auto out_text = API::instance().tesseract_api->GetUTF8Text();
-			std::string out_string(out_text);
-			delete [] out_text;
-			pixDestroy(&img);
-
-			std::cout << out_string << std::endl;
-
-			if (out_string.find(text) != std::string::npos) {
+			if (API::instance().darknet_api.match(array_out.data, array_out.data_size, text)) {
 				return 0;
 			}
 
@@ -862,13 +849,13 @@ int VmController::run(const fs::path& exe, std::vector<std::string> args) {
 					//print both streams
 					auto stderr_read = gprocess.read(2, 0x00010000, 0);
 					if (stderr_read.size() > 1) {
-						std::string stderr(stderr_read.begin(), stderr_read.end());
-						std::cout << stderr;
+						std::string err(stderr_read.begin(), stderr_read.end());
+						std::cout << err;
 					}
 					auto stdout_read = gprocess.read(1, 0x00010000, 0); //read 64 KBytes
 					if (stdout_read.size() > 1) {
-						std::string stdout(stdout_read.begin(), stdout_read.end());
-						std::cout << stdout;
+						std::string out(stdout_read.begin(), stdout_read.end());
+						std::cout << out;
 					}
 					std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					break;
@@ -982,7 +969,7 @@ int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
-			throw std::runtime_error(std::string("Source file/folder doens't exist on host: ") + std::string(src));
+			throw std::runtime_error("Source file/folder doens't exist on host: " + src.generic_string());
 		}
 
 		auto lock_machine = virtual_box.find_machine(name());
@@ -1004,13 +991,13 @@ int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 		
 		//2) if dst doesn't exist on guest - fuck you
 		if (!gsession.directory_exists(dst)) {
-			throw std::runtime_error(std::string("Directory to copy doesn't exist on guest: ") + std::string(dst));
+			throw std::runtime_error("Directory to copy doesn't exist on guest: " + dst.generic_string());
 		}
 
 		//3) If target folder already exists on guest - fuck you
 		fs::path target_name = dst / src.filename();
 		if (gsession.directory_exists(target_name) || gsession.file_exists(target_name)) {
-			throw std::runtime_error(std::string("Directory or file already exists on guest: ") + std::string(target_name));
+			throw std::runtime_error("Directory or file already exists on guest: " + target_name.generic_string());
 		}
 
 		//4) Now we're all set
@@ -1019,7 +1006,7 @@ int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 		} else if (fs::is_directory(src)) {
 			copy_dir_to_guest(src, target_name, gsession);
 		} else {
-			throw std::runtime_error(std::string("Unknown type of file: ") + std::string(target_name));
+			throw std::runtime_error("Unknown type of file: " + target_name.generic_string());
 		}
 		return 0;
 	} catch (const std::exception& error) {
@@ -1053,7 +1040,7 @@ int VmController::remove_from_guest(const fs::path& obj) {
 		} else if (gsession.file_exists(obj)) {
 			gsession.file_remove(obj);
 		} else {
-			throw std::runtime_error(std::string("Target object doesn't exist on vm: ") + std::string(obj));
+			throw std::runtime_error("Target object doesn't exist on vm: " + obj.generic_string());
 		}
 
 		return 0;

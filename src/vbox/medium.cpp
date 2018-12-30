@@ -54,7 +54,7 @@ MediumState Medium::state() const {
 std::string Medium::location() const {
 	try {
 		BSTR location = nullptr;
-		throw_if_failed(IMedium_GetLocation(handle, &location));
+		throw_if_failed(IMedium_get_Location(handle, &location));
 		return StringOut(location);
 	} catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

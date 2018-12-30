@@ -1,8 +1,6 @@
 
 #include <Utils.hpp>
-#include <unistd.h>
 #include <sys/types.h>
-#include <pwd.h>
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();
@@ -38,10 +36,23 @@ void exec_and_throw_if_failed(const std::string& command) {
 	}
 }
 
+#ifdef WIN32
+
+fs::path home_dir() {
+	throw std::runtime_error(__FUNCSIG__);
+}
+
+#else
+
+#include <pwd.h>
+#include <unistd.h>
+
 fs::path home_dir() {
 	struct passwd *pw = getpwuid(getuid());
 	return fs::path(pw->pw_dir);
 }
+
+#endif
 
 fs::path flash_drives_img_dir() {
 	auto res = home_dir();

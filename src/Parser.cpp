@@ -97,7 +97,7 @@ void Parser::handle_include() {
 	if (dest_file.is_relative()) {
 		fs::path combined = lexers[lexers.size() - 1].lex.file().parent_path() / dest_file;
 		if (!fs::exists(combined)) {
-			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: no such file: " + std::string(dest_file));
+			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: no such file: " + dest_file.generic_string());
 		}
 		dest_file = fs::canonical(combined);
 	}

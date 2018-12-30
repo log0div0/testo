@@ -56,7 +56,7 @@ bool GuestSession::directory_exists(const fs::path& dir, bool follow_links) {
 		//and it's the only exception we can expect from this function (see man)
 		//So in case the directory doesn't exists we can just ignore the exception
 		//and return false. Easy
-		IGuestSession_DirectoryExists(handle, StringIn(dir), follow_links, &result);
+		IGuestSession_DirectoryExists(handle, StringIn(dir.generic_string()), follow_links, &result);
 		
 		return (bool)result;
 	}
@@ -69,7 +69,7 @@ void GuestSession::directory_create(const fs::path& dir, uint32_t mode) {
 	try {
 		SafeArray safe_array;
 		throw_if_failed(IGuestSession_DirectoryCreate(handle,
-			StringIn(dir),
+			StringIn(dir.generic_string()),
 			mode,
 			SAFEARRAY_AS_IN_PARAM(uint32_t, safe_array)));
 	}
@@ -80,7 +80,7 @@ void GuestSession::directory_create(const fs::path& dir, uint32_t mode) {
 
 void GuestSession::directory_remove(const fs::path& dir) {
 	try {
-		throw_if_failed(IGuestSession_DirectoryRemove(handle, StringIn(dir)));
+		throw_if_failed(IGuestSession_DirectoryRemove(handle, StringIn(dir.generic_string())));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -91,7 +91,7 @@ void GuestSession::directory_remove_recursive(const fs::path& dir) {
 	try {
 		SafeArray safe_array;
 		IProgress* result = nullptr;
-		throw_if_failed(IGuestSession_DirectoryRemoveRecursive(handle, StringIn(dir), SAFEARRAY_AS_IN_PARAM(uint32_t, safe_array), &result));
+		throw_if_failed(IGuestSession_DirectoryRemoveRecursive(handle, StringIn(dir.generic_string()), SAFEARRAY_AS_IN_PARAM(uint32_t, safe_array), &result));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -102,7 +102,7 @@ bool GuestSession::file_exists(const fs::path& dir, bool follow_links) {
 	try {
 		int result = false;
 		//See directory_exists comments
-		IGuestSession_FileExists(handle, StringIn(dir), follow_links, &result);
+		IGuestSession_FileExists(handle, StringIn(dir.generic_string()), follow_links, &result);
 		return (bool)result;
 	}
 	catch (const std::exception&) {
@@ -112,7 +112,7 @@ bool GuestSession::file_exists(const fs::path& dir, bool follow_links) {
 
 void GuestSession::file_remove(const fs::path& path) {
 	try {
-		throw_if_failed(IGuestSession_FsObjRemove(handle, StringIn(path)));
+		throw_if_failed(IGuestSession_FsObjRemove(handle, StringIn(path.generic_string())));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -124,8 +124,8 @@ Progress GuestSession::file_copy_to_guest(const fs::path& src, const fs::path& d
 		SafeArray safe_array;
 		IProgress* result = nullptr;
 		throw_if_failed(IGuestSession_FileCopyToGuest(handle,
-			StringIn(src),
-			StringIn(destination),
+			StringIn(src.generic_string()),
+			StringIn(destination.generic_string()),
 			SAFEARRAY_AS_IN_PARAM(uint32_t, safe_array), &result));
 		return result;
 	}
@@ -161,7 +161,7 @@ GuestProcess GuestSession::process_create(const fs::path& executable,
 
 		SafeArray safe_array = SafeArray::bitset(bitset);
 		throw_if_failed(IGuestSession_ProcessCreate(handle,
-			StringIn(executable),
+			StringIn(executable.generic_string()),
 			SAFEARRAY_AS_IN_PARAM(BSTR, safe_array_args),
 			SAFEARRAY_AS_IN_PARAM(BSTR, safe_array_env),
 			SAFEARRAY_AS_IN_PARAM(ProcessCreateFlag_T, safe_array),

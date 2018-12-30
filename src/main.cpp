@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 		fs::path src_file(argv[1]);
 
 		if (!fs::exists(src_file)) {
-			throw std::runtime_error(std::string("Fatal error: file doesn't exist: ") + std::string(src_file));
+			throw std::runtime_error("Fatal error: file doesn't exist: " + src_file.generic_string());
 		}
 
 		if (src_file.is_relative()) {
