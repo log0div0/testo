@@ -183,9 +183,6 @@ rows_count = 16
 image_width = columns_count * char_width
 image_height = rows_count * char_height
 
-train_dir = os.path.join(dataset_dir, 'train')
-test_dir = os.path.join(dataset_dir, 'test')
-
 def random_colors():
 	background = random.choice(colors)
 	while True:
@@ -205,6 +202,9 @@ def draw_char(image, left, top, foreground, background, font):
 		return ""
 
 def main(base_dir, image_count):
+	if not os.path.exists(base_dir):
+		os.mkdir(base_dir)
+
 	fonts = [PSF(os.path.join(fonts_dir, font_charset + '-' + font_name + font_size + '.psf.gz')) for font_name in font_names]
 
 	images_dir = os.path.join(base_dir, "images")
@@ -254,11 +254,27 @@ def main(base_dir, image_count):
 	image_list_path = os.path.join(base_dir, "image_list.txt")
 	with open(image_list_path, "w") as file:
 		file.write(image_list)
+	return image_list_path
 
 if __name__ == "__main__":
-	for path in [train_dir, test_dir]:
-		if os.path.exists(path):
-			shutil.rmtree(path)
-		os.mkdir(path)
-	main(train_dir, 10000)
-	main(test_dir, 1000)
+	if os.path.exists(dataset_dir):
+		shutil.rmtree(dataset_dir)
+	os.mkdir(dataset_dir)
+
+	train_dir = os.path.join(dataset_dir, 'train')
+	valid_dir = os.path.join(dataset_dir, 'valid')
+	train_path = main(train_dir, 10000)
+	valid_path = main(valid_dir, 1000)
+
+	names_path = os.path.join(dataset_dir, "testo.names")
+	with open(names_path, "w") as file:
+		for char in chars:
+			file.write(char + "\n")
+
+	data_path = os.path.join(dataset_dir, "testo.data")
+	with open(data_path, "w") as file:
+		file.write("classes = %d\n" % len(chars))
+		file.write("train = %s\n" % train_path)
+		file.write("valid = %s\n" % valid_path)
+		file.write("names = %s\n" % names_path)
+		file.write("backup = backup\n")
