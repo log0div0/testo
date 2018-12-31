@@ -31,7 +31,15 @@ if(GPU)
 	target_link_libraries(darknet cuda cudart cublas curand)
 endif()
 
+# TODO: в cmake 3.12 можно сделать find_package(Python3 COMPONENTS Interpreter)
+# и затем использовать переменную Python3_EXECUTABLE
+if(UNIX)
+	set(PYTHON python3)
+else()
+	set(PYTHON python)
+endif()
+
 add_custom_target(dataset
-	COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/dataset.py
+	COMMAND ${PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/dataset.py
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
