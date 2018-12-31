@@ -43,3 +43,9 @@ add_custom_target(dataset
 	COMMAND ${PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/dataset.py
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+add_custom_target(train
+	COMMAND ${CMAKE_BINARY_DIR}/out/sbin/darknet detector train ${CMAKE_BINARY_DIR}/dataset/testo.data ${CMAKE_CURRENT_SOURCE_DIR}/testo.cfg
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+	DEPENDS darknet
+)
