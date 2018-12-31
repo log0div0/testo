@@ -32,6 +32,6 @@ if(GPU)
 endif()
 
 add_custom_target(dataset
-	COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/dataset.py
+	COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/dataset.py
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
