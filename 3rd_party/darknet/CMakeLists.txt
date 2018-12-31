@@ -30,3 +30,8 @@ endif()
 if(GPU)
 	target_link_libraries(darknet cuda cudart cublas curand)
 endif()
+
+add_custom_target(dataset
+	COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/dataset.py
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
