@@ -57,29 +57,29 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
 
     pthread_t load_thread = load_data(args);
     double time;
-    int count = 0;
+    // int count = 0;
     //while(i*imgs < N*120){
     while(get_current_batch(net) < net->max_batches){
-        if(l.random && count++%10 == 0){
-            printf("Resizing\n");
-            int dim = (rand() % 10 + 10) * 32;
-            if (get_current_batch(net)+200 > net->max_batches) dim = 608;
-            //int dim = (rand() % 4 + 16) * 32;
-            printf("%d\n", dim);
-            args.w = dim;
-            args.h = dim;
+        // if(l.random && count++%10 == 0){
+        //     printf("Resizing\n");
+        //     int dim = (rand() % 10 + 10) * 32;
+        //     if (get_current_batch(net)+200 > net->max_batches) dim = 608;
+        //     //int dim = (rand() % 4 + 16) * 32;
+        //     printf("%d\n", dim);
+        //     args.w = dim;
+        //     args.h = dim;
 
-            pthread_join(load_thread, 0);
-            train = buffer;
-            free_data(train);
-            load_thread = load_data(args);
+        //     pthread_join(load_thread, 0);
+        //     train = buffer;
+        //     free_data(train);
+        //     load_thread = load_data(args);
 
-            #pragma omp parallel for
-            for(i = 0; i < ngpus; ++i){
-                resize_network(nets[i], dim, dim);
-            }
-            net = nets[0];
-        }
+        //     #pragma omp parallel for
+        //     for(i = 0; i < ngpus; ++i){
+        //         resize_network(nets[i], dim, dim);
+        //     }
+        //     net = nets[0];
+        // }
         time=what_time_is_it_now();
         pthread_join(load_thread, 0);
         train = buffer;

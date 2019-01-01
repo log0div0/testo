@@ -45,6 +45,7 @@ add_custom_target(dataset
 )
 
 add_custom_target(train
+	COMMAND mkdir -p backup
 	COMMAND ${CMAKE_BINARY_DIR}/out/sbin/darknet detector train ${CMAKE_BINARY_DIR}/dataset/testo.data ${CMAKE_CURRENT_SOURCE_DIR}/testo.cfg
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 	DEPENDS darknet
