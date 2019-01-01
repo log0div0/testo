@@ -1,8 +1,8 @@
 
-#include <vbox/machine.hpp>
+#include "machine.hpp"
 #include <stdexcept>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/session.hpp>
+#include "throw_if_failed.hpp"
+#include "session.hpp"
 
 #include <iostream>
 

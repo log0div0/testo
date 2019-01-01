@@ -1,7 +1,7 @@
 
-#include <vbox/network_adapter.hpp>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/string.hpp>
+#include "network_adapter.hpp"
+#include "throw_if_failed.hpp"
+#include "string.hpp"
 
 namespace vbox {
 

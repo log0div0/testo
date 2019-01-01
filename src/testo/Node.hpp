@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <Pos.hpp>
-#include <Token.hpp>
+#include "Pos.hpp"
+#include "Token.hpp"
 #include <vector>
 #include <memory>
 #include <functional>

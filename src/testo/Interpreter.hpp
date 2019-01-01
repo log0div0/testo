@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <Parser.hpp>
-#include <Global.hpp>
-#include <Utils.hpp>
+#include "Parser.hpp"
+#include "Global.hpp"
+#include "Utils.hpp"
 
 struct Interpreter {
 	Interpreter(const fs::path& file);

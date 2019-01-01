@@ -1,5 +1,5 @@
 
-#include <vbox/enums.hpp>
+#include "enums.hpp"
 
 std::ostream& operator<<(std::ostream& stream, StorageBus storage_bus) {
 	switch (storage_bus) {

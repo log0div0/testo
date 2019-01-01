@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include <Node.hpp>
-#include <Global.hpp>
-#include <VmController.hpp>
+#include "Node.hpp"
+#include "Global.hpp"
+#include "VmController.hpp"
 
 struct VisitorInterpreter {
 	VisitorInterpreter(Global& global):

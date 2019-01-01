@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <Lexer.hpp>
-#include <Node.hpp>
-#include <Utils.hpp>
-#include <Token.hpp>
+#include "Lexer.hpp"
+#include "Node.hpp"
+#include "Utils.hpp"
+#include "Token.hpp"
 #include <set>
 #include <array>
 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <Pos.hpp>
+#include "Pos.hpp"
 
 struct Token {
 	enum category {

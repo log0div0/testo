@@ -1,8 +1,8 @@
 
-#include <vbox/snapshot.hpp>
-#include <vbox/string.hpp>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/safe_array.hpp>
+#include "snapshot.hpp"
+#include "string.hpp"
+#include "throw_if_failed.hpp"
+#include "safe_array.hpp"
 
 namespace vbox {
 

@@ -4,8 +4,10 @@
 #include "api.hpp"
 #include "progress.hpp"
 #include "guest_process.hpp"
-#include <Utils.hpp>
 #include <vector>
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
 
 namespace vbox  {
 

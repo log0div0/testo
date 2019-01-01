@@ -1,10 +1,10 @@
 
-#include <vbox/medium.hpp>
+#include "medium.hpp"
 #include <stdexcept>
 #include <ostream>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/string.hpp>
-#include <vbox/safe_array.hpp>
+#include "throw_if_failed.hpp"
+#include "string.hpp"
+#include "safe_array.hpp"
 
 namespace vbox {
 

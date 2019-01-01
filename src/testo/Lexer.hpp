@@ -1,8 +1,8 @@
 
 #pragma once
-#include <Pos.hpp>
-#include <Token.hpp>
-#include <Utils.hpp>
+#include "Pos.hpp"
+#include "Token.hpp"
+#include "Utils.hpp"
 #include <string>
 #include <unordered_map>
 #include <functional>

@@ -1,12 +1,12 @@
 
-#include <Interpreter.hpp>
+#include "Interpreter.hpp"
 #include <vbox/api.hpp>
 
 #include <iostream>
 #include <thread>
 #include <chrono>
 
-#include <Utils.hpp>
+#include "Utils.hpp"
 
 static void print_usage() {
 	std::cout << "Usage: \n";

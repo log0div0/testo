@@ -7,17 +7,11 @@ else()
 endif()
 
 include_directories(
-	${CMAKE_BINARY_DIR}/out/include
-	${CMAKE_SOURCE_DIR}/include
 	${CMAKE_SOURCE_DIR}/3rd_party
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_BINARY_DIR}/out/include
 )
 
-file(GLOB_RECURSE SRCS *.cpp)
-link_directories(${CMAKE_BINARY_DIR}/out/lib)
-add_executable(testo ${SRCS})
-
-target_link_libraries(testo vboxcapi)
-add_dependencies(testo json)
-if(UNIX)
-	target_link_libraries(testo dl stdc++fs lept tesseract)
-endif()
+add_subdirectory(vbox)
+add_subdirectory(testo)
+add_subdirectory(testo_gui)

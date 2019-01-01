@@ -1,7 +1,7 @@
 
-#include <Interpreter.hpp>
-#include <VisitorInterpreter.hpp>
-#include <VisitorSemantic.hpp>
+#include "Interpreter.hpp"
+#include "VisitorInterpreter.hpp"
+#include "VisitorSemantic.hpp"
 
 using namespace AST;
 
