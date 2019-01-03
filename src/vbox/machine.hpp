@@ -69,6 +69,8 @@ struct Machine {
 	MachineState state() const;
 	SessionState session_state() const;
 
+	void lock_machine(Session& session, LockType lock_type);
+
 	IMachine* handle = nullptr;
 };
 

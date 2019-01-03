@@ -389,6 +389,15 @@ SessionState Machine::session_state() const {
 	}
 }
 
+void Machine::lock_machine(Session& session, LockType lock_type) {
+	try {
+		throw_if_failed(IMachine_LockMachine(handle, session.handle, lock_type));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 std::ostream& operator<<(std::ostream& stream, const Machine& machine) {
 	stream << machine.name() << std::endl;
 	stream << "Storage Controllers:" << std::endl;

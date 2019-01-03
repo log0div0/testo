@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 add_subdirectory(VBoxCAPI)
 add_subdirectory(darknet)
+add_subdirectory(imgui)
 
 include(ExternalProject)
 

@@ -49,10 +49,9 @@ void SafeArray::copy_in(void* data, ULONG size) {
 
 ArrayOut SafeArray::copy_out(VARTYPE vartype) const {
 	try {
-		uint8_t* data = nullptr;
-		ULONG data_size = 0;
-		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&data, &data_size, vartype, handle));
-		return {data, data_size};
+		ArrayOut result;
+		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&result.data, &result.data_size, vartype, handle));
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -61,10 +60,9 @@ ArrayOut SafeArray::copy_out(VARTYPE vartype) const {
 
 ArrayOutIface SafeArray::copy_out_iface() const {
 	try {
-		IUnknown** ifaces = nullptr;
-		ULONG ifaces_count = 0;
-		throw_if_failed(api->pfnSafeArrayCopyOutIfaceParamHelper(&ifaces, &ifaces_count, handle));
-		return {ifaces, ifaces_count};
+		ArrayOutIface result;
+		throw_if_failed(api->pfnSafeArrayCopyOutIfaceParamHelper(&result.ifaces, &result.ifaces_count, handle));
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -118,10 +116,9 @@ SafeArrayView& SafeArrayView::operator=(SafeArrayView&& other) {
 
 ArrayOut SafeArrayView::copy_out(VARTYPE vartype) const {
 	try {
-		uint8_t* data = nullptr;
-		ULONG data_size = 0;
-		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&data, &data_size, vartype, handle));
-		return {data, data_size};
+		ArrayOut result;
+		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&result.data, &result.data_size, vartype, handle));
+		return result;
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
