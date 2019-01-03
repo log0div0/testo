@@ -14,4 +14,4 @@ include_directories(
 
 add_subdirectory(vbox)
 add_subdirectory(testo)
-add_subdirectory(testo_gui)
+add_subdirectory(testow)
