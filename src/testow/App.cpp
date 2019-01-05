@@ -5,7 +5,7 @@
 
 App* app = nullptr;
 
-App::App(): texture(640, 480) {
+App::App() {
 	::app = this;
 	virtual_box = virtual_box_client.virtual_box();
 }
@@ -13,7 +13,7 @@ App::App(): texture(640, 480) {
 void App::render() {
 	if (ImGui::Begin("List of VMs")) {
 		for (auto& machine: virtual_box.machines()) {
-			bool is_selected = vm && (vm->machine().name() == machine.name());
+			bool is_selected = vm && (vm->machine.name() == machine.name());
 			if (ImGui::Selectable(machine.name().c_str(), &is_selected)) {
 				if (is_selected) {
 					vm = std::make_shared<VM>(std::move(machine));
@@ -26,8 +26,8 @@ void App::render() {
 	}
 
 	if (vm && ImGui::Begin("VM"))  {
-		std::lock_guard<std::mutex> lock_guard(mutex);
-		ImGui::Image(texture.handle(), ImVec2(texture.width(), texture.height()));
+		std::shared_lock<std::shared_mutex> lock(vm->mutex);
+		ImGui::Image(vm->texture.handle(), ImVec2(vm->texture.width(), vm->texture.height()));
 		ImGui::End();
 	}
 

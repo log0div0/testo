@@ -4,9 +4,9 @@
 
 using namespace std::chrono_literals;
 
-VM::VM(vbox::Machine machine): _machine(std::move(machine)) {
+VM::VM(vbox::Machine machine_): machine(std::move(machine_)), texture(640, 480) {
 	session = ::app->virtual_box_client.session();
-	_machine.lock_machine(session, LockType_Shared);
+	machine.lock_machine(session, LockType_Shared);
 	running = true;
 	thread = std::thread([=] {
 		run();
@@ -31,8 +31,8 @@ void VM::run() {
 		previous = current;
 
 		if (!display.handle) {
-			::app->texture.clear();
-			if (_machine.state() == MachineState_Running) {
+			texture.clear();
+			if (machine.state() == MachineState_Running) {
 				try {
 					display = session.console().display();
 				} catch (const std::exception&) {
@@ -54,14 +54,14 @@ void VM::run() {
 			display = vbox::Display();
 			continue;
 		}
-		if ((width != ::app->texture.width()) || (height != ::app->texture.height())) {
-			std::lock_guard<std::mutex> lock_guard(::app->mutex);
-			::app->texture = Texture(width, height);
+		if ((width != texture.width()) || (height != texture.height())) {
+			std::lock_guard<std::shared_mutex> lock(mutex);
+			texture = Texture(width, height);
 		}
 
 		vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
 		vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
 
-		::app->texture.write(array_out.data, array_out.data_size);
+		texture.write(array_out.data, array_out.data_size);
 	}
 }
