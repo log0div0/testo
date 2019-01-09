@@ -21,6 +21,7 @@ private:
 
 	//inner helpers
 	void match(Token::category type);
+	void match(std::vector<Token::category> types);
 	void consume();
 
 	Token LT(size_t i) const;
@@ -32,6 +33,8 @@ private:
 	bool test_command() const;
 	bool test_action() const;
 	bool test_include() const;
+	bool test_term() const;
+	bool test_comparison() const;
 	bool is_button(const Token& t) const;
 
 	void newline_list();
@@ -61,6 +64,13 @@ private:
 	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
+
+	//expressions
+	std::shared_ptr<AST::Term> term();
+	std::shared_ptr<AST::IFactor> factor();
+	std::shared_ptr<AST::Comparison> comparison();
+	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
+	std::shared_ptr<AST::IExpr> expr();
 
 	std::vector<Ctx> lexers;
 };

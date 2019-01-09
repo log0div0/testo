@@ -339,6 +339,24 @@ Token Lexer::id() {
 		return macro();
 	} else if (value == "dvd") {
 		return dvd();
+	} else if (value == "LESS") {
+		return LESS();
+	} else if (value == "GREATER") {
+		return GREATER();
+	} else if (value == "EQUAL") {
+		return EQUAL();
+	}  else if (value == "STRLESS") {
+		return STRLESS();
+	}  else if (value == "STRGREATER") {
+		return STRGREATER();
+	}  else if (value == "STREQUAL") {
+		return STREQUAL();
+	}  else if (value == "NOT") {
+		return NOT();
+	}  else if (value == "AND") {
+		return AND();
+	}  else if (value == "OR") {
+		return OR();
 	} else {
 		current_pos.advance(shift);
 		return Token(Token::category::id, value, tmp_pos);
@@ -607,6 +625,61 @@ Token Lexer::include() {
 	std::string value("$include");
 	current_pos.advance(value.length());
 	return Token(Token::category::include, value, tmp_pos);
+}
+
+Token Lexer::LESS() {
+	Pos tmp_pos = current_pos;
+	std::string value("LESS");
+	current_pos.advance(value.length());
+	return Token(Token::category::LESS, value, tmp_pos);
+}
+Token Lexer::GREATER() {
+	Pos tmp_pos = current_pos;
+	std::string value("GREATER");
+	current_pos.advance(value.length());
+	return Token(Token::category::GREATER, value, tmp_pos);
+}
+Token Lexer::EQUAL() {
+	Pos tmp_pos = current_pos;
+	std::string value("EQUAL");
+	current_pos.advance(value.length());
+	return Token(Token::category::EQUAL, value, tmp_pos);
+}
+Token Lexer::STRLESS() {
+	Pos tmp_pos = current_pos;
+	std::string value("STRLESS");
+	current_pos.advance(value.length());
+	return Token(Token::category::STRLESS, value, tmp_pos);
+}
+Token Lexer::STRGREATER() {
+	Pos tmp_pos = current_pos;
+	std::string value("STRGREATER");
+	current_pos.advance(value.length());
+	return Token(Token::category::STRGREATER, value, tmp_pos);
+}
+Token Lexer::STREQUAL() {
+	Pos tmp_pos = current_pos;
+	std::string value("STREQUAL");
+	current_pos.advance(value.length());
+	return Token(Token::category::STREQUAL, value, tmp_pos);
+}
+Token Lexer::NOT() {
+	Pos tmp_pos = current_pos;
+	std::string value("NOT");
+	current_pos.advance(value.length());
+	return Token(Token::category::NOT, value, tmp_pos);
+}
+Token Lexer::AND() {
+	Pos tmp_pos = current_pos;
+	std::string value("AND");
+	current_pos.advance(value.length());
+	return Token(Token::category::AND, value, tmp_pos);
+}
+Token Lexer::OR() {
+	Pos tmp_pos = current_pos;
+	std::string value("OR");
+	current_pos.advance(value.length());
+	return Token(Token::category::OR, value, tmp_pos);
 }
 
 Token Lexer::get_next_token() {

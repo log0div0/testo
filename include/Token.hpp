@@ -46,6 +46,21 @@ struct Token {
 		else_, //$ifndef
 		include, //$include
 
+		//expressions
+
+		//comparisons
+		LESS,
+		GREATER,
+		EQUAL,
+		STRLESS,
+		STRGREATER,
+		STREQUAL,
+
+		//ops
+		NOT,
+		AND,
+		OR,
+		
 		//fake categories
 		none, //not initialized
 		program,

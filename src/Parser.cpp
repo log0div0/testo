@@ -30,6 +30,19 @@ void Parser::match(Token::category type) {
 	}
 }
 
+void Parser::match(const std::vector<Token::category> types) {
+	for (auto type: types) {
+		if (LA(1) == type) {
+			consume();
+			return;
+		}
+	}
+
+	throw std::runtime_error(std::string(LT(1).pos()) +
+			": unexpected token \"" +
+			LT(1).value() + "\""); //TODO: more informative what we expected
+}
+
 Token Parser::LT(size_t i) const {
 	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % 2]; //circular fetch
 }
@@ -78,6 +91,26 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::id)); //macro call
 }
 
+bool Parser::test_term() const {
+	return ((LA(1) == Token::category::dbl_quoted_string) ||
+		(LA(1) == Token::category::id));
+}
+
+bool Parser::test_comparison() const {
+	if (test_term()) {
+		if ((LA(2) == Token::category::LESS) ||
+			(LA(2) == Token::category::GREATER) ||
+			(LA(2) == Token::category::EQUAL) ||
+			(LA(2) == Token::category::STRLESS) ||
+			(LA(2) == Token::category::STRGREATER) ||
+			(LA(2) == Token::category::STREQUAL))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void Parser::newline_list() {
 	while (LA(1) == Token::category::newline) {
 		match (Token::category::newline);
@@ -118,10 +151,15 @@ void Parser::handle_include() {
 	}
 }
 
+
+
 std::shared_ptr<Program> Parser::parse() {
 	std::vector<std::shared_ptr<IStmt>> stmts;
-
-	//we expect include command only between the declarations
+	newline_list();
+	auto nana = expr();
+	
+	std::cout << "EXPR: " << std::string(*nana) << std::endl;
+	/*//we expect include command only between the declarations
 	while (!lexers.empty()) {
 		newline_list();
 		if (LA(1) == Token::category::eof) {
@@ -134,7 +172,7 @@ std::shared_ptr<Program> Parser::parse() {
 		} else {
 			throw std::runtime_error(std::string(LT(1).pos()) + ":error: expected declaration or include");
 		}
-	}
+	}*/
 
 	return std::shared_ptr<Program>(new Program(stmts));
 }
@@ -604,5 +642,75 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 
 	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name));
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
+}
+
+std::shared_ptr<Term> Parser::term() {
+	Token value = LT(1);
+	match({Token::category::dbl_quoted_string, Token::category::id});
+
+	return std::shared_ptr<Term>(new Term(value));
+}
+
+std::shared_ptr<IFactor> Parser::factor() {
+	auto not_token = Token();
+	if (LA(1) == Token::category::NOT) {
+		not_token = LT(1);
+		match(Token::category::NOT);
+	}
+
+	//TODO: newline
+	if(test_comparison()) {
+		return std::shared_ptr<Factor<Comparison>>(new Factor<Comparison>(not_token, comparison()));
+	} else if (LA(1) == Token::category::lparen) {
+		match(Token::category::lparen);
+		auto result = std::shared_ptr<Factor<IExpr>>(new Factor<IExpr>(not_token, expr()));
+		match(Token::category::rparen);
+		return result;
+	} else if (test_term()) {
+		return std::shared_ptr<Factor<Term>>(new Factor<Term>(not_token, term()));
+	} else {
+		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown expression: " + LT(1).value());
+	}
+}
+
+std::shared_ptr<Comparison> Parser::comparison() {
+	auto left = term();
+
+	Token op = LT(1);
+
+	match({
+		Token::category::GREATER,
+		Token::category::LESS,
+		Token::category::EQUAL,
+		Token::category::STRGREATER,
+		Token::category::STRLESS,
+		Token::category::STREQUAL
+		});
+
+	auto right = term();
+
+	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
+}
+
+std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {
+	auto op = LT(1);
+
+	match({Token::category::OR, Token::category::AND});
+
+	auto right = expr();
+
+	auto binop = std::shared_ptr<BinOp>(new BinOp(op, left, right));
+	return std::shared_ptr<Expr<BinOp>>(new Expr(binop));
+}
+
+std::shared_ptr<IExpr> Parser::expr() {
+	auto left = std::shared_ptr<Expr<IFactor>>(new Expr(factor()));
+
+	if ((LA(1) == Token::category::AND) ||
+		(LA(1) == Token::category::OR)) {
+		return binop(left);
+	} else {
+		return left;
+	}
 }
 

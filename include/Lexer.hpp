@@ -128,6 +128,18 @@ private:
 	Token else_();
 	Token include();
 
+	//expressions
+
+	Token LESS();
+	Token GREATER();
+	Token EQUAL();
+	Token STRLESS();
+	Token STRGREATER();
+	Token STREQUAL();
+	Token NOT();
+	Token AND();
+	Token OR();
+
 	Pos current_pos;
 	std::string input;
 	bool is_inside_if = false;

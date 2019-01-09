@@ -782,5 +782,135 @@ struct Program: public Node {
 	std::vector<std::shared_ptr<IStmt>> stmts;
 };
 
+//here go expressions and everything with them
+
+//basic unit of expressions - could be double quoted string or an id (variable) 
+struct Term: public Node {
+	Term(const Token& value):
+		Node(value) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	Token::category type() const {
+		return t.type();
+	}
+};
+
+
+struct IFactor: public Node {
+	using Node::Node;
+};
+
+//Term, comparison or expr
+template <typename FactorType>
+struct Factor: public IFactor {
+	Factor(const Token& not_token, std::shared_ptr<FactorType> factor):
+		IFactor(factor->t),
+		not_token(not_token),
+		factor(factor) {}
+
+	Pos begin() const {
+		return factor->begin();
+	}
+
+	Pos end() const {
+		return factor->end();
+	}
+
+	operator std::string() const {
+		std::string result = "FACTOR: ";
+		if (not_token.type() == Token::category::NOT) {
+			result += "NOT ";
+		}
+		result += std::string(*factor);
+		return result;
+	}
+
+	Token not_token;
+	std::shared_ptr<FactorType> factor;
+};
+
+struct Comparison: public Node {
+	Comparison(const Token& op, std::shared_ptr<Term> left, std::shared_ptr<Term> right):
+		Node(op), left(left), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return std::string(*left) + " " + t.value() + " " + std::string(*right);
+	}
+
+	std::shared_ptr<Term> left;
+	std::shared_ptr<Term> right;
+};
+
+struct IExpr: public Node {
+	using Node::Node;
+};
+
+
+//BinOp(AND, OR) or Factor
+template <typename ExprType>
+struct Expr: IExpr {
+	Expr(std::shared_ptr<ExprType> expr):
+		IExpr(expr->t),
+		expr(expr) {}
+
+	Pos begin() const {
+		return expr->begin();
+	}
+
+	Pos end() const {
+		return expr->end();
+	}
+
+	operator std::string() const {
+		return std::string(*expr);
+	}
+
+	std::shared_ptr<ExprType> expr;
+};
+
+
+struct BinOp: public Node {
+	BinOp(const Token& op, std::shared_ptr<IExpr> left, std::shared_ptr<IExpr> right):
+		Node(op), left(left), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return std::string("BINOP: ") + std::string(*left) + " " + t.value() + " " + std::string(*right);
+	}
+
+	Token op() const {
+		return t;
+	}
+
+	std::shared_ptr<IExpr> left;
+	std::shared_ptr<IExpr> right;
+};
+
 }
 
