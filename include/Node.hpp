@@ -804,6 +804,16 @@ struct Term: public Node {
 	Token::category type() const {
 		return t.type();
 	}
+
+	std::string value() const {
+		if (type() == Token::category::dbl_quoted_string) {
+			return t.value().substr(1, t.value().length() - 2);
+		} else if (type() == Token::category::id) {
+			return t.value();
+		} else {
+			throw std::runtime_error("unknown value type");
+		}
+	}
 };
 
 
@@ -829,11 +839,15 @@ struct Factor: public IFactor {
 
 	operator std::string() const {
 		std::string result = "FACTOR: ";
-		if (not_token.type() == Token::category::NOT) {
+		if (is_negated()) {
 			result += "NOT ";
 		}
 		result += std::string(*factor);
 		return result;
+	}
+
+	bool is_negated() const {
+		return not_token.type() == Token::category::NOT;
 	}
 
 	Token not_token;
@@ -854,6 +868,10 @@ struct Comparison: public Node {
 
 	operator std::string() const {
 		return std::string(*left) + " " + t.value() + " " + std::string(*right);
+	}
+
+	Token::category op() const {
+		return t.type();
 	}
 
 	std::shared_ptr<Term> left;

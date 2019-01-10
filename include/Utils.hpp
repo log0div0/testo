@@ -16,6 +16,8 @@ fs::path flash_drives_mount_dir();
 fs::path scripts_tmp_dir();
 
 
+bool is_number(const std::string& s);
+
 bool is_mac_correct(const std::string& mac);
 std::string normalized_mac(const std::string& mac);
 

@@ -9,7 +9,7 @@
 struct Parser {
 	Parser(const fs::path& file);
 
-	std::shared_ptr<AST::Program> parse();
+	std::shared_ptr<AST::IExpr> parse();
 private:
 
 	struct Ctx {

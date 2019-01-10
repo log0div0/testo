@@ -21,10 +21,12 @@ static void sleep(const std::string& interval) {
 	sleep(seconds_to_sleep);
 }
 
-void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
-	for (auto stmt: program->stmts) {
+void VisitorInterpreter::visit(std::shared_ptr<IExpr> program) {
+	auto res = visit_expr(program);
+	std::cout << "RESULT: " << res << std::endl;
+	/*for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
-	}
+	}*/
 }
 
 void VisitorInterpreter::visit_stmt(std::shared_ptr<IStmt> stmt) {
@@ -433,6 +435,101 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
 	std::cout << "Calling macro " << macro_call->name().value() << " on vm " << vm->name() << std::endl;
 	visit_action_block(vm, macro_call->macro->action_block->action);
+}
+
+bool VisitorInterpreter::visit_expr(std::shared_ptr<IExpr> expr) {
+	if (auto p = std::dynamic_pointer_cast<Expr<BinOp>>(expr)) {
+		return visit_binop(p->expr);
+	} else if (auto p = std::dynamic_pointer_cast<Expr<IFactor>>(expr)) {
+		return visit_factor(p->expr);
+	} else {
+		throw std::runtime_error("Unknown expr type");
+	}
+}
+
+bool VisitorInterpreter::visit_binop(std::shared_ptr<BinOp> binop) {
+	std::cout << "Visiting binop\n";
+	auto left = visit_expr(binop->left);
+	std::cout << "Left: " << left << std::endl;
+	auto right = visit_expr(binop->right);
+	std::cout << "Right: " << right << std::endl;
+
+	if (binop->op().type() == Token::category::AND) {
+		return left && right;
+	} else if (binop->op().type() == Token::category::OR) {
+		return left || right;
+	} else {
+		throw std::runtime_error("Unknown binop operation");
+	}
+}
+
+bool VisitorInterpreter::visit_factor(std::shared_ptr<IFactor> factor) {
+	std::cout << "Visiting factor\n";
+	if (auto p = std::dynamic_pointer_cast<Factor<Term>>(factor)) {
+		return p->is_negated() ^ visit_term(p->factor).length();
+	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
+		return p->is_negated() ^ visit_comparison(p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
+		return p->is_negated() ^ visit_expr(p->factor);
+	} else {
+		throw std::runtime_error("Unknown factor type");
+	}
+}
+
+std::string VisitorInterpreter::visit_term(std::shared_ptr<Term> term) {
+	std::cout << "Visiting term\n";
+	if (term->type() == Token::category::dbl_quoted_string) {
+		return term->value();
+	} else if (term->type() == Token::category::id) {
+		throw std::runtime_error("To be implemented");
+	} else {
+		throw std::runtime_error("Unknown term type");
+	}
+}
+
+bool VisitorInterpreter::visit_comparison(std::shared_ptr<Comparison> comparison) {
+	std::cout << "Visiting comparison\n";
+	auto left = visit_term(comparison->left);
+	auto right = visit_term(comparison->right);
+	if (comparison->op() == Token::category::GREATER) {
+		if (!is_number(left)) {
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+		}
+		if (!is_number(right)) {
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+		}
+
+		return std::stoul(left) > std::stoul(right);
+
+	} else if (comparison->op() == Token::category::LESS) {
+		if (!is_number(left)) {
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+		}
+		if (!is_number(right)) {
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+		}
+
+		return std::stoul(left) < std::stoul(right);
+
+	} else if (comparison->op() == Token::category::EQUAL) {
+		if (!is_number(left)) {
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+		}
+		if (!is_number(right)) {
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+		}
+
+		return std::stoul(left) == std::stoul(right);
+
+	} else if (comparison->op() == Token::category::STRGREATER) {
+		return left > right;
+	} else if (comparison->op() == Token::category::STRLESS) {
+		return left < right;
+	} else if (comparison->op() == Token::category::STREQUAL) {
+		return left == right;
+	} else {
+		throw std::runtime_error("Unknown comparison op");
+	}
 }
 
 void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot, bool recursive) {

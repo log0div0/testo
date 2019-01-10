@@ -153,7 +153,7 @@ void Parser::handle_include() {
 
 
 
-std::shared_ptr<Program> Parser::parse() {
+std::shared_ptr<IExpr> Parser::parse() {
 	std::vector<std::shared_ptr<IStmt>> stmts;
 	newline_list();
 	auto nana = expr();
@@ -174,7 +174,9 @@ std::shared_ptr<Program> Parser::parse() {
 		}
 	}*/
 
-	return std::shared_ptr<Program>(new Program(stmts));
+	return nana;
+
+	//return std::shared_ptr<Program>(new Program(stmts));
 }
 
 std::shared_ptr<IStmt> Parser::stmt() {

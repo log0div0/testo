@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <algorithm>
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();
@@ -91,4 +92,9 @@ std::string normalized_mac(const std::string& mac) {
 	}
 
 	return result;
+}
+
+bool is_number(const std::string& s) {
+	return !s.empty() && std::find_if(s.begin(), 
+		s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
