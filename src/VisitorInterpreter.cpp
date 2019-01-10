@@ -476,12 +476,26 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<IFactor> factor) {
 	}
 }
 
+std::string VisitorInterpreter::resolve_var(const std::string& var) {
+	//Resolving order
+	//1) metadata
+	//2) global (todo)
+	//3) env var
+
+	auto env_value = std::getenv(var.c_str());
+
+	if (env_value == nullptr) {
+		return "";
+	} 
+	return env_value;
+}
+
 std::string VisitorInterpreter::visit_term(std::shared_ptr<Term> term) {
 	std::cout << "Visiting term\n";
 	if (term->type() == Token::category::dbl_quoted_string) {
 		return term->value();
-	} else if (term->type() == Token::category::id) {
-		throw std::runtime_error("To be implemented");
+	} else if (term->type() == Token::category::var_ref) {
+		return resolve_var(term->value());
 	} else {
 		throw std::runtime_error("Unknown term type");
 	}

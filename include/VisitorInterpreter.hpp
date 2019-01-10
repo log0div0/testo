@@ -40,6 +40,7 @@ struct VisitorInterpreter {
 	bool visit_expr(std::shared_ptr<AST::IExpr> expr);
 	bool visit_binop(std::shared_ptr<AST::BinOp> binop);
 	bool visit_factor(std::shared_ptr<AST::IFactor> factor);
+	std::string resolve_var(const std::string& var);
 	std::string visit_term(std::shared_ptr<AST::Term> term);
 	bool visit_comparison(std::shared_ptr<AST::Comparison> comparison);
 	

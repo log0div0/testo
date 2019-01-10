@@ -784,7 +784,7 @@ struct Program: public Node {
 
 //here go expressions and everything with them
 
-//basic unit of expressions - could be double quoted string or an id (variable) 
+//basic unit of expressions - could be double quoted string or a var_ref (variable) 
 struct Term: public Node {
 	Term(const Token& value):
 		Node(value) {}
@@ -808,8 +808,8 @@ struct Term: public Node {
 	std::string value() const {
 		if (type() == Token::category::dbl_quoted_string) {
 			return t.value().substr(1, t.value().length() - 2);
-		} else if (type() == Token::category::id) {
-			return t.value();
+		} else if (type() == Token::category::var_ref) {
+			return t.value().substr(1, t.value().length() - 1);
 		} else {
 			throw std::runtime_error("unknown value type");
 		}

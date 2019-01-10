@@ -334,6 +334,77 @@ Token Lexer::include() {
 	return Token(Token::category::include, value, tmp_pos);
 }
 
+Token Lexer::LESS() {
+	Pos tmp_pos = current_pos;
+	std::string value("LESS");
+	current_pos.advance(value.length());
+	return Token(Token::category::LESS, value, tmp_pos);
+}
+Token Lexer::GREATER() {
+	Pos tmp_pos = current_pos;
+	std::string value("GREATER");
+	current_pos.advance(value.length());
+	return Token(Token::category::GREATER, value, tmp_pos);
+}
+Token Lexer::EQUAL() {
+	Pos tmp_pos = current_pos;
+	std::string value("EQUAL");
+	current_pos.advance(value.length());
+	return Token(Token::category::EQUAL, value, tmp_pos);
+}
+Token Lexer::STRLESS() {
+	Pos tmp_pos = current_pos;
+	std::string value("STRLESS");
+	current_pos.advance(value.length());
+	return Token(Token::category::STRLESS, value, tmp_pos);
+}
+Token Lexer::STRGREATER() {
+	Pos tmp_pos = current_pos;
+	std::string value("STRGREATER");
+	current_pos.advance(value.length());
+	return Token(Token::category::STRGREATER, value, tmp_pos);
+}
+Token Lexer::STREQUAL() {
+	Pos tmp_pos = current_pos;
+	std::string value("STREQUAL");
+	current_pos.advance(value.length());
+	return Token(Token::category::STREQUAL, value, tmp_pos);
+}
+Token Lexer::NOT() {
+	Pos tmp_pos = current_pos;
+	std::string value("NOT");
+	current_pos.advance(value.length());
+	return Token(Token::category::NOT, value, tmp_pos);
+}
+Token Lexer::AND() {
+	Pos tmp_pos = current_pos;
+	std::string value("AND");
+	current_pos.advance(value.length());
+	return Token(Token::category::AND, value, tmp_pos);
+}
+Token Lexer::OR() {
+	Pos tmp_pos = current_pos;
+	std::string value("OR");
+	current_pos.advance(value.length());
+	return Token(Token::category::OR, value, tmp_pos);
+}
+
+Token Lexer::var_ref() {
+	Pos tmp_pos = current_pos;
+	std::string value;
+	value += input[current_pos];
+	current_pos.advance();
+	size_t shift = 0;
+
+	while ((test_id(shift) || isdigit(input[current_pos + shift])) && !test_eof()) {
+		value += input[current_pos + shift];
+		shift++;
+	}
+
+	current_pos.advance(shift);
+	return Token(Token::category::var_ref, value, tmp_pos);
+}
+
 Token Lexer::multiline_string() {
 	Pos tmp_pos = current_pos;
 
@@ -451,61 +522,6 @@ Token Lexer::colon() {
 	return Token(Token::category::colon, ":", tmp_pos);
 }
 
-Token Lexer::LESS() {
-	Pos tmp_pos = current_pos;
-	std::string value("LESS");
-	current_pos.advance(value.length());
-	return Token(Token::category::LESS, value, tmp_pos);
-}
-Token Lexer::GREATER() {
-	Pos tmp_pos = current_pos;
-	std::string value("GREATER");
-	current_pos.advance(value.length());
-	return Token(Token::category::GREATER, value, tmp_pos);
-}
-Token Lexer::EQUAL() {
-	Pos tmp_pos = current_pos;
-	std::string value("EQUAL");
-	current_pos.advance(value.length());
-	return Token(Token::category::EQUAL, value, tmp_pos);
-}
-Token Lexer::STRLESS() {
-	Pos tmp_pos = current_pos;
-	std::string value("STRLESS");
-	current_pos.advance(value.length());
-	return Token(Token::category::STRLESS, value, tmp_pos);
-}
-Token Lexer::STRGREATER() {
-	Pos tmp_pos = current_pos;
-	std::string value("STRGREATER");
-	current_pos.advance(value.length());
-	return Token(Token::category::STRGREATER, value, tmp_pos);
-}
-Token Lexer::STREQUAL() {
-	Pos tmp_pos = current_pos;
-	std::string value("STREQUAL");
-	current_pos.advance(value.length());
-	return Token(Token::category::STREQUAL, value, tmp_pos);
-}
-Token Lexer::NOT() {
-	Pos tmp_pos = current_pos;
-	std::string value("NOT");
-	current_pos.advance(value.length());
-	return Token(Token::category::NOT, value, tmp_pos);
-}
-Token Lexer::AND() {
-	Pos tmp_pos = current_pos;
-	std::string value("AND");
-	current_pos.advance(value.length());
-	return Token(Token::category::AND, value, tmp_pos);
-}
-Token Lexer::OR() {
-	Pos tmp_pos = current_pos;
-	std::string value("OR");
-	current_pos.advance(value.length());
-	return Token(Token::category::OR, value, tmp_pos);
-}
-
 Token Lexer::get_next_token() {
 	while (!test_eof()) {
 		if (test_newline()) {
@@ -514,6 +530,8 @@ Token Lexer::get_next_token() {
 			return number();
 		} else if (test_id()) {
 			return id();
+		} else if (test_var_ref()) {
+			return var_ref();
 		} else if (test_multiline_quote()) {
 			return multiline_string();
 		} else if (test_dbl_quote()) {
@@ -551,7 +569,7 @@ Token Lexer::get_next_token() {
 			throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unknown lexem: " + input[current_pos]);
 		}
 	}
-	
+
 	return Token(Token::category::eof, "", current_pos);
 }
 

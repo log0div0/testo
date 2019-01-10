@@ -93,7 +93,7 @@ bool Parser::test_action() const {
 
 bool Parser::test_term() const {
 	return ((LA(1) == Token::category::dbl_quoted_string) ||
-		(LA(1) == Token::category::id));
+		(LA(1) == Token::category::var_ref));
 }
 
 bool Parser::test_comparison() const {
@@ -648,7 +648,7 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 
 std::shared_ptr<Term> Parser::term() {
 	Token value = LT(1);
-	match({Token::category::dbl_quoted_string, Token::category::id});
+	match({Token::category::dbl_quoted_string, Token::category::var_ref});
 
 	return std::shared_ptr<Term>(new Term(value));
 }

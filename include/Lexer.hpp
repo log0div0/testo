@@ -24,6 +24,10 @@ private:
 		return (isalpha(input[current_pos + shift]) || 
 			(input[current_pos + shift] == '_'));
 	}
+
+	bool test_var_ref() const {
+		return (input[current_pos] == '$');
+	}
 	bool test_comments() const { return (input[current_pos] == '#'); }
 	bool test_begin_multiline_comments() const {
 		if (test_eof(1)) {
@@ -87,6 +91,7 @@ private:
 	Token time_interval(std::string time_number, const Pos& time_number_pos);
 	Token size(std::string size_number, const Pos& size_number_pos);
 	Token id();
+	Token var_ref();
 	Token type();
 	Token wait();
 	Token press();

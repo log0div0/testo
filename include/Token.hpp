@@ -8,6 +8,7 @@ struct Token {
 		eof,
 		newline,
 		id,
+		var_ref,
 		type_,
 		wait,
 		press,
