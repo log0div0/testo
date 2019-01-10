@@ -40,11 +40,7 @@ struct Token {
 		rparen,
 		semi,
 		colon,
-		ifdef, //$ifdef
-		ifndef, //$ifndef
-		endif, //$ifndef
-		else_, //$ifndef
-		include, //$include
+		include,
 
 		//expressions
 

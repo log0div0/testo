@@ -75,16 +75,10 @@ private:
 	bool test_rparen() const { return (input[current_pos] == ')'); }
 	bool test_semi() const { return (input[current_pos] == ';'); }
 	bool test_colon() const { return (input[current_pos] == ':'); }
-	bool test_ppd() const { return (input[current_pos] == '$' && current_pos.column == 1); }
 
 	void skip_spaces();
 	void skip_comments();
 	void skip_multiline_comments();
-
-	Token handle_ppd(); //preprocessor directive
-	void handle_ifdef();
-	void handle_else(bool should_happen);
-	void handle_endif();
 
 	char escaped_character();
 
@@ -122,10 +116,6 @@ private:
 	Token rparen();
 	Token semi();
 	Token colon();
-	Token get_ppd();
-	Token ifdef();
-	Token endif();
-	Token else_();
 	Token include();
 
 	//expressions
@@ -142,5 +132,4 @@ private:
 
 	Pos current_pos;
 	std::string input;
-	bool is_inside_if = false;
 };
