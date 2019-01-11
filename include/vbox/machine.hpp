@@ -45,6 +45,7 @@ struct Machine {
 	void attach_device(const std::string& name, int controller_port, int device, DeviceType device_type, const Medium& medium);
 	void detach_device(const std::string& name, int controller_port, int device);
 
+	std::vector<std::string> getExtraDataKeys() const;
 	std::string getExtraData(const std::string& key) const;
 	void setExtraData(const std::string& key, const std::string& value) const;
 

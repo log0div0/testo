@@ -38,12 +38,12 @@ struct VisitorInterpreter {
 	void visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
 	void visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IfClause> if_clause);
 
-	bool visit_expr(std::shared_ptr<AST::IExpr> expr);
-	bool visit_binop(std::shared_ptr<AST::BinOp> binop);
-	bool visit_factor(std::shared_ptr<AST::IFactor> factor);
-	std::string resolve_var(const std::string& var);
-	std::string visit_term(std::shared_ptr<AST::Term> term);
-	bool visit_comparison(std::shared_ptr<AST::Comparison> comparison);
+	bool visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IExpr> expr);
+	bool visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::BinOp> binop);
+	bool visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IFactor> factor);
+	std::string resolve_var(std::shared_ptr<VmController> vm, const std::string& var);
+	std::string visit_term(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Term> term);
+	bool visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
 	
 	void apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot, bool recursive = false);
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);

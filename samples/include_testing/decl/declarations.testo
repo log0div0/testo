@@ -15,6 +15,11 @@ machine client {
 		network: "net1"
 		mac: "52:54:00:00:00:AA"
 	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
 }
 
 machine client2 {
@@ -34,6 +39,11 @@ machine client2 {
 		network: "net1"
 		mac: "52:54:00:11:00:aa"
 	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
 }
 
 machine server {
@@ -52,6 +62,11 @@ machine server {
 		attached_to: "internal"
 		network: "net2"
 		mac: "52:54:00:22:00:aa"
+	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
 	}
 }
 
@@ -86,6 +101,11 @@ machine master {
 		network: "net3"
 		mac: "52:54:00:33:00:cc"
 	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
 }
 
 machine slave {
@@ -119,6 +139,11 @@ machine slave {
 		network: "net3"
 		mac: "52:54:00:44:00:cc"
 	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
 }
 
 snapshot ubuntu_installed {
@@ -132,7 +157,11 @@ snapshot ubuntu_installed {
 	wait "You can try to have";	press Enter
 	wait "country of origin for the keyboard"; press Enter
 	wait "Keyboard layout"; press Enter
-	wait "Primary network interface" for 2m; press Enter
+	wait "Primary network interface" for 2m
+	if ($vm_nic_count EQUAL "4") {
+		press Down
+	}
+	press Enter;
 	wait "Hostname:" for 55s
 	press Backspace*6; type "testo"; press Enter
 	wait "Full name for the new user"; type "testo-user"; press Enter
@@ -141,11 +170,11 @@ snapshot ubuntu_installed {
 	wait "Re-enter password to verify"; type "1111"; press Enter
 	wait "Use weak password?"; press Left; press Enter
 	wait "Encrypt your"; press Enter
-$ifdef HTTP_PROXY
-	wait "Select your time zone" for 1m; press Enter
-$else
-	#wait "Moscow" for 2m; press Enter
-$endif
+	if ($HTTP_PROXY) {
+		wait "Select your time zone" for 1m; press Enter
+	}; else { 
+		wait "Moscow" for 2m; press Enter
+	}
 	wait "Partitioning method"; press Enter
 	wait "Select disk to partition"; press Enter
 	wait "configure LVM?"; press Left, Enter
@@ -156,83 +185,24 @@ $endif
 	wait "At the moment, only the core of the system is installed"; press Enter
 	wait "Install the GRUB" for 1m; press Enter
 	wait "Installation complete" for 30s; press Enter
-	#wait "Ubuntu 16.04.5 LTS" for 30s;
 	wait for 30s;
 	type "testo-user"; press Enter
 	wait for 3s; type "1111"; press Enter
 	wait for 3s;
-	#wait "Password:"; type "1111"; press Enter
-	#wait "GNU/Linux 4.4.0-131-generic";
-}
-
-snapshot master_installed {
-	wait "Tibetan"; press Enter
-	wait for 4s
-	#wait "Install Ubuntu Server"; press Enter
-	press Enter
-	#wait "Amharic";	press Enter
-	wait "Choose the language";	press Enter
-	wait "Country, territory or area"; press Enter
-	wait "You can try to have";	press Enter
-	wait "country of origin for the keyboard"; press Enter
-	wait "Keyboard layout"; press Enter
-	wait "Primary network interface" for 2m; press Down, Enter
-	wait "Hostname:" for 55s
-	press Backspace*6; type "testo"; press Enter
-	wait "Full name for the new user"; type "testo-user"; press Enter
-	wait "Username for your account"; press Enter
-	wait "Choose a password for the new user"; type "1111"; press Enter
-	wait "Re-enter password to verify"; type "1111"; press Enter
-	wait "Use weak password?"; press Left; press Enter
-	wait "Encrypt your"; press Enter
-$ifdef HTTP_PROXY
-	wait "Select your time zone" for 1m; press Enter
-$else
-	#wait "Moscow" for 2m; press Enter
-$endif
-	wait "Partitioning method"; press Enter
-	wait "Select disk to partition"; press Enter
-	wait "configure LVM?"; press Left, Enter
-	wait "Amount of volume group to use for guided partitioning"; press Enter
-	wait "If you continue, the changes listed below"; press Left, Enter
-	wait "HTTP proxy information" for 2m; press Enter
-	wait "How do you want to manage upgrades" for 5m; press Enter
-	wait "At the moment, only the core of the system is installed"; press Enter
-	wait "Install the GRUB" for 1m; press Enter
-	wait "Installation complete" for 30s; press Enter
-	#wait "Ubuntu 16.04.5 LTS" for 30s;
-	wait for 30s;
-	type "testo-user"; press Enter
-	wait for 3s; type "1111"; press Enter
-	wait for 3s;
-	#wait "Password:"; type "1111"; press Enter
-	#wait "GNU/Linux 4.4.0-131-generic";
 }
 
 snapshot internet_configured: ubuntu_installed {
 	type "sudo su"; press Enter
 	type "1111"; press Enter
 	wait for 3s
-	type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
-	wait for 5s
-	type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
-	type "Acquire::https::Proxy \"http://172.17.5.92:3128\";"
-	press leftctrl+x; wait for 1s;
-	press leftshift+y; press Enter
-	type "apt-get update"; press Enter
-	wait for 20s
-}
-
-snapshot internet_master_configured: master_installed {
-	type "sudo su"; press Enter
-	type "1111"; press Enter
-	wait for 3s
-	type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
-	wait for 5s
-	type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
-	type "Acquire::https::Proxy \"http://172.17.5.92:3128\";"
-	press leftctrl+x; wait for 1s;
-	press leftshift+y; press Enter
+	if ($HTTP_PROXY) {
+		type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
+		wait for 5s
+		type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
+		type "Acquire::https::Proxy \"http://172.17.5.92:3128\";"
+		press leftctrl+x; wait for 1s;
+		press leftshift+y; press Enter
+	}
 	type "apt-get update"; press Enter
 	wait for 20s
 }

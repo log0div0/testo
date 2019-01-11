@@ -438,7 +438,7 @@ std::shared_ptr<IAction> Parser::action() {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown action: " + LT(1).value());
 	}
 
-	if (action->t.type() != Token::category::if_) {
+	if (action->t.type() != Token::category::action_block && action->t.type() != Token::category::if_) {
 		Token delim;
 		if (LA(1) == Token::category::newline) {
 			delim = LT(1);
