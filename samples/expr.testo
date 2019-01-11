@@ -1,1 +1,8 @@
-$Hey_ho GREATER "5"
+if($Hey GREATER "10")
+	wait for 3s
+else if ($Hey GREATER "7") {
+	wait for 2s
+	wait for 1s
+}; else 
+	wait for 4s
+	

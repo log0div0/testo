@@ -26,6 +26,8 @@ struct Token {
 		flash,
 		macro,
 		dvd,
+		if_,
+		else_,
 		number,
 		time_interval,
 		size,

@@ -182,6 +182,10 @@ Token Lexer::id() {
 		return macro();
 	} else if (value == "dvd") {
 		return dvd();
+	} else if (value == "if") {
+		return if_();
+	} else if (value == "else") {
+		return else_();
 	} else if (value == "include") {
 		return include();
 	} else if (value == "LESS") {
@@ -327,6 +331,20 @@ Token Lexer::dvd() {
 	return Token(Token::category::dvd, value, tmp_pos);
 }
 
+Token Lexer::if_() {
+	Pos tmp_pos = current_pos;
+	std::string value("if");
+	current_pos.advance(value.length());
+	return Token(Token::category::if_, value, tmp_pos);
+}
+
+Token Lexer::else_() {
+	Pos tmp_pos = current_pos;
+	std::string value("else");
+	current_pos.advance(value.length());
+	return Token(Token::category::else_, value, tmp_pos);
+}
+
 Token Lexer::include() {
 	Pos tmp_pos = current_pos;
 	std::string value("include");
@@ -401,7 +419,12 @@ Token Lexer::var_ref() {
 		shift++;
 	}
 
+	if (shift == 0) {
+		throw std::runtime_error(std::string(tmp_pos) + ": Error: empty var reference");
+	}
+
 	current_pos.advance(shift);
+
 	return Token(Token::category::var_ref, value, tmp_pos);
 }
 

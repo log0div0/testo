@@ -9,7 +9,7 @@ struct VisitorInterpreter {
 	VisitorInterpreter(Global& global):
 		global(global) {}
 
-	void visit(std::shared_ptr<AST::IExpr> program);
+	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
 	void visit_controller(std::shared_ptr<AST::Controller> controller);
 	void visit_flash(std::shared_ptr<AST::Controller> flash);
@@ -36,6 +36,7 @@ struct VisitorInterpreter {
 	void visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
 	void visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<AST::CopyTo> copyto);
 	void visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
+	void visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IfClause> if_clause);
 
 	bool visit_expr(std::shared_ptr<AST::IExpr> expr);
 	bool visit_binop(std::shared_ptr<AST::BinOp> binop);

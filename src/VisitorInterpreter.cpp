@@ -21,12 +21,10 @@ static void sleep(const std::string& interval) {
 	sleep(seconds_to_sleep);
 }
 
-void VisitorInterpreter::visit(std::shared_ptr<IExpr> program) {
-	auto res = visit_expr(program);
-	std::cout << "RESULT: " << res << std::endl;
-	/*for (auto stmt: program->stmts) {
+void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
+	for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
-	}*/
+	}
 }
 
 void VisitorInterpreter::visit_stmt(std::shared_ptr<IStmt> stmt) {
@@ -155,6 +153,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_copyto(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
 		return visit_macro_call(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
+		return visit_if_clause(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
 	} else {
@@ -437,6 +437,16 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std:
 	visit_action_block(vm, macro_call->macro->action_block->action);
 }
 
+void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<IfClause> if_clause) {
+	bool expr_result = visit_expr(if_clause->expr);
+
+	if (expr_result) {
+		return visit_action(vm, if_clause->if_action);
+	} else if (if_clause->has_else()) {
+		return visit_action(vm, if_clause->else_action);
+	}
+}
+
 bool VisitorInterpreter::visit_expr(std::shared_ptr<IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<Expr<BinOp>>(expr)) {
 		return visit_binop(p->expr);
@@ -448,11 +458,8 @@ bool VisitorInterpreter::visit_expr(std::shared_ptr<IExpr> expr) {
 }
 
 bool VisitorInterpreter::visit_binop(std::shared_ptr<BinOp> binop) {
-	std::cout << "Visiting binop\n";
 	auto left = visit_expr(binop->left);
-	std::cout << "Left: " << left << std::endl;
 	auto right = visit_expr(binop->right);
-	std::cout << "Right: " << right << std::endl;
 
 	if (binop->op().type() == Token::category::AND) {
 		return left && right;
@@ -464,7 +471,6 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<BinOp> binop) {
 }
 
 bool VisitorInterpreter::visit_factor(std::shared_ptr<IFactor> factor) {
-	std::cout << "Visiting factor\n";
 	if (auto p = std::dynamic_pointer_cast<Factor<Term>>(factor)) {
 		return p->is_negated() ^ visit_term(p->factor).length();
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
@@ -491,7 +497,6 @@ std::string VisitorInterpreter::resolve_var(const std::string& var) {
 }
 
 std::string VisitorInterpreter::visit_term(std::shared_ptr<Term> term) {
-	std::cout << "Visiting term\n";
 	if (term->type() == Token::category::dbl_quoted_string) {
 		return term->value();
 	} else if (term->type() == Token::category::var_ref) {
@@ -502,7 +507,6 @@ std::string VisitorInterpreter::visit_term(std::shared_ptr<Term> term) {
 }
 
 bool VisitorInterpreter::visit_comparison(std::shared_ptr<Comparison> comparison) {
-	std::cout << "Visiting comparison\n";
 	auto left = visit_term(comparison->left);
 	auto right = visit_term(comparison->right);
 	if (comparison->op() == Token::category::GREATER) {

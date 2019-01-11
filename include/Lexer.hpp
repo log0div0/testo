@@ -109,6 +109,8 @@ private:
 	Token flash();
 	Token macro();
 	Token dvd();
+	Token if_();
+	Token else_();
 	Token dbl_quoted_string();
 	Token multiline_string();
 	Token assign();

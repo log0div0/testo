@@ -88,6 +88,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::set) ||
 		(LA(1) == Token::category::copyto) ||
 		(LA(1) == Token::category::lbrace) ||
+		(LA(1) == Token::category::if_) ||
 		(LA(1) == Token::category::id)); //macro call
 }
 
@@ -153,13 +154,10 @@ void Parser::handle_include() {
 
 
 
-std::shared_ptr<IExpr> Parser::parse() {
+std::shared_ptr<Program> Parser::parse() {
 	std::vector<std::shared_ptr<IStmt>> stmts;
-	newline_list();
-	auto nana = expr();
-	
-	std::cout << "EXPR: " << std::string(*nana) << std::endl;
-	/*//we expect include command only between the declarations
+
+	//we expect include command only between the declarations
 	while (!lexers.empty()) {
 		newline_list();
 		if (LA(1) == Token::category::eof) {
@@ -172,11 +170,9 @@ std::shared_ptr<IExpr> Parser::parse() {
 		} else {
 			throw std::runtime_error(std::string(LT(1).pos()) + ":error: expected declaration or include");
 		}
-	}*/
+	}
 
-	return nana;
-
-	//return std::shared_ptr<Program>(new Program(stmts));
+	return std::shared_ptr<Program>(new Program(stmts));
 }
 
 std::shared_ptr<IStmt> Parser::stmt() {
@@ -434,26 +430,29 @@ std::shared_ptr<IAction> Parser::action() {
 		action = copyto();
 	} else if (LA(1) == Token::category::lbrace) {
 		action = action_block();
+	} else if (LA(1) == Token::category::if_) {
+		action = if_clause();
 	} else if (LA(1) == Token::category::id) {
 		action = macro_call();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown action: " + LT(1).value());
 	}
 
-	Token delim;
-	if (LA(1) == Token::category::newline) {
-		delim = LT(1);
-		match(Token::category::newline);
-	} else if (LA(1) == Token::category::semi) {
-		delim = LT(1);
-		match(Token::category::semi);
-	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) +
-			": Expected new line or ';' \"");
+	if (action->t.type() != Token::category::if_) {
+		Token delim;
+		if (LA(1) == Token::category::newline) {
+			delim = LT(1);
+			match(Token::category::newline);
+		} else if (LA(1) == Token::category::semi) {
+			delim = LT(1);
+			match(Token::category::semi);
+		} else {
+			throw std::runtime_error(std::string(LT(1).pos()) +
+				": Expected new line or ';' \"");
+		}
+		action->set_delim(delim);
 	}
-
-	action->set_delim(delim);
-
+	
 	return action;
 }
 
@@ -593,12 +592,11 @@ std::shared_ptr<Action<Set>> Parser::set() {
 
 	std::vector<std::shared_ptr<Assignment>> assignments;
 
-	while (test_assignment()) {
+	assignments.push_back(assignment());
+	while (LA(1) == Token::category::comma) {
+		match(Token::category::comma);
+		newline_list();
 		assignments.push_back(assignment());
-	}
-
-	if (!assignments.size()) {
-		throw std::runtime_error(std::string(set_token.pos()) + ": Error: set action needs at least one assignment");
 	}
 
 	auto action = std::shared_ptr<Set>(new Set(set_token, assignments));
@@ -644,6 +642,41 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 
 	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name));
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
+}
+
+std::shared_ptr<Action<IfClause>> Parser::if_clause() {
+	Token if_token = LT(1);
+	match(Token::category::if_);
+
+	Token open_paren = LT(1);
+	match(Token::category::lparen);
+
+	auto expression = expr();
+	Token close_paren = LT(1);
+	match(Token::category::rparen);
+
+	newline_list();
+
+	auto if_action = action();
+
+	Token else_token = Token();
+	std::shared_ptr<IAction> else_action = nullptr;
+
+	if (LA(1) == Token::category::else_) {
+		else_token = LT(1);
+		match(Token::category::else_);
+		newline_list();
+		else_action = action();
+	}
+
+	auto action = std::shared_ptr<IfClause>(new IfClause(
+		if_token,
+		open_paren, expression,
+		close_paren, if_action,
+		else_token, else_action
+	));
+
+	return std::shared_ptr<Action<IfClause>>(new Action<IfClause>(action));
 }
 
 std::shared_ptr<Term> Parser::term() {

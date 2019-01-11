@@ -85,6 +85,7 @@ struct IAction: public Node {
 	virtual void set_delim (const Token& delim)  = 0;
 };
 
+//IfClause if also an action
 template <typename ActionType>
 struct Action: public IAction {
 	Action(std::shared_ptr<ActionType> action):
@@ -100,7 +101,11 @@ struct Action: public IAction {
 	}
 
 	operator std::string() const {
-		return std::string(*action) + delim.value();
+		std::string result = std::string(*action);
+		if (delim.type() == Token::category::semi) {
+			result += delim.value();
+		}
+		return result;
 	}
 
 	void set_delim (const Token& delim) {
@@ -928,6 +933,57 @@ struct BinOp: public Node {
 
 	std::shared_ptr<IExpr> left;
 	std::shared_ptr<IExpr> right;
+};
+
+struct IfClause: public Node {
+	IfClause(const Token& if_token, const Token& open_paren, std::shared_ptr<IExpr> expr,
+		const Token& close_paren, std::shared_ptr<IAction> if_action, const Token& else_token,
+		std::shared_ptr<IAction> else_action):
+		Node(if_token),
+		open_paren(open_paren),
+		expr(expr),
+		close_paren(close_paren),
+		if_action(if_action),
+		else_token(else_token),
+		else_action(else_action)
+	{}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		if (has_else()) {
+			return else_action->end();
+		} else {
+			return if_action->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result;
+
+		result += t.value() + " " +
+			open_paren.value() + std::string(*expr) + 
+			close_paren.value() + " " + std::string(*if_action);
+
+		if (has_else()) {
+			result += std::string("\n") + else_token.value() + " " +  std::string(*else_action);
+		}
+
+		return result;
+	}
+
+	bool has_else() const {
+		return else_token;
+	}
+
+	Token open_paren;
+	std::shared_ptr<IExpr> expr;
+	Token close_paren;
+	std::shared_ptr<IAction> if_action;
+	Token else_token;
+	std::shared_ptr<IAction> else_action;
 };
 
 }

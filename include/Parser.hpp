@@ -9,7 +9,7 @@
 struct Parser {
 	Parser(const fs::path& file);
 
-	std::shared_ptr<AST::IExpr> parse();
+	std::shared_ptr<AST::Program> parse();
 private:
 
 	struct Ctx {
@@ -64,6 +64,7 @@ private:
 	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
+	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
 
 	//expressions
 	std::shared_ptr<AST::Term> term();
