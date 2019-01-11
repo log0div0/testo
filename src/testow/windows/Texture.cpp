@@ -37,10 +37,10 @@ Texture::~Texture() {
 	}
 }
 
-Texture::Texture(Texture&& other): 
-	_texture(other._texture), 
-	_view(other._view), 
-	_width(other._width), 
+Texture::Texture(Texture&& other):
+	_texture(other._texture),
+	_view(other._view),
+	_width(other._width),
 	_height(other._height)
 {
 	other._texture = nullptr;
@@ -57,22 +57,12 @@ Texture& Texture::operator=(Texture&& other) {
 	return *this;
 }
 
-void Texture::write(uint8_t* data, size_t size) {
+void Texture::write(const uint8_t* data, size_t size) {
 	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
 	auto result = g_pd3dDeviceContext->Map(_texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	if (FAILED(result)) {
 		throw std::runtime_error("Texture write failed");
 	}
 	memcpy(mappedResource.pData, data, size);
-	g_pd3dDeviceContext->Unmap(_texture, 0);
-}
-
-void Texture::clear() {
-	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
-	auto result = g_pd3dDeviceContext->Map(_texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	if (FAILED(result)) {
-		throw std::runtime_error("Texture clear failed");
-	}
-	memset(mappedResource.pData, 0, _width * _height * 4);
 	g_pd3dDeviceContext->Unmap(_texture, 0);
 }

@@ -9,7 +9,7 @@
 #include <dinput.h>
 #include <iostream>
 #include <tchar.h>
-#include "app.hpp"
+#include "../App.hpp"
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();
@@ -149,8 +149,8 @@ int main(int, char**)
 		//ImGui::StyleColorsClassic();
 
 		// Load Fonts
-		// - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them. 
-		// - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple. 
+		// - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
+		// - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
 		// - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
 		// - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
 		// - Read 'misc/fonts/README.txt' for more instructions and details.
@@ -201,7 +201,7 @@ int main(int, char**)
 				g_pSwapChain->Present(1, 0); // Present with vsync
 				//g_pSwapChain->Present(0, 0); // Present without vsync
 			}
-		} 
+		}
 
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();

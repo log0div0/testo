@@ -4,6 +4,10 @@ add_subdirectory(VBoxCAPI)
 add_subdirectory(darknet)
 add_subdirectory(imgui)
 
+if(UNIX AND NOT APPLE)
+add_subdirectory(gl3w)
+endif()
+
 include(ExternalProject)
 
 ExternalProject_Add(

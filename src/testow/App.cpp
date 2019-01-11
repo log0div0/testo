@@ -27,7 +27,15 @@ void App::render() {
 
 	if (vm && ImGui::Begin("VM"))  {
 		std::shared_lock<std::shared_mutex> lock(vm->mutex);
-		ImGui::Image(vm->texture.handle(), ImVec2(vm->texture.width(), vm->texture.height()));
+		if (vm->screen) {
+			if ((texture.width() != vm->screen->width()) || (texture.height() != vm->screen->height())) {
+				texture = Texture(vm->screen->width(), vm->screen->height());
+			}
+			texture.write(vm->screen->data(), vm->screen->data_size());
+			ImGui::Image(texture.handle(), ImVec2(texture.width(), texture.height()));
+		} else {
+			ImGui::Text("No signal");
+		}
 		ImGui::End();
 	}
 
