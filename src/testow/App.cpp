@@ -5,8 +5,10 @@
 
 App* app = nullptr;
 
-App::App() {
+App::App(): net("C:\\Users\\log0div0\\work\\testo\\nn\\testo.cfg") {
 	::app = this;
+	net.load_weights("C:\\Users\\log0div0\\work\\testo\\nn\\testo.weights");
+	net.set_batch(1);
 	virtual_box = virtual_box_client.virtual_box();
 }
 
@@ -16,6 +18,7 @@ void App::render() {
 			bool is_selected = vm && (vm->machine.name() == machine.name());
 			if (ImGui::Selectable(machine.name().c_str(), &is_selected)) {
 				if (is_selected) {
+					vm = nullptr;
 					vm = std::make_shared<VM>(std::move(machine));
 				} else {
 					vm = nullptr;
@@ -27,12 +30,18 @@ void App::render() {
 
 	if (vm && ImGui::Begin("VM"))  {
 		std::shared_lock<std::shared_mutex> lock(vm->mutex);
-		if (vm->screen) {
-			if ((texture.width() != vm->screen->width()) || (texture.height() != vm->screen->height())) {
-				texture = Texture(vm->screen->width(), vm->screen->height());
+		if (vm->width && vm->height) {
+			if ((width != vm->width) || (height != vm->height)) {
+				width = vm->width;
+				height = vm->height;
+				texture1 = Texture(width, height);
+				texture2 = Texture(width, height);
 			}
-			texture.write(vm->screen->data(), vm->screen->data_size());
-			ImGui::Image(texture.handle(), ImVec2(texture.width(), texture.height()));
+			texture1.write(vm->texture1.data(), vm->texture1.size());
+			texture2.write(vm->texture2.data(), vm->texture2.size());
+			ImVec2 p = ImGui::GetCursorScreenPos();
+			ImGui::Image(texture1.handle(), ImVec2(width, height));
+			ImGui::GetWindowDrawList()->AddImage(texture2.handle(), p, ImVec2(p.x + width, p.y + height));
 		} else {
 			ImGui::Text("No signal");
 		}

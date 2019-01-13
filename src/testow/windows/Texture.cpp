@@ -5,7 +5,7 @@
 extern ID3D11Device* g_pd3dDevice;
 extern ID3D11DeviceContext* g_pd3dDeviceContext;
 
-Texture::Texture(size_t width, size_t height): _width(width), _height(height) {
+Texture::Texture(size_t width, size_t height) {
 	D3D11_TEXTURE2D_DESC desc = {};
 	desc.Width = width;
 	desc.Height = height;
@@ -39,21 +39,15 @@ Texture::~Texture() {
 
 Texture::Texture(Texture&& other):
 	_texture(other._texture),
-	_view(other._view),
-	_width(other._width),
-	_height(other._height)
+	_view(other._view)
 {
 	other._texture = nullptr;
 	other._view = nullptr;
-	other._width = 0;
-	other._height = 0;
 }
 
 Texture& Texture::operator=(Texture&& other) {
 	std::swap(_texture, other._texture);
 	std::swap(_view, other._view);
-	std::swap(_width, other._width);
-	std::swap(_height, other._height);
 	return *this;
 }
 

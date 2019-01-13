@@ -15,6 +15,8 @@ struct Display {
 	Display(Display&& other);
 	Display& operator=(Display&& other);
 
+	operator bool() const;
+
 	void get_screen_resolution(ULONG screen_id,
 		ULONG* width,
 		ULONG* height,

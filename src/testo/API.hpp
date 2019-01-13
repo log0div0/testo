@@ -7,7 +7,7 @@
 #ifdef WIN32
 namespace darknet {
 struct API {
-	bool match(uint8_t* data, size_t data_size, const std::string& text) const {
+	bool match(const uint8_t* data, size_t data_size, const std::string& text) const {
 		throw std::runtime_error("darknet api is not implemented yet");
 	}
 };
@@ -28,7 +28,7 @@ struct API {
 			tesseract_api->End();
 		}
 	}
-	bool match(uint8_t* data, size_t data_size, const std::string& text) const {
+	bool match(const uint8_t* data, size_t data_size, const std::string& text) const {
 		PIX* img = pixReadMemPng(data, data_size);
 		tesseract_api->SetImage(img);
 
@@ -46,7 +46,7 @@ private:
 	std::unique_ptr<tesseract::TessBaseAPI> tesseract_api;
 };
 }
-#endif	
+#endif
 
 struct API {
 public:

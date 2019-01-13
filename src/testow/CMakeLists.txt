@@ -9,9 +9,10 @@ if (WIN32)
 endif()
 
 add_executable(testow ${SRCS})
-target_link_libraries(testow imgui vbox vboxcapi)
+target_link_libraries(testow imgui vbox vboxcapi libdarknet)
 
 if(WIN32)
+	include_directories(${CMAKE_SOURCE_DIR}/3rd_party/darknet/include/windows)
 	target_link_libraries(testow d3d11 d3dcompiler)
 	file(GLOB OS_SPECIFIC_SRCS windows/*.cpp)
 elseif(APPLE)

@@ -9,7 +9,7 @@ if(WIN32)
 	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/windows)
 endif()
 
-file(GLOB_RECURSE libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
+file(GLOB_RECURSE libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 if(GPU)
 	add_definitions(-DGPU)

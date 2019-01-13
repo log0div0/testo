@@ -14,8 +14,23 @@ struct ArrayOut {
 	ArrayOut(ArrayOut&& other);
 	ArrayOut& operator=(ArrayOut&& other);
 
-	uint8_t* data = nullptr;
-	ULONG data_size = 0;
+	bool operator==(const ArrayOut& other) const;
+	bool operator!=(const ArrayOut& other) const;
+
+	const uint8_t* data() const;
+	size_t size() const;
+
+	const uint8_t* begin() const;
+	const uint8_t* end() const;
+
+	uint8_t operator[](size_t index) const;
+
+private:
+	uint8_t* _data = nullptr;
+	ULONG _data_size = 0;
+
+	friend struct SafeArray;
+	friend struct SafeArrayView;
 };
 
 struct ArrayOutIface {

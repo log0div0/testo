@@ -26,6 +26,10 @@ Display& Display::operator=(Display&& other) {
 	return *this;
 }
 
+Display::operator bool() const {
+	return handle != nullptr;
+}
+
 void Display::get_screen_resolution(ULONG screen_id,
 	ULONG* width,
 	ULONG* height,

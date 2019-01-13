@@ -35,25 +35,25 @@ VmController::VmController(const nlohmann::json& config): config(config) {
 		auto nics = config.at("nic");
 		for (auto& nic: nics) {
 			if (!nic.count("slot")) {
-				throw std::runtime_error("Constructing VmController error: field slot is not specified for the nic " + 
+				throw std::runtime_error("Constructing VmController error: field slot is not specified for the nic " +
 					nic.at("name").get<std::string>());
 			}
-			
+
 			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing VmController error: field attached_to is not specified for the nic " + 
+				throw std::runtime_error("Constructing VmController error: field attached_to is not specified for the nic " +
 					nic.at("name").get<std::string>());
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "internal") {
 				if (!nic.count("network")) {
-					throw std::runtime_error("Constructing VmController error: nic " + 
+					throw std::runtime_error("Constructing VmController error: nic " +
 					nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
 				}
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "nat") {
 				if (nic.count("network")) {
-					throw std::runtime_error("Constructing VmController error: nic " + 
+					throw std::runtime_error("Constructing VmController error: nic " +
 					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
 				}
 			}
@@ -62,13 +62,13 @@ VmController::VmController(const nlohmann::json& config): config(config) {
 		for (uint32_t i = 0; i < nics.size(); i++) {
 			for (uint32_t j = i + 1; j < nics.size(); j++) {
 				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing VmController error: two identical NIC names: " + 
-						nics[i].at("name").get<std::string>()); 
+					throw std::runtime_error("Constructing VmController error: two identical NIC names: " +
+						nics[i].at("name").get<std::string>());
 				}
 
 				if (nics[i].at("slot") == nics[j].at("slot")) {
-					throw std::runtime_error("Constructing VmController error: two identical SLOTS: " + 
-						nics[i].at("slot").get<uint32_t>()); 
+					throw std::runtime_error("Constructing VmController error: two identical SLOTS: " +
+						nics[i].at("slot").get<uint32_t>());
 				}
 			}
 		}
@@ -211,11 +211,11 @@ void VmController::remove_if_exists() {
 						session.console().power_down().wait_and_throw_if_failed();
 					}
 				}
-				
+
 				while (machine.session_state() != SessionState_Unlocked) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(40));
 				}
-				
+
 				machine.delete_config(machine.unregister(CleanupMode_DetachAllReturnHardDisksOnly)).wait_and_throw_if_failed();
 			}
 		}
@@ -248,14 +248,14 @@ void VmController::create_vm() {
 			machine.save_settings();
 			virtual_box.register_machine(machine);
 		}
-		
+
 		{
 			//TODO: CLEANUP IF SOMETHING WENT WRONG
 			auto lock_machine = virtual_box.find_machine(name());
 			vbox::Lock lock(lock_machine, work_session, LockType_Write);
 
 			auto machine = work_session.machine();
-			
+
 			std::experimental::filesystem::path iso_path(config.at("iso").get<std::string>());
 			auto abs_iso_path = std::experimental::filesystem::absolute(iso_path);
 			vbox::Medium dvd = virtual_box.open_medium(abs_iso_path.generic_string(),
@@ -335,7 +335,7 @@ int VmController::set_metadata(const nlohmann::json& metadata) {
 			machine.setExtraData(key_value.key(), key_value.value());
 		}
 
-		return 0;		
+		return 0;
 	}
 	catch (const std::exception& error) {
 		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
@@ -357,7 +357,7 @@ int VmController::set_metadata(const std::string& key, const std::string& value)
 	}
 }
 
-int VmController::install() {	
+int VmController::install() {
 	try {
 		remove_if_exists();
 		create_vm();
@@ -401,7 +401,7 @@ int VmController::make_snapshot(const std::string& snapshot) {
 			lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 			start_session.unlock_machine();
 		}
-		
+
 		return 0;
 	}
 	catch (const std::exception& error) {
@@ -534,7 +534,7 @@ int VmController::set_nic(const std::string& nic, bool is_enabled) {
 				auto machine = work_session.machine();
 				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
 				network_adapter.setEnabled(is_enabled);
-				machine.save_settings();			
+				machine.save_settings();
 				return 0;
 			}
 		}
@@ -606,7 +606,7 @@ int VmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 			} else {
 				empty_slot = i;
 				break;
-			}		
+			}
 		}
 
 		machine.attach_device("USB", empty_slot, 0, DeviceType_HardDisk, fd->handle);
@@ -649,7 +649,7 @@ int VmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 int VmController::plug_dvd(fs::path path) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
-		
+
 		//auto machine = work_session.machine();
 		auto mediums = lock_machine.medium_attachments_of_controller("IDE");
 		for (auto& medium: mediums) {
@@ -659,7 +659,7 @@ int VmController::plug_dvd(fs::path path) {
 				}
 			}
 		}
-		
+
 		if (path.is_relative()) {
 			path = fs::absolute(path);
 		}
@@ -795,7 +795,7 @@ int VmController::wait(const std::string& text, const std::string& time) {
 			vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_PNG);
 			vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
 
-			if (API::instance().darknet_api.match(array_out.data, array_out.data_size, text)) {
+			if (API::instance().darknet_api.match(array_out.data(), array_out.size(), text)) {
 				return 0;
 			}
 
@@ -988,7 +988,7 @@ int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 		}
 		//1) Open the session
 		auto gsession = work_session.console().guest().create_session(login, password);
-		
+
 		//2) if dst doesn't exist on guest - fuck you
 		if (!gsession.directory_exists(dst)) {
 			throw std::runtime_error("Directory to copy doesn't exist on guest: " + dst.generic_string());

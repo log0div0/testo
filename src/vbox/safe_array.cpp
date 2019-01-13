@@ -50,7 +50,7 @@ void SafeArray::copy_in(void* data, ULONG size) {
 ArrayOut SafeArray::copy_out(VARTYPE vartype) const {
 	try {
 		ArrayOut result;
-		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&result.data, &result.data_size, vartype, handle));
+		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&result._data, &result._data_size, vartype, handle));
 		return result;
 	}
 	catch (const std::exception&) {
@@ -85,8 +85,8 @@ SafeArray SafeArray::bitset(int bitset) {
 int SafeArray::bitset() const {
 	ArrayOut array_out = copy_out(VT_I4);
     int bitset = 0;
-    for (ULONG i = 0; i < array_out.data_size / sizeof(int); ++i) {
-      bitset |= ((int*)array_out.data)[i];
+    for (ULONG i = 0; i < array_out.size() / sizeof(int); ++i) {
+      bitset |= ((int*)array_out.data())[i];
     }
     return bitset;
 }
@@ -117,7 +117,7 @@ SafeArrayView& SafeArrayView::operator=(SafeArrayView&& other) {
 ArrayOut SafeArrayView::copy_out(VARTYPE vartype) const {
 	try {
 		ArrayOut result;
-		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&result.data, &result.data_size, vartype, handle));
+		throw_if_failed(api->pfnSafeArrayCopyOutParamHelper((void**)&result._data, &result._data_size, vartype, handle));
 		return result;
 	}
 	catch (const std::exception&) {

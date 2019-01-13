@@ -21,13 +21,6 @@ struct Texture
 		return (void*)(intptr_t)_handle;
 	}
 
-	size_t width() const {
-		return _width;
-	}
-	size_t height() const {
-		return _height;
-	}
-
 	void write(const uint8_t* data, size_t size);
 
 private:

@@ -20,17 +20,9 @@ struct Texture
 		return _view;
 	}
 
-	size_t width() const {
-		return _width;
-	}
-	size_t height() const {
-		return _height;
-	}
-
 	void write(const uint8_t* data, size_t size);
 
 private:
 	ID3D11Texture2D* _texture = nullptr;
 	ID3D11ShaderResourceView* _view = nullptr;
-	size_t _width, _height;
 };

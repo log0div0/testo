@@ -34,7 +34,7 @@ std::vector<uint8_t> GuestProcess::read(uint32_t handle, uint32_t bytes_to_read,
 		SafeArray safe_array;
 		throw_if_failed(IGuestProcess_Read(this->handle, handle, bytes_to_read, timeout_ms, SAFEARRAY_AS_OUT_PARAM(uint8_t, safe_array)));
 		ArrayOut array_out = safe_array.copy_out(VT_UI1);
-		std::vector<uint8_t> result(array_out.data, array_out.data + array_out.data_size);
+		std::vector<uint8_t> result(array_out.begin(), array_out.end());
 		result.push_back(0);
 		return result;
 	}
@@ -98,7 +98,7 @@ ProcessStatus GuestProcess::status() const {
 
 bool GuestProcess::is_alive() const {
 	auto state = status();
-	return ((state == ProcessStatus_Starting) || 
+	return ((state == ProcessStatus_Starting) ||
 		(state == ProcessStatus_Started) ||
 		(state == ProcessStatus_Paused) ||
 		(state == ProcessStatus_Terminating));
