@@ -1,5 +1,5 @@
 
-$include "declarations.testo"
+include "declarations.testo"
 
 macro start_vbox_additions {
 	type "modprobe vboxsf"; press Enter
@@ -8,7 +8,7 @@ macro start_vbox_additions {
 
 #firewall folder
 
-test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed), server(server_ifaces_renamed) {
+test firewall_basic: master(ifaces_renamed), client(ifaces_renamed), server(ifaces_renamed) {
 	#master, client, server start_vbox_additions
 
 	master exec bash """
@@ -47,7 +47,7 @@ test firewall_basic: master(master_ifaces_renamed), client(client_ifaces_renamed
 #link folder
 #bond
 
-test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+test bond_bug_demux_crash: master(ifaces_renamed), slave(ifaces_renamed) {
 	#master, slave start_vbox_additions
 	master exec bash """
 		ip l a abc type bond mode 0
@@ -68,7 +68,7 @@ test bond_bug_demux_crash: master(master_ifaces_renamed), slave(slave_ifaces_ren
 }
 
 
-test bond_delete_address: master(master_ifaces_renamed) {
+test bond_delete_address: master(ifaces_renamed) {
 	#master start_vbox_additions
 
 	master exec bash """
@@ -92,7 +92,7 @@ test bond_delete_address: master(master_ifaces_renamed) {
 	"""
 }
 
-test bond_mode_1: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+test bond_mode_1: master(ifaces_renamed), slave(ifaces_renamed) {
 	#master, slave start_vbox_additions
 
 	master exec bash """
@@ -137,7 +137,7 @@ test bond_mode_1: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
 }
 
 #bond+vlan
-test bond_vlan_basic: master(master_ifaces_renamed) {
+test bond_vlan_basic: master(ifaces_renamed) {
 	#master start_vbox_additions
 
 	master exec bash """
@@ -164,7 +164,7 @@ test bond_vlan_basic: master(master_ifaces_renamed) {
 
 
 #route
-test route_basic: master(master_ifaces_renamed) {
+test route_basic: master(ifaces_renamed) {
 	#master start_vbox_additions
 
 	master exec bash """
@@ -208,7 +208,7 @@ test route_basic: master(master_ifaces_renamed) {
 	"""
 }
 
-test route_bond: master(master_ifaces_renamed) {
+test route_bond: master(ifaces_renamed) {
 	#master start_vbox_additions
 
 	master exec bash """
@@ -262,9 +262,9 @@ test route_bond: master(master_ifaces_renamed) {
 }
 
 #vlan
-test vlan_basic: master(master_ifaces_renamed), client(client_ifaces_renamed),
-	client2(client2_ifaces_renamed),
-	server(server_ifaces_renamed) 
+test vlan_basic: master(ifaces_renamed), client(ifaces_renamed),
+	client2(ifaces_renamed),
+	server(ifaces_renamed)
 {
 	#master, client, client2, server start_vbox_additions
 
@@ -305,7 +305,7 @@ test vlan_basic: master(master_ifaces_renamed), client(client_ifaces_renamed),
 	client exec bash "ping -c 10 10.0.0.2"
 }
 
-test vlan_tun_with_vlan: master(master_ifaces_renamed), server(server_ifaces_renamed)
+test vlan_tun_with_vlan: master(ifaces_renamed), server(ifaces_renamed)
 {
 	#master, server start_vbox_additions
 
@@ -328,7 +328,7 @@ test vlan_tun_with_vlan: master(master_ifaces_renamed), server(server_ifaces_ren
 }
 
 
-test iif_running_flag: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+test iif_running_flag: master(ifaces_renamed), slave(ifaces_renamed) {
 	#master, slave start_vbox_additions
 
 	master exec bash """
@@ -371,7 +371,7 @@ test iif_running_flag: master(master_ifaces_renamed), slave(slave_ifaces_renamed
 
 #neigh
 
-test arping_basic: master(master_ifaces_renamed), server(server_ifaces_renamed) {
+test arping_basic: master(ifaces_renamed), server(ifaces_renamed) {
 	#master, server start_vbox_additions
 
 	master exec bash """
@@ -390,7 +390,7 @@ test arping_basic: master(master_ifaces_renamed), server(server_ifaces_renamed) 
 #router
 #dhcp
 
-test dhcp_basic: master(master_ifaces_renamed), slave(slave_ifaces_renamed) {
+test dhcp_basic: master(ifaces_renamed), slave(ifaces_renamed) {
 	#master, slave start_vbox_additions
 
 	master {

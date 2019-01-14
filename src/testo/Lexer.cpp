@@ -43,163 +43,6 @@ void Lexer::skip_multiline_comments() {
 	current_pos.advance();
 }
 
-void Lexer::handle_ifdef() {
-	if (is_inside_if) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: nested ifdefs are not supported");
-	}
-
-	skip_spaces();
-	//NEED to get id. Otherwise - error
-	if (test_eof() || !test_id()) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: ifdef directive has to have an ID");
-	}
-
-	is_inside_if = true;
-	Token env_var = id();
-	if (test_eof()) {
-		return;
-	}
-
-	if (!test_newline()) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: ifdef directive has be finished with a newline");
-	}
-
-	current_pos.advance();
-
-	auto env_value = std::getenv(env_var.value().c_str());
-
-	if (env_value && strlen(env_value)) {
-		return;
-	} else {
-		//go right to the #endif shit
-		if (test_eof()) {
-			return;
-		}
-
-		skipping:
-		while (!test_ppd()) {
-			if (test_eof()) {
-				return;
-			}
-			current_pos.advance();
-		}
-
-		Token ppd = get_ppd();
-		if (ppd.type() == Token::category::endif) {
-			return handle_endif();
-		} else if (ppd.type() == Token::category::else_) {
-			return handle_else(true);
-		} else if (ppd.type() == Token::category::include) {
-			current_pos.advance();
-			goto skipping;
-		} else {
-			throw std::runtime_error(std::string(current_pos) + ": expected $endif");
-		}
-	}
-}
-
-void Lexer::handle_else(bool should_happen = false) {
-	if (!is_inside_if) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: $else directive with no opening ifdef");
-	}
-
-	if (test_eof()) {
-		return;
-	}
-
-	if (!test_newline()) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: $else directive has be finished with a newline");
-	}
-
-	current_pos.advance(); //newline
-
-	if (!should_happen) {
-		if (test_eof()) {
-			return;
-		}
-
-		skipping:
-		while (!test_ppd()) {
-			if (test_eof()) {
-				return;
-			}
-			current_pos.advance();
-		}
-
-		Token ppd = get_ppd();
-		if (ppd.type() == Token::category::endif) {
-			return handle_endif();
-		} else if (ppd.type() == Token::category::include) {
-			current_pos.advance();
-			goto skipping;
-		} else {
-			throw std::runtime_error(std::string(current_pos) + ": expected $endif");
-		}
-	}
-}
-
-void Lexer::handle_endif() {
-	if (!is_inside_if) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: $endif directive with no opening ifdef");
-	}
-
-	is_inside_if = false;
-
-	if (test_eof()) {
-		return;
-	}
-
-	if (!test_newline()) {
-		throw std::runtime_error(std::string(current_pos) + ": Error: $endif directive has to be finished with a newline");
-	}
-
-	current_pos.advance(); //newline
-}
-
-Token Lexer::get_ppd() {
-	Pos tmp_pos = current_pos;
-	std::string value;
-	size_t shift = 0;
-
-	value += input[current_pos + shift]; //handle dollar sign
-	shift++;
-
-	while (!test_eof(shift) && test_id(shift)) {
-		value += input[current_pos + shift];
-		shift++;
-	}
-
-	if (value == "$ifdef") {
-		return ifdef();
-	} else if (value == "$ifndef") {
-		//TODO
-	} else if (value == "$else") {
-		return else_();
-	} else if (value == "$endif") {
-		return endif();
-	} else if (value == "$include") {
-		return include();
-	} else {
-		throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: Unknown ppd directive: " + value);
-	}
-
-	return Token(); //keep compiler happy
-}
-
-Token Lexer::handle_ppd() {
-	Token ppd = get_ppd();
-	if (ppd.type() == Token::category::ifdef) {
-		handle_ifdef();
-	} else if (ppd.type() == Token::category::else_) {
-		handle_else();
-	} else if (ppd.type() == Token::category::endif) {
-		handle_endif();
-	} else if (ppd.type() == Token::category::include) {
-		return ppd;
-	}
-
-	return Token();
-}
 
 bool Lexer::test_size_specifier() const {
 	if (test_eof(1)) {
@@ -339,6 +182,30 @@ Token Lexer::id() {
 		return macro();
 	} else if (value == "dvd") {
 		return dvd();
+	} else if (value == "if") {
+		return if_();
+	} else if (value == "else") {
+		return else_();
+	} else if (value == "include") {
+		return include();
+	} else if (value == "LESS") {
+		return LESS();
+	} else if (value == "GREATER") {
+		return GREATER();
+	} else if (value == "EQUAL") {
+		return EQUAL();
+	}  else if (value == "STRLESS") {
+		return STRLESS();
+	}  else if (value == "STRGREATER") {
+		return STRGREATER();
+	}  else if (value == "STREQUAL") {
+		return STREQUAL();
+	}  else if (value == "NOT") {
+		return NOT();
+	}  else if (value == "AND") {
+		return AND();
+	}  else if (value == "OR") {
+		return OR();
 	} else {
 		current_pos.advance(shift);
 		return Token(Token::category::id, value, tmp_pos);
@@ -464,6 +331,103 @@ Token Lexer::dvd() {
 	return Token(Token::category::dvd, value, tmp_pos);
 }
 
+Token Lexer::if_() {
+	Pos tmp_pos = current_pos;
+	std::string value("if");
+	current_pos.advance(value.length());
+	return Token(Token::category::if_, value, tmp_pos);
+}
+
+Token Lexer::else_() {
+	Pos tmp_pos = current_pos;
+	std::string value("else");
+	current_pos.advance(value.length());
+	return Token(Token::category::else_, value, tmp_pos);
+}
+
+Token Lexer::include() {
+	Pos tmp_pos = current_pos;
+	std::string value("include");
+	current_pos.advance(value.length());
+	return Token(Token::category::include, value, tmp_pos);
+}
+
+Token Lexer::LESS() {
+	Pos tmp_pos = current_pos;
+	std::string value("LESS");
+	current_pos.advance(value.length());
+	return Token(Token::category::LESS, value, tmp_pos);
+}
+Token Lexer::GREATER() {
+	Pos tmp_pos = current_pos;
+	std::string value("GREATER");
+	current_pos.advance(value.length());
+	return Token(Token::category::GREATER, value, tmp_pos);
+}
+Token Lexer::EQUAL() {
+	Pos tmp_pos = current_pos;
+	std::string value("EQUAL");
+	current_pos.advance(value.length());
+	return Token(Token::category::EQUAL, value, tmp_pos);
+}
+Token Lexer::STRLESS() {
+	Pos tmp_pos = current_pos;
+	std::string value("STRLESS");
+	current_pos.advance(value.length());
+	return Token(Token::category::STRLESS, value, tmp_pos);
+}
+Token Lexer::STRGREATER() {
+	Pos tmp_pos = current_pos;
+	std::string value("STRGREATER");
+	current_pos.advance(value.length());
+	return Token(Token::category::STRGREATER, value, tmp_pos);
+}
+Token Lexer::STREQUAL() {
+	Pos tmp_pos = current_pos;
+	std::string value("STREQUAL");
+	current_pos.advance(value.length());
+	return Token(Token::category::STREQUAL, value, tmp_pos);
+}
+Token Lexer::NOT() {
+	Pos tmp_pos = current_pos;
+	std::string value("NOT");
+	current_pos.advance(value.length());
+	return Token(Token::category::NOT, value, tmp_pos);
+}
+Token Lexer::AND() {
+	Pos tmp_pos = current_pos;
+	std::string value("AND");
+	current_pos.advance(value.length());
+	return Token(Token::category::AND, value, tmp_pos);
+}
+Token Lexer::OR() {
+	Pos tmp_pos = current_pos;
+	std::string value("OR");
+	current_pos.advance(value.length());
+	return Token(Token::category::OR, value, tmp_pos);
+}
+
+Token Lexer::var_ref() {
+	Pos tmp_pos = current_pos;
+	std::string value;
+	value += input[current_pos];
+	current_pos.advance();
+	size_t shift = 0;
+
+	while ((test_id(shift) || isdigit(input[current_pos + shift])) && !test_eof()) {
+		value += input[current_pos + shift];
+		shift++;
+	}
+
+	if (shift == 0) {
+		throw std::runtime_error(std::string(tmp_pos) + ": Error: empty var reference");
+	}
+
+	current_pos.advance(shift);
+
+	return Token(Token::category::var_ref, value, tmp_pos);
+}
+
 Token Lexer::multiline_string() {
 	Pos tmp_pos = current_pos;
 
@@ -581,34 +545,6 @@ Token Lexer::colon() {
 	return Token(Token::category::colon, ":", tmp_pos);
 }
 
-Token Lexer::ifdef() {
-	Pos tmp_pos = current_pos;
-	std::string value("$ifdef");
-	current_pos.advance(value.length());
-	return Token(Token::category::ifdef, value, tmp_pos);
-}
-
-Token Lexer::endif() {
-	Pos tmp_pos = current_pos;
-	std::string value("$endif");
-	current_pos.advance(value.length());
-	return Token(Token::category::endif, value, tmp_pos);
-}
-
-Token Lexer::else_() {
-	Pos tmp_pos = current_pos;
-	std::string value("$else");
-	current_pos.advance(value.length());
-	return Token(Token::category::else_, value, tmp_pos);
-}
-
-Token Lexer::include() {
-	Pos tmp_pos = current_pos;
-	std::string value("$include");
-	current_pos.advance(value.length());
-	return Token(Token::category::include, value, tmp_pos);
-}
-
 Token Lexer::get_next_token() {
 	while (!test_eof()) {
 		if (test_newline()) {
@@ -617,6 +553,8 @@ Token Lexer::get_next_token() {
 			return number();
 		} else if (test_id()) {
 			return id();
+		} else if (test_var_ref()) {
+			return var_ref();
 		} else if (test_multiline_quote()) {
 			return multiline_string();
 		} else if (test_dbl_quote()) {
@@ -641,12 +579,6 @@ Token Lexer::get_next_token() {
 			return semi();
 		} else if (test_colon()) {
 			return colon();
-		} else if (test_ppd()) {
-			auto res = handle_ppd();
-			if (res.type() == Token::category::include) {
-				return res;
-			} 
-			continue;
 		} else if (test_space()) {
 			skip_spaces();
 			continue;
@@ -661,9 +593,6 @@ Token Lexer::get_next_token() {
 		}
 	}
 
-	if (is_inside_if) {
-		throw std::runtime_error("Reached end of file in $if(n)def without $endif ppd");
-	}
 	return Token(Token::category::eof, "", current_pos);
 }
 

@@ -24,6 +24,10 @@ private:
 		return (isalpha(input[current_pos + shift]) || 
 			(input[current_pos + shift] == '_'));
 	}
+
+	bool test_var_ref() const {
+		return (input[current_pos] == '$');
+	}
 	bool test_comments() const { return (input[current_pos] == '#'); }
 	bool test_begin_multiline_comments() const {
 		if (test_eof(1)) {
@@ -75,16 +79,10 @@ private:
 	bool test_rparen() const { return (input[current_pos] == ')'); }
 	bool test_semi() const { return (input[current_pos] == ';'); }
 	bool test_colon() const { return (input[current_pos] == ':'); }
-	bool test_ppd() const { return (input[current_pos] == '$' && current_pos.column == 1); }
 
 	void skip_spaces();
 	void skip_comments();
 	void skip_multiline_comments();
-
-	Token handle_ppd(); //preprocessor directive
-	void handle_ifdef();
-	void handle_else(bool should_happen);
-	void handle_endif();
 
 	char escaped_character();
 
@@ -93,6 +91,7 @@ private:
 	Token time_interval(std::string time_number, const Pos& time_number_pos);
 	Token size(std::string size_number, const Pos& size_number_pos);
 	Token id();
+	Token var_ref();
 	Token type();
 	Token wait();
 	Token press();
@@ -110,6 +109,8 @@ private:
 	Token flash();
 	Token macro();
 	Token dvd();
+	Token if_();
+	Token else_();
 	Token dbl_quoted_string();
 	Token multiline_string();
 	Token assign();
@@ -122,13 +123,20 @@ private:
 	Token rparen();
 	Token semi();
 	Token colon();
-	Token get_ppd();
-	Token ifdef();
-	Token endif();
-	Token else_();
 	Token include();
+
+	//expressions
+
+	Token LESS();
+	Token GREATER();
+	Token EQUAL();
+	Token STRLESS();
+	Token STRGREATER();
+	Token STREQUAL();
+	Token NOT();
+	Token AND();
+	Token OR();
 
 	Pos current_pos;
 	std::string input;
-	bool is_inside_if = false;
 };

@@ -208,6 +208,19 @@ std::string Machine::getExtraData(const std::string& key) const {
 	}
 }
 
+std::vector<std::string> Machine::getExtraDataKeys() const {
+	try {
+		SafeArray safe_array;
+		throw_if_failed(IMachine_GetExtraDataKeys(handle, SAFEARRAY_AS_OUT_PARAM(BSTR, safe_array)));
+		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
+		std::vector<StringOut> strings_out {(BSTR*)array_out.data(), (BSTR*)(array_out.data() + array_out.size())};
+		return {strings_out.begin(), strings_out.end()};
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void Machine::setExtraData(const std::string& key, const std::string& value) const {
 	try {
 		throw_if_failed(IMachine_SetExtraData(handle, StringIn(key), StringIn(value)));

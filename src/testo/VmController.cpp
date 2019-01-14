@@ -249,6 +249,8 @@ void VmController::create_vm() {
 			virtual_box.register_machine(machine);
 		}
 
+		uint32_t nic_count = 0;
+
 		{
 			//TODO: CLEANUP IF SOMETHING WENT WRONG
 			auto lock_machine = virtual_box.find_machine(name());
@@ -315,11 +317,15 @@ void VmController::create_vm() {
 					}
 
 					network_adapter.setEnabled(true);
+					nic_count++;
 				}
 
 			}
 			machine.save_settings();
 		}
+
+		set_metadata("vm_nic_count", std::to_string(nic_count));
+		set_metadata("vm_name", name());
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -357,6 +363,39 @@ int VmController::set_metadata(const std::string& key, const std::string& value)
 	}
 }
 
+bool VmController::has_key(const std::string& key) {
+	try {
+		auto lock_machine = virtual_box.find_machine(name());
+		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+		auto machine = work_session.machine();
+		auto keys = machine.getExtraDataKeys();
+
+		for (auto& k: keys) {
+			if (k == key) {
+				return true;
+			}
+		}
+		return false;
+	}
+	catch (const std::exception& error) {
+		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
+		return false;
+	}
+}
+
+std::string VmController::get_metadata(const std::string& key) {
+	try {
+		auto lock_machine = virtual_box.find_machine(name());
+		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+		auto machine = work_session.machine();
+		return machine.getExtraData(key);
+	}
+	catch (const std::exception& error) {
+		std::cout << "Getting metadata value for key " << key << " on vm " << name() << ": " << error << std::endl;
+		return "";
+	}
+}
+
 int VmController::install() {
 	try {
 		remove_if_exists();
@@ -364,7 +403,7 @@ int VmController::install() {
 		if (config.count("metadata")) {
 			set_metadata(config.at("metadata"));
 		}
-		set_config_cksum(config_cksum());
+		set_metadata("config_cksum", config_cksum());
 		if (start()) {
 			throw std::runtime_error("Start while performing install action");
 		}
@@ -423,34 +462,6 @@ std::set<std::string> VmController::nics() const {
 	}
 	return result;
 }
-
-int VmController::set_config_cksum(const std::string& cksum) {
-	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
-		machine.setExtraData("config_cksum", cksum);
-		return 0;
-	}
-	catch (const std::exception& error) {
-		std::cout << "Setting config cksum on vm " << name() << ": " << error << std::endl;
-		return -1;
-	}
-}
-
-std::string VmController::get_config_cksum() {
-	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
-		return machine.getExtraData("config_cksum");
-	}
-	catch (const std::exception& error) {
-		std::cout << "Getting config cksum on vm " << name() << ": " << error << std::endl;
-		return "";
-	}
-}
-
 
 int VmController::set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) {
 	try {

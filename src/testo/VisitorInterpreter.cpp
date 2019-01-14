@@ -89,7 +89,7 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 		return;
 	}
 
-	if ((!vm->is_defined()) || (vm->get_config_cksum() != vm->config_cksum())) {
+	if ((!vm->is_defined()) || (vm->get_metadata("vm_config_cksum") != vm->config_cksum())) {
 		if (vm->install()) {
 			throw std::runtime_error(std::string(vm_state->begin()) +
 				": Error while performing install: " +
@@ -153,6 +153,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_copyto(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
 		return visit_macro_call(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
+		return visit_if_clause(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
 	} else {
@@ -433,6 +435,123 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
 	std::cout << "Calling macro " << macro_call->name().value() << " on vm " << vm->name() << std::endl;
 	visit_action_block(vm, macro_call->macro->action_block->action);
+}
+
+void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<IfClause> if_clause) {
+	bool expr_result = visit_expr(vm, if_clause->expr);
+
+	if (expr_result) {
+		return visit_action(vm, if_clause->if_action);
+	} else if (if_clause->has_else()) {
+		return visit_action(vm, if_clause->else_action);
+	}
+}
+
+bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<IExpr> expr) {
+	if (auto p = std::dynamic_pointer_cast<Expr<BinOp>>(expr)) {
+		return visit_binop(vm, p->expr);
+	} else if (auto p = std::dynamic_pointer_cast<Expr<IFactor>>(expr)) {
+		return visit_factor(vm, p->expr);
+	} else {
+		throw std::runtime_error("Unknown expr type");
+	}
+}
+
+bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<BinOp> binop) {
+	auto left = visit_expr(vm, binop->left);
+	auto right = visit_expr(vm, binop->right);
+
+	if (binop->op().type() == Token::category::AND) {
+		return left && right;
+	} else if (binop->op().type() == Token::category::OR) {
+		return left || right;
+	} else {
+		throw std::runtime_error("Unknown binop operation");
+	}
+}
+
+bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<IFactor> factor) {
+	if (auto p = std::dynamic_pointer_cast<Factor<Term>>(factor)) {
+		return p->is_negated() ^ visit_term(vm, p->factor).length();
+	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
+		return p->is_negated() ^ visit_comparison(vm, p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
+		return p->is_negated() ^ visit_expr(vm, p->factor);
+	} else {
+		throw std::runtime_error("Unknown factor type");
+	}
+}
+
+std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, const std::string& var) {
+	//Resolving order
+	//1) metadata
+	//2) global (todo)
+	//3) env var
+
+	if (vm->has_key(var)) {
+		return vm->get_metadata(var);
+	}
+
+	auto env_value = std::getenv(var.c_str());
+
+	if (env_value == nullptr) {
+		return "";
+	} 
+	return env_value;
+}
+
+std::string VisitorInterpreter::visit_term(std::shared_ptr<VmController> vm, std::shared_ptr<Term> term) {
+	if (term->type() == Token::category::dbl_quoted_string) {
+		return term->value();
+	} else if (term->type() == Token::category::var_ref) {
+		return resolve_var(vm, term->value());
+	} else {
+		throw std::runtime_error("Unknown term type");
+	}
+}
+
+bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<Comparison> comparison) {
+	auto left = visit_term(vm, comparison->left);
+	auto right = visit_term(vm, comparison->right);
+	if (comparison->op() == Token::category::GREATER) {
+		if (!is_number(left)) {
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+		}
+		if (!is_number(right)) {
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+		}
+
+		return std::stoul(left) > std::stoul(right);
+
+	} else if (comparison->op() == Token::category::LESS) {
+		if (!is_number(left)) {
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+		}
+		if (!is_number(right)) {
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+		}
+
+		return std::stoul(left) < std::stoul(right);
+
+	} else if (comparison->op() == Token::category::EQUAL) {
+		if (!is_number(left)) {
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+		}
+		if (!is_number(right)) {
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+		}
+
+		return std::stoul(left) == std::stoul(right);
+
+	} else if (comparison->op() == Token::category::STRGREATER) {
+		return left > right;
+	} else if (comparison->op() == Token::category::STRLESS) {
+		return left < right;
+	} else if (comparison->op() == Token::category::STREQUAL) {
+		return left == right;
+	} else {
+		throw std::runtime_error("Unknown comparison op");
+	}
 }
 
 void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot, bool recursive) {

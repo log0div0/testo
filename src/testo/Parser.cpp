@@ -30,6 +30,19 @@ void Parser::match(Token::category type) {
 	}
 }
 
+void Parser::match(const std::vector<Token::category> types) {
+	for (auto type: types) {
+		if (LA(1) == type) {
+			consume();
+			return;
+		}
+	}
+
+	throw std::runtime_error(std::string(LT(1).pos()) +
+			": unexpected token \"" +
+			LT(1).value() + "\""); //TODO: more informative what we expected
+}
+
 Token Parser::LT(size_t i) const {
 	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % 2]; //circular fetch
 }
@@ -75,7 +88,28 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::set) ||
 		(LA(1) == Token::category::copyto) ||
 		(LA(1) == Token::category::lbrace) ||
+		(LA(1) == Token::category::if_) ||
 		(LA(1) == Token::category::id)); //macro call
+}
+
+bool Parser::test_term() const {
+	return ((LA(1) == Token::category::dbl_quoted_string) ||
+		(LA(1) == Token::category::var_ref));
+}
+
+bool Parser::test_comparison() const {
+	if (test_term()) {
+		if ((LA(2) == Token::category::LESS) ||
+			(LA(2) == Token::category::GREATER) ||
+			(LA(2) == Token::category::EQUAL) ||
+			(LA(2) == Token::category::STRLESS) ||
+			(LA(2) == Token::category::STRGREATER) ||
+			(LA(2) == Token::category::STREQUAL))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 void Parser::newline_list() {
@@ -117,6 +151,8 @@ void Parser::handle_include() {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }
+
+
 
 std::shared_ptr<Program> Parser::parse() {
 	std::vector<std::shared_ptr<IStmt>> stmts;
@@ -394,26 +430,29 @@ std::shared_ptr<IAction> Parser::action() {
 		action = copyto();
 	} else if (LA(1) == Token::category::lbrace) {
 		action = action_block();
+	} else if (LA(1) == Token::category::if_) {
+		action = if_clause();
 	} else if (LA(1) == Token::category::id) {
 		action = macro_call();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown action: " + LT(1).value());
 	}
 
-	Token delim;
-	if (LA(1) == Token::category::newline) {
-		delim = LT(1);
-		match(Token::category::newline);
-	} else if (LA(1) == Token::category::semi) {
-		delim = LT(1);
-		match(Token::category::semi);
-	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) +
-			": Expected new line or ';' \"");
+	if (action->t.type() != Token::category::action_block && action->t.type() != Token::category::if_) {
+		Token delim;
+		if (LA(1) == Token::category::newline) {
+			delim = LT(1);
+			match(Token::category::newline);
+		} else if (LA(1) == Token::category::semi) {
+			delim = LT(1);
+			match(Token::category::semi);
+		} else {
+			throw std::runtime_error(std::string(LT(1).pos()) +
+				": Expected new line or ';' \"");
+		}
+		action->set_delim(delim);
 	}
-
-	action->set_delim(delim);
-
+	
 	return action;
 }
 
@@ -553,12 +592,11 @@ std::shared_ptr<Action<Set>> Parser::set() {
 
 	std::vector<std::shared_ptr<Assignment>> assignments;
 
-	while (test_assignment()) {
+	assignments.push_back(assignment());
+	while (LA(1) == Token::category::comma) {
+		match(Token::category::comma);
+		newline_list();
 		assignments.push_back(assignment());
-	}
-
-	if (!assignments.size()) {
-		throw std::runtime_error(std::string(set_token.pos()) + ": Error: set action needs at least one assignment");
 	}
 
 	auto action = std::shared_ptr<Set>(new Set(set_token, assignments));
@@ -604,5 +642,110 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 
 	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name));
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
+}
+
+std::shared_ptr<Action<IfClause>> Parser::if_clause() {
+	Token if_token = LT(1);
+	match(Token::category::if_);
+
+	Token open_paren = LT(1);
+	match(Token::category::lparen);
+
+	auto expression = expr();
+	Token close_paren = LT(1);
+	match(Token::category::rparen);
+
+	newline_list();
+
+	auto if_action = action();
+
+	Token else_token = Token();
+	std::shared_ptr<IAction> else_action = nullptr;
+
+	if (LA(1) == Token::category::else_) {
+		else_token = LT(1);
+		match(Token::category::else_);
+		newline_list();
+		else_action = action();
+	}
+
+	auto action = std::shared_ptr<IfClause>(new IfClause(
+		if_token,
+		open_paren, expression,
+		close_paren, if_action,
+		else_token, else_action
+	));
+
+	return std::shared_ptr<Action<IfClause>>(new Action<IfClause>(action));
+}
+
+std::shared_ptr<Term> Parser::term() {
+	Token value = LT(1);
+	match({Token::category::dbl_quoted_string, Token::category::var_ref});
+
+	return std::shared_ptr<Term>(new Term(value));
+}
+
+std::shared_ptr<IFactor> Parser::factor() {
+	auto not_token = Token();
+	if (LA(1) == Token::category::NOT) {
+		not_token = LT(1);
+		match(Token::category::NOT);
+	}
+
+	//TODO: newline
+	if(test_comparison()) {
+		return std::shared_ptr<Factor<Comparison>>(new Factor<Comparison>(not_token, comparison()));
+	} else if (LA(1) == Token::category::lparen) {
+		match(Token::category::lparen);
+		auto result = std::shared_ptr<Factor<IExpr>>(new Factor<IExpr>(not_token, expr()));
+		match(Token::category::rparen);
+		return result;
+	} else if (test_term()) {
+		return std::shared_ptr<Factor<Term>>(new Factor<Term>(not_token, term()));
+	} else {
+		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown expression: " + LT(1).value());
+	}
+}
+
+std::shared_ptr<Comparison> Parser::comparison() {
+	auto left = term();
+
+	Token op = LT(1);
+
+	match({
+		Token::category::GREATER,
+		Token::category::LESS,
+		Token::category::EQUAL,
+		Token::category::STRGREATER,
+		Token::category::STRLESS,
+		Token::category::STREQUAL
+		});
+
+	auto right = term();
+
+	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
+}
+
+std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {
+	auto op = LT(1);
+
+	match({Token::category::OR, Token::category::AND});
+
+	auto right = expr();
+
+	auto binop = std::shared_ptr<BinOp>(new BinOp(op, left, right));
+	return std::shared_ptr<Expr<BinOp>>(new Expr(binop));
+}
+
+std::shared_ptr<IExpr> Parser::expr() {
+	auto left = std::shared_ptr<Expr<IFactor>>(new Expr(factor()));
+
+	if ((LA(1) == Token::category::AND) ||
+		(LA(1) == Token::category::OR)) {
+		return binop(left);
+	} else {
+		return left;
+	}
 }
 

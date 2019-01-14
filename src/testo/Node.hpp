@@ -85,6 +85,7 @@ struct IAction: public Node {
 	virtual void set_delim (const Token& delim)  = 0;
 };
 
+//IfClause if also an action
 template <typename ActionType>
 struct Action: public IAction {
 	Action(std::shared_ptr<ActionType> action):
@@ -100,7 +101,11 @@ struct Action: public IAction {
 	}
 
 	operator std::string() const {
-		return std::string(*action) + delim.value();
+		std::string result = std::string(*action);
+		if (delim.type() == Token::category::semi) {
+			result += delim.value();
+		}
+		return result;
 	}
 
 	void set_delim (const Token& delim) {
@@ -780,6 +785,205 @@ struct Program: public Node {
 	}
 
 	std::vector<std::shared_ptr<IStmt>> stmts;
+};
+
+//here go expressions and everything with them
+
+//basic unit of expressions - could be double quoted string or a var_ref (variable) 
+struct Term: public Node {
+	Term(const Token& value):
+		Node(value) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	Token::category type() const {
+		return t.type();
+	}
+
+	std::string value() const {
+		if (type() == Token::category::dbl_quoted_string) {
+			return t.value().substr(1, t.value().length() - 2);
+		} else if (type() == Token::category::var_ref) {
+			return t.value().substr(1, t.value().length() - 1);
+		} else {
+			throw std::runtime_error("unknown value type");
+		}
+	}
+};
+
+
+struct IFactor: public Node {
+	using Node::Node;
+};
+
+//Term, comparison or expr
+template <typename FactorType>
+struct Factor: public IFactor {
+	Factor(const Token& not_token, std::shared_ptr<FactorType> factor):
+		IFactor(factor->t),
+		not_token(not_token),
+		factor(factor) {}
+
+	Pos begin() const {
+		return factor->begin();
+	}
+
+	Pos end() const {
+		return factor->end();
+	}
+
+	operator std::string() const {
+		std::string result = "FACTOR: ";
+		if (is_negated()) {
+			result += "NOT ";
+		}
+		result += std::string(*factor);
+		return result;
+	}
+
+	bool is_negated() const {
+		return not_token.type() == Token::category::NOT;
+	}
+
+	Token not_token;
+	std::shared_ptr<FactorType> factor;
+};
+
+struct Comparison: public Node {
+	Comparison(const Token& op, std::shared_ptr<Term> left, std::shared_ptr<Term> right):
+		Node(op), left(left), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return std::string(*left) + " " + t.value() + " " + std::string(*right);
+	}
+
+	Token::category op() const {
+		return t.type();
+	}
+
+	std::shared_ptr<Term> left;
+	std::shared_ptr<Term> right;
+};
+
+struct IExpr: public Node {
+	using Node::Node;
+};
+
+
+//BinOp(AND, OR) or Factor
+template <typename ExprType>
+struct Expr: IExpr {
+	Expr(std::shared_ptr<ExprType> expr):
+		IExpr(expr->t),
+		expr(expr) {}
+
+	Pos begin() const {
+		return expr->begin();
+	}
+
+	Pos end() const {
+		return expr->end();
+	}
+
+	operator std::string() const {
+		return std::string(*expr);
+	}
+
+	std::shared_ptr<ExprType> expr;
+};
+
+
+struct BinOp: public Node {
+	BinOp(const Token& op, std::shared_ptr<IExpr> left, std::shared_ptr<IExpr> right):
+		Node(op), left(left), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return std::string("BINOP: ") + std::string(*left) + " " + t.value() + " " + std::string(*right);
+	}
+
+	Token op() const {
+		return t;
+	}
+
+	std::shared_ptr<IExpr> left;
+	std::shared_ptr<IExpr> right;
+};
+
+struct IfClause: public Node {
+	IfClause(const Token& if_token, const Token& open_paren, std::shared_ptr<IExpr> expr,
+		const Token& close_paren, std::shared_ptr<IAction> if_action, const Token& else_token,
+		std::shared_ptr<IAction> else_action):
+		Node(if_token),
+		open_paren(open_paren),
+		expr(expr),
+		close_paren(close_paren),
+		if_action(if_action),
+		else_token(else_token),
+		else_action(else_action)
+	{}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		if (has_else()) {
+			return else_action->end();
+		} else {
+			return if_action->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result;
+
+		result += t.value() + " " +
+			open_paren.value() + std::string(*expr) + 
+			close_paren.value() + " " + std::string(*if_action);
+
+		if (has_else()) {
+			result += std::string("\n") + else_token.value() + " " +  std::string(*else_action);
+		}
+
+		return result;
+	}
+
+	bool has_else() const {
+		return else_token;
+	}
+
+	Token open_paren;
+	std::shared_ptr<IExpr> expr;
+	Token close_paren;
+	std::shared_ptr<IAction> if_action;
+	Token else_token;
+	std::shared_ptr<IAction> else_action;
 };
 
 }

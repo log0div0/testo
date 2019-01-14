@@ -8,6 +8,7 @@ struct Token {
 		eof,
 		newline,
 		id,
+		var_ref,
 		type_,
 		wait,
 		press,
@@ -25,6 +26,8 @@ struct Token {
 		flash,
 		macro,
 		dvd,
+		if_,
+		else_,
 		number,
 		time_interval,
 		size,
@@ -40,12 +43,23 @@ struct Token {
 		rparen,
 		semi,
 		colon,
-		ifdef, //$ifdef
-		ifndef, //$ifndef
-		endif, //$ifndef
-		else_, //$ifndef
-		include, //$include
+		include,
 
+		//expressions
+
+		//comparisons
+		LESS,
+		GREATER,
+		EQUAL,
+		STRLESS,
+		STRGREATER,
+		STREQUAL,
+
+		//ops
+		NOT,
+		AND,
+		OR,
+		
 		//fake categories
 		none, //not initialized
 		program,

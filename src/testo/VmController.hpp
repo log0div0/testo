@@ -13,8 +13,7 @@ struct VmController {
 	int make_snapshot(const std::string& snapshot);
 	int set_metadata(const nlohmann::json& metadata);
 	int set_metadata(const std::string& key, const std::string& value);
-	int set_config_cksum(const std::string& cksum);
-	std::string get_config_cksum();
+	std::string get_metadata(const std::string& key);
 	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum);
 	std::string get_snapshot_cksum(const std::string& snapshot);
 	int rollback(const std::string& snapshot);
@@ -33,6 +32,7 @@ struct VmController {
 
 	bool is_plugged(std::shared_ptr<FlashDriveController> fd);
 	bool has_snapshot(const std::string& snapshot);
+	bool has_key(const std::string& key);
 	bool is_defined() const;
 	bool is_running();
 	bool is_additions_installed();
