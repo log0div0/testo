@@ -10,6 +10,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/sbin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 
+if(GPU)
+	add_definitions(-DGPU)
+	enable_language("CUDA")
+endif()
+
 if(WIN32)
 	set(EXTRA_FLAGS "/W0 -DNOMINMAX")
 else()

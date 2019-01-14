@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
 	train_dir = os.path.join(dataset_dir, 'train')
 	valid_dir = os.path.join(dataset_dir, 'valid')
-	train_path = main(train_dir, 100)
+	train_path = main(train_dir, 10000)
 	valid_path = main(valid_dir, 100)
 
 	names_path = os.path.join(dataset_dir, "testo.names")

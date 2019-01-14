@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
 
 include_directories(${CMAKE_SOURCE_DIR}/3rd_party/imgui)
+include_directories(${CMAKE_SOURCE_DIR}/3rd_party/darknet/include)
 
 file(GLOB SRCS *.cpp)
 
-if (WIN32)
+if(WIN32)
 	add_compile_options("/U CINTERFACE")
 endif()
 
@@ -26,3 +27,7 @@ else()
 endif()
 
 target_sources(testow PUBLIC ${OS_SPECIFIC_SRCS})
+
+if(GPU)
+	target_link_libraries(testow cuda cudart cublas curand)
+endif()

@@ -7,9 +7,15 @@
 #include "VM.hpp"
 #include "Texture.hpp"
 
+struct CUDA {
+	CUDA();
+};
+
 struct App {
 	App();
 	void render();
+
+	CUDA cuda;
 
 	vbox::API api;
 	vbox::VirtualBoxClient virtual_box_client;

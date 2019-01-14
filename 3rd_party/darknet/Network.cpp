@@ -1,5 +1,6 @@
 
 #include "Network.hpp"
+#include <stdexcept>
 
 namespace darknet {
 

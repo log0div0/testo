@@ -2,6 +2,13 @@
 #include "App.hpp"
 #include <imgui.h>
 #include <iostream>
+#include <darknet.h>
+
+CUDA::CUDA() {
+#ifdef GPU
+	cuda_set_device(0);
+#endif
+}
 
 App* app = nullptr;
 
@@ -40,7 +47,7 @@ void App::render() {
 			texture1.write(vm->texture1.data(), vm->texture1.size());
 			texture2.write(vm->texture2.data(), vm->texture2.size());
 			ImVec2 p = ImGui::GetCursorScreenPos();
-			ImGui::Image(texture1.handle(), ImVec2(width, height));
+			ImGui::GetWindowDrawList()->AddImage(texture1.handle(), p, ImVec2(p.x + width, p.y + height));
 			ImGui::GetWindowDrawList()->AddImage(texture2.handle(), p, ImVec2(p.x + width, p.y + height));
 		} else {
 			ImGui::Text("No signal");

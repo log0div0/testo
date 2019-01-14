@@ -12,8 +12,6 @@ endif()
 file(GLOB_RECURSE libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 if(GPU)
-	add_definitions(-DGPU)
-	enable_language("CUDA")
 	file(GLOB_RECURSE cuda_files ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cu)
 	set(libdarknet_SRCS ${cuda_files} ${libdarknet_SRCS})
 endif()

@@ -1,5 +1,6 @@
 
 #include "array_out.hpp"
+#include <string.h>
 
 namespace vbox {
 
