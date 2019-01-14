@@ -8,7 +8,13 @@ macro start_vbox_additions {
 
 #firewall folder
 
-test firewall_basic: master(ifaces_renamed), client(ifaces_renamed), server(ifaces_renamed) {
+test hello: master(ifaces_renamed) {
+	master type "Hello " $HTTP_PROXY """ Mazafaka
+	otsosite
+	"""
+}
+
+/*test firewall_basic: master(ifaces_renamed), client(ifaces_renamed), server(ifaces_renamed) {
 	#master, client, server start_vbox_additions
 
 	master exec bash """
@@ -409,4 +415,4 @@ test dhcp_basic: master(ifaces_renamed), slave(ifaces_renamed) {
 		ip l s client_side up
 		dhclient -v client_side
 	"""
-}
+}*/

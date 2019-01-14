@@ -59,9 +59,10 @@ struct Token {
 		NOT,
 		AND,
 		OR,
-		
+
 		//fake categories
 		none, //not initialized
+		word,
 		program,
 		key_spec,
 		action_block,

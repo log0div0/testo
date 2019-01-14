@@ -42,9 +42,9 @@ struct VisitorInterpreter {
 	bool visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::BinOp> binop);
 	bool visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IFactor> factor);
 	std::string resolve_var(std::shared_ptr<VmController> vm, const std::string& var);
-	std::string visit_term(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Term> term);
+	std::string visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Word> word);
 	bool visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
-	
+
 	void apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot, bool recursive = false);
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
 	std::string cksum(std::shared_ptr<AST::Snapshot> snapshot);

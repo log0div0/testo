@@ -52,12 +52,12 @@ Token::category Parser::LA(size_t i) const {
 }
 
 bool Parser::test_assignment() const {
-	return ((LA(1) == Token::category::id) && 
+	return ((LA(1) == Token::category::id) &&
 		LA(2) == Token::category::assign);
 }
 
 bool Parser::test_stmt() const {
-	return ((LA(1) == Token::category::snapshot) || 
+	return ((LA(1) == Token::category::snapshot) ||
 		(LA(1) == Token::category::test) ||
 		(LA(1) == Token::category::macro) ||
 		test_controller());
@@ -92,13 +92,14 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::id)); //macro call
 }
 
-bool Parser::test_term() const {
+bool Parser::test_word() const {
 	return ((LA(1) == Token::category::dbl_quoted_string) ||
-		(LA(1) == Token::category::var_ref));
+		(LA(1) == Token::category::var_ref) ||
+		(LA(1) == Token::category::multiline_string));
 }
 
 bool Parser::test_comparison() const {
-	if (test_term()) {
+	if (test_word()) {
 		if ((LA(2) == Token::category::LESS) ||
 			(LA(2) == Token::category::GREATER) ||
 			(LA(2) == Token::category::EQUAL) ||
@@ -452,7 +453,7 @@ std::shared_ptr<IAction> Parser::action() {
 		}
 		action->set_delim(delim);
 	}
-	
+
 	return action;
 }
 
@@ -461,9 +462,14 @@ std::shared_ptr<Action<Type>> Parser::type() {
 	match(Token::category::type_);
 
 	Token value = LT(1);
-	match(Token::category::dbl_quoted_string);
 
-	auto action = std::shared_ptr<Type>(new Type(type_token, value));
+	if (!test_word()) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected word specificator");
+	}
+
+	auto text = word();
+
+	auto action = std::shared_ptr<Type>(new Type(type_token, text));
 	return std::shared_ptr<Action<Type>>(new Action<Type>(action));
 }
 
@@ -471,13 +477,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	Token wait_token = LT(1);
 	match(Token::category::wait);
 
-	Token value = Token();
+	std::shared_ptr<Word> value(nullptr);
 	Token for_ = Token();
 	Token time_interval = Token();
 
-	if (LA(1) == Token::category::dbl_quoted_string) {
-		value = LT(1);
-		match(Token::category::dbl_quoted_string);
+	if (test_word()) {
+		value = word();
 	}
 
 	if (LA(1) == Token::category::for_) {
@@ -524,9 +529,9 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 
 	Token type = LT(1);
 	if (LA(1) == Token::category::flash) {
-		match(Token::category::flash);	
+		match(Token::category::flash);
 	} else if (LA(1) == Token::category::dvd) {
-		match(Token::category::dvd);	
+		match(Token::category::dvd);
 	}
 	else {
 		if (LT(1).value() != "nic" && LT(1).value() != "link") {
@@ -679,11 +684,16 @@ std::shared_ptr<Action<IfClause>> Parser::if_clause() {
 	return std::shared_ptr<Action<IfClause>>(new Action<IfClause>(action));
 }
 
-std::shared_ptr<Term> Parser::term() {
-	Token value = LT(1);
-	match({Token::category::dbl_quoted_string, Token::category::var_ref});
+std::shared_ptr<Word> Parser::word() {
+	//newline will break our word-forming
+	std::vector<Token> parts;
 
-	return std::shared_ptr<Term>(new Term(value));
+	while (test_word()) {
+		parts.push_back(LT(1));
+		match({Token::category::dbl_quoted_string, Token::category::multiline_string, Token::category::var_ref});
+	}
+
+	return std::shared_ptr<Word>(new Word(parts));
 }
 
 std::shared_ptr<IFactor> Parser::factor() {
@@ -701,15 +711,15 @@ std::shared_ptr<IFactor> Parser::factor() {
 		auto result = std::shared_ptr<Factor<IExpr>>(new Factor<IExpr>(not_token, expr()));
 		match(Token::category::rparen);
 		return result;
-	} else if (test_term()) {
-		return std::shared_ptr<Factor<Term>>(new Factor<Term>(not_token, term()));
+	} else if (test_word()) {
+		return std::shared_ptr<Factor<Word>>(new Factor<Word>(not_token, word()));
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown expression: " + LT(1).value());
 	}
 }
 
 std::shared_ptr<Comparison> Parser::comparison() {
-	auto left = term();
+	auto left = word();
 
 	Token op = LT(1);
 
@@ -722,7 +732,7 @@ std::shared_ptr<Comparison> Parser::comparison() {
 		Token::category::STREQUAL
 		});
 
-	auto right = term();
+	auto right = word();
 
 	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
 }

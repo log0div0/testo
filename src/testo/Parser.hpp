@@ -35,7 +35,7 @@ private:
 	bool test_command() const;
 	bool test_action() const;
 	bool test_include() const;
-	bool test_term() const;
+	bool test_word() const;
 	bool test_comparison() const;
 	bool is_button(const Token& t) const;
 
@@ -69,7 +69,7 @@ private:
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
 
 	//expressions
-	std::shared_ptr<AST::Term> term();
+	std::shared_ptr<AST::Word> word();
 	std::shared_ptr<AST::IFactor> factor();
 	std::shared_ptr<AST::Comparison> comparison();
 	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
