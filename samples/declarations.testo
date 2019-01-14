@@ -171,7 +171,7 @@ snapshot ubuntu_installed {
 	wait "Encrypt your"; press Enter
 	if ($HTTP_PROXY) {
 		wait "Select your time zone" for 1m; press Enter
-	} else { 
+	} else {
 		wait "Moscow" for 2m; press Enter
 	}
 	wait "Partitioning method"; press Enter
@@ -230,8 +230,7 @@ snapshot ready: additions_installed {
 	wait for 2s;
 	if ($vm_name STREQUAL "master") {
 		type "apt-get install -y python conntrack conntrackd isc-dhcp-server arping nftables"; press Enter
-		wait for 30s
-		exec bash "sysctl -w net.ipv4.ip_forward=1"
+		wait for 1m
 	}
 	stop
 	unplug nic nat
@@ -253,6 +252,8 @@ snapshot ifaces_renamed: ready {
 		exec bash "/tmp/rename_net.sh 52:54:00:33:00:aa client_side"
 		exec bash "/tmp/rename_net.sh 52:54:00:33:00:bb server_side"
 		exec bash "/tmp/rename_net.sh 52:54:00:33:00:cc slave_side"
+
+		exec bash "sysctl -w net.ipv4.ip_forward=1"
 	} else if ($vm_name STREQUAL "slave") {
 		exec bash "/tmp/rename_net.sh 52:54:00:44:00:aa client_side"
 		exec bash "/tmp/rename_net.sh 52:54:00:44:00:bb server_side"

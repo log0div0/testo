@@ -264,7 +264,7 @@ test route_bond: master(ifaces_renamed) {
 #vlan
 test vlan_basic: master(ifaces_renamed), client(ifaces_renamed),
 	client2(ifaces_renamed),
-	server(ifaces_renamed) 
+	server(ifaces_renamed)
 {
 	#master, client, client2, server start_vbox_additions
 

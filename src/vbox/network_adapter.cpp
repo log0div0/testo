@@ -1,7 +1,7 @@
 
-#include <vbox/network_adapter.hpp>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/string.hpp>
+#include "network_adapter.hpp"
+#include "throw_if_failed.hpp"
+#include "string.hpp"
 
 namespace vbox {
 
@@ -28,7 +28,7 @@ NetworkAdapter& NetworkAdapter::operator=(NetworkAdapter&& other) {
 
 void NetworkAdapter::setCableConnected(bool is_connected) {
 	try {
-		throw_if_failed(INetworkAdapter_SetCableConnected(handle, is_connected));
+		throw_if_failed(INetworkAdapter_put_CableConnected(handle, is_connected));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -37,7 +37,7 @@ void NetworkAdapter::setCableConnected(bool is_connected) {
 
 void NetworkAdapter::setEnabled(bool is_enabled) const {
 	try {
-		throw_if_failed(INetworkAdapter_SetEnabled(handle, is_enabled));
+		throw_if_failed(INetworkAdapter_put_Enabled(handle, is_enabled));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -46,7 +46,7 @@ void NetworkAdapter::setEnabled(bool is_enabled) const {
 
 void NetworkAdapter::setInternalNetwork(const std::string& network) const {
 	try {
-		throw_if_failed(INetworkAdapter_SetInternalNetwork(handle, StringIn(network)));
+		throw_if_failed(INetworkAdapter_put_InternalNetwork(handle, StringIn(network)));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -55,7 +55,7 @@ void NetworkAdapter::setInternalNetwork(const std::string& network) const {
 
 void NetworkAdapter::setAttachmentType(NetworkAttachmentType type) const {
 	try {
-		throw_if_failed(INetworkAdapter_SetAttachmentType(handle, type));
+		throw_if_failed(INetworkAdapter_put_AttachmentType(handle, type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -65,7 +65,7 @@ void NetworkAdapter::setAttachmentType(NetworkAttachmentType type) const {
 
 void NetworkAdapter::setAdapterType(NetworkAdapterType type) const {
 	try {
-		throw_if_failed(INetworkAdapter_SetAdapterType(handle, type));
+		throw_if_failed(INetworkAdapter_put_AdapterType(handle, type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -74,7 +74,7 @@ void NetworkAdapter::setAdapterType(NetworkAdapterType type) const {
 
 void NetworkAdapter::setMAC(const std::string& mac) {
 	try {
-		throw_if_failed(INetworkAdapter_SetMACAddress(handle, StringIn(mac)));
+		throw_if_failed(INetworkAdapter_put_MACAddress(handle, StringIn(mac)));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

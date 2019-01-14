@@ -1,7 +1,7 @@
 
-#include <vbox/additions_facility.hpp>
-#include <vbox/string.hpp>
-#include <vbox/throw_if_failed.hpp>
+#include "additions_facility.hpp"
+#include "string.hpp"
+#include "throw_if_failed.hpp"
 
 namespace vbox {
 
@@ -29,7 +29,7 @@ AdditionsFacility& AdditionsFacility::operator=(AdditionsFacility&& other) {
 std::string AdditionsFacility::name() const {
 	try {
 		BSTR name = nullptr;
-		throw_if_failed(IAdditionsFacility_GetName(handle, &name));
+		throw_if_failed(IAdditionsFacility_get_Name(handle, &name));
 		return StringOut(name);
 	}
 	catch (const std::exception&) {
@@ -40,7 +40,7 @@ std::string AdditionsFacility::name() const {
 AdditionsFacilityType AdditionsFacility::type() const {
 	try {
 		AdditionsFacilityType_T result = AdditionsFacilityType_None;
-		throw_if_failed(IAdditionsFacility_GetType(handle, &result));
+		throw_if_failed(IAdditionsFacility_get_Type(handle, &result));
 		return (AdditionsFacilityType)result;
 	}
 	catch (const std::exception&) {

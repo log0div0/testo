@@ -1,8 +1,8 @@
 
-#include <vbox/machine.hpp>
+#include "machine.hpp"
 #include <stdexcept>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/session.hpp>
+#include "throw_if_failed.hpp"
+#include "session.hpp"
 
 #include <iostream>
 
@@ -213,7 +213,7 @@ std::vector<std::string> Machine::getExtraDataKeys() const {
 		SafeArray safe_array;
 		throw_if_failed(IMachine_GetExtraDataKeys(handle, SAFEARRAY_AS_OUT_PARAM(BSTR, safe_array)));
 		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
-		std::vector<StringOut> strings_out {(BSTR*)array_out.data, (BSTR*)(array_out.data + array_out.data_size)};
+		std::vector<StringOut> strings_out {(BSTR*)array_out.data(), (BSTR*)(array_out.data() + array_out.size())};
 		return {strings_out.begin(), strings_out.end()};
 	}
 	catch (const std::exception&) {
@@ -373,7 +373,7 @@ void Machine::vram_size(ULONG size) {
 
 void Machine::cpus(ULONG num) {
 	try {
-		throw_if_failed(IMachine_SetCPUCount(handle, num));
+		throw_if_failed(IMachine_put_CPUCount(handle, num));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -396,6 +396,15 @@ SessionState Machine::session_state() const {
 		SessionState_T result = SessionState_Null;
 		throw_if_failed(IMachine_get_SessionState(handle, &result));
 		return (SessionState)result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void Machine::lock_machine(Session& session, LockType lock_type) {
+	try {
+		throw_if_failed(IMachine_LockMachine(handle, session.handle, lock_type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

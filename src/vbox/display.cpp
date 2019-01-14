@@ -1,7 +1,7 @@
 
-#include <vbox/display.hpp>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/string.hpp>
+#include "display.hpp"
+#include "throw_if_failed.hpp"
+#include "string.hpp"
 
 namespace vbox {
 
@@ -24,6 +24,10 @@ Display::Display(Display&& other): handle(other.handle) {
 Display& Display::operator=(Display&& other) {
 	std::swap(handle, other.handle);
 	return *this;
+}
+
+Display::operator bool() const {
+	return handle != nullptr;
 }
 
 void Display::get_screen_resolution(ULONG screen_id,

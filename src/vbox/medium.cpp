@@ -1,10 +1,10 @@
 
-#include <vbox/medium.hpp>
+#include "medium.hpp"
 #include <stdexcept>
 #include <ostream>
-#include <vbox/throw_if_failed.hpp>
-#include <vbox/string.hpp>
-#include <vbox/safe_array.hpp>
+#include "throw_if_failed.hpp"
+#include "string.hpp"
+#include "safe_array.hpp"
 
 namespace vbox {
 
@@ -54,7 +54,7 @@ MediumState Medium::state() const {
 std::string Medium::location() const {
 	try {
 		BSTR location = nullptr;
-		throw_if_failed(IMedium_GetLocation(handle, &location));
+		throw_if_failed(IMedium_get_Location(handle, &location));
 		return StringOut(location);
 	} catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

@@ -1,7 +1,7 @@
 
-#include <vbox/virtual_box.hpp>
-#include <vbox/safe_array.hpp>
-#include <vbox/throw_if_failed.hpp>
+#include "virtual_box.hpp"
+#include "safe_array.hpp"
+#include "throw_if_failed.hpp"
 #include <stdexcept>
 
 namespace vbox {
@@ -102,7 +102,7 @@ std::vector<std::string> VirtualBox::machine_groups() const {
 		SafeArray safe_array;
 		throw_if_failed(IVirtualBox_get_MachineGroups(handle, SAFEARRAY_AS_OUT_PARAM(BSTR, safe_array)));
 		ArrayOut array_out = safe_array.copy_out(VT_BSTR);
-		std::vector<StringOut> strings_out {(BSTR*)array_out.data, (BSTR*)(array_out.data + array_out.data_size)};
+		std::vector<StringOut> strings_out {(BSTR*)array_out.begin(), (BSTR*)array_out.end()};
 		return {strings_out.begin(), strings_out.end()};
 	}
 	catch (const std::exception&) {

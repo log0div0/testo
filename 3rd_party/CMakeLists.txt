@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_subdirectory(VBoxCAPI)
+add_subdirectory(darknet)
+add_subdirectory(imgui)
+
+if(UNIX AND NOT APPLE)
+add_subdirectory(gl3w)
+endif()
 
 include(ExternalProject)
 
@@ -13,6 +19,5 @@ ExternalProject_Add(
 	BUILD_IN_SOURCE 1
 	CONFIGURE_COMMAND ""
 	BUILD_COMMAND ""
-	INSTALL_COMMAND mkdir -p ${CMAKE_BINARY_DIR}/out/include/nlohmann
-		&& cp -r include/nlohmann ${CMAKE_BINARY_DIR}/out/include
+	INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory include ${CMAKE_BINARY_DIR}/out/include
 )

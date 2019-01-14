@@ -1,8 +1,17 @@
 cmake_minimum_required(VERSION 3.0)
 
-file(GLOB_RECURSE SRCS *.cpp)
-link_directories(${CMAKE_BINARY_DIR}/out/lib)
-add_executable(testo ${SRCS})
+if (WIN32)
+	add_definitions(-D__PRETTY_FUNCTION__=__FUNCSIG__ -DCOBJMACROS -DCINTERFACE -D_CRT_SECURE_NO_WARNINGS)
+else()
+	add_definitions(-DVBOX_WITH_GLUE)
+endif()
 
-target_link_libraries(testo vboxcapi dl stdc++fs lept tesseract)
-add_definitions(-std=c++17 -Wall)
+include_directories(
+	${CMAKE_SOURCE_DIR}/3rd_party
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_BINARY_DIR}/out/include
+)
+
+add_subdirectory(vbox)
+add_subdirectory(testo)
+add_subdirectory(testow)

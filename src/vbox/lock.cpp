@@ -1,6 +1,6 @@
 
-#include <vbox/lock.hpp>
-#include <vbox/throw_if_failed.hpp>
+#include "lock.hpp"
+#include "throw_if_failed.hpp"
 
 #include <chrono>
 #include <thread>
