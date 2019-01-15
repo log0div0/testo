@@ -274,9 +274,7 @@ std::shared_ptr<Assignment> Parser::assignment() {
 	Token assign = LT(1);
 	match(Token::category::assign);
 
-	Token right = LT(1);
-	match(Token::category::dbl_quoted_string);
-
+	auto right = word();
 	return std::shared_ptr<Assignment>(new Assignment(left, assign, right));
 }
 
@@ -299,13 +297,14 @@ std::shared_ptr<Attr> Parser::attr() {
 	if (LA(1) == Token::category::lbrace) {
 		auto block = attr_block();
 		value = std::shared_ptr<AttrValue<AttrBlock>>(new AttrValue<AttrBlock>(block));
+	} else if (test_word()) {
+		auto word_value = std::shared_ptr<WordAttr>(new WordAttr(word()));
+		value = std::shared_ptr<AttrValue<WordAttr>>(new AttrValue<WordAttr>(word_value));
 	} else {
 		auto simple_value = std::shared_ptr<SimpleAttr>(new SimpleAttr(LT(1)));
 		value = std::shared_ptr<AttrValue<SimpleAttr>>(new AttrValue<SimpleAttr>(simple_value));
 
-		if (LA(1) == Token::category::dbl_quoted_string) {
-			match(Token::category::dbl_quoted_string);
-		} else if (LA(1) == Token::category::number) {
+		if (LA(1) == Token::category::number) {
 			match(Token::category::number);
 		} else if (LA(1) == Token::category::size) {
 			match(Token::category::size);
@@ -463,10 +462,6 @@ std::shared_ptr<Action<Type>> Parser::type() {
 
 	Token value = LT(1);
 
-	if (!test_word()) {
-		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected word specificator");
-	}
-
 	auto text = word();
 
 	auto action = std::shared_ptr<Type>(new Type(type_token, text));
@@ -542,15 +537,17 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 
 	Token name = LT(1);
 
+	std::shared_ptr<Word> path(nullptr);
+
 	if (type.type() == Token::category::dvd) {
 		if (plug_token.type() == Token::category::plug) {
-			match(Token::category::dbl_quoted_string);
+			path = word();
 		} //else this should be the end of unplug commands
 	} else {
 		match(Token::category::id);
 	}
 
-	auto action = std::shared_ptr<Plug>(new Plug(plug_token, type, name));
+	auto action = std::shared_ptr<Plug>(new Plug(plug_token, type, name, path));
 	return std::shared_ptr<Action<Plug>>(new Action<Plug>(action));
 }
 
@@ -577,17 +574,9 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 	Token process_token = LT(1);
 	match(Token::category::id);
 
-	Token commands_token = LT(1);
+	auto commands = word();
 
-	if (LA(1) == Token::category::dbl_quoted_string) {
-		match(Token::category::dbl_quoted_string);
-	} else if (LA(1) == Token::category::multiline_string) {
-		match(Token::category::multiline_string);
-	} else {
-		throw std::runtime_error(std::string("unexpected token: ") + LT(1).value() + ", expected double qouted or multiline string");
-	}
-
-	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands_token));
+	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands));
 	return std::shared_ptr<Action<Exec>>(new Action<Exec>(action));
 }
 
@@ -612,11 +601,8 @@ std::shared_ptr<Action<CopyTo>> Parser::copyto() {
 	Token copyto_token = LT(1);
 	match(Token::category::copyto);
 
-	Token from = LT(1);
-	match(Token::category::dbl_quoted_string);
-
-	Token to = LT(1);
-	match(Token::category::dbl_quoted_string);
+	auto from = word();
+	auto to = word();
 
 	auto action = std::shared_ptr<CopyTo>(new CopyTo(copyto_token, from, to));
 	return std::shared_ptr<Action<CopyTo>>(new Action<CopyTo>(action));
@@ -685,10 +671,18 @@ std::shared_ptr<Action<IfClause>> Parser::if_clause() {
 }
 
 std::shared_ptr<Word> Parser::word() {
-	//newline will break our word-forming
 	std::vector<Token> parts;
 
-	while (test_word()) {
+	if (!test_word()) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected word specificator");
+	}
+
+	parts.push_back(LT(1));
+	match({Token::category::dbl_quoted_string, Token::category::multiline_string, Token::category::var_ref});
+
+	while (LA(1) == Token::category::plus) {
+		match(Token::category::plus);
+		newline_list();
 		parts.push_back(LT(1));
 		match({Token::category::dbl_quoted_string, Token::category::multiline_string, Token::category::var_ref});
 	}

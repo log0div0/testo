@@ -253,16 +253,16 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
 	auto nics = vm->nics();
-	if (nics.find(plug->name()) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name() +
+	if (nics.find(plug->name_token.value()) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name_token.value() +
 			" in VM " + vm->name());
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " nic " << plug->name() << " on vm " << vm->name() << std::endl;
+	std::cout << plug_unplug << " nic " << plug->name_token.value() << " on vm " << vm->name() << std::endl;
 
 	int result = 0;
-	result = vm->set_nic(plug->name(), plug->is_on());
+	result = vm->set_nic(plug->name_token.value(), plug->is_on());
 
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
@@ -274,16 +274,16 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
 	auto nics = vm->nics();
-	if (nics.find(plug->name()) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name() +
+	if (nics.find(plug->name_token.value()) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name_token.value() +
 			" in VM " + vm->name());
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " link " << plug->name() << " on vm " << vm->name() << std::endl;
+	std::cout << plug_unplug << " link " << plug->name_token.value() << " on vm " << vm->name() << std::endl;
 
 	int result = 0;
-	result = vm->set_link(plug->name(), plug->is_on());
+	result = vm->set_link(plug->name_token.value(), plug->is_on());
 
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
@@ -292,7 +292,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
-	auto fd = global.fds.find(plug->name())->second; //should always be found
+	auto fd = global.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
 	if (vm->is_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
@@ -306,7 +306,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
-	auto fd = global.fds.find(plug->name())->second; //should always be found
+	auto fd = global.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Unplugging flash drive " << fd->name() << " from vm " << vm->name() << std::endl;
 	if (!vm->is_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging flash drive " + fd->name() +
@@ -321,9 +321,10 @@ void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::sha
 
 void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	if (plug->is_on()) {
-		std::cout << "Plugging dvd " << plug->name() << " in vm " << vm->name() << std::endl;
-		if (vm->plug_dvd(plug->name())) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging dvd " + plug->name() +
+		auto path = visit_word(vm, plug->path);
+		std::cout << "Plugging dvd " << path << " in vm " << vm->name() << std::endl;
+		if (vm->plug_dvd(path)) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging dvd " + path +
 				" from vm " + vm->name());
 		}
 	} else {
@@ -371,7 +372,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 		//In future this should be a function
 
 		std::string script = "set -e; set -o pipefail; set -x;";
-		script += exec->script();
+		script += visit_word(vm, exec->commands);
 
 		//copy the script to tmp folder
 		std::hash<std::string> h;
@@ -417,13 +418,17 @@ void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared
 
 	//TODO: redo!
 	for (auto assign: set->assignments) {
-		std::cout << assign->left.value() << " -> " << assign->value() << std::endl;
-		vm->set_metadata(assign->left.value(), assign->value());
+		std::string value = visit_word(vm, assign->right);
+		std::cout << assign->left.value() << " -> " << value << std::endl;
+		vm->set_metadata(assign->left.value(), value);
 	}
 }
 
 void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
-	std::cout << "Copying " << copyto->from() << " to vm " << vm->name() << " in directory " << copyto->to() << std::endl;
+	auto from = visit_word(vm, copyto->from);
+	auto to = visit_word(vm, copyto->to);
+
+	std::cout << "Copying " << from << " to vm " << vm->name() << " in directory " << to << std::endl;
 
 	if (!vm->is_running()) {
 		throw std::runtime_error(std::string(copyto->begin()) + ": Error: vm " + vm->name() + " is not running");
@@ -433,7 +438,7 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 		throw std::runtime_error(std::string(copyto->begin()) + ": Error: vbox additions are not installed on vm " + vm->name());
 	}
 
-	if (vm->copy_to_guest(copyto->from(), copyto->to())) {
+	if (vm->copy_to_guest(from, to)) {
 		throw std::runtime_error(std::string(copyto->begin()) + ": Error: copy to command failed");
 	}
 }

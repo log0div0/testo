@@ -221,7 +221,7 @@ struct Press: public Node {
 
 //Also is used for unplug
 struct Plug: public Node {
-	Plug(const Token& plug, const Token& type, const Token& name):
+	Plug(const Token& plug, const Token& type, const Token& name, std::shared_ptr<Word> path):
 		Node(plug),
 		type(type),
 		name_token(name) {}
@@ -242,17 +242,11 @@ struct Plug: public Node {
 		return (t.type() == Token::category::plug);
 	}
 
-	std::string name() const {
-		if (type.type() == Token::category::dvd) {
-			return name_token.value().substr(1, name_token.value().length() - 2);
-		} else {
-			return name_token.value();
-		}
-	}
-
 	Token type; //nic or flash
 	Token name_token; //name of resource to be plugged/unplugged
+	std::shared_ptr<Word> path; //used only for dvd
 };
+
 
 struct Start: public Node {
 	Start(const Token& start):
@@ -289,39 +283,29 @@ struct Stop: public Node {
 };
 
 struct Exec: public Node {
-	Exec(const Token& exec, const Token& process, const Token& commands):
+	Exec(const Token& exec, const Token& process, std::shared_ptr<Word> commands):
 		Node(exec),
 		process_token(process),
-		commands_token(commands) {}
+		commands(commands) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return commands_token.pos();
+		return commands->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + process_token.value() + " " + commands_token.value();
-	}
-
-	std::string script() const {
-		if (commands_token.type() == Token::category::dbl_quoted_string) {
-			return commands_token.value().substr(1, commands_token.value().length() - 2);
-		} else if (commands_token.type() == Token::category::multiline_string) {
-			return commands_token.value().substr(3, commands_token.value().length() - 6);
-		} else {
-			throw std::runtime_error(std::string(begin()) + ": making script error: unsupported commands token: " + commands_token.value());
-		}
+		return t.value() + " " + process_token.value() + " " + std::string(*commands);
 	}
 
 	Token process_token;
-	Token commands_token;
+	std::shared_ptr<Word> commands;
 };
 
 struct Assignment: public Node {
-	Assignment(const Token& left, const Token& assign, const Token& right):
+	Assignment(const Token& left, const Token& assign, std::shared_ptr<Word> right):
 		Node(assign),
 		left(left),
 		right(right) {}
@@ -331,23 +315,15 @@ struct Assignment: public Node {
 	}
 
 	Pos end() const {
-		return right.pos();
+		return right->end();
 	}
 
 	operator std::string() const {
-		return left.value() + t.value() + right.value();
-	}
-
-	std::string value() const {
-		if (right.type() == Token::category::dbl_quoted_string) {
-			return right.value().substr(1, right.value().length() - 2);
-		} else {
-			throw std::runtime_error(std::string(right.pos()) + ": error: unknown token type");
-		}
+		return left.value() + t.value() + std::string(*right);
 	}
 
 	Token left;
-	Token right;
+	std::shared_ptr<Word> right;
 };
 
 struct Set: public Node {
@@ -376,33 +352,25 @@ struct Set: public Node {
 };
 
 struct CopyTo: public Node {
-	CopyTo(const Token& copyto, const Token& from, const Token& to):
+	CopyTo(const Token& copyto, std::shared_ptr<Word> from, std::shared_ptr<Word> to):
 		Node(copyto),
-		from_token(from),
-		to_token(to) {}
+		from(from),
+		to(to) {}
 
 	Pos begin() const {
-		return from_token.pos();
+		return t.pos();
 	}
 
 	Pos end() const {
-		return to_token.pos();
+		return to->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + from_token.value() + " " + to_token.value();
+		return t.value() + " " + std::string(*from) + " " + std::string(*to);
 	}
 
-	std::string from() const {
-		return from_token.value().substr(1, from_token.value().length() - 2);
-	}
-
-	std::string to() const {
-		return to_token.value().substr(1, to_token.value().length() - 2);
-	}
-
-	Token from_token;
-	Token to_token;
+	std::shared_ptr<Word> from;
+	std::shared_ptr<Word> to;
 };
 
 struct ActionBlock: public Node {
@@ -696,6 +664,26 @@ struct SimpleAttr: public Node {
 	operator std::string() const {
 		return t.value();
 	}
+};
+
+struct WordAttr: public Node {
+	WordAttr(std::shared_ptr<Word> value):
+		Node(value->t),
+		value(value) {}
+
+	Pos begin() const {
+		return value->begin();
+	}
+
+	Pos end() const {
+		return value->end();
+	}
+
+	operator std::string() const {
+		return std::string(*value);
+	}
+
+	std::shared_ptr<Word> value;
 };
 
 struct Attr: public Node {

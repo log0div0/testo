@@ -2,7 +2,7 @@ machine client {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
-	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	iso: $ISO_PATH + "/ubuntu-16.04.5-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -26,7 +26,7 @@ machine client2 {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
-	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	iso: $ISO_PATH + "/ubuntu-16.04.5-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -50,7 +50,7 @@ machine server {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
-	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	iso: $ISO_PATH + "/ubuntu-16.04.5-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -74,7 +74,7 @@ machine master {
 	cpus: 2
 	os_type: "ubuntu_64"
 	ram: 2048Mb
-	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	iso: $ISO_PATH + "/ubuntu-16.04.5-server-amd64.iso"
 	disk_size: 5Gb
 	nic nat: {
 		slot: 0
@@ -113,7 +113,7 @@ machine slave {
 	cpus: 2
 	os_type: "ubuntu_64"
 	ram: 2Gb
-	iso: "../iso/ubuntu-16.04.5-server-amd64.iso"
+	iso: $ISO_PATH + "/ubuntu-16.04.5-server-amd64.iso"
 	disk_size: 5Gb
 	nic nat: {
 		slot: 0
@@ -182,7 +182,7 @@ snapshot ubuntu_installed {
 	wait "HTTP proxy information" for 2m; press Enter
 	wait "How do you want to manage upgrades" for 5m; press Enter
 	wait "At the moment, only the core of the system is installed"; press Enter
-	wait "Install the GRUB" for 1m; press Enter
+	wait "Install the GRUB" for 2m; press Enter
 	wait "Installation complete" for 30s; press Enter
 	wait for 30s;
 	type "testo-user"; press Enter
@@ -197,8 +197,8 @@ snapshot internet_configured: ubuntu_installed {
 	if ($HTTP_PROXY) {
 		type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
 		wait for 5s
-		type "Acquire::http::Proxy \"http://172.17.5.92:3128\";"; press Enter
-		type "Acquire::https::Proxy \"http://172.17.5.92:3128\";"
+		type "Acquire::http::Proxy \"http://" + $HTTP_PROXY + ":3128\";"; press Enter
+		type "Acquire::https::Proxy \"http://" + $HTTP_PROXY + ":3128\";"
 		press leftctrl+x; wait for 1s;
 		press leftshift+y; press Enter
 	}
@@ -239,7 +239,7 @@ snapshot ready: additions_installed {
 }
 
 snapshot ifaces_renamed: ready {
-	copyto "/home/alex/work/vbox/testo/samples/scripts/rename_net.sh" "/tmp/"
+	copyto $TESTO_DIR + "/samples/scripts/rename_net.sh" "/tmp/"
 	exec bash "chmod +x /tmp/rename_net.sh"
 
 	if ($vm_name STREQUAL "client") {
