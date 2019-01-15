@@ -19,6 +19,31 @@ struct Node {
 	Token t;
 };
 
+//basic unit of expressions - could be double quoted string or a var_ref (variable)
+struct Word: public Node {
+	Word(const std::vector<Token> parts):
+		Node(Token(Token::category::word, "word", parts[0].pos())),
+		parts(parts) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return parts[parts.size() - 1].pos();
+	}
+
+	operator std::string() const {
+		std::string result;
+		for (auto& part: parts) {
+			result += part.value();
+		}
+		return t.value();
+	}
+
+	std::vector<Token> parts;
+};
+
 struct KeySpec: public Node {
 	KeySpec(const std::vector<Token>& buttons, const Token& times):
 		Node(Token(Token::category::key_spec, "key_spec", Pos())),
@@ -117,30 +142,27 @@ struct Action: public IAction {
 };
 
 struct Type: public Node {
-	Type(const Token& type, const Token& text_token):
-		Node(type), text_token(text_token) {}
+	Type(const Token& type, std::shared_ptr<Word> text_word):
+		Node(type), text_word(text_word) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return text_token.pos();
+		return text_word->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + text_token.value();
+		return t.value() + " " + std::string(*text_word);
 	}
 
-	Token text_token;
-	std::string text() const {
-		return text_token.value().substr(1, text_token.value().length() - 2);
-	}
+	std::shared_ptr<Word> text_word;
 };
 
 struct Wait: public Node {
-	Wait(const Token& wait, const Token& text_token, Token for_, Token time_interval):
-		Node(wait), text_token(text_token), time_interval(time_interval), for_(for_) {}
+	Wait(const Token& wait, std::shared_ptr<Word> text_word, Token for_, Token time_interval):
+		Node(wait), text_word(text_word), time_interval(time_interval), for_(for_) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -150,32 +172,24 @@ struct Wait: public Node {
 		if (time_interval) {
 			return time_interval.pos();
 		} else {
-			return text_token.pos();
+			return text_word->end();
 		}
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
 
-		if (text_token) {
-			result += " " + text_token.value();
+		if (text_word) {
+			result += " " + std::string(*text_word);
 		}
 
 		if (time_interval) {
 			result += " " + for_.value() + " " + time_interval.value();
-		} 
+		}
 		return result;
 	}
 
-	std::string text() const {
-		if (text_token) {
-			return text_token.value().substr(1, text_token.value().length() - 2);
-		} else {
-			return "";
-		}
-	}
-
-	Token text_token;
+	std::shared_ptr<Word> text_word;
 	Token time_interval;
 	Token for_;
 };
@@ -207,7 +221,7 @@ struct Press: public Node {
 
 //Also is used for unplug
 struct Plug: public Node {
-	Plug(const Token& plug, const Token& type, const Token& name):
+	Plug(const Token& plug, const Token& type, const Token& name, std::shared_ptr<Word> path):
 		Node(plug),
 		type(type),
 		name_token(name) {}
@@ -228,17 +242,11 @@ struct Plug: public Node {
 		return (t.type() == Token::category::plug);
 	}
 
-	std::string name() const {
-		if (type.type() == Token::category::dvd) {
-			return name_token.value().substr(1, name_token.value().length() - 2);
-		} else {
-			return name_token.value();
-		}
-	}
-
 	Token type; //nic or flash
 	Token name_token; //name of resource to be plugged/unplugged
+	std::shared_ptr<Word> path; //used only for dvd
 };
+
 
 struct Start: public Node {
 	Start(const Token& start):
@@ -275,39 +283,29 @@ struct Stop: public Node {
 };
 
 struct Exec: public Node {
-	Exec(const Token& exec, const Token& process, const Token& commands):
+	Exec(const Token& exec, const Token& process, std::shared_ptr<Word> commands):
 		Node(exec),
 		process_token(process),
-		commands_token(commands) {}
+		commands(commands) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return commands_token.pos();
+		return commands->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + process_token.value() + " " + commands_token.value();
-	}
-
-	std::string script() const {
-		if (commands_token.type() == Token::category::dbl_quoted_string) {
-			return commands_token.value().substr(1, commands_token.value().length() - 2);
-		} else if (commands_token.type() == Token::category::multiline_string) {
-			return commands_token.value().substr(3, commands_token.value().length() - 6);
-		} else {
-			throw std::runtime_error(std::string(begin()) + ": making script error: unsupported commands token: " + commands_token.value());
-		}
+		return t.value() + " " + process_token.value() + " " + std::string(*commands);
 	}
 
 	Token process_token;
-	Token commands_token;
+	std::shared_ptr<Word> commands;
 };
 
 struct Assignment: public Node {
-	Assignment(const Token& left, const Token& assign, const Token& right):
+	Assignment(const Token& left, const Token& assign, std::shared_ptr<Word> right):
 		Node(assign),
 		left(left),
 		right(right) {}
@@ -317,23 +315,15 @@ struct Assignment: public Node {
 	}
 
 	Pos end() const {
-		return right.pos();
+		return right->end();
 	}
 
 	operator std::string() const {
-		return left.value() + t.value() + right.value();
-	}
-
-	std::string value() const {
-		if (right.type() == Token::category::dbl_quoted_string) {
-			return right.value().substr(1, right.value().length() - 2);
-		} else {
-			throw std::runtime_error(std::string(right.pos()) + ": error: unknown token type");
-		}
+		return left.value() + t.value() + std::string(*right);
 	}
 
 	Token left;
-	Token right;
+	std::shared_ptr<Word> right;
 };
 
 struct Set: public Node {
@@ -362,33 +352,25 @@ struct Set: public Node {
 };
 
 struct CopyTo: public Node {
-	CopyTo(const Token& copyto, const Token& from, const Token& to):
+	CopyTo(const Token& copyto, std::shared_ptr<Word> from, std::shared_ptr<Word> to):
 		Node(copyto),
-		from_token(from),
-		to_token(to) {}
+		from(from),
+		to(to) {}
 
 	Pos begin() const {
-		return from_token.pos();
+		return t.pos();
 	}
 
 	Pos end() const {
-		return to_token.pos();
+		return to->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + from_token.value() + " " + to_token.value();
+		return t.value() + " " + std::string(*from) + " " + std::string(*to);
 	}
 
-	std::string from() const {
-		return from_token.value().substr(1, from_token.value().length() - 2);
-	}
-
-	std::string to() const {
-		return to_token.value().substr(1, to_token.value().length() - 2);
-	}
-
-	Token from_token;
-	Token to_token;
+	std::shared_ptr<Word> from;
+	std::shared_ptr<Word> to;
 };
 
 struct ActionBlock: public Node {
@@ -684,6 +666,26 @@ struct SimpleAttr: public Node {
 	}
 };
 
+struct WordAttr: public Node {
+	WordAttr(std::shared_ptr<Word> value):
+		Node(value->t),
+		value(value) {}
+
+	Pos begin() const {
+		return value->begin();
+	}
+
+	Pos end() const {
+		return value->end();
+	}
+
+	operator std::string() const {
+		return std::string(*value);
+	}
+
+	std::shared_ptr<Word> value;
+};
+
 struct Attr: public Node {
 	Attr(const Token& name, const Token& id, std::shared_ptr<IAttrValue> value):
 		Node(Token(Token::category::attr, "", Pos())),
@@ -789,44 +791,11 @@ struct Program: public Node {
 
 //here go expressions and everything with them
 
-//basic unit of expressions - could be double quoted string or a var_ref (variable) 
-struct Term: public Node {
-	Term(const Token& value):
-		Node(value) {}
-
-	Pos begin() const {
-		return t.pos();
-	}
-
-	Pos end() const {
-		return t.pos();
-	}
-
-	operator std::string() const {
-		return t.value();
-	}
-
-	Token::category type() const {
-		return t.type();
-	}
-
-	std::string value() const {
-		if (type() == Token::category::dbl_quoted_string) {
-			return t.value().substr(1, t.value().length() - 2);
-		} else if (type() == Token::category::var_ref) {
-			return t.value().substr(1, t.value().length() - 1);
-		} else {
-			throw std::runtime_error("unknown value type");
-		}
-	}
-};
-
-
 struct IFactor: public Node {
 	using Node::Node;
 };
 
-//Term, comparison or expr
+//Word, comparison or expr
 template <typename FactorType>
 struct Factor: public IFactor {
 	Factor(const Token& not_token, std::shared_ptr<FactorType> factor):
@@ -860,7 +829,7 @@ struct Factor: public IFactor {
 };
 
 struct Comparison: public Node {
-	Comparison(const Token& op, std::shared_ptr<Term> left, std::shared_ptr<Term> right):
+	Comparison(const Token& op, std::shared_ptr<Word> left, std::shared_ptr<Word> right):
 		Node(op), left(left), right(right) {}
 
 	Pos begin() const {
@@ -879,8 +848,8 @@ struct Comparison: public Node {
 		return t.type();
 	}
 
-	std::shared_ptr<Term> left;
-	std::shared_ptr<Term> right;
+	std::shared_ptr<Word> left;
+	std::shared_ptr<Word> right;
 };
 
 struct IExpr: public Node {
@@ -964,7 +933,7 @@ struct IfClause: public Node {
 		std::string result;
 
 		result += t.value() + " " +
-			open_paren.value() + std::string(*expr) + 
+			open_paren.value() + std::string(*expr) +
 			close_paren.value() + " " + std::string(*if_action);
 
 		if (has_else()) {

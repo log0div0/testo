@@ -4,7 +4,7 @@
 using namespace AST;
 
 VisitorSemantic::VisitorSemantic(Global& global):
-	global(global) 
+	global(global)
 {
 		keys.insert("ESC");
 		keys.insert("ONE");
@@ -84,27 +84,27 @@ VisitorSemantic::VisitorSemantic(Global& global):
 		attr_ctx vm_global_ctx;
 		vm_global_ctx.insert({"ram", std::make_pair(false, Token::category::size)});
 		vm_global_ctx.insert({"disk_size", std::make_pair(false, Token::category::size)});
-		vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::dbl_quoted_string)});
+		vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::word)});
 		vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 		vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
-		vm_global_ctx.insert({"os_type", std::make_pair(false, Token::category::dbl_quoted_string)});
+		vm_global_ctx.insert({"os_type", std::make_pair(false, Token::category::word)});
 		vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
 		attr_ctxs.insert({"vm_global", vm_global_ctx});
 
 		attr_ctx vm_network_ctx;
 		vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
-		vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::dbl_quoted_string)});
-		vm_network_ctx.insert({"network", std::make_pair(false, Token::category::dbl_quoted_string)});
-		vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::dbl_quoted_string)});
-		vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::dbl_quoted_string)});
+		vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::word)});
+		vm_network_ctx.insert({"network", std::make_pair(false, Token::category::word)});
+		vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::word)});
+		vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::word)});
 
 		attr_ctxs.insert({"nic", vm_network_ctx});
 
 		attr_ctx fd_global_ctx;
-		fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::dbl_quoted_string)});
+		fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::word)});
 		fd_global_ctx.insert({"size", std::make_pair(false, Token::category::size)});
-		fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::dbl_quoted_string)});
+		fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
 
 		attr_ctxs.insert({"fd_global", fd_global_ctx});
 }
@@ -146,7 +146,7 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<IStmt> stmt) {
 void VisitorSemantic::visit_snapshot(std::shared_ptr<Snapshot> snapshot) {
 	std::cout << "Registering snapshot " << snapshot->name.value() << std::endl;
 	if (global.snapshots.find(snapshot->name) != global.snapshots.end()) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: snapshot with name " + snapshot->name.value() + 
+		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: snapshot with name " + snapshot->name.value() +
 			" already exists");
 	}
 
@@ -154,13 +154,13 @@ void VisitorSemantic::visit_snapshot(std::shared_ptr<Snapshot> snapshot) {
 		auto found = global.snapshots.find(snapshot->parent_name);
 
 		if (found == global.snapshots.end()) {
-			throw std::runtime_error(std::string(snapshot->begin()) + ": Error: cannot find parent " + snapshot->parent_name.value() + 
+			throw std::runtime_error(std::string(snapshot->begin()) + ": Error: cannot find parent " + snapshot->parent_name.value() +
 				" for snapshot " + snapshot->name.value());
 		} else {
 			snapshot->parent = found->second;
 		}
 	}
-	
+
 	if (!global.snapshots.insert({snapshot->name, snapshot}).second) {
 		throw std::runtime_error(std::string(snapshot->begin()) + ": Error while registering snapshot with name " +
 			snapshot->name.value());
@@ -173,7 +173,7 @@ void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
 	std::cout << "Registering macro " << macro->name.value() << std::endl;
 
 	if (global.macros.find(macro->name) != global.macros.end()) {
-		throw std::runtime_error(std::string(macro->begin()) + ": Error: macros with name " + macro->name.value() + 
+		throw std::runtime_error(std::string(macro->begin()) + ": Error: macros with name " + macro->name.value() +
 			" already exists");
 	}
 
@@ -257,7 +257,7 @@ void VisitorSemantic::visit_press(std::shared_ptr<Press> press) {
 void VisitorSemantic::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
 	for (auto button: key_spec->buttons) {
 		if (!is_button(button)) {
-			throw std::runtime_error(std::string(button.pos()) + 
+			throw std::runtime_error(std::string(button.pos()) +
 				" :Error: Unknown key " + button.value());
 		}
 	}
@@ -265,8 +265,8 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
 
 void VisitorSemantic::visit_plug(std::shared_ptr<Plug> plug) {
 	if (plug->type.value() == "flash") {
-		if (global.fds.find(plug->name()) == global.fds.end()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name());
+		if (global.fds.find(plug->name_token.value()) == global.fds.end()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
 		}
 	}
 }
@@ -298,7 +298,7 @@ void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {
 void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 	std::cout << "Registering machine " << machine->name.value() << std::endl;
 	if (global.vms.find(machine->name) != global.vms.end()) {
-		throw std::runtime_error(std::string(machine->begin()) + ": Error: machine with name " + machine->name.value() + 
+		throw std::runtime_error(std::string(machine->begin()) + ": Error: machine with name " + machine->name.value() +
 			" already exists");
 	}
 
@@ -312,7 +312,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 void VisitorSemantic::visit_flash(std::shared_ptr<Controller> flash) {
 	std::cout << "Registering flash " << flash->name.value() << std::endl;
 	if (global.fds.find(flash->name) != global.fds.end()) {
-		throw std::runtime_error(std::string(flash->begin()) + ": Error: flash drive with name " + flash->name.value() + 
+		throw std::runtime_error(std::string(flash->begin()) + ": Error: flash drive with name " + flash->name.value() +
 			" already exists");
 	}
 
@@ -331,11 +331,37 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AttrBlock> attr
 	return config;
 }
 
+std::string VisitorSemantic::resolve_var(const std::string& var) {
+	auto env_value = std::getenv(var.c_str());
+
+	if (env_value == nullptr) {
+		return "";
+	}
+	return env_value;
+}
+
+std::string VisitorSemantic::visit_word(std::shared_ptr<Word> word) {
+	std::string result;
+
+	for (auto part: word->parts) {
+		if (part.type() == Token::category::dbl_quoted_string) {
+			result += part.value().substr(1, part.value().length() - 2);
+		} else if (part.type() == Token::category::var_ref) {
+			result += resolve_var(part.value().substr(1, part.value().length() - 1));
+		} else if (part.type() == Token::category::multiline_string) {
+			result += part.value().substr(3, part.value().length() - 6);
+		} else {
+			throw std::runtime_error("Unknown word type");
+		}
+	}
+
+	return result;
+}
 
 void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
 	if (ctx_name == "metadata") {
-		if (attr->value->t.type() != Token::category::dbl_quoted_string) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only double qouted strings: " + attr->value->t.value()); 
+		if (attr->value->t.type() != Token::category::word) {
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only word specifiers ");
 		}
 	} else {
 		auto ctx = attr_ctxs.find(ctx_name);
@@ -352,31 +378,32 @@ void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& con
 		auto match = found->second;
 		if (attr->id != match.first) {
 			if (match.first) {
-				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() + 
+				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
 					" requires a name");
 			} else {
-				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() + 
+				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
 					" must have no name");
 			}
 		}
 
 		if (attr->value->t.type() != match.second) {
 			throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
-				Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " + 
+				Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " +
 				Token::type_to_string(match.second));
 		}
 	}
 
-	if (auto p = std::dynamic_pointer_cast<AttrValue<SimpleAttr>>(attr->value)) { 
-		auto value = p->attr_value->t; 
+	if (auto p = std::dynamic_pointer_cast<AttrValue<WordAttr>>(attr->value)) {
+		auto value = visit_word(p->attr_value->value);
+		config[attr->name.value()] = value;
+	} else if (auto p = std::dynamic_pointer_cast<AttrValue<SimpleAttr>>(attr->value)) {
+		auto value = p->attr_value->t;
 		if (value.type() == Token::category::number) {
-			config[attr->name.value()] = std::stoul(value.value()); 
-		} else if (value.type() == Token::category::dbl_quoted_string) {
-			config[attr->name.value()] = value.value().substr(1, value.value().length() - 2); //discard double qoutes 
+			config[attr->name.value()] = std::stoul(value.value());
 		} else if (value.type() == Token::category::size) {
 			config[attr->name.value()] = size_to_mb(value);
-		} else { 
-			 throw std::runtime_error(std::string(attr->begin()) + ": Error: unsupported attr: " + value.value()); 
+		} else {
+			 throw std::runtime_error(std::string(attr->begin()) + ": Error: unsupported attr: " + value.value());
 		}
 	} else if (auto p = std::dynamic_pointer_cast<AttrValue<AttrBlock>>(attr->value)) {
 		//we assume for now that named attrs could be only in attr_blocks
@@ -385,9 +412,9 @@ void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& con
 			j["name"] = attr->id.value();
 			config[attr->name.value()].push_back(j);
 		}  else {
-			config[attr->name.value()] = visit_attr_block(p->attr_value, attr->name); 
+			config[attr->name.value()] = visit_attr_block(p->attr_value, attr->name);
 		}
-	} else { 
+	} else {
 		throw std::runtime_error("Unknown attr category");
 	}
 }

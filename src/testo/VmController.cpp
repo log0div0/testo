@@ -403,7 +403,7 @@ int VmController::install() {
 		if (config.count("metadata")) {
 			set_metadata(config.at("metadata"));
 		}
-		set_metadata("config_cksum", config_cksum());
+		set_metadata("vm_config_cksum", config_cksum());
 		if (start()) {
 			throw std::runtime_error("Start while performing install action");
 		}

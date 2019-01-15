@@ -396,8 +396,8 @@ test dhcp_basic: master(ifaces_renamed), slave(ifaces_renamed) {
 	master {
 		exec bash "rm /etc/dhcp/dhcpd.conf"
 		exec bash "rm /etc/default/isc-dhcp-server"
-		copyto "/home/alex/work/vbox/testo/samples/additional_files/dhcp/master/dhcpd.conf" "/etc/dhcp/"
-		copyto "/home/alex/work/vbox/testo/samples/additional_files/dhcp/master/isc-dhcp-server" "/etc/default/"
+		copyto $TESTO_DIR + "/samples/additional_files/dhcp/master/dhcpd.conf" "/etc/dhcp/"
+		copyto $TESTO_DIR + "/samples/additional_files/dhcp/master/isc-dhcp-server" "/etc/default/"
 		exec bash """
 			ip a a 192.168.1.1/24 dev client_side
 			ip l s client_side up

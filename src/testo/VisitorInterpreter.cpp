@@ -49,15 +49,15 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	if (fd->create()) {
 		throw std::runtime_error(std::string(flash->begin()) + ": Error while creating flash drive " + flash->name.value());
 	}
-	
+
 	if (fd->has_folder()) {
 		std::cout << "Loading folder to flash drive " << fd->name() << std::endl;
 		if (fd->load_folder()) {
-			throw std::runtime_error(std::string(flash->begin()) + ": Error while loading folder to flash drive " + 
+			throw std::runtime_error(std::string(flash->begin()) + ": Error while loading folder to flash drive " +
 				flash->name.value());
 		}
 
-	}	
+	}
 }
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
@@ -163,8 +163,9 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 }
 
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::shared_ptr<Type> type) {
-	std::cout << "Typing " << type->text() << " on vm " << vm->name() << std::endl; 
-	if (vm->type(type->text())) {
+	std::string text = visit_word(vm, type->text_word);
+	std::cout << "Typing " << text << " on vm " << vm->name() << std::endl;
+	if (vm->type(text)) {
 		throw std::runtime_error(std::string(type->begin()) +
 			": Error while performing action: " +
 			std::string(*type) +
@@ -174,20 +175,25 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::share
 }
 
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::shared_ptr<Wait> wait) {
-	std::cout << "Waiting " << wait->text() << " on vm " << vm->name();
+	std::string text = "";
+	if (wait->text_word) {
+		text = visit_word(vm, wait->text_word);
+	}
+
+	std::cout << "Waiting " << text << " on vm " << vm->name();
 	if (wait->time_interval) {
 		std::cout << " for " << wait->time_interval.value();
 	}
 
 	std::cout << std::endl;
 
-	if (!wait->text_token) {
+	if (!wait->text_word) {
 		return sleep(wait->time_interval.value());
 	}
 
 	std::string wait_for = wait->time_interval ? wait->time_interval.value() : "10s";
 
-	if (vm->wait(wait->text(), wait_for)) {
+	if (vm->wait(text, wait_for)) {
 		throw std::runtime_error(std::string(wait->begin()) +
 			": Error while performing action: " +
 			std::string(*wait) +
@@ -247,16 +253,16 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
 	auto nics = vm->nics();
-	if (nics.find(plug->name()) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name() + 
+	if (nics.find(plug->name_token.value()) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name_token.value() +
 			" in VM " + vm->name());
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " nic " << plug->name() << " on vm " << vm->name() << std::endl;
+	std::cout << plug_unplug << " nic " << plug->name_token.value() << " on vm " << vm->name() << std::endl;
 
 	int result = 0;
-	result = vm->set_nic(plug->name(), plug->is_on());
+	result = vm->set_nic(plug->name_token.value(), plug->is_on());
 
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
@@ -268,16 +274,16 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
 	auto nics = vm->nics();
-	if (nics.find(plug->name()) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name() + 
+	if (nics.find(plug->name_token.value()) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name_token.value() +
 			" in VM " + vm->name());
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " link " << plug->name() << " on vm " << vm->name() << std::endl;
+	std::cout << plug_unplug << " link " << plug->name_token.value() << " on vm " << vm->name() << std::endl;
 
 	int result = 0;
-	result = vm->set_link(plug->name(), plug->is_on());
+	result = vm->set_link(plug->name_token.value(), plug->is_on());
 
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
@@ -286,7 +292,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
-	auto fd = global.fds.find(plug->name())->second; //should always be found
+	auto fd = global.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
 	if (vm->is_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
@@ -300,7 +306,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
-	auto fd = global.fds.find(plug->name())->second; //should always be found
+	auto fd = global.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Unplugging flash drive " << fd->name() << " from vm " << vm->name() << std::endl;
 	if (!vm->is_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging flash drive " + fd->name() +
@@ -315,9 +321,10 @@ void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::sha
 
 void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	if (plug->is_on()) {
-		std::cout << "Plugging dvd " << plug->name() << " in vm " << vm->name() << std::endl;
-		if (vm->plug_dvd(plug->name())) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging dvd " + plug->name() +
+		auto path = visit_word(vm, plug->path);
+		std::cout << "Plugging dvd " << path << " in vm " << vm->name() << std::endl;
+		if (vm->plug_dvd(path)) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging dvd " + path +
 				" from vm " + vm->name());
 		}
 	} else {
@@ -365,7 +372,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 		//In future this should be a function
 
 		std::string script = "set -e; set -o pipefail; set -x;";
-		script += exec->script();
+		script += visit_word(vm, exec->commands);
 
 		//copy the script to tmp folder
 		std::hash<std::string> h;
@@ -411,13 +418,17 @@ void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared
 
 	//TODO: redo!
 	for (auto assign: set->assignments) {
-		std::cout << assign->left.value() << " -> " << assign->value() << std::endl;
-		vm->set_metadata(assign->left.value(), assign->value());
+		std::string value = visit_word(vm, assign->right);
+		std::cout << assign->left.value() << " -> " << value << std::endl;
+		vm->set_metadata(assign->left.value(), value);
 	}
 }
 
 void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
-	std::cout << "Copying " << copyto->from() << " to vm " << vm->name() << " in directory " << copyto->to() << std::endl;
+	auto from = visit_word(vm, copyto->from);
+	auto to = visit_word(vm, copyto->to);
+
+	std::cout << "Copying " << from << " to vm " << vm->name() << " in directory " << to << std::endl;
 
 	if (!vm->is_running()) {
 		throw std::runtime_error(std::string(copyto->begin()) + ": Error: vm " + vm->name() + " is not running");
@@ -427,7 +438,7 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 		throw std::runtime_error(std::string(copyto->begin()) + ": Error: vbox additions are not installed on vm " + vm->name());
 	}
 
-	if (vm->copy_to_guest(copyto->from(), copyto->to())) {
+	if (vm->copy_to_guest(from, to)) {
 		throw std::runtime_error(std::string(copyto->begin()) + ": Error: copy to command failed");
 	}
 }
@@ -471,8 +482,8 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vm, std::shar
 }
 
 bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<IFactor> factor) {
-	if (auto p = std::dynamic_pointer_cast<Factor<Term>>(factor)) {
-		return p->is_negated() ^ visit_term(vm, p->factor).length();
+	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
+		return p->is_negated() ^ visit_word(vm, p->factor).length();
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
@@ -488,6 +499,8 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, co
 	//2) global (todo)
 	//3) env var
 
+	std::cout << "Resolving var " << var << std::endl;
+
 	if (vm->has_key(var)) {
 		return vm->get_metadata(var);
 	}
@@ -496,49 +509,57 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, co
 
 	if (env_value == nullptr) {
 		return "";
-	} 
+	}
 	return env_value;
 }
 
-std::string VisitorInterpreter::visit_term(std::shared_ptr<VmController> vm, std::shared_ptr<Term> term) {
-	if (term->type() == Token::category::dbl_quoted_string) {
-		return term->value();
-	} else if (term->type() == Token::category::var_ref) {
-		return resolve_var(vm, term->value());
-	} else {
-		throw std::runtime_error("Unknown term type");
+std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<Word> word) {
+	std::string result;
+
+	for (auto part: word->parts) {
+		if (part.type() == Token::category::dbl_quoted_string) {
+			result += part.value().substr(1, part.value().length() - 2);
+		} else if (part.type() == Token::category::var_ref) {
+			result += resolve_var(vm, part.value().substr(1, part.value().length() - 1));
+		} else if (part.type() == Token::category::multiline_string) {
+			result += part.value().substr(3, part.value().length() - 6);
+		} else {
+			throw std::runtime_error("Unknown word type");
+		}
 	}
+
+	return result;
 }
 
 bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<Comparison> comparison) {
-	auto left = visit_term(vm, comparison->left);
-	auto right = visit_term(vm, comparison->right);
+	auto left = visit_word(vm, comparison->left);
+	auto right = visit_word(vm, comparison->right);
 	if (comparison->op() == Token::category::GREATER) {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + std::string(*comparison->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + std::string(*comparison->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) > std::stoul(right);
 
 	} else if (comparison->op() == Token::category::LESS) {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + std::string(*comparison->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + std::string(*comparison->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) < std::stoul(right);
 
 	} else if (comparison->op() == Token::category::EQUAL) {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + comparison->left->value() + " is not an integer number");
+			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + std::string(*comparison->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + comparison->right->value() + " is not an integer number");
+			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + std::string(*comparison->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) == std::stoul(right);
@@ -556,7 +577,7 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std:
 
 void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot, bool recursive) {
 	if (recursive) {
-		if (snapshot->parent) { 
+		if (snapshot->parent) {
 			apply_actions(vm, snapshot->parent, true);
 		}
 	}
@@ -566,12 +587,12 @@ void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::sh
 	auto new_cksum = cksum(snapshot);
 	std::cout << "Taking snapshot " << snapshot->name.value() << " for vm " << vm->name() << std::endl;
 	if (vm->make_snapshot(snapshot->name)) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while creating snapshot" + 
+		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while creating snapshot" +
 			snapshot->name.value() + " for vm " + vm->name());
 	}
 	std::cout << "Setting snapshot " << snapshot->name.value() << " cksum: " << new_cksum << std::endl;
 	if (vm->set_snapshot_cksum(snapshot->name, new_cksum)) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while setting snapshot cksum" + 
+		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while setting snapshot cksum" +
 			snapshot->name.value() + " for vm " + vm->name());
 	}
 }
