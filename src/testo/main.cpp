@@ -28,15 +28,17 @@ int main(int argc, char** argv) {
 		if (src_file.is_relative()) {
 			src_file = fs::canonical(src_file);
 		}
-		
-		Interpreter runner(src_file);
+
+		Environment env;
+		ControllerCreator cc;
+		Interpreter runner(env, cc, src_file);
 		runner.run();
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
 		return -1;
 	}
 
-	
+
 
 	return 0;
 }

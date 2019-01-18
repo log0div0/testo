@@ -3,8 +3,8 @@
 
 using namespace AST;
 
-VisitorSemantic::VisitorSemantic(Global& global):
-	global(global)
+VisitorSemantic::VisitorSemantic(Register& reg, ControllerCreator& cc):
+	reg(reg), cc(cc)
 {
 		keys.insert("ESC");
 		keys.insert("ONE");
@@ -145,15 +145,15 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<IStmt> stmt) {
 
 void VisitorSemantic::visit_snapshot(std::shared_ptr<Snapshot> snapshot) {
 	std::cout << "Registering snapshot " << snapshot->name.value() << std::endl;
-	if (global.snapshots.find(snapshot->name) != global.snapshots.end()) {
+	if (reg.snapshots.find(snapshot->name) != reg.snapshots.end()) {
 		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: snapshot with name " + snapshot->name.value() +
 			" already exists");
 	}
 
 	if (snapshot->parent_name) {
-		auto found = global.snapshots.find(snapshot->parent_name);
+		auto found = reg.snapshots.find(snapshot->parent_name);
 
-		if (found == global.snapshots.end()) {
+		if (found == reg.snapshots.end()) {
 			throw std::runtime_error(std::string(snapshot->begin()) + ": Error: cannot find parent " + snapshot->parent_name.value() +
 				" for snapshot " + snapshot->name.value());
 		} else {
@@ -161,7 +161,7 @@ void VisitorSemantic::visit_snapshot(std::shared_ptr<Snapshot> snapshot) {
 		}
 	}
 
-	if (!global.snapshots.insert({snapshot->name, snapshot}).second) {
+	if (!reg.snapshots.insert({snapshot->name, snapshot}).second) {
 		throw std::runtime_error(std::string(snapshot->begin()) + ": Error while registering snapshot with name " +
 			snapshot->name.value());
 	}
@@ -172,12 +172,12 @@ void VisitorSemantic::visit_snapshot(std::shared_ptr<Snapshot> snapshot) {
 void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
 	std::cout << "Registering macro " << macro->name.value() << std::endl;
 
-	if (global.macros.find(macro->name) != global.macros.end()) {
+	if (reg.macros.find(macro->name) != reg.macros.end()) {
 		throw std::runtime_error(std::string(macro->begin()) + ": Error: macros with name " + macro->name.value() +
 			" already exists");
 	}
 
-	if (!global.macros.insert({macro->name, macro}).second) {
+	if (!reg.macros.insert({macro->name, macro}).second) {
 		throw std::runtime_error(std::string(macro->begin()) + ": Error while registering macro with name " +
 			macro->name.value());
 	}
@@ -190,24 +190,24 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 		visit_vm_state(state);
 	}
 	visit_command_block(test->cmd_block);
-	global.local_vms.clear();
+	reg.local_vms.clear();
 }
 
 void VisitorSemantic::visit_vm_state(std::shared_ptr<VmState> vm_state) {
-	auto vm = global.vms.find(vm_state->name);
-	if (vm == global.vms.end()) {
+	auto vm = reg.vms.find(vm_state->name);
+	if (vm == reg.vms.end()) {
 		throw std::runtime_error(std::string(vm_state->begin()) + ": Error: unknown vm name: " + vm_state->name.value());
 	}
 
 	if (vm_state->snapshot_name) {
-		auto snapshot = global.snapshots.find(vm_state->snapshot_name);
-		if (snapshot == global.snapshots.end()) {
+		auto snapshot = reg.snapshots.find(vm_state->snapshot_name);
+		if (snapshot == reg.snapshots.end()) {
 			throw std::runtime_error(std::string(vm_state->begin()) + ": Error: unknown snapshot: " + vm_state->snapshot_name.value());
 		}
 		vm_state->snapshot = snapshot->second;
 	}
 
-	global.local_vms.insert({vm_state->name, vm->second});
+	reg.local_vms.insert({vm_state->name, vm->second});
 }
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
@@ -219,8 +219,8 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
 
 void VisitorSemantic::visit_command(std::shared_ptr<Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
-		auto vm = global.local_vms.find(vm_token.value());
-		if (vm == global.local_vms.end()) {
+		auto vm = reg.local_vms.find(vm_token.value());
+		if (vm == reg.local_vms.end()) {
 			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: unknown vm name: " + vm_token.value());
 		}
 	}
@@ -265,7 +265,7 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
 
 void VisitorSemantic::visit_plug(std::shared_ptr<Plug> plug) {
 	if (plug->type.value() == "flash") {
-		if (global.fds.find(plug->name_token.value()) == global.fds.end()) {
+		if (reg.fds.find(plug->name_token.value()) == reg.fds.end()) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
 		}
 	}
@@ -278,8 +278,8 @@ void VisitorSemantic::visit_exec(std::shared_ptr<Exec> exec) {
 }
 
 void VisitorSemantic::visit_macro_call(std::shared_ptr<MacroCall> macro_call) {
-	auto macro = global.macros.find(macro_call->name());
-	if (macro == global.macros.end()) {
+	auto macro = reg.macros.find(macro_call->name());
+	if (macro == reg.macros.end()) {
 		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
 	}
 	macro_call->macro = macro->second;
@@ -297,7 +297,7 @@ void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {
 
 void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 	std::cout << "Registering machine " << machine->name.value() << std::endl;
-	if (global.vms.find(machine->name) != global.vms.end()) {
+	if (reg.vms.find(machine->name) != reg.vms.end()) {
 		throw std::runtime_error(std::string(machine->begin()) + ": Error: machine with name " + machine->name.value() +
 			" already exists");
 	}
@@ -305,13 +305,13 @@ void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["name"] = machine->name.value();
 
-	auto vm = std::shared_ptr<VmController>(new VmController(config));
-	global.vms.emplace(std::make_pair(machine->name, vm));
+	auto vm = std::shared_ptr<VmController>(cc.create_vm_controller(config));
+	reg.vms.emplace(std::make_pair(machine->name, vm));
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<Controller> flash) {
 	std::cout << "Registering flash " << flash->name.value() << std::endl;
-	if (global.fds.find(flash->name) != global.fds.end()) {
+	if (reg.fds.find(flash->name) != reg.fds.end()) {
 		throw std::runtime_error(std::string(flash->begin()) + ": Error: flash drive with name " + flash->name.value() +
 			" already exists");
 	}
@@ -319,8 +319,8 @@ void VisitorSemantic::visit_flash(std::shared_ptr<Controller> flash) {
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
 	config["name"] = flash->name.value();
 
-	auto fd = std::shared_ptr<FlashDriveController>(new FlashDriveController(config));
-	global.fds.emplace(std::make_pair(flash->name, fd));
+	auto fd = std::shared_ptr<FlashDriveController>(cc.create_flash_drive_controller(config));
+	reg.fds.emplace(std::make_pair(flash->name, fd));
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AttrBlock> attr_block, const std::string& ctx_name) {

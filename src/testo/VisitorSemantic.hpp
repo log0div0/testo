@@ -2,14 +2,14 @@
 #pragma once
 
 #include "Node.hpp"
-#include "Global.hpp"
+#include "Register.hpp"
 
-#include "VmController.hpp"
+#include "ControllerCreator.hpp"
 
 #include <set>
 
 struct VisitorSemantic {
-	VisitorSemantic(Global& global);
+	VisitorSemantic(Register& reg, ControllerCreator& cc);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -42,5 +42,6 @@ struct VisitorSemantic {
 	using attr_ctx = std::unordered_map<std::string, std::pair<bool, Token::category>>;
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 
-	Global& global;
+	Register& reg;
+	ControllerCreator& cc;
 };

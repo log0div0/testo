@@ -2,12 +2,13 @@
 #pragma once
 
 #include "FlashDriveController.hpp"
+#include "API.hpp"
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 #include <nlohmann/json.hpp>
 
 struct VmController {
-	VmController() = default;
+	VmController() = delete;
 	VmController(const nlohmann::json& config);
 	int install();
 	int make_snapshot(const std::string& snapshot);
@@ -61,4 +62,6 @@ private:
 	std::unordered_map<char, std::vector<std::string>> charmap;
 
 	nlohmann::json config;
+
+	API& api;
 };

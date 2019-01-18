@@ -3,6 +3,7 @@
 
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
+#include "API.hpp"
 #include "Utils.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -11,7 +12,7 @@
 
 
 struct FlashDriveController {
-	FlashDriveController() = default;
+	FlashDriveController() = delete;
 	FlashDriveController(const FlashDriveController& other) = delete;
 	FlashDriveController(const nlohmann::json& config);
 	int create();
@@ -40,4 +41,5 @@ private:
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 	nlohmann::json config;
+	API& api;
 };

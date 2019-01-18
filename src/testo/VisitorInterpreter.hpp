@@ -2,12 +2,12 @@
 #pragma once
 
 #include "Node.hpp"
-#include "Global.hpp"
-#include "VmController.hpp"
+#include "Register.hpp"
+#include "ControllerCreator.hpp"
 
 struct VisitorInterpreter {
-	VisitorInterpreter(Global& global):
-		global(global) {}
+	VisitorInterpreter(Register& reg):
+		reg(reg) {}
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -50,5 +50,5 @@ struct VisitorInterpreter {
 	std::string cksum(std::shared_ptr<AST::Snapshot> snapshot);
 	std::string cksum(std::shared_ptr<AST::Controller> controller);
 
-	Global& global;
+	Register& reg;
 };

@@ -3,14 +3,13 @@
 #include <vbox/lock.hpp>
 #include <functional>
 
-#include "API.hpp"
 #include "Utils.hpp"
 
 #include <chrono>
 #include <thread>
 #include <regex>
 
-VmController::VmController(const nlohmann::json& config): config(config) {
+VmController::VmController(const nlohmann::json& config): config(config), api(API::instance()) {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VmController error: field NAME is not specified");
 	}
@@ -806,7 +805,7 @@ int VmController::wait(const std::string& text, const std::string& time) {
 			vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_PNG);
 			vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
 
-			if (API::instance().darknet_api.match(array_out.data(), array_out.size(), text)) {
+			if (api.darknet_api.match(array_out.data(), array_out.size(), text)) {
 				return 0;
 			}
 

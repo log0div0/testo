@@ -2,13 +2,17 @@
 #pragma once
 
 #include "Parser.hpp"
-#include "Global.hpp"
+#include "Environment.hpp"
+#include "Register.hpp"
+#include "ControllerCreator.hpp"
 #include "Utils.hpp"
 
 struct Interpreter {
-	Interpreter(const fs::path& file);
+	Interpreter(Environment& env, ControllerCreator& cc, const fs::path& file);
 	int run();
-	Global global;
 private:
+	Environment& env;
+	ControllerCreator& cc;
 	Parser parser;
+	Register reg;
 };

@@ -6,7 +6,7 @@
 #include <chrono>
 
 FlashDriveController::FlashDriveController(const nlohmann::json& config):
-config(config)
+config(config), api(API::instance())
 {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing FlashDriveController error: field NAME is not specified");
@@ -44,8 +44,8 @@ int FlashDriveController::create() {
 		exec_and_throw_if_failed(std::string("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% ") +
 			size);
 
-		exec_and_throw_if_failed(std::string("mkfs.") + 
-			config.at("fs").get<std::string>() + 
+		exec_and_throw_if_failed(std::string("mkfs.") +
+			config.at("fs").get<std::string>() +
 			" /dev/nbd0");
 
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
