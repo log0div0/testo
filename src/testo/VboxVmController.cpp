@@ -1,5 +1,6 @@
 
-#include "VmController.hpp"
+#include "VboxVmController.hpp"
+#include "VboxFlashDriveController.hpp"
 #include <vbox/lock.hpp>
 #include <functional>
 
@@ -9,50 +10,50 @@
 #include <thread>
 #include <regex>
 
-VmController::VmController(const nlohmann::json& config): config(config), api(API::instance()) {
+VboxVmController::VboxVmController(const nlohmann::json& config): config(config), api(API::instance()) {
 	if (!config.count("name")) {
-		throw std::runtime_error("Constructing VmController error: field NAME is not specified");
+		throw std::runtime_error("Constructing VboxVmController error: field NAME is not specified");
 	}
 
 	if (!config.count("ram")) {
-		throw std::runtime_error("Constructing VmController error: field RAM is not specified");
+		throw std::runtime_error("Constructing VboxVmController error: field RAM is not specified");
 	}
 
 	if (!config.count("cpus")) {
-		throw std::runtime_error("Constructing VmController error: field CPUS is not specified");
+		throw std::runtime_error("Constructing VboxVmController error: field CPUS is not specified");
 	}
 
 	if (!config.count("iso")) {
-		throw std::runtime_error("Constructing VmController error: field ISO is not specified");
+		throw std::runtime_error("Constructing VboxVmController error: field ISO is not specified");
 	}
 
 	if (!config.count("disk_size")) {
-		throw std::runtime_error("Constructing VmController error: field DISK SIZE is not specified");
+		throw std::runtime_error("Constructing VboxVmController error: field DISK SIZE is not specified");
 	}
 
 	if (config.count("nic")) {
 		auto nics = config.at("nic");
 		for (auto& nic: nics) {
 			if (!nic.count("slot")) {
-				throw std::runtime_error("Constructing VmController error: field slot is not specified for the nic " +
+				throw std::runtime_error("Constructing VboxVmController error: field slot is not specified for the nic " +
 					nic.at("name").get<std::string>());
 			}
 
 			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing VmController error: field attached_to is not specified for the nic " +
+				throw std::runtime_error("Constructing VboxVmController error: field attached_to is not specified for the nic " +
 					nic.at("name").get<std::string>());
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "internal") {
 				if (!nic.count("network")) {
-					throw std::runtime_error("Constructing VmController error: nic " +
+					throw std::runtime_error("Constructing VboxVmController error: nic " +
 					nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
 				}
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "nat") {
 				if (nic.count("network")) {
-					throw std::runtime_error("Constructing VmController error: nic " +
+					throw std::runtime_error("Constructing VboxVmController error: nic " +
 					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
 				}
 			}
@@ -61,12 +62,12 @@ VmController::VmController(const nlohmann::json& config): config(config), api(AP
 		for (uint32_t i = 0; i < nics.size(); i++) {
 			for (uint32_t j = i + 1; j < nics.size(); j++) {
 				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing VmController error: two identical NIC names: " +
+					throw std::runtime_error("Constructing VboxVmController error: two identical NIC names: " +
 						nics[i].at("name").get<std::string>());
 				}
 
 				if (nics[i].at("slot") == nics[j].at("slot")) {
-					throw std::runtime_error("Constructing VmController error: two identical SLOTS: " +
+					throw std::runtime_error("Constructing VboxVmController error: two identical SLOTS: " +
 						nics[i].at("slot").get<uint32_t>());
 				}
 			}
@@ -79,7 +80,7 @@ VmController::VmController(const nlohmann::json& config): config(config), api(AP
 	work_session = virtual_box_client.session();
 
 	if (!config.count("os_type")) {
-		throw std::runtime_error("Constructing VmController error: field OSType is not specified");
+		throw std::runtime_error("Constructing VboxVmController error: field OSType is not specified");
 	}
 
 	charmap.insert({
@@ -196,7 +197,7 @@ VmController::VmController(const nlohmann::json& config): config(config), api(AP
 	});
 }
 
-void VmController::remove_if_exists() {
+void VboxVmController::remove_if_exists() {
 	try {
 		std::vector<vbox::Machine> machines = virtual_box.machines();
 		for (auto& machine: machines) {
@@ -224,7 +225,7 @@ void VmController::remove_if_exists() {
 	}
 }
 
-void VmController::create_vm() {
+void VboxVmController::create_vm() {
 	try {
 		{
 			vbox::GuestOSType guest_os_type = virtual_box.get_guest_os_type(config.at("os_type").get<std::string>());
@@ -331,7 +332,7 @@ void VmController::create_vm() {
 	}
 }
 
-int VmController::set_metadata(const nlohmann::json& metadata) {
+int VboxVmController::set_metadata(const nlohmann::json& metadata) {
 	try {
 		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
 			auto lock_machine = virtual_box.find_machine(name());
@@ -348,7 +349,7 @@ int VmController::set_metadata(const nlohmann::json& metadata) {
 	}
 }
 
-int VmController::set_metadata(const std::string& key, const std::string& value) {
+int VboxVmController::set_metadata(const std::string& key, const std::string& value) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -362,7 +363,7 @@ int VmController::set_metadata(const std::string& key, const std::string& value)
 	}
 }
 
-bool VmController::has_key(const std::string& key) {
+bool VboxVmController::has_key(const std::string& key) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -382,7 +383,7 @@ bool VmController::has_key(const std::string& key) {
 	}
 }
 
-std::string VmController::get_metadata(const std::string& key) {
+std::string VboxVmController::get_metadata(const std::string& key) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -395,7 +396,7 @@ std::string VmController::get_metadata(const std::string& key) {
 	}
 }
 
-int VmController::install() {
+int VboxVmController::install() {
 	try {
 		remove_if_exists();
 		create_vm();
@@ -414,7 +415,7 @@ int VmController::install() {
 	}
 }
 
-int VmController::make_snapshot(const std::string& snapshot) {
+int VboxVmController::make_snapshot(const std::string& snapshot) {
 	try {
 		{
 			auto lock_machine = virtual_box.find_machine(name());
@@ -448,12 +449,12 @@ int VmController::make_snapshot(const std::string& snapshot) {
 	}
 }
 
-std::string VmController::config_cksum() const {
+std::string VboxVmController::config_cksum() const {
 	std::hash<std::string> h;
 	return std::to_string(h(config.dump()));
 }
 
-std::set<std::string> VmController::nics() const {
+std::set<std::string> VboxVmController::nics() const {
 	std::set<std::string> result;
 
 	for (auto& nic: config.at("nic")) {
@@ -462,7 +463,7 @@ std::set<std::string> VmController::nics() const {
 	return result;
 }
 
-int VmController::set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) {
+int VboxVmController::set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -476,7 +477,7 @@ int VmController::set_snapshot_cksum(const std::string& snapshot, const std::str
 	}
 }
 
-std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
+std::string VboxVmController::get_snapshot_cksum(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -489,7 +490,7 @@ std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
 	}
 }
 
-int VmController::rollback(const std::string& snapshot) {
+int VboxVmController::rollback(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		if (is_running()) {
@@ -514,7 +515,7 @@ int VmController::rollback(const std::string& snapshot) {
 	}
 }
 
-int VmController::press(const std::vector<std::string>& buttons) {
+int VboxVmController::press(const std::vector<std::string>& buttons) {
 	try {
 		auto machine = virtual_box.find_machine(name());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
@@ -528,7 +529,7 @@ int VmController::press(const std::vector<std::string>& buttons) {
 	}
 }
 
-int VmController::set_nic(const std::string& nic, bool is_enabled) {
+int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 	try {
 		if (!config.count("nic")) {
 			throw std::runtime_error("There's no nics in this vm");
@@ -557,7 +558,7 @@ int VmController::set_nic(const std::string& nic, bool is_enabled) {
 	}
 }
 
-int VmController::set_link(const std::string& nic, bool is_connected) {
+int VboxVmController::set_link(const std::string& nic, bool is_connected) {
 	try {
 		if (!config.count("nic")) {
 			throw std::runtime_error("There's no nics in this vm");
@@ -585,11 +586,11 @@ int VmController::set_link(const std::string& nic, bool is_connected) {
 	}
 }
 
-bool VmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {
+bool VboxVmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {
 	return (plugged_fds.find(fd) != plugged_fds.end());
 }
 
-int VmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+int VboxVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
 		if (plugged_fds.find(fd) != plugged_fds.end()) {
 			throw std::runtime_error("This flash drive is already attached to this vm");
@@ -619,7 +620,8 @@ int VmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 			}
 		}
 
-		machine.attach_device("USB", empty_slot, 0, DeviceType_HardDisk, fd->handle);
+		auto& handle = std::dynamic_pointer_cast<VboxFlashDriveController>(fd)->handle;
+		machine.attach_device("USB", empty_slot, 0, DeviceType_HardDisk, handle);
 		machine.save_settings();
 		plugged_fds.insert(fd);
 		return 0;
@@ -629,7 +631,7 @@ int VmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	}
 }
 
-int VmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+int VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
 		if (plugged_fds.find(fd) == plugged_fds.end()) {
 			throw std::runtime_error("This flash drive is not plugged to this vm");
@@ -642,8 +644,10 @@ int VmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 
 		auto attachments = machine.medium_attachments_of_controller("USB");
 
+		auto& handle = std::dynamic_pointer_cast<VboxFlashDriveController>(fd)->handle;
+
 		for (auto& attachment: attachments) {
-			if (attachment.medium().handle == fd->handle.handle) {
+			if (attachment.medium().handle == handle.handle) {
 				machine.detach_device("USB", attachment.port(), attachment.device());
 			}
 		}
@@ -656,7 +660,13 @@ int VmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	}
 }
 
-int VmController::plug_dvd(fs::path path) {
+void VboxVmController::unplug_all_flash_drives() {
+	while (!plugged_fds.empty()) {
+		unplug_flash_drive(*plugged_fds.begin());
+	}
+}
+
+int VboxVmController::plug_dvd(fs::path path) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 
@@ -688,7 +698,7 @@ int VmController::plug_dvd(fs::path path) {
 	}
 }
 
-int VmController::unplug_dvd() {
+int VboxVmController::unplug_dvd() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -716,7 +726,7 @@ int VmController::unplug_dvd() {
 	}
 }
 
-int VmController::start() {
+int VboxVmController::start() {
 	try {
 		auto machine = virtual_box.find_machine(name());
 		machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
@@ -729,7 +739,7 @@ int VmController::start() {
 	}
 }
 
-int VmController::stop() {
+int VboxVmController::stop() {
 	try {
 		//In the end of stop we should enter session state UNLOCKED (even if the vm was being viewed by the user in GUI)
 		//So we lock our machine, then destroy lock and wait for session state to become unlocked
@@ -752,7 +762,7 @@ int VmController::stop() {
 	}
 }
 
-int VmController::type(const std::string& text) {
+int VboxVmController::type(const std::string& text) {
 	try {
 		auto machine = virtual_box.find_machine(name());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
@@ -775,7 +785,7 @@ int VmController::type(const std::string& text) {
 	}
 }
 
-int VmController::wait(const std::string& text, const std::string& time) {
+int VboxVmController::wait(const std::string& text, const std::string& time) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -818,7 +828,7 @@ int VmController::wait(const std::string& text, const std::string& time) {
 	}
 }
 
-int VmController::run(const fs::path& exe, std::vector<std::string> args) {
+int VboxVmController::run(const fs::path& exe, std::vector<std::string> args) {
 	try {
 		args.insert(args.begin(), "--");
 		uint32_t timeout = 10 * 60 * 1000; //10 mins
@@ -898,7 +908,7 @@ int VmController::run(const fs::path& exe, std::vector<std::string> args) {
 	}
 }
 
-bool VmController::has_snapshot(const std::string& snapshot) {
+bool VboxVmController::has_snapshot(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -910,7 +920,7 @@ bool VmController::has_snapshot(const std::string& snapshot) {
 	}
 }
 
-bool VmController::is_defined() const {
+bool VboxVmController::is_defined() const {
 	std::vector<vbox::Machine> machines = virtual_box.machines();
 	for (auto& machine: machines) {
 		if (machine.name() == name()) {
@@ -920,7 +930,7 @@ bool VmController::is_defined() const {
 	return false;
 }
 
-bool VmController::is_running() {
+bool VboxVmController::is_running() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -932,7 +942,7 @@ bool VmController::is_running() {
 	}
 }
 
-void VmController::delete_snapshot_with_children(vbox::Snapshot& snapshot) {
+void VboxVmController::delete_snapshot_with_children(vbox::Snapshot& snapshot) {
 	auto children = snapshot.children();
 
 	if (children.size()) {
@@ -945,7 +955,7 @@ void VmController::delete_snapshot_with_children(vbox::Snapshot& snapshot) {
 	machine.deleteSnapshot(snapshot).wait_and_throw_if_failed();
 }
 
-bool VmController::is_additions_installed() {
+bool VboxVmController::is_additions_installed() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -963,7 +973,7 @@ bool VmController::is_additions_installed() {
 	}
 }
 
-void VmController::copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::GuestSession& gsession) {
+void VboxVmController::copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::GuestSession& gsession) {
 	gsession.directory_create(dst);
 
 	for (auto& file: fs::directory_iterator(src)) {
@@ -975,7 +985,7 @@ void VmController::copy_dir_to_guest(const fs::path& src, const fs::path& dst, v
 	}
 }
 
-int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
+int VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -1025,7 +1035,7 @@ int VmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
-int VmController::remove_from_guest(const fs::path& obj) {
+int VboxVmController::remove_from_guest(const fs::path& obj) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);

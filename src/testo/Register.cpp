@@ -9,8 +9,6 @@ Register::~Register() {
 	}
 
 	for (auto vm: vms) {
-		while (!vm.second->plugged_fds.empty()) {
-			vm.second->unplug_flash_drive(*vm.second->plugged_fds.begin());
-		}
+		vm.second->unplug_all_flash_drives();
 	}
 }

@@ -5,11 +5,18 @@
 #include "Register.hpp"
 
 struct Environment {
-	Environment(): api(API::instance()) {}
-	~Environment();
+	virtual ~Environment() = default;
 
-	void setup();
-	void cleanup();
+	virtual void setup() = 0;
+	virtual void cleanup() = 0;
+};
+
+struct VboxEnvironment: public Environment {
+	VboxEnvironment(): api(API::instance()) {}
+	~VboxEnvironment();
+
+	void setup() override;
+	void cleanup() override;
 
 	API& api;
 };

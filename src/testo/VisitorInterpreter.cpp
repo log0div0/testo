@@ -296,7 +296,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
 	if (vm->is_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
-			" in vm " + vm->name() + ": this flash drive is already plugged into " + fd->current_vm);
+			" in vm " + vm->name() + ": this flash drive is already plugged into " + vm->name());
 	}
 
 	if (vm->plug_flash_drive(fd)) {

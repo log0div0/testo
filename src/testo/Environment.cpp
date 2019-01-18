@@ -2,15 +2,17 @@
 #include "Environment.hpp"
 #include <iostream>
 #include "Utils.hpp"
+#include <vbox/virtual_box_client.hpp>
+#include <vbox/virtual_box.hpp>
 
-Environment::~Environment() {
+VboxEnvironment::~VboxEnvironment() {
 	try {
 		cleanup();
 	} catch (...) {}
 }
 
 
-void Environment::setup() {
+void VboxEnvironment::setup() {
 	cleanup();
 
 	if (std::system("lsmod | grep nbd > /dev/null")) {
@@ -22,7 +24,7 @@ void Environment::setup() {
 	exec_and_throw_if_failed("mkdir -p " + scripts_tmp_dir().generic_string());
 }
 
-void Environment::cleanup() {
+void VboxEnvironment::cleanup() {
 	std::string fdisk = std::string("fdisk -l | grep nbd0");
 	if (std::system(fdisk.c_str()) == 0) {
 		exec_and_throw_if_failed(std::string("qemu-nbd --disconnect /dev/nbd0"));
