@@ -4,12 +4,12 @@
 #include "Node.hpp"
 #include "Register.hpp"
 
-#include "ControllerCreator.hpp"
+#include "Environment.hpp"
 
 #include <set>
 
 struct VisitorSemantic {
-	VisitorSemantic(Register& reg, ControllerCreator& cc);
+	VisitorSemantic(Register& reg, Environment& env);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -43,5 +43,5 @@ struct VisitorSemantic {
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 
 	Register& reg;
-	ControllerCreator& cc;
+	Environment& env;
 };

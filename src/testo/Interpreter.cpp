@@ -5,15 +5,14 @@
 
 using namespace AST;
 
-Interpreter::Interpreter(Environment& env, ControllerCreator& cc, const fs::path& file):
+Interpreter::Interpreter(Environment& env, const fs::path& file):
 	env(env),
-	cc(cc),
 	parser(file)
 {}
 
 int Interpreter::run() {
 	auto program = parser.parse();
-	VisitorSemantic semantic(reg, cc);
+	VisitorSemantic semantic(reg, env);
 
 	env.setup(); //prepare the environment
 	semantic.visit(program);

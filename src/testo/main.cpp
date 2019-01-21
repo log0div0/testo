@@ -30,8 +30,7 @@ int main(int argc, char** argv) {
 		}
 
 		VboxEnvironment env;
-		VboxControllerCreator cc;
-		Interpreter runner(env, cc, src_file);
+		Interpreter runner(env, src_file);
 		runner.run();
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
