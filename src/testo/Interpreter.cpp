@@ -5,19 +5,19 @@
 
 using namespace AST;
 
-Interpreter::Interpreter(const fs::path& file):
-	global(),
+Interpreter::Interpreter(Environment& env, const fs::path& file):
+	env(env),
 	parser(file)
 {}
 
 int Interpreter::run() {
 	auto program = parser.parse();
-	VisitorSemantic semantic(global);
+	VisitorSemantic semantic(reg, env);
 
-	global.setup(); //prepare the environment
+	env.setup(); //prepare the environment
 	semantic.visit(program);
 
-	VisitorInterpreter runner(global);
+	VisitorInterpreter runner(reg);
 	runner.visit(program);
 	return 0;
 }

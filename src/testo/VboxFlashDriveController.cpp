@@ -1,30 +1,30 @@
 
-#include "FlashDriveController.hpp"
+#include "VboxFlashDriveController.hpp"
 #include "Utils.hpp"
 #include <functional>
 #include <thread>
 #include <chrono>
 
-FlashDriveController::FlashDriveController(const nlohmann::json& config):
-config(config)
+VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config):
+config(config), api(API::instance())
 {
 	if (!config.count("name")) {
-		throw std::runtime_error("Constructing FlashDriveController error: field NAME is not specified");
+		throw std::runtime_error("Constructing VboxFlashDriveController error: field NAME is not specified");
 	}
 
 	if (!config.count("size")) {
-		throw std::runtime_error("Constructing FlashDriveController error: field SIZE is not specified");
+		throw std::runtime_error("Constructing VboxFlashDriveController error: field SIZE is not specified");
 	}
 
 	//TODO: check for fs types
 	if (!config.count("fs")) {
-		throw std::runtime_error("Constructing FlashDriveController error: field FS is not specified");
+		throw std::runtime_error("Constructing VboxFlashDriveController error: field FS is not specified");
 	}
 
 	virtual_box = virtual_box_client.virtual_box();
 }
 
-int FlashDriveController::create() {
+int VboxFlashDriveController::create() {
 	try {
 		std::string fdisk = std::string("fdisk -l | grep nbd0");
 		if (std::system(fdisk.c_str()) == 0) {
@@ -44,8 +44,8 @@ int FlashDriveController::create() {
 		exec_and_throw_if_failed(std::string("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% ") +
 			size);
 
-		exec_and_throw_if_failed(std::string("mkfs.") + 
-			config.at("fs").get<std::string>() + 
+		exec_and_throw_if_failed(std::string("mkfs.") +
+			config.at("fs").get<std::string>() +
 			" /dev/nbd0");
 
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
@@ -56,12 +56,12 @@ int FlashDriveController::create() {
 	}
 }
 
-bool FlashDriveController::is_mounted() const {
+bool VboxFlashDriveController::is_mounted() const {
 	std::string query = std::string("mountpoint -q " + flash_drives_mount_dir().generic_string());
 	return (std::system(query.c_str()) == 0);
 }
 
-int FlashDriveController::mount() const {
+int VboxFlashDriveController::mount() const {
 	try {
 		std::string fdisk = std::string("fdisk -l | grep nbd0");
 		if (std::system(fdisk.c_str()) == 0) {
@@ -80,7 +80,7 @@ int FlashDriveController::mount() const {
 	}
 }
 
-int FlashDriveController::umount() const {
+int VboxFlashDriveController::umount() const {
 	try {
 		exec_and_throw_if_failed(std::string("umount /dev/nbd0"));
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
@@ -91,7 +91,7 @@ int FlashDriveController::umount() const {
 	}
 }
 
-int FlashDriveController::load_folder() const {
+int VboxFlashDriveController::load_folder() const {
 	try {
 		fs::path target_folder(config.at("folder").get<std::string>());
 

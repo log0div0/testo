@@ -1,52 +1,34 @@
 
-#include "Global.hpp"
+#include "Environment.hpp"
 #include <iostream>
 #include "Utils.hpp"
+#include <vbox/virtual_box_client.hpp>
+#include <vbox/virtual_box.hpp>
 
-
-Global::Global(): api(API::instance()) {}
-
-Global::~Global() {
+VboxEnvironment::~VboxEnvironment() {
 	try {
 		cleanup();
 	} catch (...) {}
 }
 
 
-void Global::setup() {
+void VboxEnvironment::setup() {
 	cleanup();
 
 	if (std::system("lsmod | grep nbd > /dev/null")) {
 		throw std::runtime_error("Please load nbd module (max parts=1");
 	}
 
-	//std::cout << flash_drives_img_dir() << std::endl;
 	exec_and_throw_if_failed("mkdir -p " + flash_drives_img_dir().generic_string());
 	exec_and_throw_if_failed("mkdir -p " + flash_drives_mount_dir().generic_string());
 	exec_and_throw_if_failed("mkdir -p " + scripts_tmp_dir().generic_string());
 }
 
-
-void Global::cleanup() {
-	for (auto fd: fds) {
-		if (fd.second->is_mounted()) {
-			fd.second->umount();
-		}
-	}
-
+void VboxEnvironment::cleanup() {
 	std::string fdisk = std::string("fdisk -l | grep nbd0");
 	if (std::system(fdisk.c_str()) == 0) {
 		exec_and_throw_if_failed(std::string("qemu-nbd --disconnect /dev/nbd0"));
 	}
-
-	//detach all plugged flash drives
-
-	for (auto vm: vms) {
-		while (!vm.second->plugged_fds.empty()) {
-			vm.second->unplug_flash_drive(*vm.second->plugged_fds.begin());			
-		}
-	}
-
 
 	if (!fs::exists(flash_drives_img_dir())) {
 		return;
@@ -66,7 +48,7 @@ void Global::cleanup() {
 		}
 	}
 
-	//now we need to close all the open 
+	//now we need to close all the open
 
 	exec_and_throw_if_failed("rm -rf " + flash_drives_img_dir().generic_string());
 }

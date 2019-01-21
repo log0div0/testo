@@ -44,7 +44,7 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	std::cout << "Creating flash drive " << flash->name.value() << std::endl;
 
-	auto fd = global.fds.find(flash->name)->second; //should always be found
+	auto fd = reg.fds.find(flash->name)->second; //should always be found
 
 	if (fd->create()) {
 		throw std::runtime_error(std::string(flash->begin()) + ": Error while creating flash drive " + flash->name.value());
@@ -69,15 +69,15 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 	visit_command_block(test->cmd_block);
 
-	global.local_vms.clear();
+	reg.local_vms.clear();
 
 	std::cout << "Test \"" << test->name.value() << "\" passed\n";
 }
 
 void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
-	auto vm = global.vms.find(vm_state->name)->second;
+	auto vm = reg.vms.find(vm_state->name)->second;
 
-	global.local_vms.insert({vm_state->name, vm});
+	reg.local_vms.insert({vm_state->name, vm});
 	if (!vm_state->snapshot) {
 		if (vm->install()) {
 			throw std::runtime_error(std::string(vm_state->begin()) +
@@ -120,7 +120,7 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<CmdBlock> block) {
 
 void VisitorInterpreter::visit_command(std::shared_ptr<Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
-		auto vm = global.local_vms.find(vm_token.value());
+		auto vm = reg.local_vms.find(vm_token.value());
 		visit_action(vm->second, cmd->action);
 	}
 }
@@ -292,11 +292,11 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
-	auto fd = global.fds.find(plug->name_token.value())->second; //should always be found
+	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
 	if (vm->is_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
-			" in vm " + vm->name() + ": this flash drive is already plugged into " + fd->current_vm);
+			" in vm " + vm->name() + ": this flash drive is already plugged into " + vm->name());
 	}
 
 	if (vm->plug_flash_drive(fd)) {
@@ -306,7 +306,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
-	auto fd = global.fds.find(plug->name_token.value())->second; //should always be found
+	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Unplugging flash drive " << fd->name() << " from vm " << vm->name() << std::endl;
 	if (!vm->is_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging flash drive " + fd->name() +
@@ -496,7 +496,7 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vm, std::sha
 std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, const std::string& var) {
 	//Resolving order
 	//1) metadata
-	//2) global (todo)
+	//2) reg (todo)
 	//3) env var
 
 	std::cout << "Resolving var " << var << std::endl;
