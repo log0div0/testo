@@ -7,7 +7,11 @@
 
 struct Pos {
 	Pos() = default;
-	Pos(const fs::path& file, const std::string& input): file(file), input(input) {}
+	Pos(const fs::path& file, const std::string& input): file(file), input(input) {
+		if (file.is_relative()) {
+			this->file = fs::canonical(file);
+		}
+	}
 
 	void advance(size_t shift = 1) {
 		while (shift != 0) {
@@ -46,8 +50,8 @@ private:
 	std::string input;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Pos& pos)  
+inline std::ostream& operator<<(std::ostream& os, const Pos& pos)
 {
 	os << std::string(pos);
-	return os;  
+	return os;
 }

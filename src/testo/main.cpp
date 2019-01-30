@@ -25,10 +25,6 @@ int main(int argc, char** argv) {
 			throw std::runtime_error("Fatal error: file doesn't exist: " + src_file.generic_string());
 		}
 
-		if (src_file.is_relative()) {
-			src_file = fs::canonical(src_file);
-		}
-
 		VboxEnvironment env;
 		Interpreter runner(env, src_file);
 		runner.run();

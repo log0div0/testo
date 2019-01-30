@@ -11,8 +11,8 @@ struct Environment {
 	virtual void setup() = 0;
 	virtual void cleanup() = 0;
 
-	virtual VmController* create_vm_controller(const nlohmann::json& config) = 0;
-	virtual FlashDriveController* create_flash_drive_controller(const nlohmann::json& config) = 0;
+	virtual std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) = 0;
+	virtual std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) = 0;
 };
 
 struct VboxEnvironment: public Environment {
@@ -22,12 +22,12 @@ struct VboxEnvironment: public Environment {
 	void setup() override;
 	void cleanup() override;
 
-	VboxVmController* create_vm_controller(const nlohmann::json& config) override {
-		return new VboxVmController(config);
+	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override {
+		return std::shared_ptr<VmController>(new VboxVmController(config));
 	}
 
-	VboxFlashDriveController* create_flash_drive_controller(const nlohmann::json& config) override {
-		return new VboxFlashDriveController(config);
+	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {
+		return std::shared_ptr<VboxFlashDriveController>(new VboxFlashDriveController(config));
 	}
 
 	API& api;

@@ -49,8 +49,8 @@ bool Lexer::test_size_specifier() const {
 		return false;
 	}
 
-	if ((input[current_pos] == 'M') || 
-		(input[current_pos] == 'G')) 
+	if ((input[current_pos] == 'M') ||
+		(input[current_pos] == 'G'))
 	{
 		if (input[current_pos + 1] == 'b') {
 			if (test_eof(2) || (!test_id(2) && !test_number(2))) {
@@ -65,7 +65,7 @@ bool Lexer::test_size_specifier() const {
 bool Lexer::test_time_specifier() const {
 	if (input[current_pos] == 's' ||
 		input[current_pos] == 'h' ||
-		input[current_pos] == 'm') 
+		input[current_pos] == 'm')
 	{
 		if (test_eof(1) || (!test_id(1) && !test_number(1))) {
 			return true;
