@@ -203,7 +203,7 @@ snapshot internet_configured: ubuntu_installed {
 		press leftshift+y; press Enter
 	}
 	type "apt-get update"; press Enter
-	wait for 20s
+	wait for 1m
 }
 
 snapshot additions_installed: internet_configured {

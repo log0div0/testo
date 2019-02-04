@@ -89,7 +89,7 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 		return;
 	}
 
-	if ((!vm->is_defined()) || (vm->get_metadata("vm_config_cksum") != vm->config_cksum())) {
+	if ((!vm->is_defined()) || !check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config")))) {
 		if (vm->install()) {
 			throw std::runtime_error(std::string(vm_state->begin()) +
 				": Error while performing install: " +
@@ -634,6 +634,32 @@ bool VisitorInterpreter::resolve_state(std::shared_ptr<VmController> vm, std::sh
 	return false;
 }
 
+bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const {
+	//So....
+	//1) get rid of metadata
+	new_config.erase("metadata");
+	old_config.erase("metadata");
+
+
+	//2) Actually.... Let's just be practical here.
+	//Check if both have or don't have nics
+
+	auto old_nics = old_config.value("nic", nlohmann::json::array());
+	auto new_nics = new_config.value("nic", nlohmann::json::array());
+
+	if (old_nics.size() != new_nics.size()) {
+		return false;
+	}
+
+	if (!std::is_permutation(old_nics.begin(), old_nics.end(), new_nics.begin())) {
+		return false;
+	}
+
+	new_config.erase("nic");
+	old_config.erase("nic");
+
+	return (old_config == new_config);
+}
 
 std::string VisitorInterpreter::cksum(std::shared_ptr<Snapshot> snapshot) {
 	std::string combined = std::string(*snapshot);

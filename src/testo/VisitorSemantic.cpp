@@ -393,6 +393,12 @@ void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& con
 		}
 	}
 
+	if (config.count(attr->name.value())) {
+		if (!config.at(attr->name.value()).is_array()) {
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: duplicate attr " + attr->name.value());
+		}
+	}
+
 	if (auto p = std::dynamic_pointer_cast<AttrValue<WordAttr>>(attr->value)) {
 		auto value = visit_word(p->attr_value->value);
 		config[attr->name.value()] = value;

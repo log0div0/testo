@@ -1,0 +1,45 @@
+machine controller {
+	os_type: "ubuntu_64"
+	cpus: 1
+	iso: "/ubuntu-16.04.5-server-amd64.iso"
+	ram: 512Mb
+	disk_size: 4Gb
+
+	nic client_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:33:00:aa"
+	}
+
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "virtio-net"
+	}
+
+	nic server_side: {
+		attached_to: "internal"
+		network: "net2"
+		slot: 2
+		mac: "52:54:00:33:00:bb"
+	}
+
+	nic slave_side: {
+		slot: 3
+		network: "net3"
+		attached_to: "internal"
+		mac: "52:54:00:33:00:cc"
+	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
+}
+
+snapshot dummy
+{}
+
+test dummy: controller(dummy)
+{}

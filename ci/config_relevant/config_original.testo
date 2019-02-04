@@ -1,20 +1,20 @@
-machine client {
+machine controller {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
 	iso: "/ubuntu-16.04.5-server-amd64.iso"
 	disk_size: 4Gb
-	nic nat: {
-		slot: 0
-		attached_to: "nat"
-		adapter_type: "virtio-net"
-	}
-
 	nic client_side: {
 		slot: 1
 		attached_to: "internal"
 		network: "net1"
 		mac: "52:54:00:33:00:aa"
+	}
+
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "virtio-net"
 	}
 
 	nic server_side: {
@@ -37,8 +37,9 @@ machine client {
 	}
 }
 
+
 snapshot dummy
 {}
 
-test dummy: client(dummy)
+test dummy: controller(dummy)
 {}

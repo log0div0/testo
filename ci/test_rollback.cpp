@@ -7,46 +7,7 @@
 
 using namespace fakeit;
 
-/*
-
-Sooo.... config cksum tests.... Let's see
-
-1) new config is exactly the same it was - the only test that should pass for now
-
-2) new config is the same, but white spaces and tabs are different
-
-3) new config is the same, but some rows are mixed up
-
-3.5) new config differs in metadata
-
-4) new config is the same, but some rows in nic section is mixed up
-
-5) new config is the same, but some positions have var reference
-
-6) new config differs in one row
-
-7) new config differs in one row value
-
-8) new config differs in nic name
-
-That should cover it
-
-*/
-
-static std::string config_cksum(const nlohmann::json& config) {
-	std::hash<std::string> h;
-	return std::to_string(h(config.dump()));
-}
-
-static std::string snapsoht_cksum(const std::string& snapshot) {
-	std::hash<std::string> h;
-	return std::to_string(h(snapshot));
-}
-
-TEST_CASE("config_the_same", "[rollback]") {
-	fs::path src_file("config_the_same.testo");
-
-	nlohmann::json config = {
+nlohmann::json default_original_config = {
 		{"cpus", 1},
 		{"os_type", "ubuntu_64"},
 		{"ram", 512},
@@ -79,14 +40,22 @@ TEST_CASE("config_the_same", "[rollback]") {
 				{"attached_to", "internal"},
 				{"network", "net3"},
 				{"mac", "52:54:00:33:00:cc"}
-			},
+			}
 		}},
 		{"metadata", {
 			{"login", "root"},
 			{"password", "1111"}
 		}},
-		{"name", "client"}
+		{"name", "controller"}
 	};
+
+
+static std::string snapsoht_cksum(const std::string& snapshot) {
+	std::hash<std::string> h;
+	return std::to_string(h(snapshot));
+}
+
+static void config_relevant_routine(const fs::path& testo_file, const nlohmann::json& original_config) {
 
 	nlohmann::json new_config;
 
@@ -101,11 +70,10 @@ TEST_CASE("config_the_same", "[rollback]") {
 	Fake(Method(mock_env, setup));
 	Fake(Method(mock_env, cleanup));
 
-	//Fake(Method(mock_vm, install));
 	When(Method(mock_vm, is_defined)).Return(true);
-	When(Method(mock_vm, get_metadata).Using("vm_config_cksum")).Return(config_cksum(config));
-	When(Method(mock_vm, config_cksum)).Do([&]()->std::string {
-		return config_cksum(new_config);
+	When(Method(mock_vm, get_metadata).Using("vm_config")).Return(original_config.dump());
+	When(Method(mock_vm, get_config)).Do([&]()->nlohmann::json {
+		return new_config;
 	});
 
 
@@ -114,11 +82,110 @@ TEST_CASE("config_the_same", "[rollback]") {
 	When(Method(mock_vm, rollback).Using("dummy")).Return(0);
 
 	Fake(Method(mock_vm, unplug_all_flash_drives));
+
+	//If install is invoked - that's an exception
+
+	When(Method(mock_vm, install)).AlwaysThrow(std::runtime_error("Install was invoked instead of rollback"));
 	{
-		Interpreter runner(mock_env.get(), src_file);
+		Interpreter runner(mock_env.get(), testo_file);
 		runner.run();
 	}
 
-	//REQUIRE_NOTHROW(Verify(Method(mock_vm, rollback).Using("dummy"))); This leads to exception
-	REQUIRE_NOTHROW(Verify(Method(mock_vm, rollback)));  //This is okay
+	REQUIRE_NOTHROW(Verify(Method(mock_vm, rollback)).Once());
+}
+
+static void config_irrelevant_routine(const fs::path& testo_file, const nlohmann::json& original_config) {
+
+	nlohmann::json new_config;
+
+	Mock<Environment> mock_env;
+	Mock<VmController> mock_vm;
+
+	When(Method(mock_env, create_vm_controller)).Do([&](const nlohmann::json& a)->std::shared_ptr<VmController>{
+		new_config = a;
+		return std::shared_ptr<VmController>(&mock_vm.get(), [](VmController*){});
+	});
+
+	Fake(Method(mock_env, setup));
+	Fake(Method(mock_env, cleanup));
+
+	When(Method(mock_vm, is_defined)).Return(true);
+	When(Method(mock_vm, get_metadata).Using("vm_config")).Return(original_config.dump());
+	When(Method(mock_vm, get_config)).Do([&]()->nlohmann::json {
+		return new_config;
+	});
+
+
+	When(Method(mock_vm, has_snapshot).Using("dummy")).Return(true);
+	When(Method(mock_vm, get_snapshot_cksum).Using("dummy")).Return(snapsoht_cksum("snapshot dummy "));
+	When(Method(mock_vm, install)).Return(0);
+	When(Method(mock_vm, name)).AlwaysReturn("controller");
+	When(Method(mock_vm, make_snapshot)).AlwaysReturn(0);
+	When(Method(mock_vm, set_snapshot_cksum)).AlwaysReturn(0);
+
+	Fake(Method(mock_vm, unplug_all_flash_drives));
+
+	//If install is invoked - that's an exception
+
+	When(Method(mock_vm, rollback)).AlwaysThrow(std::runtime_error("Rollback was invoked instead of rollback"));
+	{
+		Interpreter runner(mock_env.get(), testo_file);
+		runner.run();
+	}
+
+	REQUIRE_NOTHROW(Verify(Method(mock_vm, install)).Once());
+}
+
+TEST_CASE("config_original", "[rollback]") {
+	config_relevant_routine("config_relevant/config_original.testo", default_original_config);
+}
+
+TEST_CASE("config_nics_mixed", "[rollback]") {
+	config_relevant_routine("config_relevant/config_nics_mixed.testo", default_original_config);
+}
+
+TEST_CASE("config_metadata_mixed", "[rollback]") {
+	config_relevant_routine("config_relevant/config_metadata_mixed.testo", default_original_config);
+}
+
+TEST_CASE("config_without_nics", "[rollback]") {
+	nlohmann::json config = default_original_config;
+	config.erase("nic");
+	config_relevant_routine("config_relevant/config_without_nics.testo", config);
+}
+
+TEST_CASE("config_var_ref", "[rollback]") {
+	setenv("ENV_VAR1", "/ubuntu-16.04.5", 1);
+	setenv("ENV_VAR2", ".iso", 1);
+	config_relevant_routine("config_relevant/config_var_ref.testo", default_original_config);
+}
+
+TEST_CASE("config_attr_changed", "[rollback]") {
+	config_irrelevant_routine("config_irrelevant/config_attr_changed.testo", default_original_config);
+}
+
+TEST_CASE("config_attr_erased", "[rollback]") {
+	config_irrelevant_routine("config_irrelevant/config_attr_erased.testo", default_original_config);
+}
+
+TEST_CASE("config_nic_erased", "[rollback]") {
+	config_irrelevant_routine("config_irrelevant/config_nic_erased.testo", default_original_config);
+}
+
+TEST_CASE("config_nic_added", "[rollback]") {
+	config_irrelevant_routine("config_irrelevant/config_nic_added.testo", default_original_config);
+}
+
+TEST_CASE("config_nic_renamed", "[rollback]") {
+	config_irrelevant_routine("config_irrelevant/config_nic_renamed.testo", default_original_config);
+}
+
+TEST_CASE("config_nic_attr_changed", "[rollback]") {
+	config_irrelevant_routine("config_irrelevant/config_nic_attr_changed.testo", default_original_config);
+}
+
+TEST_CASE("config_var_ref_changed", "[rollback]") {
+	setenv("ENV_VAR1", "changed", 1);
+	setenv("ENV_VAR2", ".iso", 1);
+	config_irrelevant_routine("config_irrelevant/config_var_ref_changed.testo", default_original_config);
 }
