@@ -1,0 +1,39 @@
+machine controller {
+	cpus: 1
+	os_type: "ubuntu_64"
+	ram: 512Mb
+	iso: "/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 4Gb
+	nic client_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:33:00:aa"
+	}
+
+	nic server_side: {
+		slot: 2
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:33:00:bb"
+	}
+
+	nic slave_side: {
+		slot: 3
+		attached_to: "internal"
+		network: "net3"
+		mac: "52:54:00:33:00:cc"
+	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
+}
+
+
+snapshot dummy
+{}
+
+test dummy: controller(dummy)
+{}

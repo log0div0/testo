@@ -14,6 +14,11 @@ struct VboxVmController: public VmController {
 	int make_snapshot(const std::string& snapshot) override;
 	int set_metadata(const nlohmann::json& metadata) override;
 	int set_metadata(const std::string& key, const std::string& value) override;
+
+	nlohmann::json get_config() const override {
+		return config;
+	}
+
 	std::string get_metadata(const std::string& key) override;
 	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
@@ -39,7 +44,6 @@ struct VboxVmController: public VmController {
 	bool is_running() override;
 	bool is_additions_installed() override;
 
-	std::string config_cksum() const override;
 	std::string name() const override {
 		return config.at("name").get<std::string>();
 	}
@@ -55,6 +59,7 @@ private:
 	void remove_if_exists();
 	void create_vm();
 
+	nlohmann::json config;
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 	vbox::Session start_session;
@@ -62,7 +67,6 @@ private:
 	std::unordered_map<char, std::vector<std::string>> charmap;
 
 	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
-	nlohmann::json config;
 
 	API& api;
 };

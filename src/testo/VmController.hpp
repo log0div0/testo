@@ -10,6 +10,7 @@ struct VmController {
 	virtual int make_snapshot(const std::string& snapshot) = 0;
 	virtual int set_metadata(const nlohmann::json& metadata) = 0;
 	virtual int set_metadata(const std::string& key, const std::string& value) = 0;
+	virtual nlohmann::json get_config() const = 0;
 	virtual std::string get_metadata(const std::string& key) = 0;
 	virtual int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) = 0;
 	virtual std::string get_snapshot_cksum(const std::string& snapshot) = 0;
@@ -35,7 +36,6 @@ struct VmController {
 	virtual bool is_running() = 0;
 	virtual bool is_additions_installed() = 0;
 
-	virtual std::string config_cksum() const = 0;
 	virtual std::string name() const = 0;
 
 	virtual int copy_to_guest(const fs::path& src, const fs::path& dst) = 0;

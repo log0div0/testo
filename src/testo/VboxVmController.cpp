@@ -334,6 +334,7 @@ void VboxVmController::create_vm() {
 
 int VboxVmController::set_metadata(const nlohmann::json& metadata) {
 	try {
+		auto machine = virtual_box.find_machine(name());
 		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
 			auto lock_machine = virtual_box.find_machine(name());
 			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -403,7 +404,8 @@ int VboxVmController::install() {
 		if (config.count("metadata")) {
 			set_metadata(config.at("metadata"));
 		}
-		set_metadata("vm_config_cksum", config_cksum());
+		set_metadata("vm_config", config.dump());
+		std::string shih = get_metadata("vm_config");
 		if (start()) {
 			throw std::runtime_error("Start while performing install action");
 		}
@@ -447,11 +449,6 @@ int VboxVmController::make_snapshot(const std::string& snapshot) {
 		std::cout << "Taking snapshot on vm " << name() << ": " << error << std::endl;
 		return -1;
 	}
-}
-
-std::string VboxVmController::config_cksum() const {
-	std::hash<std::string> h;
-	return std::to_string(h(config.dump()));
 }
 
 std::set<std::string> VboxVmController::nics() const {
