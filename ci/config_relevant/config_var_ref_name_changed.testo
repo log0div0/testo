@@ -3,7 +3,7 @@ machine controller {
 	os_type: "ubuntu_64"
 	disk_size: 4Gb
 	ram: 512Mb
-	iso: $ENV_VAR1 + "-server-amd64" + $ENV_VAR2
+	iso: $ENV_VAR5 + "-server-amd64" + $ENV_VAR6
 
 	nic client_side: {
 		slot: 1
