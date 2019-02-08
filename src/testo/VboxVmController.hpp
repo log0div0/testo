@@ -39,6 +39,7 @@ struct VboxVmController: public VmController {
 
 	bool is_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
+	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;
 	bool is_defined() const override;
 	bool is_running() override;

@@ -224,7 +224,8 @@ struct Plug: public Node {
 	Plug(const Token& plug, const Token& type, const Token& name, std::shared_ptr<Word> path):
 		Node(plug),
 		type(type),
-		name_token(name) {}
+		name_token(name),
+		path(path) {}
 
 	Pos begin() const {
 		return t.pos();

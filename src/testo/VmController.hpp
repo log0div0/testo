@@ -31,6 +31,7 @@ struct VmController {
 
 	virtual bool is_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
+	virtual std::vector<std::string> keys() = 0;
 	virtual bool has_key(const std::string& key) = 0;
 	virtual bool is_defined() const = 0;
 	virtual bool is_running() = 0;

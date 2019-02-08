@@ -1,5 +1,6 @@
 
 #include "VisitorInterpreter.hpp"
+#include "VisitorCksum.hpp"
 
 #include <fstream>
 #include <thread>
@@ -67,7 +68,27 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		visit_vm_state(state);
 	}
 
+	//Let's remember all the keys all vms have
+	std::unordered_map<std::shared_ptr<VmController>, std::vector<std::string>> original_states;
+
+	for (auto state: test->vms) {
+		auto vm = reg.vms.find(state->name)->second;
+		auto keys = vm->keys();
+		original_states.insert({vm, keys});
+	}
+
 	visit_command_block(test->cmd_block);
+
+	for (auto state: original_states) {
+		auto vm = state.first;
+		auto original_keys = state.second;
+		auto final_keys = vm->keys();
+		std::vector<std::string> new_keys;
+		std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), new_keys.begin());
+		for (auto& key: new_keys) {
+			vm->set_metadata(key, "");
+		}
+	}
 
 	reg.local_vms.clear();
 
@@ -416,7 +437,14 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<Set> set) {
 	std::cout << "Setting attributes on vm " << vm->name() << std::endl;
 
-	//TODO: redo!
+	//1) Let's check all the assignments so that we know we don't override any values
+
+	for (auto assign: set->assignments) {
+		if (vm->has_key(assign->left.value())) {
+			throw std::runtime_error(std::string(assign->begin()) + ": Error: can't override key " + assign->left.value());
+		}
+	}
+
 	for (auto assign: set->assignments) {
 		std::string value = visit_word(vm, assign->right);
 		std::cout << assign->left.value() << " -> " << value << std::endl;
@@ -584,7 +612,7 @@ void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::sh
 
 	std::cout << "Applying snapshot " << snapshot->name.value() << " to vm " << vm->name() << std::endl;
 	visit_action_block(vm, snapshot->action_block->action);
-	auto new_cksum = cksum(snapshot);
+	auto new_cksum = snapshot_cksum(vm, snapshot);
 	std::cout << "Taking snapshot " << snapshot->name.value() << " for vm " << vm->name() << std::endl;
 	if (vm->make_snapshot(snapshot->name)) {
 		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while creating snapshot" +
@@ -607,7 +635,7 @@ bool VisitorInterpreter::resolve_state(std::shared_ptr<VmController> vm, std::sh
 
 	if (parents_are_ok) {
 		if (vm->has_snapshot(snapshot->name)) {
-			if (vm->get_snapshot_cksum(snapshot->name) == cksum(snapshot)) {
+			if (vm->get_snapshot_cksum(snapshot->name) == snapshot_cksum(vm, snapshot)) {
 				return true;
 			}
 		}
@@ -661,16 +689,9 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 	return (old_config == new_config);
 }
 
-std::string VisitorInterpreter::cksum(std::shared_ptr<Snapshot> snapshot) {
-	std::string combined = std::string(*snapshot);
-
-	for (auto it = snapshot->parent; it != nullptr; it = it->parent) {
-		combined += std::string(*it);
-	}
-	std::hash<std::string> h;
-
-	auto result = h(combined);
-	return std::to_string(result);
+std::string VisitorInterpreter::snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
+	VisitorCksum visitor(reg);
+	return std::to_string(visitor.visit(vm, snapshot->action_block->action));
 }
 
 std::string VisitorInterpreter::cksum(std::shared_ptr<Controller> flash) {

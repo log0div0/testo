@@ -70,6 +70,7 @@ static void config_relevance_routine(const fs::path& testo_file, const nlohmann:
 	Fake(Method(mock_env, setup));
 	Fake(Method(mock_env, cleanup));
 
+	When(Method(mock_vm, keys)).AlwaysReturn({});
 	When(Method(mock_vm, is_defined)).Return(true);
 	When(Method(mock_vm, get_metadata).Using("vm_config")).Return(original_config.dump());
 	When(Method(mock_vm, get_config)).Do([&]()->nlohmann::json {
@@ -78,7 +79,7 @@ static void config_relevance_routine(const fs::path& testo_file, const nlohmann:
 
 
 	When(Method(mock_vm, has_snapshot).Using("dummy")).Return(true);
-	When(Method(mock_vm, get_snapshot_cksum).Using("dummy")).Return(snapsoht_cksum("snapshot dummy "));
+	When(Method(mock_vm, get_snapshot_cksum).Using("dummy")).Return(snapsoht_cksum("BLOCK"));
 	Fake(Method(mock_vm, unplug_all_flash_drives));
 
 	if (is_relevant) {
