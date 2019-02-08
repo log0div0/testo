@@ -68,7 +68,7 @@ VboxVmController::VboxVmController(const nlohmann::json& config): config(config)
 
 				if (nics[i].at("slot") == nics[j].at("slot")) {
 					throw std::runtime_error("Constructing VboxVmController error: two identical SLOTS: " +
-						nics[i].at("slot").get<uint32_t>());
+						std::to_string(nics[i].at("slot").get<uint32_t>()));
 				}
 			}
 		}
@@ -363,14 +363,23 @@ int VboxVmController::set_metadata(const std::string& key, const std::string& va
 	}
 }
 
-bool VboxVmController::has_key(const std::string& key) {
+std::vector<std::string> VboxVmController::keys() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
-		auto keys = machine.getExtraDataKeys();
+		return machine.getExtraDataKeys();
+	}
+	catch (const std::exception& error) {
+		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
+		return {};
+	}
+}
 
-		for (auto& k: keys) {
+bool VboxVmController::has_key(const std::string& key) {
+	try {
+		auto extra_keys = keys();
+		for (auto& k: extra_keys) {
 			if (k == key) {
 				return true;
 			}
