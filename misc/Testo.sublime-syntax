@@ -1,0 +1,100 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+file_extensions:
+  - testo
+scope: source.testo
+
+variables:
+  identifier: '[A-Za-z_][A-Za-z_0-9]*'
+
+contexts:
+  prototype:
+    - include: comments
+
+  main:
+    - include: bash
+    - include: machine
+    - include: snapshot
+    - include: macro
+    - include: test
+    - include: keywords
+    - include: numbers
+    - include: strings
+    - include: variable
+
+  machine:
+    - match: '^machine\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
+
+  snapshot:
+    - match: '^snapshot\b'
+      scope: keyword.control.testo
+      set:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          set:
+            - match: ':'
+              set:
+                - match: '{{identifier}}'
+                  scope: entity.other.inherited-class.testo
+                  pop: true
+            - match: '{'
+              pop: true
+
+  macro:
+    - match: '^macro\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
+
+  test:
+    - match: '^test\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
+
+  keywords:
+    - match: '\b(include|if|else)\b'
+      scope: keyword.control.testo
+
+  numbers:
+    - match: '\b(-)?[0-9.]+\b'
+      scope: constant.numeric.testo
+
+  bash:
+    - match: '"""'
+      scope: punctuation.definition.string.begin.testo
+      push: Packages/ShellScript/Bash.sublime-syntax
+      with_prototype:
+        - match: '"""'
+          scope: punctuation.definition.string.end.testo
+          pop: true
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.testo
+      push:
+        - meta_include_prototype: false
+        - meta_scope: string.quoted.double.testo
+        - match: '\.'
+          scope: constant.character.escape.testo
+        - match: '"'
+          scope: punctuation.definition.string.end.testo
+          pop: true
+
+  comments:
+    - match: '#'
+      scope: punctuation.definition.comment.testo
+      push:
+        - meta_scope: comment.line.testo
+        - match: $\n?
+          pop: true
