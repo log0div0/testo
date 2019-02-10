@@ -85,7 +85,7 @@ contexts:
       push:
         - meta_include_prototype: false
         - meta_scope: string.quoted.double.testo
-        - match: '\.'
+        - match: '\\.'
           scope: constant.character.escape.testo
         - match: '"'
           scope: punctuation.definition.string.end.testo
