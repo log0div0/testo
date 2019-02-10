@@ -172,17 +172,17 @@ snapshot ubuntu_installed {
 	if ($HTTP_PROXY) {
 		wait "Select your time zone" for 1m; press Enter
 	} else {
-		wait "Moscow" for 2m; press Enter
+		wait "Europe" for 2m; press Enter
 	}
 	wait "Partitioning method"; press Enter
 	wait "Select disk to partition"; press Enter
 	wait "configure LVM?"; press Left, Enter
 	wait "Amount of volume group to use for guided partitioning"; press Enter
 	wait "If you continue, the changes listed below"; press Left, Enter
-	wait "HTTP proxy information" for 2m; press Enter
+	wait "HTTP proxy information" for 5m; press Enter
 	wait "How do you want to manage upgrades" for 5m; press Enter
 	wait "At the moment, only the core of the system is installed"; press Enter
-	wait "Install the GRUB" for 2m; press Enter
+	wait "Install the GRUB" for 5m; press Enter
 	wait "Installation complete" for 30s; press Enter
 	wait for 30s;
 	type "testo-user"; press Enter
