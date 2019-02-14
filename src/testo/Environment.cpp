@@ -52,3 +52,17 @@ void VboxEnvironment::cleanup() {
 
 	exec_and_throw_if_failed("rm -rf " + flash_drives_img_dir().generic_string());
 }
+
+QemuEnvironment::~QemuEnvironment() {
+	try {
+		cleanup();
+	} catch(...) {}
+}
+
+void QemuEnvironment::setup() {
+
+}
+
+void QemuEnvironment::cleanup() {
+
+}

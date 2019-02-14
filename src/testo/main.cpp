@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 			throw std::runtime_error("Fatal error: file doesn't exist: " + src_file.generic_string());
 		}
 
-		VboxEnvironment env;
+		QemuEnvironment env;
 		Interpreter runner(env, src_file);
 		runner.run();
 	} catch (const std::exception& error) {

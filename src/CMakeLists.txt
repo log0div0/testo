@@ -15,3 +15,4 @@ include_directories(
 add_subdirectory(vbox)
 add_subdirectory(testo)
 add_subdirectory(testow)
+add_subdirectory(qemu)
