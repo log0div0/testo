@@ -4,7 +4,9 @@
 
 #include "Utils.hpp"
 
-QemuVmController::QemuVmController(const nlohmann::json& config): config(config) {
+QemuVmController::QemuVmController(const nlohmann::json& config): config(config),
+	qemu_connect(qemu::ConnectOpen("qemu:///system")) //TODO: change to session!
+{
 
 }
 
@@ -114,7 +116,13 @@ bool QemuVmController::has_snapshot(const std::string& snapshot) {
 }
 
 bool QemuVmController::is_defined() const {
-	return true;
+	auto domains = qemu_connect.ListAllDomains(VIR_CONNECT_LIST_DOMAINS_PERSISTENT);
+	for (auto& domain: domains) {
+		if (domain.name() == name()) {
+			return true;
+		}
+	}
+	return false;
 }
 
 bool QemuVmController::is_running() {

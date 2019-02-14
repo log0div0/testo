@@ -2,6 +2,7 @@
 #pragma once
 
 #include "VmController.hpp"
+#include "qemu/General.hpp"
 
 struct QemuVmController: public VmController {
 	QemuVmController() = delete;
@@ -53,4 +54,5 @@ struct QemuVmController: public VmController {
 
 private:
 	nlohmann::json config;
+	qemu::Connect qemu_connect;
 };

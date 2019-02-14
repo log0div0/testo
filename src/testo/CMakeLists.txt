@@ -9,7 +9,7 @@ list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 add_library(testo-core STATIC ${SRCS})
 
-target_link_libraries(testo-core vbox vboxcapi)
+target_link_libraries(testo-core vbox vboxcapi qemu)
 add_dependencies(testo-core json)
 
 if(UNIX)

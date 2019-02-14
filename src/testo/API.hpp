@@ -15,6 +15,7 @@ struct API {
 #else
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
+#include <libvirt/libvirt.h>
 #include <iostream>
 namespace darknet {
 struct API {
@@ -60,7 +61,6 @@ public:
 
 	darknet::API darknet_api;
 	vbox::API vbox_api;
-
 private:
 	API(const API&) = delete;
 	API& operator=(const API&) = delete;
