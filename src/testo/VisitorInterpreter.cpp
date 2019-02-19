@@ -99,7 +99,8 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 	auto vm = reg.vms.find(vm_state->name)->second;
 
 	reg.local_vms.insert({vm_state->name, vm});
-	std::cout << "Is defined: " << vm->is_defined() << std::endl;
+
+	vm->install();
 	/*if (!vm_state->snapshot) {
 		if (vm->install()) {
 			throw std::runtime_error(std::string(vm_state->begin()) +

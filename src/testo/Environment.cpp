@@ -1,5 +1,6 @@
 
 #include "Environment.hpp"
+#include <fmt/format.h>
 #include <iostream>
 #include "Utils.hpp"
 #include <vbox/virtual_box_client.hpp>
@@ -59,8 +60,53 @@ QemuEnvironment::~QemuEnvironment() {
 	} catch(...) {}
 }
 
-void QemuEnvironment::setup() {
+void QemuEnvironment::prepare_storage_pool() {
+	auto pool_dir = testo_dir() / "storage-pool";
+	if (!fs::exists(pool_dir)) {
+		if (!fs::create_directory(pool_dir)) {
+			throw std::runtime_error(std::string("Can't create testo pool directory: ") + pool_dir.generic_string());
+		}
+	}
 
+
+	auto storage_pools = qemu_connect.storage_pools({VIR_CONNECT_LIST_STORAGE_POOLS_PERSISTENT});
+
+	bool found = false;
+	for (auto& pool: storage_pools) {
+		if (pool.name() == "testo-pool") {
+			if (!pool.is_active()) {
+				std::cout << "INFO: testo-pool is inactive, starting...\n";
+			}
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		std::cout << "INFO: testo-pool is not found, creating...\n";
+		std::string storage_pool_config = fmt::format(R"(
+			<pool type='dir'>
+			  <name>testo-pool</name>
+			  <source>
+			  </source>
+			  <target>
+			    <path>{}</path>
+			    <permissions>
+			      <mode>0775</mode>
+			      <owner>1000</owner>
+			      <group>1000</group>
+			    </permissions>
+			  </target>
+			</pool>
+		)", pool_dir.generic_string());
+		auto pool = qemu_connect.storage_pool_define_xml(storage_pool_config);
+		pool.start({VIR_STORAGE_POOL_CREATE_NORMAL});
+	}
+}
+
+void QemuEnvironment::setup() {
+	qemu_connect = vir::connect_open("qemu:///system");
+	//prepare_storage_pool();
 }
 
 void QemuEnvironment::cleanup() {

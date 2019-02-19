@@ -55,6 +55,12 @@ fs::path home_dir() {
 
 #endif
 
+fs::path testo_dir() {
+	auto res = home_dir();
+	res = res / "/testo";
+	return res;
+}
+
 fs::path flash_drives_img_dir() {
 	auto res = home_dir();
 	res += "/testo/vbox/flash_drives/images/";

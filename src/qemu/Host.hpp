@@ -5,9 +5,9 @@
 
 #include <string>
 
-namespace qemu {
+namespace vir {
 
-Connect ConnectOpen(const std::string& uri);
+Connect connect_open(const std::string& uri);
 
 
 }

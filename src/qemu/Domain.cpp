@@ -3,7 +3,7 @@
 #include <libvirt/virterror.h>
 #include <stdexcept>
 
-namespace qemu {
+namespace vir {
 
 Domain::Domain(virDomain* handle): handle(handle) {
 	if (!handle) {
@@ -13,7 +13,7 @@ Domain::Domain(virDomain* handle): handle(handle) {
 
 Domain::~Domain() {
 	if (handle) {
-		free(handle);
+		virDomainFree(handle);
 	}
 }
 
@@ -26,8 +26,70 @@ Domain& Domain::operator =(Domain&& other) {
 	return *this;
 }
 
-std::string Domain::name() {
+std::string Domain::name() const {
 	return virDomainGetName(handle);
 }
+
+bool Domain::is_active() const {
+	int result = virDomainIsActive(handle);
+	if (result < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return result;
+}
+
+void Domain::stop() {
+	if (virDomainDestroy(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
+void Domain::undefine() {
+	if (virDomainUndefine(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
+std::vector<Snapshot> Domain::snapshots(std::initializer_list<virDomainSnapshotListFlags> flags) const {
+	std::vector<Snapshot> result;
+
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	virDomainSnapshotPtr* snapshots;
+
+	auto size = virDomainListAllSnapshots(handle, &snapshots, flag_bitmask);
+	if (size < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	for (size_t i = 0; i < size; i++) {
+		result.push_back(snapshots[i]);
+	}
+
+	free(snapshots);
+	return result;
+}
+
+std::string Domain::dump_xml(std::initializer_list<virDomainXMLFlags> flags) const {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	char* xml = virDomainGetXMLDesc(handle, flag_bitmask);
+	if (!xml) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	std::string result(xml);
+	free(xml);
+	return result;
+}
+
 
 }

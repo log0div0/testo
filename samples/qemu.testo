@@ -1,4 +1,4 @@
-machine client	 {
+machine client2-clone	 {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
@@ -22,7 +22,7 @@ machine client	 {
 	}
 }
 
-test dummy: client
+test dummy: client2-clone
 {
 
 }

@@ -11,6 +11,7 @@ void backtrace(std::ostream& stream, const std::exception& error, size_t n);
 uint32_t time_to_seconds(const std::string& time);
 void exec_and_throw_if_failed(const std::string& command);
 fs::path home_dir();
+fs::path testo_dir();
 fs::path flash_drives_img_dir();
 fs::path flash_drives_mount_dir();
 fs::path scripts_tmp_dir();

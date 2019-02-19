@@ -6,6 +6,8 @@ else()
 	add_definitions(-DVBOX_WITH_GLUE)
 endif()
 
+add_definitions(-DFMT_HEADER_ONLY)
+
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
 	${CMAKE_SOURCE_DIR}/src

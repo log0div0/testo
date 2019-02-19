@@ -2,7 +2,7 @@
 #pragma once
 
 #include "VmController.hpp"
-#include "qemu/General.hpp"
+#include "qemu/Host.hpp"
 
 struct QemuVmController: public VmController {
 	QemuVmController() = delete;
@@ -53,6 +53,8 @@ struct QemuVmController: public VmController {
 	std::set<std::string> nics() const override;
 
 private:
+	void remove_disks(std::string xml);
+	void create_disks();
 	nlohmann::json config;
-	qemu::Connect qemu_connect;
+	vir::Connect qemu_connect;
 };

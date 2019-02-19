@@ -49,4 +49,8 @@ struct QemuEnvironment: public Environment {
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {
 		return std::shared_ptr<FlashDriveController>(new QemuFlashDriveController(config));
 	}
+
+private:
+	void prepare_storage_pool();
+	vir::Connect qemu_connect;
 };
