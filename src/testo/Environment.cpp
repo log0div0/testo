@@ -86,17 +86,17 @@ void QemuEnvironment::prepare_storage_pool() {
 		std::cout << "INFO: testo-pool is not found, creating...\n";
 		std::string storage_pool_config = fmt::format(R"(
 			<pool type='dir'>
-			  <name>testo-pool</name>
-			  <source>
-			  </source>
-			  <target>
-			    <path>{}</path>
-			    <permissions>
-			      <mode>0775</mode>
-			      <owner>1000</owner>
-			      <group>1000</group>
-			    </permissions>
-			  </target>
+				<name>testo-pool</name>
+				<source>
+				</source>
+				<target>
+					<path>{}</path>
+					<permissions>
+						<mode>0775</mode>
+						<owner>1000</owner>
+						<group>1000</group>
+					</permissions>
+				</target>
 			</pool>
 		)", pool_dir.generic_string());
 		auto pool = qemu_connect.storage_pool_define_xml(storage_pool_config);
@@ -105,8 +105,8 @@ void QemuEnvironment::prepare_storage_pool() {
 }
 
 void QemuEnvironment::setup() {
-	qemu_connect = vir::connect_open("qemu:///system");
-	//prepare_storage_pool();
+	qemu_connect = vir::connect_open("qemu:///session");
+	prepare_storage_pool();
 }
 
 void QemuEnvironment::cleanup() {

@@ -2,6 +2,7 @@
 #include "StoragePool.hpp"
 #include <libvirt/virterror.h>
 #include <stdexcept>
+#include <regex>
 
 namespace vir {
 
@@ -62,6 +63,30 @@ StorageVolume StoragePool::volume_create_xml(const std::string& xml, std::initia
 	}
 
 	return res;
+}
+
+std::string StoragePool::dump_xml() const {
+	char* xml = virStoragePoolGetXMLDesc(handle, 0);
+	if (!xml) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	std::string result(xml);
+	free(xml);
+	return result;
+}
+
+fs::path StoragePool::path() const {
+	auto xml = dump_xml();
+
+	std::regex path_regex("<path>(.*?)</path>", std::regex::ECMAScript);
+	auto path_found = std::sregex_iterator(xml.begin(), xml.end(), path_regex);
+
+	auto match = *path_found;
+	std::string result(match[1].str());
+	if (!result.length()) {
+		throw std::runtime_error("Couldn't find attriute path in pool xml desc");
+	}
+	return result;
 }
 
 }

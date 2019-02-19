@@ -21,12 +21,13 @@ struct Connect {
 
 	std::vector<Domain> domains(std::initializer_list<virConnectListAllDomainsFlags> flags = {}) const;
 	Domain domain_lookup_by_name(const std::string& name) const;
-	StorageVolume storage_volume_lookup_by_path(const fs::path& path) const;
-
+	Domain domain_define_xml(const std::string& xml);
 
 	std::vector<StoragePool> storage_pools(std::initializer_list<virConnectListAllStoragePoolsFlags> flags = {}) const;
+	StoragePool storage_pool_lookup_by_name(const std::string& name) const;
 	StoragePool storage_pool_define_xml(const std::string& xml);
 
+	StorageVolume storage_volume_lookup_by_path(const fs::path& path) const;
 
 	::virConnect* handle = nullptr;
 };

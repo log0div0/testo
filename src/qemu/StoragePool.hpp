@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "testo/Utils.hpp"
 #include "StorageVolume.hpp"
 #include <libvirt/libvirt.h>
 #include <string>
@@ -23,7 +24,9 @@ struct StoragePool {
 
 	void start(std::initializer_list<virStoragePoolCreateFlags> flags = {});
 
-	StorageVolume volume_create_xml(const std::string& xml, std::initializer_list<virStorageVolCreateFlags> flags);
+	StorageVolume volume_create_xml(const std::string& xml, std::initializer_list<virStorageVolCreateFlags> flags = {});
+	std::string dump_xml() const;
+	fs::path path() const;
 
 	::virStoragePool* handle = nullptr;
 };

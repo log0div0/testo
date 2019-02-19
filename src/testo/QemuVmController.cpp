@@ -7,9 +7,33 @@
 #include <regex>
 
 QemuVmController::QemuVmController(const nlohmann::json& config): config(config),
-	qemu_connect(vir::connect_open("qemu:///system"))
+	qemu_connect(vir::connect_open("qemu:///session"))
 {
+	if (!config.count("name")) {
+		throw std::runtime_error("Constructing QemuVmController error: field NAME is not specified");
+	}
 
+	if (!config.count("ram")) {
+		throw std::runtime_error("Constructing QemuVmController error: field RAM is not specified");
+	}
+
+	if (!config.count("cpus")) {
+		throw std::runtime_error("Constructing QemuVmController error: field CPUS is not specified");
+	}
+
+	if (!config.count("iso")) {
+		throw std::runtime_error("Constructing QemuVmController error: field ISO is not specified");
+	}
+
+	fs::path iso_path(config.at("iso").get<std::string>());
+	if (!fs::exists(iso_path)) {
+		throw std::runtime_error(std::string("Constructing QemuVmController error: specified iso file does not exist: ")
+			+ iso_path.generic_string());
+	}
+
+	if (!config.count("disk_size")) {
+		throw std::runtime_error("Constructing QemuVmController error: field DISK SIZE is not specified");
+	}
 }
 
 
@@ -51,7 +75,126 @@ int QemuVmController::install() {
 
 
 	//now create disks
-	//create_disks();
+	create_disks();
+
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
+	fs::path volume_path = pool.path() / (name() + ".img");
+
+	std::string xml_config = fmt::format(R"(
+		<domain type='kvm'>
+			<name>{}</name>
+			<memory unit='KiB'>2097152</memory>
+			<vcpu placement='static'>{}</vcpu>
+			<resource>
+				<partition>/machine</partition>
+			</resource>
+			<os>
+				<type arch='x86_64' machine='ubuntu'>hvm</type>
+				<boot dev='cdrom'/>
+				<boot dev='hd'/>
+			</os>
+			<features>
+				<acpi/>
+				<apic/>
+				<vmport state='off'/>
+			</features>
+			<cpu mode='host-model'>
+				<model fallback='forbid'/>
+			</cpu>
+			<clock offset='utc'>
+				<timer name='rtc' tickpolicy='catchup'/>
+				<timer name='pit' tickpolicy='delay'/>
+				<timer name='hpet' present='yes'/>
+			</clock>
+			<on_poweroff>destroy</on_poweroff>
+			<on_reboot>restart</on_reboot>
+			<on_crash>destroy</on_crash>
+			<pm>
+			</pm>
+			<devices>
+				<emulator>/usr/bin/kvm-spice</emulator>
+				<disk type='file' device='disk'>
+					<driver name='qemu' type='qcow2'/>
+					<source file='{}'/>
+					<target dev='vda' bus='virtio'/>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0'/>
+				</disk>
+				<disk type='file' device='cdrom'>
+					<driver name='qemu' type='raw'/>
+					<source file='{}'/>
+					<target dev='hda' bus='ide'/>
+					<readonly/>
+					<address type='drive' controller='0' bus='0' target='0' unit='0'/>
+				</disk>
+				<controller type='usb' index='0' model='ich9-ehci1'>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x7'/>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci1'>
+					<master startport='0'/>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0' multifunction='on'/>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci2'>
+					<master startport='2'/>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x1'/>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci3'>
+					<master startport='4'/>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x2'/>
+				</controller>
+				<controller type='ide' index='0'>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
+				</controller>
+				<controller type='virtio-serial' index='0'>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
+				</controller>
+				<controller type='pci' index='0' model='pci-root'/>
+				<serial type='pty'>
+					<target type='isa-serial' port='0'>
+						<model name='isa-serial'/>
+					</target>
+				</serial>
+				<console type='pty'>
+					<target type='serial' port='0'/>
+				</console>
+				<channel type='unix'>
+					<target type='virtio' name='negotiator.0'/>
+					<address type='virtio-serial' controller='0' bus='0' port='1'/>
+				</channel>
+				<channel type='spicevmc'>
+					<target type='virtio' name='com.redhat.spice.0'/>
+					<address type='virtio-serial' controller='0' bus='0' port='2'/>
+				</channel>
+				<input type='tablet' bus='usb'>
+					<address type='usb' bus='0' port='1'/>
+				</input>
+				<input type='mouse' bus='ps2'/>
+				<input type='keyboard' bus='ps2'/>
+				<graphics type='spice' autoport='yes'>
+					<listen type='address'/>
+					<image compression='off'/>
+				</graphics>
+				<sound model='ich6'>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
+				</sound>
+				<video>
+					<model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
+				</video>
+				<redirdev bus='usb' type='spicevmc'>
+					<address type='usb' bus='0' port='2'/>
+				</redirdev>
+				<redirdev bus='usb' type='spicevmc'>
+					<address type='usb' bus='0' port='3'/>
+				</redirdev>
+				<memballoon model='virtio'>
+					<address type='pci' domain='0x0000' bus='0x00' slot='0x0b' function='0x0'/>
+				</memballoon>
+			</devices>
+		</domain>
+	)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
+
+	qemu_connect.domain_define_xml(xml_config);
+
 	return 0;
 }
 
@@ -203,27 +346,28 @@ void QemuVmController::remove_disks(std::string xml) {
 }
 
 void QemuVmController::create_disks() {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
 	std::string storage_volume_config = fmt::format(R"(
 		<volume type='file'>
-		  <name>testing.img</name>
-		  <source>
-		  </source>
-		  <capacity unit='bytes'>4294967296</capacity>
-		  <allocation unit='bytes'>4335542272</allocation>
-		  <physical unit='bytes'>7001014272</physical>
-		  <target>
-		    <path>/home/alex/testo/storage-pool/testing.img</path>
-		    <format type='qcow2'/>
-		    <permissions>
-		    </permissions>
-		    <timestamps>
-		    </timestamps>
-		    <compat>1.1</compat>
-		    <features>
-		      <lazy_refcounts/>
-		    </features>
-		  </target>
+			<name>{}.img</name>
+			<source>
+			</source>
+			<capacity unit='M'>{}</capacity>
+			<target>
+				<path>{}/{}.img</path>
+				<format type='qcow2'/>
+				<permissions>
+				</permissions>
+				<timestamps>
+				</timestamps>
+				<compat>1.1</compat>
+				<features>
+					<lazy_refcounts/>
+				</features>
+			</target>
 		</volume>
-	)");
+	)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name());
+
+	auto volume = pool.volume_create_xml(storage_volume_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 }
 

@@ -58,6 +58,14 @@ Domain Connect::domain_lookup_by_name(const std::string& name) const {
 	return result;
 }
 
+Domain Connect::domain_define_xml(const std::string& xml) {
+	auto result = virDomainDefineXML(handle, xml.c_str());
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return result;
+}
+
 StorageVolume Connect::storage_volume_lookup_by_path(const fs::path& path) const {
 	auto result = virStorageVolLookupByPath(handle, path.generic_string().c_str());
 	if (!result) {
@@ -88,6 +96,14 @@ std::vector<StoragePool> Connect::storage_pools(std::initializer_list<virConnect
 
 	free(pools);
 	return result;
+}
+
+StoragePool Connect::storage_pool_lookup_by_name(const std::string& name) const {
+	auto res = virStoragePoolLookupByName(handle, name.c_str());
+	if (!res) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return res;
 }
 
 StoragePool Connect::storage_pool_define_xml(const std::string& xml) {
