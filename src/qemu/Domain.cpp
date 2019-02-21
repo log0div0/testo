@@ -38,6 +38,12 @@ bool Domain::is_active() const {
 	return result;
 }
 
+void Domain::start() {
+	if (virDomainCreate(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
 void Domain::stop() {
 	if (virDomainDestroy(handle) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
@@ -90,6 +96,5 @@ std::string Domain::dump_xml(std::initializer_list<virDomainXMLFlags> flags) con
 	free(xml);
 	return result;
 }
-
 
 }

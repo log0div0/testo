@@ -26,7 +26,8 @@ struct Domain {
 	std::vector<Snapshot> snapshots(std::initializer_list<virDomainSnapshotListFlags> flags = {}) const;
 	std::string dump_xml(std::initializer_list<virDomainXMLFlags> flags = {}) const;
 
-	void stop(); //aka stop
+	void start();
+	void stop();
 	void undefine();
 
 

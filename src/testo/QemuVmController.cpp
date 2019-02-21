@@ -63,6 +63,24 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
 				}
 			}
+
+			if (nic.count("adapter_type")) {
+				//ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio,sungem
+				std::string driver = nic.at("adapter_type").get<std::string>();
+				if (driver != "ne2k_pci" &&
+					driver != "i82551" &&
+					driver != "i82557b" &&
+					driver != "i82559er" &&
+					driver != "rtl8139" &&
+					driver != "e1000" &&
+					driver != "pcnet" &&
+					driver != "virtio" &&
+					driver != "sungem")
+				{
+					throw std::runtime_error("Constructing QemuVmController error: nic " +
+						nic.at("name").get<std::string>() + " has unsupported adaptertype internal: " + driver);
+				}
+			}
 		}
 
 		for (uint32_t i = 0; i < nics.size(); i++) {
@@ -264,7 +282,9 @@ int QemuVmController::install() {
 
 	xml_config += "\n </devices> \n </domain>";
 
-	qemu_connect.domain_define_xml(xml_config);
+	auto domain = qemu_connect.domain_define_xml(xml_config);
+
+	domain.start();
 
 	return 0;
 }
@@ -442,7 +462,7 @@ void QemuVmController::prepare_networks() {
 						</ip>
 					)");
 				}
-				//ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio,sungem
+
 				xml_config += "\n</network>";
 				auto network = qemu_connect.network_define_xml(xml_config);
 				network.start();
