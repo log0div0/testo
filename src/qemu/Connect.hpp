@@ -4,6 +4,7 @@
 #include "testo/Utils.hpp"
 #include "Domain.hpp"
 #include "StoragePool.hpp"
+#include "Network.hpp"
 #include <vector>
 
 namespace vir {
@@ -28,6 +29,9 @@ struct Connect {
 	StoragePool storage_pool_define_xml(const std::string& xml);
 
 	StorageVolume storage_volume_lookup_by_path(const fs::path& path) const;
+
+	std::vector<Network> networks(std::initializer_list<virConnectListAllNetworksFlags> flags = {}) const;
+	Network network_define_xml(const std::string& xml);
 
 	::virConnect* handle = nullptr;
 };

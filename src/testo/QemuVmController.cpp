@@ -7,7 +7,7 @@
 #include <regex>
 
 QemuVmController::QemuVmController(const nlohmann::json& config): config(config),
-	qemu_connect(vir::connect_open("qemu:///session"))
+	qemu_connect(vir::connect_open("qemu:///system"))
 {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing QemuVmController error: field NAME is not specified");
@@ -34,6 +34,48 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 	if (!config.count("disk_size")) {
 		throw std::runtime_error("Constructing QemuVmController error: field DISK SIZE is not specified");
 	}
+
+	if (config.count("nic")) {
+		auto nics = config.at("nic");
+		for (auto& nic: nics) {
+			if (!nic.count("attached_to")) {
+				throw std::runtime_error("Constructing QemuVmController error: field attached_to is not specified for the nic " +
+					nic.at("name").get<std::string>());
+			}
+
+			if (nic.at("attached_to").get<std::string>() == "internal") {
+				if (!nic.count("network")) {
+					throw std::runtime_error("Constructing QemuVmController error: nic " +
+					nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
+				}
+			}
+
+			if (nic.count("mac")) {
+				std::string mac = nic.at("mac").get<std::string>();
+				if (!is_mac_correct(mac)) {
+					throw std::runtime_error(std::string("Incorrect mac string: ") + mac);
+				}
+			}
+
+			if (nic.at("attached_to").get<std::string>() == "nat") {
+				if (nic.count("network")) {
+					throw std::runtime_error("Constructing QemuVmController error: nic " +
+					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
+				}
+			}
+		}
+
+		for (uint32_t i = 0; i < nics.size(); i++) {
+			for (uint32_t j = i + 1; j < nics.size(); j++) {
+				if (nics[i].at("name") == nics[j].at("name")) {
+					throw std::runtime_error("Constructing QemuVmController error: two identical NIC names: " +
+						nics[i].at("name").get<std::string>());
+				}
+			}
+		}
+	}
+
+	prepare_networks();
 }
 
 
@@ -72,7 +114,6 @@ int QemuVmController::install() {
 		domain.undefine();
 		remove_disks(xml);
 	}
-
 
 	//now create disks
 	create_disks();
@@ -189,9 +230,39 @@ int QemuVmController::install() {
 				<memballoon model='virtio'>
 					<address type='pci' domain='0x0000' bus='0x00' slot='0x0b' function='0x0'/>
 				</memballoon>
-			</devices>
-		</domain>
 	)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
+
+	if (config.count("nic")) {
+		auto nics = config.at("nic");
+		for (auto& nic: nics) {
+			std::string source_network("testo-");
+
+			if (nic.at("attached_to").get<std::string>() == "internal") {
+				source_network += nic.at("network").get<std::string>();
+			}
+
+			if (nic.at("attached_to").get<std::string>() == "nat") {
+				source_network += "nat";
+			}
+
+			xml_config += fmt::format(R"(
+				<interface type='network'>
+					<source network='{}'/>
+			)", source_network);
+
+			if (nic.count("mac")) {
+				xml_config += fmt::format("\n<mac address='{}'/>", nic.at("mac").get<std::string>());
+			}
+
+			if (nic.count("adapter_type")) {
+				xml_config += fmt::format("\n<model type='{}'/>", nic.at("adapter_type").get<std::string>());
+			}
+
+			xml_config += fmt::format("\n</interface>");
+		}
+	}
+
+	xml_config += "\n </devices> \n </domain>";
 
 	qemu_connect.domain_define_xml(xml_config);
 
@@ -325,6 +396,61 @@ int QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 int QemuVmController::remove_from_guest(const fs::path& obj) {
 	return 0;
 }
+
+void QemuVmController::prepare_networks() {
+	if (config.count("nic")) {
+		auto nics = config.at("nic");
+		for (auto& nic: nics) {
+			std::string network_to_lookup;
+			if (nic.at("attached_to").get<std::string>() == "nat") {
+				network_to_lookup = "testo-nat";
+			}
+
+			if (nic.at("attached_to").get<std::string>() == "internal") {
+				network_to_lookup = std::string("testo-") + nic.at("network").get<std::string>();
+			}
+
+			bool found = false;
+			for (auto& network: qemu_connect.networks()) {
+				if (network.name() == network_to_lookup) {
+					if (!network.is_active()) {
+						network.start();
+					}
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				std::string xml_config = fmt::format(R"(
+					<network>
+						<name>{}</name>
+						<bridge name="{}"/>
+				)", network_to_lookup, network_to_lookup);
+
+				if (network_to_lookup == "testo-nat") {
+					xml_config += fmt::format(R"(
+						<forward mode='nat'>
+							<nat>
+								<port start='1024' end='65535'/>
+							</nat>
+						</forward>
+						<ip address='192.168.156.1' netmask='255.255.255.0'>
+							<dhcp>
+								<range start='192.168.156.2' end='192.168.156.254'/>
+							</dhcp>
+						</ip>
+					)");
+				}
+				//ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio,sungem
+				xml_config += "\n</network>";
+				auto network = qemu_connect.network_define_xml(xml_config);
+				network.start();
+			}
+		}
+	}
+}
+
 
 void QemuVmController::remove_disks(std::string xml) {
 	std::string::size_type pos = 0; // Must initialize

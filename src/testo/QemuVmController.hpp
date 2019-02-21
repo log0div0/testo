@@ -53,6 +53,7 @@ struct QemuVmController: public VmController {
 	std::set<std::string> nics() const override;
 
 private:
+	void prepare_networks();
 	void remove_disks(std::string xml);
 	void create_disks();
 	nlohmann::json config;

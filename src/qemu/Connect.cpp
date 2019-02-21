@@ -111,6 +111,38 @@ StoragePool Connect::storage_pool_define_xml(const std::string& xml) {
 	if (!result) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
+	return result;
+}
+
+std::vector<Network> Connect::networks(std::initializer_list<virConnectListAllNetworksFlags> flags) const {
+	std::vector<Network> result;
+
+	virNetworkPtr* nets;
+
+	uint32_t flags_bimask = 0;
+	for (auto flag: flags) {
+		flags_bimask |= flag;
+	}
+
+	auto size = virConnectListAllNetworks(handle, &nets, flags_bimask);
+	if (size < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	for (size_t i = 0; i < size; i++) {
+		result.push_back(nets[i]);
+	}
+
+	free(nets);
+	return result;
+}
+
+Network Connect::network_define_xml(const std::string& xml) {
+	auto result = virNetworkDefineXML(handle, xml.c_str());
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return result;
 }
 
 }

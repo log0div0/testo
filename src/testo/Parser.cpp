@@ -326,6 +326,7 @@ std::shared_ptr<AttrBlock> Parser::attr_block() {
 	while (LA(1) == Token::category::id) {
 		attrs.push_back(attr());
 		match(Token::category::newline);
+		newline_list();
 	}
 
 	newline_list();

@@ -49,8 +49,9 @@ fs::path home_dir() {
 #include <unistd.h>
 
 fs::path home_dir() {
-	struct passwd *pw = getpwuid(getuid());
-	return fs::path(pw->pw_dir);
+	//struct passwd *pw = getpwuid(getuid());
+	//return fs::path(pw->pw_dir);
+	return fs::path("/var/lib/libvirt");
 }
 
 #endif

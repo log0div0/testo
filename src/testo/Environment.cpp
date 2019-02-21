@@ -105,7 +105,7 @@ void QemuEnvironment::prepare_storage_pool() {
 }
 
 void QemuEnvironment::setup() {
-	qemu_connect = vir::connect_open("qemu:///session");
+	qemu_connect = vir::connect_open("qemu:///system");
 	prepare_storage_pool();
 }
 
