@@ -473,6 +473,7 @@ Token Lexer::dbl_quoted_string() {
 
 		if (test_escaped_character()) {
 			value += escaped_character();
+			continue;
 		}
 
 		value += input[current_pos];

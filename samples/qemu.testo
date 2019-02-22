@@ -25,6 +25,6 @@ machine master	 {
 test dummy: master
 {
 	master {
-		press LEFTSHIFT + EQUALSIGN;
+		type "Hello world suchka!\\\'\""
 	}
 }

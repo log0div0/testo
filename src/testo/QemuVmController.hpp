@@ -60,4 +60,5 @@ private:
 	nlohmann::json config;
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;
+	std::unordered_map<char, std::vector<std::string>> charmap;
 };
