@@ -1,4 +1,4 @@
-machine buwaha	 {
+machine master	 {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
@@ -22,7 +22,9 @@ machine buwaha	 {
 	}
 }
 
-test dummy: buwaha
+test dummy: master
 {
-
+	master {
+		press LEFTSHIFT + EQUALSIGN;
+	}
 }

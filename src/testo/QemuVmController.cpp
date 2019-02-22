@@ -93,6 +93,82 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 		}
 	}
 
+	scancodes.insert({
+	{"ESC", 1},
+	{"ONE", 2},
+	{"TWO", 3},
+	{"THREE", 4},
+	{"FOUR", 5},
+	{"FIVE", 6},
+	{"SIX", 7},
+	{"SEVEN", 8},
+	{"EIGHT", 9},
+	{"NINE", 10},
+	{"ZERO", 11},
+	{"MINUS", 12},
+	{"EQUALSIGN", 13},
+	{"BACKSPACE", 14},
+	{"TAB", 15},
+	{"Q", 16},
+	{"W", 17},
+	{"E", 18},
+	{"R", 19},
+	{"T", 20},
+	{"Y", 21},
+	{"U", 22},
+	{"I", 23},
+	{"O", 24},
+	{"P", 25},
+	{"LEFTBRACE", 26},
+	{"RIGHTBRACE", 27},
+	{"ENTER", 28},
+	{"LEFTCTRL", 29},
+	{"A", 30},
+	{"S", 31},
+	{"D", 32},
+	{"F", 33},
+	{"G", 34},
+	{"H", 35},
+	{"J", 36},
+	{"K", 37},
+	{"L", 38},
+	{"SEMICOLON", 39},
+	{"APOSTROPHE", 40},
+	{"GRAVE", 41},
+	{"LEFTSHIFT", 42},
+	{"BACKSLASH", 43},
+	{"Z", 44},
+	{"X", 45},
+	{"C", 46},
+	{"V", 47},
+	{"B", 48},
+	{"N", 49},
+	{"M", 50},
+	{"COMMA", 51},
+	{"DOT", 52},
+	{"SLASH", 53},
+	{"RIGHTSHIFT", 54},
+	{"LEFTALT", 56},
+	{"SPACE", 57},
+	{"CAPSLOCK", 58},
+	{"NUMLOCK", 69},
+	{"SCROLLLOCK", 70},
+	{"RIGHTCTRL", 97},
+	{"RIGHTALT", 100},
+	{"HOME", 102},
+	{"UP", 103},
+	{"PAGEUP", 104},
+	{"LEFT", 105},
+	{"RIGHT", 106},
+	{"END", 107},
+	{"DOWN", 108},
+	{"PAGEDOWN", 109},
+	{"INSERT", 110},
+	{"DELETE", 111},
+	{"SCROLLUP", 177},
+	{"SCROLLDOWN", 178},
+	});
+
 	prepare_networks();
 }
 
@@ -310,7 +386,19 @@ int QemuVmController::rollback(const std::string& snapshot) {
 }
 
 int QemuVmController::press(const std::vector<std::string>& buttons) {
-	return 0;
+	try {
+		std::vector<uint32_t> keycodes;
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+			keycodes.push_back(scancodes[button]);
+		}
+		qemu_connect.domain_lookup_by_name(name()).send_keys(VIR_KEYCODE_SET_LINUX, 0, keycodes);
+		return 0;
+	}
+	catch (const std::exception& error) {
+		std::cout << "Pressing buttons on vm " << name() << " error : " << error << std::endl;
+		return -1;
+	}
 }
 
 int QemuVmController::set_nic(const std::string& nic, bool is_enabled) {

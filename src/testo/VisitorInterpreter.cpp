@@ -100,8 +100,9 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 
 	reg.local_vms.insert({vm_state->name, vm});
 
-	vm->install();
-	/*if (!vm_state->snapshot) {
+	return;
+
+	if (!vm_state->snapshot) {
 		if (vm->install()) {
 			throw std::runtime_error(std::string(vm_state->begin()) +
 				": Error while performing install: " +
@@ -132,7 +133,7 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 				" on VM " +
 				vm->name());
 		}
-	}*/
+	}
 }
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<CmdBlock> block) {

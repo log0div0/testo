@@ -30,6 +30,7 @@ struct Domain {
 	void stop();
 	void undefine();
 
+	void send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes);
 
 	::virDomain* handle = nullptr;
 };

@@ -56,6 +56,8 @@ private:
 	void prepare_networks();
 	void remove_disks(std::string xml);
 	void create_disks();
+
 	nlohmann::json config;
 	vir::Connect qemu_connect;
+	std::unordered_map<std::string, uint32_t> scancodes;
 };
