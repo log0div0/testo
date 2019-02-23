@@ -16,10 +16,18 @@ struct Network {
 
 	void load_weights(const std::string& weights_file_path);
 	void set_batch(int batch);
-	float* predict(const Image& image, float thresh = 0.);
+	float* predict(const Image& image);
 
 	const layer& back() const {
 		return impl->layers[impl->n-1];
+	}
+
+	int width() const {
+		return impl->w;
+	}
+
+	int height() const {
+		return impl->h;
 	}
 
 private:

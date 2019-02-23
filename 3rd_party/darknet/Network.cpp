@@ -23,10 +23,10 @@ void Network::load_weights(const std::string& weights_file_path) {
 }
 
 void Network::set_batch(int batch) {
-	set_batch_network(impl, 1);
+	set_batch_network(impl, batch);
 }
 
-float* Network::predict(const Image& image, float thresh) {
+float* Network::predict(const Image& image) {
 	Image resized_image = image.letterbox(impl->w, impl->h);
 	return forward(resized_image.data());
 }
