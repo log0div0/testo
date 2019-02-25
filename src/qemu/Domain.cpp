@@ -118,6 +118,27 @@ std::string Domain::get_metadata(virDomainMetadataType type,
 	return result;
 }
 
+void Domain::set_metadata(virDomainMetadataType type,
+		const std::string& metadata,
+		const std::string& key,
+		const std::string& uri,
+		std::vector<virDomainModificationImpact> flags)
+{
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	const char* uri_to_pass = uri.length() ? uri.c_str() : nullptr;
+	const char* key_to_pass = key.length() ? key.c_str() : nullptr;
+	const char* metadata_to_pass = metadata.length() ? metadata.c_str() : nullptr;
+
+	if (virDomainSetMetadata(handle, type, metadata_to_pass, key_to_pass, uri_to_pass, flag_bitmask) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
 void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes) {
 	if (virDomainSendKey(handle, code_set, 0, keycodes.data(), keycodes.size(), 0) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());

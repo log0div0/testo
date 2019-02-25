@@ -272,15 +272,66 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 
 
 int QemuVmController::set_metadata(const nlohmann::json& metadata) {
-	return 0;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
+			if (set_metadata(key_value.key(), key_value.value()) < 0) {
+				std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+			}
+		}
+		return 0;
+	}
+	catch (const std::exception& error) {
+		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
+		return -1;
+	}
 }
 
 int QemuVmController::set_metadata(const std::string& key, const std::string& value) {
-	return 0;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		std::vector flags = {VIR_DOMAIN_AFFECT_CURRENT, VIR_DOMAIN_AFFECT_CONFIG};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_AFFECT_LIVE);
+		}
+
+		std::string metadata_to_set = value.length() ? fmt::format("<{} value='{}'/>", key, value) : "";
+
+		domain.set_metadata(VIR_DOMAIN_METADATA_ELEMENT,
+			metadata_to_set,
+			"testo",
+			fmt::format("vm_metadata/{}", key),
+			flags);
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Setting metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
+		return -1;
+	}
 }
 
 std::vector<std::string> QemuVmController::keys() {
-	return {};
+	try {
+		std::vector<std::string> result;
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto metadata = domain.dump_xml();
+		remove_newlines(metadata);
+
+		std::regex keys_regex("<testo:(.*?)\\ .*?/>", std::regex::ECMAScript);
+		auto keys_begin = std::sregex_iterator(metadata.begin(), metadata.end(), keys_regex);
+		auto keys_end = std::sregex_iterator();
+
+		for (auto i =  keys_begin; i != keys_end; ++i) {
+			auto match = *i;
+			result.push_back(match[1].str());
+		}
+
+		return result;
+	}
+	catch (const std::exception& error) {
+		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
+		return {};
+	}
 }
 
 bool QemuVmController::has_key(const std::string& key) {
@@ -317,167 +368,164 @@ std::string QemuVmController::get_metadata(const std::string& key) {
 }
 
 int QemuVmController::install() {
-	if (is_defined()) {
-		if (is_running()) {
-			stop();
-		}
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		for (auto& snapshot: domain.snapshots()) {
-			snapshot.destroy();
+	try {
+		if (is_defined()) {
+			if (is_running()) {
+				if (stop()) {
+					std::throw_with_nested(__PRETTY_FUNCTION__);
+				}
+			}
+			auto domain = qemu_connect.domain_lookup_by_name(name());
+			for (auto& snapshot: domain.snapshots()) {
+				snapshot.destroy();
+			}
+
+			auto xml = domain.dump_xml();
+
+			domain.undefine();
+			remove_disks(xml);
 		}
 
-		auto xml = domain.dump_xml();
+		//now create disks
+		create_disks();
 
-		domain.undefine();
-		remove_disks(xml);
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
+		fs::path volume_path = pool.path() / (name() + ".img");
+
+		std::string xml_config = fmt::format(R"(
+			<domain type='kvm'>
+				<name>{}</name>
+				<memory unit='KiB'>2097152</memory>
+				<vcpu placement='static'>{}</vcpu>
+				<resource>
+					<partition>/machine</partition>
+				</resource>
+				<os>
+					<type arch='x86_64' machine='ubuntu'>hvm</type>
+					<boot dev='cdrom'/>
+					<boot dev='hd'/>
+				</os>
+				<features>
+					<acpi/>
+					<apic/>
+					<vmport state='off'/>
+				</features>
+				<metadata>
+					<testo:login xmlns:testo="vm_metadata/login" value='root'/>
+					<testo:password xmlns:testo="vm_metadata/password" value='1111'/>
+				</metadata>
+				<cpu mode='host-model'>
+					<model fallback='forbid'/>
+				</cpu>
+				<clock offset='utc'>
+					<timer name='rtc' tickpolicy='catchup'/>
+					<timer name='pit' tickpolicy='delay'/>
+					<timer name='hpet' present='yes'/>
+				</clock>
+				<on_poweroff>destroy</on_poweroff>
+				<on_reboot>restart</on_reboot>
+				<on_crash>destroy</on_crash>
+				<pm>
+				</pm>
+				<devices>
+					<emulator>/usr/bin/kvm-spice</emulator>
+					<disk type='file' device='disk'>
+						<driver name='qemu' type='qcow2'/>
+						<source file='{}'/>
+						<target dev='vda' bus='virtio'/>
+					</disk>
+					<disk type='file' device='cdrom'>
+						<driver name='qemu' type='raw'/>
+						<source file='{}'/>
+						<target dev='hda' bus='ide'/>
+						<readonly/>
+					</disk>
+					<controller type='usb' index='0' model='ich9-ehci1'>
+					</controller>
+					<controller type='usb' index='0' model='ich9-uhci1'>
+					</controller>
+					<controller type='usb' index='0' model='ich9-uhci2'>
+					</controller>
+					<controller type='usb' index='0' model='ich9-uhci3'>
+					</controller>
+					<controller type='ide' index='0'>
+					</controller>
+					<controller type='virtio-serial' index='0'>
+					</controller>
+					<controller type='pci' index='0' model='pci-root'/>
+					<serial type='pty'>
+						<target type='isa-serial' port='0'>
+							<model name='isa-serial'/>
+						</target>
+					</serial>
+					<console type='pty'>
+						<target type='serial' port='0'/>
+					</console>
+					<channel type='unix'>
+						<target type='virtio' name='negotiator.0'/>
+					</channel>
+					<channel type='spicevmc'>
+						<target type='virtio' name='com.redhat.spice.0'/>
+					</channel>
+					<input type='tablet' bus='usb'>
+					</input>
+					<input type='mouse' bus='ps2'/>
+					<input type='keyboard' bus='ps2'/>
+					<graphics type='spice' autoport='yes'>
+						<listen type='address'/>
+						<image compression='off'/>
+					</graphics>
+					<sound model='ich6'>
+					</sound>
+					<video>
+						<model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
+					</video>
+					<redirdev bus='usb' type='spicevmc'>
+					</redirdev>
+					<redirdev bus='usb' type='spicevmc'>
+					</redirdev>
+					<memballoon model='virtio'>
+					</memballoon>
+		)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
+
+		if (config.count("nic")) {
+			auto nics = config.at("nic");
+			for (auto& nic: nics) {
+				std::string source_network("testo-");
+
+				if (nic.at("attached_to").get<std::string>() == "internal") {
+					source_network += nic.at("network").get<std::string>();
+				}
+
+				if (nic.at("attached_to").get<std::string>() == "nat") {
+					source_network += "nat";
+				}
+
+				xml_config += fmt::format(R"(
+					<interface type='network'>
+						<source network='{}'/>
+				)", source_network);
+
+				if (nic.count("mac")) {
+					xml_config += fmt::format("\n<mac address='{}'/>", nic.at("mac").get<std::string>());
+				}
+
+				if (nic.count("adapter_type")) {
+					xml_config += fmt::format("\n<model type='{}'/>", nic.at("adapter_type").get<std::string>());
+				}
+
+				xml_config += fmt::format("\n</interface>");
+			}
+		}
+
+		xml_config += "\n </devices> \n </domain>";
+		auto domain = qemu_connect.domain_define_xml(xml_config);
+		domain.start();
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Performing install on vm " << name() << ": " << error << std::endl;
+		return -1;
 	}
-
-	//now create disks
-	create_disks();
-
-	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
-	fs::path volume_path = pool.path() / (name() + ".img");
-
-	std::string xml_config = fmt::format(R"(
-		<domain type='kvm'>
-			<name>{}</name>
-			<memory unit='KiB'>2097152</memory>
-			<vcpu placement='static'>{}</vcpu>
-			<resource>
-				<partition>/machine</partition>
-			</resource>
-			<os>
-				<type arch='x86_64' machine='ubuntu'>hvm</type>
-				<boot dev='cdrom'/>
-				<boot dev='hd'/>
-			</os>
-			<features>
-				<acpi/>
-				<apic/>
-				<vmport state='off'/>
-			</features>
-			<metadata>
-				<testo:login xmlns:testo="vm_metadata/login" value='root'/>
-				<testo:password xmlns:testo="vm_metadata/password" value='1111'/>
-			</metadata>
-			<cpu mode='host-model'>
-				<model fallback='forbid'/>
-			</cpu>
-			<clock offset='utc'>
-				<timer name='rtc' tickpolicy='catchup'/>
-				<timer name='pit' tickpolicy='delay'/>
-				<timer name='hpet' present='yes'/>
-			</clock>
-			<on_poweroff>destroy</on_poweroff>
-			<on_reboot>restart</on_reboot>
-			<on_crash>destroy</on_crash>
-			<pm>
-			</pm>
-			<devices>
-				<emulator>/usr/bin/kvm-spice</emulator>
-				<disk type='file' device='disk'>
-					<driver name='qemu' type='qcow2'/>
-					<source file='{}'/>
-					<target dev='vda' bus='virtio'/>
-				</disk>
-				<disk type='file' device='cdrom'>
-					<driver name='qemu' type='raw'/>
-					<source file='{}'/>
-					<target dev='hda' bus='ide'/>
-					<readonly/>
-				</disk>
-				<controller type='usb' index='0' model='ich9-ehci1'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci1'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci2'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci3'>
-				</controller>
-				<controller type='ide' index='0'>
-				</controller>
-				<controller type='virtio-serial' index='0'>
-				</controller>
-				<controller type='pci' index='0' model='pci-root'/>
-				<serial type='pty'>
-					<target type='isa-serial' port='0'>
-						<model name='isa-serial'/>
-					</target>
-				</serial>
-				<console type='pty'>
-					<target type='serial' port='0'/>
-				</console>
-				<channel type='unix'>
-					<target type='virtio' name='negotiator.0'/>
-				</channel>
-				<channel type='spicevmc'>
-					<target type='virtio' name='com.redhat.spice.0'/>
-				</channel>
-				<input type='tablet' bus='usb'>
-				</input>
-				<input type='mouse' bus='ps2'/>
-				<input type='keyboard' bus='ps2'/>
-				<graphics type='spice' autoport='yes'>
-					<listen type='address'/>
-					<image compression='off'/>
-				</graphics>
-				<sound model='ich6'>
-				</sound>
-				<video>
-					<model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
-				</video>
-				<redirdev bus='usb' type='spicevmc'>
-				</redirdev>
-				<redirdev bus='usb' type='spicevmc'>
-				</redirdev>
-				<memballoon model='virtio'>
-				</memballoon>
-	)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
-
-	if (config.count("nic")) {
-		auto nics = config.at("nic");
-		for (auto& nic: nics) {
-			std::string source_network("testo-");
-
-			if (nic.at("attached_to").get<std::string>() == "internal") {
-				source_network += nic.at("network").get<std::string>();
-			}
-
-			if (nic.at("attached_to").get<std::string>() == "nat") {
-				source_network += "nat";
-			}
-
-			xml_config += fmt::format(R"(
-				<interface type='network'>
-					<source network='{}'/>
-			)", source_network);
-
-			if (nic.count("mac")) {
-				xml_config += fmt::format("\n<mac address='{}'/>", nic.at("mac").get<std::string>());
-			}
-
-			if (nic.count("adapter_type")) {
-				xml_config += fmt::format("\n<model type='{}'/>", nic.at("adapter_type").get<std::string>());
-			}
-
-			xml_config += fmt::format("\n</interface>");
-		}
-	}
-
-	xml_config += "\n </devices> \n </domain>";
-
-	auto domain = qemu_connect.domain_define_xml(xml_config);
-
-	domain.start();
-
-	std::cout << "Login: " << get_metadata("login") << std::endl;
-	std::cout << "Password: " << get_metadata("password") << std::endl;
-
-	std::cout << "Has login: " << has_key("login") << std::endl;
-	std::cout << "Has password: " << has_key("password") << std::endl;
-	std::cout << "Has abir: " << has_key("abir") << std::endl;
-
-	return 0;
 }
 
 int QemuVmController::make_snapshot(const std::string& snapshot) {

@@ -30,6 +30,12 @@ struct Domain {
 		const std::string& uri,
 		std::initializer_list<virDomainModificationImpact> flags = {}) const;
 
+	void set_metadata(virDomainMetadataType type,
+		const std::string& metadata,
+		const std::string& key,
+		const std::string& uri,
+		std::vector<virDomainModificationImpact> flags = {});
+
 	void start();
 	void stop();
 	void undefine();
