@@ -286,9 +286,9 @@ std::vector<std::string> QemuVmController::keys() {
 bool QemuVmController::has_key(const std::string& key) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto metadata = domain.get_metadata(VIR_DOMAIN_METADATA_ELEMENT, "vm_metadata", {VIR_DOMAIN_AFFECT_CURRENT});
+		auto metadata = domain.dump_xml();
 		remove_newlines(metadata);
-		std::regex metadata_regex(fmt::format(".*?<{}\\ value=\"(.*?)\"/>.*", key), std::regex::ECMAScript);
+		std::regex metadata_regex(fmt::format(".*?<metadata.*?<testo:{}.*?value=.*?</metadata>.*", key), std::regex::ECMAScript);
 		std::smatch match;
 		return std::regex_match(metadata, match, metadata_regex);
 
@@ -301,9 +301,8 @@ bool QemuVmController::has_key(const std::string& key) {
 std::string QemuVmController::get_metadata(const std::string& key) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto metadata = domain.get_metadata(VIR_DOMAIN_METADATA_ELEMENT, "vm_metadata", {VIR_DOMAIN_AFFECT_CURRENT});
-		remove_newlines(metadata);
-		std::regex metadata_regex(fmt::format(".*?<{}\\ value=\"(.*?)\"/>.*", key), std::regex::ECMAScript);
+		auto metadata = domain.get_metadata(VIR_DOMAIN_METADATA_ELEMENT, fmt::format("vm_metadata/{}", key), {VIR_DOMAIN_AFFECT_CURRENT});
+		std::regex metadata_regex(".*?value=\"(.*?)\"/>.*", std::regex::ECMAScript);
 		std::smatch match;
 
 		if (std::regex_match(metadata, match, metadata_regex)) {
@@ -358,10 +357,8 @@ int QemuVmController::install() {
 				<vmport state='off'/>
 			</features>
 			<metadata>
-				<testo:vm_metadata xmlns:testo="vm_metadata">
-				<testo:login value='root'/>
-				<testo:password value='1111'/>
-				</testo:vm_metadata>
+				<testo:login xmlns:testo="vm_metadata/login" value='root'/>
+				<testo:password xmlns:testo="vm_metadata/password" value='1111'/>
 			</metadata>
 			<cpu mode='host-model'>
 				<model fallback='forbid'/>
@@ -475,6 +472,10 @@ int QemuVmController::install() {
 
 	std::cout << "Login: " << get_metadata("login") << std::endl;
 	std::cout << "Password: " << get_metadata("password") << std::endl;
+
+	std::cout << "Has login: " << has_key("login") << std::endl;
+	std::cout << "Has password: " << has_key("password") << std::endl;
+	std::cout << "Has abir: " << has_key("abir") << std::endl;
 
 	return 0;
 }
