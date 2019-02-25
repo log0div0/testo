@@ -26,6 +26,10 @@ struct Domain {
 	std::vector<Snapshot> snapshots(std::initializer_list<virDomainSnapshotListFlags> flags = {}) const;
 	std::string dump_xml(std::initializer_list<virDomainXMLFlags> flags = {}) const;
 
+	std::string get_metadata(virDomainMetadataType type,
+		const std::string& uri,
+		std::initializer_list<virDomainModificationImpact> flags = {}) const;
+
 	void start();
 	void stop();
 	void undefine();

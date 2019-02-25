@@ -100,7 +100,7 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 
 	reg.local_vms.insert({vm_state->name, vm});
 
-	return;
+	//return;
 
 	if (!vm_state->snapshot) {
 		if (vm->install()) {

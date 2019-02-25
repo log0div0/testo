@@ -1,4 +1,4 @@
-machine master	 {
+machine buwaha	 {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
@@ -22,9 +22,6 @@ machine master	 {
 	}
 }
 
-test dummy: master
+test dummy: buwaha
 {
-	master {
-		type "Hello world suchka!\\\'\""
-	}
 }

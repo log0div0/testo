@@ -96,8 +96,29 @@ std::string Domain::dump_xml(std::initializer_list<virDomainXMLFlags> flags) con
 	return result;
 }
 
+std::string Domain::get_metadata(virDomainMetadataType type,
+		const std::string& uri,
+		std::initializer_list<virDomainModificationImpact> flags) const
+{
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	const char* uri_to_pass = uri.length() ? uri.c_str() : nullptr;
+
+	char* metadata = virDomainGetMetadata(handle, type, uri_to_pass, flag_bitmask);
+	if (!metadata) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	std::string result(metadata);
+	free(metadata);
+	return result;
+}
+
 void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes) {
-	uint32_t enter = 0x28;
 	if (virDomainSendKey(handle, code_set, 0, keycodes.data(), keycodes.size(), 0) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}

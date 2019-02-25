@@ -284,11 +284,37 @@ std::vector<std::string> QemuVmController::keys() {
 }
 
 bool QemuVmController::has_key(const std::string& key) {
-	return true;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto metadata = domain.get_metadata(VIR_DOMAIN_METADATA_ELEMENT, "vm_metadata", {VIR_DOMAIN_AFFECT_CURRENT});
+		remove_newlines(metadata);
+		std::regex metadata_regex(fmt::format(".*?<{}\\ value=\"(.*?)\"/>.*", key), std::regex::ECMAScript);
+		std::smatch match;
+		return std::regex_match(metadata, match, metadata_regex);
+
+	} catch (const std::exception& error) {
+		std::cout << "Checking metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
+		return false;
+	}
 }
 
 std::string QemuVmController::get_metadata(const std::string& key) {
-	return "";
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto metadata = domain.get_metadata(VIR_DOMAIN_METADATA_ELEMENT, "vm_metadata", {VIR_DOMAIN_AFFECT_CURRENT});
+		remove_newlines(metadata);
+		std::regex metadata_regex(fmt::format(".*?<{}\\ value=\"(.*?)\"/>.*", key), std::regex::ECMAScript);
+		std::smatch match;
+
+		if (std::regex_match(metadata, match, metadata_regex)) {
+			return match[1].str();
+		} else {
+			throw std::runtime_error("Requested key is not present in vm metadata");
+		}
+	} catch (const std::exception& error) {
+		std::cout << "Getting metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
+		return "";
+	}
 }
 
 int QemuVmController::install() {
@@ -331,6 +357,12 @@ int QemuVmController::install() {
 				<apic/>
 				<vmport state='off'/>
 			</features>
+			<metadata>
+				<testo:vm_metadata xmlns:testo="vm_metadata">
+				<testo:login value='root'/>
+				<testo:password value='1111'/>
+				</testo:vm_metadata>
+			</metadata>
 			<cpu mode='host-model'>
 				<model fallback='forbid'/>
 			</cpu>
@@ -350,35 +382,24 @@ int QemuVmController::install() {
 					<driver name='qemu' type='qcow2'/>
 					<source file='{}'/>
 					<target dev='vda' bus='virtio'/>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x0a' function='0x0'/>
 				</disk>
 				<disk type='file' device='cdrom'>
 					<driver name='qemu' type='raw'/>
 					<source file='{}'/>
 					<target dev='hda' bus='ide'/>
 					<readonly/>
-					<address type='drive' controller='0' bus='0' target='0' unit='0'/>
 				</disk>
 				<controller type='usb' index='0' model='ich9-ehci1'>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x7'/>
 				</controller>
 				<controller type='usb' index='0' model='ich9-uhci1'>
-					<master startport='0'/>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x0' multifunction='on'/>
 				</controller>
 				<controller type='usb' index='0' model='ich9-uhci2'>
-					<master startport='2'/>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x1'/>
 				</controller>
 				<controller type='usb' index='0' model='ich9-uhci3'>
-					<master startport='4'/>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x08' function='0x2'/>
 				</controller>
 				<controller type='ide' index='0'>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x1'/>
 				</controller>
 				<controller type='virtio-serial' index='0'>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x09' function='0x0'/>
 				</controller>
 				<controller type='pci' index='0' model='pci-root'/>
 				<serial type='pty'>
@@ -391,14 +412,11 @@ int QemuVmController::install() {
 				</console>
 				<channel type='unix'>
 					<target type='virtio' name='negotiator.0'/>
-					<address type='virtio-serial' controller='0' bus='0' port='1'/>
 				</channel>
 				<channel type='spicevmc'>
 					<target type='virtio' name='com.redhat.spice.0'/>
-					<address type='virtio-serial' controller='0' bus='0' port='2'/>
 				</channel>
 				<input type='tablet' bus='usb'>
-					<address type='usb' bus='0' port='1'/>
 				</input>
 				<input type='mouse' bus='ps2'/>
 				<input type='keyboard' bus='ps2'/>
@@ -407,20 +425,15 @@ int QemuVmController::install() {
 					<image compression='off'/>
 				</graphics>
 				<sound model='ich6'>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
 				</sound>
 				<video>
 					<model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0'/>
 				</video>
 				<redirdev bus='usb' type='spicevmc'>
-					<address type='usb' bus='0' port='2'/>
 				</redirdev>
 				<redirdev bus='usb' type='spicevmc'>
-					<address type='usb' bus='0' port='3'/>
 				</redirdev>
 				<memballoon model='virtio'>
-					<address type='pci' domain='0x0000' bus='0x00' slot='0x0b' function='0x0'/>
 				</memballoon>
 	)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
 
@@ -459,6 +472,9 @@ int QemuVmController::install() {
 	auto domain = qemu_connect.domain_define_xml(xml_config);
 
 	domain.start();
+
+	std::cout << "Login: " << get_metadata("login") << std::endl;
+	std::cout << "Password: " << get_metadata("password") << std::endl;
 
 	return 0;
 }
@@ -674,11 +690,7 @@ void QemuVmController::prepare_networks() {
 
 
 void QemuVmController::remove_disks(std::string xml) {
-	std::string::size_type pos = 0; // Must initialize
-	while (( pos = xml.find ("\n",pos)) != std::string::npos ) {
-		xml.erase (pos, 1);
-	}
-
+	remove_newlines(xml);
 	std::regex disks_regex("<disk.*?device='disk'.*?file='(.*?)'", std::regex::ECMAScript);
 	auto disks_begin = std::sregex_iterator(xml.begin(), xml.end(), disks_regex);
 	auto disks_end = std::sregex_iterator();
