@@ -357,7 +357,9 @@ std::string QemuVmController::get_metadata(const std::string& key) {
 		std::smatch match;
 
 		if (std::regex_match(metadata, match, metadata_regex)) {
-			return match[1].str();
+			std::string value = match[1].str();
+			replace_all(value, "&quot;", "\"");
+			return value;
 		} else {
 			throw std::runtime_error("Requested key is not present in vm metadata");
 		}
@@ -488,6 +490,8 @@ int QemuVmController::install() {
 					</memballoon>
 		)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
 
+		uint32_t nic_count = 0;
+
 		if (config.count("nic")) {
 			auto nics = config.at("nic");
 			for (auto& nic: nics) {
@@ -515,11 +519,24 @@ int QemuVmController::install() {
 				}
 
 				xml_config += fmt::format("\n</interface>");
+
+				nic_count++;
 			}
 		}
 
 		xml_config += "\n </devices> \n </domain>";
 		auto domain = qemu_connect.domain_define_xml(xml_config);
+
+		if (config.count("metadata")) {
+			set_metadata(config.at("metadata"));
+		}
+
+		auto config_str = config.dump();
+
+		set_metadata("vm_config", config_str);
+		set_metadata("vm_nic_count", std::to_string(nic_count));
+		set_metadata("vm_name", name());
+
 		domain.start();
 		return 0;
 	} catch (const std::exception& error) {
@@ -597,7 +614,14 @@ int QemuVmController::unplug_dvd() {
 }
 
 int QemuVmController::start() {
-	return 0;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		domain.start();
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Starting vm " << name() << ": " << error << std::endl;
+		return -1;
+	}
 }
 
 int QemuVmController::stop() {

@@ -22,6 +22,7 @@ bool is_number(const std::string& s);
 bool is_mac_correct(const std::string& mac);
 std::string normalized_mac(const std::string& mac);
 
+void replace_all(std::string& str, const std::string& from, const std::string& to);
 void remove_newlines(std::string& str);
 
 inline std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
