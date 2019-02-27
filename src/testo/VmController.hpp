@@ -7,12 +7,11 @@
 struct VmController {
 	virtual ~VmController() = default;
 	virtual int install() = 0;
-	virtual int make_snapshot(const std::string& snapshot) = 0;
+	virtual int make_snapshot(const std::string& snapshot, const std::string& cksum) = 0;
 	virtual int set_metadata(const nlohmann::json& metadata) = 0;
 	virtual int set_metadata(const std::string& key, const std::string& value) = 0;
 	virtual nlohmann::json get_config() const = 0;
 	virtual std::string get_metadata(const std::string& key) = 0;
-	virtual int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) = 0;
 	virtual std::string get_snapshot_cksum(const std::string& snapshot) = 0;
 	virtual int rollback(const std::string& snapshot) = 0;
 	virtual int press(const std::vector<std::string>& buttons) = 0;

@@ -22,8 +22,11 @@ struct Domain {
 	std::string name() const;
 	bool is_active() const;
 
-
 	std::vector<Snapshot> snapshots(std::initializer_list<virDomainSnapshotListFlags> flags = {}) const;
+	Snapshot snapshot_lookup_by_name(const std::string& name) const;
+	Snapshot snapshot_create_xml(const std::string& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags = {});
+	void revert_to_snapshot(Snapshot& snap, std::initializer_list<virDomainSnapshotRevertFlags> = {});
+
 	std::string dump_xml(std::initializer_list<virDomainXMLFlags> flags = {}) const;
 
 	std::string get_metadata(virDomainMetadataType type,

@@ -83,8 +83,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		auto vm = state.first;
 		auto original_keys = state.second;
 		auto final_keys = vm->keys();
+		std::sort(original_keys.begin(), original_keys.end());
+		std::sort(final_keys.begin(), final_keys.end());
 		std::vector<std::string> new_keys;
-		std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), new_keys.begin());
+		std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), std::back_inserter(new_keys));
 		for (auto& key: new_keys) {
 			vm->set_metadata(key, "");
 		}
@@ -99,8 +101,6 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 	auto vm = reg.vms.find(vm_state->name)->second;
 
 	reg.local_vms.insert({vm_state->name, vm});
-
-	//return;
 
 	if (!vm_state->snapshot) {
 		if (vm->install()) {
@@ -617,13 +617,8 @@ void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::sh
 	visit_action_block(vm, snapshot->action_block->action);
 	auto new_cksum = snapshot_cksum(vm, snapshot);
 	std::cout << "Taking snapshot " << snapshot->name.value() << " for vm " << vm->name() << std::endl;
-	if (vm->make_snapshot(snapshot->name)) {
+	if (vm->make_snapshot(snapshot->name, new_cksum)) {
 		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while creating snapshot" +
-			snapshot->name.value() + " for vm " + vm->name());
-	}
-	std::cout << "Setting snapshot " << snapshot->name.value() << " cksum: " << new_cksum << std::endl;
-	if (vm->set_snapshot_cksum(snapshot->name, new_cksum)) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while setting snapshot cksum" +
 			snapshot->name.value() + " for vm " + vm->name());
 	}
 }

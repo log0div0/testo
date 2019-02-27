@@ -79,6 +79,41 @@ std::vector<Snapshot> Domain::snapshots(std::initializer_list<virDomainSnapshotL
 	return result;
 }
 
+Snapshot Domain::snapshot_lookup_by_name(const std::string& name) const {
+	auto result = virDomainSnapshotLookupByName(handle, name.c_str(), 0);
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return result;
+}
+
+Snapshot Domain::snapshot_create_xml(const std::string& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags) {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	auto result = virDomainSnapshotCreateXML(handle, xml.c_str(), flag_bitmask);
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	return result;
+}
+
+void Domain::revert_to_snapshot(Snapshot& snap, std::initializer_list<virDomainSnapshotRevertFlags> flags) {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	if (virDomainRevertToSnapshot(snap.handle, flag_bitmask)) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
 std::string Domain::dump_xml(std::initializer_list<virDomainXMLFlags> flags) const {
 	uint32_t flag_bitmask = 0;
 

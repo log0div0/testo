@@ -9,7 +9,7 @@ struct QemuVmController: public VmController {
 	QemuVmController(const nlohmann::json& config);
 	QemuVmController(const QemuVmController& other) = delete;
 	int install() override;
-	int make_snapshot(const std::string& snapshot) override;
+	int make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 	int set_metadata(const nlohmann::json& metadata) override;
 	int set_metadata(const std::string& key, const std::string& value) override;
 
@@ -18,7 +18,6 @@ struct QemuVmController: public VmController {
 	}
 
 	std::string get_metadata(const std::string& key) override;
-	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	int rollback(const std::string& snapshot) override;
 	int press(const std::vector<std::string>& buttons) override;
@@ -56,6 +55,8 @@ private:
 	void prepare_networks();
 	void remove_disks(std::string xml);
 	void create_disks();
+
+	std::vector<std::string> metadata_keys(std::string xml) const;
 
 	nlohmann::json config;
 	vir::Connect qemu_connect;

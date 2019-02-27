@@ -424,7 +424,7 @@ int VboxVmController::install() {
 	}
 }
 
-int VboxVmController::make_snapshot(const std::string& snapshot) {
+int VboxVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
 	try {
 		{
 			auto lock_machine = virtual_box.find_machine(name());
@@ -448,6 +448,10 @@ int VboxVmController::make_snapshot(const std::string& snapshot) {
 			auto lock_machine = virtual_box.find_machine(name());
 			lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 			start_session.unlock_machine();
+		}
+
+		if (set_snapshot_cksum(snapshot, cksum)) {
+			std::throw_with_nested(__PRETTY_FUNCTION__);
 		}
 
 		return 0;

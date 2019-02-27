@@ -312,21 +312,8 @@ int QemuVmController::set_metadata(const std::string& key, const std::string& va
 
 std::vector<std::string> QemuVmController::keys() {
 	try {
-		std::vector<std::string> result;
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto metadata = domain.dump_xml();
-		remove_newlines(metadata);
-
-		std::regex keys_regex("<testo:(.*?)\\ .*?/>", std::regex::ECMAScript);
-		auto keys_begin = std::sregex_iterator(metadata.begin(), metadata.end(), keys_regex);
-		auto keys_end = std::sregex_iterator();
-
-		for (auto i =  keys_begin; i != keys_end; ++i) {
-			auto match = *i;
-			result.push_back(match[1].str());
-		}
-
-		return result;
+		return metadata_keys(domain.dump_xml());
 	}
 	catch (const std::exception& error) {
 		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
@@ -545,7 +532,16 @@ int QemuVmController::install() {
 	}
 }
 
-int QemuVmController::make_snapshot(const std::string& snapshot) {
+int QemuVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
+	std::string xml_config = fmt::format(R"(
+		<domainsnapshot>
+			<name>{}</name>
+			<description>{}</description>
+		</domainsnapshot>
+		)", snapshot, cksum);
+
+	auto domain = qemu_connect.domain_lookup_by_name(name());
+	domain.snapshot_create_xml(xml_config);
 	return 0;
 }
 
@@ -553,16 +549,56 @@ std::set<std::string> QemuVmController::nics() const {
 	return {};
 }
 
-int QemuVmController::set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) {
-	return 0;
-}
-
 std::string QemuVmController::get_snapshot_cksum(const std::string& snapshot) {
-	return "";
+	try {
+		auto xml = qemu_connect.domain_lookup_by_name(name()).snapshot_lookup_by_name(snapshot).dump_xml();
+
+		remove_newlines(xml);
+		std::regex description_regex(".*?<description>(.*?)<\\/description>.*", std::regex::ECMAScript);
+		std::smatch match;
+
+		if (std::regex_match(xml, match, description_regex)) {
+			std::string value = match[1].str();
+			return value;
+		} else {
+			throw std::runtime_error("Description is not present in snapshot metadata");
+		}
+
+		return "";
+	}
+	catch (const std::exception& error) {
+		std::cout << "getting snapshot cksum on vm " << name() << ": " << error << std::endl;
+		return "";
+	}
 }
 
 int QemuVmController::rollback(const std::string& snapshot) {
-	return 0;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto snap = domain.snapshot_lookup_by_name(snapshot);
+		domain.revert_to_snapshot(snap);
+
+		//Now let's take care of possible additional metadata keys
+
+		auto new_metadata_keys = metadata_keys(domain.dump_xml());
+		auto old_metadata_keys = metadata_keys(snap.dump_xml());
+
+		std::sort(new_metadata_keys.begin(), new_metadata_keys.end());
+		std::sort(old_metadata_keys.begin(), old_metadata_keys.end());
+
+		std::vector<std::string> difference;
+		std::set_difference(new_metadata_keys.begin(), new_metadata_keys.end(),
+			old_metadata_keys.begin(), old_metadata_keys.end(), std::back_inserter(difference));
+
+		for (auto& key: difference) {
+			set_metadata(key, "");
+		}
+
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Performing rollback on vm " << name() << ": " << error << std::endl;
+		return -1;
+	}
 }
 
 int QemuVmController::press(const std::vector<std::string>& buttons) {
@@ -801,5 +837,21 @@ void QemuVmController::create_disks() {
 	)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name());
 
 	auto volume = pool.volume_create_xml(storage_volume_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+}
+
+std::vector<std::string> QemuVmController::metadata_keys(std::string xml) const {
+	std::vector<std::string> result;
+	remove_newlines(xml);
+
+	std::regex keys_regex("<testo:(.*?)\\ .*?/>", std::regex::ECMAScript);
+	auto keys_begin = std::sregex_iterator(xml.begin(), xml.end(), keys_regex);
+	auto keys_end = std::sregex_iterator();
+
+	for (auto i =  keys_begin; i != keys_end; ++i) {
+		auto match = *i;
+		result.push_back(match[1].str());
+	}
+
+	return result;
 }
 

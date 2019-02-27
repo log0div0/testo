@@ -4,6 +4,7 @@
 
 using namespace AST;
 
+//TODO: Snapshot cksum must depend on name and parent cksum
 
 uint64_t VisitorCksum::visit(std::shared_ptr<VmController> vm, std::shared_ptr<ActionBlock> action_block) {
 	std::string result = visit_action_block(vm, action_block);

@@ -18,7 +18,9 @@ struct Snapshot {
 	Snapshot& operator=(Snapshot&&);
 
 	std::string name() const;
+	std::string dump_xml() const;
 	void destroy(std::initializer_list<virDomainSnapshotDeleteFlags> flags = {});
+
 
 	::virDomainSnapshot* handle = nullptr;
 };

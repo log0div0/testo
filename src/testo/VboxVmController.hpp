@@ -11,7 +11,7 @@ struct VboxVmController: public VmController {
 	VboxVmController(const nlohmann::json& config);
 	VboxVmController(const VboxVmController& other) = delete;
 	int install() override;
-	int make_snapshot(const std::string& snapshot) override;
+	int make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 	int set_metadata(const nlohmann::json& metadata) override;
 	int set_metadata(const std::string& key, const std::string& value) override;
 
@@ -20,7 +20,6 @@ struct VboxVmController: public VmController {
 	}
 
 	std::string get_metadata(const std::string& key) override;
-	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	int rollback(const std::string& snapshot) override;
 	int press(const std::vector<std::string>& buttons) override;
@@ -59,6 +58,8 @@ private:
 	void delete_snapshot_with_children(vbox::Snapshot& snapshot);
 	void remove_if_exists();
 	void create_vm();
+
+	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum);
 
 	nlohmann::json config;
 	vbox::VirtualBoxClient virtual_box_client;

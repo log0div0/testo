@@ -22,6 +22,11 @@ machine buwaha	 {
 	}
 }
 
-test dummy: buwaha
+snapshot dummy {
+
+}
+
+test dummy: buwaha(dummy)
 {
+	buwaha set puchacha="AHAHASUCHKA"
 }
