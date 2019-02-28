@@ -3,6 +3,7 @@
 #include "QemuFlashDriveController.hpp"
 
 #include "Utils.hpp"
+#include "pugixml/pugixml.hpp"
 #include <fmt/format.h>
 #include <regex>
 
@@ -323,13 +324,9 @@ std::vector<std::string> QemuVmController::keys() {
 
 bool QemuVmController::has_key(const std::string& key) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto metadata = domain.dump_xml();
-		remove_newlines(metadata);
-		std::regex metadata_regex(fmt::format(".*?<metadata.*?<testo:{}.*?value=.*?</metadata>.*", key), std::regex::ECMAScript);
-		std::smatch match;
-		return std::regex_match(metadata, match, metadata_regex);
-
+		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml_new();
+		auto found = config.select_node(fmt::format("//*[namespace-uri() = \"vm_metadata/{}\"]", key).c_str());
+		return !found.node().empty();
 	} catch (const std::exception& error) {
 		std::cout << "Checking metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
 		return false;
@@ -338,18 +335,14 @@ bool QemuVmController::has_key(const std::string& key) {
 
 std::string QemuVmController::get_metadata(const std::string& key) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto metadata = domain.get_metadata(VIR_DOMAIN_METADATA_ELEMENT, fmt::format("vm_metadata/{}", key), {VIR_DOMAIN_AFFECT_CURRENT});
-		std::regex metadata_regex(".*?value=\"(.*?)\"/>.*", std::regex::ECMAScript);
-		std::smatch match;
-
-		if (std::regex_match(metadata, match, metadata_regex)) {
-			std::string value = match[1].str();
-			replace_all(value, "&quot;", "\"");
-			return value;
-		} else {
+		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml_new();
+		auto found = config.select_node(fmt::format("//*[namespace-uri() = \"vm_metadata/{}\"]", key).c_str()).node();
+		if (found.empty()) {
 			throw std::runtime_error("Requested key is not present in vm metadata");
 		}
+
+		return found.attribute("value").value();
+
 	} catch (const std::exception& error) {
 		std::cout << "Getting metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
 		return "";
@@ -574,6 +567,7 @@ std::string QemuVmController::get_snapshot_cksum(const std::string& snapshot) {
 
 int QemuVmController::rollback(const std::string& snapshot) {
 	try {
+
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
 		domain.revert_to_snapshot(snap);
@@ -646,7 +640,28 @@ int QemuVmController::plug_dvd(fs::path path) {
 }
 
 int QemuVmController::unplug_dvd() {
-	return 0;
+	try {
+	/*	auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto xml = domain.dump_xml();
+		remove_newlines(xml);
+
+		std::regex description_regex(".*?<description>(.*?)<\\/description>.*", std::regex::ECMAScript);
+		std::smatch match;
+
+		if (std::regex_match(xml, match, description_regex)) {
+			std::string value = match[1].str();
+			return value;
+		} else {
+			throw std::runtime_error("Description is not present in snapshot metadata");
+		}*/
+
+		return 0;
+
+	} catch (const std::string& error) {
+		std::cout << "Unplugging dvd from vm " << name() << ": " << error << std::endl;
+		return -1;
+	}
+
 }
 
 int QemuVmController::start() {

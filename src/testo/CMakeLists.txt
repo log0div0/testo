@@ -9,8 +9,8 @@ list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 add_library(testo-core STATIC ${SRCS})
 
-target_link_libraries(testo-core vbox vboxcapi qemu)
-add_dependencies(testo-core json)
+add_dependencies(testo-core json libpugixml)
+target_link_libraries(testo-core vbox vboxcapi qemu pugixml)
 
 if(UNIX)
 	target_link_libraries(testo-core dl stdc++fs lept tesseract)

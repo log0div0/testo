@@ -131,6 +131,24 @@ std::string Domain::dump_xml(std::initializer_list<virDomainXMLFlags> flags) con
 	return result;
 }
 
+pugi::xml_document Domain::dump_xml_new(std::initializer_list<virDomainXMLFlags> flags) const {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	char* xml = virDomainGetXMLDesc(handle, flag_bitmask);
+	if (!xml) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	pugi::xml_document result;
+	result.load_string(xml);
+	free(xml);
+	return result;
+}
+
 std::string Domain::get_metadata(virDomainMetadataType type,
 		const std::string& uri,
 		std::initializer_list<virDomainModificationImpact> flags) const
@@ -176,6 +194,18 @@ void Domain::set_metadata(virDomainMetadataType type,
 
 void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes) {
 	if (virDomainSendKey(handle, code_set, 0, keycodes.data(), keycodes.size(), 0) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
+void Domain::update_device(const std::string& xml, std::initializer_list<virDomainDeviceModifyFlags> flags) {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	if (virDomainUpdateDeviceFlags(handle, xml.c_str(), flag_bitmask)) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 }

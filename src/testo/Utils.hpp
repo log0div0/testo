@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <experimental/filesystem>
+#include "pugixml/pugixml.hpp"
 
 namespace fs = std::experimental::filesystem;
 
@@ -24,6 +25,24 @@ std::string normalized_mac(const std::string& mac);
 
 void replace_all(std::string& str, const std::string& from, const std::string& to);
 void remove_newlines(std::string& str);
+
+struct xml_string_writer: pugi::xml_writer
+{
+	std::string result;
+
+	virtual void write(const void* data, size_t size)
+	{
+		result.append(static_cast<const char*>(data), size);
+	}
+};
+
+inline std::string node_to_string(pugi::xml_node node)
+{
+	xml_string_writer writer;
+	node.print(writer);
+
+	return writer.result;
+}
 
 inline std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 	backtrace(stream, error, 1);

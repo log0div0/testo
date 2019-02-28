@@ -14,6 +14,10 @@ include_directories(
 	${CMAKE_BINARY_DIR}/out/include
 )
 
+link_directories(
+	${CMAKE_BINARY_DIR}/out/lib
+)
+
 add_subdirectory(vbox)
 add_subdirectory(testo)
 add_subdirectory(testow)

@@ -21,3 +21,17 @@ ExternalProject_Add(
 	BUILD_COMMAND ""
 	INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory include ${CMAKE_BINARY_DIR}/out/include
 )
+
+ExternalProject_Add(
+	libpugixml
+	PREFIX ${CMAKE_BINARY_DIR}
+	UPDATE_COMMAND ""
+	URL file://${CMAKE_CURRENT_SOURCE_DIR}/pugixml-1.9.tar.gz
+	BUILD_IN_SOURCE 1
+	CONFIGURE_COMMAND cmake .
+	BUILD_COMMAND make
+	INSTALL_COMMAND mkdir -p ${CMAKE_BINARY_DIR}/out/include/pugixml/ &&
+		cp src/pugixml.hpp ${CMAKE_BINARY_DIR}/out/include/pugixml/ &&
+		cp src/pugiconfig.hpp ${CMAKE_BINARY_DIR}/out/include/pugixml/ &&
+		cp libpugixml.a ${CMAKE_BINARY_DIR}/out/lib
+)

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Snapshot.hpp"
+#include "pugixml/pugixml.hpp"
 #include <libvirt/libvirt.h>
 #include <string>
 #include <vector>
@@ -28,6 +29,7 @@ struct Domain {
 	void revert_to_snapshot(Snapshot& snap, std::initializer_list<virDomainSnapshotRevertFlags> = {});
 
 	std::string dump_xml(std::initializer_list<virDomainXMLFlags> flags = {}) const;
+	pugi::xml_document dump_xml_new(std::initializer_list<virDomainXMLFlags> flags = {}) const;
 
 	std::string get_metadata(virDomainMetadataType type,
 		const std::string& uri,
@@ -44,6 +46,8 @@ struct Domain {
 	void undefine();
 
 	void send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes);
+
+	void update_device(const std::string& xml, std::initializer_list<virDomainDeviceModifyFlags> flags = {});
 
 	::virDomain* handle = nullptr;
 };
