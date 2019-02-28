@@ -117,13 +117,6 @@ bool is_number(const std::string& s) {
 		s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
-void remove_newlines(std::string& str) {
-	std::string::size_type pos = 0; // Must initialize
-	while (( pos = str.find ("\n",pos)) != std::string::npos ) {
-		str.erase (pos, 1);
-	}
-}
-
 void replace_all(std::string& str, const std::string& from, const std::string& to) {
 	if(from.empty())
 		return;

@@ -24,7 +24,6 @@ bool is_mac_correct(const std::string& mac);
 std::string normalized_mac(const std::string& mac);
 
 void replace_all(std::string& str, const std::string& from, const std::string& to);
-void remove_newlines(std::string& str);
 
 struct xml_string_writer: pugi::xml_writer
 {

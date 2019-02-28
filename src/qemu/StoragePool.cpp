@@ -51,7 +51,7 @@ void StoragePool::start(std::initializer_list<virStoragePoolCreateFlags> flags) 
 	}
 }
 
-StorageVolume StoragePool::volume_create_xml(const pugi::xml_document& xml, std::initializer_list<virStorageVolCreateFlags> flags) {
+StorageVolume StoragePool::volume_create_xml(const pugi::xml_node& xml, std::initializer_list<virStorageVolCreateFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {

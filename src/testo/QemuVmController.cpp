@@ -631,19 +631,20 @@ int QemuVmController::plug_dvd(fs::path path) {
 
 int QemuVmController::unplug_dvd() {
 	try {
-	/*	auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto xml = domain.dump_xml();
-		remove_newlines(xml);
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
-		std::regex description_regex(".*?<description>(.*?)<\\/description>.*", std::regex::ECMAScript);
-		std::smatch match;
+		if (!cdrom.child("source").empty()) {
+			cdrom.remove_child("source");
 
-		if (std::regex_match(xml, match, description_regex)) {
-			std::string value = match[1].str();
-			return value;
-		} else {
-			throw std::runtime_error("Description is not present in snapshot metadata");
-		}*/
+			std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+			if (domain.is_active()) {
+				flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+			}
+
+			domain.update_device(cdrom, flags);
+		}
 
 		return 0;
 

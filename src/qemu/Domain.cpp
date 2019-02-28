@@ -88,7 +88,7 @@ Snapshot Domain::snapshot_lookup_by_name(const std::string& name) const {
 	return result;
 }
 
-Snapshot Domain::snapshot_create_xml(const pugi::xml_document& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags) {
+Snapshot Domain::snapshot_create_xml(const pugi::xml_node& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {
@@ -182,7 +182,7 @@ void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<ui
 	}
 }
 
-void Domain::update_device(const pugi::xml_document& xml, std::initializer_list<virDomainDeviceModifyFlags> flags) {
+void Domain::update_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags) {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {
