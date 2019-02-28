@@ -25,11 +25,10 @@ struct Domain {
 
 	std::vector<Snapshot> snapshots(std::initializer_list<virDomainSnapshotListFlags> flags = {}) const;
 	Snapshot snapshot_lookup_by_name(const std::string& name) const;
-	Snapshot snapshot_create_xml(const std::string& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags = {});
+	Snapshot snapshot_create_xml(const pugi::xml_document& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags = {});
 	void revert_to_snapshot(Snapshot& snap, std::initializer_list<virDomainSnapshotRevertFlags> = {});
 
-	std::string dump_xml(std::initializer_list<virDomainXMLFlags> flags = {}) const;
-	pugi::xml_document dump_xml_new(std::initializer_list<virDomainXMLFlags> flags = {}) const;
+	pugi::xml_document dump_xml(std::initializer_list<virDomainXMLFlags> flags = {}) const;
 
 	std::string get_metadata(virDomainMetadataType type,
 		const std::string& uri,
@@ -47,7 +46,7 @@ struct Domain {
 
 	void send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes);
 
-	void update_device(const std::string& xml, std::initializer_list<virDomainDeviceModifyFlags> flags = {});
+	void update_device(const pugi::xml_document& xml, std::initializer_list<virDomainDeviceModifyFlags> flags = {});
 
 	::virDomain* handle = nullptr;
 };

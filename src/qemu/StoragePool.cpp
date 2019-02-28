@@ -51,13 +51,13 @@ void StoragePool::start(std::initializer_list<virStoragePoolCreateFlags> flags) 
 	}
 }
 
-StorageVolume StoragePool::volume_create_xml(const std::string& xml, std::initializer_list<virStorageVolCreateFlags> flags) {
+StorageVolume StoragePool::volume_create_xml(const pugi::xml_document& xml, std::initializer_list<virStorageVolCreateFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {
 		flag_bitmask |= flag;
 	}
-	auto res = virStorageVolCreateXML(handle, xml.c_str(), flag_bitmask);
+	auto res = virStorageVolCreateXML(handle, node_to_string(xml).c_str(), flag_bitmask);
 	if (!res) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}

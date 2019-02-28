@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "pugixml/pugixml.hpp"
 #include "VmController.hpp"
 #include "qemu/Host.hpp"
 
@@ -53,10 +54,10 @@ struct QemuVmController: public VmController {
 
 private:
 	void prepare_networks();
-	void remove_disks(std::string xml);
+	void remove_disks(const pugi::xml_document& config);
 	void create_disks();
 
-	std::vector<std::string> metadata_keys(std::string xml) const;
+	std::vector<std::string> metadata_keys(const pugi::xml_node& config) const;
 
 	nlohmann::json config;
 	vir::Connect qemu_connect;

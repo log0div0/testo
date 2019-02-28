@@ -58,8 +58,8 @@ Domain Connect::domain_lookup_by_name(const std::string& name) const {
 	return result;
 }
 
-Domain Connect::domain_define_xml(const std::string& xml) {
-	auto result = virDomainDefineXML(handle, xml.c_str());
+Domain Connect::domain_define_xml(const pugi::xml_document& xml) {
+	auto result = virDomainDefineXML(handle, node_to_string(xml).c_str());
 	if (!result) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
@@ -106,8 +106,8 @@ StoragePool Connect::storage_pool_lookup_by_name(const std::string& name) const 
 	return res;
 }
 
-StoragePool Connect::storage_pool_define_xml(const std::string& xml) {
-	auto result = virStoragePoolDefineXML(handle, xml.c_str(), 0);
+StoragePool Connect::storage_pool_define_xml(const pugi::xml_document& xml) {
+	auto result = virStoragePoolDefineXML(handle, node_to_string(xml).c_str(), 0);
 	if (!result) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
@@ -137,8 +137,8 @@ std::vector<Network> Connect::networks(std::initializer_list<virConnectListAllNe
 	return result;
 }
 
-Network Connect::network_define_xml(const std::string& xml) {
-	auto result = virNetworkDefineXML(handle, xml.c_str());
+Network Connect::network_define_xml(const pugi::xml_document& xml) {
+	auto result = virNetworkDefineXML(handle, node_to_string(xml).c_str());
 	if (!result) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}

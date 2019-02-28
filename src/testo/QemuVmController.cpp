@@ -3,9 +3,7 @@
 #include "QemuFlashDriveController.hpp"
 
 #include "Utils.hpp"
-#include "pugixml/pugixml.hpp"
 #include <fmt/format.h>
-#include <regex>
 
 QemuVmController::QemuVmController(const nlohmann::json& config): config(config),
 	qemu_connect(vir::connect_open("qemu:///system"))
@@ -313,8 +311,8 @@ int QemuVmController::set_metadata(const std::string& key, const std::string& va
 
 std::vector<std::string> QemuVmController::keys() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		return metadata_keys(domain.dump_xml());
+		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
+		return metadata_keys(config.first_child().child("metadata"));
 	}
 	catch (const std::exception& error) {
 		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
@@ -324,7 +322,7 @@ std::vector<std::string> QemuVmController::keys() {
 
 bool QemuVmController::has_key(const std::string& key) {
 	try {
-		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml_new();
+		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
 		auto found = config.select_node(fmt::format("//*[namespace-uri() = \"vm_metadata/{}\"]", key).c_str());
 		return !found.node().empty();
 	} catch (const std::exception& error) {
@@ -335,7 +333,7 @@ bool QemuVmController::has_key(const std::string& key) {
 
 std::string QemuVmController::get_metadata(const std::string& key) {
 	try {
-		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml_new();
+		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
 		auto found = config.select_node(fmt::format("//*[namespace-uri() = \"vm_metadata/{}\"]", key).c_str()).node();
 		if (found.empty()) {
 			throw std::runtime_error("Requested key is not present in vm metadata");
@@ -374,7 +372,7 @@ int QemuVmController::install() {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
 		fs::path volume_path = pool.path() / (name() + ".img");
 
-		std::string xml_config = fmt::format(R"(
+		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
 				<name>{}</name>
 				<memory unit='KiB'>2097152</memory>
@@ -485,26 +483,29 @@ int QemuVmController::install() {
 					source_network += "nat";
 				}
 
-				xml_config += fmt::format(R"(
+				string_config += fmt::format(R"(
 					<interface type='network'>
 						<source network='{}'/>
 				)", source_network);
 
 				if (nic.count("mac")) {
-					xml_config += fmt::format("\n<mac address='{}'/>", nic.at("mac").get<std::string>());
+					string_config += fmt::format("\n<mac address='{}'/>", nic.at("mac").get<std::string>());
 				}
 
 				if (nic.count("adapter_type")) {
-					xml_config += fmt::format("\n<model type='{}'/>", nic.at("adapter_type").get<std::string>());
+					string_config += fmt::format("\n<model type='{}'/>", nic.at("adapter_type").get<std::string>());
 				}
 
-				xml_config += fmt::format("\n</interface>");
+				string_config += fmt::format("\n</interface>");
 
 				nic_count++;
 			}
 		}
 
-		xml_config += "\n </devices> \n </domain>";
+		string_config += "\n </devices> \n </domain>";
+
+		pugi::xml_document xml_config;
+		xml_config.load_string(string_config.c_str());
 		auto domain = qemu_connect.domain_define_xml(xml_config);
 
 		if (config.count("metadata")) {
@@ -526,12 +527,13 @@ int QemuVmController::install() {
 }
 
 int QemuVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
-	std::string xml_config = fmt::format(R"(
+	pugi::xml_document xml_config;
+	xml_config.load_string(fmt::format(R"(
 		<domainsnapshot>
 			<name>{}</name>
 			<description>{}</description>
 		</domainsnapshot>
-		)", snapshot, cksum);
+		)", snapshot, cksum).c_str());
 
 	auto domain = qemu_connect.domain_lookup_by_name(name());
 	domain.snapshot_create_xml(xml_config);
@@ -544,20 +546,9 @@ std::set<std::string> QemuVmController::nics() const {
 
 std::string QemuVmController::get_snapshot_cksum(const std::string& snapshot) {
 	try {
-		auto xml = qemu_connect.domain_lookup_by_name(name()).snapshot_lookup_by_name(snapshot).dump_xml();
-
-		remove_newlines(xml);
-		std::regex description_regex(".*?<description>(.*?)<\\/description>.*", std::regex::ECMAScript);
-		std::smatch match;
-
-		if (std::regex_match(xml, match, description_regex)) {
-			std::string value = match[1].str();
-			return value;
-		} else {
-			throw std::runtime_error("Description is not present in snapshot metadata");
-		}
-
-		return "";
+		auto config = qemu_connect.domain_lookup_by_name(name()).snapshot_lookup_by_name(snapshot).dump_xml();
+		auto description = config.first_child().child("description");
+		return description.text().get();
 	}
 	catch (const std::exception& error) {
 		std::cout << "getting snapshot cksum on vm " << name() << ": " << error << std::endl;
@@ -567,15 +558,14 @@ std::string QemuVmController::get_snapshot_cksum(const std::string& snapshot) {
 
 int QemuVmController::rollback(const std::string& snapshot) {
 	try {
-
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
 		domain.revert_to_snapshot(snap);
 
 		//Now let's take care of possible additional metadata keys
 
-		auto new_metadata_keys = metadata_keys(domain.dump_xml());
-		auto old_metadata_keys = metadata_keys(snap.dump_xml());
+		auto new_metadata_keys = metadata_keys(domain.dump_xml().first_child().child("metadata"));
+		auto old_metadata_keys = metadata_keys(snap.dump_xml().first_child().child("domain").child("metadata"));
 
 		std::sort(new_metadata_keys.begin(), new_metadata_keys.end());
 		std::sort(old_metadata_keys.begin(), old_metadata_keys.end());
@@ -783,14 +773,14 @@ void QemuVmController::prepare_networks() {
 			}
 
 			if (!found) {
-				std::string xml_config = fmt::format(R"(
+				std::string string_config = fmt::format(R"(
 					<network>
 						<name>{}</name>
 						<bridge name="{}"/>
 				)", network_to_lookup, network_to_lookup);
 
 				if (network_to_lookup == "testo-nat") {
-					xml_config += fmt::format(R"(
+					string_config += fmt::format(R"(
 						<forward mode='nat'>
 							<nat>
 								<port start='1024' end='65535'/>
@@ -804,7 +794,9 @@ void QemuVmController::prepare_networks() {
 					)");
 				}
 
-				xml_config += "\n</network>";
+				string_config += "\n</network>";
+				pugi::xml_document xml_config;
+				xml_config.load_string(string_config.c_str());
 				auto network = qemu_connect.network_define_xml(xml_config);
 				network.start();
 			}
@@ -813,24 +805,22 @@ void QemuVmController::prepare_networks() {
 }
 
 
-void QemuVmController::remove_disks(std::string xml) {
-	remove_newlines(xml);
-	std::regex disks_regex("<disk.*?device='disk'.*?file='(.*?)'", std::regex::ECMAScript);
-	auto disks_begin = std::sregex_iterator(xml.begin(), xml.end(), disks_regex);
-	auto disks_end = std::sregex_iterator();
-
-	for (auto i =  disks_begin; i != disks_end; ++i) {
-		auto match = *i;
-		fs::path disk_path(match[1].str());
-		auto storage_volume = qemu_connect.storage_volume_lookup_by_path(disk_path);
-		std::cout << "Erasing disk " << disk_path.generic_string() << std::endl;
-		storage_volume.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
+void QemuVmController::remove_disks(const pugi::xml_document& config) {
+	auto devices = config.first_child().child("devices");
+	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+		if (std::string(disk.attribute("device").value()) == "disk") {
+			fs::path disk_path(disk.child("source").attribute("file").value());
+			auto storage_volume = qemu_connect.storage_volume_lookup_by_path(disk_path);
+			std::cout << "Erasing disk " << disk_path.generic_string() << std::endl;
+			storage_volume.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
+		}
 	}
 }
 
 void QemuVmController::create_disks() {
 	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
-	std::string storage_volume_config = fmt::format(R"(
+	pugi::xml_document xml_config;
+	xml_config.load_string(fmt::format(R"(
 		<volume type='file'>
 			<name>{}.img</name>
 			<source>
@@ -849,22 +839,17 @@ void QemuVmController::create_disks() {
 				</features>
 			</target>
 		</volume>
-	)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name());
+	)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name()).c_str());
 
-	auto volume = pool.volume_create_xml(storage_volume_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+	auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 }
 
-std::vector<std::string> QemuVmController::metadata_keys(std::string xml) const {
+std::vector<std::string> QemuVmController::metadata_keys(const pugi::xml_node& metadata) const {
 	std::vector<std::string> result;
-	remove_newlines(xml);
 
-	std::regex keys_regex("<testo:(.*?)\\ .*?/>", std::regex::ECMAScript);
-	auto keys_begin = std::sregex_iterator(xml.begin(), xml.end(), keys_regex);
-	auto keys_end = std::sregex_iterator();
-
-	for (auto i =  keys_begin; i != keys_end; ++i) {
-		auto match = *i;
-		result.push_back(match[1].str());
+	for (auto it = metadata.begin(); it != metadata.end(); ++it) {
+		std::string value = it->first_attribute().value();
+		result.push_back(value.substr(strlen("vm_metadata/")));
 	}
 
 	return result;

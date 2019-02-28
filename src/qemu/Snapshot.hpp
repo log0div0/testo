@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "pugixml/pugixml.hpp"
 #include <libvirt/libvirt.h>
 #include <string>
 
@@ -18,7 +19,7 @@ struct Snapshot {
 	Snapshot& operator=(Snapshot&&);
 
 	std::string name() const;
-	std::string dump_xml() const;
+	pugi::xml_document dump_xml() const;
 	void destroy(std::initializer_list<virDomainSnapshotDeleteFlags> flags = {});
 
 

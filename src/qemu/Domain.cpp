@@ -1,5 +1,6 @@
 
 #include "Domain.hpp"
+#include "testo/Utils.hpp"
 #include <libvirt/virterror.h>
 #include <stdexcept>
 namespace vir {
@@ -87,14 +88,14 @@ Snapshot Domain::snapshot_lookup_by_name(const std::string& name) const {
 	return result;
 }
 
-Snapshot Domain::snapshot_create_xml(const std::string& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags) {
+Snapshot Domain::snapshot_create_xml(const pugi::xml_document& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {
 		flag_bitmask |= flag;
 	}
 
-	auto result = virDomainSnapshotCreateXML(handle, xml.c_str(), flag_bitmask);
+	auto result = virDomainSnapshotCreateXML(handle, node_to_string(xml).c_str(), flag_bitmask);
 	if (!result) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
@@ -114,24 +115,7 @@ void Domain::revert_to_snapshot(Snapshot& snap, std::initializer_list<virDomainS
 	}
 }
 
-std::string Domain::dump_xml(std::initializer_list<virDomainXMLFlags> flags) const {
-	uint32_t flag_bitmask = 0;
-
-	for (auto flag: flags) {
-		flag_bitmask |= flag;
-	}
-
-	char* xml = virDomainGetXMLDesc(handle, flag_bitmask);
-	if (!xml) {
-		throw std::runtime_error(virGetLastErrorMessage());
-	}
-
-	std::string result(xml);
-	free(xml);
-	return result;
-}
-
-pugi::xml_document Domain::dump_xml_new(std::initializer_list<virDomainXMLFlags> flags) const {
+pugi::xml_document Domain::dump_xml(std::initializer_list<virDomainXMLFlags> flags) const {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {
@@ -198,14 +182,14 @@ void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<ui
 	}
 }
 
-void Domain::update_device(const std::string& xml, std::initializer_list<virDomainDeviceModifyFlags> flags) {
+void Domain::update_device(const pugi::xml_document& xml, std::initializer_list<virDomainDeviceModifyFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {
 		flag_bitmask |= flag;
 	}
 
-	if (virDomainUpdateDeviceFlags(handle, xml.c_str(), flag_bitmask)) {
+	if (virDomainUpdateDeviceFlags(handle, node_to_string(xml).c_str(), flag_bitmask)) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 }

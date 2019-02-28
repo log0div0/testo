@@ -30,16 +30,18 @@ std::string Snapshot::name() const {
 	return virDomainSnapshotGetName(handle);
 }
 
-std::string Snapshot::dump_xml() const {
+pugi::xml_document Snapshot::dump_xml() const {
 	char* xml = virDomainSnapshotGetXMLDesc(handle, 0);
 	if (!xml) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 
-	std::string result(xml);
+	pugi::xml_document result;
+	result.load_string(xml);
 	free(xml);
 	return result;
 }
+
 
 void Snapshot::destroy(std::initializer_list<virDomainSnapshotDeleteFlags> flags) {
 	uint32_t flags_bitmask = 0;

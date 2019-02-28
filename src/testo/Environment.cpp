@@ -84,7 +84,8 @@ void QemuEnvironment::prepare_storage_pool() {
 
 	if (!found) {
 		std::cout << "INFO: testo-pool is not found, creating...\n";
-		std::string storage_pool_config = fmt::format(R"(
+		pugi::xml_document xml_config;
+		xml_config.load_string(fmt::format(R"(
 			<pool type='dir'>
 				<name>testo-pool</name>
 				<source>
@@ -98,8 +99,8 @@ void QemuEnvironment::prepare_storage_pool() {
 					</permissions>
 				</target>
 			</pool>
-		)", pool_dir.generic_string());
-		auto pool = qemu_connect.storage_pool_define_xml(storage_pool_config);
+		)", pool_dir.generic_string()).c_str());
+		auto pool = qemu_connect.storage_pool_define_xml(xml_config);
 		pool.start({VIR_STORAGE_POOL_CREATE_NORMAL});
 	}
 }
