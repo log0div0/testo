@@ -34,6 +34,7 @@ test dummy: buwaha(dummy2)
 {
 	buwaha stop
 	buwaha set puchacha="AHAHASUCHKA"
+	buwaha unplug dvd
 	buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
 	buwaha start
 }

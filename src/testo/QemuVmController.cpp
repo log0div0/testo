@@ -4,6 +4,7 @@
 
 #include "Utils.hpp"
 #include <fmt/format.h>
+#include <thread>
 
 QemuVmController::QemuVmController(const nlohmann::json& config): config(config),
 	qemu_connect(vir::connect_open("qemu:///system"))
@@ -694,7 +695,7 @@ std::string QemuVmController::get_dvd_path() {
 
 std::string QemuVmController::get_dvd_path(vir::Snapshot& snap) {
 	try {
-		auto cdrom = snap.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		auto cdrom = snap.dump_xml().first_child().child("domain").child("devices").find_child_by_attribute("device", "cdrom");
 		if (cdrom.child("source").empty()) {
 			return "";
 		}
@@ -716,16 +717,15 @@ int QemuVmController::plug_dvd(fs::path path) {
 
 		auto source = cdrom.insert_child_after("source", cdrom.child("driver"));
 		source.append_attribute("file") = path.generic_string().c_str();
+		cdrom.child("target").remove_attribute("tray");
 
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
 		}
-
 		domain.update_device(cdrom, flags);
 		return 0;
-
 	} catch (const std::string& error) {
 		std::cout << "Plugging dvd from vm " << name() << ": Error: " << error << std::endl;
 		return -1;
@@ -743,7 +743,7 @@ int QemuVmController::unplug_dvd() {
 
 		cdrom.remove_child("source");
 
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -752,7 +752,6 @@ int QemuVmController::unplug_dvd() {
 		domain.update_device(cdrom, flags);
 
 		return 0;
-
 	} catch (const std::string& error) {
 		std::cout << "Unplugging dvd from vm " << name() << ": Error: " << error << std::endl;
 		return -1;
