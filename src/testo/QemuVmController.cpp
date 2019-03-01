@@ -311,8 +311,33 @@ int QemuVmController::set_metadata(const std::string& key, const std::string& va
 
 std::vector<std::string> QemuVmController::keys() {
 	try {
+		std::vector<std::string> result;
 		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
-		return metadata_keys(config.first_child().child("metadata"));
+		auto metadata = config.first_child().child("metadata");
+		for (auto it = metadata.begin(); it != metadata.end(); ++it) {
+			std::string value = it->first_attribute().value();
+			result.push_back(value.substr(strlen("vm_metadata/")));
+		}
+
+		return result;
+	}
+	catch (const std::exception& error) {
+		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
+		return {};
+	}
+}
+
+std::vector<std::string> QemuVmController::keys(vir::Snapshot& snapshot) {
+	try {
+		std::vector<std::string> result;
+		auto metadata = snapshot.dump_xml().first_child().child("domain").child("metadata");
+		for (auto it = metadata.begin(); it != metadata.end(); ++it) {
+			std::string value = it->first_attribute().value();
+			result.push_back(value.substr(strlen("vm_metadata/")));
+		}
+
+		return result;
+
 	}
 	catch (const std::exception& error) {
 		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
@@ -564,8 +589,8 @@ int QemuVmController::rollback(const std::string& snapshot) {
 
 		//Now let's take care of possible additional metadata keys
 
-		auto new_metadata_keys = metadata_keys(domain.dump_xml().first_child().child("metadata"));
-		auto old_metadata_keys = metadata_keys(snap.dump_xml().first_child().child("domain").child("metadata"));
+		auto new_metadata_keys = keys();
+		auto old_metadata_keys = keys(snap);
 
 		std::sort(new_metadata_keys.begin(), new_metadata_keys.end());
 		std::sort(old_metadata_keys.begin(), old_metadata_keys.end());
@@ -576,6 +601,22 @@ int QemuVmController::rollback(const std::string& snapshot) {
 
 		for (auto& key: difference) {
 			set_metadata(key, "");
+		}
+
+		//Now let's take care of possible dvd discontingency
+		std::string new_dvd = get_dvd_path();
+		std::string old_dvd = get_dvd_path(snap);
+
+		if (new_dvd != old_dvd) {
+			//Possible variations:
+			//If we have something plugged - let's unplug it
+			if (new_dvd.length()) {
+				unplug_dvd();
+			}
+
+			if (old_dvd.length()) {
+				plug_dvd(old_dvd);
+			}
 		}
 
 		return 0;
@@ -623,6 +664,45 @@ int QemuVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> f
 
 void QemuVmController::unplug_all_flash_drives() {
 
+}
+
+bool QemuVmController::is_dvd_plugged() const {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		return cdrom.child("source").empty();
+	} catch (const std::exception& error) {
+		std::cout << "Checking if dvd is plugged into vm " << name() << ": " << error << std::endl;
+		return false;
+	}
+}
+
+std::string QemuVmController::get_dvd_path() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		if (cdrom.child("source").empty()) {
+			return "";
+		}
+		return cdrom.child("source").attribute("file").value();
+	} catch (const std::exception& error) {
+		std::cout << "Checking if dvd is plugged into vm " << name() << ": " << error << std::endl;
+		return "";
+	}
+}
+
+
+std::string QemuVmController::get_dvd_path(vir::Snapshot& snap) {
+	try {
+		auto cdrom = snap.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		if (cdrom.child("source").empty()) {
+			return "";
+		}
+		return cdrom.child("source").attribute("file").value();
+	} catch (const std::exception& error) {
+		std::cout << "Checking if dvd is plugged into vm " << name() << ": " << error << std::endl;
+		return "";
+	}
 }
 
 int QemuVmController::plug_dvd(fs::path path) {
@@ -844,15 +924,3 @@ void QemuVmController::create_disks() {
 
 	auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 }
-
-std::vector<std::string> QemuVmController::metadata_keys(const pugi::xml_node& metadata) const {
-	std::vector<std::string> result;
-
-	for (auto it = metadata.begin(); it != metadata.end(); ++it) {
-		std::string value = it->first_attribute().value();
-		result.push_back(value.substr(strlen("vm_metadata/")));
-	}
-
-	return result;
-}
-

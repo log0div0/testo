@@ -29,5 +29,5 @@ snapshot dummy {
 test dummy: buwaha(dummy)
 {
 	buwaha set puchacha="AHAHASUCHKA"
-	buwaha unplug dvd
+	buwaha plug dvd "yha"
 }

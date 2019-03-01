@@ -28,6 +28,7 @@ struct VboxVmController: public VmController {
 	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	void unplug_all_flash_drives() override;
+	bool is_dvd_plugged() const override;
 	int plug_dvd(fs::path path) override;
 	int unplug_dvd() override;
 	int start() override;

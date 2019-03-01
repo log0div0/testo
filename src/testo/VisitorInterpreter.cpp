@@ -345,6 +345,11 @@ void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::sha
 
 void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	if (plug->is_on()) {
+		if (vm->is_dvd_plugged()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging dvd from vm " + vm->name()
+				+ " : dvd is already plugged");
+		}
+
 		auto path = visit_word(vm, plug->path);
 		std::cout << "Plugging dvd " << path << " in vm " << vm->name() << std::endl;
 		if (vm->plug_dvd(path)) {
@@ -352,6 +357,11 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::s
 				" from vm " + vm->name());
 		}
 	} else {
+		if (!vm->is_dvd_plugged()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging dvd from vm " + vm->name()
+				+ " : dvd is already unplugged");
+		}
+
 		std::cout << "Unlugging dvd from vm " << vm->name() << std::endl;
 		if (vm->unplug_dvd()) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging dvd from vm " + vm->name());

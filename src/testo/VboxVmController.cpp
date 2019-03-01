@@ -674,6 +674,11 @@ void VboxVmController::unplug_all_flash_drives() {
 	}
 }
 
+bool VboxVmController::is_dvd_plugged() const {
+	throw std::runtime_error("Not implemented");
+	return true;
+}
+
 int VboxVmController::plug_dvd(fs::path path) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());

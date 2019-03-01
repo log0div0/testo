@@ -20,6 +20,7 @@ struct VmController {
 	virtual int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual void unplug_all_flash_drives() = 0;
+	virtual bool is_dvd_plugged() const = 0;
 	virtual int plug_dvd(fs::path path) = 0;
 	virtual int unplug_dvd() = 0;
 	virtual int start() = 0;

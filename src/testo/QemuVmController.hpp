@@ -27,6 +27,7 @@ struct QemuVmController: public VmController {
 	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	void unplug_all_flash_drives() override;
+	bool is_dvd_plugged() const override;
 	int plug_dvd(fs::path path) override;
 	int unplug_dvd() override;
 	int start() override;
@@ -57,7 +58,10 @@ private:
 	void remove_disks(const pugi::xml_document& config);
 	void create_disks();
 
-	std::vector<std::string> metadata_keys(const pugi::xml_node& config) const;
+	std::vector<std::string> keys(vir::Snapshot& snapshot);
+
+	std::string get_dvd_path();
+	std::string get_dvd_path(vir::Snapshot& snapshot);
 
 	nlohmann::json config;
 	vir::Connect qemu_connect;
