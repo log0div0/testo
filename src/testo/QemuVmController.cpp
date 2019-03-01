@@ -670,7 +670,7 @@ bool QemuVmController::is_dvd_plugged() const {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
-		return cdrom.child("source").empty();
+		return !bool(cdrom.child("source").empty());
 	} catch (const std::exception& error) {
 		std::cout << "Checking if dvd is plugged into vm " << name() << ": " << error << std::endl;
 		return false;
@@ -706,7 +706,30 @@ std::string QemuVmController::get_dvd_path(vir::Snapshot& snap) {
 }
 
 int QemuVmController::plug_dvd(fs::path path) {
-	return 0;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+
+		if (!cdrom.child("source").empty()) {
+			throw std::runtime_error("Some dvd is already plugged in");
+		}
+
+		auto source = cdrom.insert_child_after("source", cdrom.child("driver"));
+		source.append_attribute("file") = path.generic_string().c_str();
+
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		domain.update_device(cdrom, flags);
+		return 0;
+
+	} catch (const std::string& error) {
+		std::cout << "Plugging dvd from vm " << name() << ": Error: " << error << std::endl;
+		return -1;
+	}
 }
 
 int QemuVmController::unplug_dvd() {
@@ -714,22 +737,24 @@ int QemuVmController::unplug_dvd() {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
-		if (!cdrom.child("source").empty()) {
-			cdrom.remove_child("source");
-
-			std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
-
-			if (domain.is_active()) {
-				flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
-			}
-
-			domain.update_device(cdrom, flags);
+		if (cdrom.child("source").empty()) {
+			throw std::runtime_error("Dvd is already unplugged");
 		}
+
+		cdrom.remove_child("source");
+
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		domain.update_device(cdrom, flags);
 
 		return 0;
 
 	} catch (const std::string& error) {
-		std::cout << "Unplugging dvd from vm " << name() << ": " << error << std::endl;
+		std::cout << "Unplugging dvd from vm " << name() << ": Error: " << error << std::endl;
 		return -1;
 	}
 
