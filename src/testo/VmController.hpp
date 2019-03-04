@@ -16,6 +16,7 @@ struct VmController {
 	virtual int rollback(const std::string& snapshot) = 0;
 	virtual int press(const std::vector<std::string>& buttons) = 0;
 	virtual int set_nic(const std::string& nic, bool is_enabled) = 0;
+	virtual bool is_link_plugged(const std::string& nic) const = 0;
 	virtual int set_link(const std::string& nic, bool is_connected) = 0;
 	virtual int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;

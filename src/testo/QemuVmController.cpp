@@ -522,6 +522,11 @@ int QemuVmController::install() {
 					string_config += fmt::format("\n<model type='{}'/>", nic.at("adapter_type").get<std::string>());
 				}
 
+				//libvirt suggests that everything you do in aliases must be prefixed with "ua-"
+				std::string nic_name = std::string("ua-");
+				nic_name += nic.at("name").get<std::string>();
+				string_config += fmt::format("\n<link state='up'/>");
+				string_config += fmt::format("\n<alias name='{}'/>", nic_name);
 				string_config += fmt::format("\n</interface>");
 
 				nic_count++;
@@ -567,7 +572,12 @@ int QemuVmController::make_snapshot(const std::string& snapshot, const std::stri
 }
 
 std::set<std::string> QemuVmController::nics() const {
-	return {};
+	std::set<std::string> result;
+
+	for (auto& nic: config.at("nic")) {
+		result.insert(nic.at("name").get<std::string>());
+	}
+	return result;
 }
 
 std::string QemuVmController::get_snapshot_cksum(const std::string& snapshot) {
@@ -605,18 +615,27 @@ int QemuVmController::rollback(const std::string& snapshot) {
 		}
 
 		//Now let's take care of possible dvd discontingency
-		std::string new_dvd = get_dvd_path();
-		std::string old_dvd = get_dvd_path(snap);
+		std::string current_dvd = get_dvd_path();
+		std::string snapshot_dvd = get_dvd_path(snap);
 
-		if (new_dvd != old_dvd) {
+		if (current_dvd != snapshot_dvd) {
 			//Possible variations:
 			//If we have something plugged - let's unplug it
-			if (new_dvd.length()) {
+			if (current_dvd.length()) {
 				unplug_dvd();
 			}
 
-			if (old_dvd.length()) {
-				plug_dvd(old_dvd);
+			if (snapshot_dvd.length()) {
+				plug_dvd(snapshot_dvd);
+			}
+		}
+
+		//links contingency
+		for (auto& nic: nics()) {
+			auto currently_plugged = is_link_plugged(nic);
+			auto snapshot_plugged = is_link_plugged(snap, nic);
+			if (currently_plugged != snapshot_plugged) {
+				set_link(nic, snapshot_plugged);
 			}
 		}
 
@@ -647,8 +666,89 @@ int QemuVmController::set_nic(const std::string& nic, bool is_enabled) {
 	return 0;
 }
 
+bool QemuVmController::is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const {
+	std::string nic_name = std::string("ua-") + nic;
+
+	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+		if (std::string(nic_node.attribute("type").value()) != "network") {
+			continue;
+		}
+
+		if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+			if (nic_node.child("link").empty()) {
+				return false;
+			}
+
+			std::string state = nic_node.child("link").attribute("state").value();
+
+			if (state == "up") {
+				return true;
+			} else if (state == "down") {
+				return false;
+			} else {
+				throw std::runtime_error("Unknown link state");
+			}
+		}
+	}
+}
+
+bool QemuVmController::is_link_plugged(vir::Snapshot& snapshot, const std::string& nic) {
+	auto config = snapshot.dump_xml();
+	return is_link_plugged(config.first_child().child("domain").child("devices"), nic);
+}
+
+bool QemuVmController::is_link_plugged(const std::string& nic) const {
+	try {
+		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
+		return is_link_plugged(config.first_child().child("devices"), nic);
+	} catch (const std::exception& error) {
+		std::cout << "Checking link status on nic " << nic << " on vm " << name() << " error: " << error << std::endl;
+		return false;
+	}
+}
+
 int QemuVmController::set_link(const std::string& nic, bool is_connected) {
-	return 0;
+	try {
+		std::string nic_name = std::string("ua-") + nic;
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
+		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+			if (std::string(nic_node.attribute("type").value()) != "network") {
+				continue;
+			}
+
+			if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+				if (is_connected) { //connect link
+					//if we have set link attribute - just change state to up
+					if (!nic_node.child("link").empty()) {
+						nic_node.child("link").attribute("state").set_value("up");
+					}
+				} else { //disconnect link
+					//if we have set link attribute - set it to down
+					if (!nic_node.child("link").empty()) {
+						nic_node.child("link").attribute("state").set_value("down");
+					} else {
+						auto link = nic_node.insert_child_before("link", nic_node.child("alias"));
+						link.append_attribute("state") = "down";
+					}
+				}
+
+				std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+				if (domain.is_active()) {
+					flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+				}
+
+				domain.update_device(nic_node, flags);
+				break;
+			}
+		}
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Setting link status on nic " << nic << " on vm " << name() << " error: " << error << std::endl;
+		return -1;
+	}
 }
 
 bool QemuVmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {

@@ -297,17 +297,29 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
+
+	auto nic = plug->name_token.value();
 	auto nics = vm->nics();
-	if (nics.find(plug->name_token.value()) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name_token.value() +
+	if (nics.find(nic) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + nic +
 			" in VM " + vm->name());
 	}
 
+	if (plug->is_on() == vm->is_link_plugged(nic)) {
+		if (plug->is_on()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging link " + nic +
+				" in vm " + vm->name() + ": this link is already plugged into " + vm->name());
+		} else {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging link " + nic +
+				" from vm " + vm->name() + ": this link is already unplugged from " + vm->name());
+		}
+	}
+
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " link " << plug->name_token.value() << " on vm " << vm->name() << std::endl;
+	std::cout << plug_unplug << " link " << nic << " on vm " << vm->name() << std::endl;
 
 	int result = 0;
-	result = vm->set_link(plug->name_token.value(), plug->is_on());
+	result = vm->set_link(nic, plug->is_on());
 
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +

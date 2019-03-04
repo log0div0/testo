@@ -23,6 +23,7 @@ struct QemuVmController: public VmController {
 	int rollback(const std::string& snapshot) override;
 	int press(const std::vector<std::string>& buttons) override;
 	int set_nic(const std::string& nic, bool is_enabled) override;
+	bool is_link_plugged(const std::string& nic) const override;
 	int set_link(const std::string& nic, bool is_connected) override;
 	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
@@ -62,6 +63,9 @@ private:
 
 	std::string get_dvd_path();
 	std::string get_dvd_path(vir::Snapshot& snapshot);
+
+	bool is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const;
+	bool is_link_plugged(vir::Snapshot& snapshot, const std::string& nic);
 
 	nlohmann::json config;
 	vir::Connect qemu_connect;

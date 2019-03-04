@@ -566,6 +566,10 @@ int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 	}
 }
 
+bool VboxVmController::is_link_plugged(const std::string& nic) const {
+	throw std::runtime_error("Not implemented");
+}
+
 int VboxVmController::set_link(const std::string& nic, bool is_connected) {
 	try {
 		if (!config.count("nic")) {
