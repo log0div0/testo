@@ -23,6 +23,7 @@ struct VboxVmController: public VmController {
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	int rollback(const std::string& snapshot) override;
 	int press(const std::vector<std::string>& buttons) override;
+	bool is_nic_plugged(const std::string& nic) const override;
 	int set_nic(const std::string& nic, bool is_enabled) override;
 	bool is_link_plugged(const std::string& nic) const override;
 	int set_link(const std::string& nic, bool is_connected) override;

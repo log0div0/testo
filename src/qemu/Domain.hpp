@@ -46,7 +46,9 @@ struct Domain {
 
 	void send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes);
 
+	void attach_device(const pugi::xml_document& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});
 	void update_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});
+	void detach_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});
 
 	::virDomain* handle = nullptr;
 };

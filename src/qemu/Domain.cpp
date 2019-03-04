@@ -182,6 +182,18 @@ void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<ui
 	}
 }
 
+void Domain::attach_device(const pugi::xml_document& xml, const std::vector<virDomainDeviceModifyFlags>& flags) {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	if (virDomainAttachDeviceFlags(handle, node_to_string(xml).c_str(), flag_bitmask)) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
 void Domain::update_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags) {
 	uint32_t flag_bitmask = 0;
 
@@ -190,6 +202,18 @@ void Domain::update_device(const pugi::xml_node& xml, const std::vector<virDomai
 	}
 
 	if (virDomainUpdateDeviceFlags(handle, node_to_string(xml).c_str(), flag_bitmask)) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
+void Domain::detach_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags) {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+
+	if (virDomainDetachDeviceFlags(handle, node_to_string(xml).c_str(), flag_bitmask)) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 }

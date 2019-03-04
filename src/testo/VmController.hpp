@@ -15,6 +15,7 @@ struct VmController {
 	virtual std::string get_snapshot_cksum(const std::string& snapshot) = 0;
 	virtual int rollback(const std::string& snapshot) = 0;
 	virtual int press(const std::vector<std::string>& buttons) = 0;
+	virtual bool is_nic_plugged(const std::string& nic) const = 0;
 	virtual int set_nic(const std::string& nic, bool is_enabled) = 0;
 	virtual bool is_link_plugged(const std::string& nic) const = 0;
 	virtual int set_link(const std::string& nic, bool is_connected) = 0;

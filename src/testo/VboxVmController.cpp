@@ -537,6 +537,10 @@ int VboxVmController::press(const std::vector<std::string>& buttons) {
 	}
 }
 
+bool VboxVmController::is_nic_plugged(const std::string& nic) const {
+	throw std::runtime_error("Not implemented");
+}
+
 int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 	try {
 		if (!config.count("nic")) {

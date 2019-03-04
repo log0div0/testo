@@ -596,7 +596,6 @@ int QemuVmController::rollback(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
-		domain.revert_to_snapshot(snap);
 
 		//Now let's take care of possible additional metadata keys
 
@@ -630,6 +629,21 @@ int QemuVmController::rollback(const std::string& snapshot) {
 			}
 		}
 
+		//nics contingency
+		for (auto& nic: config.at("nic")) {
+
+			std::string nic_name = nic.at("name").get<std::string>();
+			auto currently_plugged = is_nic_plugged(nic_name);
+			auto snapshot_plugged = is_nic_plugged(snap, nic_name);
+			if (currently_plugged != snapshot_plugged) {
+				if (is_running()) {
+					stop();
+				}
+
+				set_nic(nic_name, snapshot_plugged);
+			}
+		}
+
 		//links contingency
 		for (auto& nic: nics()) {
 			auto currently_plugged = is_link_plugged(nic);
@@ -638,6 +652,8 @@ int QemuVmController::rollback(const std::string& snapshot) {
 				set_link(nic, snapshot_plugged);
 			}
 		}
+
+		domain.revert_to_snapshot(snap);
 
 		return 0;
 	} catch (const std::exception& error) {
@@ -662,8 +678,137 @@ int QemuVmController::press(const std::vector<std::string>& buttons) {
 	}
 }
 
+bool QemuVmController::is_nic_plugged(const std::string& nic) const {
+	try {
+		auto nic_name = std::string("ua-") + nic;
+		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
+		auto devices = config.first_child().child("devices");
+
+		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+			if (std::string(nic_node.attribute("type").value()) != "network") {
+				continue;
+			}
+
+			if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+				return true;
+			}
+		}
+		return false;
+	} catch (const std::exception& error) {
+		std::cout << "Checking nic " << nic << " state error: " << error;
+		return false;
+	}
+}
+
+bool QemuVmController::is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic) {
+	auto nic_name = std::string("ua-") + nic;
+	auto config = snapshot.dump_xml();
+	auto devices = config.first_child().child("domain").child("devices");
+
+	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+		if (std::string(nic_node.attribute("type").value()) != "network") {
+			continue;
+		}
+
+		if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void QemuVmController::attach_nic(const std::string& nic) {
+	auto domain = qemu_connect.domain_lookup_by_name(name());
+
+	std::string string_config;
+
+	for (auto& nic_json: config.at("nic")) {
+		if (nic_json.at("name") == nic) {
+			std::string source_network("testo-");
+
+			if (nic_json.at("attached_to").get<std::string>() == "internal") {
+				source_network += nic_json.at("network").get<std::string>();
+			}
+
+			if (nic_json.at("attached_to").get<std::string>() == "nat") {
+				source_network += "nat";
+			}
+
+			string_config = fmt::format(R"(
+				<interface type='network'>
+					<source network='{}'/>
+			)", source_network);
+
+			if (nic_json.count("mac")) {
+				string_config += fmt::format("\n<mac address='{}'/>", nic_json.at("mac").get<std::string>());
+			}
+
+			if (nic_json.count("adapter_type")) {
+				string_config += fmt::format("\n<model type='{}'/>", nic_json.at("adapter_type").get<std::string>());
+			}
+
+			//libvirt suggests that everything you do in aliases must be prefixed with "ua-"
+			std::string nic_name = std::string("ua-");
+			nic_name += nic_json.at("name").get<std::string>();
+			string_config += fmt::format("\n<link state='up'/>");
+			string_config += fmt::format("\n<alias name='{}'/>", nic_name);
+			string_config += fmt::format("\n</interface>");
+
+			break;
+		}
+	}
+
+	//TODO: check if CURRENT is enough
+	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+	if (domain.is_active()) {
+		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+	}
+
+	pugi::xml_document nic_config;
+	nic_config.load_string(string_config.c_str());
+
+	domain.attach_device(nic_config, flags);
+}
+
+void QemuVmController::detach_nic(const std::string& nic) {
+	auto nic_name = std::string("ua-") + nic;
+	auto domain = qemu_connect.domain_lookup_by_name(name());
+	auto config = domain.dump_xml();
+	auto devices = config.first_child().child("devices");
+
+	//TODO: check if CURRENT is enough
+	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+	if (domain.is_active()) {
+		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+	}
+
+	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+		if (std::string(nic_node.attribute("type").value()) != "network") {
+			continue;
+		}
+
+		if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+			domain.detach_device(nic_node, flags);
+			return;
+		}
+	}
+}
+
 int QemuVmController::set_nic(const std::string& nic, bool is_enabled) {
-	return 0;
+	try {
+		if (is_enabled) {
+			attach_nic(nic);
+		} else {
+			detach_nic(nic);
+		}
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Setting nic "  << nic << " error: " << error << std::endl;
+		return -1;
+	}
 }
 
 bool QemuVmController::is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const {

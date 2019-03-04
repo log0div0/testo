@@ -22,6 +22,7 @@ struct QemuVmController: public VmController {
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	int rollback(const std::string& snapshot) override;
 	int press(const std::vector<std::string>& buttons) override;
+	bool is_nic_plugged(const std::string& nic) const override;
 	int set_nic(const std::string& nic, bool is_enabled) override;
 	bool is_link_plugged(const std::string& nic) const override;
 	int set_link(const std::string& nic, bool is_connected) override;
@@ -66,6 +67,11 @@ private:
 
 	bool is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const;
 	bool is_link_plugged(vir::Snapshot& snapshot, const std::string& nic);
+
+	bool is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic);
+
+	void attach_nic(const std::string& nic);
+	void detach_nic(const std::string& nic);
 
 	nlohmann::json config;
 	vir::Connect qemu_connect;
