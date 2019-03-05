@@ -39,6 +39,24 @@ bool StoragePool::is_active() const {
 	return res;
 }
 
+std::vector<StorageVolume> StoragePool::volumes() const {
+	std::vector<StorageVolume> result;
+
+	virStorageVolPtr* volumes;
+
+	auto size = virStoragePoolListAllVolumes(handle, &volumes, 0);
+	if (size < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	for (size_t i = 0; i < size; i++) {
+		result.push_back(volumes[i]);
+	}
+
+	free(volumes);
+	return result;
+}
+
 void StoragePool::start(std::initializer_list<virStoragePoolCreateFlags> flags) {
 	uint32_t flag_bitmask = 0;
 

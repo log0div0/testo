@@ -18,6 +18,8 @@ struct StorageVolume {
 	StorageVolume(StorageVolume&&);
 	StorageVolume& operator=(StorageVolume&&);
 
+	std::string name() const;
+
 	void erase(std::initializer_list<virStorageVolDeleteFlags> flags = {});
 
 	::virStorageVol* handle = nullptr;

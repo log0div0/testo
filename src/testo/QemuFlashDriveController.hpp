@@ -2,6 +2,7 @@
 #pragma once
 
 #include "FlashDriveController.hpp"
+#include "qemu/Host.hpp"
 
 struct QemuFlashDriveController: FlashDriveController {
 	QemuFlashDriveController() = delete;
@@ -17,16 +18,18 @@ struct QemuFlashDriveController: FlashDriveController {
 		return config.at("name").get<std::string>();
 	}
 
-	fs::path img_path() const override {
-		auto res = flash_drives_img_dir();
-		res += name() + ".vmdk";
-		return res;
-	}
-
 	bool has_folder() const override {
 		return config.count("folder");
 	}
 
 private:
+	void remove_if_exists();
+
+	fs::path full_img_path() const {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
+		return pool.path() / (name() + ".img");
+	}
+
 	nlohmann::json config;
+	vir::Connect qemu_connect;
 };

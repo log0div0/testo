@@ -16,6 +16,7 @@ contexts:
     - include: bash
     - include: machine
     - include: snapshot
+    - include: flash
     - include: macro
     - include: test
     - include: keywords
@@ -45,6 +46,14 @@ contexts:
                   pop: true
             - match: '{'
               pop: true
+
+  flash:
+    - match: '^flash\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
 
   macro:
     - match: '^macro\b'

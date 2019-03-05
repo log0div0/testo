@@ -16,6 +16,5 @@ struct FlashDriveController {
 	virtual int load_folder() const = 0;
 
 	virtual std::string name() const = 0;
-	virtual fs::path img_path() const = 0;
 	virtual bool has_folder() const = 0;
 };

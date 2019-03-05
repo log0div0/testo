@@ -21,18 +21,18 @@ struct VboxFlashDriveController: FlashDriveController {
 		return config.at("name").get<std::string>();
 	}
 
-	fs::path img_path() const override {
-		auto res = flash_drives_img_dir();
-		res += name() + ".vmdk";
-		return res;
-	}
-
 	bool has_folder() const override {
 		return config.count("folder");
 	}
 
 	vbox::Medium handle;
 private:
+	fs::path img_path() const {
+		auto res = flash_drives_img_dir();
+		res += name() + ".vmdk";
+		return res;
+	}
+
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 	nlohmann::json config;

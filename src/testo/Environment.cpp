@@ -60,11 +60,11 @@ QemuEnvironment::~QemuEnvironment() {
 	} catch(...) {}
 }
 
-void QemuEnvironment::prepare_storage_pool() {
-	auto pool_dir = testo_dir() / "storage-pool";
+void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
+	auto pool_dir = testo_dir() / pool_name;
 	if (!fs::exists(pool_dir)) {
 		if (!fs::create_directory(pool_dir)) {
-			throw std::runtime_error(std::string("Can't create testo pool directory: ") + pool_dir.generic_string());
+			throw std::runtime_error(std::string("Can't create directory: ") + pool_dir.generic_string());
 		}
 	}
 
@@ -73,9 +73,9 @@ void QemuEnvironment::prepare_storage_pool() {
 
 	bool found = false;
 	for (auto& pool: storage_pools) {
-		if (pool.name() == "testo-pool") {
+		if (pool.name() == pool_name) {
 			if (!pool.is_active()) {
-				std::cout << "INFO: testo-pool is inactive, starting...\n";
+				std::cout << "INFO: " << pool_name <<  "is inactive, starting...\n";
 			}
 			found = true;
 			break;
@@ -83,11 +83,11 @@ void QemuEnvironment::prepare_storage_pool() {
 	}
 
 	if (!found) {
-		std::cout << "INFO: testo-pool is not found, creating...\n";
+		std::cout << "INFO: " << pool_name <<  "is not found, creating...\n";
 		pugi::xml_document xml_config;
 		xml_config.load_string(fmt::format(R"(
 			<pool type='dir'>
-				<name>testo-pool</name>
+				<name>{}</name>
 				<source>
 				</source>
 				<target>
@@ -99,7 +99,7 @@ void QemuEnvironment::prepare_storage_pool() {
 					</permissions>
 				</target>
 			</pool>
-		)", pool_dir.generic_string()).c_str());
+		)", pool_name, pool_dir.generic_string()).c_str());
 		auto pool = qemu_connect.storage_pool_define_xml(xml_config);
 		pool.start({VIR_STORAGE_POOL_CREATE_NORMAL});
 	}
@@ -107,7 +107,11 @@ void QemuEnvironment::prepare_storage_pool() {
 
 void QemuEnvironment::setup() {
 	qemu_connect = vir::connect_open("qemu:///system");
-	prepare_storage_pool();
+	prepare_storage_pool("testo-storage-pool");
+	prepare_storage_pool("testo-flash-drives-pool");
+
+	//TODO: fuck that mounting
+	exec_and_throw_if_failed("mkdir -p " + flash_drives_mount_dir().generic_string());
 }
 
 void QemuEnvironment::cleanup() {

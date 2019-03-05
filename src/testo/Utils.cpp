@@ -64,19 +64,19 @@ fs::path testo_dir() {
 
 fs::path flash_drives_img_dir() {
 	auto res = home_dir();
-	res += "/testo/vbox/flash_drives/images/";
+	res = res / "/testo/flash_drives/images/";
 	return res;
 }
 
 fs::path flash_drives_mount_dir() {
 	auto res = home_dir();
-	res += "/testo/vbox/flash_drives/mount_point/";
+	res = res / "/testo/flash_drives/mount_point/";
 	return res;
 }
 
 fs::path scripts_tmp_dir() {
 	auto res = home_dir();
-	res += "/testo/vbox/scripts_tmp/";
+	res = res / "/testo/scripts_tmp/";
 	return res;
 }
 

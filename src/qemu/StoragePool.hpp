@@ -21,6 +21,7 @@ struct StoragePool {
 
 	std::string name() const;
 	bool is_active() const;
+	std::vector<StorageVolume> volumes() const;
 
 	void start(std::initializer_list<virStoragePoolCreateFlags> flags = {});
 

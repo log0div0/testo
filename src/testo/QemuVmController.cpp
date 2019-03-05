@@ -395,7 +395,7 @@ int QemuVmController::install() {
 		//now create disks
 		create_disks();
 
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 		fs::path volume_path = pool.path() / (name() + ".img");
 
 		std::string string_config = fmt::format(R"(
@@ -1168,7 +1168,7 @@ void QemuVmController::remove_disks(const pugi::xml_document& config) {
 }
 
 void QemuVmController::create_disks() {
-	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-pool");
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 	pugi::xml_document xml_config;
 	xml_config.load_string(fmt::format(R"(
 		<volume type='file'>

@@ -51,6 +51,6 @@ struct QemuEnvironment: public Environment {
 	}
 
 private:
-	void prepare_storage_pool();
+	void prepare_storage_pool(const std::string& pool_name);
 	vir::Connect qemu_connect;
 };

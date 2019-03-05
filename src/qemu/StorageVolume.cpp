@@ -26,6 +26,15 @@ StorageVolume& StorageVolume::operator =(StorageVolume&& other) {
 	return *this;
 }
 
+std::string StorageVolume::name() const {
+	const char* result = virStorageVolGetName(handle);
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	return result;
+}
+
 void StorageVolume::erase(std::initializer_list<virStorageVolDeleteFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
