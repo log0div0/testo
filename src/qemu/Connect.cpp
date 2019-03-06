@@ -5,10 +5,15 @@
 
 namespace vir {
 
+void dummy_error_handler(void* userData, virErrorPtr error)
+{}
+
 Connect::Connect(virConnect* handle): handle(handle) {
 	if (!handle) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
 	}
+
+	virConnSetErrorFunc(handle, nullptr, dummy_error_handler);
 }
 
 Connect::~Connect() {

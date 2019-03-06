@@ -17,6 +17,12 @@ struct VboxFlashDriveController: FlashDriveController {
 	int umount() const override;
 	int load_folder() const override;
 
+	fs::path img_path() const override {
+		auto res = flash_drives_img_dir();
+		res += name() + ".vmdk";
+		return res;
+	}
+
 	std::string name() const override {
 		return config.at("name").get<std::string>();
 	}
@@ -27,11 +33,7 @@ struct VboxFlashDriveController: FlashDriveController {
 
 	vbox::Medium handle;
 private:
-	fs::path img_path() const {
-		auto res = flash_drives_img_dir();
-		res += name() + ".vmdk";
-		return res;
-	}
+
 
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;

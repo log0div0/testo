@@ -3,6 +3,7 @@
 #include "testo/Utils.hpp"
 #include <libvirt/virterror.h>
 #include <stdexcept>
+#include <thread>
 namespace vir {
 
 Domain::Domain(virDomain* handle): handle(handle) {
@@ -202,6 +203,13 @@ void Domain::update_device(const pugi::xml_node& xml, const std::vector<virDomai
 	}
 
 	if (virDomainUpdateDeviceFlags(handle, node_to_string(xml).c_str(), flag_bitmask)) {
+		if (virGetLastError()->domain == VIR_FROM_QEMU) {
+			//let's give it a second chance
+			std::this_thread::sleep_for(std::chrono::seconds(3));
+			if (virDomainUpdateDeviceFlags(handle, node_to_string(xml).c_str(), flag_bitmask) == 0) {
+				return;
+			}
+		}
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 }

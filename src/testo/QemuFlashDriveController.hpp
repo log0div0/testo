@@ -14,6 +14,11 @@ struct QemuFlashDriveController: FlashDriveController {
 	int umount() const override;
 	int load_folder() const override;
 
+	fs::path img_path() const override {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
+		return pool.path() / (name() + ".img");
+	}
+
 	std::string name() const override {
 		return config.at("name").get<std::string>();
 	}
@@ -24,11 +29,6 @@ struct QemuFlashDriveController: FlashDriveController {
 
 private:
 	void remove_if_exists();
-
-	fs::path full_img_path() const {
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
-		return pool.path() / (name() + ".img");
-	}
 
 	nlohmann::json config;
 	vir::Connect qemu_connect;

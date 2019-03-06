@@ -30,14 +30,14 @@ snapshot dummy2: dummy {
 	plug dvd $ISO_PATH + "/VBoxGuestAdditions_6.0.4.iso"
 }
 
-flash dummy_flash {
-	size: 256Mb
-	fs: "ntfs"
-	folder: "/home/alex/work/vbox/my_flash"
-}
+#flash dummy_flash {
+#	size: 256Mb
+#	fs: "ntfs"
+#	folder: "/home/alex/work/vbox/my_flash"
+#}
 
-#test dummy: buwaha(dummy2)
-#{
+test dummy: buwaha(dummy2)
+{
 	#buwaha stop
 	#buwaha unplug nic master_side
 	#buwaha start
@@ -45,4 +45,4 @@ flash dummy_flash {
 	#buwaha unplug dvd
 	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
 	#buwaha plug link master_side
-#}
+}

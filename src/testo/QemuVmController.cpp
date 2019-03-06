@@ -522,8 +522,8 @@ int QemuVmController::install() {
 					string_config += fmt::format("\n<model type='{}'/>", nic.at("adapter_type").get<std::string>());
 				}
 
-				//libvirt suggests that everything you do in aliases must be prefixed with "ua-"
-				std::string nic_name = std::string("ua-");
+				//libvirt suggests that everything you do in aliases must be prefixed with "ua-nic-"
+				std::string nic_name = std::string("ua-nic-");
 				nic_name += nic.at("name").get<std::string>();
 				string_config += fmt::format("\n<link state='up'/>");
 				string_config += fmt::format("\n<alias name='{}'/>", nic_name);
@@ -680,7 +680,7 @@ int QemuVmController::press(const std::vector<std::string>& buttons) {
 
 bool QemuVmController::is_nic_plugged(const std::string& nic) const {
 	try {
-		auto nic_name = std::string("ua-") + nic;
+		auto nic_name = std::string("ua-nic-") + nic;
 		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
 		auto devices = config.first_child().child("devices");
 
@@ -701,7 +701,7 @@ bool QemuVmController::is_nic_plugged(const std::string& nic) const {
 }
 
 bool QemuVmController::is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic) {
-	auto nic_name = std::string("ua-") + nic;
+	auto nic_name = std::string("ua-nic-") + nic;
 	auto config = snapshot.dump_xml();
 	auto devices = config.first_child().child("domain").child("devices");
 
@@ -748,8 +748,8 @@ void QemuVmController::attach_nic(const std::string& nic) {
 				string_config += fmt::format("\n<model type='{}'/>", nic_json.at("adapter_type").get<std::string>());
 			}
 
-			//libvirt suggests that everything you do in aliases must be prefixed with "ua-"
-			std::string nic_name = std::string("ua-");
+			//libvirt suggests that everything you do in aliases must be prefixed with "ua-nic-"
+			std::string nic_name = std::string("ua-nic-");
 			nic_name += nic_json.at("name").get<std::string>();
 			string_config += fmt::format("\n<link state='up'/>");
 			string_config += fmt::format("\n<alias name='{}'/>", nic_name);
@@ -773,7 +773,7 @@ void QemuVmController::attach_nic(const std::string& nic) {
 }
 
 void QemuVmController::detach_nic(const std::string& nic) {
-	auto nic_name = std::string("ua-") + nic;
+	auto nic_name = std::string("ua-nic-") + nic;
 	auto domain = qemu_connect.domain_lookup_by_name(name());
 	auto config = domain.dump_xml();
 	auto devices = config.first_child().child("devices");
@@ -812,7 +812,7 @@ int QemuVmController::set_nic(const std::string& nic, bool is_enabled) {
 }
 
 bool QemuVmController::is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const {
-	std::string nic_name = std::string("ua-") + nic;
+	std::string nic_name = std::string("ua-nic-") + nic;
 
 	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
 		if (std::string(nic_node.attribute("type").value()) != "network") {
@@ -854,7 +854,7 @@ bool QemuVmController::is_link_plugged(const std::string& nic) const {
 
 int QemuVmController::set_link(const std::string& nic, bool is_connected) {
 	try {
-		std::string nic_name = std::string("ua-") + nic;
+		std::string nic_name = std::string("ua-nic-") + nic;
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
@@ -897,15 +897,97 @@ int QemuVmController::set_link(const std::string& nic, bool is_connected) {
 }
 
 bool QemuVmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {
-	return true;
+	try {
+		auto disk_name = std::string("ua-flash-") + fd->name();
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
+
+		//TODO: check if CURRENT is enough
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+			if (std::string(disk.attribute("device").value()) != "disk") {
+				continue;
+			}
+
+			if (std::string(disk.child("alias").attribute("name").value()) == disk_name) {
+				return true;
+			}
+		}
+
+		return false;
+	} catch (const std::string& error) {
+		std::cout << "Checking if flash drive " << fd->name() << " is plugged into vm " << name() << " error: " << error << std::endl;
+		return false;
+	}
 }
 
 int QemuVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
-	return 0;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+
+		std::string string_config = fmt::format(R"(
+			<disk type='file' device='disk'>
+				<driver name='qemu' type='qcow2'/>
+				<source file='{}'/>
+				<target dev='vdb' bus='virtio'/>
+				<alias name='ua-flash-{}'/>
+			)", fd->img_path().generic_string(), fd->name());
+
+		//we just need to create new device
+		//TODO: check if CURRENT is enough
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		pugi::xml_document disk_config;
+		disk_config.load_string(string_config.c_str());
+
+		domain.attach_device(disk_config, flags);
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Plugging flash drive " << fd->name() << " into vm " << name() << " error: " << error << std::endl;
+		return -1;
+	}
 }
 
 int QemuVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
-	return 0;
+	try {
+		auto disk_name = std::string("ua-flash-") + fd->name();
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
+
+		//TODO: check if CURRENT is enough
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+			if (std::string(disk.attribute("device").value()) != "disk") {
+				continue;
+			}
+
+			if (std::string(disk.child("alias").attribute("name").value()) == disk_name) {
+				domain.detach_device(disk, flags);
+				break;
+			}
+		}
+
+		return 0;
+	} catch (const std::string& error) {
+		std::cout << "Unplugging flash drive " << fd->name() << " from vm " << name() << " error: " << error << std::endl;
+		return 1;
+	}
 }
 
 void QemuVmController::unplug_all_flash_drives() {
@@ -962,9 +1044,8 @@ int QemuVmController::plug_dvd(fs::path path) {
 
 		auto source = cdrom.insert_child_after("source", cdrom.child("driver"));
 		source.append_attribute("file") = path.generic_string().c_str();
-		cdrom.child("target").remove_attribute("tray");
 
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);

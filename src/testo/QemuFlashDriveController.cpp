@@ -52,13 +52,13 @@ int QemuFlashDriveController::create() {
 					</features>
 				</target>
 			</volume>
-		)", name(), config.at("size").get<uint32_t>(), full_img_path().generic_string()).c_str());
+		)", name(), config.at("size").get<uint32_t>(), img_path().generic_string()).c_str());
 
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 
 		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
 			"/dev/nbd0 -f qcow2 " +
-			full_img_path().generic_string());
+			img_path().generic_string());
 
 		std::string size = std::to_string(config.at("size").get<uint32_t>()) + "M";
 		exec_and_throw_if_failed(std::string("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% ") +
@@ -90,7 +90,7 @@ int QemuFlashDriveController::mount() const {
 
 		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
 			"/dev/nbd0 -f qcow2 " +
-			full_img_path().generic_string());
+			img_path().generic_string());
 
 		exec_and_throw_if_failed(std::string("mount /dev/nbd0 ") + flash_drives_mount_dir().generic_string());
 		return 0;
