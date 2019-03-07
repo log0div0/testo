@@ -602,7 +602,7 @@ int VboxVmController::set_link(const std::string& nic, bool is_connected) {
 	}
 }
 
-bool VboxVmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {
+bool VboxVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
 	return (plugged_fds.find(fd) != plugged_fds.end());
 }
 
@@ -673,12 +673,6 @@ int VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> f
 	} catch (const std::exception& error) {
 		std::cout << "Unplugging flash drive from vm " << name() << ": " << error << std::endl;
 		return 1;
-	}
-}
-
-void VboxVmController::unplug_all_flash_drives() {
-	while (!plugged_fds.empty()) {
-		unplug_flash_drive(*plugged_fds.begin());
 	}
 }
 

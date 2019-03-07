@@ -7,8 +7,4 @@ Register::~Register() {
 			fd.second->umount();
 		}
 	}
-
-	for (auto vm: vms) {
-		vm.second->unplug_all_flash_drives();
-	}
 }

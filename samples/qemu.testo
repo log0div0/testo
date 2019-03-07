@@ -22,22 +22,27 @@ machine buwaha	 {
 	}
 }
 
+flash dummy_flash {
+	size: 256Mb
+	fs: "ntfs"
+	folder: "/home/alex/work/vbox/my_flash"
+}
+
 snapshot dummy {
 	unplug dvd
 }
 
 snapshot dummy2: dummy {
 	plug dvd $ISO_PATH + "/VBoxGuestAdditions_6.0.4.iso"
+	plug flash dummy_flash
 }
-
-#flash dummy_flash {
-#	size: 256Mb
-#	fs: "ntfs"
-#	folder: "/home/alex/work/vbox/my_flash"
-#}
 
 test dummy: buwaha(dummy2)
 {
+	buwaha wait for 10s
+	buwaha unplug flash dummy_flash
+	#buwaha wait for 30s
+	#buwaha unplug flash dummy_flash
 	#buwaha stop
 	#buwaha unplug nic master_side
 	#buwaha start

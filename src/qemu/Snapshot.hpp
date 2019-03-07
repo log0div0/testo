@@ -4,6 +4,7 @@
 #include "pugixml/pugixml.hpp"
 #include <libvirt/libvirt.h>
 #include <string>
+#include <vector>
 
 namespace vir {
 
@@ -20,8 +21,9 @@ struct Snapshot {
 
 	std::string name() const;
 	pugi::xml_document dump_xml() const;
-	void destroy(std::initializer_list<virDomainSnapshotDeleteFlags> flags = {});
+	std::vector<Snapshot> children(std::initializer_list<virDomainSnapshotListFlags> flags = {}) const;
 
+	void destroy(std::initializer_list<virDomainSnapshotDeleteFlags> flags = {});
 
 	::virDomainSnapshot* handle = nullptr;
 };

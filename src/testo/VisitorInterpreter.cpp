@@ -351,7 +351,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
-	if (vm->is_plugged(fd)) {
+	if (vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
 			" in vm " + vm->name() + ": this flash drive is already plugged into " + vm->name());
 	}
@@ -365,7 +365,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Unplugging flash drive " << fd->name() << " from vm " << vm->name() << std::endl;
-	if (!vm->is_plugged(fd)) {
+	if (!vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging flash drive " + fd->name() +
 			" from vm " + vm->name() + ": this flash drive is not plugged to this vm");
 	}
@@ -732,7 +732,7 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 
 std::string VisitorInterpreter::snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
 	VisitorCksum visitor(reg);
-	return std::to_string(visitor.visit(vm, snapshot->action_block->action));
+	return std::to_string(visitor.visit(vm, snapshot));
 }
 
 std::string VisitorInterpreter::cksum(std::shared_ptr<Controller> flash) {

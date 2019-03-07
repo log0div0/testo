@@ -28,7 +28,6 @@ struct QemuVmController: public VmController {
 	int set_link(const std::string& nic, bool is_connected) override;
 	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
-	void unplug_all_flash_drives() override;
 	bool is_dvd_plugged() const override;
 	int plug_dvd(fs::path path) override;
 	int unplug_dvd() override;
@@ -38,7 +37,7 @@ struct QemuVmController: public VmController {
 	int wait(const std::string& text, const std::string& time) override;
 	int run(const fs::path& exe, std::vector<std::string> args) override;
 
-	bool is_plugged(std::shared_ptr<FlashDriveController> fd) override;
+	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;
@@ -60,6 +59,8 @@ private:
 	void remove_disks(const pugi::xml_document& config);
 	void create_disks();
 
+	void delete_snapshot_with_children(vir::Snapshot& snapshot);
+
 	std::vector<std::string> keys(vir::Snapshot& snapshot);
 
 	std::string get_dvd_path();
@@ -72,6 +73,11 @@ private:
 
 	void attach_nic(const std::string& nic);
 	void detach_nic(const std::string& nic);
+
+	std::string get_flash_img();
+	std::string get_flash_img(vir::Snapshot& snapshot);
+	void attach_flash_drive(const std::string& img_path);
+	void detach_flash_drive();
 
 	nlohmann::json config;
 	vir::Connect qemu_connect;

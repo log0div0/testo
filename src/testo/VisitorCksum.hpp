@@ -8,7 +8,7 @@
 struct VisitorCksum {
 	VisitorCksum(Register& reg): reg(reg) {}
 
-	uint64_t visit(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ActionBlock> action_block);
+	uint64_t visit(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> action_block);
 	std::string visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ActionBlock> action_block);
 	std::string visit_action(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IAction> action);
 	std::string visit_type(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Type> type);

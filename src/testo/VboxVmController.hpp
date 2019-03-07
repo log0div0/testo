@@ -29,7 +29,6 @@ struct VboxVmController: public VmController {
 	int set_link(const std::string& nic, bool is_connected) override;
 	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
-	void unplug_all_flash_drives() override;
 	bool is_dvd_plugged() const override;
 	int plug_dvd(fs::path path) override;
 	int unplug_dvd() override;
@@ -39,7 +38,7 @@ struct VboxVmController: public VmController {
 	int wait(const std::string& text, const std::string& time) override;
 	int run(const fs::path& exe, std::vector<std::string> args) override;
 
-	bool is_plugged(std::shared_ptr<FlashDriveController> fd) override;
+	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;

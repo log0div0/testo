@@ -21,7 +21,6 @@ struct VmController {
 	virtual int set_link(const std::string& nic, bool is_connected) = 0;
 	virtual int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;
-	virtual void unplug_all_flash_drives() = 0;
 	virtual bool is_dvd_plugged() const = 0;
 	virtual int plug_dvd(fs::path path) = 0;
 	virtual int unplug_dvd() = 0;
@@ -31,7 +30,7 @@ struct VmController {
 	virtual int wait(const std::string& text, const std::string& time) = 0;
 	virtual int run(const fs::path& exe, std::vector<std::string> args) = 0;
 
-	virtual bool is_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
+	virtual bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
 	virtual std::vector<std::string> keys() = 0;
 	virtual bool has_key(const std::string& key) = 0;

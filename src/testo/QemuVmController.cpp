@@ -558,6 +558,13 @@ int QemuVmController::install() {
 }
 
 int QemuVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
+	auto domain = qemu_connect.domain_lookup_by_name(name());
+
+	if (has_snapshot(snapshot)) {
+		auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
+		delete_snapshot_with_children(vir_snapshot);
+	}
+
 	pugi::xml_document xml_config;
 	xml_config.load_string(fmt::format(R"(
 		<domainsnapshot>
@@ -566,7 +573,7 @@ int QemuVmController::make_snapshot(const std::string& snapshot, const std::stri
 		</domainsnapshot>
 		)", snapshot, cksum).c_str());
 
-	auto domain = qemu_connect.domain_lookup_by_name(name());
+
 	domain.snapshot_create_xml(xml_config);
 	return 0;
 }
@@ -650,6 +657,20 @@ int QemuVmController::rollback(const std::string& snapshot) {
 			auto snapshot_plugged = is_link_plugged(snap, nic);
 			if (currently_plugged != snapshot_plugged) {
 				set_link(nic, snapshot_plugged);
+			}
+		}
+
+		//Aaaaaand, last but not least - FLASH DRIVES CONTINGENCY!!!11
+		std::string currently_flash_attached = get_flash_img();
+		std::string snapshot_flash_attached = get_flash_img(snap);
+
+		if (currently_flash_attached != snapshot_flash_attached) {
+			if (currently_flash_attached.length()) {
+				detach_flash_drive();
+			}
+
+			if (snapshot_flash_attached.length()) {
+				attach_flash_drive(snapshot_flash_attached);
 			}
 		}
 
@@ -896,61 +917,82 @@ int QemuVmController::set_link(const std::string& nic, bool is_connected) {
 	}
 }
 
-bool QemuVmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {
+std::string QemuVmController::get_flash_img(vir::Snapshot& snapshot) {
+	auto config = snapshot.dump_xml();
+	auto devices = config.first_child().child("domain").child("devices");
+
+	std::string result = "";
+
+	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+		if (std::string(disk.attribute("device").value()) != "disk") {
+			continue;
+		}
+
+		if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+			result = disk.child("source").attribute("file").value();
+		}
+	}
+
+	return result;
+}
+
+std::string QemuVmController::get_flash_img() {
+	auto domain = qemu_connect.domain_lookup_by_name(name());
+	auto config = domain.dump_xml();
+	auto devices = config.first_child().child("devices");
+
+	std::string result = "";
+
+	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+		if (std::string(disk.attribute("device").value()) != "disk") {
+			continue;
+		}
+
+		if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+			result = disk.child("source").attribute("file").value();
+		}
+	}
+
+	return result;
+}
+
+bool QemuVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
 	try {
-		auto disk_name = std::string("ua-flash-") + fd->name();
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto config = domain.dump_xml();
-		auto devices = config.first_child().child("devices");
-
-		//TODO: check if CURRENT is enough
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
-
-		if (domain.is_active()) {
-			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
-		}
-
-		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-			if (std::string(disk.attribute("device").value()) != "disk") {
-				continue;
-			}
-
-			if (std::string(disk.child("alias").attribute("name").value()) == disk_name) {
-				return true;
-			}
-		}
-
-		return false;
+		return get_flash_img().length();
 	} catch (const std::string& error) {
 		std::cout << "Checking if flash drive " << fd->name() << " is plugged into vm " << name() << " error: " << error << std::endl;
 		return false;
 	}
 }
 
+void QemuVmController::attach_flash_drive(const std::string& img_path) {
+	auto domain = qemu_connect.domain_lookup_by_name(name());
+
+	std::string string_config = fmt::format(R"(
+		<disk type='file'>
+			<driver name='qemu' type='qcow2'/>
+			<source file='{}'/>
+			<target dev='vdb' bus='virtio'/>
+		</disk>
+		)", img_path);
+
+	//we just need to create new device
+	//TODO: check if CURRENT is enough
+	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
+
+	if (domain.is_active()) {
+		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+	}
+
+	pugi::xml_document disk_config;
+	disk_config.load_string(string_config.c_str());
+
+	domain.attach_device(disk_config, flags);
+}
+
 int QemuVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-
-		std::string string_config = fmt::format(R"(
-			<disk type='file' device='disk'>
-				<driver name='qemu' type='qcow2'/>
-				<source file='{}'/>
-				<target dev='vdb' bus='virtio'/>
-				<alias name='ua-flash-{}'/>
-			)", fd->img_path().generic_string(), fd->name());
-
-		//we just need to create new device
-		//TODO: check if CURRENT is enough
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
-
-		if (domain.is_active()) {
-			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
-		}
-
-		pugi::xml_document disk_config;
-		disk_config.load_string(string_config.c_str());
-
-		domain.attach_device(disk_config, flags);
+		attach_flash_drive(fd->img_path());
 		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "Plugging flash drive " << fd->name() << " into vm " << name() << " error: " << error << std::endl;
@@ -958,31 +1000,34 @@ int QemuVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd)
 	}
 }
 
+void QemuVmController::detach_flash_drive() {
+	auto domain = qemu_connect.domain_lookup_by_name(name());
+	auto config = domain.dump_xml();
+	auto devices = config.first_child().child("devices");
+
+	//TODO: check if CURRENT is enough
+	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+	if (domain.is_active()) {
+		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+	}
+
+	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+		if (std::string(disk.attribute("device").value()) != "disk") {
+			continue;
+		}
+
+		if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+			domain.detach_device(disk, flags);
+			break;
+		}
+	}
+}
+
+//for now it's just only one flash drive possible
 int QemuVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
-		auto disk_name = std::string("ua-flash-") + fd->name();
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto config = domain.dump_xml();
-		auto devices = config.first_child().child("devices");
-
-		//TODO: check if CURRENT is enough
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
-
-		if (domain.is_active()) {
-			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
-		}
-
-		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-			if (std::string(disk.attribute("device").value()) != "disk") {
-				continue;
-			}
-
-			if (std::string(disk.child("alias").attribute("name").value()) == disk_name) {
-				domain.detach_device(disk, flags);
-				break;
-			}
-		}
-
+		detach_flash_drive();
 		return 0;
 	} catch (const std::string& error) {
 		std::cout << "Unplugging flash drive " << fd->name() << " from vm " << name() << " error: " << error << std::endl;
@@ -990,9 +1035,6 @@ int QemuVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> f
 	}
 }
 
-void QemuVmController::unplug_all_flash_drives() {
-
-}
 
 bool QemuVmController::is_dvd_plugged() const {
 	try {
@@ -1235,7 +1277,6 @@ void QemuVmController::prepare_networks() {
 	}
 }
 
-
 void QemuVmController::remove_disks(const pugi::xml_document& config) {
 	auto devices = config.first_child().child("devices");
 	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
@@ -1273,4 +1314,13 @@ void QemuVmController::create_disks() {
 	)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name()).c_str());
 
 	auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+}
+
+void QemuVmController::delete_snapshot_with_children(vir::Snapshot& snapshot) {
+	auto children = snapshot.children();
+
+	for (auto& snap: children) {
+		delete_snapshot_with_children(snap);
+	}
+	snapshot.destroy();
 }
