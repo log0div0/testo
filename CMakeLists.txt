@@ -15,6 +15,18 @@ if(GPU)
 	enable_language("CUDA")
 endif()
 
+add_definitions(-DASIO_STANDALONE)
+
+include_directories(
+	${CMAKE_SOURCE_DIR}/3rd_party
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_BINARY_DIR}/out/include
+)
+
+link_directories(
+	${CMAKE_BINARY_DIR}/out/lib
+)
+
 if(WIN32)
 	set(EXTRA_FLAGS "/W0 -DNOMINMAX")
 else()

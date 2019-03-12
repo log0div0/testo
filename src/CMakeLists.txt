@@ -8,16 +8,6 @@ endif()
 
 add_definitions(-DFMT_HEADER_ONLY)
 
-include_directories(
-	${CMAKE_SOURCE_DIR}/3rd_party
-	${CMAKE_SOURCE_DIR}/src
-	${CMAKE_BINARY_DIR}/out/include
-)
-
-link_directories(
-	${CMAKE_BINARY_DIR}/out/lib
-)
-
 add_subdirectory(vbox)
 add_subdirectory(testo)
 add_subdirectory(testow)
