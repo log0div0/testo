@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+update-rc.d negotiator-agent defaults
+service negotiator-agent start
