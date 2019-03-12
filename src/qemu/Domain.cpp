@@ -31,6 +31,14 @@ std::string Domain::name() const {
 	return virDomainGetName(handle);
 }
 
+uint32_t Domain::id() const {
+	int32_t result = virDomainGetID(handle);
+	if (result == -1) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return (uint32_t) result;
+}
+
 bool Domain::is_active() const {
 	int result = virDomainIsActive(handle);
 	if (result < 0) {

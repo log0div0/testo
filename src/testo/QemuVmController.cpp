@@ -1,6 +1,7 @@
 
 #include "QemuVmController.hpp"
 #include "QemuFlashDriveController.hpp"
+#include "Negotiator.hpp"
 
 #include "Utils.hpp"
 #include <fmt/format.h>
@@ -1209,7 +1210,14 @@ bool QemuVmController::is_running() {
 }
 
 bool QemuVmController::is_additions_installed() {
-	return true;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		Negotiator helper(domain);
+		return helper.is_avaliable();
+	} catch (const std::exception& error) {
+		std::cout << "Checking whether vm " << name() << " has negotiator : " << error << std::endl;
+		return false;
+	}
 }
 
 

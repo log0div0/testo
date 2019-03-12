@@ -43,9 +43,7 @@ class Channel(object):
 	def write(self, decoded_value):
 		encoded_message = json.dumps(decoded_value)
 		bytes_count = len(encoded_message)
-		print(bytes_count)
 		bytes_count_array = struct.pack('<I', bytes_count)
-		print('%s' % bytes_count_array)
 		self.handle.write("%s%s" % (bytes_count_array, encoded_message))
 		self.handle.flush()
 
@@ -69,13 +67,15 @@ class GuestChannel(Channel):
 			kw = request.get('kw', {})
 			if method:
 				try:
-					logging.debug(u'Method: %s' % method)
 					result = method(*args, **kw)
 					self.write(dict(success=True, result=result))
 				except Exception as e:
 					self.write(dict(success=False, error=str(e)))
 			else:
 				self.write(dict(success=False, error="Method %s not supported" % method_name))
+
+	def check_avaliable(self, *args, **kwargs):
+		pass
 
 	def copy_file(self, file, **kwargs):
 		subprocess.check_call(["mkdir", "-p", os.path.dirname(file["path"])])

@@ -21,6 +21,7 @@ struct Domain {
 	Domain& operator=(Domain&&);
 
 	std::string name() const;
+	uint32_t id() const;
 	bool is_active() const;
 
 	std::vector<Snapshot> snapshots(std::initializer_list<virDomainSnapshotListFlags> flags = {}) const;

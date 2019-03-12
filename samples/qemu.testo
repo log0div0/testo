@@ -39,8 +39,7 @@ snapshot dummy2: dummy {
 
 test dummy: buwaha(dummy2)
 {
-	buwaha wait for 10s
-	buwaha unplug flash dummy_flash
+	buwaha exec bash "Hello world"
 	#buwaha wait for 30s
 	#buwaha unplug flash dummy_flash
 	#buwaha stop
