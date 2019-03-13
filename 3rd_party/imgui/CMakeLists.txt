@@ -12,7 +12,11 @@ if(WIN32)
 		imgui_impl_win32.cpp
 	)
 elseif(APPLE)
-	message(FATAL_ERROR "Implement me")
+	set(IMPL_SRCS
+		imgui_impl_metal.mm
+		imgui_impl_osx.mm
+	)
+	set_property(SOURCE ${IMPL_SRCS} PROPERTY COMPILE_FLAGS -fobjc-weak)
 elseif(UNIX)
 	include_directories(${CMAKE_SOURCE_DIR}/3rd_party/gl3w)
 	set(IMPL_SRCS

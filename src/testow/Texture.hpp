@@ -4,7 +4,7 @@
 #ifdef WIN32
 #include "windows/Texture.hpp"
 #elif __APPLE__
-#error "Implement me"
+#include "osx/Texture.hpp"
 #elif __linux__
 #include "linux/Texture.hpp"
 #else

@@ -66,5 +66,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rd_party)
 add_subdirectory(negotiator)
+if (UNIX AND NOT APPLE)
 add_subdirectory(tests)
+endif()
 add_subdirectory(src)
