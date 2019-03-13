@@ -1222,7 +1222,21 @@ bool QemuVmController::is_additions_installed() {
 
 
 int QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
-	return 0;
+	try {
+		//1) if there's no src on host - fuck you
+		if (!fs::exists(src)) {
+			throw std::runtime_error("Source file/folder does not exist on host: " + src.generic_string());
+		}
+
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		Negotiator helper(domain);
+
+		helper.copy_to_guest(src, dst);
+		return 0;
+	} catch (const std::exception& error) {
+		std::cout << "Copying file(s) to the guest " << name() << " : error: " << error << std::endl;
+		return -1;
+	}
 }
 
 int QemuVmController::remove_from_guest(const fs::path& obj) {

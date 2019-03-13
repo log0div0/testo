@@ -80,7 +80,6 @@ static void config_relevance_routine(const fs::path& testo_file, const nlohmann:
 
 	When(Method(mock_vm, has_snapshot).Using("dummy")).Return(true);
 	When(Method(mock_vm, get_snapshot_cksum).Using("dummy")).Return(snapsoht_cksum("BLOCK"));
-	Fake(Method(mock_vm, unplug_all_flash_drives));
 
 	if (is_relevant) {
 		When(Method(mock_vm, rollback).Using("dummy")).Return(0);
@@ -98,7 +97,6 @@ static void config_relevance_routine(const fs::path& testo_file, const nlohmann:
 		When(Method(mock_vm, install)).Return(0);
 		When(Method(mock_vm, name)).AlwaysReturn("controller");
 		When(Method(mock_vm, make_snapshot)).AlwaysReturn(0);
-		When(Method(mock_vm, set_snapshot_cksum)).AlwaysReturn(0);
 
 		//If rollback is invoked - that's an exception
 		When(Method(mock_vm, rollback)).AlwaysThrow(std::runtime_error("Rollback was invoked instead of install"));
