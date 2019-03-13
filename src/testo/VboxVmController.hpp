@@ -11,7 +11,7 @@ struct VboxVmController: public VmController {
 	VboxVmController(const nlohmann::json& config);
 	VboxVmController(const VboxVmController& other) = delete;
 	int install() override;
-	int make_snapshot(const std::string& snapshot) override;
+	int make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 	int set_metadata(const nlohmann::json& metadata) override;
 	int set_metadata(const std::string& key, const std::string& value) override;
 
@@ -20,15 +20,16 @@ struct VboxVmController: public VmController {
 	}
 
 	std::string get_metadata(const std::string& key) override;
-	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	int rollback(const std::string& snapshot) override;
 	int press(const std::vector<std::string>& buttons) override;
+	bool is_nic_plugged(const std::string& nic) const override;
 	int set_nic(const std::string& nic, bool is_enabled) override;
+	bool is_link_plugged(const std::string& nic) const override;
 	int set_link(const std::string& nic, bool is_connected) override;
 	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
-	void unplug_all_flash_drives() override;
+	bool is_dvd_plugged() const override;
 	int plug_dvd(fs::path path) override;
 	int unplug_dvd() override;
 	int start() override;
@@ -37,7 +38,7 @@ struct VboxVmController: public VmController {
 	int wait(const std::string& text, const std::string& time) override;
 	int run(const fs::path& exe, std::vector<std::string> args) override;
 
-	bool is_plugged(std::shared_ptr<FlashDriveController> fd) override;
+	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;
@@ -59,6 +60,8 @@ private:
 	void delete_snapshot_with_children(vbox::Snapshot& snapshot);
 	void remove_if_exists();
 	void create_vm();
+
+	int set_snapshot_cksum(const std::string& snapshot, const std::string& cksum);
 
 	nlohmann::json config;
 	vbox::VirtualBoxClient virtual_box_client;

@@ -141,7 +141,7 @@ Token Lexer::id() {
 	std::string value;
 	size_t shift = 0;
 
-	while ((test_id(shift) || isdigit(input[current_pos + shift])) && !test_eof()) {
+	while ((test_id(shift) || input[current_pos + shift] == '-' ||  isdigit(input[current_pos + shift])) && !test_eof()) {
 		value += input[current_pos + shift];
 		shift++;
 	}
@@ -473,6 +473,7 @@ Token Lexer::dbl_quoted_string() {
 
 		if (test_escaped_character()) {
 			value += escaped_character();
+			continue;
 		}
 
 		value += input[current_pos];

@@ -49,27 +49,34 @@ fs::path home_dir() {
 #include <unistd.h>
 
 fs::path home_dir() {
-	struct passwd *pw = getpwuid(getuid());
-	return fs::path(pw->pw_dir);
+	//struct passwd *pw = getpwuid(getuid());
+	//return fs::path(pw->pw_dir);
+	return fs::path("/var/lib/libvirt");
 }
 
 #endif
 
+fs::path testo_dir() {
+	auto res = home_dir();
+	res = res / "/testo";
+	return res;
+}
+
 fs::path flash_drives_img_dir() {
 	auto res = home_dir();
-	res += "/testo/vbox/flash_drives/images/";
+	res = res / "/testo/flash_drives/images/";
 	return res;
 }
 
 fs::path flash_drives_mount_dir() {
 	auto res = home_dir();
-	res += "/testo/vbox/flash_drives/mount_point/";
+	res = res / "/testo/flash_drives/mount_point/";
 	return res;
 }
 
 fs::path scripts_tmp_dir() {
 	auto res = home_dir();
-	res += "/testo/vbox/scripts_tmp/";
+	res = res / "/testo/scripts_tmp/";
 	return res;
 }
 
@@ -109,3 +116,14 @@ bool is_number(const std::string& s) {
 	return !s.empty() && std::find_if(s.begin(),
 		s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
+
+void replace_all(std::string& str, const std::string& from, const std::string& to) {
+	if(from.empty())
+		return;
+	size_t start_pos = 0;
+	while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+		str.replace(start_pos, from.length(), to);
+		start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+	}
+}
+

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python /usr/share/pyshared/negotiator-agent.py "$@"

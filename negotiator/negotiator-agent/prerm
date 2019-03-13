@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+service negotiator-agent stop
+update-rc.d negotiator-agent remove

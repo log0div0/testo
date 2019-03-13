@@ -83,8 +83,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		auto vm = state.first;
 		auto original_keys = state.second;
 		auto final_keys = vm->keys();
+		std::sort(original_keys.begin(), original_keys.end());
+		std::sort(final_keys.begin(), final_keys.end());
 		std::vector<std::string> new_keys;
-		std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), new_keys.begin());
+		std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), std::back_inserter(new_keys));
 		for (auto& key: new_keys) {
 			vm->set_metadata(key, "");
 		}
@@ -99,6 +101,7 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 	auto vm = reg.vms.find(vm_state->name)->second;
 
 	reg.local_vms.insert({vm_state->name, vm});
+
 	if (!vm_state->snapshot) {
 		if (vm->install()) {
 			throw std::runtime_error(std::string(vm_state->begin()) +
@@ -273,17 +276,33 @@ void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
+	auto nic = plug->name_token.value();
 	auto nics = vm->nics();
-	if (nics.find(plug->name_token.value()) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name_token.value() +
+	if (nics.find(nic) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + nic +
 			" in VM " + vm->name());
 	}
 
+	if (vm->is_running()) {
+		throw std::runtime_error(std::string(plug->begin()) + ": Error while (un)plugging nic " + nic +
+			" in vm " + vm->name() + ": vm is running, but must be off");
+	}
+
+	if (vm->is_nic_plugged(nic) == plug->is_on()) {
+		if (plug->is_on()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging nic " + nic +
+				" in vm " + vm->name() + ": this nic is already plugged into " + vm->name());
+		} else {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging nic " + nic +
+				" in vm " + vm->name() + ": this nic is already unplugged into " + vm->name());
+		}
+	}
+
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " nic " << plug->name_token.value() << " on vm " << vm->name() << std::endl;
+	std::cout << plug_unplug << " nic " << nic << " on vm " << vm->name() << std::endl;
 
 	int result = 0;
-	result = vm->set_nic(plug->name_token.value(), plug->is_on());
+	result = vm->set_nic(nic, plug->is_on());
 
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
@@ -294,17 +313,34 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
+
+	auto nic = plug->name_token.value();
 	auto nics = vm->nics();
-	if (nics.find(plug->name_token.value()) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + plug->name_token.value() +
+	if (nics.find(nic) == nics.end()) {
+		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + nic +
 			" in VM " + vm->name());
 	}
 
+	if (!vm->is_nic_plugged(nic)) {
+		throw std::runtime_error(std::string(plug->begin()) + ": Error while (un)plugging link " + nic +
+				" in vm " + vm->name() + ": the nic is disabled, you must enable it first" + vm->name());
+	}
+
+	if (plug->is_on() == vm->is_link_plugged(nic)) {
+		if (plug->is_on()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging link " + nic +
+				" in vm " + vm->name() + ": this link is already plugged into " + vm->name());
+		} else {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging link " + nic +
+				" from vm " + vm->name() + ": this link is already unplugged from " + vm->name());
+		}
+	}
+
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " link " << plug->name_token.value() << " on vm " << vm->name() << std::endl;
+	std::cout << plug_unplug << " link " << nic << " on vm " << vm->name() << std::endl;
 
 	int result = 0;
-	result = vm->set_link(plug->name_token.value(), plug->is_on());
+	result = vm->set_link(nic, plug->is_on());
 
 	if (result) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
@@ -315,7 +351,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
-	if (vm->is_plugged(fd)) {
+	if (vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
 			" in vm " + vm->name() + ": this flash drive is already plugged into " + vm->name());
 	}
@@ -329,7 +365,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Unplugging flash drive " << fd->name() << " from vm " << vm->name() << std::endl;
-	if (!vm->is_plugged(fd)) {
+	if (!vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging flash drive " + fd->name() +
 			" from vm " + vm->name() + ": this flash drive is not plugged to this vm");
 	}
@@ -342,6 +378,11 @@ void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::sha
 
 void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	if (plug->is_on()) {
+		if (vm->is_dvd_plugged()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging dvd from vm " + vm->name()
+				+ " : dvd is already plugged");
+		}
+
 		auto path = visit_word(vm, plug->path);
 		std::cout << "Plugging dvd " << path << " in vm " << vm->name() << std::endl;
 		if (vm->plug_dvd(path)) {
@@ -349,6 +390,11 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::s
 				" from vm " + vm->name());
 		}
 	} else {
+		if (!vm->is_dvd_plugged()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging dvd from vm " + vm->name()
+				+ " : dvd is already unplugged");
+		}
+
 		std::cout << "Unlugging dvd from vm " << vm->name() << std::endl;
 		if (vm->unplug_dvd()) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging dvd from vm " + vm->name());
@@ -401,7 +447,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 		std::string hash = std::to_string(h(script));
 
 		fs::path host_script_dir = scripts_tmp_dir() / hash;
-		fs::path guest_script_dir = fs::path("/tmp") / hash;
+		fs::path guest_script_dir = fs::path("/tmp");
 
 		if (!fs::create_directory(host_script_dir) && !fs::exists(host_script_dir)) {
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't create tmp script file on host");
@@ -614,13 +660,8 @@ void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::sh
 	visit_action_block(vm, snapshot->action_block->action);
 	auto new_cksum = snapshot_cksum(vm, snapshot);
 	std::cout << "Taking snapshot " << snapshot->name.value() << " for vm " << vm->name() << std::endl;
-	if (vm->make_snapshot(snapshot->name)) {
+	if (vm->make_snapshot(snapshot->name, new_cksum)) {
 		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while creating snapshot" +
-			snapshot->name.value() + " for vm " + vm->name());
-	}
-	std::cout << "Setting snapshot " << snapshot->name.value() << " cksum: " << new_cksum << std::endl;
-	if (vm->set_snapshot_cksum(snapshot->name, new_cksum)) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while setting snapshot cksum" +
 			snapshot->name.value() + " for vm " + vm->name());
 	}
 }
@@ -691,7 +732,7 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 
 std::string VisitorInterpreter::snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
 	VisitorCksum visitor(reg);
-	return std::to_string(visitor.visit(vm, snapshot->action_block->action));
+	return std::to_string(visitor.visit(vm, snapshot));
 }
 
 std::string VisitorInterpreter::cksum(std::shared_ptr<Controller> flash) {

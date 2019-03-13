@@ -2,7 +2,9 @@
 #pragma once
 
 #include "VboxVmController.hpp"
+#include "QemuVmController.hpp"
 #include "VboxFlashDriveController.hpp"
+#include "QemuFlashDriveController.hpp"
 #include "Register.hpp"
 
 struct Environment {
@@ -27,8 +29,28 @@ struct VboxEnvironment: public Environment {
 	}
 
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {
-		return std::shared_ptr<VboxFlashDriveController>(new VboxFlashDriveController(config));
+		return std::shared_ptr<FlashDriveController>(new VboxFlashDriveController(config));
 	}
 
 	API& api;
+};
+
+struct QemuEnvironment: public Environment {
+	QemuEnvironment() {}
+	~QemuEnvironment();
+
+	void setup() override;
+	void cleanup() override;
+
+	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override {
+		return std::shared_ptr<VmController>(new QemuVmController(config));
+	}
+
+	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {
+		return std::shared_ptr<FlashDriveController>(new QemuFlashDriveController(config));
+	}
+
+private:
+	void prepare_storage_pool(const std::string& pool_name);
+	vir::Connect qemu_connect;
 };

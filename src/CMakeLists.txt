@@ -6,12 +6,9 @@ else()
 	add_definitions(-DVBOX_WITH_GLUE)
 endif()
 
-include_directories(
-	${CMAKE_SOURCE_DIR}/3rd_party
-	${CMAKE_SOURCE_DIR}/src
-	${CMAKE_BINARY_DIR}/out/include
-)
+add_definitions(-DFMT_HEADER_ONLY)
 
 add_subdirectory(vbox)
 add_subdirectory(testo)
 add_subdirectory(testow)
+add_subdirectory(qemu)

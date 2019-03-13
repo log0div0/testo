@@ -424,7 +424,7 @@ int VboxVmController::install() {
 	}
 }
 
-int VboxVmController::make_snapshot(const std::string& snapshot) {
+int VboxVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
 	try {
 		{
 			auto lock_machine = virtual_box.find_machine(name());
@@ -448,6 +448,10 @@ int VboxVmController::make_snapshot(const std::string& snapshot) {
 			auto lock_machine = virtual_box.find_machine(name());
 			lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 			start_session.unlock_machine();
+		}
+
+		if (set_snapshot_cksum(snapshot, cksum)) {
+			std::throw_with_nested(__PRETTY_FUNCTION__);
 		}
 
 		return 0;
@@ -533,6 +537,10 @@ int VboxVmController::press(const std::vector<std::string>& buttons) {
 	}
 }
 
+bool VboxVmController::is_nic_plugged(const std::string& nic) const {
+	throw std::runtime_error("Not implemented");
+}
+
 int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 	try {
 		if (!config.count("nic")) {
@@ -560,6 +568,10 @@ int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 		std::cout << "(Un)Plugging nic in vm " << name() << ": " << error << std::endl;
 		return -1;
 	}
+}
+
+bool VboxVmController::is_link_plugged(const std::string& nic) const {
+	throw std::runtime_error("Not implemented");
 }
 
 int VboxVmController::set_link(const std::string& nic, bool is_connected) {
@@ -590,7 +602,7 @@ int VboxVmController::set_link(const std::string& nic, bool is_connected) {
 	}
 }
 
-bool VboxVmController::is_plugged(std::shared_ptr<FlashDriveController> fd) {
+bool VboxVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
 	return (plugged_fds.find(fd) != plugged_fds.end());
 }
 
@@ -664,10 +676,9 @@ int VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> f
 	}
 }
 
-void VboxVmController::unplug_all_flash_drives() {
-	while (!plugged_fds.empty()) {
-		unplug_flash_drive(*plugged_fds.begin());
-	}
+bool VboxVmController::is_dvd_plugged() const {
+	throw std::runtime_error("Not implemented");
+	return true;
 }
 
 int VboxVmController::plug_dvd(fs::path path) {

@@ -1,0 +1,52 @@
+machine buwaha	 {
+	cpus: 1
+	os_type: "ubuntu_64"
+	ram: 512Mb
+	iso: $ISO_PATH + "/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+	}
+
+	nic master_side: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:AA"
+	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
+}
+
+flash dummy_flash {
+	size: 256Mb
+	fs: "ntfs"
+	folder: "/home/alex/work/vbox/my_flash"
+}
+
+snapshot dummy {
+	unplug dvd
+}
+
+snapshot dummy2: dummy {
+	plug dvd $ISO_PATH + "/VBoxGuestAdditions_6.0.4.iso"
+	plug flash dummy_flash
+}
+
+test dummy: buwaha(dummy2)
+{
+	buwaha exec bash "ping -c10 192.168.156.1"
+	#buwaha wait for 30s
+	#buwaha unplug flash dummy_flash
+	#buwaha stop
+	#buwaha unplug nic master_side
+	#buwaha start
+	#buwaha set puchacha="AHAHASUCHKA"
+	#buwaha unplug dvd
+	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
+	#buwaha plug link master_side
+}

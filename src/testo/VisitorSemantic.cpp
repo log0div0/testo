@@ -18,7 +18,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, Environment& env):
 		keys.insert("NINE");
 		keys.insert("ZERO");
 		keys.insert("MINUS");
-		keys.insert("EQUAL");
+		keys.insert("EQUALSIGN");
 		keys.insert("BACKSPACE");
 		keys.insert("TAB");
 		keys.insert("Q");
