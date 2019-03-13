@@ -993,9 +993,9 @@ void VboxVmController::copy_dir_to_guest(const fs::path& src, const fs::path& ds
 
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {
-			gsession.file_copy_to_guest(file, dst / "/").wait_and_throw_if_failed();
+			gsession.file_copy_to_guest(file.path().generic_string(), (dst / "/").generic_string()).wait_and_throw_if_failed();
 		} else if (fs::is_directory(file)) {
-			copy_dir_to_guest(file, dst / file.path().filename(), gsession);
+			copy_dir_to_guest(file.path().generic_string(), (dst / file.path().filename()).generic_string(), gsession);
 		} //else continue
 	}
 }
