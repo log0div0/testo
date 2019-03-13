@@ -1174,7 +1174,21 @@ int QemuVmController::wait(const std::string& text, const std::string& time) {
 }
 
 int QemuVmController::run(const fs::path& exe, std::vector<std::string> args) {
-	return 0;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		Negotiator helper(domain);
+
+		std::string command = exe.generic_string();
+		for (auto& arg: args) {
+			command += " ";
+			command += arg;
+		}
+
+		return helper.execute(command);
+	} catch (const std::exception& error) {
+		std::cout << "Run guest process error: " << error << std::endl;
+		return -1;
+	}
 }
 
 bool QemuVmController::has_snapshot(const std::string& snapshot) {

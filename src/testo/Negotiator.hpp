@@ -16,7 +16,7 @@ struct Negotiator {
 
 	bool is_avaliable();
 	void copy_to_guest(const fs::path& src, const fs::path& dst);
-
+	int execute(const std::string& command);
 
 private:
 	using Socket = coro::StreamSocket<asio::local::stream_protocol>;

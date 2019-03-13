@@ -39,7 +39,7 @@ snapshot dummy2: dummy {
 
 test dummy: buwaha(dummy2)
 {
-	buwaha copyto $TESTO_DIR + "/misc" "/home/testo-user/misc"
+	buwaha exec bash "ping -c10 192.168.156.1"
 	#buwaha wait for 30s
 	#buwaha unplug flash dummy_flash
 	#buwaha stop

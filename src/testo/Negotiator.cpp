@@ -52,11 +52,38 @@ void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
+int Negotiator::execute(const std::string& command) {
+	std::cout << "Executing command " << command << std::endl;
+	coro::Timeout timeout(610s);
+	nlohmann::json request = {
+			{"method", "execute"},
+			{"args", {
+				command, 600
+			}}
+	};
+
+	send(request);
+
+	auto response = recv();
+
+	std::cout << response.dump(4) << std::endl;
+
+	if (response.at("success").get<bool>()) {
+		std::cout << response.at("result").get<std::string>() << std::endl;
+		return 0;
+	} else {
+		std::cout << response.at("error").get<std::string>() << std::endl;
+		return 1;
+	}
+}
+
 void Negotiator::copy_file_to_guest(const fs::path& src, const fs::path& dst) {
 	std::ifstream testFile(src.generic_string(), std::ios::binary);
-	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
 
+	std::noskipws(testFile);
+	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
 	std::string encoded = base64_encode(fileContents.data(), fileContents.size());
+	std::vector<uint8_t> decoded = base64_decode(encoded);
 
 	nlohmann::json request = {
 			{"method", "copy_file"},

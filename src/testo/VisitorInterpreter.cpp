@@ -447,7 +447,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 		std::string hash = std::to_string(h(script));
 
 		fs::path host_script_dir = scripts_tmp_dir() / hash;
-		fs::path guest_script_dir = fs::path("/tmp") / hash;
+		fs::path guest_script_dir = fs::path("/tmp");
 
 		if (!fs::create_directory(host_script_dir) && !fs::exists(host_script_dir)) {
 			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't create tmp script file on host");
