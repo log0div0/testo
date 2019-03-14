@@ -7,6 +7,34 @@ import os
 import socket
 import logging
 import struct
+from threading import Thread
+from Queue import Queue, Empty
+
+class NBSR:
+
+	def __init__(self, stream):
+		self._s = stream
+		self._q = Queue()
+
+		def _populateQueue(stream, queue):
+			while True:
+				line = stream.readline()
+				if line:
+					queue.put(line)
+				else:
+					raise UnexpectedEndOfStream
+
+		self._t = Thread(target = _populateQueue, args = (self._s, self._q))
+		self._t.daemon = True
+		self._t.start()
+
+	def readline(self, timeout = None):
+		try:
+			return self._q.get(block = timeout is not None, timeout = timeout)
+		except Empty:
+			return None
+
+class UnexpectedEndOfStream(Exception): pass
 
 class ProtocolError(Exception):
 	pass
@@ -105,14 +133,23 @@ class GuestChannel(Channel):
 	def execute(self, command, timeout, **kwargs):
 		logging.info(u'Execute command "%s" ...\n' % command)
 		p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-		for i in range(timeout):
-			time.sleep(1)
-			if p.poll() is not None:
-				out, err = p.communicate()
-				if p.returncode == 0:
-					return out
+		nbsr_stdout = NBSR(p.stdout)
+		nbsr_stderr = NBSR(p.stderr)
+		while True:
+			stdout_chunk = nbsr_stdout.readline(0.3)
+			stderr_chunk = nbsr_stderr.readline(0.3)
+			subprocess_status = p.poll()
+
+			if stdout_chunk is not None or stderr_chunk is not None or subprocess_status is not None:
+				result = {}
+				if stdout_chunk:
+					result["stdout"] = stdout_chunk
+				if stderr_chunk:
+					result["stderr"] = stderr_chunk
+				if subprocess_status is None:
+					result["status"] = "pending"
+					self.write(dict(success=True, result = result))
 				else:
-					raise Exception(err)
-		p.terminate()
-		p.wait()
-		raise Exception("Timeout")
+					result["status"] = "finished"
+					result["exit_code"] = p.returncode
+					return result

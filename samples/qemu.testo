@@ -39,7 +39,7 @@ snapshot dummy2: dummy {
 
 test dummy: buwaha(dummy2)
 {
-	buwaha exec bash "ping -c10 192.168.156.1"
+	buwaha exec bash "ping -c20 192.168.156.10"
 	#buwaha wait for 30s
 	#buwaha unplug flash dummy_flash
 	#buwaha stop
