@@ -6,8 +6,8 @@
 
 void train_detector(char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear)
 {
-	char *train_images = "data/train.list";
-	char *backup_directory = "/backup/";
+	char *train_images = "dataset/image_list.txt";
+	char *backup_directory = "backup/";
 
 	srand(time(0));
 	char *base = basecfg(cfgfile);
