@@ -64,16 +64,22 @@ int Negotiator::execute(const std::string& command) {
 
 	send(request);
 
-	auto response = recv();
+	while (true) {
+		auto response = recv();
+		if (!response.at("success").get<bool>()) {
+			throw std::runtime_error(std::string("Negotiator inner error: ") + response.at("error").get<std::string>());
+		}
 
-	std::cout << response.dump(4) << std::endl;
-
-	if (response.at("success").get<bool>()) {
-		std::cout << response.at("result").get<std::string>() << std::endl;
-		return 0;
-	} else {
-		std::cout << response.at("error").get<std::string>() << std::endl;
-		return 1;
+		auto result = response.at("result");
+		if (result.count("stdout")) {
+			std::cout << result.at("stdout").get<std::string>();
+		}
+		if (result.count("stderr")) {
+			std::cout << result.at("stderr").get<std::string>();
+		}
+		if (result.at("status").get<std::string>() == "finished") {
+			return result.at("exit_code").get<int>();
+		}
 	}
 }
 
