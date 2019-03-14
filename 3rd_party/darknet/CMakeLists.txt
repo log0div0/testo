@@ -19,7 +19,7 @@ endif()
 add_library(libdarknet STATIC ${libdarknet_SRCS})
 set_target_properties(libdarknet PROPERTIES PREFIX "")
 
-file(GLOB_RECURSE darknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.c)
+file(GLOB_RECURSE darknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 add_executable(darknet ${darknet_SRCS})
 target_link_libraries(darknet libdarknet)
 if(UNIX)
