@@ -1,0 +1,85 @@
+machine controller {
+	cpus: 1
+	os_type: "ubuntu_64"
+	ram: 512Mb
+	iso: "/ubuntu-16.04.5-server-amd64.iso"
+	disk_size: 4Gb
+
+	nic server_side: {
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:33:00:bb"
+	}
+
+	metadata: {
+		login: "root"
+		password: "1111"
+	}
+}
+
+
+macro test_macro {
+	wait for 10s
+	type $MACRO_ENV
+}
+
+snapshot dummy
+{
+	#All the possible actions go here
+	start
+	stop
+
+	type "Hello world"
+	type $TYPE_ENV;
+
+	wait "Hello world"
+	wait "Hello world" + $WAIT_ENV for 10s;;
+	;
+	;;
+	wait for 15m
+
+	press Enter
+	press Down*3
+	press LEFTSHIT+LEFTALT+Up*3, left*7, Enter*8
+
+	plug dvd "DVD_PATH"
+	plug dvd $DVD_PATH_ENV
+	unplug dvd
+
+	plug nic server_side
+	unplug nic server_side
+
+	plug link server_side
+	unplug link server_side
+
+	#TODO: (un)plug flash
+
+	exec bash "Hello world"
+	exec python "Hello world"
+	exec python $EXEC_ENV
+	exec python """
+		cat Hello world!""" + $EXEC_ENV + "Okay";
+	exec python """
+		cat Hello world!""" + $EXEC_ENV2 + "Okay"
+
+
+	set var1 = "var1"
+	set var2 = $SET_ENV + "var2", var3 = $var1
+
+	{
+		copyto "from" "to"
+		copyto $FROM_VAR + "FROM" "TO" + $TO_VAR
+	}
+
+	test_macro
+
+	if ($IF_ENV EQUAL "5") {
+		wait for 10m
+	} else {
+		wait for 5m
+	}
+
+}
+
+test dummy: controller(dummy)
+{}

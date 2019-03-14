@@ -109,8 +109,27 @@ static void config_relevance_routine(const fs::path& testo_file, const nlohmann:
 	}
 }
 
+std::string default_original_snapshot = "dummyBLOCK";
 
-TEST_CASE("config_original", "[rollback]") {
+static void snapshot_relevance_routine(const fs::path& testo_file, const std::string& original_snapshot, bool is_relevant) {
+	Mock<Environment> mock_env;
+	Mock<VmController> mock_vm;
+
+	Fake(Method(mock_env, setup));
+	Fake(Method(mock_env, cleanup));
+
+	{
+		Interpreter runner(mock_env.get(), testo_file);
+		runner.run();
+	}
+}
+
+
+TEST_CASE("snapshot_original", "[rollback]") {
+	snapshot_relevance_routine("snapshot_relevant/snapshot_original.testo", default_original_snapshot, true);
+}
+
+/*TEST_CASE("config_original", "[rollback]") {
 	config_relevance_routine("config_relevant/config_original.testo", default_original_config, true);
 }
 
@@ -170,3 +189,4 @@ TEST_CASE("config_nic_renamed", "[rollback]") {
 TEST_CASE("config_nic_attr_changed", "[rollback]") {
 	config_relevance_routine("config_irrelevant/config_nic_attr_changed.testo", default_original_config, false);
 }
+*/

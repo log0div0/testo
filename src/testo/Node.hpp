@@ -141,6 +141,22 @@ struct Action: public IAction {
 	Token delim;
 };
 
+struct Empty: public Node {
+	Empty(): Node(Token()) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return "";
+	}
+};
+
 struct Type: public Node {
 	Type(const Token& type, std::shared_ptr<Word> text_word):
 		Node(type), text_word(text_word) {}
@@ -243,7 +259,7 @@ struct Plug: public Node {
 		return (t.type() == Token::category::plug);
 	}
 
-	Token type; //nic or flash
+	Token type; //nic or flash or dvd
 	Token name_token; //name of resource to be plugged/unplugged
 	std::shared_ptr<Word> path; //used only for dvd
 };

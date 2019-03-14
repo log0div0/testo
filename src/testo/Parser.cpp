@@ -89,6 +89,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::copyto) ||
 		(LA(1) == Token::category::lbrace) ||
 		(LA(1) == Token::category::if_) ||
+		(LA(1) == Token::category::semi) ||
 		(LA(1) == Token::category::id)); //macro call
 }
 
@@ -433,6 +434,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = action_block();
 	} else if (LA(1) == Token::category::if_) {
 		action = if_clause();
+	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
+		return empty_action();
 	} else if (LA(1) == Token::category::id) {
 		action = macro_call();
 	} else {
@@ -455,6 +458,12 @@ std::shared_ptr<IAction> Parser::action() {
 	}
 
 	return action;
+}
+
+std::shared_ptr<Action<Empty>> Parser::empty_action() {
+	match({Token::category::semi, Token::category::newline});
+	auto action = std::shared_ptr<Empty>(new Empty());
+	return std::shared_ptr<Action<Empty>>(new Action<Empty>(action));
 }
 
 std::shared_ptr<Action<Type>> Parser::type() {
@@ -617,7 +626,8 @@ std::shared_ptr<Action<ActionBlock>> Parser::action_block() {
 	std::vector<std::shared_ptr<IAction>> actions;
 
 	while (test_action()) {
-		actions.push_back(action());
+		auto act = action();
+		actions.push_back(act);
 		newline_list();
 	}
 

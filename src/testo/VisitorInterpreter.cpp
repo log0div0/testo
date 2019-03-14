@@ -181,6 +181,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_if_clause(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
+		return;
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
