@@ -79,7 +79,7 @@ static void config_relevance_routine(const fs::path& testo_file, const nlohmann:
 
 
 	When(Method(mock_vm, has_snapshot).Using("dummy")).Return(true);
-	When(Method(mock_vm, get_snapshot_cksum).Using("dummy")).Return(snapsoht_cksum("BLOCK"));
+	When(Method(mock_vm, get_snapshot_cksum).Using("dummy")).Return(snapsoht_cksum("dummyBLOCK"));
 
 	if (is_relevant) {
 		When(Method(mock_vm, rollback).Using("dummy")).Return(0);
