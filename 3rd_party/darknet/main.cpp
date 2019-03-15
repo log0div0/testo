@@ -3,33 +3,36 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <clipp.h>
+#include <iostream>
 
-void train_detector(char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear)
+void train(const std::string& cfgfile, const std::string& weightfile, const std::vector<int>& gpus)
 {
 	char *train_images = "dataset/image_list.txt";
 	char *backup_directory = "backup/";
 
 	srand(time(0));
-	char *base = basecfg(cfgfile);
+	char *base = basecfg((char*)cfgfile.c_str());
 	printf("%s\n", base);
 	float avg_loss = -1;
-	network **nets = (network**)calloc(ngpus, sizeof(network));
+	network **nets = (network**)calloc(gpus.size(), sizeof(network));
 
 	srand(time(0));
 	int seed = rand();
-	int i;
-	for(i = 0; i < ngpus; ++i){
+	int i = 0;
+	for (auto gpu: gpus) {
 		srand(seed);
 #ifdef GPU
-		cuda_set_device(gpus[i]);
+		cuda_set_device(gpu);
 #endif
-		nets[i] = load_network(cfgfile, weightfile, clear);
-		nets[i]->learning_rate *= ngpus;
+		nets[i] = load_network((char*)cfgfile.c_str(), (char*)weightfile.c_str(), 0);
+		nets[i]->learning_rate *= gpus.size();
+		++i;
 	}
 	srand(time(0));
 	network *net = nets[0];
 
-	int imgs = net->batch * net->subdivisions * ngpus;
+	int imgs = net->batch * net->subdivisions * gpus.size();
 	printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
 	data train, buffer;
 
@@ -106,105 +109,93 @@ void train_detector(char *cfgfile, char *weightfile, int *gpus, int ngpus, int c
 }
 
 
-void test_detector(char *cfgfile, char *weightfile, char *filename, float thresh, float hier_thresh, char *outfile, int fullscreen)
+void test(const std::string& cfgfile, const std::string& weightfile, const std::string& filename, float thresh, const std::string& outfile)
 {
-	network *net = load_network(cfgfile, weightfile, 0);
+	network *net = load_network((char*)cfgfile.c_str(), (char*)weightfile.c_str(), 0);
 	set_batch_network(net, 1);
 	srand(2222222);
 	double time;
 	char buff[256];
 	char *input = buff;
 	float nms=.45;
-	while(1){
-		if(filename){
-			strncpy(input, filename, 256);
-		} else {
-			printf("Enter Image Path: ");
-			fflush(stdout);
-			input = fgets(input, 256, stdin);
-			if(!input) return;
-			strtok(input, "\n");
-		}
-		image im = load_image_color(input,0,0);
-		image sized = letterbox_image(im, net->w, net->h);
-		layer l = net->layers[net->n-1];
+	strncpy(input, filename.c_str(), 256);
+	image im = load_image_color(input,0,0);
+	image sized = letterbox_image(im, net->w, net->h);
+	layer l = net->layers[net->n-1];
 
 
-		float *X = sized.data;
-		time=what_time_is_it_now();
-		network_predict(net, X);
-		printf("%s: Predicted in %f seconds.\n", input, what_time_is_it_now()-time);
-		int nboxes = 0;
-		detection *dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes);
-		if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-		draw_detections(im, dets, nboxes, thresh, l.classes);
-		free_detections(dets, nboxes);
-		if(outfile){
-			save_image(im, outfile);
-		}
-		else{
-			save_image(im, "predictions");
-		}
+	float *X = sized.data;
+	time=what_time_is_it_now();
+	network_predict(net, X);
+	printf("%s: Predicted in %f seconds.\n", input, what_time_is_it_now()-time);
+	int nboxes = 0;
+	detection *dets = get_network_boxes(net, im.w, im.h, thresh, 0.5, 0, 1, &nboxes);
+	if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
+	draw_detections(im, dets, nboxes, thresh, l.classes);
+	free_detections(dets, nboxes);
+	save_image(im, outfile.c_str());
 
-		free_image(im);
-		free_image(sized);
-		if (filename) break;
-	}
+	free_image(im);
+	free_image(sized);
 }
+
+enum Mode {
+	Help,
+	Train,
+	Test
+};
+
+Mode mode;
+std::string cfg;
+std::string weights;
+std::string input;
+std::string output = "prediction";
+bool nogpu = false;
+float thresh = 0.5f;
+std::vector<int> gpus = {0};
 
 int main(int argc, char **argv)
 {
-	gpu_index = find_int_arg(argc, argv, "-i", 0);
-	if (find_arg(argc, argv, "-nogpu")) {
-		gpu_index = -1;
-	}
+	using namespace clipp;
 
-#ifndef GPU
-	gpu_index = -1;
-#else
-	if (gpu_index >= 0) {
-		cuda_set_device(gpu_index);
-	}
+	auto cli = (
+		command("help").set(mode, Help)
+		| ( command("train").set(mode, Train),
+#ifdef GPU
+			option("--gpus") & values("gpus", gpus),
 #endif
+			value("cfg", cfg),
+			option("weights", weights)
+		)
+		| (
+			command("test").set(mode, Test),
+			value("cfg", cfg),
+			value("weights", weights),
+			value("input", input),
+			option("-o", "--output") & value("output", output),
+#ifdef GPU
+			option("--nogpu").set(nogpu),
+#endif
+			option("--thresh") & value("thresh", thresh)
+		)
+	);
 
-	float thresh = find_float_arg(argc, argv, "-thresh", .5);
-	float hier_thresh = find_float_arg(argc, argv, "-hier", .5);
-	if(argc < 3){
-		fprintf(stderr, "usage: %s [train/test] [cfg] [weights (optional)]\n", argv[0]);
+	if (!parse(argc, argv, cli)) {
+		std::cout << make_man_page(cli, argv[0]) << std::endl;
 		return 1;
 	}
-	char *gpu_list = find_char_arg(argc, argv, "-gpus", 0);
-	char *outfile = find_char_arg(argc, argv, "-out", 0);
-	int *gpus = 0;
-	int gpu = 0;
-	int ngpus = 0;
-	if(gpu_list){
-		printf("%s\n", gpu_list);
-		int len = strlen(gpu_list);
-		ngpus = 1;
-		int i;
-		for(i = 0; i < len; ++i){
-			if (gpu_list[i] == ',') ++ngpus;
-		}
-		gpus = (int*)calloc(ngpus, sizeof(int));
-		for(i = 0; i < ngpus; ++i){
-			gpus[i] = atoi(gpu_list);
-			gpu_list = strchr(gpu_list, ',')+1;
-		}
-	} else {
-		gpu = gpu_index;
-		gpus = &gpu;
-		ngpus = 1;
+
+	switch (mode) {
+		case Help:
+			std::cout << make_man_page(cli, argv[0]) << std::endl;
+			break;
+		case Train:
+			train(cfg, weights, gpus);
+			break;
+		case Test:
+			test(cfg, weights, input, thresh, output);
+			break;
 	}
-
-	int clear = find_arg(argc, argv, "-clear");
-	int fullscreen = find_arg(argc, argv, "-fullscreen");
-
-	char *cfg = argv[2];
-	char *weights = (argc > 3) ? argv[3] : 0;
-	char *filename = (argc > 4) ? argv[4]: 0;
-	if(0==strcmp(argv[1], "test")) test_detector(cfg, weights, filename, thresh, hier_thresh, outfile, fullscreen);
-	else if(0==strcmp(argv[1], "train")) train_detector(cfg, weights, gpus, ngpus, clear);
 
 	return 0;
 }

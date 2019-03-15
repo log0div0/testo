@@ -10,6 +10,7 @@ if(WIN32)
 endif()
 
 file(GLOB_RECURSE libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+list(REMOVE_ITEM libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 if(GPU)
 	file(GLOB_RECURSE cuda_files ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cu)
