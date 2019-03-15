@@ -9,7 +9,6 @@ list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 add_library(testo-core STATIC ${SRCS})
 
-add_dependencies(testo-core coro json libpugixml)
 target_link_libraries(testo-core coro vbox vboxcapi qemu pugixml pthread)
 
 if(UNIX)

@@ -20,11 +20,6 @@ add_definitions(-DASIO_STANDALONE)
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
 	${CMAKE_SOURCE_DIR}/src
-	${CMAKE_BINARY_DIR}/out/include
-)
-
-link_directories(
-	${CMAKE_BINARY_DIR}/out/lib
 )
 
 macro(add_package NAME)
