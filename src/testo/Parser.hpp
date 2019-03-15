@@ -55,6 +55,7 @@ private:
 	std::shared_ptr<AST::CmdBlock> command_block();
 	std::shared_ptr<AST::KeySpec> key_spec();
 	std::shared_ptr<AST::IAction> action();
+	std::shared_ptr<AST::Action<AST::Empty>> empty_action();
 	std::shared_ptr<AST::Action<AST::Type>> type();
 	std::shared_ptr<AST::Action<AST::Wait>> wait();
 	std::shared_ptr<AST::Action<AST::Press>> press();
