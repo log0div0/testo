@@ -15,24 +15,25 @@ struct Network {
 	Network& operator=(const Network&) = delete;
 
 	void load_weights(const std::string& weights_file_path);
-	void set_batch(int batch);
+	void set_batch(size_t batch);
 	float* predict(const Image& image);
 
 	const layer& back() const {
 		return impl->layers[impl->n-1];
 	}
 
-	int width() const {
+	size_t width() const {
 		return impl->w;
 	}
 
-	int height() const {
+	size_t height() const {
 		return impl->h;
 	}
 
+	network* impl = nullptr;
+
 private:
 	float* forward(float* input);
-	network* impl = nullptr;
 };
 
 }

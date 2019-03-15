@@ -4,12 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <clipp.h>
+#include <math.h>
 #include <iostream>
+#include "Network.hpp"
 
 void train(const std::string& cfgfile, const std::string& weightfile, const std::vector<int>& gpus)
 {
-	char *train_images = "dataset/image_list.txt";
-	char *backup_directory = "backup/";
+	const char *train_images = "dataset/image_list.txt";
+	const char *backup_directory = "backup/";
 
 	srand(time(0));
 	char *base = basecfg((char*)cfgfile.c_str());
@@ -19,15 +21,13 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 
 	srand(time(0));
 	int seed = rand();
-	int i = 0;
-	for (auto gpu: gpus) {
+	for (size_t i = 0; i < gpus.size(); ++i) {
 		srand(seed);
 #ifdef GPU
-		cuda_set_device(gpu);
+		cuda_set_device(gpus[i]);
 #endif
 		nets[i] = load_network((char*)cfgfile.c_str(), (char*)weightfile.c_str(), 0);
 		nets[i]->learning_rate *= gpus.size();
-		++i;
 	}
 	srand(time(0));
 	network *net = nets[0];
@@ -41,7 +41,7 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 	int classes = l.classes;
 	float jitter = l.jitter;
 
-	list *plist = get_paths(train_images);
+	list *plist = get_paths((char*)train_images);
 	char **paths = (char **)list_to_array(plist);
 
 	load_args args = get_base_args(net);
@@ -58,7 +58,7 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 
 	pthread_t load_thread = load_data(args);
 	double time;
-	while(get_current_batch(net) < net->max_batches){
+	while(get_current_batch(net) < (size_t)net->max_batches){
 		time=what_time_is_it_now();
 		pthread_join(load_thread, 0);
 		train = buffer;
@@ -80,7 +80,7 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 		if (avg_loss < 0) avg_loss = loss;
 		avg_loss = avg_loss*.9 + loss*.1;
 
-		i = get_current_batch(net);
+		int i = get_current_batch(net);
 		printf("%ld: %f, %f avg, %f rate, %lf seconds, %d images\n", get_current_batch(net), loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, i*imgs);
 		if(i%100==0){
 #ifdef GPU
@@ -109,34 +109,79 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 }
 
 
-void test(const std::string& cfgfile, const std::string& weightfile, const std::string& filename, float thresh, const std::string& outfile)
+static int entry_index(layer l, int location, int entry)
 {
-	network *net = load_network((char*)cfgfile.c_str(), (char*)weightfile.c_str(), 0);
-	set_batch_network(net, 1);
-	srand(2222222);
-	double time;
-	char buff[256];
-	char *input = buff;
-	float nms=.45;
-	strncpy(input, filename.c_str(), 256);
-	image im = load_image_color(input,0,0);
-	image sized = letterbox_image(im, net->w, net->h);
-	layer l = net->layers[net->n-1];
+    return entry*l.w*l.h + location;
+}
 
+box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw, int lh, int w, int h, int stride)
+{
+    box b;
+    b.x = (i + x[index + 0*stride]) / lw;
+    b.y = (j + x[index + 1*stride]) / lh;
+    b.w = exp(x[index + 2*stride]) * biases[2*n]   / w;
+    b.h = exp(x[index + 3*stride]) * biases[2*n+1] / h;
+    return b;
+}
 
-	float *X = sized.data;
-	time=what_time_is_it_now();
-	network_predict(net, X);
-	printf("%s: Predicted in %f seconds.\n", input, what_time_is_it_now()-time);
-	int nboxes = 0;
-	detection *dets = get_network_boxes(net, im.w, im.h, thresh, 0.5, 0, 1, &nboxes);
-	if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-	draw_detections(im, dets, nboxes, thresh, l.classes);
-	free_detections(dets, nboxes);
-	save_image(im, outfile.c_str());
+void test(const std::string& cfgfile, const std::string& weightfile, const std::string& infile, float thresh, const std::string& outfile)
+{
+	using namespace darknet;
 
-	free_image(im);
-	free_image(sized);
+	Network network(cfgfile);
+	network.load_weights(weightfile);
+	network.set_batch(1);
+
+	Image image = Image(infile);
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	float* predictions = network.predict(image);
+
+	// const char chars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+	const auto& l = network.back();
+
+	int netw = network.width();
+	int neth = network.height();
+	int w = image.width();
+	int h = image.height();
+	int new_w=0;
+	int new_h=0;
+	if (((float)netw/w) < ((float)neth/h)) {
+	    new_w = netw;
+	    new_h = (h * netw)/w;
+	} else {
+	    new_h = neth;
+	    new_w = (w * neth)/h;
+	}
+
+	for (int y = 0; y < l.h; ++y) {
+		for (int x = 0; x < l.w; ++x) {
+			int i = y * l.w + x;
+			int box_index  = entry_index(l, i, 0);
+			int obj_index  = entry_index(l, i, 4);
+			float objectness = predictions[obj_index];
+			if (objectness < thresh) {
+				continue;
+			}
+
+			box b = get_yolo_box(predictions, l.biases, l.mask[0], box_index, x, y, l.w, l.h, netw, neth, l.w*l.h);
+
+		    b.x =  (b.x - (netw - new_w)/2./netw) / ((float)new_w/netw);
+		    b.y =  (b.y - (neth - new_h)/2./neth) / ((float)new_h/neth);
+		    b.w *= (float)netw/new_w;
+		    b.h *= (float)neth/new_h;
+
+			image.draw(b, 0.9f, 0.2f, 0.3f);
+		}
+	}
+
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time = end - start;
+	std::cout << time.count() << " seconds" << std::endl;
+
+	image.save(outfile);
 }
 
 enum Mode {
@@ -157,6 +202,8 @@ std::vector<int> gpus = {0};
 int main(int argc, char **argv)
 {
 	using namespace clipp;
+
+	srand(time(0));
 
 	auto cli = (
 		command("help").set(mode, Help)

@@ -22,13 +22,18 @@ void Network::load_weights(const std::string& weights_file_path) {
 	::load_weights(impl, (char*)weights_file_path.c_str());
 }
 
-void Network::set_batch(int batch) {
+void Network::set_batch(size_t batch) {
 	set_batch_network(impl, batch);
 }
 
 float* Network::predict(const Image& image) {
-	Image resized_image = image.letterbox(impl->w, impl->h);
-	return forward(resized_image.data());
+	if ((width() != image.width()) ||
+		(height() != image.height()))
+	{
+		return forward(image.letterbox(width(), height()).data());
+	} else {
+		return forward((float*)image.data());
+	}
 }
 
 float* Network::forward(float* in) {
