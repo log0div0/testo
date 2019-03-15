@@ -193,7 +193,7 @@ def draw_char(image, left, top, foreground, background, font):
 	x_center = (left + x + (width // 2)) / image_width
 	y_center = (top + y + (height // 2)) / image_height
 	if char != ' ':
-		return "%s %s %s %s %s\n" % (chars.index(char), x_center, y_center, width / image_width, height / image_height)
+		return "%s %s %s %s %s\n" % (chars.index(char), x_center, y_center, (width + 2) / image_width, (height + 2) / image_height)
 	else:
 		return ""
 
