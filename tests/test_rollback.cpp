@@ -109,7 +109,44 @@ static void config_relevance_routine(const fs::path& testo_file, const nlohmann:
 	}
 }
 
-std::string default_original_snapshot = "dummyBLOCK";
+std::string default_original_snapshot() {
+	std::string result = "dummyBLOCK";
+	result += "start";
+	result += "stop";
+	result += "typeHello world";
+	result += "typeENV typing";
+	result += "waitHello world10s";
+	result += "waitHello worldENV waiting10s";
+	result += "wait15m";
+	result += "presskey_specENTER1";
+	result += "presskey_specDOWN3";
+	result += "presskey_specLEFTSHIFT+LEFTALT+UP3key_specLEFT7key_specENTER8";
+	result += "plug1dvdDVD_PATH";
+	result += "plug1dvdENV DVD";
+	result += "plug0dvd";
+	result += "plug1nicserver_side";
+	result += "plug0nicserver_side";
+	result += "plug1linkserver_side";
+	result += "plug0linkserver_side";
+	result += "execbashHello world";
+	result += "execbashENV EXEC";
+	result += "execbash\n\t\tcat Hello world!ENV EXECOkay";
+
+	result += "setvar1value1";
+	result += "setvar2ENV SETvalue2var3";
+	result += "BLOCK";
+	result += "copytofromto";
+	result += "copytoENV FROMFROMTOENV TO";
+
+	result += "BLOCK"; //macro
+	result += "wait10s";
+	result += "typeENV MACRO";
+	result += "iffactor0comparisonENV IF5EQUAL";
+	result += "BLOCKwait10m";
+	result += "elseBLOCKwait5m";
+
+	return result;
+}
 
 static void snapshot_relevance_routine(const fs::path& testo_file, const std::string& original_snapshot, bool is_relevant) {
 	Mock<Environment> mock_env;
@@ -118,18 +155,66 @@ static void snapshot_relevance_routine(const fs::path& testo_file, const std::st
 	Fake(Method(mock_env, setup));
 	Fake(Method(mock_env, cleanup));
 
-	{
-		Interpreter runner(mock_env.get(), testo_file);
-		runner.run();
+	When(Method(mock_env, create_vm_controller)).Do([&](const nlohmann::json& a)->std::shared_ptr<VmController>{
+		return std::shared_ptr<VmController>(&mock_vm.get(), [](VmController*){});
+	});
+
+	When(Method(mock_vm, keys)).AlwaysReturn({});
+	//visit vm_state
+	When(Method(mock_vm, is_defined)).Return(true);
+	//check config relevance - we're passing default config because it doesn't matter
+	When(Method(mock_vm, get_metadata).Using("vm_config")).Return(default_original_config.dump());
+	When(Method(mock_vm, get_config)).Return(default_original_config);
+
+	//resolve state
+	When(Method(mock_vm, has_snapshot).Using("dummy")).Return(true);
+	//Now the interesting part begins...
+	When(Method(mock_vm, get_snapshot_cksum).Using("dummy")).Return(snapsoht_cksum(original_snapshot));
+	When(Method(mock_vm, has_key)).AlwaysReturn(false);
+
+	if (is_relevant) {
+		When(Method(mock_vm, rollback).Using("dummy")).Return(0);
+
+		//If install is invoked - that's an exception
+
+		When(Method(mock_vm, install)).AlwaysThrow(std::runtime_error("Install was invoked instead of rollback"));
+		{
+			Interpreter runner(mock_env.get(), testo_file);
+			runner.run();
+		}
+
+		REQUIRE_NOTHROW(Verify(Method(mock_vm, rollback)).Once());
+	} else {
+		When(Method(mock_vm, install)).Return(0);
+		When(Method(mock_vm, name)).AlwaysReturn("controller");
+		When(Method(mock_vm, make_snapshot)).AlwaysReturn(0);
+
+		//If rollback is invoked - that's an exception
+		When(Method(mock_vm, rollback)).AlwaysThrow(std::runtime_error("Rollback was invoked instead of install"));
+		{
+			Interpreter runner(mock_env.get(), testo_file);
+			runner.run();
+		}
+
+		REQUIRE_NOTHROW(Verify(Method(mock_vm, install)).Once());
 	}
 }
 
 
 TEST_CASE("snapshot_original", "[rollback]") {
-	snapshot_relevance_routine("snapshot_relevant/snapshot_original.testo", default_original_snapshot, true);
+	setenv("TYPE_ENV", "ENV typing", 1);
+	setenv("WAIT_ENV", "ENV waiting", 1);
+	setenv("DVD_PATH_ENV", "ENV DVD", 1);
+	setenv("EXEC_ENV", "ENV EXEC", 1);
+	setenv("SET_ENV", "ENV SET", 1);
+	setenv("FROM_ENV", "ENV FROM", 1);
+	setenv("TO_ENV", "ENV TO", 1);
+	setenv("MACRO_ENV", "ENV MACRO", 1);
+	setenv("IF_ENV", "ENV IF", 1);
+	snapshot_relevance_routine("snapshot_relevant/snapshot_original.testo", default_original_snapshot(), true);
 }
 
-/*TEST_CASE("config_original", "[rollback]") {
+TEST_CASE("config_original", "[rollback]") {
 	config_relevance_routine("config_relevant/config_original.testo", default_original_config, true);
 }
 
@@ -189,4 +274,3 @@ TEST_CASE("config_nic_renamed", "[rollback]") {
 TEST_CASE("config_nic_attr_changed", "[rollback]") {
 	config_relevance_routine("config_irrelevant/config_nic_attr_changed.testo", default_original_config, false);
 }
-*/

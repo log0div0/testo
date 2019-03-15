@@ -40,7 +40,7 @@ snapshot dummy
 
 	press Enter
 	press Down*3
-	press LEFTSHIT+LEFTALT+Up*3, left*7, Enter*8
+	press LEFTSHIFT+LEFTALT+Up*3, left*7, Enter*8
 
 	plug dvd "DVD_PATH"
 	plug dvd $DVD_PATH_ENV
@@ -55,20 +55,16 @@ snapshot dummy
 	#TODO: (un)plug flash
 
 	exec bash "Hello world"
-	exec python "Hello world"
-	exec python $EXEC_ENV
-	exec python """
+	exec bash $EXEC_ENV
+	exec bash """
 		cat Hello world!""" + $EXEC_ENV + "Okay";
-	exec python """
-		cat Hello world!""" + $EXEC_ENV2 + "Okay"
 
-
-	set var1 = "var1"
-	set var2 = $SET_ENV + "var2", var3 = $var1
+	set var1 = "value1"
+	set var2 = $SET_ENV + "value2", var3 = $var1
 
 	{
 		copyto "from" "to"
-		copyto $FROM_VAR + "FROM" "TO" + $TO_VAR
+		copyto $FROM_ENV + "FROM" "TO" + $TO_ENV
 	}
 
 	test_macro

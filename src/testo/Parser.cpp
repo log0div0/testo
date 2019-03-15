@@ -545,7 +545,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 		match(Token::category::id);
 	}
 
-	Token name = LT(1);
+	Token name = Token();
 
 	std::shared_ptr<Word> path(nullptr);
 
@@ -554,6 +554,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 			path = word();
 		} //else this should be the end of unplug commands
 	} else {
+		name = LT(1);
 		match(Token::category::id);
 	}
 

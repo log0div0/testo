@@ -49,6 +49,8 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return visit_if_clause(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
+		return "";
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
@@ -92,7 +94,7 @@ std::string VisitorCksum::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
 
 std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	std::string result("plug");
-	result += plug->is_on();
+	result += std::to_string(plug->is_on());
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
@@ -103,11 +105,6 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shar
 
 std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {
 	std::string result("exec");
-	if (!vm->has_key("login") || !vm->has_key("password")) {
-		throw std::runtime_error(std::string(exec->begin()) + ": Error: This command requires login and password metadata for vm " + vm->name());
-	}
-	result += vm->get_metadata("login");
-	result += vm->get_metadata("password");
 
 	result += exec->process_token.value();
 	result += visit_word(vm, exec->commands);
@@ -125,11 +122,6 @@ std::string VisitorCksum::visit_set(std::shared_ptr<VmController> vm, std::share
 
 std::string VisitorCksum::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
 	std::string result("copyto");
-	if (!vm->has_key("login") || !vm->has_key("password")) {
-		throw std::runtime_error(std::string(copyto->begin()) + ": Error: This command requires login and password metadata for vm " + vm->name());
-	}
-	result += vm->get_metadata("login");
-	result += vm->get_metadata("password");
 
 	result += visit_word(vm, copyto->from);
 	result += visit_word(vm, copyto->to);
@@ -147,6 +139,7 @@ std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vm, std:
 	result += visit_action(vm, if_clause->if_action);
 
 	if (if_clause->has_else()) {
+		result += "else";
 		result += visit_action(vm, if_clause->else_action);
 	}
 
@@ -174,13 +167,13 @@ std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vm, std::sha
 std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<IFactor> factor) {
 	std::string result("factor");
 	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
-		result += p->is_negated();
+		result += std::to_string(p->is_negated());
 		result += visit_word(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
-		result += p->is_negated();
+		result += std::to_string(p->is_negated());
 		result += visit_comparison(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
-		result += p->is_negated();
+		result += std::to_string(p->is_negated());
 		result += visit_expr(vm, p->factor);
 	} else {
 		throw std::runtime_error("Unknown factor type");
@@ -229,7 +222,7 @@ std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vm, std
 	std::string result("comparison");
 	result += visit_word(vm, comparison->left);
 	result += visit_word(vm, comparison->right);
-	result += comparison->op();
+	result += comparison->op().value();
 	return result;
 }
 

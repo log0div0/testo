@@ -85,8 +85,11 @@ struct KeySpec: public Node {
 
 	std::string get_buttons_str() const {
 		std::string result = buttons[0].value();
+		std::transform(result.begin(), result.end(), result.begin(), ::toupper);
 		for (size_t i = 1; i < buttons.size(); i++) {
-			result += "+" + buttons[i].value();
+			auto button_str = buttons[i].value();
+			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
+			result += "+" + button_str;
 		}
 
 		return result;
@@ -861,8 +864,8 @@ struct Comparison: public Node {
 		return std::string(*left) + " " + t.value() + " " + std::string(*right);
 	}
 
-	Token::category op() const {
-		return t.type();
+	Token op() const {
+		return t;
 	}
 
 	std::shared_ptr<Word> left;
