@@ -14,4 +14,3 @@ if (APPLE)
 endif()
 
 add_library(coro STATIC ${FILES})
-add_dependencies(coro asio)
