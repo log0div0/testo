@@ -109,22 +109,6 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 	save_weights(net, buff);
 }
 
-
-static int entry_index(layer l, int location, int entry)
-{
-    return entry*l.w*l.h + location;
-}
-
-box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw, int lh, int w, int h, int stride)
-{
-    box b;
-    b.x = (i + x[index + 0*stride]) / lw;
-    b.y = (j + x[index + 1*stride]) / lh;
-    b.w = exp(x[index + 2*stride]) * biases[2*n]   / w;
-    b.h = exp(x[index + 3*stride]) * biases[2*n+1] / h;
-    return b;
-}
-
 void test(const std::string& cfgfile, const std::string& weightfile, const std::string& infile, float thresh, const std::string& outfile)
 {
 	using namespace darknet;
@@ -143,38 +127,28 @@ void test(const std::string& cfgfile, const std::string& weightfile, const std::
 
 	const auto& l = network.back();
 
-	int netw = network.width();
-	int neth = network.height();
-	int w = image.width();
-	int h = image.height();
-	int new_w=0;
-	int new_h=0;
-	if (((float)netw/w) < ((float)neth/h)) {
-	    new_w = netw;
-	    new_h = (h * netw)/w;
-	} else {
-	    new_h = neth;
-	    new_w = (w * neth)/h;
-	}
+	size_t dimension_size = l.w * l.h;
 
 	for (int y = 0; y < l.h; ++y) {
 		for (int x = 0; x < l.w; ++x) {
 			int i = y * l.w + x;
-			int box_index  = entry_index(l, i, 0);
-			int obj_index  = entry_index(l, i, 4);
-			float objectness = predictions[obj_index];
+			float objectness = predictions[dimension_size * 4 + i];
 			if (objectness < thresh) {
 				continue;
 			}
 
-			box b = get_yolo_box(predictions, l.biases, l.mask[0], box_index, x, y, l.w, l.h, netw, neth, l.w*l.h);
+			box b;
+			b.x = (x + predictions[dimension_size * 0 + i]) / l.w;
+			b.y = (y + predictions[dimension_size * 1 + i]) / l.h;
+			b.w = exp(predictions[dimension_size * 2 + i]) * l.biases[0] / image.width();
+			b.h = exp(predictions[dimension_size * 3 + i]) * l.biases[1] / image.height();
 
-		    b.x =  (b.x - (netw - new_w)/2./netw) / ((float)new_w/netw);
-		    b.y =  (b.y - (neth - new_h)/2./neth) / ((float)new_h/neth);
-		    b.w *= (float)netw/new_w;
-		    b.h *= (float)neth/new_h;
+			int left  = (b.x-b.w/2)*image.width();
+			int right = (b.x+b.w/2)*image.width();
+			int top   = (b.y-b.h/2)*image.height();
+			int bot   = (b.y+b.h/2)*image.height();
 
-			image.draw(b, 0.9f, 0.2f, 0.3f);
+			image.draw(left, top, right, bot, 0.9f, 0.2f, 0.3f);
 		}
 	}
 

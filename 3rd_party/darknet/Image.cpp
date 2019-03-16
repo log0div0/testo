@@ -34,8 +34,8 @@ Image Image::letterbox(size_t width, size_t height) const {
 	return letterbox_image(impl, width, height);
 }
 
-void Image::draw(box box, float r, float g, float b) {
-	draw_bbox(impl, box, 1, r, g, b);
+void Image::draw(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, float r, float g, float b) {
+	draw_box(impl, left, top, right, bottom, r, g, b);
 }
 
 }

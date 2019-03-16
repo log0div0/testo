@@ -30,7 +30,7 @@ float* Network::predict(const Image& image) {
 	if ((width() != image.width()) ||
 		(height() != image.height()))
 	{
-		return forward(image.letterbox(width(), height()).data());
+		throw std::runtime_error("Image size is not equal to network size");
 	} else {
 		return forward((float*)image.data());
 	}

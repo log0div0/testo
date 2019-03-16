@@ -49,7 +49,7 @@ struct Image {
 		return impl.data;
 	}
 
-	void draw(box box, float r, float g, float b);
+	void draw(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, float r, float g, float b);
 
 	image impl = {};
 
