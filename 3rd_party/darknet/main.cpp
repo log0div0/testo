@@ -7,6 +7,7 @@
 #include <math.h>
 #include <iostream>
 #include <chrono>
+#include <list>
 #include "Network.hpp"
 
 void train(const std::string& cfgfile, const std::string& weightfile, const std::vector<int>& gpus)
@@ -109,6 +110,89 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 	save_weights(net, buff);
 }
 
+struct Box {
+	uint16_t left = 0, top = 0, right = 0, bottom = 0;
+
+	float iou(const Box& other) const {
+		return float((*this & other).area()) / (*this | other).area();
+	}
+
+	uint16_t area() const {
+		return (right - left) * (bottom - top);
+	}
+
+	Box operator|(const Box& other) const {
+		return {
+			std::min(left, other.left),
+			std::min(top, other.top),
+			std::max(right, other.right),
+			std::max(bottom, other.bottom)
+		};
+	}
+	Box& operator|=(const Box& other) {
+		left = std::min(left, other.left);
+		top = std::min(top, other.top);
+		right = std::max(right, other.right);
+		bottom = std::max(bottom, other.bottom);
+		return *this;
+	}
+	Box operator&(const Box& other) const {
+		if (left > other.right) {
+			return {};
+		}
+		if (top > other.bottom) {
+			return {};
+		}
+		if (right < other.left) {
+			return {};
+		}
+		if (bottom < other.top) {
+			return {};
+		}
+		return {
+			std::max(left, other.left),
+			std::max(top, other.top),
+			std::min(right, other.right),
+			std::min(bottom, other.bottom)
+		};
+	}
+	Box& operator&=(const Box& other);
+
+	uint16_t width() const {
+		return right - left;
+	}
+
+	uint16_t height() const {
+		return bottom - top;
+	}
+};
+
+struct BoxSet: std::list<Box> {
+	void add(const Box& box)
+	{
+		Box box_ext = box;
+		if (box_ext.left >= 16) {
+			box_ext.left -= 16;
+		} else {
+			box_ext.left = 0;
+		}
+		for (auto it = begin(); it != end(); ++it) {
+			Box intersectoin = *it & box_ext;
+			if (intersectoin.area()) {
+				if ((intersectoin.height() * 2 > box.height()) || (intersectoin.height() * 2 > it->height())) {
+					Box union_ = *it | box;
+					erase(it);
+					add(union_);
+					return;
+
+				}
+			}
+		}
+
+		push_back(box);
+	}
+};
+
 void test(const std::string& cfgfile, const std::string& weightfile, const std::string& infile, float thresh, const std::string& outfile)
 {
 	using namespace darknet;
@@ -129,6 +213,7 @@ void test(const std::string& cfgfile, const std::string& weightfile, const std::
 
 	size_t dimension_size = l.w * l.h;
 
+	BoxSet boxes;
 	for (int y = 0; y < l.h; ++y) {
 		for (int x = 0; x < l.w; ++x) {
 			int i = y * l.w + x;
@@ -143,12 +228,22 @@ void test(const std::string& cfgfile, const std::string& weightfile, const std::
 			b.w = exp(predictions[dimension_size * 2 + i]) * l.biases[0] / image.width();
 			b.h = exp(predictions[dimension_size * 3 + i]) * l.biases[1] / image.height();
 
-			int left  = (b.x-b.w/2)*image.width();
-			int right = (b.x+b.w/2)*image.width();
-			int top   = (b.y-b.h/2)*image.height();
-			int bot   = (b.y+b.h/2)*image.height();
 
-			image.draw(left, top, right, bot, 0.9f, 0.2f, 0.3f);
+			Box box;
+			box.left = (b.x-b.w/2)*image.width();
+			box.right = (b.x+b.w/2)*image.width();
+			box.top = (b.y-b.h/2)*image.height();
+			box.bottom = (b.y+b.h/2)*image.height();
+
+			boxes.add(box);
+		}
+	}
+
+	for (auto& box: boxes) {
+		if (box.height() >= 8 && box.height() <= 24) {
+			if (box.width() >= 8) {
+				image.draw(box.left, box.top, box.right, box.bottom, 0.9f, 0.2f, 0.3f);
+			}
 		}
 	}
 
