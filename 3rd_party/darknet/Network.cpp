@@ -4,8 +4,8 @@
 
 namespace darknet {
 
-Network::Network(const std::string& config_file_name) {
-	impl = parse_network_cfg((char*)config_file_name.c_str());
+Network::Network(const std::string& config_file_path) {
+	impl = parse_network_cfg((char*)config_file_path.c_str());
 	if (!impl) {
 		throw std::runtime_error("parse_network_cfg failed");
 	}
@@ -18,8 +18,16 @@ Network::~Network() {
 	}
 }
 
+Network::Network(Network&& other): impl(other.impl) {
+	other.impl = nullptr;
+}
+
 void Network::load_weights(const std::string& weights_file_path) {
 	::load_weights(impl, (char*)weights_file_path.c_str());
+}
+
+void Network::save_weights(const std::string& weights_file_path) {
+	::save_weights(impl, (char*)weights_file_path.c_str());
 }
 
 void Network::set_batch(size_t batch) {

@@ -2,6 +2,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "include/darknet.h"
 #include "Image.hpp"
 
@@ -14,7 +15,11 @@ struct Network {
 	Network(const Network&) = delete;
 	Network& operator=(const Network&) = delete;
 
+	Network(Network&&);
+	Network& operator=(Network&&);
+
 	void load_weights(const std::string& weights_file_path);
+	void save_weights(const std::string& weights_file_path);
 	void set_batch(size_t batch);
 	float* predict(const Image& image);
 

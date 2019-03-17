@@ -9,47 +9,35 @@
 #include <chrono>
 #include <list>
 #include "Network.hpp"
+#include "Trainer.hpp"
 
 void train(const std::string& cfgfile, const std::string& weightfile, const std::vector<int>& gpus)
 {
-	const char *train_images = "dataset/image_list.txt";
-	const char *backup_directory = "backup/";
+	using namespace darknet;
 
-	srand(time(0));
-	char *base = basecfg((char*)cfgfile.c_str());
-	printf("%s\n", base);
+	const std::string backup_directory = "backup/";
+
 	float avg_loss = -1;
-	network **nets = (network**)calloc(gpus.size(), sizeof(network));
 
-	srand(time(0));
-	int seed = rand();
-	for (size_t i = 0; i < gpus.size(); ++i) {
-		srand(seed);
-#ifdef GPU
-		cuda_set_device(gpus[i]);
-#endif
-		nets[i] = load_network((char*)cfgfile.c_str(), (char*)weightfile.c_str(), 0);
-		nets[i]->learning_rate *= gpus.size();
+	Trainer trainer(cfgfile, gpus);
+	if (weightfile.size()) {
+		trainer.load_weights(weightfile);
 	}
-	srand(time(0));
-	network *net = nets[0];
 
-	int imgs = net->batch * net->subdivisions * gpus.size();
-	printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
 	data train, buffer;
 
-	layer l = net->layers[net->n - 1];
+	layer l = trainer.networks.back().back();
 
 	int classes = l.classes;
 	float jitter = l.jitter;
 
-	list *plist = get_paths((char*)train_images);
+	list *plist = get_paths((char*)"dataset/image_list.txt");
 	char **paths = (char **)list_to_array(plist);
 
-	load_args args = get_base_args(net);
+	load_args args = get_base_args(trainer.networks.back().impl);
 	args.coords = l.coords;
 	args.paths = paths;
-	args.n = imgs;
+	args.n = trainer.batch_size() * trainer.subdivisions() * gpus.size();
 	args.m = plist->size;
 	args.classes = classes;
 	args.jitter = jitter;
@@ -59,55 +47,28 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 	args.threads = 64;
 
 	pthread_t load_thread = load_data(args);
-	double time;
-	while(get_current_batch(net) < (size_t)net->max_batches){
-		time=what_time_is_it_now();
+	while (trainer.current_batch() < trainer.max_batches())
+	{
 		pthread_join(load_thread, 0);
 		train = buffer;
 		load_thread = load_data(args);
 
-		printf("Loaded: %lf seconds\n", what_time_is_it_now()-time);
-
-		time=what_time_is_it_now();
-		float loss = 0;
-#ifdef GPU
-		if(gpus.size() == 1){
-			loss = train_network(net, train);
-		} else {
-			loss = train_networks(nets, gpus.size(), train, 4);
-		}
-#else
-		loss = train_network(net, train);
-#endif
+		float loss = trainer.train(train);
 		if (avg_loss < 0) avg_loss = loss;
 		avg_loss = avg_loss*.9 + loss*.1;
 
-		int i = get_current_batch(net);
-		printf("%ld: %f, %f avg, %f rate, %lf seconds, %d images\n", get_current_batch(net), loss, avg_loss, get_current_rate(net), what_time_is_it_now()-time, i*imgs);
-		if(i%100==0){
-#ifdef GPU
-			if(gpus.size() != 1) sync_nets(nets, gpus.size(), 0);
-#endif
-			char buff[256];
-			sprintf(buff, "%s/%s.backup", backup_directory, base);
-			save_weights(net, buff);
+		int i = trainer.current_batch();
+		printf("%d: %f, %f avg\n", i, loss, avg_loss);
+
+		if (i % 100 == 0) {
+			trainer.save_weights(backup_directory + "/net.weights");
 		}
-		if(i%10000==0 || (i < 1000 && i%100 == 0)){
-#ifdef GPU
-			if(gpus.size() != 1) sync_nets(nets, gpus.size(), 0);
-#endif
-			char buff[256];
-			sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
-			save_weights(net, buff);
+		if (i % 10000==0 || (i < 1000 && i % 100 == 0)) {
+			trainer.save_weights(backup_directory + "/net_" + std::to_string(i) + ".weights");
 		}
 		free_data(train);
 	}
-#ifdef GPU
-	if(gpus.size() != 1) sync_nets(nets, gpus.size(), 0);
-#endif
-	char buff[256];
-	sprintf(buff, "%s/%s_final.weights", backup_directory, base);
-	save_weights(net, buff);
+	trainer.save_weights(backup_directory + "/net_final.weights");
 }
 
 struct Box {
