@@ -228,7 +228,7 @@ std::string input;
 std::string output = "prediction";
 bool nogpu = false;
 float thresh = 0.5f;
-std::vector<int> gpus = {0};
+std::vector<int> gpus;
 
 int main(int argc, char **argv)
 {
@@ -239,11 +239,12 @@ int main(int argc, char **argv)
 	auto cli = (
 		command("help").set(mode, Help)
 		| ( command("train").set(mode, Train),
-#ifdef GPU
-			option("--gpus") & values("gpus", gpus),
-#endif
 			value("cfg", cfg),
 			option("weights", weights)
+#ifdef GPU
+			,
+			option("--gpus") & values("gpus", gpus)
+#endif
 		)
 		| (
 			command("test").set(mode, Test),
@@ -268,6 +269,9 @@ int main(int argc, char **argv)
 			std::cout << make_man_page(cli, argv[0]) << std::endl;
 			break;
 		case Train:
+			if (!gpus.size()) {
+				gpus = {0};
+			}
 			train(cfg, weights, gpus);
 			break;
 		case Test:

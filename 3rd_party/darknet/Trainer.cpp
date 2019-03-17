@@ -6,6 +6,9 @@ namespace darknet {
 Trainer::Trainer(const std::string& config_file_path, const std::vector<int> gpus) {
 	int seed = rand();
 	for (size_t gpu: gpus) {
+#ifdef GPU
+		cuda_set_device(gpu);
+#endif
 		srand(seed);
 		networks.push_back(Network(config_file_path));
 		networks.back().impl->gpu_index = gpu;
@@ -22,7 +25,7 @@ void Trainer::load_weights(const std::string& weights_file_path) {
 void Trainer::sync_weights() {
 #ifdef GPU
 	if (networks.size() != 1) {
-		std::vector<network*> n(networks.size());
+		std::vector<network*> n;
 		for (auto& network: networks) {
 			n.push_back(network.impl);
 		}
@@ -41,7 +44,7 @@ float Trainer::train(data data) {
 	if (networks.size() == 1) {
 		return train_network(networks.back().impl, data);
 	} else {
-		std::vector<network*> n(networks.size());
+		std::vector<network*> n;
 		for (auto& network: networks) {
 			n.push_back(network.impl);
 		}
