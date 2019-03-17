@@ -7,28 +7,13 @@
 #include "utils.h"
 #include "blas.h"
 
-#include "crop_layer.h"
 #include "connected_layer.h"
-#include "gru_layer.h"
-#include "rnn_layer.h"
-#include "crnn_layer.h"
-#include "local_layer.h"
 #include "convolutional_layer.h"
-#include "activation_layer.h"
-#include "detection_layer.h"
-#include "region_layer.h"
 #include "yolo_layer.h"
-#include "normalization_layer.h"
 #include "batchnorm_layer.h"
 #include "maxpool_layer.h"
-#include "reorg_layer.h"
-#include "avgpool_layer.h"
 #include "cost_layer.h"
 #include "softmax_layer.h"
-#include "dropout_layer.h"
-#include "route_layer.h"
-#include "upsample_layer.h"
-#include "shortcut_layer.h"
 #include "parser.h"
 #include "data.h"
 
@@ -189,7 +174,7 @@ void forward_network(network *netp)
 {
 #ifdef GPU
     if(netp->gpu_index >= 0){
-        forward_network_gpu(netp);   
+        forward_network_gpu(netp);
         return;
     }
 #endif
@@ -214,7 +199,7 @@ void update_network(network *netp)
 {
 #ifdef GPU
     if(netp->gpu_index >= 0){
-        update_network_gpu(netp);   
+        update_network_gpu(netp);
         return;
     }
 #endif
@@ -264,7 +249,7 @@ void backward_network(network *netp)
 {
 #ifdef GPU
     if(netp->gpu_index >= 0){
-        backward_network_gpu(netp);   
+        backward_network_gpu(netp);
         return;
     }
 #endif
@@ -349,7 +334,7 @@ void set_batch_network(network *net, int b)
         if(net->layers[i].type == DECONVOLUTIONAL){
             layer *l = net->layers + i;
             cudnnSetTensor4dDescriptor(l->dstTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l->out_c, l->out_h, l->out_w);
-            cudnnSetTensor4dDescriptor(l->normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l->out_c, 1, 1); 
+            cudnnSetTensor4dDescriptor(l->normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l->out_c, 1, 1);
         }
 #endif
     }
@@ -373,26 +358,10 @@ int resize_network(network *net, int w, int h)
         layer l = net->layers[i];
         if(l.type == CONVOLUTIONAL){
             resize_convolutional_layer(&l, w, h);
-        }else if(l.type == CROP){
-            resize_crop_layer(&l, w, h);
         }else if(l.type == MAXPOOL){
             resize_maxpool_layer(&l, w, h);
-        }else if(l.type == REGION){
-            resize_region_layer(&l, w, h);
         }else if(l.type == YOLO){
             resize_yolo_layer(&l, w, h);
-        }else if(l.type == ROUTE){
-            resize_route_layer(&l, net);
-        }else if(l.type == SHORTCUT){
-            resize_shortcut_layer(&l, w, h);
-        }else if(l.type == UPSAMPLE){
-            resize_upsample_layer(&l, w, h);
-        }else if(l.type == REORG){
-            resize_reorg_layer(&l, w, h);
-        }else if(l.type == AVGPOOL){
-            resize_avgpool_layer(&l, w, h);
-        }else if(l.type == NORMALIZATION){
-            resize_normalization_layer(&l, w, h);
         }else if(l.type == COST){
             resize_cost_layer(&l, inputs);
         }else{
@@ -485,7 +454,7 @@ void visualize_network(network *net)
         if(l.type == CONVOLUTIONAL){
             prev = visualize_convolutional_layer(l, buff, prev);
         }
-    } 
+    }
 }
 
 void top_predictions(network *net, int k, int *index)
@@ -548,14 +517,6 @@ void fill_network_boxes(network *net, int w, int h, float thresh, float hier, in
             int count = get_yolo_detections(l, w, h, net->w, net->h, thresh, map, relative, dets);
             dets += count;
         }
-        if(l.type == REGION){
-            get_region_detections(l, w, h, net->w, net->h, thresh, map, hier, relative, dets);
-            dets += l.w*l.h*l.n;
-        }
-        if(l.type == DETECTION){
-            get_detection_detections(l, w, h, thresh, dets);
-            dets += l.w*l.h*l.n;
-        }
     }
 }
 
@@ -610,7 +571,7 @@ matrix network_predict_data_multi(network *net, data test, int n)
         }
     }
     free(X);
-    return pred;   
+    return pred;
 }
 
 matrix network_predict_data(network *net, data test)
@@ -633,7 +594,7 @@ matrix network_predict_data(network *net, data test)
         }
     }
     free(X);
-    return pred;   
+    return pred;
 }
 
 void print_network(network *net)
@@ -675,7 +636,7 @@ void compare_networks(network *n1, network *n2, data test)
     printf("%5d %5d\n%5d %5d\n", a, b, c, d);
     float num = pow((abs(b - c) - 1.), 2.);
     float den = b + c;
-    printf("%f\n", num/den); 
+    printf("%f\n", num/den);
 }
 
 float network_accuracy(network *net, data d)
