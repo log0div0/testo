@@ -13,7 +13,7 @@ add_dependencies(testo-core coro json libpugixml)
 target_link_libraries(testo-core coro vbox vboxcapi qemu pugixml pthread)
 
 if(UNIX)
-	target_link_libraries(testo-core dl stdc++fs lept tesseract)
+	target_link_libraries(testo-core dl stdc++fs)
 endif()
 
 add_executable(testo main.cpp)

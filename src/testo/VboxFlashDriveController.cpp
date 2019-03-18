@@ -6,7 +6,7 @@
 #include <chrono>
 
 VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config):
-config(config), api(API::instance())
+config(config)
 {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxFlashDriveController error: field NAME is not specified");

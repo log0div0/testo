@@ -2,7 +2,6 @@
 #pragma once
 
 #include "FlashDriveController.hpp"
-#include "API.hpp"
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 
@@ -38,5 +37,5 @@ private:
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 	nlohmann::json config;
-	API& api;
+	//API& api;
 };

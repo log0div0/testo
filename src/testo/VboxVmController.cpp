@@ -10,7 +10,7 @@
 #include <thread>
 #include <regex>
 
-VboxVmController::VboxVmController(const nlohmann::json& config): config(config), api(API::instance()) {
+VboxVmController::VboxVmController(const nlohmann::json& config): config(config) {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxVmController error: field NAME is not specified");
 	}
@@ -830,10 +830,10 @@ int VboxVmController::wait(const std::string& text, const std::string& time) {
 			vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_PNG);
 			vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
 
-			if (api.darknet_api.match(array_out.data(), array_out.size(), text)) {
+			/*if (api.darknet_api.match(array_out.data(), array_out.size(), text)) {
 				return 0;
 			}
-
+*/
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
 		return -1;
