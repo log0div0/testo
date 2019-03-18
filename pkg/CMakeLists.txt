@@ -5,11 +5,19 @@ set(CPACK_PACKAGE_VERSION "0.0.1")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 set(CPACK_GENERATOR "DEB")
 
+install(FILES
+	${CMAKE_BINARY_DIR}/out/pkg/negotiator.iso
+	DESTINATION /var/lib/libvirt/testo
+	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
 install(PROGRAMS
 		${CMAKE_BINARY_DIR}/out/sbin/testo
 		DESTINATION /usr/sbin/
 		PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+	"${CMAKE_CURRENT_SOURCE_DIR}/preinst;\
+	${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
 
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	libvirt0 (>= 4.0.0), \
@@ -19,4 +27,4 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 ")
 
 add_package(testo-package)
-add_dependencies(testo-package testo)
+add_dependencies(testo-package testo negotiator-iso)

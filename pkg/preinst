@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+mkdir -p /var/lib/libvirt/testo
