@@ -116,70 +116,18 @@ box_label *read_boxes(char *filename, int *n)
     return boxes;
 }
 
-void randomize_boxes(box_label *b, int n)
-{
-    int i;
-    for(i = 0; i < n; ++i){
-        box_label swap = b[i];
-        int index = rand()%n;
-        b[i] = b[index];
-        b[index] = swap;
-    }
-}
-
-void correct_boxes(box_label *boxes, int n, float dx, float dy, float sx, float sy, int flip)
-{
-    int i;
-    for(i = 0; i < n; ++i){
-        if(boxes[i].x == 0 && boxes[i].y == 0) {
-            boxes[i].x = 999999;
-            boxes[i].y = 999999;
-            boxes[i].w = 999999;
-            boxes[i].h = 999999;
-            continue;
-        }
-        boxes[i].left   = boxes[i].left  * sx - dx;
-        boxes[i].right  = boxes[i].right * sx - dx;
-        boxes[i].top    = boxes[i].top   * sy - dy;
-        boxes[i].bottom = boxes[i].bottom* sy - dy;
-
-        if(flip){
-            float swap = boxes[i].left;
-            boxes[i].left = 1. - boxes[i].right;
-            boxes[i].right = 1. - swap;
-        }
-
-        boxes[i].left =  constrain(0, 1, boxes[i].left);
-        boxes[i].right = constrain(0, 1, boxes[i].right);
-        boxes[i].top =   constrain(0, 1, boxes[i].top);
-        boxes[i].bottom =   constrain(0, 1, boxes[i].bottom);
-
-        boxes[i].x = (boxes[i].left+boxes[i].right)/2;
-        boxes[i].y = (boxes[i].top+boxes[i].bottom)/2;
-        boxes[i].w = (boxes[i].right - boxes[i].left);
-        boxes[i].h = (boxes[i].bottom - boxes[i].top);
-
-        boxes[i].w = constrain(0, 1, boxes[i].w);
-        boxes[i].h = constrain(0, 1, boxes[i].h);
-    }
-}
-
-void fill_truth_detection(char *path, int num_boxes, float *truth, int classes, int flip, float dx, float dy, float sx, float sy)
+void fill_truth_detection(char *path, int num_boxes, float *truth, int classes)
 {
     char labelpath[4096];
     find_replace(path, "images", "labels", labelpath);
-    find_replace(labelpath, "JPEGImages", "labels", labelpath);
-
-    find_replace(labelpath, "raw", "labels", labelpath);
-    find_replace(labelpath, ".jpg", ".txt", labelpath);
     find_replace(labelpath, ".png", ".txt", labelpath);
-    find_replace(labelpath, ".JPG", ".txt", labelpath);
-    find_replace(labelpath, ".JPEG", ".txt", labelpath);
+
     int count = 0;
     box_label *boxes = read_boxes(labelpath, &count);
-    randomize_boxes(boxes, count);
-    correct_boxes(boxes, count, dx, dy, sx, sy, flip);
-    if(count > num_boxes) count = num_boxes;
+    if(count > num_boxes) {
+        printf("The boxes count is more than the limit\n");
+        exit(1);
+    }
     float x,y,w,h;
     int id;
     int i;
@@ -225,7 +173,7 @@ void free_data(data d)
     }
 }
 
-data load_data_detection(int n, char **paths, int m, int w, int h, int boxes, int classes, float jitter, float hue, float saturation, float exposure)
+data load_data_detection(int n, char **paths, int m, int w, int h, int boxes, int classes)
 {
     char **random_paths = get_random_paths(paths, n, m);
     int i;
@@ -239,41 +187,13 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int boxes, in
     d.y = make_matrix(n, 5*boxes);
     for(i = 0; i < n; ++i){
         image orig = load_image_color(random_paths[i], 0, 0);
-        image sized = make_image(w, h, orig.c);
-        fill_image(sized, .5);
-
-        float dw = jitter * orig.w;
-        float dh = jitter * orig.h;
-
-        float new_ar = (orig.w + rand_uniform(-dw, dw)) / (orig.h + rand_uniform(-dh, dh));
-        //float scale = rand_uniform(.25, 2);
-        float scale = 1;
-
-        float nw, nh;
-
-        if(new_ar < 1){
-            nh = scale * h;
-            nw = nh * new_ar;
-        } else {
-            nw = scale * w;
-            nh = nw / new_ar;
+        if ((orig.w != w) || (orig.h != h)) {
+            printf("Images in dataset has different sizes\n");
+            exit(1);
         }
+        d.X.vals[i] = orig.data;
 
-        float dx = rand_uniform(0, w - nw);
-        float dy = rand_uniform(0, h - nh);
-
-        place_image(orig, nw, nh, dx, dy, sized);
-
-        random_distort_image(sized, hue, saturation, exposure);
-
-        int flip = rand()%2;
-        if(flip) flip_image(sized);
-        d.X.vals[i] = sized.data;
-
-
-        fill_truth_detection(random_paths[i], boxes, d.y.vals[i], classes, flip, -dx/w, -dy/h, nw/w, nh/h);
-
-        free_image(orig);
+        fill_truth_detection(random_paths[i], boxes, d.y.vals[i], classes);
     }
     free(random_paths);
     return d;
@@ -281,14 +201,10 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int boxes, in
 
 void *load_thread(void *ptr)
 {
-    //printf("Loading data: %d\n", rand());
     load_args a = *(struct load_args*)ptr;
-    if(a.exposure == 0) a.exposure = 1;
-    if(a.saturation == 0) a.saturation = 1;
-    if(a.aspect == 0) a.aspect = 1;
 
     if (a.type == DETECTION_DATA){
-        *a.d = load_data_detection(a.n, a.paths, a.m, a.w, a.h, a.num_boxes, a.classes, a.jitter, a.hue, a.saturation, a.exposure);
+        *a.d = load_data_detection(a.n, a.paths, a.m, a.w, a.h, a.num_boxes, a.classes);
     }
     free(ptr);
     return 0;
