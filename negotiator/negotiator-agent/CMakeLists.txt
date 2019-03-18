@@ -26,3 +26,11 @@ ${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
 set(CPACK_GENERATOR "DEB")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 add_package(negotiator-agent-package)
+
+add_custom_target(negotiator-iso
+	COMMAND
+		rm -f negotiator.iso &&
+		genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot -o negotiator.iso negotiator-agent-0.0.1.deb
+	DEPENDS
+		negotiator-agent-package
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/out/pkg)

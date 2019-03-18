@@ -18,7 +18,7 @@ struct Environment {
 };
 
 struct VboxEnvironment: public Environment {
-	VboxEnvironment(): api(API::instance()) {}
+	VboxEnvironment() {}
 	~VboxEnvironment();
 
 	void setup() override;
@@ -32,7 +32,7 @@ struct VboxEnvironment: public Environment {
 		return std::shared_ptr<FlashDriveController>(new VboxFlashDriveController(config));
 	}
 
-	API& api;
+	//API& api;
 };
 
 struct QemuEnvironment: public Environment {

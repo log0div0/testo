@@ -2,7 +2,6 @@
 #pragma once
 
 #include "VmController.hpp"
-#include "API.hpp"
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 
@@ -72,5 +71,5 @@ private:
 
 	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
 
-	API& api;
+	//API& api;
 };

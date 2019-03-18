@@ -63,13 +63,13 @@ QemuEnvironment::~QemuEnvironment() {
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 	auto pool_dir = testo_dir() / pool_name;
 	if (!fs::exists(pool_dir)) {
-		if (!fs::create_directory(pool_dir)) {
+		if (!fs::create_directories(pool_dir)) {
 			throw std::runtime_error(std::string("Can't create directory: ") + pool_dir.generic_string());
 		}
 	}
 
 	if (!fs::exists(scripts_tmp_dir())) {
-		if (!fs::create_directory(scripts_tmp_dir())) {
+		if (!fs::create_directories(scripts_tmp_dir())) {
 			throw std::runtime_error(std::string("Can't create directory: ") + pool_dir.generic_string());
 		}
 	}
