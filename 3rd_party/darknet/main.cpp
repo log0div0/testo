@@ -10,6 +10,7 @@
 #include <list>
 #include "Network.hpp"
 #include "Trainer.hpp"
+#include "DataLoader.hpp"
 
 void train(const std::string& cfgfile, const std::string& weightfile, const std::vector<int>& gpus)
 {
@@ -24,38 +25,17 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 		trainer.load_weights(weightfile);
 	}
 
-	data train, buffer;
+	DataLoader data_loader("dataset/image_list.txt", trainer);
 
-	layer l = trainer.networks.back().back();
-
-	int classes = l.classes;
-	float jitter = l.jitter;
-
-	list *plist = get_paths((char*)"dataset/image_list.txt");
-	char **paths = (char **)list_to_array(plist);
-
-	load_args args = get_base_args(trainer.networks.back().impl);
-	args.coords = l.coords;
-	args.paths = paths;
-	args.n = trainer.batch_size() * trainer.subdivisions() * gpus.size();
-	args.m = plist->size;
-	args.classes = classes;
-	args.jitter = jitter;
-	args.num_boxes = l.max_boxes;
-	args.d = &buffer;
-	args.type = DETECTION_DATA;
-	args.threads = 64;
-
-	pthread_t load_thread = load_data(args);
 	while (trainer.current_batch() < trainer.max_batches())
 	{
-		pthread_join(load_thread, 0);
-		train = buffer;
-		load_thread = load_data(args);
+		float loss = trainer.train(data_loader.load_data());
 
-		float loss = trainer.train(train);
-		if (avg_loss < 0) avg_loss = loss;
-		avg_loss = avg_loss*.9 + loss*.1;
+		if (avg_loss < 0) {
+			avg_loss = loss;
+		} else {
+			avg_loss = avg_loss*.9 + loss*.1;
+		}
 
 		int i = trainer.current_batch();
 		printf("%d: %f, %f avg\n", i, loss, avg_loss);
@@ -66,7 +46,6 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 		if (i % 10000==0 || (i < 1000 && i % 100 == 0)) {
 			trainer.save_weights(backup_directory + "/net_" + std::to_string(i) + ".weights");
 		}
-		free_data(train);
 	}
 	trainer.save_weights(backup_directory + "/net_final.weights");
 }
