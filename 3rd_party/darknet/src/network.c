@@ -443,20 +443,6 @@ image get_network_image(network *net)
     return def;
 }
 
-void visualize_network(network *net)
-{
-    image *prev = 0;
-    int i;
-    char buff[256];
-    for(i = 0; i < net->n; ++i){
-        sprintf(buff, "Layer %d", i);
-        layer l = net->layers[i];
-        if(l.type == CONVOLUTIONAL){
-            prev = visualize_convolutional_layer(l, buff, prev);
-        }
-    }
-}
-
 void top_predictions(network *net, int k, int *index)
 {
     top_k(net->output, net->outputs, k, index);

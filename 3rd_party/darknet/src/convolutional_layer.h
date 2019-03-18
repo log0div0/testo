@@ -29,7 +29,6 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
 void resize_convolutional_layer(convolutional_layer *layer, int w, int h);
 void forward_convolutional_layer(const convolutional_layer layer, network net);
 void update_convolutional_layer(convolutional_layer layer, update_args a);
-image *visualize_convolutional_layer(convolutional_layer layer, char *window, image *prev_weights);
 void binarize_weights(float *weights, int n, int size, float *binary);
 void swap_binary(convolutional_layer *l);
 void binarize_weights2(float *weights, int n, int size, char *binary, float *scales);

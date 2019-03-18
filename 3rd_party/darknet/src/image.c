@@ -513,18 +513,6 @@ void rgbgr_image(image im)
     }
 }
 
-int show_image(image p, const char *name, int ms)
-{
-#ifdef OPENCV
-    int c = show_image_cv(p, name, ms);
-    return c;
-#else
-    fprintf(stderr, "Not compiled with OpenCV, saving to %s.png instead\n", name);
-    save_image(p, name);
-    return -1;
-#endif
-}
-
 void save_image_options(image im, const char *name, IMTYPE f, int quality)
 {
     char buff[256];
@@ -553,25 +541,6 @@ void save_image_options(image im, const char *name, IMTYPE f, int quality)
 void save_image(image im, const char *name)
 {
     save_image_options(im, name, JPG, 80);
-}
-
-void show_image_layers(image p, char *name)
-{
-    int i;
-    char buff[256];
-    for(i = 0; i < p.c; ++i){
-        sprintf(buff, "%s - Layer %d", name, i);
-        image layer = get_image_layer(p, i);
-        show_image(layer, buff, 1);
-        free_image(layer);
-    }
-}
-
-void show_image_collapsed(image p, char *name)
-{
-    image c = collapse_image_layers(p, 1);
-    show_image(c, name, 1);
-    free_image(c);
 }
 
 image make_empty_image(int w, int h, int c)
@@ -1220,54 +1189,6 @@ image resize_image(image im, int w, int h)
 }
 
 
-void test_resize(char *filename)
-{
-    image im = load_image(filename, 0,0, 3);
-    float mag = mag_array(im.data, im.w*im.h*im.c);
-    printf("L2 Norm: %f\n", mag);
-    image gray = grayscale_image(im);
-
-    image c1 = copy_image(im);
-    image c2 = copy_image(im);
-    image c3 = copy_image(im);
-    image c4 = copy_image(im);
-    distort_image(c1, .1, 1.5, 1.5);
-    distort_image(c2, -.1, .66666, .66666);
-    distort_image(c3, .1, 1.5, .66666);
-    distort_image(c4, .1, .66666, 1.5);
-
-
-    show_image(im,   "Original", 1);
-    show_image(gray, "Gray", 1);
-    show_image(c1, "C1", 1);
-    show_image(c2, "C2", 1);
-    show_image(c3, "C3", 1);
-    show_image(c4, "C4", 1);
-#ifdef OPENCV
-    while(1){
-        image aug = random_augment_image(im, 0, .75, 320, 448, 320, 320);
-        show_image(aug, "aug", 1);
-        free_image(aug);
-
-
-        float exposure = 1.15;
-        float saturation = 1.15;
-        float hue = .05;
-
-        image c = copy_image(im);
-
-        float dexp = rand_scale(exposure);
-        float dsat = rand_scale(saturation);
-        float dhue = rand_uniform(-hue, hue);
-
-        distort_image(c, dhue, dsat, dexp);
-        show_image(c, "rand", 1);
-        printf("%f %f %f\n", dhue, dsat, dexp);
-        free_image(c);
-    }
-#endif
-}
-
 
 image load_image_stb(char *filename, int channels)
 {
@@ -1295,11 +1216,7 @@ image load_image_stb(char *filename, int channels)
 
 image load_image(char *filename, int w, int h, int c)
 {
-#ifdef OPENCV
-    image out = load_image_cv(filename, c);
-#else
     image out = load_image_stb(filename, c);
-#endif
 
     if((h && w) && (h != out.h || w != out.w)){
         image resized = resize_image(out, w, h);
@@ -1409,32 +1326,6 @@ image collapse_images_horz(image *ims, int n)
         free_image(copy);
     }
     return filters;
-}
-
-void show_image_normalized(image im, const char *name)
-{
-    image c = copy_image(im);
-    normalize_image(c);
-    show_image(c, name, 1);
-    free_image(c);
-}
-
-void show_images(image *ims, int n, char *window)
-{
-    image m = collapse_images_vert(ims, n);
-    /*
-       int w = 448;
-       int h = ((float)m.h/m.w) * 448;
-       if(h > 896){
-       h = 896;
-       w = ((float)m.w/m.h) * 896;
-       }
-       image sized = resize_image(m, w, h);
-     */
-    normalize_image(m);
-    save_image(m, window);
-    show_image(m, window, 1);
-    free_image(m);
 }
 
 void free_image(image m)
