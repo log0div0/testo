@@ -605,7 +605,7 @@ struct VmState: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = name.value();
+		std::string result = std::string("resolving ") + name.value();
 		if (snapshot) {
 			result += "(" + snapshot_name.value() + ")";
 		}

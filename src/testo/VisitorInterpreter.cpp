@@ -2,6 +2,7 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
 
+#include <fmt/format.h>
 #include <fstream>
 #include <thread>
 
@@ -23,8 +24,13 @@ static void sleep(const std::string& interval) {
 }
 
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
-	for (auto stmt: program->stmts) {
-		visit_stmt(stmt);
+	try {
+		for (auto stmt: program->stmts) {
+			visit_stmt(stmt);
+		}
+	}
+	catch (const std::exception& error) {
+		std::cout << error << std::endl;
 	}
 }
 
@@ -43,96 +49,86 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 }
 
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
-	std::cout << "Creating flash drive " << flash->name.value() << std::endl;
+	try {
+		std::cout << "Creating flash drive " << flash->name.value() << std::endl;
 
-	auto fd = reg.fds.find(flash->name)->second; //should always be found
+		auto fd = reg.fds.find(flash->name)->second; //should always be found
 
-	if (fd->create()) {
-		throw std::runtime_error(std::string(flash->begin()) + ": Error while creating flash drive " + flash->name.value());
-	}
+		fd->create();
 
-	if (fd->has_folder()) {
-		std::cout << "Loading folder to flash drive " << fd->name() << std::endl;
-		if (fd->load_folder()) {
-			throw std::runtime_error(std::string(flash->begin()) + ": Error while loading folder to flash drive " +
-				flash->name.value());
+		if (fd->has_folder()) {
+			std::cout << "Loading folder to flash drive " << fd->name() << std::endl;
+			fd->load_folder();
 		}
-
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(flash, nullptr));
 	}
+
 }
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
-	std::cout << "Running test \"" << test->name.value() << "\"...\n";
+	try {
+		std::cout << "Running test \"" << test->name.value() << "\"...\n";
 
-	for (auto state: test->vms) {
-		visit_vm_state(state);
-	}
-
-	//Let's remember all the keys all vms have
-	std::unordered_map<std::shared_ptr<VmController>, std::vector<std::string>> original_states;
-
-	for (auto state: test->vms) {
-		auto vm = reg.vms.find(state->name)->second;
-		auto keys = vm->keys();
-		original_states.insert({vm, keys});
-	}
-
-	visit_command_block(test->cmd_block);
-
-	for (auto state: original_states) {
-		auto vm = state.first;
-		auto original_keys = state.second;
-		auto final_keys = vm->keys();
-		std::sort(original_keys.begin(), original_keys.end());
-		std::sort(final_keys.begin(), final_keys.end());
-		std::vector<std::string> new_keys;
-		std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), std::back_inserter(new_keys));
-		for (auto& key: new_keys) {
-			vm->set_metadata(key, "");
+		for (auto state: test->vms) {
+			visit_vm_state(state);
 		}
+
+		//Let's remember all the keys all vms have
+		std::unordered_map<std::shared_ptr<VmController>, std::vector<std::string>> original_states;
+
+		for (auto state: test->vms) {
+			auto vm = reg.vms.find(state->name)->second;
+			auto keys = vm->keys();
+			original_states.insert({vm, keys});
+		}
+
+		visit_command_block(test->cmd_block);
+
+		for (auto state: original_states) {
+			auto vm = state.first;
+			auto original_keys = state.second;
+			auto final_keys = vm->keys();
+			std::sort(original_keys.begin(), original_keys.end());
+			std::sort(final_keys.begin(), final_keys.end());
+			std::vector<std::string> new_keys;
+			std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), std::back_inserter(new_keys));
+			for (auto& key: new_keys) {
+				vm->set_metadata(key, "");
+			}
+		}
+
+		reg.local_vms.clear();
+
+		std::cout << "Test \"" << test->name.value() << "\" passed\n";
+	} catch (const std::exception& error) {
+		std::cout << error << std::endl;
 	}
 
-	reg.local_vms.clear();
-
-	std::cout << "Test \"" << test->name.value() << "\" passed\n";
 }
 
 void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
-	auto vm = reg.vms.find(vm_state->name)->second;
+	try {
+		auto vm = reg.vms.find(vm_state->name)->second;
 
-	reg.local_vms.insert({vm_state->name, vm});
+		reg.local_vms.insert({vm_state->name, vm});
 
-	if (!vm_state->snapshot) {
-		if (vm->install()) {
-			throw std::runtime_error(std::string(vm_state->begin()) +
-				": Error while performing install: " +
-				std::string(*vm_state) +
-				" on VM " +
-				vm_state->name.value());
+		if (!vm_state->snapshot) {
+			vm->install();
+			return;
 		}
-		return;
-	}
 
-	if ((!vm->is_defined()) || !check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config")))) {
-		if (vm->install()) {
-			throw std::runtime_error(std::string(vm_state->begin()) +
-				": Error while performing install: " +
-				std::string(*vm_state) +
-				" on VM " +
-				vm_state->name.value());
+		if ((!vm->is_defined()) || !check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config")))) {
+			vm->install();
+			return apply_actions(vm, vm_state->snapshot, true);
 		}
-		return apply_actions(vm, vm_state->snapshot, true);
-	}
 
-	if (resolve_state(vm, vm_state->snapshot)) {
-		//everything is A-OK. We can rollback to the last snapshot
-		if (vm->rollback(vm_state->snapshot->name)) {
-			throw std::runtime_error(std::string(vm_state->snapshot->begin()) +
-				": Error while performing rollback: " +
-				vm_state->snapshot->name.value() +
-				" on VM " +
-				vm->name());
+		if (resolve_state(vm, vm_state->snapshot)) {
+			//everything is A-OK. We can rollback to the last snapshot
+			vm->rollback(vm_state->snapshot->name);
 		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(vm_state, nullptr));
 	}
 }
 
@@ -189,48 +185,50 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 }
 
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::shared_ptr<Type> type) {
-	std::string text = visit_word(vm, type->text_word);
-	std::cout << "Typing " << text << " on vm " << vm->name() << std::endl;
-	if (vm->type(text)) {
-		throw std::runtime_error(std::string(type->begin()) +
-			": Error while performing action: " +
-			std::string(*type) +
-			" on VM " +
-			vm->name());
+	try {
+		std::string text = visit_word(vm, type->text_word);
+		std::cout << "Typing " << text << " on vm " << vm->name() << std::endl;
+		vm->type(text);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(type, vm));
 	}
 }
 
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::shared_ptr<Wait> wait) {
-	std::string text = "";
-	if (wait->text_word) {
-		text = visit_word(vm, wait->text_word);
+	try {
+		std::string text = "";
+		if (wait->text_word) {
+			text = visit_word(vm, wait->text_word);
+		}
+
+		std::cout << "Waiting " << text << " on vm " << vm->name();
+		if (wait->time_interval) {
+			std::cout << " for " << wait->time_interval.value();
+		}
+
+		std::cout << std::endl;
+
+		if (!wait->text_word) {
+			return sleep(wait->time_interval.value());
+		}
+
+		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "10s";
+		if (!vm->wait(text, wait_for)) {
+			throw std::runtime_error("Wait timeout");
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(wait, vm));
 	}
 
-	std::cout << "Waiting " << text << " on vm " << vm->name();
-	if (wait->time_interval) {
-		std::cout << " for " << wait->time_interval.value();
-	}
-
-	std::cout << std::endl;
-
-	if (!wait->text_word) {
-		return sleep(wait->time_interval.value());
-	}
-
-	std::string wait_for = wait->time_interval ? wait->time_interval.value() : "10s";
-
-	if (vm->wait(text, wait_for)) {
-		throw std::runtime_error(std::string(wait->begin()) +
-			": Error while performing action: " +
-			std::string(*wait) +
-			" on VM " +
-			vm->name());
-	}
 }
 
 void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vm, std::shared_ptr<Press> press) {
-	for (auto key_spec: press->keys) {
-		visit_key_spec(vm, key_spec);
+	try {
+		for (auto key_spec: press->keys) {
+			visit_key_spec(vm, key_spec);
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(press, vm));
 	}
 }
 
@@ -246,32 +244,30 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vm, std::s
 	std::cout << " on vm " << vm->name() << std::endl;
 
 	for (uint32_t i = 0; i < times; i++) {
-		if (vm->press(key_spec->get_buttons())) {
-			throw std::runtime_error(std::string(key_spec->begin()) +
-			": Error while pressing buttons: " +
-			std::string(*key_spec) +
-			" on VM " +
-			vm->name());
-		}
+		vm->press(key_spec->get_buttons());
 	}
 }
 
 void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
-	if (plug->type.value() == "nic") {
-		return visit_plug_nic(vm, plug);
-	} else if (plug->type.value() == "link") {
-		return visit_plug_link(vm, plug);
-	} else if (plug->type.value() == "dvd") {
-		return visit_plug_dvd(vm, plug);
-	} else if (plug->type.value() == "flash") {
-		if(plug->is_on()) {
-			return plug_flash(vm, plug);
+	try {
+		if (plug->type.value() == "nic") {
+			return visit_plug_nic(vm, plug);
+		} else if (plug->type.value() == "link") {
+			return visit_plug_link(vm, plug);
+		} else if (plug->type.value() == "dvd") {
+			return visit_plug_dvd(vm, plug);
+		} else if (plug->type.value() == "flash") {
+			if(plug->is_on()) {
+				return plug_flash(vm, plug);
+			} else {
+				return unplug_flash(vm, plug);
+			}
 		} else {
-			return unplug_flash(vm, plug);
+			throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
+				plug->type.value());
 		}
-	} else {
-		throw std::runtime_error(std::string(plug->begin()) + ":Error: unknown hardware type to plug/unplug: " +
-			plug->type.value());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(plug, vm));
 	}
 }
 
@@ -281,35 +277,25 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 	auto nic = plug->name_token.value();
 	auto nics = vm->nics();
 	if (nics.find(nic) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + nic +
-			" in VM " + vm->name());
+		throw std::runtime_error(fmt::format("specified nic {} is not present in this vm", nic));
 	}
 
 	if (vm->is_running()) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while (un)plugging nic " + nic +
-			" in vm " + vm->name() + ": vm is running, but must be off");
+		throw std::runtime_error(fmt::format("vm is running, but must be stopeed"));
 	}
 
 	if (vm->is_nic_plugged(nic) == plug->is_on()) {
 		if (plug->is_on()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging nic " + nic +
-				" in vm " + vm->name() + ": this nic is already plugged into " + vm->name());
+			throw std::runtime_error(fmt::format("specified nic {} is already plugged in this vm", nic));
 		} else {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging nic " + nic +
-				" in vm " + vm->name() + ": this nic is already unplugged into " + vm->name());
+			throw std::runtime_error(fmt::format("specified nic {} is not unplugged from this vm", nic));
 		}
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
 	std::cout << plug_unplug << " nic " << nic << " on vm " << vm->name() << std::endl;
 
-	int result = 0;
-	result = vm->set_nic(nic, plug->is_on());
-
-	if (result) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
-			" nic on vm " + vm->name());
-	}
+	vm->set_nic(nic, plug->is_on());
 }
 
 void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
@@ -319,204 +305,182 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 	auto nic = plug->name_token.value();
 	auto nics = vm->nics();
 	if (nics.find(nic) == nics.end()) {
-		throw std::runtime_error(std::string(plug->end()) + ": Error: unknown NIC " + nic +
-			" in VM " + vm->name());
+		throw std::runtime_error(fmt::format("the nic for specified link {} is not present in this vm", nic));
 	}
 
 	if (!vm->is_nic_plugged(nic)) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while (un)plugging link " + nic +
-				" in vm " + vm->name() + ": the nic is disabled, you must enable it first" + vm->name());
+		throw std::runtime_error(fmt::format("the nic for specified link {} is unplugged, you must to plug it first", nic));
 	}
 
 	if (plug->is_on() == vm->is_link_plugged(nic)) {
 		if (plug->is_on()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging link " + nic +
-				" in vm " + vm->name() + ": this link is already plugged into " + vm->name());
+			throw std::runtime_error(fmt::format("specified link {} is already plugged in this vm", nic));
 		} else {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging link " + nic +
-				" from vm " + vm->name() + ": this link is already unplugged from " + vm->name());
+			throw std::runtime_error(fmt::format("specified link {} is already unplugged from this vm", nic));
 		}
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
 	std::cout << plug_unplug << " link " << nic << " on vm " << vm->name() << std::endl;
 
-	int result = 0;
-	result = vm->set_link(nic, plug->is_on());
-
-	if (result) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while " + plug_unplug +
-			" link on vm " + vm->name());
-	}
+	vm->set_link(nic, plug->is_on());
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
 	if (vm->is_flash_plugged(fd)) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
-			" in vm " + vm->name() + ": this flash drive is already plugged into " + vm->name());
+		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this vm", fd->name()));
 	}
 
-	if (vm->plug_flash_drive(fd)) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging flash drive " + fd->name() +
-			" in vm " + vm->name());
-	}
+	vm->plug_flash_drive(fd);
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	std::cout << "Unplugging flash drive " << fd->name() << " from vm " << vm->name() << std::endl;
 	if (!vm->is_flash_plugged(fd)) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging flash drive " + fd->name() +
-			" from vm " + vm->name() + ": this flash drive is not plugged to this vm");
+		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this vm", fd->name()));
 	}
 
-	if (vm->unplug_flash_drive(fd)) {
-		throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging flash drive " + fd->name() +
-				" from vm " + vm->name());
-	}
+	vm->unplug_flash_drive(fd);
 }
 
 void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	if (plug->is_on()) {
 		if (vm->is_dvd_plugged()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging dvd from vm " + vm->name()
-				+ " : dvd is already plugged");
+			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
 
 		auto path = visit_word(vm, plug->path);
 		std::cout << "Plugging dvd " << path << " in vm " << vm->name() << std::endl;
-		if (vm->plug_dvd(path)) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while plugging dvd " + path +
-				" from vm " + vm->name());
-		}
+		vm->plug_dvd(path);
 	} else {
 		if (!vm->is_dvd_plugged()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging dvd from vm " + vm->name()
-				+ " : dvd is already unplugged");
+			throw std::runtime_error(fmt::format("dvd is already unplugged"));
 		}
 
 		std::cout << "Unlugging dvd from vm " << vm->name() << std::endl;
-		if (vm->unplug_dvd()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error while unplugging dvd from vm " + vm->name());
-		}
+		vm->unplug_dvd();
 	}
 }
 
 void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vm, std::shared_ptr<Start> start) {
-	std::cout << "Starting vm " << vm->name() << std::endl;
-	if (vm->start()) {
-		throw std::runtime_error(std::string(start->begin()) +
-			": Error while performing start: " +
-			std::string(*start) +
-			" on VM " +
-			vm->name());
+	try {
+		std::cout << "Starting vm " << vm->name() << std::endl;
+		vm->start();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(start, vm));
 	}
 }
 
 void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::shared_ptr<Stop> stop) {
-	std::cout << "Stopping vm " << vm->name() << std::endl;
-	if (vm->stop()) {
-		throw std::runtime_error(std::string(stop->begin()) +
-			": Error while performing stop: " +
-			std::string(*stop) +
-			" on VM " +
-			vm->name());
+	try {
+		std::cout << "Stopping vm " << vm->name() << std::endl;
+		vm->stop();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(stop, vm));
+
 	}
+
 }
 
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {
-	std::cout << "Executing  " << exec->process_token.value() << " command on vm " << vm->name() << std::endl;
+	try {
+		std::cout << "Executing  " << exec->process_token.value() << " command on vm " << vm->name() << std::endl;
 
-	if (!vm->is_running()) {
-		throw std::runtime_error(std::string(exec->begin()) + ": Error: vm " + vm->name() + " is not running");
-	}
-
-	if (!vm->is_additions_installed()) {
-		throw std::runtime_error(std::string(exec->begin()) + ": Error: vbox additions are not installed on vm " + vm->name());
-	}
-
-	if (exec->process_token.value() == "bash") {
-		//In future this should be a function
-
-		std::string script = "set -e; set -o pipefail; set -x;";
-		script += visit_word(vm, exec->commands);
-
-		//copy the script to tmp folder
-		std::hash<std::string> h;
-
-		std::string hash = std::to_string(h(script));
-
-		fs::path host_script_dir = scripts_tmp_dir() / hash;
-		fs::path guest_script_dir = fs::path("/tmp");
-
-		if (!fs::create_directories(host_script_dir) && !fs::exists(host_script_dir)) {
-			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't create tmp script file on host");
+		if (!vm->is_running()) {
+			throw std::runtime_error(fmt::format("vm is not running"));
 		}
 
-		fs::path host_script_file = host_script_dir / std::string(hash + ".sh");
-		fs::path guest_script_file = guest_script_dir / std::string(hash + ".sh");
-		std::ofstream script_stream(host_script_file);
-		if (!script_stream.is_open()) {
-			throw std::runtime_error(std::string(exec->begin()) + ": Error: Can't open tmp file for writing the script");
+		if (!vm->is_additions_installed()) {
+			throw std::runtime_error(fmt::format("guest additions is not installed"));
 		}
 
-		script_stream << script;
-		script_stream.close();
+		if (exec->process_token.value() == "bash") {
+			//In future this should be a function
 
-		if (vm->copy_to_guest(host_script_dir, fs::path("/tmp"))) {
-			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't copy script file to vm");
+			std::string script = "set -e; set -o pipefail; set -x;";
+			script += visit_word(vm, exec->commands);
+
+			//copy the script to tmp folder
+			std::hash<std::string> h;
+
+			std::string hash = std::to_string(h(script));
+
+			fs::path host_script_dir = scripts_tmp_dir() / hash;
+			fs::path guest_script_dir = fs::path("/tmp");
+
+			if (!fs::create_directories(host_script_dir) && !fs::exists(host_script_dir)) {
+				throw std::runtime_error(fmt::format("can't create tmp script file on host"));
+			}
+
+			fs::path host_script_file = host_script_dir / std::string(hash + ".sh");
+			fs::path guest_script_file = guest_script_dir / std::string(hash + ".sh");
+			std::ofstream script_stream(host_script_file);
+			if (!script_stream.is_open()) {
+				throw std::runtime_error(fmt::format("Can't open tmp file for writing the script"));
+			}
+
+			script_stream << script;
+			script_stream.close();
+
+			vm->copy_to_guest(host_script_dir, fs::path("/tmp"));
+
+			fs::remove(host_script_file.generic_string());
+			fs::remove(host_script_dir.generic_string());
+
+			vm->run("/bin/bash", {guest_script_file.generic_string()});
+			vm->remove_from_guest(guest_script_dir);
 		}
-
-		fs::remove(host_script_file.generic_string());
-		fs::remove(host_script_dir.generic_string());
-
-		if (vm->run("/bin/bash", {guest_script_file.generic_string()})) {
-			throw std::runtime_error(std::string(exec->begin()) + ": Error: one of the commands failed");
-		}
-
-		if (vm->remove_from_guest(guest_script_dir)) {
-			throw std::runtime_error(std::string(exec->begin()) + ": Error: can't cleanup tmp file with script from guest");
-		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(exec, vm));
 	}
 }
 
 void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<Set> set) {
-	std::cout << "Setting attributes on vm " << vm->name() << std::endl;
+	try {
+		std::cout << "Setting attributes on vm " << vm->name() << std::endl;
 
-	//1) Let's check all the assignments so that we know we don't override any values
+		//1) Let's check all the assignments so that we know we don't override any values
 
-	for (auto assign: set->assignments) {
-		if (vm->has_key(assign->left.value())) {
-			throw std::runtime_error(std::string(assign->begin()) + ": Error: can't override key " + assign->left.value());
+		for (auto assign: set->assignments) {
+			if (vm->has_key(assign->left.value())) {
+				throw std::runtime_error(fmt::format("Can't override key {}", assign->left.value()));
+			}
 		}
+
+		for (auto assign: set->assignments) {
+			std::string value = visit_word(vm, assign->right);
+			std::cout << assign->left.value() << " -> " << value << std::endl;
+			vm->set_metadata(assign->left.value(), value);
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(set, vm));
 	}
 
-	for (auto assign: set->assignments) {
-		std::string value = visit_word(vm, assign->right);
-		std::cout << assign->left.value() << " -> " << value << std::endl;
-		vm->set_metadata(assign->left.value(), value);
-	}
 }
 
 void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
-	auto from = visit_word(vm, copyto->from);
-	auto to = visit_word(vm, copyto->to);
+	try {
+		auto from = visit_word(vm, copyto->from);
+		auto to = visit_word(vm, copyto->to);
 
-	std::cout << "Copying " << from << " to vm " << vm->name() << " in directory " << to << std::endl;
+		std::cout << "Copying " << from << " to vm " << vm->name() << " in directory " << to << std::endl;
 
-	if (!vm->is_running()) {
-		throw std::runtime_error(std::string(copyto->begin()) + ": Error: vm " + vm->name() + " is not running");
+		if (!vm->is_running()) {
+			throw std::runtime_error(fmt::format("vm is not running"));
+		}
+
+		if (!vm->is_additions_installed()) {
+			throw std::runtime_error(fmt::format("guest additions are not installed"));
+		}
+
+		vm->copy_to_guest(from, to);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(copyto, vm));
 	}
 
-	if (!vm->is_additions_installed()) {
-		throw std::runtime_error(std::string(copyto->begin()) + ": Error: vbox additions are not installed on vm " + vm->name());
-	}
-
-	if (vm->copy_to_guest(from, to)) {
-		throw std::runtime_error(std::string(copyto->begin()) + ": Error: copy to command failed");
-	}
 }
 
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
@@ -525,13 +489,18 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std:
 }
 
 void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<IfClause> if_clause) {
-	bool expr_result = visit_expr(vm, if_clause->expr);
+	try {
+		bool expr_result = visit_expr(vm, if_clause->expr);
 
-	if (expr_result) {
-		return visit_action(vm, if_clause->if_action);
-	} else if (if_clause->has_else()) {
-		return visit_action(vm, if_clause->else_action);
+		if (expr_result) {
+			return visit_action(vm, if_clause->if_action);
+		} else if (if_clause->has_else()) {
+			return visit_action(vm, if_clause->else_action);
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(if_clause, vm));
 	}
+
 }
 
 bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<IExpr> expr) {
@@ -612,30 +581,30 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std:
 	auto right = visit_word(vm, comparison->right);
 	if (comparison->op() == Token::category::GREATER) {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + std::string(*comparison->left) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + std::string(*comparison->right) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) > std::stoul(right);
 
 	} else if (comparison->op() == Token::category::LESS) {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + std::string(*comparison->left) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + std::string(*comparison->right) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) < std::stoul(right);
 
 	} else if (comparison->op() == Token::category::EQUAL) {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(comparison->left->begin()) + ": Error: " + std::string(*comparison->left) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(comparison->right->begin()) + ": Error: " + std::string(*comparison->right) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) == std::stoul(right);
@@ -662,10 +631,7 @@ void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::sh
 	visit_action_block(vm, snapshot->action_block->action);
 	auto new_cksum = snapshot_cksum(vm, snapshot);
 	std::cout << "Taking snapshot " << snapshot->name.value() << " for vm " << vm->name() << std::endl;
-	if (vm->make_snapshot(snapshot->name, new_cksum)) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: error while creating snapshot" +
-			snapshot->name.value() + " for vm " + vm->name());
-	}
+	vm->make_snapshot(snapshot->name, new_cksum);
 }
 
 //return true if everything is OK and we don't need to apply nothing
@@ -684,20 +650,9 @@ bool VisitorInterpreter::resolve_state(std::shared_ptr<VmController> vm, std::sh
 		}
 
 		if (snapshot->parent) {
-			if (vm->rollback(snapshot->parent->name)) {
-				throw std::runtime_error(std::string(snapshot->parent->begin()) +
-					": Error while performing rollback: " +
-					snapshot->parent->name.value() +
-					" on VM " +
-					vm->name());
-			}
+			vm->rollback(snapshot->parent->name);
 		} else {
-			if (vm->install()) {
-				throw std::runtime_error(std::string(snapshot->begin()) +
-					": Error while performing install: " +
-					" on VM " +
-					vm->name());
-			}
+			vm->install();
 		}
 	}
 

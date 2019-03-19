@@ -8,7 +8,7 @@
 
 namespace fs = std::experimental::filesystem;
 
-void backtrace(std::ostream& stream, const std::exception& error, size_t n);
+void backtrace(std::ostream& stream, const std::exception& error);
 uint32_t time_to_seconds(const std::string& time);
 void exec_and_throw_if_failed(const std::string& command);
 fs::path home_dir();
@@ -44,6 +44,6 @@ inline std::string node_to_string(pugi::xml_node node)
 }
 
 inline std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
-	backtrace(stream, error, 1);
+	backtrace(stream, error);
 	return stream;
 }
