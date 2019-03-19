@@ -6,7 +6,7 @@
 
 namespace darknet {
 
-struct Image {
+struct Image: image {
 	Image() = default;
 	Image(size_t width, size_t height, size_t channels);
 	Image(const std::string& path);
@@ -20,41 +20,31 @@ struct Image {
 	void save(const std::string& path) const;
 
 	size_t width() const {
-		return impl.w;
+		return w;
 	}
 
 	size_t height() const {
-		return impl.h;
+		return h;
 	}
 
 	size_t channels() const {
-		return impl.c;
+		return c;
 	}
 
 	float& operator[](size_t index) {
-		return impl.data[index];
+		return data[index];
 	}
 
 	const float& operator[](size_t index) const {
-		return impl.data[index];
+		return data[index];
 	}
 
 	Image letterbox(size_t width, size_t height) const;
 
-	float* data() {
-		return impl.data;
-	}
-
-	const float* data() const {
-		return impl.data;
-	}
-
 	void draw(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, float r, float g, float b);
 
-	image impl = {};
-
 private:
-	Image(const image& impl_): impl(impl_) {}
+	Image(const image& impl_): image(impl_) {}
 };
 
 }

@@ -3,7 +3,6 @@
 #include <assert.h>
 #include "network.h"
 #include "image.h"
-#include "data.h"
 #include "utils.h"
 #include "blas.h"
 
@@ -15,25 +14,6 @@
 #include "cost_layer.h"
 #include "softmax_layer.h"
 #include "parser.h"
-#include "data.h"
-
-load_args get_base_args(network *net)
-{
-    load_args args = {0};
-    args.w = net->w;
-    args.h = net->h;
-    args.size = net->w;
-
-    args.min = net->min_crop;
-    args.max = net->max_crop;
-    args.angle = net->angle;
-    args.aspect = net->aspect;
-    args.exposure = net->exposure;
-    args.center = net->center;
-    args.saturation = net->saturation;
-    args.hue = net->hue;
-    return args;
-}
 
 network *load_network(char *cfg, char *weights, int clear)
 {

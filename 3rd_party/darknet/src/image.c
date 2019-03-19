@@ -540,7 +540,7 @@ void save_image_options(image im, const char *name, IMTYPE f, int quality)
 
 void save_image(image im, const char *name)
 {
-    save_image_options(im, name, JPG, 80);
+    save_image_options(im, name, PNG, 100);
 }
 
 image make_empty_image(int w, int h, int c)

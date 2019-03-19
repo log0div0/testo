@@ -10,26 +10,36 @@
 #include <list>
 #include "Network.hpp"
 #include "Trainer.hpp"
-#include "DataLoader.hpp"
 
-void train(const std::string& cfgfile, const std::string& weightfile, const std::vector<int>& gpus)
+using namespace darknet;
+
+std::string network_file;
+std::string dataset_file;
+std::string weights_file;
+std::string input_file;
+std::string output_file;
+float thresh = 0.5f;
+#ifdef GPU
+std::vector<int> gpus;
+bool nogpu = false;
+#endif
+
+void train()
 {
-	using namespace darknet;
-
-	const std::string backup_directory = "backup/";
+	Trainer trainer(network_file, dataset_file
+#ifdef GPU
+		, gpus
+#endif
+	);
+	if (input_file.size()) {
+		trainer.load_weights(input_file);
+	}
 
 	float avg_loss = -1;
 
-	Trainer trainer(cfgfile, gpus);
-	if (weightfile.size()) {
-		trainer.load_weights(weightfile);
-	}
-
-	DataLoader data_loader("dataset/image_list.txt", trainer);
-
-	while (trainer.current_batch() < trainer.max_batches())
+	while (true)
 	{
-		float loss = trainer.train(data_loader.load_data());
+		float loss = trainer.train();
 
 		if (avg_loss < 0) {
 			avg_loss = loss;
@@ -37,17 +47,16 @@ void train(const std::string& cfgfile, const std::string& weightfile, const std:
 			avg_loss = avg_loss*.9 + loss*.1;
 		}
 
-		int i = trainer.current_batch();
-		printf("%d: %f, %f avg\n", i, loss, avg_loss);
+		size_t i = trainer.current_batch();
 
-		if (i % 100 == 0) {
-			trainer.save_weights(backup_directory + "/net.weights");
-		}
-		if (i % 10000==0 || (i < 1000 && i % 100 == 0)) {
-			trainer.save_weights(backup_directory + "/net_" + std::to_string(i) + ".weights");
+		std::cout << i << ": loss = " << loss << ", avg_loss = " << avg_loss << std::endl;
+
+		if (i) {
+			if (i % 100 == 0) {
+				trainer.save_weights(output_file);
+			}
 		}
 	}
-	trainer.save_weights(backup_directory + "/net_final.weights");
 }
 
 struct Box {
@@ -133,15 +142,13 @@ struct BoxSet: std::list<Box> {
 	}
 };
 
-void test(const std::string& cfgfile, const std::string& weightfile, const std::string& infile, float thresh, const std::string& outfile)
+void test()
 {
-	using namespace darknet;
-
-	Network network(cfgfile);
-	network.load_weights(weightfile);
+	Network network(network_file);
+	network.load_weights(weights_file);
 	network.set_batch(1);
 
-	Image image = Image(infile);
+	Image image = Image(input_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
 
@@ -191,7 +198,7 @@ void test(const std::string& cfgfile, const std::string& weightfile, const std::
 	std::chrono::duration<double> time = end - start;
 	std::cout << time.count() << " seconds" << std::endl;
 
-	image.save(outfile);
+	image.save(output_file);
 }
 
 enum Mode {
@@ -201,62 +208,70 @@ enum Mode {
 };
 
 Mode mode;
-std::string cfg;
-std::string weights;
-std::string input;
-std::string output = "prediction";
-bool nogpu = false;
-float thresh = 0.5f;
-std::vector<int> gpus;
 
 int main(int argc, char **argv)
 {
-	using namespace clipp;
+	try {
+		using namespace clipp;
 
-	srand(time(0));
+		srand(time(0));
 
-	auto cli = (
-		command("help").set(mode, Help)
-		| ( command("train").set(mode, Train),
-			value("cfg", cfg),
-			option("weights", weights)
-#ifdef GPU
-			,
-			option("--gpus") & values("gpus", gpus)
-#endif
-		)
-		| (
-			command("test").set(mode, Test),
-			value("cfg", cfg),
-			value("weights", weights),
-			value("input", input),
-			option("-o", "--output") & value("output", output),
-#ifdef GPU
-			option("--nogpu").set(nogpu),
-#endif
-			option("--thresh") & value("thresh", thresh)
-		)
-	);
+		auto cli = (
+			command("help").set(mode, Help)
+			| ( command("train").set(mode, Train),
+				value("network", network_file),
+				value("dataset", dataset_file),
+				option("-i", "--input") & value("input weights", input_file),
+				option("-o", "--output") & value("output weights", output_file)
+	#ifdef GPU
+				,
+				option("--gpus") & values("gpus", gpus)
+	#endif
+			)
+			| (
+				command("test").set(mode, Test),
+				value("network", network_file),
+				value("weights", weights_file),
+				value("input", input_file),
+				option("-o", "--output") & value("output file", output_file),
+	#ifdef GPU
+				option("--nogpu").set(nogpu),
+	#endif
+				option("--thresh") & value("thresh", thresh)
+			)
+		);
 
-	if (!parse(argc, argv, cli)) {
-		std::cout << make_man_page(cli, argv[0]) << std::endl;
+		if (!parse(argc, argv, cli)) {
+			std::cout << make_man_page(cli, argv[0]) << std::endl;
+			return 1;
+		}
+
+		switch (mode) {
+			case Help:
+				std::cout << make_man_page(cli, argv[0]) << std::endl;
+				break;
+			case Train:
+	#ifdef GPU
+				if (!gpus.size()) {
+					gpus = {0};
+				}
+	#endif
+				if (!output_file.size()) {
+					output_file = "output.weights";
+				}
+				train();
+				break;
+			case Test:
+				if (!output_file.size()) {
+					output_file = "output";
+				}
+				test();
+				break;
+		}
+	}
+	catch (const std::exception& error) {
+		std::cerr << error.what() << std::endl;
 		return 1;
 	}
-
-	switch (mode) {
-		case Help:
-			std::cout << make_man_page(cli, argv[0]) << std::endl;
-			break;
-		case Train:
-			if (!gpus.size()) {
-				gpus = {0};
-			}
-			train(cfg, weights, gpus);
-			break;
-		case Test:
-			test(cfg, weights, input, thresh, output);
-			break;
-	}
-
 	return 0;
 }

@@ -29,8 +29,6 @@ typedef struct{
     char **names;
 } metadata;
 
-metadata get_metadata(char *file);
-
 typedef struct{
     int *leaf;
     int n;
@@ -532,50 +530,41 @@ typedef struct matrix{
 
 
 typedef struct{
-    int w, h;
     matrix X;
     matrix y;
-    int shallow;
-    int *num_boxes;
-    box **boxes;
 } data;
 
-typedef enum {
-    DETECTION_DATA
-} data_type;
+inline void get_random_batch(data d, int n, float *X, float *y)
+{
+    int j;
+    for(j = 0; j < n; ++j){
+        int index = rand()%d.X.rows;
+        memcpy(X+j*d.X.cols, d.X.vals[index], d.X.cols*sizeof(float));
+        memcpy(y+j*d.y.cols, d.y.vals[index], d.y.cols*sizeof(float));
+    }
+}
 
-typedef struct load_args{
-    int threads;
-    char **paths;
-    char *path;
-    int n;
-    int m;
-    char **labels;
-    int h;
-    int w;
-    int out_w;
-    int out_h;
-    int nh;
-    int nw;
-    int num_boxes;
-    int min, max, size;
-    int classes;
-    int background;
-    int scale;
-    int center;
-    int coords;
-    float jitter;
-    float angle;
-    float aspect;
-    float saturation;
-    float exposure;
-    float hue;
-    data *d;
-    image *im;
-    image *resized;
-    data_type type;
-    tree *hierarchy;
-} load_args;
+inline void get_next_batch(data d, int n, int offset, float *X, float *y)
+{
+    int j;
+    for(j = 0; j < n; ++j){
+        int index = offset + j;
+        memcpy(X+j*d.X.cols, d.X.vals[index], d.X.cols*sizeof(float));
+        if(y) memcpy(y+j*d.y.cols, d.y.vals[index], d.y.cols*sizeof(float));
+    }
+}
+
+inline data get_data_part(data d, int part, int total)
+{
+    data p = {0};
+    p.X.rows = d.X.rows * (part + 1) / total - d.X.rows * part / total;
+    p.y.rows = d.y.rows * (part + 1) / total - d.y.rows * part / total;
+    p.X.cols = d.X.cols;
+    p.y.cols = d.y.cols;
+    p.X.vals = d.X.vals + d.X.rows * part / total;
+    p.y.vals = d.y.vals + d.y.rows * part / total;
+    return p;
+}
 
 typedef struct{
     int id;
@@ -585,7 +574,6 @@ typedef struct{
 
 
 network *load_network(char *cfg, char *weights, int clear);
-load_args get_base_args(network *net);
 
 void free_data(data d);
 
@@ -601,13 +589,8 @@ typedef struct list{
     node *back;
 } list;
 
-pthread_t load_data(load_args args);
-list *read_data_cfg(char *filename);
 list *read_cfg(char *filename);
 unsigned char *read_file(char *filename);
-data resize_data(data orig, int w, int h);
-data *tile_data(data orig, int divs, int size);
-data select_data(data *orig, int *inds);
 
 void forward_network(network *net);
 void backward_network(network *net);
@@ -648,7 +631,6 @@ image get_label(image **characters, char *string, int size);
 void draw_label(image a, int r, int c, image label, const float *rgb);
 void save_image(image im, const char *name);
 void save_image_options(image im, const char *name, IMTYPE f, int quality);
-void get_next_batch(data d, int n, int offset, float *X, float *y);
 void grayscale_image_3c(image im);
 void normalize_image(image p);
 void matrix_to_csv(matrix m);
@@ -747,7 +729,6 @@ void free_detections(detection *dets, int n);
 
 void reset_network_state(network *net, int b);
 
-char **get_labels(char *filename);
 void do_nms_obj(detection *dets, int total, int classes, float thresh);
 void do_nms_sort(detection *dets, int total, int classes, float thresh);
 
@@ -755,11 +736,8 @@ matrix make_matrix(int rows, int cols);
 
 void free_image(image m);
 float train_network(network *net, data d);
-pthread_t load_data_in_thread(load_args args);
-void load_data_blocking(load_args args);
 list *get_paths(char *filename);
 void hierarchy_predictions(float *predictions, int n, tree *hier, int only_leaves, int stride);
-void change_leaves(tree *t, char *leaf_list);
 
 int find_int_arg(int argc, char **argv, char *arg, int def);
 float find_float_arg(int argc, char **argv, char *arg, float def);

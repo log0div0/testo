@@ -40,7 +40,7 @@ float* Network::predict(const Image& image) {
 	{
 		throw std::runtime_error("Image size is not equal to network size");
 	} else {
-		return forward((float*)image.data());
+		return forward(image.data);
 	}
 }
 
