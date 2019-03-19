@@ -3,16 +3,16 @@
 #include <sys/types.h>
 #include <algorithm>
 
-void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
-	stream << n << ". " << error.what();
+void backtrace(std::ostream& stream, const std::exception& error) {
+	stream << error.what();
 	try {
 		std::rethrow_if_nested(error);
 	} catch (const std::exception& error) {
-		stream << std::endl;
-		backtrace(stream, error, n + 1);
+		stream << ": ";
+		backtrace(stream, error);
 	} catch(...) {
 		stream << std::endl;
-		stream << n << ". " << "[Unknown exception type]";
+		stream << "[Unknown exception type]";
 	}
 }
 

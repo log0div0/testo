@@ -271,24 +271,25 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 	prepare_networks();
 }
 
-
-int QemuVmController::set_metadata(const nlohmann::json& metadata) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
-			if (set_metadata(key_value.key(), key_value.value()) < 0) {
-				std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-			}
-		}
-		return 0;
-	}
-	catch (const std::exception& error) {
-		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
-		return -1;
+QemuVmController::~QemuVmController() {
+	if (!is_defined()) {
+		remove_disk();
 	}
 }
 
-int QemuVmController::set_metadata(const std::string& key, const std::string& value) {
+void QemuVmController::set_metadata(const nlohmann::json& metadata) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
+			set_metadata(key_value.key(), key_value.value());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Setting json metadata on vm "));
+	}
+}
+
+void QemuVmController::set_metadata(const std::string& key, const std::string& value) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		std::vector flags = {VIR_DOMAIN_AFFECT_CURRENT, VIR_DOMAIN_AFFECT_CONFIG};
@@ -304,10 +305,8 @@ int QemuVmController::set_metadata(const std::string& key, const std::string& va
 			"testo",
 			fmt::format("vm_metadata/{}", key),
 			flags);
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Setting metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
 	}
 }
 
@@ -324,8 +323,7 @@ std::vector<std::string> QemuVmController::keys() {
 		return result;
 	}
 	catch (const std::exception& error) {
-		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
-		return {};
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata keys")));
 	}
 }
 
@@ -342,8 +340,7 @@ std::vector<std::string> QemuVmController::keys(vir::Snapshot& snapshot) {
 
 	}
 	catch (const std::exception& error) {
-		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
-		return {};
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata keys")));
 	}
 }
 
@@ -353,8 +350,7 @@ bool QemuVmController::has_key(const std::string& key) {
 		auto found = config.select_node(fmt::format("//*[namespace-uri() = \"vm_metadata/{}\"]", key).c_str());
 		return !found.node().empty();
 	} catch (const std::exception& error) {
-		std::cout << "Checking metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking metadata with key {}", key)));
 	}
 }
 
@@ -369,18 +365,15 @@ std::string QemuVmController::get_metadata(const std::string& key) {
 		return found.attribute("value").value();
 
 	} catch (const std::exception& error) {
-		std::cout << "Getting metadata with key " << key << " on vm " << name() << " error : " << error << std::endl;
-		return "";
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
 	}
 }
 
-int QemuVmController::install() {
+void QemuVmController::install() {
 	try {
 		if (is_defined()) {
 			if (is_running()) {
-				if (stop()) {
-					std::throw_with_nested(__PRETTY_FUNCTION__);
-				}
+				stop();
 			}
 			auto domain = qemu_connect.domain_lookup_by_name(name());
 			for (auto& snapshot: domain.snapshots()) {
@@ -390,11 +383,12 @@ int QemuVmController::install() {
 			auto xml = domain.dump_xml();
 
 			domain.undefine();
-			remove_disks(xml);
 		}
 
+		remove_disk();
+
 		//now create disks
-		create_disks();
+		create_disk();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 		fs::path volume_path = pool.path() / (name() + ".img");
@@ -551,32 +545,34 @@ int QemuVmController::install() {
 		set_metadata("vm_name", name());
 
 		domain.start();
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Performing install on vm " << name() << ": " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(fmt::format("Performing install")));
 	}
 }
 
-int QemuVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
-	auto domain = qemu_connect.domain_lookup_by_name(name());
+void QemuVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
 
-	if (has_snapshot(snapshot)) {
-		auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
-		delete_snapshot_with_children(vir_snapshot);
+		if (has_snapshot(snapshot)) {
+			auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
+			delete_snapshot_with_children(vir_snapshot);
+		}
+
+		pugi::xml_document xml_config;
+		xml_config.load_string(fmt::format(R"(
+			<domainsnapshot>
+				<name>{}</name>
+				<description>{}</description>
+			</domainsnapshot>
+			)", snapshot, cksum).c_str());
+
+
+		domain.snapshot_create_xml(xml_config);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
 	}
 
-	pugi::xml_document xml_config;
-	xml_config.load_string(fmt::format(R"(
-		<domainsnapshot>
-			<name>{}</name>
-			<description>{}</description>
-		</domainsnapshot>
-		)", snapshot, cksum).c_str());
-
-
-	domain.snapshot_create_xml(xml_config);
-	return 0;
 }
 
 std::set<std::string> QemuVmController::nics() const {
@@ -595,12 +591,11 @@ std::string QemuVmController::get_snapshot_cksum(const std::string& snapshot) {
 		return description.text().get();
 	}
 	catch (const std::exception& error) {
-		std::cout << "getting snapshot cksum on vm " << name() << ": " << error << std::endl;
-		return "";
+		std::throw_with_nested(std::runtime_error("getting snapshot cksum error"));
 	}
 }
 
-int QemuVmController::rollback(const std::string& snapshot) {
+void QemuVmController::rollback(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
@@ -676,15 +671,12 @@ int QemuVmController::rollback(const std::string& snapshot) {
 		}
 
 		domain.revert_to_snapshot(snap);
-
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Performing rollback on vm " << name() << ": " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error("Performing rollback error"));
 	}
 }
 
-int QemuVmController::press(const std::vector<std::string>& buttons) {
+void QemuVmController::press(const std::vector<std::string>& buttons) {
 	try {
 		std::vector<uint32_t> keycodes;
 		for (auto button: buttons) {
@@ -692,11 +684,9 @@ int QemuVmController::press(const std::vector<std::string>& buttons) {
 			keycodes.push_back(scancodes[button]);
 		}
 		qemu_connect.domain_lookup_by_name(name()).send_keys(VIR_KEYCODE_SET_LINUX, 0, keycodes);
-		return 0;
 	}
 	catch (const std::exception& error) {
-		std::cout << "Pressing buttons on vm " << name() << " error : " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
 	}
 }
 
@@ -717,151 +707,171 @@ bool QemuVmController::is_nic_plugged(const std::string& nic) const {
 		}
 		return false;
 	} catch (const std::exception& error) {
-		std::cout << "Checking nic " << nic << " state error: " << error;
-		return false;
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged", nic)));
 	}
 }
 
 bool QemuVmController::is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic) {
-	auto nic_name = std::string("ua-nic-") + nic;
-	auto config = snapshot.dump_xml();
-	auto devices = config.first_child().child("domain").child("devices");
+	try {
+		auto nic_name = std::string("ua-nic-") + nic;
+		auto config = snapshot.dump_xml();
+		auto devices = config.first_child().child("domain").child("devices");
 
-	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-		if (std::string(nic_node.attribute("type").value()) != "network") {
-			continue;
+		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+			if (std::string(nic_node.attribute("type").value()) != "network") {
+				continue;
+			}
+
+			if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+				return true;
+			}
 		}
 
-		if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
-			return true;
-		}
+		return false;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged from snapshot", nic)));
 	}
 
-	return false;
 }
 
 void QemuVmController::attach_nic(const std::string& nic) {
-	auto domain = qemu_connect.domain_lookup_by_name(name());
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
 
-	std::string string_config;
+		std::string string_config;
 
-	for (auto& nic_json: config.at("nic")) {
-		if (nic_json.at("name") == nic) {
-			std::string source_network("testo-");
+		for (auto& nic_json: config.at("nic")) {
+			if (nic_json.at("name") == nic) {
+				std::string source_network("testo-");
 
-			if (nic_json.at("attached_to").get<std::string>() == "internal") {
-				source_network += nic_json.at("network").get<std::string>();
+				if (nic_json.at("attached_to").get<std::string>() == "internal") {
+					source_network += nic_json.at("network").get<std::string>();
+				}
+
+				if (nic_json.at("attached_to").get<std::string>() == "nat") {
+					source_network += "nat";
+				}
+
+				string_config = fmt::format(R"(
+					<interface type='network'>
+						<source network='{}'/>
+				)", source_network);
+
+				if (nic_json.count("mac")) {
+					string_config += fmt::format("\n<mac address='{}'/>", nic_json.at("mac").get<std::string>());
+				}
+
+				if (nic_json.count("adapter_type")) {
+					string_config += fmt::format("\n<model type='{}'/>", nic_json.at("adapter_type").get<std::string>());
+				}
+
+				//libvirt suggests that everything you do in aliases must be prefixed with "ua-nic-"
+				std::string nic_name = std::string("ua-nic-");
+				nic_name += nic_json.at("name").get<std::string>();
+				string_config += fmt::format("\n<link state='up'/>");
+				string_config += fmt::format("\n<alias name='{}'/>", nic_name);
+				string_config += fmt::format("\n</interface>");
+
+				break;
 			}
-
-			if (nic_json.at("attached_to").get<std::string>() == "nat") {
-				source_network += "nat";
-			}
-
-			string_config = fmt::format(R"(
-				<interface type='network'>
-					<source network='{}'/>
-			)", source_network);
-
-			if (nic_json.count("mac")) {
-				string_config += fmt::format("\n<mac address='{}'/>", nic_json.at("mac").get<std::string>());
-			}
-
-			if (nic_json.count("adapter_type")) {
-				string_config += fmt::format("\n<model type='{}'/>", nic_json.at("adapter_type").get<std::string>());
-			}
-
-			//libvirt suggests that everything you do in aliases must be prefixed with "ua-nic-"
-			std::string nic_name = std::string("ua-nic-");
-			nic_name += nic_json.at("name").get<std::string>();
-			string_config += fmt::format("\n<link state='up'/>");
-			string_config += fmt::format("\n<alias name='{}'/>", nic_name);
-			string_config += fmt::format("\n</interface>");
-
-			break;
 		}
+
+		//TODO: check if CURRENT is enough
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		pugi::xml_document nic_config;
+		nic_config.load_string(string_config.c_str());
+
+		domain.attach_device(nic_config, flags);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Attaching nic {}", nic)));
 	}
 
-	//TODO: check if CURRENT is enough
-	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
-
-	if (domain.is_active()) {
-		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
-	}
-
-	pugi::xml_document nic_config;
-	nic_config.load_string(string_config.c_str());
-
-	domain.attach_device(nic_config, flags);
 }
 
 void QemuVmController::detach_nic(const std::string& nic) {
-	auto nic_name = std::string("ua-nic-") + nic;
-	auto domain = qemu_connect.domain_lookup_by_name(name());
-	auto config = domain.dump_xml();
-	auto devices = config.first_child().child("devices");
+	try {
+		auto nic_name = std::string("ua-nic-") + nic;
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
 
-	//TODO: check if CURRENT is enough
-	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		//TODO: check if CURRENT is enough
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
-	if (domain.is_active()) {
-		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
-	}
-
-	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-		if (std::string(nic_node.attribute("type").value()) != "network") {
-			continue;
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
 		}
 
-		if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
-			domain.detach_device(nic_node, flags);
-			return;
+		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+			if (std::string(nic_node.attribute("type").value()) != "network") {
+				continue;
+			}
+
+			if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+				domain.detach_device(nic_node, flags);
+				return;
+			}
 		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Detaching nic {}", nic)));
 	}
 }
 
-int QemuVmController::set_nic(const std::string& nic, bool is_enabled) {
+void QemuVmController::set_nic(const std::string& nic, bool is_enabled) {
 	try {
 		if (is_enabled) {
 			attach_nic(nic);
 		} else {
 			detach_nic(nic);
 		}
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Setting nic "  << nic << " error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(fmt::format("Setting nic {}", nic)));
 	}
 }
 
 bool QemuVmController::is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const {
-	std::string nic_name = std::string("ua-nic-") + nic;
+	try {
+		std::string nic_name = std::string("ua-nic-") + nic;
 
-	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-		if (std::string(nic_node.attribute("type").value()) != "network") {
-			continue;
-		}
-
-		if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
-			if (nic_node.child("link").empty()) {
-				return false;
+		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
+			if (std::string(nic_node.attribute("type").value()) != "network") {
+				continue;
 			}
 
-			std::string state = nic_node.child("link").attribute("state").value();
+			if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+				if (nic_node.child("link").empty()) {
+					return false;
+				}
 
-			if (state == "up") {
-				return true;
-			} else if (state == "down") {
-				return false;
-			} else {
-				throw std::runtime_error("Unknown link state");
+				std::string state = nic_node.child("link").attribute("state").value();
+
+				if (state == "up") {
+					return true;
+				} else if (state == "down") {
+					return false;
+				} else {
+					throw std::runtime_error("Unknown link state");
+				}
 			}
 		}
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged", nic)));
 	}
 }
 
 bool QemuVmController::is_link_plugged(vir::Snapshot& snapshot, const std::string& nic) {
-	auto config = snapshot.dump_xml();
-	return is_link_plugged(config.first_child().child("domain").child("devices"), nic);
+	try {
+		auto config = snapshot.dump_xml();
+		return is_link_plugged(config.first_child().child("domain").child("devices"), nic);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged from snapshot", nic)));
+	}
+
 }
 
 bool QemuVmController::is_link_plugged(const std::string& nic) const {
@@ -869,12 +879,11 @@ bool QemuVmController::is_link_plugged(const std::string& nic) const {
 		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
 		return is_link_plugged(config.first_child().child("devices"), nic);
 	} catch (const std::exception& error) {
-		std::cout << "Checking link status on nic " << nic << " on vm " << name() << " error: " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking link status on nic {}", nic)));
 	}
 }
 
-int QemuVmController::set_link(const std::string& nic, bool is_connected) {
+void QemuVmController::set_link(const std::string& nic, bool is_connected) {
 	try {
 		std::string nic_name = std::string("ua-nic-") + nic;
 		auto domain = qemu_connect.domain_lookup_by_name(name());
@@ -911,128 +920,138 @@ int QemuVmController::set_link(const std::string& nic, bool is_connected) {
 				break;
 			}
 		}
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Setting link status on nic " << nic << " on vm " << name() << " error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(fmt::format("Setting link status on nic {}", nic)));
 	}
 }
 
 std::string QemuVmController::get_flash_img(vir::Snapshot& snapshot) {
-	auto config = snapshot.dump_xml();
-	auto devices = config.first_child().child("domain").child("devices");
+	try {
+		auto config = snapshot.dump_xml();
+		auto devices = config.first_child().child("domain").child("devices");
 
-	std::string result = "";
+		std::string result = "";
 
-	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-		if (std::string(disk.attribute("device").value()) != "disk") {
-			continue;
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+			if (std::string(disk.attribute("device").value()) != "disk") {
+				continue;
+			}
+
+			if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+				result = disk.child("source").attribute("file").value();
+			}
 		}
 
-		if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
-			result = disk.child("source").attribute("file").value();
-		}
+		return result;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Getting flash image from snapshot"));
 	}
-
-	return result;
 }
 
 std::string QemuVmController::get_flash_img() {
-	auto domain = qemu_connect.domain_lookup_by_name(name());
-	auto config = domain.dump_xml();
-	auto devices = config.first_child().child("devices");
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
 
-	std::string result = "";
+		std::string result = "";
 
-	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-		if (std::string(disk.attribute("device").value()) != "disk") {
-			continue;
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+			if (std::string(disk.attribute("device").value()) != "disk") {
+				continue;
+			}
+
+			if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+				result = disk.child("source").attribute("file").value();
+			}
 		}
 
-		if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
-			result = disk.child("source").attribute("file").value();
-		}
+		return result;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Getting flash image"));
 	}
-
-	return result;
 }
 
 bool QemuVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
 	try {
 		return get_flash_img().length();
 	} catch (const std::string& error) {
-		std::cout << "Checking if flash drive " << fd->name() << " is plugged into vm " << name() << " error: " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking if flash drive {} is pluged", fd->name())));
 	}
 }
 
 void QemuVmController::attach_flash_drive(const std::string& img_path) {
-	auto domain = qemu_connect.domain_lookup_by_name(name());
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
 
-	std::string string_config = fmt::format(R"(
-		<disk type='file'>
-			<driver name='qemu' type='qcow2'/>
-			<source file='{}'/>
-			<target dev='vdb' bus='virtio'/>
-		</disk>
-		)", img_path);
+		std::string string_config = fmt::format(R"(
+			<disk type='file'>
+				<driver name='qemu' type='qcow2'/>
+				<source file='{}'/>
+				<target dev='vdb' bus='virtio'/>
+			</disk>
+			)", img_path);
 
-	//we just need to create new device
-	//TODO: check if CURRENT is enough
-	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
+		//we just need to create new device
+		//TODO: check if CURRENT is enough
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
 
-	if (domain.is_active()) {
-		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		pugi::xml_document disk_config;
+		disk_config.load_string(string_config.c_str());
+
+		domain.attach_device(disk_config, flags);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Attaching flash drive {}", img_path)));
 	}
 
-	pugi::xml_document disk_config;
-	disk_config.load_string(string_config.c_str());
-
-	domain.attach_device(disk_config, flags);
 }
 
-int QemuVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void QemuVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
 		attach_flash_drive(fd->img_path());
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Plugging flash drive " << fd->name() << " into vm " << name() << " error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(fmt::format("Plugging flash drive {}", fd->name())));
 	}
 }
 
 void QemuVmController::detach_flash_drive() {
-	auto domain = qemu_connect.domain_lookup_by_name(name());
-	auto config = domain.dump_xml();
-	auto devices = config.first_child().child("devices");
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
 
-	//TODO: check if CURRENT is enough
-	std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		//TODO: check if CURRENT is enough
+		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
-	if (domain.is_active()) {
-		flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
-	}
-
-	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-		if (std::string(disk.attribute("device").value()) != "disk") {
-			continue;
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
 		}
 
-		if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
-			domain.detach_device(disk, flags);
-			break;
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+			if (std::string(disk.attribute("device").value()) != "disk") {
+				continue;
+			}
+
+			if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+				domain.detach_device(disk, flags);
+				break;
+			}
 		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Detaching flash drive"));
 	}
 }
 
 //for now it's just only one flash drive possible
-int QemuVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void QemuVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
 		detach_flash_drive();
-		return 0;
 	} catch (const std::string& error) {
-		std::cout << "Unplugging flash drive " << fd->name() << " from vm " << name() << " error: " << error << std::endl;
-		return 1;
+		std::throw_with_nested(std::runtime_error(fmt::format("Unplugging flash drive {}", fd->name())));
 	}
 }
 
@@ -1043,8 +1062,7 @@ bool QemuVmController::is_dvd_plugged() const {
 		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
 		return !bool(cdrom.child("source").empty());
 	} catch (const std::exception& error) {
-		std::cout << "Checking if dvd is plugged into vm " << name() << ": " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error("Checking if dvd is plugged"));
 	}
 }
 
@@ -1057,8 +1075,7 @@ std::string QemuVmController::get_dvd_path() {
 		}
 		return cdrom.child("source").attribute("file").value();
 	} catch (const std::exception& error) {
-		std::cout << "Checking if dvd is plugged into vm " << name() << ": " << error << std::endl;
-		return "";
+		std::throw_with_nested(std::runtime_error("Getting dvd path"));
 	}
 }
 
@@ -1071,12 +1088,11 @@ std::string QemuVmController::get_dvd_path(vir::Snapshot& snap) {
 		}
 		return cdrom.child("source").attribute("file").value();
 	} catch (const std::exception& error) {
-		std::cout << "Checking if dvd is plugged into vm " << name() << ": " << error << std::endl;
-		return "";
+		std::throw_with_nested(std::runtime_error("Getting dvd path from snapshot"));
 	}
 }
 
-int QemuVmController::plug_dvd(fs::path path) {
+void QemuVmController::plug_dvd(fs::path path) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
@@ -1094,14 +1110,12 @@ int QemuVmController::plug_dvd(fs::path path) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
 		}
 		domain.update_device(cdrom, flags);
-		return 0;
 	} catch (const std::string& error) {
-		std::cout << "Plugging dvd from vm " << name() << ": Error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(fmt::format("plugging dvd {}", path.generic_string())));
 	}
 }
 
-int QemuVmController::unplug_dvd() {
+void QemuVmController::unplug_dvd() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
@@ -1119,38 +1133,32 @@ int QemuVmController::unplug_dvd() {
 		}
 
 		domain.update_device(cdrom, flags);
-
-		return 0;
 	} catch (const std::string& error) {
-		std::cout << "Unplugging dvd from vm " << name() << ": Error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error("Unplugging dvd"));
 	}
 
 }
 
-int QemuVmController::start() {
+void QemuVmController::start() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		domain.start();
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Starting vm " << name() << ": " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error("Starting vm"));
 	}
 }
 
-int QemuVmController::stop() {
+void QemuVmController::stop() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		domain.stop();
-		return 0;
 	}
 	catch (const std::exception& error) {
-		return -1;
+		std::throw_with_nested(std::runtime_error("Stopping vm"));
 	}
 }
 
-int QemuVmController::type(const std::string& text) {
+void QemuVmController::type(const std::string& text) {
 	try {
 		for (auto c: text) {
 			auto buttons = charmap.find(c);
@@ -1160,17 +1168,13 @@ int QemuVmController::type(const std::string& text) {
 
 			press(buttons->second);
 		}
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Typing on vm " << name() << ": " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(fmt::format("Typing {}", text)));
 	}
-
-	return 0;
 }
 
-int QemuVmController::wait(const std::string& text, const std::string& time) {
-	return 0;
+bool QemuVmController::wait(const std::string& text, const std::string& time) {
+	return true;
 }
 
 int QemuVmController::run(const fs::path& exe, std::vector<std::string> args) {
@@ -1186,20 +1190,23 @@ int QemuVmController::run(const fs::path& exe, std::vector<std::string> args) {
 
 		return helper.execute(command);
 	} catch (const std::exception& error) {
-		std::cout << "Run guest process error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error("Run guest process"));
 	}
 }
 
 bool QemuVmController::has_snapshot(const std::string& snapshot) {
-	auto domain = qemu_connect.domain_lookup_by_name(name());
-	auto snapshots = domain.snapshots();
-	for (auto& snap: snapshots) {
-		if (snap.name() == snapshot) {
-			return true;
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto snapshots = domain.snapshots();
+		for (auto& snap: snapshots) {
+			if (snap.name() == snapshot) {
+				return true;
+			}
 		}
+		return false;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking whether vm has snapshot {}", snapshot)));
 	}
-	return false;
 }
 
 bool QemuVmController::is_defined() const {
@@ -1218,8 +1225,7 @@ bool QemuVmController::is_running() {
 		return domain.is_active();
 	}
 	catch (const std::exception& error) {
-		std::cout << "Checking whether vm " << name() << " is running error : " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
 	}
 }
 
@@ -1229,13 +1235,12 @@ bool QemuVmController::is_additions_installed() {
 		Negotiator helper(domain);
 		return helper.is_avaliable();
 	} catch (const std::exception& error) {
-		std::cout << "Checking whether vm " << name() << " has negotiator : " << error << std::endl;
 		return false;
 	}
 }
 
 
-int QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
+void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -1246,117 +1251,136 @@ int QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 		Negotiator helper(domain);
 
 		helper.copy_to_guest(src, dst);
-		return 0;
 	} catch (const std::exception& error) {
-		std::cout << "Copying file(s) to the guest " << name() << " : error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
 	}
 }
 
-int QemuVmController::remove_from_guest(const fs::path& obj) {
-	return 0;
+void QemuVmController::remove_from_guest(const fs::path& obj) {
+	//TODO!!
 }
 
 void QemuVmController::prepare_networks() {
-	if (config.count("nic")) {
-		auto nics = config.at("nic");
-		for (auto& nic: nics) {
-			std::string network_to_lookup;
-			if (nic.at("attached_to").get<std::string>() == "nat") {
-				network_to_lookup = "testo-nat";
-			}
+	try {
+		if (config.count("nic")) {
+			auto nics = config.at("nic");
+			for (auto& nic: nics) {
+				std::string network_to_lookup;
+				if (nic.at("attached_to").get<std::string>() == "nat") {
+					network_to_lookup = "testo-nat";
+				}
 
-			if (nic.at("attached_to").get<std::string>() == "internal") {
-				network_to_lookup = std::string("testo-") + nic.at("network").get<std::string>();
-			}
+				if (nic.at("attached_to").get<std::string>() == "internal") {
+					network_to_lookup = std::string("testo-") + nic.at("network").get<std::string>();
+				}
 
-			bool found = false;
-			for (auto& network: qemu_connect.networks()) {
-				if (network.name() == network_to_lookup) {
-					if (!network.is_active()) {
-						network.start();
+				bool found = false;
+				for (auto& network: qemu_connect.networks()) {
+					if (network.name() == network_to_lookup) {
+						if (!network.is_active()) {
+							network.start();
+						}
+						found = true;
+						break;
 					}
-					found = true;
-					break;
-				}
-			}
-
-			if (!found) {
-				std::string string_config = fmt::format(R"(
-					<network>
-						<name>{}</name>
-						<bridge name="{}"/>
-				)", network_to_lookup, network_to_lookup);
-
-				if (network_to_lookup == "testo-nat") {
-					string_config += fmt::format(R"(
-						<forward mode='nat'>
-							<nat>
-								<port start='1024' end='65535'/>
-							</nat>
-						</forward>
-						<ip address='192.168.156.1' netmask='255.255.255.0'>
-							<dhcp>
-								<range start='192.168.156.2' end='192.168.156.254'/>
-							</dhcp>
-						</ip>
-					)");
 				}
 
-				string_config += "\n</network>";
-				pugi::xml_document xml_config;
-				xml_config.load_string(string_config.c_str());
-				auto network = qemu_connect.network_define_xml(xml_config);
-				network.start();
+				if (!found) {
+					std::string string_config = fmt::format(R"(
+						<network>
+							<name>{}</name>
+							<bridge name="{}"/>
+					)", network_to_lookup, network_to_lookup);
+
+					if (network_to_lookup == "testo-nat") {
+						string_config += fmt::format(R"(
+							<forward mode='nat'>
+								<nat>
+									<port start='1024' end='65535'/>
+								</nat>
+							</forward>
+							<ip address='192.168.156.1' netmask='255.255.255.0'>
+								<dhcp>
+									<range start='192.168.156.2' end='192.168.156.254'/>
+								</dhcp>
+							</ip>
+						)");
+					}
+
+					string_config += "\n</network>";
+					pugi::xml_document xml_config;
+					xml_config.load_string(string_config.c_str());
+					auto network = qemu_connect.network_define_xml(xml_config);
+					network.start();
+				}
 			}
 		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Preparing netowkrs"));
 	}
+
 }
 
-void QemuVmController::remove_disks(const pugi::xml_document& config) {
-	auto devices = config.first_child().child("devices");
-	for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-		if (std::string(disk.attribute("device").value()) == "disk") {
-			fs::path disk_path(disk.child("source").attribute("file").value());
-			auto storage_volume = qemu_connect.storage_volume_lookup_by_path(disk_path);
-			std::cout << "Erasing disk " << disk_path.generic_string() << std::endl;
-			storage_volume.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
+void QemuVmController::remove_disk() {
+	try {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+
+		auto vol_name = name() + ".img";
+
+		for (auto& vol: pool.volumes()) {
+			if (vol.name() == vol_name) {
+				vol.erase();
+				break;
+			}
 		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Removing existing disks"));
 	}
+
 }
 
-void QemuVmController::create_disks() {
-	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-	pugi::xml_document xml_config;
-	xml_config.load_string(fmt::format(R"(
-		<volume type='file'>
-			<name>{}.img</name>
-			<source>
-			</source>
-			<capacity unit='M'>{}</capacity>
-			<target>
-				<path>{}/{}.img</path>
-				<format type='qcow2'/>
-				<permissions>
-				</permissions>
-				<timestamps>
-				</timestamps>
-				<compat>1.1</compat>
-				<features>
-					<lazy_refcounts/>
-				</features>
-			</target>
-		</volume>
-	)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name()).c_str());
+void QemuVmController::create_disk() {
+	try {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+		pugi::xml_document xml_config;
+		xml_config.load_string(fmt::format(R"(
+			<volume type='file'>
+				<name>{}.img</name>
+				<source>
+				</source>
+				<capacity unit='M'>{}</capacity>
+				<target>
+					<path>{}/{}.img</path>
+					<format type='qcow2'/>
+					<permissions>
+					</permissions>
+					<timestamps>
+					</timestamps>
+					<compat>1.1</compat>
+					<features>
+						<lazy_refcounts/>
+					</features>
+				</target>
+			</volume>
+		)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name()).c_str());
 
-	auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Creating disks"));
+	}
+
 }
 
 void QemuVmController::delete_snapshot_with_children(vir::Snapshot& snapshot) {
-	auto children = snapshot.children();
+	try {
+		auto children = snapshot.children();
 
-	for (auto& snap: children) {
-		delete_snapshot_with_children(snap);
+		for (auto& snap: children) {
+			delete_snapshot_with_children(snap);
+		}
+		snapshot.destroy();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Deleting snapshot with children"));
 	}
-	snapshot.destroy();
+
 }

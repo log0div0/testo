@@ -10,11 +10,11 @@ struct VboxFlashDriveController: FlashDriveController {
 	VboxFlashDriveController() = delete;
 	VboxFlashDriveController(const VboxFlashDriveController& other) = delete;
 	VboxFlashDriveController(const nlohmann::json& config);
-	int create() override;
+	void create() override;
 	bool is_mounted() const override;
-	int mount() const override;
-	int umount() const override;
-	int load_folder() const override;
+	void mount() const override;
+	void umount() const override;
+	void load_folder() const override;
 
 	fs::path img_path() const override {
 		auto res = flash_drives_img_dir();

@@ -5,6 +5,27 @@
 #include "Register.hpp"
 
 struct VisitorInterpreter {
+	struct InterpreterException: public std::runtime_error {
+		explicit InterpreterException(std::shared_ptr<AST::Node> node, std::shared_ptr<VmController> vm):
+			std::runtime_error(""), node(node), vm(vm)
+		{
+			msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node) + " ";
+			if (vm) {
+				msg += "on vm ";
+				msg += vm->name();
+			}
+		}
+
+		const char* what() const noexcept override {
+			return msg.c_str();
+		}
+
+	private:
+		std::string msg;
+		std::shared_ptr<AST::Node> node;
+		std::shared_ptr<VmController> vm;
+	};
+
 	VisitorInterpreter(Register& reg):
 		reg(reg) {}
 
