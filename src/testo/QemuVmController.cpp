@@ -273,8 +273,7 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 
 QemuVmController::~QemuVmController() {
 	if (!is_defined()) {
-		//remove_disks();
-		//TODO: remove possibly created disks
+		remove_disk();
 	}
 }
 
@@ -384,11 +383,12 @@ void QemuVmController::install() {
 			auto xml = domain.dump_xml();
 
 			domain.undefine();
-			remove_disks(xml);
 		}
 
+		remove_disk();
+
 		//now create disks
-		create_disks();
+		create_disk();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 		fs::path volume_path = pool.path() / (name() + ".img");
@@ -1321,15 +1321,16 @@ void QemuVmController::prepare_networks() {
 
 }
 
-void QemuVmController::remove_disks(const pugi::xml_document& config) {
+void QemuVmController::remove_disk() {
 	try {
-		auto devices = config.first_child().child("devices");
-		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-			if (std::string(disk.attribute("device").value()) == "disk") {
-				fs::path disk_path(disk.child("source").attribute("file").value());
-				auto storage_volume = qemu_connect.storage_volume_lookup_by_path(disk_path);
-				std::cout << "Erasing disk " << disk_path.generic_string() << std::endl;
-				storage_volume.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+
+		auto vol_name = name() + ".img";
+
+		for (auto& vol: pool.volumes()) {
+			if (vol.name() == vol_name) {
+				vol.erase();
+				break;
 			}
 		}
 	} catch (const std::exception& error) {
@@ -1338,7 +1339,7 @@ void QemuVmController::remove_disks(const pugi::xml_document& config) {
 
 }
 
-void QemuVmController::create_disks() {
+void QemuVmController::create_disk() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 		pugi::xml_document xml_config;

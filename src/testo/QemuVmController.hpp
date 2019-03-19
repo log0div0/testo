@@ -57,8 +57,8 @@ struct QemuVmController: public VmController {
 
 private:
 	void prepare_networks();
-	void remove_disks(const pugi::xml_document& config);
-	void create_disks();
+	void remove_disk();
+	void create_disk();
 
 	void delete_snapshot_with_children(vir::Snapshot& snapshot);
 
