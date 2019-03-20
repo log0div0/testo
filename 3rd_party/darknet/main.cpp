@@ -202,7 +202,6 @@ void test()
 }
 
 enum Mode {
-	Help,
 	Train,
 	Test
 };
@@ -217,8 +216,7 @@ int main(int argc, char **argv)
 		srand(time(0));
 
 		auto cli = (
-			command("help").set(mode, Help)
-			| ( command("train").set(mode, Train),
+			( command("train").set(mode, Train),
 				value("network", network_file),
 				value("dataset", dataset_file),
 				option("-i", "--input") & value("input weights", input_file),
@@ -232,8 +230,8 @@ int main(int argc, char **argv)
 				command("test").set(mode, Test),
 				value("network", network_file),
 				value("weights", weights_file),
-				value("input", input_file),
-				option("-o", "--output") & value("output file", output_file),
+				value("input image", input_file),
+				option("-o", "--output") & value("output image", output_file),
 	#ifdef GPU
 				option("--nogpu").set(nogpu),
 	#endif
@@ -247,9 +245,6 @@ int main(int argc, char **argv)
 		}
 
 		switch (mode) {
-			case Help:
-				std::cout << make_man_page(cli, argv[0]) << std::endl;
-				break;
 			case Train:
 	#ifdef GPU
 				if (!gpus.size()) {

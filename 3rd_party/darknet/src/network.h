@@ -5,7 +5,6 @@
 
 #include "image.h"
 #include "layer.h"
-#include "tree.h"
 
 
 #ifdef GPU

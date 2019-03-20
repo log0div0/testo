@@ -194,3 +194,17 @@ void print_matrix(matrix m)
     for(j = 0; j < 16*m.cols-1; ++j) printf(" ");
     printf("__|\n");
 }
+
+void transpose_matrix(float *a, int rows, int cols)
+{
+    float *transpose = calloc(rows*cols, sizeof(float));
+    int x, y;
+    for(x = 0; x < rows; ++x){
+        for(y = 0; y < cols; ++y){
+            transpose[y*rows + x] = a[x*cols + y];
+        }
+    }
+    memcpy(a, transpose, rows*cols*sizeof(float));
+    free(transpose);
+}
+

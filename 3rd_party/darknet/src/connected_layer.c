@@ -119,8 +119,8 @@ layer make_connected_layer(int batch, int inputs, int outputs, ACTIVATION activa
 #ifdef CUDNN
         cudnnCreateTensorDescriptor(&l.normTensorDesc);
         cudnnCreateTensorDescriptor(&l.dstTensorDesc);
-        cudnnSetTensor4dDescriptor(l.dstTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, l.batch, l.out_c, l.out_h, l.out_w); 
-        cudnnSetTensor4dDescriptor(l.normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l.out_c, 1, 1); 
+        cudnnSetTensor4dDescriptor(l.dstTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, l.batch, l.out_c, l.out_h, l.out_w);
+        cudnnSetTensor4dDescriptor(l.normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l.out_c, 1, 1);
 #endif
     }
 #endif
@@ -334,3 +334,43 @@ void backward_connected_layer_gpu(layer l, network net)
     if(c) gemm_gpu(0,0,m,n,k,1,a,k,b,n,1,c,n);
 }
 #endif
+
+void save_connected_weights(layer l, FILE *fp)
+{
+#ifdef GPU
+    if(gpu_index >= 0){
+        pull_connected_layer(l);
+    }
+#endif
+    fwrite(l.biases, sizeof(float), l.outputs, fp);
+    fwrite(l.weights, sizeof(float), l.outputs*l.inputs, fp);
+    if (l.batch_normalize){
+        fwrite(l.scales, sizeof(float), l.outputs, fp);
+        fwrite(l.rolling_mean, sizeof(float), l.outputs, fp);
+        fwrite(l.rolling_variance, sizeof(float), l.outputs, fp);
+    }
+}
+
+void load_connected_weights(layer l, FILE *fp, int transpose)
+{
+    fread(l.biases, sizeof(float), l.outputs, fp);
+    fread(l.weights, sizeof(float), l.outputs*l.inputs, fp);
+    if(transpose){
+        transpose_matrix(l.weights, l.inputs, l.outputs);
+    }
+    //printf("Biases: %f mean %f variance\n", mean_array(l.biases, l.outputs), variance_array(l.biases, l.outputs));
+    //printf("Weights: %f mean %f variance\n", mean_array(l.weights, l.outputs*l.inputs), variance_array(l.weights, l.outputs*l.inputs));
+    if (l.batch_normalize && (!l.dontloadscales)){
+        fread(l.scales, sizeof(float), l.outputs, fp);
+        fread(l.rolling_mean, sizeof(float), l.outputs, fp);
+        fread(l.rolling_variance, sizeof(float), l.outputs, fp);
+        //printf("Scales: %f mean %f variance\n", mean_array(l.scales, l.outputs), variance_array(l.scales, l.outputs));
+        //printf("rolling_mean: %f mean %f variance\n", mean_array(l.rolling_mean, l.outputs), variance_array(l.rolling_mean, l.outputs));
+        //printf("rolling_variance: %f mean %f variance\n", mean_array(l.rolling_variance, l.outputs), variance_array(l.rolling_variance, l.outputs));
+    }
+#ifdef GPU
+    if(gpu_index >= 0){
+        push_connected_layer(l);
+    }
+#endif
+}

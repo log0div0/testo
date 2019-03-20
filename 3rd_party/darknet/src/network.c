@@ -13,7 +13,6 @@
 #include "maxpool_layer.h"
 #include "cost_layer.h"
 #include "softmax_layer.h"
-#include "parser.h"
 
 network *load_network(char *cfg, char *weights, int clear)
 {
@@ -1054,3 +1053,92 @@ void pull_network_output(network *net)
 }
 
 #endif
+
+void save_weights_upto(network *net, char *filename, int cutoff)
+{
+#ifdef GPU
+    if(net->gpu_index >= 0){
+        cuda_set_device(net->gpu_index);
+    }
+#endif
+    fprintf(stderr, "Saving weights to %s\n", filename);
+    FILE *fp = fopen(filename, "wb");
+    if(!fp) file_error(filename);
+
+    int major = 0;
+    int minor = 2;
+    int revision = 0;
+    fwrite(&major, sizeof(int), 1, fp);
+    fwrite(&minor, sizeof(int), 1, fp);
+    fwrite(&revision, sizeof(int), 1, fp);
+    fwrite(net->seen, sizeof(size_t), 1, fp);
+
+    int i;
+    for(i = 0; i < net->n && i < cutoff; ++i){
+        layer l = net->layers[i];
+        if (l.dontsave) continue;
+        if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+            save_convolutional_weights(l, fp);
+        } if(l.type == CONNECTED){
+            save_connected_weights(l, fp);
+        } if(l.type == BATCHNORM){
+            save_batchnorm_weights(l, fp);
+        }
+    }
+    fclose(fp);
+}
+void save_weights(network *net, char *filename)
+{
+    save_weights_upto(net, filename, net->n);
+}
+
+void load_weights_upto(network *net, char *filename, int start, int cutoff)
+{
+#ifdef GPU
+    if(net->gpu_index >= 0){
+        cuda_set_device(net->gpu_index);
+    }
+#endif
+    fprintf(stderr, "Loading weights from %s...", filename);
+    fflush(stdout);
+    FILE *fp = fopen(filename, "rb");
+    if(!fp) file_error(filename);
+
+    int major;
+    int minor;
+    int revision;
+    fread(&major, sizeof(int), 1, fp);
+    fread(&minor, sizeof(int), 1, fp);
+    fread(&revision, sizeof(int), 1, fp);
+    if ((major*10 + minor) >= 2 && major < 1000 && minor < 1000){
+        fread(net->seen, sizeof(size_t), 1, fp);
+    } else {
+        int iseen = 0;
+        fread(&iseen, sizeof(int), 1, fp);
+        *net->seen = iseen;
+    }
+    int transpose = (major > 1000) || (minor > 1000);
+
+    int i;
+    for(i = start; i < net->n && i < cutoff; ++i){
+        layer l = net->layers[i];
+        if (l.dontload) continue;
+        if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+            load_convolutional_weights(l, fp);
+        }
+        if(l.type == CONNECTED){
+            load_connected_weights(l, fp, transpose);
+        }
+        if(l.type == BATCHNORM){
+            load_batchnorm_weights(l, fp);
+        }
+    }
+    fprintf(stderr, "Done!\n");
+    fclose(fp);
+}
+
+void load_weights(network *net, char *filename)
+{
+    load_weights_upto(net, filename, 0, net->n);
+}
+
