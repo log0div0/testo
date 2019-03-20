@@ -72,4 +72,25 @@ struct VisitorInterpreter {
 	std::string cksum(std::shared_ptr<AST::Controller> controller);
 
 	Register& reg;
+
+private:
+	template <typename... Args>
+	void print(Args... args) {
+		std::cout << "[";
+		std::cout << std::setw(3);
+		std::cout << current_progress;
+		std::cout << std::setw(0);
+		std::cout << "\%] ";
+		(std::cout << ... << args);
+		std::cout << std::endl;
+	}
+
+	void setup_progress_vars(std::shared_ptr<AST::Program> program);
+	void update_progress();
+
+	uint16_t current_progress = 0;
+	uint16_t progress_step = 0;
+	uint16_t original_remainder = 0;
+	uint16_t current_remainder = 0;
+	uint32_t tests_num = 0;
 };
