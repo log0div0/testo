@@ -39,8 +39,8 @@ snapshot dummy2: dummy {
 
 test dummy: buwaha(dummy2)
 {
-	buwaha exec bash "ping -c20 192.168.156.10"
-	#buwaha wait for 30s
+	#buwaha exec bash "ping -c20 192.168.156.10"
+	buwaha wait for 3s
 	#buwaha unplug flash dummy_flash
 	#buwaha stop
 	#buwaha unplug nic master_side
@@ -50,3 +50,32 @@ test dummy: buwaha(dummy2)
 	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
 	#buwaha plug link master_side
 }
+
+test dummy2: buwaha(dummy2)
+{
+	#buwaha exec bash "ping -c20 192.168.156.10"
+	buwaha wait for 3s
+	#buwaha unplug flash dummy_flash
+	#buwaha stop
+	#buwaha unplug nic master_side
+	#buwaha start
+	#buwaha set puchacha="AHAHASUCHKA"
+	#buwaha unplug dvd
+	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
+	#buwaha plug link master_side
+}
+
+test dummy3: buwaha(dummy2)
+{
+	#buwaha exec bash "ping -c20 192.168.156.10"
+	buwaha wait for 3s
+	#buwaha unplug flash dummy_flash
+	#buwaha stop
+	#buwaha unplug nic master_side
+	#buwaha start
+	#buwaha set puchacha="AHAHASUCHKA"
+	#buwaha unplug dvd
+	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
+	#buwaha plug link master_side
+}
+

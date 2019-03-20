@@ -23,8 +23,38 @@ static void sleep(const std::string& interval) {
 	std::this_thread::sleep_for(std::chrono::seconds(seconds_to_sleep));
 }
 
+void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
+	for (auto stmt: program->stmts) {
+		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
+			tests_num++;
+		}
+	}
+
+	if (tests_num != 0) {
+		progress_step = 100 / tests_num;
+		original_remainder = 100 % tests_num;
+		current_remainder = original_remainder;
+	} else {
+		progress_step = 100;
+	}
+
+}
+
+void VisitorInterpreter::update_progress() {
+	current_progress += progress_step;
+	if (original_remainder != 0) {
+		if ((current_remainder / tests_num) > 0) {
+			current_remainder = current_remainder / tests_num;
+			current_progress++;
+		}
+		current_remainder += original_remainder;
+	}
+}
+
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	try {
+		setup_progress_vars(program);
+
 		for (auto stmt: program->stmts) {
 			visit_stmt(stmt);
 		}
@@ -50,14 +80,14 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	try {
-		std::cout << "Creating flash drive " << flash->name.value() << std::endl;
+		print("Creating flash drive \"", flash->name.value());
 
 		auto fd = reg.fds.find(flash->name)->second; //should always be found
 
 		fd->create();
 
 		if (fd->has_folder()) {
-			std::cout << "Loading folder to flash drive " << fd->name() << std::endl;
+			print("Loading folder to flash drive \"", fd->name());
 			fd->load_folder();
 		}
 	} catch (const std::exception& error) {
@@ -68,7 +98,7 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 	try {
-		std::cout << "Running test \"" << test->name.value() << "\"...\n";
+		print("Running test \"", test->name.value(), "\"...");
 
 		for (auto state: test->vms) {
 			visit_vm_state(state);
@@ -100,7 +130,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		reg.local_vms.clear();
 
-		std::cout << "Test \"" << test->name.value() << "\" passed\n";
+		update_progress();
+		print("Test \"", test->name.value(), "\" passed");
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;
 	}
@@ -187,7 +218,7 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::shared_ptr<Type> type) {
 	try {
 		std::string text = visit_word(vm, type->text_word);
-		std::cout << "Typing " << text << " on vm " << vm->name() << std::endl;
+		print("Typing ", text, " on vm ", vm->name());
 		vm->type(text);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(type, vm));
@@ -201,12 +232,12 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::share
 			text = visit_word(vm, wait->text_word);
 		}
 
-		std::cout << "Waiting " << text << " on vm " << vm->name();
+		std::string print_str = std::string("Waiting ") + text + " on vm " + vm->name();
 		if (wait->time_interval) {
-			std::cout << " for " << wait->time_interval.value();
+			print_str += " for " + wait->time_interval.value();
 		}
 
-		std::cout << std::endl;
+		print(print_str);
 
 		if (!wait->text_word) {
 			return sleep(wait->time_interval.value());
@@ -235,13 +266,13 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vm, std::shar
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vm, std::shared_ptr<KeySpec> key_spec) {
 	uint32_t times = key_spec->get_times();
 
-	std::cout << "Pressing button " << key_spec->get_buttons_str();
+	std::string print_str = std::string("Pressing button ") + key_spec->get_buttons_str();
 
 	if (times > 1) {
-		std::cout << " for " << times << " times ";
+		print_str += std::string(" ") + std::to_string(times) + " times ";
 	}
 
-	std::cout << " on vm " << vm->name() << std::endl;
+	print_str += std::string(" on vm ") + vm->name();
 
 	for (uint32_t i = 0; i < times; i++) {
 		vm->press(key_spec->get_buttons());
@@ -293,7 +324,7 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " nic " << nic << " on vm " << vm->name() << std::endl;
+	print(plug_unplug, " nic ", nic, " on vm ", vm->name());
 
 	vm->set_nic(nic, plug->is_on());
 }
@@ -321,14 +352,14 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	std::cout << plug_unplug << " link " << nic << " on vm " << vm->name() << std::endl;
+	print(plug_unplug, " link ", nic, " on vm ", vm->name());
 
 	vm->set_link(nic, plug->is_on());
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	std::cout << "Plugging flash drive " << fd->name() << " in vm " << vm->name() << std::endl;
+	print("Plugging flash drive ", fd->name(), " in vm ", vm->name());
 	if (vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this vm", fd->name()));
 	}
@@ -338,7 +369,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	std::cout << "Unplugging flash drive " << fd->name() << " from vm " << vm->name() << std::endl;
+	print("Unlugging flash drive ", fd->name(), " from vm ", vm->name());
 	if (!vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this vm", fd->name()));
 	}
@@ -353,21 +384,21 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::s
 		}
 
 		auto path = visit_word(vm, plug->path);
-		std::cout << "Plugging dvd " << path << " in vm " << vm->name() << std::endl;
+		print("Plugging dvd ", path, " in vm ", vm->name());
 		vm->plug_dvd(path);
 	} else {
 		if (!vm->is_dvd_plugged()) {
 			throw std::runtime_error(fmt::format("dvd is already unplugged"));
 		}
 
-		std::cout << "Unlugging dvd from vm " << vm->name() << std::endl;
+		print("Plugging dvd from vm ", vm->name());
 		vm->unplug_dvd();
 	}
 }
 
 void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vm, std::shared_ptr<Start> start) {
 	try {
-		std::cout << "Starting vm " << vm->name() << std::endl;
+		print("Starting vm ", vm->name());
 		vm->start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(start, vm));
@@ -376,7 +407,7 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vm, std::shar
 
 void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::shared_ptr<Stop> stop) {
 	try {
-		std::cout << "Stopping vm " << vm->name() << std::endl;
+		print("Stopping vm ", vm->name());
 		vm->stop();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(stop, vm));
@@ -387,7 +418,7 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {
 	try {
-		std::cout << "Executing  " << exec->process_token.value() << " command on vm " << vm->name() << std::endl;
+		print("Executing ", exec->process_token.value(), " command on vm ", vm->name());
 
 		if (!vm->is_running()) {
 			throw std::runtime_error(fmt::format("vm is not running"));
@@ -440,7 +471,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 
 void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<Set> set) {
 	try {
-		std::cout << "Setting attributes on vm " << vm->name() << std::endl;
+		print("Setting attributes on vm ", vm->name());
 
 		//1) Let's check all the assignments so that we know we don't override any values
 
@@ -466,7 +497,7 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 		auto from = visit_word(vm, copyto->from);
 		auto to = visit_word(vm, copyto->to);
 
-		std::cout << "Copying " << from << " to vm " << vm->name() << " in directory " << to << std::endl;
+		print("Copying ", from, " to vm ", vm->name(), " in directory ", to);
 
 		if (!vm->is_running()) {
 			throw std::runtime_error(fmt::format("vm is not running"));
@@ -484,7 +515,7 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 }
 
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
-	std::cout << "Calling macro " << macro_call->name().value() << " on vm " << vm->name() << std::endl;
+	print("Calling macro ", macro_call->name().value(), " on vm ", vm->name());
 	visit_action_block(vm, macro_call->macro->action_block->action);
 }
 
@@ -544,7 +575,7 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, co
 	//2) reg (todo)
 	//3) env var
 
-	std::cout << "Resolving var " << var << std::endl;
+	print("Resolving var ", var);
 
 	if (vm->has_key(var)) {
 		return vm->get_metadata(var);
@@ -627,10 +658,10 @@ void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::sh
 		}
 	}
 
-	std::cout << "Applying snapshot " << snapshot->name.value() << " to vm " << vm->name() << std::endl;
+	print("Applying snapshot ", snapshot->name.value(), " to vm ", vm->name());
 	visit_action_block(vm, snapshot->action_block->action);
 	auto new_cksum = snapshot_cksum(vm, snapshot);
-	std::cout << "Taking snapshot " << snapshot->name.value() << " for vm " << vm->name() << std::endl;
+	print("Taking snapshot ", snapshot->name.value(), " for vm ", vm->name());
 	vm->make_snapshot(snapshot->name, new_cksum);
 }
 
