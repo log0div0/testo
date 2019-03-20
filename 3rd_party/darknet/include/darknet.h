@@ -502,23 +502,8 @@ typedef struct{
 } box_label;
 
 
-network *load_network(char *cfg, char *weights, int clear);
-
 void free_data(data d);
 
-typedef struct node{
-    void *val;
-    struct node *next;
-    struct node *prev;
-} node;
-
-typedef struct list{
-    int size;
-    node *front;
-    node *back;
-} list;
-
-list *read_cfg(char *filename);
 unsigned char *read_file(char *filename);
 
 void forward_network(network *net);
@@ -585,11 +570,6 @@ image *get_weights(layer l);
 
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int frame_skip, char *prefix, int avg, float hier_thresh, int w, int h, int fps, int fullscreen);
 
-char *option_find_str(list *l, char *key, char *def);
-int option_find_int(list *l, char *key, int def);
-int option_find_int_quiet(list *l, char *key, int def);
-
-network *parse_network_cfg(char *filename);
 void save_weights(network *net, char *filename);
 void load_weights(network *net, char *filename);
 void save_weights_upto(network *net, char *filename, int cutoff);
@@ -654,7 +634,6 @@ matrix make_matrix(int rows, int cols);
 
 void free_image(image m);
 float train_network(network *net, data d);
-list *get_paths(char *filename);
 void hierarchy_predictions(float *predictions, int n, tree *hier, int only_leaves, int stride);
 
 int find_int_arg(int argc, char **argv, char *arg, int def);
@@ -667,7 +646,6 @@ void free_ptrs(void **ptrs, int n);
 char *fgetl(FILE *fp);
 void strip(char *s);
 float sec(clock_t clocks);
-void **list_to_array(list *l);
 void top_k(float *a, int n, int k, int *index);
 int *read_map(char *filename);
 void error(const char *s);
@@ -675,7 +653,6 @@ int max_index(float *a, int n);
 int max_int_index(int *a, int n);
 int sample_array(float *a, int n);
 int *random_index_order(int min, int max);
-void free_list(list *l);
 float mse_array(float *a, int n);
 float variance_array(float *a, int n);
 float mag_array(float *a, int n);
@@ -683,7 +660,6 @@ void scale_array(float *a, int n, float s);
 float mean_array(float *a, int n);
 float sum_array(float *a, int n);
 void normalize_array(float *a, int n);
-int *read_intlist(char *s, int *n, int d);
 size_t rand_size_t();
 float rand_normal();
 float rand_uniform(float min, float max);

@@ -8,7 +8,7 @@
 
 namespace darknet {
 
-struct Network {
+struct Network: network {
 	Network(const std::string& config_file_path);
 	~Network();
 
@@ -24,18 +24,16 @@ struct Network {
 	float* predict(const Image& image);
 
 	const layer& back() const {
-		return impl->layers[impl->n-1];
+		return layers[n-1];
 	}
 
 	size_t width() const {
-		return impl->w;
+		return w;
 	}
 
 	size_t height() const {
-		return impl->h;
+		return h;
 	}
-
-	network* impl = nullptr;
 
 private:
 	float* forward(float* input);

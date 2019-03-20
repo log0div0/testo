@@ -11,51 +11,6 @@
 
 #include "utils.h"
 
-
-/*
-// old timing. is it better? who knows!!
-double get_wall_time()
-{
-    struct timeval time;
-    if (gettimeofday(&time,NULL)){
-        return 0;
-    }
-    return (double)time.tv_sec + (double)time.tv_usec * .000001;
-}
-*/
-
-double what_time_is_it_now()
-{
-    struct timeval time;
-    if (gettimeofday(&time,NULL)){
-        return 0;
-    }
-    return (double)time.tv_sec + (double)time.tv_usec * .000001;
-}
-
-int *read_intlist(char *gpu_list, int *ngpus, int d)
-{
-    int *gpus = 0;
-    if(gpu_list){
-        int len = strlen(gpu_list);
-        *ngpus = 1;
-        int i;
-        for(i = 0; i < len; ++i){
-            if (gpu_list[i] == ',') ++*ngpus;
-        }
-        gpus = calloc(*ngpus, sizeof(int));
-        for(i = 0; i < *ngpus; ++i){
-            gpus[i] = atoi(gpu_list);
-            gpu_list = strchr(gpu_list, ',')+1;
-        }
-    } else {
-        gpus = calloc(1, sizeof(float));
-        *gpus = d;
-        *ngpus = 1;
-    }
-    return gpus;
-}
-
 int *read_map(char *filename)
 {
     int n = 0;
@@ -262,9 +217,9 @@ unsigned char *read_file(char *filename)
     FILE *fp = fopen(filename, "rb");
     size_t size;
 
-    fseek(fp, 0, SEEK_END); 
+    fseek(fp, 0, SEEK_END);
     size = ftell(fp);
-    fseek(fp, 0, SEEK_SET); 
+    fseek(fp, 0, SEEK_SET);
 
     unsigned char *text = calloc(size+1, sizeof(char));
     fread(text, 1, size, fp);
@@ -282,21 +237,6 @@ void file_error(char *s)
 {
     fprintf(stderr, "Couldn't open file: %s\n", s);
     exit(0);
-}
-
-list *split_str(char *s, char delim)
-{
-    size_t i;
-    size_t len = strlen(s);
-    list *l = make_list();
-    list_insert(l, s);
-    for(i = 0; i < len; ++i){
-        if(s[i] == delim){
-            s[i] = '\0';
-            list_insert(l, &(s[i+1]));
-        }
-    }
-    return l;
 }
 
 void strip(char *s)
@@ -425,23 +365,6 @@ char *copy_string(char *s)
     char *copy = malloc(strlen(s)+1);
     strncpy(copy, s, strlen(s)+1);
     return copy;
-}
-
-list *parse_csv_line(char *line)
-{
-    list *l = make_list();
-    char *c, *p;
-    int in = 0;
-    for(c = line, p = line; *c != '\0'; ++c){
-        if(*c == '"') in = !in;
-        else if(*c == ',' && !in){
-            *c = '\0';
-            list_insert(l, copy_string(p));
-            p = c+1;
-        }
-    }
-    list_insert(l, copy_string(p));
-    return l;
 }
 
 int count_fields(char *line)
@@ -576,7 +499,7 @@ float mag_array(float *a, int n)
     int i;
     float sum = 0;
     for(i = 0; i < n; ++i){
-        sum += a[i]*a[i];   
+        sum += a[i]*a[i];
     }
     return sqrt(sum);
 }
@@ -685,7 +608,7 @@ float rand_normal()
 
 size_t rand_size_t()
 {
-    return  ((size_t)(rand()&0xff) << 56) | 
+    return  ((size_t)(rand()&0xff) << 56) |
         ((size_t)(rand()&0xff) << 48) |
         ((size_t)(rand()&0xff) << 40) |
         ((size_t)(rand()&0xff) << 32) |

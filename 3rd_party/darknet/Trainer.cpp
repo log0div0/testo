@@ -19,8 +19,8 @@ Trainer::Trainer(const std::string& network_file, const std::string& dataset_fil
 		cuda_set_device(gpu);
 		srand(seed);
 		networks.push_back(Network(network_file));
-		networks.back().impl->gpu_index = gpu;
-		networks.back().impl->learning_rate *= gpus.size();
+		networks.back().gpu_index = gpu;
+		networks.back().learning_rate *= gpus.size();
 	}
 #endif
 }
@@ -58,7 +58,7 @@ void Trainer::save_weights(const std::string& weights_file_path) {
 
 float Trainer::train() {
 #ifdef GPU
-	Data data = dataset.load(networks.at(0).impl->batch * networks.size());
+	Data data = dataset.load(networks.at(0).batch * networks.size());
 	if (networks.size() == 1) {
 		return train_network(networks.back().impl, data);
 	} else {
@@ -69,16 +69,16 @@ float Trainer::train() {
 		return ::train_networks(n.data(), n.size(), data, 4);
 	}
 #else
-	Data data = dataset.load(network.impl->batch);
-	return train_network(network.impl, data);
+	Data data = dataset.load(network.batch);
+	return train_network(&network, data);
 #endif
 }
 
 size_t Trainer::current_batch() const {
 #ifdef GPU
-	return get_current_batch(networks.at(0).impl);
+	return get_current_batch((struct network*)&networks.at(0));
 #else
-	return get_current_batch(network.impl);
+	return get_current_batch((struct network*)&network);
 #endif
 }
 

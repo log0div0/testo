@@ -3,18 +3,9 @@
 #include <stdio.h>
 #include <time.h>
 #include "darknet.h"
-#include "list.h"
-
-#define TIME(a) \
-    do { \
-    double start = what_time_is_it_now(); \
-    a; \
-    printf("%s took: %f seconds\n", #a, what_time_is_it_now() - start); \
-    } while (0)
 
 #define TWO_PI 6.2831853071795864769252866f
 
-double what_time_is_it_now();
 void shuffle(char *arr, size_t n, size_t size);
 void sorta_shuffle(char *arr, size_t n, size_t size, size_t sections);
 void free_ptrs(void **ptrs, int n);
@@ -31,9 +22,7 @@ void malloc_error();
 void file_error(char *s);
 void strip(char *s);
 void strip_char(char *s, char bad);
-list *split_str(char *s, char delim);
 char *fgetl(FILE *fp);
-list *parse_csv_line(char *line);
 char *copy_string(char *s);
 int count_fields(char *line);
 float *parse_fields(char *line, int n);

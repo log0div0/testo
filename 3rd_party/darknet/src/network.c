@@ -11,41 +11,10 @@
 #include "batchnorm_layer.h"
 #include "maxpool_layer.h"
 
-network *load_network(char *cfg, char *weights, int clear)
-{
-    network *net = parse_network_cfg(cfg);
-    if(weights && weights[0] != 0){
-        load_weights(net, weights);
-    }
-    if(clear) (*net->seen) = 0;
-    return net;
-}
-
 size_t get_current_batch(network *net)
 {
     size_t batch_num = (*net->seen)/(net->batch);
     return batch_num;
-}
-
-void reset_network_state(network *net, int b)
-{
-    int i;
-    for (i = 0; i < net->n; ++i) {
-        #ifdef GPU
-        layer l = net->layers[i];
-        if(l.state_gpu){
-            fill_gpu(l.outputs, 0, l.state_gpu + l.outputs*b, 1);
-        }
-        if(l.h_gpu){
-            fill_gpu(l.outputs, 0, l.h_gpu + l.outputs*b, 1);
-        }
-        #endif
-    }
-}
-
-void reset_rnn(network *net)
-{
-    reset_network_state(net, 0);
 }
 
 char *get_layer_string(LAYER_TYPE a)
@@ -532,26 +501,6 @@ float network_accuracy_multi(network *net, data d, int n)
     free_matrix(guess);
     return acc;
 }
-
-void free_network(network *net)
-{
-    int i;
-    for(i = 0; i < net->n; ++i){
-        free_layer(net->layers[i]);
-    }
-    free(net->layers);
-    if(net->input) free(net->input);
-    if(net->truth) free(net->truth);
-#ifdef GPU
-    if(net->input_gpu) cuda_free(net->input_gpu);
-    if(net->truth_gpu) cuda_free(net->truth_gpu);
-#endif
-    free(net);
-}
-
-// Some day...
-// ^ What the hell is this comment for?
-
 
 layer network_output_layer(network *net)
 {

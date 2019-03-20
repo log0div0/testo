@@ -1,6 +1,6 @@
 
 import gzip, array, os, string, shutil, random
-import PIL, PIL.ImageDraw, configparser
+import PIL, PIL.ImageDraw
 
 class PSF:
 	def __init__(self, filename):
@@ -241,19 +241,25 @@ def main(base_dir, image_count):
 		with open(label_path, "w") as file:
 			file.write(label)
 
-	config = configparser.ConfigParser()
-	config.add_section("general")
-	config.set("general", "samples_count", str(image_count))
-	config.add_section("image")
-	config.set("image", "width", str(image_width))
-	config.set("image", "height", str(image_height))
-	config.set("image", "dir", images_dir)
-	config.add_section("label")
-	config.set("label", "bbox_count", str(512))
-	config.set("label", "dir", labels_dir)
+	s = """
+item_count = %s
+bbox_count = %s
+image_width = %s
+image_height = %s
+image_dir = %s
+label_dir = %s
+""" % (
+		image_count,
+		512,
+		image_width,
+		image_height,
+		images_dir,
+		labels_dir
+	)
+
 	config_file_path = os.path.join(base_dir, "console_fonts.dataset")
 	with open(config_file_path, 'w') as config_file:
-		config.write(config_file)
+		config_file.write(s)
 
 if __name__ == "__main__":
 	dataset_dir = os.path.join(os.getcwd(), "dataset")
