@@ -705,10 +705,6 @@ void update_network_gpu(network *netp)
     a.learning_rate = net.learning_rate;
     a.momentum = net.momentum;
     a.decay = net.decay;
-    a.adam = net.adam;
-    a.B1 = net.B1;
-    a.B2 = net.B2;
-    a.eps = net.eps;
     ++*net.t;
     a.t = (*net.t);
 

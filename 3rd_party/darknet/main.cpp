@@ -183,13 +183,14 @@ void test()
 			box.bottom = (b.y+b.h/2)*image.height();
 
 			boxes.add(box);
+			image.draw(box.left, box.top, box.right, box.bottom, 0.9f, 0.2f, 0.3f);
 		}
 	}
 
 	for (auto& box: boxes) {
 		if (box.height() >= 8 && box.height() <= 24) {
 			if (box.width() >= 8) {
-				image.draw(box.left, box.top, box.right, box.bottom, 0.9f, 0.2f, 0.3f);
+				// image.draw(box.left, box.top, box.right, box.bottom, 0.9f, 0.2f, 0.3f);
 			}
 		}
 	}
