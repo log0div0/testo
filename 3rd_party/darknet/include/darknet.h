@@ -97,10 +97,6 @@ typedef struct{
     float learning_rate;
     float momentum;
     float decay;
-    int adam;
-    float B1;
-    float B2;
-    float eps;
     int t;
 } update_args;
 
@@ -154,13 +150,11 @@ struct layer{
     float smooth;
     float dot;
     float angle;
-    float jitter;
     float saturation;
     float exposure;
     float shift;
     float ratio;
     float learning_rate_scale;
-    float clip;
     int noloss;
     int softmax;
     int classes;
@@ -186,7 +180,6 @@ struct layer{
     float mask_scale;
     float class_scale;
     int bias_match;
-    int random;
     float ignore_thresh;
     float truth_thresh;
     float thresh;
@@ -421,56 +414,23 @@ struct layer{
 
 void free_layer(layer);
 
-typedef enum {
-    CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
-} learning_rate_policy;
-
 typedef struct network{
     int n;
     int batch;
     size_t *seen;
     int *t;
     float epoch;
-    int subdivisions;
     layer *layers;
     float *output;
-    learning_rate_policy policy;
 
     float learning_rate;
     float momentum;
     float decay;
-    float gamma;
-    float scale;
-    float power;
-    int time_steps;
-    int step;
-    int max_batches;
-    float *scales;
-    int   *steps;
-    int num_steps;
-    int burn_in;
-
-    int adam;
-    float B1;
-    float B2;
-    float eps;
 
     int inputs;
     int outputs;
     int truths;
-    int notruth;
     int h, w, c;
-    int max_crop;
-    int min_crop;
-    float max_ratio;
-    float min_ratio;
-    int center;
-    float angle;
-    float aspect;
-    float exposure;
-    float saturation;
-    float hue;
-    int random;
 
     int gpu_index;
     tree *hierarchy;
@@ -482,7 +442,6 @@ typedef struct network{
     int train;
     int index;
     float *cost;
-    float clip;
 
 #ifdef GPU
     float *input_gpu;
@@ -691,7 +650,6 @@ void test_resize(char *filename);
 int show_image(image p, const char *name, int ms);
 image copy_image(image p);
 void draw_box_width(image a, int x1, int y1, int x2, int y2, int w, float r, float g, float b);
-float get_current_rate(network *net);
 void composite_3d(char *f1, char *f2, char *out, int delta);
 size_t get_current_batch(network *net);
 void constrain_image(image im);

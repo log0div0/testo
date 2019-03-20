@@ -6,13 +6,10 @@
 #include "utils.h"
 #include "blas.h"
 
-#include "connected_layer.h"
 #include "convolutional_layer.h"
 #include "yolo_layer.h"
 #include "batchnorm_layer.h"
 #include "maxpool_layer.h"
-#include "cost_layer.h"
-#include "softmax_layer.h"
 
 network *load_network(char *cfg, char *weights, int clear)
 {
@@ -26,7 +23,7 @@ network *load_network(char *cfg, char *weights, int clear)
 
 size_t get_current_batch(network *net)
 {
-    size_t batch_num = (*net->seen)/(net->batch*net->subdivisions);
+    size_t batch_num = (*net->seen)/(net->batch);
     return batch_num;
 }
 
@@ -49,38 +46,6 @@ void reset_network_state(network *net, int b)
 void reset_rnn(network *net)
 {
     reset_network_state(net, 0);
-}
-
-float get_current_rate(network *net)
-{
-    size_t batch_num = get_current_batch(net);
-    int i;
-    float rate;
-    if (batch_num < net->burn_in) return net->learning_rate * pow((float)batch_num / net->burn_in, net->power);
-    switch (net->policy) {
-        case CONSTANT:
-            return net->learning_rate;
-        case STEP:
-            return net->learning_rate * pow(net->scale, batch_num/net->step);
-        case STEPS:
-            rate = net->learning_rate;
-            for(i = 0; i < net->num_steps; ++i){
-                if(net->steps[i] > batch_num) return rate;
-                rate *= net->scales[i];
-            }
-            return rate;
-        case EXP:
-            return net->learning_rate * pow(net->gamma, batch_num);
-        case POLY:
-            return net->learning_rate * pow(1 - (float)batch_num / net->max_batches, net->power);
-        case RANDOM:
-            return net->learning_rate * pow(rand_uniform(0,1), net->power);
-        case SIG:
-            return net->learning_rate * (1./(1.+exp(net->gamma*(batch_num - net->step))));
-        default:
-            fprintf(stderr, "Policy is weird!\n");
-            return net->learning_rate;
-    }
 }
 
 char *get_layer_string(LAYER_TYPE a)
@@ -185,14 +150,10 @@ void update_network(network *netp)
     network net = *netp;
     int i;
     update_args a = {0};
-    a.batch = net.batch*net.subdivisions;
-    a.learning_rate = get_current_rate(netp);
+    a.batch = net.batch;
+    a.learning_rate = net.learning_rate;
     a.momentum = net.momentum;
     a.decay = net.decay;
-    a.adam = net.adam;
-    a.B1 = net.B1;
-    a.B2 = net.B2;
-    a.eps = net.eps;
     ++*net.t;
     a.t = *net.t;
 
@@ -257,7 +218,7 @@ float train_network_datum(network *net)
     forward_network(net);
     backward_network(net);
     float error = *net->cost;
-    if(((*net->seen)/net->batch)%net->subdivisions == 0) update_network(net);
+    update_network(net);
     return error;
 }
 
@@ -341,8 +302,6 @@ int resize_network(network *net, int w, int h)
             resize_maxpool_layer(&l, w, h);
         }else if(l.type == YOLO){
             resize_yolo_layer(&l, w, h);
-        }else if(l.type == COST){
-            resize_cost_layer(&l, inputs);
         }else{
             error("Cannot resize this type of layer");
         }
@@ -742,8 +701,8 @@ void update_network_gpu(network *netp)
     cuda_set_device(net.gpu_index);
     int i;
     update_args a = {0};
-    a.batch = net.batch*net.subdivisions;
-    a.learning_rate = get_current_rate(netp);
+    a.batch = net.batch;
+    a.learning_rate = net.learning_rate;
     a.momentum = net.momentum;
     a.decay = net.decay;
     a.adam = net.adam;
@@ -865,91 +824,6 @@ void distribute_weights(layer l, layer base)
     }
 }
 
-
-/*
-
-   void pull_updates(layer l)
-   {
-   if(l.type == CONVOLUTIONAL){
-   cuda_pull_array(l.bias_updates_gpu, l.bias_updates, l.n);
-   cuda_pull_array(l.weight_updates_gpu, l.weight_updates, l.nweights);
-   if(l.scale_updates) cuda_pull_array(l.scale_updates_gpu, l.scale_updates, l.n);
-   } else if(l.type == CONNECTED){
-   cuda_pull_array(l.bias_updates_gpu, l.bias_updates, l.outputs);
-   cuda_pull_array(l.weight_updates_gpu, l.weight_updates, l.outputs*l.inputs);
-   }
-   }
-
-   void push_updates(layer l)
-   {
-   if(l.type == CONVOLUTIONAL){
-   cuda_push_array(l.bias_updates_gpu, l.bias_updates, l.n);
-   cuda_push_array(l.weight_updates_gpu, l.weight_updates, l.nweights);
-   if(l.scale_updates) cuda_push_array(l.scale_updates_gpu, l.scale_updates, l.n);
-   } else if(l.type == CONNECTED){
-   cuda_push_array(l.bias_updates_gpu, l.bias_updates, l.outputs);
-   cuda_push_array(l.weight_updates_gpu, l.weight_updates, l.outputs*l.inputs);
-   }
-   }
-
-   void update_layer(layer l, network net)
-   {
-   int update_batch = net.batch*net.subdivisions;
-   float rate = get_current_rate(net);
-   l.t = get_current_batch(net);
-   if(l.update_gpu){
-   l.update_gpu(l, update_batch, rate*l.learning_rate_scale, net.momentum, net.decay);
-   }
-   }
-   void merge_updates(layer l, layer base)
-   {
-   if (l.type == CONVOLUTIONAL) {
-   axpy_cpu(l.n, 1, l.bias_updates, 1, base.bias_updates, 1);
-   axpy_cpu(l.nweights, 1, l.weight_updates, 1, base.weight_updates, 1);
-   if (l.scale_updates) {
-   axpy_cpu(l.n, 1, l.scale_updates, 1, base.scale_updates, 1);
-   }
-   } else if(l.type == CONNECTED) {
-   axpy_cpu(l.outputs, 1, l.bias_updates, 1, base.bias_updates, 1);
-   axpy_cpu(l.outputs*l.inputs, 1, l.weight_updates, 1, base.weight_updates, 1);
-   }
-   }
-
-   void distribute_updates(layer l, layer base)
-   {
-   if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
-   cuda_push_array(l.bias_updates_gpu, base.bias_updates, l.n);
-   cuda_push_array(l.weight_updates_gpu, base.weight_updates, l.nweights);
-   if(base.scale_updates) cuda_push_array(l.scale_updates_gpu, base.scale_updates, l.n);
-   } else if(l.type == CONNECTED){
-   cuda_push_array(l.bias_updates_gpu, base.bias_updates, l.outputs);
-   cuda_push_array(l.weight_updates_gpu, base.weight_updates, l.outputs*l.inputs);
-   }
-   }
- */
-
-/*
-   void sync_layer(network *nets, int n, int j)
-   {
-   int i;
-   network net = nets[0];
-   layer base = net.layers[j];
-   scale_weights(base, 0);
-   for (i = 0; i < n; ++i) {
-   cuda_set_device(nets[i].gpu_index);
-   layer l = nets[i].layers[j];
-   pull_weights(l);
-   merge_weights(l, base);
-   }
-   scale_weights(base, 1./n);
-   for (i = 0; i < n; ++i) {
-   cuda_set_device(nets[i].gpu_index);
-   layer l = nets[i].layers[j];
-   distribute_weights(l, base);
-   }
-   }
- */
-
 void sync_layer(network **nets, int n, int j)
 {
     int i;
@@ -1001,7 +875,7 @@ void sync_nets(network **nets, int n, int interval)
     int layers = nets[0]->n;
     pthread_t *threads = (pthread_t *) calloc(layers, sizeof(pthread_t));
 
-    *(nets[0]->seen) += interval * (n-1) * nets[0]->batch * nets[0]->subdivisions;
+    *(nets[0]->seen) += interval * (n-1) * nets[0]->batch;
     for (j = 0; j < n; ++j){
         *(nets[j]->seen) = *(nets[0]->seen);
     }
@@ -1018,8 +892,7 @@ float train_networks(network **nets, int n, data d, int interval)
 {
     int i;
     int batch = nets[0]->batch;
-    int subdivisions = nets[0]->subdivisions;
-    assert(batch * subdivisions * n == d.X.rows);
+    assert(batch * n == d.X.rows);
     pthread_t *threads = (pthread_t *) calloc(n, sizeof(pthread_t));
     float *errors = (float *) calloc(n, sizeof(float));
 
@@ -1079,8 +952,6 @@ void save_weights_upto(network *net, char *filename, int cutoff)
         if (l.dontsave) continue;
         if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
             save_convolutional_weights(l, fp);
-        } if(l.type == CONNECTED){
-            save_connected_weights(l, fp);
         } if(l.type == BATCHNORM){
             save_batchnorm_weights(l, fp);
         }
@@ -1125,9 +996,6 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
         if (l.dontload) continue;
         if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
             load_convolutional_weights(l, fp);
-        }
-        if(l.type == CONNECTED){
-            load_connected_weights(l, fp, transpose);
         }
         if(l.type == BATCHNORM){
             load_batchnorm_weights(l, fp);

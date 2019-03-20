@@ -173,7 +173,7 @@ void cudnn_convolutional_setup(layer *l)
 #endif
 #endif
 
-convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor, int adam)
+convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor)
 {
     int i;
     convolutional_layer l = {0};
@@ -249,14 +249,6 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
         l.x = calloc(l.batch*l.outputs, sizeof(float));
         l.x_norm = calloc(l.batch*l.outputs, sizeof(float));
     }
-    if(adam){
-        l.m = calloc(l.nweights, sizeof(float));
-        l.v = calloc(l.nweights, sizeof(float));
-        l.bias_m = calloc(n, sizeof(float));
-        l.scale_m = calloc(n, sizeof(float));
-        l.bias_v = calloc(n, sizeof(float));
-        l.scale_v = calloc(n, sizeof(float));
-    }
 
 #ifdef GPU
     l.forward_gpu = forward_convolutional_layer_gpu;
@@ -264,14 +256,6 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.update_gpu = update_convolutional_layer_gpu;
 
     if(gpu_index >= 0){
-        if (adam) {
-            l.m_gpu = cuda_make_array(l.m, l.nweights);
-            l.v_gpu = cuda_make_array(l.v, l.nweights);
-            l.bias_m_gpu = cuda_make_array(l.bias_m, n);
-            l.bias_v_gpu = cuda_make_array(l.bias_v, n);
-            l.scale_m_gpu = cuda_make_array(l.scale_m, n);
-            l.scale_v_gpu = cuda_make_array(l.scale_v, n);
-        }
 
         l.weights_gpu = cuda_make_array(l.weights, l.nweights);
         l.weight_updates_gpu = cuda_make_array(l.weight_updates, l.nweights);

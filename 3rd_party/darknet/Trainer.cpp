@@ -58,7 +58,7 @@ void Trainer::save_weights(const std::string& weights_file_path) {
 
 float Trainer::train() {
 #ifdef GPU
-	Data data = dataset.load(networks.at(0).impl->batch * networks.at(0).impl->subdivisions * networks.size());
+	Data data = dataset.load(networks.at(0).impl->batch * networks.size());
 	if (networks.size() == 1) {
 		return train_network(networks.back().impl, data);
 	} else {
@@ -69,7 +69,7 @@ float Trainer::train() {
 		return ::train_networks(n.data(), n.size(), data, 4);
 	}
 #else
-	Data data = dataset.load(network.impl->batch * network.impl->subdivisions);
+	Data data = dataset.load(network.impl->batch);
 	return train_network(network.impl, data);
 #endif
 }
