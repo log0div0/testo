@@ -117,15 +117,11 @@ struct layer{
     void (*backward_gpu)  (struct layer, struct network);
     void (*update_gpu)    (struct layer, update_args);
     int batch_normalize;
-    int shortcut;
     int batch;
-    int forced;
-    int flipped;
     int inputs;
     int outputs;
     int nweights;
     int nbiases;
-    int extra;
     int truths;
     int h,w,c;
     int out_h, out_w, out_c;
@@ -135,8 +131,6 @@ struct layer{
     int size;
     int side;
     int stride;
-    int reverse;
-    int flatten;
     int spatial;
     int pad;
     int sqrt;
@@ -146,19 +140,14 @@ struct layer{
     int xnor;
     int steps;
     int hidden;
-    int truth;
-    float smooth;
-    float dot;
     float angle;
     float saturation;
     float exposure;
     float shift;
     float ratio;
-    float learning_rate_scale;
     int noloss;
     int softmax;
     int classes;
-    int coords;
     int background;
     int rescore;
     int objectness;
@@ -186,13 +175,6 @@ struct layer{
     float focus;
     int classfix;
     int absolute;
-
-    int onlyforward;
-    int stopbackward;
-    int dontload;
-    int dontsave;
-    int dontloadscales;
-    int numload;
 
     float temperature;
     float probability;
@@ -318,8 +300,6 @@ struct layer{
     struct layer *ug;
     struct layer *wg;
 
-    tree *softmax_tree;
-
     size_t workspace_size;
 
 #ifdef GPU
@@ -433,7 +413,6 @@ typedef struct network{
     int h, w, c;
 
     int gpu_index;
-    tree *hierarchy;
 
     float *input;
     float *truth;
@@ -472,15 +451,6 @@ typedef struct {
 typedef struct{
     float x, y, w, h;
 } box;
-
-typedef struct detection{
-    box bbox;
-    int classes;
-    float *prob;
-    float *mask;
-    float objectness;
-    int sort_class;
-} detection;
 
 typedef struct matrix{
     int rows, cols;
@@ -614,7 +584,6 @@ void rgbgr_weights(layer l);
 image *get_weights(layer l);
 
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int frame_skip, char *prefix, int avg, float hier_thresh, int w, int h, int fps, int fullscreen);
-void get_detection_detections(layer l, int w, int h, float thresh, detection *dets);
 
 char *option_find_str(list *l, char *key, char *def);
 int option_find_int(list *l, char *key, int def);
@@ -627,8 +596,6 @@ void save_weights_upto(network *net, char *filename, int cutoff);
 void load_weights_upto(network *net, char *filename, int start, int cutoff);
 
 void zero_objectness(layer l);
-void get_region_detections(layer l, int w, int h, int netw, int neth, float thresh, int *map, float tree_thresh, int relative, detection *dets);
-int get_yolo_detections(layer l, int w, int h, int netw, int neth, float thresh, int *map, int relative, detection *dets);
 void free_network(network *net);
 void set_batch_network(network *net, int b);
 void set_temp_network(network *net, float t);
@@ -671,7 +638,6 @@ float box_iou(box a, box b);
 data load_all_cifar10();
 box_label *read_boxes(char *filename, int *n);
 box float_to_box(float *f, int stride);
-void draw_detections(image im, detection *dets, int num, float thresh, int classes);
 
 matrix network_predict_data(network *net, data test);
 image **load_alphabet();
@@ -681,14 +647,8 @@ float *network_predict(network *net, float *input);
 int network_width(network *net);
 int network_height(network *net);
 float *network_predict_image(network *net, image im);
-void network_detect(network *net, image im, float thresh, float hier_thresh, float nms, detection *dets);
-detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num);
-void free_detections(detection *dets, int n);
 
 void reset_network_state(network *net, int b);
-
-void do_nms_obj(detection *dets, int total, int classes, float thresh);
-void do_nms_sort(detection *dets, int total, int classes, float thresh);
 
 matrix make_matrix(int rows, int cols);
 

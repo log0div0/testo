@@ -101,7 +101,6 @@ typedef struct size_params{
     int h;
     int w;
     int c;
-    int index;
     network *net;
 } size_params;
 
@@ -110,10 +109,8 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     int n = option_find_int(options, "filters",1);
     int size = option_find_int(options, "size",1);
     int stride = option_find_int(options, "stride",1);
-    int pad = option_find_int_quiet(options, "pad",0);
     int padding = option_find_int_quiet(options, "padding",0);
     int groups = option_find_int_quiet(options, "groups", 1);
-    if(pad) padding = size/2;
 
     char *activation_s = option_find_str(options, "activation", "logistic");
     ACTIVATION activation = get_activation(activation_s);
@@ -129,8 +126,6 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     int xnor = option_find_int_quiet(options, "xnor", 0);
 
     convolutional_layer layer = make_convolutional_layer(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize, binary, xnor);
-    layer.flipped = option_find_int_quiet(options, "flipped", 0);
-    layer.dot = option_find_float_quiet(options, "dot", 0);
 
     return layer;
 }
@@ -259,7 +254,6 @@ network *parse_network_cfg(char *filename)
     free_section(s);
     fprintf(stderr, "layer     filters    size              input                output\n");
     while(n){
-        params.index = count;
         fprintf(stderr, "%5d ", count);
         s = (section *)n->val;
         options = s->options;
@@ -269,7 +263,6 @@ network *parse_network_cfg(char *filename)
             l = parse_convolutional(options, params);
         }else if(lt == YOLO){
             l = parse_yolo(options, params);
-            net->hierarchy = l.softmax_tree;
         }else if(lt == BATCHNORM){
             l = parse_batchnorm(options, params);
         }else if(lt == MAXPOOL){
@@ -277,15 +270,6 @@ network *parse_network_cfg(char *filename)
         }else{
             fprintf(stderr, "Type not recognized: %s\n", s->type);
         }
-        l.truth = option_find_int_quiet(options, "truth", 0);
-        l.onlyforward = option_find_int_quiet(options, "onlyforward", 0);
-        l.stopbackward = option_find_int_quiet(options, "stopbackward", 0);
-        l.dontsave = option_find_int_quiet(options, "dontsave", 0);
-        l.dontload = option_find_int_quiet(options, "dontload", 0);
-        l.numload = option_find_int_quiet(options, "numload", 0);
-        l.dontloadscales = option_find_int_quiet(options, "dontloadscales", 0);
-        l.learning_rate_scale = option_find_float_quiet(options, "learning_rate", 1);
-        l.smooth = option_find_float_quiet(options, "smooth", 0);
         option_unused(options);
         net->layers[count] = l;
         if (l.workspace_size > workspace_size) workspace_size = l.workspace_size;

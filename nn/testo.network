@@ -19,7 +19,7 @@ batch_normalize=1
 filters=4
 size=3
 stride=1
-pad=1
+padding=1
 activation=leaky
 
 [maxpool]
@@ -31,7 +31,7 @@ batch_normalize=1
 filters=8
 size=3
 stride=1
-pad=1
+padding=1
 activation=leaky
 
 [maxpool]
@@ -43,7 +43,7 @@ batch_normalize=1
 filters=16
 size=3
 stride=1
-pad=1
+padding=1
 activation=leaky
 
 ###########
@@ -53,14 +53,14 @@ batch_normalize=1
 filters=32
 size=1
 stride=1
-pad=1
+padding=0
 activation=leaky
 
 [convolutional]
+filters=5
 size=1
 stride=1
-pad=1
-filters=5
+padding=0
 activation=linear
 
 

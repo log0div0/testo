@@ -521,7 +521,7 @@ void backward_convolutional_layer(convolutional_layer l, network net)
 
 void update_convolutional_layer(convolutional_layer l, update_args a)
 {
-    float learning_rate = a.learning_rate*l.learning_rate_scale;
+    float learning_rate = a.learning_rate;
     float momentum = a.momentum;
     float decay = a.decay;
     int batch = a.batch;
@@ -645,7 +645,7 @@ void save_convolutional_weights(layer l, FILE *fp)
 void load_convolutional_weights_binary(layer l, FILE *fp)
 {
     fread(l.biases, sizeof(float), l.n, fp);
-    if (l.batch_normalize && (!l.dontloadscales)){
+    if (l.batch_normalize){
         fread(l.scales, sizeof(float), l.n, fp);
         fread(l.rolling_mean, sizeof(float), l.n, fp);
         fread(l.rolling_variance, sizeof(float), l.n, fp);
@@ -678,10 +678,9 @@ void load_convolutional_weights(layer l, FILE *fp)
         //load_convolutional_weights_binary(l, fp);
         //return;
     }
-    if(l.numload) l.n = l.numload;
     int num = l.c/l.groups*l.n*l.size*l.size;
     fread(l.biases, sizeof(float), l.n, fp);
-    if (l.batch_normalize && (!l.dontloadscales)){
+    if (l.batch_normalize){
         fread(l.scales, sizeof(float), l.n, fp);
         fread(l.rolling_mean, sizeof(float), l.n, fp);
         fread(l.rolling_variance, sizeof(float), l.n, fp);
@@ -714,9 +713,6 @@ void load_convolutional_weights(layer l, FILE *fp)
     }
     fread(l.weights, sizeof(float), num, fp);
     //if(l.c == 3) scal_cpu(num, 1./256, l.weights, 1);
-    if (l.flipped) {
-        transpose_matrix(l.weights, l.c*l.size*l.size, l.n);
-    }
     //if (l.binary) binarize_weights(l.weights, l.n, l.c*l.size*l.size, l.weights);
 #ifdef GPU
     if(gpu_index >= 0){
