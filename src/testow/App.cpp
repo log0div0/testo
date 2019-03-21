@@ -12,7 +12,7 @@ CUDA::CUDA() {
 
 App* app = nullptr;
 
-App::App(): net("C:\\Users\\log0div0\\work\\testo\\nn\\testo.cfg") {
+App::App(): net("C:\\Users\\log0div0\\work\\testo\\nn\\testo.cfg", -1) {
 	::app = this;
 	net.load_weights("C:\\Users\\log0div0\\work\\testo\\nn\\testo.weights");
 	net.set_batch(1);

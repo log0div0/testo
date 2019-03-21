@@ -9,41 +9,63 @@
 #include <chrono>
 #include <list>
 #include "Network.hpp"
-#include "Trainer.hpp"
+#include "Dataset.hpp"
 
 using namespace darknet;
+
+void get_next_batch(data d, int n, int offset, float *X, float *y)
+{
+    int j;
+    for(j = 0; j < n; ++j){
+        int index = offset + j;
+        memcpy(X+j*d.X.cols, d.X.vals[index], d.X.cols*sizeof(float));
+        if(y) memcpy(y+j*d.y.cols, d.y.vals[index], d.y.cols*sizeof(float));
+    }
+}
 
 std::string network_file;
 std::string dataset_file;
 std::string weights_file;
-std::string input_file;
+std::string image_file;
 std::string output_file;
 float thresh = 0.5f;
 #ifdef GPU
-std::vector<int> gpus;
-bool nogpu = false;
-#else
-size_t threads_count = 1;
+int gpu = 0;
 #endif
 
 void train()
 {
-	Trainer trainer(network_file, dataset_file,
+	Network network(network_file
 #ifdef GPU
-		gpus
-#else
-		threads_count
+		, gpu
 #endif
 	);
-	if (input_file.size()) {
-		trainer.load_weights(input_file);
+	if (weights_file.size()) {
+		network.load_weights(weights_file);
 	}
+	network.set_batch(1);
+	network.train = 1;
+
+	Dataset dataset(dataset_file);
 
 	float avg_loss = -1;
 
-	while (true)
+	for (size_t i = 0; ; ++i)
 	{
-		float loss = trainer.train();
+		Data d = dataset.load(network.batch);
+		get_next_batch(d, d.X.rows, 0, network.input, network.truth);
+		forward_network(&network);
+		backward_network(&network);
+		float sum = 0;
+		int count = 0;
+		for(size_t i = 0; i < network.n; ++i) {
+			if (network.layers[i].cost) {
+				sum += network.layers[i].cost[0];
+				++count;
+			}
+		}
+		float loss = sum/count;
+		update_network(&network);
 
 		if (avg_loss < 0) {
 			avg_loss = loss;
@@ -51,10 +73,10 @@ void train()
 			avg_loss = avg_loss*.9 + loss*.1;
 		}
 
-		std::cout << trainer.batch_index << ": loss = " << loss << ", avg_loss = " << avg_loss << std::endl;
+		std::cout << i << ": loss = " << loss << ", avg_loss = " << avg_loss << std::endl;
 
-		if (trainer.batch_index && (trainer.batch_index % 100 == 0)) {
-			trainer.save_weights(output_file);
+		if (i && (i % 100 == 0)) {
+			network.save_weights(output_file);
 		}
 	}
 }
@@ -144,11 +166,15 @@ struct BoxSet: std::list<Box> {
 
 void test()
 {
-	Network network(network_file);
+	Network network(network_file
+#ifdef GPU
+		, gpu
+#endif
+	);
 	network.load_weights(weights_file);
 	network.set_batch(1);
 
-	Image image = Image(input_file);
+	Image image = Image(image_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
 
@@ -220,24 +246,22 @@ int main(int argc, char **argv)
 			( command("train").set(mode, Train),
 				value("network", network_file),
 				value("dataset", dataset_file),
-				option("-i", "--input") & value("input weights", input_file),
-				option("-o", "--output") & value("output weights", output_file),
+				opt_value("weights", weights_file),
+				option("-o", "--output") & value("output weights", output_file)
 #ifdef GPU
-				option("--gpus") & values("gpus", gpus)
-#else
-				option("--threads") & value("threads count", threads_count)
+				, option("--gpu") & values("gpu", gpu)
 #endif
 			)
 			| (
 				command("test").set(mode, Test),
 				value("network", network_file),
 				value("weights", weights_file),
-				value("input image", input_file),
+				value("input image", image_file),
 				option("-o", "--output") & value("output image", output_file),
-#ifdef GPU
-				option("--nogpu").set(nogpu),
-#endif
 				option("--thresh") & value("thresh", thresh)
+#ifdef GPU
+				, option("--gpu") & values("gpu", gpu)
+#endif
 			)
 		);
 
@@ -248,11 +272,6 @@ int main(int argc, char **argv)
 
 		switch (mode) {
 			case Train:
-#ifdef GPU
-				if (!gpus.size()) {
-					gpus = {0};
-				}
-#endif
 				if (!output_file.size()) {
 					output_file = "output.weights";
 				}

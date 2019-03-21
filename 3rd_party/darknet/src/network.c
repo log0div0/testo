@@ -170,34 +170,6 @@ layer get_network_output_layer(network *net)
     return net->layers[i];
 }
 
-void merge_weights(layer l, layer base)
-{
-    if (l.type == CONVOLUTIONAL) {
-        axpy_cpu(l.n, 1, l.biases, 1, base.biases, 1);
-        axpy_cpu(l.nweights, 1, l.weights, 1, base.weights, 1);
-        if (l.scales) {
-            axpy_cpu(l.n, 1, l.scales, 1, base.scales, 1);
-        }
-    } else if(l.type == CONNECTED) {
-        axpy_cpu(l.outputs, 1, l.biases, 1, base.biases, 1);
-        axpy_cpu(l.outputs*l.inputs, 1, l.weights, 1, base.weights, 1);
-    }
-}
-
-void scale_weights(layer l, float s)
-{
-    if (l.type == CONVOLUTIONAL) {
-        scal_cpu(l.n, s, l.biases, 1);
-        scal_cpu(l.nweights, s, l.weights, 1);
-        if (l.scales) {
-            scal_cpu(l.n, s, l.scales, 1);
-        }
-    } else if(l.type == CONNECTED) {
-        scal_cpu(l.outputs, s, l.biases, 1);
-        scal_cpu(l.outputs*l.inputs, s, l.weights, 1);
-    }
-}
-
 #ifdef GPU
 
 void forward_network_gpu(network *netp)
@@ -259,30 +231,6 @@ void update_network_gpu(network *netp)
         if(l.update_gpu){
             l.update_gpu(l, a);
         }
-    }
-}
-
-void pull_weights(layer l)
-{
-    if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
-        cuda_pull_array(l.biases_gpu, l.biases, l.n);
-        cuda_pull_array(l.weights_gpu, l.weights, l.nweights);
-        if(l.scales) cuda_pull_array(l.scales_gpu, l.scales, l.n);
-    } else if(l.type == CONNECTED){
-        cuda_pull_array(l.biases_gpu, l.biases, l.outputs);
-        cuda_pull_array(l.weights_gpu, l.weights, l.outputs*l.inputs);
-    }
-}
-
-void push_weights(layer l)
-{
-    if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
-        cuda_push_array(l.biases_gpu, l.biases, l.n);
-        cuda_push_array(l.weights_gpu, l.weights, l.nweights);
-        if(l.scales) cuda_push_array(l.scales_gpu, l.scales, l.n);
-    } else if(l.type == CONNECTED){
-        cuda_push_array(l.biases_gpu, l.biases, l.outputs);
-        cuda_push_array(l.weights_gpu, l.weights, l.outputs*l.inputs);
     }
 }
 

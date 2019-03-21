@@ -11,7 +11,7 @@ namespace darknet {
 struct Network: network {
 	Network(const std::string& config_file_path
 #ifdef GPU
-		, int gpu = -1
+		, int gpu
 #endif
 	);
 	~Network();
