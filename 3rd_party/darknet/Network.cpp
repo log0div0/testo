@@ -30,9 +30,7 @@ Network::Network(const std::string& path): network({}) {
 
 	n = ini.sections().size();
 	layers = (layer*)calloc(n, sizeof(layer));
-	seen = (size_t*)calloc(1, sizeof(size_t));
-	t    = (int*)calloc(1, sizeof(int));
-	cost = (float*)calloc(1, sizeof(float));
+	seen = 0;
 	gpu_index = gpu_index;
 	batch = ini.get_int("batch", 1);
 	learning_rate = ini.get_float("learning_rate", .001);
@@ -88,7 +86,6 @@ Network::Network(const std::string& path): network({}) {
 	if (out.truths) {
 		truths = out.truths;
 	}
-	output = out.output;
 	input = (float*)calloc(inputs*batch, sizeof(float));
 	truth = (float*)calloc(truths*batch, sizeof(float));
 #ifdef GPU
@@ -156,8 +153,23 @@ float* Network::forward(float* in) {
 	truth = 0;
 	train = 0;
 	delta = 0;
-	forward_network(this);
-	float *out = output;
+#ifdef GPU
+	if(gpu_index >= 0){
+		forward_network_gpu(this);
+	}
+	else
+#endif
+	{
+		for(int i = 0; i < n; ++i){
+			layer l = layers[i];
+			if(l.delta){
+				fill_cpu(l.outputs * l.batch, 0, l.delta, 1);
+			}
+			l.forward(l, *this);
+			input = l.output;
+		}
+	}
+	float *out = back().output;
 	(network&)*this = orig;
 	return out;
 }

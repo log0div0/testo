@@ -13,7 +13,7 @@
 
 size_t get_current_batch(network *net)
 {
-    size_t batch_num = (*net->seen)/(net->batch);
+    size_t batch_num = net->seen/net->batch;
     return batch_num;
 }
 
@@ -28,7 +28,6 @@ void forward_network(network *netp)
     network net = *netp;
     int i;
     for(i = 0; i < net.n; ++i){
-        net.index = i;
         layer l = net.layers[i];
         if(l.delta){
             fill_cpu(l.outputs * l.batch, 0, l.delta, 1);
@@ -36,7 +35,6 @@ void forward_network(network *netp)
         l.forward(l, net);
         net.input = l.output;
     }
-    calc_network_cost(netp);
 }
 
 void update_network(network *netp)
@@ -54,8 +52,6 @@ void update_network(network *netp)
     a.learning_rate = net.learning_rate;
     a.momentum = net.momentum;
     a.decay = net.decay;
-    ++*net.t;
-    a.t = *net.t;
 
     for(i = 0; i < net.n; ++i){
         layer l = net.layers[i];
@@ -65,7 +61,7 @@ void update_network(network *netp)
     }
 }
 
-void calc_network_cost(network *netp)
+float get_network_cost(network *netp)
 {
     network net = *netp;
     int i;
@@ -77,7 +73,7 @@ void calc_network_cost(network *netp)
             ++count;
         }
     }
-    *net.cost = sum/count;
+    return sum/count;
 }
 
 void backward_network(network *netp)
@@ -100,18 +96,17 @@ void backward_network(network *netp)
             net.input = prev.output;
             net.delta = prev.delta;
         }
-        net.index = i;
         l.backward(l, net);
     }
 }
 
 float train_network_datum(network *net)
 {
-    *net->seen += net->batch;
+    net->seen += net->batch;
     net->train = 1;
     forward_network(net);
     backward_network(net);
-    float error = *net->cost;
+    float error = get_network_cost(net);
     update_network(net);
     return error;
 }
@@ -189,7 +184,6 @@ int resize_network(network *net, int w, int h)
     net->outputs = out.outputs;
     net->truths = out.outputs;
     if(net->layers[net->n-1].truths) net->truths = net->layers[net->n-1].truths;
-    net->output = out.output;
     free(net->input);
     free(net->truth);
     net->input = calloc(net->inputs*net->batch, sizeof(float));
@@ -237,7 +231,6 @@ void forward_network_gpu(network *netp)
 
     int i;
     for(i = 0; i < net.n; ++i){
-        net.index = i;
         layer l = net.layers[i];
         if(l.delta_gpu){
             fill_gpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
@@ -247,7 +240,6 @@ void forward_network_gpu(network *netp)
         net.input = l.output;
     }
     pull_network_output(netp);
-    calc_network_cost(netp);
 }
 
 void backward_network_gpu(network *netp)
@@ -267,7 +259,6 @@ void backward_network_gpu(network *netp)
             net.input_gpu = prev.output_gpu;
             net.delta_gpu = prev.delta_gpu;
         }
-        net.index = i;
         l.backward_gpu(l, net);
     }
 }
@@ -282,8 +273,6 @@ void update_network_gpu(network *netp)
     a.learning_rate = net.learning_rate;
     a.momentum = net.momentum;
     a.decay = net.decay;
-    ++*net.t;
-    a.t = (*net.t);
 
     for(i = 0; i < net.n; ++i){
         layer l = net.layers[i];
@@ -435,9 +424,9 @@ void sync_nets(network **nets, int n, int interval)
     int layers = nets[0]->n;
     pthread_t *threads = (pthread_t *) calloc(layers, sizeof(pthread_t));
 
-    *(nets[0]->seen) += interval * (n-1) * nets[0]->batch;
+    nets[0]->seen += interval * (n-1) * nets[0]->batch;
     for (j = 0; j < n; ++j){
-        *(nets[j]->seen) = *(nets[0]->seen);
+        nets[j]->seen = nets[0]->seen;
     }
     for (j = 0; j < layers; ++j) {
         threads[j] = sync_layer_in_thread(nets, n, j);
@@ -504,7 +493,7 @@ void save_weights_upto(network *net, char *filename, int cutoff)
     fwrite(&major, sizeof(int), 1, fp);
     fwrite(&minor, sizeof(int), 1, fp);
     fwrite(&revision, sizeof(int), 1, fp);
-    fwrite(net->seen, sizeof(size_t), 1, fp);
+    fwrite(&net->seen, sizeof(size_t), 1, fp);
 
     int i;
     for(i = 0; i < net->n && i < cutoff; ++i){
@@ -541,11 +530,11 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
     fread(&minor, sizeof(int), 1, fp);
     fread(&revision, sizeof(int), 1, fp);
     if ((major*10 + minor) >= 2 && major < 1000 && minor < 1000){
-        fread(net->seen, sizeof(size_t), 1, fp);
+        fread(&net->seen, sizeof(size_t), 1, fp);
     } else {
         int iseen = 0;
         fread(&iseen, sizeof(int), 1, fp);
-        *net->seen = iseen;
+        net->seen = iseen;
     }
     int transpose = (major > 1000) || (minor > 1000);
 

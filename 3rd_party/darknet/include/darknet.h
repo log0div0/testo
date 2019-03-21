@@ -97,7 +97,6 @@ typedef struct{
     float learning_rate;
     float momentum;
     float decay;
-    int t;
 } update_args;
 
 struct network;
@@ -397,11 +396,8 @@ void free_layer(layer);
 typedef struct network{
     int n;
     int batch;
-    size_t *seen;
-    int *t;
-    float epoch;
+    size_t seen;
     layer *layers;
-    float *output;
 
     float learning_rate;
     float momentum;
@@ -419,8 +415,6 @@ typedef struct network{
     float *delta;
     float *workspace;
     int train;
-    int index;
-    float *cost;
 
 #ifdef GPU
     float *input_gpu;
