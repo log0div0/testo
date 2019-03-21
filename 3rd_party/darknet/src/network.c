@@ -245,10 +245,6 @@ void forward_network_gpu(network *netp)
         l.forward_gpu(l, net);
         net.input_gpu = l.output_gpu;
         net.input = l.output;
-        if(l.truth) {
-            net.truth_gpu = l.output_gpu;
-            net.truth = l.output;
-        }
     }
     pull_network_output(netp);
     calc_network_cost(netp);
@@ -262,7 +258,6 @@ void backward_network_gpu(network *netp)
     cuda_set_device(net.gpu_index);
     for(i = net.n-1; i >= 0; --i){
         layer l = net.layers[i];
-        if(l.stopbackward) break;
         if(i == 0){
             net = orig;
         }else{

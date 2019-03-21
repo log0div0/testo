@@ -2,6 +2,7 @@
 #include "Network.hpp"
 #include <stdexcept>
 #include <inipp.hh>
+#include <assert.h>
 
 #include "layers/ConvolutionalLayer.hpp"
 #include "layers/YoloLayer.hpp"

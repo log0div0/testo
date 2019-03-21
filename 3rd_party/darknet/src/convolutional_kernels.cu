@@ -178,9 +178,6 @@ extern "C" void smooth_layer(layer l, int size, float rate)
 
 void backward_convolutional_layer_gpu(convolutional_layer l, network net)
 {
-    if(l.smooth){
-        smooth_layer(l, 5, l.smooth);
-    }
     //constrain_gpu(l.outputs*l.batch, 1, l.delta_gpu, 1);
     gradient_array_gpu(l.output_gpu, l.outputs*l.batch, l.activation, l.delta_gpu);
 
@@ -298,7 +295,7 @@ void push_convolutional_layer(layer l)
 
 void update_convolutional_layer_gpu(layer l, update_args a)
 {
-    float learning_rate = a.learning_rate*l.learning_rate_scale;
+    float learning_rate = a.learning_rate;
     float momentum = a.momentum;
     float decay = a.decay;
     int batch = a.batch;

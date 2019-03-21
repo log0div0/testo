@@ -46,7 +46,6 @@ void upsample_cpu(float *in, int w, int h, int c, int batch, int stride, int for
 
 #ifdef GPU
 #include "cuda.h"
-#include "tree.h"
 
 void axpy_gpu(int N, float ALPHA, float * X, int INCX, float * Y, int INCY);
 void axpy_gpu_offset(int N, float ALPHA, float * X, int OFFX, int INCX, float * Y, int OFFY, int INCY);

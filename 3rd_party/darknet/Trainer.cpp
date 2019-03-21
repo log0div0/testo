@@ -40,7 +40,7 @@ void Trainer::sync_weights() {
 	if (networks.size() != 1) {
 		std::vector<network*> n;
 		for (auto& network: networks) {
-			n.push_back(network.impl);
+			n.push_back(&network);
 		}
 		sync_nets(n.data(), n.size(), 0);
 	}
@@ -60,11 +60,11 @@ float Trainer::train() {
 #ifdef GPU
 	Data data = dataset.load(networks.at(0).batch * networks.size());
 	if (networks.size() == 1) {
-		return train_network(networks.back().impl, data);
+		return train_network(&networks.back(), data);
 	} else {
 		std::vector<network*> n;
 		for (auto& network: networks) {
-			n.push_back(network.impl);
+			n.push_back(&network);
 		}
 		return ::train_networks(n.data(), n.size(), data, 4);
 	}
