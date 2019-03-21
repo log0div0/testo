@@ -1,5 +1,6 @@
 
 #include "VisitorSemantic.hpp"
+#include <fmt/format.h>
 
 using namespace AST;
 
@@ -283,6 +284,10 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<MacroCall> macro_call) {
 		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
 	}
 	macro_call->macro = macro->second;
+	if (macro_call->params.size() != macro_call->macro->params.size()) {
+		throw std::runtime_error(fmt::format("{}: Error: expected {} params, {} provided", std::string(macro_call->begin()),
+			macro_call->macro->params.size(), macro_call->params.size()));
+	}
 }
 
 void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {

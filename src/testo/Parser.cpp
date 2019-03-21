@@ -675,7 +675,7 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 		if (params.empty()) {
 			match(Token::category::rparen); //will cause failure
 		}
-
+		match(Token::category::comma);
 		params.push_back(word());
 	}
 

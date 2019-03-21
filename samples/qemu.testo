@@ -72,6 +72,7 @@ test dummy2: buwaha(dummy2)
 test dummy3: buwaha(dummy2)
 {
 	#buwaha exec bash "ping -c20 192.168.156.10"
+	buwaha reboot("Hey", "Suka")
 	buwaha wait for 3s
 	#buwaha unplug flash dummy_flash
 	#buwaha stop
