@@ -244,10 +244,30 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token name = LT(1);
 	match(Token::category::id);
 
+	match(Token::category::lparen);
+
+	std::vector<Token> params;
+
+	if (LA(1) == Token::category::id) {
+		params.push_back(LT(1));
+		match(Token::category::id);
+	}
+
+	while (LA(1) == Token::category::comma) {
+		if (params.empty()) {
+			match(Token::category::rparen); //will cause failure
+		}
+		match(Token::category::comma);
+		params.push_back(LT(1));
+		match(Token::category::id);
+	}
+
+	match(Token::category::rparen);
+
 	newline_list();
 	auto actions = action_block();
 
-	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, actions));
+	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, params, actions));
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
 
@@ -643,7 +663,25 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 	Token macro_name = LT(1);
 	match(Token::category::id);
 
-	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name));
+	match(Token::category::lparen);
+
+	std::vector<std::shared_ptr<Word>> params;
+
+	if (test_word()) {
+		params.push_back(word());
+	}
+
+	while (LA(1) == Token::category::comma) {
+		if (params.empty()) {
+			match(Token::category::rparen); //will cause failure
+		}
+
+		params.push_back(word());
+	}
+
+	match(Token::category::rparen);
+
+	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
 }
 

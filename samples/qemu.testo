@@ -1,4 +1,4 @@
-machine buwaha	 {
+machine buwaha {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
@@ -20,6 +20,10 @@ machine buwaha	 {
 		login: "root"
 		password: "1111"
 	}
+}
+
+macro reboot(login, password) {
+	wait for 3s
 }
 
 flash dummy_flash {

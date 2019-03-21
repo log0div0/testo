@@ -541,10 +541,12 @@ struct Snapshot: public Node {
 };
 
 struct Macro: public Node {
-	Macro(const Token& macro, const Token& name, std::shared_ptr<Action<ActionBlock>> action_block):
-		Node(macro),
-		name(name),
-		action_block(action_block) {}
+	Macro(const Token& macro,
+		const Token& name,
+		const std::vector<Token>& params,
+		std::shared_ptr<Action<ActionBlock>> action_block):
+			Node(macro), name(name), params(params),
+			action_block(action_block) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -555,16 +557,23 @@ struct Macro: public Node {
 	}
 
 	operator std::string() const {
-		return t.value() + " " + name.value() + " " + std::string(*action_block);
+		std::string result = t.value() + " " + name.value() + "(";
+		for (auto param: params) {
+			result += param.value() + " ,";
+		}
+		result += ") ";
+		result += std::string(*action_block);
+		return result;
 	}
 
 	Token name;
+	std::vector<Token> params;
 	std::shared_ptr<Action<ActionBlock>> action_block;
 };
 
 struct MacroCall: public Node {
-	MacroCall(const Token& macro_name):
-		Node(macro_name) {}
+	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<Word>>& params):
+		Node(macro_name), params(params) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -575,7 +584,12 @@ struct MacroCall: public Node {
 	}
 
 	operator std::string() const {
-		return t.value();
+		std::string result = t.value() + ("(");
+		for (auto param: params) {
+			result += std::string(*param) + " ,";
+		}
+		result += ")";
+		return result;
 	}
 
 	Token name() const {
@@ -583,6 +597,7 @@ struct MacroCall: public Node {
 	}
 
 	std::shared_ptr<Macro> macro;
+	std::vector<std::shared_ptr<Word>> params;
 };
 
 struct VmState: public Node {
