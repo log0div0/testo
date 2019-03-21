@@ -16,11 +16,8 @@ Trainer::Trainer(const std::string& network_file, const std::string& dataset_fil
 #ifdef GPU
 	int seed = rand();
 	for (size_t gpu: gpus) {
-		cuda_set_device(gpu);
 		srand(seed);
-		networks.push_back(Network(network_file));
-		networks.back().gpu_index = gpu;
-		networks.back().learning_rate *= gpus.size();
+		networks.push_back(Network(network_file, gpu));
 	}
 #endif
 }

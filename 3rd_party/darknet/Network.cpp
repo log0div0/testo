@@ -21,7 +21,12 @@ struct size_params {
 	network *net;
 };
 
-Network::Network(const std::string& path): network({}) {
+Network::Network(const std::string& path
+#ifdef GPU
+	, int gpu
+#endif
+	): network({})
+{
 	std::ifstream file(path);
 	if (!file.is_open()) {
 		throw std::runtime_error("Failed to open file " + path);
@@ -31,7 +36,12 @@ Network::Network(const std::string& path): network({}) {
 	n = ini.sections().size();
 	layers = (layer*)calloc(n, sizeof(layer));
 	seen = 0;
-	gpu_index = gpu_index;
+#ifdef GPU
+	gpu_index = gpu;
+	if (gpu_index >= 0) {
+		cuda_set_device(gpu_index);
+	}
+#endif
 	batch = ini.get_int("batch", 1);
 	learning_rate = ini.get_float("learning_rate", .001);
 	momentum = ini.get_float("momentum", .9);
@@ -134,6 +144,11 @@ void Network::save_weights(const std::string& weights_file_path) {
 }
 
 void Network::set_batch(size_t batch) {
+#ifdef GPU
+	if (gpu_index >= 0) {
+		cuda_set_device(gpu_index);
+	}
+#endif
 	set_batch_network(this, batch);
 }
 

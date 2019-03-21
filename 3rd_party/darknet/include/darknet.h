@@ -408,7 +408,6 @@ typedef struct network{
     int truths;
     int h, w, c;
 
-    int gpu_index;
 
     float *input;
     float *truth;
@@ -417,6 +416,7 @@ typedef struct network{
     int train;
 
 #ifdef GPU
+    int gpu_index;
     float *input_gpu;
     float *truth_gpu;
     float *delta_gpu;
