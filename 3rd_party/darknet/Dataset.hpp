@@ -31,7 +31,6 @@ struct Dataset {
 	Data load(size_t size);
 
 private:
-	size_t item_index = 0;
 	size_t item_count;
 	size_t image_width, image_height, image_channels, bbox_size, bbox_count;
 	std::string image_dir, label_dir;

@@ -11,12 +11,6 @@
 #include "batchnorm_layer.h"
 #include "maxpool_layer.h"
 
-size_t get_current_batch(network *net)
-{
-    size_t batch_num = net->seen/net->batch;
-    return batch_num;
-}
-
 void forward_network(network *netp)
 {
 #ifdef GPU
@@ -61,21 +55,6 @@ void update_network(network *netp)
     }
 }
 
-float get_network_cost(network *netp)
-{
-    network net = *netp;
-    int i;
-    float sum = 0;
-    int count = 0;
-    for(i = 0; i < net.n; ++i){
-        if(net.layers[i].cost){
-            sum += net.layers[i].cost[0];
-            ++count;
-        }
-    }
-    return sum/count;
-}
-
 void backward_network(network *netp)
 {
 #ifdef GPU
@@ -98,33 +77,6 @@ void backward_network(network *netp)
         }
         l.backward(l, net);
     }
-}
-
-float train_network_datum(network *net)
-{
-    net->seen += net->batch;
-    net->train = 1;
-    forward_network(net);
-    backward_network(net);
-    float error = get_network_cost(net);
-    update_network(net);
-    return error;
-}
-
-float train_network(network *net, data d)
-{
-    assert(d.X.rows % net->batch == 0);
-    int batch = net->batch;
-    int n = d.X.rows / batch;
-
-    int i;
-    float sum = 0;
-    for(i = 0; i < n; ++i){
-        get_next_batch(d, batch, i*batch, net->input, net->truth);
-        float err = train_network_datum(net);
-        sum += err;
-    }
-    return (float)sum/(n*batch);
 }
 
 void set_batch_network(network *net, int b)
@@ -218,6 +170,34 @@ layer get_network_output_layer(network *net)
     return net->layers[i];
 }
 
+void merge_weights(layer l, layer base)
+{
+    if (l.type == CONVOLUTIONAL) {
+        axpy_cpu(l.n, 1, l.biases, 1, base.biases, 1);
+        axpy_cpu(l.nweights, 1, l.weights, 1, base.weights, 1);
+        if (l.scales) {
+            axpy_cpu(l.n, 1, l.scales, 1, base.scales, 1);
+        }
+    } else if(l.type == CONNECTED) {
+        axpy_cpu(l.outputs, 1, l.biases, 1, base.biases, 1);
+        axpy_cpu(l.outputs*l.inputs, 1, l.weights, 1, base.weights, 1);
+    }
+}
+
+void scale_weights(layer l, float s)
+{
+    if (l.type == CONVOLUTIONAL) {
+        scal_cpu(l.n, s, l.biases, 1);
+        scal_cpu(l.nweights, s, l.weights, 1);
+        if (l.scales) {
+            scal_cpu(l.n, s, l.scales, 1);
+        }
+    } else if(l.type == CONNECTED) {
+        scal_cpu(l.outputs, s, l.biases, 1);
+        scal_cpu(l.outputs*l.inputs, s, l.weights, 1);
+    }
+}
+
 #ifdef GPU
 
 void forward_network_gpu(network *netp)
@@ -282,70 +262,15 @@ void update_network_gpu(network *netp)
     }
 }
 
-typedef struct {
-    network *net;
-    data d;
-    float *err;
-} train_args;
-
-void *train_thread(void *ptr)
-{
-    train_args args = *(train_args*)ptr;
-    free(ptr);
-    cuda_set_device(args.net->gpu_index);
-    *args.err = train_network(args.net, args.d);
-    return 0;
-}
-
-pthread_t train_network_in_thread(network *net, data d, float *err)
-{
-    pthread_t thread;
-    train_args *ptr = (train_args *)calloc(1, sizeof(train_args));
-    ptr->net = net;
-    ptr->d = d;
-    ptr->err = err;
-    if(pthread_create(&thread, 0, train_thread, ptr)) error("Thread creation failed");
-    return thread;
-}
-
-void merge_weights(layer l, layer base)
-{
-    if (l.type == CONVOLUTIONAL) {
-        axpy_cpu(l.n, 1, l.bias_updates, 1, base.biases, 1);
-        axpy_cpu(l.nweights, 1, l.weight_updates, 1, base.weights, 1);
-        if (l.scales) {
-            axpy_cpu(l.n, 1, l.scale_updates, 1, base.scales, 1);
-        }
-    } else if(l.type == CONNECTED) {
-        axpy_cpu(l.outputs, 1, l.bias_updates, 1, base.biases, 1);
-        axpy_cpu(l.outputs*l.inputs, 1, l.weight_updates, 1, base.weights, 1);
-    }
-}
-
-void scale_weights(layer l, float s)
-{
-    if (l.type == CONVOLUTIONAL) {
-        scal_cpu(l.n, s, l.biases, 1);
-        scal_cpu(l.nweights, s, l.weights, 1);
-        if (l.scales) {
-            scal_cpu(l.n, s, l.scales, 1);
-        }
-    } else if(l.type == CONNECTED) {
-        scal_cpu(l.outputs, s, l.biases, 1);
-        scal_cpu(l.outputs*l.inputs, s, l.weights, 1);
-    }
-}
-
-
 void pull_weights(layer l)
 {
     if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
-        cuda_pull_array(l.biases_gpu, l.bias_updates, l.n);
-        cuda_pull_array(l.weights_gpu, l.weight_updates, l.nweights);
-        if(l.scales) cuda_pull_array(l.scales_gpu, l.scale_updates, l.n);
+        cuda_pull_array(l.biases_gpu, l.biases, l.n);
+        cuda_pull_array(l.weights_gpu, l.weights, l.nweights);
+        if(l.scales) cuda_pull_array(l.scales_gpu, l.scales, l.n);
     } else if(l.type == CONNECTED){
-        cuda_pull_array(l.biases_gpu, l.bias_updates, l.outputs);
-        cuda_pull_array(l.weights_gpu, l.weight_updates, l.outputs*l.inputs);
+        cuda_pull_array(l.biases_gpu, l.biases, l.outputs);
+        cuda_pull_array(l.weights_gpu, l.weights, l.outputs*l.inputs);
     }
 }
 
@@ -359,113 +284,6 @@ void push_weights(layer l)
         cuda_push_array(l.biases_gpu, l.biases, l.outputs);
         cuda_push_array(l.weights_gpu, l.weights, l.outputs*l.inputs);
     }
-}
-
-void distribute_weights(layer l, layer base)
-{
-    if (l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL) {
-        cuda_push_array(l.biases_gpu, base.biases, l.n);
-        cuda_push_array(l.weights_gpu, base.weights, l.nweights);
-        if (base.scales) cuda_push_array(l.scales_gpu, base.scales, l.n);
-    } else if (l.type == CONNECTED) {
-        cuda_push_array(l.biases_gpu, base.biases, l.outputs);
-        cuda_push_array(l.weights_gpu, base.weights, l.outputs*l.inputs);
-    }
-}
-
-void sync_layer(network **nets, int n, int j)
-{
-    int i;
-    network *net = nets[0];
-    layer base = net->layers[j];
-    scale_weights(base, 0);
-    for (i = 0; i < n; ++i) {
-        cuda_set_device(nets[i]->gpu_index);
-        layer l = nets[i]->layers[j];
-        pull_weights(l);
-        merge_weights(l, base);
-    }
-    scale_weights(base, 1./n);
-    for (i = 0; i < n; ++i) {
-        cuda_set_device(nets[i]->gpu_index);
-        layer l = nets[i]->layers[j];
-        distribute_weights(l, base);
-    }
-}
-
-typedef struct{
-    network **nets;
-    int n;
-    int j;
-} sync_args;
-
-void *sync_layer_thread(void *ptr)
-{
-    sync_args args = *(sync_args*)ptr;
-    sync_layer(args.nets, args.n, args.j);
-    free(ptr);
-    return 0;
-}
-
-pthread_t sync_layer_in_thread(network **nets, int n, int j)
-{
-    pthread_t thread;
-    sync_args *ptr = (sync_args *)calloc(1, sizeof(sync_args));
-    ptr->nets = nets;
-    ptr->n = n;
-    ptr->j = j;
-    if(pthread_create(&thread, 0, sync_layer_thread, ptr)) error("Thread creation failed");
-    return thread;
-}
-
-void sync_nets(network **nets, int n, int interval)
-{
-    int j;
-    int layers = nets[0]->n;
-    pthread_t *threads = (pthread_t *) calloc(layers, sizeof(pthread_t));
-
-    nets[0]->seen += interval * (n-1) * nets[0]->batch;
-    for (j = 0; j < n; ++j){
-        nets[j]->seen = nets[0]->seen;
-    }
-    for (j = 0; j < layers; ++j) {
-        threads[j] = sync_layer_in_thread(nets, n, j);
-    }
-    for (j = 0; j < layers; ++j) {
-        pthread_join(threads[j], 0);
-    }
-    free(threads);
-}
-
-float train_networks(network **nets, int n, data d, int interval)
-{
-    int i;
-    int batch = nets[0]->batch;
-    assert(batch * n == d.X.rows);
-    pthread_t *threads = (pthread_t *) calloc(n, sizeof(pthread_t));
-    float *errors = (float *) calloc(n, sizeof(float));
-
-    float sum = 0;
-    for(i = 0; i < n; ++i){
-        data p = get_data_part(d, i, n);
-        threads[i] = train_network_in_thread(nets[i], p, errors + i);
-    }
-    for(i = 0; i < n; ++i){
-        pthread_join(threads[i], 0);
-        //printf("%f\n", errors[i]);
-        sum += errors[i];
-    }
-    //cudaDeviceSynchronize();
-    if (get_current_batch(nets[0]) % interval == 0) {
-        printf("Syncing... ");
-        fflush(stdout);
-        sync_nets(nets, n, interval);
-        printf("Done!\n");
-    }
-    //cudaDeviceSynchronize();
-    free(threads);
-    free(errors);
-    return (float)sum/(n);
 }
 
 void pull_network_output(network *net)
@@ -486,14 +304,6 @@ void save_weights_upto(network *net, char *filename, int cutoff)
     fprintf(stderr, "Saving weights to %s\n", filename);
     FILE *fp = fopen(filename, "wb");
     if(!fp) file_error(filename);
-
-    int major = 0;
-    int minor = 2;
-    int revision = 0;
-    fwrite(&major, sizeof(int), 1, fp);
-    fwrite(&minor, sizeof(int), 1, fp);
-    fwrite(&revision, sizeof(int), 1, fp);
-    fwrite(&net->seen, sizeof(size_t), 1, fp);
 
     int i;
     for(i = 0; i < net->n && i < cutoff; ++i){
@@ -522,21 +332,6 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
     fflush(stdout);
     FILE *fp = fopen(filename, "rb");
     if(!fp) file_error(filename);
-
-    int major;
-    int minor;
-    int revision;
-    fread(&major, sizeof(int), 1, fp);
-    fread(&minor, sizeof(int), 1, fp);
-    fread(&revision, sizeof(int), 1, fp);
-    if ((major*10 + minor) >= 2 && major < 1000 && minor < 1000){
-        fread(&net->seen, sizeof(size_t), 1, fp);
-    } else {
-        int iseen = 0;
-        fread(&iseen, sizeof(int), 1, fp);
-        net->seen = iseen;
-    }
-    int transpose = (major > 1000) || (minor > 1000);
 
     int i;
     for(i = start; i < net->n && i < cutoff; ++i){

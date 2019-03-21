@@ -22,13 +22,17 @@ float thresh = 0.5f;
 #ifdef GPU
 std::vector<int> gpus;
 bool nogpu = false;
+#else
+size_t threads_count = 1;
 #endif
 
 void train()
 {
-	Trainer trainer(network_file, dataset_file
+	Trainer trainer(network_file, dataset_file,
 #ifdef GPU
-		, gpus
+		gpus
+#else
+		threads_count
 #endif
 	);
 	if (input_file.size()) {
@@ -47,14 +51,10 @@ void train()
 			avg_loss = avg_loss*.9 + loss*.1;
 		}
 
-		size_t i = trainer.current_batch();
+		std::cout << trainer.batch_index << ": loss = " << loss << ", avg_loss = " << avg_loss << std::endl;
 
-		std::cout << i << ": loss = " << loss << ", avg_loss = " << avg_loss << std::endl;
-
-		if (i) {
-			if (i % 100 == 0) {
-				trainer.save_weights(output_file);
-			}
+		if (trainer.batch_index && (trainer.batch_index % 100 == 0)) {
+			trainer.save_weights(output_file);
 		}
 	}
 }
@@ -221,11 +221,12 @@ int main(int argc, char **argv)
 				value("network", network_file),
 				value("dataset", dataset_file),
 				option("-i", "--input") & value("input weights", input_file),
-				option("-o", "--output") & value("output weights", output_file)
-	#ifdef GPU
-				,
+				option("-o", "--output") & value("output weights", output_file),
+#ifdef GPU
 				option("--gpus") & values("gpus", gpus)
-	#endif
+#else
+				option("--threads") & value("threads count", threads_count)
+#endif
 			)
 			| (
 				command("test").set(mode, Test),
@@ -233,9 +234,9 @@ int main(int argc, char **argv)
 				value("weights", weights_file),
 				value("input image", input_file),
 				option("-o", "--output") & value("output image", output_file),
-	#ifdef GPU
+#ifdef GPU
 				option("--nogpu").set(nogpu),
-	#endif
+#endif
 				option("--thresh") & value("thresh", thresh)
 			)
 		);
@@ -247,11 +248,11 @@ int main(int argc, char **argv)
 
 		switch (mode) {
 			case Train:
-	#ifdef GPU
+#ifdef GPU
 				if (!gpus.size()) {
 					gpus = {0};
 				}
-	#endif
+#endif
 				if (!output_file.size()) {
 					output_file = "output.weights";
 				}

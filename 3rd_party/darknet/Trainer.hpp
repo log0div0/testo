@@ -7,9 +7,11 @@
 namespace darknet {
 
 struct Trainer {
-	Trainer(const std::string& network_file, const std::string& dataset_file
+	Trainer(const std::string& network_file, const std::string& dataset_file,
 #ifdef GPU
-		, const std::vector<int> gpus
+		const std::vector<int> gpus
+#else
+		size_t threads_count
 #endif
 	);
 
@@ -19,14 +21,12 @@ struct Trainer {
 
 	float train();
 
-	size_t current_batch() const;
-
-#ifdef GPU
 	std::vector<Network> networks;
-#else
-	Network network;
-#endif
 	Dataset dataset;
+	size_t batch_index = 0;
+
+private:
+	float train(Network& network);
 };
 
 }

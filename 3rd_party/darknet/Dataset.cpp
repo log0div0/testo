@@ -51,6 +51,8 @@ Data Dataset::load(size_t rows_count) {
 
 	for (size_t row_index = 0; row_index < rows_count; ++row_index)
 	{
+		size_t item_index = rand() % item_count;
+
 		std::string image_path = image_dir + std::to_string(item_index) + ".png";
 		Image image(image_path);
 		if ((image.w != image_width) ||
@@ -79,8 +81,6 @@ Data Dataset::load(size_t rows_count) {
 			d.y.vals[row_index][bbox_size * bbox_index + 4] = bbox_class;
 			++bbox_index;
 		}
-
-		item_index = (item_index + 1) % item_count;
 	}
 
 	return d;

@@ -35,7 +35,6 @@ Network::Network(const std::string& path
 
 	n = ini.sections().size();
 	layers = (layer*)calloc(n, sizeof(layer));
-	seen = 0;
 #ifdef GPU
 	gpu_index = gpu;
 	if (gpu_index >= 0) {

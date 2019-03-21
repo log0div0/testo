@@ -396,7 +396,6 @@ void free_layer(layer);
 typedef struct network{
     int n;
     int batch;
-    size_t seen;
     layer *layers;
 
     float learning_rate;
@@ -456,38 +455,6 @@ typedef struct{
     matrix X;
     matrix y;
 } data;
-
-inline void get_random_batch(data d, int n, float *X, float *y)
-{
-    int j;
-    for(j = 0; j < n; ++j){
-        int index = rand()%d.X.rows;
-        memcpy(X+j*d.X.cols, d.X.vals[index], d.X.cols*sizeof(float));
-        memcpy(y+j*d.y.cols, d.y.vals[index], d.y.cols*sizeof(float));
-    }
-}
-
-inline void get_next_batch(data d, int n, int offset, float *X, float *y)
-{
-    int j;
-    for(j = 0; j < n; ++j){
-        int index = offset + j;
-        memcpy(X+j*d.X.cols, d.X.vals[index], d.X.cols*sizeof(float));
-        if(y) memcpy(y+j*d.y.cols, d.y.vals[index], d.y.cols*sizeof(float));
-    }
-}
-
-inline data get_data_part(data d, int part, int total)
-{
-    data p = {0};
-    p.X.rows = d.X.rows * (part + 1) / total - d.X.rows * part / total;
-    p.y.rows = d.y.rows * (part + 1) / total - d.y.rows * part / total;
-    p.X.cols = d.X.cols;
-    p.y.cols = d.y.cols;
-    p.X.vals = d.X.vals + d.X.rows * part / total;
-    p.y.vals = d.y.vals + d.y.rows * part / total;
-    return p;
-}
 
 typedef struct{
     int id;
