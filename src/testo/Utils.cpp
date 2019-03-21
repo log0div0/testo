@@ -3,19 +3,6 @@
 #include <sys/types.h>
 #include <algorithm>
 
-void backtrace(std::ostream& stream, const std::exception& error) {
-	stream << error.what();
-	try {
-		std::rethrow_if_nested(error);
-	} catch (const std::exception& error) {
-		stream << ": ";
-		backtrace(stream, error);
-	} catch(...) {
-		stream << std::endl;
-		stream << "[Unknown exception type]";
-	}
-}
-
 uint32_t time_to_seconds(const std::string& time) {
 	uint32_t seconds = std::stoul(time.substr(0, time.length() - 1));
 	if (time[time.length() - 1] == 's') {

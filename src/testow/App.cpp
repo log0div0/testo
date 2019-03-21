@@ -12,21 +12,20 @@ CUDA::CUDA() {
 
 App* app = nullptr;
 
-App::App(): net("C:\\Users\\log0div0\\work\\testo\\nn\\testo.cfg") {
+App::App(): net("/home/alex/work/vbox/testo/nn/testo.cfg"), qemu_connect(vir::connect_open("qemu:///system")) {
 	::app = this;
-	net.load_weights("C:\\Users\\log0div0\\work\\testo\\nn\\testo.weights");
+	net.load_weights("/home/alex/work/vbox/testo/nn/testo.weights");
 	net.set_batch(1);
-	virtual_box = virtual_box_client.virtual_box();
 }
 
 void App::render() {
 	if (ImGui::Begin("List of VMs")) {
-		for (auto& machine: virtual_box.machines()) {
-			bool is_selected = vm && (vm->machine.name() == machine.name());
-			if (ImGui::Selectable(machine.name().c_str(), &is_selected)) {
+		for (auto& domain: qemu_connect.domains({VIR_CONNECT_LIST_DOMAINS_PERSISTENT})) {
+			bool is_selected = vm && (vm->domain.name() == domain.name());
+			if (ImGui::Selectable(domain.name().c_str(), &is_selected)) {
 				if (is_selected) {
 					vm = nullptr;
-					vm = std::make_shared<VM>(std::move(machine));
+					vm = std::make_shared<VM>(qemu_connect, std::move(domain));
 				} else {
 					vm = nullptr;
 				}

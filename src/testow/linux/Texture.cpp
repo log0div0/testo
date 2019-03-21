@@ -41,6 +41,6 @@ Texture& Texture::operator=(Texture&& other) {
 
 void Texture::write(const uint8_t* data, size_t size) {
 	glBindTexture(GL_TEXTURE_2D, _handle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
 }
 

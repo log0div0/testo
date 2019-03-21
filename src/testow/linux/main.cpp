@@ -33,23 +33,6 @@
 #include "../App.hpp"
 #include <iostream>
 
-void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
-	stream << n << ". " << error.what();
-	try {
-		std::rethrow_if_nested(error);
-	} catch (const std::exception& error) {
-		stream << std::endl;
-		backtrace(stream, error, n + 1);
-	} catch(...) {
-		stream << std::endl;
-		stream << n << ". " << "[Unknown exception type]";
-	}
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
-	backtrace(stream, error, 1);
-	return stream;
-}
 static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
