@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Snapshot.hpp"
+#include "Stream.hpp"
 #include "pugixml/pugixml.hpp"
 #include <libvirt/libvirt.h>
 #include <string>
@@ -51,6 +52,7 @@ struct Domain {
 	void update_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});
 	void detach_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});
 
+	std::string screenshot(Stream& st, uint32_t screen_id = 0);
 	::virDomain* handle = nullptr;
 };
 

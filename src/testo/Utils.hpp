@@ -8,7 +8,19 @@
 
 namespace fs = std::experimental::filesystem;
 
-void backtrace(std::ostream& stream, const std::exception& error);
+static void backtrace(std::ostream& stream, const std::exception& error) {
+	stream << error.what();
+	try {
+		std::rethrow_if_nested(error);
+	} catch (const std::exception& error) {
+		stream << ": ";
+		backtrace(stream, error);
+	} catch(...) {
+		stream << std::endl;
+		stream << "[Unknown exception type]";
+	}
+}
+
 uint32_t time_to_seconds(const std::string& time);
 void exec_and_throw_if_failed(const std::string& command);
 fs::path home_dir();

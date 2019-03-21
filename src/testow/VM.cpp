@@ -18,10 +18,9 @@ struct BGRA {
 	uint8_t b, g, r, a;
 };
 
-VM::VM(vbox::Machine machine_): machine(std::move(machine_)) {
-	session = ::app->virtual_box_client.session();
-	machine.lock_machine(session, LockType_Shared);
+VM::VM(vir::Connect& qemu_connect, vir::Domain domain): qemu_connect(qemu_connect), domain(std::move(domain)) {
 	running = true;
+	buffer.reserve(10000000); //10 Mb
 	thread = std::thread([=] {
 		run();
 	});
@@ -30,7 +29,6 @@ VM::VM(vbox::Machine machine_): machine(std::move(machine_)) {
 VM::~VM() {
 	running = false;
 	thread.join();
-	session.unlock_machine();
 }
 
 static int entry_index(layer l, int location, int entry)
@@ -51,51 +49,61 @@ void VM::run() {
 			std::this_thread::sleep_for(interval - diff);
 		}
 		previous = current;
+		auto stream = qemu_connect.new_stream();
+		auto mime = domain.screenshot(stream);
+		size_t bytes = stream.recv_all(buffer.data(), buffer.capacity());
+		stream.finish();
 
-		if (machine.state() == MachineState_Running) {
-			if (!display) {
-				display = session.console().display();
-			}
-		} else {
-			if (display) {
-				display = {};
-				std::lock_guard<std::shared_mutex> lock(mutex);
-				width = 0;
-				height = 0;
-			}
+		std::string format(""), str_width(""), str_height("");
+		size_t current_pos = 0;
+		while(buffer[current_pos] != '\n') {
+			format += buffer[current_pos];
+			current_pos++;
+		}
+		current_pos++;
+
+		while(buffer[current_pos] != ' ') {
+			str_width += buffer[current_pos];
+			current_pos++;
 		}
 
-		if (!display) {
-			continue;
+		current_pos++;
+
+		while(buffer[current_pos] != '\n') {
+			str_height += buffer[current_pos];
+			current_pos++;
 		}
 
-		ULONG width = 0;
-		ULONG height = 0;
-		ULONG bits_per_pixel = 0;
-		LONG x_origin = 0;
-		LONG y_origin = 0;
-		GuestMonitorStatus guest_monitor_status = GuestMonitorStatus_Disabled;
+		current_pos++;
 
-		display.get_screen_resolution(0, &width, &height, &bits_per_pixel, &x_origin, &y_origin, &guest_monitor_status);
+		while(buffer[current_pos] != '\n') {
+			current_pos++;
+		}
+
+		current_pos++;
+
+		width = std::stoi(str_width);
+		height = std::stoi(str_height);
 
 		if (!width || !height) {
 			continue;
 		}
 
-		vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
-		vbox::ArrayOut texture1 = safe_array.copy_out(VT_UI1);
+		std::vector<uint8_t> texture1(buffer.begin() + current_pos, buffer.begin() + bytes);
+
+		texture2.resize(width * height * 3);
+		std::fill(texture2.begin(), texture2.end(), 0);
+
 		if (this->texture1 == texture1) {
 			continue;
 		}
 
-		texture2.resize(width * height * sizeof(BGRA));
-		std::fill(texture2.begin(), texture2.end(), 0);
 
 		if ((image.width() != width) || (image.height() != height)) {
 			image = darknet::Image(width, height, 3);
 		}
 
-		size_t channels = 4;
+		size_t channels = 3;
 
 		for(size_t c = 0; c < image.channels(); ++c){
 			for(size_t h = 0; h < image.height(); ++h){
