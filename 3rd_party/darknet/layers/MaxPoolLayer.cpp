@@ -1,6 +1,10 @@
 
 #include "MaxPoolLayer.hpp"
 
+extern "C" {
+#include <maxpool_layer.h>
+}
+
 using namespace inipp;
 
 namespace darknet {

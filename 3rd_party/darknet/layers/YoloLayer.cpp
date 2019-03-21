@@ -1,6 +1,10 @@
 
 #include "YoloLayer.hpp"
 
+extern "C" {
+#include <yolo_layer.h>
+}
+
 using namespace inipp;
 
 namespace darknet {
@@ -39,7 +43,6 @@ YoloLayer::YoloLayer(const inisection& section,
 	int *mask = parse_yolo_mask(section.get("mask").c_str(), &num);
 	int max_boxes = section.get_int("max", 90);
 	(layer&)*this = make_yolo_layer(batch, w, h, num, total, mask, classes, max_boxes);
-	assert(outputs == params.inputs);
 
 	ignore_thresh = section.get_float("ignore_thresh", .5);
 	truth_thresh = section.get_float("truth_thresh", 1);

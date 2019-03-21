@@ -1,6 +1,10 @@
 
 #include "ConvolutionalLayer.hpp"
 
+extern "C" {
+#include <convolutional_layer.h>
+}
+
 using namespace inipp;
 
 namespace darknet {

@@ -1,10 +1,7 @@
 
 #pragma once
 
-extern "C" {
-#include <convolutional_layer.h>
-}
-
+#include <darknet.h>
 #include <inipp.hh>
 
 namespace darknet {
