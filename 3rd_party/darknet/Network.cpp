@@ -142,15 +142,6 @@ void Network::save_weights(const std::string& weights_file_path) {
 	::save_weights(this, (char*)weights_file_path.c_str());
 }
 
-void Network::set_batch(size_t batch) {
-#ifdef GPU
-	if (gpu_index >= 0) {
-		cuda_set_device(gpu_index);
-	}
-#endif
-	set_batch_network(this, batch);
-}
-
 float* Network::predict(const Image& image) {
 	if ((width() != image.width()) ||
 		(height() != image.height()))

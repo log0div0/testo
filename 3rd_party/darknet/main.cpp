@@ -43,7 +43,6 @@ void train()
 	if (weights_file.size()) {
 		network.load_weights(weights_file);
 	}
-	network.set_batch(1);
 	network.train = 1;
 
 	Dataset dataset(dataset_file);
@@ -64,7 +63,7 @@ void train()
 				++count;
 			}
 		}
-		float loss = sum/count;
+		float loss = sum/count/network.batch;
 		update_network(&network);
 
 		if (avg_loss < 0) {
@@ -164,7 +163,7 @@ struct BoxSet: std::list<Box> {
 	}
 };
 
-void test()
+void predict()
 {
 	Network network(network_file
 #ifdef GPU
@@ -172,7 +171,6 @@ void test()
 #endif
 	);
 	network.load_weights(weights_file);
-	network.set_batch(1);
 
 	Image image = Image(image_file);
 
@@ -230,7 +228,7 @@ void test()
 
 enum Mode {
 	Train,
-	Test
+	Predict
 };
 
 Mode mode;
@@ -253,7 +251,7 @@ int main(int argc, char **argv)
 #endif
 			)
 			| (
-				command("test").set(mode, Test),
+				command("predict").set(mode, Predict),
 				value("network", network_file),
 				value("weights", weights_file),
 				value("input image", image_file),
@@ -277,11 +275,11 @@ int main(int argc, char **argv)
 				}
 				train();
 				break;
-			case Test:
+			case Predict:
 				if (!output_file.size()) {
 					output_file = "output";
 				}
-				test();
+				predict();
 				break;
 		}
 	}

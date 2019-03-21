@@ -24,7 +24,6 @@ struct Network: network {
 
 	void load_weights(const std::string& weights_file_path);
 	void save_weights(const std::string& weights_file_path);
-	void set_batch(size_t batch);
 	float* predict(const Image& image);
 
 	const layer& back() const {
