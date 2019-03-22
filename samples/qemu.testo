@@ -22,8 +22,13 @@ machine buwaha {
 	}
 }
 
-macro reboot(login, password) {
+macro another_reboot(login, password) {
+	type $login + " " + $password
 	wait for 3s
+}
+
+macro reboot(login, password) {
+	another_reboot($password, $login)
 }
 
 flash dummy_flash {
