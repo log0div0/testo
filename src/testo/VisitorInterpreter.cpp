@@ -126,6 +126,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			for (auto& key: new_keys) {
 				vm->set_metadata(key, "");
 			}
+
+			if (vm->is_flash_plugged(nullptr)) {
+				throw std::runtime_error(fmt::format("Vm {} has unplugged flash drive, you must unplug it before the end of the test", vm->name()));
+			}
 		}
 
 		reg.local_vms.clear();
@@ -678,6 +682,11 @@ void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::sh
 
 	print("Applying snapshot ", snapshot->name.value(), " to vm ", vm->name());
 	visit_action_block(vm, snapshot->action_block->action);
+
+	if (vm->is_flash_plugged(nullptr)) {
+		throw std::runtime_error(fmt::format("Can't take snapshot {}: you must unplug all flash drives", snapshot->name.value()));
+	}
+
 	auto new_cksum = snapshot_cksum(vm, snapshot);
 	print("Taking snapshot ", snapshot->name.value(), " for vm ", vm->name());
 	vm->make_snapshot(snapshot->name, new_cksum);

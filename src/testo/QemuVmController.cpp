@@ -656,20 +656,6 @@ void QemuVmController::rollback(const std::string& snapshot) {
 			}
 		}
 
-		//Aaaaaand, last but not least - FLASH DRIVES CONTINGENCY!!!11
-		std::string currently_flash_attached = get_flash_img();
-		std::string snapshot_flash_attached = get_flash_img(snap);
-
-		if (currently_flash_attached != snapshot_flash_attached) {
-			if (currently_flash_attached.length()) {
-				detach_flash_drive();
-			}
-
-			if (snapshot_flash_attached.length()) {
-				attach_flash_drive(snapshot_flash_attached);
-			}
-		}
-
 		domain.revert_to_snapshot(snap);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Performing rollback error"));
