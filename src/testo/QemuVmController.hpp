@@ -76,7 +76,6 @@ private:
 	void detach_nic(const std::string& nic);
 
 	std::string get_flash_img();
-	std::string get_flash_img(vir::Snapshot& snapshot);
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 

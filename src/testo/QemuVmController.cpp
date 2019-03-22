@@ -656,6 +656,11 @@ void QemuVmController::rollback(const std::string& snapshot) {
 			}
 		}
 
+		std::string flash_attached = get_flash_img();
+		if (flash_attached.length()) {
+			detach_flash_drive();
+		}
+
 		domain.revert_to_snapshot(snap);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Performing rollback error"));
@@ -908,29 +913,6 @@ void QemuVmController::set_link(const std::string& nic, bool is_connected) {
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Setting link status on nic {}", nic)));
-	}
-}
-
-std::string QemuVmController::get_flash_img(vir::Snapshot& snapshot) {
-	try {
-		auto config = snapshot.dump_xml();
-		auto devices = config.first_child().child("domain").child("devices");
-
-		std::string result = "";
-
-		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-			if (std::string(disk.attribute("device").value()) != "disk") {
-				continue;
-			}
-
-			if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
-				result = disk.child("source").attribute("file").value();
-			}
-		}
-
-		return result;
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Getting flash image from snapshot"));
 	}
 }
 

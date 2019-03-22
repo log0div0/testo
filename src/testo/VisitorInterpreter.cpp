@@ -126,10 +126,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			for (auto& key: new_keys) {
 				vm->set_metadata(key, "");
 			}
-
-			if (vm->is_flash_plugged(nullptr)) {
-				throw std::runtime_error(fmt::format("Vm {} has unplugged flash drive, you must unplug it before the end of the test", vm->name()));
-			}
 		}
 
 		reg.local_vms.clear();
