@@ -29,6 +29,7 @@ fs::path flash_drives_img_dir();
 fs::path flash_drives_mount_dir();
 fs::path scripts_tmp_dir();
 
+std::string file_signature(const fs::path& file);
 
 bool is_number(const std::string& s);
 
@@ -46,6 +47,7 @@ struct xml_string_writer: pugi::xml_writer
 		result.append(static_cast<const char*>(data), size);
 	}
 };
+
 
 inline std::string node_to_string(pugi::xml_node node)
 {

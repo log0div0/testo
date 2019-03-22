@@ -67,6 +67,11 @@ fs::path scripts_tmp_dir() {
 	return res;
 }
 
+std::string file_signature(const fs::path& file) {
+	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
+	return file.filename().generic_string() + std::to_string(last_modify_time);
+}
+
 //NOTE: this check is very, very rough
 bool is_mac_correct(const std::string& mac) {
 	int k = 0, s = 0;

@@ -149,7 +149,10 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 			return;
 		}
 
-		if ((!vm->is_defined()) || !check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config")))) {
+		if ((!vm->is_defined()) ||
+			!check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config"))) ||
+			(file_signature(vm->get_config().at("iso").get<std::string>()) != vm->get_metadata("dvd_signature")))
+		{
 			vm->install();
 			return apply_actions(vm, vm_state->snapshot, true);
 		}
@@ -720,7 +723,6 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 	new_config.erase("metadata");
 	old_config.erase("metadata");
 
-
 	//2) Actually.... Let's just be practical here.
 	//Check if both have or don't have nics
 
@@ -738,8 +740,10 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 	new_config.erase("nic");
 	old_config.erase("nic");
 
+	//Check also dvd contingency
 	return (old_config == new_config);
 }
+
 
 std::string VisitorInterpreter::snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
 	VisitorCksum visitor(reg);

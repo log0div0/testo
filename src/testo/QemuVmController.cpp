@@ -543,6 +543,7 @@ void QemuVmController::install() {
 		set_metadata("vm_config", config_str);
 		set_metadata("vm_nic_count", std::to_string(nic_count));
 		set_metadata("vm_name", name());
+		set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
 
 		domain.start();
 	} catch (const std::exception& error) {

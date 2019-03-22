@@ -98,7 +98,10 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shar
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		result += visit_word(vm, plug->path);
+		auto path = visit_word(vm, plug->path);
+		result += path;
+		//add signature for dvd file
+		result += file_signature(path);
 	}
 	return result;
 }
