@@ -44,6 +44,7 @@ snapshot dummy {
 snapshot dummy2: dummy {
 	plug dvd $ISO_PATH + "/VBoxGuestAdditions_6.0.4.iso"
 	plug flash dummy_flash
+	unplug flash dummy_flash
 }
 
 test dummy: buwaha(dummy2)

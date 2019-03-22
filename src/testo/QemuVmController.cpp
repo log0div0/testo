@@ -656,18 +656,9 @@ void QemuVmController::rollback(const std::string& snapshot) {
 			}
 		}
 
-		//Aaaaaand, last but not least - FLASH DRIVES CONTINGENCY!!!11
-		std::string currently_flash_attached = get_flash_img();
-		std::string snapshot_flash_attached = get_flash_img(snap);
-
-		if (currently_flash_attached != snapshot_flash_attached) {
-			if (currently_flash_attached.length()) {
-				detach_flash_drive();
-			}
-
-			if (snapshot_flash_attached.length()) {
-				attach_flash_drive(snapshot_flash_attached);
-			}
+		std::string flash_attached = get_flash_img();
+		if (flash_attached.length()) {
+			detach_flash_drive();
 		}
 
 		domain.revert_to_snapshot(snap);
@@ -922,29 +913,6 @@ void QemuVmController::set_link(const std::string& nic, bool is_connected) {
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Setting link status on nic {}", nic)));
-	}
-}
-
-std::string QemuVmController::get_flash_img(vir::Snapshot& snapshot) {
-	try {
-		auto config = snapshot.dump_xml();
-		auto devices = config.first_child().child("domain").child("devices");
-
-		std::string result = "";
-
-		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-			if (std::string(disk.attribute("device").value()) != "disk") {
-				continue;
-			}
-
-			if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
-				result = disk.child("source").attribute("file").value();
-			}
-		}
-
-		return result;
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Getting flash image from snapshot"));
 	}
 }
 
