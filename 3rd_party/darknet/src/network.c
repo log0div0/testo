@@ -11,26 +11,6 @@
 #include "batchnorm_layer.h"
 #include "maxpool_layer.h"
 
-void forward_network(network *netp)
-{
-#ifdef GPU
-    if(netp->gpu_index >= 0){
-        forward_network_gpu(netp);
-        return;
-    }
-#endif
-    network net = *netp;
-    int i;
-    for(i = 0; i < net.n; ++i){
-        layer l = net.layers[i];
-        if(l.delta){
-            fill_cpu(l.outputs * l.batch, 0, l.delta, 1);
-        }
-        l.forward(l, net);
-        net.input = l.output;
-    }
-}
-
 void update_network(network *netp)
 {
 #ifdef GPU
@@ -79,25 +59,6 @@ void backward_network(network *netp)
     }
 }
 
-void set_batch_network(network *net, int b)
-{
-    net->batch = b;
-    int i;
-    for(i = 0; i < net->n; ++i){
-        net->layers[i].batch = b;
-#ifdef CUDNN
-        if(net->layers[i].type == CONVOLUTIONAL){
-            cudnn_convolutional_setup(net->layers + i);
-        }
-        if(net->layers[i].type == DECONVOLUTIONAL){
-            layer *l = net->layers + i;
-            cudnnSetTensor4dDescriptor(l->dstTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l->out_c, l->out_h, l->out_w);
-            cudnnSetTensor4dDescriptor(l->normTensorDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, l->out_c, 1, 1);
-        }
-#endif
-    }
-}
-
 int resize_network(network *net, int w, int h)
 {
 #ifdef GPU
@@ -131,7 +92,7 @@ int resize_network(network *net, int w, int h)
         h = l.out_h;
         if(l.type == AVGPOOL) break;
     }
-    layer out = get_network_output_layer(net);
+    layer out = net->layers[net->n - 1];
     net->inputs = net->layers[0].inputs;
     net->outputs = out.outputs;
     net->truths = out.outputs;
@@ -161,15 +122,6 @@ int resize_network(network *net, int w, int h)
     return 0;
 }
 
-layer get_network_output_layer(network *net)
-{
-    int i;
-    for(i = net->n - 1; i >= 0; --i){
-        if(net->layers[i].type != COST) break;
-    }
-    return net->layers[i];
-}
-
 #ifdef GPU
 
 void forward_network_gpu(network *netp)
@@ -191,7 +143,8 @@ void forward_network_gpu(network *netp)
         net.input_gpu = l.output_gpu;
         net.input = l.output;
     }
-    pull_network_output(netp);
+    layer l = net.layers[net.n - 1];
+    cuda_pull_array(l.output_gpu, l.output, l.outputs*l.batch);
 }
 
 void backward_network_gpu(network *netp)
@@ -232,12 +185,6 @@ void update_network_gpu(network *netp)
             l.update_gpu(l, a);
         }
     }
-}
-
-void pull_network_output(network *net)
-{
-    layer l = get_network_output_layer(net);
-    cuda_pull_array(l.output_gpu, l.output, l.outputs*l.batch);
 }
 
 #endif

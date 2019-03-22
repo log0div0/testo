@@ -24,7 +24,6 @@ struct Network: network {
 
 	void load_weights(const std::string& weights_file_path);
 	void save_weights(const std::string& weights_file_path);
-	float* predict(const Image& image);
 
 	const layer& back() const {
 		return layers[n-1];
@@ -38,8 +37,7 @@ struct Network: network {
 		return h;
 	}
 
-private:
-	float* forward(float* input);
+	void forward();
 };
 
 }

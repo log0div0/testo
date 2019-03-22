@@ -53,7 +53,7 @@ void train()
 	{
 		Data d = dataset.load(network.batch);
 		get_next_batch(d, d.X.rows, 0, network.input, network.truth);
-		forward_network(&network);
+		network.forward();
 		backward_network(&network);
 		float sum = 0;
 		int count = 0;
@@ -171,12 +171,22 @@ void predict()
 #endif
 	);
 	network.load_weights(weights_file);
+	network.train = 0;
 
 	Image image = Image(image_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
 
-	float* predictions = network.predict(image);
+	if ((image.w * image.h * image.c) != network.inputs)
+	{
+		throw std::runtime_error("Image size is not equal to network size");
+	}
+
+	memcpy(network.input, image.data, network.inputs * sizeof(float));
+	network.truth = 0;
+	network.delta = 0;
+	network.forward();
+	float* predictions = network.back().output;
 
 	// const char chars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~";
 

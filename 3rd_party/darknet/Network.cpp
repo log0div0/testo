@@ -142,22 +142,8 @@ void Network::save_weights(const std::string& weights_file_path) {
 	::save_weights(this, (char*)weights_file_path.c_str());
 }
 
-float* Network::predict(const Image& image) {
-	if ((width() != image.width()) ||
-		(height() != image.height()))
-	{
-		throw std::runtime_error("Image size is not equal to network size");
-	} else {
-		return forward(image.data);
-	}
-}
-
-float* Network::forward(float* in) {
-	network orig = *this;
-	input = in;
-	truth = 0;
-	train = 0;
-	delta = 0;
+void Network::forward() {
+	network backup = *this;
 #ifdef GPU
 	if(gpu_index >= 0){
 		forward_network_gpu(this);
@@ -174,9 +160,7 @@ float* Network::forward(float* in) {
 			input = l.output;
 		}
 	}
-	float *out = back().output;
-	(network&)*this = orig;
-	return out;
+	*(network*)this = backup;
 }
 
 }
