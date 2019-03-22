@@ -3,8 +3,32 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
+#include <stack>
 
 struct VisitorInterpreter {
+	struct Stack {
+		void define(const std::string& name, const std::string& value) {
+			vars[name] = value;
+		}
+
+
+		bool is_defined(const std::string& name) {
+			return (vars.find(name) != vars.end());
+		}
+
+		std::string ref(const std::string& name) {
+			auto found = vars.find(name);
+
+			if (found != vars.end()) {
+				return found->second;
+			} else {
+				throw std::runtime_error(std::string("Var ") + name + " not defined");
+			}
+		}
+
+		std::unordered_map<std::string, std::string> vars;
+	};
+
 	struct InterpreterException: public std::runtime_error {
 		explicit InterpreterException(std::shared_ptr<AST::Node> node, std::shared_ptr<VmController> vm):
 			std::runtime_error(""), node(node), vm(vm)
@@ -74,6 +98,8 @@ struct VisitorInterpreter {
 	Register& reg;
 
 private:
+	std::stack<Stack> local_vars;
+
 	template <typename... Args>
 	void print(Args... args) {
 		std::cout << "[";

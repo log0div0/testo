@@ -1,4 +1,4 @@
-machine buwaha	 {
+machine buwaha {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
@@ -20,6 +20,15 @@ machine buwaha	 {
 		login: "root"
 		password: "1111"
 	}
+}
+
+macro another_reboot(login, password) {
+	type $login + " " + $password
+	wait for 3s
+}
+
+macro reboot(login, password) {
+	another_reboot($password, $login)
 }
 
 flash dummy_flash {
@@ -68,6 +77,7 @@ test dummy2: buwaha(dummy2)
 test dummy3: buwaha(dummy2)
 {
 	#buwaha exec bash "ping -c20 192.168.156.10"
+	buwaha reboot("Hey", "Suka")
 	buwaha wait for 3s
 	#buwaha unplug flash dummy_flash
 	#buwaha stop
