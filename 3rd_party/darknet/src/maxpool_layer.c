@@ -2,22 +2,6 @@
 #include "cuda.h"
 #include <stdio.h>
 
-image get_maxpool_image(maxpool_layer l)
-{
-    int h = l.out_h;
-    int w = l.out_w;
-    int c = l.c;
-    return float_to_image(w,h,c,l.output);
-}
-
-image get_maxpool_delta(maxpool_layer l)
-{
-    int h = l.out_h;
-    int w = l.out_w;
-    int c = l.c;
-    return float_to_image(w,h,c,l.delta);
-}
-
 maxpool_layer make_maxpool_layer(int batch, int h, int w, int c, int size, int stride, int padding)
 {
     maxpool_layer l = {0};

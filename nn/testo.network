@@ -5,7 +5,7 @@
 # width=800
 # height=600
 # Training
-batch=1
+batch=8
 width=256
 height=256
 channels=3

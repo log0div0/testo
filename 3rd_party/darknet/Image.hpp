@@ -39,8 +39,6 @@ struct Image: image {
 		return data[index];
 	}
 
-	Image letterbox(size_t width, size_t height) const;
-
 	void draw(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom, float r, float g, float b);
 
 private:

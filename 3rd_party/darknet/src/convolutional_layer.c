@@ -73,16 +73,6 @@ int convolutional_out_width(convolutional_layer l)
     return (l.w + 2*l.pad - l.size) / l.stride + 1;
 }
 
-image get_convolutional_image(convolutional_layer l)
-{
-    return float_to_image(l.out_w,l.out_h,l.out_c,l.output);
-}
-
-image get_convolutional_delta(convolutional_layer l)
-{
-    return float_to_image(l.out_w,l.out_h,l.out_c,l.delta);
-}
-
 static size_t get_workspace_size(layer l){
 #ifdef CUDNN
     if(gpu_index >= 0){
@@ -539,55 +529,6 @@ void update_convolutional_layer(convolutional_layer l, update_args a)
     scal_cpu(l.nweights, momentum, l.weight_updates, 1);
 }
 
-
-image get_convolutional_weight(convolutional_layer l, int i)
-{
-    int h = l.size;
-    int w = l.size;
-    int c = l.c/l.groups;
-    return float_to_image(w,h,c,l.weights+i*h*w*c);
-}
-
-void rgbgr_weights(convolutional_layer l)
-{
-    int i;
-    for(i = 0; i < l.n; ++i){
-        image im = get_convolutional_weight(l, i);
-        if (im.c == 3) {
-            rgbgr_image(im);
-        }
-    }
-}
-
-void rescale_weights(convolutional_layer l, float scale, float trans)
-{
-    int i;
-    for(i = 0; i < l.n; ++i){
-        image im = get_convolutional_weight(l, i);
-        if (im.c == 3) {
-            scale_image(im, scale);
-            float sum = sum_array(im.data, im.w*im.h*im.c);
-            l.biases[i] += sum*trans;
-        }
-    }
-}
-
-image *get_weights(convolutional_layer l)
-{
-    image *weights = calloc(l.n, sizeof(image));
-    int i;
-    for(i = 0; i < l.n; ++i){
-        weights[i] = copy_image(get_convolutional_weight(l, i));
-        normalize_image(weights[i]);
-        /*
-           char buff[256];
-           sprintf(buff, "filter%d", i);
-           save_image(weights[i], buff);
-         */
-    }
-    //error("hey");
-    return weights;
-}
 
 void save_convolutional_weights_binary(layer l, FILE *fp)
 {
