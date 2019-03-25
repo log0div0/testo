@@ -509,12 +509,12 @@ void backward_convolutional_layer(convolutional_layer l, network net)
     }
 }
 
-void update_convolutional_layer(convolutional_layer l, update_args a)
+void update_convolutional_layer(convolutional_layer l, network net)
 {
-    float learning_rate = a.learning_rate;
-    float momentum = a.momentum;
-    float decay = a.decay;
-    int batch = a.batch;
+    float learning_rate = net.learning_rate;
+    float momentum = net.momentum;
+    float decay = net.decay;
+    int batch = net.batch;
 
     axpy_cpu(l.n, learning_rate/batch, l.bias_updates, 1, l.biases, 1);
     scal_cpu(l.n, momentum, l.bias_updates, 1);

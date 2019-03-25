@@ -4,7 +4,6 @@
 #include "image.h"
 #include "cuda.h"
 #include "layer.h"
-#include "network.h"
 
 typedef layer maxpool_layer;
 

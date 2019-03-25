@@ -8,6 +8,19 @@
 #include "layers/YoloLayer.hpp"
 #include "layers/MaxPoolLayer.hpp"
 
+extern "C" {
+
+#include "convolutional_layer.h"
+#include "yolo_layer.h"
+#include "batchnorm_layer.h"
+#include "maxpool_layer.h"
+
+void save_convolutional_weights(layer l, FILE *fp);
+void save_batchnorm_weights(layer l, FILE *fp);
+void load_convolutional_weights(layer l, FILE *fp);
+void load_batchnorm_weights(layer l, FILE *fp);
+}
+
 using namespace inipp;
 
 namespace darknet {
@@ -135,18 +148,71 @@ Network::Network(Network&& other): network(other) {
 }
 
 void Network::load_weights(const std::string& weights_file_path) {
-	::load_weights(this, (char*)weights_file_path.c_str());
+#ifdef GPU
+	if(gpu_index >= 0){
+		cuda_set_device(gpu_index);
+	}
+#endif
+	FILE *fp = fopen(weights_file_path.c_str(), "rb");
+	if(!fp) {
+		throw std::runtime_error("Failed to open file " + weights_file_path);
+	}
+
+	for(int i = 0; i < n; ++i){
+		layer l = layers[i];
+		if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+			load_convolutional_weights(l, fp);
+		}
+		if(l.type == BATCHNORM){
+			load_batchnorm_weights(l, fp);
+		}
+	}
+	fclose(fp);
 }
 
 void Network::save_weights(const std::string& weights_file_path) {
-	::save_weights(this, (char*)weights_file_path.c_str());
+#ifdef GPU
+	if(gpu_index >= 0){
+		cuda_set_device(gpu_index);
+	}
+#endif
+	FILE *fp = fopen(weights_file_path.c_str(), "wb");
+	if(!fp) {
+		throw std::runtime_error("Failed to open file " + weights_file_path);
+	}
+
+	for(int i = 0; i < n; ++i){
+		layer l = layers[i];
+		if(l.type == CONVOLUTIONAL || l.type == DECONVOLUTIONAL){
+			save_convolutional_weights(l, fp);
+		} if(l.type == BATCHNORM){
+			save_batchnorm_weights(l, fp);
+		}
+	}
+	fclose(fp);
 }
 
 void Network::forward() {
 	network backup = *this;
 #ifdef GPU
 	if(gpu_index >= 0){
-		forward_network_gpu(this);
+		cuda_set_device(gpu_index);
+		cuda_push_array(input_gpu, input, inputs*batch);
+		if (truth) {
+			cuda_push_array(truth_gpu, truth, truths*batch);
+		}
+
+		for(int i = 0; i < n; ++i){
+			layer l = layers[i];
+			if(l.delta_gpu){
+				fill_gpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
+			}
+			l.forward_gpu(l, *this);
+			input_gpu = l.output_gpu;
+			input = l.output;
+		}
+		layer l = layers[n - 1];
+		cuda_pull_array(l.output_gpu, l.output, l.outputs*l.batch);
 	}
 	else
 #endif
@@ -161,6 +227,122 @@ void Network::forward() {
 		}
 	}
 	*(network*)this = backup;
+}
+
+void Network::backward() {
+	network backup = *this;
+#ifdef GPU
+	if(gpu_index >= 0){
+		cuda_set_device(gpu_index);
+		for(int i = n-1; i >= 0; --i){
+			layer l = layers[i];
+			if(i == 0){
+				*(network*)this = backup;
+			}else{
+				layer prev = layers[i-1];
+				input = prev.output;
+				delta = prev.delta;
+				input_gpu = prev.output_gpu;
+				delta_gpu = prev.delta_gpu;
+			}
+			l.backward_gpu(l, *this);
+		}
+	}
+	else
+#endif
+	{
+		for(int i = n-1; i >= 0; --i){
+			layer l = layers[i];
+			if(i == 0){
+				*(network*)this = backup;
+			}else{
+				layer prev = layers[i-1];
+				input = prev.output;
+				delta = prev.delta;
+			}
+			l.backward(l, *this);
+		}
+	}
+	*(network*)this = backup;
+}
+
+void Network::update() {
+#ifdef GPU
+	if(netp->gpu_index >= 0){
+		cuda_set_device(gpu_index);
+		for(int i = 0; i < n; ++i){
+			layer l = layers[i];
+			if(l.update_gpu){
+				l.update_gpu(l, *this);
+			}
+		}
+	}
+	else
+#endif
+	{
+		for(int i = 0; i < n; ++i){
+			layer l = layers[i];
+			if(l.update){
+				l.update(l, *this);
+			}
+		}
+	}
+}
+
+void Network::resize(int w_, int h_) {
+#ifdef GPU
+	cuda_set_device(gpu_index);
+	cuda_free(workspace);
+#endif
+	w = w_;
+	h = h_;
+	int inputs = 0;
+	size_t workspace_size = 0;
+	for (int i = 0; i < n; ++i){
+		layer l = layers[i];
+		if(l.type == CONVOLUTIONAL){
+			resize_convolutional_layer(&l, w, h);
+		}else if(l.type == MAXPOOL){
+			resize_maxpool_layer(&l, w, h);
+		}else if(l.type == YOLO){
+			resize_yolo_layer(&l, w, h);
+		}else{
+			error("Cannot resize this type of layer");
+		}
+		if(l.workspace_size > workspace_size) workspace_size = l.workspace_size;
+		if(l.workspace_size > 2000000000) assert(0);
+		inputs = l.outputs;
+		layers[i] = l;
+		w = l.out_w;
+		h = l.out_h;
+		if(l.type == AVGPOOL) break;
+	}
+	layer out = layers[n - 1];
+	inputs = layers[0].inputs;
+	outputs = out.outputs;
+	truths = out.outputs;
+	if(layers[n-1].truths) truths = layers[n-1].truths;
+	free(input);
+	free(truth);
+	input = (float*)calloc(inputs*batch, sizeof(float));
+	truth = (float*)calloc(truths*batch, sizeof(float));
+#ifdef GPU
+	if(gpu_index >= 0){
+		cuda_free(input_gpu);
+		cuda_free(truth_gpu);
+		input_gpu = cuda_make_array(input, inputs*batch);
+		truth_gpu = cuda_make_array(truth, truths*batch);
+		if(workspace_size){
+			workspace = cuda_make_array(0, (workspace_size-1)/sizeof(float)+1);
+		}
+	}else {
+		free(workspace);
+		workspace = calloc(1, workspace_size);
+	}
+#else
+	free(workspace);
+	workspace = (float*)calloc(1, workspace_size);
+#endif
 }
 
 }

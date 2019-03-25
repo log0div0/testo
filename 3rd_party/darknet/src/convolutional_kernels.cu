@@ -293,12 +293,12 @@ void push_convolutional_layer(layer l)
     }
 }
 
-void update_convolutional_layer_gpu(layer l, update_args a)
+void update_convolutional_layer_gpu(layer l, network net)
 {
-    float learning_rate = a.learning_rate;
-    float momentum = a.momentum;
-    float decay = a.decay;
-    int batch = a.batch;
+    float learning_rate = net.learning_rate;
+    float momentum = net.momentum;
+    float decay = net.decay;
+    int batch = net.batch;
 
     axpy_gpu(l.nweights, -decay*batch, l.weights_gpu, 1, l.weight_updates_gpu, 1);
     axpy_gpu(l.nweights, learning_rate/batch, l.weight_updates_gpu, 1, l.weights_gpu, 1);

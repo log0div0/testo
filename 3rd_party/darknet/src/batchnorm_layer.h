@@ -3,7 +3,6 @@
 
 #include "image.h"
 #include "layer.h"
-#include "network.h"
 
 layer make_batchnorm_layer(int batch, int w, int h, int c);
 void forward_batchnorm_layer(layer l, network net);

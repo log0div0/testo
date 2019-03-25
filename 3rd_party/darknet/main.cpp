@@ -54,7 +54,7 @@ void train()
 		Data d = dataset.load(network.batch);
 		get_next_batch(d, d.X.rows, 0, network.input, network.truth);
 		network.forward();
-		backward_network(&network);
+		network.backward();
 		float sum = 0;
 		int count = 0;
 		for(size_t i = 0; i < network.n; ++i) {
@@ -64,7 +64,7 @@ void train()
 			}
 		}
 		float loss = sum/count/network.batch;
-		update_network(&network);
+		network.update();
 
 		if (avg_loss < 0) {
 			avg_loss = loss;

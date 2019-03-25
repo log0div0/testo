@@ -92,13 +92,6 @@ typedef enum{
     SSE, MASKED, L1, SEG, SMOOTH,WGAN
 } COST_TYPE;
 
-typedef struct{
-    int batch;
-    float learning_rate;
-    float momentum;
-    float decay;
-} update_args;
-
 struct network;
 typedef struct network network;
 
@@ -111,10 +104,10 @@ struct layer{
     COST_TYPE cost_type;
     void (*forward)   (struct layer, struct network);
     void (*backward)  (struct layer, struct network);
-    void (*update)    (struct layer, update_args);
+    void (*update)    (struct layer, struct network);
     void (*forward_gpu)   (struct layer, struct network);
     void (*backward_gpu)  (struct layer, struct network);
-    void (*update_gpu)    (struct layer, update_args);
+    void (*update_gpu)    (struct layer, struct network);
     int batch_normalize;
     int batch;
     int inputs;
