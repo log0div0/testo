@@ -30,6 +30,15 @@ struct VboxFlashDriveController: FlashDriveController {
 		return config.count("folder");
 	}
 
+	nlohmann::json get_config() const override {
+		return config;
+	}
+
+	std::string cksum() const {
+		return "";
+	}
+
+
 	vbox::Medium handle;
 private:
 

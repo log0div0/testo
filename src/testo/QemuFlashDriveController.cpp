@@ -4,6 +4,7 @@
 #include "QemuFlashDriveController.hpp"
 #include "Utils.hpp"
 #include <thread>
+#include <fstream>
 
 QemuFlashDriveController::QemuFlashDriveController(const nlohmann::json& config):
 config(config), qemu_connect(vir::connect_open("qemu:///system"))
@@ -19,6 +20,19 @@ config(config), qemu_connect(vir::connect_open("qemu:///system"))
 	//TODO: check for fs types
 	if (!config.count("fs")) {
 		throw std::runtime_error("Constructing VboxFlashDriveController error: field FS is not specified");
+	}
+
+	if (config.count("folder")) {
+		fs::path folder(config.at("folder").get<std::string>());
+		if (!fs::exists(folder)) {
+			throw std::runtime_error(fmt::format("specified folder {} for flash drive {} does not exist",
+				folder.generic_string(), name()));
+		}
+
+		if (!fs::is_directory(folder)) {
+			throw std::runtime_error(fmt::format("specified folder {} for flash drive {} is not a folder",
+				folder.generic_string(), name()));
+		}
 	}
 }
 
@@ -69,6 +83,22 @@ void QemuFlashDriveController::create() {
 			" /dev/nbd0");
 
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
+
+		std::string cksum_input = name() + std::to_string(config.at("size").get<uint32_t>()) + config.at("fs").get<std::string>();
+		if (has_folder()) {
+			cksum_input += directory_signature(config.at("folder").get<std::string>());
+		}
+
+		std::hash<std::string> h;
+		std::string cksum = std::to_string(h(cksum_input));
+
+		fs::path cksum_path = img_dir() / (name() + ".cksum");
+		std::ofstream output_stream(cksum_path, std::ofstream::out);
+		if (!output_stream) {
+			throw std::runtime_error(std::string("Can't create file for writing cksum: ") + cksum_path.generic_string());
+		}
+		output_stream << cksum;
+		output_stream.close();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating flash drive"));
 	}
@@ -128,6 +158,26 @@ void QemuFlashDriveController::load_folder() const {
 	}
 }
 
+std::string QemuFlashDriveController::cksum() const {
+	fs::path cksum_path = img_dir() / (name() + ".cksum");
+	if (!fs::exists(cksum_path)) {
+		return "";
+	};
+
+	if (!fs::is_regular_file(cksum_path)) {
+		return "";
+	};
+
+	std::ifstream input_stream(cksum_path);
+
+	if (!input_stream) {
+		return "";
+	}
+
+	std::string result = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
+	return result;
+}
+
 void QemuFlashDriveController::remove_if_exists() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
@@ -136,6 +186,9 @@ void QemuFlashDriveController::remove_if_exists() {
 				vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
 			}
 		}
+		fs::path cksum_path = img_dir() / (name() + ".cksum");
+		fs::remove(cksum_path);
+
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Remove flash if exist"));
 	}

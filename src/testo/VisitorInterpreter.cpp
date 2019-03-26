@@ -80,15 +80,16 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	try {
-		print("Creating flash drive \"", flash->name.value());
-
 		auto fd = reg.fds.find(flash->name)->second; //should always be found
-
-		fd->create();
-
-		if (fd->has_folder()) {
-			print("Loading folder to flash drive \"", fd->name());
-			fd->load_folder();
+		if (cksum(fd) != fd->cksum()) {
+			print("Creating flash drive \"", flash->name.value());
+			fd->create();
+			if (fd->has_folder()) {
+				print("Loading folder to flash drive \"", fd->name());
+				fd->load_folder();
+			}
+		} else {
+			print("Using cached flash drive \"", flash->name.value());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(flash, nullptr));
@@ -750,9 +751,13 @@ std::string VisitorInterpreter::snapshot_cksum(std::shared_ptr<VmController> vm,
 	return std::to_string(visitor.visit(vm, snapshot));
 }
 
-std::string VisitorInterpreter::cksum(std::shared_ptr<Controller> flash) {
-	std::hash<std::string> h;
-	auto result = h(std::string(*flash));
+std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) {
+	auto config = fd->get_config();
+	std::string cksum_input = fd->name() + std::to_string(config.at("size").get<uint32_t>()) + config.at("fs").get<std::string>();
+	if (fd->has_folder()) {
+		cksum_input += directory_signature(config.at("folder").get<std::string>());
+	}
 
-	return std::to_string(result);
+	std::hash<std::string> h;
+	return std::to_string(h(cksum_input));
 }

@@ -43,7 +43,9 @@ snapshot dummy {
 
 snapshot dummy2: dummy {
 	plug dvd "/home/alex/work/vbox/build/out/pkg/negotiator.iso"
-	copyto $NF2_BUILD_DIR + "/pkg" "/tmp/"
+	plug flash dummy_flash
+	wait for 5s
+	unplug flash dummy_flash
 }
 
 test dummy: buwaha(dummy2)
