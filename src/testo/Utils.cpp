@@ -72,6 +72,23 @@ std::string file_signature(const fs::path& file) {
 	return file.filename().generic_string() + std::to_string(last_modify_time);
 }
 
+std::string directory_signature(const fs::path& dir) {
+	std::string result("");
+	for (auto& file: fs::directory_iterator(dir)) {
+		if (fs::is_regular_file(file)) {
+			result += file_signature(file);
+		} else if (fs::is_directory(file)) {
+			result += directory_signature(file);
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
+		}
+	}
+
+	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(dir));
+	result += std::to_string(last_modify_time);
+	return result;
+}
+
 //NOTE: this check is very, very rough
 bool is_mac_correct(const std::string& mac) {
 	int k = 0, s = 0;

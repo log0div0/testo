@@ -42,9 +42,8 @@ snapshot dummy {
 }
 
 snapshot dummy2: dummy {
-	plug dvd $ISO_PATH + "/VBoxGuestAdditions_6.0.4.iso"
-	plug flash dummy_flash
-	unplug flash dummy_flash
+	plug dvd "/home/alex/work/vbox/build/out/pkg/negotiator.iso"
+	copyto $NF2_BUILD_DIR + "/pkg" "/tmp/"
 }
 
 test dummy: buwaha(dummy2)

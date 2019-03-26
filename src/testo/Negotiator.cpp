@@ -48,7 +48,9 @@ void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst) {
 			copy_file_to_guest(file, dst / file.path().filename());
 		} else if (fs::is_directory(file)) {
 			copy_dir_to_guest(file, dst / file.path().filename());
-		} //else continue
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
+		}
 	}
 }
 
