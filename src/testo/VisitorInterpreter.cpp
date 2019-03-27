@@ -27,6 +27,16 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 }
 
+void VisitorInterpreter::print_statistics() const {
+	auto total_tests = success_tests.size() + failed_tests.size();
+	std::cout << "TOTAL RUN " << total_tests << " tests\n";
+	std::cout << "PASSED: " << success_tests.size() << std::endl;
+	std::cout << "FAILED: " << failed_tests.size() << std::endl;
+	for (auto& fail: failed_tests) {
+		std::cout << "\t -" << fail << std::endl;
+	}
+}
+
 void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
@@ -62,6 +72,8 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 		for (auto stmt: program->stmts) {
 			visit_stmt(stmt);
 		}
+
+		print_statistics();
 	}
 	catch (const std::exception& error) {
 		std::cout << error << std::endl;
@@ -137,10 +149,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		update_progress();
 		print("Test \"", test->name.value(), "\" passed");
+		success_tests.push_back(test->name.value());
 	} catch (const InterpreterException& error) {
 		//This exception indicates that some test failed;
 		std::cout << error << std::endl;
 		print("Test \"", test->name.value(), "\" FAILED");
+		failed_tests.push_back(test->name.value());
 		if (stop_on_fail) {
 			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
 		}
