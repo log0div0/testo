@@ -5,9 +5,10 @@
 
 using namespace AST;
 
-Interpreter::Interpreter(Environment& env, const fs::path& file):
+Interpreter::Interpreter(Environment& env, const fs::path& file, const nlohmann::json& config):
 	env(env),
-	parser(file)
+	parser(file),
+	config(config)
 {}
 
 int Interpreter::run() {
@@ -17,7 +18,7 @@ int Interpreter::run() {
 	env.setup(); //prepare the environment
 	semantic.visit(program);
 
-	VisitorInterpreter runner(reg);
+	VisitorInterpreter runner(reg, config);
 	runner.visit(program);
 	return 0;
 }

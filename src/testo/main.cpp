@@ -8,26 +8,34 @@
 
 #include "Utils.hpp"
 #include <coro/Application.h>
+#include <clipp.h>
 
-static void print_usage() {
-	std::cout << "Usage: \n";
-	std::cout << "testo <input file>\n";
-}
+using namespace clipp;
 
 int do_main(int argc, char** argv) {
-	if (argc != 2) {
-		print_usage();
-		return 0;
-	}
+	std::string src_file;
+	bool stop_on_fail = false;
 
-	fs::path src_file(argv[1]);
+	auto cli = (
+		value("input file", src_file),
+		option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test")
+	);
+
+	if (!parse(argc, argv, cli)) {
+		std::cout << make_man_page(cli, "testo") << std::endl;
+		throw std::runtime_error("");
+	}
 
 	if (!fs::exists(src_file)) {
-		throw std::runtime_error("Fatal error: file doesn't exist: " + src_file.generic_string());
+		throw std::runtime_error("Fatal error: file doesn't exist: " + src_file);
 	}
 
+	nlohmann::json config = {
+		{"stop_on_fail", stop_on_fail}
+	};
+
 	QemuEnvironment env;
-	Interpreter runner(env, src_file);
+	Interpreter runner(env, src_file, config);
 	runner.run();
 	return 0;
 }

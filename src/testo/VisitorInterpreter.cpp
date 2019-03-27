@@ -23,6 +23,10 @@ static void sleep(const std::string& interval) {
 	std::this_thread::sleep_for(std::chrono::seconds(seconds_to_sleep));
 }
 
+VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
+	stop_on_fail = config.at("stop_on_fail").get<bool>();
+}
+
 void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
@@ -133,9 +137,14 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		update_progress();
 		print("Test \"", test->name.value(), "\" passed");
-	} catch (const std::exception& error) {
+	} catch (const InterpreterException& error) {
+		//This exception indicates that some test failed;
 		std::cout << error << std::endl;
-	}
+		print("Test \"", test->name.value(), "\" FAILED");
+		if (stop_on_fail) {
+			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
+		}
+	} //any other fails will go up to visit() and will result in terminating
 
 }
 
