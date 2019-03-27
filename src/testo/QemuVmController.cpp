@@ -330,7 +330,8 @@ std::vector<std::string> QemuVmController::keys() {
 std::vector<std::string> QemuVmController::keys(vir::Snapshot& snapshot) {
 	try {
 		std::vector<std::string> result;
-		auto metadata = snapshot.dump_xml().first_child().child("domain").child("metadata");
+		auto xml = snapshot.dump_xml();
+		auto metadata = xml.first_child().child("domain").child("metadata");
 		for (auto it = metadata.begin(); it != metadata.end(); ++it) {
 			std::string value = it->first_attribute().value();
 			result.push_back(value.substr(strlen("vm_metadata/")));
@@ -1028,7 +1029,8 @@ void QemuVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> 
 bool QemuVmController::is_dvd_plugged() const {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		auto config = domain.dump_xml();
+		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 		return !bool(cdrom.child("source").empty());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Checking if dvd is plugged"));
@@ -1038,7 +1040,8 @@ bool QemuVmController::is_dvd_plugged() const {
 std::string QemuVmController::get_dvd_path() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		auto config = domain.dump_xml();
+		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 		if (cdrom.child("source").empty()) {
 			return "";
 		}
@@ -1051,7 +1054,8 @@ std::string QemuVmController::get_dvd_path() {
 
 std::string QemuVmController::get_dvd_path(vir::Snapshot& snap) {
 	try {
-		auto cdrom = snap.dump_xml().first_child().child("domain").child("devices").find_child_by_attribute("device", "cdrom");
+		auto config = snap.dump_xml();
+		auto cdrom = config.first_child().child("domain").child("devices").find_child_by_attribute("device", "cdrom");
 		if (cdrom.child("source").empty()) {
 			return "";
 		}
@@ -1064,7 +1068,8 @@ std::string QemuVmController::get_dvd_path(vir::Snapshot& snap) {
 void QemuVmController::plug_dvd(fs::path path) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		auto config = domain.dump_xml();
+		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
 		if (!cdrom.child("source").empty()) {
 			throw std::runtime_error("Some dvd is already plugged in");
@@ -1087,7 +1092,8 @@ void QemuVmController::plug_dvd(fs::path path) {
 void QemuVmController::unplug_dvd() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		auto cdrom = domain.dump_xml().first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		auto config = domain.dump_xml();
+		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
 		if (cdrom.child("source").empty()) {
 			throw std::runtime_error("Dvd is already unplugged");
