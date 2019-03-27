@@ -114,6 +114,8 @@ private:
 		std::cout << std::endl;
 	}
 
+	void print_statistics() const;
+
 	void setup_progress_vars(std::shared_ptr<AST::Program> program);
 	void update_progress();
 
@@ -122,4 +124,7 @@ private:
 	uint16_t original_remainder = 0;
 	uint16_t current_remainder = 0;
 	uint32_t tests_num = 0;
+
+	std::vector<std::string> success_tests;
+	std::vector<std::string> failed_tests;
 };
