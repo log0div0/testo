@@ -93,7 +93,7 @@ struct VisitorInterpreter {
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
 	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;
 	std::string snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
-	std::string cksum(std::shared_ptr<AST::Controller> controller);
+	std::string cksum(std::shared_ptr<FlashDriveController> flash);
 
 	Register& reg;
 

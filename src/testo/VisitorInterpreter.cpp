@@ -80,15 +80,16 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	try {
-		print("Creating flash drive \"", flash->name.value());
-
 		auto fd = reg.fds.find(flash->name)->second; //should always be found
-
-		fd->create();
-
-		if (fd->has_folder()) {
-			print("Loading folder to flash drive \"", fd->name());
-			fd->load_folder();
+		if (cksum(fd) != fd->cksum()) {
+			print("Creating flash drive \"", flash->name.value());
+			fd->create();
+			if (fd->has_folder()) {
+				print("Loading folder to flash drive \"", fd->name());
+				fd->load_folder();
+			}
+		} else {
+			print("Using cached flash drive \"", flash->name.value());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(flash, nullptr));
@@ -149,7 +150,10 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 			return;
 		}
 
-		if ((!vm->is_defined()) || !check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config")))) {
+		if ((!vm->is_defined()) ||
+			!check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config"))) ||
+			(file_signature(vm->get_config().at("iso").get<std::string>()) != vm->get_metadata("dvd_signature")))
+		{
 			vm->install();
 			return apply_actions(vm, vm_state->snapshot, true);
 		}
@@ -720,7 +724,6 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 	new_config.erase("metadata");
 	old_config.erase("metadata");
 
-
 	//2) Actually.... Let's just be practical here.
 	//Check if both have or don't have nics
 
@@ -738,17 +741,23 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 	new_config.erase("nic");
 	old_config.erase("nic");
 
+	//Check also dvd contingency
 	return (old_config == new_config);
 }
+
 
 std::string VisitorInterpreter::snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
 	VisitorCksum visitor(reg);
 	return std::to_string(visitor.visit(vm, snapshot));
 }
 
-std::string VisitorInterpreter::cksum(std::shared_ptr<Controller> flash) {
-	std::hash<std::string> h;
-	auto result = h(std::string(*flash));
+std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) {
+	auto config = fd->get_config();
+	std::string cksum_input = fd->name() + std::to_string(config.at("size").get<uint32_t>()) + config.at("fs").get<std::string>();
+	if (fd->has_folder()) {
+		cksum_input += directory_signature(config.at("folder").get<std::string>());
+	}
 
-	return std::to_string(result);
+	std::hash<std::string> h;
+	return std::to_string(h(cksum_input));
 }

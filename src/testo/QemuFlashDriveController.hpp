@@ -27,7 +27,17 @@ struct QemuFlashDriveController: FlashDriveController {
 		return config.count("folder");
 	}
 
+	nlohmann::json get_config() const override {
+		return config;
+	}
+
+	std::string cksum() const;
+
 private:
+	fs::path img_dir() const {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
+		return pool.path();
+	}
 	void remove_if_exists();
 
 	nlohmann::json config;

@@ -42,8 +42,9 @@ snapshot dummy {
 }
 
 snapshot dummy2: dummy {
-	plug dvd $ISO_PATH + "/VBoxGuestAdditions_6.0.4.iso"
+	plug dvd "/home/alex/work/vbox/build/out/pkg/negotiator.iso"
 	plug flash dummy_flash
+	wait for 5s
 	unplug flash dummy_flash
 }
 

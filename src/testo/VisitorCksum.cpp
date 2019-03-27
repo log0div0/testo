@@ -98,7 +98,15 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shar
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		result += visit_word(vm, plug->path);
+		auto path = visit_word(vm, plug->path);
+		result += path;
+		//add signature for dvd file
+		result += file_signature(path);
+	}
+
+	if (plug->type.value() == "flash") {
+		auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
+		result += fd->cksum();
 	}
 	return result;
 }
@@ -123,8 +131,26 @@ std::string VisitorCksum::visit_set(std::shared_ptr<VmController> vm, std::share
 std::string VisitorCksum::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
 	std::string result("copyto");
 
-	result += visit_word(vm, copyto->from);
+	auto from = visit_word(vm, copyto->from);
+
+	result += from;
+
+	if (!fs::exists(from)) {
+		throw std::runtime_error("Specified path doesn't exist: " + fs::path(from).generic_string());
+	}
+
+	//now we should take care of last modify date of every file and folder in the folder
+	if (fs::is_regular_file(from)) {
+		result += file_signature(from);
+	} else if (fs::is_directory(from)) {
+		result += directory_signature(from);
+	} else {
+		throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
+	}
+
+
 	result += visit_word(vm, copyto->to);
+
 	return result;
 }
 
