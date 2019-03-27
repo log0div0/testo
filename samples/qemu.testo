@@ -64,8 +64,7 @@ test dummy: buwaha(dummy2)
 
 test dummy2: buwaha(dummy2)
 {
-	#buwaha exec bash "ping -c20 192.168.156.10"
-	buwaha wait for 3s
+	buwaha exec bash "ping -c20 192.168.156.10"
 	#buwaha unplug flash dummy_flash
 	#buwaha stop
 	#buwaha unplug nic master_side

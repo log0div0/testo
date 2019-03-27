@@ -50,8 +50,7 @@ struct VisitorInterpreter {
 		std::shared_ptr<VmController> vm;
 	};
 
-	VisitorInterpreter(Register& reg):
-		reg(reg) {}
+	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -98,6 +97,10 @@ struct VisitorInterpreter {
 	Register& reg;
 
 private:
+	//settings
+	bool stop_on_fail;
+
+
 	std::stack<Stack> local_vars;
 
 	template <typename... Args>
