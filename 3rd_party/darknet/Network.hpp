@@ -40,7 +40,6 @@ struct Network: network {
 	void forward();
 	void backward();
 	void update();
-	void resize(int w, int h);
 };
 
 }

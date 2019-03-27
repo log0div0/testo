@@ -61,26 +61,6 @@ layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int 
     return l;
 }
 
-void resize_yolo_layer(layer *l, int w, int h)
-{
-    l->w = w;
-    l->h = h;
-
-    l->outputs = h*w*l->n*(l->classes + 4 + 1);
-    l->inputs = l->outputs;
-
-    l->output = realloc(l->output, l->batch*l->outputs*sizeof(float));
-    l->delta = realloc(l->delta, l->batch*l->outputs*sizeof(float));
-
-#ifdef GPU
-    cuda_free(l->delta_gpu);
-    cuda_free(l->output_gpu);
-
-    l->delta_gpu =     cuda_make_array(l->delta, l->batch*l->outputs);
-    l->output_gpu =    cuda_make_array(l->output, l->batch*l->outputs);
-#endif
-}
-
 box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw, int lh, int w, int h, int stride)
 {
     box b;

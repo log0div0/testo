@@ -316,72 +316,6 @@ void denormalize_convolutional_layer(convolutional_layer l)
     }
 }
 
-/*
-void test_convolutional_layer()
-{
-    convolutional_layer l = make_convolutional_layer(1, 5, 5, 3, 2, 5, 2, 1, LEAKY, 1, 0, 0, 0);
-    l.batch_normalize = 1;
-    float data[] = {1,1,1,1,1,
-        1,1,1,1,1,
-        1,1,1,1,1,
-        1,1,1,1,1,
-        1,1,1,1,1,
-        2,2,2,2,2,
-        2,2,2,2,2,
-        2,2,2,2,2,
-        2,2,2,2,2,
-        2,2,2,2,2,
-        3,3,3,3,3,
-        3,3,3,3,3,
-        3,3,3,3,3,
-        3,3,3,3,3,
-        3,3,3,3,3};
-    //net.input = data;
-    //forward_convolutional_layer(l);
-}
-*/
-
-void resize_convolutional_layer(convolutional_layer *l, int w, int h)
-{
-    l->w = w;
-    l->h = h;
-    int out_w = convolutional_out_width(*l);
-    int out_h = convolutional_out_height(*l);
-
-    l->out_w = out_w;
-    l->out_h = out_h;
-
-    l->outputs = l->out_h * l->out_w * l->out_c;
-    l->inputs = l->w * l->h * l->c;
-
-    l->output = realloc(l->output, l->batch*l->outputs*sizeof(float));
-    l->delta  = realloc(l->delta,  l->batch*l->outputs*sizeof(float));
-    if(l->batch_normalize){
-        l->x = realloc(l->x, l->batch*l->outputs*sizeof(float));
-        l->x_norm  = realloc(l->x_norm, l->batch*l->outputs*sizeof(float));
-    }
-
-#ifdef GPU
-    cuda_free(l->delta_gpu);
-    cuda_free(l->output_gpu);
-
-    l->delta_gpu =  cuda_make_array(l->delta,  l->batch*l->outputs);
-    l->output_gpu = cuda_make_array(l->output, l->batch*l->outputs);
-
-    if(l->batch_normalize){
-        cuda_free(l->x_gpu);
-        cuda_free(l->x_norm_gpu);
-
-        l->x_gpu = cuda_make_array(l->output, l->batch*l->outputs);
-        l->x_norm_gpu = cuda_make_array(l->output, l->batch*l->outputs);
-    }
-#ifdef CUDNN
-    cudnn_convolutional_setup(l);
-#endif
-#endif
-    l->workspace_size = get_workspace_size(*l);
-}
-
 void add_bias(float *output, float *biases, int batch, int n, int size)
 {
     int i,j,b;
@@ -564,10 +498,6 @@ void save_convolutional_weights_binary(layer l, FILE *fp)
 
 void save_convolutional_weights(layer l, FILE *fp)
 {
-    if(l.binary){
-        //save_convolutional_weights_binary(l, fp);
-        //return;
-    }
 #ifdef GPU
     if(gpu_index >= 0){
         pull_convolutional_layer(l);
@@ -615,46 +545,14 @@ void load_convolutional_weights_binary(layer l, FILE *fp)
 
 void load_convolutional_weights(layer l, FILE *fp)
 {
-    if(l.binary){
-        //load_convolutional_weights_binary(l, fp);
-        //return;
-    }
     int num = l.c/l.groups*l.n*l.size*l.size;
     fread(l.biases, sizeof(float), l.n, fp);
     if (l.batch_normalize){
         fread(l.scales, sizeof(float), l.n, fp);
         fread(l.rolling_mean, sizeof(float), l.n, fp);
         fread(l.rolling_variance, sizeof(float), l.n, fp);
-        if(0){
-            int i;
-            for(i = 0; i < l.n; ++i){
-                printf("%g, ", l.rolling_mean[i]);
-            }
-            printf("\n");
-            for(i = 0; i < l.n; ++i){
-                printf("%g, ", l.rolling_variance[i]);
-            }
-            printf("\n");
-        }
-        if(0){
-            fill_cpu(l.n, 0, l.rolling_mean, 1);
-            fill_cpu(l.n, 0, l.rolling_variance, 1);
-        }
-        if(0){
-            int i;
-            for(i = 0; i < l.n; ++i){
-                printf("%g, ", l.rolling_mean[i]);
-            }
-            printf("\n");
-            for(i = 0; i < l.n; ++i){
-                printf("%g, ", l.rolling_variance[i]);
-            }
-            printf("\n");
-        }
     }
     fread(l.weights, sizeof(float), num, fp);
-    //if(l.c == 3) scal_cpu(num, 1./256, l.weights, 1);
-    //if (l.binary) binarize_weights(l.weights, l.n, l.c*l.size*l.size, l.weights);
 #ifdef GPU
     if(gpu_index >= 0){
         push_convolutional_layer(l);
