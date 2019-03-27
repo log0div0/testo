@@ -148,8 +148,9 @@ struct layer{
     int reorg;
     int log;
     int tanh;
-    int *mask;
     int total;
+    float anchor_w;
+    float anchor_h;
 
     float alpha;
     float beta;

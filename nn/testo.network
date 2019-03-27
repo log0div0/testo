@@ -65,10 +65,8 @@ activation=linear
 
 
 [yolo]
-mask = 0
-anchors = 8,16
 classes=0
-num=1
+max_boxes=512
 ignore_thresh = .7
-truth_thresh = 1
-max=512
+anchor_w = 8
+anchor_h = 16

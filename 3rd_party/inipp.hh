@@ -54,6 +54,22 @@ struct inisection: std::map<std::string,std::string> {
 		throw std::runtime_error("Cannot find key " + key + " in section " + _name);
 	}
 
+	int get_int(const std::string& key) const {
+		auto it = find(key);
+		if (it != end()) {
+			return std::stoi(it->second);
+		}
+		throw std::runtime_error("Cannot find key " + key + " in section " + _name);
+	}
+
+	float get_float(const std::string& key) const {
+		auto it = find(key);
+		if (it != end()) {
+			return std::stof(it->second);
+		}
+		throw std::runtime_error("Cannot find key " + key + " in section " + _name);
+	}
+
 private:
 	std::string _name;
 };
