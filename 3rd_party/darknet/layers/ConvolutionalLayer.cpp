@@ -19,7 +19,6 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 	int size = section.get_int("size",1);
 	int stride = section.get_int("stride",1);
 	int padding = section.get_int("padding",0);
-	int groups = section.get_int("groups", 1);
 
 	ACTIVATION activation = get_activation((char*)section.get("activation", "logistic").c_str());
 
@@ -28,7 +27,7 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 	}
 	int batch_normalize = section.get_int("batch_normalize", 0);
 
-	(layer&)*this = make_convolutional_layer(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize);
+	(layer&)*this = make_convolutional_layer(batch,h,w,c,n,size,stride,padding,activation, batch_normalize);
 }
 
 }

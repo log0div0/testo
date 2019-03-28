@@ -111,7 +111,6 @@ struct layer{
     int out_h, out_w, out_c;
     int n;
     int max_boxes;
-    int groups;
     int size;
     int side;
     int stride;

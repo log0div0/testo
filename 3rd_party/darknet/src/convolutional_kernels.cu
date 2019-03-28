@@ -17,24 +17,22 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network net)
 {
     fill_gpu(l.outputs*l.batch, 0, l.output_gpu, 1);
 
-    int i, j;
-    int m = l.n/l.groups;
-    int k = l.size*l.size*l.c/l.groups;
+    int i;
+    int m = l.n;
+    int k = l.size*l.size*l.c;
     int n = l.out_w*l.out_h;
     for(i = 0; i < l.batch; ++i){
-        for(j = 0; j < l.groups; ++j){
-            float *a = l.weights_gpu + j*l.nweights/l.groups;
-            float *b = net.workspace;
-            float *c = l.output_gpu + (i*l.groups + j)*n*m;
-            float *im = net.input_gpu + (i*l.groups + j)*l.c/l.groups*l.h*l.w;
+        float *a = l.weights_gpu;
+        float *b = net.workspace;
+        float *c = l.output_gpu + i*n*m;
+        float *im = net.input_gpu + i*l.c*l.h*l.w;
 
-            if (l.size == 1){
-                b = im;
-            } else {
-                im2col_gpu(im, l.c/l.groups, l.h, l.w, l.size, l.stride, l.pad, b);
-            }
-            gemm_gpu(0,0,m,n,k,1,a,k,b,n,1,c,n);
+        if (l.size == 1){
+            b = im;
+        } else {
+            im2col_gpu(im, l.c, l.h, l.w, l.size, l.stride, l.pad, b);
         }
+        gemm_gpu(0,0,m,n,k,1,a,k,b,n,1,c,n);
     }
 
     if (l.batch_normalize) {
@@ -58,36 +56,34 @@ void backward_convolutional_layer_gpu(convolutional_layer l, network net)
     }
     float *original_input = net.input_gpu;
 
-    int m = l.n/l.groups;
-    int n = l.size*l.size*l.c/l.groups;
+    int m = l.n;
+    int n = l.size*l.size*l.c;
     int k = l.out_w*l.out_h;
 
-    int i, j;
+    int i;
     for(i = 0; i < l.batch; ++i){
-        for(j = 0; j < l.groups; ++j){
-            float *a = l.delta_gpu + (i*l.groups + j)*m*k;
-            float *b = net.workspace;
-            float *c = l.weight_updates_gpu + j*l.nweights/l.groups;
+        float *a = l.delta_gpu + i*m*k;
+        float *b = net.workspace;
+        float *c = l.weight_updates_gpu;
 
-            float *im  = net.input_gpu+(i*l.groups + j)*l.c/l.groups*l.h*l.w;
-            float *imd = net.delta_gpu+(i*l.groups + j)*l.c/l.groups*l.h*l.w;
+        float *im  = net.input_gpu+i*l.c*l.h*l.w;
+        float *imd = net.delta_gpu+i*l.c*l.h*l.w;
 
-            im2col_gpu(im, l.c/l.groups, l.h, l.w, l.size, l.stride, l.pad, b);
-            gemm_gpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
+        im2col_gpu(im, l.c, l.h, l.w, l.size, l.stride, l.pad, b);
+        gemm_gpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
 
-            if (net.delta_gpu) {
-                a = l.weights_gpu + j*l.nweights/l.groups;
-                b = l.delta_gpu + (i*l.groups + j)*m*k;
-                c = net.workspace;
-                if (l.size == 1) {
-                    c = imd;
-                }
+        if (net.delta_gpu) {
+            a = l.weights_gpu;
+            b = l.delta_gpu + i*m*k;
+            c = net.workspace;
+            if (l.size == 1) {
+                c = imd;
+            }
 
-                gemm_gpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
+            gemm_gpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
-                if (l.size != 1) {
-                    col2im_gpu(net.workspace, l.c/l.groups, l.h, l.w, l.size, l.stride, l.pad, imd);
-                }
+            if (l.size != 1) {
+                col2im_gpu(net.workspace, l.c, l.h, l.w, l.size, l.stride, l.pad, imd);
             }
         }
     }
