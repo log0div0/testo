@@ -99,7 +99,7 @@ struct VisitorInterpreter {
 private:
 	//settings
 	bool stop_on_fail;
-
+	std::string test_spec;
 
 	std::stack<Stack> local_vars;
 
@@ -123,8 +123,8 @@ private:
 	uint16_t progress_step = 0;
 	uint16_t original_remainder = 0;
 	uint16_t current_remainder = 0;
-	uint32_t tests_num = 0;
 
+	std::set<std::shared_ptr<AST::Test>> tests_to_run; //used for varouis inner reasons
 	std::vector<std::string> success_tests;
 	std::vector<std::string> failed_tests;
 };

@@ -25,6 +25,7 @@ static void sleep(const std::string& interval) {
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
+	test_spec = config.at("test_spec").get<std::string>();
 }
 
 void VisitorInterpreter::print_statistics() const {
@@ -40,10 +41,17 @@ void VisitorInterpreter::print_statistics() const {
 void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
-			tests_num++;
+			if (test_spec.length()) {
+				if (p->stmt->name.value() == test_spec) {
+					tests_to_run.insert(p->stmt);
+				}
+			} else {
+				tests_to_run.insert(p->stmt);
+			}
 		}
 	}
 
+	auto tests_num = tests_to_run.size();
 	if (tests_num != 0) {
 		progress_step = 100 / tests_num;
 		original_remainder = 100 % tests_num;
@@ -57,8 +65,8 @@ void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
 void VisitorInterpreter::update_progress() {
 	current_progress += progress_step;
 	if (original_remainder != 0) {
-		if ((current_remainder / tests_num) > 0) {
-			current_remainder = current_remainder / tests_num;
+		if ((current_remainder / tests_to_run.size()) > 0) {
+			current_remainder = current_remainder / tests_to_run.size();
 			current_progress++;
 		}
 		current_remainder += original_remainder;
@@ -68,6 +76,15 @@ void VisitorInterpreter::update_progress() {
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	try {
 		setup_progress_vars(program);
+
+		if (tests_to_run.size() == 0) {
+			if (test_spec.length()) {
+				std::cout << "Couldn't find a test with the name " << test_spec << std::endl;
+			} else {
+				std::cout << "There's no tests to run\n";
+			}
+			return;
+		}
 
 		for (auto stmt: program->stmts) {
 			visit_stmt(stmt);
@@ -115,6 +132,10 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 	try {
+		if (tests_to_run.find(test) == tests_to_run.end()) {
+			return;
+		}
+
 		print("Running test \"", test->name.value(), "\"...");
 
 		for (auto state: test->vms) {
