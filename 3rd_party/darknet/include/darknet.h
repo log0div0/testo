@@ -164,7 +164,6 @@ struct layer{
     int   * indexes;
     int   * input_layers;
     int   * input_sizes;
-    int   * map;
     int   * counts;
     float ** sums;
     float * rand;
