@@ -254,6 +254,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_macro_call(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
 		return visit_if_clause(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+		return visit_for_clause(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
@@ -589,6 +591,16 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(if_clause, vm));
+	}
+}
+
+void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<ForClause> for_clause) {
+	try {
+		for (auto i = for_clause->start(); i < for_clause->finish(); i++) {
+			visit_action(vm, for_clause->cycle_body);
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(for_clause, vm));
 	}
 
 }

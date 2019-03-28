@@ -996,9 +996,9 @@ struct ForClause: public Node {
 		Node(for_token),
 		counter(counter),
 		in(in),
-		start(start),
+		start_(start),
 		double_dot(double_dot),
-		finish(finish),
+		finish_(finish),
 		cycle_body(cycle_body) {}
 
 	Pos begin() const {
@@ -1013,7 +1013,15 @@ struct ForClause: public Node {
 		return t.value();
 	}
 
-	Token counter, in, start, double_dot, finish;
+	uint32_t start() const {
+		return std::stoul(start_.value());
+	}
+
+	uint32_t finish() const {
+		return std::stoul(finish_.value());
+	}
+
+	Token counter, in, start_, double_dot, finish_;
 	std::shared_ptr<IAction> cycle_body;
 };
 

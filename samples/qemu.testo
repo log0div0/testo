@@ -51,7 +51,7 @@ snapshot dummy2: dummy {
 test dummy: buwaha(dummy2)
 {
 	buwaha{
-		for i in 3..5 {
+		for i in 5..3 {
 			wait for 2s
 		}
 	}
