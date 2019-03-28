@@ -51,10 +51,6 @@ typedef enum{
     PNG, BMP, TGA, JPG
 } IMTYPE;
 
-typedef enum{
-    MULT, ADD, SUB, DIV
-} BINARY_ACTIVATION;
-
 typedef enum {
     CONVOLUTIONAL,
     DECONVOLUTIONAL,
@@ -128,8 +124,6 @@ struct layer{
     int sqrt;
     int flip;
     int index;
-    int binary;
-    int xnor;
     int steps;
     int hidden;
     float angle;
@@ -191,8 +185,6 @@ struct layer{
     float * concat;
     float * concat_delta;
 
-    float * binary_weights;
-
     float * biases;
     float * bias_updates;
 
@@ -249,8 +241,6 @@ struct layer{
     float *o_cpu;
     float *c_cpu;
     float *dc_cpu;
-
-    float * binary_input;
 
     struct layer *input_layer;
     struct layer *self_layer;
@@ -336,9 +326,6 @@ struct layer{
     float * save_delta_gpu;
     float * concat_gpu;
     float * concat_delta_gpu;
-
-    float * binary_input_gpu;
-    float * binary_weights_gpu;
 
     float * mean_gpu;
     float * variance_gpu;

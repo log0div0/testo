@@ -8,61 +8,6 @@
 #include <stdio.h>
 #include <time.h>
 
-#ifdef AI2
-#include "xnor_layer.h"
-#endif
-
-void swap_binary(convolutional_layer *l)
-{
-    float *swap = l->weights;
-    l->weights = l->binary_weights;
-    l->binary_weights = swap;
-
-#ifdef GPU
-    swap = l->weights_gpu;
-    l->weights_gpu = l->binary_weights_gpu;
-    l->binary_weights_gpu = swap;
-#endif
-}
-
-void binarize_weights(float *weights, int n, int size, float *binary)
-{
-    int i, f;
-    for(f = 0; f < n; ++f){
-        float mean = 0;
-        for(i = 0; i < size; ++i){
-            mean += fabs(weights[f*size + i]);
-        }
-        mean = mean / size;
-        for(i = 0; i < size; ++i){
-            binary[f*size + i] = (weights[f*size + i] > 0) ? mean : -mean;
-        }
-    }
-}
-
-void binarize_cpu(float *input, int n, float *binary)
-{
-    int i;
-    for(i = 0; i < n; ++i){
-        binary[i] = (input[i] > 0) ? 1 : -1;
-    }
-}
-
-void binarize_input(float *input, int n, int size, float *binary)
-{
-    int i, s;
-    for(s = 0; s < size; ++s){
-        float mean = 0;
-        for(i = 0; i < n; ++i){
-            mean += fabs(input[i*size + s]);
-        }
-        mean = mean / n;
-        for(i = 0; i < n; ++i){
-            binary[i*size + s] = (input[i*size + s] > 0) ? mean : -mean;
-        }
-    }
-}
-
 int convolutional_out_height(convolutional_layer l)
 {
     return (l.h + 2*l.pad - l.size) / l.stride + 1;
@@ -163,7 +108,7 @@ void cudnn_convolutional_setup(layer *l)
 #endif
 #endif
 
-convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize, int binary, int xnor)
+convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int n, int groups, int size, int stride, int padding, ACTIVATION activation, int batch_normalize)
 {
     int i;
     convolutional_layer l = {0};
@@ -174,8 +119,6 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.w = w;
     l.c = c;
     l.n = n;
-    l.binary = binary;
-    l.xnor = xnor;
     l.batch = batch;
     l.stride = stride;
     l.size = size;
@@ -211,15 +154,6 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.forward = forward_convolutional_layer;
     l.backward = backward_convolutional_layer;
     l.update = update_convolutional_layer;
-    if(binary){
-        l.binary_weights = calloc(l.nweights, sizeof(float));
-        l.cweights = calloc(l.nweights, sizeof(char));
-        l.scales = calloc(n, sizeof(float));
-    }
-    if(xnor){
-        l.binary_weights = calloc(l.nweights, sizeof(float));
-        l.binary_input = calloc(l.inputs*l.batch, sizeof(float));
-    }
 
     if(batch_normalize){
         l.scales = calloc(n, sizeof(float));
@@ -255,14 +189,6 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
 
         l.delta_gpu = cuda_make_array(l.delta, l.batch*out_h*out_w*n);
         l.output_gpu = cuda_make_array(l.output, l.batch*out_h*out_w*n);
-
-        if(binary){
-            l.binary_weights_gpu = cuda_make_array(l.weights, l.nweights);
-        }
-        if(xnor){
-            l.binary_weights_gpu = cuda_make_array(l.weights, l.nweights);
-            l.binary_input_gpu = cuda_make_array(0, l.inputs*l.batch);
-        }
 
         if(batch_normalize){
             l.mean_gpu = cuda_make_array(l.mean, n);
@@ -356,13 +282,6 @@ void forward_convolutional_layer(convolutional_layer l, network net)
 
     fill_cpu(l.outputs*l.batch, 0, l.output, 1);
 
-    if(l.xnor){
-        binarize_weights(l.weights, l.n, l.c/l.groups*l.size*l.size, l.binary_weights);
-        swap_binary(&l);
-        binarize_cpu(net.input, l.c*l.h*l.w*l.batch, l.binary_input);
-        net.input = l.binary_input;
-    }
-
     int m = l.n/l.groups;
     int k = l.size*l.size*l.c/l.groups;
     int n = l.out_w*l.out_h;
@@ -389,7 +308,6 @@ void forward_convolutional_layer(convolutional_layer l, network net)
     }
 
     activate_array(l.output, l.outputs*l.batch, l.activation);
-    if(l.binary || l.xnor) swap_binary(&l);
 }
 
 void backward_convolutional_layer(convolutional_layer l, network net)
@@ -463,39 +381,6 @@ void update_convolutional_layer(convolutional_layer l, network net)
     scal_cpu(l.nweights, momentum, l.weight_updates, 1);
 }
 
-
-void save_convolutional_weights_binary(layer l, FILE *fp)
-{
-#ifdef GPU
-    if(gpu_index >= 0){
-        pull_convolutional_layer(l);
-    }
-#endif
-    binarize_weights(l.weights, l.n, l.c*l.size*l.size, l.binary_weights);
-    int size = l.c*l.size*l.size;
-    int i, j, k;
-    fwrite(l.biases, sizeof(float), l.n, fp);
-    if (l.batch_normalize){
-        fwrite(l.scales, sizeof(float), l.n, fp);
-        fwrite(l.rolling_mean, sizeof(float), l.n, fp);
-        fwrite(l.rolling_variance, sizeof(float), l.n, fp);
-    }
-    for(i = 0; i < l.n; ++i){
-        float mean = l.binary_weights[i*size];
-        if(mean < 0) mean = -mean;
-        fwrite(&mean, sizeof(float), 1, fp);
-        for(j = 0; j < size/8; ++j){
-            int index = i*size + j*8;
-            unsigned char c = 0;
-            for(k = 0; k < 8; ++k){
-                if (j*8 + k >= size) break;
-                if (l.binary_weights[index + k] > 0) c = (c | 1<<k);
-            }
-            fwrite(&c, sizeof(char), 1, fp);
-        }
-    }
-}
-
 void save_convolutional_weights(layer l, FILE *fp)
 {
 #ifdef GPU
@@ -511,36 +396,6 @@ void save_convolutional_weights(layer l, FILE *fp)
         fwrite(l.rolling_variance, sizeof(float), l.n, fp);
     }
     fwrite(l.weights, sizeof(float), num, fp);
-}
-
-void load_convolutional_weights_binary(layer l, FILE *fp)
-{
-    fread(l.biases, sizeof(float), l.n, fp);
-    if (l.batch_normalize){
-        fread(l.scales, sizeof(float), l.n, fp);
-        fread(l.rolling_mean, sizeof(float), l.n, fp);
-        fread(l.rolling_variance, sizeof(float), l.n, fp);
-    }
-    int size = l.c*l.size*l.size;
-    int i, j, k;
-    for(i = 0; i < l.n; ++i){
-        float mean = 0;
-        fread(&mean, sizeof(float), 1, fp);
-        for(j = 0; j < size/8; ++j){
-            int index = i*size + j*8;
-            unsigned char c = 0;
-            fread(&c, sizeof(char), 1, fp);
-            for(k = 0; k < 8; ++k){
-                if (j*8 + k >= size) break;
-                l.weights[index + k] = (c & 1<<k) ? mean : -mean;
-            }
-        }
-    }
-#ifdef GPU
-    if(gpu_index >= 0){
-        push_convolutional_layer(l);
-    }
-#endif
 }
 
 void load_convolutional_weights(layer l, FILE *fp)

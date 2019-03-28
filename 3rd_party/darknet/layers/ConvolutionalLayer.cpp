@@ -27,10 +27,8 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 		throw std::runtime_error("Layer before convolutional layer must output image.");
 	}
 	int batch_normalize = section.get_int("batch_normalize", 0);
-	int binary = section.get_int("binary", 0);
-	int xnor = section.get_int("xnor", 0);
 
-	(layer&)*this = make_convolutional_layer(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize, binary, xnor);
+	(layer&)*this = make_convolutional_layer(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize);
 }
 
 }

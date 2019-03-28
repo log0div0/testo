@@ -26,7 +26,6 @@ void free_layer(layer l)
     if(l.state_delta)        free(l.state_delta);
     if(l.concat)             free(l.concat);
     if(l.concat_delta)       free(l.concat_delta);
-    if(l.binary_weights)     free(l.binary_weights);
     if(l.biases)             free(l.biases);
     if(l.bias_updates)       free(l.bias_updates);
     if(l.scales)             free(l.scales);
@@ -51,7 +50,6 @@ void free_layer(layer l)
     if(l.z_cpu)              free(l.z_cpu);
     if(l.r_cpu)              free(l.r_cpu);
     if(l.h_cpu)              free(l.h_cpu);
-    if(l.binary_input)       free(l.binary_input);
 
 #ifdef GPU
     if(l.indexes_gpu)           cuda_free((float *)l.indexes_gpu);
