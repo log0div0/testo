@@ -1,0 +1,5 @@
+include "./include/src3.testo"
+include "./include/include.testo"
+include "./include/inner_inner/src4.testo"
+include "./src.testo"
+include "./src2.testo"

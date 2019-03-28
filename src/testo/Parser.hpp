@@ -77,4 +77,6 @@ private:
 	std::shared_ptr<AST::IExpr> expr();
 
 	std::vector<Ctx> lexers;
+
+	std::vector<fs::path> already_included;
 };
