@@ -117,38 +117,21 @@ void forward_yolo_layer(const layer l, network net)
     float recall75 = 0;
     float avg_cat = 0;
     float avg_obj = 0;
-    float avg_anyobj = 0;
     int count = 0;
     int class_count = 0;
     *(l.cost) = 0;
     for (b = 0; b < l.batch; ++b) {
         for (j = 0; j < l.h; ++j) {
             for (i = 0; i < l.w; ++i) {
-                int box_index = entry_index(l, b, j*l.w + i, 0);
-                box pred = get_yolo_box(l.output, l.anchor_w, l.anchor_h, box_index, i, j, l.w, l.h, net.w, net.h, l.w*l.h);
-                float best_iou = 0;
-                int best_t = 0;
-                for(t = 0; t < l.max_boxes; ++t){
-                    box truth = float_to_box(net.truth + t*(4 + 1) + b*l.truths, 1);
-                    if(!truth.x) break;
-                    float iou = box_iou(pred, truth);
-                    if (iou > best_iou) {
-                        best_iou = iou;
-                        best_t = t;
-                    }
-                }
                 int obj_index = entry_index(l, b, j*l.w + i, 4);
-                avg_anyobj += l.output[obj_index];
                 l.delta[obj_index] = 0 - l.output[obj_index];
-                if (best_iou > l.ignore_thresh) {
-                    l.delta[obj_index] = 0;
-                }
             }
         }
         for(t = 0; t < l.max_boxes; ++t){
             box truth = float_to_box(net.truth + t*(4 + 1) + b*l.truths, 1);
 
             if(!truth.x) break;
+
             i = (truth.x * l.w);
             j = (truth.y * l.h);
 
@@ -174,7 +157,7 @@ void forward_yolo_layer(const layer l, network net)
         }
     }
     *(l.cost) = pow(mag_array(l.delta, l.outputs * l.batch), 2);
-    printf("Avg IOU: %f, Class: %f, Obj: %f, No Obj: %f, .5R: %f, .75R: %f,  count: %d\n", avg_iou/count, avg_cat/class_count, avg_obj/count, avg_anyobj/(l.w*l.h*l.n*l.batch), recall/count, recall75/count, count);
+    printf("Avg IOU: %f, Class: %f, Obj: %f, .5R: %f, .75R: %f,  count: %d\n", avg_iou/count, avg_cat/class_count, avg_obj/count, recall/count, recall75/count, count);
 }
 
 void backward_yolo_layer(const layer l, network net)

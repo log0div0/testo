@@ -162,8 +162,6 @@ struct layer{
     float mask_scale;
     float class_scale;
     int bias_match;
-    float ignore_thresh;
-    float truth_thresh;
     float thresh;
     float focus;
     int classfix;

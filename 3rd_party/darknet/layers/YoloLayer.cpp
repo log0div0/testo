@@ -20,7 +20,6 @@ YoloLayer::YoloLayer(const inisection& section,
 
 	(layer&)*this = make_yolo_layer(batch, w, h, classes, max_boxes);
 
-	ignore_thresh = section.get_float("ignore_thresh", .5);
 	anchor_w = section.get_int("anchor_w");
 	anchor_h = section.get_int("anchor_h");
 }

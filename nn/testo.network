@@ -67,6 +67,5 @@ activation=linear
 [yolo]
 classes=0
 max_boxes=512
-ignore_thresh = .7
 anchor_w = 8
 anchor_h = 16
