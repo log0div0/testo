@@ -263,8 +263,8 @@ void predict()
 			box b;
 			b.x = (x + predictions[dimension_size * 0 + i]) / l.w;
 			b.y = (y + predictions[dimension_size * 1 + i]) / l.h;
-			b.w = exp(predictions[dimension_size * 2 + i]) * l.biases[0] / image.width();
-			b.h = exp(predictions[dimension_size * 3 + i]) * l.biases[1] / image.height();
+			b.w = exp(predictions[dimension_size * 2 + i]) * l.anchor_w / image.width();
+			b.h = exp(predictions[dimension_size * 3 + i]) * l.anchor_h / image.height();
 
 
 			Box box;
