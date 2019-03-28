@@ -51,12 +51,13 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 }
 
 int do_main(int argc, char** argv) {
-	std::string target;
+	std::string target, test_spec("");
 	bool stop_on_fail = false;
 
 	auto cli = (
 		value("input file", target),
-		option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test")
+		option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
+		option("--test_spec").doc("Run specific test") & value("test name", test_spec)
 	);
 
 	if (!parse(argc, argv, cli)) {
@@ -65,7 +66,8 @@ int do_main(int argc, char** argv) {
 	}
 
 	nlohmann::json config = {
-		{"stop_on_fail", stop_on_fail}
+		{"stop_on_fail", stop_on_fail},
+		{"test_spec", test_spec}
 	};
 
 	if (!fs::exists(target)) {
