@@ -990,5 +990,32 @@ struct IfClause: public Node {
 	std::shared_ptr<IAction> else_action;
 };
 
+struct ForClause: public Node {
+	ForClause(const Token& for_token, const Token& counter, const Token& in, const Token& start,
+		const Token& double_dot, const Token& finish, std::shared_ptr<IAction> cycle_body):
+		Node(for_token),
+		counter(counter),
+		in(in),
+		start(start),
+		double_dot(double_dot),
+		finish(finish),
+		cycle_body(cycle_body) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	Token counter, in, start, double_dot, finish;
+	std::shared_ptr<IAction> cycle_body;
+};
+
 }
 

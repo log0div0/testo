@@ -28,6 +28,7 @@ struct Token {
 		dvd,
 		if_,
 		else_,
+		in,
 		number,
 		time_interval,
 		size,
@@ -43,6 +44,7 @@ struct Token {
 		rparen,
 		semi,
 		colon,
+		double_dot,
 		include,
 
 		//expressions

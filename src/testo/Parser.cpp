@@ -89,6 +89,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::copyto) ||
 		(LA(1) == Token::category::lbrace) ||
 		(LA(1) == Token::category::if_) ||
+		(LA(1) == Token::category::for_) ||
 		(LA(1) == Token::category::semi) ||
 		(LA(1) == Token::category::id)); //macro call
 }
@@ -455,6 +456,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = action_block();
 	} else if (LA(1) == Token::category::if_) {
 		action = if_clause();
+	} else if (LA(1) == Token::category::for_) {
+		action = for_clause();
 	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
 		return empty_action();
 	} else if (LA(1) == Token::category::id) {
@@ -463,7 +466,10 @@ std::shared_ptr<IAction> Parser::action() {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown action: " + LT(1).value());
 	}
 
-	if (action->t.type() != Token::category::action_block && action->t.type() != Token::category::if_) {
+	if (action->t.type() != Token::category::action_block &&
+		action->t.type() != Token::category::if_ &&
+		action->t.type() != Token::category::for_)
+	{
 		Token delim;
 		if (LA(1) == Token::category::newline) {
 			delim = LT(1);
@@ -719,6 +725,40 @@ std::shared_ptr<Action<IfClause>> Parser::if_clause() {
 	));
 
 	return std::shared_ptr<Action<IfClause>>(new Action<IfClause>(action));
+}
+
+std::shared_ptr<Action<ForClause>> Parser::for_clause() {
+	Token for_token = LT(1);
+	match(Token::category::for_);
+
+	Token counter = LT(1);
+	match(Token::category::id);
+
+	Token in = LT(1);
+	match(Token::category::in);
+
+	Token begin = LT(1);
+	match(Token::category::number);
+
+	Token double_dot = LT(1);
+	match(Token::category::double_dot);
+
+	Token end = LT(1);
+	match(Token::category::number);
+
+	newline_list();
+
+	auto cycle_body = action();
+	auto action = std::shared_ptr<ForClause>(new ForClause(
+		for_token,
+		counter,
+		in,
+		begin,
+		double_dot,
+		end,
+		cycle_body
+	));
+	return std::shared_ptr<Action<ForClause>>(new Action<ForClause>(action));
 }
 
 std::shared_ptr<Word> Parser::word() {

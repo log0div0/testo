@@ -186,6 +186,8 @@ Token Lexer::id() {
 		return if_();
 	} else if (value == "else") {
 		return else_();
+	} else if (value == "in") {
+		return in();
 	} else if (value == "include") {
 		return include();
 	} else if (value == "LESS") {
@@ -343,6 +345,13 @@ Token Lexer::else_() {
 	std::string value("else");
 	current_pos.advance(value.length());
 	return Token(Token::category::else_, value, tmp_pos);
+}
+
+Token Lexer::in() {
+	Pos tmp_pos = current_pos;
+	std::string value("in");
+	current_pos.advance(value.length());
+	return Token(Token::category::in, value, tmp_pos);
 }
 
 Token Lexer::include() {
@@ -546,6 +555,12 @@ Token Lexer::colon() {
 	return Token(Token::category::colon, ":", tmp_pos);
 }
 
+Token Lexer::double_dot() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance(2);
+	return Token(Token::category::double_dot, "..", tmp_pos);
+}
+
 Token Lexer::get_next_token() {
 	while (!test_eof()) {
 		if (test_newline()) {
@@ -580,6 +595,8 @@ Token Lexer::get_next_token() {
 			return semi();
 		} else if (test_colon()) {
 			return colon();
+		} else if (test_double_dot()) {
+			return double_dot();
 		} else if (test_space()) {
 			skip_spaces();
 			continue;

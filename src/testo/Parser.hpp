@@ -68,6 +68,7 @@ private:
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
+	std::shared_ptr<AST::Action<AST::ForClause>> for_clause();
 
 	//expressions
 	std::shared_ptr<AST::Word> word();
