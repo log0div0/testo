@@ -1,0 +1,16 @@
+include "include/include.testo"
+
+test dummy: buwaha(dummy2)
+{
+	#buwaha exec bash "ping -c20 192.168.156.10"
+	buwaha wait for 3s
+	#buwaha unplug flash dummy_flash
+	#buwaha stop
+	#buwaha unplug nic master_side
+	#buwaha start
+	#buwaha set puchacha="AHAHASUCHKA"
+	#buwaha unplug dvd
+	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
+	#buwaha plug link master_side
+}
+

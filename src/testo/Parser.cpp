@@ -140,14 +140,15 @@ void Parser::handle_include() {
 
 	//check for cycles
 
-	for (auto& ctx: lexers) {
-		if (ctx.lex.file() == dest_file) {
-			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: cyclic include detected: $include " + std::string(dest_file_token));
+	for (auto& path: already_included) {
+		if (path == dest_file) {
+			return; //implementing #pramga once
 		}
 	}
 
 	Ctx new_ctx(dest_file);
 	lexers.push_back(new_ctx);
+	already_included.push_back(dest_file);
 
 	for (int i = 0; i < 2; i++) {
 		consume();	//Populate lookahead buffer with tokens
