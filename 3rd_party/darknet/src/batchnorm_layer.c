@@ -225,7 +225,7 @@ void load_batchnorm_weights(layer l, FILE *fp)
     fread(l.rolling_mean, sizeof(float), l.c, fp);
     fread(l.rolling_variance, sizeof(float), l.c, fp);
 #ifdef GPU
-    if(gpu_index >= 0){
+    if(use_gpu){
         push_batchnorm_layer(l);
     }
 #endif
@@ -234,7 +234,7 @@ void load_batchnorm_weights(layer l, FILE *fp)
 void save_batchnorm_weights(layer l, FILE *fp)
 {
 #ifdef GPU
-    if(gpu_index >= 0){
+    if(use_gpu){
         pull_batchnorm_layer(l);
     }
 #endif

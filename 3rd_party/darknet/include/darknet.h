@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 #define SECRET_NUM -1234
-extern int gpu_index;
+extern int use_gpu;
 
 typedef enum{
     LOGISTIC, RELU, RELIE, LINEAR, RAMP, TANH, PLSE, LEAKY, ELU, LOGGY, STAIR, HARDTAN, LHTAN, SELU
@@ -358,7 +358,6 @@ typedef struct network{
     int train;
 
 #ifdef GPU
-    int gpu_index;
     float *input_gpu;
     float *truth_gpu;
     float *delta_gpu;
@@ -407,11 +406,9 @@ void fill_gpu(int N, float ALPHA, float * X, int INCX);
 void scal_gpu(int N, float ALPHA, float * X, int INCX);
 void copy_gpu(int N, float * X, int INCX, float * Y, int INCY);
 
-void cuda_set_device(int n);
 void cuda_free(float *x_gpu);
 float *cuda_make_array(float *x, size_t n);
 void cuda_pull_array(float *x_gpu, float *x, size_t n);
-float cuda_mag_array(float *x_gpu, size_t n);
 void cuda_push_array(float *x_gpu, float *x, size_t n);
 
 void forward_network_gpu(network *net);

@@ -1,6 +1,4 @@
-int gpu_index = 0;
-
-#ifdef GPU
+int use_gpu = 0;
 
 #include "cuda.h"
 #include "utils.h"
@@ -9,12 +7,6 @@ int gpu_index = 0;
 #include <stdlib.h>
 #include <time.h>
 
-void cuda_set_device(int n)
-{
-    gpu_index = n;
-    cudaError_t status = cudaSetDevice(n);
-    check_error(status);
-}
 
 int cuda_get_device()
 {
@@ -89,20 +81,6 @@ float *cuda_make_array(float *x, size_t n)
     return x_gpu;
 }
 
-void cuda_random(float *x_gpu, size_t n)
-{
-    static curandGenerator_t gen[16];
-    static int init[16] = {0};
-    int i = cuda_get_device();
-    if(!init[i]){
-        curandCreateGenerator(&gen[i], CURAND_RNG_PSEUDO_DEFAULT);
-        curandSetPseudoRandomGeneratorSeed(gen[i], time(0));
-        init[i] = 1;
-    }
-    curandGenerateUniform(gen[i], x_gpu, n);
-    check_error(cudaPeekAtLastError());
-}
-
 int *cuda_make_int_array(int *x, size_t n)
 {
     int *x_gpu;
@@ -136,16 +114,3 @@ void cuda_pull_array(float *x_gpu, float *x, size_t n)
     cudaError_t status = cudaMemcpy(x, x_gpu, size, cudaMemcpyDeviceToHost);
     check_error(status);
 }
-
-float cuda_mag_array(float *x_gpu, size_t n)
-{
-    float *temp = calloc(n, sizeof(float));
-    cuda_pull_array(x_gpu, temp, n);
-    float m = mag_array(temp, n);
-    free(temp);
-    return m;
-}
-#else
-void cuda_set_device(int n){}
-
-#endif

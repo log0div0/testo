@@ -88,7 +88,7 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.backward_gpu = backward_convolutional_layer_gpu;
     l.update_gpu = update_convolutional_layer_gpu;
 
-    if(gpu_index >= 0){
+    if(use_gpu){
 
         l.weights_gpu = cuda_make_array(l.weights, l.nweights);
         l.weight_updates_gpu = cuda_make_array(l.weight_updates, l.nweights);
@@ -263,7 +263,7 @@ void update_convolutional_layer(convolutional_layer l, network net)
 void save_convolutional_weights(layer l, FILE *fp)
 {
 #ifdef GPU
-    if(gpu_index >= 0){
+    if(use_gpu){
         pull_convolutional_layer(l);
     }
 #endif
@@ -288,7 +288,7 @@ void load_convolutional_weights(layer l, FILE *fp)
     }
     fread(l.weights, sizeof(float), num, fp);
 #ifdef GPU
-    if(gpu_index >= 0){
+    if(use_gpu){
         push_convolutional_layer(l);
     }
 #endif

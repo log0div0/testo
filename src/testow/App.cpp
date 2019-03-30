@@ -4,15 +4,9 @@
 #include <iostream>
 #include <darknet.h>
 
-CUDA::CUDA() {
-#ifdef GPU
-	cuda_set_device(0);
-#endif
-}
-
 App* app = nullptr;
 
-App::App(): net("C:\\Users\\log0div0\\work\\testo\\nn\\testo.cfg", -1) {
+App::App(): net("C:\\Users\\log0div0\\work\\testo\\nn\\testo.cfg") {
 	::app = this;
 	net.load_weights("C:\\Users\\log0div0\\work\\testo\\nn\\testo.weights");
 	virtual_box = virtual_box_client.virtual_box();

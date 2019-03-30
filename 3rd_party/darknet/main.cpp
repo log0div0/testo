@@ -93,11 +93,7 @@ int gpu = 0;
 
 void train()
 {
-	Network network(network_file
-#ifdef GPU
-		, gpu
-#endif
-	);
+	Network network(network_file);
 	if (weights_file.size()) {
 		network.load_weights(weights_file);
 	}
@@ -222,11 +218,7 @@ struct BoxSet: std::list<Box> {
 
 void predict()
 {
-	Network network(network_file
-#ifdef GPU
-		, gpu
-#endif
-	);
+	Network network(network_file);
 	network.load_weights(weights_file);
 	network.train = 0;
 
@@ -308,14 +300,11 @@ int main(int argc, char **argv)
 		srand(time(0));
 
 		auto cli = (
-			( command("train").set(mode, Train),
+			(( command("train").set(mode, Train),
 				value("network", network_file),
 				value("dataset", dataset_file),
 				opt_value("weights", weights_file),
 				option("-o", "--output") & value("output weights", output_file)
-#ifdef GPU
-				, option("--gpu") & values("gpu", gpu)
-#endif
 			)
 			| (
 				command("predict").set(mode, Predict),
@@ -324,16 +313,26 @@ int main(int argc, char **argv)
 				value("input image", image_file),
 				option("-o", "--output") & value("output image", output_file),
 				option("--thresh") & value("thresh", thresh)
+			))
 #ifdef GPU
-				, option("--gpu") & values("gpu", gpu)
+			, (option("--gpu") & values("gpu", gpu)) | option("--no-gpu").set(gpu, -1)
 #endif
-			)
 		);
 
 		if (!parse(argc, argv, cli)) {
 			std::cout << make_man_page(cli, argv[0]) << std::endl;
 			return 1;
 		}
+
+#ifdef GPU
+		if (gpu >= 0) {
+			cudaError_t status = cudaSetDevice(gpu);
+			if (status != cudaSuccess) {
+				throw std::runtime_error(cudaGetErrorString(status));
+			}
+			use_gpu = true;
+		}
+#endif
 
 		switch (mode) {
 			case Train:

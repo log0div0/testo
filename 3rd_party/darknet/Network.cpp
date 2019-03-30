@@ -34,11 +34,7 @@ struct size_params {
 	network *net;
 };
 
-Network::Network(const std::string& path
-#ifdef GPU
-	, int gpu
-#endif
-	): network({})
+Network::Network(const std::string& path): network({})
 {
 	std::ifstream file(path);
 	if (!file.is_open()) {
@@ -48,12 +44,6 @@ Network::Network(const std::string& path
 
 	n = ini.sections().size();
 	layers = (layer*)calloc(n, sizeof(layer));
-#ifdef GPU
-	gpu_index = gpu;
-	if (gpu_index >= 0) {
-		cuda_set_device(gpu_index);
-	}
-#endif
 	batch = ini.get_int("batch", 1);
 	learning_rate = ini.get_float("learning_rate", .001);
 	momentum = ini.get_float("momentum", .9);
@@ -115,16 +105,16 @@ Network::Network(const std::string& path
 	input_gpu = cuda_make_array(input, inputs*batch);
 	truth_gpu = cuda_make_array(truth, truths*batch);
 #endif
-	if(workspace_size){
+	if (workspace_size) {
 #ifdef GPU
-		if(gpu_index >= 0){
+		if (use_gpu) {
 			workspace = (float*)cuda_make_array(0, (workspace_size-1)/sizeof(float)+1);
-		}else {
+		}
+		else
+#endif
+		{
 			workspace = (float*)calloc(1, workspace_size);
 		}
-#else
-		workspace = (float*)calloc(1, workspace_size);
-#endif
 	}
 }
 
@@ -148,11 +138,6 @@ Network::Network(Network&& other): network(other) {
 }
 
 void Network::load_weights(const std::string& weights_file_path) {
-#ifdef GPU
-	if(gpu_index >= 0){
-		cuda_set_device(gpu_index);
-	}
-#endif
 	FILE *fp = fopen(weights_file_path.c_str(), "rb");
 	if(!fp) {
 		throw std::runtime_error("Failed to open file " + weights_file_path);
@@ -171,11 +156,6 @@ void Network::load_weights(const std::string& weights_file_path) {
 }
 
 void Network::save_weights(const std::string& weights_file_path) {
-#ifdef GPU
-	if(gpu_index >= 0){
-		cuda_set_device(gpu_index);
-	}
-#endif
 	FILE *fp = fopen(weights_file_path.c_str(), "wb");
 	if(!fp) {
 		throw std::runtime_error("Failed to open file " + weights_file_path);
@@ -195,8 +175,7 @@ void Network::save_weights(const std::string& weights_file_path) {
 void Network::forward() {
 	network backup = *this;
 #ifdef GPU
-	if(gpu_index >= 0){
-		cuda_set_device(gpu_index);
+	if (use_gpu) {
 		cuda_push_array(input_gpu, input, inputs*batch);
 		if (truth) {
 			cuda_push_array(truth_gpu, truth, truths*batch);
@@ -232,8 +211,7 @@ void Network::forward() {
 void Network::backward() {
 	network backup = *this;
 #ifdef GPU
-	if(gpu_index >= 0){
-		cuda_set_device(gpu_index);
+	if (use_gpu) {
 		for(int i = n-1; i >= 0; --i){
 			layer l = layers[i];
 			if(i == 0){
@@ -268,8 +246,7 @@ void Network::backward() {
 
 void Network::update() {
 #ifdef GPU
-	if(gpu_index >= 0){
-		cuda_set_device(gpu_index);
+	if (use_gpu) {
 		for(int i = 0; i < n; ++i){
 			layer l = layers[i];
 			if(l.update_gpu){
