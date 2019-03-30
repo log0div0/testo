@@ -69,8 +69,6 @@ void free_layer(layer l)
     if(l.save_delta_gpu)          cuda_free(l.save_delta_gpu);
     if(l.concat_gpu)              cuda_free(l.concat_gpu);
     if(l.concat_delta_gpu)        cuda_free(l.concat_delta_gpu);
-    if(l.binary_input_gpu)        cuda_free(l.binary_input_gpu);
-    if(l.binary_weights_gpu)      cuda_free(l.binary_weights_gpu);
     if(l.mean_gpu)                cuda_free(l.mean_gpu);
     if(l.variance_gpu)            cuda_free(l.variance_gpu);
     if(l.rolling_mean_gpu)        cuda_free(l.rolling_mean_gpu);

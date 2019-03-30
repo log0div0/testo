@@ -268,7 +268,7 @@ void Network::backward() {
 
 void Network::update() {
 #ifdef GPU
-	if(netp->gpu_index >= 0){
+	if(gpu_index >= 0){
 		cuda_set_device(gpu_index);
 		for(int i = 0; i < n; ++i){
 			layer l = layers[i];
