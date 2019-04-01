@@ -246,6 +246,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<IAction> action) {
 		return visit_exec(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
 		return visit_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+		return visit_for_clause(p->action);
 	}
 }
 
@@ -287,6 +289,13 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<MacroCall> macro_call) {
 	if (macro_call->params.size() != macro_call->macro->params.size()) {
 		throw std::runtime_error(fmt::format("{}: Error: expected {} params, {} provided", std::string(macro_call->begin()),
 			macro_call->macro->params.size(), macro_call->params.size()));
+	}
+}
+
+void VisitorSemantic::visit_for_clause(std::shared_ptr<ForClause> for_clause) {
+	if (for_clause->start() > for_clause->finish()) {
+		throw std::runtime_error(std::string(for_clause->begin()) + ": Error: start number of the cycle " +
+			for_clause->start_.value() + " is greater than finish number " + for_clause->finish_.value());
 	}
 }
 

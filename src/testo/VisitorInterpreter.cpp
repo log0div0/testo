@@ -2,6 +2,7 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
 
+#include "coro/Finally.h"
 #include <fmt/format.h>
 #include <fstream>
 #include <thread>
@@ -179,6 +180,14 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		if (stop_on_fail) {
 			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
 		}
+	} catch (const CycleControlException& error) {
+		//This exception indicates that some test failed;
+		std::cout << error.token.pos() << " error: cycle control action has not a correcponding cycle" << std::endl;
+		print("Test \"", test->name.value(), "\" FAILED");
+		failed_tests.push_back(test->name.value());
+		if (stop_on_fail) {
+			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
+		}
 	} //any other fails will go up to visit() and will result in terminating
 
 }
@@ -206,6 +215,8 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 			//everything is A-OK. We can rollback to the last snapshot
 			vm->rollback(vm_state->snapshot->name);
 		}
+	} catch (const CycleControlException& error) {
+		throw error; //let it go further up
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(vm_state, nullptr));
 	}
@@ -254,6 +265,10 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_macro_call(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
 		return visit_if_clause(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+		return visit_for_clause(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<CycleControl>>(action)) {
+		throw CycleControlException(p->action->t);
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
@@ -565,32 +580,58 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
 	print("Calling macro ", macro_call->name().value(), " on vm ", vm->name());
 	//push new ctx
-	Stack new_ctx;
+	StackEntry new_ctx(true);
 
 	for (size_t i = 0; i < macro_call->params.size(); ++i) {
 		auto value = visit_word(vm, macro_call->params[i]);
 		new_ctx.define(macro_call->macro->params[i].value(), value);
 	}
 
-	local_vars.push(new_ctx);
+	local_vars.push_back(new_ctx);
+	coro::Finally finally([&] {
+		local_vars.pop_back();
+	});
+
 	visit_action_block(vm, macro_call->macro->action_block->action);
-	//pop ctx
-	local_vars.pop();
 }
 
 void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<IfClause> if_clause) {
+	bool expr_result;
 	try {
-		bool expr_result = visit_expr(vm, if_clause->expr);
-
-		if (expr_result) {
-			return visit_action(vm, if_clause->if_action);
-		} else if (if_clause->has_else()) {
-			return visit_action(vm, if_clause->else_action);
-		}
+		expr_result = visit_expr(vm, if_clause->expr);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(if_clause, vm));
 	}
+	//everything else should be caught at test level
+	if (expr_result) {
+		return visit_action(vm, if_clause->if_action);
+	} else if (if_clause->has_else()) {
+		return visit_action(vm, if_clause->else_action);
+	}
 
+}
+
+void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<ForClause> for_clause) {
+	StackEntry new_ctx(false);
+	local_vars.push_back(new_ctx);
+	size_t ctx_position = local_vars.size() - 1;
+	coro::Finally finally([&]{
+		local_vars.pop_back();
+	});
+	for (auto i = for_clause->start(); i <= for_clause->finish(); i++) {
+		local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
+		try {
+			visit_action(vm, for_clause->cycle_body);
+		} catch (const CycleControlException& cycle_control) {
+			if (cycle_control.token.type() == Token::category::break_) {
+				break;
+			} else if (cycle_control.token.type() == Token::category::continue_) {
+				continue;
+			} else {
+				throw std::runtime_error(std::string("Unknown cycle control command: ") + cycle_control.token.value());
+			}
+		}
+	}
 }
 
 bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<IExpr> expr) {
@@ -636,10 +677,12 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, co
 
 	print("Resolving var ", var);
 
-	if (!local_vars.empty()) {
-		auto top = local_vars.top();
-		if (top.is_defined(var)) {
-			return top.ref(var);
+	for (auto it = local_vars.rbegin(); it != local_vars.rend(); ++it) {
+		if (it->is_defined(var)) {
+			return it->ref(var);
+		}
+		if (it->is_terminate) {
+			break;
 		}
 	}
 
@@ -676,7 +719,7 @@ std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vm, std
 bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<Comparison> comparison) {
 	auto left = visit_word(vm, comparison->left);
 	auto right = visit_word(vm, comparison->right);
-	if (comparison->op() == Token::category::GREATER) {
+	if (comparison->op().type() == Token::category::GREATER) {
 		if (!is_number(left)) {
 			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
 		}
@@ -686,7 +729,7 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std:
 
 		return std::stoul(left) > std::stoul(right);
 
-	} else if (comparison->op() == Token::category::LESS) {
+	} else if (comparison->op().type() == Token::category::LESS) {
 		if (!is_number(left)) {
 			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
 		}
@@ -696,7 +739,7 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std:
 
 		return std::stoul(left) < std::stoul(right);
 
-	} else if (comparison->op() == Token::category::EQUAL) {
+	} else if (comparison->op().type() == Token::category::EQUAL) {
 		if (!is_number(left)) {
 			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
 		}
@@ -706,11 +749,11 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std:
 
 		return std::stoul(left) == std::stoul(right);
 
-	} else if (comparison->op() == Token::category::STRGREATER) {
+	} else if (comparison->op().type() == Token::category::STRGREATER) {
 		return left > right;
-	} else if (comparison->op() == Token::category::STRLESS) {
+	} else if (comparison->op().type() == Token::category::STRLESS) {
 		return left < right;
-	} else if (comparison->op() == Token::category::STREQUAL) {
+	} else if (comparison->op().type() == Token::category::STREQUAL) {
 		return left == right;
 	} else {
 		throw std::runtime_error("Unknown comparison op");

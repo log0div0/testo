@@ -80,6 +80,13 @@ private:
 	bool test_rparen() const { return (input[current_pos] == ')'); }
 	bool test_semi() const { return (input[current_pos] == ';'); }
 	bool test_colon() const { return (input[current_pos] == ':'); }
+	bool test_double_dot() const {
+		if (test_eof(1)) {
+			return false;
+		}
+		return ((input[current_pos] == '.') &&
+			(input[current_pos + 1] == '.'));
+	}
 
 	void skip_spaces();
 	void skip_comments();
@@ -112,6 +119,9 @@ private:
 	Token dvd();
 	Token if_();
 	Token else_();
+	Token in();
+	Token break_();
+	Token continue_();
 	Token dbl_quoted_string();
 	Token multiline_string();
 	Token assign();
@@ -124,6 +134,7 @@ private:
 	Token rparen();
 	Token semi();
 	Token colon();
+	Token double_dot();
 	Token include();
 
 	//expressions

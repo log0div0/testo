@@ -28,6 +28,7 @@ macro another_reboot(login, password) {
 }
 
 macro reboot(login, password) {
+	type $login + " " + $password
 	another_reboot($password, $login)
 }
 
@@ -50,16 +51,20 @@ snapshot dummy2: dummy {
 
 test dummy: buwaha(dummy2)
 {
-	#buwaha exec bash "ping -c20 192.168.156.10"
-	buwaha wait for 3s
-	#buwaha unplug flash dummy_flash
-	#buwaha stop
-	#buwaha unplug nic master_side
-	#buwaha start
-	#buwaha set puchacha="AHAHASUCHKA"
-	#buwaha unplug dvd
-	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
-	#buwaha plug link master_side
+	buwaha{
+		for i in 3..5 {
+			for j in 0..10 {
+				type " j is " + $j
+				type " i is " + $i
+				if ($i EQUAL "4" AND $j EQUAL "7") {
+					type "BREAKING"
+					break
+				}
+				wait for 1s
+			}
+			type "OUTER CYCLE"
+		}
+	}
 }
 
 test dummy2: buwaha(dummy2)

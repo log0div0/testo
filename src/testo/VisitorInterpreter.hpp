@@ -3,10 +3,12 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
-#include <stack>
+#include <vector>
 
 struct VisitorInterpreter {
-	struct Stack {
+	struct StackEntry {
+		StackEntry(bool is_terminate): is_terminate(is_terminate) {}
+
 		void define(const std::string& name, const std::string& value) {
 			vars[name] = value;
 		}
@@ -26,6 +28,7 @@ struct VisitorInterpreter {
 			}
 		}
 
+		bool is_terminate;
 		std::unordered_map<std::string, std::string> vars;
 	};
 
@@ -48,6 +51,22 @@ struct VisitorInterpreter {
 		std::string msg;
 		std::shared_ptr<AST::Node> node;
 		std::shared_ptr<VmController> vm;
+	};
+
+	struct CycleControlException: public std::runtime_error {
+		explicit CycleControlException(const Token& token):
+			std::runtime_error(""), token(token)
+		{
+			msg = token.value();
+		}
+
+		const char* what() const noexcept override {
+			return msg.c_str();
+		}
+
+		Token token;
+	private:
+		std::string msg;
 	};
 
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
@@ -80,6 +99,7 @@ struct VisitorInterpreter {
 	void visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<AST::CopyTo> copyto);
 	void visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
 	void visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IfClause> if_clause);
+	void visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ForClause> for_clause);
 
 	bool visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IExpr> expr);
 	bool visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::BinOp> binop);
@@ -101,7 +121,7 @@ private:
 	bool stop_on_fail;
 	std::string test_spec;
 
-	std::stack<Stack> local_vars;
+	std::vector<StackEntry> local_vars;
 
 	template <typename... Args>
 	void print(Args... args) {
