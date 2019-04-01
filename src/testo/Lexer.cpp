@@ -188,6 +188,10 @@ Token Lexer::id() {
 		return else_();
 	} else if (value == "in") {
 		return in();
+	} else if (value == "break") {
+		return break_();
+	} else if (value == "continue") {
+		return continue_();
 	} else if (value == "include") {
 		return include();
 	} else if (value == "LESS") {
@@ -352,6 +356,20 @@ Token Lexer::in() {
 	std::string value("in");
 	current_pos.advance(value.length());
 	return Token(Token::category::in, value, tmp_pos);
+}
+
+Token Lexer::break_() {
+	Pos tmp_pos = current_pos;
+	std::string value("break");
+	current_pos.advance(value.length());
+	return Token(Token::category::break_, value, tmp_pos);
+}
+
+Token Lexer::continue_() {
+	Pos tmp_pos = current_pos;
+	std::string value("continue");
+	current_pos.advance(value.length());
+	return Token(Token::category::continue_, value, tmp_pos);
 }
 
 Token Lexer::include() {

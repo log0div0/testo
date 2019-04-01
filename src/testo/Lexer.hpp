@@ -120,6 +120,8 @@ private:
 	Token if_();
 	Token else_();
 	Token in();
+	Token break_();
+	Token continue_();
 	Token dbl_quoted_string();
 	Token multiline_string();
 	Token assign();

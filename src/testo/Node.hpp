@@ -1006,7 +1006,7 @@ struct ForClause: public Node {
 	}
 
 	Pos end() const {
-		return t.pos();
+		return cycle_body->end();
 	}
 
 	operator std::string() const {
@@ -1023,6 +1023,22 @@ struct ForClause: public Node {
 
 	Token counter, in, start_, double_dot, finish_;
 	std::shared_ptr<IAction> cycle_body;
+};
+
+struct CycleControl: public Node {
+	CycleControl(const Token& control_token): Node(control_token) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
 };
 
 }

@@ -47,6 +47,10 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return visit_macro_call(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
 		return visit_if_clause(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+		return visit_for_clause(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<CycleControl>>(action)) {
+		return p->action->t.value();
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
@@ -168,6 +172,17 @@ std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vm, std:
 		result += "else";
 		result += visit_action(vm, if_clause->else_action);
 	}
+
+	return result;
+}
+
+std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<ForClause> for_clause) {
+	std::string result("for");
+	//we should drop the counter from cksum
+	result += for_clause->start_.value();
+	result += "..";
+	result += for_clause->finish_.value();
+	result += visit_action(vm, for_clause->cycle_body);
 
 	return result;
 }

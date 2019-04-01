@@ -29,6 +29,8 @@ struct Token {
 		if_,
 		else_,
 		in,
+		break_,
+		continue_,
 		number,
 		time_interval,
 		size,

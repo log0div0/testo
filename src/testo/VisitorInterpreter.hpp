@@ -53,6 +53,22 @@ struct VisitorInterpreter {
 		std::shared_ptr<VmController> vm;
 	};
 
+	struct CycleControlException: public std::runtime_error {
+		explicit CycleControlException(const Token& token):
+			std::runtime_error(""), token(token)
+		{
+			msg = token.value();
+		}
+
+		const char* what() const noexcept override {
+			return msg.c_str();
+		}
+
+		Token token;
+	private:
+		std::string msg;
+	};
+
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);

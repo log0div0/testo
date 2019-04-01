@@ -56,8 +56,13 @@ test dummy: buwaha(dummy2)
 			for j in 0..10 {
 				type " j is " + $j
 				type " i is " + $i
+				if ($i EQUAL "4" AND $j EQUAL "7") {
+					type "BREAKING"
+					break
+				}
 				wait for 1s
 			}
+			type "OUTER CYCLE"
 		}
 	}
 }

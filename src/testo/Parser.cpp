@@ -90,6 +90,8 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::lbrace) ||
 		(LA(1) == Token::category::if_) ||
 		(LA(1) == Token::category::for_) ||
+		(LA(1) == Token::category::break_) ||
+		(LA(1) == Token::category::continue_) ||
 		(LA(1) == Token::category::semi) ||
 		(LA(1) == Token::category::id)); //macro call
 }
@@ -458,6 +460,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = if_clause();
 	} else if (LA(1) == Token::category::for_) {
 		action = for_clause();
+	} else if ((LA(1) == Token::category::break_) || (LA(1) == Token::category::continue_)) {
+		action = cycle_control();
 	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
 		return empty_action();
 	} else if (LA(1) == Token::category::id) {
@@ -759,6 +763,14 @@ std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 		cycle_body
 	));
 	return std::shared_ptr<Action<ForClause>>(new Action<ForClause>(action));
+}
+
+std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
+	Token control_token = LT(1);
+	match({Token::category::break_, Token::category::continue_});
+
+	auto action = std::shared_ptr<CycleControl>(new CycleControl(control_token));
+	return std::shared_ptr<Action<CycleControl>>(new Action<CycleControl>(action));
 }
 
 std::shared_ptr<Word> Parser::word() {
