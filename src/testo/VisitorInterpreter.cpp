@@ -2,6 +2,7 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
 
+#include "coro/Finally.h"
 #include <fmt/format.h>
 #include <fstream>
 #include <thread>
@@ -567,17 +568,19 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
 	print("Calling macro ", macro_call->name().value(), " on vm ", vm->name());
 	//push new ctx
-	Stack new_ctx;
+	StackEntry new_ctx(true);
 
 	for (size_t i = 0; i < macro_call->params.size(); ++i) {
 		auto value = visit_word(vm, macro_call->params[i]);
 		new_ctx.define(macro_call->macro->params[i].value(), value);
 	}
 
-	local_vars.push(new_ctx);
+	local_vars.push_back(new_ctx);
+	coro::Finally finally([&] {
+		local_vars.pop_back();
+	});
+
 	visit_action_block(vm, macro_call->macro->action_block->action);
-	//pop ctx
-	local_vars.pop();
 }
 
 void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<IfClause> if_clause) {
@@ -596,9 +599,17 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::
 
 void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<ForClause> for_clause) {
 	try {
-		for (auto i = for_clause->start(); i < for_clause->finish(); i++) {
+		StackEntry new_ctx(false);
+		local_vars.push_back(new_ctx);
+		size_t ctx_position = local_vars.size() - 1;
+		coro::Finally finally([&]{
+			local_vars.pop_back();
+		});
+		for (auto i = for_clause->start(); i <= for_clause->finish(); i++) {
+			local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
 			visit_action(vm, for_clause->cycle_body);
 		}
+
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(for_clause, vm));
 	}
@@ -648,10 +659,12 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, co
 
 	print("Resolving var ", var);
 
-	if (!local_vars.empty()) {
-		auto top = local_vars.top();
-		if (top.is_defined(var)) {
-			return top.ref(var);
+	for (auto it = local_vars.rbegin(); it != local_vars.rend(); ++it) {
+		if (it->is_defined(var)) {
+			return it->ref(var);
+		}
+		if (it->is_terminate) {
+			break;
 		}
 	}
 

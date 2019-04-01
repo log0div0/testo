@@ -3,10 +3,12 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
-#include <stack>
+#include <vector>
 
 struct VisitorInterpreter {
-	struct Stack {
+	struct StackEntry {
+		StackEntry(bool is_terminate): is_terminate(is_terminate) {}
+
 		void define(const std::string& name, const std::string& value) {
 			vars[name] = value;
 		}
@@ -26,6 +28,7 @@ struct VisitorInterpreter {
 			}
 		}
 
+		bool is_terminate;
 		std::unordered_map<std::string, std::string> vars;
 	};
 
@@ -102,7 +105,7 @@ private:
 	bool stop_on_fail;
 	std::string test_spec;
 
-	std::stack<Stack> local_vars;
+	std::vector<StackEntry> local_vars;
 
 	template <typename... Args>
 	void print(Args... args) {
