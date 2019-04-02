@@ -832,7 +832,7 @@ struct IFactor: public Node {
 	using Node::Node;
 };
 
-//Word, comparison or expr
+//Word, comparison, check or expr
 template <typename FactorType>
 struct Factor: public IFactor {
 	Factor(const Token& not_token, std::shared_ptr<FactorType> factor):
@@ -887,6 +887,37 @@ struct Comparison: public Node {
 
 	std::shared_ptr<Word> left;
 	std::shared_ptr<Word> right;
+};
+
+struct Check: public Node {
+	Check(const Token& check, std::shared_ptr<Word> text_word,
+	const std::vector<std::shared_ptr<Assignment>>& params):
+		Node(check), text_word(text_word), params(params) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		if (params.size()) {
+			return params[params.size() - 1]->end();
+		} else {
+			return text_word->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = t.value();
+
+		if (text_word) {
+			result += " " + std::string(*text_word);
+		}
+
+		return result;
+	}
+
+	std::shared_ptr<Word> text_word;
+	std::vector<std::shared_ptr<Assignment>> params;
 };
 
 struct IExpr: public Node {

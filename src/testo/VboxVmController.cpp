@@ -801,6 +801,10 @@ bool VboxVmController::wait(const std::string& text, const nlohmann::json& param
 	}
 }
 
+bool VboxVmController::check(const std::string& text, const nlohmann::json& params) {
+	throw std::runtime_error("Implement me");
+}
+
 int VboxVmController::run(const fs::path& exe, std::vector<std::string> args) {
 	try {
 		args.insert(args.begin(), "--");

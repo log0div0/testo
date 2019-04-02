@@ -824,7 +824,9 @@ std::shared_ptr<IFactor> Parser::factor() {
 	}
 
 	//TODO: newline
-	if(test_comparison()) {
+	if (LA(1) == Token::category::check) {
+		return std::shared_ptr<Factor<Check>>(new Factor<Check>(not_token, check()));
+	} else if(test_comparison()) {
 		return std::shared_ptr<Factor<Comparison>>(new Factor<Comparison>(not_token, comparison()));
 	} else if (LA(1) == Token::category::lparen) {
 		match(Token::category::lparen);
@@ -855,6 +857,35 @@ std::shared_ptr<Comparison> Parser::comparison() {
 	auto right = word();
 
 	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
+}
+
+std::shared_ptr<Check> Parser::check() {
+	Token check_token = LT(1);
+	match(Token::category::check);
+
+	std::shared_ptr<Word> value(nullptr);
+
+	value = word();
+
+	std::vector<std::shared_ptr<Assignment>> params;
+
+	if (LA(1) == Token::category::lparen) {
+		match(Token::category::lparen);
+		if (LA(1) == Token::category::id) {
+			params.push_back(assignment());
+		}
+		while (LA(1) == Token::category::comma) {
+			if (params.empty()) {
+				match(Token::category::rparen); //will cause failure
+			}
+			match(Token::category::comma);
+			newline_list();
+			params.push_back(assignment());
+		}
+		match(Token::category::rparen);
+	}
+
+	return std::shared_ptr<Check>(new Check(check_token, value, params));
 }
 
 std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {

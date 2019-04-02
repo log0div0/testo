@@ -56,7 +56,7 @@ test dummy: buwaha(dummy2)
 			for j in 0..10 {
 				type " j is " + $j
 				type " i is " + $i
-				if ($i EQUAL "4" AND $j EQUAL "7") {
+				if ($i EQUAL "4" AND NOT(NOT check "Hey ho"(arg1="val1", arg2="val2") AND $j EQUAL "1")) {
 					type "BREAKING"
 					break
 				}

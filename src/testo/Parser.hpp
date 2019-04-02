@@ -74,6 +74,7 @@ private:
 	//expressions
 	std::shared_ptr<AST::Word> word();
 	std::shared_ptr<AST::IFactor> factor();
+	std::shared_ptr<AST::Check> check();
 	std::shared_ptr<AST::Comparison> comparison();
 	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
 	std::shared_ptr<AST::IExpr> expr();

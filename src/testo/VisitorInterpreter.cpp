@@ -681,6 +681,8 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vm, std::sha
 		return p->is_negated() ^ visit_word(vm, p->factor).length();
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(vm, p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<Factor<Check>>(factor)) {
+		return p->is_negated() ^ visit_check(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
 		return p->is_negated() ^ visit_expr(vm, p->factor);
 	} else {
@@ -776,6 +778,37 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std:
 		return left == right;
 	} else {
 		throw std::runtime_error("Unknown comparison op");
+	}
+}
+
+bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<Check> check) {
+	try {
+		auto text = visit_word(vm, check->text_word);
+
+		std::string print_str = std::string("Checking ") + text;
+		nlohmann::json params = {};
+
+		for (auto it = check->params.begin(); it != check->params.end();) {
+			if (it == check->params.begin()) {
+				print_str += "(";
+			}
+
+			auto value = visit_word(vm, (*it)->right);
+			params[(*it)->left.value()] = value;
+			print_str += (*it)->left.value() + "=" + value;
+
+			if (++it != check->params.end()) {
+				print_str += ", ";
+				continue;
+			}
+			print_str += ")";
+		}
+
+		print_str += std::string(" on vm ") + vm->name();
+		print(print_str);
+		return vm->check(text, params);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(InterpreterException(check, vm));
 	}
 }
 

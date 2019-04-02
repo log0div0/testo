@@ -29,6 +29,7 @@ struct VisitorCksum {
 	std::string resolve_var(std::shared_ptr<VmController> vm, const std::string& var);
 	std::string visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Word> word);
 	std::string visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
+	std::string visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Check> check);
 
 	Register& reg;
 };

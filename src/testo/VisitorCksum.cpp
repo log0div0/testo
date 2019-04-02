@@ -220,6 +220,9 @@ std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vm, std::sh
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_comparison(vm, p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<Factor<Check>>(factor)) {
+		result += std::to_string(p->is_negated());
+		result += visit_check(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_expr(vm, p->factor);
@@ -274,3 +277,16 @@ std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vm, std
 	return result;
 }
 
+std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<Check> check) {
+	std::string result = "check";
+	result += visit_word(vm, check->text_word);
+
+	result += "(";
+	for (auto param: check->params) {
+		auto value = visit_word(vm, param->right);
+		result += param->left.value() + "=" + value;
+	}
+	result += ")";
+
+	return result;
+}

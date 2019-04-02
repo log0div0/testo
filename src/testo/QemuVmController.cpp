@@ -1152,6 +1152,10 @@ bool QemuVmController::wait(const std::string& text, const nlohmann::json& param
 	return true;
 }
 
+bool QemuVmController::check(const std::string& text, const nlohmann::json& params) {
+	return true;
+}
+
 int QemuVmController::run(const fs::path& exe, std::vector<std::string> args) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
