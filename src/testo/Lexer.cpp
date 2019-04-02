@@ -152,6 +152,8 @@ Token Lexer::id() {
 		return type();
 	} else if (value == "wait") {
 		return wait();
+	} else if (value == "check") {
+		return check();
 	} else if (value == "press") {
 		return press();
 	} else if (value == "plug") {
@@ -230,6 +232,13 @@ Token Lexer::wait() {
 	std::string value("wait");
 	current_pos.advance(value.length());
 	return Token(Token::category::wait, value, tmp_pos);
+}
+
+Token Lexer::check() {
+	Pos tmp_pos = current_pos;
+	std::string value("check");
+	current_pos.advance(value.length());
+	return Token(Token::category::check, value, tmp_pos);
 }
 
 Token Lexer::press() {

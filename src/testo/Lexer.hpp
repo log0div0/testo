@@ -102,6 +102,7 @@ private:
 	Token var_ref();
 	Token type();
 	Token wait();
+	Token check();
 	Token press();
 	Token plug();
 	Token unplug();

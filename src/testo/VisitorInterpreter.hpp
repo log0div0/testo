@@ -107,6 +107,7 @@ struct VisitorInterpreter {
 	std::string resolve_var(std::shared_ptr<VmController> vm, const std::string& var);
 	std::string visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Word> word);
 	bool visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
+	bool visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Check> check);
 
 	void apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot, bool recursive = false);
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);

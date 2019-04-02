@@ -758,7 +758,7 @@ void VboxVmController::type(const std::string& text) {
 	}
 }
 
-bool VboxVmController::wait(const std::string& text, const std::string& time) {
+bool VboxVmController::wait(const std::string& text, const nlohmann::json& params, const std::string& time) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -799,6 +799,10 @@ bool VboxVmController::wait(const std::string& text, const std::string& time) {
 		std::cout << "Waiting on vm " << name() << ": " << error << std::endl;
 		return false;
 	}
+}
+
+bool VboxVmController::check(const std::string& text, const nlohmann::json& params) {
+	throw std::runtime_error("Implement me");
 }
 
 int VboxVmController::run(const fs::path& exe, std::vector<std::string> args) {

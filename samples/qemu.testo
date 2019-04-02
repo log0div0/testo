@@ -56,7 +56,7 @@ test dummy: buwaha(dummy2)
 			for j in 0..10 {
 				type " j is " + $j
 				type " i is " + $i
-				if ($i EQUAL "4" AND $j EQUAL "7") {
+				if ($i EQUAL "4" AND NOT(NOT check "Hey ho"(arg1="val1", arg2="val2") AND $j EQUAL "1")) {
 					type "BREAKING"
 					break
 				}
@@ -69,15 +69,8 @@ test dummy: buwaha(dummy2)
 
 test dummy2: buwaha(dummy2)
 {
-	buwaha exec bash "ping -c20 192.168.156.10"
-	#buwaha unplug flash dummy_flash
-	#buwaha stop
-	#buwaha unplug nic master_side
-	#buwaha start
-	#buwaha set puchacha="AHAHASUCHKA"
-	#buwaha unplug dvd
-	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
-	#buwaha plug link master_side
+	buwaha wait "Zimbabwe" (hey="ho", otsosi="y Traktorista",
+		iso_blat=$ISO_PATH, login_nahuy=$login)
 }
 
 test dummy3: buwaha(dummy2)

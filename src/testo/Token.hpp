@@ -11,6 +11,7 @@ struct Token {
 		var_ref,
 		type_,
 		wait,
+		check,
 		press,
 		plug,
 		unplug,
