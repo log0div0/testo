@@ -179,9 +179,32 @@ struct Type: public Node {
 	std::shared_ptr<Word> text_word;
 };
 
+struct Assignment: public Node {
+	Assignment(const Token& left, const Token& assign, std::shared_ptr<Word> right):
+		Node(assign),
+		left(left),
+		right(right) {}
+
+	Pos begin() const {
+		return left.pos();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return left.value() + t.value() + std::string(*right);
+	}
+
+	Token left;
+	std::shared_ptr<Word> right;
+};
+
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<Word> text_word, Token for_, Token time_interval):
-		Node(wait), text_word(text_word), time_interval(time_interval), for_(for_) {}
+	Wait(const Token& wait, std::shared_ptr<Word> text_word,
+	const std::vector<std::shared_ptr<Assignment>>& params, Token for_, Token time_interval):
+		Node(wait), text_word(text_word), params(params), time_interval(time_interval), for_(for_) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -209,6 +232,7 @@ struct Wait: public Node {
 	}
 
 	std::shared_ptr<Word> text_word;
+	std::vector<std::shared_ptr<Assignment>> params;
 	Token time_interval;
 	Token for_;
 };
@@ -322,28 +346,6 @@ struct Exec: public Node {
 
 	Token process_token;
 	std::shared_ptr<Word> commands;
-};
-
-struct Assignment: public Node {
-	Assignment(const Token& left, const Token& assign, std::shared_ptr<Word> right):
-		Node(assign),
-		left(left),
-		right(right) {}
-
-	Pos begin() const {
-		return left.pos();
-	}
-
-	Pos end() const {
-		return right->end();
-	}
-
-	operator std::string() const {
-		return left.value() + t.value() + std::string(*right);
-	}
-
-	Token left;
-	std::shared_ptr<Word> right;
 };
 
 struct Set: public Node {

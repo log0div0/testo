@@ -72,6 +72,13 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vm, std::shar
 		result += visit_word(vm, wait->text_word);
 	}
 
+	result += "(";
+	for (auto param: wait->params) {
+		auto value = visit_word(vm, param->right);
+		result += param->left.value() + "=" + value;
+	}
+	result += ")";
+
 	if (wait->time_interval) {
 		result += wait->time_interval.value();
 	} else {

@@ -1148,7 +1148,7 @@ void QemuVmController::type(const std::string& text) {
 	}
 }
 
-bool QemuVmController::wait(const std::string& text, const std::string& time) {
+bool QemuVmController::wait(const std::string& text, const nlohmann::json& params, const std::string& time) {
 	return true;
 }
 

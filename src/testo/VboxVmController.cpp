@@ -758,7 +758,7 @@ void VboxVmController::type(const std::string& text) {
 	}
 }
 
-bool VboxVmController::wait(const std::string& text, const std::string& time) {
+bool VboxVmController::wait(const std::string& text, const nlohmann::json& params, const std::string& time) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);

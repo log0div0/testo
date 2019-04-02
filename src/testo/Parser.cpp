@@ -521,6 +521,24 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		value = word();
 	}
 
+	std::vector<std::shared_ptr<Assignment>> params;
+
+	if (LA(1) == Token::category::lparen) {
+		match(Token::category::lparen);
+		if (LA(1) == Token::category::id) {
+			params.push_back(assignment());
+		}
+		while (LA(1) == Token::category::comma) {
+			if (params.empty()) {
+				match(Token::category::rparen); //will cause failure
+			}
+			match(Token::category::comma);
+			newline_list();
+			params.push_back(assignment());
+		}
+		match(Token::category::rparen);
+	}
+
 	if (LA(1) == Token::category::for_) {
 		for_ = LT(1);
 		match(Token::category::for_);
@@ -529,12 +547,17 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		match(Token::category::time_interval);
 	}
 
+	if (!value && params.size()) {
+		throw std::runtime_error(std::string(wait_token.pos()) +
+			": Error: params cannot be specified without TEXT");
+	}
+
 	if (!(value || for_)) {
 		throw std::runtime_error(std::string(wait_token.pos()) +
 			": Error: either TEXT or FOR (of both) must be specified for wait command");
 	}
 
-	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, for_, time_interval));
+	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, params, for_, time_interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
