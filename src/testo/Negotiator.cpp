@@ -42,6 +42,40 @@ void Negotiator::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
+void Negotiator::copy_from_guest(const fs::path& src, const fs::path& dst) {
+	nlohmann::json request = {
+		{"method", "copy_files_out"}
+	};
+
+	request["args"] = nlohmann::json::array();
+	request["args"].push_back(src.generic_string());
+	request["args"].push_back(dst.generic_string());
+
+	coro::Timeout timeout(10s); //actually, it really depends on file size, TODO
+
+	send(request);
+
+	auto response = recv();
+
+	if(!response.at("success").get<bool>()) {
+		throw std::runtime_error(response.at("error").get<std::string>());
+	}
+
+	for (auto& file: response.at("result")) {
+		fs::path dst = file.at("path").get<std::string>();
+		if (!file.count("content")) {
+			fs::create_directories(dst);
+			continue;
+		}
+		fs::create_directories(dst.parent_path());
+		auto content_base64 = file.at("content").get<std::string>();
+		auto content = base64_decode(content_base64);
+		std::ofstream file_stream(dst.generic_string(), std::ios::out | std::ios::binary);
+		file_stream.write((const char*)&content[0], content.size());
+		file_stream.close();
+	}
+}
+
 void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst) {
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {

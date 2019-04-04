@@ -259,8 +259,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_exec(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
 		return visit_set(vm, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<CopyTo>>(action)) {
-		return visit_copyto(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Copy>>(action)) {
+		return visit_copy(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
 		return visit_macro_call(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
@@ -574,12 +574,13 @@ void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared
 
 }
 
-void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
+void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {
 	try {
-		auto from = visit_word(vm, copyto->from);
-		auto to = visit_word(vm, copyto->to);
+		auto from = visit_word(vm, copy->from);
+		auto to = visit_word(vm, copy->to);
+		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
-		print("Copying ", from, " to vm ", vm->name(), " in directory ", to);
+		print("Copying ", from, " ", from_to, " vm ", vm->name(), " in directory ", to);
 
 		if (!vm->is_running()) {
 			throw std::runtime_error(fmt::format("vm is not running"));
@@ -589,9 +590,13 @@ void VisitorInterpreter::visit_copyto(std::shared_ptr<VmController> vm, std::sha
 			throw std::runtime_error(fmt::format("guest additions are not installed"));
 		}
 
-		vm->copy_to_guest(from, to);
+		if(copy->is_to_guest()) {
+			vm->copy_to_guest(from, to);
+		} else {
+			vm->copy_from_guest(from, to);
+		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(copyto, vm));
+		std::throw_with_nested(InterpreterException(copy, vm));
 	}
 
 }

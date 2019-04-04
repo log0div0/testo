@@ -43,10 +43,26 @@ snapshot dummy {
 }
 
 snapshot dummy2: dummy {
-	plug dvd "/home/alex/work/vbox/build/out/pkg/negotiator.iso"
-	plug flash dummy_flash
-	wait for 5s
-	unplug flash dummy_flash
+	type "sudo su"; press Enter;; wait for 1s;
+	type "1111"; press Enter;
+	if ($HTTP_PROXY) {
+		type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
+		wait for 5s
+		type "Acquire::http::Proxy \"http://" + $HTTP_PROXY + ":3128\";"; press Enter
+		type "Acquire::https::Proxy \"http://" + $HTTP_PROXY + ":3128\";"
+		press leftctrl+x; wait for 1s;
+		press leftshift+y; press Enter
+	}
+	type "apt-get update"; press Enter
+	wait for 40s
+	type "apt-get install -y python daemon"; press Enter; wait for 30s
+}
+
+snapshot negotiator: dummy2 {
+	plug dvd "/home/alex/work/vbox/build/out/pkg/negotiator.iso"; wait for 5s
+	type "mount /dev/cdrom /media"; press Enter; wait for 3s
+	type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter; wait for 5s;
+	type "umount /media"; press Enter; wait for 3s;
 }
 
 test dummy: buwaha(dummy2)
@@ -73,18 +89,8 @@ test dummy2: buwaha(dummy2)
 		iso_blat=$ISO_PATH, login_nahuy=$login)
 }
 
-test dummy3: buwaha(dummy2)
+test dummy3: buwaha(negotiator)
 {
-	#buwaha exec bash "ping -c20 192.168.156.10"
-	buwaha reboot("Hey", "Suka")
-	buwaha wait for 3s
-	#buwaha unplug flash dummy_flash
-	#buwaha stop
-	#buwaha unplug nic master_side
-	#buwaha start
-	#buwaha set puchacha="AHAHASUCHKA"
-	#buwaha unplug dvd
-	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
-	#buwaha plug link master_side
+	buwaha copyfrom "/usr/lib/mime/" "/home/alex/tmp/copyfrom_testing/mime"
 }
 

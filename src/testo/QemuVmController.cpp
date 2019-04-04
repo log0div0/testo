@@ -1235,6 +1235,19 @@ void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
+void QemuVmController::copy_from_guest(const fs::path& src, const fs::path& dst) {
+	try {
+
+
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		Negotiator helper(domain);
+
+		helper.copy_from_guest(src, dst);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
+	}
+}
+
 void QemuVmController::remove_from_guest(const fs::path& obj) {
 	//TODO!!
 }

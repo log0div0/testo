@@ -87,6 +87,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::exec) ||
 		(LA(1) == Token::category::set) ||
 		(LA(1) == Token::category::copyto) ||
+		(LA(1) == Token::category::copyfrom) ||
 		(LA(1) == Token::category::lbrace) ||
 		(LA(1) == Token::category::if_) ||
 		(LA(1) == Token::category::for_) ||
@@ -452,8 +453,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = exec();
 	} else if (LA(1) == Token::category::set) {
 		action = set();
-	} else if (LA(1) == Token::category::copyto) {
-		action = copyto();
+	} else if ((LA(1) == Token::category::copyto) || (LA(1) == Token::category::copyfrom)) {
+		action = copy();
 	} else if (LA(1) == Token::category::lbrace) {
 		action = action_block();
 	} else if (LA(1) == Token::category::if_) {
@@ -662,15 +663,15 @@ std::shared_ptr<Action<Set>> Parser::set() {
 	return std::shared_ptr<Action<Set>>(new Action<Set>(action));
 }
 
-std::shared_ptr<Action<CopyTo>> Parser::copyto() {
-	Token copyto_token = LT(1);
-	match(Token::category::copyto);
+std::shared_ptr<Action<Copy>> Parser::copy() {
+	Token copy_token = LT(1);
+	match({Token::category::copyto, Token::category::copyfrom});
 
 	auto from = word();
 	auto to = word();
 
-	auto action = std::shared_ptr<CopyTo>(new CopyTo(copyto_token, from, to));
-	return std::shared_ptr<Action<CopyTo>>(new Action<CopyTo>(action));
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to));
+	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 
 std::shared_ptr<Action<ActionBlock>> Parser::action_block() {

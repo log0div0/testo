@@ -41,8 +41,8 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return visit_exec(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
 		return visit_set(vm, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<CopyTo>>(action)) {
-		return visit_copyto(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Copy>>(action)) {
+		return visit_copy(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
 		return visit_macro_call(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
@@ -139,10 +139,10 @@ std::string VisitorCksum::visit_set(std::shared_ptr<VmController> vm, std::share
 	return result;
 }
 
-std::string VisitorCksum::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
-	std::string result("copyto");
+std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {
+	std::string result(copy->t.value());
 
-	auto from = visit_word(vm, copyto->from);
+	auto from = visit_word(vm, copy->from);
 
 	result += from;
 
@@ -160,7 +160,7 @@ std::string VisitorCksum::visit_copyto(std::shared_ptr<VmController> vm, std::sh
 	}
 
 
-	result += visit_word(vm, copyto->to);
+	result += visit_word(vm, copy->to);
 
 	return result;
 }

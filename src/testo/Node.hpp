@@ -373,9 +373,11 @@ struct Set: public Node {
 	std::vector<std::shared_ptr<Assignment>> assignments;
 };
 
-struct CopyTo: public Node {
-	CopyTo(const Token& copyto, std::shared_ptr<Word> from, std::shared_ptr<Word> to):
-		Node(copyto),
+//Now this node holds actions copyto and copyfrom
+//Cause they're really similar
+struct Copy: public Node {
+	Copy(const Token& copy, std::shared_ptr<Word> from, std::shared_ptr<Word> to):
+		Node(copy),
 		from(from),
 		to(to) {}
 
@@ -389,6 +391,12 @@ struct CopyTo: public Node {
 
 	operator std::string() const {
 		return t.value() + " " + std::string(*from) + " " + std::string(*to);
+	}
+
+	//return true if we copy to guest,
+	//false if from guest to host
+	bool is_to_guest() const {
+		return t.type() == Token::category::copyto;
 	}
 
 	std::shared_ptr<Word> from;

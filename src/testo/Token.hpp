@@ -20,6 +20,7 @@ struct Token {
 		exec,
 		set,
 		copyto,
+		copyfrom,
 		for_,
 		snapshot,
 		test,

@@ -113,6 +113,9 @@ class GuestChannel(Channel):
 			f.write(base64.b64decode(file["content"]))
 
 	def copy_files_out(self, src, dst):
+		if not os.path.exists(src):
+			raise Exception("target file/folder does not exist!")
+
 		if os.path.isfile(src):
 			with open(src, "rb") as f:
 				data = f.read()
@@ -125,6 +128,11 @@ class GuestChannel(Channel):
 		elif os.path.isdir(src):
 			files = []
 			for file in os.listdir(src):
+				if os.path.isdir(src + "/" + file):
+					#no content indicates that this is a directory
+					files.append({
+						"path": dst + "/" + file
+					})
 				files += self.copy_files_out(src + "/" + file, dst + "/" + file)
 			return files
 		else:

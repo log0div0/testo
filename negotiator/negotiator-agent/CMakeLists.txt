@@ -23,6 +23,11 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 ${CMAKE_CURRENT_SOURCE_DIR}/prerm;\
 ${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
+	python2.7, \
+	daemon
+")
+
 set(CPACK_GENERATOR "DEB")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 add_package(negotiator-agent-package)
