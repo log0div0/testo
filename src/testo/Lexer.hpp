@@ -111,6 +111,7 @@ private:
 	Token exec();
 	Token set();
 	Token copyto();
+	Token copyfrom();
 	Token for_();
 	Token snapshot();
 	Token test();

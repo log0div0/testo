@@ -96,7 +96,7 @@ struct VisitorInterpreter {
 	void visit_stop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Stop> stop);
 	void visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Exec> exec);
 	void visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
-	void visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<AST::CopyTo> copyto);
+	void visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Copy> copy);
 	void visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
 	void visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IfClause> if_clause);
 	void visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ForClause> for_clause);

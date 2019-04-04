@@ -64,7 +64,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Stop>> stop();
 	std::shared_ptr<AST::Action<AST::Exec>> exec();
 	std::shared_ptr<AST::Action<AST::Set>> set();
-	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
+	std::shared_ptr<AST::Action<AST::Copy>> copy();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();

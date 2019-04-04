@@ -42,6 +42,7 @@ struct VmController {
 	virtual std::string name() const = 0;
 
 	virtual void copy_to_guest(const fs::path& src, const fs::path& dst) = 0;
+	virtual void copy_from_guest(const fs::path& src, const fs::path& dst) = 0;
 	virtual void remove_from_guest(const fs::path& obj) = 0;
 
 	virtual std::set<std::string> nics() const = 0;
