@@ -12,6 +12,10 @@
 #include <inipp.hh>
 #include "Network.hpp"
 
+extern "C" {
+#include "src/activations.h"
+}
+
 using namespace darknet;
 
 struct Dataset {
@@ -247,14 +251,14 @@ void predict()
 	for (int y = 0; y < l.h; ++y) {
 		for (int x = 0; x < l.w; ++x) {
 			int i = y * l.w + x;
-			float objectness = predictions[dimension_size * 4 + i];
+			float objectness = logistic_activate(predictions[dimension_size * 4 + i]);
 			if (objectness < thresh) {
 				continue;
 			}
 
 			box b;
-			b.x = (x + predictions[dimension_size * 0 + i]) / l.w;
-			b.y = (y + predictions[dimension_size * 1 + i]) / l.h;
+			b.x = (x + logistic_activate(predictions[dimension_size * 0 + i])) / l.w;
+			b.y = (y + logistic_activate(predictions[dimension_size * 1 + i])) / l.h;
 			b.w = exp(predictions[dimension_size * 2 + i]) * l.anchor_w / image.width();
 			b.h = exp(predictions[dimension_size * 3 + i]) * l.anchor_h / image.height();
 

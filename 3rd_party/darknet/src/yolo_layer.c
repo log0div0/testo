@@ -50,8 +50,8 @@ layer make_yolo_layer(int batch, int w, int h, int classes, int max_boxes)
 box get_yolo_box(float *x, float anchor_w, float anchor_h, int index, int i, int j, int lw, int lh, int w, int h, int stride)
 {
     box b;
-    b.x = (i + x[index + 0*stride]) / lw;
-    b.y = (j + x[index + 1*stride]) / lh;
+    b.x = (i + logistic_activate(x[index + 0*stride])) / lw;
+    b.y = (j + logistic_activate(x[index + 1*stride])) / lh;
     b.w = exp(x[index + 2*stride]) * anchor_w   / w;
     b.h = exp(x[index + 3*stride]) * anchor_h / h;
     return b;
@@ -67,8 +67,8 @@ float delta_yolo_box(box truth, float *x, float anchor_w, float anchor_h, int in
     float tw = log(truth.w*w / anchor_w);
     float th = log(truth.h*h / anchor_h);
 
-    delta[index + 0*stride] = scale * (tx - x[index + 0*stride]);
-    delta[index + 1*stride] = scale * (ty - x[index + 1*stride]);
+    delta[index + 0*stride] = scale * (tx - logistic_activate(x[index + 0*stride]));
+    delta[index + 1*stride] = scale * (ty - logistic_activate(x[index + 1*stride]));
     delta[index + 2*stride] = scale * (tw - x[index + 2*stride]);
     delta[index + 3*stride] = scale * (th - x[index + 3*stride]);
     return iou;
@@ -79,8 +79,8 @@ void delta_yolo_class(float *output, float *delta, int index, int class, int cla
 {
     int n;
     for(n = 0; n < classes; ++n){
-        delta[index + stride*n] = ((n == class)?1 : 0) - output[index + stride*n];
-        if(n == class && avg_cat) *avg_cat += output[index + stride*n];
+        delta[index + stride*n] = ((n == class)?1 : 0) - logistic_activate(output[index + stride*n]);
+        if(n == class && avg_cat) *avg_cat += logistic_activate(output[index + stride*n]);
     }
 }
 
@@ -95,16 +95,6 @@ void forward_yolo_layer(const layer l, network net)
 {
     int i,j,b,t;
     memcpy(l.output, net.input, l.outputs*l.batch*sizeof(float));
-
-#ifndef GPU
-    for (b = 0; b < l.batch; ++b){
-        int index = entry_index(l, b, 0, 0);
-        activate_array(l.output + index, 2*l.w*l.h, LOGISTIC);
-        index = entry_index(l, b, 0, 4);
-        activate_array(l.output + index, (1+l.classes)*l.w*l.h, LOGISTIC);
-    }
-#endif
-
     memset(l.delta, 0, l.outputs * l.batch * sizeof(float));
     if(!net.train) return;
     float avg_iou = 0;
@@ -119,7 +109,7 @@ void forward_yolo_layer(const layer l, network net)
         for (j = 0; j < l.h; ++j) {
             for (i = 0; i < l.w; ++i) {
                 int obj_index = entry_index(l, b, j*l.w + i, 4);
-                l.delta[obj_index] = 0 - l.output[obj_index];
+                l.delta[obj_index] = 0 - logistic_activate(l.output[obj_index]);
             }
         }
         for(t = 0; t < l.max_boxes; ++t){
@@ -134,8 +124,8 @@ void forward_yolo_layer(const layer l, network net)
             float iou = delta_yolo_box(truth, l.output, l.anchor_w, l.anchor_h, box_index, i, j, l.w, l.h, net.w, net.h, l.delta, (2-truth.w*truth.h), l.w*l.h);
 
             int obj_index = entry_index(l, b, j*l.w + i, 4);
-            avg_obj += l.output[obj_index];
-            l.delta[obj_index] = 1 - l.output[obj_index];
+            avg_obj += logistic_activate(l.output[obj_index]);
+            l.delta[obj_index] = 1 - logistic_activate(l.output[obj_index]);
 
             if (l.classes) {
                 int class = net.truth[t*(4 + 1) + b*l.truths + 4];
@@ -164,21 +154,11 @@ void backward_yolo_layer(const layer l, network net)
 void forward_yolo_layer_gpu(const layer l, network net)
 {
     copy_gpu(l.batch*l.inputs, net.input_gpu, 1, l.output_gpu, 1);
-    int b;
-    for (b = 0; b < l.batch; ++b){
-        int index = entry_index(l, b, 0, 0);
-        activate_array_gpu(l.output_gpu + index, 2*l.w*l.h, LOGISTIC);
-        index = entry_index(l, b, 0, 4);
-        activate_array_gpu(l.output_gpu + index, (1+l.classes)*l.w*l.h, LOGISTIC);
-    }
-    if(!net.train){
-        cuda_pull_array(l.output_gpu, l.output, l.batch*l.outputs);
-        return;
-    }
-
-    cuda_pull_array(l.output_gpu, net.input, l.batch*l.inputs);
+    cuda_pull_array(net.input_gpu, net.input, l.batch*l.inputs);
     forward_yolo_layer(l, net);
-    cuda_push_array(l.delta_gpu, l.delta, l.batch*l.outputs);
+    if(net.train) {
+        cuda_push_array(l.delta_gpu, l.delta, l.batch*l.outputs);
+    }
 }
 
 void backward_yolo_layer_gpu(const layer l, network net)
