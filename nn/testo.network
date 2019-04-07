@@ -61,11 +61,3 @@ size=1
 stride=1
 padding=0
 activation=linear
-
-
-
-[yolo]
-classes=0
-max_boxes=512
-anchor_w = 8
-anchor_h = 16

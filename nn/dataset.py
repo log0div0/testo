@@ -243,14 +243,12 @@ def main(base_dir, image_count):
 
 	s = """
 item_count = %s
-bbox_count = %s
 image_width = %s
 image_height = %s
 image_dir = %s
 label_dir = %s
 """ % (
 		image_count,
-		512,
 		image_width,
 		image_height,
 		images_dir,

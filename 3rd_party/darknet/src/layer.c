@@ -17,7 +17,6 @@ void free_layer(layer l)
     if(l.input_layers)       free(l.input_layers);
     if(l.input_sizes)        free(l.input_sizes);
     if(l.rand)               free(l.rand);
-    if(l.cost)               free(l.cost);
     if(l.state)              free(l.state);
     if(l.prev_state)         free(l.prev_state);
     if(l.forgot_state)       free(l.forgot_state);

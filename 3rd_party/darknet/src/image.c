@@ -46,19 +46,6 @@ void draw_box(image a, int x1, int y1, int x2, int y2, float r, float g, float b
     }
 }
 
-void draw_bbox(image a, box bbox, int w, float r, float g, float b)
-{
-    int left  = (bbox.x-bbox.w/2)*a.w;
-    int right = (bbox.x+bbox.w/2)*a.w;
-    int top   = (bbox.y-bbox.h/2)*a.h;
-    int bot   = (bbox.y+bbox.h/2)*a.h;
-
-    int i;
-    for(i = 0; i < w; ++i){
-        draw_box(a, left+i, top+i, right-i, bot-i, r, g, b);
-    }
-}
-
 void save_image_options(image im, const char *name, IMTYPE f, int quality)
 {
     char buff[256];

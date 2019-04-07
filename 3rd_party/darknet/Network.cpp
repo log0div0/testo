@@ -5,13 +5,11 @@
 #include <assert.h>
 
 #include "layers/ConvolutionalLayer.hpp"
-#include "layers/YoloLayer.hpp"
 #include "layers/MaxPoolLayer.hpp"
 
 extern "C" {
 
 #include "convolutional_layer.h"
-#include "yolo_layer.h"
 #include "batchnorm_layer.h"
 #include "maxpool_layer.h"
 
@@ -74,8 +72,6 @@ Network::Network(const std::string& path): network({})
 		layer l = {};
 		if (section.name() == "convolutional") {
 			l = ConvolutionalLayer(section, params.batch, params.w, params.h, params.c);
-		} else if (section.name() == "yolo") {
-			l = YoloLayer(section, params.batch, params.w, params.h, params.c);
 		} else if (section.name() == "maxpool"){
 			l = MaxPoolLayer(section, params.batch, params.w, params.h, params.c);
 		} else {
@@ -94,16 +90,10 @@ Network::Network(const std::string& path): network({})
 	}
 	layer out = back();
 	outputs = out.outputs;
-	truths = out.outputs;
-	if (out.truths) {
-		truths = out.truths;
-	}
 	input = (float*)calloc(inputs*batch, sizeof(float));
-	truth = (float*)calloc(truths*batch, sizeof(float));
 #ifdef GPU
 	output_gpu = out.output_gpu;
 	input_gpu = cuda_make_array(input, inputs*batch);
-	truth_gpu = cuda_make_array(truth, truths*batch);
 #endif
 	if (workspace_size) {
 #ifdef GPU
@@ -126,10 +116,8 @@ Network::~Network() {
 		free(layers);
 	}
 	if(input) free(input);
-	if(truth) free(truth);
 #ifdef GPU
 	if(input_gpu) cuda_free(input_gpu);
-	if(truth_gpu) cuda_free(truth_gpu);
 #endif
 }
 
@@ -177,9 +165,6 @@ void Network::forward() {
 #ifdef GPU
 	if (use_gpu) {
 		cuda_push_array(input_gpu, input, inputs*batch);
-		if (truth) {
-			cuda_push_array(truth_gpu, truth, truths*batch);
-		}
 
 		for(int i = 0; i < n; ++i){
 			layer l = layers[i];
@@ -212,6 +197,8 @@ void Network::backward() {
 	network backup = *this;
 #ifdef GPU
 	if (use_gpu) {
+		layer l = layers[n - 1];
+		cuda_push_array(l.delta_gpu, l.delta, l.batch*l.outputs);
 		for(int i = n-1; i >= 0; --i){
 			layer l = layers[i];
 			if(i == 0){

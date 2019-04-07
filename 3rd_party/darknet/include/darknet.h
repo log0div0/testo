@@ -61,10 +61,6 @@ typedef enum {
     BLANK
 } LAYER_TYPE;
 
-typedef enum{
-    SSE, MASKED, L1, SEG, SMOOTH,WGAN
-} COST_TYPE;
-
 struct network;
 typedef struct network network;
 
@@ -74,7 +70,6 @@ typedef struct layer layer;
 struct layer{
     LAYER_TYPE type;
     ACTIVATION activation;
-    COST_TYPE cost_type;
     void (*forward)   (struct layer, struct network);
     void (*backward)  (struct layer, struct network);
     void (*update)    (struct layer, struct network);
@@ -87,11 +82,9 @@ struct layer{
     int outputs;
     int nweights;
     int nbiases;
-    int truths;
     int h,w,c;
     int out_h, out_w, out_c;
     int n;
-    int max_boxes;
     int size;
     int side;
     int stride;
@@ -109,7 +102,6 @@ struct layer{
     float ratio;
     int noloss;
     int softmax;
-    int classes;
     int background;
     int rescore;
     int objectness;
@@ -119,8 +111,6 @@ struct layer{
     int log;
     int tanh;
     int total;
-    float anchor_w;
-    float anchor_h;
 
     float alpha;
     float beta;
@@ -148,7 +138,6 @@ struct layer{
     int   * counts;
     float ** sums;
     float * rand;
-    float * cost;
     float * state;
     float * prev_state;
     float * forgot_state;
@@ -347,12 +336,10 @@ typedef struct network{
 
     int inputs;
     int outputs;
-    int truths;
     int h, w, c;
 
 
     float *input;
-    float *truth;
     float *delta;
     float *workspace;
     int train;
@@ -372,16 +359,6 @@ typedef struct {
     int c;
     float *data;
 } image;
-
-typedef struct{
-    float x, y, w, h;
-} box;
-
-typedef struct{
-    int id;
-    float x,y,w,h;
-    float left, right, top, bottom;
-} box_label;
 
 
 unsigned char *read_file(char *filename);
@@ -472,9 +449,6 @@ void rotate_image_cw(image im, int times);
 double what_time_is_it_now();
 image rotate_image(image m, float rad);
 void visualize_network(network *net);
-float box_iou(box a, box b);
-box_label *read_boxes(char *filename, int *n);
-box float_to_box(float *f, int stride);
 
 int network_width(network *net);
 int network_height(network *net);

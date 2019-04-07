@@ -18,6 +18,40 @@ extern "C" {
 
 using namespace darknet;
 
+
+struct Box {
+	float x, y, h, w;
+	float uio(const Box& other) const {
+		return intersection(other)/union_(other);
+	}
+	float intersection(const Box& other) const {
+		float w = overlap(this->x, this->w, other.x, other.w);
+		float h = overlap(this->y, this->h, other.y, other.h);
+		if(w < 0 || h < 0) {
+			return 0;
+		}
+		float area = w*h;
+		return area;
+	}
+	float union_(const Box& other) const {
+		float i = intersection(other);
+		float u = w*h + other.w*other.h - i;
+		return u;
+	}
+
+	static float overlap(float x1, float w1, float x2, float w2)
+	{
+		float l1 = x1 - w1/2;
+		float l2 = x2 - w2/2;
+		float left = l1 > l2 ? l1 : l2;
+		float r1 = x1 + w1/2;
+		float r2 = x2 + w2/2;
+		float right = r1 < r2 ? r1 : r2;
+		return right - left;
+	}
+
+};
+
 struct Dataset {
 	Dataset(const std::string& path)  {
 		std::ifstream file(path);
@@ -33,16 +67,40 @@ struct Dataset {
 		image_channels = 3;
 		image_size = image_width * image_height * image_channels;
 
-		bbox_count = std::stoi(ini.get("bbox_count"));
-		bbox_size = 5;
-		label_size = bbox_count * bbox_size;
-
 		image_dir = ini.get("image_dir") + "/";
 		label_dir = ini.get("label_dir") + "/";
 	}
 
-	void charge(Network* network) {
-		memset(network->truth, 0, label_size*network->batch*sizeof(float));
+	struct Object: Box {
+		int class_id;
+
+		friend std::istream& operator>>(std::istream& stream, Object& object) {
+			return stream
+				>> object.class_id
+				>> object.x
+				>> object.y
+				>> object.w
+				>> object.h;
+		}
+	};
+
+
+	struct Label: std::vector<Object> {
+		Label(const std::string& path) {
+			std::ifstream file(path);
+			if (!file.is_open()) {
+				throw std::runtime_error("Failed to open file " + path);
+			}
+			Object object;
+			while (file >> object) {
+				push_back(object);
+			}
+		}
+	};
+
+	std::vector<Label> charge(Network* network) {
+		std::vector<Label> result;
+
 		for (size_t row_index = 0; row_index < network->batch; ++row_index)
 		{
 			size_t item_index = rand() % item_count;
@@ -56,32 +114,18 @@ struct Dataset {
 			}
 			memcpy(&network->input[image_size*row_index], image.data, image_size*sizeof(float));
 
-			float x, y, w, h;
-			size_t bbox_class;
-			size_t bbox_index = 0;
 			std::string label_path = label_dir + std::to_string(item_index) + ".txt";
-			std::ifstream label(label_path);
-			if (!label.is_open()) {
-				throw std::runtime_error("Failed to open file " + label_path);
-			}
-			while (label >> bbox_class >> x >> y >> w >> h) {
-				if (bbox_index == bbox_count) {
-					throw std::runtime_error("Label of invalid size");
-				}
-				network->truth[label_size*row_index + bbox_size*bbox_index + 0] = x;
-				network->truth[label_size*row_index + bbox_size*bbox_index + 1] = y;
-				network->truth[label_size*row_index + bbox_size*bbox_index + 2] = w;
-				network->truth[label_size*row_index + bbox_size*bbox_index + 3] = h;
-				network->truth[label_size*row_index + bbox_size*bbox_index + 4] = bbox_class;
-				++bbox_index;
-			}
+			Label label(label_path);
+			result.push_back(std::move(label));
 		}
+
+		return result;
 	}
 
 private:
 	size_t item_count;
-	size_t image_size, label_size;
-	size_t image_width, image_height, image_channels, bbox_size, bbox_count;
+	size_t image_size;
+	size_t image_width, image_height, image_channels;
 	std::string image_dir, label_dir;
 };
 
@@ -94,6 +138,53 @@ float thresh = 0.5f;
 #ifdef GPU
 int gpu = 0;
 #endif
+
+Box get_yolo_box(float *x, float anchor_w, float anchor_h, int index, int i, int j, int lw, int lh, int w, int h, int stride)
+{
+	Box b;
+	b.x = (i + logistic_activate(x[index + 0*stride])) / lw;
+	b.y = (j + logistic_activate(x[index + 1*stride])) / lh;
+	b.w = exp(x[index + 2*stride]) * anchor_w   / w;
+	b.h = exp(x[index + 3*stride]) * anchor_h / h;
+	return b;
+}
+
+float delta_yolo_box(const Box& truth, float *x, float anchor_w, float anchor_h, int index, int i, int j, int lw, int lh, int w, int h, float *delta, float scale, int stride)
+{
+	Box pred = get_yolo_box(x, anchor_w, anchor_h, index, i, j, lw, lh, w, h, stride);
+	float iou = pred.uio(truth);
+
+	float tx = (truth.x*lw - i);
+	float ty = (truth.y*lh - j);
+	float tw = log(truth.w*w / anchor_w);
+	float th = log(truth.h*h / anchor_h);
+
+	delta[index + 0*stride] = scale * (tx - logistic_activate(x[index + 0*stride]));
+	delta[index + 1*stride] = scale * (ty - logistic_activate(x[index + 1*stride]));
+	delta[index + 2*stride] = scale * (tw - x[index + 2*stride]);
+	delta[index + 3*stride] = scale * (th - x[index + 3*stride]);
+	return iou;
+}
+
+
+void delta_yolo_class(float *output, float *delta, int index, int class_, int classes, int stride, float *avg_cat)
+{
+	int n;
+	for(n = 0; n < classes; ++n){
+		delta[index + stride*n] = ((n == class_)?1 : 0) - logistic_activate(output[index + stride*n]);
+		if(n == class_ && avg_cat) *avg_cat += logistic_activate(output[index + stride*n]);
+	}
+}
+
+int entry_index(layer l, int batch, int location, int entry, int classes)
+{
+	int n =   location / (l.w*l.h);
+	int loc = location % (l.w*l.h);
+	return batch*l.outputs + n*l.w*l.h*(4+classes+1) + entry*l.w*l.h + loc;
+}
+
+float anchor_w = 8;
+float anchor_h = 16;
 
 void train()
 {
@@ -109,18 +200,56 @@ void train()
 
 	for (size_t i = 0; ; ++i)
 	{
-		dataset.charge(&network);
+		auto labels = dataset.charge(&network);
 		network.forward();
-		network.backward();
-		float sum = 0;
-		int count = 0;
-		for(size_t i = 0; i < network.n; ++i) {
-			if (network.layers[i].cost) {
-				sum += network.layers[i].cost[0];
-				++count;
+
+		float loss = 0;
+		int classes = 0;
+
+		{
+			float avg_iou = 0;
+			float recall = 0;
+			float recall75 = 0;
+			float avg_cat = 0;
+			float avg_obj = 0;
+			int count = 0;
+			auto& l = network.back();
+			for (int b = 0; b < l.batch; ++b) {
+				auto& label = labels.at(b);
+				for (int j = 0; j < l.h; ++j) {
+					for (int i = 0; i < l.w; ++i) {
+						int obj_index = entry_index(l, b, j*l.w + i, 4, classes);
+						l.delta[obj_index] = 0 - logistic_activate(l.output[obj_index]);
+					}
+				}
+				for(auto& truth: label){
+
+					int i = (truth.x * l.w);
+					int j = (truth.y * l.h);
+
+					int box_index = entry_index(l, b, j*l.w + i, 0, classes);
+					float iou = delta_yolo_box(truth, l.output, anchor_w, anchor_h, box_index, i, j, l.w, l.h, network.w, network.h, l.delta, (2-truth.w*truth.h), l.w*l.h);
+
+					int obj_index = entry_index(l, b, j*l.w + i, 4, classes);
+					avg_obj += logistic_activate(l.output[obj_index]);
+					l.delta[obj_index] = 1 - logistic_activate(l.output[obj_index]);
+
+					if (classes) {
+						int class_index = entry_index(l, b, j*l.w + i, 4 + 1, classes);
+						delta_yolo_class(l.output, l.delta, class_index, truth.class_id, classes, l.w*l.h, &avg_cat);
+					}
+
+					++count;
+					if(iou > .5) recall += 1;
+					if(iou > .75) recall75 += 1;
+					avg_iou += iou;
+				}
 			}
+			loss = pow(mag_array(l.delta, l.outputs * l.batch), 2) / l.batch;
+			printf("Avg IOU: %f, Class: %f, Obj: %f, .5R: %f, .75R: %f,  count: %d\n", avg_iou/count, avg_cat/count, avg_obj/count, recall/count, recall75/count, count);
 		}
-		float loss = sum/count/network.batch;
+
+		network.backward();
 		network.update();
 
 		if (avg_loss < 0) {
@@ -137,10 +266,10 @@ void train()
 	}
 }
 
-struct Box {
+struct Rect {
 	uint16_t left = 0, top = 0, right = 0, bottom = 0;
 
-	float iou(const Box& other) const {
+	float iou(const Rect& other) const {
 		return float((*this & other).area()) / (*this | other).area();
 	}
 
@@ -148,7 +277,7 @@ struct Box {
 		return (right - left) * (bottom - top);
 	}
 
-	Box operator|(const Box& other) const {
+	Rect operator|(const Rect& other) const {
 		return {
 			std::min(left, other.left),
 			std::min(top, other.top),
@@ -156,14 +285,14 @@ struct Box {
 			std::max(bottom, other.bottom)
 		};
 	}
-	Box& operator|=(const Box& other) {
+	Rect& operator|=(const Rect& other) {
 		left = std::min(left, other.left);
 		top = std::min(top, other.top);
 		right = std::max(right, other.right);
 		bottom = std::max(bottom, other.bottom);
 		return *this;
 	}
-	Box operator&(const Box& other) const {
+	Rect operator&(const Rect& other) const {
 		if (left > other.right) {
 			return {};
 		}
@@ -183,7 +312,7 @@ struct Box {
 			std::min(bottom, other.bottom)
 		};
 	}
-	Box& operator&=(const Box& other);
+	Rect& operator&=(const Rect& other);
 
 	uint16_t width() const {
 		return right - left;
@@ -194,20 +323,20 @@ struct Box {
 	}
 };
 
-struct BoxSet: std::list<Box> {
-	void add(const Box& box)
+struct RectSet: std::list<Rect> {
+	void add(const Rect& rect)
 	{
-		Box box_ext = box;
-		if (box_ext.left >= 16) {
-			box_ext.left -= 16;
+		Rect rect_ext = rect;
+		if (rect_ext.left >= 16) {
+			rect_ext.left -= 16;
 		} else {
-			box_ext.left = 0;
+			rect_ext.left = 0;
 		}
 		for (auto it = begin(); it != end(); ++it) {
-			Box intersectoin = *it & box_ext;
+			Rect intersectoin = *it & rect_ext;
 			if (intersectoin.area()) {
-				if ((intersectoin.height() * 2 > box.height()) || (intersectoin.height() * 2 > it->height())) {
-					Box union_ = *it | box;
+				if ((intersectoin.height() * 2 > rect.height()) || (intersectoin.height() * 2 > it->height())) {
+					Rect union_ = *it | rect;
 					erase(it);
 					add(union_);
 					return;
@@ -216,7 +345,7 @@ struct BoxSet: std::list<Box> {
 			}
 		}
 
-		push_back(box);
+		push_back(rect);
 	}
 };
 
@@ -236,7 +365,6 @@ void predict()
 	}
 
 	memcpy(network.input, image.data, network.inputs * sizeof(float));
-	network.truth = 0;
 	network.delta = 0;
 	network.forward();
 	float* predictions = network.back().output;
@@ -247,7 +375,7 @@ void predict()
 
 	size_t dimension_size = l.w * l.h;
 
-	BoxSet boxes;
+	RectSet rects;
 	for (int y = 0; y < l.h; ++y) {
 		for (int x = 0; x < l.w; ++x) {
 			int i = y * l.w + x;
@@ -256,28 +384,28 @@ void predict()
 				continue;
 			}
 
-			box b;
+			Box b;
 			b.x = (x + logistic_activate(predictions[dimension_size * 0 + i])) / l.w;
 			b.y = (y + logistic_activate(predictions[dimension_size * 1 + i])) / l.h;
-			b.w = exp(predictions[dimension_size * 2 + i]) * l.anchor_w / image.width();
-			b.h = exp(predictions[dimension_size * 3 + i]) * l.anchor_h / image.height();
+			b.w = exp(predictions[dimension_size * 2 + i]) * anchor_w / image.width();
+			b.h = exp(predictions[dimension_size * 3 + i]) * anchor_h / image.height();
 
 
-			Box box;
-			box.left = (b.x-b.w/2)*image.width();
-			box.right = (b.x+b.w/2)*image.width();
-			box.top = (b.y-b.h/2)*image.height();
-			box.bottom = (b.y+b.h/2)*image.height();
+			Rect rect;
+			rect.left = (b.x-b.w/2)*image.width();
+			rect.right = (b.x+b.w/2)*image.width();
+			rect.top = (b.y-b.h/2)*image.height();
+			rect.bottom = (b.y+b.h/2)*image.height();
 
-			boxes.add(box);
-			image.draw(box.left, box.top, box.right, box.bottom, 0.9f, 0.2f, 0.3f);
+			rects.add(rect);
+			image.draw(rect.left, rect.top, rect.right, rect.bottom, 0.9f, 0.2f, 0.3f);
 		}
 	}
 
-	for (auto& box: boxes) {
-		if (box.height() >= 8 && box.height() <= 24) {
-			if (box.width() >= 8) {
-				// image.draw(box.left, box.top, box.right, box.bottom, 0.9f, 0.2f, 0.3f);
+	for (auto& rect: rects) {
+		if (rect.height() >= 8 && rect.height() <= 24) {
+			if (rect.width() >= 8) {
+				// image.draw(rect.left, rect.top, rect.right, rect.bottom, 0.9f, 0.2f, 0.3f);
 			}
 		}
 	}
