@@ -168,6 +168,9 @@ void Network::forward() {
 
 		for(int i = 0; i < n; ++i){
 			layer l = layers[i];
+			if(l.delta){
+				fill_cpu(l.outputs * l.batch, 0, l.delta, 1);
+			}
 			if(l.delta_gpu){
 				fill_gpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
 			}
