@@ -6,6 +6,10 @@
 namespace darknet {
 
 struct Layer: layer {
+	Layer(): layer() {
+
+	}
+
 	virtual ~Layer() {
 		free_layer(*this);
 	};

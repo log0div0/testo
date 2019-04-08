@@ -3,65 +3,6 @@
 #include "blas.h"
 #include <stdio.h>
 
-layer make_batchnorm_layer(int batch, int w, int h, int c)
-{
-    fprintf(stderr, "Batch Normalization Layer: %d x %d x %d image\n", w,h,c);
-    layer l = {0};
-    l.type = BATCHNORM;
-    l.batch = batch;
-    l.h = l.out_h = h;
-    l.w = l.out_w = w;
-    l.c = l.out_c = c;
-    l.output = calloc(h * w * c * batch, sizeof(float));
-    l.delta  = calloc(h * w * c * batch, sizeof(float));
-    l.inputs = w*h*c;
-    l.outputs = l.inputs;
-
-    l.scales = calloc(c, sizeof(float));
-    l.scale_updates = calloc(c, sizeof(float));
-    l.biases = calloc(c, sizeof(float));
-    l.bias_updates = calloc(c, sizeof(float));
-    int i;
-    for(i = 0; i < c; ++i){
-        l.scales[i] = 1;
-    }
-
-    l.mean = calloc(c, sizeof(float));
-    l.variance = calloc(c, sizeof(float));
-
-    l.rolling_mean = calloc(c, sizeof(float));
-    l.rolling_variance = calloc(c, sizeof(float));
-
-    l.forward = forward_batchnorm_layer;
-    l.backward = backward_batchnorm_layer;
-#ifdef GPU
-    l.forward_gpu = forward_batchnorm_layer_gpu;
-    l.backward_gpu = backward_batchnorm_layer_gpu;
-
-    l.output_gpu =  cuda_make_array(l.output, h * w * c * batch);
-    l.delta_gpu =   cuda_make_array(l.delta, h * w * c * batch);
-
-    l.biases_gpu = cuda_make_array(l.biases, c);
-    l.bias_updates_gpu = cuda_make_array(l.bias_updates, c);
-
-    l.scales_gpu = cuda_make_array(l.scales, c);
-    l.scale_updates_gpu = cuda_make_array(l.scale_updates, c);
-
-    l.mean_gpu = cuda_make_array(l.mean, c);
-    l.variance_gpu = cuda_make_array(l.variance, c);
-
-    l.rolling_mean_gpu = cuda_make_array(l.mean, c);
-    l.rolling_variance_gpu = cuda_make_array(l.variance, c);
-
-    l.mean_delta_gpu = cuda_make_array(l.mean, c);
-    l.variance_delta_gpu = cuda_make_array(l.variance, c);
-
-    l.x_gpu = cuda_make_array(l.output, l.batch*l.outputs);
-    l.x_norm_gpu = cuda_make_array(l.output, l.batch*l.outputs);
-#endif
-    return l;
-}
-
 void backward_scale_cpu(float *x_norm, float *delta, int batch, int n, int size, float *scale_updates)
 {
     int i,b,f;
