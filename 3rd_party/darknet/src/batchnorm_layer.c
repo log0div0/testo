@@ -218,27 +218,3 @@ void backward_batchnorm_layer_gpu(layer l, network net)
     if(l.type == BATCHNORM) copy_gpu(l.outputs*l.batch, l.delta_gpu, 1, net.delta_gpu, 1);
 }
 #endif
-
-void load_batchnorm_weights(layer l, FILE *fp)
-{
-    fread(l.scales, sizeof(float), l.c, fp);
-    fread(l.rolling_mean, sizeof(float), l.c, fp);
-    fread(l.rolling_variance, sizeof(float), l.c, fp);
-#ifdef GPU
-    if(use_gpu){
-        push_batchnorm_layer(l);
-    }
-#endif
-}
-
-void save_batchnorm_weights(layer l, FILE *fp)
-{
-#ifdef GPU
-    if(use_gpu){
-        pull_batchnorm_layer(l);
-    }
-#endif
-    fwrite(l.scales, sizeof(float), l.c, fp);
-    fwrite(l.rolling_mean, sizeof(float), l.c, fp);
-    fwrite(l.rolling_variance, sizeof(float), l.c, fp);
-}

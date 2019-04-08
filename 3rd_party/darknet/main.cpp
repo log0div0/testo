@@ -213,7 +213,7 @@ void train()
 			float avg_cat = 0;
 			float avg_obj = 0;
 			int count = 0;
-			auto& l = network.back();
+			auto& l = *network.layers.back();
 			for (int b = 0; b < l.batch; ++b) {
 				auto& label = labels.at(b);
 				for (int j = 0; j < l.h; ++j) {
@@ -367,11 +367,11 @@ void predict()
 	memcpy(network.input, image.data, network.inputs * sizeof(float));
 	network.delta = 0;
 	network.forward();
-	float* predictions = network.back().output;
+	float* predictions = network.layers.back()->output;
 
 	// const char chars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~";
 
-	const auto& l = network.back();
+	const auto& l = *network.layers.back();
 
 	size_t dimension_size = l.w * l.h;
 

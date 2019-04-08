@@ -326,9 +326,7 @@ struct layer{
 void free_layer(layer);
 
 typedef struct network{
-    int n;
     int batch;
-    layer *layers;
 
     float learning_rate;
     float momentum;

@@ -30,4 +30,38 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 	(layer&)*this = make_convolutional_layer(batch,h,w,c,n,size,stride,padding,activation, batch_normalize);
 }
 
+void ConvolutionalLayer::load_weights(FILE* fp)
+{
+    int num = c*n*size*size;
+    fread(biases, sizeof(float), n, fp);
+    if (batch_normalize){
+        fread(scales, sizeof(float), n, fp);
+        fread(rolling_mean, sizeof(float), n, fp);
+        fread(rolling_variance, sizeof(float), n, fp);
+    }
+    fread(weights, sizeof(float), num, fp);
+#ifdef GPU
+    if(use_gpu){
+        push_convolutional_layer(*this);
+    }
+#endif
+}
+
+void ConvolutionalLayer::save_weights(FILE* fp) const
+{
+#ifdef GPU
+	if(use_gpu){
+		pull_convolutional_layer(*this);
+	}
+#endif
+	int num = nweights;
+	fwrite(biases, sizeof(float), n, fp);
+	if (batch_normalize){
+		fwrite(scales, sizeof(float), n, fp);
+		fwrite(rolling_mean, sizeof(float), n, fp);
+		fwrite(rolling_variance, sizeof(float), n, fp);
+	}
+	fwrite(weights, sizeof(float), num, fp);
+}
+
 }

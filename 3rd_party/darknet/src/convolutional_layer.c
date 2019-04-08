@@ -259,37 +259,3 @@ void update_convolutional_layer(convolutional_layer l, network net)
     axpy_cpu(l.nweights, learning_rate/batch, l.weight_updates, 1, l.weights, 1);
     scal_cpu(l.nweights, momentum, l.weight_updates, 1);
 }
-
-void save_convolutional_weights(layer l, FILE *fp)
-{
-#ifdef GPU
-    if(use_gpu){
-        pull_convolutional_layer(l);
-    }
-#endif
-    int num = l.nweights;
-    fwrite(l.biases, sizeof(float), l.n, fp);
-    if (l.batch_normalize){
-        fwrite(l.scales, sizeof(float), l.n, fp);
-        fwrite(l.rolling_mean, sizeof(float), l.n, fp);
-        fwrite(l.rolling_variance, sizeof(float), l.n, fp);
-    }
-    fwrite(l.weights, sizeof(float), num, fp);
-}
-
-void load_convolutional_weights(layer l, FILE *fp)
-{
-    int num = l.c*l.n*l.size*l.size;
-    fread(l.biases, sizeof(float), l.n, fp);
-    if (l.batch_normalize){
-        fread(l.scales, sizeof(float), l.n, fp);
-        fread(l.rolling_mean, sizeof(float), l.n, fp);
-        fread(l.rolling_variance, sizeof(float), l.n, fp);
-    }
-    fread(l.weights, sizeof(float), num, fp);
-#ifdef GPU
-    if(use_gpu){
-        push_convolutional_layer(l);
-    }
-#endif
-}
