@@ -91,6 +91,10 @@ test dummy2: buwaha(dummy2)
 
 test dummy3: buwaha(negotiator)
 {
-	buwaha copyfrom "/usr/lib/mime/" "/home/alex/tmp/copyfrom_testing/mime"
+	buwaha wait for 10s
+	buwaha type """This is some test text
+	With some tabulations and multilines
+And smore
+			And smore"""
 }
 
