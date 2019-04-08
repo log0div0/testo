@@ -13,7 +13,6 @@ contexts:
     - include: comments
 
   main:
-    - include: bash
     - include: machine
     - include: snapshot
     - include: flash
@@ -21,13 +20,14 @@ contexts:
     - include: test
     - include: keywords
     - include: numbers
+    - include: var_refs
     - include: time_intervals
     - include: size_specifiers
     - include: strings
     - include: variable
 
   machine:
-    - match: '^machine\b'
+    - match: '\bmachine\b'
       scope: keyword.control.testo
       push:
         - match: '{{identifier}}'
@@ -35,7 +35,7 @@ contexts:
           pop: true
 
   snapshot:
-    - match: '^snapshot\b'
+    - match: '\bsnapshot\b'
       scope: keyword.control.testo
       set:
         - match: '{{identifier}}'
@@ -50,7 +50,7 @@ contexts:
               pop: true
 
   flash:
-    - match: '^flash\b'
+    - match: '\bflash\b'
       scope: keyword.control.testo
       push:
         - match: '{{identifier}}'
@@ -58,15 +58,23 @@ contexts:
           pop: true
 
   macro:
-    - match: '^macro\b'
+    - match: '\bmacro\b'
       scope: keyword.control.testo
-      push:
+      set:
         - match: '{{identifier}}'
-          scope: entity.name.testo
-          pop: true
+          scope: entity.name.function.testo
+          set:
+            - match: '\('
+              scope: punctuation.section.group.begin.testo
+              set:
+                - match: '{{identifier}}'
+                  scope: variable.parameter.testo
+                - match: '\)'
+                  scope: punctuation.section.group.end.testo
+                  pop: true
 
   test:
-    - match: '^test\b'
+    - match: '\btest\b'
       scope: keyword.control.testo
       push:
         - match: '{{identifier}}'
@@ -74,11 +82,25 @@ contexts:
           pop: true
 
   keywords:
-    - match: '\b(include|if|else)\b'
-      scope: keyword.control.testo
+    - match: '\binclude\b'
+      scope: keyword.control.import.testo
+    - match: '\b(if|else)\b'
+      scope: keyword.control.conditional.testo
 
   numbers:
     - match: '\b[0-9.]+\b'
+      scope: constant.numeric.testo
+
+  var_refs:
+    - match: '\$'
+      scope: punctuation.definition.variable.testo
+      push:
+        - match: '{{identifier}}'
+          scope: variable.other.testo variable.function.testo
+        - match: '\b'
+          pop: true
+
+    - match: '\b\${{identifier}}\b'
       scope: constant.numeric.testo
 
   time_intervals:
@@ -89,15 +111,6 @@ contexts:
     - match: '\b[0-9.]+[K,M,G]b\b'
       scope: constant.other
 
-  bash:
-    - match: '"""'
-      scope: punctuation.definition.string.begin.testo
-      push: Packages/ShellScript/Bash.sublime-syntax
-      with_prototype:
-        - match: '"""'
-          scope: punctuation.definition.string.end.testo
-          pop: true
-
   strings:
     - match: '"'
       scope: punctuation.definition.string.begin.testo
@@ -107,6 +120,16 @@ contexts:
         - match: '\\.'
           scope: constant.character.escape.testo
         - match: '"'
+          scope: punctuation.definition.string.end.testo
+          pop: true
+    - match: '"""'
+      scope: punctuation.definition.string.begin.testo
+      push:
+        - meta_include_prototype: false
+        - meta_scope: string.quoted.other
+        - match: '\\.'
+          scope: constant.character.escape.testo
+        - match: '"""'
           scope: punctuation.definition.string.end.testo
           pop: true
 

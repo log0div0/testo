@@ -21,7 +21,6 @@ machine buwaha {
 		password: "1111"
 	}
 }
-
 macro another_reboot(login, password) {
 	type $login + " " + $password
 	wait for 3s
