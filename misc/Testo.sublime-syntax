@@ -72,14 +72,30 @@ contexts:
                 - match: '\)'
                   scope: punctuation.section.group.end.testo
                   pop: true
+            - match: '{'
+              pop: true
 
   test:
     - match: '\btest\b'
       scope: keyword.control.testo
-      push:
+      set:
         - match: '{{identifier}}'
           scope: entity.name.testo
-          pop: true
+          set:
+            - match: ':'
+              set:
+                - match: '{{identifier}}'
+                  set:
+                    - match: '\('
+                      scope: punctuation.section.group.begin.testo
+                      push:
+                        - match: '{{identifier}}'
+                          scope: entity.other.inherited-class.testo
+                        - match: '\)'
+                          scope: punctuation.section.group.end.testo
+                          pop: true
+                    - match: '{'
+                      pop: true
 
   keywords:
     - match: '\binclude\b'
