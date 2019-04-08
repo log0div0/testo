@@ -250,6 +250,8 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 		{'\'', {"APOSTROPHE"}},
 		{'\"', {"LEFTSHIFT", "APOSTROPHE"}},
 		{'\\', {"BACKSLASH"}},
+		{'\n', {"ENTER"}},
+		{'\t', {"TAB"}},
 		{'|', {"LEFTSHIFT", "BACKSLASH"}},
 		{',', {"COMMA"}},
 		{'<', {"LEFTSHIFT", "COMMA"}},
