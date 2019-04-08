@@ -93,4 +93,3 @@ test dummy3: buwaha(negotiator)
 {
 	buwaha copyfrom "/usr/lib/mime/" "/home/alex/tmp/copyfrom_testing/mime"
 }
-

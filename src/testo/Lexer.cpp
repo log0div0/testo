@@ -49,7 +49,8 @@ bool Lexer::test_size_specifier() const {
 		return false;
 	}
 
-	if ((input[current_pos] == 'M') ||
+	if ((input[current_pos] == 'K') ||
+		(input[current_pos] == 'M') ||
 		(input[current_pos] == 'G'))
 	{
 		if (input[current_pos + 1] == 'b') {

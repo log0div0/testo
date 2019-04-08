@@ -21,6 +21,8 @@ contexts:
     - include: test
     - include: keywords
     - include: numbers
+    - include: time_intervals
+    - include: size_specifiers
     - include: strings
     - include: variable
 
@@ -76,8 +78,16 @@ contexts:
       scope: keyword.control.testo
 
   numbers:
-    - match: '\b(-)?[0-9.]+\b'
+    - match: '\b[0-9.]+\b'
       scope: constant.numeric.testo
+
+  time_intervals:
+    - match: '\b[0-9.]+[s,m,h]\b'
+      scope: constant.other
+
+  size_specifiers:
+    - match: '\b[0-9.]+[K,M,G]b\b'
+      scope: constant.other
 
   bash:
     - match: '"""'
@@ -106,4 +116,10 @@ contexts:
       push:
         - meta_scope: comment.line.testo
         - match: $\n?
+          pop: true
+    - match: '\/\*'
+      scope: punctuation.definition.comment.testo
+      push:
+        - meta_scope: comment.block.testo
+        - match: \*\/
           pop: true
