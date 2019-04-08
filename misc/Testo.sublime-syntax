@@ -24,7 +24,9 @@ contexts:
     - include: time_intervals
     - include: size_specifiers
     - include: strings
-    - include: variable
+    - include: comparisons
+    - include: ops
+    - include: actions
 
   machine:
     - match: '\bmachine\b'
@@ -100,7 +102,7 @@ contexts:
   keywords:
     - match: '\binclude\b'
       scope: keyword.control.import.testo
-    - match: '\b(if|else)\b'
+    - match: '\b(if|else|continue|break)\b'
       scope: keyword.control.conditional.testo
 
   numbers:
@@ -112,7 +114,7 @@ contexts:
       scope: punctuation.definition.variable.testo
       push:
         - match: '{{identifier}}'
-          scope: variable.other.testo variable.function.testo
+          scope: variable.other.testo
         - match: '\b'
           pop: true
 
@@ -148,6 +150,18 @@ contexts:
         - match: '"""'
           scope: punctuation.definition.string.end.testo
           pop: true
+
+  comparisons:
+    - match: '\b(EQUAL|LESS|GREATER|STREQUAL|STRGREATER|STRLESS)\b'
+      scope: keyword.operator.comparison.testo
+
+  ops:
+    - match: '\b(NOT|AND|OR|check)\b'
+      scope: keyword.operator.logical.testo
+
+  actions:
+    - match: '\b(type|wait|press|plug|unplug|start|stop|exec|set|copyto|copyfrom)\b'
+      scope: support.function.testo
 
   comments:
     - match: '#'
