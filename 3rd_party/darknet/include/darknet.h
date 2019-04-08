@@ -90,7 +90,6 @@ struct layer{
     int stride;
     int spatial;
     int pad;
-    int sqrt;
     int flip;
     int index;
     int steps;

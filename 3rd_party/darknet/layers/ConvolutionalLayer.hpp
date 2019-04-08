@@ -15,6 +15,8 @@ struct ConvolutionalLayer: Layer {
 
 	virtual void load_weights(FILE* fp) override;
 	virtual void save_weights(FILE* fp) const override;
+
+	size_t get_workspace_size() const;
 };
 
 }

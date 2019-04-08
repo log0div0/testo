@@ -84,12 +84,12 @@ Network::Network(const std::string& path): network({})
 	if (workspace_size) {
 #ifdef GPU
 		if (use_gpu) {
-			workspace = (float*)cuda_make_array(0, (workspace_size-1)/sizeof(float)+1);
+			workspace = cuda_make_array(nullptr, workspace_size);
 		}
 		else
 #endif
 		{
-			workspace = (float*)calloc(1, workspace_size);
+			workspace = (float*)calloc(workspace_size, sizeof(float));
 		}
 	}
 }
