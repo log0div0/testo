@@ -275,6 +275,8 @@ void ConvolutionalLayer::forward(Network* net)
 	activate_array(output, outputs*batch, activation);
 }
 
+#ifdef GPU
+
 void ConvolutionalLayer::forward_gpu(Network* net)
 {
 	fill_gpu(outputs*batch, 0, output_gpu, 1);
@@ -324,6 +326,8 @@ void ConvolutionalLayer::forward_gpu(Network* net)
 
 	activate_array_gpu(output_gpu, outputs*batch, activation);
 }
+
+#endif
 
 void backward_scale_cpu(float *x_norm, float *delta, int batch, int n, int size, float *scale_updates)
 {
@@ -444,6 +448,8 @@ void ConvolutionalLayer::backward(Network* net)
 	}
 }
 
+#ifdef GPU
+
 void ConvolutionalLayer::backward_gpu(Network* net)
 {
 	gradient_array_gpu(output_gpu, outputs*batch, activation, delta_gpu);
@@ -499,6 +505,8 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 	}
 }
 
+#endif
+
 void ConvolutionalLayer::update(Network* net)
 {
 	float learning_rate = net->learning_rate;
@@ -518,6 +526,8 @@ void ConvolutionalLayer::update(Network* net)
 	axpy_cpu(nweights, learning_rate/batch, weight_updates, 1, weights, 1);
 	scal_cpu(nweights, momentum, weight_updates, 1);
 }
+
+#ifdef GPU
 
 void ConvolutionalLayer::update_gpu(Network* net)
 {
@@ -564,6 +574,8 @@ void ConvolutionalLayer::push() const
 		cuda_push_array(rolling_variance_gpu, rolling_variance, n);
 	}
 }
+
+#endif
 
 int ConvolutionalLayer::get_out_height() const
 {

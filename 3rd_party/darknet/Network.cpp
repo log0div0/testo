@@ -125,8 +125,8 @@ void Network::save_weights(const std::string& weights_file_path) {
 
 void Network::forward() {
 	float* input_backup = input;
-	float* input_gpu_backup = input_gpu;
 #ifdef GPU
+	float* input_gpu_backup = input_gpu;
 	if (use_gpu) {
 		cuda_push_array(input_gpu, input, inputs*batch);
 
@@ -158,15 +158,17 @@ void Network::forward() {
 		}
 	}
 	input = input_backup;
+#ifdef GPU
 	input_gpu = input_gpu_backup;
+#endif
 }
 
 void Network::backward() {
 	float* input_backup = input;
-	float* input_gpu_backup = input_gpu;
 	float* delta_backup = delta;
-	float* delta_gpu_backup = delta_gpu;
 #ifdef GPU
+	float* input_gpu_backup = input_gpu;
+	float* delta_gpu_backup = delta_gpu;
 	if (use_gpu) {
 		auto& l = layers.back();
 		cuda_push_array(l->delta_gpu, l->delta, l->batch*l->outputs);
@@ -194,9 +196,7 @@ void Network::backward() {
 			auto& l = layers[i];
 			if (i == 0) {
 				input = input_backup;
-				input_gpu = input_gpu_backup;
 				delta = delta_backup;
-				delta_gpu = delta_gpu_backup;
 			} else {
 				auto& prev = layers[i-1];
 				input = prev->output;
@@ -206,9 +206,11 @@ void Network::backward() {
 		}
 	}
 	input = input_backup;
-	input_gpu = input_gpu_backup;
 	delta = delta_backup;
+#ifdef GPU
+	input_gpu = input_gpu_backup;
 	delta_gpu = delta_gpu_backup;
+#endif
 }
 
 void Network::update() {
