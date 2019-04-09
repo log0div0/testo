@@ -102,7 +102,7 @@ contexts:
   keywords:
     - match: '\binclude\b'
       scope: keyword.control.import.testo
-    - match: '\b(if|else|continue|break)\b'
+    - match: '\b(if|else|continue|break|for)\b'
       scope: keyword.control.conditional.testo
 
   numbers:
