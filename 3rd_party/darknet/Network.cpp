@@ -17,10 +17,9 @@ struct size_params {
 	int h;
 	int w;
 	int c;
-	network *net;
 };
 
-Network::Network(const std::string& path): network({})
+Network::Network(const std::string& path)
 {
 	std::ifstream file(path);
 	if (!file.is_open()) {
@@ -47,7 +46,6 @@ Network::Network(const std::string& path): network({})
 	params.c = c;
 	params.inputs = inputs;
 	params.batch = batch;
-	params.net = this;
 
 	size_t workspace_size = 0;
 	int count = 0;
@@ -101,10 +99,6 @@ Network::~Network() {
 #endif
 }
 
-Network::Network(Network&& other): network(other) {
-	(network&)other = {};
-}
-
 void Network::load_weights(const std::string& weights_file_path) {
 	FILE *fp = fopen(weights_file_path.c_str(), "rb");
 	if(!fp) {
@@ -130,7 +124,8 @@ void Network::save_weights(const std::string& weights_file_path) {
 }
 
 void Network::forward() {
-	network backup = *this;
+	float* input_backup = input;
+	float* input_gpu_backup = input_gpu;
 #ifdef GPU
 	if (use_gpu) {
 		cuda_push_array(input_gpu, input, inputs*batch);
@@ -162,11 +157,15 @@ void Network::forward() {
 			input = l->output;
 		}
 	}
-	*(network*)this = backup;
+	input = input_backup;
+	input_gpu = input_gpu_backup;
 }
 
 void Network::backward() {
-	network backup = *this;
+	float* input_backup = input;
+	float* input_gpu_backup = input_gpu;
+	float* delta_backup = delta;
+	float* delta_gpu_backup = delta_gpu;
 #ifdef GPU
 	if (use_gpu) {
 		auto& l = layers.back();
@@ -174,7 +173,10 @@ void Network::backward() {
 		for (int i = layers.size()-1; i >= 0; --i) {
 			auto& l = layers[i];
 			if (i == 0) {
-				*(network*)this = backup;
+				input = input_backup;
+				input_gpu = input_gpu_backup;
+				delta = delta_backup;
+				delta_gpu = delta_gpu_backup;
 			} else {
 				auto& prev = layers[i-1];
 				input = prev->output;
@@ -191,7 +193,10 @@ void Network::backward() {
 		for (int i = layers.size()-1; i >= 0; --i) {
 			auto& l = layers[i];
 			if (i == 0) {
-				*(network*)this = backup;
+				input = input_backup;
+				input_gpu = input_gpu_backup;
+				delta = delta_backup;
+				delta_gpu = delta_gpu_backup;
 			} else {
 				auto& prev = layers[i-1];
 				input = prev->output;
@@ -200,7 +205,10 @@ void Network::backward() {
 			l->backward(this);
 		}
 	}
-	*(network*)this = backup;
+	input = input_backup;
+	input_gpu = input_gpu_backup;
+	delta = delta_backup;
+	delta_gpu = delta_gpu_backup;
 }
 
 void Network::update() {

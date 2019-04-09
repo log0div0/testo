@@ -28,47 +28,10 @@ typedef enum{
     PNG, BMP, TGA, JPG
 } IMTYPE;
 
-typedef enum {
-    CONVOLUTIONAL,
-    DECONVOLUTIONAL,
-    CONNECTED,
-    MAXPOOL,
-    SOFTMAX,
-    DETECTION,
-    DROPOUT,
-    CROP,
-    ROUTE,
-    COST,
-    NORMALIZATION,
-    AVGPOOL,
-    LOCAL,
-    SHORTCUT,
-    ACTIVE,
-    RNN,
-    GRU,
-    LSTM,
-    CRNN,
-    BATCHNORM,
-    NETWORK,
-    XNOR,
-    REGION,
-    YOLO,
-    ISEG,
-    REORG,
-    UPSAMPLE,
-    LOGXENT,
-    L2NORM,
-    BLANK
-} LAYER_TYPE;
-
-struct network;
-typedef struct network network;
-
 struct layer;
 typedef struct layer layer;
 
 struct layer{
-    LAYER_TYPE type;
     ACTIVATION activation;
     int batch_normalize;
     int batch;
@@ -316,32 +279,6 @@ struct layer{
 #endif
 };
 
-typedef struct network{
-    int batch;
-
-    float learning_rate;
-    float momentum;
-    float decay;
-
-    int inputs;
-    int outputs;
-    int h, w, c;
-
-
-    float *input;
-    float *delta;
-    float *workspace;
-    int train;
-
-#ifdef GPU
-    float *input_gpu;
-    float *truth_gpu;
-    float *delta_gpu;
-    float *output_gpu;
-#endif
-
-} network;
-
 typedef struct {
     int w;
     int h;
@@ -351,11 +288,6 @@ typedef struct {
 
 
 unsigned char *read_file(char *filename);
-
-void forward_network(network *net);
-void backward_network(network *net);
-void update_network(network *net);
-
 
 float dot_cpu(int N, float *X, int INCX, float *Y, int INCY);
 void axpy_cpu(int N, float ALPHA, float *X, int INCX, float *Y, int INCY);
@@ -377,10 +309,6 @@ float *cuda_make_array(float *x, size_t n);
 void cuda_pull_array(float *x_gpu, float *x, size_t n);
 void cuda_push_array(float *x_gpu, float *x, size_t n);
 
-void forward_network_gpu(network *net);
-void backward_network_gpu(network *net);
-void update_network_gpu(network *net);
-
 #endif
 image get_label(image **characters, char *string, int size);
 void draw_label(image a, int r, int c, image label, const float *rgb);
@@ -399,15 +327,7 @@ image *get_weights(layer l);
 
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int frame_skip, char *prefix, int avg, float hier_thresh, int w, int h, int fps, int fullscreen);
 
-void save_weights(network *net, char *filename);
-void load_weights(network *net, char *filename);
-void save_weights_upto(network *net, char *filename, int cutoff);
-void load_weights_upto(network *net, char *filename, int start, int cutoff);
-
 void zero_objectness(layer l);
-void free_network(network *net);
-void set_batch_network(network *net, int b);
-void set_temp_network(network *net, float t);
 image load_image(char *filename);
 image make_image(int w, int h, int c);
 image resize_image(image im, int w, int h);
@@ -419,16 +339,11 @@ image resize_min(image im, int min);
 image resize_max(image im, int max);
 image threshold_image(image im, float thresh);
 image mask_to_rgb(image mask);
-int resize_network(network *net, int w, int h);
 int show_image(image p, const char *name, int ms);
 image copy_image(image p);
 void draw_box_width(image a, int x1, int y1, int x2, int y2, int w, float r, float g, float b);
 void composite_3d(char *f1, char *f2, char *out, int delta);
-size_t get_current_batch(network *net);
 void constrain_image(image im);
-image get_network_image_layer(network *net, int i);
-layer get_network_output_layer(network *net);
-void top_predictions(network *net, int n, int *index);
 void flip_image(image a);
 image float_to_image(int w, int h, int c, float *data);
 void random_distort_image(image im, float hue, float saturation, float exposure);
@@ -437,11 +352,6 @@ image grayscale_image(image im);
 void rotate_image_cw(image im, int times);
 double what_time_is_it_now();
 image rotate_image(image m, float rad);
-void visualize_network(network *net);
-
-int network_width(network *net);
-int network_height(network *net);
-float *network_predict_image(network *net, image im);
 
 void free_image(image m);
 
