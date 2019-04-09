@@ -13,7 +13,7 @@ file(GLOB_RECURSE libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CU
 list(REMOVE_ITEM libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 if(GPU)
-	file(GLOB_RECURSE cuda_files ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cu)
+	file(GLOB_RECURSE cuda_files ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
 	set(libdarknet_SRCS ${cuda_files} ${libdarknet_SRCS})
 else()
 	list(REMOVE_ITEM libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda.c)

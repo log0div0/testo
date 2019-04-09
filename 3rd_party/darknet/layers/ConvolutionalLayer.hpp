@@ -17,6 +17,17 @@ struct ConvolutionalLayer: Layer {
 	virtual void load_weights(FILE* fp) override;
 	virtual void save_weights(FILE* fp) const override;
 
+
+	virtual void forward(Network* network) override;
+	virtual void backward(Network* network) override;
+	virtual void update(Network* network) override;
+#ifdef GPU
+	virtual void forward_gpu(Network* network) override;
+	virtual void backward_gpu(Network* network) override;
+	virtual void update_gpu(Network* network) override;
+#endif
+
+private:
 	size_t get_workspace_size() const;
 };
 

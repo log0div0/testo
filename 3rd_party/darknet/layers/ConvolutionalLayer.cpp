@@ -1,7 +1,13 @@
 
 #include "ConvolutionalLayer.hpp"
+#include "../Network.hpp"
+
 
 extern "C" {
+#include <im2col.h>
+#include <col2im.h>
+#include <blas.h>
+#include <gemm.h>
 #include <convolutional_layer.h>
 }
 
@@ -36,13 +42,6 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 		throw std::runtime_error("Layer before convolutional layer must output image.");
 	}
 
-
-
-
-
-
-
-
 	weights = (float*)calloc(c*n*size*size, sizeof(float));
 	weight_updates = (float*)calloc(c*n*size*size, sizeof(float));
 
@@ -66,10 +65,6 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 	output = (float*)calloc(batch*outputs, sizeof(float));
 	delta  = (float*)calloc(batch*outputs, sizeof(float));
 
-	forward = forward_convolutional_layer;
-	backward = backward_convolutional_layer;
-	update = update_convolutional_layer;
-
 	if (batch_normalize) {
 		scales = (float*)calloc(n, sizeof(float));
 		scale_updates = (float*)calloc(n, sizeof(float));
@@ -90,10 +85,6 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 	}
 
 #ifdef GPU
-	forward_gpu = forward_convolutional_layer_gpu;
-	backward_gpu = backward_convolutional_layer_gpu;
-	update_gpu = update_convolutional_layer_gpu;
-
 	if (use_gpu)
 	{
 		weights_gpu = cuda_make_array(weights, nweights);
@@ -203,6 +194,256 @@ void ConvolutionalLayer::save_weights(FILE* fp) const
 		fwrite(rolling_variance, sizeof(float), n, fp);
 	}
 	fwrite(weights, sizeof(float), num, fp);
+}
+
+void ConvolutionalLayer::forward(Network* net)
+{
+	fill_cpu(outputs*batch, 0, output, 1);
+
+	int m = this->n;
+	int k = size*size*this->c;
+	int n = out_w*out_h;
+	for (int i = 0; i < batch; ++i) {
+		float *a = weights;
+		float *b = net->workspace;
+		float *c = output + i*n*m;
+		float *im =  net->input + i*this->c*h*w;
+
+		if (size == 1) {
+			b = im;
+		} else {
+			im2col_cpu(im, this->c, h, w, size, stride, pad, b);
+		}
+		gemm(0,0,m,n,k,1,a,k,b,n,1,c,n);
+	}
+
+	if (batch_normalize) {
+		copy_cpu(outputs*batch, output, 1, x, 1);
+		if (net->train) {
+			mean_cpu(output, batch, out_c, out_h*out_w, mean);
+			variance_cpu(output, mean, batch, out_c, out_h*out_w, variance);
+
+			scal_cpu(out_c, .99, rolling_mean, 1);
+			axpy_cpu(out_c, .01, mean, 1, rolling_mean, 1);
+			scal_cpu(out_c, .99, rolling_variance, 1);
+			axpy_cpu(out_c, .01, variance, 1, rolling_variance, 1);
+
+			normalize_cpu(output, mean, variance, batch, out_c, out_h*out_w);
+			copy_cpu(outputs*batch, output, 1, x_norm, 1);
+		} else {
+			normalize_cpu(output, rolling_mean, rolling_variance, batch, out_c, out_h*out_w);
+		}
+		scale_bias(output, scales, batch, out_c, out_h*out_w);
+		add_bias(output, biases, batch, out_c, out_h*out_w);
+	} else {
+		add_bias(output, biases, batch, this->n, out_h*out_w);
+	}
+
+	activate_array(output, outputs*batch, activation);
+}
+
+void ConvolutionalLayer::forward_gpu(Network* net)
+{
+	fill_gpu(outputs*batch, 0, output_gpu, 1);
+
+	int m = this->n;
+	int k = size*size*this->c;
+	int n = out_w*out_h;
+	for (int i = 0; i < batch; ++i) {
+		float *a = weights_gpu;
+		float *b = net->workspace;
+		float *c = output_gpu + i*n*m;
+		float *im = net->input_gpu + i*this->c*h*w;
+
+		if (size == 1){
+			b = im;
+		} else {
+			im2col_gpu(im, this->c, h, w, size, stride, pad, b);
+		}
+		gemm_gpu(0,0,m,n,k,1,a,k,b,n,1,c,n);
+	}
+
+	if (batch_normalize) {
+		copy_gpu(outputs*batch, output_gpu, 1, x_gpu, 1);
+		if (net->train) {
+			fast_mean_gpu(output_gpu, batch, out_c, out_h*out_w, mean_gpu);
+			fast_variance_gpu(output_gpu, mean_gpu, batch, out_c, out_h*out_w, variance_gpu);
+
+			scal_gpu(out_c, .99, rolling_mean_gpu, 1);
+			axpy_gpu(out_c, .01, mean_gpu, 1, rolling_mean_gpu, 1);
+			scal_gpu(out_c, .99, rolling_variance_gpu, 1);
+			axpy_gpu(out_c, .01, variance_gpu, 1, rolling_variance_gpu, 1);
+
+			copy_gpu(outputs*batch, output_gpu, 1, x_gpu, 1);
+			normalize_gpu(output_gpu, mean_gpu, variance_gpu, batch, out_c, out_h*out_w);
+			copy_gpu(outputs*batch, output_gpu, 1, x_norm_gpu, 1);
+
+			scale_bias_gpu(output_gpu, scales_gpu, batch, out_c, out_h*out_w);
+			add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
+		} else {
+			normalize_gpu(output_gpu, rolling_mean_gpu, rolling_variance_gpu, batch, out_c, out_h*out_w);
+			scale_bias_gpu(output_gpu, scales_gpu, batch, out_c, out_h*out_w);
+			add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
+		}
+	} else {
+		add_bias_gpu(output_gpu, biases_gpu, batch, this->n, out_w*out_h);
+	}
+
+	activate_array_gpu(output_gpu, outputs*batch, activation);
+}
+
+void ConvolutionalLayer::backward(Network* net)
+{
+    int m = this->n;
+    int n = size*size*this->c;
+    int k = out_w*out_h;
+
+    gradient_array(output, outputs*batch, activation, delta);
+
+    if (batch_normalize) {
+        if (!net->train) {
+	        mean = rolling_mean;
+	        variance = rolling_variance;
+	    }
+	    backward_bias(bias_updates, delta, batch, out_c, out_w*out_h);
+	    backward_scale_cpu(x_norm, delta, batch, out_c, out_w*out_h, scale_updates);
+
+	    scale_bias(delta, scales, batch, out_c, out_h*out_w);
+
+	    mean_delta_cpu(delta, variance, batch, out_c, out_w*out_h, mean_delta);
+	    variance_delta_cpu(x, delta, mean, variance, batch, out_c, out_w*out_h, variance_delta);
+	    normalize_delta_cpu(x, mean, variance, mean_delta, variance_delta, batch, out_c, out_w*out_h, delta);
+    } else {
+        backward_bias(bias_updates, delta, batch, this->n, k);
+    }
+
+    for (int i = 0; i < batch; ++i) {
+        float *a = delta + i*m*k;
+        float *b = net->workspace;
+        float *c = weight_updates;
+
+        float *im  = net->input + i*this->c*h*w;
+        float *imd = net->delta + i*this->c*h*w;
+
+        if(size == 1){
+            b = im;
+        } else {
+            im2col_cpu(im, this->c, h, w,
+                    size, stride, pad, b);
+        }
+
+        gemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
+
+        if (net->delta) {
+            a = weights;
+            b = delta + i*m*k;
+            c = net->workspace;
+            if (size == 1) {
+                c = imd;
+            }
+
+            gemm(1,0,n,k,m,1,a,n,b,k,0,c,k);
+
+            if (size != 1) {
+                col2im_cpu(net->workspace, this->c, h, w, size, stride, pad, imd);
+            }
+        }
+    }
+}
+
+void ConvolutionalLayer::backward_gpu(Network* net)
+{
+    gradient_array_gpu(output_gpu, outputs*batch, activation, delta_gpu);
+
+    if (batch_normalize) {
+    	if (!net->train) {
+    	    mean_gpu = rolling_mean_gpu;
+    	    variance_gpu = rolling_variance_gpu;
+    	}
+    	backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, out_c, out_w*out_h);
+    	backward_scale_gpu(x_norm_gpu, delta_gpu, batch, out_c, out_w*out_h, scale_updates_gpu);
+
+    	scale_bias_gpu(delta_gpu, scales_gpu, batch, out_c, out_h*out_w);
+
+    	fast_mean_delta_gpu(delta_gpu, variance_gpu, batch, out_c, out_w*out_h, mean_delta_gpu);
+    	fast_variance_delta_gpu(x_gpu, delta_gpu, mean_gpu, variance_gpu, batch, out_c, out_w*out_h, variance_delta_gpu);
+    	normalize_delta_gpu(x_gpu, mean_gpu, variance_gpu, mean_delta_gpu, variance_delta_gpu, batch, out_c, out_w*out_h, delta_gpu);
+    } else {
+        backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, this->n, out_w*out_h);
+    }
+    float *original_input = net->input_gpu;
+
+    int m = this->n;
+    int n = size*size*this->c;
+    int k = out_w*out_h;
+
+    int i;
+    for(i = 0; i < batch; ++i){
+        float *a = delta_gpu + i*m*k;
+        float *b = net->workspace;
+        float *c = weight_updates_gpu;
+
+        float *im  = net->input_gpu+i*this->c*h*w;
+        float *imd = net->delta_gpu+i*this->c*h*w;
+
+        im2col_gpu(im, this->c, h, w, size, stride, pad, b);
+        gemm_gpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
+
+        if (net->delta_gpu) {
+            a = weights_gpu;
+            b = delta_gpu + i*m*k;
+            c = net->workspace;
+            if (size == 1) {
+                c = imd;
+            }
+
+            gemm_gpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
+
+            if (size != 1) {
+                col2im_gpu(net->workspace, this->c, h, w, size, stride, pad, imd);
+            }
+        }
+    }
+}
+
+void ConvolutionalLayer::update(Network* net)
+{
+	float learning_rate = net->learning_rate;
+	float momentum = net->momentum;
+	float decay = net->decay;
+	int batch = net->batch;
+
+	axpy_cpu(n, learning_rate/batch, bias_updates, 1, biases, 1);
+	scal_cpu(n, momentum, bias_updates, 1);
+
+	if (scales) {
+		axpy_cpu(n, learning_rate/batch, scale_updates, 1, scales, 1);
+		scal_cpu(n, momentum, scale_updates, 1);
+	}
+
+	axpy_cpu(nweights, -decay*batch, weights, 1, weight_updates, 1);
+	axpy_cpu(nweights, learning_rate/batch, weight_updates, 1, weights, 1);
+	scal_cpu(nweights, momentum, weight_updates, 1);
+}
+
+void ConvolutionalLayer::update_gpu(Network* net)
+{
+	float learning_rate = net->learning_rate;
+	float momentum = net->momentum;
+	float decay = net->decay;
+	int batch = net->batch;
+
+	axpy_gpu(nweights, -decay*batch, weights_gpu, 1, weight_updates_gpu, 1);
+	axpy_gpu(nweights, learning_rate/batch, weight_updates_gpu, 1, weights_gpu, 1);
+	scal_gpu(nweights, momentum, weight_updates_gpu, 1);
+
+	axpy_gpu(n, learning_rate/batch, bias_updates_gpu, 1, biases_gpu, 1);
+	scal_gpu(n, momentum, bias_updates_gpu, 1);
+
+	if (scales_gpu) {
+		axpy_gpu(n, learning_rate/batch, scale_updates_gpu, 1, scales_gpu, 1);
+		scal_gpu(n, momentum, scale_updates_gpu, 1);
+	}
 }
 
 }

@@ -70,12 +70,6 @@ typedef struct layer layer;
 struct layer{
     LAYER_TYPE type;
     ACTIVATION activation;
-    void (*forward)   (struct layer, struct network);
-    void (*backward)  (struct layer, struct network);
-    void (*update)    (struct layer, struct network);
-    void (*forward_gpu)   (struct layer, struct network);
-    void (*backward_gpu)  (struct layer, struct network);
-    void (*update_gpu)    (struct layer, struct network);
     int batch_normalize;
     int batch;
     int inputs;

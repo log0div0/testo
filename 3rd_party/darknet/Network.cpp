@@ -143,7 +143,7 @@ void Network::forward() {
 			if (l->delta_gpu) {
 				fill_gpu(l->outputs * l->batch, 0, l->delta_gpu, 1);
 			}
-			l->forward_gpu(*l, *this);
+			l->forward_gpu(this);
 			input_gpu = l->output_gpu;
 			input = l->output;
 		}
@@ -158,7 +158,7 @@ void Network::forward() {
 			if (l->delta) {
 				fill_cpu(l->outputs * l->batch, 0, l->delta, 1);
 			}
-			l->forward(*l, *this);
+			l->forward(this);
 			input = l->output;
 		}
 	}
@@ -182,7 +182,7 @@ void Network::backward() {
 				input_gpu = prev->output_gpu;
 				delta_gpu = prev->delta_gpu;
 			}
-			l->backward_gpu(*l, *this);
+			l->backward_gpu(this);
 		}
 	}
 	else
@@ -197,7 +197,7 @@ void Network::backward() {
 				input = prev->output;
 				delta = prev->delta;
 			}
-			l->backward(*l, *this);
+			l->backward(this);
 		}
 	}
 	*(network*)this = backup;
@@ -206,21 +206,15 @@ void Network::backward() {
 void Network::update() {
 #ifdef GPU
 	if (use_gpu) {
-		for (int i = 0; i < layers.size(); ++i) {
-			auto& l = layers[i];
-			if (l->update_gpu) {
-				l->update_gpu(*l, *this);
-			}
+		for (auto& l: layers) {
+			l->update_gpu(this);
 		}
 	}
 	else
 #endif
 	{
-		for (int i = 0; i < layers.size(); ++i) {
-			auto& l = layers[i];
-			if (l->update) {
-				l->update(*l, *this);
-			}
+		for (auto& l: layers) {
+			l->update(this);
 		}
 	}
 }
