@@ -3,7 +3,6 @@
 
 #include "image.h"
 #include "cuda.h"
-#include "layer.h"
 
 typedef layer maxpool_layer;
 

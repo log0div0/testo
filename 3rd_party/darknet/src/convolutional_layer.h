@@ -4,7 +4,6 @@
 #include "cuda.h"
 #include "image.h"
 #include "activations.h"
-#include "layer.h"
 
 typedef layer convolutional_layer;
 

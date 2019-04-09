@@ -322,8 +322,6 @@ struct layer{
 #endif
 };
 
-void free_layer(layer);
-
 typedef struct network{
     int batch;
 

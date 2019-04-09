@@ -10,6 +10,7 @@
 #include <list>
 #include <fstream>
 #include <inipp.hh>
+#include <signal.h>
 #include "Network.hpp"
 
 extern "C" {
@@ -186,8 +187,18 @@ int entry_index(layer l, int batch, int location, int entry, int classes)
 float anchor_w = 8;
 float anchor_h = 16;
 
+bool stop_training = false;
+
+void sig_handler(int signum)
+{
+	stop_training = true;
+}
+
+
 void train()
 {
+	signal(SIGINT, sig_handler);
+
 	Network network(network_file);
 	if (weights_file.size()) {
 		network.load_weights(weights_file);
@@ -198,7 +209,7 @@ void train()
 
 	float avg_loss = -1;
 
-	for (size_t i = 0; ; ++i)
+	for (size_t i = 0; !stop_training; ++i)
 	{
 		auto labels = dataset.charge(&network);
 		network.forward();
@@ -259,11 +270,9 @@ void train()
 		}
 
 		std::cout << i << ": loss = " << loss << ", avg_loss = " << avg_loss << std::endl;
-
-		if (i && (i % 100 == 0)) {
-			network.save_weights(output_file);
-		}
 	}
+
+	network.save_weights(output_file);
 }
 
 struct Rect {

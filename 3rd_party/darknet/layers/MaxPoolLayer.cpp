@@ -50,4 +50,15 @@ MaxPoolLayer::MaxPoolLayer(const inisection& section,
 	workspace_size = 0;
 }
 
+MaxPoolLayer::~MaxPoolLayer() {
+	free(indexes);
+	free(output);
+	free(delta);
+#ifdef GPU
+	cuda_free((float *)indexes_gpu);
+	cuda_free(output_gpu);
+	cuda_free(delta_gpu);
+#endif
+}
+
 }

@@ -12,6 +12,7 @@ struct MaxPoolLayer: Layer {
 		size_t w,
 		size_t h,
 		size_t c);
+	virtual ~MaxPoolLayer() override;
 
 	virtual void load_weights(FILE* fp) override {};
 	virtual void save_weights(FILE* fp) const override {};
