@@ -21,7 +21,6 @@ machine buwaha {
 		password: "1111"
 	}
 }
-
 macro another_reboot(login, password) {
 	type $login + " " + $password
 	wait for 3s
@@ -38,7 +37,8 @@ flash dummy_flash {
 	folder: "/home/alex/work/vbox/my_flash"
 }
 
-snapshot dummy {
+snapshot dummy: dummy3
+{
 	unplug dvd
 }
 
@@ -65,9 +65,9 @@ snapshot negotiator: dummy2 {
 	type "umount /media"; press Enter; wait for 3s;
 }
 
-test dummy: buwaha(dummy2)
-{
+test dummy: buwaha(dummy2) {
 	buwaha{
+		reboot("Hey", "Suka")
 		for i in 3..5 {
 			for j in 0..10 {
 				type " j is " + $j
@@ -97,4 +97,3 @@ test dummy3: buwaha(negotiator)
 And smore
 			And smore"""
 }
-
