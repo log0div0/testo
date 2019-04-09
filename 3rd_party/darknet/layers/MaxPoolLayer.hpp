@@ -25,6 +25,15 @@ struct MaxPoolLayer: Layer {
 	virtual void backward_gpu(Network* network) override;
 	virtual void update_gpu(Network* network) override {};
 #endif
+
+	int in_w = 0;
+	int in_h = 0;
+	int in_c = 0;
+	int stride = 0;
+	int size = 0;
+	int pad = 0;
+
+	int* indexes = nullptr;
 };
 
 }

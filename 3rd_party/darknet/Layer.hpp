@@ -7,11 +7,8 @@ namespace darknet {
 
 struct Network;
 
-struct Layer: layer {
-	Layer(): layer() {
-
-	}
-
+struct Layer {
+	Layer() {};
 	virtual ~Layer() {};
 
 	Layer(const Layer& other) = delete;
@@ -27,6 +24,21 @@ struct Layer: layer {
 	virtual void forward_gpu(Network* network) = 0;
 	virtual void backward_gpu(Network* network) = 0;
 	virtual void update_gpu(Network* network) = 0;
+#endif
+
+	int out_w = 0;
+	int out_h = 0;
+	int out_c = 0;
+	int batch = 0;
+	int outputs = 0;
+	size_t workspace_size = 0;
+
+	float* output = nullptr;
+	float* delta = nullptr;
+
+#ifdef GPU
+	float* output_gpu = nullptr;
+	float* delta_gpu = nullptr;
 #endif
 };
 

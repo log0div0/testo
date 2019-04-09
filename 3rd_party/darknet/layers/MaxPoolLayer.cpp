@@ -18,9 +18,9 @@ MaxPoolLayer::MaxPoolLayer(const inisection& section,
 	size_t c)
 {
 	this->batch = batch;
-	this->h = h;
-	this->w = w;
-	this->c = c;
+	in_h = h;
+	in_w = w;
+	in_c = c;
 
 	stride = section.get_int("stride", 1);
 	size = section.get_int("size", stride);
@@ -34,7 +34,6 @@ MaxPoolLayer::MaxPoolLayer(const inisection& section,
 	out_h = (h + pad - size)/stride + 1;
 	out_c = c;
 	outputs = out_h * out_w * out_c;
-	inputs = h*w*c;
 	int output_size = out_h * out_w * out_c * batch;
 	indexes = (int*)calloc(output_size, sizeof(int));
 	output =  (float*)calloc(output_size, sizeof(float));
@@ -68,19 +67,19 @@ void MaxPoolLayer::forward(Network* net)
     int w = out_w;
 
     for(int b = 0; b < batch; ++b){
-        for(int k = 0; k < c; ++k){
+        for(int k = 0; k < in_c; ++k){
             for(int i = 0; i < h; ++i){
                 for(int j = 0; j < w; ++j){
-                    int out_index = j + w*(i + h*(k + c*b));
+                    int out_index = j + w*(i + h*(k + in_c*b));
                     float max = -FLT_MAX;
                     int max_i = -1;
                     for(int n = 0; n < size; ++n){
                         for(int m = 0; m < size; ++m){
                             int cur_h = h_offset + i*stride + n;
                             int cur_w = w_offset + j*stride + m;
-                            int index = cur_w + this->w*(cur_h + this->h*(k + b*c));
-                            int valid = (cur_h >= 0 && cur_h < this->h &&
-                                         cur_w >= 0 && cur_w < this->w);
+                            int index = cur_w + in_w*(cur_h + in_h*(k + b*in_c));
+                            int valid = (cur_h >= 0 && cur_h < in_h &&
+                                         cur_w >= 0 && cur_w < in_w);
                             float val = (valid != 0) ? net->input[index] : -FLT_MAX;
                             max_i = (val > max) ? index : max_i;
                             max   = (val > max) ? val   : max;
@@ -98,7 +97,7 @@ void MaxPoolLayer::backward(Network* net)
 {
     int h = out_h;
     int w = out_w;
-    for (int i = 0; i < h*w*c*batch; ++i) {
+    for (int i = 0; i < h*w*in_c*batch; ++i) {
         int index = indexes[i];
         net->delta[index] += delta[i];
     }

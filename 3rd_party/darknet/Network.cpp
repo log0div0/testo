@@ -76,7 +76,6 @@ Network::Network(const std::string& path)
 	outputs = out->outputs;
 	input = (float*)calloc(inputs*batch, sizeof(float));
 #ifdef GPU
-	output_gpu = out->output_gpu;
 	input_gpu = cuda_make_array(input, inputs*batch);
 #endif
 	if (workspace_size) {

@@ -15,7 +15,7 @@ using namespace inipp;
 namespace darknet {
 
 size_t ConvolutionalLayer::get_workspace_size() const {
-	return (size_t)out_h*out_w*size*size*c;
+	return (size_t)out_h*out_w*size*size*in_c;
 }
 
 ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
@@ -24,12 +24,12 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 	size_t h,
 	size_t c)
 {
-	this->h = h;
-	this->w = w;
-	this->c = c;
+	in_h = h;
+	in_w = w;
+	in_c = c;
 	this->batch = batch;
 
-	n = section.get_int("filters",1);
+	out_c = section.get_int("filters",1);
 	size = section.get_int("size",1);
 	stride = section.get_int("stride",1);
 	pad = section.get_int("padding",0);
@@ -41,14 +41,14 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 		throw std::runtime_error("Layer before convolutional layer must output image.");
 	}
 
-	weights = (float*)calloc(c*n*size*size, sizeof(float));
-	weight_updates = (float*)calloc(c*n*size*size, sizeof(float));
+	nweights = in_c*out_c*size*size;
+	nbiases = out_c;
 
-	biases = (float*)calloc(n, sizeof(float));
-	bias_updates = (float*)calloc(n, sizeof(float));
+	weights = (float*)calloc(nweights, sizeof(float));
+	weight_updates = (float*)calloc(nweights, sizeof(float));
 
-	nweights = c*n*size*size;
-	nbiases = n;
+	biases = (float*)calloc(nbiases, sizeof(float));
+	bias_updates = (float*)calloc(nbiases, sizeof(float));
 
 	float scale = sqrt(2./(size*size*c));
 	for (int i = 0; i < nweights; ++i) {
@@ -57,28 +57,26 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 
 	out_h = get_out_height();
 	out_w = get_out_width();
-	out_c = n;
 	outputs = out_h * out_w * out_c;
-	inputs = w * h * c;
 
 	output = (float*)calloc(batch*outputs, sizeof(float));
 	delta  = (float*)calloc(batch*outputs, sizeof(float));
 
 	if (batch_normalize) {
-		scales = (float*)calloc(n, sizeof(float));
-		scale_updates = (float*)calloc(n, sizeof(float));
-		for (int i = 0; i < n; ++i) {
+		scales = (float*)calloc(out_c, sizeof(float));
+		scale_updates = (float*)calloc(out_c, sizeof(float));
+		for (int i = 0; i < out_c; ++i) {
 			scales[i] = 1;
 		}
 
-		mean = (float*)calloc(n, sizeof(float));
-		variance = (float*)calloc(n, sizeof(float));
+		mean = (float*)calloc(out_c, sizeof(float));
+		variance = (float*)calloc(out_c, sizeof(float));
 
-		mean_delta = (float*)calloc(n, sizeof(float));
-		variance_delta = (float*)calloc(n, sizeof(float));
+		mean_delta = (float*)calloc(out_c, sizeof(float));
+		variance_delta = (float*)calloc(out_c, sizeof(float));
 
-		rolling_mean = (float*)calloc(n, sizeof(float));
-		rolling_variance = (float*)calloc(n, sizeof(float));
+		rolling_mean = (float*)calloc(out_c, sizeof(float));
+		rolling_variance = (float*)calloc(out_c, sizeof(float));
 		x = (float*)calloc(batch*outputs, sizeof(float));
 		x_norm = (float*)calloc(batch*outputs, sizeof(float));
 	}
@@ -115,7 +113,7 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 #endif
 	workspace_size = get_workspace_size();
 
-	fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", n, size, size, stride, w, h, c, out_w, out_h, out_c, (2.0 * n * size*size*c * out_h*out_w)/1000000000.);
+	fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", out_c, size, size, stride, in_w, in_h, in_c, out_w, out_h, out_c, (2.0 * out_c * size*size*c * out_h*out_w)/1000000000.);
 }
 
 ConvolutionalLayer::~ConvolutionalLayer() {
@@ -163,14 +161,13 @@ ConvolutionalLayer::~ConvolutionalLayer() {
 
 void ConvolutionalLayer::load_weights(FILE* fp)
 {
-	int num = c*n*size*size;
-	fread(biases, sizeof(float), n, fp);
+	fread(biases, sizeof(float), out_c, fp);
 	if (batch_normalize){
-		fread(scales, sizeof(float), n, fp);
-		fread(rolling_mean, sizeof(float), n, fp);
-		fread(rolling_variance, sizeof(float), n, fp);
+		fread(scales, sizeof(float), out_c, fp);
+		fread(rolling_mean, sizeof(float), out_c, fp);
+		fread(rolling_variance, sizeof(float), out_c, fp);
 	}
-	fread(weights, sizeof(float), num, fp);
+	fread(weights, sizeof(float), nweights, fp);
 #ifdef GPU
 	if(use_gpu){
 		push();
@@ -185,14 +182,13 @@ void ConvolutionalLayer::save_weights(FILE* fp) const
 		pull();
 	}
 #endif
-	int num = nweights;
-	fwrite(biases, sizeof(float), n, fp);
+	fwrite(biases, sizeof(float), out_c, fp);
 	if (batch_normalize){
-		fwrite(scales, sizeof(float), n, fp);
-		fwrite(rolling_mean, sizeof(float), n, fp);
-		fwrite(rolling_variance, sizeof(float), n, fp);
+		fwrite(scales, sizeof(float), out_c, fp);
+		fwrite(rolling_mean, sizeof(float), out_c, fp);
+		fwrite(rolling_variance, sizeof(float), out_c, fp);
 	}
-	fwrite(weights, sizeof(float), num, fp);
+	fwrite(weights, sizeof(float), nweights, fp);
 }
 
 void add_bias(float *output, float *biases, int batch, int n, int size)
@@ -233,19 +229,19 @@ void ConvolutionalLayer::forward(Network* net)
 {
 	fill_cpu(outputs*batch, 0, output, 1);
 
-	int m = this->n;
-	int k = size*size*this->c;
+	int m = out_c;
+	int k = size*size*in_c;
 	int n = out_w*out_h;
 	for (int i = 0; i < batch; ++i) {
 		float *a = weights;
 		float *b = net->workspace;
 		float *c = output + i*n*m;
-		float *im =  net->input + i*this->c*h*w;
+		float *im =  net->input + i*in_c*in_h*in_w;
 
 		if (size == 1) {
 			b = im;
 		} else {
-			im2col_cpu(im, this->c, h, w, size, stride, pad, b);
+			im2col_cpu(im, in_c, in_h, in_w, size, stride, pad, b);
 		}
 		gemm(0,0,m,n,k,1,a,k,b,n,1,c,n);
 	}
@@ -269,7 +265,7 @@ void ConvolutionalLayer::forward(Network* net)
 		scale_bias(output, scales, batch, out_c, out_h*out_w);
 		add_bias(output, biases, batch, out_c, out_h*out_w);
 	} else {
-		add_bias(output, biases, batch, this->n, out_h*out_w);
+		add_bias(output, biases, batch, out_c, out_h*out_w);
 	}
 
 	activate_array(output, outputs*batch, activation);
@@ -391,8 +387,8 @@ void normalize_delta_cpu(float *x, float *mean, float *variance, float *mean_del
 
 void ConvolutionalLayer::backward(Network* net)
 {
-	int m = this->n;
-	int n = size*size*this->c;
+	int m = out_c;
+	int n = size*size*in_c;
 	int k = out_w*out_h;
 
 	gradient_array(output, outputs*batch, activation, delta);
@@ -411,7 +407,7 @@ void ConvolutionalLayer::backward(Network* net)
 		variance_delta_cpu(x, delta, mean, variance, batch, out_c, out_w*out_h, variance_delta);
 		normalize_delta_cpu(x, mean, variance, mean_delta, variance_delta, batch, out_c, out_w*out_h, delta);
 	} else {
-		backward_bias(bias_updates, delta, batch, this->n, k);
+		backward_bias(bias_updates, delta, batch, out_c, k);
 	}
 
 	for (int i = 0; i < batch; ++i) {
@@ -419,13 +415,13 @@ void ConvolutionalLayer::backward(Network* net)
 		float *b = net->workspace;
 		float *c = weight_updates;
 
-		float *im  = net->input + i*this->c*h*w;
-		float *imd = net->delta + i*this->c*h*w;
+		float *im  = net->input + i*in_c*in_h*in_w;
+		float *imd = net->delta + i*in_c*in_h*in_w;
 
 		if(size == 1){
 			b = im;
 		} else {
-			im2col_cpu(im, this->c, h, w,
+			im2col_cpu(im, in_c, in_h, in_w,
 					size, stride, pad, b);
 		}
 
@@ -442,7 +438,7 @@ void ConvolutionalLayer::backward(Network* net)
 			gemm(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
 			if (size != 1) {
-				col2im_cpu(net->workspace, this->c, h, w, size, stride, pad, imd);
+				col2im_cpu(net->workspace, in_c, in_h, in_w, size, stride, pad, imd);
 			}
 		}
 	}
@@ -514,12 +510,12 @@ void ConvolutionalLayer::update(Network* net)
 	float decay = net->decay;
 	int batch = net->batch;
 
-	axpy_cpu(n, learning_rate/batch, bias_updates, 1, biases, 1);
-	scal_cpu(n, momentum, bias_updates, 1);
+	axpy_cpu(out_c, learning_rate/batch, bias_updates, 1, biases, 1);
+	scal_cpu(out_c, momentum, bias_updates, 1);
 
 	if (scales) {
-		axpy_cpu(n, learning_rate/batch, scale_updates, 1, scales, 1);
-		scal_cpu(n, momentum, scale_updates, 1);
+		axpy_cpu(out_c, learning_rate/batch, scale_updates, 1, scales, 1);
+		scal_cpu(out_c, momentum, scale_updates, 1);
 	}
 
 	axpy_cpu(nweights, -decay*batch, weights, 1, weight_updates, 1);
@@ -579,12 +575,12 @@ void ConvolutionalLayer::push() const
 
 int ConvolutionalLayer::get_out_height() const
 {
-    return (h + 2*pad - size) / stride + 1;
+    return (in_h + 2*pad - size) / stride + 1;
 }
 
 int ConvolutionalLayer::get_out_width() const
 {
-    return (w + 2*pad - size) / stride + 1;
+    return (in_w + 2*pad - size) / stride + 1;
 }
 
 }

@@ -46,9 +46,7 @@ struct Network {
 
 #ifdef GPU
 	float *input_gpu = nullptr;
-	float *truth_gpu = nullptr;
 	float *delta_gpu = nullptr;
-	float *output_gpu = nullptr;
 #endif
 
 };

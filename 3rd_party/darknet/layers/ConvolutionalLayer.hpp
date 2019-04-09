@@ -36,6 +36,39 @@ private:
 	void pull() const;
 	void push() const;
 #endif
+
+	int in_w = 0;
+	int in_h = 0;
+	int in_c = 0;
+	int size = 0;
+	int stride = 0;
+	int pad = 0;
+	bool batch_normalize = false;
+	ACTIVATION activation;
+
+	float* weights = nullptr;
+	float* weight_updates = nullptr;
+
+	float* biases = nullptr;
+	float* bias_updates = nullptr;
+
+	int nweights = 0;
+	int nbiases = 0;
+
+	float* scales = nullptr;
+	float* scale_updates = nullptr;
+
+	float* mean = nullptr;
+	float* variance = nullptr;
+
+	float* mean_delta = nullptr;
+	float* variance_delta = nullptr;
+
+	float* rolling_mean = nullptr;
+	float* rolling_variance = nullptr;
+
+	float* x = nullptr;
+	float* x_norm = nullptr;
 };
 
 }

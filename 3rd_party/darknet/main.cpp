@@ -177,11 +177,11 @@ void delta_yolo_class(float *output, float *delta, int index, int class_, int cl
 	}
 }
 
-int entry_index(layer l, int batch, int location, int entry, int classes)
+int entry_index(Layer& l, int batch, int location, int entry, int classes)
 {
-	int n =   location / (l.w*l.h);
-	int loc = location % (l.w*l.h);
-	return batch*l.outputs + n*l.w*l.h*(4+classes+1) + entry*l.w*l.h + loc;
+	int n =   location / (l.out_w*l.out_h);
+	int loc = location % (l.out_w*l.out_h);
+	return batch*l.outputs + n*l.out_w*l.out_h*(4+classes+1) + entry*l.out_w*l.out_h + loc;
 }
 
 float anchor_w = 8;
@@ -227,27 +227,27 @@ void train()
 			auto& l = *network.layers.back();
 			for (int b = 0; b < l.batch; ++b) {
 				auto& label = labels.at(b);
-				for (int j = 0; j < l.h; ++j) {
-					for (int i = 0; i < l.w; ++i) {
-						int obj_index = entry_index(l, b, j*l.w + i, 4, classes);
+				for (int j = 0; j < l.out_h; ++j) {
+					for (int i = 0; i < l.out_w; ++i) {
+						int obj_index = entry_index(l, b, j*l.out_w + i, 4, classes);
 						l.delta[obj_index] = 0 - logistic_activate(l.output[obj_index]);
 					}
 				}
 				for(auto& truth: label){
 
-					int i = (truth.x * l.w);
-					int j = (truth.y * l.h);
+					int i = (truth.x * l.out_w);
+					int j = (truth.y * l.out_h);
 
-					int box_index = entry_index(l, b, j*l.w + i, 0, classes);
-					float iou = delta_yolo_box(truth, l.output, anchor_w, anchor_h, box_index, i, j, l.w, l.h, network.w, network.h, l.delta, (2-truth.w*truth.h), l.w*l.h);
+					int box_index = entry_index(l, b, j*l.out_w + i, 0, classes);
+					float iou = delta_yolo_box(truth, l.output, anchor_w, anchor_h, box_index, i, j, l.out_w, l.out_h, network.w, network.h, l.delta, (2-truth.w*truth.h), l.out_w*l.out_h);
 
-					int obj_index = entry_index(l, b, j*l.w + i, 4, classes);
+					int obj_index = entry_index(l, b, j*l.out_w + i, 4, classes);
 					avg_obj += logistic_activate(l.output[obj_index]);
 					l.delta[obj_index] = 1 - logistic_activate(l.output[obj_index]);
 
 					if (classes) {
-						int class_index = entry_index(l, b, j*l.w + i, 4 + 1, classes);
-						delta_yolo_class(l.output, l.delta, class_index, truth.class_id, classes, l.w*l.h, &avg_cat);
+						int class_index = entry_index(l, b, j*l.out_w + i, 4 + 1, classes);
+						delta_yolo_class(l.output, l.delta, class_index, truth.class_id, classes, l.out_w*l.out_h, &avg_cat);
 					}
 
 					++count;
@@ -382,20 +382,20 @@ void predict()
 
 	const auto& l = *network.layers.back();
 
-	size_t dimension_size = l.w * l.h;
+	size_t dimension_size = l.out_w * l.out_h;
 
 	RectSet rects;
-	for (int y = 0; y < l.h; ++y) {
-		for (int x = 0; x < l.w; ++x) {
-			int i = y * l.w + x;
+	for (int y = 0; y < l.out_h; ++y) {
+		for (int x = 0; x < l.out_w; ++x) {
+			int i = y * l.out_w + x;
 			float objectness = logistic_activate(predictions[dimension_size * 4 + i]);
 			if (objectness < thresh) {
 				continue;
 			}
 
 			Box b;
-			b.x = (x + logistic_activate(predictions[dimension_size * 0 + i])) / l.w;
-			b.y = (y + logistic_activate(predictions[dimension_size * 1 + i])) / l.h;
+			b.x = (x + logistic_activate(predictions[dimension_size * 0 + i])) / l.out_w;
+			b.y = (y + logistic_activate(predictions[dimension_size * 1 + i])) / l.out_h;
 			b.w = exp(predictions[dimension_size * 2 + i]) * anchor_w / image.width();
 			b.h = exp(predictions[dimension_size * 3 + i]) * anchor_h / image.height();
 
