@@ -3,7 +3,8 @@
 #include "../Network.hpp"
 
 extern "C" {
-#include <maxpool_layer.h>
+#include "image.h"
+#include "cuda.h"
 }
 
 using namespace inipp;

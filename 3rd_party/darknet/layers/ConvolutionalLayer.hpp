@@ -29,6 +29,10 @@ struct ConvolutionalLayer: Layer {
 
 private:
 	size_t get_workspace_size() const;
+	int get_out_height() const;
+	int get_out_width() const;
+	void pull() const;
+	void push() const;
 };
 
 }

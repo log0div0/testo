@@ -2,13 +2,12 @@
 #include "ConvolutionalLayer.hpp"
 #include "../Network.hpp"
 
-
 extern "C" {
 #include <im2col.h>
 #include <col2im.h>
 #include <blas.h>
 #include <gemm.h>
-#include <convolutional_layer.h>
+#include <activations.h>
 }
 
 using namespace inipp;
@@ -56,8 +55,8 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 		weights[i] = scale*rand_normal();
 	}
 
-	out_h = convolutional_out_height(*this);
-	out_w = convolutional_out_width(*this);
+	out_h = get_out_height();
+	out_w = get_out_width();
 	out_c = n;
 	outputs = out_h * out_w * out_c;
 	inputs = w * h * c;
@@ -174,7 +173,7 @@ void ConvolutionalLayer::load_weights(FILE* fp)
 	fread(weights, sizeof(float), num, fp);
 #ifdef GPU
 	if(use_gpu){
-		push_convolutional_layer(*this);
+		push();
 	}
 #endif
 }
@@ -183,7 +182,7 @@ void ConvolutionalLayer::save_weights(FILE* fp) const
 {
 #ifdef GPU
 	if(use_gpu){
-		pull_convolutional_layer(*this);
+		pull();
 	}
 #endif
 	int num = nweights;
@@ -194,6 +193,40 @@ void ConvolutionalLayer::save_weights(FILE* fp) const
 		fwrite(rolling_variance, sizeof(float), n, fp);
 	}
 	fwrite(weights, sizeof(float), num, fp);
+}
+
+void add_bias(float *output, float *biases, int batch, int n, int size)
+{
+	int i,j,b;
+	for(b = 0; b < batch; ++b){
+		for(i = 0; i < n; ++i){
+			for(j = 0; j < size; ++j){
+				output[(b*n + i)*size + j] += biases[i];
+			}
+		}
+	}
+}
+
+void scale_bias(float *output, float *scales, int batch, int n, int size)
+{
+	int i,j,b;
+	for(b = 0; b < batch; ++b){
+		for(i = 0; i < n; ++i){
+			for(j = 0; j < size; ++j){
+				output[(b*n + i)*size + j] *= scales[i];
+			}
+		}
+	}
+}
+
+void backward_bias(float *bias_updates, float *delta, int batch, int n, int size)
+{
+	int i,b;
+	for(b = 0; b < batch; ++b){
+		for(i = 0; i < n; ++i){
+			bias_updates[i] += sum_array(delta+size*(i+b*n), size);
+		}
+	}
 }
 
 void ConvolutionalLayer::forward(Network* net)
@@ -292,118 +325,178 @@ void ConvolutionalLayer::forward_gpu(Network* net)
 	activate_array_gpu(output_gpu, outputs*batch, activation);
 }
 
+void backward_scale_cpu(float *x_norm, float *delta, int batch, int n, int size, float *scale_updates)
+{
+	int i,b,f;
+	for(f = 0; f < n; ++f){
+		float sum = 0;
+		for(b = 0; b < batch; ++b){
+			for(i = 0; i < size; ++i){
+				int index = i + size*(f + n*b);
+				sum += delta[index] * x_norm[index];
+			}
+		}
+		scale_updates[f] += sum;
+	}
+}
+
+void mean_delta_cpu(float *delta, float *variance, int batch, int filters, int spatial, float *mean_delta)
+{
+
+	int i,j,k;
+	for(i = 0; i < filters; ++i){
+		mean_delta[i] = 0;
+		for (j = 0; j < batch; ++j) {
+			for (k = 0; k < spatial; ++k) {
+				int index = j*filters*spatial + i*spatial + k;
+				mean_delta[i] += delta[index];
+			}
+		}
+		mean_delta[i] *= (-1./sqrt(variance[i] + .00001f));
+	}
+}
+
+void variance_delta_cpu(float *x, float *delta, float *mean, float *variance, int batch, int filters, int spatial, float *variance_delta)
+{
+
+	int i,j,k;
+	for(i = 0; i < filters; ++i){
+		variance_delta[i] = 0;
+		for(j = 0; j < batch; ++j){
+			for(k = 0; k < spatial; ++k){
+				int index = j*filters*spatial + i*spatial + k;
+				variance_delta[i] += delta[index]*(x[index] - mean[i]);
+			}
+		}
+		variance_delta[i] *= -.5 * pow(variance[i] + .00001f, (float)(-3./2.));
+	}
+}
+
+void normalize_delta_cpu(float *x, float *mean, float *variance, float *mean_delta, float *variance_delta, int batch, int filters, int spatial, float *delta)
+{
+	int f, j, k;
+	for(j = 0; j < batch; ++j){
+		for(f = 0; f < filters; ++f){
+			for(k = 0; k < spatial; ++k){
+				int index = j*filters*spatial + f*spatial + k;
+				delta[index] = delta[index] * 1./(sqrt(variance[f] + .00001f)) + variance_delta[f] * 2. * (x[index] - mean[f]) / (spatial * batch) + mean_delta[f]/(spatial*batch);
+			}
+		}
+	}
+}
+
 void ConvolutionalLayer::backward(Network* net)
 {
-    int m = this->n;
-    int n = size*size*this->c;
-    int k = out_w*out_h;
+	int m = this->n;
+	int n = size*size*this->c;
+	int k = out_w*out_h;
 
-    gradient_array(output, outputs*batch, activation, delta);
+	gradient_array(output, outputs*batch, activation, delta);
 
-    if (batch_normalize) {
-        if (!net->train) {
-	        mean = rolling_mean;
-	        variance = rolling_variance;
-	    }
-	    backward_bias(bias_updates, delta, batch, out_c, out_w*out_h);
-	    backward_scale_cpu(x_norm, delta, batch, out_c, out_w*out_h, scale_updates);
+	if (batch_normalize) {
+		if (!net->train) {
+			mean = rolling_mean;
+			variance = rolling_variance;
+		}
+		backward_bias(bias_updates, delta, batch, out_c, out_w*out_h);
+		backward_scale_cpu(x_norm, delta, batch, out_c, out_w*out_h, scale_updates);
 
-	    scale_bias(delta, scales, batch, out_c, out_h*out_w);
+		scale_bias(delta, scales, batch, out_c, out_h*out_w);
 
-	    mean_delta_cpu(delta, variance, batch, out_c, out_w*out_h, mean_delta);
-	    variance_delta_cpu(x, delta, mean, variance, batch, out_c, out_w*out_h, variance_delta);
-	    normalize_delta_cpu(x, mean, variance, mean_delta, variance_delta, batch, out_c, out_w*out_h, delta);
-    } else {
-        backward_bias(bias_updates, delta, batch, this->n, k);
-    }
+		mean_delta_cpu(delta, variance, batch, out_c, out_w*out_h, mean_delta);
+		variance_delta_cpu(x, delta, mean, variance, batch, out_c, out_w*out_h, variance_delta);
+		normalize_delta_cpu(x, mean, variance, mean_delta, variance_delta, batch, out_c, out_w*out_h, delta);
+	} else {
+		backward_bias(bias_updates, delta, batch, this->n, k);
+	}
 
-    for (int i = 0; i < batch; ++i) {
-        float *a = delta + i*m*k;
-        float *b = net->workspace;
-        float *c = weight_updates;
+	for (int i = 0; i < batch; ++i) {
+		float *a = delta + i*m*k;
+		float *b = net->workspace;
+		float *c = weight_updates;
 
-        float *im  = net->input + i*this->c*h*w;
-        float *imd = net->delta + i*this->c*h*w;
+		float *im  = net->input + i*this->c*h*w;
+		float *imd = net->delta + i*this->c*h*w;
 
-        if(size == 1){
-            b = im;
-        } else {
-            im2col_cpu(im, this->c, h, w,
-                    size, stride, pad, b);
-        }
+		if(size == 1){
+			b = im;
+		} else {
+			im2col_cpu(im, this->c, h, w,
+					size, stride, pad, b);
+		}
 
-        gemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
+		gemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
 
-        if (net->delta) {
-            a = weights;
-            b = delta + i*m*k;
-            c = net->workspace;
-            if (size == 1) {
-                c = imd;
-            }
+		if (net->delta) {
+			a = weights;
+			b = delta + i*m*k;
+			c = net->workspace;
+			if (size == 1) {
+				c = imd;
+			}
 
-            gemm(1,0,n,k,m,1,a,n,b,k,0,c,k);
+			gemm(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
-            if (size != 1) {
-                col2im_cpu(net->workspace, this->c, h, w, size, stride, pad, imd);
-            }
-        }
-    }
+			if (size != 1) {
+				col2im_cpu(net->workspace, this->c, h, w, size, stride, pad, imd);
+			}
+		}
+	}
 }
 
 void ConvolutionalLayer::backward_gpu(Network* net)
 {
-    gradient_array_gpu(output_gpu, outputs*batch, activation, delta_gpu);
+	gradient_array_gpu(output_gpu, outputs*batch, activation, delta_gpu);
 
-    if (batch_normalize) {
-    	if (!net->train) {
-    	    mean_gpu = rolling_mean_gpu;
-    	    variance_gpu = rolling_variance_gpu;
-    	}
-    	backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, out_c, out_w*out_h);
-    	backward_scale_gpu(x_norm_gpu, delta_gpu, batch, out_c, out_w*out_h, scale_updates_gpu);
+	if (batch_normalize) {
+		if (!net->train) {
+			mean_gpu = rolling_mean_gpu;
+			variance_gpu = rolling_variance_gpu;
+		}
+		backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, out_c, out_w*out_h);
+		backward_scale_gpu(x_norm_gpu, delta_gpu, batch, out_c, out_w*out_h, scale_updates_gpu);
 
-    	scale_bias_gpu(delta_gpu, scales_gpu, batch, out_c, out_h*out_w);
+		scale_bias_gpu(delta_gpu, scales_gpu, batch, out_c, out_h*out_w);
 
-    	fast_mean_delta_gpu(delta_gpu, variance_gpu, batch, out_c, out_w*out_h, mean_delta_gpu);
-    	fast_variance_delta_gpu(x_gpu, delta_gpu, mean_gpu, variance_gpu, batch, out_c, out_w*out_h, variance_delta_gpu);
-    	normalize_delta_gpu(x_gpu, mean_gpu, variance_gpu, mean_delta_gpu, variance_delta_gpu, batch, out_c, out_w*out_h, delta_gpu);
-    } else {
-        backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, this->n, out_w*out_h);
-    }
-    float *original_input = net->input_gpu;
+		fast_mean_delta_gpu(delta_gpu, variance_gpu, batch, out_c, out_w*out_h, mean_delta_gpu);
+		fast_variance_delta_gpu(x_gpu, delta_gpu, mean_gpu, variance_gpu, batch, out_c, out_w*out_h, variance_delta_gpu);
+		normalize_delta_gpu(x_gpu, mean_gpu, variance_gpu, mean_delta_gpu, variance_delta_gpu, batch, out_c, out_w*out_h, delta_gpu);
+	} else {
+		backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, this->n, out_w*out_h);
+	}
+	float *original_input = net->input_gpu;
 
-    int m = this->n;
-    int n = size*size*this->c;
-    int k = out_w*out_h;
+	int m = this->n;
+	int n = size*size*this->c;
+	int k = out_w*out_h;
 
-    int i;
-    for(i = 0; i < batch; ++i){
-        float *a = delta_gpu + i*m*k;
-        float *b = net->workspace;
-        float *c = weight_updates_gpu;
+	int i;
+	for(i = 0; i < batch; ++i){
+		float *a = delta_gpu + i*m*k;
+		float *b = net->workspace;
+		float *c = weight_updates_gpu;
 
-        float *im  = net->input_gpu+i*this->c*h*w;
-        float *imd = net->delta_gpu+i*this->c*h*w;
+		float *im  = net->input_gpu+i*this->c*h*w;
+		float *imd = net->delta_gpu+i*this->c*h*w;
 
-        im2col_gpu(im, this->c, h, w, size, stride, pad, b);
-        gemm_gpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
+		im2col_gpu(im, this->c, h, w, size, stride, pad, b);
+		gemm_gpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
 
-        if (net->delta_gpu) {
-            a = weights_gpu;
-            b = delta_gpu + i*m*k;
-            c = net->workspace;
-            if (size == 1) {
-                c = imd;
-            }
+		if (net->delta_gpu) {
+			a = weights_gpu;
+			b = delta_gpu + i*m*k;
+			c = net->workspace;
+			if (size == 1) {
+				c = imd;
+			}
 
-            gemm_gpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
+			gemm_gpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
-            if (size != 1) {
-                col2im_gpu(net->workspace, this->c, h, w, size, stride, pad, imd);
-            }
-        }
-    }
+			if (size != 1) {
+				col2im_gpu(net->workspace, this->c, h, w, size, stride, pad, imd);
+			}
+		}
+	}
 }
 
 void ConvolutionalLayer::update(Network* net)
@@ -444,6 +537,42 @@ void ConvolutionalLayer::update_gpu(Network* net)
 		axpy_gpu(n, learning_rate/batch, scale_updates_gpu, 1, scales_gpu, 1);
 		scal_gpu(n, momentum, scale_updates_gpu, 1);
 	}
+}
+
+void ConvolutionalLayer::pull() const
+{
+	cuda_pull_array(weights_gpu, weights, nweights);
+	cuda_pull_array(biases_gpu, biases, n);
+	cuda_pull_array(weight_updates_gpu, weight_updates, nweights);
+	cuda_pull_array(bias_updates_gpu, bias_updates, n);
+	if (batch_normalize) {
+		cuda_pull_array(scales_gpu, scales, n);
+		cuda_pull_array(rolling_mean_gpu, rolling_mean, n);
+		cuda_pull_array(rolling_variance_gpu, rolling_variance, n);
+	}
+}
+
+void ConvolutionalLayer::push() const
+{
+	cuda_push_array(weights_gpu, weights, nweights);
+	cuda_push_array(biases_gpu, biases, n);
+	cuda_push_array(weight_updates_gpu, weight_updates, nweights);
+	cuda_push_array(bias_updates_gpu, bias_updates, n);
+	if (batch_normalize) {
+		cuda_push_array(scales_gpu, scales, n);
+		cuda_push_array(rolling_mean_gpu, rolling_mean, n);
+		cuda_push_array(rolling_variance_gpu, rolling_variance, n);
+	}
+}
+
+int ConvolutionalLayer::get_out_height() const
+{
+    return (h + 2*pad - size) / stride + 1;
+}
+
+int ConvolutionalLayer::get_out_width() const
+{
+    return (w + 2*pad - size) / stride + 1;
 }
 
 }
