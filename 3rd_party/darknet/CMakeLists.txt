@@ -5,10 +5,6 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-if(WIN32)
-	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/windows)
-endif()
-
 file(GLOB_RECURSE libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 list(REMOVE_ITEM libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
