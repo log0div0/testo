@@ -3,7 +3,6 @@
 #include "../Network.hpp"
 
 extern "C" {
-#include "image.h"
 #include "cuda.h"
 }
 
@@ -71,7 +70,7 @@ void MaxPoolLayer::forward(Network* net)
             for(int i = 0; i < h; ++i){
                 for(int j = 0; j < w; ++j){
                     int out_index = j + w*(i + h*(k + in_c*b));
-                    float max = -FLT_MAX;
+                    float max = std::numeric_limits<float>::min();
                     int max_i = -1;
                     for(int n = 0; n < size; ++n){
                         for(int m = 0; m < size; ++m){
@@ -80,7 +79,7 @@ void MaxPoolLayer::forward(Network* net)
                             int index = cur_w + in_w*(cur_h + in_h*(k + b*in_c));
                             int valid = (cur_h >= 0 && cur_h < in_h &&
                                          cur_w >= 0 && cur_w < in_w);
-                            float val = (valid != 0) ? net->input[index] : -FLT_MAX;
+                            float val = (valid != 0) ? net->input[index] : std::numeric_limits<float>::min();
                             max_i = (val > max) ? index : max_i;
                             max   = (val > max) ? val   : max;
                         }

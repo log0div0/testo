@@ -24,17 +24,6 @@ typedef enum{
     LOGISTIC, RELU, RELIE, LINEAR, RAMP, TANH, PLSE, LEAKY, ELU, LOGGY, STAIR, HARDTAN, LHTAN, SELU
 } ACTIVATION;
 
-typedef enum{
-    PNG, BMP, TGA, JPG
-} IMTYPE;
-
-typedef struct {
-    int w;
-    int h;
-    int c;
-    float *data;
-} image;
-
 
 unsigned char *read_file(char *filename);
 
@@ -46,7 +35,6 @@ void fill_cpu(int N, float ALPHA, float * X, int INCX);
 void normalize_cpu(float *x, float *mean, float *variance, int batch, int filters, int spatial);
 void softmax(float *input, int n, float temp, int stride, float *output);
 
-int best_3d_shift_r(image a, image b, int min, int max);
 #ifdef GPU
 void axpy_gpu(int N, float ALPHA, float * X, int INCX, float * Y, int INCY);
 void fill_gpu(int N, float ALPHA, float * X, int INCX);
@@ -59,39 +47,6 @@ void cuda_pull_array(float *x_gpu, float *x, size_t n);
 void cuda_push_array(float *x_gpu, float *x, size_t n);
 
 #endif
-image get_label(image **characters, char *string, int size);
-void draw_label(image a, int r, int c, image label, const float *rgb);
-void save_image(image im, const char *name);
-void save_image_options(image im, const char *name, IMTYPE f, int quality);
-void grayscale_image_3c(image im);
-void normalize_image(image p);
-void rgbgr_image(image im);
-image load_image(char *filename);
-image make_image(int w, int h, int c);
-image resize_image(image im, int w, int h);
-void censor_image(image im, int dx, int dy, int w, int h);
-image letterbox_image(image im, int w, int h);
-image crop_image(image im, int dx, int dy, int w, int h);
-image center_crop_image(image im, int w, int h);
-image resize_min(image im, int min);
-image resize_max(image im, int max);
-image threshold_image(image im, float thresh);
-image mask_to_rgb(image mask);
-int show_image(image p, const char *name, int ms);
-image copy_image(image p);
-void draw_box_width(image a, int x1, int y1, int x2, int y2, int w, float r, float g, float b);
-void composite_3d(char *f1, char *f2, char *out, int delta);
-void constrain_image(image im);
-void flip_image(image a);
-image float_to_image(int w, int h, int c, float *data);
-void random_distort_image(image im, float hue, float saturation, float exposure);
-void fill_image(image m, float s);
-image grayscale_image(image im);
-void rotate_image_cw(image im, int times);
-double what_time_is_it_now();
-image rotate_image(image m, float rad);
-
-void free_image(image m);
 
 int find_int_arg(int argc, char **argv, char *arg, int def);
 float find_float_arg(int argc, char **argv, char *arg, float def);
