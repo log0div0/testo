@@ -14,8 +14,28 @@ using namespace inipp;
 
 namespace darknet {
 
-size_t ConvolutionalLayer::get_workspace_size() const {
-	return (size_t)out_h*out_w*size*size*in_c;
+#define TWO_PI 6.2831853071795864769252866f
+
+// From http://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+float rand_normal()
+{
+	static int haveSpare = 0;
+	static double rand1, rand2;
+
+	if(haveSpare)
+	{
+		haveSpare = 0;
+		return sqrt(rand1) * sin(rand2);
+	}
+
+	haveSpare = 1;
+
+	rand1 = rand() / ((double) RAND_MAX);
+	if(rand1 < 1e-100) rand1 = 1e-100;
+	rand1 = -2 * log(rand1);
+	rand2 = (rand() / ((double) RAND_MAX)) * TWO_PI;
+
+	return sqrt(rand1) * cos(rand2);
 }
 
 ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
@@ -213,6 +233,14 @@ void scale_bias(float *output, float *scales, int batch, int n, int size)
 			}
 		}
 	}
+}
+
+float sum_array(float *a, int n)
+{
+	int i;
+	float sum = 0;
+	for(i = 0; i < n; ++i) sum += a[i];
+	return sum;
 }
 
 void backward_bias(float *bias_updates, float *delta, int batch, int n, int size)
@@ -573,14 +601,18 @@ void ConvolutionalLayer::push() const
 
 #endif
 
+size_t ConvolutionalLayer::get_workspace_size() const {
+	return (size_t)out_h*out_w*size*size*in_c;
+}
+
 int ConvolutionalLayer::get_out_height() const
 {
-    return (in_h + 2*pad - size) / stride + 1;
+	return (in_h + 2*pad - size) / stride + 1;
 }
 
 int ConvolutionalLayer::get_out_width() const
 {
-    return (in_w + 2*pad - size) / stride + 1;
+	return (in_w + 2*pad - size) / stride + 1;
 }
 
 }

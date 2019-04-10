@@ -140,6 +140,16 @@ float thresh = 0.5f;
 int gpu = 0;
 #endif
 
+float mag_array(float *a, int n)
+{
+	int i;
+	float sum = 0;
+	for(i = 0; i < n; ++i){
+		sum += a[i]*a[i];
+	}
+	return sqrt(sum);
+}
+
 Box get_yolo_box(float *x, float anchor_w, float anchor_h, int index, int i, int j, int lw, int lh, int w, int h, int stride)
 {
 	Box b;

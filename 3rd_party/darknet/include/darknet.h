@@ -67,13 +67,10 @@ int sample_array(float *a, int n);
 int *random_index_order(int min, int max);
 float mse_array(float *a, int n);
 float variance_array(float *a, int n);
-float mag_array(float *a, int n);
 void scale_array(float *a, int n, float s);
 float mean_array(float *a, int n);
-float sum_array(float *a, int n);
 void normalize_array(float *a, int n);
 size_t rand_size_t();
-float rand_normal();
 float rand_uniform(float min, float max);
 
 #ifdef __cplusplus

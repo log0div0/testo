@@ -1,7 +1,6 @@
 int use_gpu = 0;
 
 #include "cuda.h"
-#include "utils.h"
 #include "blas.h"
 #include <assert.h>
 #include <stdlib.h>
