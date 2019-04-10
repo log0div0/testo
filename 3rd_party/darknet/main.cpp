@@ -494,7 +494,7 @@ int main(int argc, char **argv)
 				break;
 			case Predict:
 				if (!output_file.size()) {
-					output_file = "output";
+					output_file = "output.png";
 				}
 				predict();
 				break;

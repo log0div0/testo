@@ -21,16 +21,19 @@ MaxPoolLayer::MaxPoolLayer(const inisection& section,
 	in_w = w;
 	in_c = c;
 
-	stride = section.get_int("stride", 1);
-	size = section.get_int("size", stride);
-	pad = section.get_int("padding", size-1);
+	size_h = section.get_int("size_h", section.get_int("size", 2));
+    size_w = section.get_int("size_w", section.get_int("size", 2));
+    stride_h = section.get_int("stride_h", section.get_int("stride", size_h));
+    stride_w = section.get_int("stride_w", section.get_int("stride", size_w));
+	pad_h = section.get_int("pad_h", section.get_int("pad", size_h / 2));
+    pad_w = section.get_int("pad_w", section.get_int("pad", size_w / 2));
 
 	if(!(h && w && c)) {
 		throw std::runtime_error("Layer before maxpool layer must output image.");
 	}
 
-	out_w = (w + pad - size)/stride + 1;
-	out_h = (h + pad - size)/stride + 1;
+	out_w = (w + pad_w - size_w)/stride_w + 1;
+	out_h = (h + pad_h - size_h)/stride_h + 1;
 	out_c = c;
 	outputs = out_h * out_w * out_c;
 	int output_size = out_h * out_w * out_c * batch;
@@ -42,7 +45,7 @@ MaxPoolLayer::MaxPoolLayer(const inisection& section,
 	output_gpu  = cuda_make_array(output, output_size);
 	delta_gpu   = cuda_make_array(delta, output_size);
 #endif
-	fprintf(stderr, "max          %d x %d / %d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", size, size, stride, w, h, c, out_w, out_h, out_c);
+	fprintf(stderr, "max          %d x %d / %d x %d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", size_w, size_h, stride_w, stride_h, w, h, c, out_w, out_h, out_c);
 	workspace_size = 0;
 }
 
@@ -59,23 +62,23 @@ MaxPoolLayer::~MaxPoolLayer() {
 
 void MaxPoolLayer::forward(Network* net)
 {
-    int w_offset = -pad/2;
-    int h_offset = -pad/2;
+    int w_offset = -pad_w/2;
+    int h_offset = -pad_h/2;
 
     int h = out_h;
     int w = out_w;
 
-    for(int b = 0; b < batch; ++b){
-        for(int k = 0; k < in_c; ++k){
-            for(int i = 0; i < h; ++i){
-                for(int j = 0; j < w; ++j){
+    for (int b = 0; b < batch; ++b) {
+        for (int k = 0; k < in_c; ++k) {
+            for (int i = 0; i < h; ++i) {
+                for (int j = 0; j < w; ++j) {
                     int out_index = j + w*(i + h*(k + in_c*b));
                     float max = std::numeric_limits<float>::min();
                     int max_i = -1;
-                    for(int n = 0; n < size; ++n){
-                        for(int m = 0; m < size; ++m){
-                            int cur_h = h_offset + i*stride + n;
-                            int cur_w = w_offset + j*stride + m;
+                    for (int n = 0; n < size_h; ++n) {
+                        for (int m = 0; m < size_w; ++m) {
+                            int cur_h = h_offset + i*stride_h + n;
+                            int cur_w = w_offset + j*stride_w + m;
                             int index = cur_w + in_w*(cur_h + in_h*(k + b*in_c));
                             int valid = (cur_h >= 0 && cur_h < in_h &&
                                          cur_w >= 0 && cur_w < in_w);

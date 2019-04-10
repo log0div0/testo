@@ -34,8 +34,10 @@ padding=1
 activation=leaky
 
 [maxpool]
-size=2
-stride=2
+size_w=1
+size_h=2
+stride_w=1
+stride_h=2
 
 [convolutional]
 batch_normalize=1
@@ -44,6 +46,10 @@ size=3
 stride=1
 padding=1
 activation=leaky
+
+[maxpool]
+size=2
+stride=2
 
 ###########
 

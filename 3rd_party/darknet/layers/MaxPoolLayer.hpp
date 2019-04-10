@@ -29,9 +29,12 @@ struct MaxPoolLayer: Layer {
 	int in_w = 0;
 	int in_h = 0;
 	int in_c = 0;
-	int stride = 0;
-	int size = 0;
-	int pad = 0;
+	int stride_w = 0;
+	int stride_h = 0;
+	int size_w = 0;
+	int size_h = 0;
+	int pad_w = 0;
+	int pad_h = 0;
 
 	int* indexes = nullptr;
 
