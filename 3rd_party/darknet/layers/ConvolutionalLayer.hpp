@@ -69,6 +69,29 @@ private:
 
 	float* x = nullptr;
 	float* x_norm = nullptr;
+
+#ifdef GPU
+	float* weights_gpu = nullptr;
+	float* weight_updates_gpu = nullptr;
+
+	float* biases_gpu = nullptr;
+	float* bias_updates_gpu = nullptr;
+
+	float* scales_gpu = nullptr;
+	float* scale_updates_gpu = nullptr;
+
+	float* mean_gpu = nullptr;
+	float* variance_gpu = nullptr;
+
+	float* mean_delta_gpu = nullptr;
+	float* variance_delta_gpu = nullptr;
+
+	float* rolling_mean_gpu = nullptr;
+	float* rolling_variance_gpu = nullptr;
+
+	float* x_gpu = nullptr;
+	float* x_norm_gpu = nullptr;
+#endif
 };
 
 }

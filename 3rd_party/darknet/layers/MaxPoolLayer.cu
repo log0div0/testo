@@ -89,20 +89,17 @@ __global__ void backward_maxpool_layer_kernel(int n, int in_h, int in_w, int in_
 
 void MaxPoolLayer::forward_gpu(Network* net)
 {
-    int h = out_h;
-    int w = out_w;
+    size_t n = out_h*out_w*in_c*batch;
 
-    size_t n = h*w*c*batch;
-
-    forward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, this->h, this->w, c, stride, size, pad, net->input_gpu, output_gpu, indexes_gpu);
+    forward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, in_h, in_w, in_c, stride, size, pad, net->input_gpu, output_gpu, indexes_gpu);
     check_error(cudaPeekAtLastError());
 }
 
 void MaxPoolLayer::backward_gpu(Network* net)
 {
-    size_t n = h*w*c*batch;
+    size_t n = in_h*in_w*in_c*batch;
 
-    backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, h, w, c, stride, size, pad, delta_gpu, net->delta_gpu, indexes_gpu);
+    backward_maxpool_layer_kernel<<<cuda_gridsize(n), BLOCK>>>(n, in_h, in_w, in_c, stride, size, pad, delta_gpu, net->delta_gpu, indexes_gpu);
     check_error(cudaPeekAtLastError());
 }
 

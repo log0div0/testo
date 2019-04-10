@@ -34,6 +34,10 @@ struct MaxPoolLayer: Layer {
 	int pad = 0;
 
 	int* indexes = nullptr;
+
+#ifdef GPU
+	int* indexes_gpu = nullptr;
+#endif
 };
 
 }

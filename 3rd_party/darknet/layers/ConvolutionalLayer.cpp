@@ -87,27 +87,27 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 		weights_gpu = cuda_make_array(weights, nweights);
 		weight_updates_gpu = cuda_make_array(weight_updates, nweights);
 
-		biases_gpu = cuda_make_array(biases, n);
-		bias_updates_gpu = cuda_make_array(bias_updates, n);
+		biases_gpu = cuda_make_array(biases, nbiases);
+		bias_updates_gpu = cuda_make_array(bias_updates, nbiases);
 
-		delta_gpu = cuda_make_array(delta, batch*out_h*out_w*n);
-		output_gpu = cuda_make_array(output, batch*out_h*out_w*n);
+		delta_gpu = cuda_make_array(delta, batch*out_h*out_w*out_c);
+		output_gpu = cuda_make_array(output, batch*out_h*out_w*out_c);
 
 		if (batch_normalize) {
-			mean_gpu = cuda_make_array(mean, n);
-			variance_gpu = cuda_make_array(variance, n);
+			mean_gpu = cuda_make_array(mean, out_c);
+			variance_gpu = cuda_make_array(variance, out_c);
 
-			rolling_mean_gpu = cuda_make_array(mean, n);
-			rolling_variance_gpu = cuda_make_array(variance, n);
+			rolling_mean_gpu = cuda_make_array(mean, out_c);
+			rolling_variance_gpu = cuda_make_array(variance, out_c);
 
-			mean_delta_gpu = cuda_make_array(mean, n);
-			variance_delta_gpu = cuda_make_array(variance, n);
+			mean_delta_gpu = cuda_make_array(mean, out_c);
+			variance_delta_gpu = cuda_make_array(variance, out_c);
 
-			scales_gpu = cuda_make_array(scales, n);
-			scale_updates_gpu = cuda_make_array(scale_updates, n);
+			scales_gpu = cuda_make_array(scales, out_c);
+			scale_updates_gpu = cuda_make_array(scale_updates, out_c);
 
-			x_gpu = cuda_make_array(output, batch*out_h*out_w*n);
-			x_norm_gpu = cuda_make_array(output, batch*out_h*out_w*n);
+			x_gpu = cuda_make_array(output, batch*out_h*out_w*out_c);
+			x_norm_gpu = cuda_make_array(output, batch*out_h*out_w*out_c);
 		}
 	}
 #endif
@@ -277,19 +277,19 @@ void ConvolutionalLayer::forward_gpu(Network* net)
 {
 	fill_gpu(outputs*batch, 0, output_gpu, 1);
 
-	int m = this->n;
-	int k = size*size*this->c;
+	int m = out_c;
+	int k = size*size*in_c;
 	int n = out_w*out_h;
 	for (int i = 0; i < batch; ++i) {
 		float *a = weights_gpu;
 		float *b = net->workspace;
 		float *c = output_gpu + i*n*m;
-		float *im = net->input_gpu + i*this->c*h*w;
+		float *im = net->input_gpu + i*in_c*in_h*in_w;
 
 		if (size == 1){
 			b = im;
 		} else {
-			im2col_gpu(im, this->c, h, w, size, stride, pad, b);
+			im2col_gpu(im, in_c, in_h, in_w, size, stride, pad, b);
 		}
 		gemm_gpu(0,0,m,n,k,1,a,k,b,n,1,c,n);
 	}
@@ -317,7 +317,7 @@ void ConvolutionalLayer::forward_gpu(Network* net)
 			add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
 		}
 	} else {
-		add_bias_gpu(output_gpu, biases_gpu, batch, this->n, out_w*out_h);
+		add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
 	}
 
 	activate_array_gpu(output_gpu, outputs*batch, activation);
@@ -464,12 +464,12 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 		fast_variance_delta_gpu(x_gpu, delta_gpu, mean_gpu, variance_gpu, batch, out_c, out_w*out_h, variance_delta_gpu);
 		normalize_delta_gpu(x_gpu, mean_gpu, variance_gpu, mean_delta_gpu, variance_delta_gpu, batch, out_c, out_w*out_h, delta_gpu);
 	} else {
-		backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, this->n, out_w*out_h);
+		backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, out_c, out_w*out_h);
 	}
 	float *original_input = net->input_gpu;
 
-	int m = this->n;
-	int n = size*size*this->c;
+	int m = out_c;
+	int n = size*size*in_c;
 	int k = out_w*out_h;
 
 	int i;
@@ -478,10 +478,10 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 		float *b = net->workspace;
 		float *c = weight_updates_gpu;
 
-		float *im  = net->input_gpu+i*this->c*h*w;
-		float *imd = net->delta_gpu+i*this->c*h*w;
+		float *im  = net->input_gpu+i*in_c*in_h*in_w;
+		float *imd = net->delta_gpu+i*in_c*in_h*in_w;
 
-		im2col_gpu(im, this->c, h, w, size, stride, pad, b);
+		im2col_gpu(im, in_c, in_h, in_w, size, stride, pad, b);
 		gemm_gpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
 
 		if (net->delta_gpu) {
@@ -495,7 +495,7 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 			gemm_gpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
 			if (size != 1) {
-				col2im_gpu(net->workspace, this->c, h, w, size, stride, pad, imd);
+				col2im_gpu(net->workspace, in_c, in_h, in_w, size, stride, pad, imd);
 			}
 		}
 	}
@@ -536,38 +536,38 @@ void ConvolutionalLayer::update_gpu(Network* net)
 	axpy_gpu(nweights, learning_rate/batch, weight_updates_gpu, 1, weights_gpu, 1);
 	scal_gpu(nweights, momentum, weight_updates_gpu, 1);
 
-	axpy_gpu(n, learning_rate/batch, bias_updates_gpu, 1, biases_gpu, 1);
-	scal_gpu(n, momentum, bias_updates_gpu, 1);
+	axpy_gpu(nbiases, learning_rate/batch, bias_updates_gpu, 1, biases_gpu, 1);
+	scal_gpu(nbiases, momentum, bias_updates_gpu, 1);
 
 	if (scales_gpu) {
-		axpy_gpu(n, learning_rate/batch, scale_updates_gpu, 1, scales_gpu, 1);
-		scal_gpu(n, momentum, scale_updates_gpu, 1);
+		axpy_gpu(out_c, learning_rate/batch, scale_updates_gpu, 1, scales_gpu, 1);
+		scal_gpu(out_c, momentum, scale_updates_gpu, 1);
 	}
 }
 
 void ConvolutionalLayer::pull() const
 {
 	cuda_pull_array(weights_gpu, weights, nweights);
-	cuda_pull_array(biases_gpu, biases, n);
+	cuda_pull_array(biases_gpu, biases, out_c);
 	cuda_pull_array(weight_updates_gpu, weight_updates, nweights);
-	cuda_pull_array(bias_updates_gpu, bias_updates, n);
+	cuda_pull_array(bias_updates_gpu, bias_updates, out_c);
 	if (batch_normalize) {
-		cuda_pull_array(scales_gpu, scales, n);
-		cuda_pull_array(rolling_mean_gpu, rolling_mean, n);
-		cuda_pull_array(rolling_variance_gpu, rolling_variance, n);
+		cuda_pull_array(scales_gpu, scales, out_c);
+		cuda_pull_array(rolling_mean_gpu, rolling_mean, out_c);
+		cuda_pull_array(rolling_variance_gpu, rolling_variance, out_c);
 	}
 }
 
 void ConvolutionalLayer::push() const
 {
 	cuda_push_array(weights_gpu, weights, nweights);
-	cuda_push_array(biases_gpu, biases, n);
+	cuda_push_array(biases_gpu, biases, out_c);
 	cuda_push_array(weight_updates_gpu, weight_updates, nweights);
-	cuda_push_array(bias_updates_gpu, bias_updates, n);
+	cuda_push_array(bias_updates_gpu, bias_updates, out_c);
 	if (batch_normalize) {
-		cuda_push_array(scales_gpu, scales, n);
-		cuda_push_array(rolling_mean_gpu, rolling_mean, n);
-		cuda_push_array(rolling_variance_gpu, rolling_variance, n);
+		cuda_push_array(scales_gpu, scales, out_c);
+		cuda_push_array(rolling_mean_gpu, rolling_mean, out_c);
+		cuda_push_array(rolling_variance_gpu, rolling_variance, out_c);
 	}
 }
 
