@@ -28,11 +28,17 @@ struct ConvolutionalLayer: Layer {
 #endif
 
 private:
+	void im2col_cpu(float* data_im, float* data_col);
+	void col2im_cpu(float* data_col, float* data_im);
+
 	size_t get_workspace_size() const;
 	int get_out_height() const;
 	int get_out_width() const;
 
 #ifdef GPU
+	void im2col_gpu(float* data_im, float* data_col);
+	void col2im_gpu(float* data_col, float* data_im);
+
 	void pull() const;
 	void push() const;
 #endif

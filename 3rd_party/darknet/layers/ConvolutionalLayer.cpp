@@ -3,8 +3,6 @@
 #include "../Network.hpp"
 
 extern "C" {
-#include <im2col.h>
-#include <col2im.h>
 #include <blas.h>
 #include <gemm.h>
 #include <activations.h>
@@ -269,7 +267,7 @@ void ConvolutionalLayer::forward(Network* net)
 		if (size == 1) {
 			b = im;
 		} else {
-			im2col_cpu(im, in_c, in_h, in_w, size, stride, pad, b);
+			im2col_cpu(im, b);
 		}
 		gemm(0,0,m,n,k,1,a,k,b,n,1,c,n);
 	}
@@ -317,7 +315,7 @@ void ConvolutionalLayer::forward_gpu(Network* net)
 		if (size == 1){
 			b = im;
 		} else {
-			im2col_gpu(im, in_c, in_h, in_w, size, stride, pad, b);
+			im2col_gpu(im, b);
 		}
 		gemm_gpu(0,0,m,n,k,1,a,k,b,n,1,c,n);
 	}
@@ -449,8 +447,7 @@ void ConvolutionalLayer::backward(Network* net)
 		if(size == 1){
 			b = im;
 		} else {
-			im2col_cpu(im, in_c, in_h, in_w,
-					size, stride, pad, b);
+			im2col_cpu(im, b);
 		}
 
 		gemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
@@ -466,7 +463,7 @@ void ConvolutionalLayer::backward(Network* net)
 			gemm(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
 			if (size != 1) {
-				col2im_cpu(net->workspace, in_c, in_h, in_w, size, stride, pad, imd);
+				col2im_cpu(net->workspace, imd);
 			}
 		}
 	}
@@ -509,7 +506,7 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 		float *im  = net->input_gpu+i*in_c*in_h*in_w;
 		float *imd = net->delta_gpu+i*in_c*in_h*in_w;
 
-		im2col_gpu(im, in_c, in_h, in_w, size, stride, pad, b);
+		im2col_gpu(im, b);
 		gemm_gpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
 
 		if (net->delta_gpu) {
@@ -523,7 +520,7 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 			gemm_gpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
 			if (size != 1) {
-				col2im_gpu(net->workspace, in_c, in_h, in_w, size, stride, pad, imd);
+				col2im_gpu(net->workspace, imd);
 			}
 		}
 	}
@@ -590,6 +587,73 @@ void ConvolutionalLayer::push() const
 }
 
 #endif
+
+float im2col_get_pixel(float *im, int height, int width, int channels,
+						int row, int col, int channel, int pad)
+{
+	row -= pad;
+	col -= pad;
+
+	if (row < 0 || col < 0 ||
+		row >= height || col >= width) return 0;
+	return im[col + width*(row + height*channel)];
+}
+
+void ConvolutionalLayer::im2col_cpu(float* data_im, float* data_col)
+{
+	int height_col = (in_h + 2*pad - size) / stride + 1;
+	int width_col = (in_w + 2*pad - size) / stride + 1;
+
+	int channels_col = in_c * size * size;
+	for (int c = 0; c < channels_col; ++c) {
+		int w_offset = c % size;
+		int h_offset = (c / size) % size;
+		int c_im = c / size / size;
+		for (int h = 0; h < height_col; ++h) {
+			for (int w = 0; w < width_col; ++w) {
+				int im_row = h_offset + h * stride;
+				int im_col = w_offset + w * stride;
+				int col_index = (c * height_col + h) * width_col + w;
+				data_col[col_index] = im2col_get_pixel(data_im, in_h, in_w, in_c,
+						im_row, im_col, c_im, pad);
+			}
+		}
+	}
+}
+
+void col2im_add_pixel(float *im, int height, int width, int channels,
+						int row, int col, int channel, int pad, float val)
+{
+	row -= pad;
+	col -= pad;
+
+	if (row < 0 || col < 0 ||
+		row >= height || col >= width) return;
+	im[col + width*(row + height*channel)] += val;
+}
+
+void ConvolutionalLayer::col2im_cpu(float* data_col, float* data_im)
+{
+	int height_col = (in_h + 2*pad - size) / stride + 1;
+	int width_col = (in_w + 2*pad - size) / stride + 1;
+
+	int channels_col = in_c * size * size;
+	for (int c = 0; c < channels_col; ++c) {
+		int w_offset = c % size;
+		int h_offset = (c / size) % size;
+		int c_im = c / size / size;
+		for (int h = 0; h < height_col; ++h) {
+			for (int w = 0; w < width_col; ++w) {
+				int im_row = h_offset + h * stride;
+				int im_col = w_offset + w * stride;
+				int col_index = (c * height_col + h) * width_col + w;
+				double val = data_col[col_index];
+				col2im_add_pixel(data_im, in_h, in_w, in_c,
+						im_row, im_col, c_im, pad, val);
+			}
+		}
+	}
+}
 
 size_t ConvolutionalLayer::get_workspace_size() const {
 	return (size_t)out_h*out_w*size*size*in_c;
