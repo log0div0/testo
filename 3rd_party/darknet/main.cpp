@@ -135,6 +135,9 @@ std::string weights_file;
 std::string image_file;
 std::string output_file;
 int batch_size = 32;
+float learning_rate = 0.0001;
+float momentum = 0.9;
+float decay = 0.0005;
 float thresh = 0.5f;
 #ifdef GPU
 int gpu = 0;
@@ -271,7 +274,7 @@ void train()
 		}
 
 		network.backward();
-		network.update();
+		network.update(learning_rate, momentum, decay);
 
 		if (avg_loss < 0) {
 			avg_loss = loss;
@@ -456,7 +459,10 @@ int main(int argc, char **argv)
 				value("dataset", dataset_file),
 				opt_value("weights", weights_file),
 				option("-o", "--output") & value("output weights", output_file),
-				option("-b", "--batch") & value("batch size", batch_size)
+				option("-b", "--batch") & value("batch size", batch_size),
+				option("-r", "--rate") & value("learning rate", learning_rate),
+				option("-d", "--decay") & value("decay", decay),
+				option("-m", "--momentum") & value("momentum", momentum)
 			)
 			| (
 				command("predict").set(mode, Predict),

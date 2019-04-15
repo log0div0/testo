@@ -19,11 +19,11 @@ struct MaxPoolLayer: Layer {
 
 	virtual void forward(Network* network) override;
 	virtual void backward(Network* network) override;
-	virtual void update(Network* network) override {};
+	virtual void update(Network* network, float learning_rate, float momentum, float decay) override {};
 #ifdef GPU
 	virtual void forward_gpu(Network* network) override;
 	virtual void backward_gpu(Network* network) override;
-	virtual void update_gpu(Network* network) override {};
+	virtual void update_gpu(Network* network, float learning_rate, float momentum, float decay) override {};
 #endif
 
 	int in_w = 0;

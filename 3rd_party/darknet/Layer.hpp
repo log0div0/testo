@@ -19,11 +19,11 @@ struct Layer {
 
 	virtual void forward(Network* network) = 0;
 	virtual void backward(Network* network) = 0;
-	virtual void update(Network* network) = 0;
+	virtual void update(Network* network, float learning_rate, float momentum, float decay) = 0;
 #ifdef GPU
 	virtual void forward_gpu(Network* network) = 0;
 	virtual void backward_gpu(Network* network) = 0;
-	virtual void update_gpu(Network* network) = 0;
+	virtual void update_gpu(Network* network, float learning_rate, float momentum, float decay) = 0;
 #endif
 
 	int out_w = 0;

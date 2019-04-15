@@ -531,13 +531,8 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 
 #endif
 
-void ConvolutionalLayer::update(Network* net)
+void ConvolutionalLayer::update(Network* net, float learning_rate, float momentum, float decay)
 {
-	float learning_rate = net->learning_rate;
-	float momentum = net->momentum;
-	float decay = net->decay;
-	int batch = net->batch;
-
 	axpy_cpu(out_c, learning_rate/batch, bias_updates, 1, biases, 1);
 	scal_cpu(out_c, momentum, bias_updates, 1);
 
@@ -553,13 +548,8 @@ void ConvolutionalLayer::update(Network* net)
 
 #ifdef GPU
 
-void ConvolutionalLayer::update_gpu(Network* net)
+void ConvolutionalLayer::update_gpu(Network* net, float learning_rate, float momentum, float decay)
 {
-	float learning_rate = net->learning_rate;
-	float momentum = net->momentum;
-	float decay = net->decay;
-	int batch = net->batch;
-
 	axpy_gpu(nweights, -decay*batch, weights_gpu, 1, weight_updates_gpu, 1);
 	axpy_gpu(nweights, learning_rate/batch, weight_updates_gpu, 1, weights_gpu, 1);
 	scal_gpu(nweights, momentum, weight_updates_gpu, 1);

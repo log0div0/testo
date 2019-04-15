@@ -1,8 +1,4 @@
 
-momentum=0.9
-decay=0.0005
-learning_rate=0.0001
-
 [convolutional]
 batch_normalize=1
 filters=4

@@ -29,9 +29,6 @@ Network::Network(const std::string& path,
 	inifile ini(file);
 
 	batch = batch_;
-	learning_rate = ini.get_float("learning_rate", .001);
-	momentum = ini.get_float("momentum", .9);
-	decay = ini.get_float("decay", .0001);
 	h = h_;
 	w = w_;
 	c = c_;
@@ -213,18 +210,18 @@ void Network::backward() {
 #endif
 }
 
-void Network::update() {
+void Network::update(float learning_rate, float momentum, float decay) {
 #ifdef GPU
 	if (use_gpu) {
 		for (auto& l: layers) {
-			l->update_gpu(this);
+			l->update_gpu(this, learning_rate, momentum, decay);
 		}
 	}
 	else
 #endif
 	{
 		for (auto& l: layers) {
-			l->update(this);
+			l->update(this, learning_rate, momentum, decay);
 		}
 	}
 }

@@ -25,20 +25,14 @@ struct Network {
 
 	void forward();
 	void backward();
-	void update();
+	void update(float learning_rate, float momentum, float decay);
 
 	std::vector<std::unique_ptr<Layer>> layers;
 
 	int batch = 0;
-
-	float learning_rate = 0;
-	float momentum = 0;
-	float decay = 0;
-
+	int h = 0, w = 0, c = 0;
 	int inputs = 0;
 	int outputs = 0;
-	int h = 0, w = 0, c = 0;
-
 
 	float *input = nullptr;
 	float *delta = nullptr;
