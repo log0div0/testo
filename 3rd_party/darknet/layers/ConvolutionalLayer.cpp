@@ -4,7 +4,6 @@
 
 extern "C" {
 #include <blas.h>
-#include <gemm.h>
 #include <activations.h>
 }
 
@@ -269,7 +268,7 @@ void ConvolutionalLayer::forward(Network* net)
 		} else {
 			im2col_cpu(im, b);
 		}
-		gemm(0,0,m,n,k,1,a,k,b,n,1,c,n);
+		gemm_cpu(0,0,m,n,k,1,a,k,b,n,1,c,n);
 	}
 
 	if (batch_normalize) {
@@ -450,7 +449,7 @@ void ConvolutionalLayer::backward(Network* net)
 			im2col_cpu(im, b);
 		}
 
-		gemm(0,1,m,n,k,1,a,k,b,k,1,c,n);
+		gemm_cpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
 
 		if (net->delta) {
 			a = weights;
@@ -460,7 +459,7 @@ void ConvolutionalLayer::backward(Network* net)
 				c = imd;
 			}
 
-			gemm(1,0,n,k,m,1,a,n,b,k,0,c,k);
+			gemm_cpu(1,0,n,k,m,1,a,n,b,k,0,c,k);
 
 			if (size != 1) {
 				col2im_cpu(net->workspace, imd);
