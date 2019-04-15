@@ -123,7 +123,6 @@ struct Dataset {
 		return result;
 	}
 
-private:
 	size_t item_count;
 	size_t image_size;
 	size_t image_width, image_height, image_channels;
@@ -135,6 +134,7 @@ std::string dataset_file;
 std::string weights_file;
 std::string image_file;
 std::string output_file;
+int batch_size = 32;
 float thresh = 0.5f;
 #ifdef GPU
 int gpu = 0;
@@ -209,13 +209,13 @@ void train()
 {
 	signal(SIGINT, sig_handler);
 
-	Network network(network_file);
+	Dataset dataset(dataset_file);
+
+	Network network(network_file, batch_size, dataset.image_width, dataset.image_height, dataset.image_channels);
 	if (weights_file.size()) {
 		network.load_weights(weights_file);
 	}
 	network.train = 1;
-
-	Dataset dataset(dataset_file);
 
 	float avg_loss = -1;
 
@@ -370,11 +370,11 @@ struct RectSet: std::list<Rect> {
 
 void predict()
 {
-	Network network(network_file);
+	Image image = Image(image_file);
+
+	Network network(network_file, 1, image.w, image.h, image.c);
 	network.load_weights(weights_file);
 	network.train = 0;
-
-	Image image = Image(image_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
 
@@ -455,7 +455,8 @@ int main(int argc, char **argv)
 				value("network", network_file),
 				value("dataset", dataset_file),
 				opt_value("weights", weights_file),
-				option("-o", "--output") & value("output weights", output_file)
+				option("-o", "--output") & value("output weights", output_file),
+				option("-b", "--batch") & value("batch size", batch_size)
 			)
 			| (
 				command("predict").set(mode, Predict),

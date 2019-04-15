@@ -19,7 +19,8 @@ struct size_params {
 	int c;
 };
 
-Network::Network(const std::string& path)
+Network::Network(const std::string& path,
+	int batch_, int w_, int h_, int c_)
 {
 	std::ifstream file(path);
 	if (!file.is_open()) {
@@ -27,13 +28,13 @@ Network::Network(const std::string& path)
 	}
 	inifile ini(file);
 
-	batch = ini.get_int("batch", 1);
+	batch = batch_;
 	learning_rate = ini.get_float("learning_rate", .001);
 	momentum = ini.get_float("momentum", .9);
 	decay = ini.get_float("decay", .0001);
-	h = ini.get_int("height", 0);
-	w = ini.get_int("width", 0);
-	c = ini.get_int("channels", 0);
+	h = h_;
+	w = w_;
+	c = c_;
 	inputs = h * w * c;
 
 	if (!inputs && !(h && w && c)) {

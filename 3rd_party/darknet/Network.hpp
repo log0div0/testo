@@ -10,7 +10,8 @@
 namespace darknet {
 
 struct Network {
-	Network(const std::string& config_file_path);
+	Network(const std::string& config_file_path,
+		int batch_, int w_, int h_, int c_);
 	~Network();
 
 	Network(const Network&) = delete;
