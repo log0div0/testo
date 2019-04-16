@@ -153,52 +153,52 @@ float mag_array(float *a, int n)
 	return sqrt(sum);
 }
 
-Box get_yolo_box(float *x, float anchor_w, float anchor_h, int index, int i, int j, int lw, int lh, int w, int h, int stride)
-{
-	Box b;
-	b.x = (i + logistic_activate(x[index + 0*stride])) / lw;
-	b.y = (j + logistic_activate(x[index + 1*stride])) / lh;
-	b.w = exp(x[index + 2*stride]) * anchor_w   / w;
-	b.h = exp(x[index + 3*stride]) * anchor_h / h;
-	return b;
-}
+float anchor_w = 8;
+float anchor_h = 16;
 
-float delta_yolo_box(const Box& truth, float *x, float anchor_w, float anchor_h, int index, int i, int j, int lw, int lh, int w, int h, float *delta, float scale, int stride)
+float delta_yolo_box(Layer& l, const Box& truth, int index, int i, int j, int w, int h)
 {
-	Box pred = get_yolo_box(x, anchor_w, anchor_h, index, i, j, lw, lh, w, h, stride);
+	float scale = 2-truth.w*truth.h;
+	int stride = l.out_w*l.out_h;
+
+	Box pred = {};
+	pred.x = (i + logistic_activate(l.output[index + 0*stride])) / l.out_w;
+	pred.y = (j + logistic_activate(l.output[index + 1*stride])) / l.out_h;
+	pred.w = exp(l.output[index + 2*stride]) * anchor_w / w;
+	pred.h = exp(l.output[index + 3*stride]) * anchor_h / h;
+
 	float iou = pred.uio(truth);
 
-	float tx = (truth.x*lw - i);
-	float ty = (truth.y*lh - j);
+	float tx = (truth.x*l.out_w - i);
+	float ty = (truth.y*l.out_h - j);
 	float tw = log(truth.w*w / anchor_w);
 	float th = log(truth.h*h / anchor_h);
 
-	delta[index + 0*stride] = scale * (tx - logistic_activate(x[index + 0*stride]));
-	delta[index + 1*stride] = scale * (ty - logistic_activate(x[index + 1*stride]));
-	delta[index + 2*stride] = scale * (tw - x[index + 2*stride]);
-	delta[index + 3*stride] = scale * (th - x[index + 3*stride]);
+	l.delta[index + 0*stride] = scale * (tx - logistic_activate(l.output[index + 0*stride]));
+	l.delta[index + 1*stride] = scale * (ty - logistic_activate(l.output[index + 1*stride]));
+	l.delta[index + 2*stride] = scale * (tw - l.output[index + 2*stride]);
+	l.delta[index + 3*stride] = scale * (th - l.output[index + 3*stride]);
 	return iou;
 }
 
 
-void delta_yolo_class(float *output, float *delta, int index, int class_, int classes, int stride, float *avg_cat)
+float delta_yolo_class(Layer& l, int index, int class_, int classes)
 {
-	int n;
-	for(n = 0; n < classes; ++n){
-		delta[index + stride*n] = ((n == class_)?1 : 0) - logistic_activate(output[index + stride*n]);
-		if(n == class_ && avg_cat) *avg_cat += logistic_activate(output[index + stride*n]);
+	float result = 0;
+	int stride = l.out_w*l.out_h;
+	for(int n = 0; n < classes; ++n){
+		l.delta[index + stride*n] = ((n == class_)?1 : 0) - logistic_activate(l.output[index + stride*n]);
+		if (n == class_) {
+			result += logistic_activate(l.output[index + stride*n]);
+		}
 	}
+	return result;
 }
 
-int entry_index(Layer& l, int batch, int location, int entry, int classes)
+int entry_index(Layer& l, int batch, int location, int entry)
 {
-	int n =   location / (l.out_w*l.out_h);
-	int loc = location % (l.out_w*l.out_h);
-	return batch*l.outputs + n*l.out_w*l.out_h*(4+classes+1) + entry*l.out_w*l.out_h + loc;
+	return batch*l.outputs + entry*l.out_w*l.out_h + location;
 }
-
-float anchor_w = 8;
-float anchor_h = 16;
 
 bool stop_training = false;
 
@@ -242,7 +242,7 @@ void train()
 				auto& label = labels.at(b);
 				for (int j = 0; j < l.out_h; ++j) {
 					for (int i = 0; i < l.out_w; ++i) {
-						int obj_index = entry_index(l, b, j*l.out_w + i, 4, classes);
+						int obj_index = entry_index(l, b, j*l.out_w + i, 4);
 						l.delta[obj_index] = 0 - logistic_activate(l.output[obj_index]);
 					}
 				}
@@ -251,16 +251,16 @@ void train()
 					int i = (truth.x * l.out_w);
 					int j = (truth.y * l.out_h);
 
-					int box_index = entry_index(l, b, j*l.out_w + i, 0, classes);
-					float iou = delta_yolo_box(truth, l.output, anchor_w, anchor_h, box_index, i, j, l.out_w, l.out_h, network.w, network.h, l.delta, (2-truth.w*truth.h), l.out_w*l.out_h);
+					int box_index = entry_index(l, b, j*l.out_w + i, 0);
+					float iou = delta_yolo_box(l, truth, box_index, i, j, network.w, network.h);
 
-					int obj_index = entry_index(l, b, j*l.out_w + i, 4, classes);
+					int obj_index = entry_index(l, b, j*l.out_w + i, 4);
 					avg_obj += logistic_activate(l.output[obj_index]);
 					l.delta[obj_index] = 1 - logistic_activate(l.output[obj_index]);
 
 					if (classes) {
-						int class_index = entry_index(l, b, j*l.out_w + i, 4 + 1, classes);
-						delta_yolo_class(l.output, l.delta, class_index, truth.class_id, classes, l.out_w*l.out_h, &avg_cat);
+						int class_index = entry_index(l, b, j*l.out_w + i, 4 + 1);
+						avg_cat += delta_yolo_class(l, class_index, truth.class_id, classes);
 					}
 
 					++count;
