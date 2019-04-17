@@ -155,6 +155,7 @@ float mag_array(float *a, int n)
 
 float anchor_w = 8;
 float anchor_h = 16;
+std::string classes = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)";
 
 float delta_yolo_box(Layer& l, const Box& truth, int index, int i, int j, int w, int h)
 {
@@ -182,11 +183,11 @@ float delta_yolo_box(Layer& l, const Box& truth, int index, int i, int j, int w,
 }
 
 
-float delta_yolo_class(Layer& l, int index, int class_, int classes)
+float delta_yolo_class(Layer& l, int index, int class_)
 {
 	float result = 0;
 	int stride = l.out_w*l.out_h;
-	for(int n = 0; n < classes; ++n){
+	for(int n = 0; n < classes.size(); ++n){
 		l.delta[index + stride*n] = ((n == class_)?1 : 0) - logistic_activate(l.output[index + stride*n]);
 		if (n == class_) {
 			result += logistic_activate(l.output[index + stride*n]);
@@ -228,7 +229,6 @@ void train()
 		network.forward();
 
 		float loss = 0;
-		int classes = 0;
 
 		{
 			float avg_iou = 0;
@@ -258,10 +258,8 @@ void train()
 					avg_obj += logistic_activate(l.output[obj_index]);
 					l.delta[obj_index] = 1 - logistic_activate(l.output[obj_index]);
 
-					if (classes) {
-						int class_index = entry_index(l, b, j*l.out_w + i, 4 + 1);
-						avg_cat += delta_yolo_class(l, class_index, truth.class_id, classes);
-					}
+					int class_index = entry_index(l, b, j*l.out_w + i, 4 + 1);
+					avg_cat += delta_yolo_class(l, class_index, truth.class_id);
 
 					++count;
 					if(iou > .5) recall += 1;
@@ -289,13 +287,13 @@ void train()
 }
 
 struct Rect {
-	uint16_t left = 0, top = 0, right = 0, bottom = 0;
+	int32_t left = 0, top = 0, right = 0, bottom = 0;
 
 	float iou(const Rect& other) const {
 		return float((*this & other).area()) / (*this | other).area();
 	}
 
-	uint16_t area() const {
+	int32_t area() const {
 		return (right - left) * (bottom - top);
 	}
 
@@ -336,11 +334,11 @@ struct Rect {
 	}
 	Rect& operator&=(const Rect& other);
 
-	uint16_t width() const {
+	int32_t width() const {
 		return right - left;
 	}
 
-	uint16_t height() const {
+	int32_t height() const {
 		return bottom - top;
 	}
 };
