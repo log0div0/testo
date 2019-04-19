@@ -134,11 +134,11 @@ std::string dataset_file;
 std::string weights_file;
 std::string image_file;
 std::string output_file;
+std::string query;
 int batch_size = 32;
 float learning_rate = 0.0001;
 float momentum = 0.9;
 float decay = 0.0005;
-float thresh = 0.5f;
 #ifdef GPU
 int gpu = 0;
 #endif
@@ -343,31 +343,59 @@ struct Rect {
 	}
 };
 
-struct RectSet: std::list<Rect> {
-	void add(const Rect& rect)
-	{
-		Rect rect_ext = rect;
-		if (rect_ext.left >= 16) {
-			rect_ext.left -= 16;
+bool find_substr(const Image& image, const Layer& l, int left, int top, std::string substr, std::vector<Rect>& rects) {
+	int right = left;
+	int bottom = top;
+	while (true) {
+		if (!substr.size()) {
+			return true;
+		}
+		right += 3;
+		bottom += 2;
+		if (substr.at(0) != ' ') {
+			break;
 		} else {
-			rect_ext.left = 0;
+			substr = substr.substr(1);
 		}
-		for (auto it = begin(); it != end(); ++it) {
-			Rect intersectoin = *it & rect_ext;
-			if (intersectoin.area()) {
-				if ((intersectoin.height() * 2 > rect.height()) || (intersectoin.height() * 2 > it->height())) {
-					Rect union_ = *it | rect;
-					erase(it);
-					add(union_);
-					return;
-
-				}
-			}
-		}
-
-		push_back(rect);
 	}
-};
+	size_t dimension_size = l.out_w * l.out_h;
+	size_t class_id = classes.find(substr.at(0));
+	if (class_id == std::string::npos) {
+		throw std::runtime_error("Unsupported symbol: " + substr.at(0));
+	}
+	for (int x = left; (x < right) && (x < l.out_w); ++x) {
+		for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
+			int i = y * l.out_w + x;
+
+			float objectness = logistic_activate(l.output[dimension_size * 4 + i]);
+			if (objectness < 0.1f) {
+				continue;
+			}
+
+			float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
+			if (class_probability < 0.5f) {
+				continue;
+			}
+
+			Box b;
+			b.x = (x + logistic_activate(l.output[dimension_size * 0 + i])) / l.out_w;
+			b.y = (y + logistic_activate(l.output[dimension_size * 1 + i])) / l.out_h;
+			b.w = exp(l.output[dimension_size * 2 + i]) * anchor_w / image.width();
+			b.h = exp(l.output[dimension_size * 3 + i]) * anchor_h / image.height();
+
+			Rect rect;
+			rect.left = (b.x-b.w/2)*image.width();
+			rect.right = (b.x+b.w/2)*image.width();
+			rect.top = (b.y-b.h/2)*image.height();
+			rect.bottom = (b.y+b.h/2)*image.height();
+
+			rects.push_back(rect);
+
+			return find_substr(image, l, x + 1, top, substr.substr(1), rects);
+		}
+	}
+	return false;
+}
 
 void predict()
 {
@@ -379,54 +407,20 @@ void predict()
 
 	auto start = std::chrono::high_resolution_clock::now();
 
-	if ((image.w * image.h * image.c) != network.inputs)
-	{
-		throw std::runtime_error("Image size is not equal to network size");
-	}
-
 	memcpy(network.input, image.data, network.inputs * sizeof(float));
-	network.delta = 0;
 	network.forward();
-	float* predictions = network.layers.back()->output;
 
-	// const char chars[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~";
+	const Layer& l = *network.layers.back();
 
-	const auto& l = *network.layers.back();
-
-	size_t dimension_size = l.out_w * l.out_h;
-
-	RectSet rects;
 	for (int y = 0; y < l.out_h; ++y) {
 		for (int x = 0; x < l.out_w; ++x) {
-			int i = y * l.out_w + x;
-			float objectness = logistic_activate(predictions[dimension_size * 4 + i]);
-			if (objectness < thresh) {
-				continue;
+			std::vector<Rect> rects;
+			if (find_substr(image, l, x, y, query, rects)) {
+				for (auto& rect: rects) {
+					image.draw(rect.left, rect.top, rect.right, rect.bottom, 0.9f, 0.2f, 0.3f);
+				}
 			}
 
-			Box b;
-			b.x = (x + logistic_activate(predictions[dimension_size * 0 + i])) / l.out_w;
-			b.y = (y + logistic_activate(predictions[dimension_size * 1 + i])) / l.out_h;
-			b.w = exp(predictions[dimension_size * 2 + i]) * anchor_w / image.width();
-			b.h = exp(predictions[dimension_size * 3 + i]) * anchor_h / image.height();
-
-
-			Rect rect;
-			rect.left = (b.x-b.w/2)*image.width();
-			rect.right = (b.x+b.w/2)*image.width();
-			rect.top = (b.y-b.h/2)*image.height();
-			rect.bottom = (b.y+b.h/2)*image.height();
-
-			rects.add(rect);
-			image.draw(rect.left, rect.top, rect.right, rect.bottom, 0.9f, 0.2f, 0.3f);
-		}
-	}
-
-	for (auto& rect: rects) {
-		if (rect.height() >= 8 && rect.height() <= 24) {
-			if (rect.width() >= 8) {
-				// image.draw(rect.left, rect.top, rect.right, rect.bottom, 0.9f, 0.2f, 0.3f);
-			}
 		}
 	}
 
@@ -467,8 +461,8 @@ int main(int argc, char **argv)
 				value("network", network_file),
 				value("weights", weights_file),
 				value("input image", image_file),
-				option("-o", "--output") & value("output image", output_file),
-				option("--thresh") & value("thresh", thresh)
+				value("query", query),
+				option("-o", "--output") & value("output image", output_file)
 			))
 #ifdef GPU
 			, (option("--gpu") & values("gpu", gpu)) | option("--no-gpu").set(gpu, -1)
