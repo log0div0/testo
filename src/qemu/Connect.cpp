@@ -150,4 +150,16 @@ Network Connect::network_define_xml(const pugi::xml_document& xml) {
 	return result;
 }
 
+Stream Connect::new_stream(std::initializer_list<virStreamFlags> flags) {
+	uint32_t flags_bimask = 0;
+	for (auto flag: flags) {
+		flags_bimask |= flag;
+	}
+	auto result = virStreamNew(handle, flags_bimask);
+	if (result == nullptr) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return result;
+}
+
 }

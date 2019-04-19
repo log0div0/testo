@@ -10,7 +10,7 @@
 #include <thread>
 #include <regex>
 
-VboxVmController::VboxVmController(const nlohmann::json& config): config(config), api(API::instance()) {
+VboxVmController::VboxVmController(const nlohmann::json& config): config(config) {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxVmController error: field NAME is not specified");
 	}
@@ -332,7 +332,7 @@ void VboxVmController::create_vm() {
 	}
 }
 
-int VboxVmController::set_metadata(const nlohmann::json& metadata) {
+void VboxVmController::set_metadata(const nlohmann::json& metadata) {
 	try {
 		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
 			auto lock_machine = virtual_box.find_machine(name());
@@ -340,26 +340,21 @@ int VboxVmController::set_metadata(const nlohmann::json& metadata) {
 			auto machine = work_session.machine();
 			machine.setExtraData(key_value.key(), key_value.value());
 		}
-
-		return 0;
 	}
 	catch (const std::exception& error) {
 		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
-int VboxVmController::set_metadata(const std::string& key, const std::string& value) {
+void VboxVmController::set_metadata(const std::string& key, const std::string& value) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		machine.setExtraData(key, value);
-		return 0;
 	}
 	catch (const std::exception& error) {
 		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
@@ -405,7 +400,7 @@ std::string VboxVmController::get_metadata(const std::string& key) {
 	}
 }
 
-int VboxVmController::install() {
+void VboxVmController::install() {
 	try {
 		remove_if_exists();
 		create_vm();
@@ -413,18 +408,14 @@ int VboxVmController::install() {
 			set_metadata(config.at("metadata"));
 		}
 		set_metadata("vm_config", config.dump());
-		if (start()) {
-			throw std::runtime_error("Start while performing install action");
-		}
-		return 0;
+		start();
 	}
 	catch (const std::exception& error) {
 		std::cout << "Performing install on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
-int VboxVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
+void VboxVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
 	try {
 		{
 			auto lock_machine = virtual_box.find_machine(name());
@@ -450,15 +441,10 @@ int VboxVmController::make_snapshot(const std::string& snapshot, const std::stri
 			start_session.unlock_machine();
 		}
 
-		if (set_snapshot_cksum(snapshot, cksum)) {
-			std::throw_with_nested(__PRETTY_FUNCTION__);
-		}
-
-		return 0;
+		set_snapshot_cksum(snapshot, cksum);
 	}
 	catch (const std::exception& error) {
 		std::cout << "Taking snapshot on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
@@ -471,17 +457,15 @@ std::set<std::string> VboxVmController::nics() const {
 	return result;
 }
 
-int VboxVmController::set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) {
+void VboxVmController::set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		machine.findSnapshot(snapshot).setDescription(cksum);
-		return 0;
 	}
 	catch (const std::exception& error) {
 		std::cout << "Setting snapshot cksum on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
@@ -498,7 +482,7 @@ std::string VboxVmController::get_snapshot_cksum(const std::string& snapshot) {
 	}
 }
 
-int VboxVmController::rollback(const std::string& snapshot) {
+void VboxVmController::rollback(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		if (is_running()) {
@@ -514,26 +498,21 @@ int VboxVmController::rollback(const std::string& snapshot) {
 
 		lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
-
-		return 0;
 	}
 	catch (const std::exception& error) {
 		std::cout << "Performing rollback on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
-int VboxVmController::press(const std::vector<std::string>& buttons) {
+void VboxVmController::press(const std::vector<std::string>& buttons) {
 	try {
 		auto machine = virtual_box.find_machine(name());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		auto keyboard = work_session.console().keyboard();
 		keyboard.putScancodes(buttons);
 		keyboard.releaseKeys(buttons);
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "Pressing button on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
@@ -541,7 +520,7 @@ bool VboxVmController::is_nic_plugged(const std::string& nic) const {
 	throw std::runtime_error("Not implemented");
 }
 
-int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
+void VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 	try {
 		if (!config.count("nic")) {
 			throw std::runtime_error("There's no nics in this vm");
@@ -558,7 +537,6 @@ int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
 				network_adapter.setEnabled(is_enabled);
 				machine.save_settings();
-				return 0;
 			}
 		}
 
@@ -566,7 +544,6 @@ int VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 	}
 	catch (const std::exception& error) {
 		std::cout << "(Un)Plugging nic in vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
@@ -574,7 +551,7 @@ bool VboxVmController::is_link_plugged(const std::string& nic) const {
 	throw std::runtime_error("Not implemented");
 }
 
-int VboxVmController::set_link(const std::string& nic, bool is_connected) {
+void VboxVmController::set_link(const std::string& nic, bool is_connected) {
 	try {
 		if (!config.count("nic")) {
 			throw std::runtime_error("There's no nics in this vm");
@@ -590,7 +567,6 @@ int VboxVmController::set_link(const std::string& nic, bool is_connected) {
 				auto machine = work_session.machine();
 				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
 				network_adapter.setCableConnected(is_connected);
-				return 0;
 			}
 		}
 
@@ -598,7 +574,6 @@ int VboxVmController::set_link(const std::string& nic, bool is_connected) {
 	}
 	catch (const std::exception& error) {
 		std::cout << "(Un)Plugging link on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
@@ -606,7 +581,7 @@ bool VboxVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> fd
 	return (plugged_fds.find(fd) != plugged_fds.end());
 }
 
-int VboxVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void VboxVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
 		if (plugged_fds.find(fd) != plugged_fds.end()) {
 			throw std::runtime_error("This flash drive is already attached to this vm");
@@ -640,14 +615,12 @@ int VboxVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd)
 		machine.attach_device("USB", empty_slot, 0, DeviceType_HardDisk, handle);
 		machine.save_settings();
 		plugged_fds.insert(fd);
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "Plugging flash drive on vm " << name() << ": " << error << std::endl;
-		return 1;
 	}
 }
 
-int VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	try {
 		if (plugged_fds.find(fd) == plugged_fds.end()) {
 			throw std::runtime_error("This flash drive is not plugged to this vm");
@@ -669,10 +642,8 @@ int VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> f
 		}
 		machine.save_settings();
 		plugged_fds.erase(fd);
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "Unplugging flash drive from vm " << name() << ": " << error << std::endl;
-		return 1;
 	}
 }
 
@@ -681,7 +652,7 @@ bool VboxVmController::is_dvd_plugged() const {
 	return true;
 }
 
-int VboxVmController::plug_dvd(fs::path path) {
+void VboxVmController::plug_dvd(fs::path path) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 
@@ -689,9 +660,7 @@ int VboxVmController::plug_dvd(fs::path path) {
 		auto mediums = lock_machine.medium_attachments_of_controller("IDE");
 		for (auto& medium: mediums) {
 			if (medium.port() == 1) {
-				if (unplug_dvd()) {
-					throw std::runtime_error("error while unplugging already attached dvd");
-				}
+				unplug_dvd();
 			}
 		}
 
@@ -705,15 +674,12 @@ int VboxVmController::plug_dvd(fs::path path) {
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		machine.mount_medium("IDE", 1, 0, dvd, false);
-
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "Plugging dvd " << path << " to vm " << name() << ": " << error << std::endl;
-		return 1;
 	}
 }
 
-int VboxVmController::unplug_dvd() {
+void VboxVmController::unplug_dvd() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -733,28 +699,23 @@ int VboxVmController::unplug_dvd() {
 		}
 
 		machine.unmount_medium("IDE", 1, 0, false);
-
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "Unplugging dvd from vm " << name() << ": " << error << std::endl;
-		return 1;
 	}
 }
 
-int VboxVmController::start() {
+void VboxVmController::start() {
 	try {
 		auto machine = virtual_box.find_machine(name());
 		machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
-		return 0;
 	}
 	catch (const std::exception& error) {
 		std::cout << "Starting vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
-int VboxVmController::stop() {
+void VboxVmController::stop() {
 	try {
 		//In the end of stop we should enter session state UNLOCKED (even if the vm was being viewed by the user in GUI)
 		//So we lock our machine, then destroy lock and wait for session state to become unlocked
@@ -765,7 +726,7 @@ int VboxVmController::stop() {
 		}
 		for (int i = 0; i < 10; i++) {
 			if (machine.session_state() == SessionState_Unlocked) {
-				return 0;
+				return;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
@@ -773,11 +734,10 @@ int VboxVmController::stop() {
 	}
 	catch (const std::exception& error) {
 		std::cout << "Stopping vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
-int VboxVmController::type(const std::string& text) {
+void VboxVmController::type(const std::string& text) {
 	try {
 		auto machine = virtual_box.find_machine(name());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
@@ -793,14 +753,12 @@ int VboxVmController::type(const std::string& text) {
 			keyboard.releaseKeys(buttons->second);
 			std::this_thread::sleep_for(std::chrono::milliseconds(20)); //Fuck, it's even in vboxmanage sources
 		}
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "Typing on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }
 
-int VboxVmController::wait(const std::string& text, const std::string& time) {
+bool VboxVmController::wait(const std::string& text, const nlohmann::json& params, const std::string& time) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -820,7 +778,7 @@ int VboxVmController::wait(const std::string& text, const std::string& time) {
 			display.get_screen_resolution(0, &width, &height, &bits_per_pixel, &x_origin, &y_origin, &guest_monitor_status);
 
 			if (!width || !height) {
-				return -1;
+				return false;;
 			}
 		}
 
@@ -830,17 +788,21 @@ int VboxVmController::wait(const std::string& text, const std::string& time) {
 			vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_PNG);
 			vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
 
-			if (api.darknet_api.match(array_out.data(), array_out.size(), text)) {
+			/*if (api.darknet_api.match(array_out.data(), array_out.size(), text)) {
 				return 0;
 			}
-
+*/
 			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}
-		return -1;
+		return false;
 	} catch (const std::exception& error) {
 		std::cout << "Waiting on vm " << name() << ": " << error << std::endl;
-		return -1;
+		return false;
 	}
+}
+
+bool VboxVmController::check(const std::string& text, const nlohmann::json& params) {
+	throw std::runtime_error("Implement me");
 }
 
 int VboxVmController::run(const fs::path& exe, std::vector<std::string> args) {
@@ -1000,7 +962,7 @@ void VboxVmController::copy_dir_to_guest(const fs::path& src, const fs::path& ds
 	}
 }
 
-int VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
+void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -1043,14 +1005,16 @@ int VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 		} else {
 			throw std::runtime_error("Unknown type of file: " + target_name.generic_string());
 		}
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "copy_to_guest on vm " << name() << ": " << error << std::endl;
-		return 1;
 	}
 }
 
-int VboxVmController::remove_from_guest(const fs::path& obj) {
+void VboxVmController::copy_from_guest(const fs::path& src, const fs::path& dst) {
+	throw std::runtime_error("Implement me");
+}
+
+void VboxVmController::remove_from_guest(const fs::path& obj) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -1078,9 +1042,7 @@ int VboxVmController::remove_from_guest(const fs::path& obj) {
 			throw std::runtime_error("Target object doesn't exist on vm: " + obj.generic_string());
 		}
 
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << "remove_from_guest on vm " << name() << ": " << error << std::endl;
-		return -1;
 	}
 }

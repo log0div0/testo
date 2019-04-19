@@ -87,8 +87,13 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::exec) ||
 		(LA(1) == Token::category::set) ||
 		(LA(1) == Token::category::copyto) ||
+		(LA(1) == Token::category::copyfrom) ||
 		(LA(1) == Token::category::lbrace) ||
 		(LA(1) == Token::category::if_) ||
+		(LA(1) == Token::category::for_) ||
+		(LA(1) == Token::category::break_) ||
+		(LA(1) == Token::category::continue_) ||
+		(LA(1) == Token::category::semi) ||
 		(LA(1) == Token::category::id)); //macro call
 }
 
@@ -139,14 +144,15 @@ void Parser::handle_include() {
 
 	//check for cycles
 
-	for (auto& ctx: lexers) {
-		if (ctx.lex.file() == dest_file) {
-			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: cyclic include detected: $include " + std::string(dest_file_token));
+	for (auto& path: already_included) {
+		if (path == dest_file) {
+			return; //implementing #pramga once
 		}
 	}
 
 	Ctx new_ctx(dest_file);
 	lexers.push_back(new_ctx);
+	already_included.push_back(dest_file);
 
 	for (int i = 0; i < 2; i++) {
 		consume();	//Populate lookahead buffer with tokens
@@ -243,10 +249,30 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token name = LT(1);
 	match(Token::category::id);
 
+	match(Token::category::lparen);
+
+	std::vector<Token> params;
+
+	if (LA(1) == Token::category::id) {
+		params.push_back(LT(1));
+		match(Token::category::id);
+	}
+
+	while (LA(1) == Token::category::comma) {
+		if (params.empty()) {
+			match(Token::category::rparen); //will cause failure
+		}
+		match(Token::category::comma);
+		params.push_back(LT(1));
+		match(Token::category::id);
+	}
+
+	match(Token::category::rparen);
+
 	newline_list();
 	auto actions = action_block();
 
-	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, actions));
+	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, params, actions));
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
 
@@ -427,19 +453,28 @@ std::shared_ptr<IAction> Parser::action() {
 		action = exec();
 	} else if (LA(1) == Token::category::set) {
 		action = set();
-	} else if (LA(1) == Token::category::copyto) {
-		action = copyto();
+	} else if ((LA(1) == Token::category::copyto) || (LA(1) == Token::category::copyfrom)) {
+		action = copy();
 	} else if (LA(1) == Token::category::lbrace) {
 		action = action_block();
 	} else if (LA(1) == Token::category::if_) {
 		action = if_clause();
+	} else if (LA(1) == Token::category::for_) {
+		action = for_clause();
+	} else if ((LA(1) == Token::category::break_) || (LA(1) == Token::category::continue_)) {
+		action = cycle_control();
+	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
+		return empty_action();
 	} else if (LA(1) == Token::category::id) {
 		action = macro_call();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown action: " + LT(1).value());
 	}
 
-	if (action->t.type() != Token::category::action_block && action->t.type() != Token::category::if_) {
+	if (action->t.type() != Token::category::action_block &&
+		action->t.type() != Token::category::if_ &&
+		action->t.type() != Token::category::for_)
+	{
 		Token delim;
 		if (LA(1) == Token::category::newline) {
 			delim = LT(1);
@@ -455,6 +490,12 @@ std::shared_ptr<IAction> Parser::action() {
 	}
 
 	return action;
+}
+
+std::shared_ptr<Action<Empty>> Parser::empty_action() {
+	match({Token::category::semi, Token::category::newline});
+	auto action = std::shared_ptr<Empty>(new Empty());
+	return std::shared_ptr<Action<Empty>>(new Action<Empty>(action));
 }
 
 std::shared_ptr<Action<Type>> Parser::type() {
@@ -481,6 +522,24 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		value = word();
 	}
 
+	std::vector<std::shared_ptr<Assignment>> params;
+
+	if (LA(1) == Token::category::lparen) {
+		match(Token::category::lparen);
+		if (LA(1) == Token::category::id) {
+			params.push_back(assignment());
+		}
+		while (LA(1) == Token::category::comma) {
+			if (params.empty()) {
+				match(Token::category::rparen); //will cause failure
+			}
+			match(Token::category::comma);
+			newline_list();
+			params.push_back(assignment());
+		}
+		match(Token::category::rparen);
+	}
+
 	if (LA(1) == Token::category::for_) {
 		for_ = LT(1);
 		match(Token::category::for_);
@@ -489,12 +548,17 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		match(Token::category::time_interval);
 	}
 
+	if (!value && params.size()) {
+		throw std::runtime_error(std::string(wait_token.pos()) +
+			": Error: params cannot be specified without TEXT");
+	}
+
 	if (!(value || for_)) {
 		throw std::runtime_error(std::string(wait_token.pos()) +
 			": Error: either TEXT or FOR (of both) must be specified for wait command");
 	}
 
-	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, for_, time_interval));
+	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, params, for_, time_interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
@@ -536,7 +600,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 		match(Token::category::id);
 	}
 
-	Token name = LT(1);
+	Token name = Token();
 
 	std::shared_ptr<Word> path(nullptr);
 
@@ -545,6 +609,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 			path = word();
 		} //else this should be the end of unplug commands
 	} else {
+		name = LT(1);
 		match(Token::category::id);
 	}
 
@@ -598,15 +663,15 @@ std::shared_ptr<Action<Set>> Parser::set() {
 	return std::shared_ptr<Action<Set>>(new Action<Set>(action));
 }
 
-std::shared_ptr<Action<CopyTo>> Parser::copyto() {
-	Token copyto_token = LT(1);
-	match(Token::category::copyto);
+std::shared_ptr<Action<Copy>> Parser::copy() {
+	Token copy_token = LT(1);
+	match({Token::category::copyto, Token::category::copyfrom});
 
 	auto from = word();
 	auto to = word();
 
-	auto action = std::shared_ptr<CopyTo>(new CopyTo(copyto_token, from, to));
-	return std::shared_ptr<Action<CopyTo>>(new Action<CopyTo>(action));
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to));
+	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 
 std::shared_ptr<Action<ActionBlock>> Parser::action_block() {
@@ -617,7 +682,8 @@ std::shared_ptr<Action<ActionBlock>> Parser::action_block() {
 	std::vector<std::shared_ptr<IAction>> actions;
 
 	while (test_action()) {
-		actions.push_back(action());
+		auto act = action();
+		actions.push_back(act);
 		newline_list();
 	}
 
@@ -632,7 +698,25 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 	Token macro_name = LT(1);
 	match(Token::category::id);
 
-	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name));
+	match(Token::category::lparen);
+
+	std::vector<std::shared_ptr<Word>> params;
+
+	if (test_word()) {
+		params.push_back(word());
+	}
+
+	while (LA(1) == Token::category::comma) {
+		if (params.empty()) {
+			match(Token::category::rparen); //will cause failure
+		}
+		match(Token::category::comma);
+		params.push_back(word());
+	}
+
+	match(Token::category::rparen);
+
+	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
 }
 
@@ -671,6 +755,48 @@ std::shared_ptr<Action<IfClause>> Parser::if_clause() {
 	return std::shared_ptr<Action<IfClause>>(new Action<IfClause>(action));
 }
 
+std::shared_ptr<Action<ForClause>> Parser::for_clause() {
+	Token for_token = LT(1);
+	match(Token::category::for_);
+
+	Token counter = LT(1);
+	match(Token::category::id);
+
+	Token in = LT(1);
+	match(Token::category::in);
+
+	Token begin = LT(1);
+	match(Token::category::number);
+
+	Token double_dot = LT(1);
+	match(Token::category::double_dot);
+
+	Token end = LT(1);
+	match(Token::category::number);
+
+	newline_list();
+
+	auto cycle_body = action();
+	auto action = std::shared_ptr<ForClause>(new ForClause(
+		for_token,
+		counter,
+		in,
+		begin,
+		double_dot,
+		end,
+		cycle_body
+	));
+	return std::shared_ptr<Action<ForClause>>(new Action<ForClause>(action));
+}
+
+std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
+	Token control_token = LT(1);
+	match({Token::category::break_, Token::category::continue_});
+
+	auto action = std::shared_ptr<CycleControl>(new CycleControl(control_token));
+	return std::shared_ptr<Action<CycleControl>>(new Action<CycleControl>(action));
+}
+
 std::shared_ptr<Word> Parser::word() {
 	std::vector<Token> parts;
 
@@ -699,7 +825,9 @@ std::shared_ptr<IFactor> Parser::factor() {
 	}
 
 	//TODO: newline
-	if(test_comparison()) {
+	if (LA(1) == Token::category::check) {
+		return std::shared_ptr<Factor<Check>>(new Factor<Check>(not_token, check()));
+	} else if(test_comparison()) {
 		return std::shared_ptr<Factor<Comparison>>(new Factor<Comparison>(not_token, comparison()));
 	} else if (LA(1) == Token::category::lparen) {
 		match(Token::category::lparen);
@@ -730,6 +858,35 @@ std::shared_ptr<Comparison> Parser::comparison() {
 	auto right = word();
 
 	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
+}
+
+std::shared_ptr<Check> Parser::check() {
+	Token check_token = LT(1);
+	match(Token::category::check);
+
+	std::shared_ptr<Word> value(nullptr);
+
+	value = word();
+
+	std::vector<std::shared_ptr<Assignment>> params;
+
+	if (LA(1) == Token::category::lparen) {
+		match(Token::category::lparen);
+		if (LA(1) == Token::category::id) {
+			params.push_back(assignment());
+		}
+		while (LA(1) == Token::category::comma) {
+			if (params.empty()) {
+				match(Token::category::rparen); //will cause failure
+			}
+			match(Token::category::comma);
+			newline_list();
+			params.push_back(assignment());
+		}
+		match(Token::category::rparen);
+	}
+
+	return std::shared_ptr<Check>(new Check(check_token, value, params));
 }
 
 std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {

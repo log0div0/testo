@@ -41,14 +41,20 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return visit_exec(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
 		return visit_set(vm, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<CopyTo>>(action)) {
-		return visit_copyto(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Copy>>(action)) {
+		return visit_copy(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
 		return visit_macro_call(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
 		return visit_if_clause(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+		return visit_for_clause(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<CycleControl>>(action)) {
+		return p->action->t.value();
 	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
 		return visit_action_block(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
+		return "";
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
@@ -65,6 +71,13 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vm, std::shar
 	if (wait->text_word) {
 		result += visit_word(vm, wait->text_word);
 	}
+
+	result += "(";
+	for (auto param: wait->params) {
+		auto value = visit_word(vm, param->right);
+		result += param->left.value() + "=" + value;
+	}
+	result += ")";
 
 	if (wait->time_interval) {
 		result += wait->time_interval.value();
@@ -92,22 +105,25 @@ std::string VisitorCksum::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
 
 std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
 	std::string result("plug");
-	result += plug->is_on();
+	result += std::to_string(plug->is_on());
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		result += visit_word(vm, plug->path);
+		auto path = visit_word(vm, plug->path);
+		result += path;
+		//add signature for dvd file
+		result += file_signature(path);
+	}
+
+	if (plug->type.value() == "flash") {
+		auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
+		result += fd->cksum();
 	}
 	return result;
 }
 
 std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {
 	std::string result("exec");
-	if (!vm->has_key("login") || !vm->has_key("password")) {
-		throw std::runtime_error(std::string(exec->begin()) + ": Error: This command requires login and password metadata for vm " + vm->name());
-	}
-	result += vm->get_metadata("login");
-	result += vm->get_metadata("password");
 
 	result += exec->process_token.value();
 	result += visit_word(vm, exec->commands);
@@ -123,16 +139,29 @@ std::string VisitorCksum::visit_set(std::shared_ptr<VmController> vm, std::share
 	return result;
 }
 
-std::string VisitorCksum::visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<CopyTo> copyto) {
-	std::string result("copyto");
-	if (!vm->has_key("login") || !vm->has_key("password")) {
-		throw std::runtime_error(std::string(copyto->begin()) + ": Error: This command requires login and password metadata for vm " + vm->name());
-	}
-	result += vm->get_metadata("login");
-	result += vm->get_metadata("password");
+std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {
+	std::string result(copy->t.value());
 
-	result += visit_word(vm, copyto->from);
-	result += visit_word(vm, copyto->to);
+	auto from = visit_word(vm, copy->from);
+
+	result += from;
+
+	if (!fs::exists(from)) {
+		throw std::runtime_error("Specified path doesn't exist: " + fs::path(from).generic_string());
+	}
+
+	//now we should take care of last modify date of every file and folder in the folder
+	if (fs::is_regular_file(from)) {
+		result += file_signature(from);
+	} else if (fs::is_directory(from)) {
+		result += directory_signature(from);
+	} else {
+		throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
+	}
+
+
+	result += visit_word(vm, copy->to);
+
 	return result;
 }
 
@@ -147,8 +176,20 @@ std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vm, std:
 	result += visit_action(vm, if_clause->if_action);
 
 	if (if_clause->has_else()) {
+		result += "else";
 		result += visit_action(vm, if_clause->else_action);
 	}
+
+	return result;
+}
+
+std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<ForClause> for_clause) {
+	std::string result("for");
+	//we should drop the counter from cksum
+	result += for_clause->start_.value();
+	result += "..";
+	result += for_clause->finish_.value();
+	result += visit_action(vm, for_clause->cycle_body);
 
 	return result;
 }
@@ -174,13 +215,16 @@ std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vm, std::sha
 std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<IFactor> factor) {
 	std::string result("factor");
 	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
-		result += p->is_negated();
+		result += std::to_string(p->is_negated());
 		result += visit_word(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
-		result += p->is_negated();
+		result += std::to_string(p->is_negated());
 		result += visit_comparison(vm, p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<Factor<Check>>(factor)) {
+		result += std::to_string(p->is_negated());
+		result += visit_check(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
-		result += p->is_negated();
+		result += std::to_string(p->is_negated());
 		result += visit_expr(vm, p->factor);
 	} else {
 		throw std::runtime_error("Unknown factor type");
@@ -229,7 +273,20 @@ std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vm, std
 	std::string result("comparison");
 	result += visit_word(vm, comparison->left);
 	result += visit_word(vm, comparison->right);
-	result += comparison->op();
+	result += comparison->op().value();
 	return result;
 }
 
+std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<Check> check) {
+	std::string result = "check";
+	result += visit_word(vm, check->text_word);
+
+	result += "(";
+	for (auto param: check->params) {
+		auto value = visit_word(vm, param->right);
+		result += param->left.value() + "=" + value;
+	}
+	result += ")";
+
+	return result;
+}

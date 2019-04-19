@@ -1,4 +1,4 @@
-machine buwaha	 {
+machine buwaha {
 	cpus: 1
 	os_type: "ubuntu_64"
 	ram: 512Mb
@@ -21,6 +21,15 @@ machine buwaha	 {
 		password: "1111"
 	}
 }
+macro another_reboot(login, password) {
+	type $login + " " + $password
+	wait for 3s
+}
+
+macro reboot(login, password) {
+	type $login + " " + $password
+	another_reboot($password, $login)
+}
 
 flash dummy_flash {
 	size: 256Mb
@@ -28,25 +37,63 @@ flash dummy_flash {
 	folder: "/home/alex/work/vbox/my_flash"
 }
 
-snapshot dummy {
+snapshot dummy: dummy3
+{
 	unplug dvd
 }
 
 snapshot dummy2: dummy {
-	plug dvd $ISO_PATH + "/VBoxGuestAdditions_6.0.4.iso"
-	plug flash dummy_flash
+	type "sudo su"; press Enter;; wait for 1s;
+	type "1111"; press Enter;
+	if ($HTTP_PROXY) {
+		type "nano /etc/apt/apt.conf.d/proxy.conf"; press Enter
+		wait for 5s
+		type "Acquire::http::Proxy \"http://" + $HTTP_PROXY + ":3128\";"; press Enter
+		type "Acquire::https::Proxy \"http://" + $HTTP_PROXY + ":3128\";"
+		press leftctrl+x; wait for 1s;
+		press leftshift+y; press Enter
+	}
+	type "apt-get update"; press Enter
+	wait for 40s
+	type "apt-get install -y python daemon"; press Enter; wait for 30s
 }
 
-test dummy: buwaha(dummy2)
+snapshot negotiator: dummy2 {
+	plug dvd "/home/alex/work/vbox/build/out/pkg/negotiator.iso"; wait for 5s
+	type "mount /dev/cdrom /media"; press Enter; wait for 3s
+	type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter; wait for 5s;
+	type "umount /media"; press Enter; wait for 3s;
+}
+
+test dummy: buwaha(dummy2) {
+	buwaha{
+		reboot("Hey", "Suka")
+		for i in 3..5 {
+			for j in 0..10 {
+				type " j is " + $j
+				type " i is " + $i
+				if ($i EQUAL "4" AND NOT(NOT check "Hey ho"(arg1="val1", arg2="val2") AND $j EQUAL "1")) {
+					type "BREAKING"
+					break
+				}
+				wait for 1s
+			}
+			type "OUTER CYCLE"
+		}
+	}
+}
+
+test dummy2: buwaha(dummy2)
 {
-	buwaha exec bash "ping -c20 192.168.156.10"
-	#buwaha wait for 30s
-	#buwaha unplug flash dummy_flash
-	#buwaha stop
-	#buwaha unplug nic master_side
-	#buwaha start
-	#buwaha set puchacha="AHAHASUCHKA"
-	#buwaha unplug dvd
-	#buwaha plug dvd $ISO_PATH + "/VBoxGuestAdditions_5.2.10.iso"
-	#buwaha plug link master_side
+	buwaha wait "Zimbabwe" (hey="ho", otsosi="y Traktorista",
+		iso_blat=$ISO_PATH, login_nahuy=$login)
+}
+
+test dummy3: buwaha(negotiator)
+{
+	buwaha wait for 10s
+	buwaha type """This is some test text
+	With some tabulations and multilines
+And smore
+			And smore"""
 }

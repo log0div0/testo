@@ -2,7 +2,6 @@
 #pragma once
 
 #include "FlashDriveController.hpp"
-#include "API.hpp"
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 
@@ -11,11 +10,11 @@ struct VboxFlashDriveController: FlashDriveController {
 	VboxFlashDriveController() = delete;
 	VboxFlashDriveController(const VboxFlashDriveController& other) = delete;
 	VboxFlashDriveController(const nlohmann::json& config);
-	int create() override;
+	void create() override;
 	bool is_mounted() const override;
-	int mount() const override;
-	int umount() const override;
-	int load_folder() const override;
+	void mount() const override;
+	void umount() const override;
+	void load_folder() const override;
 
 	fs::path img_path() const override {
 		auto res = flash_drives_img_dir();
@@ -31,6 +30,15 @@ struct VboxFlashDriveController: FlashDriveController {
 		return config.count("folder");
 	}
 
+	nlohmann::json get_config() const override {
+		return config;
+	}
+
+	std::string cksum() const {
+		return "";
+	}
+
+
 	vbox::Medium handle;
 private:
 
@@ -38,5 +46,5 @@ private:
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 	nlohmann::json config;
-	API& api;
+	//API& api;
 };

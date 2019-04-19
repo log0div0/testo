@@ -18,9 +18,10 @@ struct VisitorCksum {
 	std::string visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
 	std::string visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Exec> exec);
 	std::string visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
-	std::string visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<AST::CopyTo> copyto);
+	std::string visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Copy> copy);
 	std::string visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
 	std::string visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IfClause> if_clause);
+	std::string visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ForClause> for_clause);
 
 	std::string visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IExpr> expr);
 	std::string visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::BinOp> binop);
@@ -28,6 +29,7 @@ struct VisitorCksum {
 	std::string resolve_var(std::shared_ptr<VmController> vm, const std::string& var);
 	std::string visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Word> word);
 	std::string visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
+	std::string visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Check> check);
 
 	Register& reg;
 };

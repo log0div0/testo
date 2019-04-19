@@ -8,11 +8,11 @@ struct QemuFlashDriveController: FlashDriveController {
 	QemuFlashDriveController() = delete;
 	QemuFlashDriveController(const QemuFlashDriveController& other) = delete;
 	QemuFlashDriveController(const nlohmann::json& config);
-	int create() override;
+	void create() override;
 	bool is_mounted() const override;
-	int mount() const override;
-	int umount() const override;
-	int load_folder() const override;
+	void mount() const override;
+	void umount() const override;
+	void load_folder() const override;
 
 	fs::path img_path() const override {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
@@ -27,7 +27,17 @@ struct QemuFlashDriveController: FlashDriveController {
 		return config.count("folder");
 	}
 
+	nlohmann::json get_config() const override {
+		return config;
+	}
+
+	std::string cksum() const;
+
 private:
+	fs::path img_dir() const {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
+		return pool.path();
+	}
 	void remove_if_exists();
 
 	nlohmann::json config;

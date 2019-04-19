@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include <vbox/virtual_box_client.hpp>
-#include <vbox/virtual_box.hpp>
+#include <qemu/Host.hpp>
 #include <darknet/Network.hpp>
 #include "VM.hpp"
 #include "Texture.hpp"
@@ -11,9 +10,9 @@ struct App {
 	App();
 	void render();
 
-	vbox::API api;
-	vbox::VirtualBoxClient virtual_box_client;
-	vbox::VirtualBox virtual_box;
+	CUDA cuda;
+
+	vir::Connect qemu_connect;
 
 	darknet::Network net;
 	std::shared_ptr<VM> vm;

@@ -5,6 +5,7 @@
 #include "Domain.hpp"
 #include "StoragePool.hpp"
 #include "Network.hpp"
+#include "Stream.hpp"
 #include <vector>
 
 namespace vir {
@@ -32,6 +33,8 @@ struct Connect {
 
 	std::vector<Network> networks(std::initializer_list<virConnectListAllNetworksFlags> flags = {}) const;
 	Network network_define_xml(const pugi::xml_document& xml);
+
+	Stream new_stream(std::initializer_list<virStreamFlags> flags = {}); //It's not vector of flags because there's only one possible flag
 
 	::virConnect* handle = nullptr;
 };

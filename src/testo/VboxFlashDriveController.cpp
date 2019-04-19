@@ -6,7 +6,7 @@
 #include <chrono>
 
 VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config):
-config(config), api(API::instance())
+config(config)
 {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxFlashDriveController error: field NAME is not specified");
@@ -24,7 +24,7 @@ config(config), api(API::instance())
 	virtual_box = virtual_box_client.virtual_box();
 }
 
-int VboxFlashDriveController::create() {
+void VboxFlashDriveController::create() {
 	try {
 		std::string fdisk = std::string("fdisk -l | grep nbd0");
 		if (std::system(fdisk.c_str()) == 0) {
@@ -49,10 +49,8 @@ int VboxFlashDriveController::create() {
 			" /dev/nbd0");
 
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;
-		return 1;
 	}
 }
 
@@ -61,7 +59,7 @@ bool VboxFlashDriveController::is_mounted() const {
 	return (std::system(query.c_str()) == 0);
 }
 
-int VboxFlashDriveController::mount() const {
+void VboxFlashDriveController::mount() const {
 	try {
 		std::string fdisk = std::string("fdisk -l | grep nbd0");
 		if (std::system(fdisk.c_str()) == 0) {
@@ -73,25 +71,21 @@ int VboxFlashDriveController::mount() const {
 			img_path().generic_string());
 
 		exec_and_throw_if_failed(std::string("mount /dev/nbd0"));
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;
-		return 1;
 	}
 }
 
-int VboxFlashDriveController::umount() const {
+void VboxFlashDriveController::umount() const {
 	try {
 		exec_and_throw_if_failed(std::string("umount /dev/nbd0"));
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
-		return 0;
 	} catch (const std::exception& error) {
 		std::cout << error << std::endl;
-		return 1;
 	}
 }
 
-int VboxFlashDriveController::load_folder() const {
+void VboxFlashDriveController::load_folder() const {
 	try {
 		fs::path target_folder(config.at("folder").get<std::string>());
 
@@ -100,22 +94,14 @@ int VboxFlashDriveController::load_folder() const {
 		if (!fs::exists(abs_target_folder)) {
 			throw std::runtime_error("Target folder doesn't exist");
 		}
-		if (mount()) {
-			throw std::runtime_error("performing mount while loading folder");
-		}
+		mount();
 
 		exec_and_throw_if_failed(std::string("cp -r ") +
 			abs_target_folder.generic_string() +
 			" " + flash_drives_mount_dir().generic_string());
 		std::this_thread::sleep_for(std::chrono::seconds(2));
-		if (umount()) {
-			throw std::runtime_error("performing mount while loading folder");
-		}
-		return 0;
+		umount();
 	} catch (const std::exception& error) {
 		std::cout << "Load folder error: " << error << std::endl;
-		return 1;
 	}
-
-
 }

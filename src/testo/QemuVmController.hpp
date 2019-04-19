@@ -8,11 +8,12 @@
 struct QemuVmController: public VmController {
 	QemuVmController() = delete;
 	QemuVmController(const nlohmann::json& config);
+	~QemuVmController();
 	QemuVmController(const QemuVmController& other) = delete;
-	int install() override;
-	int make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-	int set_metadata(const nlohmann::json& metadata) override;
-	int set_metadata(const std::string& key, const std::string& value) override;
+	void install() override;
+	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
+	void set_metadata(const nlohmann::json& metadata) override;
+	void set_metadata(const std::string& key, const std::string& value) override;
 
 	nlohmann::json get_config() const override {
 		return config;
@@ -20,21 +21,22 @@ struct QemuVmController: public VmController {
 
 	std::string get_metadata(const std::string& key) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
-	int rollback(const std::string& snapshot) override;
-	int press(const std::vector<std::string>& buttons) override;
+	void rollback(const std::string& snapshot) override;
+	void press(const std::vector<std::string>& buttons) override;
 	bool is_nic_plugged(const std::string& nic) const override;
-	int set_nic(const std::string& nic, bool is_enabled) override;
+	void set_nic(const std::string& nic, bool is_enabled) override;
 	bool is_link_plugged(const std::string& nic) const override;
-	int set_link(const std::string& nic, bool is_connected) override;
-	int plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
-	int unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
+	void set_link(const std::string& nic, bool is_connected) override;
+	void plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
+	void unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
 	bool is_dvd_plugged() const override;
-	int plug_dvd(fs::path path) override;
-	int unplug_dvd() override;
-	int start() override;
-	int stop() override;
-	int type(const std::string& text) override;
-	int wait(const std::string& text, const std::string& time) override;
+	void plug_dvd(fs::path path) override;
+	void unplug_dvd() override;
+	void start() override;
+	void stop() override;
+	void type(const std::string& text) override;
+	bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) override;
+	bool check(const std::string& text, const nlohmann::json& params) override;
 	int run(const fs::path& exe, std::vector<std::string> args) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
@@ -49,15 +51,16 @@ struct QemuVmController: public VmController {
 		return config.at("name").get<std::string>();
 	}
 
-	int copy_to_guest(const fs::path& src, const fs::path& dst) override;
-	int remove_from_guest(const fs::path& obj) override;
+	void copy_to_guest(const fs::path& src, const fs::path& dst) override;
+	void copy_from_guest(const fs::path& src, const fs::path& dst) override;
+	void remove_from_guest(const fs::path& obj) override;
 
 	std::set<std::string> nics() const override;
 
 private:
 	void prepare_networks();
-	void remove_disks(const pugi::xml_document& config);
-	void create_disks();
+	void remove_disk();
+	void create_disk();
 
 	void delete_snapshot_with_children(vir::Snapshot& snapshot);
 
@@ -75,7 +78,6 @@ private:
 	void detach_nic(const std::string& nic);
 
 	std::string get_flash_img();
-	std::string get_flash_img(vir::Snapshot& snapshot);
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 

@@ -11,6 +11,7 @@ struct Token {
 		var_ref,
 		type_,
 		wait,
+		check,
 		press,
 		plug,
 		unplug,
@@ -19,6 +20,7 @@ struct Token {
 		exec,
 		set,
 		copyto,
+		copyfrom,
 		for_,
 		snapshot,
 		test,
@@ -28,6 +30,9 @@ struct Token {
 		dvd,
 		if_,
 		else_,
+		in,
+		break_,
+		continue_,
 		number,
 		time_interval,
 		size,
@@ -43,6 +48,7 @@ struct Token {
 		rparen,
 		semi,
 		colon,
+		double_dot,
 		include,
 
 		//expressions

@@ -55,6 +55,7 @@ private:
 	std::shared_ptr<AST::CmdBlock> command_block();
 	std::shared_ptr<AST::KeySpec> key_spec();
 	std::shared_ptr<AST::IAction> action();
+	std::shared_ptr<AST::Action<AST::Empty>> empty_action();
 	std::shared_ptr<AST::Action<AST::Type>> type();
 	std::shared_ptr<AST::Action<AST::Wait>> wait();
 	std::shared_ptr<AST::Action<AST::Press>> press();
@@ -63,17 +64,22 @@ private:
 	std::shared_ptr<AST::Action<AST::Stop>> stop();
 	std::shared_ptr<AST::Action<AST::Exec>> exec();
 	std::shared_ptr<AST::Action<AST::Set>> set();
-	std::shared_ptr<AST::Action<AST::CopyTo>> copyto();
+	std::shared_ptr<AST::Action<AST::Copy>> copy();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
+	std::shared_ptr<AST::Action<AST::ForClause>> for_clause();
+	std::shared_ptr<AST::Action<AST::CycleControl>> cycle_control();
 
 	//expressions
 	std::shared_ptr<AST::Word> word();
 	std::shared_ptr<AST::IFactor> factor();
+	std::shared_ptr<AST::Check> check();
 	std::shared_ptr<AST::Comparison> comparison();
 	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
 	std::shared_ptr<AST::IExpr> expr();
 
 	std::vector<Ctx> lexers;
+
+	std::vector<fs::path> already_included;
 };

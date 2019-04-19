@@ -3,19 +3,6 @@
 #include <sys/types.h>
 #include <algorithm>
 
-void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
-	stream << n << ". " << error.what();
-	try {
-		std::rethrow_if_nested(error);
-	} catch (const std::exception& error) {
-		stream << std::endl;
-		backtrace(stream, error, n + 1);
-	} catch(...) {
-		stream << std::endl;
-		stream << n << ". " << "[Unknown exception type]";
-	}
-}
-
 uint32_t time_to_seconds(const std::string& time) {
 	uint32_t seconds = std::stoul(time.substr(0, time.length() - 1));
 	if (time[time.length() - 1] == 's') {
@@ -78,6 +65,28 @@ fs::path scripts_tmp_dir() {
 	auto res = home_dir();
 	res = res / "/testo/scripts_tmp/";
 	return res;
+}
+
+std::string file_signature(const fs::path& file) {
+	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
+	return file.filename().generic_string() + std::to_string(last_modify_time);
+}
+
+std::string directory_signature(const fs::path& dir) {
+	std::string result("");
+	for (auto& file: fs::directory_iterator(dir)) {
+		if (fs::is_regular_file(file)) {
+			result += file_signature(file);
+		} else if (fs::is_directory(file)) {
+			result += directory_signature(file);
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
+		}
+	}
+
+	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(dir));
+	result += std::to_string(last_modify_time);
+	return result;
 }
 
 //NOTE: this check is very, very rough

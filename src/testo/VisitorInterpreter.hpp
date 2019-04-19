@@ -3,10 +3,73 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
+#include <vector>
 
 struct VisitorInterpreter {
-	VisitorInterpreter(Register& reg):
-		reg(reg) {}
+	struct StackEntry {
+		StackEntry(bool is_terminate): is_terminate(is_terminate) {}
+
+		void define(const std::string& name, const std::string& value) {
+			vars[name] = value;
+		}
+
+
+		bool is_defined(const std::string& name) {
+			return (vars.find(name) != vars.end());
+		}
+
+		std::string ref(const std::string& name) {
+			auto found = vars.find(name);
+
+			if (found != vars.end()) {
+				return found->second;
+			} else {
+				throw std::runtime_error(std::string("Var ") + name + " not defined");
+			}
+		}
+
+		bool is_terminate;
+		std::unordered_map<std::string, std::string> vars;
+	};
+
+	struct InterpreterException: public std::runtime_error {
+		explicit InterpreterException(std::shared_ptr<AST::Node> node, std::shared_ptr<VmController> vm):
+			std::runtime_error(""), node(node), vm(vm)
+		{
+			msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node) + " ";
+			if (vm) {
+				msg += "on vm ";
+				msg += vm->name();
+			}
+		}
+
+		const char* what() const noexcept override {
+			return msg.c_str();
+		}
+
+	private:
+		std::string msg;
+		std::shared_ptr<AST::Node> node;
+		std::shared_ptr<VmController> vm;
+	};
+
+	struct CycleControlException: public std::runtime_error {
+		explicit CycleControlException(const Token& token):
+			std::runtime_error(""), token(token)
+		{
+			msg = token.value();
+		}
+
+		const char* what() const noexcept override {
+			return msg.c_str();
+		}
+
+		Token token;
+	private:
+		std::string msg;
+	};
+
+	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -33,9 +96,10 @@ struct VisitorInterpreter {
 	void visit_stop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Stop> stop);
 	void visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Exec> exec);
 	void visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
-	void visit_copyto(std::shared_ptr<VmController> vm, std::shared_ptr<AST::CopyTo> copyto);
+	void visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Copy> copy);
 	void visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
 	void visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IfClause> if_clause);
+	void visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ForClause> for_clause);
 
 	bool visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IExpr> expr);
 	bool visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::BinOp> binop);
@@ -43,12 +107,45 @@ struct VisitorInterpreter {
 	std::string resolve_var(std::shared_ptr<VmController> vm, const std::string& var);
 	std::string visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Word> word);
 	bool visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
+	bool visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Check> check);
 
 	void apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot, bool recursive = false);
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
 	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;
 	std::string snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
-	std::string cksum(std::shared_ptr<AST::Controller> controller);
+	std::string cksum(std::shared_ptr<FlashDriveController> flash);
 
 	Register& reg;
+
+private:
+	//settings
+	bool stop_on_fail;
+	std::string test_spec;
+
+	std::vector<StackEntry> local_vars;
+
+	template <typename... Args>
+	void print(Args... args) {
+		std::cout << "[";
+		std::cout << std::setw(3);
+		std::cout << current_progress;
+		std::cout << std::setw(0);
+		std::cout << "\%] ";
+		(std::cout << ... << args);
+		std::cout << std::endl;
+	}
+
+	void print_statistics() const;
+
+	void setup_progress_vars(std::shared_ptr<AST::Program> program);
+	void update_progress();
+
+	uint16_t current_progress = 0;
+	uint16_t progress_step = 0;
+	uint16_t original_remainder = 0;
+	uint16_t current_remainder = 0;
+
+	std::set<std::shared_ptr<AST::Test>> tests_to_run; //used for varouis inner reasons
+	std::vector<std::string> success_tests;
+	std::vector<std::string> failed_tests;
 };

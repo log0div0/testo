@@ -49,7 +49,8 @@ bool Lexer::test_size_specifier() const {
 		return false;
 	}
 
-	if ((input[current_pos] == 'M') ||
+	if ((input[current_pos] == 'K') ||
+		(input[current_pos] == 'M') ||
 		(input[current_pos] == 'G'))
 	{
 		if (input[current_pos + 1] == 'b') {
@@ -152,6 +153,8 @@ Token Lexer::id() {
 		return type();
 	} else if (value == "wait") {
 		return wait();
+	} else if (value == "check") {
+		return check();
 	} else if (value == "press") {
 		return press();
 	} else if (value == "plug") {
@@ -168,6 +171,8 @@ Token Lexer::id() {
 		return set();
 	} else if (value == "copyto") {
 		return copyto();
+	} else if (value == "copyfrom") {
+		return copyfrom();
 	} else if (value == "for") {
 		return for_();
 	} else if (value == "snapshot") {
@@ -186,6 +191,12 @@ Token Lexer::id() {
 		return if_();
 	} else if (value == "else") {
 		return else_();
+	} else if (value == "in") {
+		return in();
+	} else if (value == "break") {
+		return break_();
+	} else if (value == "continue") {
+		return continue_();
 	} else if (value == "include") {
 		return include();
 	} else if (value == "LESS") {
@@ -224,6 +235,13 @@ Token Lexer::wait() {
 	std::string value("wait");
 	current_pos.advance(value.length());
 	return Token(Token::category::wait, value, tmp_pos);
+}
+
+Token Lexer::check() {
+	Pos tmp_pos = current_pos;
+	std::string value("check");
+	current_pos.advance(value.length());
+	return Token(Token::category::check, value, tmp_pos);
 }
 
 Token Lexer::press() {
@@ -280,6 +298,13 @@ Token Lexer::copyto() {
 	std::string value("copyto");
 	current_pos.advance(value.length());
 	return Token(Token::category::copyto, value, tmp_pos);
+}
+
+Token Lexer::copyfrom() {
+	Pos tmp_pos = current_pos;
+	std::string value("copyfrom");
+	current_pos.advance(value.length());
+	return Token(Token::category::copyfrom, value, tmp_pos);
 }
 
 Token Lexer::for_() {
@@ -343,6 +368,27 @@ Token Lexer::else_() {
 	std::string value("else");
 	current_pos.advance(value.length());
 	return Token(Token::category::else_, value, tmp_pos);
+}
+
+Token Lexer::in() {
+	Pos tmp_pos = current_pos;
+	std::string value("in");
+	current_pos.advance(value.length());
+	return Token(Token::category::in, value, tmp_pos);
+}
+
+Token Lexer::break_() {
+	Pos tmp_pos = current_pos;
+	std::string value("break");
+	current_pos.advance(value.length());
+	return Token(Token::category::break_, value, tmp_pos);
+}
+
+Token Lexer::continue_() {
+	Pos tmp_pos = current_pos;
+	std::string value("continue");
+	current_pos.advance(value.length());
+	return Token(Token::category::continue_, value, tmp_pos);
 }
 
 Token Lexer::include() {
@@ -546,6 +592,12 @@ Token Lexer::colon() {
 	return Token(Token::category::colon, ":", tmp_pos);
 }
 
+Token Lexer::double_dot() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance(2);
+	return Token(Token::category::double_dot, "..", tmp_pos);
+}
+
 Token Lexer::get_next_token() {
 	while (!test_eof()) {
 		if (test_newline()) {
@@ -580,6 +632,8 @@ Token Lexer::get_next_token() {
 			return semi();
 		} else if (test_colon()) {
 			return colon();
+		} else if (test_double_dot()) {
+			return double_dot();
 		} else if (test_space()) {
 			skip_spaces();
 			continue;

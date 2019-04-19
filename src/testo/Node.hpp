@@ -85,8 +85,11 @@ struct KeySpec: public Node {
 
 	std::string get_buttons_str() const {
 		std::string result = buttons[0].value();
+		std::transform(result.begin(), result.end(), result.begin(), ::toupper);
 		for (size_t i = 1; i < buttons.size(); i++) {
-			result += "+" + buttons[i].value();
+			auto button_str = buttons[i].value();
+			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
+			result += "+" + button_str;
 		}
 
 		return result;
@@ -141,6 +144,22 @@ struct Action: public IAction {
 	Token delim;
 };
 
+struct Empty: public Node {
+	Empty(): Node(Token()) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return "";
+	}
+};
+
 struct Type: public Node {
 	Type(const Token& type, std::shared_ptr<Word> text_word):
 		Node(type), text_word(text_word) {}
@@ -160,9 +179,32 @@ struct Type: public Node {
 	std::shared_ptr<Word> text_word;
 };
 
+struct Assignment: public Node {
+	Assignment(const Token& left, const Token& assign, std::shared_ptr<Word> right):
+		Node(assign),
+		left(left),
+		right(right) {}
+
+	Pos begin() const {
+		return left.pos();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return left.value() + t.value() + std::string(*right);
+	}
+
+	Token left;
+	std::shared_ptr<Word> right;
+};
+
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<Word> text_word, Token for_, Token time_interval):
-		Node(wait), text_word(text_word), time_interval(time_interval), for_(for_) {}
+	Wait(const Token& wait, std::shared_ptr<Word> text_word,
+	const std::vector<std::shared_ptr<Assignment>>& params, Token for_, Token time_interval):
+		Node(wait), text_word(text_word), params(params), time_interval(time_interval), for_(for_) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -190,6 +232,7 @@ struct Wait: public Node {
 	}
 
 	std::shared_ptr<Word> text_word;
+	std::vector<std::shared_ptr<Assignment>> params;
 	Token time_interval;
 	Token for_;
 };
@@ -243,7 +286,7 @@ struct Plug: public Node {
 		return (t.type() == Token::category::plug);
 	}
 
-	Token type; //nic or flash
+	Token type; //nic or flash or dvd
 	Token name_token; //name of resource to be plugged/unplugged
 	std::shared_ptr<Word> path; //used only for dvd
 };
@@ -305,28 +348,6 @@ struct Exec: public Node {
 	std::shared_ptr<Word> commands;
 };
 
-struct Assignment: public Node {
-	Assignment(const Token& left, const Token& assign, std::shared_ptr<Word> right):
-		Node(assign),
-		left(left),
-		right(right) {}
-
-	Pos begin() const {
-		return left.pos();
-	}
-
-	Pos end() const {
-		return right->end();
-	}
-
-	operator std::string() const {
-		return left.value() + t.value() + std::string(*right);
-	}
-
-	Token left;
-	std::shared_ptr<Word> right;
-};
-
 struct Set: public Node {
 	Set(const Token& set, const std::vector<std::shared_ptr<Assignment>>& assignments):
 		Node(set),
@@ -352,9 +373,11 @@ struct Set: public Node {
 	std::vector<std::shared_ptr<Assignment>> assignments;
 };
 
-struct CopyTo: public Node {
-	CopyTo(const Token& copyto, std::shared_ptr<Word> from, std::shared_ptr<Word> to):
-		Node(copyto),
+//Now this node holds actions copyto and copyfrom
+//Cause they're really similar
+struct Copy: public Node {
+	Copy(const Token& copy, std::shared_ptr<Word> from, std::shared_ptr<Word> to):
+		Node(copy),
 		from(from),
 		to(to) {}
 
@@ -368,6 +391,12 @@ struct CopyTo: public Node {
 
 	operator std::string() const {
 		return t.value() + " " + std::string(*from) + " " + std::string(*to);
+	}
+
+	//return true if we copy to guest,
+	//false if from guest to host
+	bool is_to_guest() const {
+		return t.type() == Token::category::copyto;
 	}
 
 	std::shared_ptr<Word> from;
@@ -522,10 +551,12 @@ struct Snapshot: public Node {
 };
 
 struct Macro: public Node {
-	Macro(const Token& macro, const Token& name, std::shared_ptr<Action<ActionBlock>> action_block):
-		Node(macro),
-		name(name),
-		action_block(action_block) {}
+	Macro(const Token& macro,
+		const Token& name,
+		const std::vector<Token>& params,
+		std::shared_ptr<Action<ActionBlock>> action_block):
+			Node(macro), name(name), params(params),
+			action_block(action_block) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -536,16 +567,23 @@ struct Macro: public Node {
 	}
 
 	operator std::string() const {
-		return t.value() + " " + name.value() + " " + std::string(*action_block);
+		std::string result = t.value() + " " + name.value() + "(";
+		for (auto param: params) {
+			result += param.value() + " ,";
+		}
+		result += ") ";
+		result += std::string(*action_block);
+		return result;
 	}
 
 	Token name;
+	std::vector<Token> params;
 	std::shared_ptr<Action<ActionBlock>> action_block;
 };
 
 struct MacroCall: public Node {
-	MacroCall(const Token& macro_name):
-		Node(macro_name) {}
+	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<Word>>& params):
+		Node(macro_name), params(params) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -556,7 +594,12 @@ struct MacroCall: public Node {
 	}
 
 	operator std::string() const {
-		return t.value();
+		std::string result = t.value() + ("(");
+		for (auto param: params) {
+			result += std::string(*param) + " ,";
+		}
+		result += ")";
+		return result;
 	}
 
 	Token name() const {
@@ -564,6 +607,7 @@ struct MacroCall: public Node {
 	}
 
 	std::shared_ptr<Macro> macro;
+	std::vector<std::shared_ptr<Word>> params;
 };
 
 struct VmState: public Node {
@@ -586,7 +630,7 @@ struct VmState: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = name.value();
+		std::string result = std::string("resolving ") + name.value();
 		if (snapshot) {
 			result += "(" + snapshot_name.value() + ")";
 		}
@@ -796,7 +840,7 @@ struct IFactor: public Node {
 	using Node::Node;
 };
 
-//Word, comparison or expr
+//Word, comparison, check or expr
 template <typename FactorType>
 struct Factor: public IFactor {
 	Factor(const Token& not_token, std::shared_ptr<FactorType> factor):
@@ -845,12 +889,43 @@ struct Comparison: public Node {
 		return std::string(*left) + " " + t.value() + " " + std::string(*right);
 	}
 
-	Token::category op() const {
-		return t.type();
+	Token op() const {
+		return t;
 	}
 
 	std::shared_ptr<Word> left;
 	std::shared_ptr<Word> right;
+};
+
+struct Check: public Node {
+	Check(const Token& check, std::shared_ptr<Word> text_word,
+	const std::vector<std::shared_ptr<Assignment>>& params):
+		Node(check), text_word(text_word), params(params) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		if (params.size()) {
+			return params[params.size() - 1]->end();
+		} else {
+			return text_word->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = t.value();
+
+		if (text_word) {
+			result += " " + std::string(*text_word);
+		}
+
+		return result;
+	}
+
+	std::shared_ptr<Word> text_word;
+	std::vector<std::shared_ptr<Assignment>> params;
 };
 
 struct IExpr: public Node {
@@ -954,6 +1029,57 @@ struct IfClause: public Node {
 	std::shared_ptr<IAction> if_action;
 	Token else_token;
 	std::shared_ptr<IAction> else_action;
+};
+
+struct ForClause: public Node {
+	ForClause(const Token& for_token, const Token& counter, const Token& in, const Token& start,
+		const Token& double_dot, const Token& finish, std::shared_ptr<IAction> cycle_body):
+		Node(for_token),
+		counter(counter),
+		in(in),
+		start_(start),
+		double_dot(double_dot),
+		finish_(finish),
+		cycle_body(cycle_body) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return cycle_body->end();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	uint32_t start() const {
+		return std::stoul(start_.value());
+	}
+
+	uint32_t finish() const {
+		return std::stoul(finish_.value());
+	}
+
+	Token counter, in, start_, double_dot, finish_;
+	std::shared_ptr<IAction> cycle_body;
+};
+
+struct CycleControl: public Node {
+	CycleControl(const Token& control_token): Node(control_token) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
 };
 
 }
