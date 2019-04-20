@@ -5,16 +5,16 @@
 #include <darknet/Network.hpp>
 #include "VM.hpp"
 #include "Texture.hpp"
+#include <map>
 
 struct App {
 	App();
 	void render();
 
-	CUDA cuda;
-
 	vir::Connect qemu_connect;
+	std::map<std::string, vir::Domain> domains;
 
-	darknet::Network net;
+	// darknet::Network net;
 	std::shared_ptr<VM> vm;
 	Texture texture1;
 	Texture texture2;
