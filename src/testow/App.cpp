@@ -41,6 +41,7 @@ void App::render() {
 			if ((width != vm->width) || (height != vm->height)) {
 				width = vm->width;
 				height = vm->height;
+				ImGui::SetWindowSize({width + 40, height + 40});
 				texture1 = Texture(width, height);
 				texture2 = Texture(width, height);
 			}
