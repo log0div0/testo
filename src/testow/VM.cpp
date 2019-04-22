@@ -23,7 +23,6 @@ struct BGRA {
 VM::VM(vir::Connect& qemu_connect, vir::Domain& domain): qemu_connect(qemu_connect), domain(domain) {
 	domain_name = domain.name();
 	running = true;
-	buffer.reserve(10000000); //10 Mb
 	thread = std::thread([=] {
 		run();
 	});
