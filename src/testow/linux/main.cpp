@@ -69,6 +69,7 @@ int main(int, char**)
 			return 1;
 		glfwMakeContextCurrent(window);
 		glfwSwapInterval(1); // Enable vsync
+		glfwMaximizeWindow(window);
 
 		// Initialize OpenGL loader
 	#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)

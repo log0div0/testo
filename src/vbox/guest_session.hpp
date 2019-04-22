@@ -5,9 +5,6 @@
 #include "progress.hpp"
 #include "guest_process.hpp"
 #include <vector>
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
 
 namespace vbox  {
 
@@ -24,14 +21,14 @@ struct GuestSession {
 	GuestSessionWaitResult wait_for(GuestSessionWaitForFlag wait_flag, uint32_t timeout_ms);
 	void close();
 
-	bool directory_exists(const fs::path& dir, bool follow_links = false); 
-	bool file_exists(const fs::path& dir, bool follow_links = false);
-	void file_remove(const fs::path& path);
-	void directory_create(const fs::path& dir, uint32_t mode = 0x1FD);
-	void directory_remove(const fs::path& dir);
-	void directory_remove_recursive(const fs::path& dir);
-	Progress file_copy_to_guest(const fs::path& src, const fs::path& destination);
-	GuestProcess process_create(const fs::path& executable,
+	bool directory_exists(const std::string& dir, bool follow_links = false);
+	bool file_exists(const std::string& dir, bool follow_links = false);
+	void file_remove(const std::string& path);
+	void directory_create(const std::string& dir, uint32_t mode = 0x1FD);
+	void directory_remove(const std::string& dir);
+	void directory_remove_recursive(const std::string& dir);
+	Progress file_copy_to_guest(const std::string& src, const std::string& destination);
+	GuestProcess process_create(const std::string& executable,
 		const std::vector<std::string>& arguments,
 		const std::vector<std::string>& env_changes,
 		const std::vector<ProcessCreateFlag>& flags,
@@ -39,6 +36,6 @@ struct GuestSession {
 
 	IGuestSession* handle = nullptr;
 };
-	
+
 }
 

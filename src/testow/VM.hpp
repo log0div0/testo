@@ -5,23 +5,22 @@
 #include <qemu/Host.hpp>
 #include <thread>
 #include <shared_mutex>
-#include <darknet/Image.hpp>
+#include <testo/StinkingPileOfShit.hpp>
 
 struct VM {
-	VM(vir::Connect& qemu_connect, vir::Domain domain);
+	VM(vir::Connect& qemu_connect, vir::Domain& domain);
 	~VM();
 
-	vir::Domain domain;
+	vir::Connect& qemu_connect;
+	std::string domain_name;
+	vir::Domain& domain;
 
 	std::shared_mutex mutex;
-	std::vector<uint8_t> texture1;
-	std::vector<uint8_t> texture2;
-	size_t width = 0;
-	size_t height = 0;
-	std::vector<uint8_t> buffer;
+	stb::Image view;
+	std::string query;
 
 private:
-	vir::Connect& qemu_connect;
+	StinkingPileOfShit shit;
 	std::thread thread;
 	void run();
 	bool running = false;

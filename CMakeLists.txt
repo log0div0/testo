@@ -20,11 +20,6 @@ add_definitions(-DASIO_STANDALONE)
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
 	${CMAKE_SOURCE_DIR}/src
-	${CMAKE_BINARY_DIR}/out/include
-)
-
-link_directories(
-	${CMAKE_BINARY_DIR}/out/lib
 )
 
 macro(add_package NAME)
@@ -67,5 +62,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(3rd_party)
 add_subdirectory(pkg)
 add_subdirectory(negotiator)
+if (UNIX AND NOT APPLE)
 add_subdirectory(tests)
+endif()
 add_subdirectory(src)

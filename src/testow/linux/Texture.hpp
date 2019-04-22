@@ -23,6 +23,14 @@ struct Texture
 
 	void write(const uint8_t* data, size_t size);
 
+	size_t width() const {
+		return _width;
+	}
+
+	size_t height() const {
+		return _height;
+	}
+
 private:
 	GLuint _handle = 0;
 	size_t _width, _height;

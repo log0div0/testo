@@ -169,10 +169,6 @@ colors = [
 ]
 
 fonts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
-dataset_dir = os.path.join(os.getcwd(), "dataset")
-
-if not os.path.exists(dataset_dir):
-	os.mkdir(dataset_dir)
 
 chars = [char for char in string.printable if not char.isspace()]
 
@@ -197,14 +193,11 @@ def draw_char(image, left, top, foreground, background, font):
 	x_center = (left + x + (width // 2)) / image_width
 	y_center = (top + y + (height // 2)) / image_height
 	if char != ' ':
-		return "%s %s %s %s %s\n" % (chars.index(char), x_center, y_center, width / image_width, height / image_height)
+		return "%s %s %s %s %s\n" % (chars.index(char), x_center, y_center, (width + 2) / image_width, (height + 2) / image_height)
 	else:
 		return ""
 
 def main(base_dir, image_count):
-	if not os.path.exists(base_dir):
-		os.mkdir(base_dir)
-
 	fonts = [PSF(os.path.join(fonts_dir, font_charset + '-' + font_name + font_size + '.psf.gz')) for font_name in font_names]
 
 	images_dir = os.path.join(base_dir, "images")
@@ -212,13 +205,10 @@ def main(base_dir, image_count):
 	labels_dir = os.path.join(base_dir, "labels")
 	os.mkdir(labels_dir)
 
-	image_list = ""
-
 	for image_index in range(image_count):
 		print(str(image_index) + '/' + str(image_count))
 
 		image_path = os.path.join(images_dir, str(image_index) + '.png')
-		image_list += os.path.abspath(image_path) + "\n"
 		label_path = os.path.join(labels_dir, str(image_index) + '.txt')
 
 		if image_index % 4 < 3:
@@ -251,30 +241,28 @@ def main(base_dir, image_count):
 		with open(label_path, "w") as file:
 			file.write(label)
 
-	image_list_path = os.path.join(base_dir, "image_list.txt")
-	with open(image_list_path, "w") as file:
-		file.write(image_list)
-	return image_list_path
+	s = """
+item_count = %s
+image_width = %s
+image_height = %s
+image_dir = %s
+label_dir = %s
+""" % (
+		image_count,
+		image_width,
+		image_height,
+		images_dir,
+		labels_dir
+	)
+
+	config_file_path = os.path.join(base_dir, "console_fonts.dataset")
+	with open(config_file_path, 'w') as config_file:
+		config_file.write(s)
 
 if __name__ == "__main__":
+	dataset_dir = os.path.join(os.getcwd(), "dataset")
 	if os.path.exists(dataset_dir):
 		shutil.rmtree(dataset_dir)
 	os.mkdir(dataset_dir)
 
-	train_dir = os.path.join(dataset_dir, 'train')
-	valid_dir = os.path.join(dataset_dir, 'valid')
-	train_path = main(train_dir, 10000)
-	valid_path = main(valid_dir, 100)
-
-	names_path = os.path.join(dataset_dir, "testo.names")
-	with open(names_path, "w") as file:
-		for char in chars:
-			file.write(char + "\n")
-
-	data_path = os.path.join(dataset_dir, "testo.data")
-	with open(data_path, "w") as file:
-		file.write("classes = %d\n" % len(chars))
-		file.write("train = %s\n" % train_path)
-		file.write("valid = %s\n" % valid_path)
-		file.write("names = %s\n" % names_path)
-		file.write("backup = backup\n")
+	main(dataset_dir, 10000)

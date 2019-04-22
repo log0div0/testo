@@ -40,7 +40,13 @@ Texture& Texture::operator=(Texture&& other) {
 }
 
 void Texture::write(const uint8_t* data, size_t size) {
+	if (!size) {
+		return;
+	}
 	glBindTexture(GL_TEXTURE_2D, _handle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	if (glGetError() != GL_NO_ERROR) {
+		throw std::runtime_error("OpenGL error");
+	}
 }
 
