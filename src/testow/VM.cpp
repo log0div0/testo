@@ -4,6 +4,7 @@
 #include <iostream>
 #include <math.h>
 #include <stb_image.h>
+#include <darknet/YOLO.hpp>
 
 using namespace std::chrono_literals;
 
@@ -47,8 +48,7 @@ void VM::run() {
 		previous = current;
 		if (!domain.is_active()) {
 			std::lock_guard<std::shared_mutex> lock(mutex);
-			width = 0;
-			height = 0;
+			view = {};
 			continue;
 		}
 		auto stream = qemu_connect.new_stream();
@@ -58,9 +58,29 @@ void VM::run() {
 
 		stb::Image screenshot(buffer.data(), bytes);
 
+		if (network) {
+			if ((network->w != screenshot.width) ||
+				(network->h != screenshot.height) ||
+				(network->c != screenshot.channels)) {
+				network.reset();
+			}
+		}
+		if (!network) {
+			use_gpu = true;
+			network = std::make_unique<darknet::Network>("/home/log0div0/work/testo/nn/testo.network",
+				1, screenshot.width, screenshot.height, screenshot.channels);
+			network->load_weights("/home/log0div0/work/testo/nn/testo.weights");
+		}
+
+		std::string query_copy;
+		{
+			std::lock_guard<std::shared_mutex> lock(mutex);
+			query_copy = query;
+		}
+
+		yolo::predict(*network, screenshot, query_copy);
+
 		std::lock_guard<std::shared_mutex> lock(mutex);
-		std::swap(texture1, screenshot);
-		width = screenshot.width;
-		height = screenshot.height;
+		std::swap(view, screenshot);
 	}
 }

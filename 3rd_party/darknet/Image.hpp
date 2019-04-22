@@ -32,6 +32,8 @@ struct Image {
 		return width * height * channels;
 	}
 
+	void draw(int left, int top, int right, int bottom, uint8_t r, uint8_t g, uint8_t b);
+
 	uint8_t* _data = nullptr;
 	int width = 0;
 	int height = 0;
@@ -78,8 +80,6 @@ struct Image {
 	const float& operator[](size_t index) const {
 		return data[index];
 	}
-
-	void draw(int left, int top, int right, int bottom, float r, float g, float b);
 
 	int w = 0;
 	int h = 0;

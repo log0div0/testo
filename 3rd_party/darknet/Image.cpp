@@ -63,6 +63,39 @@ void Image::write_png(const std::string& path) {
 	}
 }
 
+void Image::draw(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b) {
+	if (x1 < 0) x1 = 0;
+	if (x1 >= width) x1 = width - 1;
+	if (x2 < 0) x2 = 0;
+	if (x2 >= width) x2 = width - 1;
+
+	if (y1 < 0) y1 = 0;
+	if (y1 >= height) y1 = height - 1;
+	if (y2 < 0) y2 = 0;
+	if (y2 >= height) y2 = height - 1;
+
+	for (int i = x1; i <= x2; ++i) {
+		_data[i*channels + y1*width*channels + 0] = r;
+		_data[i*channels + y2*width*channels + 0] = r;
+
+		_data[i*channels + y1*width*channels + 1] = g;
+		_data[i*channels + y2*width*channels + 1] = g;
+
+		_data[i*channels + y1*width*channels + 2] = b;
+		_data[i*channels + y2*width*channels + 2] = b;
+	}
+	for (int i = y1; i <= y2; ++i) {
+		_data[x1*channels + i*width*channels + 0] = r;
+		_data[x2*channels + i*width*channels + 0] = r;
+
+		_data[x1*channels + i*width*channels + 1] = g;
+		_data[x2*channels + i*width*channels + 1] = g;
+
+		_data[x1*channels + i*width*channels + 2] = b;
+		_data[x2*channels + i*width*channels + 2] = b;
+	}
+}
+
 }
 
 namespace darknet {
@@ -139,39 +172,6 @@ Image& Image::operator=(Image&& other) {
 	std::swap(c, other.c);
 	std::swap(data, other.data);
 	return *this;
-}
-
-void Image::draw(int x1, int y1, int x2, int y2, float r, float g, float b) {
-	if (x1 < 0) x1 = 0;
-	if (x1 >= w) x1 = w-1;
-	if (x2 < 0) x2 = 0;
-	if (x2 >= w) x2 = w-1;
-
-	if (y1 < 0) y1 = 0;
-	if (y1 >= h) y1 = h-1;
-	if (y2 < 0) y2 = 0;
-	if (y2 >= h) y2 = h-1;
-
-	for (int i = x1; i <= x2; ++i) {
-		data[i + y1*w + 0*w*h] = r;
-		data[i + y2*w + 0*w*h] = r;
-
-		data[i + y1*w + 1*w*h] = g;
-		data[i + y2*w + 1*w*h] = g;
-
-		data[i + y1*w + 2*w*h] = b;
-		data[i + y2*w + 2*w*h] = b;
-	}
-	for (int i = y1; i <= y2; ++i) {
-		data[x1 + i*w + 0*w*h] = r;
-		data[x2 + i*w + 0*w*h] = r;
-
-		data[x1 + i*w + 1*w*h] = g;
-		data[x2 + i*w + 1*w*h] = g;
-
-		data[x1 + i*w + 2*w*h] = b;
-		data[x2 + i*w + 2*w*h] = b;
-	}
 }
 
 }
