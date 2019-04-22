@@ -176,15 +176,15 @@ ConvolutionalLayer::~ConvolutionalLayer() {
 #endif
 }
 
-void ConvolutionalLayer::load_weights(FILE* fp)
+void ConvolutionalLayer::load_weights(std::istream& stream)
 {
-	fread(biases, sizeof(float), out_c, fp);
-	if (batch_normalize){
-		fread(scales, sizeof(float), out_c, fp);
-		fread(rolling_mean, sizeof(float), out_c, fp);
-		fread(rolling_variance, sizeof(float), out_c, fp);
+	stream.read((char*)biases, sizeof(float) * out_c);
+	if (batch_normalize) {
+		stream.read((char*)scales, sizeof(float) * out_c);
+		stream.read((char*)rolling_mean, sizeof(float) * out_c);
+		stream.read((char*)rolling_variance, sizeof(float) * out_c);
 	}
-	fread(weights, sizeof(float), nweights, fp);
+	stream.read((char*)weights, sizeof(float) * nweights);
 #ifdef GPU
 	if(use_gpu){
 		push();

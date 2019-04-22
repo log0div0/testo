@@ -12,6 +12,8 @@ namespace darknet {
 struct Network {
 	Network(const std::string& config_file_path,
 		int batch_, int w_, int h_, int c_);
+	Network(std::istream& ini,
+		int batch_, int w_, int h_, int c_);
 	~Network();
 
 	Network(const Network&) = delete;
@@ -21,6 +23,7 @@ struct Network {
 	Network& operator=(Network&&);
 
 	void load_weights(const std::string& weights_file_path);
+	void load_weights(std::istream& weights_file);
 	void save_weights(const std::string& weights_file_path);
 
 	void forward();

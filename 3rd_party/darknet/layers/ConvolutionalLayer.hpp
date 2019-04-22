@@ -14,7 +14,7 @@ struct ConvolutionalLayer: Layer {
 		size_t c);
 	virtual ~ConvolutionalLayer() override;
 
-	virtual void load_weights(FILE* fp) override;
+	virtual void load_weights(std::istream& stream) override;
 	virtual void save_weights(FILE* fp) const override;
 
 

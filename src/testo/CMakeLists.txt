@@ -7,8 +7,28 @@ endif()
 file(GLOB_RECURSE SRCS *.cpp)
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
-add_library(testo-core STATIC ${SRCS})
 
+set(DST ${CMAKE_BINARY_DIR}/src/nf2/nf2_main/conntrack/helpers)
+set(SRC ${CMAKE_SOURCE_DIR}/src/nf2/nf2_main/conntrack/helpers)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_network.cpp
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
+	COMMAND xxd -i testo.network ${CMAKE_BINARY_DIR}/src/testo_network.cpp
+	DEPENDS ${CMAKE_SOURCE_DIR}/nn/testo.network
+)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_weights.cpp
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
+	COMMAND xxd -i testo.weights ${CMAKE_BINARY_DIR}/src/testo_weights.cpp
+	DEPENDS ${CMAKE_SOURCE_DIR}/nn/testo.weights
+)
+
+list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_network.cpp)
+list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_weights.cpp)
+
+
+add_library(testo-core STATIC ${SRCS})
+add_dependencies(testo-core darknet)
 target_link_libraries(testo-core coro vbox vboxcapi qemu pugixml pthread)
 
 if(UNIX)

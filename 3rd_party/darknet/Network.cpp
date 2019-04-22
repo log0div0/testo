@@ -1,8 +1,8 @@
 
 #include "Network.hpp"
 #include <stdexcept>
-#include <inipp.hh>
 #include <assert.h>
+#include <inipp.hh>
 
 #include "layers/ConvolutionalLayer.hpp"
 #include "layers/MaxPoolLayer.hpp"
@@ -26,7 +26,13 @@ Network::Network(const std::string& path,
 	if (!file.is_open()) {
 		throw std::runtime_error("Failed to open file " + path);
 	}
-	inifile ini(file);
+	new (this) Network(file, batch_, w_, h_, c_);
+}
+
+Network::Network(std::istream& stream,
+	int batch_, int w_, int h_, int c_)
+{
+	inifile ini(stream);
 
 	batch = batch_;
 	h = h_;
@@ -97,15 +103,17 @@ Network::~Network() {
 }
 
 void Network::load_weights(const std::string& weights_file_path) {
-	FILE *fp = fopen(weights_file_path.c_str(), "rb");
-	if(!fp) {
+	std::ifstream file(weights_file_path, std::ios::binary);
+	if (!file.is_open()) {
 		throw std::runtime_error("Failed to open file " + weights_file_path);
 	}
+	load_weights(file);
+}
 
+void Network::load_weights(std::istream& weights_file) {
 	for (auto& l: layers) {
-		l->load_weights(fp);
+		l->load_weights(weights_file);
 	}
-	fclose(fp);
 }
 
 void Network::save_weights(const std::string& weights_file_path) {

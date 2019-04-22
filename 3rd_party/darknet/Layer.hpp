@@ -2,6 +2,7 @@
 #pragma once
 
 #include "include/darknet.h"
+#include <istream>
 
 namespace darknet {
 
@@ -14,7 +15,7 @@ struct Layer {
 	Layer(const Layer& other) = delete;
 	Layer& operator=(const Layer& other) = delete;
 
-	virtual void load_weights(FILE* fp) = 0;
+	virtual void load_weights(std::istream& stream) = 0;
 	virtual void save_weights(FILE* fp) const = 0;
 
 	virtual void forward(Network* network) = 0;

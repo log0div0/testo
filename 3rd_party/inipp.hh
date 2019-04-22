@@ -111,7 +111,7 @@ public:
 struct inifile: inisection
 {
 public:
-	inifile(std::ifstream& infile) {
+	inifile(std::istream& infile) {
 		inisection* cursec = this;
 		std::string line;
 
