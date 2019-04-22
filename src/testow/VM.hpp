@@ -5,8 +5,7 @@
 #include <qemu/Host.hpp>
 #include <thread>
 #include <shared_mutex>
-#include <darknet/Image.hpp>
-#include <darknet/Network.hpp>
+#include <testo/StinkingPileOfShit.hpp>
 
 struct VM {
 	VM(vir::Connect& qemu_connect, vir::Domain& domain);
@@ -21,7 +20,7 @@ struct VM {
 	std::string query;
 
 private:
-	std::unique_ptr<darknet::Network> network;
+	StinkingPileOfShit shit;
 	std::thread thread;
 	void run();
 	bool running = false;

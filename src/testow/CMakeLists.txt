@@ -11,7 +11,7 @@ endif()
 
 add_executable(testow ${SRCS})
 add_dependencies(testow qemu)
-target_link_libraries(testow imgui qemu pugixml libdarknet testo-core)
+target_link_libraries(testow imgui qemu pugixml testo-core libdarknet)
 
 if(WIN32)
 	include_directories(${CMAKE_SOURCE_DIR}/3rd_party/darknet/include/windows)

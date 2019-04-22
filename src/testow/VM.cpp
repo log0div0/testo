@@ -4,7 +4,6 @@
 #include <iostream>
 #include <math.h>
 #include <stb_image.h>
-#include <darknet/YOLO.hpp>
 
 using namespace std::chrono_literals;
 
@@ -58,27 +57,13 @@ void VM::run() {
 
 		stb::Image screenshot(buffer.data(), bytes);
 
-		if (network) {
-			if ((network->w != screenshot.width) ||
-				(network->h != screenshot.height) ||
-				(network->c != screenshot.channels)) {
-				network.reset();
-			}
-		}
-		if (!network) {
-			use_gpu = true;
-			network = std::make_unique<darknet::Network>("/home/log0div0/work/testo/nn/testo.network",
-				1, screenshot.width, screenshot.height, screenshot.channels);
-			network->load_weights("/home/log0div0/work/testo/nn/testo.weights");
-		}
-
 		std::string query_copy;
 		{
 			std::lock_guard<std::shared_mutex> lock(mutex);
 			query_copy = query;
 		}
 
-		yolo::predict(*network, screenshot, query_copy);
+		shit.stink_even_stronger(screenshot, query_copy);
 
 		std::lock_guard<std::shared_mutex> lock(mutex);
 		std::swap(view, screenshot);
