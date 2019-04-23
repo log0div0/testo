@@ -4,6 +4,7 @@
 #include "pugixml/pugixml.hpp"
 #include "VmController.hpp"
 #include "qemu/Host.hpp"
+#include "StinkingPileOfShit.hpp"
 
 struct QemuVmController: public VmController {
 	QemuVmController() = delete;
@@ -85,4 +86,6 @@ private:
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;
 	std::unordered_map<char, std::vector<std::string>> charmap;
+	StinkingPileOfShit shit;
+	std::vector<uint8_t> screenshot_buffer;
 };

@@ -490,7 +490,7 @@ void ConvolutionalLayer::backward_gpu(Network* net)
 	} else {
 		backward_bias_gpu(bias_updates_gpu, delta_gpu, batch, out_c, out_w*out_h);
 	}
-	float *original_input = net->input_gpu;
+	//float *original_input = net->input_gpu;
 
 	int m = out_c;
 	int n = size*size*in_c;

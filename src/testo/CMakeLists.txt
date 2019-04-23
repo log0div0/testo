@@ -29,10 +29,14 @@ list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_weights.cpp)
 
 add_library(testo-core STATIC ${SRCS})
 add_dependencies(testo-core darknet)
-target_link_libraries(testo-core coro vbox vboxcapi qemu pugixml pthread)
+target_link_libraries(testo-core coro vbox vboxcapi qemu pugixml pthread libdarknet)
 
 if(UNIX)
-	target_link_libraries(testo-core dl stdc++fs)
+	target_link_libraries(testo-core glfw gl3w GL dl stdc++fs)
+endif()
+
+if(GPU)
+	target_link_libraries(testo-core cuda cudart cublas curand)
 endif()
 
 add_executable(testo main.cpp)

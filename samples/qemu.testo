@@ -1,8 +1,7 @@
-machine buwaha {
+machine client {
 	cpus: 1
-	os_type: "ubuntu_64"
 	ram: 512Mb
-	iso: $ISO_PATH + "/ubuntu-16.04.5-server-amd64.iso"
+	iso: $ISO_PATH + "/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -21,6 +20,8 @@ machine buwaha {
 		password: "1111"
 	}
 }
+
+
 macro another_reboot(login, password) {
 	type $login + " " + $password
 	wait for 3s
@@ -31,18 +32,41 @@ macro reboot(login, password) {
 	another_reboot($password, $login)
 }
 
-flash dummy_flash {
-	size: 256Mb
-	fs: "ntfs"
-	folder: "/home/alex/work/vbox/my_flash"
-}
-
-snapshot dummy: dummy3
+snapshot ubuntu_installed
 {
-	unplug dvd
+	wait "Language"; press Enter;
+	wait "Install Ubuntu Server"; press Enter;
+	wait "Select a language"; press Enter;
+	wait "Select your location"; press Enter;
+	wait "Detect keyboard layout?"; press Enter;
+	wait "Country of origin"; press Enter;
+	wait "Keyboard layout:"; press Enter;
+	wait "Primary network interface:" for 1m; press Enter;
+	wait "Hostname:" for 20s; press Backspace*6; type "testo"; press Enter
+	wait "Full name for the new user"; type "testo-user"; press Enter
+	wait "Username for your account:"; press Enter
+	wait "Choose a password for the new user"; type "1111"; press Enter
+	wait "Re-enter password to verify"; type "1111"; press Enter
+	wait "Use weak password?";  press Left, Enter
+	wait "Encrypt your home directory?";  press Enter
+	wait "Select your time zone" for 2m;  press Enter
+	wait "Partitioning method"; press Up, Enter
+	wait "Select disk to partition"; press Enter
+	wait "Write the changes to disks?"; press Left, Enter
+	wait "HTTP proxy information" for 2m; type $HTTP_PROXY; press Enter;
+	wait "How do you want to manage upgrades" for 1m; press Enter
+	wait "Choose software to install"; press Enter
+	wait "Install the GRUB" for 6m; press Enter
+	wait "Installation complete" for 90s; unplug dvd; press Enter
+	wait "Ubuntu 16.04.6 LTS" for 40s;
+
 }
 
-snapshot dummy2: dummy {
+test dummy: client(ubuntu_installed) {
+
+}
+
+/*snapshot dummy2: dummy {
 	type "sudo su"; press Enter;; wait for 1s;
 	type "1111"; press Enter;
 	if ($HTTP_PROXY) {
@@ -96,4 +120,4 @@ test dummy3: buwaha(negotiator)
 	With some tabulations and multilines
 And smore
 			And smore"""
-}
+}*/
