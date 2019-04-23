@@ -58,7 +58,7 @@ std::vector<Snapshot> Snapshot::children(std::initializer_list<virDomainSnapshot
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 
-	for (size_t i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result.push_back(snapshots[i]);
 	}
 

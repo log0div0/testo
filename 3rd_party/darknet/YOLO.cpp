@@ -51,9 +51,9 @@ float delta_yolo_class(darknet::Layer& l, int index, int class_)
 {
 	float result = 0;
 	int stride = l.out_w*l.out_h;
-	for(int n = 0; n < classes.size(); ++n){
-		l.delta[index + stride*n] = ((n == class_)?1 : 0) - logistic_activate(l.output[index + stride*n]);
-		if (n == class_) {
+	for(size_t n = 0; n < classes.size(); ++n){
+		l.delta[index + stride*n] = ((n == (size_t)class_)?1 : 0) - logistic_activate(l.output[index + stride*n]);
+		if (n == (size_t)class_) {
 			result += logistic_activate(l.output[index + stride*n]);
 		}
 	}
@@ -176,6 +176,8 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l, int left, int
 
 bool predict(darknet::Network& network, stb::Image& image, const std::string& text) {
 
+	bool result = false;
+
 	network.train = false;
 
 	uint8_t buffer[sizeof(darknet::Image)];
@@ -194,6 +196,7 @@ bool predict(darknet::Network& network, stb::Image& image, const std::string& te
 		for (int x = 0; x < l.out_w; ++x) {
 			std::vector<Rect> rects;
 			if (find_substr(image, l, x, y, text, rects)) {
+				result = true;
 				for (auto& rect: rects) {
 					image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
 				}
@@ -201,7 +204,7 @@ bool predict(darknet::Network& network, stb::Image& image, const std::string& te
 
 		}
 	}
-
+	return result;
 }
 
 }

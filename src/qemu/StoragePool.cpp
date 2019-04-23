@@ -49,7 +49,7 @@ std::vector<StorageVolume> StoragePool::volumes() const {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 
-	for (size_t i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result.push_back(volumes[i]);
 	}
 

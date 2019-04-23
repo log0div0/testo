@@ -854,6 +854,7 @@ bool QemuVmController::is_link_plugged(const pugi::xml_node& devices, const std:
 				}
 			}
 		}
+		return false;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged", nic)));
 	}

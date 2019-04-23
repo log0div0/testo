@@ -130,7 +130,7 @@ private:
 		std::cout << std::setw(3);
 		std::cout << current_progress;
 		std::cout << std::setw(0);
-		std::cout << "\%] ";
+		std::cout << '%' << "] ";
 		(std::cout << ... << args);
 		std::cout << std::endl;
 	}

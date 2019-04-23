@@ -153,7 +153,7 @@ void Network::forward() {
 	else
 #endif
 	{
-		for (int i = 0; i < layers.size(); ++i) {
+		for (size_t i = 0; i < layers.size(); ++i) {
 			auto& l = layers[i];
 			if (l->delta) {
 				fill_cpu(l->outputs * l->batch, 0, l->delta, 1);
