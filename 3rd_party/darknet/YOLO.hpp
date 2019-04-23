@@ -132,10 +132,10 @@ struct Dataset {
 		}
 		inipp::inifile ini(file);
 
-		item_count = std::stoi(ini.get("item_count"));
+		item_count = std::stoul(ini.get("item_count"));
 
-		image_width = std::stoi(ini.get("image_width"));
-		image_height = std::stoi(ini.get("image_height"));
+		image_width = std::stoul(ini.get("image_width"));
+		image_height = std::stoul(ini.get("image_height"));
 		image_channels = 3;
 		image_size = image_width * image_height * image_channels;
 
@@ -146,15 +146,15 @@ struct Dataset {
 	std::vector<yolo::Label> charge(darknet::Network* network) {
 		std::vector<yolo::Label> result;
 
-		for (size_t row_index = 0; row_index < network->batch; ++row_index)
+		for (int row_index = 0; row_index < network->batch; ++row_index)
 		{
 			size_t item_index = rand() % item_count;
 
 			std::string image_path = image_dir + std::to_string(item_index) + ".png";
 			darknet::Image image(image_path);
-			if ((image.w != image_width) ||
-				(image.h != image_height) ||
-				(image.c != image_channels)) {
+			if ((image.width() != image_width) ||
+				(image.height() != image_height) ||
+				(image.channels() != image_channels)) {
 				throw std::runtime_error("Image of invalid size");
 			}
 			memcpy(&network->input[image_size*row_index], image.data, image_size*sizeof(float));

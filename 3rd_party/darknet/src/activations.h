@@ -62,6 +62,7 @@ static inline float hardtan_gradient(float x)
     if (x > -1 && x < 1) return 1;
     return 0;
 }
+
 static inline float linear_gradient(float x){return 1;}
 static inline float logistic_gradient(float x){return (1-x)*x;}
 static inline float loggy_gradient(float x)

@@ -81,7 +81,7 @@ std::vector<Snapshot> Domain::snapshots(std::initializer_list<virDomainSnapshotL
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 
-	for (size_t i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result.push_back(snapshots[i]);
 	}
 
@@ -186,7 +186,7 @@ void Domain::set_metadata(virDomainMetadataType type,
 }
 
 void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes) {
-	if (virDomainSendKey(handle, code_set, 0, keycodes.data(), keycodes.size(), 0) < 0) {
+	if (virDomainSendKey(handle, code_set, holdtime, keycodes.data(), keycodes.size(), 0) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 }

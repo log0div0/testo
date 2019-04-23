@@ -45,7 +45,7 @@ MaxPoolLayer::MaxPoolLayer(const inisection& section,
 	output_gpu  = cuda_make_array(output, output_size);
 	delta_gpu   = cuda_make_array(delta, output_size);
 #endif
-	fprintf(stderr, "max          %d x %d / %d x %d  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", size_w, size_h, stride_w, stride_h, w, h, c, out_w, out_h, out_c);
+	fprintf(stderr, "max          %d x %d / %d x %d  %4zd x%4zd x%4zd   ->  %4d x%4d x%4d\n", size_w, size_h, stride_w, stride_h, w, h, c, out_w, out_h, out_c);
 	workspace_size = 0;
 }
 

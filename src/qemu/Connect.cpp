@@ -46,7 +46,7 @@ std::vector<Domain> Connect::domains(std::initializer_list<virConnectListAllDoma
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 
-	for (size_t i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result.push_back(domains[i]);
 	}
 
@@ -95,7 +95,7 @@ std::vector<StoragePool> Connect::storage_pools(std::initializer_list<virConnect
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 
-	for (size_t i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result.push_back(pools[i]);
 	}
 
@@ -134,7 +134,7 @@ std::vector<Network> Connect::networks(std::initializer_list<virConnectListAllNe
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 
-	for (size_t i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++) {
 		result.push_back(nets[i]);
 	}
 
