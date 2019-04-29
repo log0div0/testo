@@ -295,7 +295,10 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::share
 			text = visit_word(vm, wait->text_word);
 		}
 
-		std::string print_str = std::string("Waiting ") + text;
+		std::string print_str = std::string("Waiting ");
+		if (text.length()) {
+			print_str += "\"" + text + "\"";
+		}
 		nlohmann::json params = {};
 
 		for (auto it = wait->params.begin(); it != wait->params.end();) {
@@ -355,6 +358,8 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vm, std::s
 	}
 
 	print_str += std::string(" on vm ") + vm->name();
+
+	print(print_str);
 
 	for (uint32_t i = 0; i < times; i++) {
 		vm->press(key_spec->get_buttons());
@@ -473,7 +478,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::s
 			throw std::runtime_error(fmt::format("dvd is already unplugged"));
 		}
 
-		print("Plugging dvd from vm ", vm->name());
+		print("Unplugging dvd from vm ", vm->name());
 		vm->unplug_dvd();
 	}
 }
@@ -543,7 +548,9 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			fs::remove(host_script_file.generic_string());
 			fs::remove(host_script_dir.generic_string());
 
-			vm->run("/bin/bash", {guest_script_file.generic_string()});
+			if (vm->run("/bin/bash", {guest_script_file.generic_string()}) != 0) {
+				throw std::runtime_error("Bash command failed");
+			}
 			vm->remove_from_guest(guest_script_dir);
 		}
 	} catch (const std::exception& error) {

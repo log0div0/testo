@@ -58,7 +58,7 @@ snapshot ubuntu_installed
 	wait "Choose software to install"; press Enter
 	wait "Install the GRUB" for 6m; press Enter
 	wait "Installation complete" for 90s; unplug dvd; press Enter
-	wait "Ubuntu 16.04.6 LTS" for 40s;
+	wait "testo login:" for 40s;
 
 }
 

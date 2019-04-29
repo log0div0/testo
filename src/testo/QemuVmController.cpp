@@ -1147,6 +1147,7 @@ void QemuVmController::type(const std::string& text) {
 			}
 
 			press(buttons->second);
+			std::this_thread::sleep_for(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Typing {}", text)));

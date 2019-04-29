@@ -107,11 +107,11 @@ int Negotiator::execute(const std::string& command) {
 		}
 
 		auto result = response.at("result");
-		if (result.count("stdout")) {
-			std::cout << result.at("stdout").get<std::string>();
-		}
 		if (result.count("stderr")) {
 			std::cout << result.at("stderr").get<std::string>();
+		}
+		if (result.count("stdout")) {
+			std::cout << result.at("stdout").get<std::string>();
 		}
 		if (result.at("status").get<std::string>() == "finished") {
 			return result.at("exit_code").get<int>();

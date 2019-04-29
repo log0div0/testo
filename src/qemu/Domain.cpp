@@ -54,7 +54,8 @@ void Domain::start() {
 }
 
 void Domain::stop() {
-	if (virDomainDestroy(handle) < 0) {
+	//TODO: create shutdown action
+	if (virDomainDestroyFlags(handle, VIR_DOMAIN_DESTROY_GRACEFUL) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 }
