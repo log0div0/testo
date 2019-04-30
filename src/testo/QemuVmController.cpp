@@ -323,7 +323,6 @@ std::vector<std::string> QemuVmController::keys() {
 			std::string value = it->first_attribute().value();
 			result.push_back(value.substr(strlen("vm_metadata/")));
 		}
-
 		return result;
 	}
 	catch (const std::exception& error) {
@@ -340,9 +339,7 @@ std::vector<std::string> QemuVmController::keys(vir::Snapshot& snapshot) {
 			std::string value = it->first_attribute().value();
 			result.push_back(value.substr(strlen("vm_metadata/")));
 		}
-
 		return result;
-
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata keys")));
@@ -1252,6 +1249,10 @@ void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 			throw std::runtime_error("Source file/folder does not exist on host: " + src.generic_string());
 		}
 
+		if (dst.is_relative()) {
+			throw std::runtime_error("Destination path on vm must be absolute");
+		}
+
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		Negotiator helper(domain);
 
@@ -1263,7 +1264,9 @@ void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 
 void QemuVmController::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	try {
-
+		if (src.is_relative()) {
+			throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
+		}
 
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		Negotiator helper(domain);

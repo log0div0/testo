@@ -109,8 +109,11 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shar
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		auto path = visit_word(vm, plug->path);
-		result += path;
+		fs::path path = visit_word(vm, plug->path);
+		if (path.is_relative()) {
+			path = plug->t.pos().file.parent_path() / path;
+		}
+		result += path.generic_string();
 		//add signature for dvd file
 		result += file_signature(path);
 	}
@@ -142,25 +145,36 @@ std::string VisitorCksum::visit_set(std::shared_ptr<VmController> vm, std::share
 std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {
 	std::string result(copy->t.value());
 
-	auto from = visit_word(vm, copy->from);
+	fs::path from = visit_word(vm, copy->from);
 
-	result += from;
-
-	if (!fs::exists(from)) {
-		throw std::runtime_error("Specified path doesn't exist: " + fs::path(from).generic_string());
+	if (from.is_relative()) {
+		from = copy->t.pos().file.parent_path() / from;
 	}
 
-	//now we should take care of last modify date of every file and folder in the folder
-	if (fs::is_regular_file(from)) {
-		result += file_signature(from);
-	} else if (fs::is_directory(from)) {
-		result += directory_signature(from);
-	} else {
-		throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
+	result += from.generic_string();
+
+	if (copy->is_to_guest()) {
+		if (!fs::exists(from)) {
+			throw std::runtime_error("Specified path doesn't exist: " + fs::path(from).generic_string());
+		}
+
+		//now we should take care of last modify date of every file and folder in the folder
+		if (fs::is_regular_file(from)) {
+			result += file_signature(from);
+		} else if (fs::is_directory(from)) {
+			result += directory_signature(from);
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
+		}
+	} //TODO: I wonder what it must be for the from copy
+
+	fs::path to = visit_word(vm, copy->to);
+
+	if (to.is_relative()) {
+		to = copy->t.pos().file.parent_path() / to;
 	}
 
-
-	result += visit_word(vm, copy->to);
+	result += to.generic_string();
 
 	return result;
 }

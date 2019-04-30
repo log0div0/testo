@@ -143,33 +143,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			visit_vm_state(state);
 		}
 
-		//Let's remember all the keys all vms have
-		std::unordered_map<std::shared_ptr<VmController>, std::vector<std::string>> original_states;
-
-		for (auto state: test->vms) {
-			auto vm = reg.vms.find(state->name)->second;
-			auto keys = vm->keys();
-			original_states.insert({vm, keys});
-		}
-
 		visit_command_block(test->cmd_block);
+		reg.local_vms.clear(); //also not cleaned up
+		update_progress(); //not happening after possible exception
 
-		for (auto state: original_states) {
-			auto vm = state.first;
-			auto original_keys = state.second;
-			auto final_keys = vm->keys();
-			std::sort(original_keys.begin(), original_keys.end());
-			std::sort(final_keys.begin(), final_keys.end());
-			std::vector<std::string> new_keys;
-			std::set_difference(final_keys.begin(), final_keys.end(), original_keys.begin(), original_keys.end(), std::back_inserter(new_keys));
-			for (auto& key: new_keys) {
-				vm->set_metadata(key, "");
-			}
-		}
+		//Also vm should be stopped if everything is OK
 
-		reg.local_vms.clear();
-
-		update_progress();
 		print("Test \"", test->name.value(), "\" passed");
 		success_tests.push_back(test->name.value());
 	} catch (const InterpreterException& error) {
@@ -177,6 +156,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		std::cout << error << std::endl;
 		print("Test \"", test->name.value(), "\" FAILED");
 		failed_tests.push_back(test->name.value());
+
 		if (stop_on_fail) {
 			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
 		}
@@ -470,8 +450,11 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::s
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
 
-		auto path = visit_word(vm, plug->path);
+		fs::path path = visit_word(vm, plug->path);
 		print("Plugging dvd ", path, " in vm ", vm->name());
+		if (path.is_relative()) {
+			path = plug->t.pos().file.parent_path() / path;
+		}
 		vm->plug_dvd(path);
 	} else {
 		if (!vm->is_dvd_plugged()) {
@@ -583,8 +566,9 @@ void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared
 
 void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {
 	try {
-		auto from = visit_word(vm, copy->from);
-		auto to = visit_word(vm, copy->to);
+		fs::path from = visit_word(vm, copy->from);
+		fs::path to = visit_word(vm, copy->to);
+
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
 		print("Copying ", from, " ", from_to, " vm ", vm->name(), " in directory ", to);
@@ -598,8 +582,14 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::share
 		}
 
 		if(copy->is_to_guest()) {
+			if (from.is_relative()) {
+				from = copy->t.pos().file.parent_path() / from;
+			}
 			vm->copy_to_guest(from, to);
 		} else {
+			if (to.is_relative()) {
+				to = copy->t.pos().file.parent_path() / to;
+			}
 			vm->copy_from_guest(from, to);
 		}
 	} catch (const std::exception& error) {
