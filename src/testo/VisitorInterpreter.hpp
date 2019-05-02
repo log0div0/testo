@@ -109,6 +109,8 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Check> check);
 
+	void stop_all_vms(std::shared_ptr<AST::Test> test);
+
 	void apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot, bool recursive = false);
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
 	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;

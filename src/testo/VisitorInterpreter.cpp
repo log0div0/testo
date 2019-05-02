@@ -137,6 +137,9 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			return;
 		}
 
+		reg.local_vms.clear();
+		stop_all_vms(test);
+
 		print("Running test \"", test->name.value(), "\"...");
 
 		for (auto state: test->vms) {
@@ -144,11 +147,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		}
 
 		visit_command_block(test->cmd_block);
-		reg.local_vms.clear(); //also not cleaned up
 		update_progress(); //not happening after possible exception
-
-		//Also vm should be stopped if everything is OK
-
+		stop_all_vms(test);
 		print("Test \"", test->name.value(), "\" passed");
 		success_tests.push_back(test->name.value());
 	} catch (const InterpreterException& error) {
@@ -160,6 +160,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		if (stop_on_fail) {
 			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
 		}
+		stop_all_vms(test);
+
 	} catch (const CycleControlException& error) {
 		//This exception indicates that some test failed;
 		std::cout << error.token.pos() << " error: cycle control action has not a correcponding cycle" << std::endl;
@@ -168,6 +170,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		if (stop_on_fail) {
 			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
 		}
+		stop_all_vms(test);
+
 	} //any other fails will go up to visit() and will result in terminating
 
 }
@@ -811,6 +815,15 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vm, std::shar
 		return vm->check(text, params);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(InterpreterException(check, vm));
+	}
+}
+
+void VisitorInterpreter::stop_all_vms(std::shared_ptr<AST::Test> test) {
+	for (auto state: test->vms) {
+		auto vm = reg.vms.find(state->name)->second;
+		if (vm->is_defined() && vm->is_running()) {
+			vm->stop();
+		}
 	}
 }
 
