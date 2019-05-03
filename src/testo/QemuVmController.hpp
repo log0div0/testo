@@ -35,7 +35,7 @@ struct QemuVmController: public VmController {
 	void unplug_dvd() override;
 	void start() override;
 	void stop() override;
-	void shutdown() override;
+	void shutdown(uint32_t timeout_seconds) override;
 	void type(const std::string& text) override;
 	bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) override;
 	bool check(const std::string& text, const nlohmann::json& params) override;

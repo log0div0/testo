@@ -33,12 +33,12 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return visit_press(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Plug>>(action)) {
 		return visit_plug(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
+		return visit_shutdown(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Start>>(action)) {
 		return "start";
 	} else if (auto p = std::dynamic_pointer_cast<Action<Stop>>(action)) {
 		return "stop";
-	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
-		return "shutdown";
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
@@ -123,6 +123,16 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shar
 	if (plug->type.value() == "flash") {
 		auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 		result += fd->cksum();
+	}
+	return result;
+}
+
+std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<Shutdown> shutdown) {
+	std::string result("shutdown");
+	if (shutdown->time_interval) {
+		result += shutdown->time_interval.value();
+	} else {
+		result += "1m";
 	}
 	return result;
 }

@@ -737,7 +737,7 @@ void VboxVmController::stop() {
 	}
 }
 
-void VboxVmController::shutdown() {
+void VboxVmController::shutdown(uint32_t timeout_seconds) {
 	throw std::runtime_error("Implement me");
 }
 

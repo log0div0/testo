@@ -1135,10 +1135,10 @@ void QemuVmController::stop() {
 	}
 }
 
-void QemuVmController::shutdown() {
+void QemuVmController::shutdown(uint32_t timeout_seconds) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		domain.shutdown(30);
+		domain.shutdown(timeout_seconds);
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Stopping vm"));

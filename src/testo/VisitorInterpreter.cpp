@@ -481,7 +481,8 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<Shutdown> shutdown) {
 	try {
 		print("Shutting down vm ", vm->name());
-		vm->shutdown();
+		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
+		vm->shutdown(time_to_seconds(wait_for));
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(shutdown, vm));
 
