@@ -126,7 +126,7 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 			print("Using cached flash drive \"", flash->name.value());
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(flash, nullptr));
+		std::throw_with_nested(ActionException(flash, nullptr));
 	}
 
 }
@@ -162,18 +162,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		}
 		stop_all_vms(test);
 
-	} catch (const CycleControlException& error) {
-		//This exception indicates that some test failed;
-		std::cout << error.token.pos() << " error: cycle control action has not a correcponding cycle" << std::endl;
-		print("Test \"", test->name.value(), "\" FAILED");
-		failed_tests.push_back(test->name.value());
-		if (stop_on_fail) {
-			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
-		}
-		stop_all_vms(test);
-
 	} //any other fails will go up to visit() and will result in terminating
-
 }
 
 void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
@@ -199,10 +188,8 @@ void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
 			//everything is A-OK. We can rollback to the last snapshot
 			vm->rollback(vm_state->snapshot->name);
 		}
-	} catch (const CycleControlException& error) {
-		throw error; //let it go further up
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(vm_state, nullptr));
+		std::throw_with_nested(ActionException(vm_state, nullptr));
 	}
 }
 
@@ -268,7 +255,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::share
 		print("Typing ", text, " on vm ", vm->name());
 		vm->type(text);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(type, vm));
+		std::throw_with_nested(ActionException(type, vm));
 	}
 }
 
@@ -317,7 +304,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::share
 			throw std::runtime_error("Wait timeout");
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(wait, vm));
+		std::throw_with_nested(ActionException(wait, vm));
 	}
 
 }
@@ -328,7 +315,7 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vm, std::shar
 			visit_key_spec(vm, key_spec);
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(press, vm));
+		std::throw_with_nested(ActionException(press, vm));
 	}
 }
 
@@ -369,7 +356,7 @@ void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vm, std::share
 				plug->type.value());
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(plug, vm));
+		std::throw_with_nested(ActionException(plug, vm));
 	}
 }
 
@@ -475,7 +462,7 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vm, std::shar
 		print("Starting vm ", vm->name());
 		vm->start();
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(start, vm));
+		std::throw_with_nested(ActionException(start, vm));
 	}
 }
 
@@ -484,7 +471,7 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 		print("Stopping vm ", vm->name());
 		vm->stop();
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(stop, vm));
+		std::throw_with_nested(ActionException(stop, vm));
 
 	}
 
@@ -541,7 +528,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			vm->remove_from_guest(guest_script_dir);
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(exec, vm));
+		std::throw_with_nested(ActionException(exec, vm));
 	}
 }
 
@@ -563,7 +550,7 @@ void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared
 			vm->set_metadata(assign->left.value(), value);
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(set, vm));
+		std::throw_with_nested(ActionException(set, vm));
 	}
 
 }
@@ -597,7 +584,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::share
 			vm->copy_from_guest(from, to);
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(copy, vm));
+		std::throw_with_nested(ActionException(copy, vm));
 	}
 
 }
@@ -625,7 +612,7 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::
 	try {
 		expr_result = visit_expr(vm, if_clause->expr);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(if_clause, vm));
+		std::throw_with_nested(ActionException(if_clause, vm));
 	}
 	//everything else should be caught at test level
 	if (expr_result) {
@@ -814,7 +801,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vm, std::shar
 		print(print_str);
 		return vm->check(text, params);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(InterpreterException(check, vm));
+		std::throw_with_nested(ActionException(check, vm));
 	}
 }
 

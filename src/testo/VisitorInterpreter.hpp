@@ -32,9 +32,23 @@ struct VisitorInterpreter {
 		std::unordered_map<std::string, std::string> vars;
 	};
 
-	struct InterpreterException: public std::runtime_error {
-		explicit InterpreterException(std::shared_ptr<AST::Node> node, std::shared_ptr<VmController> vm):
-			std::runtime_error(""), node(node), vm(vm)
+	struct InterpreterException: public std::exception {
+			explicit InterpreterException():
+				std::exception()
+			{
+				msg = "";
+			}
+
+			const char* what() const noexcept override {
+				return msg.c_str();
+			}
+		protected:
+			std::string msg;
+	};
+
+	struct ActionException: public InterpreterException {
+		explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<VmController> vm):
+			InterpreterException(), node(node), vm(vm)
 		{
 			msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node) + " ";
 			if (vm) {
@@ -42,31 +56,20 @@ struct VisitorInterpreter {
 				msg += vm->name();
 			}
 		}
-
-		const char* what() const noexcept override {
-			return msg.c_str();
-		}
-
 	private:
-		std::string msg;
 		std::shared_ptr<AST::Node> node;
 		std::shared_ptr<VmController> vm;
 	};
 
-	struct CycleControlException: public std::runtime_error {
-		explicit CycleControlException(const Token& token):
-			std::runtime_error(""), token(token)
-		{
-			msg = token.value();
-		}
 
-		const char* what() const noexcept override {
-			return msg.c_str();
+	struct CycleControlException: public InterpreterException {
+		explicit CycleControlException(const Token& token):
+			InterpreterException(), token(token)
+		{
+			msg = std::string(token.pos()) + " error: cycle control action has not a correcponding cycle";
 		}
 
 		Token token;
-	private:
-		std::string msg;
 	};
 
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
