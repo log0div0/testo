@@ -809,7 +809,7 @@ bool VboxVmController::check(const std::string& text, const nlohmann::json& para
 	throw std::runtime_error("Implement me");
 }
 
-int VboxVmController::run(const fs::path& exe, std::vector<std::string> args) {
+int VboxVmController::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
 	try {
 		args.insert(args.begin(), "--");
 		uint32_t timeout = 10 * 60 * 1000; //10 mins

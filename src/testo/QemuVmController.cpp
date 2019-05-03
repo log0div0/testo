@@ -1189,7 +1189,7 @@ bool QemuVmController::check(const std::string& text, const nlohmann::json& para
 	return shit.stink_even_stronger(screenshot, text);
 }
 
-int QemuVmController::run(const fs::path& exe, std::vector<std::string> args) {
+int QemuVmController::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		Negotiator helper(domain);
@@ -1200,7 +1200,7 @@ int QemuVmController::run(const fs::path& exe, std::vector<std::string> args) {
 			command += arg;
 		}
 
-		return helper.execute(command);
+		return helper.execute(command, timeout_seconds);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Run guest process"));
 	}

@@ -8,17 +8,13 @@
 
 namespace fs = std::experimental::filesystem;
 
-static void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
+static void backtrace(std::ostream& stream, const std::exception& error) {
 	stream << error.what();
 	try {
 		std::rethrow_if_nested(error);
 	} catch (const std::exception& error) {
-		stream << ":\n";
-		for (size_t i = 0; i < n; i++) {
-			stream << "\t";
-		}
-		stream << "-";
-		backtrace(stream, error, n + 1);
+		stream << ":\n\t-";
+		backtrace(stream, error);
 	} catch(...) {
 		stream << std::endl;
 		stream << "[Unknown exception type]";
@@ -63,6 +59,6 @@ inline std::string node_to_string(pugi::xml_node node)
 }
 
 inline std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
-	backtrace(stream, error, 1);
+	backtrace(stream, error);
 	return stream;
 }

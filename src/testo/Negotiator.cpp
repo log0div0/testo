@@ -88,13 +88,14 @@ void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
-int Negotiator::execute(const std::string& command) {
+int Negotiator::execute(const std::string& command, uint32_t timeout_seconds) {
 	std::cout << "Executing command " << command << std::endl;
-	coro::Timeout timeout(610s);
+	auto timeout_chrono = std::chrono::seconds(timeout_seconds);
+	coro::Timeout timeout(timeout_chrono);
 	nlohmann::json request = {
 			{"method", "execute"},
 			{"args", {
-				command, 600
+				command
 			}}
 	};
 

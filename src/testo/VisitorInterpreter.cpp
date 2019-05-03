@@ -534,7 +534,9 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			fs::remove(host_script_file.generic_string());
 			fs::remove(host_script_dir.generic_string());
 
-			if (vm->run("/bin/bash", {guest_script_file.generic_string()}) != 0) {
+			std::string wait_for = exec->time_interval ? exec->time_interval.value() : "600s";
+
+			if (vm->run("/bin/bash", {guest_script_file.generic_string()}, time_to_seconds(wait_for)) != 0) {
 				throw std::runtime_error("Bash command failed");
 			}
 			vm->remove_from_guest(guest_script_dir);

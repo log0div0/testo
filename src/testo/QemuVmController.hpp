@@ -39,7 +39,7 @@ struct QemuVmController: public VmController {
 	void type(const std::string& text) override;
 	bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) override;
 	bool check(const std::string& text, const nlohmann::json& params) override;
-	int run(const fs::path& exe, std::vector<std::string> args) override;
+	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;

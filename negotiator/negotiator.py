@@ -110,7 +110,7 @@ class GuestChannel(Channel):
 		else:
 			return []
 
-	def execute(self, command, timeout, **kwargs):
+	def execute(self, command, **kwargs):
 		logging.info(u'Execute command "%s" ...\n' % command)
 		p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
