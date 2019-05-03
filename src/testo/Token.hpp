@@ -22,6 +22,7 @@ struct Token {
 		set,
 		copyto,
 		copyfrom,
+		timeout,
 		for_,
 		snapshot,
 		test,

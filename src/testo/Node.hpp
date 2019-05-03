@@ -203,16 +203,16 @@ struct Assignment: public Node {
 
 struct Wait: public Node {
 	Wait(const Token& wait, std::shared_ptr<Word> text_word,
-	const std::vector<std::shared_ptr<Assignment>>& params, Token for_, Token time_interval):
-		Node(wait), text_word(text_word), params(params), time_interval(time_interval), for_(for_) {}
+	const std::vector<std::shared_ptr<Assignment>>& params, const Token& timeout, const Token& time_interval):
+		Node(wait), text_word(text_word), params(params), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		if (time_interval) {
-			return time_interval.pos();
+		if (timeout) {
+			return timeout.pos();
 		} else {
 			return text_word->end();
 		}
@@ -225,16 +225,16 @@ struct Wait: public Node {
 			result += " " + std::string(*text_word);
 		}
 
-		if (time_interval) {
-			result += " " + for_.value() + " " + time_interval.value();
+		if (timeout) {
+			result += " " + timeout.value() + " " + time_interval.value();
 		}
 		return result;
 	}
 
 	std::shared_ptr<Word> text_word;
 	std::vector<std::shared_ptr<Assignment>> params;
+	Token timeout;
 	Token time_interval;
-	Token for_;
 };
 
 struct Press: public Node {
@@ -327,42 +327,61 @@ struct Stop: public Node {
 };
 
 struct Shutdown: public Node {
-	Shutdown(const Token& shutdown):
-		Node(shutdown) {}
+	Shutdown(const Token& shutdown, const Token& timeout, const Token& time_interval):
+		Node(shutdown), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
+		if (timeout) {
+			return time_interval.pos();
+		}
 		return t.pos();
 	}
 
 	operator std::string() const {
-		return t.value();
+		std::string result = t.value();
+		if (timeout) {
+			result += " timeout " + time_interval.value();
+		}
+		return result;
 	}
+
+	Token timeout;
+	Token time_interval;
 };
 
 struct Exec: public Node {
-	Exec(const Token& exec, const Token& process, std::shared_ptr<Word> commands):
+	Exec(const Token& exec, const Token& process, std::shared_ptr<Word> commands, const Token& timeout, const Token& time_interval):
 		Node(exec),
 		process_token(process),
-		commands(commands) {}
+		commands(commands), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
+		if (timeout) {
+			return time_interval.pos();
+		}
 		return commands->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + process_token.value() + " " + std::string(*commands);
+		std::string result = t.value() + " " + process_token.value() + " " + std::string(*commands);
+		if (timeout) {
+			result += " timeout " + time_interval.value();
+		}
+		return result;
 	}
 
 	Token process_token;
 	std::shared_ptr<Word> commands;
+	Token timeout;
+	Token time_interval;
 };
 
 struct Set: public Node {
@@ -393,21 +412,28 @@ struct Set: public Node {
 //Now this node holds actions copyto and copyfrom
 //Cause they're really similar
 struct Copy: public Node {
-	Copy(const Token& copy, std::shared_ptr<Word> from, std::shared_ptr<Word> to):
+	Copy(const Token& copy, std::shared_ptr<Word> from, std::shared_ptr<Word> to, const Token& timeout, const Token& time_interval):
 		Node(copy),
 		from(from),
-		to(to) {}
+		to(to), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
+		if (timeout) {
+			return time_interval.pos();
+		}
 		return to->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + std::string(*from) + " " + std::string(*to);
+		std::string result = t.value() + " " + std::string(*from) + " " + std::string(*to);
+		if (timeout) {
+			result += " timeout " + time_interval.value();
+		}
+		return result;
 	}
 
 	//return true if we copy to guest,
@@ -418,6 +444,8 @@ struct Copy: public Node {
 
 	std::shared_ptr<Word> from;
 	std::shared_ptr<Word> to;
+	Token timeout;
+	Token time_interval;
 };
 
 struct ActionBlock: public Node {

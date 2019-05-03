@@ -175,6 +175,8 @@ Token Lexer::id() {
 		return copyto();
 	} else if (value == "copyfrom") {
 		return copyfrom();
+	} else if (value == "timeout") {
+		return timeout();
 	} else if (value == "for") {
 		return for_();
 	} else if (value == "snapshot") {
@@ -314,6 +316,13 @@ Token Lexer::copyfrom() {
 	std::string value("copyfrom");
 	current_pos.advance(value.length());
 	return Token(Token::category::copyfrom, value, tmp_pos);
+}
+
+Token Lexer::timeout() {
+	Pos tmp_pos = current_pos;
+	std::string value("timeout");
+	current_pos.advance(value.length());
+	return Token(Token::category::timeout, value, tmp_pos);
 }
 
 Token Lexer::for_() {

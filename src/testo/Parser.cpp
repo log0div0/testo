@@ -516,7 +516,7 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	match(Token::category::wait);
 
 	std::shared_ptr<Word> value(nullptr);
-	Token for_ = Token();
+	Token timeout = Token();
 	Token time_interval = Token();
 
 	if (test_word()) {
@@ -541,9 +541,9 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		match(Token::category::rparen);
 	}
 
-	if (LA(1) == Token::category::for_) {
-		for_ = LT(1);
-		match(Token::category::for_);
+	if (LA(1) == Token::category::timeout) {
+		timeout = LT(1);
+		match(Token::category::timeout);
 
 		time_interval = LT(1);
 		match(Token::category::time_interval);
@@ -554,12 +554,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 			": Error: params cannot be specified without TEXT");
 	}
 
-	if (!(value || for_)) {
+	if (!(value || timeout)) {
 		throw std::runtime_error(std::string(wait_token.pos()) +
 			": Error: either TEXT or FOR (of both) must be specified for wait command");
 	}
 
-	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, params, for_, time_interval));
+	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, params, timeout, time_interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
@@ -638,7 +638,18 @@ std::shared_ptr<Action<Shutdown>> Parser::shutdown() {
 	Token shutdown_token = LT(1);
 	match(Token::category::shutdown);
 
-	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token));
+	Token timeout = Token();
+	Token time_interval = Token();
+
+	if (LA(1) == Token::category::timeout) {
+		timeout = LT(1);
+		match(Token::category::timeout);
+
+		time_interval = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token, timeout, time_interval));
 	return std::shared_ptr<Action<Shutdown>>(new Action<Shutdown>(action));
 }
 
@@ -651,7 +662,18 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 
 	auto commands = word();
 
-	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands));
+	Token timeout = Token();
+	Token time_interval = Token();
+
+	if (LA(1) == Token::category::timeout) {
+		timeout = LT(1);
+		match(Token::category::timeout);
+
+		time_interval = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout, time_interval));
 	return std::shared_ptr<Action<Exec>>(new Action<Exec>(action));
 }
 
@@ -679,7 +701,18 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 	auto from = word();
 	auto to = word();
 
-	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to));
+	Token timeout = Token();
+	Token time_interval = Token();
+
+	if (LA(1) == Token::category::timeout) {
+		timeout = LT(1);
+		match(Token::category::timeout);
+
+		time_interval = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout, time_interval));
 	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 
