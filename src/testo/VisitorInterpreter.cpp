@@ -226,6 +226,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_start(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Stop>>(action)) {
 		return visit_stop(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
+		return visit_shutdown(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
@@ -474,7 +476,16 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 		std::throw_with_nested(ActionException(stop, vm));
 
 	}
+}
 
+void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<Shutdown> shutdown) {
+	try {
+		print("Shutting down vm ", vm->name());
+		vm->shutdown();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(shutdown, vm));
+
+	}
 }
 
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {

@@ -17,6 +17,7 @@ struct Token {
 		unplug,
 		start,
 		stop,
+		shutdown,
 		exec,
 		set,
 		copyto,

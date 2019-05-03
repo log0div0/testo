@@ -37,6 +37,8 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return "start";
 	} else if (auto p = std::dynamic_pointer_cast<Action<Stop>>(action)) {
 		return "stop";
+	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
+		return "shutdown";
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {

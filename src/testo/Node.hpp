@@ -326,6 +326,23 @@ struct Stop: public Node {
 	}
 };
 
+struct Shutdown: public Node {
+	Shutdown(const Token& shutdown):
+		Node(shutdown) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+};
+
 struct Exec: public Node {
 	Exec(const Token& exec, const Token& process, std::shared_ptr<Word> commands):
 		Node(exec),

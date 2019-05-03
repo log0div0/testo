@@ -26,6 +26,7 @@ struct VmController {
 	virtual void unplug_dvd() = 0;
 	virtual void start() = 0;
 	virtual void stop() = 0;
+	virtual void shutdown() = 0;
 	virtual void type(const std::string& text) = 0;
 	virtual bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) = 0;
 	virtual bool check(const std::string& text, const nlohmann::json& params) = 0;

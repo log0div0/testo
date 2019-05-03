@@ -737,6 +737,10 @@ void VboxVmController::stop() {
 	}
 }
 
+void VboxVmController::shutdown() {
+	throw std::runtime_error("Implement me");
+}
+
 void VboxVmController::type(const std::string& text) {
 	try {
 		auto machine = virtual_box.find_machine(name());

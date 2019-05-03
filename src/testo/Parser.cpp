@@ -84,6 +84,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::unplug) ||
 		(LA(1) == Token::category::start) ||
 		(LA(1) == Token::category::stop) ||
+		(LA(1) == Token::category::shutdown) ||
 		(LA(1) == Token::category::exec) ||
 		(LA(1) == Token::category::set) ||
 		(LA(1) == Token::category::copyto) ||
@@ -158,8 +159,6 @@ void Parser::handle_include() {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }
-
-
 
 std::shared_ptr<Program> Parser::parse() {
 	std::vector<std::shared_ptr<IStmt>> stmts;
@@ -449,6 +448,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = start();
 	} else if (LA(1) == Token::category::stop) {
 		action = stop();
+	} else if (LA(1) == Token::category::shutdown) {
+		action = shutdown();
 	} else if (LA(1) == Token::category::exec) {
 		action = exec();
 	} else if (LA(1) == Token::category::set) {
@@ -631,6 +632,14 @@ std::shared_ptr<Action<Stop>> Parser::stop() {
 
 	auto action = std::shared_ptr<Stop>(new Stop(stop_token));
 	return std::shared_ptr<Action<Stop>>(new Action<Stop>(action));
+}
+
+std::shared_ptr<Action<Shutdown>> Parser::shutdown() {
+	Token shutdown_token = LT(1);
+	match(Token::category::shutdown);
+
+	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token));
+	return std::shared_ptr<Action<Shutdown>>(new Action<Shutdown>(action));
 }
 
 std::shared_ptr<Action<Exec>> Parser::exec() {

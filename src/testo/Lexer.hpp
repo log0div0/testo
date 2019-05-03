@@ -108,6 +108,7 @@ private:
 	Token unplug();
 	Token start();
 	Token stop();
+	Token shutdown();
 	Token exec();
 	Token set();
 	Token copyto();

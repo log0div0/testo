@@ -97,6 +97,7 @@ struct VisitorInterpreter {
 	void unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
 	void visit_start(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Start> start);
 	void visit_stop(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Stop> stop);
+	void visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Shutdown> shutdown);
 	void visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Exec> exec);
 	void visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
 	void visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Copy> copy);

@@ -165,6 +165,8 @@ Token Lexer::id() {
 		return start();
 	} else if (value == "stop") {
 		return stop();
+	} else if (value == "shutdown") {
+		return shutdown();
 	} else if (value == "exec") {
 		return exec();
 	} else if (value == "set") {
@@ -277,6 +279,13 @@ Token Lexer::stop() {
 	std::string value("stop");
 	current_pos.advance(value.length());
 	return Token(Token::category::stop, value, tmp_pos);
+}
+
+Token Lexer::shutdown() {
+	Pos tmp_pos = current_pos;
+	std::string value("shutdown");
+	current_pos.advance(value.length());
+	return Token(Token::category::shutdown, value, tmp_pos);
 }
 
 Token Lexer::exec() {

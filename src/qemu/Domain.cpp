@@ -60,6 +60,21 @@ void Domain::stop() {
 	}
 }
 
+void Domain::shutdown(uint32_t timeout_seconds) {
+	if (virDomainShutdown(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(timeout_seconds);
+	while (std::chrono::system_clock::now() < deadline) {
+		if (!is_active()) {
+			return;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(300));
+	}
+	throw std::runtime_error("Shutdown timeout");
+}
+
 void Domain::undefine() {
 	if (virDomainUndefine(handle) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
