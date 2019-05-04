@@ -378,7 +378,7 @@ void mean_delta_cpu(float *delta, float *variance, int batch, int filters, int s
 				mean_delta[i] += delta[index];
 			}
 		}
-		mean_delta[i] *= (-1./sqrt(variance[i] + .00001f));
+		mean_delta[i] *= (-1./sqrtf(variance[i] + .00001f));
 	}
 }
 
@@ -394,7 +394,7 @@ void variance_delta_cpu(float *x, float *delta, float *mean, float *variance, in
 				variance_delta[i] += delta[index]*(x[index] - mean[i]);
 			}
 		}
-		variance_delta[i] *= -.5 * pow(variance[i] + .00001f, (float)(-3./2.));
+		variance_delta[i] *= -.5 * powf(variance[i] + .00001f, (float)(-3./2.));
 	}
 }
 
@@ -405,7 +405,7 @@ void normalize_delta_cpu(float *x, float *mean, float *variance, float *mean_del
 		for(f = 0; f < filters; ++f){
 			for(k = 0; k < spatial; ++k){
 				int index = j*filters*spatial + f*spatial + k;
-				delta[index] = delta[index] * 1./(sqrt(variance[f] + .00001f)) + variance_delta[f] * 2. * (x[index] - mean[f]) / (spatial * batch) + mean_delta[f]/(spatial*batch);
+				delta[index] = delta[index] * 1./(sqrtf(variance[f] + .00001f)) + variance_delta[f] * 2. * (x[index] - mean[f]) / (spatial * batch) + mean_delta[f]/(spatial*batch);
 			}
 		}
 	}
