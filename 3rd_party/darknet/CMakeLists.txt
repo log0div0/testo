@@ -20,7 +20,7 @@ set_target_properties(libdarknet PROPERTIES PREFIX "")
 
 file(GLOB_RECURSE darknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 add_executable(darknet ${darknet_SRCS})
-target_link_libraries(darknet libdarknet)
+target_link_libraries(darknet libdarknet openblas)
 if(UNIX)
 	target_link_libraries(darknet pthread m)
 endif()
