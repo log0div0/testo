@@ -130,7 +130,7 @@ ConvolutionalLayer::ConvolutionalLayer(const inisection& section,
 #endif
 	workspace_size = get_workspace_size();
 
-	fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", out_c, size, size, stride, in_w, in_h, in_c, out_w, out_h, out_c, (2.0 * out_c * size*size*c * out_h*out_w)/1000000000.);
+	// fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", out_c, size, size, stride, in_w, in_h, in_c, out_w, out_h, out_c, (2.0 * out_c * size*size*c * out_h*out_w)/1000000000.);
 }
 
 ConvolutionalLayer::~ConvolutionalLayer() {
@@ -272,7 +272,6 @@ void ConvolutionalLayer::forward(Network* net)
 	}
 
 	if (batch_normalize) {
-		copy_cpu(outputs*batch, output, 1, x, 1);
 		if (net->train) {
 			mean_cpu(output, batch, out_c, out_h*out_w, mean);
 			variance_cpu(output, mean, batch, out_c, out_h*out_w, variance);
@@ -282,11 +281,13 @@ void ConvolutionalLayer::forward(Network* net)
 			scal_cpu(out_c, .99, rolling_variance, 1);
 			axpy_cpu(out_c, .01, variance, 1, rolling_variance, 1);
 
+			copy_cpu(outputs*batch, output, 1, x, 1);
 			normalize_cpu(output, mean, variance, batch, out_c, out_h*out_w);
 			copy_cpu(outputs*batch, output, 1, x_norm, 1);
 		} else {
 			normalize_cpu(output, rolling_mean, rolling_variance, batch, out_c, out_h*out_w);
 		}
+
 		scale_bias(output, scales, batch, out_c, out_h*out_w);
 		add_bias(output, biases, batch, out_c, out_h*out_w);
 	} else {
@@ -320,7 +321,6 @@ void ConvolutionalLayer::forward_gpu(Network* net)
 	}
 
 	if (batch_normalize) {
-		copy_gpu(outputs*batch, output_gpu, 1, x_gpu, 1);
 		if (net->train) {
 			fast_mean_gpu(output_gpu, batch, out_c, out_h*out_w, mean_gpu);
 			fast_variance_gpu(output_gpu, mean_gpu, batch, out_c, out_h*out_w, variance_gpu);
@@ -333,14 +333,12 @@ void ConvolutionalLayer::forward_gpu(Network* net)
 			copy_gpu(outputs*batch, output_gpu, 1, x_gpu, 1);
 			normalize_gpu(output_gpu, mean_gpu, variance_gpu, batch, out_c, out_h*out_w);
 			copy_gpu(outputs*batch, output_gpu, 1, x_norm_gpu, 1);
-
-			scale_bias_gpu(output_gpu, scales_gpu, batch, out_c, out_h*out_w);
-			add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
 		} else {
 			normalize_gpu(output_gpu, rolling_mean_gpu, rolling_variance_gpu, batch, out_c, out_h*out_w);
-			scale_bias_gpu(output_gpu, scales_gpu, batch, out_c, out_h*out_w);
-			add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
 		}
+
+		scale_bias_gpu(output_gpu, scales_gpu, batch, out_c, out_h*out_w);
+		add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
 	} else {
 		add_bias_gpu(output_gpu, biases_gpu, batch, out_c, out_w*out_h);
 	}
@@ -377,7 +375,7 @@ void mean_delta_cpu(float *delta, float *variance, int batch, int filters, int s
 				mean_delta[i] += delta[index];
 			}
 		}
-		mean_delta[i] *= (-1./sqrt(variance[i] + .00001f));
+		mean_delta[i] *= (-1./sqrtf(variance[i] + .00001f));
 	}
 }
 
@@ -393,7 +391,7 @@ void variance_delta_cpu(float *x, float *delta, float *mean, float *variance, in
 				variance_delta[i] += delta[index]*(x[index] - mean[i]);
 			}
 		}
-		variance_delta[i] *= -.5 * pow(variance[i] + .00001f, (float)(-3./2.));
+		variance_delta[i] *= -.5 * powf(variance[i] + .00001f, (float)(-3./2.));
 	}
 }
 
@@ -404,7 +402,7 @@ void normalize_delta_cpu(float *x, float *mean, float *variance, float *mean_del
 		for(f = 0; f < filters; ++f){
 			for(k = 0; k < spatial; ++k){
 				int index = j*filters*spatial + f*spatial + k;
-				delta[index] = delta[index] * 1./(sqrt(variance[f] + .00001f)) + variance_delta[f] * 2. * (x[index] - mean[f]) / (spatial * batch) + mean_delta[f]/(spatial*batch);
+				delta[index] = delta[index] * 1./(sqrtf(variance[f] + .00001f)) + variance_delta[f] * 2. * (x[index] - mean[f]) / (spatial * batch) + mean_delta[f]/(spatial*batch);
 			}
 		}
 	}

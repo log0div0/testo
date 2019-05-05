@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src
+	${CMAKE_BINARY_DIR}/out/include/openblas
 )
 
 file(GLOB_RECURSE libdarknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
@@ -16,6 +17,8 @@ else()
 endif()
 
 add_library(libdarknet STATIC ${libdarknet_SRCS})
+add_dependencies(libdarknet libopenblas)
+target_link_libraries(libdarknet openblas)
 set_target_properties(libdarknet PROPERTIES PREFIX "")
 
 file(GLOB_RECURSE darknet_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)

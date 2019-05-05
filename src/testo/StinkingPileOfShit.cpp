@@ -27,7 +27,9 @@ bool StinkingPileOfShit::stink_even_stronger(stb::Image& image, const std::strin
 	}
 	if (!network) {
 		std::stringstream ss(config);
+#ifdef GPU
 		use_gpu = true;
+#endif
 		network = std::make_unique<darknet::Network>(ss, 1, image.width, image.height, image.channels);
 		membuf buf(testo_weights, testo_weights_len);
 		std::istream bs(&buf);

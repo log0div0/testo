@@ -22,6 +22,10 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/src
 )
 
+link_directories(
+	${CMAKE_BINARY_DIR}/out/lib
+)
+
 macro(add_package NAME)
 	# file name
 	if ($ENV{BUILDKITE_BUILD_NUMBER})
@@ -60,6 +64,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rd_party)
-add_subdirectory(pkg)
+if (UNIX AND NOT APPLE)
+	add_subdirectory(pkg)
+endif()
 add_subdirectory(negotiator)
 add_subdirectory(src)
