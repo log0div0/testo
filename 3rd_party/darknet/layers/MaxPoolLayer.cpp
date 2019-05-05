@@ -1,6 +1,7 @@
 
 #include "MaxPoolLayer.hpp"
 #include "../Network.hpp"
+#include <math.h>
 
 extern "C" {
 #include "cuda.h"

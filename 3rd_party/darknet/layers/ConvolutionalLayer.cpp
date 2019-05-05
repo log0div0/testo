@@ -4,7 +4,6 @@
 
 extern "C" {
 #include <blas.h>
-#include <gemm.h>
 #include <activations.h>
 }
 

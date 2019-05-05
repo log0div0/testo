@@ -22,6 +22,10 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/src
 )
 
+link_directories(
+	${CMAKE_BINARY_DIR}/out/lib
+)
+
 macro(add_package NAME)
 	# file name
 	if ($ENV{BUILDKITE_BUILD_NUMBER})
