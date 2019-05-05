@@ -53,9 +53,9 @@ Network::Network(std::istream& stream,
 
 	size_t workspace_size = 0;
 	int count = 0;
-	fprintf(stderr, "layer     filters    size              input                output\n");
+	// fprintf(stderr, "layer     filters    size              input                output\n");
 	for (auto& section: ini.sections()) {
-		fprintf(stderr, "%5d ", count);
+		// fprintf(stderr, "%5d ", count);
 
 		std::unique_ptr<Layer> l;
 		if (section.name() == "convolutional") {
