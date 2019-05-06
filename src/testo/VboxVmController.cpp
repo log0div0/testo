@@ -966,7 +966,7 @@ void VboxVmController::copy_dir_to_guest(const fs::path& src, const fs::path& ds
 	}
 }
 
-void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
+void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -1014,7 +1014,7 @@ void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
-void VboxVmController::copy_from_guest(const fs::path& src, const fs::path& dst) {
+void VboxVmController::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
 	throw std::runtime_error("Implement me");
 }
 

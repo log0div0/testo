@@ -18,16 +18,16 @@ struct Negotiator {
 	Negotiator(vir::Domain& domain);
 
 	bool is_avaliable();
-	void copy_to_guest(const fs::path& src, const fs::path& dst);
-	void copy_from_guest(const fs::path& src, const fs::path& dst);
+	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds);
+	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds);
 	int execute(const std::string& command, uint32_t timeout_seconds);
 
 private:
 	using Socket = coro::StreamSocket<asio::local::stream_protocol>;
 	using Endpoint = asio::local::stream_protocol::endpoint;
 
-	void copy_file_to_guest(const fs::path& src, const fs::path& dst);
-	void copy_dir_to_guest(const fs::path& src, const fs::path& dst);
+	void copy_file_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline);
+	void copy_dir_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline);
 
 	void send(const nlohmann::json& command);
 	nlohmann::json recv();

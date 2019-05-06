@@ -51,8 +51,8 @@ struct VboxVmController: public VmController {
 		return config.at("name").get<std::string>();
 	}
 
-	void copy_to_guest(const fs::path& src, const fs::path& dst) override;
-	void copy_from_guest(const fs::path& src, const fs::path& dst) override;
+	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
+	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
 	void remove_from_guest(const fs::path& obj) override;
 
 	std::set<std::string> nics() const override;

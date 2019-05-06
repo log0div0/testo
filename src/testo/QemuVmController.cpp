@@ -1252,7 +1252,7 @@ bool QemuVmController::is_additions_installed() {
 }
 
 
-void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
+void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -1266,13 +1266,13 @@ void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst) {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		Negotiator helper(domain);
 
-		helper.copy_to_guest(src, dst);
+		helper.copy_to_guest(src, dst, timeout_seconds);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
 	}
 }
 
-void QemuVmController::copy_from_guest(const fs::path& src, const fs::path& dst) {
+void QemuVmController::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
 	try {
 		if (src.is_relative()) {
 			throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
@@ -1281,7 +1281,7 @@ void QemuVmController::copy_from_guest(const fs::path& src, const fs::path& dst)
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		Negotiator helper(domain);
 
-		helper.copy_from_guest(src, dst);
+		helper.copy_from_guest(src, dst, timeout_seconds);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
 	}

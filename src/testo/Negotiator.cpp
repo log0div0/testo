@@ -31,18 +31,19 @@ bool Negotiator::is_avaliable() {
 	}
 }
 
-void Negotiator::copy_to_guest(const fs::path& src, const fs::path& dst) {
+void Negotiator::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+	auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(timeout_seconds);
 	//4) Now we're all set
 	if (fs::is_regular_file(src)) {
-		copy_file_to_guest(src, dst);
+		copy_file_to_guest(src, dst, deadline);
 	} else if (fs::is_directory(src)) {
-		copy_dir_to_guest(src, dst);
+		copy_dir_to_guest(src, dst, deadline);
 	} else {
 		throw std::runtime_error("Unknown type of file: " + src.generic_string());
 	}
 }
 
-void Negotiator::copy_from_guest(const fs::path& src, const fs::path& dst) {
+void Negotiator::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
 	nlohmann::json request = {
 		{"method", "copy_files_out"}
 	};
@@ -51,7 +52,8 @@ void Negotiator::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	request["args"].push_back(src.generic_string());
 	request["args"].push_back(dst.generic_string());
 
-	coro::Timeout timeout(10s); //actually, it really depends on file size, TODO
+	auto chrono_seconds = std::chrono::seconds(timeout_seconds);
+	coro::Timeout timeout(chrono_seconds); //actually, it really depends on file size, TODO
 
 	send(request);
 
@@ -76,12 +78,12 @@ void Negotiator::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
-void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst) {
+void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {
-			copy_file_to_guest(file, dst / file.path().filename());
+			copy_file_to_guest(file, dst / file.path().filename(), deadline);
 		} else if (fs::is_directory(file)) {
-			copy_dir_to_guest(file, dst / file.path().filename());
+			copy_dir_to_guest(file, dst / file.path().filename(), deadline);
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
 		}
@@ -120,7 +122,7 @@ int Negotiator::execute(const std::string& command, uint32_t timeout_seconds) {
 	}
 }
 
-void Negotiator::copy_file_to_guest(const fs::path& src, const fs::path& dst) {
+void Negotiator::copy_file_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
 	std::ifstream testFile(src.generic_string(), std::ios::binary);
 
 	std::noskipws(testFile);
@@ -138,7 +140,11 @@ void Negotiator::copy_file_to_guest(const fs::path& src, const fs::path& dst) {
 			}}
 	};
 
-	coro::Timeout timeout(10s); //actually, it really depends on file size, TODO
+	if (std::chrono::system_clock::now() < (deadline - std::chrono::milliseconds(100))) {
+		throw std::runtime_error("Timeout expired");
+	}
+
+	coro::Timeout timeout(deadline - std::chrono::system_clock::now());
 
 	send(request);
 

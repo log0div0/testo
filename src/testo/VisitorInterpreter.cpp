@@ -529,7 +529,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			script_stream << script;
 			script_stream.close();
 
-			vm->copy_to_guest(host_script_dir, fs::path("/tmp"));
+			vm->copy_to_guest(host_script_dir, fs::path("/tmp"), 5); //5 seconds should be enough to pass any script
 
 			fs::remove(host_script_file.generic_string());
 			fs::remove(host_script_dir.generic_string());
@@ -586,16 +586,18 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::share
 			throw std::runtime_error(fmt::format("guest additions are not installed"));
 		}
 
+		std::string wait_for = copy->time_interval ? copy->time_interval.value() : "600s";
+
 		if(copy->is_to_guest()) {
 			if (from.is_relative()) {
 				from = copy->t.pos().file.parent_path() / from;
 			}
-			vm->copy_to_guest(from, to);
+			vm->copy_to_guest(from, to, time_to_seconds(wait_for));
 		} else {
 			if (to.is_relative()) {
 				to = copy->t.pos().file.parent_path() / to;
 			}
-			vm->copy_from_guest(from, to);
+			vm->copy_from_guest(from, to, time_to_seconds(wait_for));;
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(copy, vm));

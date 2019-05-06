@@ -142,6 +142,13 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vm, std::shar
 
 	result += exec->process_token.value();
 	result += visit_word(vm, exec->commands);
+
+	if (exec->time_interval) {
+		result += exec->time_interval.value();
+	} else {
+		result += "600s";
+	}
+
 	return result;
 }
 
@@ -187,6 +194,12 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vm, std::shar
 	}
 
 	result += to.generic_string();
+
+	if (copy->time_interval) {
+		result += copy->time_interval.value();
+	} else {
+		result += "600s";
+	}
 
 	return result;
 }
