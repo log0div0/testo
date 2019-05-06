@@ -9,6 +9,19 @@
 
 using namespace AST;
 
+template <typename Duration>
+std::string duration_to_str(Duration duration) {
+
+	auto h = std::chrono::duration_cast<std::chrono::hours>(duration);
+	duration -= h;
+	auto m = std::chrono::duration_cast<std::chrono::minutes>(duration);
+	duration -= m;
+	auto s = std::chrono::duration_cast<std::chrono::seconds>(duration);
+	auto result = fmt::format("{}h:{}m:{}s", h.count(), m.count(), s.count());
+
+	return result;
+}
+
 static void sleep(const std::string& interval) {
 	uint32_t seconds_to_sleep = std::stoul(interval.substr(0, interval.length() - 1));
 	if (interval[interval.length() - 1] == 's') {
@@ -31,7 +44,9 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 
 void VisitorInterpreter::print_statistics() const {
 	auto total_tests = success_tests.size() + failed_tests.size();
-	std::cout << "TOTAL RUN " << total_tests << " tests\n";
+	auto tests_durantion = std::chrono::system_clock::now() - start_timestamp;
+
+	std::cout << "TOTAL RUN " << total_tests << " tests in " << duration_to_str(tests_durantion) << std::endl;
 	std::cout << "PASSED: " << success_tests.size() << std::endl;
 	std::cout << "FAILED: " << failed_tests.size() << std::endl;
 	for (auto& fail: failed_tests) {
@@ -76,6 +91,8 @@ void VisitorInterpreter::update_progress() {
 
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	try {
+		start_timestamp = std::chrono::system_clock::now();
+
 		setup_progress_vars(program);
 
 		if (tests_to_run.size() == 0) {
@@ -137,6 +154,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			return;
 		}
 
+		auto tests_start_timestamp = std::chrono::system_clock::now();
+
 		reg.local_vms.clear();
 		stop_all_vms(test);
 
@@ -149,7 +168,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		visit_command_block(test->cmd_block);
 		update_progress(); //not happening after possible exception
 		stop_all_vms(test);
-		print("Test \"", test->name.value(), "\" passed");
+		auto test_duration = std::chrono::system_clock::now() - tests_start_timestamp;
+		print("Test \"", test->name.value(), "\" passed in ", duration_to_str(test_duration));
 		success_tests.push_back(test->name.value());
 	} catch (const InterpreterException& error) {
 		//This exception indicates that some test failed;

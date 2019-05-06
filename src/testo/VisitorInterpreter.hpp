@@ -151,6 +151,8 @@ private:
 	uint16_t original_remainder = 0;
 	uint16_t current_remainder = 0;
 
+	std::chrono::system_clock::time_point start_timestamp;
+
 	std::set<std::shared_ptr<AST::Test>> tests_to_run; //used for varouis inner reasons
 	std::vector<std::string> success_tests;
 	std::vector<std::string> failed_tests;
