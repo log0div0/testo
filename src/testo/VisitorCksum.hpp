@@ -16,6 +16,7 @@ struct VisitorCksum {
 	std::string visit_press(std::shared_ptr<AST::Press> press);
 	std::string visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	std::string visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
+	std::string visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Shutdown> shutdown);
 	std::string visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Exec> exec);
 	std::string visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
 	std::string visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Copy> copy);

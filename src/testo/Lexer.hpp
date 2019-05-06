@@ -113,6 +113,7 @@ private:
 	Token set();
 	Token copyto();
 	Token copyfrom();
+	Token timeout();
 	Token for_();
 	Token snapshot();
 	Token test();

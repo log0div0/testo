@@ -481,7 +481,8 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<Shutdown> shutdown) {
 	try {
 		print("Shutting down vm ", vm->name());
-		vm->shutdown();
+		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
+		vm->shutdown(time_to_seconds(wait_for));
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(shutdown, vm));
 
@@ -528,12 +529,14 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			script_stream << script;
 			script_stream.close();
 
-			vm->copy_to_guest(host_script_dir, fs::path("/tmp"));
+			vm->copy_to_guest(host_script_dir, fs::path("/tmp"), 5); //5 seconds should be enough to pass any script
 
 			fs::remove(host_script_file.generic_string());
 			fs::remove(host_script_dir.generic_string());
 
-			if (vm->run("/bin/bash", {guest_script_file.generic_string()}) != 0) {
+			std::string wait_for = exec->time_interval ? exec->time_interval.value() : "600s";
+
+			if (vm->run("/bin/bash", {guest_script_file.generic_string()}, time_to_seconds(wait_for)) != 0) {
 				throw std::runtime_error("Bash command failed");
 			}
 			vm->remove_from_guest(guest_script_dir);
@@ -583,16 +586,18 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::share
 			throw std::runtime_error(fmt::format("guest additions are not installed"));
 		}
 
+		std::string wait_for = copy->time_interval ? copy->time_interval.value() : "600s";
+
 		if(copy->is_to_guest()) {
 			if (from.is_relative()) {
 				from = copy->t.pos().file.parent_path() / from;
 			}
-			vm->copy_to_guest(from, to);
+			vm->copy_to_guest(from, to, time_to_seconds(wait_for));
 		} else {
 			if (to.is_relative()) {
 				to = copy->t.pos().file.parent_path() / to;
 			}
-			vm->copy_from_guest(from, to);
+			vm->copy_from_guest(from, to, time_to_seconds(wait_for));;
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(copy, vm));

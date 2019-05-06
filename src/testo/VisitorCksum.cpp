@@ -33,12 +33,12 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return visit_press(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Plug>>(action)) {
 		return visit_plug(vm, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
+		return visit_shutdown(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Start>>(action)) {
 		return "start";
 	} else if (auto p = std::dynamic_pointer_cast<Action<Stop>>(action)) {
 		return "stop";
-	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
-		return "shutdown";
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
@@ -127,11 +127,28 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shar
 	return result;
 }
 
+std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<Shutdown> shutdown) {
+	std::string result("shutdown");
+	if (shutdown->time_interval) {
+		result += shutdown->time_interval.value();
+	} else {
+		result += "1m";
+	}
+	return result;
+}
+
 std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {
 	std::string result("exec");
 
 	result += exec->process_token.value();
 	result += visit_word(vm, exec->commands);
+
+	if (exec->time_interval) {
+		result += exec->time_interval.value();
+	} else {
+		result += "600s";
+	}
+
 	return result;
 }
 
@@ -177,6 +194,12 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vm, std::shar
 	}
 
 	result += to.generic_string();
+
+	if (copy->time_interval) {
+		result += copy->time_interval.value();
+	} else {
+		result += "600s";
+	}
 
 	return result;
 }

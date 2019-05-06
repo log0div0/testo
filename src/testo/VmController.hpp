@@ -26,11 +26,11 @@ struct VmController {
 	virtual void unplug_dvd() = 0;
 	virtual void start() = 0;
 	virtual void stop() = 0;
-	virtual void shutdown() = 0;
+	virtual void shutdown(uint32_t timeout_seconds) = 0;
 	virtual void type(const std::string& text) = 0;
 	virtual bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) = 0;
 	virtual bool check(const std::string& text, const nlohmann::json& params) = 0;
-	virtual int run(const fs::path& exe, std::vector<std::string> args) = 0;
+	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
@@ -42,8 +42,8 @@ struct VmController {
 
 	virtual std::string name() const = 0;
 
-	virtual void copy_to_guest(const fs::path& src, const fs::path& dst) = 0;
-	virtual void copy_from_guest(const fs::path& src, const fs::path& dst) = 0;
+	virtual void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) = 0;
+	virtual void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) = 0;
 	virtual void remove_from_guest(const fs::path& obj) = 0;
 
 	virtual std::set<std::string> nics() const = 0;
