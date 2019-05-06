@@ -7,7 +7,22 @@ using namespace AST;
 
 Interpreter::Interpreter(Environment& env, const fs::path& file, const nlohmann::json& config):
 	env(env),
-	parser(file),
+	config(config)
+{
+	std::ifstream input_stream(file);
+
+	if (!input_stream) {
+		throw std::runtime_error("Can't open file: " + file.generic_string());
+	}
+
+	std::string input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
+
+	parser = Parser(file, input);
+}
+
+Interpreter::Interpreter(Environment& env, const fs::path& dir, const std::string& input, const nlohmann::json& config):
+	env(env),
+	parser(dir, input),
 	config(config)
 {}
 

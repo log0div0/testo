@@ -5,9 +5,11 @@
 #include <stdexcept>
 #include "Utils.hpp"
 
+#include <experimental/string_view>
+
 struct Pos {
 	Pos() = default;
-	Pos(const fs::path& file, const std::string& input): file(file), input(input) {
+	Pos(const fs::path& file, std::experimental::string_view input): file(file), input(input) {
 		if (file.is_relative()) {
 			this->file = fs::canonical(file);
 		}
@@ -47,7 +49,7 @@ struct Pos {
 	fs::path file; //should always be in canonical form
 
 private:
-	std::string input;
+	std::experimental::string_view input; //we don't own the input, we just need to read it
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Pos& pos)

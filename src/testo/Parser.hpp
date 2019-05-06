@@ -9,13 +9,14 @@
 #include <array>
 
 struct Parser {
-	Parser(const fs::path& file);
+	Parser() = default;
+	Parser(const fs::path& file, const std::string& input);
 
 	std::shared_ptr<AST::Program> parse();
 private:
 
 	struct Ctx {
-		Ctx(const fs::path& file): lex(file) {}
+		Ctx(const fs::path& file, const std::string& input): lex(file, input) {}
 		Lexer lex;
 		std::array<Token, 2> lookahead;
 		size_t p = 0; //current position in lookahead buffer

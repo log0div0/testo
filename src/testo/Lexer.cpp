@@ -4,14 +4,7 @@
 #include <stdexcept>
 #include <string.h>
 
-Lexer::Lexer(const fs::path& file) {
-	std::ifstream input_stream(file);
-
-	if (!input_stream) {
-		throw std::runtime_error("Can't open file: " + file.generic_string());
-	}
-
-	input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
+Lexer::Lexer(const fs::path& file, const std::string& input): input(input) {
 	current_pos = Pos(file, input);
 }
 
