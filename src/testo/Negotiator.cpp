@@ -140,7 +140,7 @@ void Negotiator::copy_file_to_guest(const fs::path& src, const fs::path& dst, st
 			}}
 	};
 
-	if (std::chrono::system_clock::now() < (deadline - std::chrono::milliseconds(100))) {
+	if (std::chrono::system_clock::now() > (deadline - std::chrono::milliseconds(100))) {
 		throw std::runtime_error("Timeout expired");
 	}
 

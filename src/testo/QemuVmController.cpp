@@ -1069,6 +1069,15 @@ std::string QemuVmController::get_dvd_path(vir::Snapshot& snap) {
 
 void QemuVmController::plug_dvd(fs::path path) {
 	try {
+		if (!fs::exists(path)) {
+			throw std::runtime_error(std::string("specified iso file does not exist: ")
+				+ path.generic_string());
+		}
+
+		if (!fs::is_regular_file(path)) {
+			throw std::runtime_error(std::string("specified iso is not a regular file: ")
+				+ path.generic_string());
+		}
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
@@ -1077,15 +1086,28 @@ void QemuVmController::plug_dvd(fs::path path) {
 			throw std::runtime_error("Some dvd is already plugged in");
 		}
 
-		auto source = cdrom.insert_child_after("source", cdrom.child("driver"));
-		source.append_attribute("file") = path.generic_string().c_str();
+		std::string string_config = fmt::format(R"(
+			<disk type='file' device='cdrom'>
+				<driver name='qemu' type='raw'/>
+				<source file='{}'/>
+				<backingStore/>
+				<target dev='hda' bus='ide'/>
+				<readonly/>
+				<alias name='ide0-0-0'/>
+				<address type='drive' controller='0' bus='0' target='0' unit='0'/>
+			</disk>
+		)", path.generic_string().c_str());
 
 		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
 		}
-		domain.update_device(cdrom, flags);
+
+		pugi::xml_document dvd_config;
+		dvd_config.load_string(string_config.c_str());
+
+		domain.update_device(dvd_config, flags);
 	} catch (const std::string& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("plugging dvd {}", path.generic_string())));
 	}
