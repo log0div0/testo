@@ -39,15 +39,10 @@ void run_file(const fs::path& file, const nlohmann::json& config) {
 
 void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	auto generated = generate_script(folder);
-	fs::path generated_path = folder / "testo-generated";
-	std::ofstream output_stream(generated_path, std::ofstream::out);
-	if (!output_stream) {
-		throw std::runtime_error(std::string("Can't create file for writing generated script: ") + generated_path.generic_string());
-	}
-	output_stream << generated;
-	output_stream.close();
 
-	run_file(generated_path, config);
+	QemuEnvironment env;
+	Interpreter runner(env, folder, generated, config);
+	runner.run();
 }
 
 int do_main(int argc, char** argv) {

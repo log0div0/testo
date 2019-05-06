@@ -1,12 +1,13 @@
 
 #include "Parser.hpp"
 #include "Utils.hpp"
+#include <fstream>
 
 using namespace AST;
 
-Parser::Parser(const fs::path& file)
+Parser::Parser(const fs::path& file, const std::string& input)
 {
-	Ctx ctx(file);
+	Ctx ctx(file, input);
 	lexers.push_back(ctx);
 	for (int i = 0; i < 2; i++) {
 		consume();	//Populate lookahead buffer with tokens
@@ -136,7 +137,16 @@ void Parser::handle_include() {
 	fs::path dest_file = dest_file_token.value().substr(1, dest_file_token.value().length() - 2);
 
 	if (dest_file.is_relative()) {
-		fs::path combined = lexers[lexers.size() - 1].lex.file().parent_path() / dest_file;
+		auto current_path = lexers[lexers.size() - 1].lex.file();
+		fs::path combined;
+		if (fs::is_regular_file(current_path)) {
+			combined = current_path.parent_path() / dest_file;
+		} else if (fs::is_directory(current_path)) {
+			combined = current_path / dest_file;
+		} else {
+			throw std::runtime_error("Handle include error");
+		}
+
 		if (!fs::exists(combined)) {
 			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: no such file: " + dest_file.generic_string());
 		}
@@ -151,7 +161,15 @@ void Parser::handle_include() {
 		}
 	}
 
-	Ctx new_ctx(dest_file);
+	std::ifstream input_stream(dest_file);
+
+	if (!input_stream) {
+		throw std::runtime_error("Can't open file: " + dest_file.generic_string());
+	}
+
+	auto input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
+
+	Ctx new_ctx(dest_file, input);
 	lexers.push_back(new_ctx);
 	already_included.push_back(dest_file);
 
