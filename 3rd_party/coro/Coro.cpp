@@ -4,9 +4,10 @@
 #include <algorithm>
 #include <cassert>
 
+#ifdef _DEBUG
 #include <cxxabi.h>
-
 using namespace __cxxabiv1;
+#endif
 
 namespace coro {
 

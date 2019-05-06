@@ -1,6 +1,7 @@
 
 #include "MaxPoolLayer.hpp"
 #include "../Network.hpp"
+#include <math.h>
 
 extern "C" {
 #include "cuda.h"
@@ -45,7 +46,7 @@ MaxPoolLayer::MaxPoolLayer(const inisection& section,
 	output_gpu  = cuda_make_array(output, output_size);
 	delta_gpu   = cuda_make_array(delta, output_size);
 #endif
-	fprintf(stderr, "max          %d x %d / %d x %d  %4zd x%4zd x%4zd   ->  %4d x%4d x%4d\n", size_w, size_h, stride_w, stride_h, w, h, c, out_w, out_h, out_c);
+	// fprintf(stderr, "max          %d x %d / %d x %d  %4zd x%4zd x%4zd   ->  %4d x%4d x%4d\n", size_w, size_h, stride_w, stride_h, w, h, c, out_w, out_h, out_c);
 	workspace_size = 0;
 }
 
@@ -73,7 +74,7 @@ void MaxPoolLayer::forward(Network* net)
             for (int i = 0; i < h; ++i) {
                 for (int j = 0; j < w; ++j) {
                     int out_index = j + w*(i + h*(k + in_c*b));
-                    float max = std::numeric_limits<float>::min();
+                    float max = -INFINITY;
                     int max_i = -1;
                     for (int n = 0; n < size_h; ++n) {
                         for (int m = 0; m < size_w; ++m) {
@@ -82,7 +83,7 @@ void MaxPoolLayer::forward(Network* net)
                             int index = cur_w + in_w*(cur_h + in_h*(k + b*in_c));
                             int valid = (cur_h >= 0 && cur_h < in_h &&
                                          cur_w >= 0 && cur_w < in_w);
-                            float val = (valid != 0) ? net->input[index] : std::numeric_limits<float>::min();
+                            float val = (valid != 0) ? net->input[index] : -INFINITY;
                             max_i = (val > max) ? index : max_i;
                             max   = (val > max) ? val   : max;
                         }

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <pthread.h>
 
 #ifdef GPU
     #define BLOCK 512
@@ -57,7 +56,6 @@ void find_replace(char *str, char *orig, char *rep, char *output);
 void free_ptrs(void **ptrs, int n);
 char *fgetl(FILE *fp);
 void strip(char *s);
-float sec(clock_t clocks);
 void top_k(float *a, int n, int k, int *index);
 int *read_map(char *filename);
 void error(const char *s);

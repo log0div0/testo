@@ -5,6 +5,7 @@
 #include "Image.hpp"
 #include <fstream>
 #include <inipp.hh>
+#include <algorithm>
 
 namespace yolo {
 
