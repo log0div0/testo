@@ -5,9 +5,11 @@
 #include <stdexcept>
 #include "Utils.hpp"
 
+#include <experimental/string_view>
+
 struct Pos {
 	Pos() = default;
-	Pos(const fs::path& file, const std::string& input): file(file), input(input) {
+	Pos(const fs::path& file, std::shared_ptr<std::string> input): file(file), input(input) {
 		if (file.is_relative()) {
 			this->file = fs::canonical(file);
 		}
@@ -15,10 +17,10 @@ struct Pos {
 
 	void advance(size_t shift = 1) {
 		while (shift != 0) {
-			if (offset == input.length()) {
+			if (offset == input->length()) {
 				throw std::runtime_error("ADVANCE: Can't advance position over the end of the input");
 			}
-			if (input[offset] == '\n') {
+			if ((*input)[offset] == '\n') {
 				line++;
 				column = 1;
 			} else {
@@ -46,8 +48,7 @@ struct Pos {
 
 	fs::path file; //should always be in canonical form
 
-private:
-	std::string input;
+	std::shared_ptr<std::string> input; //we don't own the input, we just need to read it
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Pos& pos)
