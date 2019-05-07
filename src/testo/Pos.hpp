@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include "Utils.hpp"
 
+#include <experimental/string_view>
+
 struct Pos {
 	Pos() = default;
 	Pos(const fs::path& file, const std::string* input): file(file), input(input) {
