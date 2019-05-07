@@ -7,7 +7,6 @@ ProcessorCount(N)
 
 add_subdirectory(coro)
 add_subdirectory(VBoxCAPI)
-add_subdirectory(darknet)
 add_subdirectory(imgui)
 add_subdirectory(pugixml)
 

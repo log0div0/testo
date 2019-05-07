@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
 include_directories(${CMAKE_SOURCE_DIR}/3rd_party/imgui)
-include_directories(${CMAKE_SOURCE_DIR}/3rd_party/darknet/include)
 
 file(GLOB SRCS *.cpp)
 
@@ -14,7 +13,6 @@ add_dependencies(testow qemu)
 target_link_libraries(testow imgui qemu pugixml testo-core libdarknet)
 
 if(WIN32)
-	include_directories(${CMAKE_SOURCE_DIR}/3rd_party/darknet/include/windows)
 	target_link_libraries(testow d3d11 d3dcompiler)
 	file(GLOB OS_SPECIFIC_SRCS windows/*.cpp)
 elseif(APPLE)

@@ -8,6 +8,7 @@ endif()
 
 add_definitions(-DFMT_HEADER_ONLY)
 
+add_subdirectory(darknet)
 add_subdirectory(vbox)
 if (UNIX AND NOT APPLE)
 add_subdirectory(qemu)

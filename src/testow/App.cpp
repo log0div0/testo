@@ -2,7 +2,6 @@
 #include "App.hpp"
 #include <imgui.h>
 #include <iostream>
-#include <darknet.h>
 
 App* app = nullptr;
 
