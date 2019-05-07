@@ -1,5 +1,5 @@
 
-import gzip, array, os, string, shutil, random
+import gzip, os, string, shutil, random, json
 import PIL, PIL.ImageDraw
 
 class PSF:
@@ -8,7 +8,7 @@ class PSF:
 		if self.has_unicode:
 			self.unicodes = {}
 			i = 0
-			for chars in self.unicode_data[0:-1].tobytes().split(self.unicode_term):
+			for chars in self.unicode_data[0:-1].split(self.unicode_term):
 				for char in chars.decode('utf-16', 'replace'):
 					self.unicodes[char] = i
 				i += 1
@@ -16,8 +16,11 @@ class PSF:
 	def get_data(self, i):
 		return self.data[i * self.charsize: (i+1) * self.charsize]
 
+	def get_glyph(self, char):
+		return self.get_data(self.unicodes[char])
+
 	def draw(self, image, char, left, top, font_color="white", background_color="black"):
-		data = self.get_data(self.unicodes[char])
+		data = self.get_glyph(char)
 		draw = PIL.ImageDraw.Draw(image)
 		bits_per_line = (self.width + 7) // 8 * 8
 		x_min = self.width
@@ -87,16 +90,13 @@ class PSF:
 			self.has_unicode = False
 		self.height = self.charsize = self.header[3]
 		self.width = 8
-		d = f.read(self.length * self.charsize)
-		self.data = array.array('B', d)
-		d = f.read()
-		self.unicode_data = array.array('B', d)
+		self.data = f.read(self.length * self.charsize)
+		self.unicode_data = f.read()
 		self.unicode_term = b'\xff\xff'
 
 	def load_psf_2(self, f):
 		self.type = 2
-		d = f.read(28)
-		self.header2 = array.array('B', d)
+		self.header2 = f.read(28)
 		self.version = self.calc(0)
 		self.headersize = self.calc(4)
 		self.flags = self.calc(8)
@@ -106,12 +106,9 @@ class PSF:
 		self.width = self.calc(24)
 		self.has_unicode = self.flags & 1 == 1
 		self.rest_length = self.headersize - 32
-		d = f.read(self.rest_length)
-		self.rest = array.array('B', d)
-		d = f.read(self.length * self.charsize)
-		self.data = array.array('B', d)
-		d = f.read()
-		self.unicode_data = array.array('B', d)
+		self.rest = f.read(self.rest_length)
+		self.data = f.read(self.length * self.charsize)
+		self.unicode_data = f.read()
 		self.unicode_term = b'\xff'
 
 	def load(self, filename):
@@ -120,8 +117,7 @@ class PSF:
 		else:
 			f = open(filename, "rb")
 		self.type = 0
-		d = f.read(4)
-		self.header = array.array('B', d)
+		self.header = f.read(4)
 		if (self.header[0] == 0x36 and self.header[1] == 0x04):
 			self.load_psf_1(f)
 		elif (self.header[0] == 0x72 and self.header[1] == 0xb5 and self.header[2] == 0x4a and self.header[3] == 0x86):
@@ -146,7 +142,7 @@ class PSF:
 		f.close()
 
 font_charset = 'Uni2'
-font_names = ['Fixed', 'Terminus', 'TerminusBold', 'VGA']
+font_names = ['Fixed', 'VGA']
 font_size = '16'
 
 colors = [
@@ -171,6 +167,34 @@ colors = [
 fonts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 
 chars = [char for char in string.printable if not char.isspace()]
+for char in "абвгдеёжзийклмнопрстуфхцчшщъыьэюя":
+	chars.append(char)
+	chars.append(char.upper())
+
+fonts = [PSF(os.path.join(fonts_dir, font_charset + '-' + font_name + font_size + '.psf.gz')) for font_name in font_names]
+chars_to_glyphs = dict()
+chars_to_symbols = dict()
+symbols = list()
+for char in chars:
+	glyphs = set()
+	for font in fonts:
+		glyphs.add(font.get_glyph(char))
+	for char2, glyphs2 in chars_to_glyphs.items():
+		intersection = glyphs & glyphs2
+		if len(intersection):
+			if glyphs != glyphs2:
+				raise Exception("Fucking fuck: " + char + " and " + char2)
+			else:
+				symbol_code = chars_to_symbols[char2]
+				chars_to_symbols[char] = symbol_code
+				symbols[symbol_code] += char
+				break
+	chars_to_glyphs[char] = glyphs
+	if char not in chars_to_symbols:
+		chars_to_symbols[char] = len(symbols)
+		symbols.append(char)
+
+print("Symbols count: ", len(symbols))
 
 char_height = 16
 char_width = 8
@@ -193,13 +217,11 @@ def draw_char(image, left, top, foreground, background, font):
 	x_center = (left + x + (width // 2)) / image_width
 	y_center = (top + y + (height // 2)) / image_height
 	if char != ' ':
-		return "%s %s %s %s %s\n" % (chars.index(char), x_center, y_center, (width + 2) / image_width, (height + 2) / image_height)
+		return "%s %s %s %s %s\n" % (chars_to_symbols[char], x_center, y_center, (width + 2) / image_width, (height + 2) / image_height)
 	else:
 		return ""
 
 def main(base_dir, image_count):
-	fonts = [PSF(os.path.join(fonts_dir, font_charset + '-' + font_name + font_size + '.psf.gz')) for font_name in font_names]
-
 	images_dir = os.path.join(base_dir, "images")
 	os.mkdir(images_dir)
 	labels_dir = os.path.join(base_dir, "labels")
@@ -241,23 +263,19 @@ def main(base_dir, image_count):
 		with open(label_path, "w") as file:
 			file.write(label)
 
-	s = """
-item_count = %s
-image_width = %s
-image_height = %s
-image_dir = %s
-label_dir = %s
-""" % (
-		image_count,
-		image_width,
-		image_height,
-		images_dir,
-		labels_dir
-	)
+	dataset_file_path = os.path.join(base_dir, "dataset.json")
+	with open(dataset_file_path, 'w') as dataset_file:
+		dataset_file.write(json.dumps({
+			"image_count": image_count,
+			"image_width": image_width,
+			"image_height": image_height,
+			"images_dir": images_dir,
+			"labels_dir": labels_dir
+		}))
 
-	config_file_path = os.path.join(base_dir, "console_fonts.dataset")
-	with open(config_file_path, 'w') as config_file:
-		config_file.write(s)
+	symbols_file_path = os.path.join(base_dir, "symbols.json")
+	with open(symbols_file_path, 'w') as symbols_file:
+		symbols_file.write(json.dumps(symbols))
 
 if __name__ == "__main__":
 	dataset_dir = os.path.join(os.getcwd(), "dataset")
