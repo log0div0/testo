@@ -8,6 +8,12 @@ Lexer::Lexer(const fs::path& file, const std::string& input): input(input) {
 	current_pos = Pos(file, &this->input);
 }
 
+Lexer::Lexer(const Lexer& other) {
+	input = other.input;
+	current_pos = other.current_pos;
+	current_pos.input = &input;
+}
+
 void Lexer::skip_spaces() {
 	while (test_space() && !test_eof()) {
 		current_pos.advance();

@@ -9,6 +9,8 @@
 
 struct Lexer {
 	Lexer(const fs::path& file, const std::string& input);
+	Lexer(const Lexer& other);
+	Lexer& operator=(const Lexer& other);
 
 	Token get_next_token();
 	fs::path file() const {

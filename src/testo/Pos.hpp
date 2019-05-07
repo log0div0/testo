@@ -46,7 +46,6 @@ struct Pos {
 
 	fs::path file; //should always be in canonical form
 
-private:
 	const std::string* input; //we don't own the input, we just need to read it
 };
 
