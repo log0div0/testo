@@ -4,14 +4,8 @@
 #include <stdexcept>
 #include <string.h>
 
-Lexer::Lexer(const fs::path& file, const std::string& input): input(input) {
-	current_pos = Pos(file, &this->input);
-}
-
-Lexer::Lexer(const Lexer& other) {
-	input = other.input;
-	current_pos = other.current_pos;
-	current_pos.input = &input;
+Lexer::Lexer(const fs::path& file, const std::string& input): input(new std::string(input)) {
+	current_pos = Pos(file, this->input);
 }
 
 void Lexer::skip_spaces() {
@@ -48,11 +42,11 @@ bool Lexer::test_size_specifier() const {
 		return false;
 	}
 
-	if ((input[current_pos] == 'K') ||
-		(input[current_pos] == 'M') ||
-		(input[current_pos] == 'G'))
+	if (((*input)[current_pos] == 'K') ||
+		((*input)[current_pos] == 'M') ||
+		((*input)[current_pos] == 'G'))
 	{
-		if (input[current_pos + 1] == 'b') {
+		if ((*input)[current_pos + 1] == 'b') {
 			if (test_eof(2) || (!test_id(2) && !test_number(2))) {
 				return true;
 			}
@@ -63,9 +57,9 @@ bool Lexer::test_size_specifier() const {
 }
 
 bool Lexer::test_time_specifier() const {
-	if (input[current_pos] == 's' ||
-		input[current_pos] == 'h' ||
-		input[current_pos] == 'm')
+	if ((*input)[current_pos] == 's' ||
+		(*input)[current_pos] == 'h' ||
+		(*input)[current_pos] == 'm')
 	{
 		if (test_eof(1) || (!test_id(1) && !test_number(1))) {
 			return true;
@@ -82,7 +76,7 @@ char Lexer::escaped_character() {
 		throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected escaped character");
 	}
 
-	char res = input[current_pos];
+	char res = (*input)[current_pos];
 	current_pos.advance();
 
 	return res;
@@ -102,7 +96,7 @@ Token Lexer::number() {
 	std::string value;
 
 	while (test_number() && !test_eof()) {
-		value += input[current_pos];
+		value += (*input)[current_pos];
 		current_pos.advance();
 	}
 
@@ -123,15 +117,15 @@ Token Lexer::number() {
 }
 
 Token Lexer::time_interval(std::string time_number, const Pos& time_number_pos) {
-	time_number += input[current_pos];
+	time_number += (*input)[current_pos];
 	current_pos.advance();
 	return Token(Token::category::time_interval, time_number, time_number_pos);
 }
 
 Token Lexer::size(std::string size_number, const Pos& size_number_pos) {
-	size_number += input[current_pos];
+	size_number += (*input)[current_pos];
 	current_pos.advance();
-	size_number += input[current_pos];
+	size_number += (*input)[current_pos];
 	current_pos.advance();
 	return Token(Token::category::size, size_number, size_number_pos);
 }
@@ -141,8 +135,8 @@ Token Lexer::id() {
 	std::string value;
 	size_t shift = 0;
 
-	while ((test_id(shift) || input[current_pos + shift] == '-' ||  isdigit(input[current_pos + shift])) && !test_eof()) {
-		value += input[current_pos + shift];
+	while ((test_id(shift) || (*input)[current_pos + shift] == '-' ||  isdigit((*input)[current_pos + shift])) && !test_eof()) {
+		value += (*input)[current_pos + shift];
 		shift++;
 	}
 
@@ -473,12 +467,12 @@ Token Lexer::OR() {
 Token Lexer::var_ref() {
 	Pos tmp_pos = current_pos;
 	std::string value;
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance();
 	size_t shift = 0;
 
-	while ((test_id(shift) || isdigit(input[current_pos + shift])) && !test_eof()) {
-		value += input[current_pos + shift];
+	while ((test_id(shift) || isdigit((*input)[current_pos + shift])) && !test_eof()) {
+		value += (*input)[current_pos + shift];
 		shift++;
 	}
 
@@ -498,11 +492,11 @@ Token Lexer::multiline_string() {
 
 	//advance over first 3 characters for we already know that it's a triple quote
 	//If we don't do so, we could trip over something like """"
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance();
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance();
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance();
 
 	do {
@@ -510,15 +504,15 @@ Token Lexer::multiline_string() {
 			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing triple quote");
 		}
 
-		value += input[current_pos];
+		value += (*input)[current_pos];
 		current_pos.advance();
 	} while (!test_multiline_quote());
 
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance(); //advance over closing quote
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance();
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance();
 
 	return Token(Token::category::multiline_string, value, tmp_pos);
@@ -539,11 +533,11 @@ Token Lexer::dbl_quoted_string() {
 			continue;
 		}
 
-		value += input[current_pos];
+		value += (*input)[current_pos];
 		current_pos.advance();
 	} while (!test_dbl_quote());
 
-	value += input[current_pos];
+	value += (*input)[current_pos];
 	current_pos.advance(); //advance over closing quote
 
 	return Token(Token::category::dbl_quoted_string, value, tmp_pos);
@@ -661,7 +655,7 @@ Token Lexer::get_next_token() {
 			skip_multiline_comments();
 			continue;
 		} else {
-			throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unknown lexem: " + input[current_pos]);
+			throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unknown lexem: " + (*input)[current_pos]);
 		}
 	}
 

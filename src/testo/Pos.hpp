@@ -9,7 +9,7 @@
 
 struct Pos {
 	Pos() = default;
-	Pos(const fs::path& file, const std::string* input): file(file), input(input) {
+	Pos(const fs::path& file, std::shared_ptr<std::string> input): file(file), input(input) {
 		if (file.is_relative()) {
 			this->file = fs::canonical(file);
 		}
@@ -48,7 +48,7 @@ struct Pos {
 
 	fs::path file; //should always be in canonical form
 
-	const std::string* input; //we don't own the input, we just need to read it
+	std::shared_ptr<std::string> input; //we don't own the input, we just need to read it
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Pos& pos)
