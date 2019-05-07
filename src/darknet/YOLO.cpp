@@ -1,5 +1,6 @@
 
 #include "YOLO.hpp"
+#include "utf8.hpp"
 
 extern "C" {
 #include "src/activations.h"
@@ -9,7 +10,8 @@ namespace yolo {
 
 float anchor_w = 8;
 float anchor_h = 16;
-std::string classes = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)";
+std::string classes_str = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)";
+std::vector<std::string> classes = utf8::split_to_chars(classes_str);
 
 float mag_array(float *a, int n)
 {
@@ -120,26 +122,31 @@ float train(darknet::Network& network, Dataset& dataset,
 	return loss;
 }
 
-bool find_substr(const stb::Image& image, const darknet::Layer& l, int left, int top, std::string substr, std::vector<Rect>& rects) {
+bool find_substr(const stb::Image& image, const darknet::Layer& l,
+	int left, int top,
+	const std::vector<std::string>& query, size_t index,
+	std::vector<Rect>& rects
+) {
 	int right = left;
 	int bottom = top;
 	while (true) {
-		if (!substr.size()) {
+		if (index == query.size()) {
 			return true;
 		}
 		right += 3;
 		bottom += 2;
-		if (substr.at(0) != ' ') {
+		if (query.at(index) != " ") {
 			break;
 		} else {
-			substr = substr.substr(1);
+			++index;
 		}
 	}
 	size_t dimension_size = l.out_w * l.out_h;
-	size_t class_id = classes.find(substr.at(0));
-	if (class_id == std::string::npos) {
-		throw std::runtime_error("Unsupported symbol: " + substr.at(0));
+	auto it = std::find(classes.begin(), classes.end(), query.at(index));
+	if (it == classes.end()) {
+		throw std::runtime_error("Unsupported symbol: " + query.at(index));
 	}
+	size_t class_id = it - classes.begin();
 	for (int x = left; (x < right) && (x < l.out_w); ++x) {
 		for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
 			int i = y * l.out_w + x;
@@ -168,7 +175,7 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l, int left, int
 
 			rects.push_back(rect);
 
-			return find_substr(image, l, x + 1, top, substr.substr(1), rects);
+			return find_substr(image, l, x + 1, top, query, index + 1, rects);
 		}
 	}
 	return false;
@@ -190,12 +197,14 @@ bool predict(darknet::Network& network, stb::Image& image, const std::string& te
 
 	network.forward();
 
+	std::vector<std::string> query = utf8::split_to_chars(text);
+
 	const darknet::Layer& l = *network.layers.back();
 
 	for (int y = 0; y < l.out_h; ++y) {
 		for (int x = 0; x < l.out_w; ++x) {
 			std::vector<Rect> rects;
-			if (find_substr(image, l, x, y, text, rects)) {
+			if (find_substr(image, l, x, y, query, 0, rects)) {
 				result = true;
 				for (auto& rect: rects) {
 					image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
