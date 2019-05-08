@@ -1,4 +1,4 @@
-machine testo_vpn_sgw1 {
+machine vpn_sgw1 {
 	cpus: 1
 	ram: 512Mb
 	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
@@ -28,11 +28,11 @@ machine testo_vpn_sgw1 {
 	metadata: {
 		login: "vpn-sgw1"
 		password: "1111"
-		host_name: "testo-vpn-sgw1"
+		host_name: "vpn-sgw1"
 	}
 }
 
-machine testo_vpn_sgw2 {
+machine vpn_sgw2 {
 	cpus: 1
 	ram: 512Mb
 	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
@@ -62,11 +62,11 @@ machine testo_vpn_sgw2 {
 	metadata: {
 		login: "vpn-sgw2"
 		password: "1111"
-		host_name: "testo-vpn-sgw2"
+		host_name: "vpn-sgw2"
 	}
 }
 
-machine testo_vpn_client1 {
+machine vpn_client1 {
 	cpus: 1
 	ram: 512Mb
 	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
@@ -89,11 +89,11 @@ machine testo_vpn_client1 {
 	metadata: {
 		login: "vpn-client1"
 		password: "1111"
-		host_name: "testo-vpn-client1"
+		host_name: "vpn-client1"
 	}
 }
 
-machine testo_vpn_client2 {
+machine vpn_client2 {
 	cpus: 1
 	ram: 512Mb
 	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
@@ -116,33 +116,7 @@ machine testo_vpn_client2 {
 	metadata: {
 		login: "vpn-client2"
 		password: "1111"
-		host_name: "testo-vpn-client2"
-	}
-}
-
-machine testo_vpn_sniffer {
-	cpus: 1
-	ram: 512Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 4Gb
-	nic nat: {
-		slot: 0
-		attached_to: "nat"
-		adapter_type: "e1000"
-	}
-
-	nic WAN: {
-		slot: 1
-		attached_to: "internal"
-		network: "net2"
-		mac: "52:54:00:00:44:00"
-		adapter_type: "e1000"
-	}
-
-	metadata: {
-		login: "vpn-sniffer"
-		password: "1111"
-		host_name: "testo-vpn-sniffer"
+		host_name: "vpn-client2"
 	}
 }
 
@@ -197,8 +171,7 @@ snapshot negotiator_installed: ubuntu_installed {
 	plug dvd $ISO_DIR + "/negotiator.iso"; wait timeout 5s
 	type "mount /dev/cdrom /media"; press Enter
 	wait "mounting read-only"; type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter;
-	wait "Processing triggers for systemd"; wait timeout 2s
-
+	wait "ureadahead"; wait timeout 2s
 }
 
 snapshot pkgs_and_net_ready: negotiator_installed {
@@ -206,20 +179,22 @@ snapshot pkgs_and_net_ready: negotiator_installed {
 	copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
 	exec bash "chmod +x /tmp/rename_net.sh"
 
-	if ($vm_name STREQUAL "testo_vpn_sgw1") {
-		exec bash "apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config"
+	if ($vm_name STREQUAL "vpn_sgw1") {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break || sleep 15; done
+		"""
 		exec bash "/tmp/rename_net.sh 52:54:00:00:00:00 WAN"
 		exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
-	} else if ($vm_name STREQUAL "testo_vpn_sgw2") {
-		exec bash "apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config"
+	} else if ($vm_name STREQUAL "vpn_sgw2") {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config && break || sleep 15; done
+		"""
 		exec bash "/tmp/rename_net.sh 52:54:00:00:11:00 WAN"
 		exec bash "/tmp/rename_net.sh 52:54:00:00:11:11 LAN"
-	} else if ($vm_name STREQUAL "testo_vpn_client1") {
+	} else if ($vm_name STREQUAL "vpn_client1") {
 		exec bash "/tmp/rename_net.sh 52:54:00:00:22:00 LAN"
-	} else if ($vm_name STREQUAL "testo_vpn_client2") {
+	} else if ($vm_name STREQUAL "vpn_client2") {
 		exec bash "/tmp/rename_net.sh 52:54:00:00:33:00 LAN"
-	} else if ($vm_name STREQUAL "testo_vpn_sniffer") {
-		exec bash "/tmp/rename_net.sh 52:54:00:00:44:00 WAN"
 	}
 
 	shutdown
@@ -250,88 +225,4 @@ snapshot wireguard: pkgs_and_net_ready {
 flash pubkey_flash {
 	fs: "ntfs"
 	size: 32Mb
-}
-
-
-test basic: testo_vpn_sgw1(wireguard), testo_vpn_sgw2(wireguard)
-{
-	testo_vpn_sgw1 exec bash """
-		ip a a 192.168.1.1/24 dev WAN
-		ip l s WAN up
-
-		ip a a 192.168.0.1/24 dev LAN
-		ip l s LAN up
-
-		sysctl net.ipv4.ip_forward=1
-
-		wg genkey > private
-		wg pubkey < private > public.key
-
-		ip link add wg0 type wireguard
-		ip a a 10.0.0.1/24 dev wg0
-
-		wg set wg0 private-key private
-		wg set wg0 listen-port 51820
-		ip l s wg0 up
-	"""
-
-	testo_vpn_sgw2 exec bash """
-		ip a a 192.168.1.2/24 dev WAN
-		ip l s WAN up
-
-		ip a a 192.168.2.1/24 dev LAN
-		ip l s LAN up
-
-		sysctl net.ipv4.ip_forward=1
-
-		wg genkey > private
-		wg pubkey < private > public.key
-
-		ip link add wg0 type wireguard
-		ip a a 10.0.0.2/24 dev wg0
-
-		wg set wg0 private-key private
-		wg set wg0 listen-port 51820
-		ip l s wg0 up
-	"""
-
-	testo_vpn_sgw1 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/vdb /media
-			cp public.key /media/sgw1_public.key
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	testo_vpn_sgw2 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/vdb /media
-			cp public.key /media/sgw2_public.key
-			cp /media/sgw1_public.key ~/
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	testo_vpn_sgw1 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/vdb /media
-			cp /media/sgw2_public.key ~/
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	testo_vpn_sgw1 exec bash "wg set wg0 peer $(cat ~/sgw2_public.key) allowed-ips 10.0.0.2/32 endpoint 192.168.1.2:51820"
-	testo_vpn_sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips 10.0.0.1/32 endpoint 192.168.1.1:51820"
-
-	testo_vpn_sgw1 exec bash "ping -c 10 10.0.0.2"
-	testo_vpn_sgw2 exec bash "ping -c 10 10.0.0.1"
 }
