@@ -26,10 +26,16 @@ Network::Network(const std::string& path,
 	if (!file.is_open()) {
 		throw std::runtime_error("Failed to open file " + path);
 	}
-	new (this) Network(file, batch_, w_, h_, c_);
+	init(file, batch_, w_, h_, c_);
 }
 
 Network::Network(std::istream& stream,
+	int batch_, int w_, int h_, int c_)
+{
+	init(stream, batch_, w_, h_, c_);
+}
+
+void Network::init(std::istream& stream,
 	int batch_, int w_, int h_, int c_)
 {
 	inifile ini(stream);

@@ -47,6 +47,9 @@ struct Network {
 	float *delta_gpu = nullptr;
 #endif
 
+private:
+	void init(std::istream& ini,
+		int batch_, int w_, int h_, int c_);
 };
 
 }
