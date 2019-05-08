@@ -49,13 +49,17 @@ float delta_yolo_box(darknet::Layer& l, const Box& truth, int index, int i, int 
 }
 
 
-float delta_yolo_class(darknet::Layer& l, int index, int class_)
+float delta_yolo_class(darknet::Layer& l, int index, int class_id)
 {
 	float result = 0;
 	int stride = l.out_w*l.out_h;
-	for(size_t n = 0; n < classes.size(); ++n){
-		l.delta[index + stride*n] = ((n == (size_t)class_)?1 : 0) - logistic_activate(l.output[index + stride*n]);
-		if (n == (size_t)class_) {
+	int classes_count = l.out_c - 4 - 1;
+	if (class_id >= classes_count) {
+		throw std::runtime_error("class_id >= classes_count");
+	}
+	for (int n = 0; n < classes_count; ++n){
+		l.delta[index + stride*n] = ((n == class_id)?1 : 0) - logistic_activate(l.output[index + stride*n]);
+		if (n == class_id) {
 			result += logistic_activate(l.output[index + stride*n]);
 		}
 	}
