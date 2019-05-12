@@ -90,29 +90,24 @@ void VisitorInterpreter::update_progress() {
 }
 
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
-	try {
-		start_timestamp = std::chrono::system_clock::now();
+	start_timestamp = std::chrono::system_clock::now();
 
-		setup_progress_vars(program);
+	setup_progress_vars(program);
 
-		if (tests_to_run.size() == 0) {
-			if (test_spec.length()) {
-				std::cout << "Couldn't find a test with the name " << test_spec << std::endl;
-			} else {
-				std::cout << "There's no tests to run\n";
-			}
-			return;
+	if (tests_to_run.size() == 0) {
+		if (test_spec.length()) {
+			std::cout << "Couldn't find a test with the name " << test_spec << std::endl;
+		} else {
+			std::cout << "There's no tests to run\n";
 		}
-
-		for (auto stmt: program->stmts) {
-			visit_stmt(stmt);
-		}
-
-		print_statistics();
+		return;
 	}
-	catch (const std::exception& error) {
-		std::cout << error << std::endl;
+
+	for (auto stmt: program->stmts) {
+		visit_stmt(stmt);
 	}
+
+	print_statistics();
 }
 
 void VisitorInterpreter::visit_stmt(std::shared_ptr<IStmt> stmt) {
