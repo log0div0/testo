@@ -85,6 +85,10 @@ machine url_proxy {
 	}
 }
 
+flash pubkey_flash {
+	fs: "ntfs"
+	size: 32Mb
+}
 
 snapshot ubuntu_installed {
 	wait timeout 2s
@@ -200,11 +204,25 @@ snapshot squid_installed: pkgs_and_net_ready {
 	"""
 }
 
+macro copy_cert_to_flash(cert) {
+	plug flash pubkey_flash;
+	wait timeout 5s
+	exec bash """
+		mount /dev/vdb /media
+		cp """ + $cert + """ /media
+		umount /media
+	"""
+	unplug flash pubkey_flash
+}
+
 snapshot squid_configured: squid_installed {
+	exec bash "date --set=\"2018-09-30 10:00:00.000\""
 	copyto "./proxy/squid.conf" "/usr/local/squid/etc/squid.conf"
 	copyto $CLAMAV_DATABASE_DIR + "/main.cvd" "/var/lib/clamav/main.cvd"
 	copyto $CLAMAV_DATABASE_DIR + "/daily.cvd" "/var/lib/clamav/main.cvd"
 	copyto $CLAMAV_DATABASE_DIR + "/bytecode.cvd" "/var/lib/clamav/main.cvd"
+
+	exec bash "date --set=\"2018-09-30 10:00:00.000\""
 
 	exec bash """
 		chown -R proxy:proxy /usr/local/squid/var
@@ -229,9 +247,14 @@ snapshot squid_configured: squid_installed {
 	type "/usr/local/squid/sbin/squid -z"; press Enter;
 	wait "Removing PID file";
 	press LEFTCTRL+C
+
+	copy_cert_to_flash("/usr/local/squid/etc/squidCA.crt")
 }
 
+
+
 snapshot server_configured: pkgs_and_net_ready {
+	exec bash "date --set=\"2018-09-30 10:00:00.000\""
 	copyto "./static-website-example-master.zip" "/opt/website.zip"
 	copyto "./server/default" "/etc/nginx/sites-available/default"
 
@@ -252,15 +275,15 @@ snapshot server_configured: pkgs_and_net_ready {
 	exec bash "systemctl restart nginx"
 
 	exec bash "wget -O /tmp/index.html --no-check-certificate https://127.0.0.1"
-}
 
-flash pubkey_flash {
-	fs: "ntfs"
-	size: 32Mb
+	copy_cert_to_flash("/opt/rootCA.crt")
+	copy_cert_to_flash("/opt/server.csr")
 }
 
 test http_interception: url_client(pkgs_and_net_ready), url_server(server_configured), url_proxy(squid_configured)
 {
+	url_client, url_server, url_proxy exec bash "date --set=\"2018-09-30 10:30:00.000\""
+
 	url_server exec bash """
 		ip a a 192.168.1.2/24 dev WAN
 		ip l s WAN up
@@ -300,6 +323,8 @@ test http_interception: url_client(pkgs_and_net_ready), url_server(server_config
 
 test https_interception: url_client(pkgs_and_net_ready), url_server(server_configured), url_proxy(squid_configured)
 {
+	url_client, url_server, url_proxy exec bash "date --set=\"2018-09-30 10:30:00.000\""
+
 	url_server exec bash """
 		ip a a 192.168.1.2/24 dev WAN
 		ip l s WAN up
@@ -320,26 +345,14 @@ test https_interception: url_client(pkgs_and_net_ready), url_server(server_confi
 		sysctl net.ipv4.ip_forward=1
 	"""
 
-	url_client exec bash "ping -c10 192.168.1.2"
-
-	url_server {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/vdb /media
-			cp /opt/rootCA.crt /media/rootCA.crt
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	url_client, url_proxy {
+	url_proxy, url_client {
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
 			mount /dev/vdb /media
 			mkdir /usr/share/ca-certificates/extra
 			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
+			cp /media/squidCA.crt /usr/local/share/ca-certificates/squidCA.crt
 			umount /media
 		"""
 		unplug flash pubkey_flash
@@ -347,14 +360,22 @@ test https_interception: url_client(pkgs_and_net_ready), url_server(server_confi
 			dpkg-reconfigure ca-certificates
 			update-ca-certificates
 		"""
-		wait timeout 10s
-
-		exec bash """
-			cd /tmp
-			wget http://192.168.1.2
-			wget --no-check-certificate https://192.168.1.2
-		"""
 	}
 
-	url_proxy wait timeout 2h
+	url_proxy exec bash """
+		iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 3129
+
+		/usr/local/squid/sbin/squid
+
+		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\" && break || sleep 10; done
+		cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\"
+	"""
+
+	url_client exec bash """
+		cd /tmp
+		wget https://192.168.1.2
+		(! wget https://192.168.1.2/images/pic02.jpg &> out)
+		cat out
+		cat out | fgrep Forbidden
+	"""
 }
