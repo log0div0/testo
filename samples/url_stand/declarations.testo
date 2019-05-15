@@ -1,0 +1,280 @@
+machine url_client {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "url-client"
+		password: "1111"
+		host_name: "url-client"
+	}
+}
+
+machine url_server {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic WAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:00:11:00"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "url-server"
+		password: "1111"
+		host_name: "url-server"
+	}
+}
+
+machine url_proxy {
+	cpus: 2
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 8Gb
+
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:22:00"
+		adapter_type: "e1000"
+	}
+
+	nic WAN: {
+		slot: 2
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:00:22:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "url-proxy"
+		password: "1111"
+		host_name: "url-proxy"
+	}
+}
+
+flash pubkey_flash {
+	fs: "ntfs"
+	size: 32Mb
+}
+
+snapshot ubuntu_installed {
+	wait timeout 2s
+	wait "Language"; press Enter;
+	wait "Install Ubuntu Server"; press Enter;
+	wait "Choose the language";	press Enter
+	wait "Select your location"; press Enter
+	wait "Detect keyboard layout?";	press Enter
+	wait "Country of origin for the keyboard"; press Enter
+	wait "Keyboard layout"; press Enter
+	wait "Primary network interface" timeout 5m; press Enter
+	wait "Hostname:" timeout 30s; press Backspace*6; type $host_name; press Enter
+	wait "Full name for the new user"; type $login; press Enter
+	wait "Username for your account"; press Enter
+	wait "Choose a password for the new user"; type $password; press Enter
+	wait "Re-enter password to verify"; type $password; press Enter
+	wait "Use weak password?"; press Left, Enter
+	wait "Encrypt your home directory?"; press Enter
+	if ($HTTP_PROXY) {
+		wait "Select your time zone" timeout 2m; press Enter
+	} else {
+		wait "Moscow" timeout 2m; press Enter
+	}
+
+	wait "Partitioning method"; press Enter
+	wait "Select disk to partition"; press Enter
+	wait "Write the changes to disks and configure LVM?"; press Left, Enter
+	wait "Amount of volume group to use for guided partitioning"; press Enter
+	wait "Write the changes to disks?"; press Left, Enter
+	wait "HTTP proxy information" timeout 3m; type $HTTP_PROXY; press Enter
+	wait "How do you want to manage upgrades" timeout 6m; press Enter
+	wait "Choose software to install"; press Enter
+	wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
+	wait "Installation complete" timeout 1m; unplug dvd; press Enter
+	wait $host_name +  " login:" timeout 2m;
+	type $login; press Enter
+	wait "Password:"; type $password; press Enter
+	wait "Welcome to Ubuntu"
+}
+
+macro enter_sudo() {
+	type "sudo su"; press Enter;
+	wait "password for " + $login; type $password; press Enter
+	wait "root@" + $host_name
+}
+
+snapshot negotiator_installed: ubuntu_installed {
+	enter_sudo()
+	type "apt-get update"; press Enter
+	wait "Reading package lists... Done" timeout 1m;
+	type "clear && apt-get install -y python daemon"; press Enter
+	wait "Setting up daemon" timeout 1m
+	wait "root@" + $host_name
+
+	plug dvd $ISO_DIR + "/negotiator.iso"; wait timeout 5s
+	type "mount /dev/cdrom /media"; press Enter
+	wait "mounting read-only"; type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter;
+	wait "ureadahead"; wait timeout 2s
+}
+
+snapshot pkgs_and_net_ready: negotiator_installed {
+	#TODO: path search from current file
+	copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+	exec bash "chmod +x /tmp/rename_net.sh"
+
+	if ($vm_name STREQUAL "url_server") {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y nginx unzip && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:11:00 WAN"
+	} else if ($vm_name STREQUAL "url_client") {
+		exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
+	} else if ($vm_name STREQUAL "url_proxy") {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y build-essential pkg-config libssl-dev libclamav-dev clamav && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:22:00 LAN"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:22:11 WAN"
+	}
+
+	shutdown
+
+	unplug nic nat
+	start
+
+	wait $host_name +  " login:" timeout 30s;
+	type $login; press Enter
+	wait "Password:"; type $password; press Enter
+	wait "Welcome to Ubuntu"
+}
+
+snapshot squid_installed: pkgs_and_net_ready {
+	exec bash "mkdir /opt/archives"
+
+	copyto "./proxy/archives/libecap-1.0.1.tar.gz" "/opt/archives/libecap-1.0.1.tar.gz"
+	copyto "./proxy/archives/squid-4.7.tar.gz" "/opt/archives/squid-4.7.tar.gz"
+
+	exec bash """
+		cd /opt/archives
+		tar -xf libecap-1.0.1.tar.gz
+		cd libecap-1.0.1
+		./configure
+		make -j2
+		make install
+		ldconfig
+	"""
+
+	exec bash """
+		cd /opt/archives
+		tar -xf squid-4.7.tar.gz
+		cd squid-4.7
+		./configure --enable-ecap --with-openssl
+		make -j2
+		make install
+	"""
+}
+
+macro copy_cert_to_flash(cert) {
+	plug flash pubkey_flash;
+	wait timeout 5s
+	exec bash """
+		mount /dev/vdb /media
+		cp """ + $cert + """ /media
+		umount /media
+	"""
+	unplug flash pubkey_flash
+}
+
+snapshot squid_configured: squid_installed {
+	exec bash "date --set=\"2018-09-30 10:00:00.000\""
+	copyto "./proxy/archives/ecap_clamav_adapter-2.0.0.tar.gz" "/opt/archives/ecap_clamav_adapter-2.0.0.tar.gz"
+	copyto "./proxy/squid.conf" "/usr/local/squid/etc/squid.conf"
+	copyto "./proxy/bytecode.cvd" "/var/lib/clamav/bytecode.cvd"
+
+	exec bash "date --set=\"2018-09-30 10:00:00.000\""
+
+	exec bash """
+		chown -R proxy:proxy /usr/local/squid/var
+	"""
+
+	exec bash """
+		cd /opt/archives
+		tar -xf ecap_clamav_adapter-2.0.0.tar.gz
+		cd ecap_clamav_adapter-2.0.0
+		./configure
+		make -j2
+		make install
+	"""
+
+	exec bash """
+		cd /usr/local/squid/etc
+		openssl genrsa -out squidCA.key 4096
+		openssl req -x509 -new -nodes -key squidCA.key -sha256 -days 1024 -out squidCA.crt -subj \"/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=squidCA.com\"
+	"""
+
+	enter_sudo()
+	type "/usr/local/squid/sbin/squid -z"; press Enter;
+	wait "Removing PID file";
+	press LEFTCTRL+C
+
+	copy_cert_to_flash("/usr/local/squid/etc/squidCA.crt")
+}
+
+snapshot server_configured: pkgs_and_net_ready {
+	exec bash "date --set=\"2018-09-30 10:00:00.000\""
+	copyto "./static-website-example-master.zip" "/opt/website.zip"
+	copyto "./server/default" "/etc/nginx/sites-available/default"
+
+	exec bash """
+		cd /opt
+		unzip website.zip
+	"""
+
+	exec bash """
+		cd /opt
+		openssl genrsa -out rootCA.key 4096
+		openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj \"/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=rootCA.com\"
+		openssl genrsa -out server.key 2048
+		openssl req -new -sha256 -key server.key -nodes -subj \"/C=RU/ST=MSK/L=Moscow/O=MyServer/CN=192.168.1.2\" -out server.csr
+		openssl x509 -req -in server.csr -CA rootCA.crt -CAkey rootCA.crt -CAkey rootCA.key -CAcreateserial -out server.crt -days 500 -sha256
+	"""
+
+	exec bash "systemctl restart nginx"
+
+	exec bash "wget -O /tmp/index.html --no-check-certificate https://127.0.0.1"
+
+	copy_cert_to_flash("/opt/rootCA.crt")
+	copy_cert_to_flash("/opt/server.csr")
+}
