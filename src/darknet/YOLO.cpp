@@ -154,8 +154,8 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 	}
 
 	int class_id = symbols.at(query.at(index));
-	for (int x = left; (x < right) && (x < l.out_w); ++x) {
-		for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
+	for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
+		for (int x = left; (x < right) && (x < l.out_w); ++x) {
 			int i = y * l.out_w + x;
 
 			float objectness = logistic_activate(l.output[dimension_size * 4 + i]);
