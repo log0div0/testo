@@ -181,7 +181,10 @@ snapshot pkgs_and_net_ready: negotiator_installed {
 }
 
 snapshot squid_installed: pkgs_and_net_ready {
-	copyto "./proxy/archives" "/opt/archives"
+	exec bash "mkdir /opt/archives"
+
+	copyto "./proxy/archives/libecap-1.0.1.tar.gz" "/opt/archives/libecap-1.0.1.tar.gz"
+	copyto "./proxy/archives/squid-4.7.tar.gz" "/opt/archives/squid-4.7.tar.gz"
 
 	exec bash """
 		cd /opt/archives
@@ -216,10 +219,9 @@ macro copy_cert_to_flash(cert) {
 
 snapshot squid_configured: squid_installed {
 	exec bash "date --set=\"2018-09-30 10:00:00.000\""
+	copyto "./proxy/archives/ecap_clamav_adapter-2.0.0.tar.gz" "/opt/archives/ecap_clamav_adapter-2.0.0.tar.gz"
 	copyto "./proxy/squid.conf" "/usr/local/squid/etc/squid.conf"
-	copyto $CLAMAV_DATABASE_DIR + "/main.cvd" "/var/lib/clamav/main.cvd"
-	copyto $CLAMAV_DATABASE_DIR + "/daily.cvd" "/var/lib/clamav/main.cvd"
-	copyto $CLAMAV_DATABASE_DIR + "/bytecode.cvd" "/var/lib/clamav/main.cvd"
+	copyto "./proxy/bytecode.cvd" "/var/lib/clamav/bytecode.cvd"
 
 	exec bash "date --set=\"2018-09-30 10:00:00.000\""
 

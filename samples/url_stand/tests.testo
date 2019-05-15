@@ -34,7 +34,7 @@ test http_interception: url_client(pkgs_and_net_ready), url_server(server_config
 
 	url_client exec bash """
 		cd /tmp
-		wget http://192.168.1.2
+		wget http://192.168.1.2/images/overlay.png
 		(! wget http://192.168.1.2/images/pic02.jpg &> out)
 		cat out
 		cat out | fgrep Forbidden
@@ -165,3 +165,62 @@ test https_clamav: url_client(pkgs_and_net_ready), url_server(server_configured)
 		cat out | fgrep Forbidden
 	"""
 }
+
+test https_proxy_cert_not_imported: url_client(pkgs_and_net_ready), url_server(server_configured), url_proxy(squid_configured)
+{
+	url_client, url_server, url_proxy exec bash "date --set=\"2018-09-30 10:30:00.000\""
+
+	url_server exec bash """
+		ip a a 192.168.1.2/24 dev WAN
+		ip l s WAN up
+		ip r a default via 192.168.1.1
+	"""
+
+	url_client exec bash """
+		ip a a 192.168.0.2/24 dev LAN
+		ip l s LAN up
+		ip r a default via 192.168.0.1
+	"""
+
+	url_proxy exec bash """
+		ip a a 192.168.0.1/24 dev LAN
+		ip l s LAN up
+		ip a a 192.168.1.1/24 dev WAN
+		ip l s WAN up
+		sysctl net.ipv4.ip_forward=1
+	"""
+
+	url_proxy, url_client {
+		plug flash pubkey_flash;
+		wait timeout 5s
+		exec bash """
+			mount /dev/vdb /media
+			mkdir /usr/share/ca-certificates/extra
+			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
+			umount /media
+		"""
+		unplug flash pubkey_flash
+		exec bash """
+			dpkg-reconfigure ca-certificates
+			update-ca-certificates
+		"""
+	}
+
+	url_proxy exec bash """
+		iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 3129
+
+		/usr/local/squid/sbin/squid
+
+		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\" && break || sleep 10; done
+		cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\"
+	"""
+
+	url_client exec bash """
+		cd /tmp
+		wget https://192.168.1.2
+		(! wget https://192.168.1.2/images/pic02.jpg &> out)
+		cat out
+		cat out | fgrep Forbidden
+	"""
+}
+
