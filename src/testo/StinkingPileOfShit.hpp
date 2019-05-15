@@ -11,6 +11,7 @@ struct StinkingPileOfShit {
 
 private:
 	std::string config;
+	std::map<std::string, int> symbols;
 	std::vector<uint8_t> weights;
 	std::unique_ptr<darknet::Network> network;
 };

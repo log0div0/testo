@@ -6,6 +6,8 @@ extern unsigned char testo_network[];
 extern unsigned int testo_network_len;
 extern unsigned char testo_weights[];
 extern unsigned int testo_weights_len;
+extern unsigned char testo_symbols[];
+extern unsigned int testo_symbols_len;
 
 struct membuf: std::basic_streambuf<char> {
 	membuf(const uint8_t *p, size_t l) {
@@ -15,6 +17,9 @@ struct membuf: std::basic_streambuf<char> {
 
 StinkingPileOfShit::StinkingPileOfShit() {
 	config = std::string(testo_network, testo_network + testo_network_len);
+	std::string symbols_str(testo_symbols, testo_symbols + testo_symbols_len);
+	std::stringstream ss(symbols_str);
+	symbols = yolo::load_symbols(ss);
 }
 
 bool StinkingPileOfShit::stink_even_stronger(stb::Image& image, const std::string& text) {
@@ -36,5 +41,5 @@ bool StinkingPileOfShit::stink_even_stronger(stb::Image& image, const std::strin
 		network->load_weights(bs);
 	}
 
-	return yolo::predict(*network, image, text);
+	return yolo::predict(*network, image, text, symbols);
 }

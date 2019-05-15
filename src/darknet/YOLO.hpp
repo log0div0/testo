@@ -176,7 +176,10 @@ struct Dataset {
 	std::string images_dir, labels_dir;
 };
 
-bool predict(darknet::Network& network, stb::Image& image, const std::string& text);
+std::map<std::string, int> load_symbols(const std::string& file);
+std::map<std::string, int> load_symbols(std::istream& stream);
+
+bool predict(darknet::Network& network, stb::Image& image, const std::string& text, const std::map<std::string, int>& symbols);
 float train(darknet::Network& network, Dataset& dataset,
 	float learning_rate,
 	float momentum,

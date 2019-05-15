@@ -10,6 +10,7 @@ std::string dataset_file;
 std::string weights_file;
 std::string image_file;
 std::string output_file;
+std::string symbols_file;
 std::string query;
 int batch_size = 32;
 float learning_rate = 0.0001;
@@ -62,9 +63,11 @@ void predict()
 	darknet::Network network(network_file, 1, image.width, image.height, image.channels);
 	network.load_weights(weights_file);
 
+	auto symbols = yolo::load_symbols(symbols_file);
+
 	auto start = std::chrono::high_resolution_clock::now();
 
-	yolo::predict(network, image, query);
+	yolo::predict(network, image, query, symbols);
 
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
@@ -104,6 +107,7 @@ int main(int argc, char **argv)
 				value("weights", weights_file),
 				value("input image", image_file),
 				value("query", query),
+				value("symbols", symbols_file),
 				option("-o", "--output") & value("output image", output_file)
 			))
 #ifdef GPU

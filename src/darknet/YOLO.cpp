@@ -10,8 +10,6 @@ namespace yolo {
 
 float anchor_w = 8;
 float anchor_h = 16;
-std::string classes_str = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)";
-std::vector<std::string> classes = utf8::split_to_chars(classes_str);
 
 float mag_array(float *a, int n)
 {
@@ -129,6 +127,7 @@ float train(darknet::Network& network, Dataset& dataset,
 bool find_substr(const stb::Image& image, const darknet::Layer& l,
 	int left, int top,
 	const std::vector<std::string>& query, size_t index,
+	const std::map<std::string, int>& symbols,
 	std::vector<Rect>& rects
 ) {
 	int right = left;
@@ -146,24 +145,41 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 		}
 	}
 	size_t dimension_size = l.out_w * l.out_h;
-	auto it = std::find(classes.begin(), classes.end(), query.at(index));
-	if (it == classes.end()) {
-		throw std::runtime_error("Unsupported symbol: " + query.at(index));
+
+	float thresh_objectness = 0.01f;
+	size_t thresh_class = 5;
+	if (query.size() < 4) {
+		thresh_objectness = 0.1f;
+		thresh_class = query.size() - 1;
 	}
-	size_t class_id = it - classes.begin();
+
+	int class_id = symbols.at(query.at(index));
 	for (int x = left; (x < right) && (x < l.out_w); ++x) {
 		for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
 			int i = y * l.out_w + x;
 
 			float objectness = logistic_activate(l.output[dimension_size * 4 + i]);
-			if (objectness < 0.1f) {
+			if (objectness < thresh_objectness) {
 				continue;
 			}
 
-			float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
-			if (class_probability < 0.5f) {
+			std::vector<int> v;
+			for (int i = 0; i < 100; ++i) {
+				v.push_back(i);
+			}
+			std::sort(v.begin(), v.end(), [&](int a, int b) {
+				float a_probability = logistic_activate(l.output[dimension_size * (5 + a) + i]);
+				float b_probability = logistic_activate(l.output[dimension_size * (5 + b) + i]);
+				return a_probability > b_probability;
+			});
+			auto it = std::find(v.begin(), v.end(), class_id);
+			if ((it - v.begin()) > thresh_class) {
 				continue;
 			}
+			// float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
+			// if (class_probability < 0.1f) {
+			// 	continue;
+			// }
 
 			Box b;
 			b.x = (x + logistic_activate(l.output[dimension_size * 0 + i])) / l.out_w;
@@ -177,15 +193,42 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 			rect.top = (b.y-b.h/2)*image.height;
 			rect.bottom = (b.y+b.h/2)*image.height;
 
+			if (rects.size()) {
+				if (rects.back().iou(rect) >= 0.5f) {
+					continue;
+				}
+			}
+
 			rects.push_back(rect);
 
-			return find_substr(image, l, x + 1, top, query, index + 1, rects);
+			return find_substr(image, l, x + 1, top, query, index + 1, symbols, rects);
 		}
 	}
 	return false;
 }
 
-bool predict(darknet::Network& network, stb::Image& image, const std::string& text) {
+std::map<std::string, int> load_symbols(const std::string& path) {
+	std::ifstream file(path);
+	if (!file.is_open()) {
+		throw std::runtime_error("Failed to open file " + path);
+	}
+	return load_symbols(file);
+}
+
+std::map<std::string, int> load_symbols(std::istream& stream) {
+	nlohmann::json json;
+	stream >> json;
+	std::map<std::string, int> result;
+	for (size_t i = 0; i < json.size(); ++i) {
+		std::string chars = json[i];
+		for (const auto& ch: utf8::split_to_chars(chars)) {
+			result[ch] = i;
+		}
+	}
+	return result;
+}
+
+bool predict(darknet::Network& network, stb::Image& image, const std::string& text, const std::map<std::string, int>& symbols) {
 
 	bool result = false;
 
@@ -208,7 +251,7 @@ bool predict(darknet::Network& network, stb::Image& image, const std::string& te
 	for (int y = 0; y < l.out_h; ++y) {
 		for (int x = 0; x < l.out_w; ++x) {
 			std::vector<Rect> rects;
-			if (find_substr(image, l, x, y, query, 0, rects)) {
+			if (find_substr(image, l, x, y, query, 0, symbols, rects)) {
 				result = true;
 				for (auto& rect: rects) {
 					image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);

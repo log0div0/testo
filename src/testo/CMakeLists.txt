@@ -8,9 +8,6 @@ file(GLOB_RECURSE SRCS *.cpp)
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 
-set(DST ${CMAKE_BINARY_DIR}/src/nf2/nf2_main/conntrack/helpers)
-set(SRC ${CMAKE_SOURCE_DIR}/src/nf2/nf2_main/conntrack/helpers)
-
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_network.cpp
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
 	COMMAND xxd -i testo.network ${CMAKE_BINARY_DIR}/src/testo_network.cpp
@@ -23,8 +20,15 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_weights.cpp
 	DEPENDS ${CMAKE_SOURCE_DIR}/nn/testo.weights
 )
 
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
+	COMMAND xxd -i testo.symbols ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp
+	DEPENDS ${CMAKE_SOURCE_DIR}/nn/testo.symbols
+)
+
 list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_network.cpp)
 list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_weights.cpp)
+list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp)
 
 
 add_library(testo-core STATIC ${SRCS})

@@ -1,6 +1,8 @@
+#!/usr/bin/python3
 
 import gzip, os, string, shutil, random, json
 import PIL, PIL.ImageDraw
+import multiprocessing
 
 class PSF:
 	def __init__(self, filename):
@@ -141,9 +143,18 @@ class PSF:
 			f.write(self.unicode_data)
 		f.close()
 
-font_charset = 'Uni2'
-font_names = ['Fixed', 'VGA']
-font_size = '16'
+font_names = [
+	'Uni2-Fixed13.psf.gz',
+	'Uni2-Fixed14.psf.gz',
+	'Uni2-Fixed15.psf.gz',
+	'Uni2-Fixed16.psf.gz',
+	'Uni2-Terminus14.psf.gz',
+	'Uni2-Terminus16.psf.gz',
+	'Uni2-TerminusBold14.psf.gz',
+	'Uni2-TerminusBold16.psf.gz',
+	'Uni2-VGA14.psf.gz',
+	'Uni2-VGA16.psf.gz'
+]
 
 colors = [
 	"White",
@@ -171,30 +182,128 @@ for char in "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 	chars.append(char)
 	chars.append(char.upper())
 
-fonts = [PSF(os.path.join(fonts_dir, font_charset + '-' + font_name + font_size + '.psf.gz')) for font_name in font_names]
-chars_to_glyphs = dict()
+fonts = [PSF(os.path.join(fonts_dir, font_name)) for font_name in font_names]
+symbols_to_glyphs = dict()
 chars_to_symbols = dict()
-symbols = list()
-for char in chars:
+symbols = [
+	'1',
+	'2',
+	'3Зз',
+	'4',
+	'5',
+	'6б',
+	'7',
+	'8',
+	'9',
+	'aа',
+	'bьЬ',
+	'd',
+	'eеё',
+	'f',
+	'g',
+	'h',
+	'i',
+	'j',
+	'l',
+	'm',
+	'n',
+	'q',
+	'r',
+	't',
+	'Uuи',
+	'yуУ',
+	'AА',
+	'BВв',
+	'CСcс',
+	'D',
+	'EЕЁ',
+	'F',
+	'G',
+	'HНн',
+	'I',
+	'J',
+	'KКkк',
+	'L',
+	'MМм',
+	'N',
+	'OО0oо',
+	'PРpр',
+	'Q',
+	'R',
+	'Ss',
+	'TТт',
+	'Vv',
+	'Ww',
+	'XХxх',
+	'Y',
+	'Zz',
+	'!',
+	'"',
+	'#',
+	'$',
+	'%',
+	'&',
+	'`',
+	"'",
+	'(',
+	')',
+	'*',
+	'+',
+	',',
+	'-',
+	'.',
+	'/',
+	':',
+	';',
+	'<',
+	'=',
+	'>',
+	'?',
+	'@',
+	'[',
+	'\\',
+	']',
+	'^',
+	'_',
+	'{',
+	'|',
+	'}',
+	'~',
+	'Б',
+	'гГ',
+	'дД',
+	'жЖ',
+	'И',
+	'йЙ',
+	'лЛ',
+	'пП',
+	'Фф',
+	'Цц',
+	'Чч',
+	'Шш',
+	'Щщ',
+	'Ъъ',
+	'Ыы',
+	'Ээ',
+	'Юю',
+	'Яя'
+]
+for index, symbol in enumerate(symbols):
 	glyphs = set()
-	for font in fonts:
-		glyphs.add(font.get_glyph(char))
-	for char2, glyphs2 in chars_to_glyphs.items():
-		intersection = glyphs & glyphs2
-		if len(intersection):
-			if glyphs != glyphs2:
-				raise Exception("Fucking fuck: " + char + " and " + char2)
-			else:
-				symbol_code = chars_to_symbols[char2]
-				chars_to_symbols[char] = symbol_code
-				symbols[symbol_code] += char
-				break
-	chars_to_glyphs[char] = glyphs
-	if char not in chars_to_symbols:
-		chars_to_symbols[char] = len(symbols)
-		symbols.append(char)
+	for char in symbol:
+		chars_to_symbols[char] = index
+		for font in fonts:
+			glyphs.add(font.get_glyph(char))
+	symbols_to_glyphs[symbol] = glyphs
+
+for symbol1, glyphs1 in symbols_to_glyphs.items():
+	for symbol2, glyphs2 in symbols_to_glyphs.items():
+		if symbol1 != symbol2:
+			if len(glyphs1 & glyphs2):
+				raise Exception("Fucking fuck: " + symbol1 + " and " + symbol2)
 
 print("Symbols count: ", len(symbols))
+print(symbols)
 
 char_height = 16
 char_width = 8
@@ -221,49 +330,59 @@ def draw_char(image, left, top, foreground, background, font):
 	else:
 		return ""
 
-def main(base_dir, image_count):
-	images_dir = os.path.join(base_dir, "images")
+dataset_dir = os.path.join(os.getcwd(), "dataset")
+images_dir = os.path.join(dataset_dir, "images")
+labels_dir = os.path.join(dataset_dir, "labels")
+
+def main(image_index):
+	image_path = os.path.join(images_dir, str(image_index) + '.png')
+	label_path = os.path.join(labels_dir, str(image_index) + '.txt')
+
+	background, foreground = random_colors()
+	if image_index % 4 < 3:
+		image = PIL.Image.new("RGB", (image_width, image_height), background)
+		label = ""
+		for row in range(1, rows_count - 1, 3):
+			font = random.choice(fonts)
+			x_offset = random.randint(-3, 3);
+			y_offset = random.randint(-7, 7);
+			for column in range(1, columns_count - 1):
+				left = column*char_width + x_offset
+				top = row*char_height + y_offset
+				label += draw_char(image, left, top, foreground, background, font)
+	else:
+		image = PIL.Image.new("RGB", (image_width, image_height), background)
+		label = ""
+		j = 0
+		for row in range(rows_count):
+			font = random.choice(fonts)
+			for column in range(columns_count):
+				if j % 57 == 0:
+					background, foreground = random_colors()
+				left = column*char_width
+				top = row*char_height
+				label += draw_char(image, left, top, foreground, background, font)
+				j += 1
+
+	image.save(image_path)
+	with open(label_path, "w") as file:
+		file.write(label)
+
+if __name__ == "__main__":
+	if os.path.exists(dataset_dir):
+		shutil.rmtree(dataset_dir)
+	os.mkdir(dataset_dir)
+
 	os.mkdir(images_dir)
-	labels_dir = os.path.join(base_dir, "labels")
 	os.mkdir(labels_dir)
 
-	for image_index in range(image_count):
-		print(str(image_index) + '/' + str(image_count))
+	image_count = 10000
 
-		image_path = os.path.join(images_dir, str(image_index) + '.png')
-		label_path = os.path.join(labels_dir, str(image_index) + '.txt')
+	with multiprocessing.Pool() as p:
+		for x, _ in enumerate(p.imap(main, range(image_count))):
+			print(x, "/", image_count)
 
-		if image_index % 4 < 3:
-			background, foreground = random_colors()
-			image = PIL.Image.new("RGB", (image_width, image_height), background)
-			label = ""
-			for row in range(1, rows_count - 1, 3):
-				font = random.choice(fonts)
-				x_offset = random.randint(-3, 3);
-				y_offset = random.randint(-7, 7);
-				for column in range(1, columns_count - 1):
-					left = column*char_width + x_offset
-					top = row*char_height + y_offset
-					label += draw_char(image, left, top, foreground, background, font)
-		else:
-			image = PIL.Image.new("RGB", (image_width, image_height), background)
-			label = ""
-			j = 0
-			for row in range(rows_count):
-				font = random.choice(fonts)
-				for column in range(columns_count):
-					if j % 57 == 0:
-						background, foreground = random_colors()
-					left = column*char_width
-					top = row*char_height
-					label += draw_char(image, left, top, foreground, background, font)
-					j += 1
-
-		image.save(image_path)
-		with open(label_path, "w") as file:
-			file.write(label)
-
-	dataset_file_path = os.path.join(base_dir, "dataset.json")
+	dataset_file_path = os.path.join(dataset_dir, "dataset.json")
 	with open(dataset_file_path, 'w') as dataset_file:
 		dataset_file.write(json.dumps({
 			"image_count": image_count,
@@ -273,14 +392,6 @@ def main(base_dir, image_count):
 			"labels_dir": labels_dir
 		}))
 
-	symbols_file_path = os.path.join(base_dir, "symbols.json")
+	symbols_file_path = os.path.join(dataset_dir, "symbols.json")
 	with open(symbols_file_path, 'w') as symbols_file:
 		symbols_file.write(json.dumps(symbols))
-
-if __name__ == "__main__":
-	dataset_dir = os.path.join(os.getcwd(), "dataset")
-	if os.path.exists(dataset_dir):
-		shutil.rmtree(dataset_dir)
-	os.mkdir(dataset_dir)
-
-	main(dataset_dir, 10000)
