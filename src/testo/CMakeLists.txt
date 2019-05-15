@@ -7,6 +7,11 @@ endif()
 file(GLOB_RECURSE SRCS *.cpp)
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
+if (WIN32)
+	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/QemuFlashDriveController.cpp)
+	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/QemuGuestAdditions.cpp)
+	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/QemuVmController.cpp)
+endif()
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_network.cpp
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
@@ -33,10 +38,10 @@ list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp)
 
 add_library(testo-core STATIC ${SRCS})
 add_dependencies(testo-core darknet)
-target_link_libraries(testo-core coro vbox vboxcapi qemu pugixml pthread libdarknet)
+target_link_libraries(testo-core coro vbox vboxcapi pugixml libdarknet)
 
 if(UNIX)
-	target_link_libraries(testo-core glfw gl3w GL dl stdc++fs)
+	target_link_libraries(testo-core glfw gl3w GL dl stdc++fs qemu pthread)
 endif()
 
 if(GPU)

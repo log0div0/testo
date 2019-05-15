@@ -834,7 +834,7 @@ int VboxVmController::run(const fs::path& exe, std::vector<std::string> args, ui
 
 		std::vector<ProcessCreateFlag> create_flags = {ProcessCreateFlag_WaitForStdOut, ProcessCreateFlag_WaitForStdErr};
 		std::vector<ProcessWaitForFlag> wait_for_flags = {ProcessWaitForFlag_StdOut, ProcessWaitForFlag_StdErr, ProcessWaitForFlag_Terminate};
-		auto gprocess = gsession.process_create(exe, args, {}, create_flags, timeout);
+		auto gprocess = gsession.process_create(exe.generic_string(), args, {}, create_flags, timeout);
 
 		bool completed = false;
 		while (!completed) {
@@ -955,7 +955,7 @@ bool VboxVmController::is_additions_installed() {
 }
 
 void VboxVmController::copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::GuestSession& gsession) {
-	gsession.directory_create(dst);
+	gsession.directory_create(dst.generic_string());
 
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {
@@ -991,19 +991,19 @@ void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst, u
 		auto gsession = work_session.console().guest().create_session(login, password);
 
 		//2) if dst doesn't exist on guest - fuck you
-		if (!gsession.directory_exists(dst)) {
+		if (!gsession.directory_exists(dst.generic_string())) {
 			throw std::runtime_error("Directory to copy doesn't exist on guest: " + dst.generic_string());
 		}
 
 		//3) If target folder already exists on guest - fuck you
 		fs::path target_name = dst / src.filename();
-		if (gsession.directory_exists(target_name) || gsession.file_exists(target_name)) {
+		if (gsession.directory_exists(target_name.generic_string()) || gsession.file_exists(target_name.generic_string())) {
 			throw std::runtime_error("Directory or file already exists on guest: " + target_name.generic_string());
 		}
 
 		//4) Now we're all set
 		if (fs::is_regular_file(src)) {
-			gsession.file_copy_to_guest(src, dst / "/").wait_and_throw_if_failed();
+			gsession.file_copy_to_guest(src.generic_string(), (dst / "/").generic_string()).wait_and_throw_if_failed();
 		} else if (fs::is_directory(src)) {
 			copy_dir_to_guest(src, target_name, gsession);
 		} else {
@@ -1038,10 +1038,10 @@ void VboxVmController::remove_from_guest(const fs::path& obj) {
 		auto gsession = work_session.console().guest().create_session(login, password);
 
 		//directory handling differs from file handling
-		if (gsession.directory_exists(obj)) {
-			gsession.directory_remove_recursive(obj);
-		} else if (gsession.file_exists(obj)) {
-			gsession.file_remove(obj);
+		if (gsession.directory_exists(obj.generic_string())) {
+			gsession.directory_remove_recursive(obj.generic_string());
+		} else if (gsession.file_exists(obj.generic_string())) {
+			gsession.file_remove(obj.generic_string());
 		} else {
 			throw std::runtime_error("Target object doesn't exist on vm: " + obj.generic_string());
 		}

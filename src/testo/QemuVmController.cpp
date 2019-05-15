@@ -1,7 +1,7 @@
 
 #include "QemuVmController.hpp"
 #include "QemuFlashDriveController.hpp"
-#include "Negotiator.hpp"
+#include "QemuGuestAdditions.hpp"
 
 #include "Utils.hpp"
 #include <fmt/format.h>
@@ -1226,7 +1226,7 @@ bool QemuVmController::check(const std::string& text, const nlohmann::json& para
 int QemuVmController::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		Negotiator helper(domain);
+		QemuGuestAdditions helper(domain);
 
 		std::string command = exe.generic_string();
 		for (auto& arg: args) {
@@ -1278,7 +1278,7 @@ bool QemuVmController::is_running() {
 bool QemuVmController::is_additions_installed() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		Negotiator helper(domain);
+		QemuGuestAdditions helper(domain);
 		return helper.is_avaliable();
 	} catch (const std::exception& error) {
 		return false;
@@ -1298,7 +1298,7 @@ void QemuVmController::copy_to_guest(const fs::path& src, const fs::path& dst, u
 		}
 
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		Negotiator helper(domain);
+		QemuGuestAdditions helper(domain);
 
 		helper.copy_to_guest(src, dst, timeout_seconds);
 	} catch (const std::exception& error) {
@@ -1313,7 +1313,7 @@ void QemuVmController::copy_from_guest(const fs::path& src, const fs::path& dst,
 		}
 
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		Negotiator helper(domain);
+		QemuGuestAdditions helper(domain);
 
 		helper.copy_from_guest(src, dst, timeout_seconds);
 	} catch (const std::exception& error) {

@@ -130,6 +130,14 @@ private:
 
 	std::vector<StackEntry> local_vars;
 
+	void do_print() {}
+
+	template <typename First, typename... Rest>
+	void do_print(First first, Rest... rest) {
+		std::cout << first;
+		do_print(std::forward<Rest>(rest)...);
+	}
+
 	template <typename... Args>
 	void print(Args... args) {
 		std::cout << "[";
@@ -137,7 +145,7 @@ private:
 		std::cout << current_progress;
 		std::cout << std::setw(0);
 		std::cout << '%' << "] ";
-		(std::cout << ... << args);
+		do_print(std::forward<Args>(args)...);
 		std::cout << std::endl;
 	}
 

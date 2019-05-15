@@ -2,8 +2,7 @@
 #include "Interpreter.hpp"
 #include "VisitorInterpreter.hpp"
 #include "VisitorSemantic.hpp"
-
-using namespace AST;
+#include <fstream>
 
 Interpreter::Interpreter(Environment& env, const fs::path& file, const nlohmann::json& config):
 	env(env),

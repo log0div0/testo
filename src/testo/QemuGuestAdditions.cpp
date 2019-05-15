@@ -1,19 +1,19 @@
 
-#include "Negotiator.hpp"
+#include "QemuGuestAdditions.hpp"
 #include "base64.hpp"
 #include <fmt/format.h>
 #include <fstream>
 
 using namespace std::literals::chrono_literals;
 
-Negotiator::Negotiator(vir::Domain& domain) {
+QemuGuestAdditions::QemuGuestAdditions(vir::Domain& domain) {
 	endpoint = Endpoint(fmt::format("/var/lib/libvirt/qemu/channel/target/domain-{}-{}/negotiator.0",
 		domain.id(), domain.name()));
 
 	socket.connect(endpoint);
 }
 
-bool Negotiator::is_avaliable() {
+bool QemuGuestAdditions::is_avaliable() {
 	try {
 		nlohmann::json request = {
 			{"method", "check_avaliable"}
@@ -31,7 +31,7 @@ bool Negotiator::is_avaliable() {
 	}
 }
 
-void Negotiator::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void QemuGuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
 	auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(timeout_seconds);
 	//4) Now we're all set
 	if (fs::is_regular_file(src)) {
@@ -43,7 +43,7 @@ void Negotiator::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_
 	}
 }
 
-void Negotiator::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
 	nlohmann::json request = {
 		{"method", "copy_files_out"}
 	};
@@ -78,7 +78,7 @@ void Negotiator::copy_from_guest(const fs::path& src, const fs::path& dst, uint3
 	}
 }
 
-void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
+void QemuGuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {
 			copy_file_to_guest(file, dst / file.path().filename(), deadline);
@@ -90,7 +90,7 @@ void Negotiator::copy_dir_to_guest(const fs::path& src, const fs::path& dst, std
 	}
 }
 
-int Negotiator::execute(const std::string& command, uint32_t timeout_seconds) {
+int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_seconds) {
 	std::cout << "Executing command " << command << std::endl;
 	auto timeout_chrono = std::chrono::seconds(timeout_seconds);
 	coro::Timeout timeout(timeout_chrono);
@@ -122,7 +122,7 @@ int Negotiator::execute(const std::string& command, uint32_t timeout_seconds) {
 	}
 }
 
-void Negotiator::copy_file_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
+void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
 	std::ifstream testFile(src.generic_string(), std::ios::binary);
 
 	std::noskipws(testFile);
@@ -156,7 +156,7 @@ void Negotiator::copy_file_to_guest(const fs::path& src, const fs::path& dst, st
 
 }
 
-void Negotiator::send(const nlohmann::json& command) {
+void QemuGuestAdditions::send(const nlohmann::json& command) {
 	auto command_str = command.dump();
 	std::vector<uint8_t> buffer;
 	uint32_t command_length = command_str.length();
@@ -167,7 +167,7 @@ void Negotiator::send(const nlohmann::json& command) {
 	socket.write(buffer);
 }
 
-nlohmann::json Negotiator::recv() {
+nlohmann::json QemuGuestAdditions::recv() {
 	uint32_t json_length = 0;
 	socket.read(&json_length, sizeof(uint32_t));
 	std::string json_str;

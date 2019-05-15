@@ -2,9 +2,11 @@
 #pragma once
 
 #include "VboxVmController.hpp"
-#include "QemuVmController.hpp"
 #include "VboxFlashDriveController.hpp"
+#ifndef WIN32
+#include "QemuVmController.hpp"
 #include "QemuFlashDriveController.hpp"
+#endif
 #include "Register.hpp"
 
 struct Environment {
@@ -35,7 +37,19 @@ struct VboxEnvironment: public Environment {
 	//API& api;
 };
 
-struct QemuEnvironment: public Environment {
+#ifdef WIN32
+struct HypervEnvironment: public Environment {
+	HypervEnvironment() {}
+	~HypervEnvironment();
+
+	void setup() override;
+	void cleanup() override;
+
+	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override;
+	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override;
+};
+#else
+struct QemuEnvironment : public Environment {
 	QemuEnvironment() {}
 	~QemuEnvironment();
 
@@ -54,3 +68,4 @@ private:
 	void prepare_storage_pool(const std::string& pool_name);
 	vir::Connect qemu_connect;
 };
+#endif

@@ -10,12 +10,12 @@
 #include "Utils.hpp"
 #include <nlohmann/json.hpp>
 
-struct Negotiator {
-	Negotiator() = delete;
-	Negotiator(const Negotiator& other) = delete;
-	Negotiator& operator=(const Negotiator& other) = delete;
+struct QemuGuestAdditions {
+	QemuGuestAdditions() = delete;
+	QemuGuestAdditions(const QemuGuestAdditions& other) = delete;
+	QemuGuestAdditions& operator=(const QemuGuestAdditions& other) = delete;
 
-	Negotiator(vir::Domain& domain);
+	QemuGuestAdditions(vir::Domain& domain);
 
 	bool is_avaliable();
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds);
