@@ -1,7 +1,0 @@
-include "./real_test.testo"
-include "./qemu.testo"
-include "./declarations.testo"
-include "./expr.testo"
-include "./include_testing/tests.testo"
-include "./include_testing/decl/declarations_error.testo"
-include "./include_testing/decl/declarations.testo"
