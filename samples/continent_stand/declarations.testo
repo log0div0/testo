@@ -1,0 +1,165 @@
+
+machine CUS {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/Continent.iso"
+	disk_size: 20Gb
+
+	nic UB_side: {
+		slot: 0
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:AA"
+	}
+
+	metadata: {
+		id: "150"
+		login: "root"
+		password: "1111"
+	}
+}
+
+machine UB {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/Continent.iso"
+	disk_size: 20Gb
+
+	nic UB_side: {
+		slot: 0
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:BB"
+	}
+
+	metadata: {
+		id: "250"
+		login: "root"
+		password: "1111"
+	}
+}
+
+snapshot continent_installed {
+	wait timeout 3s
+	wait "Установить Континент"; press Enter
+	wait "Выберите тип платформы" timeout 30s; press Enter
+	wait "Введите идентификатор шлюза"; type $id; press Enter*2
+	wait "Установить Континент" timeout 10m; stop; unplug dvd; start
+	wait "Главное меню" timeout 2m
+}
+
+snapshot CUS_inited: continent_installed {
+	press Down, Enter
+	wait "Инициализировать устройство как"; press Up*2, Enter
+	wait "Очистить локальные журналы"; press Enter
+	wait "Успе" timeout 5m; press Enter;
+	wait "Главное меню"; press Down*2, Enter
+	wait "Сертификаты УЦ"; press Enter
+	wait "Кому выдан"; press F2
+	wait "Выпуск сертификата"; press Enter
+	wait "Страна";
+	press Down; type "Security Code"
+	press Down; type "DevOps"
+	press Down; type "CA"; press Enter
+	wait "Успе"; press Enter
+	wait timeout 1s; press Down, Enter
+	wait "Кому выдан"; press Esc
+	wait "Сертификаты управления"; press Down, Enter
+	wait "Кому выдан"; press F2
+	wait "Выпуск сертификата"; press Enter
+	wait "Страна";
+	press Down*3; type "Control"; press Enter
+	wait "Выберите корневой сертификат"; press Enter
+	wait "Успе"; press Enter
+	wait "Выпуск сертификата"; press Esc
+	wait "Кому выдан"; press Esc
+	wait "Сертификаты управления"; press Esc
+	wait "Главное меню"; press Down, Enter
+	wait "Все службы будут сконфигурированы заново"; press Enter
+	wait "Выбор сертификата управления"; press Enter
+	wait "Пароль для встроенного администратора"; type "Cont-4.X"
+	press Down; type "Cont-4.X"; press Enter
+	wait "Выберите интерфейс управления"; press Enter
+	wait "Настройка интерфейса управления"; type "192.168.0.1/24"; press Enter
+	wait "Применить указанные настройки?"; press Enter
+	wait "Система успе" timeout 15m; press Enter
+}
+
+snapshot UB_inited: continent_installed {
+	press Down, Enter;
+	wait "Инициализировать устройство как"; press Enter
+	wait "Очистить локальные журналы"; press Enter
+	wait "Успе" timeout 5m; press Enter;
+	wait "Главное меню";
+}
+
+flash ub_flash {
+	fs: "ntfs"
+	size: 16Mb
+	cache_enabled: 0
+}
+
+test UB_initiation: CUS(CUS_inited), UB(UB_inited) {
+	#CUS init
+	UB {
+		plug flash ub_flash
+		press Down*2, Enter
+		wait "Запросы на выпуск сертификата"; press Enter
+		wait "Кому выдан"; press F4
+		wait "Страна";
+		press Down; type "Security Code"
+		press Down; type "DevOps"
+		press Down; type "UB"; press Enter
+		wait "Запрос записан на носитель"; press Enter, Esc
+		wait "Запросы на выпуск сертификата"; press Esc
+		wait "Главное меню";
+		unplug flash ub_flash
+	}
+
+	CUS {
+		plug flash ub_flash
+		wait "Вход в систему"; press Enter
+		wait "Выбор метода аутентификации"; press Enter
+		wait "Главное меню"; press Down; press Enter
+		wait "Сертификаты управления"; press Down, Enter
+		wait "Кому выдан"; press F2
+		wait "Выпуск сертификата"; press Down, Enter
+		wait "Есть ли запрос для создания сертификата?"; press Enter
+		wait "Выберите"; press Enter
+		wait "Выберите корневой сертификат"; press Enter
+		wait "Успе"; press Enter
+		wait "Выпуск сертификата"; press Esc
+		wait "Кому выдан"; press Esc
+		wait "Сертификаты управления"; press Esc
+		wait "Главное меню" timeout 20s; press Down*2, Enter
+		wait "Меню инструменты"; press Down*3; press Enter
+		wait "Введите ID узла безопасности"; type "250"; press Enter
+		wait "Выбор сертификата управления"; press Down, Enter
+		wait "Узел 250 успе" timeout 2m; press Enter
+		wait "Меню инструменты"; press Down*7, Enter
+		wait "Выгрузить политику"; type "250"; press Enter
+		wait "Успе"; press Enter
+		wait timeout 1m;
+		unplug flash ub_flash
+	}
+
+	UB {
+		plug flash ub_flash
+		wait timeout 5s
+		press Down, Enter
+		wait "Все службы будут сконфигурированы заново"; press Enter
+		wait "Выберите конфигурацию"; press Down, Enter
+		wait "Выберите интерфейс управления"; press Enter
+		wait "Настройка интерфейса управления"; type "192.168.0.2/24"; press Enter
+		wait "Применить указанные настройки?"; press Enter
+		wait "Система успе" timeout 3m; press Enter
+	}
+
+	CUS {
+		press Esc
+		wait "Имеются неподтвержденные изменения с узлов" timeout 4m; press Enter
+		wait "Меню инструменты"; press Down*6, Enter
+		wait "Локальные изменения"; press Space, Enter
+		wait "Подтверждено конфигураций :1" timeout 1m; press Enter
+	}
+}

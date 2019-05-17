@@ -33,6 +33,9 @@ struct QemuFlashDriveController: FlashDriveController {
 
 	std::string cksum() const;
 
+	bool cache_enabled() const {
+		return cache_enabled_;
+	}
 private:
 	fs::path img_dir() const {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
@@ -40,6 +43,7 @@ private:
 	}
 	void remove_if_exists();
 
+	bool cache_enabled_ = true;
 	nlohmann::json config;
 	vir::Connect qemu_connect;
 };

@@ -20,4 +20,5 @@ struct FlashDriveController {
 	virtual nlohmann::json get_config() const = 0;
 	virtual bool has_folder() const = 0;
 	virtual std::string cksum() const = 0;
+	virtual bool cache_enabled() const = 0;
 };

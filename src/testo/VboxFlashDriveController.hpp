@@ -39,6 +39,10 @@ struct VboxFlashDriveController: FlashDriveController {
 	}
 
 
+	bool cache_enabled() const {
+		return false;
+	}
+
 	vbox::Medium handle;
 private:
 

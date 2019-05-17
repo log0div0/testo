@@ -154,6 +154,18 @@ QemuVmController::QemuVmController(const nlohmann::json& config): config(config)
 		{"LEFTALT", 56},
 		{"SPACE", 57},
 		{"CAPSLOCK", 58},
+		{"F1", 59},
+		{"F2", 60},
+		{"F3", 61},
+		{"F4", 62},
+		{"F5", 63},
+		{"F6", 64},
+		{"F7", 65},
+		{"F8", 66},
+		{"F9", 67},
+		{"F10", 68},
+		{"F11", 87},
+		{"F12", 88},
 		{"NUMLOCK", 69},
 		{"SCROLLLOCK", 70},
 		{"RIGHTCTRL", 97},
@@ -435,12 +447,12 @@ void QemuVmController::install() {
 					<disk type='file' device='disk'>
 						<driver name='qemu' type='qcow2'/>
 						<source file='{}'/>
-						<target dev='vda' bus='virtio'/>
+						<target dev='hda' bus='ide'/>
 					</disk>
 					<disk type='file' device='cdrom'>
 						<driver name='qemu' type='raw'/>
 						<source file='{}'/>
-						<target dev='hda' bus='ide'/>
+						<target dev='hdb' bus='ide'/>
 						<readonly/>
 					</disk>
 					<controller type='usb' index='0' model='ich9-ehci1'>
@@ -933,7 +945,7 @@ std::string QemuVmController::get_flash_img() {
 				continue;
 			}
 
-			if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+			if (std::string(disk.child("target").attribute("dev").value()) == "sdb") {
 				result = disk.child("source").attribute("file").value();
 			}
 		}
@@ -960,7 +972,7 @@ void QemuVmController::attach_flash_drive(const std::string& img_path) {
 			<disk type='file'>
 				<driver name='qemu' type='qcow2'/>
 				<source file='{}'/>
-				<target dev='vdb' bus='virtio'/>
+				<target dev='sdb' bus='usb'/>
 			</disk>
 			)", img_path);
 
@@ -1008,7 +1020,7 @@ void QemuVmController::detach_flash_drive() {
 				continue;
 			}
 
-			if (std::string(disk.child("target").attribute("dev").value()) == "vdb") {
+			if (std::string(disk.child("target").attribute("dev").value()) == "sdb") {
 				domain.detach_device(disk, flags);
 				break;
 			}

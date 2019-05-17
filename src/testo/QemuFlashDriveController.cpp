@@ -22,6 +22,8 @@ config(config), qemu_connect(vir::connect_open("qemu:///system"))
 		throw std::runtime_error("Constructing VboxFlashDriveController error: field FS is not specified");
 	}
 
+	cache_enabled_ = config.value("cache_enabled", 1);
+
 	if (config.count("folder")) {
 		fs::path folder(config.at("folder").get<std::string>());
 		if (!fs::exists(folder)) {
