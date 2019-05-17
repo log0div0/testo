@@ -164,7 +164,8 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 			}
 
 			std::vector<int> v;
-			for (int i = 0; i < 100; ++i) {
+			int classes_count = l.out_c - 4 - 1;
+			for (int i = 0; i < classes_count; ++i) {
 				v.push_back(i);
 			}
 			std::sort(v.begin(), v.end(), [&](int a, int b) {
