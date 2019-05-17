@@ -146,41 +146,35 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 	}
 	size_t dimension_size = l.out_w * l.out_h;
 
-	float thresh_objectness = 0.01f;
-	size_t thresh_class = 5;
-	if (query.size() < 4) {
-		thresh_objectness = 0.1f;
-		thresh_class = query.size() - 1;
-	}
-
 	int class_id = symbols.at(query.at(index));
 	for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
 		for (int x = left; (x < right) && (x < l.out_w); ++x) {
 			int i = y * l.out_w + x;
 
 			float objectness = logistic_activate(l.output[dimension_size * 4 + i]);
-			if (objectness < thresh_objectness) {
+			if (objectness < 0.1f) {
 				continue;
 			}
 
-			std::vector<int> v;
-			int classes_count = l.out_c - 4 - 1;
-			for (int i = 0; i < classes_count; ++i) {
-				v.push_back(i);
-			}
-			std::sort(v.begin(), v.end(), [&](int a, int b) {
-				float a_probability = logistic_activate(l.output[dimension_size * (5 + a) + i]);
-				float b_probability = logistic_activate(l.output[dimension_size * (5 + b) + i]);
-				return a_probability > b_probability;
-			});
-			auto it = std::find(v.begin(), v.end(), class_id);
-			if ((it - v.begin()) > thresh_class) {
-				continue;
-			}
-			// float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
-			// if (class_probability < 0.1f) {
+			// std::vector<int> v;
+			// int classes_count = l.out_c - 4 - 1;
+			// for (int i = 0; i < classes_count; ++i) {
+			// 	v.push_back(i);
+			// }
+			// std::sort(v.begin(), v.end(), [&](int a, int b) {
+			// 	float a_probability = logistic_activate(l.output[dimension_size * (5 + a) + i]);
+			// 	float b_probability = logistic_activate(l.output[dimension_size * (5 + b) + i]);
+			// 	return a_probability > b_probability;
+			// });
+			// auto it = std::find(v.begin(), v.end(), class_id);
+			// if ((it - v.begin()) > 5) {
 			// 	continue;
 			// }
+
+			float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
+			if (class_probability < 0.1f) {
+				continue;
+			}
 
 			Box b;
 			b.x = (x + logistic_activate(l.output[dimension_size * 0 + i])) / l.out_w;
