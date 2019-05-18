@@ -5,6 +5,7 @@
 #include <string>
 #include <locale>
 #include <codecvt>
+#include <sstream>
 
 #include <Wbemidl.h>
 #include <comdef.h>
@@ -13,28 +14,54 @@ namespace wmi {
 
 extern std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
+template <typename T>
+std::string to_hex(T t) {
+	std::stringstream stream;
+	stream << std::hex << "0x" << t;
+	return stream.str();
+}
+
+struct ComError: std::runtime_error {
+	ComError(HRESULT hresult_):
+		std::runtime_error("HRESULT = " + to_hex(hresult_)),
+		hresult(hresult_)
+	{
+
+	}
+
+	HRESULT hresult;
+};
+
+inline void throw_if_failed(HRESULT hr) {
+	if (FAILED(hr)) {
+		throw ComError(hr);
+	}
+}
+
 struct CoInitializer {
 	CoInitializer() {
-		HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-		if (FAILED(hres)) {
-			throw std::runtime_error("CoInitializeEx failed");
+		try {
+			throw_if_failed(CoInitializeEx(0, COINIT_MULTITHREADED));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 
 	void initalize_security() {
-		HRESULT hres = CoInitializeSecurity(
-			NULL,
-			-1,
-			NULL,
-			NULL,
-			RPC_C_AUTHN_LEVEL_DEFAULT,
-			RPC_C_IMP_LEVEL_IMPERSONATE,
-			NULL,
-			EOAC_NONE,
-			NULL
-		);
-		if (FAILED(hres)) {
-			throw std::runtime_error("CoInitializeSecurity failed");
+		try {
+			throw_if_failed(CoInitializeSecurity(
+				NULL,
+				-1,
+				NULL,
+				NULL,
+				RPC_C_AUTHN_LEVEL_DEFAULT,
+				RPC_C_IMP_LEVEL_IMPERSONATE,
+				NULL,
+				EOAC_NONE,
+				NULL
+			));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 
@@ -60,12 +87,84 @@ struct Variant: VARIANT {
 		std::swap((VARIANT&)*this, (VARIANT&)other);
 		return *this;
 	}
+
+	template <typename T>
+	operator T() const {
+		return get<T>();
+	}
+
+	template <typename T>
+	T get() const;
+
+	template <>
+	std::string get() const {
+		try {
+			check_type(VT_BSTR);
+			if (bstrVal == nullptr) {
+				throw std::runtime_error("nullptr");
+			}
+			return converter.to_bytes(bstrVal);
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	template <>
+	uint16_t get() const {
+		try {
+			check_type(VT_UI2);
+			return uiVal;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	template <>
+	int16_t get() const {
+		try {
+			check_type(VT_I2);
+			return iVal;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	template <>
+	uint32_t get() const {
+		try {
+			check_type(VT_UI4);
+			return ulVal;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	template <>
+	int32_t get() const {
+		try {
+			check_type(VT_I4);
+			return lVal;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+private:
+	void check_type(VARENUM expected) const {
+		if (vt != expected) {
+			throw std::runtime_error("Expected type = " + to_hex(expected) + " , actual type = " + to_hex(vt));
+		}
+	}
 };
 
 struct String {
 	String(BSTR handle_): handle(handle_) {
-		if (handle == nullptr) {
-			throw std::runtime_error("null bstr");
+		try {
+			if (handle == nullptr) {
+				throw std::runtime_error("nullptr");
+			}
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 	~String() {
@@ -75,7 +174,11 @@ struct String {
 		}
 	}
 	operator std::string() const {
-		return converter.to_bytes(handle);
+		try {
+			return converter.to_bytes(handle);
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
 	}
 	BSTR handle = nullptr;
 };
@@ -84,8 +187,12 @@ template <typename IObject>
 struct Object {
 	Object() {}
 	Object(IObject* handle_): handle(handle_) {
-		if (handle == nullptr) {
-			throw std::runtime_error("IObject handle == nullptr");
+		try {
+			if (handle == nullptr) {
+				throw std::runtime_error("nullptr");
+			}
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 	~Object() {
@@ -95,8 +202,18 @@ struct Object {
 		}
 	}
 
-	Object(const Object& other) = delete;
-	Object& operator=(const Object& other) = delete;
+	Object(const Object& other): handle(other.handle) {
+		handle->AddRef();
+	}
+	Object& operator=(const Object& other) {
+		if (handle) {
+			handle->Release();
+			handle = nullptr;
+		}
+		handle = other->handle;
+		handle->AddRef();
+		return *this;
+	}
 	Object(Object&& other): handle(other.handle) {
 		other.handle = nullptr;
 	}
@@ -110,69 +227,81 @@ struct Object {
 struct WbemClassObject: Object<IWbemClassObject> {
 	using Object<IWbemClassObject>::Object;
 
-	template <typename T>
-	T get(const std::string& name) const;
-
-	template <>
-	std::string get(const std::string& name) const {
-		return converter.to_bytes(_get(name, CIM_STRING).bstrVal);
-	}
-
-	template <>
-	uint16_t get(const std::string& name) const {
-		return _get(name, CIM_UINT16).uiVal;
+	Variant get(const std::string& name) const {
+		try {
+			Variant variant;
+			throw_if_failed(handle->Get(converter.from_bytes(name).c_str(), 0, &variant, nullptr, 0));
+			return variant;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
 	}
 
 	std::string getObjectText() {
-		BSTR str = nullptr;
-		HRESULT hres = handle->GetObjectText(0, &str);
-		if (FAILED(hres)) {
-			throw std::runtime_error("WbemClassObject::getObjectText failed");
+		try {
+			BSTR str = nullptr;
+			throw_if_failed(handle->GetObjectText(0, &str));
+			return String(str);
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
-		return String(str);
+	}
+
+	std::string relpath() const {
+		try {
+			return get("__RELPATH");
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
 	}
 
 private:
-	Variant _get(const std::string& name, CIMTYPE expected_type) const {
-		Variant variant;
-		CIMTYPE actual_type = CIM_ILLEGAL;
-		HRESULT hres = handle->Get(converter.from_bytes(name).c_str(), 0, &variant, &actual_type, 0);
-		if (FAILED(hres)) {
-			throw std::runtime_error("WbemClassObject::Get failed");
-		}
-		if (actual_type != expected_type) {
-			throw std::runtime_error("WbemClassObject::Get return data of unexpected type");
-		}
-		return variant;
-	}
 };
 
 struct EnumWbemClassObject: Object<IEnumWbemClassObject> {
 	using Object<IEnumWbemClassObject>::Object;
 
-	std::vector<WbemClassObject> next(size_t count = 1) {
-		ULONG returned = 0;
-		std::vector<IWbemClassObject*> buffer(count, nullptr);
-		HRESULT hres = handle->Next(WBEM_INFINITE, count, buffer.data(), &returned);
-		std::vector<WbemClassObject> result(buffer.begin(), buffer.begin() + returned);
-		if (FAILED(hres)) {
-			throw std::runtime_error("EnumWbemClassObject::Next failed");
+	std::vector<WbemClassObject> next(size_t count) {
+		try {
+			ULONG returned = 0;
+			std::vector<IWbemClassObject*> buffer(count, nullptr);
+			HRESULT hres = handle->Next(WBEM_INFINITE, count, buffer.data(), &returned);
+			std::vector<WbemClassObject> result(buffer.begin(), buffer.begin() + returned);
+			throw_if_failed(hres);
+			return result;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
-		return result;
 	}
 
-	std::vector<WbemClassObject> getAll(size_t batch_size = 10) {
-		std::vector<wmi::WbemClassObject> result;
-		while (true) {
-			std::vector<wmi::WbemClassObject> objects = next(batch_size);
-			if (objects.size() == 0) {
-				break;
+	std::vector<WbemClassObject> getAll(size_t batch_size = 1) {
+		try {
+			std::vector<wmi::WbemClassObject> result;
+			while (true) {
+				std::vector<wmi::WbemClassObject> objects = next(batch_size);
+				if (objects.size() == 0) {
+					break;
+				}
+				for (auto& object: objects) {
+					result.push_back(std::move(object));
+				}
 			}
-			for (auto& object: objects) {
-				result.push_back(std::move(object));
-			}
+			return result;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
-		return result;
+	}
+
+	WbemClassObject getOne() {
+		try {
+			auto objects = getAll();
+			if (objects.size() != 1) {
+				throw std::runtime_error("Get more object than expected");
+			}
+			return std::move(objects.at(0));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
 	}
 };
 
@@ -180,72 +309,71 @@ struct WbemServices: Object<IWbemServices> {
 	using Object<IWbemServices>::Object;
 
 	void setProxyBlanket() {
-		HRESULT hres = CoSetProxyBlanket(
-			handle,
-			RPC_C_AUTHN_WINNT,
-			RPC_C_AUTHZ_NONE,
-			NULL,
-			RPC_C_AUTHN_LEVEL_CALL,
-			RPC_C_IMP_LEVEL_IMPERSONATE,
-			NULL,
-			EOAC_NONE
-		);
-
-		if (FAILED(hres)) {
-			throw std::runtime_error("CoSetProxyBlanket failed");
+		try {
+			throw_if_failed(CoSetProxyBlanket(
+				handle,
+				RPC_C_AUTHN_WINNT,
+				RPC_C_AUTHZ_NONE,
+				NULL,
+				RPC_C_AUTHN_LEVEL_CALL,
+				RPC_C_IMP_LEVEL_IMPERSONATE,
+				NULL,
+				EOAC_NONE
+			));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 
 	EnumWbemClassObject execQuery(const std::string& query) const {
-		IEnumWbemClassObject* enumerator = nullptr;
-		HRESULT hres = handle->ExecQuery(
-			bstr_t("WQL"),
-			bstr_t(query.c_str()),
-			WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
-			NULL,
-			&enumerator
-		);
-
-		if (FAILED(hres)) {
-			throw std::runtime_error("IWbemServices::ExecQuery failed");
+		try {
+			IEnumWbemClassObject* enumerator = nullptr;
+			throw_if_failed(handle->ExecQuery(
+				bstr_t("WQL"),
+				bstr_t(query.c_str()),
+				WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+				NULL,
+				&enumerator
+			));
+			return enumerator;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
-
-		return enumerator;
 	}
 };
 
 struct WbemLocator: Object<IWbemLocator> {
 	WbemLocator() {
-		HRESULT hres = CoCreateInstance(
-			CLSID_WbemLocator,
-			0,
-			CLSCTX_INPROC_SERVER,
-			IID_IWbemLocator, (LPVOID *)&handle);
-
-		if (FAILED(hres)) {
-			throw std::runtime_error("CoCreateInstance failed (WbemLocator)");
+		try {
+			throw_if_failed(CoCreateInstance(
+				CLSID_WbemLocator,
+				0,
+				CLSCTX_INPROC_SERVER,
+				IID_IWbemLocator, (LPVOID *)&handle));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 
 	WbemServices connectServer(const std::string& path) {
-		IWbemServices* services = nullptr;
+		try {
+			IWbemServices* services = nullptr;
 
-		HRESULT hres = handle->ConnectServer(
-			_bstr_t(path.c_str()),
-			NULL,
-			NULL,
-			_bstr_t("MS_409"),
-			NULL,
-			0,
-			0,
-			&services
-		);
+			throw_if_failed(handle->ConnectServer(
+				_bstr_t(path.c_str()),
+				NULL,
+				NULL,
+				_bstr_t("MS_409"),
+				NULL,
+				0,
+				0,
+				&services
+			));
 
-		if (FAILED(hres)) {
-			throw std::runtime_error("IWbemLocator::ConnectServer failed");
+			return services;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
-
-		return services;
 	}
 };
 
