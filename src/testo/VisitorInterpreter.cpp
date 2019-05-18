@@ -127,7 +127,7 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	try {
 		auto fd = reg.fds.find(flash->name)->second; //should always be found
-		if (cksum(fd) != fd->cksum()) {
+		if (!fd->cache_enabled() || (cksum(fd) != fd->cksum())) {
 			print("Creating flash drive \"", flash->name.value());
 			fd->create();
 			if (fd->has_folder()) {

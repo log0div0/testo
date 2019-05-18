@@ -64,6 +64,18 @@ VisitorSemantic::VisitorSemantic(Register& reg, Environment& env):
 		keys.insert("LEFTALT");
 		keys.insert("SPACE");
 		keys.insert("CAPSLOCK");
+		keys.insert("F1"),
+		keys.insert("F2"),
+		keys.insert("F3"),
+		keys.insert("F4"),
+		keys.insert("F5"),
+		keys.insert("F6"),
+		keys.insert("F7"),
+		keys.insert("F8"),
+		keys.insert("F9"),
+		keys.insert("F10"),
+		keys.insert("F11"),
+		keys.insert("F12"),
 		keys.insert("NUMLOCK");
 		keys.insert("SCROLLLOCK");
 		keys.insert("RIGHTCTRL");
@@ -106,6 +118,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, Environment& env):
 		fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::word)});
 		fd_global_ctx.insert({"size", std::make_pair(false, Token::category::size)});
 		fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
+		fd_global_ctx.insert({"cache_enabled", std::make_pair(false, Token::category::number)});
 
 		attr_ctxs.insert({"fd_global", fd_global_ctx});
 }

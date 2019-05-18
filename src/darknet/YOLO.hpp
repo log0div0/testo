@@ -4,7 +4,7 @@
 #include "Network.hpp"
 #include "Image.hpp"
 #include <fstream>
-#include <inipp.hh>
+#include <nlohmann/json.hpp>
 #include <algorithm>
 
 namespace yolo {
@@ -131,17 +131,19 @@ struct Dataset {
 		if (!file.is_open()) {
 			throw std::runtime_error("Failed to open file " + path);
 		}
-		inipp::inifile ini(file);
 
-		item_count = std::stoul(ini.get("item_count"));
+		nlohmann::json config;
+		file >> config;
 
-		image_width = std::stoul(ini.get("image_width"));
-		image_height = std::stoul(ini.get("image_height"));
+		image_count = config.at("image_count");
+
+		image_width = config.at("image_width");
+		image_height = config.at("image_height");
 		image_channels = 3;
 		image_size = image_width * image_height * image_channels;
 
-		image_dir = ini.get("image_dir") + "/";
-		label_dir = ini.get("label_dir") + "/";
+		images_dir = config.at("images_dir").get<std::string>() + "/";
+		labels_dir = config.at("labels_dir").get<std::string>() + "/";
 	}
 
 	std::vector<yolo::Label> charge(darknet::Network* network) {
@@ -149,9 +151,9 @@ struct Dataset {
 
 		for (int row_index = 0; row_index < network->batch; ++row_index)
 		{
-			size_t item_index = rand() % item_count;
+			size_t item_index = rand() % image_count;
 
-			std::string image_path = image_dir + std::to_string(item_index) + ".png";
+			std::string image_path = images_dir + std::to_string(item_index) + ".png";
 			darknet::Image image(image_path);
 			if ((image.width() != image_width) ||
 				(image.height() != image_height) ||
@@ -160,7 +162,7 @@ struct Dataset {
 			}
 			memcpy(&network->input[image_size*row_index], image.data, image_size*sizeof(float));
 
-			std::string label_path = label_dir + std::to_string(item_index) + ".txt";
+			std::string label_path = labels_dir + std::to_string(item_index) + ".txt";
 			yolo::Label label(label_path);
 			result.push_back(std::move(label));
 		}
@@ -168,13 +170,16 @@ struct Dataset {
 		return result;
 	}
 
-	size_t item_count;
+	size_t image_count;
 	size_t image_size;
 	size_t image_width, image_height, image_channels;
-	std::string image_dir, label_dir;
+	std::string images_dir, labels_dir;
 };
 
-bool predict(darknet::Network& network, stb::Image& image, const std::string& text);
+std::map<std::string, int> load_symbols(const std::string& file);
+std::map<std::string, int> load_symbols(std::istream& stream);
+
+bool predict(darknet::Network& network, stb::Image& image, const std::string& text, const std::map<std::string, int>& symbols);
 float train(darknet::Network& network, Dataset& dataset,
 	float learning_rate,
 	float momentum,

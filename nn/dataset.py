@@ -1,6 +1,8 @@
+#!/usr/bin/python3
 
-import gzip, array, os, string, shutil, random
+import gzip, os, string, shutil, random, json
 import PIL, PIL.ImageDraw
+import multiprocessing
 
 class PSF:
 	def __init__(self, filename):
@@ -8,7 +10,7 @@ class PSF:
 		if self.has_unicode:
 			self.unicodes = {}
 			i = 0
-			for chars in self.unicode_data[0:-1].tobytes().split(self.unicode_term):
+			for chars in self.unicode_data[0:-1].split(self.unicode_term):
 				for char in chars.decode('utf-16', 'replace'):
 					self.unicodes[char] = i
 				i += 1
@@ -16,8 +18,11 @@ class PSF:
 	def get_data(self, i):
 		return self.data[i * self.charsize: (i+1) * self.charsize]
 
+	def get_glyph(self, char):
+		return self.get_data(self.unicodes[char])
+
 	def draw(self, image, char, left, top, font_color="white", background_color="black"):
-		data = self.get_data(self.unicodes[char])
+		data = self.get_glyph(char)
 		draw = PIL.ImageDraw.Draw(image)
 		bits_per_line = (self.width + 7) // 8 * 8
 		x_min = self.width
@@ -87,16 +92,13 @@ class PSF:
 			self.has_unicode = False
 		self.height = self.charsize = self.header[3]
 		self.width = 8
-		d = f.read(self.length * self.charsize)
-		self.data = array.array('B', d)
-		d = f.read()
-		self.unicode_data = array.array('B', d)
+		self.data = f.read(self.length * self.charsize)
+		self.unicode_data = f.read()
 		self.unicode_term = b'\xff\xff'
 
 	def load_psf_2(self, f):
 		self.type = 2
-		d = f.read(28)
-		self.header2 = array.array('B', d)
+		self.header2 = f.read(28)
 		self.version = self.calc(0)
 		self.headersize = self.calc(4)
 		self.flags = self.calc(8)
@@ -106,12 +108,9 @@ class PSF:
 		self.width = self.calc(24)
 		self.has_unicode = self.flags & 1 == 1
 		self.rest_length = self.headersize - 32
-		d = f.read(self.rest_length)
-		self.rest = array.array('B', d)
-		d = f.read(self.length * self.charsize)
-		self.data = array.array('B', d)
-		d = f.read()
-		self.unicode_data = array.array('B', d)
+		self.rest = f.read(self.rest_length)
+		self.data = f.read(self.length * self.charsize)
+		self.unicode_data = f.read()
 		self.unicode_term = b'\xff'
 
 	def load(self, filename):
@@ -120,8 +119,7 @@ class PSF:
 		else:
 			f = open(filename, "rb")
 		self.type = 0
-		d = f.read(4)
-		self.header = array.array('B', d)
+		self.header = f.read(4)
 		if (self.header[0] == 0x36 and self.header[1] == 0x04):
 			self.load_psf_1(f)
 		elif (self.header[0] == 0x72 and self.header[1] == 0xb5 and self.header[2] == 0x4a and self.header[3] == 0x86):
@@ -145,9 +143,12 @@ class PSF:
 			f.write(self.unicode_data)
 		f.close()
 
-font_charset = 'Uni2'
-font_names = ['Fixed', 'Terminus', 'TerminusBold', 'VGA']
-font_size = '16'
+font_names = [
+	'Uni2-Continent.psf.gz',
+	'Uni2-Continent-FirstScreen.psf.gz',
+	'Uni2-Fixed16.psf.gz',
+	'Uni2-VGA16.psf.gz'
+]
 
 colors = [
 	"White",
@@ -171,6 +172,107 @@ colors = [
 fonts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 
 chars = [char for char in string.printable if not char.isspace()]
+for char in "абвгдеёжзийклмнопрстуфхцчшщъыьэюя":
+	chars.append(char)
+	chars.append(char.upper())
+
+fonts = [PSF(os.path.join(fonts_dir, font_name)) for font_name in font_names]
+symbols_to_glyphs = dict()
+chars_to_symbols = dict()
+symbols = [
+	'1',
+	'2',
+	'3Зз',
+	'4',
+	'5',
+	'6Бб',
+	'7',
+	'8',
+	'9',
+	'AАaа',
+	'bЬьЪъ',
+	'Gg',
+	'OОoо0',
+	'YУyу',
+	'Zz',
+	'BВв',
+	'CСcс',
+	'Dd',
+	'EЕЁeеё',
+	'Ff',
+	'HНhн',
+	'Ii',
+	'Jj',
+	'KКkк',
+	'Ll',
+	'MМmм',
+	'Nn',
+	'PРpр',
+	'Qq',
+	'Rr',
+	'Ss',
+	'TТtт',
+	'Uu',
+	'Vv',
+	'Ww',
+	'XХxх',
+	'!',
+	'"',
+	"'",
+	'`',
+	'#',
+	'$',
+	'%',
+	'&',
+	'([{<',
+	')]}>',
+	'*',
+	'+',
+	'.,',
+	'-',
+	'/',
+	':;',
+	'=',
+	'?',
+	'@',
+	'\\',
+	'^',
+	'_',
+	'|',
+	'~',
+	'Гг',
+	'Дд',
+	'Жж',
+	'ИЙий',
+	'Лл',
+	'Пп',
+	'Фф',
+	'Цц',
+	'Чч',
+	'ШЩшщ',
+	'Ыы',
+	'Ээ',
+	'Юю',
+	'Яя',
+]
+
+for index, symbol in enumerate(symbols):
+	glyphs = set()
+	for char in symbol:
+		chars_to_symbols[char] = index
+		for font in fonts:
+			glyphs.add(font.get_glyph(char))
+	symbols_to_glyphs[symbol] = glyphs
+
+for symbol1, glyphs1 in symbols_to_glyphs.items():
+	for symbol2, glyphs2 in symbols_to_glyphs.items():
+		if symbol1 != symbol2:
+			if len(glyphs1 & glyphs2):
+				raise Exception("Fucking fuck: " + symbol1 + " and " + symbol2)
+
+print(chars)
+print("Symbols count: ", len(symbols))
+print(symbols)
 
 char_height = 16
 char_width = 8
@@ -193,76 +295,72 @@ def draw_char(image, left, top, foreground, background, font):
 	x_center = (left + x + (width // 2)) / image_width
 	y_center = (top + y + (height // 2)) / image_height
 	if char != ' ':
-		return "%s %s %s %s %s\n" % (chars.index(char), x_center, y_center, (width + 2) / image_width, (height + 2) / image_height)
+		return "%s %s %s %s %s\n" % (chars_to_symbols[char], x_center, y_center, (width + 2) / image_width, (height + 2) / image_height)
 	else:
 		return ""
 
-def main(base_dir, image_count):
-	fonts = [PSF(os.path.join(fonts_dir, font_charset + '-' + font_name + font_size + '.psf.gz')) for font_name in font_names]
+dataset_dir = os.path.join(os.getcwd(), "dataset")
+images_dir = os.path.join(dataset_dir, "images")
+labels_dir = os.path.join(dataset_dir, "labels")
 
-	images_dir = os.path.join(base_dir, "images")
-	os.mkdir(images_dir)
-	labels_dir = os.path.join(base_dir, "labels")
-	os.mkdir(labels_dir)
+def main(image_index):
+	image_path = os.path.join(images_dir, str(image_index) + '.png')
+	label_path = os.path.join(labels_dir, str(image_index) + '.txt')
 
-	for image_index in range(image_count):
-		print(str(image_index) + '/' + str(image_count))
+	background, foreground = random_colors()
+	if image_index % 4 < 3:
+		image = PIL.Image.new("RGB", (image_width, image_height), background)
+		label = ""
+		for row in range(1, rows_count - 1, 3):
+			font = random.choice(fonts)
+			x_offset = random.randint(-3, 3);
+			y_offset = random.randint(-7, 7);
+			for column in range(1, columns_count - 1):
+				left = column*char_width + x_offset
+				top = row*char_height + y_offset
+				label += draw_char(image, left, top, foreground, background, font)
+	else:
+		image = PIL.Image.new("RGB", (image_width, image_height), background)
+		label = ""
+		j = 0
+		for row in range(rows_count):
+			font = random.choice(fonts)
+			for column in range(columns_count):
+				if j % 57 == 0:
+					background, foreground = random_colors()
+				left = column*char_width
+				top = row*char_height
+				label += draw_char(image, left, top, foreground, background, font)
+				j += 1
 
-		image_path = os.path.join(images_dir, str(image_index) + '.png')
-		label_path = os.path.join(labels_dir, str(image_index) + '.txt')
-
-		if image_index % 4 < 3:
-			background, foreground = random_colors()
-			image = PIL.Image.new("RGB", (image_width, image_height), background)
-			label = ""
-			for row in range(1, rows_count - 1, 3):
-				font = random.choice(fonts)
-				x_offset = random.randint(-3, 3);
-				y_offset = random.randint(-7, 7);
-				for column in range(1, columns_count - 1):
-					left = column*char_width + x_offset
-					top = row*char_height + y_offset
-					label += draw_char(image, left, top, foreground, background, font)
-		else:
-			image = PIL.Image.new("RGB", (image_width, image_height), background)
-			label = ""
-			j = 0
-			for row in range(rows_count):
-				font = random.choice(fonts)
-				for column in range(columns_count):
-					if j % 57 == 0:
-						background, foreground = random_colors()
-					left = column*char_width
-					top = row*char_height
-					label += draw_char(image, left, top, foreground, background, font)
-					j += 1
-
-		image.save(image_path)
-		with open(label_path, "w") as file:
-			file.write(label)
-
-	s = """
-item_count = %s
-image_width = %s
-image_height = %s
-image_dir = %s
-label_dir = %s
-""" % (
-		image_count,
-		image_width,
-		image_height,
-		images_dir,
-		labels_dir
-	)
-
-	config_file_path = os.path.join(base_dir, "console_fonts.dataset")
-	with open(config_file_path, 'w') as config_file:
-		config_file.write(s)
+	image.save(image_path)
+	with open(label_path, "w") as file:
+		file.write(label)
 
 if __name__ == "__main__":
-	dataset_dir = os.path.join(os.getcwd(), "dataset")
 	if os.path.exists(dataset_dir):
 		shutil.rmtree(dataset_dir)
 	os.mkdir(dataset_dir)
 
-	main(dataset_dir, 10000)
+	os.mkdir(images_dir)
+	os.mkdir(labels_dir)
+
+	image_count = 10000
+
+	with multiprocessing.Pool() as p:
+		for x, _ in enumerate(p.imap(main, range(image_count))):
+			print(x, "/", image_count)
+
+	dataset_file_path = os.path.join(dataset_dir, "dataset.json")
+	with open(dataset_file_path, 'w') as dataset_file:
+		dataset_file.write(json.dumps({
+			"image_count": image_count,
+			"image_width": image_width,
+			"image_height": image_height,
+			"images_dir": images_dir,
+			"labels_dir": labels_dir
+		}))
+
+	symbols_file_path = os.path.join(dataset_dir, "symbols.json")
+	with open(symbols_file_path, 'w') as symbols_file:
+		symbols_file.write(json.dumps(symbols))

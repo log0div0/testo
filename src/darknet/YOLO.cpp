@@ -1,5 +1,6 @@
 
 #include "YOLO.hpp"
+#include "utf8.hpp"
 
 extern "C" {
 #include "src/activations.h"
@@ -9,7 +10,6 @@ namespace yolo {
 
 float anchor_w = 8;
 float anchor_h = 16;
-std::string classes = R"(0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~)";
 
 float mag_array(float *a, int n)
 {
@@ -47,13 +47,17 @@ float delta_yolo_box(darknet::Layer& l, const Box& truth, int index, int i, int 
 }
 
 
-float delta_yolo_class(darknet::Layer& l, int index, int class_)
+float delta_yolo_class(darknet::Layer& l, int index, int class_id)
 {
 	float result = 0;
 	int stride = l.out_w*l.out_h;
-	for(size_t n = 0; n < classes.size(); ++n){
-		l.delta[index + stride*n] = ((n == (size_t)class_)?1 : 0) - logistic_activate(l.output[index + stride*n]);
-		if (n == (size_t)class_) {
+	int classes_count = l.out_c - 4 - 1;
+	if (class_id >= classes_count) {
+		throw std::runtime_error("class_id >= classes_count");
+	}
+	for (int n = 0; n < classes_count; ++n){
+		l.delta[index + stride*n] = ((n == class_id)?1 : 0) - logistic_activate(l.output[index + stride*n]);
+		if (n == class_id) {
 			result += logistic_activate(l.output[index + stride*n]);
 		}
 	}
@@ -120,37 +124,55 @@ float train(darknet::Network& network, Dataset& dataset,
 	return loss;
 }
 
-bool find_substr(const stb::Image& image, const darknet::Layer& l, int left, int top, std::string substr, std::vector<Rect>& rects) {
+bool find_substr(const stb::Image& image, const darknet::Layer& l,
+	int left, int top,
+	const std::vector<std::string>& query, size_t index,
+	const std::map<std::string, int>& symbols,
+	std::vector<Rect>& rects
+) {
 	int right = left;
 	int bottom = top;
 	while (true) {
-		if (!substr.size()) {
+		if (index == query.size()) {
 			return true;
 		}
 		right += 3;
 		bottom += 2;
-		if (substr.at(0) != ' ') {
+		if (query.at(index) != " ") {
 			break;
 		} else {
-			substr = substr.substr(1);
+			++index;
 		}
 	}
 	size_t dimension_size = l.out_w * l.out_h;
-	size_t class_id = classes.find(substr.at(0));
-	if (class_id == std::string::npos) {
-		throw std::runtime_error("Unsupported symbol: " + substr.at(0));
-	}
-	for (int x = left; (x < right) && (x < l.out_w); ++x) {
-		for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
+
+	int class_id = symbols.at(query.at(index));
+	for (int y = top; (y < bottom) && (y < l.out_h); ++y) {
+		for (int x = left; (x < right) && (x < l.out_w); ++x) {
 			int i = y * l.out_w + x;
 
 			float objectness = logistic_activate(l.output[dimension_size * 4 + i]);
-			if (objectness < 0.1f) {
+			if (objectness < 0.01f) {
 				continue;
 			}
 
+			// std::vector<int> v;
+			// int classes_count = l.out_c - 4 - 1;
+			// for (int i = 0; i < classes_count; ++i) {
+			// 	v.push_back(i);
+			// }
+			// std::sort(v.begin(), v.end(), [&](int a, int b) {
+			// 	float a_probability = logistic_activate(l.output[dimension_size * (5 + a) + i]);
+			// 	float b_probability = logistic_activate(l.output[dimension_size * (5 + b) + i]);
+			// 	return a_probability > b_probability;
+			// });
+			// auto it = std::find(v.begin(), v.end(), class_id);
+			// if ((it - v.begin()) > 5) {
+			// 	continue;
+			// }
+
 			float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
-			if (class_probability < 0.5f) {
+			if (class_probability < 0.1f) {
 				continue;
 			}
 
@@ -166,15 +188,42 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l, int left, int
 			rect.top = (b.y-b.h/2)*image.height;
 			rect.bottom = (b.y+b.h/2)*image.height;
 
+			if (rects.size()) {
+				if (rects.back().iou(rect) >= 0.5f) {
+					continue;
+				}
+			}
+
 			rects.push_back(rect);
 
-			return find_substr(image, l, x + 1, top, substr.substr(1), rects);
+			return find_substr(image, l, x + 1, top, query, index + 1, symbols, rects);
 		}
 	}
 	return false;
 }
 
-bool predict(darknet::Network& network, stb::Image& image, const std::string& text) {
+std::map<std::string, int> load_symbols(const std::string& path) {
+	std::ifstream file(path);
+	if (!file.is_open()) {
+		throw std::runtime_error("Failed to open file " + path);
+	}
+	return load_symbols(file);
+}
+
+std::map<std::string, int> load_symbols(std::istream& stream) {
+	nlohmann::json json;
+	stream >> json;
+	std::map<std::string, int> result;
+	for (size_t i = 0; i < json.size(); ++i) {
+		std::string chars = json[i];
+		for (const auto& ch: utf8::split_to_chars(chars)) {
+			result[ch] = i;
+		}
+	}
+	return result;
+}
+
+bool predict(darknet::Network& network, stb::Image& image, const std::string& text, const std::map<std::string, int>& symbols) {
 
 	bool result = false;
 
@@ -190,12 +239,14 @@ bool predict(darknet::Network& network, stb::Image& image, const std::string& te
 
 	network.forward();
 
+	std::vector<std::string> query = utf8::split_to_chars(text);
+
 	const darknet::Layer& l = *network.layers.back();
 
 	for (int y = 0; y < l.out_h; ++y) {
 		for (int x = 0; x < l.out_w; ++x) {
 			std::vector<Rect> rects;
-			if (find_substr(image, l, x, y, text, rects)) {
+			if (find_substr(image, l, x, y, query, 0, symbols, rects)) {
 				result = true;
 				for (auto& rect: rects) {
 					image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
