@@ -52,7 +52,7 @@ snapshot CUS_inited: continent_installed {
 	press Down, Enter
 	wait "Инициализировать устройство как"; press Up*2, Enter
 	wait "Очистить локальные журналы"; press Enter
-	wait "Успе" timeout 5m; press Enter;
+	wait "Успешно" timeout 5m; press Enter;
 	wait "Главное меню"; press Down*2, Enter
 	wait "Сертификаты УЦ"; press Enter
 	wait "Кому выдан"; press F2
@@ -61,7 +61,7 @@ snapshot CUS_inited: continent_installed {
 	press Down; type "Security Code"
 	press Down; type "DevOps"
 	press Down; type "CA"; press Enter
-	wait "Успе"; press Enter
+	wait "Успешно"; press Enter
 	wait timeout 1s; press Down, Enter
 	wait "Кому выдан"; press Esc
 	wait "Сертификаты управления"; press Down, Enter
@@ -70,7 +70,7 @@ snapshot CUS_inited: continent_installed {
 	wait "Страна";
 	press Down*3; type "Control"; press Enter
 	wait "Выберите корневой сертификат"; press Enter
-	wait "Успе"; press Enter
+	wait "Успешно"; press Enter
 	wait "Выпуск сертификата"; press Esc
 	wait "Кому выдан"; press Esc
 	wait "Сертификаты управления"; press Esc
@@ -82,14 +82,14 @@ snapshot CUS_inited: continent_installed {
 	wait "Выберите интерфейс управления"; press Enter
 	wait "Настройка интерфейса управления"; type "192.168.0.1/24"; press Enter
 	wait "Применить указанные настройки?"; press Enter
-	wait "Система успе" timeout 15m; press Enter
+	wait "Система успешно настроена" timeout 15m; press Enter
 }
 
 snapshot UB_inited: continent_installed {
 	press Down, Enter;
 	wait "Инициализировать устройство как"; press Enter
 	wait "Очистить локальные журналы"; press Enter
-	wait "Успе" timeout 5m; press Enter;
+	wait "Успешно" timeout 5m; press Enter;
 	wait "Главное меню";
 }
 
@@ -102,16 +102,19 @@ flash ub_flash {
 test UB_initiation: CUS(CUS_inited), UB(UB_inited) {
 	#CUS init
 	UB {
-		plug flash ub_flash
 		press Down*2, Enter
 		wait "Запросы на выпуск сертификата"; press Enter
-		wait "Кому выдан"; press F4
-		wait "Страна";
+		wait "F4 - создать запрос"; press F4
+		wait "Вставьте USB Flash накопитель"
+		plug flash ub_flash
+		wait timeout 5s
+		press Enter
+		wait "Идёт создание запроса";
 		press Down; type "Security Code"
 		press Down; type "DevOps"
 		press Down; type "UB"; press Enter
 		wait "Запрос записан на носитель"; press Enter, Esc
-		wait "Запросы на выпуск сертификата"; press Esc
+		wait "Возврат в предыдущее меню"; press Esc
 		wait "Главное меню";
 		unplug flash ub_flash
 	}
@@ -122,23 +125,23 @@ test UB_initiation: CUS(CUS_inited), UB(UB_inited) {
 		wait "Выбор метода аутентификации"; press Enter
 		wait "Главное меню"; press Down; press Enter
 		wait "Сертификаты управления"; press Down, Enter
-		wait "Кому выдан"; press F2
+		wait "F2 - Выпуск серт."; press F2
 		wait "Выпуск сертификата"; press Down, Enter
 		wait "Есть ли запрос для создания сертификата?"; press Enter
-		wait "Выберите"; press Enter
+		wait "Выберите Запрос"; press Enter
 		wait "Выберите корневой сертификат"; press Enter
-		wait "Успе"; press Enter
+		wait "Успешно"; press Enter
 		wait "Выпуск сертификата"; press Esc
-		wait "Кому выдан"; press Esc
 		wait "Сертификаты управления"; press Esc
+		wait "Возврат в предыдущее меню"; press Esc
 		wait "Главное меню" timeout 20s; press Down*2, Enter
 		wait "Меню инструменты"; press Down*3; press Enter
 		wait "Введите ID узла безопасности"; type "250"; press Enter
 		wait "Выбор сертификата управления"; press Down, Enter
-		wait "Узел 250 успе" timeout 2m; press Enter
+		wait "Узел 250 успешно создан" timeout 2m; press Enter
 		wait "Меню инструменты"; press Down*7, Enter
 		wait "Выгрузить политику"; type "250"; press Enter
-		wait "Успе"; press Enter
+		wait "Успешно"; press Enter
 		wait timeout 1m;
 		unplug flash ub_flash
 	}
@@ -152,7 +155,7 @@ test UB_initiation: CUS(CUS_inited), UB(UB_inited) {
 		wait "Выберите интерфейс управления"; press Enter
 		wait "Настройка интерфейса управления"; type "192.168.0.2/24"; press Enter
 		wait "Применить указанные настройки?"; press Enter
-		wait "Система успе" timeout 3m; press Enter
+		wait "Система успешно настроена" timeout 3m; press Enter
 	}
 
 	CUS {

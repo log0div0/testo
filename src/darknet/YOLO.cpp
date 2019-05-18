@@ -152,7 +152,7 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 			int i = y * l.out_w + x;
 
 			float objectness = logistic_activate(l.output[dimension_size * 4 + i]);
-			if (objectness < 0.1f) {
+			if (objectness < 0.01f) {
 				continue;
 			}
 
