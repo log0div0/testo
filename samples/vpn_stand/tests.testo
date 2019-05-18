@@ -49,7 +49,7 @@ test basic: vpn_sgw1(wireguard), vpn_sgw2(wireguard)
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp public.key /media/sgw1_public.key
 			umount /media
 		"""
@@ -60,7 +60,7 @@ test basic: vpn_sgw1(wireguard), vpn_sgw2(wireguard)
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp public.key /media/sgw2_public.key
 			cp /media/sgw1_public.key ~/
 			umount /media
@@ -72,7 +72,7 @@ test basic: vpn_sgw1(wireguard), vpn_sgw2(wireguard)
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp /media/sgw2_public.key ~/
 			umount /media
 		"""
@@ -153,7 +153,7 @@ test basic_with_clients: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp public.key /media/sgw1_public.key
 			umount /media
 		"""
@@ -164,7 +164,7 @@ test basic_with_clients: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp public.key /media/sgw2_public.key
 			cp /media/sgw1_public.key ~/
 			umount /media
@@ -176,7 +176,7 @@ test basic_with_clients: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp /media/sgw2_public.key ~/
 			umount /media
 		"""
@@ -269,7 +269,7 @@ test routes_misconfigured: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp public.key /media/sgw1_public.key
 			umount /media
 		"""
@@ -280,7 +280,7 @@ test routes_misconfigured: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp public.key /media/sgw2_public.key
 			cp /media/sgw1_public.key ~/
 			umount /media
@@ -292,7 +292,7 @@ test routes_misconfigured: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			cp /media/sgw2_public.key ~/
 			umount /media
 		"""

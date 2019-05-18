@@ -210,7 +210,7 @@ macro copy_cert_to_flash(cert) {
 	plug flash pubkey_flash;
 	wait timeout 5s
 	exec bash """
-		mount /dev/vdb /media
+		mount /dev/sdb /media
 		cp """ + $cert + """ /media
 		umount /media
 	"""

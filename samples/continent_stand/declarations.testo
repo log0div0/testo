@@ -42,7 +42,7 @@ machine UB {
 snapshot continent_installed {
 	wait timeout 3s
 	wait "Установить Континент"; press Enter
-	wait "Выберите тип платформы" timeout 30s; press Enter
+	wait "Выберите тип платформы"; press Enter
 	wait "Введите идентификатор шлюза"; type $id; press Enter*2
 	wait "Установить Континент" timeout 10m; stop; unplug dvd; start
 	wait "Главное меню" timeout 2m
@@ -134,7 +134,7 @@ test UB_initiation: CUS(CUS_inited), UB(UB_inited) {
 		wait "Выпуск сертификата"; press Esc
 		wait "Сертификаты управления"; press Esc
 		wait "Возврат в предыдущее меню"; press Esc
-		wait "Главное меню" timeout 20s; press Down*2, Enter
+		wait "Главное меню"; press Down*2, Enter
 		wait "Меню инструменты"; press Down*3; press Enter
 		wait "Введите ID узла безопасности"; type "250"; press Enter
 		wait "Выбор сертификата управления"; press Down, Enter

@@ -1103,10 +1103,10 @@ void QemuVmController::plug_dvd(fs::path path) {
 				<driver name='qemu' type='raw'/>
 				<source file='{}'/>
 				<backingStore/>
-				<target dev='hda' bus='ide'/>
+				<target dev='hdb' bus='ide'/>
 				<readonly/>
-				<alias name='ide0-0-0'/>
-				<address type='drive' controller='0' bus='0' target='0' unit='0'/>
+				<alias name='ide0-0-1'/>
+				<address type='drive' controller='0' bus='0' target='0' unit='1'/>
 			</disk>
 		)", path.generic_string().c_str());
 

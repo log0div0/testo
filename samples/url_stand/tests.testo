@@ -70,7 +70,7 @@ test https_interception: url_client(pkgs_and_net_ready), url_server(server_confi
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			mkdir /usr/share/ca-certificates/extra
 			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
 			cp /media/squidCA.crt /usr/local/share/ca-certificates/squidCA.crt
@@ -129,7 +129,7 @@ test https_clamav: url_client(pkgs_and_net_ready), url_server(server_configured)
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			mkdir /usr/share/ca-certificates/extra
 			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
 			cp /media/squidCA.crt /usr/local/share/ca-certificates/squidCA.crt
@@ -194,7 +194,7 @@ test https_proxy_cert_not_imported: url_client(pkgs_and_net_ready), url_server(s
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/vdb /media
+			mount /dev/sdb /media
 			mkdir /usr/share/ca-certificates/extra
 			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
 			umount /media

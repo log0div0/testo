@@ -316,7 +316,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::share
 			return sleep(wait->time_interval.value());
 		}
 
-		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "10s";
+		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
 		if (!vm->wait(text, params, wait_for)) {
 			throw std::runtime_error("Wait timeout");
 		}
