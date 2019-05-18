@@ -53,8 +53,13 @@ struct Variant: VARIANT {
 
 	Variant(const Variant& other) = delete;
 	Variant& operator=(const Variant& other) = delete;
-	Variant(Variant&& other);
-	Variant& operator=(Variant&& other);
+	Variant(Variant&& other): VARIANT(other) {
+		VariantInit(&other);
+	}
+	Variant& operator=(Variant&& other) {
+		std::swap((VARIANT&)*this, (VARIANT&)other);
+		return *this;
+	}
 };
 
 struct String {
@@ -110,16 +115,12 @@ struct WbemClassObject: Object<IWbemClassObject> {
 
 	template <>
 	std::string get(const std::string& name) const {
-		Variant variant;
-		CIMTYPE type = CIM_ILLEGAL;
-		HRESULT hres = handle->Get(converter.from_bytes(name).c_str(), 0, &variant, &type, 0);
-		if (FAILED(hres)) {
-			throw std::runtime_error("WbemClassObject::Get failed");
-		}
-		if (type != CIM_STRING) {
-			throw std::runtime_error("String was expected");
-		}
-		return converter.to_bytes(variant.bstrVal);
+		return converter.to_bytes(_get(name, CIM_STRING).bstrVal);
+	}
+
+	template <>
+	uint16_t get(const std::string& name) const {
+		return _get(name, CIM_UINT16).uiVal;
 	}
 
 	std::string getObjectText() {
@@ -129,6 +130,20 @@ struct WbemClassObject: Object<IWbemClassObject> {
 			throw std::runtime_error("WbemClassObject::getObjectText failed");
 		}
 		return String(str);
+	}
+
+private:
+	Variant _get(const std::string& name, CIMTYPE expected_type) const {
+		Variant variant;
+		CIMTYPE actual_type = CIM_ILLEGAL;
+		HRESULT hres = handle->Get(converter.from_bytes(name).c_str(), 0, &variant, &actual_type, 0);
+		if (FAILED(hres)) {
+			throw std::runtime_error("WbemClassObject::Get failed");
+		}
+		if (actual_type != expected_type) {
+			throw std::runtime_error("WbemClassObject::Get return data of unexpected type");
+		}
+		return variant;
 	}
 };
 

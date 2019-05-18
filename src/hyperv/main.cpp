@@ -13,7 +13,10 @@ struct Machine {
 		return object.get<std::string>("ElementName");
 	}
 
-private:
+	bool is_running() const {
+		return object.get<uint16_t>("EnabledState") == 2;
+	}
+
 	wmi::WbemClassObject object;
 };
 
@@ -28,7 +31,6 @@ struct Connect {
 		return {std::make_move_iterator(objects.begin()), std::make_move_iterator(objects.end())};
 	}
 
-private:
 	wmi::WbemLocator locator;
 	wmi::WbemServices services;
 };
@@ -42,7 +44,7 @@ void main() {
 
 		hyperv::Connect connect;
 		for (auto& machine: connect.machines()) {
-			std::cout << machine.name() << std::endl;
+			std::cout << machine.name() << " " << (machine.is_running() ? "running" : "stopped") << std::endl;
 		}
 
 	} catch (const std::exception& error) {
