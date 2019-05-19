@@ -7,7 +7,7 @@
 #include <map>
 
 struct App {
-	App(std::shared_ptr<Host> host);
+	App(std::shared_ptr<Hypervisor> hypervisor);
 	void render();
 
 	std::vector<std::shared_ptr<Guest>> guests;

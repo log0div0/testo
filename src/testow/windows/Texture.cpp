@@ -5,7 +5,9 @@
 extern ID3D11Device* g_pd3dDevice;
 extern ID3D11DeviceContext* g_pd3dDeviceContext;
 
-Texture::Texture(size_t width, size_t height) {
+Texture::Texture(size_t width, size_t height):
+	_width(width), _height(height)
+{
 	D3D11_TEXTURE2D_DESC desc = {};
 	desc.Width = width;
 	desc.Height = height;

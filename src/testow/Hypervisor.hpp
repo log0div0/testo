@@ -21,8 +21,8 @@ private:
 	std::string _name;
 };
 
-struct Host {
-	virtual ~Host() {};
+struct Hypervisor {
+	virtual ~Hypervisor() {};
 
 	virtual std::vector<std::shared_ptr<Guest>> guests() const = 0;
 };

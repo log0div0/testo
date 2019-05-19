@@ -10,6 +10,7 @@
 #include <iostream>
 #include <tchar.h>
 #include "../App.hpp"
+#include "../Vbox.hpp"
 
 // Data
 ID3D11Device*            g_pd3dDevice = NULL;
@@ -148,7 +149,7 @@ int main(int, char**)
 		{
 			// Our state
 			ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-			App app;
+			App app(std::make_shared<Vbox>());
 
 			// Main loop
 			MSG msg;

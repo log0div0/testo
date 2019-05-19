@@ -15,8 +15,8 @@ private:
 	mutable std::vector<uint8_t> buffer;
 };
 
-struct QemuHost: Host {
-	QemuHost();
+struct Qemu: Hypervisor {
+	Qemu();
 	virtual std::vector<std::shared_ptr<Guest>> guests() const override;
 
 private:

@@ -21,11 +21,11 @@ stb::Image QemuGuest::screenshot() const {
 	return stb::Image(buffer.data(), bytes);
 }
 
-QemuHost::QemuHost() {
+Qemu::Qemu() {
 	connect = std::make_shared<vir::Connect>(vir::connect_open("qemu:///system"));
 }
 
-std::vector<std::shared_ptr<Guest>> QemuHost::guests() const {
+std::vector<std::shared_ptr<Guest>> Qemu::guests() const {
 	std::vector<std::shared_ptr<Guest>> result;
 	for (auto& domain: connect->domains({VIR_CONNECT_LIST_DOMAINS_PERSISTENT})) {
 		result.push_back(std::make_shared<QemuGuest>(connect, std::move(domain)));

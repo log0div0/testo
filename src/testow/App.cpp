@@ -23,10 +23,10 @@ std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 
 App* app = nullptr;
 
-App::App(std::shared_ptr<Host> host)
+App::App(std::shared_ptr<Hypervisor> hypervisor)
 {
 	::app = this;
-	guests = host->guests();
+	guests = hypervisor->guests();
 }
 
 void App::render() {
@@ -53,7 +53,10 @@ void App::render() {
 				if ((texture.width() != vm->view.width) ||
 					(texture.height() != vm->view.height)) {
 					texture = Texture(vm->view.width, vm->view.height);
-					ImGui::SetWindowSize({texture.width() + 40, texture.height() + 40});
+					ImGui::SetWindowSize({
+						float(texture.width() + 40),
+						float(texture.height() + 40)
+					});
 				}
 				texture.write(vm->view.data(), vm->view.size());
 				ImVec2 p = ImGui::GetCursorScreenPos();

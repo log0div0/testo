@@ -120,7 +120,7 @@ int main(int, char**)
 
 		{
 			ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-			App app(std::make_shared<QemuHost>());
+			App app(std::make_shared<Qemu>());
 
 			// Main loop
 			while (!glfwWindowShouldClose(window))
