@@ -1,20 +1,24 @@
 
 #include <iostream>
+#include <chrono>
 #include "wmi.hpp"
 
 namespace hyperv {
 
 struct Machine {
-	Machine(wmi::WbemClassObject object_,
+	Machine(wmi::WbemClassObject computerSystem_,
 		wmi::WbemServices services_):
-		object(std::move(object_)),
+		computerSystem(std::move(computerSystem_)),
 		services(std::move(services_))
 	{
+		videoHead = services.execQuery("ASSOCIATORS OF {" + computerSystem.relpath() + "} WHERE ResultClass=Msvm_VideoHead").getOne();
+		virtualSystemSettingData = services.execQuery("ASSOCIATORS OF {" + computerSystem.relpath() + "} WHERE ResultClass=Msvm_VirtualSystemSettingData").getOne();
+		virtualSystemManagementService = services.execQuery("SELECT * FROM Msvm_VirtualSystemManagementService").getOne();
 	}
 
 	std::string name() const {
 		try {
-			return object.get("ElementName");
+			return computerSystem.get("ElementName");
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -22,27 +26,30 @@ struct Machine {
 
 	bool is_running() const {
 		try {
-			return object.get("EnabledState").get<int32_t>() == 2;
+			return computerSystem.get("EnabledState").get<int32_t>() == 2;
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 
-	void screenshot() const {
+	std::vector<uint8_t> screenshot() const {
 		try {
-			std::string query = "ASSOCIATORS OF {" + object.relpath() + "} WHERE ResultClass=Msvm_VideoHead";
-			auto video_head = services.execQuery(query).getOne();
-			int32_t height = video_head.get("CurrentVerticalResolution");
-			int32_t width = video_head.get("CurrentHorizontalResolution");
-			std::cout << width << " " << height << std::endl;
-			auto virtualSystemManagementService = services.execQuery("SELECT * FROM Msvm_VirtualSystemManagementService").getOne();
-			// services.getObject
+			auto call = services.getObject("Msvm_VirtualSystemManagementService").getMethod("GetVirtualSystemThumbnailImage").spawnInstance();
+			call.put("HeightPixels", videoHead.get("CurrentVerticalResolution"));
+			call.put("WidthPixels", videoHead.get("CurrentHorizontalResolution"));
+			call.put("TargetSystem", virtualSystemSettingData.path());
+			auto result = services.execMethod(virtualSystemManagementService.path(), "GetVirtualSystemThumbnailImage", call);
+			if (result.get("ReturnValue").get<int32_t>() != 0) {
+				throw std::runtime_error("ReturnValue == " + std::to_string(result.get("ReturnValue").get<int32_t>()));
+			}
+
+			return result.get("ImageData");
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
 
-	wmi::WbemClassObject object;
+	wmi::WbemClassObject computerSystem, videoHead, virtualSystemSettingData, virtualSystemManagementService;
 	wmi::WbemServices services;
 };
 
@@ -101,7 +108,12 @@ void main() {
 		hyperv::Connect connect;
 		for (auto& machine: connect.machines()) {
 			std::cout << machine.name() << " " << (machine.is_running() ? "running" : "stopped") << std::endl;
-			machine.screenshot();
+			auto start = std::chrono::high_resolution_clock::now();
+			std::vector<uint8_t> screenshot = machine.screenshot();
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> time = end - start;
+			std::cout << time.count() << " seconds" << std::endl;
+			std::cout << "SIZE = " << screenshot.size() << std::endl;
 		}
 
 	} catch (const std::exception& error) {

@@ -9,6 +9,7 @@
 
 #include <Wbemidl.h>
 #include <comdef.h>
+#include <propvarutil.h>
 
 namespace wmi {
 
@@ -50,13 +51,13 @@ struct CoInitializer {
 	void initalize_security() {
 		try {
 			throw_if_failed(CoInitializeSecurity(
-				NULL,
+				nullptr,
 				-1,
-				NULL,
-				NULL,
+				nullptr,
+				nullptr,
 				RPC_C_AUTHN_LEVEL_DEFAULT,
 				RPC_C_IMP_LEVEL_IMPERSONATE,
-				NULL,
+				nullptr,
 				EOAC_NONE,
 				NULL
 			));
@@ -73,6 +74,9 @@ struct CoInitializer {
 struct Variant: VARIANT {
 	Variant() {
 		VariantInit(this);
+	}
+	Variant(const std::string& str) {
+		InitVariantFromString(bstr_t(str.c_str()), this);
 	}
 	~Variant() {
 		VariantClear(this);
@@ -144,6 +148,25 @@ struct Variant: VARIANT {
 		try {
 			check_type(VT_I4);
 			return lVal;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	template <>
+	std::vector<uint8_t> get() const {
+		try {
+			check_type(VARENUM(VT_ARRAY | VT_UI1));
+			long lowerBound = 0;
+			long upperBound = 0;
+			SafeArrayGetLBound(parray, 1 , &lowerBound);
+			SafeArrayGetUBound(parray, 1, &upperBound);
+			uint8_t* begin = nullptr;
+			throw_if_failed(SafeArrayAccessData(parray, (void**)&begin));
+			uint8_t* end = begin + (upperBound - lowerBound + 1);
+			std::vector<uint8_t> result(begin, end);
+			SafeArrayUnaccessData(parray);
+			return result;
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -255,7 +278,54 @@ struct WbemClassObject: Object<IWbemClassObject> {
 		}
 	}
 
-private:
+	std::string path() const {
+		try {
+			return get("__PATH");
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	WbemClassObject getMethod(const std::string& name) const {
+		try {
+			IWbemClassObject* object = nullptr;
+			throw_if_failed(handle->GetMethod(
+				bstr_t(name.c_str()),
+				0,
+				&object,
+				nullptr
+			));
+			return object;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	WbemClassObject spawnInstance() const {
+		try {
+			IWbemClassObject* object = nullptr;
+			throw_if_failed(handle->SpawnInstance(
+				0,
+				&object
+			));
+			return object;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	void put(const std::string& name, Variant value) {
+		try {
+			throw_if_failed(handle->Put(
+				bstr_t(name.c_str()),
+				0,
+				&value,
+				0
+			));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
 };
 
 struct EnumWbemClassObject: Object<IEnumWbemClassObject> {
@@ -314,10 +384,10 @@ struct WbemServices: Object<IWbemServices> {
 				handle,
 				RPC_C_AUTHN_WINNT,
 				RPC_C_AUTHZ_NONE,
-				NULL,
+				nullptr,
 				RPC_C_AUTHN_LEVEL_CALL,
 				RPC_C_IMP_LEVEL_IMPERSONATE,
-				NULL,
+				nullptr,
 				EOAC_NONE
 			));
 		} catch (const std::exception&) {
@@ -329,13 +399,47 @@ struct WbemServices: Object<IWbemServices> {
 		try {
 			IEnumWbemClassObject* enumerator = nullptr;
 			throw_if_failed(handle->ExecQuery(
-				bstr_t("WQL"),
+				L"WQL",
 				bstr_t(query.c_str()),
 				WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
-				NULL,
+				nullptr,
 				&enumerator
 			));
 			return enumerator;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	WbemClassObject execMethod(const std::string& className, const std::string& methodName, WbemClassObject& input) const {
+		try {
+			IWbemClassObject* output = nullptr;
+			throw_if_failed(handle->ExecMethod(
+				bstr_t(className.c_str()),
+				bstr_t(methodName.c_str()),
+				0,
+				nullptr,
+				input.handle,
+				&output,
+				nullptr
+			));
+			return output;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	WbemClassObject getObject(const std::string& name) const {
+		try {
+			IWbemClassObject* object = nullptr;
+			throw_if_failed(handle->GetObject(
+				bstr_t(name.c_str()),
+				0,
+				nullptr,
+				&object,
+				nullptr
+			));
+			return object;
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -360,11 +464,11 @@ struct WbemLocator: Object<IWbemLocator> {
 			IWbemServices* services = nullptr;
 
 			throw_if_failed(handle->ConnectServer(
-				_bstr_t(path.c_str()),
-				NULL,
-				NULL,
-				_bstr_t("MS_409"),
-				NULL,
+				bstr_t(path.c_str()),
+				nullptr,
+				nullptr,
+				L"MS_409",
+				0,
 				0,
 				0,
 				&services
