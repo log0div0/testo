@@ -11,24 +11,6 @@
 #include <tchar.h>
 #include "../App.hpp"
 
-void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
-	stream << n << ". " << error.what();
-	try {
-		std::rethrow_if_nested(error);
-	} catch (const std::exception& error) {
-		stream << std::endl;
-		backtrace(stream, error, n + 1);
-	} catch(...) {
-		stream << std::endl;
-		stream << n << ". " << "[Unknown exception type]";
-	}
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
-	backtrace(stream, error, 1);
-	return stream;
-}
-
 // Data
 ID3D11Device*            g_pd3dDevice = NULL;
 ID3D11DeviceContext*     g_pd3dDeviceContext = NULL;

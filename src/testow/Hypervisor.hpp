@@ -1,0 +1,28 @@
+
+#pragma once
+
+#include <string>
+#include <memory>
+#include <vector>
+#include <darknet/Image.hpp>
+
+struct Guest {
+	Guest(const std::string& name);
+	virtual ~Guest() {};
+
+	const std::string& name() const {
+		return _name;
+	}
+
+	virtual bool is_running() const = 0;
+	virtual stb::Image screenshot() const = 0;
+
+private:
+	std::string _name;
+};
+
+struct Host {
+	virtual ~Host() {};
+
+	virtual std::vector<std::shared_ptr<Guest>> guests() const = 0;
+};

@@ -3,25 +3,40 @@
 #include <imgui.h>
 #include <iostream>
 
+void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
+	stream << n << ". " << error.what();
+	try {
+		std::rethrow_if_nested(error);
+	} catch (const std::exception& error) {
+		stream << std::endl;
+		backtrace(stream, error, n + 1);
+	} catch(...) {
+		stream << std::endl;
+		stream << n << ". " << "[Unknown exception type]";
+	}
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
+	backtrace(stream, error, 1);
+	return stream;
+}
+
 App* app = nullptr;
 
-App::App():
-	qemu_connect(vir::connect_open("qemu:///system"))
+App::App(std::shared_ptr<Host> host)
 {
 	::app = this;
-	for (auto& domain: qemu_connect.domains({VIR_CONNECT_LIST_DOMAINS_PERSISTENT})) {
-		domains.emplace(domain.name(), std::move(domain));
-	}
+	guests = host->guests();
 }
 
 void App::render() {
 	if (ImGui::Begin("List of VMs")) {
-		for (auto& [domain_name, domain]: domains) {
-			bool is_selected = vm && (vm->domain_name == domain_name);
-			if (ImGui::Selectable(domain_name.c_str(), &is_selected)) {
+		for (auto& guest: guests) {
+			bool is_selected = vm && (vm->guest == guest);
+			if (ImGui::Selectable(guest->name().c_str(), &is_selected)) {
 				if (is_selected) {
 					vm = nullptr;
-					vm = std::make_unique<VM>(qemu_connect, domain);
+					vm = std::make_unique<VM>(guest);
 				} else {
 					vm = nullptr;
 				}

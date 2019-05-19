@@ -31,6 +31,7 @@
 #endif
 
 #include "../App.hpp"
+#include "Qemu.hpp"
 #include <iostream>
 
 static void glfw_error_callback(int error, const char* description)
@@ -119,7 +120,7 @@ int main(int, char**)
 
 		{
 			ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-			App app;
+			App app(std::make_shared<QemuHost>());
 
 			// Main loop
 			while (!glfwWindowShouldClose(window))

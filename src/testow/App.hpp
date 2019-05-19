@@ -1,17 +1,16 @@
 
 #pragma once
 
-#include <qemu/Host.hpp>
+#include "Hypervisor.hpp"
 #include "VM.hpp"
 #include "Texture.hpp"
 #include <map>
 
 struct App {
-	App();
+	App(std::shared_ptr<Host> host);
 	void render();
 
-	vir::Connect qemu_connect;
-	std::map<std::string, vir::Domain> domains;
+	std::vector<std::shared_ptr<Guest>> guests;
 	char query[128] = {};
 
 	std::unique_ptr<VM> vm;
@@ -19,3 +18,4 @@ struct App {
 };
 
 extern App* app;
+extern std::ostream& operator<<(std::ostream& stream, const std::exception& error);
