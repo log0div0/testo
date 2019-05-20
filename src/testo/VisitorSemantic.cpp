@@ -188,6 +188,37 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 	}
 
 	visit_command_block(test->cmd_block);
+
+	//Now that we've checked that all commands are ligit we could check that
+	//all parents have totally separate vms. We can't do that before command block because
+	//a user may specify unexisting vm in some command and we need to catch that before that hierarchy check
+
+	std::vector<std::set<std::shared_ptr<VmController>>> parents_subtries;
+
+	//populate our parents paths
+	for (auto parent: test->parents) {
+		parents_subtries.push_back(reg.get_all_vms(parent));
+	}
+
+	//check that parents path are independent
+	for (size_t i = 0; i < parents_subtries.size(); ++i) {
+		for (size_t j = 0; j < parents_subtries.size(); ++j) {
+			if (i == j) {
+				continue;
+			}
+
+			std::vector<std::shared_ptr<VmController>> intersection;
+
+			std::set_intersection(
+				parents_subtries[i].begin(), parents_subtries[i].end(),
+				parents_subtries[j].begin(), parents_subtries[j].end(),
+				std::back_inserter(intersection));
+
+			if (intersection.size() != 0) {
+				throw std::runtime_error(std::string(test->begin()) + ":Error: some parents have common vms");
+			}
+		}
+	}
 }
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
