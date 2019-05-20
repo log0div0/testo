@@ -97,7 +97,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
 	try {
 		// Create application window
@@ -149,7 +149,7 @@ int main(int, char**)
 		{
 			// Our state
 			ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-			App app(std::make_shared<Vbox>());
+			App app(argc, argv);
 
 			// Main loop
 			MSG msg;

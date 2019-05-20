@@ -1,5 +1,5 @@
 
-#include "VBox.hpp"
+#include "Vbox.hpp"
 
 VboxGuest::VboxGuest(vbox::Machine machine_, vbox::Session session_): Guest(machine_.name()),
 	machine(std::move(machine_)), session(std::move(session_))
@@ -40,7 +40,7 @@ stb::Image VboxGuest::screenshot() const {
 		for(size_t w = 0; w < width; ++w){
 			for(size_t c = 0; c < 3; ++c){
 				size_t src_index = h*width*4 + w*4 + c;
-				size_t dst_index = h*width*3 * w*3 + c;
+				size_t dst_index = h*width*3 + w*3 + c;
 				result._data[dst_index] = array_out[src_index];
 			}
 		}

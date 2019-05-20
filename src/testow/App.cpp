@@ -2,6 +2,8 @@
 #include "App.hpp"
 #include <imgui.h>
 #include <iostream>
+#include <sstream>
+#include <clipp.h>
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();
@@ -23,8 +25,24 @@ std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 
 App* app = nullptr;
 
-App::App(std::shared_ptr<Hypervisor> hypervisor)
+App::App(int argc, char** argv)
 {
+	using namespace clipp;
+
+	std::string hypervisor_name;
+
+	auto cli = (
+		option("-v", "--hypervisor") & value("hypervisor name", hypervisor_name)
+	);
+
+	if (!parse(argc, argv, cli)) {
+		std::stringstream ss;
+		ss << make_man_page(cli, argv[0]);
+		throw std::runtime_error(ss.str());
+	}
+
+	hypervisor = Hypervisor::get(hypervisor_name);
+
 	::app = this;
 	guests = hypervisor->guests();
 }

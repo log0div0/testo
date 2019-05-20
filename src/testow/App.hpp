@@ -7,9 +7,10 @@
 #include <map>
 
 struct App {
-	App(std::shared_ptr<Hypervisor> hypervisor);
+	App(int argc, char** argv);
 	void render();
 
+	std::shared_ptr<Hypervisor> hypervisor;
 	std::vector<std::shared_ptr<Guest>> guests;
 	char query[128] = {};
 
