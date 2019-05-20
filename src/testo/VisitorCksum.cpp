@@ -84,7 +84,7 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vm, std::shar
 	if (wait->time_interval) {
 		result += wait->time_interval.value();
 	} else {
-		result += "10s";
+		result += "1m";
 	}
 
 	return result;
