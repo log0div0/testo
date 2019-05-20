@@ -55,7 +55,7 @@ void VisitorInterpreter::print_statistics() const {
 }
 
 void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
-	for (auto stmt: program->stmts) {
+	/*for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
 			if (test_spec.length()) {
 				if (p->stmt->name.value() == test_spec) {
@@ -74,7 +74,7 @@ void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
 		current_remainder = original_remainder;
 	} else {
 		progress_step = 100;
-	}
+	}*/
 
 }
 
@@ -92,7 +92,7 @@ void VisitorInterpreter::update_progress() {
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	start_timestamp = std::chrono::system_clock::now();
 
-	setup_progress_vars(program);
+	/*setup_progress_vars(program);
 
 	if (tests_to_run.size() == 0) {
 		if (test_spec.length()) {
@@ -107,10 +107,10 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 		visit_stmt(stmt);
 	}
 
-	print_statistics();
+	print_statistics();*/
 }
 
-void VisitorInterpreter::visit_stmt(std::shared_ptr<IStmt> stmt) {
+/*void VisitorInterpreter::visit_stmt(std::shared_ptr<IStmt> stmt) {
 	if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
 		return visit_test(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
@@ -932,4 +932,4 @@ std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) 
 
 	std::hash<std::string> h;
 	return std::to_string(h(cksum_input));
-}
+}*/

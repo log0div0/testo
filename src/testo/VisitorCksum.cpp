@@ -6,7 +6,7 @@ using namespace AST;
 
 //TODO: Snapshot cksum must depend on name and parent cksum
 
-uint64_t VisitorCksum::visit(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
+/*uint64_t VisitorCksum::visit(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
 	std::string result = snapshot->name.value();
 	if (snapshot->parent) {
 		result += snapshot->parent->name.value();
@@ -14,9 +14,9 @@ uint64_t VisitorCksum::visit(std::shared_ptr<VmController> vm, std::shared_ptr<S
 	result += visit_action_block(vm, snapshot->action_block->action);
 	std::hash<std::string> h;
 	return h(result);
-}
+}*/
 
-std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<ActionBlock> action_block) {
+/*std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<ActionBlock> action_block) {
 	std::string result("BLOCK");
 	for (auto action: action_block->actions) {
 		result += visit_action(vm, action);
@@ -329,3 +329,4 @@ std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vm, std::sha
 
 	return result;
 }
+*/

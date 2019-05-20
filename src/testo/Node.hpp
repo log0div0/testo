@@ -4,6 +4,7 @@
 #include "Pos.hpp"
 #include "Token.hpp"
 #include <vector>
+#include <set>
 #include <memory>
 #include <functional>
 
@@ -537,7 +538,7 @@ struct CmdBlock: public Node {
 };
 
 //High-level constructions
-//may be machine, flash, snapshot, macro or test declaration
+//may be machine, flash, macro or test declaration
 struct IStmt: public Node {
 	using Node::Node;
 };
@@ -561,38 +562,6 @@ struct Stmt: public IStmt {
 	}
 
 	std::shared_ptr<StmtType> stmt;
-};
-
-struct Snapshot: public Node {
-	Snapshot(const Token& snapshot, const Token& name,
-		const Token& parent_name, std::shared_ptr<Action<ActionBlock>> action_block):
-		Node(snapshot),
-		name(name),
-		parent_name(parent_name),
-		action_block(action_block),
-		parent() {}
-
-	Pos begin() const {
-		return t.pos();
-	}
-
-	Pos end() const {
-		return action_block->end();
-	}
-
-	operator std::string() const {
-		std::string result = t.value() + " " + name.value();
-		if (parent_name) {
-			result += ":(" + parent_name.value() + ")";
-		}
-		result += " " + std::string(*action_block);
-		return result;
-	}
-
-	Token name;
-	Token parent_name;
-	std::shared_ptr<Action<ActionBlock>> action_block;
-	std::shared_ptr<Snapshot> parent;
 };
 
 struct Macro: public Node {
@@ -655,45 +624,13 @@ struct MacroCall: public Node {
 	std::vector<std::shared_ptr<Word>> params;
 };
 
-struct VmState: public Node {
-	VmState(const Token& name, const Token& snapshot_name):
-		Node(Token(Token::category::vm_state, "", Pos())),
-		name(name),
-		snapshot_name(snapshot_name),
-		snapshot() {}
-
-	Pos begin() const {
-		return name.pos();
-	}
-
-	Pos end() const {
-		if (snapshot) {
-			return snapshot_name.pos();
-		} else {
-			return name.pos();
-		}
-	}
-
-	operator std::string() const {
-		std::string result = std::string("resolving ") + name.value();
-		if (snapshot) {
-			result += "(" + snapshot_name.value() + ")";
-		}
-		return result;
-	}
-
-	Token name;
-	Token snapshot_name;
-	std::shared_ptr<Snapshot> snapshot;
-};
-
 struct Test: public Node {
 	Test(const Token& test, const Token& name,
-		const std::vector<std::shared_ptr<VmState>>& vms,
+		const std::vector<Token>& parents_tokens,
 		std::shared_ptr<CmdBlock> cmd_block):
 		Node(test),
 		name(name),
-		vms(vms),
+		parents_tokens(parents_tokens),
 		cmd_block(cmd_block) {}
 
 	Pos begin() const {
@@ -710,7 +647,8 @@ struct Test: public Node {
 	}
 
 	Token name;
-	std::vector<std::shared_ptr<VmState>> vms;
+	std::vector<Token> parents_tokens;
+	std::set<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
 };
 

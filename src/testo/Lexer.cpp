@@ -172,8 +172,6 @@ Token Lexer::id() {
 		return timeout();
 	} else if (value == "for") {
 		return for_();
-	} else if (value == "snapshot") {
-		return snapshot();
 	} else if (value == "test") {
 		return test();
 	} else if (value == "machine") {
@@ -323,13 +321,6 @@ Token Lexer::for_() {
 	std::string value("for");
 	current_pos.advance(value.length());
 	return Token(Token::category::for_, value, tmp_pos);
-}
-
-Token Lexer::snapshot() {
-	Pos tmp_pos = current_pos;
-	std::string value("snapshot");
-	current_pos.advance(value.length());
-	return Token(Token::category::snapshot, value, tmp_pos);
 }
 
 Token Lexer::test() {

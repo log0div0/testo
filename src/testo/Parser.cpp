@@ -58,8 +58,7 @@ bool Parser::test_assignment() const {
 }
 
 bool Parser::test_stmt() const {
-	return ((LA(1) == Token::category::snapshot) ||
-		(LA(1) == Token::category::test) ||
+	return ((LA(1) == Token::category::test) ||
 		(LA(1) == Token::category::macro) ||
 		test_controller());
 }
@@ -200,9 +199,7 @@ std::shared_ptr<Program> Parser::parse() {
 }
 
 std::shared_ptr<IStmt> Parser::stmt() {
-	if (LA(1) == Token::category::snapshot) {
-		return snapshot();
-	} else if (LA(1) == Token::category::test) {
+	if (LA(1) == Token::category::test) {
 		return test();
 	} else if (LA(1) == Token::category::macro) {
 		return macro();
@@ -214,48 +211,33 @@ std::shared_ptr<IStmt> Parser::stmt() {
 	}
 }
 
-std::shared_ptr<Stmt<Snapshot>> Parser::snapshot() {
-	Token snapshot = LT(1);
-	match(Token::category::snapshot);
-
-	Token name = LT(1);
-	match(Token::category::id);
-	Token parent = Token();
-
-	if (LA(1) == Token::category::colon) {
-		match(Token::category::colon);
-		parent = LT(1);
-		match(Token::category::id);
-	}
-
-	newline_list();
-	auto actions = action_block();
-
-	auto stmt = std::shared_ptr<Snapshot>(new Snapshot(snapshot, name, parent, actions));
-	return std::shared_ptr<Stmt<Snapshot>>(new Stmt<Snapshot>(stmt));
-}
-
 std::shared_ptr<Stmt<Test>> Parser::test() {
 	Token test = LT(1);
 	match(Token::category::test);
 
 	Token name = LT(1);
+
 	match(Token::category::id);
-	match(Token::category::colon);
 
-	std::vector<std::shared_ptr<VmState>> vms;
-	newline_list();
-	vms.push_back(vm_state());
+	std::vector<Token> parents;
 
-	while (LA(1) == Token::category::comma) {
-		match(Token::category::comma);
-		newline_list();
-		vms.push_back(vm_state());
+	if (LA(1) == Token::category::colon) {
+ 		match(Token::category::colon);
+ 		newline_list();
+ 		parents.push_back(LT(1));
+ 		match(Token::category::id);
+
+ 		while (LA(1) == Token::category::comma) {
+ 			match(Token::category::comma);
+ 			newline_list();
+ 			parents.push_back(LT(1));
+ 			match(Token::category::id);
+ 		}
 	}
 
 	newline_list();
 	auto commands = command_block();
-	auto stmt = std::shared_ptr<Test>(new Test(test, name, vms, commands));
+	auto stmt = std::shared_ptr<Test>(new Test(test, name, parents, commands));
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 
@@ -291,23 +273,6 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, params, actions));
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
-}
-
-std::shared_ptr<VmState> Parser::vm_state() {
-	Token name = LT(1);
-
-	match (Token::category::id);
-
-	Token snapshot = Token();
-
-	if (LA(1) == Token::category::lparen) {
-		match(Token::category::lparen);
-		snapshot = LT(1);
-		match(Token::category::id);
-		match(Token::category::rparen);
-	}
-
-	return std::shared_ptr<VmState>(new VmState(name, snapshot));
 }
 
 std::shared_ptr<Assignment> Parser::assignment() {

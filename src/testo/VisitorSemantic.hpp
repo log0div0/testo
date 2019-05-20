@@ -13,10 +13,8 @@ struct VisitorSemantic {
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
-	void visit_snapshot(std::shared_ptr<AST::Snapshot> snapshot);
 	void visit_macro(std::shared_ptr<AST::Macro> macro);
 	void visit_test(std::shared_ptr<AST::Test> test);
-	void visit_vm_state(std::shared_ptr<AST::VmState> vm_state);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);

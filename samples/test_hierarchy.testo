@@ -1,0 +1,41 @@
+machine vpn_sgw1 {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic WAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:00:00:00"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 2
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "vpn-sgw1"
+		password: "1111"
+		host_name: "vpn-sgw1"
+	}
+}
+
+test dummy {}
+
+test dummy2: dummy {}
+
+test dummy_child: dummy, dummy2 {
+	vpn_sgw1, vpn_sgw2 stop
+}

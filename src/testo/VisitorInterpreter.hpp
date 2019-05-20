@@ -75,7 +75,7 @@ struct VisitorInterpreter {
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
-	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
+	/*void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
 	void visit_controller(std::shared_ptr<AST::Controller> controller);
 	void visit_flash(std::shared_ptr<AST::Controller> flash);
 	void visit_snapshot(std::shared_ptr<AST::Snapshot> snapshot);
@@ -119,7 +119,7 @@ struct VisitorInterpreter {
 	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
 	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;
 	std::string snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
-	std::string cksum(std::shared_ptr<FlashDriveController> flash);
+	std::string cksum(std::shared_ptr<FlashDriveController> flash);*/
 
 	Register& reg;
 
