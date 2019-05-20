@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cblas.h>
+#include <CLBlast/include/clblast_netlib_c.h>
 
 void mean_cpu(float *x, int batch, int filters, int spatial, float *mean)
 {
@@ -101,23 +101,6 @@ void mult_add_into_cpu(int N, float *X, float *Y, float *Z)
     int i;
     for(i = 0; i < N; ++i) Z[i] += X[i]*Y[i];
 }
-
-// void cblas_sgemm(
-//     OPENBLAS_CONST enum CBLAS_ORDER Order,
-//     OPENBLAS_CONST enum CBLAS_TRANSPOSE TransA,
-//     OPENBLAS_CONST enum CBLAS_TRANSPOSE TransB,
-//     OPENBLAS_CONST blasint M,
-//     OPENBLAS_CONST blasint N,
-//     OPENBLAS_CONST blasint K,
-//     OPENBLAS_CONST float alpha,
-//     OPENBLAS_CONST float *A,
-//     OPENBLAS_CONST blasint lda,
-//     OPENBLAS_CONST float *B,
-//     OPENBLAS_CONST blasint ldb,
-//     OPENBLAS_CONST float beta,
-//     float *C,
-//     OPENBLAS_CONST blasint ldc
-// );
 
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *A, int lda,
