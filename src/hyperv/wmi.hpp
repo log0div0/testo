@@ -365,8 +365,11 @@ struct EnumWbemClassObject: Object<IEnumWbemClassObject> {
 	WbemClassObject getOne() {
 		try {
 			auto objects = getAll();
+			if (objects.size() == 0) {
+				throw std::runtime_error("No object found");
+			}
 			if (objects.size() != 1) {
-				throw std::runtime_error("Get more object than expected");
+				throw std::runtime_error("Found more objects than expected");
 			}
 			return std::move(objects.at(0));
 		} catch (const std::exception&) {

@@ -31,7 +31,7 @@ struct Texture
 	}
 
 private:
-	size_t _width, _height;
+	size_t _width = 0, _height = 0;
 	ID3D11Texture2D* _texture = nullptr;
 	ID3D11ShaderResourceView* _view = nullptr;
 };
