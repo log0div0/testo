@@ -32,8 +32,9 @@ bool Machine::is_running() const {
 
 Display Machine::display() const {
 	try {
-		auto videoHead = services.execQuery("ASSOCIATORS OF {" + computerSystem.relpath() + "} WHERE ResultClass=Msvm_VideoHead").getOne();
-		auto virtualSystemSettingData = services.execQuery("ASSOCIATORS OF {" + computerSystem.relpath() + "} WHERE ResultClass=Msvm_VirtualSystemSettingData").getOne();
+		std::string name = computerSystem.get("Name");
+		auto videoHead = services.execQuery("SELECT * FROM Msvm_VideoHead WHERE SystemName=\"" + name + "\"").getOne();
+		auto virtualSystemSettingData = services.execQuery("SELECT * FROM Msvm_VirtualSystemSettingData WHERE InstanceID=\"Microsoft:" + name + "\"").getOne();
 		return Display(std::move(videoHead), std::move(virtualSystemSettingData), services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));

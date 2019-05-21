@@ -25,17 +25,13 @@ void main() {
 	try {
 		wmi::CoInitializer initializer;
 		initializer.initalize_security();
-
 		hyperv::Connect connect;
-		for (auto& machine: connect.machines()) {
-			std::cout << machine.name() << " " << (machine.is_running() ? "running" : "stopped") << std::endl;
-			auto start = std::chrono::high_resolution_clock::now();
-			std::vector<uint8_t> screenshot = machine.screenshot();
-			auto end = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> time = end - start;
-			std::cout << time.count() << " seconds" << std::endl;
-			std::cout << "SIZE = " << screenshot.size() << std::endl;
-		}
+
+		auto start = std::chrono::high_resolution_clock::now();
+		std::cout << connect.machine("ubuntu").display().width() << std::endl;
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> time = end - start;
+		std::cout << time.count() << " seconds" << std::endl;
 
 	} catch (const std::exception& error) {
 		std::cerr << error << std::endl;
