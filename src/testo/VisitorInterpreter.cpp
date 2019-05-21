@@ -43,56 +43,83 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 }
 
 void VisitorInterpreter::print_statistics() const {
-	auto total_tests = success_tests.size() + failed_tests.size();
+	//auto total_tests = success_tests.size() + failed_tests.size();
 	auto tests_durantion = std::chrono::system_clock::now() - start_timestamp;
 
-	std::cout << "TOTAL RUN " << total_tests << " tests in " << duration_to_str(tests_durantion) << std::endl;
-	std::cout << "PASSED: " << success_tests.size() << std::endl;
-	std::cout << "FAILED: " << failed_tests.size() << std::endl;
-	for (auto& fail: failed_tests) {
+	//std::cout << "TOTAL RUN " << total_tests << " tests in " << duration_to_str(tests_durantion) << std::endl;
+	//std::cout << "PASSED: " << success_tests.size() << std::endl;
+	//std::cout << "FAILED: " << failed_tests.size() << std::endl;
+	/*for (auto& fail: failed_tests) {
 		std::cout << "\t -" << fail << std::endl;
-	}
+	}*/
 }
 
-void VisitorInterpreter::setup_progress_vars(std::shared_ptr<Program> program) {
-	/*for (auto stmt: program->stmts) {
+void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
+	//Need to check that we don't have duplicates
+	//And we can't use std::set because we need to
+	//keep the order of the tests
+	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
-			if (test_spec.length()) {
-				if (p->stmt->name.value() == test_spec) {
-					tests_to_run.insert(p->stmt);
+			auto test = p->stmt;
+
+			//So for every test
+			//we need to check if it's suitable for test spec
+			//if it is - push back to list and remove all the parents duplicates
+
+			if (test_spec.length() && (test->name.value() != test_spec)) {
+				continue;
+			}
+
+			tests_to_run.push_back(test);
+
+			//remove parent duplicates
+			for (auto parent: test->parents) {
+				for (auto it = tests_to_run.begin(); it != tests_to_run.end(); ++it) {
+					if (*it == parent) {
+						tests_to_run.erase(it);
+						break;
+					}
 				}
-			} else {
-				tests_to_run.insert(p->stmt);
+			}
+
+		} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
+			if (p->stmt->t.type() == Token::category::flash) {
+				flash_drives.push_back(p->stmt);
 			}
 		}
 	}
 
-	auto tests_num = tests_to_run.size();
+	/*auto tests_num = tests_to_run.size();
 	if (tests_num != 0) {
 		progress_step = 100 / tests_num;
 		original_remainder = 100 % tests_num;
 		current_remainder = original_remainder;
 	} else {
 		progress_step = 100;
-	}*/
-
+	}
+*/
 }
 
 void VisitorInterpreter::update_progress() {
-	current_progress += progress_step;
+	/*current_progress += progress_step;
 	if (original_remainder != 0) {
 		if ((current_remainder / tests_to_run.size()) > 0) {
 			current_remainder = current_remainder / tests_to_run.size();
 			current_progress++;
 		}
 		current_remainder += original_remainder;
-	}
+	}*/
 }
 
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	start_timestamp = std::chrono::system_clock::now();
 
-	/*setup_progress_vars(program);
+	setup_vars(program);
+
+	//Create flash drives
+	for (auto fd: flash_drives) {
+		visit_flash(fd);
+	}
 
 	if (tests_to_run.size() == 0) {
 		if (test_spec.length()) {
@@ -103,19 +130,12 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 		return;
 	}
 
-	for (auto stmt: program->stmts) {
-		visit_stmt(stmt);
+	for (auto test: tests_to_run) {
+		std::cout<< "Running test " << test->name.value() << std::endl;
+		visit_test(test);
 	}
 
-	print_statistics();*/
-}
-
-/*void VisitorInterpreter::visit_stmt(std::shared_ptr<IStmt> stmt) {
-	if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
-		return visit_test(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
-		return visit_controller(p->stmt);
-	}
+	print_statistics();
 }
 
 void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller) {
@@ -144,68 +164,7 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 }
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
-	try {
-		if (tests_to_run.find(test) == tests_to_run.end()) {
-			return;
-		}
 
-		auto tests_start_timestamp = std::chrono::system_clock::now();
-
-		reg.local_vms.clear();
-		stop_all_vms(test);
-
-		print("Running test \"", test->name.value(), "\"...");
-
-		for (auto state: test->vms) {
-			visit_vm_state(state);
-		}
-
-		visit_command_block(test->cmd_block);
-		update_progress(); //not happening after possible exception
-		stop_all_vms(test);
-		auto test_duration = std::chrono::system_clock::now() - tests_start_timestamp;
-		print("Test \"", test->name.value(), "\" passed in ", duration_to_str(test_duration));
-		success_tests.push_back(test->name.value());
-	} catch (const InterpreterException& error) {
-		//This exception indicates that some test failed;
-		std::cout << error << std::endl;
-		print("Test \"", test->name.value(), "\" FAILED");
-		failed_tests.push_back(test->name.value());
-
-		if (stop_on_fail) {
-			throw std::runtime_error(""); //This will be catched at visit() and will terminate the program
-		}
-		stop_all_vms(test);
-
-	} //any other fails will go up to visit() and will result in terminating
-}
-
-void VisitorInterpreter::visit_vm_state(std::shared_ptr<VmState> vm_state) {
-	try {
-		auto vm = reg.vms.find(vm_state->name)->second;
-
-		reg.local_vms.insert({vm_state->name, vm});
-
-		if (!vm_state->snapshot) {
-			vm->install();
-			return;
-		}
-
-		if ((!vm->is_defined()) ||
-			!check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config"))) ||
-			(file_signature(vm->get_config().at("iso").get<std::string>()) != vm->get_metadata("dvd_signature")))
-		{
-			vm->install();
-			return apply_actions(vm, vm_state->snapshot, true);
-		}
-
-		if (resolve_state(vm, vm_state->snapshot)) {
-			//everything is A-OK. We can rollback to the last snapshot
-			vm->rollback(vm_state->snapshot->name);
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(vm_state, nullptr));
-	}
 }
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<CmdBlock> block) {
@@ -216,7 +175,7 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<CmdBlock> block) {
 
 void VisitorInterpreter::visit_command(std::shared_ptr<Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
-		auto vm = reg.local_vms.find(vm_token.value());
+		auto vm = reg.vms.find(vm_token.value());
 		visit_action(vm->second, cmd->action);
 	}
 }
@@ -836,60 +795,6 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vm, std::shar
 	}
 }
 
-void VisitorInterpreter::stop_all_vms(std::shared_ptr<AST::Test> test) {
-	for (auto state: test->vms) {
-		auto vm = reg.vms.find(state->name)->second;
-		if (vm->is_defined() && vm->is_running()) {
-			vm->stop();
-		}
-	}
-}
-
-void VisitorInterpreter::apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot, bool recursive) {
-	if (recursive) {
-		if (snapshot->parent) {
-			apply_actions(vm, snapshot->parent, true);
-		}
-	}
-
-	print("Applying snapshot ", snapshot->name.value(), " to vm ", vm->name());
-	visit_action_block(vm, snapshot->action_block->action);
-
-	if (vm->is_flash_plugged(nullptr)) {
-		throw std::runtime_error(fmt::format("Can't take snapshot {}: you must unplug all flash drives", snapshot->name.value()));
-	}
-
-	auto new_cksum = snapshot_cksum(vm, snapshot);
-	print("Taking snapshot ", snapshot->name.value(), " for vm ", vm->name());
-	vm->make_snapshot(snapshot->name, new_cksum);
-}
-
-//return true if everything is OK and we don't need to apply nothing
-bool VisitorInterpreter::resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
-	bool parents_are_ok = true;
-
-	if (snapshot->parent) {
-		parents_are_ok = resolve_state(vm, snapshot->parent);
-	}
-
-	if (parents_are_ok) {
-		if (vm->has_snapshot(snapshot->name)) {
-			if (vm->get_snapshot_cksum(snapshot->name) == snapshot_cksum(vm, snapshot)) {
-				return true;
-			}
-		}
-
-		if (snapshot->parent) {
-			vm->rollback(snapshot->parent->name);
-		} else {
-			vm->install();
-		}
-	}
-
-	apply_actions(vm, snapshot);
-	return false;
-}
-
 bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const {
 	//So....
 	//1) get rid of metadata
@@ -918,9 +823,9 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 }
 
 
-std::string VisitorInterpreter::snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
+std::string VisitorInterpreter::test_cksum(std::shared_ptr<Test> test) {
 	VisitorCksum visitor(reg);
-	return std::to_string(visitor.visit(vm, snapshot));
+	//return std::to_string(visitor.visit(vm, snapshot));
 }
 
 std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) {
@@ -932,4 +837,4 @@ std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) 
 
 	std::hash<std::string> h;
 	return std::to_string(h(cksum_input));
-}*/
+}

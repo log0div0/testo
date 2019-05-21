@@ -180,6 +180,10 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 		if (!test->parents.insert(parent->second).second) {
 			throw std::runtime_error(std::string(parent_token.pos()) + ": Error: this test was already specified in parent list " + parent_token.value());
 		}
+
+		if (parent_token.value() == test->name.value()) {
+			throw std::runtime_error(std::string(parent_token.pos()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
+		}
 	}
 
 	if (!reg.tests.insert({test->name.value(), test}).second) {
