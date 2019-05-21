@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "pugixml/pugixml.hpp"
-#include "VmController.hpp"
-#include "qemu/Host.hpp"
-#include "StinkingPileOfShit.hpp"
+#include <pugixml/pugixml.hpp>
+#include "../VmController.hpp"
+#include <qemu/Host.hpp>
+#include "../../StinkingPileOfShit.hpp"
 
 struct QemuVmController: public VmController {
 	QemuVmController() = delete;

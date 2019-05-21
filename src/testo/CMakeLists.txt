@@ -4,13 +4,16 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 	add_definitions(-D_DEBUG)
 endif()
 
-file(GLOB_RECURSE SRCS *.cpp)
+file(GLOB SRCS *.cpp)
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 if (WIN32)
-	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/QemuFlashDriveController.cpp)
-	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/QemuGuestAdditions.cpp)
-	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/QemuVmController.cpp)
+	file(GLOB HYPERV_SRCS backends/hyperv/*.cpp)
+	set(SRCS ${SRCS} ${HYPERV_SRCS})
+endif()
+if (UNIX)
+	file(GLOB QEMU_SRCS backends/qemu/*.cpp)
+	set(SRCS ${SRCS} ${QEMU_SRCS})
 endif()
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_network.cpp

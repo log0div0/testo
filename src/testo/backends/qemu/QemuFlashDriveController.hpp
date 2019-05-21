@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "FlashDriveController.hpp"
-#include "qemu/Host.hpp"
+#include "../FlashDriveController.hpp"
+#include <qemu/Host.hpp>
 
 struct QemuFlashDriveController: FlashDriveController {
 	QemuFlashDriveController() = delete;
