@@ -49,6 +49,21 @@ struct xml_string_writer: pugi::xml_writer
 	}
 };
 
+template <typename T>
+void concat_unique(std::vector<T>& left, const std::vector<T>& right) {
+
+	for (auto it_right: right) {
+		bool already_included = false;
+		for (auto it_left: left) {
+			if (it_left == it_right) {
+				already_included = true;
+			}
+		}
+		if (!already_included) {
+			left.push_back(it_right);
+		}
+	}
+}
 
 inline std::string node_to_string(pugi::xml_node node)
 {

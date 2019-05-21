@@ -648,7 +648,7 @@ struct Test: public Node {
 
 	Token name;
 	std::vector<Token> parents_tokens;
-	std::set<std::shared_ptr<AST::Test>> parents;
+	std::vector<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
 };
 

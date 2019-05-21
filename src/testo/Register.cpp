@@ -31,3 +31,21 @@ std::set<std::shared_ptr<VmController>> Register::get_all_vms(std::shared_ptr<AS
 
 	return result;
 }
+
+std::vector<std::shared_ptr<AST::Test>> Register::get_test_path(std::shared_ptr<AST::Test> test) const {
+	std::vector<std::shared_ptr<AST::Test>> result;
+
+	/*
+		For every parent. Get his parents. Iterate though them. If we already have a parent - don't include it
+		Then do the same check for the parents themselves
+	*/
+
+	for (auto parent: test->parents) {
+		concat_unique(result, get_test_path(parent));
+	}
+
+	concat_unique(result, test->parents);
+	concat_unique(result, {test});
+
+	return result;
+}

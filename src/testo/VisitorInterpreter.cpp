@@ -43,15 +43,16 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 }
 
 void VisitorInterpreter::print_statistics() const {
-	//auto total_tests = success_tests.size() + failed_tests.size();
+	auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size();
 	auto tests_durantion = std::chrono::system_clock::now() - start_timestamp;
 
-	//std::cout << "TOTAL RUN " << total_tests << " tests in " << duration_to_str(tests_durantion) << std::endl;
-	//std::cout << "PASSED: " << success_tests.size() << std::endl;
-	//std::cout << "FAILED: " << failed_tests.size() << std::endl;
-	/*for (auto& fail: failed_tests) {
+	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << duration_to_str(tests_durantion) << std::endl;
+	std::cout << "UP TO DATE: " << up_to_date_tests.size() << std::endl;
+	std::cout << "RUN SUCCESSFULLY: " << succeeded_tests.size() << std::endl;
+	std::cout << "FAILED: " << failed_tests.size() << std::endl;
+	for (auto& fail: failed_tests) {
 		std::cout << "\t -" << fail << std::endl;
-	}*/
+	}
 }
 
 void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
@@ -70,18 +71,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 				continue;
 			}
 
-			tests_to_run.push_back(test);
-
-			//remove parent duplicates
-			for (auto parent: test->parents) {
-				for (auto it = tests_to_run.begin(); it != tests_to_run.end(); ++it) {
-					if (*it == parent) {
-						tests_to_run.erase(it);
-						break;
-					}
-				}
-			}
-
+			concat_unique(tests_to_run, reg.get_test_path(test));
 		} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
 			if (p->stmt->t.type() == Token::category::flash) {
 				flash_drives.push_back(p->stmt);
@@ -164,7 +154,28 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 }
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
+	try {
+		/*
+		One more time
+		1) We need to go to all our parents recursively and if they're returning false then we just return false ourselves
+		2) If they're OK, we  need to check if our test is up-to-date
+		The test is up to date if:
+			every vm from this test (parents included) is defined, has valid config, dvd cksum and
+			snapshot with the name of this test with valid snapshot cksum
+		If we're up-to-date we just return true
+		If we're not up-to-date, we need to run the test, but before that we need to prepare all the involved vms.
+		Check all vms in our test. For every vm involed in parents we must rollback them to parents snapshot.
+		We can be sure that they're up-to-date, because our parent test is done
+		For every new vm we must invoke install
 
+		Then do all the commands
+
+		At the end - pause everything, take snapshot, stop all vms. */
+
+
+	} catch (const InterpreterException& error) {
+
+	} //everything else is fatal and should be catched furter up
 }
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<CmdBlock> block) {

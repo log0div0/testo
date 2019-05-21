@@ -16,4 +16,5 @@ struct Register {
 	std::unordered_map<std::string, std::shared_ptr<AST::Macro>> macros;
 
 	std::set<std::shared_ptr<VmController>> get_all_vms(std::shared_ptr<AST::Test> test) const;
+	std::vector<std::shared_ptr<AST::Test>> get_test_path(std::shared_ptr<AST::Test> test) const;
 };

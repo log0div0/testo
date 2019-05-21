@@ -4,7 +4,6 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include <vector>
-#include <list>
 
 struct VisitorInterpreter {
 	struct StackEntry {
@@ -135,6 +134,10 @@ private:
 		std::cout << std::endl;
 	}
 
+	std::vector<std::string> succeeded_tests;
+	std::vector<std::string> failed_tests;
+	std::vector<std::string> up_to_date_tests;
+
 	void print_statistics() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
@@ -144,6 +147,6 @@ private:
 
 	std::chrono::system_clock::time_point start_timestamp;
 
-	std::list<std::shared_ptr<AST::Test>> tests_to_run;
+	std::vector<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 };
