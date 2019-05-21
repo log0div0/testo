@@ -4,13 +4,13 @@
 #include <vbox/lock.hpp>
 #include <functional>
 
-#include "Utils.hpp"
+#include "../../Utils.hpp"
 
 #include <chrono>
 #include <thread>
 #include <regex>
 
-VboxVmController::VboxVmController(const nlohmann::json& config): config(config) {
+VboxVmController::VboxVmController(const nlohmann::json& config_): VmController(config_) {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxVmController error: field NAME is not specified");
 	}

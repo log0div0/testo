@@ -6,13 +6,12 @@
 
 struct QemuGuest: Guest {
 	QemuGuest(std::shared_ptr<vir::Connect> connect, vir::Domain domain);
-	virtual bool is_running() const override;
-	virtual stb::Image screenshot() const override;
+	virtual stb::Image screenshot() override;
 
 private:
 	std::shared_ptr<vir::Connect> connect;
 	vir::Domain domain;
-	mutable std::vector<uint8_t> buffer;
+	std::vector<uint8_t> buffer;
 };
 
 struct Qemu: Hypervisor {

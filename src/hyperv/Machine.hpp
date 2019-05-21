@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "wmi.hpp"
+#include "Display.hpp"
 
 namespace hyperv {
 
@@ -10,11 +10,9 @@ struct Machine {
 
 	std::string name() const;
 	bool is_running() const;
-	std::vector<uint8_t> screenshot() const;
-	size_t screenWidth() const;
-	size_t screenHeight() const;
+	Display display() const;
 
-	wmi::WbemClassObject computerSystem, videoHead, virtualSystemSettingData, virtualSystemManagementService;
+	wmi::WbemClassObject computerSystem;
 	wmi::WbemServices services;
 };
 

@@ -14,8 +14,7 @@ struct Guest {
 		return _name;
 	}
 
-	virtual bool is_running() const = 0;
-	virtual stb::Image screenshot() const = 0;
+	virtual stb::Image screenshot() = 0;
 
 private:
 	std::string _name;

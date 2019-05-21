@@ -11,11 +11,11 @@ VboxGuest::~VboxGuest() {
 	session.unlock_machine();
 }
 
-bool VboxGuest::is_running() const {
-	return machine.state() == MachineState_Running;
-}
+stb::Image VboxGuest::screenshot() {
+	if (machine.state() != MachineState_Running) {
+		return {};
+	}
 
-stb::Image VboxGuest::screenshot() const {
 	auto display = session.console().display();
 
 	ULONG width = 0;
@@ -28,7 +28,7 @@ stb::Image VboxGuest::screenshot() const {
 	display.get_screen_resolution(0, &width, &height, &bits_per_pixel, &x_origin, &y_origin, &guest_monitor_status);
 
 	if (!width || !height) {
-		throw std::runtime_error("Failed to get vbox screenshot");
+		return {};
 	}
 
 	stb::Image result(width, height, 3);

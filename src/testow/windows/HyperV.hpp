@@ -5,13 +5,12 @@
 #include <hyperv/Connect.hpp>
 
 struct HyperVGuest: Guest {
-	HyperVGuest(hyperv::Machine machine_);
+	HyperVGuest(std::string name_);
 
-	virtual bool is_running() const override;
-	virtual stb::Image screenshot() const override;
+	virtual stb::Image screenshot() override;
 
 private:
-	hyperv::Machine machine;
+	hyperv::Connect connect;
 };
 
 struct HyperV: Hypervisor {
@@ -20,5 +19,4 @@ struct HyperV: Hypervisor {
 
 private:
 	wmi::CoInitializer initializer;
-	std::unique_ptr<hyperv::Connect> connect;
 };

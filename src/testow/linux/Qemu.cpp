@@ -5,11 +5,10 @@ QemuGuest::QemuGuest(std::shared_ptr<vir::Connect> connect_, vir::Domain domain_
 	connect(std::move(connect_)),
 	domain(std::move(domain_)) {}
 
-bool QemuGuest::is_running() const {
-	return domain.is_active();
-}
-
-stb::Image QemuGuest::screenshot() const {
+stb::Image QemuGuest::screenshot() {
+	if (!domain.is_active()) {
+		return {};
+	}
 	if (!buffer.size()) {
 		buffer.resize(10'000'000);
 	}

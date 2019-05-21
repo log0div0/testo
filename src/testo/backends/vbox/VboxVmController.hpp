@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "VmController.hpp"
+#include "../VmController.hpp"
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 
@@ -13,10 +13,6 @@ struct VboxVmController: public VmController {
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 	void set_metadata(const nlohmann::json& metadata) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
-
-	nlohmann::json get_config() const override {
-		return config;
-	}
 
 	std::string get_metadata(const std::string& key) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
@@ -47,10 +43,6 @@ struct VboxVmController: public VmController {
 	bool is_running() override;
 	bool is_additions_installed() override;
 
-	std::string name() const override {
-		return config.at("name").get<std::string>();
-	}
-
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
 	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
 	void remove_from_guest(const fs::path& obj) override;
@@ -65,7 +57,6 @@ private:
 
 	void set_snapshot_cksum(const std::string& snapshot, const std::string& cksum);
 
-	nlohmann::json config;
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 	vbox::Session start_session;

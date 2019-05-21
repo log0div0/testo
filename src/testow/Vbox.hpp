@@ -8,8 +8,7 @@
 struct VboxGuest: Guest {
 	VboxGuest(vbox::Machine machine_, vbox::Session session_);
 	~VboxGuest();
-	virtual bool is_running() const override;
-	virtual stb::Image screenshot() const override;
+	virtual stb::Image screenshot() override;
 
 private:
 	vbox::Machine machine;

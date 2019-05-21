@@ -1,13 +1,9 @@
 
 #include "HyperV.hpp"
+#include <iostream>
 
-HyperVGuest::HyperVGuest(hyperv::Machine machine_): Guest(machine_.name()),
-	machine(machine_) {
+HyperVGuest::HyperVGuest(std::string name_): Guest(name_) {
 
-}
-
-bool HyperVGuest::is_running() const {
-	return machine.is_running();
 }
 
 uint8_t Table5[1 << 5] = {0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132,
@@ -19,10 +15,16 @@ uint8_t Table6[1 << 6] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 5
  202, 206, 210, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251, 255};
 
 
-stb::Image HyperVGuest::screenshot() const {
-	size_t height = machine.screenHeight();
-	size_t width = machine.screenWidth();
-	std::vector<uint8_t> screenshot = machine.screenshot();
+stb::Image HyperVGuest::screenshot() {
+	auto machine = connect.machine(name());
+	if (!machine.is_running()) {
+		return {};
+	}
+	auto display = machine.display();
+
+	size_t height = display.height();
+	size_t width = display.width();
+	std::vector<uint8_t> screenshot = display.screenshot();
 
 	stb::Image result(width, height, 3);
 
@@ -49,13 +51,13 @@ stb::Image HyperVGuest::screenshot() const {
 
 HyperV::HyperV() {
 	initializer.initalize_security();
-	connect.reset(new hyperv::Connect);
 }
 
 std::vector<std::shared_ptr<Guest>> HyperV::guests() const {
 	std::vector<std::shared_ptr<Guest>> result;
-	for (auto& machine: connect->machines()) {
-		result.push_back(std::make_shared<HyperVGuest>(std::move(machine)));
+	hyperv::Connect connect;
+	for (auto& machine: connect.machines()) {
+		result.push_back(std::make_shared<HyperVGuest>(machine.name()));
 	}
 	return result;
 }

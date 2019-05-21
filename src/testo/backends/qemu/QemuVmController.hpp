@@ -16,10 +16,6 @@ struct QemuVmController: public VmController {
 	void set_metadata(const nlohmann::json& metadata) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
 
-	nlohmann::json get_config() const override {
-		return config;
-	}
-
 	std::string get_metadata(const std::string& key) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
@@ -48,10 +44,6 @@ struct QemuVmController: public VmController {
 	bool is_defined() const override;
 	bool is_running() override;
 	bool is_additions_installed() override;
-
-	std::string name() const override {
-		return config.at("name").get<std::string>();
-	}
 
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
 	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
@@ -83,7 +75,6 @@ private:
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 
-	nlohmann::json config;
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;
 	std::unordered_map<char, std::vector<std::string>> charmap;

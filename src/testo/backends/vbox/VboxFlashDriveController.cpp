@@ -1,12 +1,11 @@
 
 #include "VboxFlashDriveController.hpp"
-#include "Utils.hpp"
+#include "../../Utils.hpp"
 #include <functional>
 #include <thread>
 #include <chrono>
 
-VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config):
-config(config)
+VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config_): FlashDriveController(config_)
 {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxFlashDriveController error: field NAME is not specified");

@@ -9,7 +9,7 @@
 
 #include <stb_image.h>
 
-QemuVmController::QemuVmController(const nlohmann::json& config): config(config),
+QemuVmController::QemuVmController(const nlohmann::json& config_): VmController(config_),
 	qemu_connect(vir::connect_open("qemu:///system")), screenshot_buffer(10'000'000)
 {
 	if (!config.count("name")) {

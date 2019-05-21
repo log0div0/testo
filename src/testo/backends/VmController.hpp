@@ -5,12 +5,13 @@
 #include <nlohmann/json.hpp>
 
 struct VmController {
+	VmController() = delete;
+	VmController(const nlohmann::json& config_);
 	virtual ~VmController() = default;
 	virtual void install() = 0;
 	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0;
 	virtual void set_metadata(const nlohmann::json& metadata) = 0;
 	virtual void set_metadata(const std::string& key, const std::string& value) = 0;
-	virtual nlohmann::json get_config() const = 0;
 	virtual std::string get_metadata(const std::string& key) = 0;
 	virtual std::string get_snapshot_cksum(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
@@ -40,11 +41,18 @@ struct VmController {
 	virtual bool is_running() = 0;
 	virtual bool is_additions_installed() = 0;
 
-	virtual std::string name() const = 0;
 
 	virtual void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) = 0;
 	virtual void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) = 0;
 	virtual void remove_from_guest(const fs::path& obj) = 0;
 
 	virtual std::set<std::string> nics() const = 0;
+
+
+
+	std::string name() const;
+	nlohmann::json get_config() const;
+
+protected:
+	nlohmann::json config;
 };

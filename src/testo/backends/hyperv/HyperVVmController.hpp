@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../VmController.hpp"
+#include <hyperv/Connect.hpp>
 
 struct HyperVVmController: VmController {
 	HyperVVmController() = delete;
@@ -11,7 +12,6 @@ struct HyperVVmController: VmController {
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 	void set_metadata(const nlohmann::json& metadata) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
-	nlohmann::json get_config() const override;
 	std::string get_metadata(const std::string& key) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
@@ -41,11 +41,12 @@ struct HyperVVmController: VmController {
 	bool is_running() override;
 	bool is_additions_installed() override;
 
-	std::string name() const override;
-
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
 	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
 	void remove_from_guest(const fs::path& obj) override;
 
 	std::set<std::string> nics() const override;
+
+private:
+	hyperv::Connect connect;
 };

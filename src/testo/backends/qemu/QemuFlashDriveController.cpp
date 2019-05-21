@@ -6,8 +6,8 @@
 #include <thread>
 #include <fstream>
 
-QemuFlashDriveController::QemuFlashDriveController(const nlohmann::json& config):
-config(config), qemu_connect(vir::connect_open("qemu:///system"))
+QemuFlashDriveController::QemuFlashDriveController(const nlohmann::json& config_): FlashDriveController(config_),
+	qemu_connect(vir::connect_open("qemu:///system"))
 {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxFlashDriveController error: field NAME is not specified");
@@ -21,8 +21,6 @@ config(config), qemu_connect(vir::connect_open("qemu:///system"))
 	if (!config.count("fs")) {
 		throw std::runtime_error("Constructing VboxFlashDriveController error: field FS is not specified");
 	}
-
-	cache_enabled_ = config.value("cache_enabled", 1);
 
 	if (config.count("folder")) {
 		fs::path folder(config.at("folder").get<std::string>());

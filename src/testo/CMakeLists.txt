@@ -7,6 +7,12 @@ endif()
 file(GLOB SRCS *.cpp)
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
+file(GLOB BACKENDS_SRCS backends/*.cpp)
+set(SRCS ${SRCS} ${BACKENDS_SRCS})
+
+file(GLOB VBOX_SRCS backends/vbox/*.cpp)
+set(SRCS ${SRCS} ${VBOX_SRCS})
+
 if (WIN32)
 	file(GLOB HYPERV_SRCS backends/hyperv/*.cpp)
 	set(SRCS ${SRCS} ${HYPERV_SRCS})

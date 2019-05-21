@@ -4,6 +4,7 @@
 #include "HyperVVmController.hpp"
 #include "HyperVFlashDriveController.hpp"
 #include "../Environment.hpp"
+#include <hyperv/wmi.hpp>
 
 struct HyperVEnvironment: Environment {
 	HyperVEnvironment() {}
@@ -19,4 +20,7 @@ struct HyperVEnvironment: Environment {
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {
 		return std::shared_ptr<FlashDriveController>(new HyperVFlashDriveController(config));
 	}
+
+private:
+	wmi::CoInitializer initializer;
 };

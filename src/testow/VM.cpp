@@ -42,13 +42,13 @@ void VM::run() {
 			std::this_thread::sleep_for(interval - diff);
 		}
 		previous = current;
-		if (!guest->is_running()) {
+
+		stb::Image screenshot = guest->screenshot();
+		if (!screenshot.data()) {
 			std::lock_guard<std::shared_mutex> lock(mutex);
 			view = {};
 			continue;
 		}
-
-		stb::Image screenshot = guest->screenshot();
 
 		std::string query_copy;
 		{

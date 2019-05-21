@@ -25,4 +25,13 @@ std::vector<Machine> Connect::machines() const {
 	}
 }
 
+Machine Connect::machine(const std::string& name) const {
+	try {
+		auto object = services.execQuery("SELECT * FROM Msvm_ComputerSystem WHERE Caption=\"Virtual Machine\" AND ElementName=\"" + name + "\"").getOne();
+		return Machine(std::move(object), services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 }
