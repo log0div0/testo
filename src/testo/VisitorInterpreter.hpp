@@ -127,7 +127,7 @@ private:
 	void print(Args... args) {
 		std::cout << "[";
 		std::cout << std::setw(3);
-		std::cout << current_progress;
+		std::cout << std::round(current_progress);
 		std::cout << std::setw(0);
 		std::cout << '%' << "] ";
 		(std::cout << ... << args);
@@ -151,7 +151,8 @@ private:
 		}
 	}
 
-	uint16_t current_progress = 0;
+	float current_progress = 0;
+	float progress_step = 0;
 
 	std::chrono::system_clock::time_point start_timestamp;
 

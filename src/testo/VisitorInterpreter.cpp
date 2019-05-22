@@ -79,27 +79,14 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 		}
 	}
 
-	/*auto tests_num = tests_to_run.size();
+	auto tests_num = tests_to_run.size();
 	if (tests_num != 0) {
-		progress_step = 100 / tests_num;
-		original_remainder = 100 % tests_num;
-		current_remainder = original_remainder;
+		progress_step = (float)100 / tests_num;
 	} else {
 		progress_step = 100;
 	}
-*/
 }
 
-void VisitorInterpreter::update_progress() {
-	/*current_progress += progress_step;
-	if (original_remainder != 0) {
-		if ((current_remainder / tests_to_run.size()) > 0) {
-			current_remainder = current_remainder / tests_to_run.size();
-			current_progress++;
-		}
-		current_remainder += original_remainder;
-	}*/
-}
 
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	start_timestamp = std::chrono::system_clock::now();
@@ -159,6 +146,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		for (auto parent: test->parents) {
 			for (auto failed: failed_tests) {
 				if (parent == failed) {
+					current_progress += progress_step;
 					print("Skipping test ", test->name.value(), " because his parent ", parent->name.value(), " failed");
 					failed_tests.push_back(test);
 					return;
@@ -187,6 +175,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		}
 
 		if (is_cached) {
+			current_progress += progress_step;
 			print("Test ", test->name.value(), " is up-to-date, skipping...");
 			up_to_date_tests.push_back(test);
 			return;
@@ -236,11 +225,15 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		stop_all_vms(test);
 
+		current_progress += progress_step;
+		print("Test ", test->name.value(), " PASSED");
+
 		succeeded_tests.push_back(test);
 
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
 		print ("Test ", test->name.value(), " FAILED");
+		current_progress += progress_step;
 		failed_tests.push_back(test);
 
 		if (stop_on_fail) {
