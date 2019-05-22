@@ -1,19 +1,16 @@
 
 #pragma once
 
-#include <qemu/Domain.hpp>
-#include <qemu/Host.hpp>
+#include "Hypervisor.hpp"
 #include <thread>
 #include <shared_mutex>
 #include <testo/StinkingPileOfShit.hpp>
 
 struct VM {
-	VM(vir::Connect& qemu_connect, vir::Domain& domain);
+	VM(std::shared_ptr<Guest> guest);
 	~VM();
 
-	vir::Connect& qemu_connect;
-	std::string domain_name;
-	vir::Domain& domain;
+	std::shared_ptr<Guest> guest;
 
 	std::shared_mutex mutex;
 	stb::Image view;

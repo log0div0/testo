@@ -4,9 +4,23 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 	add_definitions(-D_DEBUG)
 endif()
 
-file(GLOB_RECURSE SRCS *.cpp)
+file(GLOB SRCS *.cpp)
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
+file(GLOB BACKENDS_SRCS backends/*.cpp)
+set(SRCS ${SRCS} ${BACKENDS_SRCS})
+
+file(GLOB VBOX_SRCS backends/vbox/*.cpp)
+set(SRCS ${SRCS} ${VBOX_SRCS})
+
+if (WIN32)
+	file(GLOB HYPERV_SRCS backends/hyperv/*.cpp)
+	set(SRCS ${SRCS} ${HYPERV_SRCS})
+endif()
+if (UNIX)
+	file(GLOB QEMU_SRCS backends/qemu/*.cpp)
+	set(SRCS ${SRCS} ${QEMU_SRCS})
+endif()
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_network.cpp
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
@@ -33,10 +47,14 @@ list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp)
 
 add_library(testo-core STATIC ${SRCS})
 add_dependencies(testo-core darknet)
-target_link_libraries(testo-core coro vbox vboxcapi qemu pugixml pthread libdarknet)
+target_link_libraries(testo-core coro vbox vboxcapi pugixml libdarknet)
+
+if(WIN32)
+	target_link_libraries(testo-core hyperv)
+endif()
 
 if(UNIX)
-	target_link_libraries(testo-core glfw gl3w GL dl stdc++fs)
+	target_link_libraries(testo-core dl stdc++fs qemu pthread)
 endif()
 
 if(GPU)

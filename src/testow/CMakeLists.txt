@@ -4,13 +4,8 @@ include_directories(${CMAKE_SOURCE_DIR}/3rd_party/imgui)
 
 file(GLOB SRCS *.cpp)
 
-if(WIN32)
-	add_compile_options("/U CINTERFACE")
-endif()
-
 add_executable(testow ${SRCS})
-add_dependencies(testow qemu)
-target_link_libraries(testow imgui qemu pugixml testo-core libdarknet)
+target_link_libraries(testow imgui pugixml testo-core libdarknet)
 
 if(WIN32)
 	target_link_libraries(testow d3d11 d3dcompiler)
@@ -18,7 +13,7 @@ if(WIN32)
 elseif(APPLE)
 	file(GLOB OS_SPECIFIC_SRCS osx/*.cpp)
 elseif(UNIX)
-	target_link_libraries(testow glfw gl3w GL pthread dl stdc++fs)
+	target_link_libraries(testow glfw gl3w GL pthread dl qemu stdc++fs)
 	include_directories(${CMAKE_SOURCE_DIR}/3rd_party/gl3w)
 	file(GLOB OS_SPECIFIC_SRCS linux/*.cpp)
 else()

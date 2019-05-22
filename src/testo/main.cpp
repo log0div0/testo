@@ -1,13 +1,18 @@
 
+#include <coro/Application.h>
 #include "Interpreter.hpp"
-#include <vbox/api.hpp>
+
+#ifdef WIN32
+#include "backends/hyperv/HypervEnvironment.hpp"
+#else
+#include "backends/qemu/QemuEnvironment.hpp"
+#endif
 
 #include <iostream>
 #include <thread>
 #include <chrono>
 
 #include "Utils.hpp"
-#include <coro/Application.h>
 #include <clipp.h>
 #include <fmt/format.h>
 #include <fstream>
@@ -32,7 +37,11 @@ std::string generate_script(const fs::path& folder, const fs::path& current_pref
 }
 
 void run_file(const fs::path& file, const nlohmann::json& config) {
+#ifdef WIN32
+	HyperVEnvironment env;
+#else
 	QemuEnvironment env;
+#endif
 	Interpreter runner(env, file, config);
 	runner.run();
 }
@@ -40,7 +49,11 @@ void run_file(const fs::path& file, const nlohmann::json& config) {
 void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	auto generated = generate_script(folder);
 
+#ifdef WIN32
+	HyperVEnvironment env;
+#else
 	QemuEnvironment env;
+#endif
 	Interpreter runner(env, folder, generated, config);
 	runner.run();
 }
