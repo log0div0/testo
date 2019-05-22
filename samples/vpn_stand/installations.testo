@@ -159,15 +159,7 @@ macro install_ubuntu() {
 	wait "Welcome to Ubuntu"
 }
 
-test sgws_installed {
-	vpn_sgw1, vpn_sgw2 install_ubuntu()
-}
-
-test clients_installed {
-	vpn_client1, vpn_client2 install_ubuntu()
-}
-
-/*snapshot negotiator_installed: ubuntu_installed {
+macro install_negotiator() {
 	type "sudo su"; press Enter;
 	wait "password for " + $login; type $password; press Enter
 	type "apt-get update"; press Enter
@@ -182,29 +174,23 @@ test clients_installed {
 	wait "ureadahead"; wait timeout 2s
 }
 
-snapshot pkgs_and_net_ready: negotiator_installed {
-	#TODO: path search from current file
-	copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
-	exec bash "chmod +x /tmp/rename_net.sh"
+test sgws_installed {
+	vpn_sgw1, vpn_sgw2 install_ubuntu()
+}
 
-	if ($vm_name STREQUAL "vpn_sgw1") {
-		exec bash """
-			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break || sleep 15; done
-		"""
-		exec bash "/tmp/rename_net.sh 52:54:00:00:00:00 WAN"
-		exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
-	} else if ($vm_name STREQUAL "vpn_sgw2") {
-		exec bash """
-			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config && break || sleep 15; done
-		"""
-		exec bash "/tmp/rename_net.sh 52:54:00:00:11:00 WAN"
-		exec bash "/tmp/rename_net.sh 52:54:00:00:11:11 LAN"
-	} else if ($vm_name STREQUAL "vpn_client1") {
-		exec bash "/tmp/rename_net.sh 52:54:00:00:22:00 LAN"
-	} else if ($vm_name STREQUAL "vpn_client2") {
-		exec bash "/tmp/rename_net.sh 52:54:00:00:33:00 LAN"
-	}
+test clients_installed {
+	vpn_client1, vpn_client2 install_ubuntu()
+}
 
+test sgws_negotiator: sgws_installed  {
+	vpn_sgw1, vpn_sgw2 install_negotiator()
+}
+
+test clients_negotiator: clients_installed {
+	vpn_client1, vpn_client2 install_negotiator()
+}
+
+macro unplug_nat() {
 	shutdown
 
 	unplug nic nat
@@ -216,20 +202,66 @@ snapshot pkgs_and_net_ready: negotiator_installed {
 	wait "Welcome to Ubuntu"
 }
 
-snapshot wireguard: pkgs_and_net_ready {
-	copyto "./WireGuard.tar.xz" "/opt/WireGuard.tar.xz"
+test sgws_pkgs: sgws_negotiator {
+	vpn_sgw1, vpn_sgw2 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+	}
 
-	exec bash """
-		cd /opt
-		tar -xf WireGuard.tar.xz
-		cd WireGuard/src
-		make
-		make install
-		modprobe wireguard
-		lsmod | fgrep wireguard
-	"""
+	vpn_sgw1 {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:00:00 WAN"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
+	}
+
+	vpn_sgw2 {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:11:00 WAN"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:11:11 LAN"
+	}
+
+	vpn_sgw1, vpn_sgw2 unplug_nat()
 }
-*/
+
+test clients_net_renamed: clients_negotiator {
+	vpn_client1, vpn_client2 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+	}
+
+	vpn_client1 {
+		exec bash "/tmp/rename_net.sh 52:54:00:00:22:00 LAN"
+	}
+
+	vpn_client2 {
+		exec bash "/tmp/rename_net.sh 52:54:00:00:33:00 LAN"
+	}
+
+	vpn_client1, vpn_client2 unplug_nat()
+}
+
+test install_wireguard: sgws_pkgs {
+	vpn_sgw1, vpn_sgw2 {
+		copyto "./WireGuard.tar.xz" "/opt/WireGuard.tar.xz"
+
+		exec bash """
+			cd /opt
+			tar -xf WireGuard.tar.xz
+			cd WireGuard/src
+			make
+			make install
+			modprobe wireguard
+			lsmod | fgrep wireguard
+		"""
+		wait timeout 1s
+	}
+
+}
+
 flash pubkey_flash {
 	fs: "ntfs"
 	size: 32Mb
