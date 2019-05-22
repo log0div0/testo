@@ -232,8 +232,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
-		print ("Test ", test->name.value(), " FAILED");
 		current_progress += progress_step;
+		print ("Test ", test->name.value(), " FAILED");
 		failed_tests.push_back(test);
 
 		if (stop_on_fail) {

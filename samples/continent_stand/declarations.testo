@@ -39,7 +39,7 @@ machine UB {
 	}
 }
 
-snapshot continent_installed {
+macro install_continent() {
 	wait timeout 3s
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter
@@ -48,49 +48,62 @@ snapshot continent_installed {
 	wait "Главное меню" timeout 2m
 }
 
-snapshot CUS_inited: continent_installed {
-	press Down, Enter
-	wait "Инициализировать устройство как"; press Up*2, Enter
-	wait "Очистить локальные журналы"; press Enter
-	wait "Успешно" timeout 5m; press Enter;
-	wait "Главное меню"; press Down*2, Enter
-	wait "Сертификаты УЦ"; press Enter
-	wait "Кому выдан"; press F2
-	wait "Выпуск сертификата"; press Enter
-	wait "Страна";
-	press Down; type "Security Code"
-	press Down; type "DevOps"
-	press Down; type "CA"; press Enter
-	wait "Успешно"; press Enter
-	wait timeout 1s; press Down, Enter
-	wait "Кому выдан"; press Esc
-	wait "Сертификаты управления"; press Down, Enter
-	wait "Кому выдан"; press F2
-	wait "Выпуск сертификата"; press Enter
-	wait "Страна";
-	press Down*3; type "Control"; press Enter
-	wait "Выберите корневой сертификат"; press Enter
-	wait "Успешно"; press Enter
-	wait "Выпуск сертификата"; press Esc
-	wait "Кому выдан"; press Esc
-	wait "Сертификаты управления"; press Esc
-	wait "Главное меню"; press Down, Enter
-	wait "Все службы будут сконфигурированы заново"; press Enter
-	wait "Выбор сертификата управления"; press Enter
-	wait "Пароль для встроенного администратора"; type "Cont-4.X"
-	press Down; type "Cont-4.X"; press Enter
-	wait "Выберите интерфейс управления"; press Enter
-	wait "Настройка интерфейса управления"; type "192.168.0.1/24"; press Enter
-	wait "Применить указанные настройки?"; press Enter
-	wait "Система успешно настроена" timeout 15m; press Enter
+test install_CUS {
+	CUS install_continent()
 }
 
-snapshot UB_inited: continent_installed {
-	press Down, Enter;
-	wait "Инициализировать устройство как"; press Enter
-	wait "Очистить локальные журналы"; press Enter
-	wait "Успешно" timeout 5m; press Enter;
-	wait "Главное меню";
+test install_UB {
+	UB install_continent()
+}
+
+
+test init_CUS: install_CUS {
+	CUS {
+		press Down, Enter
+		wait "Инициализировать устройство как"; press Up*2, Enter
+		wait "Очистить локальные журналы"; press Enter
+		wait "Успешно" timeout 5m; press Enter;
+		wait "Главное меню"; press Down*2, Enter
+		wait "Сертификаты УЦ"; press Enter
+		wait "Кому выдан"; press F2
+		wait "Выпуск сертификата"; press Enter
+		wait "Страна";
+		press Down; type "Security Code"
+		press Down; type "DevOps"
+		press Down; type "CA"; press Enter
+		wait "Успешно"; press Enter
+		wait timeout 1s; press Down, Enter
+		wait "Кому выдан"; press Esc
+		wait "Сертификаты управления"; press Down, Enter
+		wait "Кому выдан"; press F2
+		wait "Выпуск сертификата"; press Enter
+		wait "Страна";
+		press Down*3; type "Control"; press Enter
+		wait "Выберите корневой сертификат"; press Enter
+		wait "Успешно"; press Enter
+		wait "Выпуск сертификата"; press Esc
+		wait "Кому выдан"; press Esc
+		wait "Сертификаты управления"; press Esc
+		wait "Главное меню"; press Down, Enter
+		wait "Все службы будут сконфигурированы заново"; press Enter
+		wait "Выбор сертификата управления"; press Enter
+		wait "Пароль для встроенного администратора"; type "Cont-4.X"
+		press Down; type "Cont-4.X"; press Enter
+		wait "Выберите интерфейс управления"; press Enter
+		wait "Настройка интерфейса управления"; type "192.168.0.1/24"; press Enter
+		wait "Применить указанные настройки?"; press Enter
+		wait "Система успешно настроена" timeout 15m; press Enter
+	}
+}
+
+test init_UB: install_UB {
+	UB {
+		press Down, Enter;
+		wait "Инициализировать устройство как"; press Enter
+		wait "Очистить локальные журналы"; press Enter
+		wait "Успешно" timeout 5m; press Enter;
+		wait "Главное меню";
+	}
 }
 
 flash ub_flash {
@@ -99,7 +112,7 @@ flash ub_flash {
 	cache_enabled: 0
 }
 
-test UB_initiation: CUS(CUS_inited), UB(UB_inited) {
+test config_UB: init_CUS, init_UB {
 	#CUS init
 	UB {
 		press Down*2, Enter
