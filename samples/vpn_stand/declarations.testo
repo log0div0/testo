@@ -120,7 +120,7 @@ machine vpn_client2 {
 	}
 }
 
-snapshot ubuntu_installed {
+macro install_ubuntu() {
 	wait timeout 2s
 	wait "Language"; press Enter;
 	wait "Install Ubuntu Server"; press Enter;
@@ -159,7 +159,15 @@ snapshot ubuntu_installed {
 	wait "Welcome to Ubuntu"
 }
 
-snapshot negotiator_installed: ubuntu_installed {
+test sgws_installed {
+	vpn_sgw1, vpn_sgw2 install_ubuntu()
+}
+
+test clients_installed {
+	vpn_client1, vpn_client2 install_ubuntu()
+}
+
+/*snapshot negotiator_installed: ubuntu_installed {
 	type "sudo su"; press Enter;
 	wait "password for " + $login; type $password; press Enter
 	type "apt-get update"; press Enter
@@ -221,7 +229,7 @@ snapshot wireguard: pkgs_and_net_ready {
 		lsmod | fgrep wireguard
 	"""
 }
-
+*/
 flash pubkey_flash {
 	fs: "ntfs"
 	size: 32Mb

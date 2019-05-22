@@ -50,8 +50,8 @@ void VisitorInterpreter::print_statistics() const {
 	std::cout << "UP TO DATE: " << up_to_date_tests.size() << std::endl;
 	std::cout << "RUN SUCCESSFULLY: " << succeeded_tests.size() << std::endl;
 	std::cout << "FAILED: " << failed_tests.size() << std::endl;
-	for (auto& fail: failed_tests) {
-		std::cout << "\t -" << fail << std::endl;
+	for (auto fail: failed_tests) {
+		std::cout << "\t -" << fail->name.value() << std::endl;
 	}
 }
 
@@ -155,26 +155,99 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 	try {
-		/*
-		One more time
-		1) We need to go to all our parents recursively and if they're returning false then we just return false ourselves
-		2) If they're OK, we  need to check if our test is up-to-date
-		The test is up to date if:
-			every vm from this test (parents included) is defined, has valid config, dvd cksum and
-			snapshot with the name of this test with valid snapshot cksum
-		If we're up-to-date we just return true
-		If we're not up-to-date, we need to run the test, but before that we need to prepare all the involved vms.
-		Check all vms in our test. For every vm involed in parents we must rollback them to parents snapshot.
-		We can be sure that they're up-to-date, because our parent test is done
-		For every new vm we must invoke install
+		//Check if one of the parents failed. If it did, just fail
+		for (auto parent: test->parents) {
+			for (auto failed: failed_tests) {
+				if (parent == failed) {
+					print("Skipping test ", test->name.value(), " because his parent ", parent->name.value(), " failed");
+					failed_tests.push_back(test);
+					return;
+				}
+			}
+		}
 
-		Then do all the commands
+		//Now check if out test is cached
+		//Our test is checked if every vm in our test (parents included)
+		// - is defined
+		// - has valid config and dvd cksum
+		// - has snapshots with corresponding name and valid cksums
 
-		At the end - pause everything, take snapshot, stop all vms. */
+		bool is_cached = true;
 
+		for (auto vm: reg.get_all_vms(test)) {
+			if (vm->is_defined() &&
+				check_config_relevance(vm->get_config(), nlohmann::json::parse(vm->get_metadata("vm_config"))) &&
+				(file_signature(vm->get_config().at("iso").get<std::string>()) == vm->get_metadata("dvd_signature")) &&
+				vm->has_snapshot(test->name.value()) &&
+				(vm->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
+			{
+				continue;
+			}
+			is_cached = false;
+		}
+
+		if (is_cached) {
+			print("Test ", test->name.value(), " is up-to-date, skipping...");
+			up_to_date_tests.push_back(test);
+			return;
+		}
+
+		//Ok, we're not cached and we need to run the test
+		//First we need to get all the vms in the correct state
+		//vms from parents - rollback to parent snapshot (we can be sure it is present and have valid cksum)
+		//new vms - install
+
+		for (auto parent: test->parents) {
+			for (auto vm: reg.get_all_vms(parent)) {
+				print("Restoring snapshot ", parent->name.value(), " for vm ", vm->name());
+				vm->rollback(parent->name.value());
+			}
+		}
+
+		for (auto vm: reg.get_all_vms(test)) {
+			//check if it's a new one
+			auto is_new = true;
+			for (auto parent: test->parents) {
+				auto parent_vms = reg.get_all_vms(parent);
+				if (parent_vms.find(vm) != parent_vms.end()) {
+					//not new, go to the next vm
+					is_new = false;
+					break;
+				}
+			}
+
+			if (is_new) {
+				print("Creating machine ", vm->name());
+				vm->install();
+			}
+		}
+
+		//Everything is in the right state so we could actually do the test
+		visit_command_block(test->cmd_block);
+
+		//But that's not everything - we need to create according snapshots to all included vms
+
+		//TODO: pause all vms
+
+		for (auto vm: reg.get_all_vms(test)) {
+			print("Taking snapshot ", test->name.value(), " for vm ", vm->name());
+			vm->make_snapshot(test->name.value(), test_cksum(test));
+		}
+
+		stop_all_vms(test);
+
+		succeeded_tests.push_back(test);
 
 	} catch (const InterpreterException& error) {
+		std::cout << error << std::endl;
+		print ("Test ", test->name.value(), " FAILED");
+		failed_tests.push_back(test);
 
+		if (stop_on_fail) {
+			throw std::runtime_error("");
+		}
+
+		stop_all_vms(test);
 	} //everything else is fatal and should be catched furter up
 }
 
@@ -836,7 +909,7 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 
 std::string VisitorInterpreter::test_cksum(std::shared_ptr<Test> test) {
 	VisitorCksum visitor(reg);
-	//return std::to_string(visitor.visit(vm, snapshot));
+	return std::to_string(visitor.visit(test));
 }
 
 std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) {

@@ -134,14 +134,22 @@ private:
 		std::cout << std::endl;
 	}
 
-	std::vector<std::string> succeeded_tests;
-	std::vector<std::string> failed_tests;
-	std::vector<std::string> up_to_date_tests;
+	std::vector<std::shared_ptr<AST::Test>> succeeded_tests;
+	std::vector<std::shared_ptr<AST::Test>> failed_tests;
+	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
 
 	void print_statistics() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
 	void update_progress();
+
+	void stop_all_vms(std::shared_ptr<AST::Test> test) {
+		for (auto vm: reg.get_all_vms(test)) {
+			if (vm->is_defined() && vm->is_running()) {
+				vm->stop();
+			}
+		}
+	}
 
 	uint16_t current_progress = 0;
 

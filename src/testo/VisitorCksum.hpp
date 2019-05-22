@@ -8,8 +8,9 @@
 struct VisitorCksum {
 	VisitorCksum(Register& reg): reg(reg) {}
 
-	//uint64_t visit(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> action_block);
-	/*std::string visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ActionBlock> action_block);
+	uint64_t visit(std::shared_ptr<AST::Test> test);
+	std::string visit_cmd(std::shared_ptr<AST::Cmd> cmd);
+	std::string visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ActionBlock> action_block);
 	std::string visit_action(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IAction> action);
 	std::string visit_type(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Type> type);
 	std::string visit_wait(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Wait> wait);
@@ -31,6 +32,6 @@ struct VisitorCksum {
 	std::string visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Word> word);
 	std::string visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
 	std::string visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Check> check);
-*/
+
 	Register& reg;
 };
