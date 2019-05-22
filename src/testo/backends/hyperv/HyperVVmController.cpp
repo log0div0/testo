@@ -11,7 +11,26 @@ HyperVVmController::~HyperVVmController() {
 }
 
 void HyperVVmController::install() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		for (auto& machine: connect.machines()) {
+			if (machine.name() == name()) {
+				machine.destroy();
+			}
+		}
+		auto machine = connect.defineMachine(name());
+
+		nlohmann::json notes_json = {
+			{"vm_config", config},
+			{"vm_nic_count", config.count("nic") ? config.at("nic").size() : 0},
+			{"vm_name", name()}
+		};
+		machine.setNotes({notes_json.dump(4)});
+
+		throw std::runtime_error("WORK IN PROGRESS");
+	} catch (const std::exception& error) {
+		std::cout << error.what() << std::endl;
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 void HyperVVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -108,7 +127,11 @@ bool HyperVVmController::is_defined() const {
 	}
 }
 bool HyperVVmController::is_running() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		return connect.machine(name()).is_running();
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 bool HyperVVmController::is_additions_installed() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);

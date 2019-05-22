@@ -17,12 +17,6 @@ endif()
 
 add_definitions(-DASIO_STANDALONE)
 
-if(WIN32)
-	add_definitions(-D__PRETTY_FUNCTION__=__FUNCSIG__)
-	add_definitions(-D_SCL_SECURE_NO_WARNINGS)
-	add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN7)
-endif()
-
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
 	${CMAKE_SOURCE_DIR}/src
@@ -54,18 +48,21 @@ macro(add_package NAME)
 endmacro(add_package)
 
 if(WIN32)
-	set(EXTRA_FLAGS "/W0 -DNOMINMAX")
+	add_definitions(
+		-D_SCL_SECURE_NO_WARNINGS
+		-D_WIN32_WINNT=_WIN32_WINNT_WIN7
+		-D_WINSOCK_DEPRECATED_NO_WARNINGS
+		-DNOMINMAX
+	)
 else()
 	if(CMAKE_BUILD_TYPE MATCHES Release)
-		set(EXTRA_FLAGS "${EXTRA_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter -O3 -DNDEBUG -g")
+		add_definitions(-Wall -Wextra -Wpedantic -Wno-unused-parameter -O3 -DNDEBUG -g)
 	elseif(CMAKE_BUILD_TYPE MATCHES Debug)
-		set(EXTRA_FLAGS "${EXTRA_FLAGS} -O0 -D_DEBUG -g")
+		add_definitions(-O0 -D_DEBUG -g)
 	else()
 		MESSAGE(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE value: ${CMAKE_BUILD_TYPE}")
 	endif()
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
 
 set(CMAKE_CXX_STANDARD 17)
 

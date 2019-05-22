@@ -702,7 +702,7 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vm, std::shar
 
 bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<IFactor> factor) {
 	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
-		return p->is_negated() ^ visit_word(vm, p->factor).length();
+		return p->is_negated() ^ (bool)visit_word(vm, p->factor).length();
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(vm, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Check>>(factor)) {

@@ -11,9 +11,14 @@ struct Machine {
 	std::string name() const;
 	bool is_running() const;
 	Display display() const;
+	void destroy();
+	void setNotes(const std::vector<std::string>& notes);
 
 	wmi::WbemClassObject computerSystem;
 	wmi::WbemServices services;
+
+private:
+	wmi::WbemClassObject settings() const;
 };
 
 }

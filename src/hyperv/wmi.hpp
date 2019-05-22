@@ -78,6 +78,19 @@ struct Variant: VARIANT {
 	Variant(const std::string& str) {
 		InitVariantFromString(bstr_t(str.c_str()), this);
 	}
+	Variant(const std::vector<std::string>& strs) {
+		std::vector<bstr_t> bstrs;
+		bstrs.reserve(strs.size());
+		for (auto& str: strs) {
+			bstrs.push_back(str.c_str());
+		}
+		std::vector<PCWSTR> pcwstrs;
+		pcwstrs.reserve(pcwstrs.size());
+		for (auto& bstr: bstrs) {
+			pcwstrs.push_back(bstr);
+		}
+		InitVariantFromStringArray(pcwstrs.data(), pcwstrs.size(), this);
+	}
 	~Variant() {
 		VariantClear(this);
 	}
@@ -157,15 +170,8 @@ struct Variant: VARIANT {
 	std::vector<uint8_t> get() const {
 		try {
 			check_type(VARENUM(VT_ARRAY | VT_UI1));
-			long lowerBound = 0;
-			long upperBound = 0;
-			SafeArrayGetLBound(parray, 1 , &lowerBound);
-			SafeArrayGetUBound(parray, 1, &upperBound);
-			uint8_t* begin = nullptr;
-			throw_if_failed(SafeArrayAccessData(parray, (void**)&begin));
-			uint8_t* end = begin + (upperBound - lowerBound + 1);
-			std::vector<uint8_t> result(begin, end);
-			SafeArrayUnaccessData(parray);
+			std::vector<uint8_t> result(VariantGetElementCount(*this));
+			throw_if_failed(VariantToBuffer(*this, result.data(), result.size()));
 			return result;
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -314,14 +320,44 @@ struct WbemClassObject: Object<IWbemClassObject> {
 		}
 	}
 
-	void put(const std::string& name, Variant value) {
+	WbemClassObject& put(const std::string& name, const Variant& value) {
 		try {
 			throw_if_failed(handle->Put(
 				bstr_t(name.c_str()),
 				0,
-				&value,
+				(VARIANT*)&value,
 				0
 			));
+			return *this;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+};
+
+struct WbemObjectTextSrc: Object<IWbemObjectTextSrc> {
+	WbemObjectTextSrc() {
+		try {
+			throw_if_failed(CoCreateInstance(
+				CLSID_WbemObjectTextSrc,
+				nullptr,
+				CLSCTX_INPROC_SERVER,
+				IID_IWbemObjectTextSrc,
+				(void**)&handle));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	std::string getText(const WbemClassObject& object, ULONG format = WMI_OBJ_TEXT_WMI_DTD_2_0) {
+		try {
+			BSTR str = nullptr;
+			throw_if_failed(handle->GetText(0,
+				object.handle,
+				WMI_OBJ_TEXT_CIM_DTD_2_0,
+				nullptr,
+				&str));
+			return String(str);
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -377,6 +413,8 @@ struct EnumWbemClassObject: Object<IEnumWbemClassObject> {
 		}
 	}
 };
+
+struct Call;
 
 struct WbemServices: Object<IWbemServices> {
 	using Object<IWbemServices>::Object;
@@ -447,7 +485,64 @@ struct WbemServices: Object<IWbemServices> {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
+
+	Call call(const std::string& class_name, const std::string& method_name) const;
 };
+
+struct Call {
+	Call(WbemServices services_, std::string class_name_, std::string method_name_):
+		services(std::move(services_)), class_name(std::move(class_name_)), method_name(std::move(method_name_))
+	{
+		try {
+			method_instance = services.getObject(class_name).getMethod(method_name).spawnInstance();
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+	Call& with(std::string name, const Variant& value) {
+		try {
+			method_instance.put(name, value);
+			return *this;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+	Call& with(std::string name, const WbemClassObject& object) {
+		try {
+			return with(name, WbemObjectTextSrc().getText(object));
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+	WbemClassObject exec(WbemClassObject object) {
+		try {
+			auto result = services.execMethod(object.path(), method_name, method_instance);
+			if (result.get("ReturnValue").get<int32_t>() != 0) {
+				throw std::runtime_error("ReturnValue == " + std::to_string(result.get("ReturnValue").get<int32_t>()));
+			}
+			return result;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+	WbemClassObject exec() {
+		try {
+			return exec(services.execQuery("SELECT * FROM " + class_name).getOne());
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+private:
+	WbemServices services;
+	std::string class_name;
+	std::string method_name;
+	WbemClassObject method_instance;
+};
+
+inline Call WbemServices::call(const std::string& class_name, const std::string& method_name) const {
+	return Call(*this, class_name, method_name);
+}
 
 struct WbemLocator: Object<IWbemLocator> {
 	WbemLocator() {
