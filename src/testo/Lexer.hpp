@@ -114,7 +114,6 @@ private:
 	Token copyfrom();
 	Token timeout();
 	Token for_();
-	Token snapshot();
 	Token test();
 	Token machine();
 	Token flash();

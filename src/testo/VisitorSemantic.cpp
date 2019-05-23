@@ -143,9 +143,7 @@ void VisitorSemantic::visit(std::shared_ptr<Program> program) {
 }
 
 void VisitorSemantic::visit_stmt(std::shared_ptr<IStmt> stmt) {
-	if (auto p = std::dynamic_pointer_cast<Stmt<Snapshot>>(stmt)) {
-		return visit_snapshot(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
+	if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
 		return visit_test(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<Stmt<Macro>>(stmt)) {
 		return visit_macro(p->stmt);
@@ -154,33 +152,6 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<IStmt> stmt) {
 	} else {
 		throw std::runtime_error("Unknown statement");
 	}
-}
-
-
-void VisitorSemantic::visit_snapshot(std::shared_ptr<Snapshot> snapshot) {
-	std::cout << "Registering snapshot " << snapshot->name.value() << std::endl;
-	if (reg.snapshots.find(snapshot->name) != reg.snapshots.end()) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error: snapshot with name " + snapshot->name.value() +
-			" already exists");
-	}
-
-	if (snapshot->parent_name) {
-		auto found = reg.snapshots.find(snapshot->parent_name);
-
-		if (found == reg.snapshots.end()) {
-			throw std::runtime_error(std::string(snapshot->begin()) + ": Error: cannot find parent " + snapshot->parent_name.value() +
-				" for snapshot " + snapshot->name.value());
-		} else {
-			snapshot->parent = found->second;
-		}
-	}
-
-	if (!reg.snapshots.insert({snapshot->name, snapshot}).second) {
-		throw std::runtime_error(std::string(snapshot->begin()) + ": Error while registering snapshot with name " +
-			snapshot->name.value());
-	}
-
-	visit_action_block(snapshot->action_block->action); //dummy controller to match the interface
 }
 
 void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
@@ -200,28 +171,62 @@ void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
-	for (auto state: test->vms) {
-		visit_vm_state(state);
-	}
-	visit_command_block(test->cmd_block);
-	reg.local_vms.clear();
-}
-
-void VisitorSemantic::visit_vm_state(std::shared_ptr<VmState> vm_state) {
-	auto vm = reg.vms.find(vm_state->name);
-	if (vm == reg.vms.end()) {
-		throw std::runtime_error(std::string(vm_state->begin()) + ": Error: unknown vm name: " + vm_state->name.value());
-	}
-
-	if (vm_state->snapshot_name) {
-		auto snapshot = reg.snapshots.find(vm_state->snapshot_name);
-		if (snapshot == reg.snapshots.end()) {
-			throw std::runtime_error(std::string(vm_state->begin()) + ": Error: unknown snapshot: " + vm_state->snapshot_name.value());
+	for (auto parent_token: test->parents_tokens) {
+		auto parent = reg.tests.find(parent_token.value());
+		if (parent == reg.tests.end()) {
+			throw std::runtime_error(std::string(parent_token.pos()) + ": Error: unknown test: " + parent_token.value());
 		}
-		vm_state->snapshot = snapshot->second;
+
+		for (auto already_included: test->parents) {
+			if (already_included == parent->second) {
+				throw std::runtime_error(std::string(parent_token.pos()) + ": Error: this test was already specified in parent list " + parent_token.value());
+			}
+		}
+
+		test->parents.push_back(parent->second);
+
+		if (parent_token.value() == test->name.value()) {
+			throw std::runtime_error(std::string(parent_token.pos()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
+		}
 	}
 
-	reg.local_vms.insert({vm_state->name, vm->second});
+	if (!reg.tests.insert({test->name.value(), test}).second) {
+		throw std::runtime_error(std::string(test->begin()) + ": Error test is already defined: " +
+			test->name.value());
+	}
+
+	visit_command_block(test->cmd_block);
+
+	//Now that we've checked that all commands are ligit we could check that
+	//all parents have totally separate vms. We can't do that before command block because
+	//a user may specify unexisting vm in some command and we need to catch that before that hierarchy check
+
+	std::vector<std::set<std::shared_ptr<VmController>>> parents_subtries;
+
+	//populate our parents paths
+	for (auto parent: test->parents) {
+		parents_subtries.push_back(reg.get_all_vms(parent));
+	}
+
+	//check that parents path are independent
+	for (size_t i = 0; i < parents_subtries.size(); ++i) {
+		for (size_t j = 0; j < parents_subtries.size(); ++j) {
+			if (i == j) {
+				continue;
+			}
+
+			std::vector<std::shared_ptr<VmController>> intersection;
+
+			std::set_intersection(
+				parents_subtries[i].begin(), parents_subtries[i].end(),
+				parents_subtries[j].begin(), parents_subtries[j].end(),
+				std::back_inserter(intersection));
+
+			if (intersection.size() != 0) {
+				throw std::runtime_error(std::string(test->begin()) + ":Error: some parents have common vms");
+			}
+		}
+	}
 }
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
@@ -230,12 +235,17 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
 	}
 }
 
-
 void VisitorSemantic::visit_command(std::shared_ptr<Cmd> cmd) {
+	std::set<std::shared_ptr<VmController>> unique_vms;
 	for (auto vm_token: cmd->vms) {
-		auto vm = reg.local_vms.find(vm_token.value());
-		if (vm == reg.local_vms.end()) {
+
+		auto vm = reg.vms.find(vm_token.value());
+		if (vm == reg.vms.end()) {
 			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: unknown vm name: " + vm_token.value());
+		}
+
+		if (!unique_vms.insert(vm->second).second) {
+			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: this vm was already specified in the vms list: " + vm_token.value());
 		}
 	}
 

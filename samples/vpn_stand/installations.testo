@@ -1,0 +1,207 @@
+
+include "../common.testo"
+
+machine vpn_sgw1 {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic WAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:00:00:00"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 2
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "vpn-sgw1"
+		password: "1111"
+		host_name: "vpn-sgw1"
+	}
+}
+
+machine vpn_sgw2 {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic WAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:00:11:00"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 2
+		attached_to: "internal"
+		network: "net3"
+		mac: "52:54:00:00:11:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "vpn-sgw2"
+		password: "1111"
+		host_name: "vpn-sgw2"
+	}
+}
+
+machine vpn_client1 {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:22:00"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "vpn-client1"
+		password: "1111"
+		host_name: "vpn-client1"
+	}
+}
+
+machine vpn_client2 {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 5Gb
+
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net3"
+		mac: "52:54:00:00:33:00"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "vpn-client2"
+		password: "1111"
+		host_name: "vpn-client2"
+	}
+}
+
+
+
+test sgws_installed {
+	vpn_sgw1, vpn_sgw2 install_ubuntu()
+}
+
+test clients_installed {
+	vpn_client1, vpn_client2 install_ubuntu()
+}
+
+test sgws_negotiator: sgws_installed  {
+	vpn_sgw1, vpn_sgw2 install_negotiator()
+}
+
+test clients_negotiator: clients_installed {
+	vpn_client1, vpn_client2 install_negotiator()
+}
+
+test sgws_pkgs: sgws_negotiator {
+	vpn_sgw1, vpn_sgw2 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+	}
+
+	vpn_sgw1 {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:00:00 WAN"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
+	}
+
+	vpn_sgw2 {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:11:00 WAN"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:11:11 LAN"
+	}
+
+	vpn_sgw1, vpn_sgw2 unplug_nat()
+}
+
+test clients_net_renamed: clients_negotiator {
+	vpn_client1, vpn_client2 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+	}
+
+	vpn_client1 {
+		exec bash "/tmp/rename_net.sh 52:54:00:00:22:00 LAN"
+	}
+
+	vpn_client2 {
+		exec bash "/tmp/rename_net.sh 52:54:00:00:33:00 LAN"
+	}
+
+	vpn_client1, vpn_client2 unplug_nat()
+}
+
+test install_wireguard: sgws_pkgs {
+	vpn_sgw1, vpn_sgw2 {
+		copyto "./WireGuard.tar.xz" "/opt/WireGuard.tar.xz"
+
+		exec bash """
+			cd /opt
+			tar -xf WireGuard.tar.xz
+			cd WireGuard/src
+			make
+			make install
+			modprobe wireguard
+			lsmod | fgrep wireguard
+		"""
+		wait timeout 1s
+	}
+
+}
+
+flash pubkey_flash {
+	fs: "ntfs"
+	size: 32Mb
+}

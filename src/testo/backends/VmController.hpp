@@ -28,6 +28,8 @@ struct VmController {
 	virtual void start() = 0;
 	virtual void stop() = 0;
 	virtual void shutdown(uint32_t timeout_seconds) = 0;
+	virtual void suspend() = 0;
+	virtual void resume() = 0;
 	virtual void type(const std::string& text) = 0;
 	virtual bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) = 0;
 	virtual bool check(const std::string& text, const nlohmann::json& params) = 0;

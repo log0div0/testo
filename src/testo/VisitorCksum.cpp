@@ -4,16 +4,29 @@
 
 using namespace AST;
 
-//TODO: Snapshot cksum must depend on name and parent cksum
+uint64_t VisitorCksum::visit(std::shared_ptr<Test> test) {
+	std::string result = test->name.value();
 
-uint64_t VisitorCksum::visit(std::shared_ptr<VmController> vm, std::shared_ptr<Snapshot> snapshot) {
-	std::string result = snapshot->name.value();
-	if (snapshot->parent) {
-		result += snapshot->parent->name.value();
+	for (auto parent: test->parents) {
+		result += parent->name.value();
 	}
-	result += visit_action_block(vm, snapshot->action_block->action);
+
+	for (auto cmd: test->cmd_block->commands) {
+		result += visit_cmd(cmd);
+	}
 	std::hash<std::string> h;
 	return h(result);
+}
+
+std::string VisitorCksum::visit_cmd(std::shared_ptr<Cmd> cmd) {
+	std::string result;
+
+	for (auto vm_token: cmd->vms) {
+		result += vm_token.value();
+		auto vm = reg.vms.find(vm_token);
+		result += visit_action(vm->second, cmd->action);
+	}
+	return result;
 }
 
 std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<ActionBlock> action_block) {
@@ -84,7 +97,7 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vm, std::shar
 	if (wait->time_interval) {
 		result += wait->time_interval.value();
 	} else {
-		result += "10s";
+		result += "1m";
 	}
 
 	return result;
