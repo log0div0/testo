@@ -5,8 +5,10 @@
 #include <cassert>
 
 #ifdef _DEBUG
+#ifndef WIN32
 #include <cxxabi.h>
 using namespace __cxxabiv1;
+#endif
 #endif
 
 namespace coro {
@@ -49,7 +51,11 @@ Coro::~Coro() {
 			continue;
 		}
 		catch (...) {
+#ifndef WIN32
 			what += abi::__cxa_current_exception_type()->name();
+#else
+			what += "Unknown Exception Type";
+#endif
 			what += "\n";
 		}
 	}

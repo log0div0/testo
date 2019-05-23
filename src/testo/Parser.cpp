@@ -922,11 +922,11 @@ std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {
 	auto right = expr();
 
 	auto binop = std::shared_ptr<BinOp>(new BinOp(op, left, right));
-	return std::shared_ptr<Expr<BinOp>>(new Expr(binop));
+	return std::shared_ptr<Expr<BinOp>>(new Expr<BinOp>(binop));
 }
 
 std::shared_ptr<IExpr> Parser::expr() {
-	auto left = std::shared_ptr<Expr<IFactor>>(new Expr(factor()));
+	auto left = std::shared_ptr<Expr<IFactor>>(new Expr<IFactor>(factor()));
 
 	if ((LA(1) == Token::category::AND) ||
 		(LA(1) == Token::category::OR)) {

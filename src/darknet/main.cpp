@@ -65,13 +65,13 @@ void predict()
 
 	auto symbols = yolo::load_symbols(symbols_file);
 
-	auto start = std::chrono::high_resolution_clock::now();
-
-	yolo::predict(network, image, query, symbols);
-
-	auto end = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double> time = end - start;
-	std::cout << time.count() << " seconds" << std::endl;
+	for (size_t i = 0; i < 10; ++i) {
+		auto start = std::chrono::high_resolution_clock::now();
+		yolo::predict(network, image, query, symbols);
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> time = end - start;
+		std::cout << time.count() << " seconds" << std::endl;
+	}
 
 	image.write_png(output_file);
 }

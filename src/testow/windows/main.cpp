@@ -10,24 +10,7 @@
 #include <iostream>
 #include <tchar.h>
 #include "../App.hpp"
-
-void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
-	stream << n << ". " << error.what();
-	try {
-		std::rethrow_if_nested(error);
-	} catch (const std::exception& error) {
-		stream << std::endl;
-		backtrace(stream, error, n + 1);
-	} catch(...) {
-		stream << std::endl;
-		stream << n << ". " << "[Unknown exception type]";
-	}
-}
-
-std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
-	backtrace(stream, error, 1);
-	return stream;
-}
+#include "../Vbox.hpp"
 
 // Data
 ID3D11Device*            g_pd3dDevice = NULL;
@@ -114,7 +97,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
 	try {
 		// Create application window
@@ -166,7 +149,7 @@ int main(int, char**)
 		{
 			// Our state
 			ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-			App app;
+			App app(argc, argv);
 
 			// Main loop
 			MSG msg;

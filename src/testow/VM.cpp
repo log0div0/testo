@@ -20,8 +20,7 @@ struct BGRA {
 	uint8_t b, g, r, a;
 };
 
-VM::VM(vir::Connect& qemu_connect, vir::Domain& domain): qemu_connect(qemu_connect), domain(domain) {
-	domain_name = domain.name();
+VM::VM(std::shared_ptr<Guest> guest_): guest(guest_) {
 	running = true;
 	thread = std::thread([=] {
 		run();
@@ -34,8 +33,6 @@ VM::~VM() {
 }
 
 void VM::run() {
-	std::vector<uint8_t> buffer(10'000'000);
-
 	auto interval = 200ms;
 	auto previous = std::chrono::high_resolution_clock::now();
 	while (running) {
@@ -45,17 +42,13 @@ void VM::run() {
 			std::this_thread::sleep_for(interval - diff);
 		}
 		previous = current;
-		if (!domain.is_active()) {
+
+		stb::Image screenshot = guest->screenshot();
+		if (!screenshot.data()) {
 			std::lock_guard<std::shared_mutex> lock(mutex);
 			view = {};
 			continue;
 		}
-		auto stream = qemu_connect.new_stream();
-		auto mime = domain.screenshot(stream);
-		size_t bytes = stream.recv_all(buffer.data(), buffer.size());
-		stream.finish();
-
-		stb::Image screenshot(buffer.data(), bytes);
 
 		std::string query_copy;
 		{

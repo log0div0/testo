@@ -262,7 +262,7 @@ void Domain::detach_device(const pugi::xml_node& xml, const std::vector<virDomai
 	}
 }
 
-std::string Domain::screenshot(Stream& st, uint32_t screen_id) {
+std::string Domain::screenshot(Stream& st, uint32_t screen_id) const {
 	char* result = virDomainScreenshot(handle, st.handle, screen_id, 0);
 	if (result == nullptr) {
 		throw std::runtime_error(virGetLastErrorMessage());

@@ -17,6 +17,12 @@ endif()
 
 add_definitions(-DASIO_STANDALONE)
 
+if(WIN32)
+	add_definitions(-D__PRETTY_FUNCTION__=__FUNCSIG__)
+	add_definitions(-D_SCL_SECURE_NO_WARNINGS)
+	add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN7)
+endif()
+
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
 	${CMAKE_SOURCE_DIR}/src

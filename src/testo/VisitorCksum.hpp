@@ -3,7 +3,7 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
-#include "VmController.hpp"
+#include "backends/VmController.hpp"
 
 struct VisitorCksum {
 	VisitorCksum(Register& reg): reg(reg) {}

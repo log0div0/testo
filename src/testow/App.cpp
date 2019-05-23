@@ -2,26 +2,59 @@
 #include "App.hpp"
 #include <imgui.h>
 #include <iostream>
+#include <sstream>
+#include <clipp.h>
+
+void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
+	stream << n << ". " << error.what();
+	try {
+		std::rethrow_if_nested(error);
+	} catch (const std::exception& error) {
+		stream << std::endl;
+		backtrace(stream, error, n + 1);
+	} catch(...) {
+		stream << std::endl;
+		stream << n << ". " << "[Unknown exception type]";
+	}
+}
+
+std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
+	backtrace(stream, error, 1);
+	return stream;
+}
 
 App* app = nullptr;
 
-App::App():
-	qemu_connect(vir::connect_open("qemu:///system"))
+App::App(int argc, char** argv)
 {
-	::app = this;
-	for (auto& domain: qemu_connect.domains({VIR_CONNECT_LIST_DOMAINS_PERSISTENT})) {
-		domains.emplace(domain.name(), std::move(domain));
+	using namespace clipp;
+
+	std::string hypervisor_name;
+
+	auto cli = (
+		option("-v", "--hypervisor") & value("hypervisor name", hypervisor_name)
+	);
+
+	if (!parse(argc, argv, cli)) {
+		std::stringstream ss;
+		ss << make_man_page(cli, argv[0]);
+		throw std::runtime_error(ss.str());
 	}
+
+	hypervisor = Hypervisor::get(hypervisor_name);
+
+	::app = this;
+	guests = hypervisor->guests();
 }
 
 void App::render() {
 	if (ImGui::Begin("List of VMs")) {
-		for (auto& [domain_name, domain]: domains) {
-			bool is_selected = vm && (vm->domain_name == domain_name);
-			if (ImGui::Selectable(domain_name.c_str(), &is_selected)) {
+		for (auto& guest: guests) {
+			bool is_selected = vm && (vm->guest == guest);
+			if (ImGui::Selectable(guest->name().c_str(), &is_selected)) {
 				if (is_selected) {
 					vm = nullptr;
-					vm = std::make_unique<VM>(qemu_connect, domain);
+					vm = std::make_unique<VM>(guest);
 				} else {
 					vm = nullptr;
 				}
@@ -38,7 +71,10 @@ void App::render() {
 				if ((texture.width() != vm->view.width) ||
 					(texture.height() != vm->view.height)) {
 					texture = Texture(vm->view.width, vm->view.height);
-					ImGui::SetWindowSize({texture.width() + 40, texture.height() + 40});
+					ImGui::SetWindowSize({
+						float(texture.width() + 40),
+						float(texture.height() + 40)
+					});
 				}
 				texture.write(vm->view.data(), vm->view.size());
 				ImVec2 p = ImGui::GetCursorScreenPos();
