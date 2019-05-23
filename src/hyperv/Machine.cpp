@@ -40,7 +40,13 @@ Display Machine::display() const {
 }
 
 void Machine::destroy() {
-
+	try {
+		services.call("Msvm_VirtualSystemManagementService", "DestroySystem")
+			.with("AffectedSystem", computerSystem.path())
+			.exec();
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 void Machine::setNotes(const std::vector<std::string>& notes) {
@@ -69,6 +75,10 @@ void Machine::requestStateChange(uint16_t requestedState) {
 
 void Machine::start() {
 	requestStateChange(2);
+}
+
+void Machine::stop() {
+	requestStateChange(3);
 }
 
 wmi::WbemClassObject Machine::settings() const {

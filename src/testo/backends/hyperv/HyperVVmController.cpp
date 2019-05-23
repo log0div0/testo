@@ -17,15 +17,15 @@ void HyperVVmController::install() {
 				machine.destroy();
 			}
 		}
+
 		auto machine = connect.defineMachine(name());
 
-		nlohmann::json notes_json = {
-			{"vm_config", config},
-			{"metadata", config.at("metadata")},
-			{"vm_nic_count", config.count("nic") ? config.at("nic").size() : 0},
-			{"vm_name", name()}
-		};
-		machine.setNotes({notes_json.dump(4)});
+		nlohmann::json metadata = config.at("metadata");
+		metadata["vm_config"] = config.dump(4);
+		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
+		metadata["vm_name"] = config.at("name");
+		metadata["dvd_signature"] = "";
+		machine.setNotes({metadata.dump(4)});
 
 		machine.start();
 
@@ -46,9 +46,13 @@ void HyperVVmController::set_metadata(const std::string& key, const std::string&
 }
 
 std::string HyperVVmController::get_metadata(const std::string& key) {
-	auto machine = connect.machine(name());
-	auto json = nlohmann::json::parse(machine.notes().at(0));
-	return json.at("metadata").at(key);
+	try {
+		auto machine = connect.machine(name());
+		auto json = nlohmann::json::parse(machine.notes().at(0));
+		return json.at(key);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 std::string HyperVVmController::get_snapshot_cksum(const std::string& snapshot) {
@@ -88,10 +92,18 @@ void HyperVVmController::unplug_dvd() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void HyperVVmController::start() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		connect.machine(name()).start();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 void HyperVVmController::stop() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		connect.machine(name()).stop();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 void HyperVVmController::shutdown(uint32_t timeout_seconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -100,7 +112,8 @@ void HyperVVmController::type(const std::string& text) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVmController::wait(const std::string& text, const nlohmann::json& params, const std::string& time) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+	return false;
 }
 bool HyperVVmController::check(const std::string& text, const nlohmann::json& params) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);

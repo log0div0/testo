@@ -18,6 +18,7 @@ struct Machine {
 
 	void requestStateChange(uint16_t requestedState);
 	void start();
+	void stop();
 
 	wmi::WbemClassObject computerSystem;
 	wmi::WbemServices services;
