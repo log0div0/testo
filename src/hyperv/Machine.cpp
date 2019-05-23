@@ -44,9 +44,31 @@ void Machine::destroy() {
 }
 
 void Machine::setNotes(const std::vector<std::string>& notes) {
-	services.call("Msvm_VirtualSystemManagementService", "ModifySystemSettings")
-		.with("SystemSettings", settings().put("Notes", notes))
-		.exec();
+	try {
+		services.call("Msvm_VirtualSystemManagementService", "ModifySystemSettings")
+			.with("SystemSettings", settings().put("Notes", notes))
+			.exec();
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+std::vector<std::string> Machine::notes() const {
+	return settings().get("Notes");
+}
+
+void Machine::requestStateChange(uint16_t requestedState) {
+	try {
+		services.call("Msvm_ComputerSystem", "RequestStateChange")
+			.with("RequestedState", (int32_t)requestedState)
+			.exec(computerSystem);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+void Machine::start() {
+	requestStateChange(2);
 }
 
 wmi::WbemClassObject Machine::settings() const {

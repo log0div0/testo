@@ -12,7 +12,12 @@ struct Machine {
 	bool is_running() const;
 	Display display() const;
 	void destroy();
+
 	void setNotes(const std::vector<std::string>& notes);
+	std::vector<std::string> notes() const;
+
+	void requestStateChange(uint16_t requestedState);
+	void start();
 
 	wmi::WbemClassObject computerSystem;
 	wmi::WbemServices services;

@@ -6,6 +6,8 @@
 #include <locale>
 #include <codecvt>
 #include <sstream>
+#include <thread>
+#include <chrono>
 
 #include <Wbemidl.h>
 #include <comdef.h>
@@ -91,6 +93,18 @@ struct Variant: VARIANT {
 		}
 		InitVariantFromStringArray(pcwstrs.data(), pcwstrs.size(), this);
 	}
+	Variant(uint16_t value) {
+		InitVariantFromUInt16(value, this);
+	}
+	Variant(int16_t value) {
+		InitVariantFromInt16(value, this);
+	}
+	Variant(uint32_t value) {
+		InitVariantFromUInt32(value, this);
+	}
+	Variant(int32_t value) {
+		InitVariantFromInt32(value, this);
+	}
 	~Variant() {
 		VariantClear(this);
 	}
@@ -105,16 +119,7 @@ struct Variant: VARIANT {
 		return *this;
 	}
 
-	template <typename T>
-	operator T() const {
-		return get<T>();
-	}
-
-	template <typename T>
-	T get() const;
-
-	template <>
-	std::string get() const {
+	operator std::string() const {
 		try {
 			check_type(VT_BSTR);
 			if (bstrVal == nullptr) {
@@ -126,8 +131,34 @@ struct Variant: VARIANT {
 		}
 	}
 
-	template <>
-	uint16_t get() const {
+	operator std::vector<std::string>() const
+	{
+		try {
+			check_type(VARENUM(VT_BSTR | VT_ARRAY));
+			std::vector<PWSTR> pwstrs(VariantGetElementCount(*this));
+			ULONG size = 0;
+			throw_if_failed(VariantToStringArray(*this, pwstrs.data(), pwstrs.size(), &size));
+			if (pwstrs.size() != size) {
+				throw std::runtime_error("Extracted less strings than expected");
+			}
+			std::vector<bstr_t> bstrs;
+			bstrs.reserve(pwstrs.size());
+			for (auto& pwstr: pwstrs) {
+				bstrs.push_back(bstr_t(pwstr));
+				CoTaskMemFree(pwstr);
+			}
+			std::vector<std::string> strs;
+			strs.reserve(bstrs.size());
+			for (auto& bstr: bstrs) {
+				strs.push_back((const char*)bstr);
+			}
+			return strs;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	operator uint16_t() const {
 		try {
 			check_type(VT_UI2);
 			return uiVal;
@@ -136,8 +167,7 @@ struct Variant: VARIANT {
 		}
 	}
 
-	template <>
-	int16_t get() const {
+	operator int16_t() const {
 		try {
 			check_type(VT_I2);
 			return iVal;
@@ -146,8 +176,7 @@ struct Variant: VARIANT {
 		}
 	}
 
-	template <>
-	uint32_t get() const {
+	operator uint32_t() const {
 		try {
 			check_type(VT_UI4);
 			return ulVal;
@@ -156,8 +185,7 @@ struct Variant: VARIANT {
 		}
 	}
 
-	template <>
-	int32_t get() const {
+	operator int32_t() const {
 		try {
 			check_type(VT_I4);
 			return lVal;
@@ -166,8 +194,7 @@ struct Variant: VARIANT {
 		}
 	}
 
-	template <>
-	std::vector<uint8_t> get() const {
+	operator std::vector<uint8_t>() const {
 		try {
 			check_type(VARENUM(VT_ARRAY | VT_UI1));
 			std::vector<uint8_t> result(VariantGetElementCount(*this));
@@ -178,38 +205,17 @@ struct Variant: VARIANT {
 		}
 	}
 
+	template <typename T>
+	T get() const {
+		return *this;
+	}
+
 private:
 	void check_type(VARENUM expected) const {
 		if (vt != expected) {
 			throw std::runtime_error("Expected type = " + to_hex(expected) + " , actual type = " + to_hex(vt));
 		}
 	}
-};
-
-struct String {
-	String(BSTR handle_): handle(handle_) {
-		try {
-			if (handle == nullptr) {
-				throw std::runtime_error("nullptr");
-			}
-		} catch (const std::exception&) {
-			throw_with_nested(std::runtime_error(__FUNCSIG__));
-		}
-	}
-	~String() {
-		if (handle) {
-			SysFreeString(handle);
-			handle = nullptr;
-		}
-	}
-	operator std::string() const {
-		try {
-			return converter.to_bytes(handle);
-		} catch (const std::exception&) {
-			throw_with_nested(std::runtime_error(__FUNCSIG__));
-		}
-	}
-	BSTR handle = nullptr;
 };
 
 template <typename IObject>
@@ -270,7 +276,7 @@ struct WbemClassObject: Object<IWbemClassObject> {
 		try {
 			BSTR str = nullptr;
 			throw_if_failed(handle->GetObjectText(0, &str));
-			return String(str);
+			return (const char*)bstr_t(str, false);
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -357,7 +363,7 @@ struct WbemObjectTextSrc: Object<IWbemObjectTextSrc> {
 				WMI_OBJ_TEXT_CIM_DTD_2_0,
 				nullptr,
 				&str));
-			return String(str);
+			return (const char*)bstr_t(str, false);
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -517,8 +523,25 @@ struct Call {
 	WbemClassObject exec(WbemClassObject object) {
 		try {
 			auto result = services.execMethod(object.path(), method_name, method_instance);
-			if (result.get("ReturnValue").get<int32_t>() != 0) {
-				throw std::runtime_error("ReturnValue == " + std::to_string(result.get("ReturnValue").get<int32_t>()));
+			int32_t returnValue = result.get("ReturnValue");
+			if (returnValue != 0) {
+				if (returnValue == 4096) {
+					std::string jobRef = result.get("Job");
+					while (true) {
+						auto job = services.getObject(jobRef);
+						int32_t jobState = job.get("JobState");
+						if (jobState == 4) {
+							std::this_thread::sleep_for(std::chrono::milliseconds(100));
+							continue;
+						}
+						if (jobState == 7) {
+							break;
+						}
+						throw std::runtime_error(job.get("ErrorDescription").get<std::string>());
+					}
+				} else {
+					throw std::runtime_error("ReturnValue == " + std::to_string(returnValue));
+				}
 			}
 			return result;
 		} catch (const std::exception&) {

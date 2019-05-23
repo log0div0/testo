@@ -21,17 +21,20 @@ void HyperVVmController::install() {
 
 		nlohmann::json notes_json = {
 			{"vm_config", config},
+			{"metadata", config.at("metadata")},
 			{"vm_nic_count", config.count("nic") ? config.at("nic").size() : 0},
 			{"vm_name", name()}
 		};
 		machine.setNotes({notes_json.dump(4)});
 
-		throw std::runtime_error("WORK IN PROGRESS");
+		machine.start();
+
+		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 	} catch (const std::exception& error) {
-		std::cout << error.what() << std::endl;
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -41,9 +44,13 @@ void HyperVVmController::set_metadata(const nlohmann::json& metadata) {
 void HyperVVmController::set_metadata(const std::string& key, const std::string& value) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
 std::string HyperVVmController::get_metadata(const std::string& key) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto machine = connect.machine(name());
+	auto json = nlohmann::json::parse(machine.notes().at(0));
+	return json.at("metadata").at(key);
 }
+
 std::string HyperVVmController::get_snapshot_cksum(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -101,7 +108,6 @@ bool HyperVVmController::check(const std::string& text, const nlohmann::json& pa
 int HyperVVmController::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-
 bool HyperVVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -114,6 +120,7 @@ std::vector<std::string> HyperVVmController::keys() {
 bool HyperVVmController::has_key(const std::string& key) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
 bool HyperVVmController::is_defined() const {
 	try {
 		for (auto& machine: connect.machines()) {
@@ -126,6 +133,7 @@ bool HyperVVmController::is_defined() const {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 bool HyperVVmController::is_running() {
 	try {
 		return connect.machine(name()).is_running();
@@ -133,6 +141,7 @@ bool HyperVVmController::is_running() {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 bool HyperVVmController::is_additions_installed() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -145,7 +154,6 @@ void HyperVVmController::copy_from_guest(const fs::path& src, const fs::path& ds
 void HyperVVmController::remove_from_guest(const fs::path& obj) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-
 std::set<std::string> HyperVVmController::nics() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
