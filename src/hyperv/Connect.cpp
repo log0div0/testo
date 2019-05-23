@@ -37,7 +37,8 @@ Machine Connect::machine(const std::string& name) const {
 Machine Connect::defineMachine(const std::string& name) {
 	try {
 		auto virtualSystemSettingData = services.getObject("Msvm_VirtualSystemSettingData").spawnInstance()
-			.put("ElementName", name);
+			.put("ElementName", name)
+			.put("VirtualSystemSubType", "Microsoft:Hyper-V:SubType:2");
 		services.call("Msvm_VirtualSystemManagementService", "DefineSystem")
 			.with("SystemSettings", virtualSystemSettingData)
 			.exec();

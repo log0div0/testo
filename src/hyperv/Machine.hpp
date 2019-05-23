@@ -21,11 +21,16 @@ struct Machine {
 	void stop();
 	void pause();
 
+	void addDiskDrive();
+	void addDVDDrive();
+
 	wmi::WbemClassObject computerSystem;
 	wmi::WbemServices services;
 
 private:
+	std::string settings_path() const;
 	wmi::WbemClassObject settings() const;
+	void addDevice(const std::string& type);
 };
 
 }

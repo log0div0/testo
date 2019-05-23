@@ -88,8 +88,32 @@ void Machine::pause() {
 	requestStateChange(32776);
 }
 
+void Machine::addDiskDrive() {
+	addDevice("Microsoft:Hyper-V:Synthetic Disk Drive");
+}
+
+void Machine::addDVDDrive() {
+	addDevice("Microsoft:Hyper-V:Synthetic DVD Drive");
+}
+
+std::string Machine::settings_path() const {
+	return "Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"";
+}
+
 wmi::WbemClassObject Machine::settings() const {
-	return services.getObject("Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"");
+	return services.getObject(settings_path());
+}
+
+void Machine::addDevice(const std::string& type) {
+	auto device = services.execQuery(
+		"SELECT * FROM Msvm_ResourceAllocationSettingData "
+		"WHERE InstanceID LIKE \"%Default\" "
+		"AND ResourceSubType=\"" + type + "\""
+	).getOne().clone();
+	services.call("Msvm_VirtualSystemManagementService", "AddResourceSettings")
+			.with("AffectedConfiguration", settings_path())
+			.with("ResourceSettings", std::vector<wmi::WbemClassObject>{device})
+			.exec();
 }
 
 }

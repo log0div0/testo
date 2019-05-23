@@ -30,6 +30,9 @@ void HyperVVmController::install() {
 		metadata["dvd_signature"] = "";
 		machine.setNotes({metadata.dump(4)});
 
+		machine.addDVDDrive();
+		machine.addDiskDrive();
+
 		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));

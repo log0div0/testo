@@ -77,6 +77,9 @@ struct Variant: VARIANT {
 	Variant() {
 		VariantInit(this);
 	}
+	Variant(const char* str) {
+		InitVariantFromString(bstr_t(str), this);
+	}
 	Variant(const std::string& str) {
 		InitVariantFromString(bstr_t(str.c_str()), this);
 	}
@@ -339,6 +342,16 @@ struct WbemClassObject: Object<IWbemClassObject> {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
+
+	WbemClassObject clone() {
+		try {
+			IWbemClassObject* copy = nullptr;
+			throw_if_failed(handle->Clone(&copy));
+			return copy;
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
 };
 
 struct WbemObjectTextSrc: Object<IWbemObjectTextSrc> {
@@ -520,6 +533,18 @@ struct Call {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
 	}
+	Call& with(std::string name, const std::vector<WbemClassObject>& objects) {
+		try {
+			std::vector<std::string> strings;
+			WbemObjectTextSrc objectTextSrc;
+			for (auto& object: objects) {
+				strings.push_back(objectTextSrc.getText(object));
+			}
+			return with(name, strings);
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
 	WbemClassObject exec(WbemClassObject object) {
 		try {
 			auto result = services.execMethod(object.path(), method_name, method_instance);
@@ -537,7 +562,8 @@ struct Call {
 						if (jobState == 7) {
 							break;
 						}
-						throw std::runtime_error(job.get("ErrorDescription").get<std::string>());
+						std::string errorDescription = job.get("ErrorDescription");
+						throw std::runtime_error(errorDescription);
 					}
 				} else {
 					throw std::runtime_error("ReturnValue == " + std::to_string(returnValue));
