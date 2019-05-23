@@ -27,8 +27,6 @@ void HyperVVmController::install() {
 		metadata["dvd_signature"] = "";
 		machine.setNotes({metadata.dump(4)});
 
-		machine.start();
-
 		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -91,6 +89,7 @@ void HyperVVmController::plug_dvd(fs::path path) {
 void HyperVVmController::unplug_dvd() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
 void HyperVVmController::start() {
 	try {
 		connect.machine(name()).start();
@@ -98,6 +97,7 @@ void HyperVVmController::start() {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVmController::stop() {
 	try {
 		connect.machine(name()).stop();
@@ -105,6 +105,22 @@ void HyperVVmController::stop() {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
+void HyperVVmController::suspend() {
+	try {
+		connect.machine(name()).pause();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+void HyperVVmController::resume() {
+	try {
+		connect.machine(name()).start();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 void HyperVVmController::shutdown(uint32_t timeout_seconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }

@@ -81,6 +81,10 @@ void Machine::stop() {
 	requestStateChange(3);
 }
 
+void Machine::pause() {
+	requestStateChange(32776);
+}
+
 wmi::WbemClassObject Machine::settings() const {
 	return services.execQuery("SELECT * FROM Msvm_VirtualSystemSettingData WHERE InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"").getOne();
 }
