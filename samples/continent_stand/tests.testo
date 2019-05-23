@@ -40,6 +40,7 @@ machine UB {
 }
 
 macro install_continent() {
+	start
 	wait timeout 3s
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter

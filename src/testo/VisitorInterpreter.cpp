@@ -193,6 +193,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
+		for (auto parent: test->parents) {
+			for (auto vm: reg.get_all_vms(parent)) {
+				vm->resume();
+			}
+		}
+
 		for (auto vm: reg.get_all_vms(test)) {
 			//check if it's a new one
 			auto is_new = true;
@@ -216,7 +222,9 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		//But that's not everything - we need to create according snapshots to all included vms
 
-		//TODO: pause all vms
+		for (auto vm: reg.get_all_vms(test)) {
+			vm->suspend();
+		}
 
 		for (auto vm: reg.get_all_vms(test)) {
 			print("Taking snapshot ", test->name.value(), " for vm ", vm->name());

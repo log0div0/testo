@@ -45,6 +45,8 @@ struct Domain {
 	void start();
 	void stop();
 	void shutdown(uint32_t timeout_seconds);
+	void suspend();
+	void resume();
 	void undefine();
 
 	operator bool() const {

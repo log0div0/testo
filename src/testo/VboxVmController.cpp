@@ -741,6 +741,14 @@ void VboxVmController::shutdown(uint32_t timeout_seconds) {
 	throw std::runtime_error("Implement me");
 }
 
+void VboxVmController::suspend() {
+	throw std::runtime_error("Implement me");
+}
+
+void VboxVmController::resume() {
+	throw std::runtime_error("Implement me");
+}
+
 void VboxVmController::type(const std::string& text) {
 	try {
 		auto machine = virtual_box.find_machine(name());
