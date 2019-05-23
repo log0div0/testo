@@ -75,6 +75,18 @@ void Domain::shutdown(uint32_t timeout_seconds) {
 	throw std::runtime_error("Shutdown timeout");
 }
 
+void Domain::suspend() {
+	if (virDomainSuspend(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
+void Domain::resume() {
+	if (virDomainResume(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
 void Domain::undefine() {
 	if (virDomainUndefine(handle) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());

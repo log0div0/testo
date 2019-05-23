@@ -75,12 +75,9 @@ struct VisitorInterpreter {
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
-	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
 	void visit_controller(std::shared_ptr<AST::Controller> controller);
 	void visit_flash(std::shared_ptr<AST::Controller> flash);
-	void visit_snapshot(std::shared_ptr<AST::Snapshot> snapshot);
 	void visit_test(std::shared_ptr<AST::Test> test);
-	void visit_vm_state(std::shared_ptr<AST::VmState> vm_state);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<AST::ActionBlock> action_block);
@@ -113,12 +110,8 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Check> check);
 
-	void stop_all_vms(std::shared_ptr<AST::Test> test);
-
-	void apply_actions(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot, bool recursive = false);
-	bool resolve_state(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
 	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;
-	std::string snapshot_cksum(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Snapshot> snapshot);
+	std::string test_cksum(std::shared_ptr<AST::Test> test);
 	std::string cksum(std::shared_ptr<FlashDriveController> flash);
 
 	Register& reg;
@@ -142,26 +135,35 @@ private:
 	void print(Args... args) {
 		std::cout << "[";
 		std::cout << std::setw(3);
-		std::cout << current_progress;
+		std::cout << std::round(current_progress);
 		std::cout << std::setw(0);
 		std::cout << '%' << "] ";
 		do_print(std::forward<Args>(args)...);
 		std::cout << std::endl;
 	}
 
+	std::vector<std::shared_ptr<AST::Test>> succeeded_tests;
+	std::vector<std::shared_ptr<AST::Test>> failed_tests;
+	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
+
 	void print_statistics() const;
 
-	void setup_progress_vars(std::shared_ptr<AST::Program> program);
+	void setup_vars(std::shared_ptr<AST::Program> program);
 	void update_progress();
 
-	uint16_t current_progress = 0;
-	uint16_t progress_step = 0;
-	uint16_t original_remainder = 0;
-	uint16_t current_remainder = 0;
+	void stop_all_vms(std::shared_ptr<AST::Test> test) {
+		for (auto vm: reg.get_all_vms(test)) {
+			if (vm->is_defined() && vm->is_running()) {
+				vm->stop();
+			}
+		}
+	}
+
+	float current_progress = 0;
+	float progress_step = 0;
 
 	std::chrono::system_clock::time_point start_timestamp;
 
-	std::set<std::shared_ptr<AST::Test>> tests_to_run; //used for varouis inner reasons
-	std::vector<std::string> success_tests;
-	std::vector<std::string> failed_tests;
+	std::vector<std::shared_ptr<AST::Test>> tests_to_run;
+	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 };

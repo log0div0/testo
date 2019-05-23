@@ -24,7 +24,6 @@ struct Token {
 		copyfrom,
 		timeout,
 		for_,
-		snapshot,
 		test,
 		machine,
 		flash,
@@ -77,8 +76,7 @@ struct Token {
 		attr,
 		attr_block,
 		cmd,
-		cmd_block,
-		vm_state
+		cmd_block
 	};
 
 	Token() {
@@ -135,8 +133,6 @@ struct Token {
 			return "ACTION STOP";
 		case for_:
 			return "FOR";
-		case snapshot:
-			return "SNAPSHOT";
 		case test:
 			return "TEST";
 		case machine:
@@ -185,8 +181,6 @@ struct Token {
 			return "COMMAND";
 		case cmd_block:
 			return "COMMAND BLOCK";
-		case vm_state:
-			return "MACHINE STATE";
 		default:
 			return "UNKNOWN TYPE";
 		}

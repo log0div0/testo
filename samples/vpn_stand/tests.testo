@@ -1,18 +1,13 @@
 
-include "./declarations.testo"
+include "./installations.testo"
 
-test basic: vpn_sgw1(wireguard), vpn_sgw2(wireguard)
+test sgw_basic: install_wireguard
 {
 	vpn_sgw1 copyto "./utils/test_pcap.py" "/test_pcap.py"
 
 	vpn_sgw1 exec bash """
 		ip a a 192.168.1.1/24 dev WAN
 		ip l s WAN up
-
-		ip a a 192.168.0.1/24 dev LAN
-		ip l s LAN up
-
-		sysctl net.ipv4.ip_forward=1
 
 		wg genkey > private
 		wg pubkey < private > public.key
@@ -28,9 +23,6 @@ test basic: vpn_sgw1(wireguard), vpn_sgw2(wireguard)
 	vpn_sgw2 exec bash """
 		ip a a 192.168.1.2/24 dev WAN
 		ip l s WAN up
-
-		ip a a 192.168.2.1/24 dev LAN
-		ip l s LAN up
 
 		sysctl net.ipv4.ip_forward=1
 
@@ -99,101 +91,34 @@ test basic: vpn_sgw1(wireguard), vpn_sgw2(wireguard)
 	}
 }
 
-test basic_with_clients: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
-	vpn_client1(pkgs_and_net_ready), vpn_client2(pkgs_and_net_ready)
+test sgw_basic_with_clients: sgw_basic, clients_net_renamed
 {
-	vpn_sgw1 copyto "./utils/test_pcap.py" "/test_pcap.py"
 	vpn_sgw1 exec bash """
-		ip a a 192.168.1.1/24 dev WAN
-		ip l s WAN up
-
 		ip a a 192.168.0.1/24 dev LAN
 		ip l s LAN up
 
 		sysctl net.ipv4.ip_forward=1
-
-		wg genkey > private
-		wg pubkey < private > public.key
-
-		ip link add wg0 type wireguard
-		ip a a 10.0.0.1/24 dev wg0
-
-		wg set wg0 private-key private
-		wg set wg0 listen-port 51820
-		ip l s wg0 up
 
 		ip r a default via 10.0.0.2 dev wg0 table 1056
 		ip rule add from 192.168.0.0/24 to 192.168.2.0/24 lookup 1056
 	"""
 
 	vpn_sgw2 exec bash """
-		ip a a 192.168.1.2/24 dev WAN
-		ip l s WAN up
-
 		ip a a 192.168.2.1/24 dev LAN
 		ip l s LAN up
 
 		sysctl net.ipv4.ip_forward=1
-
-		wg genkey > private
-		wg pubkey < private > public.key
-
-		ip link add wg0 type wireguard
-		ip a a 10.0.0.2/24 dev wg0
-
-		wg set wg0 private-key private
-		wg set wg0 listen-port 51820
-		ip l s wg0 up
 
 		ip r a default via 10.0.0.1 dev wg0 table 1056
 		ip rule add from 192.168.2.0/24 to 192.168.0.0/24 lookup 1056
 	"""
 
-	vpn_sgw1 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/sdb /media
-			cp public.key /media/sgw1_public.key
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	vpn_sgw2 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/sdb /media
-			cp public.key /media/sgw2_public.key
-			cp /media/sgw1_public.key ~/
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	vpn_sgw1 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/sdb /media
-			cp /media/sgw2_public.key ~/
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
 	vpn_sgw1 exec bash "wg set wg0 peer $(cat ~/sgw2_public.key) allowed-ips 10.0.0.2/32,192.168.2.0/24 endpoint 192.168.1.2:51820"
 	vpn_sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips 10.0.0.1/32,192.168.0.0/24 endpoint 192.168.1.1:51820"
 
 	vpn_sgw1 {
-		type "sudo su"; press Enter
-		wait "password for " + $login; type $password; press Enter
 		type "tcpdump -i WAN -w /tmp/captured.pcapng"; press Enter
 	}
-
-	vpn_sgw1 exec bash "ping -c 10 10.0.0.2"
-	vpn_sgw2 exec bash "ping -c 10 10.0.0.1"
 
 	vpn_client1 exec bash """
 		ip a a 192.168.0.2/24 dev LAN
@@ -217,99 +142,29 @@ test basic_with_clients: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 	}
 }
 
-test routes_misconfigured: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
-	vpn_client1(pkgs_and_net_ready), vpn_client2(pkgs_and_net_ready)
+test sgw_routes_misconfigured: sgw_basic, clients_net_renamed
 {
-	vpn_sgw1 copyto "./utils/test_pcap.py" "/test_pcap.py"
 	vpn_sgw1 exec bash """
-		ip a a 192.168.1.1/24 dev WAN
-		ip l s WAN up
-
 		ip a a 192.168.0.1/24 dev LAN
 		ip l s LAN up
 
 		sysctl net.ipv4.ip_forward=1
 
-		wg genkey > private
-		wg pubkey < private > public.key
-
-		ip link add wg0 type wireguard
-		ip a a 10.0.0.1/24 dev wg0
-
-		wg set wg0 private-key private
-		wg set wg0 listen-port 51820
-		ip l s wg0 up
-
 		ip r a default via 192.168.1.2
 	"""
 
 	vpn_sgw2 exec bash """
-		ip a a 192.168.1.2/24 dev WAN
-		ip l s WAN up
-
 		ip a a 192.168.2.1/24 dev LAN
 		ip l s LAN up
 
 		sysctl net.ipv4.ip_forward=1
 
-		wg genkey > private
-		wg pubkey < private > public.key
-
-		ip link add wg0 type wireguard
-		ip a a 10.0.0.2/24 dev wg0
-
-		wg set wg0 private-key private
-		wg set wg0 listen-port 51820
-		ip l s wg0 up
-
 		ip r a default via 192.168.1.1
 	"""
 
 	vpn_sgw1 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/sdb /media
-			cp public.key /media/sgw1_public.key
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	vpn_sgw2 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/sdb /media
-			cp public.key /media/sgw2_public.key
-			cp /media/sgw1_public.key ~/
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	vpn_sgw1 {
-		plug flash pubkey_flash;
-		wait timeout 5s
-		exec bash """
-			mount /dev/sdb /media
-			cp /media/sgw2_public.key ~/
-			umount /media
-		"""
-		unplug flash pubkey_flash
-	}
-
-	vpn_sgw1 exec bash "wg set wg0 peer $(cat ~/sgw2_public.key) allowed-ips 10.0.0.2/32,192.168.2.0/24 endpoint 192.168.1.2:51820"
-	vpn_sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips 10.0.0.1/32,192.168.0.0/24 endpoint 192.168.1.1:51820"
-
-	vpn_sgw1 {
-		type "sudo su"; press Enter
-		wait "password for " + $login; type $password; press Enter
 		type "tcpdump -i WAN -w /tmp/captured.pcapng"; press Enter
 	}
-
-	vpn_sgw1 exec bash "ping -c 10 10.0.0.2"
-	vpn_sgw2 exec bash "ping -c 10 10.0.0.1"
 
 	vpn_client1 exec bash """
 		ip a a 192.168.0.2/24 dev LAN
@@ -332,5 +187,3 @@ test routes_misconfigured: vpn_sgw1(wireguard), vpn_sgw2(wireguard),
 		exec bash "python test_pcap.py"
 	}
 }
-
-

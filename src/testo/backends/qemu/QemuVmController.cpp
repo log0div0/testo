@@ -558,8 +558,6 @@ void QemuVmController::install() {
 		set_metadata("vm_nic_count", std::to_string(nic_count));
 		set_metadata("vm_name", name());
 		set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
-
-		domain.start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Performing install")));
 	}
@@ -1173,6 +1171,26 @@ void QemuVmController::shutdown(uint32_t timeout_seconds) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		domain.shutdown(timeout_seconds);
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Stopping vm"));
+	}
+}
+
+void QemuVmController::suspend() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		domain.suspend();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Stopping vm"));
+	}
+}
+
+void QemuVmController::resume() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		domain.resume();
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Stopping vm"));

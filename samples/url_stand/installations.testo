@@ -1,0 +1,241 @@
+
+include "../common.testo"
+
+machine url_client {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "url-client"
+		password: "1111"
+		host_name: "url-client"
+	}
+}
+
+machine url_server {
+	cpus: 1
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic WAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:00:11:00"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "url-server"
+		password: "1111"
+		host_name: "url-server"
+	}
+}
+
+machine url_proxy {
+	cpus: 2
+	ram: 512Mb
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 8Gb
+
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic LAN: {
+		slot: 1
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:22:00"
+		adapter_type: "e1000"
+	}
+
+	nic WAN: {
+		slot: 2
+		attached_to: "internal"
+		network: "net2"
+		mac: "52:54:00:00:22:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "url-proxy"
+		password: "1111"
+		host_name: "url-proxy"
+	}
+}
+
+flash pubkey_flash {
+	fs: "ntfs"
+	size: 32Mb
+}
+
+test install_ubuntu {
+	url_proxy, url_client, url_server install_ubuntu()
+}
+
+test install_negotiator: install_ubuntu {
+	url_proxy, url_client, url_server install_negotiator()
+}
+
+
+test install_pkgs: install_negotiator {
+	url_proxy, url_client, url_server {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+	}
+
+	url_proxy {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y build-essential pkg-config libssl-dev libclamav-dev clamav && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:22:00 LAN"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:22:11 WAN"
+	}
+
+	url_server {
+		exec bash """
+			for i in {1..5}; do command apt-get install -y nginx unzip && break || sleep 15; done
+		"""
+		exec bash "/tmp/rename_net.sh 52:54:00:00:11:00 WAN"
+	}
+
+	url_client exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
+
+	url_proxy, url_client, url_server unplug_nat()
+}
+
+test configure_server: install_pkgs {
+	url_server {
+		exec bash "date --set=\"2018-09-30 10:00:00.000\""
+		copyto "./static-website-example-master.zip" "/opt/website.zip"
+		copyto "./server/default" "/etc/nginx/sites-available/default"
+
+		exec bash """
+			cd /opt
+			unzip website.zip
+		"""
+
+		exec bash """
+			cd /opt
+			openssl genrsa -out rootCA.key 4096
+			openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj \"/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=rootCA.com\"
+			openssl genrsa -out server.key 2048
+			openssl req -new -sha256 -key server.key -nodes -subj \"/C=RU/ST=MSK/L=Moscow/O=MyServer/CN=192.168.1.2\" -out server.csr
+			openssl x509 -req -in server.csr -CA rootCA.crt -CAkey rootCA.crt -CAkey rootCA.key -CAcreateserial -out server.crt -days 500 -sha256
+		"""
+
+		exec bash "systemctl restart nginx"
+
+		exec bash "wget -O /tmp/index.html --no-check-certificate https://127.0.0.1"
+	}
+}
+
+test install_squid: configure_server {
+	url_proxy {
+		exec bash "mkdir /opt/archives"
+
+		copyto "./proxy/archives/libecap-1.0.1.tar.gz" "/opt/archives/libecap-1.0.1.tar.gz"
+		copyto "./proxy/archives/squid-4.7.tar.gz" "/opt/archives/squid-4.7.tar.gz"
+
+		exec bash """
+			cd /opt/archives
+			tar -xf libecap-1.0.1.tar.gz
+			cd libecap-1.0.1
+			./configure
+			make -j2
+			make install
+			ldconfig
+		"""
+
+		exec bash """
+			cd /opt/archives
+			tar -xf squid-4.7.tar.gz
+			cd squid-4.7
+			./configure --enable-ecap --with-openssl
+			make -j2
+			make install
+		"""
+	}
+}
+
+test configure_squid: install_squid {
+	url_proxy {
+		exec bash "date --set=\"2018-09-30 10:00:00.000\""
+		copyto "./proxy/archives/ecap_clamav_adapter-2.0.0.tar.gz" "/opt/archives/ecap_clamav_adapter-2.0.0.tar.gz"
+		copyto "./proxy/squid.conf" "/usr/local/squid/etc/squid.conf"
+		copyto "./proxy/bytecode.cvd" "/var/lib/clamav/bytecode.cvd"
+
+		exec bash "date --set=\"2018-09-30 10:00:00.000\""
+
+		exec bash """
+			chown -R proxy:proxy /usr/local/squid/var
+		"""
+
+		exec bash """
+			cd /opt/archives
+			tar -xf ecap_clamav_adapter-2.0.0.tar.gz
+			cd ecap_clamav_adapter-2.0.0
+			./configure
+			make -j2
+			make install
+		"""
+
+		exec bash """
+			cd /usr/local/squid/etc
+			openssl genrsa -out squidCA.key 4096
+			openssl req -x509 -new -nodes -key squidCA.key -sha256 -days 1024 -out squidCA.crt -subj \"/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=squidCA.com\"
+		"""
+
+		enter_sudo()
+		type "/usr/local/squid/sbin/squid -z"; press Enter;
+		wait "Removing PID file";
+		press LEFTCTRL+C
+
+	}
+}
+
+test configure_net: configure_squid {
+	url_server exec bash """
+		ip a a 192.168.1.2/24 dev WAN
+		ip l s WAN up
+		ip r a default via 192.168.1.1
+	"""
+
+	url_client exec bash """
+		ip a a 192.168.0.2/24 dev LAN
+		ip l s LAN up
+		ip r a default via 192.168.0.1
+	"""
+
+	url_proxy exec bash """
+		ip a a 192.168.0.1/24 dev LAN
+		ip l s LAN up
+		ip a a 192.168.1.1/24 dev WAN
+		ip l s WAN up
+		sysctl net.ipv4.ip_forward=1
+	"""
+}
