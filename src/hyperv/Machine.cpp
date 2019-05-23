@@ -32,7 +32,10 @@ bool Machine::is_running() const {
 
 Display Machine::display() const {
 	try {
-		auto videoHead = services.execQuery("SELECT * FROM Msvm_VideoHead WHERE SystemName=\"" + computerSystem.get("Name").get<std::string>() + "\"").getOne();
+		auto videoHead = services.execQuery(
+			"SELECT * FROM Msvm_VideoHead WHERE SystemName=\"" +
+			computerSystem.get("Name").get<std::string>() +
+			"\" AND EnabledState=2").getOne();
 		return Display(std::move(videoHead), services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -86,7 +89,7 @@ void Machine::pause() {
 }
 
 wmi::WbemClassObject Machine::settings() const {
-	return services.execQuery("SELECT * FROM Msvm_VirtualSystemSettingData WHERE InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"").getOne();
+	return services.getObject("Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"");
 }
 
 }

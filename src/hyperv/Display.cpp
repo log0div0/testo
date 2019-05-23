@@ -10,7 +10,7 @@ Display::Display(wmi::WbemClassObject videoHead_, wmi::WbemServices services_):
 
 std::vector<uint8_t> Display::screenshot() const {
 	try {
-		auto virtualSystemSettingData = services.execQuery("SELECT * FROM Msvm_VirtualSystemSettingData WHERE InstanceID=\"Microsoft:" + videoHead.get("SystemName").get<std::string>() + "\"").getOne();
+		auto virtualSystemSettingData = services.getObject("Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + videoHead.get("SystemName").get<std::string>() + "\"");
 		return services.call("Msvm_VirtualSystemManagementService", "GetVirtualSystemThumbnailImage")
 			.with("HeightPixels", videoHead.get("CurrentVerticalResolution"))
 			.with("WidthPixels", videoHead.get("CurrentHorizontalResolution"))

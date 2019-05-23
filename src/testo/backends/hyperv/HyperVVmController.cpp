@@ -14,6 +14,9 @@ void HyperVVmController::install() {
 	try {
 		for (auto& machine: connect.machines()) {
 			if (machine.name() == name()) {
+				if (machine.is_running()) {
+					machine.stop();
+				}
 				machine.destroy();
 			}
 		}
