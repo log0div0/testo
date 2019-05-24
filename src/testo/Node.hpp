@@ -625,7 +625,7 @@ struct MacroCall: public Node {
 };
 
 struct Test: public Node {
-	Test(const Token& test, const Token& name,
+	Test(const Token& test, const Token& name, const Token& no_cache,
 		const std::vector<Token>& parents_tokens,
 		std::shared_ptr<CmdBlock> cmd_block):
 		Node(test),

@@ -185,6 +185,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		//First we need to get all the vms in the correct state
 		//vms from parents - rollback to parent snapshot (we can be sure it is present and have valid cksum)
 		//new vms - install
+		//Also now we need to delete corresponding snapshots if they exist
 
 		for (auto parent: test->parents) {
 			for (auto vm: reg.get_all_vms(parent)) {
@@ -194,12 +195,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 					print("Restoring snapshot ", parent->name.value(), " for vm ", vm->name());
 					vm->rollback(parent->name.value());
 				}
-			}
-		}
-
-		for (auto parent: test->parents) {
-			for (auto vm: reg.get_all_vms(parent)) {
-				vm->resume();
 			}
 		}
 
@@ -218,6 +213,18 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			if (is_new) {
 				print("Creating machine ", vm->name());
 				vm->install();
+			}
+		}
+
+		for (auto vm: reg.get_all_vms(test)) {
+			if (vm->has_snapshot(test->name.value())) {
+				vm->delete_snapshot_with_children(test->name.value());
+			}
+		}
+
+		for (auto parent: test->parents) {
+			for (auto vm: reg.get_all_vms(parent)) {
+				vm->resume();
 			}
 		}
 

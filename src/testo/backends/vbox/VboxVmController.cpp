@@ -903,6 +903,10 @@ bool VboxVmController::has_snapshot(const std::string& snapshot) {
 	}
 }
 
+void VboxVmController::delete_snapshot_with_children(const std::string& snapshot) {
+	throw std::runtime_error("Implement me");
+}
+
 bool VboxVmController::is_defined() const {
 	std::vector<vbox::Machine> machines = virtual_box.machines();
 	for (auto& machine: machines) {
