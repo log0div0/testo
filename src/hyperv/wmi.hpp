@@ -86,6 +86,9 @@ struct Variant: VARIANT {
 	Variant(const std::string& str) {
 		InitVariantFromString(bstr_t(str.c_str()), this);
 	}
+	Variant(const std::vector<uint8_t>& buffer) {
+		InitVariantFromBuffer(buffer.data(), buffer.size(), this);
+	}
 	Variant(const std::vector<std::string>& strs) {
 		std::vector<bstr_t> bstrs;
 		bstrs.reserve(strs.size());

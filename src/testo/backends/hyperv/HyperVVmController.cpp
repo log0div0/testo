@@ -4,6 +4,94 @@
 
 HyperVVmController::HyperVVmController(const nlohmann::json& config_): VmController(config_) {
 	std::cout << "HyperVVmController " << config.dump(4) << std::endl;
+
+	scancodes.insert({
+		{"ESC", 1},
+		{"ONE", 2},
+		{"TWO", 3},
+		{"THREE", 4},
+		{"FOUR", 5},
+		{"FIVE", 6},
+		{"SIX", 7},
+		{"SEVEN", 8},
+		{"EIGHT", 9},
+		{"NINE", 10},
+		{"ZERO", 11},
+		{"MINUS", 12},
+		{"EQUALSIGN", 13},
+		{"BACKSPACE", 14},
+		{"TAB", 15},
+		{"Q", 16},
+		{"W", 17},
+		{"E", 18},
+		{"R", 19},
+		{"T", 20},
+		{"Y", 21},
+		{"U", 22},
+		{"I", 23},
+		{"O", 24},
+		{"P", 25},
+		{"LEFTBRACE", 26},
+		{"RIGHTBRACE", 27},
+		{"ENTER", 28},
+		{"LEFTCTRL", 29},
+		{"A", 30},
+		{"S", 31},
+		{"D", 32},
+		{"F", 33},
+		{"G", 34},
+		{"H", 35},
+		{"J", 36},
+		{"K", 37},
+		{"L", 38},
+		{"SEMICOLON", 39},
+		{"APOSTROPHE", 40},
+		{"GRAVE", 41},
+		{"LEFTSHIFT", 42},
+		{"BACKSLASH", 43},
+		{"Z", 44},
+		{"X", 45},
+		{"C", 46},
+		{"V", 47},
+		{"B", 48},
+		{"N", 49},
+		{"M", 50},
+		{"COMMA", 51},
+		{"DOT", 52},
+		{"SLASH", 53},
+		{"RIGHTSHIFT", 54},
+		{"LEFTALT", 56},
+		{"SPACE", 57},
+		{"CAPSLOCK", 58},
+		{"F1", 59},
+		{"F2", 60},
+		{"F3", 61},
+		{"F4", 62},
+		{"F5", 63},
+		{"F6", 64},
+		{"F7", 65},
+		{"F8", 66},
+		{"F9", 67},
+		{"F10", 68},
+		{"F11", 87},
+		{"F12", 88},
+		{"NUMLOCK", 69},
+		{"SCROLLLOCK", 70},
+		{"RIGHTCTRL", 97},
+		{"RIGHTALT", 100},
+		{"HOME", 102},
+		{"UP", 103},
+		{"PAGEUP", 104},
+		{"LEFT", 105},
+		{"RIGHT", 106},
+		{"END", 107},
+		{"DOWN", 108},
+		{"PAGEDOWN", 109},
+		{"INSERT", 110},
+		{"DELETE", 111},
+		{"SCROLLUP", 177},
+		{"SCROLLDOWN", 178},
+	});
 }
 
 HyperVVmController::~HyperVVmController() {
@@ -66,9 +154,20 @@ std::string HyperVVmController::get_snapshot_cksum(const std::string& snapshot) 
 void HyperVVmController::rollback(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
 void HyperVVmController::press(const std::vector<std::string>& buttons) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		std::vector<uint8_t> codes;
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+			codes.push_back(scancodes.at(button));
+		}
+		connect.machine(name()).keyboard().typeScancodes(codes);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
+
 bool HyperVVmController::is_nic_plugged(const std::string& nic) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -129,9 +228,6 @@ void HyperVVmController::resume() {
 }
 
 void HyperVVmController::shutdown(uint32_t timeout_seconds) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
-void HyperVVmController::type(const std::string& text) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

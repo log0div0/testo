@@ -3,6 +3,7 @@
 
 #include "Display.hpp"
 #include "StorageController.hpp"
+#include "Keyboard.hpp"
 
 namespace hyperv {
 
@@ -24,6 +25,7 @@ struct Machine {
 
 	std::vector<StorageController> ideControllers() const;
 	std::vector<StorageController> controllers(const std::string& subtype) const;
+	Keyboard keyboard() const;
 
 	wmi::WbemClassObject computerSystem;
 	wmi::WbemClassObject virtualSystemSettingData;

@@ -95,16 +95,32 @@ std::vector<StorageController> Machine::ideControllers() const {
 }
 
 std::vector<StorageController> Machine::controllers(const std::string& subtype) const {
-	std::vector<StorageController> result;
-	auto objects = services.execQuery(
-			"SELECT * FROM Msvm_ResourceAllocationSettingData "
-			"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\" "
-			"AND ResourceSubType=\"" + subtype + "\""
-		).getAll();
-	for (auto& object: objects) {
-		result.push_back(StorageController(std::move(object), virtualSystemSettingData, services));
+	try {
+		std::vector<StorageController> result;
+		auto objects = services.execQuery(
+				"SELECT * FROM Msvm_ResourceAllocationSettingData "
+				"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\" "
+				"AND ResourceSubType=\"" + subtype + "\""
+			).getAll();
+		for (auto& object: objects) {
+			result.push_back(StorageController(std::move(object), virtualSystemSettingData, services));
+		}
+		return result;
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
-	return result;
+}
+
+Keyboard Machine::keyboard() const {
+	try {
+		auto keyboard = services.execQuery(
+			"SELECT * FROM Msvm_Keyboard "
+			"WHERE SystemName=\"" + computerSystem.get("Name").get<std::string>() + "\""
+		).getOne();
+		return Keyboard(std::move(keyboard), virtualSystemSettingData, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 }

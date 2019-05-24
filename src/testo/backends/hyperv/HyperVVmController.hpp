@@ -30,7 +30,6 @@ struct HyperVVmController: VmController {
 	void suspend() override;
 	void resume() override;
 	void shutdown(uint32_t timeout_seconds) override;
-	void type(const std::string& text) override;
 	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
@@ -50,4 +49,5 @@ struct HyperVVmController: VmController {
 
 private:
 	hyperv::Connect connect;
+	std::unordered_map<std::string, uint8_t> scancodes;
 };
