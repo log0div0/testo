@@ -160,7 +160,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		// - has valid config and dvd cksum
 		// - has snapshots with corresponding name and valid cksums
 
-		bool is_cached = true;
+		bool is_cached = test->is_cachable(); //we try to enable cache only if we have the setting
 
 		for (auto vm: reg.get_all_vms(test)) {
 			if (vm->is_defined() &&
@@ -188,8 +188,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		for (auto parent: test->parents) {
 			for (auto vm: reg.get_all_vms(parent)) {
-				print("Restoring snapshot ", parent->name.value(), " for vm ", vm->name());
-				vm->rollback(parent->name.value());
+				//Now our parent could actually not have a snapshot - if it's not cacheble
+				//But it's paused anyway
+				if (vm->has_snapshot(parent->name.value())) {
+					print("Restoring snapshot ", parent->name.value(), " for vm ", vm->name());
+					vm->rollback(parent->name.value());
+				}
 			}
 		}
 
@@ -226,12 +230,13 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			vm->suspend();
 		}
 
-		for (auto vm: reg.get_all_vms(test)) {
-			print("Taking snapshot ", test->name.value(), " for vm ", vm->name());
-			vm->make_snapshot(test->name.value(), test_cksum(test));
+		if (test->is_cachable()) {
+			for (auto vm: reg.get_all_vms(test)) {
+				print("Taking snapshot ", test->name.value(), " for vm ", vm->name());
+				vm->make_snapshot(test->name.value(), test_cksum(test));
+			}
+			stop_all_vms(test);
 		}
-
-		stop_all_vms(test);
 
 		current_progress += progress_step;
 		print("Test ", test->name.value(), " PASSED");

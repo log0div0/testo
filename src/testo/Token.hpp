@@ -25,6 +25,7 @@ struct Token {
 		timeout,
 		for_,
 		test,
+		no_cache,
 		machine,
 		flash,
 		macro,
@@ -135,6 +136,8 @@ struct Token {
 			return "FOR";
 		case test:
 			return "TEST";
+		case no_cache:
+			return "NO_CACHE";
 		case machine:
 			return "MACHINE";
 		case flash:
