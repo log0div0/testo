@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Display.hpp"
+#include "StorageController.hpp"
 
 namespace hyperv {
 
@@ -21,16 +22,12 @@ struct Machine {
 	void stop();
 	void pause();
 
-	void addDiskDrive();
-	void addDVDDrive();
+	std::vector<StorageController> ideControllers() const;
+	std::vector<StorageController> controllers(const std::string& subtype) const;
 
 	wmi::WbemClassObject computerSystem;
+	wmi::WbemClassObject virtualSystemSettingData;
 	wmi::WbemServices services;
-
-private:
-	std::string settings_path() const;
-	wmi::WbemClassObject settings() const;
-	void addDevice(const std::string& type);
 };
 
 }

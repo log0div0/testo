@@ -3,14 +3,13 @@
 
 namespace hyperv {
 
-Display::Display(wmi::WbemClassObject videoHead_, wmi::WbemServices services_):
-	videoHead(std::move(videoHead_)), services(std::move(services_))
+Display::Display(wmi::WbemClassObject videoHead_, wmi::WbemClassObject virtualSystemSettingData_, wmi::WbemServices services_):
+	videoHead(std::move(videoHead_)), virtualSystemSettingData(std::move(virtualSystemSettingData_)), services(std::move(services_))
 {
 }
 
 std::vector<uint8_t> Display::screenshot() const {
 	try {
-		auto virtualSystemSettingData = services.getObject("Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + videoHead.get("SystemName").get<std::string>() + "\"");
 		return services.call("Msvm_VirtualSystemManagementService", "GetVirtualSystemThumbnailImage")
 			.with("HeightPixels", videoHead.get("CurrentVerticalResolution"))
 			.with("WidthPixels", videoHead.get("CurrentHorizontalResolution"))

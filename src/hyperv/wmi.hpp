@@ -77,6 +77,9 @@ struct Variant: VARIANT {
 	Variant() {
 		VariantInit(this);
 	}
+	Variant(bool value) {
+		InitVariantFromBoolean(value, this);
+	}
 	Variant(const char* str) {
 		InitVariantFromString(bstr_t(str), this);
 	}
@@ -506,6 +509,20 @@ struct WbemServices: Object<IWbemServices> {
 	}
 
 	Call call(const std::string& class_name, const std::string& method_name) const;
+
+	wmi::WbemClassObject getResourceTemplate(const std::string& type, const std::string& subtype) {
+		try {
+			return execQuery(
+				"SELECT * FROM " + type + " "
+				"WHERE InstanceID LIKE \"%Default\" "
+				"AND ResourceSubType=\"" + subtype + "\""
+			).getOne().clone();
+		} catch (const std::exception&) {
+			throw_with_nested(std::runtime_error(__FUNCSIG__));
+		}
+	}
+
+	wmi::WbemClassObject addResource(const wmi::WbemClassObject& target, const wmi::WbemClassObject& resourceTemplate);
 };
 
 struct Call {
@@ -591,6 +608,19 @@ private:
 
 inline Call WbemServices::call(const std::string& class_name, const std::string& method_name) const {
 	return Call(*this, class_name, method_name);
+}
+
+inline wmi::WbemClassObject WbemServices::addResource(const wmi::WbemClassObject& target, const wmi::WbemClassObject& resourceTemplate) {
+	try {
+		auto result = call("Msvm_VirtualSystemManagementService", "AddResourceSettings")
+				.with("AffectedConfiguration", target.path())
+				.with("ResourceSettings", std::vector<wmi::WbemClassObject>{resourceTemplate})
+				.exec();
+		std::vector<std::string> refs = result.get("ResultingResourceSettings");
+		return getObject(refs.at(0));
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 struct WbemLocator: Object<IWbemLocator> {

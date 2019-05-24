@@ -1,5 +1,6 @@
 
 #include "Machine.hpp"
+#include <iostream>
 
 namespace hyperv {
 
@@ -9,6 +10,7 @@ Machine::Machine(wmi::WbemClassObject computerSystem_,
 	services(std::move(services_))
 {
 	try {
+		virtualSystemSettingData = services.getObject("Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"");
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -36,7 +38,7 @@ Display Machine::display() const {
 			"SELECT * FROM Msvm_VideoHead WHERE SystemName=\"" +
 			computerSystem.get("Name").get<std::string>() +
 			"\" AND EnabledState=2").getOne();
-		return Display(std::move(videoHead), services);
+		return Display(std::move(videoHead), virtualSystemSettingData, services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -55,7 +57,7 @@ void Machine::destroy() {
 void Machine::setNotes(const std::vector<std::string>& notes) {
 	try {
 		services.call("Msvm_VirtualSystemManagementService", "ModifySystemSettings")
-			.with("SystemSettings", settings().put("Notes", notes))
+			.with("SystemSettings", virtualSystemSettingData.put("Notes", notes))
 			.exec();
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -63,7 +65,7 @@ void Machine::setNotes(const std::vector<std::string>& notes) {
 }
 
 std::vector<std::string> Machine::notes() const {
-	return settings().get("Notes");
+	return virtualSystemSettingData.get("Notes");
 }
 
 void Machine::requestStateChange(uint16_t requestedState) {
@@ -88,32 +90,21 @@ void Machine::pause() {
 	requestStateChange(32776);
 }
 
-void Machine::addDiskDrive() {
-	addDevice("Microsoft:Hyper-V:Synthetic Disk Drive");
+std::vector<StorageController> Machine::ideControllers() const {
+	return controllers("Microsoft:Hyper-V:Emulated IDE Controller");
 }
 
-void Machine::addDVDDrive() {
-	addDevice("Microsoft:Hyper-V:Synthetic DVD Drive");
-}
-
-std::string Machine::settings_path() const {
-	return "Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"";
-}
-
-wmi::WbemClassObject Machine::settings() const {
-	return services.getObject(settings_path());
-}
-
-void Machine::addDevice(const std::string& type) {
-	auto device = services.execQuery(
-		"SELECT * FROM Msvm_ResourceAllocationSettingData "
-		"WHERE InstanceID LIKE \"%Default\" "
-		"AND ResourceSubType=\"" + type + "\""
-	).getOne().clone();
-	services.call("Msvm_VirtualSystemManagementService", "AddResourceSettings")
-			.with("AffectedConfiguration", settings_path())
-			.with("ResourceSettings", std::vector<wmi::WbemClassObject>{device})
-			.exec();
+std::vector<StorageController> Machine::controllers(const std::string& subtype) const {
+	std::vector<StorageController> result;
+	auto objects = services.execQuery(
+			"SELECT * FROM Msvm_ResourceAllocationSettingData "
+			"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\" "
+			"AND ResourceSubType=\"" + subtype + "\""
+		).getAll();
+	for (auto& object: objects) {
+		result.push_back(StorageController(std::move(object), virtualSystemSettingData, services));
+	}
+	return result;
 }
 
 }

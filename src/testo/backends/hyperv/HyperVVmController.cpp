@@ -30,8 +30,9 @@ void HyperVVmController::install() {
 		metadata["dvd_signature"] = "";
 		machine.setNotes({metadata.dump(4)});
 
-		machine.addDVDDrive();
-		machine.addDiskDrive();
+		auto controllers = machine.ideControllers();
+		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
+		// controllers.at(1).addDiskDrive(0);
 
 		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 	} catch (const std::exception& error) {
