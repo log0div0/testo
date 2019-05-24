@@ -3,6 +3,7 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
+#include "StinkingPileOfShit.hpp"
 #include <vector>
 
 struct VisitorInterpreter {
@@ -166,4 +167,6 @@ private:
 
 	std::vector<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
+
+	StinkingPileOfShit shit;
 };
