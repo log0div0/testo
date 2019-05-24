@@ -28,7 +28,7 @@ struct Machine {
 	std::vector<StorageController> controllers(const std::string& subtype) const;
 	Keyboard keyboard() const;
 
-	NIC addNIC(const std::string& name);
+	NIC addNIC(const std::string& name, bool legacy = true);
 
 	wmi::WbemClassObject computerSystem;
 	wmi::WbemClassObject virtualSystemSettingData;

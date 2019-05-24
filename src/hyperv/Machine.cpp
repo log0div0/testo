@@ -123,8 +123,10 @@ Keyboard Machine::keyboard() const {
 	}
 }
 
-NIC Machine::addNIC(const std::string& name) {
-	auto nicTemplate = services.getResourceTemplate("Msvm_SyntheticEthernetPortSettingData", "Microsoft:Hyper-V:Synthetic Ethernet Port");
+NIC Machine::addNIC(const std::string& name, bool legacy) {
+	auto nicTemplate = legacy ?
+		services.getResourceTemplate("Msvm_EmulatedEthernetPortSettingData", "Microsoft:Hyper-V:Emulated Ethernet Port") :
+		services.getResourceTemplate("Msvm_SyntheticEthernetPortSettingData", "Microsoft:Hyper-V:Synthetic Ethernet Port");
 	nicTemplate.put("ElementName", name);
 	auto nic = services.addResource(virtualSystemSettingData, nicTemplate);
 	return NIC(nic, virtualSystemSettingData, services);

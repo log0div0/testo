@@ -12,7 +12,7 @@ void Keyboard::typeScancodes(const std::vector<uint8_t>& codes) {
 	try {
 		services.call("Msvm_Keyboard", "TypeScancodes")
 			.with("Scancodes", codes)
-			.exec();
+			.exec(keyboard);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}

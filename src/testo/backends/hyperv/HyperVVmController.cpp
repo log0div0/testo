@@ -135,6 +135,8 @@ void HyperVVmController::install() {
 				if (nic_cfg.count("mac")) {
 					nic.setMAC(nic_cfg.at("mac"));
 				}
+				auto bridge = connect.bridge(nic_cfg.at("network"));
+				nic.connect(bridge);
 			}
 		}
 
