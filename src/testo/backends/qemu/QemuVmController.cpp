@@ -410,7 +410,7 @@ void QemuVmController::install() {
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
 				<name>{}</name>
-				<memory unit='KiB'>2097152</memory>
+				<memory unit='MiB'>{}</memory>
 				<vcpu placement='static'>{}</vcpu>
 				<resource>
 					<partition>/machine</partition>
@@ -501,7 +501,7 @@ void QemuVmController::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
+		)", name(), config.at("ram").get<uint32_t>(),  config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
 
 		uint32_t nic_count = 0;
 
