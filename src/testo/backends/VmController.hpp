@@ -31,7 +31,6 @@ struct VmController {
 	virtual void shutdown(uint32_t timeout_seconds) = 0;
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
-	virtual void type(const std::string& text) = 0;
 	virtual stb::Image screenshot() = 0;
 	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) = 0;
 

@@ -32,7 +32,6 @@ struct VboxVmController: public VmController {
 	void shutdown(uint32_t timeout_seconds) override;
 	void suspend() override;
 	void resume() override;
-	void type(const std::string& text) override;
 	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
@@ -62,7 +61,6 @@ private:
 	vbox::VirtualBox virtual_box;
 	vbox::Session start_session;
 	vbox::Session work_session;
-	std::unordered_map<char, std::vector<std::string>> charmap;
 
 	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
 

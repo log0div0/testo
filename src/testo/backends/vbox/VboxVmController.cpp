@@ -82,119 +82,6 @@ VboxVmController::VboxVmController(const nlohmann::json& config_): VmController(
 	if (!config.count("os_type")) {
 		throw std::runtime_error("Constructing VboxVmController error: field OSType is not specified");
 	}
-
-	charmap.insert({
-		{'0', {"ZERO"}},
-		{'1', {"ONE"}},
-		{'2', {"TWO"}},
-		{'3', {"THREE"}},
-		{'4', {"FOUR"}},
-		{'5', {"FIVE"}},
-		{'6', {"SIX"}},
-		{'7', {"SEVEN"}},
-		{'8', {"EIGHT"}},
-		{'9', {"NINE"}},
-
-		{')', {"LEFTSHIFT", "ZERO"}},
-		{'!', {"LEFTSHIFT", "ONE"}},
-		{'@', {"LEFTSHIFT", "TWO"}},
-		{'#', {"LEFTSHIFT", "THREE"}},
-		{'$', {"LEFTSHIFT", "FOUR"}},
-		{'%', {"LEFTSHIFT", "FIVE"}},
-		{'^', {"LEFTSHIFT", "SIX"}},
-		{'&', {"LEFTSHIFT", "SEVEN"}},
-		{'*', {"LEFTSHIFT", "EIGHT"}},
-		{'(', {"LEFTSHIFT", "NINE"}},
-
-		{'a', {"A"}},
-		{'b', {"B"}},
-		{'c', {"C"}},
-		{'d', {"D"}},
-		{'e', {"E"}},
-		{'f', {"F"}},
-		{'g', {"G"}},
-		{'h', {"H"}},
-		{'i', {"I"}},
-		{'j', {"J"}},
-		{'k', {"K"}},
-		{'l', {"L"}},
-		{'m', {"M"}},
-		{'n', {"N"}},
-		{'o', {"O"}},
-		{'p', {"P"}},
-		{'q', {"Q"}},
-		{'r', {"R"}},
-		{'s', {"S"}},
-		{'t', {"T"}},
-		{'u', {"U"}},
-		{'v', {"V"}},
-		{'w', {"W"}},
-		{'x', {"X"}},
-		{'y', {"Y"}},
-		{'z', {"Z"}},
-
-		{'A', {"LEFTSHIFT", "A"}},
-		{'B', {"LEFTSHIFT", "B"}},
-		{'C', {"LEFTSHIFT", "C"}},
-		{'D', {"LEFTSHIFT", "D"}},
-		{'E', {"LEFTSHIFT", "E"}},
-		{'F', {"LEFTSHIFT", "F"}},
-		{'G', {"LEFTSHIFT", "G"}},
-		{'H', {"LEFTSHIFT", "H"}},
-		{'I', {"LEFTSHIFT", "I"}},
-		{'J', {"LEFTSHIFT", "J"}},
-		{'K', {"LEFTSHIFT", "K"}},
-		{'L', {"LEFTSHIFT", "L"}},
-		{'M', {"LEFTSHIFT", "M"}},
-		{'N', {"LEFTSHIFT", "N"}},
-		{'O', {"LEFTSHIFT", "O"}},
-		{'P', {"LEFTSHIFT", "P"}},
-		{'Q', {"LEFTSHIFT", "Q"}},
-		{'R', {"LEFTSHIFT", "R"}},
-		{'S', {"LEFTSHIFT", "S"}},
-		{'T', {"LEFTSHIFT", "T"}},
-		{'U', {"LEFTSHIFT", "U"}},
-		{'V', {"LEFTSHIFT", "V"}},
-		{'W', {"LEFTSHIFT", "W"}},
-		{'X', {"LEFTSHIFT", "X"}},
-		{'Y', {"LEFTSHIFT", "Y"}},
-		{'Z', {"LEFTSHIFT", "Z"}},
-
-		{'-', {"MINUS"}},
-		{'_', {"LEFTSHIFT", "MINUS"}},
-
-		{'=', {"EQUAL"}},
-		{'+', {"LEFTSHIFT", "EQUAL"}},
-
-		{'\'', {"APOSTROPHE"}},
-		{'\"', {"LEFTSHIFT", "APOSTROPHE"}},
-
-		{'\\', {"BACKSLASH"}},
-		{'|', {"LEFTSHIFT", "BACKSLASH"}},
-
-		{',', {"COMMA"}},
-		{'<', {"LEFTSHIFT", "COMMA"}},
-
-		{'.', {"DOT"}},
-		{'>', {"LEFTSHIFT", "DOT"}},
-
-		{'/', {"SLASH"}},
-		{'?', {"LEFTSHIFT", "SLASH"}},
-
-		{';', {"SEMICOLON"}},
-		{':', {"LEFTSHIFT", "SEMICOLON"}},
-
-		{'[', {"LEFTBRACE"}},
-		{'{', {"LEFTSHIFT", "LEFTBRACE"}},
-
-		{']', {"RIGHTBRACE"}},
-		{'}', {"LEFTSHIFT", "RIGHTBRACE"}},
-
-		{'`', {"GRAVE"}},
-		{'~', {"LEFTSHIFT", "GRAVE"}},
-
-		{' ', {"SPACE"}},
-	});
 }
 
 void VboxVmController::remove_if_exists() {
@@ -509,8 +396,7 @@ void VboxVmController::press(const std::vector<std::string>& buttons) {
 		auto machine = virtual_box.find_machine(name());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		auto keyboard = work_session.console().keyboard();
-		keyboard.putScancodes(buttons);
-		keyboard.releaseKeys(buttons);
+		throw std::runtime_error("Implement me!");
 	} catch (const std::exception& error) {
 		std::cout << "Pressing button on vm " << name() << ": " << error << std::endl;
 	}
@@ -747,27 +633,6 @@ void VboxVmController::suspend() {
 
 void VboxVmController::resume() {
 	throw std::runtime_error("Implement me");
-}
-
-void VboxVmController::type(const std::string& text) {
-	try {
-		auto machine = virtual_box.find_machine(name());
-		vbox::Lock lock(machine, work_session, LockType_Shared);
-		auto keyboard = work_session.console().keyboard();
-
-		for (auto c: text) {
-			auto buttons = charmap.find(c);
-			if (buttons == charmap.end()) {
-				throw std::runtime_error("Unknown character to type");
-			}
-
-			keyboard.putScancodes(buttons->second);
-			keyboard.releaseKeys(buttons->second);
-			std::this_thread::sleep_for(std::chrono::milliseconds(20)); //Fuck, it's even in vboxmanage sources
-		}
-	} catch (const std::exception& error) {
-		std::cout << "Typing on vm " << name() << ": " << error << std::endl;
-	}
 }
 
 stb::Image VboxVmController::screenshot() {

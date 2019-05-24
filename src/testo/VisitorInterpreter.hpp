@@ -169,4 +169,6 @@ private:
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	StinkingPileOfShit shit;
+	std::unordered_map<char, std::vector<std::string>> charmap;
+
 };
