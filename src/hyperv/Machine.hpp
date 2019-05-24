@@ -4,6 +4,7 @@
 #include "Display.hpp"
 #include "StorageController.hpp"
 #include "Keyboard.hpp"
+#include "NIC.hpp"
 
 namespace hyperv {
 
@@ -26,6 +27,8 @@ struct Machine {
 	std::vector<StorageController> ideControllers() const;
 	std::vector<StorageController> controllers(const std::string& subtype) const;
 	Keyboard keyboard() const;
+
+	NIC addNIC(const std::string& name);
 
 	wmi::WbemClassObject computerSystem;
 	wmi::WbemClassObject virtualSystemSettingData;

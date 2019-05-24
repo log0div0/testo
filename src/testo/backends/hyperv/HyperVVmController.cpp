@@ -122,6 +122,23 @@ void HyperVVmController::install() {
 		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
 		// controllers.at(1).addDiskDrive(0);
 
+		if (config.count("nic")) {
+			for (auto& nic_cfg: config.at("nic")) {
+				auto bridges = connect.bridges();
+				auto it = std::find_if(bridges.begin(), bridges.end(), [&](auto bridge) {
+					return bridge.name() == nic_cfg.at("network");
+				});
+				if (it == bridges.end()) {
+					connect.defineBridge(nic_cfg.at("network"));
+				}
+				auto nic = machine.addNIC(nic_cfg.at("name"));
+				if (nic_cfg.count("mac")) {
+					nic.setMAC(nic_cfg.at("mac"));
+				}
+			}
+		}
+
+
 		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));

@@ -526,6 +526,7 @@ struct WbemServices: Object<IWbemServices> {
 	}
 
 	wmi::WbemClassObject addResource(const wmi::WbemClassObject& target, const wmi::WbemClassObject& resourceTemplate);
+	wmi::WbemClassObject modifyResource(const wmi::WbemClassObject& resource);
 };
 
 struct Call {
@@ -618,6 +619,18 @@ inline wmi::WbemClassObject WbemServices::addResource(const wmi::WbemClassObject
 		auto result = call("Msvm_VirtualSystemManagementService", "AddResourceSettings")
 				.with("AffectedConfiguration", target.path())
 				.with("ResourceSettings", std::vector<wmi::WbemClassObject>{resourceTemplate})
+				.exec();
+		std::vector<std::string> refs = result.get("ResultingResourceSettings");
+		return getObject(refs.at(0));
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+inline wmi::WbemClassObject WbemServices::modifyResource(const wmi::WbemClassObject& resource) {
+	try {
+		auto result = call("Msvm_VirtualSystemManagementService", "ModifyResourceSettings")
+				.with("ResourceSettings", std::vector<wmi::WbemClassObject>{resource})
 				.exec();
 		std::vector<std::string> refs = result.get("ResultingResourceSettings");
 		return getObject(refs.at(0));
