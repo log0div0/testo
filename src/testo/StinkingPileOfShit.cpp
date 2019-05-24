@@ -23,6 +23,9 @@ StinkingPileOfShit::StinkingPileOfShit() {
 }
 
 bool StinkingPileOfShit::stink_even_stronger(stb::Image& image, const std::string& text) {
+	if (!image._data) {
+		return false;
+	}
 	if (network) {
 		if ((network->w != image.width) ||
 			(network->h != image.height) ||

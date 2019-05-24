@@ -10,7 +10,7 @@
 #include <stb_image.h>
 
 QemuVmController::QemuVmController(const nlohmann::json& config_): VmController(config_),
-	qemu_connect(vir::connect_open("qemu:///system")), screenshot_buffer(10'000'000)
+	qemu_connect(vir::connect_open("qemu:///system"))
 {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing QemuVmController error: field NAME is not specified");
@@ -1213,32 +1213,21 @@ void QemuVmController::type(const std::string& text) {
 	}
 }
 
-bool QemuVmController::wait(const std::string& text, const nlohmann::json& params, const std::string& time) {
-
-	auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(time_to_seconds(time));
-
-	while (std::chrono::system_clock::now() < deadline) {
-		if (check(text, params)) {
-			return true;
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
-
-	return false;
-}
-
-bool QemuVmController::check(const std::string& text, const nlohmann::json& params) {
+stb::Image QemuVmController::screenshot() {
 	auto domain = qemu_connect.domain_lookup_by_name(name());
 	auto stream = qemu_connect.new_stream();
 	auto mime = domain.screenshot(stream);
+
+	if (!screenshot_buffer.size()) {
+		screenshot_buffer.resize(10'000'000);
+	}
 
 	size_t bytes = stream.recv_all(screenshot_buffer.data(), screenshot_buffer.size());
 
 	stream.finish();
 
 	stb::Image screenshot(screenshot_buffer.data(), bytes);
-
-	return shit.stink_even_stronger(screenshot, text);
+	return screenshot;
 }
 
 int QemuVmController::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {

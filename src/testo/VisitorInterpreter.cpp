@@ -361,9 +361,18 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::share
 		}
 
 		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
-		if (!vm->wait(text, params, wait_for)) {
-			throw std::runtime_error("Wait timeout");
+
+		auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(time_to_seconds(wait_for));
+
+		while (std::chrono::system_clock::now() < deadline) {
+			auto screenshot = vm->screenshot();
+			if (shit.stink_even_stronger(screenshot, text)) {
+				return;
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
+
+		throw std::runtime_error("Wait timeout");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(wait, vm));
 	}
@@ -874,7 +883,8 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vm, std::shar
 
 		print_str += std::string(" on vm ") + vm->name();
 		print(print_str);
-		return vm->check(text, params);
+		auto screenshot = vm->screenshot();
+		return shit.stink_even_stronger(screenshot, text);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vm));
 	}
