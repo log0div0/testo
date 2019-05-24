@@ -625,11 +625,12 @@ struct MacroCall: public Node {
 };
 
 struct Test: public Node {
-	Test(const Token& test, const Token& name,
+	Test(const Token& test, const Token& name, const Token& no_cache,
 		const std::vector<Token>& parents_tokens,
 		std::shared_ptr<CmdBlock> cmd_block):
 		Node(test),
 		name(name),
+		no_cache(no_cache),
 		parents_tokens(parents_tokens),
 		cmd_block(cmd_block) {}
 
@@ -646,7 +647,12 @@ struct Test: public Node {
 		return result; //for now
 	}
 
+	bool is_cachable() const {
+		return !no_cache;
+	}
+
 	Token name;
+	Token no_cache;
 	std::vector<Token> parents_tokens;
 	std::vector<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;

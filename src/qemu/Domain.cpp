@@ -40,11 +40,21 @@ uint32_t Domain::id() const {
 }
 
 bool Domain::is_active() const {
-	int result = virDomainIsActive(handle);
+	int current_state;
+	int result = virDomainGetState(handle, &current_state, nullptr, 0);
 	if (result < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
-	return result;
+	return current_state == (int)VIR_DOMAIN_RUNNING;
+}
+
+bool Domain::is_suspended() const {
+	int current_state;
+	int result = virDomainGetState(handle, &current_state, nullptr, 0);
+	if (result < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return current_state == (int)VIR_DOMAIN_PAUSED;
 }
 
 void Domain::start() {

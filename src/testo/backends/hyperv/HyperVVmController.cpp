@@ -191,6 +191,9 @@ bool HyperVVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> 
 bool HyperVVmController::has_snapshot(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+void HyperVVmController::delete_snapshot_with_children(const std::string& snapshot) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
 std::vector<std::string> HyperVVmController::keys() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -217,6 +220,10 @@ bool HyperVVmController::is_running() {
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
+}
+
+bool HyperVVmController::is_suspended() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
 bool HyperVVmController::is_additions_installed() {
