@@ -1172,7 +1172,7 @@ void QemuVmController::shutdown(uint32_t timeout_seconds) {
 		domain.shutdown(timeout_seconds);
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Stopping vm"));
+		std::throw_with_nested(std::runtime_error("Shutdowning vm"));
 	}
 }
 
@@ -1182,7 +1182,7 @@ void QemuVmController::suspend() {
 		domain.suspend();
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Stopping vm"));
+		std::throw_with_nested(std::runtime_error("Suspending vm"));
 	}
 }
 
@@ -1192,7 +1192,7 @@ void QemuVmController::resume() {
 		domain.resume();
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Stopping vm"));
+		std::throw_with_nested(std::runtime_error("Resuming vm"));
 	}
 }
 
@@ -1298,6 +1298,17 @@ bool QemuVmController::is_running() {
 		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
 	}
 }
+
+bool QemuVmController::is_suspended() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		return domain.is_suspended();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
+	}
+}
+
 
 bool QemuVmController::is_additions_installed() {
 	try {

@@ -244,7 +244,7 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 
 	newline_list();
 	auto commands = command_block();
-	auto stmt = std::shared_ptr<Test>(new Test(test, no_cache, name, parents, commands));
+	auto stmt = std::shared_ptr<Test>(new Test(test, name, no_cache, parents, commands));
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 

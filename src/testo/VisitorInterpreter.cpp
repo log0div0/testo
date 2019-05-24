@@ -224,7 +224,9 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		for (auto parent: test->parents) {
 			for (auto vm: reg.get_all_vms(parent)) {
-				vm->resume();
+				if (vm->is_suspended()) {
+					vm->resume();
+				}
 			}
 		}
 
@@ -234,7 +236,9 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		//But that's not everything - we need to create according snapshots to all included vms
 
 		for (auto vm: reg.get_all_vms(test)) {
-			vm->suspend();
+			if (vm->is_running()) {
+				vm->suspend();
+			}
 		}
 
 		if (test->is_cachable()) {

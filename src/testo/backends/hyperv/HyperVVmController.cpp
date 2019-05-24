@@ -222,6 +222,10 @@ bool HyperVVmController::is_running() {
 	}
 }
 
+bool HyperVVmController::is_suspended() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
 bool HyperVVmController::is_additions_installed() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }

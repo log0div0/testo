@@ -929,6 +929,10 @@ bool VboxVmController::is_running() {
 	}
 }
 
+bool VboxVmController::is_suspended() {
+	throw std::runtime_error("Implement me");
+}
+
 void VboxVmController::delete_snapshot_with_children(vbox::Snapshot& snapshot) {
 	auto children = snapshot.children();
 
