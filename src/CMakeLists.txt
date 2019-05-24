@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DFMT_HEADER_ONLY)
+if (WIN32)
+	add_definitions(
+		-D__PRETTY_FUNCTION__=__FUNCSIG__
+		/W1
+		/WX
+	)
+endif()
 
 add_subdirectory(darknet)
 add_subdirectory(vbox)

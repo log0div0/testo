@@ -12,7 +12,8 @@ struct Display {
 	size_t width() const;
 	size_t height() const;
 
-	wmi::WbemClassObject videoHead, virtualSystemSettingData, virtualSystemManagementService;
+	wmi::WbemClassObject videoHead;
+	wmi::WbemClassObject virtualSystemSettingData;
 	wmi::WbemServices services;
 };
 

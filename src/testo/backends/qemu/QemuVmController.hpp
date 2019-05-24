@@ -4,7 +4,6 @@
 #include <pugixml/pugixml.hpp>
 #include "../VmController.hpp"
 #include <qemu/Host.hpp>
-#include "../../StinkingPileOfShit.hpp"
 
 struct QemuVmController: public VmController {
 	QemuVmController() = delete;
@@ -35,8 +34,7 @@ struct QemuVmController: public VmController {
 	void suspend() override;
 	void resume() override;
 	void type(const std::string& text) override;
-	bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) override;
-	bool check(const std::string& text, const nlohmann::json& params) override;
+	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
@@ -80,6 +78,5 @@ private:
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;
 	std::unordered_map<char, std::vector<std::string>> charmap;
-	StinkingPileOfShit shit;
 	std::vector<uint8_t> screenshot_buffer;
 };

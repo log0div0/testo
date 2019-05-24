@@ -770,7 +770,7 @@ void VboxVmController::type(const std::string& text) {
 	}
 }
 
-bool VboxVmController::wait(const std::string& text, const nlohmann::json& params, const std::string& time) {
+stb::Image VboxVmController::screenshot() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -786,35 +786,29 @@ bool VboxVmController::wait(const std::string& text, const nlohmann::json& param
 		display.get_screen_resolution(0, &width, &height, &bits_per_pixel, &x_origin, &y_origin, &guest_monitor_status);
 
 		if (!width || !height) {
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-			display.get_screen_resolution(0, &width, &height, &bits_per_pixel, &x_origin, &y_origin, &guest_monitor_status);
+			return {};
+		}
 
-			if (!width || !height) {
-				return false;;
+		stb::Image result(width, height, 3);
+
+		vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
+		vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
+
+		for(size_t h = 0; h < height; ++h){
+			for(size_t w = 0; w < width; ++w){
+				for(size_t c = 0; c < 3; ++c){
+					size_t src_index = h*width*4 + w*4 + c;
+					size_t dst_index = h*width*3 + w*3 + c;
+					result._data[dst_index] = array_out[src_index];
+				}
 			}
 		}
 
-		auto timeout = std::chrono::system_clock::now() + std::chrono::seconds(time_to_seconds(time));
-
-		while (std::chrono::system_clock::now() < timeout) {
-			vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_PNG);
-			vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
-
-			/*if (api.darknet_api.match(array_out.data(), array_out.size(), text)) {
-				return 0;
-			}
-*/
-			std::this_thread::sleep_for(std::chrono::milliseconds(200));
-		}
-		return false;
+		return result;
 	} catch (const std::exception& error) {
 		std::cout << "Waiting on vm " << name() << ": " << error << std::endl;
-		return false;
+		return {};
 	}
-}
-
-bool VboxVmController::check(const std::string& text, const nlohmann::json& params) {
-	throw std::runtime_error("Implement me");
 }
 
 int VboxVmController::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {

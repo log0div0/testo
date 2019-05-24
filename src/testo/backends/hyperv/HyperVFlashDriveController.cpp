@@ -13,7 +13,8 @@ void HyperVFlashDriveController::create() {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }
 bool HyperVFlashDriveController::is_mounted() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+	return false;
 }
 void HyperVFlashDriveController::mount() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);

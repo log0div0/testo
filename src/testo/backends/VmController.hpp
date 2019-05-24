@@ -2,6 +2,7 @@
 #pragma once
 
 #include "FlashDriveController.hpp"
+#include "../StinkingPileOfShit.hpp"
 #include <nlohmann/json.hpp>
 
 struct VmController {
@@ -31,8 +32,7 @@ struct VmController {
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
 	virtual void type(const std::string& text) = 0;
-	virtual bool wait(const std::string& text, const nlohmann::json& params, const std::string& time) = 0;
-	virtual bool check(const std::string& text, const nlohmann::json& params) = 0;
+	virtual stb::Image screenshot() = 0;
 	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
