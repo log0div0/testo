@@ -60,7 +60,7 @@ void Domain::stop() {
 	}
 }
 
-void Domain::shutdown(uint32_t timeout_seconds) {
+void Domain::shutdown() {
 	if (virDomainShutdown(handle) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}

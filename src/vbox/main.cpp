@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 	return stream;
 }
 
-void main() {
+int main(int argc, char** argv) {
 	try {
 		vbox::API api;
 		vbox::VirtualBoxClient client;
@@ -37,7 +37,9 @@ void main() {
 		std::chrono::duration<double> time = end - start;
 		std::cout << time.count() << " seconds" << std::endl;
 
+		return 0;
 	} catch (const std::exception& error) {
 		std::cerr << error << std::endl;
+		return 1;
 	}
 }
