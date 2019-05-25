@@ -174,6 +174,8 @@ Token Lexer::id() {
 		return for_();
 	} else if (value == "test") {
 		return test();
+	} else if (value == "no_cache") {
+		return no_cache();
 	} else if (value == "machine") {
 		return machine();
 	} else if (value == "flash") {
@@ -328,6 +330,13 @@ Token Lexer::test() {
 	std::string value("test");
 	current_pos.advance(value.length());
 	return Token(Token::category::test, value, tmp_pos);
+}
+
+Token Lexer::no_cache() {
+	Pos tmp_pos = current_pos;
+	std::string value("no_cache");
+	current_pos.advance(value.length());
+	return Token(Token::category::no_cache, value, tmp_pos);
 }
 
 Token Lexer::machine() {

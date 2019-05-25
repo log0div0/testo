@@ -298,7 +298,7 @@ void QemuVmController::install() {
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
 				<name>{}</name>
-				<memory unit='KiB'>2097152</memory>
+				<memory unit='MiB'>{}</memory>
 				<vcpu placement='static'>{}</vcpu>
 				<resource>
 					<partition>/machine</partition>
@@ -389,7 +389,7 @@ void QemuVmController::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", name(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
+		)", name(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
 
 		uint32_t nic_count = 0;
 
@@ -445,8 +445,7 @@ void QemuVmController::make_snapshot(const std::string& snapshot, const std::str
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 
 		if (has_snapshot(snapshot)) {
-			auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
-			delete_snapshot_with_children(vir_snapshot);
+			delete_snapshot_with_children(snapshot);
 		}
 
 		pugi::xml_document xml_config;
@@ -1050,7 +1049,7 @@ void QemuVmController::power_button() {
 		domain.shutdown();
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Stopping vm"));
+		std::throw_with_nested(std::runtime_error("Shutdowning vm"));
 	}
 }
 
@@ -1060,7 +1059,7 @@ void QemuVmController::suspend() {
 		domain.suspend();
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Stopping vm"));
+		std::throw_with_nested(std::runtime_error("Suspending vm"));
 	}
 }
 
@@ -1070,7 +1069,7 @@ void QemuVmController::resume() {
 		domain.resume();
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Stopping vm"));
+		std::throw_with_nested(std::runtime_error("Resuming vm"));
 	}
 }
 
@@ -1123,6 +1122,24 @@ bool QemuVmController::has_snapshot(const std::string& snapshot) {
 	}
 }
 
+void QemuVmController::delete_snapshot_with_children(const std::string& snapshot) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
+
+		auto children = vir_snapshot.children();
+
+		for (auto& snap: children) {
+			delete_snapshot_with_children(snap.name());
+		}
+		vir_snapshot.destroy();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Deleting snapshot with children"));
+	}
+
+}
+
+
 bool QemuVmController::is_defined() const {
 	auto domains = qemu_connect.domains({VIR_CONNECT_LIST_DOMAINS_PERSISTENT});
 	for (auto& domain: domains) {
@@ -1142,6 +1159,17 @@ bool QemuVmController::is_running() {
 		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
 	}
 }
+
+bool QemuVmController::is_suspended() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		return domain.is_suspended();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
+	}
+}
+
 
 bool QemuVmController::is_additions_installed() {
 	try {
@@ -1300,20 +1328,6 @@ void QemuVmController::create_disk() {
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));
-	}
-
-}
-
-void QemuVmController::delete_snapshot_with_children(vir::Snapshot& snapshot) {
-	try {
-		auto children = snapshot.children();
-
-		for (auto& snap: children) {
-			delete_snapshot_with_children(snap);
-		}
-		snapshot.destroy();
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Deleting snapshot with children"));
 	}
 
 }

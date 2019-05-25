@@ -36,10 +36,12 @@ struct VboxVmController: public VmController {
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
+	void delete_snapshot_with_children(const std::string& snapshot) override;
 	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;
 	bool is_defined() const override;
 	bool is_running() override;
+	bool is_suspended() override;
 	bool is_additions_installed() override;
 
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;

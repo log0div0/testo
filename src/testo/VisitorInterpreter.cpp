@@ -260,7 +260,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		// - has valid config and dvd cksum
 		// - has snapshots with corresponding name and valid cksums
 
-		bool is_cached = true;
+		bool is_cached = test->is_cachable(); //we try to enable cache only if we have the setting
 
 		for (auto vm: reg.get_all_vms(test)) {
 			if (vm->is_defined() &&
@@ -285,17 +285,16 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		//First we need to get all the vms in the correct state
 		//vms from parents - rollback to parent snapshot (we can be sure it is present and have valid cksum)
 		//new vms - install
+		//Also now we need to delete corresponding snapshots if they exist
 
 		for (auto parent: test->parents) {
 			for (auto vm: reg.get_all_vms(parent)) {
-				print("Restoring snapshot ", parent->name.value(), " for vm ", vm->name());
-				vm->rollback(parent->name.value());
-			}
-		}
-
-		for (auto parent: test->parents) {
-			for (auto vm: reg.get_all_vms(parent)) {
-				vm->resume();
+				//Now our parent could actually not have a snapshot - if it's not cacheble
+				//But it's paused anyway
+				if (vm->has_snapshot(parent->name.value())) {
+					print("Restoring snapshot ", parent->name.value(), " for vm ", vm->name());
+					vm->rollback(parent->name.value());
+				}
 			}
 		}
 
@@ -332,21 +331,38 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
+		for (auto vm: reg.get_all_vms(test)) {
+			if (vm->has_snapshot(test->name.value())) {
+				vm->delete_snapshot_with_children(test->name.value());
+			}
+		}
+
+		for (auto parent: test->parents) {
+			for (auto vm: reg.get_all_vms(parent)) {
+				if (vm->is_suspended()) {
+					vm->resume();
+				}
+			}
+		}
+
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);
 
 		//But that's not everything - we need to create according snapshots to all included vms
 
 		for (auto vm: reg.get_all_vms(test)) {
-			vm->suspend();
+			if (vm->is_running()) {
+				vm->suspend();
+			}
 		}
 
-		for (auto vm: reg.get_all_vms(test)) {
-			print("Taking snapshot ", test->name.value(), " for vm ", vm->name());
-			vm->make_snapshot(test->name.value(), test_cksum(test));
+		if (test->is_cachable()) {
+			for (auto vm: reg.get_all_vms(test)) {
+				print("Taking snapshot ", test->name.value(), " for vm ", vm->name());
+				vm->make_snapshot(test->name.value(), test_cksum(test));
+			}
+			stop_all_vms(test);
 		}
-
-		stop_all_vms(test);
 
 		current_progress += progress_step;
 		print("Test ", test->name.value(), " PASSED");

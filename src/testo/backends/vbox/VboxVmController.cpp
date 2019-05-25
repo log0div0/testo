@@ -796,6 +796,10 @@ bool VboxVmController::has_snapshot(const std::string& snapshot) {
 	}
 }
 
+void VboxVmController::delete_snapshot_with_children(const std::string& snapshot) {
+	throw std::runtime_error("Implement me");
+}
+
 bool VboxVmController::is_defined() const {
 	std::vector<vbox::Machine> machines = virtual_box.machines();
 	for (auto& machine: machines) {
@@ -815,6 +819,10 @@ bool VboxVmController::is_running() {
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
+}
+
+bool VboxVmController::is_suspended() {
+	throw std::runtime_error("Implement me");
 }
 
 void VboxVmController::delete_snapshot_with_children(vbox::Snapshot& snapshot) {

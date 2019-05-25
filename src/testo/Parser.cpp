@@ -219,6 +219,13 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 
 	match(Token::category::id);
 
+	Token no_cache = Token();
+
+	if (LA(1) == Token::category::no_cache) {
+		no_cache = LT(1);
+		match(Token::category::no_cache);
+	}
+
 	std::vector<Token> parents;
 
 	if (LA(1) == Token::category::colon) {
@@ -237,7 +244,7 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 
 	newline_list();
 	auto commands = command_block();
-	auto stmt = std::shared_ptr<Test>(new Test(test, name, parents, commands));
+	auto stmt = std::shared_ptr<Test>(new Test(test, name, no_cache, parents, commands));
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 
