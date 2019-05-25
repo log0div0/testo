@@ -314,6 +314,21 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			if (is_new) {
 				print("Creating machine ", vm->name());
 				vm->install();
+
+				auto config = vm->get_config();
+
+				if (config.count("metadata")) {
+					auto metadata = config.at("metadata");
+					for (auto it = metadata.begin(); it != metadata.end(); ++it) {
+						vm->set_metadata(it.key(), it.value());
+					}
+				}
+
+				vm->set_metadata("vm_config", config.dump());
+				vm->set_metadata("vm_nic_count", std::to_string(config.count("nic") ? config.at("nic").size() : 0));
+				vm->set_metadata("vm_name", config.at("name"));
+				vm->set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
+
 			}
 		}
 
@@ -656,8 +671,16 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<Shutdown> shutdown) {
 	try {
 		print("Shutting down vm ", vm->name());
+		vm->power_button();
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
-		vm->shutdown(time_to_seconds(wait_for));
+		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
+		while (std::chrono::system_clock::now() < deadline) {
+			if (!vm->is_running()) {
+				return;
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+		}
+		throw std::runtime_error("Shutdown timeout");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(shutdown, vm));
 

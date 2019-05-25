@@ -79,9 +79,84 @@ VboxVmController::VboxVmController(const nlohmann::json& config_): VmController(
 	start_session = virtual_box_client.session();
 	work_session = virtual_box_client.session();
 
-	if (!config.count("os_type")) {
-		throw std::runtime_error("Constructing VboxVmController error: field OSType is not specified");
-	}
+	scancodes.insert({
+		{"ESC", {1}},
+		{"ONE", {2}},
+		{"TWO", {3}},
+		{"THREE", {4}},
+		{"FOUR", {5}},
+		{"FIVE", {6}},
+		{"SIX", {7}},
+		{"SEVEN", {8}},
+		{"EIGHT", {9}},
+		{"NINE", {10}},
+		{"ZERO", {11}},
+		{"MINUS", {12}},
+		{"EQUAL", {13}},
+		{"BACKSPACE", {14}},
+		{"TAB", {15}},
+		{"Q", {16}},
+		{"W", {17}},
+		{"E", {18}},
+		{"R", {19}},
+		{"T", {20}},
+		{"Y", {21}},
+		{"U", {22}},
+		{"I", {23}},
+		{"O", {24}},
+		{"P", {25}},
+		{"LEFTBRACE", {26}},
+		{"RIGHTBRACE", {27}},
+		{"ENTER", {28}},
+		{"LEFTCTRL", {29}},
+		{"A", {30}},
+		{"S", {31}},
+		{"D", {32}},
+		{"F", {33}},
+		{"G", {34}},
+		{"H", {35}},
+		{"J", {36}},
+		{"K", {37}},
+		{"L", {38}},
+		{"SEMICOLON", {39}},
+		{"APOSTROPHE", {40}},
+		{"GRAVE", {41}},
+		{"LEFTSHIFT", {42}},
+		{"BACKSLASH", {43}},
+		{"Z", {44}},
+		{"X", {45}},
+		{"C", {46}},
+		{"V", {47}},
+		{"B", {48}},
+		{"N", {49}},
+		{"M", {50}},
+		{"COMMA", {51}},
+		{"DOT", {52}},
+		{"SLASH", {53}},
+		{"RIGHTSHIFT", {54}},
+		{"LEFTALT", {56}},
+		{"SPACE", {57}},
+		{"CAPSLOCK", {58}},
+		{"NUMLOCK", {69}}, //TODO: recheck
+		{"SCROLLLOCK", {70}},
+
+		{"RIGHTCTRL", {97}},
+		{"RIGHTALT", {100}},
+
+		{"HOME", {224,71}},
+		{"UP", {224, 72}},
+		{"PAGEUP", {224,73}},
+		{"LEFT", {224,75}},
+		{"RIGHT", {224,77}},
+		{"END", {224,79}},
+		{"DOWN", {224,80}},
+		{"PAGEDOWN", {224,81}},
+		{"INSERT", {224,82}},
+		{"DELETE", {224,83}},
+
+		{"SCROLLUP", {177}},
+		{"SCROLLDOWN", {178}},
+	});
 }
 
 void VboxVmController::remove_if_exists() {
@@ -94,7 +169,7 @@ void VboxVmController::remove_if_exists() {
 					vbox::Lock lock(machine, session, LockType_Shared);
 
 					auto machine = session.machine();
-					if (machine.state() == MachineState_Running) {
+					if (machine.state() != MachineState_PoweredOff) {
 						session.console().power_down().wait_and_throw_if_failed();
 					}
 				}
@@ -115,7 +190,7 @@ void VboxVmController::remove_if_exists() {
 void VboxVmController::create_vm() {
 	try {
 		{
-			vbox::GuestOSType guest_os_type = virtual_box.get_guest_os_type(config.at("os_type").get<std::string>());
+			vbox::GuestOSType guest_os_type = virtual_box.get_guest_os_type(config.value("vbox_os_type", "Other_64"));
 			std::string settings_file_path = virtual_box.compose_machine_filename(name(), "/", {}, {});
 			vbox::Machine machine = virtual_box.create_machine(settings_file_path, name(), {"/"}, guest_os_type.id(), {});
 
@@ -190,7 +265,7 @@ void VboxVmController::create_vm() {
 							network_adapter.setAdapterType(NetworkAdapterType_Am79C970A);
 						} else if (type == "Am79C973") {
 							network_adapter.setAdapterType(NetworkAdapterType_Am79C973);
-						} else if (type == "82540EM") {
+						} else if ((type == "82540EM") || (type == "e1000")) {
 							network_adapter.setAdapterType(NetworkAdapterType_I82540EM);
 						} else if (type == "82543GC") {
 							network_adapter.setAdapterType(NetworkAdapterType_I82543GC);
@@ -209,23 +284,6 @@ void VboxVmController::create_vm() {
 
 			}
 			machine.save_settings();
-		}
-
-		set_metadata("vm_nic_count", std::to_string(nic_count));
-		set_metadata("vm_name", name());
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-void VboxVmController::set_metadata(const nlohmann::json& metadata) {
-	try {
-		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
-			auto lock_machine = virtual_box.find_machine(name());
-			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-			auto machine = work_session.machine();
-			machine.setExtraData(key_value.key(), key_value.value());
 		}
 	}
 	catch (const std::exception& error) {
@@ -288,10 +346,6 @@ void VboxVmController::install() {
 	try {
 		remove_if_exists();
 		create_vm();
-		if (config.count("metadata")) {
-			set_metadata(config.at("metadata"));
-		}
-		set_metadata("vm_config", config.dump());
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -300,31 +354,15 @@ void VboxVmController::install() {
 
 void VboxVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
 	try {
-		{
-			auto lock_machine = virtual_box.find_machine(name());
-			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-			auto machine = work_session.machine();
-			if (machine.hasSnapshot(snapshot)) {
-				auto existing_snapshot = machine.findSnapshot(snapshot);
-				delete_snapshot_with_children(existing_snapshot);
-			}
+		auto lock_machine = virtual_box.find_machine(name());
+		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+		auto machine = work_session.machine();
+		if (machine.hasSnapshot(snapshot)) {
+			auto existing_snapshot = machine.findSnapshot(snapshot);
+			delete_snapshot_with_children(existing_snapshot);
 		}
-
-		{
-			auto lock_machine = virtual_box.find_machine(name());
-			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-
-			auto machine = work_session.machine();
-			machine.takeSnapshot(snapshot).wait_and_throw_if_failed();
-		}
-
-		if (!is_running()) {
-			auto lock_machine = virtual_box.find_machine(name());
-			lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
-			start_session.unlock_machine();
-		}
-
-		set_snapshot_cksum(snapshot, cksum);
+		machine.takeSnapshot(snapshot).wait_and_throw_if_failed();
+		machine.findSnapshot(snapshot).setDescription(cksum);
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -338,18 +376,6 @@ std::set<std::string> VboxVmController::nics() const {
 		result.insert(nic.at("name").get<std::string>());
 	}
 	return result;
-}
-
-void VboxVmController::set_snapshot_cksum(const std::string& snapshot, const std::string& cksum) {
-	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
-		machine.findSnapshot(snapshot).setDescription(cksum);
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
 }
 
 std::string VboxVmController::get_snapshot_cksum(const std::string& snapshot) {
@@ -391,7 +417,19 @@ void VboxVmController::press(const std::vector<std::string>& buttons) {
 		auto machine = virtual_box.find_machine(name());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		auto keyboard = work_session.console().keyboard();
-		throw std::runtime_error("Implement me!");
+		std::vector<uint8_t> codes;
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+			for (auto code: scancodes.at(button)) {
+				codes.push_back(code);
+			}
+		}
+		for (auto code: codes) {
+			keyboard.putScancode(code);
+		}
+		for (auto code: codes) {
+			keyboard.putScancode(code | 0x80);
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
@@ -529,22 +567,22 @@ void VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> 
 }
 
 bool VboxVmController::is_dvd_plugged() const {
-	throw std::runtime_error("Not implemented");
-	return true;
+	try {
+		auto machine = virtual_box.find_machine(name());
+		auto mediums = machine.medium_attachments_of_controller("IDE");
+		for (auto& medium: mediums) {
+			if (medium.port() == 1) {
+				return true;
+			}
+		}
+		return false;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }
 
 void VboxVmController::plug_dvd(fs::path path) {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
-
-		//auto machine = work_session.machine();
-		auto mediums = lock_machine.medium_attachments_of_controller("IDE");
-		for (auto& medium: mediums) {
-			if (medium.port() == 1) {
-				unplug_dvd();
-			}
-		}
-
 		if (path.is_relative()) {
 			path = fs::absolute(path);
 		}
@@ -552,6 +590,7 @@ void VboxVmController::plug_dvd(fs::path path) {
 		vbox::Medium dvd = virtual_box.open_medium(path.generic_string(),
 				DeviceType_DVD, AccessMode_ReadOnly, false);
 
+		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		machine.mount_medium("IDE", 1, 0, dvd, false);
@@ -564,21 +603,7 @@ void VboxVmController::unplug_dvd() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-
 		auto machine = work_session.machine();
-		auto mediums = machine.medium_attachments_of_controller("IDE");
-		bool found = false;
-		for (auto& medium: mediums) {
-			if (medium.port() == 1) {
-				found = true;
-				break;
-			}
-		}
-
-		if (!found) {
-			throw std::runtime_error("No dvd is attached");
-		}
-
 		machine.unmount_medium("IDE", 1, 0, false);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -598,36 +623,46 @@ void VboxVmController::start() {
 
 void VboxVmController::stop() {
 	try {
-		//In the end of stop we should enter session state UNLOCKED (even if the vm was being viewed by the user in GUI)
-		//So we lock our machine, then destroy lock and wait for session state to become unlocked
 		auto machine = virtual_box.find_machine(name());
-		{
-			vbox::Lock lock(machine, work_session, LockType_Shared);
-			work_session.console().power_down().wait_and_throw_if_failed();
-		}
-		for (int i = 0; i < 10; i++) {
-			if (machine.session_state() == SessionState_Unlocked) {
-				return;
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
-		throw std::runtime_error("timeout for stop has expired");
+		vbox::Lock lock(machine, work_session, LockType_Shared);
+		work_session.console().power_down().wait_and_throw_if_failed();
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
-void VboxVmController::shutdown(uint32_t timeout_seconds) {
-	throw std::runtime_error("Implement me");
+void VboxVmController::power_button() {
+	try {
+		auto machine = virtual_box.find_machine(name());
+		vbox::Lock lock(machine, work_session, LockType_Shared);
+		work_session.console().power_button();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }
 
 void VboxVmController::suspend() {
-	throw std::runtime_error("Implement me");
+	try {
+		auto machine = virtual_box.find_machine(name());
+		vbox::Lock lock(machine, work_session, LockType_Shared);
+		work_session.console().pause();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }
 
 void VboxVmController::resume() {
-	throw std::runtime_error("Implement me");
+	try {
+		auto machine = virtual_box.find_machine(name());
+		vbox::Lock lock(machine, work_session, LockType_Shared);
+		work_session.console().resume();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }
 
 stb::Image VboxVmController::screenshot() {
@@ -666,7 +701,8 @@ stb::Image VboxVmController::screenshot() {
 
 		return result;
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+		std::cerr << error.what() << std::endl;
+		return {};
 	}
 }
 
@@ -775,7 +811,7 @@ bool VboxVmController::is_running() {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
-		return (machine.state() == MachineState_Running);
+		return (machine.state() != MachineState_PoweredOff);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}

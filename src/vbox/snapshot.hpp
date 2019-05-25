@@ -23,5 +23,5 @@ struct Snapshot {
 
 	ISnapshot* handle;
 };
-	
+
 }

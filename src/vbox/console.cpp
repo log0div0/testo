@@ -47,6 +47,15 @@ Progress Console::power_down() const {
 	}
 }
 
+void Console::power_button() const {
+	try {
+		throw_if_failed(IConsole_PowerButton(handle));
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
 void Console::pause() const {
 	try {
 		throw_if_failed(IConsole_Pause(handle));

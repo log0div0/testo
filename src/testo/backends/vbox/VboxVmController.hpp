@@ -11,7 +11,6 @@ struct VboxVmController: public VmController {
 	VboxVmController(const VboxVmController& other) = delete;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-	void set_metadata(const nlohmann::json& metadata) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
 
 	std::string get_metadata(const std::string& key) override;
@@ -29,7 +28,7 @@ struct VboxVmController: public VmController {
 	void unplug_dvd() override;
 	void start() override;
 	void stop() override;
-	void shutdown(uint32_t timeout_seconds) override;
+	void power_button() override;
 	void suspend() override;
 	void resume() override;
 	stb::Image screenshot() override;
@@ -55,14 +54,13 @@ private:
 	void remove_if_exists();
 	void create_vm();
 
-	void set_snapshot_cksum(const std::string& snapshot, const std::string& cksum);
-
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 	vbox::Session start_session;
 	vbox::Session work_session;
 
 	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
+	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
 
 	//API& api;
 };

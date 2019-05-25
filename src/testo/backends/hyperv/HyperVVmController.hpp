@@ -10,7 +10,6 @@ struct HyperVVmController: VmController {
 	~HyperVVmController() override;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-	void set_metadata(const nlohmann::json& metadata) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
 	std::string get_metadata(const std::string& key) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
@@ -29,7 +28,7 @@ struct HyperVVmController: VmController {
 	void stop() override;
 	void suspend() override;
 	void resume() override;
-	void shutdown(uint32_t timeout_seconds) override;
+	void power_button() override;
 	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 

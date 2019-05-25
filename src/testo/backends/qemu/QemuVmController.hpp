@@ -12,7 +12,6 @@ struct QemuVmController: public VmController {
 	QemuVmController(const QemuVmController& other) = delete;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-	void set_metadata(const nlohmann::json& metadata) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
 
 	std::string get_metadata(const std::string& key) override;
@@ -30,7 +29,7 @@ struct QemuVmController: public VmController {
 	void unplug_dvd() override;
 	void start() override;
 	void stop() override;
-	void shutdown(uint32_t timeout_seconds) override;
+	void power_button() override;
 	void suspend() override;
 	void resume() override;
 	stb::Image screenshot() override;

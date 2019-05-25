@@ -110,14 +110,6 @@ void HyperVVmController::install() {
 		}
 
 		auto machine = connect.defineMachine(name());
-
-		nlohmann::json metadata = config.at("metadata");
-		metadata["vm_config"] = config.dump(4);
-		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
-		metadata["vm_name"] = config.at("name");
-		metadata["dvd_signature"] = "";
-		machine.setNotes({metadata.dump(4)});
-
 		auto controllers = machine.ideControllers();
 		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
 		// controllers.at(1).addDiskDrive(0);
@@ -148,9 +140,6 @@ void HyperVVmController::install() {
 }
 
 void HyperVVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
-void HyperVVmController::set_metadata(const nlohmann::json& metadata) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void HyperVVmController::set_metadata(const std::string& key, const std::string& value) {
@@ -246,7 +235,7 @@ void HyperVVmController::resume() {
 	}
 }
 
-void HyperVVmController::shutdown(uint32_t timeout_seconds) {
+void HyperVVmController::power_button() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

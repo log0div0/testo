@@ -22,6 +22,7 @@ struct Console {
 	Progress power_up() const;
 	Progress power_down() const;
 
+	void power_button() const;
 	void pause() const;
 	void resume() const;
 

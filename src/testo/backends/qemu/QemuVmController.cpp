@@ -193,18 +193,6 @@ QemuVmController::~QemuVmController() {
 	}
 }
 
-void QemuVmController::set_metadata(const nlohmann::json& metadata) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
-			set_metadata(key_value.key(), key_value.value());
-		}
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Setting json metadata on vm "));
-	}
-}
-
 void QemuVmController::set_metadata(const std::string& key, const std::string& value) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
@@ -446,18 +434,7 @@ void QemuVmController::install() {
 
 		pugi::xml_document xml_config;
 		xml_config.load_string(string_config.c_str());
-		auto domain = qemu_connect.domain_define_xml(xml_config);
-
-		if (config.count("metadata")) {
-			set_metadata(config.at("metadata"));
-		}
-
-		auto config_str = config.dump();
-
-		set_metadata("vm_config", config_str);
-		set_metadata("vm_nic_count", std::to_string(nic_count));
-		set_metadata("vm_name", name());
-		set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
+		qemu_connect.domain_define_xml(xml_config);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Performing install")));
 	}
@@ -1067,7 +1044,7 @@ void QemuVmController::stop() {
 	}
 }
 
-void QemuVmController::shutdown(uint32_t timeout_seconds) {
+void QemuVmController::power_button() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		domain.shutdown(timeout_seconds);

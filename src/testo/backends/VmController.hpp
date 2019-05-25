@@ -11,7 +11,6 @@ struct VmController {
 	virtual ~VmController() = default;
 	virtual void install() = 0;
 	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0;
-	virtual void set_metadata(const nlohmann::json& metadata) = 0;
 	virtual void set_metadata(const std::string& key, const std::string& value) = 0;
 	virtual std::string get_metadata(const std::string& key) = 0;
 	virtual std::string get_snapshot_cksum(const std::string& snapshot) = 0;
@@ -28,7 +27,7 @@ struct VmController {
 	virtual void unplug_dvd() = 0;
 	virtual void start() = 0;
 	virtual void stop() = 0;
-	virtual void shutdown(uint32_t timeout_seconds) = 0;
+	virtual void power_button() = 0;
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
 	virtual stb::Image screenshot() = 0;
