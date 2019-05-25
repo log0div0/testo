@@ -229,7 +229,7 @@ void VboxVmController::set_metadata(const nlohmann::json& metadata) {
 		}
 	}
 	catch (const std::exception& error) {
-		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -241,7 +241,7 @@ void VboxVmController::set_metadata(const std::string& key, const std::string& v
 		machine.setExtraData(key, value);
 	}
 	catch (const std::exception& error) {
-		std::cout << "Setting metadata on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -253,8 +253,7 @@ std::vector<std::string> VboxVmController::keys() {
 		return machine.getExtraDataKeys();
 	}
 	catch (const std::exception& error) {
-		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
-		return {};
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -269,8 +268,7 @@ bool VboxVmController::has_key(const std::string& key) {
 		return false;
 	}
 	catch (const std::exception& error) {
-		std::cout << "Getting metadata keys on vm " << name() << ": " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -282,8 +280,7 @@ std::string VboxVmController::get_metadata(const std::string& key) {
 		return machine.getExtraData(key);
 	}
 	catch (const std::exception& error) {
-		std::cout << "Getting metadata value for key " << key << " on vm " << name() << ": " << error << std::endl;
-		return "";
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -295,10 +292,9 @@ void VboxVmController::install() {
 			set_metadata(config.at("metadata"));
 		}
 		set_metadata("vm_config", config.dump());
-		start();
 	}
 	catch (const std::exception& error) {
-		std::cout << "Performing install on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -331,7 +327,7 @@ void VboxVmController::make_snapshot(const std::string& snapshot, const std::str
 		set_snapshot_cksum(snapshot, cksum);
 	}
 	catch (const std::exception& error) {
-		std::cout << "Taking snapshot on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -352,7 +348,7 @@ void VboxVmController::set_snapshot_cksum(const std::string& snapshot, const std
 		machine.findSnapshot(snapshot).setDescription(cksum);
 	}
 	catch (const std::exception& error) {
-		std::cout << "Setting snapshot cksum on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -364,8 +360,7 @@ std::string VboxVmController::get_snapshot_cksum(const std::string& snapshot) {
 		return machine.findSnapshot(snapshot).getDescription();
 	}
 	catch (const std::exception& error) {
-		std::cout << "getting snapshot cksum on vm " << name() << ": " << error << std::endl;
-		return "";
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -387,7 +382,7 @@ void VboxVmController::rollback(const std::string& snapshot) {
 		start_session.unlock_machine();
 	}
 	catch (const std::exception& error) {
-		std::cout << "Performing rollback on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -398,7 +393,7 @@ void VboxVmController::press(const std::vector<std::string>& buttons) {
 		auto keyboard = work_session.console().keyboard();
 		throw std::runtime_error("Implement me!");
 	} catch (const std::exception& error) {
-		std::cout << "Pressing button on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -429,7 +424,7 @@ void VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 		throw std::runtime_error(std::string("There's no nic with name ") + nic);
 	}
 	catch (const std::exception& error) {
-		std::cout << "(Un)Plugging nic in vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -459,7 +454,7 @@ void VboxVmController::set_link(const std::string& nic, bool is_connected) {
 		throw std::runtime_error(std::string("There's no nic with name ") + nic);
 	}
 	catch (const std::exception& error) {
-		std::cout << "(Un)Plugging link on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -502,7 +497,7 @@ void VboxVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd
 		machine.save_settings();
 		plugged_fds.insert(fd);
 	} catch (const std::exception& error) {
-		std::cout << "Plugging flash drive on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -529,7 +524,7 @@ void VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> 
 		machine.save_settings();
 		plugged_fds.erase(fd);
 	} catch (const std::exception& error) {
-		std::cout << "Unplugging flash drive from vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -561,7 +556,7 @@ void VboxVmController::plug_dvd(fs::path path) {
 		auto machine = work_session.machine();
 		machine.mount_medium("IDE", 1, 0, dvd, false);
 	} catch (const std::exception& error) {
-		std::cout << "Plugging dvd " << path << " to vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -586,7 +581,7 @@ void VboxVmController::unplug_dvd() {
 
 		machine.unmount_medium("IDE", 1, 0, false);
 	} catch (const std::exception& error) {
-		std::cout << "Unplugging dvd from vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -597,7 +592,7 @@ void VboxVmController::start() {
 		start_session.unlock_machine();
 	}
 	catch (const std::exception& error) {
-		std::cout << "Starting vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -619,7 +614,7 @@ void VboxVmController::stop() {
 		throw std::runtime_error("timeout for stop has expired");
 	}
 	catch (const std::exception& error) {
-		std::cout << "Stopping vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -671,8 +666,7 @@ stb::Image VboxVmController::screenshot() {
 
 		return result;
 	} catch (const std::exception& error) {
-		std::cout << "Waiting on vm " << name() << ": " << error << std::endl;
-		return {};
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -751,8 +745,7 @@ int VboxVmController::run(const fs::path& exe, std::vector<std::string> args, ui
 		//okay
 		return gprocess.exit_code();
 	} catch (const std::exception& error) {
-		std::cout << "Run guest process error: " << error << std::endl;
-		return -1;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -763,8 +756,7 @@ bool VboxVmController::has_snapshot(const std::string& snapshot) {
 		auto machine = work_session.machine();
 		return machine.hasSnapshot(snapshot);
 	} catch (const std::exception& error) {
-		std::cout << "Has snapshot on vm " << name() << ": " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -785,8 +777,7 @@ bool VboxVmController::is_running() {
 		auto machine = work_session.machine();
 		return (machine.state() == MachineState_Running);
 	} catch (const std::exception& error) {
-		std::cout << "Is running on vm " << name() << ": " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -816,8 +807,7 @@ bool VboxVmController::is_additions_installed() {
 		}
 		return false;
 	} catch (const std::exception& error) {
-		std::cout << "Is additions installed on vm " << name() << ": " << error << std::endl;
-		return false;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -877,7 +867,7 @@ void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst, u
 			throw std::runtime_error("Unknown type of file: " + target_name.generic_string());
 		}
 	} catch (const std::exception& error) {
-		std::cout << "copy_to_guest on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -914,6 +904,6 @@ void VboxVmController::remove_from_guest(const fs::path& obj) {
 		}
 
 	} catch (const std::exception& error) {
-		std::cout << "remove_from_guest on vm " << name() << ": " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
