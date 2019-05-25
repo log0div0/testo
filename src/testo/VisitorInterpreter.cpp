@@ -339,7 +339,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		for (auto parent: test->parents) {
 			for (auto vm: reg.get_all_vms(parent)) {
-				if (vm->is_suspended()) {
+				if (vm->state() == VmState::Suspended) {
 					vm->resume();
 				}
 			}
@@ -351,7 +351,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		//But that's not everything - we need to create according snapshots to all included vms
 
 		for (auto vm: reg.get_all_vms(test)) {
-			if (vm->is_running()) {
+			if (vm->state() == VmState::Running) {
 				vm->suspend();
 			}
 		}
@@ -577,7 +577,7 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 		throw std::runtime_error(fmt::format("specified nic {} is not present in this vm", nic));
 	}
 
-	if (vm->is_running()) {
+	if (vm->state() != VmState::Stopped) {
 		throw std::runtime_error(fmt::format("vm is running, but must be stopeed"));
 	}
 
@@ -691,7 +691,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::s
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
 		while (std::chrono::system_clock::now() < deadline) {
-			if (!vm->is_running()) {
+			if (vm->state() != VmState::Stopped) {
 				return;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -707,7 +707,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 	try {
 		print("Executing ", exec->process_token.value(), " command on vm ", vm->name());
 
-		if (!vm->is_running()) {
+		if (vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("vm is not running"));
 		}
 
@@ -792,7 +792,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::share
 
 		print("Copying ", from, " ", from_to, " vm ", vm->name(), " in directory ", to);
 
-		if (!vm->is_running()) {
+		if (vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("vm is not running"));
 		}
 

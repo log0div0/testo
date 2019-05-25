@@ -40,8 +40,7 @@ struct VboxVmController: public VmController {
 	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;
 	bool is_defined() const override;
-	bool is_running() override;
-	bool is_suspended() override;
+	VmState state() const override;
 	bool is_additions_installed() override;
 
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;

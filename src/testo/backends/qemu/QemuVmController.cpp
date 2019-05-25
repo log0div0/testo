@@ -274,10 +274,10 @@ std::string QemuVmController::get_metadata(const std::string& key) {
 void QemuVmController::install() {
 	try {
 		if (is_defined()) {
-			if (is_running()) {
+			auto domain = qemu_connect.domain_lookup_by_name(name());
+			if (domain.state() != VIR_DOMAIN_SHUTOFF) {
 				stop();
 			}
-			auto domain = qemu_connect.domain_lookup_by_name(name());
 			for (auto& snapshot: domain.snapshots()) {
 				snapshot.destroy();
 			}
@@ -528,7 +528,7 @@ void QemuVmController::rollback(const std::string& snapshot) {
 			auto currently_plugged = is_nic_plugged(nic_name);
 			auto snapshot_plugged = is_nic_plugged(snap, nic_name);
 			if (currently_plugged != snapshot_plugged) {
-				if (is_running()) {
+				if (domain.state() != VIR_DOMAIN_SHUTOFF) {
 					stop();
 				}
 
@@ -1150,26 +1150,24 @@ bool QemuVmController::is_defined() const {
 	return false;
 }
 
-bool QemuVmController::is_running() {
+VmState QemuVmController::state() const {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		return domain.is_active();
+		auto state = domain.state();
+		if (state == VIR_DOMAIN_SHUTOFF) {
+			return VmState::Stopped;
+		} else if (state == VIR_DOMAIN_RUNNING) {
+			return VmState::Running;
+		} else if (state == VIR_DOMAIN_PAUSED) {
+			return VmState::Suspended;
+		} else {
+			return VmState::Other;
+		}
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
 	}
 }
-
-bool QemuVmController::is_suspended() {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		return domain.is_suspended();
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
-	}
-}
-
 
 bool QemuVmController::is_additions_installed() {
 	try {

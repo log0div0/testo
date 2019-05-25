@@ -24,7 +24,7 @@ struct Domain {
 	std::string name() const;
 	uint32_t id() const;
 	bool is_active() const;
-	bool is_suspended() const;
+	virDomainState state() const;
 	std::vector<Snapshot> snapshots(std::initializer_list<virDomainSnapshotListFlags> flags = {}) const;
 	Snapshot snapshot_lookup_by_name(const std::string& name) const;
 	Snapshot snapshot_create_xml(const pugi::xml_node& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags = {});

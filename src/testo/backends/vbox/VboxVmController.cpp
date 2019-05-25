@@ -393,7 +393,7 @@ std::string VboxVmController::get_snapshot_cksum(const std::string& snapshot) {
 void VboxVmController::rollback(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
-		if (is_running()) {
+		if (lock_machine.state() != MachineState_PoweredOff) {
 			stop();
 		}
 
@@ -810,19 +810,22 @@ bool VboxVmController::is_defined() const {
 	return false;
 }
 
-bool VboxVmController::is_running() {
+VmState VboxVmController::state() const {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
-		return (machine.state() != MachineState_PoweredOff);
+		auto machine = virtual_box.find_machine(name());
+		auto state = machine.state();
+		if (state == MachineState_PoweredOff) {
+			return VmState::Stopped;
+		} else if (state == MachineState_Running) {
+			return VmState::Running;
+		} else if (state == MachineState_Paused) {
+			return VmState::Suspended;
+		} else {
+			return VmState::Other;
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
-}
-
-bool VboxVmController::is_suspended() {
-	throw std::runtime_error("Implement me");
 }
 
 void VboxVmController::delete_snapshot_with_children(vbox::Snapshot& snapshot) {

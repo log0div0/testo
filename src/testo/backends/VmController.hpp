@@ -5,6 +5,13 @@
 #include "../StinkingPileOfShit.hpp"
 #include <nlohmann/json.hpp>
 
+enum class VmState {
+	Stopped,
+	Running,
+	Suspended,
+	Other
+};
+
 struct VmController {
 	VmController() = delete;
 	VmController(const nlohmann::json& config_);
@@ -39,8 +46,7 @@ struct VmController {
 	virtual std::vector<std::string> keys() = 0;
 	virtual bool has_key(const std::string& key) = 0;
 	virtual bool is_defined() const = 0;
-	virtual bool is_running() = 0;
-	virtual bool is_suspended() = 0;
+	virtual VmState state() const = 0;
 	virtual bool is_additions_installed() = 0;
 
 

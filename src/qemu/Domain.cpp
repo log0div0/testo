@@ -47,13 +47,13 @@ bool Domain::is_active() const {
 	return result;
 }
 
-bool Domain::is_suspended() const {
-	int current_state;
-	int result = virDomainGetState(handle, &current_state, nullptr, 0);
+virDomainState Domain::state() const {
+	virDomainState current_state;
+	int result = virDomainGetState(handle, (int*)&current_state, nullptr, 0);
 	if (result < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
-	return current_state == (int)VIR_DOMAIN_PAUSED;
+	return current_state;
 }
 
 void Domain::start() {
