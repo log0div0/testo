@@ -17,7 +17,7 @@ uint8_t Table6[1 << 6] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 5
 
 stb::Image HyperVGuest::screenshot() {
 	auto machine = connect.machine(name());
-	if (!machine.is_running()) {
+	if (machine.state() != hyperv::Machine::State::Enabled) {
 		return {};
 	}
 	auto display = machine.display();

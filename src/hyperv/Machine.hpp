@@ -9,17 +9,25 @@
 namespace hyperv {
 
 struct Machine {
+	enum class State: uint16_t {
+		Unknown = 0,
+		Other = 1,
+		Enabled = 2,
+		Disabled = 3,
+		Paused = 32768
+	};
+
 	Machine(wmi::WbemClassObject computerSystem_, wmi::WbemServices services_);
 
 	std::string name() const;
-	bool is_running() const;
+	State state() const;
 	Display display() const;
 	void destroy();
 
 	void setNotes(const std::vector<std::string>& notes);
 	std::vector<std::string> notes() const;
 
-	void requestStateChange(uint16_t requestedState);
+	void requestStateChange(State requestedState);
 	void start();
 	void stop();
 	void pause();

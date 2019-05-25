@@ -102,7 +102,7 @@ void HyperVVmController::install() {
 	try {
 		for (auto& machine: connect.machines()) {
 			if (machine.name() == name()) {
-				if (machine.is_running()) {
+				if (machine.state() != hyperv::Machine::State::Disabled) {
 					machine.stop();
 				}
 				machine.destroy();
@@ -251,7 +251,7 @@ stb::Image HyperVVmController::screenshot() {
 	try {
 		auto machine = connect.machine(name());
 
-		if (!machine.is_running()) {
+		if (machine.state() != hyperv::Machine::State::Enabled) {
 			return {};
 		}
 		auto display = machine.display();
@@ -318,16 +318,21 @@ bool HyperVVmController::is_defined() const {
 	}
 }
 
-bool HyperVVmController::is_running() {
+VmState HyperVVmController::state() const {
 	try {
-		return connect.machine(name()).is_running();
+		auto state = connect.machine(name()).state();
+		if (state == hyperv::Machine::State::Disabled) {
+			return VmState::Stopped;
+		} else if (state == hyperv::Machine::State::Enabled) {
+			return VmState::Running;
+		} else if (state == hyperv::Machine::State::Paused) {
+			return VmState::Suspended;
+		} else {
+			return VmState::Other;
+		}
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
-}
-
-bool HyperVVmController::is_suspended() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
 bool HyperVVmController::is_additions_installed() {

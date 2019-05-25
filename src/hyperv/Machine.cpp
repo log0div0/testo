@@ -24,9 +24,9 @@ std::string Machine::name() const {
 	}
 }
 
-bool Machine::is_running() const {
+Machine::State Machine::state() const {
 	try {
-		return computerSystem.get("EnabledState").get<int32_t>() == 2;
+		return (State)computerSystem.get("EnabledState").get<int32_t>();
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -68,7 +68,7 @@ std::vector<std::string> Machine::notes() const {
 	return virtualSystemSettingData.get("Notes");
 }
 
-void Machine::requestStateChange(uint16_t requestedState) {
+void Machine::requestStateChange(State requestedState) {
 	try {
 		services.call("Msvm_ComputerSystem", "RequestStateChange")
 			.with("RequestedState", (int32_t)requestedState)
@@ -79,15 +79,15 @@ void Machine::requestStateChange(uint16_t requestedState) {
 }
 
 void Machine::start() {
-	requestStateChange(2);
+	requestStateChange(State::Enabled);
 }
 
 void Machine::stop() {
-	requestStateChange(3);
+	requestStateChange(State::Disabled);
 }
 
 void Machine::pause() {
-	requestStateChange(32776);
+	requestStateChange(State::Paused);
 }
 
 std::vector<StorageController> Machine::ideControllers() const {
