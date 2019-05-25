@@ -154,7 +154,7 @@ private:
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
 		for (auto vm: reg.get_all_vms(test)) {
-			if (vm->is_defined() && vm->is_running()) {
+			if (vm->is_defined() && (vm->state() != VmState::Stopped)) {
 				vm->stop();
 			}
 		}
@@ -169,4 +169,6 @@ private:
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	StinkingPileOfShit shit;
+	std::unordered_map<char, std::vector<std::string>> charmap;
+
 };

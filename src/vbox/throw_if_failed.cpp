@@ -58,7 +58,8 @@ void throw_if_failed(HRESULT rc) {
 					&IID_IVirtualBoxErrorInfo
 #endif
 				);
-				throw std::runtime_error(virtual_box_error_info.text());
+				auto error_message = virtual_box_error_info.text();
+				throw std::runtime_error(error_message);
 			} else {
 				std::stringstream ss;
 				ss << "Error code: " << std::hex << rc << std::dec;

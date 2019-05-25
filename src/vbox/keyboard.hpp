@@ -16,11 +16,9 @@ struct Keyboard {
 	Keyboard(Keyboard&& other);
 	Keyboard& operator=(Keyboard&& other);
 
-	void putScancodes(const std::vector<std::string>& buttons);
-	void releaseKeys(const std::vector<std::string>& buttons);
+	void putScancode(uint32_t code);
 
 	IKeyboard* handle = nullptr;
-	std::unordered_map<std::string, std::vector<uint32_t>> scancodes;
 };
 
 }

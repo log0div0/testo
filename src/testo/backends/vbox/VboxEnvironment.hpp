@@ -20,5 +20,5 @@ struct VboxEnvironment: public Environment {
 		return std::shared_ptr<FlashDriveController>(new VboxFlashDriveController(config));
 	}
 
-	//API& api;
+	vbox::API api;
 };

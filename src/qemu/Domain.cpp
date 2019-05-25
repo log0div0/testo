@@ -47,13 +47,13 @@ bool Domain::is_active() const {
 	return result;
 }
 
-bool Domain::is_suspended() const {
-	int current_state;
-	int result = virDomainGetState(handle, &current_state, nullptr, 0);
+virDomainState Domain::state() const {
+	virDomainState current_state;
+	int result = virDomainGetState(handle, (int*)&current_state, nullptr, 0);
 	if (result < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
-	return current_state == (int)VIR_DOMAIN_PAUSED;
+	return current_state;
 }
 
 void Domain::start() {
@@ -69,19 +69,10 @@ void Domain::stop() {
 	}
 }
 
-void Domain::shutdown(uint32_t timeout_seconds) {
+void Domain::shutdown() {
 	if (virDomainShutdown(handle) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
-
-	auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(timeout_seconds);
-	while (std::chrono::system_clock::now() < deadline) {
-		if (!is_active()) {
-			return;
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(300));
-	}
-	throw std::runtime_error("Shutdown timeout");
 }
 
 void Domain::suspend() {

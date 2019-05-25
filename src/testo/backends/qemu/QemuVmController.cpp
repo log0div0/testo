@@ -184,124 +184,12 @@ QemuVmController::QemuVmController(const nlohmann::json& config_): VmController(
 		{"SCROLLDOWN", 178},
 	});
 
-	charmap.insert({
-		{'0', {"ZERO"}},
-		{'1', {"ONE"}},
-		{'2', {"TWO"}},
-		{'3', {"THREE"}},
-		{'4', {"FOUR"}},
-		{'5', {"FIVE"}},
-		{'6', {"SIX"}},
-		{'7', {"SEVEN"}},
-		{'8', {"EIGHT"}},
-		{'9', {"NINE"}},
-		{')', {"LEFTSHIFT", "ZERO"}},
-		{'!', {"LEFTSHIFT", "ONE"}},
-		{'@', {"LEFTSHIFT", "TWO"}},
-		{'#', {"LEFTSHIFT", "THREE"}},
-		{'$', {"LEFTSHIFT", "FOUR"}},
-		{'%', {"LEFTSHIFT", "FIVE"}},
-		{'^', {"LEFTSHIFT", "SIX"}},
-		{'&', {"LEFTSHIFT", "SEVEN"}},
-		{'*', {"LEFTSHIFT", "EIGHT"}},
-		{'(', {"LEFTSHIFT", "NINE"}},
-		{'a', {"A"}},
-		{'b', {"B"}},
-		{'c', {"C"}},
-		{'d', {"D"}},
-		{'e', {"E"}},
-		{'f', {"F"}},
-		{'g', {"G"}},
-		{'h', {"H"}},
-		{'i', {"I"}},
-		{'j', {"J"}},
-		{'k', {"K"}},
-		{'l', {"L"}},
-		{'m', {"M"}},
-		{'n', {"N"}},
-		{'o', {"O"}},
-		{'p', {"P"}},
-		{'q', {"Q"}},
-		{'r', {"R"}},
-		{'s', {"S"}},
-		{'t', {"T"}},
-		{'u', {"U"}},
-		{'v', {"V"}},
-		{'w', {"W"}},
-		{'x', {"X"}},
-		{'y', {"Y"}},
-		{'z', {"Z"}},
-		{'A', {"LEFTSHIFT", "A"}},
-		{'B', {"LEFTSHIFT", "B"}},
-		{'C', {"LEFTSHIFT", "C"}},
-		{'D', {"LEFTSHIFT", "D"}},
-		{'E', {"LEFTSHIFT", "E"}},
-		{'F', {"LEFTSHIFT", "F"}},
-		{'G', {"LEFTSHIFT", "G"}},
-		{'H', {"LEFTSHIFT", "H"}},
-		{'I', {"LEFTSHIFT", "I"}},
-		{'J', {"LEFTSHIFT", "J"}},
-		{'K', {"LEFTSHIFT", "K"}},
-		{'L', {"LEFTSHIFT", "L"}},
-		{'M', {"LEFTSHIFT", "M"}},
-		{'N', {"LEFTSHIFT", "N"}},
-		{'O', {"LEFTSHIFT", "O"}},
-		{'P', {"LEFTSHIFT", "P"}},
-		{'Q', {"LEFTSHIFT", "Q"}},
-		{'R', {"LEFTSHIFT", "R"}},
-		{'S', {"LEFTSHIFT", "S"}},
-		{'T', {"LEFTSHIFT", "T"}},
-		{'U', {"LEFTSHIFT", "U"}},
-		{'V', {"LEFTSHIFT", "V"}},
-		{'W', {"LEFTSHIFT", "W"}},
-		{'X', {"LEFTSHIFT", "X"}},
-		{'Y', {"LEFTSHIFT", "Y"}},
-		{'Z', {"LEFTSHIFT", "Z"}},
-		{'-', {"MINUS"}},
-		{'_', {"LEFTSHIFT", "MINUS"}},
-		{'=', {"EQUALSIGN"}},
-		{'+', {"LEFTSHIFT", "EQUALSIGN"}},
-		{'\'', {"APOSTROPHE"}},
-		{'\"', {"LEFTSHIFT", "APOSTROPHE"}},
-		{'\\', {"BACKSLASH"}},
-		{'\n', {"ENTER"}},
-		{'\t', {"TAB"}},
-		{'|', {"LEFTSHIFT", "BACKSLASH"}},
-		{',', {"COMMA"}},
-		{'<', {"LEFTSHIFT", "COMMA"}},
-		{'.', {"DOT"}},
-		{'>', {"LEFTSHIFT", "DOT"}},
-		{'/', {"SLASH"}},
-		{'?', {"LEFTSHIFT", "SLASH"}},
-		{';', {"SEMICOLON"}},
-		{':', {"LEFTSHIFT", "SEMICOLON"}},
-		{'[', {"LEFTBRACE"}},
-		{'{', {"LEFTSHIFT", "LEFTBRACE"}},
-		{']', {"RIGHTBRACE"}},
-		{'}', {"LEFTSHIFT", "RIGHTBRACE"}},
-		{'`', {"GRAVE"}},
-		{'~', {"LEFTSHIFT", "GRAVE"}},
-		{' ', {"SPACE"}}
-	});
-
 	prepare_networks();
 }
 
 QemuVmController::~QemuVmController() {
 	if (!is_defined()) {
 		remove_disk();
-	}
-}
-
-void QemuVmController::set_metadata(const nlohmann::json& metadata) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		for (auto key_value = metadata.begin(); key_value != metadata.end(); ++key_value) {
-			set_metadata(key_value.key(), key_value.value());
-		}
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Setting json metadata on vm "));
 	}
 }
 
@@ -386,10 +274,10 @@ std::string QemuVmController::get_metadata(const std::string& key) {
 void QemuVmController::install() {
 	try {
 		if (is_defined()) {
-			if (is_running()) {
+			auto domain = qemu_connect.domain_lookup_by_name(name());
+			if (domain.state() != VIR_DOMAIN_SHUTOFF) {
 				stop();
 			}
-			auto domain = qemu_connect.domain_lookup_by_name(name());
 			for (auto& snapshot: domain.snapshots()) {
 				snapshot.destroy();
 			}
@@ -546,18 +434,7 @@ void QemuVmController::install() {
 
 		pugi::xml_document xml_config;
 		xml_config.load_string(string_config.c_str());
-		auto domain = qemu_connect.domain_define_xml(xml_config);
-
-		if (config.count("metadata")) {
-			set_metadata(config.at("metadata"));
-		}
-
-		auto config_str = config.dump();
-
-		set_metadata("vm_config", config_str);
-		set_metadata("vm_nic_count", std::to_string(nic_count));
-		set_metadata("vm_name", name());
-		set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
+		qemu_connect.domain_define_xml(xml_config);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Performing install")));
 	}
@@ -651,7 +528,7 @@ void QemuVmController::rollback(const std::string& snapshot) {
 			auto currently_plugged = is_nic_plugged(nic_name);
 			auto snapshot_plugged = is_nic_plugged(snap, nic_name);
 			if (currently_plugged != snapshot_plugged) {
-				if (is_running()) {
+				if (domain.state() != VIR_DOMAIN_SHUTOFF) {
 					stop();
 				}
 
@@ -1166,10 +1043,10 @@ void QemuVmController::stop() {
 	}
 }
 
-void QemuVmController::shutdown(uint32_t timeout_seconds) {
+void QemuVmController::power_button() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		domain.shutdown(timeout_seconds);
+		domain.shutdown();
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Shutdowning vm"));
@@ -1193,22 +1070,6 @@ void QemuVmController::resume() {
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Resuming vm"));
-	}
-}
-
-void QemuVmController::type(const std::string& text) {
-	try {
-		for (auto c: text) {
-			auto buttons = charmap.find(c);
-			if (buttons == charmap.end()) {
-				throw std::runtime_error("Unknown character to type");
-			}
-
-			press(buttons->second);
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Typing {}", text)));
 	}
 }
 
@@ -1289,26 +1150,24 @@ bool QemuVmController::is_defined() const {
 	return false;
 }
 
-bool QemuVmController::is_running() {
+VmState QemuVmController::state() const {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-		return domain.is_active();
+		auto state = domain.state();
+		if (state == VIR_DOMAIN_SHUTOFF) {
+			return VmState::Stopped;
+		} else if (state == VIR_DOMAIN_RUNNING) {
+			return VmState::Running;
+		} else if (state == VIR_DOMAIN_PAUSED) {
+			return VmState::Suspended;
+		} else {
+			return VmState::Other;
+		}
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
 	}
 }
-
-bool QemuVmController::is_suspended() {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		return domain.is_suspended();
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Checking whether vm is running"));
-	}
-}
-
 
 bool QemuVmController::is_additions_installed() {
 	try {

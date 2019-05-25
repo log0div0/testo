@@ -47,14 +47,14 @@ list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp)
 
 add_library(testo-core STATIC ${SRCS})
 add_dependencies(testo-core darknet)
-target_link_libraries(testo-core coro vbox vboxcapi pugixml libdarknet)
+target_link_libraries(testo-core coro vbox pugixml libdarknet)
 
 if(WIN32)
 	target_link_libraries(testo-core hyperv)
 endif()
 
 if(UNIX)
-	target_link_libraries(testo-core dl stdc++fs qemu pthread)
+	target_link_libraries(testo-core stdc++fs qemu pthread)
 endif()
 
 if(GPU)

@@ -10,7 +10,6 @@ struct HyperVVmController: VmController {
 	~HyperVVmController() override;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-	void set_metadata(const nlohmann::json& metadata) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
 	std::string get_metadata(const std::string& key) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;
@@ -29,8 +28,7 @@ struct HyperVVmController: VmController {
 	void stop() override;
 	void suspend() override;
 	void resume() override;
-	void shutdown(uint32_t timeout_seconds) override;
-	void type(const std::string& text) override;
+	void power_button() override;
 	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
@@ -40,8 +38,7 @@ struct HyperVVmController: VmController {
 	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;
 	bool is_defined() const override;
-	bool is_running() override;
-	bool is_suspended() override;
+	VmState state() const override;
 	bool is_additions_installed() override;
 
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
@@ -52,4 +49,5 @@ struct HyperVVmController: VmController {
 
 private:
 	hyperv::Connect connect;
+	std::unordered_map<std::string, uint8_t> scancodes;
 };

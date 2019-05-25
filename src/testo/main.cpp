@@ -2,6 +2,7 @@
 #include <coro/Application.h>
 #include "Interpreter.hpp"
 
+#include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
 #else
@@ -38,7 +39,8 @@ std::string generate_script(const fs::path& folder, const fs::path& current_pref
 
 void run_file(const fs::path& file, const nlohmann::json& config) {
 #ifdef WIN32
-	HyperVEnvironment env;
+	// HyperVEnvironment env;
+	VboxEnvironment env;
 #else
 	QemuEnvironment env;
 #endif
@@ -50,7 +52,8 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	auto generated = generate_script(folder);
 
 #ifdef WIN32
-	HyperVEnvironment env;
+	VboxEnvironment env;
+	// HyperVEnvironment env;
 #else
 	QemuEnvironment env;
 #endif

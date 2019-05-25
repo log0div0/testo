@@ -24,9 +24,9 @@ std::string Machine::name() const {
 	}
 }
 
-bool Machine::is_running() const {
+Machine::State Machine::state() const {
 	try {
-		return computerSystem.get("EnabledState").get<int32_t>() == 2;
+		return (State)computerSystem.get("EnabledState").get<int32_t>();
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -68,7 +68,7 @@ std::vector<std::string> Machine::notes() const {
 	return virtualSystemSettingData.get("Notes");
 }
 
-void Machine::requestStateChange(uint16_t requestedState) {
+void Machine::requestStateChange(State requestedState) {
 	try {
 		services.call("Msvm_ComputerSystem", "RequestStateChange")
 			.with("RequestedState", (int32_t)requestedState)
@@ -79,15 +79,15 @@ void Machine::requestStateChange(uint16_t requestedState) {
 }
 
 void Machine::start() {
-	requestStateChange(2);
+	requestStateChange(State::Enabled);
 }
 
 void Machine::stop() {
-	requestStateChange(3);
+	requestStateChange(State::Disabled);
 }
 
 void Machine::pause() {
-	requestStateChange(32776);
+	requestStateChange(State::Paused);
 }
 
 std::vector<StorageController> Machine::ideControllers() const {
@@ -95,16 +95,41 @@ std::vector<StorageController> Machine::ideControllers() const {
 }
 
 std::vector<StorageController> Machine::controllers(const std::string& subtype) const {
-	std::vector<StorageController> result;
-	auto objects = services.execQuery(
-			"SELECT * FROM Msvm_ResourceAllocationSettingData "
-			"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\" "
-			"AND ResourceSubType=\"" + subtype + "\""
-		).getAll();
-	for (auto& object: objects) {
-		result.push_back(StorageController(std::move(object), virtualSystemSettingData, services));
+	try {
+		std::vector<StorageController> result;
+		auto objects = services.execQuery(
+				"SELECT * FROM Msvm_ResourceAllocationSettingData "
+				"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\" "
+				"AND ResourceSubType=\"" + subtype + "\""
+			).getAll();
+		for (auto& object: objects) {
+			result.push_back(StorageController(std::move(object), virtualSystemSettingData, services));
+		}
+		return result;
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
-	return result;
+}
+
+Keyboard Machine::keyboard() const {
+	try {
+		auto keyboard = services.execQuery(
+			"SELECT * FROM Msvm_Keyboard "
+			"WHERE SystemName=\"" + computerSystem.get("Name").get<std::string>() + "\""
+		).getOne();
+		return Keyboard(std::move(keyboard), virtualSystemSettingData, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+NIC Machine::addNIC(const std::string& name, bool legacy) {
+	auto nicTemplate = legacy ?
+		services.getResourceTemplate("Msvm_EmulatedEthernetPortSettingData", "Microsoft:Hyper-V:Emulated Ethernet Port") :
+		services.getResourceTemplate("Msvm_SyntheticEthernetPortSettingData", "Microsoft:Hyper-V:Synthetic Ethernet Port");
+	nicTemplate.put("ElementName", name);
+	auto nic = services.addResource(virtualSystemSettingData, nicTemplate);
+	return NIC(nic, virtualSystemSettingData, services);
 }
 
 }

@@ -244,11 +244,19 @@ NetworkAdapter Machine::getNetworkAdapter(ULONG slot) const {
 bool Machine::hasSnapshot(const std::string& name) const {
 	try {
 		ISnapshot* result = nullptr;
-		throw_if_failed(IMachine_FindSnapshot(handle, StringIn(name), &result));
+		auto error = IMachine_FindSnapshot(handle, StringIn(name), &result);
+		if (FAILED(error)) {
+			if (error == VBOX_E_OBJECT_NOT_FOUND) {
+				return false;
+			} else {
+				throw_if_failed(error);
+			}
+		}
+		ISnapshot_Release(result);
 		return true;
 	}
 	catch (const std::exception&) {
-		return false;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

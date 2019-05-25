@@ -5,13 +5,19 @@
 #include "../StinkingPileOfShit.hpp"
 #include <nlohmann/json.hpp>
 
+enum class VmState {
+	Stopped,
+	Running,
+	Suspended,
+	Other
+};
+
 struct VmController {
 	VmController() = delete;
 	VmController(const nlohmann::json& config_);
 	virtual ~VmController() = default;
 	virtual void install() = 0;
 	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0;
-	virtual void set_metadata(const nlohmann::json& metadata) = 0;
 	virtual void set_metadata(const std::string& key, const std::string& value) = 0;
 	virtual std::string get_metadata(const std::string& key) = 0;
 	virtual std::string get_snapshot_cksum(const std::string& snapshot) = 0;
@@ -28,10 +34,9 @@ struct VmController {
 	virtual void unplug_dvd() = 0;
 	virtual void start() = 0;
 	virtual void stop() = 0;
-	virtual void shutdown(uint32_t timeout_seconds) = 0;
+	virtual void power_button() = 0;
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
-	virtual void type(const std::string& text) = 0;
 	virtual stb::Image screenshot() = 0;
 	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) = 0;
 
@@ -41,8 +46,7 @@ struct VmController {
 	virtual std::vector<std::string> keys() = 0;
 	virtual bool has_key(const std::string& key) = 0;
 	virtual bool is_defined() const = 0;
-	virtual bool is_running() = 0;
-	virtual bool is_suspended() = 0;
+	virtual VmState state() const = 0;
 	virtual bool is_additions_installed() = 0;
 
 

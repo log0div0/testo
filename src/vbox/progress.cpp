@@ -56,7 +56,8 @@ void Progress::wait_and_throw_if_failed() const {
 		if (rc) {
 			vbox::VirtualBoxErrorInfo error = error_info();
 			if (error) {
-				throw std::runtime_error(error.text());
+				auto error_text = error.text();
+				throw std::runtime_error(error_text);
 			} else {
 				std::stringstream ss;
 				ss << "Error code: " << std::hex << rc << std::dec;

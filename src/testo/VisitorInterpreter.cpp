@@ -40,6 +40,106 @@ static void sleep(const std::string& interval) {
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	test_spec = config.at("test_spec").get<std::string>();
+
+	charmap.insert({
+		{'0', {"ZERO"}},
+		{'1', {"ONE"}},
+		{'2', {"TWO"}},
+		{'3', {"THREE"}},
+		{'4', {"FOUR"}},
+		{'5', {"FIVE"}},
+		{'6', {"SIX"}},
+		{'7', {"SEVEN"}},
+		{'8', {"EIGHT"}},
+		{'9', {"NINE"}},
+		{')', {"LEFTSHIFT", "ZERO"}},
+		{'!', {"LEFTSHIFT", "ONE"}},
+		{'@', {"LEFTSHIFT", "TWO"}},
+		{'#', {"LEFTSHIFT", "THREE"}},
+		{'$', {"LEFTSHIFT", "FOUR"}},
+		{'%', {"LEFTSHIFT", "FIVE"}},
+		{'^', {"LEFTSHIFT", "SIX"}},
+		{'&', {"LEFTSHIFT", "SEVEN"}},
+		{'*', {"LEFTSHIFT", "EIGHT"}},
+		{'(', {"LEFTSHIFT", "NINE"}},
+		{'a', {"A"}},
+		{'b', {"B"}},
+		{'c', {"C"}},
+		{'d', {"D"}},
+		{'e', {"E"}},
+		{'f', {"F"}},
+		{'g', {"G"}},
+		{'h', {"H"}},
+		{'i', {"I"}},
+		{'j', {"J"}},
+		{'k', {"K"}},
+		{'l', {"L"}},
+		{'m', {"M"}},
+		{'n', {"N"}},
+		{'o', {"O"}},
+		{'p', {"P"}},
+		{'q', {"Q"}},
+		{'r', {"R"}},
+		{'s', {"S"}},
+		{'t', {"T"}},
+		{'u', {"U"}},
+		{'v', {"V"}},
+		{'w', {"W"}},
+		{'x', {"X"}},
+		{'y', {"Y"}},
+		{'z', {"Z"}},
+		{'A', {"LEFTSHIFT", "A"}},
+		{'B', {"LEFTSHIFT", "B"}},
+		{'C', {"LEFTSHIFT", "C"}},
+		{'D', {"LEFTSHIFT", "D"}},
+		{'E', {"LEFTSHIFT", "E"}},
+		{'F', {"LEFTSHIFT", "F"}},
+		{'G', {"LEFTSHIFT", "G"}},
+		{'H', {"LEFTSHIFT", "H"}},
+		{'I', {"LEFTSHIFT", "I"}},
+		{'J', {"LEFTSHIFT", "J"}},
+		{'K', {"LEFTSHIFT", "K"}},
+		{'L', {"LEFTSHIFT", "L"}},
+		{'M', {"LEFTSHIFT", "M"}},
+		{'N', {"LEFTSHIFT", "N"}},
+		{'O', {"LEFTSHIFT", "O"}},
+		{'P', {"LEFTSHIFT", "P"}},
+		{'Q', {"LEFTSHIFT", "Q"}},
+		{'R', {"LEFTSHIFT", "R"}},
+		{'S', {"LEFTSHIFT", "S"}},
+		{'T', {"LEFTSHIFT", "T"}},
+		{'U', {"LEFTSHIFT", "U"}},
+		{'V', {"LEFTSHIFT", "V"}},
+		{'W', {"LEFTSHIFT", "W"}},
+		{'X', {"LEFTSHIFT", "X"}},
+		{'Y', {"LEFTSHIFT", "Y"}},
+		{'Z', {"LEFTSHIFT", "Z"}},
+		{'-', {"MINUS"}},
+		{'_', {"LEFTSHIFT", "MINUS"}},
+		{'=', {"EQUALSIGN"}},
+		{'+', {"LEFTSHIFT", "EQUALSIGN"}},
+		{'\'', {"APOSTROPHE"}},
+		{'\"', {"LEFTSHIFT", "APOSTROPHE"}},
+		{'\\', {"BACKSLASH"}},
+		{'\n', {"ENTER"}},
+		{'\t', {"TAB"}},
+		{'|', {"LEFTSHIFT", "BACKSLASH"}},
+		{',', {"COMMA"}},
+		{'<', {"LEFTSHIFT", "COMMA"}},
+		{'.', {"DOT"}},
+		{'>', {"LEFTSHIFT", "DOT"}},
+		{'/', {"SLASH"}},
+		{'?', {"LEFTSHIFT", "SLASH"}},
+		{';', {"SEMICOLON"}},
+		{':', {"LEFTSHIFT", "SEMICOLON"}},
+		{'[', {"LEFTBRACE"}},
+		{'{', {"LEFTSHIFT", "LEFTBRACE"}},
+		{']', {"RIGHTBRACE"}},
+		{'}', {"LEFTSHIFT", "RIGHTBRACE"}},
+		{'`', {"GRAVE"}},
+		{'~', {"LEFTSHIFT", "GRAVE"}},
+		{' ', {"SPACE"}}
+	});
 }
 
 void VisitorInterpreter::print_statistics() const {
@@ -213,6 +313,21 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			if (is_new) {
 				print("Creating machine ", vm->name());
 				vm->install();
+
+				auto config = vm->get_config();
+
+				if (config.count("metadata")) {
+					auto metadata = config.at("metadata");
+					for (auto it = metadata.begin(); it != metadata.end(); ++it) {
+						vm->set_metadata(it.key(), it.value());
+					}
+				}
+
+				vm->set_metadata("vm_config", config.dump());
+				vm->set_metadata("vm_nic_count", std::to_string(config.count("nic") ? config.at("nic").size() : 0));
+				vm->set_metadata("vm_name", config.at("name"));
+				vm->set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
+
 			}
 		}
 
@@ -224,7 +339,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		for (auto parent: test->parents) {
 			for (auto vm: reg.get_all_vms(parent)) {
-				if (vm->is_suspended()) {
+				if (vm->state() == VmState::Suspended) {
 					vm->resume();
 				}
 			}
@@ -236,7 +351,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		//But that's not everything - we need to create according snapshots to all included vms
 
 		for (auto vm: reg.get_all_vms(test)) {
-			if (vm->is_running()) {
+			if (vm->state() == VmState::Running) {
 				vm->suspend();
 			}
 		}
@@ -330,7 +445,14 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::share
 	try {
 		std::string text = visit_word(vm, type->text_word);
 		print("Typing ", text, " on vm ", vm->name());
-		vm->type(text);
+		for (auto c: text) {
+			auto buttons = charmap.find(c);
+			if (buttons == charmap.end()) {
+				throw std::runtime_error("Unknown character to type");
+			}
+			vm->press(buttons->second);
+			std::this_thread::sleep_for(std::chrono::milliseconds(30));
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(type, vm));
 	}
@@ -455,7 +577,7 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 		throw std::runtime_error(fmt::format("specified nic {} is not present in this vm", nic));
 	}
 
-	if (vm->is_running()) {
+	if (vm->state() != VmState::Stopped) {
 		throw std::runtime_error(fmt::format("vm is running, but must be stopeed"));
 	}
 
@@ -565,8 +687,16 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<Shutdown> shutdown) {
 	try {
 		print("Shutting down vm ", vm->name());
+		vm->power_button();
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
-		vm->shutdown(time_to_seconds(wait_for));
+		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
+		while (std::chrono::system_clock::now() < deadline) {
+			if (vm->state() != VmState::Stopped) {
+				return;
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+		}
+		throw std::runtime_error("Shutdown timeout");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(shutdown, vm));
 
@@ -577,7 +707,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 	try {
 		print("Executing ", exec->process_token.value(), " command on vm ", vm->name());
 
-		if (!vm->is_running()) {
+		if (vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("vm is not running"));
 		}
 
@@ -662,7 +792,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::share
 
 		print("Copying ", from, " ", from_to, " vm ", vm->name(), " in directory ", to);
 
-		if (!vm->is_running()) {
+		if (vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("vm is not running"));
 		}
 
