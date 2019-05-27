@@ -62,6 +62,4 @@ private:
 
 	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
 	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
-
-	//API& api;
 };

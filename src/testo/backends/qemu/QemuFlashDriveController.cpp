@@ -2,7 +2,7 @@
 #include "pugixml/pugixml.hpp"
 #include <fmt/format.h>
 #include "QemuFlashDriveController.hpp"
-#include "../../Utils.hpp"
+#include "QemuEnvironment.hpp"
 #include <thread>
 #include <fstream>
 
@@ -66,7 +66,7 @@ void QemuFlashDriveController::create() {
 }
 
 bool QemuFlashDriveController::is_mounted() const {
-	std::string query = std::string("mountpoint -q " + flash_drives_mount_dir().generic_string());
+	std::string query = std::string("mountpoint -q " + QemuEnvironment::flash_drives_mount_dir.generic_string());
 	return (std::system(query.c_str()) == 0);
 }
 
@@ -81,7 +81,7 @@ void QemuFlashDriveController::mount() const {
 			"/dev/nbd0 -f qcow2 " +
 			img_path().generic_string());
 
-		exec_and_throw_if_failed(std::string("mount /dev/nbd0 ") + flash_drives_mount_dir().generic_string());
+		exec_and_throw_if_failed(std::string("mount /dev/nbd0 ") + QemuEnvironment::flash_drives_mount_dir.generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
 	}
@@ -111,12 +111,17 @@ void QemuFlashDriveController::load_folder() const {
 
 		exec_and_throw_if_failed(std::string("cp -r ") +
 			target_folder.generic_string() +
-			" " + flash_drives_mount_dir().generic_string());
+			" " + QemuEnvironment::flash_drives_mount_dir.generic_string());
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 		umount();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Load folder"));
 	}
+}
+
+fs::path QemuFlashDriveController::img_path() const {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
+	return pool.path() / (name() + ".img");
 }
 
 void QemuFlashDriveController::remove_if_exists() {

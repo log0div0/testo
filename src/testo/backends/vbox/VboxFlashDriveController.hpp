@@ -15,15 +15,10 @@ struct VboxFlashDriveController: FlashDriveController {
 	void umount() const override;
 	void load_folder() const override;
 
-	fs::path img_path() const override {
-		auto res = flash_drives_img_dir();
-		res += name() + ".vmdk";
-		return res;
-	}
+	fs::path img_path() const override;
 
 	vbox::Medium handle;
 private:
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
-	//API& api;
 };

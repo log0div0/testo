@@ -1,6 +1,11 @@
 
 #include "QemuEnvironment.hpp"
+#include "QemuVmController.hpp"
+#include "QemuFlashDriveController.hpp"
 #include <fmt/format.h>
+
+fs::path QemuEnvironment::testo_dir = "/var/lib/libvirt/testo";
+fs::path QemuEnvironment::flash_drives_mount_dir = "/var/lib/libvirt/testo/flash_drives/mount_point/";
 
 QemuEnvironment::~QemuEnvironment() {
 	try {
@@ -9,7 +14,7 @@ QemuEnvironment::~QemuEnvironment() {
 }
 
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
-	auto pool_dir = testo_dir() / pool_name;
+	auto pool_dir = testo_dir / pool_name;
 	if (!fs::exists(pool_dir)) {
 		if (!fs::create_directories(pool_dir)) {
 			throw std::runtime_error(std::string("Can't create directory: ") + pool_dir.generic_string());
@@ -57,10 +62,21 @@ void QemuEnvironment::setup() {
 	prepare_storage_pool("testo-storage-pool");
 	prepare_storage_pool("testo-flash-drives-pool");
 
-	//TODO: fuck that mounting
-	exec_and_throw_if_failed("mkdir -p " + flash_drives_mount_dir().generic_string());
+	if (!fs::exists(flash_drives_mount_dir)) {
+		if (!fs::create_directories(flash_drives_mount_dir)) {
+			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_mount_dir.generic_string());
+		}
+	}
 }
 
 void QemuEnvironment::cleanup() {
 
+}
+
+std::shared_ptr<VmController> QemuEnvironment::create_vm_controller(const nlohmann::json& config) {
+	return std::shared_ptr<VmController>(new QemuVmController(config));
+}
+
+std::shared_ptr<FlashDriveController> QemuEnvironment::create_flash_drive_controller(const nlohmann::json& config) {
+	return std::shared_ptr<FlashDriveController>(new QemuFlashDriveController(config));
 }

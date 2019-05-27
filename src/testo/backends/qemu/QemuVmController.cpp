@@ -3,7 +3,6 @@
 #include "QemuFlashDriveController.hpp"
 #include "QemuGuestAdditions.hpp"
 
-#include "../../Utils.hpp"
 #include <fmt/format.h>
 #include <thread>
 

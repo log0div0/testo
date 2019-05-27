@@ -1,6 +1,6 @@
 
 #include "VboxFlashDriveController.hpp"
-#include "../../Utils.hpp"
+#include "VboxEnvironment.hpp"
 #include <functional>
 #include <thread>
 #include <chrono>
@@ -41,7 +41,7 @@ void VboxFlashDriveController::create() {
 }
 
 bool VboxFlashDriveController::is_mounted() const {
-	std::string query = std::string("mountpoint -q " + flash_drives_mount_dir().generic_string());
+	std::string query = std::string("mountpoint -q " + VboxEnvironment::flash_drives_mount_dir.generic_string());
 	return (std::system(query.c_str()) == 0);
 }
 
@@ -84,10 +84,16 @@ void VboxFlashDriveController::load_folder() const {
 
 		exec_and_throw_if_failed(std::string("cp -r ") +
 			abs_target_folder.generic_string() +
-			" " + flash_drives_mount_dir().generic_string());
+			" " + VboxEnvironment::flash_drives_mount_dir.generic_string());
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 		umount();
 	} catch (const std::exception& error) {
 		std::cout << "Load folder error: " << error << std::endl;
 	}
+}
+
+fs::path VboxFlashDriveController::img_path() const {
+	auto res = VboxEnvironment::flash_drives_img_dir;
+	res += name() + ".vmdk";
+	return res;
 }

@@ -2,23 +2,20 @@
 #pragma once
 
 #include "../Environment.hpp"
-#include "QemuVmController.hpp"
-#include "QemuFlashDriveController.hpp"
+#include <qemu/Connect.hpp>
 
 struct QemuEnvironment : public Environment {
+	static fs::path testo_dir;
+	static fs::path flash_drives_mount_dir;
+
 	QemuEnvironment() {}
 	~QemuEnvironment();
 
 	void setup() override;
 	void cleanup() override;
 
-	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override {
-		return std::shared_ptr<VmController>(new QemuVmController(config));
-	}
-
-	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {
-		return std::shared_ptr<FlashDriveController>(new QemuFlashDriveController(config));
-	}
+	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override;
+	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override;
 
 private:
 	void prepare_storage_pool(const std::string& pool_name);
