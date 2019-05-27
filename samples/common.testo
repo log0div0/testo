@@ -58,7 +58,7 @@ macro install_guest_additions() {
 		plug dvd $ISO_DIR + "/negotiator.iso"; wait timeout 5s
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounting read-only"; type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter;
-		wait "ureadahead"; wait timeout 2s
+		wait "Setting up negotiator-agent"
 	}
 	if ($VBOX) {
 		type "clear && apt-get install -y virtualbox-guest-dkms"; press Enter
