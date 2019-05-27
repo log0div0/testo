@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 		try {
 			result = do_main(argc, argv);
 		} catch (const std::exception& error) {
-			std::cout << error.what() << std::endl;
+			std::cout << error << std::endl;
 			result = 1;
 		}
 	}).run();

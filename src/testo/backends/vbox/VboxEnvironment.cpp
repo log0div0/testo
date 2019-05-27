@@ -20,7 +20,6 @@ void VboxEnvironment::setup() {
 
 	exec_and_throw_if_failed("mkdir -p " + flash_drives_img_dir().generic_string());
 	exec_and_throw_if_failed("mkdir -p " + flash_drives_mount_dir().generic_string());
-	exec_and_throw_if_failed("mkdir -p " + scripts_tmp_dir().generic_string());
 }
 
 void VboxEnvironment::cleanup() {

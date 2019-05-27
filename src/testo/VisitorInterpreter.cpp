@@ -726,12 +726,8 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 
 			std::string hash = std::to_string(h(script));
 
-			fs::path host_script_dir = scripts_tmp_dir() / hash;
+			fs::path host_script_dir = fs::temp_directory_path();
 			fs::path guest_script_dir = fs::path("/tmp");
-
-			if (!fs::create_directories(host_script_dir) && !fs::exists(host_script_dir)) {
-				throw std::runtime_error(fmt::format("can't create tmp script file on host"));
-			}
 
 			fs::path host_script_file = host_script_dir / std::string(hash + ".sh");
 			fs::path guest_script_file = guest_script_dir / std::string(hash + ".sh");
@@ -743,17 +739,16 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			script_stream << script;
 			script_stream.close();
 
-			vm->copy_to_guest(host_script_dir, fs::path("/tmp"), 5); //5 seconds should be enough to pass any script
+			vm->copy_to_guest(host_script_file, guest_script_file, 5); //5 seconds should be enough to pass any script
 
 			fs::remove(host_script_file.generic_string());
-			fs::remove(host_script_dir.generic_string());
 
 			std::string wait_for = exec->time_interval ? exec->time_interval.value() : "600s";
 
 			if (vm->run("/bin/bash", {guest_script_file.generic_string()}, time_to_seconds(wait_for)) != 0) {
 				throw std::runtime_error("Bash command failed");
 			}
-			vm->remove_from_guest(guest_script_dir);
+			vm->remove_from_guest(guest_script_file);
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(exec, vm));

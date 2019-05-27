@@ -16,13 +16,6 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 		}
 	}
 
-	if (!fs::exists(scripts_tmp_dir())) {
-		if (!fs::create_directories(scripts_tmp_dir())) {
-			throw std::runtime_error(std::string("Can't create directory: ") + pool_dir.generic_string());
-		}
-	}
-
-
 	auto storage_pools = qemu_connect.storage_pools({VIR_CONNECT_LIST_STORAGE_POOLS_PERSISTENT});
 
 	bool found = false;

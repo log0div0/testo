@@ -27,7 +27,6 @@ fs::path home_dir();
 fs::path testo_dir();
 fs::path flash_drives_img_dir();
 fs::path flash_drives_mount_dir();
-fs::path scripts_tmp_dir();
 
 std::string file_signature(const fs::path& file);
 std::string directory_signature(const fs::path& dir);

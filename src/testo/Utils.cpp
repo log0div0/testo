@@ -61,12 +61,6 @@ fs::path flash_drives_mount_dir() {
 	return res;
 }
 
-fs::path scripts_tmp_dir() {
-	auto res = home_dir();
-	res = res / "/testo/scripts_tmp/";
-	return res;
-}
-
 std::string file_signature(const fs::path& file) {
 	if (!fs::exists(file)) {
 		throw std::runtime_error("File " + file.generic_string() + " does not exists");
