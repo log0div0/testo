@@ -20,7 +20,7 @@ struct FlashDriveController {
 	virtual fs::path img_path() const = 0;
 	std::string cksum() const;
 	bool is_cksum_ok() const {
-		return cksum() == read_cksum();
+		return calc_cksum() == read_cksum();
 	}
 
 	std::string name() const;

@@ -12,10 +12,11 @@ VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config_
 
 void VboxFlashDriveController::create() {
 	try {
-		std::string fdisk = std::string("fdisk -l | grep nbd0");
-		if (std::system(fdisk.c_str()) == 0) {
-			throw std::runtime_error("Can't create flash drive: target host slot is busy");
+		if (std::system("lsmod | grep nbd > /dev/null")) {
+			throw std::runtime_error("Please load nbd module (max parts=1");
 		}
+
+		remove_if_exists();
 
 		handle = virtual_box.create_medium("vmdk", img_path().generic_string(), AccessMode_ReadWrite, DeviceType_HardDisk);
 		size_t disk_size = config.at("size").get<uint32_t>();
@@ -23,8 +24,8 @@ void VboxFlashDriveController::create() {
 		handle.create_base_storage(disk_size, MediumVariant_Fixed).wait_and_throw_if_failed();
 
 		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f vmdk " +
-			img_path().generic_string());
+			"/dev/nbd0 -f vmdk \"" +
+			img_path().generic_string() + "\"");
 
 		std::string size = std::to_string(config.at("size").get<uint32_t>()) + "M";
 		exec_and_throw_if_failed(std::string("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% ") +
@@ -36,7 +37,7 @@ void VboxFlashDriveController::create() {
 
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
 	} catch (const std::exception& error) {
-		std::cout << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -53,12 +54,12 @@ void VboxFlashDriveController::mount() const {
 		}
 
 		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f vmdk " +
-			img_path().generic_string());
+			"/dev/nbd0 -f vmdk \"" +
+			img_path().generic_string() + "\"");
 
 		exec_and_throw_if_failed(std::string("mount /dev/nbd0"));
 	} catch (const std::exception& error) {
-		std::cout << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -67,7 +68,7 @@ void VboxFlashDriveController::umount() const {
 		exec_and_throw_if_failed(std::string("umount /dev/nbd0"));
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
 	} catch (const std::exception& error) {
-		std::cout << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -88,12 +89,25 @@ void VboxFlashDriveController::load_folder() const {
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 		umount();
 	} catch (const std::exception& error) {
-		std::cout << "Load folder error: " << error << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
 fs::path VboxFlashDriveController::img_path() const {
-	auto res = VboxEnvironment::flash_drives_img_dir;
-	res += name() + ".vmdk";
-	return res;
+	return VboxEnvironment::flash_drives_img_dir / (name() + ".vmdk");
+}
+
+void VboxFlashDriveController::remove_if_exists() {
+	try {
+		for (auto& hdd: virtual_box.hard_disks()) {
+			if (img_path().generic_string() == hdd.location()) {
+				hdd.delete_storage().wait_and_throw_if_failed();
+				break;
+			}
+		}
+
+		delete_cksum();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }

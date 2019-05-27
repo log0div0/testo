@@ -19,6 +19,8 @@ struct VboxFlashDriveController: FlashDriveController {
 
 	vbox::Medium handle;
 private:
+	void remove_if_exists();
+
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
 };

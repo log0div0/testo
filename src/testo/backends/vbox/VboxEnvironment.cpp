@@ -29,10 +29,6 @@ VboxEnvironment::~VboxEnvironment() {
 void VboxEnvironment::setup() {
 	cleanup();
 
-	if (std::system("lsmod | grep nbd > /dev/null")) {
-		throw std::runtime_error("Please load nbd module (max parts=1");
-	}
-
 	if (!fs::exists(flash_drives_img_dir)) {
 		if (!fs::create_directories(flash_drives_img_dir)) {
 			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_img_dir.generic_string());
@@ -47,27 +43,6 @@ void VboxEnvironment::setup() {
 }
 
 void VboxEnvironment::cleanup() {
-	std::string fdisk = std::string("fdisk -l | grep nbd0");
-	if (std::system(fdisk.c_str()) == 0) {
-		exec_and_throw_if_failed(std::string("qemu-nbd --disconnect /dev/nbd0"));
-	}
-
-	if (!fs::exists(flash_drives_img_dir)) {
-		return;
-	}
-
-	vbox::VirtualBoxClient virtual_box_client;
-	auto virtual_box = virtual_box_client.virtual_box();
-	auto hdds = virtual_box.hard_disks();
-
-	for (auto& p: fs::directory_iterator(flash_drives_img_dir)) {
-		for (auto& hdd: hdds) {
-			if (fs::path(p).generic_string() == hdd.location()) {
-				hdd.delete_storage().wait_and_throw_if_failed();
-				break;
-			}
-		}
-	}
 }
 
 std::shared_ptr<VmController> VboxEnvironment::create_vm_controller(const nlohmann::json& config) {
