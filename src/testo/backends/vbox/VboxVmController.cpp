@@ -623,9 +623,20 @@ void VboxVmController::start() {
 
 void VboxVmController::stop() {
 	try {
+		//In the end of stop we should enter session state UNLOCKED (even if the vm was being viewed by the user in GUI)
+		//So we lock our machine, then destroy lock and wait for session state to become unlocked
 		auto machine = virtual_box.find_machine(name());
-		vbox::Lock lock(machine, work_session, LockType_Shared);
-		work_session.console().power_down().wait_and_throw_if_failed();
+		{
+			vbox::Lock lock(machine, work_session, LockType_Shared);
+			work_session.console().power_down().wait_and_throw_if_failed();
+		}
+		for (int i = 0; i < 10; i++) {
+			if (machine.session_state() == SessionState_Unlocked) {
+				return;
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
+		throw std::runtime_error("timeout for stop has expired");
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
