@@ -19,7 +19,7 @@ struct Lock {
 
 	IMachine* machine;
 	ISession* session;
-	SessionState prev_state;
+	SessionState_T prev_state;
 };
 
 }

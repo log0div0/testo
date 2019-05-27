@@ -11,12 +11,20 @@ using namespace std::chrono_literals;
 
 namespace vbox {
 
-Lock::Lock(Machine& machine, Session& session, LockType lock_type): machine(machine.handle),
-	session(session.handle) 
+Lock::Lock(Machine& machine_, Session& session_, LockType lock_type): machine(machine_.handle),
+	session(session_.handle)
 {
 	try {
-		prev_state = machine.session_state();
-		throw_if_failed(IMachine_LockMachine(this->machine, this->session, lock_type));
+		SessionState_T result = SessionState_Null;
+		throw_if_failed(IMachine_get_SessionState(machine, &result));
+
+		while ((result == SessionState_Unlocking) || (result == SessionState_Spawning)) {
+			std::this_thread::sleep_for(40ms);
+			throw_if_failed(IMachine_get_SessionState(machine, &result));
+		}
+
+		prev_state = result;
+		throw_if_failed(IMachine_LockMachine(machine, session, lock_type));
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
