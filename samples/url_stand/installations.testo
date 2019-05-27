@@ -97,12 +97,12 @@ test install_ubuntu {
 	url_proxy, url_client, url_server install_ubuntu()
 }
 
-test install_negotiator: install_ubuntu {
-	url_proxy, url_client, url_server install_negotiator()
+test install_guest_additions: install_ubuntu {
+	url_proxy, url_client, url_server install_guest_additions()
 }
 
 
-test install_pkgs: install_negotiator {
+test install_pkgs: install_guest_additions {
 	url_proxy, url_client, url_server {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
 		exec bash "chmod +x /tmp/rename_net.sh"

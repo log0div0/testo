@@ -26,7 +26,7 @@ void exec_and_throw_if_failed(const std::string& command) {
 
 std::string file_signature(const fs::path& file) {
 	if (!fs::exists(file)) {
-		throw std::runtime_error("File " + file.generic_string() + " does not exists");
+		return "not exists";
 	}
 	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
 	return file.filename().generic_string() + std::to_string(last_modify_time);

@@ -133,15 +133,15 @@ test clients_installed {
 	vpn_client1, vpn_client2 install_ubuntu()
 }
 
-test sgws_negotiator: sgws_installed  {
-	vpn_sgw1, vpn_sgw2 install_negotiator()
+test sgws_guest_additions: sgws_installed  {
+	vpn_sgw1, vpn_sgw2 install_guest_additions()
 }
 
-test clients_negotiator: clients_installed {
-	vpn_client1, vpn_client2 install_negotiator()
+test clients_guest_additions: clients_installed {
+	vpn_client1, vpn_client2 install_guest_additions()
 }
 
-test sgws_pkgs: sgws_negotiator {
+test sgws_pkgs: sgws_guest_additions {
 	vpn_sgw1, vpn_sgw2 {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
 		exec bash "chmod +x /tmp/rename_net.sh"
@@ -149,24 +149,34 @@ test sgws_pkgs: sgws_negotiator {
 
 	vpn_sgw1 {
 		exec bash """
-			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break || sleep 15; done
+			/tmp/rename_net.sh 52:54:00:00:00:00 WAN
+			/tmp/rename_net.sh 52:54:00:00:00:11 LAN
+			while true
+			do
+				dhclient -r
+				dhclient
+				apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break
+			done
 		"""
-		exec bash "/tmp/rename_net.sh 52:54:00:00:00:00 WAN"
-		exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
 	}
 
 	vpn_sgw2 {
 		exec bash """
-			for i in {1..5}; do command apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config && break || sleep 15; done
+			/tmp/rename_net.sh 52:54:00:00:11:00 WAN
+			/tmp/rename_net.sh 52:54:00:00:11:11 LAN
+			while true
+			do
+				dhclient -r
+				dhclient
+				apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config && break
+			done
 		"""
-		exec bash "/tmp/rename_net.sh 52:54:00:00:11:00 WAN"
-		exec bash "/tmp/rename_net.sh 52:54:00:00:11:11 LAN"
 	}
 
 	vpn_sgw1, vpn_sgw2 unplug_nat()
 }
 
-test clients_net_renamed: clients_negotiator {
+test clients_net_renamed: clients_guest_additions {
 	vpn_client1, vpn_client2 {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
 		exec bash "chmod +x /tmp/rename_net.sh"

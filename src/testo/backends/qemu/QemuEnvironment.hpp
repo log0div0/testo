@@ -8,7 +8,7 @@ struct QemuEnvironment : public Environment {
 	static fs::path testo_dir;
 	static fs::path flash_drives_mount_dir;
 
-	QemuEnvironment() {}
+	QemuEnvironment();
 	~QemuEnvironment();
 
 	void setup() override;

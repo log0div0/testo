@@ -7,6 +7,10 @@
 fs::path QemuEnvironment::testo_dir = "/var/lib/libvirt/testo";
 fs::path QemuEnvironment::flash_drives_mount_dir = "/var/lib/libvirt/testo/flash_drives/mount_point/";
 
+QemuEnvironment::QemuEnvironment() {
+	setenv("QEMU", "1", false);
+}
+
 QemuEnvironment::~QemuEnvironment() {
 	try {
 		cleanup();
