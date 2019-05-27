@@ -17,7 +17,6 @@ struct VboxFlashDriveController: FlashDriveController {
 
 	fs::path img_path() const override;
 
-	vbox::Medium handle;
 private:
 	void remove_if_exists();
 

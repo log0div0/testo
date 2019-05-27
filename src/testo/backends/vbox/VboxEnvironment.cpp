@@ -10,7 +10,11 @@ fs::path VboxEnvironment::flash_drives_img_dir;
 fs::path VboxEnvironment::flash_drives_mount_dir;
 
 VboxEnvironment::VboxEnvironment() {
+#ifdef WIN32
+	_putenv_s("VBOX", "1");
+#else
 	setenv("VBOX", "1", false);
+#endif
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box = virtual_box_client.virtual_box();
 	auto path = fs::path(virtual_box.compose_machine_filename("testo", "/", {}, {}));

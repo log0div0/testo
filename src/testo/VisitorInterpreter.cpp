@@ -720,6 +720,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 
 			std::string script = "set -e; set -o pipefail; set -x;";
 			script += visit_word(vm, exec->commands);
+			script.erase(std::remove(script.begin(), script.end(), '\r'), script.end());
 
 			//copy the script to tmp folder
 			std::hash<std::string> h;
@@ -731,7 +732,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 
 			fs::path host_script_file = host_script_dir / std::string(hash + ".sh");
 			fs::path guest_script_file = guest_script_dir / std::string(hash + ".sh");
-			std::ofstream script_stream(host_script_file);
+			std::ofstream script_stream(host_script_file, std::ios::binary);
 			if (!script_stream.is_open()) {
 				throw std::runtime_error(fmt::format("Can't open tmp file for writing the script"));
 			}

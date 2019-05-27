@@ -28,6 +28,3 @@ void HyperVFlashDriveController::load_folder() const {
 fs::path HyperVFlashDriveController::img_path() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-std::string HyperVFlashDriveController::cksum() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}

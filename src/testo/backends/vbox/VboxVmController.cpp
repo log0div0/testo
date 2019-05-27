@@ -10,6 +10,8 @@
 #include <thread>
 #include <regex>
 
+using namespace std::chrono_literals;
+
 VboxVmController::VboxVmController(const nlohmann::json& config_): VmController(config_) {
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing VboxVmController error: field NAME is not specified");
@@ -195,7 +197,7 @@ void VboxVmController::create_vm() {
 			vbox::Machine machine = virtual_box.create_machine(settings_file_path, name(), {"/"}, guest_os_type.id(), {});
 
 			machine.memory_size(config.at("ram").get<std::uint32_t>()); //for now, but we need to change it
-			machine.vram_size(guest_os_type.recommended_vram());
+			machine.vram_size(guest_os_type.recommended_vram() > 16 ? guest_os_type.recommended_vram() : 16);
 			machine.cpus(config.at("cpus").get<uint32_t>());
 
 			machine.add_usb_controller("OHCI", USBControllerType_OHCI);
@@ -305,9 +307,7 @@ void VboxVmController::set_metadata(const std::string& key, const std::string& v
 
 std::vector<std::string> VboxVmController::keys() {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
+		auto machine = virtual_box.find_machine(name());
 		return machine.getExtraDataKeys();
 	}
 	catch (const std::exception& error) {
@@ -332,9 +332,7 @@ bool VboxVmController::has_key(const std::string& key) {
 
 std::string VboxVmController::get_metadata(const std::string& key) {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
+		auto machine = virtual_box.find_machine(name());
 		return machine.getExtraData(key);
 	}
 	catch (const std::exception& error) {
@@ -392,20 +390,17 @@ std::string VboxVmController::get_snapshot_cksum(const std::string& snapshot) {
 
 void VboxVmController::rollback(const std::string& snapshot) {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		if (lock_machine.state() != MachineState_PoweredOff) {
-			stop();
-		}
+		stop();
 
 		{
+			auto lock_machine = virtual_box.find_machine(name());
 			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 			auto machine = work_session.machine();
 			auto snap = machine.findSnapshot(snapshot);
 			machine.restoreSnapshot(snap).wait_and_throw_if_failed();
 		}
 
-		lock_machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
-		start_session.unlock_machine();
+		start();
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -570,8 +565,8 @@ void VboxVmController::plug_flash_drive(std::shared_ptr<FlashDriveController> fd
 			}
 		}
 
-		auto& handle = std::dynamic_pointer_cast<VboxFlashDriveController>(fd)->handle;
-		machine.attach_device("USB", empty_slot, 0, DeviceType_HardDisk, handle);
+		vbox::Medium medium = virtual_box.open_medium(fd->img_path().generic_string(), DeviceType_HardDisk, AccessMode_ReadWrite, false);
+		machine.attach_device("USB", empty_slot, 0, DeviceType_HardDisk, medium);
 		machine.save_settings();
 		plugged_fds.insert(fd);
 	} catch (const std::exception& error) {
@@ -592,10 +587,8 @@ void VboxVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController> 
 
 		auto attachments = machine.medium_attachments_of_controller("USB");
 
-		auto& handle = std::dynamic_pointer_cast<VboxFlashDriveController>(fd)->handle;
-
 		for (auto& attachment: attachments) {
-			if (attachment.medium().handle == handle.handle) {
+			if (attachment.medium().location() == fd->img_path()) {
 				machine.detach_device("USB", attachment.port(), attachment.device());
 			}
 		}
@@ -653,8 +646,21 @@ void VboxVmController::unplug_dvd() {
 void VboxVmController::start() {
 	try {
 		auto machine = virtual_box.find_machine(name());
+		if (machine.state() == MachineState_Running) {
+			return;
+		}
 		machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
+
+		auto deadline = std::chrono::system_clock::now() + 10s;
+		do {
+			if (machine.state() == MachineState_Running) {
+				return;
+			}
+			std::this_thread::sleep_for(100ms);
+		} while (std::chrono::system_clock::now() < deadline);
+
+		throw std::runtime_error("Failed to start VM");
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -663,20 +669,23 @@ void VboxVmController::start() {
 
 void VboxVmController::stop() {
 	try {
-		//In the end of stop we should enter session state UNLOCKED (even if the vm was being viewed by the user in GUI)
-		//So we lock our machine, then destroy lock and wait for session state to become unlocked
 		auto machine = virtual_box.find_machine(name());
-		{
-			vbox::Lock lock(machine, work_session, LockType_Shared);
-			work_session.console().power_down().wait_and_throw_if_failed();
+		if ((machine.state() == MachineState_PoweredOff) ||
+			(machine.state() == MachineState_Saved)) {
+			return;
 		}
-		for (int i = 0; i < 10; i++) {
-			if (machine.session_state() == SessionState_Unlocked) {
+		vbox::Lock lock(machine, work_session, LockType_Shared);
+		work_session.console().power_down().wait_and_throw_if_failed();
+
+		auto deadline = std::chrono::system_clock::now() + 10s;
+		do {
+			if (machine.state() == MachineState_PoweredOff) {
 				return;
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
-		throw std::runtime_error("timeout for stop has expired");
+			std::this_thread::sleep_for(100ms);
+		} while (std::chrono::system_clock::now() < deadline);
+
+		throw std::runtime_error("Failed to start VM");
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
