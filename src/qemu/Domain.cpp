@@ -1,6 +1,6 @@
 
 #include "Domain.hpp"
-#include "testo/Utils.hpp"
+#include "XML.hpp"
 #include <libvirt/virterror.h>
 #include <stdexcept>
 #include <thread>
