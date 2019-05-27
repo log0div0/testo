@@ -178,7 +178,7 @@ test install_squid: configure_server {
 			./configure --enable-ecap --with-openssl
 			make -j2
 			make install
-		"""
+		""" timeout 30m
 	}
 }
 

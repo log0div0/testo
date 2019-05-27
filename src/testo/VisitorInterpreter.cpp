@@ -691,7 +691,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::s
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
 		while (std::chrono::system_clock::now() < deadline) {
-			if (vm->state() != VmState::Stopped) {
+			if (vm->state() == VmState::Stopped) {
 				return;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(300));
