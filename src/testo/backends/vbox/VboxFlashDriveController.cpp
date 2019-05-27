@@ -5,6 +5,12 @@
 #include <thread>
 #include <chrono>
 
+#ifdef __linux__
+const std::string disk_format = "vmdk";
+#else
+const std::string disk_format = "vhd";
+#endif
+
 VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config_): FlashDriveController(config_)
 {
 	virtual_box = virtual_box_client.virtual_box();
@@ -19,15 +25,15 @@ void VboxFlashDriveController::create() {
 #endif
 		remove_if_exists();
 
-		auto handle = virtual_box.create_medium("vhd", img_path().generic_string(), AccessMode_ReadWrite, DeviceType_HardDisk);
+		auto handle = virtual_box.create_medium(disk_format, img_path().generic_string(), AccessMode_ReadWrite, DeviceType_HardDisk);
 		size_t disk_size = config.at("size").get<uint32_t>();
 		disk_size = disk_size * 1024 * 1024;
 		handle.create_base_storage(disk_size, MediumVariant_Fixed).wait_and_throw_if_failed();
 
 #ifdef __linux__
 		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f vhd \"" +
-			img_path().generic_string() + "\"");
+			"/dev/nbd0 -f " + disk_format +
+			" \"" + img_path().generic_string() + "\"");
 
 		std::string size = std::to_string(config.at("size").get<uint32_t>()) + "M";
 		exec_and_throw_if_failed(std::string("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% ") +
@@ -62,8 +68,8 @@ void VboxFlashDriveController::mount() const {
 		}
 
 		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f vhd \"" +
-			img_path().generic_string() + "\"");
+			"/dev/nbd0 -f " + disk_format +
+			" \"" + img_path().generic_string() + "\"");
 
 		exec_and_throw_if_failed(std::string("mount /dev/nbd0"));
 #endif
@@ -108,7 +114,7 @@ void VboxFlashDriveController::load_folder() const {
 }
 
 fs::path VboxFlashDriveController::img_path() const {
-	return VboxEnvironment::flash_drives_img_dir / (name() + ".vhd");
+	return VboxEnvironment::flash_drives_img_dir / (name() + "." + disk_format);
 }
 
 void VboxFlashDriveController::remove_if_exists() {
