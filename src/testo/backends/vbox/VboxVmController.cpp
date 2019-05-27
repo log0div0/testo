@@ -436,7 +436,26 @@ void VboxVmController::press(const std::vector<std::string>& buttons) {
 }
 
 bool VboxVmController::is_nic_plugged(const std::string& nic) const {
-	throw std::runtime_error("Not implemented");
+	try {
+		if (!config.count("nic")) {
+			throw std::runtime_error("There's no nics in this vm");
+		}
+
+		auto& nics = config.at("nic");
+
+		for (auto& nic_it: nics) {
+			if (nic_it.at("name") == nic) {
+				auto machine = virtual_box.find_machine(name());
+				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
+				return network_adapter.enabled();
+			}
+		}
+
+		throw std::runtime_error(std::string("There's no nic with name ") + nic);
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }
 
 void VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
@@ -456,6 +475,7 @@ void VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
 				network_adapter.setEnabled(is_enabled);
 				machine.save_settings();
+				return;
 			}
 		}
 
@@ -467,7 +487,26 @@ void VboxVmController::set_nic(const std::string& nic, bool is_enabled) {
 }
 
 bool VboxVmController::is_link_plugged(const std::string& nic) const {
-	throw std::runtime_error("Not implemented");
+	try {
+		if (!config.count("nic")) {
+			throw std::runtime_error("There's no nics in this vm");
+		}
+
+		auto& nics = config.at("nic");
+
+		for (auto& nic_it: nics) {
+			if (nic_it.at("name") == nic) {
+				auto machine = virtual_box.find_machine(name());
+				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
+				return network_adapter.cableConnected();
+			}
+		}
+
+		throw std::runtime_error(std::string("There's no nic with name ") + nic);
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }
 
 void VboxVmController::set_link(const std::string& nic, bool is_connected) {
@@ -486,6 +525,7 @@ void VboxVmController::set_link(const std::string& nic, bool is_connected) {
 				auto machine = work_session.machine();
 				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
 				network_adapter.setCableConnected(is_connected);
+				return;
 			}
 		}
 
@@ -727,7 +767,8 @@ int VboxVmController::run(const fs::path& exe, std::vector<std::string> args, ui
 		//1) Open the session
 
 		auto machine = work_session.machine();
-		auto login = machine.getExtraData("login");
+		// auto login = machine.getExtraData("login");
+		std::string login = "root";
 		auto password = machine.getExtraData("password");
 
 		if (!login.length()) {
@@ -808,7 +849,17 @@ bool VboxVmController::has_snapshot(const std::string& snapshot) {
 }
 
 void VboxVmController::delete_snapshot_with_children(const std::string& snapshot) {
-	throw std::runtime_error("Implement me");
+	try {
+		auto lock_machine = virtual_box.find_machine(name());
+		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
+		auto machine = work_session.machine();
+		if (machine.hasSnapshot(snapshot)) {
+			auto existing_snapshot = machine.findSnapshot(snapshot);
+			delete_snapshot_with_children(existing_snapshot);
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
 }
 
 bool VboxVmController::is_defined() const {
@@ -874,7 +925,7 @@ void VboxVmController::copy_dir_to_guest(const fs::path& src, const fs::path& ds
 
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {
-			gsession.file_copy_to_guest(file.path().generic_string(), (dst / "/").generic_string()).wait_and_throw_if_failed();
+			gsession.file_copy_to_guest(file.path().generic_string(), (dst / file.path().filename()).generic_string()).wait_and_throw_if_failed();
 		} else if (fs::is_directory(file)) {
 			copy_dir_to_guest(file.path().generic_string(), (dst / file.path().filename()).generic_string(), gsession);
 		} //else continue
@@ -892,7 +943,8 @@ void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst, u
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 
 		auto machine = work_session.machine();
-		auto login = machine.getExtraData("login");
+		// auto login = machine.getExtraData("login");
+		std::string login = "root";
 		auto password = machine.getExtraData("password");
 
 		if (!login.length()) {
@@ -902,27 +954,15 @@ void VboxVmController::copy_to_guest(const fs::path& src, const fs::path& dst, u
 		if (!password.length()) {
 			throw std::runtime_error("Attribute login is not specified");
 		}
-		//1) Open the session
+
 		auto gsession = work_session.console().guest().create_session(login, password);
 
-		//2) if dst doesn't exist on guest - fuck you
-		if (!gsession.directory_exists(dst.generic_string())) {
-			throw std::runtime_error("Directory to copy doesn't exist on guest: " + dst.generic_string());
-		}
-
-		//3) If target folder already exists on guest - fuck you
-		fs::path target_name = dst / src.filename();
-		if (gsession.directory_exists(target_name.generic_string()) || gsession.file_exists(target_name.generic_string())) {
-			throw std::runtime_error("Directory or file already exists on guest: " + target_name.generic_string());
-		}
-
-		//4) Now we're all set
 		if (fs::is_regular_file(src)) {
-			gsession.file_copy_to_guest(src.generic_string(), (dst / "/").generic_string()).wait_and_throw_if_failed();
+			gsession.file_copy_to_guest(src.generic_string(), dst.generic_string()).wait_and_throw_if_failed();
 		} else if (fs::is_directory(src)) {
-			copy_dir_to_guest(src, target_name, gsession);
+			copy_dir_to_guest(src, dst, gsession);
 		} else {
-			throw std::runtime_error("Unknown type of file: " + target_name.generic_string());
+			throw std::runtime_error("Unknown type of file: " + dst.generic_string());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -939,7 +979,8 @@ void VboxVmController::remove_from_guest(const fs::path& obj) {
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 
 		auto machine = work_session.machine();
-		auto login = machine.getExtraData("login");
+		// auto login = machine.getExtraData("login");
+		std::string login = "root";
 		auto password = machine.getExtraData("password");
 
 		if (!login.length()) {
