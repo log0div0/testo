@@ -113,7 +113,6 @@ struct VisitorInterpreter {
 
 	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;
 	std::string test_cksum(std::shared_ptr<AST::Test> test);
-	std::string cksum(std::shared_ptr<FlashDriveController> flash);
 
 	Register& reg;
 

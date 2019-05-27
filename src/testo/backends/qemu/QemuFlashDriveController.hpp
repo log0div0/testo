@@ -19,7 +19,6 @@ struct QemuFlashDriveController: FlashDriveController {
 		return pool.path() / (name() + ".img");
 	}
 
-	std::string cksum() const;
 private:
 	fs::path img_dir() const {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");

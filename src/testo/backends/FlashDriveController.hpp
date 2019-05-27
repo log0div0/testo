@@ -18,7 +18,10 @@ struct FlashDriveController {
 	virtual void umount() const = 0;
 	virtual void load_folder() const = 0;
 	virtual fs::path img_path() const = 0;
-	virtual std::string cksum() const = 0;
+	std::string cksum() const;
+	bool is_cksum_ok() const {
+		return cksum() == read_cksum();
+	}
 
 	std::string name() const;
 	nlohmann::json get_config() const;
@@ -26,5 +29,10 @@ struct FlashDriveController {
 	bool cache_enabled() const;
 
 protected:
+	std::string read_cksum() const;
+	void write_cksum(const std::string& cksum) const;
+	std::string calc_cksum() const;
+	void delete_cksum() const;
+	fs::path cksum_path() const;
 	nlohmann::json config;
 };

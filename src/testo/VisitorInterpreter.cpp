@@ -224,7 +224,7 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	try {
 		auto fd = reg.fds.find(flash->name)->second; //should always be found
-		if (!fd->cache_enabled() || (cksum(fd) != fd->cksum())) {
+		if (!fd->cache_enabled() || !fd->is_cksum_ok()) {
 			print("Creating flash drive \"", flash->name.value());
 			fd->create();
 			if (fd->has_folder()) {
@@ -1062,15 +1062,4 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 std::string VisitorInterpreter::test_cksum(std::shared_ptr<Test> test) {
 	VisitorCksum visitor(reg);
 	return std::to_string(visitor.visit(test));
-}
-
-std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) {
-	auto config = fd->get_config();
-	std::string cksum_input = fd->name() + std::to_string(config.at("size").get<uint32_t>()) + config.at("fs").get<std::string>();
-	if (fd->has_folder()) {
-		cksum_input += directory_signature(config.at("folder").get<std::string>());
-	}
-
-	std::hash<std::string> h;
-	return std::to_string(h(cksum_input));
 }

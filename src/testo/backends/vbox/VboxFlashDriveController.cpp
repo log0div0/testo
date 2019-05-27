@@ -7,19 +7,6 @@
 
 VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config_): FlashDriveController(config_)
 {
-	if (!config.count("name")) {
-		throw std::runtime_error("Constructing VboxFlashDriveController error: field NAME is not specified");
-	}
-
-	if (!config.count("size")) {
-		throw std::runtime_error("Constructing VboxFlashDriveController error: field SIZE is not specified");
-	}
-
-	//TODO: check for fs types
-	if (!config.count("fs")) {
-		throw std::runtime_error("Constructing VboxFlashDriveController error: field FS is not specified");
-	}
-
 	virtual_box = virtual_box_client.virtual_box();
 }
 

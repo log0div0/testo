@@ -21,10 +21,6 @@ struct VboxFlashDriveController: FlashDriveController {
 		return res;
 	}
 
-	std::string cksum() const {
-		return "";
-	}
-
 	vbox::Medium handle;
 private:
 	vbox::VirtualBoxClient virtual_box_client;
