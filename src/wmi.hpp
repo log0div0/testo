@@ -312,7 +312,11 @@ struct WbemClassObject: Object<IWbemClassObject> {
 				&object,
 				nullptr
 			));
-			return object;
+			if (object) {
+				return WbemClassObject(object);
+			} else {
+				return WbemClassObject();
+			}
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -530,7 +534,10 @@ struct Call {
 		services(std::move(services_)), class_name(std::move(class_name_)), method_name(std::move(method_name_))
 	{
 		try {
-			method_instance = services.getObject(class_name).getMethod(method_name).spawnInstance();
+			auto method = services.getObject(class_name).getMethod(method_name);
+			if (method.handle) {
+				method_instance = method.spawnInstance();
+			}
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
