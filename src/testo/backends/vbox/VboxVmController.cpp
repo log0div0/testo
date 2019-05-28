@@ -763,7 +763,7 @@ stb::Image VboxVmController::screenshot() {
 int VboxVmController::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
 	try {
 		args.insert(args.begin(), "--");
-		uint32_t timeout = 10 * 60 * 1000; //10 mins
+		uint32_t timeout = timeout_seconds * 1000;
 
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
