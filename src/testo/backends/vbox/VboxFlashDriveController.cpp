@@ -4,6 +4,8 @@
 #include <functional>
 #include <thread>
 #include <chrono>
+#include <msft/Connect.hpp>
+#include <virtdisk/VirtualDisk.hpp>
 
 #ifdef __linux__
 const std::string disk_format = "vmdk";
@@ -44,6 +46,17 @@ void VboxFlashDriveController::create() {
 			" /dev/nbd0");
 
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
+#else
+		VirtualDisk virtualDisk(img_path().generic_string());
+		virtualDisk.attach();
+		msft::Connect connect;
+		auto disk = connect.virtualDisk(img_path().generic_string());
+		disk.initialize();
+		disk.createPartition();
+		auto partition = disk.partitions().at(0);
+		auto volume = partition.volume();
+		volume.format("NTFS", name());
+		virtualDisk.detach();
 #endif
 		write_cksum(calc_cksum());
 	} catch (const std::exception& error) {
@@ -53,10 +66,11 @@ void VboxFlashDriveController::create() {
 
 bool VboxFlashDriveController::is_mounted() const {
 #ifdef __linux__
-	std::string query = std::string("mountpoint -q " + VboxEnvironment::flash_drives_mount_dir.generic_string());
+	std::string query = std::string("mountpoint -q " + mount_dir().generic_string());
 	return (std::system(query.c_str()) == 0);
+#else
+	return VirtualDisk(img_path().generic_string()).isLoaded();
 #endif
-	return false;
 }
 
 void VboxFlashDriveController::mount() const {
@@ -72,6 +86,13 @@ void VboxFlashDriveController::mount() const {
 			" \"" + img_path().generic_string() + "\"");
 
 		exec_and_throw_if_failed(std::string("mount /dev/nbd0"));
+#else
+		VirtualDisk virtualDisk(img_path().generic_string());
+		virtualDisk.attach();
+		msft::Connect connect;
+		auto disk = connect.virtualDisk(img_path().generic_string());
+		auto partition = disk.partitions().at(0);
+		partition.addAccessPath(mount_dir().generic_string());
 #endif
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -83,31 +104,14 @@ void VboxFlashDriveController::umount() const {
 #ifdef __linux__
 		exec_and_throw_if_failed(std::string("umount /dev/nbd0"));
 		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
+#else
+		msft::Connect connect;
+		auto disk = connect.virtualDisk(img_path().generic_string());
+		auto partition = disk.partitions().at(0);
+		partition.removeAccessPath(mount_dir().generic_string());
+		VirtualDisk virtualDisk(img_path().generic_string());
+		virtualDisk.detach();
 #endif
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-void VboxFlashDriveController::load_folder() const {
-	try {
-		fs::path target_folder(config.at("folder").get<std::string>());
-
-		auto abs_target_folder = std::experimental::filesystem::absolute(target_folder);
-
-		if (!fs::exists(abs_target_folder)) {
-			throw std::runtime_error("Target folder doesn't exist");
-		}
-		mount();
-
-#ifdef __linux__
-		exec_and_throw_if_failed(std::string("cp -r ") +
-			abs_target_folder.generic_string() +
-			" " + VboxEnvironment::flash_drives_mount_dir.generic_string());
-		std::this_thread::sleep_for(std::chrono::seconds(2));
-#endif
-
-		umount();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
@@ -115,6 +119,10 @@ void VboxFlashDriveController::load_folder() const {
 
 fs::path VboxFlashDriveController::img_path() const {
 	return VboxEnvironment::flash_drives_img_dir / (name() + "." + disk_format);
+}
+
+fs::path VboxFlashDriveController::mount_dir() const {
+	return VboxEnvironment::flash_drives_mount_dir;
 }
 
 void VboxFlashDriveController::remove_if_exists() {

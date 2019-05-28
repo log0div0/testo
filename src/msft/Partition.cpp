@@ -62,4 +62,14 @@ void Partition::addAccessPath(const std::string& path) {
 	}
 }
 
+void Partition::removeAccessPath(const std::string& path) {
+	try {
+		auto result = services.call("Msft_Partition", "RemoveAccessPath")
+			.with("AccessPath", path)
+			.exec(partition);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 }

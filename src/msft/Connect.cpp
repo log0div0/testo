@@ -30,6 +30,7 @@ std::vector<Disk> Connect::disks() const {
 Disk Connect::virtualDisk(const std::string& location) const {
 	try {
 		auto escaped_location = std::regex_replace(location, std::regex("\\\\"), "\\\\");
+		escaped_location = std::regex_replace(escaped_location, std::regex("/"), "\\\\");
 		auto object = services.execQuery("SELECT * FROM Msft_Disk WHERE Location=\"" + escaped_location + "\"").getOne();
 		return Disk(std::move(object), services);
 	} catch (const std::exception&) {

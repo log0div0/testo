@@ -13,6 +13,7 @@ struct Partition {
 	std::vector<std::string> accessPaths() const;
 	Volume volume() const;
 	void addAccessPath(const std::string& path);
+	void removeAccessPath(const std::string& path);
 
 	wmi::WbemClassObject partition;
 	wmi::WbemServices services;

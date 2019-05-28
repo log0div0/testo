@@ -97,3 +97,23 @@ void FlashDriveController::delete_cksum() const {
 fs::path FlashDriveController::cksum_path() const {
 	return img_path().generic_string() + ".cksum";
 }
+
+void FlashDriveController::load_folder() const {
+	try {
+		fs::path target_folder(config.at("folder").get<std::string>());
+
+		if (target_folder.is_relative()) {
+			target_folder = fs::canonical(target_folder);
+		}
+
+		if (!fs::exists(target_folder)) {
+			throw std::runtime_error("Target folder doesn't exist");
+		}
+
+		mount();
+		fs::copy(target_folder, mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+		umount();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}

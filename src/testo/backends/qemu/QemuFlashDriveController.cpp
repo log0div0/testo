@@ -66,7 +66,7 @@ void QemuFlashDriveController::create() {
 }
 
 bool QemuFlashDriveController::is_mounted() const {
-	std::string query = std::string("mountpoint -q " + QemuEnvironment::flash_drives_mount_dir.generic_string());
+	std::string query = std::string("mountpoint -q " + mount_dir().generic_string());
 	return (std::system(query.c_str()) == 0);
 }
 
@@ -81,7 +81,7 @@ void QemuFlashDriveController::mount() const {
 			"/dev/nbd0 -f qcow2 " +
 			img_path().generic_string());
 
-		exec_and_throw_if_failed(std::string("mount /dev/nbd0 ") + QemuEnvironment::flash_drives_mount_dir.generic_string());
+		exec_and_throw_if_failed(std::string("mount /dev/nbd0 ") + mount_dir().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
 	}
@@ -96,32 +96,13 @@ void QemuFlashDriveController::umount() const {
 	}
 }
 
-void QemuFlashDriveController::load_folder() const {
-	try {
-		fs::path target_folder(config.at("folder").get<std::string>());
-
-		if (target_folder.is_relative()) {
-			target_folder = fs::canonical(target_folder);
-		}
-
-		if (!fs::exists(target_folder)) {
-			throw std::runtime_error("Target folder doesn't exist");
-		}
-		mount();
-
-		exec_and_throw_if_failed(std::string("cp -r ") +
-			target_folder.generic_string() +
-			" " + QemuEnvironment::flash_drives_mount_dir.generic_string());
-		std::this_thread::sleep_for(std::chrono::seconds(2));
-		umount();
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Load folder"));
-	}
-}
-
 fs::path QemuFlashDriveController::img_path() const {
 	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 	return pool.path() / (name() + ".img");
+}
+
+fs::path QemuFlashDriveController::mount_dir() const {
+	auto QemuEnvironment::flash_drives_mount_dir;
 }
 
 void QemuFlashDriveController::remove_if_exists() {
