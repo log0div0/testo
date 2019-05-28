@@ -4,12 +4,12 @@
 #include <functional>
 #include <thread>
 #include <chrono>
-#include <msft/Connect.hpp>
-#include <virtdisk/VirtualDisk.hpp>
 
 #ifdef __linux__
 const std::string disk_format = "vmdk";
 #else
+#include <msft/Connect.hpp>
+#include <virtdisk/VirtualDisk.hpp>
 const std::string disk_format = "vhd";
 #endif
 

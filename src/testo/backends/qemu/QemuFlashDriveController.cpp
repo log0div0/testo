@@ -102,7 +102,7 @@ fs::path QemuFlashDriveController::img_path() const {
 }
 
 fs::path QemuFlashDriveController::mount_dir() const {
-	auto QemuEnvironment::flash_drives_mount_dir;
+	return QemuEnvironment::flash_drives_mount_dir;
 }
 
 void QemuFlashDriveController::remove_if_exists() {
