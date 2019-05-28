@@ -291,7 +291,7 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vm, const st
 	//2) reg (todo)
 	//3) env var
 
-	if (vm->has_key(var)) {
+	if (vm->is_defined() && vm->has_key(var)) {
 		return vm->get_metadata(var);
 	}
 
