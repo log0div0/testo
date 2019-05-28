@@ -25,7 +25,7 @@ macro copy_cert_to_flash(cert) {
 	plug flash pubkey_flash;
 	wait timeout 5s
 	exec bash """
-		mount /dev/sdb /media
+		mount /dev/sdb1 /media
 		cp """ + $cert + """ /media
 		umount /media
 	"""
@@ -49,7 +49,7 @@ test https_interception: configure_net
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/sdb /media
+			mount /dev/sdb1 /media
 			mkdir /usr/share/ca-certificates/extra
 			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
 			cp /media/squidCA.crt /usr/local/share/ca-certificates/squidCA.crt
@@ -112,7 +112,7 @@ test https_proxy_cert_not_imported: configure_net
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/sdb /media
+			mount /dev/sdb1 /media
 			mkdir /usr/share/ca-certificates/extra
 			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
 			umount /media

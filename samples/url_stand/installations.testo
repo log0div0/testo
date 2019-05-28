@@ -54,8 +54,8 @@ machine url_server {
 }
 
 machine url_proxy {
-	cpus: 2
-	ram: 512Mb
+	cpus: 1
+	ram: 2048Mb
 	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 8Gb
 
@@ -137,6 +137,8 @@ test configure_server: install_pkgs {
 		exec bash """
 			cd /opt
 			unzip website.zip
+			chmod 777 static-website-example-master
+			chmod 666 static-website-example-master/*
 		"""
 
 		exec bash """
@@ -166,7 +168,7 @@ test install_squid: configure_server {
 			tar -xf libecap-1.0.1.tar.gz
 			cd libecap-1.0.1
 			./configure
-			make -j2
+			make
 			make install
 			ldconfig
 		"""
@@ -176,7 +178,7 @@ test install_squid: configure_server {
 			tar -xf squid-4.7.tar.gz
 			cd squid-4.7
 			./configure --enable-ecap --with-openssl
-			make -j2
+			make
 			make install
 		""" timeout 30m
 	}
@@ -192,6 +194,8 @@ test configure_squid: install_squid {
 		exec bash "date --set=\"2018-09-30 10:00:00.000\""
 
 		exec bash """
+			chmod 666 /var/lib/clamav/bytecode.cvd
+			chmod 777 /usr/local/squid
 			chown -R proxy:proxy /usr/local/squid/var
 		"""
 
@@ -200,7 +204,7 @@ test configure_squid: install_squid {
 			tar -xf ecap_clamav_adapter-2.0.0.tar.gz
 			cd ecap_clamav_adapter-2.0.0
 			./configure
-			make -j2
+			make
 			make install
 		"""
 

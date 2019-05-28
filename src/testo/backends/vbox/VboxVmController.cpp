@@ -142,6 +142,19 @@ VboxVmController::VboxVmController(const nlohmann::json& config_): VmController(
 		{"NUMLOCK", {69}}, //TODO: recheck
 		{"SCROLLLOCK", {70}},
 
+		{"F1", {59}},
+		{"F2", {60}},
+		{"F3", {61}},
+		{"F4", {62}},
+		{"F5", {63}},
+		{"F6", {64}},
+		{"F7", {65}},
+		{"F8", {66}},
+		{"F9", {67}},
+		{"F10", {68}},
+		{"F11", {87}},
+		{"F12", {88}},
+
 		{"RIGHTCTRL", {97}},
 		{"RIGHTALT", {100}},
 
@@ -359,8 +372,7 @@ void VboxVmController::make_snapshot(const std::string& snapshot, const std::str
 			auto existing_snapshot = machine.findSnapshot(snapshot);
 			delete_snapshot_with_children(existing_snapshot);
 		}
-		machine.takeSnapshot(snapshot).wait_and_throw_if_failed();
-		machine.findSnapshot(snapshot).setDescription(cksum);
+		machine.takeSnapshot(snapshot, cksum, true).wait_and_throw_if_failed();
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
