@@ -649,18 +649,10 @@ void VboxVmController::start() {
 		if (machine.state() == MachineState_Running) {
 			return;
 		}
+		wait_state({MachineState_PoweredOff, MachineState_Saved});
 		machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
 		start_session.unlock_machine();
-
-		auto deadline = std::chrono::system_clock::now() + 10s;
-		do {
-			if (machine.state() == MachineState_Running) {
-				return;
-			}
-			std::this_thread::sleep_for(100ms);
-		} while (std::chrono::system_clock::now() < deadline);
-
-		throw std::runtime_error("Failed to start VM");
+		wait_state({MachineState_Running});
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -674,18 +666,10 @@ void VboxVmController::stop() {
 			(machine.state() == MachineState_Saved)) {
 			return;
 		}
+		wait_state({MachineState_Running, MachineState_Paused});
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		work_session.console().power_down().wait_and_throw_if_failed();
-
-		auto deadline = std::chrono::system_clock::now() + 10s;
-		do {
-			if (machine.state() == MachineState_PoweredOff) {
-				return;
-			}
-			std::this_thread::sleep_for(100ms);
-		} while (std::chrono::system_clock::now() < deadline);
-
-		throw std::runtime_error("Failed to start VM");
+		wait_state({MachineState_PoweredOff});
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -706,8 +690,13 @@ void VboxVmController::power_button() {
 void VboxVmController::suspend() {
 	try {
 		auto machine = virtual_box.find_machine(name());
+		if (machine.state() == MachineState_Paused) {
+			return;
+		}
+		wait_state({MachineState_Running});
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		work_session.console().pause();
+		wait_state({MachineState_Paused});
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -717,8 +706,13 @@ void VboxVmController::suspend() {
 void VboxVmController::resume() {
 	try {
 		auto machine = virtual_box.find_machine(name());
+		if (machine.state() == MachineState_Running) {
+			return;
+		}
+		wait_state({MachineState_Paused});
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		work_session.console().resume();
+		wait_state({MachineState_Running});
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -1014,4 +1008,27 @@ void VboxVmController::remove_from_guest(const fs::path& obj) {
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
+}
+
+void VboxVmController::wait_state(std::initializer_list<MachineState> states) {
+	auto machine = virtual_box.find_machine(name());
+	auto deadline = std::chrono::system_clock::now() + 10s;
+	do {
+		auto it = std::find(states.begin(), states.end(), machine.state());
+		if (it != states.end()) {
+			return;
+		}
+		std::this_thread::sleep_for(100ms);
+	} while (std::chrono::system_clock::now() < deadline);
+
+	std::stringstream ss;
+	ss << "Machine is not in one of this states: ";
+	for (auto it = states.begin(); it != states.end(); ++it) {
+		if (it != states.begin()) {
+			ss << ", ";
+		}
+		ss << *it;
+	}
+
+	throw std::runtime_error(ss.str());
 }
