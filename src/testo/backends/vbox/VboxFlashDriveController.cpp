@@ -122,6 +122,10 @@ void VboxFlashDriveController::remove_if_exists() {
 			}
 		}
 
+		if (fs::exists(img_path())) {
+			fs::remove(img_path());
+		}
+
 		delete_cksum();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
