@@ -235,6 +235,8 @@ void VboxVmController::create_vm() {
 
 			auto machine = work_session.machine();
 
+			machine.setExtraData("VBoxInternal/Devices/VMMDev/0/Config/GetHostTimeDisabled", "1");
+
 			std::experimental::filesystem::path iso_path(config.at("iso").get<std::string>());
 			auto abs_iso_path = std::experimental::filesystem::absolute(iso_path);
 			vbox::Medium dvd = virtual_box.open_medium(abs_iso_path.generic_string(),

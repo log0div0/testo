@@ -53,11 +53,12 @@ test https_interception: configure_net
 			mkdir /usr/share/ca-certificates/extra
 			cp /media/rootCA.crt /usr/local/share/ca-certificates/rootCA.crt
 			cp /media/squidCA.crt /usr/local/share/ca-certificates/squidCA.crt
+			chmod 644 /usr/local/share/ca-certificates/rootCA.crt
+			chmod 644 /usr/local/share/ca-certificates/squidCA.crt
 			umount /media
 		"""
 		unplug flash pubkey_flash
 		exec bash """
-			dpkg-reconfigure ca-certificates
 			update-ca-certificates
 		"""
 	}
@@ -87,7 +88,7 @@ test https_clamav: https_interception
 	url_server {
 		exec bash "mkdir /opt/static-website-example-master/files"
 		copyto "./server/eicar.txt" "/opt/static-website-example-master/files/eicar.txt"
-		exec bash "systemctl restart nginx"
+		exec bash "chown -R www-data:www-data /opt/static-website-example-master/files"
 	}
 
 	url_client exec bash """
@@ -119,7 +120,6 @@ test https_proxy_cert_not_imported: configure_net
 		"""
 		unplug flash pubkey_flash
 		exec bash """
-			dpkg-reconfigure ca-certificates
 			update-ca-certificates
 		"""
 	}
