@@ -4,7 +4,7 @@ include "../common.testo"
 machine url_client {
 	cpus: 1
 	ram: 512Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-i386.iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -25,12 +25,14 @@ machine url_client {
 		password: "1111"
 		host_name: "url-client"
 	}
+
+	vbox_os_type: "Ubuntu"
 }
 
 machine url_server {
 	cpus: 1
 	ram: 512Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-i386.iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -51,12 +53,14 @@ machine url_server {
 		password: "1111"
 		host_name: "url-server"
 	}
+
+	vbox_os_type: "Ubuntu"
 }
 
 machine url_proxy {
 	cpus: 1
 	ram: 2048Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: $ISO_DIR + "/ubuntu-16.04.6-server-i386.iso"
 	disk_size: 8Gb
 
 	nic nat: {
@@ -86,6 +90,8 @@ machine url_proxy {
 		password: "1111"
 		host_name: "url-proxy"
 	}
+
+	vbox_os_type: "Ubuntu"
 }
 
 flash pubkey_flash {
@@ -186,7 +192,7 @@ test install_squid: configure_server {
 test configure_squid: install_squid {
 	url_proxy {
 		exec bash "date --set=\"2018-09-30 10:00:00.000\""
-		copyto "./proxy/archives/ecap_clamav_adapter-2.0.0.tar.gz" "/opt/archives/ecap_clamav_adapter-2.0.0.tar.gz"
+		copyto "./proxy/archives/ecap_clamav_adapter-2.0.0.tar.xz" "/opt/archives/ecap_clamav_adapter-2.0.0.tar.xz"
 		copyto "./proxy/squid.conf" "/usr/local/squid/etc/squid.conf"
 		copyto "./proxy/bytecode.cvd" "/var/lib/clamav/bytecode.cvd"
 
@@ -199,7 +205,7 @@ test configure_squid: install_squid {
 
 		exec bash """
 			cd /opt/archives
-			tar -xf ecap_clamav_adapter-2.0.0.tar.gz
+			tar -xf ecap_clamav_adapter-2.0.0.tar.xz
 			cd ecap_clamav_adapter-2.0.0
 			./configure
 			make
