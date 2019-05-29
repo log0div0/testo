@@ -45,19 +45,10 @@ void QemuFlashDriveController::create() {
 
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 
-		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f qcow2 " +
-			img_path().generic_string());
-
-		std::string size = std::to_string(config.at("size").get<uint32_t>()) + "M";
-		exec_and_throw_if_failed(std::string("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% ") +
-			size);
-
-		exec_and_throw_if_failed(std::string("mkfs.") +
-			config.at("fs").get<std::string>() +
-			" /dev/nbd0");
-
-		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
+		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path().generic_string() + "\"");
+		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
+		exec_and_throw_if_failed("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
+		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 
 		write_cksum(calc_cksum());
 	} catch (const std::exception& error) {
@@ -66,22 +57,19 @@ void QemuFlashDriveController::create() {
 }
 
 bool QemuFlashDriveController::is_mounted() const {
-	std::string query = std::string("mountpoint -q " + mount_dir().generic_string());
+	std::string query = "mountpoint -q \"" + mount_dir().generic_string() + "\"";
 	return (std::system(query.c_str()) == 0);
 }
 
 void QemuFlashDriveController::mount() const {
 	try {
-		std::string fdisk = std::string("fdisk -l | grep nbd0");
+		std::string fdisk = "fdisk -l | grep nbd0";
 		if (std::system(fdisk.c_str()) == 0) {
 			throw std::runtime_error("Can't mount flash drive: target host slot is busy");
 		}
 
-		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f qcow2 " +
-			img_path().generic_string());
-
-		exec_and_throw_if_failed(std::string("mount /dev/nbd0 ") + mount_dir().generic_string());
+		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path().generic_string() + "\"");
+		exec_and_throw_if_failed("mount /dev/nbd0");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
 	}
@@ -89,8 +77,8 @@ void QemuFlashDriveController::mount() const {
 
 void QemuFlashDriveController::umount() const {
 	try {
-		exec_and_throw_if_failed(std::string("umount /dev/nbd0"));
-		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
+		exec_and_throw_if_failed("umount /dev/nbd0");
+		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
 	}

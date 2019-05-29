@@ -33,19 +33,10 @@ void VboxFlashDriveController::create() {
 		handle.create_base_storage(disk_size, MediumVariant_Fixed).wait_and_throw_if_failed();
 
 #ifdef __linux__
-		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f " + disk_format +
-			" \"" + img_path().generic_string() + "\"");
-
-		std::string size = std::to_string(config.at("size").get<uint32_t>()) + "M";
-		exec_and_throw_if_failed(std::string("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% ") +
-			size);
-
-		exec_and_throw_if_failed(std::string("mkfs.") +
-			config.at("fs").get<std::string>() +
-			" /dev/nbd0");
-
-		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
+		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f " + disk_format + " \"" + img_path().generic_string() + "\"");
+		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
+		exec_and_throw_if_failed("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
+		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 #else
 		VirtualDisk virtualDisk(img_path().generic_string());
 		virtualDisk.attach();
@@ -66,7 +57,7 @@ void VboxFlashDriveController::create() {
 
 bool VboxFlashDriveController::is_mounted() const {
 #ifdef __linux__
-	std::string query = std::string("mountpoint -q " + mount_dir().generic_string());
+	std::string query = "mountpoint -q \"" + mount_dir().generic_string() + "\"";
 	return (std::system(query.c_str()) == 0);
 #else
 	return VirtualDisk(img_path().generic_string()).isLoaded();
@@ -76,16 +67,13 @@ bool VboxFlashDriveController::is_mounted() const {
 void VboxFlashDriveController::mount() const {
 	try {
 #ifdef __linux__
-		std::string fdisk = std::string("fdisk -l | grep nbd0");
+		std::string fdisk = "fdisk -l | grep nbd0";
 		if (std::system(fdisk.c_str()) == 0) {
 			throw std::runtime_error("Can't mount flash drive: target host slot is busy");
 		}
 
-		exec_and_throw_if_failed(std::string("qemu-nbd --connect=") +
-			"/dev/nbd0 -f " + disk_format +
-			" \"" + img_path().generic_string() + "\"");
-
-		exec_and_throw_if_failed(std::string("mount /dev/nbd0"));
+		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f " + disk_format +	" \"" + img_path().generic_string() + "\"");
+		exec_and_throw_if_failed("mount /dev/nbd0");
 #else
 		VirtualDisk virtualDisk(img_path().generic_string());
 		virtualDisk.attach();
@@ -102,8 +90,8 @@ void VboxFlashDriveController::mount() const {
 void VboxFlashDriveController::umount() const {
 	try {
 #ifdef __linux__
-		exec_and_throw_if_failed(std::string("umount /dev/nbd0"));
-		exec_and_throw_if_failed(std::string("qemu-nbd -d /dev/nbd0"));
+		exec_and_throw_if_failed("umount /dev/nbd0");
+		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 #else
 		msft::Connect connect;
 		auto disk = connect.virtualDisk(img_path().generic_string());
