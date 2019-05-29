@@ -662,9 +662,19 @@ void VboxVmController::start() {
 			return;
 		}
 		wait_state({MachineState_PoweredOff, MachineState_Saved});
-		machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
-		start_session.unlock_machine();
-		wait_state({MachineState_Running});
+		auto deadline = std::chrono::system_clock::now() + 10s;
+		do {
+			if (machine.session_state() == SessionState_Unlocked)
+			{
+				machine.launch_vm_process(start_session, "headless").wait_and_throw_if_failed();
+				start_session.unlock_machine();
+				wait_state({MachineState_Running});
+				return;
+			}
+			std::this_thread::sleep_for(100ms);
+		} while (std::chrono::system_clock::now() < deadline);
+
+		throw std::runtime_error("Failed to start machine, because it's locked");
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
