@@ -137,8 +137,7 @@ test configure_server: install_pkgs {
 		exec bash """
 			cd /opt
 			unzip website.zip
-			chmod 777 static-website-example-master
-			chmod 666 static-website-example-master/*
+			chown -R www-data:www-data static-website-example-master
 		"""
 
 		exec bash """
@@ -194,9 +193,8 @@ test configure_squid: install_squid {
 		exec bash "date --set=\"2018-09-30 10:00:00.000\""
 
 		exec bash """
-			chmod 666 /var/lib/clamav/bytecode.cvd
-			chmod 777 /usr/local/squid
-			chown -R proxy:proxy /usr/local/squid/var
+			chown proxy:proxy /var/lib/clamav/bytecode.cvd
+			chown -R proxy:proxy /usr/local/squid
 		"""
 
 		exec bash """
