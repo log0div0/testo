@@ -84,7 +84,7 @@ test init_CUS: install_CUS {
 		wait "Успешно"; press Enter
 		wait "Выпуск сертификата"; press Esc
 		wait "Кому выдан"; press Esc
-		wait "Сертификаты управления"; press Esc
+		wait "Возврат в предыдущее меню"; press Esc
 		wait "Главное меню"; press Down, Enter
 		wait "Все службы будут сконфигурированы заново"; press Enter
 		wait "Выбор сертификата управления"; press Enter
