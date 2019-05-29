@@ -62,7 +62,7 @@ macro install_guest_additions() {
 	}
 	if ($VBOX) {
 		type "clear && apt-get install -y virtualbox-guest-dkms"; press Enter
-		wait "DKMS: install completed" timeout 3m
+		wait "DKMS: install completed" timeout 10m
 		wait "root@" + $host_name
 		type "passwd"; press Enter
 		wait "Enter new UNIX password"

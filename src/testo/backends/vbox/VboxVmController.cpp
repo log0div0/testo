@@ -687,7 +687,8 @@ void VboxVmController::stop() {
 	try {
 		auto machine = virtual_box.find_machine(name());
 		if ((machine.state() == MachineState_PoweredOff) ||
-			(machine.state() == MachineState_Saved)) {
+			(machine.state() == MachineState_Saved) ||
+			(machine.state() == MachineState_Aborted)) {
 			return;
 		}
 		wait_state({MachineState_Running, MachineState_Paused});
