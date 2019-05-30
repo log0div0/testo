@@ -47,6 +47,10 @@ macro(add_package NAME)
 	add_custom_target(${NAME} cpack --config CPackConfig.cmake)
 endmacro(add_package)
 
+if(APPLE)
+	add_definitions(-D_XOPEN_SOURCE)
+endif()
+
 if(WIN32)
 	add_definitions(
 		-D_SCL_SECURE_NO_WARNINGS

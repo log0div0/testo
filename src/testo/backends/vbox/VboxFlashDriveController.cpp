@@ -7,10 +7,12 @@
 
 #ifdef __linux__
 const std::string disk_format = "vmdk";
-#else
+#elif WIN32
 #include <msft/Connect.hpp>
 #include <virtdisk/VirtualDisk.hpp>
 const std::string disk_format = "vhd";
+#elif __APPLE__
+const std::string disk_format = "????";
 #endif
 
 VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config_): FlashDriveController(config_)
@@ -37,7 +39,7 @@ void VboxFlashDriveController::create() {
 		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
 		exec_and_throw_if_failed("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
-#else
+#elif WIN32
 		VirtualDisk virtualDisk(img_path().generic_string());
 		virtualDisk.attach();
 		msft::Connect connect;
@@ -59,8 +61,10 @@ bool VboxFlashDriveController::is_mounted() const {
 #ifdef __linux__
 	std::string query = "mountpoint -q \"" + mount_dir().generic_string() + "\"";
 	return (std::system(query.c_str()) == 0);
-#else
+#elif WIN32
 	return VirtualDisk(img_path().generic_string()).isLoaded();
+#elif __APPLE__
+	throw std::runtime_error(__PRETTY_FUNCTION__);
 #endif
 }
 
@@ -74,7 +78,7 @@ void VboxFlashDriveController::mount() const {
 
 		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f " + disk_format +	" \"" + img_path().generic_string() + "\"");
 		exec_and_throw_if_failed("mount /dev/nbd0");
-#else
+#elif WIN32
 		VirtualDisk virtualDisk(img_path().generic_string());
 		virtualDisk.attach();
 		msft::Connect connect;
@@ -92,7 +96,7 @@ void VboxFlashDriveController::umount() const {
 #ifdef __linux__
 		exec_and_throw_if_failed("umount /dev/nbd0");
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
-#else
+#elif WIN32
 		msft::Connect connect;
 		auto disk = connect.virtualDisk(img_path().generic_string());
 		auto partition = disk.partitions().at(0);
