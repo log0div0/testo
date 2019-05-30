@@ -1,7 +1,7 @@
 
 machine CUS {
 	cpus: 1
-	ram: 512Mb
+	ram: 2048Mb
 	iso: $ISO_DIR + "/Continent.iso"
 	disk_size: 20Gb
 
@@ -21,7 +21,7 @@ machine CUS {
 
 machine UB {
 	cpus: 1
-	ram: 512Mb
+	ram: 2048Mb
 	iso: $ISO_DIR + "/Continent.iso"
 	disk_size: 20Gb
 
@@ -45,8 +45,10 @@ macro install_continent() {
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter
 	wait "Введите идентификатор шлюза"; type $id; press Enter*2
-	wait "Установить Континент" timeout 10m; stop; unplug dvd; start
-	wait "Главное меню" timeout 2m
+	if ($QEMU) {
+		wait "Установить Континент" timeout 10m; stop; unplug dvd; start
+	}
+	wait "Главное меню" timeout 10m
 }
 
 test install_CUS {
@@ -84,7 +86,7 @@ test init_CUS: install_CUS {
 		wait "Успешно"; press Enter
 		wait "Выпуск сертификата"; press Esc
 		wait "Кому выдан"; press Esc
-		wait "Сертификаты управления"; press Esc
+		wait "Возврат в предыдущее меню"; press Esc
 		wait "Главное меню"; press Down, Enter
 		wait "Все службы будут сконфигурированы заново"; press Enter
 		wait "Выбор сертификата управления"; press Enter
@@ -170,6 +172,7 @@ test config_UB: init_CUS, init_UB {
 		wait "Настройка интерфейса управления"; type "192.168.0.2/24"; press Enter
 		wait "Применить указанные настройки?"; press Enter
 		wait "Система успешно настроена" timeout 3m; press Enter
+		unplug flash ub_flash
 	}
 
 	CUS {

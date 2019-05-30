@@ -100,7 +100,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, Environment& env):
 		vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::word)});
 		vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 		vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
-		vm_global_ctx.insert({"os_type", std::make_pair(false, Token::category::word)});
+		vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::word)});
 		vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
 		attr_ctxs.insert({"vm_global", vm_global_ctx});

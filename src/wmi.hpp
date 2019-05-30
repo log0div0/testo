@@ -3,8 +3,6 @@
 
 #include <vector>
 #include <string>
-#include <locale>
-#include <codecvt>
 #include <sstream>
 #include <thread>
 #include <chrono>
@@ -14,8 +12,6 @@
 #include <propvarutil.h>
 
 namespace wmi {
-
-extern std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 
 template <typename T>
 std::string to_hex(T t) {
@@ -134,7 +130,7 @@ struct Variant: VARIANT {
 			if (bstrVal == nullptr) {
 				throw std::runtime_error("nullptr");
 			}
-			return converter.to_bytes(bstrVal);
+			return (const char*)bstr_t(bstrVal);
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -274,7 +270,7 @@ struct WbemClassObject: Object<IWbemClassObject> {
 	Variant get(const std::string& name) const {
 		try {
 			Variant variant;
-			throw_if_failed(handle->Get(converter.from_bytes(name).c_str(), 0, &variant, nullptr, 0));
+			throw_if_failed(handle->Get(bstr_t(name.c_str()), 0, &variant, nullptr, 0));
 			return variant;
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -316,7 +312,11 @@ struct WbemClassObject: Object<IWbemClassObject> {
 				&object,
 				nullptr
 			));
-			return object;
+			if (object) {
+				return WbemClassObject(object);
+			} else {
+				return WbemClassObject();
+			}
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}
@@ -534,7 +534,10 @@ struct Call {
 		services(std::move(services_)), class_name(std::move(class_name_)), method_name(std::move(method_name_))
 	{
 		try {
-			method_instance = services.getObject(class_name).getMethod(method_name).spawnInstance();
+			auto method = services.getObject(class_name).getMethod(method_name);
+			if (method.handle) {
+				method_instance = method.spawnInstance();
+			}
 		} catch (const std::exception&) {
 			throw_with_nested(std::runtime_error(__FUNCSIG__));
 		}

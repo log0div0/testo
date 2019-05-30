@@ -54,6 +54,7 @@ private:
 	void delete_snapshot_with_children(vbox::Snapshot& snapshot);
 	void remove_if_exists();
 	void create_vm();
+	void wait_state(std::initializer_list<MachineState> states);
 
 	vbox::VirtualBoxClient virtual_box_client;
 	vbox::VirtualBox virtual_box;
@@ -62,6 +63,4 @@ private:
 
 	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
 	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
-
-	//API& api;
 };

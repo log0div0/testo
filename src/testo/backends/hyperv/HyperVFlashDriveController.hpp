@@ -12,7 +12,6 @@ struct HyperVFlashDriveController: FlashDriveController {
 	bool is_mounted() const override;
 	void mount() const override;
 	void umount() const override;
-	void load_folder() const override;
 	fs::path img_path() const override;
-	std::string cksum() const override;
+	fs::path mount_dir() const override;
 };

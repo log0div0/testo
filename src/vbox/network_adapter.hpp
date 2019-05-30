@@ -17,11 +17,12 @@ struct NetworkAdapter {
 	NetworkAdapter& operator=(NetworkAdapter&& other);
 
 	void setCableConnected(bool is_connected);
-
-	void setEnabled(bool is_enabled) const;
-	void setInternalNetwork(const std::string& network) const;
-	void setAttachmentType(NetworkAttachmentType type) const;
-	void setAdapterType(NetworkAdapterType type) const;
+	bool cableConnected() const;
+	void setEnabled(bool is_enabled);
+	bool enabled() const;
+	void setInternalNetwork(const std::string& network);
+	void setAttachmentType(NetworkAttachmentType type);
+	void setAdapterType(NetworkAdapterType type);
 	void setMAC(const std::string& mac);
 
 	INetworkAdapter* handle = nullptr;

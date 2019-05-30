@@ -224,7 +224,7 @@ void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller
 void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 	try {
 		auto fd = reg.fds.find(flash->name)->second; //should always be found
-		if (!fd->cache_enabled() || (cksum(fd) != fd->cksum())) {
+		if (!fd->cache_enabled() || !fd->is_cksum_ok()) {
 			print("Creating flash drive \"", flash->name.value());
 			fd->create();
 			if (fd->has_folder()) {
@@ -691,7 +691,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::s
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
 		while (std::chrono::system_clock::now() < deadline) {
-			if (vm->state() != VmState::Stopped) {
+			if (vm->state() == VmState::Stopped) {
 				return;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -720,22 +720,19 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 
 			std::string script = "set -e; set -o pipefail; set -x;";
 			script += visit_word(vm, exec->commands);
+			script.erase(std::remove(script.begin(), script.end(), '\r'), script.end());
 
 			//copy the script to tmp folder
 			std::hash<std::string> h;
 
 			std::string hash = std::to_string(h(script));
 
-			fs::path host_script_dir = scripts_tmp_dir() / hash;
+			fs::path host_script_dir = fs::temp_directory_path();
 			fs::path guest_script_dir = fs::path("/tmp");
-
-			if (!fs::create_directories(host_script_dir) && !fs::exists(host_script_dir)) {
-				throw std::runtime_error(fmt::format("can't create tmp script file on host"));
-			}
 
 			fs::path host_script_file = host_script_dir / std::string(hash + ".sh");
 			fs::path guest_script_file = guest_script_dir / std::string(hash + ".sh");
-			std::ofstream script_stream(host_script_file);
+			std::ofstream script_stream(host_script_file, std::ios::binary);
 			if (!script_stream.is_open()) {
 				throw std::runtime_error(fmt::format("Can't open tmp file for writing the script"));
 			}
@@ -743,17 +740,16 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 			script_stream << script;
 			script_stream.close();
 
-			vm->copy_to_guest(host_script_dir, fs::path("/tmp"), 5); //5 seconds should be enough to pass any script
+			vm->copy_to_guest(host_script_file, guest_script_file, 5); //5 seconds should be enough to pass any script
 
 			fs::remove(host_script_file.generic_string());
-			fs::remove(host_script_dir.generic_string());
 
 			std::string wait_for = exec->time_interval ? exec->time_interval.value() : "600s";
 
 			if (vm->run("/bin/bash", {guest_script_file.generic_string()}, time_to_seconds(wait_for)) != 0) {
 				throw std::runtime_error("Bash command failed");
 			}
-			vm->remove_from_guest(guest_script_dir);
+			vm->remove_from_guest(guest_script_file);
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(exec, vm));
@@ -1067,15 +1063,4 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 std::string VisitorInterpreter::test_cksum(std::shared_ptr<Test> test) {
 	VisitorCksum visitor(reg);
 	return std::to_string(visitor.visit(test));
-}
-
-std::string VisitorInterpreter::cksum(std::shared_ptr<FlashDriveController> fd) {
-	auto config = fd->get_config();
-	std::string cksum_input = fd->name() + std::to_string(config.at("size").get<uint32_t>()) + config.at("fs").get<std::string>();
-	if (fd->has_folder()) {
-		cksum_input += directory_signature(config.at("folder").get<std::string>());
-	}
-
-	std::hash<std::string> h;
-	return std::to_string(h(cksum_input));
 }

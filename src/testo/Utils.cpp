@@ -24,52 +24,9 @@ void exec_and_throw_if_failed(const std::string& command) {
 	}
 }
 
-#ifdef WIN32
-
-fs::path home_dir() {
-	throw std::runtime_error(__FUNCSIG__);
-}
-
-#else
-
-#include <pwd.h>
-#include <unistd.h>
-
-fs::path home_dir() {
-	//struct passwd *pw = getpwuid(getuid());
-	//return fs::path(pw->pw_dir);
-	return fs::path("/var/lib/libvirt");
-}
-
-#endif
-
-fs::path testo_dir() {
-	auto res = home_dir();
-	res = res / "/testo";
-	return res;
-}
-
-fs::path flash_drives_img_dir() {
-	auto res = home_dir();
-	res = res / "/testo/flash_drives/images/";
-	return res;
-}
-
-fs::path flash_drives_mount_dir() {
-	auto res = home_dir();
-	res = res / "/testo/flash_drives/mount_point/";
-	return res;
-}
-
-fs::path scripts_tmp_dir() {
-	auto res = home_dir();
-	res = res / "/testo/scripts_tmp/";
-	return res;
-}
-
 std::string file_signature(const fs::path& file) {
 	if (!fs::exists(file)) {
-		throw std::runtime_error("File " + file.generic_string() + " does not exists");
+		return "not exists";
 	}
 	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
 	return file.filename().generic_string() + std::to_string(last_modify_time);

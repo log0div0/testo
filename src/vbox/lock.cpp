@@ -11,12 +11,32 @@ using namespace std::chrono_literals;
 
 namespace vbox {
 
-Lock::Lock(Machine& machine, Session& session, LockType lock_type): machine(machine.handle),
-	session(session.handle) 
+Lock::Lock(Machine& machine_, Session& session_, LockType lock_type): machine(machine_.handle),
+	session(session_.handle)
 {
 	try {
-		prev_state = machine.session_state();
-		throw_if_failed(IMachine_LockMachine(this->machine, this->session, lock_type));
+		auto deadline = std::chrono::system_clock::now() + 10s;
+		do {
+			SessionState_T result = SessionState_Null;
+			throw_if_failed(IMachine_get_SessionState(machine, &result));
+			if ((result == SessionState_Unlocked) ||
+				((result == SessionState_Locked) && (lock_type == LockType_Shared)))
+			{
+				do {
+					try {
+						throw_if_failed(IMachine_LockMachine(machine, session, lock_type));
+						return;
+					} catch (const std::exception& error) {
+						std::this_thread::sleep_for(100ms);
+					}
+				} while (std::chrono::system_clock::now() < deadline);
+
+				throw std::runtime_error("Failed to lock machine");
+			}
+			std::this_thread::sleep_for(100ms);
+		} while (std::chrono::system_clock::now() < deadline);
+
+		throw std::runtime_error("Failed to lock machine");
 	}
 	catch (const std::exception&) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -26,19 +46,9 @@ Lock::Lock(Machine& machine, Session& session, LockType lock_type): machine(mach
 Lock::~Lock() {
 	try {
 		throw_if_failed(ISession_UnlockMachine(session));
-		if (prev_state == SessionState_Unlocked) {
-
-			SessionState_T result = SessionState_Null;
-			throw_if_failed(IMachine_get_SessionState(machine, &result));
-
-			while (result != SessionState_Unlocked) {
-				std::this_thread::sleep_for(40ms);
-				throw_if_failed(IMachine_get_SessionState(machine, &result));
-			}
-		}
 	}
 	catch (const std::exception& error) {
-		std::cout << error.what() << std::endl;
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

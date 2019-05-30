@@ -2,7 +2,9 @@
 macro install_ubuntu() {
 	start
 	wait timeout 2s
-	wait "Language"; press Enter;
+	wait "Language";
+	wait timeout 2s;
+	press Enter;
 	wait "Install Ubuntu Server"; press Enter;
 	wait "Choose the language";	press Enter
 	wait "Select your location"; press Enter
@@ -44,18 +46,36 @@ macro enter_sudo() {
 	wait "root@" + $host_name
 }
 
-macro install_negotiator() {
+macro install_guest_additions() {
 	enter_sudo()
 	type "apt-get update"; press Enter
 	wait "Reading package lists... Done" timeout 5m;
-	type "clear && apt-get install -y python daemon"; press Enter
-	wait "Setting up daemon" timeout 3m
-	wait "root@" + $host_name
+	if ($QEMU) {
+		type "clear && apt-get install -y python daemon"; press Enter
+		wait "Setting up daemon" timeout 3m
+		wait "root@" + $host_name
 
-	plug dvd $ISO_DIR + "/negotiator.iso"; wait timeout 5s
-	type "mount /dev/cdrom /media"; press Enter
-	wait "mounting read-only"; type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter;
-	wait "ureadahead"; wait timeout 2s
+		plug dvd $ISO_DIR + "/negotiator.iso"; wait timeout 5s
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only"; type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter;
+		wait "Setting up negotiator-agent"
+	}
+	if ($VBOX) {
+		type "clear && apt-get install -y virtualbox-guest-dkms"; press Enter
+		wait "DKMS: install completed" timeout 10m
+		wait "root@" + $host_name
+		type "passwd"; press Enter
+		wait "Enter new UNIX password"
+		type $password; press Enter
+		wait "Retype new UNIX password"
+		type $password; press Enter
+		wait "password updated successfully"
+		type "reboot"; press Enter
+		wait "login:" timeout 2m; type "root"; press Enter
+		wait "Password:"; type $password; press Enter
+		wait "Welcome to Ubuntu"
+		exec bash "echo test"
+	}
 }
 
 macro unplug_nat() {
@@ -64,8 +84,7 @@ macro unplug_nat() {
 	unplug nic nat
 	start
 
-	wait $host_name +  " login:" timeout 30s;
-	type $login; press Enter
+	wait "login:"; type $login; press Enter
 	wait "Password:"; type $password; press Enter
 	wait "Welcome to Ubuntu"
 }

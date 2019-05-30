@@ -50,7 +50,7 @@ add_dependencies(testo-core darknet)
 target_link_libraries(testo-core coro vbox pugixml libdarknet)
 
 if(WIN32)
-	target_link_libraries(testo-core hyperv)
+	target_link_libraries(testo-core hyperv msft virtdisk++)
 endif()
 
 if(UNIX)

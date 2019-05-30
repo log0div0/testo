@@ -25,6 +25,8 @@ machine url_client {
 		password: "1111"
 		host_name: "url-client"
 	}
+
+	vbox_os_type: "Ubuntu_64"
 }
 
 machine url_server {
@@ -51,11 +53,13 @@ machine url_server {
 		password: "1111"
 		host_name: "url-server"
 	}
+
+	vbox_os_type: "Ubuntu_64"
 }
 
 machine url_proxy {
-	cpus: 2
-	ram: 512Mb
+	cpus: 1
+	ram: 2048Mb
 	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 8Gb
 
@@ -86,6 +90,8 @@ machine url_proxy {
 		password: "1111"
 		host_name: "url-proxy"
 	}
+
+	vbox_os_type: "Ubuntu_64"
 }
 
 flash pubkey_flash {
@@ -97,12 +103,12 @@ test install_ubuntu {
 	url_proxy, url_client, url_server install_ubuntu()
 }
 
-test install_negotiator: install_ubuntu {
-	url_proxy, url_client, url_server install_negotiator()
+test install_guest_additions: install_ubuntu {
+	url_proxy, url_client, url_server install_guest_additions()
 }
 
 
-test install_pkgs: install_negotiator {
+test install_pkgs: install_guest_additions {
 	url_proxy, url_client, url_server {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
 		exec bash "chmod +x /tmp/rename_net.sh"
@@ -137,6 +143,7 @@ test configure_server: install_pkgs {
 		exec bash """
 			cd /opt
 			unzip website.zip
+			chown -R www-data:www-data static-website-example-master
 		"""
 
 		exec bash """
@@ -166,7 +173,7 @@ test install_squid: configure_server {
 			tar -xf libecap-1.0.1.tar.gz
 			cd libecap-1.0.1
 			./configure
-			make -j2
+			make
 			make install
 			ldconfig
 		"""
@@ -176,9 +183,9 @@ test install_squid: configure_server {
 			tar -xf squid-4.7.tar.gz
 			cd squid-4.7
 			./configure --enable-ecap --with-openssl
-			make -j2
+			make
 			make install
-		"""
+		""" timeout 30m
 	}
 }
 
@@ -192,7 +199,8 @@ test configure_squid: install_squid {
 		exec bash "date --set=\"2018-09-30 10:00:00.000\""
 
 		exec bash """
-			chown -R proxy:proxy /usr/local/squid/var
+			chown proxy:proxy /var/lib/clamav/bytecode.cvd
+			chown -R proxy:proxy /usr/local/squid
 		"""
 
 		exec bash """
@@ -200,7 +208,7 @@ test configure_squid: install_squid {
 			tar -xf ecap_clamav_adapter-2.0.0.tar.gz
 			cd ecap_clamav_adapter-2.0.0
 			./configure
-			make -j2
+			make
 			make install
 		"""
 

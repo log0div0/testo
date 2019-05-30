@@ -41,7 +41,7 @@ test sgw_basic: install_wireguard
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/sdb /media
+			mount /dev/sdb1 /media
 			cp public.key /media/sgw1_public.key
 			umount /media
 		"""
@@ -52,7 +52,7 @@ test sgw_basic: install_wireguard
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/sdb /media
+			mount /dev/sdb1 /media
 			cp public.key /media/sgw2_public.key
 			cp /media/sgw1_public.key ~/
 			umount /media
@@ -64,7 +64,7 @@ test sgw_basic: install_wireguard
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
-			mount /dev/sdb /media
+			mount /dev/sdb1 /media
 			cp /media/sgw2_public.key ~/
 			umount /media
 		"""

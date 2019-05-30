@@ -5,6 +5,7 @@
 #include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
+#include <wmi.hpp>
 #else
 #include "backends/qemu/QemuEnvironment.hpp"
 #endif
@@ -62,6 +63,12 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 }
 
 int do_main(int argc, char** argv) {
+
+#ifdef WIN32
+	wmi::CoInitializer initializer;
+	initializer.initalize_security();
+#endif
+
 	std::string target, test_spec("");
 	bool stop_on_fail = false;
 
@@ -102,7 +109,7 @@ int main(int argc, char** argv) {
 		try {
 			result = do_main(argc, argv);
 		} catch (const std::exception& error) {
-			std::cout << error.what() << std::endl;
+			std::cout << error << std::endl;
 			result = 1;
 		}
 	}).run();

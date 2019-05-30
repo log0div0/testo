@@ -47,28 +47,23 @@ struct ErrorInfo {
 };
 
 void throw_if_failed(HRESULT rc) {
-	try {
-		if (FAILED(rc)) {
-			ErrorInfo error_info;
-			if (error_info) {
-				VirtualBoxErrorInfo virtual_box_error_info = (IVirtualBoxErrorInfo*)error_info.query_interface(
+	if (FAILED(rc)) {
+		ErrorInfo error_info;
+		if (error_info) {
+			VirtualBoxErrorInfo virtual_box_error_info = (IVirtualBoxErrorInfo*)error_info.query_interface(
 #ifdef WIN32
-					IID_IVirtualBoxErrorInfo
+				IID_IVirtualBoxErrorInfo
 #else
-					&IID_IVirtualBoxErrorInfo
+				&IID_IVirtualBoxErrorInfo
 #endif
-				);
-				auto error_message = virtual_box_error_info.text();
-				throw std::runtime_error(error_message);
-			} else {
-				std::stringstream ss;
-				ss << "Error code: " << std::hex << rc << std::dec;
-				throw std::runtime_error(ss.str());
-			}
+			);
+			auto error_message = virtual_box_error_info.text();
+			throw std::runtime_error(error_message);
+		} else {
+			std::stringstream ss;
+			ss << "Error code: " << std::hex << rc << std::dec;
+			throw std::runtime_error(ss.str());
 		}
-	}
-	catch (const std::exception&) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

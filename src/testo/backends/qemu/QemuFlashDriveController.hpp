@@ -12,19 +12,11 @@ struct QemuFlashDriveController: FlashDriveController {
 	bool is_mounted() const override;
 	void mount() const override;
 	void umount() const override;
-	void load_folder() const override;
 
-	fs::path img_path() const override {
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
-		return pool.path() / (name() + ".img");
-	}
+	fs::path img_path() const override;
+	fs::path mount_dir() const override;
 
-	std::string cksum() const;
 private:
-	fs::path img_dir() const {
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
-		return pool.path();
-	}
 	void remove_if_exists();
 
 	vir::Connect qemu_connect;

@@ -35,7 +35,18 @@ void NetworkAdapter::setCableConnected(bool is_connected) {
 	}
 }
 
-void NetworkAdapter::setEnabled(bool is_enabled) const {
+bool NetworkAdapter::cableConnected() const {
+	try {
+		BOOL result = false;
+		throw_if_failed(INetworkAdapter_get_CableConnected(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void NetworkAdapter::setEnabled(bool is_enabled) {
 	try {
 		throw_if_failed(INetworkAdapter_put_Enabled(handle, is_enabled));
 	}
@@ -44,7 +55,18 @@ void NetworkAdapter::setEnabled(bool is_enabled) const {
 	}
 }
 
-void NetworkAdapter::setInternalNetwork(const std::string& network) const {
+bool NetworkAdapter::enabled() const {
+	try {
+		BOOL result = false;
+		throw_if_failed(INetworkAdapter_get_Enabled(handle, &result));
+		return result;
+	}
+	catch (const std::exception&) {
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
+	}
+}
+
+void NetworkAdapter::setInternalNetwork(const std::string& network) {
 	try {
 		throw_if_failed(INetworkAdapter_put_InternalNetwork(handle, StringIn(network)));
 	}
@@ -53,7 +75,7 @@ void NetworkAdapter::setInternalNetwork(const std::string& network) const {
 	}
 }
 
-void NetworkAdapter::setAttachmentType(NetworkAttachmentType type) const {
+void NetworkAdapter::setAttachmentType(NetworkAttachmentType type) {
 	try {
 		throw_if_failed(INetworkAdapter_put_AttachmentType(handle, type));
 	}
@@ -63,7 +85,7 @@ void NetworkAdapter::setAttachmentType(NetworkAttachmentType type) const {
 }
 
 
-void NetworkAdapter::setAdapterType(NetworkAdapterType type) const {
+void NetworkAdapter::setAdapterType(NetworkAdapterType type) {
 	try {
 		throw_if_failed(INetworkAdapter_put_AdapterType(handle, type));
 	}
@@ -71,7 +93,6 @@ void NetworkAdapter::setAdapterType(NetworkAdapterType type) const {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
-
 void NetworkAdapter::setMAC(const std::string& mac) {
 	try {
 		throw_if_failed(INetworkAdapter_put_MACAddress(handle, StringIn(mac)));

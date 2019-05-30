@@ -22,12 +22,9 @@ void HyperVFlashDriveController::mount() const {
 void HyperVFlashDriveController::umount() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVFlashDriveController::load_folder() const {
-	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
-}
 fs::path HyperVFlashDriveController::img_path() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-std::string HyperVFlashDriveController::cksum() const {
+fs::path HyperVFlashDriveController::mount_dir() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
