@@ -45,7 +45,9 @@ macro install_continent() {
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter
 	wait "Введите идентификатор шлюза"; type $id; press Enter*2
-	#wait "Установить Континент" timeout 10m; stop; unplug dvd; start
+	if ($QEMU) {
+		wait "Установить Континент" timeout 10m; stop; unplug dvd; start
+	}
 	wait "Главное меню" timeout 10m
 }
 
