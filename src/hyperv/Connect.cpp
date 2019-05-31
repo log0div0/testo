@@ -84,4 +84,28 @@ Bridge Connect::defineBridge(const std::string& name) {
 	}
 }
 
+std::string Connect::defaultVirtualHardDiskPath() const {
+	try {
+		auto virtualSystemManagementServiceSettingData = services.execQuery("SELECT * FROM Msvm_VirtualSystemManagementServiceSettingData").getOne();
+		return virtualSystemManagementServiceSettingData.get("DefaultVirtualHardDiskPath");
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+void Connect::createHDD(const std::string& path, size_t size) {
+	try {
+		auto virtualHardDiskSettingData = services.getObject("Msvm_VirtualHardDiskSettingData").spawnInstance()
+			.put("Path", path)
+			.put("Type", (int32_t)3)
+			.put("Format", (int32_t)2)
+			.put("MaxInternalSize", std::to_string(size));
+		auto result = services.call("Msvm_ImageManagementService", "CreateVirtualHardDisk")
+			.with("VirtualDiskSettingData", virtualHardDiskSettingData)
+			.exec();
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 }

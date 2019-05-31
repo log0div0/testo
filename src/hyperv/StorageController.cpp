@@ -1,5 +1,6 @@
 
 #include "StorageController.hpp"
+#include <regex>
 
 namespace hyperv {
 
@@ -27,6 +28,24 @@ Drive StorageController::addDrive(size_t slot, const std::string& subtype) {
 	driveTemplate.put("AddressOnParent", std::to_string(slot));
 	auto drive = services.addResource(virtualSystemSettingData, driveTemplate);
 	return Drive(drive, virtualSystemSettingData, services);
+}
+
+std::vector<Drive> StorageController::drives() const {
+	try {
+		auto escaped_path = std::regex_replace(resourceAllocationSettingData.path(), std::regex("\\\\"), "\\\\");
+		auto escaped_path2 = std::regex_replace(escaped_path, std::regex("\""), "\\\"");
+		std::vector<Drive> result;
+		auto objects = services.execQuery(
+				"SELECT * FROM Msvm_ResourceAllocationSettingData "
+				"WHERE Parent=\"" + escaped_path2 + "\""
+			).getAll();
+		for (auto& object: objects) {
+			result.push_back(Drive(std::move(object), virtualSystemSettingData, services));
+		}
+		return result;
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 }

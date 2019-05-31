@@ -657,7 +657,10 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::s
 		vm->plug_dvd(path);
 	} else {
 		if (!vm->is_dvd_plugged()) {
-			throw std::runtime_error(fmt::format("dvd is already unplugged"));
+			// throw std::runtime_error(fmt::format("dvd is already unplugged"));
+			// это нормально, потому что поведение отличается от гипервизора к гипервизору
+			// иногда у ОС получается открыть дисковод, иногда - нет
+			return;
 		}
 
 		print("Unplugging dvd from vm ", vm->name());

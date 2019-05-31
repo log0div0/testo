@@ -86,10 +86,6 @@ void Machine::stop() {
 	requestStateChange(State::Disabled);
 }
 
-void Machine::pause() {
-	requestStateChange(State::Paused);
-}
-
 std::vector<StorageController> Machine::ideControllers() const {
 	return controllers("Microsoft:Hyper-V:Emulated IDE Controller");
 }

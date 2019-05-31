@@ -2,12 +2,13 @@
 #include <coro/Application.h>
 #include "Interpreter.hpp"
 
-#include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
 #include <wmi.hpp>
-#else
+#elif __linux__
 #include "backends/qemu/QemuEnvironment.hpp"
+#elif __APPLE__
+#include "backends/vbox/VboxEnvironment.hpp"
 #endif
 
 #include <iostream>
@@ -40,10 +41,11 @@ std::string generate_script(const fs::path& folder, const fs::path& current_pref
 
 void run_file(const fs::path& file, const nlohmann::json& config) {
 #ifdef WIN32
-	// HyperVEnvironment env;
-	VboxEnvironment env;
-#else
+	HyperVEnvironment env;
+#elif __linux__
 	QemuEnvironment env;
+#elif __APPLE__
+	VboxEnvironment env;
 #endif
 	Interpreter runner(env, file, config);
 	runner.run();
@@ -53,10 +55,11 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	auto generated = generate_script(folder);
 
 #ifdef WIN32
-	VboxEnvironment env;
-	// HyperVEnvironment env;
-#else
+	HyperVEnvironment env;
+#elif __linux__
 	QemuEnvironment env;
+#elif __APPLE__
+	VboxEnvironment env;
 #endif
 	Interpreter runner(env, folder, generated, config);
 	runner.run();

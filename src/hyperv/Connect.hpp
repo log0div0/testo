@@ -15,6 +15,8 @@ struct Connect {
 	std::vector<Bridge> bridges() const;
 	Bridge bridge(const std::string& name) const;
 	Bridge defineBridge(const std::string& name);
+	std::string defaultVirtualHardDiskPath() const;
+	void createHDD(const std::string& path, size_t size);
 
 	wmi::WbemLocator locator;
 	wmi::WbemServices services;

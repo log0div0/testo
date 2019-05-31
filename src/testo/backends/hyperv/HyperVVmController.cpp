@@ -6,91 +6,95 @@ HyperVVmController::HyperVVmController(const nlohmann::json& config_): VmControl
 	std::cout << "HyperVVmController " << config.dump(4) << std::endl;
 
 	scancodes.insert({
-		{"ESC", 1},
-		{"ONE", 2},
-		{"TWO", 3},
-		{"THREE", 4},
-		{"FOUR", 5},
-		{"FIVE", 6},
-		{"SIX", 7},
-		{"SEVEN", 8},
-		{"EIGHT", 9},
-		{"NINE", 10},
-		{"ZERO", 11},
-		{"MINUS", 12},
-		{"EQUALSIGN", 13},
-		{"BACKSPACE", 14},
-		{"TAB", 15},
-		{"Q", 16},
-		{"W", 17},
-		{"E", 18},
-		{"R", 19},
-		{"T", 20},
-		{"Y", 21},
-		{"U", 22},
-		{"I", 23},
-		{"O", 24},
-		{"P", 25},
-		{"LEFTBRACE", 26},
-		{"RIGHTBRACE", 27},
-		{"ENTER", 28},
-		{"LEFTCTRL", 29},
-		{"A", 30},
-		{"S", 31},
-		{"D", 32},
-		{"F", 33},
-		{"G", 34},
-		{"H", 35},
-		{"J", 36},
-		{"K", 37},
-		{"L", 38},
-		{"SEMICOLON", 39},
-		{"APOSTROPHE", 40},
-		{"GRAVE", 41},
-		{"LEFTSHIFT", 42},
-		{"BACKSLASH", 43},
-		{"Z", 44},
-		{"X", 45},
-		{"C", 46},
-		{"V", 47},
-		{"B", 48},
-		{"N", 49},
-		{"M", 50},
-		{"COMMA", 51},
-		{"DOT", 52},
-		{"SLASH", 53},
-		{"RIGHTSHIFT", 54},
-		{"LEFTALT", 56},
-		{"SPACE", 57},
-		{"CAPSLOCK", 58},
-		{"F1", 59},
-		{"F2", 60},
-		{"F3", 61},
-		{"F4", 62},
-		{"F5", 63},
-		{"F6", 64},
-		{"F7", 65},
-		{"F8", 66},
-		{"F9", 67},
-		{"F10", 68},
-		{"F11", 87},
-		{"F12", 88},
-		{"NUMLOCK", 69},
-		{"SCROLLLOCK", 70},
-		{"RIGHTCTRL", 97},
-		{"RIGHTALT", 100},
-		{"HOME", 102},
-		{"UP", 103},
-		{"PAGEUP", 104},
-		{"LEFT", 105},
-		{"RIGHT", 106},
-		{"END", 107},
-		{"DOWN", 108},
-		{"PAGEDOWN", 109},
-		{"INSERT", 110},
-		{"DELETE", 111},
-		{"SCROLLUP", 177},
-		{"SCROLLDOWN", 178},
+		{"ESC", {1}},
+		{"ONE", {2}},
+		{"TWO", {3}},
+		{"THREE", {4}},
+		{"FOUR", {5}},
+		{"FIVE", {6}},
+		{"SIX", {7}},
+		{"SEVEN", {8}},
+		{"EIGHT", {9}},
+		{"NINE", {10}},
+		{"ZERO", {11}},
+		{"MINUS", {12}},
+		{"EQUAL", {13}},
+		{"BACKSPACE", {14}},
+		{"TAB", {15}},
+		{"Q", {16}},
+		{"W", {17}},
+		{"E", {18}},
+		{"R", {19}},
+		{"T", {20}},
+		{"Y", {21}},
+		{"U", {22}},
+		{"I", {23}},
+		{"O", {24}},
+		{"P", {25}},
+		{"LEFTBRACE", {26}},
+		{"RIGHTBRACE", {27}},
+		{"ENTER", {28}},
+		{"LEFTCTRL", {29}},
+		{"A", {30}},
+		{"S", {31}},
+		{"D", {32}},
+		{"F", {33}},
+		{"G", {34}},
+		{"H", {35}},
+		{"J", {36}},
+		{"K", {37}},
+		{"L", {38}},
+		{"SEMICOLON", {39}},
+		{"APOSTROPHE", {40}},
+		{"GRAVE", {41}},
+		{"LEFTSHIFT", {42}},
+		{"BACKSLASH", {43}},
+		{"Z", {44}},
+		{"X", {45}},
+		{"C", {46}},
+		{"V", {47}},
+		{"B", {48}},
+		{"N", {49}},
+		{"M", {50}},
+		{"COMMA", {51}},
+		{"DOT", {52}},
+		{"SLASH", {53}},
+		{"RIGHTSHIFT", {54}},
+		{"LEFTALT", {56}},
+		{"SPACE", {57}},
+		{"CAPSLOCK", {58}},
+		{"NUMLOCK", {69}}, //TODO: recheck
+		{"SCROLLLOCK", {70}},
+
+		{"F1", {59}},
+		{"F2", {60}},
+		{"F3", {61}},
+		{"F4", {62}},
+		{"F5", {63}},
+		{"F6", {64}},
+		{"F7", {65}},
+		{"F8", {66}},
+		{"F9", {67}},
+		{"F10", {68}},
+		{"F11", {87}},
+		{"F12", {88}},
+
+		{"RIGHTCTRL", {97}},
+		{"RIGHTALT", {100}},
+
+		{"HOME", {224,71}},
+		{"UP", {224, 72}},
+		{"PAGEUP", {224,73}},
+		{"LEFT", {224,75}},
+		{"RIGHT", {224,77}},
+		{"END", {224,79}},
+		{"DOWN", {224,80}},
+		{"PAGEDOWN", {224,81}},
+		{"INSERT", {224,82}},
+		{"DELETE", {224,83}},
+
+		{"SCROLLUP", {177}},
+		{"SCROLLDOWN", {178}},
 	});
 }
 
@@ -109,10 +113,23 @@ void HyperVVmController::install() {
 			}
 		}
 
+		fs::path hhd_dir = connect.defaultVirtualHardDiskPath();
+		fs::path hhd_path = hhd_dir / (name() + ".vhd");
+		if (fs::exists(hhd_path)) {
+			fs::remove(hhd_path);
+		}
+
 		auto machine = connect.defineMachine(name());
+
+		nlohmann::json json = nlohmann::json::object();
+		machine.setNotes({json.dump(4)});
+
 		auto controllers = machine.ideControllers();
 		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
-		// controllers.at(1).addDiskDrive(0);
+		size_t disk_size = config.at("disk_size").get<uint32_t>();
+		disk_size = disk_size * 1024 * 1024;
+		connect.createHDD(hhd_path.generic_string(), disk_size);
+		controllers.at(1).addDiskDrive(0).mountHDD(hhd_path.generic_string());
 
 		if (config.count("nic")) {
 			for (auto& nic_cfg: config.at("nic")) {
@@ -132,7 +149,6 @@ void HyperVVmController::install() {
 			}
 		}
 
-
 		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -140,10 +156,21 @@ void HyperVVmController::install() {
 }
 
 void HyperVVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 void HyperVVmController::set_metadata(const std::string& key, const std::string& value) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto machine = connect.machine(name());
+		auto json = nlohmann::json::parse(machine.notes().at(0));
+		json[key] = value;
+		machine.setNotes({json.dump(4)});
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 std::string HyperVVmController::get_metadata(const std::string& key) {
@@ -168,7 +195,13 @@ void HyperVVmController::press(const std::vector<std::string>& buttons) {
 		std::vector<uint8_t> codes;
 		for (auto button: buttons) {
 			std::transform(button.begin(), button.end(), button.begin(), toupper);
-			codes.push_back(scancodes.at(button));
+			for (auto code: scancodes.at(button)) {
+				codes.push_back(code);
+			}
+		}
+		connect.machine(name()).keyboard().typeScancodes(codes);
+		for (auto& code: codes) {
+			code |= 0x80;
 		}
 		connect.machine(name()).keyboard().typeScancodes(codes);
 	} catch (const std::exception& error) {
@@ -195,7 +228,14 @@ void HyperVVmController::unplug_flash_drive(std::shared_ptr<FlashDriveController
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVmController::is_dvd_plugged() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto machine = connect.machine(name());
+		auto controller = machine.ideControllers().at(0);
+		auto drive = controller.drives().at(0);
+		return drive.disks().size();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 void HyperVVmController::plug_dvd(fs::path path) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -222,7 +262,7 @@ void HyperVVmController::stop() {
 
 void HyperVVmController::suspend() {
 	try {
-		connect.machine(name()).pause();
+		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -293,7 +333,12 @@ bool HyperVVmController::is_flash_plugged(std::shared_ptr<FlashDriveController> 
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVmController::has_snapshot(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
+		return false;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 void HyperVVmController::delete_snapshot_with_children(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -302,7 +347,13 @@ std::vector<std::string> HyperVVmController::keys() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVmController::has_key(const std::string& key) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto machine = connect.machine(name());
+		auto json = nlohmann::json::parse(machine.notes().at(0));
+		return json.count(key);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 bool HyperVVmController::is_defined() const {

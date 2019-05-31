@@ -110,6 +110,12 @@ struct Variant: VARIANT {
 	Variant(int32_t value) {
 		InitVariantFromInt32(value, this);
 	}
+	Variant(uint64_t value) {
+		InitVariantFromUInt64(value, this);
+	}
+	Variant(int64_t value) {
+		InitVariantFromInt64(value, this);
+	}
 	~Variant() {
 		VariantClear(this);
 	}
@@ -335,13 +341,13 @@ struct WbemClassObject: Object<IWbemClassObject> {
 		}
 	}
 
-	WbemClassObject& put(const std::string& name, const Variant& value) {
+	WbemClassObject& put(const std::string& name, const Variant& value, CIMTYPE type = 0) {
 		try {
 			throw_if_failed(handle->Put(
 				bstr_t(name.c_str()),
 				0,
 				(VARIANT*)&value,
-				0
+				type
 			));
 			return *this;
 		} catch (const std::exception&) {

@@ -1,13 +1,9 @@
 
 #pragma once
 
-#include "wmi.hpp"
+#include "Disk.hpp"
 
 namespace hyperv {
-
-struct Disk {
-
-};
 
 struct Drive {
 	Drive(wmi::WbemClassObject resourceAllocationSettingData_,
@@ -15,7 +11,10 @@ struct Drive {
 		wmi::WbemServices services_);
 
 	Disk mountISO(const std::string& path);
+	Disk mountHDD(const std::string& path);
 	Disk mount(const std::string& path, const std::string& subtype);
+
+	std::vector<Disk> disks() const;
 
 	wmi::WbemClassObject resourceAllocationSettingData;
 	wmi::WbemClassObject virtualSystemSettingData;

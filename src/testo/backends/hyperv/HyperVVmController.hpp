@@ -49,5 +49,5 @@ struct HyperVVmController: VmController {
 
 private:
 	hyperv::Connect connect;
-	std::unordered_map<std::string, uint8_t> scancodes;
+	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
 };

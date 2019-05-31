@@ -30,7 +30,6 @@ struct Machine {
 	void requestStateChange(State requestedState);
 	void start();
 	void stop();
-	void pause();
 
 	std::vector<StorageController> ideControllers() const;
 	std::vector<StorageController> controllers(const std::string& subtype) const;
