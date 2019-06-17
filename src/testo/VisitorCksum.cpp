@@ -54,8 +54,6 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 		return "stop";
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(vm, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
-		return visit_set(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Copy>>(action)) {
 		return visit_copy(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
@@ -162,15 +160,6 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vm, std::shar
 		result += "600s";
 	}
 
-	return result;
-}
-
-std::string VisitorCksum::visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<Set> set) {
-	std::string result("set");
-	for (auto assign: set->assignments) {
-		result += assign->left.value();
-		result += visit_word(vm, assign->right);
-	}
 	return result;
 }
 
