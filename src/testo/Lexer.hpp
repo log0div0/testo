@@ -77,6 +77,8 @@ private:
 	bool test_rbrace() const { return ((*input)[current_pos] == '}'); }
 	bool test_lparen() const { return ((*input)[current_pos] == '('); }
 	bool test_rparen() const { return ((*input)[current_pos] == ')'); }
+	bool test_lbracket() const { return ((*input)[current_pos] == '['); }
+	bool test_rbracket() const { return ((*input)[current_pos] == ']'); }
 	bool test_semi() const { return ((*input)[current_pos] == ';'); }
 	bool test_colon() const { return ((*input)[current_pos] == ':'); }
 	bool test_double_dot() const {
@@ -134,6 +136,8 @@ private:
 	Token rbrace();
 	Token lparen();
 	Token rparen();
+	Token lbracket();
+	Token rbracket();
 	Token semi();
 	Token colon();
 	Token double_dot();

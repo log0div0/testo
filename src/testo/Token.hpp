@@ -47,6 +47,8 @@ struct Token {
 		rbrace,
 		lparen,
 		rparen,
+		lbracket,
+		rbracket,
 		semi,
 		colon,
 		double_dot,
@@ -161,6 +163,10 @@ struct Token {
 			return "(";
 		case rparen:
 			return ")";
+		case lbracket:
+			return "[";
+		case rbracket:
+			return "]";
 		case semi:
 			return ";";
 		case colon:

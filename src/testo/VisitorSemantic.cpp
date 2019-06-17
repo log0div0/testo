@@ -171,6 +171,23 @@ void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
+	//Check for duplicates in attrs
+	std::set<std::string> attrs;
+
+	for (auto attr: test->attrs) {
+		if (!attrs.insert(attr.value()).second) {
+			throw std::runtime_error(std::string(attr.pos()) + ": Error: duplicate attribute : " + attr.value());
+		}
+	}
+
+	for (auto attr: attrs) {
+		if (attr == "no_snapshots") {
+			test->no_snapshots = true;
+		} else {
+			throw std::runtime_error(std::string(test->begin()) + ": Error: unknown attribute : " + attr);
+		}
+	}
+
 	for (auto parent_token: test->parents_tokens) {
 		auto parent = reg.tests.find(parent_token.value());
 		if (parent == reg.tests.end()) {

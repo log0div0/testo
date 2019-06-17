@@ -587,6 +587,18 @@ Token Lexer::rparen() {
 	return Token(Token::category::rparen, ")", tmp_pos);
 }
 
+Token Lexer::lbracket() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance();
+	return Token(Token::category::lbracket, "[", tmp_pos);
+}
+
+Token Lexer::rbracket() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance();
+	return Token(Token::category::rbracket, "]", tmp_pos);
+}
+
 Token Lexer::semi() {
 	Pos tmp_pos = current_pos;
 	current_pos.advance();
@@ -635,6 +647,10 @@ Token Lexer::get_next_token() {
 			return lparen();
 		} else if (test_rparen()) {
 			return rparen();
+		} else if (test_lbracket()) {
+			return lbracket();
+		} else if (test_rbracket()) {
+			return rbracket();
 		} else if (test_semi()) {
 			return semi();
 		} else if (test_colon()) {

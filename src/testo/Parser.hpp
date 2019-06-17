@@ -33,6 +33,7 @@ private:
 	bool test_assignment() const;
 	bool test_stmt() const;
 	bool test_controller() const;
+	bool test_test() const;
 	bool test_command() const;
 	bool test_action() const;
 	bool test_include() const;
