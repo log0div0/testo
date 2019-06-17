@@ -86,7 +86,6 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::stop) ||
 		(LA(1) == Token::category::shutdown) ||
 		(LA(1) == Token::category::exec) ||
-		(LA(1) == Token::category::set) ||
 		(LA(1) == Token::category::copyto) ||
 		(LA(1) == Token::category::copyfrom) ||
 		(LA(1) == Token::category::lbrace) ||
@@ -442,8 +441,6 @@ std::shared_ptr<IAction> Parser::action() {
 		action = shutdown();
 	} else if (LA(1) == Token::category::exec) {
 		action = exec();
-	} else if (LA(1) == Token::category::set) {
-		action = set();
 	} else if ((LA(1) == Token::category::copyto) || (LA(1) == Token::category::copyfrom)) {
 		action = copy();
 	} else if (LA(1) == Token::category::lbrace) {
@@ -665,23 +662,6 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 
 	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout, time_interval));
 	return std::shared_ptr<Action<Exec>>(new Action<Exec>(action));
-}
-
-std::shared_ptr<Action<Set>> Parser::set() {
-	Token set_token = LT(1);
-	match(Token::category::set);
-
-	std::vector<std::shared_ptr<Assignment>> assignments;
-
-	assignments.push_back(assignment());
-	while (LA(1) == Token::category::comma) {
-		match(Token::category::comma);
-		newline_list();
-		assignments.push_back(assignment());
-	}
-
-	auto action = std::shared_ptr<Set>(new Set(set_token, assignments));
-	return std::shared_ptr<Action<Set>>(new Action<Set>(action));
 }
 
 std::shared_ptr<Action<Copy>> Parser::copy() {

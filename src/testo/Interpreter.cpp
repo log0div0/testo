@@ -4,8 +4,7 @@
 #include "VisitorSemantic.hpp"
 #include <fstream>
 
-Interpreter::Interpreter(Environment& env, const fs::path& file, const nlohmann::json& config):
-	env(env),
+Interpreter::Interpreter(const fs::path& file, const nlohmann::json& config):
 	config(config)
 {
 	std::ifstream input_stream(file);
@@ -19,17 +18,16 @@ Interpreter::Interpreter(Environment& env, const fs::path& file, const nlohmann:
 	parser = Parser(file, input);
 }
 
-Interpreter::Interpreter(Environment& env, const fs::path& dir, const std::string& input, const nlohmann::json& config):
-	env(env),
+Interpreter::Interpreter(const fs::path& dir, const std::string& input, const nlohmann::json& config):
 	parser(dir, input),
 	config(config)
 {}
 
 int Interpreter::run() {
 	auto program = parser.parse();
-	VisitorSemantic semantic(reg, env);
+	VisitorSemantic semantic(reg);
 
-	env.setup(); //prepare the environment
+	env->setup(); //prepare the environment
 	semantic.visit(program);
 
 	VisitorInterpreter runner(reg, config);

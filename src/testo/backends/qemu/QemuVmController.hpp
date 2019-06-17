@@ -12,10 +12,7 @@ struct QemuVmController: public VmController {
 	QemuVmController(const QemuVmController& other) = delete;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-	void set_metadata(const std::string& key, const std::string& value) override;
 
-	std::string get_metadata(const std::string& key) override;
-	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
 	bool is_nic_plugged(const std::string& nic) const override;
@@ -38,8 +35,6 @@ struct QemuVmController: public VmController {
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void delete_snapshot_with_children(const std::string& snapshot) override;
-	std::vector<std::string> keys() override;
-	bool has_key(const std::string& key) override;
 	bool is_defined() const override;
 	VmState state() const override;
 	bool is_additions_installed() override;
@@ -54,12 +49,6 @@ private:
 	void prepare_networks();
 	void remove_disk();
 	void create_disk();
-
-	void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
-	nlohmann::json read_metadata_file(const fs::path& file) const;
-	void erase_metadata(const std::string& key);
-
-	std::vector<std::string> keys(vir::Snapshot& snapshot);
 
 	std::string get_dvd_path();
 	std::string get_dvd_path(vir::Snapshot& snapshot);

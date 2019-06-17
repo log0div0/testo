@@ -4,8 +4,8 @@
 
 using namespace AST;
 
-VisitorSemantic::VisitorSemantic(Register& reg, Environment& env):
-	reg(reg), env(env)
+VisitorSemantic::VisitorSemantic(Register& reg):
+	reg(reg)
 {
 		keys.insert("ESC");
 		keys.insert("ONE");
@@ -342,7 +342,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["name"] = machine->name.value();
 
-	auto vm = env.create_vm_controller(config);
+	auto vm = env->create_vm_controller(config);
 	reg.vms.emplace(std::make_pair(machine->name, vm));
 }
 
@@ -356,7 +356,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<Controller> flash) {
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
 	config["name"] = flash->name.value();
 
-	auto fd = env.create_flash_drive_controller(config);
+	auto fd = env->create_flash_drive_controller(config);
 	reg.fds.emplace(std::make_pair(flash->name, fd));
 }
 
