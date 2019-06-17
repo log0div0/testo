@@ -115,7 +115,6 @@ private:
 	Token timeout();
 	Token for_();
 	Token test();
-	Token no_cache();
 	Token machine();
 	Token flash();
 	Token macro();
