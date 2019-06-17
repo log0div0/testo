@@ -56,8 +56,6 @@ struct VmController {
 
 	virtual std::set<std::string> nics() const = 0;
 
-
-
 	std::string name() const;
 	nlohmann::json get_config() const;
 

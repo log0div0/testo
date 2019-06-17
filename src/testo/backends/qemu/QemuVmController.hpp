@@ -55,6 +55,10 @@ private:
 	void remove_disk();
 	void create_disk();
 
+	void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
+	nlohmann::json read_metadata_file(const fs::path& file) const;
+	void erase_metadata(const std::string& key);
+
 	std::vector<std::string> keys(vir::Snapshot& snapshot);
 
 	std::string get_dvd_path();

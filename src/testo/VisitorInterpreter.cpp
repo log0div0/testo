@@ -255,7 +255,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		}
 
 		//Now check if out test is cached
-		//Our test is checked if every vm in our test (parents included)
+		//Our test is cached if every vm in our test (parents included)
 		// - is defined
 		// - has valid config and dvd cksum
 		// - has snapshots with corresponding name and valid cksums
@@ -283,7 +283,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		//Ok, we're not cached and we need to run the test
 		//First we need to get all the vms in the correct state
-		//vms from parents - rollback to parent snapshot (we can be sure it is present and have valid cksum)
+		//vms from parents - rollback to parent snapshot (we can be sure it is present and has valid cksum)
 		//new vms - install
 		//Also now we need to delete corresponding snapshots if they exist
 
@@ -327,7 +327,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 				vm->set_metadata("vm_nic_count", std::to_string(config.count("nic") ? config.at("nic").size() : 0));
 				vm->set_metadata("vm_name", config.at("name"));
 				vm->set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
-
 			}
 		}
 
