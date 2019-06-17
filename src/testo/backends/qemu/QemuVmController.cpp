@@ -193,32 +193,6 @@ QemuVmController::~QemuVmController() {
 	}
 }
 
-void QemuVmController::set_metadata(const std::string& key, const std::string& value) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
-		std::vector flags = {VIR_DOMAIN_AFFECT_CURRENT, VIR_DOMAIN_AFFECT_CONFIG};
-
-		if (domain.is_active()) {
-			flags.push_back(VIR_DOMAIN_AFFECT_LIVE);
-		}
-
-		std::string metadata_to_set = value.length() ? fmt::format("<{} value='{}'/>", key, value) : "";
-
-		domain.set_metadata(VIR_DOMAIN_METADATA_ELEMENT,
-			metadata_to_set,
-			"testo",
-			fmt::format("vm_metadata/{}", key),
-			flags);
-
-		fs::path metadata_file = QemuEnvironment::metadata_dir / name();
-		auto metadata = read_metadata_file(metadata_file);
-		metadata[key] = value;
-		write_metadata_file(metadata_file, metadata);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
-	}
-}
-
 std::vector<std::string> QemuVmController::keys() {
 	try {
 		std::vector<std::string> result;
@@ -251,30 +225,6 @@ std::vector<std::string> QemuVmController::keys(vir::Snapshot& snapshot) {
 	}
 }
 
-bool QemuVmController::has_key(const std::string& key) {
-	try {
-		fs::path metadata_file = QemuEnvironment::metadata_dir / name();
-		auto metadata = read_metadata_file(metadata_file);
-		return metadata.count(key);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking metadata with key {}", key)));
-	}
-}
-
-std::string QemuVmController::get_metadata(const std::string& key) {
-	try {
-		fs::path metadata_file = QemuEnvironment::metadata_dir / name();
-		auto metadata = read_metadata_file(metadata_file);
-		if (!metadata.count(key)) {
-			throw std::runtime_error("Requested key is not present in vm metadata");
-		}
-		return metadata.at(key).get<std::string>();
-
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
-	}
-}
-
 void QemuVmController::install() {
 	try {
 		if (is_defined()) {
@@ -291,7 +241,7 @@ void QemuVmController::install() {
 			domain.undefine();
 		}
 
-		fs::path metadata_file = QemuEnvironment::metadata_dir / name();
+		fs::path metadata_file = env->metadata_dir() / name();
 
 		if (fs::exists(metadata_file)) {
 			if (!fs::remove(metadata_file)) {
@@ -453,35 +403,6 @@ void QemuVmController::install() {
 	}
 }
 
-void QemuVmController::write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
-	std::ofstream metadata_file_stream(file.generic_string());
-	if (!metadata_file_stream) {
-		throw std::runtime_error("Can't write metadata file " + file.generic_string());
-	}
-
-	metadata_file_stream << metadata;
-	metadata_file_stream.close();
-}
-
-nlohmann::json QemuVmController::read_metadata_file(const fs::path& file) const {
-	std::ifstream metadata_file_stream(file.generic_string());
-	if (!metadata_file_stream) {
-		throw std::runtime_error("Can't read metadata file " + file.generic_string());
-	}
-
-	nlohmann::json result;
-	metadata_file_stream >> result;
-	metadata_file_stream.close();
-	return result;
-}
-
-void QemuVmController::erase_metadata(const std::string& key) {
-	fs::path metadata_file = QemuEnvironment::metadata_dir / name();
-	auto metadata = read_metadata_file(metadata_file);
-	metadata.erase(key);
-	write_metadata_file(metadata_file, metadata);
-}
-
 void QemuVmController::make_snapshot(const std::string& snapshot, const std::string& cksum) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
@@ -500,7 +421,7 @@ void QemuVmController::make_snapshot(const std::string& snapshot, const std::str
 		domain.snapshot_create_xml(xml_config);
 		nlohmann::json metadata;
 		metadata["cksum"] = cksum;
-		fs::path metadata_file = QemuEnvironment::metadata_dir / (name() + "_" + snapshot);
+		fs::path metadata_file = env->metadata_dir() / (name() + "_" + snapshot);
 		write_metadata_file(metadata_file, metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
@@ -515,21 +436,6 @@ std::set<std::string> QemuVmController::nics() const {
 		result.insert(nic.at("name").get<std::string>());
 	}
 	return result;
-}
-
-std::string QemuVmController::get_snapshot_cksum(const std::string& snapshot) {
-	try {
-		fs::path metadata_file = QemuEnvironment::metadata_dir / (name() + "_" + snapshot);
-		auto metadata = read_metadata_file(metadata_file);
-		if (!metadata.count("cksum")) {
-			throw std::runtime_error("Can't find cksum field in snapshot metadata " + snapshot);
-		}
-
-		return metadata.at("cksum").get<std::string>();
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("getting snapshot cksum error"));
-	}
 }
 
 void QemuVmController::rollback(const std::string& snapshot) {
@@ -1181,7 +1087,7 @@ void QemuVmController::delete_snapshot_with_children(const std::string& snapshot
 			delete_snapshot_with_children(snap.name());
 		}
 		vir_snapshot.destroy();
-		fs::path metadata_file = QemuEnvironment::metadata_dir / (name() + "_" + snapshot);
+		fs::path metadata_file = env->metadata_dir() / (name() + "_" + snapshot);
 		if (fs::exists(metadata_file)) {
 			if (!fs::remove(metadata_file)) {
 				throw std::runtime_error("Can't delete snapshot metadata file");

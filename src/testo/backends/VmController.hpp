@@ -18,9 +18,6 @@ struct VmController {
 	virtual ~VmController() = default;
 	virtual void install() = 0;
 	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0;
-	virtual void set_metadata(const std::string& key, const std::string& value) = 0;
-	virtual std::string get_metadata(const std::string& key) = 0;
-	virtual std::string get_snapshot_cksum(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual void press(const std::vector<std::string>& buttons) = 0;
 	virtual bool is_nic_plugged(const std::string& nic) const = 0;
@@ -44,7 +41,6 @@ struct VmController {
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot_with_children(const std::string& snapshot) = 0;
 	virtual std::vector<std::string> keys() = 0;
-	virtual bool has_key(const std::string& key) = 0;
 	virtual bool is_defined() const = 0;
 	virtual VmState state() const = 0;
 	virtual bool is_additions_installed() = 0;
@@ -58,7 +54,16 @@ struct VmController {
 
 	std::string name() const;
 	nlohmann::json get_config() const;
+	std::string get_metadata(const std::string& key);
+	void set_metadata(const std::string& key, const std::string& value);
+	void erase_metadata(const std::string& key);
+	std::string get_snapshot_cksum(const std::string& snapshot);
+	bool has_key(const std::string& key);
+
 
 protected:
 	nlohmann::json config;
+
+	void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
+	nlohmann::json read_metadata_file(const fs::path& file) const;
 };

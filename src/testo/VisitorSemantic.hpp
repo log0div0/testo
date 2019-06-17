@@ -8,7 +8,7 @@
 #include <set>
 
 struct VisitorSemantic {
-	VisitorSemantic(Register& reg, Environment& env);
+	VisitorSemantic(Register& reg);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -41,5 +41,4 @@ struct VisitorSemantic {
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 
 	Register& reg;
-	Environment& env;
 };
