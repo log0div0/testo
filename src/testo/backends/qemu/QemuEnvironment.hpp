@@ -7,6 +7,7 @@
 struct QemuEnvironment : public Environment {
 	static fs::path testo_dir;
 	static fs::path flash_drives_mount_dir;
+	static fs::path metadata_dir;
 
 	QemuEnvironment();
 	~QemuEnvironment();

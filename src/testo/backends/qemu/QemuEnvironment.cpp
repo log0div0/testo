@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 
 fs::path QemuEnvironment::testo_dir = "/var/lib/libvirt/testo";
+fs::path QemuEnvironment::metadata_dir = "/var/lib/libvirt/testo/metadata";
 fs::path QemuEnvironment::flash_drives_mount_dir = "/var/lib/libvirt/testo/flash_drives/mount_point/";
 
 QemuEnvironment::QemuEnvironment() {
@@ -69,6 +70,12 @@ void QemuEnvironment::setup() {
 	if (!fs::exists(flash_drives_mount_dir)) {
 		if (!fs::create_directories(flash_drives_mount_dir)) {
 			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_mount_dir.generic_string());
+		}
+	}
+
+	if (!fs::exists(metadata_dir)) {
+		if (!fs::create_directories(metadata_dir)) {
+			throw std::runtime_error(std::string("Can't create directory: ") + metadata_dir.generic_string());
 		}
 	}
 }
