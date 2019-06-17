@@ -308,16 +308,6 @@ void VboxVmController::create_vm() {
 	}
 }
 
-std::vector<std::string> VboxVmController::keys() {
-	try {
-		auto machine = virtual_box.find_machine(name());
-		return machine.getExtraDataKeys();
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
 void VboxVmController::install() {
 	try {
 		remove_if_exists();

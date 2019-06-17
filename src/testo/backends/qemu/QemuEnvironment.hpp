@@ -9,13 +9,13 @@ struct QemuEnvironment : public Environment {
 		return "/var/lib/libvirt/testo";
 	}
 	fs::path flash_drives_mount_dir() const override {
-		return "/var/lib/libvirt/testo/metadata";
+		return "/var/lib/libvirt/testo/flash_drives/mount_point/";
 	}
 	fs::path flash_drives_img_dir() const override {
 		throw std::runtime_error("Not needed");
 	}
 	fs::path metadata_dir() const override {
-		return "/var/lib/libvirt/testo/flash_drives/mount_point/";
+		return "/var/lib/libvirt/testo/metadata";
 	}
 
 	QemuEnvironment();

@@ -35,7 +35,6 @@ struct QemuVmController: public VmController {
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void delete_snapshot_with_children(const std::string& snapshot) override;
-	std::vector<std::string> keys() override;
 	bool is_defined() const override;
 	VmState state() const override;
 	bool is_additions_installed() override;
@@ -50,8 +49,6 @@ private:
 	void prepare_networks();
 	void remove_disk();
 	void create_disk();
-
-	std::vector<std::string> keys(vir::Snapshot& snapshot);
 
 	std::string get_dvd_path();
 	std::string get_dvd_path(vir::Snapshot& snapshot);

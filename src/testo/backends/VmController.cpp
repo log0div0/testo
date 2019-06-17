@@ -40,14 +40,6 @@ void VmController::set_metadata(const std::string& key, const std::string& value
 	}
 }
 
-void VmController::erase_metadata(const std::string& key) {
-	fs::path metadata_file = env->metadata_dir() / name();
-	auto metadata = read_metadata_file(metadata_file);
-	metadata.erase(key);
-	write_metadata_file(metadata_file, metadata);
-}
-
-
 std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / (name() + "_" + snapshot);

@@ -40,11 +40,9 @@ struct VmController {
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot_with_children(const std::string& snapshot) = 0;
-	virtual std::vector<std::string> keys() = 0;
 	virtual bool is_defined() const = 0;
 	virtual VmState state() const = 0;
 	virtual bool is_additions_installed() = 0;
-
 
 	virtual void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) = 0;
 	virtual void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) = 0;
@@ -56,7 +54,6 @@ struct VmController {
 	nlohmann::json get_config() const;
 	std::string get_metadata(const std::string& key);
 	void set_metadata(const std::string& key, const std::string& value);
-	void erase_metadata(const std::string& key);
 	std::string get_snapshot_cksum(const std::string& snapshot);
 	bool has_key(const std::string& key);
 

@@ -193,38 +193,6 @@ QemuVmController::~QemuVmController() {
 	}
 }
 
-std::vector<std::string> QemuVmController::keys() {
-	try {
-		std::vector<std::string> result;
-		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
-		auto metadata = config.first_child().child("metadata");
-		for (auto it = metadata.begin(); it != metadata.end(); ++it) {
-			std::string value = it->first_attribute().value();
-			result.push_back(value.substr(strlen("vm_metadata/")));
-		}
-		return result;
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata keys")));
-	}
-}
-
-std::vector<std::string> QemuVmController::keys(vir::Snapshot& snapshot) {
-	try {
-		std::vector<std::string> result;
-		auto xml = snapshot.dump_xml();
-		auto metadata = xml.first_child().child("domain").child("metadata");
-		for (auto it = metadata.begin(); it != metadata.end(); ++it) {
-			std::string value = it->first_attribute().value();
-			result.push_back(value.substr(strlen("vm_metadata/")));
-		}
-		return result;
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata keys")));
-	}
-}
-
 void QemuVmController::install() {
 	try {
 		if (is_defined()) {
@@ -442,22 +410,6 @@ void QemuVmController::rollback(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
-
-		//Now let's take care of possible additional metadata keys
-
-		auto new_metadata_keys = keys();
-		auto old_metadata_keys = keys(snap);
-
-		std::sort(new_metadata_keys.begin(), new_metadata_keys.end());
-		std::sort(old_metadata_keys.begin(), old_metadata_keys.end());
-
-		std::vector<std::string> difference;
-		std::set_difference(new_metadata_keys.begin(), new_metadata_keys.end(),
-			old_metadata_keys.begin(), old_metadata_keys.end(), std::back_inserter(difference));
-
-		for (auto& key: difference) {
-			erase_metadata(key);
-		}
 
 		//Now let's take care of possible dvd discontingency
 		std::string current_dvd = get_dvd_path();
