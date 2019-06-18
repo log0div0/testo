@@ -111,7 +111,6 @@ private:
 	Token stop();
 	Token shutdown();
 	Token exec();
-	Token set();
 	Token copyto();
 	Token copyfrom();
 	Token timeout();

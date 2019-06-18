@@ -22,6 +22,8 @@
 
 using namespace clipp;
 
+std::shared_ptr<Environment> env;
+
 std::string generate_script(const fs::path& folder, const fs::path& current_prefix = ".") {
 	std::string result("");
 	for (auto& file: fs::directory_iterator(folder)) {
@@ -41,13 +43,13 @@ std::string generate_script(const fs::path& folder, const fs::path& current_pref
 
 void run_file(const fs::path& file, const nlohmann::json& config) {
 #ifdef WIN32
-	HyperVEnvironment env;
+	env = std::make_shared<HyperVEnvironment>();
 #elif __linux__
-	QemuEnvironment env;
+	env = std::make_shared<QemuEnvironment>();
 #elif __APPLE__
-	VboxEnvironment env;
+	env = std::make_shared<VboxEnvironment>();
 #endif
-	Interpreter runner(env, file, config);
+	Interpreter runner(file, config);
 	runner.run();
 }
 
@@ -55,13 +57,13 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	auto generated = generate_script(folder);
 
 #ifdef WIN32
-	HyperVEnvironment env;
+	env = std::make_shared<HyperVEnvironment>();
 #elif __linux__
-	QemuEnvironment env;
+	env = std::make_shared<QemuEnvironment>();
 #elif __APPLE__
-	VboxEnvironment env;
+	env = std::make_shared<VboxEnvironment>();
 #endif
-	Interpreter runner(env, folder, generated, config);
+	Interpreter runner(folder, generated, config);
 	runner.run();
 }
 

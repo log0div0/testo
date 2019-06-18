@@ -35,7 +35,6 @@ struct HyperVVmController: VmController {
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void delete_snapshot_with_children(const std::string& snapshot) override;
-	std::vector<std::string> keys() override;
 	bool has_key(const std::string& key) override;
 	bool is_defined() const override;
 	VmState state() const override;

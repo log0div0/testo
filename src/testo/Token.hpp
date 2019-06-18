@@ -19,7 +19,6 @@ struct Token {
 		stop,
 		shutdown,
 		exec,
-		set,
 		copyto,
 		copyfrom,
 		timeout,

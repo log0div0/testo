@@ -417,8 +417,6 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 		return visit_shutdown(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
 		return visit_exec(vm, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Set>>(action)) {
-		return visit_set(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Copy>>(action)) {
 		return visit_copy(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
@@ -754,29 +752,6 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(exec, vm));
 	}
-}
-
-void VisitorInterpreter::visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<Set> set) {
-	try {
-		print("Setting attributes on vm ", vm->name());
-
-		//1) Let's check all the assignments so that we know we don't override any values
-
-		for (auto assign: set->assignments) {
-			if (vm->has_key(assign->left.value())) {
-				throw std::runtime_error(fmt::format("Can't override key {}", assign->left.value()));
-			}
-		}
-
-		for (auto assign: set->assignments) {
-			std::string value = visit_word(vm, assign->right);
-			std::cout << assign->left.value() << " -> " << value << std::endl;
-			vm->set_metadata(assign->left.value(), value);
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(set, vm));
-	}
-
 }
 
 void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {

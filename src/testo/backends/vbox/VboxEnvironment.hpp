@@ -5,8 +5,18 @@
 #include <vbox/api.hpp>
 
 struct VboxEnvironment: public Environment {
-	static fs::path flash_drives_img_dir;
-	static fs::path flash_drives_mount_dir;
+	fs::path testo_dir() const override {
+		throw std::runtime_error("Implement me");
+	}
+	fs::path flash_drives_mount_dir() const override {
+		return _flash_drives_mount_dir;
+	}
+	fs::path flash_drives_img_dir() const override {
+		return _flash_drives_img_dir;
+	}
+	fs::path metadata_dir() const override {
+		throw std::runtime_error("Implement me");
+	}
 
 	VboxEnvironment();
 	~VboxEnvironment();
@@ -18,4 +28,8 @@ struct VboxEnvironment: public Environment {
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override;
 
 	vbox::API api;
+
+private:
+	fs::path _flash_drives_img_dir;
+	fs::path _flash_drives_mount_dir;
 };

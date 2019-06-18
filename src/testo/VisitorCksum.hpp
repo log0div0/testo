@@ -19,7 +19,6 @@ struct VisitorCksum {
 	std::string visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Plug> plug);
 	std::string visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Shutdown> shutdown);
 	std::string visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Exec> exec);
-	std::string visit_set(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Set> set);
 	std::string visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<AST::Copy> copy);
 	std::string visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<AST::MacroCall> macro_call);
 	std::string visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<AST::IfClause> if_clause);

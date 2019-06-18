@@ -385,31 +385,6 @@ struct Exec: public Node {
 	Token time_interval;
 };
 
-struct Set: public Node {
-	Set(const Token& set, const std::vector<std::shared_ptr<Assignment>>& assignments):
-		Node(set),
-		assignments(assignments) {}
-
-	Pos begin() const {
-		return t.pos();
-	}
-
-	Pos end() const {
-		return assignments[assignments.size() - 1]->end();
-	}
-
-	operator std::string() const {
-		std::string result = t.value();
-		for (auto assignment: assignments) {
-			result += " ";
-			result += *assignment;
-		}
-		return result;
-	}
-
-	std::vector<std::shared_ptr<Assignment>> assignments;
-};
-
 //Now this node holds actions copyto and copyfrom
 //Cause they're really similar
 struct Copy: public Node {

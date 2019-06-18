@@ -162,8 +162,6 @@ Token Lexer::id() {
 		return shutdown();
 	} else if (value == "exec") {
 		return exec();
-	} else if (value == "set") {
-		return set();
 	} else if (value == "copyto") {
 		return copyto();
 	} else if (value == "copyfrom") {
@@ -286,13 +284,6 @@ Token Lexer::exec() {
 	std::string value("exec");
 	current_pos.advance(value.length());
 	return Token(Token::category::exec, value, tmp_pos);
-}
-
-Token Lexer::set() {
-	Pos tmp_pos = current_pos;
-	std::string value("set");
-	current_pos.advance(value.length());
-	return Token(Token::category::set, value, tmp_pos);
 }
 
 Token Lexer::copyto() {

@@ -110,11 +110,11 @@ void VboxFlashDriveController::umount() const {
 }
 
 fs::path VboxFlashDriveController::img_path() const {
-	return VboxEnvironment::flash_drives_img_dir / (name() + "." + disk_format);
+	return env->flash_drives_img_dir() / (name() + "." + disk_format);
 }
 
 fs::path VboxFlashDriveController::mount_dir() const {
-	return VboxEnvironment::flash_drives_mount_dir;
+	return env->flash_drives_mount_dir();
 }
 
 void VboxFlashDriveController::remove_if_exists() {

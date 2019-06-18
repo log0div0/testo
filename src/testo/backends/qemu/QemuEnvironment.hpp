@@ -5,9 +5,18 @@
 #include <qemu/Connect.hpp>
 
 struct QemuEnvironment : public Environment {
-	static fs::path testo_dir;
-	static fs::path flash_drives_mount_dir;
-	static fs::path metadata_dir;
+	fs::path testo_dir() const override {
+		return "/var/lib/libvirt/testo";
+	}
+	fs::path flash_drives_mount_dir() const override {
+		return "/var/lib/libvirt/testo/flash_drives/mount_point/";
+	}
+	fs::path flash_drives_img_dir() const override {
+		throw std::runtime_error("Not needed");
+	}
+	fs::path metadata_dir() const override {
+		return "/var/lib/libvirt/testo/metadata";
+	}
 
 	QemuEnvironment();
 	~QemuEnvironment();

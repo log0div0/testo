@@ -343,9 +343,7 @@ bool HyperVVmController::has_snapshot(const std::string& snapshot) {
 void HyperVVmController::delete_snapshot_with_children(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-std::vector<std::string> HyperVVmController::keys() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
+
 bool HyperVVmController::has_key(const std::string& key) {
 	try {
 		auto machine = connect.machine(name());

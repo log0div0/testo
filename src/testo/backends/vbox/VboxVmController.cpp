@@ -308,53 +308,6 @@ void VboxVmController::create_vm() {
 	}
 }
 
-void VboxVmController::set_metadata(const std::string& key, const std::string& value) {
-	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
-		machine.setExtraData(key, value);
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-std::vector<std::string> VboxVmController::keys() {
-	try {
-		auto machine = virtual_box.find_machine(name());
-		return machine.getExtraDataKeys();
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-bool VboxVmController::has_key(const std::string& key) {
-	try {
-		auto extra_keys = keys();
-		for (auto& k: extra_keys) {
-			if (k == key) {
-				return true;
-			}
-		}
-		return false;
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-std::string VboxVmController::get_metadata(const std::string& key) {
-	try {
-		auto machine = virtual_box.find_machine(name());
-		return machine.getExtraData(key);
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
 void VboxVmController::install() {
 	try {
 		remove_if_exists();
@@ -388,18 +341,6 @@ std::set<std::string> VboxVmController::nics() const {
 		result.insert(nic.at("name").get<std::string>());
 	}
 	return result;
-}
-
-std::string VboxVmController::get_snapshot_cksum(const std::string& snapshot) {
-	try {
-		auto lock_machine = virtual_box.find_machine(name());
-		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
-		auto machine = work_session.machine();
-		return machine.findSnapshot(snapshot).getDescription();
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
 }
 
 void VboxVmController::rollback(const std::string& snapshot) {
