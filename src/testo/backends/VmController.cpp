@@ -98,6 +98,34 @@ bool VmController::has_snapshot(const std::string& snapshot) {
 	return fs::exists(metadata_file);
 }
 
+std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
+	try {
+		fs::path metadata_file = env->metadata_dir() / vm->name();
+		metadata_file /= vm->name() + "_" + snapshot;
+		auto metadata = read_metadata_file(metadata_file);
+		if (!metadata.count("cksum")) {
+			throw std::runtime_error("Can't find cksum field in snapshot metadata " + snapshot);
+		}
+
+		return metadata.at("cksum").get<std::string>();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("getting snapshot cksum error"));
+	}
+}
+
+bool VmController::has_key(const std::string& key) {
+	try {
+		fs::path metadata_file = env->metadata_dir() / vm->name();
+		metadata_file /= vm->name();
+		auto metadata = read_metadata_file(metadata_file);
+		return metadata.count(key);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking metadata with key {}", key)));
+	}
+}
+
+
 std::string VmController::get_metadata(const std::string& key) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / vm->name();

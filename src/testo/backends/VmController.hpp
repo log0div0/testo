@@ -11,7 +11,9 @@ struct VmController {
 	void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed);
 	void delete_snapshot_with_children(const std::string& snapshot);
 	bool has_snapshot(const std::string& snapshot);
+	std::string get_snapshot_cksum(const std::string& snapshot);
 
+	bool has_key(const std::string& key);
 	std::string get_metadata(const std::string& key);
 	void set_metadata(const std::string& key, const std::string& value);
 

@@ -280,7 +280,7 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vmc, const s
 	//2) reg (todo)
 	//3) env var
 
-	if (vmc->vm->is_defined() && vmc->vm->has_key(var)) {
+	if (vmc->vm->is_defined() && vmc->has_key(var)) {
 		return vmc->get_metadata(var);
 	}
 

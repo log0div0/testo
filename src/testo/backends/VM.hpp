@@ -52,9 +52,6 @@ struct VM {
 
 	std::string name() const;
 	nlohmann::json get_config() const;
-	std::string get_snapshot_cksum(const std::string& snapshot); //move to contoller
-	bool has_key(const std::string& key); //move to contoller
-
 
 protected:
 	nlohmann::json config;
