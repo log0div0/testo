@@ -9,7 +9,7 @@ struct HyperVVM: VM {
 	HyperVVM(const nlohmann::json& config);
 	~HyperVVM() override;
 	void install() override;
-	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
+	void make_snapshot(const std::string& snapshot) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
 	std::string get_metadata(const std::string& key) override;
 	std::string get_snapshot_cksum(const std::string& snapshot) override;

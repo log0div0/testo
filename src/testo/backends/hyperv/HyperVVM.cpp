@@ -155,7 +155,7 @@ void HyperVVM::install() {
 	}
 }
 
-void HyperVVM::make_snapshot(const std::string& snapshot, const std::string& cksum) {
+void HyperVVM::make_snapshot(const std::string& snapshot) {
 	try {
 		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 	} catch (const std::exception& error) {

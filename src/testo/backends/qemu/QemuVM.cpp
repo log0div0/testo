@@ -362,13 +362,9 @@ void QemuVM::install() {
 	}
 }
 
-void QemuVM::make_snapshot(const std::string& snapshot, const std::string& cksum) {
+void QemuVM::make_snapshot(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
-
-		if (has_snapshot(snapshot)) {
-			delete_snapshot_with_children(snapshot);
-		}
 
 		pugi::xml_document xml_config;
 		xml_config.load_string(fmt::format(R"(
@@ -378,10 +374,6 @@ void QemuVM::make_snapshot(const std::string& snapshot, const std::string& cksum
 			)", snapshot).c_str());
 
 		domain.snapshot_create_xml(xml_config);
-		nlohmann::json metadata;
-		metadata["cksum"] = cksum;
-		fs::path metadata_file = env->metadata_dir() / (name() + "_" + snapshot);
-		//write_metadata_file(metadata_file, metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
 	}
@@ -1019,29 +1011,15 @@ bool QemuVM::has_snapshot(const std::string& snapshot) {
 	}
 }
 
-void QemuVM::delete_snapshot_with_children(const std::string& snapshot) {
+void QemuVM::delete_snapshot(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
-
-		auto children = vir_snapshot.children();
-
-		for (auto& snap: children) {
-			delete_snapshot_with_children(snap.name());
-		}
 		vir_snapshot.destroy();
-		fs::path metadata_file = env->metadata_dir() / (name() + "_" + snapshot);
-		if (fs::exists(metadata_file)) {
-			if (!fs::remove(metadata_file)) {
-				throw std::runtime_error("Can't delete snapshot metadata file");
-			}
-		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Deleting snapshot with children"));
 	}
-
 }
-
 
 bool QemuVM::is_defined() const {
 	auto domains = qemu_connect.domains({VIR_CONNECT_LIST_DOMAINS_PERSISTENT});

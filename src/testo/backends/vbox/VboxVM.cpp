@@ -318,7 +318,7 @@ void VboxVM::install() {
 	}
 }
 
-void VboxVM::make_snapshot(const std::string& snapshot, const std::string& cksum) {
+void VboxVM::make_snapshot(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -327,7 +327,7 @@ void VboxVM::make_snapshot(const std::string& snapshot, const std::string& cksum
 			auto existing_snapshot = machine.findSnapshot(snapshot);
 			delete_snapshot_with_children(existing_snapshot);
 		}
-		machine.takeSnapshot(snapshot, cksum, true).wait_and_throw_if_failed();
+		machine.takeSnapshot(snapshot, "", true).wait_and_throw_if_failed();
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -817,14 +817,14 @@ bool VboxVM::has_snapshot(const std::string& snapshot) {
 	}
 }
 
-void VboxVM::delete_snapshot_with_children(const std::string& snapshot) {
+void VboxVM::delete_snapshot(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		if (machine.hasSnapshot(snapshot)) {
 			auto existing_snapshot = machine.findSnapshot(snapshot);
-			delete_snapshot_with_children(existing_snapshot);
+			machine.deleteSnapshot(existing_snapshot);
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));

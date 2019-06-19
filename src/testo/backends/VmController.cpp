@@ -5,11 +5,11 @@
 
 void VmController::create_vm() {
 	try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
+		fs::path metadata_dir = env->metadata_dir() / vm->name();
 
-		if (fs::exists(metadata_file)) {
-			if (!fs::remove(metadata_file)) {
-				throw std::runtime_error("Error deleting metadata file " + metadata_file.generic_string());
+		if (fs::exists(metadata_dir)) {
+			if (!fs::remove_all(metadata_dir)) {
+				throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
 			}
 		}
 
@@ -26,14 +26,76 @@ void VmController::create_vm() {
 			}
 		}
 
+		if (!fs::create_directory(metadata_dir)) {
+			throw std::runtime_error("Error creating metadata dir " + metadata_dir.generic_string());
+		}
+
+		fs::path metadata_file = metadata_dir / vm->name();
+
 		metadata["vm_config"] = config.dump();
 		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
 		metadata["vm_name"] = config.at("name");
+		metadata["vm_current_state"] = "";
 		metadata["dvd_signature"] = file_signature(config.at("iso").get<std::string>());
 		write_metadata_file(metadata_file, nlohmann::json::object());
+
 	} catch (const std::exception& error) {
 		std::throw_with_nested("creating vm");
 	}
+}
+
+void VmController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
+{
+	try {
+		if (has_snapshot(snapshot)) {
+			delete_snapshot_with_children(snapshot);
+		}
+
+		//1) Let's try and create the actual snapshot. If we fail then no additional work
+		if (hypervisor_snapshot_needed) {
+			vm->make_snapshot(snapshot);
+		}
+
+		//Where to store new metadata file?
+		fs::path metadata_file = env->metadata_dir() / vm->name();
+		metadata_file /= vm->name() + "_" + snapshot;
+
+		auto current_state = get_metadata("vm_current_state");
+
+		nlohmann::json metadata;
+		metadata["cksum"] = cksum;
+		metadata["children"] = nlohmann::json::array();
+		metadata["parent"] = current_state;
+		write_metadata_file(metadata_file, metadata);
+
+		//link parent to a child
+		if (current_state.length()) {
+			fs::path parent_metadata_file = env->metadata_dir() / vm->name();
+			parent_metadata_file /= vm->name() + "_" + current_state;
+			auto parent_metadata = read_metadata_file(parent_metadata_file);
+			parent_metadata.at("children").push_back(snapshot);
+			write_metadata_file(parent_metadata_file, parent_metadata);
+		}
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested("creating snapshot");
+	}
+}
+
+void VmController::delete_snapshot_with_children(const std::string& snapshot)
+{
+	try {
+		//TODO
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested("deleting snapshot");
+	}
+}
+
+bool VmController::has_snapshot(const std::string& snapshot) {
+	fs::path metadata_file = env->metadata_dir() / vm->name();
+	metadata_file /= vm->name() + "_" + snapshot;
+	return fs::exists(metadata_file);
 }
 
 std::string VmController::get_metadata(const std::string& key) {

@@ -266,7 +266,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			if (vmc->vm->is_defined() &&
 				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->get_metadata("vm_config"))) &&
 				(file_signature(vmc->vm->get_config().at("iso").get<std::string>()) == vmc->get_metadata("dvd_signature")) &&
-				vmc->vm->has_snapshot(test->name.value()) &&
+				vmc->has_snapshot(test->name.value()) &&
 				(vmc->vm->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
 			{
 				continue;
@@ -294,6 +294,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 				if (vmc->vm->has_snapshot(parent->name.value())) {
 					print("Restoring snapshot ", parent->name.value(), " for virtual machine ", vmc->vm->name());
 					vmc->vm->rollback(parent->name.value());
+					vmc->set_metadata("vm_current_state", parent->name.value());
 				}
 			}
 		}
@@ -317,8 +318,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		}
 
 		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->has_snapshot(test->name.value())) {
-				vmc->vm->delete_snapshot_with_children(test->name.value());
+			if (vmc->has_snapshot(test->name.value())) {
+				vmc->delete_snapshot_with_children(test->name.value());
 			}
 		}
 
@@ -343,13 +344,14 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		for (auto vmc: reg.get_all_vmcs(test)) {
 			print("Taking snapshot ", test->name.value(), " for virtual machine ", vmc->vm->name());
-			vmc->vm->make_snapshot(test->name.value(), test_cksum(test));
+			vmc->create_snapshot(test->name.value(), test_cksum(test), true); //true for now
+			//Update current state on vm
+			vmc->set_metadata("vm_current_state", test->name.value());
 		}
 		stop_all_vms(test);
 
 		current_progress += progress_step;
 		print("Test ", test->name.value(), " PASSED");
-
 		succeeded_tests.push_back(test);
 
 	} catch (const InterpreterException& error) {

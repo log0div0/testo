@@ -11,7 +11,7 @@ struct QemuVM: public VM {
 	~QemuVM();
 	QemuVM(const QemuVM& other) = delete;
 	void install() override;
-	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
+	void make_snapshot(const std::string& snapshot) override;
 
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
@@ -34,7 +34,7 @@ struct QemuVM: public VM {
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
-	void delete_snapshot_with_children(const std::string& snapshot) override;
+	void delete_snapshot(const std::string& snapshot) override;
 	bool is_defined() const override;
 	VmState state() const override;
 	bool is_additions_installed() override;
