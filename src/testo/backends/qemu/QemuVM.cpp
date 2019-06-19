@@ -209,14 +209,6 @@ void QemuVM::install() {
 			domain.undefine();
 		}
 
-		fs::path metadata_file = env->metadata_dir() / name();
-
-		if (fs::exists(metadata_file)) {
-			if (!fs::remove(metadata_file)) {
-				throw std::runtime_error("Error deleting metadata file " + metadata_file.generic_string());
-			}
-		}
-
 		remove_disk();
 
 		//now create disks
@@ -365,7 +357,6 @@ void QemuVM::install() {
 		pugi::xml_document xml_config;
 		xml_config.load_string(string_config.c_str());
 		qemu_connect.domain_define_xml(xml_config);
-		write_metadata_file(metadata_file, nlohmann::json::object());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Performing install")));
 	}
@@ -390,7 +381,7 @@ void QemuVM::make_snapshot(const std::string& snapshot, const std::string& cksum
 		nlohmann::json metadata;
 		metadata["cksum"] = cksum;
 		fs::path metadata_file = env->metadata_dir() / (name() + "_" + snapshot);
-		write_metadata_file(metadata_file, metadata);
+		//write_metadata_file(metadata_file, metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
 	}

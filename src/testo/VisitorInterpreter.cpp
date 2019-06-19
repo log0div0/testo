@@ -264,8 +264,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		for (auto vmc: reg.get_all_vmcs(test)) {
 			if (vmc->vm->is_defined() &&
-				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->vm->get_metadata("vm_config"))) &&
-				(file_signature(vmc->vm->get_config().at("iso").get<std::string>()) == vmc->vm->get_metadata("dvd_signature")) &&
+				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->get_metadata("vm_config"))) &&
+				(file_signature(vmc->vm->get_config().at("iso").get<std::string>()) == vmc->get_metadata("dvd_signature")) &&
 				vmc->vm->has_snapshot(test->name.value()) &&
 				(vmc->vm->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
 			{
@@ -312,21 +312,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 			if (is_new) {
 				print("Creating machine ", vmc->vm->name());
-				vmc->vm->install();
-
-				auto config = vmc->vm->get_config();
-
-				if (config.count("metadata")) {
-					auto metadata = config.at("metadata");
-					for (auto it = metadata.begin(); it != metadata.end(); ++it) {
-						vmc->vm->set_metadata(it.key(), it.value());
-					}
-				}
-
-				vmc->vm->set_metadata("vm_config", config.dump());
-				vmc->vm->set_metadata("vm_nic_count", std::to_string(config.count("nic") ? config.at("nic").size() : 0));
-				vmc->vm->set_metadata("vm_name", config.at("name"));
-				vmc->vm->set_metadata("dvd_signature", file_signature(config.at("iso").get<std::string>()));
+				vmc->create_vm();
 			}
 		}
 
@@ -902,7 +888,7 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 	}
 
 	if (vmc->vm->is_defined() && vmc->vm->has_key(var)) {
-		return vmc->vm->get_metadata(var);
+		return vmc->get_metadata(var);
 	}
 
 	auto env_value = std::getenv(var.c_str());

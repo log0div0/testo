@@ -16,7 +16,7 @@ struct VM {
 	VM() = delete;
 	VM(const nlohmann::json& config_);
 	virtual ~VM() = default;
-	virtual void install() = 0; // create vm
+	virtual void install() = 0;
 	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0; //dublicate
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual void press(const std::vector<std::string>& buttons) = 0;
@@ -52,15 +52,10 @@ struct VM {
 
 	std::string name() const;
 	nlohmann::json get_config() const;
-	std::string get_metadata(const std::string& key);	//move to contoller
-	void set_metadata(const std::string& key, const std::string& value); //move to contoller
 	std::string get_snapshot_cksum(const std::string& snapshot); //move to contoller
 	bool has_key(const std::string& key); //move to contoller
 
 
 protected:
 	nlohmann::json config;
-
-	void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
-	nlohmann::json read_metadata_file(const fs::path& file) const;
 };

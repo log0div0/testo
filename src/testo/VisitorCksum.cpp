@@ -281,7 +281,7 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vmc, const s
 	//3) env var
 
 	if (vmc->vm->is_defined() && vmc->vm->has_key(var)) {
-		return vmc->vm->get_metadata(var);
+		return vmc->get_metadata(var);
 	}
 
 	auto env_value = std::getenv(var.c_str());
