@@ -2,14 +2,14 @@
 #pragma once
 
 #include <pugixml/pugixml.hpp>
-#include "../VmController.hpp"
+#include "../VM.hpp"
 #include <qemu/Host.hpp>
 
-struct QemuVmController: public VmController {
-	QemuVmController() = delete;
-	QemuVmController(const nlohmann::json& config);
-	~QemuVmController();
-	QemuVmController(const QemuVmController& other) = delete;
+struct QemuVM: public VM {
+	QemuVM() = delete;
+	QemuVM(const nlohmann::json& config);
+	~QemuVM();
+	QemuVM(const QemuVM& other) = delete;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 

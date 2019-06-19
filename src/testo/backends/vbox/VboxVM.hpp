@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "../VmController.hpp"
+#include "../VM.hpp"
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 
-struct VboxVmController: public VmController {
-	VboxVmController() = delete;
-	VboxVmController(const nlohmann::json& config);
-	VboxVmController(const VboxVmController& other) = delete;
+struct VboxVM: public VM {
+	VboxVM() = delete;
+	VboxVM(const nlohmann::json& config);
+	VboxVM(const VboxVM& other) = delete;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 

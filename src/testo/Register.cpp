@@ -9,8 +9,8 @@ Register::~Register() {
 	}
 }
 
-std::set<std::shared_ptr<VmController>> Register::get_all_vms(std::shared_ptr<AST::Test> test) const {
-	std::set<std::shared_ptr<VmController>> result;
+std::set<std::shared_ptr<VM>> Register::get_all_vms(std::shared_ptr<AST::Test> test) const {
+	std::set<std::shared_ptr<VM>> result;
 	for (auto parent: test->parents) {
 		for (auto vm: get_all_vms(parent)) {
 			result.insert(vm);

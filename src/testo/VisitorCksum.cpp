@@ -29,7 +29,7 @@ std::string VisitorCksum::visit_cmd(std::shared_ptr<Cmd> cmd) {
 	return result;
 }
 
-std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<ActionBlock> action_block) {
+std::string VisitorCksum::visit_action_block(std::shared_ptr<VM> vm, std::shared_ptr<ActionBlock> action_block) {
 	std::string result("BLOCK");
 	for (auto action: action_block->actions) {
 		result += visit_action(vm, action);
@@ -37,7 +37,7 @@ std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vm, s
 	return result;
 }
 
-std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::shared_ptr<IAction> action) {
+std::string VisitorCksum::visit_action(std::shared_ptr<VM> vm, std::shared_ptr<IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
 		return visit_type(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Wait>>(action)) {
@@ -73,13 +73,13 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vm, std::sh
 	}
 }
 
-std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vm, std::shared_ptr<Type> type) {
+std::string VisitorCksum::visit_type(std::shared_ptr<VM> vm, std::shared_ptr<Type> type) {
 	std::string result("type");
 	result += visit_word(vm, type->text_word);
 	return result;
 }
 
-std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vm, std::shared_ptr<Wait> wait) {
+std::string VisitorCksum::visit_wait(std::shared_ptr<VM> vm, std::shared_ptr<Wait> wait) {
 	std::string result = "wait";
 	if (wait->text_word) {
 		result += visit_word(vm, wait->text_word);
@@ -116,7 +116,7 @@ std::string VisitorCksum::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
 	return result;
 }
 
-std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+std::string VisitorCksum::visit_plug(std::shared_ptr<VM> vm, std::shared_ptr<Plug> plug) {
 	std::string result("plug");
 	result += std::to_string(plug->is_on());
 	result += plug->type.value();
@@ -138,7 +138,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vm, std::shar
 	return result;
 }
 
-std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<Shutdown> shutdown) {
+std::string VisitorCksum::visit_shutdown(std::shared_ptr<VM>, std::shared_ptr<Shutdown> shutdown) {
 	std::string result("shutdown");
 	if (shutdown->time_interval) {
 		result += shutdown->time_interval.value();
@@ -148,7 +148,7 @@ std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {
+std::string VisitorCksum::visit_exec(std::shared_ptr<VM> vm, std::shared_ptr<Exec> exec) {
 	std::string result("exec");
 
 	result += exec->process_token.value();
@@ -163,7 +163,7 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vm, std::shar
 	return result;
 }
 
-std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {
+std::string VisitorCksum::visit_copy(std::shared_ptr<VM> vm, std::shared_ptr<Copy> copy) {
 	std::string result(copy->t.value());
 
 	fs::path from = visit_word(vm, copy->from);
@@ -206,11 +206,11 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vm, std::shar
 	return result;
 }
 
-std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
+std::string VisitorCksum::visit_macro_call(std::shared_ptr<VM> vm, std::shared_ptr<MacroCall> macro_call) {
 	return visit_action_block(vm, macro_call->macro->action_block->action);
 }
 
-std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<IfClause> if_clause) {
+std::string VisitorCksum::visit_if_clause(std::shared_ptr<VM> vm, std::shared_ptr<IfClause> if_clause) {
 	std::string result("if");
 	result += visit_expr(vm, if_clause->expr);
 
@@ -224,7 +224,7 @@ std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vm, std:
 	return result;
 }
 
-std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<ForClause> for_clause) {
+std::string VisitorCksum::visit_for_clause(std::shared_ptr<VM> vm, std::shared_ptr<ForClause> for_clause) {
 	std::string result("for");
 	//we should drop the counter from cksum
 	result += for_clause->start_.value();
@@ -235,7 +235,7 @@ std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vm, std
 	return result;
 }
 
-std::string VisitorCksum::visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<IExpr> expr) {
+std::string VisitorCksum::visit_expr(std::shared_ptr<VM> vm, std::shared_ptr<IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<Expr<BinOp>>(expr)) {
 		return visit_binop(vm, p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<Expr<IFactor>>(expr)) {
@@ -245,7 +245,7 @@ std::string VisitorCksum::visit_expr(std::shared_ptr<VmController> vm, std::shar
 	}
 }
 
-std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<BinOp> binop) {
+std::string VisitorCksum::visit_binop(std::shared_ptr<VM> vm, std::shared_ptr<BinOp> binop) {
 	std::string result("binop");
 	result += visit_expr(vm, binop->left);
 	result += visit_expr(vm, binop->right);
@@ -253,7 +253,7 @@ std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vm, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<IFactor> factor) {
+std::string VisitorCksum::visit_factor(std::shared_ptr<VM> vm, std::shared_ptr<IFactor> factor) {
 	std::string result("factor");
 	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
 		result += std::to_string(p->is_negated());
@@ -274,7 +274,7 @@ std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vm, std::sh
 	return result;
 }
 
-std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vm, const std::string& var) {
+std::string VisitorCksum::resolve_var(std::shared_ptr<VM> vm, const std::string& var) {
 	//Resolving order
 	//1) metadata
 	//2) reg (todo)
@@ -292,7 +292,7 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vm, const st
 	return env_value;
 }
 
-std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<Word> word) {
+std::string VisitorCksum::visit_word(std::shared_ptr<VM> vm, std::shared_ptr<Word> word) {
 	std::string result;
 
 	for (auto part: word->parts) {
@@ -310,7 +310,7 @@ std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vm, std::shar
 	return result;
 }
 
-std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<Comparison> comparison) {
+std::string VisitorCksum::visit_comparison(std::shared_ptr<VM> vm, std::shared_ptr<Comparison> comparison) {
 	std::string result("comparison");
 	result += visit_word(vm, comparison->left);
 	result += visit_word(vm, comparison->right);
@@ -318,7 +318,7 @@ std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vm, std
 	return result;
 }
 
-std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<Check> check) {
+std::string VisitorCksum::visit_check(std::shared_ptr<VM> vm, std::shared_ptr<Check> check) {
 	std::string result = "check";
 	result += visit_word(vm, check->text_word);
 

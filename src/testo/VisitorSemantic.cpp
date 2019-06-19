@@ -218,7 +218,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 	//all parents have totally separate vms. We can't do that before command block because
 	//a user may specify unexisting vm in some command and we need to catch that before that hierarchy check
 
-	std::vector<std::set<std::shared_ptr<VmController>>> parents_subtries;
+	std::vector<std::set<std::shared_ptr<VM>>> parents_subtries;
 
 	//populate our parents paths
 	for (auto parent: test->parents) {
@@ -232,7 +232,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 				continue;
 			}
 
-			std::vector<std::shared_ptr<VmController>> intersection;
+			std::vector<std::shared_ptr<VM>> intersection;
 
 			std::set_intersection(
 				parents_subtries[i].begin(), parents_subtries[i].end(),
@@ -253,7 +253,7 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
 }
 
 void VisitorSemantic::visit_command(std::shared_ptr<Cmd> cmd) {
-	std::set<std::shared_ptr<VmController>> unique_vms;
+	std::set<std::shared_ptr<VM>> unique_vms;
 	for (auto vm_token: cmd->vms) {
 
 		auto vm = reg.vms.find(vm_token.value());

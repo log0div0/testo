@@ -1,21 +1,21 @@
 
-#include "VmController.hpp"
+#include "VM.hpp"
 #include "Environment.hpp"
 #include <fmt/format.h>
 
-VmController::VmController(const nlohmann::json& config_): config(config_) {
+VM::VM(const nlohmann::json& config_): config(config_) {
 
 }
 
-nlohmann::json VmController::get_config() const {
+nlohmann::json VM::get_config() const {
 	return config;
 }
 
-std::string VmController::name() const {
+std::string VM::name() const {
 	return config.at("name");
 }
 
-std::string VmController::get_metadata(const std::string& key) {
+std::string VM::get_metadata(const std::string& key) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / name();
 		auto metadata = read_metadata_file(metadata_file);
@@ -29,7 +29,7 @@ std::string VmController::get_metadata(const std::string& key) {
 	}
 }
 
-void VmController::set_metadata(const std::string& key, const std::string& value) {
+void VM::set_metadata(const std::string& key, const std::string& value) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / name();
 		auto metadata = read_metadata_file(metadata_file);
@@ -40,7 +40,7 @@ void VmController::set_metadata(const std::string& key, const std::string& value
 	}
 }
 
-std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
+std::string VM::get_snapshot_cksum(const std::string& snapshot) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / (name() + "_" + snapshot);
 		auto metadata = read_metadata_file(metadata_file);
@@ -55,7 +55,7 @@ std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
 	}
 }
 
-bool VmController::has_key(const std::string& key) {
+bool VM::has_key(const std::string& key) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / name();
 		auto metadata = read_metadata_file(metadata_file);
@@ -65,7 +65,7 @@ bool VmController::has_key(const std::string& key) {
 	}
 }
 
-void VmController::write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
+void VM::write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
 	std::ofstream metadata_file_stream(file.generic_string());
 	if (!metadata_file_stream) {
 		throw std::runtime_error("Can't write metadata file " + file.generic_string());
@@ -75,7 +75,7 @@ void VmController::write_metadata_file(const fs::path& file, const nlohmann::jso
 	metadata_file_stream.close();
 }
 
-nlohmann::json VmController::read_metadata_file(const fs::path& file) const {
+nlohmann::json VM::read_metadata_file(const fs::path& file) const {
 	std::ifstream metadata_file_stream(file.generic_string());
 	if (!metadata_file_stream) {
 		throw std::runtime_error("Can't read metadata file " + file.generic_string());

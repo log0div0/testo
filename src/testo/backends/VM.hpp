@@ -12,10 +12,10 @@ enum class VmState {
 	Other
 };
 
-struct VmController {
-	VmController() = delete;
-	VmController(const nlohmann::json& config_);
-	virtual ~VmController() = default;
+struct VM {
+	VM() = delete;
+	VM(const nlohmann::json& config_);
+	virtual ~VM() = default;
 	virtual void install() = 0;
 	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;

@@ -394,13 +394,13 @@ void VisitorInterpreter::visit_command(std::shared_ptr<Cmd> cmd) {
 }
 
 
-void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vm, std::shared_ptr<ActionBlock> action_block) {
+void VisitorInterpreter::visit_action_block(std::shared_ptr<VM> vm, std::shared_ptr<ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
 		visit_action(vm, action);
 	}
 }
 
-void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::shared_ptr<IAction> action) {
+void VisitorInterpreter::visit_action(std::shared_ptr<VM> vm, std::shared_ptr<IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
 		return visit_type(vm, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Wait>>(action)) {
@@ -436,7 +436,7 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vm, std::sha
 	}
 }
 
-void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::shared_ptr<Type> type) {
+void VisitorInterpreter::visit_type(std::shared_ptr<VM> vm, std::shared_ptr<Type> type) {
 	try {
 		std::string text = visit_word(vm, type->text_word);
 		print("Typing ", text, " on vm ", vm->name());
@@ -453,7 +453,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vm, std::share
 	}
 }
 
-void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::shared_ptr<Wait> wait) {
+void VisitorInterpreter::visit_wait(std::shared_ptr<VM> vm, std::shared_ptr<Wait> wait) {
 	try {
 		std::string text = "";
 		if (wait->text_word) {
@@ -512,7 +512,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vm, std::share
 
 }
 
-void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vm, std::shared_ptr<Press> press) {
+void VisitorInterpreter::visit_press(std::shared_ptr<VM> vm, std::shared_ptr<Press> press) {
 	try {
 		for (auto key_spec: press->keys) {
 			visit_key_spec(vm, key_spec);
@@ -522,7 +522,7 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vm, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vm, std::shared_ptr<KeySpec> key_spec) {
+void VisitorInterpreter::visit_key_spec(std::shared_ptr<VM> vm, std::shared_ptr<KeySpec> key_spec) {
 	uint32_t times = key_spec->get_times();
 
 	std::string print_str = std::string("Pressing button ") + key_spec->get_buttons_str();
@@ -540,7 +540,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vm, std::s
 	}
 }
 
-void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug(std::shared_ptr<VM> vm, std::shared_ptr<Plug> plug) {
 	try {
 		if (plug->type.value() == "nic") {
 			return visit_plug_nic(vm, plug);
@@ -563,7 +563,7 @@ void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vm, std::share
 	}
 }
 
-void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VM> vm, std::shared_ptr<Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
 	auto nic = plug->name_token.value();
@@ -590,7 +590,7 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vm, std::s
 	vm->set_nic(nic, plug->is_on());
 }
 
-void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug_link(std::shared_ptr<VM> vm, std::shared_ptr<Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vm while semantic analisys
 
@@ -618,7 +618,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vm, std::
 	vm->set_link(nic, plug->is_on());
 }
 
-void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::plug_flash(std::shared_ptr<VM> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	print("Plugging flash drive ", fd->name(), " in vm ", vm->name());
 	if (vm->is_flash_plugged(fd)) {
@@ -628,7 +628,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vm, std::share
 	vm->plug_flash_drive(fd);
 }
 
-void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::unplug_flash(std::shared_ptr<VM> vm, std::shared_ptr<Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
 	print("Unlugging flash drive ", fd->name(), " from vm ", vm->name());
 	if (!vm->is_flash_plugged(fd)) {
@@ -638,7 +638,7 @@ void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vm, std::sha
 	vm->unplug_flash_drive(fd);
 }
 
-void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VM> vm, std::shared_ptr<Plug> plug) {
 	if (plug->is_on()) {
 		if (vm->is_dvd_plugged()) {
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
@@ -663,7 +663,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vm, std::s
 	}
 }
 
-void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vm, std::shared_ptr<Start> start) {
+void VisitorInterpreter::visit_start(std::shared_ptr<VM> vm, std::shared_ptr<Start> start) {
 	try {
 		print("Starting vm ", vm->name());
 		vm->start();
@@ -672,7 +672,7 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vm, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::shared_ptr<Stop> stop) {
+void VisitorInterpreter::visit_stop(std::shared_ptr<VM> vm, std::shared_ptr<Stop> stop) {
 	try {
 		print("Stopping vm ", vm->name());
 		vm->stop();
@@ -682,7 +682,7 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vm, std::share
 	}
 }
 
-void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::shared_ptr<Shutdown> shutdown) {
+void VisitorInterpreter::visit_shutdown(std::shared_ptr<VM> vm, std::shared_ptr<Shutdown> shutdown) {
 	try {
 		print("Shutting down vm ", vm->name());
 		vm->power_button();
@@ -701,7 +701,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vm, std::s
 	}
 }
 
-void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::shared_ptr<Exec> exec) {
+void VisitorInterpreter::visit_exec(std::shared_ptr<VM> vm, std::shared_ptr<Exec> exec) {
 	try {
 		print("Executing ", exec->process_token.value(), " command on vm ", vm->name());
 
@@ -754,7 +754,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vm, std::share
 	}
 }
 
-void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::shared_ptr<Copy> copy) {
+void VisitorInterpreter::visit_copy(std::shared_ptr<VM> vm, std::shared_ptr<Copy> copy) {
 	try {
 		fs::path from = visit_word(vm, copy->from);
 		fs::path to = visit_word(vm, copy->to);
@@ -790,7 +790,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vm, std::share
 
 }
 
-void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std::shared_ptr<MacroCall> macro_call) {
+void VisitorInterpreter::visit_macro_call(std::shared_ptr<VM> vm, std::shared_ptr<MacroCall> macro_call) {
 	print("Calling macro ", macro_call->name().value(), " on vm ", vm->name());
 	//push new ctx
 	StackEntry new_ctx(true);
@@ -808,7 +808,7 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vm, std:
 	visit_action_block(vm, macro_call->macro->action_block->action);
 }
 
-void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::shared_ptr<IfClause> if_clause) {
+void VisitorInterpreter::visit_if_clause(std::shared_ptr<VM> vm, std::shared_ptr<IfClause> if_clause) {
 	bool expr_result;
 	try {
 		expr_result = visit_expr(vm, if_clause->expr);
@@ -824,7 +824,7 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vm, std::
 
 }
 
-void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vm, std::shared_ptr<ForClause> for_clause) {
+void VisitorInterpreter::visit_for_clause(std::shared_ptr<VM> vm, std::shared_ptr<ForClause> for_clause) {
 	StackEntry new_ctx(false);
 	local_vars.push_back(new_ctx);
 	size_t ctx_position = local_vars.size() - 1;
@@ -847,7 +847,7 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vm, std:
 	}
 }
 
-bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vm, std::shared_ptr<IExpr> expr) {
+bool VisitorInterpreter::visit_expr(std::shared_ptr<VM> vm, std::shared_ptr<IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<Expr<BinOp>>(expr)) {
 		return visit_binop(vm, p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<Expr<IFactor>>(expr)) {
@@ -857,7 +857,7 @@ bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vm, std::share
 	}
 }
 
-bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vm, std::shared_ptr<BinOp> binop) {
+bool VisitorInterpreter::visit_binop(std::shared_ptr<VM> vm, std::shared_ptr<BinOp> binop) {
 	auto left = visit_expr(vm, binop->left);
 	auto right = visit_expr(vm, binop->right);
 
@@ -870,7 +870,7 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vm, std::shar
 	}
 }
 
-bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vm, std::shared_ptr<IFactor> factor) {
+bool VisitorInterpreter::visit_factor(std::shared_ptr<VM> vm, std::shared_ptr<IFactor> factor) {
 	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
 		return p->is_negated() ^ (bool)visit_word(vm, p->factor).length();
 	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
@@ -884,7 +884,7 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vm, std::sha
 	}
 }
 
-std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, const std::string& var) {
+std::string VisitorInterpreter::resolve_var(std::shared_ptr<VM> vm, const std::string& var) {
 	//Resolving order
 	//1) metadata
 	//2) reg (todo)
@@ -913,7 +913,7 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vm, co
 	return env_value;
 }
 
-std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vm, std::shared_ptr<Word> word) {
+std::string VisitorInterpreter::visit_word(std::shared_ptr<VM> vm, std::shared_ptr<Word> word) {
 	std::string result;
 
 	for (auto part: word->parts) {
@@ -931,7 +931,7 @@ std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vm, std
 	return result;
 }
 
-bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std::shared_ptr<Comparison> comparison) {
+bool VisitorInterpreter::visit_comparison(std::shared_ptr<VM> vm, std::shared_ptr<Comparison> comparison) {
 	auto left = visit_word(vm, comparison->left);
 	auto right = visit_word(vm, comparison->right);
 	if (comparison->op().type() == Token::category::GREATER) {
@@ -975,7 +975,7 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vm, std:
 	}
 }
 
-bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vm, std::shared_ptr<Check> check) {
+bool VisitorInterpreter::visit_check(std::shared_ptr<VM> vm, std::shared_ptr<Check> check) {
 	try {
 		auto text = visit_word(vm, check->text_word);
 

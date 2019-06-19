@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include "../VmController.hpp"
+#include "../VM.hpp"
 #include <hyperv/Connect.hpp>
 
-struct HyperVVmController: VmController {
-	HyperVVmController() = delete;
-	HyperVVmController(const nlohmann::json& config);
-	~HyperVVmController() override;
+struct HyperVVM: VM {
+	HyperVVM() = delete;
+	HyperVVM(const nlohmann::json& config);
+	~HyperVVM() override;
 	void install() override;
 	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
