@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "HyperVVM.hpp"
+#include "HyperVVM.hp"
 #include "HyperVFlashDriveController.hpp"
 #include "../Environment.hpp"
 
@@ -13,7 +13,7 @@ struct HyperVEnvironment: Environment {
 	void cleanup() override;
 
 	std::shared_ptr<VM> create_vm_controller(const nlohmann::json& config) override {
-		return std::shared_ptr<VM>(new HyperVVM(config));
+		return std::make_shared<VmController>(std::shared_ptr<VM>(new HyperVVM(config)));
 	}
 
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {

@@ -16,8 +16,8 @@ struct VM {
 	VM() = delete;
 	VM(const nlohmann::json& config_);
 	virtual ~VM() = default;
-	virtual void install() = 0;
-	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0;
+	virtual void install() = 0; // create vm
+	virtual void make_snapshot(const std::string& snapshot, const std::string& cksum) = 0; //dublicate
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual void press(const std::vector<std::string>& buttons) = 0;
 	virtual bool is_nic_plugged(const std::string& nic) const = 0;
@@ -38,8 +38,8 @@ struct VM {
 	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
-	virtual bool has_snapshot(const std::string& snapshot) = 0;
-	virtual void delete_snapshot_with_children(const std::string& snapshot) = 0;
+	virtual bool has_snapshot(const std::string& snapshot) = 0; //dublicate
+	virtual void delete_snapshot_with_children(const std::string& snapshot) = 0; //move to controller, replace with just delete
 	virtual bool is_defined() const = 0;
 	virtual VmState state() const = 0;
 	virtual bool is_additions_installed() = 0;
@@ -52,10 +52,10 @@ struct VM {
 
 	std::string name() const;
 	nlohmann::json get_config() const;
-	std::string get_metadata(const std::string& key);
-	void set_metadata(const std::string& key, const std::string& value);
-	std::string get_snapshot_cksum(const std::string& snapshot);
-	bool has_key(const std::string& key);
+	std::string get_metadata(const std::string& key);	//move to contoller
+	void set_metadata(const std::string& key, const std::string& value); //move to contoller
+	std::string get_snapshot_cksum(const std::string& snapshot); //move to contoller
+	bool has_key(const std::string& key); //move to contoller
 
 
 protected:
