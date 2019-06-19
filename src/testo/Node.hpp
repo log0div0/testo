@@ -600,17 +600,22 @@ struct MacroCall: public Node {
 };
 
 struct Test: public Node {
-	Test(const Token& test, const Token& name, const Token& no_cache,
+	Test(const std::vector<Token>& attrs,
+		const Token& test, const Token& name,
 		const std::vector<Token>& parents_tokens,
 		std::shared_ptr<CmdBlock> cmd_block):
 		Node(test),
+		attrs(attrs),
 		name(name),
-		no_cache(no_cache),
 		parents_tokens(parents_tokens),
 		cmd_block(cmd_block) {}
 
 	Pos begin() const {
-		return t.pos();
+		if (attrs.size()) {
+			return attrs[0].pos();
+		} else {
+			return t.pos();
+		}
 	}
 
 	Pos end() const {
@@ -622,15 +627,12 @@ struct Test: public Node {
 		return result; //for now
 	}
 
-	bool is_cachable() const {
-		return !no_cache;
-	}
-
+	std::vector<Token> attrs;
 	Token name;
-	Token no_cache;
 	std::vector<Token> parents_tokens;
 	std::vector<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
+	bool no_snapshots = false;
 };
 
 struct IAttrValue: public Node {

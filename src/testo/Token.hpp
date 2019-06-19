@@ -24,7 +24,6 @@ struct Token {
 		timeout,
 		for_,
 		test,
-		no_cache,
 		machine,
 		flash,
 		macro,
@@ -47,6 +46,8 @@ struct Token {
 		rbrace,
 		lparen,
 		rparen,
+		lbracket,
+		rbracket,
 		semi,
 		colon,
 		double_dot,
@@ -135,8 +136,6 @@ struct Token {
 			return "FOR";
 		case test:
 			return "TEST";
-		case no_cache:
-			return "NO_CACHE";
 		case machine:
 			return "MACHINE";
 		case flash:
@@ -163,6 +162,10 @@ struct Token {
 			return "(";
 		case rparen:
 			return ")";
+		case lbracket:
+			return "[";
+		case rbracket:
+			return "]";
 		case semi:
 			return ";";
 		case colon:

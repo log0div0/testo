@@ -260,7 +260,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		// - has valid config and dvd cksum
 		// - has snapshots with corresponding name and valid cksums
 
-		bool is_cached = test->is_cachable(); //we try to enable cache only if we have the setting
+		bool is_cached = true; //we try to enable cache only if we have the setting
 
 		for (auto vm: reg.get_all_vms(test)) {
 			if (vm->is_defined() &&
@@ -355,13 +355,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
-		if (test->is_cachable()) {
-			for (auto vm: reg.get_all_vms(test)) {
-				print("Taking snapshot ", test->name.value(), " for vm ", vm->name());
-				vm->make_snapshot(test->name.value(), test_cksum(test));
-			}
-			stop_all_vms(test);
+		for (auto vm: reg.get_all_vms(test)) {
+			print("Taking snapshot ", test->name.value(), " for vm ", vm->name());
+			vm->make_snapshot(test->name.value(), test_cksum(test));
 		}
+		stop_all_vms(test);
 
 		current_progress += progress_step;
 		print("Test ", test->name.value(), " PASSED");

@@ -172,8 +172,6 @@ Token Lexer::id() {
 		return for_();
 	} else if (value == "test") {
 		return test();
-	} else if (value == "no_cache") {
-		return no_cache();
 	} else if (value == "machine") {
 		return machine();
 	} else if (value == "flash") {
@@ -321,13 +319,6 @@ Token Lexer::test() {
 	std::string value("test");
 	current_pos.advance(value.length());
 	return Token(Token::category::test, value, tmp_pos);
-}
-
-Token Lexer::no_cache() {
-	Pos tmp_pos = current_pos;
-	std::string value("no_cache");
-	current_pos.advance(value.length());
-	return Token(Token::category::no_cache, value, tmp_pos);
 }
 
 Token Lexer::machine() {
@@ -587,6 +578,18 @@ Token Lexer::rparen() {
 	return Token(Token::category::rparen, ")", tmp_pos);
 }
 
+Token Lexer::lbracket() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance();
+	return Token(Token::category::lbracket, "[", tmp_pos);
+}
+
+Token Lexer::rbracket() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance();
+	return Token(Token::category::rbracket, "]", tmp_pos);
+}
+
 Token Lexer::semi() {
 	Pos tmp_pos = current_pos;
 	current_pos.advance();
@@ -635,6 +638,10 @@ Token Lexer::get_next_token() {
 			return lparen();
 		} else if (test_rparen()) {
 			return rparen();
+		} else if (test_lbracket()) {
+			return lbracket();
+		} else if (test_rbracket()) {
+			return rbracket();
 		} else if (test_semi()) {
 			return semi();
 		} else if (test_colon()) {

@@ -58,9 +58,9 @@ bool Parser::test_assignment() const {
 }
 
 bool Parser::test_stmt() const {
-	return ((LA(1) == Token::category::test) ||
-		(LA(1) == Token::category::macro) ||
-		test_controller());
+	return ((LA(1) == Token::category::macro) ||
+		test_controller() ||
+		test_test());
 }
 
 bool Parser::test_include() const {
@@ -70,6 +70,11 @@ bool Parser::test_include() const {
 bool Parser::test_controller() const {
 	return (LA(1) == Token::category::machine) ||
 		(LA(1) == Token::category::flash);
+}
+
+bool Parser::test_test() const {
+	return (LA(1) == Token::category::test) ||
+		(LA(1) == Token::category::lbracket);
 }
 
 bool Parser::test_command() const {
@@ -198,7 +203,7 @@ std::shared_ptr<Program> Parser::parse() {
 }
 
 std::shared_ptr<IStmt> Parser::stmt() {
-	if (LA(1) == Token::category::test) {
+	if (test_test()) {
 		return test();
 	} else if (LA(1) == Token::category::macro) {
 		return macro();
@@ -211,19 +216,30 @@ std::shared_ptr<IStmt> Parser::stmt() {
 }
 
 std::shared_ptr<Stmt<Test>> Parser::test() {
+	std::vector<Token> attrs;
+	//To be honest, we should place attr list in a separate Node. And we will do that
+	//just when it could be used somewhere else
+	if (LA(1) == Token::category::lbracket) {
+		match(Token::category::lbracket);
+		while (LA(1) != Token::category::rbracket) {
+			attrs.push_back(LT(1));
+			match(Token::category::id);
+			if (LA(1) == Token::category::comma) {
+				match(Token::category::comma);
+				continue;
+			}
+		}
+
+		match(Token::category::rbracket);
+		newline_list();
+	}
+
 	Token test = LT(1);
 	match(Token::category::test);
 
 	Token name = LT(1);
 
 	match(Token::category::id);
-
-	Token no_cache = Token();
-
-	if (LA(1) == Token::category::no_cache) {
-		no_cache = LT(1);
-		match(Token::category::no_cache);
-	}
 
 	std::vector<Token> parents;
 
@@ -243,7 +259,7 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 
 	newline_list();
 	auto commands = command_block();
-	auto stmt = std::shared_ptr<Test>(new Test(test, name, no_cache, parents, commands));
+	auto stmt = std::shared_ptr<Test>(new Test(attrs, test, name, parents, commands));
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 
