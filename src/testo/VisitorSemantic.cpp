@@ -216,13 +216,13 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 
 	//Now that we've checked that all commands are ligit we could check that
 	//all parents have totally separate vms. We can't do that before command block because
-	//a user may specify unexisting vm in some command and we need to catch that before that hierarchy check
+	//a user may specify unexisting vmc in some command and we need to catch that before that hierarchy check
 
 	std::vector<std::set<std::shared_ptr<VmController>>> parents_subtries;
 
 	//populate our parents paths
 	for (auto parent: test->parents) {
-		parents_subtries.push_back(reg.get_all_vms(parent));
+		parents_subtries.push_back(reg.get_all_vmcs(parent));
 	}
 
 	//check that parents path are independent
@@ -253,16 +253,15 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
 }
 
 void VisitorSemantic::visit_command(std::shared_ptr<Cmd> cmd) {
-	std::set<std::shared_ptr<VmController>> unique_vms;
+	std::set<std::shared_ptr<VmController>> unique_vmcs;
 	for (auto vm_token: cmd->vms) {
-
-		auto vm = reg.vms.find(vm_token.value());
-		if (vm == reg.vms.end()) {
-			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: unknown vm name: " + vm_token.value());
+		auto vmc = reg.vmcs.find(vm_token.value());
+		if (vmc == reg.vmcs.end()) {
+			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: unknown vitrual machine name: " + vm_token.value());
 		}
 
-		if (!unique_vms.insert(vm->second).second) {
-			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: this vm was already specified in the vms list: " + vm_token.value());
+		if (!unique_vmcs.insert(vmc->second).second) {
+			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: this vmc was already specified in the virtual machines list: " + vm_token.value());
 		}
 	}
 
@@ -351,7 +350,7 @@ void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {
 
 void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 	std::cout << "Registering machine " << machine->name.value() << std::endl;
-	if (reg.vms.find(machine->name) != reg.vms.end()) {
+	if (reg.vmcs.find(machine->name) != reg.vmcs.end()) {
 		throw std::runtime_error(std::string(machine->begin()) + ": Error: machine with name " + machine->name.value() +
 			" already exists");
 	}
@@ -359,8 +358,8 @@ void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["name"] = machine->name.value();
 
-	auto vm = env->create_vm_controller(config);
-	reg.vms.emplace(std::make_pair(machine->name, vm));
+	auto vmc = env->create_vm_controller(config);
+	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<Controller> flash) {

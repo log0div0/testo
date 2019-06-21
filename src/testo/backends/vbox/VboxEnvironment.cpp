@@ -1,6 +1,6 @@
 
 #include "VboxEnvironment.hpp"
-#include "VboxVmController.hpp"
+#include "VboxVM.hpp"
 #include "VboxFlashDriveController.hpp"
 
 #include <vbox/virtual_box_client.hpp>
@@ -47,7 +47,7 @@ void VboxEnvironment::cleanup() {
 }
 
 std::shared_ptr<VmController> VboxEnvironment::create_vm_controller(const nlohmann::json& config) {
-	return std::shared_ptr<VmController>(new VboxVmController(config));
+	return std::make_shared<VmController>(std::shared_ptr<VM>(new VboxVM(config)));
 }
 
 std::shared_ptr<FlashDriveController> VboxEnvironment::create_flash_drive_controller(const nlohmann::json& config) {

@@ -1,17 +1,18 @@
 
 #pragma once
 
-#include "../VmController.hpp"
-#include <vbox/virtual_box_client.hpp>
-#include <vbox/virtual_box.hpp>
+#include "../VM.hpp"
+#include <hyperv/Connect.hpp>
 
-struct VboxVmController: public VmController {
-	VboxVmController() = delete;
-	VboxVmController(const nlohmann::json& config);
-	VboxVmController(const VboxVmController& other) = delete;
+struct HyperVVM: VM {
+	HyperVVM() = delete;
+	HyperVVM(const nlohmann::json& config);
+	~HyperVVM() override;
 	void install() override;
-	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-
+	void make_snapshot(const std::string& snapshot) override;
+	void set_metadata(const std::string& key, const std::string& value) override;
+	std::string get_metadata(const std::string& key) override;
+	std::string get_snapshot_cksum(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
 	bool is_nic_plugged(const std::string& nic) const override;
@@ -25,15 +26,16 @@ struct VboxVmController: public VmController {
 	void unplug_dvd() override;
 	void start() override;
 	void stop() override;
-	void power_button() override;
 	void suspend() override;
 	void resume() override;
+	void power_button() override;
 	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void delete_snapshot_with_children(const std::string& snapshot) override;
+	bool has_key(const std::string& key) override;
 	bool is_defined() const override;
 	VmState state() const override;
 	bool is_additions_installed() override;
@@ -45,17 +47,6 @@ struct VboxVmController: public VmController {
 	std::set<std::string> nics() const override;
 
 private:
-	void copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::GuestSession& gsession);
-	void delete_snapshot_with_children(vbox::Snapshot& snapshot);
-	void remove_if_exists();
-	void create_vm();
-	void wait_state(std::initializer_list<MachineState> states);
-
-	vbox::VirtualBoxClient virtual_box_client;
-	vbox::VirtualBox virtual_box;
-	vbox::Session start_session;
-	vbox::Session work_session;
-
-	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
+	hyperv::Connect connect;
 	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
 };

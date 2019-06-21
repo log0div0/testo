@@ -1,6 +1,6 @@
 
 #include "QemuEnvironment.hpp"
-#include "QemuVmController.hpp"
+#include "QemuVM.hpp"
 #include "QemuFlashDriveController.hpp"
 #include <fmt/format.h>
 
@@ -81,7 +81,7 @@ void QemuEnvironment::cleanup() {
 }
 
 std::shared_ptr<VmController> QemuEnvironment::create_vm_controller(const nlohmann::json& config) {
-	return std::shared_ptr<VmController>(new QemuVmController(config));
+		return std::make_shared<VmController>(std::shared_ptr<VM>(new QemuVM(config)));
 }
 
 std::shared_ptr<FlashDriveController> QemuEnvironment::create_flash_drive_controller(const nlohmann::json& config) {

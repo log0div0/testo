@@ -9,11 +9,11 @@ Register::~Register() {
 	}
 }
 
-std::set<std::shared_ptr<VmController>> Register::get_all_vms(std::shared_ptr<AST::Test> test) const {
+std::set<std::shared_ptr<VmController>> Register::get_all_vmcs(std::shared_ptr<AST::Test> test) const {
 	std::set<std::shared_ptr<VmController>> result;
 	for (auto parent: test->parents) {
-		for (auto vm: get_all_vms(parent)) {
-			result.insert(vm);
+		for (auto vmc: get_all_vmcs(parent)) {
+			result.insert(vmc);
 		}
 	}
 
@@ -21,11 +21,11 @@ std::set<std::shared_ptr<VmController>> Register::get_all_vms(std::shared_ptr<AS
 
 	for (auto command: test->cmd_block->commands) {
 		for (auto vm_token: command->vms) {
-			auto vm = vms.find(vm_token.value());
-			if (vm == vms.end()) {
+			auto vmc = vmcs.find(vm_token.value());
+			if (vmc == vmcs.end()) {
 				throw std::runtime_error(""); //should never happen
 			}
-			result.insert(vm->second);
+			result.insert(vmc->second);
 		}
 	}
 

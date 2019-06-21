@@ -1,18 +1,18 @@
 
 #pragma once
 
-#include "../VmController.hpp"
-#include <hyperv/Connect.hpp>
+#include <pugixml/pugixml.hpp>
+#include "../VM.hpp"
+#include <qemu/Host.hpp>
 
-struct HyperVVmController: VmController {
-	HyperVVmController() = delete;
-	HyperVVmController(const nlohmann::json& config);
-	~HyperVVmController() override;
+struct QemuVM: public VM {
+	QemuVM() = delete;
+	QemuVM(const nlohmann::json& config);
+	~QemuVM();
+	QemuVM(const QemuVM& other) = delete;
 	void install() override;
-	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
-	void set_metadata(const std::string& key, const std::string& value) override;
-	std::string get_metadata(const std::string& key) override;
-	std::string get_snapshot_cksum(const std::string& snapshot) override;
+	void make_snapshot(const std::string& snapshot) override;
+
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
 	bool is_nic_plugged(const std::string& nic) const override;
@@ -26,16 +26,15 @@ struct HyperVVmController: VmController {
 	void unplug_dvd() override;
 	void start() override;
 	void stop() override;
+	void power_button() override;
 	void suspend() override;
 	void resume() override;
-	void power_button() override;
 	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
-	void delete_snapshot_with_children(const std::string& snapshot) override;
-	bool has_key(const std::string& key) override;
+	void delete_snapshot(const std::string& snapshot) override;
 	bool is_defined() const override;
 	VmState state() const override;
 	bool is_additions_installed() override;
@@ -47,6 +46,26 @@ struct HyperVVmController: VmController {
 	std::set<std::string> nics() const override;
 
 private:
-	hyperv::Connect connect;
-	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
+	void prepare_networks();
+	void remove_disk();
+	void create_disk();
+
+	std::string get_dvd_path();
+	std::string get_dvd_path(vir::Snapshot& snapshot);
+
+	bool is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const;
+	bool is_link_plugged(vir::Snapshot& snapshot, const std::string& nic);
+
+	bool is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic);
+
+	void attach_nic(const std::string& nic);
+	void detach_nic(const std::string& nic);
+
+	std::string get_flash_img();
+	void attach_flash_drive(const std::string& img_path);
+	void detach_flash_drive();
+
+	vir::Connect qemu_connect;
+	std::unordered_map<std::string, uint32_t> scancodes;
+	std::vector<uint8_t> screenshot_buffer;
 };

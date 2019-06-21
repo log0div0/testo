@@ -1,17 +1,16 @@
 
 #pragma once
 
-#include <pugixml/pugixml.hpp>
-#include "../VmController.hpp"
-#include <qemu/Host.hpp>
+#include "../VM.hpp"
+#include <vbox/virtual_box_client.hpp>
+#include <vbox/virtual_box.hpp>
 
-struct QemuVmController: public VmController {
-	QemuVmController() = delete;
-	QemuVmController(const nlohmann::json& config);
-	~QemuVmController();
-	QemuVmController(const QemuVmController& other) = delete;
+struct VboxVM: public VM {
+	VboxVM() = delete;
+	VboxVM(const nlohmann::json& config);
+	VboxVM(const VboxVM& other) = delete;
 	void install() override;
-	void make_snapshot(const std::string& snapshot, const std::string& cksum) override;
+	void make_snapshot(const std::string& snapshot) override;
 
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
@@ -34,7 +33,7 @@ struct QemuVmController: public VmController {
 
 	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
-	void delete_snapshot_with_children(const std::string& snapshot) override;
+	void delete_snapshot(const std::string& snapshot) override;
 	bool is_defined() const override;
 	VmState state() const override;
 	bool is_additions_installed() override;
@@ -46,26 +45,17 @@ struct QemuVmController: public VmController {
 	std::set<std::string> nics() const override;
 
 private:
-	void prepare_networks();
-	void remove_disk();
-	void create_disk();
+	void copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::GuestSession& gsession);
+	void delete_snapshot_with_children(vbox::Snapshot& snapshot);
+	void remove_if_exists();
+	void create_vm();
+	void wait_state(std::initializer_list<MachineState> states);
 
-	std::string get_dvd_path();
-	std::string get_dvd_path(vir::Snapshot& snapshot);
+	vbox::VirtualBoxClient virtual_box_client;
+	vbox::VirtualBox virtual_box;
+	vbox::Session start_session;
+	vbox::Session work_session;
 
-	bool is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const;
-	bool is_link_plugged(vir::Snapshot& snapshot, const std::string& nic);
-
-	bool is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic);
-
-	void attach_nic(const std::string& nic);
-	void detach_nic(const std::string& nic);
-
-	std::string get_flash_img();
-	void attach_flash_drive(const std::string& img_path);
-	void detach_flash_drive();
-
-	vir::Connect qemu_connect;
-	std::unordered_map<std::string, uint32_t> scancodes;
-	std::vector<uint8_t> screenshot_buffer;
+	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
+	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
 };
