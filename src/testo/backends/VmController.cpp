@@ -20,8 +20,8 @@ void VmController::create_vm() {
 		nlohmann::json metadata;
 
 		if (config.count("metadata")) {
-			auto metadata = config.at("metadata");
-			for (auto it = metadata.begin(); it != metadata.end(); ++it) {
+			auto config_metadata = config.at("metadata");
+			for (auto it = config_metadata.begin(); it != config_metadata.end(); ++it) {
 				metadata[it.key()] = it.value();
 			}
 		}
@@ -37,7 +37,7 @@ void VmController::create_vm() {
 		metadata["vm_name"] = config.at("name");
 		metadata["vm_current_state"] = "";
 		metadata["dvd_signature"] = file_signature(config.at("iso").get<std::string>());
-		write_metadata_file(metadata_file, nlohmann::json::object());
+		write_metadata_file(metadata_file, metadata);
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested("creating vm");
@@ -85,7 +85,48 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 void VmController::delete_snapshot_with_children(const std::string& snapshot)
 {
 	try {
-		//TODO
+		//This thins needs to be recursive
+		//I guess... go through the children and call recursively on them
+		fs::path metadata_file = env->metadata_dir() / vm->name();
+		metadata_file /= vm->name() + "_" + snapshot;
+
+		auto metadata = read_metadata_file(metadata_file);
+
+		for (auto& child: metadata.at("children")) {
+			delete_snapshot_with_children(child.get<std::string>());
+		}
+
+		//Now we're at the bottom of the hierarchy
+		//Delete the hypervisor child if we have one
+
+		if (vm->has_snapshot(snapshot)) {
+			vm->delete_snapshot(snapshot);
+		}
+
+		//Ok, now we need to get our parent
+		auto parent = metadata.at("parent").get<std::string>();
+
+		//Unlink the parent
+		if (parent.length()) {
+			fs::path parent_metadata_file = env->metadata_dir() / vm->name();
+			parent_metadata_file /= vm->name() + "_" + parent;
+
+			auto parent_metadata = read_metadata_file(parent_metadata_file);
+			auto& children = metadata.at("children");
+
+			for (auto it = children.begin(); it != children.end(); ++it) {
+				if (it.value() == snapshot) {
+					children.erase(it);
+					break;
+				}
+			}
+			write_metadata_file(parent_metadata_file, parent_metadata);
+		}
+
+		//Now we can delete the metadata file
+		if (!fs::remove(metadata_file)) {
+			throw std::runtime_error("Error deleting metadata file " + metadata_file.generic_string());
+		}
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested("deleting snapshot");
@@ -129,6 +170,7 @@ bool VmController::has_key(const std::string& key) {
 std::string VmController::get_metadata(const std::string& key) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / vm->name();
+		metadata_file /= vm->name();
 		auto metadata = read_metadata_file(metadata_file);
 		if (!metadata.count(key)) {
 			throw std::runtime_error("Requested key is not present in vm metadata");
@@ -143,6 +185,7 @@ std::string VmController::get_metadata(const std::string& key) {
 void VmController::set_metadata(const std::string& key, const std::string& value) {
 	try {
 		fs::path metadata_file = env->metadata_dir() / vm->name();
+		metadata_file /= vm->name();
 		auto metadata = read_metadata_file(metadata_file);
 		metadata[key] = value;
 		write_metadata_file(metadata_file, metadata);
@@ -167,8 +210,7 @@ nlohmann::json VmController::read_metadata_file(const fs::path& file) const {
 		throw std::runtime_error("Can't read metadata file " + file.generic_string());
 	}
 
-	nlohmann::json result;
-	metadata_file_stream >> result;
+	nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
 	metadata_file_stream.close();
 	return result;
 }
