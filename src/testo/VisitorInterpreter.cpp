@@ -1018,6 +1018,9 @@ bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohm
 	new_config.erase("nic");
 	old_config.erase("nic");
 
+	new_config.erase("iso");
+	old_config.erase("iso");
+
 	//Check also dvd contingency
 	return (old_config == new_config);
 }
