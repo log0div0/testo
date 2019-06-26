@@ -77,7 +77,7 @@ std::shared_ptr<Program> CompileFromSource(
       header_string += "#define SUBGROUP_SHUFFLING_NVIDIA_PRE_VOLTA 1\n";
     }
   }
-  
+
   // Optionally adds a translation header from OpenCL kernels to CUDA kernels
   #ifdef CUDA_API
     header_string +=
@@ -111,6 +111,7 @@ std::shared_ptr<Program> CompileFromSource(
   // Compiles the kernel
   auto program = std::make_shared<Program>(context, kernel_string);
   try {
+    SetOpenCLKernelStandard(device, options);
     program->Build(device, options);
   } catch (const CLCudaAPIBuildError &e) {
     if (program->StatusIsCompilationWarningOrError(e.status()) && !silent) {

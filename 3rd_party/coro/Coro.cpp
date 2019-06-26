@@ -3,6 +3,7 @@
 #include <coro/Finally.h>
 #include <algorithm>
 #include <cassert>
+#include <stdexcept>
 
 #ifdef _DEBUG
 #ifndef WIN32

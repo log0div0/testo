@@ -235,11 +235,11 @@ struct Arguments {
   // Tuner-specific arguments
   size_t heuristic_selection = 0;
   double fraction = 1.0;
-  size_t pso_swarm_size = 8; 
+  size_t pso_swarm_size = 8;
   double pso_inf_global = 0.3;
   double pso_inf_local = 0.6;
   double pso_inf_random = 0.1;
-  double ann_max_temperature = 1.0; // Is it a valid default value? 
+  double ann_max_temperature = 1.0; // Is it a valid default value?
   // Client-specific arguments
   int compare_clblas = 1;
   int compare_cblas = 1;
@@ -374,6 +374,10 @@ std::string GetDeviceArchitecture(const Device& device);
 std::string GetDeviceName(const Device& device);
 
 // =================================================================================================
+
+void SetOpenCLKernelStandard(const Device &device, std::vector<std::string> &options);
+
+ // =================================================================================================
 
 // Solve Bezout's identity
 // a * p + b * q = r = GCD(a, b)

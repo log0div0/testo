@@ -121,9 +121,6 @@ void HyperVVM::install() {
 
 		auto machine = connect.defineMachine(name());
 
-		nlohmann::json json = nlohmann::json::object();
-		machine.setNotes({json.dump(4)});
-
 		auto controllers = machine.ideControllers();
 		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
 		size_t disk_size = config.at("disk_size").get<uint32_t>();
@@ -162,30 +159,7 @@ void HyperVVM::make_snapshot(const std::string& snapshot) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
-void HyperVVM::set_metadata(const std::string& key, const std::string& value) {
-	try {
-		auto machine = connect.machine(name());
-		auto json = nlohmann::json::parse(machine.notes().at(0));
-		json[key] = value;
-		machine.setNotes({json.dump(4)});
-	} catch (const std::exception& error) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
-}
 
-std::string HyperVVM::get_metadata(const std::string& key) {
-	try {
-		auto machine = connect.machine(name());
-		auto json = nlohmann::json::parse(machine.notes().at(0));
-		return json.at(key);
-	} catch (const std::exception& error) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
-}
-
-std::string HyperVVM::get_snapshot_cksum(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
 void HyperVVM::rollback(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -340,18 +314,8 @@ bool HyperVVM::has_snapshot(const std::string& snapshot) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
-void HyperVVM::delete_snapshot_with_children(const std::string& snapshot) {
+void HyperVVM::delete_snapshot(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
-
-bool HyperVVM::has_key(const std::string& key) {
-	try {
-		auto machine = connect.machine(name());
-		auto json = nlohmann::json::parse(machine.notes().at(0));
-		return json.count(key);
-	} catch (const std::exception& error) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
 }
 
 bool HyperVVM::is_defined() const {

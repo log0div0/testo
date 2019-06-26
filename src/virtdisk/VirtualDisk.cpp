@@ -2,6 +2,7 @@
 #include "VirtualDisk.hpp"
 #include <comdef.h>
 #include <virtdisk.h>
+#include <stdexcept>
 
 VirtualDisk::VirtualDisk(const std::string& path) {
 	VIRTUAL_STORAGE_TYPE storageType = {};

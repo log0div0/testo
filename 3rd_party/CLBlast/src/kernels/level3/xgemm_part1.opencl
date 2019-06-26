@@ -22,18 +22,18 @@
 // For kernel 1, both A and C are transposed w.r.t. the above
 //
 // Or as an image (assuming column-major)
-//       K                      
-//    o-------o                 
-//    |       |                 
-//  N | [B^T] |                 
-//    |       |                 
-//    o-------o                 
-//        K               N     
-//    o-------o        o-----o  
-//  M |  [A]  |      M | [C] |  
-//    |       |        |     |  
-//    o-------o        o-----o  
-//                              
+//       K
+//    o-------o
+//    |       |
+//  N | [B^T] |
+//    |       |
+//    o-------o
+//        K               N
+//    o-------o        o-----o
+//  M |  [A]  |      M | [C] |
+//    |       |        |     |
+//    o-------o        o-----o
+//
 //
 // This kernel is separated into multiple files. This is part 1 out of 4.
 //
@@ -127,6 +127,7 @@ R"(
 
 // Intel subgroups (https://www.khronos.org/registry/OpenCL/extensions/intel/cl_intel_subgroups.txt)
 #if USE_SUBGROUP_SHUFFLING == 1 && SUBGROUP_SHUFFLING_INTEL == 1
+  #pragma OPENCL EXTENSION cl_intel_subgroups: enable
   #define SUBGROUP_SIZE 8              // Assumes subgroup size is always 8 on Intel GPUs
 #endif
 

@@ -18,13 +18,13 @@
 // =================================================================================================
 //
 // Copyright 2015 SURFsara
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //  http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -483,7 +483,6 @@ class Program {
 
   // Compiles the device program and checks whether or not there are any warnings/errors
   void Build(const Device &device, std::vector<std::string> &options) {
-    options.push_back("-cl-std=CL1.1");
     auto options_string = std::accumulate(options.begin(), options.end(), std::string{" "});
     const cl_device_id dev = device();
     CheckError(clBuildProgram(program_, 1, &dev, options_string.c_str(), nullptr, nullptr));
