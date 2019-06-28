@@ -5,6 +5,7 @@
 #include "Register.hpp"
 #include "StinkingPileOfShit.hpp"
 #include <vector>
+#include <list>
 
 struct VisitorInterpreter {
 	struct StackEntry {
@@ -148,12 +149,17 @@ private:
 	void print_statistics() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
+	void reset_cache();
+	void resolve_tests(const std::vector<std::shared_ptr<AST::Test>>& tests_queue);
 	void update_progress();
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
 		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined() && (vmc->vm->state() != VmState::Stopped)) {
-				vmc->vm->stop();
+			if (vmc->vm->is_defined()) {
+				if (vmc->vm->state() != VmState::Stopped) {
+					vmc->vm->stop();
+				}
+				vmc->set_metadata("vm_current_state", "");
 			}
 		}
 	}
@@ -163,7 +169,7 @@ private:
 
 	std::chrono::system_clock::time_point start_timestamp;
 
-	std::vector<std::shared_ptr<AST::Test>> tests_to_run;
+	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	StinkingPileOfShit shit;
