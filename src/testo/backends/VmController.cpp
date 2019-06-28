@@ -76,9 +76,6 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 			parent_metadata.at("children").push_back(snapshot);
 			write_metadata_file(parent_metadata_file, parent_metadata);
 		}
-
-		set_metadata("vm_current_state", snapshot);
-
 	} catch (const std::exception& error) {
 		std::throw_with_nested("creating snapshot");
 	}

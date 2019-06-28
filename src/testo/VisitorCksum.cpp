@@ -11,9 +11,14 @@ uint64_t VisitorCksum::visit(std::shared_ptr<Test> test) {
 		result += parent->name.value();
 	}
 
+	for (auto attr: test->attrs) {
+		result += attr.value();
+	}
+
 	for (auto cmd: test->cmd_block->commands) {
 		result += visit_cmd(cmd);
 	}
+
 	std::hash<std::string> h;
 	return h(result);
 }

@@ -182,7 +182,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 
 	for (auto attr: attrs) {
 		if (attr == "no_snapshots") {
-			test->no_snapshots = true;
+			test->snapshots_needed = false;
 		} else {
 			throw std::runtime_error(std::string(test->begin()) + ": Error: unknown attribute : " + attr);
 		}

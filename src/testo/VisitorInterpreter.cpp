@@ -155,6 +155,40 @@ void VisitorInterpreter::print_statistics() const {
 	}
 }
 
+void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test, std::list<std::shared_ptr<AST::Test>>& test_plan) {
+	//we need to check could we start right away?
+
+	auto vmcs = reg.get_all_vmcs(test);
+
+	for (auto parent: test->parents) {
+		//for every parent we need to check, maybe we are already in the perfect position?
+		//so starting from the end of tests_to_run, we move backwards
+		//and we try to find the parent test
+
+		bool parent_is_ok = false;
+
+		for (auto rit = tests_to_run.rbegin(); rit != tests_to_run.rend(); ++rit) {
+			if ((*rit)->name.value() == parent->name.value()) {
+				//This parent is good
+				parent_is_ok = true;
+				break;
+			}
+
+			auto other_vmcs = reg.get_all_vmcs(*rit);
+			if (std::find_first_of (vmcs.begin(), vmcs.end(), other_vmcs.begin(), other_vmcs.end()) != vmcs.end()) {
+				//this particular test has no interference with us, proceed to the next
+				break;
+			}
+		}
+
+		if (!parent_is_ok && !parent->snapshots_needed) {
+			build_test_plan(parent, test_plan);
+		}
+	}
+
+	test_plan.push_back(test);
+}
+
 void VisitorInterpreter::resolve_tests(const std::vector<std::shared_ptr<AST::Test>>& tests_queue) {
 	//Check every test
 	for (auto test: tests_queue) {
@@ -188,8 +222,22 @@ void VisitorInterpreter::resolve_tests(const std::vector<std::shared_ptr<AST::Te
 		if (is_cached) {
 			up_to_date_tests.push_back(test);
 		} else {
-			//For now that's all
-			tests_to_run.push_back(test);
+			//First we need to invalidate corresponding snapshots if they exist
+
+			for (auto vmc: reg.get_all_vmcs(test)) {
+				if (vmc->has_snapshot(test->name.value())) {
+					vmc->delete_snapshot_with_children(test->name.value());
+				}
+			}
+
+			//Now the interesting part
+			//We already have the logic involving current_state, so all we need to do...
+			//is to fill up the test queue with intermediate tests
+			std::list<std::shared_ptr<AST::Test>> test_plan;
+
+			build_test_plan(test, test_plan);
+
+			tests_to_run.insert(tests_to_run.end(), test_plan.begin(), test_plan.end());
 		}
 	}
 }
@@ -267,6 +315,11 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 		print("Test ", test->name.value(), " is up-to-date, skipping...");
 	}
 
+	std::cout << "TEST TO RUN\n";
+	for (auto it: tests_to_run) {
+		std::cout << it->name.value() << std::endl;
+	}
+
 	while (!tests_to_run.empty()) {
 		auto front = tests_to_run.front();
 		tests_to_run.pop_front();
@@ -318,15 +371,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		//Ok, we're not cached and we need to run the test
 
-		std::cout<< "Preparing the environment for the test " << test->name.value() << std::endl;
-
-		//First we need to invalidate corresponding snapshots if they exist
-
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->has_snapshot(test->name.value())) {
-				vmc->delete_snapshot_with_children(test->name.value());
-			}
-		}
+		print("Preparing the environment for the test ", test->name.value());
 
 		//we need to get all the vms in the correct state
 		//vms from parents - rollback them to parents if we need to
@@ -368,7 +413,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
-		std::cout<< "Running test " << test->name.value() << std::endl;
+		print("Running test ", test->name.value());
 
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);
@@ -382,8 +427,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		}
 
 		for (auto vmc: reg.get_all_vmcs(test)) {
-			print("Taking snapshot ", test->name.value(), " for virtual machine ", vmc->vm->name());
-			vmc->create_snapshot(test->name.value(), test_cksum(test), true); //true for now
+			if (!vmc->has_snapshot(test->name.value())) {
+				print("Taking snapshot ", test->name.value(), " for virtual machine ", vmc->vm->name());
+				vmc->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
+			}
+			vmc->set_metadata("vm_current_state", test->name.value());
 		}
 
 		//We need to check if we need to stop all the vms
@@ -411,13 +459,38 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 
 		current_progress += progress_step;
 		print("Test ", test->name.value(), " PASSED");
+
+		for (auto it: up_to_date_tests) {
+			if (it->name.value() == test->name.value()) {
+				//already have that one
+				return;
+			}
+		}
+
+		for (auto it: succeeded_tests) {
+			if (it->name.value() == test->name.value()) {
+				//already have that one
+				return;
+			}
+		}
+
 		succeeded_tests.push_back(test);
 
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
 		current_progress += progress_step;
 		print ("Test ", test->name.value(), " FAILED");
-		failed_tests.push_back(test);
+
+		bool already_failed = false;
+		for (auto it: failed_tests) {
+			if (it->name.value() == test->name.value()) {
+				already_failed = true;
+			}
+		}
+
+		if (!already_failed) {
+			failed_tests.push_back(test);
+		}
 
 		if (stop_on_fail) {
 			throw std::runtime_error("");

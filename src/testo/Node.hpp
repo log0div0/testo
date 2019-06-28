@@ -632,7 +632,7 @@ struct Test: public Node {
 	std::vector<Token> parents_tokens;
 	std::vector<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
-	bool no_snapshots = false;
+	bool snapshots_needed = true;
 };
 
 struct IAttrValue: public Node {
