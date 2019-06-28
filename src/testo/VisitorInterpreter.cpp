@@ -155,10 +155,40 @@ void VisitorInterpreter::print_statistics() const {
 	}
 }
 
+void VisitorInterpreter::resolve_tests(const std::vector<std::shared_ptr<AST::Test>>& tests_queue) {
+	//Check every test
+	for (auto test: tests_queue) {
+		//1) If it's cached, just place it in the corresponding queue
+		bool is_cached = true;
+
+		for (auto vmc: reg.get_all_vmcs(test)) {
+			if (vmc->vm->is_defined() &&
+				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->get_metadata("vm_config"))) &&
+				(file_signature(vmc->vm->get_config().at("iso").get<std::string>()) == vmc->get_metadata("dvd_signature")) &&
+				vmc->has_snapshot(test->name.value()) &&
+				(vmc->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
+			{
+				continue;
+			}
+			is_cached = false;
+		}
+
+		if (is_cached) {
+			up_to_date_tests.push_back(test);
+		} else {
+			//For now that's all
+			tests_to_run.push_back(test);
+		}
+	}
+}
+
 void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
+	std::vector<std::shared_ptr<AST::Test>> tests_queue; //temporary, only needed for general execution plan
+
 	//Need to check that we don't have duplicates
 	//And we can't use std::set because we need to
 	//keep the order of the tests
+
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
 			auto test = p->stmt;
@@ -171,7 +201,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 				continue;
 			}
 
-			concat_unique(tests_to_run, reg.get_test_path(test));
+			concat_unique(tests_queue, reg.get_test_path(test));
 		} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
 			if (p->stmt->t.type() == Token::category::flash) {
 				flash_drives.push_back(p->stmt);
@@ -179,7 +209,10 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 		}
 	}
 
-	auto tests_num = tests_to_run.size();
+	resolve_tests(tests_queue);
+	reset_cache();
+
+	auto tests_num = tests_to_run.size() + up_to_date_tests.size();
 	if (tests_num != 0) {
 		progress_step = (float)100 / tests_num;
 	} else {
@@ -187,6 +220,16 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 	}
 }
 
+
+void VisitorInterpreter::reset_cache() {
+	for (auto test: tests_to_run) {
+		for (auto vmc: reg.get_all_vmcs(test)) {
+			if (vmc->vm->is_defined()) {
+				vmc->set_metadata("vm_current_state", "");
+			}
+		}
+	}
+}
 
 void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	start_timestamp = std::chrono::system_clock::now();
@@ -198,7 +241,7 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 		visit_flash(fd);
 	}
 
-	if (tests_to_run.size() == 0) {
+	if ((tests_to_run.size() + up_to_date_tests.size()) == 0) {
 		if (test_spec.length()) {
 			std::cout << "Couldn't find a test with the name " << test_spec << std::endl;
 		} else {
@@ -207,10 +250,14 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 		return;
 	}
 
-	for (auto test: tests_to_run) {
-		std::cout<< "Running test " << test->name.value() << std::endl;
-		visit_test(test);
+	for (auto test: up_to_date_tests) {
+		current_progress += progress_step;
+		print("Test ", test->name.value(), " is up-to-date, skipping...");
 	}
+
+	for (auto test: tests_to_run) {
+			visit_test(test);
+		}
 
 	print_statistics();
 }
@@ -242,6 +289,7 @@ void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
 
 void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 	try {
+
 		//Check if one of the parents failed. If it did, just fail
 		for (auto parent: test->parents) {
 			for (auto failed: failed_tests) {
@@ -254,50 +302,34 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
-		//Now check if out test is cached
-		//Our test is cached if every vmc in our test (parents included)
-		// - is defined
-		// - has valid config and dvd cksum
-		// - has snapshots with corresponding name and valid cksums
+		//Ok, we're not cached and we need to run the test
 
-		bool is_cached = true; //we try to enable cache only if we have the setting
+		std::cout<< "Preparing the environment for the test " << test->name.value() << std::endl;
+
+		//First we need to invalidate corresponding snapshots if they exist
 
 		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined() &&
-				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->get_metadata("vm_config"))) &&
-				(file_signature(vmc->vm->get_config().at("iso").get<std::string>()) == vmc->get_metadata("dvd_signature")) &&
-				vmc->has_snapshot(test->name.value()) &&
-				(vmc->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
-			{
-				continue;
+			if (vmc->has_snapshot(test->name.value())) {
+				vmc->delete_snapshot_with_children(test->name.value());
 			}
-			is_cached = false;
 		}
 
-		if (is_cached) {
-			current_progress += progress_step;
-			print("Test ", test->name.value(), " is up-to-date, skipping...");
-			up_to_date_tests.push_back(test);
-			return;
-		}
-
-		//Ok, we're not cached and we need to run the test
-		//First we need to get all the vms in the correct state
-		//vms from parents - rollback to parent snapshot (we can be sure it is present and has valid cksum)
-		//new vms - install
-		//Also now we need to delete corresponding snapshots if they exist
-
+		//we need to get all the vms in the correct state
+		//vms from parents - rollback them to parents if we need to
+		//We need to do it only if our current state is not the parent
 		for (auto parent: test->parents) {
 			for (auto vmc: reg.get_all_vmcs(parent)) {
-				//Now our parent could actually not have a snapshot - if it's not cacheble
-				//But it's paused anyway
-				if (vmc->vm->has_snapshot(parent->name.value())) {
+				if (vmc->get_metadata("vm_current_state") != parent->name.value()) {
+					if (!vmc->has_snapshot(parent->name.value())) {
+						throw std::runtime_error("FAILSED, TO BE REMOVED");
+					}
 					print("Restoring snapshot ", parent->name.value(), " for virtual machine ", vmc->vm->name());
-					vmc->vm->rollback(parent->name.value());
-					vmc->set_metadata("vm_current_state", parent->name.value());
+					vmc->restore_snapshot(parent->name.value());
 				}
 			}
 		}
+
+		//new vms - install
 
 		for (auto vmc: reg.get_all_vmcs(test)) {
 			//check if it's a new one
@@ -317,12 +349,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->has_snapshot(test->name.value())) {
-				vmc->delete_snapshot_with_children(test->name.value());
-			}
-		}
-
 		for (auto parent: test->parents) {
 			for (auto vmc: reg.get_all_vmcs(parent)) {
 				if (vmc->vm->state() == VmState::Suspended) {
@@ -330,6 +356,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 				}
 			}
 		}
+
+		std::cout<< "Running test " << test->name.value() << std::endl;
 
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);
@@ -345,10 +373,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		for (auto vmc: reg.get_all_vmcs(test)) {
 			print("Taking snapshot ", test->name.value(), " for virtual machine ", vmc->vm->name());
 			vmc->create_snapshot(test->name.value(), test_cksum(test), true); //true for now
-			//Update current state on vm
-			vmc->set_metadata("vm_current_state", test->name.value());
 		}
-		stop_all_vms(test);
+
+		//TODO: check to the end of the queue if we need to stop the vms
+		//stop_all_vms(test);
 
 		current_progress += progress_step;
 		print("Test ", test->name.value(), " PASSED");

@@ -148,6 +148,8 @@ private:
 	void print_statistics() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
+	void reset_cache();
+	void resolve_tests(const std::vector<std::shared_ptr<AST::Test>>& tests_queue);
 	void update_progress();
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
