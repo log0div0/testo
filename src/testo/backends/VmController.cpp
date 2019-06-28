@@ -119,7 +119,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 			parent_metadata_file /= vm->name() + "_" + parent;
 
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
-			auto& children = metadata.at("children");
+			auto& children = parent_metadata.at("children");
 
 			for (auto it = children.begin(); it != children.end(); ++it) {
 				if (it.value() == snapshot) {

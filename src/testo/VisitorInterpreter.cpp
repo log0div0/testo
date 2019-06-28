@@ -161,6 +161,18 @@ void VisitorInterpreter::resolve_tests(const std::vector<std::shared_ptr<AST::Te
 		//1) If it's cached, just place it in the corresponding queue
 		bool is_cached = true;
 
+		for (auto parent: test->parents) {
+			for (auto it: tests_to_run) {
+				if (it->name.value() == parent->name.value()) {
+					is_cached = false;
+					break;
+				}
+			}
+			if (!is_cached) {
+				break;
+			}
+		}
+
 		for (auto vmc: reg.get_all_vmcs(test)) {
 			if (vmc->vm->is_defined() &&
 				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->get_metadata("vm_config"))) &&
@@ -255,9 +267,11 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 		print("Test ", test->name.value(), " is up-to-date, skipping...");
 	}
 
-	for (auto test: tests_to_run) {
-			visit_test(test);
-		}
+	while (!tests_to_run.empty()) {
+		auto front = tests_to_run.front();
+		tests_to_run.pop_front();
+		visit_test(front);
+	}
 
 	print_statistics();
 }
@@ -320,9 +334,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		for (auto parent: test->parents) {
 			for (auto vmc: reg.get_all_vmcs(parent)) {
 				if (vmc->get_metadata("vm_current_state") != parent->name.value()) {
-					if (!vmc->has_snapshot(parent->name.value())) {
-						throw std::runtime_error("FAILSED, TO BE REMOVED");
-					}
 					print("Restoring snapshot ", parent->name.value(), " for virtual machine ", vmc->vm->name());
 					vmc->restore_snapshot(parent->name.value());
 				}
@@ -375,8 +386,28 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			vmc->create_snapshot(test->name.value(), test_cksum(test), true); //true for now
 		}
 
-		//TODO: check to the end of the queue if we need to stop the vms
-		//stop_all_vms(test);
+		//We need to check if we need to stop all the vms
+		//VMS should be stopped if we don't need them anymore
+		//and this could happen only if there's no children tests
+		//ahead
+
+		bool need_to_stop = true;
+
+		for (auto it: tests_to_run) {
+			for (auto parent: it->parents) {
+				if (parent->name.value() == test->name.value()) {
+					need_to_stop = false;
+					break;
+				}
+			}
+			if (need_to_stop) {
+				break;
+			}
+		}
+
+		if (need_to_stop) {
+			stop_all_vms(test);
+		}
 
 		current_progress += progress_step;
 		print("Test ", test->name.value(), " PASSED");
@@ -393,6 +424,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		}
 
 		stop_all_vms(test);
+
 	} //everything else is fatal and should be catched furter up
 }
 
