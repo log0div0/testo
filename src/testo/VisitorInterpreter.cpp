@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <thread>
+#include <wildcards.hpp>
 
 using namespace AST;
 
@@ -40,6 +41,7 @@ static void sleep(const std::string& interval) {
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	test_spec = config.at("test_spec").get<std::string>();
+	exclude = config.at("exclude").get<std::string>();
 
 	charmap.insert({
 		{'0', {"ZERO"}},
@@ -209,10 +211,13 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 			//we need to check if it's suitable for test spec
 			//if it is - push back to list and remove all the parents duplicates
 
-			if (test_spec.length() && (test->name.value() != test_spec)) {
+			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
 				continue;
 			}
 
+			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
+				continue;
+			}
 			concat_unique(tests_queue, reg.get_test_path(test));
 		} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
 			if (p->stmt->t.type() == Token::category::flash) {
@@ -254,11 +259,7 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	}
 
 	if ((tests_to_run.size() + up_to_date_tests.size()) == 0) {
-		if (test_spec.length()) {
-			std::cout << "Couldn't find a test with the name " << test_spec << std::endl;
-		} else {
-			std::cout << "There's no tests to run\n";
-		}
+		std::cout << "There's no tests to run\n";
 		return;
 	}
 
