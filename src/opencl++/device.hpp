@@ -11,6 +11,7 @@ struct Device {
 	Device(cl_device_id id);
 
 	std::string name() const;
+	cl_device_id id() const { return _id; }
 
 private:
 	size_t info_size(cl_device_info name) const;

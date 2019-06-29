@@ -12,6 +12,7 @@ struct Platform {
 	Platform(cl_platform_id id);
 
 	std::string name() const;
+	cl_platform_id id() const { return _id; }
 
 	cl_uint device_ids_count(cl_device_type type = CL_DEVICE_TYPE_ALL) const;
 	std::vector<cl_device_id> device_ids(cl_device_type type = CL_DEVICE_TYPE_ALL) const;
