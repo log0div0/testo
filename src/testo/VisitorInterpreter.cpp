@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <thread>
+#include <wildcards.hpp>
 
 using namespace AST;
 
@@ -209,7 +210,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 			//we need to check if it's suitable for test spec
 			//if it is - push back to list and remove all the parents duplicates
 
-			if (test_spec.length() && (test->name.value() != test_spec)) {
+			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
 				continue;
 			}
 
@@ -254,11 +255,7 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	}
 
 	if ((tests_to_run.size() + up_to_date_tests.size()) == 0) {
-		if (test_spec.length()) {
-			std::cout << "Couldn't find a test with the name " << test_spec << std::endl;
-		} else {
-			std::cout << "There's no tests to run\n";
-		}
+		std::cout << "There's no tests to run\n";
 		return;
 	}
 
