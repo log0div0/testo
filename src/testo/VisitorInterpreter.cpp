@@ -41,6 +41,7 @@ static void sleep(const std::string& interval) {
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	test_spec = config.at("test_spec").get<std::string>();
+	exclude = config.at("exclude").get<std::string>();
 
 	charmap.insert({
 		{'0', {"ZERO"}},
@@ -214,6 +215,9 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 				continue;
 			}
 
+			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
+				continue;
+			}
 			concat_unique(tests_queue, reg.get_test_path(test));
 		} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
 			if (p->stmt->t.type() == Token::category::flash) {
