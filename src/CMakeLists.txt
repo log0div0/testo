@@ -11,6 +11,7 @@ endif()
 
 add_subdirectory(darknet)
 add_subdirectory(vbox)
+add_subdirectory(opencl++)
 if (WIN32)
 add_subdirectory(virtdisk)
 add_subdirectory(msft)
