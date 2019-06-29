@@ -8,5 +8,3 @@ add_subdirectory(pugixml)
 if(UNIX AND NOT APPLE)
 add_subdirectory(gl3w)
 endif()
-
-add_subdirectory(CLBlast)
