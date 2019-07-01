@@ -161,6 +161,44 @@ struct Empty: public Node {
 	}
 };
 
+struct Abort: public Node {
+	Abort(const Token& abort, std::shared_ptr<Word> message):
+		Node(abort), message(message) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return message->end();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + std::string(*message);
+	}
+
+	std::shared_ptr<Word> message;
+};
+
+struct Print: public Node {
+	Print(const Token& print, std::shared_ptr<Word> message):
+		Node(print), message(message) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return message->end();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + std::string(*message);
+	}
+
+	std::shared_ptr<Word> message;
+};
+
 struct Type: public Node {
 	Type(const Token& type, std::shared_ptr<Word> text_word):
 		Node(type), text_word(text_word) {}

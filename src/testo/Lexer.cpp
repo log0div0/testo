@@ -142,7 +142,11 @@ Token Lexer::id() {
 
 	//check for buildins
 
-	if (value == "type") {
+	if (value == "abort") {
+		return abort();
+	} else if (value == "print") {
+		return print();
+	} else if (value == "type") {
 		return type();
 	} else if (value == "wait") {
 		return wait();
@@ -214,6 +218,20 @@ Token Lexer::id() {
 		current_pos.advance(shift);
 		return Token(Token::category::id, value, tmp_pos);
 	}
+}
+
+Token Lexer::abort() {
+	Pos tmp_pos = current_pos;
+	std::string value("abort");
+	current_pos.advance(value.length());
+	return Token(Token::category::abort, value, tmp_pos);
+}
+
+Token Lexer::print() {
+	Pos tmp_pos = current_pos;
+	std::string value("print");
+	current_pos.advance(value.length());
+	return Token(Token::category::print, value, tmp_pos);
 }
 
 Token Lexer::type() {

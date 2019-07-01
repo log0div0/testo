@@ -571,7 +571,11 @@ void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vmc, s
 }
 
 void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
+	if (auto p = std::dynamic_pointer_cast<Action<Abort>>(action)) {
+		return visit_abort(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Print>>(action)) {
+		return visit_print(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
 		return visit_type(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Wait>>(action)) {
 		return visit_wait(vmc, p->action);
@@ -603,6 +607,20 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		return;
 	} else {
 		throw std::runtime_error("Unknown action");
+	}
+}
+
+void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<Abort> abort) {
+	std::string message = visit_word(vmc, abort->message);
+	throw AbortException(abort, vmc, message);
+}
+
+void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<Print> print_action) {
+	try {
+		std::string message = visit_word(vmc, print_action->message);
+		print(vmc->vm->name(), ": ", message.c_str());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(print_action, vmc));
 	}
 }
 
