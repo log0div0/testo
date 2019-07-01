@@ -32,8 +32,8 @@ std::set<std::shared_ptr<VmController>> Register::get_all_vmcs(std::shared_ptr<A
 	return result;
 }
 
-std::vector<std::shared_ptr<AST::Test>> Register::get_test_path(std::shared_ptr<AST::Test> test) const {
-	std::vector<std::shared_ptr<AST::Test>> result;
+std::list<std::shared_ptr<AST::Test>> Register::get_test_path(std::shared_ptr<AST::Test> test) const {
+	std::list<std::shared_ptr<AST::Test>> result;
 
 	/*
 		For every parent. Get his parents. Iterate though them. If we already have a parent - don't include it

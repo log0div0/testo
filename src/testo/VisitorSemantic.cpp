@@ -146,7 +146,7 @@ void VisitorSemantic::update_leaves() {
 					break;
 				}
 			}
-			if (is_leaf) {
+			if (!is_leaf) {
 				break;
 			}
 		}

@@ -5,6 +5,7 @@
 #include "backends/FlashDriveController.hpp"
 #include "Node.hpp"
 #include <unordered_map>
+#include <list>
 
 struct Register {
 	Register() = default;
@@ -16,5 +17,5 @@ struct Register {
 	std::unordered_map<std::string, std::shared_ptr<AST::Macro>> macros;
 
 	std::set<std::shared_ptr<VmController>> get_all_vmcs(std::shared_ptr<AST::Test> test) const;
-	std::vector<std::shared_ptr<AST::Test>> get_test_path(std::shared_ptr<AST::Test> test) const;
+	std::list<std::shared_ptr<AST::Test>> get_test_path(std::shared_ptr<AST::Test> test) const;
 };

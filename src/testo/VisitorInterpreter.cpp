@@ -157,82 +157,94 @@ void VisitorInterpreter::print_statistics() const {
 	}
 }
 
+bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
+	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
+	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
+{
+	auto vmcs = reg.get_all_vmcs(test);
+
+	auto all_parents = reg.get_test_path(test);
+
+	bool result = false;
+
+	for (auto rit = tests_to_run.rbegin(); rit != tests_to_run.rend(); ++rit) {
+		if ((*rit)->name.value() == parent->name.value()) {
+			//This parent is good
+			result = true;
+			break;
+		}
+
+		//If it's just another parent - we don't care
+		bool another_parent = false;
+		for (auto test_it: all_parents) {
+			if (test_it->name.value() == (*rit)->name.value()) {
+				another_parent = true;
+				break;
+			}
+		}
+
+		if (another_parent) {
+			continue;
+		}
+
+		auto other_vmcs = reg.get_all_vmcs(*rit);
+		if (std::find_first_of (vmcs.begin(), vmcs.end(), other_vmcs.begin(), other_vmcs.end()) != vmcs.end()) {
+			break;
+		}
+	}
+
+	return result;
+}
+
 void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
 	std::list<std::shared_ptr<AST::Test>>& test_plan,
-	std::list<std::shared_ptr<AST::Test>> tests_to_run)
+	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
+	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
 {
 	//we need to check could we start right away?
 
 	auto vmcs = reg.get_all_vmcs(test);
-
-	//Get all the parents
-	auto all_parents = reg.get_test_path(test);
 
 	for (auto parent: test->parents) {
 		//for every parent we need to check, maybe we are already in the perfect position?
 		//so starting from the end of tests_to_run, we move backwards
 		//and we try to find the parent test
 
-		bool parent_is_ok = false;
-
-		for (auto rit = tests_to_run.rbegin(); rit != tests_to_run.rend(); ++rit) {
-			if ((*rit)->name.value() == parent->name.value()) {
-				//This parent is good
-				parent_is_ok = true;
-				break;
-			}
-
-			//If it's just another parent - we don't care
-			bool another_parent = false;
-			for (auto test_it: all_parents) {
-				if (test_it->name.value() == (*rit)->name.value()) {
-					another_parent = true;
-					break;
-				}
-			}
-
-			if (another_parent) {
-				continue;
-			}
-
-			auto other_vmcs = reg.get_all_vmcs(*rit);
-			if (std::find_first_of (vmcs.begin(), vmcs.end(), other_vmcs.begin(), other_vmcs.end()) != vmcs.end()) {
-				//this particular test has no interference with us, proceed to the next
-				break;
-			}
-		}
-
-		if (!parent_is_ok && !parent->snapshots_needed) {
+		if (!parent_is_ok(test, parent, begin, end) && !parent->snapshots_needed) {
 			//New tests to run should be JUST before the parent
 			std::list<std::shared_ptr<AST::Test>> new_tests_to_run;
 
-			for (auto rit = tests_to_run.rbegin(); rit != tests_to_run.rend(); ++rit) {
+			for (auto rit = begin; rit != end; ++rit) {
 				if ((*rit)->name.value() == parent->name.value()) {
-					new_tests_to_run.insert(new_tests_to_run.end(), tests_to_run.begin(), rit.base());
+					begin = ++rit;
 					break;
 				}
 			}
 
-			build_test_plan(parent, test_plan, new_tests_to_run);
+			build_test_plan(parent, test_plan, begin, end);
 		}
 	}
 	test_plan.push_back(test);
 }
 
-void VisitorInterpreter::resolve_tests(const std::vector<std::shared_ptr<AST::Test>>& tests_queue) {
+void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {
 	//Check every test
-	for (auto test: tests_queue) {
+	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
 		//1) If it's cached, just place it in the corresponding queue
 		bool is_cached = true;
 
+		auto test = *test_it;
+
 		for (auto parent: test->parents) {
-			for (auto it: tests_to_run) {
-				if (it->name.value() == parent->name.value()) {
-					is_cached = false;
+			bool parent_cached = false;
+			for (auto cached: up_to_date_tests) {
+				if (parent->name.value() == cached->name.value()) {
+					parent_cached = true;
 					break;
 				}
 			}
-			if (!is_cached) {
+			if (!parent_cached) {
+				is_cached = false;
 				break;
 			}
 		}
@@ -251,30 +263,36 @@ void VisitorInterpreter::resolve_tests(const std::vector<std::shared_ptr<AST::Te
 
 		if (is_cached) {
 			up_to_date_tests.push_back(test);
+			tests_queue.erase(test_it++);
 		} else {
-			//First we need to invalidate corresponding snapshots if they exist
-
-			for (auto vmc: reg.get_all_vmcs(test)) {
-				if (vmc->has_snapshot(test->name.value())) {
-					vmc->delete_snapshot_with_children(test->name.value());
-				}
-			}
-
-			//Now the interesting part
-			//We already have the logic involving current_state, so all we need to do...
-			//is to fill up the test queue with intermediate tests
-			std::list<std::shared_ptr<AST::Test>> test_plan;
-
-			build_test_plan(test, test_plan, tests_to_run);
-
-			//TODO: insert before last
-			tests_to_run.insert(tests_to_run.end(), test_plan.begin(), test_plan.end());
+			test_it++;
 		}
 	}
 }
 
+void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue) {
+	for (auto test: tests_queue) {
+		for (auto vmc: reg.get_all_vmcs(test)) {
+			if (vmc->has_snapshot(test->name.value())) {
+				vmc->delete_snapshot_with_children(test->name.value());
+			}
+		}
+
+		//Now the interesting part
+		//We already have the logic involving current_state, so all we need to do...
+		//is to fill up the test queue with intermediate tests
+		std::list<std::shared_ptr<AST::Test>> test_plan;
+
+		build_test_plan(test, test_plan, tests_to_run.rbegin(), tests_to_run.rend());
+
+		//TODO: insert before last
+		tests_to_run.insert(tests_to_run.end(), test_plan.begin(), test_plan.end());
+	}
+}
+
+
 void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
-	std::vector<std::shared_ptr<AST::Test>> tests_queue; //temporary, only needed for general execution plan
+	std::list<std::shared_ptr<AST::Test>> tests_queue; //temporary, only needed for general execution plan
 
 	//Need to check that we don't have duplicates
 	//And we can't use std::set because we need to
@@ -303,6 +321,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 		}
 	}
 
+	check_up_to_date_tests(tests_queue);
 	resolve_tests(tests_queue);
 	reset_cache();
 
@@ -443,7 +462,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
-		print("Running test ", test->name.value());
+		print("Running test ", test->name.value(), " ", test->snapshots_needed);
 
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);

@@ -150,11 +150,19 @@ private:
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
 	void reset_cache();
+
+
+	bool parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
+
 	void build_test_plan(std::shared_ptr<AST::Test> test,
 		std::list<std::shared_ptr<AST::Test>>& test_plan,
-		std::list<std::shared_ptr<AST::Test>> tests_to_run);
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
 
-	void resolve_tests(const std::vector<std::shared_ptr<AST::Test>>& tests_queue);
+	void check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue);
+	void resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue);
 	void update_progress();
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
