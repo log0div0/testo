@@ -63,6 +63,24 @@ struct VisitorInterpreter {
 		std::shared_ptr<VmController> vmc;
 	};
 
+	struct AbortException: public InterpreterException {
+		explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<VmController> vmc, const std::string& message):
+			InterpreterException(), node(node), vmc(vmc)
+		{
+			msg = std::string(node->begin()) + ": Caught abort action ";
+			if (vmc) {
+				msg += "on virtual machine ";
+				msg += vmc->vm->name();
+			}
+
+			msg += " with message: ";
+			msg += message;
+		}
+	private:
+		std::shared_ptr<AST::Node> node;
+		std::shared_ptr<VmController> vmc;
+	};
+
 
 	struct CycleControlException: public InterpreterException {
 		explicit CycleControlException(const Token& token):
@@ -84,6 +102,8 @@ struct VisitorInterpreter {
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ActionBlock> action_block);
 	void visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action);
+	void visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort);
+	void visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action);
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);

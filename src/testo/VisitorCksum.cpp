@@ -41,7 +41,11 @@ std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vmc, 
 }
 
 std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
+	if (auto p = std::dynamic_pointer_cast<Action<Abort>>(action)) {
+		return visit_abort(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Print>>(action)) {
+		return visit_print(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
 		return visit_type(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<Action<Wait>>(action)) {
 		return visit_wait(vmc, p->action);
@@ -74,6 +78,18 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
+}
+
+std::string VisitorCksum::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<Abort> abort) {
+	std::string result("abort");
+	result += visit_word(vmc, abort->message);
+	return result;
+}
+
+std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<Print> print) {
+	std::string result("print");
+	result += visit_word(vmc, print->message);
+	return result;
 }
 
 std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<Type> type) {

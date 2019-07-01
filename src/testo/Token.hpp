@@ -9,6 +9,8 @@ struct Token {
 		newline,
 		id,
 		var_ref,
+		abort,
+		print,
 		type_,
 		wait,
 		check,
@@ -118,6 +120,10 @@ struct Token {
 			return "NEWLINE";
 		case id:
 			return "IDENTIFIER";
+		case abort:
+			return "ACTION ABORT";
+		case print:
+			return "ACTION PRINT";
 		case type_:
 			return "ACTION TYPE";
 		case wait:

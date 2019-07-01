@@ -82,7 +82,9 @@ bool Parser::test_command() const {
 }
 
 bool Parser::test_action() const {
-	return ((LA(1) == Token::category::type_) ||
+	return ((LA(1) == Token::category::abort) ||
+		(LA(1) == Token::category::print) ||
+		(LA(1) == Token::category::type_) ||
 		(LA(1) == Token::category::wait) ||
 		(LA(1) == Token::category::press) ||
 		(LA(1) == Token::category::plug) ||
@@ -441,7 +443,11 @@ std::shared_ptr<KeySpec> Parser::key_spec() {
 
 std::shared_ptr<IAction> Parser::action() {
 	std::shared_ptr<IAction> action;
-	if (LA(1) == Token::category::type_) {
+	if (LA(1) == Token::category::abort) {
+		action = abort();
+	} else if (LA(1) == Token::category::print) {
+		action = print();
+	} else if (LA(1) == Token::category::type_) {
 		action = type();
 	} else if (LA(1) == Token::category::wait) {
 		action = wait();
@@ -500,6 +506,30 @@ std::shared_ptr<Action<Empty>> Parser::empty_action() {
 	match({Token::category::semi, Token::category::newline});
 	auto action = std::shared_ptr<Empty>(new Empty());
 	return std::shared_ptr<Action<Empty>>(new Action<Empty>(action));
+}
+
+std::shared_ptr<Action<Abort>> Parser::abort() {
+	Token abort_token = LT(1);
+	match(Token::category::abort);
+
+	Token value = LT(1);
+
+	auto message = word();
+
+	auto action = std::shared_ptr<Abort>(new Abort(abort_token, message));
+	return std::shared_ptr<Action<Abort>>(new Action<Abort>(action));
+}
+
+std::shared_ptr<Action<Print>> Parser::print() {
+	Token print_token = LT(1);
+	match(Token::category::print);
+
+	Token value = LT(1);
+
+	auto message = word();
+
+	auto action = std::shared_ptr<Print>(new Print(print_token, message));
+	return std::shared_ptr<Action<Print>>(new Action<Print>(action));
 }
 
 std::shared_ptr<Action<Type>> Parser::type() {
