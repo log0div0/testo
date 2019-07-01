@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <list>
 #include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem;
@@ -34,7 +35,7 @@ std::string normalized_mac(const std::string& mac);
 void replace_all(std::string& str, const std::string& from, const std::string& to);
 
 template <typename T>
-void concat_unique(std::vector<T>& left, const std::vector<T>& right) {
+void concat_unique(std::list<T>& left, const std::list<T>& right) {
 
 	for (auto it_right: right) {
 		bool already_included = false;

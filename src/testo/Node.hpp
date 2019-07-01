@@ -630,7 +630,7 @@ struct Test: public Node {
 	std::vector<Token> attrs;
 	Token name;
 	std::vector<Token> parents_tokens;
-	std::vector<std::shared_ptr<AST::Test>> parents;
+	std::list<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
 	bool snapshots_needed = true;
 };

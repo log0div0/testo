@@ -136,10 +136,33 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
+void VisitorSemantic::update_leaves() {
+	for (auto it: reg.tests) {
+		bool is_leaf = true;
+		for (auto it2: reg.tests) {
+			for (auto parent: it2.second->parents) {
+				if (it.second->name.value() == parent->name.value()) {
+					is_leaf = false;
+					break;
+				}
+			}
+			if (!is_leaf) {
+				break;
+			}
+		}
+
+		if (is_leaf) {
+			it.second->snapshots_needed = false;
+		}
+	}
+}
+
 void VisitorSemantic::visit(std::shared_ptr<Program> program) {
 	for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
 	}
+
+	update_leaves();
 }
 
 void VisitorSemantic::visit_stmt(std::shared_ptr<IStmt> stmt) {
