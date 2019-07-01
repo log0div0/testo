@@ -1,6 +1,7 @@
 
 include "./installations.testo"
 
+[no_snapshots]
 test sgw_basic: install_wireguard
 {
 	vpn_sgw1 copyto "./utils/test_pcap.py" "/test_pcap.py"
