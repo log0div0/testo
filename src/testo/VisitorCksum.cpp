@@ -2,9 +2,7 @@
 #include "VisitorCksum.hpp"
 #include <algorithm>
 
-using namespace AST;
-
-uint64_t VisitorCksum::visit(std::shared_ptr<Test> test) {
+uint64_t VisitorCksum::visit(std::shared_ptr<AST::Test> test) {
 	std::string result = test->name.value();
 
 	for (auto parent: test->parents) {
@@ -21,7 +19,7 @@ uint64_t VisitorCksum::visit(std::shared_ptr<Test> test) {
 	return h(result);
 }
 
-std::string VisitorCksum::visit_cmd(std::shared_ptr<Cmd> cmd) {
+std::string VisitorCksum::visit_cmd(std::shared_ptr<AST::Cmd> cmd) {
 	std::string result;
 
 	for (auto vm_token: cmd->vms) {
@@ -32,7 +30,7 @@ std::string VisitorCksum::visit_cmd(std::shared_ptr<Cmd> cmd) {
 	return result;
 }
 
-std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<ActionBlock> action_block) {
+std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ActionBlock> action_block) {
 	std::string result("BLOCK");
 	for (auto action: action_block->actions) {
 		result += visit_action(vmc, action);
@@ -40,65 +38,65 @@ std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vmc, 
 	return result;
 }
 
-std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<Action<Abort>>(action)) {
+std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
 		return visit_abort(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Print>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
 		return visit_print(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
 		return visit_type(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Wait>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		return visit_wait(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Press>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Plug>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
 		return visit_shutdown(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Start>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
 		return "start";
-	} else if (auto p = std::dynamic_pointer_cast<Action<Stop>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
 		return "stop";
-	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Copy>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
 		return visit_copy(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		return visit_macro_call(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		return visit_for_clause(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<CycleControl>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		return p->action->t.value();
-	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		return "";
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
 }
 
-std::string VisitorCksum::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<Abort> abort) {
+std::string VisitorCksum::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
 	std::string result("abort");
 	result += visit_word(vmc, abort->message);
 	return result;
 }
 
-std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<Print> print) {
+std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print) {
 	std::string result("print");
 	result += visit_word(vmc, print->message);
 	return result;
 }
 
-std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<Type> type) {
+std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	std::string result("type");
 	result += visit_word(vmc, type->text_word);
 	return result;
 }
 
-std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<Wait> wait) {
+std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	std::string result = "wait";
 	if (wait->text_word) {
 		result += visit_word(vmc, wait->text_word);
@@ -120,7 +118,7 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_press(std::shared_ptr<Press> press) {
+std::string VisitorCksum::visit_press(std::shared_ptr<AST::Press> press) {
 	std::string result("press");
 	for (auto key_spec: press->keys) {
 		result += visit_key_spec(key_spec);
@@ -128,14 +126,14 @@ std::string VisitorCksum::visit_press(std::shared_ptr<Press> press) {
 	return result;
 }
 
-std::string VisitorCksum::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
+std::string VisitorCksum::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 	std::string result("key_spec");
 	result += key_spec->get_buttons_str();
 	result += std::to_string(key_spec->get_times());
 	return result;
 }
 
-std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<Plug> plug) {
+std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	std::string result("plug");
 	result += std::to_string(plug->is_on());
 	result += plug->type.value();
@@ -156,7 +154,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<Shutdown> shutdown) {
+std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<AST::Shutdown> shutdown) {
 	std::string result("shutdown");
 	if (shutdown->time_interval) {
 		result += shutdown->time_interval.value();
@@ -166,7 +164,7 @@ std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<Exec> exec) {
+std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	std::string result("exec");
 
 	result += exec->process_token.value();
@@ -181,7 +179,7 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<Copy> copy) {
+std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
 	std::string result(copy->t.value());
 
 	fs::path from = visit_word(vmc, copy->from);
@@ -224,11 +222,11 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<MacroCall> macro_call) {
+std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
 	return visit_action_block(vmc, macro_call->macro->action_block->action);
 }
 
-std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<IfClause> if_clause) {
+std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause) {
 	std::string result("if");
 	result += visit_expr(vmc, if_clause->expr);
 
@@ -242,7 +240,7 @@ std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vmc, std
 	return result;
 }
 
-std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<ForClause> for_clause) {
+std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause) {
 	std::string result("for");
 	//we should drop the counter from cksum
 	result += for_clause->start_.value();
@@ -253,17 +251,17 @@ std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vmc, st
 	return result;
 }
 
-std::string VisitorCksum::visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<IExpr> expr) {
-	if (auto p = std::dynamic_pointer_cast<Expr<BinOp>>(expr)) {
+std::string VisitorCksum::visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr) {
+	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
 		return visit_binop(vmc, p->expr);
-	} else if (auto p = std::dynamic_pointer_cast<Expr<IFactor>>(expr)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
 		return visit_factor(vmc, p->expr);
 	} else {
 		throw std::runtime_error("Unknown expr type");
 	}
 }
 
-std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<BinOp> binop) {
+std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop) {
 	std::string result("binop");
 	result += visit_expr(vmc, binop->left);
 	result += visit_expr(vmc, binop->right);
@@ -271,18 +269,18 @@ std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vmc, std::sh
 	return result;
 }
 
-std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<IFactor> factor) {
+std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
 	std::string result("factor");
-	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
+	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Word>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_word(vmc, p->factor);
-	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_comparison(vmc, p->factor);
-	} else if (auto p = std::dynamic_pointer_cast<Factor<Check>>(factor)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_check(vmc, p->factor);
-	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_expr(vmc, p->factor);
 	} else {
@@ -310,7 +308,7 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vmc, const s
 	return env_value;
 }
 
-std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<Word> word) {
+std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
 	std::string result;
 
 	for (auto part: word->parts) {
@@ -328,7 +326,7 @@ std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vmc, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<Comparison> comparison) {
+std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
 	std::string result("comparison");
 	result += visit_word(vmc, comparison->left);
 	result += visit_word(vmc, comparison->right);
@@ -336,7 +334,7 @@ std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, st
 	return result;
 }
 
-std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<Check> check) {
+std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	std::string result = "check";
 	result += visit_word(vmc, check->text_word);
 

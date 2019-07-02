@@ -2,8 +2,6 @@
 #include "VisitorSemantic.hpp"
 #include <fmt/format.h>
 
-using namespace AST;
-
 VisitorSemantic::VisitorSemantic(Register& reg):
 	reg(reg)
 {
@@ -157,7 +155,7 @@ void VisitorSemantic::update_leaves() {
 	}
 }
 
-void VisitorSemantic::visit(std::shared_ptr<Program> program) {
+void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
 	for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
 	}
@@ -165,19 +163,19 @@ void VisitorSemantic::visit(std::shared_ptr<Program> program) {
 	update_leaves();
 }
 
-void VisitorSemantic::visit_stmt(std::shared_ptr<IStmt> stmt) {
-	if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
+void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
+	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
 		return visit_test(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<Stmt<Macro>>(stmt)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
 		return visit_macro(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
 		return visit_controller(p->stmt);
 	} else {
 		throw std::runtime_error("Unknown statement");
 	}
 }
 
-void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
+void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 	std::cout << "Registering macro " << macro->name.value() << std::endl;
 
 	if (reg.macros.find(macro->name) != reg.macros.end()) {
@@ -193,7 +191,7 @@ void VisitorSemantic::visit_macro(std::shared_ptr<Macro> macro) {
 	visit_action_block(macro->action_block->action); //dummy controller to match the interface
 }
 
-void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
+void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
 	//Check for duplicates in attrs
 	std::set<std::string> attrs;
 
@@ -269,13 +267,13 @@ void VisitorSemantic::visit_test(std::shared_ptr<Test> test) {
 	}
 }
 
-void VisitorSemantic::visit_command_block(std::shared_ptr<CmdBlock> block) {
+void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
 	for (auto command: block->commands) {
 		visit_command(command);
 	}
 }
 
-void VisitorSemantic::visit_command(std::shared_ptr<Cmd> cmd) {
+void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	std::set<std::shared_ptr<VmController>> unique_vmcs;
 	for (auto vm_token: cmd->vms) {
 		auto vmc = reg.vmcs.find(vm_token.value());
@@ -291,35 +289,35 @@ void VisitorSemantic::visit_command(std::shared_ptr<Cmd> cmd) {
 	visit_action(cmd->action);
 }
 
-void VisitorSemantic::visit_action_block(std::shared_ptr<ActionBlock> action_block) {
+void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
 		visit_action(action);
 	}
 }
 
-void VisitorSemantic::visit_action(std::shared_ptr<IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<Action<Press>>(action)) {
+void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Plug>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		return visit_macro_call(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		return visit_for_clause(p->action);
 	}
 }
 
-void VisitorSemantic::visit_press(std::shared_ptr<Press> press) {
+void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
 	for (auto key_spec: press->keys) {
 		visit_key_spec(key_spec);
 	}
 }
 
-void VisitorSemantic::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
+void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 	for (auto button: key_spec->buttons) {
 		if (!is_button(button)) {
 			throw std::runtime_error(std::string(button.pos()) +
@@ -328,7 +326,7 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<KeySpec> key_spec) {
 	}
 }
 
-void VisitorSemantic::visit_plug(std::shared_ptr<Plug> plug) {
+void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 	if (plug->type.value() == "flash") {
 		if (reg.fds.find(plug->name_token.value()) == reg.fds.end()) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
@@ -336,13 +334,13 @@ void VisitorSemantic::visit_plug(std::shared_ptr<Plug> plug) {
 	}
 }
 
-void VisitorSemantic::visit_exec(std::shared_ptr<Exec> exec) {
+void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
 	if (exec->process_token.value() != "bash") {
 		throw std::runtime_error(std::string(exec->begin()) + ": Error: unknown process name: " + exec->process_token.value());
 	}
 }
 
-void VisitorSemantic::visit_macro_call(std::shared_ptr<MacroCall> macro_call) {
+void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
 	auto macro = reg.macros.find(macro_call->name());
 	if (macro == reg.macros.end()) {
 		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
@@ -354,14 +352,14 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<MacroCall> macro_call) {
 	}
 }
 
-void VisitorSemantic::visit_for_clause(std::shared_ptr<ForClause> for_clause) {
+void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
 	if (for_clause->start() > for_clause->finish()) {
 		throw std::runtime_error(std::string(for_clause->begin()) + ": Error: start number of the cycle " +
 			for_clause->start_.value() + " is greater than finish number " + for_clause->finish_.value());
 	}
 }
 
-void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {
+void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controller) {
 	if (controller->t.type() == Token::category::machine) {
 		return visit_machine(controller);
 	} else if (controller->t.type() == Token::category::flash) {
@@ -371,7 +369,7 @@ void VisitorSemantic::visit_controller(std::shared_ptr<Controller> controller) {
 	}
 }
 
-void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
+void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	std::cout << "Registering machine " << machine->name.value() << std::endl;
 	if (reg.vmcs.find(machine->name) != reg.vmcs.end()) {
 		throw std::runtime_error(std::string(machine->begin()) + ": Error: machine with name " + machine->name.value() +
@@ -385,7 +383,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<Controller> machine) {
 	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
 }
 
-void VisitorSemantic::visit_flash(std::shared_ptr<Controller> flash) {
+void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	std::cout << "Registering flash " << flash->name.value() << std::endl;
 	if (reg.fds.find(flash->name) != reg.fds.end()) {
 		throw std::runtime_error(std::string(flash->begin()) + ": Error: flash drive with name " + flash->name.value() +
@@ -399,7 +397,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<Controller> flash) {
 	reg.fds.emplace(std::make_pair(flash->name, fd));
 }
 
-nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AttrBlock> attr_block, const std::string& ctx_name) {
+nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {
 	nlohmann::json config;
 	for (auto attr: attr_block->attrs) {
 		visit_attr(attr, config, ctx_name);
@@ -416,7 +414,7 @@ std::string VisitorSemantic::resolve_var(const std::string& var) {
 	return env_value;
 }
 
-std::string VisitorSemantic::visit_word(std::shared_ptr<Word> word) {
+std::string VisitorSemantic::visit_word(std::shared_ptr<AST::Word> word) {
 	std::string result;
 
 	for (auto part: word->parts) {
@@ -434,7 +432,7 @@ std::string VisitorSemantic::visit_word(std::shared_ptr<Word> word) {
 	return result;
 }
 
-void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
+void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
 	if (ctx_name == "metadata") {
 		if (attr->value->t.type() != Token::category::word) {
 			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only word specifiers ");
@@ -475,10 +473,10 @@ void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& con
 		}
 	}
 
-	if (auto p = std::dynamic_pointer_cast<AttrValue<WordAttr>>(attr->value)) {
+	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::WordAttr>>(attr->value)) {
 		auto value = visit_word(p->attr_value->value);
 		config[attr->name.value()] = value;
-	} else if (auto p = std::dynamic_pointer_cast<AttrValue<SimpleAttr>>(attr->value)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::SimpleAttr>>(attr->value)) {
 		auto value = p->attr_value->t;
 		if (value.type() == Token::category::number) {
 			config[attr->name.value()] = std::stoul(value.value());
@@ -487,7 +485,7 @@ void VisitorSemantic::visit_attr(std::shared_ptr<Attr> attr, nlohmann::json& con
 		} else {
 			 throw std::runtime_error(std::string(attr->begin()) + ": Error: unsupported attr: " + value.value());
 		}
-	} else if (auto p = std::dynamic_pointer_cast<AttrValue<AttrBlock>>(attr->value)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::AttrBlock>>(attr->value)) {
 		//we assume for now that named attrs could be only in attr_blocks
 		auto j = visit_attr_block(p->attr_value, attr->name);
 		if (attr->id) {
