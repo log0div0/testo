@@ -9,6 +9,16 @@ Register::~Register() {
 	}
 }
 
+std::set<std::shared_ptr<Controller>> Register::get_all_controllers(std::shared_ptr<AST::Test> test) const {
+	std::set<std::shared_ptr<Controller>> result;
+
+	for (auto vmc: get_all_vmcs(test)) {
+		result.insert(vmc);
+	}
+
+	return result;
+}
+
 std::set<std::shared_ptr<VmController>> Register::get_all_vmcs(std::shared_ptr<AST::Test> test) const {
 	std::set<std::shared_ptr<VmController>> result;
 	for (auto parent: test->parents) {

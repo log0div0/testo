@@ -160,8 +160,7 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
 {
-	auto vmcs = reg.get_all_vmcs(test);
-
+	auto controllers = reg.get_all_controllers(test);
 	auto all_parents = reg.get_test_path(test);
 
 	bool result = false;
@@ -186,8 +185,8 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 			continue;
 		}
 
-		auto other_vmcs = reg.get_all_vmcs(*rit);
-		if (std::find_first_of (vmcs.begin(), vmcs.end(), other_vmcs.begin(), other_vmcs.end()) != vmcs.end()) {
+		auto other_controllers = reg.get_all_controllers(*rit);
+		if (std::find_first_of (controllers.begin(), controllers.end(), other_controllers.begin(), other_controllers.end()) != controllers.end()) {
 			break;
 		}
 	}
@@ -201,8 +200,6 @@ void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
 {
 	//we need to check could we start right away?
-
-	auto vmcs = reg.get_all_vmcs(test);
 
 	for (auto parent: test->parents) {
 		//for every parent we need to check, maybe we are already in the perfect position?
@@ -248,12 +245,11 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 			}
 		}
 
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined() &&
-				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->get_metadata("vm_config"))) &&
-				(file_signature(vmc->vm->get_config().at("iso").get<std::string>()) == vmc->get_metadata("dvd_signature")) &&
-				vmc->has_snapshot(test->name.value()) &&
-				(vmc->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (controller->is_defined() &&
+				controller->check_config_relevance() &&
+				controller->has_snapshot(test->name.value()) &&
+				(controller->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
 			{
 				continue;
 			}
@@ -271,9 +267,9 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 
 void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue) {
 	for (auto test: tests_queue) {
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->has_snapshot(test->name.value())) {
-				vmc->delete_snapshot_with_children(test->name.value());
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (controller->has_snapshot(test->name.value())) {
+				controller->delete_snapshot_with_children(test->name.value());
 			}
 		}
 
@@ -303,9 +299,9 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 			//invalidate tests at request
 
 			if (invalidate.length() && wildcards::match(test->name.value(), invalidate)) {
-				for (auto vmc: reg.get_all_vmcs(test)) {
-					if (vmc->has_snapshot(test->name.value())) {
-						vmc->delete_snapshot_with_children(test->name.value());
+				for (auto controller: reg.get_all_controllers(test)) {
+					if (controller->has_snapshot(test->name.value())) {
+						controller->delete_snapshot_with_children(test->name.value());
 					}
 				}
 			}
@@ -344,9 +340,9 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 
 void VisitorInterpreter::reset_cache() {
 	for (auto test: tests_to_run) {
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined()) {
-				vmc->set_metadata("vm_current_state", "");
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (controller->is_defined()) {
+				controller->set_metadata("current_state", "");
 			}
 		}
 	}
@@ -434,22 +430,22 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		//vms from parents - rollback them to parents if we need to
 		//We need to do it only if our current state is not the parent
 		for (auto parent: test->parents) {
-			for (auto vmc: reg.get_all_vmcs(parent)) {
-				if (vmc->get_metadata("vm_current_state") != parent->name.value()) {
-					print("Restoring snapshot ", parent->name.value(), " for virtual machine ", vmc->vm->name());
-					vmc->restore_snapshot(parent->name.value());
+			for (auto controller: reg.get_all_controllers(parent)) {
+				if (controller->get_metadata("current_state") != parent->name.value()) {
+					print("Restoring snapshot ", parent->name.value(), " for entity ", controller->name());
+					controller->restore_snapshot(parent->name.value());
 				}
 			}
 		}
 
 		//new vms - install
 
-		for (auto vmc: reg.get_all_vmcs(test)) {
+		for (auto controller: reg.get_all_controllers(test)) {
 			//check if it's a new one
 			auto is_new = true;
 			for (auto parent: test->parents) {
-				auto parent_vmcs = reg.get_all_vmcs(parent);
-				if (parent_vmcs.find(vmc) != parent_vmcs.end()) {
+				auto parent_controller = reg.get_all_controllers(parent);
+				if (parent_controller.find(controller) != parent_controller.end()) {
 					//not new, go to the next vmc
 					is_new = false;
 					break;
@@ -457,8 +453,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 
 			if (is_new) {
-				print("Creating machine ", vmc->vm->name());
-				vmc->create();
+				print("Creating machine ", controller->name());
+				controller->create();
 			}
 		}
 
@@ -483,12 +479,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 		}
 
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (!vmc->has_snapshot(test->name.value())) {
-				print("Taking snapshot ", test->name.value(), " for virtual machine ", vmc->vm->name());
-				vmc->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (!controller->has_snapshot(test->name.value())) {
+				print("Taking snapshot ", test->name.value(), " for entity ", controller->name());
+				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
 			}
-			vmc->set_metadata("vm_current_state", test->name.value());
+			controller->set_metadata("current_state", test->name.value());
 		}
 
 		//We need to check if we need to stop all the vms
@@ -626,7 +622,7 @@ void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
 	try {
 		std::string message = visit_word(vmc, print_action->message);
-		print(vmc->vm->name(), ": ", message.c_str());
+		print(vmc->name(), ": ", message.c_str());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(print_action, vmc));
 	}
@@ -635,7 +631,7 @@ void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	try {
 		std::string text = visit_word(vmc, type->text_word);
-		print("Typing ", text, " on virtual machine ", vmc->vm->name());
+		print("Typing ", text, " on virtual machine ", vmc->name());
 		for (auto c: text) {
 			auto buttons = charmap.find(c);
 			if (buttons == charmap.end()) {
@@ -678,7 +674,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			print_str += ")";
 		}
 
-		print_str += std::string(" on virtual machine ") + vmc->vm->name();
+		print_str += std::string(" on virtual machine ") + vmc->name();
 		if (wait->time_interval) {
 			print_str += " for " + wait->time_interval.value();
 		}
@@ -727,7 +723,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 		print_str += std::string(" ") + std::to_string(times) + " times ";
 	}
 
-	print_str += std::string(" on virtual machine ") + vmc->vm->name();
+	print_str += std::string(" on virtual machine ") + vmc->name();
 
 	print(print_str);
 
@@ -781,7 +777,7 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	print(plug_unplug, " nic ", nic, " on virtual machine ", vmc->vm->name());
+	print(plug_unplug, " nic ", nic, " on virtual machine ", vmc->name());
 
 	vmc->vm->set_nic(nic, plug->is_on());
 }
@@ -809,14 +805,14 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	print(plug_unplug, " link ", nic, " on virtual machine ", vmc->vm->name());
+	print(plug_unplug, " link ", nic, " on virtual machine ", vmc->name());
 
 	vmc->vm->set_link(nic, plug->is_on());
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	print("Plugging flash drive ", fd->name(), " in virtual machine ", vmc->vm->name());
+	print("Plugging flash drive ", fd->name(), " in virtual machine ", vmc->name());
 	if (vmc->vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fd->name()));
 	}
@@ -826,7 +822,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	print("Unlugging flash drive ", fd->name(), " from virtual machine ", vmc->vm->name());
+	print("Unlugging flash drive ", fd->name(), " from virtual machine ", vmc->name());
 	if (!vmc->vm->is_flash_plugged(fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fd->name()));
 	}
@@ -841,7 +837,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 		}
 
 		fs::path path = visit_word(vmc, plug->path);
-		print("Plugging dvd ", path, " in virtual machine ", vmc->vm->name());
+		print("Plugging dvd ", path, " in virtual machine ", vmc->name());
 		if (path.is_relative()) {
 			path = plug->t.pos().file.parent_path() / path;
 		}
@@ -854,14 +850,14 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			return;
 		}
 
-		print("Unplugging dvd from virtual machine ", vmc->vm->name());
+		print("Unplugging dvd from virtual machine ", vmc->name());
 		vmc->vm->unplug_dvd();
 	}
 }
 
 void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Start> start) {
 	try {
-		print("Starting virtual machine ", vmc->vm->name());
+		print("Starting virtual machine ", vmc->name());
 		vmc->vm->start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(start, vmc));
@@ -870,7 +866,7 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Stop> stop) {
 	try {
-		print("Stopping virtual machine ", vmc->vm->name());
+		print("Stopping virtual machine ", vmc->name());
 		vmc->vm->stop();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(stop, vmc));
@@ -880,7 +876,7 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown) {
 	try {
-		print("Shutting down virtual machine ", vmc->vm->name());
+		print("Shutting down virtual machine ", vmc->name());
 		vmc->vm->power_button();
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
@@ -899,7 +895,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
-		print("Executing ", exec->process_token.value(), " command on virtual machine ", vmc->vm->name());
+		print("Executing ", exec->process_token.value(), " command on virtual machine ", vmc->name());
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -957,7 +953,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
-		print("Copying ", from, " ", from_to, " virtual machine ", vmc->vm->name(), " in directory ", to);
+		print("Copying ", from, " ", from_to, " virtual machine ", vmc->name(), " in directory ", to);
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -987,7 +983,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 }
 
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
-	print("Calling macro ", macro_call->name().value(), " on virtual machine ", vmc->vm->name());
+	print("Calling macro ", macro_call->name().value(), " on virtual machine ", vmc->name());
 	//push new ctx
 	StackEntry new_ctx(true);
 
@@ -1097,7 +1093,7 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 		}
 	}
 
-	if (vmc->vm->is_defined() && vmc->has_key(var)) {
+	if (vmc->is_defined() && vmc->has_key(var)) {
 		return vmc->get_metadata(var);
 	}
 
@@ -1194,7 +1190,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			print_str += ")";
 		}
 
-		print_str += std::string(" on virtual machine ") + vmc->vm->name();
+		print_str += std::string(" on virtual machine ") + vmc->name();
 		print(print_str);
 		auto screenshot = vmc->vm->screenshot();
 		return shit.stink_even_stronger(screenshot, text);
@@ -1202,37 +1198,6 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 		std::throw_with_nested(ActionException(check, vmc));
 	}
 }
-
-bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const {
-	//So....
-	//1) get rid of metadata
-	new_config.erase("metadata");
-	old_config.erase("metadata");
-
-	//2) Actually.... Let's just be practical here.
-	//Check if both have or don't have nics
-
-	auto old_nics = old_config.value("nic", nlohmann::json::array());
-	auto new_nics = new_config.value("nic", nlohmann::json::array());
-
-	if (old_nics.size() != new_nics.size()) {
-		return false;
-	}
-
-	if (!std::is_permutation(old_nics.begin(), old_nics.end(), new_nics.begin())) {
-		return false;
-	}
-
-	new_config.erase("nic");
-	old_config.erase("nic");
-
-	new_config.erase("iso");
-	old_config.erase("iso");
-
-	//Check also dvd contingency
-	return (old_config == new_config);
-}
-
 
 std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) {
 	VisitorCksum visitor(reg);

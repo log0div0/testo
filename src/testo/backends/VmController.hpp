@@ -8,6 +8,8 @@ struct VmController: public Controller {
 	VmController() = delete;
 	VmController(std::shared_ptr<VM> vm): Controller(), vm(vm) {}
 
+	std::string name() const override;
+	bool is_defined() override;
 	void create() override;
 	void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) override;
 	void restore_snapshot(const std::string& snapshot) override;
@@ -18,6 +20,8 @@ struct VmController: public Controller {
 	bool has_key(const std::string& key) override;
 	std::string get_metadata(const std::string& key) override;
 	void set_metadata(const std::string& key, const std::string& value) override;
+
+	bool check_config_relevance() override;
 
 	std::shared_ptr<VM> vm;
 };

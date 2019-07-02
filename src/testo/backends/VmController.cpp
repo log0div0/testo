@@ -3,6 +3,14 @@
 #include "Environment.hpp"
 #include <fmt/format.h>
 
+std::string VmController::name() const {
+	return vm->name();
+}
+
+bool VmController::is_defined() {
+	return vm->is_defined();
+}
+
 void VmController::create() {
 	try {
 		fs::path metadata_dir = env->metadata_dir() / vm->name();
@@ -35,7 +43,7 @@ void VmController::create() {
 		metadata["vm_config"] = config.dump();
 		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
 		metadata["vm_name"] = config.at("name");
-		metadata["vm_current_state"] = "";
+		metadata["current_state"] = "";
 		metadata["dvd_signature"] = file_signature(config.at("iso").get<std::string>());
 		write_metadata_file(metadata_file, metadata);
 
@@ -60,7 +68,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 		fs::path metadata_file = env->metadata_dir() / vm->name();
 		metadata_file /= vm->name() + "_" + snapshot;
 
-		auto current_state = get_metadata("vm_current_state");
+		auto current_state = get_metadata("current_state");
 
 		nlohmann::json metadata;
 		metadata["cksum"] = cksum;
@@ -83,7 +91,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 
 void VmController::restore_snapshot(const std::string& snapshot) {
 	vm->rollback(snapshot);
-	set_metadata("vm_current_state", snapshot);
+	set_metadata("current_state", snapshot);
 }
 
 void VmController::delete_snapshot_with_children(const std::string& snapshot)
@@ -196,4 +204,40 @@ void VmController::set_metadata(const std::string& key, const std::string& value
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
 	}
+}
+
+bool VmController::check_config_relevance() {
+	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
+	auto new_config = vm->get_config();
+	//So....
+	//1) get rid of metadata
+	new_config.erase("metadata");
+	old_config.erase("metadata");
+
+	//2) Actually.... Let's just be practical here.
+	//Check if both have or don't have nics
+
+	auto old_nics = old_config.value("nic", nlohmann::json::array());
+	auto new_nics = new_config.value("nic", nlohmann::json::array());
+
+	if (old_nics.size() != new_nics.size()) {
+		return false;
+	}
+
+	if (!std::is_permutation(old_nics.begin(), old_nics.end(), new_nics.begin())) {
+		return false;
+	}
+
+	new_config.erase("nic");
+	old_config.erase("nic");
+
+	new_config.erase("iso");
+	old_config.erase("iso");
+
+	bool config_is_ok = (old_config == new_config);
+
+	//Check also dvd contingency
+	bool iso_is_ok = (file_signature(vm->get_config().at("iso").get<std::string>()) == get_metadata("dvd_signature"));
+
+	return (config_is_ok && iso_is_ok);
 }
