@@ -74,14 +74,15 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 #endif
 
-	std::string target, test_spec, exclude;
+	std::string target, test_spec, exclude, invalidate;
 	bool stop_on_fail = false;
 
 	auto cli = (
 		value("input file", target),
 		option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
 		option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
-		option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude)
+		option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
+		option("--invalidate").doc("invalidate specific tests") & value("wildcard pattern", invalidate)
 	);
 
 	if (!parse(argc, argv, cli)) {
@@ -92,7 +93,8 @@ int do_main(int argc, char** argv) {
 	nlohmann::json config = {
 		{"stop_on_fail", stop_on_fail},
 		{"test_spec", test_spec},
-		{"exclude", exclude}
+		{"exclude", exclude},
+		{"invalidate", invalidate}
 	};
 
 	if (!fs::exists(target)) {

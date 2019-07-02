@@ -139,7 +139,7 @@ struct VisitorInterpreter {
 private:
 	//settings
 	bool stop_on_fail;
-	std::string test_spec, exclude;
+	std::string test_spec, exclude, invalidate;
 
 	std::vector<StackEntry> local_vars;
 

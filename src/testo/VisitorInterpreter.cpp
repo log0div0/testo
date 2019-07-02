@@ -42,6 +42,7 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
+	invalidate = config.at("invalidate").get<std::string>();
 
 	charmap.insert({
 		{'0', {"ZERO"}},
@@ -290,7 +291,6 @@ void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test
 	}
 }
 
-
 void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 	std::list<std::shared_ptr<AST::Test>> tests_queue; //temporary, only needed for general execution plan
 
@@ -301,6 +301,16 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
 			auto test = p->stmt;
+
+			//invalidate tests at request
+
+			if (invalidate.length() && wildcards::match(test->name.value(), invalidate)) {
+				for (auto vmc: reg.get_all_vmcs(test)) {
+					if (vmc->has_snapshot(test->name.value())) {
+						vmc->delete_snapshot_with_children(test->name.value());
+					}
+				}
+			}
 
 			//So for every test
 			//we need to check if it's suitable for test spec
