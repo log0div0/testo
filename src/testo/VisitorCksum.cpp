@@ -145,7 +145,6 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 		if (path.is_relative()) {
 			path = plug->t.pos().file.parent_path() / path;
 		}
-		result += path.generic_string();
 		//add signature for dvd file
 		result += file_signature(path);
 	}
