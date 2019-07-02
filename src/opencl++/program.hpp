@@ -9,6 +9,7 @@
 namespace cl {
 
 struct Program {
+	Program() = default;
 	Program(cl_program handle);
 	~Program();
 

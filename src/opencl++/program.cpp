@@ -22,6 +22,15 @@ Program::~Program() {
 	}
 }
 
+Program::Program(Program&& other): _handle(other._handle) {
+	other._handle = nullptr;
+}
+
+Program& Program::operator=(Program&& other) {
+	std::swap(_handle, other._handle);
+	return *this;
+}
+
 void Program::build(const std::vector<Device>& devices, const std::string& options) {
 	try {
 		static_assert(sizeof(cl_device_id) == sizeof(Device));

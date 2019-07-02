@@ -9,6 +9,7 @@
 namespace cl {
 
 struct Context {
+	Context() = default;
 	Context(Platform platform, std::vector<Device> devices);
 	~Context();
 

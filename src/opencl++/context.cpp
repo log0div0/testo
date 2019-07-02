@@ -24,6 +24,15 @@ Context::~Context() {
 	}
 }
 
+Context::Context(Context&& other): _handle(other._handle) {
+	other._handle = nullptr;
+}
+
+Context& Context::operator=(Context&& other) {
+	std::swap(_handle, other._handle);
+	return *this;
+}
+
 CommandQueue Context::createCommandQueue(Device& device) {
 	try {
 		cl_int error_code = 0;

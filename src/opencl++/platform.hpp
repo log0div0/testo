@@ -9,6 +9,7 @@ struct Platform {
 	static cl_uint ids_count();
 	static std::vector<cl_platform_id> ids();
 
+	Platform() = default;
 	Platform(cl_platform_id id);
 
 	std::string name() const;
@@ -21,7 +22,7 @@ private:
 	size_t info_size(cl_platform_info name) const;
 	std::string info(cl_platform_info name) const;
 
-	cl_platform_id _id;
+	cl_platform_id _id = nullptr;
 };
 
 }

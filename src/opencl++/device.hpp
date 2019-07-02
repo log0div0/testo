@@ -8,6 +8,7 @@
 namespace cl {
 
 struct Device {
+	Device() = default;
 	Device(cl_device_id id);
 
 	std::string name() const;
@@ -17,7 +18,7 @@ private:
 	size_t info_size(cl_device_info name) const;
 	std::string info(cl_device_info name) const;
 
-	cl_device_id _id;
+	cl_device_id _id = nullptr;
 };
 
 }
