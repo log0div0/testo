@@ -497,7 +497,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 					break;
 				}
 			}
-			if (need_to_stop) {
+			if (!need_to_stop) {
 				break;
 			}
 		}
