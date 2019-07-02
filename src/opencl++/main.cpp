@@ -208,7 +208,7 @@ struct Dummy {
 		cl::CommandQueue queue = context.createCommandQueue(device);
 		cl::wait({
 			queue.readBuffer(bufC, 0, M*N*sizeof(float), C, {
-				queue.execute(kernel, {(size_t)M, (size_t)N}, {
+				queue.execute(kernel, {(size_t)M, (size_t)N}, {TS, TS}, {
 					queue.writeBuffer(bufA, 0, M*K*sizeof(float), A),
 					queue.writeBuffer(bufB, 0, K*N*sizeof(float), B),
 					queue.writeBuffer(bufC, 0, M*N*sizeof(float), C)
@@ -221,6 +221,7 @@ struct Dummy {
 	cl::Device device;
 	cl::Context context;
 	cl::Program programs[2][2];
+	size_t TS = 16;
 };
 
 std::vector<float> random_matrix(int rows, int cols)
