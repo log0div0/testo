@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <sstream>
 #include "context.hpp"
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
@@ -113,7 +114,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
 
 const char *kernelstring = R"(
 
-__kernel void gemm_nn(const int M, const int N, const int K,
+__kernel void gemm(const int M, const int N, const int K,
 		const float ALPHA,
 		const __global float *A, const int lda,
 		const __global float *B, const int ldb,
@@ -125,61 +126,17 @@ __kernel void gemm_nn(const int M, const int N, const int K,
 
 	float acc = 0.0f;
 	for (int k = 0; k < K; ++k) {
-		acc += ALPHA*A[i*lda+k]*B[k*ldb+j];
-	}
-	C[i*ldc+j] *= BETA;
-	C[i*ldc+j] += acc;
-}
-
-__kernel void gemm_nt(const int M, const int N, const int K,
-		const float ALPHA,
-		const __global float *A, const int lda,
-		const __global float *B, const int ldb,
-		const float BETA,
-		__global float *C, const int ldc)
-{
-	const int i = get_global_id(0);
-	const int j = get_global_id(1);
-
-	float acc = 0.0f;
-	for (int k = 0; k < K; ++k) {
-		acc += ALPHA*A[i*lda+k]*B[j*ldb+k];
-	}
-	C[i*ldc+j] *= BETA;
-	C[i*ldc+j] += acc;
-}
-
-__kernel void gemm_tn(const int M, const int N, const int K,
-		const float ALPHA,
-		const __global float *A, const int lda,
-		const __global float *B, const int ldb,
-		const float BETA,
-		__global float *C, const int ldc)
-{
-	const int i = get_global_id(0);
-	const int j = get_global_id(1);
-
-	float acc = 0.0f;
-	for (int k = 0; k < K; ++k) {
-		acc += ALPHA*A[k*lda+i]*B[k*ldb+j];
-	}
-	C[i*ldc+j] *= BETA;
-	C[i*ldc+j] += acc;
-}
-
-__kernel void gemm_tt(const int M, const int N, const int K,
-		const float ALPHA,
-		const __global float *A, const int lda,
-		const __global float *B, const int ldb,
-		const float BETA,
-		__global float *C, const int ldc)
-{
-	const int i = get_global_id(0);
-	const int j = get_global_id(1);
-
-	float acc = 0.0f;
-	for (int k = 0; k < K; ++k) {
-		acc += ALPHA*A[k*lda+i]*B[j*ldb+k];
+#if TA == 0
+		int A_index = i*lda+k;
+#else
+		int A_index = k*lda+i;
+#endif
+#if TB == 0
+		int B_index = k*ldb+j;
+#else
+		int B_index = j*ldb+k;
+#endif
+		acc += ALPHA*A[A_index]*B[B_index];
 	}
 	C[i*ldc+j] *= BETA;
 	C[i*ldc+j] += acc;
@@ -204,16 +161,25 @@ struct Dummy {
 		}
 
 		context = cl::Context(platform, {device});
-		program = context.createProgram({kernelstring});
-		try {
-			program.build({device});
-		} catch (const std::exception& error) {
-			std::cout << program.build_log(device) << std::endl;
-			throw;
+		for (auto TA: {false, true}) {
+			for (auto TB: {false, true}) {
+				auto& program = programs[TA][TB];
+				program = context.createProgram({kernelstring});
+				std::stringstream options;
+				options
+					<< "-D TA=" << (int)TA
+					<< " -D TB=" << (int)TB;
+				try {
+					program.build({device}, options.str());
+				} catch (const std::exception& error) {
+					std::cout << program.build_log(device) << std::endl;
+					throw;
+				}
+			}
 		}
 	}
 
-	void sgemm(int TA, int TB,
+	void gemm(bool TA, bool TB,
 			int M, int N, int K,
 			float ALPHA,
 			float *A, int lda,
@@ -225,18 +191,7 @@ struct Dummy {
 		cl::Mem bufB = context.createBuffer(CL_MEM_READ_ONLY,  K*N*sizeof(float));
 		cl::Mem bufC = context.createBuffer(CL_MEM_READ_WRITE, M*N*sizeof(float));
 
-		std::string name;
-
-		if (!TA && !TB)
-			name = "gemm_nn";
-		else if (TA && !TB)
-			name = "gemm_tn";
-		else if (!TA && TB)
-			name = "gemm_nt";
-		else
-			name = "gemm_tt";
-
-		cl::Kernel kernel = program.createKernel(name);
+		cl::Kernel kernel = programs[TA][TB].createKernel("gemm");
 
 		kernel.setArg(0, sizeof(M), &M);
 		kernel.setArg(1, sizeof(N), &N);
@@ -265,7 +220,7 @@ struct Dummy {
 	cl::Platform platform;
 	cl::Device device;
 	cl::Context context;
-	cl::Program program;
+	cl::Program programs[2][2];
 };
 
 std::vector<float> random_matrix(int rows, int cols)
@@ -303,7 +258,7 @@ void test_opencl_accuracy(int TA, int TB, int m, int k, int n)
 	{
 		Dummy dummy;
 		auto start = std::chrono::high_resolution_clock::now();
-		dummy.sgemm(TA, TB, m, n, k, 1, a.data(), lda, b.data(), ldb, 1, c.data(), n);
+		dummy.gemm(TA, TB, m, n, k, 1, a.data(), lda, b.data(), ldb, 1, c.data(), n);
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> time = end - start;
 		std::cout << "OpenCL time = " << time.count() << " seconds" << std::endl;

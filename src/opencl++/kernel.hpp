@@ -6,6 +6,7 @@
 namespace cl {
 
 struct Kernel {
+	Kernel() = default;
 	Kernel(cl_kernel handle);
 	~Kernel();
 
