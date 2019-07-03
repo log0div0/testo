@@ -23,6 +23,10 @@ void FlashDriveController::create() {
 
 		fd->create();
 
+		if (fd->has_folder()) {
+			fd->load_folder();
+		}
+
 		auto config = fd->get_config();
 
 		nlohmann::json metadata;
@@ -47,11 +51,6 @@ void FlashDriveController::create() {
 
 		fs::path metadata_file = metadata_dir / fd->name();
 		write_metadata_file(metadata_file, metadata);
-
-		if (fd->has_folder()) {
-			fd->load_folder();
-		}
-
 	} catch (const std::exception& error) {
 		std::throw_with_nested("creating fd");
 	}

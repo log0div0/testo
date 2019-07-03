@@ -20,7 +20,6 @@ struct VboxFlashDrive: FlashDrive {
 	void rollback(const std::string& snapshot) override;
 
 	fs::path img_path() const override;
-	fs::path mount_dir() const override;
 
 private:
 	void remove_if_exists();

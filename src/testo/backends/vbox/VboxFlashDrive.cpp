@@ -62,7 +62,7 @@ void VboxFlashDrive::create() {
 
 bool VboxFlashDrive::is_mounted() const {
 #ifdef __linux__
-	std::string query = "mountpoint -q \"" + mount_dir().generic_string() + "\"";
+	std::string query = "mountpoint -q \"" + env->flash_drives_mount_dir().generic_string() + "\"";
 	return (std::system(query.c_str()) == 0);
 #elif WIN32
 	return VirtualDisk(img_path().generic_string()).isLoaded();
@@ -130,10 +130,6 @@ void VboxFlashDrive::rollback(const std::string& snapshot) {
 
 fs::path VboxFlashDrive::img_path() const {
 	return env->flash_drives_img_dir() / (name() + "." + disk_format);
-}
-
-fs::path VboxFlashDrive::mount_dir() const {
-	return env->flash_drives_mount_dir();
 }
 
 void VboxFlashDrive::remove_if_exists() {

@@ -69,7 +69,7 @@ void QemuFlashDrive::create() {
 }
 
 bool QemuFlashDrive::is_mounted() const {
-	std::string query = "mountpoint -q \"" + mount_dir().generic_string() + "\"";
+	std::string query = "mountpoint -q \"" +env->flash_drives_mount_dir().generic_string() + "\"";
 	return (std::system(query.c_str()) == 0);
 }
 
@@ -81,7 +81,7 @@ void QemuFlashDrive::mount() const {
 		}
 
 		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path().generic_string() + "\"");
-		exec_and_throw_if_failed("mount /dev/nbd0");
+		exec_and_throw_if_failed("mount /dev/nbd0p1 " + env->flash_drives_mount_dir().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
 	}
@@ -89,7 +89,7 @@ void QemuFlashDrive::mount() const {
 
 void QemuFlashDrive::umount() const {
 	try {
-		exec_and_throw_if_failed("umount /dev/nbd0");
+		exec_and_throw_if_failed("umount /dev/nbd0p1");
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
@@ -135,10 +135,6 @@ void QemuFlashDrive::rollback(const std::string& snapshot) {
 fs::path QemuFlashDrive::img_path() const {
 	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 	return pool.path() / (name() + ".img");
-}
-
-fs::path QemuFlashDrive::mount_dir() const {
-	return env->flash_drives_mount_dir();
 }
 
 void QemuFlashDrive::remove_if_exists() {

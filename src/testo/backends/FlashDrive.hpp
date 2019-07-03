@@ -22,7 +22,6 @@ struct FlashDrive {
 	virtual void delete_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual fs::path img_path() const = 0;
-	virtual fs::path mount_dir() const = 0;
 
 	std::string name() const;
 	nlohmann::json get_config() const;

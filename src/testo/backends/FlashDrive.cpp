@@ -1,5 +1,6 @@
 
 #include "FlashDrive.hpp"
+#include "Environment.hpp"
 #include <fmt/format.h>
 #include <fstream>
 
@@ -56,7 +57,7 @@ void FlashDrive::load_folder() const {
 		}
 
 		mount();
-		fs::copy(target_folder, mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+		fs::copy(target_folder, env->flash_drives_mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
 		umount();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
