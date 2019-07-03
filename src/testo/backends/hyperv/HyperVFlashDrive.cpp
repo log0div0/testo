@@ -9,6 +9,10 @@ HyperVFlashDrive::~HyperVFlashDrive() {
 
 }
 
+bool HyperVFlashDrive::is_defined() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
 void HyperVFlashDrive::create() {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }

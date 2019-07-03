@@ -12,10 +12,15 @@ struct FlashDrive {
 	FlashDrive(const nlohmann::json& config_);
 	virtual ~FlashDrive() = default;
 
+	virtual bool is_defined() = 0;
 	virtual void create() = 0;
 	virtual bool is_mounted() const = 0;
 	virtual void mount() const = 0;
 	virtual void umount() const = 0;
+	virtual bool has_snapshot(const std::string& snapshot) = 0;
+	virtual void make_snapshot(const std::string& snapshot) = 0;
+	virtual void delete_snapshot(const std::string& snapshot) = 0;
+	virtual void rollback(const std::string& snapshot) = 0;
 	virtual fs::path img_path() const = 0;
 	virtual fs::path mount_dir() const = 0;
 	std::string cksum() const;

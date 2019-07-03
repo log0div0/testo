@@ -13,7 +13,7 @@ bool VmController::is_defined() {
 
 void VmController::create() {
 	try {
-		fs::path metadata_dir = env->metadata_dir() / vm->name();
+		fs::path metadata_dir = env->vm_metadata_dir() / vm->name();
 
 		if (fs::exists(metadata_dir)) {
 			if (!fs::remove_all(metadata_dir)) {
@@ -65,7 +65,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 		}
 
 		//Where to store new metadata file?
-		fs::path metadata_file = env->metadata_dir() / vm->name();
+		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
 		metadata_file /= vm->name() + "_" + snapshot;
 
 		auto current_state = get_metadata("current_state");
@@ -78,7 +78,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 
 		//link parent to a child
 		if (current_state.length()) {
-			fs::path parent_metadata_file = env->metadata_dir() / vm->name();
+			fs::path parent_metadata_file = env->vm_metadata_dir() / vm->name();
 			parent_metadata_file /= vm->name() + "_" + current_state;
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			parent_metadata.at("children").push_back(snapshot);
@@ -99,7 +99,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 	try {
 		//This thins needs to be recursive
 		//I guess... go through the children and call recursively on them
-		fs::path metadata_file = env->metadata_dir() / vm->name();
+		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
 		metadata_file /= vm->name() + "_" + snapshot;
 
 		auto metadata = read_metadata_file(metadata_file);
@@ -120,7 +120,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 
 		//Unlink the parent
 		if (parent.length()) {
-			fs::path parent_metadata_file = env->metadata_dir() / vm->name();
+			fs::path parent_metadata_file = env->vm_metadata_dir() / vm->name();
 			parent_metadata_file /= vm->name() + "_" + parent;
 
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
@@ -146,14 +146,14 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 }
 
 bool VmController::has_snapshot(const std::string& snapshot) {
-	fs::path metadata_file = env->metadata_dir() / vm->name();
+	fs::path metadata_file = env->vm_metadata_dir() / vm->name();
 	metadata_file /= vm->name() + "_" + snapshot;
 	return fs::exists(metadata_file);
 }
 
 std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
 	try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
+		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
 		metadata_file /= vm->name() + "_" + snapshot;
 		auto metadata = read_metadata_file(metadata_file);
 		if (!metadata.count("cksum")) {
@@ -169,7 +169,7 @@ std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
 
 bool VmController::has_key(const std::string& key) {
 	try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
+		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
 		metadata_file /= vm->name();
 		auto metadata = read_metadata_file(metadata_file);
 		return metadata.count(key);
@@ -181,7 +181,7 @@ bool VmController::has_key(const std::string& key) {
 
 std::string VmController::get_metadata(const std::string& key) {
 	try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
+		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
 		metadata_file /= vm->name();
 		auto metadata = read_metadata_file(metadata_file);
 		if (!metadata.count(key)) {
@@ -196,7 +196,7 @@ std::string VmController::get_metadata(const std::string& key) {
 
 void VmController::set_metadata(const std::string& key, const std::string& value) {
 	try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
+		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
 		metadata_file /= vm->name();
 		auto metadata = read_metadata_file(metadata_file);
 		metadata[key] = value;

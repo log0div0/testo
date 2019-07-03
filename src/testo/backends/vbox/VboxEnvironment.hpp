@@ -14,7 +14,11 @@ struct VboxEnvironment: public Environment {
 	fs::path flash_drives_img_dir() const override {
 		return _flash_drives_img_dir;
 	}
-	fs::path metadata_dir() const override {
+	fs::path vm_metadata_dir() const override {
+		throw std::runtime_error("Implement me");
+	}
+
+	fs::path flash_drives_metadata_dir() const override {
 		throw std::runtime_error("Implement me");
 	}
 

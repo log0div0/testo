@@ -20,6 +20,10 @@ VboxFlashDrive::VboxFlashDrive(const nlohmann::json& config_): FlashDrive(config
 	virtual_box = virtual_box_client.virtual_box();
 }
 
+bool VboxFlashDrive::is_defined() {
+	throw std::runtime_error("Implement me");
+}
+
 void VboxFlashDrive::create() {
 	try {
 #ifdef __linux__
@@ -107,6 +111,22 @@ void VboxFlashDrive::umount() const {
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
+}
+
+bool VboxFlashDrive::has_snapshot(const std::string& snapshot) {
+	throw std::runtime_error("Implement me");
+}
+
+void VboxFlashDrive::make_snapshot(const std::string& snapshot) {
+	throw std::runtime_error("Implement me");
+}
+
+void VboxFlashDrive::delete_snapshot(const std::string& snapshot) {
+	throw std::runtime_error("Implement me");
+}
+
+void VboxFlashDrive::rollback(const std::string& snapshot) {
+	throw std::runtime_error("Implement me");
 }
 
 fs::path VboxFlashDrive::img_path() const {

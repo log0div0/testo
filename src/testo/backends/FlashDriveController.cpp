@@ -4,19 +4,16 @@
 #include <fmt/format.h>
 
 std::string FlashDriveController::name() const {
-	throw std::runtime_error("Implement me");
-	//return vm->name();
+	return fd->name();
 }
 
 bool FlashDriveController::is_defined() {
-	throw std::runtime_error("Implement me");
-	//return vm->is_defined();
+	return fd->is_defined();
 }
 
 void FlashDriveController::create() {
-	throw std::runtime_error("Implement me");
-	/*try {
-		fs::path metadata_dir = env->metadata_dir() / vm->name();
+	try {
+		fs::path metadata_dir = env->flash_drives_metadata_dir() / fd->name();
 
 		if (fs::exists(metadata_dir)) {
 			if (!fs::remove_all(metadata_dir)) {
@@ -24,53 +21,43 @@ void FlashDriveController::create() {
 			}
 		}
 
-		vm->install();
+		fd->create();
 
-		auto config = vm->get_config();
+		auto config = fd->get_config();
 
 		nlohmann::json metadata;
-
-		if (config.count("metadata")) {
-			auto config_metadata = config.at("metadata");
-			for (auto it = config_metadata.begin(); it != config_metadata.end(); ++it) {
-				metadata[it.key()] = it.value();
-			}
-		}
 
 		if (!fs::create_directory(metadata_dir)) {
 			throw std::runtime_error("Error creating metadata dir " + metadata_dir.generic_string());
 		}
 
-		fs::path metadata_file = metadata_dir / vm->name();
+		fs::path metadata_file = metadata_dir / fd->name();
 
-		metadata["vm_config"] = config.dump();
-		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
-		metadata["vm_name"] = config.at("name");
+		metadata["fd_config"] = config.dump();
+		metadata["fd_name"] = config.at("name");
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(config.at("iso").get<std::string>());
 		write_metadata_file(metadata_file, metadata);
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested("creating vm");
-	}*/
+		std::throw_with_nested("creating fd");
+	}
 }
 
 void FlashDriveController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
 {
-	throw std::runtime_error("Implement me");
-	/*try {
+	try {
 		if (has_snapshot(snapshot)) {
 			delete_snapshot_with_children(snapshot);
 		}
 
 		//1) Let's try and create the actual snapshot. If we fail then no additional work
 		if (hypervisor_snapshot_needed) {
-			vm->make_snapshot(snapshot);
+			fd->make_snapshot(snapshot);
 		}
 
 		//Where to store new metadata file?
-		fs::path metadata_file = env->metadata_dir() / vm->name();
-		metadata_file /= vm->name() + "_" + snapshot;
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name() + "_" + snapshot;
 
 		auto current_state = get_metadata("current_state");
 
@@ -82,31 +69,29 @@ void FlashDriveController::create_snapshot(const std::string& snapshot, const st
 
 		//link parent to a child
 		if (current_state.length()) {
-			fs::path parent_metadata_file = env->metadata_dir() / vm->name();
-			parent_metadata_file /= vm->name() + "_" + current_state;
+			fs::path parent_metadata_file = env->flash_drives_metadata_dir() / fd->name();
+			parent_metadata_file /= fd->name() + "_" + current_state;
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			parent_metadata.at("children").push_back(snapshot);
 			write_metadata_file(parent_metadata_file, parent_metadata);
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested("creating snapshot");
-	}*/
+	}
 }
 
 void FlashDriveController::restore_snapshot(const std::string& snapshot) {
-	throw std::runtime_error("Implement me");
-	/*vm->rollback(snapshot);
-	set_metadata("current_state", snapshot);*/
+	fd->rollback(snapshot);
+	set_metadata("current_state", snapshot);
 }
 
 void FlashDriveController::delete_snapshot_with_children(const std::string& snapshot)
 {
-	throw std::runtime_error("Implement me");
-	/*try {
+	try {
 		//This thins needs to be recursive
 		//I guess... go through the children and call recursively on them
-		fs::path metadata_file = env->metadata_dir() / vm->name();
-		metadata_file /= vm->name() + "_" + snapshot;
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name() + "_" + snapshot;
 
 		auto metadata = read_metadata_file(metadata_file);
 
@@ -117,8 +102,8 @@ void FlashDriveController::delete_snapshot_with_children(const std::string& snap
 		//Now we're at the bottom of the hierarchy
 		//Delete the hypervisor child if we have one
 
-		if (vm->has_snapshot(snapshot)) {
-			vm->delete_snapshot(snapshot);
+		if (fd->has_snapshot(snapshot)) {
+			fd->delete_snapshot(snapshot);
 		}
 
 		//Ok, now we need to get our parent
@@ -126,8 +111,8 @@ void FlashDriveController::delete_snapshot_with_children(const std::string& snap
 
 		//Unlink the parent
 		if (parent.length()) {
-			fs::path parent_metadata_file = env->metadata_dir() / vm->name();
-			parent_metadata_file /= vm->name() + "_" + parent;
+			fs::path parent_metadata_file = env->flash_drives_metadata_dir() / fd->name();
+			parent_metadata_file /= fd->name() + "_" + parent;
 
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			auto& children = parent_metadata.at("children");
@@ -148,21 +133,19 @@ void FlashDriveController::delete_snapshot_with_children(const std::string& snap
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested("deleting snapshot");
-	}*/
+	}
 }
 
 bool FlashDriveController::has_snapshot(const std::string& snapshot) {
-	throw std::runtime_error("Implement me");
-	/*fs::path metadata_file = env->metadata_dir() / vm->name();
-	metadata_file /= vm->name() + "_" + snapshot;
-	return fs::exists(metadata_file);*/
+	fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+	metadata_file /= fd->name() + "_" + snapshot;
+	return fs::exists(metadata_file);
 }
 
 std::string FlashDriveController::get_snapshot_cksum(const std::string& snapshot) {
-	throw std::runtime_error("Implement me");
-	/*try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
-		metadata_file /= vm->name() + "_" + snapshot;
+	try {
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name() + "_" + snapshot;
 		auto metadata = read_metadata_file(metadata_file);
 		if (!metadata.count("cksum")) {
 			throw std::runtime_error("Can't find cksum field in snapshot metadata " + snapshot);
@@ -172,27 +155,25 @@ std::string FlashDriveController::get_snapshot_cksum(const std::string& snapshot
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("getting snapshot cksum error"));
-	}*/
+	}
 }
 
 bool FlashDriveController::has_key(const std::string& key) {
-	throw std::runtime_error("Implement me");
-	/*try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
-		metadata_file /= vm->name();
+	try {
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name();
 		auto metadata = read_metadata_file(metadata_file);
 		return metadata.count(key);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Checking metadata with key {}", key)));
-	}*/
+	}
 }
 
 
 std::string FlashDriveController::get_metadata(const std::string& key) {
-	throw std::runtime_error("Implement me");
-	/*try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
-		metadata_file /= vm->name();
+	try {
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name();
 		auto metadata = read_metadata_file(metadata_file);
 		if (!metadata.count(key)) {
 			throw std::runtime_error("Requested key is not present in vm metadata");
@@ -201,55 +182,24 @@ std::string FlashDriveController::get_metadata(const std::string& key) {
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
-	}*/
+	}
 }
 
 void FlashDriveController::set_metadata(const std::string& key, const std::string& value) {
-	throw std::runtime_error("Implement me");
-	/*try {
-		fs::path metadata_file = env->metadata_dir() / vm->name();
-		metadata_file /= vm->name();
+	try {
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name();
 		auto metadata = read_metadata_file(metadata_file);
 		metadata[key] = value;
 		write_metadata_file(metadata_file, metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
-	}*/
+	}
 }
 
 bool FlashDriveController::check_config_relevance() {
-	throw std::runtime_error("Implement me");
-	/*auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
-	auto new_config = vm->get_config();
-	//So....
-	//1) get rid of metadata
-	new_config.erase("metadata");
-	old_config.erase("metadata");
+	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
+	auto new_config = fd->get_config();
 
-	//2) Actually.... Let's just be practical here.
-	//Check if both have or don't have nics
-
-	auto old_nics = old_config.value("nic", nlohmann::json::array());
-	auto new_nics = new_config.value("nic", nlohmann::json::array());
-
-	if (old_nics.size() != new_nics.size()) {
-		return false;
-	}
-
-	if (!std::is_permutation(old_nics.begin(), old_nics.end(), new_nics.begin())) {
-		return false;
-	}
-
-	new_config.erase("nic");
-	old_config.erase("nic");
-
-	new_config.erase("iso");
-	old_config.erase("iso");
-
-	bool config_is_ok = (old_config == new_config);
-
-	//Check also dvd contingency
-	bool iso_is_ok = (file_signature(vm->get_config().at("iso").get<std::string>()) == get_metadata("dvd_signature"));
-
-	return (config_is_ok && iso_is_ok);*/
+	return (old_config == new_config);
 }

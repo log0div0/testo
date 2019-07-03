@@ -69,9 +69,9 @@ void QemuEnvironment::setup() {
 		}
 	}
 
-	if (!fs::exists(metadata_dir())) {
-		if (!fs::create_directories(metadata_dir())) {
-			throw std::runtime_error(std::string("Can't create directory: ") + metadata_dir().generic_string());
+	if (!fs::exists(vm_metadata_dir())) {
+		if (!fs::create_directories(vm_metadata_dir())) {
+			throw std::runtime_error(std::string("Can't create directory: ") + vm_metadata_dir().generic_string());
 		}
 	}
 }

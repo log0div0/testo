@@ -11,6 +11,20 @@ QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config
 {
 }
 
+bool QemuFlashDrive::is_defined() {
+	try {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
+		for (auto& vol: pool.volumes()) {
+			if (vol.name() == (name() + ".img")) {
+				return true;
+			}
+		}
+		return false;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Remove flash if exist"));
+	}
+}
+
 void QemuFlashDrive::create() {
 	try {
 		if (std::system("lsmod | grep nbd > /dev/null")) {
@@ -81,6 +95,42 @@ void QemuFlashDrive::umount() const {
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
+	}
+}
+
+bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
+	try {
+		std::string check = "qemu-img snapshot -l " + img_path().generic_string() + " | grep " + snapshot;
+		if (std::system(check.c_str()) == 0) {
+			return true;
+		}
+		return false;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
+	}
+}
+
+void QemuFlashDrive::make_snapshot(const std::string& snapshot) {
+	try {
+		exec_and_throw_if_failed("qemu-img snapshot -c " + snapshot + " " + img_path().generic_string());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Flash drive making snapshot"));
+	}
+}
+
+void QemuFlashDrive::delete_snapshot(const std::string& snapshot) {
+	try {
+		exec_and_throw_if_failed("qemu-img snapshot -d " + snapshot + " " + img_path().generic_string());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Flash drive deleting snapshot"));
+	}
+}
+
+void QemuFlashDrive::rollback(const std::string& snapshot) {
+	try {
+		exec_and_throw_if_failed("qemu-img snapshot -a " + snapshot + " " + img_path().generic_string());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Flash drive rolling back"));
 	}
 }
 
