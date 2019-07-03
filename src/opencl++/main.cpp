@@ -207,15 +207,35 @@ struct Dummy {
 		kernel.setArg(10, sizeof(ldc), &ldc);
 
 		cl::CommandQueue queue = context.createCommandQueue(device);
+
+		auto start = std::chrono::high_resolution_clock::now();
 		cl::wait({
-			queue.readBuffer(bufC, 0, M*N*sizeof(float), C, {
-				queue.execute(kernel, {(size_t)M, (size_t)N}, {
-					queue.writeBuffer(bufA, 0, M*K*sizeof(float), A),
-					queue.writeBuffer(bufB, 0, K*N*sizeof(float), B),
-					queue.writeBuffer(bufC, 0, M*N*sizeof(float), C)
-				})
-			})
+			queue.writeBuffer(bufA, 0, M*K*sizeof(float), A),
+			queue.writeBuffer(bufB, 0, K*N*sizeof(float), B),
+			queue.writeBuffer(bufC, 0, M*N*sizeof(float), C)
 		});
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> write_time = end - start;
+
+		start = std::chrono::high_resolution_clock::now();
+		cl::wait({
+			queue.execute(kernel, {(size_t)M, (size_t)N})
+		});
+		end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> exec_time = end - start;
+
+		start = std::chrono::high_resolution_clock::now();
+		cl::wait({
+			queue.readBuffer(bufC, 0, M*N*sizeof(float), C)
+		});
+		end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> read_time = end - start;
+
+		std::cout << "OpenCL write time = " << write_time.count() << " seconds" << std::endl;
+		std::cout << "OpenCL exec time = " << exec_time.count() << " seconds" << std::endl;
+		std::cout << "OpenCL read time = " << read_time.count() << " seconds" << std::endl;
+		std::cout << "OpenCL total time = " << (write_time + exec_time + read_time).count() << " seconds" << std::endl;
+
 	}
 
 	cl::Platform platform;
@@ -258,11 +278,7 @@ void test_opencl_accuracy(int TA, int TB, int m, int k, int n)
 
 	{
 		Dummy dummy;
-		auto start = std::chrono::high_resolution_clock::now();
 		dummy.gemm(TA, TB, m, n, k, 1, a.data(), lda, b.data(), ldb, 1, c.data(), n);
-		auto end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> time = end - start;
-		std::cout << "OpenCL time = " << time.count() << " seconds" << std::endl;
 	}
 
 	{
