@@ -55,7 +55,6 @@ void VboxFlashDrive::create() {
 		volume.format("NTFS", name());
 		virtualDisk.detach();
 #endif
-		write_cksum(calc_cksum());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
@@ -149,8 +148,6 @@ void VboxFlashDrive::remove_if_exists() {
 		if (fs::exists(img_path())) {
 			fs::remove(img_path());
 		}
-
-		delete_cksum();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}

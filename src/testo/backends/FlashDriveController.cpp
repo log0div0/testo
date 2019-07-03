@@ -31,12 +31,26 @@ void FlashDriveController::create() {
 			throw std::runtime_error("Error creating metadata dir " + metadata_dir.generic_string());
 		}
 
-		fs::path metadata_file = metadata_dir / fd->name();
+		std::string cksum_input = "";
+		if (fd->has_folder()) {
+			cksum_input += directory_signature(config.at("folder").get<std::string>());
+		}
+
+		std::hash<std::string> h;
+
+		auto folder_cksum = std::to_string(h(cksum_input));
 
 		metadata["fd_config"] = config.dump();
 		metadata["fd_name"] = config.at("name");
+		metadata["folder_cksum"] = folder_cksum;
 		metadata["current_state"] = "";
+
+		fs::path metadata_file = metadata_dir / fd->name();
 		write_metadata_file(metadata_file, metadata);
+
+		if (fd->has_folder()) {
+			fd->load_folder();
+		}
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested("creating fd");
@@ -198,8 +212,20 @@ void FlashDriveController::set_metadata(const std::string& key, const std::strin
 }
 
 bool FlashDriveController::check_config_relevance() {
-	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
+	auto old_config = nlohmann::json::parse(get_metadata("fd_config"));
 	auto new_config = fd->get_config();
 
-	return (old_config == new_config);
+	if (old_config != new_config) {
+		return false;
+	}
+
+	std::string cksum_input = "";
+	if (fd->has_folder()) {
+		cksum_input += directory_signature(new_config.at("folder").get<std::string>());
+	}
+
+	std::hash<std::string> h;
+	bool cksums_are_ok = (get_metadata("folder_cksum") == std::to_string(h(cksum_input)));
+
+	return cksums_are_ok;
 }

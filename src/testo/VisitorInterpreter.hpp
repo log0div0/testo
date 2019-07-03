@@ -95,8 +95,6 @@ struct VisitorInterpreter {
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
-	void visit_controller(std::shared_ptr<AST::Controller> controller);
-	void visit_flash(std::shared_ptr<AST::Controller> flash);
 	void visit_test(std::shared_ptr<AST::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);

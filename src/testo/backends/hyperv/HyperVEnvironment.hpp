@@ -22,7 +22,7 @@ struct HyperVEnvironment: Environment {
 		return std::make_shared<VmController>(std::shared_ptr<VM>(new HyperVVM(config)));
 	}
 
-	std::shared_ptr<FlashDrive> create_flash_drive_controller(const nlohmann::json& config) override {
-		return std::shared_ptr<FlashDrive>(new HyperVFlashDriveController(config));
+	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override {
+		return std::make_shared<FlashDriveController>(std::shared_ptr<FlashDrive>(new HyperVFlashDrive(config)));
 	}
 };

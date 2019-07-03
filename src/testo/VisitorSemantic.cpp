@@ -116,7 +116,6 @@ VisitorSemantic::VisitorSemantic(Register& reg):
 		fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::word)});
 		fd_global_ctx.insert({"size", std::make_pair(false, Token::category::size)});
 		fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
-		fd_global_ctx.insert({"cache_enabled", std::make_pair(false, Token::category::number)});
 
 		attr_ctxs.insert({"fd_global", fd_global_ctx});
 }
@@ -328,7 +327,7 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 
 void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 	if (plug->type.value() == "flash") {
-		if (reg.fds.find(plug->name_token.value()) == reg.fds.end()) {
+		if (reg.fdcs.find(plug->name_token.value()) == reg.fdcs.end()) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
 		}
 	}
@@ -385,7 +384,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	std::cout << "Registering flash " << flash->name.value() << std::endl;
-	if (reg.fds.find(flash->name) != reg.fds.end()) {
+	if (reg.fdcs.find(flash->name) != reg.fdcs.end()) {
 		throw std::runtime_error(std::string(flash->begin()) + ": Error: flash drive with name " + flash->name.value() +
 			" already exists");
 	}
@@ -393,8 +392,8 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
 	config["name"] = flash->name.value();
 
-	auto fd = env->create_flash_drive_controller(config);
-	reg.fds.emplace(std::make_pair(flash->name, fd));
+	auto fdc = env->create_flash_drive_controller(config);
+	reg.fdcs.emplace(std::make_pair(flash->name, fdc));
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {

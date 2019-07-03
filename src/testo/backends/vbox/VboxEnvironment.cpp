@@ -50,6 +50,6 @@ std::shared_ptr<VmController> VboxEnvironment::create_vm_controller(const nlohma
 	return std::make_shared<VmController>(std::shared_ptr<VM>(new VboxVM(config)));
 }
 
-std::shared_ptr<FlashDrive> VboxEnvironment::create_flash_drive_controller(const nlohmann::json& config) {
-	return std::shared_ptr<FlashDrive>(new VboxFlashDrive(config));
+std::shared_ptr<FlashDriveController> VboxEnvironment::create_flash_drive_controller(const nlohmann::json& config) {
+	return std::make_shared<FlashDriveController>(std::shared_ptr<FlashDrive>(new VboxFlashDrive(config)));
 }

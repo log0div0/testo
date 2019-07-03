@@ -63,8 +63,6 @@ void QemuFlashDrive::create() {
 		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
 		exec_and_throw_if_failed("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
-
-		write_cksum(calc_cksum());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating flash drive"));
 	}
@@ -151,8 +149,6 @@ void QemuFlashDrive::remove_if_exists() {
 				vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
 			}
 		}
-		delete_cksum();
-
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Remove flash if exist"));
 	}

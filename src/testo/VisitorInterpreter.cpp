@@ -353,11 +353,6 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 
 	setup_vars(program);
 
-	//Create flash drives
-	for (auto fd: flash_drives) {
-		visit_flash(fd);
-	}
-
 	if ((tests_to_run.size() + up_to_date_tests.size()) == 0) {
 		std::cout << "There's no tests to run\n";
 		return;
@@ -380,31 +375,6 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 	}
 
 	print_statistics();
-}
-
-void VisitorInterpreter::visit_controller(std::shared_ptr<AST::Controller> controller) {
-	if (controller->t.type() == Token::category::flash) {
-		return visit_flash(controller);
-	}
-}
-
-void VisitorInterpreter::visit_flash(std::shared_ptr<AST::Controller> flash) {
-	try {
-		auto fd = reg.fds.find(flash->name)->second; //should always be found
-		if (!fd->cache_enabled() || !fd->is_cksum_ok()) {
-			print("Creating flash drive \"", flash->name.value());
-			fd->create();
-			if (fd->has_folder()) {
-				print("Loading folder to flash drive \"", fd->name());
-				fd->load_folder();
-			}
-		} else {
-			print("Using cached flash drive \"", flash->name.value());
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(flash, nullptr));
-	}
-
 }
 
 void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
@@ -811,23 +781,23 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	print("Plugging flash drive ", fd->name(), " in virtual machine ", vmc->name());
-	if (vmc->vm->is_flash_plugged(fd)) {
-		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fd->name()));
+	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
+	print("Plugging flash drive ", fdc->name(), " in virtual machine ", vmc->name());
+	if (vmc->vm->is_flash_plugged(fdc->fd)) {
+		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fdc->name()));
 	}
 
-	vmc->vm->plug_flash_drive(fd);
+	vmc->vm->plug_flash_drive(fdc->fd);
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	print("Unlugging flash drive ", fd->name(), " from virtual machine ", vmc->name());
-	if (!vmc->vm->is_flash_plugged(fd)) {
-		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fd->name()));
+	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
+	print("Unlugging flash drive ", fdc->name(), " from virtual machine ", vmc->name());
+	if (!vmc->vm->is_flash_plugged(fdc->fd)) {
+		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fdc->name()));
 	}
 
-	vmc->vm->unplug_flash_drive(fd);
+	vmc->vm->unplug_flash_drive(fdc->fd);
 }
 
 void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {

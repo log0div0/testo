@@ -43,61 +43,6 @@ nlohmann::json FlashDrive::get_config() const {
 	return config;
 }
 
-bool FlashDrive::cache_enabled() const {
-	return config.value("cache_enabled", 1);
-}
-
-std::string FlashDrive::cksum() const {
-	return read_cksum();
-}
-
-std::string FlashDrive::read_cksum() const {
-	if (!fs::exists(cksum_path())) {
-		return "";
-	};
-
-	if (!fs::is_regular_file(cksum_path())) {
-		return "";
-	};
-
-	std::ifstream input_stream(cksum_path());
-
-	if (!input_stream) {
-		return "";
-	}
-
-	std::string result = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
-	return result;
-}
-
-void FlashDrive::write_cksum(const std::string& cksum) const {
-	std::ofstream output_stream(cksum_path(), std::ofstream::out);
-	if (!output_stream) {
-		throw std::runtime_error(std::string("Can't create file for writing cksum: ") + cksum_path().generic_string());
-	}
-	output_stream << cksum;
-}
-
-std::string FlashDrive::calc_cksum() const {
-	std::string cksum_input = name() + std::to_string(config.at("size").get<uint32_t>()) + config.at("fs").get<std::string>();
-	if (has_folder()) {
-		cksum_input += directory_signature(config.at("folder").get<std::string>());
-	}
-
-	std::hash<std::string> h;
-	return std::to_string(h(cksum_input));
-}
-
-void FlashDrive::delete_cksum() const {
-	if (fs::exists(cksum_path())) {
-		fs::remove(cksum_path());
-	}
-}
-
-fs::path FlashDrive::cksum_path() const {
-	return img_path().generic_string() + ".cksum";
-}
-
 void FlashDrive::load_folder() const {
 	try {
 		fs::path target_folder(config.at("folder").get<std::string>());

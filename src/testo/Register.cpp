@@ -2,9 +2,9 @@
 #include "Register.hpp"
 
 Register::~Register() {
-	for (auto fd: fds) {
-		if (fd.second->is_mounted()) {
-			fd.second->umount();
+	for (auto fdc: fdcs) {
+		if (fdc.second->fd->is_mounted()) {
+			fdc.second->fd->umount();
 		}
 	}
 }

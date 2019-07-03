@@ -46,7 +46,6 @@ void VmController::create() {
 		metadata["current_state"] = "";
 		metadata["dvd_signature"] = file_signature(config.at("iso").get<std::string>());
 		write_metadata_file(metadata_file, metadata);
-
 	} catch (const std::exception& error) {
 		std::throw_with_nested("creating vm");
 	}

@@ -147,10 +147,6 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 		result += file_signature(path);
 	}
 
-	if (plug->type.value() == "flash") {
-		auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-		result += fd->cksum();
-	}
 	return result;
 }
 
