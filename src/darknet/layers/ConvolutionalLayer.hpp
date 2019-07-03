@@ -43,12 +43,6 @@ private:
 	void push() const;
 #endif
 
-	void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
-			float *A, int lda,
-			float *B, int ldb,
-			float BETA,
-			float *C, int ldc);
-
 	int in_w = 0;
 	int in_h = 0;
 	int in_c = 0;
