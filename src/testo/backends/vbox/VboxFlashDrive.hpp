@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "../FlashDriveController.hpp"
+#include "../FlashDrive.hpp"
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 
-struct VboxFlashDriveController: FlashDriveController {
-	VboxFlashDriveController() = delete;
-	VboxFlashDriveController(const VboxFlashDriveController& other) = delete;
-	VboxFlashDriveController(const nlohmann::json& config);
+struct VboxFlashDrive: FlashDrive {
+	VboxFlashDrive() = delete;
+	VboxFlashDrive(const VboxFlashDrive& other) = delete;
+	VboxFlashDrive(const nlohmann::json& config);
 	void create() override;
 	bool is_mounted() const override;
 	void mount() const override;

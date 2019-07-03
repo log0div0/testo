@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include "../FlashDriveController.hpp"
+#include "../FlashDrive.hpp"
 #include <qemu/Host.hpp>
 
-struct QemuFlashDriveController: FlashDriveController {
-	QemuFlashDriveController() = delete;
-	QemuFlashDriveController(const QemuFlashDriveController& other) = delete;
-	QemuFlashDriveController(const nlohmann::json& config);
+struct QemuFlashDrive: FlashDrive {
+	QemuFlashDrive() = delete;
+	QemuFlashDrive(const QemuFlashDrive& other) = delete;
+	QemuFlashDrive(const nlohmann::json& config);
 	void create() override;
 	bool is_mounted() const override;
 	void mount() const override;

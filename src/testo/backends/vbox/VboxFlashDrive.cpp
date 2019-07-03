@@ -1,5 +1,5 @@
 
-#include "VboxFlashDriveController.hpp"
+#include "VboxFlashDrive.hpp"
 #include "VboxEnvironment.hpp"
 #include <functional>
 #include <thread>
@@ -15,12 +15,12 @@ const std::string disk_format = "vhd";
 const std::string disk_format = "????";
 #endif
 
-VboxFlashDriveController::VboxFlashDriveController(const nlohmann::json& config_): FlashDriveController(config_)
+VboxFlashDrive::VboxFlashDrive(const nlohmann::json& config_): FlashDrive(config_)
 {
 	virtual_box = virtual_box_client.virtual_box();
 }
 
-void VboxFlashDriveController::create() {
+void VboxFlashDrive::create() {
 	try {
 #ifdef __linux__
 		if (std::system("lsmod | grep nbd > /dev/null")) {
@@ -57,7 +57,7 @@ void VboxFlashDriveController::create() {
 	}
 }
 
-bool VboxFlashDriveController::is_mounted() const {
+bool VboxFlashDrive::is_mounted() const {
 #ifdef __linux__
 	std::string query = "mountpoint -q \"" + mount_dir().generic_string() + "\"";
 	return (std::system(query.c_str()) == 0);
@@ -68,7 +68,7 @@ bool VboxFlashDriveController::is_mounted() const {
 #endif
 }
 
-void VboxFlashDriveController::mount() const {
+void VboxFlashDrive::mount() const {
 	try {
 #ifdef __linux__
 		std::string fdisk = "fdisk -l | grep nbd0";
@@ -91,7 +91,7 @@ void VboxFlashDriveController::mount() const {
 	}
 }
 
-void VboxFlashDriveController::umount() const {
+void VboxFlashDrive::umount() const {
 	try {
 #ifdef __linux__
 		exec_and_throw_if_failed("umount /dev/nbd0");
@@ -109,15 +109,15 @@ void VboxFlashDriveController::umount() const {
 	}
 }
 
-fs::path VboxFlashDriveController::img_path() const {
+fs::path VboxFlashDrive::img_path() const {
 	return env->flash_drives_img_dir() / (name() + "." + disk_format);
 }
 
-fs::path VboxFlashDriveController::mount_dir() const {
+fs::path VboxFlashDrive::mount_dir() const {
 	return env->flash_drives_mount_dir();
 }
 
-void VboxFlashDriveController::remove_if_exists() {
+void VboxFlashDrive::remove_if_exists() {
 	try {
 		for (auto& hdd: virtual_box.hard_disks()) {
 			if (img_path().generic_string() == hdd.location()) {

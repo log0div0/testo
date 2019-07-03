@@ -195,10 +195,10 @@ bool HyperVVM::is_link_plugged(const std::string& nic) const {
 void HyperVVM::set_link(const std::string& nic, bool is_connected) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVVM::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void HyperVVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVVM::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void HyperVVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVM::is_dvd_plugged() const {
@@ -303,7 +303,7 @@ stb::Image HyperVVM::screenshot() {
 int HyperVVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
+bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVM::has_snapshot(const std::string& snapshot) {

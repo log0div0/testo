@@ -25,7 +25,7 @@ struct VboxEnvironment: public Environment {
 	void cleanup() override;
 
 	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override;
-	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override;
+	std::shared_ptr<FlashDrive> create_flash_drive_controller(const nlohmann::json& config) override;
 
 	vbox::API api;
 

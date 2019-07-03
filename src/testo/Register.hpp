@@ -2,7 +2,7 @@
 #pragma once
 
 #include "backends/VmController.hpp"
-#include "backends/FlashDriveController.hpp"
+#include "backends/FlashDrive.hpp"
 #include "Node.hpp"
 #include <unordered_map>
 #include <list>
@@ -12,7 +12,7 @@ struct Register {
 	~Register();
 
 	std::unordered_map<std::string, std::shared_ptr<VmController>> vmcs;
-	std::unordered_map<std::string, std::shared_ptr<FlashDriveController>> fds;
+	std::unordered_map<std::string, std::shared_ptr<FlashDrive>> fds;
 	std::unordered_map<std::string, std::shared_ptr<AST::Test>> tests;
 	std::unordered_map<std::string, std::shared_ptr<AST::Macro>> macros;
 

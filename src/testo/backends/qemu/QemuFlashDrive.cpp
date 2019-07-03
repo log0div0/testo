@@ -1,17 +1,17 @@
 
 #include "pugixml/pugixml.hpp"
 #include <fmt/format.h>
-#include "QemuFlashDriveController.hpp"
+#include "QemuFlashDrive.hpp"
 #include "QemuEnvironment.hpp"
 #include <thread>
 #include <fstream>
 
-QemuFlashDriveController::QemuFlashDriveController(const nlohmann::json& config_): FlashDriveController(config_),
+QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
 }
 
-void QemuFlashDriveController::create() {
+void QemuFlashDrive::create() {
 	try {
 		if (std::system("lsmod | grep nbd > /dev/null")) {
 			throw std::runtime_error("Please load nbd module (max parts=1");
@@ -56,12 +56,12 @@ void QemuFlashDriveController::create() {
 	}
 }
 
-bool QemuFlashDriveController::is_mounted() const {
+bool QemuFlashDrive::is_mounted() const {
 	std::string query = "mountpoint -q \"" + mount_dir().generic_string() + "\"";
 	return (std::system(query.c_str()) == 0);
 }
 
-void QemuFlashDriveController::mount() const {
+void QemuFlashDrive::mount() const {
 	try {
 		std::string fdisk = "fdisk -l | grep nbd0";
 		if (std::system(fdisk.c_str()) == 0) {
@@ -75,7 +75,7 @@ void QemuFlashDriveController::mount() const {
 	}
 }
 
-void QemuFlashDriveController::umount() const {
+void QemuFlashDrive::umount() const {
 	try {
 		exec_and_throw_if_failed("umount /dev/nbd0");
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
@@ -84,16 +84,16 @@ void QemuFlashDriveController::umount() const {
 	}
 }
 
-fs::path QemuFlashDriveController::img_path() const {
+fs::path QemuFlashDrive::img_path() const {
 	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 	return pool.path() / (name() + ".img");
 }
 
-fs::path QemuFlashDriveController::mount_dir() const {
+fs::path QemuFlashDrive::mount_dir() const {
 	return env->flash_drives_mount_dir();
 }
 
-void QemuFlashDriveController::remove_if_exists() {
+void QemuFlashDrive::remove_if_exists() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 		for (auto& vol: pool.volumes()) {
