@@ -144,67 +144,6 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 	}
 }
 
-bool VmController::has_snapshot(const std::string& snapshot) {
-	fs::path metadata_file = env->vm_metadata_dir() / vm->name();
-	metadata_file /= vm->name() + "_" + snapshot;
-	return fs::exists(metadata_file);
-}
-
-std::string VmController::get_snapshot_cksum(const std::string& snapshot) {
-	try {
-		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
-		metadata_file /= vm->name() + "_" + snapshot;
-		auto metadata = read_metadata_file(metadata_file);
-		if (!metadata.count("cksum")) {
-			throw std::runtime_error("Can't find cksum field in snapshot metadata " + snapshot);
-		}
-
-		return metadata.at("cksum").get<std::string>();
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("getting snapshot cksum error"));
-	}
-}
-
-bool VmController::has_key(const std::string& key) {
-	try {
-		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
-		metadata_file /= vm->name();
-		auto metadata = read_metadata_file(metadata_file);
-		return metadata.count(key);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking metadata with key {}", key)));
-	}
-}
-
-
-std::string VmController::get_metadata(const std::string& key) {
-	try {
-		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
-		metadata_file /= vm->name();
-		auto metadata = read_metadata_file(metadata_file);
-		if (!metadata.count(key)) {
-			throw std::runtime_error("Requested key is not present in vm metadata");
-		}
-		return metadata.at(key).get<std::string>();
-
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
-	}
-}
-
-void VmController::set_metadata(const std::string& key, const std::string& value) {
-	try {
-		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
-		metadata_file /= vm->name();
-		auto metadata = read_metadata_file(metadata_file);
-		metadata[key] = value;
-		write_metadata_file(metadata_file, metadata);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
-	}
-}
-
 bool VmController::check_config_relevance() {
 	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
 	auto new_config = vm->get_config();
@@ -240,3 +179,8 @@ bool VmController::check_config_relevance() {
 
 	return (config_is_ok && iso_is_ok);
 }
+
+fs::path VmController::get_metadata_dir() const {
+	return env->vm_metadata_dir();
+}
+
