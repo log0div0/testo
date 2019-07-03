@@ -21,7 +21,7 @@ size_t Device::info_size(cl_device_info name) const {
 		throw_if_failed(clGetDeviceInfo(_id, name, 0, nullptr, &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -32,7 +32,7 @@ std::vector<uint8_t> Device::info(cl_device_info name) const {
 		throw_if_failed(clGetDeviceInfo(_id, name, result.size(), result.data(), &unused));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -41,7 +41,7 @@ std::string Device::info_str(cl_device_info name) const {
 		std::vector<uint8_t> buffer = info(name);
 		return std::string((char*)buffer.data(), buffer.size());
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -54,7 +54,7 @@ POD Device::info_pod(cl_device_info name) const {
 		}
 		return *(POD*)buffer.data();
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

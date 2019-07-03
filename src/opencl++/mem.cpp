@@ -11,7 +11,7 @@ Mem::Mem(cl_mem handle): _handle(handle) {
 			throw std::runtime_error("nullptr");
 		}
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

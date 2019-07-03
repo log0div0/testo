@@ -11,7 +11,7 @@ CommandQueue::CommandQueue(cl_command_queue handle): _handle(handle) {
 			throw std::runtime_error("nullptr");
 		}
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -29,7 +29,7 @@ cl::Event CommandQueue::writeBuffer(cl::Mem& mem, size_t offset, size_t cb, cons
 		throw_if_failed(clEnqueueWriteBuffer(_handle, mem.handle(), CL_FALSE, offset, cb, ptr, events_wait_list.size(), (const cl_event*)events_wait_list.data(), &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -40,7 +40,7 @@ cl::Event CommandQueue::readBuffer(cl::Mem& mem, size_t offset, size_t cb, void*
 		throw_if_failed(clEnqueueReadBuffer(_handle, mem.handle(), CL_FALSE, offset, cb, ptr, events_wait_list.size(), (const cl_event*)events_wait_list.data(), &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -56,7 +56,7 @@ cl::Event CommandQueue::execute(cl::Kernel& kernel,
 			events_wait_list.size(), (const cl_event*)events_wait_list.data(), &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -76,7 +76,7 @@ cl::Event CommandQueue::execute(cl::Kernel& kernel,
 			events_wait_list.size(), (const cl_event*)events_wait_list.data(), &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

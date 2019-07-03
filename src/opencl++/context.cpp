@@ -13,7 +13,7 @@ Context::Context(Platform platform, std::vector<Device> devices) {
 		_handle = clCreateContext(properties, devices.size(), (cl_device_id*)devices.data(), nullptr, nullptr, &error_code);
 		throw_if_failed(error_code);
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -40,7 +40,7 @@ CommandQueue Context::createCommandQueue(Device& device) {
 		throw_if_failed(error_code);
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -55,7 +55,7 @@ Program Context::createProgram(const std::vector<std::string>& sources) {
 		throw_if_failed(error_code);
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -66,7 +66,7 @@ Mem Context::createBuffer(cl_mem_flags flags, size_t size, void* host_ptr) {
 		throw_if_failed(error_code);
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

@@ -11,7 +11,7 @@ Program::Program(cl_program handle): _handle(handle) {
 			throw std::runtime_error("nullptr");
 		}
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -36,7 +36,7 @@ void Program::build(const std::vector<Device>& devices, const std::string& optio
 		static_assert(sizeof(cl_device_id) == sizeof(Device));
 		throw_if_failed(clBuildProgram(_handle, devices.size(), (cl_device_id*)devices.data(), options.c_str(), nullptr, nullptr));
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -44,7 +44,7 @@ std::string Program::build_log(Device device) const {
 	try {
 		return build_info(device, CL_PROGRAM_BUILD_LOG);
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -55,7 +55,7 @@ Kernel Program::createKernel(const std::string& name) {
 		throw_if_failed(error_code);
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -65,7 +65,7 @@ size_t Program::build_info_size(Device device, cl_program_build_info name) const
 		throw_if_failed(clGetProgramBuildInfo(_handle, device.id(), name, 0, nullptr, &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -76,7 +76,7 @@ std::string Program::build_info(Device device, cl_program_build_info name) const
 		throw_if_failed(clGetProgramBuildInfo(_handle, device.id(), name, result.size(), result.data(), &unused));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

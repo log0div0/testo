@@ -11,7 +11,7 @@ Kernel::Kernel(cl_kernel handle): _handle(handle) {
 			throw std::runtime_error("nullptr");
 		}
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -26,7 +26,7 @@ void Kernel::setArg(cl_uint index, size_t size, const void* value) {
 	try {
 		throw_if_failed(clSetKernelArg(_handle, index, size, value));
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 

@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.0)
-cmake_policy(SET CMP0074 NEW)
 
 find_package(OpenCL REQUIRED)
 

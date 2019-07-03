@@ -11,7 +11,7 @@ cl_uint Platform::ids_count() {
 		throw_if_failed(clGetPlatformIDs(0, nullptr, &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -22,7 +22,7 @@ std::vector<cl_platform_id> Platform::ids() {
 		throw_if_failed(clGetPlatformIDs(result.size(), result.data(), &unused));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -38,7 +38,7 @@ cl_uint Platform::device_ids_count(cl_device_type type) const {
 		throw_if_failed(clGetDeviceIDs(_id, type, 0, nullptr, &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -49,7 +49,7 @@ std::vector<cl_device_id> Platform::device_ids(cl_device_type type) const {
 		throw_if_failed(clGetDeviceIDs(_id, type, result.size(), result.data(), &unused));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -59,7 +59,7 @@ size_t Platform::info_size(cl_platform_info name) const {
 		throw_if_failed(clGetPlatformInfo(_id, name, 0, nullptr, &result));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
@@ -70,7 +70,7 @@ std::string Platform::info(cl_platform_info name) const {
 		throw_if_failed(clGetPlatformInfo(_id, name, result.size(), result.data(), &unused));
 		return result;
 	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
+		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}
 }
 
