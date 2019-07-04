@@ -18,8 +18,8 @@ struct VboxVM: public VM {
 	void set_nic(const std::string& nic, bool is_enabled) override;
 	bool is_link_plugged(const std::string& nic) const override;
 	void set_link(const std::string& nic, bool is_connected) override;
-	void plug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
-	void unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) override;
+	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
+	void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
 	bool is_dvd_plugged() const override;
 	void plug_dvd(fs::path path) override;
 	void unplug_dvd() override;
@@ -31,7 +31,7 @@ struct VboxVM: public VM {
 	stb::Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
 
-	bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) override;
+	bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void delete_snapshot(const std::string& snapshot) override;
 	bool is_defined() const override;
@@ -56,6 +56,6 @@ private:
 	vbox::Session start_session;
 	vbox::Session work_session;
 
-	std::set<std::shared_ptr<FlashDriveController>> plugged_fds;
+	std::set<std::shared_ptr<FlashDrive>> plugged_fds;
 	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
 };

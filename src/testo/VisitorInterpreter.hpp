@@ -70,7 +70,7 @@ struct VisitorInterpreter {
 			msg = std::string(node->begin()) + ": Caught abort action ";
 			if (vmc) {
 				msg += "on virtual machine ";
-				msg += vmc->vm->name();
+				msg += vmc->name();
 			}
 
 			msg += " with message: ";
@@ -95,8 +95,6 @@ struct VisitorInterpreter {
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
-	void visit_controller(std::shared_ptr<AST::Controller> controller);
-	void visit_flash(std::shared_ptr<AST::Controller> flash);
 	void visit_test(std::shared_ptr<AST::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
@@ -131,7 +129,6 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
-	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;
 	std::string test_cksum(std::shared_ptr<AST::Test> test);
 
 	Register& reg;
@@ -187,11 +184,11 @@ private:
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
 		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined()) {
+			if (vmc->is_defined()) {
 				if (vmc->vm->state() != VmState::Stopped) {
 					vmc->vm->stop();
 				}
-				vmc->set_metadata("vm_current_state", "");
+				vmc->set_metadata("current_state", "");
 			}
 		}
 	}

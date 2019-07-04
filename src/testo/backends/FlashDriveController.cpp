@@ -1,119 +1,173 @@
 
 #include "FlashDriveController.hpp"
+#include "Environment.hpp"
 #include <fmt/format.h>
-#include <fstream>
-
-FlashDriveController::FlashDriveController(const nlohmann::json& config_): config(config_) {
-	if (!config.count("name")) {
-		throw std::runtime_error("Constructing VboxFlashDriveController error: field NAME is not specified");
-	}
-
-	if (!config.count("size")) {
-		throw std::runtime_error("Constructing VboxFlashDriveController error: field SIZE is not specified");
-	}
-
-	//TODO: check for fs types
-	if (!config.count("fs")) {
-		throw std::runtime_error("Constructing VboxFlashDriveController error: field FS is not specified");
-	}
-
-	if (config.count("folder")) {
-		fs::path folder(config.at("folder").get<std::string>());
-		if (!fs::exists(folder)) {
-			throw std::runtime_error(fmt::format("specified folder {} for flash drive {} does not exist",
-				folder.generic_string(), name()));
-		}
-
-		if (!fs::is_directory(folder)) {
-			throw std::runtime_error(fmt::format("specified folder {} for flash drive {} is not a folder",
-				folder.generic_string(), name()));
-		}
-	}
-}
 
 std::string FlashDriveController::name() const {
-	return config.at("name").get<std::string>();
+	return fd->name();
 }
 
-bool FlashDriveController::has_folder() const {
-	return config.count("folder");
+bool FlashDriveController::is_defined() {
+	return fd->is_defined();
 }
 
-nlohmann::json FlashDriveController::get_config() const {
-	return config;
+void FlashDriveController::create() {
+	try {
+		fs::path metadata_dir = env->flash_drives_metadata_dir() / fd->name();
+
+		if (fs::exists(metadata_dir)) {
+			if (!fs::remove_all(metadata_dir)) {
+				throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+			}
+		}
+
+		fd->create();
+
+		if (fd->has_folder()) {
+			fd->load_folder();
+		}
+
+		auto config = fd->get_config();
+
+		nlohmann::json metadata;
+
+		if (!fs::create_directory(metadata_dir)) {
+			throw std::runtime_error("Error creating metadata dir " + metadata_dir.generic_string());
+		}
+
+		std::string cksum_input = "";
+		if (fd->has_folder()) {
+			cksum_input += directory_signature(config.at("folder").get<std::string>());
+		}
+
+		std::hash<std::string> h;
+
+		auto folder_cksum = std::to_string(h(cksum_input));
+
+		metadata["fd_config"] = config.dump();
+		metadata["fd_name"] = config.at("name");
+		metadata["folder_cksum"] = folder_cksum;
+		metadata["current_state"] = "";
+
+		fs::path metadata_file = metadata_dir / fd->name();
+		write_metadata_file(metadata_file, metadata);
+	} catch (const std::exception& error) {
+		std::throw_with_nested("creating fd");
+	}
 }
 
-bool FlashDriveController::cache_enabled() const {
-	return config.value("cache_enabled", 1);
+void FlashDriveController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
+{
+	try {
+		if (has_snapshot(snapshot)) {
+			delete_snapshot_with_children(snapshot);
+		}
+
+		//1) Let's try and create the actual snapshot. If we fail then no additional work
+		if (hypervisor_snapshot_needed) {
+			fd->make_snapshot(snapshot);
+		}
+
+		//Where to store new metadata file?
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name() + "_" + snapshot;
+
+		auto current_state = get_metadata("current_state");
+
+		nlohmann::json metadata;
+		metadata["cksum"] = cksum;
+		metadata["children"] = nlohmann::json::array();
+		metadata["parent"] = current_state;
+		write_metadata_file(metadata_file, metadata);
+
+		//link parent to a child
+		if (current_state.length()) {
+			fs::path parent_metadata_file = env->flash_drives_metadata_dir() / fd->name();
+			parent_metadata_file /= fd->name() + "_" + current_state;
+			auto parent_metadata = read_metadata_file(parent_metadata_file);
+			parent_metadata.at("children").push_back(snapshot);
+			write_metadata_file(parent_metadata_file, parent_metadata);
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested("creating snapshot");
+	}
 }
 
-std::string FlashDriveController::cksum() const {
-	return read_cksum();
+void FlashDriveController::restore_snapshot(const std::string& snapshot) {
+	fd->rollback(snapshot);
+	set_metadata("current_state", snapshot);
 }
 
-std::string FlashDriveController::read_cksum() const {
-	if (!fs::exists(cksum_path())) {
-		return "";
-	};
+void FlashDriveController::delete_snapshot_with_children(const std::string& snapshot)
+{
+	try {
+		//This thins needs to be recursive
+		//I guess... go through the children and call recursively on them
+		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		metadata_file /= fd->name() + "_" + snapshot;
 
-	if (!fs::is_regular_file(cksum_path())) {
-		return "";
-	};
+		auto metadata = read_metadata_file(metadata_file);
 
-	std::ifstream input_stream(cksum_path());
+		for (auto& child: metadata.at("children")) {
+			delete_snapshot_with_children(child.get<std::string>());
+		}
 
-	if (!input_stream) {
-		return "";
+		//Now we're at the bottom of the hierarchy
+		//Delete the hypervisor child if we have one
+
+		if (fd->has_snapshot(snapshot)) {
+			fd->delete_snapshot(snapshot);
+		}
+
+		//Ok, now we need to get our parent
+		auto parent = metadata.at("parent").get<std::string>();
+
+		//Unlink the parent
+		if (parent.length()) {
+			fs::path parent_metadata_file = env->flash_drives_metadata_dir() / fd->name();
+			parent_metadata_file /= fd->name() + "_" + parent;
+
+			auto parent_metadata = read_metadata_file(parent_metadata_file);
+			auto& children = parent_metadata.at("children");
+
+			for (auto it = children.begin(); it != children.end(); ++it) {
+				if (it.value() == snapshot) {
+					children.erase(it);
+					break;
+				}
+			}
+			write_metadata_file(parent_metadata_file, parent_metadata);
+		}
+
+		//Now we can delete the metadata file
+		if (!fs::remove(metadata_file)) {
+			throw std::runtime_error("Error deleting metadata file " + metadata_file.generic_string());
+		}
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested("deleting snapshot");
+	}
+}
+
+bool FlashDriveController::check_config_relevance() {
+	auto old_config = nlohmann::json::parse(get_metadata("fd_config"));
+	auto new_config = fd->get_config();
+
+	if (old_config != new_config) {
+		return false;
 	}
 
-	std::string result = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
-	return result;
-}
-
-void FlashDriveController::write_cksum(const std::string& cksum) const {
-	std::ofstream output_stream(cksum_path(), std::ofstream::out);
-	if (!output_stream) {
-		throw std::runtime_error(std::string("Can't create file for writing cksum: ") + cksum_path().generic_string());
-	}
-	output_stream << cksum;
-}
-
-std::string FlashDriveController::calc_cksum() const {
-	std::string cksum_input = name() + std::to_string(config.at("size").get<uint32_t>()) + config.at("fs").get<std::string>();
-	if (has_folder()) {
-		cksum_input += directory_signature(config.at("folder").get<std::string>());
+	std::string cksum_input = "";
+	if (fd->has_folder()) {
+		cksum_input += directory_signature(new_config.at("folder").get<std::string>());
 	}
 
 	std::hash<std::string> h;
-	return std::to_string(h(cksum_input));
+	bool cksums_are_ok = (get_metadata("folder_cksum") == std::to_string(h(cksum_input)));
+
+	return cksums_are_ok;
 }
 
-void FlashDriveController::delete_cksum() const {
-	if (fs::exists(cksum_path())) {
-		fs::remove(cksum_path());
-	}
-}
-
-fs::path FlashDriveController::cksum_path() const {
-	return img_path().generic_string() + ".cksum";
-}
-
-void FlashDriveController::load_folder() const {
-	try {
-		fs::path target_folder(config.at("folder").get<std::string>());
-
-		if (target_folder.is_relative()) {
-			target_folder = fs::canonical(target_folder);
-		}
-
-		if (!fs::exists(target_folder)) {
-			throw std::runtime_error("Target folder doesn't exist");
-		}
-
-		mount();
-		fs::copy(target_folder, mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
-		umount();
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
+fs::path FlashDriveController::get_metadata_dir() const{
+	return env->flash_drives_metadata_dir();
 }

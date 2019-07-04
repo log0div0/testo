@@ -14,8 +14,12 @@ struct QemuEnvironment : public Environment {
 	fs::path flash_drives_img_dir() const override {
 		throw std::runtime_error("Not needed");
 	}
-	fs::path metadata_dir() const override {
-		return "/var/lib/libvirt/testo/metadata";
+	fs::path vm_metadata_dir() const override {
+		return "/var/lib/libvirt/testo/vm_metadata";
+	}
+
+	fs::path flash_drives_metadata_dir() const override {
+		return "/var/lib/libvirt/testo/fd_metadata";
 	}
 
 	QemuEnvironment();

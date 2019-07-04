@@ -8,8 +8,6 @@
 #include <thread>
 #include <wildcards.hpp>
 
-using namespace AST;
-
 template <typename Duration>
 std::string duration_to_str(Duration duration) {
 
@@ -162,8 +160,7 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
 {
-	auto vmcs = reg.get_all_vmcs(test);
-
+	auto controllers = reg.get_all_controllers(test);
 	auto all_parents = reg.get_test_path(test);
 
 	bool result = false;
@@ -188,8 +185,8 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 			continue;
 		}
 
-		auto other_vmcs = reg.get_all_vmcs(*rit);
-		if (std::find_first_of (vmcs.begin(), vmcs.end(), other_vmcs.begin(), other_vmcs.end()) != vmcs.end()) {
+		auto other_controllers = reg.get_all_controllers(*rit);
+		if (std::find_first_of (controllers.begin(), controllers.end(), other_controllers.begin(), other_controllers.end()) != controllers.end()) {
 			break;
 		}
 	}
@@ -203,8 +200,6 @@ void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
 {
 	//we need to check could we start right away?
-
-	auto vmcs = reg.get_all_vmcs(test);
 
 	for (auto parent: test->parents) {
 		//for every parent we need to check, maybe we are already in the perfect position?
@@ -250,12 +245,11 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 			}
 		}
 
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined() &&
-				check_config_relevance(vmc->vm->get_config(), nlohmann::json::parse(vmc->get_metadata("vm_config"))) &&
-				(file_signature(vmc->vm->get_config().at("iso").get<std::string>()) == vmc->get_metadata("dvd_signature")) &&
-				vmc->has_snapshot(test->name.value()) &&
-				(vmc->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (controller->is_defined() &&
+				controller->check_config_relevance() &&
+				controller->has_snapshot(test->name.value()) &&
+				(controller->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
 			{
 				continue;
 			}
@@ -273,9 +267,9 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 
 void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue) {
 	for (auto test: tests_queue) {
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->has_snapshot(test->name.value())) {
-				vmc->delete_snapshot_with_children(test->name.value());
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (controller->has_snapshot(test->name.value())) {
+				controller->delete_snapshot_with_children(test->name.value());
 			}
 		}
 
@@ -291,7 +285,7 @@ void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test
 	}
 }
 
-void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
+void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 	std::list<std::shared_ptr<AST::Test>> tests_queue; //temporary, only needed for general execution plan
 
 	//Need to check that we don't have duplicates
@@ -299,15 +293,15 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 	//keep the order of the tests
 
 	for (auto stmt: program->stmts) {
-		if (auto p = std::dynamic_pointer_cast<Stmt<Test>>(stmt)) {
+		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
 			auto test = p->stmt;
 
 			//invalidate tests at request
 
 			if (invalidate.length() && wildcards::match(test->name.value(), invalidate)) {
-				for (auto vmc: reg.get_all_vmcs(test)) {
-					if (vmc->has_snapshot(test->name.value())) {
-						vmc->delete_snapshot_with_children(test->name.value());
+				for (auto controller: reg.get_all_controllers(test)) {
+					if (controller->has_snapshot(test->name.value())) {
+						controller->delete_snapshot_with_children(test->name.value());
 					}
 				}
 			}
@@ -324,7 +318,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 				continue;
 			}
 			concat_unique(tests_queue, reg.get_test_path(test));
-		} else if (auto p = std::dynamic_pointer_cast<Stmt<Controller>>(stmt)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
 			if (p->stmt->t.type() == Token::category::flash) {
 				flash_drives.push_back(p->stmt);
 			}
@@ -346,23 +340,18 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<Program> program) {
 
 void VisitorInterpreter::reset_cache() {
 	for (auto test: tests_to_run) {
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined()) {
-				vmc->set_metadata("vm_current_state", "");
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (controller->is_defined()) {
+				controller->set_metadata("current_state", "");
 			}
 		}
 	}
 }
 
-void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
+void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 	start_timestamp = std::chrono::system_clock::now();
 
 	setup_vars(program);
-
-	//Create flash drives
-	for (auto fd: flash_drives) {
-		visit_flash(fd);
-	}
 
 	if ((tests_to_run.size() + up_to_date_tests.size()) == 0) {
 		std::cout << "There's no tests to run\n";
@@ -388,32 +377,7 @@ void VisitorInterpreter::visit(std::shared_ptr<Program> program) {
 	print_statistics();
 }
 
-void VisitorInterpreter::visit_controller(std::shared_ptr<Controller> controller) {
-	if (controller->t.type() == Token::category::flash) {
-		return visit_flash(controller);
-	}
-}
-
-void VisitorInterpreter::visit_flash(std::shared_ptr<Controller> flash) {
-	try {
-		auto fd = reg.fds.find(flash->name)->second; //should always be found
-		if (!fd->cache_enabled() || !fd->is_cksum_ok()) {
-			print("Creating flash drive \"", flash->name.value());
-			fd->create();
-			if (fd->has_folder()) {
-				print("Loading folder to flash drive \"", fd->name());
-				fd->load_folder();
-			}
-		} else {
-			print("Using cached flash drive \"", flash->name.value());
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(flash, nullptr));
-	}
-
-}
-
-void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
+void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 	try {
 
 		//Check if one of the parents failed. If it did, just fail
@@ -436,22 +400,22 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 		//vms from parents - rollback them to parents if we need to
 		//We need to do it only if our current state is not the parent
 		for (auto parent: test->parents) {
-			for (auto vmc: reg.get_all_vmcs(parent)) {
-				if (vmc->get_metadata("vm_current_state") != parent->name.value()) {
-					print("Restoring snapshot ", parent->name.value(), " for virtual machine ", vmc->vm->name());
-					vmc->restore_snapshot(parent->name.value());
+			for (auto controller: reg.get_all_controllers(parent)) {
+				if (controller->get_metadata("current_state") != parent->name.value()) {
+					print("Restoring snapshot ", parent->name.value(), " for entity ", controller->name());
+					controller->restore_snapshot(parent->name.value());
 				}
 			}
 		}
 
 		//new vms - install
 
-		for (auto vmc: reg.get_all_vmcs(test)) {
+		for (auto controller: reg.get_all_controllers(test)) {
 			//check if it's a new one
 			auto is_new = true;
 			for (auto parent: test->parents) {
-				auto parent_vmcs = reg.get_all_vmcs(parent);
-				if (parent_vmcs.find(vmc) != parent_vmcs.end()) {
+				auto parent_controller = reg.get_all_controllers(parent);
+				if (parent_controller.find(controller) != parent_controller.end()) {
 					//not new, go to the next vmc
 					is_new = false;
 					break;
@@ -459,8 +423,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 
 			if (is_new) {
-				print("Creating machine ", vmc->vm->name());
-				vmc->create_vm();
+				print("Creating machine ", controller->name());
+				controller->create();
 			}
 		}
 
@@ -485,12 +449,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 			}
 		}
 
-		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (!vmc->has_snapshot(test->name.value())) {
-				print("Taking snapshot ", test->name.value(), " for virtual machine ", vmc->vm->name());
-				vmc->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
+		for (auto controller: reg.get_all_controllers(test)) {
+			if (!controller->has_snapshot(test->name.value())) {
+				print("Taking snapshot ", test->name.value(), " for entity ", controller->name());
+				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
 			}
-			vmc->set_metadata("vm_current_state", test->name.value());
+			controller->set_metadata("current_state", test->name.value());
 		}
 
 		//We need to check if we need to stop all the vms
@@ -560,13 +524,13 @@ void VisitorInterpreter::visit_test(std::shared_ptr<Test> test) {
 	} //everything else is fatal and should be catched furter up
 }
 
-void VisitorInterpreter::visit_command_block(std::shared_ptr<CmdBlock> block) {
+void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
 	for (auto command: block->commands) {
 		visit_command(command);
 	}
 }
 
-void VisitorInterpreter::visit_command(std::shared_ptr<Cmd> cmd) {
+void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
 		auto vmc = reg.vmcs.find(vm_token.value());
 		visit_action(vmc->second, cmd->action);
@@ -574,70 +538,70 @@ void VisitorInterpreter::visit_command(std::shared_ptr<Cmd> cmd) {
 }
 
 
-void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<ActionBlock> action_block) {
+void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
 		visit_action(vmc, action);
 	}
 }
 
-void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<Action<Abort>>(action)) {
+void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
 		return visit_abort(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Print>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
 		return visit_print(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Type>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
 		return visit_type(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Wait>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		return visit_wait(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Press>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Plug>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Start>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
 		return visit_start(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Stop>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
 		return visit_stop(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Shutdown>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
 		return visit_shutdown(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Exec>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Copy>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
 		return visit_copy(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<MacroCall>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		return visit_macro_call(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<IfClause>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<ForClause>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		return visit_for_clause(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<CycleControl>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		throw CycleControlException(p->action->t);
-	} else if (auto p = std::dynamic_pointer_cast<Action<ActionBlock>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<Action<Empty>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		return;
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
 }
 
-void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<Abort> abort) {
+void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
 	std::string message = visit_word(vmc, abort->message);
 	throw AbortException(abort, vmc, message);
 }
 
-void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<Print> print_action) {
+void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
 	try {
 		std::string message = visit_word(vmc, print_action->message);
-		print(vmc->vm->name(), ": ", message.c_str());
+		print(vmc->name(), ": ", message.c_str());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(print_action, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<Type> type) {
+void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	try {
 		std::string text = visit_word(vmc, type->text_word);
-		print("Typing ", text, " on virtual machine ", vmc->vm->name());
+		print("Typing ", text, " on virtual machine ", vmc->name());
 		for (auto c: text) {
 			auto buttons = charmap.find(c);
 			if (buttons == charmap.end()) {
@@ -651,7 +615,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<Wait> wait) {
+void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
 		std::string text = "";
 		if (wait->text_word) {
@@ -680,7 +644,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			print_str += ")";
 		}
 
-		print_str += std::string(" on virtual machine ") + vmc->vm->name();
+		print_str += std::string(" on virtual machine ") + vmc->name();
 		if (wait->time_interval) {
 			print_str += " for " + wait->time_interval.value();
 		}
@@ -710,7 +674,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 }
 
-void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<Press> press) {
+void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
 	try {
 		for (auto key_spec: press->keys) {
 			visit_key_spec(vmc, key_spec);
@@ -720,7 +684,7 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<KeySpec> key_spec) {
+void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec) {
 	uint32_t times = key_spec->get_times();
 
 	std::string print_str = std::string("Pressing button ") + key_spec->get_buttons_str();
@@ -729,7 +693,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 		print_str += std::string(" ") + std::to_string(times) + " times ";
 	}
 
-	print_str += std::string(" on virtual machine ") + vmc->vm->name();
+	print_str += std::string(" on virtual machine ") + vmc->name();
 
 	print(print_str);
 
@@ -738,7 +702,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 	}
 }
 
-void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	try {
 		if (plug->type.value() == "nic") {
 			return visit_plug_nic(vmc, plug);
@@ -761,7 +725,7 @@ void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 	auto nic = plug->name_token.value();
@@ -783,12 +747,12 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	print(plug_unplug, " nic ", nic, " on virtual machine ", vmc->vm->name());
+	print(plug_unplug, " nic ", nic, " on virtual machine ", vmc->name());
 
 	vmc->vm->set_nic(nic, plug->is_on());
 }
 
-void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 
@@ -811,39 +775,39 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 	}
 
 	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	print(plug_unplug, " link ", nic, " on virtual machine ", vmc->vm->name());
+	print(plug_unplug, " link ", nic, " on virtual machine ", vmc->name());
 
 	vmc->vm->set_link(nic, plug->is_on());
 }
 
-void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<Plug> plug) {
-	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	print("Plugging flash drive ", fd->name(), " in virtual machine ", vmc->vm->name());
-	if (vmc->vm->is_flash_plugged(fd)) {
-		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fd->name()));
+void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
+	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
+	print("Plugging flash drive ", fdc->name(), " in virtual machine ", vmc->name());
+	if (vmc->vm->is_flash_plugged(fdc->fd)) {
+		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fdc->name()));
 	}
 
-	vmc->vm->plug_flash_drive(fd);
+	vmc->vm->plug_flash_drive(fdc->fd);
 }
 
-void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<Plug> plug) {
-	auto fd = reg.fds.find(plug->name_token.value())->second; //should always be found
-	print("Unlugging flash drive ", fd->name(), " from virtual machine ", vmc->vm->name());
-	if (!vmc->vm->is_flash_plugged(fd)) {
-		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fd->name()));
+void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
+	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
+	print("Unlugging flash drive ", fdc->name(), " from virtual machine ", vmc->name());
+	if (!vmc->vm->is_flash_plugged(fdc->fd)) {
+		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fdc->name()));
 	}
 
-	vmc->vm->unplug_flash_drive(fd);
+	vmc->vm->unplug_flash_drive(fdc->fd);
 }
 
-void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::shared_ptr<Plug> plug) {
+void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	if (plug->is_on()) {
 		if (vmc->vm->is_dvd_plugged()) {
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
 
 		fs::path path = visit_word(vmc, plug->path);
-		print("Plugging dvd ", path, " in virtual machine ", vmc->vm->name());
+		print("Plugging dvd ", path, " in virtual machine ", vmc->name());
 		if (path.is_relative()) {
 			path = plug->t.pos().file.parent_path() / path;
 		}
@@ -856,23 +820,23 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			return;
 		}
 
-		print("Unplugging dvd from virtual machine ", vmc->vm->name());
+		print("Unplugging dvd from virtual machine ", vmc->name());
 		vmc->vm->unplug_dvd();
 	}
 }
 
-void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<Start> start) {
+void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Start> start) {
 	try {
-		print("Starting virtual machine ", vmc->vm->name());
+		print("Starting virtual machine ", vmc->name());
 		vmc->vm->start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(start, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<Stop> stop) {
+void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Stop> stop) {
 	try {
-		print("Stopping virtual machine ", vmc->vm->name());
+		print("Stopping virtual machine ", vmc->name());
 		vmc->vm->stop();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(stop, vmc));
@@ -880,9 +844,9 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<Shutdown> shutdown) {
+void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown) {
 	try {
-		print("Shutting down virtual machine ", vmc->vm->name());
+		print("Shutting down virtual machine ", vmc->name());
 		vmc->vm->power_button();
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
@@ -899,9 +863,9 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 	}
 }
 
-void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<Exec> exec) {
+void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
-		print("Executing ", exec->process_token.value(), " command on virtual machine ", vmc->vm->name());
+		print("Executing ", exec->process_token.value(), " command on virtual machine ", vmc->name());
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -952,14 +916,14 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<Copy> copy) {
+void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
 	try {
 		fs::path from = visit_word(vmc, copy->from);
 		fs::path to = visit_word(vmc, copy->to);
 
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
-		print("Copying ", from, " ", from_to, " virtual machine ", vmc->vm->name(), " in directory ", to);
+		print("Copying ", from, " ", from_to, " virtual machine ", vmc->name(), " in directory ", to);
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -988,8 +952,8 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 
 }
 
-void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<MacroCall> macro_call) {
-	print("Calling macro ", macro_call->name().value(), " on virtual machine ", vmc->vm->name());
+void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
+	print("Calling macro ", macro_call->name().value(), " on virtual machine ", vmc->name());
 	//push new ctx
 	StackEntry new_ctx(true);
 
@@ -1006,7 +970,7 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 	visit_action_block(vmc, macro_call->macro->action_block->action);
 }
 
-void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<IfClause> if_clause) {
+void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause) {
 	bool expr_result;
 	try {
 		expr_result = visit_expr(vmc, if_clause->expr);
@@ -1022,7 +986,7 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vmc, std:
 
 }
 
-void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<ForClause> for_clause) {
+void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause) {
 	StackEntry new_ctx(false);
 	local_vars.push_back(new_ctx);
 	size_t ctx_position = local_vars.size() - 1;
@@ -1045,17 +1009,17 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std
 	}
 }
 
-bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<IExpr> expr) {
-	if (auto p = std::dynamic_pointer_cast<Expr<BinOp>>(expr)) {
+bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr) {
+	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
 		return visit_binop(vmc, p->expr);
-	} else if (auto p = std::dynamic_pointer_cast<Expr<IFactor>>(expr)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
 		return visit_factor(vmc, p->expr);
 	} else {
 		throw std::runtime_error("Unknown expr type");
 	}
 }
 
-bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<BinOp> binop) {
+bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop) {
 	auto left = visit_expr(vmc, binop->left);
 	auto right = visit_expr(vmc, binop->right);
 
@@ -1068,14 +1032,14 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<IFactor> factor) {
-	if (auto p = std::dynamic_pointer_cast<Factor<Word>>(factor)) {
+bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
+	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Word>>(factor)) {
 		return p->is_negated() ^ (bool)visit_word(vmc, p->factor).length();
-	} else if (auto p = std::dynamic_pointer_cast<Factor<Comparison>>(factor)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(vmc, p->factor);
-	} else if (auto p = std::dynamic_pointer_cast<Factor<Check>>(factor)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		return p->is_negated() ^ visit_check(vmc, p->factor);
-	} else if (auto p = std::dynamic_pointer_cast<Factor<IExpr>>(factor)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
 		return p->is_negated() ^ visit_expr(vmc, p->factor);
 	} else {
 		throw std::runtime_error("Unknown factor type");
@@ -1099,7 +1063,7 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 		}
 	}
 
-	if (vmc->vm->is_defined() && vmc->has_key(var)) {
+	if (vmc->is_defined() && vmc->has_key(var)) {
 		return vmc->get_metadata(var);
 	}
 
@@ -1111,7 +1075,7 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 	return env_value;
 }
 
-std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<Word> word) {
+std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
 	std::string result;
 
 	for (auto part: word->parts) {
@@ -1129,7 +1093,7 @@ std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vmc, st
 	return result;
 }
 
-bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<Comparison> comparison) {
+bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
 	auto left = visit_word(vmc, comparison->left);
 	auto right = visit_word(vmc, comparison->right);
 	if (comparison->op().type() == Token::category::GREATER) {
@@ -1173,7 +1137,7 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 	}
 }
 
-bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<Check> check) {
+bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
 		auto text = visit_word(vmc, check->text_word);
 
@@ -1196,7 +1160,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			print_str += ")";
 		}
 
-		print_str += std::string(" on virtual machine ") + vmc->vm->name();
+		print_str += std::string(" on virtual machine ") + vmc->name();
 		print(print_str);
 		auto screenshot = vmc->vm->screenshot();
 		return shit.stink_even_stronger(screenshot, text);
@@ -1205,38 +1169,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-bool VisitorInterpreter::check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const {
-	//So....
-	//1) get rid of metadata
-	new_config.erase("metadata");
-	old_config.erase("metadata");
-
-	//2) Actually.... Let's just be practical here.
-	//Check if both have or don't have nics
-
-	auto old_nics = old_config.value("nic", nlohmann::json::array());
-	auto new_nics = new_config.value("nic", nlohmann::json::array());
-
-	if (old_nics.size() != new_nics.size()) {
-		return false;
-	}
-
-	if (!std::is_permutation(old_nics.begin(), old_nics.end(), new_nics.begin())) {
-		return false;
-	}
-
-	new_config.erase("nic");
-	old_config.erase("nic");
-
-	new_config.erase("iso");
-	old_config.erase("iso");
-
-	//Check also dvd contingency
-	return (old_config == new_config);
-}
-
-
-std::string VisitorInterpreter::test_cksum(std::shared_ptr<Test> test) {
+std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) {
 	VisitorCksum visitor(reg);
 	return std::to_string(visitor.visit(test));
 }
