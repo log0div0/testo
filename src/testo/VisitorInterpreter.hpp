@@ -63,6 +63,24 @@ struct VisitorInterpreter {
 		std::shared_ptr<VmController> vmc;
 	};
 
+	struct AbortException: public InterpreterException {
+		explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<VmController> vmc, const std::string& message):
+			InterpreterException(), node(node), vmc(vmc)
+		{
+			msg = std::string(node->begin()) + ": Caught abort action ";
+			if (vmc) {
+				msg += "on virtual machine ";
+				msg += vmc->name();
+			}
+
+			msg += " with message: ";
+			msg += message;
+		}
+	private:
+		std::shared_ptr<AST::Node> node;
+		std::shared_ptr<VmController> vmc;
+	};
+
 
 	struct CycleControlException: public InterpreterException {
 		explicit CycleControlException(const Token& token):
@@ -77,13 +95,13 @@ struct VisitorInterpreter {
 	VisitorInterpreter(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
-	void visit_controller(std::shared_ptr<AST::Controller> controller);
-	void visit_flash(std::shared_ptr<AST::Controller> flash);
 	void visit_test(std::shared_ptr<AST::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ActionBlock> action_block);
 	void visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action);
+	void visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort);
+	void visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action);
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
@@ -111,7 +129,6 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
-	bool check_config_relevance(nlohmann::json new_config, nlohmann::json old_config) const;
 	std::string test_cksum(std::shared_ptr<AST::Test> test);
 
 	Register& reg;
@@ -119,7 +136,7 @@ struct VisitorInterpreter {
 private:
 	//settings
 	bool stop_on_fail;
-	std::string test_spec, exclude;
+	std::string test_spec, exclude, invalidate;
 
 	std::vector<StackEntry> local_vars;
 
@@ -150,16 +167,28 @@ private:
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
 	void reset_cache();
-	void resolve_tests(const std::vector<std::shared_ptr<AST::Test>>& tests_queue);
+
+
+	bool parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
+
+	void build_test_plan(std::shared_ptr<AST::Test> test,
+		std::list<std::shared_ptr<AST::Test>>& test_plan,
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
+		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
+
+	void check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue);
+	void resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue);
 	void update_progress();
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
 		for (auto vmc: reg.get_all_vmcs(test)) {
-			if (vmc->vm->is_defined()) {
+			if (vmc->is_defined()) {
 				if (vmc->vm->state() != VmState::Stopped) {
 					vmc->vm->stop();
 				}
-				vmc->set_metadata("vm_current_state", "");
+				vmc->set_metadata("current_state", "");
 			}
 		}
 	}

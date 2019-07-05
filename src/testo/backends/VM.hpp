@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "FlashDriveController.hpp"
+#include "FlashDrive.hpp"
 #include "../StinkingPileOfShit.hpp"
 #include <nlohmann/json.hpp>
 
@@ -24,8 +24,8 @@ struct VM {
 	virtual void set_nic(const std::string& nic, bool is_enabled) = 0;
 	virtual bool is_link_plugged(const std::string& nic) const = 0;
 	virtual void set_link(const std::string& nic, bool is_connected) = 0;
-	virtual void plug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;
-	virtual void unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) = 0;
+	virtual void plug_flash_drive(std::shared_ptr<FlashDrive> fd) = 0;
+	virtual void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual bool is_dvd_plugged() const = 0;
 	virtual void plug_dvd(fs::path path) = 0;
 	virtual void unplug_dvd() = 0;
@@ -37,7 +37,7 @@ struct VM {
 	virtual stb::Image screenshot() = 0;
 	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) = 0;
 
-	virtual bool is_flash_plugged(std::shared_ptr<FlashDriveController> fd) = 0;
+	virtual bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot(const std::string& snapshot) = 0;
 	virtual bool is_defined() const = 0;

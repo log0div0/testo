@@ -101,6 +101,8 @@ private:
 	Token size(std::string size_number, const Pos& size_number_pos);
 	Token id();
 	Token var_ref();
+	Token abort();
+	Token print();
 	Token type();
 	Token wait();
 	Token check();

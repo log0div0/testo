@@ -1,39 +1,23 @@
 
 #pragma once
 
-#include "../Utils.hpp"
-#include <nlohmann/json.hpp>
-#include <string>
-#include <set>
-#include <vector>
+#include "Controller.hpp"
+#include "FlashDrive.hpp"
 
-struct FlashDriveController {
+struct FlashDriveController: public Controller {
 	FlashDriveController() = delete;
-	FlashDriveController(const nlohmann::json& config_);
-	virtual ~FlashDriveController() = default;
+	FlashDriveController(std::shared_ptr<FlashDrive> fd): Controller(), fd(fd) {}
 
-	virtual void create() = 0;
-	virtual bool is_mounted() const = 0;
-	virtual void mount() const = 0;
-	virtual void umount() const = 0;
-	virtual fs::path img_path() const = 0;
-	virtual fs::path mount_dir() const = 0;
-	std::string cksum() const;
-	bool is_cksum_ok() const {
-		return calc_cksum() == read_cksum();
-	}
+	std::string name() const override;
+	bool is_defined() override;
+	void create() override;
+	void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) override;
+	void restore_snapshot(const std::string& snapshot) override;
+	void delete_snapshot_with_children(const std::string& snapshot) override;
 
-	std::string name() const;
-	nlohmann::json get_config() const;
-	bool has_folder() const;
-	void load_folder() const;
-	bool cache_enabled() const;
+	bool check_config_relevance() override;
 
-protected:
-	std::string read_cksum() const;
-	void write_cksum(const std::string& cksum) const;
-	std::string calc_cksum() const;
-	void delete_cksum() const;
-	fs::path cksum_path() const;
-	nlohmann::json config;
+	fs::path get_metadata_dir() const override;
+
+	std::shared_ptr<FlashDrive> fd;
 };

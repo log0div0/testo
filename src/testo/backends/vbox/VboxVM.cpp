@@ -1,6 +1,6 @@
 
 #include "VboxVM.hpp"
-#include "VboxFlashDriveController.hpp"
+#include "VboxFlashDrive.hpp"
 #include <vbox/lock.hpp>
 #include <functional>
 
@@ -486,11 +486,11 @@ void VboxVM::set_link(const std::string& nic, bool is_connected) {
 	}
 }
 
-bool VboxVM::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
+bool VboxVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	return (plugged_fds.find(fd) != plugged_fds.end());
 }
 
-void VboxVM::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void VboxVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	try {
 		if (plugged_fds.find(fd) != plugged_fds.end()) {
 			throw std::runtime_error("This flash drive is already attached to this vm");
@@ -529,7 +529,7 @@ void VboxVM::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
 	}
 }
 
-void VboxVM::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void VboxVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	try {
 		if (plugged_fds.find(fd) == plugged_fds.end()) {
 			throw std::runtime_error("This flash drive is not plugged to this vm");

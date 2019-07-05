@@ -1,6 +1,6 @@
 
 #include "QemuVM.hpp"
-#include "QemuFlashDriveController.hpp"
+#include "QemuFlashDrive.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "QemuEnvironment.hpp"
 
@@ -719,7 +719,7 @@ std::string QemuVM::get_flash_img() {
 	}
 }
 
-bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDriveController> fd) {
+bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	try {
 		return get_flash_img().length();
 	} catch (const std::string& error) {
@@ -757,7 +757,7 @@ void QemuVM::attach_flash_drive(const std::string& img_path) {
 
 }
 
-void QemuVM::plug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void QemuVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	try {
 		attach_flash_drive(fd->img_path());
 	} catch (const std::exception& error) {
@@ -794,7 +794,7 @@ void QemuVM::detach_flash_drive() {
 }
 
 //for now it's just only one flash drive possible
-void QemuVM::unplug_flash_drive(std::shared_ptr<FlashDriveController> fd) {
+void QemuVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	try {
 		detach_flash_drive();
 	} catch (const std::string& error) {
