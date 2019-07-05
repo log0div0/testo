@@ -112,6 +112,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float BETA,
         float *C, int ldc)
 {
+    openblas_set_num_threads(1);
     cblas_sgemm(
         CblasRowMajor,
         TA ? CblasTrans : CblasNoTrans,

@@ -8,6 +8,8 @@
 #include <thread>
 #include <wildcards.hpp>
 
+using namespace std::chrono_literals;
+
 using namespace AST;
 
 template <typename Duration>
@@ -547,11 +549,17 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(time_to_seconds(wait_for));
 
 		while (std::chrono::system_clock::now() < deadline) {
+			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
 			if (shit.stink_even_stronger(screenshot, text)) {
 				return;
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> time = end - start;
+			// std::cout << "time = " << time.count() << " seconds" << std::endl;
+			if (time < 1s) {
+				std::this_thread::sleep_for(1s - time);
+			}
 		}
 
 		throw std::runtime_error("Wait timeout");
