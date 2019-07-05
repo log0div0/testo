@@ -61,10 +61,6 @@ if(UNIX)
 	target_link_libraries(testo-core stdc++fs pthread)
 endif()
 
-if(GPU)
-	target_link_libraries(testo-core cuda cudart cublas curand)
-endif()
-
 add_executable(testo main.cpp)
 add_dependencies(testo testo-core)
 target_link_libraries(testo testo-core)

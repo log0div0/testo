@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __linux__
+#include <cblas.h>
+#endif
+
 void mean_cpu(float *x, int batch, int filters, int spatial, float *mean)
 {
     float scale = 1./(batch * spatial);
@@ -101,6 +105,31 @@ void mult_add_into_cpu(int N, float *X, float *Y, float *Z)
     for(i = 0; i < N; ++i) Z[i] += X[i]*Y[i];
 }
 
+#ifdef __linux__
+void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
+        float *A, int lda,
+        float *B, int ldb,
+        float BETA,
+        float *C, int ldc)
+{
+    cblas_sgemm(
+        CblasRowMajor,
+        TA ? CblasTrans : CblasNoTrans,
+        TB ? CblasTrans : CblasNoTrans,
+        M,
+        N,
+        K,
+        ALPHA,
+        A,
+        lda,
+        B,
+        ldb,
+        BETA,
+        C,
+        ldc
+    );
+}
+#else
 void gemm_nn(int M, int N, int K, float ALPHA,
         float *A, int lda,
         float *B, int ldb,
@@ -188,6 +217,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
     else
         gemm_tt(M, N, K, ALPHA,A,lda, B, ldb,C,ldc);
 }
+#endif
 
 #ifdef GPU
 
