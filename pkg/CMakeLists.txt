@@ -5,11 +5,6 @@ set(CPACK_PACKAGE_VERSION "0.0.1")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 set(CPACK_GENERATOR "DEB")
 
-install(FILES
-	${CMAKE_BINARY_DIR}/out/pkg/negotiator.iso
-	DESTINATION /var/lib/libvirt/testo
-	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-
 install(PROGRAMS
 		${CMAKE_BINARY_DIR}/out/sbin/testo
 		DESTINATION /usr/sbin/
@@ -23,8 +18,9 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	libvirt0 (>= 4.0.0), \
 	libvirt-bin (>= 4.0.0), \
 	qemu (>= 1.2.11), \
-	qemu-kvm (>= 2.11) \
+	qemu-kvm (>= 2.11), \
+	libopenblas-base (>= 0.2.0) \
 ")
 
 add_package(testo-package)
-add_dependencies(testo-package testo negotiator-iso)
+add_dependencies(testo-package testo)
