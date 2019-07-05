@@ -21,7 +21,3 @@ else()
 endif()
 
 target_sources(testow PUBLIC ${OS_SPECIFIC_SRCS})
-
-if(GPU)
-	target_link_libraries(testow cuda cudart cublas curand)
-endif()

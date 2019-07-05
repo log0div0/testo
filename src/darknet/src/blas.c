@@ -6,7 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <CLBlast/include/clblast_netlib_c.h>
+
+#ifdef __linux__
+#include <cblas.h>
+#endif
 
 void mean_cpu(float *x, int batch, int filters, int spatial, float *mean)
 {
@@ -102,12 +105,14 @@ void mult_add_into_cpu(int N, float *X, float *Y, float *Z)
     for(i = 0; i < N; ++i) Z[i] += X[i]*Y[i];
 }
 
+#ifdef __linux__
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *A, int lda,
         float *B, int ldb,
         float BETA,
         float *C, int ldc)
 {
+    openblas_set_num_threads(1);
     cblas_sgemm(
         CblasRowMajor,
         TA ? CblasTrans : CblasNoTrans,
@@ -125,6 +130,95 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         ldc
     );
 }
+#else
+void gemm_nn(int M, int N, int K, float ALPHA,
+        float *A, int lda,
+        float *B, int ldb,
+        float *C, int ldc)
+{
+    int i,j,k;
+    for(i = 0; i < M; ++i){
+        for(k = 0; k < K; ++k){
+            float A_PART = ALPHA*A[i*lda+k];
+            for(j = 0; j < N; ++j){
+                C[i*ldc+j] += A_PART*B[k*ldb+j];
+            }
+        }
+    }
+}
+
+void gemm_nt(int M, int N, int K, float ALPHA,
+        float *A, int lda,
+        float *B, int ldb,
+        float *C, int ldc)
+{
+    int i,j,k;
+    for(i = 0; i < M; ++i){
+        for(j = 0; j < N; ++j){
+            float sum = 0;
+            for(k = 0; k < K; ++k){
+                sum += ALPHA*A[i*lda+k]*B[j*ldb + k];
+            }
+            C[i*ldc+j] += sum;
+        }
+    }
+}
+
+void gemm_tn(int M, int N, int K, float ALPHA,
+        float *A, int lda,
+        float *B, int ldb,
+        float *C, int ldc)
+{
+    int i,j,k;
+    for(i = 0; i < M; ++i){
+        for(k = 0; k < K; ++k){
+            float A_PART = ALPHA*A[k*lda+i];
+            for(j = 0; j < N; ++j){
+                C[i*ldc+j] += A_PART*B[k*ldb+j];
+            }
+        }
+    }
+}
+
+void gemm_tt(int M, int N, int K, float ALPHA,
+        float *A, int lda,
+        float *B, int ldb,
+        float *C, int ldc)
+{
+    int i,j,k;
+    for(i = 0; i < M; ++i){
+        for(j = 0; j < N; ++j){
+            float sum = 0;
+            for(k = 0; k < K; ++k){
+                sum += ALPHA*A[i+k*lda]*B[k+j*ldb];
+            }
+            C[i*ldc+j] += sum;
+        }
+    }
+}
+
+void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
+        float *A, int lda,
+        float *B, int ldb,
+        float BETA,
+        float *C, int ldc)
+{
+    int i, j;
+    for(i = 0; i < M; ++i){
+        for(j = 0; j < N; ++j){
+            C[i*ldc + j] *= BETA;
+        }
+    }
+    if(!TA && !TB)
+        gemm_nn(M, N, K, ALPHA,A,lda, B, ldb,C,ldc);
+    else if(TA && !TB)
+        gemm_tn(M, N, K, ALPHA,A,lda, B, ldb,C,ldc);
+    else if(!TA && TB)
+        gemm_nt(M, N, K, ALPHA,A,lda, B, ldb,C,ldc);
+    else
+        gemm_tt(M, N, K, ALPHA,A,lda, B, ldb,C,ldc);
+}
+#endif
 
 #ifdef GPU
 
