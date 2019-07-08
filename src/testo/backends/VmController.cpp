@@ -47,7 +47,7 @@ void VmController::create() {
 		metadata["dvd_signature"] = file_signature(config.at("iso").get<std::string>());
 		write_metadata_file(metadata_file, metadata);
 	} catch (const std::exception& error) {
-		std::throw_with_nested("creating vm");
+		std::throw_with_nested(std::runtime_error("creating vm"));
 	}
 }
 
@@ -84,7 +84,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 			write_metadata_file(parent_metadata_file, parent_metadata);
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested("creating snapshot");
+		std::throw_with_nested(std::runtime_error("creating snapshot"));
 	}
 }
 
@@ -140,7 +140,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 		}
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested("deleting snapshot");
+		std::throw_with_nested(std::runtime_error("deleting snapshot"));
 	}
 }
 

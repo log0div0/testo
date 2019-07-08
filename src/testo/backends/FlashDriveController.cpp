@@ -52,7 +52,7 @@ void FlashDriveController::create() {
 		fs::path metadata_file = metadata_dir / fd->name();
 		write_metadata_file(metadata_file, metadata);
 	} catch (const std::exception& error) {
-		std::throw_with_nested("creating fd");
+		std::throw_with_nested(std::runtime_error("creating fd"));
 	}
 }
 
@@ -89,7 +89,7 @@ void FlashDriveController::create_snapshot(const std::string& snapshot, const st
 			write_metadata_file(parent_metadata_file, parent_metadata);
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested("creating snapshot");
+		std::throw_with_nested(std::runtime_error("creating snapshot"));
 	}
 }
 
@@ -145,7 +145,7 @@ void FlashDriveController::delete_snapshot_with_children(const std::string& snap
 		}
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested("deleting snapshot");
+		std::throw_with_nested(std::runtime_error("deleting snapshot"));
 	}
 }
 
