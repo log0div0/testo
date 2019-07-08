@@ -76,18 +76,27 @@ int do_main(int argc, char** argv) {
 
 	std::string target, test_spec, exclude, invalidate;
 	bool stop_on_fail = false;
+	bool show_help = false;
 
 	auto cli = (
-		value("input file", target),
-		option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
-		option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
-		option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
-		option("--invalidate").doc("invalidate specific tests") & value("wildcard pattern", invalidate)
+		( option("--help").set(show_help).doc("Show this help message") ) |
+		(
+			value("input file or folder", target),
+			option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
+			option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
+			option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
+			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate)
+		)
 	);
 
 	if (!parse(argc, argv, cli)) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
-		throw std::runtime_error("");
+		return -1;
+	}
+
+	if (show_help) {
+		std::cout << make_man_page(cli, "testo") << std::endl;
+		return 0;
 	}
 
 	nlohmann::json config = {
