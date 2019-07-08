@@ -1,7 +1,7 @@
 ..  SPDX-License-Identifier: BSD-3-Clause
     Copyright(c) 2010-2015 Intel Corporation.
 
-.. _getting_started:
+.. _lang:
 
 Начало работы
 ===============================
@@ -10,7 +10,4 @@
     :maxdepth: 2
     :numbered:
 
-    intro
-    test_policy
-    getting_started
-    starting
+    general
