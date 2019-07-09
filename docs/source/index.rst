@@ -11,4 +11,5 @@
    :caption: Содержание:
 
    getting_started/index
+   lang/index
 
