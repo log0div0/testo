@@ -11,5 +11,6 @@
     :numbered:
 
     general
+    lexems
     machine
     flash
