@@ -12,3 +12,4 @@
 
     general
     machine
+    flash
