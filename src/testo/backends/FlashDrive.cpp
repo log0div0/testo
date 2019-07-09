@@ -3,6 +3,7 @@
 #include "Environment.hpp"
 #include <fmt/format.h>
 #include <fstream>
+#include <unistd.h>
 
 FlashDrive::FlashDrive(const nlohmann::json& config_): config(config_) {
 	if (!config.count("name")) {
@@ -58,6 +59,9 @@ void FlashDrive::load_folder() const {
 
 		mount();
 		fs::copy(target_folder, env->flash_drives_mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+#ifdef __linux__
+		sync();
+#endif
 		umount();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
