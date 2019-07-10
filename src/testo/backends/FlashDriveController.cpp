@@ -37,7 +37,13 @@ void FlashDriveController::create() {
 
 		std::string cksum_input = "";
 		if (fd->has_folder()) {
-			cksum_input += directory_signature(config.at("folder").get<std::string>());
+			fs::path folder(config.at("folder").get<std::string>());
+			if (folder.is_relative()) {
+				fs::path src_file(config.at("src_file").get<std::string>());
+				folder = src_file.parent_path() / folder;
+			}
+			folder = fs::canonical(folder);
+			cksum_input += directory_signature(folder);
 		}
 
 		std::hash<std::string> h;
@@ -159,7 +165,13 @@ bool FlashDriveController::check_config_relevance() {
 
 	std::string cksum_input = "";
 	if (fd->has_folder()) {
-		cksum_input += directory_signature(new_config.at("folder").get<std::string>());
+		fs::path folder(new_config.at("folder").get<std::string>());
+		if (folder.is_relative()) {
+			fs::path src_file(new_config.at("src_file").get<std::string>());
+			folder = src_file.parent_path() / folder;
+		}
+		folder = fs::canonical(folder);
+		cksum_input += directory_signature(folder);
 	}
 
 	std::hash<std::string> h;

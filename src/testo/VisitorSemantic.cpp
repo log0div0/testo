@@ -133,33 +133,10 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
-void VisitorSemantic::update_leaves() {
-	for (auto it: reg.tests) {
-		bool is_leaf = true;
-		for (auto it2: reg.tests) {
-			for (auto parent: it2.second->parents) {
-				if (it.second->name.value() == parent->name.value()) {
-					is_leaf = false;
-					break;
-				}
-			}
-			if (!is_leaf) {
-				break;
-			}
-		}
-
-		if (is_leaf) {
-			it.second->snapshots_needed = false;
-		}
-	}
-}
-
 void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
 	for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
 	}
-
-	update_leaves();
 }
 
 void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
@@ -377,6 +354,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["name"] = machine->name.value();
+	config["src_file"] = machine->name.pos().file.generic_string();
 
 	auto vmc = env->create_vm_controller(config);
 	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
@@ -391,6 +369,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
 	config["name"] = flash->name.value();
+	config["src_file"] = flash->name.pos().file.generic_string();
 
 	auto fdc = env->create_flash_drive_controller(config);
 	reg.fdcs.emplace(std::make_pair(flash->name, fdc));

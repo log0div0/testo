@@ -98,7 +98,7 @@ void QemuFlashDrive::umount() const {
 
 bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
 	try {
-		std::string check = "qemu-img snapshot -l " + img_path().generic_string() + " | grep " + snapshot;
+		std::string check = "qemu-img snapshot -l " + img_path().generic_string() + " | grep " + snapshot + " > /dev/null";
 		if (std::system(check.c_str()) == 0) {
 			return true;
 		}

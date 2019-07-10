@@ -24,6 +24,11 @@ FlashDrive::FlashDrive(const nlohmann::json& config_): config(config_) {
 
 	if (config.count("folder")) {
 		fs::path folder(config.at("folder").get<std::string>());
+		if (folder.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			folder = src_file.parent_path() / folder;
+		}
+		folder = fs::canonical(folder);
 		if (!fs::exists(folder)) {
 			throw std::runtime_error(fmt::format("specified folder {} for flash drive {} does not exist",
 				folder.generic_string(), name()));
@@ -50,18 +55,19 @@ nlohmann::json FlashDrive::get_config() const {
 
 void FlashDrive::load_folder() const {
 	try {
-		fs::path target_folder(config.at("folder").get<std::string>());
-
-		if (target_folder.is_relative()) {
-			target_folder = fs::canonical(target_folder);
+		fs::path folder(config.at("folder").get<std::string>());
+		if (folder.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			folder = src_file.parent_path() / folder;
 		}
+		folder = fs::canonical(folder);
 
-		if (!fs::exists(target_folder)) {
+		if (!fs::exists(folder)) {
 			throw std::runtime_error("Target folder doesn't exist");
 		}
 
 		mount();
-		fs::copy(target_folder, env->flash_drives_mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+		fs::copy(folder, env->flash_drives_mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
 #ifdef __linux__
 		sync();
 #endif

@@ -10,8 +10,6 @@
 struct VisitorSemantic {
 	VisitorSemantic(Register& reg);
 
-	void update_leaves();
-
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
 	void visit_macro(std::shared_ptr<AST::Macro> macro);
