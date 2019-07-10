@@ -45,14 +45,27 @@ macro install_continent() {
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter
 	wait "Введите идентификатор шлюза"; type $id; press Enter*2
-	if ($QEMU) {
-		wait "Установить Континент" timeout 10m; stop; unplug dvd; start
-	}
+	wait "Установить Континент" timeout 10m; stop; unplug dvd; start
 	wait "Главное меню" timeout 10m
 }
 
 test install_CUS {
-	CUS install_continent()
+	CUS  {
+		start
+		wait timeout 3s
+		wait "Установить Континент"
+		press Enter
+		wait "Выберите тип платформы"
+		press Enter
+		wait "Введите идентификатор шлюза"
+		type "150"
+		press Enter*2
+		wait "Установить Континент" timeout 10m
+		stop
+		unplug dvd
+		start
+		wait "Главное меню" timeout 10m
+	}
 }
 
 test install_UB {
@@ -112,7 +125,6 @@ test init_UB: install_UB {
 flash ub_flash {
 	fs: "ntfs"
 	size: 16Mb
-	cache_enabled: 0
 }
 
 test config_UB: init_CUS, init_UB {
@@ -151,14 +163,14 @@ test config_UB: init_CUS, init_UB {
 		wait "Сертификаты управления"; press Esc
 		wait "Возврат в предыдущее меню"; press Esc
 		wait "Главное меню"; press Down*2, Enter
-		wait "Меню инструменты"; press Down*3; press Enter
+		wait "Инструменты"; press Down*3; press Enter
 		wait "Введите ID узла безопасности"; type "250"; press Enter
 		wait "Выбор сертификата управления"; press Down, Enter
-		wait "Узел 250 успешно создан" timeout 2m; press Enter
-		wait "Меню инструменты"; press Down*7, Enter
+		wait "Узел безопасности 250 успешно создан" timeout 2m; press Enter
+		wait "Инструменты"; press Down*6, Enter
 		wait "Выгрузить политику"; type "250"; press Enter
 		wait "Успешно"; press Enter
-		wait timeout 1m;
+		wait timeout 10s;
 		unplug flash ub_flash
 	}
 
@@ -178,8 +190,9 @@ test config_UB: init_CUS, init_UB {
 	CUS {
 		press Esc
 		wait "Имеются неподтвержденные изменения с узлов" timeout 4m; press Enter
-		wait "Меню инструменты"; press Down*6, Enter
+		wait "Инструменты"; press Down*5, Enter
 		wait "Локальные изменения"; press Space, Enter
-		wait "Подтверждено конфигураций :1" timeout 1m; press Enter
+		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
+		wait "Инструменты"
 	}
 }
