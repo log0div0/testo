@@ -29,6 +29,15 @@ void HyperVFlashDrive::umount() const {
 fs::path HyperVFlashDrive::img_path() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-fs::path HyperVFlashDrive::mount_dir() const {
+bool HyperVFlashDrive::has_snapshot(const std::string& snapshot) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+void HyperVFlashDrive::make_snapshot(const std::string& snapshot) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+void HyperVFlashDrive::delete_snapshot(const std::string& snapshot) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+void HyperVFlashDrive::rollback(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }

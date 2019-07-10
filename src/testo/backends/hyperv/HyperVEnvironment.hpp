@@ -2,7 +2,7 @@
 #pragma once
 
 #include "HyperVVM.hpp"
-#include "HyperVFlashDriveController.hpp"
+#include "HyperVFlashDrive.hpp"
 #include "../Environment.hpp"
 
 struct HyperVEnvironment: Environment {

@@ -87,7 +87,7 @@ void VboxFlashDrive::mount() const {
 		msft::Connect connect;
 		auto disk = connect.virtualDisk(img_path().generic_string());
 		auto partition = disk.partitions().at(0);
-		partition.addAccessPath(mount_dir().generic_string());
+		partition.addAccessPath(env->flash_drives_mount_dir().generic_string());
 #endif
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
@@ -103,7 +103,7 @@ void VboxFlashDrive::umount() const {
 		msft::Connect connect;
 		auto disk = connect.virtualDisk(img_path().generic_string());
 		auto partition = disk.partitions().at(0);
-		partition.removeAccessPath(mount_dir().generic_string());
+		partition.removeAccessPath(env->flash_drives_mount_dir().generic_string());
 		VirtualDisk virtualDisk(img_path().generic_string());
 		virtualDisk.detach();
 #endif

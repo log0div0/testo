@@ -18,5 +18,4 @@ struct HyperVFlashDrive: FlashDrive {
 	void delete_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	fs::path img_path() const override;
-	fs::path mount_dir() const override;
 };

@@ -3,7 +3,10 @@
 #include "Environment.hpp"
 #include <fmt/format.h>
 #include <fstream>
+
+#ifdef __linux__
 #include <unistd.h>
+#endif
 
 FlashDrive::FlashDrive(const nlohmann::json& config_): config(config_) {
 	if (!config.count("name")) {
