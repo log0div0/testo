@@ -14,5 +14,6 @@
     lexems
     machine
     flash
+    test
     actions
     keys
