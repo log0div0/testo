@@ -14,3 +14,4 @@
     lexems
     machine
     flash
+    actions
