@@ -15,3 +15,4 @@
     machine
     flash
     actions
+    keys
