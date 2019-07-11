@@ -438,7 +438,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 		}
 
-		print("Running test ", test->name.value(), " ", test->snapshots_needed);
+		print("Running test ", test->name.value());
 
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);
