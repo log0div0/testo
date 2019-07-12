@@ -16,5 +16,6 @@
     machine
     flash
     test
+    macro
     actions
     keys
