@@ -12,6 +12,7 @@
 
     general
     lexems
+    var_refs
     machine
     flash
     test
