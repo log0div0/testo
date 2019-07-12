@@ -18,4 +18,6 @@
     test
     macro
     actions
+    if
+    for
     keys
