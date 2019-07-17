@@ -2,6 +2,7 @@
 #include <coro/Application.h>
 #include "Interpreter.hpp"
 
+#include "backends/dummy/DummyEnvironment.hpp"
 #include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
@@ -59,7 +60,7 @@ void run_file(const fs::path& file, const nlohmann::json& config) {
 	} else if (hypervisor == "vsphere") {
 		throw std::runtime_error("TODO");
 	} else if (hypervisor == "dummy") {
-		throw std::runtime_error("TODO");
+		env = std::make_shared<DummyEnvironment>();
 	} else {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
 	}
@@ -89,7 +90,7 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	} else if (hypervisor == "vsphere") {
 		throw std::runtime_error("TODO");
 	} else if (hypervisor == "dummy") {
-		throw std::runtime_error("TODO");
+		env = std::make_shared<DummyEnvironment>();
 	} else {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
 	}
