@@ -1,7 +1,7 @@
 machine my_machine {
 	cpus: 1
 	ram: 512Mb
-	iso: "Don't care"
+	iso: "../iso.iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
