@@ -12,7 +12,16 @@ DummyVM::~DummyVM() {
 }
 
 void DummyVM::install() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	//remove the file if it exists
+
+	if (fs::exists(metadata_file())) {
+		fs::remove(metadata_file());
+	}
+
+	nlohmann::json config;
+	config["state"] = "stopped";
+
+	write_metadata_file(metadata_file(), config);
 }
 
 void DummyVM::make_snapshot(const std::string& snapshot) {
@@ -56,18 +65,35 @@ void DummyVM::unplug_dvd() {
 }
 
 void DummyVM::start() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+	config["state"] = "running";
+	write_metadata_file(metadata_file(), config);
 }
 
 void DummyVM::stop() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+	config["state"] = "stopped";
+	write_metadata_file(metadata_file(), config);
 }
 
 void DummyVM::suspend() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+
+	auto current_state = config.at("state").get<std::string>();
+	if (current_state != "running") {
+		throw std::runtime_error(std::string("Can't suspend vm not in running state, current state is ") + current_state);
+	}
+
+	config["state"] = "suspended";
+	write_metadata_file(metadata_file(), config);
 }
 void DummyVM::resume() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+	auto current_state = config.at("state").get<std::string>();
+	if (current_state != "suspended") {
+		throw std::runtime_error(std::string("Can't suspend vm not in running state, current state is ") + current_state);
+	}
+	write_metadata_file(metadata_file(), config);
 }
 
 void DummyVM::power_button() {
@@ -92,11 +118,25 @@ void DummyVM::delete_snapshot(const std::string& snapshot) {
 }
 
 bool DummyVM::is_defined() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	return fs::exists(metadata_file());
 }
 
 VmState DummyVM::state() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+
+	std::string state = config.at("state").get<std::string>();
+
+	if (state == "stopped") {
+		return VmState::Stopped;
+	} else if (state == "running") {
+		return VmState::Running;
+	} else if (state == "suspended") {
+		return VmState::Suspended;
+	} else if (state == "other") {
+		return VmState::Other;
+	} else {
+		throw std::runtime_error(std::string("Unknown vm state: ") + state);
+	}
 }
 
 bool DummyVM::is_additions_installed() {
@@ -114,3 +154,26 @@ void DummyVM::remove_from_guest(const fs::path& obj) {
 std::set<std::string> DummyVM::nics() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
+void DummyVM::write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
+	std::ofstream metadata_file_stream(file.generic_string());
+	if (!metadata_file_stream) {
+		throw std::runtime_error("Can't write metadata file " + file.generic_string());
+	}
+
+	metadata_file_stream << metadata;
+	metadata_file_stream.close();
+}
+
+nlohmann::json DummyVM::read_metadata_file(const fs::path& file) const {
+	std::ifstream metadata_file_stream(file.generic_string());
+	if (!metadata_file_stream) {
+		throw std::runtime_error("Can't read metadata file " + file.generic_string());
+	}
+
+	nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
+	metadata_file_stream.close();
+	return result;
+}
+
+
