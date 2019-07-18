@@ -1,5 +1,7 @@
 BASEDIR=$(dirname "$0")
 
+TESTO_BIN=$SBIN_DIR/testo
+
 assert_output() {
 	if [ "$1" != "$2" ]; then
 		diff <(echo "$1") <(echo "$2")
@@ -13,7 +15,7 @@ rm -rf ./vm_metadata
 
 mkdir ./dummy_hypervisor_files
 
-OUTPUT=`ISO_FILE=$BASEDIR/iso.iso ./out/sbin/testo $BASEDIR/scripts/base.testo --hypervisor dummy`
+OUTPUT=`ISO_FILE=$BASEDIR/iso.iso $TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy`
 
 EVERYTHING_PASSED="Registering machine my_machine
 TEST TO RUN
@@ -37,7 +39,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_PASSED"
 
-OUTPUT=`ISO_FILE=$BASEDIR/iso.iso ./out/sbin/testo $BASEDIR/scripts/base.testo --hypervisor dummy`
+OUTPUT=`ISO_FILE=$BASEDIR/iso.iso $TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy`
 
 EVERYTHING_UP_TO_DATE="Registering machine my_machine
 [ 50%] Test parent_test is up-to-date, skipping...
@@ -52,6 +54,6 @@ assert_output "$OUTPUT" "$EVERYTHING_UP_TO_DATE"
 
 touch $BASEDIR/iso.iso
 
-OUTPUT=`ISO_FILE=$BASEDIR/iso.iso ./out/sbin/testo $BASEDIR/scripts/base.testo --hypervisor dummy`
+OUTPUT=`ISO_FILE=$BASEDIR/iso.iso $TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy`
 
 assert_output "$OUTPUT" "$EVERYTHING_PASSED"

@@ -1,4 +1,7 @@
+
 BASEDIR=$(dirname "$0")
+
+TESTO_BIN=$SBIN_DIR/testo
 
 assert_output() {
 	if [ "$1" != "$2" ]; then
@@ -13,7 +16,7 @@ rm -rf ./vm_metadata
 
 mkdir ./dummy_hypervisor_files
 
-OUTPUT=`./out/sbin/testo $BASEDIR/scripts/base.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy`
 
 EVERYTHING_PASSED="Registering machine my_machine
 TEST TO RUN
@@ -43,7 +46,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_PASSED"
 
-OUTPUT=`./out/sbin/testo $BASEDIR/scripts/base.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy`
 
 EVERYTHING_UP_TO_DATE="Registering machine my_machine
 [ 50%] Test parent_test is up-to-date, skipping...
@@ -56,7 +59,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_UP_TO_DATE"
 
-OUTPUT=`./out/sbin/testo $BASEDIR/scripts/no_snapshots.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/no_snapshots.testo --hypervisor dummy`
 
 RUN_ONLY_CHILD="Registering machine my_machine
 [ 50%] Test parent_test is up-to-date, skipping...
