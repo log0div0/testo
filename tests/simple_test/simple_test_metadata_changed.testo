@@ -1,7 +1,7 @@
 machine my_machine {
 	cpus: 1
 	ram: 512Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: "some_iso"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -18,13 +18,13 @@ machine my_machine {
 	}
 
 	metadata: {
-		login: "url-client"
+		login: "my_machine_another_login"
 		password: "1111"
-		host_name: "url-client"
+		host_name: "my-machine"
 	}
 }
 
 [no_snapshots]
 test simple_test {
-	my_machine stop
+	my_machine start
 }

@@ -3,8 +3,6 @@
 #include <iostream>
 
 DummyVM::DummyVM(const nlohmann::json& config_): VM(config_) {
-	std::cout << "DummyVM " << config.dump(4) << std::endl;
-
 }
 
 DummyVM::~DummyVM() {
