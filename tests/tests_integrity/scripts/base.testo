@@ -1,7 +1,7 @@
 machine my_machine {
 	cpus: 1
 	ram: 512Mb
-	iso: "some_iso"
+	iso: "Don't care"
 	disk_size: 4Gb
 	nic nat: {
 		slot: 0
@@ -24,7 +24,19 @@ machine my_machine {
 	}
 }
 
-[no_snapshots]
-test simple_test {
-	my_machine start
+test parent_test {
+	my_machine {
+		start
+		stop
+		print $host_name
+		print "Some string"
+	}
+}
+
+test child_test: parent_test  {
+	my_machine {
+		start
+		stop
+		print $login
+	}
 }

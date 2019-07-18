@@ -40,6 +40,8 @@ void VmController::create() {
 
 		fs::path metadata_file = metadata_dir / vm->name();
 
+		config.erase("src_file");
+
 		metadata["vm_config"] = config.dump();
 		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
 		metadata["vm_name"] = config.at("name");
@@ -171,6 +173,9 @@ bool VmController::check_config_relevance() {
 
 	new_config.erase("iso");
 	old_config.erase("iso");
+
+	new_config.erase("src_file");
+	//old_config already doesn't have the src_file
 
 	bool config_is_ok = (old_config == new_config);
 

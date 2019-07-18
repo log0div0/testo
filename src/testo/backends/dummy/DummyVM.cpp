@@ -30,7 +30,8 @@ void DummyVM::make_snapshot(const std::string& snapshot) {
 }
 
 void DummyVM::rollback(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	//TODO!!!!!! RESTORE THE STATE FROM SNAPSHOT!
+	return;
 }
 
 void DummyVM::press(const std::vector<std::string>& buttons) {
