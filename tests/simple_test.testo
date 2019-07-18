@@ -26,5 +26,5 @@ machine my_machine {
 
 [no_snapshots]
 test simple_test {
-	my_machine start
+	my_machine stop
 }
