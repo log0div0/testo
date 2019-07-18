@@ -2,13 +2,13 @@
 #include <coro/Application.h>
 #include "Interpreter.hpp"
 
+#include "backends/dummy/DummyEnvironment.hpp"
+#include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
 #include <wmi.hpp>
 #elif __linux__
 #include "backends/qemu/QemuEnvironment.hpp"
-#elif __APPLE__
-#include "backends/vbox/VboxEnvironment.hpp"
 #endif
 
 #include <iostream>
@@ -42,13 +42,29 @@ std::string generate_script(const fs::path& folder, const fs::path& current_pref
 }
 
 void run_file(const fs::path& file, const nlohmann::json& config) {
-#ifdef WIN32
-	env = std::make_shared<HyperVEnvironment>();
-#elif __linux__
-	env = std::make_shared<QemuEnvironment>();
-#elif __APPLE__
-	env = std::make_shared<VboxEnvironment>();
+	std::string hypervisor = config.at("hypervisor").get<std::string>();
+	if (hypervisor == "qemu") {
+#ifndef __linux__
+		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
+#else
+		env = std::make_shared<QemuEnvironment>();
 #endif
+	} else if (hypervisor == "vbox") {
+		env = std::make_shared<VboxEnvironment>();
+	} else if (hypervisor == "hyperv") {
+#ifndef WIN32
+		throw std::runtime_error("Can't use hyperv not in Windows");
+#else
+		env = std::make_shared<HyperVEnvironment>();
+#endif
+	} else if (hypervisor == "vsphere") {
+		throw std::runtime_error("TODO");
+	} else if (hypervisor == "dummy") {
+		env = std::make_shared<DummyEnvironment>();
+	} else {
+		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
+	}
+
 	Interpreter runner(file, config);
 	runner.run();
 }
@@ -56,13 +72,29 @@ void run_file(const fs::path& file, const nlohmann::json& config) {
 void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	auto generated = generate_script(folder);
 
-#ifdef WIN32
-	env = std::make_shared<HyperVEnvironment>();
-#elif __linux__
-	env = std::make_shared<QemuEnvironment>();
-#elif __APPLE__
-	env = std::make_shared<VboxEnvironment>();
+	std::string hypervisor = config.at("hypervisor").get<std::string>();
+	if (hypervisor == "qemu") {
+#ifndef __linux__
+		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
+#else
+		env = std::make_shared<QemuEnvironment>();
 #endif
+	} else if (hypervisor == "vbox") {
+		env = std::make_shared<VboxEnvironment>();
+	} else if (hypervisor == "hyperv") {
+#ifndef WIN32
+		throw std::runtime_error("Can't use hyperv not in Windows");
+#else
+		env = std::make_shared<HyperVEnvironment>();
+#endif
+	} else if (hypervisor == "vsphere") {
+		throw std::runtime_error("TODO");
+	} else if (hypervisor == "dummy") {
+		env = std::make_shared<DummyEnvironment>();
+	} else {
+		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
+	}
+
 	Interpreter runner(folder, generated, config);
 	runner.run();
 }
@@ -75,6 +107,15 @@ int do_main(int argc, char** argv) {
 #endif
 
 	std::string target, test_spec, exclude, invalidate;
+
+#ifdef WIN32
+	std::string hypervisor("hyperv");
+#elif __linux__
+	std::string hypervisor("qemu");
+#elif __APPLE__
+	std::string hypervisor("vsphere");
+#endif
+
 	bool stop_on_fail = false;
 	bool show_help = false;
 
@@ -85,7 +126,8 @@ int do_main(int argc, char** argv) {
 			option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
 			option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
 			option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
-			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate)
+			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
+			option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
 		)
 	);
 
@@ -103,7 +145,8 @@ int do_main(int argc, char** argv) {
 		{"stop_on_fail", stop_on_fail},
 		{"test_spec", test_spec},
 		{"exclude", exclude},
-		{"invalidate", invalidate}
+		{"invalidate", invalidate},
+		{"hypervisor", hypervisor}
 	};
 
 	if (!fs::exists(target)) {

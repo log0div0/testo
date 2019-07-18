@@ -10,6 +10,9 @@ list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 file(GLOB BACKENDS_SRCS backends/*.cpp)
 set(SRCS ${SRCS} ${BACKENDS_SRCS})
 
+file(GLOB DUMMY_SRCS backends/dummy/*.cpp)
+set(SRCS ${SRCS} ${DUMMY_SRCS})
+
 file(GLOB VBOX_SRCS backends/vbox/*.cpp)
 set(SRCS ${SRCS} ${VBOX_SRCS})
 
