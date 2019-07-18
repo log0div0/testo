@@ -32,7 +32,6 @@ child_test
 [ 50%] Preparing the environment for the test child_test
 [ 50%] Running test child_test
 [ 50%] Starting virtual machine my_machine
-[ 50%] Stopping virtual machine my_machine
 [ 50%] Resolving var login
 [ 50%] my_machine: my_machine_login
 [ 50%] Taking snapshot child_test for entity my_machine
@@ -67,7 +66,6 @@ child_test
 [ 50%] Restoring snapshot parent_test for entity my_machine
 [ 50%] Running test child_test
 [ 50%] Starting virtual machine my_machine
-[ 50%] Stopping virtual machine my_machine
 [ 50%] Resolving var login
 [ 50%] my_machine: my_machine_login
 [ 50%] Taking snapshot child_test for entity my_machine

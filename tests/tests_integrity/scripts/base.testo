@@ -36,7 +36,6 @@ test parent_test {
 test child_test: parent_test  {
 	my_machine {
 		start
-		stop
 		print $login
 	}
 }

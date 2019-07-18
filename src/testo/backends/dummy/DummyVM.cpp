@@ -25,13 +25,24 @@ void DummyVM::install() {
 
 void DummyVM::make_snapshot(const std::string& snapshot) {
 	auto config = read_metadata_file(metadata_file());
-	config["snapshots"].push_back(snapshot);
+	nlohmann::json new_snapshot = {
+		{"name", snapshot},
+		{"state", config.at("state").get<std::string>()}
+	};
+	config["snapshots"].push_back(new_snapshot);
 	write_metadata_file(metadata_file(), config);
 }
 
 void DummyVM::rollback(const std::string& snapshot) {
-	//TODO!!!!!! RESTORE THE STATE FROM SNAPSHOT!
-	return;
+	auto config = read_metadata_file(metadata_file());
+	for (auto snap: config["snapshots"]) {
+		if (snap["name"] == snapshot) {
+			config["state"] = snap.at("state").get<std::string>();
+			write_metadata_file(metadata_file(), config);
+			return;
+		}
+	}
+	throw std::runtime_error(std::string("Trying to restore non-existent snapshot: ") + snapshot);
 }
 
 void DummyVM::press(const std::vector<std::string>& buttons) {
@@ -115,7 +126,7 @@ bool DummyVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 bool DummyVM::has_snapshot(const std::string& snapshot) {
 	auto config = read_metadata_file(metadata_file());
 	for (auto snap: config["snapshots"]) {
-		if (snap == snapshot) {
+		if (snap["name"] == snapshot) {
 			return true;
 		}
 	}
@@ -126,7 +137,7 @@ void DummyVM::delete_snapshot(const std::string& snapshot) {
 
 	auto snapshots = config.at("snapshots");
 	for (auto it = snapshots.begin(); it != snapshots.end(); ++it) {
-		if (it.value() == snapshot) {
+		if (it.value()["name"] == snapshot) {
 			snapshots.erase(it);
 			config["snapshots"] = snapshots;
 			write_metadata_file(metadata_file(), config);
