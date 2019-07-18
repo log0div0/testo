@@ -40,13 +40,25 @@ void VmController::create() {
 
 		fs::path metadata_file = metadata_dir / vm->name();
 
+		fs::path iso_file = config.at("iso").get<std::string>();
+		if (iso_file.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			iso_file = src_file.parent_path() / iso_file;
+		}
+		iso_file = fs::canonical(iso_file);
+
+		if (!fs::exists(iso_file)) {
+			throw std::runtime_error("Target iso file doesn't exist");
+		}
+
 		config.erase("src_file");
+		config.erase("iso");
 
 		metadata["vm_config"] = config.dump();
 		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
 		metadata["vm_name"] = config.at("name");
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(config.at("iso").get<std::string>());
+		metadata["dvd_signature"] = file_signature(iso_file);
 		write_metadata_file(metadata_file, metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
@@ -172,7 +184,7 @@ bool VmController::check_config_relevance() {
 	old_config.erase("nic");
 
 	new_config.erase("iso");
-	old_config.erase("iso");
+	//old_config already doesn't have the iso
 
 	new_config.erase("src_file");
 	//old_config already doesn't have the src_file
@@ -180,7 +192,15 @@ bool VmController::check_config_relevance() {
 	bool config_is_ok = (old_config == new_config);
 
 	//Check also dvd contingency
-	bool iso_is_ok = (file_signature(vm->get_config().at("iso").get<std::string>()) == get_metadata("dvd_signature"));
+
+	fs::path iso_file = vm->get_config().at("iso").get<std::string>();
+	if (iso_file.is_relative()) {
+		fs::path src_file(vm->get_config().at("src_file").get<std::string>());
+		iso_file = src_file.parent_path() / iso_file;
+	}
+	iso_file = fs::canonical(iso_file);
+
+	bool iso_is_ok = (file_signature(iso_file) == get_metadata("dvd_signature"));
 
 	return (config_is_ok && iso_is_ok);
 }

@@ -25,18 +25,9 @@ machine my_machine {
 }
 
 test parent_test {
-	my_machine {
-		start
-		stop
-		print $host_name
-		print "Some string"
-	}
+	my_machine print "This is parent test running"
 }
 
-[no_snapshots]
 test child_test: parent_test  {
-	my_machine {
-		start
-		print $login
-	}
+	my_machine print "This is child test running"
 }
