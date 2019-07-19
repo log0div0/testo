@@ -192,15 +192,23 @@ void VmController::set_user_metadata(const std::string& key, const std::string& 
 
 void VmController::update_user_metadata() {
 	auto metadata = read_metadata_file(main_file());
+	//need to preserve vm_name and vm_nic_count
+
+	auto vm_name = metadata["user_metadata"].at("vm_name").get<std::string>();
+	auto vm_nic_count = metadata["user_metadata"].at("vm_nic_count").get<std::string>();
 
 	//we just... update it.... completely
 	auto new_config = vm->get_config();
+
+
 	if (new_config.count("metadata")) {
 		metadata["user_metadata"] = vm->get_config().at("metadata");
 	} else {
 		metadata["user_metadata"] = nlohmann::json::object();
 	}
 
+	metadata["user_metadata"]["vm_name"] = vm_name;
+	metadata["user_metadata"]["vm_nic_count"] = vm_nic_count;
 	write_metadata_file(main_file(), metadata);
 }
 
@@ -254,6 +262,6 @@ bool VmController::check_config_relevance() {
 }
 
 fs::path VmController::get_metadata_dir() const {
-	return env->vm_metadata_dir();
+	return env->vm_metadata_dir() / name();
 }
 

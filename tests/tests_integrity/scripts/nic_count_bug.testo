@@ -1,0 +1,20 @@
+machine my_machine {
+	cpus: 1
+	ram: 512Mb
+	iso: "../iso.iso"
+	disk_size: 4Gb
+
+	metadata: {
+		login: "my_machine_login"
+		password: "1111"
+		host_name: "my-machine"
+	}
+}
+
+test parent_test {
+	my_machine {
+		if ($vm_nic_count STREQUAL "0") {
+			print "Is zero"
+		}
+	}
+}
