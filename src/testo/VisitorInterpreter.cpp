@@ -1071,8 +1071,8 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 		}
 	}
 
-	if (vmc->is_defined() && vmc->has_key(var)) {
-		return vmc->get_metadata(var);
+	if (vmc->is_defined() && vmc->has_user_key(var)) {
+		return vmc->get_user_metadata(var);
 	}
 
 	auto env_value = std::getenv(var.c_str());

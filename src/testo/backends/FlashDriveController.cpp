@@ -13,7 +13,7 @@ bool FlashDriveController::is_defined() {
 
 void FlashDriveController::create() {
 	try {
-		fs::path metadata_dir = env->flash_drives_metadata_dir() / fd->name();
+		fs::path metadata_dir = get_metadata_dir();
 
 		if (fs::exists(metadata_dir)) {
 			if (!fs::remove_all(metadata_dir)) {
@@ -55,8 +55,7 @@ void FlashDriveController::create() {
 		metadata["folder_cksum"] = folder_cksum;
 		metadata["current_state"] = "";
 
-		fs::path metadata_file = metadata_dir / fd->name();
-		write_metadata_file(metadata_file, metadata);
+		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating fd"));
 	}
@@ -75,7 +74,7 @@ void FlashDriveController::create_snapshot(const std::string& snapshot, const st
 		}
 
 		//Where to store new metadata file?
-		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		fs::path metadata_file = get_metadata_dir();
 		metadata_file /= fd->name() + "_" + snapshot;
 
 		auto current_state = get_metadata("current_state");
@@ -88,7 +87,7 @@ void FlashDriveController::create_snapshot(const std::string& snapshot, const st
 
 		//link parent to a child
 		if (current_state.length()) {
-			fs::path parent_metadata_file = env->flash_drives_metadata_dir() / fd->name();
+			fs::path parent_metadata_file = get_metadata_dir();
 			parent_metadata_file /= fd->name() + "_" + current_state;
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			parent_metadata.at("children").push_back(snapshot);
@@ -109,7 +108,7 @@ void FlashDriveController::delete_snapshot_with_children(const std::string& snap
 	try {
 		//This thins needs to be recursive
 		//I guess... go through the children and call recursively on them
-		fs::path metadata_file = env->flash_drives_metadata_dir() / fd->name();
+		fs::path metadata_file = get_metadata_dir();
 		metadata_file /= fd->name() + "_" + snapshot;
 
 		auto metadata = read_metadata_file(metadata_file);
@@ -181,5 +180,5 @@ bool FlashDriveController::check_config_relevance() {
 }
 
 fs::path FlashDriveController::get_metadata_dir() const{
-	return env->flash_drives_metadata_dir();
+	return env->flash_drives_metadata_dir() / name();
 }
