@@ -26,6 +26,12 @@ struct Controller {
 	virtual fs::path get_metadata_dir() const = 0;
 
 protected:
+	fs::path main_file() {
+		fs::path result = get_metadata_dir();
+		result = result / name();
+		return result;
+	}
+
 	void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
 	nlohmann::json read_metadata_file(const fs::path& file) const;
 };

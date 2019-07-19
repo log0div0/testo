@@ -15,9 +15,16 @@ struct VmController: public Controller {
 	void restore_snapshot(const std::string& snapshot) override;
 	void delete_snapshot_with_children(const std::string& snapshot) override;
 
+	bool has_user_key(const std::string& key);
+	std::string get_user_metadata(const std::string& key);
+	void set_user_metadata(const std::string& key, const std::string& value);
+
 	bool check_config_relevance() override;
 
 	fs::path get_metadata_dir() const override;
 
 	std::shared_ptr<VM> vm;
+
+private:
+	void update_user_metadata();
 };

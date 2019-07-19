@@ -13,11 +13,9 @@ bool VmController::is_defined() {
 
 void VmController::create() {
 	try {
-		fs::path metadata_dir = env->vm_metadata_dir() / vm->name();
-
-		if (fs::exists(metadata_dir)) {
-			if (!fs::remove_all(metadata_dir)) {
-				throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		if (fs::exists(get_metadata_dir())) {
+			if (!fs::remove_all(get_metadata_dir())) {
+				throw std::runtime_error("Error deleting metadata dir " + get_metadata_dir().generic_string());
 			}
 		}
 
@@ -27,18 +25,18 @@ void VmController::create() {
 
 		nlohmann::json metadata;
 
+		metadata["user_metadata"] = nlohmann::json::object();
+
 		if (config.count("metadata")) {
 			auto config_metadata = config.at("metadata");
 			for (auto it = config_metadata.begin(); it != config_metadata.end(); ++it) {
-				metadata[it.key()] = it.value();
+				metadata["user_metadata"][it.key()] = it.value();
 			}
 		}
 
-		if (!fs::create_directory(metadata_dir)) {
-			throw std::runtime_error("Error creating metadata dir " + metadata_dir.generic_string());
+		if (!fs::create_directory(get_metadata_dir())) {
+			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
-
-		fs::path metadata_file = metadata_dir / vm->name();
 
 		fs::path iso_file = config.at("iso").get<std::string>();
 		if (iso_file.is_relative()) {
@@ -53,13 +51,14 @@ void VmController::create() {
 
 		config.erase("src_file");
 		config.erase("iso");
+		config.erase("metadata");
 
 		metadata["vm_config"] = config.dump();
-		metadata["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
-		metadata["vm_name"] = config.at("name");
+		metadata["user_metadata"]["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
+		metadata["user_metadata"]["vm_name"] = config.at("name");
 		metadata["current_state"] = "";
 		metadata["dvd_signature"] = file_signature(iso_file);
-		write_metadata_file(metadata_file, metadata);
+		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
 	}
@@ -78,7 +77,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 		}
 
 		//Where to store new metadata file?
-		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
+		fs::path metadata_file = get_metadata_dir();
 		metadata_file /= vm->name() + "_" + snapshot;
 
 		auto current_state = get_metadata("current_state");
@@ -91,7 +90,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 
 		//link parent to a child
 		if (current_state.length()) {
-			fs::path parent_metadata_file = env->vm_metadata_dir() / vm->name();
+			fs::path parent_metadata_file = get_metadata_dir();
 			parent_metadata_file /= vm->name() + "_" + current_state;
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			parent_metadata.at("children").push_back(snapshot);
@@ -112,7 +111,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 	try {
 		//This thins needs to be recursive
 		//I guess... go through the children and call recursively on them
-		fs::path metadata_file = env->vm_metadata_dir() / vm->name();
+		fs::path metadata_file = get_metadata_dir();
 		metadata_file /= vm->name() + "_" + snapshot;
 
 		auto metadata = read_metadata_file(metadata_file);
@@ -133,7 +132,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 
 		//Unlink the parent
 		if (parent.length()) {
-			fs::path parent_metadata_file = env->vm_metadata_dir() / vm->name();
+			fs::path parent_metadata_file = get_metadata_dir();
 			parent_metadata_file /= vm->name() + "_" + parent;
 
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
@@ -158,13 +157,62 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 	}
 }
 
+bool VmController::has_user_key(const std::string& key) {
+	try {
+		auto metadata = read_metadata_file(main_file());
+		return metadata["user_metadata"].count(key);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking metadata with key {}", key)));
+	}
+}
+
+
+std::string VmController::get_user_metadata(const std::string& key) {
+	try {
+		auto metadata = read_metadata_file(main_file());
+		if (!metadata["user_metadata"].count(key)) {
+			throw std::runtime_error("Requested key is not present in vm metadata");
+		}
+		return metadata["user_metadata"].at(key).get<std::string>();
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
+	}
+}
+
+void VmController::set_user_metadata(const std::string& key, const std::string& value) {
+	try {
+		auto metadata = read_metadata_file(main_file());
+		metadata["user_metadata"][key] = value;
+		write_metadata_file(main_file(), metadata);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
+	}
+}
+
+void VmController::update_user_metadata() {
+	auto metadata = read_metadata_file(main_file());
+
+	//we just... update it.... completely
+	auto new_config = vm->get_config();
+	if (new_config.count("metadata")) {
+		metadata["user_metadata"] = vm->get_config().at("metadata");
+	} else {
+		metadata["user_metadata"] = nlohmann::json::object();
+	}
+
+	write_metadata_file(main_file(), metadata);
+}
+
 bool VmController::check_config_relevance() {
+	update_user_metadata();
+
 	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
 	auto new_config = vm->get_config();
 	//So....
 	//1) get rid of metadata
 	new_config.erase("metadata");
-	old_config.erase("metadata");
+	old_config.erase("user_metadata");
 
 	//2) Actually.... Let's just be practical here.
 	//Check if both have or don't have nics

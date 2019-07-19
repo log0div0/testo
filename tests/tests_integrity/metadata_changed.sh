@@ -70,7 +70,7 @@ child_test
 [ 50%] Running test child_test
 [ 50%] Starting virtual machine my_machine
 [ 50%] Resolving var login
-[ 50%] my_machine: my_machine_login
+[ 50%] my_machine: my_machine_login_changed
 [ 50%] Taking snapshot child_test for entity my_machine
 [100%] Test child_test PASSED
 PROCESSED TOTAL 2 TESTS IN 0h:0m:0s
