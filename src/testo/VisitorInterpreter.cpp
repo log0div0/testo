@@ -377,6 +377,10 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 	}
 
 	print_statistics();
+
+	if (failed_tests.size()) {
+		throw std::runtime_error("At least one of the tests failed");
+	}
 }
 
 void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
