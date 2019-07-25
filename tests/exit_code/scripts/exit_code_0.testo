@@ -1,0 +1,24 @@
+machine my_machine {
+	cpus: 1
+	ram: 512Mb
+	iso: "../iso.iso"
+	disk_size: 4Gb
+}
+
+test parent_test {
+	my_machine {
+		print "Some string"
+	}
+}
+
+test child_test: parent_test  {
+	my_machine {
+		print "Some other string"
+	}
+}
+
+test another_child_test: parent_test  {
+	my_machine {
+		print "Some other string"
+	}
+}
