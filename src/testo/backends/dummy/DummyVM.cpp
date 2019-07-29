@@ -46,7 +46,7 @@ void DummyVM::rollback(const std::string& snapshot) {
 }
 
 void DummyVM::press(const std::vector<std::string>& buttons) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	return;
 }
 
 bool DummyVM::is_nic_plugged(const std::string& nic) const {

@@ -18,4 +18,14 @@ struct DummyFlashDrive: FlashDrive {
 	void delete_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	fs::path img_path() const override;
+
+private:
+	void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
+	nlohmann::json read_metadata_file(const fs::path& file) const;
+
+	fs::path metadata_file() const {
+		fs::path result = "./dummy_hypervisor_files";
+		result = result / name();
+		return result;
+	};
 };

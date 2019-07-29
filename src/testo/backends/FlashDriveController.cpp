@@ -13,9 +13,21 @@ bool FlashDriveController::is_defined() {
 
 void FlashDriveController::create() {
 	try {
+		// Check if we have the init snapshot. If we do and config is relevant
+		// then just rollback there and exit. If not - do the usual procedure
+
+
 		fs::path metadata_dir = get_metadata_dir();
 
-		if (fs::exists(metadata_dir)) {
+		if (fs::exists(main_file())) {
+			//The check would be valid only if we have the main file
+			if (has_snapshot("_init")) {
+				if (check_config_relevance()) {
+					restore_snapshot("_init");
+					return;
+				}
+			}
+
 			if (!fs::remove_all(metadata_dir)) {
 				throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
 			}
@@ -56,6 +68,8 @@ void FlashDriveController::create() {
 		metadata["current_state"] = "";
 
 		write_metadata_file(main_file(), metadata);
+
+		create_snapshot("_init", "", true);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating fd"));
 	}
