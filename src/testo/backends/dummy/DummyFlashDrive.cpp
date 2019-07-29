@@ -3,7 +3,6 @@
 #include <fstream>
 
 DummyFlashDrive::DummyFlashDrive(const nlohmann::json& config_): FlashDrive(config_) {
-	std::cout << "DummyFlashDrive " << config.dump(4) << std::endl;
 }
 
 DummyFlashDrive::~DummyFlashDrive() {
@@ -22,13 +21,11 @@ void DummyFlashDrive::create() {
 	}
 
 	nlohmann::json config;
-	config["state"] = "stopped";
 	config["snapshots"] = nlohmann::json::array();
 
 	write_metadata_file(metadata_file(), config);
 }
 bool DummyFlashDrive::is_mounted() const {
-	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 	return false;
 }
 void DummyFlashDrive::mount() const {
@@ -41,36 +38,43 @@ fs::path DummyFlashDrive::img_path() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool DummyFlashDrive::has_snapshot(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+	for (auto snap: config["snapshots"]) {
+		if (snap["name"] == snapshot) {
+			return true;
+		}
+	}
+	return false;
 }
 void DummyFlashDrive::make_snapshot(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+	nlohmann::json new_snapshot = {
+		{"name", snapshot},
+	};
+	config["snapshots"].push_back(new_snapshot);
+	write_metadata_file(metadata_file(), config);
 }
 void DummyFlashDrive::delete_snapshot(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+
+	auto snapshots = config.at("snapshots");
+	for (auto it = snapshots.begin(); it != snapshots.end(); ++it) {
+		if (it.value()["name"] == snapshot) {
+			snapshots.erase(it);
+			config["snapshots"] = snapshots;
+			write_metadata_file(metadata_file(), config);
+			return;
+		}
+	}
+	throw std::runtime_error(std::string("Trying to delete non-existent snapshot: ") + snapshot);
 }
 void DummyFlashDrive::rollback(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
-
-void DummyFlashDrive::write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
-	std::ofstream metadata_file_stream(file.generic_string());
-	if (!metadata_file_stream) {
-		throw std::runtime_error("Can't write metadata file " + file.generic_string());
+	auto config = read_metadata_file(metadata_file());
+	for (auto snap: config["snapshots"]) {
+		if (snap["name"] == snapshot) {
+			write_metadata_file(metadata_file(), config);
+			return;
+		}
 	}
-
-	metadata_file_stream << metadata;
-	metadata_file_stream.close();
+	throw std::runtime_error(std::string("Trying to restore non-existent snapshot: ") + snapshot);
 }
-
-nlohmann::json DummyFlashDrive::read_metadata_file(const fs::path& file) const {
-	std::ifstream metadata_file_stream(file.generic_string());
-	if (!metadata_file_stream) {
-		throw std::runtime_error("Can't read metadata file " + file.generic_string());
-	}
-
-	nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
-	metadata_file_stream.close();
-	return result;
-}
-

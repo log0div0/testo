@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <experimental/filesystem>
+#include <nlohmann/json.hpp>
 
 namespace fs = std::experimental::filesystem;
 
@@ -33,6 +34,9 @@ bool is_mac_correct(const std::string& mac);
 std::string normalized_mac(const std::string& mac);
 
 void replace_all(std::string& str, const std::string& from, const std::string& to);
+
+nlohmann::json read_metadata_file(const fs::path& file);
+void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
 
 template <typename T>
 void concat_unique(std::list<T>& left, const std::list<T>& right) {

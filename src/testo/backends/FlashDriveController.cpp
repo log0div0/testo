@@ -70,6 +70,7 @@ void FlashDriveController::create() {
 		write_metadata_file(main_file(), metadata);
 
 		create_snapshot("_init", "", true);
+		set_metadata("current_state", "_init");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating fd"));
 	}

@@ -5,22 +5,27 @@ machine my_machine {
 	disk_size: 4Gb
 }
 
+flash my_flash {
+	fs: "ntfs"
+	size: 32Mb
+}
 
-
-test test1 {
+test test_parent {
 	my_machine {
-		print "Some string"
+		print "test_parent"
 	}
 }
 
-test child_test: parent_test  {
+test test_child_1: test_parent {
 	my_machine {
-		print "Some other string"
+		plug flash my_flash
+		unplug flash my_flash
 	}
 }
 
-test another_child_test: parent_test  {
+test test_child_2: test_parent {
 	my_machine {
-		print "Some other string"
+		plug flash my_flash
+		unplug flash my_flash
 	}
 }
