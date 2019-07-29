@@ -22,7 +22,8 @@ EVERYTHING_PASSED="Registering machine my_machine
 TEST TO RUN
 parent_test
 [  0%] Preparing the environment for the test parent_test
-[  0%] Creating machine my_machine
+[  0%] Creating entity my_machine
+[  0%] Taking initial snapshot for entity my_machine
 [  0%] Running test parent_test
 [  0%] Resolving var vm_nic_count
 [  0%] my_machine: Is zero

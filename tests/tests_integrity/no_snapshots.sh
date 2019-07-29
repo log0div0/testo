@@ -23,7 +23,8 @@ TEST TO RUN
 parent_test
 child_test
 [  0%] Preparing the environment for the test parent_test
-[  0%] Creating machine my_machine
+[  0%] Creating entity my_machine
+[  0%] Taking initial snapshot for entity my_machine
 [  0%] Running test parent_test
 [  0%] Starting virtual machine my_machine
 [  0%] Stopping virtual machine my_machine

@@ -1,0 +1,31 @@
+machine my_machine {
+	cpus: 1
+	ram: 512Mb
+	iso: "../iso.iso"
+	disk_size: 4Gb
+}
+
+flash my_flash {
+	fs: "ntfs"
+	size: 16Mb
+}
+
+test test_parent {
+	my_machine {
+		print "test_parent"
+	}
+}
+
+test test_child_1: test_parent {
+	my_machine {
+		plug flash my_flash
+		unplug flash my_flash
+	}
+}
+
+test test_child_2: test_parent {
+	my_machine {
+		plug flash my_flash
+		unplug flash my_flash
+	}
+}
