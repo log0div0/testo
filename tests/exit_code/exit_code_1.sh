@@ -26,7 +26,8 @@ parent_test
 child_test
 another_child_test
 [  0%] Preparing the environment for the test parent_test
-[  0%] Creating machine my_machine
+[  0%] Creating entity my_machine
+[  0%] Taking initial snapshot for entity my_machine
 [  0%] Running test parent_test
 [  0%] my_machine: Some string
 [  0%] Taking snapshot parent_test for entity my_machine

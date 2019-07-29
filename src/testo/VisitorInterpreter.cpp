@@ -429,8 +429,23 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 
 			if (is_new) {
-				print("Creating machine ", controller->name());
-				controller->create();
+				//Ok, here we need to do some refactoring
+				//If the config is relevant, and the init snapshot is avaliable
+				//we should restore init snapshot
+				//Otherwise we're creating the controller and taking init snapshot
+				if (controller->is_defined() &&
+					controller->has_snapshot("_init") &&
+					controller->check_config_relevance())
+				{
+					print("Restoring initial snapshot for entity ", controller->name());
+					controller->restore_snapshot("_init");
+				} else {
+					print("Creating entity ", controller->name());
+					controller->create();
+					print("Taking initial snapshot for entity ", controller->name());
+					controller->create_snapshot("_init", "", true);
+					controller->set_metadata("current_state", "_init");
+				}
 			}
 		}
 
