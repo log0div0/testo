@@ -19,11 +19,15 @@ void DummyVM::install() {
 	nlohmann::json config;
 	config["state"] = "stopped";
 	config["snapshots"] = nlohmann::json::array();
+	config["flash_drive"] = "";
 
 	write_metadata_file(metadata_file(), config);
 }
 
 void DummyVM::make_snapshot(const std::string& snapshot) {
+	if (is_flash_plugged(nullptr)) {
+		throw std::runtime_error(std::string("Can't create cnapshot with inserted flash drive "));
+	}
 	auto config = read_metadata_file(metadata_file());
 	nlohmann::json new_snapshot = {
 		{"name", snapshot},
@@ -46,7 +50,7 @@ void DummyVM::rollback(const std::string& snapshot) {
 }
 
 void DummyVM::press(const std::vector<std::string>& buttons) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	return;
 }
 
 bool DummyVM::is_nic_plugged(const std::string& nic) const {
@@ -62,10 +66,22 @@ void DummyVM::set_link(const std::string& nic, bool is_connected) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void DummyVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	if (is_flash_plugged(fd)) {
+		throw std::runtime_error("Trying plug already plugged flash drive");
+	}
+	auto config = read_metadata_file(metadata_file());
+	config["flash_drive"] = fd->name();
+	write_metadata_file(metadata_file(), config);
+	return;
 }
 void DummyVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	if (!is_flash_plugged(fd)) {
+		throw std::runtime_error("Trying unplug already unplugged flash drive");
+	}
+	auto config = read_metadata_file(metadata_file());
+	config["flash_drive"] = "";
+	write_metadata_file(metadata_file(), config);
+	return;
 }
 bool DummyVM::is_dvd_plugged() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -121,8 +137,11 @@ int DummyVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t ti
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool DummyVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto config = read_metadata_file(metadata_file());
+	auto flash_drive = config.at("flash_drive").get<std::string>();
+	return flash_drive.length();
 }
+
 bool DummyVM::has_snapshot(const std::string& snapshot) {
 	auto config = read_metadata_file(metadata_file());
 	for (auto snap: config["snapshots"]) {
@@ -184,26 +203,3 @@ void DummyVM::remove_from_guest(const fs::path& obj) {
 std::set<std::string> DummyVM::nics() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-
-void DummyVM::write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
-	std::ofstream metadata_file_stream(file.generic_string());
-	if (!metadata_file_stream) {
-		throw std::runtime_error("Can't write metadata file " + file.generic_string());
-	}
-
-	metadata_file_stream << metadata;
-	metadata_file_stream.close();
-}
-
-nlohmann::json DummyVM::read_metadata_file(const fs::path& file) const {
-	std::ifstream metadata_file_stream(file.generic_string());
-	if (!metadata_file_stream) {
-		throw std::runtime_error("Can't read metadata file " + file.generic_string());
-	}
-
-	nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
-	metadata_file_stream.close();
-	return result;
-}
-
-

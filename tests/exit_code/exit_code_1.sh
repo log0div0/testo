@@ -33,7 +33,7 @@ another_child_test
 [ 33%] Test parent_test PASSED
 [ 33%] Preparing the environment for the test child_test
 [ 33%] Running test child_test
-/home/alex/work/testo/testo/tests/exit_code/scripts/exit_code_1.testo:16:3: Caught abort action on virtual machine my_machine with message: Some error
+$BASEDIR/scripts/exit_code_1.testo:16:3: Caught abort action on virtual machine my_machine with message: Some error
 [ 67%] Test child_test FAILED
 [ 67%] Preparing the environment for the test another_child_test
 [ 67%] Restoring snapshot parent_test for entity my_machine

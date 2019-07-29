@@ -103,11 +103,12 @@ test install_ubuntu {
 	url_proxy, url_client, url_server install_ubuntu()
 }
 
+[no_snapshots]
 test install_guest_additions: install_ubuntu {
 	url_proxy, url_client, url_server install_guest_additions()
 }
 
-
+[no_snapshots]
 test install_pkgs: install_guest_additions {
 	url_proxy, url_client, url_server {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
@@ -134,6 +135,7 @@ test install_pkgs: install_guest_additions {
 	url_proxy, url_client, url_server unplug_nat()
 }
 
+[no_snapshots]
 test configure_server: install_pkgs {
 	url_server {
 		exec bash "date --set=\"2018-09-30 10:00:00.000\""
@@ -189,6 +191,7 @@ test install_squid: configure_server {
 	}
 }
 
+[no_snapshots]
 test configure_squid: install_squid {
 	url_proxy {
 		exec bash "date --set=\"2018-09-30 10:00:00.000\""

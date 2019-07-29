@@ -2,6 +2,7 @@
 #include "Utils.hpp"
 #include <sys/types.h>
 #include <algorithm>
+#include <fstream>
 
 uint32_t time_to_seconds(const std::string& time) {
 	uint32_t seconds = std::stoul(time.substr(0, time.length() - 1));
@@ -96,3 +97,24 @@ void replace_all(std::string& str, const std::string& from, const std::string& t
 	}
 }
 
+nlohmann::json read_metadata_file(const fs::path& file) {
+	std::ifstream metadata_file_stream(file.generic_string());
+	if (!metadata_file_stream) {
+		throw std::runtime_error("Can't read metadata file " + file.generic_string());
+	}
+
+	nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
+	metadata_file_stream.close();
+	return result;
+}
+
+
+void write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
+	std::ofstream metadata_file_stream(file.generic_string());
+	if (!metadata_file_stream) {
+		throw std::runtime_error("Can't write metadata file " + file.generic_string());
+	}
+
+	metadata_file_stream << metadata;
+	metadata_file_stream.close();
+}

@@ -31,9 +31,6 @@ protected:
 		result = result / name();
 		return result;
 	}
-
-	void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
-	nlohmann::json read_metadata_file(const fs::path& file) const;
 };
 
 

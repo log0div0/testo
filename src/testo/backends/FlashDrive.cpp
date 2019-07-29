@@ -2,7 +2,6 @@
 #include "FlashDrive.hpp"
 #include "Environment.hpp"
 #include <fmt/format.h>
-#include <fstream>
 
 #ifdef __linux__
 #include <unistd.h>
