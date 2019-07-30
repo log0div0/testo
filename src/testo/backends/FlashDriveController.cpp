@@ -56,6 +56,7 @@ void FlashDriveController::create() {
 
 		auto folder_cksum = std::to_string(h(cksum_input));
 
+		config.erase("src_file");
 		metadata["fd_config"] = config.dump();
 		metadata["fd_name"] = config.at("name");
 		metadata["folder_cksum"] = folder_cksum;
@@ -164,9 +165,13 @@ bool FlashDriveController::check_config_relevance() {
 	auto old_config = nlohmann::json::parse(get_metadata("fd_config"));
 	auto new_config = fd->get_config();
 
+	new_config.erase("src_file");
+
 	if (old_config != new_config) {
 		return false;
 	}
+
+	new_config = fd->get_config();
 
 	std::string cksum_input = "";
 	if (fd->has_folder()) {

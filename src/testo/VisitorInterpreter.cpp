@@ -154,7 +154,7 @@ void VisitorInterpreter::print_statistics() const {
 	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << duration_to_str(tests_durantion) << std::endl;
 	std::cout << "UP TO DATE: " << up_to_date_tests.size() << std::endl;
 	if (ignored_tests.size()) {
-		std::cout << "LOST CACHE, BUT IGNORED: " << ignored_tests.size() << std::endl;
+		std::cout << "LOST CACHE, BUT SKIPPED: " << ignored_tests.size() << std::endl;
 		for (auto ignore: ignored_tests) {
 			std::cout << "\t -" << ignore->name.value() << std::endl;
 		}
@@ -267,11 +267,29 @@ bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> tes
 
 	bool prompt_needed = false;
 
+	//is some parent is ignored - we should ignore this one as well
 	for (auto parent: test->parents) {
 		for (auto ignored_test: ignored_tests) {
 			if (parent == ignored_test) {
 				return false;
 			}
+		}
+	}
+
+	//if at least on of the parents is not up-to-date, then it was scheduled to run and the user accepted its running
+	//So no need to ask twice
+
+	for (auto parent: test->parents) {
+		bool found = false;
+
+		for (auto up_to_date: up_to_date_tests) {
+			if (parent == up_to_date) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			return true;
 		}
 	}
 
