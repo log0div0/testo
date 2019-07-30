@@ -117,6 +117,7 @@ int do_main(int argc, char** argv) {
 #endif
 
 	bool stop_on_fail = false;
+	bool dont_prompt = false;
 	bool show_help = false;
 
 	auto cli = (
@@ -127,6 +128,7 @@ int do_main(int argc, char** argv) {
 			option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
 			option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
 			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
+			option("--disable_cache_miss_prompt").set(dont_prompt).doc("Don't invoke prompt at test cache miss"),
 			option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
 		)
 	);
@@ -143,6 +145,7 @@ int do_main(int argc, char** argv) {
 
 	nlohmann::json config = {
 		{"stop_on_fail", stop_on_fail},
+		{"cache_miss_prompt", !dont_prompt},
 		{"test_spec", test_spec},
 		{"exclude", exclude},
 		{"invalidate", invalidate},

@@ -136,6 +136,7 @@ struct VisitorInterpreter {
 private:
 	//settings
 	bool stop_on_fail;
+	bool cache_miss_prompt;
 	std::string test_spec, exclude, invalidate;
 
 	std::vector<StackEntry> local_vars;

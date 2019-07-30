@@ -40,6 +40,7 @@ static void sleep(const std::string& interval) {
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
+	cache_miss_prompt = config.at("cache_miss_prompt").get<bool>();
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
@@ -259,6 +260,10 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 }
 
 bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> test) const {
+	if (!cache_miss_prompt) {
+		return true;
+	}
+
 	bool prompt_needed = false;
 
 	for (auto parent: test->parents) {
