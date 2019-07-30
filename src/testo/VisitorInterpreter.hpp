@@ -129,7 +129,7 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
-	std::string test_cksum(std::shared_ptr<AST::Test> test);
+	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
 
 	Register& reg;
 
@@ -162,12 +162,12 @@ private:
 	std::vector<std::shared_ptr<AST::Test>> succeeded_tests;
 	std::vector<std::shared_ptr<AST::Test>> failed_tests;
 	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
+	std::vector<std::shared_ptr<AST::Test>> ignored_tests;
 
 	void print_statistics() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
 	void reset_cache();
-
 
 	bool parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
 		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
@@ -178,6 +178,8 @@ private:
 		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
 		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
 
+	bool is_cached(std::shared_ptr<AST::Test> test) const;
+	bool prompt_proceed_if_needed(std::shared_ptr<AST::Test> test) const;
 	void check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue);
 	void resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue);
 	void update_progress();

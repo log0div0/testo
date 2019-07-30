@@ -146,11 +146,17 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 }
 
 void VisitorInterpreter::print_statistics() const {
-	auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size();
+	auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
 	auto tests_durantion = std::chrono::system_clock::now() - start_timestamp;
 
 	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << duration_to_str(tests_durantion) << std::endl;
 	std::cout << "UP TO DATE: " << up_to_date_tests.size() << std::endl;
+	if (ignored_tests.size()) {
+		std::cout << "LOST CACHE, BUT IGNORED: " << ignored_tests.size() << std::endl;
+		for (auto ignore: ignored_tests) {
+			std::cout << "\t -" << ignore->name.value() << std::endl;
+		}
+	}
 	std::cout << "RUN SUCCESSFULLY: " << succeeded_tests.size() << std::endl;
 	std::cout << "FAILED: " << failed_tests.size() << std::endl;
 	for (auto fail: failed_tests) {
@@ -225,44 +231,89 @@ void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
 	test_plan.push_back(test);
 }
 
-void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {
-	//Check every test
-	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
-		//1) If it's cached, just place it in the corresponding queue
-		bool is_cached = true;
-
-		auto test = *test_it;
-
-		for (auto parent: test->parents) {
-			bool parent_cached = false;
-			for (auto cached: up_to_date_tests) {
-				if (parent->name.value() == cached->name.value()) {
-					parent_cached = true;
-					break;
-				}
-			}
-			if (!parent_cached) {
-				is_cached = false;
+bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
+	for (auto parent: test->parents) {
+		bool parent_cached = false;
+		for (auto cached: up_to_date_tests) {
+			if (parent->name.value() == cached->name.value()) {
+				parent_cached = true;
 				break;
 			}
 		}
-
-		for (auto controller: reg.get_all_controllers(test)) {
-			if (controller->is_defined() &&
-				controller->check_config_relevance() &&
-				controller->has_snapshot(test->name.value()) &&
-				(controller->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
-			{
-				continue;
-			}
-			is_cached = false;
+		if (!parent_cached) {
+			return false;
 		}
+	}
 
-		if (is_cached) {
-			up_to_date_tests.push_back(test);
+	for (auto controller: reg.get_all_controllers(test)) {
+		if (controller->is_defined() &&
+			controller->check_config_relevance() &&
+			controller->has_snapshot(test->name.value()) &&
+			(controller->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
+		{
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
+bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> test) const {
+	bool prompt_needed = false;
+
+	for (auto parent: test->parents) {
+		for (auto ignored_test: ignored_tests) {
+			if (parent == ignored_test) {
+				return false;
+			}
+		}
+	}
+
+	for (auto controller: reg.get_all_controllers(test)) {
+		if (controller->is_defined()) {
+			if (!controller->check_config_relevance()) {
+				prompt_needed = true;
+				break;
+			}
+
+			if (controller->has_snapshot(test->name.value())) {
+				if (controller->get_snapshot_cksum(test->name.value()) != test_cksum(test)) {
+					prompt_needed = true;
+					break;
+				}
+			}
+		}
+	}
+
+	if (!prompt_needed) {
+		return true;
+	}
+
+	std::string choice;
+	std::cout << "Test " << test->name.value() << " lost its cache. It and all its children will run again" << std::endl;
+	std::cout << "Do you confirm the running of the test? [Y/n] ";
+	std::getline(std::cin, choice);
+	if (!choice.length() || choice == "Y" || choice == "y") {
+		return true;
+	}
+
+	return false;
+}
+
+void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {
+	//Check every test
+	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
+		if (is_cached(*test_it)) {
+			up_to_date_tests.push_back(*test_it);
 			tests_queue.erase(test_it++);
 		} else {
-			test_it++;
+			//prompt with what to do with the test
+			if (!prompt_proceed_if_needed(*test_it)) {
+				ignored_tests.push_back(*test_it);
+				tests_queue.erase(test_it++);
+			} else {
+				test_it++;
+			}
 		}
 	}
 }
@@ -1196,7 +1247,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) {
+std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) const {
 	VisitorCksum visitor(reg);
 	return std::to_string(visitor.visit(test));
 }
