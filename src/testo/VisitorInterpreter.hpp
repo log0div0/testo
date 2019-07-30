@@ -137,6 +137,7 @@ private:
 	//settings
 	bool stop_on_fail;
 	bool cache_miss_prompt;
+	bool cache_miss_default_yes;
 	std::string test_spec, exclude, invalidate;
 
 	std::vector<StackEntry> local_vars;

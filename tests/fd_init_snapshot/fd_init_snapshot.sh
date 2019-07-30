@@ -16,7 +16,7 @@ rm -rf ./vm_metadata
 
 mkdir ./dummy_hypervisor_files
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy --disable_cache_miss_prompt`
 
 EVERYTHING_PASSED="Registering machine my_machine
 Registering flash my_flash
@@ -56,7 +56,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_PASSED"
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy --disable_cache_miss_prompt`
 
 EVERYTHING_UP_TO_DATE="Registering machine my_machine
 Registering flash my_flash
@@ -71,7 +71,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_UP_TO_DATE"
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/fd_config_changed.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/fd_config_changed.testo --hypervisor dummy --disable_cache_miss_prompt`
 
 RUN_CHILDREN="Registering machine my_machine
 Registering flash my_flash

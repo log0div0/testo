@@ -41,6 +41,7 @@ static void sleep(const std::string& interval) {
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	cache_miss_prompt = config.at("cache_miss_prompt").get<bool>();
+	cache_miss_default_yes = (config.at("default_cache_miss_policy").get<std::string>() == "accept") ? true : false;
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
@@ -261,7 +262,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 
 bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> test) const {
 	if (!cache_miss_prompt) {
-		return true;
+		return cache_miss_default_yes;
 	}
 
 	bool prompt_needed = false;
@@ -295,14 +296,22 @@ bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> tes
 	}
 
 	std::string choice;
+	std::string default_choice_prompt = cache_miss_default_yes ? "[Y/n]" : "[y/N]";
 	std::cout << "Test " << test->name.value() << " lost its cache. It and all its children will run again" << std::endl;
-	std::cout << "Do you confirm the running of the test? [Y/n] ";
+	std::cout << "Do you confirm the running of the test? " << default_choice_prompt << ": ";
 	std::getline(std::cin, choice);
-	if (!choice.length() || choice == "Y" || choice == "y") {
+
+	std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
+
+	if (!choice.length()) {
+		return cache_miss_default_yes;
+	}
+
+	if (choice == "Y" || choice == "YES") {
 		return true;
 	}
 
-	return false;
+	return false; //If we can't figure out what to do - ignore the test. It's safer
 }
 
 void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {

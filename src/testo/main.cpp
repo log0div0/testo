@@ -106,7 +106,7 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 #endif
 
-	std::string target, test_spec, exclude, invalidate;
+	std::string target, test_spec, exclude, invalidate, default_cache_miss_policy("accept");
 
 #ifdef WIN32
 	std::string hypervisor("hyperv");
@@ -128,7 +128,9 @@ int do_main(int argc, char** argv) {
 			option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
 			option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
 			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
-			option("--disable_cache_miss_prompt").set(dont_prompt).doc("Don't invoke prompt at test cache miss"),
+			option("--disable_cache_miss_prompt").set(dont_prompt).doc("Don't invoke prompt at test cache miss and go with default cache miss policy"),
+			option("--default_cache_miss_policy").doc("Default action when a test loses its cache (accept, skip_branch). Default value - accept")
+				& value("cache policy", default_cache_miss_policy),
 			option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
 		)
 	);
@@ -143,9 +145,14 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
+	if (default_cache_miss_policy != "accept" && default_cache_miss_policy != "skip_branch") {
+		throw std::runtime_error(std::string("Unknown default_cache_miss_policy value: ") + default_cache_miss_policy);
+	}
+
 	nlohmann::json config = {
 		{"stop_on_fail", stop_on_fail},
 		{"cache_miss_prompt", !dont_prompt},
+		{"default_cache_miss_policy", default_cache_miss_policy},
 		{"test_spec", test_spec},
 		{"exclude", exclude},
 		{"invalidate", invalidate},

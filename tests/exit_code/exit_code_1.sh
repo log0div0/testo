@@ -16,7 +16,7 @@ rm -rf ./vm_metadata
 
 mkdir ./dummy_hypervisor_files
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/exit_code_1.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/exit_code_1.testo --hypervisor dummy --disable_cache_miss_prompt`
 
 RETURN_CODE="$?"
 

@@ -16,7 +16,7 @@ rm -rf ./vm_metadata
 
 mkdir ./dummy_hypervisor_files
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/nic_count_bug.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/nic_count_bug.testo --hypervisor dummy --disable_cache_miss_prompt`
 
 EVERYTHING_PASSED="Registering machine my_machine
 TEST TO RUN
@@ -36,7 +36,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_PASSED"
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/nic_count_bug.testo --hypervisor dummy`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/nic_count_bug.testo --hypervisor dummy --disable_cache_miss_prompt`
 
 EVERYTHING_UP_TO_DATE="Registering machine my_machine
 [100%] Test parent_test is up-to-date, skipping...
