@@ -55,8 +55,8 @@ branch2_child2
 [ 43%] Preparing the environment for the test branch1_child1
 [ 43%] Running test branch1_child1
 [ 43%] my_machine1: branch1_child1
-[ 43%] Taking snapshot branch1_child1 for entity my_machine2
 [ 43%] Taking snapshot branch1_child1 for entity my_machine1
+[ 43%] Taking snapshot branch1_child1 for entity my_machine2
 [ 57%] Test branch1_child1 PASSED
 [ 57%] Preparing the environment for the test branch1_child2
 [ 57%] Restoring snapshot branch1_parent1 for entity my_machine1
@@ -67,9 +67,9 @@ branch2_child2
 [ 57%] my_machine2: branch1_child2
 [ 57%] Plugging flash drive my_flash in virtual machine my_machine2
 [ 57%] Unlugging flash drive my_flash from virtual machine my_machine2
+[ 57%] Taking snapshot branch1_child2 for entity my_machine1
 [ 57%] Taking snapshot branch1_child2 for entity my_flash
 [ 57%] Taking snapshot branch1_child2 for entity my_machine2
-[ 57%] Taking snapshot branch1_child2 for entity my_machine1
 [ 71%] Test branch1_child2 PASSED
 [ 71%] Preparing the environment for the test branch2_child1
 [ 71%] Creating entity my_machine4
@@ -95,7 +95,7 @@ assert_output "$OUTPUT" "$EVERYTHING_PASSED"
 #ok, now we need to invalidate some cache
 #1) Let's invalidate vm and ignore some tests
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/vm_config_changed.testo --hypervisor dummy --disable_cache_miss_prompt --default_cache_miss_policy skip_branch`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/vm_config_changed.testo --hypervisor dummy --cache_miss_policy skip_branch`
 
 BRANCH2_INVALIDATED="Registering machine my_machine1
 Registering machine my_machine2
@@ -120,7 +120,7 @@ assert_output "$OUTPUT" "$BRANCH2_INVALIDATED"
 
 #2) Now let's invalidate flash drive
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/fd_config_changed.testo --hypervisor dummy --disable_cache_miss_prompt --default_cache_miss_policy skip_branch`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/fd_config_changed.testo --hypervisor dummy --cache_miss_policy skip_branch`
 
 BRANCH1_CHILD2_INVALIDATED="Registering machine my_machine1
 Registering machine my_machine2

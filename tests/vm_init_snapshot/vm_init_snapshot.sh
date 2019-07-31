@@ -16,7 +16,7 @@ rm -rf ./vm_metadata
 
 mkdir ./dummy_hypervisor_files
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy --disable_cache_miss_prompt`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy --cache_miss_policy accept`
 
 EVERYTHING_PASSED="Registering machine my_machine
 TEST TO RUN
@@ -42,7 +42,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_PASSED"
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy --disable_cache_miss_prompt`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/base.testo --hypervisor dummy --cache_miss_policy accept`
 
 EVERYTHING_UP_TO_DATE="Registering machine my_machine
 [ 50%] Test test1 is up-to-date, skipping...
@@ -55,7 +55,7 @@ FAILED: 0"
 
 assert_output "$OUTPUT" "$EVERYTHING_UP_TO_DATE"
 
-OUTPUT=`$TESTO_BIN $BASEDIR/scripts/vm_config_changed.testo --hypervisor dummy --disable_cache_miss_prompt`
+OUTPUT=`$TESTO_BIN $BASEDIR/scripts/vm_config_changed.testo --hypervisor dummy --cache_miss_policy accept`
 
 EVERYTHING_PASSED="Registering machine my_machine
 TEST TO RUN

@@ -136,8 +136,7 @@ struct VisitorInterpreter {
 private:
 	//settings
 	bool stop_on_fail;
-	bool cache_miss_prompt;
-	bool cache_miss_default_yes;
+	std::string cache_miss_policy;
 	std::string test_spec, exclude, invalidate;
 
 	std::vector<StackEntry> local_vars;
@@ -181,7 +180,7 @@ private:
 		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
 
 	bool is_cached(std::shared_ptr<AST::Test> test) const;
-	bool prompt_proceed_if_needed(std::shared_ptr<AST::Test> test) const;
+	bool resolve_miss_cache_action(std::shared_ptr<AST::Test> test) const;
 	void check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue);
 	void resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue);
 	void update_progress();

@@ -42,59 +42,12 @@ std::string generate_script(const fs::path& folder, const fs::path& current_pref
 }
 
 void run_file(const fs::path& file, const nlohmann::json& config) {
-	std::string hypervisor = config.at("hypervisor").get<std::string>();
-	if (hypervisor == "qemu") {
-#ifndef __linux__
-		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
-#else
-		env = std::make_shared<QemuEnvironment>();
-#endif
-	} else if (hypervisor == "vbox") {
-		env = std::make_shared<VboxEnvironment>();
-	} else if (hypervisor == "hyperv") {
-#ifndef WIN32
-		throw std::runtime_error("Can't use hyperv not in Windows");
-#else
-		env = std::make_shared<HyperVEnvironment>();
-#endif
-	} else if (hypervisor == "vsphere") {
-		throw std::runtime_error("TODO");
-	} else if (hypervisor == "dummy") {
-		env = std::make_shared<DummyEnvironment>();
-	} else {
-		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
-	}
-
 	Interpreter runner(file, config);
 	runner.run();
 }
 
 void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	auto generated = generate_script(folder);
-
-	std::string hypervisor = config.at("hypervisor").get<std::string>();
-	if (hypervisor == "qemu") {
-#ifndef __linux__
-		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
-#else
-		env = std::make_shared<QemuEnvironment>();
-#endif
-	} else if (hypervisor == "vbox") {
-		env = std::make_shared<VboxEnvironment>();
-	} else if (hypervisor == "hyperv") {
-#ifndef WIN32
-		throw std::runtime_error("Can't use hyperv not in Windows");
-#else
-		env = std::make_shared<HyperVEnvironment>();
-#endif
-	} else if (hypervisor == "vsphere") {
-		throw std::runtime_error("TODO");
-	} else if (hypervisor == "dummy") {
-		env = std::make_shared<DummyEnvironment>();
-	} else {
-		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
-	}
-
 	Interpreter runner(folder, generated, config);
 	runner.run();
 }
@@ -106,7 +59,7 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 #endif
 
-	std::string target, test_spec, exclude, invalidate, default_cache_miss_policy("accept");
+	std::string target, test_spec, exclude, invalidate, cache_miss_policy;
 
 #ifdef WIN32
 	std::string hypervisor("hyperv");
@@ -117,7 +70,6 @@ int do_main(int argc, char** argv) {
 #endif
 
 	bool stop_on_fail = false;
-	bool dont_prompt = false;
 	bool show_help = false;
 
 	auto cli = (
@@ -128,9 +80,8 @@ int do_main(int argc, char** argv) {
 			option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
 			option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
 			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
-			option("--disable_cache_miss_prompt").set(dont_prompt).doc("Don't invoke prompt at test cache miss and go with default cache miss policy"),
-			option("--default_cache_miss_policy").doc("Default action when a test loses its cache (accept, skip_branch). Default value - accept")
-				& value("cache policy", default_cache_miss_policy),
+			option("--cache_miss_policy").doc("Apply some policy when a test loses its cache (accept, skip_branch, abort)")
+				& value("cache miss policy", cache_miss_policy),
 			option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
 		)
 	);
@@ -145,22 +96,45 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
-	if (default_cache_miss_policy != "accept" && default_cache_miss_policy != "skip_branch") {
-		throw std::runtime_error(std::string("Unknown default_cache_miss_policy value: ") + default_cache_miss_policy);
+	if (cache_miss_policy.length()) {
+		if (cache_miss_policy != "accept" && cache_miss_policy != "skip_branch" && cache_miss_policy != "abort") {
+			throw std::runtime_error(std::string("Unknown cache_miss_policy value: ") + cache_miss_policy);
+		}
 	}
+
 
 	nlohmann::json config = {
 		{"stop_on_fail", stop_on_fail},
-		{"cache_miss_prompt", !dont_prompt},
-		{"default_cache_miss_policy", default_cache_miss_policy},
+		{"cache_miss_policy", cache_miss_policy},
 		{"test_spec", test_spec},
 		{"exclude", exclude},
-		{"invalidate", invalidate},
-		{"hypervisor", hypervisor}
+		{"invalidate", invalidate}
 	};
 
 	if (!fs::exists(target)) {
 		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + target);
+	}
+
+	if (hypervisor == "qemu") {
+#ifndef __linux__
+		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
+#else
+		env = std::make_shared<QemuEnvironment>();
+#endif
+	} else if (hypervisor == "vbox") {
+		env = std::make_shared<VboxEnvironment>();
+	} else if (hypervisor == "hyperv") {
+#ifndef WIN32
+		throw std::runtime_error("Can't use hyperv not in Windows");
+#else
+		env = std::make_shared<HyperVEnvironment>();
+#endif
+	} else if (hypervisor == "vsphere") {
+		throw std::runtime_error("TODO");
+	} else if (hypervisor == "dummy") {
+		env = std::make_shared<DummyEnvironment>();
+	} else {
+		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
 	}
 
 	if (fs::is_regular_file(target)) {

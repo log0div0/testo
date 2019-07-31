@@ -40,8 +40,7 @@ static void sleep(const std::string& interval) {
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
-	cache_miss_prompt = config.at("cache_miss_prompt").get<bool>();
-	cache_miss_default_yes = (config.at("default_cache_miss_policy").get<std::string>() == "accept") ? true : false;
+	cache_miss_policy = config.at("cache_miss_policy").get<std::string>();
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
@@ -260,12 +259,19 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 	return true;
 }
 
-bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> test) const {
-	if (!cache_miss_prompt) {
-		return cache_miss_default_yes;
+bool VisitorInterpreter::resolve_miss_cache_action(std::shared_ptr<AST::Test> test) const {
+	if (cache_miss_policy.length()) {
+		//cache miss policy is set
+		if (cache_miss_policy == "skip_branch") {
+			return false;
+		} else if (cache_miss_policy == "accept") {
+			return true;
+		} else if (cache_miss_policy == "abort") {
+			throw std::runtime_error(std::string("Test ") + test->name.value() + " lost cache, aborting");
+		} else {
+			throw std::runtime_error("Unknown cache_miss_policy"); //should never happen, just a failsafe
+		}
 	}
-
-	bool prompt_needed = false;
 
 	//is some parent is ignored - we should ignore this one as well
 	for (auto parent: test->parents) {
@@ -276,7 +282,7 @@ bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> tes
 		}
 	}
 
-	//if at least on of the parents is not up-to-date, then it was scheduled to run and the user accepted its running
+	//if at least one of the parents is not up-to-date, then it was scheduled to run and the user accepted its running
 	//So no need to ask twice
 
 	for (auto parent: test->parents) {
@@ -292,6 +298,8 @@ bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> tes
 			return true;
 		}
 	}
+
+	bool prompt_needed = false;
 
 	for (auto controller: reg.get_all_controllers(test)) {
 		if (controller->is_defined()) {
@@ -314,22 +322,17 @@ bool VisitorInterpreter::prompt_proceed_if_needed(std::shared_ptr<AST::Test> tes
 	}
 
 	std::string choice;
-	std::string default_choice_prompt = cache_miss_default_yes ? "[Y/n]" : "[y/N]";
 	std::cout << "Test " << test->name.value() << " lost its cache. It and all its children will run again" << std::endl;
-	std::cout << "Do you confirm the running of the test? " << default_choice_prompt << ": ";
+	std::cout << "Do you confirm the running of the test? [Y/n]: ";
 	std::getline(std::cin, choice);
 
 	std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
 
-	if (!choice.length()) {
-		return cache_miss_default_yes;
-	}
-
-	if (choice == "Y" || choice == "YES") {
+	if (!choice.length() || choice == "Y" || choice == "YES") {
 		return true;
 	}
 
-	return false; //If we can't figure out what to do - ignore the test. It's safer
+	return false;
 }
 
 void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {
@@ -340,7 +343,7 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 			tests_queue.erase(test_it++);
 		} else {
 			//prompt with what to do with the test
-			if (!prompt_proceed_if_needed(*test_it)) {
+			if (!resolve_miss_cache_action(*test_it)) {
 				ignored_tests.push_back(*test_it);
 				tests_queue.erase(test_it++);
 			} else {
