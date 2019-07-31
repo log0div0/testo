@@ -40,6 +40,7 @@ static void sleep(const std::string& interval) {
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
+	cache_miss_policy = config.at("cache_miss_policy").get<std::string>();
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
@@ -146,11 +147,17 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 }
 
 void VisitorInterpreter::print_statistics() const {
-	auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size();
+	auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
 	auto tests_durantion = std::chrono::system_clock::now() - start_timestamp;
 
 	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << duration_to_str(tests_durantion) << std::endl;
 	std::cout << "UP TO DATE: " << up_to_date_tests.size() << std::endl;
+	if (ignored_tests.size()) {
+		std::cout << "LOST CACHE, BUT SKIPPED: " << ignored_tests.size() << std::endl;
+		for (auto ignore: ignored_tests) {
+			std::cout << "\t -" << ignore->name.value() << std::endl;
+		}
+	}
 	std::cout << "RUN SUCCESSFULLY: " << succeeded_tests.size() << std::endl;
 	std::cout << "FAILED: " << failed_tests.size() << std::endl;
 	for (auto fail: failed_tests) {
@@ -225,44 +232,123 @@ void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
 	test_plan.push_back(test);
 }
 
-void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {
-	//Check every test
-	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
-		//1) If it's cached, just place it in the corresponding queue
-		bool is_cached = true;
-
-		auto test = *test_it;
-
-		for (auto parent: test->parents) {
-			bool parent_cached = false;
-			for (auto cached: up_to_date_tests) {
-				if (parent->name.value() == cached->name.value()) {
-					parent_cached = true;
-					break;
-				}
-			}
-			if (!parent_cached) {
-				is_cached = false;
+bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
+	for (auto parent: test->parents) {
+		bool parent_cached = false;
+		for (auto cached: up_to_date_tests) {
+			if (parent->name.value() == cached->name.value()) {
+				parent_cached = true;
 				break;
 			}
 		}
-
-		for (auto controller: reg.get_all_controllers(test)) {
-			if (controller->is_defined() &&
-				controller->check_config_relevance() &&
-				controller->has_snapshot(test->name.value()) &&
-				(controller->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
-			{
-				continue;
-			}
-			is_cached = false;
+		if (!parent_cached) {
+			return false;
 		}
+	}
 
-		if (is_cached) {
-			up_to_date_tests.push_back(test);
+	for (auto controller: reg.get_all_controllers(test)) {
+		if (controller->is_defined() &&
+			controller->check_config_relevance() &&
+			controller->has_snapshot(test->name.value()) &&
+			(controller->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
+		{
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
+bool VisitorInterpreter::resolve_miss_cache_action(std::shared_ptr<AST::Test> test) const {
+	if (cache_miss_policy.length()) {
+		//cache miss policy is set
+		if (cache_miss_policy == "skip_branch") {
+			return false;
+		} else if (cache_miss_policy == "accept") {
+			return true;
+		} else if (cache_miss_policy == "abort") {
+			throw std::runtime_error(std::string("Test ") + test->name.value() + " lost cache, aborting");
+		} else {
+			throw std::runtime_error("Unknown cache_miss_policy"); //should never happen, just a failsafe
+		}
+	}
+
+	//is some parent is ignored - we should ignore this one as well
+	for (auto parent: test->parents) {
+		for (auto ignored_test: ignored_tests) {
+			if (parent == ignored_test) {
+				return false;
+			}
+		}
+	}
+
+	//if at least one of the parents is not up-to-date, then it was scheduled to run and the user accepted its running
+	//So no need to ask twice
+
+	for (auto parent: test->parents) {
+		bool found = false;
+
+		for (auto up_to_date: up_to_date_tests) {
+			if (parent == up_to_date) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			return true;
+		}
+	}
+
+	bool prompt_needed = false;
+
+	for (auto controller: reg.get_all_controllers(test)) {
+		if (controller->is_defined()) {
+			if (!controller->check_config_relevance()) {
+				prompt_needed = true;
+				break;
+			}
+
+			if (controller->has_snapshot(test->name.value())) {
+				if (controller->get_snapshot_cksum(test->name.value()) != test_cksum(test)) {
+					prompt_needed = true;
+					break;
+				}
+			}
+		}
+	}
+
+	if (!prompt_needed) {
+		return true;
+	}
+
+	std::string choice;
+	std::cout << "Test " << test->name.value() << " lost its cache. It and all its children will run again" << std::endl;
+	std::cout << "Do you confirm the running of the test? [Y/n]: ";
+	std::getline(std::cin, choice);
+
+	std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
+
+	if (!choice.length() || choice == "Y" || choice == "YES") {
+		return true;
+	}
+
+	return false;
+}
+
+void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {
+	//Check every test
+	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
+		if (is_cached(*test_it)) {
+			up_to_date_tests.push_back(*test_it);
 			tests_queue.erase(test_it++);
 		} else {
-			test_it++;
+			//prompt with what to do with the test
+			if (!resolve_miss_cache_action(*test_it)) {
+				ignored_tests.push_back(*test_it);
+				tests_queue.erase(test_it++);
+			} else {
+				test_it++;
+			}
 		}
 	}
 }
@@ -1196,7 +1282,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) {
+std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) const {
 	VisitorCksum visitor(reg);
 	return std::to_string(visitor.visit(test));
 }
