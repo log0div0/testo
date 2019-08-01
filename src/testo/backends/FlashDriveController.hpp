@@ -9,7 +9,7 @@ struct FlashDriveController: public Controller {
 	FlashDriveController(std::shared_ptr<FlashDrive> fd): Controller(), fd(fd) {}
 
 	std::string name() const override;
-	bool is_defined() override;
+	bool is_defined() const override;
 	void create() override;
 	void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) override;
 	void restore_snapshot(const std::string& snapshot) override;

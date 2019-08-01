@@ -7,8 +7,8 @@ std::string VmController::name() const {
 	return vm->name();
 }
 
-bool VmController::is_defined() {
-	return vm->is_defined();
+bool VmController::is_defined() const {
+	return Controller::is_defined() && vm->is_defined();
 }
 
 void VmController::create() {
