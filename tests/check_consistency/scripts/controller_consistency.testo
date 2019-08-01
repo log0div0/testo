@@ -1,0 +1,18 @@
+machine my_machine {
+	cpus: 1
+	ram: 512Mb
+	iso: "../iso.iso"
+	disk_size: 4Gb
+}
+
+flash my_flash {
+	fs: "ntfs"
+	size: 32Mb
+}
+
+test my_test {
+	my_machine {
+		plug flash my_flash
+		unplug flash my_flash
+	}
+}

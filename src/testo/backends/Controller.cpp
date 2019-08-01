@@ -3,6 +3,10 @@
 
 #include <fmt/format.h>
 
+bool Controller::is_defined() const {
+	return fs::exists(main_file());
+}
+
 bool Controller::has_snapshot(const std::string& snapshot) {
 	fs::path metadata_file = get_metadata_dir();
 	metadata_file /= name() + "_" + snapshot;

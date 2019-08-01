@@ -356,7 +356,7 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue) {
 	for (auto test: tests_queue) {
 		for (auto controller: reg.get_all_controllers(test)) {
-			if (controller->has_snapshot(test->name.value())) {
+			if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
 				controller->delete_snapshot_with_children(test->name.value());
 			}
 		}
@@ -388,7 +388,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 
 			if (invalidate.length() && wildcards::match(test->name.value(), invalidate)) {
 				for (auto controller: reg.get_all_controllers(test)) {
-					if (controller->has_snapshot(test->name.value())) {
+					if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
 						controller->delete_snapshot_with_children(test->name.value());
 					}
 				}

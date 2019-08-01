@@ -7,8 +7,8 @@ std::string FlashDriveController::name() const {
 	return fd->name();
 }
 
-bool FlashDriveController::is_defined() {
-	return fd->is_defined();
+bool FlashDriveController::is_defined() const {
+	return Controller::is_defined() && fd->is_defined();
 }
 
 void FlashDriveController::create() {
