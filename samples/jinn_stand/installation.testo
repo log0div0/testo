@@ -1,0 +1,51 @@
+
+machine cas1 {
+	cpus: 1
+	ram: 1024Mb
+	iso: $ISO_DIR + "/CentOS-7-x86_64-Minimal-1810.iso"
+	disk_size: 10Gb
+
+	nic cas2_side: {
+		slot: 0
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "cas1"
+		password: "1111"
+		host_name: "cas1"
+	}
+}
+
+test cas1_centos_installed {
+	cas1 {
+		start
+		wait "Install CentOS 7"; press Tab; type " text"; press Enter
+		wait "Please make your choice" timeout 3m; press Two, Enter
+		wait "Set timezone"; press One, Enter
+		wait "Available regions"; press One, Enter
+		wait "Available timezones in region Europe"; type "33"; press Enter
+		wait "2) [x]"; press Five, Enter
+		wait "1 disk selected"; press C, Enter
+		wait "Installation requires partitioning"; press C, Enter
+		wait "Select a partition scheme configuration"; press C, Enter
+		wait "5) [x]"; press Seven, Enter
+		wait "Set host name"; press One, Enter
+		wait "Enter new value for"; type $host_name; press Enter;
+		wait "Host name: " + $host_name; press C, Enter
+		wait "Installation"; press Eight, Enter
+		wait "Password:"; type $password; press Enter;
+		wait "Password (confirm):"; type $password; press Enter;
+		wait "The password you have provided is weak"; type "yes"; press Enter
+		wait "8) [x]"; press B, Enter
+		wait "Installation complete" timeout 15m; press Enter
+		wait "Install CentOS 7"; unplug dvd;
+		stop; start
+		wait $host_name + " login:"; type "root"; press Enter
+		wait "Password:"; type $password; press Enter;
+		wait "[root@" + $host_name + " ~]#"
+	}
+}

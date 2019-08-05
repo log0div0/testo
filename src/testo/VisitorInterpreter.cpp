@@ -303,13 +303,12 @@ bool VisitorInterpreter::resolve_miss_cache_action(std::shared_ptr<AST::Test> te
 
 	for (auto controller: reg.get_all_controllers(test)) {
 		if (controller->is_defined()) {
-			if (!controller->check_config_relevance()) {
-				prompt_needed = true;
-				break;
-			}
-
 			if (controller->has_snapshot(test->name.value())) {
 				if (controller->get_snapshot_cksum(test->name.value()) != test_cksum(test)) {
+					prompt_needed = true;
+					break;
+				}
+				if (!controller->check_config_relevance()) {
 					prompt_needed = true;
 					break;
 				}

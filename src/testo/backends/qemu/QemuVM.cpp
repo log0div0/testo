@@ -383,8 +383,10 @@ void QemuVM::make_snapshot(const std::string& snapshot) {
 std::set<std::string> QemuVM::nics() const {
 	std::set<std::string> result;
 
-	for (auto& nic: config.at("nic")) {
-		result.insert(nic.at("name").get<std::string>());
+	if (config.count("nic")) {
+		for (auto& nic: config.at("nic")) {
+			result.insert(nic.at("name").get<std::string>());
+		}
 	}
 	return result;
 }
@@ -411,17 +413,19 @@ void QemuVM::rollback(const std::string& snapshot) {
 		}
 
 		//nics contingency
-		for (auto& nic: config.at("nic")) {
+		if (config.count("nic")) {
+			for (auto& nic: config.at("nic")) {
 
-			std::string nic_name = nic.at("name").get<std::string>();
-			auto currently_plugged = is_nic_plugged(nic_name);
-			auto snapshot_plugged = is_nic_plugged(snap, nic_name);
-			if (currently_plugged != snapshot_plugged) {
-				if (domain.state() != VIR_DOMAIN_SHUTOFF) {
-					stop();
+				std::string nic_name = nic.at("name").get<std::string>();
+				auto currently_plugged = is_nic_plugged(nic_name);
+				auto snapshot_plugged = is_nic_plugged(snap, nic_name);
+				if (currently_plugged != snapshot_plugged) {
+					if (domain.state() != VIR_DOMAIN_SHUTOFF) {
+						stop();
+					}
+
+					set_nic(nic_name, snapshot_plugged);
 				}
-
-				set_nic(nic_name, snapshot_plugged);
 			}
 		}
 
