@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+systemctl daemon-reload
+systemctl enable negotiator-agent
+systemctl start negotiator-agent
