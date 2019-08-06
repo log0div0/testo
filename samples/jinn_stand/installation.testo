@@ -20,7 +20,7 @@ machine cas1 {
 	}
 }
 
-test cas1_centos_installed {
+test cas1_install_centos {
 	cas1 {
 		start
 		wait "Install CentOS 7"; press Tab; type " text"; press Enter
@@ -47,5 +47,17 @@ test cas1_centos_installed {
 		wait $host_name + " login:"; type "root"; press Enter
 		wait "Password:"; type $password; press Enter;
 		wait "[root@" + $host_name + " ~]#"
+	}
+}
+
+test cas1_install_additions: cas1_install_centos {
+	cas1 {
+		type "mkdir /media/cdrom"; press Enter
+		plug dvd $ISO_DIR + "/negotiator.iso"
+		wait timeout 5s
+		type "mount /dev/cdrom /media/cdrom"; press Enter
+		wait "mounting read-only"; type "rpm -i /media/cdrom/negotiator-agent-0.0.1.rpm"; press Enter;
+		wait "Created symlink";
+		exec bash "echo test"
 	}
 }
