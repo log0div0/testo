@@ -1,0 +1,163 @@
+
+machine cas1 {
+	cpus: 1
+	ram: 1024Mb
+	iso: $ISO_DIR + "/CentOS-7-x86_64-Minimal-1810.iso"
+	disk_size: 10Gb
+
+	nic cas2_side: {
+		slot: 0
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:11"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		login: "cas1"
+		password: "1111"
+		host_name: "cas1"
+	}
+}
+
+machine cas2 {
+	cpus: 1
+	ram: 1024Mb
+	iso: $ISO_DIR + "/CentOS-7-x86_64-Minimal-1810.iso"
+	disk_size: 10Gb
+
+	nic nat: {
+		slot: 0
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+
+	nic cas1_side: {
+		slot: 0
+		attached_to: "internal"
+		network: "net1"
+		mac: "52:54:00:00:00:22"
+		adapter_type: "e1000"
+	}
+
+	metadata: {
+		nat_iface: "true"
+		login: "cas2"
+		password: "1111"
+		host_name: "cas2"
+	}
+}
+
+macro install_centos() {
+	start
+	wait "Install CentOS 7"; press Tab; type " text"; press Enter
+	wait "Please make your choice" timeout 3m;
+	press Two, Enter;
+	wait "Set timezone"; press One, Enter;
+	wait "Available regions";press One, Enter;
+	wait "Available timezones in region Europe"; type "33"; press Enter
+	wait "2) [x] Time settings"; press Five, Enter;
+	wait "1 disk selected"; press C, Enter;
+	wait "Installation requires partitioning"; press C, Enter
+	wait "Select a partition scheme configuration"; press C, Enter
+	wait "5) [x] Installation Destination"; press Seven, Enter
+	wait "Set host name"; press One, Enter
+	wait "Enter new value for"; type $host_name; press Enter;
+	wait "Host name: " + $host_name;
+
+	if ($nat_iface) {
+		press Two, Enter;
+		wait "Device configuration"; press One, Enter
+		wait "Enter new value for 'IPv4 address"; type "dhcp"; press Enter
+		wait timeout 2s; press Seven, Enter
+		wait "7) [x] Connect automatically after reboot"; press Eight, Enter
+		wait "8) [x] Apply configuration in installer"; press C, Enter
+	}
+
+	press C, Enter
+	wait "Installation"; press Eight, Enter
+	wait "Password:"; type $password; press Enter;
+	wait "Password (confirm):"; type $password; press Enter;
+	wait "The password you have provided is weak"; type "yes"; press Enter
+	wait "8) [x] Root password";
+
+	if (check "4) [!] Software selection") {
+		press Four, Enter;
+		wait "Base environment"; press C, Enter
+		wait timeout 3s;
+	}
+
+	press B, Enter
+
+	wait "Installation complete" timeout 15m; press Enter
+	wait "Install CentOS 7"; unplug dvd;
+	stop; start
+	wait $host_name + " login:"; type "root"; press Enter
+	wait "Password:"; type $password; press Enter;
+	wait "[root@" + $host_name + " ~]#"
+}
+
+test install_centos {
+	cas1, cas2 install_centos();
+}
+
+test install_additions_and_disable_selinux: install_centos {
+	cas1, cas2 {
+		type "mkdir /media/cdrom"; press Enter
+		plug dvd $ISO_DIR + "/negotiator.iso"
+		wait timeout 5s
+		type "mount /dev/cdrom /media/cdrom"; press Enter
+		wait "mounting read-only"; type "rpm -i /media/cdrom/negotiator-agent-0.0.1.rpm"; press Enter;
+		wait "Created symlink";
+		exec bash "echo test"
+		exec bash "umount /media/cdrom";
+		unplug dvd;
+		exec bash "sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux"
+		exec bash "sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config"
+		shutdown
+		start
+		wait $host_name + " login:"; type "root"; press Enter
+		wait "Password:"; type $password; press Enter;
+		wait "[root@" + $host_name + " ~]#"
+	}
+}
+
+test install_jinn: install_additions_and_disable_selinux {
+	cas1 {
+		plug dvd $ISO_DIR + "/CentOS-7-x86_64-DVD-1810.iso"
+		wait timeout 5s
+		exec bash "mount /dev/cdrom /media/cdrom"
+		wait timeout 5s
+		exec bash "yum --disablerepo=\\* --enablerepo=c7-media install -y createrepo"
+		copyto $JINN_DIR + "/cas1" "/root/jinn_server"
+		exec bash """
+			cd /root/jinn_server/contrib
+			tar -xf *.tgz
+			cp linux-amd64/*.rpm repo/
+			cd repo
+			createrepo .
+		"""
+		copyto "./misc/CentOS-Local.repo" "/etc/yum.repos.d/CentOS-Local.repo"
+		exec bash "yum --disablerepo=\\* --enablerepo=c7-media,c7-contrib install --nogpgcheck -y /root/jinn_server/JinnServer/*.rpm"
+		exec bash "umount /media/cdrom"
+		unplug dvd
+	}
+
+	cas2 {
+		plug dvd $ISO_DIR + "/CentOS-7-x86_64-DVD-1810.iso"
+		wait timeout 5s
+		exec bash "mount /dev/cdrom /media/cdrom"
+		wait timeout 5s
+		copyto $JINN_DIR + "/cas2" "/root/jinn_server"
+
+		exec bash "yum --disablerepo=\\* --enablerepo=c7-media install --nogpgcheck -y /root/jinn_server/*.rpm"
+		exec bash "umount /media/cdrom"
+		unplug dvd
+	}
+}
+
+test configure_jinn: install_jinn {
+	cas2 {
+		exec bash "cat /opt/tccs/etc/csm.conf"
+	}
+}
