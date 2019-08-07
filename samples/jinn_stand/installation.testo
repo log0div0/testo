@@ -50,7 +50,7 @@ test cas1_install_centos {
 	}
 }
 
-test cas1_install_additions: cas1_install_centos {
+test cas1_install_additions_and_disable_selinux: cas1_install_centos {
 	cas1 {
 		type "mkdir /media/cdrom"; press Enter
 		plug dvd $ISO_DIR + "/negotiator.iso"
@@ -59,5 +59,35 @@ test cas1_install_additions: cas1_install_centos {
 		wait "mounting read-only"; type "rpm -i /media/cdrom/negotiator-agent-0.0.1.rpm"; press Enter;
 		wait "Created symlink";
 		exec bash "echo test"
+		exec bash "umount /media/cdrom"; unplug dvd;
+		exec bash "sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux"
+		exec bash "sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config"
+		shutdown
+		start
+		wait $host_name + " login:"; type "root"; press Enter
+		wait "Password:"; type $password; press Enter;
+		wait "[root@" + $host_name + " ~]#"
+	}
+}
+
+test cas1_install_jinn: cas1_install_additions_and_disable_selinux {
+	cas1 {
+		plug dvd $ISO_DIR + "/CentOS-7-x86_64-DVD-1810.iso"
+		wait timeout 5s
+		exec bash "mount /dev/cdrom /media/cdrom"
+		wait timeout 5s
+		exec bash "yum --disablerepo=\\* --enablerepo=c7-media install -y createrepo"
+		copyto $JINN_DIR "/root/jinn_server"
+		exec bash """
+			cd /root/jinn_server/contrib
+			tar -xf *.tgz
+			cp linux-amd64/*.rpm repo/
+			cd repo
+			createrepo .
+		"""
+		copyto "./misc/CentOS-Local.repo" "/etc/yum.repos.d/CentOS-Local.repo"
+		exec bash "yum --disablerepo=\\* --enablerepo=c7-media,c7-contrib install --nogpgcheck -y /root/jinn_server/JinnServer/*.rpm"
+		exec bash "umount /media/cdrom"
+		unplug dvd
 	}
 }
