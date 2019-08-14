@@ -11,6 +11,12 @@ QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config
 {
 }
 
+QemuFlashDrive::~QemuFlashDrive() {
+	if (is_mounted()) {
+		umount();
+	}
+}
+
 bool QemuFlashDrive::is_defined() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
@@ -64,6 +70,7 @@ void QemuFlashDrive::create() {
 		exec_and_throw_if_failed("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 	} catch (const std::exception& error) {
+		std::system("qemu-nbd -d /dev/nbd0");
 		std::throw_with_nested(std::runtime_error("Creating flash drive"));
 	}
 }

@@ -22,11 +22,11 @@ FlashDrive::FlashDrive(const nlohmann::json& config_): config(config_) {
 	}
 
 	auto fs = config.at("fs").get<std::string>();
-	if (fs != "ntfs" &&
+	/*if (fs != "ntfs" &&
 		fs != "vfat")
 	{
 		throw std::runtime_error(std::string("Constructing FlashDriveController error: unsupported filesystem: ") + fs);
-	}
+	}*/
 
 	if (config.count("folder")) {
 		fs::path folder(config.at("folder").get<std::string>());
