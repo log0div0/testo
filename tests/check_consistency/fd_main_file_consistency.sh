@@ -23,15 +23,15 @@ Registering flash my_flash
 TEST TO RUN
 my_test
 [  0%] Preparing the environment for the test my_test
-[  0%] Creating entity my_flash
-[  0%] Taking initial snapshot for entity my_flash
 [  0%] Creating entity my_machine
 [  0%] Taking initial snapshot for entity my_machine
+[  0%] Creating entity my_flash
+[  0%] Taking initial snapshot for entity my_flash
 [  0%] Running test my_test
 [  0%] Plugging flash drive my_flash in virtual machine my_machine
 [  0%] Unlugging flash drive my_flash from virtual machine my_machine
-[  0%] Taking snapshot my_test for entity my_flash
 [  0%] Taking snapshot my_test for entity my_machine
+[  0%] Taking snapshot my_test for entity my_flash
 [100%] Test my_test PASSED
 PROCESSED TOTAL 1 TESTS IN 0h:0m:0s
 UP TO DATE: 0
@@ -64,14 +64,14 @@ Registering flash my_flash
 TEST TO RUN
 my_test
 [  0%] Preparing the environment for the test my_test
+[  0%] Restoring initial snapshot for entity my_machine
 [  0%] Creating entity my_flash
 [  0%] Taking initial snapshot for entity my_flash
-[  0%] Restoring initial snapshot for entity my_machine
 [  0%] Running test my_test
 [  0%] Plugging flash drive my_flash in virtual machine my_machine
 [  0%] Unlugging flash drive my_flash from virtual machine my_machine
-[  0%] Taking snapshot my_test for entity my_flash
 [  0%] Taking snapshot my_test for entity my_machine
+[  0%] Taking snapshot my_test for entity my_flash
 [100%] Test my_test PASSED
 PROCESSED TOTAL 1 TESTS IN 0h:0m:0s
 UP TO DATE: 0

@@ -37,8 +37,8 @@ test_child_2
 [ 33%] Running test test_child_1
 [ 33%] Plugging flash drive my_flash in virtual machine my_machine
 [ 33%] Unlugging flash drive my_flash from virtual machine my_machine
-[ 33%] Taking snapshot test_child_1 for entity my_flash
 [ 33%] Taking snapshot test_child_1 for entity my_machine
+[ 33%] Taking snapshot test_child_1 for entity my_flash
 [ 67%] Test test_child_1 PASSED
 [ 67%] Preparing the environment for the test test_child_2
 [ 67%] Restoring snapshot test_parent for entity my_machine
@@ -46,8 +46,8 @@ test_child_2
 [ 67%] Running test test_child_2
 [ 67%] Plugging flash drive my_flash in virtual machine my_machine
 [ 67%] Unlugging flash drive my_flash from virtual machine my_machine
-[ 67%] Taking snapshot test_child_2 for entity my_flash
 [ 67%] Taking snapshot test_child_2 for entity my_machine
+[ 67%] Taking snapshot test_child_2 for entity my_flash
 [100%] Test test_child_2 PASSED
 PROCESSED TOTAL 3 TESTS IN 0h:0m:0s
 UP TO DATE: 0
@@ -86,8 +86,8 @@ test_child_2
 [ 33%] Running test test_child_1
 [ 33%] Plugging flash drive my_flash in virtual machine my_machine
 [ 33%] Unlugging flash drive my_flash from virtual machine my_machine
-[ 33%] Taking snapshot test_child_1 for entity my_flash
 [ 33%] Taking snapshot test_child_1 for entity my_machine
+[ 33%] Taking snapshot test_child_1 for entity my_flash
 [ 67%] Test test_child_1 PASSED
 [ 67%] Preparing the environment for the test test_child_2
 [ 67%] Restoring snapshot test_parent for entity my_machine
@@ -95,8 +95,8 @@ test_child_2
 [ 67%] Running test test_child_2
 [ 67%] Plugging flash drive my_flash in virtual machine my_machine
 [ 67%] Unlugging flash drive my_flash from virtual machine my_machine
-[ 67%] Taking snapshot test_child_2 for entity my_flash
 [ 67%] Taking snapshot test_child_2 for entity my_machine
+[ 67%] Taking snapshot test_child_2 for entity my_flash
 [100%] Test test_child_2 PASSED
 PROCESSED TOTAL 3 TESTS IN 0h:0m:0s
 UP TO DATE: 1

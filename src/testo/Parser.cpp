@@ -110,6 +110,12 @@ bool Parser::test_word() const {
 		(LA(1) == Token::category::multiline_string));
 }
 
+bool Parser::test_binary() const {
+	return ((LA(1) == Token::category::true_) ||
+		(LA(1) == Token::category::false_));
+}
+
+
 bool Parser::test_comparison() const {
 	if (test_word()) {
 		if ((LA(2) == Token::category::LESS) ||
@@ -218,21 +224,11 @@ std::shared_ptr<IStmt> Parser::stmt() {
 }
 
 std::shared_ptr<Stmt<Test>> Parser::test() {
-	std::vector<Token> attrs;
+	std::shared_ptr<AttrBlock> attrs(nullptr);
 	//To be honest, we should place attr list in a separate Node. And we will do that
 	//just when it could be used somewhere else
 	if (LA(1) == Token::category::lbracket) {
-		match(Token::category::lbracket);
-		while (LA(1) != Token::category::rbracket) {
-			attrs.push_back(LT(1));
-			match(Token::category::id);
-			if (LA(1) == Token::category::comma) {
-				match(Token::category::comma);
-				continue;
-			}
-		}
-
-		match(Token::category::rbracket);
+		attrs = attr_block();
 		newline_list();
 	}
 
@@ -332,6 +328,11 @@ std::shared_ptr<Attr> Parser::attr() {
 	} else if (test_word()) {
 		auto word_value = std::shared_ptr<WordAttr>(new WordAttr(word()));
 		value = std::shared_ptr<AttrValue<WordAttr>>(new AttrValue<WordAttr>(word_value));
+	} else if (test_binary()) {
+		auto binary_value = std::shared_ptr<BinaryAttr>(new BinaryAttr(LT(1)));
+		value = std::shared_ptr<AttrValue<BinaryAttr>>(new AttrValue<BinaryAttr>(binary_value));
+
+		match({Token::category::true_, Token::category::false_});
 	} else {
 		auto simple_value = std::shared_ptr<SimpleAttr>(new SimpleAttr(LT(1)));
 		value = std::shared_ptr<AttrValue<SimpleAttr>>(new AttrValue<SimpleAttr>(simple_value));
@@ -350,20 +351,28 @@ std::shared_ptr<Attr> Parser::attr() {
 
 std::shared_ptr<AttrBlock> Parser::attr_block() {
 	Token lbrace = LT(1);
-	match(Token::category::lbrace);
+
+	match({Token::category::lbrace, Token::category::lbracket});
 
 	newline_list();
 	std::vector<std::shared_ptr<Attr>> attrs;
 
 	while (LA(1) == Token::category::id) {
 		attrs.push_back(attr());
+		if ((LA(1) == Token::category::rbrace) || (LA(1) == Token::category::rbracket)) {
+			break;
+		}
 		match(Token::category::newline);
 		newline_list();
 	}
 
 	newline_list();
 	Token rbrace = LT(1);
-	match(Token::category::rbrace);
+	if (lbrace.type() == Token::category::lbrace) {
+		match(Token::category::rbrace);
+	} else {
+		match (Token::category::rbracket);
+	}
 
 	return std::shared_ptr<AttrBlock>(new AttrBlock(lbrace, rbrace, attrs));
 }
@@ -380,6 +389,9 @@ std::shared_ptr<Stmt<Controller>> Parser::controller() {
 	match(Token::category::id);
 
 	newline_list();
+	if (LA(1) != Token::category::lbrace) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: expected attribute block");
+	}
 	auto block = attr_block();
 	auto stmt = std::shared_ptr<Controller>(new Controller(controller, name, block));
 	return std::shared_ptr<Stmt<Controller>>(new Stmt<Controller>(stmt));
