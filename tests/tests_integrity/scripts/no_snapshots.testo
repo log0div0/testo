@@ -33,7 +33,7 @@ test parent_test {
 	}
 }
 
-[no_snapshots]
+[no_snapshots: true]
 test child_test: parent_test  {
 	my_machine {
 		start

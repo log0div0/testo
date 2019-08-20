@@ -38,6 +38,7 @@ private:
 	bool test_action() const;
 	bool test_include() const;
 	bool test_word() const;
+	bool test_binary() const;
 	bool test_comparison() const;
 	bool is_button(const Token& t) const;
 

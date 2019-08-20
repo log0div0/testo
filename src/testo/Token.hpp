@@ -35,6 +35,8 @@ struct Token {
 		in,
 		break_,
 		continue_,
+		true_,
+		false_,
 		number,
 		time_interval,
 		size,
@@ -73,6 +75,7 @@ struct Token {
 		//fake categories
 		none, //not initialized
 		word,
+		binary, //true or false
 		program,
 		key_spec,
 		action_block,
@@ -192,6 +195,12 @@ struct Token {
 			return "COMMAND";
 		case cmd_block:
 			return "COMMAND BLOCK";
+		case true_:
+			return "TRUE";
+		case false_:
+			return "FALSE";
+		case binary:
+			return "BINARY CONSTANT";
 		default:
 			return "UNKNOWN TYPE";
 		}

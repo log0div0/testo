@@ -637,41 +637,6 @@ struct MacroCall: public Node {
 	std::vector<std::shared_ptr<Word>> params;
 };
 
-struct Test: public Node {
-	Test(const std::vector<Token>& attrs,
-		const Token& test, const Token& name,
-		const std::vector<Token>& parents_tokens,
-		std::shared_ptr<CmdBlock> cmd_block):
-		Node(test),
-		attrs(attrs),
-		name(name),
-		parents_tokens(parents_tokens),
-		cmd_block(cmd_block) {}
-
-	Pos begin() const {
-		if (attrs.size()) {
-			return attrs[0].pos();
-		} else {
-			return t.pos();
-		}
-	}
-
-	Pos end() const {
-		return cmd_block->end();
-	}
-
-	operator std::string() const {
-		std::string result = t.value() + " " + name.value();
-		return result; //for now
-	}
-
-	std::vector<Token> attrs;
-	Token name;
-	std::vector<Token> parents_tokens;
-	std::list<std::shared_ptr<AST::Test>> parents;
-	std::shared_ptr<CmdBlock> cmd_block;
-	bool snapshots_needed = true;
-};
 
 struct IAttrValue: public Node {
 	using Node::Node;
@@ -713,6 +678,26 @@ struct SimpleAttr: public Node {
 	operator std::string() const {
 		return t.value();
 	}
+};
+
+struct BinaryAttr: public Node {
+	BinaryAttr(const Token& _value):
+		Node(Token(Token::category::binary, _value.value(), _value.pos())),
+		value(_value) {}
+
+	Pos begin() const {
+		return value.pos();
+	}
+
+	Pos end() const {
+		return value.pos();
+	}
+
+	operator std::string() const {
+		return value.value();
+	}
+
+	Token value;
 };
 
 struct WordAttr: public Node {
@@ -787,6 +772,43 @@ struct AttrBlock: public Node {
 	Token open_brace;
 	Token close_brace;
 	std::vector<std::shared_ptr<Attr>> attrs;
+};
+
+struct Test: public Node {
+	Test(std::shared_ptr<AttrBlock> attrs,
+		const Token& test, const Token& name,
+		const std::vector<Token>& parents_tokens,
+		std::shared_ptr<CmdBlock> cmd_block):
+		Node(test),
+		attrs(attrs),
+		name(name),
+		parents_tokens(parents_tokens),
+		cmd_block(cmd_block) {}
+
+	Pos begin() const {
+		if (attrs) {
+			return attrs->begin();
+		} else {
+			return t.pos();
+		}
+	}
+
+	Pos end() const {
+		return cmd_block->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + name.value();
+		return result; //for now
+	}
+
+	std::shared_ptr<AttrBlock> attrs;
+	Token name;
+	std::vector<Token> parents_tokens;
+	std::list<std::shared_ptr<AST::Test>> parents;
+	std::shared_ptr<CmdBlock> cmd_block;
+	bool snapshots_needed = true;
+	std::string description;
 };
 
 struct Controller: public Node {

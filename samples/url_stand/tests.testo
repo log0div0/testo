@@ -1,7 +1,7 @@
 
 include "./installations.testo"
 
-[no_snapshots]
+[no_snapshots: true]
 test http_interception: configure_net
 {
 	url_proxy exec bash """

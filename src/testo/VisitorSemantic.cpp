@@ -118,6 +118,11 @@ VisitorSemantic::VisitorSemantic(Register& reg):
 		fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
 
 		attr_ctxs.insert({"fd_global", fd_global_ctx});
+
+		attr_ctx test_global_ctx;
+		test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
+		test_global_ctx.insert({"description", std::make_pair(false, Token::category::word)});
+		attr_ctxs.insert({"test_global", test_global_ctx});
 }
 
 static uint32_t size_to_mb(const std::string& size) {
@@ -169,20 +174,20 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 
 void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
 	//Check for duplicates in attrs
-	std::set<std::string> attrs;
+	nlohmann::json attrs = nlohmann::json::object();
 
-	for (auto attr: test->attrs) {
-		if (!attrs.insert(attr.value()).second) {
-			throw std::runtime_error(std::string(attr.pos()) + ": Error: duplicate attribute : " + attr.value());
+	if (test->attrs) {
+		attrs = visit_attr_block(test->attrs, "test_global");
+	}
+
+	if (attrs.count("no_snapshots")) {
+		if (attrs.at("no_snapshots").get<bool>()) {
+			test->snapshots_needed = false;
 		}
 	}
 
-	for (auto attr: attrs) {
-		if (attr == "no_snapshots") {
-			test->snapshots_needed = false;
-		} else {
-			throw std::runtime_error(std::string(test->begin()) + ": Error: unknown attribute : " + attr);
-		}
+	if (attrs.count("description")) {
+		test->description = attrs.at("description").get<std::string>();
 	}
 
 	for (auto parent_token: test->parents_tokens) {
@@ -454,6 +459,15 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::WordAttr>>(attr->value)) {
 		auto value = visit_word(p->attr_value->value);
 		config[attr->name.value()] = value;
+	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
+		auto value = p->attr_value->value;
+		if (value.type() == Token::category::true_) {
+			config[attr->name.value()] = true;
+		} else if (value.type() == Token::category::false_) {
+			config[attr->name.value()] = false;
+		} else {
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: unsupported binary attr: " + value.value());
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::SimpleAttr>>(attr->value)) {
 		auto value = p->attr_value->t;
 		if (value.type() == Token::category::number) {
