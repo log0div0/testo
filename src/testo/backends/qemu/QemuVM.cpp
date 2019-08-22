@@ -235,10 +235,6 @@ void QemuVM::install() {
 					<apic/>
 					<vmport state='off'/>
 				</features>
-				<metadata>
-					<testo:login xmlns:testo="vm_metadata/login" value='root'/>
-					<testo:password xmlns:testo="vm_metadata/password" value='1111'/>
-				</metadata>
 				<cpu mode='host-model'>
 					<model fallback='forbid'/>
 				</cpu>
