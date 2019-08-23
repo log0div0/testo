@@ -44,6 +44,7 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
+	json_report_file = config.at("json_report_file").get<std::string>();
 
 	charmap.insert({
 		{'0', {"ZERO"}},
@@ -144,6 +145,65 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 		{'~', {"LEFTSHIFT", "GRAVE"}},
 		{' ', {"SPACE"}}
 	});
+}
+
+nlohmann::json VisitorInterpreter::create_json_report() const {
+	nlohmann::json report = nlohmann::json::object();
+	report["tests"] = nlohmann::json::array();
+
+	for (auto test: succeeded_tests) {
+		auto duration = test->stop_timestamp - test->start_timestamp;
+		nlohmann::json test_json = {
+			{"name", test->name.value()},
+			{"description", test->description},
+			{"state", "success"},
+			{"is_cached", false},
+			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
+		};
+
+		report["tests"].push_back(test_json);
+	}
+
+	for (auto test: failed_tests) {
+		auto duration = test->stop_timestamp - test->start_timestamp;
+		nlohmann::json test_json = {
+			{"name", test->name.value()},
+			{"description", test->description},
+			{"state", "fail"},
+			{"is_cached", false},
+			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
+		};
+
+		report["tests"].push_back(test_json);
+	}
+
+	for (auto test: up_to_date_tests) {
+		auto duration = test->stop_timestamp - test->start_timestamp;
+		nlohmann::json test_json = {
+			{"name", test->name.value()},
+			{"description", test->description},
+			{"state", "success"},
+			{"is_cached", true},
+			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
+		};
+
+		report["tests"].push_back(test_json);
+	}
+
+	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
+
+	std::stringstream ss1;
+	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
+	report["start_timestamp"] = ss1.str();
+
+	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	std::stringstream ss2;
+	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
+
+	report["stop_timestamp"] = ss2.str();
+
+	return report;
 }
 
 void VisitorInterpreter::print_statistics() const {
@@ -462,6 +522,14 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 	}
 
 	print_statistics();
+	if (json_report_file.length()) {
+		auto report = create_json_report();
+
+		fs::create_directories(fs::path(json_report_file).parent_path());
+
+		std::ofstream file(json_report_file);
+		file << report;
+	}
 
 	if (failed_tests.size()) {
 		throw std::runtime_error("At least one of the tests failed");
@@ -470,6 +538,7 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 
 void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 	try {
+		test->start_timestamp = std::chrono::system_clock::now();
 
 		//Check if one of the parents failed. If it did, just fail
 		for (auto parent: test->parents) {
@@ -477,6 +546,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 				if (parent == failed) {
 					current_progress += progress_step;
 					print("Skipping test ", test->name.value(), " because his parent ", parent->name.value(), " failed");
+					test->stop_timestamp = std::chrono::system_clock::now();
 					failed_tests.push_back(test);
 					return;
 				}
@@ -587,7 +657,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		current_progress += progress_step;
-		print("Test ", test->name.value(), " PASSED");
+		test->stop_timestamp = std::chrono::system_clock::now();
+
+		print("Test ", test->name.value(), " PASSED in ", duration_to_str(test->stop_timestamp - test->start_timestamp));
+
 
 		for (auto it: up_to_date_tests) {
 			if (it->name.value() == test->name.value()) {
@@ -608,6 +681,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
 		current_progress += progress_step;
+		test->stop_timestamp = std::chrono::system_clock::now();
 		print ("Test ", test->name.value(), " FAILED");
 
 		bool already_failed = false;

@@ -59,7 +59,7 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 #endif
 
-	std::string target, test_spec, exclude, invalidate, cache_miss_policy;
+	std::string target, test_spec, exclude, invalidate, cache_miss_policy, json_report_file;
 
 #ifdef WIN32
 	std::string hypervisor("hyperv");
@@ -82,6 +82,7 @@ int do_main(int argc, char** argv) {
 			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
 			option("--cache_miss_policy").doc("Apply some policy when a test loses its cache (accept, skip_branch, abort)")
 				& value("cache miss policy", cache_miss_policy),
+			option("--json_report").doc("Generate json-formatted statistics report") & value("output file", json_report_file),
 			option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
 		)
 	);
@@ -108,7 +109,8 @@ int do_main(int argc, char** argv) {
 		{"cache_miss_policy", cache_miss_policy},
 		{"test_spec", test_spec},
 		{"exclude", exclude},
-		{"invalidate", invalidate}
+		{"invalidate", invalidate},
+		{"json_report_file", json_report_file}
 	};
 
 	if (!fs::exists(target)) {
