@@ -809,6 +809,8 @@ struct Test: public Node {
 	std::shared_ptr<CmdBlock> cmd_block;
 	bool snapshots_needed = true;
 	std::string description;
+	std::chrono::system_clock::time_point start_timestamp;
+	std::chrono::system_clock::time_point stop_timestamp;
 };
 
 struct Controller: public Node {
