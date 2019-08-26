@@ -3,6 +3,7 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
+#include "StackEntry.hpp"
 #include "backends/VmController.hpp"
 
 struct VisitorCksum {
@@ -35,4 +36,5 @@ struct VisitorCksum {
 	std::string visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
 	Register& reg;
+	std::vector<StackEntry> local_vars;
 };

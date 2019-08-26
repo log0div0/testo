@@ -1,5 +1,6 @@
 
 #include "VisitorCksum.hpp"
+#include "coro/Finally.h"
 #include <algorithm>
 
 uint64_t VisitorCksum::visit(std::shared_ptr<AST::Test> test) {
@@ -219,6 +220,18 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 }
 
 std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
+	StackEntry new_ctx(true);
+
+	for (size_t i = 0; i < macro_call->params.size(); ++i) {
+		auto value = visit_word(vmc, macro_call->params[i]);
+		new_ctx.define(macro_call->macro->params[i].value(), value);
+	}
+
+	local_vars.push_back(new_ctx);
+	coro::Finally finally([&] {
+		local_vars.pop_back();
+	});
+
 	return visit_action_block(vmc, macro_call->macro->action_block->action);
 }
 
@@ -292,6 +305,15 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vmc, const s
 	//2) reg (todo)
 	//3) env var
 
+	for (auto it = local_vars.rbegin(); it != local_vars.rend(); ++it) {
+		if (it->is_defined(var)) {
+			return it->ref(var);
+		}
+		if (it->is_terminate) {
+			break;
+		}
+	}
+
 	if (vmc->vm->is_defined() && vmc->has_user_key(var)) {
 		return vmc->get_user_metadata(var);
 	}
@@ -301,6 +323,7 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vmc, const s
 	if (env_value == nullptr) {
 		return "";
 	}
+
 	return env_value;
 }
 
