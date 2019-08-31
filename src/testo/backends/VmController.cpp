@@ -213,7 +213,11 @@ void VmController::update_user_metadata() {
 }
 
 bool VmController::check_config_relevance() {
-	update_user_metadata();
+	try {
+		update_user_metadata();
+	} catch (const std::exception& error) {
+		return false;
+	}
 
 	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
 	auto new_config = vm->get_config();
