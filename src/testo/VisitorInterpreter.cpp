@@ -156,7 +156,7 @@ nlohmann::json VisitorInterpreter::create_json_report() const {
 		nlohmann::json test_json = {
 			{"name", test->name.value()},
 			{"description", test->description},
-			{"state", "success"},
+			{"status", "success"},
 			{"is_cached", false},
 			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
 		};
@@ -169,7 +169,7 @@ nlohmann::json VisitorInterpreter::create_json_report() const {
 		nlohmann::json test_json = {
 			{"name", test->name.value()},
 			{"description", test->description},
-			{"state", "fail"},
+			{"status", "fail"},
 			{"is_cached", false},
 			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
 		};
@@ -182,7 +182,7 @@ nlohmann::json VisitorInterpreter::create_json_report() const {
 		nlohmann::json test_json = {
 			{"name", test->name.value()},
 			{"description", test->description},
-			{"state", "success"},
+			{"status", "success"},
 			{"is_cached", true},
 			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
 		};
@@ -523,12 +523,13 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 
 	print_statistics();
 	if (json_report_file.length()) {
+		auto path = fs::absolute(json_report_file);
 		auto report = create_json_report();
 
-		fs::create_directories(fs::path(json_report_file).parent_path());
+		fs::create_directories(path.parent_path());
 
-		std::ofstream file(json_report_file);
-		file << report;
+		std::ofstream file(path);
+		file << report.dump(2);
 	}
 
 	if (failed_tests.size()) {
