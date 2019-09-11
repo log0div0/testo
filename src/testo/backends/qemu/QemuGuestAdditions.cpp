@@ -107,7 +107,6 @@ void QemuGuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& 
 }
 
 int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_seconds) {
-	std::cout << "Executing command " << command << std::endl;
 	auto timeout_chrono = std::chrono::seconds(timeout_seconds);
 	coro::Timeout timeout(timeout_chrono);
 	nlohmann::json request = {

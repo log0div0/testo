@@ -116,23 +116,14 @@ private:
 
 	std::vector<StackEntry> local_vars;
 
-	void do_print() {}
-
-	template <typename First, typename... Rest>
-	void do_print(First first, Rest... rest) {
-		std::cout << first;
-		do_print(std::forward<Rest>(rest)...);
-	}
-
-	template <typename... Args>
-	void print(Args... args) {
-		std::cout << "[";
-		std::cout << std::setw(3);
-		std::cout << std::round(current_progress);
-		std::cout << std::setw(0);
-		std::cout << '%' << "] ";
-		do_print(std::forward<Args>(args)...);
-		std::cout << std::endl;
+	std::string progress() const {
+		std::stringstream ss;
+		ss << "[";
+		ss << std::setw(3);
+		ss << std::round(current_progress);
+		ss << std::setw(0);
+		ss << '%' << "]";
+		return ss.str();
 	}
 
 	std::vector<std::shared_ptr<AST::Test>> succeeded_tests;

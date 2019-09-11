@@ -9,6 +9,7 @@ struct VmController: public Controller {
 	VmController(std::shared_ptr<VM> vm): Controller(), vm(vm) {}
 
 	std::string name() const override;
+	std::string type() const override { return "virtual machine"; }
 	bool is_defined() const override;
 	void create() override;
 	void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) override;

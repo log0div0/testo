@@ -157,7 +157,7 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
 }
 
 void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
-	std::cout << "Registering macro " << macro->name.value() << std::endl;
+	// std::cout << "Registering macro " << macro->name.value() << std::endl;
 
 	if (reg.macros.find(macro->name) != reg.macros.end()) {
 		throw std::runtime_error(std::string(macro->begin()) + ": Error: macros with name " + macro->name.value() +
@@ -351,7 +351,7 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 }
 
 void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
-	std::cout << "Registering machine " << machine->name.value() << std::endl;
+	// std::cout << "Registering machine " << machine->name.value() << std::endl;
 	if (reg.vmcs.find(machine->name) != reg.vmcs.end()) {
 		throw std::runtime_error(std::string(machine->begin()) + ": Error: machine with name " + machine->name.value() +
 			" already exists");
@@ -366,7 +366,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
-	std::cout << "Registering flash " << flash->name.value() << std::endl;
+	// std::cout << "Registering flash " << flash->name.value() << std::endl;
 	if (reg.fdcs.find(flash->name) != reg.fdcs.end()) {
 		throw std::runtime_error(std::string(flash->begin()) + ": Error: flash drive with name " + flash->name.value() +
 			" already exists");

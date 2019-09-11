@@ -7,6 +7,7 @@
 #include <fstream>
 #include <thread>
 #include <wildcards.hpp>
+#include <rang.hpp>
 
 using namespace std::chrono_literals;
 
@@ -210,19 +211,26 @@ void VisitorInterpreter::print_statistics() const {
 	auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
 	auto tests_durantion = std::chrono::system_clock::now() - start_timestamp;
 
+	std::cout << rang::style::bold;
+	std::cout << rang::fg::blue;
 	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << duration_to_str(tests_durantion) << std::endl;
-	std::cout << "UP TO DATE: " << up_to_date_tests.size() << std::endl;
+	std::cout << "UP-TO-DATE: " << up_to_date_tests.size() << std::endl;
 	if (ignored_tests.size()) {
 		std::cout << "LOST CACHE, BUT SKIPPED: " << ignored_tests.size() << std::endl;
 		for (auto ignore: ignored_tests) {
 			std::cout << "\t -" << ignore->name.value() << std::endl;
 		}
 	}
+	std::cout << rang::fg::green;
 	std::cout << "RUN SUCCESSFULLY: " << succeeded_tests.size() << std::endl;
+	std::cout << rang::fg::red;
 	std::cout << "FAILED: " << failed_tests.size() << std::endl;
+	std::cout << rang::style::reset;
+	std::cout << rang::fg::red;
 	for (auto fail: failed_tests) {
 		std::cout << "\t -" << fail->name.value() << std::endl;
 	}
+	std::cout << rang::style::reset;
 }
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
@@ -505,14 +513,27 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 		return;
 	}
 
-	for (auto test: up_to_date_tests) {
-		current_progress += progress_step;
-		print("Test ", test->name.value(), " is up-to-date, skipping...");
+	if (up_to_date_tests.size()) {
+		std::cout << rang::fgB::blue << rang::style::bold;
+		std::cout << "UP-TO-DATE TESTS:" << std::endl;
+		std::cout << rang::style::reset;
+		std::cout << rang::fgB::magenta;
+		for (auto test: up_to_date_tests) {
+			current_progress += progress_step;
+			std::cout << test->name.value() << std::endl;
+		}
+		std::cout << rang::style::reset;
 	}
 
-	std::cout << "TEST TO RUN\n";
-	for (auto it: tests_to_run) {
-		std::cout << it->name.value() << std::endl;
+	if (tests_to_run.size()) {
+		std::cout << rang::fgB::blue << rang::style::bold;
+		std::cout << "TESTS TO RUN:" << std::endl;
+		std::cout << rang::style::reset;
+		std::cout << rang::fgB::magenta;
+		for (auto it: tests_to_run) {
+			std::cout << it->name.value() << std::endl;
+		}
+		std::cout << rang::style::reset;
 	}
 
 	while (!tests_to_run.empty()) {
@@ -546,7 +567,13 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			for (auto failed: failed_tests) {
 				if (parent == failed) {
 					current_progress += progress_step;
-					print("Skipping test ", test->name.value(), " because his parent ", parent->name.value(), " failed");
+					std::cout
+						<< rang::fgB::red << progress() << " Skipping test "
+						<< rang::fg::yellow << test->name.value()
+						<< rang::fgB::red << " because his parent "
+						<< rang::fg::yellow << parent->name.value()
+						<< rang::fgB::red << " failed"
+						<< rang::style::reset << std::endl;
 					test->stop_timestamp = std::chrono::system_clock::now();
 					failed_tests.push_back(test);
 					return;
@@ -556,7 +583,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		//Ok, we're not cached and we need to run the test
 
-		print("Preparing the environment for the test ", test->name.value());
+		std::cout
+			<< rang::fgB::blue << progress() << rang::style::reset
+			<< rang::fgB::blue << " Preparing the environment for test "
+			<< rang::fg::yellow << test->name.value() << rang::style::reset
+			<< rang::style::reset << std::endl;
 
 		//we need to get all the vms in the correct state
 		//vms from parents - rollback them to parents if we need to
@@ -564,7 +595,13 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		for (auto parent: test->parents) {
 			for (auto controller: reg.get_all_controllers(parent)) {
 				if (controller->get_metadata("current_state") != parent->name.value()) {
-					print("Restoring snapshot ", parent->name.value(), " for entity ", controller->name());
+					std::cout
+						<< rang::fgB::blue << progress() << rang::style::reset
+						<< rang::fgB::blue << " Restoring snapshot "
+						<< rang::fg::yellow << parent->name.value() << rang::style::reset
+						<< rang::fgB::blue << " for " << controller->type() << " "
+						<< rang::fg::yellow << controller->name() << rang::style::reset
+						<< rang::style::reset << std::endl;
 					controller->restore_snapshot(parent->name.value());
 				}
 			}
@@ -593,12 +630,24 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 					controller->has_snapshot("_init") &&
 					controller->check_config_relevance())
 				{
-					print("Restoring initial snapshot for entity ", controller->name());
+					std::cout
+						<< rang::fgB::blue << progress()
+						<< " Restoring initial snapshot for " << controller->type() << " "
+						<< rang::fg::yellow << controller->name()
+						<< rang::style::reset << std::endl;
 					controller->restore_snapshot("_init");
 				} else {
-					print("Creating entity ", controller->name());
+					std::cout
+						<< rang::fgB::blue << progress()
+						<< " Creating " << controller->type() << " "
+						<< rang::fg::yellow << controller->name()
+						<< rang::style::reset << std::endl;
 					controller->create();
-					print("Taking initial snapshot for entity ", controller->name());
+					std::cout
+						<< rang::fgB::blue << progress()
+						<< " Taking initial snapshot for " << controller->type() << " "
+						<< rang::fg::yellow << controller->name()
+						<< rang::style::reset << std::endl;
 					controller->create_snapshot("_init", "", true);
 					controller->set_metadata("current_state", "_init");
 				}
@@ -613,7 +662,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 		}
 
-		print("Running test ", test->name.value());
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Running test "
+			<< rang::fg::yellow << test->name.value()
+			<< rang::style::reset << std::endl;
 
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);
@@ -628,7 +681,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		for (auto controller: reg.get_all_controllers(test)) {
 			if (!controller->has_snapshot(test->name.value())) {
-				print("Taking snapshot ", test->name.value(), " for entity ", controller->name());
+				std::cout
+					<< rang::fgB::blue << progress() << " Taking snapshot "
+					<< rang::fg::yellow << test->name.value()
+					<< rang::fgB::blue << " for " << controller->type() << " "
+					<< rang::fg::yellow << controller->name()
+					<< rang::style::reset << std::endl;
 				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
 			}
 			controller->set_metadata("current_state", test->name.value());
@@ -660,7 +718,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		current_progress += progress_step;
 		test->stop_timestamp = std::chrono::system_clock::now();
 
-		print("Test ", test->name.value(), " PASSED in ", duration_to_str(test->stop_timestamp - test->start_timestamp));
+		std::cout
+			<< rang::fgB::green << progress() << " Test "
+			<< rang::fg::yellow << test->name.value()
+			<< rang::fgB::green << " PASSED in "
+			<< duration_to_str(test->stop_timestamp - test->start_timestamp)
+			<< rang::style::reset << std::endl;
 
 
 		for (auto it: up_to_date_tests) {
@@ -683,7 +746,12 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		std::cout << error << std::endl;
 		current_progress += progress_step;
 		test->stop_timestamp = std::chrono::system_clock::now();
-		print ("Test ", test->name.value(), " FAILED");
+		std::cout
+			<< rang::fgB::red << progress()
+			<< " Test "
+			<< rang::fg::yellow << test->name.value()
+			<< rang::fgB::red << " FAILED"
+			<< rang::style::reset << std::endl;
 
 		bool already_failed = false;
 		for (auto it: failed_tests) {
@@ -773,7 +841,11 @@ void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
 	try {
 		std::string message = visit_word(vmc, print_action->message);
-		print(vmc->name(), ": ", message.c_str());
+		std::cout
+			<< rang::fgB::blue << progress() << " "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::fgB::blue << ": " << message
+			<< rang::style::reset << std::endl;
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(print_action, vmc));
 	}
@@ -782,7 +854,16 @@ void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	try {
 		std::string text = visit_word(vmc, type->text_word);
-		print("Typing ", text, " on virtual machine ", vmc->name());
+		if (text.size() == 0) {
+			return;
+		}
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Typing "
+			<< rang::fg::yellow << "\"" << text << "\""
+			<< rang::fgB::blue << " on virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 		for (auto c: text) {
 			auto buttons = charmap.find(c);
 			if (buttons == charmap.end()) {
@@ -803,34 +884,26 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			text = visit_word(vmc, wait->text_word);
 		}
 
-		std::string print_str = std::string("Waiting ");
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Waiting "
+			<< rang::fg::yellow;
+
 		if (text.length()) {
-			print_str += "\"" + text + "\"";
-		}
-		nlohmann::json params = {};
-
-		for (auto it = wait->params.begin(); it != wait->params.end();) {
-			if (it == wait->params.begin()) {
-				print_str += "(";
-			}
-
-			auto value = visit_word(vmc, (*it)->right);
-			params[(*it)->left.value()] = value;
-			print_str += (*it)->left.value() + "=" + value;
-
-			if (++it != wait->params.end()) {
-				print_str += ", ";
-				continue;
-			}
-			print_str += ")";
+			std::cout << "\"" + text + "\" ";
 		}
 
-		print_str += std::string(" on virtual machine ") + vmc->name();
+		std::cout
+			<< rang::fgB::blue << "on virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::fgB::blue;
+
 		if (wait->time_interval) {
-			print_str += " for " + wait->time_interval.value();
+			std::cout << " for " << wait->time_interval.value();
 		}
 
-		print(print_str);
+		std::cout
+			<< rang::style::reset << std::endl;
 
 		if (!wait->text_word) {
 			return sleep(wait->time_interval.value());
@@ -874,15 +947,20 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec) {
 	uint32_t times = key_spec->get_times();
 
-	std::string print_str = std::string("Pressing button ") + key_spec->get_buttons_str();
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Pressing button "
+		<< rang::fg::yellow << key_spec->get_buttons_str()
+		<< rang::fgB::blue;
 
 	if (times > 1) {
-		print_str += std::string(" ") + std::to_string(times) + " times ";
+		std::cout << " " << times << " times";
 	}
 
-	print_str += std::string(" on virtual machine ") + vmc->name();
-
-	print(print_str);
+	std::cout
+		<< " on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->get_buttons());
@@ -933,8 +1011,14 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::
 		}
 	}
 
-	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	print(plug_unplug, " nic ", nic, " on virtual machine ", vmc->name());
+	std::string plug_unplug = plug->is_on() ? "Plugging" : "Unplugging";
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " " << plug_unplug << " nic "
+		<< rang::fg::yellow << nic
+		<< rang::fgB::blue << " on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
 
 	vmc->vm->set_nic(nic, plug->is_on());
 }
@@ -961,15 +1045,27 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 		}
 	}
 
-	std::string plug_unplug = plug->is_on() ? "plugging" : "unplugging";
-	print(plug_unplug, " link ", nic, " on virtual machine ", vmc->name());
+	std::string plug_unplug = plug->is_on() ? "Plugging" : "Unplugging";
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " " << plug_unplug << " link "
+		<< rang::fg::yellow << nic
+		<< rang::fgB::blue << " on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
 
 	vmc->vm->set_link(nic, plug->is_on());
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
-	print("Plugging flash drive ", fdc->name(), " in virtual machine ", vmc->name());
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Plugging flash drive "
+		<< rang::fg::yellow << fdc->name()
+		<< rang::fgB::blue << " in virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
 	if (vmc->vm->is_flash_plugged(fdc->fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fdc->name()));
 	}
@@ -979,7 +1075,13 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
-	print("Unlugging flash drive ", fdc->name(), " from virtual machine ", vmc->name());
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Unlugging flash drive "
+		<< rang::fg::yellow << fdc->name()
+		<< rang::fgB::blue << " from virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
 	if (!vmc->vm->is_flash_plugged(fdc->fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fdc->name()));
 	}
@@ -994,7 +1096,13 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 		}
 
 		fs::path path = visit_word(vmc, plug->path);
-		print("Plugging dvd ", path, " in virtual machine ", vmc->name());
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Plugging dvd "
+			<< rang::fg::yellow << path
+			<< rang::fgB::blue << " in virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 		if (path.is_relative()) {
 			path = plug->t.pos().file.parent_path() / path;
 		}
@@ -1007,14 +1115,22 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			return;
 		}
 
-		print("Unplugging dvd from virtual machine ", vmc->name());
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Unplugging dvd from virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 		vmc->vm->unplug_dvd();
 	}
 }
 
 void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Start> start) {
 	try {
-		print("Starting virtual machine ", vmc->name());
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Starting virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 		vmc->vm->start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(start, vmc));
@@ -1023,7 +1139,11 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Stop> stop) {
 	try {
-		print("Stopping virtual machine ", vmc->name());
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Stopping virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 		vmc->vm->stop();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(stop, vmc));
@@ -1033,7 +1153,11 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown) {
 	try {
-		print("Shutting down virtual machine ", vmc->name());
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Shutting down virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 		vmc->vm->power_button();
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
@@ -1052,7 +1176,11 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
-		print("Executing ", exec->process_token.value(), " command on virtual machine ", vmc->name());
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Executing " << exec->process_token.value() << " command on virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -1110,7 +1238,14 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
-		print("Copying ", from, " ", from_to, " virtual machine ", vmc->name(), " in directory ", to);
+		std::cout
+			<< rang::fgB::blue << progress() << " Copying "
+			<< rang::fg::yellow << from
+			<< rang::fgB::blue << " " << from_to << " virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::fgB::blue << " in directory "
+			<< rang::fg::yellow << to
+			<< rang::style::reset << std::endl;
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -1140,7 +1275,13 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 }
 
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
-	print("Calling macro ", macro_call->name().value(), " on virtual machine ", vmc->name());
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Calling macro "
+		<< rang::fg::yellow << macro_call->name().value()
+		<< rang::fgB::blue << " on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
 	//push new ctx
 	StackEntry new_ctx(true);
 
@@ -1239,7 +1380,11 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 	//2) reg (todo)
 	//3) env var
 
-	print("Resolving var ", var);
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Resolving var "
+		<< rang::fg::yellow << var
+		<< rang::style::reset << std::endl;
 
 	for (auto it = local_vars.rbegin(); it != local_vars.rend(); ++it) {
 		if (it->is_defined(var)) {
@@ -1328,27 +1473,14 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		auto text = visit_word(vmc, check->text_word);
 
-		std::string print_str = std::string("Checking ") + text;
-		nlohmann::json params = {};
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Checking "
+			<< rang::fg::yellow << "\"" << text << "\""
+			<< rang::fgB::blue << " on virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
 
-		for (auto it = check->params.begin(); it != check->params.end();) {
-			if (it == check->params.begin()) {
-				print_str += "(";
-			}
-
-			auto value = visit_word(vmc, (*it)->right);
-			params[(*it)->left.value()] = value;
-			print_str += (*it)->left.value() + "=" + value;
-
-			if (++it != check->params.end()) {
-				print_str += ", ";
-				continue;
-			}
-			print_str += ")";
-		}
-
-		print_str += std::string(" on virtual machine ") + vmc->name();
-		print(print_str);
 		auto screenshot = vmc->vm->screenshot();
 		return shit.stink_even_stronger(screenshot, text);
 	} catch (const std::exception& error) {

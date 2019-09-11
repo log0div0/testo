@@ -9,6 +9,7 @@ struct Controller {
 	virtual ~Controller() {}
 
 	virtual std::string name() const = 0;
+	virtual std::string type() const = 0;
 	virtual bool is_defined() const;
 	virtual void create() = 0;
 	virtual void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) = 0;
