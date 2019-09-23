@@ -916,7 +916,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
-			if (shit.stink_even_stronger(screenshot, text)) {
+			if (shit.stink_even_stronger(screenshot, text, {}, {})) {
 				return;
 			}
 			auto end = std::chrono::high_resolution_clock::now();
@@ -1482,7 +1482,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			<< rang::style::reset << std::endl;
 
 		auto screenshot = vmc->vm->screenshot();
-		return shit.stink_even_stronger(screenshot, text);
+		return shit.stink_even_stronger(screenshot, text, {}, {});
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}

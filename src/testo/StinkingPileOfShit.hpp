@@ -7,7 +7,9 @@
 
 struct StinkingPileOfShit {
 	StinkingPileOfShit();
-	bool stink_even_stronger(stb::Image& image, const std::string& text);
+	bool stink_even_stronger(stb::Image& image, const std::string& text,
+		const std::string& foreground,
+		const std::string& background);
 
 private:
 	std::string config;
