@@ -2,127 +2,130 @@
 #include "VisitorSemantic.hpp"
 #include <fmt/format.h>
 
-VisitorSemantic::VisitorSemantic(Register& reg):
+VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	reg(reg)
 {
-		keys.insert("ESC");
-		keys.insert("ONE");
-		keys.insert("TWO");
-		keys.insert("THREE");
-		keys.insert("FOUR");
-		keys.insert("FIVE");
-		keys.insert("SIX");
-		keys.insert("SEVEN");
-		keys.insert("EIGHT");
-		keys.insert("NINE");
-		keys.insert("ZERO");
-		keys.insert("MINUS");
-		keys.insert("EQUALSIGN");
-		keys.insert("BACKSPACE");
-		keys.insert("TAB");
-		keys.insert("Q");
-		keys.insert("W");
-		keys.insert("E");
-		keys.insert("R");
-		keys.insert("T");
-		keys.insert("Y");
-		keys.insert("U");
-		keys.insert("I");
-		keys.insert("O");
-		keys.insert("P");
-		keys.insert("LEFTBRACE");
-		keys.insert("RIGHTBRACE");
-		keys.insert("ENTER");
-		keys.insert("LEFTCTRL");
-		keys.insert("A");
-		keys.insert("S");
-		keys.insert("D");
-		keys.insert("F");
-		keys.insert("G");
-		keys.insert("H");
-		keys.insert("J");
-		keys.insert("K");
-		keys.insert("L");
-		keys.insert("SEMICOLON");
-		keys.insert("APOSTROPHE");
-		keys.insert("GRAVE");
-		keys.insert("LEFTSHIFT");
-		keys.insert("BACKSLASH");
-		keys.insert("Z");
-		keys.insert("X");
-		keys.insert("C");
-		keys.insert("V");
-		keys.insert("B");
-		keys.insert("N");
-		keys.insert("M");
-		keys.insert("COMMA");
-		keys.insert("DOT");
-		keys.insert("SLASH");
-		keys.insert("RIGHTSHIFT");
-		keys.insert("LEFTALT");
-		keys.insert("SPACE");
-		keys.insert("CAPSLOCK");
-		keys.insert("F1"),
-		keys.insert("F2"),
-		keys.insert("F3"),
-		keys.insert("F4"),
-		keys.insert("F5"),
-		keys.insert("F6"),
-		keys.insert("F7"),
-		keys.insert("F8"),
-		keys.insert("F9"),
-		keys.insert("F10"),
-		keys.insert("F11"),
-		keys.insert("F12"),
-		keys.insert("NUMLOCK");
-		keys.insert("SCROLLLOCK");
-		keys.insert("RIGHTCTRL");
-		keys.insert("RIGHTALT");
-		keys.insert("HOME");
-		keys.insert("UP");
-		keys.insert("PAGEUP");
-		keys.insert("LEFT");
-		keys.insert("RIGHT");
-		keys.insert("END");
-		keys.insert("DOWN");
-		keys.insert("PAGEDOWN");
-		keys.insert("INSERT");
-		keys.insert("DELETE");
-		keys.insert("SCROLLUP");
-		keys.insert("SCROLLDOWN");
 
-		//init attr ctx
-		attr_ctx vm_global_ctx;
-		vm_global_ctx.insert({"ram", std::make_pair(false, Token::category::size)});
-		vm_global_ctx.insert({"disk_size", std::make_pair(false, Token::category::size)});
-		vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::word)});
-		vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
-		vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
-		vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::word)});
-		vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
+	prefix = config.at("prefix").get<std::string>();
 
-		attr_ctxs.insert({"vm_global", vm_global_ctx});
+	keys.insert("ESC");
+	keys.insert("ONE");
+	keys.insert("TWO");
+	keys.insert("THREE");
+	keys.insert("FOUR");
+	keys.insert("FIVE");
+	keys.insert("SIX");
+	keys.insert("SEVEN");
+	keys.insert("EIGHT");
+	keys.insert("NINE");
+	keys.insert("ZERO");
+	keys.insert("MINUS");
+	keys.insert("EQUALSIGN");
+	keys.insert("BACKSPACE");
+	keys.insert("TAB");
+	keys.insert("Q");
+	keys.insert("W");
+	keys.insert("E");
+	keys.insert("R");
+	keys.insert("T");
+	keys.insert("Y");
+	keys.insert("U");
+	keys.insert("I");
+	keys.insert("O");
+	keys.insert("P");
+	keys.insert("LEFTBRACE");
+	keys.insert("RIGHTBRACE");
+	keys.insert("ENTER");
+	keys.insert("LEFTCTRL");
+	keys.insert("A");
+	keys.insert("S");
+	keys.insert("D");
+	keys.insert("F");
+	keys.insert("G");
+	keys.insert("H");
+	keys.insert("J");
+	keys.insert("K");
+	keys.insert("L");
+	keys.insert("SEMICOLON");
+	keys.insert("APOSTROPHE");
+	keys.insert("GRAVE");
+	keys.insert("LEFTSHIFT");
+	keys.insert("BACKSLASH");
+	keys.insert("Z");
+	keys.insert("X");
+	keys.insert("C");
+	keys.insert("V");
+	keys.insert("B");
+	keys.insert("N");
+	keys.insert("M");
+	keys.insert("COMMA");
+	keys.insert("DOT");
+	keys.insert("SLASH");
+	keys.insert("RIGHTSHIFT");
+	keys.insert("LEFTALT");
+	keys.insert("SPACE");
+	keys.insert("CAPSLOCK");
+	keys.insert("F1"),
+	keys.insert("F2"),
+	keys.insert("F3"),
+	keys.insert("F4"),
+	keys.insert("F5"),
+	keys.insert("F6"),
+	keys.insert("F7"),
+	keys.insert("F8"),
+	keys.insert("F9"),
+	keys.insert("F10"),
+	keys.insert("F11"),
+	keys.insert("F12"),
+	keys.insert("NUMLOCK");
+	keys.insert("SCROLLLOCK");
+	keys.insert("RIGHTCTRL");
+	keys.insert("RIGHTALT");
+	keys.insert("HOME");
+	keys.insert("UP");
+	keys.insert("PAGEUP");
+	keys.insert("LEFT");
+	keys.insert("RIGHT");
+	keys.insert("END");
+	keys.insert("DOWN");
+	keys.insert("PAGEDOWN");
+	keys.insert("INSERT");
+	keys.insert("DELETE");
+	keys.insert("SCROLLUP");
+	keys.insert("SCROLLDOWN");
 
-		attr_ctx vm_network_ctx;
-		vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
-		vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::word)});
-		vm_network_ctx.insert({"network", std::make_pair(false, Token::category::word)});
-		vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::word)});
-		vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::word)});
+	//init attr ctx
+	attr_ctx vm_global_ctx;
+	vm_global_ctx.insert({"ram", std::make_pair(false, Token::category::size)});
+	vm_global_ctx.insert({"disk_size", std::make_pair(false, Token::category::size)});
+	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::word)});
+	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
+	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
+	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::word)});
+	vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
-		attr_ctxs.insert({"nic", vm_network_ctx});
+	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
-		attr_ctx fd_global_ctx;
-		fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::word)});
-		fd_global_ctx.insert({"size", std::make_pair(false, Token::category::size)});
-		fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
+	attr_ctx vm_network_ctx;
+	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
+	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::word)});
+	vm_network_ctx.insert({"network", std::make_pair(false, Token::category::word)});
+	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::word)});
+	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::word)});
 
-		attr_ctxs.insert({"fd_global", fd_global_ctx});
+	attr_ctxs.insert({"nic", vm_network_ctx});
 
-		attr_ctx test_global_ctx;
-		test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
-		test_global_ctx.insert({"description", std::make_pair(false, Token::category::word)});
-		attr_ctxs.insert({"test_global", test_global_ctx});
+	attr_ctx fd_global_ctx;
+	fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::word)});
+	fd_global_ctx.insert({"size", std::make_pair(false, Token::category::size)});
+	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
+
+	attr_ctxs.insert({"fd_global", fd_global_ctx});
+
+	attr_ctx test_global_ctx;
+	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
+	test_global_ctx.insert({"description", std::make_pair(false, Token::category::word)});
+	attr_ctxs.insert({"test_global", test_global_ctx});
 }
 
 static uint32_t size_to_mb(const std::string& size) {
@@ -358,7 +361,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	}
 
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
-	config["name"] = machine->name.value();
+	config["name"] = prefix + machine->name.value();
 	config["src_file"] = machine->name.pos().file.generic_string();
 
 	auto vmc = env->create_vm_controller(config);
@@ -373,7 +376,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	}
 
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
-	config["name"] = flash->name.value();
+	config["name"] = prefix + flash->name.value();
 	config["src_file"] = flash->name.pos().file.generic_string();
 
 	auto fdc = env->create_flash_drive_controller(config);

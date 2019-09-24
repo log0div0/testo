@@ -25,7 +25,7 @@ Interpreter::Interpreter(const fs::path& dir, const std::string& input, const nl
 
 int Interpreter::run() {
 	auto program = parser.parse();
-	VisitorSemantic semantic(reg);
+	VisitorSemantic semantic(reg, config);
 
 	env->setup(); //prepare the environment
 	semantic.visit(program);
