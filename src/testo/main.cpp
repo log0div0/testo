@@ -59,7 +59,7 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 #endif
 
-	std::string target, test_spec, exclude, invalidate, cache_miss_policy, json_report_file;
+	std::string target, prefix, test_spec, exclude, invalidate, cache_miss_policy, json_report_file;
 
 #ifdef WIN32
 	std::string hypervisor("hyperv");
@@ -76,6 +76,7 @@ int do_main(int argc, char** argv) {
 		( option("--help").set(show_help).doc("Show this help message") ) |
 		(
 			value("input file or folder", target),
+			option("--prefix").doc("Add a prefix to all entities, thus forming a namespace") & value("prefix", prefix),
 			option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
 			option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
 			option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
@@ -110,7 +111,8 @@ int do_main(int argc, char** argv) {
 		{"test_spec", test_spec},
 		{"exclude", exclude},
 		{"invalidate", invalidate},
-		{"json_report_file", json_report_file}
+		{"json_report_file", json_report_file},
+		{"prefix", prefix}
 	};
 
 	if (!fs::exists(target)) {
