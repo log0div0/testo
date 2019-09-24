@@ -51,85 +51,90 @@ macro install_continent() {
 
 test install_CUS {
 	CUS {
-		start
-		wait "Установить Континент"
-		press Enter
-		wait "Выберите тип платформы"
-		press Enter
-		wait "Введите идентификатор шлюза"
-		type "150"
-		press Enter*2
-		wait "Установить Континент" timeout 10m
-		stop
-		unplug dvd
-		start
-		wait "Главное меню" timeout 10m
+		install_continent()
 	}
 }
 
 test install_UB {
 	UB {
-		start
-		wait "Установить Континент"
-		press Enter
-		wait "Выберите тип платформы"
-		press Enter
-		wait "Введите идентификатор шлюза"
-		type "250"
-		press Enter*2
-		wait "Установить Континент" timeout 10m
-		stop
-		unplug dvd
-		start
-		wait "Главное меню" timeout 10m
+		install_continent()
 	}
 }
 
+macro select_local_menu(string) {
+	wait $string
+	for i in 0..20 {
+		if ($i EQUAL "20") {
+			abort "Can't find menu entry " + $string
+		}
+
+		if (check $string (foreground = "blue", background = "gray")) {
+			press Enter;
+			break;
+		}
+
+		press Down; wait timeout 1s
+	}
+}
+
+macro select_local_menu_horizontal(string) {
+	wait $string
+	for i in 0..20 {
+		if ($i EQUAL "20") {
+			abort "Can't find menu entry " + $string
+		}
+
+		if (check $string (foreground = "blue", background = "gray")) {
+			press Enter;
+			break;
+		}
+
+		press Right; wait timeout 1s
+	}
+}
 
 test init_CUS: install_CUS {
 	CUS {
-		press Down, Enter
-		wait "Инициализировать устройство как"; press Up*2, Enter
-		wait "Очистить локальные журналы"; press Enter
+		select_local_menu("Инициализация");
+		wait "Инициализировать устройство как"; press Up*2; select_local_menu("Начать инициализацию")
+		wait "Очистить локальные журналы"; select_local_menu_horizontal("Да")
 		wait "Успешно" timeout 5m; press Enter;
-		wait "Главное меню"; press Down*2, Enter
-		wait "Сертификаты УЦ"; press Enter
+		select_local_menu("Сертификаты");
+		select_local_menu("Сертификаты УЦ")
 		wait "Кому выдан"; press F2
-		wait "Выпуск сертификата"; press Enter
+		select_local_menu("Выпуск корневого сертификата")
 		wait "Страна";
 		press Down; type "Security Code"
 		press Down; type "DevOps"
 		press Down; type "CA"; press Enter
 		wait "Успешно"; press Enter
-		wait timeout 1s; press Down, Enter
+		select_local_menu("Возврат в предыдущее меню")
 		wait "Кому выдан"; press Esc
-		wait "Сертификаты управления"; press Down, Enter
+		select_local_menu("Сертификаты управления")
 		wait "Кому выдан"; press F2
-		wait "Выпуск сертификата"; press Enter
-		wait "Страна";
-		press Down*3; type "Control"; press Enter
-		wait "Выберите корневой сертификат"; press Enter
+		select_local_menu("Выпуск сертификата управления для ЦУС")
+		wait "Страна"; press Down*3; type "Control"; press Enter
+		wait "Выберите корневой сертификат"; select_local_menu("CA")
 		wait "Успешно"; press Enter
 		wait "Выпуск сертификата"; press Esc
 		wait "Кому выдан"; press Esc
-		wait "Возврат в предыдущее меню"; press Esc
-		wait "Главное меню"; press Down, Enter
-		wait "Все службы будут сконфигурированы заново"; press Enter
-		wait "Выбор сертификата управления"; press Enter
-		wait "Пароль для встроенного администратора"; type "Cont-4.X"
-		press Down; type "Cont-4.X"; press Enter
-		wait "Выберите интерфейс управления"; press Enter
+		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Настройка ЦУС")
+		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
+		wait "Выбор сертификата управления"; select_local_menu("Control")
+		wait "Пароль для встроенного администратора"; type "Cont-4.X"; press Down; type "Cont-4.X"; press Enter
+		wait "Выберите интерфейс управления"; select_local_menu("fe-0-0")
 		wait "Настройка интерфейса управления"; type "192.168.0.1/24"; press Enter
-		wait "Применить указанные настройки?"; press Enter
+		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
 		wait "Система успешно настроена" timeout 15m; press Enter
 	}
 }
 
 test init_UB: install_UB {
 	UB {
-		press Down, Enter;
+		select_local_menu("Инициализация");
 		wait "Инициализировать устройство как"; press Enter
-		wait "Очистить локальные журналы"; press Enter
+		wait "Очистить локальные журналы"; select_local_menu_horizontal("Да")
 		wait "Успешно" timeout 6m; press Enter;
 		wait "Главное меню";
 	}
@@ -143,8 +148,8 @@ flash ub_flash {
 test config_UB: init_CUS, init_UB {
 	#CUS init
 	UB {
-		press Down*2, Enter
-		wait "Запросы на выпуск сертификата"; press Enter
+		select_local_menu("Сертификаты")
+		select_local_menu("Запросы на выпуск сертификата")
 		wait "F4 - создать запрос"; press F4
 		wait "Вставьте USB Flash накопитель"
 		plug flash ub_flash
@@ -162,25 +167,25 @@ test config_UB: init_CUS, init_UB {
 
 	CUS {
 		plug flash ub_flash
-		wait "Вход в систему"; press Enter
-		wait "Выбор метода аутентификации"; press Enter
-		wait "Главное меню"; press Down; press Enter
-		wait "Сертификаты управления"; press Down, Enter
+		select_local_menu("Вход в систему")
+		select_local_menu_horizontal("Соболь")
+		select_local_menu("Сертификаты")
+		select_local_menu("Сертификаты управления")
 		wait "F2 - Выпуск серт."; press F2
-		wait "Выпуск сертификата"; press Down, Enter
-		wait "Есть ли запрос для создания сертификата?"; press Enter
-		wait "Выберите Запрос"; press Enter
-		wait "Выберите корневой сертификат"; press Enter
+		select_local_menu("Выпуск сертификата управления для узла безопасности")
+		wait "Есть ли запрос для создания сертификата?"; select_local_menu_horizontal("Да")
+		wait "Выберите Запрос"; select_local_menu("continent-250.req")
+		wait "Выберите корневой сертификат"; select_local_menu("CA")
 		wait "Успешно"; press Enter
 		wait "Выпуск сертификата"; press Esc
 		wait "Сертификаты управления"; press Esc
-		wait "Возврат в предыдущее меню"; press Esc
-		wait "Главное меню"; press Down*2, Enter
-		wait "Инструменты"; press Down*3; press Enter
+		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Инструменты")
+		select_local_menu("Создать узел безопасности")
 		wait "Введите ID узла безопасности"; type "250"; press Enter
-		wait "Выбор сертификата управления"; press Down, Enter
+		wait "Выбор сертификата управления"; select_local_menu("UB")
 		wait "Узел безопасности 250 успешно создан" timeout 2m; press Enter
-		wait "Инструменты"; press Down*6, Enter
+		select_local_menu("Экспорт конфигурации УБ на носитель")
 		wait "Выгрузить политику"; type "250"; press Enter
 		wait "Успешно"; press Enter
 		wait timeout 10s;
@@ -190,20 +195,21 @@ test config_UB: init_CUS, init_UB {
 	UB {
 		plug flash ub_flash
 		wait timeout 5s
-		press Down, Enter
-		wait "Все службы будут сконфигурированы заново"; press Enter
-		wait "Выберите конфигурацию"; press Down, Enter
-		wait "Выберите интерфейс управления"; press Enter
+		select_local_menu("Подключиться к ЦУС")
+		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
+		wait "Выберите конфигурацию"; select_local_menu("gate-250.json")
+		wait "Выберите интерфейс управления"; select_local_menu("fe-0-0")
 		wait "Настройка интерфейса управления"; type "192.168.0.2/24"; press Enter
-		wait "Применить указанные настройки?"; press Enter
+		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
 		wait "Система успешно настроена" timeout 10m; press Enter
 		unplug flash ub_flash
 	}
 
 	CUS {
 		press Esc
-		wait "Имеются неподтвержденные изменения с узлов" timeout 4m; press Enter
-		wait "Инструменты"; press Down*5, Enter
+		wait "Имеются неподтвержденные изменения с узлов" timeout 4m;
+		select_local_menu("Инструменты")
+		select_local_menu("Подтверждение изменений настроек УБ")
 		wait "Локальные изменения"; press Space, Enter
 		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
 		wait "Инструменты"
