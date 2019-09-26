@@ -87,6 +87,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::type_) ||
 		(LA(1) == Token::category::wait) ||
 		(LA(1) == Token::category::press) ||
+		(LA(1) == Token::category::mouse) ||
 		(LA(1) == Token::category::plug) ||
 		(LA(1) == Token::category::unplug) ||
 		(LA(1) == Token::category::start) ||
@@ -465,6 +466,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = wait();
 	} else if (LA(1) == Token::category::press) {
 		action = press();
+	} else if (LA(1) == Token::category::mouse) {
+		action = mouse();
 	} else if ((LA(1) == Token::category::plug) || (LA(1) == Token::category::unplug)) {
 		action = plug();
 	} else if (LA(1) == Token::category::start) {
@@ -622,6 +625,42 @@ std::shared_ptr<Action<Press>> Parser::press() {
 
 	auto action = std::shared_ptr<Press>(new Press(press_token, keys));
 	return std::shared_ptr<Action<Press>>(new Action<Press>(action));
+}
+
+std::shared_ptr<IAction> Parser::mouse() {
+	Token mouse_token = LT(1);
+	match(Token::category::mouse);
+
+	if (LA(1) == Token::category::move) {
+		return mouse_move(mouse_token);
+	} else if ((LA(1) == Token::category::click) || (LA(1) == Token::category::rclick)) {
+		return mouse_click(mouse_token);
+	} else {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected move, click or rclick token");
+	}
+	return nullptr;
+}
+
+std::shared_ptr<Action<MouseMove>> Parser::mouse_move(const Token& mouse) {
+	Token move = LT(1);
+	match(Token::category::move);
+
+	Token dx = LT(1);
+	match(Token::category::number);
+
+	Token dy = LT(1);
+	match(Token::category::number);
+
+	auto action = std::shared_ptr<MouseMove>(new MouseMove(mouse, move, dx, dy));
+	return std::shared_ptr<Action<MouseMove>>(new Action<MouseMove>(action));
+}
+
+std::shared_ptr<Action<MouseClick>> Parser::mouse_click(const Token& mouse) {
+	Token click = LT(1);
+	match({Token::category::click, Token::category::rclick});
+
+	auto action = std::shared_ptr<MouseClick>(new MouseClick(mouse, click));
+	return std::shared_ptr<Action<MouseClick>>(new Action<MouseClick>(action));
 }
 
 std::shared_ptr<Action<Plug>> Parser::plug() {

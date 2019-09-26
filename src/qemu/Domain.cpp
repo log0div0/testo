@@ -219,6 +219,18 @@ void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<ui
 	}
 }
 
+void Domain::monitor_command(const std::string& cmd, char** result, std::initializer_list<virDomainQemuMonitorCommandFlags> flags) {
+	uint32_t flag_bitmask = 0;
+
+	for (auto flag: flags) {
+		flag_bitmask |= flag;
+	}
+	if (virDomainQemuMonitorCommand(handle, cmd.c_str(), result, flag_bitmask) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
+
 void Domain::attach_device(const pugi::xml_document& xml, const std::vector<virDomainDeviceModifyFlags>& flags) {
 	uint32_t flag_bitmask = 0;
 

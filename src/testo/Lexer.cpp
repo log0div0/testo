@@ -266,6 +266,34 @@ Token Lexer::press() {
 	return Token(Token::category::press, value, tmp_pos);
 }
 
+Token Lexer::mouse() {
+	Pos tmp_pos = current_pos;
+	std::string value("mouse");
+	current_pos.advance(value.length());
+	return Token(Token::category::mouse, value, tmp_pos);
+}
+
+Token Lexer::move() {
+	Pos tmp_pos = current_pos;
+	std::string value("move");
+	current_pos.advance(value.length());
+	return Token(Token::category::move, value, tmp_pos);
+}
+
+Token Lexer::click() {
+	Pos tmp_pos = current_pos;
+	std::string value("click");
+	current_pos.advance(value.length());
+	return Token(Token::category::click, value, tmp_pos);
+}
+
+Token Lexer::rclick() {
+	Pos tmp_pos = current_pos;
+	std::string value("rclick");
+	current_pos.advance(value.length());
+	return Token(Token::category::rclick, value, tmp_pos);
+}
+
 Token Lexer::plug() {
 	Pos tmp_pos = current_pos;
 	std::string value("plug");
