@@ -189,14 +189,14 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 
 			if (foreground_id >= 0) {
 				float foreground_probability = logistic_activate(l.output[dimension_size * (5 + classes_count + foreground_id) + i]);
-				if (foreground_probability < 0.1f) {
+				if (foreground_probability < 0.01f) {
 					continue;
 				}
 			}
 
 			if (background_id >= 0) {
 				float background_probability = logistic_activate(l.output[dimension_size * (5 + classes_count + colors_count + background_id) + i]);
-				if (background_probability < 0.1f) {
+				if (background_probability < 0.01f) {
 					continue;
 				}
 			}
