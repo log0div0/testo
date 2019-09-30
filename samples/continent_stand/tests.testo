@@ -158,7 +158,7 @@ test config_UB: init_CUS, init_UB {
 		wait "Идёт создание запроса";
 		press Down; type "Security Code"
 		press Down; type "DevOps"
-		press Down; type "UB"; press Enter
+		press Down; type "UB-250"; press Enter
 		wait "Запрос записан на носитель"; press Enter, Esc
 		wait "Возврат в предыдущее меню"; press Esc
 		wait "Главное меню";
@@ -183,7 +183,7 @@ test config_UB: init_CUS, init_UB {
 		select_local_menu("Инструменты")
 		select_local_menu("Создать узел безопасности")
 		wait "Введите ID узла безопасности"; type "250"; press Enter
-		wait "Выбор сертификата управления"; select_local_menu("UB")
+		wait "Выбор сертификата управления"; select_local_menu("UB-250")
 		wait "Узел безопасности 250 успешно создан" timeout 2m; press Enter
 		select_local_menu("Экспорт конфигурации УБ на носитель")
 		wait "Выгрузить политику"; type "250"; press Enter
