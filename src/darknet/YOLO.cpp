@@ -183,7 +183,7 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 			// }
 
 			float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
-			if (class_probability < 0.1f) {
+			if (class_probability < 0.01f) {
 				continue;
 			}
 
