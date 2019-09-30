@@ -37,6 +37,14 @@ activation=leaky
 size=2
 stride=2
 
+[convolutional]
+batch_normalize=1
+filters=256
+size=3
+stride=1
+padding=1
+activation=leaky
+
 ###########
 
 [convolutional]
