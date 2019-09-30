@@ -137,6 +137,7 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 	int left, int top,
 	const std::vector<std::string>& query,
 	int foreground_id, int background_id,
+	int foreground_hits, int background_hits,
 	size_t index,
 	const std::map<std::string, int>& symbols,
 	std::vector<Rect>& rects
@@ -145,6 +146,16 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 	int bottom = top;
 	while (true) {
 		if (index == query.size()) {
+			if (foreground_id >= 0) {
+				if (foreground_hits <= int(query.size() * 0.5f)) {
+					return false;
+				}
+			}
+			if (background_id >= 0) {
+				if (background_hits <= int(query.size() * 0.5f)) {
+					return false;
+				}
+			}
 			return true;
 		}
 		right += 3;
@@ -189,15 +200,15 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 
 			if (foreground_id >= 0) {
 				float foreground_probability = logistic_activate(l.output[dimension_size * (5 + classes_count + foreground_id) + i]);
-				if (foreground_probability < 0.01f) {
-					continue;
+				if (foreground_probability > 0.01f) {
+					foreground_hits += 1;
 				}
 			}
 
 			if (background_id >= 0) {
 				float background_probability = logistic_activate(l.output[dimension_size * (5 + classes_count + colors_count + background_id) + i]);
-				if (background_probability < 0.01f) {
-					continue;
+				if (background_probability > 0.01f) {
+					background_hits += 1;
 				}
 			}
 
@@ -221,7 +232,7 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 
 			rects.push_back(rect);
 
-			return find_substr(image, l, x + 1, top, query, foreground_id, background_id, index + 1, symbols, rects);
+			return find_substr(image, l, x + 1, top, query, foreground_id, background_id, foreground_hits, background_hits, index + 1, symbols, rects);
 		}
 	}
 	return false;
@@ -301,7 +312,7 @@ bool predict(darknet::Network& network, stb::Image& image, const std::string& te
 	for (int y = 0; y < l.out_h; ++y) {
 		for (int x = 0; x < l.out_w; ++x) {
 			std::vector<Rect> rects;
-			if (find_substr(image, l, x, y, query, foreground_id, background_id, 0, symbols, rects)) {
+			if (find_substr(image, l, x, y, query, foreground_id, background_id, 0, 0, 0, symbols, rects)) {
 				result = true;
 				for (auto& rect: rects) {
 					image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
