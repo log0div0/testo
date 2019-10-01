@@ -8,7 +8,7 @@
 #include <set>
 
 struct VisitorSemantic {
-	VisitorSemantic(Register& reg);
+	VisitorSemantic(Register& reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -35,6 +35,8 @@ struct VisitorSemantic {
 
 	bool is_button(const Token& t) const;
 	std::set<std::string> keys;
+
+	std::string prefix;
 
 	//bool is for "requires a name"
 	using attr_ctx = std::unordered_map<std::string, std::pair<bool, Token::category>>;
