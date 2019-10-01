@@ -16,6 +16,8 @@ struct App {
 
 	std::unique_ptr<VM> vm;
 	Texture texture;
+	int foreground = -1;
+	int background = -1;
 };
 
 extern App* app;

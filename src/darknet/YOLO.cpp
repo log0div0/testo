@@ -46,12 +46,10 @@ float delta_yolo_box(darknet::Layer& l, const Box& truth, int index, int i, int 
 	return iou;
 }
 
-
-float delta_yolo_class(darknet::Layer& l, int index, int class_id)
+float delta_yolo_class(darknet::Layer& l, int index, int classes_count, int class_id)
 {
 	float result = 0;
 	int stride = l.out_w*l.out_h;
-	int classes_count = l.out_c - 4 - 1;
 	if (class_id >= classes_count) {
 		throw std::runtime_error("class_id >= classes_count");
 	}
@@ -69,6 +67,9 @@ int entry_index(darknet::Layer& l, int batch, int location, int entry)
 	return batch*l.outputs + entry*l.out_w*l.out_h + location;
 }
 
+constexpr int classes_count = 74;
+constexpr int colors_count = 10;
+
 float train(darknet::Network& network, Dataset& dataset,
 	float learning_rate,
 	float momentum,
@@ -83,6 +84,7 @@ float train(darknet::Network& network, Dataset& dataset,
 	float recall = 0;
 	float recall75 = 0;
 	float avg_cat = 0;
+	float avg_color = 0;
 	float avg_obj = 0;
 	int count = 0;
 	auto& l = *network.layers.back();
@@ -94,6 +96,7 @@ float train(darknet::Network& network, Dataset& dataset,
 				l.delta[obj_index] = 0 - logistic_activate(l.output[obj_index]);
 			}
 		}
+
 		for(auto& truth: label){
 
 			int i = (truth.x * l.out_w);
@@ -107,7 +110,13 @@ float train(darknet::Network& network, Dataset& dataset,
 			l.delta[obj_index] = 1 - logistic_activate(l.output[obj_index]);
 
 			int class_index = entry_index(l, b, j*l.out_w + i, 4 + 1);
-			avg_cat += delta_yolo_class(l, class_index, truth.class_id);
+			avg_cat += delta_yolo_class(l, class_index, classes_count, truth.class_id);
+
+			int foreground_index = entry_index(l, b, j*l.out_w + i, 4 + 1 + classes_count);
+			avg_color += delta_yolo_class(l, foreground_index, colors_count, truth.foreground_id);
+
+			int background_index = entry_index(l, b, j*l.out_w + i, 4 + 1 + classes_count + colors_count);
+			avg_color += delta_yolo_class(l, background_index, colors_count, truth.background_id);
 
 			++count;
 			if(iou > .5) recall += 1;
@@ -116,7 +125,7 @@ float train(darknet::Network& network, Dataset& dataset,
 		}
 	}
 	loss = pow(mag_array(l.delta, l.outputs * l.batch), 2) / l.batch;
-	printf("Avg IOU: %f, Class: %f, Obj: %f, .5R: %f, .75R: %f,  count: %d\n", avg_iou/count, avg_cat/count, avg_obj/count, recall/count, recall75/count, count);
+	printf("Avg IOU: %f, Class: %f, Color: %f, Obj: %f, .5R: %f, .75R: %f,  count: %d\n", avg_iou/count, avg_cat/count, avg_color/count/2, avg_obj/count, recall/count, recall75/count, count);
 
 	network.backward();
 	network.update(learning_rate, momentum, decay);
@@ -126,7 +135,10 @@ float train(darknet::Network& network, Dataset& dataset,
 
 bool find_substr(const stb::Image& image, const darknet::Layer& l,
 	int left, int top,
-	const std::vector<std::string>& query, size_t index,
+	const std::vector<std::string>& query,
+	int foreground_id, int background_id,
+	int foreground_hits, int background_hits,
+	size_t index,
 	const std::map<std::string, int>& symbols,
 	std::vector<Rect>& rects
 ) {
@@ -134,6 +146,16 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 	int bottom = top;
 	while (true) {
 		if (index == query.size()) {
+			if (foreground_id >= 0) {
+				if (foreground_hits <= int(query.size() * 0.5f)) {
+					return false;
+				}
+			}
+			if (background_id >= 0) {
+				if (background_hits <= int(query.size() * 0.5f)) {
+					return false;
+				}
+			}
 			return true;
 		}
 		right += 3;
@@ -172,8 +194,22 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 			// }
 
 			float class_probability = logistic_activate(l.output[dimension_size * (5 + class_id) + i]);
-			if (class_probability < 0.1f) {
+			if (class_probability < 0.01f) {
 				continue;
+			}
+
+			if (foreground_id >= 0) {
+				float foreground_probability = logistic_activate(l.output[dimension_size * (5 + classes_count + foreground_id) + i]);
+				if (foreground_probability > 0.01f) {
+					foreground_hits += 1;
+				}
+			}
+
+			if (background_id >= 0) {
+				float background_probability = logistic_activate(l.output[dimension_size * (5 + classes_count + colors_count + background_id) + i]);
+				if (background_probability > 0.01f) {
+					background_hits += 1;
+				}
 			}
 
 			Box b;
@@ -196,7 +232,7 @@ bool find_substr(const stb::Image& image, const darknet::Layer& l,
 
 			rects.push_back(rect);
 
-			return find_substr(image, l, x + 1, top, query, index + 1, symbols, rects);
+			return find_substr(image, l, x + 1, top, query, foreground_id, background_id, foreground_hits, background_hits, index + 1, symbols, rects);
 		}
 	}
 	return false;
@@ -223,7 +259,35 @@ std::map<std::string, int> load_symbols(std::istream& stream) {
 	return result;
 }
 
-bool predict(darknet::Network& network, stb::Image& image, const std::string& text, const std::map<std::string, int>& symbols) {
+std::vector<std::string> colors = {
+	"white",
+	"gray",
+	"black",
+	"red",
+	"orange",
+	"yellow",
+	"green",
+	"cyan",
+	"blue",
+	"purple",
+};
+
+int get_color_id(const std::string& color) {
+	if (!color.size()) {
+		return -1;
+	}
+	for (size_t i = 0; i < colors.size(); ++i) {
+		if (colors[i] == color) {
+			return i;
+		}
+	}
+	throw std::runtime_error("Unknown color \"" + color + "\"");
+}
+
+bool predict(darknet::Network& network, stb::Image& image, const std::string& text,
+	const std::string& foreground,
+	const std::string& background,
+	const std::map<std::string, int>& symbols) {
 
 	bool result = false;
 
@@ -240,13 +304,15 @@ bool predict(darknet::Network& network, stb::Image& image, const std::string& te
 	network.forward();
 
 	std::vector<std::string> query = utf8::split_to_chars(text);
+	int foreground_id = get_color_id(foreground);
+	int background_id = get_color_id(background);
 
 	const darknet::Layer& l = *network.layers.back();
 
 	for (int y = 0; y < l.out_h; ++y) {
 		for (int x = 0; x < l.out_w; ++x) {
 			std::vector<Rect> rects;
-			if (find_substr(image, l, x, y, query, 0, symbols, rects)) {
+			if (find_substr(image, l, x, y, query, foreground_id, background_id, 0, 0, 0, symbols, rects)) {
 				result = true;
 				for (auto& rect: rects) {
 					image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);

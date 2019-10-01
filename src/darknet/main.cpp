@@ -67,7 +67,7 @@ void predict()
 
 	for (size_t i = 0; i < 10; ++i) {
 		auto start = std::chrono::high_resolution_clock::now();
-		yolo::predict(network, image, query, symbols);
+		yolo::predict(network, image, query, {}, {}, symbols);
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> time = end - start;
 		std::cout << time.count() << " seconds" << std::endl;

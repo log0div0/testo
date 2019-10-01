@@ -43,6 +43,8 @@ struct Box {
 
 struct Object: yolo::Box {
 	int class_id;
+	int foreground_id;
+	int background_id;
 
 	friend std::istream& operator>>(std::istream& stream, Object& object) {
 		return stream
@@ -50,7 +52,10 @@ struct Object: yolo::Box {
 			>> object.x
 			>> object.y
 			>> object.w
-			>> object.h;
+			>> object.h
+			>> object.foreground_id
+			>> object.background_id
+			;
 	}
 };
 
@@ -179,7 +184,10 @@ struct Dataset {
 std::map<std::string, int> load_symbols(const std::string& file);
 std::map<std::string, int> load_symbols(std::istream& stream);
 
-bool predict(darknet::Network& network, stb::Image& image, const std::string& text, const std::map<std::string, int>& symbols);
+bool predict(darknet::Network& network, stb::Image& image, const std::string& text,
+	const std::string& foreground,
+	const std::string& background,
+	const std::map<std::string, int>& symbols);
 float train(darknet::Network& network, Dataset& dataset,
 	float learning_rate,
 	float momentum,

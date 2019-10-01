@@ -893,6 +893,19 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			std::cout << "\"" + text + "\" ";
 		}
 
+		std::string foreground;
+		std::string background;
+
+		for (auto param: wait->params) {
+			if (param->left.value() == "foreground") {
+				foreground = visit_word(vmc, param->right);
+			} else if (param->left.value() == "background") {
+				background = visit_word(vmc, param->right);
+			} else {
+				throw std::runtime_error(std::string("Unknown wait parameter: ") + param->left.value());
+			}
+		}
+
 		std::cout
 			<< rang::fgB::blue << "on virtual machine "
 			<< rang::fg::yellow << vmc->name()
@@ -916,7 +929,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
-			if (shit.stink_even_stronger(screenshot, text)) {
+			if (shit.stink_even_stronger(screenshot, text, foreground, background)) {
 				return;
 			}
 			auto end = std::chrono::high_resolution_clock::now();
@@ -1380,11 +1393,11 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 	//2) reg (todo)
 	//3) env var
 
-	std::cout
+	/*std::cout
 		<< rang::fgB::blue << progress()
 		<< " Resolving var "
 		<< rang::fg::yellow << var
-		<< rang::style::reset << std::endl;
+		<< rang::style::reset << std::endl;*/
 
 	for (auto it = local_vars.rbegin(); it != local_vars.rend(); ++it) {
 		if (it->is_defined(var)) {
@@ -1473,6 +1486,19 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		auto text = visit_word(vmc, check->text_word);
 
+		std::string foreground;
+		std::string background;
+
+		for (auto param: check->params) {
+			if (param->left.value() == "foreground") {
+				foreground = visit_word(vmc, param->right);
+			} else if (param->left.value() == "background") {
+				background = visit_word(vmc, param->right);
+			} else {
+				throw std::runtime_error(std::string("Unknown check parameter: ") + param->left.value());
+			}
+		}
+
 		std::cout
 			<< rang::fgB::blue << progress()
 			<< " Checking "
@@ -1482,7 +1508,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			<< rang::style::reset << std::endl;
 
 		auto screenshot = vmc->vm->screenshot();
-		return shit.stink_even_stronger(screenshot, text);
+		return shit.stink_even_stronger(screenshot, text, foreground, background);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}

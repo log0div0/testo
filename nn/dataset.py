@@ -3,6 +3,7 @@
 import gzip, os, string, shutil, random, json
 import PIL, PIL.ImageDraw
 import multiprocessing
+import colorsys
 
 class PSF:
 	def __init__(self, filename):
@@ -151,22 +152,66 @@ font_names = [
 ]
 
 colors = [
-	"White",
-	"Silver",
-	"Gray",
-	"Black",
-	"Red",
-	"Maroon",
-	"Yellow",
-	"Olive",
-	"Lime",
-	"Green",
-	"Aqua",
-	"Teal",
-	"Blue",
-	"Navy",
-	"Fuchsia",
-	"Purple"
+	{
+		"name": "white",
+		"h": [0, 360],
+		"s": [.0, .05],
+		"v": [.9, 1.]
+	},
+	{
+		"name": "gray",
+		"h": [0, 360],
+		"s": [.0, .05],
+		"v": [.4, .6]
+	},
+	{
+		"name": "black",
+		"h": [0, 360],
+		"s": [.0, .05],
+		"v": [.0, .1]
+	},
+	{
+		"name": "red",
+		"h": [350, 370],
+		"s": [.8, 1.],
+		"v": [.8, 1.]
+	},
+	{
+		"name": "orange",
+		"h": [30, 36],
+		"s": [.8, 1.],
+		"v": [.8, 1.]
+	},
+	{
+		"name": "yellow",
+		"h": [52, 64],
+		"s": [.8, 1.],
+		"v": [.8, 1.]
+	},
+	{
+		"name": "green",
+		"h": [97, 125],
+		"s": [.8, 1.],
+		"v": [.8, 1.]
+	},
+	{
+		"name": "cyan",
+		"h": [173, 182],
+		"s": [.8, 1.],
+		"v": [.8, 1.]
+	},
+	{
+		"name": "blue",
+		"h": [220, 250],
+		"s": [.8, 1.],
+		"v": [.3, 1.]
+	},
+	{
+		"name": "purple",
+		"h": [264, 281],
+		"s": [.8, 1.],
+		"v": [.8, 1.]
+	}
 ]
 
 fonts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
@@ -281,21 +326,37 @@ rows_count = 16
 image_width = columns_count * char_width
 image_height = rows_count * char_height
 
+def color_diff(a, b):
+	return abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
+
+def random_color():
+	index = random.randrange(len(colors))
+	color = colors[index]
+	h = random.randrange(color["h"][0], color["h"][1]) % 360 / 360.
+	s = random.uniform(color["s"][0], color["s"][1])
+	v = random.uniform(color["v"][0], color["v"][1])
+	r, g, b = colorsys.hsv_to_rgb(h, s, v)
+	return {
+		"index": index,
+		"rgb": (int(r * 256), int(g * 256), int(b * 256))
+	}
+
 def random_colors():
-	background = random.choice(colors)
+	background = random_color()
 	while True:
-		foreground = random.choice(colors)
-		if foreground != background:
+		foreground = random_color()
+		if color_diff(foreground["rgb"], background["rgb"]) > 350:
 			break
 	return background, foreground
 
 def draw_char(image, left, top, foreground, background, font):
 	char = random.choice([random.choice(chars), ' '])
-	x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground, background_color=background)
+	x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
 	x_center = (left + x + (width // 2)) / image_width
 	y_center = (top + y + (height // 2)) / image_height
 	if char != ' ':
-		return "%s %s %s %s %s\n" % (chars_to_symbols[char], x_center, y_center, (width + 2) / image_width, (height + 2) / image_height)
+		return "%s %s %s %s %s %s %s\n" % (chars_to_symbols[char], x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
+			foreground["index"], background["index"])
 	else:
 		return ""
 
@@ -309,7 +370,7 @@ def main(image_index):
 
 	background, foreground = random_colors()
 	if image_index % 4 < 3:
-		image = PIL.Image.new("RGB", (image_width, image_height), background)
+		image = PIL.Image.new("RGB", (image_width, image_height), background["rgb"])
 		label = ""
 		for row in range(1, rows_count - 1, 3):
 			font = random.choice(fonts)
@@ -320,7 +381,7 @@ def main(image_index):
 				top = row*char_height + y_offset
 				label += draw_char(image, left, top, foreground, background, font)
 	else:
-		image = PIL.Image.new("RGB", (image_width, image_height), background)
+		image = PIL.Image.new("RGB", (image_width, image_height), background["rgb"])
 		label = ""
 		j = 0
 		for row in range(rows_count):

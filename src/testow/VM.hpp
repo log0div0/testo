@@ -15,6 +15,7 @@ struct VM {
 	std::shared_mutex mutex;
 	stb::Image view;
 	std::string query;
+	std::string foreground, background;
 
 private:
 	StinkingPileOfShit shit;

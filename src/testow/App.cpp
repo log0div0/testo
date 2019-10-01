@@ -47,6 +47,19 @@ App::App(int argc, char** argv)
 	guests = hypervisor->guests();
 }
 
+const char* colors[] = {
+	"white",
+	"gray",
+	"black",
+	"red",
+	"orange",
+	"yellow",
+	"green",
+	"cyan",
+	"blue",
+	"purple",
+};
+
 void App::render() {
 	if (ImGui::Begin("List of VMs")) {
 		for (auto& guest: guests) {
@@ -86,7 +99,15 @@ void App::render() {
 		}
 		if (ImGui::Begin("Search params")) {
 			vm->query = query;
+			if (foreground >= 0) {
+				vm->foreground = colors[foreground];
+			}
+			if (background >= 0) {
+				vm->background = colors[background];
+			}
 			ImGui::InputText("query string", query, IM_ARRAYSIZE(query));
+			ImGui::ListBox("foreground", &foreground, colors, IM_ARRAYSIZE(colors));
+			ImGui::ListBox("background", &background, colors, IM_ARRAYSIZE(colors));
 			ImGui::End();
 		}
 	}

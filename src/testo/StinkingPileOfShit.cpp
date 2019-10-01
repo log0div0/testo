@@ -22,7 +22,10 @@ StinkingPileOfShit::StinkingPileOfShit() {
 	symbols = yolo::load_symbols(ss);
 }
 
-bool StinkingPileOfShit::stink_even_stronger(stb::Image& image, const std::string& text) {
+bool StinkingPileOfShit::stink_even_stronger(stb::Image& image, const std::string& text,
+	const std::string& foreground,
+	const std::string& background
+) {
 	if (!image._data) {
 		return false;
 	}
@@ -44,5 +47,5 @@ bool StinkingPileOfShit::stink_even_stronger(stb::Image& image, const std::strin
 		network->load_weights(bs);
 	}
 
-	return yolo::predict(*network, image, text, symbols);
+	return yolo::predict(*network, image, text, foreground, background, symbols);
 }
