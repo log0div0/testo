@@ -68,7 +68,7 @@ macro select_local_menu(string) {
 			abort "Can't find menu entry " + $string
 		}
 
-		if (check $string (foreground = "blue", background = "gray")) {
+		if (check $string [foreground = "blue", background = "gray"]) {
 			press Enter;
 			break;
 		}
@@ -84,7 +84,7 @@ macro select_local_menu_horizontal(string) {
 			abort "Can't find menu entry " + $string
 		}
 
-		if (check $string (foreground = "blue", background = "gray")) {
+		if (check $string [foreground = "blue", background = "gray"]) {
 			press Enter;
 			break;
 		}
