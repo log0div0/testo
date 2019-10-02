@@ -573,20 +573,20 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	std::vector<std::shared_ptr<Assignment>> params;
 
-	if (LA(1) == Token::category::lparen) {
-		match(Token::category::lparen);
+	if (LA(1) == Token::category::lbracket) {
+		match(Token::category::lbracket);
 		if (LA(1) == Token::category::id) {
 			params.push_back(assignment());
 		}
 		while (LA(1) == Token::category::comma) {
 			if (params.empty()) {
-				match(Token::category::rparen); //will cause failure
+				match(Token::category::rbracket); //will cause failure
 			}
 			match(Token::category::comma);
 			newline_list();
 			params.push_back(assignment());
 		}
-		match(Token::category::rparen);
+		match(Token::category::rbracket);
 	}
 
 	if (LA(1) == Token::category::timeout) {
@@ -979,20 +979,20 @@ std::shared_ptr<Check> Parser::check() {
 
 	std::vector<std::shared_ptr<Assignment>> params;
 
-	if (LA(1) == Token::category::lparen) {
-		match(Token::category::lparen);
+	if (LA(1) == Token::category::lbracket) {
+		match(Token::category::lbracket);
 		if (LA(1) == Token::category::id) {
 			params.push_back(assignment());
 		}
 		while (LA(1) == Token::category::comma) {
 			if (params.empty()) {
-				match(Token::category::rparen); //will cause failure
+				match(Token::category::rbracket); //will cause failure
 			}
 			match(Token::category::comma);
 			newline_list();
 			params.push_back(assignment());
 		}
-		match(Token::category::rparen);
+		match(Token::category::rbracket);
 	}
 
 	return std::shared_ptr<Check>(new Check(check_token, value, params));

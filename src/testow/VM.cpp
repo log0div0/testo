@@ -51,12 +51,16 @@ void VM::run() {
 		}
 
 		std::string query_copy;
+		std::string foreground_copy;
+		std::string background_copy;
 		{
 			std::lock_guard<std::shared_mutex> lock(mutex);
 			query_copy = query;
+			foreground_copy = foreground;
+			background_copy = background;
 		}
 
-		shit.stink_even_stronger(screenshot, query_copy);
+		shit.stink_even_stronger(screenshot, query_copy, foreground_copy, background_copy);
 
 		std::lock_guard<std::shared_mutex> lock(mutex);
 		std::swap(view, screenshot);
