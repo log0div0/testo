@@ -17,7 +17,7 @@ struct Lexer {
 
 private:
 
-	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) == input->length()); }
+	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input->length()); }
 	bool test_newline() const { return ((*input)[current_pos] == '\n'); }
 	bool test_number(size_t shift = 0) const { return isdigit((*input)[current_pos + shift]); }
 	bool test_id(size_t shift = 0) const {

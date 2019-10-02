@@ -25,18 +25,7 @@ std::string duration_to_str(Duration duration) {
 }
 
 static void sleep(const std::string& interval) {
-	uint32_t seconds_to_sleep = std::stoul(interval.substr(0, interval.length() - 1));
-	if (interval[interval.length() - 1] == 's') {
-		seconds_to_sleep = seconds_to_sleep * 1;
-	} else if (interval[interval.length() - 1] == 'm') {
-		seconds_to_sleep = seconds_to_sleep * 60;
-	} else if (interval[interval.length() - 1] == 'h') {
-		seconds_to_sleep = seconds_to_sleep * 60 * 60;
-	} else {
-		throw std::runtime_error("Unknown time specifier"); //should not happen ever
-	}
-
-	std::this_thread::sleep_for(std::chrono::seconds(seconds_to_sleep));
+	std::this_thread::sleep_for(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
@@ -924,7 +913,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
 
-		auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(time_to_seconds(wait_for));
+		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
 
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
@@ -1173,7 +1162,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 			<< rang::style::reset << std::endl;
 		vmc->vm->power_button();
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
-		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(time_to_seconds(wait_for));
+		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
 		while (std::chrono::system_clock::now() < deadline) {
 			if (vmc->vm->state() == VmState::Stopped) {
 				return;
@@ -1234,7 +1223,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 
 			std::string wait_for = exec->time_interval ? exec->time_interval.value() : "600s";
 
-			if (vmc->vm->run("/bin/bash", {guest_script_file.generic_string()}, time_to_seconds(wait_for)) != 0) {
+			if (vmc->vm->run("/bin/bash", {guest_script_file.generic_string()}, time_to_milliseconds(wait_for)) != 0) {
 				throw std::runtime_error("Bash command failed");
 			}
 			vmc->vm->remove_from_guest(guest_script_file);
@@ -1274,12 +1263,12 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 			if (from.is_relative()) {
 				from = copy->t.pos().file.parent_path() / from;
 			}
-			vmc->vm->copy_to_guest(from, to, time_to_seconds(wait_for));
+			vmc->vm->copy_to_guest(from, to, time_to_milliseconds(wait_for));
 		} else {
 			if (to.is_relative()) {
 				to = copy->t.pos().file.parent_path() / to;
 			}
-			vmc->vm->copy_from_guest(from, to, time_to_seconds(wait_for));;
+			vmc->vm->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(copy, vmc));

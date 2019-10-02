@@ -133,7 +133,7 @@ stb::Image DummyVM::screenshot() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-int DummyVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
+int DummyVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool DummyVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
@@ -191,10 +191,10 @@ VmState DummyVM::state() const {
 bool DummyVM::is_additions_installed() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void DummyVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void DummyVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void DummyVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void DummyVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void DummyVM::remove_from_guest(const fs::path& obj) {

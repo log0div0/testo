@@ -58,11 +58,25 @@ bool Lexer::test_size_specifier() const {
 
 bool Lexer::test_time_specifier() const {
 	if ((*input)[current_pos] == 's' ||
-		(*input)[current_pos] == 'h' ||
-		(*input)[current_pos] == 'm')
+		(*input)[current_pos] == 'h')
 	{
 		if (test_eof(1) || (!test_id(1) && !test_number(1))) {
 			return true;
+		}
+	}
+
+	if ((*input)[current_pos] == 'm') {
+		if (test_eof(1)) {
+			return true;
+		}
+		if ((*input)[current_pos + 1] == 's') {
+			if (test_eof(2) || (!test_id(2) && !test_number(2))) {
+				return true;
+			}
+		} else {
+			if (test_eof(1) || (!test_id(1) && !test_number(1))) {
+				return true;
+			}
 		}
 	}
 
@@ -119,6 +133,10 @@ Token Lexer::number() {
 Token Lexer::time_interval(std::string time_number, const Pos& time_number_pos) {
 	time_number += (*input)[current_pos];
 	current_pos.advance();
+	if ((*input)[current_pos] == 's') {
+		time_number += (*input)[current_pos];
+		current_pos.advance();
+	}
 	return Token(Token::category::time_interval, time_number, time_number_pos);
 }
 

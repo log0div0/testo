@@ -29,7 +29,7 @@ struct VboxVM: public VM {
 	void suspend() override;
 	void resume() override;
 	stb::Image screenshot() override;
-	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) override;
+	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
@@ -38,8 +38,8 @@ struct VboxVM: public VM {
 	VmState state() const override;
 	bool is_additions_installed() override;
 
-	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
-	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) override;
+	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) override;
+	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) override;
 	void remove_from_guest(const fs::path& obj) override;
 
 	std::set<std::string> nics() const override;

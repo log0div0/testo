@@ -726,10 +726,10 @@ stb::Image VboxVM::screenshot() {
 	}
 }
 
-int VboxVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
+int VboxVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
 	try {
 		args.insert(args.begin(), "--");
-		uint32_t timeout = timeout_seconds * 1000;
+		uint32_t timeout = timeout_milliseconds * 1000 * 1000;
 
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -901,7 +901,7 @@ void VboxVM::copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::G
 	}
 }
 
-void VboxVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void VboxVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -938,7 +938,7 @@ void VboxVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 	}
 }
 
-void VboxVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void VboxVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	throw std::runtime_error("Implement me");
 }
 
