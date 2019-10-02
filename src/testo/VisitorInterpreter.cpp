@@ -1217,7 +1217,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 			script_stream << script;
 			script_stream.close();
 
-			vmc->vm->copy_to_guest(host_script_file, guest_script_file, 5); //5 seconds should be enough to pass any script
+			vmc->vm->copy_to_guest(host_script_file, guest_script_file, 5000); //5 seconds should be enough to pass any script
 
 			fs::remove(host_script_file.generic_string());
 
