@@ -979,7 +979,7 @@ stb::Image QemuVM::screenshot() {
 	return screenshot;
 }
 
-int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
+int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		QemuGuestAdditions helper(domain);
@@ -990,7 +990,7 @@ int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t tim
 			command += arg;
 		}
 
-		return helper.execute(command, timeout_seconds);
+		return helper.execute(command, timeout_milliseconds);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Run guest process"));
 	}
@@ -1061,7 +1061,7 @@ bool QemuVM::is_additions_installed() {
 }
 
 
-void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -1075,13 +1075,13 @@ void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		QemuGuestAdditions helper(domain);
 
-		helper.copy_to_guest(src, dst, timeout_seconds);
+		helper.copy_to_guest(src, dst, timeout_milliseconds);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
 	}
 }
 
-void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	try {
 		if (src.is_relative()) {
 			throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
@@ -1090,7 +1090,7 @@ void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t 
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 		QemuGuestAdditions helper(domain);
 
-		helper.copy_from_guest(src, dst, timeout_seconds);
+		helper.copy_from_guest(src, dst, timeout_milliseconds);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
 	}

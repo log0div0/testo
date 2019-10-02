@@ -300,7 +300,7 @@ stb::Image HyperVVM::screenshot() {
 	}
 }
 
-int HyperVVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_seconds) {
+int HyperVVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
@@ -351,10 +351,10 @@ VmState HyperVVM::state() const {
 bool HyperVVM::is_additions_installed() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void HyperVVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void HyperVVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void HyperVVM::remove_from_guest(const fs::path& obj) {

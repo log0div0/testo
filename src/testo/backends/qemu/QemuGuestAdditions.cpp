@@ -47,8 +47,8 @@ bool QemuGuestAdditions::is_avaliable() {
 	}
 }
 
-void QemuGuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
-	auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(timeout_seconds);
+void QemuGuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
+	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(timeout_milliseconds);
 	//4) Now we're all set
 	if (fs::is_regular_file(src)) {
 		copy_file_to_guest(src, dst, deadline);
@@ -59,7 +59,7 @@ void QemuGuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst,
 	}
 }
 
-void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_seconds) {
+void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	nlohmann::json request = {
 		{"method", "copy_files_out"}
 	};
@@ -68,7 +68,7 @@ void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& ds
 	request["args"].push_back(src.generic_string());
 	request["args"].push_back(dst.generic_string());
 
-	auto chrono_seconds = std::chrono::seconds(timeout_seconds);
+	auto chrono_seconds = std::chrono::milliseconds(timeout_milliseconds);
 	coro::Timeout timeout(chrono_seconds); //actually, it really depends on file size, TODO
 
 	send(request);
@@ -106,8 +106,8 @@ void QemuGuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& 
 	}
 }
 
-int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_seconds) {
-	auto timeout_chrono = std::chrono::seconds(timeout_seconds);
+int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_milliseconds) {
+	auto timeout_chrono = std::chrono::milliseconds(timeout_milliseconds);
 	coro::Timeout timeout(timeout_chrono);
 	nlohmann::json request = {
 			{"method", "execute"},

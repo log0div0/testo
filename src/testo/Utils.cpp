@@ -4,19 +4,24 @@
 #include <algorithm>
 #include <fstream>
 
-uint32_t time_to_seconds(const std::string& time) {
-	uint32_t seconds = std::stoul(time.substr(0, time.length() - 1));
-	if (time[time.length() - 1] == 's') {
-		seconds = seconds * 1;
+uint32_t time_to_milliseconds(const std::string& time) {
+	uint32_t milliseconds;
+	if (time[time.length() - 2] == 'm') {
+		milliseconds = std::stoul(time.substr(0, time.length() - 2));
+	} else if (time[time.length() - 1] == 's') {
+		milliseconds = std::stoul(time.substr(0, time.length() - 1));
+		milliseconds = milliseconds * 1000;
 	} else if (time[time.length() - 1] == 'm') {
-		seconds = seconds * 60;
+		milliseconds = std::stoul(time.substr(0, time.length() - 1));
+		milliseconds = milliseconds * 1000 * 60;
 	} else if (time[time.length() - 1] == 'h') {
-		seconds = seconds * 60 * 60;
+		milliseconds = std::stoul(time.substr(0, time.length() - 1));
+		milliseconds = milliseconds * 1000 * 60 * 60;
 	} else {
 		throw std::runtime_error("Unknown time specifier"); //should not happen ever
 	}
 
-	return seconds;
+	return milliseconds;
 }
 
 void exec_and_throw_if_failed(const std::string& command) {
