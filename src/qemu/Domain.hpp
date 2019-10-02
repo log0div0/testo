@@ -5,6 +5,7 @@
 #include "Stream.hpp"
 #include "pugixml/pugixml.hpp"
 #include <libvirt/libvirt.h>
+#include <libvirt/libvirt-qemu.h>
 #include <string>
 #include <vector>
 
@@ -54,6 +55,7 @@ struct Domain {
 	}
 
 	void send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes);
+	void monitor_command(const std::string& cmd, char** result, std::initializer_list<virDomainQemuMonitorCommandFlags> = {});
 
 	void attach_device(const pugi::xml_document& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});
 	void update_device(const pugi::xml_node& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});

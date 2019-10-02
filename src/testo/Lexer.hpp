@@ -109,6 +109,10 @@ private:
 	Token wait();
 	Token check();
 	Token press();
+	Token mouse();
+	Token move();
+	Token click();
+	Token rclick();
 	Token plug();
 	Token unplug();
 	Token start();
