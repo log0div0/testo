@@ -6,7 +6,7 @@
 
 struct QemuGuest: Guest {
 	QemuGuest(std::shared_ptr<vir::Connect> connect, vir::Domain domain);
-	virtual stb::Image screenshot() override;
+	virtual Image screenshot() override;
 
 private:
 	std::shared_ptr<vir::Connect> connect;

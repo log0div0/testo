@@ -5,7 +5,7 @@ QemuGuest::QemuGuest(std::shared_ptr<vir::Connect> connect_, vir::Domain domain_
 	connect(std::move(connect_)),
 	domain(std::move(domain_)) {}
 
-stb::Image QemuGuest::screenshot() {
+Image QemuGuest::screenshot() {
 	if (!domain.is_active()) {
 		return {};
 	}
@@ -17,7 +17,7 @@ stb::Image QemuGuest::screenshot() {
 	size_t bytes = stream.recv_all(buffer.data(), buffer.size());
 	stream.finish();
 
-	return stb::Image(buffer.data(), bytes);
+	return Image(buffer.data(), bytes);
 }
 
 Qemu::Qemu() {

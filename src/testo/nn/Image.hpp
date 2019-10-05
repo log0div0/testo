@@ -8,7 +8,7 @@ struct Image {
 	Image() {}
 	Image(int w, int h, int c);
 	Image(const std::string& path);
-	Image(const uint8_t* data, size_t size);
+	Image(const uint8_t* buffer, size_t buffer_len);
 	~Image();
 
 	Image(const Image& other) = delete;

@@ -7,7 +7,7 @@
 struct HyperVGuest: Guest {
 	HyperVGuest(std::string name_);
 
-	virtual stb::Image screenshot() override;
+	virtual Image screenshot() override;
 
 private:
 	hyperv::Connect connect;

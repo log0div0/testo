@@ -4,7 +4,7 @@
 #include "Hypervisor.hpp"
 #include <thread>
 #include <shared_mutex>
-#include <testo/StinkingPileOfShit.hpp>
+#include <testo/nn/text_detector/TextDetector.hpp>
 
 struct VM {
 	VM(std::shared_ptr<Guest> guest);
@@ -13,12 +13,12 @@ struct VM {
 	std::shared_ptr<Guest> guest;
 
 	std::shared_mutex mutex;
-	stb::Image view;
+	Image view;
 	std::string query;
 	std::string foreground, background;
 
 private:
-	StinkingPileOfShit shit;
+	TextDetector text_detector;
 	std::thread thread;
 	void run();
 	bool running = false;

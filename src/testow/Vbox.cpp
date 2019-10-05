@@ -11,7 +11,7 @@ VboxGuest::~VboxGuest() {
 	session.unlock_machine();
 }
 
-stb::Image VboxGuest::screenshot() {
+Image VboxGuest::screenshot() {
 	if (machine.state() != MachineState_Running) {
 		return {};
 	}
@@ -31,7 +31,7 @@ stb::Image VboxGuest::screenshot() {
 		return {};
 	}
 
-	stb::Image result(width, height, 3);
+	Image result(width, height, 3);
 
 	vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
 	vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
@@ -41,7 +41,7 @@ stb::Image VboxGuest::screenshot() {
 			for(size_t c = 0; c < 3; ++c){
 				size_t src_index = h*width*4 + w*4 + c;
 				size_t dst_index = h*width*3 + w*3 + c;
-				result._data[dst_index] = array_out[src_index];
+				result.data[dst_index] = array_out[src_index];
 			}
 		}
 	}

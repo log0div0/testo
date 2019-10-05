@@ -1,35 +1,51 @@
 cmake_minimum_required(VERSION 3.0)
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-	add_definitions(-D_DEBUG)
+if(NOT TENSORFLOW_DIR)
+	message(FATAL_ERROR "TENSORFLOW_DIR is not set")
 endif()
 
-file(GLOB SRCS *.cpp)
-list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+include_directories(
+	${TENSORFLOW_DIR}
+	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/downloads/flatbuffers/include
+)
 
-file(GLOB BACKENDS_SRCS backends/*.cpp)
-set(SRCS ${SRCS} ${BACKENDS_SRCS})
+link_directories(
+	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/linux_x86_64/lib/
+)
 
-file(GLOB DUMMY_SRCS backends/dummy/*.cpp)
-set(SRCS ${SRCS} ${DUMMY_SRCS})
+list(APPEND SRC_DIRS "*.cpp")
 
-file(GLOB VBOX_SRCS backends/vbox/*.cpp)
-set(SRCS ${SRCS} ${VBOX_SRCS})
-
+list(APPEND SRC_DIRS "backends/*.cpp")
+list(APPEND SRC_DIRS "backends/dummy/*.cpp")
+list(APPEND SRC_DIRS "backends/vbox/*.cpp")
 if (WIN32)
-	file(GLOB HYPERV_SRCS backends/hyperv/*.cpp)
-	set(SRCS ${SRCS} ${HYPERV_SRCS})
+list(APPEND SRC_DIRS "backends/hyperv/*.cpp")
 endif()
 if (UNIX AND NOT APPLE)
-	file(GLOB QEMU_SRCS backends/qemu/*.cpp)
-	set(SRCS ${SRCS} ${QEMU_SRCS})
+list(APPEND SRC_DIRS "backends/qemu/*.cpp")
 endif()
 
-file(GLOB NN_SRCS nn/*.cpp)
-set(SRCS ${SRCS} ${NN_SRCS})
+list(APPEND SRC_DIRS "nn/*.cpp")
+list(APPEND SRC_DIRS "nn/**/*.cpp")
+
+file(GLOB SRCS ${SRC_DIRS})
+list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+
+macro(embed_ftlite_model MODEL_PATH)
+	get_filename_component(MODEL_NAME ${MODEL_PATH} NAME)
+	get_filename_component(MODEL_DIRECTORY ${MODEL_PATH} DIRECTORY)
+	add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/${MODEL_NAME}.cpp
+		WORKING_DIRECTORY ${MODEL_DIRECTORY}
+		COMMAND xxd -i ${MODEL_NAME} ${CMAKE_BINARY_DIR}/src/${MODEL_NAME}.cpp
+		DEPENDS ${MODEL_PATH}
+	)
+	list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/${MODEL_NAME}.cpp)
+endmacro(embed_ftlite_model)
+
+embed_ftlite_model(${CMAKE_CURRENT_SOURCE_DIR}/nn/text_detector/TextDetector.tflite)
 
 add_library(testo-core STATIC ${SRCS})
-target_link_libraries(testo-core coro vbox pugixml)
+target_link_libraries(testo-core coro vbox pugixml tensorflow-lite)
 
 if(WIN32)
 	target_link_libraries(testo-core hyperv msft virtdisk++)

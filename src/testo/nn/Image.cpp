@@ -20,8 +20,8 @@ Image::Image(const std::string& path) {
 	}
 }
 
-Image::Image(const uint8_t* data, size_t size) {
-	data = stbi_load_from_memory(data, size, &width, &height, &channels, 0);
+Image::Image(const uint8_t* buffer, size_t buffer_len) {
+	data = stbi_load_from_memory(buffer, buffer_len, &width, &height, &channels, 0);
 	if (!data) {
 		throw std::runtime_error(std::string("Cannot parse image because ") + stbi_failure_reason());
 	}

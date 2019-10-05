@@ -89,7 +89,7 @@ void App::render() {
 						float(texture.height() + 40)
 					});
 				}
-				texture.write(vm->view.data(), vm->view.size());
+				texture.write(vm->view.data, vm->view.size());
 				ImVec2 p = ImGui::GetCursorScreenPos();
 				ImGui::GetWindowDrawList()->AddImage(texture.handle(), p, ImVec2(p.x + texture.width(), p.y + texture.height()));
 			} else {

@@ -3,7 +3,6 @@
 #include "App.hpp"
 #include <iostream>
 #include <math.h>
-#include <stb_image.h>
 
 using namespace std::chrono_literals;
 
@@ -43,8 +42,8 @@ void VM::run() {
 		}
 		previous = current;
 
-		stb::Image screenshot = guest->screenshot();
-		if (!screenshot.data()) {
+		Image screenshot = guest->screenshot();
+		if (!screenshot.data) {
 			std::lock_guard<std::shared_mutex> lock(mutex);
 			view = {};
 			continue;
@@ -60,7 +59,7 @@ void VM::run() {
 			background_copy = background;
 		}
 
-		shit.stink_even_stronger(screenshot, query_copy, foreground_copy, background_copy);
+		text_detector.detect(screenshot, query_copy, foreground_copy, background_copy);
 
 		std::lock_guard<std::shared_mutex> lock(mutex);
 		std::swap(view, screenshot);

@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <darknet/Image.hpp>
+#include <testo/nn/Image.hpp>
 
 struct Guest {
 	Guest(const std::string& name);
@@ -14,7 +14,7 @@ struct Guest {
 		return _name;
 	}
 
-	virtual stb::Image screenshot() = 0;
+	virtual Image screenshot() = 0;
 
 private:
 	std::string _name;

@@ -10,20 +10,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/sbin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 
-if(GPU)
-	add_definitions(-DGPU)
-	enable_language("CUDA")
-endif()
-
 add_definitions(-DASIO_STANDALONE)
 
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
 	${CMAKE_SOURCE_DIR}/src
-)
-
-link_directories(
-	${CMAKE_BINARY_DIR}/out/lib
 )
 
 macro(add_package NAME)

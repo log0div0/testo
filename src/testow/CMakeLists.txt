@@ -2,6 +2,19 @@ cmake_minimum_required(VERSION 3.0)
 
 include_directories(${CMAKE_SOURCE_DIR}/3rd_party/imgui)
 
+if(NOT TENSORFLOW_DIR)
+	message(FATAL_ERROR "TENSORFLOW_DIR is not set")
+endif()
+
+include_directories(
+	${TENSORFLOW_DIR}
+	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/downloads/flatbuffers/include
+)
+
+link_directories(
+	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/linux_x86_64/lib/
+)
+
 file(GLOB SRCS *.cpp)
 
 add_executable(testow ${SRCS})
