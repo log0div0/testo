@@ -320,11 +320,11 @@ struct MouseMove: public Node {
 	}
 
 	int dx() {
-		std::stoi(dx_token.value());
+		return std::stoi(dx_token.value());
 	}
 
 	int dy() {
-		std::stoi(dy_token.value());
+		return std::stoi(dy_token.value());
 	}
 
 	Token move, dx_token, dy_token;
