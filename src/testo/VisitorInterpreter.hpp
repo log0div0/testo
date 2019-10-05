@@ -4,7 +4,7 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "StackEntry.hpp"
-#include "StinkingPileOfShit.hpp"
+#include "nn/text_detector/TextDetector.hpp"
 #include <vector>
 #include <list>
 
@@ -171,7 +171,7 @@ private:
 	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
-	StinkingPileOfShit shit;
+	TextDetector text_detector;
 	std::unordered_map<char, std::vector<std::string>> charmap;
 
 	std::string json_report_file;

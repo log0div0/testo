@@ -2,7 +2,7 @@
 #pragma once
 
 #include "FlashDrive.hpp"
-#include "../StinkingPileOfShit.hpp"
+#include "../nn/Image.hpp"
 #include <nlohmann/json.hpp>
 
 enum class VmState {
@@ -34,7 +34,7 @@ struct VM {
 	virtual void power_button() = 0;
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
-	virtual stb::Image screenshot() = 0;
+	virtual Image screenshot() = 0;
 	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) = 0;

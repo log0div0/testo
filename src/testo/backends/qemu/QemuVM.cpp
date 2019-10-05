@@ -962,7 +962,7 @@ void QemuVM::resume() {
 	}
 }
 
-stb::Image QemuVM::screenshot() {
+Image QemuVM::screenshot() {
 	auto domain = qemu_connect.domain_lookup_by_name(name());
 	auto stream = qemu_connect.new_stream();
 	auto mime = domain.screenshot(stream);
@@ -975,7 +975,7 @@ stb::Image QemuVM::screenshot() {
 
 	stream.finish();
 
-	stb::Image screenshot(screenshot_buffer.data(), bytes);
+	Image screenshot(screenshot_buffer.data(), bytes);
 	return screenshot;
 }
 

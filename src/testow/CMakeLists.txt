@@ -5,7 +5,7 @@ include_directories(${CMAKE_SOURCE_DIR}/3rd_party/imgui)
 file(GLOB SRCS *.cpp)
 
 add_executable(testow ${SRCS})
-target_link_libraries(testow imgui pugixml testo-core libdarknet)
+target_link_libraries(testow imgui pugixml testo-core)
 
 if(WIN32)
 	target_link_libraries(testow d3d11 d3dcompiler)

@@ -26,7 +26,7 @@ struct HyperVVM: VM {
 	void suspend() override;
 	void resume() override;
 	void power_button() override;
-	stb::Image screenshot() override;
+	Image screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) override;

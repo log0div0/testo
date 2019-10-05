@@ -685,7 +685,7 @@ void VboxVM::resume() {
 	}
 }
 
-stb::Image VboxVM::screenshot() {
+Image VboxVM::screenshot() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -704,7 +704,7 @@ stb::Image VboxVM::screenshot() {
 			return {};
 		}
 
-		stb::Image result(width, height, 3);
+		Image result(width, height, 3);
 
 		vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
 		vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);
@@ -714,7 +714,7 @@ stb::Image VboxVM::screenshot() {
 				for(size_t c = 0; c < 3; ++c){
 					size_t src_index = h*width*4 + w*4 + c;
 					size_t dst_index = h*width*3 + w*3 + c;
-					result._data[dst_index] = array_out[src_index];
+					result.data[dst_index] = array_out[src_index];
 				}
 			}
 		}

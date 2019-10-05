@@ -25,32 +25,11 @@ if (UNIX AND NOT APPLE)
 	set(SRCS ${SRCS} ${QEMU_SRCS})
 endif()
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_network.cpp
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
-	COMMAND xxd -i testo.network ${CMAKE_BINARY_DIR}/src/testo_network.cpp
-	DEPENDS ${CMAKE_SOURCE_DIR}/nn/testo.network
-)
-
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_weights.cpp
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
-	COMMAND xxd -i testo.weights ${CMAKE_BINARY_DIR}/src/testo_weights.cpp
-	DEPENDS ${CMAKE_SOURCE_DIR}/nn/testo.weights
-)
-
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/nn/
-	COMMAND xxd -i testo.symbols ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp
-	DEPENDS ${CMAKE_SOURCE_DIR}/nn/testo.symbols
-)
-
-list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_network.cpp)
-list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_weights.cpp)
-list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/testo_symbols.cpp)
-
+file(GLOB NN_SRCS nn/*.cpp)
+set(SRCS ${SRCS} ${NN_SRCS})
 
 add_library(testo-core STATIC ${SRCS})
-add_dependencies(testo-core darknet)
-target_link_libraries(testo-core coro vbox pugixml libdarknet)
+target_link_libraries(testo-core coro vbox pugixml)
 
 if(WIN32)
 	target_link_libraries(testo-core hyperv msft virtdisk++)
