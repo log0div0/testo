@@ -9,9 +9,15 @@ include_directories(
 	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/downloads/flatbuffers/include
 )
 
+if(APPLE)
+link_directories(
+	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/osx_x86_64/lib/
+)
+else()
 link_directories(
 	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/linux_x86_64/lib/
 )
+endif()
 
 list(APPEND SRC_DIRS "*.cpp")
 
