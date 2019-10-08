@@ -67,7 +67,12 @@ void QemuFlashDrive::create() {
 
 		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path().generic_string() + "\"");
 		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
-		exec_and_throw_if_failed("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
+		auto fs = config.at("fs").get<std::string>();
+		if (fs == "ntfs") {
+			exec_and_throw_if_failed("mkfs." + fs + " -f /dev/nbd0p1");
+		} else {
+			exec_and_throw_if_failed("mkfs." + fs + " /dev/nbd0p1");
+		}
 		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 	} catch (const std::exception& error) {
 		std::system("qemu-nbd -d /dev/nbd0");
