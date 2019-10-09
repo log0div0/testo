@@ -7,8 +7,6 @@
 #include <fmt/format.h>
 #include <thread>
 
-#include <stb_image.h>
-
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
@@ -962,7 +960,7 @@ void QemuVM::resume() {
 	}
 }
 
-Image QemuVM::screenshot() {
+stb::Image QemuVM::screenshot() {
 	auto domain = qemu_connect.domain_lookup_by_name(name());
 	auto stream = qemu_connect.new_stream();
 	auto mime = domain.screenshot(stream);
@@ -975,7 +973,7 @@ Image QemuVM::screenshot() {
 
 	stream.finish();
 
-	Image screenshot(screenshot_buffer.data(), bytes);
+	stb::Image screenshot(screenshot_buffer.data(), bytes);
 	return screenshot;
 }
 

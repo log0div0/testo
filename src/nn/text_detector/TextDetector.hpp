@@ -1,8 +1,13 @@
 
 #pragma once
 
-#include "../Image.hpp"
-#include <tensorflow/lite/interpreter.h>
+#include <stb/Image.hpp>
+#include <vector>
+#include <memory>
+
+namespace tflite {
+class Interpreter;
+}
 
 struct TextDetector {
 
@@ -96,7 +101,8 @@ struct TextDetector {
 	};
 
 	TextDetector();
-	bool detect(Image& image,
+	~TextDetector();
+	bool detect(stb::Image& image,
 		const std::string& text,
 		const std::string& foreground,
 		const std::string& background);

@@ -129,7 +129,7 @@ void DummyVM::power_button() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-Image DummyVM::screenshot() {
+stb::Image DummyVM::screenshot() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

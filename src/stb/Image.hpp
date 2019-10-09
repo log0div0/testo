@@ -4,6 +4,8 @@
 #include <stb_image.h>
 #include <string>
 
+namespace stb {
+
 struct Image {
 	Image() {}
 	Image(int w, int h, int c);
@@ -27,3 +29,5 @@ struct Image {
 	int height = 0;
 	int channels = 0;
 };
+
+}

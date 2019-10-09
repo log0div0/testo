@@ -685,7 +685,7 @@ void VboxVM::resume() {
 	}
 }
 
-Image VboxVM::screenshot() {
+stb::Image VboxVM::screenshot() {
 	try {
 		auto lock_machine = virtual_box.find_machine(name());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
@@ -704,7 +704,7 @@ Image VboxVM::screenshot() {
 			return {};
 		}
 
-		Image result(width, height, 3);
+		stb::Image result(width, height, 3);
 
 		vbox::SafeArray safe_array = display.take_screen_shot_to_array(0, width, height, BitmapFormat_BGRA);
 		vbox::ArrayOut array_out = safe_array.copy_out(VT_UI1);

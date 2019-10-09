@@ -4,7 +4,7 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "StackEntry.hpp"
-#include "nn/text_detector/TextDetector.hpp"
+#include <nn/text_detector/TextDetector.hpp>
 #include <vector>
 #include <list>
 

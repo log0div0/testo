@@ -1,5 +1,6 @@
 
 #include "TextDetector.hpp"
+#include <tensorflow/lite/interpreter.h>
 #include <tensorflow/lite/model.h>
 #include <tensorflow/lite/kernels/register.h>
 #include <iostream>
@@ -134,7 +135,11 @@ TextDetector::TextDetector() {
 	}
 }
 
-bool TextDetector::detect(Image& image,
+TextDetector::~TextDetector() {
+
+}
+
+bool TextDetector::detect(stb::Image& image,
 	const std::string& text,
 	const std::string& foreground,
 	const std::string& background)

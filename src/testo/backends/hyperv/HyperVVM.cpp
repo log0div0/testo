@@ -261,7 +261,7 @@ uint8_t Table6[1 << 6] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 5
  142, 146, 150, 154, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198,
  202, 206, 210, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251, 255};
 
-Image HyperVVM::screenshot() {
+stb::Image HyperVVM::screenshot() {
 	try {
 		auto machine = connect.machine(name());
 
@@ -274,7 +274,7 @@ Image HyperVVM::screenshot() {
 		size_t width = display.width();
 		std::vector<uint8_t> screenshot = display.screenshot();
 
-		Image result(width, height, 3);
+		stb::Image result(width, height, 3);
 
 		for (size_t h = 0; h < height; ++h) {
 			for (size_t w = 0; w < width; ++w) {

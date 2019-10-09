@@ -6,6 +6,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+namespace stb {
+
 Image::Image(int w, int h, int c) {
 	width = w;
 	height = h;
@@ -84,4 +86,6 @@ void Image::draw(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b
 		data[x1*channels + i*width*channels + 2] = b;
 		data[x2*channels + i*width*channels + 2] = b;
 	}
+}
+
 }
