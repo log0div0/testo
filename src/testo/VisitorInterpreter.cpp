@@ -950,19 +950,27 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
 	try {
-		std::cout
-			<< rang::fgB::blue << progress()
-			<< " Moving cursor "
-			<< rang::fg::yellow;
+		if (mouse_event->is_move_needed()) {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Moving cursor "
+				<< rang::fg::yellow;
 
 
-		std::cout
-			<< rang::fgB::blue << "on virtual machine "
-			<< rang::fg::yellow << vmc->name();
+			std::cout
+				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fg::yellow << vmc->name();
 
 
-		std::cout
-			<< rang::style::reset << std::endl;
+			std::cout
+				<< rang::style::reset << std::endl;
+
+
+			vmc->vm->mouse_move(mouse_event->dx_token.value(), mouse_event->dy_token.value());
+
+		}
+
+
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(mouse_event, vmc));

@@ -53,6 +53,10 @@ void DummyVM::press(const std::vector<std::string>& buttons) {
 	return;
 }
 
+void DummyVM::mouse_move(const std::string& x, const std::string& y) {
+	return;
+}
+
 bool DummyVM::is_nic_plugged(const std::string& nic) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }

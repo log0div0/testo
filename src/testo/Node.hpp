@@ -319,12 +319,8 @@ struct MouseEvent: public Node {
 		return result;
 	}
 
-	int dx() {
-		return std::stoi(dx_token.value());
-	}
-
-	int dy() {
-		return std::stoi(dy_token.value());
+	bool is_move_needed() const {
+		return dx_token.value().length();
 	}
 
 	Token event, dx_token, dy_token;

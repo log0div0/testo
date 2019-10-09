@@ -459,6 +459,26 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
+void QemuVM::mouse_move(const std::string& x, const std::string& y) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+
+		int dx = 0, dy = 0;
+
+		//ONLY FOR NOW!
+		dx = std::stoi(x);
+		dy = std::stoi(y);
+
+		std::string command = "mouse_move ";
+		command += x + " " + y;
+
+		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse move error"));
+	}
+}
+
 bool QemuVM::is_nic_plugged(const std::string& nic) const {
 	try {
 		auto nic_name = std::string("ua-nic-") + nic;
