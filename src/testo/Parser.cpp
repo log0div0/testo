@@ -467,7 +467,7 @@ std::shared_ptr<IAction> Parser::action() {
 	} else if (LA(1) == Token::category::press) {
 		action = press();
 	} else if (LA(1) == Token::category::mouse) {
-		action = mouse();
+		action = mouse_event();
 	} else if ((LA(1) == Token::category::plug) || (LA(1) == Token::category::unplug)) {
 		action = plug();
 	} else if (LA(1) == Token::category::start) {
@@ -627,41 +627,26 @@ std::shared_ptr<Action<Press>> Parser::press() {
 	return std::shared_ptr<Action<Press>>(new Action<Press>(action));
 }
 
-std::shared_ptr<IAction> Parser::mouse() {
+std::shared_ptr<Action<MouseEvent>> Parser::mouse_event() {
 	Token mouse_token = LT(1);
 	match(Token::category::mouse);
 
-	if (LA(1) == Token::category::move) {
-		return mouse_move(mouse_token);
-	} else if ((LA(1) == Token::category::click) || (LA(1) == Token::category::rclick)) {
-		return mouse_click(mouse_token);
-	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected move, click or rclick token");
+	Token event_token = LT(1);
+	match({Token::category::move, Token::category::click, Token::category::rclick});
+
+	Token dx, dy;
+
+	if (event_token.value() == "move" || LA(1) == Token::category::number) {
+		dx = LT(1);
+		match(Token::category::number);
+		dy = LT(1);
+		match(Token::category::number);
 	}
-	return nullptr;
+
+	auto action = std::shared_ptr<MouseEvent>(new MouseEvent(mouse_token, event_token, dx, dy));
+	return std::shared_ptr<Action<MouseEvent>>(new Action<MouseEvent>(action));
 }
 
-std::shared_ptr<Action<MouseMove>> Parser::mouse_move(const Token& mouse) {
-	Token move = LT(1);
-	match(Token::category::move);
-
-	Token dx = LT(1);
-	match(Token::category::number);
-
-	Token dy = LT(1);
-	match(Token::category::number);
-
-	auto action = std::shared_ptr<MouseMove>(new MouseMove(mouse, move, dx, dy));
-	return std::shared_ptr<Action<MouseMove>>(new Action<MouseMove>(action));
-}
-
-std::shared_ptr<Action<MouseClick>> Parser::mouse_click(const Token& mouse) {
-	Token click = LT(1);
-	match({Token::category::click, Token::category::rclick});
-
-	auto action = std::shared_ptr<MouseClick>(new MouseClick(mouse, click));
-	return std::shared_ptr<Action<MouseClick>>(new Action<MouseClick>(action));
-}
 
 std::shared_ptr<Action<Plug>> Parser::plug() {
 	Token plug_token = LT(1);

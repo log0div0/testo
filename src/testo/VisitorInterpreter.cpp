@@ -793,6 +793,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		return visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MouseEvent>>(action)) {
+		return visit_mouse_event(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
@@ -943,6 +945,27 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
+	}
+}
+
+void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
+	try {
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Moving cursor "
+			<< rang::fg::yellow;
+
+
+		std::cout
+			<< rang::fgB::blue << "on virtual machine "
+			<< rang::fg::yellow << vmc->name();
+
+
+		std::cout
+			<< rang::style::reset << std::endl;
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(mouse_event, vmc));
 	}
 }
 

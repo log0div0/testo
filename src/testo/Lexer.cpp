@@ -172,6 +172,14 @@ Token Lexer::id() {
 		return check();
 	} else if (value == "press") {
 		return press();
+	} else if (value == "mouse") {
+		return mouse();
+	} else if (value == "move") {
+		return move();
+	} else if (value == "click") {
+		return click();
+	} else if (value == "rclick") {
+		return rclick();
 	} else if (value == "plug") {
 		return plug();
 	} else if (value == "unplug") {

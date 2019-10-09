@@ -301,9 +301,9 @@ struct Press: public Node {
 	std::vector<std::shared_ptr<KeySpec>> keys;
 };
 
-struct MouseMove: public Node {
-	MouseMove(const Token& mouse, const Token& move, const Token& dx, const Token& dy):
-		Node(mouse), move(move), dx_token(dx), dy_token(dy) {}
+struct MouseEvent: public Node {
+	MouseEvent(const Token& mouse, const Token& event, const Token& dx, const Token& dy):
+		Node(mouse), event(event), dx_token(dx), dy_token(dy) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -314,7 +314,7 @@ struct MouseMove: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + " " + move.value() + " " + dx_token.value() + " " + dy_token.value();
+		std::string result = t.value() + " " + event.value() + " " + dx_token.value() + " " + dy_token.value();
 
 		return result;
 	}
@@ -327,28 +327,7 @@ struct MouseMove: public Node {
 		return std::stoi(dy_token.value());
 	}
 
-	Token move, dx_token, dy_token;
-};
-
-struct MouseClick: public Node {
-	MouseClick(const Token& mouse, const Token& click_type):
-		Node(mouse), click_type(click_type) {}
-
-	Pos begin() const {
-		return t.pos();
-	}
-
-	Pos end() const {
-		return click_type.pos();
-	}
-
-	operator std::string() const {
-		std::string result = t.value() + " " + click_type.value();
-
-		return result;
-	}
-
-	Token click_type;
+	Token event, dx_token, dy_token;
 };
 
 //Also is used for unplug
