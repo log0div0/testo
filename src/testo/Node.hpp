@@ -314,7 +314,18 @@ struct MouseEvent: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + " " + event.value() + " " + dx_token.value() + " " + dy_token.value();
+		std::string result = t.value() + " " + event.value() + " ";
+		if (!dx_token.value().length()) {
+			result += "+0 ";
+		} else {
+			result += dx_token.value();
+		}
+
+		if (!dy_token.value().length()) {
+			result += "+0";
+		} else {
+			result += dy_token.value();
+		}
 
 		return result;
 	}

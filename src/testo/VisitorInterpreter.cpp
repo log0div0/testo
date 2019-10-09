@@ -954,11 +954,11 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 			std::cout
 				<< rang::fgB::blue << progress()
 				<< " Moving cursor "
-				<< rang::fg::yellow;
-
+				<< rang::fg::yellow << "X:" << mouse_event->dx_token.value()
+				<< " Y:" << mouse_event->dy_token.value();
 
 			std::cout
-				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fgB::blue << " on virtual machine "
 				<< rang::fg::yellow << vmc->name();
 
 
@@ -970,10 +970,32 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 
 		}
 
-		if (mouse_event->event.value() == "click") {
+		if (mouse_event->event.value() == "move") {
+			return;
+		} else if (mouse_event->event.value() == "click") {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Left Clicking "
+				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
 			vmc->vm->mouse_set_buttons(MouseButton::Left);
 			vmc->vm->mouse_set_buttons(0);
 		} else if (mouse_event->event.value() == "rclick") {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Right Clicking "
+				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
 			vmc->vm->mouse_set_buttons(MouseButton::Right);
 			vmc->vm->mouse_set_buttons(0);
 		} else {
