@@ -463,6 +463,10 @@ void QemuVM::mouse_move(const std::string& x, const std::string& y) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(name());
 
+		if (isdigit(x[0]) || isdigit(y[0])) {
+			std::throw_with_nested(std::runtime_error("absolute mouse movement is not implemented"));
+		}
+
 		int dx = 0, dy = 0;
 
 		//ONLY FOR NOW!
