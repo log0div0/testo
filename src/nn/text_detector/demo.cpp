@@ -14,11 +14,14 @@ void predict()
 	TextDetector text_detector;
 
 	auto start = std::chrono::high_resolution_clock::now();
-	text_detector.detect(image, query, {}, {});
+	auto rects = text_detector.detect(image, query, {}, {});
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << time.count() << " seconds" << std::endl;
 
+	for (auto& rect: rects) {
+		image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
+	}
 	image.write_png(output_file);
 }
 

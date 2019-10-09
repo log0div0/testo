@@ -139,13 +139,13 @@ TextDetector::~TextDetector() {
 
 }
 
-bool TextDetector::detect(stb::Image& image,
+std::vector<Rect> TextDetector::detect(stb::Image& image,
 	const std::string& text,
 	const std::string& foreground,
 	const std::string& background)
 {
 	if (!image.data) {
-		return false;
+		return {};
 	}
 
 	if ((in_w != image.width) ||
@@ -180,26 +180,40 @@ bool TextDetector::detect(stb::Image& image,
 
 	interpreter->Invoke();
 
-	bool result = false;
-
 	std::vector<std::string> query = utf8::split_to_chars(text);
 	int foreground_id = get_color_id(foreground);
 	int background_id = get_color_id(background);
+
+	std::vector<Rect> total_rects;
 
 	for (int y = 0; y < out_h; ++y) {
 		for (int x = 0; x < out_w; ++x) {
 			std::vector<Rect> rects;
 			if (find_substr(x, y, query, 0, foreground_id, background_id, 0, 0, rects)) {
-				result = true;
-				for (auto& rect: rects) {
-					image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
+				Rect total_rect = rects.at(0);
+				for (size_t i = 1; i < rects.size(); ++i) {
+					total_rect |= rects.at(i);
 				}
+				total_rects.push_back(total_rect);
 			}
 
 		}
 	}
 
-	return result;
+	std::vector<Rect> results;
+	for (auto& total_rect: total_rects) {
+		bool merged = false;
+		for (auto& result: results) {
+			if (result.iou(total_rect) > 0.5f) {
+				result |= total_rect;
+				merged = true;
+			}
+		}
+		if (!merged) {
+			results.push_back(total_rect);
+		}
+	}
+	return results;
 }
 
 float char_w = 8;
