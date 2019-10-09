@@ -13,6 +13,7 @@ struct HyperVVM: VM {
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
 	void mouse_move(const std::string& x, const std::string& y) override;
+	void mouse_set_buttons(uint32_t button_mask) override;
 	bool is_nic_plugged(const std::string& nic) const override;
 	void set_nic(const std::string& nic, bool is_enabled) override;
 	bool is_link_plugged(const std::string& nic) const override;

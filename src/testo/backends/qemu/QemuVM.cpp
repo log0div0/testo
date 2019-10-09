@@ -483,6 +483,17 @@ void QemuVM::mouse_move(const std::string& x, const std::string& y) {
 	}
 }
 
+void QemuVM::mouse_set_buttons(uint32_t button_mask) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		std::string command = "mouse_button " + std::to_string(button_mask);
+		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse set buttons error"));
+	}
+}
+
 bool QemuVM::is_nic_plugged(const std::string& nic) const {
 	try {
 		auto nic_name = std::string("ua-nic-") + nic;

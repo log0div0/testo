@@ -389,6 +389,9 @@ void VboxVM::mouse_move(const std::string& x, const std::string& y) {
 	throw std::runtime_error("Implement me");
 }
 
+void VboxVM::mouse_set_buttons(uint32_t button_mask) {
+	throw std::runtime_error("Implement me");
+}
 
 bool VboxVM::is_nic_plugged(const std::string& nic) const {
 	try {

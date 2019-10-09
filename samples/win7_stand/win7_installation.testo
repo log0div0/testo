@@ -14,10 +14,10 @@ test win7_installation {
 		start
 		wait timeout 2s
 		press Down, Enter
-		wait timeout 40s
-		mouse move +50 -50
-		wait timeout 10s
-		mouse move +20 +50
+		wait timeout 35s
+		mouse click
+		wait timeout 3s
+		mouse click +160 +125
 		abort "stop here"
 	}
 }
