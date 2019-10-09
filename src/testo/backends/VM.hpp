@@ -12,6 +12,12 @@ enum class VmState {
 	Other
 };
 
+enum MouseButton {
+	Left = 1,
+	Right = 2,
+	Middle = 4
+};
+
 struct VM {
 	VM() = delete;
 	VM(const nlohmann::json& config_);
@@ -20,6 +26,8 @@ struct VM {
 	virtual void make_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual void press(const std::vector<std::string>& buttons) = 0;
+	virtual void mouse_move(const std::string& x, const std::string& y) = 0;
+	virtual void mouse_set_buttons(uint32_t button_mask) = 0;
 	virtual bool is_nic_plugged(const std::string& nic) const = 0;
 	virtual void set_nic(const std::string& nic, bool is_enabled) = 0;
 	virtual bool is_link_plugged(const std::string& nic) const = 0;

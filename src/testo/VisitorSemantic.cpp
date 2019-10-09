@@ -302,6 +302,13 @@ void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
 }
 
 void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
+	if (key_spec->times.value().length()) {
+		if (std::stoi(key_spec->times.value()) < 1) {
+			throw std::runtime_error(std::string(key_spec->times.pos()) +
+					" :Error: Can't press a buttin less than 1 time: " + key_spec->times.value());
+		}
+	}
+
 	for (auto button: key_spec->buttons) {
 		if (!is_button(button)) {
 			throw std::runtime_error(std::string(button.pos()) +
@@ -474,6 +481,9 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::SimpleAttr>>(attr->value)) {
 		auto value = p->attr_value->t;
 		if (value.type() == Token::category::number) {
+			if (std::stoi(value.value()) < 0) {
+				throw std::runtime_error(std::string(attr->begin()) + ": Error: numeric attr can't be negative: " + value.value());
+			}
 			config[attr->name.value()] = std::stoul(value.value());
 		} else if (value.type() == Token::category::size) {
 			config[attr->name.value()] = size_to_mb(value);

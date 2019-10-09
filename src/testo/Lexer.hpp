@@ -19,7 +19,20 @@ private:
 
 	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input->length()); }
 	bool test_newline() const { return ((*input)[current_pos] == '\n'); }
-	bool test_number(size_t shift = 0) const { return isdigit((*input)[current_pos + shift]); }
+	bool test_digit(size_t shift = 0) const { return isdigit((*input)[current_pos + shift]); }
+	bool test_number() const {
+		if (test_digit()) {
+			return true;
+		}
+
+		if (test_eof(1)) {
+			return false;
+		}
+
+		if (test_plus() || test_minus()) {
+			return test_digit(1);
+		}
+	}
 	bool test_id(size_t shift = 0) const {
 		return (isalpha((*input)[current_pos + shift]) ||
 			((*input)[current_pos + shift] == '_'));
@@ -72,6 +85,7 @@ private:
 
 	bool test_comma() const { return ((*input)[current_pos] == ','); }
 	bool test_plus() const { return ((*input)[current_pos] == '+'); }
+	bool test_minus() const { return ((*input)[current_pos] == '-'); }
 	bool test_asterisk() const { return ((*input)[current_pos] == '*'); }
 	bool test_lbrace() const { return ((*input)[current_pos] == '{'); }
 	bool test_rbrace() const { return ((*input)[current_pos] == '}'); }

@@ -299,7 +299,7 @@ void QemuVM::install() {
 					<sound model='ich6'>
 					</sound>
 					<video>
-						<model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
+						<model type='vmvga' heads='1' primary='yes'/>
 					</video>
 					<redirdev bus='usb' type='spicevmc'>
 					</redirdev>
@@ -456,6 +456,41 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
+	}
+}
+
+void QemuVM::mouse_move(const std::string& x, const std::string& y) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+
+		if (isdigit(x[0]) || isdigit(y[0])) {
+			std::throw_with_nested(std::runtime_error("absolute mouse movement is not implemented"));
+		}
+
+		int dx = 0, dy = 0;
+
+		//ONLY FOR NOW!
+		dx = std::stoi(x);
+		dy = std::stoi(y);
+
+		std::string command = "mouse_move ";
+		command += x + " " + y;
+
+		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse move error"));
+	}
+}
+
+void QemuVM::mouse_set_buttons(uint32_t button_mask) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(name());
+		std::string command = "mouse_button " + std::to_string(button_mask);
+		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse set buttons error"));
 	}
 }
 

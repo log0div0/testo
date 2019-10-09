@@ -793,6 +793,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		return visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MouseEvent>>(action)) {
+		return visit_mouse_event(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
@@ -943,6 +945,65 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
+	}
+}
+
+void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
+	try {
+		if (mouse_event->is_move_needed()) {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Moving cursor "
+				<< rang::fg::yellow << "X:" << mouse_event->dx_token.value()
+				<< " Y:" << mouse_event->dy_token.value();
+
+			std::cout
+				<< rang::fgB::blue << " on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
+
+			vmc->vm->mouse_move(mouse_event->dx_token.value(), mouse_event->dy_token.value());
+
+		}
+
+		if (mouse_event->event.value() == "move") {
+			return;
+		} else if (mouse_event->event.value() == "click") {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Left Clicking "
+				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
+			vmc->vm->mouse_set_buttons(MouseButton::Left);
+			vmc->vm->mouse_set_buttons(0);
+		} else if (mouse_event->event.value() == "rclick") {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Right Clicking "
+				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
+			vmc->vm->mouse_set_buttons(MouseButton::Right);
+			vmc->vm->mouse_set_buttons(0);
+		} else {
+			throw std::runtime_error("Unsupported mouse event");
+		}
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(mouse_event, vmc));
 	}
 }
 
