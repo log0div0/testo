@@ -5,6 +5,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 namespace stb {
 
@@ -53,6 +55,12 @@ Image& Image::operator=(Image&& other) {
 	std::swap(height, other.height);
 	std::swap(channels, other.channels);
 	return *this;
+}
+
+void Image::write_png(const std::string& path) {
+	if (!stbi_write_png(path.c_str(), width, height, channels, data, width*channels)) {
+		throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
+	}
 }
 
 void Image::draw(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b) {

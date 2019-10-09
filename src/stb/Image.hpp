@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <stb_image.h>
 #include <string>
 
 namespace stb {
@@ -17,6 +16,8 @@ struct Image {
 	Image& operator=(const Image& other) = delete;
 	Image(Image&& other);
 	Image& operator=(Image&& other);
+
+	void write_png(const std::string& path);
 
 	size_t size() const {
 		return width * height * channels;
