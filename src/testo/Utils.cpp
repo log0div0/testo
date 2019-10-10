@@ -32,10 +32,22 @@ void exec_and_throw_if_failed(const std::string& command) {
 
 std::string file_signature(const fs::path& file) {
 	if (!fs::exists(file)) {
-		return "not exists";
+		return file.filename().generic_string() + "not exists";
 	}
-	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
-	return file.filename().generic_string() + std::to_string(last_modify_time);
+
+	if(fs::file_size(file) > 1048576) { //1Mb
+		auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
+		return file.filename().generic_string() + std::to_string(last_modify_time);
+	} else {
+		std::ifstream f(file.generic_string());
+		if (!f) {
+			return file.filename().generic_string() + "Can't open";
+		}
+		std::string str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+		std::hash<std::string> h;
+		return file.filename().generic_string() + std::to_string(h(str));
+	}
+
 }
 
 std::string directory_signature(const fs::path& dir) {
