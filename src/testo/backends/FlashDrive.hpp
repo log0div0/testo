@@ -23,6 +23,7 @@ struct FlashDrive {
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual fs::path img_path() const = 0;
 
+	std::string id() const;
 	std::string name() const;
 	nlohmann::json get_config() const;
 	bool has_folder() const;

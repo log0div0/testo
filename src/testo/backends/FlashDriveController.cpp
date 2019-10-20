@@ -3,6 +3,10 @@
 #include "Environment.hpp"
 #include <fmt/format.h>
 
+std::string FlashDriveController::id() const {
+	return fd->id();
+}
+
 std::string FlashDriveController::name() const {
 	return fd->name();
 }
@@ -82,7 +86,7 @@ void FlashDriveController::create_snapshot(const std::string& snapshot, const st
 
 		//Where to store new metadata file?
 		fs::path metadata_file = get_metadata_dir();
-		metadata_file /= fd->name() + "_" + snapshot;
+		metadata_file /= fd->id() + "_" + snapshot;
 
 		auto current_state = get_metadata("current_state");
 
@@ -95,7 +99,7 @@ void FlashDriveController::create_snapshot(const std::string& snapshot, const st
 		//link parent to a child
 		if (current_state.length()) {
 			fs::path parent_metadata_file = get_metadata_dir();
-			parent_metadata_file /= fd->name() + "_" + current_state;
+			parent_metadata_file /= fd->id() + "_" + current_state;
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			parent_metadata.at("children").push_back(snapshot);
 			write_metadata_file(parent_metadata_file, parent_metadata);
@@ -116,7 +120,7 @@ void FlashDriveController::delete_snapshot_with_children(const std::string& snap
 		//This thins needs to be recursive
 		//I guess... go through the children and call recursively on them
 		fs::path metadata_file = get_metadata_dir();
-		metadata_file /= fd->name() + "_" + snapshot;
+		metadata_file /= fd->id() + "_" + snapshot;
 
 		auto metadata = read_metadata_file(metadata_file);
 
@@ -136,8 +140,8 @@ void FlashDriveController::delete_snapshot_with_children(const std::string& snap
 
 		//Unlink the parent
 		if (parent.length()) {
-			fs::path parent_metadata_file = env->flash_drives_metadata_dir() / fd->name();
-			parent_metadata_file /= fd->name() + "_" + parent;
+			fs::path parent_metadata_file = env->flash_drives_metadata_dir() / fd->id();
+			parent_metadata_file /= fd->id() + "_" + parent;
 
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			auto& children = parent_metadata.at("children");
@@ -191,5 +195,5 @@ bool FlashDriveController::check_config_relevance() {
 }
 
 fs::path FlashDriveController::get_metadata_dir() const{
-	return env->flash_drives_metadata_dir() / name();
+	return env->flash_drives_metadata_dir() / id();
 }

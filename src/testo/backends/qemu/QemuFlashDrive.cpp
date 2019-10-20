@@ -21,7 +21,7 @@ bool QemuFlashDrive::is_defined() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 		for (auto& vol: pool.volumes()) {
-			if (vol.name() == (name() + ".img")) {
+			if (vol.name() == (id() + ".img")) {
 				return true;
 			}
 		}
@@ -61,7 +61,7 @@ void QemuFlashDrive::create() {
 					</features>
 				</target>
 			</volume>
-		)", name(), config.at("size").get<uint32_t>(), img_path().generic_string()).c_str());
+		)", id(), config.at("size").get<uint32_t>(), img_path().generic_string()).c_str());
 
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 
@@ -146,14 +146,14 @@ void QemuFlashDrive::rollback(const std::string& snapshot) {
 
 fs::path QemuFlashDrive::img_path() const {
 	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
-	return pool.path() / (name() + ".img");
+	return pool.path() / (id() + ".img");
 }
 
 void QemuFlashDrive::remove_if_exists() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 		for (auto& vol: pool.volumes()) {
-			if (vol.name() == (name() + ".img")) {
+			if (vol.name() == (id() + ".img")) {
 				vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
 			}
 		}

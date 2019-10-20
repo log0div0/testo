@@ -8,6 +8,7 @@ struct VmController: public Controller {
 	VmController() = delete;
 	VmController(std::shared_ptr<VM> vm): Controller(), vm(vm) {}
 
+	std::string id() const override;
 	std::string name() const override;
 	std::string type() const override { return "virtual machine"; }
 	bool is_defined() const override;

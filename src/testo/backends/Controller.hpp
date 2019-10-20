@@ -8,6 +8,7 @@
 struct Controller {
 	virtual ~Controller() {}
 
+	virtual std::string id() const = 0;
 	virtual std::string name() const = 0;
 	virtual std::string type() const = 0;
 	virtual bool is_defined() const;
@@ -29,7 +30,7 @@ struct Controller {
 protected:
 	fs::path main_file() const {
 		fs::path result = get_metadata_dir();
-		result = result / name();
+		result = result / id();
 		return result;
 	}
 };

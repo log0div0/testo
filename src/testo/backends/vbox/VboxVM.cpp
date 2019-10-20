@@ -178,7 +178,7 @@ void VboxVM::remove_if_exists() {
 	try {
 		std::vector<vbox::Machine> machines = virtual_box.machines();
 		for (auto& machine: machines) {
-			if (machine.name() == name()) {
+			if (machine.name() == id()) {
 				vbox::Session session = virtual_box_client.session();
 				{
 					vbox::Lock lock(machine, session, LockType_Shared);
@@ -206,8 +206,8 @@ void VboxVM::create_vm() {
 	try {
 		{
 			vbox::GuestOSType guest_os_type = virtual_box.get_guest_os_type(config.value("vbox_os_type", "Other_64"));
-			std::string settings_file_path = virtual_box.compose_machine_filename(name(), "/", {}, {});
-			vbox::Machine machine = virtual_box.create_machine(settings_file_path, name(), {"/"}, guest_os_type.id(), {});
+			std::string settings_file_path = virtual_box.compose_machine_filename(id(), "/", {}, {});
+			vbox::Machine machine = virtual_box.create_machine(settings_file_path, id(), {"/"}, guest_os_type.id(), {});
 
 			machine.memory_size(config.at("ram").get<std::uint32_t>()); //for now, but we need to change it
 			machine.vram_size(guest_os_type.recommended_vram() > 16 ? guest_os_type.recommended_vram() : 16);
@@ -230,7 +230,7 @@ void VboxVM::create_vm() {
 
 		{
 			//TODO: CLEANUP IF SOMETHING WENT WRONG
-			auto lock_machine = virtual_box.find_machine(name());
+			auto lock_machine = virtual_box.find_machine(id());
 			vbox::Lock lock(lock_machine, work_session, LockType_Write);
 
 			auto machine = work_session.machine();
@@ -320,7 +320,7 @@ void VboxVM::install() {
 
 void VboxVM::make_snapshot(const std::string& snapshot) {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		if (machine.hasSnapshot(snapshot)) {
@@ -348,7 +348,7 @@ void VboxVM::rollback(const std::string& snapshot) {
 		stop();
 
 		{
-			auto lock_machine = virtual_box.find_machine(name());
+			auto lock_machine = virtual_box.find_machine(id());
 			vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 			auto machine = work_session.machine();
 			auto snap = machine.findSnapshot(snapshot);
@@ -364,7 +364,7 @@ void VboxVM::rollback(const std::string& snapshot) {
 
 void VboxVM::press(const std::vector<std::string>& buttons) {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		auto keyboard = work_session.console().keyboard();
 		std::vector<uint8_t> codes;
@@ -403,7 +403,7 @@ bool VboxVM::is_nic_plugged(const std::string& nic) const {
 
 		for (auto& nic_it: nics) {
 			if (nic_it.at("name") == nic) {
-				auto machine = virtual_box.find_machine(name());
+				auto machine = virtual_box.find_machine(id());
 				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
 				return network_adapter.enabled();
 			}
@@ -426,7 +426,7 @@ void VboxVM::set_nic(const std::string& nic, bool is_enabled) {
 
 		for (auto& nic_it: nics) {
 			if (nic_it.at("name") == nic) {
-				auto lock_machine = virtual_box.find_machine(name());
+				auto lock_machine = virtual_box.find_machine(id());
 
 				vbox::Lock lock(lock_machine, work_session, LockType_Write);
 				auto machine = work_session.machine();
@@ -454,7 +454,7 @@ bool VboxVM::is_link_plugged(const std::string& nic) const {
 
 		for (auto& nic_it: nics) {
 			if (nic_it.at("name") == nic) {
-				auto machine = virtual_box.find_machine(name());
+				auto machine = virtual_box.find_machine(id());
 				auto network_adapter = machine.getNetworkAdapter(nic_it.at("slot").get<uint32_t>());
 				return network_adapter.cableConnected();
 			}
@@ -477,7 +477,7 @@ void VboxVM::set_link(const std::string& nic, bool is_connected) {
 
 		for (auto& nic_it: nics) {
 			if (nic_it.at("name") == nic) {
-				auto lock_machine = virtual_box.find_machine(name());
+				auto lock_machine = virtual_box.find_machine(id());
 
 				vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 				auto machine = work_session.machine();
@@ -504,7 +504,7 @@ void VboxVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 			throw std::runtime_error("This flash drive is already attached to this vm");
 		}
 
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 
 		auto machine = work_session.machine();
@@ -543,7 +543,7 @@ void VboxVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 			throw std::runtime_error("This flash drive is not plugged to this vm");
 		}
 
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 
 		auto machine = work_session.machine();
@@ -564,7 +564,7 @@ void VboxVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 
 bool VboxVM::is_dvd_plugged() const {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		auto mediums = machine.medium_attachments_of_controller("IDE");
 		for (auto& medium: mediums) {
 			if (medium.port() == 1) {
@@ -586,7 +586,7 @@ void VboxVM::plug_dvd(fs::path path) {
 		vbox::Medium dvd = virtual_box.open_medium(path.generic_string(),
 				DeviceType_DVD, AccessMode_ReadOnly, false);
 
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		machine.mount_medium("IDE", 1, 0, dvd, false);
@@ -597,7 +597,7 @@ void VboxVM::plug_dvd(fs::path path) {
 
 void VboxVM::unplug_dvd() {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		machine.unmount_medium("IDE", 1, 0, false);
@@ -608,7 +608,7 @@ void VboxVM::unplug_dvd() {
 
 void VboxVM::start() {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		if (machine.state() == MachineState_Running) {
 			return;
 		}
@@ -634,7 +634,7 @@ void VboxVM::start() {
 
 void VboxVM::stop() {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		if ((machine.state() == MachineState_PoweredOff) ||
 			(machine.state() == MachineState_Saved) ||
 			(machine.state() == MachineState_Aborted)) {
@@ -652,7 +652,7 @@ void VboxVM::stop() {
 
 void VboxVM::power_button() {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		vbox::Lock lock(machine, work_session, LockType_Shared);
 		work_session.console().power_button();
 	}
@@ -663,7 +663,7 @@ void VboxVM::power_button() {
 
 void VboxVM::suspend() {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		if (machine.state() == MachineState_Paused) {
 			return;
 		}
@@ -679,7 +679,7 @@ void VboxVM::suspend() {
 
 void VboxVM::resume() {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		if (machine.state() == MachineState_Running) {
 			return;
 		}
@@ -695,7 +695,7 @@ void VboxVM::resume() {
 
 stb::Image VboxVM::screenshot() {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto display = work_session.console().display();
 
@@ -739,7 +739,7 @@ int VboxVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t tim
 		args.insert(args.begin(), "--");
 		uint32_t timeout = timeout_milliseconds * 1000 * 1000;
 
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		//1) Open the session
 
@@ -816,7 +816,7 @@ int VboxVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t tim
 
 bool VboxVM::has_snapshot(const std::string& snapshot) {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		return machine.hasSnapshot(snapshot);
@@ -827,7 +827,7 @@ bool VboxVM::has_snapshot(const std::string& snapshot) {
 
 void VboxVM::delete_snapshot(const std::string& snapshot) {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
 		if (machine.hasSnapshot(snapshot)) {
@@ -842,7 +842,7 @@ void VboxVM::delete_snapshot(const std::string& snapshot) {
 bool VboxVM::is_defined() const {
 	std::vector<vbox::Machine> machines = virtual_box.machines();
 	for (auto& machine: machines) {
-		if (machine.name() == name()) {
+		if (machine.name() == id()) {
 			return true;
 		}
 	}
@@ -851,7 +851,7 @@ bool VboxVM::is_defined() const {
 
 VmState VboxVM::state() const {
 	try {
-		auto machine = virtual_box.find_machine(name());
+		auto machine = virtual_box.find_machine(id());
 		auto state = machine.state();
 		if (state == MachineState_PoweredOff) {
 			return VmState::Stopped;
@@ -882,7 +882,7 @@ void VboxVM::delete_snapshot_with_children(vbox::Snapshot& snapshot) {
 
 bool VboxVM::is_additions_installed() {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto facilities = work_session.console().guest().facilities();
 
@@ -916,7 +916,7 @@ void VboxVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 			throw std::runtime_error("Source file/folder doens't exist on host: " + src.generic_string());
 		}
 
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 
 		auto machine = work_session.machine();
@@ -952,7 +952,7 @@ void VboxVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t 
 
 void VboxVM::remove_from_guest(const fs::path& obj) {
 	try {
-		auto lock_machine = virtual_box.find_machine(name());
+		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 
 		auto machine = work_session.machine();
@@ -985,7 +985,7 @@ void VboxVM::remove_from_guest(const fs::path& obj) {
 }
 
 void VboxVM::wait_state(std::initializer_list<MachineState> states) {
-	auto machine = virtual_box.find_machine(name());
+	auto machine = virtual_box.find_machine(id());
 	auto deadline = std::chrono::system_clock::now() + 10s;
 	do {
 		auto it = std::find(states.begin(), states.end(), machine.state());

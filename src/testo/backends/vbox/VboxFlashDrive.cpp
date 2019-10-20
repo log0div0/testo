@@ -129,7 +129,7 @@ void VboxFlashDrive::rollback(const std::string& snapshot) {
 }
 
 fs::path VboxFlashDrive::img_path() const {
-	return env->flash_drives_img_dir() / (name() + "." + disk_format);
+	return env->flash_drives_img_dir() / (id() + "." + disk_format);
 }
 
 void VboxFlashDrive::remove_if_exists() {

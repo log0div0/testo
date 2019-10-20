@@ -368,7 +368,8 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	}
 
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
-	config["name"] = prefix + machine->name.value();
+	config["prefix"] = prefix;
+	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.pos().file.generic_string();
 
 	auto vmc = env->create_vm_controller(config);
@@ -383,7 +384,8 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	}
 
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
-	config["name"] = prefix + flash->name.value();
+	config["prefix"] = prefix;
+	config["name"] = flash->name.value();
 	config["src_file"] = flash->name.pos().file.generic_string();
 
 	auto fdc = env->create_flash_drive_controller(config);

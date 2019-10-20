@@ -46,7 +46,7 @@ struct DummyVM: VM {
 private:
 	fs::path metadata_file() const {
 		fs::path result = "./dummy_hypervisor_files";
-		result = result / name();
+		result = result / id();
 		return result;
 	};
 };

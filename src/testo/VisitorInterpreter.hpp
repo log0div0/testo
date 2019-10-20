@@ -30,7 +30,7 @@ struct VisitorInterpreter {
 			msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node) + " ";
 			if (vmc) {
 				msg += "on virtual machine ";
-				msg += vmc->vm->name();
+				msg += vmc->name();
 			}
 		}
 	private:
