@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 
-import os, string, shutil, random, json
-import multiprocessing
-import colorsys
-import PIL.Image
+import os, random, colorsys
 import numpy as np
+import tensorflow_datasets as tfds
 from psf import PSF
 
 font_names = [
@@ -213,58 +211,67 @@ def draw_char(image, left, top, foreground, background, font):
 		font.draw(image, ' ', left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
 		return ""
 
-dataset_dir = os.path.join(os.getcwd(), "dataset")
-images_dir = os.path.join(dataset_dir, "images")
-labels_dir = os.path.join(dataset_dir, "labels")
-
 images_count = 20000
 
-def main(image_index):
-	image_path = os.path.join(images_dir, str(image_index) + '.png')
-	label_path = os.path.join(labels_dir, str(image_index) + '.txt')
-
+def generate_example_1():
 	background, foreground = random_colors()
-	if image_index % 4 < 3:
-		image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
-		label = ""
-		for row in range(1, rows_count - 1, 3):
-			font = random.choice(fonts)
-			x_offset = random.randint(-3, 3);
-			y_offset = random.randint(-7, 7);
-			for column in range(1, columns_count - 1):
-				left = column*char_width + x_offset
-				top = row*char_height + y_offset
-				label += draw_char(image, left, top, foreground, background, font)
-	else:
-		image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
-		label = ""
-		j = 0
-		for row in range(rows_count):
-			font = random.choice(fonts)
-			for column in range(columns_count):
-				if j % 57 == 0:
-					background, foreground = random_colors()
-				left = column*char_width
-				top = row*char_height
-				label += draw_char(image, left, top, foreground, background, font)
-				j += 1
+	image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
+	label = ""
+	for row in range(1, rows_count - 1, 3):
+		font = random.choice(fonts)
+		x_offset = random.randint(-3, 3);
+		y_offset = random.randint(-7, 7);
+		for column in range(1, columns_count - 1):
+			left = column*char_width + x_offset
+			top = row*char_height + y_offset
+			label += draw_char(image, left, top, foreground, background, font)
+	return {
+		'image': image,
+		'label': label
+	}
 
-	PIL.Image.fromarray(image).save(image_path)
-	with open(label_path, "w") as file:
-		file.write(label)
+def generate_example_2():
+	background, foreground = random_colors()
+	image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
+	label = ""
+	j = 0
+	for row in range(rows_count):
+		font = random.choice(fonts)
+		for column in range(columns_count):
+			if j % 57 == 0:
+				background, foreground = random_colors()
+			left = column*char_width
+			top = row*char_height
+			label += draw_char(image, left, top, foreground, background, font)
+			j += 1
+	return {
+		'image': image,
+		'label': label
+	}
 
-if __name__ == "__main__":
-	if os.path.exists(dataset_dir):
-		shutil.rmtree(dataset_dir)
-	os.mkdir(dataset_dir)
+class Builder(tfds.core.GeneratorBasedBuilder):
+	VERSION = tfds.core.Version('0.1.0')
 
-	os.mkdir(images_dir)
-	os.mkdir(labels_dir)
+	def _info(self):
+		return tfds.core.DatasetInfo(
+			builder=self,
+			features=tfds.features.FeaturesDict({
+				"image": tfds.features.Image(shape=(image_height, image_width, 3)),
+				"label": tfds.features.Text(),
+			})
+		)
 
-	with multiprocessing.Pool() as p:
-		for x, _ in enumerate(p.imap(main, range(images_count))):
-			print(x, "/", images_count)
+	def _split_generators(self, dl_manager):
+		return [
+			tfds.core.SplitGenerator(name=tfds.Split.TRAIN)
+		]
 
-	symbols_file_path = os.path.join(dataset_dir, "symbols.json")
-	with open(symbols_file_path, 'w') as symbols_file:
-		symbols_file.write(json.dumps(symbols))
+	def _generate_examples(self):
+		for i in range(images_count):
+			if i % 4 < 3:
+				yield i, generate_example_1()
+			else:
+				yield i, generate_example_2()
+
+builder = Builder(data_dir='.')
+builder.download_and_prepare()

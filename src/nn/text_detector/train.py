@@ -3,25 +3,30 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import dataset as generator
+from dataset import (
+	builder,
+	images_count,
+	image_height,
+	image_width,
+	columns_count,
+	rows_count,
+	char_width,
+	char_height,
+	colors,
+	symbols
+)
 from model import Model
 
 np.set_printoptions(precision=2, suppress=True)
 
-images_paths = [generator.images_dir + "/" + str(i) + ".png" for i in range(generator.images_count)]
-labels_paths = [generator.labels_dir + "/" + str(i) + ".txt" for i in range(generator.images_count)]
+grid_w = columns_count * 2
+grid_h = rows_count * 2
 
-dataset = tf.data.Dataset.from_tensor_slices((images_paths, labels_paths))
-
-grid_w = generator.columns_count * 2
-grid_h = generator.rows_count * 2
-
-def preprocess_image_and_label(image_path, label_path):
-	image = tf.io.read_file(image_path)
-	image = tf.image.decode_image(image)
+def preprocess_image_and_label(example):
+	image = example['image']
 	image /= 255
-	image.set_shape([generator.image_height, generator.image_width, 3])
-	label = tf.io.read_file(label_path)
+	image.set_shape([image_height, image_width, 3])
+	label = example['label']
 	label = tf.strings.split(label, "\n")
 	label = tf.strings.split(label[:-1])
 	label = tf.strings.to_number(label)
@@ -36,7 +41,8 @@ def preprocess_image_and_label(image_path, label_path):
 	label = tf.scatter_nd(indexes.stack(), updates.stack(), [grid_h, grid_w, tf.shape(label)[-1] + 1])
 	return image, label
 
-dataset = dataset.shuffle(generator.images_count)
+dataset = builder.as_dataset(split='train')
+dataset = dataset.shuffle(images_count)
 dataset = dataset.map(preprocess_image_and_label)
 dataset = dataset.batch(32)
 
@@ -46,7 +52,7 @@ optimizer = tf.keras.optimizers.Adam(lr=1e-3)
 
 def Loss(y_true, y_pred):
 	pred_obj, pred_xy, pred_wh, pred_symbol, pred_fg, pred_bg = tf.split(
-		y_pred, (1, 2, 2, len(generator.symbols), len(generator.colors), len(generator.colors)), axis=-1)
+		y_pred, (1, 2, 2, len(symbols), len(colors), len(colors)), axis=-1)
 
 	true_obj, true_xy, true_wh, true_symbol, true_fg, true_bg = tf.split(
 		y_true, (1, 2, 2, 1, 1, 1), axis=-1)
@@ -59,7 +65,7 @@ def Loss(y_true, y_pred):
 	grid = tf.cast(grid, tf.float32)
 	true_xy = true_xy * grid_size - grid
 
-	true_wh = true_wh * [generator.image_width, generator.image_height] / [generator.char_width, generator.char_height]
+	true_wh = true_wh * [image_width, image_height] / [char_width, char_height]
 
 	obj_mask = tf.squeeze(true_obj, -1)
 	xy_loss = obj_mask * tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
