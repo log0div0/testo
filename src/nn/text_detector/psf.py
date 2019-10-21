@@ -1,6 +1,5 @@
 
 import gzip
-import PIL.ImageDraw
 
 class PSF:
 	def __init__(self, filename):
@@ -19,9 +18,8 @@ class PSF:
 	def get_glyph(self, char):
 		return self.get_data(self.unicodes[char])
 
-	def draw(self, image, char, left, top, font_color="white", background_color="black"):
+	def draw(self, image, char, left, top, font_color, background_color=None):
 		data = self.get_glyph(char)
-		draw = PIL.ImageDraw.Draw(image)
 		bits_per_line = (self.width + 7) // 8 * 8
 		x_min = self.width
 		y_min = self.height
@@ -33,7 +31,6 @@ class PSF:
 				byte_index = bit_position // 8
 				bit_index = 7 - bit_position % 8
 				if data[byte_index] & (1 << bit_index):
-					color = font_color
 					if x_min > x:
 						x_min = x
 					if y_min > y:
@@ -42,9 +39,10 @@ class PSF:
 						x_max = x
 					if y_max < y:
 						y_max = y
+					image[top+y, left+x] = font_color
 				else:
-					color = background_color
-				draw.point((left+x,top+y), color)
+					if background_color:
+						image[top+y, left+x] = background_color
 		return x_min, y_min, x_max-x_min+1, y_max-y_min+1
 
 	def set_data(self, i, data):

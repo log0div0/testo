@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import os, string, shutil, random, json
-import PIL
 import multiprocessing
 import colorsys
+import PIL.Image
+import numpy as np
 from psf import PSF
 
 font_names = [
@@ -230,7 +231,7 @@ def main(image_index):
 
 	background, foreground = random_colors()
 	if image_index % 4 < 3:
-		image = PIL.Image.new("RGB", (image_width, image_height), background["rgb"])
+		image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
 		label = ""
 		for row in range(1, rows_count - 1, 3):
 			font = random.choice(fonts)
@@ -241,7 +242,7 @@ def main(image_index):
 				top = row*char_height + y_offset
 				label += draw_char(image, left, top, foreground, background, font)
 	else:
-		image = PIL.Image.new("RGB", (image_width, image_height), background["rgb"])
+		image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
 		label = ""
 		j = 0
 		for row in range(rows_count):
@@ -254,7 +255,7 @@ def main(image_index):
 				label += draw_char(image, left, top, foreground, background, font)
 				j += 1
 
-	image.save(image_path)
+	PIL.Image.fromarray(image).save(image_path)
 	with open(label_path, "w") as file:
 		file.write(label)
 
