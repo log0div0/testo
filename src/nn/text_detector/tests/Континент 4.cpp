@@ -59,17 +59,17 @@ TEST_CASE("Континент 4/Локальное меню") {
 		CHECK(detector.detect(img, "Начать инициализацию").size() == 1);
 	}
 	{
-		stb::Image img("Континент 4/Локальное меню/Меню \"Инструменты\".png");
+		stb::Image img("Континент 4/Локальное меню/Меню Инструменты.png");
 		CHECK(detector.detect(img, "Инструменты").size() == 1);
 		CHECK(detector.detect(img, "Экспорт конфигурации УБ на носитель").size() == 1);
 	}
 	{
-		stb::Image img("Континент 4/Локальное меню/Меню \"Настройки\".png");
+		stb::Image img("Континент 4/Локальное меню/Меню Настройки.png");
 		CHECK(detector.detect(img, "Меню настроек").size() == 1);
 		CHECK(detector.detect(img, "Применение локальной политики").size() == 1);
 	}
 	{
-		stb::Image img("Континент 4/Локальное меню/Меню \"Сертификаты\".png");
+		stb::Image img("Континент 4/Локальное меню/Меню Сертификаты.png");
 		CHECK(detector.detect(img, "Сертификаты УЦ").size() == 1);
 	}
 }
