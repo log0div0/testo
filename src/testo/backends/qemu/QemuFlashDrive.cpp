@@ -9,6 +9,31 @@
 QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
+	//If out flash drive exists and is plugged somewhere - we need to unplug it
+	if (is_defined()) {
+		for (auto& domain: qemu_connect.domains()) {
+			auto config = domain.dump_xml();
+			auto devices = config.first_child().child("devices");
+
+			for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+				if (std::string(disk.attribute("device").value()) != "disk") {
+					continue;
+				}
+
+				if (std::string(disk.child("source").attribute("file").value()) == img_path().generic_string()) {
+					std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+					if (domain.is_active()) {
+						flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+					}
+
+
+					domain.detach_device(disk, flags);
+					return;
+				}
+			}
+		}
+	}
 }
 
 QemuFlashDrive::~QemuFlashDrive() {
