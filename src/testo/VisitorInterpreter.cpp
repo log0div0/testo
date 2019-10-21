@@ -942,6 +942,7 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		for (auto key_spec: press->keys) {
 			visit_key_spec(vmc, key_spec);
+			std::this_thread::sleep_for(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
@@ -1027,6 +1028,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->get_buttons());
+		std::this_thread::sleep_for(std::chrono::milliseconds(30));
 	}
 }
 
