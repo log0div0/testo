@@ -78,15 +78,8 @@ colors = [
 ]
 
 fonts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
-
-chars = [char for char in string.printable if not char.isspace()]
-for char in "абвгдеёжзийклмнопрстуфхцчшщъыьэюя":
-	chars.append(char)
-	chars.append(char.upper())
-
 fonts = [PSF(os.path.join(fonts_dir, font_name)) for font_name in font_names]
 symbols_to_glyphs = dict()
-chars_to_symbols = dict()
 symbols = [
 	'1',
 	'2',
@@ -167,7 +160,6 @@ symbols = [
 for index, symbol in enumerate(symbols):
 	glyphs = set()
 	for char in symbol:
-		chars_to_symbols[char] = index
 		for font in fonts:
 			glyphs.add(font.get_glyph(char))
 	symbols_to_glyphs[symbol] = glyphs
@@ -209,14 +201,16 @@ def random_colors():
 	return background, foreground
 
 def draw_char(image, left, top, foreground, background, font):
-	char = random.choice([random.choice(chars), ' '])
-	x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
-	x_center = (left + x + (width // 2)) / image_width
-	y_center = (top + y + (height // 2)) / image_height
-	if char != ' ':
+	symbol = random.choice([random.choice(symbols), None])
+	if symbol:
+		char = random.choice(symbol)
+		x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
+		x_center = (left + x + (width // 2)) / image_width
+		y_center = (top + y + (height // 2)) / image_height
 		return "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
-			chars_to_symbols[char], foreground["index"], background["index"])
+			symbols.index(symbol), foreground["index"], background["index"])
 	else:
+		font.draw(image, ' ', left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
 		return ""
 
 dataset_dir = os.path.join(os.getcwd(), "dataset")
