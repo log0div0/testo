@@ -2,6 +2,7 @@
 
 import os, random, colorsys
 import numpy as np
+import tensorflow as tf
 import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
 from psf import PSF
@@ -175,6 +176,10 @@ columns_count = 64
 rows_count = 16
 image_width = columns_count * char_width
 image_height = rows_count * char_height
+grid_w = columns_count * 2
+grid_h = rows_count * 2
+image_shape = (image_height, image_width, 3)
+label_shape = (grid_h, grid_w, 1 + 2 + 2 + 1 + 1 + 1)
 
 def random_shade(color):
 	h = random.randrange(color["h"][0], color["h"][1]) % 360 / 360.
@@ -196,8 +201,8 @@ images_count = 200
 def generate_example_1():
 	bg, fg = random_colors()
 	bg_shade, fg_shade = random_shade(bg), random_shade(fg)
-	image = np.full((image_height, image_width, 3), bg_shade, np.uint8)
-	label = ""
+	image = np.full(image_shape, bg_shade, np.uint8)
+	label = np.zeros(label_shape, np.float32)
 	for row in range(1, rows_count - 1, 3):
 		font = random.choice(fonts)
 		x_offset = random.randint(-3, 3);
@@ -211,8 +216,18 @@ def generate_example_1():
 				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade)
 				x_center = (left + x + (width // 2)) / image_width
 				y_center = (top + y + (height // 2)) / image_height
-				label += "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
-					symbols.index(symbol), colors.index(fg), colors.index(bg))
+				grid_x = int(x_center * grid_w)
+				grid_y = int(y_center * grid_h)
+				label[grid_y, grid_x] = (
+					1,
+					x_center,
+					y_center,
+					(width + 2) / image_width,
+					(height + 2) / image_height,
+					symbols.index(symbol),
+					colors.index(fg),
+					colors.index(bg)
+				)
 	return {
 		'image': image,
 		'label': label
@@ -221,8 +236,8 @@ def generate_example_1():
 def generate_example_2():
 	bg, fg = random_colors()
 	bg_shade, fg_shade = random_shade(bg), random_shade(fg)
-	image = np.full((image_height, image_width, 3), (0, 0, 0), np.uint8)
-	label = ""
+	image = np.full(image_shape, (0, 0, 0), np.uint8)
+	label = np.zeros(label_shape, np.float32)
 	j = 0
 	for row in range(rows_count):
 		font = random.choice(fonts)
@@ -238,8 +253,18 @@ def generate_example_2():
 				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 				x_center = (left + x + (width // 2)) / image_width
 				y_center = (top + y + (height // 2)) / image_height
-				label += "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
-					symbols.index(symbol), colors.index(fg), colors.index(bg))
+				grid_x = int(x_center * grid_w)
+				grid_y = int(y_center * grid_h)
+				label[grid_y, grid_x] = (
+					1,
+					x_center,
+					y_center,
+					(width + 2) / image_width,
+					(height + 2) / image_height,
+					symbols.index(symbol),
+					colors.index(fg),
+					colors.index(bg)
+				)
 			else:
 				font.draw(image, ' ', left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 			j += 1
@@ -260,8 +285,8 @@ class Builder(tfds.core.GeneratorBasedBuilder):
 		return tfds.core.DatasetInfo(
 			builder=self,
 			features=tfds.features.FeaturesDict({
-				"image": tfds.features.Image(shape=(image_height, image_width, 3)),
-				"label": tfds.features.Text(),
+				"image": tfds.features.Image(shape=image_shape),
+				"label": tfds.features.Tensor(shape=label_shape, dtype=tf.float32),
 			})
 		)
 

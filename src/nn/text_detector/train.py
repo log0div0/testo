@@ -8,8 +8,8 @@ from dataset import (
 	images_count,
 	image_height,
 	image_width,
-	columns_count,
-	rows_count,
+	grid_w,
+	grid_h,
 	char_width,
 	char_height,
 	colors,
@@ -19,26 +19,10 @@ from model import Model
 
 np.set_printoptions(precision=2, suppress=True)
 
-grid_w = columns_count * 2
-grid_h = rows_count * 2
-
 def preprocess_image_and_label(example):
 	image = example['image']
 	image /= 255
-	image.set_shape([image_height, image_width, 3])
 	label = example['label']
-	label = tf.strings.split(label, "\n")
-	label = tf.strings.split(label[:-1])
-	label = tf.strings.to_number(label)
-	label = label.to_tensor()
-	indexes = tf.TensorArray(tf.int32, 0, dynamic_size=True)
-	updates = tf.TensorArray(tf.float32, 0, dynamic_size=True)
-	for row in label:
-		box_xy = row[0:2]
-		grid_xy = tf.cast(box_xy * [grid_w, grid_h], tf.int32)
-		indexes = indexes.write(indexes.size(), [grid_xy[1], grid_xy[0]])
-		updates = updates.write(updates.size(), tf.concat([[1], row], axis=0))
-	label = tf.scatter_nd(indexes.stack(), updates.stack(), [grid_h, grid_w, tf.shape(label)[-1] + 1])
 	return image, label
 
 dataset = builder.as_dataset(split='train')
