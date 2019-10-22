@@ -3,6 +3,7 @@
 import os, random, colorsys
 import numpy as np
 import tensorflow_datasets as tfds
+import matplotlib.pyplot as plt
 from psf import PSF
 
 font_names = [
@@ -198,20 +199,7 @@ def random_colors():
 			break
 	return background, foreground
 
-def draw_char(image, left, top, foreground, background, font):
-	symbol = random.choice([random.choice(symbols), None])
-	if symbol:
-		char = random.choice(symbol)
-		x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
-		x_center = (left + x + (width // 2)) / image_width
-		y_center = (top + y + (height // 2)) / image_height
-		return "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
-			symbols.index(symbol), foreground["index"], background["index"])
-	else:
-		font.draw(image, ' ', left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
-		return ""
-
-images_count = 20000
+images_count = 200
 
 def generate_example_1():
 	background, foreground = random_colors()
@@ -224,7 +212,14 @@ def generate_example_1():
 		for column in range(1, columns_count - 1):
 			left = column*char_width + x_offset
 			top = row*char_height + y_offset
-			label += draw_char(image, left, top, foreground, background, font)
+			symbol = random.choice([random.choice(symbols), None])
+			if symbol:
+				char = random.choice(symbol)
+				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
+				x_center = (left + x + (width // 2)) / image_width
+				y_center = (top + y + (height // 2)) / image_height
+				label += "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
+					symbols.index(symbol), foreground["index"], background["index"])
 	return {
 		'image': image,
 		'label': label
@@ -242,12 +237,26 @@ def generate_example_2():
 				background, foreground = random_colors()
 			left = column*char_width
 			top = row*char_height
-			label += draw_char(image, left, top, foreground, background, font)
+			symbol = random.choice([random.choice(symbols), None])
+			if symbol:
+				char = random.choice(symbol)
+				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
+				x_center = (left + x + (width // 2)) / image_width
+				y_center = (top + y + (height // 2)) / image_height
+				label += "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
+					symbols.index(symbol), foreground["index"], background["index"])
+			else:
+				font.draw(image, ' ', left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
 			j += 1
 	return {
 		'image': image,
 		'label': label
 	}
+
+# example = generate_example_2()
+# plt.imshow(example['image'])
+# plt.show()
+# exit(0)
 
 class Builder(tfds.core.GeneratorBasedBuilder):
 	VERSION = tfds.core.Version('0.1.0')
