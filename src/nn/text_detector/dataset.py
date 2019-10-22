@@ -176,34 +176,27 @@ rows_count = 16
 image_width = columns_count * char_width
 image_height = rows_count * char_height
 
-def color_diff(a, b):
-	return abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
-
-def random_color():
-	index = random.randrange(len(colors))
-	color = colors[index]
+def random_shade(color):
 	h = random.randrange(color["h"][0], color["h"][1]) % 360 / 360.
 	s = random.uniform(color["s"][0], color["s"][1])
 	v = random.uniform(color["v"][0], color["v"][1])
 	r, g, b = colorsys.hsv_to_rgb(h, s, v)
-	return {
-		"index": index,
-		"rgb": (int(r * 256), int(g * 256), int(b * 256))
-	}
+	return (int(r * 256), int(g * 256), int(b * 256))
 
 def random_colors():
-	background = random_color()
+	bg = random.choice(colors)
 	while True:
-		foreground = random_color()
-		if color_diff(foreground["rgb"], background["rgb"]) > 350:
+		fg = random.choice(colors)
+		if bg != fg:
 			break
-	return background, foreground
+	return bg, fg
 
 images_count = 200
 
 def generate_example_1():
-	background, foreground = random_colors()
-	image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
+	bg, fg = random_colors()
+	bg_shade, fg_shade = random_shade(bg), random_shade(fg)
+	image = np.full((image_height, image_width, 3), bg_shade, np.uint8)
 	label = ""
 	for row in range(1, rows_count - 1, 3):
 		font = random.choice(fonts)
@@ -215,45 +208,47 @@ def generate_example_1():
 			symbol = random.choice([random.choice(symbols), None])
 			if symbol:
 				char = random.choice(symbol)
-				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
+				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade)
 				x_center = (left + x + (width // 2)) / image_width
 				y_center = (top + y + (height // 2)) / image_height
 				label += "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
-					symbols.index(symbol), foreground["index"], background["index"])
+					symbols.index(symbol), colors.index(fg), colors.index(bg))
 	return {
 		'image': image,
 		'label': label
 	}
 
 def generate_example_2():
-	background, foreground = random_colors()
-	image = np.full((image_height, image_width, 3), background["rgb"], np.uint8)
+	bg, fg = random_colors()
+	bg_shade, fg_shade = random_shade(bg), random_shade(fg)
+	image = np.full((image_height, image_width, 3), (0, 0, 0), np.uint8)
 	label = ""
 	j = 0
 	for row in range(rows_count):
 		font = random.choice(fonts)
 		for column in range(columns_count):
 			if j % 57 == 0:
-				background, foreground = random_colors()
+				bg, fg = random_colors()
+				bg_shade, fg_shade = random_shade(bg), random_shade(fg)
 			left = column*char_width
 			top = row*char_height
 			symbol = random.choice([random.choice(symbols), None])
 			if symbol:
 				char = random.choice(symbol)
-				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
+				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 				x_center = (left + x + (width // 2)) / image_width
 				y_center = (top + y + (height // 2)) / image_height
 				label += "%s %s %s %s %s %s %s\n" % (x_center, y_center, (width + 2) / image_width, (height + 2) / image_height,
-					symbols.index(symbol), foreground["index"], background["index"])
+					symbols.index(symbol), colors.index(fg), colors.index(bg))
 			else:
-				font.draw(image, ' ', left=left, top=top, font_color=foreground["rgb"], background_color=background["rgb"])
+				font.draw(image, ' ', left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 			j += 1
 	return {
 		'image': image,
 		'label': label
 	}
 
-# example = generate_example_2()
+# example = generate_example_1()
 # plt.imshow(example['image'])
 # plt.show()
 # exit(0)
