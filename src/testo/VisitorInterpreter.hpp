@@ -1,6 +1,6 @@
 
 #pragma once
-
+#include "coro/Timer.h"
 #include "Node.hpp"
 #include "Register.hpp"
 #include "StackEntry.hpp"
@@ -166,6 +166,8 @@ private:
 
 	float current_progress = 0;
 	float progress_step = 0;
+
+	coro::Timer timer;
 
 	std::chrono::system_clock::time_point start_timestamp;
 

@@ -42,7 +42,7 @@ bool QemuGuestAdditions::is_avaliable() {
 		auto response = recv();
 		return response.at("success").get<bool>();
 
-	} catch (...) {
+	} catch (const std::exception&) {
 		return false;
 	}
 }

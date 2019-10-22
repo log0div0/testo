@@ -24,6 +24,9 @@
 
 using namespace clipp;
 
+struct CancelException {};
+
+
 std::shared_ptr<Environment> env;
 
 std::string generate_script(const fs::path& folder, const fs::path& current_prefix = ".") {
@@ -147,7 +150,7 @@ int do_main(int argc, char** argv) {
 	pool.exec([&] {
 		coro::SignalSet set({SIGINT, SIGTERM});
 		set.wait();
-		throw std::runtime_error("Canceled");
+		throw CancelException();
 	});
 
 	if (fs::is_regular_file(target)) {
@@ -168,6 +171,9 @@ int main(int argc, char** argv) {
 			result = do_main(argc, argv);
 		} catch (const std::exception& error) {
 			std::cout << error << std::endl;
+			result = 1;
+		} catch (const CancelException&) {
+			std::cout << "Cancelled" << std::endl;
 			result = 1;
 		}
 	}).run();
