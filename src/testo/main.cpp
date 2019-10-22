@@ -1,5 +1,7 @@
 
 #include <coro/Application.h>
+#include <coro/CoroPool.h>
+#include <coro/SignalSet.h>
 #include "Interpreter.hpp"
 
 #include "backends/dummy/DummyEnvironment.hpp"
@@ -21,6 +23,9 @@
 #include <fstream>
 
 using namespace clipp;
+
+struct CancelException {};
+
 
 std::shared_ptr<Environment> env;
 
@@ -141,6 +146,13 @@ int do_main(int argc, char** argv) {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
 	}
 
+	coro::CoroPool pool;
+	pool.exec([&] {
+		coro::SignalSet set({SIGINT, SIGTERM});
+		set.wait();
+		throw CancelException();
+	});
+
 	if (fs::is_regular_file(target)) {
 		run_file(target, config);
 	} else if (fs::is_directory(target)) {
@@ -159,6 +171,9 @@ int main(int argc, char** argv) {
 			result = do_main(argc, argv);
 		} catch (const std::exception& error) {
 			std::cout << error << std::endl;
+			result = 1;
+		} catch (const CancelException&) {
+			std::cout << "Canceled" << std::endl;
 			result = 1;
 		}
 	}).run();

@@ -21,9 +21,7 @@ VboxEnvironment::VboxEnvironment() {
 }
 
 VboxEnvironment::~VboxEnvironment() {
-	try {
-		cleanup();
-	} catch (...) {}
+	cleanup();
 }
 
 

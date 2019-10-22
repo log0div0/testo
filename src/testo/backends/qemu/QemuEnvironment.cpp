@@ -9,9 +9,7 @@ QemuEnvironment::QemuEnvironment() {
 }
 
 QemuEnvironment::~QemuEnvironment() {
-	try {
-		cleanup();
-	} catch(...) {}
+	cleanup();
 }
 
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {

@@ -25,7 +25,8 @@ std::string duration_to_str(Duration duration) {
 }
 
 static void sleep(const std::string& interval) {
-	std::this_thread::sleep_for(std::chrono::milliseconds(time_to_milliseconds(interval)));
+	coro::Timer timer;
+	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
@@ -758,8 +759,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		stop_all_vms(test);
-
-	} //everything else is fatal and should be catched furter up
+	}
 }
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
@@ -861,7 +861,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 				throw std::runtime_error("Unknown character to type");
 			}
 			vmc->vm->press(buttons->second);
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
+			timer.waitFor(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(type, vmc));
@@ -925,9 +925,9 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			}
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
-			// std::cout << "time = " << time.count() << " seconds" << std::endl;
+			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (time < 1s) {
-				std::this_thread::sleep_for(1s - time);
+				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
 			}
 		}
 
@@ -942,7 +942,7 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		for (auto key_spec: press->keys) {
 			visit_key_spec(vmc, key_spec);
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
+			timer.waitFor(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
@@ -1028,7 +1028,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->get_buttons());
-		std::this_thread::sleep_for(std::chrono::milliseconds(30));
+		timer.waitFor(std::chrono::milliseconds(30));
 	}
 }
 
@@ -1230,7 +1230,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 			if (vmc->vm->state() == VmState::Stopped) {
 				return;
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+			timer.waitFor(std::chrono::milliseconds(300));
 		}
 		throw std::runtime_error("Shutdown timeout");
 	} catch (const std::exception& error) {
