@@ -1,5 +1,7 @@
 
 #include <coro/Application.h>
+#include <coro/CoroPool.h>
+#include <coro/SignalSet.h>
 #include "Interpreter.hpp"
 
 #include "backends/dummy/DummyEnvironment.hpp"
@@ -140,6 +142,13 @@ int do_main(int argc, char** argv) {
 	} else {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
 	}
+
+	coro::CoroPool pool;
+	pool.exec([&] {
+		coro::SignalSet set({SIGINT, SIGTERM});
+		set.wait();
+		throw std::runtime_error("Canceled");
+	});
 
 	if (fs::is_regular_file(target)) {
 		run_file(target, config);

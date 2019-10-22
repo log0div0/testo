@@ -3,6 +3,8 @@
 #include "VisitorCksum.hpp"
 
 #include "coro/Finally.h"
+#include "coro/CheckPoint.h"
+#include "coro/Timer.h"
 #include <fmt/format.h>
 #include <fstream>
 #include <thread>
@@ -25,7 +27,8 @@ std::string duration_to_str(Duration duration) {
 }
 
 static void sleep(const std::string& interval) {
-	std::this_thread::sleep_for(std::chrono::milliseconds(time_to_milliseconds(interval)));
+	coro::Timer timer;
+	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
@@ -784,44 +787,46 @@ void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vmc, s
 
 void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		return visit_abort(vmc, p->action);
+		visit_abort(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		return visit_print(vmc, p->action);
+		visit_print(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		return visit_type(vmc, p->action);
+		visit_type(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		return visit_wait(vmc, p->action);
+		visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		return visit_press(vmc, p->action);
+		visit_press(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MouseEvent>>(action)) {
-		return visit_mouse_event(vmc, p->action);
+		visit_mouse_event(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		return visit_plug(vmc, p->action);
+		visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		return visit_start(vmc, p->action);
+		visit_start(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		return visit_stop(vmc, p->action);
+		visit_stop(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		return visit_shutdown(vmc, p->action);
+		visit_shutdown(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		return visit_exec(vmc, p->action);
+		visit_exec(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		return visit_copy(vmc, p->action);
+		visit_copy(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(vmc, p->action);
+		visit_macro_call(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		return visit_if_clause(vmc, p->action);
+		visit_if_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		return visit_for_clause(vmc, p->action);
+		visit_for_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		throw CycleControlException(p->action->t);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		return visit_action_block(vmc, p->action);
+		visit_action_block(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
-		return;
+		;
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
+
+	coro::CheckPoint();
 }
 
 void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
@@ -861,7 +866,8 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 				throw std::runtime_error("Unknown character to type");
 			}
 			vmc->vm->press(buttons->second);
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
+			coro::Timer timer;
+			timer.waitFor(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(type, vmc));
@@ -923,6 +929,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			if (shit.stink_even_stronger(screenshot, text, foreground, background)) {
 				return;
 			}
+			coro::CheckPoint();
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
 			// std::cout << "time = " << time.count() << " seconds" << std::endl;
@@ -942,7 +949,8 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		for (auto key_spec: press->keys) {
 			visit_key_spec(vmc, key_spec);
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
+			coro::Timer timer;
+			timer.waitFor(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
@@ -1028,7 +1036,8 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->get_buttons());
-		std::this_thread::sleep_for(std::chrono::milliseconds(30));
+		coro::Timer timer;
+		timer.waitFor(std::chrono::milliseconds(30));
 	}
 }
 
@@ -1230,7 +1239,8 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 			if (vmc->vm->state() == VmState::Stopped) {
 				return;
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+			coro::Timer timer;
+			timer.waitFor(std::chrono::milliseconds(300));
 		}
 		throw std::runtime_error("Shutdown timeout");
 	} catch (const std::exception& error) {
