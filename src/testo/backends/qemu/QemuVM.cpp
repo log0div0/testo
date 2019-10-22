@@ -248,6 +248,9 @@ void QemuVM::install() {
 				<on_crash>destroy</on_crash>
 				<pm>
 				</pm>
+				<metadata>
+					<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
+				</metadata>
 				<devices>
 					<emulator>/usr/bin/kvm-spice</emulator>
 					<disk type='file' device='disk'>

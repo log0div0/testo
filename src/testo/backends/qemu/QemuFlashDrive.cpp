@@ -9,25 +9,45 @@
 QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
-	//If out flash drive exists and is plugged somewhere - we need to unplug it
-	if (is_defined()) {
-		for (auto& domain: qemu_connect.domains()) {
-			auto config = domain.dump_xml();
-			auto devices = config.first_child().child("devices");
+	if (!is_defined()) {
+		return;
+	}
 
-			for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-				if (std::string(disk.attribute("device").value()) != "disk") {
-					continue;
+	for (auto& domain: qemu_connect.domains()) {
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
+
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+			if (std::string(disk.attribute("device").value()) != "disk") {
+				continue;
+			}
+
+			if (std::string(disk.child("source").attribute("file").value()) == img_path().generic_string()) {
+				bool need_to_detach = false;
+				auto metadata = config.first_child().child("metadata");
+				if (metadata && metadata.child("testo:is_testo_related")) {
+					need_to_detach = true;
+				} else {
+					std::string choice;
+					std::cout << "Warning: Flash drive " << name() << " is plugged into user-defined vm " << domain.name() << std::endl;
+					std::cout << "Would you like to unplug it? [Y/n]: ";
+					std::getline(std::cin, choice);
+
+					std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
+
+					if (!choice.length() || choice == "Y" || choice == "YES") {
+						need_to_detach = true;
+					} else {
+						need_to_detach = false;
+					}
 				}
 
-				if (std::string(disk.child("source").attribute("file").value()) == img_path().generic_string()) {
+				if (need_to_detach) {
 					std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 					if (domain.is_active()) {
 						flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
 					}
-
-
 					domain.detach_device(disk, flags);
 					return;
 				}

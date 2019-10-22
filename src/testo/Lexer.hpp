@@ -32,6 +32,7 @@ private:
 		if (test_plus() || test_minus()) {
 			return test_digit(1);
 		}
+		return false;
 	}
 	bool test_id(size_t shift = 0) const {
 		return (isalpha((*input)[current_pos + shift]) ||

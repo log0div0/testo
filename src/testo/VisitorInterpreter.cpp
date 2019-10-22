@@ -759,8 +759,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		stop_all_vms(test);
-
 	}
+}
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
 	for (auto command: block->commands) {
@@ -784,41 +784,41 @@ void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vmc, s
 
 void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort(vmc, p->action);
+		return visit_abort(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print(vmc, p->action);
+		return visit_print(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		visit_type(vmc, p->action);
+		return visit_type(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		visit_wait(vmc, p->action);
+		return visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		visit_press(vmc, p->action);
+		return visit_press(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MouseEvent>>(action)) {
-		visit_mouse_event(vmc, p->action);
+		return visit_mouse_event(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		visit_plug(vmc, p->action);
+		return visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		visit_start(vmc, p->action);
+		return visit_start(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		visit_stop(vmc, p->action);
+		return visit_stop(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		visit_shutdown(vmc, p->action);
+		return visit_shutdown(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		visit_exec(vmc, p->action);
+		return visit_exec(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		visit_copy(vmc, p->action);
+		return visit_copy(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call(vmc, p->action);
+		return visit_macro_call(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		visit_if_clause(vmc, p->action);
+		return visit_if_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		visit_for_clause(vmc, p->action);
+		return visit_for_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		throw CycleControlException(p->action->t);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		visit_action_block(vmc, p->action);
+		return visit_action_block(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
-		;
+		return;
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
@@ -925,9 +925,9 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			}
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
-			// std::cout << "time = " << time.count() << " seconds" << std::endl;
+			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (time < 1s) {
-				std::this_thread::sleep_for(1s - time);
+				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
 			}
 		}
 

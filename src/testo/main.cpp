@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 			std::cout << error << std::endl;
 			result = 1;
 		} catch (const CancelException&) {
-			std::cout << "Cancelled" << std::endl;
+			std::cout << "Canceled" << std::endl;
 			result = 1;
 		}
 	}).run();
