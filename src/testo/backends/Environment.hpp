@@ -3,6 +3,7 @@
 
 #include "VmController.hpp"
 #include "FlashDriveController.hpp"
+#include "NetworkController.hpp"
 #include "../Register.hpp"
 
 struct Environment {
@@ -19,6 +20,7 @@ struct Environment {
 
 	virtual std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) = 0;
 	virtual std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) = 0;
+	virtual std::shared_ptr<NetworkController> create_network_controller(const nlohmann::json& config) = 0;
 };
 
 extern std::shared_ptr<Environment> env;

@@ -220,6 +220,8 @@ Token Lexer::id() {
 		return machine();
 	} else if (value == "flash") {
 		return flash();
+	} else if (value == "network") {
+		return network();
 	} else if (value == "macro") {
 		return macro();
 	} else if (value == "dvd") {
@@ -423,6 +425,13 @@ Token Lexer::flash() {
 	std::string value("flash");
 	current_pos.advance(value.length());
 	return Token(Token::category::flash, value, tmp_pos);
+}
+
+Token Lexer::network() {
+	Pos tmp_pos = current_pos;
+	std::string value("network");
+	current_pos.advance(value.length());
+	return Token(Token::category::network, value, tmp_pos);
 }
 
 Token Lexer::macro() {

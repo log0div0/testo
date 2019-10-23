@@ -30,6 +30,7 @@ struct QemuEnvironment : public Environment {
 
 	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override;
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override;
+	std::shared_ptr<NetworkController> create_network_controller(const nlohmann::json& config) override;
 
 private:
 	void prepare_storage_pool(const std::string& pool_name);

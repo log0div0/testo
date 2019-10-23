@@ -392,6 +392,22 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	reg.fdcs.emplace(std::make_pair(flash->name, fdc));
 }
 
+void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
+	// std::cout << "Registering network " << network->name.value() << std::endl;
+	if (reg.netcs.find(network->name) != reg.netcs.end()) {
+		throw std::runtime_error(std::string(network->begin()) + ": Error: network with name " + network->name.value() +
+			" already exists");
+	}
+
+	auto config = visit_attr_block(network->attr_block, "vm_global");
+	config["prefix"] = prefix;
+	config["name"] = network->name.value();
+	config["src_file"] = network->name.pos().file.generic_string();
+
+	auto netc = env->create_network_controller(config);
+	reg.netcs.emplace(std::make_pair(network->name, netc));
+}
+
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {
 	nlohmann::json config;
 	for (auto attr: attr_block->attrs) {

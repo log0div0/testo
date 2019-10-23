@@ -69,7 +69,8 @@ bool Parser::test_include() const {
 
 bool Parser::test_controller() const {
 	return (LA(1) == Token::category::machine) ||
-		(LA(1) == Token::category::flash);
+		(LA(1) == Token::category::flash) ||
+		(LA(1) == Token::category::network);
 }
 
 bool Parser::test_test() const {
@@ -380,11 +381,8 @@ std::shared_ptr<AttrBlock> Parser::attr_block() {
 
 std::shared_ptr<Stmt<Controller>> Parser::controller() {
 	Token controller = LT(1);
-	if (LA(1) == Token::category::machine) {
-		match(Token::category::machine);
-	} else {
-		match(Token::category::flash);
-	}
+
+	match ({Token::category::machine, Token::category::flash, Token::category::network});
 
 	Token name = LT(1);
 	match(Token::category::id);

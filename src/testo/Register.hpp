@@ -3,6 +3,7 @@
 
 #include "backends/VmController.hpp"
 #include "backends/FlashDriveController.hpp"
+#include "backends/NetworkController.hpp"
 #include "Node.hpp"
 #include <unordered_map>
 #include <list>
@@ -13,6 +14,7 @@ struct Register {
 
 	std::unordered_map<std::string, std::shared_ptr<VmController>> vmcs;
 	std::unordered_map<std::string, std::shared_ptr<FlashDriveController>> fdcs;
+	std::unordered_map<std::string, std::shared_ptr<NetworkController>> netcs;
 	std::unordered_map<std::string, std::shared_ptr<AST::Test>> tests;
 	std::unordered_map<std::string, std::shared_ptr<AST::Macro>> macros;
 
