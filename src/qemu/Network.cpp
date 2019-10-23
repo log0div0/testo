@@ -38,6 +38,13 @@ bool Network::is_active() const {
 	return res;
 }
 
+void Network::set_autostart(bool is_on) {
+	if(virNetworkSetAutostart(handle, (int)is_on) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+}
+
 void Network::start() {
 	if (virNetworkCreate(handle) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());

@@ -1189,6 +1189,7 @@ void QemuVM::prepare_networks() {
 					pugi::xml_document xml_config;
 					xml_config.load_string(string_config.c_str());
 					auto network = qemu_connect.network_define_xml(xml_config);
+					network.set_autostart(true);
 					network.start();
 				}
 			}
