@@ -10,4 +10,5 @@ struct VboxNetwork: Network {
 	~VboxNetwork() {}
 
 	bool is_defined() override;
+	void create() override;
 };

@@ -5,7 +5,7 @@
 #include "Network.hpp"
 
 struct NetworkController: public Controller {
-	NetworkController();
+	NetworkController() = delete;
 	NetworkController(std::shared_ptr<Network> network): Controller(), network(network) {}
 
 	std::string id() const override;

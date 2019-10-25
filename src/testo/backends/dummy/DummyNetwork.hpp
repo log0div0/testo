@@ -10,6 +10,7 @@ struct DummyNetwork: Network {
 	~DummyNetwork() {}
 
 	bool is_defined() override;
+	void create() override;
 
 private:
 	fs::path metadata_file() const {

@@ -10,6 +10,7 @@ struct Network {
 	virtual ~Network() = default;
 
 	virtual bool is_defined() = 0;
+	virtual void create() = 0;
 
 	std::string id() const;
 	std::string name() const;

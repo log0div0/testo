@@ -11,6 +11,7 @@ struct QemuNetwork: Network {
 	~QemuNetwork() {}
 
 	bool is_defined() override;
+	void create() override;
 
 private:
 	vir::Connect qemu_connect;

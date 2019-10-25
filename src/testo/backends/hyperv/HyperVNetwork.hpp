@@ -10,4 +10,5 @@ struct HyperVNetwork: Network {
 	~HyperVNetwork() {}
 
 	bool is_defined() override;
+	void create() override;
 };
