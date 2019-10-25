@@ -8,4 +8,6 @@ struct HyperVNetwork: Network {
 	HyperVNetwork(const HyperVNetwork& other) = delete;
 	HyperVNetwork(const nlohmann::json& config);
 	~HyperVNetwork() {}
+
+	bool is_defined() override;
 };

@@ -8,4 +8,6 @@ struct VboxNetwork: Network {
 	VboxNetwork(const VboxNetwork& other) = delete;
 	VboxNetwork(const nlohmann::json& config): Network(config) {}
 	~VboxNetwork() {}
+
+	bool is_defined() override;
 };

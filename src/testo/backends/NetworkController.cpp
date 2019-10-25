@@ -4,15 +4,15 @@
 #include <fmt/format.h>
 
 std::string NetworkController::id() const {
-
+	network->id();
 }
 
 std::string NetworkController::name() const {
-
+	return network->name();
 }
 
 bool NetworkController::is_defined() const {
-
+	return Controller::is_defined() && network->is_defined();
 }
 
 void NetworkController::create() {

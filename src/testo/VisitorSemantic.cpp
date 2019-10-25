@@ -109,7 +109,6 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	attr_ctx vm_network_ctx;
 	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
 	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::word)});
-	vm_network_ctx.insert({"network", std::make_pair(false, Token::category::word)});
 	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::word)});
 	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::word)});
 
@@ -121,6 +120,13 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
 
 	attr_ctxs.insert({"fd_global", fd_global_ctx});
+
+	attr_ctx network_global_ctx;
+	network_global_ctx.insert({"mode", std::make_pair(false, Token::category::word)});
+	network_global_ctx.insert({"persistent", std::make_pair(false, Token::category::binary)});
+	network_global_ctx.insert({"autostart", std::make_pair(false, Token::category::binary)});
+
+	attr_ctxs.insert({"network_global", network_global_ctx});
 
 	attr_ctx test_global_ctx;
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
@@ -399,7 +405,7 @@ void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
 			" already exists");
 	}
 
-	auto config = visit_attr_block(network->attr_block, "vm_global");
+	auto config = visit_attr_block(network->attr_block, "network_global");
 	config["prefix"] = prefix;
 	config["name"] = network->name.value();
 	config["src_file"] = network->name.pos().file.generic_string();
