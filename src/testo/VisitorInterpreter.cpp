@@ -928,6 +928,8 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (time < 1s) {
 				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+			} else {
+				timer.waitFor(std::chrono::milliseconds(1));
 			}
 		}
 
