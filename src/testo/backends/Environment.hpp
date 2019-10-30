@@ -13,6 +13,7 @@ struct Environment {
 	virtual fs::path flash_drives_mount_dir() const = 0;
 	virtual fs::path flash_drives_img_dir() const = 0;
 	virtual fs::path vm_metadata_dir() const = 0;
+	virtual fs::path network_metadata_dir() const = 0;
 	virtual fs::path flash_drives_metadata_dir() const = 0;
 
 	virtual void setup() = 0;

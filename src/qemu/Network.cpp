@@ -38,6 +38,14 @@ bool Network::is_active() const {
 	return res;
 }
 
+bool Network::is_persistent() const {
+	auto res = virNetworkIsPersistent(handle);
+	if (res < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+	return res;
+}
+
 void Network::set_autostart(bool is_on) {
 	if(virNetworkSetAutostart(handle, (int)is_on) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
@@ -51,4 +59,15 @@ void Network::start() {
 	}
 }
 
+void Network::stop() {
+	if (virNetworkDestroy(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
+void Network::undefine() {
+	if (virNetworkUndefine(handle) < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
 }

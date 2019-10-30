@@ -6,7 +6,15 @@
 
 QemuNetwork::QemuNetwork(const nlohmann::json& config): Network(config), qemu_connect(vir::connect_open("qemu:///system"))
 {
+	if (!is_defined()) {
+		return;
+	}
 
+	auto network = qemu_connect.network_lookup_by_name(id());
+
+	if (!network.is_active()) {
+		network.start();
+	}
 }
 
 bool QemuNetwork::is_defined() {
@@ -19,37 +27,56 @@ bool QemuNetwork::is_defined() {
 }
 
 void QemuNetwork::create() {
-	std::string string_config = fmt::format(R"(
-		<network>
-			<name>{}</name>
-			<bridge name="{}"/>
-	)", id(), id());
+	try {
+		remove_if_exists();
 
-	auto mode = config.at("mode").get<std::string>();
+		std::string string_config = fmt::format(R"(
+			<network>
+				<name>{}</name>
+				<bridge name="{}"/>
+		)", id(), id());
 
-	if (mode == "nat") {
-		string_config += fmt::format(R"(
-			<forward mode='nat'>
-				<nat>
-					<port start='1024' end='65535'/>
-				</nat>
-			</forward>
-			<ip address='192.168.156.1' netmask='255.255.255.0'>
-				<dhcp>
-					<range start='192.168.156.2' end='192.168.156.254'/>
-				</dhcp>
-			</ip>
-		)");
+		auto mode = config.at("mode").get<std::string>();
+
+		if (mode == "nat") {
+			string_config += fmt::format(R"(
+				<forward mode='nat'>
+					<nat>
+						<port start='1024' end='65535'/>
+					</nat>
+				</forward>
+				<ip address='192.168.156.1' netmask='255.255.255.0'>
+					<dhcp>
+						<range start='192.168.156.2' end='192.168.156.254'/>
+					</dhcp>
+				</ip>
+			)");
+		}
+
+		string_config += "\n</network>";
+		pugi::xml_document xml_config;
+		xml_config.load_string(string_config.c_str());
+		auto network = qemu_connect.network_define_xml(xml_config);
+
+		bool autostart = config.value("autostart", true);
+
+		network.set_autostart(autostart);
+		network.start();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Creating network"));
 	}
+}
 
-	string_config += "\n</network>";
-	pugi::xml_document xml_config;
-	xml_config.load_string(string_config.c_str());
-	auto network = qemu_connect.network_define_xml(xml_config);
-
-	bool autostart = config.value("autostart", false);
-
-	network.set_autostart(autostart);
-	network.start();
+void QemuNetwork::remove_if_exists() {
+	for (auto& network: qemu_connect.networks()) {
+		if (network.name() == id()) {
+			if (network.is_active()) {
+				network.stop();
+			}
+			if (network.is_persistent()) {
+				network.undefine();
+			}
+		}
+	}
 }
 

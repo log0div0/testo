@@ -17,7 +17,9 @@ struct VboxEnvironment: public Environment {
 	fs::path vm_metadata_dir() const override {
 		throw std::runtime_error("Implement me");
 	}
-
+	fs::path network_metadata_dir() const override {
+		throw std::runtime_error("Implement me");
+	}
 	fs::path flash_drives_metadata_dir() const override {
 		throw std::runtime_error("Implement me");
 	}

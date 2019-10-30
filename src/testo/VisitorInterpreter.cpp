@@ -304,6 +304,16 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 		}
 	}
 
+	//check networks aditionally
+	for (auto netc: reg.get_all_netcs(test)) {
+		if (netc->is_defined() &&
+			netc->check_config_relevance())
+		{
+			continue;
+		}
+		return false;
+	}
+
 	for (auto controller: reg.get_all_controllers(test)) {
 		if (controller->is_defined() &&
 			controller->check_config_relevance() &&
@@ -595,6 +605,17 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 					controller->restore_snapshot(parent->name.value());
 				}
 			}
+		}
+
+		//check all the networks
+
+		for (auto netc: reg.get_all_netcs(test)) {
+			if (netc->is_defined() &&
+				netc->check_config_relevance())
+			{
+				continue;
+			}
+			netc->create();
 		}
 
 		//new vms - install

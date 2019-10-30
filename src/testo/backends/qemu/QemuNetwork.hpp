@@ -14,5 +14,7 @@ struct QemuNetwork: Network {
 	void create() override;
 
 private:
+	void remove_if_exists();
+
 	vir::Connect qemu_connect;
 };

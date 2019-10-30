@@ -17,6 +17,9 @@ struct QemuEnvironment : public Environment {
 	fs::path vm_metadata_dir() const override {
 		return "/var/lib/libvirt/testo/vm_metadata";
 	}
+	fs::path network_metadata_dir() const override {
+		return "/var/lib/libvirt/testo/network_metadata";
+	}
 
 	fs::path flash_drives_metadata_dir() const override {
 		return "/var/lib/libvirt/testo/fd_metadata";

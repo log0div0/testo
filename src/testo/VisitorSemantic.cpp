@@ -361,6 +361,8 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 		return visit_machine(controller);
 	} else if (controller->t.type() == Token::category::flash) {
 		return visit_flash(controller);
+	} else if (controller->t.type() == Token::category::network) {
+		return visit_network(controller);
 	} else {
 		throw std::runtime_error("Unknown controller type");
 	}
@@ -378,8 +380,16 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.pos().file.generic_string();
 
+
 	auto vmc = env->create_vm_controller(config);
 	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
+
+	//additional check that all the networks are defined earlier
+	for (auto network: vmc->vm->networks()) {
+		if (reg.netcs.find(network) == reg.netcs.end()) {
+			throw std::runtime_error(std::string(machine->begin()) + ": Error: specified network " + network + " is not defined");
+		}
+	}
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {

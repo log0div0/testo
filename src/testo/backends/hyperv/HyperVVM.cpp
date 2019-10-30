@@ -368,6 +368,4 @@ void HyperVVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_
 void HyperVVM::remove_from_guest(const fs::path& obj) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-std::set<std::string> HyperVVM::nics() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
+

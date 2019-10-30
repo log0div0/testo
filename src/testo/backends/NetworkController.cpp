@@ -5,7 +5,7 @@
 #include <fmt/format.h>
 
 std::string NetworkController::id() const {
-	network->id();
+	return network->id();
 }
 
 std::string NetworkController::name() const {
@@ -13,7 +13,7 @@ std::string NetworkController::name() const {
 }
 
 bool NetworkController::is_defined() const {
-	return Controller::is_defined() && network->is_defined();
+	return fs::exists(main_file()) && network->is_defined();
 }
 
 void NetworkController::create() {
@@ -26,80 +26,46 @@ void NetworkController::create() {
 
 		network->create();
 
-		/*auto config = network->get_config();
+		auto config = network->get_config();
 
 		nlohmann::json metadata;
-
-		metadata["user_metadata"] = nlohmann::json::object();
-
-		if (config.count("metadata")) {
-			auto config_metadata = config.at("metadata");
-			for (auto it = config_metadata.begin(); it != config_metadata.end(); ++it) {
-				metadata["user_metadata"][it.key()] = it.value();
-			}
-		}
 
 		if (!fs::create_directory(get_metadata_dir())) {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
 
-		fs::path iso_file = config.at("iso").get<std::string>();
-		if (iso_file.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			iso_file = src_file.parent_path() / iso_file;
-		}
-		iso_file = fs::canonical(iso_file);
-
-		if (!fs::exists(iso_file)) {
-			throw std::runtime_error("Target iso file doesn't exist");
-		}
-
-		config.erase("src_file");
-		config.erase("iso");
-		config.erase("metadata");
-
-		metadata["vm_config"] = config.dump();
-		metadata["user_metadata"]["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
-		metadata["user_metadata"]["vm_name"] = config.at("name");
+		metadata["network_config"] = config.dump();
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(iso_file);
-		write_metadata_file(main_file(), metadata);*/
+		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("creating vm"));
+		std::throw_with_nested(std::runtime_error("creating network"));
 	}
 }
 
-void NetworkController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
-{
+std::string NetworkController::get_metadata(const std::string& key) const {
+	try {
+		auto metadata = read_metadata_file(main_file());
+		if (!metadata.count(key)) {
+			throw std::runtime_error("Requested key is not present in vm metadata");
+		}
+		return metadata.at(key).get<std::string>();
 
-}
-
-void NetworkController::restore_snapshot(const std::string& snapshot) {
-
-}
-
-void NetworkController::delete_snapshot_with_children(const std::string& snapshot)
-{
-
-}
-
-bool NetworkController::has_user_key(const std::string& key) {
-
-}
-
-
-std::string NetworkController::get_user_metadata(const std::string& key) {
-
-}
-
-void NetworkController::set_user_metadata(const std::string& key, const std::string& value) {
-
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
+	}
 }
 
 bool NetworkController::check_config_relevance() {
+	auto old_config = nlohmann::json::parse(get_metadata("network_config"));
+	auto new_config = network->get_config();
 
+	new_config.erase("src_file");
+	//old_config already doesn't have the src_file
+
+	return (old_config == new_config);
 }
 
 fs::path NetworkController::get_metadata_dir() const {
+	return env->network_metadata_dir() / id();
 }
 

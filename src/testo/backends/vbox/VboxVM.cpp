@@ -334,15 +334,6 @@ void VboxVM::make_snapshot(const std::string& snapshot) {
 	}
 }
 
-std::set<std::string> VboxVM::nics() const {
-	std::set<std::string> result;
-
-	for (auto& nic: config.at("nic")) {
-		result.insert(nic.at("name").get<std::string>());
-	}
-	return result;
-}
-
 void VboxVM::rollback(const std::string& snapshot) {
 	try {
 		stop();

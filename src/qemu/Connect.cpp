@@ -142,6 +142,15 @@ std::vector<Network> Connect::networks(std::initializer_list<virConnectListAllNe
 	return result;
 }
 
+Network Connect::network_lookup_by_name(const std::string& name) const {
+	auto result = virNetworkLookupByName(handle, name.c_str());
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	return result;
+}
+
 Network Connect::network_define_xml(const pugi::xml_document& xml) {
 	auto result = virNetworkDefineXML(handle, node_to_string(xml).c_str());
 	if (!result) {

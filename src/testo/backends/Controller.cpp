@@ -39,7 +39,7 @@ bool Controller::has_key(const std::string& key) {
 }
 
 
-std::string Controller::get_metadata(const std::string& key) {
+std::string Controller::get_metadata(const std::string& key) const {
 	try {
 		auto metadata = read_metadata_file(main_file());
 		if (!metadata.count(key)) {

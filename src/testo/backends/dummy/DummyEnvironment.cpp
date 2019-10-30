@@ -17,6 +17,10 @@ fs::path DummyEnvironment::vm_metadata_dir() const {
 	return "./vm_metadata";
 }
 
+fs::path DummyEnvironment::network_metadata_dir() const {
+	return "./network_metadata";
+}
+
 fs::path DummyEnvironment::flash_drives_metadata_dir() const {
 	return "./flash_drives_metadata";
 }
