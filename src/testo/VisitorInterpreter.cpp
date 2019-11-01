@@ -369,6 +369,17 @@ bool VisitorInterpreter::resolve_miss_cache_action(std::shared_ptr<AST::Test> te
 
 	bool prompt_needed = false;
 
+	//check networks aditionally
+	for (auto netc: reg.get_all_netcs(test)) {
+		if (netc->is_defined()) {
+			if (!netc->check_config_relevance()) {
+				prompt_needed = true;
+				break;
+			}
+		}
+	}
+
+
 	for (auto controller: reg.get_all_controllers(test)) {
 		if (controller->is_defined()) {
 			if (controller->has_snapshot(test->name.value())) {

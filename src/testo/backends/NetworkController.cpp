@@ -34,6 +34,8 @@ void NetworkController::create() {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
 
+		config.erase("src_file");
+
 		metadata["network_config"] = config.dump();
 		metadata["current_state"] = "";
 		write_metadata_file(main_file(), metadata);
