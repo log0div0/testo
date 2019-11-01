@@ -39,7 +39,7 @@ std::string QemuNetwork::find_free_nat() const {
 			if (!forward) {
 				continue;
 			}
-			if (forward.attribute("mode").value() != "nat") {
+			if (std::string(forward.attribute("mode").value()) != "nat") {
 				continue;
 			}
 
@@ -48,7 +48,7 @@ std::string QemuNetwork::find_free_nat() const {
 				continue;
 			}
 
-			if (ip.attribute("address").value() == network_to_look) {
+			if (std::string(ip.attribute("address").value()) == network_to_look) {
 				is_free = false;
 				break;
 			}
