@@ -15,6 +15,7 @@ struct QemuNetwork: Network {
 
 private:
 	void remove_if_exists();
+	std::string find_free_nat() const;
 
 	vir::Connect qemu_connect;
 };

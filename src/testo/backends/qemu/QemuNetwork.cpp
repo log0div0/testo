@@ -26,6 +26,40 @@ bool QemuNetwork::is_defined() {
 	return false;
 }
 
+
+std::string QemuNetwork::find_free_nat() const {
+	for (int i = 156; i < 254; i++) {
+		std::string network_to_look("192.168.");
+		network_to_look += std::to_string(i);
+		network_to_look += ".1";
+		auto is_free = true;
+		for (auto& network: qemu_connect.networks()) {
+			auto config = network.dump_xml();
+			auto forward = config.first_child().child("forward");
+			if (!forward) {
+				continue;
+			}
+			if (forward.attribute("mode").value() != "nat") {
+				continue;
+			}
+
+			auto ip = config.first_child().child("ip");
+			if (!ip) {
+				continue;
+			}
+
+			if (ip.attribute("address").value() == network_to_look) {
+				is_free = false;
+				break;
+			}
+		}
+		if (is_free) {
+			return std::to_string(i);
+		}
+	}
+	throw std::runtime_error(std::string("Can't find a free nat to create network ") + id());
+}
+
 void QemuNetwork::create() {
 	try {
 		remove_if_exists();
@@ -39,18 +73,19 @@ void QemuNetwork::create() {
 		auto mode = config.at("mode").get<std::string>();
 
 		if (mode == "nat") {
+			auto network = find_free_nat();
 			string_config += fmt::format(R"(
 				<forward mode='nat'>
 					<nat>
 						<port start='1024' end='65535'/>
 					</nat>
 				</forward>
-				<ip address='192.168.156.1' netmask='255.255.255.0'>
+				<ip address='192.168.{}.1' netmask='255.255.255.0'>
 					<dhcp>
-						<range start='192.168.156.2' end='192.168.156.254'/>
+						<range start='192.168.{}.2' end='192.168.{}.254'/>
 					</dhcp>
 				</ip>
-			)");
+			)", network, network, network);
 		}
 
 		string_config += "\n</network>";
