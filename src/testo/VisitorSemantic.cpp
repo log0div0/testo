@@ -109,7 +109,6 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	attr_ctx vm_network_ctx;
 	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
 	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::word)});
-	vm_network_ctx.insert({"network", std::make_pair(false, Token::category::word)});
 	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::word)});
 	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::word)});
 
@@ -121,6 +120,13 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
 
 	attr_ctxs.insert({"fd_global", fd_global_ctx});
+
+	attr_ctx network_global_ctx;
+	network_global_ctx.insert({"mode", std::make_pair(false, Token::category::word)});
+	network_global_ctx.insert({"persistent", std::make_pair(false, Token::category::binary)});
+	network_global_ctx.insert({"autostart", std::make_pair(false, Token::category::binary)});
+
+	attr_ctxs.insert({"network_global", network_global_ctx});
 
 	attr_ctx test_global_ctx;
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
@@ -355,6 +361,8 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 		return visit_machine(controller);
 	} else if (controller->t.type() == Token::category::flash) {
 		return visit_flash(controller);
+	} else if (controller->t.type() == Token::category::network) {
+		return visit_network(controller);
 	} else {
 		throw std::runtime_error("Unknown controller type");
 	}
@@ -372,8 +380,16 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.pos().file.generic_string();
 
+
 	auto vmc = env->create_vm_controller(config);
 	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
+
+	//additional check that all the networks are defined earlier
+	for (auto network: vmc->vm->networks()) {
+		if (reg.netcs.find(network) == reg.netcs.end()) {
+			throw std::runtime_error(std::string(machine->begin()) + ": Error: specified network " + network + " is not defined");
+		}
+	}
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
@@ -390,6 +406,22 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 
 	auto fdc = env->create_flash_drive_controller(config);
 	reg.fdcs.emplace(std::make_pair(flash->name, fdc));
+}
+
+void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
+	// std::cout << "Registering network " << network->name.value() << std::endl;
+	if (reg.netcs.find(network->name) != reg.netcs.end()) {
+		throw std::runtime_error(std::string(network->begin()) + ": Error: network with name " + network->name.value() +
+			" already exists");
+	}
+
+	auto config = visit_attr_block(network->attr_block, "network_global");
+	config["prefix"] = prefix;
+	config["name"] = network->name.value();
+	config["src_file"] = network->name.pos().file.generic_string();
+
+	auto netc = env->create_network_controller(config);
+	reg.netcs.emplace(std::make_pair(network->name, netc));
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {

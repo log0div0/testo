@@ -208,6 +208,3 @@ void DummyVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t
 void DummyVM::remove_from_guest(const fs::path& obj) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-std::set<std::string> DummyVM::nics() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}

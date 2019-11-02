@@ -183,8 +183,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		{"SCROLLUP", 177},
 		{"SCROLLDOWN", 178},
 	});
-
-	prepare_networks();
 }
 
 QemuVM::~QemuVM() {
@@ -317,15 +315,10 @@ void QemuVM::install() {
 		if (config.count("nic")) {
 			auto nics = config.at("nic");
 			for (auto& nic: nics) {
-				std::string source_network("testo-");
+				//Complete redo
+				std::string source_network = config.at("prefix").get<std::string>();
 
-				if (nic.at("attached_to").get<std::string>() == "internal") {
-					source_network += nic.at("network").get<std::string>();
-				}
-
-				if (nic.at("attached_to").get<std::string>() == "nat") {
-					source_network += "nat";
-				}
+				source_network += nic.at("attached_to").get<std::string>();
 
 				string_config += fmt::format(R"(
 					<interface type='network'>
@@ -377,17 +370,6 @@ void QemuVM::make_snapshot(const std::string& snapshot) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
 	}
 
-}
-
-std::set<std::string> QemuVM::nics() const {
-	std::set<std::string> result;
-
-	if (config.count("nic")) {
-		for (auto& nic: config.at("nic")) {
-			result.insert(nic.at("name").get<std::string>());
-		}
-	}
-	return result;
 }
 
 void QemuVM::rollback(const std::string& snapshot) {
@@ -1136,68 +1118,6 @@ void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t 
 
 void QemuVM::remove_from_guest(const fs::path& obj) {
 	//TODO!!
-}
-
-void QemuVM::prepare_networks() {
-	try {
-		if (config.count("nic")) {
-			auto nics = config.at("nic");
-			for (auto& nic: nics) {
-				std::string network_to_lookup;
-				if (nic.at("attached_to").get<std::string>() == "nat") {
-					network_to_lookup = "testo-nat";
-				}
-
-				if (nic.at("attached_to").get<std::string>() == "internal") {
-					network_to_lookup = std::string("testo-") + nic.at("network").get<std::string>();
-				}
-
-				bool found = false;
-				for (auto& network: qemu_connect.networks()) {
-					if (network.name() == network_to_lookup) {
-						if (!network.is_active()) {
-							network.start();
-						}
-						found = true;
-						break;
-					}
-				}
-
-				if (!found) {
-					std::string string_config = fmt::format(R"(
-						<network>
-							<name>{}</name>
-							<bridge name="{}"/>
-					)", network_to_lookup, network_to_lookup);
-
-					if (network_to_lookup == "testo-nat") {
-						string_config += fmt::format(R"(
-							<forward mode='nat'>
-								<nat>
-									<port start='1024' end='65535'/>
-								</nat>
-							</forward>
-							<ip address='192.168.156.1' netmask='255.255.255.0'>
-								<dhcp>
-									<range start='192.168.156.2' end='192.168.156.254'/>
-								</dhcp>
-							</ip>
-						)");
-					}
-
-					string_config += "\n</network>";
-					pugi::xml_document xml_config;
-					xml_config.load_string(string_config.c_str());
-					auto network = qemu_connect.network_define_xml(xml_config);
-					network.set_autostart(true);
-					network.start();
-				}
-			}
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Preparing netowkrs"));
-	}
-
 }
 
 void QemuVM::remove_disk() {

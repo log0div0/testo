@@ -1,3 +1,7 @@
+network nat {
+	mode: "nat"
+}
+
 machine my_machine {
 	cpus: 1
 	ram: 512Mb

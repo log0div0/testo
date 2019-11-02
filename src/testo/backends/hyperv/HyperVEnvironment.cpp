@@ -17,6 +17,10 @@ fs::path HyperVEnvironment::vm_metadata_dir() const {
 	return ".";
 }
 
+fs::path HyperVEnvironment::network_metadata_dir() const {
+	return ".";
+}
+
 fs::path HyperVEnvironment::flash_drives_metadata_dir() const {
 	return ".";
 }

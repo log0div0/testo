@@ -17,7 +17,9 @@ struct VboxEnvironment: public Environment {
 	fs::path vm_metadata_dir() const override {
 		throw std::runtime_error("Implement me");
 	}
-
+	fs::path network_metadata_dir() const override {
+		throw std::runtime_error("Implement me");
+	}
 	fs::path flash_drives_metadata_dir() const override {
 		throw std::runtime_error("Implement me");
 	}
@@ -30,6 +32,7 @@ struct VboxEnvironment: public Environment {
 
 	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override;
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override;
+	std::shared_ptr<NetworkController> create_network_controller(const nlohmann::json& config) override;
 
 	vbox::API api;
 

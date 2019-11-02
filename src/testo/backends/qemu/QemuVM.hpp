@@ -45,10 +45,7 @@ struct QemuVM: public VM {
 	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) override;
 	void remove_from_guest(const fs::path& obj) override;
 
-	std::set<std::string> nics() const override;
-
 private:
-	void prepare_networks();
 	void remove_disk();
 	void create_disk();
 

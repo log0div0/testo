@@ -72,7 +72,7 @@ bool QemuFlashDrive::is_defined() {
 		}
 		return false;
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Remove flash if exist"));
+		std::throw_with_nested(std::runtime_error("Is defined"));
 	}
 }
 

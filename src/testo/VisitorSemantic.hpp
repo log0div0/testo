@@ -28,6 +28,7 @@ struct VisitorSemantic {
 	void visit_controller(std::shared_ptr<AST::Controller> controller);
 	void visit_machine(std::shared_ptr<AST::Controller> machine);
 	void visit_flash(std::shared_ptr<AST::Controller> flash); //flash drive
+	void visit_network(std::shared_ptr<AST::Controller> network); //flash drive
 	nlohmann::json visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx);
 	std::string resolve_var(const std::string& var);
 	std::string visit_word(std::shared_ptr<AST::Word> word);
