@@ -83,31 +83,33 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 
 std::string VisitorCksum::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
 	std::string result("abort");
-	result += visit_word(vmc, abort->message);
+	// result += visit_word(vmc, abort->message);
 	return result;
 }
 
 std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print) {
 	std::string result("print");
-	result += visit_word(vmc, print->message);
+	// result += visit_word(vmc, print->message);
 	return result;
 }
 
 std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	std::string result("type");
-	result += visit_word(vmc, type->text_word);
+	// result += visit_word(vmc, type->text_word);
 	return result;
 }
 
 std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	std::string result = "wait";
-	if (wait->text_word) {
-		result += visit_word(vmc, wait->text_word);
+	if (wait->text) {
+		// result += visit_word(vmc, wait->text_word);
+		result += wait->text->text();
 	}
 
 	result += "(";
 	for (auto param: wait->params) {
-		auto value = visit_word(vmc, param->right);
+		// auto value = visit_word(vmc, param->right);
+		auto value = param->right->text();
 		result += param->left.value() + "=" + value;
 	}
 	result += ")";
@@ -148,7 +150,8 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		fs::path path = visit_word(vmc, plug->path);
+		// fs::path path = visit_word(vmc, plug->path);
+		fs::path path = plug->path->text();
 		if (path.is_relative()) {
 			path = plug->t.pos().file.parent_path() / path;
 		}
@@ -173,7 +176,7 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 	std::string result("exec");
 
 	result += exec->process_token.value();
-	result += visit_word(vmc, exec->commands);
+	// result += visit_word(vmc, exec->commands);
 
 	if (exec->time_interval) {
 		result += exec->time_interval.value();
@@ -187,7 +190,8 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
 	std::string result(copy->t.value());
 
-	fs::path from = visit_word(vmc, copy->from);
+	// fs::path from = visit_word(vmc, copy->from);
+	fs::path from = copy->from->text();
 
 	if (from.is_relative()) {
 		from = copy->t.pos().file.parent_path() / from;
@@ -210,7 +214,8 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 		}
 	} //TODO: I wonder what it must be for the from copy
 
-	fs::path to = visit_word(vmc, copy->to);
+	// fs::path to = visit_word(vmc, copy->to);
+	fs::path to = copy->to->text();
 
 	if (to.is_relative()) {
 		to = copy->t.pos().file.parent_path() / to;
@@ -231,7 +236,8 @@ std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, st
 	StackEntry new_ctx(true);
 
 	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		auto value = visit_word(vmc, macro_call->params[i]);
+		// auto value = visit_word(vmc, macro_call->params[i]);
+		auto value = macro_call->params[i]->text();
 		new_ctx.define(macro_call->macro->params[i].value(), value);
 	}
 
@@ -288,9 +294,9 @@ std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vmc, std::sh
 
 std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
 	std::string result("factor");
-	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Word>>(factor)) {
+	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
 		result += std::to_string(p->is_negated());
-		result += visit_word(vmc, p->factor);
+		// result += visit_word(vmc, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_comparison(vmc, p->factor);
@@ -335,7 +341,7 @@ std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vmc, const s
 	return env_value;
 }
 
-std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
+/*std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
 	std::string result;
 
 	for (auto part: word->parts) {
@@ -351,23 +357,24 @@ std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vmc, std::sha
 	}
 
 	return result;
-}
+}*/
 
 std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
 	std::string result("comparison");
-	result += visit_word(vmc, comparison->left);
-	result += visit_word(vmc, comparison->right);
+	// result += visit_word(vmc, comparison->left);
+	// result += visit_word(vmc, comparison->right);
 	result += comparison->op().value();
 	return result;
 }
 
 std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	std::string result = "check";
-	result += visit_word(vmc, check->text_word);
+	// result += visit_word(vmc, check->text_word);
 
 	result += "(";
 	for (auto param: check->params) {
-		auto value = visit_word(vmc, param->right);
+		// auto value = visit_word(vmc, param->right);
+		auto value = param->right->text();
 		result += param->left.value() + "=" + value;
 	}
 	result += ")";

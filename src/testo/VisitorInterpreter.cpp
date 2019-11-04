@@ -857,13 +857,15 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 }
 
 void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
-	std::string message = visit_word(vmc, abort->message);
+	// std::string message = visit_word(vmc, abort->message);
+	std::string message = abort->message->text();
 	throw AbortException(abort, vmc, message);
 }
 
 void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
 	try {
-		std::string message = visit_word(vmc, print_action->message);
+		//std::string message = visit_word(vmc, print_action->message);
+		std::string message = print_action->message->text();
 		std::cout
 			<< rang::fgB::blue << progress() << " "
 			<< rang::fg::yellow << vmc->name()
@@ -876,7 +878,8 @@ void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	try {
-		std::string text = visit_word(vmc, type->text_word);
+		//std::string text = visit_word(vmc, type->text_word);
+		std::string text = type->text->text();
 		if (text.size() == 0) {
 			return;
 		}
@@ -903,8 +906,9 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
 		std::string text = "";
-		if (wait->text_word) {
-			text = visit_word(vmc, wait->text_word);
+		if (wait->text) {
+			// text = visit_word(vmc, wait->text_word);
+			text = wait->text->text();
 		}
 
 		std::cout
@@ -921,9 +925,11 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 		for (auto param: wait->params) {
 			if (param->left.value() == "foreground") {
-				foreground = visit_word(vmc, param->right);
+				// foreground = visit_word(vmc, param->right);
+				foreground = param->right->text();
 			} else if (param->left.value() == "background") {
-				background = visit_word(vmc, param->right);
+				// background = visit_word(vmc, param->right);
+				background = param->right->text();
 			} else {
 				throw std::runtime_error(std::string("Unknown wait parameter: ") + param->left.value());
 			}
@@ -941,7 +947,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		std::cout
 			<< rang::style::reset << std::endl;
 
-		if (!wait->text_word) {
+		if (!wait->text) {
 			return sleep(wait->time_interval.value());
 		}
 
@@ -1194,7 +1200,8 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
 
-		fs::path path = visit_word(vmc, plug->path);
+		// fs::path path = visit_word(vmc, plug->path);
+		fs::path path = plug->path->text();
 		std::cout
 			<< rang::fgB::blue << progress()
 			<< " Plugging dvd "
@@ -1293,7 +1300,8 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 			//In future this should be a function
 
 			std::string script = "set -e; set -o pipefail; set -x;";
-			script += visit_word(vmc, exec->commands);
+			// script += visit_word(vmc, exec->commands);
+			script += exec->commands->text();
 			script.erase(std::remove(script.begin(), script.end(), '\r'), script.end());
 
 			//copy the script to tmp folder
@@ -1332,8 +1340,10 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
 	try {
-		fs::path from = visit_word(vmc, copy->from);
-		fs::path to = visit_word(vmc, copy->to);
+		// fs::path from = visit_word(vmc, copy->from);
+		fs::path from = copy->from->text();
+		// fs::path to = visit_word(vmc, copy->to);
+		fs::path to = copy->to->text();
 
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
@@ -1385,7 +1395,8 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 	StackEntry new_ctx(true);
 
 	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		auto value = visit_word(vmc, macro_call->params[i]);
+		// auto value = visit_word(vmc, macro_call->params[i]);
+		auto value = macro_call->params[i]->text();
 		new_ctx.define(macro_call->macro->params[i].value(), value);
 	}
 
@@ -1460,8 +1471,9 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::sha
 }
 
 bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
-	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Word>>(factor)) {
-		return p->is_negated() ^ (bool)visit_word(vmc, p->factor).length();
+	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
+		// return p->is_negated() ^ (bool)visit_word(vmc, p->factor).length();
+		return p->is_negated() ^ (bool)p->factor->text().length();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(vmc, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
@@ -1506,7 +1518,7 @@ std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, c
 	return env_value;
 }
 
-std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
+/*std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
 	std::string result;
 
 	for (auto part: word->parts) {
@@ -1522,11 +1534,13 @@ std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vmc, st
 	}
 
 	return result;
-}
+}*/
 
 bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
-	auto left = visit_word(vmc, comparison->left);
-	auto right = visit_word(vmc, comparison->right);
+	// auto left = visit_word(vmc, comparison->left);
+	auto left = comparison->left->text();
+	// auto right = visit_word(vmc, comparison->right);
+	auto right = comparison->right->text();
 	if (comparison->op().type() == Token::category::GREATER) {
 		if (!is_number(left)) {
 			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
@@ -1570,16 +1584,19 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
-		auto text = visit_word(vmc, check->text_word);
+		// auto text = visit_word(vmc, check->text_word);
+		auto text = check->text->text();
 
 		std::string foreground;
 		std::string background;
 
 		for (auto param: check->params) {
 			if (param->left.value() == "foreground") {
-				foreground = visit_word(vmc, param->right);
+				// foreground = visit_word(vmc, param->right);
+				foreground = param->right->text();
 			} else if (param->left.value() == "background") {
-				background = visit_word(vmc, param->right);
+				// background = visit_word(vmc, param->right);
+				background = param->right->text();
 			} else {
 				throw std::runtime_error(std::string("Unknown check parameter: ") + param->left.value());
 			}

@@ -8,7 +8,6 @@ struct Token {
 		eof,
 		newline,
 		id,
-		var_ref,
 		abort,
 		print,
 		type_,
@@ -79,7 +78,6 @@ struct Token {
 
 		//fake categories
 		none, //not initialized
-		word,
 		binary, //true or false
 		program,
 		key_spec,

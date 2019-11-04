@@ -101,7 +101,7 @@ struct VisitorInterpreter {
 	bool visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop);
 	bool visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor);
 	std::string resolve_var(std::shared_ptr<VmController> vmc, const std::string& var);
-	std::string visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word);
+	//std::string visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word);
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 

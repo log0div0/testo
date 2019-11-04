@@ -106,9 +106,8 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::id)); //macro call
 }
 
-bool Parser::test_word() const {
+bool Parser::test_string() const {
 	return ((LA(1) == Token::category::dbl_quoted_string) ||
-		(LA(1) == Token::category::var_ref) ||
 		(LA(1) == Token::category::multiline_string));
 }
 
@@ -119,7 +118,7 @@ bool Parser::test_binary() const {
 
 
 bool Parser::test_comparison() const {
-	if (test_word()) {
+	if (test_string()) {
 		if ((LA(2) == Token::category::LESS) ||
 			(LA(2) == Token::category::GREATER) ||
 			(LA(2) == Token::category::EQUAL) ||
@@ -304,7 +303,7 @@ std::shared_ptr<Assignment> Parser::assignment() {
 	Token assign = LT(1);
 	match(Token::category::assign);
 
-	auto right = word();
+	auto right = string();
 	return std::shared_ptr<Assignment>(new Assignment(left, assign, right));
 }
 
@@ -327,9 +326,13 @@ std::shared_ptr<Attr> Parser::attr() {
 	if (LA(1) == Token::category::lbrace) {
 		auto block = attr_block();
 		value = std::shared_ptr<AttrValue<AttrBlock>>(new AttrValue<AttrBlock>(block));
-	} else if (test_word()) {
-		auto word_value = std::shared_ptr<WordAttr>(new WordAttr(word()));
-		value = std::shared_ptr<AttrValue<WordAttr>>(new AttrValue<WordAttr>(word_value));
+	} else if (test_string()) {
+		auto str = string();
+		if (str->t.type() == Token::category::multiline_string) {
+			throw std::runtime_error(std::string(str->begin()) + ": Cant' accept multiline as an attr value: " + std::string(*str));
+		}
+		auto string_value = std::shared_ptr<StringAttr>(new StringAttr(str));
+		value = std::shared_ptr<AttrValue<StringAttr>>(new AttrValue<StringAttr>(string_value));
 	} else if (test_binary()) {
 		auto binary_value = std::shared_ptr<BinaryAttr>(new BinaryAttr(LT(1)));
 		value = std::shared_ptr<AttrValue<BinaryAttr>>(new AttrValue<BinaryAttr>(binary_value));
@@ -527,7 +530,7 @@ std::shared_ptr<Action<Abort>> Parser::abort() {
 
 	Token value = LT(1);
 
-	auto message = word();
+	auto message = string();
 
 	auto action = std::shared_ptr<Abort>(new Abort(abort_token, message));
 	return std::shared_ptr<Action<Abort>>(new Action<Abort>(action));
@@ -539,7 +542,7 @@ std::shared_ptr<Action<Print>> Parser::print() {
 
 	Token value = LT(1);
 
-	auto message = word();
+	auto message = string();
 
 	auto action = std::shared_ptr<Print>(new Print(print_token, message));
 	return std::shared_ptr<Action<Print>>(new Action<Print>(action));
@@ -551,7 +554,7 @@ std::shared_ptr<Action<Type>> Parser::type() {
 
 	Token value = LT(1);
 
-	auto text = word();
+	auto text = string();
 
 	auto action = std::shared_ptr<Type>(new Type(type_token, text));
 	return std::shared_ptr<Action<Type>>(new Action<Type>(action));
@@ -561,12 +564,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	Token wait_token = LT(1);
 	match(Token::category::wait);
 
-	std::shared_ptr<Word> value(nullptr);
+	std::shared_ptr<String> value(nullptr);
 	Token timeout = Token();
 	Token time_interval = Token();
 
-	if (test_word()) {
-		value = word();
+	if (test_string()) {
+		value = string();
 	}
 
 	std::vector<std::shared_ptr<Assignment>> params;
@@ -670,11 +673,11 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 
 	Token name = Token();
 
-	std::shared_ptr<Word> path(nullptr);
+	std::shared_ptr<String> path(nullptr);
 
 	if (type.type() == Token::category::dvd) {
 		if (plug_token.type() == Token::category::plug) {
-			path = word();
+			path = string();
 		} //else this should be the end of unplug commands
 	} else {
 		name = LT(1);
@@ -727,7 +730,7 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 	Token process_token = LT(1);
 	match(Token::category::id);
 
-	auto commands = word();
+	auto commands = string();
 
 	Token timeout = Token();
 	Token time_interval = Token();
@@ -748,8 +751,8 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 	Token copy_token = LT(1);
 	match({Token::category::copyto, Token::category::copyfrom});
 
-	auto from = word();
-	auto to = word();
+	auto from = string();
+	auto to = string();
 
 	Token timeout = Token();
 	Token time_interval = Token();
@@ -792,10 +795,10 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 
 	match(Token::category::lparen);
 
-	std::vector<std::shared_ptr<Word>> params;
+	std::vector<std::shared_ptr<String>> params;
 
-	if (test_word()) {
-		params.push_back(word());
+	if (test_string()) {
+		params.push_back(string());
 	}
 
 	while (LA(1) == Token::category::comma) {
@@ -803,7 +806,7 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 			match(Token::category::rparen); //will cause failure
 		}
 		match(Token::category::comma);
-		params.push_back(word());
+		params.push_back(string());
 	}
 
 	match(Token::category::rparen);
@@ -889,24 +892,15 @@ std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
 	return std::shared_ptr<Action<CycleControl>>(new Action<CycleControl>(action));
 }
 
-std::shared_ptr<Word> Parser::word() {
-	std::vector<Token> parts;
-
-	if (!test_word()) {
-		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected word specificator");
+std::shared_ptr<String> Parser::string() {
+	Token str = LT(1);
+	if (!test_string()) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected string");
 	}
 
-	parts.push_back(LT(1));
-	match({Token::category::dbl_quoted_string, Token::category::multiline_string, Token::category::var_ref});
+	match({Token::category::dbl_quoted_string, Token::category::multiline_string});
 
-	while (LA(1) == Token::category::plus) {
-		match(Token::category::plus);
-		newline_list();
-		parts.push_back(LT(1));
-		match({Token::category::dbl_quoted_string, Token::category::multiline_string, Token::category::var_ref});
-	}
-
-	return std::shared_ptr<Word>(new Word(parts));
+	return std::shared_ptr<String>(new String(str));
 }
 
 std::shared_ptr<IFactor> Parser::factor() {
@@ -926,15 +920,15 @@ std::shared_ptr<IFactor> Parser::factor() {
 		auto result = std::shared_ptr<Factor<IExpr>>(new Factor<IExpr>(not_token, expr()));
 		match(Token::category::rparen);
 		return result;
-	} else if (test_word()) {
-		return std::shared_ptr<Factor<Word>>(new Factor<Word>(not_token, word()));
+	} else if (test_string()) {
+		return std::shared_ptr<Factor<String>>(new Factor<String>(not_token, string()));
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown expression: " + LT(1).value());
 	}
 }
 
 std::shared_ptr<Comparison> Parser::comparison() {
-	auto left = word();
+	auto left = string();
 
 	Token op = LT(1);
 
@@ -947,7 +941,7 @@ std::shared_ptr<Comparison> Parser::comparison() {
 		Token::category::STREQUAL
 		});
 
-	auto right = word();
+	auto right = string();
 
 	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
 }
@@ -956,9 +950,9 @@ std::shared_ptr<Check> Parser::check() {
 	Token check_token = LT(1);
 	match(Token::category::check);
 
-	std::shared_ptr<Word> value(nullptr);
+	std::shared_ptr<String> value(nullptr);
 
-	value = word();
+	value = string();
 
 	std::vector<std::shared_ptr<Assignment>> params;
 

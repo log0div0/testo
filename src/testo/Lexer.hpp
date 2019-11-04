@@ -39,9 +39,9 @@ private:
 			((*input)[current_pos + shift] == '_'));
 	}
 
-	bool test_var_ref() const {
+	/*bool test_var_ref() const {
 		return ((*input)[current_pos] == '$');
-	}
+	}*/
 	bool test_comments() const { return ((*input)[current_pos] == '#'); }
 	bool test_begin_multiline_comments() const {
 		if (test_eof(1)) {

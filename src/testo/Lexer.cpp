@@ -559,7 +559,7 @@ Token Lexer::OR() {
 	return Token(Token::category::OR, value, tmp_pos);
 }
 
-Token Lexer::var_ref() {
+/*Token Lexer::var_ref() {
 	Pos tmp_pos = current_pos;
 	std::string value;
 	value += (*input)[current_pos];
@@ -578,7 +578,7 @@ Token Lexer::var_ref() {
 	current_pos.advance(shift);
 
 	return Token(Token::category::var_ref, value, tmp_pos);
-}
+}*/
 
 Token Lexer::multiline_string() {
 	Pos tmp_pos = current_pos;
@@ -729,9 +729,9 @@ Token Lexer::get_next_token() {
 			return number();
 		} else if (test_id()) {
 			return id();
-		} else if (test_var_ref()) {
+		}/* else if (test_var_ref()) {
 			return var_ref();
-		} else if (test_multiline_quote()) {
+		}*/ else if (test_multiline_quote()) {
 			return multiline_string();
 		} else if (test_dbl_quote()) {
 			return dbl_quoted_string();
