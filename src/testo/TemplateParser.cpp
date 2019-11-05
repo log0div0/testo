@@ -1,0 +1,143 @@
+
+#include "TemplateParser.hpp"
+
+namespace template_literals {
+
+void Pos::advance(size_t shift) {
+	while (shift != 0) {
+		if (offset == input.length()) {
+			throw std::runtime_error("ADVANCE: Can't advance position over the end of the input");
+		}
+		if (input[offset] == '\n') {
+			line++;
+			column = 1;
+		} else {
+			column++;
+		}
+		offset++;
+
+		shift--;
+	}
+}
+
+std::string Parser::resolve_var(const std::string& var, Register& reg, std::shared_ptr<VmController> vmc) {
+	for (auto it = reg.local_vars.rbegin(); it != reg.local_vars.rend(); ++it) {
+		if (it->is_defined(var)) {
+			return it->ref(var);
+		}
+		if (it->is_terminate) {
+			break;
+		}
+	}
+
+	if (vmc && vmc->is_defined() && vmc->has_user_key(var)) {
+		return vmc->get_user_metadata(var);
+	}
+
+	auto env_value = std::getenv(var.c_str());
+
+	if (env_value == nullptr) {
+		return "";
+	}
+	return env_value;
+}
+
+std::string Parser::resolve(const std::string& input, Register& reg, std::shared_ptr<VmController> vmc) {
+	this->input = input;
+	current_pos = Pos(input);
+
+	auto tokens = tokenize();
+
+	std::string result;
+
+	for (auto token: tokens) {
+		if (token.type() == Token::category::var_ref) {
+			result += resolve_var(token.value().substr(1, token.value().length() - 1), reg, vmc);
+		} else if (token.type() == Token::category::regular_string) {
+			result += token.value();
+		} else {
+			//should never happen
+			throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unknown lexem: " + token.value());
+		}
+	}
+
+	return result;
+}
+
+bool Parser::test_escaped() const {
+	if (test_eof(1)) {
+		return false;
+	}
+
+	return ((input[current_pos] == '$') &&
+		(input[current_pos + 1] == '$'));
+}
+
+bool Parser::test_var_ref() const {
+	return (input[current_pos] == '$');
+}
+
+bool Parser::test_id(size_t shift) const {
+	return (isalpha(input[current_pos + shift]) ||
+		(input[current_pos + shift] == '_'));
+}
+
+Token Parser::var_ref() {
+	Pos tmp_pos = current_pos;
+	std::string value;
+	value += input[current_pos];
+	current_pos.advance();
+	size_t shift = 0;
+
+	while ((test_id(shift) || isdigit(input[current_pos + shift])) && !test_eof()) {
+		value += input[current_pos + shift];
+		shift++;
+	}
+
+	if (shift == 0) {
+		throw std::runtime_error(std::string(tmp_pos) + ": Error: empty var reference");
+	}
+
+	current_pos.advance(shift);
+
+	return Token(Token::category::var_ref, value, tmp_pos);
+}
+
+std::vector<Token> Parser::tokenize() {
+	std::vector<Token> result;
+
+	std::string string_value;
+	Pos string_start = current_pos;
+	//Well, this could seem a little crooked,
+	//But actually it's just a lesser code for only two tokens:
+	//Regular string and var reference
+	//Basically we just extend strings a little by little
+	//And interrupt when a reference occurs
+	//This would work just fine while we have only two tokens
+	while (!test_eof()) {
+		if (test_var_ref()) {
+			result.push_back(Token(Token::category::regular_string, string_value, string_start));
+			result.push_back(var_ref());
+			string_value = "";
+			string_start = current_pos;
+			continue;
+		}
+
+		if (test_escaped()) {
+			current_pos.advance();
+		}
+
+		string_value += input[current_pos];
+		current_pos.advance();
+	}
+
+	if (string_value.length()) {
+		result.push_back(Token(Token::category::regular_string, string_value, string_start));
+	}
+
+	return result;
+}
+
+
+}
+

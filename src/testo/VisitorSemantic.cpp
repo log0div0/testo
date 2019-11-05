@@ -432,33 +432,6 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock>
 	return config;
 }
 
-std::string VisitorSemantic::resolve_var(const std::string& var) {
-	auto env_value = std::getenv(var.c_str());
-
-	if (env_value == nullptr) {
-		return "";
-	}
-	return env_value;
-}
-
-/*std::string VisitorSemantic::visit_word(std::shared_ptr<AST::Word> word) {
-	std::string result;
-
-	for (auto part: word->parts) {
-		if (part.type() == Token::category::dbl_quoted_string) {
-			result += part.value().substr(1, part.value().length() - 2);
-		} else if (part.type() == Token::category::var_ref) {
-			result += resolve_var(part.value().substr(1, part.value().length() - 1));
-		} else if (part.type() == Token::category::multiline_string) {
-			result += part.value().substr(3, part.value().length() - 6);
-		} else {
-			throw std::runtime_error("Unknown word type");
-		}
-	}
-
-	return result;
-}
-*/
 void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
 	if (ctx_name == "metadata") {
 		if (attr->value->t.type() != Token::category::dbl_quoted_string) {
@@ -501,8 +474,7 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	}
 
 	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::StringAttr>>(attr->value)) {
-		// auto value = visit_word(p->attr_value->value);
-		auto value = p->attr_value->value->text();
+		auto value = template_parser.resolve(p->attr_value->value->text(), reg);
 		config[attr->name.value()] = value;
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
 		auto value = p->attr_value->value;

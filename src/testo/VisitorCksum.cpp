@@ -83,33 +83,31 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 
 std::string VisitorCksum::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
 	std::string result("abort");
-	// result += visit_word(vmc, abort->message);
+	result += template_parser.resolve(abort->message->text(), reg, vmc);
 	return result;
 }
 
 std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print) {
 	std::string result("print");
-	// result += visit_word(vmc, print->message);
+	result += template_parser.resolve(print->message->text(), reg, vmc);
 	return result;
 }
 
 std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	std::string result("type");
-	// result += visit_word(vmc, type->text_word);
+	result += template_parser.resolve(type->text->text(), reg, vmc);
 	return result;
 }
 
 std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	std::string result = "wait";
 	if (wait->text) {
-		// result += visit_word(vmc, wait->text_word);
-		result += wait->text->text();
+		result += template_parser.resolve(wait->text->text(), reg, vmc);
 	}
 
 	result += "(";
 	for (auto param: wait->params) {
-		// auto value = visit_word(vmc, param->right);
-		auto value = param->right->text();
+		auto value = template_parser.resolve(param->right->text(), reg, vmc);
 		result += param->left.value() + "=" + value;
 	}
 	result += ")";
@@ -150,8 +148,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		// fs::path path = visit_word(vmc, plug->path);
-		fs::path path = plug->path->text();
+		fs::path path = template_parser.resolve(plug->path->text(), reg, vmc);
 		if (path.is_relative()) {
 			path = plug->t.pos().file.parent_path() / path;
 		}
@@ -176,7 +173,7 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 	std::string result("exec");
 
 	result += exec->process_token.value();
-	// result += visit_word(vmc, exec->commands);
+	result += template_parser.resolve(exec->commands->text(), reg, vmc);
 
 	if (exec->time_interval) {
 		result += exec->time_interval.value();
@@ -190,8 +187,7 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
 	std::string result(copy->t.value());
 
-	// fs::path from = visit_word(vmc, copy->from);
-	fs::path from = copy->from->text();
+	fs::path from = template_parser.resolve(copy->from->text(), reg, vmc);
 
 	if (from.is_relative()) {
 		from = copy->t.pos().file.parent_path() / from;
@@ -214,8 +210,7 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 		}
 	} //TODO: I wonder what it must be for the from copy
 
-	// fs::path to = visit_word(vmc, copy->to);
-	fs::path to = copy->to->text();
+	fs::path to = template_parser.resolve(copy->to->text(), reg, vmc);
 
 	if (to.is_relative()) {
 		to = copy->t.pos().file.parent_path() / to;
@@ -236,14 +231,13 @@ std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, st
 	StackEntry new_ctx(true);
 
 	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		// auto value = visit_word(vmc, macro_call->params[i]);
-		auto value = macro_call->params[i]->text();
+		auto value = template_parser.resolve(macro_call->params[i]->text(), reg, vmc);
 		new_ctx.define(macro_call->macro->params[i].value(), value);
 	}
 
-	local_vars.push_back(new_ctx);
+	reg.local_vars.push_back(new_ctx);
 	coro::Finally finally([&] {
-		local_vars.pop_back();
+		reg.local_vars.pop_back();
 	});
 
 	return visit_action_block(vmc, macro_call->macro->action_block->action);
@@ -296,7 +290,7 @@ std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vmc, std::s
 	std::string result("factor");
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
 		result += std::to_string(p->is_negated());
-		// result += visit_word(vmc, p->factor);
+		result += template_parser.resolve(p->factor->text(), reg, vmc);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_comparison(vmc, p->factor);
@@ -313,68 +307,21 @@ std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vmc, std::s
 	return result;
 }
 
-std::string VisitorCksum::resolve_var(std::shared_ptr<VmController> vmc, const std::string& var) {
-	//Resolving order
-	//1) metadata
-	//2) reg (todo)
-	//3) env var
-
-	for (auto it = local_vars.rbegin(); it != local_vars.rend(); ++it) {
-		if (it->is_defined(var)) {
-			return it->ref(var);
-		}
-		if (it->is_terminate) {
-			break;
-		}
-	}
-
-	if (vmc->vm->is_defined() && vmc->has_user_key(var)) {
-		return vmc->get_user_metadata(var);
-	}
-
-	auto env_value = std::getenv(var.c_str());
-
-	if (env_value == nullptr) {
-		return "";
-	}
-
-	return env_value;
-}
-
-/*std::string VisitorCksum::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
-	std::string result;
-
-	for (auto part: word->parts) {
-		if (part.type() == Token::category::dbl_quoted_string) {
-			result += part.value().substr(1, part.value().length() - 2);
-		} else if (part.type() == Token::category::var_ref) {
-			result += resolve_var(vmc, part.value().substr(1, part.value().length() - 1));
-		} else if (part.type() == Token::category::multiline_string) {
-			result += part.value().substr(3, part.value().length() - 6);
-		} else {
-			throw std::runtime_error("Unknown word type");
-		}
-	}
-
-	return result;
-}*/
-
 std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
 	std::string result("comparison");
-	// result += visit_word(vmc, comparison->left);
-	// result += visit_word(vmc, comparison->right);
+	result += template_parser.resolve(comparison->left->text(), reg, vmc);
+	result += template_parser.resolve(comparison->right->text(), reg, vmc);
 	result += comparison->op().value();
 	return result;
 }
 
 std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	std::string result = "check";
-	// result += visit_word(vmc, check->text_word);
+	result += template_parser.resolve(check->text->text(), reg, vmc);
 
 	result += "(";
 	for (auto param: check->params) {
-		// auto value = visit_word(vmc, param->right);
-		auto value = param->right->text();
+		auto value = template_parser.resolve(param->right->text(), reg, vmc);
 		result += param->left.value() + "=" + value;
 	}
 	result += ")";

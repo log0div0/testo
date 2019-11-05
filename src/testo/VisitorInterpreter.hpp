@@ -3,7 +3,7 @@
 #include "coro/Timer.h"
 #include "Node.hpp"
 #include "Register.hpp"
-#include "StackEntry.hpp"
+#include "TemplateParser.hpp"
 #include "StinkingPileOfShit.hpp"
 #include <vector>
 #include <list>
@@ -100,22 +100,19 @@ struct VisitorInterpreter {
 	bool visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr);
 	bool visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop);
 	bool visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor);
-	std::string resolve_var(std::shared_ptr<VmController> vmc, const std::string& var);
-	//std::string visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word);
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
 
 	Register& reg;
+	template_literals::Parser template_parser;
 
 private:
 	//settings
 	bool stop_on_fail;
 	std::string cache_miss_policy;
 	std::string test_spec, exclude, invalidate;
-
-	std::vector<StackEntry> local_vars;
 
 	std::string progress() const {
 		std::stringstream ss;

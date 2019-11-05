@@ -3,6 +3,7 @@
 
 #include "Node.hpp"
 #include "Register.hpp"
+#include "TemplateParser.hpp"
 #include "backends/Environment.hpp"
 
 #include <set>
@@ -30,8 +31,6 @@ struct VisitorSemantic {
 	void visit_flash(std::shared_ptr<AST::Controller> flash); //flash drive
 	void visit_network(std::shared_ptr<AST::Controller> network); //flash drive
 	nlohmann::json visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx);
-	std::string resolve_var(const std::string& var);
-	//std::string visit_word(std::shared_ptr<AST::Word> word);
 	void visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx);
 
 	bool is_button(const Token& t) const;
@@ -44,4 +43,5 @@ struct VisitorSemantic {
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 
 	Register& reg;
+	template_literals::Parser template_parser;
 };

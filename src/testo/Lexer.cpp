@@ -559,27 +559,6 @@ Token Lexer::OR() {
 	return Token(Token::category::OR, value, tmp_pos);
 }
 
-/*Token Lexer::var_ref() {
-	Pos tmp_pos = current_pos;
-	std::string value;
-	value += (*input)[current_pos];
-	current_pos.advance();
-	size_t shift = 0;
-
-	while ((test_id(shift) || isdigit((*input)[current_pos + shift])) && !test_eof()) {
-		value += (*input)[current_pos + shift];
-		shift++;
-	}
-
-	if (shift == 0) {
-		throw std::runtime_error(std::string(tmp_pos) + ": Error: empty var reference");
-	}
-
-	current_pos.advance(shift);
-
-	return Token(Token::category::var_ref, value, tmp_pos);
-}*/
-
 Token Lexer::multiline_string() {
 	Pos tmp_pos = current_pos;
 
@@ -729,9 +708,7 @@ Token Lexer::get_next_token() {
 			return number();
 		} else if (test_id()) {
 			return id();
-		}/* else if (test_var_ref()) {
-			return var_ref();
-		}*/ else if (test_multiline_quote()) {
+		} else if (test_multiline_quote()) {
 			return multiline_string();
 		} else if (test_dbl_quote()) {
 			return dbl_quoted_string();

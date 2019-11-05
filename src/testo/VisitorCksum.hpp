@@ -4,6 +4,7 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "StackEntry.hpp"
+#include "TemplateParser.hpp"
 #include "backends/VmController.hpp"
 
 struct VisitorCksum {
@@ -30,12 +31,10 @@ struct VisitorCksum {
 
 	std::string visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr);
 	std::string visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop);
-	std::string visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor);
-	std::string resolve_var(std::shared_ptr<VmController> vmc, const std::string& var);
-	//std::string visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word);
+	std::string visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor);	std::string resolve_var(std::shared_ptr<VmController> vmc, const std::string& var);
 	std::string visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	std::string visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
 	Register& reg;
-	std::vector<StackEntry> local_vars;
+	template_literals::Parser template_parser;
 };
