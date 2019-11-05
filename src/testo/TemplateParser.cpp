@@ -52,7 +52,7 @@ std::string Parser::resolve(const std::string& input, Register& reg, std::shared
 
 	for (auto token: tokens) {
 		if (token.type() == Token::category::var_ref) {
-			result += resolve_var(token.value().substr(1, token.value().length() - 1), reg, vmc);
+			result += resolve_var(token.value().substr(2, token.value().length() - 3), reg, vmc);
 		} else if (token.type() == Token::category::regular_string) {
 			result += token.value();
 		} else {
@@ -87,11 +87,27 @@ Token Parser::var_ref() {
 	std::string value;
 	value += input[current_pos];
 	current_pos.advance();
+
+	if (test_eof()) {
+		throw std::runtime_error(std::string(current_pos) + ": Error: unexpected end of line in var referencing, expected \"{\"");
+	}
+
+	if (input[current_pos] != '{') {
+		throw std::runtime_error(std::string(current_pos) + ": Error: unexpected symbol in var referencing: " + input[current_pos] + " expected \"{\"");
+	}
+
+	value += input[current_pos];
+	current_pos.advance();
+
 	size_t shift = 0;
 
-	while ((test_id(shift) || isdigit(input[current_pos + shift])) && !test_eof()) {
+	while (!test_eof(shift) && (test_id(shift) || isdigit(input[current_pos + shift]))) {
 		value += input[current_pos + shift];
 		shift++;
+	}
+
+	if (test_eof()) {
+		throw std::runtime_error(std::string(current_pos) + ": Error: unexpected end of line in var referencing, expected \"}\"");
 	}
 
 	if (shift == 0) {
@@ -99,6 +115,13 @@ Token Parser::var_ref() {
 	}
 
 	current_pos.advance(shift);
+
+	if (input[current_pos] != '}') {
+		throw std::runtime_error(std::string(current_pos) + ": Error: unexpected symbol in var referencing: " + input[current_pos] + " expected \"}\"");
+	}
+
+	value += input[current_pos];
+	current_pos.advance();
 
 	return Token(Token::category::var_ref, value, tmp_pos);
 }
@@ -116,7 +139,9 @@ std::vector<Token> Parser::tokenize() {
 	//This would work just fine while we have only two tokens
 	while (!test_eof()) {
 		if (test_var_ref()) {
-			result.push_back(Token(Token::category::regular_string, string_value, string_start));
+			if (string_value.length()) {
+				result.push_back(Token(Token::category::regular_string, string_value, string_start));
+			}
 			result.push_back(var_ref());
 			string_value = "";
 			string_start = current_pos;
