@@ -902,74 +902,116 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
-		std::string text = "";
-		if (wait->text) {
-			text = template_parser.resolve(wait->text->text(), reg, vmc);
-		}
-
-		std::cout
-			<< rang::fgB::blue << progress()
-			<< " Waiting "
-			<< rang::fg::yellow;
-
-		if (text.length()) {
-			std::cout << "\"" + text + "\" ";
-		}
-
-		std::string foreground;
-		std::string background;
-
-		for (auto param: wait->params) {
-			if (param->left.value() == "foreground") {
-				foreground = template_parser.resolve(param->right->text(), reg, vmc);
-			} else if (param->left.value() == "background") {
-				background = template_parser.resolve(param->right->text(), reg, vmc);
-			} else {
-				throw std::runtime_error(std::string("Unknown wait parameter: ") + param->left.value());
-			}
-		}
-
-		std::cout
-			<< rang::fgB::blue << "on virtual machine "
-			<< rang::fg::yellow << vmc->name()
-			<< rang::fgB::blue;
-
-		if (wait->time_interval) {
-			std::cout << " for " << wait->time_interval.value();
-		}
-
-		std::cout
-			<< rang::style::reset << std::endl;
-
+		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
 		if (!wait->text) {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Sleeping "
+				<< rang::fgB::blue << "in virtual machine "
+				<< rang::fg::yellow << vmc->name()
+				<< rang::fgB::blue
+				<< " for " << wait_for << rang::style::reset << std::endl;
+
 			return sleep(wait->time_interval.value());
 		}
 
-		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
-
-		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
-
-		while (std::chrono::system_clock::now() < deadline) {
-			auto start = std::chrono::high_resolution_clock::now();
-			auto screenshot = vmc->vm->screenshot();
-			if (shit.stink_even_stronger(screenshot, text, foreground, background)) {
-				return;
-			}
-			auto end = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> time = end - start;
-			//std::cout << "time = " << time.count() << " seconds" << std::endl;
-			if (time < 1s) {
-				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
-			} else {
-				timer.waitFor(std::chrono::milliseconds(1));
-			}
+		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(wait->text)) {
+			return visit_wait_string(vmc, p->selectable, wait_for);
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(wait->text)) {
+			return visit_wait_select_expr(vmc, p->selectable, wait_for);
+		} else {
+			throw std::runtime_error("Unknown selectable type");
 		}
-
-		throw std::runtime_error("Wait timeout");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(wait, vmc));
 	}
 
+}
+
+void VisitorInterpreter::visit_wait_string(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::String> string, const std::string& timeout) {
+	std::string	text = template_parser.resolve(string->text(), reg, vmc);
+
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Waiting string "
+		<< rang::fg::yellow;
+
+	std::cout << "\"" + text + "\" ";
+
+	std::cout << " for " << timeout;
+
+	std::cout
+		<< rang::fgB::blue << "on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::fgB::blue;
+
+
+	std::cout
+		<< rang::style::reset << std::endl;
+
+	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
+
+	while (std::chrono::system_clock::now() < deadline) {
+		auto start = std::chrono::high_resolution_clock::now();
+		auto screenshot = vmc->vm->screenshot();
+		if (shit.stink_even_stronger(screenshot, text, "", "")) {
+			return;
+		}
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> time = end - start;
+		//std::cout << "time = " << time.count() << " seconds" << std::endl;
+		if (time < 1s) {
+			timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+		} else {
+			timer.waitFor(std::chrono::milliseconds(1));
+		}
+	}
+
+	throw std::runtime_error("Wait timeout");
+}
+
+void VisitorInterpreter::visit_wait_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectExpr> select_expr, const std::string& timeout) {
+
+	throw std::runtime_error("To be implemented");
+	std::string	selection = template_parser.resolve(select_expr->text(), reg, vmc);
+
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Waiting select expression "
+		<< rang::fg::yellow;
+
+	std::cout << "`" + selection + "` ";
+
+	std::cout << " for " << timeout;
+
+	std::cout
+		<< rang::fgB::blue << "on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::fgB::blue;
+
+
+	std::cout
+		<< rang::style::reset << std::endl;
+
+	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
+
+	while (std::chrono::system_clock::now() < deadline) {
+		auto start = std::chrono::high_resolution_clock::now();
+		auto screenshot = vmc->vm->screenshot();
+		if (shit.stink_even_stronger(screenshot, selection, "", "")) {
+			return;
+		}
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> time = end - start;
+		//std::cout << "time = " << time.count() << " seconds" << std::endl;
+		if (time < 1s) {
+			timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+		} else {
+			timer.waitFor(std::chrono::milliseconds(1));
+		}
+	}
+
+	throw std::runtime_error("Wait timeout");
 }
 
 void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
@@ -1519,34 +1561,47 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
-		auto text = template_parser.resolve(check->text->text(), reg, vmc);
-
-		std::string foreground;
-		std::string background;
-
-		for (auto param: check->params) {
-			if (param->left.value() == "foreground") {
-				foreground = template_parser.resolve(param->right->text(), reg, vmc);
-			} else if (param->left.value() == "background") {
-				background = template_parser.resolve(param->right->text(), reg, vmc);
-			} else {
-				throw std::runtime_error(std::string("Unknown check parameter: ") + param->left.value());
-			}
+		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(check->text)) {
+			return visit_check_string(vmc, p->selectable);
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(check->text)) {
+			return visit_check_select_expr(vmc, p->selectable);
+		} else {
+			throw std::runtime_error("Unknown selectable type");
 		}
-
-		std::cout
-			<< rang::fgB::blue << progress()
-			<< " Checking "
-			<< rang::fg::yellow << "\"" << text << "\""
-			<< rang::fgB::blue << " on virtual machine "
-			<< rang::fg::yellow << vmc->name()
-			<< rang::style::reset << std::endl;
-
-		auto screenshot = vmc->vm->screenshot();
-		return shit.stink_even_stronger(screenshot, text, foreground, background);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}
+}
+
+bool VisitorInterpreter::visit_check_string(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::String> string) {
+	auto text = template_parser.resolve(string->text(), reg, vmc);
+
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Checking string "
+		<< rang::fg::yellow << "\"" << text << "\""
+		<< rang::fgB::blue << " on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
+
+	auto screenshot = vmc->vm->screenshot();
+	return shit.stink_even_stronger(screenshot, text, "", "");
+}
+
+bool VisitorInterpreter::visit_check_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectExpr> select_expr) {
+	throw std::runtime_error("Implement me");
+	auto text = template_parser.resolve(select_expr->text(), reg, vmc);
+
+	std::cout
+		<< rang::fgB::blue << progress()
+		<< " Checking select expression "
+		<< rang::fg::yellow << "`" << text << "`"
+		<< rang::fgB::blue << " on virtual machine "
+		<< rang::fg::yellow << vmc->name()
+		<< rang::style::reset << std::endl;
+
+	auto screenshot = vmc->vm->screenshot();
+	return shit.stink_even_stronger(screenshot, text, "", "");
 }
 
 std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) const {

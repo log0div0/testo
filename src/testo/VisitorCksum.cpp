@@ -102,6 +102,7 @@ std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::sha
 std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	std::string result = "wait";
 	if (wait->text) {
+		//For now this will do
 		result += template_parser.resolve(wait->text->text(), reg, vmc);
 	}
 

@@ -327,7 +327,7 @@ struct Wait: public Node {
 	}
 
 	std::shared_ptr<ISelectable> text;
-	std::vector<std::shared_ptr<Assignment>> params;
+	std::vector<std::shared_ptr<Assignment>> params; //TODO: Remove
 	Token timeout;
 	Token time_interval;
 };
