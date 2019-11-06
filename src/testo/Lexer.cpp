@@ -578,17 +578,17 @@ Token Lexer::multiline_string() {
 			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing triple quote");
 		}
 
-		if (test_escaped_character()) {
-			value += escaped_character();
-			continue;
-		}
-
 		value += (*input)[current_pos];
 		current_pos.advance();
 	} while (!test_multiline_quote());
 
-	value += (*input)[current_pos];
-	current_pos.advance(); //advance over closing quote
+	//Check if we have another quotes over the end. Like """"
+
+	while(test_multiline_quote()) {
+		value += (*input)[current_pos];
+		current_pos.advance(); //advance over closing quote
+	}
+
 	value += (*input)[current_pos];
 	current_pos.advance();
 	value += (*input)[current_pos];
