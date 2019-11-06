@@ -63,6 +63,7 @@ private:
 			(c == '\t'));
 	}
 	bool test_dbl_quote() const { return ((*input)[current_pos] == '\"'); }
+	bool test_grave_quote() const { return ((*input)[current_pos] == '`'); }
 	bool test_multiline_quote() const {
 		if (test_eof(1)) {
 			return false;
@@ -147,6 +148,7 @@ private:
 	Token break_();
 	Token continue_();
 	Token dbl_quoted_string();
+	Token grave_quoted_string();
 	Token multiline_string();
 	Token assign();
 	Token comma();

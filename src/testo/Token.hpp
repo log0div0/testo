@@ -46,6 +46,7 @@ struct Token {
 		size,
 		dbl_quoted_string,
 		multiline_string,
+		grave_quoted_string, //`
 		assign,
 		comma,
 		plus,

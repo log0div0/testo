@@ -112,6 +112,11 @@ bool Parser::test_string() const {
 		(LA(1) == Token::category::multiline_string));
 }
 
+bool Parser::test_selectable() const {
+	return (test_string() ||
+		(LA(1) == Token::category::grave_quoted_string));
+}
+
 bool Parser::test_binary() const {
 	return ((LA(1) == Token::category::true_) ||
 		(LA(1) == Token::category::false_));
@@ -565,12 +570,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	Token wait_token = LT(1);
 	match(Token::category::wait);
 
-	std::shared_ptr<String> value(nullptr);
+	std::shared_ptr<ISelectable> value(nullptr);
 	Token timeout = Token();
 	Token time_interval = Token();
 
-	if (test_string()) {
-		value = string();
+	if (test_selectable()) {
+		value = selectable();
 	}
 
 	std::vector<std::shared_ptr<Assignment>> params;
@@ -893,6 +898,36 @@ std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
 	return std::shared_ptr<Action<CycleControl>>(new Action<CycleControl>(action));
 }
 
+std::shared_ptr<ISelectable> Parser::selectable() {
+	std::shared_ptr<ISelectable> selectable;
+	if (test_string()) {
+		selectable = std::shared_ptr<Selectable<String>>(new Selectable<String>(string()));
+	} else if (LA(1) == Token::category::grave_quoted_string) {
+		selectable = selectable_expr();
+	} else {
+		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown selective object type: " + LT(1).value());
+	}
+
+	return selectable;
+}
+
+std::shared_ptr<Selectable<SelectExpr>> Parser::selectable_expr() {
+	Token str = LT(1);
+
+	match(Token::category::grave_quoted_string);
+
+	auto selectable = std::shared_ptr<SelectExpr>(new SelectExpr(str));
+
+	try {
+		template_literals::Parser templ_parser;
+		templ_parser.check_sanity(selectable->text());
+	} catch (const std::runtime_error& error) {
+		std::throw_with_nested(std::runtime_error(std::string(selectable->begin()) + ": Error parsing string: `" + selectable->text() + "`"));
+	}
+
+	return std::shared_ptr<Selectable<SelectExpr>>(new Selectable<SelectExpr>(selectable));
+}
+
 std::shared_ptr<String> Parser::string() {
 	Token str = LT(1);
 	if (!test_string()) {
@@ -960,9 +995,9 @@ std::shared_ptr<Check> Parser::check() {
 	Token check_token = LT(1);
 	match(Token::category::check);
 
-	std::shared_ptr<String> value(nullptr);
+	std::shared_ptr<ISelectable> value(nullptr);
 
-	value = string();
+	value = selectable();
 
 	std::vector<std::shared_ptr<Assignment>> params;
 

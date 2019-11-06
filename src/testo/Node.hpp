@@ -46,6 +46,61 @@ struct String: public Node {
 	}
 };
 
+//basic unit of expressions - could be double quoted string or a var_ref (variable)
+struct SelectExpr: public Node {
+	SelectExpr(const Token& string):
+		Node(string) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	std::string text() const {
+		return t.value().substr(1, t.value().length() - 2);
+	}
+};
+
+//String or SelectExpr. Used only in
+//Wait, Check and Click (in future)
+struct ISelectable: public Node {
+	using Node::Node;
+
+	virtual std::string text() const = 0;
+};
+
+template <typename SelectableType>
+struct Selectable: public ISelectable {
+	Selectable(std::shared_ptr<SelectableType> selectable):
+		ISelectable(selectable->t),
+		selectable(selectable) {}
+
+	Pos begin() const {
+		return selectable->begin();
+	}
+
+	Pos end() const {
+		return selectable->end();
+	}
+
+	operator std::string() const {
+		return text();
+	}
+
+	std::string text() const {
+		return selectable->text();
+	}
+
+	std::shared_ptr<SelectableType> selectable;
+};
+
 struct KeySpec: public Node {
 	KeySpec(const std::vector<Token>& buttons, const Token& times):
 		Node(Token(Token::category::key_spec, "key_spec", Pos())),
@@ -242,7 +297,7 @@ struct Assignment: public Node {
 };
 
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<String> text,
+	Wait(const Token& wait, std::shared_ptr<ISelectable> text,
 	const std::vector<std::shared_ptr<Assignment>>& params, const Token& timeout, const Token& time_interval):
 		Node(wait), text(text), params(params), timeout(timeout), time_interval(time_interval) {}
 
@@ -271,7 +326,7 @@ struct Wait: public Node {
 		return result;
 	}
 
-	std::shared_ptr<String> text;
+	std::shared_ptr<ISelectable> text;
 	std::vector<std::shared_ptr<Assignment>> params;
 	Token timeout;
 	Token time_interval;
@@ -963,7 +1018,7 @@ struct Comparison: public Node {
 };
 
 struct Check: public Node {
-	Check(const Token& check, std::shared_ptr<String> text,
+	Check(const Token& check, std::shared_ptr<ISelectable> text,
 	const std::vector<std::shared_ptr<Assignment>>& params):
 		Node(check), text(text), params(params) {}
 
@@ -989,7 +1044,7 @@ struct Check: public Node {
 		return result;
 	}
 
-	std::shared_ptr<String> text;
+	std::shared_ptr<ISelectable> text;
 	std::vector<std::shared_ptr<Assignment>> params;
 };
 
