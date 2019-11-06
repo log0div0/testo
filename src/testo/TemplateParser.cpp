@@ -64,6 +64,13 @@ std::string Parser::resolve(const std::string& input, Register& reg, std::shared
 	return result;
 }
 
+void Parser::check_sanity(const std::string& input) {
+	this->input = input;
+	current_pos = Pos(input);
+
+	auto tokens = tokenize();
+}
+
 bool Parser::test_escaped() const {
 	if (test_eof(1)) {
 		return false;
@@ -74,7 +81,10 @@ bool Parser::test_escaped() const {
 }
 
 bool Parser::test_var_ref() const {
-	return (input[current_pos] == '$');
+	if (test_eof(1)) {
+		return false;
+	}
+	return (input[current_pos] == '$' && input[current_pos + 1] == '{');
 }
 
 bool Parser::test_id(size_t shift) const {
@@ -106,6 +116,8 @@ Token Parser::var_ref() {
 		shift++;
 	}
 
+	current_pos.advance(shift);
+
 	if (test_eof()) {
 		throw std::runtime_error(std::string(current_pos) + ": Error: unexpected end of line in var referencing, expected \"}\"");
 	}
@@ -114,7 +126,6 @@ Token Parser::var_ref() {
 		throw std::runtime_error(std::string(tmp_pos) + ": Error: empty var reference");
 	}
 
-	current_pos.advance(shift);
 
 	if (input[current_pos] != '}') {
 		throw std::runtime_error(std::string(current_pos) + ": Error: unexpected symbol in var referencing: " + input[current_pos] + " expected \"}\"");

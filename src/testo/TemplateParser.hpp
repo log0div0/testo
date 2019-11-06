@@ -87,6 +87,8 @@ struct Parser {
 	Parser() = default;
 
 	std::string resolve(const std::string& input, Register& reg, std::shared_ptr<VmController> vmc = nullptr);
+	void check_sanity(const std::string& input);
+
 
 private:
 	std::string input;

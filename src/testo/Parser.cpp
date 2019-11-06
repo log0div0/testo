@@ -1,6 +1,7 @@
 
 #include "Parser.hpp"
 #include "Utils.hpp"
+#include "TemplateParser.hpp"
 #include <fstream>
 
 using namespace AST;
@@ -382,7 +383,7 @@ std::shared_ptr<AttrBlock> Parser::attr_block() {
 	return std::shared_ptr<AttrBlock>(new AttrBlock(lbrace, rbrace, attrs));
 }
 
-std::shared_ptr<Stmt<Controller>> Parser::controller() {
+std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 	Token controller = LT(1);
 
 	match ({Token::category::machine, Token::category::flash, Token::category::network});
@@ -395,8 +396,8 @@ std::shared_ptr<Stmt<Controller>> Parser::controller() {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: expected attribute block");
 	}
 	auto block = attr_block();
-	auto stmt = std::shared_ptr<Controller>(new Controller(controller, name, block));
-	return std::shared_ptr<Stmt<Controller>>(new Stmt<Controller>(stmt));
+	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
+	return std::shared_ptr<AST::Stmt<AST::Controller>>(new AST::Stmt<AST::Controller>(stmt));
 }
 
 std::shared_ptr<Cmd> Parser::command() {
@@ -900,7 +901,16 @@ std::shared_ptr<String> Parser::string() {
 
 	match({Token::category::dbl_quoted_string, Token::category::multiline_string});
 
-	return std::shared_ptr<String>(new String(str));
+	auto new_node = std::shared_ptr<String>(new String(str));
+
+	try {
+		template_literals::Parser templ_parser;
+		templ_parser.check_sanity(new_node->text());
+	} catch (const std::runtime_error& error) {
+		std::throw_with_nested(std::runtime_error(std::string(new_node->begin()) + ": Error parsing string: \"" + new_node->text() + "\""));
+	}
+
+	return new_node;
 }
 
 std::shared_ptr<IFactor> Parser::factor() {
