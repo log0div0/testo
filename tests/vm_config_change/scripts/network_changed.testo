@@ -1,6 +1,6 @@
 
 network nat {
-	mode: "nat"
+	mode: "internal"
 }
 
 network net1 {

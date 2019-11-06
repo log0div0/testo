@@ -1,6 +1,6 @@
 
 #pragma once
-
+#include "coro/Timer.h"
 #include "Node.hpp"
 #include "Register.hpp"
 #include "StackEntry.hpp"
@@ -30,7 +30,7 @@ struct VisitorInterpreter {
 			msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node) + " ";
 			if (vmc) {
 				msg += "on virtual machine ";
-				msg += vmc->vm->name();
+				msg += vmc->name();
 			}
 		}
 	private:
@@ -80,6 +80,7 @@ struct VisitorInterpreter {
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
+	void visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event);
 	void visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
 	void visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
@@ -165,6 +166,8 @@ private:
 
 	float current_progress = 0;
 	float progress_step = 0;
+
+	coro::Timer timer;
 
 	std::chrono::system_clock::time_point start_timestamp;
 

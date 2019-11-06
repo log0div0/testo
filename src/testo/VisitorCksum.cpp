@@ -50,6 +50,8 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 		return visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MouseEvent>>(action)) {
+		return visit_mouse_event(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
@@ -124,6 +126,12 @@ std::string VisitorCksum::visit_press(std::shared_ptr<AST::Press> press) {
 	for (auto key_spec: press->keys) {
 		result += visit_key_spec(key_spec);
 	}
+	return result;
+}
+
+std::string VisitorCksum::visit_mouse_event(std::shared_ptr<AST::MouseEvent> mouse_event) {
+	std::string result("mouse_event");
+	result += *mouse_event;
 	return result;
 }
 

@@ -62,9 +62,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Type>> type();
 	std::shared_ptr<AST::Action<AST::Wait>> wait();
 	std::shared_ptr<AST::Action<AST::Press>> press();
-	std::shared_ptr<AST::IAction> mouse();
-	std::shared_ptr<AST::Action<AST::MouseMove>> mouse_move(const Token& mouse);
-	std::shared_ptr<AST::Action<AST::MouseClick>> mouse_click(const Token& mouse);
+	std::shared_ptr<AST::Action<AST::MouseEvent>> mouse_event();
 	std::shared_ptr<AST::Action<AST::Plug>> plug();
 	std::shared_ptr<AST::Action<AST::Start>> start();
 	std::shared_ptr<AST::Action<AST::Stop>> stop();

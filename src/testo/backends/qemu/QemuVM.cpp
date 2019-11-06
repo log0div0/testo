@@ -181,8 +181,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		{"SCROLLUP", 177},
 		{"SCROLLDOWN", 178},
 	});
-
-	prepare_networks();
 }
 
 QemuVM::~QemuVM() {
@@ -194,7 +192,7 @@ QemuVM::~QemuVM() {
 void QemuVM::install() {
 	try {
 		if (is_defined()) {
-			auto domain = qemu_connect.domain_lookup_by_name(name());
+			auto domain = qemu_connect.domain_lookup_by_name(id());
 			if (domain.state() != VIR_DOMAIN_SHUTOFF) {
 				stop();
 			}
@@ -213,7 +211,7 @@ void QemuVM::install() {
 		create_disk();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		fs::path volume_path = pool.path() / (name() + ".img");
+		fs::path volume_path = pool.path() / (id() + ".img");
 
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
@@ -246,6 +244,9 @@ void QemuVM::install() {
 				<on_crash>destroy</on_crash>
 				<pm>
 				</pm>
+				<metadata>
+					<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
+				</metadata>
 				<devices>
 					<emulator>/usr/bin/kvm-spice</emulator>
 					<disk type='file' device='disk'>
@@ -297,7 +298,7 @@ void QemuVM::install() {
 					<sound model='ich6'>
 					</sound>
 					<video>
-						<model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
+						<model type='vmvga' heads='1' primary='yes'/>
 					</video>
 					<redirdev bus='usb' type='spicevmc'>
 					</redirdev>
@@ -305,22 +306,17 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", name(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
 
 		uint32_t nic_count = 0;
 
 		if (config.count("nic")) {
 			auto nics = config.at("nic");
 			for (auto& nic: nics) {
-				std::string source_network("testo-");
+				//Complete redo
+				std::string source_network = config.at("prefix").get<std::string>();
 
-				if (nic.at("attached_to").get<std::string>() == "internal") {
-					source_network += nic.at("network").get<std::string>();
-				}
-
-				if (nic.at("attached_to").get<std::string>() == "nat") {
-					source_network += "nat";
-				}
+				source_network += nic.at("attached_to").get<std::string>();
 
 				string_config += fmt::format(R"(
 					<interface type='network'>
@@ -358,7 +354,7 @@ void QemuVM::install() {
 
 void QemuVM::make_snapshot(const std::string& snapshot) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 
 		pugi::xml_document xml_config;
 		xml_config.load_string(fmt::format(R"(
@@ -374,20 +370,9 @@ void QemuVM::make_snapshot(const std::string& snapshot) {
 
 }
 
-std::set<std::string> QemuVM::nics() const {
-	std::set<std::string> result;
-
-	if (config.count("nic")) {
-		for (auto& nic: config.at("nic")) {
-			result.insert(nic.at("name").get<std::string>());
-		}
-	}
-	return result;
-}
-
 void QemuVM::rollback(const std::string& snapshot) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
 
 		//Now let's take care of possible dvd discontingency
@@ -450,17 +435,52 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 			std::transform(button.begin(), button.end(), button.begin(), toupper);
 			keycodes.push_back(scancodes[button]);
 		}
-		qemu_connect.domain_lookup_by_name(name()).send_keys(VIR_KEYCODE_SET_LINUX, 0, keycodes);
+		qemu_connect.domain_lookup_by_name(id()).send_keys(VIR_KEYCODE_SET_LINUX, 0, keycodes);
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
 	}
 }
 
+void QemuVM::mouse_move(const std::string& x, const std::string& y) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		if (isdigit(x[0]) || isdigit(y[0])) {
+			std::throw_with_nested(std::runtime_error("absolute mouse movement is not implemented"));
+		}
+
+		int dx = 0, dy = 0;
+
+		//ONLY FOR NOW!
+		dx = std::stoi(x);
+		dy = std::stoi(y);
+
+		std::string command = "mouse_move ";
+		command += x + " " + y;
+
+		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse move error"));
+	}
+}
+
+void QemuVM::mouse_set_buttons(uint32_t button_mask) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+		std::string command = "mouse_button " + std::to_string(button_mask);
+		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse set buttons error"));
+	}
+}
+
 bool QemuVM::is_nic_plugged(const std::string& nic) const {
 	try {
 		auto nic_name = std::string("ua-nic-") + nic;
-		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
+		auto config = qemu_connect.domain_lookup_by_name(id()).dump_xml();
 		auto devices = config.first_child().child("devices");
 
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
@@ -503,7 +523,7 @@ bool QemuVM::is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic) {
 
 void QemuVM::attach_nic(const std::string& nic) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 
 		std::string string_config;
 
@@ -563,7 +583,7 @@ void QemuVM::attach_nic(const std::string& nic) {
 void QemuVM::detach_nic(const std::string& nic) {
 	try {
 		auto nic_name = std::string("ua-nic-") + nic;
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
 
@@ -644,7 +664,7 @@ bool QemuVM::is_link_plugged(vir::Snapshot& snapshot, const std::string& nic) {
 
 bool QemuVM::is_link_plugged(const std::string& nic) const {
 	try {
-		auto config = qemu_connect.domain_lookup_by_name(name()).dump_xml();
+		auto config = qemu_connect.domain_lookup_by_name(id()).dump_xml();
 		return is_link_plugged(config.first_child().child("devices"), nic);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Checking link status on nic {}", nic)));
@@ -654,7 +674,7 @@ bool QemuVM::is_link_plugged(const std::string& nic) const {
 void QemuVM::set_link(const std::string& nic, bool is_connected) {
 	try {
 		std::string nic_name = std::string("ua-nic-") + nic;
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
@@ -695,7 +715,7 @@ void QemuVM::set_link(const std::string& nic, bool is_connected) {
 
 std::string QemuVM::get_flash_img() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
 
@@ -727,7 +747,7 @@ bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 
 void QemuVM::attach_flash_drive(const std::string& img_path) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 
 		std::string string_config = fmt::format(R"(
 			<disk type='file'>
@@ -765,7 +785,7 @@ void QemuVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 
 void QemuVM::detach_flash_drive() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
 
@@ -803,7 +823,7 @@ void QemuVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 
 bool QemuVM::is_dvd_plugged() const {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 		return !bool(cdrom.child("source").empty());
@@ -814,7 +834,7 @@ bool QemuVM::is_dvd_plugged() const {
 
 std::string QemuVM::get_dvd_path() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 		if (cdrom.child("source").empty()) {
@@ -851,7 +871,7 @@ void QemuVM::plug_dvd(fs::path path) {
 			throw std::runtime_error(std::string("specified iso is not a regular file: ")
 				+ path.generic_string());
 		}
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
@@ -888,7 +908,7 @@ void QemuVM::plug_dvd(fs::path path) {
 
 void QemuVM::unplug_dvd() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
@@ -913,7 +933,7 @@ void QemuVM::unplug_dvd() {
 
 void QemuVM::start() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		domain.start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Starting vm"));
@@ -922,7 +942,7 @@ void QemuVM::start() {
 
 void QemuVM::stop() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		domain.stop();
 	}
 	catch (const std::exception& error) {
@@ -932,7 +952,7 @@ void QemuVM::stop() {
 
 void QemuVM::power_button() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		domain.shutdown();
 	}
 	catch (const std::exception& error) {
@@ -942,7 +962,7 @@ void QemuVM::power_button() {
 
 void QemuVM::suspend() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		domain.suspend();
 	}
 	catch (const std::exception& error) {
@@ -952,7 +972,7 @@ void QemuVM::suspend() {
 
 void QemuVM::resume() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		domain.resume();
 	}
 	catch (const std::exception& error) {
@@ -961,7 +981,7 @@ void QemuVM::resume() {
 }
 
 stb::Image QemuVM::screenshot() {
-	auto domain = qemu_connect.domain_lookup_by_name(name());
+	auto domain = qemu_connect.domain_lookup_by_name(id());
 	auto stream = qemu_connect.new_stream();
 	auto mime = domain.screenshot(stream);
 
@@ -979,7 +999,7 @@ stb::Image QemuVM::screenshot() {
 
 int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 
 		std::string command = exe.generic_string();
@@ -996,7 +1016,7 @@ int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t tim
 
 bool QemuVM::has_snapshot(const std::string& snapshot) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto snapshots = domain.snapshots();
 		for (auto& snap: snapshots) {
 			if (snap.name() == snapshot) {
@@ -1011,7 +1031,7 @@ bool QemuVM::has_snapshot(const std::string& snapshot) {
 
 void QemuVM::delete_snapshot(const std::string& snapshot) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
 		vir_snapshot.destroy();
 	} catch (const std::exception& error) {
@@ -1022,7 +1042,7 @@ void QemuVM::delete_snapshot(const std::string& snapshot) {
 bool QemuVM::is_defined() const {
 	auto domains = qemu_connect.domains({VIR_CONNECT_LIST_DOMAINS_PERSISTENT});
 	for (auto& domain: domains) {
-		if (domain.name() == name()) {
+		if (domain.name() == id()) {
 			return true;
 		}
 	}
@@ -1031,7 +1051,7 @@ bool QemuVM::is_defined() const {
 
 VmState QemuVM::state() const {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto state = domain.state();
 		if (state == VIR_DOMAIN_SHUTOFF) {
 			return VmState::Stopped;
@@ -1050,7 +1070,7 @@ VmState QemuVM::state() const {
 
 bool QemuVM::is_additions_installed() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 		return helper.is_avaliable();
 	} catch (const std::exception& error) {
@@ -1070,7 +1090,7 @@ void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 			throw std::runtime_error("Destination path on vm must be absolute");
 		}
 
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 
 		helper.copy_to_guest(src, dst, timeout_milliseconds);
@@ -1085,7 +1105,7 @@ void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t 
 			throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
 		}
 
-		auto domain = qemu_connect.domain_lookup_by_name(name());
+		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 
 		helper.copy_from_guest(src, dst, timeout_milliseconds);
@@ -1098,72 +1118,11 @@ void QemuVM::remove_from_guest(const fs::path& obj) {
 	//TODO!!
 }
 
-void QemuVM::prepare_networks() {
-	try {
-		if (config.count("nic")) {
-			auto nics = config.at("nic");
-			for (auto& nic: nics) {
-				std::string network_to_lookup;
-				if (nic.at("attached_to").get<std::string>() == "nat") {
-					network_to_lookup = "testo-nat";
-				}
-
-				if (nic.at("attached_to").get<std::string>() == "internal") {
-					network_to_lookup = std::string("testo-") + nic.at("network").get<std::string>();
-				}
-
-				bool found = false;
-				for (auto& network: qemu_connect.networks()) {
-					if (network.name() == network_to_lookup) {
-						if (!network.is_active()) {
-							network.start();
-						}
-						found = true;
-						break;
-					}
-				}
-
-				if (!found) {
-					std::string string_config = fmt::format(R"(
-						<network>
-							<name>{}</name>
-							<bridge name="{}"/>
-					)", network_to_lookup, network_to_lookup);
-
-					if (network_to_lookup == "testo-nat") {
-						string_config += fmt::format(R"(
-							<forward mode='nat'>
-								<nat>
-									<port start='1024' end='65535'/>
-								</nat>
-							</forward>
-							<ip address='192.168.156.1' netmask='255.255.255.0'>
-								<dhcp>
-									<range start='192.168.156.2' end='192.168.156.254'/>
-								</dhcp>
-							</ip>
-						)");
-					}
-
-					string_config += "\n</network>";
-					pugi::xml_document xml_config;
-					xml_config.load_string(string_config.c_str());
-					auto network = qemu_connect.network_define_xml(xml_config);
-					network.start();
-				}
-			}
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Preparing netowkrs"));
-	}
-
-}
-
 void QemuVM::remove_disk() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 
-		auto vol_name = name() + ".img";
+		auto vol_name = id() + ".img";
 
 		for (auto& vol: pool.volumes()) {
 			if (vol.name() == vol_name) {
@@ -1200,7 +1159,7 @@ void QemuVM::create_disk() {
 					</features>
 				</target>
 			</volume>
-		)", name(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), name()).c_str());
+		)", id(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), id()).c_str());
 
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 	} catch (const std::exception& error) {

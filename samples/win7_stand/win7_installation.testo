@@ -1,0 +1,23 @@
+machine testo_win7 {
+	cpus: 1
+	ram: 2Gb
+	iso: $ISO_DIR + "/win7.iso"
+	disk_size: 10Gb
+	nic nat: {
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+}
+
+test win7_installation {
+	testo_win7 {
+		start
+		wait timeout 2s
+		press Down, Enter
+		wait timeout 35s
+		mouse click
+		wait timeout 3s
+		mouse click +160 +125
+		abort "stop here"
+	}
+}

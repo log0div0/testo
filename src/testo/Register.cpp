@@ -35,9 +35,24 @@ std::set<std::shared_ptr<VmController>> Register::get_all_vmcs(std::shared_ptr<A
 		for (auto vm_token: command->vms) {
 			auto vmc = vmcs.find(vm_token.value());
 			if (vmc == vmcs.end()) {
-				throw std::runtime_error(""); //should never happen
+				throw std::runtime_error("get_all_vmcs"); //should never happen
 			}
 			result.insert(vmc->second);
+		}
+	}
+
+	return result;
+}
+
+std::set<std::shared_ptr<NetworkController>> Register::get_all_netcs(std::shared_ptr<AST::Test> test) const {
+	std::set<std::shared_ptr<NetworkController>> result;
+	for (auto vmc: get_all_vmcs(test)) {
+		for (std::string network_name: vmc->vm->networks()) {
+			auto netc = netcs.find(network_name);
+			if (netc == netcs.end()) {
+				throw std::runtime_error("get_all_netcs"); //should never happen
+			}
+			result.insert(netc->second);
 		}
 	}
 

@@ -47,7 +47,7 @@ bool Lexer::test_size_specifier() const {
 		((*input)[current_pos] == 'G'))
 	{
 		if ((*input)[current_pos + 1] == 'b') {
-			if (test_eof(2) || (!test_id(2) && !test_number(2))) {
+			if (test_eof(2) || (!test_id(2) && !test_digit(2))) {
 				return true;
 			}
 		}
@@ -60,7 +60,7 @@ bool Lexer::test_time_specifier() const {
 	if ((*input)[current_pos] == 's' ||
 		(*input)[current_pos] == 'h')
 	{
-		if (test_eof(1) || (!test_id(1) && !test_number(1))) {
+		if (test_eof(1) || (!test_id(1) && !test_digit(1))) {
 			return true;
 		}
 	}
@@ -70,11 +70,11 @@ bool Lexer::test_time_specifier() const {
 			return true;
 		}
 		if ((*input)[current_pos + 1] == 's') {
-			if (test_eof(2) || (!test_id(2) && !test_number(2))) {
+			if (test_eof(2) || (!test_id(2) && !test_digit(2))) {
 				return true;
 			}
 		} else {
-			if (test_eof(1) || (!test_id(1) && !test_number(1))) {
+			if (test_eof(1) || (!test_id(1) && !test_digit(1))) {
 				return true;
 			}
 		}
@@ -109,7 +109,15 @@ Token Lexer::number() {
 	Pos tmp_pos = current_pos;
 	std::string value;
 
-	while (test_number() && !test_eof()) {
+	bool is_signed = false;
+
+	if (test_plus() || test_minus()) {
+		is_signed = true;
+		value += (*input)[current_pos];
+		current_pos.advance();
+	}
+
+	while (test_digit() && !test_eof()) {
 		value += (*input)[current_pos];
 		current_pos.advance();
 	}
@@ -119,8 +127,14 @@ Token Lexer::number() {
 	}
 
 	if (test_size_specifier()) {
+		if (is_signed) {
+			throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: size specifier can't be signed");
+		}
 		return size(value, current_pos);
 	} else if (test_time_specifier()) {
+		if (is_signed) {
+			throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: time specifier can't be signed");
+		}
 		return time_interval(value, current_pos);
 	} else if (test_id()) {
 		throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: ID can't start with a number");
@@ -172,6 +186,14 @@ Token Lexer::id() {
 		return check();
 	} else if (value == "press") {
 		return press();
+	} else if (value == "mouse") {
+		return mouse();
+	} else if (value == "move") {
+		return move();
+	} else if (value == "click") {
+		return click();
+	} else if (value == "rclick") {
+		return rclick();
 	} else if (value == "plug") {
 		return plug();
 	} else if (value == "unplug") {
@@ -198,6 +220,8 @@ Token Lexer::id() {
 		return machine();
 	} else if (value == "flash") {
 		return flash();
+	} else if (value == "network") {
+		return network();
 	} else if (value == "macro") {
 		return macro();
 	} else if (value == "dvd") {
@@ -401,6 +425,13 @@ Token Lexer::flash() {
 	std::string value("flash");
 	current_pos.advance(value.length());
 	return Token(Token::category::flash, value, tmp_pos);
+}
+
+Token Lexer::network() {
+	Pos tmp_pos = current_pos;
+	std::string value("network");
+	current_pos.advance(value.length());
+	return Token(Token::category::network, value, tmp_pos);
 }
 
 Token Lexer::macro() {

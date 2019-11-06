@@ -42,7 +42,7 @@ bool QemuGuestAdditions::is_avaliable() {
 		auto response = recv();
 		return response.at("success").get<bool>();
 
-	} catch (...) {
+	} catch (const std::exception&) {
 		return false;
 	}
 }
@@ -154,10 +154,6 @@ void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path&
 				}
 			}}
 	};
-
-	if (std::chrono::system_clock::now() > (deadline - std::chrono::milliseconds(100))) {
-		throw std::runtime_error("Timeout expired");
-	}
 
 	coro::Timeout timeout(deadline - std::chrono::system_clock::now());
 

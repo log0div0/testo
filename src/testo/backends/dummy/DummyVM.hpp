@@ -11,6 +11,8 @@ struct DummyVM: VM {
 	void make_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
+	void mouse_move(const std::string& x, const std::string& y) override;
+	void mouse_set_buttons(uint32_t button_mask) override;
 	bool is_nic_plugged(const std::string& nic) const override;
 	void set_nic(const std::string& nic, bool is_enabled) override;
 	bool is_link_plugged(const std::string& nic) const override;
@@ -39,12 +41,10 @@ struct DummyVM: VM {
 	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) override;
 	void remove_from_guest(const fs::path& obj) override;
 
-	std::set<std::string> nics() const override;
-
 private:
 	fs::path metadata_file() const {
 		fs::path result = "./dummy_hypervisor_files";
-		result = result / name();
+		result = result / id();
 		return result;
 	};
 };

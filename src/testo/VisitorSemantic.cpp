@@ -109,7 +109,6 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	attr_ctx vm_network_ctx;
 	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
 	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::word)});
-	vm_network_ctx.insert({"network", std::make_pair(false, Token::category::word)});
 	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::word)});
 	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::word)});
 
@@ -121,6 +120,13 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
 
 	attr_ctxs.insert({"fd_global", fd_global_ctx});
+
+	attr_ctx network_global_ctx;
+	network_global_ctx.insert({"mode", std::make_pair(false, Token::category::word)});
+	network_global_ctx.insert({"persistent", std::make_pair(false, Token::category::binary)});
+	network_global_ctx.insert({"autostart", std::make_pair(false, Token::category::binary)});
+
+	attr_ctxs.insert({"network_global", network_global_ctx});
 
 	attr_ctx test_global_ctx;
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
@@ -302,6 +308,13 @@ void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
 }
 
 void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
+	if (key_spec->times.value().length()) {
+		if (std::stoi(key_spec->times.value()) < 1) {
+			throw std::runtime_error(std::string(key_spec->times.pos()) +
+					" :Error: Can't press a buttin less than 1 time: " + key_spec->times.value());
+		}
+	}
+
 	for (auto button: key_spec->buttons) {
 		if (!is_button(button)) {
 			throw std::runtime_error(std::string(button.pos()) +
@@ -348,6 +361,8 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 		return visit_machine(controller);
 	} else if (controller->t.type() == Token::category::flash) {
 		return visit_flash(controller);
+	} else if (controller->t.type() == Token::category::network) {
+		return visit_network(controller);
 	} else {
 		throw std::runtime_error("Unknown controller type");
 	}
@@ -361,11 +376,20 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	}
 
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
-	config["name"] = prefix + machine->name.value();
+	config["prefix"] = prefix;
+	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.pos().file.generic_string();
+
 
 	auto vmc = env->create_vm_controller(config);
 	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
+
+	//additional check that all the networks are defined earlier
+	for (auto network: vmc->vm->networks()) {
+		if (reg.netcs.find(network) == reg.netcs.end()) {
+			throw std::runtime_error(std::string(machine->begin()) + ": Error: specified network " + network + " is not defined");
+		}
+	}
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
@@ -376,11 +400,28 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	}
 
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
-	config["name"] = prefix + flash->name.value();
+	config["prefix"] = prefix;
+	config["name"] = flash->name.value();
 	config["src_file"] = flash->name.pos().file.generic_string();
 
 	auto fdc = env->create_flash_drive_controller(config);
 	reg.fdcs.emplace(std::make_pair(flash->name, fdc));
+}
+
+void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
+	// std::cout << "Registering network " << network->name.value() << std::endl;
+	if (reg.netcs.find(network->name) != reg.netcs.end()) {
+		throw std::runtime_error(std::string(network->begin()) + ": Error: network with name " + network->name.value() +
+			" already exists");
+	}
+
+	auto config = visit_attr_block(network->attr_block, "network_global");
+	config["prefix"] = prefix;
+	config["name"] = network->name.value();
+	config["src_file"] = network->name.pos().file.generic_string();
+
+	auto netc = env->create_network_controller(config);
+	reg.netcs.emplace(std::make_pair(network->name, netc));
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {
@@ -474,6 +515,9 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::SimpleAttr>>(attr->value)) {
 		auto value = p->attr_value->t;
 		if (value.type() == Token::category::number) {
+			if (std::stoi(value.value()) < 0) {
+				throw std::runtime_error(std::string(attr->begin()) + ": Error: numeric attr can't be negative: " + value.value());
+			}
 			config[attr->name.value()] = std::stoul(value.value());
 		} else if (value.type() == Token::category::size) {
 			config[attr->name.value()] = size_to_mb(value);

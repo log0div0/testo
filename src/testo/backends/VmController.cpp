@@ -3,6 +3,10 @@
 #include "Environment.hpp"
 #include <fmt/format.h>
 
+std::string VmController::id() const {
+	return vm->id();
+}
+
 std::string VmController::name() const {
 	return vm->name();
 }
@@ -78,7 +82,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 
 		//Where to store new metadata file?
 		fs::path metadata_file = get_metadata_dir();
-		metadata_file /= vm->name() + "_" + snapshot;
+		metadata_file /= vm->id() + "_" + snapshot;
 
 		auto current_state = get_metadata("current_state");
 
@@ -91,7 +95,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 		//link parent to a child
 		if (current_state.length()) {
 			fs::path parent_metadata_file = get_metadata_dir();
-			parent_metadata_file /= vm->name() + "_" + current_state;
+			parent_metadata_file /= vm->id() + "_" + current_state;
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			parent_metadata.at("children").push_back(snapshot);
 			write_metadata_file(parent_metadata_file, parent_metadata);
@@ -112,7 +116,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 		//This thins needs to be recursive
 		//I guess... go through the children and call recursively on them
 		fs::path metadata_file = get_metadata_dir();
-		metadata_file /= vm->name() + "_" + snapshot;
+		metadata_file /= vm->id() + "_" + snapshot;
 
 		auto metadata = read_metadata_file(metadata_file);
 
@@ -133,7 +137,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 		//Unlink the parent
 		if (parent.length()) {
 			fs::path parent_metadata_file = get_metadata_dir();
-			parent_metadata_file /= vm->name() + "_" + parent;
+			parent_metadata_file /= vm->id() + "_" + parent;
 
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			auto& children = parent_metadata.at("children");
@@ -266,6 +270,6 @@ bool VmController::check_config_relevance() {
 }
 
 fs::path VmController::get_metadata_dir() const {
-	return env->vm_metadata_dir() / name();
+	return env->vm_metadata_dir() / id();
 }
 

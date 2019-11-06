@@ -25,7 +25,8 @@ std::string duration_to_str(Duration duration) {
 }
 
 static void sleep(const std::string& interval) {
-	std::this_thread::sleep_for(std::chrono::milliseconds(time_to_milliseconds(interval)));
+	coro::Timer timer;
+	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
@@ -303,6 +304,16 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 		}
 	}
 
+	//check networks aditionally
+	for (auto netc: reg.get_all_netcs(test)) {
+		if (netc->is_defined() &&
+			netc->check_config_relevance())
+		{
+			continue;
+		}
+		return false;
+	}
+
 	for (auto controller: reg.get_all_controllers(test)) {
 		if (controller->is_defined() &&
 			controller->check_config_relevance() &&
@@ -357,6 +368,17 @@ bool VisitorInterpreter::resolve_miss_cache_action(std::shared_ptr<AST::Test> te
 	}
 
 	bool prompt_needed = false;
+
+	//check networks aditionally
+	for (auto netc: reg.get_all_netcs(test)) {
+		if (netc->is_defined()) {
+			if (!netc->check_config_relevance()) {
+				prompt_needed = true;
+				break;
+			}
+		}
+	}
+
 
 	for (auto controller: reg.get_all_controllers(test)) {
 		if (controller->is_defined()) {
@@ -596,6 +618,17 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 		}
 
+		//check all the networks
+
+		for (auto netc: reg.get_all_netcs(test)) {
+			if (netc->is_defined() &&
+				netc->check_config_relevance())
+			{
+				continue;
+			}
+			netc->create();
+		}
+
 		//new vms - install
 
 		for (auto controller: reg.get_all_controllers(test)) {
@@ -758,8 +791,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		stop_all_vms(test);
-
-	} //everything else is fatal and should be catched furter up
+	}
 }
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
@@ -793,6 +825,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		return visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MouseEvent>>(action)) {
+		return visit_mouse_event(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
@@ -859,7 +893,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 				throw std::runtime_error("Unknown character to type");
 			}
 			vmc->vm->press(buttons->second);
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
+			timer.waitFor(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(type, vmc));
@@ -923,9 +957,11 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			}
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
-			// std::cout << "time = " << time.count() << " seconds" << std::endl;
+			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (time < 1s) {
-				std::this_thread::sleep_for(1s - time);
+				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+			} else {
+				timer.waitFor(std::chrono::milliseconds(1));
 			}
 		}
 
@@ -940,9 +976,69 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		for (auto key_spec: press->keys) {
 			visit_key_spec(vmc, key_spec);
+			timer.waitFor(std::chrono::milliseconds(30));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
+	}
+}
+
+void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
+	try {
+		if (mouse_event->is_move_needed()) {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Moving cursor "
+				<< rang::fg::yellow << "X:" << mouse_event->dx_token.value()
+				<< " Y:" << mouse_event->dy_token.value();
+
+			std::cout
+				<< rang::fgB::blue << " on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
+
+			vmc->vm->mouse_move(mouse_event->dx_token.value(), mouse_event->dy_token.value());
+
+		}
+
+		if (mouse_event->event.value() == "move") {
+			return;
+		} else if (mouse_event->event.value() == "click") {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Left Clicking "
+				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
+			vmc->vm->mouse_set_buttons(MouseButton::Left);
+			vmc->vm->mouse_set_buttons(0);
+		} else if (mouse_event->event.value() == "rclick") {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Right Clicking "
+				<< rang::fgB::blue << "on virtual machine "
+				<< rang::fg::yellow << vmc->name();
+
+
+			std::cout
+				<< rang::style::reset << std::endl;
+
+			vmc->vm->mouse_set_buttons(MouseButton::Right);
+			vmc->vm->mouse_set_buttons(0);
+		} else {
+			throw std::runtime_error("Unsupported mouse event");
+		}
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(mouse_event, vmc));
 	}
 }
 
@@ -966,6 +1062,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->get_buttons());
+		timer.waitFor(std::chrono::milliseconds(30));
 	}
 }
 
@@ -1167,7 +1264,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 			if (vmc->vm->state() == VmState::Stopped) {
 				return;
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+			timer.waitFor(std::chrono::milliseconds(300));
 		}
 		throw std::runtime_error("Shutdown timeout");
 	} catch (const std::exception& error) {

@@ -47,6 +47,10 @@ FlashDrive::FlashDrive(const nlohmann::json& config_): config(config_) {
 	}
 }
 
+std::string FlashDrive::id() const {
+	return config.at("prefix").get<std::string>() + config.at("name").get<std::string>();
+}
+
 std::string FlashDrive::name() const {
 	return config.at("name").get<std::string>();
 }

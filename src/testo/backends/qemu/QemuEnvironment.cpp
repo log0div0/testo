@@ -2,6 +2,7 @@
 #include "QemuEnvironment.hpp"
 #include "QemuVM.hpp"
 #include "QemuFlashDrive.hpp"
+#include "QemuNetwork.hpp"
 #include <fmt/format.h>
 
 QemuEnvironment::QemuEnvironment() {
@@ -9,9 +10,7 @@ QemuEnvironment::QemuEnvironment() {
 }
 
 QemuEnvironment::~QemuEnvironment() {
-	try {
-		cleanup();
-	} catch(...) {}
+	cleanup();
 }
 
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
@@ -75,6 +74,12 @@ void QemuEnvironment::setup() {
 		}
 	}
 
+	if (!fs::exists(network_metadata_dir())) {
+		if (!fs::create_directories(network_metadata_dir())) {
+			throw std::runtime_error(std::string("Can't create directory: ") + network_metadata_dir().generic_string());
+		}
+	}
+
 	if (!fs::exists(flash_drives_metadata_dir())) {
 		if (!fs::create_directories(flash_drives_metadata_dir())) {
 			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_metadata_dir().generic_string());
@@ -93,3 +98,7 @@ std::shared_ptr<VmController> QemuEnvironment::create_vm_controller(const nlohma
 std::shared_ptr<FlashDriveController> QemuEnvironment::create_flash_drive_controller(const nlohmann::json& config) {
 	return std::make_shared<FlashDriveController>(std::shared_ptr<FlashDrive>(new QemuFlashDrive(config)));
 }
+
+std::shared_ptr<NetworkController> QemuEnvironment::create_network_controller(const nlohmann::json& config) {
+		return std::make_shared<NetworkController>(std::shared_ptr<Network>(new QemuNetwork(config)));
+	}

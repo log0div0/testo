@@ -183,6 +183,14 @@ void HyperVVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
+void HyperVVM::mouse_move(const std::string& x, const std::string& y) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
+void HyperVVM::mouse_set_buttons(uint32_t button_mask) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
 bool HyperVVM::is_nic_plugged(const std::string& nic) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -360,6 +368,4 @@ void HyperVVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_
 void HyperVVM::remove_from_guest(const fs::path& obj) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-std::set<std::string> HyperVVM::nics() const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
+

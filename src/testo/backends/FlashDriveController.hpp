@@ -8,6 +8,7 @@ struct FlashDriveController: public Controller {
 	FlashDriveController() = delete;
 	FlashDriveController(std::shared_ptr<FlashDrive> fd): Controller(), fd(fd) {}
 
+	std::string id() const override;
 	std::string name() const override;
 	std::string type() const override { return "flash drive"; }
 	bool is_defined() const override;

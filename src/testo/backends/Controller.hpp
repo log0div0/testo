@@ -8,6 +8,7 @@
 struct Controller {
 	virtual ~Controller() {}
 
+	virtual std::string id() const = 0;
 	virtual std::string name() const = 0;
 	virtual std::string type() const = 0;
 	virtual bool is_defined() const;
@@ -19,7 +20,7 @@ struct Controller {
 	std::string get_snapshot_cksum(const std::string& snapshot);
 
 	bool has_key(const std::string& key);
-	std::string get_metadata(const std::string& key);
+	std::string get_metadata(const std::string& key) const;
 	void set_metadata(const std::string& key, const std::string& value);
 
 	virtual bool check_config_relevance() = 0;
@@ -29,7 +30,7 @@ struct Controller {
 protected:
 	fs::path main_file() const {
 		fs::path result = get_metadata_dir();
-		result = result / name();
+		result = result / id();
 		return result;
 	}
 };

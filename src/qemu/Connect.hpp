@@ -32,6 +32,7 @@ struct Connect {
 	StorageVolume storage_volume_lookup_by_path(const fs::path& path) const;
 
 	std::vector<Network> networks(std::initializer_list<virConnectListAllNetworksFlags> flags = {}) const;
+	Network network_lookup_by_name(const std::string& name) const;
 	Network network_define_xml(const pugi::xml_document& xml);
 
 	Stream new_stream(std::initializer_list<virStreamFlags> flags = {}); //It's not vector of flags because there's only one possible flag

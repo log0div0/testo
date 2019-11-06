@@ -219,15 +219,21 @@ void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<ui
 	}
 }
 
-void Domain::monitor_command(const std::string& cmd, char** result, std::initializer_list<virDomainQemuMonitorCommandFlags> flags) {
+void Domain::monitor_command(const std::string& cmd, std::initializer_list<virDomainQemuMonitorCommandFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
 	for (auto flag: flags) {
 		flag_bitmask |= flag;
 	}
-	if (virDomainQemuMonitorCommand(handle, cmd.c_str(), result, flag_bitmask) < 0) {
+
+	char* result = nullptr;
+	if (virDomainQemuMonitorCommand(handle, cmd.c_str(), &result, flag_bitmask) < 0) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
+	if (result) {
+		free(result);
+	}
+
 }
 
 

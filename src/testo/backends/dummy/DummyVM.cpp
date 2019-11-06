@@ -53,6 +53,14 @@ void DummyVM::press(const std::vector<std::string>& buttons) {
 	return;
 }
 
+void DummyVM::mouse_move(const std::string& x, const std::string& y) {
+	return;
+}
+
+void DummyVM::mouse_set_buttons(uint32_t button_mask) {
+	return;
+}
+
 bool DummyVM::is_nic_plugged(const std::string& nic) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -198,8 +206,5 @@ void DummyVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void DummyVM::remove_from_guest(const fs::path& obj) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
-std::set<std::string> DummyVM::nics() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
