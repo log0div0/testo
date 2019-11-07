@@ -204,7 +204,7 @@ std::vector<Rect> TextDetector::detect(stb::Image& image,
 	for (auto& total_rect: total_rects) {
 		bool merged = false;
 		for (auto& result: results) {
-			if (result.iou(total_rect) > 0.5f) {
+			if (result.iou(total_rect) > 0.25f) {
 				result |= total_rect;
 				merged = true;
 			}
@@ -227,6 +227,7 @@ bool TextDetector::find_substr(int left, int top,
 ) {
 	int right = left;
 	int bottom = top;
+	bottom += 2;
 	while (true) {
 		if (index == query.size()) {
 			if (foreground_id >= 0) {
@@ -242,7 +243,6 @@ bool TextDetector::find_substr(int left, int top,
 			return true;
 		}
 		right += 3;
-		bottom += 2;
 		if (query.at(index) != " ") {
 			break;
 		} else {
@@ -300,7 +300,9 @@ bool TextDetector::find_substr(int left, int top,
 
 			rects.push_back(rect);
 
-			return find_substr(x + 1, top, query, index + 1, foreground_id, background_id, foreground_hits, background_hits, rects);
+			if (find_substr(x + 1, top, query, index + 1, foreground_id, background_id, foreground_hits, background_hits, rects)) {
+				return true;
+			}
 		}
 	}
 	return false;
