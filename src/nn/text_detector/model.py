@@ -5,7 +5,8 @@ from tensorflow.keras.layers import (
 	Input,
 	MaxPool2D,
 	BatchNormalization,
-	LeakyReLU
+	LeakyReLU,
+	Dropout
 )
 import dataset as generator
 
@@ -15,6 +16,7 @@ def DarknetConv(x, filters, kernel_size):
 							use_bias=False)(x)
 	x = BatchNormalization()(x)
 	x = LeakyReLU(alpha=0.1)(x)
+	x = Dropout(0.03)(x)
 	return x
 
 def Model(height = None, width = None):

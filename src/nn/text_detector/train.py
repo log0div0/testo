@@ -86,5 +86,5 @@ callbacks = [
 	tf.keras.callbacks.ModelCheckpoint('checkpoints/epoch_{epoch}.tf', verbose=1, save_weights_only=True),
 ]
 
-model.fit(dataset, epochs=40, callbacks=callbacks)
+model.fit(dataset, epochs=30, callbacks=callbacks)
 model.save_weights('checkpoints/final.tf')

@@ -38,6 +38,11 @@ TEST_CASE("Ubuntu Server 18.04/Установка") {
 	}
 
 	{
+		stb::Image img("Ubuntu Server 18.04/Установка/Приветствие.png");
+		CHECK(detector.detect(img, "Install Ubuntu").size() == 1);
+	}
+
+	{
 		stb::Image img("Ubuntu Server 18.04/Установка/Настройка сети.png");
 		CHECK(detector.detect(img, "Network connections").size() == 1);
 		CHECK(detector.detect(img, "192.168.122.219/24").size() == 1);
@@ -59,5 +64,14 @@ TEST_CASE("Ubuntu Server 18.04/Установка") {
 	{
 		stb::Image img("Ubuntu Server 18.04/Установка/Пожалуйста, извлеките CD-ROM.png");
 		CHECK(detector.detect(img, "Please remove the installation medium, then press ENTER:").size() == 1);
+	}
+}
+
+TEST_CASE("Ubuntu Server 18.04/Консоль") {
+	TextDetector detector;
+
+	{
+		stb::Image img("Ubuntu Server 18.04/Консоль/Установка питона.png");
+		CHECK(detector.detect(img, "Setting up daemon").size() == 1);
 	}
 }
