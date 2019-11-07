@@ -172,7 +172,7 @@ for symbol1, glyphs1 in symbols_to_glyphs.items():
 
 char_height = 16
 char_width = 8
-columns_count = 64
+columns_count = 32
 rows_count = 16
 image_width = columns_count * char_width
 image_height = rows_count * char_height
@@ -196,7 +196,7 @@ def random_colors():
 			break
 	return bg, fg
 
-images_count = 200
+images_count = 10000
 
 def generate_example_1():
 	bg, fg = random_colors()
@@ -207,27 +207,36 @@ def generate_example_1():
 		font = random.choice(fonts)
 		x_offset = random.randint(-3, 3);
 		y_offset = random.randint(-7, 7);
-		for column in range(1, columns_count - 1):
-			left = column*char_width + x_offset
-			top = row*char_height + y_offset
-			symbol = random.choice([random.choice(symbols), None])
-			if symbol:
-				char = random.choice(symbol)
-				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade)
-				x_center = (left + x + (width // 2)) / image_width
-				y_center = (top + y + (height // 2)) / image_height
-				grid_x = int(x_center * grid_w)
-				grid_y = int(y_center * grid_h)
-				label[grid_y, grid_x] = (
-					1,
-					x_center,
-					y_center,
-					(width + 2) / image_width,
-					(height + 2) / image_height,
-					symbols.index(symbol),
-					colors.index(fg),
-					colors.index(bg)
-				)
+		is_word = random.choice([True, False])
+		column = 0
+		while column < columns_count - 1:
+			is_word = not is_word
+			if is_word:
+				word_length = random.randint(1, min(15, columns_count - 1 - column))
+			else:
+				word_length = random.randint(1, min(2, columns_count - 1 - column))
+			for _ in range(word_length):
+				left = column*char_width + x_offset
+				top = row*char_height + y_offset
+				if is_word:
+					symbol = random.choice(symbols)
+					char = random.choice(symbol)
+					x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade)
+					x_center = (left + x + (width // 2)) / image_width
+					y_center = (top + y + (height // 2)) / image_height
+					grid_x = int(x_center * grid_w)
+					grid_y = int(y_center * grid_h)
+					label[grid_y, grid_x] = (
+						1,
+						x_center,
+						y_center,
+						(width + 2) / image_width,
+						(height + 2) / image_height,
+						symbols.index(symbol),
+						colors.index(fg),
+						colors.index(bg)
+					)
+				column += 1
 	return {
 		'image': image,
 		'label': label
@@ -241,33 +250,42 @@ def generate_example_2():
 	j = 0
 	for row in range(rows_count):
 		font = random.choice(fonts)
-		for column in range(columns_count):
-			if j % 57 == 0:
-				bg, fg = random_colors()
-				bg_shade, fg_shade = random_shade(bg), random_shade(fg)
-			left = column*char_width
-			top = row*char_height
-			symbol = random.choice([random.choice(symbols), None])
-			if symbol:
-				char = random.choice(symbol)
-				x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
-				x_center = (left + x + (width // 2)) / image_width
-				y_center = (top + y + (height // 2)) / image_height
-				grid_x = int(x_center * grid_w)
-				grid_y = int(y_center * grid_h)
-				label[grid_y, grid_x] = (
-					1,
-					x_center,
-					y_center,
-					(width + 2) / image_width,
-					(height + 2) / image_height,
-					symbols.index(symbol),
-					colors.index(fg),
-					colors.index(bg)
-				)
+		is_word = random.choice([True, False])
+		column = 0
+		while column < columns_count - 1:
+			is_word = not is_word
+			if is_word:
+				word_length = random.randint(1, min(15, columns_count - 1 - column))
 			else:
-				font.draw(image, ' ', left=left, top=top, font_color=fg_shade, background_color=bg_shade)
-			j += 1
+				word_length = random.randint(1, min(2, columns_count - 1 - column))
+			for _ in range(word_length):
+				if j % 57 == 0:
+					bg, fg = random_colors()
+					bg_shade, fg_shade = random_shade(bg), random_shade(fg)
+				left = column*char_width
+				top = row*char_height
+				if is_word:
+					symbol = random.choice(symbols)
+					char = random.choice(symbol)
+					x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
+					x_center = (left + x + (width // 2)) / image_width
+					y_center = (top + y + (height // 2)) / image_height
+					grid_x = int(x_center * grid_w)
+					grid_y = int(y_center * grid_h)
+					label[grid_y, grid_x] = (
+						1,
+						x_center,
+						y_center,
+						(width + 2) / image_width,
+						(height + 2) / image_height,
+						symbols.index(symbol),
+						colors.index(fg),
+						colors.index(bg)
+					)
+				else:
+					font.draw(image, ' ', left=left, top=top, font_color=fg_shade, background_color=bg_shade)
+				j += 1
+				column += 1
 	return {
 		'image': image,
 		'label': label
@@ -297,7 +315,7 @@ class Builder(tfds.core.GeneratorBasedBuilder):
 
 	def _generate_examples(self):
 		for i in range(images_count):
-			if i % 4 < 3:
+			if i % 2 == 1:
 				yield i, generate_example_1()
 			else:
 				yield i, generate_example_2()
