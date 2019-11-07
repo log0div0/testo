@@ -274,32 +274,9 @@ struct Type: public Node {
 	std::shared_ptr<String> text;
 };
 
-struct Assignment: public Node {
-	Assignment(const Token& left, const Token& assign, std::shared_ptr<String> right):
-		Node(assign),
-		left(left),
-		right(right) {}
-
-	Pos begin() const {
-		return left.pos();
-	}
-
-	Pos end() const {
-		return right->end();
-	}
-
-	operator std::string() const {
-		return left.value() + t.value() + std::string(*right);
-	}
-
-	Token left;
-	std::shared_ptr<String> right;
-};
-
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<ISelectable> text,
-	const std::vector<std::shared_ptr<Assignment>>& params, const Token& timeout, const Token& time_interval):
-		Node(wait), text(text), params(params), timeout(timeout), time_interval(time_interval) {}
+	Wait(const Token& wait, std::shared_ptr<ISelectable> text, const Token& timeout, const Token& time_interval):
+		Node(wait), text(text), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -327,7 +304,6 @@ struct Wait: public Node {
 	}
 
 	std::shared_ptr<ISelectable> text;
-	std::vector<std::shared_ptr<Assignment>> params; //TODO: Remove
 	Token timeout;
 	Token time_interval;
 };
@@ -1018,20 +994,15 @@ struct Comparison: public Node {
 };
 
 struct Check: public Node {
-	Check(const Token& check, std::shared_ptr<ISelectable> text,
-	const std::vector<std::shared_ptr<Assignment>>& params):
-		Node(check), text(text), params(params) {}
+	Check(const Token& check, std::shared_ptr<ISelectable> text):
+		Node(check), text(text) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		if (params.size()) {
-			return params[params.size() - 1]->end();
-		} else {
-			return text->end();
-		}
+		return text->end();
 	}
 
 	operator std::string() const {
@@ -1045,7 +1016,6 @@ struct Check: public Node {
 	}
 
 	std::shared_ptr<ISelectable> text;
-	std::vector<std::shared_ptr<Assignment>> params;
 };
 
 struct IExpr: public Node {

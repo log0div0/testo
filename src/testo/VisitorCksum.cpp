@@ -106,13 +106,6 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::sha
 		result += template_parser.resolve(wait->text->text(), reg, vmc);
 	}
 
-	result += "(";
-	for (auto param: wait->params) {
-		auto value = template_parser.resolve(param->right->text(), reg, vmc);
-		result += param->left.value() + "=" + value;
-	}
-	result += ")";
-
 	if (wait->time_interval) {
 		result += wait->time_interval.value();
 	} else {
@@ -319,13 +312,6 @@ std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, st
 std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	std::string result = "check";
 	result += template_parser.resolve(check->text->text(), reg, vmc);
-
-	result += "(";
-	for (auto param: check->params) {
-		auto value = template_parser.resolve(param->right->text(), reg, vmc);
-		result += param->left.value() + "=" + value;
-	}
-	result += ")";
 
 	return result;
 }

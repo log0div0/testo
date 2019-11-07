@@ -53,11 +53,6 @@ Token::category Parser::LA(size_t i) const {
 	return LT(i).type();
 }
 
-bool Parser::test_assignment() const {
-	return ((LA(1) == Token::category::id) &&
-		LA(2) == Token::category::assign);
-}
-
 bool Parser::test_stmt() const {
 	return ((LA(1) == Token::category::macro) ||
 		test_controller() ||
@@ -300,17 +295,6 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, params, actions));
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
-}
-
-std::shared_ptr<Assignment> Parser::assignment() {
-	Token left = LT(1);
-	match(Token::category::id);
-
-	Token assign = LT(1);
-	match(Token::category::assign);
-
-	auto right = string();
-	return std::shared_ptr<Assignment>(new Assignment(left, assign, right));
 }
 
 std::shared_ptr<Attr> Parser::attr() {
@@ -578,24 +562,6 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		value = selectable();
 	}
 
-	std::vector<std::shared_ptr<Assignment>> params;
-
-	if (LA(1) == Token::category::lbracket) {
-		match(Token::category::lbracket);
-		if (LA(1) == Token::category::id) {
-			params.push_back(assignment());
-		}
-		while (LA(1) == Token::category::comma) {
-			if (params.empty()) {
-				match(Token::category::rbracket); //will cause failure
-			}
-			match(Token::category::comma);
-			newline_list();
-			params.push_back(assignment());
-		}
-		match(Token::category::rbracket);
-	}
-
 	if (LA(1) == Token::category::timeout) {
 		timeout = LT(1);
 		match(Token::category::timeout);
@@ -604,17 +570,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		match(Token::category::time_interval);
 	}
 
-	if (!value && params.size()) {
-		throw std::runtime_error(std::string(wait_token.pos()) +
-			": Error: params cannot be specified without TEXT");
-	}
-
 	if (!(value || timeout)) {
 		throw std::runtime_error(std::string(wait_token.pos()) +
 			": Error: either TEXT or FOR (of both) must be specified for wait command");
 	}
 
-	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, params, timeout, time_interval));
+	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, timeout, time_interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
@@ -999,25 +960,7 @@ std::shared_ptr<Check> Parser::check() {
 
 	value = selectable();
 
-	std::vector<std::shared_ptr<Assignment>> params;
-
-	if (LA(1) == Token::category::lbracket) {
-		match(Token::category::lbracket);
-		if (LA(1) == Token::category::id) {
-			params.push_back(assignment());
-		}
-		while (LA(1) == Token::category::comma) {
-			if (params.empty()) {
-				match(Token::category::rbracket); //will cause failure
-			}
-			match(Token::category::comma);
-			newline_list();
-			params.push_back(assignment());
-		}
-		match(Token::category::rbracket);
-	}
-
-	return std::shared_ptr<Check>(new Check(check_token, value, params));
+	return std::shared_ptr<Check>(new Check(check_token, value));
 }
 
 std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {
