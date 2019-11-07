@@ -3,23 +3,6 @@
 
 namespace template_literals {
 
-void Pos::advance(size_t shift) {
-	while (shift != 0) {
-		if (offset == input.length()) {
-			throw std::runtime_error("ADVANCE: Can't advance position over the end of the input");
-		}
-		if (input[offset] == '\n') {
-			line++;
-			column = 1;
-		} else {
-			column++;
-		}
-		offset++;
-
-		shift--;
-	}
-}
-
 std::string Parser::resolve_var(const std::string& var, Register& reg, std::shared_ptr<VmController> vmc) {
 	for (auto it = reg.local_vars.rbegin(); it != reg.local_vars.rend(); ++it) {
 		if (it->is_defined(var)) {

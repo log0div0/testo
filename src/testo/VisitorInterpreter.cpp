@@ -1,6 +1,7 @@
 
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
+#include "screen_selection/ScreenSelector.hpp"
 
 #include "coro/Finally.h"
 #include <fmt/format.h>
@@ -915,103 +916,67 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			return sleep(wait->time_interval.value());
 		}
 
+
+		std::string query = "";
+
 		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(wait->text)) {
-			return visit_wait_string(vmc, p->selectable, wait_for);
+			auto text = template_parser.resolve(p->text(), reg, vmc);
+			query = screen_selection::text_to_query(text);
+
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Waiting string"
+				<< rang::fg::yellow;
+			std::cout << "\"" + text + "\" ";
+
 		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(wait->text)) {
-			return visit_wait_select_expr(vmc, p->selectable, wait_for);
+			query = template_parser.resolve(p->text(), reg, vmc);
+
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Waiting selection "
+				<< rang::fg::yellow;
+			std::cout << "`" + query + "` ";
+
 		} else {
 			throw std::runtime_error("Unknown selectable type");
 		}
+
+		std::cout << " for " << wait_for;
+
+		std::cout
+			<< rang::fgB::blue << "on virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::fgB::blue;
+
+		std::cout
+			<< rang::style::reset << std::endl;
+
+		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
+
+		while (std::chrono::system_clock::now() < deadline) {
+			auto start = std::chrono::high_resolution_clock::now();
+			auto screenshot = vmc->vm->screenshot();
+			screen_selection::ScreenSelector selector;
+			if (selector.exec(screenshot, query)) {
+				return;
+			}
+
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> time = end - start;
+			//std::cout << "time = " << time.count() << " seconds" << std::endl;
+			if (time < 1s) {
+				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+			} else {
+				timer.waitFor(std::chrono::milliseconds(1));
+			}
+		}
+
+		throw std::runtime_error("Wait timeout");
+
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(wait, vmc));
 	}
-
-}
-
-void VisitorInterpreter::visit_wait_string(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::String> string, const std::string& timeout) {
-	std::string	text = template_parser.resolve(string->text(), reg, vmc);
-
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Waiting string "
-		<< rang::fg::yellow;
-
-	std::cout << "\"" + text + "\" ";
-
-	std::cout << " for " << timeout;
-
-	std::cout
-		<< rang::fgB::blue << "on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue;
-
-
-	std::cout
-		<< rang::style::reset << std::endl;
-
-	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
-
-	while (std::chrono::system_clock::now() < deadline) {
-		auto start = std::chrono::high_resolution_clock::now();
-		auto screenshot = vmc->vm->screenshot();
-		if (shit.stink_even_stronger(screenshot, text, "", "")) {
-			return;
-		}
-		auto end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> time = end - start;
-		//std::cout << "time = " << time.count() << " seconds" << std::endl;
-		if (time < 1s) {
-			timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
-		} else {
-			timer.waitFor(std::chrono::milliseconds(1));
-		}
-	}
-
-	throw std::runtime_error("Wait timeout");
-}
-
-void VisitorInterpreter::visit_wait_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectExpr> select_expr, const std::string& timeout) {
-
-	throw std::runtime_error("To be implemented");
-	std::string	selection = template_parser.resolve(select_expr->text(), reg, vmc);
-
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Waiting select expression "
-		<< rang::fg::yellow;
-
-	std::cout << "`" + selection + "` ";
-
-	std::cout << " for " << timeout;
-
-	std::cout
-		<< rang::fgB::blue << "on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue;
-
-
-	std::cout
-		<< rang::style::reset << std::endl;
-
-	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
-
-	while (std::chrono::system_clock::now() < deadline) {
-		auto start = std::chrono::high_resolution_clock::now();
-		auto screenshot = vmc->vm->screenshot();
-		if (shit.stink_even_stronger(screenshot, selection, "", "")) {
-			return;
-		}
-		auto end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> time = end - start;
-		//std::cout << "time = " << time.count() << " seconds" << std::endl;
-		if (time < 1s) {
-			timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
-		} else {
-			timer.waitFor(std::chrono::milliseconds(1));
-		}
-	}
-
-	throw std::runtime_error("Wait timeout");
 }
 
 void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {

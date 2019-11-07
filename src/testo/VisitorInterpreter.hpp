@@ -79,8 +79,6 @@ struct VisitorInterpreter {
 	void visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action);
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
-	void visit_wait_string(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::String> string, const std::string& timeout);
-	void visit_wait_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectExpr> select_expr, const std::string& timeout);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
 	void visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event);
 	void visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec);

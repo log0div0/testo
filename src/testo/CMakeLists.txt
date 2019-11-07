@@ -10,6 +10,9 @@ list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 file(GLOB BACKENDS_SRCS backends/*.cpp)
 set(SRCS ${SRCS} ${BACKENDS_SRCS})
 
+file(GLOB SCREEN_SELECTION_SRCS screen_selection/*.cpp)
+set(SRCS ${SRCS} ${SCREEN_SELECTION_SRCS})
+
 file(GLOB DUMMY_SRCS backends/dummy/*.cpp)
 set(SRCS ${SRCS} ${DUMMY_SRCS})
 
