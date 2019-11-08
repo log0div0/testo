@@ -20,6 +20,45 @@ struct Node {
 	Token t;
 };
 
+struct Term: public Node {
+	Term(const Token& value):
+		Node(value) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+};
+
+
+struct Factor: public Node {
+	Factor(std::shared_ptr<Term> left, const Token& op, std::shared_ptr<Term> right):
+		Node(Token(Token::category::factor, "factor", left->begin())), left(left), op(op), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return std::string(*left) + op.value() + std::string(*right);
+	}
+
+	std::shared_ptr<Term> left;
+	Token op;
+	std::shared_ptr<Term> right;
+};
+
 /*struct Expr: public Node {
 	Expr():
 		Node(select), from(from), where(where), where_expr(where_expr) {}
@@ -36,6 +75,7 @@ struct Node {
 		return t.value();
 	}
 };*/
+
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
 struct SelectStmt: public Node {

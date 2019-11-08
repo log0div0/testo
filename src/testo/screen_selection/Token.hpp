@@ -25,6 +25,7 @@ namespace screen_selection {
 			and_,
 			or_,
 
+			factor,
 			none
 		};
 

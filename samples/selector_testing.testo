@@ -9,5 +9,6 @@ machine nana {
 
 test herush {
 	nana start
-	nana wait `select something from textlines where`
+	nana wait """select something from
+		textlines where"""
 }
