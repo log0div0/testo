@@ -2,7 +2,7 @@
 #pragma once
 
 #include "FlashDrive.hpp"
-#include "../StinkingPileOfShit.hpp"
+#include <stb/Image.hpp>
 #include <nlohmann/json.hpp>
 
 enum class VmState {

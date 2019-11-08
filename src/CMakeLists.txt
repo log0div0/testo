@@ -9,9 +9,21 @@ if (WIN32)
 	)
 endif()
 
-add_subdirectory(darknet)
+if(NOT TENSORFLOW_DIR)
+	message(FATAL_ERROR "TENSORFLOW_DIR is not set")
+endif()
+
+if(APPLE)
+link_directories(
+	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/osx_x86_64/lib/
+)
+else()
+link_directories(
+	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/linux_x86_64/lib/
+)
+endif()
+
 add_subdirectory(vbox)
-add_subdirectory(opencl++)
 if (WIN32)
 add_subdirectory(virtdisk)
 add_subdirectory(msft)
@@ -20,5 +32,6 @@ endif()
 if (UNIX AND NOT APPLE)
 add_subdirectory(qemu)
 endif()
+add_subdirectory(stb)
+add_subdirectory(nn)
 add_subdirectory(testo)
-add_subdirectory(testow)
