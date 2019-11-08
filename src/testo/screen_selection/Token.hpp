@@ -8,9 +8,24 @@ namespace screen_selection {
 	struct Token {
 		enum category {
 			eof,
+			number,
+			dbl_quoted_string,
+			assign,
+			comma,
+			asterisk,
+			lparen,
+			rparen,
 
-			none,
-			exec_plan
+			id,
+			select,
+			from,
+			where,
+
+			not_,
+			and_,
+			or_,
+
+			none
 		};
 
 		Token() {
@@ -49,8 +64,26 @@ namespace screen_selection {
 				return "EOF";
 			case none:
 				return "NONE";
-			case exec_plan:
-				return "EXEC PLAN";
+			case number:
+				return "number";
+			case dbl_quoted_string:
+				return "double-quoted string";
+			case assign:
+				return "=";
+			case comma:
+				return ",";
+			case asterisk:
+				return "*";
+			case lparen:
+				return "(";
+			case rparen:
+				return ")";
+			case not_:
+				return "not";
+			case and_:
+				return "and";
+			case or_:
+				return "or";
 			default:
 				return "UNKNOWN TOKEN TYPE";
 			}

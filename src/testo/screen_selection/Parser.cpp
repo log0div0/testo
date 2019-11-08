@@ -25,7 +25,7 @@ Token::category Parser::LA() const {
 	return LT().type();
 }
 
-std::shared_ptr<AST::ExecPlan> Parser::parse() {
+std::shared_ptr<AST::SelectStmt> Parser::parse() {
 	return nullptr;
 }
 

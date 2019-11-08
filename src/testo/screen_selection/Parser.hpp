@@ -9,7 +9,7 @@ namespace screen_selection {
 
 struct Parser {
 	Parser(const std::string& query): lex(query) {}
-	std::shared_ptr<AST::ExecPlan> parse();
+	std::shared_ptr<AST::SelectStmt> parse();
 
 private:
 	void consume();

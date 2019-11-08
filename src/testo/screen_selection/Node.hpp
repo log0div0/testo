@@ -20,9 +20,9 @@ struct Node {
 };
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
-struct ExecPlan: public Node {
-	ExecPlan():
-		Node(Token(Token::category::exec_plan, "exec_plan", Pos())) {}
+struct SelectStmt: public Node {
+	SelectStmt(const Token& select):
+		Node(select) {}
 
 	Pos begin() const {
 		return t.pos();
