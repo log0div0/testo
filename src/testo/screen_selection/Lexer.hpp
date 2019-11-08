@@ -12,6 +12,7 @@ struct Lexer {
 	Lexer(std::string input_) {
 		std::transform(input_.begin(), input_.end(), input_.begin(), toupper);
 		this->input = std::shared_ptr<std::string>(new std::string(input_));
+		current_pos = Pos(this->input);
 	}
 
 	Token get_next_token();

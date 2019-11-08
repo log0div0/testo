@@ -3,6 +3,10 @@
 
 namespace screen_selection {
 
+Parser::Parser(const std::string& query): lex(query) {
+	consume();
+}
+
 void Parser::consume() {
 	current_token = lex.get_next_token();
 }
@@ -26,7 +30,35 @@ Token::category Parser::LA() const {
 }
 
 std::shared_ptr<AST::SelectStmt> Parser::parse() {
-	return nullptr;
+	auto select = LT();
+
+	match(Token::category::select);
+
+	std::vector<Token> columns;
+
+	if (LA() == Token::category::asterisk) {
+		columns.push_back(LT());
+		match(Token::category::asterisk);
+	} else {
+		columns.push_back(LT());
+		match(Token::category::id);
+
+		while (LA() == Token::category::comma) {
+			match(Token::category::comma);
+			columns.push_back(LT());
+			match(Token::category::id);
+		}
+	}
+
+	auto from = LT();
+	match(Token::category::from);
+	auto from_table = LT();
+	match(Token::category::id);
+
+	auto where_token = LT();
+	match(Token::category::where);
+
+	return std::shared_ptr<AST::SelectStmt>(new AST::SelectStmt(select, columns, from, where_token));
 }
 
 }

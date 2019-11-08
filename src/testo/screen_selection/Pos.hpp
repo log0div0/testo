@@ -4,19 +4,20 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
+#include <memory>
 
 namespace screen_selection {
 
 struct Pos {
 	Pos() = default;
-	Pos(const std::string& input): input(input) {}
+	Pos(std::shared_ptr<std::string> input): input(input) {}
 
 	void advance(size_t shift = 1) {
 		while (shift != 0) {
-			if (offset == input.length()) {
+			if (offset == input->length()) {
 				throw std::runtime_error("ADVANCE: Can't advance position over the end of the input");
 			}
-			if (input[offset] == '\n') {
+			if ((*input)[offset] == '\n') {
 				line++;
 				column = 1;
 			} else {
@@ -42,7 +43,7 @@ struct Pos {
 	uint32_t line = 1;
 	uint32_t column = 1;
 
-	std::string input;
+	std::shared_ptr<std::string> input;
 };
 
 }

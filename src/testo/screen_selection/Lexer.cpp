@@ -9,6 +9,35 @@ void Lexer::skip_spaces() {
 	}
 }
 
+Token Lexer::number() {
+	Pos tmp_pos = current_pos;
+	std::string value;
+
+	bool is_signed = false;
+
+	if (test_plus() || test_minus()) {
+		is_signed = true;
+		value += (*input)[current_pos];
+		current_pos.advance();
+	}
+
+	while (test_digit() && !test_eof()) {
+		value += (*input)[current_pos];
+		current_pos.advance();
+	}
+
+	if (test_eof()) {
+		return Token(Token::category::number, value, tmp_pos);
+	}
+
+	if (test_id()) {
+		throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: ID can't start with a number");
+	} else {
+		return Token(Token::category::number, value, tmp_pos);
+	}
+}
+
+
 Token Lexer::comma() {
 	Pos tmp_pos = current_pos;
 	current_pos.advance();
@@ -88,17 +117,17 @@ Token Lexer::id() {
 
 	//check for buildins
 
-	if (value == "select") {
+	if (value == "SELECT") {
 		return select();
-	} else if (value == "from") {
+	} else if (value == "FROM") {
 		return from();
-	} else if (value == "where") {
+	} else if (value == "WHERE") {
 		return where();
-	} else if (value == "not") {
+	} else if (value == "NOT") {
 		return not_();
-	} else if (value == "and") {
+	} else if (value == "AND") {
 		return and_();
-	} else if (value == "or") {
+	} else if (value == "OR") {
 		return or_();
 	} else {
 		current_pos.advance(shift);
@@ -108,42 +137,42 @@ Token Lexer::id() {
 
 Token Lexer::select() {
 	Pos tmp_pos = current_pos;
-	std::string value("select");
+	std::string value("SELECT");
 	current_pos.advance(value.length());
 	return Token(Token::category::select, value, tmp_pos);
 }
 
 Token Lexer::from() {
 	Pos tmp_pos = current_pos;
-	std::string value("from");
+	std::string value("FROM");
 	current_pos.advance(value.length());
 	return Token(Token::category::from, value, tmp_pos);
 }
 
 Token Lexer::where() {
 	Pos tmp_pos = current_pos;
-	std::string value("where");
+	std::string value("WHERE");
 	current_pos.advance(value.length());
 	return Token(Token::category::where, value, tmp_pos);
 }
 
 Token Lexer::not_() {
 	Pos tmp_pos = current_pos;
-	std::string value("not");
+	std::string value("NOT");
 	current_pos.advance(value.length());
 	return Token(Token::category::not_, value, tmp_pos);
 }
 
 Token Lexer::and_() {
 	Pos tmp_pos = current_pos;
-	std::string value("and");
+	std::string value("AND");
 	current_pos.advance(value.length());
 	return Token(Token::category::and_, value, tmp_pos);
 }
 
 Token Lexer::or_() {
 	Pos tmp_pos = current_pos;
-	std::string value("or");
+	std::string value("OR");
 	current_pos.advance(value.length());
 	return Token(Token::category::or_, value, tmp_pos);
 }

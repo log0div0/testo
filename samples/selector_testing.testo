@@ -1,0 +1,13 @@
+
+
+machine nana {
+	cpus: 1
+	ram: 1024Mb
+	iso: "${ISO_DIR}/Continent.iso"
+	disk_size: 2Gb
+}
+
+test herush {
+	nana start
+	nana wait `select something from textlines where`
+}
