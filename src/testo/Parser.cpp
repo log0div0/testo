@@ -562,6 +562,13 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		value = selectable();
 	}
 
+	//special check for multiline strings. We don't support them yet.
+
+	if (value->t.type() == Token::category::multiline_string) {
+		throw std::runtime_error(std::string(value->begin()) +
+			": Error: multiline strings are not supported in wait action");
+	}
+
 	if (LA(1) == Token::category::timeout) {
 		timeout = LT(1);
 		match(Token::category::timeout);
@@ -959,6 +966,10 @@ std::shared_ptr<Check> Parser::check() {
 	std::shared_ptr<ISelectable> value(nullptr);
 
 	value = selectable();
+	if (value->t.type() == Token::category::multiline_string) {
+		throw std::runtime_error(std::string(value->begin()) +
+			": Error: multiline strings are not supported in check action");
+	}
 
 	return std::shared_ptr<Check>(new Check(check_token, value));
 }
