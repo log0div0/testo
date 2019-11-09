@@ -10,5 +10,5 @@ machine nana {
 test herush {
 	nana start
 	nana wait `select * from
-		textlines where text = "Hello world" AND foreground = "blue" AND background = "gray" `
+		textlines where NOT (text = "Hello" OR text = "World" AND text = "Hello" OR NOT (text!="World")) `
 }

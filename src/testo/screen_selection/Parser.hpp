@@ -22,7 +22,9 @@ private:
 	std::shared_ptr<AST::Term> term();
 	std::shared_ptr<AST::Factor> factor();
 	std::shared_ptr<AST::IExpr> expr();
+	std::shared_ptr<AST::Expr<AST::UnOp>> unop();
 	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
+	std::shared_ptr<AST::Expr<AST::ParentedExpr>> parented_expr();
 
 	Token current_token;
 	Lexer lex;

@@ -63,6 +63,17 @@ std::shared_ptr<AST::Factor> Parser::factor() {
 	return std::shared_ptr<AST::Factor>(new AST::Factor(left, op, right));
 }
 
+std::shared_ptr<AST::Expr<AST::UnOp>> Parser::unop() {
+	auto op = LT();
+
+	match(Token::category::not_);
+
+	auto expression = expr();
+
+	auto unop = std::shared_ptr<AST::UnOp>(new AST::UnOp(op, expression));
+	return std::shared_ptr<AST::Expr<AST::UnOp>>(new AST::Expr<AST::UnOp>(unop));
+}
+
 std::shared_ptr<AST::Expr<AST::BinOp>> Parser::binop(std::shared_ptr<AST::IExpr> left) {
 	auto op = LT();
 
@@ -74,7 +85,27 @@ std::shared_ptr<AST::Expr<AST::BinOp>> Parser::binop(std::shared_ptr<AST::IExpr>
 	return std::shared_ptr<AST::Expr<AST::BinOp>>(new AST::Expr<AST::BinOp>(binop));
 }
 
+std::shared_ptr<AST::Expr<AST::ParentedExpr>> Parser::parented_expr() {
+	auto lparen = LT();
+	match(Token::category::lparen);
+
+	auto expression = expr();
+
+	auto rparen = LT();
+	match(Token::category::rparen);
+	auto parented_expr = std::shared_ptr<AST::ParentedExpr>(new AST::ParentedExpr(lparen, expression, rparen));
+	return std::shared_ptr<AST::Expr<AST::ParentedExpr>>(new AST::Expr<AST::ParentedExpr>(parented_expr));
+}
+
 std::shared_ptr<AST::IExpr> Parser::expr() {
+	if (LA() == Token::category::not_) {
+		return unop();
+	}
+
+	if (LA() == Token::category::lparen) {
+		return parented_expr();
+	}
+
 	auto left = std::shared_ptr<AST::Expr<AST::Factor>>(new AST::Expr<AST::Factor>(factor()));
 
 	if ((LA() == Token::category::and_) ||

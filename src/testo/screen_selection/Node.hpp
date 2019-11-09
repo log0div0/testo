@@ -85,16 +85,35 @@ struct Expr: IExpr {
 	std::shared_ptr<ExprType> expr;
 };
 
-struct BinOp: public Node {
-	BinOp(std::shared_ptr<IExpr> left, const Token& op, std::shared_ptr<IExpr> right):
-		Node(op), left(left), right(right) {}
+struct UnOp: public Node {
+	UnOp(const Token& op, std::shared_ptr<IExpr> expr):
+		Node(op), expr(expr) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return expr->end();
+	}
+
+	operator std::string() const {
+		return t.value() + std::string(*expr);
+	}
+
+	std::shared_ptr<IExpr> expr;
+};
+
+struct BinOp: public Node {
+	BinOp(std::shared_ptr<IExpr> left, const Token& op, std::shared_ptr<IExpr> right):
+		Node(op), left(left), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
 	}
 
 	operator std::string() const {
@@ -105,6 +124,25 @@ struct BinOp: public Node {
 	std::shared_ptr<IExpr> right;	
 };
 
+struct ParentedExpr: public Node {
+	ParentedExpr(const Token& lparen, std::shared_ptr<IExpr> expr, const Token& rparen):
+		Node(lparen), expr(expr), rparen(rparen) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return rparen.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + std::string(*expr) + rparen.value();
+	}
+
+	std::shared_ptr<IExpr> expr;
+	Token rparen;
+};
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
 struct SelectStmt: public Node {
