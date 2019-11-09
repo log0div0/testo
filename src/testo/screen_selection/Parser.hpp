@@ -14,9 +14,15 @@ struct Parser {
 private:
 	void consume();
 	void match(Token::category type);
+	void match(std::vector<Token::category> types);
 
 	Token LT() const;
 	Token::category LA() const;
+
+	std::shared_ptr<AST::Term> term();
+	std::shared_ptr<AST::Factor> factor();
+	std::shared_ptr<AST::IExpr> expr();
+	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
 
 	Token current_token;
 	Lexer lex;

@@ -59,9 +59,35 @@ struct Factor: public Node {
 	std::shared_ptr<Term> right;
 };
 
-/*struct Expr: public Node {
-	Expr():
-		Node(select), from(from), where(where), where_expr(where_expr) {}
+struct IExpr: public Node {
+	using Node::Node;
+};
+
+//Factor, Unary, Binary
+template <typename ExprType>
+struct Expr: IExpr {
+	Expr(std::shared_ptr<ExprType> expr):
+		IExpr(expr->t),
+		expr(expr) {}
+
+	Pos begin() const {
+		return expr->begin();
+	}
+
+	Pos end() const {
+		return expr->end();
+	}
+
+	operator std::string() const {
+		return std::string(*expr);
+	}
+
+	std::shared_ptr<ExprType> expr;
+};
+
+struct BinOp: public Node {
+	BinOp(std::shared_ptr<IExpr> left, const Token& op, std::shared_ptr<IExpr> right):
+		Node(op), left(left), right(right) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -72,17 +98,24 @@ struct Factor: public Node {
 	}
 
 	operator std::string() const {
-		return t.value();
+		return std::string(*left) + t.value() + std::string(*right);
 	}
-};*/
+
+	std::shared_ptr<IExpr> left;
+	std::shared_ptr<IExpr> right;	
+};
 
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
 struct SelectStmt: public Node {
 	//SelectStmt(const Token& select, const Token& from, const Token& where, std::shared_ptr<Expr> where_expr):
-	SelectStmt(const Token& select, const std::vector<Token>& columns, const Token& from_token, const Token& where_token):
-		//Node(select), from(from), where(where), where_expr(where_expr) {}
-		Node(select), columns(columns), from_token(from_token), where_token(where_token) {}
+	SelectStmt(
+			const Token& select,
+			const std::vector<Token>& columns,
+			const Token& from_token,
+			const Token& where_token,
+			std::shared_ptr<IExpr> where_expr):
+		Node(select), columns(columns), from_token(from_token), where_token(where_token), where_expr(where_expr) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -100,7 +133,7 @@ struct SelectStmt: public Node {
 	Token from_token;
 	Token from_table;
 	Token where_token;
-	//std::shared_ptr<Expr> where_expr;
+	std::shared_ptr<IExpr> where_expr;
 };
 
 }

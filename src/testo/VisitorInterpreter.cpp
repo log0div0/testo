@@ -942,10 +942,11 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			throw std::runtime_error("Unknown selectable type");
 		}
 
-		std::cout << " for " << wait_for;
+		
 
 		std::cout
-			<< rang::fgB::blue << "on virtual machine "
+			<< rang::fgB::blue << " for " << wait_for
+			<< " on virtual machine "
 			<< rang::fg::yellow << vmc->name()
 			<< rang::fgB::blue;
 

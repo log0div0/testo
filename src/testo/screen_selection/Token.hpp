@@ -10,7 +10,8 @@ namespace screen_selection {
 			eof,
 			number,
 			dbl_quoted_string,
-			assign,
+			equals,
+			not_equals,
 			comma,
 			asterisk,
 			lparen,
@@ -26,6 +27,7 @@ namespace screen_selection {
 			or_,
 
 			factor,
+			expr,
 			none
 		};
 
@@ -65,12 +67,16 @@ namespace screen_selection {
 				return "EOF";
 			case none:
 				return "NONE";
+			case id:
+				return "identifier";
 			case number:
 				return "number";
 			case dbl_quoted_string:
 				return "double-quoted string";
-			case assign:
+			case equals:
 				return "=";
+			case not_equals:
+				return "!=";
 			case comma:
 				return ",";
 			case asterisk:

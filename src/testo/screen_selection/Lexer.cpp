@@ -44,10 +44,16 @@ Token Lexer::comma() {
 	return Token(Token::category::comma, ",", tmp_pos);
 }
 
-Token Lexer::assign() {
+Token Lexer::equals() {
 	Pos tmp_pos = current_pos;
 	current_pos.advance();
-	return Token(Token::category::assign, "=", tmp_pos);
+	return Token(Token::category::equals, "=", tmp_pos);
+}
+
+Token Lexer::not_equals() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance(2);
+	return Token(Token::category::not_equals, "!=", tmp_pos);
 }
 
 Token Lexer::asterisk() {
@@ -187,8 +193,10 @@ Token Lexer::get_next_token() {
 			return dbl_quoted_string();
 		} else if (test_comma()) {
 			return comma();
-		} else if (test_assign()) {
-			return assign();
+		} else if (test_equals()) {
+			return equals();
+		} else if (test_not_equals()) {
+			return not_equals();
 		} else if (test_asterisk()) {
 			return asterisk();
 		} else if (test_lparen()) {

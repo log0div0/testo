@@ -54,7 +54,16 @@ private:
 	}
 
 	bool test_dbl_quote() const { return ((*input)[current_pos] == '\"'); }
-	bool test_assign() const { return (*input)[current_pos] == '='; }
+	bool test_equals() const { return (*input)[current_pos] == '='; }
+	bool test_not_equals() const { 
+		if (test_eof(1)) {
+			return false;
+		}
+
+		return (((*input)[current_pos] == '!') &&
+			((*input)[current_pos + 1] == '=')); 
+	}
+
 	bool test_comma() const { return ((*input)[current_pos] == ','); }
 	bool test_asterisk() const { return ((*input)[current_pos] == '*'); }
 	bool test_lparen() const { return ((*input)[current_pos] == '('); }
@@ -71,7 +80,8 @@ private:
 	Token from();
 	Token where();
 	Token dbl_quoted_string();
-	Token assign();
+	Token equals();
+	Token not_equals();
 	Token comma();
 	Token asterisk();
 	Token lparen();
