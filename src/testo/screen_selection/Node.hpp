@@ -146,14 +146,14 @@ struct ParentedExpr: public Node {
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
 struct SelectStmt: public Node {
-	//SelectStmt(const Token& select, const Token& from, const Token& where, std::shared_ptr<Expr> where_expr):
 	SelectStmt(
 			const Token& select,
 			const std::vector<Token>& columns,
 			const Token& from_token,
+			const Token& from_table,
 			const Token& where_token,
 			std::shared_ptr<IExpr> where_expr):
-		Node(select), columns(columns), from_token(from_token), where_token(where_token), where_expr(where_expr) {}
+		Node(select), columns(columns), from_token(from_token), from_table(from_table), where_token(where_token), where_expr(where_expr) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -165,6 +165,10 @@ struct SelectStmt: public Node {
 
 	operator std::string() const {
 		return t.value();
+	}
+
+	bool is_wildcard() const {
+		return (columns[0].type() == Token::category::asterisk);
 	}
 
 	std::vector<Token> columns;

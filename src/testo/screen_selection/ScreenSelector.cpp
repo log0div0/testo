@@ -1,6 +1,7 @@
 
 #include "ScreenSelector.hpp"
 #include "Parser.hpp"
+#include "VisitorSemantic.hpp"
 
 namespace screen_selection {
 
@@ -15,6 +16,8 @@ bool ScreenSelector::exec(stb::Image& image, const std::string& query) {
 	Parser parser(query);
 	//VisitorInterpreter runner;
 	auto select_stmt = parser.parse();
+	VisitorSemantic semantic;
+	semantic.visit(select_stmt);
 	//return runner.run(exec_plan);
 	return true;
 }

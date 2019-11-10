@@ -147,7 +147,7 @@ std::shared_ptr<AST::SelectStmt> Parser::parse() {
 
 	auto where_expr = expr();
 
-	return std::shared_ptr<AST::SelectStmt>(new AST::SelectStmt(select, columns, from, where_token, where_expr));
+	return std::shared_ptr<AST::SelectStmt>(new AST::SelectStmt(select, columns, from, from_table, where_token, where_expr));
 }
 
 }
