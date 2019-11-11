@@ -6,8 +6,11 @@ namespace screen_selection {
 
 VisitorInterpreter::VisitorInterpreter() {}
 
-void VisitorInterpreter::visit(std::shared_ptr<AST::SelectStmt> select_stmt) {	
+bool VisitorInterpreter::visit(std::shared_ptr<AST::SelectStmt> select_stmt) {
 	visit_expr(select_stmt->where_expr);
+	if (!text.length()) {
+		throw std::runtime_error(std::string(select_stmt->where_expr->begin()) + ": Error: attribute text is not specified");
+	}
 }
 
 void VisitorInterpreter::visit_unop(std::shared_ptr<AST::UnOp> unop) {
@@ -32,6 +35,29 @@ void VisitorInterpreter::visit_factor(std::shared_ptr<AST::Factor> factor) {
 
 	if (factor->op.type() != Token::category::equals) {
 		throw std::runtime_error(std::string(factor->op.pos()) + ": Error: unsupported operation: " + factor->op.value());
+	}
+
+	if (left.type() != Token::category::id) {
+		throw std::runtime_error(std::string(left.pos()) + ": Error: we support only text, foreground and background checking for now " + left.value());
+	}
+
+	if (left.value() == "TEXT") {
+		if (text.length()) {
+			throw std::runtime_error(std::string(left.pos()) + ": Error: we support only one text checking at a time for now " + left.value());
+		}
+		text = left.value();
+	} else if (left.value() == "BACKGROUND") {
+		if (background.length()) {
+			throw std::runtime_error(std::string(left.pos()) + ": Error: we support only one background checking at a time for now " + left.value());
+		}
+		background = left.value();
+	} else if (left.value() == "FOREGROUND") {
+		if (foreground.length()) {
+			throw std::runtime_error(std::string(left.pos()) + ": Error: we support only one foreground checking at a time for now " + left.value());
+		}
+		foreground = left.value();
+	} else {
+		throw std::runtime_error(std::string(left.pos()) + ": Error: unsupported attribute: " + left.value());
 	}
 }
 

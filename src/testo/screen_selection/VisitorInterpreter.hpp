@@ -8,7 +8,7 @@ namespace screen_selection{
 struct VisitorInterpreter {
 	VisitorInterpreter();
 
-	void visit(std::shared_ptr<AST::SelectStmt> select_stmt);
+	bool visit(std::shared_ptr<AST::SelectStmt> select_stmt);
 	void visit_expr(std::shared_ptr<AST::IExpr> expr);
 	void visit_unop(std::shared_ptr<AST::UnOp> unop);
 	void visit_binop(std::shared_ptr<AST::BinOp> binop);
