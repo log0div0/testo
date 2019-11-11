@@ -5,7 +5,7 @@
 #include "Node.hpp"
 #include "Token.hpp"
 
-namespace screen_selection {
+namespace tql {
 
 struct Parser {
 	Parser(const std::string& query);

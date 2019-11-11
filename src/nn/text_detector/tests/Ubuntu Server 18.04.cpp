@@ -3,7 +3,7 @@
 #include "../TextDetector.hpp"
 
 TEST_CASE("Ubuntu Server 18.04/Установка") {
-	TextDetector detector;
+	TextDetector& detector = TextDetector::instance();
 
 	{
 		stb::Image img("Ubuntu Server 18.04/Установка/Выбор языка.png");
@@ -68,7 +68,7 @@ TEST_CASE("Ubuntu Server 18.04/Установка") {
 }
 
 TEST_CASE("Ubuntu Server 18.04/Консоль") {
-	TextDetector detector;
+	TextDetector& detector = TextDetector::instance();
 
 	{
 		stb::Image img("Ubuntu Server 18.04/Консоль/Установка питона.png");

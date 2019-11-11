@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace screen_selection {
+namespace tql {
 
 namespace AST {
 
@@ -121,7 +121,7 @@ struct BinOp: public Node {
 	}
 
 	std::shared_ptr<IExpr> left;
-	std::shared_ptr<IExpr> right;	
+	std::shared_ptr<IExpr> right;
 };
 
 struct ParentedExpr: public Node {

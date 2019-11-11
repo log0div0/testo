@@ -3,7 +3,7 @@
 #include <nn/text_detector/TextDetector.hpp>
 #include <set>
 
-namespace screen_selection {
+namespace tql {
 
 VisitorInterpreter::VisitorInterpreter(stb::Image& image): image(image) {}
 

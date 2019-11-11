@@ -2,7 +2,7 @@
 #include "Lexer.hpp"
 #include <algorithm>
 
-namespace screen_selection {
+namespace tql {
 
 void Lexer::skip_spaces() {
 	while (test_space() && !test_eof()) {

@@ -2,7 +2,7 @@
 #include "VisitorSemantic.hpp"
 #include <set>
 
-namespace screen_selection {
+namespace tql {
 
 VisitorSemantic::VisitorSemantic() {
 	supported_columns.insert("TEXT");

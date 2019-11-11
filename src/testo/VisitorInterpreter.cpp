@@ -1,6 +1,7 @@
 
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
+#include "tql/Interpreter.hpp"
 
 #include "coro/Finally.h"
 #include <fmt/format.h>
@@ -920,7 +921,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(wait->text)) {
 			auto text = template_parser.resolve(p->text(), reg, vmc);
-			query = screen_selection::text_to_query(text);
+			query = tql::text_to_query(text);
 
 			std::cout
 				<< rang::fgB::blue << progress()
@@ -950,10 +951,12 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
 
+		tql::Interpreter query_interpreter(query);
+
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
-			if (screen_selector.exec(screenshot, query)) {
+			if (query_interpreter.exec(screenshot)) {
 				return;
 			}
 
@@ -1525,7 +1528,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 
 		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(check->text)) {
 			auto text = template_parser.resolve(p->text(), reg, vmc);
-			query = screen_selection::text_to_query(text);
+			query = tql::text_to_query(text);
 
 			std::cout
 				<< rang::fgB::blue << progress()
@@ -1553,44 +1556,12 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			<< rang::fgB::blue
 			<< rang::style::reset << std::endl;
 
+		tql::Interpreter query_interpreter(query);
 		auto screenshot = vmc->vm->screenshot();
-		return screen_selector.exec(screenshot, query);
+		return query_interpreter.exec(screenshot);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}
-}
-
-bool VisitorInterpreter::visit_check_string(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::String> string) {
-	auto text = template_parser.resolve(string->text(), reg, vmc);
-
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Checking string "
-		<< rang::fg::yellow << "\"" << text << "\""
-		<< rang::fgB::blue << " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
-
-		return true;
-	/*auto screenshot = vmc->vm->screenshot();
-	return shit.stink_even_stronger(screenshot, text, "", "");*/
-}
-
-bool VisitorInterpreter::visit_check_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectExpr> select_expr) {
-	throw std::runtime_error("Implement me");
-	auto text = template_parser.resolve(select_expr->text(), reg, vmc);
-
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Checking select expression "
-		<< rang::fg::yellow << "`" << text << "`"
-		<< rang::fgB::blue << " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
-
-	return true;
-	/*auto screenshot = vmc->vm->screenshot();
-	return shit.stink_even_stronger(screenshot, text, "", "");*/
 }
 
 std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) const {

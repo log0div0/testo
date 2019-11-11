@@ -4,7 +4,7 @@
 #include "Node.hpp"
 #include <set>
 
-namespace screen_selection{
+namespace tql{
 
 struct VisitorSemantic {
 	VisitorSemantic();

@@ -3,7 +3,7 @@
 
 #include "Pos.hpp"
 
-namespace screen_selection {
+namespace tql {
 
 	struct Token {
 		enum category {

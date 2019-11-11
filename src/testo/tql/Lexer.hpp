@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 
-namespace screen_selection {
+namespace tql {
 
 struct Lexer {
 	Lexer(std::string input_) {

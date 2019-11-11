@@ -4,7 +4,7 @@
 #include "stb/Image.hpp"
 #include "Node.hpp"
 
-namespace screen_selection{
+namespace tql{
 
 struct VisitorInterpreter {
 	VisitorInterpreter() = delete;

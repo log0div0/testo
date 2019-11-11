@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <memory>
 
-namespace screen_selection {
+namespace tql {
 
 struct Pos {
 	Pos() = default;

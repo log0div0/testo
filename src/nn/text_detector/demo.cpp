@@ -11,10 +11,10 @@ std::string query;
 void predict()
 {
 	stb::Image image(image_file);
-	TextDetector text_detector;
+	TextDetector& detector = TextDetector::instance();
 
 	auto start = std::chrono::high_resolution_clock::now();
-	auto rects = text_detector.detect(image, query, {}, {});
+	auto rects = detector.detect(image, query, {}, {});
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << time.count() << " seconds" << std::endl;

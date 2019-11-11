@@ -1,7 +1,7 @@
 
 #include "Parser.hpp"
 
-namespace screen_selection {
+namespace tql {
 
 Parser::Parser(const std::string& query): lex(query) {
 	consume();

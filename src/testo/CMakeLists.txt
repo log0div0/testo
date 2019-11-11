@@ -12,7 +12,7 @@ if (UNIX AND NOT APPLE)
 list(APPEND SRC_DIRS "backends/qemu/*.cpp")
 endif()
 
-list(APPEND SRC_DIRS "screen_selection/*.cpp")
+list(APPEND SRC_DIRS "tql/*.cpp")
 
 file(GLOB SRCS ${SRC_DIRS})
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)

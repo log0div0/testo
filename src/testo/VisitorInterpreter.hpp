@@ -4,7 +4,6 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "TemplateParser.hpp"
-#include "screen_selection/ScreenSelector.hpp"
 #include <vector>
 #include <list>
 
@@ -102,8 +101,6 @@ struct VisitorInterpreter {
 	bool visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor);
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
-	bool visit_check_string(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::String> string);
-	bool visit_check_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectExpr> select_expr);
 
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
 
@@ -165,8 +162,6 @@ private:
 
 	float current_progress = 0;
 	float progress_step = 0;
-
-	screen_selection::ScreenSelector screen_selector;
 
 	coro::Timer timer;
 
