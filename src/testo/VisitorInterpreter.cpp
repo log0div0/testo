@@ -958,8 +958,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
-			screen_selection::ScreenSelector selector;
-			if (selector.exec(screenshot, query)) {
+			if (text_detector.detect(screenshot, text, foreground, background).size()) {
 				return;
 			}
 
@@ -1534,6 +1533,17 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 		} else {
 			throw std::runtime_error("Unknown selectable type");
 		}
+
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Checking "
+			<< rang::fg::yellow << "\"" << text << "\""
+			<< rang::fgB::blue << " on virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::style::reset << std::endl;
+
+		auto screenshot = vmc->vm->screenshot();
+		return text_detector.detect(screenshot, text, foreground, background).size();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}

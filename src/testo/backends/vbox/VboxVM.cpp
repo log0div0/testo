@@ -713,7 +713,7 @@ stb::Image VboxVM::screenshot() {
 				for(size_t c = 0; c < 3; ++c){
 					size_t src_index = h*width*4 + w*4 + c;
 					size_t dst_index = h*width*3 + w*3 + c;
-					result._data[dst_index] = array_out[src_index];
+					result.data[dst_index] = array_out[src_index];
 				}
 			}
 		}

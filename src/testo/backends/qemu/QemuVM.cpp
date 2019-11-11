@@ -7,8 +7,6 @@
 #include <fmt/format.h>
 #include <thread>
 
-#include <stb_image.h>
-
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
