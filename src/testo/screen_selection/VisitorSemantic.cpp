@@ -7,13 +7,13 @@ namespace screen_selection {
 VisitorSemantic::VisitorSemantic() {
 	supported_columns.insert("TEXT");
 	supported_columns.insert("FOREGROUND");
-	supported_columns.insert("BACKROUND");
+	supported_columns.insert("BACKGROUND");
 
 
 	supported_tables.insert("TEXTLINES");
 }
 
-void VisitorSemantic::visit(std::shared_ptr<AST::SelectStmt> select_stmt) {	
+void VisitorSemantic::visit(std::shared_ptr<AST::SelectStmt> select_stmt) {
 
 	if (!select_stmt->is_wildcard()) {
 		for (auto column: select_stmt->columns) {

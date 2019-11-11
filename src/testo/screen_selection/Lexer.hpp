@@ -4,13 +4,11 @@
 #include "Token.hpp"
 #include <string>
 #include <memory>
-#include <algorithm>
 
 namespace screen_selection {
 
 struct Lexer {
 	Lexer(std::string input_) {
-		std::transform(input_.begin(), input_.end(), input_.begin(), toupper);
 		this->input = std::shared_ptr<std::string>(new std::string(input_));
 		current_pos = Pos(this->input);
 	}
@@ -55,13 +53,13 @@ private:
 
 	bool test_dbl_quote() const { return ((*input)[current_pos] == '\"'); }
 	bool test_equals() const { return (*input)[current_pos] == '='; }
-	bool test_not_equals() const { 
+	bool test_not_equals() const {
 		if (test_eof(1)) {
 			return false;
 		}
 
 		return (((*input)[current_pos] == '!') &&
-			((*input)[current_pos + 1] == '=')); 
+			((*input)[current_pos + 1] == '='));
 	}
 
 	bool test_comma() const { return ((*input)[current_pos] == ','); }

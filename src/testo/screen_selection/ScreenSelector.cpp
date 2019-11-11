@@ -8,7 +8,7 @@
 namespace screen_selection {
 
 std::string text_to_query(const std::string& text) {
-	std::string result = fmt::format("select * from textlines where text = {}", text);
+	std::string result = fmt::format("select * from textlines where text = \"{}\"", text);
 	return result;
 }
 

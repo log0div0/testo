@@ -1,5 +1,6 @@
 
 #include "Lexer.hpp"
+#include <algorithm>
 
 namespace screen_selection {
 
@@ -120,6 +121,8 @@ Token Lexer::id() {
 		value += (*input)[current_pos + shift];
 		shift++;
 	}
+
+	std::transform(value.begin(), value.end(), value.begin(), toupper);
 
 	//check for buildins
 

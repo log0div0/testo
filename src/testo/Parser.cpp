@@ -564,7 +564,7 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	//special check for multiline strings. We don't support them yet.
 
-	if (value->t.type() == Token::category::multiline_string) {
+	if (value && (value->t.type() == Token::category::multiline_string)) {
 		throw std::runtime_error(std::string(value->begin()) +
 			": Error: multiline strings are not supported in wait action");
 	}

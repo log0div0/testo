@@ -44,21 +44,27 @@ void VisitorInterpreter::visit_factor(std::shared_ptr<AST::Factor> factor) {
 		throw std::runtime_error(std::string(left.pos()) + ": Error: we support only text, foreground and background checking for now " + left.value());
 	}
 
+	if (right.type() != Token::category::dbl_quoted_string) {
+		throw std::runtime_error(std::string(right.pos()) + ": Error:  we suppoer only strings for now " + right.value());
+	}
+
+	auto val = right.value().substr(1, right.value().length() - 2);
+
 	if (left.value() == "TEXT") {
 		if (text.length()) {
 			throw std::runtime_error(std::string(left.pos()) + ": Error: we support only one text checking at a time for now " + left.value());
 		}
-		text = left.value();
+		text = val;
 	} else if (left.value() == "BACKGROUND") {
 		if (background.length()) {
 			throw std::runtime_error(std::string(left.pos()) + ": Error: we support only one background checking at a time for now " + left.value());
 		}
-		background = left.value();
+		background = val;
 	} else if (left.value() == "FOREGROUND") {
 		if (foreground.length()) {
 			throw std::runtime_error(std::string(left.pos()) + ": Error: we support only one foreground checking at a time for now " + left.value());
 		}
-		foreground = left.value();
+		foreground = val;
 	} else {
 		throw std::runtime_error(std::string(left.pos()) + ": Error: unsupported attribute: " + left.value());
 	}
