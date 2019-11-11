@@ -924,7 +924,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 			std::cout
 				<< rang::fgB::blue << progress()
-				<< " Waiting string"
+				<< " Waiting string "
 				<< rang::fg::yellow;
 			std::cout << "\"" + text + "\" ";
 
