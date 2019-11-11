@@ -27,7 +27,7 @@ macro copy_cert_to_flash(cert) {
 	wait timeout 5s
 	exec bash """
 		mount /dev/sdb1 /media
-		cp """ + $cert + """ /media
+		cp ${cert} /media
 		umount /media
 	"""
 	unplug flash pubkey_flash
