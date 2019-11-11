@@ -21,7 +21,15 @@ IoService* IoService::current() {
 void IoService::run() {
 	Fiber::initialize();
 	t_ioService = this;
-	_impl.run();
+	while (_impl.run_one())
+	{
+	  while (_impl.poll_one());
+	  while (checkpoints.size()) {
+	  	auto checkpoint = std::move(checkpoints.front());
+	  	checkpoints.pop();
+	  	checkpoint();
+	  }
+	}
 	t_ioService = nullptr;
 	Fiber::deinitialize();
 }

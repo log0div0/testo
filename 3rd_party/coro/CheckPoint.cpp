@@ -9,7 +9,9 @@ void CheckPoint() {
 	auto coro = Coro::current();
 	std::string CheckPointToken = "CheckPoint " + std::to_string((uint64_t)coro);
 	IoService::current()->post([=] {
-		coro->resume(CheckPointToken);
+		IoService::current()->checkpoints.push([=] {
+			coro->resume(CheckPointToken);
+		});
 	});
 	coro->yield({CheckPointToken, TokenThrow});
 }
