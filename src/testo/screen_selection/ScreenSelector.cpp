@@ -16,12 +16,17 @@ bool ScreenSelector::exec(stb::Image& image, const std::string& query) {
 	//1) Tokenize the whole shit
 	//2) Parse
 
-	Parser parser(query);
-	auto select_stmt = parser.parse();
-	VisitorSemantic semantic;
-	semantic.visit(select_stmt);
+	if (query != current_query) {
+		Parser parser(query);
+		auto select_stmt = parser.parse();
+		VisitorSemantic semantic;
+		semantic.visit(select_stmt);
+		current_query = query;
+		current_select_stmt = select_stmt;
+	}
+
 	VisitorInterpreter runner(image);
-	return runner.visit(select_stmt);
+	return runner.visit(current_select_stmt);
 }
 
 }
