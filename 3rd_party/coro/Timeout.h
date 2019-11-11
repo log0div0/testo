@@ -5,7 +5,6 @@
 #include <atomic>
 #include "coro/Coro.h"
 #include "coro/IoService.h"
-#include "coro/Strand.h"
 
 namespace coro {
 
@@ -47,7 +46,7 @@ public:
 	template <typename Duration>
 	Timeout(Duration duration): _timer(*IoService::current()) {
 		_timer.expires_from_now(duration);
-		_timer.async_wait(Strand::current()->wrap([=](const std::error_code& errorCode) {
+		_timer.async_wait([=](const std::error_code& errorCode) {
 			_callbackExecuted = true;
 			if (_timerCanceled) {
 				return _coro->resume(token());
@@ -56,7 +55,7 @@ public:
 				return _coro->propagateException(std::system_error(errorCode));
 			}
 			_coro->propagateException(TimeoutError(this));
-		}));
+		});
 	}
 	/// Снять таймаут
 	~Timeout() {

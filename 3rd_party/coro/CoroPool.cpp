@@ -1,5 +1,5 @@
 
-#include "coro/Strand.h"
+#include "coro/IoService.h"
 #include "coro/CoroPool.h"
 #include <coro/Finally.h>
 
@@ -59,7 +59,7 @@ void CoroPool::cancelAll() {
 }
 
 void CoroPool::onCoroDone(Coro* childCoro) {
-	Strand::current()->post([=] {
+	IoService::current()->post([=] {
 		while (childCoro->exceptions().size()) {
 			try {
 				childCoro->propagateException();

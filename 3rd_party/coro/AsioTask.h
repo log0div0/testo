@@ -2,8 +2,8 @@
 #pragma once
 
 
-#include "coro/Strand.h"
 #include "coro/Coro.h"
+#include <asio.hpp>
 
 
 namespace coro {
@@ -45,11 +45,11 @@ class AsioTask1: public AsioTask {
 public:
 	/// Передайте этот callback в asio
 	std::function<void(const std::error_code&)> callback() {
-		return Strand::current()->wrap([=](const std::error_code& errorCode) {
+		return [=](const std::error_code& errorCode) {
 			_isCallbackExecuted = true;
 			_errorCode = errorCode;
 			_coro->resume(token());
-		});
+		};
 	}
 
 	/// @see AsioTask::doWait
@@ -72,12 +72,12 @@ class AsioTask2: public AsioTask {
 public:
 	/// Передайте этот callback в asio
 	std::function<void(const std::error_code&, Result)> callback() {
-		return Strand::current()->wrap([=](const std::error_code& errorCode, Result result) {
+		return [=](const std::error_code& errorCode, Result result) {
 			_isCallbackExecuted = true;
 			_errorCode = errorCode;
 			_result = result;
 			_coro->resume(token());
-		});
+		};
 	}
 
 	/// @see AsioTask::doWait
