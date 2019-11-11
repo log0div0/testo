@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <darknet/Image.hpp>
+#include "stb/Image.hpp"
 #include <string>
 
 namespace screen_selection {
