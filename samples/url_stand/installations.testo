@@ -146,9 +146,9 @@ test configure_server: install_pkgs {
 		exec bash """
 			cd /opt
 			openssl genrsa -out rootCA.key 4096
-			openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj \"/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=rootCA.com\"
+			openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt -subj "/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=rootCA.com"
 			openssl genrsa -out server.key 2048
-			openssl req -new -sha256 -key server.key -nodes -subj \"/C=RU/ST=MSK/L=Moscow/O=MyServer/CN=192.168.1.2\" -out server.csr
+			openssl req -new -sha256 -key server.key -nodes -subj "/C=RU/ST=MSK/L=Moscow/O=MyServer/CN=192.168.1.2" -out server.csr
 			openssl x509 -req -in server.csr -CA rootCA.crt -CAkey rootCA.crt -CAkey rootCA.key -CAcreateserial -out server.crt -days 500 -sha256
 		"""
 
@@ -213,7 +213,7 @@ test configure_squid: install_squid {
 		exec bash """
 			cd /usr/local/squid/etc
 			openssl genrsa -out squidCA.key 4096
-			openssl req -x509 -new -nodes -key squidCA.key -sha256 -days 1024 -out squidCA.crt -subj \"/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=squidCA.com\"
+			openssl req -x509 -new -nodes -key squidCA.key -sha256 -days 1024 -out squidCA.crt -subj "/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=squidCA.com"
 		"""
 
 		enter_sudo()

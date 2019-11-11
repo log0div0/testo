@@ -9,8 +9,8 @@ test http_interception: configure_net
 
 		/usr/local/squid/sbin/squid
 
-		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\" && break || sleep 10; done
-		cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\"
+		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep "Accepting NAT intercepted SSL bumped" && break || sleep 10; done
+		cat /usr/local/squid/var/logs/cache.log | fgrep "Accepting NAT intercepted SSL bumped"
 	"""
 
 	url_client exec bash """
@@ -69,8 +69,8 @@ test https_interception: configure_net
 
 		/usr/local/squid/sbin/squid
 
-		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\" && break || sleep 10; done
-		cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\"
+		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep "Accepting NAT intercepted SSL bumped" && break || sleep 10; done
+		cat /usr/local/squid/var/logs/cache.log | fgrep "Accepting NAT intercepted SSL bumped"
 	"""
 
 	url_client exec bash """
@@ -130,8 +130,8 @@ test https_proxy_cert_not_imported: configure_net
 
 		/usr/local/squid/sbin/squid
 
-		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\" && break || sleep 10; done
-		cat /usr/local/squid/var/logs/cache.log | fgrep \"Accepting NAT intercepted SSL bumped\"
+		for i in {1..10}; do command cat /usr/local/squid/var/logs/cache.log | fgrep "Accepting NAT intercepted SSL bumped" && break || sleep 10; done
+		cat /usr/local/squid/var/logs/cache.log | fgrep "Accepting NAT intercepted SSL bumped"
 	"""
 
 	url_client exec bash """
