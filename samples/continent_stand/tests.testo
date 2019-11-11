@@ -6,7 +6,7 @@ network net1 {
 machine CUS {
 	cpus: 1
 	ram: 2048Mb
-	iso: $ISO_DIR + "/Continent.iso"
+	iso: "${ISO_DIR}/Continent.iso"
 	disk_size: 20Gb
 
 	nic UB_side: {
@@ -25,7 +25,7 @@ machine CUS {
 machine UB {
 	cpus: 1
 	ram: 2048Mb
-	iso: $ISO_DIR + "/Continent.iso"
+	iso: "${ISO_DIR}/Continent.iso"
 	disk_size: 20Gb
 
 	nic UB_side: {
@@ -46,7 +46,7 @@ macro install_continent() {
 	wait timeout 3s
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter
-	wait "Введите идентификатор шлюза"; type $id; press Enter*2
+	wait "Введите идентификатор шлюза"; type "${id}"; press Enter*2
 	wait "Установить Континент" timeout 10m; stop; unplug dvd; start
 	wait "Главное меню" timeout 10m
 }
@@ -64,13 +64,15 @@ test install_UB {
 }
 
 macro select_local_menu(string) {
-	wait $string
+	wait "${string}"
 	for i in 0..20 {
-		if ($i EQUAL "20") {
-			abort "Can't find menu entry " + $string
+		if ("${i}" EQUAL "20") {
+			abort "Can't find menu entry ${string}"
 		}
 
-		if (check $string [foreground = "blue", background = "gray"]) {
+		if (check `select * from textlines
+				where text = "${string}" and foreground = "blue" and background = "gray"`)
+		{
 			press Enter;
 			break;
 		}
@@ -80,13 +82,15 @@ macro select_local_menu(string) {
 }
 
 macro select_local_menu_horizontal(string) {
-	wait $string
+	wait "${string}"
 	for i in 0..20 {
-		if ($i EQUAL "20") {
-			abort "Can't find menu entry " + $string
+		if ("${i}" EQUAL "20") {
+			abort "Can't find menu entry ${string}"
 		}
 
-		if (check $string [foreground = "blue", background = "gray"]) {
+		if (check `select * from textlines
+				where text = "${string}" and foreground = "blue" and background = "gray"`)
+		{
 			press Enter;
 			break;
 		}

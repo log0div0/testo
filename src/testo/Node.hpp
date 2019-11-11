@@ -21,28 +21,84 @@ struct Node {
 };
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
-struct Word: public Node {
-	Word(const std::vector<Token> parts):
-		Node(Token(Token::category::word, "word", parts[0].pos())),
-		parts(parts) {}
+struct String: public Node {
+	String(const Token& string):
+		Node(string) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return parts[parts.size() - 1].pos();
+		return t.pos();
 	}
 
 	operator std::string() const {
-		std::string result;
-		for (auto& part: parts) {
-			result += part.value();
-		}
 		return t.value();
 	}
 
-	std::vector<Token> parts;
+	std::string text() const {
+		if (t.type() == Token::category::quoted_string) {
+			return t.value().substr(1, t.value().length() - 2);
+		} else {
+			return t.value().substr(3, t.value().length() - 6);
+		}
+	}
+};
+
+//basic unit of expressions - could be double quoted string or a var_ref (variable)
+struct SelectExpr: public Node {
+	SelectExpr(const Token& string):
+		Node(string) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+
+	std::string text() const {
+		return t.value().substr(1, t.value().length() - 2);
+	}
+};
+
+//String or SelectExpr. Used only in
+//Wait, Check and Click (in future)
+struct ISelectable: public Node {
+	using Node::Node;
+
+	virtual std::string text() const = 0;
+};
+
+template <typename SelectableType>
+struct Selectable: public ISelectable {
+	Selectable(std::shared_ptr<SelectableType> selectable):
+		ISelectable(selectable->t),
+		selectable(selectable) {}
+
+	Pos begin() const {
+		return selectable->begin();
+	}
+
+	Pos end() const {
+		return selectable->end();
+	}
+
+	operator std::string() const {
+		return text();
+	}
+
+	std::string text() const {
+		return selectable->text();
+	}
+
+	std::shared_ptr<SelectableType> selectable;
 };
 
 struct KeySpec: public Node {
@@ -162,7 +218,7 @@ struct Empty: public Node {
 };
 
 struct Abort: public Node {
-	Abort(const Token& abort, std::shared_ptr<Word> message):
+	Abort(const Token& abort, std::shared_ptr<String> message):
 		Node(abort), message(message) {}
 
 	Pos begin() const {
@@ -177,11 +233,11 @@ struct Abort: public Node {
 		return t.value() + " " + std::string(*message);
 	}
 
-	std::shared_ptr<Word> message;
+	std::shared_ptr<String> message;
 };
 
 struct Print: public Node {
-	Print(const Token& print, std::shared_ptr<Word> message):
+	Print(const Token& print, std::shared_ptr<String> message):
 		Node(print), message(message) {}
 
 	Pos begin() const {
@@ -196,54 +252,31 @@ struct Print: public Node {
 		return t.value() + " " + std::string(*message);
 	}
 
-	std::shared_ptr<Word> message;
+	std::shared_ptr<String> message;
 };
 
 struct Type: public Node {
-	Type(const Token& type, std::shared_ptr<Word> text_word):
-		Node(type), text_word(text_word) {}
+	Type(const Token& type, std::shared_ptr<String> text):
+		Node(type), text(text) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return text_word->end();
+		return text->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " " + std::string(*text_word);
+		return t.value() + " " + std::string(*text);
 	}
 
-	std::shared_ptr<Word> text_word;
-};
-
-struct Assignment: public Node {
-	Assignment(const Token& left, const Token& assign, std::shared_ptr<Word> right):
-		Node(assign),
-		left(left),
-		right(right) {}
-
-	Pos begin() const {
-		return left.pos();
-	}
-
-	Pos end() const {
-		return right->end();
-	}
-
-	operator std::string() const {
-		return left.value() + t.value() + std::string(*right);
-	}
-
-	Token left;
-	std::shared_ptr<Word> right;
+	std::shared_ptr<String> text;
 };
 
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<Word> text_word,
-	const std::vector<std::shared_ptr<Assignment>>& params, const Token& timeout, const Token& time_interval):
-		Node(wait), text_word(text_word), params(params), timeout(timeout), time_interval(time_interval) {}
+	Wait(const Token& wait, std::shared_ptr<ISelectable> text, const Token& timeout, const Token& time_interval):
+		Node(wait), text(text), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -253,15 +286,15 @@ struct Wait: public Node {
 		if (timeout) {
 			return timeout.pos();
 		} else {
-			return text_word->end();
+			return text->end();
 		}
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
 
-		if (text_word) {
-			result += " " + std::string(*text_word);
+		if (text) {
+			result += " " + std::string(*text);
 		}
 
 		if (timeout) {
@@ -270,8 +303,7 @@ struct Wait: public Node {
 		return result;
 	}
 
-	std::shared_ptr<Word> text_word;
-	std::vector<std::shared_ptr<Assignment>> params;
+	std::shared_ptr<ISelectable> text;
 	Token timeout;
 	Token time_interval;
 };
@@ -339,7 +371,7 @@ struct MouseEvent: public Node {
 
 //Also is used for unplug
 struct Plug: public Node {
-	Plug(const Token& plug, const Token& type, const Token& name, std::shared_ptr<Word> path):
+	Plug(const Token& plug, const Token& type, const Token& name, std::shared_ptr<String> path):
 		Node(plug),
 		type(type),
 		name_token(name),
@@ -363,7 +395,7 @@ struct Plug: public Node {
 
 	Token type; //nic or flash or dvd
 	Token name_token; //name of resource to be plugged/unplugged
-	std::shared_ptr<Word> path; //used only for dvd
+	std::shared_ptr<String> path; //used only for dvd
 };
 
 
@@ -429,7 +461,7 @@ struct Shutdown: public Node {
 };
 
 struct Exec: public Node {
-	Exec(const Token& exec, const Token& process, std::shared_ptr<Word> commands, const Token& timeout, const Token& time_interval):
+	Exec(const Token& exec, const Token& process, std::shared_ptr<String> commands, const Token& timeout, const Token& time_interval):
 		Node(exec),
 		process_token(process),
 		commands(commands), timeout(timeout), time_interval(time_interval) {}
@@ -454,7 +486,7 @@ struct Exec: public Node {
 	}
 
 	Token process_token;
-	std::shared_ptr<Word> commands;
+	std::shared_ptr<String> commands;
 	Token timeout;
 	Token time_interval;
 };
@@ -462,7 +494,7 @@ struct Exec: public Node {
 //Now this node holds actions copyto and copyfrom
 //Cause they're really similar
 struct Copy: public Node {
-	Copy(const Token& copy, std::shared_ptr<Word> from, std::shared_ptr<Word> to, const Token& timeout, const Token& time_interval):
+	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, const Token& timeout, const Token& time_interval):
 		Node(copy),
 		from(from),
 		to(to), timeout(timeout), time_interval(time_interval) {}
@@ -492,8 +524,8 @@ struct Copy: public Node {
 		return t.type() == Token::category::copyto;
 	}
 
-	std::shared_ptr<Word> from;
-	std::shared_ptr<Word> to;
+	std::shared_ptr<String> from;
+	std::shared_ptr<String> to;
 	Token timeout;
 	Token time_interval;
 };
@@ -645,7 +677,7 @@ struct Macro: public Node {
 };
 
 struct MacroCall: public Node {
-	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<Word>>& params):
+	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<String>>& params):
 		Node(macro_name), params(params) {}
 
 	Pos begin() const {
@@ -670,7 +702,7 @@ struct MacroCall: public Node {
 	}
 
 	std::shared_ptr<Macro> macro;
-	std::vector<std::shared_ptr<Word>> params;
+	std::vector<std::shared_ptr<String>> params;
 };
 
 
@@ -736,8 +768,8 @@ struct BinaryAttr: public Node {
 	Token value;
 };
 
-struct WordAttr: public Node {
-	WordAttr(std::shared_ptr<Word> value):
+struct StringAttr: public Node {
+	StringAttr(std::shared_ptr<String> value):
 		Node(value->t),
 		value(value) {}
 
@@ -753,7 +785,7 @@ struct WordAttr: public Node {
 		return std::string(*value);
 	}
 
-	std::shared_ptr<Word> value;
+	std::shared_ptr<String> value;
 };
 
 struct Attr: public Node {
@@ -904,7 +936,7 @@ struct IFactor: public Node {
 	using Node::Node;
 };
 
-//Word, comparison, check or expr
+//String, comparison, check or expr
 template <typename FactorType>
 struct Factor: public IFactor {
 	Factor(const Token& not_token, std::shared_ptr<FactorType> factor):
@@ -938,7 +970,7 @@ struct Factor: public IFactor {
 };
 
 struct Comparison: public Node {
-	Comparison(const Token& op, std::shared_ptr<Word> left, std::shared_ptr<Word> right):
+	Comparison(const Token& op, std::shared_ptr<String> left, std::shared_ptr<String> right):
 		Node(op), left(left), right(right) {}
 
 	Pos begin() const {
@@ -957,39 +989,33 @@ struct Comparison: public Node {
 		return t;
 	}
 
-	std::shared_ptr<Word> left;
-	std::shared_ptr<Word> right;
+	std::shared_ptr<String> left;
+	std::shared_ptr<String> right;
 };
 
 struct Check: public Node {
-	Check(const Token& check, std::shared_ptr<Word> text_word,
-	const std::vector<std::shared_ptr<Assignment>>& params):
-		Node(check), text_word(text_word), params(params) {}
+	Check(const Token& check, std::shared_ptr<ISelectable> text):
+		Node(check), text(text) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		if (params.size()) {
-			return params[params.size() - 1]->end();
-		} else {
-			return text_word->end();
-		}
+		return text->end();
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
 
-		if (text_word) {
-			result += " " + std::string(*text_word);
+		if (text) {
+			result += " " + std::string(*text);
 		}
 
 		return result;
 	}
 
-	std::shared_ptr<Word> text_word;
-	std::vector<std::shared_ptr<Assignment>> params;
+	std::shared_ptr<ISelectable> text;
 };
 
 struct IExpr: public Node {

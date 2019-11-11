@@ -559,28 +559,7 @@ Token Lexer::OR() {
 	return Token(Token::category::OR, value, tmp_pos);
 }
 
-Token Lexer::var_ref() {
-	Pos tmp_pos = current_pos;
-	std::string value;
-	value += (*input)[current_pos];
-	current_pos.advance();
-	size_t shift = 0;
-
-	while ((test_id(shift) || isdigit((*input)[current_pos + shift])) && !test_eof()) {
-		value += (*input)[current_pos + shift];
-		shift++;
-	}
-
-	if (shift == 0) {
-		throw std::runtime_error(std::string(tmp_pos) + ": Error: empty var reference");
-	}
-
-	current_pos.advance(shift);
-
-	return Token(Token::category::var_ref, value, tmp_pos);
-}
-
-Token Lexer::multiline_string() {
+Token Lexer::triple_quoted_string() {
 	Pos tmp_pos = current_pos;
 
 	std::string value;
@@ -599,27 +578,27 @@ Token Lexer::multiline_string() {
 			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing triple quote");
 		}
 
-		if (test_escaped_character()) {
-			value += escaped_character();
-			continue;
-		}
-
 		value += (*input)[current_pos];
 		current_pos.advance();
-	} while (!test_multiline_quote());
+	} while (!test_triple_quote());
 
-	value += (*input)[current_pos];
-	current_pos.advance(); //advance over closing quote
+	//Check if we have another quotes over the end. Like """"
+
+	while(test_triple_quote()) {
+		value += (*input)[current_pos];
+		current_pos.advance(); //advance over closing quote
+	}
+
 	value += (*input)[current_pos];
 	current_pos.advance();
 	value += (*input)[current_pos];
 	current_pos.advance();
 
-	return Token(Token::category::multiline_string, value, tmp_pos);
+	return Token(Token::category::triple_quoted_string, value, tmp_pos);
 }
 
 
-Token Lexer::dbl_quoted_string() {
+Token Lexer::quoted_string() {
 	Pos tmp_pos = current_pos;
 
 	std::string value;
@@ -635,12 +614,31 @@ Token Lexer::dbl_quoted_string() {
 
 		value += (*input)[current_pos];
 		current_pos.advance();
-	} while (!test_dbl_quote());
+	} while (!test_quote());
 
 	value += (*input)[current_pos];
 	current_pos.advance(); //advance over closing quote
 
-	return Token(Token::category::dbl_quoted_string, value, tmp_pos);
+	return Token(Token::category::quoted_string, value, tmp_pos);
+}
+
+Token Lexer::backticked_string() {
+	Pos tmp_pos = current_pos;
+
+	std::string value;
+	do {
+		if (test_eof()) {
+			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing backtick");
+		}
+
+		value += (*input)[current_pos];
+		current_pos.advance();
+	} while (!test_backtick());
+
+	value += (*input)[current_pos];
+	current_pos.advance(); //advance over closing quote
+
+	return Token(Token::category::backticked_string, value, tmp_pos);
 }
 
 Token Lexer::comma() {
@@ -729,12 +727,12 @@ Token Lexer::get_next_token() {
 			return number();
 		} else if (test_id()) {
 			return id();
-		} else if (test_var_ref()) {
-			return var_ref();
-		} else if (test_multiline_quote()) {
-			return multiline_string();
-		} else if (test_dbl_quote()) {
-			return dbl_quoted_string();
+		} else if (test_triple_quote()) {
+			return triple_quoted_string();
+		} else if (test_quote()) {
+			return quoted_string();
+		} else if (test_backtick()) {
+			return backticked_string();
 		} else if (test_comma()) {
 			return comma();
 		} else if (test_assign()) {

@@ -13,7 +13,7 @@ machine my_machine {
 
 test parent_test {
 	my_machine {
-		if ($vm_nic_count STREQUAL "0") {
+		if ("${vm_nic_count}" STREQUAL "0") {
 			print "Is zero"
 		}
 	}

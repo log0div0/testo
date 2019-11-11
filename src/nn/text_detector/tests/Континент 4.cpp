@@ -3,7 +3,7 @@
 #include "../TextDetector.hpp"
 
 TEST_CASE("Континент 4/Установка") {
-	TextDetector detector;
+	TextDetector& detector = TextDetector::instance();
 
 	{
 		stb::Image img("Континент 4/Установка/Начальный экран.png");
@@ -23,7 +23,7 @@ TEST_CASE("Континент 4/Установка") {
 }
 
 TEST_CASE("Континент 4/Локальное меню") {
-	TextDetector detector;
+	TextDetector& detector = TextDetector::instance();
 
 	{
 		stb::Image img("Континент 4/Локальное меню/Выбор метода аутентификации.png");

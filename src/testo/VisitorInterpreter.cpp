@@ -1,6 +1,7 @@
 
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
+#include "tql/Interpreter.hpp"
 
 #include "coro/Finally.h"
 #include "coro/CheckPoint.h"
@@ -858,13 +859,13 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 }
 
 void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
-	std::string message = visit_word(vmc, abort->message);
+	std::string message = template_parser.resolve(abort->message->text(), reg, vmc);
 	throw AbortException(abort, vmc, message);
 }
 
 void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
 	try {
-		std::string message = visit_word(vmc, print_action->message);
+		std::string message = template_parser.resolve(print_action->message->text(), reg, vmc);
 		std::cout
 			<< rang::fgB::blue << progress() << " "
 			<< rang::fg::yellow << vmc->name()
@@ -877,7 +878,7 @@ void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	try {
-		std::string text = visit_word(vmc, type->text_word);
+		std::string text = template_parser.resolve(type->text->text(), reg, vmc);
 		if (text.size() == 0) {
 			return;
 		}
@@ -903,59 +904,63 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
-		std::string text = "";
-		if (wait->text_word) {
-			text = visit_word(vmc, wait->text_word);
-		}
+		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
+		if (!wait->text) {
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Sleeping "
+				<< rang::fgB::blue << "in virtual machine "
+				<< rang::fg::yellow << vmc->name()
+				<< rang::fgB::blue
+				<< " for " << wait_for << rang::style::reset << std::endl;
 
-		std::cout
-			<< rang::fgB::blue << progress()
-			<< " Waiting "
-			<< rang::fg::yellow;
-
-		if (text.length()) {
-			std::cout << "\"" + text + "\" ";
-		}
-
-		std::string foreground;
-		std::string background;
-
-		for (auto param: wait->params) {
-			if (param->left.value() == "foreground") {
-				foreground = visit_word(vmc, param->right);
-			} else if (param->left.value() == "background") {
-				background = visit_word(vmc, param->right);
-			} else {
-				throw std::runtime_error(std::string("Unknown wait parameter: ") + param->left.value());
-			}
-		}
-
-		std::cout
-			<< rang::fgB::blue << "on virtual machine "
-			<< rang::fg::yellow << vmc->name()
-			<< rang::fgB::blue;
-
-		if (wait->time_interval) {
-			std::cout << " for " << wait->time_interval.value();
-		}
-
-		std::cout
-			<< rang::style::reset << std::endl;
-
-		if (!wait->text_word) {
 			return sleep(wait->time_interval.value());
 		}
 
-		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
+
+		std::string query = "";
+
+		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(wait->text)) {
+			auto text = template_parser.resolve(p->text(), reg, vmc);
+			query = tql::text_to_query(text);
+
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Waiting string "
+				<< rang::fg::yellow;
+			std::cout << "\"" + text + "\"";
+
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(wait->text)) {
+			query = template_parser.resolve(p->text(), reg, vmc);
+
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Waiting selection "
+				<< rang::fg::yellow;
+			std::cout << "`" + query + "`";
+
+		} else {
+			throw std::runtime_error("Unknown selectable type");
+		}
+
+		std::cout
+			<< rang::fgB::blue << " for " << wait_for
+			<< " on virtual machine "
+			<< rang::fg::yellow << vmc->name()
+			<< rang::fgB::blue
+			<< rang::style::reset << std::endl;
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
+
+		tql::Interpreter query_interpreter(query);
 
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
-			if (text_detector.detect(screenshot, text, foreground, background).size()) {
+			if (query_interpreter.exec(screenshot)) {
 				return;
 			}
+
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
 			//std::cout << "time = " << time.count() << " seconds" << std::endl;
@@ -967,10 +972,10 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		}
 
 		throw std::runtime_error("Wait timeout");
+
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(wait, vmc));
 	}
-
 }
 
 void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
@@ -1048,7 +1053,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 
 	std::cout
 		<< rang::fgB::blue << progress()
-		<< " Pressing button "
+		<< " Pressing key "
 		<< rang::fg::yellow << key_spec->get_buttons_str()
 		<< rang::fgB::blue;
 
@@ -1195,7 +1200,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
 
-		fs::path path = visit_word(vmc, plug->path);
+		fs::path path = template_parser.resolve(plug->path->text(), reg, vmc);
 		std::cout
 			<< rang::fgB::blue << progress()
 			<< " Plugging dvd "
@@ -1294,7 +1299,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 			//In future this should be a function
 
 			std::string script = "set -e; set -o pipefail; set -x;";
-			script += visit_word(vmc, exec->commands);
+			script += template_parser.resolve(exec->commands->text(), reg, vmc);
 			script.erase(std::remove(script.begin(), script.end(), '\r'), script.end());
 
 			//copy the script to tmp folder
@@ -1333,8 +1338,8 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
 	try {
-		fs::path from = visit_word(vmc, copy->from);
-		fs::path to = visit_word(vmc, copy->to);
+		fs::path from = template_parser.resolve(copy->from->text(), reg, vmc);
+		fs::path to = template_parser.resolve(copy->to->text(), reg, vmc);
 
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
@@ -1386,13 +1391,13 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 	StackEntry new_ctx(true);
 
 	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		auto value = visit_word(vmc, macro_call->params[i]);
+		auto value = template_parser.resolve(macro_call->params[i]->text(), reg, vmc);
 		new_ctx.define(macro_call->macro->params[i].value(), value);
 	}
 
-	local_vars.push_back(new_ctx);
+	reg.local_vars.push_back(new_ctx);
 	coro::Finally finally([&] {
-		local_vars.pop_back();
+		reg.local_vars.pop_back();
 	});
 
 	visit_action_block(vmc, macro_call->macro->action_block->action);
@@ -1416,13 +1421,13 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vmc, std:
 
 void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause) {
 	StackEntry new_ctx(false);
-	local_vars.push_back(new_ctx);
-	size_t ctx_position = local_vars.size() - 1;
+	reg.local_vars.push_back(new_ctx);
+	size_t ctx_position = reg.local_vars.size() - 1;
 	coro::Finally finally([&]{
-		local_vars.pop_back();
+		reg.local_vars.pop_back();
 	});
 	for (auto i = for_clause->start(); i <= for_clause->finish(); i++) {
-		local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
+		reg.local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
 		try {
 			visit_action(vmc, for_clause->cycle_body);
 		} catch (const CycleControlException& cycle_control) {
@@ -1461,8 +1466,8 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::sha
 }
 
 bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
-	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Word>>(factor)) {
-		return p->is_negated() ^ (bool)visit_word(vmc, p->factor).length();
+	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
+		return p->is_negated() ^ (bool)template_parser.resolve(p->factor->text(), reg, vmc).length();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(vmc, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
@@ -1474,60 +1479,9 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::sh
 	}
 }
 
-std::string VisitorInterpreter::resolve_var(std::shared_ptr<VmController> vmc, const std::string& var) {
-	//Resolving order
-	//1) metadata
-	//2) reg (todo)
-	//3) env var
-
-	/*std::cout
-		<< rang::fgB::blue << progress()
-		<< " Resolving var "
-		<< rang::fg::yellow << var
-		<< rang::style::reset << std::endl;*/
-
-	for (auto it = local_vars.rbegin(); it != local_vars.rend(); ++it) {
-		if (it->is_defined(var)) {
-			return it->ref(var);
-		}
-		if (it->is_terminate) {
-			break;
-		}
-	}
-
-	if (vmc->is_defined() && vmc->has_user_key(var)) {
-		return vmc->get_user_metadata(var);
-	}
-
-	auto env_value = std::getenv(var.c_str());
-
-	if (env_value == nullptr) {
-		return "";
-	}
-	return env_value;
-}
-
-std::string VisitorInterpreter::visit_word(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Word> word) {
-	std::string result;
-
-	for (auto part: word->parts) {
-		if (part.type() == Token::category::dbl_quoted_string) {
-			result += part.value().substr(1, part.value().length() - 2);
-		} else if (part.type() == Token::category::var_ref) {
-			result += resolve_var(vmc, part.value().substr(1, part.value().length() - 1));
-		} else if (part.type() == Token::category::multiline_string) {
-			result += part.value().substr(3, part.value().length() - 6);
-		} else {
-			throw std::runtime_error("Unknown word type");
-		}
-	}
-
-	return result;
-}
-
 bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
-	auto left = visit_word(vmc, comparison->left);
-	auto right = visit_word(vmc, comparison->right);
+	auto left = template_parser.resolve(comparison->left->text(), reg, vmc);
+	auto right = template_parser.resolve(comparison->right->text(), reg, vmc);
 	if (comparison->op().type() == Token::category::GREATER) {
 		if (!is_number(left)) {
 			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
@@ -1571,31 +1525,41 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
-		auto text = visit_word(vmc, check->text_word);
+		std::string query = "";
 
-		std::string foreground;
-		std::string background;
+		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(check->text)) {
+			auto text = template_parser.resolve(p->text(), reg, vmc);
+			query = tql::text_to_query(text);
 
-		for (auto param: check->params) {
-			if (param->left.value() == "foreground") {
-				foreground = visit_word(vmc, param->right);
-			} else if (param->left.value() == "background") {
-				background = visit_word(vmc, param->right);
-			} else {
-				throw std::runtime_error(std::string("Unknown check parameter: ") + param->left.value());
-			}
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Checking string "
+				<< rang::fg::yellow;
+			std::cout << "\"" + text + "\"";
+
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(check->text)) {
+			query = template_parser.resolve(p->text(), reg, vmc);
+
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Checking selection "
+				<< rang::fg::yellow;
+			std::cout << "`" + query + "`";
+
+		} else {
+			throw std::runtime_error("Unknown selectable type");
 		}
 
 		std::cout
-			<< rang::fgB::blue << progress()
-			<< " Checking "
-			<< rang::fg::yellow << "\"" << text << "\""
-			<< rang::fgB::blue << " on virtual machine "
+			<< rang::fgB::blue
+			<< " on virtual machine "
 			<< rang::fg::yellow << vmc->name()
+			<< rang::fgB::blue
 			<< rang::style::reset << std::endl;
 
+		tql::Interpreter query_interpreter(query);
 		auto screenshot = vmc->vm->screenshot();
-		return text_detector.detect(screenshot, text, foreground, background).size();
+		return query_interpreter.exec(screenshot);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}

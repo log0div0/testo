@@ -30,14 +30,14 @@ private:
 	Token LT(size_t i) const;
 	Token::category LA(size_t i) const;
 
-	bool test_assignment() const;
 	bool test_stmt() const;
 	bool test_controller() const;
 	bool test_test() const;
 	bool test_command() const;
 	bool test_action() const;
 	bool test_include() const;
-	bool test_word() const;
+	bool test_string() const;
+	bool test_selectable() const;
 	bool test_binary() const;
 	bool test_comparison() const;
 	bool is_button(const Token& t) const;
@@ -48,7 +48,6 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
 	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
-	std::shared_ptr<AST::Assignment> assignment();
 	std::shared_ptr<AST::Attr> attr();
 	std::shared_ptr<AST::AttrBlock> attr_block();
 	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
@@ -76,7 +75,11 @@ private:
 	std::shared_ptr<AST::Action<AST::CycleControl>> cycle_control();
 
 	//expressions
-	std::shared_ptr<AST::Word> word();
+	std::shared_ptr<AST::ISelectable> selectable();
+	std::shared_ptr<AST::Selectable<AST::SelectExpr>> selectable_expr();
+
+	std::shared_ptr<AST::String> string();
+
 	std::shared_ptr<AST::IFactor> factor();
 	std::shared_ptr<AST::Check> check();
 	std::shared_ptr<AST::Comparison> comparison();

@@ -5,10 +5,9 @@ network nat {
 machine my_machine {
 	cpus: 1
 	ram: 512Mb
-	iso: $ISO_FILE
+	iso: "${ISO_FILE}"
 	disk_size: 4Gb
 	nic nat: {
-		slot: 0
 		attached_to: "nat"
 		adapter_type: "e1000"
 	}

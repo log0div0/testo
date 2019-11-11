@@ -1,29 +1,40 @@
 
 include "../common.testo"
 
+network nat {
+	mode: "nat"
+}
+
+network net1 {
+	mode: "internal"
+}
+
+network net2 {
+	mode: "internal"
+}
+
+network net3 {
+	mode: "internal"
+}
+
 machine vpn_sgw1 {
 	cpus: 1
 	ram: 1024Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
-		slot: 0
 		attached_to: "nat"
 		adapter_type: "e1000"
 	}
 
 	nic WAN: {
-		slot: 1
-		attached_to: "internal"
-		network: "net2"
+		attached_to: "net2"
 		mac: "52:54:00:00:00:00"
 		adapter_type: "e1000"
 	}
 
 	nic LAN: {
-		slot: 2
-		attached_to: "internal"
-		network: "net1"
+		attached_to: "net1"
 		mac: "52:54:00:00:00:11"
 		adapter_type: "e1000"
 	}
@@ -33,33 +44,26 @@ machine vpn_sgw1 {
 		password: "1111"
 		host_name: "vpn-sgw1"
 	}
-
-	vbox_os_type: "Ubuntu_64"
 }
 
 machine vpn_sgw2 {
 	cpus: 1
 	ram: 1024Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
-		slot: 0
 		attached_to: "nat"
 		adapter_type: "e1000"
 	}
 
 	nic WAN: {
-		slot: 1
-		attached_to: "internal"
-		network: "net2"
+		attached_to: "net2"
 		mac: "52:54:00:00:11:00"
 		adapter_type: "e1000"
 	}
 
 	nic LAN: {
-		slot: 2
-		attached_to: "internal"
-		network: "net3"
+		attached_to: "net3"
 		mac: "52:54:00:00:11:11"
 		adapter_type: "e1000"
 	}
@@ -69,26 +73,21 @@ machine vpn_sgw2 {
 		password: "1111"
 		host_name: "vpn-sgw2"
 	}
-
-	vbox_os_type: "Ubuntu_64"
 }
 
 machine vpn_client1 {
 	cpus: 1
 	ram: 512Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 4Gb
 
 	nic nat: {
-		slot: 0
 		attached_to: "nat"
 		adapter_type: "e1000"
 	}
 
 	nic LAN: {
-		slot: 1
-		attached_to: "internal"
-		network: "net1"
+		attached_to: "net1"
 		mac: "52:54:00:00:22:00"
 		adapter_type: "e1000"
 	}
@@ -98,26 +97,21 @@ machine vpn_client1 {
 		password: "1111"
 		host_name: "vpn-client1"
 	}
-
-	vbox_os_type: "Ubuntu_64"
 }
 
 machine vpn_client2 {
 	cpus: 1
 	ram: 512Mb
-	iso: $ISO_DIR + "/ubuntu-16.04.6-server-amd64.iso"
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 5Gb
 
 	nic nat: {
-		slot: 0
 		attached_to: "nat"
 		adapter_type: "e1000"
 	}
 
 	nic LAN: {
-		slot: 1
-		attached_to: "internal"
-		network: "net3"
+		attached_to: "net3"
 		mac: "52:54:00:00:33:00"
 		adapter_type: "e1000"
 	}
@@ -127,8 +121,6 @@ machine vpn_client2 {
 		password: "1111"
 		host_name: "vpn-client2"
 	}
-
-	vbox_os_type: "Ubuntu_64"
 }
 
 

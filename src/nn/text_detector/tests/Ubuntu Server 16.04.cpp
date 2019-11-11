@@ -3,7 +3,7 @@
 #include "../TextDetector.hpp"
 
 TEST_CASE("Ubuntu Server 16.04/Установка") {
-	TextDetector detector;
+	TextDetector& detector = TextDetector::instance();
 
 	{
 		stb::Image img("Ubuntu Server 16.04/Установка/Начальный экран.png");

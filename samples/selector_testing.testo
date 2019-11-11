@@ -1,0 +1,14 @@
+
+
+machine nana {
+	cpus: 1
+	ram: 1024Mb
+	iso: "${ISO_DIR}/Continent.iso"
+	disk_size: 2Gb
+}
+
+test herush {
+	nana start
+	nana wait `select * from
+		textlines where NOT (text = "Hello" OR text = "World" AND text = "Hello" OR NOT (text!="World")) `
+}

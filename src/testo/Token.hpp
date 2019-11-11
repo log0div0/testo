@@ -8,7 +8,6 @@ struct Token {
 		eof,
 		newline,
 		id,
-		var_ref,
 		abort,
 		print,
 		type_,
@@ -45,8 +44,9 @@ struct Token {
 		number,
 		time_interval,
 		size,
-		dbl_quoted_string,
-		multiline_string,
+		quoted_string,
+		triple_quoted_string,
+		backticked_string, //`
 		assign,
 		comma,
 		plus,
@@ -79,7 +79,6 @@ struct Token {
 
 		//fake categories
 		none, //not initialized
-		word,
 		binary, //true or false
 		program,
 		key_spec,
@@ -160,8 +159,8 @@ struct Token {
 			return "TIME INTERVAL";
 		case size:
 			return "SIZE";
-		case dbl_quoted_string:
-			return "DOUBLE-QUOTED STRING";
+		case quoted_string:
+			return "QUOTED STRING";
 		case comma:
 			return ",";
 		case plus:

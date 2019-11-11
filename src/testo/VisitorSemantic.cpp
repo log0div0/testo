@@ -98,31 +98,31 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	attr_ctx vm_global_ctx;
 	vm_global_ctx.insert({"ram", std::make_pair(false, Token::category::size)});
 	vm_global_ctx.insert({"disk_size", std::make_pair(false, Token::category::size)});
-	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::word)});
+	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::quoted_string)});
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
-	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::word)});
+	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
 	vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
 	attr_ctx vm_network_ctx;
 	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
-	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::word)});
-	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::word)});
-	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::word)});
+	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::quoted_string)});
+	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::quoted_string)});
+	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"nic", vm_network_ctx});
 
 	attr_ctx fd_global_ctx;
-	fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::word)});
+	fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::quoted_string)});
 	fd_global_ctx.insert({"size", std::make_pair(false, Token::category::size)});
-	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::word)});
+	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"fd_global", fd_global_ctx});
 
 	attr_ctx network_global_ctx;
-	network_global_ctx.insert({"mode", std::make_pair(false, Token::category::word)});
+	network_global_ctx.insert({"mode", std::make_pair(false, Token::category::quoted_string)});
 	network_global_ctx.insert({"persistent", std::make_pair(false, Token::category::binary)});
 	network_global_ctx.insert({"autostart", std::make_pair(false, Token::category::binary)});
 
@@ -130,7 +130,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 
 	attr_ctx test_global_ctx;
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
-	test_global_ctx.insert({"description", std::make_pair(false, Token::category::word)});
+	test_global_ctx.insert({"description", std::make_pair(false, Token::category::quoted_string)});
 	attr_ctxs.insert({"test_global", test_global_ctx});
 }
 
@@ -432,37 +432,10 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock>
 	return config;
 }
 
-std::string VisitorSemantic::resolve_var(const std::string& var) {
-	auto env_value = std::getenv(var.c_str());
-
-	if (env_value == nullptr) {
-		return "";
-	}
-	return env_value;
-}
-
-std::string VisitorSemantic::visit_word(std::shared_ptr<AST::Word> word) {
-	std::string result;
-
-	for (auto part: word->parts) {
-		if (part.type() == Token::category::dbl_quoted_string) {
-			result += part.value().substr(1, part.value().length() - 2);
-		} else if (part.type() == Token::category::var_ref) {
-			result += resolve_var(part.value().substr(1, part.value().length() - 1));
-		} else if (part.type() == Token::category::multiline_string) {
-			result += part.value().substr(3, part.value().length() - 6);
-		} else {
-			throw std::runtime_error("Unknown word type");
-		}
-	}
-
-	return result;
-}
-
 void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
 	if (ctx_name == "metadata") {
-		if (attr->value->t.type() != Token::category::word) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only word specifiers ");
+		if (attr->value->t.type() != Token::category::quoted_string) {
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only string specifiers");
 		}
 	} else {
 		auto ctx = attr_ctxs.find(ctx_name);
@@ -500,8 +473,8 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 		}
 	}
 
-	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::WordAttr>>(attr->value)) {
-		auto value = visit_word(p->attr_value->value);
+	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::StringAttr>>(attr->value)) {
+		auto value = template_parser.resolve(p->attr_value->value->text(), reg);
 		config[attr->name.value()] = value;
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
 		auto value = p->attr_value->value;
