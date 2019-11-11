@@ -38,7 +38,7 @@ struct String: public Node {
 	}
 
 	std::string text() const {
-		if (t.type() == Token::category::dbl_quoted_string) {
+		if (t.type() == Token::category::quoted_string) {
 			return t.value().substr(1, t.value().length() - 2);
 		} else {
 			return t.value().substr(3, t.value().length() - 6);

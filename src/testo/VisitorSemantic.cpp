@@ -98,31 +98,31 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	attr_ctx vm_global_ctx;
 	vm_global_ctx.insert({"ram", std::make_pair(false, Token::category::size)});
 	vm_global_ctx.insert({"disk_size", std::make_pair(false, Token::category::size)});
-	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::dbl_quoted_string)});
+	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::quoted_string)});
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
-	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::dbl_quoted_string)});
+	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
 	vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
 	attr_ctx vm_network_ctx;
 	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
-	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::dbl_quoted_string)});
-	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::dbl_quoted_string)});
-	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::dbl_quoted_string)});
+	vm_network_ctx.insert({"attached_to", std::make_pair(false, Token::category::quoted_string)});
+	vm_network_ctx.insert({"mac", std::make_pair(false, Token::category::quoted_string)});
+	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"nic", vm_network_ctx});
 
 	attr_ctx fd_global_ctx;
-	fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::dbl_quoted_string)});
+	fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::quoted_string)});
 	fd_global_ctx.insert({"size", std::make_pair(false, Token::category::size)});
-	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::dbl_quoted_string)});
+	fd_global_ctx.insert({"folder", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"fd_global", fd_global_ctx});
 
 	attr_ctx network_global_ctx;
-	network_global_ctx.insert({"mode", std::make_pair(false, Token::category::dbl_quoted_string)});
+	network_global_ctx.insert({"mode", std::make_pair(false, Token::category::quoted_string)});
 	network_global_ctx.insert({"persistent", std::make_pair(false, Token::category::binary)});
 	network_global_ctx.insert({"autostart", std::make_pair(false, Token::category::binary)});
 
@@ -130,7 +130,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 
 	attr_ctx test_global_ctx;
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
-	test_global_ctx.insert({"description", std::make_pair(false, Token::category::dbl_quoted_string)});
+	test_global_ctx.insert({"description", std::make_pair(false, Token::category::quoted_string)});
 	attr_ctxs.insert({"test_global", test_global_ctx});
 }
 
@@ -434,7 +434,7 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock>
 
 void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
 	if (ctx_name == "metadata") {
-		if (attr->value->t.type() != Token::category::dbl_quoted_string) {
+		if (attr->value->t.type() != Token::category::quoted_string) {
 			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only string specifiers");
 		}
 	} else {

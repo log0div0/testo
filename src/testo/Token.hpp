@@ -44,9 +44,9 @@ struct Token {
 		number,
 		time_interval,
 		size,
-		dbl_quoted_string,
-		multiline_string,
-		grave_quoted_string, //`
+		quoted_string,
+		triple_quoted_string,
+		backticked_string, //`
 		assign,
 		comma,
 		plus,
@@ -159,8 +159,8 @@ struct Token {
 			return "TIME INTERVAL";
 		case size:
 			return "SIZE";
-		case dbl_quoted_string:
-			return "DOUBLE-QUOTED STRING";
+		case quoted_string:
+			return "QUOTED STRING";
 		case comma:
 			return ",";
 		case plus:

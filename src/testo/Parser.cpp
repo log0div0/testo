@@ -103,13 +103,13 @@ bool Parser::test_action() const {
 }
 
 bool Parser::test_string() const {
-	return ((LA(1) == Token::category::dbl_quoted_string) ||
-		(LA(1) == Token::category::multiline_string));
+	return ((LA(1) == Token::category::quoted_string) ||
+		(LA(1) == Token::category::triple_quoted_string));
 }
 
 bool Parser::test_selectable() const {
 	return (test_string() ||
-		(LA(1) == Token::category::grave_quoted_string));
+		(LA(1) == Token::category::backticked_string));
 }
 
 bool Parser::test_binary() const {
@@ -145,7 +145,7 @@ void Parser::handle_include() {
 	match(Token::category::include);
 
 	auto dest_file_token = LT(1);
-	match(Token::category::dbl_quoted_string);
+	match(Token::category::quoted_string);
 	match(Token::category::newline);
 	fs::path dest_file = dest_file_token.value().substr(1, dest_file_token.value().length() - 2);
 
@@ -318,7 +318,7 @@ std::shared_ptr<Attr> Parser::attr() {
 		value = std::shared_ptr<AttrValue<AttrBlock>>(new AttrValue<AttrBlock>(block));
 	} else if (test_string()) {
 		auto str = string();
-		if (str->t.type() == Token::category::multiline_string) {
+		if (str->t.type() == Token::category::triple_quoted_string) {
 			throw std::runtime_error(std::string(str->begin()) + ": Cant' accept multiline as an attr value: " + std::string(*str));
 		}
 		auto string_value = std::shared_ptr<StringAttr>(new StringAttr(str));
@@ -564,7 +564,7 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	//special check for multiline strings. We don't support them yet.
 
-	if (value && (value->t.type() == Token::category::multiline_string)) {
+	if (value && (value->t.type() == Token::category::triple_quoted_string)) {
 		throw std::runtime_error(std::string(value->begin()) +
 			": Error: multiline strings are not supported in wait action");
 	}
@@ -870,7 +870,7 @@ std::shared_ptr<ISelectable> Parser::selectable() {
 	std::shared_ptr<ISelectable> selectable;
 	if (test_string()) {
 		selectable = std::shared_ptr<Selectable<String>>(new Selectable<String>(string()));
-	} else if (LA(1) == Token::category::grave_quoted_string) {
+	} else if (LA(1) == Token::category::backticked_string) {
 		selectable = selectable_expr();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown selective object type: " + LT(1).value());
@@ -882,7 +882,7 @@ std::shared_ptr<ISelectable> Parser::selectable() {
 std::shared_ptr<Selectable<SelectExpr>> Parser::selectable_expr() {
 	Token str = LT(1);
 
-	match(Token::category::grave_quoted_string);
+	match(Token::category::backticked_string);
 
 	auto selectable = std::shared_ptr<SelectExpr>(new SelectExpr(str));
 
@@ -902,7 +902,7 @@ std::shared_ptr<String> Parser::string() {
 		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected string");
 	}
 
-	match({Token::category::dbl_quoted_string, Token::category::multiline_string});
+	match({Token::category::quoted_string, Token::category::triple_quoted_string});
 
 	auto new_node = std::shared_ptr<String>(new String(str));
 
@@ -966,7 +966,7 @@ std::shared_ptr<Check> Parser::check() {
 	std::shared_ptr<ISelectable> value(nullptr);
 
 	value = selectable();
-	if (value->t.type() == Token::category::multiline_string) {
+	if (value->t.type() == Token::category::triple_quoted_string) {
 		throw std::runtime_error(std::string(value->begin()) +
 			": Error: multiline strings are not supported in check action");
 	}

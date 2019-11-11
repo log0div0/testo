@@ -62,9 +62,8 @@ private:
 			(c == '\r') ||
 			(c == '\t'));
 	}
-	bool test_dbl_quote() const { return ((*input)[current_pos] == '\"'); }
-	bool test_grave_quote() const { return ((*input)[current_pos] == '`'); }
-	bool test_multiline_quote() const {
+	bool test_quote() const { return ((*input)[current_pos] == '\"'); }
+	bool test_triple_quote() const {
 		if (test_eof(1)) {
 			return false;
 		} else if (test_eof(2)) {
@@ -76,6 +75,7 @@ private:
 			((*input)[current_pos + 1] == quote) &&
 			((*input)[current_pos + 2] == quote));
 	}
+	bool test_backtick() const { return ((*input)[current_pos] == '`'); }
 	bool test_assign() const { return (*input)[current_pos] == '='; }
 	bool test_time_specifier() const;
 	bool test_size_specifier() const;
@@ -147,9 +147,9 @@ private:
 	Token in();
 	Token break_();
 	Token continue_();
-	Token dbl_quoted_string();
-	Token grave_quoted_string();
-	Token multiline_string();
+	Token quoted_string();
+	Token triple_quoted_string();
+	Token backticked_string();
 	Token assign();
 	Token comma();
 	Token plus();

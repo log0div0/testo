@@ -927,7 +927,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 				<< rang::fgB::blue << progress()
 				<< " Waiting string "
 				<< rang::fg::yellow;
-			std::cout << "\"" + text + "\" ";
+			std::cout << "\"" + text + "\"";
 
 		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(wait->text)) {
 			query = template_parser.resolve(p->text(), reg, vmc);
@@ -936,7 +936,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 				<< rang::fgB::blue << progress()
 				<< " Waiting selection "
 				<< rang::fg::yellow;
-			std::cout << "`" + query + "` ";
+			std::cout << "`" + query + "`";
 
 		} else {
 			throw std::runtime_error("Unknown selectable type");
@@ -1052,7 +1052,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 
 	std::cout
 		<< rang::fgB::blue << progress()
-		<< " Pressing button "
+		<< " Pressing key "
 		<< rang::fg::yellow << key_spec->get_buttons_str()
 		<< rang::fgB::blue;
 
@@ -1532,9 +1532,9 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 
 			std::cout
 				<< rang::fgB::blue << progress()
-				<< " Checking string"
+				<< " Checking string "
 				<< rang::fg::yellow;
-			std::cout << "\"" + text + "\" ";
+			std::cout << "\"" + text + "\"";
 
 		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(check->text)) {
 			query = template_parser.resolve(p->text(), reg, vmc);
@@ -1543,7 +1543,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 				<< rang::fgB::blue << progress()
 				<< " Checking selection "
 				<< rang::fg::yellow;
-			std::cout << "`" + query + "` ";
+			std::cout << "`" + query + "`";
 
 		} else {
 			throw std::runtime_error("Unknown selectable type");
