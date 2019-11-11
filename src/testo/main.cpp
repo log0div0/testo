@@ -24,7 +24,7 @@
 
 using namespace clipp;
 
-struct CancelException {};
+struct Interruption {};
 
 
 std::shared_ptr<Environment> env;
@@ -150,7 +150,7 @@ int do_main(int argc, char** argv) {
 	pool.exec([&] {
 		coro::SignalSet set({SIGINT, SIGTERM});
 		set.wait();
-		throw CancelException();
+		throw Interruption();
 	});
 
 	if (fs::is_regular_file(target)) {
@@ -172,8 +172,8 @@ int main(int argc, char** argv) {
 		} catch (const std::exception& error) {
 			std::cout << error << std::endl;
 			result = 1;
-		} catch (const CancelException&) {
-			std::cout << "Canceled" << std::endl;
+		} catch (const Interruption&) {
+			std::cout << "Interrupted by user" << std::endl;
 			result = 1;
 		}
 	}).run();

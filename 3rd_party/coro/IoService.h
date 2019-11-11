@@ -2,6 +2,7 @@
 #pragma once
 
 #include <asio.hpp>
+#include <queue>
 
 namespace coro {
 
@@ -21,6 +22,8 @@ public:
 	void dispatch(T&& t) {
 		_impl.dispatch(std::forward<T>(t));
 	}
+
+	std::queue<std::function<void()>> checkpoints;
 
 	operator const asio::io_service&() const { return _impl; }
 	operator asio::io_service&() { return _impl; }

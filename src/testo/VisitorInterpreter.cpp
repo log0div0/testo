@@ -3,6 +3,7 @@
 #include "VisitorCksum.hpp"
 
 #include "coro/Finally.h"
+#include "coro/CheckPoint.h"
 #include <fmt/format.h>
 #include <fstream>
 #include <thread>
@@ -961,7 +962,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			if (time < 1s) {
 				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
 			} else {
-				timer.waitFor(std::chrono::milliseconds(1));
+				coro::CheckPoint();
 			}
 		}
 
