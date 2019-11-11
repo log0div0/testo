@@ -1,16 +1,19 @@
 
 #include "VisitorInterpreter.hpp"
+#include <nn/text_detector/TextDetector.hpp>
 #include <set>
 
 namespace screen_selection {
 
-VisitorInterpreter::VisitorInterpreter() {}
+VisitorInterpreter::VisitorInterpreter(stb::Image& image): image(image) {}
 
 bool VisitorInterpreter::visit(std::shared_ptr<AST::SelectStmt> select_stmt) {
 	visit_expr(select_stmt->where_expr);
 	if (!text.length()) {
 		throw std::runtime_error(std::string(select_stmt->where_expr->begin()) + ": Error: attribute text is not specified");
 	}
+
+	return TextDetector::instance().detect(image, text, foreground, background).size();
 }
 
 void VisitorInterpreter::visit_unop(std::shared_ptr<AST::UnOp> unop) {

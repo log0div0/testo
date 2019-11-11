@@ -1,7 +1,6 @@
 
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
-#include "screen_selection/ScreenSelector.hpp"
 
 #include "coro/Finally.h"
 #include <fmt/format.h>
@@ -942,15 +941,11 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			throw std::runtime_error("Unknown selectable type");
 		}
 
-
-
 		std::cout
 			<< rang::fgB::blue << " for " << wait_for
 			<< " on virtual machine "
 			<< rang::fg::yellow << vmc->name()
-			<< rang::fgB::blue;
-
-		std::cout
+			<< rang::fgB::blue
 			<< rang::style::reset << std::endl;
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
@@ -958,9 +953,9 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
-			/*if (text_detector.detect(screenshot, text, foreground, background).size()) {
+			if (screen_selector.exec(screenshot, query)) {
 				return;
-			}*/
+			}
 
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
@@ -1526,24 +1521,40 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
+		std::string query = "";
+
 		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(check->text)) {
-			return visit_check_string(vmc, p->selectable);
+			auto text = template_parser.resolve(p->text(), reg, vmc);
+			query = screen_selection::text_to_query(text);
+
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Checking string"
+				<< rang::fg::yellow;
+			std::cout << "\"" + text + "\" ";
+
 		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(check->text)) {
-			return visit_check_select_expr(vmc, p->selectable);
+			query = template_parser.resolve(p->text(), reg, vmc);
+
+			std::cout
+				<< rang::fgB::blue << progress()
+				<< " Checking selection "
+				<< rang::fg::yellow;
+			std::cout << "`" + query + "` ";
+
 		} else {
 			throw std::runtime_error("Unknown selectable type");
 		}
 
-		/*std::cout
-			<< rang::fgB::blue << progress()
-			<< " Checking "
-			<< rang::fg::yellow << "\"" << text << "\""
-			<< rang::fgB::blue << " on virtual machine "
+		std::cout
+			<< rang::fgB::blue
+			<< " on virtual machine "
 			<< rang::fg::yellow << vmc->name()
+			<< rang::fgB::blue
 			<< rang::style::reset << std::endl;
-*/
-		/*auto screenshot = vmc->vm->screenshot();
-		return text_detector.detect(screenshot, text, foreground, background).size();*/
+
+		auto screenshot = vmc->vm->screenshot();
+		return screen_selector.exec(screenshot, query);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}

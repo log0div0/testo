@@ -4,7 +4,7 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "TemplateParser.hpp"
-#include <nn/text_detector/TextDetector.hpp>
+#include "screen_selection/ScreenSelector.hpp"
 #include <vector>
 #include <list>
 
@@ -166,6 +166,8 @@ private:
 	float current_progress = 0;
 	float progress_step = 0;
 
+	screen_selection::ScreenSelector screen_selector;
+
 	coro::Timer timer;
 
 	std::chrono::system_clock::time_point start_timestamp;
@@ -173,7 +175,6 @@ private:
 	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
-	TextDetector text_detector;
 	std::unordered_map<char, std::vector<std::string>> charmap;
 
 	std::string json_report_file;

@@ -1,12 +1,14 @@
 
 #pragma once
 
+#include "stb/Image.hpp"
 #include "Node.hpp"
 
 namespace screen_selection{
 
 struct VisitorInterpreter {
-	VisitorInterpreter();
+	VisitorInterpreter() = delete;
+	VisitorInterpreter(stb::Image& image);
 
 	bool visit(std::shared_ptr<AST::SelectStmt> select_stmt);
 	void visit_expr(std::shared_ptr<AST::IExpr> expr);
@@ -16,6 +18,7 @@ struct VisitorInterpreter {
 	void visit_factor(std::shared_ptr<AST::Factor> factor);
 
 private:
+	stb::Image& image;
 	std::string text, background, foreground;
 };
 

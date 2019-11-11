@@ -99,7 +99,6 @@ struct Rect {
 };
 
 struct TextDetector {
-	TextDetector();
 	~TextDetector();
 
 	std::vector<Rect> detect(stb::Image& image,
@@ -107,7 +106,16 @@ struct TextDetector {
 		const std::string& foreground = {},
 		const std::string& background = {});
 
+	static TextDetector& instance()
+	{
+	        static TextDetector text_detector;
+	        return text_detector;
+	}
+
 private:
+	TextDetector();
+	TextDetector(const TextDetector& root) = delete;
+	TextDetector& operator=(const TextDetector&) = delete;
 	bool find_substr(int left, int top,
 		const std::vector<std::string>& query, size_t index,
 		int foreground_id, int background_id,
