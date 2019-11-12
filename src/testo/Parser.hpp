@@ -76,7 +76,7 @@ private:
 
 	//expressions
 	std::shared_ptr<AST::ISelectable> selectable();
-	std::shared_ptr<AST::Selectable<AST::SelectExpr>> selectable_expr();
+	std::shared_ptr<AST::Selectable<AST::SelectQuery>> select_query();
 
 	std::shared_ptr<AST::String> string();
 

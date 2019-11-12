@@ -867,33 +867,33 @@ std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
 }
 
 std::shared_ptr<ISelectable> Parser::selectable() {
-	std::shared_ptr<ISelectable> selectable;
+	std::shared_ptr<ISelectable> query;
 	if (test_string()) {
-		selectable = std::shared_ptr<Selectable<String>>(new Selectable<String>(string()));
+		query = std::shared_ptr<Selectable<String>>(new Selectable<String>(string()));
 	} else if (LA(1) == Token::category::backticked_string) {
-		selectable = selectable_expr();
+		query = select_query();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown selective object type: " + LT(1).value());
 	}
 
-	return selectable;
+	return query;
 }
 
-std::shared_ptr<Selectable<SelectExpr>> Parser::selectable_expr() {
+std::shared_ptr<Selectable<SelectQuery>> Parser::select_query() {
 	Token str = LT(1);
 
 	match(Token::category::backticked_string);
 
-	auto selectable = std::shared_ptr<SelectExpr>(new SelectExpr(str));
+	auto query = std::shared_ptr<SelectQuery>(new SelectQuery(str));
 
 	try {
 		template_literals::Parser templ_parser;
-		templ_parser.check_sanity(selectable->text());
+		templ_parser.check_sanity(query->text());
 	} catch (const std::runtime_error& error) {
-		std::throw_with_nested(std::runtime_error(std::string(selectable->begin()) + ": Error parsing string: `" + selectable->text() + "`"));
+		std::throw_with_nested(std::runtime_error(std::string(query->begin()) + ": Error parsing string: `" + query->text() + "`"));
 	}
 
-	return std::shared_ptr<Selectable<SelectExpr>>(new Selectable<SelectExpr>(selectable));
+	return std::shared_ptr<Selectable<SelectQuery>>(new Selectable<SelectQuery>(query));
 }
 
 std::shared_ptr<String> Parser::string() {

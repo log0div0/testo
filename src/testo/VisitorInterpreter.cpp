@@ -930,7 +930,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 				<< rang::fg::yellow;
 			std::cout << "\"" + text + "\"";
 
-		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(wait->text)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(wait->text)) {
 			query = template_parser.resolve(p->text(), reg, vmc);
 
 			std::cout
@@ -1537,7 +1537,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 				<< rang::fg::yellow;
 			std::cout << "\"" + text + "\"";
 
-		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectExpr>>(check->text)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(check->text)) {
 			query = template_parser.resolve(p->text(), reg, vmc);
 
 			std::cout

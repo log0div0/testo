@@ -47,8 +47,8 @@ struct String: public Node {
 };
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
-struct SelectExpr: public Node {
-	SelectExpr(const Token& string):
+struct SelectQuery: public Node {
+	SelectQuery(const Token& string):
 		Node(string) {}
 
 	Pos begin() const {
@@ -68,7 +68,7 @@ struct SelectExpr: public Node {
 	}
 };
 
-//String or SelectExpr. Used only in
+//String or SelectQuery. Used only in
 //Wait, Check and Click (in future)
 struct ISelectable: public Node {
 	using Node::Node;
@@ -272,6 +272,90 @@ struct Type: public Node {
 	}
 
 	std::shared_ptr<String> text;
+};
+
+struct ISelectExpr: public Node {
+	using Node::Node;
+};
+
+template <typename SelectExprType>
+struct SelectExpr: public ISelectExpr {
+	SelectExpr(std::shared_ptr<SelectExprType> select_expr):
+		ISelectExpr(select_expr->t),
+		select_expr(select_expr) {}
+
+	Pos begin() const {
+		return select_expr->begin();
+	}
+
+	Pos end() const {
+		return select_expr->end();
+	}
+
+	operator std::string() const {
+		return std::string(*(select_expr));
+	}
+
+	std::shared_ptr<SelectExprType> select_expr;
+};
+
+struct SelectUnOp: public Node {
+	SelectUnOp(const Token& op, std::shared_ptr<ISelectExpr> select_expr):
+		Node(op), select_expr(select_expr) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return select_expr->end();
+	}
+
+	operator std::string() const {
+		return t.value() + std::string(*select_expr);
+	}
+
+	std::shared_ptr<ISelectExpr> select_expr;
+};
+
+struct SelectBinOp: public Node {
+	SelectBinOp(std::shared_ptr<ISelectExpr> left, const Token& op, std::shared_ptr<ISelectExpr> right):
+		Node(op), left(left), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return std::string(*left) + t.value() + std::string(*right);
+	}
+
+	std::shared_ptr<ISelectExpr> left;
+	std::shared_ptr<ISelectExpr> right;
+};
+
+struct SelectParentedExpr: public Node {
+	SelectParentedExpr(const Token& lparen, std::shared_ptr<ISelectExpr> select_expr, const Token& rparen):
+		Node(lparen), select_expr(select_expr), rparen(rparen) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return rparen.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + std::string(*select_expr) + rparen.value();
+	}
+
+	std::shared_ptr<ISelectExpr> select_expr;
+	Token rparen;
 };
 
 struct Wait: public Node {
