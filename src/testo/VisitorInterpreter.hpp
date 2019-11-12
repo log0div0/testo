@@ -78,6 +78,10 @@ struct VisitorInterpreter {
 	void visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action);
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
+	bool visit_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
+	bool visit_select_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	bool visit_select_unop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
+	bool visit_select_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
 	void visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event);
 	void visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec);

@@ -902,10 +902,66 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
+bool VisitorInterpreter::visit_select_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot) {
+	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
+		return visit_select_selectable(vmc, p->select_expr, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
+		return visit_select_unop(vmc, p->select_expr, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
+		return visit_select_binop(vmc, p->select_expr, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectParentedExpr>>(select_expr)) {
+		return visit_select_expr(vmc, p->select_expr->select_expr, screenshot);
+	} else {
+		throw std::runtime_error("Unknown select expression type");
+	}
+}
+
+bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+	std::string query = "";
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
+		auto text = template_parser.resolve(p->text(), reg, vmc);
+		query = tql::text_to_query(text);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(selectable)) {
+		query = template_parser.resolve(p->text(), reg, vmc);
+	} else {
+		throw std::runtime_error("Unknown selectable type");
+	}
+
+	tql::Interpreter query_interpreter(query);
+	return query_interpreter.exec(screenshot);
+}
+
+bool VisitorInterpreter::visit_select_unop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot) {
+	if (unop->t.type() == Token::category::exclamation_mark) {
+		return !visit_select_expr(vmc, unop->select_expr, screenshot);
+	} else {
+		throw std::runtime_error("Unknown unop operation");
+	}
+}
+
+bool VisitorInterpreter::visit_select_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot) {
+	auto left_value = visit_select_expr(vmc, binop->left, screenshot);
+	if (binop->t.type() == Token::category::double_ampersand) {
+		if (!left_value) {
+			return false;
+		} else {
+			return left_value && visit_select_expr(vmc, binop->right, screenshot);
+		}
+	} else if (binop->t.type() == Token::category::double_vertical_bar) {
+		if (left_value) {
+			return true;
+		} else {
+			return left_value || visit_select_expr(vmc, binop->right, screenshot);
+		}
+	} else {
+		throw std::runtime_error("Unknown binop operation");
+	}
+}
+
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
 		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
-		if (!wait->text) {
+		if (!wait->select_expr) {
 			std::cout
 				<< rang::fgB::blue << progress()
 				<< " Sleeping "
@@ -917,31 +973,12 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			return sleep(wait->time_interval.value());
 		}
 
+		std::cout
+			<< rang::fgB::blue << progress()
+			<< " Waiting "
+			<< rang::fg::yellow
+			<< template_parser.resolve(std::string(*wait->select_expr), reg, vmc);
 
-		std::string query = "";
-
-		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(wait->text)) {
-			auto text = template_parser.resolve(p->text(), reg, vmc);
-			query = tql::text_to_query(text);
-
-			std::cout
-				<< rang::fgB::blue << progress()
-				<< " Waiting string "
-				<< rang::fg::yellow;
-			std::cout << "\"" + text + "\"";
-
-		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(wait->text)) {
-			query = template_parser.resolve(p->text(), reg, vmc);
-
-			std::cout
-				<< rang::fgB::blue << progress()
-				<< " Waiting selection "
-				<< rang::fg::yellow;
-			std::cout << "`" + query + "`";
-
-		} else {
-			throw std::runtime_error("Unknown selectable type");
-		}
 
 		std::cout
 			<< rang::fgB::blue << " for " << wait_for
@@ -952,12 +989,11 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
 
-		tql::Interpreter query_interpreter(query);
-
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
-			if (query_interpreter.exec(screenshot)) {
+
+			if (visit_select_expr(vmc, wait->select_expr, screenshot)) {
 				return;
 			}
 
@@ -1525,30 +1561,11 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
-		std::string query = "";
-
-		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(check->text)) {
-			auto text = template_parser.resolve(p->text(), reg, vmc);
-			query = tql::text_to_query(text);
-
-			std::cout
+		std::cout
 				<< rang::fgB::blue << progress()
-				<< " Checking string "
-				<< rang::fg::yellow;
-			std::cout << "\"" + text + "\"";
-
-		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(check->text)) {
-			query = template_parser.resolve(p->text(), reg, vmc);
-
-			std::cout
-				<< rang::fgB::blue << progress()
-				<< " Checking selection "
-				<< rang::fg::yellow;
-			std::cout << "`" + query + "`";
-
-		} else {
-			throw std::runtime_error("Unknown selectable type");
-		}
+				<< " Checking "
+				<< rang::fg::yellow
+				<< template_parser.resolve(std::string(*check->select_expr), reg, vmc);
 
 		std::cout
 			<< rang::fgB::blue
@@ -1557,9 +1574,8 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			<< rang::fgB::blue
 			<< rang::style::reset << std::endl;
 
-		tql::Interpreter query_interpreter(query);
 		auto screenshot = vmc->vm->screenshot();
-		return query_interpreter.exec(screenshot);
+		return visit_select_expr(vmc, check->select_expr, screenshot);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}

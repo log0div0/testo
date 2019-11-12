@@ -331,7 +331,7 @@ struct SelectBinOp: public Node {
 	}
 
 	operator std::string() const {
-		return std::string(*left) + t.value() + std::string(*right);
+		return std::string(*left) + " " + t.value() + " " + std::string(*right);
 	}
 
 	std::shared_ptr<ISelectExpr> left;
@@ -359,8 +359,8 @@ struct SelectParentedExpr: public Node {
 };
 
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<ISelectable> text, const Token& timeout, const Token& time_interval):
-		Node(wait), text(text), timeout(timeout), time_interval(time_interval) {}
+	Wait(const Token& wait, std::shared_ptr<ISelectExpr> select_expr, const Token& timeout, const Token& time_interval):
+		Node(wait), select_expr(select_expr), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -370,15 +370,15 @@ struct Wait: public Node {
 		if (timeout) {
 			return timeout.pos();
 		} else {
-			return text->end();
+			return select_expr->end();
 		}
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
 
-		if (text) {
-			result += " " + std::string(*text);
+		if (select_expr) {
+			result += " " + std::string(*select_expr);
 		}
 
 		if (timeout) {
@@ -387,7 +387,7 @@ struct Wait: public Node {
 		return result;
 	}
 
-	std::shared_ptr<ISelectable> text;
+	std::shared_ptr<ISelectExpr> select_expr;
 	Token timeout;
 	Token time_interval;
 };
@@ -1078,28 +1078,28 @@ struct Comparison: public Node {
 };
 
 struct Check: public Node {
-	Check(const Token& check, std::shared_ptr<ISelectable> text):
-		Node(check), text(text) {}
+	Check(const Token& check, std::shared_ptr<ISelectExpr> select_expr):
+		Node(check), select_expr(select_expr) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return text->end();
+		return select_expr->end();
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
 
-		if (text) {
-			result += " " + std::string(*text);
+		if (select_expr) {
+			result += " " + std::string(*select_expr);
 		}
 
 		return result;
 	}
 
-	std::shared_ptr<ISelectable> text;
+	std::shared_ptr<ISelectExpr> select_expr;
 };
 
 struct IExpr: public Node {

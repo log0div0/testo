@@ -112,6 +112,12 @@ bool Parser::test_selectable() const {
 		(LA(1) == Token::category::backticked_string));
 }
 
+bool Parser::test_select_expr() const {
+	return (test_selectable() ||
+		(LA(1) == Token::category::exclamation_mark) ||
+		(LA(1) == Token::category::lparen));
+}
+
 bool Parser::test_binary() const {
 	return ((LA(1) == Token::category::true_) ||
 		(LA(1) == Token::category::false_));
@@ -554,18 +560,19 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	Token wait_token = LT(1);
 	match(Token::category::wait);
 
-	std::shared_ptr<ISelectable> value(nullptr);
+	std::shared_ptr<ISelectExpr> select_expression(nullptr);
 	Token timeout = Token();
 	Token time_interval = Token();
 
-	if (test_selectable()) {
-		value = selectable();
+	if (test_select_expr()) {
+		select_expression = select_expr();
 	}
 
 	//special check for multiline strings. We don't support them yet.
 
-	if (value && (value->t.type() == Token::category::triple_quoted_string)) {
-		throw std::runtime_error(std::string(value->begin()) +
+	//ToDo: Thiple check this part
+	if (select_expression && (select_expression->t.type() == Token::category::triple_quoted_string)) {
+		throw std::runtime_error(std::string(select_expression->begin()) +
 			": Error: multiline strings are not supported in wait action");
 	}
 
@@ -577,12 +584,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		match(Token::category::time_interval);
 	}
 
-	if (!(value || timeout)) {
+	if (!(select_expression || timeout)) {
 		throw std::runtime_error(std::string(wait_token.pos()) +
 			": Error: either TEXT or FOR (of both) must be specified for wait command");
 	}
 
-	auto action = std::shared_ptr<Wait>(new Wait(wait_token, value, timeout, time_interval));
+	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, time_interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
@@ -866,6 +873,61 @@ std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
 	return std::shared_ptr<Action<CycleControl>>(new Action<CycleControl>(action));
 }
 
+std::shared_ptr<ISelectExpr> Parser::select_expr() {
+	if (LA(1) == Token::category::exclamation_mark) {
+		return select_unop();
+	}
+
+	if (LA(1) == Token::category::lparen) {
+		return select_parented_expr();
+	}
+
+	std::shared_ptr<ISelectExpr> left = std::shared_ptr<SelectExpr<ISelectable>>(new SelectExpr<ISelectable>(selectable()));
+
+	if ((LA(1) == Token::category::double_ampersand) ||
+		(LA(1) == Token::category::double_vertical_bar)) {
+		return select_binop(left);
+	} else {
+		return left;
+	}
+}
+
+
+std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>> Parser::select_unop() {
+	auto op = LT(1);
+
+	match(Token::category::exclamation_mark);
+
+	auto expression = select_expr();
+
+	auto unop = std::shared_ptr<AST::SelectUnOp>(new AST::SelectUnOp(op, expression));
+	return std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>>(new AST::SelectExpr<AST::SelectUnOp>(unop));
+}
+
+std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> Parser::select_parented_expr() {
+	auto lparen = LT(1);
+	match(Token::category::lparen);
+
+	auto expression = select_expr();
+
+	auto rparen = LT(1);
+	match(Token::category::rparen);
+	auto parented_expr = std::shared_ptr<AST::SelectParentedExpr>(new AST::SelectParentedExpr(lparen, expression, rparen));
+	return std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>>(new AST::SelectExpr<AST::SelectParentedExpr>(parented_expr));
+}
+
+std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> Parser::select_binop(std::shared_ptr<AST::ISelectExpr> left) {
+	auto op = LT(1);
+
+	match({Token::category::double_ampersand, Token::category::double_vertical_bar});
+	newline_list();
+
+	auto right = select_expr();
+
+	auto binop = std::shared_ptr<AST::SelectBinOp>(new AST::SelectBinOp(left, op, right));
+	return std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>>(new AST::SelectExpr<AST::SelectBinOp>(binop));
+}
+
 std::shared_ptr<ISelectable> Parser::selectable() {
 	std::shared_ptr<ISelectable> query;
 	if (test_string()) {
@@ -963,21 +1025,22 @@ std::shared_ptr<Check> Parser::check() {
 	Token check_token = LT(1);
 	match(Token::category::check);
 
-	std::shared_ptr<ISelectable> value(nullptr);
+	std::shared_ptr<ISelectExpr> select_expression(nullptr);
 
-	value = selectable();
-	if (value->t.type() == Token::category::triple_quoted_string) {
-		throw std::runtime_error(std::string(value->begin()) +
+	select_expression = select_expr();
+	if (select_expression->t.type() == Token::category::triple_quoted_string) {
+		throw std::runtime_error(std::string(select_expression->begin()) +
 			": Error: multiline strings are not supported in check action");
 	}
 
-	return std::shared_ptr<Check>(new Check(check_token, value));
+	return std::shared_ptr<Check>(new Check(check_token, select_expression));
 }
 
 std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {
 	auto op = LT(1);
 
 	match({Token::category::OR, Token::category::AND});
+	newline_list();
 
 	auto right = expr();
 
