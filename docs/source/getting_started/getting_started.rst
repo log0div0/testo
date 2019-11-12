@@ -22,7 +22,7 @@
 
 .. code-block:: console
 
-  # apt-get install qemu qemu-kvm libvirt0 libvirt-bin libopenblas-base
+  # apt-get install qemu qemu-kvm libvirt0 libvirt-bin
 
 QEMU позволяет управлять виртуальными машинами, используя только командную строку, однако это не слишком удобно. Для графического управления виртуальными машинами QEMU существует клиент virtual manager. Установить его можно командой
 

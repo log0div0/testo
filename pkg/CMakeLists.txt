@@ -29,8 +29,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	libvirt0 (>= 4.0.0), \
 	libvirt-bin (>= 4.0.0), \
 	qemu (>= 1.2.11), \
-	qemu-kvm (>= 2.11), \
-	libopenblas-base (>= 0.2.0) \
+	qemu-kvm (>= 2.11) \
 ")
 
 add_package(testo-package)
