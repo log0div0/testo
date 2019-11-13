@@ -63,7 +63,8 @@ int do_main(int argc, char** argv) {
 	wmi::CoInitializer initializer;
 	initializer.initalize_security();
 #endif
-
+	enum mode {run, clean, help};
+	mode selected_mode = mode::help;
 	std::string target, prefix, test_spec, exclude, invalidate, cache_miss_policy, json_report_file;
 
 #ifdef WIN32
@@ -77,21 +78,26 @@ int do_main(int argc, char** argv) {
 	bool stop_on_fail = false;
 	bool show_help = false;
 
-	auto cli = (
-		( option("--help").set(show_help).doc("Show this help message") ) |
-		(
-			value("input file or folder", target),
-			option("--prefix").doc("Add a prefix to all entities, thus forming a namespace") & value("prefix", prefix),
-			option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
-			option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
-			option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
-			option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
-			option("--cache_miss_policy").doc("Apply some policy when a test loses its cache (accept, skip_branch, abort)")
-				& value("cache miss policy", cache_miss_policy),
-			option("--json_report").doc("Generate json-formatted statistics report") & value("output file", json_report_file),
-			option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
-		)
+	auto run_mode = (
+		command("run").set(selected_mode, mode::run),
+		value("input file or folder", target),
+		option("--help").set(show_help).doc("Show this help message"),
+		option("--prefix").doc("Add a prefix to all entities, thus forming a namespace") & value("prefix", prefix),
+		option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
+		option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
+		option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
+		option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
+		option("--cache_miss_policy").doc("Apply some policy when a test loses its cache (accept, skip_branch, abort)")
+			& value("cache miss policy", cache_miss_policy),
+		option("--json_report").doc("Generate json-formatted statistics report") & value("output file", json_report_file),
+		option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
 	);
+
+	auto clean_mode = (
+		command("clean").set(selected_mode, mode::clean)
+	);
+
+	auto cli = ( run_mode | clean_mode | command("help").set(selected_mode, mode::help) );
 
 	if (!parse(argc, argv, cli)) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
@@ -102,6 +108,20 @@ int do_main(int argc, char** argv) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
 		return 0;
 	}
+
+	switch(selected_mode) {
+		case mode::run:
+			std::cout << "RUN MODE\n";
+			break;
+		case mode::clean:
+			std::cout << "CLEAN MODE\n";
+			break;
+		case mode::help:
+			std::cout << "HELP MODE\n";
+			break;
+	}
+
+	return 0;
 
 	if (cache_miss_policy.length()) {
 		if (cache_miss_policy != "accept" && cache_miss_policy != "skip_branch" && cache_miss_policy != "abort") {
