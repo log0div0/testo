@@ -1,7 +1,6 @@
 
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
-#include "tql/Interpreter.hpp"
 
 #include "coro/Finally.h"
 #include "coro/CheckPoint.h"
@@ -927,8 +926,11 @@ bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<VmController> v
 		throw std::runtime_error("Unknown selectable type");
 	}
 
-	tql::Interpreter query_interpreter(query);
-	return query_interpreter.exec(screenshot);
+	if (!selectable->query_interpreter || (selectable->query_interpreter->input != query)) {
+		selectable->query_interpreter.reset(new tql::Interpreter(query));
+	}
+
+	return selectable->query_interpreter->exec(screenshot);
 }
 
 bool VisitorInterpreter::visit_select_unop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot) {

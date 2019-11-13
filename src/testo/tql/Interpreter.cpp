@@ -12,7 +12,7 @@ std::string text_to_query(const std::string& text) {
 	return result;
 }
 
-Interpreter::Interpreter(const std::string& query) {
+Interpreter::Interpreter(const std::string& query): input(query) {
 	Parser parser(query);
 	select_stmt = parser.parse();
 	VisitorSemantic semantic;

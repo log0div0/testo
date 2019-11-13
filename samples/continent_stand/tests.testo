@@ -101,8 +101,6 @@ macro select_local_menu_horizontal(string) {
 
 test init_CUS: install_CUS {
 	CUS {
-		wait "Главное меню" || `select * from textlines
-				where text = "${id}" and foreground = "blue" and background = "gray"`
 		select_local_menu("Инициализация");
 		wait "Инициализировать устройство как"; press Up*2; select_local_menu("Начать инициализацию")
 		wait "Очистить локальные журналы"; select_local_menu_horizontal("Да")

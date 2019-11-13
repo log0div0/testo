@@ -3,6 +3,7 @@
 
 #include "Pos.hpp"
 #include "Token.hpp"
+#include "tql/Interpreter.hpp"
 #include <vector>
 #include <set>
 #include <memory>
@@ -73,6 +74,7 @@ struct SelectQuery: public Node {
 struct ISelectable: public Node {
 	using Node::Node;
 
+	std::unique_ptr<tql::Interpreter> query_interpreter = nullptr;
 	virtual std::string text() const = 0;
 };
 

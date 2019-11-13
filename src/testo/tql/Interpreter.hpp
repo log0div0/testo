@@ -15,6 +15,7 @@ struct Interpreter {
 	bool exec(stb::Image& image);
 
 	std::shared_ptr<AST::SelectStmt> select_stmt;
+	std::string input;
 };
 
 }
