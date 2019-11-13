@@ -853,6 +853,17 @@ std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 	newline_list();
 
 	auto cycle_body = action();
+
+	Token else_token = Token();
+	std::shared_ptr<IAction> else_action = nullptr;
+
+	if (LA(1) == Token::category::else_) {
+		else_token = LT(1);
+		match(Token::category::else_);
+		newline_list();
+		else_action = action();
+	}
+
 	auto action = std::shared_ptr<ForClause>(new ForClause(
 		for_token,
 		counter,
@@ -860,7 +871,9 @@ std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 		begin,
 		double_dot,
 		end,
-		cycle_body
+		cycle_body,
+		else_token,
+		else_action
 	));
 	return std::shared_ptr<Action<ForClause>>(new Action<ForClause>(action));
 }

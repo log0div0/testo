@@ -1209,21 +1209,28 @@ struct IfClause: public Node {
 
 struct ForClause: public Node {
 	ForClause(const Token& for_token, const Token& counter, const Token& in, const Token& start,
-		const Token& double_dot, const Token& finish, std::shared_ptr<IAction> cycle_body):
+		const Token& double_dot, const Token& finish, std::shared_ptr<IAction> cycle_body,
+		const Token& else_token, std::shared_ptr<IAction> else_action):
 		Node(for_token),
 		counter(counter),
 		in(in),
 		start_(start),
 		double_dot(double_dot),
 		finish_(finish),
-		cycle_body(cycle_body) {}
+		cycle_body(cycle_body),
+		else_token(else_token),
+		else_action(else_action) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return cycle_body->end();
+		if (else_token) {
+			return else_action->end();
+		} else {
+			return cycle_body->end();
+		}
 	}
 
 	operator std::string() const {
@@ -1240,6 +1247,9 @@ struct ForClause: public Node {
 
 	Token counter, in, start_, double_dot, finish_;
 	std::shared_ptr<IAction> cycle_body;
+
+	Token else_token;
+	std::shared_ptr<IAction> else_action;
 };
 
 struct CycleControl: public Node {

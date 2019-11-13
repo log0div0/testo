@@ -257,7 +257,10 @@ std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vmc, st
 	result += "..";
 	result += for_clause->finish_.value();
 	result += visit_action(vmc, for_clause->cycle_body);
-
+	if (for_clause->else_token) {
+		result += "else";
+		result += visit_action(vmc, for_clause->else_action);
+	}
 	return result;
 }
 
