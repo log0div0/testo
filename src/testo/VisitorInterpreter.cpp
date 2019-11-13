@@ -1464,7 +1464,8 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std
 	coro::Finally finally([&]{
 		reg.local_vars.pop_back();
 	});
-	for (auto i = for_clause->start(); i <= for_clause->finish(); i++) {
+	uint32_t i = 0;
+	for (i = for_clause->start(); i <= for_clause->finish(); i++) {
 		reg.local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
 		try {
 			visit_action(vmc, for_clause->cycle_body);
@@ -1477,6 +1478,10 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std
 				throw std::runtime_error(std::string("Unknown cycle control command: ") + cycle_control.token.value());
 			}
 		}
+	}
+
+	if ((i == for_clause->finish() + 1) && for_clause->else_token) {
+		visit_action(vmc, for_clause->else_action);
 	}
 }
 

@@ -66,10 +66,6 @@ test install_UB {
 macro select_local_menu(string) {
 	wait "${string}"
 	for i in 0..20 {
-		if ("${i}" EQUAL "20") {
-			abort "Can't find menu entry ${string}"
-		}
-
 		if (check `select * from textlines
 				where text = "${string}" and foreground = "blue" and background = "gray"`)
 		{
@@ -78,16 +74,14 @@ macro select_local_menu(string) {
 		}
 
 		press Down; wait timeout 50ms
+	} else {
+		abort "Can't find menu entry ${string}"
 	}
 }
 
 macro select_local_menu_horizontal(string) {
 	wait "${string}"
-	for i in 0..20 {
-		if ("${i}" EQUAL "20") {
-			abort "Can't find menu entry ${string}"
-		}
-
+	for i in 0..5 {
 		if (check `select * from textlines
 				where text = "${string}" and foreground = "blue" and background = "gray"`)
 		{
@@ -96,6 +90,8 @@ macro select_local_menu_horizontal(string) {
 		}
 
 		press Right; wait timeout 50ms
+	} else {
+		abort "Can't find menu entry ${string}"
 	}
 }
 
