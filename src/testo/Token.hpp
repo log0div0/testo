@@ -47,6 +47,9 @@ struct Token {
 		quoted_string,
 		triple_quoted_string,
 		backticked_string, //`
+		double_ampersand,	//&&
+		double_vertical_bar,	//||
+		exclamation_mark,	//!
 		assign,
 		comma,
 		plus,
@@ -161,6 +164,14 @@ struct Token {
 			return "SIZE";
 		case quoted_string:
 			return "QUOTED STRING";
+		case assign:
+			return "=";
+		case exclamation_mark:
+			return "!";
+		case double_ampersand:
+			return "&&";
+		case double_vertical_bar:
+			return "||";
 		case comma:
 			return ",";
 		case plus:

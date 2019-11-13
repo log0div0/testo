@@ -3,6 +3,7 @@
 
 #include "Pos.hpp"
 #include "Token.hpp"
+#include "tql/Interpreter.hpp"
 #include <vector>
 #include <set>
 #include <memory>
@@ -47,8 +48,8 @@ struct String: public Node {
 };
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
-struct SelectExpr: public Node {
-	SelectExpr(const Token& string):
+struct SelectQuery: public Node {
+	SelectQuery(const Token& string):
 		Node(string) {}
 
 	Pos begin() const {
@@ -68,11 +69,12 @@ struct SelectExpr: public Node {
 	}
 };
 
-//String or SelectExpr. Used only in
+//String or SelectQuery. Used only in
 //Wait, Check and Click (in future)
 struct ISelectable: public Node {
 	using Node::Node;
 
+	std::unique_ptr<tql::Interpreter> query_interpreter = nullptr;
 	virtual std::string text() const = 0;
 };
 
@@ -274,9 +276,93 @@ struct Type: public Node {
 	std::shared_ptr<String> text;
 };
 
+struct ISelectExpr: public Node {
+	using Node::Node;
+};
+
+template <typename SelectExprType>
+struct SelectExpr: public ISelectExpr {
+	SelectExpr(std::shared_ptr<SelectExprType> select_expr):
+		ISelectExpr(select_expr->t),
+		select_expr(select_expr) {}
+
+	Pos begin() const {
+		return select_expr->begin();
+	}
+
+	Pos end() const {
+		return select_expr->end();
+	}
+
+	operator std::string() const {
+		return std::string(*(select_expr));
+	}
+
+	std::shared_ptr<SelectExprType> select_expr;
+};
+
+struct SelectUnOp: public Node {
+	SelectUnOp(const Token& op, std::shared_ptr<ISelectExpr> select_expr):
+		Node(op), select_expr(select_expr) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return select_expr->end();
+	}
+
+	operator std::string() const {
+		return t.value() + std::string(*select_expr);
+	}
+
+	std::shared_ptr<ISelectExpr> select_expr;
+};
+
+struct SelectBinOp: public Node {
+	SelectBinOp(std::shared_ptr<ISelectExpr> left, const Token& op, std::shared_ptr<ISelectExpr> right):
+		Node(op), left(left), right(right) {}
+
+	Pos begin() const {
+		return left->begin();
+	}
+
+	Pos end() const {
+		return right->end();
+	}
+
+	operator std::string() const {
+		return std::string(*left) + " " + t.value() + " " + std::string(*right);
+	}
+
+	std::shared_ptr<ISelectExpr> left;
+	std::shared_ptr<ISelectExpr> right;
+};
+
+struct SelectParentedExpr: public Node {
+	SelectParentedExpr(const Token& lparen, std::shared_ptr<ISelectExpr> select_expr, const Token& rparen):
+		Node(lparen), select_expr(select_expr), rparen(rparen) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return rparen.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + std::string(*select_expr) + rparen.value();
+	}
+
+	std::shared_ptr<ISelectExpr> select_expr;
+	Token rparen;
+};
+
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<ISelectable> text, const Token& timeout, const Token& time_interval):
-		Node(wait), text(text), timeout(timeout), time_interval(time_interval) {}
+	Wait(const Token& wait, std::shared_ptr<ISelectExpr> select_expr, const Token& timeout, const Token& time_interval):
+		Node(wait), select_expr(select_expr), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -286,15 +372,15 @@ struct Wait: public Node {
 		if (timeout) {
 			return timeout.pos();
 		} else {
-			return text->end();
+			return select_expr->end();
 		}
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
 
-		if (text) {
-			result += " " + std::string(*text);
+		if (select_expr) {
+			result += " " + std::string(*select_expr);
 		}
 
 		if (timeout) {
@@ -303,7 +389,7 @@ struct Wait: public Node {
 		return result;
 	}
 
-	std::shared_ptr<ISelectable> text;
+	std::shared_ptr<ISelectExpr> select_expr;
 	Token timeout;
 	Token time_interval;
 };
@@ -994,28 +1080,28 @@ struct Comparison: public Node {
 };
 
 struct Check: public Node {
-	Check(const Token& check, std::shared_ptr<ISelectable> text):
-		Node(check), text(text) {}
+	Check(const Token& check, std::shared_ptr<ISelectExpr> select_expr):
+		Node(check), select_expr(select_expr) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return text->end();
+		return select_expr->end();
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
 
-		if (text) {
-			result += " " + std::string(*text);
+		if (select_expr) {
+			result += " " + std::string(*select_expr);
 		}
 
 		return result;
 	}
 
-	std::shared_ptr<ISelectable> text;
+	std::shared_ptr<ISelectExpr> select_expr;
 };
 
 struct IExpr: public Node {

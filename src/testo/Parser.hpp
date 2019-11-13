@@ -38,6 +38,7 @@ private:
 	bool test_include() const;
 	bool test_string() const;
 	bool test_selectable() const;
+	bool test_select_expr() const;
 	bool test_binary() const;
 	bool test_comparison() const;
 	bool is_button(const Token& t) const;
@@ -75,8 +76,13 @@ private:
 	std::shared_ptr<AST::Action<AST::CycleControl>> cycle_control();
 
 	//expressions
+	std::shared_ptr<AST::ISelectExpr> select_expr();
+	std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>> select_unop();
+	std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> select_parented_expr();
+	std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> select_binop(std::shared_ptr<AST::ISelectExpr> left);
+
 	std::shared_ptr<AST::ISelectable> selectable();
-	std::shared_ptr<AST::Selectable<AST::SelectExpr>> selectable_expr();
+	std::shared_ptr<AST::Selectable<AST::SelectQuery>> select_query();
 
 	std::shared_ptr<AST::String> string();
 

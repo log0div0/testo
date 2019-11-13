@@ -76,6 +76,21 @@ private:
 			((*input)[current_pos + 2] == quote));
 	}
 	bool test_backtick() const { return ((*input)[current_pos] == '`'); }
+	bool test_double_ampersand() const {
+		if (test_eof(1)) {
+			return false;
+		}
+		return (((*input)[current_pos] == '&') &&
+			((*input)[current_pos + 1] == '&'));
+	}
+	bool test_double_vertical_bar() const {
+		if (test_eof(1)) {
+			return false;
+		}
+		return (((*input)[current_pos] == '|') &&
+			((*input)[current_pos + 1] == '|'));
+	}
+	bool test_exclamation_mark() const { return (*input)[current_pos] == '!'; }
 	bool test_assign() const { return (*input)[current_pos] == '='; }
 	bool test_time_specifier() const;
 	bool test_size_specifier() const;
@@ -150,6 +165,9 @@ private:
 	Token quoted_string();
 	Token triple_quoted_string();
 	Token backticked_string();
+	Token exclamation_mark();
+	Token double_ampersand();
+	Token double_vertical_bar();
 	Token assign();
 	Token comma();
 	Token plus();

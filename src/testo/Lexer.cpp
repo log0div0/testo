@@ -647,6 +647,24 @@ Token Lexer::comma() {
 	return Token(Token::category::comma, ",", tmp_pos);
 }
 
+Token Lexer::exclamation_mark() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance();
+	return Token(Token::category::exclamation_mark, "!", tmp_pos);
+}
+
+Token Lexer::double_ampersand() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance(2);
+	return Token(Token::category::double_ampersand, "&&", tmp_pos);
+}
+
+Token Lexer::double_vertical_bar() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance(2);
+	return Token(Token::category::double_vertical_bar, "||", tmp_pos);
+}
+
 Token Lexer::assign() {
 	Pos tmp_pos = current_pos;
 	current_pos.advance();
@@ -735,6 +753,12 @@ Token Lexer::get_next_token() {
 			return backticked_string();
 		} else if (test_comma()) {
 			return comma();
+		} else if (test_exclamation_mark()) {
+			return exclamation_mark();
+		} else if (test_double_ampersand()) {
+			return double_ampersand();
+		} else if (test_double_vertical_bar()) {
+			return double_vertical_bar();
 		} else if (test_assign()) {
 			return assign();
 		} else if (test_plus()) {

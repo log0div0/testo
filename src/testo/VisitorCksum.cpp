@@ -101,9 +101,8 @@ std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::sha
 
 std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	std::string result = "wait";
-	if (wait->text) {
-		//For now this will do
-		result += template_parser.resolve(wait->text->text(), reg, vmc);
+	if (wait->select_expr) {
+		result += template_parser.resolve(std::string(*wait->select_expr), reg, vmc);
 	}
 
 	if (wait->time_interval) {
@@ -311,7 +310,7 @@ std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, st
 
 std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	std::string result = "check";
-	result += template_parser.resolve(check->text->text(), reg, vmc);
+	result += template_parser.resolve(std::string(*check->select_expr), reg, vmc);
 
 	return result;
 }
