@@ -4,6 +4,10 @@
 #include "../Utils.hpp"
 #include <fmt/format.h>
 
+NetworkController::NetworkController(const fs::path& main_file) {
+
+}
+
 std::string NetworkController::id() const {
 	return network->id();
 }
@@ -12,8 +16,24 @@ std::string NetworkController::name() const {
 	return network->name();
 }
 
+std::string NetworkController::prefix() const {
+	return network->prefix();
+}
+
+
 bool NetworkController::is_defined() const {
 	return fs::exists(main_file()) && network->is_defined();
+}
+
+void NetworkController::undefine() {
+	try {
+		if (network->is_defined()) {
+			network->undefine();
+		}
+		fs::remove(main_file());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("undefining network controller"));
+	}
 }
 
 void NetworkController::create() {
@@ -46,14 +66,10 @@ void NetworkController::create() {
 
 std::string NetworkController::get_metadata(const std::string& key) const {
 	try {
-		auto metadata = read_metadata_file(main_file());
-		if (!metadata.count(key)) {
-			throw std::runtime_error("Requested key is not present in vm metadata");
-		}
-		return metadata.at(key).get<std::string>();
+		return ::get_metadata(main_file(), key);
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting network metadata with key {}", key)));
 	}
 }
 

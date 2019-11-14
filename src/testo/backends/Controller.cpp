@@ -41,14 +41,10 @@ bool Controller::has_key(const std::string& key) {
 
 std::string Controller::get_metadata(const std::string& key) const {
 	try {
-		auto metadata = read_metadata_file(main_file());
-		if (!metadata.count(key)) {
-			throw std::runtime_error("Requested key is not present in vm metadata");
-		}
-		return metadata.at(key).get<std::string>();
+		::get_metadata(main_file(), key);
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting vm metadata with key {}", key)));
 	}
 }
 

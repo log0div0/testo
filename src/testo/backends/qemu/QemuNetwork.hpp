@@ -12,6 +12,7 @@ struct QemuNetwork: Network {
 
 	bool is_defined() override;
 	void create() override;
+	void undefine() override;
 
 private:
 	void remove_if_exists();

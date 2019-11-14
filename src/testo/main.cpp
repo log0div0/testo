@@ -76,6 +76,21 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 }
 
 int clean_mode() {
+	//cleanup networks
+	for (auto& network_folder: fs::directory_iterator(env->network_metadata_dir())) {
+		for (auto& file: fs::directory_iterator(network_folder)) {
+			if (fs::path(file).filename() == fs::path(network_folder).filename()) {
+				auto config = nlohmann::json::parse(get_metadata(file, "network_config"));
+
+				auto network_contoller = env->create_network_controller(config);
+				if (network_contoller->prefix() == params.prefix) {
+					network_contoller->undefine();
+					std::cout << "Deleted network " << network_contoller->id() << std::endl;
+					break;
+				}
+			}
+		}
+	}
 	return 0;
 }
 

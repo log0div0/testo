@@ -29,3 +29,7 @@ std::string Network::id() const {
 std::string Network::name() const {
 	return config.at("name");
 }
+
+std::string Network::prefix() const {
+	return config.at("prefix").get<std::string>();
+}
