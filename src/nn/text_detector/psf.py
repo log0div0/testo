@@ -43,7 +43,7 @@ class PSF:
 				else:
 					if background_color:
 						image[top+y, left+x] = background_color
-		return x_min, y_min, x_max-x_min+1, y_max-y_min+1
+		return left + x_min, top + y_min, left + x_max, top + y_max
 
 	def set_data(self, i, data):
 		assert len(data) == self.charsize

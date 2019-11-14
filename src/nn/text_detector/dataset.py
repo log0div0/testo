@@ -197,17 +197,36 @@ def random_colors():
 
 images_count = 10000
 
+def update_label(label, rect, symbol, fg, bg):
+	left, top, right, bottom = rect
+	width = right - left + 1
+	height = bottom - top + 1
+	x = (left + (width // 2)) / image_width
+	y = (top + (height // 2)) / image_height
+	grid_x = int(x * grid_w)
+	grid_y = int(y * grid_h)
+	label[grid_y, grid_x] = (
+		1,
+		x,
+		y,
+		(width + 2) / image_width,
+		(height + 2) / image_height,
+		symbols.index(symbol),
+		colors.index(fg),
+		colors.index(bg)
+	)
+
 def generate_example_1():
 	bg, fg = random_colors()
 	bg_shade, fg_shade = random_shade(bg), random_shade(fg)
 	image = np.full(image_shape, bg_shade, np.uint8)
 	label = np.zeros(label_shape, np.float32)
-	for row in range(1, rows_count - 1, 3):
+	for row in range(1, rows_count - 1, 2):
 		font = random.choice(fonts)
 		x_offset = random.randint(-3, 3);
 		y_offset = random.randint(-7, 7);
 		is_word = random.choice([True, False])
-		column = 0
+		column = 1
 		while column < columns_count - 1:
 			is_word = not is_word
 			if is_word:
@@ -220,21 +239,8 @@ def generate_example_1():
 				if is_word:
 					symbol = random.choice(symbols)
 					char = random.choice(symbol)
-					x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade)
-					x_center = (left + x + (width // 2)) / image_width
-					y_center = (top + y + (height // 2)) / image_height
-					grid_x = int(x_center * grid_w)
-					grid_y = int(y_center * grid_h)
-					label[grid_y, grid_x] = (
-						1,
-						x_center,
-						y_center,
-						(width + 2) / image_width,
-						(height + 2) / image_height,
-						symbols.index(symbol),
-						colors.index(fg),
-						colors.index(bg)
-					)
+					rect = font.draw(image, char, left=left, top=top, font_color=fg_shade)
+					update_label(label, rect, symbol, fg, bg)
 				column += 1
 	return {
 		'image': image,
@@ -251,12 +257,12 @@ def generate_example_2():
 		font = random.choice(fonts)
 		is_word = random.choice([True, False])
 		column = 0
-		while column < columns_count - 1:
+		while column < columns_count:
 			is_word = not is_word
 			if is_word:
-				word_length = random.randint(1, min(15, columns_count - 1 - column))
+				word_length = random.randint(1, min(15, columns_count - column))
 			else:
-				word_length = random.randint(1, min(2, columns_count - 1 - column))
+				word_length = random.randint(1, min(2, columns_count - column))
 			for _ in range(word_length):
 				if j % 57 == 0:
 					bg, fg = random_colors()
@@ -266,21 +272,8 @@ def generate_example_2():
 				if is_word:
 					symbol = random.choice(symbols)
 					char = random.choice(symbol)
-					x, y, width, height = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
-					x_center = (left + x + (width // 2)) / image_width
-					y_center = (top + y + (height // 2)) / image_height
-					grid_x = int(x_center * grid_w)
-					grid_y = int(y_center * grid_h)
-					label[grid_y, grid_x] = (
-						1,
-						x_center,
-						y_center,
-						(width + 2) / image_width,
-						(height + 2) / image_height,
-						symbols.index(symbol),
-						colors.index(fg),
-						colors.index(bg)
-					)
+					rect = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
+					update_label(label, rect, symbol, fg, bg)
 				else:
 					font.draw(image, ' ', left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 				j += 1
