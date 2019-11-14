@@ -26,6 +26,24 @@ using namespace clipp;
 
 struct Interruption {};
 
+enum mode {run, clean};
+
+struct console_params {
+	mode selected_mode;
+	std::string target;
+	std::string prefix;
+	std::string test_spec;
+	std::string exclude;
+	std::string invalidate;
+	std::string cache_miss_policy;
+	std::string json_report_file;
+	std::string hypervisor;
+
+	bool show_help = false;
+	bool stop_on_fail = false;
+};
+
+console_params params;
 
 std::shared_ptr<Environment> env;
 
@@ -57,16 +75,50 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 	runner.run();
 }
 
+int clean_mode() {
+	return 0;
+}
+
+int run_mode() {
+
+	if (params.cache_miss_policy.length()) {
+		if (params.cache_miss_policy != "accept" && params.cache_miss_policy != "skip_branch" && params.cache_miss_policy != "abort") {
+			throw std::runtime_error(std::string("Unknown cache_miss_policy value: ") + params.cache_miss_policy);
+		}
+	}
+
+	nlohmann::json config = {
+		{"stop_on_fail", params.stop_on_fail},
+		{"cache_miss_policy", params.cache_miss_policy},
+		{"test_spec", params.test_spec},
+		{"exclude", params.exclude},
+		{"invalidate", params.invalidate},
+		{"json_report_file", params.json_report_file},
+		{"prefix", params.prefix}
+	};
+
+	if (!fs::exists(params.target)) {
+		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + params.target);
+	}
+
+
+	if (fs::is_regular_file(params.target)) {
+		run_file(params.target, config);
+	} else if (fs::is_directory(params.target)) {
+		run_folder(params.target, config);
+	} else {
+		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + params.target);
+	}
+
+	return 0;
+}
+
 int do_main(int argc, char** argv) {
 
 #ifdef WIN32
 	wmi::CoInitializer initializer;
 	initializer.initalize_security();
 #endif
-	enum mode {run, clean, help};
-	mode selected_mode = mode::help;
-	std::string target, prefix, test_spec, exclude, invalidate, cache_miss_policy, json_report_file;
-
 #ifdef WIN32
 	std::string hypervisor("hyperv");
 #elif __linux__
@@ -75,73 +127,36 @@ int do_main(int argc, char** argv) {
 	std::string hypervisor("vsphere");
 #endif
 
-	bool stop_on_fail = false;
-	bool show_help = false;
-
-	auto run_mode = (
-		command("run").set(selected_mode, mode::run),
-		value("input file or folder", target),
-		option("--help").set(show_help).doc("Show this help message"),
-		option("--prefix").doc("Add a prefix to all entities, thus forming a namespace") & value("prefix", prefix),
-		option("--stop_on_fail").set(stop_on_fail).doc("Stop executing after first failed test"),
-		option("--test_spec").doc("Run specific tests") & value("wildcard pattern", test_spec),
-		option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", exclude),
-		option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", invalidate),
+	auto run_spec = (
+		command("run").set(params.selected_mode, mode::run),
+		value("input file or folder", params.target),
+		option("--prefix").doc("Add a prefix to all entities, thus forming a namespace") & value("prefix", params.prefix),
+		option("--stop_on_fail").set(params.stop_on_fail).doc("Stop executing after first failed test"),
+		option("--test_spec").doc("Run specific tests") & value("wildcard pattern", params.test_spec),
+		option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", params.exclude),
+		option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", params.invalidate),
 		option("--cache_miss_policy").doc("Apply some policy when a test loses its cache (accept, skip_branch, abort)")
-			& value("cache miss policy", cache_miss_policy),
-		option("--json_report").doc("Generate json-formatted statistics report") & value("output file", json_report_file),
-		option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", hypervisor)
+			& value("cache miss policy", params.cache_miss_policy),
+		option("--json_report").doc("Generate json-formatted statistics report") & value("output file", params.json_report_file),
+		option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", params.hypervisor)
 	);
 
-	auto clean_mode = (
-		command("clean").set(selected_mode, mode::clean)
+	auto clean_spec = (
+		command("clean").set(params.selected_mode, mode::clean),
+		option("--prefix") & value("prefix", params.prefix),
+		option("--hypervisor") & value("hypervisor type", params.hypervisor)
 	);
 
-	auto cli = ( run_mode | clean_mode | command("help").set(selected_mode, mode::help) );
+	auto cli = ( run_spec | clean_spec | command("help").set(params.show_help) );
 
 	if (!parse(argc, argv, cli)) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
 		return -1;
 	}
 
-	if (show_help) {
+	if (params.show_help) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
 		return 0;
-	}
-
-	switch(selected_mode) {
-		case mode::run:
-			std::cout << "RUN MODE\n";
-			break;
-		case mode::clean:
-			std::cout << "CLEAN MODE\n";
-			break;
-		case mode::help:
-			std::cout << "HELP MODE\n";
-			break;
-	}
-
-	return 0;
-
-	if (cache_miss_policy.length()) {
-		if (cache_miss_policy != "accept" && cache_miss_policy != "skip_branch" && cache_miss_policy != "abort") {
-			throw std::runtime_error(std::string("Unknown cache_miss_policy value: ") + cache_miss_policy);
-		}
-	}
-
-
-	nlohmann::json config = {
-		{"stop_on_fail", stop_on_fail},
-		{"cache_miss_policy", cache_miss_policy},
-		{"test_spec", test_spec},
-		{"exclude", exclude},
-		{"invalidate", invalidate},
-		{"json_report_file", json_report_file},
-		{"prefix", prefix}
-	};
-
-	if (!fs::exists(target)) {
-		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + target);
 	}
 
 	if (hypervisor == "qemu") {
@@ -173,15 +188,13 @@ int do_main(int argc, char** argv) {
 		throw Interruption();
 	});
 
-	if (fs::is_regular_file(target)) {
-		run_file(target, config);
-	} else if (fs::is_directory(target)) {
-		run_folder(target, config);
+	if (params.selected_mode == mode::clean) {
+		return clean_mode();
+	} else if (params.selected_mode == mode::run) {
+		return run_mode();
 	} else {
-		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + target);
+		throw std::runtime_error("Unknown mode");
 	}
-
-	return 0;
 }
 
 int main(int argc, char** argv) {
