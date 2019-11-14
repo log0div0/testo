@@ -77,12 +77,20 @@ def Loss(y_true, y_pred):
 
 	return obj_loss + 0.25 * xy_loss + 0.25 * wh_loss + symbol_loss + 0.25 * fg_loss + 0.25 * bg_loss
 
-model.compile(optimizer=optimizer, loss=Loss)
+# model.compile(optimizer=optimizer, loss=Loss)
+# callbacks = [
+# 	tf.keras.callbacks.ModelCheckpoint('checkpoints/epoch_{epoch}.tf', verbose=1, save_weights_only=True),
+# ]
+# model.fit(dataset, epochs=30, callbacks=callbacks)
+# model.save_weights('checkpoints/final.tf')
 
-callbacks = [
-	tf.keras.callbacks.TensorBoard(log_dir='logs'),
-	tf.keras.callbacks.ModelCheckpoint('checkpoints/epoch_{epoch}.tf', verbose=1, save_weights_only=True),
-]
-
-model.fit(dataset, epochs=30, callbacks=callbacks)
-model.save_weights('checkpoints/final.tf')
+summary_writer = tf.summary.create_file_writer('logs')
+with summary_writer.as_default():
+	for epoch in range(30):
+		print("Epoch", epoch)
+		for images, labels in dataset:
+			with tf.GradientTape() as tape:
+				loss = Loss(model(images), labels)
+			tf.summary.scalar("loss", tf.math.reduce_mean(loss), optimizer.iterations)
+			gradients = tape.gradient(loss, model.trainable_variables)
+			optimizer.apply_gradients(zip(gradients, model.trainable_variables))
