@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 from psf import PSF
 
 font_names = [
-	'Uni2-Continent.psf.gz',
-	'Uni2-Continent-FirstScreen.psf.gz',
+	'Uni2-Continent3.psf.gz',
+	'Uni2-Continent4.psf.gz',
+	'Uni2-Continent4-FirstScreen.psf.gz',
 	'Uni2-Fixed16.psf.gz',
 	'Uni2-VGA16.psf.gz'
 ]
@@ -92,7 +93,7 @@ symbols = [
 	'9',
 	'AАaа',
 	'bЬьЪъ',
-	'Gg',
+	'GДgд',
 	'OОoо0',
 	'YУyу',
 	'Zz',
@@ -113,7 +114,7 @@ symbols = [
 	'Rr',
 	'Ss',
 	'TТtт',
-	'Uu',
+	'UuИЙий',
 	'Vv',
 	'Ww',
 	'XХxх',
@@ -142,9 +143,7 @@ symbols = [
 	'|',
 	'~',
 	'Гг',
-	'Дд',
 	'Жж',
-	'ИЙий',
 	'Лл',
 	'Пп',
 	'Фф',

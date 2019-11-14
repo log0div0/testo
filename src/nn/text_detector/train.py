@@ -77,7 +77,7 @@ def Loss(y_true, y_pred):
 	fg_loss = obj_mask * categorical_focal_loss(true_fg, pred_fg)
 	bg_loss = obj_mask * categorical_focal_loss(true_bg, pred_bg)
 
-	return obj_loss + xy_loss + wh_loss + symbol_loss + fg_loss + bg_loss
+	return obj_loss + 0.25 * xy_loss + 0.25 * wh_loss + symbol_loss + 0.25 * fg_loss + 0.25 * bg_loss
 
 model.compile(optimizer=optimizer, loss=Loss)
 
