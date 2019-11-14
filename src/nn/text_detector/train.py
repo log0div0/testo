@@ -51,7 +51,7 @@ def categorical_focal_loss(y_true, y_pred, gamma=2.):
 	loss = K.pow(1 - y_pred, gamma) * cross_entropy
 	return K.sum(loss, axis=-1)
 
-def Loss(y_true, y_pred):
+def Loss(y_true, y_pred, step=None):
 	pred_obj, pred_xy, pred_wh, pred_symbol, pred_fg, pred_bg = tf.split(
 		y_pred, (1, 2, 2, len(symbols), len(colors), len(colors)), axis=-1)
 
@@ -75,22 +75,44 @@ def Loss(y_true, y_pred):
 	fg_loss = obj_mask * categorical_focal_loss(true_fg, pred_fg)
 	bg_loss = obj_mask * categorical_focal_loss(true_bg, pred_bg)
 
-	return obj_loss + 0.25 * xy_loss + 0.25 * wh_loss + symbol_loss + 0.25 * fg_loss + 0.25 * bg_loss
+	obj_loss = tf.math.reduce_mean(obj_loss)
+	xy_loss = tf.math.reduce_mean(xy_loss)
+	wh_loss = tf.math.reduce_mean(wh_loss)
+	symbol_loss = tf.math.reduce_mean(symbol_loss)
+	fg_loss = tf.math.reduce_mean(fg_loss)
+	bg_loss = tf.math.reduce_mean(xy_loss)
 
-# model.compile(optimizer=optimizer, loss=Loss)
-# callbacks = [
-# 	tf.keras.callbacks.ModelCheckpoint('checkpoints/epoch_{epoch}.tf', verbose=1, save_weights_only=True),
-# ]
-# model.fit(dataset, epochs=30, callbacks=callbacks)
-# model.save_weights('checkpoints/final.tf')
+	total_loss = obj_loss + \
+		0.25 * xy_loss + \
+		0.25 * wh_loss + \
+		symbol_loss + \
+		0.25 * fg_loss + \
+		0.25 * bg_loss
 
-summary_writer = tf.summary.create_file_writer('logs')
-with summary_writer.as_default():
-	for epoch in range(30):
-		print("Epoch", epoch)
-		for images, labels in dataset:
-			with tf.GradientTape() as tape:
-				loss = Loss(model(images), labels)
-			tf.summary.scalar("loss", tf.math.reduce_mean(loss), optimizer.iterations)
-			gradients = tape.gradient(loss, model.trainable_variables)
-			optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+	if step:
+		tf.summary.scalar("loss/0-total", total_loss, step)
+		tf.summary.scalar("loss/1-obj", obj_loss, step)
+		tf.summary.scalar("loss/2-xy", xy_loss, step)
+		tf.summary.scalar("loss/3-wh", wh_loss, step)
+		tf.summary.scalar("loss/4-symbol", symbol_loss, step)
+		tf.summary.scalar("loss/5-fg", fg_loss, step)
+		tf.summary.scalar("loss/6-bg", bg_loss, step)
+
+	return total_loss
+
+model.compile(optimizer=optimizer, loss=Loss)
+callbacks = [
+	tf.keras.callbacks.ModelCheckpoint('checkpoints/epoch_{epoch}.tf', verbose=1, save_weights_only=True),
+]
+model.fit(dataset, epochs=30, callbacks=callbacks)
+model.save_weights('checkpoints/final.tf')
+
+# summary_writer = tf.summary.create_file_writer('logs/base')
+# with summary_writer.as_default():
+# 	for epoch in range(20):
+# 		print("Epoch", epoch)
+# 		for images, labels in dataset:
+# 			with tf.GradientTape() as tape:
+# 				loss = Loss(model(images), labels, optimizer.iterations)
+# 			gradients = tape.gradient(loss, model.trainable_variables)
+# 			optimizer.apply_gradients(zip(gradients, model.trainable_variables))
