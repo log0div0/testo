@@ -178,7 +178,7 @@ image_height = rows_count * char_height
 grid_w = columns_count * 2
 grid_h = rows_count * 2
 image_shape = (image_height, image_width, 3)
-label_shape = (grid_h, grid_w, 1 + 2 + 2 + 1 + 1 + 1)
+label_shape = (grid_h, grid_w, 1 + 2 + 2 + len(symbols) + len(colors) + len(colors))
 
 def random_shade(color):
 	h = random.randrange(color["h"][0], color["h"][1]) % 360 / 360.
@@ -205,16 +205,14 @@ def update_label(label, rect, symbol, fg, bg):
 	y = (top + (height // 2)) / image_height
 	grid_x = int(x * grid_w)
 	grid_y = int(y * grid_h)
-	label[grid_y, grid_x] = (
-		1,
-		x,
-		y,
-		(width + 2) / image_width,
-		(height + 2) / image_height,
-		symbols.index(symbol),
-		colors.index(fg),
-		colors.index(bg)
-	)
+	label[grid_y, grid_x, 0] = 1
+	label[grid_y, grid_x, 1] = x
+	label[grid_y, grid_x, 2] = y
+	label[grid_y, grid_x, 3] = (width + 2) / image_width
+	label[grid_y, grid_x, 4] = (height + 2) / image_height
+	label[grid_y, grid_x, 5 + symbols.index(symbol)] = 1
+	label[grid_y, grid_x, 5 + len(symbols) + colors.index(fg)] = 1
+	label[grid_y, grid_x, 5 + len(symbols) + len(colors) + colors.index(bg)] = 1
 
 def generate_example_1():
 	bg, fg = random_colors()

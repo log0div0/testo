@@ -45,8 +45,6 @@ def binary_focal_loss(y_true, y_pred, gamma=2.):
 	return K.sum(loss, axis=-1)
 
 def categorical_focal_loss(y_true, y_pred, gamma=2.):
-	y_true = K.squeeze(y_true, axis=-1)
-	y_true = K.one_hot(tf.cast(y_true, tf.int32), num_classes=tf.shape(y_pred)[-1])
 	epsilon = K.epsilon()
 	y_pred = K.clip(y_pred, epsilon, 1. - epsilon)
 	cross_entropy = -y_true * K.log(y_pred)
@@ -58,7 +56,7 @@ def Loss(y_true, y_pred):
 		y_pred, (1, 2, 2, len(symbols), len(colors), len(colors)), axis=-1)
 
 	true_obj, true_xy, true_wh, true_symbol, true_fg, true_bg = tf.split(
-		y_true, (1, 2, 2, 1, 1, 1), axis=-1)
+		y_true, (1, 2, 2, len(symbols), len(colors), len(colors)), axis=-1)
 
 	obj_loss = binary_focal_loss(true_obj, pred_obj)
 
