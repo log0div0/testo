@@ -208,11 +208,17 @@ def update_label(label, rect, symbol, fg, bg):
 	label[grid_y, grid_x, 0] = 1
 	label[grid_y, grid_x, 1] = x * grid_w - grid_x
 	label[grid_y, grid_x, 2] = y * grid_h - grid_y
-	label[grid_y, grid_x, 3] = (width + 2) / char_width
-	label[grid_y, grid_x, 4] = (height + 2) / char_height
+	label[grid_y, grid_x, 3] = width / char_width
+	label[grid_y, grid_x, 4] = height / char_height
 	label[grid_y, grid_x, 5 + symbols.index(symbol)] = 1
 	label[grid_y, grid_x, 5 + len(symbols) + colors.index(fg)] = 1
 	label[grid_y, grid_x, 5 + len(symbols) + len(colors) + colors.index(bg)] = 1
+	if np.any(label[grid_y, grid_x] > 1):
+		print(label[grid_y, grid_x])
+		raise Exception("label > 1")
+	if np.any(label[grid_y, grid_x] < 0):
+		print(label[grid_y, grid_x])
+		raise Exception("label < 0")
 
 def generate_example_1():
 	bg, fg = random_colors()

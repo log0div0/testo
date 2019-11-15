@@ -31,16 +31,6 @@ def Model(height = None, width = None):
 	x = DarknetConv(x, filters=256, kernel_size=1)
 	x = Conv2D(filters=1 + 2 + 2 + len(generator.symbols) + len(generator.colors) + len(generator.colors), kernel_size=1)(x)
 
-	obj, xy, wh, symbol, fg, bg = tf.split(
-		x, (1, 2, 2, len(generator.symbols), len(generator.colors), len(generator.colors)), axis=-1)
-
-	obj = tf.nn.sigmoid(obj)
-	xy = tf.nn.sigmoid(xy)
-	wh = tf.nn.relu(wh)
-	symbol = tf.nn.softmax(symbol)
-	fg = tf.nn.softmax(fg)
-	bg = tf.nn.softmax(bg)
-
-	x = tf.concat([obj, xy, wh, symbol, fg, bg], axis=-1)
+	x = tf.sigmoid(x)
 
 	return tf.keras.Model(inputs, x)

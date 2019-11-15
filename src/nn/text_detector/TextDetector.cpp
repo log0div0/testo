@@ -255,25 +255,25 @@ bool TextDetector::find_substr(int left, int top,
 			int i = y * out_w * out_c + x * out_c;
 
 			float objectness = out[i];
-			if (objectness < 0.01f) {
+			if (objectness < 0.10f) {
 				continue;
 			}
 
 			float class_probability = out[i + 1 + 2 + 2 + symbol_id];
-			if (class_probability < 0.01f) {
+			if (class_probability < 0.10f) {
 				continue;
 			}
 
 			if (foreground_id >= 0) {
 				float foreground_probability = out[i + 1 + 2 + 2 + symbols.size() + foreground_id];
-				if (foreground_probability > 0.01f) {
+				if (foreground_probability > 0.10f) {
 					foreground_hits += 1;
 				}
 			}
 
 			if (background_id >= 0) {
 				float background_probability = out[i + 1 + 2 + 2 + symbols.size() + colors.size() + background_id];
-				if (background_probability > 0.01f) {
+				if (background_probability > 0.10f) {
 					background_hits += 1;
 				}
 			}
