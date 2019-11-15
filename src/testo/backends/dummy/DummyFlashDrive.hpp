@@ -10,6 +10,7 @@ struct DummyFlashDrive: FlashDrive {
 
 	bool is_defined() override;
 	void create() override;
+	void undefine() override;
 	bool is_mounted() const override;
 	void mount() const override;
 	void umount() const override;

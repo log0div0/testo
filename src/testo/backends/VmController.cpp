@@ -72,6 +72,10 @@ void VmController::create() {
 	}
 }
 
+void VmController::undefine() {
+	throw std::runtime_error("Implement me");
+}
+
 void VmController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
 {
 	try {

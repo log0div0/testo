@@ -76,6 +76,34 @@ void FlashDriveController::create() {
 	}
 }
 
+void FlashDriveController::undefine() {
+	try {
+		auto metadata_dir = get_metadata_dir();
+		if (!fd->is_defined()) {
+			if (fs::exists(metadata_dir)) {
+				//The check would be valid only if we have the main file
+
+				if (!fs::remove_all(metadata_dir)) {
+					throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+				}
+			}
+			return;
+		}
+
+		if (Controller::has_snapshot("_init")) {
+			delete_snapshot_with_children("_init");
+		}
+
+		fd->undefine();
+
+		if (!fs::remove_all(metadata_dir)) {
+			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("undefining network controller"));
+	}
+}
+
 void FlashDriveController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
 {
 	try {

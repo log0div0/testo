@@ -14,6 +14,7 @@ struct FlashDrive {
 
 	virtual bool is_defined() = 0;
 	virtual void create() = 0;
+	virtual void undefine() = 0;
 	virtual bool is_mounted() const = 0;
 	virtual void mount() const = 0;
 	virtual void umount() const = 0;
@@ -28,6 +29,7 @@ struct FlashDrive {
 	std::string prefix() const;
 	nlohmann::json get_config() const;
 	bool has_folder() const;
+	void validate_folder() const;
 	void load_folder() const;
 
 protected:

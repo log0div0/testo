@@ -98,13 +98,12 @@ int clean_mode() {
 			for (auto& file: fs::directory_iterator(flash_drive_folder)) {
 				if (fs::path(file).filename() == fs::path(flash_drive_folder).filename()) {
 					auto config = nlohmann::json::parse(get_metadata(file, "fd_config"));
-					std::cout << file << std::endl;
 					auto flash_drive_contoller = env->create_flash_drive_controller(config);
-					/*if (flash_drive_contoller->prefix() == params.prefix) {
-						//flash_drive_contoller->undefine();
+					if (flash_drive_contoller->prefix() == params.prefix) {
+						flash_drive_contoller->undefine();
 						std::cout << "Deleted flash drive " << flash_drive_contoller->id() << std::endl;
 						break;
-					}*/
+					}
 				}
 			}
 		}

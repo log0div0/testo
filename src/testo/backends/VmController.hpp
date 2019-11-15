@@ -14,6 +14,7 @@ struct VmController: public Controller {
 	std::string type() const override { return "virtual machine"; }
 	bool is_defined() const override;
 	void create() override;
+	void undefine() override;
 	void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) override;
 	void restore_snapshot(const std::string& snapshot) override;
 	void delete_snapshot_with_children(const std::string& snapshot) override;

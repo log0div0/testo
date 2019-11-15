@@ -117,17 +117,3 @@ void QemuNetwork::undefine() {
 		std::throw_with_nested(std::runtime_error("Deleting network"));
 	}
 }
-
-void QemuNetwork::remove_if_exists() {
-	for (auto& network: qemu_connect.networks()) {
-		if (network.name() == id()) {
-			if (network.is_active()) {
-				network.stop();
-			}
-			if (network.is_persistent()) {
-				network.undefine();
-			}
-		}
-	}
-}
-

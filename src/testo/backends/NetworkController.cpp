@@ -27,10 +27,23 @@ bool NetworkController::is_defined() const {
 
 void NetworkController::undefine() {
 	try {
-		if (network->is_defined()) {
-			network->undefine();
+		auto metadata_dir = get_metadata_dir();
+		if (!network->is_defined()) {
+			if (fs::exists(metadata_dir)) {
+				//The check would be valid only if we have the main file
+
+				if (!fs::remove_all(metadata_dir)) {
+					throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+				}
+			}
+			return;
 		}
-		fs::remove(main_file());
+
+		network->undefine();
+
+		if (!fs::remove_all(metadata_dir)) {
+			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("undefining network controller"));
 	}

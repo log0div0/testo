@@ -16,6 +16,9 @@ bool HyperVFlashDrive::is_defined() {
 void HyperVFlashDrive::create() {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }
+void HyperVFlashDrive::undefine() {
+	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+}
 bool HyperVFlashDrive::is_mounted() const {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 	return false;

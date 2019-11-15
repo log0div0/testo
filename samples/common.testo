@@ -23,11 +23,7 @@ macro install_ubuntu() {
 	wait "Re-enter password to verify"; type "${password}"; press Enter
 	wait "Use weak password?"; press Left, Enter
 	wait "Encrypt your home directory?"; press Enter
-	if ("${HTTP_PROXY}" OR ("${vm_nic_count}" STREQUAL "0")) {
-		wait "Select your time zone" timeout 2m; press Enter
-	} else {
-		wait "Moscow" timeout 2m; press Enter
-	}
+	wait "Select your time zone" || "Moscow" timeout 2m; press Enter
 	wait "Partitioning method"; press Enter
 	wait "Select disk to partition"; press Enter
 	wait "Write the changes to disks and configure LVM?"; press Left, Enter

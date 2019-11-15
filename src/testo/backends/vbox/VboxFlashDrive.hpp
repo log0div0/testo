@@ -11,6 +11,7 @@ struct VboxFlashDrive: FlashDrive {
 	VboxFlashDrive(const nlohmann::json& config);
 	bool is_defined() override;
 	void create() override;
+	void undefine() override;
 	bool is_mounted() const override;
 	void mount() const override;
 	void umount() const override;

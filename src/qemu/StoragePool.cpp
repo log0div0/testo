@@ -39,6 +39,15 @@ bool StoragePool::is_active() const {
 	return res;
 }
 
+StorageVolume StoragePool::storage_volume_lookup_by_name(const std::string& name) const {
+	auto result = virStorageVolLookupByName(handle, name.c_str());
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	return result;
+}
+
 std::vector<StorageVolume> StoragePool::volumes() const {
 	std::vector<StorageVolume> result;
 

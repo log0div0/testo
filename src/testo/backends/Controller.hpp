@@ -14,6 +14,7 @@ struct Controller {
 	virtual std::string type() const = 0;
 	virtual bool is_defined() const;
 	virtual void create() = 0;
+	virtual void undefine() = 0;
 	virtual void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) = 0;
 	virtual void restore_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot_with_children(const std::string& snapshot) = 0;
