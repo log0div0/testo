@@ -6,12 +6,6 @@ import os
 from dataset import (
 	builder,
 	images_count,
-	image_height,
-	image_width,
-	grid_w,
-	grid_h,
-	char_width,
-	char_height,
 	colors,
 	symbols
 )
@@ -61,15 +55,6 @@ def Loss(y_true, y_pred):
 		y_true, (1, 2, 2, len(symbols), len(colors), len(colors)), axis=-1)
 
 	obj_loss = binary_focal_loss(true_obj, pred_obj)
-
-	grid_size = tf.cast([grid_w, grid_h], tf.float32)
-	grid = tf.meshgrid(tf.range(grid_w), tf.range(grid_h))
-	grid = tf.stack(grid, axis=-1)
-	grid = tf.cast(grid, tf.float32)
-	true_xy = true_xy * grid_size - grid
-
-	true_wh = true_wh * [image_width, image_height] / [char_width, char_height]
-
 	obj_mask = tf.squeeze(true_obj, -1)
 	xy_loss = obj_mask * tf.reduce_sum(tf.square(true_xy - pred_xy), axis=-1)
 	wh_loss = obj_mask * tf.reduce_sum(tf.square(true_wh - pred_wh), axis=-1)

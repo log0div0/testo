@@ -206,10 +206,10 @@ def update_label(label, rect, symbol, fg, bg):
 	grid_x = int(x * grid_w)
 	grid_y = int(y * grid_h)
 	label[grid_y, grid_x, 0] = 1
-	label[grid_y, grid_x, 1] = x
-	label[grid_y, grid_x, 2] = y
-	label[grid_y, grid_x, 3] = (width + 2) / image_width
-	label[grid_y, grid_x, 4] = (height + 2) / image_height
+	label[grid_y, grid_x, 1] = x * grid_w - grid_x
+	label[grid_y, grid_x, 2] = y * grid_h - grid_y
+	label[grid_y, grid_x, 3] = (width + 2) / char_width
+	label[grid_y, grid_x, 4] = (height + 2) / char_height
 	label[grid_y, grid_x, 5 + symbols.index(symbol)] = 1
 	label[grid_y, grid_x, 5 + len(symbols) + colors.index(fg)] = 1
 	label[grid_y, grid_x, 5 + len(symbols) + len(colors) + colors.index(bg)] = 1
