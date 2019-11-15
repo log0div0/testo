@@ -197,8 +197,10 @@ def random_colors():
 
 images_count = 10000
 
-def update_label(label, rect, symbol, fg, bg):
-	left, top, right, bottom = rect
+def draw_char(image, label, font, left, top, fg, bg, fg_shade, bg_shade):
+	symbol = random.choice(symbols)
+	char = random.choice(symbol)
+	left, top, right, bottom = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 	width = right - left + 1
 	height = bottom - top + 1
 	x = (left + (width // 2)) / image_width
@@ -241,10 +243,7 @@ def generate_example_1():
 				left = column*char_width + x_offset
 				top = row*char_height + y_offset
 				if is_word:
-					symbol = random.choice(symbols)
-					char = random.choice(symbol)
-					rect = font.draw(image, char, left=left, top=top, font_color=fg_shade)
-					update_label(label, rect, symbol, fg, bg)
+					draw_char(image, label, font, left, top, fg, bg, fg_shade, None)
 				column += 1
 	return {
 		'image': image,
@@ -274,10 +273,7 @@ def generate_example_2():
 				left = column*char_width
 				top = row*char_height
 				if is_word:
-					symbol = random.choice(symbols)
-					char = random.choice(symbol)
-					rect = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
-					update_label(label, rect, symbol, fg, bg)
+					draw_char(image, label, font, left, top, fg, bg, fg_shade, bg_shade)
 				else:
 					font.draw(image, ' ', left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 				j += 1
