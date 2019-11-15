@@ -1,5 +1,48 @@
 
 import gzip
+import numpy as np
+
+class Glyph:
+	def __init__(self, width, height, data):
+		self.width = width
+		self.height = height
+		self.data = data
+		self.mask = np.zeros((height, width, 1), np.uint8)
+		self.x_min = width
+		self.y_min = height
+		self.x_max = 0
+		self.y_max = 0
+		bits_per_line = (width + 7) // 8 * 8
+		for y in range(height):
+			for x in range(width):
+				bit_position = y * bits_per_line + x
+				byte_index = bit_position // 8
+				bit_index = 7 - bit_position % 8
+				if data[byte_index] & (1 << bit_index):
+					if self.x_min > x:
+						self.x_min = x
+					if self.y_min > y:
+						self.y_min = y
+					if self.x_max < x:
+						self.x_max = x
+					if self.y_max < y:
+						self.y_max = y
+					self.mask[y, x] = 1
+
+	def __hash__(self):
+		return hash(self.data)
+
+	def __eq__(self, other):
+		return self.data == other.data
+
+	def draw(self, image, left, top, font_color, background_color=None):
+		fg = self.mask * font_color
+		if background_color:
+			bg = (1 - self.mask) * background_color
+		else:
+			bg = (1 - self.mask) * image[top:top+self.height, left:left+self.width]
+		image[top:top+self.height, left:left+self.width] = fg + bg
+		return left + self.x_min, top + self.y_min, left + self.x_max, top + self.y_max
 
 class PSF:
 	def __init__(self, filename):
@@ -15,39 +58,13 @@ class PSF:
 	def get_data(self, i):
 		return self.data[i * self.charsize: (i+1) * self.charsize]
 
-	def get_glyph(self, char):
-		return self.get_data(self.unicodes[char])
-
-	def draw(self, image, char, left, top, font_color, background_color=None):
-		data = self.get_glyph(char)
-		bits_per_line = (self.width + 7) // 8 * 8
-		x_min = self.width
-		y_min = self.height
-		x_max = 0
-		y_max = 0
-		for y in range(self.height):
-			for x in range(self.width):
-				bit_position = y * bits_per_line + x
-				byte_index = bit_position // 8
-				bit_index = 7 - bit_position % 8
-				if data[byte_index] & (1 << bit_index):
-					if x_min > x:
-						x_min = x
-					if y_min > y:
-						y_min = y
-					if x_max < x:
-						x_max = x
-					if y_max < y:
-						y_max = y
-					image[top+y, left+x] = font_color
-				else:
-					if background_color:
-						image[top+y, left+x] = background_color
-		return left + x_min, top + y_min, left + x_max, top + y_max
-
 	def set_data(self, i, data):
 		assert len(data) == self.charsize
 		self.data[i * self.charsize : (i + 1) * self.charsize] = data
+
+	def get_glyph(self, char):
+		data = self.get_data(self.unicodes[char])
+		return Glyph(self.width, self.height, data)
 
 	def calc(self, offset):
 		return self.header2[offset] + (self.header2[offset + 1] << 8) + \

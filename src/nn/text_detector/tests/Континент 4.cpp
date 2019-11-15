@@ -29,7 +29,7 @@ TEST_CASE("Континент 4/Локальное меню") {
 		stb::Image img("Континент 4/Локальное меню/Выбор метода аутентификации.png");
 		CHECK(detector.detect(img, "Выбор метода аутентификации").size() == 1);
 		CHECK(detector.detect(img, "Соболь").size() == 1);
-		CHECK(detector.detect(img, "Учетная запись/пароль").size() == 1);
+		CHECK(detector.detect(img, "Учётная запись/пароль").size() == 1);
 		CHECK(detector.detect(img, "Отмена").size() == 1);
 	}
 	{

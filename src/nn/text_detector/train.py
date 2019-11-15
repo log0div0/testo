@@ -36,7 +36,7 @@ def binary_focal_loss(y_true, y_pred, gamma=2.):
 	pt = K.clip(pt, epsilon, 1. - epsilon)
 	cross_entropy = -K.log(pt)
 	loss = K.pow(1 - pt, gamma) * cross_entropy
-	return K.mean(loss, axis=-1)
+	return K.max(loss, axis=-1)
 
 run_eagerly = True
 
@@ -49,18 +49,18 @@ def Loss(y_true, y_pred):
 
 	obj_loss = binary_focal_loss(true_obj, pred_obj)
 	obj_mask = tf.squeeze(true_obj, -1)
-	xy_loss = obj_mask * tf.reduce_mean(tf.square(true_xy - pred_xy), axis=-1)
-	wh_loss = obj_mask * tf.reduce_mean(tf.square(true_wh - pred_wh), axis=-1)
+	xy_loss = obj_mask * tf.reduce_max(tf.square(true_xy - pred_xy), axis=-1)
+	wh_loss = obj_mask * tf.reduce_max(tf.square(true_wh - pred_wh), axis=-1)
 	symbol_loss = obj_mask * binary_focal_loss(true_symbol, pred_symbol)
 	fg_loss = obj_mask * binary_focal_loss(true_fg, pred_fg)
 	bg_loss = obj_mask * binary_focal_loss(true_bg, pred_bg)
 
-	obj_loss = tf.math.reduce_mean(obj_loss)
-	xy_loss = tf.math.reduce_mean(xy_loss) * 0.25
-	wh_loss = tf.math.reduce_mean(wh_loss) * 0.25
-	symbol_loss = tf.math.reduce_mean(symbol_loss)
-	fg_loss = tf.math.reduce_mean(fg_loss) * 0.25
-	bg_loss = tf.math.reduce_mean(xy_loss) * 0.25
+	obj_loss = tf.math.reduce_mean(obj_loss) * 100
+	xy_loss = tf.math.reduce_mean(xy_loss) * 100 * 0.25
+	wh_loss = tf.math.reduce_mean(wh_loss) * 100 * 0.25
+	symbol_loss = tf.math.reduce_mean(symbol_loss) * 100
+	fg_loss = tf.math.reduce_mean(fg_loss) * 100 * 0.25
+	bg_loss = tf.math.reduce_mean(xy_loss) * 100 * 0.25
 
 	total_loss = obj_loss + xy_loss + wh_loss + symbol_loss + fg_loss + bg_loss
 

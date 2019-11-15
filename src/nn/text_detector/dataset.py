@@ -80,44 +80,44 @@ colors = [
 
 fonts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 fonts = [PSF(os.path.join(fonts_dir, font_name)) for font_name in font_names]
-symbols_to_glyphs = dict()
+
 symbols = [
+	'0',
 	'1',
 	'2',
-	'3Зз',
+	'3',
 	'4',
 	'5',
-	'6Бб',
+	'6',
 	'7',
 	'8',
 	'9',
-	'AАaа',
-	'bЬьЪъ',
-	'GДgд',
-	'OОoо0',
-	'YУyу',
-	'Zz',
-	'BВв',
-	'CСcс',
+	'Aa',
+	'Bb',
+	'Cc',
 	'Dd',
-	'EЕЁeеё',
+	'Ee',
 	'Ff',
-	'HНhн',
+	'Gg',
+	'Hh',
 	'Ii',
 	'Jj',
-	'KКkк',
+	'Kk',
 	'Ll',
-	'MМmм',
+	'Mm',
 	'Nn',
-	'PРpр',
+	'Oo',
+	'Pp',
 	'Qq',
 	'Rr',
 	'Ss',
-	'TТtт',
-	'UuИЙий',
+	'Tt',
+	'Uu',
 	'Vv',
 	'Ww',
-	'XХxх',
+	'Xx',
+	'Yy',
+	'Zz',
 	'!',
 	'"',
 	"'",
@@ -142,32 +142,40 @@ symbols = [
 	'_',
 	'|',
 	'~',
+	'Аа',
+	'Бб',
+	'Вв',
 	'Гг',
+	'Дд',
+	'Ее',
+	'Ёё',
 	'Жж',
+	'Зз',
+	'Ии',
+	'Йй',
+	'Кк',
 	'Лл',
+	'Мм',
+	'Нн',
+	'Оо',
 	'Пп',
+	'Рр',
+	'Сс',
+	'Тт',
+	'Уу',
 	'Фф',
+	'Хх',
 	'Цц',
 	'Чч',
-	'ШЩшщ',
+	'Шш',
+	'Щщ',
+	'Ъъ',
 	'Ыы',
+	'Ьь',
 	'Ээ',
 	'Юю',
 	'Яя',
 ]
-
-for index, symbol in enumerate(symbols):
-	glyphs = set()
-	for char in symbol:
-		for font in fonts:
-			glyphs.add(font.get_glyph(char))
-	symbols_to_glyphs[symbol] = glyphs
-
-for symbol1, glyphs1 in symbols_to_glyphs.items():
-	for symbol2, glyphs2 in symbols_to_glyphs.items():
-		if symbol1 != symbol2:
-			if len(glyphs1 & glyphs2):
-				raise Exception("Fucking fuck: " + symbol1 + " and " + symbol2)
 
 char_height = 16
 char_width = 8
@@ -179,6 +187,26 @@ grid_w = columns_count * 2
 grid_h = rows_count * 2
 image_shape = (image_height, image_width, 3)
 label_shape = (grid_h, grid_w, 1 + 2 + 2 + len(symbols) + len(colors) + len(colors))
+
+chars_to_glyphs = dict()
+glyphs_to_chars = dict()
+chars_to_symbols = dict()
+for symbol in symbols:
+	for char in symbol:
+		chars_to_symbols[char] = symbol
+		for font in fonts:
+			glyph = font.get_glyph(char)
+			if not (char in chars_to_glyphs):
+				chars_to_glyphs[char] = set()
+			chars_to_glyphs[char].add(glyph)
+			if not (glyph in glyphs_to_chars):
+				glyphs_to_chars[glyph] = set()
+			glyphs_to_chars[glyph].add(char)
+
+for char, glyphs in chars_to_glyphs.items():
+	chars_to_glyphs[char] = list(glyphs)
+for glyph, chars in glyphs_to_chars.items():
+	glyphs_to_chars[glyph] = list(chars)
 
 def random_shade(color):
 	h = random.randrange(color["h"][0], color["h"][1]) % 360 / 360.
@@ -200,7 +228,8 @@ images_count = 10000
 def draw_char(image, label, font, left, top, fg, bg, fg_shade, bg_shade):
 	symbol = random.choice(symbols)
 	char = random.choice(symbol)
-	left, top, right, bottom = font.draw(image, char, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
+	glyph = random.choice(chars_to_glyphs[char])
+	left, top, right, bottom = glyph.draw(image, left=left, top=top, font_color=fg_shade, background_color=bg_shade)
 	width = right - left + 1
 	height = bottom - top + 1
 	x = (left + (width // 2)) / image_width
@@ -212,7 +241,8 @@ def draw_char(image, label, font, left, top, fg, bg, fg_shade, bg_shade):
 	label[grid_y, grid_x, 2] = y * grid_h - grid_y
 	label[grid_y, grid_x, 3] = width / char_width
 	label[grid_y, grid_x, 4] = height / char_height
-	label[grid_y, grid_x, 5 + symbols.index(symbol)] = 1
+	for char in glyphs_to_chars[glyph]:
+		label[grid_y, grid_x, 5 + symbols.index(chars_to_symbols[char])] = 1
 	label[grid_y, grid_x, 5 + len(symbols) + colors.index(fg)] = 1
 	label[grid_y, grid_x, 5 + len(symbols) + len(colors) + colors.index(bg)] = 1
 	if np.any(label[grid_y, grid_x] > 1):
@@ -275,7 +305,7 @@ def generate_example_2():
 				if is_word:
 					draw_char(image, label, font, left, top, fg, bg, fg_shade, bg_shade)
 				else:
-					font.draw(image, ' ', left=left, top=top, font_color=fg_shade, background_color=bg_shade)
+					image[top:top+char_height, left:left+char_width] = bg_shade
 				j += 1
 				column += 1
 	return {
@@ -283,7 +313,7 @@ def generate_example_2():
 		'label': label
 	}
 
-# example = generate_example_1()
+# example = generate_example_2()
 # plt.imshow(example['image'])
 # plt.show()
 # exit(0)
