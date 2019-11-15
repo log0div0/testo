@@ -41,7 +41,7 @@ bool Controller::has_key(const std::string& key) {
 
 std::string Controller::get_metadata(const std::string& key) const {
 	try {
-		::get_metadata(main_file(), key);
+		return ::get_metadata(main_file(), key);
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Getting vm metadata with key {}", key)));

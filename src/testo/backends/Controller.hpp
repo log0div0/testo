@@ -10,6 +10,7 @@ struct Controller {
 
 	virtual std::string id() const = 0;
 	virtual std::string name() const = 0;
+	virtual std::string prefix() const = 0;
 	virtual std::string type() const = 0;
 	virtual bool is_defined() const;
 	virtual void create() = 0;

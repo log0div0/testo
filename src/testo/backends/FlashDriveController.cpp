@@ -11,6 +11,10 @@ std::string FlashDriveController::name() const {
 	return fd->name();
 }
 
+std::string FlashDriveController::prefix() const {
+	return fd->prefix();
+}
+
 bool FlashDriveController::is_defined() const {
 	return Controller::is_defined() && fd->is_defined();
 }

@@ -10,6 +10,7 @@ struct FlashDriveController: public Controller {
 
 	std::string id() const override;
 	std::string name() const override;
+	std::string prefix() const override;
 	std::string type() const override { return "flash drive"; }
 	bool is_defined() const override;
 	void create() override;

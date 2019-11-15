@@ -11,6 +11,10 @@ std::string VmController::name() const {
 	return vm->name();
 }
 
+std::string VmController::prefix() const {
+	return vm->prefix();
+}
+
 bool VmController::is_defined() const {
 	return Controller::is_defined() && vm->is_defined();
 }

@@ -61,6 +61,7 @@ struct VM {
 
 	std::string id() const;
 	std::string name() const;
+	std::string prefix() const;
 	nlohmann::json get_config() const;
 
 protected:
