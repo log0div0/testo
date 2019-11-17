@@ -2,8 +2,6 @@
 
 import os, random, colorsys
 import numpy as np
-import tensorflow as tf
-import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
 from psf import PSF
 
@@ -223,8 +221,6 @@ def random_colors():
 			break
 	return bg, fg
 
-images_count = 10000
-
 def draw_char(image, label, font, left, top, fg, bg, fg_shade, bg_shade):
 	symbol = random.choice(symbols)
 	char = random.choice(symbol)
@@ -252,11 +248,10 @@ def draw_char(image, label, font, left, top, fg, bg, fg_shade, bg_shade):
 		print(label[grid_y, grid_x])
 		raise Exception("label < 0")
 
-def generate_example_1():
+def draw_example_1(image, label):
 	bg, fg = random_colors()
 	bg_shade, fg_shade = random_shade(bg), random_shade(fg)
-	image = np.full(image_shape, bg_shade, np.uint8)
-	label = np.zeros(label_shape, np.float32)
+	image[:] = bg_shade
 	for row in range(1, rows_count - 1, 2):
 		font = random.choice(fonts)
 		x_offset = random.randint(-3, 3);
@@ -275,16 +270,10 @@ def generate_example_1():
 				if is_word:
 					draw_char(image, label, font, left, top, fg, bg, fg_shade, None)
 				column += 1
-	return {
-		'image': image,
-		'label': label
-	}
 
-def generate_example_2():
+def draw_example_2(image, label):
 	bg, fg = random_colors()
 	bg_shade, fg_shade = random_shade(bg), random_shade(fg)
-	image = np.full(image_shape, (0, 0, 0), np.uint8)
-	label = np.zeros(label_shape, np.float32)
 	j = 0
 	for row in range(rows_count):
 		font = random.choice(fonts)
@@ -308,39 +297,24 @@ def generate_example_2():
 					image[top:top+char_height, left:left+char_width] = bg_shade
 				j += 1
 				column += 1
-	return {
-		'image': image,
-		'label': label
-	}
 
-# example = generate_example_2()
-# plt.imshow(example['image'])
+# image = np.zeros(image_shape, np.uint8)
+# label = np.zeros(label_shape, np.float32)
+# example = draw_example_1(image, label)
+# plt.imshow(image)
 # plt.show()
 # exit(0)
 
-class Builder(tfds.core.GeneratorBasedBuilder):
-	VERSION = tfds.core.Version('0.1.0')
+images_count = 10000
 
-	def _info(self):
-		return tfds.core.DatasetInfo(
-			builder=self,
-			features=tfds.features.FeaturesDict({
-				"image": tfds.features.Image(shape=image_shape),
-				"label": tfds.features.Tensor(shape=label_shape, dtype=tf.float32),
-			})
-		)
-
-	def _split_generators(self, dl_manager):
-		return [
-			tfds.core.SplitGenerator(name=tfds.Split.TRAIN)
-		]
-
-	def _generate_examples(self):
-		for i in range(images_count):
-			if i % 2 == 1:
-				yield i, generate_example_1()
-			else:
-				yield i, generate_example_2()
-
-builder = Builder(data_dir='.')
-builder.download_and_prepare()
+if __name__ == "__main__":
+	images = np.zeros((images_count,) + image_shape, np.uint8)
+	labels = np.zeros((images_count,) + label_shape, np.float32)
+	for i in range(images_count):
+		print(i)
+		if i % 2 == 1:
+			draw_example_1(images[i], labels[i])
+		else:
+			draw_example_2(images[i], labels[i])
+	np.savez_compressed("dataset", images=images, labels=labels)
+	print("OK")
