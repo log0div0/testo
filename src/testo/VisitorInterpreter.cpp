@@ -1325,6 +1325,69 @@ static std::string build_shell_script(const std::string& body) {
 	return script;
 }
 
+static std::string build_python_script(const std::string& body) {
+	std::vector<std::string> strings;
+	std::stringstream iss(body);
+	while(iss.good())
+	{
+		std::string single_string;
+		getline(iss,single_string,'\n');
+		strings.push_back(single_string);
+	}
+
+	size_t base_offset = 0;
+
+	bool offset_found = false;
+
+	for (auto& str: strings) {
+		size_t offset_probe = 0;
+
+		if (offset_found) {
+			break;
+		}
+
+		for (auto it = str.begin(); it != str.end(); ++it) {
+			while (*it == '\t') {
+				offset_probe++;
+				++it;
+			}
+			if (it == str.end()) {
+				//empty string
+				break;
+			} else {
+				//meaningful_string
+				base_offset = offset_probe;
+				offset_found = true;
+				break;
+			}
+		}
+	}
+
+	std::string result;
+
+	for (auto& str: strings) {
+		for (auto it = str.begin(); it != str.end(); ++it) {
+			for (size_t i = 0; i < base_offset; i++) {
+				if (it == str.end()) {
+					break;
+				}
+
+				if (*it != '\t') {
+					throw std::runtime_error("Ill-formatted python script");
+				}
+				++it;
+			}
+
+			result += std::string(it, str.end());
+			result += "\n";
+			break;
+		}
+	}
+
+	return result;
+}
+
+
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
 		std::cout
@@ -1347,12 +1410,16 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 			script = build_shell_script(template_parser.resolve(exec->commands->text(), reg, vmc));
 			extension = ".sh";
 			interpreter = "bash";
+		} else if (exec->process_token.value() == "python") {
+			script = build_python_script(template_parser.resolve(exec->commands->text(), reg, vmc));
+			extension = ".py";
+			interpreter = "python";
 		} else if (exec->process_token.value() == "python2") {
-			script = template_parser.resolve(exec->commands->text(), reg, vmc);
+			script = build_python_script(template_parser.resolve(exec->commands->text(), reg, vmc));
 			extension = ".py";
 			interpreter = "python2";
 		} else {
-			script = template_parser.resolve(exec->commands->text(), reg, vmc);
+			script = build_python_script(template_parser.resolve(exec->commands->text(), reg, vmc));
 			extension = ".py";
 			interpreter = "python3";
 		}

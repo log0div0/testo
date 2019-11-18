@@ -85,15 +85,14 @@ test sgw_basic: install_wireguard
 	vpn_sgw1 {
 		press LEFTCTRL+C
 		wait timeout 2s
-		exec python2 """
+		exec python """
+			from scapy.all import *
 
-from scapy.all import *
+			packets = rdpcap('/tmp/captured.pcapng')
 
-packets = rdpcap('/tmp/captured.pcapng')
-
-for pkt in packets:
-	if ICMP in pkt:
-		exit(1)
+			for pkt in packets:
+				if ICMP in pkt:
+					exit(1)
 
 		"""
 	}
@@ -146,15 +145,14 @@ test sgw_basic_with_clients: sgw_basic, clients_net_renamed
 	vpn_sgw1 {
 		press LEFTCTRL+C
 		wait timeout 2s
-		exec python2 """
+		exec python """
+			from scapy.all import *
 
-from scapy.all import *
+			packets = rdpcap('/tmp/captured.pcapng')
 
-packets = rdpcap('/tmp/captured.pcapng')
-
-for pkt in packets:
-	if ICMP in pkt:
-		exit(1)
+			for pkt in packets:
+				if ICMP in pkt:
+					exit(1)
 
 		"""
 	}
@@ -202,15 +200,14 @@ test sgw_routes_misconfigured: sgw_basic, clients_net_renamed
 	vpn_sgw1 {
 		press LEFTCTRL+C
 		wait timeout 2s
-		exec python2 """
+		exec python """
+			from scapy.all import *
 
-from scapy.all import *
+			packets = rdpcap('/tmp/captured.pcapng')
 
-packets = rdpcap('/tmp/captured.pcapng')
-
-for pkt in packets:
-	if ICMP in pkt:
-		exit(1)
+			for pkt in packets:
+				if ICMP in pkt:
+					exit(1)
 
 		"""
 	}
