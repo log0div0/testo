@@ -165,11 +165,11 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 #endif
 #ifdef WIN32
-	std::string hypervisor("hyperv");
+	params.hypervisor = "hyperv";
 #elif __linux__
-	std::string hypervisor("qemu");
+	params.hypervisor = "qemu";
 #elif __APPLE__
-	std::string hypervisor("vsphere");
+	params.hypervisor = "vsphere";
 #endif
 
 	auto run_spec = (
@@ -204,26 +204,26 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
-	if (hypervisor == "qemu") {
+	if (params.hypervisor == "qemu") {
 #ifndef __linux__
 		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
 #else
 		env = std::make_shared<QemuEnvironment>();
 #endif
-	} else if (hypervisor == "vbox") {
+	} else if (params.hypervisor == "vbox") {
 		env = std::make_shared<VboxEnvironment>();
-	} else if (hypervisor == "hyperv") {
+	} else if (params.hypervisor == "hyperv") {
 #ifndef WIN32
 		throw std::runtime_error("Can't use hyperv not in Windows");
 #else
 		env = std::make_shared<HyperVEnvironment>();
 #endif
-	} else if (hypervisor == "vsphere") {
+	} else if (params.hypervisor == "vsphere") {
 		throw std::runtime_error("TODO");
-	} else if (hypervisor == "dummy") {
+	} else if (params.hypervisor == "dummy") {
 		env = std::make_shared<DummyEnvironment>();
 	} else {
-		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
+		throw std::runtime_error(std::string("Unknown hypervisor: ") + params.hypervisor);
 	}
 
 	coro::CoroPool pool;
