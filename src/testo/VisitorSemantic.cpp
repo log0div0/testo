@@ -405,6 +405,11 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	config["src_file"] = flash->name.pos().file.generic_string();
 
 	auto fdc = env->create_flash_drive_controller(config);
+
+	if (fdc->fd->has_folder()) {
+		fdc->fd->validate_folder();
+	}
+
 	reg.fdcs.emplace(std::make_pair(flash->name, fdc));
 }
 

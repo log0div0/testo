@@ -318,6 +318,10 @@ void VboxVM::install() {
 	}
 }
 
+void VboxVM::undefine() {
+	throw std::runtime_error("Implement me");
+}
+
 void VboxVM::make_snapshot(const std::string& snapshot) {
 	try {
 		auto lock_machine = virtual_box.find_machine(id());

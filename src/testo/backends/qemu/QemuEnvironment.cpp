@@ -100,5 +100,5 @@ std::shared_ptr<FlashDriveController> QemuEnvironment::create_flash_drive_contro
 }
 
 std::shared_ptr<NetworkController> QemuEnvironment::create_network_controller(const nlohmann::json& config) {
-		return std::make_shared<NetworkController>(std::shared_ptr<Network>(new QemuNetwork(config)));
-	}
+	return std::make_shared<NetworkController>(std::shared_ptr<Network>(new QemuNetwork(config)));
+}

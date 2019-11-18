@@ -152,6 +152,11 @@ void HyperVVM::install() {
 	}
 }
 
+void HyperVVM::undefine() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
+
 void HyperVVM::make_snapshot(const std::string& snapshot) {
 	try {
 		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;

@@ -11,6 +11,7 @@ struct QemuVM: public VM {
 	~QemuVM();
 	QemuVM(const QemuVM& other) = delete;
 	void install() override;
+	void undefine() override;
 	void make_snapshot(const std::string& snapshot) override;
 
 	void rollback(const std::string& snapshot) override;

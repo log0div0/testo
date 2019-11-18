@@ -135,3 +135,11 @@ void write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
 	metadata_file_stream << metadata;
 	metadata_file_stream.close();
 }
+
+std::string get_metadata(const fs::path& file, const std::string& key) {
+	auto metadata = read_metadata_file(file);
+	if (!metadata.count(key)) {
+		throw std::runtime_error("Requested key is not present in metadata");
+	}
+	return metadata.at(key).get<std::string>();
+}

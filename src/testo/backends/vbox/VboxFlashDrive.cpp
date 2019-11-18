@@ -60,6 +60,11 @@ void VboxFlashDrive::create() {
 	}
 }
 
+void VboxFlashDrive::undefine() {
+	throw std::runtime_error("Implement me");
+}
+
+
 bool VboxFlashDrive::is_mounted() const {
 #ifdef __linux__
 	std::string query = "mountpoint -q \"" + env->flash_drives_mount_dir().generic_string() + "\"";

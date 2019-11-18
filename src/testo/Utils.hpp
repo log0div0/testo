@@ -37,6 +37,7 @@ void replace_all(std::string& str, const std::string& from, const std::string& t
 
 nlohmann::json read_metadata_file(const fs::path& file);
 void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
+std::string get_metadata(const fs::path& file, const std::string& key);
 
 template <typename T>
 void concat_unique(std::list<T>& left, const std::list<T>& right) {

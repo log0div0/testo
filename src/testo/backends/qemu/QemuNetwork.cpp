@@ -62,7 +62,9 @@ std::string QemuNetwork::find_free_nat() const {
 
 void QemuNetwork::create() {
 	try {
-		remove_if_exists();
+		if (is_defined()) {
+			undefine();
+		}
 
 		std::string string_config = fmt::format(R"(
 			<network>
@@ -102,16 +104,16 @@ void QemuNetwork::create() {
 	}
 }
 
-void QemuNetwork::remove_if_exists() {
-	for (auto& network: qemu_connect.networks()) {
-		if (network.name() == id()) {
-			if (network.is_active()) {
-				network.stop();
-			}
-			if (network.is_persistent()) {
-				network.undefine();
-			}
+void QemuNetwork::undefine() {
+	try {
+		auto network = qemu_connect.network_lookup_by_name(id());
+		if (network.is_active()) {
+			network.stop();
 		}
+		if (network.is_persistent()) {
+			network.undefine();
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Deleting network"));
 	}
 }
-

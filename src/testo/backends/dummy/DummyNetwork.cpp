@@ -13,7 +13,14 @@ void DummyNetwork::create() {
 	}
 
 	nlohmann::json config;
-	config["snapshots"] = nlohmann::json::array();
 
 	write_metadata_file(metadata_file(), config);
+}
+
+void DummyNetwork::undefine() {
+	//remove the file if it exists
+
+	if (fs::exists(metadata_file())) {
+		fs::remove(metadata_file());
+	}
 }

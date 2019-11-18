@@ -11,6 +11,7 @@ struct QemuFlashDrive: FlashDrive {
 	~QemuFlashDrive();
 	bool is_defined() override;
 	void create() override;
+	void undefine() override;
 	bool is_mounted() const override;
 	void mount() const override;
 	void umount() const override;
@@ -22,7 +23,5 @@ struct QemuFlashDrive: FlashDrive {
 	fs::path img_path() const override;
 
 private:
-	void remove_if_exists();
-
 	vir::Connect qemu_connect;
 };

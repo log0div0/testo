@@ -19,6 +19,10 @@ std::string VM::name() const {
 	return config.at("name");
 }
 
+std::string VM::prefix() const {
+	return config.at("prefix");
+}
+
 std::set<std::string> VM::nics() const {
 	std::set<std::string> result;
 

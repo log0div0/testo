@@ -4,6 +4,10 @@
 #include "../Utils.hpp"
 #include <fmt/format.h>
 
+NetworkController::NetworkController(const fs::path& main_file) {
+
+}
+
 std::string NetworkController::id() const {
 	return network->id();
 }
@@ -12,12 +16,43 @@ std::string NetworkController::name() const {
 	return network->name();
 }
 
+std::string NetworkController::prefix() const {
+	return network->prefix();
+}
+
+
 bool NetworkController::is_defined() const {
 	return fs::exists(main_file()) && network->is_defined();
 }
 
+void NetworkController::undefine() {
+	try {
+		auto metadata_dir = get_metadata_dir();
+		if (!network->is_defined()) {
+			if (fs::exists(metadata_dir)) {
+				//The check would be valid only if we have the main file
+
+				if (!fs::remove_all(metadata_dir)) {
+					throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+				}
+			}
+			return;
+		}
+
+		network->undefine();
+
+		if (!fs::remove_all(metadata_dir)) {
+			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("undefining network controller"));
+	}
+}
+
 void NetworkController::create() {
 	try {
+		undefine();
+
 		if (fs::exists(get_metadata_dir())) {
 			if (!fs::remove_all(get_metadata_dir())) {
 				throw std::runtime_error("Error deleting metadata dir " + get_metadata_dir().generic_string());
@@ -46,14 +81,10 @@ void NetworkController::create() {
 
 std::string NetworkController::get_metadata(const std::string& key) const {
 	try {
-		auto metadata = read_metadata_file(main_file());
-		if (!metadata.count(key)) {
-			throw std::runtime_error("Requested key is not present in vm metadata");
-		}
-		return metadata.at(key).get<std::string>();
+		return ::get_metadata(main_file(), key);
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting network metadata with key {}", key)));
 	}
 }
 

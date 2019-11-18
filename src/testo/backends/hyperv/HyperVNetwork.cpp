@@ -9,3 +9,6 @@ void HyperVNetwork::create() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
+void HyperVNetwork::undefine() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}

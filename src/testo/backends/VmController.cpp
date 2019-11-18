@@ -11,12 +11,18 @@ std::string VmController::name() const {
 	return vm->name();
 }
 
+std::string VmController::prefix() const {
+	return vm->prefix();
+}
+
 bool VmController::is_defined() const {
 	return Controller::is_defined() && vm->is_defined();
 }
 
 void VmController::create() {
 	try {
+		undefine();
+
 		if (fs::exists(get_metadata_dir())) {
 			if (!fs::remove_all(get_metadata_dir())) {
 				throw std::runtime_error("Error deleting metadata dir " + get_metadata_dir().generic_string());
@@ -54,7 +60,6 @@ void VmController::create() {
 		}
 
 		config.erase("src_file");
-		config.erase("iso");
 		config.erase("metadata");
 
 		metadata["vm_config"] = config.dump();
@@ -65,6 +70,34 @@ void VmController::create() {
 		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
+	}
+}
+
+void VmController::undefine() {
+	try {
+		auto metadata_dir = get_metadata_dir();
+		if (!vm->is_defined()) {
+			if (fs::exists(metadata_dir)) {
+				//The check would be valid only if we have the main file
+
+				if (!fs::remove_all(metadata_dir)) {
+					throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+				}
+			}
+			return;
+		}
+
+		if (Controller::has_snapshot("_init")) {
+			delete_snapshot_with_children("_init");
+		}
+
+		vm->undefine();
+
+		if (!fs::remove_all(metadata_dir)) {
+			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("undefining network controller"));
 	}
 }
 
@@ -248,7 +281,7 @@ bool VmController::check_config_relevance() {
 	old_config.erase("nic");
 
 	new_config.erase("iso");
-	//old_config already doesn't have the iso
+	old_config.erase("iso");
 
 	new_config.erase("src_file");
 	//old_config already doesn't have the src_file

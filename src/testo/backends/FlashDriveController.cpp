@@ -11,12 +11,18 @@ std::string FlashDriveController::name() const {
 	return fd->name();
 }
 
+std::string FlashDriveController::prefix() const {
+	return fd->prefix();
+}
+
 bool FlashDriveController::is_defined() const {
 	return Controller::is_defined() && fd->is_defined();
 }
 
 void FlashDriveController::create() {
 	try {
+		undefine();
+
 		// Check if we have the init snapshot. If we do and config is relevant
 		// then just rollback there and exit. If not - do the usual procedure
 
@@ -69,6 +75,34 @@ void FlashDriveController::create() {
 		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating fd"));
+	}
+}
+
+void FlashDriveController::undefine() {
+	try {
+		auto metadata_dir = get_metadata_dir();
+		if (!fd->is_defined()) {
+			if (fs::exists(metadata_dir)) {
+				//The check would be valid only if we have the main file
+
+				if (!fs::remove_all(metadata_dir)) {
+					throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+				}
+			}
+			return;
+		}
+
+		if (Controller::has_snapshot("_init")) {
+			delete_snapshot_with_children("_init");
+		}
+
+		fd->undefine();
+
+		if (!fs::remove_all(metadata_dir)) {
+			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("undefining network controller"));
 	}
 }
 

@@ -82,7 +82,9 @@ void QemuFlashDrive::create() {
 			throw std::runtime_error("Please load nbd module (max parts=1)");
 		}
 
-		remove_if_exists();
+		if (is_defined()) {
+			undefine();
+		}
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 		pugi::xml_document xml_config;
@@ -123,6 +125,13 @@ void QemuFlashDrive::create() {
 		std::system("qemu-nbd -d /dev/nbd0");
 		std::throw_with_nested(std::runtime_error("Creating flash drive"));
 	}
+}
+
+void QemuFlashDrive::undefine() {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
+
+	auto vol = pool.storage_volume_lookup_by_name(id() + ".img");
+	vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
 }
 
 bool QemuFlashDrive::is_mounted() const {
@@ -192,18 +201,4 @@ void QemuFlashDrive::rollback(const std::string& snapshot) {
 fs::path QemuFlashDrive::img_path() const {
 	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
 	return pool.path() / (id() + ".img");
-}
-
-void QemuFlashDrive::remove_if_exists() {
-	try {
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
-		for (auto& vol: pool.volumes()) {
-			if (vol.name() == (id() + ".img")) {
-				vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
-			}
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Remove flash if exist"));
-	}
-
 }

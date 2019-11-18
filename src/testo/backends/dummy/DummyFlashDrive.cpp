@@ -15,9 +15,8 @@ bool DummyFlashDrive::is_defined() {
 
 void DummyFlashDrive::create() {
 	//remove the file if it exists
-
-	if (fs::exists(metadata_file())) {
-		fs::remove(metadata_file());
+	if(is_defined()) {
+		undefine();
 	}
 
 	nlohmann::json config;
@@ -25,6 +24,16 @@ void DummyFlashDrive::create() {
 
 	write_metadata_file(metadata_file(), config);
 }
+
+void DummyFlashDrive::undefine() {
+	//remove the file if it exists
+
+	if (fs::exists(metadata_file())) {
+		fs::remove(metadata_file());
+	}
+
+}
+
 bool DummyFlashDrive::is_mounted() const {
 	return false;
 }

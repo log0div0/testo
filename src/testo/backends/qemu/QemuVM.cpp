@@ -11,24 +11,24 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
 	if (!config.count("name")) {
-		throw std::runtime_error("Constructing QemuVM error: field NAME is not specified");
+		throw std::runtime_error("Constructing QemuVM " + id() + " error: field NAME is not specified");
 	}
 
 	if (!config.count("ram")) {
-		throw std::runtime_error("Constructing QemuVM error: field RAM is not specified");
+		throw std::runtime_error("Constructing QemuVM " + id() + " error: field RAM is not specified");
 	}
 
 	if (!config.count("cpus")) {
-		throw std::runtime_error("Constructing QemuVM error: field CPUS is not specified");
+		throw std::runtime_error("Constructing QemuVM " + id() + " error: field CPUS is not specified");
 	}
 
 	if (!config.count("iso")) {
-		throw std::runtime_error("Constructing QemuVM error: field ISO is not specified");
+		throw std::runtime_error("Constructing QemuVM " + id() + " error: field ISO is not specified");
 	}
 
 	fs::path iso_path(config.at("iso").get<std::string>());
 	if (!fs::exists(iso_path)) {
-		throw std::runtime_error(std::string("Constructing QemuVM error: specified iso file does not exist: ")
+		throw std::runtime_error(std::string("Constructing QemuVM " + id() + " error: specified iso file does not exist: ")
 			+ iso_path.generic_string());
 	}
 
@@ -192,20 +192,8 @@ QemuVM::~QemuVM() {
 void QemuVM::install() {
 	try {
 		if (is_defined()) {
-			auto domain = qemu_connect.domain_lookup_by_name(id());
-			if (domain.state() != VIR_DOMAIN_SHUTOFF) {
-				stop();
-			}
-			for (auto& snapshot: domain.snapshots()) {
-				snapshot.destroy();
-			}
-
-			auto xml = domain.dump_xml();
-
-			domain.undefine();
+			undefine();
 		}
-
-		remove_disk();
 
 		//now create disks
 		create_disk();
@@ -349,6 +337,23 @@ void QemuVM::install() {
 		qemu_connect.domain_define_xml(xml_config);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Performing install")));
+	}
+}
+
+void QemuVM::undefine() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+
+		if (state() != VmState::Stopped) {
+			stop();
+		}
+		//delete the storage
+		remove_disk();
+
+		domain.undefine();
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Undefining vm {}", id())));
 	}
 }
 
