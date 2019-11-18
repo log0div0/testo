@@ -77,33 +77,46 @@ void run_folder(const fs::path& folder, const nlohmann::json& config) {
 
 int clean_mode() {
 	//cleanup networks
-	if (params.prefix.length()) {
-		for (auto& network_folder: fs::directory_iterator(env->network_metadata_dir())) {
-			for (auto& file: fs::directory_iterator(network_folder)) {
-				if (fs::path(file).filename() == fs::path(network_folder).filename()) {
-					auto config = nlohmann::json::parse(get_metadata(file, "network_config"));
+	for (auto& network_folder: fs::directory_iterator(env->network_metadata_dir())) {
+		for (auto& file: fs::directory_iterator(network_folder)) {
+			if (fs::path(file).filename() == fs::path(network_folder).filename()) {
+				auto config = nlohmann::json::parse(get_metadata(file, "network_config"));
 
-					auto network_controller = env->create_network_controller(config);
-					if (network_controller->prefix() == params.prefix) {
-						network_controller->undefine();
-						std::cout << "Deleted network " << network_controller->id() << std::endl;
-						break;
-					}
+				auto network_controller = env->create_network_controller(config);
+				if (network_controller->prefix() == params.prefix) {
+					network_controller->undefine();
+					std::cout << "Deleted network " << network_controller->id() << std::endl;
+					break;
 				}
 			}
 		}
+	}
 
-		//cleanup flash drives
-		for (auto& flash_drive_folder: fs::directory_iterator(env->flash_drives_metadata_dir())) {
-			for (auto& file: fs::directory_iterator(flash_drive_folder)) {
-				if (fs::path(file).filename() == fs::path(flash_drive_folder).filename()) {
-					auto config = nlohmann::json::parse(get_metadata(file, "fd_config"));
-					auto flash_drive_contoller = env->create_flash_drive_controller(config);
-					if (flash_drive_contoller->prefix() == params.prefix) {
-						flash_drive_contoller->undefine();
-						std::cout << "Deleted flash drive " << flash_drive_contoller->id() << std::endl;
-						break;
-					}
+	//cleanup flash drives
+	for (auto& flash_drive_folder: fs::directory_iterator(env->flash_drives_metadata_dir())) {
+		for (auto& file: fs::directory_iterator(flash_drive_folder)) {
+			if (fs::path(file).filename() == fs::path(flash_drive_folder).filename()) {
+				auto config = nlohmann::json::parse(get_metadata(file, "fd_config"));
+				auto flash_drive_contoller = env->create_flash_drive_controller(config);
+				if (flash_drive_contoller->prefix() == params.prefix) {
+					flash_drive_contoller->undefine();
+					std::cout << "Deleted flash drive " << flash_drive_contoller->id() << std::endl;
+					break;
+				}
+			}
+		}
+	}
+
+	//cleanup virtual machines
+	for (auto& vm_folder: fs::directory_iterator(env->vm_metadata_dir())) {
+		for (auto& file: fs::directory_iterator(vm_folder)) {
+			if (fs::path(file).filename() == fs::path(vm_folder).filename()) {
+				auto config = nlohmann::json::parse(get_metadata(file, "vm_config"));
+				auto vm_contoller = env->create_vm_controller(config);
+				if (vm_contoller->prefix() == params.prefix) {
+					vm_contoller->undefine();
+					std::cout << "Deleted virtual machine" << vm_contoller->id() << std::endl;
+					break;
 				}
 			}
 		}

@@ -10,6 +10,7 @@ struct VboxVM: public VM {
 	VboxVM(const nlohmann::json& config);
 	VboxVM(const VboxVM& other) = delete;
 	void install() override;
+	void undefine() override;
 	void make_snapshot(const std::string& snapshot) override;
 
 	void rollback(const std::string& snapshot) override;

@@ -12,8 +12,8 @@ DummyVM::~DummyVM() {
 void DummyVM::install() {
 	//remove the file if it exists
 
-	if (fs::exists(metadata_file())) {
-		fs::remove(metadata_file());
+	if (is_defined()) {
+		undefine();
 	}
 
 	nlohmann::json config;
@@ -23,6 +23,15 @@ void DummyVM::install() {
 
 	write_metadata_file(metadata_file(), config);
 }
+
+void DummyVM::undefine() {
+	//remove the file if it exists
+
+	if (fs::exists(metadata_file())) {
+		fs::remove(metadata_file());
+	}
+}
+
 
 void DummyVM::make_snapshot(const std::string& snapshot) {
 	if (is_flash_plugged(nullptr)) {

@@ -8,6 +8,7 @@ struct DummyVM: VM {
 	DummyVM(const nlohmann::json& config);
 	~DummyVM() override;
 	void install() override;
+	void undefine() override;
 	void make_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;

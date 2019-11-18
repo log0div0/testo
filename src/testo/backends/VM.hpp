@@ -23,6 +23,7 @@ struct VM {
 	VM(const nlohmann::json& config_);
 	virtual ~VM() = default;
 	virtual void install() = 0;
+	virtual void undefine() = 0;
 	virtual void make_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual void press(const std::vector<std::string>& buttons) = 0;
