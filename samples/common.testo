@@ -16,7 +16,7 @@ macro install_ubuntu() {
 	} else {
 		wait "Primary network interface" timeout 5m; press Enter
 	}
-	wait "Hostname:" timeout 30s; press Backspace*6; type "${host_name}"; press Enter
+	wait "Hostname:" timeout 30s; press Backspace*36; type "${host_name}"; press Enter
 	wait "Full name for the new user"; type "${login}"; press Enter
 	wait "Username for your account"; press Enter
 	wait "Choose a password for the new user"; type "${password}"; press Enter

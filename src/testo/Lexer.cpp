@@ -578,6 +578,11 @@ Token Lexer::triple_quoted_string() {
 			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing triple quote");
 		}
 
+		if (test_escaped_character()) {
+			value += escaped_character();
+			continue;
+		}
+
 		value += (*input)[current_pos];
 		current_pos.advance();
 	} while (!test_triple_quote());

@@ -3,8 +3,6 @@ include "./installations.testo"
 
 test sgw_basic: install_wireguard
 {
-	vpn_sgw1 copyto "./utils/test_pcap.py" "/test_pcap.py"
-
 	vpn_sgw1 exec bash """
 		ip a a 192.168.1.1/24 dev WAN
 		ip l s WAN up
@@ -87,7 +85,16 @@ test sgw_basic: install_wireguard
 	vpn_sgw1 {
 		press LEFTCTRL+C
 		wait timeout 2s
-		exec bash "python test_pcap.py"
+		exec python """
+			from scapy.all import *
+
+			packets = rdpcap('/tmp/captured.pcapng')
+
+			for pkt in packets:
+				if ICMP in pkt:
+					exit(1)
+
+		"""
 	}
 }
 
@@ -138,7 +145,16 @@ test sgw_basic_with_clients: sgw_basic, clients_net_renamed
 	vpn_sgw1 {
 		press LEFTCTRL+C
 		wait timeout 2s
-		exec bash "python test_pcap.py"
+		exec python """
+			from scapy.all import *
+
+			packets = rdpcap('/tmp/captured.pcapng')
+
+			for pkt in packets:
+				if ICMP in pkt:
+					exit(1)
+
+		"""
 	}
 }
 
@@ -184,6 +200,15 @@ test sgw_routes_misconfigured: sgw_basic, clients_net_renamed
 	vpn_sgw1 {
 		press LEFTCTRL+C
 		wait timeout 2s
-		exec bash "python test_pcap.py"
+		exec python """
+			from scapy.all import *
+
+			packets = rdpcap('/tmp/captured.pcapng')
+
+			for pkt in packets:
+				if ICMP in pkt:
+					exit(1)
+
+		"""
 	}
 }
