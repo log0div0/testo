@@ -1317,6 +1317,14 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::
 	}
 }
 
+static std::string build_shell_script(const std::string& body) {
+	std::string script = "set -e; set -o pipefail; set -x;";
+	script += body;
+	script.erase(std::remove(script.begin(), script.end(), '\r'), script.end());
+
+	return script;
+}
+
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
 		std::cout
@@ -1333,42 +1341,51 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 			throw std::runtime_error(fmt::format("guest additions is not installed"));
 		}
 
+		std::string script, extension, interpreter;
+
 		if (exec->process_token.value() == "bash") {
-			//In future this should be a function
-
-			std::string script = "set -e; set -o pipefail; set -x;";
-			script += template_parser.resolve(exec->commands->text(), reg, vmc);
-			script.erase(std::remove(script.begin(), script.end(), '\r'), script.end());
-
-			//copy the script to tmp folder
-			std::hash<std::string> h;
-
-			std::string hash = std::to_string(h(script));
-
-			fs::path host_script_dir = fs::temp_directory_path();
-			fs::path guest_script_dir = fs::path("/tmp");
-
-			fs::path host_script_file = host_script_dir / std::string(hash + ".sh");
-			fs::path guest_script_file = guest_script_dir / std::string(hash + ".sh");
-			std::ofstream script_stream(host_script_file, std::ios::binary);
-			if (!script_stream.is_open()) {
-				throw std::runtime_error(fmt::format("Can't open tmp file for writing the script"));
-			}
-
-			script_stream << script;
-			script_stream.close();
-
-			vmc->vm->copy_to_guest(host_script_file, guest_script_file, 5000); //5 seconds should be enough to pass any script
-
-			fs::remove(host_script_file.generic_string());
-
-			std::string wait_for = exec->time_interval ? exec->time_interval.value() : "600s";
-
-			if (vmc->vm->run("/bin/bash", {guest_script_file.generic_string()}, time_to_milliseconds(wait_for)) != 0) {
-				throw std::runtime_error("Bash command failed");
-			}
-			vmc->vm->remove_from_guest(guest_script_file);
+			script = build_shell_script(template_parser.resolve(exec->commands->text(), reg, vmc));
+			extension = ".sh";
+			interpreter = "bash";
+		} else if (exec->process_token.value() == "python2") {
+			script = template_parser.resolve(exec->commands->text(), reg, vmc);
+			extension = ".py";
+			interpreter = "python2";
+		} else {
+			script = template_parser.resolve(exec->commands->text(), reg, vmc);
+			extension = ".py";
+			interpreter = "python3";
 		}
+
+		//copy the script to tmp folder
+		std::hash<std::string> h;
+
+		std::string hash = std::to_string(h(script));
+
+		fs::path host_script_dir = fs::temp_directory_path();
+		fs::path guest_script_dir = fs::path("/tmp");
+
+		fs::path host_script_file = host_script_dir / std::string(hash + extension);
+		fs::path guest_script_file = guest_script_dir / std::string(hash + extension);
+		std::ofstream script_stream(host_script_file, std::ios::binary);
+		if (!script_stream.is_open()) {
+			throw std::runtime_error(fmt::format("Can't open tmp file for writing the script"));
+		}
+
+		script_stream << script;
+		script_stream.close();
+
+		vmc->vm->copy_to_guest(host_script_file, guest_script_file, 5000); //5 seconds should be enough to pass any script
+
+		fs::remove(host_script_file.generic_string());
+
+		std::string wait_for = exec->time_interval ? exec->time_interval.value() : "600s";
+
+		if (vmc->vm->run(interpreter, {guest_script_file.generic_string()}, time_to_milliseconds(wait_for)) != 0) {
+			throw std::runtime_error(interpreter + " command failed");
+		}
+		vmc->vm->remove_from_guest(guest_script_file);
+
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(exec, vmc));
 	}
