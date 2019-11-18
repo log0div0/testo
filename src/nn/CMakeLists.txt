@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 include_directories(
-	${TENSORFLOW_DIR}
-	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/downloads/flatbuffers/include
+	${ONNX_RUNTIME_DIR}/include
 )
 
 macro(embed_ftlite_model MODEL_PATH)

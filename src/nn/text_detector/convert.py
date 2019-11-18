@@ -1,10 +1,25 @@
 
-import tensorflow as tf
+import torch
 from model import Model
 
-model = Model(480, 640)
-model.load_weights('checkpoints/final.tf')
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-model_tflite = converter.convert()
-with open("model.tflite", "wb") as f:
-	f.write(model_tflite)
+dummy_input = torch.randn(1, 3, 224, 224)
+
+model = Model()
+model.load_state_dict(torch.load('model.pt', map_location=torch.device('cpu')))
+
+torch.onnx.export(model, dummy_input, "model.onnx",
+	input_names=["input"],
+	output_names=["output"],
+	dynamic_axes={
+		'input': {
+			2: 'height',
+			3: 'width'
+		},
+		'output': {
+			2: 'height',
+			3: 'width'
+		}
+	}
+)
+
+print("OK")

@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
 set(SRCS TextDetector.cpp)
-embed_ftlite_model(${CMAKE_CURRENT_SOURCE_DIR}/TextDetector.tflite)
+embed_ftlite_model(${CMAKE_CURRENT_SOURCE_DIR}/TextDetector.onnx)
 
 add_library(text-detector STATIC ${SRCS})
-target_link_libraries(text-detector stb tensorflow-lite pthread)
+target_link_libraries(text-detector stb onnxruntime pthread)
 
 add_executable(text_detector_demo demo.cpp)
 target_link_libraries(text_detector_demo text-detector)

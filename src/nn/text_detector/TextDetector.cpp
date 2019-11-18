@@ -1,13 +1,11 @@
 
 #include "TextDetector.hpp"
-#include <tensorflow/lite/interpreter.h>
-#include <tensorflow/lite/model.h>
-#include <tensorflow/lite/kernels/register.h>
+#include <onnxruntime_cxx_api.h>
 #include <iostream>
 #include <utf8.hpp>
 
-extern unsigned char TextDetector_tflite[];
-extern unsigned int TextDetector_tflite_len;
+extern unsigned char TextDetector_onnx[];
+extern unsigned int TextDetector_onnx_len;
 
 std::vector<std::string> colors = {
 	"white",
@@ -140,18 +138,8 @@ int get_symbol_id(const std::string& symbol) {
 }
 
 TextDetector::TextDetector() {
-	std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(
-		(const char*)TextDetector_tflite, TextDetector_tflite_len);
-	if (!model) {
-		throw std::runtime_error("Failed to load nn model");
-	}
-
-	tflite::ops::builtin::BuiltinOpResolver resolver;
-	tflite::InterpreterBuilder builder(*model, resolver);
-	builder(&interpreter);
-	if (!interpreter) {
-		throw std::runtime_error("Failed to build nn model");
-	}
+	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "text_detector");
+	session = std::make_unique<Ort::Session>(*env, TextDetector_onnx, TextDetector_onnx_len, Ort::SessionOptions{nullptr});
 }
 
 TextDetector::~TextDetector() {
@@ -170,34 +158,42 @@ std::vector<Rect> TextDetector::detect(stb::Image& image,
 	if ((in_w != image.width) ||
 		(in_h != image.height))
 	{
-		in_w = image.width;
+		in_c = 3;
 		in_h = image.height;
-		int in_index = interpreter->inputs().at(0);
-		if (interpreter->ResizeInputTensor(in_index, {1, in_h, in_w, 3}) != kTfLiteOk) {
-			throw std::runtime_error("Failed to resize input tensor");
-		}
-		if (interpreter->AllocateTensors() != kTfLiteOk) {
-			throw std::runtime_error("Failed to allocate tensors");
-		}
-		in = interpreter->typed_input_tensor<float>(0);
-		out = interpreter->typed_output_tensor<float>(0);
-		int out_index = interpreter->outputs().at(0);
-		out_h = interpreter->tensor(out_index)->dims->data[1];
-		out_w = interpreter->tensor(out_index)->dims->data[2];
-		out_c = interpreter->tensor(out_index)->dims->data[3];
+		in_w = image.width;
+
+		out_c = 1 + 2 + 2 + symbols.size() + colors.size() + colors.size();
+		out_h = image.height / 8;
+		out_w = image.width / 4;
+
+		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+
+		std::array<int64_t, 4> in_shape = {1, in_c, in_h, in_w};
+		std::array<int64_t, 4> out_shape = {1, out_c, out_h, out_w};
+
+		in.resize(in_c * in_h * in_w);
+		out.resize(out_c * out_h * out_w);
+
+		in_tensor = std::make_unique<Ort::Value>(
+			Ort::Value::CreateTensor<float>(memory_info, in.data(), in.size(), in_shape.data(), in_shape.size()));
+    out_tensor = std::make_unique<Ort::Value>(
+    	Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
 	}
 
 	for (int y = 0; y < image.height; ++y) {
 		for (int x = 0; x < image.width; ++x) {
 			for (int c = 0; c < 3; ++c) {
 				int src_index = y * image.width * image.channels + x * image.channels + c;
-				int dst_index = y * image.width * 3 + x * 3 + c;
+				int dst_index = c * image.height * image.width + y * image.width + x;
 				in[dst_index] = float(image.data[src_index]) / 255.0f;
 			}
 		}
 	}
 
-	interpreter->Invoke();
+	const char* in_names[] = {"input"};
+	const char* out_names[] = {"output"};
+
+	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 
 	std::vector<std::string> query = utf8::split_to_chars(text);
 	int foreground_id = get_color_id(foreground);
@@ -273,37 +269,36 @@ bool TextDetector::find_substr(int left, int top,
 
 	for (int y = top; (y < bottom) && (y < out_h); ++y) {
 		for (int x = left; (x < right) && (x < out_w); ++x) {
-			int i = y * out_w * out_c + x * out_c;
 
-			float objectness = out[i];
+			float objectness = at(x, y, 0);
 			if (objectness < 0.10f) {
 				continue;
 			}
 
-			float class_probability = out[i + 1 + 2 + 2 + symbol_id];
+			float class_probability = at(x, y, 1 + 2 + 2 + symbol_id);
 			if (class_probability < 0.10f) {
 				continue;
 			}
 
 			if (foreground_id >= 0) {
-				float foreground_probability = out[i + 1 + 2 + 2 + symbols.size() + foreground_id];
+				float foreground_probability = at(x, y, 1 + 2 + 2 + symbols.size() + foreground_id);
 				if (foreground_probability > 0.10f) {
 					foreground_hits += 1;
 				}
 			}
 
 			if (background_id >= 0) {
-				float background_probability = out[i + 1 + 2 + 2 + symbols.size() + colors.size() + background_id];
+				float background_probability = at(x, y, 1 + 2 + 2 + symbols.size() + colors.size() + background_id);
 				if (background_probability > 0.10f) {
 					background_hits += 1;
 				}
 			}
 
 			Box b;
-			b.x = (x + out[i + 1]) / out_w;
-			b.y = (y + out[i + 2]) / out_h;
-			b.w = out[i + 3] * char_w / in_w;
-			b.h = out[i + 4] * char_h / in_h;
+			b.x = (x + at(x, y, 1)) / out_w;
+			b.y = (y + at(x, y, 2)) / out_h;
+			b.w = at(x, y, 3) * char_w / in_w;
+			b.h = at(x, y, 4) * char_h / in_h;
 
 			Rect rect;
 			rect.left = (b.x-b.w/2)*in_w;
@@ -325,4 +320,8 @@ bool TextDetector::find_substr(int left, int top,
 		}
 	}
 	return false;
+}
+
+float TextDetector::at(int x, int y, int c) {
+	return out[c * out_h * out_w + y * out_w + x];
 }

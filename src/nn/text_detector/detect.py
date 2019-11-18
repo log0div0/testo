@@ -18,24 +18,23 @@ image = image.unsqueeze(0)
 image = image.permute(0, 3, 1, 2)
 
 model = Model()
-model.load_state_dict(torch.load('model.pt'))
+model.load_state_dict(torch.load('model.pt', map_location=torch.device('cpu')))
 prediction = model(image)
-
 prediction = prediction[0]
 
 obj, xy, wh, symbol, fg, bg = prediction.split(
 	(1, 2, 2, len(generator.symbols), len(generator.colors), len(generator.colors)), dim=0)
 
-y = 57
-for x in range(prediction.shape[2]):
-	if (obj[0][y][x] < 0.1):
-		continue
-	print(x)
-	a = symbol[:,y,x]
-	for n in range(len(a)):
-		if a[n] > 0.01:
-			print(round(float(a[n]), 2), generator.symbols[n])
-exit()
+# y = 57
+# for x in range(prediction.shape[2]):
+# 	if (obj[0][y][x] < 0.1):
+# 		continue
+# 	print(x)
+# 	a = symbol[:,y,x]
+# 	for n in range(len(a)):
+# 		if a[n] > 0.01:
+# 			print(round(float(a[n]), 2), generator.symbols[n])
+# exit()
 
 symbol_index = symbol.argmax(dim=0)
 
