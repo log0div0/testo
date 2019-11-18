@@ -21,6 +21,8 @@ bool VmController::is_defined() const {
 
 void VmController::create() {
 	try {
+		undefine();
+
 		if (fs::exists(get_metadata_dir())) {
 			if (!fs::remove_all(get_metadata_dir())) {
 				throw std::runtime_error("Error deleting metadata dir " + get_metadata_dir().generic_string());

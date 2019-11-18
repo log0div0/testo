@@ -192,20 +192,8 @@ QemuVM::~QemuVM() {
 void QemuVM::install() {
 	try {
 		if (is_defined()) {
-			auto domain = qemu_connect.domain_lookup_by_name(id());
-			if (domain.state() != VIR_DOMAIN_SHUTOFF) {
-				stop();
-			}
-			for (auto& snapshot: domain.snapshots()) {
-				snapshot.destroy();
-			}
-
-			auto xml = domain.dump_xml();
-
-			domain.undefine();
+			undefine();
 		}
-
-		remove_disk();
 
 		//now create disks
 		create_disk();
@@ -356,11 +344,12 @@ void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
-		//delete the storage
 
 		if (state() != VmState::Stopped) {
 			stop();
 		}
+		//delete the storage
+		remove_disk();
 
 		domain.undefine();
 	} catch (const std::exception& error) {

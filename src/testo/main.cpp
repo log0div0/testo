@@ -115,7 +115,7 @@ int clean_mode() {
 				auto vm_contoller = env->create_vm_controller(config);
 				if (vm_contoller->prefix() == params.prefix) {
 					vm_contoller->undefine();
-					std::cout << "Deleted virtual machine" << vm_contoller->id() << std::endl;
+					std::cout << "Deleted virtual machine " << vm_contoller->id() << std::endl;
 					break;
 				}
 			}

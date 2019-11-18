@@ -21,6 +21,8 @@ bool FlashDriveController::is_defined() const {
 
 void FlashDriveController::create() {
 	try {
+		undefine();
+
 		// Check if we have the init snapshot. If we do and config is relevant
 		// then just rollback there and exit. If not - do the usual procedure
 
