@@ -67,13 +67,13 @@ macro select_local_menu(string) {
 	wait "${string}"
 	for i in 0..20 {
 		if (check `select * from textlines
-				where text = "${string}" and foreground = "blue" and background = "gray"`)
+				where text = "${string}" and foreground = "blue" and background = "gray"` timeout 50ms)
 		{
 			press Enter;
 			break;
 		}
 
-		press Down; wait timeout 50ms
+		press Down
 	} else {
 		abort "Can't find menu entry ${string}"
 	}
@@ -83,13 +83,13 @@ macro select_local_menu_horizontal(string) {
 	wait "${string}"
 	for i in 0..5 {
 		if (check `select * from textlines
-				where text = "${string}" and foreground = "blue" and background = "gray"`)
+				where text = "${string}" and foreground = "blue" and background = "gray"` timeout 50ms)
 		{
 			press Enter;
 			break;
 		}
 
-		press Right; wait timeout 50ms
+		press Right
 	} else {
 		abort "Can't find menu entry ${string}"
 	}

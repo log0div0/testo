@@ -315,5 +315,11 @@ std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::sh
 	std::string result = "check";
 	result += template_parser.resolve(std::string(*check->select_expr), reg, vmc);
 
+	if (check->time_interval) {
+		result += check->time_interval.value();
+	} else {
+		result += "1ms";
+	}
+
 	return result;
 }

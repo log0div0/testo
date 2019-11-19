@@ -1080,8 +1080,8 @@ struct Comparison: public Node {
 };
 
 struct Check: public Node {
-	Check(const Token& check, std::shared_ptr<ISelectExpr> select_expr):
-		Node(check), select_expr(select_expr) {}
+	Check(const Token& check, std::shared_ptr<ISelectExpr> select_expr, const Token& timeout, const Token& time_interval):
+		Node(check), select_expr(select_expr), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -1098,10 +1098,17 @@ struct Check: public Node {
 			result += " " + std::string(*select_expr);
 		}
 
+		if (timeout) {
+			result += " " + timeout.value() + " " + time_interval.value();
+		}
+
 		return result;
 	}
 
 	std::shared_ptr<ISelectExpr> select_expr;
+
+	Token timeout;
+	Token time_interval;
 };
 
 struct IExpr: public Node {
