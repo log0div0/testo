@@ -1652,11 +1652,16 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
+		std::string check_for = check->time_interval ? check->time_interval.value() : "1ms";
+
 		std::cout
 				<< rang::fgB::blue << progress()
 				<< " Checking "
 				<< rang::fg::yellow
 				<< template_parser.resolve(std::string(*check->select_expr), reg, vmc);
+		if (check->time_interval) {
+			std::cout << " for " << check_for << rang::style::reset << std::endl;
+		}
 
 		std::cout
 			<< rang::fgB::blue
@@ -1665,8 +1670,28 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			<< rang::fgB::blue
 			<< rang::style::reset << std::endl;
 
-		auto screenshot = vmc->vm->screenshot();
-		return visit_select_expr(vmc, check->select_expr, screenshot);
+
+		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
+
+		while (std::chrono::system_clock::now() < deadline) {
+			auto start = std::chrono::high_resolution_clock::now();
+			auto screenshot = vmc->vm->screenshot();
+
+			if (visit_select_expr(vmc, check->select_expr, screenshot)) {
+				return true;
+			}
+
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> time = end - start;
+			//std::cout << "time = " << time.count() << " seconds" << std::endl;
+			if (time < 1s) {
+				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+			} else {
+				coro::CheckPoint();
+			}
+		}
+
+		return false;
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check, vmc));
 	}

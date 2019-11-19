@@ -1046,7 +1046,17 @@ std::shared_ptr<Check> Parser::check() {
 			": Error: multiline strings are not supported in check action");
 	}
 
-	return std::shared_ptr<Check>(new Check(check_token, select_expression));
+	Token timeout, time_interval;
+
+	if (LA(1) == Token::category::timeout) {
+		timeout = LT(1);
+		match(Token::category::timeout);
+
+		time_interval = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	return std::shared_ptr<Check>(new Check(check_token, select_expression, timeout, time_interval));
 }
 
 std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {
