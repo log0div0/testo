@@ -20,11 +20,34 @@
 
 .. code-block:: none
 
-	$VAR_REF
+	"${VAR_REF}"
 
 Где ``VAR_REF`` - это идентификатор с именем переменной
 
-В качестве результата обращения к переменной всегда будет получена строка.
+Обращаться к переменной можно прямо внутри строки, не прерывая ее:
+
+.. code-block:: none
+
+	"Hello ${VAR_REF}"
+
+Обращаться к переменным можно и в многострочных строках и в select-выражениях
+
+.. code-block:: none
+
+	"""Hello
+		${VAR_REF}
+	"""
+
+	`select * from textlines
+		where text = "Menu entry"
+			and foreground = "${foreground_colour}"
+			and background = "gray"`
+
+Экранирование обращения к переменным
+++++++++++++++++++++++++++++++++++++
+
+Для экранирования сочетания символов ``${`` необходимо добавить еще один знак доллара в начале: ``$${``.
+
 
 Порядок разрешения значения переменных
 ++++++++++++++++++++++++++++++++++++++
@@ -50,7 +73,7 @@
 	}
 
 	machine vm2 {
-		iso: $PATH_TO_ISO
+		iso: "${PATH_TO_ISO}"
 		...
 		metadata: {
 			attr1: "value3"
@@ -61,16 +84,16 @@
 
 	macro some_macro(attr2) {
 		for i in 1..2 {
-			print $i + " " + $attr2
+			print "${i} ${attr2}"
 		}
 
-		print $attr3
+		print "${attr3}"
 	}
 
 	test some_test {
 		vm1, vm2 {
-			some_macro($attr1)
-			some_macro($attr2)
+			some_macro("${attr1}")
+			some_macro("${attr2}")
 		}
 	}
 

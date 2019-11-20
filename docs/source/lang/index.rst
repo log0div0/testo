@@ -15,6 +15,7 @@
     var_refs
     machine
     flash
+    network
     test
     macro
     actions
