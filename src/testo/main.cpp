@@ -172,24 +172,24 @@ int do_main(int argc, char** argv) {
 	params.hypervisor = "vsphere";
 #endif
 
-	auto run_spec = (
+	auto run_spec = "run options" % (
 		command("run").set(params.selected_mode, mode::run),
-		value("input file or folder", params.target),
-		option("--prefix").doc("Add a prefix to all entities, thus forming a namespace") & value("prefix", params.prefix),
-		option("--stop_on_fail").set(params.stop_on_fail).doc("Stop executing after first failed test"),
-		option("--test_spec").doc("Run specific tests") & value("wildcard pattern", params.test_spec),
-		option("--exclude").doc("Do not run specific tests") & value("wildcard pattern", params.exclude),
-		option("--invalidate").doc("Invalidate specific tests") & value("wildcard pattern", params.invalidate),
-		option("--cache_miss_policy").doc("Apply some policy when a test loses its cache (accept, skip_branch, abort)")
-			& value("cache miss policy", params.cache_miss_policy),
-		option("--json_report").doc("Generate json-formatted statistics report") & value("output file", params.json_report_file),
-		option("--hypervisor").doc("Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)") & value("hypervisor type", params.hypervisor)
+		value("input file or folder", params.target) % "Path to a file with testcases or to a folder with such files",
+		(option("--prefix") & value("prefix", params.prefix)) % "Add a prefix to all entities, thus forming a namespace",
+		(option("--stop_on_fail").set(params.stop_on_fail)) % "Stop executing after first failed test",
+		(option("--test_spec") & value("wildcard pattern", params.test_spec)) % "Run specific tests",
+		(option("--exclude") & value("wildcard pattern", params.exclude)) % "Do not run specific tests",
+		(option("--invalidate") & value("wildcard pattern", params.invalidate)) % "Invalidate specific tests",
+		(option("--cache_miss_policy") & value("cache miss policy", params.cache_miss_policy))
+			% "Apply some policy when a test loses its cache (accept, skip_branch, abort)",
+		(option("--json_report") & value("output file", params.json_report_file)) % "Generate json-formatted statistics report",
+		(option("--hypervisor") & value("hypervisor type", params.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
-	auto clean_spec = (
+	auto clean_spec = "clean options" % (
 		command("clean").set(params.selected_mode, mode::clean),
-		option("--prefix") & value("prefix", params.prefix),
-		option("--hypervisor") & value("hypervisor type", params.hypervisor)
+		(option("--prefix") & value("prefix", params.prefix)) % "Add a prefix to all entities, thus forming a namespace",
+		(option("--hypervisor") & value("hypervisor type", params.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
 	auto cli = ( run_spec | clean_spec | command("help").set(params.show_help) );
