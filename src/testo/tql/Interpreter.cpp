@@ -8,7 +8,14 @@
 namespace tql {
 
 std::string text_to_query(const std::string& text) {
-	std::string result = fmt::format("select * from textlines where text = \"{}\"", text);
+	std::string tmp_str;
+	for (auto& c: text) {
+		if (c == '\"') {
+			tmp_str += "\\";
+		}
+		tmp_str += c;
+	}
+	std::string result = fmt::format("select * from textlines where text = \"{}\"", tmp_str);
 	return result;
 }
 
