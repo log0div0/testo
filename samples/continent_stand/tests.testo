@@ -1,4 +1,9 @@
 
+param ISO_DIR "/home/alex/work/iso"
+
+param cus_id "150"
+param ub_id "250"
+
 network net1 {
 	mode: "internal"
 }
@@ -14,12 +19,6 @@ machine CUS {
 		attached_to: "net1"
 		mac: "52:54:00:00:00:AA"
 	}
-
-	metadata: {
-		id: "150"
-		login: "root"
-		password: "1111"
-	}
 }
 
 machine UB {
@@ -33,15 +32,9 @@ machine UB {
 		attached_to: "net1"
 		mac: "52:54:00:00:00:BB"
 	}
-
-	metadata: {
-		id: "250"
-		login: "root"
-		password: "1111"
-	}
 }
 
-macro install_continent() {
+macro install_continent(id) {
 	start
 	wait timeout 3s
 	wait "Установить Континент"; press Enter
@@ -53,13 +46,13 @@ macro install_continent() {
 
 test install_CUS {
 	CUS {
-		install_continent()
+		install_continent("${cus_id}")
 	}
 }
 
 test install_UB {
 	UB {
-		install_continent()
+		install_continent("${ub_id}")
 	}
 }
 
@@ -160,7 +153,7 @@ test config_UB: init_CUS, init_UB {
 		wait "Идёт создание запроса";
 		press Down; type "Security Code"
 		press Down; type "DevOps"
-		press Down; type "UB-250"; press Enter
+		press Down; type "UB-${ub_id}"; press Enter
 		wait "Запрос записан на носитель"; press Enter, Esc
 		wait "Возврат в предыдущее меню"; press Esc
 		wait "Главное меню";
@@ -176,7 +169,7 @@ test config_UB: init_CUS, init_UB {
 		wait "F2 - Выпуск серт."; press F2
 		select_local_menu("Выпуск сертификата управления для узла безопасности")
 		wait "Есть ли запрос для создания сертификата?"; select_local_menu_horizontal("Да")
-		wait "Выберите Запрос"; select_local_menu("continent-250.req")
+		wait "Выберите Запрос"; select_local_menu("continent-${ub_id}.req")
 		wait "Выберите корневой сертификат"; select_local_menu("CA")
 		wait "Успешно"; press Enter
 		wait "Выпуск сертификата"; press Esc
@@ -184,11 +177,11 @@ test config_UB: init_CUS, init_UB {
 		select_local_menu("Возврат в предыдущее меню")
 		select_local_menu("Инструменты")
 		select_local_menu("Создать узел безопасности")
-		wait "Введите ID узла безопасности"; type "250"; press Enter
-		wait "Выбор сертификата управления"; select_local_menu("UB-250")
-		wait "Узел безопасности 250 успешно создан" timeout 2m; press Enter
+		wait "Введите ID узла безопасности"; type "${ub_id}"; press Enter
+		wait "Выбор сертификата управления"; select_local_menu("UB-${ub_id}")
+		wait "Узел безопасности ${ub_id} успешно создан" timeout 2m; press Enter
 		select_local_menu("Экспорт конфигурации УБ на носитель")
-		wait "Выгрузить политику"; type "250"; press Enter
+		wait "Выгрузить политику"; type "${ub_id}"; press Enter
 		wait "Успешно"; press Enter
 		wait timeout 10s;
 		unplug flash ub_flash
@@ -199,7 +192,7 @@ test config_UB: init_CUS, init_UB {
 		wait timeout 5s
 		select_local_menu("Подключиться к ЦУС")
 		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
-		wait "Выберите конфигурацию"; select_local_menu("gate-250.json")
+		wait "Выберите конфигурацию"; select_local_menu("gate-${ub_id}.json")
 		wait "Выберите интерфейс управления"; select_local_menu("fe-0-0")
 		wait "Настройка интерфейса управления"; type "192.168.0.2/24"; press Enter
 		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")

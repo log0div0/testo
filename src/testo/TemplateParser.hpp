@@ -101,7 +101,7 @@ private:
 struct Parser {
 	Parser() = default;
 
-	std::string resolve(const std::string& input, Register& reg, std::shared_ptr<VmController> vmc = nullptr);
+	std::string resolve(const std::string& input, Register& reg);
 	void check_sanity(const std::string& input);
 
 
@@ -110,7 +110,7 @@ private:
 	Pos current_pos;
 
 	std::vector<Token> tokenize();
-	std::string resolve_var(const std::string& var, Register& reg, std::shared_ptr<VmController> vmc);
+	std::string resolve_var(const std::string& var, Register& reg);
 
 	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input.length()); }
 	bool test_escaped() const;

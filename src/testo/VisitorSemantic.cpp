@@ -158,6 +158,8 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
 		return visit_test(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
 		return visit_macro(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
+		return visit_param(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
 		return visit_controller(p->stmt);
 	} else {
@@ -169,7 +171,7 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 	// std::cout << "Registering macro " << macro->name.value() << std::endl;
 
 	if (reg.macros.find(macro->name) != reg.macros.end()) {
-		throw std::runtime_error(std::string(macro->begin()) + ": Error: macros with name " + macro->name.value() +
+		throw std::runtime_error(std::string(macro->begin()) + ": Error: macro with name " + macro->name.value() +
 			" already exists");
 	}
 
@@ -179,6 +181,20 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 	}
 
 	visit_action_block(macro->action_block->action); //dummy controller to match the interface
+}
+
+void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
+	if (reg.params.find(param->name) != reg.params.end()) {
+		throw std::runtime_error(std::string(param->begin()) + ": Error: param with name " + param->name.value() +
+			" already exists");
+	}
+
+	auto value = template_parser.resolve(param->value->text(), reg);
+
+	if (!reg.params.insert({param->name.value(), value}).second) {
+		throw std::runtime_error(std::string(param->begin()) + ": Error while registering param with name " +
+			param->name.value());
+	}
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
