@@ -155,6 +155,7 @@ private:
 	Token machine();
 	Token flash();
 	Token network();
+	Token param();
 	Token macro();
 	Token dvd();
 	Token if_();

@@ -222,6 +222,8 @@ Token Lexer::id() {
 		return flash();
 	} else if (value == "network") {
 		return network();
+	} else if (value == "param") {
+		return param();
 	} else if (value == "macro") {
 		return macro();
 	} else if (value == "dvd") {
@@ -432,6 +434,13 @@ Token Lexer::network() {
 	std::string value("network");
 	current_pos.advance(value.length());
 	return Token(Token::category::network, value, tmp_pos);
+}
+
+Token Lexer::param() {
+	Pos tmp_pos = current_pos;
+	std::string value("param");
+	current_pos.advance(value.length());
+	return Token(Token::category::param, value, tmp_pos);
 }
 
 Token Lexer::macro() {
