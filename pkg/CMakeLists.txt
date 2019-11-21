@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 set(CPACK_PACKAGE_NAME "testo")
-set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_VERSION "1.2.0")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 set(CPACK_GENERATOR "DEB")
 
@@ -27,7 +27,8 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	libvirt0 (>= 4.0.0), \
-	libvirt-bin (>= 4.0.0), \
+	libvirt-clients (>= 4.0.0), \
+	libvirt-daemon-system (>= 4.0.0), \
 	qemu (>= 1.2.11), \
 	qemu-kvm (>= 2.11) \
 ")
