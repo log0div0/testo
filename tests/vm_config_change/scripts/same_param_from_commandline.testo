@@ -1,3 +1,4 @@
+
 network nat {
 	mode: "nat"
 }
@@ -13,7 +14,7 @@ param host_name "my-machine"
 machine my_machine {
 	cpus: 1
 	ram: 512Mb
-	iso: "../iso.iso"
+	iso: "${ISO_FILE}"
 	disk_size: 4Gb
 	nic nat: {
 		attached_to: "nat"
@@ -22,23 +23,15 @@ machine my_machine {
 
 	nic LAN: {
 		attached_to: "net1"
-		mac: "52:54:00:00:00:11"
+		mac: "${mac}"
 		adapter_type: "e1000"
 	}
 }
 
 test parent_test {
-	my_machine {
-		start
-		stop
-		print "${host_name}"
-		print "Some string"
-	}
+	my_machine print "This is parent test running"
 }
 
 test child_test: parent_test  {
-	my_machine {
-		start
-		print "${login}"
-	}
+	my_machine print "This is child test running"
 }

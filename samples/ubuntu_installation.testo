@@ -1,9 +1,6 @@
 
 include "./common.testo"
 
-param ISO_DIR "/home/alex/work/iso"
-param HTTP_PROXY "http://172.17.5.149:3128"
-
 machine VM1 {
 	cpus: 1
 	ram: 1024Mb

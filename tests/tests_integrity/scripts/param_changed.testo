@@ -6,6 +6,10 @@ network net1 {
 	mode: "internal"
 }
 
+param login "my_machine_login_changed"
+param password "1111"
+param host_name "my-machine"
+
 machine my_machine {
 	cpus: 1
 	ram: 512Mb
@@ -20,12 +24,6 @@ machine my_machine {
 		attached_to: "net1"
 		mac: "52:54:00:00:00:11"
 		adapter_type: "e1000"
-	}
-
-	metadata: {
-		login: "my_machine_login_changed"
-		password: "1111"
-		host_name: "my-machine"
 	}
 }
 

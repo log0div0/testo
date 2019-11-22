@@ -2,6 +2,11 @@ network nat {
 	mode: "nat"
 }
 
+param login "my_machine_login"
+param password "1111"
+param host_name "my-machine"
+param mac "52:54:00:00:00:11"
+
 machine my_machine {
 	cpus: 1
 	ram: 512Mb
@@ -10,12 +15,6 @@ machine my_machine {
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
-	}
-
-	metadata: {
-		login: "my_machine_login"
-		password: "1111"
-		host_name: "my-machine"
 	}
 }
 

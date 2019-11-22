@@ -17,6 +17,20 @@ network net3 {
 	mode: "internal"
 }
 
+param default_password "1111"
+
+param sgw1_login "vpn-sgw1"
+param sgw1_host_name "vpn-sgw1"
+
+param sgw2_login "vpn-sgw2"
+param sgw2_host_name "vpn-sgw2"
+
+param client1_login "vpn-client1"
+param client1_host_name "vpn-client1"
+
+param client2_login "vpn-client2"
+param client2_host_name "vpn-client2"
+
 machine vpn_sgw1 {
 	cpus: 1
 	ram: 1024Mb
@@ -37,12 +51,6 @@ machine vpn_sgw1 {
 		attached_to: "net1"
 		mac: "52:54:00:00:00:11"
 		adapter_type: "e1000"
-	}
-
-	metadata: {
-		login: "vpn-sgw1"
-		password: "1111"
-		host_name: "vpn-sgw1"
 	}
 }
 
@@ -67,12 +75,6 @@ machine vpn_sgw2 {
 		mac: "52:54:00:00:11:11"
 		adapter_type: "e1000"
 	}
-
-	metadata: {
-		login: "vpn-sgw2"
-		password: "1111"
-		host_name: "vpn-sgw2"
-	}
 }
 
 machine vpn_client1 {
@@ -90,12 +92,6 @@ machine vpn_client1 {
 		attached_to: "net1"
 		mac: "52:54:00:00:22:00"
 		adapter_type: "e1000"
-	}
-
-	metadata: {
-		login: "vpn-client1"
-		password: "1111"
-		host_name: "vpn-client1"
 	}
 }
 
@@ -115,30 +111,28 @@ machine vpn_client2 {
 		mac: "52:54:00:00:33:00"
 		adapter_type: "e1000"
 	}
-
-	metadata: {
-		login: "vpn-client2"
-		password: "1111"
-		host_name: "vpn-client2"
-	}
 }
 
 
 
 test sgws_installed {
-	vpn_sgw1, vpn_sgw2 install_ubuntu()
+	vpn_sgw1 install_ubuntu("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
+	vpn_sgw2 install_ubuntu("${sgw2_host_name}", "${sgw2_login}", "${default_password}")
 }
 
 test clients_installed {
-	vpn_client1, vpn_client2 install_ubuntu()
+	vpn_client1 install_ubuntu("${client1_host_name}", "${client1_login}", "${default_password}")
+	vpn_client2 install_ubuntu("${client2_host_name}", "${client2_login}", "${default_password}")
 }
 
 test sgws_guest_additions: sgws_installed  {
-	vpn_sgw1, vpn_sgw2 install_guest_additions()
+	vpn_sgw1 install_guest_additions("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
+	vpn_sgw2 install_guest_additions("${sgw2_host_name}", "${sgw2_login}", "${default_password}")
 }
 
 test clients_guest_additions: clients_installed {
-	vpn_client1, vpn_client2 install_guest_additions()
+	vpn_client1 install_guest_additions("${client1_host_name}", "${client1_login}", "${default_password}")
+	vpn_client2 install_guest_additions("${client2_host_name}", "${client2_login}", "${default_password}")
 }
 
 test sgws_pkgs: sgws_guest_additions {
@@ -173,7 +167,8 @@ test sgws_pkgs: sgws_guest_additions {
 		"""
 	}
 
-	vpn_sgw1, vpn_sgw2 unplug_nat()
+	vpn_sgw1 unplug_nat("${sgw1_login}", "${default_password}")
+	vpn_sgw2 unplug_nat("${sgw2_login}", "${default_password}")
 }
 
 test clients_net_renamed: clients_guest_additions {
@@ -190,7 +185,8 @@ test clients_net_renamed: clients_guest_additions {
 		exec bash "/tmp/rename_net.sh 52:54:00:00:33:00 LAN"
 	}
 
-	vpn_client1, vpn_client2 unplug_nat()
+	vpn_client1 unplug_nat("${client1_login}", "${default_password}")
+	vpn_client2 unplug_nat("${client2_login}", "${default_password}")
 }
 
 test install_wireguard: sgws_pkgs {
