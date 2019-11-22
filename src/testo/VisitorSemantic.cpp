@@ -131,6 +131,21 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
 	test_global_ctx.insert({"description", std::make_pair(false, Token::category::quoted_string)});
 	attr_ctxs.insert({"test_global", test_global_ctx});
+
+
+	for (auto param: config.at("params")) {
+		auto name = param.at("name").get<std::string>();
+		auto value = param.at("value").get<std::string>();
+
+		if (reg.params.find(name) != reg.params.end()) {
+			throw std::runtime_error("Error: param with name " + name +
+				" already exists");
+		}
+
+		if (!reg.params.insert({name, value}).second) {
+			throw std::runtime_error("Error: while registering param with name " + name);
+		}
+	}
 }
 
 static uint32_t size_to_mb(const std::string& size) {

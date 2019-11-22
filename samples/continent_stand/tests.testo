@@ -1,6 +1,4 @@
 
-param ISO_DIR "/home/alex/work/iso"
-
 param cus_id "150"
 param ub_id "250"
 

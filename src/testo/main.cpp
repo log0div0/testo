@@ -135,6 +135,16 @@ int run_mode() {
 		}
 	}
 
+	auto params = nlohmann::json::array();
+
+	for (size_t i = 0; i < args.params_names.size(); ++i) {
+		nlohmann::json json_param = {
+			{ "name", args.params_names[i]},
+			{ "value", args.params_values[i]}
+		};
+		params.push_back(json_param);
+	}
+
 	nlohmann::json config = {
 		{"stop_on_fail", args.stop_on_fail},
 		{"cache_miss_policy", args.cache_miss_policy},
@@ -142,13 +152,13 @@ int run_mode() {
 		{"exclude", args.exclude},
 		{"invalidate", args.invalidate},
 		{"json_report_file", args.json_report_file},
-		{"prefix", args.prefix}
+		{"prefix", args.prefix},
+		{"params", params}
 	};
 
 	if (!fs::exists(args.target)) {
 		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + args.target);
 	}
-
 
 	if (fs::is_regular_file(args.target)) {
 		run_file(args.target, config);
@@ -176,7 +186,7 @@ int do_main(int argc, char** argv) {
 #endif
 
 	auto params_defs_spec = repeatable(
-		option("--params") & value("param_name", args.params_names) & value("param_value", args.params_values)
+		option("--param") & value("param_name", args.params_names) & value("param_value", args.params_values)
 	) % "Parameters to define for test cases";
 
 	auto run_spec = "run options" % (
