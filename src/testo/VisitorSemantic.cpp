@@ -102,7 +102,6 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
-	vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
@@ -458,38 +457,32 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock>
 }
 
 void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
-	if (ctx_name == "metadata") {
-		if (attr->value->t.type() != Token::category::quoted_string) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only string specifiers");
-		}
-	} else {
-		auto ctx = attr_ctxs.find(ctx_name);
-		if (ctx == attr_ctxs.end()) {
-			throw std::runtime_error("Unknown ctx"); //should never happen
-		}
+	auto ctx = attr_ctxs.find(ctx_name);
+	if (ctx == attr_ctxs.end()) {
+		throw std::runtime_error("Unknown ctx"); //should never happen
+	}
 
-		auto found = ctx->second.find(attr->name);
+	auto found = ctx->second.find(attr->name);
 
-		if (found == ctx->second.end()) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
-		}
+	if (found == ctx->second.end()) {
+		throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
+	}
 
-		auto match = found->second;
-		if (attr->id != match.first) {
-			if (match.first) {
-				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-					" requires a name");
-			} else {
-				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-					" must have no name");
-			}
+	auto match = found->second;
+	if (attr->id != match.first) {
+		if (match.first) {
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
+				" requires a name");
+		} else {
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
+				" must have no name");
 		}
+	}
 
-		if (attr->value->t.type() != match.second) {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
-				Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " +
-				Token::type_to_string(match.second));
-		}
+	if (attr->value->t.type() != match.second) {
+		throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
+			Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " +
+			Token::type_to_string(match.second));
 	}
 
 	if (config.count(attr->name.value())) {

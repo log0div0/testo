@@ -1,5 +1,5 @@
 
-macro install_ubuntu() {
+macro install_ubuntu(host_name, login, password) {
 	start
 	wait timeout 2s
 	wait "Language";
@@ -11,10 +11,11 @@ macro install_ubuntu() {
 	wait "Detect keyboard layout?";	press Enter
 	wait "Country of origin for the keyboard"; press Enter
 	wait "Keyboard layout"; press Enter
-	if ("${vm_nic_count}" STREQUAL "0") {
-		wait "No network interfaces detected" timeout 5m; press Right, Enter
+	wait "No network interfaces detected" || "Primary network interface" timeout 5m
+	if (check "No network interfaces detected") {
+		press Right, Enter
 	} else {
-		wait "Primary network interface" timeout 5m; press Enter
+		press Enter
 	}
 	wait "Hostname:" timeout 30s; press Backspace*36; type "${host_name}"; press Enter
 	wait "Full name for the new user"; type "${login}"; press Enter
@@ -39,14 +40,14 @@ macro install_ubuntu() {
 	wait "Welcome to Ubuntu"
 }
 
-macro enter_sudo() {
+macro enter_sudo(host_name, login, password) {
 	type "sudo su"; press Enter;
 	wait "password for ${login}"; type "${password}"; press Enter
 	wait "root@${host_name}"
 }
 
-macro install_guest_additions() {
-	enter_sudo()
+macro install_guest_additions(host_name, login, password) {
+	enter_sudo("${host_name}", "${login}", "${password}")
 	type "apt-get update"; press Enter
 	wait "Reading package lists... Done" timeout 5m;
 	if ("${QEMU}") {
@@ -77,7 +78,7 @@ macro install_guest_additions() {
 	}
 }
 
-macro unplug_nat() {
+macro unplug_nat(login, password) {
 	shutdown
 
 	unplug nic nat
