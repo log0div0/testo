@@ -49,6 +49,7 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
 	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
+	std::shared_ptr<AST::Stmt<AST::Param>> param();
 	std::shared_ptr<AST::Attr> attr();
 	std::shared_ptr<AST::AttrBlock> attr_block();
 	std::shared_ptr<AST::Stmt<AST::Controller>> controller();

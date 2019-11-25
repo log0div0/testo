@@ -1,6 +1,17 @@
 
 include "../common.testo"
 
+param default_password "1111"
+
+param client_login "url-client"
+param client_host_name "url-client"
+
+param server_login "url-server"
+param server_host_name "url-server"
+
+param proxy_login "url-proxy"
+param proxy_host_name "url-proxy"
+
 network nat {
 	mode: "nat"
 }
@@ -28,12 +39,6 @@ machine url_client {
 		mac: "52:54:00:00:00:11"
 		adapter_type: "e1000"
 	}
-
-	metadata: {
-		login: "url-client"
-		password: "1111"
-		host_name: "url-client"
-	}
 }
 
 machine url_server {
@@ -50,12 +55,6 @@ machine url_server {
 		attached_to: "net2"
 		mac: "52:54:00:00:11:00"
 		adapter_type: "e1000"
-	}
-
-	metadata: {
-		login: "url-server"
-		password: "1111"
-		host_name: "url-server"
 	}
 }
 
@@ -81,12 +80,6 @@ machine url_proxy {
 		mac: "52:54:00:00:22:11"
 		adapter_type: "e1000"
 	}
-
-	metadata: {
-		login: "url-proxy"
-		password: "1111"
-		host_name: "url-proxy"
-	}
 }
 
 flash pubkey_flash {
@@ -95,12 +88,16 @@ flash pubkey_flash {
 }
 
 test install_ubuntu {
-	url_proxy, url_client, url_server install_ubuntu()
+	url_proxy install_ubuntu("${proxy_host_name}", "${proxy_login}", "${default_password}")
+	url_client install_ubuntu("${client_host_name}", "${client_login}", "${default_password}")
+	url_server install_ubuntu("${server_host_name}", "${server_login}", "${default_password}")
 }
 
 [no_snapshots: true]
 test install_guest_additions: install_ubuntu {
-	url_proxy, url_client, url_server install_guest_additions()
+	url_proxy install_guest_additions("${proxy_host_name}", "${proxy_login}", "${default_password}")
+	url_client install_guest_additions("${client_host_name}", "${client_login}", "${default_password}")
+	url_server install_guest_additions("${server_host_name}", "${server_login}", "${default_password}")
 }
 
 [no_snapshots: true]
@@ -127,7 +124,9 @@ test install_pkgs: install_guest_additions {
 
 	url_client exec bash "/tmp/rename_net.sh 52:54:00:00:00:11 LAN"
 
-	url_proxy, url_client, url_server unplug_nat()
+	url_proxy unplug_nat("${proxy_login}", "${default_password}")
+	url_client unplug_nat("${client_login}", "${default_password}")
+	url_server unplug_nat("${server_login}", "${default_password}")
 }
 
 [no_snapshots: true]
@@ -216,7 +215,7 @@ test configure_squid: install_squid {
 			openssl req -x509 -new -nodes -key squidCA.key -sha256 -days 1024 -out squidCA.crt -subj "/C=RU/ST=MSK/L=Moscow/O=MyCA/CN=squidCA.com"
 		"""
 
-		enter_sudo()
+		enter_sudo("${proxy_host_name}", "${proxy_login}", "${default_password}")
 		type "/usr/local/squid/sbin/squid -z"; press Enter;
 		wait "Removing PID file";
 		press LEFTCTRL+C

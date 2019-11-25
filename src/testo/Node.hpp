@@ -989,6 +989,27 @@ struct Controller: public Node {
 	std::shared_ptr<AttrBlock> attr_block;
 };
 
+struct Param: public Node {
+	Param(const Token& param_token, const Token& name, std::shared_ptr<String> value):
+		Node(param_token), name(name), value(value) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return value->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + name.value() + " " + std::string(*value);
+		return result;
+	}
+
+	Token name;
+	std::shared_ptr<String> value;
+};
+
 struct Program: public Node {
 	Program (const std::vector<std::shared_ptr<IStmt>> stmts):
 		Node(Token(Token::category::program, "program", Pos())),

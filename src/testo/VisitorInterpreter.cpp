@@ -858,13 +858,13 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 }
 
 void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
-	std::string message = template_parser.resolve(abort->message->text(), reg, vmc);
+	std::string message = template_parser.resolve(abort->message->text(), reg);
 	throw AbortException(abort, vmc, message);
 }
 
 void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
 	try {
-		std::string message = template_parser.resolve(print_action->message->text(), reg, vmc);
+		std::string message = template_parser.resolve(print_action->message->text(), reg);
 		std::cout
 			<< rang::fgB::blue << progress() << " "
 			<< rang::fg::yellow << vmc->name()
@@ -877,7 +877,7 @@ void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	try {
-		std::string text = template_parser.resolve(type->text->text(), reg, vmc);
+		std::string text = template_parser.resolve(type->text->text(), reg);
 		if (text.size() == 0) {
 			return;
 		}
@@ -918,10 +918,10 @@ bool VisitorInterpreter::visit_select_expr(std::shared_ptr<VmController> vmc, st
 bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
-		auto text = template_parser.resolve(p->text(), reg, vmc);
+		auto text = template_parser.resolve(p->text(), reg);
 		query = tql::text_to_query(text);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(selectable)) {
-		query = template_parser.resolve(p->text(), reg, vmc);
+		query = template_parser.resolve(p->text(), reg);
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
@@ -979,7 +979,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			<< rang::fgB::blue << progress()
 			<< " Waiting "
 			<< rang::fg::yellow
-			<< template_parser.resolve(std::string(*wait->select_expr), reg, vmc);
+			<< template_parser.resolve(std::string(*wait->select_expr), reg);
 
 
 		std::cout
@@ -1238,7 +1238,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
 
-		fs::path path = template_parser.resolve(plug->path->text(), reg, vmc);
+		fs::path path = template_parser.resolve(plug->path->text(), reg);
 		std::cout
 			<< rang::fgB::blue << progress()
 			<< " Plugging dvd "
@@ -1407,19 +1407,19 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 		std::string script, extension, interpreter;
 
 		if (exec->process_token.value() == "bash") {
-			script = build_shell_script(template_parser.resolve(exec->commands->text(), reg, vmc));
+			script = build_shell_script(template_parser.resolve(exec->commands->text(), reg));
 			extension = ".sh";
 			interpreter = "bash";
 		} else if (exec->process_token.value() == "python") {
-			script = build_python_script(template_parser.resolve(exec->commands->text(), reg, vmc));
+			script = build_python_script(template_parser.resolve(exec->commands->text(), reg));
 			extension = ".py";
 			interpreter = "python";
 		} else if (exec->process_token.value() == "python2") {
-			script = build_python_script(template_parser.resolve(exec->commands->text(), reg, vmc));
+			script = build_python_script(template_parser.resolve(exec->commands->text(), reg));
 			extension = ".py";
 			interpreter = "python2";
 		} else {
-			script = build_python_script(template_parser.resolve(exec->commands->text(), reg, vmc));
+			script = build_python_script(template_parser.resolve(exec->commands->text(), reg));
 			extension = ".py";
 			interpreter = "python3";
 		}
@@ -1460,8 +1460,8 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
 	try {
-		fs::path from = template_parser.resolve(copy->from->text(), reg, vmc);
-		fs::path to = template_parser.resolve(copy->to->text(), reg, vmc);
+		fs::path from = template_parser.resolve(copy->from->text(), reg);
+		fs::path to = template_parser.resolve(copy->to->text(), reg);
 
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
@@ -1513,7 +1513,7 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 	StackEntry new_ctx(true);
 
 	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->params[i]->text(), reg, vmc);
+		auto value = template_parser.resolve(macro_call->params[i]->text(), reg);
 		new_ctx.define(macro_call->macro->params[i].value(), value);
 	}
 
@@ -1594,7 +1594,7 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::sha
 
 bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
-		return p->is_negated() ^ (bool)template_parser.resolve(p->factor->text(), reg, vmc).length();
+		return p->is_negated() ^ (bool)template_parser.resolve(p->factor->text(), reg).length();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(vmc, p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
@@ -1607,8 +1607,8 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::sh
 }
 
 bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
-	auto left = template_parser.resolve(comparison->left->text(), reg, vmc);
-	auto right = template_parser.resolve(comparison->right->text(), reg, vmc);
+	auto left = template_parser.resolve(comparison->left->text(), reg);
+	auto right = template_parser.resolve(comparison->right->text(), reg);
 	if (comparison->op().type() == Token::category::GREATER) {
 		if (!is_number(left)) {
 			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
@@ -1658,7 +1658,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 				<< rang::fgB::blue << progress()
 				<< " Checking "
 				<< rang::fg::yellow
-				<< template_parser.resolve(std::string(*check->select_expr), reg, vmc);
+				<< template_parser.resolve(std::string(*check->select_expr), reg);
 		if (check->time_interval) {
 			std::cout << " for " << check_for << rang::style::reset << std::endl;
 		}

@@ -32,6 +32,7 @@ struct Token {
 		machine,
 		flash,
 		network,
+		param,
 		macro,
 		dvd,
 		if_,

@@ -55,6 +55,7 @@ Token::category Parser::LA(size_t i) const {
 
 bool Parser::test_stmt() const {
 	return ((LA(1) == Token::category::macro) ||
+		(LA(1) == Token::category::param) ||
 		test_controller() ||
 		test_test());
 }
@@ -223,6 +224,8 @@ std::shared_ptr<IStmt> Parser::stmt() {
 		return test();
 	} else if (LA(1) == Token::category::macro) {
 		return macro();
+	} else if (LA(1) == Token::category::param) {
+		return param();
 	} else if (test_controller()) {
 		return controller();
 	} else {
@@ -301,6 +304,19 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, params, actions));
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
+}
+
+std::shared_ptr<Stmt<Param>> Parser::param() {
+	Token param_token = LT(1);
+	match(Token::category::param);
+
+	Token name = LT(1);
+	match(Token::category::id);
+
+	auto value = string();
+
+	auto stmt = std::shared_ptr<Param>(new Param(param_token, name, value));
+	return std::shared_ptr<Stmt<Param>>(new Stmt<Param>(stmt));
 }
 
 std::shared_ptr<Attr> Parser::attr() {

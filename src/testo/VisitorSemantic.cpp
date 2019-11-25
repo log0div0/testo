@@ -102,7 +102,6 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
-	vm_global_ctx.insert({"metadata", std::make_pair(false, Token::category::attr_block)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
@@ -132,6 +131,21 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
 	test_global_ctx.insert({"description", std::make_pair(false, Token::category::quoted_string)});
 	attr_ctxs.insert({"test_global", test_global_ctx});
+
+
+	for (auto param: config.at("params")) {
+		auto name = param.at("name").get<std::string>();
+		auto value = param.at("value").get<std::string>();
+
+		if (reg.params.find(name) != reg.params.end()) {
+			throw std::runtime_error("Error: param with name " + name +
+				" already exists");
+		}
+
+		if (!reg.params.insert({name, value}).second) {
+			throw std::runtime_error("Error: while registering param with name " + name);
+		}
+	}
 }
 
 static uint32_t size_to_mb(const std::string& size) {
@@ -158,6 +172,8 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
 		return visit_test(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
 		return visit_macro(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
+		return visit_param(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
 		return visit_controller(p->stmt);
 	} else {
@@ -169,7 +185,7 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 	// std::cout << "Registering macro " << macro->name.value() << std::endl;
 
 	if (reg.macros.find(macro->name) != reg.macros.end()) {
-		throw std::runtime_error(std::string(macro->begin()) + ": Error: macros with name " + macro->name.value() +
+		throw std::runtime_error(std::string(macro->begin()) + ": Error: macro with name " + macro->name.value() +
 			" already exists");
 	}
 
@@ -179,6 +195,20 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 	}
 
 	visit_action_block(macro->action_block->action); //dummy controller to match the interface
+}
+
+void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
+	if (reg.params.find(param->name) != reg.params.end()) {
+		throw std::runtime_error(std::string(param->begin()) + ": Error: param with name " + param->name.value() +
+			" already exists");
+	}
+
+	auto value = template_parser.resolve(param->value->text(), reg);
+
+	if (!reg.params.insert({param->name.value(), value}).second) {
+		throw std::runtime_error(std::string(param->begin()) + ": Error while registering param with name " +
+			param->name.value());
+	}
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
@@ -442,38 +472,32 @@ nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock>
 }
 
 void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
-	if (ctx_name == "metadata") {
-		if (attr->value->t.type() != Token::category::quoted_string) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: metadata supports only string specifiers");
-		}
-	} else {
-		auto ctx = attr_ctxs.find(ctx_name);
-		if (ctx == attr_ctxs.end()) {
-			throw std::runtime_error("Unknown ctx"); //should never happen
-		}
+	auto ctx = attr_ctxs.find(ctx_name);
+	if (ctx == attr_ctxs.end()) {
+		throw std::runtime_error("Unknown ctx"); //should never happen
+	}
 
-		auto found = ctx->second.find(attr->name);
+	auto found = ctx->second.find(attr->name);
 
-		if (found == ctx->second.end()) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
-		}
+	if (found == ctx->second.end()) {
+		throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
+	}
 
-		auto match = found->second;
-		if (attr->id != match.first) {
-			if (match.first) {
-				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-					" requires a name");
-			} else {
-				throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-					" must have no name");
-			}
+	auto match = found->second;
+	if (attr->id != match.first) {
+		if (match.first) {
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
+				" requires a name");
+		} else {
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
+				" must have no name");
 		}
+	}
 
-		if (attr->value->t.type() != match.second) {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
-				Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " +
-				Token::type_to_string(match.second));
-		}
+	if (attr->value->t.type() != match.second) {
+		throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
+			Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " +
+			Token::type_to_string(match.second));
 	}
 
 	if (config.count(attr->name.value())) {

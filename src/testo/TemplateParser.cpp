@@ -3,7 +3,7 @@
 
 namespace template_literals {
 
-std::string Parser::resolve_var(const std::string& var, Register& reg, std::shared_ptr<VmController> vmc) {
+std::string Parser::resolve_var(const std::string& var, Register& reg) {
 	for (auto it = reg.local_vars.rbegin(); it != reg.local_vars.rend(); ++it) {
 		if (it->is_defined(var)) {
 			return it->ref(var);
@@ -13,19 +13,15 @@ std::string Parser::resolve_var(const std::string& var, Register& reg, std::shar
 		}
 	}
 
-	if (vmc && vmc->is_defined() && vmc->has_user_key(var)) {
-		return vmc->get_user_metadata(var);
-	}
-
-	auto env_value = std::getenv(var.c_str());
-
-	if (env_value == nullptr) {
+	auto found = reg.params.find(var);
+	if (found == reg.params.end()) {
 		return "";
 	}
-	return env_value;
+
+	return found->second;
 }
 
-std::string Parser::resolve(const std::string& input, Register& reg, std::shared_ptr<VmController> vmc) {
+std::string Parser::resolve(const std::string& input, Register& reg) {
 	this->input = input;
 	current_pos = Pos(input);
 
@@ -35,7 +31,7 @@ std::string Parser::resolve(const std::string& input, Register& reg, std::shared
 
 	for (auto token: tokens) {
 		if (token.type() == Token::category::var_ref) {
-			result += resolve_var(token.value().substr(2, token.value().length() - 3), reg, vmc);
+			result += resolve_var(token.value().substr(2, token.value().length() - 3), reg);
 		} else if (token.type() == Token::category::regular_string) {
 			result += token.value();
 		} else {

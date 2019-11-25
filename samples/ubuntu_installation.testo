@@ -6,16 +6,8 @@ machine VM1 {
 	ram: 1024Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 4Gb
-
-	metadata: {
-		login: "user"
-		password: "1111"
-		host_name: "VM1"
-	}
-
-	vbox_os_type: "Ubuntu_64"
 }
 
 test ubuntu_installation {
-	VM1 install_ubuntu()
+	VM1 install_ubuntu("VM1", "user", "1111")
 }

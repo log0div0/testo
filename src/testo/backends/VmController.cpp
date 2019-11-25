@@ -35,15 +35,6 @@ void VmController::create() {
 
 		nlohmann::json metadata;
 
-		metadata["user_metadata"] = nlohmann::json::object();
-
-		if (config.count("metadata")) {
-			auto config_metadata = config.at("metadata");
-			for (auto it = config_metadata.begin(); it != config_metadata.end(); ++it) {
-				metadata["user_metadata"][it.key()] = it.value();
-			}
-		}
-
 		if (!fs::create_directory(get_metadata_dir())) {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
@@ -63,8 +54,6 @@ void VmController::create() {
 		config.erase("metadata");
 
 		metadata["vm_config"] = config.dump();
-		metadata["user_metadata"]["vm_nic_count"] = std::to_string(config.count("nic") ? config.at("nic").size() : 0);
-		metadata["user_metadata"]["vm_name"] = config.at("name");
 		metadata["current_state"] = "";
 		metadata["dvd_signature"] = file_signature(iso_file);
 		write_metadata_file(main_file(), metadata);
@@ -194,77 +183,12 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 	}
 }
 
-bool VmController::has_user_key(const std::string& key) {
-	try {
-		auto metadata = read_metadata_file(main_file());
-		return metadata["user_metadata"].count(key);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking metadata with key {}", key)));
-	}
-}
-
-
-std::string VmController::get_user_metadata(const std::string& key) {
-	try {
-		auto metadata = read_metadata_file(main_file());
-		if (!metadata["user_metadata"].count(key)) {
-			throw std::runtime_error("Requested key is not present in vm metadata");
-		}
-		return metadata["user_metadata"].at(key).get<std::string>();
-
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
-	}
-}
-
-void VmController::set_user_metadata(const std::string& key, const std::string& value) {
-	try {
-		auto metadata = read_metadata_file(main_file());
-		metadata["user_metadata"][key] = value;
-		write_metadata_file(main_file(), metadata);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
-	}
-}
-
-void VmController::update_user_metadata() {
-	auto metadata = read_metadata_file(main_file());
-	//need to preserve vm_name and vm_nic_count
-
-	auto vm_name = metadata["user_metadata"].at("vm_name").get<std::string>();
-	auto vm_nic_count = metadata["user_metadata"].at("vm_nic_count").get<std::string>();
-
-	//we just... update it.... completely
-	auto new_config = vm->get_config();
-
-
-	if (new_config.count("metadata")) {
-		metadata["user_metadata"] = vm->get_config().at("metadata");
-	} else {
-		metadata["user_metadata"] = nlohmann::json::object();
-	}
-
-	metadata["user_metadata"]["vm_name"] = vm_name;
-	metadata["user_metadata"]["vm_nic_count"] = vm_nic_count;
-	write_metadata_file(main_file(), metadata);
-}
-
 bool VmController::check_config_relevance() {
-	try {
-		update_user_metadata();
-	} catch (const std::exception& error) {
-		return false;
-	}
-
 	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
 	auto new_config = vm->get_config();
 	//So....
-	//1) get rid of metadata
-	new_config.erase("metadata");
-	old_config.erase("user_metadata");
 
-	//2) Actually.... Let's just be practical here.
-	//Check if both have or don't have nics
+	//1)Check if both have or don't have nics
 
 	auto old_nics = old_config.value("nic", nlohmann::json::array());
 	auto new_nics = new_config.value("nic", nlohmann::json::array());

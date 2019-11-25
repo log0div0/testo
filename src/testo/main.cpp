@@ -28,7 +28,7 @@ struct Interruption {};
 
 enum mode {run, clean};
 
-struct console_params {
+struct console_args {
 	mode selected_mode;
 	std::string target;
 	std::string prefix;
@@ -39,11 +39,14 @@ struct console_params {
 	std::string json_report_file;
 	std::string hypervisor;
 
+	std::vector<std::string> params_names;
+	std::vector<std::string> params_values;
+
 	bool show_help = false;
 	bool stop_on_fail = false;
 };
 
-console_params params;
+console_args args;
 
 std::shared_ptr<Environment> env;
 
@@ -83,7 +86,7 @@ int clean_mode() {
 				auto config = nlohmann::json::parse(get_metadata(file, "network_config"));
 
 				auto network_controller = env->create_network_controller(config);
-				if (network_controller->prefix() == params.prefix) {
+				if (network_controller->prefix() == args.prefix) {
 					network_controller->undefine();
 					std::cout << "Deleted network " << network_controller->id() << std::endl;
 					break;
@@ -98,7 +101,7 @@ int clean_mode() {
 			if (fs::path(file).filename() == fs::path(flash_drive_folder).filename()) {
 				auto config = nlohmann::json::parse(get_metadata(file, "fd_config"));
 				auto flash_drive_contoller = env->create_flash_drive_controller(config);
-				if (flash_drive_contoller->prefix() == params.prefix) {
+				if (flash_drive_contoller->prefix() == args.prefix) {
 					flash_drive_contoller->undefine();
 					std::cout << "Deleted flash drive " << flash_drive_contoller->id() << std::endl;
 					break;
@@ -113,7 +116,7 @@ int clean_mode() {
 			if (fs::path(file).filename() == fs::path(vm_folder).filename()) {
 				auto config = nlohmann::json::parse(get_metadata(file, "vm_config"));
 				auto vm_contoller = env->create_vm_controller(config);
-				if (vm_contoller->prefix() == params.prefix) {
+				if (vm_contoller->prefix() == args.prefix) {
 					vm_contoller->undefine();
 					std::cout << "Deleted virtual machine " << vm_contoller->id() << std::endl;
 					break;
@@ -126,33 +129,43 @@ int clean_mode() {
 
 int run_mode() {
 
-	if (params.cache_miss_policy.length()) {
-		if (params.cache_miss_policy != "accept" && params.cache_miss_policy != "skip_branch" && params.cache_miss_policy != "abort") {
-			throw std::runtime_error(std::string("Unknown cache_miss_policy value: ") + params.cache_miss_policy);
+	if (args.cache_miss_policy.length()) {
+		if (args.cache_miss_policy != "accept" && args.cache_miss_policy != "skip_branch" && args.cache_miss_policy != "abort") {
+			throw std::runtime_error(std::string("Unknown cache_miss_policy value: ") + args.cache_miss_policy);
 		}
 	}
 
-	nlohmann::json config = {
-		{"stop_on_fail", params.stop_on_fail},
-		{"cache_miss_policy", params.cache_miss_policy},
-		{"test_spec", params.test_spec},
-		{"exclude", params.exclude},
-		{"invalidate", params.invalidate},
-		{"json_report_file", params.json_report_file},
-		{"prefix", params.prefix}
-	};
+	auto params = nlohmann::json::array();
 
-	if (!fs::exists(params.target)) {
-		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + params.target);
+	for (size_t i = 0; i < args.params_names.size(); ++i) {
+		nlohmann::json json_param = {
+			{ "name", args.params_names[i]},
+			{ "value", args.params_values[i]}
+		};
+		params.push_back(json_param);
 	}
 
+	nlohmann::json config = {
+		{"stop_on_fail", args.stop_on_fail},
+		{"cache_miss_policy", args.cache_miss_policy},
+		{"test_spec", args.test_spec},
+		{"exclude", args.exclude},
+		{"invalidate", args.invalidate},
+		{"json_report_file", args.json_report_file},
+		{"prefix", args.prefix},
+		{"params", params}
+	};
 
-	if (fs::is_regular_file(params.target)) {
-		run_file(params.target, config);
-	} else if (fs::is_directory(params.target)) {
-		run_folder(params.target, config);
+	if (!fs::exists(args.target)) {
+		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + args.target);
+	}
+
+	if (fs::is_regular_file(args.target)) {
+		run_file(args.target, config);
+	} else if (fs::is_directory(args.target)) {
+		run_folder(args.target, config);
 	} else {
-		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + params.target);
+		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + args.target);
 	}
 
 	return 0;
@@ -165,65 +178,70 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 #endif
 #ifdef WIN32
-	params.hypervisor = "hyperv";
+	args.hypervisor = "hyperv";
 #elif __linux__
-	params.hypervisor = "qemu";
+	args.hypervisor = "qemu";
 #elif __APPLE__
-	params.hypervisor = "vsphere";
+	args.hypervisor = "vsphere";
 #endif
 
+	auto params_defs_spec = repeatable(
+		option("--param") & value("param_name", args.params_names) & value("param_value", args.params_values)
+	) % "Parameters to define for test cases";
+
 	auto run_spec = "run options" % (
-		command("run").set(params.selected_mode, mode::run),
-		value("input file or folder", params.target) % "Path to a file with testcases or to a folder with such files",
-		(option("--prefix") & value("prefix", params.prefix)) % "Add a prefix to all entities, thus forming a namespace",
-		(option("--stop_on_fail").set(params.stop_on_fail)) % "Stop executing after first failed test",
-		(option("--test_spec") & value("wildcard pattern", params.test_spec)) % "Run specific tests",
-		(option("--exclude") & value("wildcard pattern", params.exclude)) % "Do not run specific tests",
-		(option("--invalidate") & value("wildcard pattern", params.invalidate)) % "Invalidate specific tests",
-		(option("--cache_miss_policy") & value("cache miss policy", params.cache_miss_policy))
+		command("run").set(args.selected_mode, mode::run),
+		value("input file or folder", args.target) % "Path to a file with testcases or to a folder with such files",
+		params_defs_spec,
+		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
+		(option("--stop_on_fail").set(args.stop_on_fail)) % "Stop executing after first failed test",
+		(option("--test_spec") & value("wildcard pattern", args.test_spec)) % "Run specific tests",
+		(option("--exclude") & value("wildcard pattern", args.exclude)) % "Do not run specific tests",
+		(option("--invalidate") & value("wildcard pattern", args.invalidate)) % "Invalidate specific tests",
+		(option("--cache_miss_policy") & value("cache miss policy", args.cache_miss_policy))
 			% "Apply some policy when a test loses its cache (accept, skip_branch, abort)",
-		(option("--json_report") & value("output file", params.json_report_file)) % "Generate json-formatted statistics report",
-		(option("--hypervisor") & value("hypervisor type", params.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
+		(option("--json_report") & value("output file", args.json_report_file)) % "Generate json-formatted statistics report",
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
 	auto clean_spec = "clean options" % (
-		command("clean").set(params.selected_mode, mode::clean),
-		(option("--prefix") & value("prefix", params.prefix)) % "Add a prefix to all entities, thus forming a namespace",
-		(option("--hypervisor") & value("hypervisor type", params.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
+		command("clean").set(args.selected_mode, mode::clean),
+		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
-	auto cli = ( run_spec | clean_spec | command("help").set(params.show_help) );
+	auto cli = ( run_spec | clean_spec | command("help").set(args.show_help) );
 
 	if (!parse(argc, argv, cli)) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
 		return -1;
 	}
 
-	if (params.show_help) {
+	if (args.show_help) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
 		return 0;
 	}
 
-	if (params.hypervisor == "qemu") {
+	if (args.hypervisor == "qemu") {
 #ifndef __linux__
 		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
 #else
 		env = std::make_shared<QemuEnvironment>();
 #endif
-	} else if (params.hypervisor == "vbox") {
+	} else if (args.hypervisor == "vbox") {
 		env = std::make_shared<VboxEnvironment>();
-	} else if (params.hypervisor == "hyperv") {
+	} else if (args.hypervisor == "hyperv") {
 #ifndef WIN32
 		throw std::runtime_error("Can't use hyperv not in Windows");
 #else
 		env = std::make_shared<HyperVEnvironment>();
 #endif
-	} else if (params.hypervisor == "vsphere") {
+	} else if (args.hypervisor == "vsphere") {
 		throw std::runtime_error("TODO");
-	} else if (params.hypervisor == "dummy") {
+	} else if (args.hypervisor == "dummy") {
 		env = std::make_shared<DummyEnvironment>();
 	} else {
-		throw std::runtime_error(std::string("Unknown hypervisor: ") + params.hypervisor);
+		throw std::runtime_error(std::string("Unknown hypervisor: ") + args.hypervisor);
 	}
 
 	coro::CoroPool pool;
@@ -233,9 +251,9 @@ int do_main(int argc, char** argv) {
 		throw Interruption();
 	});
 
-	if (params.selected_mode == mode::clean) {
+	if (args.selected_mode == mode::clean) {
 		return clean_mode();
-	} else if (params.selected_mode == mode::run) {
+	} else if (args.selected_mode == mode::run) {
 		return run_mode();
 	} else {
 		throw std::runtime_error("Unknown mode");
