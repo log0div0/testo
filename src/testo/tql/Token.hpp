@@ -85,6 +85,12 @@ namespace tql {
 				return "(";
 			case rparen:
 				return ")";
+			case select:
+				return "select";
+			case from:
+				return "from";
+			case where:
+				return "where";
 			case not_:
 				return "not";
 			case and_:

@@ -1,5 +1,6 @@
 
 #include "VisitorSemantic.hpp"
+#include "coro/Finally.h"
 #include <fmt/format.h>
 
 VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
@@ -193,8 +194,6 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 		throw std::runtime_error(std::string(macro->begin()) + ": Error while registering macro with name " +
 			macro->name.value());
 	}
-
-	visit_action_block(macro->action_block->action); //dummy controller to match the interface
 }
 
 void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
@@ -324,8 +323,12 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
+		return visit_wait(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		return visit_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
+		return visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		return visit_for_clause(p->action);
 	}
@@ -371,6 +374,51 @@ void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
 	}
 }
 
+void VisitorSemantic::visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
+	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
+		return visit_select_selectable(p->select_expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
+		return visit_select_unop(p->select_expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
+		return visit_select_binop(p->select_expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectParentedExpr>>(select_expr)) {
+		return visit_select_expr(p->select_expr->select_expr);
+	}
+}
+
+void VisitorSemantic::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable) {
+	std::string query = "";
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
+		auto text = template_parser.resolve(p->text(), reg);
+		query = tql::text_to_query(text);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(selectable)) {
+		query = template_parser.resolve(p->text(), reg);
+	}
+
+	try {
+		tql::Interpreter::validate_sanity(query);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(std::string(selectable->begin()) + ": Error while parsing tql query"));
+	}
+}
+
+void VisitorSemantic::visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop) {
+	visit_select_expr(unop->select_expr);
+}
+
+void VisitorSemantic::visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop) {
+	visit_select_expr(binop->left);
+	visit_select_expr(binop->right);
+}
+
+void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
+	if (!wait->select_expr) {
+		return;
+	}
+
+	visit_select_expr(wait->select_expr);
+}
+
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
 	auto macro = reg.macros.find(macro_call->name());
 	if (macro == reg.macros.end()) {
@@ -381,12 +429,69 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 		throw std::runtime_error(fmt::format("{}: Error: expected {} params, {} provided", std::string(macro_call->begin()),
 			macro_call->macro->params.size(), macro_call->params.size()));
 	}
+
+	//push new ctx
+	StackEntry new_ctx(true);
+
+	for (size_t i = 0; i < macro_call->params.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->params[i]->text(), reg);
+		new_ctx.define(macro_call->macro->params[i].value(), value);
+	}
+
+	reg.local_vars.push_back(new_ctx);
+	coro::Finally finally([&] {
+		reg.local_vars.pop_back();
+	});
+
+	visit_action_block(macro_call->macro->action_block->action);
+}
+
+void VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
+	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
+		return visit_binop(p->expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
+		return visit_factor(p->expr);
+	}
+}
+
+
+void VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
+	visit_expr(binop->left);
+	visit_expr(binop->right);
+}
+
+void VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
+	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
+		return visit_check(p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
+		return visit_expr(p->factor);
+	}
+}
+
+void VisitorSemantic::visit_check(std::shared_ptr<AST::Check> check) {
+	visit_select_expr(check->select_expr);
+}
+
+void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
+	visit_expr(if_clause->expr);
 }
 
 void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
 	if (for_clause->start() > for_clause->finish()) {
 		throw std::runtime_error(std::string(for_clause->begin()) + ": Error: start number of the cycle " +
 			for_clause->start_.value() + " is greater than finish number " + for_clause->finish_.value());
+	}
+
+	StackEntry new_ctx(false);
+	reg.local_vars.push_back(new_ctx);
+	size_t ctx_position = reg.local_vars.size() - 1;
+	coro::Finally finally([&]{
+		reg.local_vars.pop_back();
+	});
+
+	for (auto i = for_clause->start(); i <= for_clause->finish(); i++) {
+		reg.local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
+		visit_action(for_clause->cycle_body);
 	}
 }
 

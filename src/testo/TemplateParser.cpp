@@ -43,7 +43,7 @@ std::string Parser::resolve(const std::string& input, Register& reg) {
 	return result;
 }
 
-void Parser::check_sanity(const std::string& input) {
+void Parser::validate_sanity(const std::string& input) {
 	this->input = input;
 	current_pos = Pos(input);
 
