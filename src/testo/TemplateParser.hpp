@@ -102,7 +102,7 @@ struct Parser {
 	Parser() = default;
 
 	std::string resolve(const std::string& input, Register& reg);
-	void check_sanity(const std::string& input);
+	void validate_sanity(const std::string& input);
 
 
 private:

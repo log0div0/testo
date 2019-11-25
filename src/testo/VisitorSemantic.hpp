@@ -24,8 +24,20 @@ struct VisitorSemantic {
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<AST::Plug> plug);
 	void visit_exec(std::shared_ptr<AST::Exec> exec);
+	void visit_wait(std::shared_ptr<AST::Wait> wait);
 	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
+	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
+
+	void visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr);
+	void visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable);
+	void visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop);
+	void visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop);
+
+	void visit_expr(std::shared_ptr<AST::IExpr> expr);
+	void visit_binop(std::shared_ptr<AST::BinOp> binop);
+	void visit_factor(std::shared_ptr<AST::IFactor> factor);
+	void visit_check(std::shared_ptr<AST::Check> check);
 
 	void visit_controller(std::shared_ptr<AST::Controller> controller);
 	void visit_machine(std::shared_ptr<AST::Controller> machine);

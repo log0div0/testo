@@ -979,7 +979,7 @@ std::shared_ptr<Selectable<SelectQuery>> Parser::select_query() {
 
 	try {
 		template_literals::Parser templ_parser;
-		templ_parser.check_sanity(query->text());
+		templ_parser.validate_sanity(query->text());
 	} catch (const std::runtime_error& error) {
 		std::throw_with_nested(std::runtime_error(std::string(query->begin()) + ": Error parsing string: `" + query->text() + "`"));
 	}
@@ -999,7 +999,7 @@ std::shared_ptr<String> Parser::string() {
 
 	try {
 		template_literals::Parser templ_parser;
-		templ_parser.check_sanity(new_node->text());
+		templ_parser.validate_sanity(new_node->text());
 	} catch (const std::runtime_error& error) {
 		std::throw_with_nested(std::runtime_error(std::string(new_node->begin()) + ": Error parsing string: \"" + new_node->text() + "\""));
 	}

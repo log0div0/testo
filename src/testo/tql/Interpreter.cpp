@@ -31,4 +31,8 @@ bool Interpreter::exec(stb::Image& image) {
 	return runner.visit(select_stmt);
 }
 
+void Interpreter::validate_sanity(const std::string& query) {
+	Interpreter interpreter(query);
+}
+
 }
