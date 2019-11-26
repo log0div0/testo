@@ -171,7 +171,7 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 	if (exec->time_interval) {
 		result += exec->time_interval.value();
 	} else {
-		result += "600s";
+		result += "10m";
 	}
 
 	return result;
@@ -214,7 +214,7 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 	if (copy->time_interval) {
 		result += copy->time_interval.value();
 	} else {
-		result += "600s";
+		result += "10m";
 	}
 
 	return result;

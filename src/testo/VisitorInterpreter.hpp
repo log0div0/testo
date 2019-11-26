@@ -126,7 +126,6 @@ private:
 	std::vector<std::shared_ptr<AST::Test>> ignored_tests;
 
 	nlohmann::json create_json_report() const;
-	void print_statistics() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
 	void reset_cache();

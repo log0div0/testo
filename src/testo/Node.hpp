@@ -449,7 +449,7 @@ struct MouseEvent: public Node {
 	}
 
 	bool is_move_needed() const {
-		return dx_token.value().length();
+		return dx_token.value().length() || dy_token.value().length();
 	}
 
 	Token event, dx_token, dy_token;
