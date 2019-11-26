@@ -474,6 +474,10 @@ void VisitorSemantic::visit_check(std::shared_ptr<AST::Check> check) {
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
 	visit_expr(if_clause->expr);
+	visit_action(if_clause->if_action);
+	if (if_clause->has_else()) {
+		visit_action(if_clause->else_action);
+	}
 }
 
 void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
@@ -492,6 +496,10 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 	for (auto i = for_clause->start(); i <= for_clause->finish(); i++) {
 		reg.local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
 		visit_action(for_clause->cycle_body);
+	}
+
+	if (for_clause->else_token) {
+		visit_action(for_clause->else_action);
 	}
 }
 
