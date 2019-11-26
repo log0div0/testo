@@ -30,7 +30,7 @@ static void sleep(const std::string& interval) {
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
-VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
+VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg), logger(config) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	cache_miss_policy = config.at("cache_miss_policy").get<std::string>();
 	test_spec = config.at("test_spec").get<std::string>();
@@ -531,7 +531,7 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 		std::cout << rang::style::reset;
 		std::cout << rang::fgB::magenta;
 		for (auto test: up_to_date_tests) {
-			current_progress += progress_step;
+			logger.current_progress += progress_step;
 			std::cout << test->name.value() << std::endl;
 		}
 		std::cout << rang::style::reset;
@@ -578,9 +578,9 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		for (auto parent: test->parents) {
 			for (auto failed: failed_tests) {
 				if (parent == failed) {
-					current_progress += progress_step;
+					logger.current_progress += progress_step;
 					std::cout
-						<< rang::fgB::red << progress() << " Skipping test "
+						<< rang::fgB::red << logger.progress() << " Skipping test "
 						<< rang::fg::yellow << test->name.value()
 						<< rang::fgB::red << " because his parent "
 						<< rang::fg::yellow << parent->name.value()
@@ -596,7 +596,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		//Ok, we're not cached and we need to run the test
 
 		std::cout
-			<< rang::fgB::blue << progress() << rang::style::reset
+			<< rang::fgB::blue << logger.progress() << rang::style::reset
 			<< rang::fgB::blue << " Preparing the environment for test "
 			<< rang::fg::yellow << test->name.value() << rang::style::reset
 			<< rang::style::reset << std::endl;
@@ -608,7 +608,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			for (auto controller: reg.get_all_controllers(parent)) {
 				if (controller->get_metadata("current_state") != parent->name.value()) {
 					std::cout
-						<< rang::fgB::blue << progress() << rang::style::reset
+						<< rang::fgB::blue << logger.progress() << rang::style::reset
 						<< rang::fgB::blue << " Restoring snapshot "
 						<< rang::fg::yellow << parent->name.value() << rang::style::reset
 						<< rang::fgB::blue << " for " << controller->type() << " "
@@ -654,20 +654,20 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 					controller->check_config_relevance())
 				{
 					std::cout
-						<< rang::fgB::blue << progress()
+						<< rang::fgB::blue << logger.progress()
 						<< " Restoring initial snapshot for " << controller->type() << " "
 						<< rang::fg::yellow << controller->name()
 						<< rang::style::reset << std::endl;
 					controller->restore_snapshot("_init");
 				} else {
 					std::cout
-						<< rang::fgB::blue << progress()
+						<< rang::fgB::blue << logger.progress()
 						<< " Creating " << controller->type() << " "
 						<< rang::fg::yellow << controller->name()
 						<< rang::style::reset << std::endl;
 					controller->create();
 					std::cout
-						<< rang::fgB::blue << progress()
+						<< rang::fgB::blue << logger.progress()
 						<< " Taking initial snapshot for " << controller->type() << " "
 						<< rang::fg::yellow << controller->name()
 						<< rang::style::reset << std::endl;
@@ -686,7 +686,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Running test "
 			<< rang::fg::yellow << test->name.value()
 			<< rang::style::reset << std::endl;
@@ -705,7 +705,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		for (auto controller: reg.get_all_controllers(test)) {
 			if (!controller->has_snapshot(test->name.value())) {
 				std::cout
-					<< rang::fgB::blue << progress() << " Taking snapshot "
+					<< rang::fgB::blue << logger.progress() << " Taking snapshot "
 					<< rang::fg::yellow << test->name.value()
 					<< rang::fgB::blue << " for " << controller->type() << " "
 					<< rang::fg::yellow << controller->name()
@@ -738,11 +738,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			stop_all_vms(test);
 		}
 
-		current_progress += progress_step;
+		logger.current_progress += progress_step;
 		test->stop_timestamp = std::chrono::system_clock::now();
 
 		std::cout
-			<< rang::fgB::green << progress() << " Test "
+			<< rang::fgB::green << logger.progress() << " Test "
 			<< rang::fg::yellow << test->name.value()
 			<< rang::fgB::green << " PASSED in "
 			<< duration_to_str(test->stop_timestamp - test->start_timestamp)
@@ -767,10 +767,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
-		current_progress += progress_step;
+		logger.current_progress += progress_step;
 		test->stop_timestamp = std::chrono::system_clock::now();
 		std::cout
-			<< rang::fgB::red << progress()
+			<< rang::fgB::red << logger.progress()
 			<< " Test "
 			<< rang::fg::yellow << test->name.value()
 			<< rang::fgB::red << " FAILED"
@@ -866,7 +866,7 @@ void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		std::string message = template_parser.resolve(print_action->message->text(), reg);
 		std::cout
-			<< rang::fgB::blue << progress() << " "
+			<< rang::fgB::blue << logger.progress() << " "
 			<< rang::fg::yellow << vmc->name()
 			<< rang::fgB::blue << ": " << message
 			<< rang::style::reset << std::endl;
@@ -882,7 +882,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 			return;
 		}
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Typing "
 			<< rang::fg::yellow << "\"" << text << "\""
 			<< rang::fgB::blue << " on virtual machine "
@@ -965,7 +965,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
 		if (!wait->select_expr) {
 			std::cout
-				<< rang::fgB::blue << progress()
+				<< rang::fgB::blue << logger.progress()
 				<< " Sleeping "
 				<< rang::fgB::blue << "in virtual machine "
 				<< rang::fg::yellow << vmc->name()
@@ -976,7 +976,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		}
 
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Waiting "
 			<< rang::fg::yellow
 			<< template_parser.resolve(std::string(*wait->select_expr), reg);
@@ -1031,7 +1031,7 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 	try {
 		if (mouse_event->is_move_needed()) {
 			std::cout
-				<< rang::fgB::blue << progress()
+				<< rang::fgB::blue << logger.progress()
 				<< " Moving cursor "
 				<< rang::fg::yellow << "X:" << mouse_event->dx_token.value()
 				<< " Y:" << mouse_event->dy_token.value();
@@ -1053,7 +1053,7 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 			return;
 		} else if (mouse_event->event.value() == "click") {
 			std::cout
-				<< rang::fgB::blue << progress()
+				<< rang::fgB::blue << logger.progress()
 				<< " Left Clicking "
 				<< rang::fgB::blue << "on virtual machine "
 				<< rang::fg::yellow << vmc->name();
@@ -1066,7 +1066,7 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 			vmc->vm->mouse_set_buttons(0);
 		} else if (mouse_event->event.value() == "rclick") {
 			std::cout
-				<< rang::fgB::blue << progress()
+				<< rang::fgB::blue << logger.progress()
 				<< " Right Clicking "
 				<< rang::fgB::blue << "on virtual machine "
 				<< rang::fg::yellow << vmc->name();
@@ -1090,7 +1090,7 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 	uint32_t times = key_spec->get_times();
 
 	std::cout
-		<< rang::fgB::blue << progress()
+		<< rang::fgB::blue << logger.progress()
 		<< " Pressing key "
 		<< rang::fg::yellow << key_spec->get_buttons_str()
 		<< rang::fgB::blue;
@@ -1156,7 +1156,7 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::
 
 	std::string plug_unplug = plug->is_on() ? "Plugging" : "Unplugging";
 	std::cout
-		<< rang::fgB::blue << progress()
+		<< rang::fgB::blue << logger.progress()
 		<< " " << plug_unplug << " nic "
 		<< rang::fg::yellow << nic
 		<< rang::fgB::blue << " on virtual machine "
@@ -1190,7 +1190,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 
 	std::string plug_unplug = plug->is_on() ? "Plugging" : "Unplugging";
 	std::cout
-		<< rang::fgB::blue << progress()
+		<< rang::fgB::blue << logger.progress()
 		<< " " << plug_unplug << " link "
 		<< rang::fg::yellow << nic
 		<< rang::fgB::blue << " on virtual machine "
@@ -1203,7 +1203,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
 	std::cout
-		<< rang::fgB::blue << progress()
+		<< rang::fgB::blue << logger.progress()
 		<< " Plugging flash drive "
 		<< rang::fg::yellow << fdc->name()
 		<< rang::fgB::blue << " in virtual machine "
@@ -1219,7 +1219,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
 	std::cout
-		<< rang::fgB::blue << progress()
+		<< rang::fgB::blue << logger.progress()
 		<< " Unlugging flash drive "
 		<< rang::fg::yellow << fdc->name()
 		<< rang::fgB::blue << " from virtual machine "
@@ -1240,7 +1240,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 
 		fs::path path = template_parser.resolve(plug->path->text(), reg);
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Plugging dvd "
 			<< rang::fg::yellow << path
 			<< rang::fgB::blue << " in virtual machine "
@@ -1259,7 +1259,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 		}
 
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Unplugging dvd from virtual machine "
 			<< rang::fg::yellow << vmc->name()
 			<< rang::style::reset << std::endl;
@@ -1270,7 +1270,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Start> start) {
 	try {
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Starting virtual machine "
 			<< rang::fg::yellow << vmc->name()
 			<< rang::style::reset << std::endl;
@@ -1283,7 +1283,7 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Stop> stop) {
 	try {
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Stopping virtual machine "
 			<< rang::fg::yellow << vmc->name()
 			<< rang::style::reset << std::endl;
@@ -1297,7 +1297,7 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown) {
 	try {
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Shutting down virtual machine "
 			<< rang::fg::yellow << vmc->name()
 			<< rang::style::reset << std::endl;
@@ -1391,7 +1391,7 @@ static std::string build_python_script(const std::string& body) {
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
 		std::cout
-			<< rang::fgB::blue << progress()
+			<< rang::fgB::blue << logger.progress()
 			<< " Executing " << exec->process_token.value() << " command on virtual machine "
 			<< rang::fg::yellow << vmc->name()
 			<< rang::style::reset << std::endl;
@@ -1466,7 +1466,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 		std::string from_to = copy->is_to_guest() ? "to" : "from";
 
 		std::cout
-			<< rang::fgB::blue << progress() << " Copying "
+			<< rang::fgB::blue << logger.progress() << " Copying "
 			<< rang::fg::yellow << from
 			<< rang::fgB::blue << " " << from_to << " virtual machine "
 			<< rang::fg::yellow << vmc->name()
@@ -1503,7 +1503,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
 	std::cout
-		<< rang::fgB::blue << progress()
+		<< rang::fgB::blue << logger.progress()
 		<< " Calling macro "
 		<< rang::fg::yellow << macro_call->name().value()
 		<< rang::fgB::blue << " on virtual machine "
@@ -1655,7 +1655,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 		std::string check_for = check->time_interval ? check->time_interval.value() : "1ms";
 
 		std::cout
-				<< rang::fgB::blue << progress()
+				<< rang::fgB::blue << logger.progress()
 				<< " Checking "
 				<< rang::fg::yellow
 				<< template_parser.resolve(std::string(*check->select_expr), reg);

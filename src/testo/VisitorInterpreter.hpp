@@ -4,6 +4,7 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "TemplateParser.hpp"
+#include "Logger.hpp"
 #include <vector>
 #include <list>
 
@@ -112,20 +113,12 @@ struct VisitorInterpreter {
 	template_literals::Parser template_parser;
 
 private:
+	Logger logger;
+
 	//settings
 	bool stop_on_fail;
 	std::string cache_miss_policy;
 	std::string test_spec, exclude, invalidate;
-
-	std::string progress() const {
-		std::stringstream ss;
-		ss << "[";
-		ss << std::setw(3);
-		ss << std::round(current_progress);
-		ss << std::setw(0);
-		ss << '%' << "]";
-		return ss.str();
-	}
 
 	std::vector<std::shared_ptr<AST::Test>> succeeded_tests;
 	std::vector<std::shared_ptr<AST::Test>> failed_tests;
@@ -164,7 +157,6 @@ private:
 		}
 	}
 
-	float current_progress = 0;
 	float progress_step = 0;
 
 	coro::Timer timer;
