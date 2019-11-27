@@ -120,12 +120,10 @@ private:
 	std::string cache_miss_policy;
 	std::string test_spec, exclude, invalidate;
 
-	std::vector<std::shared_ptr<AST::Test>> succeeded_tests;
-	std::vector<std::shared_ptr<AST::Test>> failed_tests;
 	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
 	std::vector<std::shared_ptr<AST::Test>> ignored_tests;
 
-	nlohmann::json create_json_report() const;
+	//nlohmann::json create_json_report() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
 	void reset_cache();
@@ -155,9 +153,6 @@ private:
 			}
 		}
 	}
-
-	float progress_step = 0;
-
 	coro::Timer timer;
 
 	std::chrono::system_clock::time_point start_timestamp;

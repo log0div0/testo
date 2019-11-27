@@ -6,12 +6,70 @@ Logger::Logger(const nlohmann::json& config) {
 
 }
 
+void Logger::init(const std::vector<std::string>& tests_to_run, const std::vector<std::string>& up_to_date_tests, const std::vector<std::string>& ignored_tests) {
+	for (auto test_name: tests_to_run) {
+		this->tests_to_run.push_back(test_name);
+	}
+	for (auto test_name: up_to_date_tests) {
+		this->up_to_date_tests.push_back(test_name);
+	}
+	for (auto test_name: ignored_tests) {
+		this->ignored_tests.push_back(test_name);
+	}
+
+	/*if (up_to_date_tests.size()) {
+		std::cout << rang::fgB::blue << rang::style::bold;
+		std::cout << "UP-TO-DATE TESTS:" << std::endl;
+		std::cout << rang::style::reset;
+		std::cout << rang::fgB::magenta;
+		for (auto test: up_to_date_tests) {
+			logger.current_progress += progress_step;
+			std::cout << test->name.value() << std::endl;
+		}
+		std::cout << rang::style::reset;
+	}
+
+	if (tests_to_run.size()) {
+		std::cout << rang::fgB::blue << rang::style::bold;
+		std::cout << "TESTS TO RUN:" << std::endl;
+		std::cout << rang::style::reset;
+		std::cout << rang::fgB::magenta;
+		for (auto it: tests_to_run) {
+			std::cout << it->name.value() << std::endl;
+		}
+		std::cout << rang::style::reset;
+	}*/
+
+	/*auto tests_num = tests_to_run.size() + up_to_date_tests.size();
+	if (tests_num != 0) {
+		progress_step = (float)100 / tests_num;
+	} else {
+		progress_step = 100;
+	}*/
+}
+
+void Logger::finish() {
+	//	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
+		//logger.print_statistics(succeeded_tests, failed_tests, up_to_date_tests, ignored_tests, tests_durantion);
+	//	if (json_report_file.length()) {
+	//		auto path = fs::absolute(json_report_file);
+	//		auto report = create_json_report();
+
+	//		fs::create_directories(path.parent_path());
+
+	//		std::ofstream file(path);
+	//		file << report.dump(2);
+	//	}
+}
+
 void Logger::prepare_environment(const std::string& test) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Preparing the environment for test "
 		<< rang::fg::yellow << test
 		<< rang::style::reset << std::endl;
+
+	//test->start_timestamp = std::chrono::system_clock::now();
 }
 
 void Logger::run_test(const std::string& test) const {
@@ -31,28 +89,71 @@ void Logger::skip_test(const std::string& test, const std::string& parent) const
 		<< rang::fg::yellow << parent
 		<< rang::fgB::red << " failed"
 		<< rang::style::reset << std::endl;
+
+//logger.current_progress += progress_step;
+
+	//test->stop_timestamp = std::chrono::system_clock::now();
+	//failed_tests.push_back(test);
 }
 
-void Logger::test_passed(const std::string& test, const std::string& time) const {
+void Logger::test_passed(const std::string& test) const {
 	std::cout
 		<< rang::fgB::green << progress()
 		<< " Test " << rang::fg::yellow << test
 		<< rang::fgB::green << " PASSED in "
-		<< time
+		//<< time
 		<< rang::style::reset << std::endl;
+
+		/*logger.current_progress += progress_step;
+		test->stop_timestamp = std::chrono::system_clock::now();
+
+		auto duration = duration_to_str(test->stop_timestamp - test->start_timestamp);
+		logger.test_passed(test->name.value());
+
+		for (auto it: up_to_date_tests) {
+			if (it->name.value() == test->name.value()) {
+				//already have that one
+				return;
+			}
+		}
+
+		for (auto it: succeeded_tests) {
+			if (it->name.value() == test->name.value()) {
+				//already have that one
+				return;
+			}
+		}
+
+		succeeded_tests.push_back(test);*/
 }
 
-void Logger::test_failed(const std::string& test, const std::string& time) const {
+void Logger::test_failed(const std::string& test) const {
 	std::cout
 		<< rang::fgB::red << progress()
 		<< " Test "
 		<< rang::fg::yellow << test
 		<< rang::fgB::red << " FAILED in "
-		<< time
+		//<< time
 		<< rang::style::reset << std::endl;
+
+	/*logger.current_progress += progress_step;
+		test->stop_timestamp = std::chrono::system_clock::now();
+		auto duration = duration_to_str(test->stop_timestamp - test->start_timestamp);
+		logger.test_failed(test->name);
+
+		bool already_failed = false;
+		for (auto it: failed_tests) {
+			if (it->name.value() == test->name.value()) {
+				already_failed = true;
+			}
+		}
+
+		if (!already_failed) {
+			failed_tests.push_back(test);
+		}*/
 }
 
-void Logger::print_statistics(
+/*void Logger::print_statistics(
 		const std::vector<std::shared_ptr<AST::Test>>& succeeded_tests,
 		const std::vector<std::shared_ptr<AST::Test>>& failed_tests,
 		const std::vector<std::shared_ptr<AST::Test>>& up_to_date_tests,
@@ -81,7 +182,7 @@ void Logger::print_statistics(
 		std::cout << "\t -" << fail->name.value() << std::endl;
 	}
 	std::cout << rang::style::reset;
-}
+}*/
 
 void Logger::create_controller(std::shared_ptr<Controller> controller) const {
 	std::cout

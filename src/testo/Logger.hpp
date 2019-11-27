@@ -7,22 +7,33 @@
 #include "Node.hpp"
 
 struct Logger {
+	struct Test {
+		Test() = default;
+		Test(const std::string& test_name): name(test_name) {}
+		std::string name;
+		std::chrono::system_clock::time_point start_timestamp;
+		std::chrono::system_clock::time_point stop_timestamp;
+	};
+
 	Logger() = delete;
 	Logger(const nlohmann::json& config);
+
+	void init(const std::vector<std::string>& tests_to_run, const std::vector<std::string>& up_to_date_tests, const std::vector<std::string>& ignored_tests);
+	void finish();
 
 	//test stuff
 	void prepare_environment(const std::string& test) const;
 	void run_test(const std::string& test) const;
 	void skip_test(const std::string& test, const std::string& parent) const;
-	void test_passed(const std::string& test, const std::string& time) const;
-	void test_failed(const std::string& test, const std::string& time) const;
+	void test_passed(const std::string& test) const;
+	void test_failed(const std::string& test) const;
 
-	void print_statistics(
+	/*void print_statistics(
 		const std::vector<std::shared_ptr<AST::Test>>& succeeded_tests,
 		const std::vector<std::shared_ptr<AST::Test>>& failed_tests,
 		const std::vector<std::shared_ptr<AST::Test>>& up_to_date_tests,
 		const std::vector<std::shared_ptr<AST::Test>>& ignored_tests,
-		const std::string& time);
+		const std::string& time);*/
 
 	//Controller stuff
 	void create_controller(std::shared_ptr<Controller> controller) const;
@@ -56,6 +67,13 @@ struct Logger {
 		return ss.str();
 	}
 
+	std::vector<Test> tests_to_run;
+	std::vector<Test> passed_tests;
+	std::vector<Test> failed_tests;
+	std::vector<Test> up_to_date_tests;
+	std::vector<Test> ignored_tests;
+
+	float progress_step = 0;
 	float current_progress = 0;
 };
 

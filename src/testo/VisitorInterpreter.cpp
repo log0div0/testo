@@ -139,7 +139,7 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	});
 }
 
-nlohmann::json VisitorInterpreter::create_json_report() const {
+/*nlohmann::json VisitorInterpreter::create_json_report() const {
 	nlohmann::json report = nlohmann::json::object();
 	report["tests"] = nlohmann::json::array();
 
@@ -196,7 +196,7 @@ nlohmann::json VisitorInterpreter::create_json_report() const {
 	report["stop_timestamp"] = ss2.str();
 
 	return report;
-}
+}*/
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
@@ -469,13 +469,6 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 	check_up_to_date_tests(tests_queue);
 	resolve_tests(tests_queue);
 	reset_cache();
-
-	auto tests_num = tests_to_run.size() + up_to_date_tests.size();
-	if (tests_num != 0) {
-		progress_step = (float)100 / tests_num;
-	} else {
-		progress_step = 100;
-	}
 }
 
 
@@ -494,33 +487,22 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 
 	setup_vars(program);
 
+	std::vector<std::string> tests_to_run_names, up_to_date_tests_names, ignored_tests_names;
+	for (auto test: tests_to_run) {
+		tests_to_run_names.push_back(test->name);
+	}
+	for (auto test: up_to_date_tests) {
+		up_to_date_tests_names.push_back(test->name);
+	}
+	for (auto test: ignored_tests) {
+		ignored_tests_names.push_back(test->name);
+	}
 	if ((tests_to_run.size() + up_to_date_tests.size()) == 0) {
 		std::cout << "There's no tests to run\n";
 		return;
 	}
 
-	if (up_to_date_tests.size()) {
-		std::cout << rang::fgB::blue << rang::style::bold;
-		std::cout << "UP-TO-DATE TESTS:" << std::endl;
-		std::cout << rang::style::reset;
-		std::cout << rang::fgB::magenta;
-		for (auto test: up_to_date_tests) {
-			logger.current_progress += progress_step;
-			std::cout << test->name.value() << std::endl;
-		}
-		std::cout << rang::style::reset;
-	}
-
-	if (tests_to_run.size()) {
-		std::cout << rang::fgB::blue << rang::style::bold;
-		std::cout << "TESTS TO RUN:" << std::endl;
-		std::cout << rang::style::reset;
-		std::cout << rang::fgB::magenta;
-		for (auto it: tests_to_run) {
-			std::cout << it->name.value() << std::endl;
-		}
-		std::cout << rang::style::reset;
-	}
+	logger.init(tests_to_run_names, up_to_date_tests_names, ignored_tests_names);
 
 	while (!tests_to_run.empty()) {
 		auto front = tests_to_run.front();
@@ -528,43 +510,25 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 		visit_test(front);
 	}
 
-	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
-	logger.print_statistics(succeeded_tests, failed_tests, up_to_date_tests, ignored_tests, tests_durantion);
-	if (json_report_file.length()) {
-		auto path = fs::absolute(json_report_file);
-		auto report = create_json_report();
-
-		fs::create_directories(path.parent_path());
-
-		std::ofstream file(path);
-		file << report.dump(2);
-	}
-
-	if (failed_tests.size()) {
+	logger.finish();
+	if (logger.failed_tests.size()) {
 		throw std::runtime_error("At least one of the tests failed");
 	}
 }
 
 void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 	try {
-		test->start_timestamp = std::chrono::system_clock::now();
-
+		//Ok, we're not cached and we need to run the test
+		logger.prepare_environment(test->name);
 		//Check if one of the parents failed. If it did, just fail
 		for (auto parent: test->parents) {
-			for (auto failed: failed_tests) {
-				if (parent == failed) {
-					logger.current_progress += progress_step;
+			for (auto failed: logger.failed_tests) {
+				if (parent->name.value() == failed.name) {
 					logger.skip_test(test->name, parent->name);
-					test->stop_timestamp = std::chrono::system_clock::now();
-					failed_tests.push_back(test);
 					return;
 				}
 			}
 		}
-
-		//Ok, we're not cached and we need to run the test
-
-		logger.prepare_environment(test->name);
 
 		//we need to get all the vms in the correct state
 		//vms from parents - rollback them to parents if we need to
@@ -675,51 +639,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		if (need_to_stop) {
 			stop_all_vms(test);
 		}
-
-		logger.current_progress += progress_step;
-		test->stop_timestamp = std::chrono::system_clock::now();
-
-		auto duration = duration_to_str(test->stop_timestamp - test->start_timestamp);
-		logger.test_passed(test->name.value(), duration);
-
-		for (auto it: up_to_date_tests) {
-			if (it->name.value() == test->name.value()) {
-				//already have that one
-				return;
-			}
-		}
-
-		for (auto it: succeeded_tests) {
-			if (it->name.value() == test->name.value()) {
-				//already have that one
-				return;
-			}
-		}
-
-		succeeded_tests.push_back(test);
+		logger.test_passed(test->name.value());
 
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
-		logger.current_progress += progress_step;
-		test->stop_timestamp = std::chrono::system_clock::now();
-		auto duration = duration_to_str(test->stop_timestamp - test->start_timestamp);
-		logger.test_failed(test->name, duration);
-
-		bool already_failed = false;
-		for (auto it: failed_tests) {
-			if (it->name.value() == test->name.value()) {
-				already_failed = true;
-			}
-		}
-
-		if (!already_failed) {
-			failed_tests.push_back(test);
-		}
-
-		if (stop_on_fail) {
-			throw std::runtime_error("");
-		}
-
+		logger.test_failed(test->name);
 		stop_all_vms(test);
 	}
 }
