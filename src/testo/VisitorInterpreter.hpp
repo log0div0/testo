@@ -155,12 +155,8 @@ private:
 	}
 	coro::Timer timer;
 
-	std::chrono::system_clock::time_point start_timestamp;
-
 	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	std::unordered_map<char, std::vector<std::string>> charmap;
-
-	std::string json_report_file;
 };

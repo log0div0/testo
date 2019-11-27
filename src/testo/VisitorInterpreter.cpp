@@ -12,19 +12,6 @@
 
 using namespace std::chrono_literals;
 
-template <typename Duration>
-std::string duration_to_str(Duration duration) {
-
-	auto h = std::chrono::duration_cast<std::chrono::hours>(duration);
-	duration -= h;
-	auto m = std::chrono::duration_cast<std::chrono::minutes>(duration);
-	duration -= m;
-	auto s = std::chrono::duration_cast<std::chrono::seconds>(duration);
-	auto result = fmt::format("{}h:{}m:{}s", h.count(), m.count(), s.count());
-
-	return result;
-}
-
 static void sleep(const std::string& interval) {
 	coro::Timer timer;
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
@@ -36,7 +23,6 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
-	json_report_file = config.at("json_report_file").get<std::string>();
 
 	charmap.insert({
 		{'0', {"ZERO"}},
@@ -138,65 +124,6 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 		{' ', {"SPACE"}}
 	});
 }
-
-/*nlohmann::json VisitorInterpreter::create_json_report() const {
-	nlohmann::json report = nlohmann::json::object();
-	report["tests"] = nlohmann::json::array();
-
-	for (auto test: succeeded_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name.value()},
-			{"description", test->description},
-			{"status", "success"},
-			{"is_cached", false},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	for (auto test: failed_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name.value()},
-			{"description", test->description},
-			{"status", "fail"},
-			{"is_cached", false},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	for (auto test: up_to_date_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name.value()},
-			{"description", test->description},
-			{"status", "success"},
-			{"is_cached", true},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
-
-	std::stringstream ss1;
-	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
-	report["start_timestamp"] = ss1.str();
-
-	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	std::stringstream ss2;
-	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
-
-	report["stop_timestamp"] = ss2.str();
-
-	return report;
-}*/
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
@@ -471,7 +398,6 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 	reset_cache();
 }
 
-
 void VisitorInterpreter::reset_cache() {
 	for (auto test: tests_to_run) {
 		for (auto controller: reg.get_all_controllers(test)) {
@@ -483,8 +409,6 @@ void VisitorInterpreter::reset_cache() {
 }
 
 void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
-	start_timestamp = std::chrono::system_clock::now();
-
 	setup_vars(program);
 
 	std::vector<std::string> tests_to_run_names, up_to_date_tests_names, ignored_tests_names;
@@ -519,12 +443,12 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 	try {
 		//Ok, we're not cached and we need to run the test
-		logger.prepare_environment(test->name);
+		logger.prepare_environment();
 		//Check if one of the parents failed. If it did, just fail
 		for (auto parent: test->parents) {
 			for (auto failed: logger.failed_tests) {
-				if (parent->name.value() == failed.name) {
-					logger.skip_test(test->name, parent->name);
+				if (parent->name.value() == failed->name) {
+					logger.skip_failed_test(parent->name);
 					return;
 				}
 			}
@@ -597,7 +521,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 		}
 
-		logger.run_test(test->name);
+		logger.run_test();
 
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);
@@ -639,11 +563,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		if (need_to_stop) {
 			stop_all_vms(test);
 		}
-		logger.test_passed(test->name.value());
+		logger.test_passed();
 
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
-		logger.test_failed(test->name);
+		logger.test_failed();
 		stop_all_vms(test);
 	}
 }

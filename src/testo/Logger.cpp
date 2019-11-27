@@ -1,30 +1,52 @@
 
 #include "Logger.hpp"
 #include <rang.hpp>
+#include <fstream>
+#include <fmt/format.h>
 
-Logger::Logger(const nlohmann::json& config) {
+template <typename Duration>
+std::string duration_to_str(Duration duration) {
 
+	auto h = std::chrono::duration_cast<std::chrono::hours>(duration);
+	duration -= h;
+	auto m = std::chrono::duration_cast<std::chrono::minutes>(duration);
+	duration -= m;
+	auto s = std::chrono::duration_cast<std::chrono::seconds>(duration);
+	auto result = fmt::format("{}h:{}m:{}s", h.count(), m.count(), s.count());
+
+	return result;
 }
 
-void Logger::init(const std::vector<std::string>& tests_to_run, const std::vector<std::string>& up_to_date_tests, const std::vector<std::string>& ignored_tests) {
-	for (auto test_name: tests_to_run) {
-		this->tests_to_run.push_back(test_name);
+Logger::Logger(const nlohmann::json& config) {
+	json_report_file = config.at("json_report_file").get<std::string>();
+}
+
+void Logger::init(const std::vector<std::string>& _tests_to_run, const std::vector<std::string>& _up_to_date_tests, const std::vector<std::string>& _ignored_tests) {
+	for (auto test: _tests_to_run) {
+		tests_to_run.push_back(std::shared_ptr<Test>(new Test(test)));
 	}
-	for (auto test_name: up_to_date_tests) {
-		this->up_to_date_tests.push_back(test_name);
+	for (auto test: _up_to_date_tests) {
+		up_to_date_tests.push_back(std::shared_ptr<Test>(new Test(test)));
 	}
-	for (auto test_name: ignored_tests) {
-		this->ignored_tests.push_back(test_name);
+	for (auto test: _ignored_tests) {
+		ignored_tests.push_back(std::shared_ptr<Test>(new Test(test)));
 	}
 
-	/*if (up_to_date_tests.size()) {
+	auto tests_num = tests_to_run.size() + up_to_date_tests.size();
+	if (tests_num != 0) {
+		progress_step = (float)100 / tests_num;
+	} else {
+		progress_step = 100;
+	}
+
+	if (up_to_date_tests.size()) {
 		std::cout << rang::fgB::blue << rang::style::bold;
 		std::cout << "UP-TO-DATE TESTS:" << std::endl;
 		std::cout << rang::style::reset;
 		std::cout << rang::fgB::magenta;
 		for (auto test: up_to_date_tests) {
-			logger.current_progress += progress_step;
-			std::cout << test->name.value() << std::endl;
+			current_progress += progress_step;
+			std::cout << test->name << std::endl;
 		}
 		std::cout << rang::style::reset;
 	}
@@ -34,133 +56,126 @@ void Logger::init(const std::vector<std::string>& tests_to_run, const std::vecto
 		std::cout << "TESTS TO RUN:" << std::endl;
 		std::cout << rang::style::reset;
 		std::cout << rang::fgB::magenta;
-		for (auto it: tests_to_run) {
-			std::cout << it->name.value() << std::endl;
+		for (auto test: tests_to_run) {
+			std::cout << test->name << std::endl;
 		}
 		std::cout << rang::style::reset;
-	}*/
+	}
 
-	/*auto tests_num = tests_to_run.size() + up_to_date_tests.size();
-	if (tests_num != 0) {
-		progress_step = (float)100 / tests_num;
-	} else {
-		progress_step = 100;
-	}*/
+	start_timestamp = std::chrono::system_clock::now();
 }
 
 void Logger::finish() {
-	//	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
-		//logger.print_statistics(succeeded_tests, failed_tests, up_to_date_tests, ignored_tests, tests_durantion);
-	//	if (json_report_file.length()) {
-	//		auto path = fs::absolute(json_report_file);
-	//		auto report = create_json_report();
+	finish_timestamp = std::chrono::system_clock::now();
 
-	//		fs::create_directories(path.parent_path());
+	print_statistics();
+	if (json_report_file.length()) {
+		auto path = fs::absolute(json_report_file);
+		auto report = create_json_report();
 
-	//		std::ofstream file(path);
-	//		file << report.dump(2);
-	//	}
+		fs::create_directories(path.parent_path());
+
+		std::ofstream file(path);
+		file << report.dump(2);
+	}
 }
 
-void Logger::prepare_environment(const std::string& test) const {
+void Logger::prepare_environment() {
+	current_test = tests_to_run.front();
+	tests_to_run.pop_front();
+
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Preparing the environment for test "
-		<< rang::fg::yellow << test
+		<< rang::fg::yellow << current_test->name
 		<< rang::style::reset << std::endl;
 
-	//test->start_timestamp = std::chrono::system_clock::now();
+	current_test->start_timestamp = std::chrono::system_clock::now();
 }
 
-void Logger::run_test(const std::string& test) const {
+void Logger::run_test() {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Running test "
-		<< rang::fg::yellow << test
+		<< rang::fg::yellow << current_test->name
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::skip_test(const std::string& test, const std::string& parent) const {
+void Logger::skip_failed_test(const std::string& failed_parent) {
 	std::cout
 		<< rang::fgB::red << progress()
 		<< " Skipping test "
-		<< rang::fg::yellow << test
+		<< rang::fg::yellow << current_test->name
 		<< rang::fgB::red << " because his parent "
-		<< rang::fg::yellow << parent
+		<< rang::fg::yellow << failed_parent
 		<< rang::fgB::red << " failed"
 		<< rang::style::reset << std::endl;
 
-//logger.current_progress += progress_step;
-
-	//test->stop_timestamp = std::chrono::system_clock::now();
-	//failed_tests.push_back(test);
+	current_progress += progress_step;
+	current_test->stop_timestamp = std::chrono::system_clock::now();
+	failed_tests.push_back(current_test);
+	current_test = nullptr;
 }
 
-void Logger::test_passed(const std::string& test) const {
+void Logger::test_passed() {
+	current_test->stop_timestamp = std::chrono::system_clock::now();
+	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
 	std::cout
 		<< rang::fgB::green << progress()
-		<< " Test " << rang::fg::yellow << test
+		<< " Test " << rang::fg::yellow << current_test->name
 		<< rang::fgB::green << " PASSED in "
-		//<< time
+		<< duration
 		<< rang::style::reset << std::endl;
 
-		/*logger.current_progress += progress_step;
-		test->stop_timestamp = std::chrono::system_clock::now();
+	current_progress += progress_step;
 
-		auto duration = duration_to_str(test->stop_timestamp - test->start_timestamp);
-		logger.test_passed(test->name.value());
-
-		for (auto it: up_to_date_tests) {
-			if (it->name.value() == test->name.value()) {
-				//already have that one
-				return;
-			}
+	for (auto it: up_to_date_tests) {
+		if (it->name == current_test->name) {
+			//already have that one
+			return;
 		}
+	}
 
-		for (auto it: succeeded_tests) {
-			if (it->name.value() == test->name.value()) {
-				//already have that one
-				return;
-			}
+	for (auto it: passed_tests) {
+		if (it->name == current_test->name) {
+			//already have that one
+			return;
 		}
+	}
 
-		succeeded_tests.push_back(test);*/
+	passed_tests.push_back(current_test);
+	current_test = nullptr;
 }
 
-void Logger::test_failed(const std::string& test) const {
+void Logger::test_failed() {
+	current_progress += progress_step;
+	current_test->stop_timestamp = std::chrono::system_clock::now();
+
 	std::cout
 		<< rang::fgB::red << progress()
 		<< " Test "
-		<< rang::fg::yellow << test
+		<< rang::fg::yellow << current_test->name
 		<< rang::fgB::red << " FAILED in "
 		//<< time
 		<< rang::style::reset << std::endl;
 
-	/*logger.current_progress += progress_step;
-		test->stop_timestamp = std::chrono::system_clock::now();
-		auto duration = duration_to_str(test->stop_timestamp - test->start_timestamp);
-		logger.test_failed(test->name);
-
-		bool already_failed = false;
-		for (auto it: failed_tests) {
-			if (it->name.value() == test->name.value()) {
-				already_failed = true;
-			}
+	bool already_failed = false;
+	for (auto it: failed_tests) {
+		if (it->name == current_test->name) {
+			already_failed = true;
 		}
+	}
 
-		if (!already_failed) {
-			failed_tests.push_back(test);
-		}*/
+	if (!already_failed) {
+		failed_tests.push_back(current_test);
+	}
+	current_test = nullptr;
 }
 
-/*void Logger::print_statistics(
-		const std::vector<std::shared_ptr<AST::Test>>& succeeded_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& failed_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& up_to_date_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& ignored_tests,
-		const std::string& time)
+void Logger::print_statistics()
 {
-	auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
+	auto tests_durantion = duration_to_str(finish_timestamp - start_timestamp);
+	/*auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
 
 	std::cout << rang::style::bold;
 	std::cout << rang::fg::blue;
@@ -181,8 +196,8 @@ void Logger::test_failed(const std::string& test) const {
 	for (auto fail: failed_tests) {
 		std::cout << "\t -" << fail->name.value() << std::endl;
 	}
-	std::cout << rang::style::reset;
-}*/
+	std::cout << rang::style::reset;*/
+}
 
 void Logger::create_controller(std::shared_ptr<Controller> controller) const {
 	std::cout
@@ -384,4 +399,64 @@ void Logger::mouse_click(std::shared_ptr<VmController> vmc, const std::string& c
 		<< rang::fgB::blue << " on virtual machine "
 		<< rang::fg::yellow << vmc->name()
 		<< rang::style::reset << std::endl;
+}
+
+nlohmann::json Logger::create_json_report() const {
+	return nlohmann::json();
+	/*nlohmann::json report = nlohmann::json::object();
+	report["tests"] = nlohmann::json::array();
+
+	for (auto test: succeeded_tests) {
+		auto duration = test->stop_timestamp - test->start_timestamp;
+		nlohmann::json test_json = {
+			{"name", test->name.value()},
+			{"description", test->description},
+			{"status", "success"},
+			{"is_cached", false},
+			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
+		};
+
+		report["tests"].push_back(test_json);
+	}
+
+	for (auto test: failed_tests) {
+		auto duration = test->stop_timestamp - test->start_timestamp;
+		nlohmann::json test_json = {
+			{"name", test->name.value()},
+			{"description", test->description},
+			{"status", "fail"},
+			{"is_cached", false},
+			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
+		};
+
+		report["tests"].push_back(test_json);
+	}
+
+	for (auto test: up_to_date_tests) {
+		auto duration = test->stop_timestamp - test->start_timestamp;
+		nlohmann::json test_json = {
+			{"name", test->name.value()},
+			{"description", test->description},
+			{"status", "success"},
+			{"is_cached", true},
+			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
+		};
+
+		report["tests"].push_back(test_json);
+	}
+
+	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
+
+	std::stringstream ss1;
+	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
+	report["start_timestamp"] = ss1.str();
+
+	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	std::stringstream ss2;
+	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
+
+	report["stop_timestamp"] = ss2.str();
+
+	return report;*/
 }

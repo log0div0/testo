@@ -22,18 +22,14 @@ struct Logger {
 	void finish();
 
 	//test stuff
-	void prepare_environment(const std::string& test) const;
-	void run_test(const std::string& test) const;
-	void skip_test(const std::string& test, const std::string& parent) const;
-	void test_passed(const std::string& test) const;
-	void test_failed(const std::string& test) const;
+	void prepare_environment();
+	void run_test();
+	void skip_failed_test(const std::string& failed_parent);
+	void test_passed();
+	void test_failed();
 
-	/*void print_statistics(
-		const std::vector<std::shared_ptr<AST::Test>>& succeeded_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& failed_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& up_to_date_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& ignored_tests,
-		const std::string& time);*/
+	void print_statistics();
+	nlohmann::json create_json_report() const;
 
 	//Controller stuff
 	void create_controller(std::shared_ptr<Controller> controller) const;
@@ -67,13 +63,19 @@ struct Logger {
 		return ss.str();
 	}
 
-	std::vector<Test> tests_to_run;
-	std::vector<Test> passed_tests;
-	std::vector<Test> failed_tests;
-	std::vector<Test> up_to_date_tests;
-	std::vector<Test> ignored_tests;
+	std::list<std::shared_ptr<Test>> tests_to_run;
+	std::vector<std::shared_ptr<Test>> passed_tests;
+	std::vector<std::shared_ptr<Test>> failed_tests;
+	std::vector<std::shared_ptr<Test>> up_to_date_tests;
+	std::vector<std::shared_ptr<Test>> ignored_tests;
+
+	std::shared_ptr<Test> current_test;
 
 	float progress_step = 0;
 	float current_progress = 0;
+
+	std::chrono::system_clock::time_point start_timestamp;
+	std::chrono::system_clock::time_point finish_timestamp;
+	std::string json_report_file;
 };
 
