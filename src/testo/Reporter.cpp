@@ -1,5 +1,5 @@
 
-#include "Logger.hpp"
+#include "Reporter.hpp"
 #include <rang.hpp>
 #include <fstream>
 #include <fmt/format.h>
@@ -17,11 +17,15 @@ std::string duration_to_str(Duration duration) {
 	return result;
 }
 
-Logger::Logger(const nlohmann::json& config) {
+Reporter::Reporter(const nlohmann::json& config) {
 	json_report_file = config.at("json_report_file").get<std::string>();
 }
 
-void Logger::init(const std::vector<std::string>& _tests_to_run, const std::vector<std::string>& _up_to_date_tests, const std::vector<std::string>& _ignored_tests) {
+void Reporter::init(
+		const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,
+		const std::vector<std::shared_ptr<AST::Test>>& _up_to_date_tests,
+		const std::vector<std::shared_ptr<AST::Test>>& _ignored_tests)
+{
 	for (auto test: _tests_to_run) {
 		tests_to_run.push_back(std::shared_ptr<Test>(new Test(test)));
 	}
@@ -65,7 +69,7 @@ void Logger::init(const std::vector<std::string>& _tests_to_run, const std::vect
 	start_timestamp = std::chrono::system_clock::now();
 }
 
-void Logger::finish() {
+void Reporter::finish() {
 	finish_timestamp = std::chrono::system_clock::now();
 
 	print_statistics();
@@ -80,7 +84,7 @@ void Logger::finish() {
 	}
 }
 
-void Logger::prepare_environment() {
+void Reporter::prepare_environment() {
 	current_test = tests_to_run.front();
 	tests_to_run.pop_front();
 
@@ -93,7 +97,7 @@ void Logger::prepare_environment() {
 	current_test->start_timestamp = std::chrono::system_clock::now();
 }
 
-void Logger::run_test() {
+void Reporter::run_test() {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Running test "
@@ -101,7 +105,7 @@ void Logger::run_test() {
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::skip_failed_test(const std::string& failed_parent) {
+void Reporter::skip_failed_test(const std::string& failed_parent) {
 	std::cout
 		<< rang::fgB::red << progress()
 		<< " Skipping test "
@@ -117,7 +121,7 @@ void Logger::skip_failed_test(const std::string& failed_parent) {
 	current_test = nullptr;
 }
 
-void Logger::test_passed() {
+void Reporter::test_passed() {
 	current_test->stop_timestamp = std::chrono::system_clock::now();
 	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
 	std::cout
@@ -147,7 +151,7 @@ void Logger::test_passed() {
 	current_test = nullptr;
 }
 
-void Logger::test_failed() {
+void Reporter::test_failed() {
 	current_progress += progress_step;
 	current_test->stop_timestamp = std::chrono::system_clock::now();
 
@@ -172,34 +176,34 @@ void Logger::test_failed() {
 	current_test = nullptr;
 }
 
-void Logger::print_statistics()
+void Reporter::print_statistics()
 {
-	auto tests_durantion = duration_to_str(finish_timestamp - start_timestamp);
-	/*auto total_tests = succeeded_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
+	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
+	auto total_tests = passed_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
 
 	std::cout << rang::style::bold;
 	std::cout << rang::fg::blue;
-	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << time << std::endl;
+	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << tests_durantion << std::endl;
 	std::cout << "UP-TO-DATE: " << up_to_date_tests.size() << std::endl;
 	if (ignored_tests.size()) {
 		std::cout << "LOST CACHE, BUT SKIPPED: " << ignored_tests.size() << std::endl;
 		for (auto ignore: ignored_tests) {
-			std::cout << "\t -" << ignore->name.value() << std::endl;
+			std::cout << "\t -" << ignore->name << std::endl;
 		}
 	}
 	std::cout << rang::fg::green;
-	std::cout << "RUN SUCCESSFULLY: " << succeeded_tests.size() << std::endl;
+	std::cout << "RUN SUCCESSFULLY: " << passed_tests.size() << std::endl;
 	std::cout << rang::fg::red;
 	std::cout << "FAILED: " << failed_tests.size() << std::endl;
 	std::cout << rang::style::reset;
 	std::cout << rang::fg::red;
 	for (auto fail: failed_tests) {
-		std::cout << "\t -" << fail->name.value() << std::endl;
+		std::cout << "\t -" << fail->name << std::endl;
 	}
-	std::cout << rang::style::reset;*/
+	std::cout << rang::style::reset;
 }
 
-void Logger::create_controller(std::shared_ptr<Controller> controller) const {
+void Reporter::create_controller(std::shared_ptr<Controller> controller) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Creating " << controller->type() << " "
@@ -207,7 +211,7 @@ void Logger::create_controller(std::shared_ptr<Controller> controller) const {
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::take_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const {
+void Reporter::take_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Taking snapshot "
@@ -217,7 +221,7 @@ void Logger::take_snapshot(std::shared_ptr<Controller> controller, const std::st
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::restore_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const {
+void Reporter::restore_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Restoring snapshot "
@@ -227,7 +231,7 @@ void Logger::restore_snapshot(std::shared_ptr<Controller> controller, const std:
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::print(std::shared_ptr<VmController> vmc, const std::string& message) const {
+void Reporter::print(std::shared_ptr<VmController> vmc, const std::string& message) const {
 	std::cout
 		<< rang::fgB::blue << progress() << " "
 		<< rang::fg::yellow << vmc->name()
@@ -235,7 +239,7 @@ void Logger::print(std::shared_ptr<VmController> vmc, const std::string& message
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::start(std::shared_ptr<VmController> vmc) const {
+void Reporter::start(std::shared_ptr<VmController> vmc) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Starting virtual machine "
@@ -243,7 +247,7 @@ void Logger::start(std::shared_ptr<VmController> vmc) const {
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::stop(std::shared_ptr<VmController> vmc) const {
+void Reporter::stop(std::shared_ptr<VmController> vmc) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Stopping virtual machine "
@@ -251,7 +255,7 @@ void Logger::stop(std::shared_ptr<VmController> vmc) const {
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::shutdown(std::shared_ptr<VmController> vmc, const std::string& timeout) const {
+void Reporter::shutdown(std::shared_ptr<VmController> vmc, const std::string& timeout) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Shutting down virtual machine "
@@ -260,7 +264,7 @@ void Logger::shutdown(std::shared_ptr<VmController> vmc, const std::string& time
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times) const {
+void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Pressing key "
@@ -277,7 +281,7 @@ void Logger::press_key(std::shared_ptr<VmController> vmc, const std::string& key
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::type(std::shared_ptr<VmController> vmc, const std::string& text) const {
+void Reporter::type(std::shared_ptr<VmController> vmc, const std::string& text) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Typing "
@@ -287,7 +291,7 @@ void Logger::type(std::shared_ptr<VmController> vmc, const std::string& text) co
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::sleep(std::shared_ptr<VmController> vmc, const std::string& timeout) const {
+void Reporter::sleep(std::shared_ptr<VmController> vmc, const std::string& timeout) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Sleeping "
@@ -297,7 +301,7 @@ void Logger::sleep(std::shared_ptr<VmController> vmc, const std::string& timeout
 		<< " for " << timeout << rang::style::reset << std::endl;
 }
 
-void Logger::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const {
+void Reporter::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Waiting "
@@ -309,7 +313,7 @@ void Logger::wait(std::shared_ptr<VmController> vmc, const std::string& text, co
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const {
+void Reporter::check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Checking "
@@ -327,15 +331,19 @@ void Logger::check(std::shared_ptr<VmController> vmc, const std::string& text, c
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) const {
+void Reporter::macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Calling macro "
 		<< rang::fg::yellow << macro_name << "(";
 
-	for (auto& pair: params) {
+	for (auto it = params.begin(); it != params.end(); ++it) {
 		std::cout
-			<< pair.first << "=" << pair.second;
+			<< it->first << "=\"" << it->second << "\"";
+
+		if ((it + 1) != params.end()) {
+			std::cout << ", ";
+		}
 	}
 
 	std::cout << ")";
@@ -346,7 +354,7 @@ void Logger::macro_call(std::shared_ptr<VmController> vmc, const std::string& ma
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on) const {
+void Reporter::plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on) const {
 	std::string plug_or_unplug = is_on ? " Plugging " : " Unplugging ";
 	std::string into_or_from = is_on ? " into " : " from ";
 	std::cout
@@ -358,7 +366,7 @@ void Logger::plug(std::shared_ptr<VmController> vmc, const std::string& device, 
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout) const {
+void Reporter::exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Executing " << interpreter << " command in virtual machine "
@@ -367,7 +375,7 @@ void Logger::exec(std::shared_ptr<VmController> vmc, const std::string& interpre
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) const {
+void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) const {
 	std::string from_to = is_to_guest ? "to" : "from";
 
 	std::cout
@@ -381,7 +389,7 @@ void Logger::copy(std::shared_ptr<VmController> vmc, const std::string& from, co
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) const {
+void Reporter::mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) const {
 	std::cout
 		<< rang::fgB::blue << progress()
 		<< " Moving cursor "
@@ -392,7 +400,7 @@ void Logger::mouse_move(std::shared_ptr<VmController> vmc, const std::string& X,
 		<< rang::style::reset << std::endl;
 }
 
-void Logger::mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type) const {
+void Reporter::mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type) const {
 	std::cout
 		<< rang::fgB::blue << progress() << " "
 		<< click_type
@@ -401,15 +409,14 @@ void Logger::mouse_click(std::shared_ptr<VmController> vmc, const std::string& c
 		<< rang::style::reset << std::endl;
 }
 
-nlohmann::json Logger::create_json_report() const {
-	return nlohmann::json();
-	/*nlohmann::json report = nlohmann::json::object();
+nlohmann::json Reporter::create_json_report() const {
+	nlohmann::json report = nlohmann::json::object();
 	report["tests"] = nlohmann::json::array();
 
-	for (auto test: succeeded_tests) {
+	for (auto test: passed_tests) {
 		auto duration = test->stop_timestamp - test->start_timestamp;
 		nlohmann::json test_json = {
-			{"name", test->name.value()},
+			{"name", test->name},
 			{"description", test->description},
 			{"status", "success"},
 			{"is_cached", false},
@@ -422,7 +429,7 @@ nlohmann::json Logger::create_json_report() const {
 	for (auto test: failed_tests) {
 		auto duration = test->stop_timestamp - test->start_timestamp;
 		nlohmann::json test_json = {
-			{"name", test->name.value()},
+			{"name", test->name},
 			{"description", test->description},
 			{"status", "fail"},
 			{"is_cached", false},
@@ -435,7 +442,7 @@ nlohmann::json Logger::create_json_report() const {
 	for (auto test: up_to_date_tests) {
 		auto duration = test->stop_timestamp - test->start_timestamp;
 		nlohmann::json test_json = {
-			{"name", test->name.value()},
+			{"name", test->name},
 			{"description", test->description},
 			{"status", "success"},
 			{"is_cached", true},
@@ -458,5 +465,5 @@ nlohmann::json Logger::create_json_report() const {
 
 	report["stop_timestamp"] = ss2.str();
 
-	return report;*/
+	return report;
 }

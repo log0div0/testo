@@ -17,7 +17,7 @@ static void sleep(const std::string& interval) {
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
-VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg), logger(config) {
+VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg), reporter(config) {
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	cache_miss_policy = config.at("cache_miss_policy").get<std::string>();
 	test_spec = config.at("test_spec").get<std::string>();
@@ -411,22 +411,7 @@ void VisitorInterpreter::reset_cache() {
 void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 	setup_vars(program);
 
-	std::vector<std::string> tests_to_run_names, up_to_date_tests_names, ignored_tests_names;
-	for (auto test: tests_to_run) {
-		tests_to_run_names.push_back(test->name);
-	}
-	for (auto test: up_to_date_tests) {
-		up_to_date_tests_names.push_back(test->name);
-	}
-	for (auto test: ignored_tests) {
-		ignored_tests_names.push_back(test->name);
-	}
-	if ((tests_to_run.size() + up_to_date_tests.size()) == 0) {
-		std::cout << "There's no tests to run\n";
-		return;
-	}
-
-	logger.init(tests_to_run_names, up_to_date_tests_names, ignored_tests_names);
+	reporter.init(tests_to_run, up_to_date_tests, ignored_tests);
 
 	while (!tests_to_run.empty()) {
 		auto front = tests_to_run.front();
@@ -434,8 +419,8 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 		visit_test(front);
 	}
 
-	logger.finish();
-	if (logger.failed_tests.size()) {
+	reporter.finish();
+	if (reporter.failed_tests.size()) {
 		throw std::runtime_error("At least one of the tests failed");
 	}
 }
@@ -443,12 +428,12 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 	try {
 		//Ok, we're not cached and we need to run the test
-		logger.prepare_environment();
+		reporter.prepare_environment();
 		//Check if one of the parents failed. If it did, just fail
 		for (auto parent: test->parents) {
-			for (auto failed: logger.failed_tests) {
+			for (auto failed: reporter.failed_tests) {
 				if (parent->name.value() == failed->name) {
-					logger.skip_failed_test(parent->name);
+					reporter.skip_failed_test(parent->name);
 					return;
 				}
 			}
@@ -460,7 +445,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		for (auto parent: test->parents) {
 			for (auto controller: reg.get_all_controllers(parent)) {
 				if (controller->get_metadata("current_state") != parent->name.value()) {
-					logger.restore_snapshot(controller, parent->name);
+					reporter.restore_snapshot(controller, parent->name);
 					controller->restore_snapshot(parent->name.value());
 				}
 			}
@@ -500,13 +485,13 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 					controller->has_snapshot("_init") &&
 					controller->check_config_relevance())
 				{
-					logger.restore_snapshot(controller, "initial");
+					reporter.restore_snapshot(controller, "initial");
 					controller->restore_snapshot("_init");
 				} else {
-					logger.create_controller(controller);
+					reporter.create_controller(controller);
 					controller->create();
 
-					logger.take_snapshot(controller, "initial");
+					reporter.take_snapshot(controller, "initial");
 					controller->create_snapshot("_init", "", true);
 					controller->set_metadata("current_state", "_init");
 				}
@@ -521,7 +506,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 		}
 
-		logger.run_test();
+		reporter.run_test();
 
 		//Everything is in the right state so we could actually do the test
 		visit_command_block(test->cmd_block);
@@ -535,7 +520,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		for (auto controller: reg.get_all_controllers(test)) {
 			if (!controller->has_snapshot(test->name.value())) {
-				logger.take_snapshot(controller, test->name);
+				reporter.take_snapshot(controller, test->name);
 				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
 			}
 			controller->set_metadata("current_state", test->name.value());
@@ -563,11 +548,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		if (need_to_stop) {
 			stop_all_vms(test);
 		}
-		logger.test_passed();
+		reporter.test_passed();
 
 	} catch (const InterpreterException& error) {
 		std::cout << error << std::endl;
-		logger.test_failed();
+		reporter.test_failed();
 		stop_all_vms(test);
 	}
 }
@@ -642,7 +627,7 @@ void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
 	try {
 		std::string message = template_parser.resolve(print_action->message->text(), reg);
-		logger.print(vmc, message);
+		reporter.print(vmc, message);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(print_action, vmc));
 	}
@@ -654,7 +639,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 		if (text.size() == 0) {
 			return;
 		}
-		logger.type(vmc, text);
+		reporter.type(vmc, text);
 		for (auto c: text) {
 			auto buttons = charmap.find(c);
 			if (buttons == charmap.end()) {
@@ -731,13 +716,13 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 	try {
 		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
 		if (!wait->select_expr) {
-			logger.sleep(vmc, wait_for);
+			reporter.sleep(vmc, wait_for);
 			return sleep(wait->time_interval.value());
 		}
 
 		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);
 
-		logger.wait(vmc, text, wait_for);
+		reporter.wait(vmc, text, wait_for);
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
 
@@ -780,19 +765,19 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
 	try {
 		if (mouse_event->is_move_needed()) {
-			logger.mouse_move(vmc, mouse_event->dx_token, mouse_event->dy_token);
+			reporter.mouse_move(vmc, mouse_event->dx_token, mouse_event->dy_token);
 			vmc->vm->mouse_move(mouse_event->dx_token.value(), mouse_event->dy_token.value());
 		}
 
 		if (mouse_event->event.value() == "move") {
 			return;
 		} else if (mouse_event->event.value() == "click") {
-			logger.mouse_click(vmc, "Left Clicking");
+			reporter.mouse_click(vmc, "Left Clicking");
 
 			vmc->vm->mouse_set_buttons(MouseButton::Left);
 			vmc->vm->mouse_set_buttons(0);
 		} else if (mouse_event->event.value() == "rclick") {
-			logger.mouse_click(vmc, "Right Clicking");
+			reporter.mouse_click(vmc, "Right Clicking");
 
 			vmc->vm->mouse_set_buttons(MouseButton::Right);
 			vmc->vm->mouse_set_buttons(0);
@@ -808,7 +793,7 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec) {
 	uint32_t times = key_spec->get_times();
 
-	logger.press_key(vmc, key_spec->get_buttons_str(), times);
+	reporter.press_key(vmc, key_spec->get_buttons_str(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->get_buttons());
@@ -844,7 +829,7 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::
 	//the vmc while semantic analisys
 	auto nic = plug->name_token.value();
 
-	logger.plug(vmc, "nic", nic, plug->is_on());
+	reporter.plug(vmc, "nic", nic, plug->is_on());
 
 	auto nics = vmc->vm->nics();
 	if (nics.find(nic) == nics.end()) {
@@ -872,7 +857,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 
 	auto nic = plug->name_token.value();
 
-	logger.plug(vmc, "link", nic, plug->is_on());
+	reporter.plug(vmc, "link", nic, plug->is_on());
 
 	auto nics = vmc->vm->nics();
 	if (nics.find(nic) == nics.end()) {
@@ -897,7 +882,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
 
-	logger.plug(vmc, "flash drive", fdc->name(), true);
+	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	if (vmc->vm->is_flash_plugged(fdc->fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fdc->name()));
 	}
@@ -908,7 +893,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
 
-	logger.plug(vmc, "flash drive", fdc->name(), false);
+	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm->is_flash_plugged(fdc->fd)) {
 		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fdc->name()));
 	}
@@ -923,7 +908,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			path = plug->t.pos().file.parent_path() / path;
 		}
 
-		logger.plug(vmc, "dvd", path.generic_string(), true);
+		reporter.plug(vmc, "dvd", path.generic_string(), true);
 
 		if (vmc->vm->is_dvd_plugged()) {
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
@@ -936,14 +921,14 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 			// иногда у ОС получается открыть дисковод, иногда - нет
 			return;
 		}
-		logger.plug(vmc, "dvd", "", false);
+		reporter.plug(vmc, "dvd", "", false);
 		vmc->vm->unplug_dvd();
 	}
 }
 
 void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Start> start) {
 	try {
-		logger.start(vmc);
+		reporter.start(vmc);
 		vmc->vm->start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(start, vmc));
@@ -952,7 +937,7 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Stop> stop) {
 	try {
-		logger.stop(vmc);
+		reporter.stop(vmc);
 		vmc->vm->stop();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(stop, vmc));
@@ -963,7 +948,7 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown) {
 	try {
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
-		logger.shutdown(vmc, wait_for);
+		reporter.shutdown(vmc, wait_for);
 		vmc->vm->power_button();
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
 		while (std::chrono::system_clock::now() < deadline) {
@@ -1053,7 +1038,7 @@ static std::string build_python_script(const std::string& body) {
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
 		std::string wait_for = exec->time_interval ? exec->time_interval.value() : "10m";
-		logger.exec(vmc, exec->process_token.value(), wait_for);
+		reporter.exec(vmc, exec->process_token.value(), wait_for);
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -1121,7 +1106,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 		fs::path to = template_parser.resolve(copy->to->text(), reg);
 
 		std::string wait_for = copy->time_interval ? copy->time_interval.value() : "10m";
-		logger.copy(vmc, from.generic_string(), to.generic_string(), copy->is_to_guest(), wait_for);
+		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy->is_to_guest(), wait_for);
 
 		if (vmc->vm->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -1164,7 +1149,7 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 		reg.local_vars.pop_back();
 	});
 
-	logger.macro_call(vmc, macro_call->name(), params);
+	reporter.macro_call(vmc, macro_call->name(), params);
 	visit_action_block(vmc, macro_call->macro->action_block->action);
 }
 
@@ -1297,7 +1282,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		std::string check_for = check->time_interval ? check->time_interval.value() : "1ms";
 		auto text = template_parser.resolve(std::string(*check->select_expr), reg);
-		logger.check(vmc, text, check_for);
+		reporter.check(vmc, text, check_for);
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
 

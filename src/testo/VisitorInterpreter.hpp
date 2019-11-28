@@ -4,7 +4,7 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "TemplateParser.hpp"
-#include "Logger.hpp"
+#include "Reporter.hpp"
 #include <vector>
 #include <list>
 
@@ -113,13 +113,14 @@ struct VisitorInterpreter {
 	template_literals::Parser template_parser;
 
 private:
-	Logger logger;
+	Reporter reporter;
 
 	//settings
 	bool stop_on_fail;
 	std::string cache_miss_policy;
 	std::string test_spec, exclude, invalidate;
 
+	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
 	std::vector<std::shared_ptr<AST::Test>> ignored_tests;
 
@@ -155,7 +156,6 @@ private:
 	}
 	coro::Timer timer;
 
-	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	std::unordered_map<char, std::vector<std::string>> charmap;

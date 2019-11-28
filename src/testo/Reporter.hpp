@@ -6,19 +6,23 @@
 #include "backends/VmController.hpp"
 #include "Node.hpp"
 
-struct Logger {
+struct Reporter {
 	struct Test {
 		Test() = default;
-		Test(const std::string& test_name): name(test_name) {}
+		Test(std::shared_ptr<AST::Test> test): name(test->name), description(test->description) {}
 		std::string name;
+		std::string description;
 		std::chrono::system_clock::time_point start_timestamp;
 		std::chrono::system_clock::time_point stop_timestamp;
 	};
 
-	Logger() = delete;
-	Logger(const nlohmann::json& config);
+	Reporter() = delete;
+	Reporter(const nlohmann::json& config);
 
-	void init(const std::vector<std::string>& tests_to_run, const std::vector<std::string>& up_to_date_tests, const std::vector<std::string>& ignored_tests);
+	void init(const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,
+		const std::vector<std::shared_ptr<AST::Test>>& _up_to_date_tests,
+		const std::vector<std::shared_ptr<AST::Test>>& _ignored_tests);
+
 	void finish();
 
 	//test stuff
