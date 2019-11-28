@@ -12,12 +12,16 @@
 
 using namespace std::chrono_literals;
 
+Reporter reporter;
+
 static void sleep(const std::string& interval) {
 	coro::Timer timer;
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
-VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg), reporter(config) {
+VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
+	reporter = Reporter(config);
+
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	cache_miss_policy = config.at("cache_miss_policy").get<std::string>();
 	test_spec = config.at("test_spec").get<std::string>();

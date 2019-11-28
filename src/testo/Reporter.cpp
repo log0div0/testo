@@ -409,6 +409,10 @@ void Reporter::mouse_click(std::shared_ptr<VmController> vmc, const std::string&
 		<< rang::style::reset << std::endl;
 }
 
+void Reporter::exec_command_output(const std::string& text) const {
+	std::cout << text;
+}
+
 nlohmann::json Reporter::create_json_report() const {
 	nlohmann::json report = nlohmann::json::object();
 	report["tests"] = nlohmann::json::array();

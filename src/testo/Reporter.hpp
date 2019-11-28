@@ -16,7 +16,7 @@ struct Reporter {
 		std::chrono::system_clock::time_point stop_timestamp;
 	};
 
-	Reporter() = delete;
+	Reporter() = default;
 	Reporter(const nlohmann::json& config);
 
 	void init(const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,
@@ -57,6 +57,9 @@ struct Reporter {
 	void mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) const;
 	void mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type) const;
 
+	//negotiator
+	void exec_command_output(const std::string& text) const;
+
 	std::string progress() const {
 		std::stringstream ss;
 		ss << "[";
@@ -86,3 +89,4 @@ struct Reporter {
 	fs::path report_folder() const;
 };
 
+extern Reporter reporter;

@@ -113,8 +113,6 @@ struct VisitorInterpreter {
 	template_literals::Parser template_parser;
 
 private:
-	Reporter reporter;
-
 	//settings
 	bool stop_on_fail;
 	std::string cache_miss_policy;

@@ -1,4 +1,5 @@
 
+#include "../../Reporter.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "base64.hpp"
 #include <fmt/format.h>
@@ -126,10 +127,10 @@ int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_mil
 
 		auto result = response.at("result");
 		if (result.count("stderr")) {
-			std::cout << result.at("stderr").get<std::string>();
+			reporter.exec_command_output(result.at("stderr").get<std::string>());
 		}
 		if (result.count("stdout")) {
-			std::cout << result.at("stdout").get<std::string>();
+			reporter.exec_command_output(result.at("stdout").get<std::string>());
 		}
 		if (result.at("status").get<std::string>() == "finished") {
 			return result.at("exit_code").get<int>();
