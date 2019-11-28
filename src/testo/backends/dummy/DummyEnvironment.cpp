@@ -25,6 +25,10 @@ fs::path DummyEnvironment::flash_drives_metadata_dir() const {
 	return "./flash_drives_metadata";
 }
 
+fs::path DummyEnvironment::reports_dir() const {
+	return "./reports";
+}
+
 void DummyEnvironment::setup() {
 	if (!fs::exists(vm_metadata_dir())) {
 		if (!fs::create_directories(vm_metadata_dir())) {
@@ -41,6 +45,12 @@ void DummyEnvironment::setup() {
 	if (!fs::exists(flash_drives_metadata_dir())) {
 		if (!fs::create_directories(flash_drives_metadata_dir())) {
 			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_metadata_dir().generic_string());
+		}
+	}
+
+	if (!fs::exists(reports_dir())) {
+		if (!fs::create_directories(reports_dir())) {
+			throw std::runtime_error(std::string("Can't create directory: ") + reports_dir().generic_string());
 		}
 	}
 }

@@ -1,5 +1,6 @@
 
 #include "Reporter.hpp"
+#include "backends/Environment.hpp"
 #include <rang.hpp>
 #include <fstream>
 #include <fmt/format.h>
@@ -18,7 +19,7 @@ std::string duration_to_str(Duration duration) {
 }
 
 Reporter::Reporter(const nlohmann::json& config) {
-	json_report_file = config.at("json_report_file").get<std::string>();
+	prefix = config.at("prefix").get<std::string>();
 }
 
 void Reporter::init(
@@ -67,21 +68,20 @@ void Reporter::init(
 	}
 
 	start_timestamp = std::chrono::system_clock::now();
+	fs::create_directories(report_folder());
 }
 
 void Reporter::finish() {
 	finish_timestamp = std::chrono::system_clock::now();
 
 	print_statistics();
-	if (json_report_file.length()) {
-		auto path = fs::absolute(json_report_file);
-		auto report = create_json_report();
+	auto json_report_file = report_folder() / "report.json";
 
-		fs::create_directories(path.parent_path());
-
-		std::ofstream file(path);
-		file << report.dump(2);
-	}
+	auto path = fs::absolute(json_report_file);
+	auto report = create_json_report();
+	fs::create_directories(path.parent_path());
+	std::ofstream file(path);
+	file << report.dump(2);
 }
 
 void Reporter::prepare_environment() {
@@ -466,4 +466,19 @@ nlohmann::json Reporter::create_json_report() const {
 	report["stop_timestamp"] = ss2.str();
 
 	return report;
+}
+
+fs::path Reporter::report_folder() const {
+	time_t tt = std::chrono::system_clock::to_time_t(start_timestamp);
+	tm local_tm = *localtime(&tt);
+	std::stringstream result;
+	result << prefix;
+	result << local_tm.tm_year + 1900 << '-';
+	result << local_tm.tm_mon + 1 << '-';
+	result << local_tm.tm_mday << '_';
+	result << local_tm.tm_hour << ':';
+	result << local_tm.tm_min << ':';
+	result << local_tm.tm_sec;
+
+	return env->reports_dir() / result.str();
 }

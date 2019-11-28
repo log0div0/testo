@@ -16,6 +16,7 @@ struct DummyEnvironment: Environment {
 	fs::path vm_metadata_dir() const override;
 	fs::path network_metadata_dir() const override;
 	fs::path flash_drives_metadata_dir() const override;
+	fs::path reports_dir() const override;
 
 	void setup() override;
 	void cleanup() override;

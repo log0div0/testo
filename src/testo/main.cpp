@@ -36,7 +36,6 @@ struct console_args {
 	std::string exclude;
 	std::string invalidate;
 	std::string cache_miss_policy;
-	std::string json_report_file;
 	std::string hypervisor;
 
 	std::vector<std::string> params_names;
@@ -151,7 +150,6 @@ int run_mode() {
 		{"test_spec", args.test_spec},
 		{"exclude", args.exclude},
 		{"invalidate", args.invalidate},
-		{"json_report_file", args.json_report_file},
 		{"prefix", args.prefix},
 		{"params", params}
 	};
@@ -200,7 +198,6 @@ int do_main(int argc, char** argv) {
 		(option("--invalidate") & value("wildcard pattern", args.invalidate)) % "Invalidate specific tests",
 		(option("--cache_miss_policy") & value("cache miss policy", args.cache_miss_policy))
 			% "Apply some policy when a test loses its cache (accept, skip_branch, abort)",
-		(option("--json_report") & value("output file", args.json_report_file)) % "Generate json-formatted statistics report",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 

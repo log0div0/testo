@@ -67,6 +67,8 @@ struct Reporter {
 		return ss.str();
 	}
 
+	std::string prefix;
+
 	std::list<std::shared_ptr<Test>> tests_to_run;
 	std::vector<std::shared_ptr<Test>> passed_tests;
 	std::vector<std::shared_ptr<Test>> failed_tests;
@@ -80,6 +82,7 @@ struct Reporter {
 
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point finish_timestamp;
-	std::string json_report_file;
+
+	fs::path report_folder() const;
 };
 

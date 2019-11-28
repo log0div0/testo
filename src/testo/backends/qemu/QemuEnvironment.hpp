@@ -25,6 +25,10 @@ struct QemuEnvironment : public Environment {
 		return "/var/lib/libvirt/testo/fd_metadata";
 	}
 
+	fs::path reports_dir() const override {
+		return "/var/lib/libvirt/testo/reports";
+	}
+
 	QemuEnvironment();
 	~QemuEnvironment();
 

@@ -85,6 +85,12 @@ void QemuEnvironment::setup() {
 			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_metadata_dir().generic_string());
 		}
 	}
+
+	if (!fs::exists(reports_dir())) {
+		if (!fs::create_directories(reports_dir())) {
+			throw std::runtime_error(std::string("Can't create directory: ") + reports_dir().generic_string());
+		}
+	}
 }
 
 void QemuEnvironment::cleanup() {
