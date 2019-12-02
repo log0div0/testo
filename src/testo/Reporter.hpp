@@ -3,6 +3,7 @@
 
 #include <nlohmann/json.hpp>
 #include <sstream>
+#include <fstream>
 #include "backends/VmController.hpp"
 #include "Node.hpp"
 
@@ -10,10 +11,12 @@ struct Reporter {
 	struct Test {
 		Test() = default;
 		Test(std::shared_ptr<AST::Test> test): name(test->name), description(test->description) {}
+		Test(std::shared_ptr<AST::Test> test, fs::path report_folder): name(test->name), description(test->description), output_file(report_folder / test->name.value()) {}
 		std::string name;
 		std::string description;
 		std::chrono::system_clock::time_point start_timestamp;
 		std::chrono::system_clock::time_point stop_timestamp;
+		std::ofstream output_file;
 	};
 
 	Reporter() = default;
@@ -36,29 +39,29 @@ struct Reporter {
 	nlohmann::json create_json_report() const;
 
 	//Controller stuff
-	void create_controller(std::shared_ptr<Controller> controller) const;
-	void take_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const;
-	void restore_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const;
+	void create_controller(std::shared_ptr<Controller> controller);
+	void take_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot);
+	void restore_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot);
 
 	//vm actions
-	void print(std::shared_ptr<VmController> vmc, const std::string& message) const;
-	void start(std::shared_ptr<VmController> vmc) const;
-	void stop(std::shared_ptr<VmController> vmc) const;
-	void shutdown(std::shared_ptr<VmController> vmc, const std::string& timeout) const;
-	void press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times) const;
-	void type(std::shared_ptr<VmController> vmc, const std::string& text) const;
-	void sleep(std::shared_ptr<VmController> vmc, const std::string& timeout) const;
-	void wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const;
-	void check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const;
-	void macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) const;
-	void plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on) const;
-	void exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout) const;
-	void copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) const;
-	void mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) const;
-	void mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type) const;
+	void print(std::shared_ptr<VmController> vmc, const std::string& message);
+	void start(std::shared_ptr<VmController> vmc);
+	void stop(std::shared_ptr<VmController> vmc);
+	void shutdown(std::shared_ptr<VmController> vmc, const std::string& timeout);
+	void press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times);
+	void type(std::shared_ptr<VmController> vmc, const std::string& text);
+	void sleep(std::shared_ptr<VmController> vmc, const std::string& timeout);
+	void wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout);
+	void check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout);
+	void macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
+	void plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on);
+	void exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout);
+	void copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
+	void mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y);
+	void mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type);
 
 	//negotiator
-	void exec_command_output(const std::string& text) const;
+	void exec_command_output(const std::string& text);
 
 	std::string progress() const {
 		std::stringstream ss;
@@ -69,6 +72,18 @@ struct Reporter {
 		ss << '%' << "]";
 		return ss.str();
 	}
+
+
+	enum style {
+		regular,
+		blue,
+		magenta,
+		yellow,
+		green,
+		red
+	};
+
+	void report(const std::string& message, style color, bool is_bold = false);
 
 	std::string prefix;
 
@@ -86,7 +101,8 @@ struct Reporter {
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point finish_timestamp;
 
-	fs::path report_folder() const;
+	fs::path report_folder;
+	std::ofstream summary_output_file;
 };
 
 extern Reporter reporter;

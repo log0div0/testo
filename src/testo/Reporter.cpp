@@ -27,8 +27,27 @@ void Reporter::init(
 		const std::vector<std::shared_ptr<AST::Test>>& _up_to_date_tests,
 		const std::vector<std::shared_ptr<AST::Test>>& _ignored_tests)
 {
+	start_timestamp = std::chrono::system_clock::now();
+
+	time_t tt = std::chrono::system_clock::to_time_t(start_timestamp);
+	tm local_tm = *localtime(&tt);
+	std::stringstream time_spec;
+	time_spec << prefix;
+	time_spec << local_tm.tm_year + 1900 << '-';
+	time_spec << local_tm.tm_mon + 1 << '-';
+	time_spec << local_tm.tm_mday << '_';
+	time_spec << local_tm.tm_hour << ':';
+	time_spec << local_tm.tm_min << ':';
+	time_spec << local_tm.tm_sec;
+
+	report_folder = env->reports_dir() / time_spec.str();
+
+	fs::create_directories(report_folder);
+
+	summary_output_file = std::ofstream(report_folder / "summary.txt");
+
 	for (auto test: _tests_to_run) {
-		tests_to_run.push_back(std::shared_ptr<Test>(new Test(test)));
+		tests_to_run.push_back(std::shared_ptr<Test>(new Test(test, report_folder)));
 	}
 	for (auto test: _up_to_date_tests) {
 		up_to_date_tests.push_back(std::shared_ptr<Test>(new Test(test)));
@@ -45,37 +64,27 @@ void Reporter::init(
 	}
 
 	if (up_to_date_tests.size()) {
-		std::cout << rang::fgB::blue << rang::style::bold;
-		std::cout << "UP-TO-DATE TESTS:" << std::endl;
-		std::cout << rang::style::reset;
-		std::cout << rang::fgB::magenta;
+		report("UP-TO-DATE TESTS:\n", blue, true);
 		for (auto test: up_to_date_tests) {
 			current_progress += progress_step;
-			std::cout << test->name << std::endl;
+			report(fmt::format("{}\n", test->name), magenta);
 		}
-		std::cout << rang::style::reset;
 	}
 
 	if (tests_to_run.size()) {
 		std::cout << rang::fgB::blue << rang::style::bold;
-		std::cout << "TESTS TO RUN:" << std::endl;
-		std::cout << rang::style::reset;
-		std::cout << rang::fgB::magenta;
+		report("TESTS TO RUN:\n", style::blue, true);
 		for (auto test: tests_to_run) {
-			std::cout << test->name << std::endl;
+			report(fmt::format("{}\n", test->name), magenta);
 		}
-		std::cout << rang::style::reset;
 	}
-
-	start_timestamp = std::chrono::system_clock::now();
-	fs::create_directories(report_folder());
 }
 
 void Reporter::finish() {
 	finish_timestamp = std::chrono::system_clock::now();
 
 	print_statistics();
-	auto json_report_file = report_folder() / "report.json";
+	auto json_report_file = report_folder / "report.json";
 
 	auto path = fs::absolute(json_report_file);
 	auto report = create_json_report();
@@ -88,11 +97,8 @@ void Reporter::prepare_environment() {
 	current_test = tests_to_run.front();
 	tests_to_run.pop_front();
 
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Preparing the environment for test "
-		<< rang::fg::yellow << current_test->name
-		<< rang::style::reset << std::endl;
+	report(fmt::format("{} Preparing the environment for test ", progress()), blue);
+	report(fmt::format("{}\n", current_test->name), yellow);
 
 	current_test->start_timestamp = std::chrono::system_clock::now();
 }
@@ -106,32 +112,27 @@ void Reporter::run_test() {
 }
 
 void Reporter::skip_failed_test(const std::string& failed_parent) {
-	std::cout
-		<< rang::fgB::red << progress()
-		<< " Skipping test "
-		<< rang::fg::yellow << current_test->name
-		<< rang::fgB::red << " because his parent "
-		<< rang::fg::yellow << failed_parent
-		<< rang::fgB::red << " failed"
-		<< rang::style::reset << std::endl;
-
 	current_progress += progress_step;
 	current_test->stop_timestamp = std::chrono::system_clock::now();
+
+	report(fmt::format("{} Skipping test ", progress()), red);
+	report(current_test->name, yellow);
+	report(" because his parent ", red);
+	report(failed_parent, yellow);
+	report(" failed\n", red);
+
 	failed_tests.push_back(current_test);
 	current_test = nullptr;
 }
 
 void Reporter::test_passed() {
+	current_progress += progress_step;
 	current_test->stop_timestamp = std::chrono::system_clock::now();
 	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
-	std::cout
-		<< rang::fgB::green << progress()
-		<< " Test " << rang::fg::yellow << current_test->name
-		<< rang::fgB::green << " PASSED in "
-		<< duration
-		<< rang::style::reset << std::endl;
 
-	current_progress += progress_step;
+	report(fmt::format("{} Test ", progress()), green, true);
+	report(current_test->name, yellow, true);
+	report(fmt::format(" PASSED in {}\n", duration), green, true);
 
 	for (auto it: up_to_date_tests) {
 		if (it->name == current_test->name) {
@@ -154,14 +155,11 @@ void Reporter::test_passed() {
 void Reporter::test_failed() {
 	current_progress += progress_step;
 	current_test->stop_timestamp = std::chrono::system_clock::now();
+	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
 
-	std::cout
-		<< rang::fgB::red << progress()
-		<< " Test "
-		<< rang::fg::yellow << current_test->name
-		<< rang::fgB::red << " FAILED in "
-		//<< time
-		<< rang::style::reset << std::endl;
+	report(fmt::format("{} Test ", progress()), red, true);
+	report(current_test->name, yellow, true);
+	report(fmt::format(" FAILED in {}\n", duration), red, true);
 
 	bool already_failed = false;
 	for (auto it: failed_tests) {
@@ -181,236 +179,164 @@ void Reporter::print_statistics()
 	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
 	auto total_tests = passed_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
 
-	std::cout << rang::style::bold;
-	std::cout << rang::fg::blue;
-	std::cout << "PROCESSED TOTAL " << total_tests << " TESTS IN " << tests_durantion << std::endl;
-	std::cout << "UP-TO-DATE: " << up_to_date_tests.size() << std::endl;
+	report(fmt::format("PROCESSED TOTAL {} TESTS IN {}\n", total_tests, tests_durantion), blue, true);
+	report(fmt::format("UP-TO-DATE: {}\n", up_to_date_tests.size()), blue, true);
+
 	if (ignored_tests.size()) {
-		std::cout << "LOST CACHE, BUT SKIPPED: " << ignored_tests.size() << std::endl;
+		report(fmt::format("LOST CACHE, BUT SKIPPED: {}\n", ignored_tests.size()), yellow, true);
 		for (auto ignore: ignored_tests) {
-			std::cout << "\t -" << ignore->name << std::endl;
+			report(fmt::format("\t -{}\n", ignore->name), yellow);
 		}
 	}
-	std::cout << rang::fg::green;
-	std::cout << "RUN SUCCESSFULLY: " << passed_tests.size() << std::endl;
-	std::cout << rang::fg::red;
-	std::cout << "FAILED: " << failed_tests.size() << std::endl;
-	std::cout << rang::style::reset;
-	std::cout << rang::fg::red;
+	report(fmt::format("RUN SUCCESSFULLY: {}\n", passed_tests.size()), green, true);
+	report(fmt::format("FAILED: {}\n", failed_tests.size()), red, true);
 	for (auto fail: failed_tests) {
-		std::cout << "\t -" << fail->name << std::endl;
+		report(fmt::format("\t -{}\n", fail->name), red);
 	}
-	std::cout << rang::style::reset;
 }
 
-void Reporter::create_controller(std::shared_ptr<Controller> controller) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Creating " << controller->type() << " "
-		<< rang::fg::yellow << controller->name()
-		<< rang::style::reset << std::endl;
+void Reporter::create_controller(std::shared_ptr<Controller> controller) {
+	report(fmt::format("{} Creating {} ", progress(), controller->type()), blue);
+	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
-void Reporter::take_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Taking snapshot "
-		<< rang::fg::yellow << snapshot
-		<< rang::fgB::blue << " for " << controller->type() << " "
-		<< rang::fg::yellow << controller->name()
-		<< rang::style::reset << std::endl;
+void Reporter::take_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) {
+	report(fmt::format("{} Taking snapshot ", progress()), blue);
+	report(snapshot, yellow);
+	report(fmt::format(" for {} ", controller->type()), blue);
+	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
-void Reporter::restore_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Restoring snapshot "
-		<< rang::fg::yellow << snapshot
-		<< rang::fgB::blue << " for " << controller->type() << " "
-		<< rang::fg::yellow << controller->name()
-		<< rang::style::reset << std::endl;
+void Reporter::restore_snapshot(std::shared_ptr<Controller> controller, const std::string& snapshot) {
+	report(fmt::format("{} Restoring snapshot ", progress()), blue);
+	report(snapshot, yellow);
+	report(fmt::format(" for {} ", controller->type()), blue);
+	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
-void Reporter::print(std::shared_ptr<VmController> vmc, const std::string& message) const {
-	std::cout
-		<< rang::fgB::blue << progress() << " "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue << ": " << message
-		<< rang::style::reset << std::endl;
+void Reporter::print(std::shared_ptr<VmController> vmc, const std::string& message) {
+	report(progress() + " ", blue);
+	report(vmc->name(), yellow);
+	report(fmt::format(" :{}\n", message), blue);
 }
 
-void Reporter::start(std::shared_ptr<VmController> vmc) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Starting virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+void Reporter::start(std::shared_ptr<VmController> vmc) {
+	report(fmt::format("{} Starting virtual machine ", progress()), blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::stop(std::shared_ptr<VmController> vmc) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Stopping virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+void Reporter::stop(std::shared_ptr<VmController> vmc) {
+	report(fmt::format("{} Stopping virtual machine ", progress()), blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::shutdown(std::shared_ptr<VmController> vmc, const std::string& timeout) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Shutting down virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue << " with timeout " << timeout
-		<< rang::style::reset << std::endl;
+void Reporter::shutdown(std::shared_ptr<VmController> vmc, const std::string& timeout) {
+	report(fmt::format("{} Shutting down virtual machine ", progress()), blue);
+	report(fmt::format("{}", vmc->name()), yellow);
+	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
 
-void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Pressing key "
-		<< rang::fg::yellow << key
-		<< rang::fgB::blue;
+void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times) {
+	report(fmt::format("{} Pressing key ", progress()), blue);
+	report(fmt::format("{} ", key), yellow);
 
 	if (times > 1) {
-		std::cout << " " << times << " times";
+		report(fmt::format("{} times ", times), blue);
 	}
 
-	std::cout
-		<< " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+	report("on virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::type(std::shared_ptr<VmController> vmc, const std::string& text) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Typing "
-		<< rang::fg::yellow << "\"" << text << "\""
-		<< rang::fgB::blue << " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+void Reporter::type(std::shared_ptr<VmController> vmc, const std::string& text) {
+	report(fmt::format("{} Typing ", progress()), blue);
+	report(fmt::format("\"{}\" ", text), yellow);
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+
 }
 
-void Reporter::sleep(std::shared_ptr<VmController> vmc, const std::string& timeout) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Sleeping "
-		<< rang::fgB::blue << "in virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue
-		<< " for " << timeout << rang::style::reset << std::endl;
+void Reporter::sleep(std::shared_ptr<VmController> vmc, const std::string& timeout) {
+	report(fmt::format("{} Sleeping in virtual machine ", progress()), blue);
+	report(fmt::format("{}", vmc->name()), yellow);
+	report(fmt::format(" for {}\n", timeout), blue);
 }
 
-void Reporter::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Waiting "
-		<< rang::fg::yellow << text
-		<< rang::fgB::blue << " for " << timeout
-		<< " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue
-		<< rang::style::reset << std::endl;
+void Reporter::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) {
+	report(fmt::format("{} Waiting ", progress()), blue);
+	report(fmt::format("{} ", text), yellow);
+	report(fmt::format("for {} in virtual machine ", timeout), blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Checking "
-		<< rang::fg::yellow
-		<< text
-		<< rang::fgB::blue;
-
+void Reporter::check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) {
+	report(fmt::format("{} Checking ", progress()), blue);
+	report(fmt::format("{} ", text), yellow);
 	if (timeout != "1ms") {
-		std::cout << " for " << timeout;
+		report(fmt::format(" for {} ", timeout), blue);
 	}
-
-	std::cout
-		<< " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+	report(fmt::format("in virtual machine "), blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Calling macro "
-		<< rang::fg::yellow << macro_name << "(";
+void Reporter::macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
+	report(fmt::format("{} Calling macro ", progress()), blue);
+	report(fmt::format("{}(", macro_name), yellow);
 
 	for (auto it = params.begin(); it != params.end(); ++it) {
-		std::cout
-			<< it->first << "=\"" << it->second << "\"";
+		report(fmt::format("{}=\"{}\"", it->first, it->second), yellow);
 
 		if ((it + 1) != params.end()) {
-			std::cout << ", ";
+			report(", ", yellow);
 		}
 	}
 
-	std::cout << ")";
-
-	std::cout
-		<< rang::fgB::blue << " in virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+	report(")", yellow);
+	report(" in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on) const {
-	std::string plug_or_unplug = is_on ? " Plugging " : " Unplugging ";
-	std::string into_or_from = is_on ? " into " : " from ";
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< plug_or_unplug  << device
-		<< rang::fg::yellow << " " << device_name
-		<< rang::fgB::blue << into_or_from << "virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+void Reporter::plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on) {
+	std::string plug_or_unplug = is_on ? "Plugging" : "Unplugging";
+	std::string into_or_from = is_on ? "into" : "from";
+	report(fmt::format("{} {} {} ", progress(), plug_or_unplug, device), blue);
+	report(fmt::format("{} ", device_name), yellow);
+	report(fmt::format("{} virtual machine ", into_or_from), blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Executing " << interpreter << " command in virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue << " with timeout " << timeout
-		<< rang::style::reset << std::endl;
+void Reporter::exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout) {
+	report(fmt::format("{} Executing {} command in virtual machine ", progress(), interpreter), blue);
+	report(fmt::format("{}", vmc->name()), yellow);
+	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
 
-void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) const {
+void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) {
 	std::string from_to = is_to_guest ? "to" : "from";
 
-	std::cout
-		<< rang::fgB::blue << progress() << " Copying "
-		<< rang::fg::yellow << from
-		<< rang::fgB::blue << " " << from_to << " virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::fgB::blue << " in directory "
-		<< rang::fg::yellow << to
-		<< rang::fgB::blue << " with timeout " << timeout
-		<< rang::style::reset << std::endl;
+	report(fmt::format("{} Copying ", progress()), blue);
+	report(fmt::format("{} ", from), yellow);
+	report(fmt::format("{} virtual machine ", from_to), blue);
+	report(fmt::format("{} ", vmc->name()), yellow);
+	report(fmt::format("to destination "), blue);
+	report(fmt::format("{} ", to), yellow);
+	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
 
-void Reporter::mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) const {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Moving cursor "
-		<< rang::fg::yellow << "X:" << X
-		<< " Y:" << Y
-		<< rang::fgB::blue << " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+void Reporter::mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) {
+	report(fmt::format("{} Moving cursor ", progress()), blue);
+	report(fmt::format("X: {} Y: {} ", X, Y), yellow);
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type) const {
-	std::cout
-		<< rang::fgB::blue << progress() << " "
-		<< click_type
-		<< rang::fgB::blue << " on virtual machine "
-		<< rang::fg::yellow << vmc->name()
-		<< rang::style::reset << std::endl;
+void Reporter::mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type) {
+	report(fmt::format("{} {} on virtual machine ", progress(), click_type), blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::exec_command_output(const std::string& text) const {
-	std::cout << text;
+void Reporter::exec_command_output(const std::string& text) {
+	report(text, regular);
 }
 
 nlohmann::json Reporter::create_json_report() const {
@@ -472,17 +398,38 @@ nlohmann::json Reporter::create_json_report() const {
 	return report;
 }
 
-fs::path Reporter::report_folder() const {
-	time_t tt = std::chrono::system_clock::to_time_t(start_timestamp);
-	tm local_tm = *localtime(&tt);
-	std::stringstream result;
-	result << prefix;
-	result << local_tm.tm_year + 1900 << '-';
-	result << local_tm.tm_mon + 1 << '-';
-	result << local_tm.tm_mday << '_';
-	result << local_tm.tm_hour << ':';
-	result << local_tm.tm_min << ':';
-	result << local_tm.tm_sec;
+void Reporter::report(const std::string& message, style color, bool is_bold) {
+	std::cout << rang::style::reset;
 
-	return env->reports_dir() / result.str();
+	switch (color) {
+		case regular:
+			break;
+		case blue:
+			std::cout << rang::fgB::blue;
+			break;
+		case magenta:
+			std::cout << rang::fgB::magenta;
+			break;
+		case yellow:
+			std::cout << rang::fg::yellow;
+			break;
+		case green:
+			std::cout << rang::fg::green;
+			break;
+		case red:
+			std::cout << rang::fg::red;
+			break;
+	}
+
+	if (is_bold) {
+		std::cout << rang::style::bold;
+	}
+
+	std::cout << message;
+
+	if (current_test) {
+		current_test->output_file << message;
+	} else {
+		summary_output_file << message;
+	}
 }
