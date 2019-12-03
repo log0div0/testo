@@ -33,7 +33,7 @@ struct Reporter {
 	void run_test();
 	void skip_failed_test(const std::string& failed_parent);
 	void test_passed();
-	void test_failed();
+	void test_failed(const std::string& error_message);
 
 	void print_statistics();
 	nlohmann::json create_json_report() const;
@@ -62,6 +62,8 @@ struct Reporter {
 
 	//negotiator
 	void exec_command_output(const std::string& text);
+
+	void save_screenshot(std::shared_ptr<VmController> vmc);
 
 	std::string progress() const {
 		std::stringstream ss;

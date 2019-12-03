@@ -555,8 +555,9 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		reporter.test_passed();
 
 	} catch (const InterpreterException& error) {
-		std::cout << error << std::endl;
-		reporter.test_failed();
+		std::stringstream ss;
+		ss << error << std::endl;
+		reporter.test_failed(ss.str());
 		stop_all_vms(test);
 	}
 }
@@ -748,6 +749,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			}
 		}
 
+		reporter.save_screenshot(vmc);
 		throw std::runtime_error("Wait timeout");
 
 	} catch (const std::exception& error) {

@@ -107,8 +107,8 @@ struct TextDetector {
 		const std::string& background = {});
 
 	static TextDetector& instance() {
-			static TextDetector text_detector;
-			return text_detector;
+		static TextDetector text_detector;
+		return text_detector;
 	}
 
 private:

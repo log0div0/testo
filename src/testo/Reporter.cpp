@@ -115,11 +115,11 @@ void Reporter::skip_failed_test(const std::string& failed_parent) {
 	current_progress += progress_step;
 	current_test->stop_timestamp = std::chrono::system_clock::now();
 
-	report(fmt::format("{} Skipping test ", progress()), red);
-	report(current_test->name, yellow);
-	report(" because his parent ", red);
-	report(failed_parent, yellow);
-	report(" failed\n", red);
+	report(fmt::format("{} Skipping test ", progress()), red, true);
+	report(current_test->name, yellow, true);
+	report(" because his parent ", red, true);
+	report(failed_parent, yellow, true);
+	report(" failed\n", red, true);
 
 	failed_tests.push_back(current_test);
 	current_test = nullptr;
@@ -152,7 +152,9 @@ void Reporter::test_passed() {
 	current_test = nullptr;
 }
 
-void Reporter::test_failed() {
+void Reporter::test_failed(const std::string& error_message) {
+	report(fmt::format("{}", error_message), red, true);
+
 	current_progress += progress_step;
 	current_test->stop_timestamp = std::chrono::system_clock::now();
 	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
@@ -339,6 +341,13 @@ void Reporter::exec_command_output(const std::string& text) {
 	report(text, regular);
 }
 
+void Reporter::save_screenshot(std::shared_ptr<VmController> vmc) {
+	auto screenshot = vmc->vm->screenshot();
+	screenshot.write_png(report_folder / (current_test->name + "_wait_failed.png"));
+	report(fmt::format("{} Saved screenshot from vm ", progress()), blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
 nlohmann::json Reporter::create_json_report() const {
 	nlohmann::json report = nlohmann::json::object();
 	report["tests"] = nlohmann::json::array();
@@ -432,4 +441,6 @@ void Reporter::report(const std::string& message, style color, bool is_bold) {
 	} else {
 		summary_output_file << message;
 	}
+
+	std::cout << rang::style::reset;
 }
