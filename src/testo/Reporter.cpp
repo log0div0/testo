@@ -19,7 +19,13 @@ std::string duration_to_str(Duration duration) {
 }
 
 Reporter::Reporter(const nlohmann::json& config) {
-	prefix = config.at("prefix").get<std::string>();
+	report_folder = config.at("report_folder").get<std::string>();
+	report_logs = config.at("report_logs").get<bool>();
+	report_screenshots = config.at("report_screenshots").get<bool>();
+
+	if ((report_logs || report_screenshots) && report_folder.empty()) {
+		throw std::runtime_error("--report_logs and --report_screenshots arguments are valid only with specified --report_folder");
+	}
 }
 
 void Reporter::init(
@@ -29,25 +35,25 @@ void Reporter::init(
 {
 	start_timestamp = std::chrono::system_clock::now();
 
-	time_t tt = std::chrono::system_clock::to_time_t(start_timestamp);
-	tm local_tm = *localtime(&tt);
-	std::stringstream time_spec;
-	time_spec << prefix;
-	time_spec << local_tm.tm_year + 1900 << '-';
-	time_spec << local_tm.tm_mon + 1 << '-';
-	time_spec << local_tm.tm_mday << '_';
-	time_spec << local_tm.tm_hour << ':';
-	time_spec << local_tm.tm_min << ':';
-	time_spec << local_tm.tm_sec;
-
-	report_folder = env->reports_dir() / time_spec.str();
-
-	fs::create_directories(report_folder);
-
-	summary_output_file = std::ofstream(report_folder / "summary.txt");
+	if (!report_folder.empty()) {
+		if (fs::exists(report_folder)) {
+			if (!fs::is_directory(report_folder)) {
+				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a folder");
+			}
+			fs::remove_all(report_folder);
+		}
+		fs::create_directories(report_folder);
+		if (report_logs) {
+			summary_output_file = std::ofstream(report_folder / "summary.txt");
+		}
+	}
 
 	for (auto test: _tests_to_run) {
-		tests_to_run.push_back(std::shared_ptr<Test>(new Test(test, report_folder)));
+		if (report_logs) {
+			tests_to_run.push_back(std::shared_ptr<Test>(new Test(test, report_folder)));
+		} else {
+			tests_to_run.push_back(std::shared_ptr<Test>(new Test(test)));
+		}
 	}
 	for (auto test: _up_to_date_tests) {
 		up_to_date_tests.push_back(std::shared_ptr<Test>(new Test(test)));
@@ -84,13 +90,15 @@ void Reporter::finish() {
 	finish_timestamp = std::chrono::system_clock::now();
 
 	print_statistics();
-	auto json_report_file = report_folder / "report.json";
+	if (!report_folder.empty()) {
+		auto json_report_file = report_folder / "report.json";
 
-	auto path = fs::absolute(json_report_file);
-	auto report = create_json_report();
-	fs::create_directories(path.parent_path());
-	std::ofstream file(path);
-	file << report.dump(2);
+		auto path = fs::absolute(json_report_file);
+		auto report = create_json_report();
+		fs::create_directories(path.parent_path());
+		std::ofstream file(path);
+		file << report.dump(2);
+	}
 }
 
 void Reporter::prepare_environment() {
@@ -436,10 +444,12 @@ void Reporter::report(const std::string& message, style color, bool is_bold) {
 
 	std::cout << message;
 
-	if (current_test) {
-		current_test->output_file << message;
-	} else {
-		summary_output_file << message;
+	if (report_logs) {
+		if (current_test) {
+			current_test->output_file << message;
+		} else {
+			summary_output_file << message;
+		}
 	}
 
 	std::cout << rang::style::reset;

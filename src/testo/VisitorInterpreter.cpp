@@ -749,7 +749,9 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			}
 		}
 
-		reporter.save_screenshot(vmc);
+		if (reporter.report_screenshots) {
+			reporter.save_screenshot(vmc);
+		}
 		throw std::runtime_error("Wait timeout");
 
 	} catch (const std::exception& error) {
