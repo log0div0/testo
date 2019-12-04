@@ -4,6 +4,7 @@
 #include "Node.hpp"
 #include "Register.hpp"
 #include "TemplateParser.hpp"
+#include "Reporter.hpp"
 #include <vector>
 #include <list>
 
@@ -117,23 +118,9 @@ private:
 	std::string cache_miss_policy;
 	std::string test_spec, exclude, invalidate;
 
-	std::string progress() const {
-		std::stringstream ss;
-		ss << "[";
-		ss << std::setw(3);
-		ss << std::round(current_progress);
-		ss << std::setw(0);
-		ss << '%' << "]";
-		return ss.str();
-	}
-
-	std::vector<std::shared_ptr<AST::Test>> succeeded_tests;
-	std::vector<std::shared_ptr<AST::Test>> failed_tests;
+	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
 	std::vector<std::shared_ptr<AST::Test>> ignored_tests;
-
-	nlohmann::json create_json_report() const;
-	void print_statistics() const;
 
 	void setup_vars(std::shared_ptr<AST::Program> program);
 	void reset_cache();
@@ -163,18 +150,9 @@ private:
 			}
 		}
 	}
-
-	float current_progress = 0;
-	float progress_step = 0;
-
 	coro::Timer timer;
 
-	std::chrono::system_clock::time_point start_timestamp;
-
-	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	std::unordered_map<char, std::vector<std::string>> charmap;
-
-	std::string json_report_file;
 };

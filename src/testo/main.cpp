@@ -36,14 +36,16 @@ struct console_args {
 	std::string exclude;
 	std::string invalidate;
 	std::string cache_miss_policy;
-	std::string json_report_file;
 	std::string hypervisor;
+	std::string report_folder;
 
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
 
 	bool show_help = false;
 	bool stop_on_fail = false;
+	bool report_logs = false;
+	bool report_screenshots = false;
 };
 
 console_args args;
@@ -151,7 +153,9 @@ int run_mode() {
 		{"test_spec", args.test_spec},
 		{"exclude", args.exclude},
 		{"invalidate", args.invalidate},
-		{"json_report_file", args.json_report_file},
+		{"report_folder", args.report_folder},
+		{"report_logs", args.report_logs},
+		{"report_screenshots", args.report_screenshots},
 		{"prefix", args.prefix},
 		{"params", params}
 	};
@@ -198,9 +202,11 @@ int do_main(int argc, char** argv) {
 		(option("--test_spec") & value("wildcard pattern", args.test_spec)) % "Run specific tests",
 		(option("--exclude") & value("wildcard pattern", args.exclude)) % "Do not run specific tests",
 		(option("--invalidate") & value("wildcard pattern", args.invalidate)) % "Invalidate specific tests",
+		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
+		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
+		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
 		(option("--cache_miss_policy") & value("cache miss policy", args.cache_miss_policy))
 			% "Apply some policy when a test loses its cache (accept, skip_branch, abort)",
-		(option("--json_report") & value("output file", args.json_report_file)) % "Generate json-formatted statistics report",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 

@@ -26,17 +26,6 @@ void FlashDriveController::create() {
 		// Check if we have the init snapshot. If we do and config is relevant
 		// then just rollback there and exit. If not - do the usual procedure
 
-
-		fs::path metadata_dir = get_metadata_dir();
-
-		if (fs::exists(metadata_dir)) {
-			//The check would be valid only if we have the main file
-
-			if (!fs::remove_all(metadata_dir)) {
-				throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
-			}
-		}
-
 		fd->create();
 
 		if (fd->has_folder()) {
@@ -47,6 +36,7 @@ void FlashDriveController::create() {
 
 		nlohmann::json metadata;
 
+		fs::path metadata_dir = get_metadata_dir();
 		if (!fs::create_directory(metadata_dir)) {
 			throw std::runtime_error("Error creating metadata dir " + metadata_dir.generic_string());
 		}

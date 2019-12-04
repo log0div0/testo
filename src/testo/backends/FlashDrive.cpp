@@ -77,7 +77,15 @@ void FlashDrive::load_folder() const {
 	try {
 		validate_folder();
 		mount();
-		fs::copy(config.at("folder").get<std::string>(), env->flash_drives_mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+
+		fs::path folder(config.at("folder").get<std::string>());
+		if (folder.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			folder = src_file.parent_path() / folder;
+		}
+		folder = fs::canonical(folder);
+
+		fs::copy(folder, env->flash_drives_mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
 #ifdef __linux__
 		sync();
 #endif
