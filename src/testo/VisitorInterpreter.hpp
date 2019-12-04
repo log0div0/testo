@@ -115,7 +115,7 @@ struct VisitorInterpreter {
 private:
 	//settings
 	bool stop_on_fail;
-	std::string cache_miss_policy;
+	bool assume_yes;
 	std::string test_spec, exclude, invalidate;
 
 	std::list<std::shared_ptr<AST::Test>> tests_to_run;

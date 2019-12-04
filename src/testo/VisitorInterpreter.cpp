@@ -23,7 +23,7 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	reporter = Reporter(config);
 
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
-	cache_miss_policy = config.at("cache_miss_policy").get<std::string>();
+	assume_yes = config.at("assume_yes").get<bool>();
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
@@ -344,7 +344,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 
 	check_up_to_date_tests(tests_queue);
 
-	if (cache_missed_tests.size()) {
+	if (!assume_yes && cache_missed_tests.size()) {
 		std::cout << "Some tests have lost their cache:" << std::endl;
 
 		for (auto cache_missed: cache_missed_tests) {

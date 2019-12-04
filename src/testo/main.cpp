@@ -35,7 +35,6 @@ struct console_args {
 	std::string test_spec;
 	std::string exclude;
 	std::string invalidate;
-	std::string cache_miss_policy;
 	std::string hypervisor;
 	std::string report_folder;
 
@@ -44,6 +43,7 @@ struct console_args {
 
 	bool show_help = false;
 	bool stop_on_fail = false;
+	bool assume_yes = false;
 	bool report_logs = false;
 	bool report_screenshots = false;
 };
@@ -130,13 +130,6 @@ int clean_mode() {
 }
 
 int run_mode() {
-
-	if (args.cache_miss_policy.length()) {
-		if (args.cache_miss_policy != "accept" && args.cache_miss_policy != "skip_branch" && args.cache_miss_policy != "abort") {
-			throw std::runtime_error(std::string("Unknown cache_miss_policy value: ") + args.cache_miss_policy);
-		}
-	}
-
 	auto params = nlohmann::json::array();
 
 	for (size_t i = 0; i < args.params_names.size(); ++i) {
@@ -149,7 +142,7 @@ int run_mode() {
 
 	nlohmann::json config = {
 		{"stop_on_fail", args.stop_on_fail},
-		{"cache_miss_policy", args.cache_miss_policy},
+		{"assume_yes", args.assume_yes},
 		{"test_spec", args.test_spec},
 		{"exclude", args.exclude},
 		{"invalidate", args.invalidate},
@@ -199,14 +192,13 @@ int do_main(int argc, char** argv) {
 		params_defs_spec,
 		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
 		(option("--stop_on_fail").set(args.stop_on_fail)) % "Stop executing after first failed test",
+		(option("--assume_yes").set(args.assume_yes)) % "Quietly agree to run lost cache tests",
 		(option("--test_spec") & value("wildcard pattern", args.test_spec)) % "Run specific tests",
 		(option("--exclude") & value("wildcard pattern", args.exclude)) % "Do not run specific tests",
 		(option("--invalidate") & value("wildcard pattern", args.invalidate)) % "Invalidate specific tests",
 		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
-		(option("--cache_miss_policy") & value("cache miss policy", args.cache_miss_policy))
-			% "Apply some policy when a test loses its cache (accept, skip_branch, abort)",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
