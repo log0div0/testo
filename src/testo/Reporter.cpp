@@ -28,10 +28,7 @@ Reporter::Reporter(const nlohmann::json& config) {
 	}
 }
 
-void Reporter::init(
-		const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,
-		const std::vector<std::shared_ptr<AST::Test>>& _up_to_date_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& _ignored_tests)
+void Reporter::init(const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,	const std::vector<std::shared_ptr<AST::Test>>& _up_to_date_tests)
 {
 	start_timestamp = std::chrono::system_clock::now();
 
@@ -60,9 +57,6 @@ void Reporter::init(
 	}
 	for (auto test: _up_to_date_tests) {
 		up_to_date_tests.push_back(std::shared_ptr<Test>(new Test(test)));
-	}
-	for (auto test: _ignored_tests) {
-		ignored_tests.push_back(std::shared_ptr<Test>(new Test(test)));
 	}
 
 	auto tests_num = tests_to_run.size() + up_to_date_tests.size();
@@ -190,17 +184,11 @@ void Reporter::test_failed(const std::string& error_message) {
 void Reporter::print_statistics()
 {
 	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
-	auto total_tests = passed_tests.size() + failed_tests.size() + up_to_date_tests.size() + ignored_tests.size();
+	auto total_tests = passed_tests.size() + failed_tests.size() + up_to_date_tests.size();
 
 	report(fmt::format("PROCESSED TOTAL {} TESTS IN {}\n", total_tests, tests_durantion), blue, true);
 	report(fmt::format("UP-TO-DATE: {}\n", up_to_date_tests.size()), blue, true);
 
-	if (ignored_tests.size()) {
-		report(fmt::format("LOST CACHE, BUT SKIPPED: {}\n", ignored_tests.size()), yellow, true);
-		for (auto ignore: ignored_tests) {
-			report(fmt::format("\t -{}\n", ignore->name), yellow);
-		}
-	}
 	report(fmt::format("RUN SUCCESSFULLY: {}\n", passed_tests.size()), green, true);
 	report(fmt::format("FAILED: {}\n", failed_tests.size()), red, true);
 	for (auto fail: failed_tests) {
