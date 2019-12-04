@@ -25,10 +25,6 @@ fs::path HyperVEnvironment::flash_drives_metadata_dir() const {
 	return ".";
 }
 
-fs::path HyperVEnvironment::reports_dir() const {
-	return ".";
-}
-
 void HyperVEnvironment::setup() {
 	_putenv_s("HYPERV", "1");
 }

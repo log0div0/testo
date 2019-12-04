@@ -202,7 +202,7 @@ int do_main(int argc, char** argv) {
 		(option("--test_spec") & value("wildcard pattern", args.test_spec)) % "Run specific tests",
 		(option("--exclude") & value("wildcard pattern", args.exclude)) % "Do not run specific tests",
 		(option("--invalidate") & value("wildcard pattern", args.invalidate)) % "Invalidate specific tests",
-		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder",
+		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
 		(option("--cache_miss_policy") & value("cache miss policy", args.cache_miss_policy))

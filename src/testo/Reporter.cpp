@@ -40,9 +40,12 @@ void Reporter::init(
 			if (!fs::is_directory(report_folder)) {
 				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a folder");
 			}
-			fs::remove_all(report_folder);
+			if (!fs::is_empty(report_folder)) {
+				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not empty");
+			}
+		} else {
+			fs::create_directories(report_folder);
 		}
-		fs::create_directories(report_folder);
 		if (report_logs) {
 			summary_output_file = std::ofstream(report_folder / "summary.txt");
 		}
