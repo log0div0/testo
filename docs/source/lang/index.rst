@@ -16,6 +16,7 @@
     machine
     flash
     network
+    param
     test
     macro
     actions
