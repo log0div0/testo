@@ -23,8 +23,7 @@ struct Reporter {
 	Reporter(const nlohmann::json& config);
 
 	void init(const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,
-		const std::vector<std::shared_ptr<AST::Test>>& _up_to_date_tests,
-		const std::vector<std::shared_ptr<AST::Test>>& _ignored_tests);
+		const std::vector<std::shared_ptr<AST::Test>>& _up_to_date_tests);
 
 	void finish();
 
@@ -91,7 +90,6 @@ struct Reporter {
 	std::vector<std::shared_ptr<Test>> passed_tests;
 	std::vector<std::shared_ptr<Test>> failed_tests;
 	std::vector<std::shared_ptr<Test>> up_to_date_tests;
-	std::vector<std::shared_ptr<Test>> ignored_tests;
 
 	std::shared_ptr<Test> current_test;
 

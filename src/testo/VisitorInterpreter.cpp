@@ -23,7 +23,7 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	reporter = Reporter(config);
 
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
-	cache_miss_policy = config.at("cache_miss_policy").get<std::string>();
+	assume_yes = config.at("assume_yes").get<bool>();
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
@@ -233,87 +233,35 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 	return true;
 }
 
-bool VisitorInterpreter::resolve_miss_cache_action(std::shared_ptr<AST::Test> test) const {
-	if (cache_miss_policy.length()) {
-		//cache miss policy is set
-		if (cache_miss_policy == "skip_branch") {
-			return false;
-		} else if (cache_miss_policy == "accept") {
-			return true;
-		} else if (cache_miss_policy == "abort") {
-			throw std::runtime_error(std::string("Test ") + test->name.value() + " lost cache, aborting");
-		} else {
-			throw std::runtime_error("Unknown cache_miss_policy"); //should never happen, just a failsafe
-		}
-	}
-
-	//is some parent is ignored - we should ignore this one as well
+bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 	for (auto parent: test->parents) {
-		for (auto ignored_test: ignored_tests) {
-			if (parent == ignored_test) {
+		for (auto cache_missed_test: cache_missed_tests) {
+			if (parent == cache_missed_test) {
 				return false;
 			}
 		}
 	}
 
-	//if at least one of the parents is not up-to-date, then it was scheduled to run and the user accepted its running
-	//So no need to ask twice
-
-	for (auto parent: test->parents) {
-		bool found = false;
-
-		for (auto up_to_date: up_to_date_tests) {
-			if (parent == up_to_date) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			return true;
-		}
-	}
-
-	bool prompt_needed = false;
-
 	//check networks aditionally
 	for (auto netc: reg.get_all_netcs(test)) {
 		if (netc->is_defined()) {
 			if (!netc->check_config_relevance()) {
-				prompt_needed = true;
-				break;
+				return true;
 			}
 		}
 	}
-
 
 	for (auto controller: reg.get_all_controllers(test)) {
 		if (controller->is_defined()) {
 			if (controller->has_snapshot(test->name.value())) {
 				if (controller->get_snapshot_cksum(test->name.value()) != test_cksum(test)) {
-					prompt_needed = true;
-					break;
+					return true;
 				}
 				if (!controller->check_config_relevance()) {
-					prompt_needed = true;
-					break;
+					return true;
 				}
 			}
 		}
-	}
-
-	if (!prompt_needed) {
-		return true;
-	}
-
-	std::string choice;
-	std::cout << "Test " << test->name.value() << " lost its cache. It and all its children will run again" << std::endl;
-	std::cout << "Do you confirm the running of the test? [Y/n]: ";
-	std::getline(std::cin, choice);
-
-	std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
-
-	if (!choice.length() || choice == "Y" || choice == "YES") {
-		return true;
 	}
 
 	return false;
@@ -326,13 +274,10 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 			up_to_date_tests.push_back(*test_it);
 			tests_queue.erase(test_it++);
 		} else {
-			//prompt with what to do with the test
-			if (!resolve_miss_cache_action(*test_it)) {
-				ignored_tests.push_back(*test_it);
-				tests_queue.erase(test_it++);
-			} else {
-				test_it++;
+			if (is_cache_miss(*test_it)) {
+				cache_missed_tests.push_back(*test_it);
 			}
+			test_it++;
 		}
 	}
 }
@@ -398,6 +343,25 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 	}
 
 	check_up_to_date_tests(tests_queue);
+
+	if (!assume_yes && cache_missed_tests.size()) {
+		std::cout << "Some tests have lost their cache:" << std::endl;
+
+		for (auto cache_missed: cache_missed_tests) {
+			std::cout << "\t- " << cache_missed->name.value() << std::endl;
+		}
+
+		std::cout << "Do you confirm running them and all their children? [y/N]: ";
+		std::string choice;
+		std::getline(std::cin, choice);
+
+		std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
+
+		if (choice != "Y" && choice != "YES") {
+			throw std::runtime_error("Aborted");
+		}
+	}
+
 	resolve_tests(tests_queue);
 	reset_cache();
 }
@@ -415,7 +379,7 @@ void VisitorInterpreter::reset_cache() {
 void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 	setup_vars(program);
 
-	reporter.init(tests_to_run, up_to_date_tests, ignored_tests);
+	reporter.init(tests_to_run, up_to_date_tests);
 
 	while (!tests_to_run.empty()) {
 		auto front = tests_to_run.front();
