@@ -165,6 +165,8 @@ struct Token {
 			return "SIZE";
 		case quoted_string:
 			return "QUOTED STRING";
+		case triple_quoted_string:
+			return "TRIPLE QUOTED STRING";
 		case assign:
 			return "=";
 		case exclamation_mark:

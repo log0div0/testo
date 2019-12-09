@@ -522,6 +522,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		std::stringstream ss;
 		ss << error << std::endl;
 		reporter.test_failed(ss.str());
+
+		if (stop_on_fail) {
+			throw std::runtime_error("");
+		}
+
 		stop_all_vms(test);
 	}
 }
