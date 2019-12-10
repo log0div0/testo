@@ -24,6 +24,7 @@ link_directories(
 endif()
 
 add_subdirectory(vbox)
+add_subdirectory(license)
 if (WIN32)
 add_subdirectory(virtdisk)
 add_subdirectory(msft)
