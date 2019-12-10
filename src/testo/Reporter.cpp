@@ -4,6 +4,7 @@
 #include <rang.hpp>
 #include <fstream>
 #include <fmt/format.h>
+#include <license/License.hpp>
 
 template <typename Duration>
 std::string duration_to_str(Duration duration) {
@@ -22,6 +23,10 @@ Reporter::Reporter(const nlohmann::json& config) {
 	report_folder = config.at("report_folder").get<std::string>();
 	report_logs = config.at("report_logs").get<bool>();
 	report_screenshots = config.at("report_screenshots").get<bool>();
+	std::string license_path = config.at("license").get<std::string>();
+	if (license_path.size()) {
+		license_status = verify_license(license_path, "2jqeSUIJCzooeIIPVzwXxbROsOHMmfot3WZelMoXRRg=");
+	}
 
 	if ((report_logs || report_screenshots) && report_folder.empty()) {
 		throw std::runtime_error("--report_logs and --report_screenshots arguments are valid only with specified --report_folder");
@@ -102,6 +107,9 @@ void Reporter::prepare_environment() {
 	current_test = tests_to_run.front();
 	tests_to_run.pop_front();
 
+	if (license_status.size()) {
+		report(license_status, red);
+	}
 	report(fmt::format("{} Preparing the environment for test ", progress()), blue);
 	report(fmt::format("{}\n", current_test->name), yellow);
 

@@ -23,6 +23,11 @@ link_directories(
 )
 endif()
 
+if (APPLE)
+include_directories(/usr/local/include)
+link_directories(/usr/local/lib)
+endif()
+
 add_subdirectory(vbox)
 add_subdirectory(license)
 if (WIN32)

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <vector>
 
@@ -11,7 +13,7 @@ static inline bool is_base64(uint8_t c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-std::string base64_encode(const uint8_t* buf, unsigned int bufLen) {
+static inline std::string base64_encode(const uint8_t* buf, unsigned int bufLen) {
   std::string ret;
   int i = 0;
   int j = 0;
@@ -52,7 +54,7 @@ std::string base64_encode(const uint8_t* buf, unsigned int bufLen) {
   return ret;
 }
 
-std::vector<uint8_t> base64_decode(const std::string& encoded_string) {
+static inline std::vector<uint8_t> base64_decode(const std::string& encoded_string) {
   int in_len = encoded_string.size();
   int i = 0;
   int j = 0;
