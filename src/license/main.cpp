@@ -51,10 +51,20 @@ struct Date {
 	uint16_t day = 0, month = 0, year = 0;
 };
 
+std::vector<uint8_t> read_key(const std::string& path) {
+	std::ifstream file(path);
+	std::string base64;
+	file >> base64;
+	return base64_decode(base64);
+}
+
+void write_key(const std::string& path, const uint8_t* data, size_t size) {
+	std::ofstream file(path);
+	file << base64_encode(data, size);
+}
+
 enum Mode {GEN_KEYS, SIGN, VERIFY};
 Mode mode;
-uint64_t id = 0;
-std::string not_before, not_after;
 std::string license_path;
 std::string private_key_path, public_key_path;
 
@@ -65,68 +75,64 @@ void gen_keys() {
 	if (result) {
 		throw std::runtime_error("crypto_sign_keypair failed");
 	}
-	std::ofstream public_file(public_key_path, std::ios::binary);
-	public_file.write((const char*)public_key, crypto_sign_PUBLICKEYBYTES);
-	std::ofstream private_file(private_key_path, std::ios::binary);
-	private_file.write((const char*)private_key, crypto_sign_SECRETKEYBYTES);
+	write_key(public_key_path, public_key, crypto_sign_PUBLICKEYBYTES);
+	write_key(private_key_path, private_key, crypto_sign_SECRETKEYBYTES);
+}
+
+std::string normalize_license(const nlohmann::json& license) {
+	uint64_t id = license.at("id");
+	std::string not_before = license.at("not_before").get<std::string>();
+	std::string not_after = license.at("not_after").get<std::string>();
+	Date::from_string(not_before);
+	Date::from_string(not_after);
+	return std::to_string(id) + not_before + not_after;
 }
 
 void sign() {
-	std::ifstream private_file(private_key_path, std::ios::binary);
-	private_file.unsetf(std::ios::skipws);
-	std::vector<uint8_t> private_key {
-		std::istream_iterator<uint8_t>(private_file),
-		std::istream_iterator<uint8_t>()
-	};
+	nlohmann::json license;
+
+	{
+		std::ifstream license_file(license_path);
+		license_file >> license;
+	}
+
+	std::vector<uint8_t> private_key = read_key(private_key_path);
 	if (private_key.size() != crypto_sign_SECRETKEYBYTES) {
 		throw std::runtime_error("Invalid size of private key");
 	}
 
-	Date::from_string(not_before);
-	Date::from_string(not_after);
-
-	std::string message = std::to_string(id) + not_before + not_after;
+	std::string message = normalize_license(license);
 	uint8_t sig[crypto_sign_BYTES] = {};
 	int result = crypto_sign_detached(sig, nullptr, (uint8_t*)message.data(), message.size(), private_key.data());
 	if (result) {
 		throw std::runtime_error("crypto_sign_detached failed");
 	}
 
-	nlohmann::json license = {
-		{"id", id},
-		{"not_before", not_before},
-		{"not_after", not_after},
-		{"sig", base64_encode(sig, crypto_sign_BYTES)}
-	};
+	license["sig"] = base64_encode(sig, crypto_sign_BYTES);
 
-	std::ofstream license_file(license_path);
-	license_file << license.dump(4);
+	{
+		std::ofstream license_file(license_path);
+		license_file << license.dump(4);
+	}
 }
 
 void verify() {
-	std::ifstream license_file(license_path);
 	nlohmann::json license;
+
+	std::ifstream license_file(license_path);
 	license_file >> license;
 
-	std::ifstream public_file(public_key_path, std::ios::binary);
-	public_file.unsetf(std::ios::skipws);
-	std::vector<uint8_t> public_key {
-		std::istream_iterator<uint8_t>(public_file),
-		std::istream_iterator<uint8_t>()
-	};
+	std::vector<uint8_t> public_key = read_key(public_key_path);
 	if (public_key.size() != crypto_sign_PUBLICKEYBYTES) {
 		throw std::runtime_error("Invalid size of public key");
 	}
 
-	id = license.at("id");
-	not_before = license.at("not_before").get<std::string>();
-	not_after = license.at("not_after").get<std::string>();
 	std::vector<uint8_t> sig = base64_decode(license.at("sig"));
 	if (sig.size() != crypto_sign_BYTES) {
 		throw std::runtime_error("Invalid sig length");
 	}
 
-	std::string message = std::to_string(id) + not_before + not_after;
+	std::string message = normalize_license(license);
 
 	int result = crypto_sign_verify_detached(sig.data(), (uint8_t*)message.data(), message.size(), public_key.data());
 	if (result) {
@@ -152,11 +158,8 @@ int main(int argc, char** argv) {
 
 		auto sign_spec = (
 			command("sign").set(mode, SIGN),
-			required("--id") & value("id", id),
-			required("--not_before") & value("data", not_before),
-			required("--not_after") & value("date", not_after),
-			required("--private_key") & value("path", private_key_path),
-			required("--license") & value("path", license_path)
+			required("--license") & value("path", license_path),
+			required("--private_key") & value("path", private_key_path)
 		);
 
 		auto verify_spec = (
