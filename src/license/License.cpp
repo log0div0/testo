@@ -77,16 +77,16 @@ std::string verify_license(const std::string& license_path, const std::string& p
 		throw std::runtime_error("crypto_sign_verify_detached failed");
 	}
 
-	auto not_before = Date::from_string(license.at("not_before").get<std::string>()).to_time_point();
-	auto not_after = Date::from_string(license.at("not_after").get<std::string>()).to_time_point();
-	auto now = std::chrono::system_clock::now();
+	auto not_before = Date::from_string(license.at("not_before").get<std::string>());
+	auto not_after = Date::from_string(license.at("not_after").get<std::string>());
+	auto now = Date::now();
 
 	if (now < not_before) {
 		return "Период действия лицензии ещё не настал";
 	}
 
 	if (now > not_after) {
-		return "Период действия лицензии ещё не закончился";
+		return "Период действия лицензии уже закончился";
 	}
 
 	return {};

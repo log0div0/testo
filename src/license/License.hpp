@@ -27,17 +27,29 @@ struct Date {
 		return date;
 	}
 
-	std::chrono::system_clock::time_point to_time_point() const {
-		std::tm timeinfo = std::tm();
-		timeinfo.tm_year = year;
-		timeinfo.tm_mon = month;
-		timeinfo.tm_mday = day;
-		std::time_t tt = std::mktime(&timeinfo);
-		return std::chrono::system_clock::from_time_t(tt);
+	static Date now() {
+		std::time_t time = std::time(nullptr);
+		std::tm* tm = std::localtime(&time);
+		Date date;
+		date.day = tm->tm_mday;
+		date.month = tm->tm_mon + 1;
+		date.year = tm->tm_year + 1900;
+		return date;
 	}
+
 
 	uint16_t day = 0, month = 0, year = 0;
 };
+
+inline bool operator<(const Date& lhs, const Date& rhs) {
+	return std::tie(lhs.year, lhs.month, lhs.day) <
+		std::tie(rhs.year, rhs.month, rhs.day);
+}
+
+inline bool operator>(const Date& lhs, const Date& rhs) {
+	return std::tie(lhs.year, lhs.month, lhs.day) >
+		std::tie(rhs.year, rhs.month, rhs.day);
+}
 
 void sign_license(const std::string& license_path, const std::string& private_key);
 std::string verify_license(const std::string& license_path, const std::string& public_key);
