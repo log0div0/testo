@@ -155,4 +155,6 @@ private:
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	std::unordered_map<char, std::vector<std::string>> charmap;
+
+	std::string license_status;
 };

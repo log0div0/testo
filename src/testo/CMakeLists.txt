@@ -15,23 +15,18 @@ endif()
 list(APPEND SRC_DIRS "tql/*.cpp")
 
 file(GLOB SRCS ${SRC_DIRS})
-list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
-add_library(testo-core STATIC ${SRCS})
-target_link_libraries(testo-core coro vbox pugixml stb text-detector)
+add_executable(testo ${SRCS})
+target_link_libraries(testo coro vbox pugixml stb text-detector license)
 
 if(WIN32)
-	target_link_libraries(testo-core hyperv msft virtdisk++)
+	target_link_libraries(testo hyperv msft virtdisk++)
 endif()
 
 if (UNIX AND NOT APPLE)
-	target_link_libraries(testo-core qemu)
+	target_link_libraries(testo qemu)
 endif()
 
 if(UNIX)
-	target_link_libraries(testo-core stdc++fs pthread)
+	target_link_libraries(testo stdc++fs pthread)
 endif()
-
-add_executable(testo main.cpp)
-add_dependencies(testo testo-core)
-target_link_libraries(testo testo-core)

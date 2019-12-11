@@ -37,6 +37,7 @@ struct console_args {
 	std::string invalidate;
 	std::string hypervisor;
 	std::string report_folder;
+	std::string license;
 
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
@@ -149,6 +150,7 @@ int run_mode() {
 		{"report_folder", args.report_folder},
 		{"report_logs", args.report_logs},
 		{"report_screenshots", args.report_screenshots},
+		{"license", args.license},
 		{"prefix", args.prefix},
 		{"params", params}
 	};
@@ -199,6 +201,7 @@ int do_main(int argc, char** argv) {
 		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
+		(option("--license") & value("path", args.license)) % "Path to license file",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
