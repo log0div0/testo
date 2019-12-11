@@ -104,8 +104,6 @@ struct Reporter {
 
 	fs::path report_folder;
 	std::ofstream summary_output_file;
-
-	std::string license_status;
 };
 
 extern Reporter reporter;
