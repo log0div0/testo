@@ -33,6 +33,7 @@ param
 Предположим, что один параметр был передан с помощью командной строки (``--param ISO_DIR /path/to/iso``)
 
 .. code-block:: none
+
 	param param1 "value1"  # transforms to "value1"
 	param param2 "${ISO_DIR}/${param1}" #transforms to "/path/to/iso/value1"
 
