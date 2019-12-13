@@ -321,7 +321,7 @@ void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, 
 	report(fmt::format("{} ", vmc->name()), yellow);
 	report(fmt::format("to destination "), blue);
 	report(fmt::format("{} ", to), yellow);
-	report(fmt::format(" with timeout {}\n", timeout), blue);
+	report(fmt::format("with timeout {}\n", timeout), blue);
 }
 
 void Reporter::mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) {
