@@ -18,6 +18,7 @@ private:
 
 	void handle_command(const nlohmann::json& command);
 	nlohmann::json handle_copy_file(const nlohmann::json& args);
+	nlohmann::json run(const nlohmann::json& args);
 
 	void send_ok(const nlohmann::json& result);
 	void send_error(const std::string& error);

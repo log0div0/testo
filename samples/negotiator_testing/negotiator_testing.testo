@@ -36,7 +36,11 @@ test install_guest_additions: install_negotiator {
 		type "cp /media/guest_additions /opt"; press Enter
 		type "/opt/guest_additions"; press Enter
 		wait timeout 2s
-		exec bash "echo Hello world"
+		exec bash """for i in {1..5}
+			do
+				echo "Hello world $i"
+			done
+		"""
 		abort "stop here"
 	}
 }

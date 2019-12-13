@@ -142,6 +142,8 @@ void Server::handle_command(const nlohmann::json& command) {
 			result = nlohmann::json::object();
 		} else if (method_name == "copy_file") {
 			result = handle_copy_file(command.at("args"));
+		} else if (method_name == "execute") {
+			result = run(command.at("args"));
 		} else {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
@@ -182,4 +184,24 @@ nlohmann::json Server::handle_copy_file(const nlohmann::json& args) {
 	}
 
 	return nlohmann::json::object();
+}
+
+nlohmann::json Server::run(const nlohmann::json& args) {
+	auto result = nlohmann::json::object();
+
+	auto cmd = args[0].get<std::string>();
+
+	std::cout << "CMD:" << cmd <<std::endl;
+
+	std::array<char, 128> buffer;
+	std::string total_output;
+	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+	if (!pipe) {
+		throw std::runtime_error("popen() failed!");
+	}
+	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+		std::cout << buffer.data();
+		total_output += buffer.data();
+	}
+	return result;
 }
