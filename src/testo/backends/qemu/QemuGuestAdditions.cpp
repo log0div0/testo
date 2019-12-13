@@ -25,7 +25,7 @@ QemuGuestAdditions::QemuGuestAdditions(vir::Domain& domain) {
 		throw std::runtime_error("Can't find negotiator channel unix file");
 	}
 
-	endpoint = Endpoint(path);
+	endpoint = Endpoint("/var/lib/libvirt/qemu/negotiator_testing_guest_additions");
 
 	socket.connect(endpoint);
 }
@@ -42,7 +42,6 @@ bool QemuGuestAdditions::is_avaliable() {
 
 		auto response = recv();
 		return response.at("success").get<bool>();
-
 	} catch (const std::exception&) {
 		return false;
 	}
@@ -185,5 +184,6 @@ nlohmann::json QemuGuestAdditions::recv() {
 	std::string json_str;
 	json_str.resize(json_length);
 	socket.read(&json_str[0], json_length);
+	std::cout << nlohmann::json::parse(json_str).dump(4) << std::endl;
 	return nlohmann::json::parse(json_str);
 }
