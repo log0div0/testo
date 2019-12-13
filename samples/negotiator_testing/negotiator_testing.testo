@@ -1,0 +1,26 @@
+
+include "../common.testo"
+
+machine negotiator_testing {
+	cpus: 1
+	ram: 1024Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+}
+
+test ubuntu_installation {
+	negotiator_testing install_ubuntu("negotiator", "user", "1111")
+}
+
+test install_negotiator: ubuntu_installation {
+	negotiator_testing {
+		plug dvd "${NEGOTIATOR_DIR}/guest_additions.iso"
+		enter_sudo("negotiator", "user", "1111")
+		wait timeout 2s
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only";
+		type "cp /media/guest_additions /opt"; press Enter
+		type "/opt/guest_additions"; press Enter
+		abort "stop here"
+	}
+}

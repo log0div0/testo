@@ -218,7 +218,7 @@ void Reporter::restore_snapshot(std::shared_ptr<Controller> controller, const st
 void Reporter::print(std::shared_ptr<VmController> vmc, const std::string& message) {
 	report(progress() + " ", blue);
 	report(vmc->name(), yellow);
-	report(fmt::format(" :{}\n", message), blue);
+	report(fmt::format(": {}\n", message), blue);
 }
 
 void Reporter::start(std::shared_ptr<VmController> vmc) {
