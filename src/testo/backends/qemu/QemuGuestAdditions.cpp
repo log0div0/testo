@@ -184,6 +184,6 @@ nlohmann::json QemuGuestAdditions::recv() {
 	std::string json_str;
 	json_str.resize(json_length);
 	socket.read(&json_str[0], json_length);
-	std::cout << nlohmann::json::parse(json_str).dump(4) << std::endl;
+	//std::cout << nlohmann::json::parse(json_str).dump(4) << std::endl;
 	return nlohmann::json::parse(json_str);
 }

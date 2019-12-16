@@ -139,16 +139,15 @@ void Server::handle_command(const nlohmann::json& command) {
 	try {
 		nlohmann::json result;
 		if (method_name == "check_avaliable") {
+			return handle_check_avaliable();
 			result = nlohmann::json::object();
 		} else if (method_name == "copy_file") {
-			result = handle_copy_file(command.at("args"));
+			return handle_copy_file(command.at("args"));
 		} else if (method_name == "execute") {
-			result = run(command.at("args"));
+			return handle_execute(command.at("args"));
 		} else {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
-
-		send_ok(result);
 	} catch (const std::exception& error) {
 		send_error(error.what());
 	}
@@ -163,16 +162,16 @@ void Server::send_error(const std::string& error) {
 	send(response);
 }
 
-void Server::send_ok(const nlohmann::json& result) {
+void Server::handle_check_avaliable() {
 	nlohmann::json response = {
 		{"success", true},
-		{"result", result}
+		{"result", nlohmann::json::object()}
 	};
 
 	send(response);
 }
 
-nlohmann::json Server::handle_copy_file(const nlohmann::json& args) {
+void Server::handle_copy_file(const nlohmann::json& args) {
 	for (auto file: args) {
 		auto content64 = file.at("content").get<std::string>();
 		auto content = base64_decode(content64);
@@ -183,25 +182,47 @@ nlohmann::json Server::handle_copy_file(const nlohmann::json& args) {
 		std::cout << "Copied file " << dst << std::endl;
 	}
 
-	return nlohmann::json::object();
+	nlohmann::json response = {
+		{"success", true},
+		{"result", nlohmann::json::object()}
+	};
+
+	send(response);
 }
 
-nlohmann::json Server::run(const nlohmann::json& args) {
-	auto result = nlohmann::json::object();
-
+void Server::handle_execute(const nlohmann::json& args) {
 	auto cmd = args[0].get<std::string>();
+	cmd += " 2>&1";
 
-	std::cout << "CMD:" << cmd <<std::endl;
+	std::array<char, 256> buffer;
+	auto pipe = popen(cmd.c_str(), "r");
 
-	std::array<char, 128> buffer;
-	std::string total_output;
-	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
 	if (!pipe) {
 		throw std::runtime_error("popen() failed!");
 	}
-	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-		std::cout << buffer.data();
-		total_output += buffer.data();
+
+	while(!feof(pipe)) {
+		if (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+			nlohmann::json result = {
+				{"success", true},
+				{"result", {
+					{"status", "pending"},
+					{"stdout", buffer.data()}
+				}}
+			};
+			send(result);
+		}
 	}
-	return result;
+
+	auto rc = pclose(pipe);
+
+	nlohmann::json result = {
+		{"success", true},
+		{"result", {
+			{"status", "finished"},
+			{"exit_code", rc}
+		}}
+	};
+
+	send(result);
 }

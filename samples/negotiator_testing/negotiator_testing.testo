@@ -39,6 +39,9 @@ test install_guest_additions: install_negotiator {
 		exec bash """for i in {1..5}
 			do
 				echo "Hello world $i"
+				if [ "$i" -eq "4" ]; then
+					ls ${NEGOTIATOR_DIR};
+				fi
 			done
 		"""
 		abort "stop here"
