@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+systemctl daemon-reload
+systemctl enable testo-guest-additions
+systemctl start testo-guest-additions

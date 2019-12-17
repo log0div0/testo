@@ -1,4 +1,0 @@
-#!/bin/bash -e
-
-systemctl stop negotiator-agent
-systemctl disable negotiator-agent

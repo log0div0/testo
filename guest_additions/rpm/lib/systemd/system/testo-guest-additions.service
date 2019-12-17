@@ -1,0 +1,9 @@
+[Unit]
+Description=testo-guest-additions
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/usr/sbin/testo-guest-additions
+Restart=always

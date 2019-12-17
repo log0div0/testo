@@ -1,20 +1,15 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CPACK_PACKAGE_NAME "negotiator-agent")
-set(CPACK_PACKAGE_VERSION "0.0.1")
+set(CPACK_PACKAGE_NAME "testo-guest-additions")
+set(CPACK_PACKAGE_VERSION "1.0.0")
 
 install(FILES
-	${CMAKE_SOURCE_DIR}/negotiator/negotiator-agent/usr/share/pyshared/negotiator-agent.py
-	${CMAKE_SOURCE_DIR}/negotiator/negotiator.py
-	DESTINATION /usr/share/pyshared)
-
-install(FILES
-	${CMAKE_SOURCE_DIR}/negotiator/negotiator-agent/usr/sbin/negotiator-agent
+	${CMAKE_BINARY_DIR}/out/sbin/testo-guest-additions
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install(FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/etc/init.d/negotiator-agent
+	${CMAKE_CURRENT_SOURCE_DIR}/etc/init.d/testo-guest-additions
 	DESTINATION /etc/init.d
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
@@ -25,4 +20,6 @@ ${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
-add_package(negotiator-agent-package-deb)
+add_package(guest-additions-package-deb)
+
+add_dependencies(guest-additions-package-deb testo-guest-additions)

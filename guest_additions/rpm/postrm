@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+rm -f /var/log/testo-guest-additions.log
+systemctl daemon-reload

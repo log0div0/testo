@@ -1,0 +1,4 @@
+#!/bin/bash -e
+
+systemctl stop testo-guest-additions
+systemctl disable testo-guest-additions
