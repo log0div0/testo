@@ -2,14 +2,17 @@
 #include "Server.hpp"
 #include "base64.hpp"
 
+#include <chrono>
+#include <thread>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
 #include <errno.h>
-#include <fcntl.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 Server::Server(const std::string& fd_path): fd_path(fd_path) {}
 
@@ -19,59 +22,22 @@ Server::~Server() {
 	}
 }
 
-void Server::set_interface_attribs(int speed, int parity) {
-	struct termios tty;
-	if (tcgetattr (fd, &tty) != 0) {
-		std::string error_msg = "error " + std::to_string(errno) + " from tcgetattr";
-		throw std::runtime_error(error_msg);
-	}
-	cfsetospeed (&tty, speed);
-	cfsetispeed (&tty, speed);
-	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;		// 8-bit chars
-	// disable IGNBRK for mismatched speed tests; otherwise receive break
-	// as \000 chars
-	tty.c_iflag &= ~IGNBRK;		// disable break processing
-	tty.c_lflag = 0;			// no signaling chars, no echo,
-								// no canonical processing
-	tty.c_oflag = 0;		// no remapping, no delays
-	tty.c_cc[VMIN]  = 0;	// read doesn't block
-	tty.c_cc[VTIME] = 5;	// 0.5 seconds read timeout
-
-	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
-
-	tty.c_cflag |= (CLOCAL | CREAD);		// ignore modem controls,
-											// enable reading
-	tty.c_cflag &= ~(PARENB | PARODD);		// shut off parity
-	tty.c_cflag |= parity;
-	tty.c_cflag &= ~CSTOPB;
-	tty.c_cflag &= ~CRTSCTS;
-
-	if (tcsetattr (fd, TCSANOW, &tty) != 0) {
-		std::string error_msg = "error " + std::to_string(errno) + " from tcgetattr";
-		throw std::runtime_error(error_msg);
-	}
-}
-
-void Server::set_blocking(bool should_block) {
-	struct termios tty;
-	memset (&tty, 0, sizeof tty);
-	if (tcgetattr (fd, &tty) != 0) {
-		std::string error_msg = "error " + std::to_string(errno) + " from tcgetattr";
-		throw std::runtime_error(error_msg);
-	}
-	tty.c_cc[VMIN]  = should_block ? 1 : 0;
-	tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
-	if (tcsetattr (fd, TCSANOW, &tty) != 0) {
-		std::string error_msg = "error " + std::to_string(errno) + " setting term attributes";
-		throw std::runtime_error(error_msg);
-	}
-}
-
 nlohmann::json Server::read() {
 	uint32_t msg_size;
-	if (::read (fd, &msg_size, 4) != 4) {
-		throw std::runtime_error("Can't read msg size");
+	while (true) {
+		int bytes_read = ::read (fd, &msg_size, 4);
+		if (bytes_read == 0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			continue;
+		} else if (bytes_read < 0) {
+			throw std::runtime_error(std::string("Got error from reading socket: ") + strerror(errno));
+		} else if (bytes_read != 4) {
+			throw std::runtime_error("Can't read msg size");
+		} else {
+			break;
+		}
 	}
+
 	std::string json_str;
 	json_str.resize(msg_size);
 
@@ -114,7 +80,7 @@ void Server::send(const nlohmann::json& response) {
 }
 
 void Server::run() {
-	fd = open (fd_path.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+	fd = open (fd_path.c_str(), O_RDWR);
 	if (fd < 0) {
 		std::string error_msg = "error " + std::to_string(errno) + " opening " + fd_path + ": " + strerror (errno);
 		throw std::runtime_error(error_msg);
@@ -122,13 +88,10 @@ void Server::run() {
 
 	std::cout << "Connected to " << fd_path << std::endl;
 
-	set_interface_attribs(B115200, 0);  // set speed to 115,200 bps, 8n1 (no parity)
-	set_blocking(true);
-
 	std::cout << "Waiting for commands\n";
 	while (true) {
 		auto command = read();
-		std::cout << command.dump(4) << std::endl;
+		//std::cout << command.dump(4) << std::endl;
 		handle_command(command);
 	}
 }
@@ -137,12 +100,13 @@ void Server::handle_command(const nlohmann::json& command) {
 	std::string method_name = command.at("method").get<std::string>();
 
 	try {
-		nlohmann::json result;
 		if (method_name == "check_avaliable") {
 			return handle_check_avaliable();
-			result = nlohmann::json::object();
 		} else if (method_name == "copy_file") {
+			//std::cout << "Copy file\n";
 			return handle_copy_file(command.at("args"));
+		} else if (method_name == "copy_files_out") {
+			return handle_copy_file_out(command.at("args"));
 		} else if (method_name == "execute") {
 			return handle_execute(command.at("args"));
 		} else {
@@ -171,12 +135,24 @@ void Server::handle_check_avaliable() {
 	send(response);
 }
 
+std::string get_folder(const std::string& str) {
+	size_t found;
+	found = str.find_last_of("/");
+	return str.substr(0,found);
+}
+
 void Server::handle_copy_file(const nlohmann::json& args) {
 	for (auto file: args) {
 		auto content64 = file.at("content").get<std::string>();
 		auto content = base64_decode(content64);
 		auto dst = file.at("path").get<std::string>();
+		std::cout << "Copying " << dst << std::endl;
+		std::string mkdir_cmd = std::string("mkdir -p ") + get_folder(dst);
+		std::system(mkdir_cmd.c_str());
 		std::ofstream file_stream(dst, std::ios::out | std::ios::binary);
+		if (!file_stream) {
+			throw std::runtime_error("Couldn't open file stream to write file " + dst);
+		}
 		file_stream.write((const char*)&content[0], content.size());
 		file_stream.close();
 		std::cout << "Copied file " << dst << std::endl;
@@ -189,6 +165,28 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 
 	send(response);
 }
+
+void Server::handle_copy_file_out(const nlohmann::json& args) {
+	std::string src = args[0];
+	std::string dst = args[1];
+	std::cout << "SRC: " << src << std::endl;
+	std::cout << "DST: " << dst << std::endl;
+
+	struct stat info;
+	if (stat(src.c_str(), &info)) {
+		std::string error_msg = "error " + std::to_string(errno) + " stat() " + src + ": " + strerror (errno);
+		throw std::runtime_error(error_msg);
+	} else if(info.st_mode & S_IFDIR) {
+		//copydir
+	} else {
+		std::ofstream file_stream(dst, std::ios::in | std::ios::binary);
+		if (!file_stream) {
+			throw std::runtime_error("Couldn't open file stream to read file " + src);
+		}
+	}
+
+}
+
 
 void Server::handle_execute(const nlohmann::json& args) {
 	auto cmd = args[0].get<std::string>();

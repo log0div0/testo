@@ -9,7 +9,7 @@
 #include "Server.hpp"
 
 int main(int argc, char** argv) {
-	Server commands_handler("/dev/ttyS1");
+	Server commands_handler("/dev/virtio-ports/negotiator.0");
 	commands_handler.run();
 	return 0;
 }

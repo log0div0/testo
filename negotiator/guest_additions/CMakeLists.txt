@@ -2,10 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 file(GLOB_RECURSE SRCS *.cpp)
 
-set(LIBS
-	coro
-	pthread
-)
+set(LIBS)
 
 add_executable(guest_additions ${SRCS})
 target_link_libraries(guest_additions ${LIBS})

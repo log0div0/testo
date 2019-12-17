@@ -28,22 +28,28 @@ test install_negotiator: ubuntu_installation {
 	}
 }
 
-test install_guest_additions: install_negotiator {
+test install_guest_additions: ubuntu_installation {
 	negotiator_testing {
+		enter_sudo("negotiator", "user", "1111")
 		plug dvd "${NEGOTIATOR_DIR}/guest_additions.iso"
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounting read-only";
 		type "cp /media/guest_additions /opt"; press Enter
 		type "/opt/guest_additions"; press Enter
-		wait timeout 2s
+		wait timeout 10s
+		copyto "/home/alex/work/testo/testo/samples/" "/home/user/samples"
 		exec bash """for i in {1..5}
 			do
 				echo "Hello world $i"
-				if [ "$i" -eq "4" ]; then
-					ls ${NEGOTIATOR_DIR};
-				fi
 			done
 		"""
+
+		exec bash """
+			cd /home/user
+			echo "Hello world" > /tmp/zumba
+			ls /zz 2>/tmp/failed
+		"""
+
 		abort "stop here"
 	}
 }

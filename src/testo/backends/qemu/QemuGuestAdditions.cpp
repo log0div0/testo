@@ -25,8 +25,7 @@ QemuGuestAdditions::QemuGuestAdditions(vir::Domain& domain) {
 		throw std::runtime_error("Can't find negotiator channel unix file");
 	}
 
-	endpoint = Endpoint("/var/lib/libvirt/qemu/negotiator_testing_guest_additions");
-
+	endpoint = Endpoint(path);
 	socket.connect(endpoint);
 }
 

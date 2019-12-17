@@ -266,13 +266,6 @@ void QemuVM::install() {
 							<model name='isa-serial'/>
 						</target>
 					</serial>
-					<serial type='unix'>
-						<source mode='bind' path='/var/lib/libvirt/qemu/{}_guest_additions'/>
-						<target type='isa-serial' port='1'>
-							<model name='isa-serial'/>
-						</target>
-						<alias name='serial0'/>
-					</serial>
 					<console type='pty'>
 						<target type='serial' port='0'/>
 					</console>
