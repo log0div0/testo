@@ -8,6 +8,8 @@
 
 int main(int argc, char** argv) {
 	auto logger = spdlog::basic_logger_mt("basic_logger", "/var/log/testo-guest-additions.log");
+	logger->set_level(spdlog::level::info);
+	logger->flush_on(spdlog::level::info);
 	spdlog::set_default_logger(logger);
 	Server commands_handler("/dev/virtio-ports/negotiator.0");
 	commands_handler.run();

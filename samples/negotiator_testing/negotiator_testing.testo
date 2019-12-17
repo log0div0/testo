@@ -31,13 +31,14 @@ test install_negotiator: ubuntu_installation {
 test install_guest_additions: ubuntu_installation {
 	negotiator_testing {
 		enter_sudo("negotiator", "user", "1111")
-		plug dvd "${NEGOTIATOR_DIR}/guest_additions.iso"
+		type "apt install daemon"; press Enter
+		wait "Setting up daemon"
+		plug dvd "${NEGOTIATOR_DIR}/testo-guest-additions.iso"
 		wait timeout 5s
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounting read-only";
-		type "cp /media/guest_additions /opt"; press Enter
-		type "/opt/guest_additions"; press Enter
-		wait timeout 2s
+		type "dpkg -i /media/testo-guest-additions-1.0.0.deb"; press Enter
+		wait "Setting up testo-guest-additions"
 		copyto "/home/alex/work/testo/testo/samples/" "/home/user/samples"
 		exec bash """for i in {1..5}
 			do
