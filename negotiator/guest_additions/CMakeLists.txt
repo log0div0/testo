@@ -20,4 +20,4 @@ add_custom_target(guest_additions-iso
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/out/pkg)
 
 
-#add_dependencies(nf2-starter argagg libbreakpad spdlog)
+add_dependencies(guest_additions spdlog)

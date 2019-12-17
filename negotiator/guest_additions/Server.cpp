@@ -1,6 +1,7 @@
 
 #include "Server.hpp"
 #include "base64.hpp"
+#include <spdlog/spdlog.h>
 
 #include <chrono>
 #include <thread>
@@ -10,7 +11,6 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include <cstdlib>
 #include <fcntl.h>
 #include <sys/stat.h>
 
@@ -86,12 +86,11 @@ void Server::run() {
 		throw std::runtime_error(error_msg);
 	}
 
-	std::cout << "Connected to " << fd_path << std::endl;
+	spdlog::info("Connected to " + fd_path.generic_string());
+	spdlog::info("Waiting for commands");
 
-	std::cout << "Waiting for commands\n";
 	while (true) {
 		auto command = read();
-		//std::cout << command.dump(4) << std::endl;
 		handle_command(command);
 	}
 }
@@ -103,7 +102,6 @@ void Server::handle_command(const nlohmann::json& command) {
 		if (method_name == "check_avaliable") {
 			return handle_check_avaliable();
 		} else if (method_name == "copy_file") {
-			//std::cout << "Copy file\n";
 			return handle_copy_file(command.at("args"));
 		} else if (method_name == "copy_files_out") {
 			return handle_copy_files_out(command.at("args"));
@@ -113,11 +111,13 @@ void Server::handle_command(const nlohmann::json& command) {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
 	} catch (const std::exception& error) {
+		spdlog::error(error.what());
 		send_error(error.what());
 	}
 }
 
 void Server::send_error(const std::string& error) {
+	spdlog::error("Sending error " + error);
 	nlohmann::json response = {
 		{"success", false},
 		{"error", error}
@@ -127,12 +127,15 @@ void Server::send_error(const std::string& error) {
 }
 
 void Server::handle_check_avaliable() {
+	spdlog::info("Checking avaliability call");
+
 	nlohmann::json response = {
 		{"success", true},
 		{"result", nlohmann::json::object()}
 	};
 
 	send(response);
+	spdlog::info("Checking avaliability is OK");
 }
 
 void Server::handle_copy_file(const nlohmann::json& args) {
@@ -140,7 +143,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 		auto content64 = file.at("content").get<std::string>();
 		auto content = base64_decode(content64);
 		fs::path dst = file.at("path").get<std::string>();
-		std::cout << "Copying " << dst << std::endl;
+		spdlog::info("Copying file to guest: " + dst.generic_string());
 
 		if (!fs::exists(dst.parent_path())) {
 			if (!fs::create_directories(dst.parent_path())) {
@@ -154,7 +157,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 		}
 		file_stream.write((const char*)&content[0], content.size());
 		file_stream.close();
-		std::cout << "Copied file " << dst.generic_string() << std::endl;
+		spdlog::info("File copied successfully to guest: " + dst.generic_string());
 	}
 
 	nlohmann::json response = {
@@ -165,7 +168,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 	send(response);
 }
 
-nlohmann::json Server::copy_single_file(const fs::path& src, const fs::path& dst) {
+nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
 	std::ifstream testFile(src.generic_string(), std::ios::binary);
 
 	std::noskipws(testFile);
@@ -190,7 +193,7 @@ nlohmann::json Server::copy_single_file(const fs::path& src, const fs::path& dst
 	return result;
 }
 
-nlohmann::json Server::copy_directory(const fs::path& dir, const fs::path& dst) {
+nlohmann::json Server::copy_directory_out(const fs::path& dir, const fs::path& dst) {
 	nlohmann::json files = nlohmann::json::array();
 
 	files.push_back({
@@ -199,9 +202,9 @@ nlohmann::json Server::copy_directory(const fs::path& dir, const fs::path& dst) 
 
 	for (auto& file: fs::directory_iterator(dir)) {
 		if (fs::is_regular_file(file)) {
-			files.push_back(copy_single_file(file, dst / fs::path(file).filename()));
+			files.push_back(copy_single_file_out(file, dst / fs::path(file).filename()));
 		} else if (fs::is_directory(file)) {
-			auto result = copy_directory(file, dst / fs::path(file).filename());
+			auto result = copy_directory_out(file, dst / fs::path(file).filename());
 			files.insert(files.end(), result.begin(), result.end());
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
@@ -216,14 +219,16 @@ void Server::handle_copy_files_out(const nlohmann::json& args) {
 	fs::path src = args[0].get<std::string>();
 	fs::path dst = args[1].get<std::string>();
 
+	spdlog::info("Copying FROM guest: " + src.generic_string());
+
 	if (!fs::exists(src)) {
 		throw std::runtime_error("Source " + src.generic_string() + " doesn't exist on guest");
 	}
 
 	if (fs::is_regular_file(src)) {
-		files.push_back(copy_single_file(src, dst));
+		files.push_back(copy_single_file_out(src, dst));
 	} else if (fs::is_directory(src)) {
-		auto result = copy_directory(src, dst);
+		auto result = copy_directory_out(src, dst);
 		files.insert(files.end(), result.begin(), result.end());
 	} else {
 		throw std::runtime_error("Unknown type of file: " + src.generic_string());
@@ -233,12 +238,17 @@ void Server::handle_copy_files_out(const nlohmann::json& args) {
 		{"success", true},
 		{"result", files}
 	};
+
 	send(result);
+	spdlog::info("Copied FROM guest: " + src.generic_string());
 }
 
 
 void Server::handle_execute(const nlohmann::json& args) {
 	auto cmd = args[0].get<std::string>();
+
+	spdlog::info("Executing command " + cmd);
+
 	cmd += " 2>&1";
 
 	std::array<char, 256> buffer;
@@ -272,4 +282,7 @@ void Server::handle_execute(const nlohmann::json& args) {
 	};
 
 	send(result);
+
+	spdlog::info("Command finished: " + cmd);
+	spdlog::info("Return code: " + std::to_string(rc));
 }
