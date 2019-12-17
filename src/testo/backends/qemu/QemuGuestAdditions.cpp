@@ -142,7 +142,6 @@ void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path&
 	std::noskipws(testFile);
 	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
 	std::string encoded = base64_encode(fileContents.data(), fileContents.size());
-	std::vector<uint8_t> decoded = base64_decode(encoded);
 
 	nlohmann::json request = {
 			{"method", "copy_file"},
@@ -183,6 +182,5 @@ nlohmann::json QemuGuestAdditions::recv() {
 	std::string json_str;
 	json_str.resize(json_length);
 	socket.read(&json_str[0], json_length);
-	//std::cout << nlohmann::json::parse(json_str).dump(4) << std::endl;
 	return nlohmann::json::parse(json_str);
 }

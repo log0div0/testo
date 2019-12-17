@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-Server::Server(const std::string& fd_path): fd_path(fd_path) {}
+Server::Server(const fs::path& fd_path): fd_path(fd_path) {}
 
 Server::~Server() {
 	if (fd) {
@@ -82,7 +82,7 @@ void Server::send(const nlohmann::json& response) {
 void Server::run() {
 	fd = open (fd_path.c_str(), O_RDWR);
 	if (fd < 0) {
-		std::string error_msg = "error " + std::to_string(errno) + " opening " + fd_path + ": " + strerror (errno);
+		std::string error_msg = "error " + std::to_string(errno) + " opening " + fd_path.generic_string() + ": " + strerror (errno);
 		throw std::runtime_error(error_msg);
 	}
 
@@ -106,7 +106,7 @@ void Server::handle_command(const nlohmann::json& command) {
 			//std::cout << "Copy file\n";
 			return handle_copy_file(command.at("args"));
 		} else if (method_name == "copy_files_out") {
-			return handle_copy_file_out(command.at("args"));
+			return handle_copy_files_out(command.at("args"));
 		} else if (method_name == "execute") {
 			return handle_execute(command.at("args"));
 		} else {
@@ -135,27 +135,26 @@ void Server::handle_check_avaliable() {
 	send(response);
 }
 
-std::string get_folder(const std::string& str) {
-	size_t found;
-	found = str.find_last_of("/");
-	return str.substr(0,found);
-}
-
 void Server::handle_copy_file(const nlohmann::json& args) {
 	for (auto file: args) {
 		auto content64 = file.at("content").get<std::string>();
 		auto content = base64_decode(content64);
-		auto dst = file.at("path").get<std::string>();
+		fs::path dst = file.at("path").get<std::string>();
 		std::cout << "Copying " << dst << std::endl;
-		std::string mkdir_cmd = std::string("mkdir -p ") + get_folder(dst);
-		std::system(mkdir_cmd.c_str());
+
+		if (!fs::exists(dst.parent_path())) {
+			if (!fs::create_directories(dst.parent_path())) {
+				throw std::runtime_error(std::string("Can't create directory: ") + dst.parent_path().generic_string());
+			}
+		}
+
 		std::ofstream file_stream(dst, std::ios::out | std::ios::binary);
 		if (!file_stream) {
-			throw std::runtime_error("Couldn't open file stream to write file " + dst);
+			throw std::runtime_error("Couldn't open file stream to write file " + dst.generic_string());
 		}
 		file_stream.write((const char*)&content[0], content.size());
 		file_stream.close();
-		std::cout << "Copied file " << dst << std::endl;
+		std::cout << "Copied file " << dst.generic_string() << std::endl;
 	}
 
 	nlohmann::json response = {
@@ -166,25 +165,75 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 	send(response);
 }
 
-void Server::handle_copy_file_out(const nlohmann::json& args) {
-	std::string src = args[0];
-	std::string dst = args[1];
-	std::cout << "SRC: " << src << std::endl;
-	std::cout << "DST: " << dst << std::endl;
+nlohmann::json Server::copy_single_file(const fs::path& src, const fs::path& dst) {
+	std::ifstream testFile(src.generic_string(), std::ios::binary);
 
-	struct stat info;
-	if (stat(src.c_str(), &info)) {
-		std::string error_msg = "error " + std::to_string(errno) + " stat() " + src + ": " + strerror (errno);
-		throw std::runtime_error(error_msg);
-	} else if(info.st_mode & S_IFDIR) {
-		//copydir
-	} else {
-		std::ofstream file_stream(dst, std::ios::in | std::ios::binary);
-		if (!file_stream) {
-			throw std::runtime_error("Couldn't open file stream to read file " + src);
+	std::noskipws(testFile);
+	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
+	std::string encoded = base64_encode(fileContents.data(), fileContents.size());
+
+	nlohmann::json request = {
+			{"method", "copy_file"},
+			{"args", {
+				{
+					{"path", dst.generic_string()},
+					{"content", encoded}
+				}
+			}}
+	};
+
+	nlohmann::json result = {
+		{"path", dst.generic_string()},
+		{"content", encoded}
+	};
+
+	return result;
+}
+
+nlohmann::json Server::copy_directory(const fs::path& dir, const fs::path& dst) {
+	nlohmann::json files = nlohmann::json::array();
+
+	files.push_back({
+		{"path", dst.generic_string()}
+	});
+
+	for (auto& file: fs::directory_iterator(dir)) {
+		if (fs::is_regular_file(file)) {
+			files.push_back(copy_single_file(file, dst / fs::path(file).filename()));
+		} else if (fs::is_directory(file)) {
+			auto result = copy_directory(file, dst / fs::path(file).filename());
+			files.insert(files.end(), result.begin(), result.end());
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
 		}
 	}
 
+	return files;
+}
+
+void Server::handle_copy_files_out(const nlohmann::json& args) {
+	nlohmann::json files = nlohmann::json::array();
+	fs::path src = args[0].get<std::string>();
+	fs::path dst = args[1].get<std::string>();
+
+	if (!fs::exists(src)) {
+		throw std::runtime_error("Source " + src.generic_string() + " doesn't exist on guest");
+	}
+
+	if (fs::is_regular_file(src)) {
+		files.push_back(copy_single_file(src, dst));
+	} else if (fs::is_directory(src)) {
+		auto result = copy_directory(src, dst);
+		files.insert(files.end(), result.begin(), result.end());
+	} else {
+		throw std::runtime_error("Unknown type of file: " + src.generic_string());
+	}
+
+	nlohmann::json result = {
+		{"success", true},
+		{"result", files}
+	};
+	send(result);
 }
 
 

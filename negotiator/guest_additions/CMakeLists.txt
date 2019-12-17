@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 
 file(GLOB_RECURSE SRCS *.cpp)
 
-set(LIBS)
+set(LIBS
+	stdc++fs
+	)
+
+set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 add_executable(guest_additions ${SRCS})
 target_link_libraries(guest_additions ${LIBS})

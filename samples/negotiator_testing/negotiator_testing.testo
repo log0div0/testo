@@ -32,12 +32,13 @@ test install_guest_additions: ubuntu_installation {
 	negotiator_testing {
 		enter_sudo("negotiator", "user", "1111")
 		plug dvd "${NEGOTIATOR_DIR}/guest_additions.iso"
+		wait timeout 5s
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounting read-only";
 		type "cp /media/guest_additions /opt"; press Enter
 		type "/opt/guest_additions"; press Enter
-		wait timeout 10s
-		copyto "/home/alex/work/testo/testo/samples/" "/home/user/samples"
+		wait timeout 2s
+		#copyto "/home/alex/work/testo/testo/samples/" "/home/user/samples"
 		exec bash """for i in {1..5}
 			do
 				echo "Hello world $i"
@@ -47,8 +48,9 @@ test install_guest_additions: ubuntu_installation {
 		exec bash """
 			cd /home/user
 			echo "Hello world" > /tmp/zumba
-			ls /zz 2>/tmp/failed
 		"""
+
+		copyfrom "/etc/X11ss" "/home/alex/work/zumba"
 
 		abort "stop here"
 	}
