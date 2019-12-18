@@ -17,6 +17,13 @@ machine negotiator_testing {
 	}
 }
 
+machine CentOS_guest_additions {
+	cpus: 1
+	ram: 1024Mb
+	iso: "${ISO_DIR}/CentOS-7-x86_64-Minimal-1810.iso"
+	disk_size: 10Gb
+}
+
 test ubuntu_installation {
 	negotiator_testing install_ubuntu("negotiator", "user", "1111")
 }
@@ -39,6 +46,81 @@ test install_guest_additions: ubuntu_installation {
 		wait "mounting read-only";
 		type "dpkg -i /media/testo-guest-additions-1.0.0.deb"; press Enter
 		wait "Setting up testo-guest-additions"
+		copyto "/home/alex/work/testo/testo/samples/" "/home/user/samples"
+		exec bash """for i in {1..5}
+			do
+				echo "Hello world $i"
+			done
+		"""
+
+		exec bash """
+			cd /home/user
+			echo "Hello world" > /tmp/zumba
+		"""
+
+		copyfrom "/etc/X11" "/home/alex/work/zumba"
+
+		abort "stop here"
+	}
+}
+
+macro login(host_name, login, password) {
+	wait "${host_name} login:"; type "${login}"; press Enter
+	wait "Password:"; type "${password}"; press Enter;
+	wait "[root@${host_name} ~]#"
+}
+
+test install_centos {
+	CentOS_guest_additions {
+		start
+		wait "Install CentOS 7"; press Tab; type " text"; press Enter
+		wait "Please make your choice" timeout 3m;
+		press Two, Enter;
+		wait "Set timezone"; press One, Enter;
+		wait "Available regions";press One, Enter;
+		wait "Available timezones in region Europe"; type "33"; press Enter
+		wait "2) [x] Time settings"; press Five, Enter;
+		wait "1 disk selected"; press C, Enter;
+		wait "Installation requires partitioning"; press C, Enter
+		wait "Select a partition scheme configuration"; press C, Enter
+		wait "5) [x] Installation Destination"; press Seven, Enter
+		wait "Set host name"; press One, Enter
+		wait "Enter new value for"; type "centos"; press Enter;
+		wait "Host name: centos"
+
+		press C, Enter
+		wait "Installation"; press Eight, Enter
+		wait "Password:"; type "1111"; press Enter;
+		wait "Password (confirm):"; type "1111"; press Enter;
+		wait "The password you have provided is weak"; type "yes"; press Enter
+		wait "8) [x] Root password";
+
+		if (check "4) [!] Software selection") {
+			press Four, Enter;
+			wait "Base environment"; press C, Enter
+			wait timeout 3s;
+		}
+
+		press B, Enter
+
+		wait "Installation complete" timeout 15m; press Enter
+		wait "Install CentOS 7"; unplug dvd;
+		stop; start
+		login("centos", "root", "1111");
+	}
+}
+
+test centos_install_guest_additions: install_centos {
+	CentOS_guest_additions {
+		type "mkdir /media/cdrom"; press Enter
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		wait timeout 5s
+		type "mount /dev/cdrom /media/cdrom"; press Enter
+		wait "mounting read-only"; type "rpm -i /media/cdrom/testo-guest-additions-1.0.0.rpm"; press Enter;
+		wait "Created symlink";
+		exec bash "echo test"
+		exec bash "umount /media/cdrom";
+
 		copyto "/home/alex/work/testo/testo/samples/" "/home/user/samples"
 		exec bash """for i in {1..5}
 			do

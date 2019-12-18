@@ -74,8 +74,7 @@ test sgw_basic: install_wireguard
 	vpn_sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips 10.0.0.1/32 endpoint 192.168.1.1:51820"
 
 	vpn_sgw1 {
-		type "sudo su"; press Enter
-		wait "password for ${login}"; type "${password}"; press Enter
+		enter_sudo("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
 		type "tcpdump -i WAN -w /tmp/captured.pcapng"; press Enter
 	}
 
