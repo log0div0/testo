@@ -1,0 +1,56 @@
+
+include "./macros.testo"
+
+network nat {
+	mode: "nat"
+}
+
+machine astra {
+	cpus: 1
+	iso: "${ISO_DIR}/orel-current.iso"
+	ram: 1024Mb
+	disk_size: 10Gb
+
+	nic nat: {
+		attached_to: "nat"
+	}
+}
+
+param host_name "testo-astralinux"
+param login "user"
+param password "12345678"
+
+test install_astralinux {
+	astra {
+		start
+		wait "Графическая установка" && `select * from textlines
+			where text = "Русский" and foreground = "white" and background = "blue"`; press Enter, Down
+		wait `select * from textlines
+			where text = "Установка" and foreground = "white"`; press Enter
+		wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
+		wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
+		wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
+		wait "Имя учётной записи администратора"; type "${login}"; press Enter
+		wait "Введите пароль для нового администратора"; type "${password}"; press Enter
+		wait "Введите пароль еще раз"; type "${password}"; press Enter
+		wait "Настройка времени"; select_menu_vertical("Москва+00");
+		wait "Метод разметки"; select_menu_vertical("Авто - использовать весь диск");
+		wait "Выберите диск для разметки"; select_menu_vertical("SCSI1 (0,0,0) (sda)");
+		wait "Схема разметки"; select_menu_vertical("Все файлы в одном разделе");
+		select_menu_vertical("Закончить разметку и записать изменения на диск");
+		wait "Записать изменения на диск?"; select_menu_horizontal("Да")
+		wait "Выбор программного обеспечения" timeout 10m;
+		press Down, Space
+		press Down, Space
+		press Down, Space
+		press Enter
+		wait "Дополнительные настройки ОС" timeout 20m; press Enter
+		wait "Установить системный загрузчик GRUB"; select_menu_horizontal("Да")
+		wait "Устройство для установки системного загрузчика"; select_menu_vertical("/dev/sda")
+		wait "Установка завершена" timeout 3m; unplug dvd; select_menu_horizontal("Продолжить")
+		wait "${host_name} login:" timeout 5m; type "${login}"; press Enter
+		wait "Password:"; type "${password}"; press Enter
+		wait "${login}@${host_name}:"
+
+	}
+}

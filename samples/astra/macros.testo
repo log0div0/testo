@@ -1,0 +1,87 @@
+
+macro select_menu_horizontal(menu_entry) {
+	wait "${menu_entry}"
+
+	#check if it's enabled by default
+	if (check `select * from textlines
+		where text = "${menu_entry}" and foreground = "gray" and background = "red"`)
+	{
+		press Enter
+	} else {
+		press Left*5
+
+		for i in 0..5 {
+			if (check `select * from textlines
+					where text = "${menu_entry}" and foreground = "gray" and background = "red"` timeout 50ms)
+			{
+				press Enter;
+				break;
+			}
+
+			press Right
+		} else {
+			abort "Can't find menu entry ${menu_entry}"
+		}
+	}
+}
+
+macro select_menu_vertical(menu_entry) {
+	wait "${menu_entry}"
+
+	#check if it's enabled by default
+	if (check `select * from textlines
+		where text = "${menu_entry}" and foreground = "gray" and background = "red"`)
+	{
+		press Enter
+	} else {
+		press Up*20
+
+		for i in 0..20 {
+			if (check `select * from textlines
+					where text = "${menu_entry}" and foreground = "gray" and background = "red"` timeout 50ms)
+			{
+				press Enter;
+				break;
+			}
+
+			press Down
+		} else {
+			abort "Can't find menu entry ${menu_entry}"
+		}
+	}
+}
+
+macro do_select_checkbox_vertical(entry) {
+	press Up*20
+
+	for i in 0..20 {
+		press Space
+		if (check "${entry}" timeout 50ms) {
+			press Enter;
+			break;
+		}
+		press Space, Down
+	} else {
+		abort "Can't select menu entry ${entry}"
+	}
+}
+
+macro select_checkbox_vertical(name, state) {
+	wait "${name}" #let's ensure we even have that entry
+
+	if ("${state}" STREQUAL "on") {
+		if (check "[*] ${name}") {
+			print "checkbox ${name} is already selected"
+		} else {
+			do_select_checkbox_vertical("[*] ${name}")
+		}
+	} else if ("${state}" STREQUAL "off") {
+		if (check "[ ] ${name}") {
+			print "checkbox ${name} is already unselected"
+		} else {
+			do_select_checkbox_vertical("[ ] ${name}")
+		}
+	} else {
+		abort "Unknown state: ${state}"
+	}
+}
