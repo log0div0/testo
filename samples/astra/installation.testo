@@ -54,3 +54,10 @@ test install_astralinux {
 
 	}
 }
+
+test install_guest_additions: install_astralinux {
+	astra {
+		install_guest_additions("${host_name}", "${login}", "${password}")
+		exec bash "echo Hello world"
+	}
+}
