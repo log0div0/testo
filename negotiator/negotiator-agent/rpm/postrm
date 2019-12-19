@@ -1,4 +1,0 @@
-#!/bin/bash -e
-
-rm -f /var/log/negotiator-agent.log
-systemctl daemon-reload

@@ -11,10 +11,10 @@ macro install_ubuntu(host_name, login, password) {
 	wait "Detect keyboard layout?";	press Enter
 	wait "Country of origin for the keyboard"; press Enter
 	wait "Keyboard layout"; press Enter
-	wait "No network interfaces detected" || "Primary network interface" timeout 5m
+	wait "No network interfaces detected" || "Primary network interface" || "Hostname:" timeout 5m
 	if (check "No network interfaces detected") {
 		press Right, Enter
-	} else {
+	} else if (check "Primary network interface"){
 		press Enter
 	}
 	wait "Hostname:" timeout 30s; press Backspace*36; type "${host_name}"; press Enter
@@ -34,7 +34,7 @@ macro install_ubuntu(host_name, login, password) {
 	wait "How do you want to manage upgrades" timeout 6m; press Enter
 	wait "Choose software to install"; press Enter
 	wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
-	wait "Installation complete" timeout 1m; unplug dvd; press Enter
+	wait "Installation complete" timeout 1m; unplug dvd; wait timeout 15s; press Enter
 	wait "login:" timeout 2m; type "${login}"; press Enter
 	wait "Password:"; type "${password}"; press Enter
 	wait "Welcome to Ubuntu"
@@ -50,14 +50,17 @@ macro install_guest_additions(host_name, login, password) {
 	enter_sudo("${host_name}", "${login}", "${password}")
 	type "apt-get update"; press Enter
 	wait "Reading package lists... Done" timeout 5m;
-	type "clear && apt-get install -y python daemon"; press Enter
+	type "clear && apt-get install -y daemon"; press Enter
 	wait "Setting up daemon" timeout 3m
 	wait "root@${host_name}"
 
-	plug dvd "${ISO_DIR}/negotiator.iso"; wait timeout 5s
+	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; wait timeout 5s
 	type "mount /dev/cdrom /media"; press Enter
-	wait "mounting read-only"; type "dpkg -i /media/negotiator-agent-0.0.1.deb"; press Enter;
-	wait "Setting up negotiator-agent"
+	wait "mounting read-only"; type "dpkg -i /media/testo-guest-additions-1.0.0.deb"; press Enter;
+	wait "Setting up testo-guest-additions"
+	type "umount /media"; press Enter;
+	wait timeout 2s
+	unplug dvd
 }
 
 macro unplug_nat(login, password) {
