@@ -14,8 +14,6 @@ set(CMAKE_EXE_LINKER_FLAGS "-static")
 add_executable(testo-guest-additions ${SRCS})
 target_link_libraries(testo-guest-additions ${LIBS})
 
-add_dependencies(testo-guest-additions spdlog)
-
 add_custom_target(guest-additions-iso
 	COMMAND
 		rm -f testo-guest-additions.iso &&
