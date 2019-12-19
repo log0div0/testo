@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-add_subdirectory(deb)
-add_subdirectory(rpm)
+add_subdirectory(pkg)
 
 file(GLOB_RECURSE SRCS *.cpp)
 
@@ -19,5 +18,5 @@ add_custom_target(guest-additions-iso
 		rm -f testo-guest-additions.iso &&
 		genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot -o testo-guest-additions.iso ${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-1.0.0.deb ${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-1.0.0.rpm
 	DEPENDS
-		guest-additions-package-deb guest-additions-package-rpm
+		guest-additions-package
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/out/pkg)

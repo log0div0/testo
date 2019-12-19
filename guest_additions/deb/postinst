@@ -1,4 +1,0 @@
-#!/bin/bash -e
-
-update-rc.d testo-guest-additions defaults
-service testo-guest-additions start

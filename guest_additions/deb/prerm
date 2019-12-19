@@ -1,4 +1,0 @@
-#!/bin/bash -e
-
-service testo-guest-additions stop
-update-rc.d testo-guest-additions remove
