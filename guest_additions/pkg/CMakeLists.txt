@@ -33,10 +33,6 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 ${CMAKE_CURRENT_SOURCE_DIR}/prerm;\
 ${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
-	daemon \
-")
-
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 
 add_package(guest-additions-package)

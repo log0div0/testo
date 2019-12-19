@@ -38,8 +38,6 @@ test install_negotiator: ubuntu_installation {
 test install_guest_additions: ubuntu_installation {
 	negotiator_testing {
 		enter_sudo("negotiator", "user", "1111")
-		type "apt install daemon"; press Enter
-		wait "Setting up daemon"
 		plug dvd "${NEGOTIATOR_DIR}/testo-guest-additions.iso"
 		wait timeout 5s
 		type "mount /dev/cdrom /media"; press Enter
