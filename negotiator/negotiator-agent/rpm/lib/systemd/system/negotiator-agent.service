@@ -1,9 +1,0 @@
-[Unit]
-Description=negotiator-agent
-
-[Install]
-WantedBy=multi-user.target
-
-[Service]
-ExecStart=/usr/sbin/negotiator-agent
-Restart=always

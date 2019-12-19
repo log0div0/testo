@@ -294,7 +294,7 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>());
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>(), id());
 
 		uint32_t nic_count = 0;
 

@@ -26,7 +26,6 @@ QemuGuestAdditions::QemuGuestAdditions(vir::Domain& domain) {
 	}
 
 	endpoint = Endpoint(path);
-
 	socket.connect(endpoint);
 }
 
@@ -42,7 +41,6 @@ bool QemuGuestAdditions::is_avaliable() {
 
 		auto response = recv();
 		return response.at("success").get<bool>();
-
 	} catch (const std::exception&) {
 		return false;
 	}
@@ -144,7 +142,6 @@ void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path&
 	std::noskipws(testFile);
 	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
 	std::string encoded = base64_encode(fileContents.data(), fileContents.size());
-	std::vector<uint8_t> decoded = base64_decode(encoded);
 
 	nlohmann::json request = {
 			{"method", "copy_file"},
