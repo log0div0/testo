@@ -1,11 +1,16 @@
 
 #include "TextDetector.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <onnxruntime_cxx_api.h>
+#pragma GCC diagnostic pop
 #include <iostream>
 #include <utf8.hpp>
 
 extern unsigned char TextDetector_onnx[];
 extern unsigned int TextDetector_onnx_len;
+
+namespace nn {
 
 TextDetector::TextDetector() {
 	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "text_detector");
@@ -16,12 +21,17 @@ TextDetector::~TextDetector() {
 
 }
 
-std::vector<Rect> TextDetector::detect(stb::Image& image)
+std::vector<Rect> TextDetector::detect(const stb::Image& image)
 {
 	if (!image.data) {
 		return {};
 	}
 
+	run_nn(image);
+	return find_rects();
+}
+
+void TextDetector::run_nn(const stb::Image& image) {
 	if ((in_w != image.width) ||
 		(in_h != image.height))
 	{
@@ -40,6 +50,7 @@ std::vector<Rect> TextDetector::detect(stb::Image& image)
 
 		in.resize(in_c * in_h * in_w);
 		out.resize(out_c * out_h * out_w);
+		labelingWu = LabelingWu(out_w, out_h);
 
 		in_tensor = std::make_unique<Ort::Value>(
 			Ort::Value::CreateTensor<float>(memory_info, in.data(), in.size(), in_shape.data(), in_shape.size()));
@@ -65,6 +76,15 @@ std::vector<Rect> TextDetector::detect(stb::Image& image)
 	const char* out_names[] = {"output"};
 
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
+}
 
-	throw std::runtime_error("Implement me");
+std::vector<Rect> TextDetector::find_rects() {
+	for (int y = 0; y < out_h; ++y) {
+		for (int x = 0; x < out_w; ++x) {
+			labelingWu.I[y * out_w + x] = out[y * out_w * out_c + x * out_c + 0] > 0.75;
+		}
+	}
+	return labelingWu.run();
+}
+
 }

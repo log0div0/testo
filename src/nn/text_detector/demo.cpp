@@ -11,7 +11,7 @@ std::string query;
 void predict()
 {
 	stb::Image image(image_file);
-	TextDetector detector;
+	nn::TextDetector detector;
 
 	auto start = std::chrono::high_resolution_clock::now();
 	auto rects = detector.detect(image);

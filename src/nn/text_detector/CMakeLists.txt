@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(SRCS TextDetector.cpp)
+set(SRCS
+	LabelingWu.cpp
+	TextDetector.cpp
+)
 embed_onnx_model(${CMAKE_CURRENT_SOURCE_DIR}/TextDetector.onnx)
 
 add_library(text-detector STATIC ${SRCS})
