@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
 include_directories(
-	${TENSORFLOW_DIR}
-	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/downloads/flatbuffers/include
+	${ONNX_RUNTIME_DIR}/include
 )
 
-macro(embed_ftlite_model MODEL_PATH)
+macro(embed_onnx_model MODEL_PATH)
 	get_filename_component(MODEL_NAME ${MODEL_PATH} NAME)
 	get_filename_component(MODEL_DIRECTORY ${MODEL_PATH} DIRECTORY)
 	add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/${MODEL_NAME}.cpp
@@ -14,5 +13,5 @@ macro(embed_ftlite_model MODEL_PATH)
 		DEPENDS ${MODEL_PATH}
 	)
 	list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/${MODEL_NAME}.cpp)
-endmacro(embed_ftlite_model)
+endmacro(embed_onnx_model)
 add_subdirectory(text_detector)

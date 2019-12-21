@@ -9,19 +9,13 @@ if (WIN32)
 	)
 endif()
 
-if(NOT TENSORFLOW_DIR)
-	message(FATAL_ERROR "TENSORFLOW_DIR is not set")
+if(NOT ONNX_RUNTIME_DIR)
+	message(FATAL_ERROR "ONNX_RUNTIME_DIR is not set")
 endif()
 
-if(APPLE)
 link_directories(
-	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/osx_x86_64/lib/
+	${ONNX_RUNTIME_DIR}/lib/
 )
-else()
-link_directories(
-	${TENSORFLOW_DIR}/tensorflow/lite/tools/make/gen/linux_x86_64/lib/
-)
-endif()
 
 if (APPLE)
 include_directories(/usr/local/include)
