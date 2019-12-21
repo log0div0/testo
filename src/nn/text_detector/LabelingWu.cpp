@@ -147,7 +147,7 @@ std::vector<Rect> LabelingWu::run(int connectivity) {
 	LabelT nLabels = flattenL(lunique);
 
 	std::vector<Rect> rects;
-	rects.resize(nLabels);
+	rects.resize(nLabels - 1);
 
 	for (size_t l = 0; l < rects.size(); ++l) {
 		Rect& rect = rects[l];
@@ -166,11 +166,13 @@ std::vector<Rect> LabelingWu::run(int connectivity) {
 			const LabelT l = P[*Lrow];
 			*Lrow = l;
 
-			Rect& rect = rects[l];
-			rect.left = std::min(rect.left, c_i);
-			rect.top = std::min(rect.top, r_i);
-			rect.right = std::max(rect.right, c_i);
-			rect.bottom = std::max(rect.bottom, r_i);
+			if (l) {
+				Rect& rect = rects[l - 1];
+				rect.left = std::min(rect.left, c_i);
+				rect.top = std::min(rect.top, r_i);
+				rect.right = std::max(rect.right, c_i);
+				rect.bottom = std::max(rect.bottom, r_i);
+			}
 		}
 	}
 
