@@ -33,6 +33,10 @@ private:
 	int out_w = 0;
 	int out_h = 0;
 	int out_c = 0;
+	int in_pad_w = 0;
+	int in_pad_h = 0;
+	int out_pad_w = 0;
+	int out_pad_h = 0;
 	std::vector<float> in;
 	std::vector<float> out;
 	LabelingWu labelingWu;
