@@ -9,7 +9,7 @@ embed_onnx_model(${CMAKE_CURRENT_SOURCE_DIR}/TextDetector.onnx)
 add_library(text-detector STATIC ${SRCS})
 target_link_libraries(text-detector stb onnxruntime pthread)
 
-add_executable(text_detector_demo demo.cpp)
+add_executable(text_detector_demo main.cpp)
 target_link_libraries(text_detector_demo text-detector)
 
 file(GLOB_RECURSE TEST_SRCS tests/*.cpp)
