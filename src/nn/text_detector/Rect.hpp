@@ -60,7 +60,14 @@ struct Rect {
 	int32_t height() const {
 		return bottom - top + 1;
 	}
+
+	int32_t center_x() const {
+		return left + width() / 2;
+	}
+
+	int32_t center_y() const {
+		return top + height() / 2;
+	}
 };
 
 }
-

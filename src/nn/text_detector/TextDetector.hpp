@@ -25,7 +25,8 @@ struct TextDetector {
 
 private:
 	void run_nn(const stb::Image& image);
-	std::vector<Rect> find_rects();
+	std::vector<Rect> find_words();
+	std::vector<Rect> find_chars();
 
 	int in_w = 0;
 	int in_h = 0;

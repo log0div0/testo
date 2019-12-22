@@ -47,7 +47,7 @@ std::vector<Rect> TextDetector::detect(const stb::Image& image)
 	}
 
 	run_nn(image);
-	return find_rects();
+	return find_words();
 }
 
 void TextDetector::run_nn(const stb::Image& image) {
@@ -105,15 +105,76 @@ void TextDetector::run_nn(const stb::Image& image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<Rect> TextDetector::find_rects() {
-	for (int y = 0; y < out_h; ++y) {
-		for (int x = 0; x < out_w; ++x) {
-			labelingWu.I[y*out_w + x] = out[y*out_pad_w*out_c + x*out_c] > .75;
+std::vector<Rect> TextDetector::find_words() {
+	std::vector<Rect> chars = find_chars();
+	std::vector<bool> visited_chars(chars.size(), false);
+	std::vector<Rect> words;
+	for (int x = 0; x < out_w; ++x) {
+		for (int y = 0; y < out_h; ++y) {
+			uint16_t l = labelingWu.L[y*out_w + x];
+			if (!l) {
+				continue;
+			}
+			if (visited_chars[l-1]) {
+				continue;
+			}
+			visited_chars[l-1] = true;
+			Rect word = chars[l-1];
+			Rect a = chars[l-1];
+			while (true) {
+word_next:
+				for (int x = a.right; x <= (a.right + a.width()*2); ++x) {
+					for (int y = a.top; y <= a.bottom; ++y) {
+						uint16_t l = labelingWu.L[y*out_w + x];
+						if (!l) {
+							continue;
+						}
+						if (visited_chars[l-1]) {
+							continue;
+						}
+						Rect b = chars[l-1];
+						if (a.right >= b.left) {
+							int32_t mean_height = (a.height() + b.height()) / 2;
+							int32_t min_bottom = std::min(a.bottom, b.bottom);
+							int32_t max_top = std::max(a.top, b.top);
+							if ((min_bottom - max_top) >= (mean_height / 2)) {
+								visited_chars[l-1] = true;
+								word |= b;
+								a = b;
+								goto word_next;
+							}
+						}
+						for (int x = a.center_x(); x <= b.center_x(); ++x) {
+							for (int y = std::max(a.top, b.top); y <= std::min(a.bottom, b.bottom); ++y) {
+								if (out[y*out_pad_w*out_c + x*out_c + 1] >= 0.75) {
+									visited_chars[l-1] = true;
+									word |= b;
+									a = b;
+									goto word_next;
+								}
+							}
+						}
+						goto word_finish;
+					}
+				}
+				goto word_finish;
+			}
+word_finish:
+			words.push_back(word);
 		}
 	}
-	std::vector<Rect> rects = labelingWu.run();
-	for (size_t l = 0; l < rects.size(); ++l) {
-		Rect& rect = rects[l];
+	return words;
+}
+
+std::vector<Rect> TextDetector::find_chars() {
+	for (int y = 0; y < out_h; ++y) {
+		for (int x = 0; x < out_w; ++x) {
+			labelingWu.I[y*out_w + x] = out[y*out_pad_w*out_c + x*out_c] >= .75;
+		}
+	}
+	std::vector<Rect> chars = labelingWu.run();
+	for (size_t i = 0; i < chars.size(); ++i) {
+		Rect& rect = chars[i];
 		Rect new_rect;
 
 		{
@@ -127,7 +188,7 @@ std::vector<Rect> TextDetector::find_rects() {
 						max = out[y*out_pad_w*out_c + x*out_c];
 					}
 				}
-				if ((max < 0.25) || (max > prev_max)) {
+				if ((max < 0.5) || (max > prev_max)) {
 					++x;
 					break;
 				}
@@ -146,7 +207,7 @@ std::vector<Rect> TextDetector::find_rects() {
 						max = out[y*out_pad_w*out_c + x*out_c];
 					}
 				}
-				if ((max < 0.25) || (max > prev_max)) {
+				if ((max < 0.5) || (max > prev_max)) {
 					--x;
 					break;
 				}
@@ -195,7 +256,7 @@ std::vector<Rect> TextDetector::find_rects() {
 
 		rect = new_rect;
 	}
-	return rects;
+	return chars;
 }
 
 }
