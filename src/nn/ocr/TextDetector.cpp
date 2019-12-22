@@ -1,11 +1,6 @@
 
 #include "TextDetector.hpp"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#include <onnxruntime_cxx_api.h>
-#pragma GCC diagnostic pop
 #include <iostream>
-#include <utf8.hpp>
 
 extern unsigned char TextDetector_onnx[];
 extern unsigned int TextDetector_onnx_len;
@@ -32,8 +27,7 @@ int nearest_n_times_div_by_2(int value, size_t n = 4) {
 }
 
 TextDetector::TextDetector() {
-	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "text_detector");
-	session = std::make_unique<Ort::Session>(*env, TextDetector_onnx, TextDetector_onnx_len, Ort::SessionOptions{nullptr});
+	session = LoadModel(TextDetector_onnx, TextDetector_onnx_len);
 }
 
 TextDetector::~TextDetector() {

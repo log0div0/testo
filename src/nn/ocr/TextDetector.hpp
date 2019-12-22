@@ -2,15 +2,8 @@
 #pragma once
 
 #include <stb/Image.hpp>
-#include <vector>
-#include <memory>
 #include "LabelingWu.hpp"
-
-namespace Ort {
-class Env;
-class Session;
-class Value;
-}
+#include "OnnxRuntime.hpp"
 
 namespace nn {
 
@@ -42,7 +35,6 @@ private:
 	std::vector<float> out;
 	LabelingWu labelingWu;
 
-	std::unique_ptr<Ort::Env> env;
 	std::unique_ptr<Ort::Session> session;
 	std::unique_ptr<Ort::Value> in_tensor;
 	std::unique_ptr<Ort::Value> out_tensor;

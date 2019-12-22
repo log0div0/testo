@@ -3,18 +3,20 @@
 #include <iostream>
 #include <clipp.h>
 #include "TextDetector.hpp"
+#include "TextRecognizer.hpp"
 
 std::string image_file;
 std::string output_file = "output.png";
-std::string query;
 
 void predict()
 {
 	stb::Image image(image_file);
 	nn::TextDetector detector;
+	nn::TextRecognizer recognizer;
 
 	auto start = std::chrono::high_resolution_clock::now();
 	auto rects = detector.detect(image);
+	auto texts = recognizer.recognize(image, rects);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << time.count() << " seconds" << std::endl;
@@ -22,7 +24,12 @@ void predict()
 	for (auto& rect: rects) {
 		image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
 	}
+
 	image.write_png(output_file);
+
+	for (auto& text: texts) {
+		std::cout << text << std::endl;
+	}
 }
 
 int main(int argc, char **argv)
@@ -32,7 +39,6 @@ int main(int argc, char **argv)
 
 		auto cli = (
 			value("input image", image_file),
-			value("query", query),
 			option("-o", "--output") & value("output image", output_file)
 		);
 
@@ -41,6 +47,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
+		nn::OnnxRuntime onnx_runtime;
 		predict();
 	}
 	catch (const std::exception& error) {
