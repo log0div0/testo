@@ -14,4 +14,5 @@ macro(embed_onnx_model MODEL_PATH)
 	)
 	list(APPEND SRCS ${CMAKE_BINARY_DIR}/src/${MODEL_NAME}.cpp)
 endmacro(embed_onnx_model)
-add_subdirectory(text_detector)
+
+add_subdirectory(ocr)
