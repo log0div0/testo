@@ -7,7 +7,7 @@ extern unsigned int TextDetector_onnx_len;
 
 namespace nn {
 
-bool is_n_times_div_by_2(int value, size_t n = 4) {
+static inline bool is_n_times_div_by_2(int value, size_t n) {
 	for (size_t i = 0; i < n; ++i) {
 		if ((value % 2) != 0) {
 			return false;
@@ -17,7 +17,7 @@ bool is_n_times_div_by_2(int value, size_t n = 4) {
 	return true;
 }
 
-int nearest_n_times_div_by_2(int value, size_t n = 4) {
+static inline int nearest_n_times_div_by_2(int value, size_t n) {
 	while (true) {
 		if (is_n_times_div_by_2(value, n)) {
 			return value;
@@ -51,14 +51,14 @@ void TextDetector::run_nn(const stb::Image& image) {
 		in_c = 3;
 		in_h = image.height;
 		in_w = image.width;
-		in_pad_h = nearest_n_times_div_by_2(in_h);
-		in_pad_w = nearest_n_times_div_by_2(in_w);
+		in_pad_h = nearest_n_times_div_by_2(in_h, 4);
+		in_pad_w = nearest_n_times_div_by_2(in_w, 4);
 
 		out_c = 2;
 		out_h = in_h;
 		out_w = in_w;
-		out_pad_h = nearest_n_times_div_by_2(out_h);
-		out_pad_w = nearest_n_times_div_by_2(out_w);
+		out_pad_h = nearest_n_times_div_by_2(out_h, 4);
+		out_pad_w = nearest_n_times_div_by_2(out_w, 4);
 
 		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
@@ -73,8 +73,8 @@ void TextDetector::run_nn(const stb::Image& image) {
 
 		in_tensor = std::make_unique<Ort::Value>(
 			Ort::Value::CreateTensor<float>(memory_info, in.data(), in.size(), in_shape.data(), in_shape.size()));
-    out_tensor = std::make_unique<Ort::Value>(
-    	Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
+		out_tensor = std::make_unique<Ort::Value>(
+			Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
 
 		labelingWu = LabelingWu(out_w, out_h);
 	}

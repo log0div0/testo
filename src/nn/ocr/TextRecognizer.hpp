@@ -19,6 +19,16 @@ struct TextRecognizer {
 	std::vector<std::string> recognize(const stb::Image& image, const std::vector<Rect>& rects);
 
 private:
+	void run_nn(const stb::Image& image, const std::vector<Rect>& rects);
+
+	std::vector<std::string> symbols;
+
+	int batch_size = 0;
+	int in_w = 0;
+	int out_w = 0;
+	std::vector<float> in;
+	std::vector<float> out;
+
 	std::unique_ptr<Ort::Session> session;
 	std::unique_ptr<Ort::Value> in_tensor;
 	std::unique_ptr<Ort::Value> out_tensor;
