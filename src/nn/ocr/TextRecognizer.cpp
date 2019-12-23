@@ -65,36 +65,37 @@ std::vector<std::string> TextRecognizer::recognize(const stb::Image& image, cons
 	}
 
 	run_nn(image, rects);
-	throw std::runtime_error("Implement me");
+	return decode_words(rects.size());
 }
 
 void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Rect>& rects) {
 
 	widths.resize(rects.size());
 
-	for (size_t i = 0; i < rects.size(); ++i) {
-		const Rect& rect = rects[i];
+	for (size_t b = 0; b < rects.size(); ++b) {
+		const Rect& rect = rects[b];
 		float ratio = float(rect.width()) / float(rect.height());
 		int height = MAX_HEIGHT;
 		int width = ratio * height;
-		widths[i] = width;
+		widths[b] = width;
 	}
 
 	int max_width = nearest_n_times_div_by_2(*std::max_element(widths.begin(), widths.end()), 2);
-	word_grey_resized.resize(MAX_HEIGHT * max_width);
 
 	if ((size_t(batch_size) < rects.size()) || (in_w < max_width)) {
 		batch_size = rects.size();
 		in_w = max_width;
+		in_c = 1;
 		out_w = max_width / 4 + 1;
+		out_c = symbols.size() + 1;
 
 		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
-		std::array<int64_t, 4> in_shape = {batch_size, 1, MAX_HEIGHT, in_w};
-		std::array<int64_t, 3> out_shape = {out_w, batch_size, int(symbols.size() + 1)};
+		std::array<int64_t, 4> in_shape = {batch_size, in_c, MAX_HEIGHT, in_w};
+		std::array<int64_t, 3> out_shape = {out_w, batch_size, out_c};
 
-		in.resize(batch_size * 1 * MAX_HEIGHT * in_w);
-		out.resize(out_w * batch_size * int(symbols.size() + 1));
+		in.resize(batch_size * in_c * MAX_HEIGHT * in_w);
+		out.resize(out_w * batch_size * out_c);
 
 		in_tensor = std::make_unique<Ort::Value>(
 			Ort::Value::CreateTensor<float>(memory_info, in.data(), in.size(), in_shape.data(), in_shape.size()));
@@ -105,8 +106,8 @@ void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Rect>& re
 	std::fill(in.begin(), in.end(), 0);
 	std::fill(out.begin(), out.end(), 0);
 
-	for (size_t i = 0; i < rects.size(); ++i) {
-		const Rect& rect = rects[i];
+	for (size_t b = 0; b < rects.size(); ++b) {
+		const Rect& rect = rects[b];
 
 		int h = rect.height();
 		int w = rect.width();
@@ -119,16 +120,65 @@ void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Rect>& re
 			}
 		}
 
-		stbir_resize_uint8(
+		word_grey_resized.resize(widths[b] * MAX_HEIGHT);
+		if (!stbir_resize_uint8(
 			word_grey.data(), w, h, 0,
-			word_grey_resized.data(), widths[i], MAX_HEIGHT, 0,
-			1);
+			word_grey_resized.data(), widths[b], MAX_HEIGHT, 0,
+			in_c)
+		) {
+			throw std::runtime_error("stbir_resize_uint8 failed");
+		}
 
-		std::string path = "tmp/" + std::to_string(i) + ".png";
-		if (!stbi_write_png(path.c_str(), widths[i], MAX_HEIGHT, 1, word_grey_resized.data(), widths[i]*1)) {
-			throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
+		// std::string path = "tmp/" + std::to_string(b) + ".png";
+		// if (!stbi_write_png(path.c_str(), widths[b], MAX_HEIGHT, 1, word_grey_resized.data(), widths[b]*1)) {
+		// 	throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
+		// }
+
+		for (int y = 0; y < MAX_HEIGHT; ++y) {
+			for (int x = 0; x < widths[b]; ++x) {
+				for (int c = 0; c < in_c; ++c) {
+					int src_index = y * widths[b] * in_c + x * in_c + c;
+					int dst_index = b * in_c * MAX_HEIGHT * max_width + c * MAX_HEIGHT * max_width + y * max_width + x;
+					in[dst_index] = float(word_grey_resized[src_index]) / 255.0 - 0.5;
+				}
+			}
 		}
 	}
+
+	const char* in_names[] = {"input"};
+	const char* out_names[] = {"output"};
+
+	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
+}
+
+std::vector<std::string> TextRecognizer::decode_words(int num_words) {
+	std::vector<std::string> words;
+	words.reserve(num_words);
+	for (int b = 0; b < num_words; ++b) {
+		std::string word;
+		int prev_max_pos = -1;
+		for (int x = 0; (x < (widths[b] / 4)) && (x < out_w); ++x) {
+			int max_pos = -1;
+			float max_value = std::numeric_limits<float>::lowest();
+			for (int c = 0; c < out_c; ++c) {
+				int index = x * batch_size * out_c + b * out_c + c;
+				if (max_value < out[index]) {
+					max_value = out[index];
+					max_pos = c;
+				}
+			}
+			if (max_pos == 0) {
+				continue;
+			}
+			if (prev_max_pos == max_pos) {
+				continue;
+			}
+			prev_max_pos = max_pos;
+			word += symbols.at(max_pos - 1);
+		}
+		words.push_back(word);
+	}
+	return words;
 }
 
 }

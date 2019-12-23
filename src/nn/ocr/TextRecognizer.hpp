@@ -20,12 +20,15 @@ struct TextRecognizer {
 
 private:
 	void run_nn(const stb::Image& image, const std::vector<Rect>& rects);
+	std::vector<std::string> decode_words(int num_words);
 
 	std::vector<std::string> symbols;
 
 	int batch_size = 0;
 	int in_w = 0;
+	int in_c = 0;
 	int out_w = 0;
+	int out_c = 0;
 	std::vector<float> in;
 	std::vector<float> out;
 
