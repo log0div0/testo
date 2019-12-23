@@ -32,6 +32,9 @@ private:
 	std::unique_ptr<Ort::Session> session;
 	std::unique_ptr<Ort::Value> in_tensor;
 	std::unique_ptr<Ort::Value> out_tensor;
+
+	std::vector<int> widths;
+	std::vector<uint8_t> word_grey, word_grey_resized;
 };
 
 }

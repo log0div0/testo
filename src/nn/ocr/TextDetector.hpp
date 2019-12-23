@@ -20,6 +20,7 @@ private:
 	void run_nn(const stb::Image& image);
 	std::vector<Rect> find_words();
 	std::vector<Rect> find_chars();
+	Rect adjust_rect(const Rect& rect, float threshold);
 
 	int in_w = 0;
 	int in_h = 0;
