@@ -27,10 +27,6 @@ LabelingWu::LabelingWu(int cols_, int rows_) {
 }
 
 std::vector<Rect> LabelingWu::run(int connectivity) {
-	assert(rows == I.rows);
-	assert(cols == I.cols);
-	assert(rows == L.rows);
-	assert(cols == L.cols);
 	assert(connectivity == 8 || connectivity == 4);
 	P[0] = 0;
 	LabelT lunique = 1;
