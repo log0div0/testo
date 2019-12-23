@@ -166,6 +166,7 @@ void TextRecognizer::decode_words(std::vector<Word>& words) {
 				}
 			}
 			if (max_pos == 0) {
+				prev_max_pos = max_pos;
 				continue;
 			}
 			if (prev_max_pos == max_pos) {
