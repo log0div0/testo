@@ -2,8 +2,7 @@
 #include <chrono>
 #include <iostream>
 #include <clipp.h>
-#include "TextDetector.hpp"
-#include "TextRecognizer.hpp"
+#include "OCR.hpp"
 
 std::string image_file;
 std::string output_file = "output.png";
@@ -11,25 +10,20 @@ std::string output_file = "output.png";
 void predict()
 {
 	stb::Image image(image_file);
-	nn::TextDetector detector;
-	nn::TextRecognizer recognizer;
+	nn::OCR ocr;
 
 	auto start = std::chrono::high_resolution_clock::now();
-	auto rects = detector.detect(image);
-	auto texts = recognizer.recognize(image, rects);
+	auto textlines = ocr.run(image);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << time.count() << " seconds" << std::endl;
 
-	for (auto& rect: rects) {
-		image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
+	for (auto& textline: textlines) {
+		image.draw(textline.rect.left, textline.rect.top, textline.rect.right, textline.rect.bottom, 200, 20, 50);
+		std::cout << textline.text << std::endl;
 	}
 
 	image.write_png(output_file);
-
-	for (auto& text: texts) {
-		std::cout << text << std::endl;
-	}
 }
 
 int main(int argc, char **argv)

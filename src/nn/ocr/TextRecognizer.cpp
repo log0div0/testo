@@ -56,24 +56,24 @@ TextRecognizer::~TextRecognizer() {
 
 }
 
-std::vector<std::string> TextRecognizer::recognize(const stb::Image& image, const std::vector<Rect>& rects) {
+void TextRecognizer::recognize(const stb::Image& image, std::vector<Word>& words) {
 	if (!image.data) {
-		return {};
+		return;
 	}
-	if (!rects.size()) {
-		return {};
+	if (!words.size()) {
+		return;
 	}
 
-	run_nn(image, rects);
-	return decode_words(rects.size());
+	run_nn(image, words);
+	decode_words(words);
 }
 
-void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Rect>& rects) {
+void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Word>& words) {
 
-	widths.resize(rects.size());
+	widths.resize(words.size());
 
-	for (size_t b = 0; b < rects.size(); ++b) {
-		const Rect& rect = rects[b];
+	for (size_t b = 0; b < words.size(); ++b) {
+		const Rect& rect = words[b].rect;
 		float ratio = float(rect.width()) / float(rect.height());
 		int height = MAX_HEIGHT;
 		int width = ratio * height;
@@ -82,8 +82,8 @@ void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Rect>& re
 
 	int max_width = nearest_n_times_div_by_2(*std::max_element(widths.begin(), widths.end()), 2);
 
-	if ((size_t(batch_size) < rects.size()) || (in_w < max_width)) {
-		batch_size = rects.size();
+	if ((size_t(batch_size) < words.size()) || (in_w < max_width)) {
+		batch_size = words.size();
 		in_w = max_width;
 		in_c = 1;
 		out_w = max_width / 4 + 1;
@@ -106,8 +106,8 @@ void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Rect>& re
 	std::fill(in.begin(), in.end(), 0);
 	std::fill(out.begin(), out.end(), 0);
 
-	for (size_t b = 0; b < rects.size(); ++b) {
-		const Rect& rect = rects[b];
+	for (size_t b = 0; b < words.size(); ++b) {
+		const Rect& rect = words[b].rect;
 
 		int h = rect.height();
 		int w = rect.width();
@@ -151,11 +151,9 @@ void TextRecognizer::run_nn(const stb::Image& image, const std::vector<Rect>& re
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<std::string> TextRecognizer::decode_words(int num_words) {
-	std::vector<std::string> words;
-	words.reserve(num_words);
-	for (int b = 0; b < num_words; ++b) {
-		std::string word;
+void TextRecognizer::decode_words(std::vector<Word>& words) {
+	for (size_t b = 0; b < words.size(); ++b) {
+		std::string& text = words[b].text;
 		int prev_max_pos = -1;
 		for (int x = 0; (x < (widths[b] / 4)) && (x < out_w); ++x) {
 			int max_pos = -1;
@@ -174,11 +172,9 @@ std::vector<std::string> TextRecognizer::decode_words(int num_words) {
 				continue;
 			}
 			prev_max_pos = max_pos;
-			word += symbols.at(max_pos - 1);
+			text += symbols.at(max_pos - 1);
 		}
-		words.push_back(word);
 	}
-	return words;
 }
 
 }

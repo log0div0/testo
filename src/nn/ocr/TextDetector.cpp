@@ -34,7 +34,7 @@ TextDetector::~TextDetector() {
 
 }
 
-std::vector<Rect> TextDetector::detect(const stb::Image& image)
+std::vector<Word> TextDetector::detect(const stb::Image& image)
 {
 	if (!image.data) {
 		return {};
@@ -99,10 +99,10 @@ void TextDetector::run_nn(const stb::Image& image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<Rect> TextDetector::find_words() {
+std::vector<Word> TextDetector::find_words() {
 	std::vector<Rect> chars = find_chars();
 	std::vector<bool> visited_chars(chars.size(), false);
-	std::vector<Rect> words;
+	std::vector<Word> words;
 	for (int x = 0; x < out_w; ++x) {
 		for (int y = 0; y < out_h; ++y) {
 			uint16_t l = labelingWu.L[y*out_w + x];
@@ -113,7 +113,8 @@ std::vector<Rect> TextDetector::find_words() {
 				continue;
 			}
 			visited_chars[l-1] = true;
-			Rect word = chars[l-1];
+			Word word;
+			word.rect = chars[l-1];
 			Rect a = chars[l-1];
 			while (true) {
 word_next:
@@ -133,7 +134,7 @@ word_next:
 							int32_t max_top = std::max(a.top, b.top);
 							if ((min_bottom - max_top) >= (mean_height / 2)) {
 								visited_chars[l-1] = true;
-								word |= b;
+								word.rect |= b;
 								a = b;
 								goto word_next;
 							}
@@ -142,7 +143,7 @@ word_next:
 							for (int y = std::max(a.top, b.top); y <= std::min(a.bottom, b.bottom); ++y) {
 								if (out[y*out_pad_w*out_c + x*out_c + 1] >= 0.75) {
 									visited_chars[l-1] = true;
-									word |= b;
+									word.rect |= b;
 									a = b;
 									goto word_next;
 								}
@@ -154,7 +155,7 @@ word_next:
 				goto word_finish;
 			}
 word_finish:
-			word = adjust_rect(word, 0.25);
+			word.rect = adjust_rect(word.rect, 0.25);
 			words.push_back(word);
 		}
 	}

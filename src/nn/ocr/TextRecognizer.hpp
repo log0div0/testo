@@ -3,8 +3,7 @@
 
 #include <stb/Image.hpp>
 #include <vector>
-#include <string>
-#include "Rect.hpp"
+#include "Word.hpp"
 #include "OnnxRuntime.hpp"
 
 namespace nn {
@@ -16,11 +15,11 @@ struct TextRecognizer {
 	TextRecognizer(const TextRecognizer& root) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
 
-	std::vector<std::string> recognize(const stb::Image& image, const std::vector<Rect>& rects);
+	void recognize(const stb::Image& image, std::vector<Word>& words);
 
 private:
-	void run_nn(const stb::Image& image, const std::vector<Rect>& rects);
-	std::vector<std::string> decode_words(int num_words);
+	void run_nn(const stb::Image& image, const std::vector<Word>& words);
+	void decode_words(std::vector<Word>& words);
 
 	std::vector<std::string> symbols;
 

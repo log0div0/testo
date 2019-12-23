@@ -4,6 +4,7 @@
 #include <stb/Image.hpp>
 #include "LabelingWu.hpp"
 #include "OnnxRuntime.hpp"
+#include "Word.hpp"
 
 namespace nn {
 
@@ -14,11 +15,11 @@ struct TextDetector {
 	TextDetector(const TextDetector& root) = delete;
 	TextDetector& operator=(const TextDetector&) = delete;
 
-	std::vector<Rect> detect(const stb::Image& image);
+	std::vector<Word> detect(const stb::Image& image);
 
 private:
 	void run_nn(const stb::Image& image);
-	std::vector<Rect> find_words();
+	std::vector<Word> find_words();
 	std::vector<Rect> find_chars();
 	Rect adjust_rect(const Rect& rect, float threshold);
 
