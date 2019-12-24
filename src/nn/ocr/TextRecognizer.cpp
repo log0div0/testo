@@ -1,6 +1,7 @@
 
 #include "TextRecognizer.hpp"
 #include <iostream>
+#include <algorithm>
 #include <utf8.hpp>
 #include <stb_image.h>
 #include <stb_image_write.h>

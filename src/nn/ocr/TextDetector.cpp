@@ -1,6 +1,7 @@
 
 #include "TextDetector.hpp"
 #include <iostream>
+#include <algorithm>
 
 extern unsigned char TextDetector_onnx[];
 extern unsigned int TextDetector_onnx_len;

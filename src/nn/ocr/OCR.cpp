@@ -1,6 +1,7 @@
 
 #include "OCR.hpp"
 #include <iostream>
+#include <algorithm>
 
 namespace nn {
 
