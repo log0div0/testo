@@ -44,7 +44,7 @@ void VmController::create() {
 
 		metadata["vm_config"] = config.dump();
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = vm->iso_signature();
+		metadata["dvd_signature"] = dvd_signature();
 		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
@@ -201,14 +201,32 @@ bool VmController::check_config_relevance() {
 
 	bool config_is_ok = (old_config == new_config);
 
-	//Check also dvd contingency
-
-	bool iso_is_ok = (vm->iso_signature() == get_metadata("dvd_signature"));
+	bool iso_is_ok = (dvd_signature() == get_metadata("dvd_signature"));
 
 	return (config_is_ok && iso_is_ok);
 }
 
 fs::path VmController::get_metadata_dir() const {
 	return env->vm_metadata_dir() / id();
+}
+
+std::string VmController::dvd_signature() const {
+	std::string result;
+	auto config = vm->get_config();
+	std::string iso_query = config.at("iso").get<std::string>();
+	if(is_pool_related(iso_query)) {
+		auto last_modifyed = env->get_last_modify_date(get_volume(iso_query), get_pool(iso_query));
+		result = timestamp_signature(last_modifyed);
+	} else {
+		fs::path iso_path(iso_query);
+		if (iso_path.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			iso_path = src_file.parent_path() / iso_path;
+		}
+		iso_path = fs::canonical(iso_path);
+		result = file_signature(iso_path);
+	}
+
+	return result;
 }
 

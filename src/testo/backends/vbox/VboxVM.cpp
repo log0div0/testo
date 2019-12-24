@@ -945,10 +945,6 @@ void VboxVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t 
 	throw std::runtime_error("Implement me");
 }
 
-std::string VboxVM::iso_signature() {
-	throw std::runtime_error("Implement me");
-}
-
 void VboxVM::remove_from_guest(const fs::path& obj) {
 	try {
 		auto lock_machine = virtual_box.find_machine(id());

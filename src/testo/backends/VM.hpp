@@ -57,8 +57,6 @@ struct VM {
 	virtual void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) = 0;
 	virtual void remove_from_guest(const fs::path& obj) = 0;
 
-	virtual std::string iso_signature() = 0;
-
 	std::set<std::string> nics() const;
 	std::set<std::string> networks() const;
 

@@ -23,5 +23,7 @@ struct VmController: public Controller {
 
 	fs::path get_metadata_dir() const override;
 
+	std::string dvd_signature() const;
+
 	std::shared_ptr<VM> vm;
 };

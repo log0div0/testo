@@ -91,6 +91,24 @@ void QemuEnvironment::cleanup() {
 
 }
 
+fs::path QemuEnvironment::resolve_path(const std::string& volume, const std::string& pool) {
+	auto qemu_connect = vir::connect_open("qemu:///system");
+
+	auto p = qemu_connect.storage_pool_lookup_by_name(pool);
+	auto vol = p.storage_volume_lookup_by_name(volume);
+	return vol.path();
+}
+
+std::string QemuEnvironment::get_last_modify_date(const std::string& volume, const std::string& pool) {
+	auto qemu_connect = vir::connect_open("qemu:///system");
+	auto p = qemu_connect.storage_pool_lookup_by_name(pool);
+	auto vol = p.storage_volume_lookup_by_name(volume);
+	auto config = vol.dump_xml();
+
+	auto mtime = config.first_child().child("target").child("timestamps").child("mtime");
+	return mtime.child_value();
+}
+
 std::shared_ptr<VmController> QemuEnvironment::create_vm_controller(const nlohmann::json& config) {
 	return std::make_shared<VmController>(std::shared_ptr<VM>(new QemuVM(config)));
 }

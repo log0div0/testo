@@ -30,6 +30,13 @@ struct VboxEnvironment: public Environment {
 	void setup() override;
 	void cleanup() override;
 
+	fs::path resolve_path(const std::string& volume, const std::string& pool) {
+		return "";
+	}
+
+	std::string get_last_modify_date(const std::string& volume, const std::string& pool) {
+		return "";
+	}
 	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override;
 	std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) override;
 	std::shared_ptr<NetworkController> create_network_controller(const nlohmann::json& config) override;

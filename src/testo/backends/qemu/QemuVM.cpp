@@ -7,18 +7,6 @@
 #include <fmt/format.h>
 #include <thread>
 
-static bool is_pool_related(const std::string& iso_path) {
-	return iso_path.find("@") != std::string::npos;
-}
-
-vir::StorageVolume QemuVM::get_iso_from_pool(const std::string& iso_path_query) {
-	auto pool_name = iso_path_query.substr(iso_path_query.find("@") + 1);
-	auto pool = qemu_connect.storage_pool_lookup_by_name(pool_name);
-
-	auto vol_name = iso_path_query.substr(0, iso_path_query.find("@"));
-	return pool.storage_volume_lookup_by_name(vol_name);
-}
-
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
@@ -42,8 +30,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		auto iso_path_query = config.at("iso").get<std::string>();
 
 		if (is_pool_related(iso_path_query)) {
-			auto vol = get_iso_from_pool(iso_path_query);
-			iso_path = vol.path();
+			iso_path = env->resolve_path(get_volume(iso_path_query), get_pool(iso_path_query));
 		} else {
 			iso_path = iso_path_query;
 			if (iso_path.is_relative()) {
@@ -56,7 +43,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 				throw std::runtime_error("Target iso file doesn't exist");
 			}
 		}
-
 
 		std::cout << "ISO PATH: " << iso_path << std::endl;
 
@@ -222,17 +208,6 @@ QemuVM::~QemuVM() {
 	}
 }
 
-std::string QemuVM::iso_signature() {
-	if (is_pool_related(config.at("iso").get<std::string>())) {
-		auto vol = get_iso_from_pool(config.at("iso").get<std::string>());
-		auto config = vol.dump_xml();
-
-		auto mtime = config.first_child().child("target").child("timestamps").child("mtime");
-		return timestamp_signature(mtime.child_value());
-	} else {
-		return file_signature(iso_path);
-	}
-}
 
 void QemuVM::install() {
 	try {

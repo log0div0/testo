@@ -1,5 +1,6 @@
 
 #include "VisitorCksum.hpp"
+#include "backends/Environment.hpp"
 #include "coro/Finally.h"
 #include <algorithm>
 
@@ -141,12 +142,19 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		fs::path path = template_parser.resolve(plug->path->text(), reg);
-		if (path.is_relative()) {
-			path = plug->t.pos().file.parent_path() / path;
+		std::string iso_query = template_parser.resolve(plug->path->text(), reg);
+
+		if(is_pool_related(iso_query)) {
+			auto last_modifyed = env->get_last_modify_date(get_volume(iso_query), get_pool(iso_query));
+			result += timestamp_signature(last_modifyed);
+		} else {
+			fs::path iso_path(iso_query);
+			if (iso_path.is_relative()) {
+				iso_path = plug->t.pos().file.parent_path() / iso_path;
+			}
+			iso_path = fs::canonical(iso_path);
+			result += file_signature(iso_path);
 		}
-		//add signature for dvd file
-		result += file_signature(path);
 	}
 
 	return result;

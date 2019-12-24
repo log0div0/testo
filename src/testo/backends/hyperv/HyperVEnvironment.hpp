@@ -20,6 +20,14 @@ struct HyperVEnvironment: Environment {
 	void setup() override;
 	void cleanup() override;
 
+	fs::path resolve_path(const std::string& volume, const std::string& pool) {
+		return "";
+	}
+
+	std::string get_last_modify_date(const std::string& volume, const std::string& pool) {
+		return "";
+	}
+
 	std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) override {
 		return std::make_shared<VmController>(std::shared_ptr<VM>(new HyperVVM(config)));
 	}
