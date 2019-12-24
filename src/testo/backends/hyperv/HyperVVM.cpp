@@ -374,3 +374,6 @@ void HyperVVM::remove_from_guest(const fs::path& obj) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
+std::string HyperVVM::iso_signature() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}

@@ -27,6 +27,7 @@ void exec_and_throw_if_failed(const std::string& command);
 
 std::string file_signature(const fs::path& file);
 std::string directory_signature(const fs::path& dir);
+std::string timestamp_signature(const std::string& timestamp);
 
 bool is_number(const std::string& s);
 

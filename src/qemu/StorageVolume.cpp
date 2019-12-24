@@ -35,6 +35,15 @@ std::string StorageVolume::name() const {
 	return result;
 }
 
+std::string StorageVolume::path() const {
+	const char* result = virStorageVolGetPath(handle);
+	if (!result) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	return result;
+}
+
 void StorageVolume::erase(std::initializer_list<virStorageVolDeleteFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
@@ -46,5 +55,16 @@ void StorageVolume::erase(std::initializer_list<virStorageVolDeleteFlags> flags)
 	}
 }
 
+pugi::xml_document StorageVolume::dump_xml() const {
+	char* xml = virStorageVolGetXMLDesc(handle, 0);
+	if (!xml) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	pugi::xml_document result;
+	result.load_string(xml);
+	free(xml);
+	return result;
+}
 
 }

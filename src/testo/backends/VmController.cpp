@@ -39,23 +39,12 @@ void VmController::create() {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
 
-		fs::path iso_file = config.at("iso").get<std::string>();
-		if (iso_file.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			iso_file = src_file.parent_path() / iso_file;
-		}
-		iso_file = fs::canonical(iso_file);
-
-		if (!fs::exists(iso_file)) {
-			throw std::runtime_error("Target iso file doesn't exist");
-		}
-
 		config.erase("src_file");
 		config.erase("metadata");
 
 		metadata["vm_config"] = config.dump();
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(iso_file);
+		metadata["dvd_signature"] = vm->iso_signature();
 		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
@@ -214,14 +203,7 @@ bool VmController::check_config_relevance() {
 
 	//Check also dvd contingency
 
-	fs::path iso_file = vm->get_config().at("iso").get<std::string>();
-	if (iso_file.is_relative()) {
-		fs::path src_file(vm->get_config().at("src_file").get<std::string>());
-		iso_file = src_file.parent_path() / iso_file;
-	}
-	iso_file = fs::canonical(iso_file);
-
-	bool iso_is_ok = (file_signature(iso_file) == get_metadata("dvd_signature"));
+	bool iso_is_ok = (vm->iso_signature() == get_metadata("dvd_signature"));
 
 	return (config_is_ok && iso_is_ok);
 }

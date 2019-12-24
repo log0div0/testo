@@ -67,6 +67,11 @@ std::string directory_signature(const fs::path& dir) {
 	return result;
 }
 
+std::string timestamp_signature(const std::string& timestamp) {
+	std::hash<std::string> h;
+	return std::to_string(h(timestamp));
+}
+
 //NOTE: this check is very, very rough
 bool is_mac_correct(const std::string& mac) {
 	int k = 0, s = 0;

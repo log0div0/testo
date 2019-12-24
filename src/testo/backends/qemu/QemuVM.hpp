@@ -46,6 +46,8 @@ struct QemuVM: public VM {
 	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) override;
 	void remove_from_guest(const fs::path& obj) override;
 
+	std::string iso_signature() override;
+
 private:
 	void remove_disk();
 	void create_disk();
@@ -64,6 +66,10 @@ private:
 	std::string get_flash_img();
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
+
+	fs::path iso_path;
+
+	vir::StorageVolume get_iso_from_pool(const std::string& iso_path_query);
 
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;

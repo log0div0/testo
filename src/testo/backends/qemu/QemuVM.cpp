@@ -7,91 +7,124 @@
 #include <fmt/format.h>
 #include <thread>
 
+static bool is_pool_related(const std::string& iso_path) {
+	return iso_path.find("@") != std::string::npos;
+}
+
+vir::StorageVolume QemuVM::get_iso_from_pool(const std::string& iso_path_query) {
+	auto pool_name = iso_path_query.substr(iso_path_query.find("@") + 1);
+	auto pool = qemu_connect.storage_pool_lookup_by_name(pool_name);
+
+	auto vol_name = iso_path_query.substr(0, iso_path_query.find("@"));
+	return pool.storage_volume_lookup_by_name(vol_name);
+}
+
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
-	if (!config.count("name")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field NAME is not specified");
-	}
+	try {
+		if (!config.count("name")) {
+			throw std::runtime_error("field NAME is not specified");
+		}
 
-	if (!config.count("ram")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field RAM is not specified");
-	}
+		if (!config.count("ram")) {
+			throw std::runtime_error("field RAM is not specified");
+		}
 
-	if (!config.count("cpus")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field CPUS is not specified");
-	}
+		if (!config.count("cpus")) {
+			throw std::runtime_error("field CPUS is not specified");
+		}
 
-	if (!config.count("iso")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field ISO is not specified");
-	}
+		if (!config.count("iso")) {
+			throw std::runtime_error("field ISO is not specified");
+		}
 
-	fs::path iso_path(config.at("iso").get<std::string>());
-	if (!fs::exists(iso_path)) {
-		throw std::runtime_error(std::string("Constructing QemuVM " + id() + " error: specified iso file does not exist: ")
-			+ iso_path.generic_string());
-	}
+		auto iso_path_query = config.at("iso").get<std::string>();
 
-	if (!config.count("disk_size")) {
-		throw std::runtime_error("Constructing QemuVM error: field DISK SIZE is not specified");
-	}
-
-	if (config.count("nic")) {
-		auto nics = config.at("nic");
-		for (auto& nic: nics) {
-			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing QemuVM error: field attached_to is not specified for the nic " +
-					nic.at("name").get<std::string>());
+		if (is_pool_related(iso_path_query)) {
+			auto vol = get_iso_from_pool(iso_path_query);
+			iso_path = vol.path();
+		} else {
+			iso_path = iso_path_query;
+			if (iso_path.is_relative()) {
+				fs::path src_file(config.at("src_file").get<std::string>());
+				iso_path = src_file.parent_path() / iso_path;
 			}
+			iso_path = fs::canonical(iso_path);
 
-			if (nic.at("attached_to").get<std::string>() == "internal") {
-				if (!nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM error: nic " +
-					nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
-				}
-			}
-
-			if (nic.count("mac")) {
-				std::string mac = nic.at("mac").get<std::string>();
-				if (!is_mac_correct(mac)) {
-					throw std::runtime_error(std::string("Incorrect mac string: ") + mac);
-				}
-			}
-
-			if (nic.at("attached_to").get<std::string>() == "nat") {
-				if (nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM error: nic " +
-					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
-				}
-			}
-
-			if (nic.count("adapter_type")) {
-				//ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio,sungem
-				std::string driver = nic.at("adapter_type").get<std::string>();
-				if (driver != "ne2k_pci" &&
-					driver != "i82551" &&
-					driver != "i82557b" &&
-					driver != "i82559er" &&
-					driver != "rtl8139" &&
-					driver != "e1000" &&
-					driver != "pcnet" &&
-					driver != "virtio" &&
-					driver != "sungem")
-				{
-					throw std::runtime_error("Constructing QemuVM error: nic " +
-						nic.at("name").get<std::string>() + " has unsupported adaptertype internal: " + driver);
-				}
+			if (!fs::exists(iso_path)) {
+				throw std::runtime_error("Target iso file doesn't exist");
 			}
 		}
 
-		for (uint32_t i = 0; i < nics.size(); i++) {
-			for (uint32_t j = i + 1; j < nics.size(); j++) {
-				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing QemuVM error: two identical NIC names: " +
-						nics[i].at("name").get<std::string>());
+
+		std::cout << "ISO PATH: " << iso_path << std::endl;
+
+		if (!config.count("disk_size")) {
+			throw std::runtime_error("field DISK SIZE is not specified");
+		}
+
+		if (config.count("nic")) {
+			auto nics = config.at("nic");
+			for (auto& nic: nics) {
+				if (!nic.count("attached_to")) {
+					throw std::runtime_error("field attached_to is not specified for the nic " +
+						nic.at("name").get<std::string>());
+				}
+
+				if (nic.at("attached_to").get<std::string>() == "internal") {
+					if (!nic.count("network")) {
+						throw std::runtime_error("nic " +
+						nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
+					}
+				}
+
+				if (nic.count("mac")) {
+					std::string mac = nic.at("mac").get<std::string>();
+					if (!is_mac_correct(mac)) {
+						throw std::runtime_error(std::string("Incorrect mac string: ") + mac);
+					}
+				}
+
+				if (nic.at("attached_to").get<std::string>() == "nat") {
+					if (nic.count("network")) {
+						throw std::runtime_error("nic " +
+						nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
+					}
+				}
+
+				if (nic.count("adapter_type")) {
+					//ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio,sungem
+					std::string driver = nic.at("adapter_type").get<std::string>();
+					if (driver != "ne2k_pci" &&
+						driver != "i82551" &&
+						driver != "i82557b" &&
+						driver != "i82559er" &&
+						driver != "rtl8139" &&
+						driver != "e1000" &&
+						driver != "pcnet" &&
+						driver != "virtio" &&
+						driver != "sungem")
+					{
+						throw std::runtime_error("nic " +
+							nic.at("name").get<std::string>() + " has unsupported adaptertype internal: " + driver);
+					}
+				}
+			}
+
+			for (uint32_t i = 0; i < nics.size(); i++) {
+				for (uint32_t j = i + 1; j < nics.size(); j++) {
+					if (nics[i].at("name") == nics[j].at("name")) {
+						throw std::runtime_error("two identical NIC names: " +
+							nics[i].at("name").get<std::string>());
+					}
 				}
 			}
 		}
+	}
+
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Constructing QemuVM " + id() + " error"));
 	}
 
 	scancodes.insert({
@@ -186,6 +219,18 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 QemuVM::~QemuVM() {
 	if (!is_defined()) {
 		remove_disk();
+	}
+}
+
+std::string QemuVM::iso_signature() {
+	if (is_pool_related(config.at("iso").get<std::string>())) {
+		auto vol = get_iso_from_pool(config.at("iso").get<std::string>());
+		auto config = vol.dump_xml();
+
+		auto mtime = config.first_child().child("target").child("timestamps").child("mtime");
+		return timestamp_signature(mtime.child_value());
+	} else {
+		return file_signature(iso_path);
 	}
 }
 
@@ -294,7 +339,7 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>(), id());
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), iso_path.generic_string(), id());
 
 		uint32_t nic_count = 0;
 
