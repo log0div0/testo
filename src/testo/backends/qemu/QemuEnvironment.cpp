@@ -5,8 +5,9 @@
 #include "QemuNetwork.hpp"
 #include <fmt/format.h>
 
-QemuEnvironment::QemuEnvironment() {
+QemuEnvironment::QemuEnvironment(const std::string& uri): Environment(uri) {
 	setenv("QEMU", "1", false);
+	qemu_connect = vir::connect_open(uri);
 }
 
 QemuEnvironment::~QemuEnvironment() {
@@ -58,7 +59,6 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 }
 
 void QemuEnvironment::setup() {
-	qemu_connect = vir::connect_open("qemu:///system");
 	prepare_storage_pool("testo-storage-pool");
 	prepare_storage_pool("testo-flash-drives-pool");
 
@@ -92,15 +92,12 @@ void QemuEnvironment::cleanup() {
 }
 
 fs::path QemuEnvironment::resolve_path(const std::string& volume, const std::string& pool) {
-	auto qemu_connect = vir::connect_open("qemu:///system");
-
 	auto p = qemu_connect.storage_pool_lookup_by_name(pool);
 	auto vol = p.storage_volume_lookup_by_name(volume);
 	return vol.path();
 }
 
 std::string QemuEnvironment::get_last_modify_date(const std::string& volume, const std::string& pool) {
-	auto qemu_connect = vir::connect_open("qemu:///system");
 	auto p = qemu_connect.storage_pool_lookup_by_name(pool);
 	auto vol = p.storage_volume_lookup_by_name(volume);
 	auto config = vol.dump_xml();

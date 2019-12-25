@@ -172,6 +172,8 @@ int run_mode() {
 
 int do_main(int argc, char** argv) {
 
+	std::string uri;
+
 #ifdef WIN32
 	wmi::CoInitializer initializer;
 	initializer.initalize_security();
@@ -180,6 +182,7 @@ int do_main(int argc, char** argv) {
 	args.hypervisor = "hyperv";
 #elif __linux__
 	args.hypervisor = "qemu";
+	uri = "qemu:///system";
 #elif __APPLE__
 	args.hypervisor = "vsphere";
 #endif
@@ -202,13 +205,15 @@ int do_main(int argc, char** argv) {
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
 		(option("--license") & value("path", args.license)) % "Path to license file",
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)",
+		(option("--uri") & value("remote hypervisor uri", uri)) % "uri to remote hypervisor if used"
 	);
 
 	auto clean_spec = "clean options" % (
 		command("clean").set(args.selected_mode, mode::clean),
 		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)",
+		(option("--uri") & value("remote hypervisor uri", uri)) % "uri to remote hypervisor if used"
 	);
 
 	auto cli = ( run_spec | clean_spec | command("help").set(args.show_help) );
@@ -227,7 +232,7 @@ int do_main(int argc, char** argv) {
 #ifndef __linux__
 		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
 #else
-		env = std::make_shared<QemuEnvironment>();
+		env = std::make_shared<QemuEnvironment>(uri);
 #endif
 	} else if (args.hypervisor == "vbox") {
 		env = std::make_shared<VboxEnvironment>();

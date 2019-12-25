@@ -8,7 +8,7 @@
 #include <thread>
 
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
-	qemu_connect(vir::connect_open("qemu:///system"))
+	qemu_connect(vir::connect_open(env->uri()))
 {
 	try {
 		if (!config.count("name")) {
@@ -48,8 +48,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 					+ iso_path.generic_string());
 			}
 		}
-
-		std::cout << "ISO PATH: " << iso_path << std::endl;
 
 		if (!config.count("disk_size")) {
 			throw std::runtime_error("field DISK SIZE is not specified");
