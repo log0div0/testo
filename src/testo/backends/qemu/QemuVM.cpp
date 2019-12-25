@@ -40,7 +40,12 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 			iso_path = fs::canonical(iso_path);
 
 			if (!fs::exists(iso_path)) {
-				throw std::runtime_error("Target iso file doesn't exist");
+				throw std::runtime_error("Target iso file doesn't exist:" + iso_path.generic_string());
+			}
+
+			if (!fs::is_regular_file(iso_path)) {
+				throw std::runtime_error(std::string("Target iso is not a regular file: ")
+					+ iso_path.generic_string());
 			}
 		}
 
@@ -885,17 +890,8 @@ std::string QemuVM::get_dvd_path(vir::Snapshot& snap) {
 	}
 }
 
-void QemuVM::plug_dvd(fs::path path) {
+void QemuVM::plug_dvd(fs::path iso_path) {
 	try {
-		if (!fs::exists(path)) {
-			throw std::runtime_error(std::string("specified iso file does not exist: ")
-				+ path.generic_string());
-		}
-
-		if (!fs::is_regular_file(path)) {
-			throw std::runtime_error(std::string("specified iso is not a regular file: ")
-				+ path.generic_string());
-		}
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
@@ -914,7 +910,7 @@ void QemuVM::plug_dvd(fs::path path) {
 				<alias name='ide0-0-1'/>
 				<address type='drive' controller='0' bus='0' target='0' unit='1'/>
 			</disk>
-		)", path.generic_string().c_str());
+		)", iso_path.generic_string().c_str());
 
 		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
 
@@ -927,7 +923,7 @@ void QemuVM::plug_dvd(fs::path path) {
 
 		domain.update_device(dvd_config, flags);
 	} catch (const std::string& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("plugging dvd {}", path.generic_string())));
+		std::throw_with_nested(std::runtime_error(fmt::format("plugging dvd {}", iso_path.generic_string())));
 	}
 }
 

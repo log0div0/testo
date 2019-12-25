@@ -38,7 +38,7 @@ test install_negotiator: ubuntu_installation {
 test install_guest_additions: ubuntu_installation {
 	negotiator_testing {
 		enter_sudo("negotiator", "user", "1111")
-		plug dvd "${NEGOTIATOR_DIR}/testo-guest-additions.iso"
+		plug dvd "testo-guest-additions.iso@iso"
 		wait timeout 5s
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounting read-only";
@@ -56,9 +56,9 @@ test install_guest_additions: ubuntu_installation {
 			echo "Hello world" > /tmp/zumba
 		"""
 
-		copyfrom "/etc/X11" "/home/alex/work/zumba"
+		#copyfrom "/etc/X11" "/home/alex/work/zumba"
 
-		abort "stop here"
+		#abort "stop here"
 	}
 }
 
