@@ -7,7 +7,7 @@
 #include "../Environment.hpp"
 
 struct DummyEnvironment: Environment {
-	DummyEnvironment(): Environment("") {}
+	DummyEnvironment() {}
 	~DummyEnvironment() {}
 
 	fs::path testo_dir() const override;

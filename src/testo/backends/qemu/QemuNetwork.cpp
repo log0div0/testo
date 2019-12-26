@@ -5,7 +5,9 @@
 #include "pugixml/pugixml.hpp"
 #include <fmt/format.h>
 
-QemuNetwork::QemuNetwork(const nlohmann::json& config): Network(config), qemu_connect(vir::connect_open(env->uri()))
+QemuNetwork::QemuNetwork(const nlohmann::json& config):
+	Network(config),
+	qemu_connect(vir::connect_open(std::dynamic_pointer_cast<QemuEnvironment>(env)->uri()))
 {
 	if (id().length() > 15) {
 		throw std::runtime_error("Too long name for a network: " + id() + ", please specifify 15 characters or less");

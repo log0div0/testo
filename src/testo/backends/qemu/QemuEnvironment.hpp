@@ -31,6 +31,9 @@ struct QemuEnvironment : public Environment {
 	void setup() override;
 	void cleanup() override;
 
+	std::string uri() const;
+	bool is_local_uri() const;
+
 	fs::path resolve_path(const std::string& volume, const std::string& pool);
 	std::string get_last_modify_date(const std::string& volume, const std::string& pool);
 
@@ -39,6 +42,7 @@ struct QemuEnvironment : public Environment {
 	std::shared_ptr<NetworkController> create_network_controller(const nlohmann::json& config) override;
 
 private:
+	const std::string _uri;
 	void prepare_storage_pool(const std::string& pool_name);
 	vir::Connect qemu_connect;
 };

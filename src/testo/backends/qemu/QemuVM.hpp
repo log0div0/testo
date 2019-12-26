@@ -47,6 +47,8 @@ struct QemuVM: public VM {
 	void remove_from_guest(const fs::path& obj) override;
 
 private:
+	std::string find_free_guest_additions_port() const;
+
 	void remove_disk();
 	void create_disk();
 

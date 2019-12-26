@@ -5,13 +5,17 @@
 #include "QemuNetwork.hpp"
 #include <fmt/format.h>
 
-QemuEnvironment::QemuEnvironment(const std::string& uri): Environment(uri) {
+QemuEnvironment::QemuEnvironment(const std::string& uri): _uri(uri) {
 	setenv("QEMU", "1", false);
 	qemu_connect = vir::connect_open(uri);
 }
 
 QemuEnvironment::~QemuEnvironment() {
 	cleanup();
+}
+
+std::string QemuEnvironment::uri() const {
+	return _uri;
 }
 
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
@@ -89,6 +93,10 @@ void QemuEnvironment::setup() {
 
 void QemuEnvironment::cleanup() {
 
+}
+
+bool QemuEnvironment::is_local_uri() const {
+	return (uri() == "qemu:///system");
 }
 
 fs::path QemuEnvironment::resolve_path(const std::string& volume, const std::string& pool) {

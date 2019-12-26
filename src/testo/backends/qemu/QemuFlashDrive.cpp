@@ -7,7 +7,7 @@
 #include <fstream>
 
 QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config_),
-	qemu_connect(vir::connect_open(env->uri()))
+	qemu_connect(vir::connect_open(std::dynamic_pointer_cast<QemuEnvironment>(env)->uri()))
 {
 	if (!is_defined()) {
 		return;

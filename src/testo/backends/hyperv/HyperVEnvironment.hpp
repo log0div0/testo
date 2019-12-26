@@ -7,7 +7,7 @@
 #include "../Environment.hpp"
 
 struct HyperVEnvironment: Environment {
-	HyperVEnvironment(): Environment("") {}
+	HyperVEnvironment() {}
 	~HyperVEnvironment() {}
 
 	fs::path testo_dir() const override;

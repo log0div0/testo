@@ -8,7 +8,7 @@
 #include <thread>
 
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
-	qemu_connect(vir::connect_open(env->uri()))
+	qemu_connect(vir::connect_open(std::dynamic_pointer_cast<QemuEnvironment>(env)->uri()))
 {
 	try {
 		if (!config.count("name")) {
@@ -224,6 +224,26 @@ void QemuVM::install() {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 		fs::path volume_path = pool.path() / (id() + ".img");
 
+		auto qemu_env = std::dynamic_pointer_cast<QemuEnvironment>(env);
+
+		std::string guest_addition_channel;
+
+		if (qemu_env->is_local_uri()) {
+			guest_addition_channel = fmt::format(R"(
+				<channel type='unix'>
+					<target type='virtio' name='negotiator.0'/>
+				</channel>
+			)");
+		} else {
+			guest_addition_channel = fmt::format(R"(
+				<channel type='tcp'>
+					<source mode='bind' host='0.0.0.0' service='{}'/>
+					<protocol type='raw'/>
+					<target type='virtio' name='negotiator.0'/>
+				</channel>
+			)", find_free_guest_additions_port());
+		}
+
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
 				<name>{}</name>
@@ -292,9 +312,7 @@ void QemuVM::install() {
 					<console type='pty'>
 						<target type='serial' port='0'/>
 					</console>
-					<channel type='unix'>
-						<target type='virtio' name='negotiator.0'/>
-					</channel>
+					{}
 					<channel type='spicevmc'>
 						<target type='virtio' name='com.redhat.spice.0'/>
 					</channel>
@@ -317,7 +335,13 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), iso_path.generic_string(), id());
+		)", id(),
+			config.at("ram").get<uint32_t>(),
+			config.at("cpus").get<uint32_t>(),
+			volume_path.generic_string(),
+			iso_path.generic_string(),
+			guest_addition_channel
+		);
 
 		uint32_t nic_count = 0;
 
@@ -1184,4 +1208,36 @@ void QemuVM::create_disk() {
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));
 	}
+}
+
+std::string QemuVM::find_free_guest_additions_port() const {
+	for (int i = 25500; i < 26000; i++) {
+		std::string port_candidate = std::to_string(i);
+		auto is_free = true;
+		for (auto& domain: qemu_connect.domains()) {
+			auto config = domain.dump_xml();
+			auto devices = config.first_child().child("devices");
+
+			bool has_tcp_channel = false;
+
+			for (auto channel = devices.child("channel"); channel; channel = channel.next_sibling("channel")) {
+				if (std::string(channel.attribute("type").value()) != "tcp") {
+					continue;
+				}
+
+				if (channel.child("source").attribute("service").value() == port_candidate) {
+					is_free = false;
+					break;
+				}
+			}
+
+			if (!is_free) {
+				break;
+			}
+		}
+		if (is_free) {
+			return std::to_string(i);
+		}
+	}
+	throw std::runtime_error(std::string("Can't find a free port to guest additions channel ") + id());
 }
