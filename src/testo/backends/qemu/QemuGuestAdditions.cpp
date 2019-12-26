@@ -1,5 +1,6 @@
 
 #include "../../Reporter.hpp"
+#include "QemuEnvironment.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "base64.hpp"
 #include <fmt/format.h>
@@ -9,24 +10,30 @@ using namespace std::literals::chrono_literals;
 
 QemuGuestAdditions::QemuGuestAdditions(vir::Domain& domain) {
 	auto config = domain.dump_xml();
-
 	auto devices = config.first_child().child("devices");
-
-	std::string path;
 
 	for (auto channel = devices.child("channel"); channel; channel = channel.next_sibling("channel")) {
 		if (std::string(channel.child("target").attribute("name").value()) == "negotiator.0") {
-			path = std::string(channel.child("source").attribute("path").value());
-			break;
+			if (std::string(channel.attribute("type").value()) == "unix") {
+				std::string path = std::string(channel.child("source").attribute("path").value());
+				channel_handler.reset(new QemuUnixChannelHandler(path));
+				break;
+			} else if (std::string(channel.attribute("type").value()) == "tcp") {
+				auto uri = std::dynamic_pointer_cast<QemuEnvironment>(env)->uri();
+				std::string begin_trimmed = uri.substr(uri.find("://") + 3);
+				auto host_name = begin_trimmed.substr(0, begin_trimmed.find_first_of(":/"));
+				auto port = channel.child("source").attribute("service").value();
+				channel_handler.reset(new QemuTCPChannelHandler(host_name, port));
+				break;
+			} else {
+				throw std::runtime_error("Unknown channel type: " + std::string(channel.attribute("type").value()));
+			}
 		}
 	}
 
-	if (!path.length()) {
-		throw std::runtime_error("Can't find negotiator channel unix file");
+	if (!channel_handler) {
+		throw std::runtime_error("Can't find negotiator target in vm config");
 	}
-
-	endpoint = Endpoint(path);
-	socket.connect(endpoint);
 }
 
 bool QemuGuestAdditions::is_avaliable() {
@@ -37,11 +44,12 @@ bool QemuGuestAdditions::is_avaliable() {
 
 		coro::Timeout timeout(3s);
 
-		send(request);
+		channel_handler->send(request);
 
-		auto response = recv();
+		auto response = channel_handler->recv();
 		return response.at("success").get<bool>();
-	} catch (const std::exception&) {
+	} catch (const std::exception& error) {
+		std::cout << "Checking guest additions avaliability failed: " << error.what() << std::endl;
 		return false;
 	}
 }
@@ -70,9 +78,9 @@ void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& ds
 	auto chrono_seconds = std::chrono::milliseconds(timeout_milliseconds);
 	coro::Timeout timeout(chrono_seconds); //actually, it really depends on file size, TODO
 
-	send(request);
+	channel_handler->send(request);
 
-	auto response = recv();
+	auto response = channel_handler->recv();
 
 	if(!response.at("success").get<bool>()) {
 		throw std::runtime_error(response.at("error").get<std::string>());
@@ -115,10 +123,10 @@ int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_mil
 			}}
 	};
 
-	send(request);
+	channel_handler->send(request);
 
 	while (true) {
-		auto response = recv();
+		auto response = channel_handler->recv();
 		if (!response.at("success").get<bool>()) {
 			throw std::runtime_error(std::string("Negotiator inner error: ") + response.at("error").get<std::string>());
 		}
@@ -155,32 +163,12 @@ void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path&
 
 	coro::Timeout timeout(deadline - std::chrono::system_clock::now());
 
-	send(request);
+	channel_handler->send(request);
 
-	auto response = recv();
+	auto response = channel_handler->recv();
 
 	if(!response.at("success").get<bool>()) {
 		throw std::runtime_error(response.at("error").get<std::string>());
 	}
 
-}
-
-void QemuGuestAdditions::send(const nlohmann::json& command) {
-	auto command_str = command.dump();
-	std::vector<uint8_t> buffer;
-	uint32_t command_length = command_str.length();
-	buffer.reserve(sizeof(uint32_t) + command_str.length());
-	std::copy((uint8_t*)&command_length, (uint8_t*)(&command_length) + sizeof(uint32_t), std::back_inserter(buffer));
-
-	std::copy(command_str.begin(), command_str.end(), std::back_inserter(buffer));
-	socket.write(buffer);
-}
-
-nlohmann::json QemuGuestAdditions::recv() {
-	uint32_t json_length = 0;
-	socket.read(&json_length, sizeof(uint32_t));
-	std::string json_str;
-	json_str.resize(json_length);
-	socket.read(&json_str[0], json_length);
-	return nlohmann::json::parse(json_str);
 }
