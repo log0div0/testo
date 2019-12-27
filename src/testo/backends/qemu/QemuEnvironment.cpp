@@ -20,7 +20,7 @@ std::string QemuEnvironment::uri() const {
 
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 	auto pool_dir = testo_dir() / pool_name;
-	if (!fs::exists(pool_dir)) {
+	if (is_local_uri() && !fs::exists(pool_dir)) {
 		if (!fs::create_directories(pool_dir)) {
 			throw std::runtime_error(std::string("Can't create directory: ") + pool_dir.generic_string());
 		}
@@ -32,7 +32,8 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 	for (auto& pool: storage_pools) {
 		if (pool.name() == pool_name) {
 			if (!pool.is_active()) {
-				std::cout << "INFO: " << pool_name <<  "is inactive, starting...\n";
+				std::cout << "INFO: " << pool_name <<  " is inactive, starting...\n";
+				pool.start({VIR_STORAGE_POOL_CREATE_NORMAL});
 			}
 			found = true;
 			break;
@@ -40,7 +41,7 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 	}
 
 	if (!found) {
-		std::cout << "INFO: " << pool_name <<  "is not found, creating...\n";
+		std::cout << "INFO: " << pool_name <<  " is not found, creating...\n";
 		pugi::xml_document xml_config;
 		xml_config.load_string(fmt::format(R"(
 			<pool type='dir'>
@@ -65,6 +66,10 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 void QemuEnvironment::setup() {
 	prepare_storage_pool("testo-storage-pool");
 	prepare_storage_pool("testo-flash-drives-pool");
+
+	if (!is_local_uri()) {
+		prepare_storage_pool("testo-uploaded-iso");
+	}
 
 	if (!fs::exists(flash_drives_mount_dir())) {
 		if (!fs::create_directories(flash_drives_mount_dir())) {

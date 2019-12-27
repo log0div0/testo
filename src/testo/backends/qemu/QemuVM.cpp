@@ -915,8 +915,44 @@ std::string QemuVM::get_dvd_path(vir::Snapshot& snap) {
 	}
 }
 
+void QemuVM::upload_iso(const fs::path& iso_path) {
+	try {
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-uploaded-iso");
+
+		pugi::xml_document xml_config;
+		//TODO: Mode should be default!
+		auto iso_size = fs::file_size(iso_path);
+		fs::path remote_iso_path = pool.path() / iso_path.filename();
+
+		xml_config.load_string(fmt::format(R"(
+			<volume type='file'>
+				<name>{}</name>
+				<key>{}</key>
+				<source>
+				</source>
+				<capacity unit='B'>{}</capacity>
+				<target>
+					<path>{}</path>
+					<format type='iso'/>
+					<permissions>
+					</permissions>
+					<timestamps>
+					</timestamps>
+				</target>
+			</volume>
+		)", iso_path.filename().generic_string(), remote_iso_path.generic_string(), std::to_string(iso_size), remote_iso_path.generic_string()).c_str());
+
+		auto volume = pool.volume_create_xml(xml_config);
+
+	} catch (const std::string& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Uploading dvd {}", iso_path.generic_string())));
+	}
+}
+
 void QemuVM::plug_dvd(fs::path iso_path) {
 	try {
+		upload_iso(iso_path);
+
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
