@@ -3,6 +3,7 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "QemuEnvironment.hpp"
+#include "../../IsoId.hpp"
 
 #include <fmt/format.h>
 #include <thread>
@@ -29,10 +30,12 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 
 		auto iso_path_query = config.at("iso").get<std::string>();
 
-		if (is_pool_related(iso_path_query)) {
-			iso_path = env->resolve_path(get_volume(iso_path_query), get_pool(iso_path_query));
+		IsoId iso(iso_path_query);
+
+		if (iso.pool.length()) {
+			iso_path = env->resolve_path(iso.name, iso.pool);
 		} else {
-			iso_path = iso_path_query;
+			iso_path = iso.name;
 			if (iso_path.is_relative()) {
 				fs::path src_file(config.at("src_file").get<std::string>());
 				iso_path = src_file.parent_path() / iso_path;

@@ -1,6 +1,7 @@
 
 #include "VisitorCksum.hpp"
 #include "backends/Environment.hpp"
+#include "IsoId.hpp"
 #include "coro/Finally.h"
 #include <algorithm>
 
@@ -143,12 +144,11 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
 		std::string iso_query = template_parser.resolve(plug->path->text(), reg);
-
-		if(is_pool_related(iso_query)) {
-			auto last_modifyed = env->get_last_modify_date(get_volume(iso_query), get_pool(iso_query));
-			result += timestamp_signature(last_modifyed);
+		IsoId iso(iso_query);
+		if(iso.pool.length()) {
+			result += env->get_last_modify_date(iso.name, iso.pool);
 		} else {
-			fs::path iso_path(iso_query);
+			fs::path iso_path(iso.name);
 			if (iso_path.is_relative()) {
 				iso_path = plug->t.pos().file.parent_path() / iso_path;
 			}

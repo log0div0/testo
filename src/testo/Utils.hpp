@@ -27,19 +27,6 @@ void exec_and_throw_if_failed(const std::string& command);
 
 std::string file_signature(const fs::path& file);
 std::string directory_signature(const fs::path& dir);
-std::string timestamp_signature(const std::string& timestamp);
-
-static bool is_pool_related(const std::string& iso_path) {
-	return iso_path.find("@") != std::string::npos;
-}
-
-static std::string get_volume(const std::string& iso_query) {
-	return iso_query.substr(0, iso_query.find("@"));
-}
-
-static std::string get_pool(const std::string& iso_query) {
-	return iso_query.substr(iso_query.find("@") + 1);
-}
 
 bool is_number(const std::string& s);
 

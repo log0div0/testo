@@ -2,6 +2,7 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
 #include "backends/Environment.hpp"
+#include "IsoId.hpp"
 
 #include "coro/Finally.h"
 #include "coro/CheckPoint.h"
@@ -896,10 +897,12 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 		std::string iso_query = template_parser.resolve(plug->path->text(), reg);
 
 		fs::path iso_path;
-		if(is_pool_related(iso_query)) {
-			iso_path = env->resolve_path(get_volume(iso_query), get_pool(iso_query));
+		IsoId iso(iso_query);
+
+		if(iso.pool.length()) {
+			iso_path = env->resolve_path(iso.name, iso.pool);
 		} else {
-			iso_path = iso_query;
+			iso_path = iso.name;
 			if (iso_path.is_relative()) {
 				iso_path = plug->t.pos().file.parent_path() / iso_path;
 			}

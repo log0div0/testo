@@ -1,5 +1,6 @@
 
 #include "QemuChannelHandler.hpp"
+#include "coro/Resolver.h"
 
 QemuUnixChannelHandler::QemuUnixChannelHandler(const fs::path& sock_path) {
 	endpoint = Endpoint(sock_path);
@@ -28,11 +29,8 @@ nlohmann::json QemuUnixChannelHandler::recv() {
 }
 
 QemuTCPChannelHandler::QemuTCPChannelHandler(const std::string& remote_host, const std::string& port) {
-	asio::io_service ios;
+	coro::TcpResolver resolver;
 	asio::ip::tcp::resolver::query resolver_query(remote_host, port, asio::ip::tcp::resolver::query::numeric_service);
-
-	asio::ip::tcp::resolver resolver(ios);
-
 	auto it = resolver.resolve(resolver_query);
 	socket.connect(it->endpoint());
 }

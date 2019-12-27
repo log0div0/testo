@@ -1,6 +1,7 @@
 
 #include "VmController.hpp"
 #include "Environment.hpp"
+#include "../IsoId.hpp"
 #include <fmt/format.h>
 
 std::string VmController::id() const {
@@ -214,11 +215,15 @@ std::string VmController::dvd_signature() const {
 	std::string result;
 	auto config = vm->get_config();
 	std::string iso_query = config.at("iso").get<std::string>();
-	if(is_pool_related(iso_query)) {
-		auto last_modifyed = env->get_last_modify_date(get_volume(iso_query), get_pool(iso_query));
-		result = timestamp_signature(last_modifyed);
+
+	IsoId iso(iso_query);
+
+	if(iso.pool.length()) {
+		auto last_modifyed = env->get_last_modify_date(iso.name, iso.pool);
+		std::hash<std::string> h;
+		result = std::to_string(h(last_modifyed));
 	} else {
-		fs::path iso_path(iso_query);
+		fs::path iso_path(iso.name);
 		if (iso_path.is_relative()) {
 			fs::path src_file(config.at("src_file").get<std::string>());
 			iso_path = src_file.parent_path() / iso_path;

@@ -1,7 +1,6 @@
 
 #include "Utils.hpp"
 #include <sys/types.h>
-#include <algorithm>
 #include <fstream>
 
 uint32_t time_to_milliseconds(const std::string& time) {
@@ -65,11 +64,6 @@ std::string directory_signature(const fs::path& dir) {
 	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(dir));
 	result += std::to_string(last_modify_time);
 	return result;
-}
-
-std::string timestamp_signature(const std::string& timestamp) {
-	std::hash<std::string> h;
-	return std::to_string(h(timestamp));
 }
 
 //NOTE: this check is very, very rough
