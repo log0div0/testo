@@ -1,3 +1,4 @@
 .DS_Store
 *.pyc
-tests/vm_config_change/iso.iso
+node_modules
+package-lock.json
