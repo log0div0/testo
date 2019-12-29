@@ -46,7 +46,7 @@ export function Background(props) {
 
 	return (
 		<div style={divStyle}>
-			<img style={imgStyle} src={props.src}/>
+			<img id='background' style={imgStyle} src={props.src}/>
 			{props.children}
 		</div>
 	)

@@ -80,7 +80,13 @@ async function generate_dataset(src_path) {
 					let html_path = path.join(dst_dir, `${i}.html`)
 					await fs.promises.writeFile(html_path, html)
 					await page.goto('file://' + path.resolve(html_path))
-					let screenshot = await page.screenshot()
+					let clip = await page.evaluate(() => {
+						let background = document.querySelector('#background')
+						let {x, y, width, height} = background.getBoundingClientRect()
+						return {x, y, width, height}
+					})
+					await page.setViewport({width: clip.width, height: clip.height})
+					let screenshot = await page.screenshot({clip})
 					await fs.promises.writeFile(path.join(dst_dir, `${i}.png`), screenshot, {encoding: 'binary'})
 					let label = await page.evaluate(generate_label)
 					await fs.promises.writeFile(path.join(dst_dir, `${i}.json`), JSON.stringify(label, null, 2))
