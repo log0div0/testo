@@ -14,9 +14,9 @@ public:
 	using BaseType::operator=;
 	using BaseType::_handle;
 
-	StreamSocket(): BaseType(typename Protocol::socket(*IoService::current())) {
+	StreamSocket(): BaseType(typename Protocol::socket(IoService::current()->_impl)) {
 	}
-	StreamSocket(const typename Protocol::endpoint& endpoint): BaseType(typename Protocol::socket(*IoService::current(), endpoint)) {
+	StreamSocket(const typename Protocol::endpoint& endpoint): BaseType(typename Protocol::socket(IoService::current()->_impl, endpoint)) {
 	}
 
 	void connect(const typename Protocol::endpoint& endpoint) {

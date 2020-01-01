@@ -10,7 +10,7 @@ class Work {
 public:
 
 private:
-	asio::io_service::work _impl = asio::io_service::work(*IoService::current());
+	asio::io_service::work _impl = asio::io_service::work(IoService::current()->_impl);
 };
 
 }

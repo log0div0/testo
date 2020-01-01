@@ -10,7 +10,7 @@ namespace coro {
 /// Wrapper вокруг asio::steady_timer
 class Timer {
 public:
-	Timer(): _handle(*IoService::current()) {}
+	Timer(): _handle(IoService::current()->_impl) {}
 
 	template <typename Duration>
 	void waitFor(Duration duration) {

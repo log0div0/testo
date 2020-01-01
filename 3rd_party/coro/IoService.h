@@ -25,10 +25,6 @@ public:
 
 	std::queue<std::function<void()>> checkpoints;
 
-	operator const asio::io_service&() const { return _impl; }
-	operator asio::io_service&() { return _impl; }
-
-private:
 	asio::io_service _impl;
 };
 
