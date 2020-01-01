@@ -5,14 +5,20 @@
 
 namespace nn {
 
-std::vector<TextLine> OCR::run(const stb::Image& image) {
-	std::vector<TextLine> textlines = detector.detect(image);
-	for (auto& textline: textlines) {
+OCR& OCR::instance() {
+	static OCR ocr;
+	return ocr;
+}
+
+OCRResult OCR::run(const stb::Image& image) {
+	OCRResult result;
+	result.textlines = detector.detect(image);
+	for (auto& textline: result.textlines) {
 		for (auto& word: textline.words) {
 			recognizer.recognize(image, word);
 		}
 	}
-	return textlines;
+	return result;
 }
 
 }

@@ -5,25 +5,38 @@
 #include "OCR.hpp"
 
 std::string image_file;
+std::string query;
 std::string output_file = "output.png";
 
 void predict()
 {
 	stb::Image image(image_file);
-	nn::OCR ocr;
+	nn::OCR& ocr = nn::OCR::instance();
 
 	auto start = std::chrono::high_resolution_clock::now();
-	auto textlines = ocr.run(image);
+	auto result = ocr.run(image);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
-	std::cout << time.count() << " seconds" << std::endl;
+	std::cout << "Time: " << time.count() << " seconds" << std::endl;
 
-	for (auto& textline: textlines) {
-		for (auto& word: textline.words) {
-			image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
-			std::cout << word.text << " ";
+	if (query.size() == 0) {
+		for (auto& textline: result.textlines) {
+			for (auto& word: textline.words) {
+				image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
+				for (auto& char_: word.chars) {
+					std::cout << char_.alternatives[0];
+				}
+				std::cout << " ";
+			}
+			std::cout << std::endl;
 		}
-		std::cout << std::endl;
+	} else {
+		auto rects = result.search(query);
+		for (auto& rect: rects) {
+			image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
+		}
+
+		std::cout << "Found: " << rects.size() << std::endl;
 	}
 
 	image.write_png(output_file);
@@ -36,6 +49,7 @@ int main(int argc, char **argv)
 
 		auto cli = (
 			value("input image", image_file),
+			option("-q", "--query") & value("the text to search for", query),
 			option("-o", "--output") & value("output image", output_file)
 		);
 

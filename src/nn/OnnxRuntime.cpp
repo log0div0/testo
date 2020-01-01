@@ -6,7 +6,7 @@ namespace nn {
 std::unique_ptr<Ort::Env> env;
 
 OnnxRuntime::OnnxRuntime() {
-	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "testo");
+	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_ERROR, "testo");
 }
 
 OnnxRuntime::~OnnxRuntime() {
