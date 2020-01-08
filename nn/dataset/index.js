@@ -35,27 +35,32 @@ function generate_label() {
 	let label = {
 		textlines: []
 	}
-	let textlines = document.querySelectorAll(".textline")
-	for (let textline of textlines) {
-		let {x, y, top, bottom, left, right, width, height} = textline.getBoundingClientRect()
-		let textline_desc = {
-			text: textline.innerText,
+	let textline_nodes = document.querySelectorAll(".textline")
+	for (let textline_node of textline_nodes) {
+		let {x, y, top, bottom, left, right, width, height} = textline_node.getBoundingClientRect()
+		let textline = {
+			text: '',
 			bbox: {x, y, top, bottom, left, right, width, height},
 			chars: []
 		}
-		let chars = textline.querySelectorAll('.char')
-		for (let char of chars) {
-			let {x, y, top, bottom, left, right, width, height} = char.getBoundingClientRect()
-			let char_desc = {
-				text: char.innerText,
+		let char_nodes = textline_node.querySelectorAll('.char')
+		for (let char_node of char_nodes) {
+			let text = char_node.innerText;
+			if (text == '') {
+				text = ' '
+			}
+			let {x, y, top, bottom, left, right, width, height} = char_node.getBoundingClientRect()
+			let char = {
+				text: text,
 				bbox: {x, y, top, bottom, left, right, width, height}
 			}
 			if ((width == 0) || (height == 0)) {
-				throw Error(JSON.stringify(char_desc))
+				throw Error(JSON.stringify(char))
 			}
-			textline_desc.chars.push(char_desc)
+			textline.text += text
+			textline.chars.push(char)
 		}
-		label.textlines.push(textline_desc)
+		label.textlines.push(textline)
 	}
 	return label
 }
