@@ -103,14 +103,14 @@ try:
 
 			step += 1
 
-			if step >= step_finish:
-				print("FINISH")
-				os._exit(0)
-
 			if step % 10000 == 0:
 				torch.save(net.state_dict(), "checkpoints/" + str(step) + ".pt")
 				adjust_learning_rate(optimizer, step)
 				print("CHECKPOINT " + str(step))
+
+			if step >= step_finish:
+				print("FINISH")
+				os._exit(0)
 
 except:
 	traceback.print_exc()

@@ -9,6 +9,11 @@ import json
 import visdom
 from .craft import normalizeMeanVariance
 import random
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('dataset_folder')
+args = parser.parse_args()
 
 class GaussianTransformer(object):
 	def __init__(self, imgSize=512, region_threshold=0.4,
@@ -149,11 +154,12 @@ class Dataset:
 	def __init__(self, root, size):
 		self.root = root
 		self.size = size
+		self.cache = [None] * size
 
 	def __len__(self):
 		return self.size
 
-	def load_data(self, idx):
+	def _load_data(self, idx):
 		image_path = os.path.join(self.root, str(idx) + '.png')
 		label_path = os.path.join(self.root, str(idx) + '.json')
 
@@ -173,10 +179,10 @@ class Dataset:
 						word_bboxes.append(np.array(char_bboxes))
 						char_bboxes = []
 					continue
-				left = int(char['bbox']['left'])
-				top = int(char['bbox']['top'])
-				right = int(char['bbox']['right'])
-				bottom = int(char['bbox']['bottom'])
+				left = math.floor(char['bbox']['left'])
+				top = math.floor(char['bbox']['top'])
+				right = math.ceil(char['bbox']['right']) - 1
+				bottom = math.ceil(char['bbox']['bottom']) - 1
 				if left == right:
 					raise Exception("Fuck")
 				if top == bottom:
@@ -191,13 +197,18 @@ class Dataset:
 				word_bboxes.append(np.array(char_bboxes))
 				char_bboxes = []
 
-		return image, word_bboxes
-
-	def __getitem__(self, idx):
-		image, word_bboxes = self.load_data(idx)
-
 		region_scores = gaussianTransformer.generate_region((image.shape[0], image.shape[1]), word_bboxes)
 		affinity_scores = gaussianTransformer.generate_affinity((image.shape[0], image.shape[1]), word_bboxes)
+
+		return image, region_scores, affinity_scores
+
+	def load_data(self, idx):
+		if not self.cache[idx]:
+			self.cache[idx] = self._load_data(idx)
+		return self.cache[idx]
+
+	def __getitem__(self, idx):
+		image, region_scores, affinity_scores = self.load_data(idx)
 
 		image, region_scores, affinity_scores = random_crop([image, region_scores, affinity_scores])
 
@@ -216,7 +227,7 @@ class Dataset:
 
 datasets = []
 
-for root, dirs, files in os.walk('dataset'):
+for root, dirs, files in os.walk(args.dataset_folder):
 	labels_count = len([file for file in files if os.path.splitext(file)[1] == '.json'])
 	if not labels_count:
 		continue
