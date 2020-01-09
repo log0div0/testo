@@ -190,7 +190,8 @@ function ConsoleChar(props) {
 	let style = {
 		color: 'transparent',
 		width: '8px',
-		height: '16px'
+		height: '16px',
+		marginRight: props.marginRight
 	}
 	if (props.children != ' ') {
 		let index = alphabet.indexOf(props.children)
@@ -210,9 +211,9 @@ function ConsoleChar(props) {
 }
 
 export function ConsoleText(props) {
-	let {children, color, font, style, className} = defaultStyle(props)
+	let {children, color, font, style, className, marginRight} = defaultStyle(props)
 	style.display = 'flex'
-	return <span style={style} className={className}>{textToChars(children, ConsoleChar, {color, font})}</span>
+	return <span style={style} className={className}>{textToChars(children, ConsoleChar, {color, font, marginRight})}</span>
 }
 
 export function ConsoleTextLine(props) {
