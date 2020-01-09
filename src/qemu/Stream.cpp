@@ -28,6 +28,20 @@ Stream& Stream::operator =(Stream&& other) {
 	return *this;
 }
 
+
+void Stream::send_all(uint8_t* buf, size_t size) {
+	size_t already_sent = 0;
+
+	while (already_sent < size) {
+		auto bytes_sent = virStreamSend(handle, (char*)(buf + already_sent), size - already_sent);
+		if (bytes_sent < 0) {
+			throw std::runtime_error(virGetLastErrorMessage());
+		}
+
+		already_sent += bytes_sent;
+	}
+}
+
 size_t Stream::recv_all(uint8_t* buf, size_t size) {
 	uint32_t chunk_size = 2359312; //1024x768 ppm format
 	size_t current_pos = 0;

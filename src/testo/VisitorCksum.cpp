@@ -144,16 +144,11 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
 		std::string iso_query = template_parser.resolve(plug->path->text(), reg);
-		IsoId iso(iso_query);
+		IsoId iso(iso_query, plug->t.pos().file.parent_path());
 		if(iso.pool.length()) {
 			result += env->get_last_modify_date(iso.name, iso.pool);
 		} else {
-			fs::path iso_path(iso.name);
-			if (iso_path.is_relative()) {
-				iso_path = plug->t.pos().file.parent_path() / iso_path;
-			}
-			iso_path = fs::canonical(iso_path);
-			result += file_signature(iso_path);
+			result += file_signature(iso.name);
 		}
 	}
 

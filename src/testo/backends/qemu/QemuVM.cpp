@@ -3,7 +3,6 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "QemuEnvironment.hpp"
-#include "../../IsoId.hpp"
 
 #include <fmt/format.h>
 #include <thread>
@@ -30,26 +29,14 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 
 		auto iso_path_query = config.at("iso").get<std::string>();
 
-		IsoId iso(iso_path_query);
+		fs::path src_file(config.at("src_file").get<std::string>());
+
+		IsoId iso(iso_path_query, src_file.parent_path());
 
 		if (iso.pool.length()) {
 			iso_path = env->resolve_path(iso.name, iso.pool);
 		} else {
 			iso_path = iso.name;
-			if (iso_path.is_relative()) {
-				fs::path src_file(config.at("src_file").get<std::string>());
-				iso_path = src_file.parent_path() / iso_path;
-			}
-			iso_path = fs::canonical(iso_path);
-
-			if (!fs::exists(iso_path)) {
-				throw std::runtime_error("Target iso file doesn't exist:" + iso_path.generic_string());
-			}
-
-			if (!fs::is_regular_file(iso_path)) {
-				throw std::runtime_error(std::string("Target iso is not a regular file: ")
-					+ iso_path.generic_string());
-			}
 		}
 
 		if (!config.count("disk_size")) {
@@ -265,9 +252,6 @@ void QemuVM::install() {
 					<apic/>
 					<vmport state='off'/>
 				</features>
-				<cpu mode='host-model'>
-					<model fallback='forbid'/>
-				</cpu>
 				<clock offset='utc'>
 					<timer name='rtc' tickpolicy='catchup'/>
 					<timer name='pit' tickpolicy='delay'/>
@@ -505,11 +489,11 @@ void QemuVM::mouse_move(const std::string& x, const std::string& y) {
 			std::throw_with_nested(std::runtime_error("absolute mouse movement is not implemented"));
 		}
 
-		int dx = 0, dy = 0;
+	/*	int dx = 0, dy = 0;
 
 		//ONLY FOR NOW!
 		dx = std::stoi(x);
-		dy = std::stoi(y);
+		dy = std::stoi(y);*/
 
 		std::string command = "mouse_move ";
 		command += x + " " + y;
@@ -915,7 +899,7 @@ std::string QemuVM::get_dvd_path(vir::Snapshot& snap) {
 	}
 }
 
-void QemuVM::upload_iso(const fs::path& iso_path) {
+fs::path QemuVM::upload_iso(const fs::path& iso_path) {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-uploaded-iso");
 
@@ -943,22 +927,37 @@ void QemuVM::upload_iso(const fs::path& iso_path) {
 		)", iso_path.filename().generic_string(), remote_iso_path.generic_string(), std::to_string(iso_size), remote_iso_path.generic_string()).c_str());
 
 		auto volume = pool.volume_create_xml(xml_config);
-
+		auto stream = qemu_connect.new_stream();
+		volume.upload(stream, iso_path);
+		stream.finish();
+		return remote_iso_path;
 	} catch (const std::string& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Uploading dvd {}", iso_path.generic_string())));
 	}
 }
 
-void QemuVM::plug_dvd(fs::path iso_path) {
+void QemuVM::plug_dvd(IsoId iso) {
 	try {
-		upload_iso(iso_path);
-
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
 		if (!cdrom.child("source").empty()) {
 			throw std::runtime_error("Some dvd is already plugged in");
+		}
+
+		auto qemu_env = std::dynamic_pointer_cast<QemuEnvironment>(env);
+
+		fs::path iso_path;
+
+		if (pool.length()) {
+			iso_path = env->resolve_path(iso.name, iso.pool);
+		} else {
+			if (qemu_env->is_local_uri()) {
+				iso_path = iso.name;
+			} else {
+				iso_path = upload_iso(iso.name);
+			}
 		}
 
 		std::string string_config = fmt::format(R"(
@@ -1256,8 +1255,6 @@ std::string QemuVM::find_free_guest_additions_port() const {
 		for (auto& domain: qemu_connect.domains()) {
 			auto config = domain.dump_xml();
 			auto devices = config.first_child().child("devices");
-
-			bool has_tcp_channel = false;
 
 			for (auto channel = devices.child("channel"); channel; channel = channel.next_sibling("channel")) {
 				if (std::string(channel.attribute("type").value()) != "tcp") {

@@ -572,9 +572,9 @@ bool VboxVM::is_dvd_plugged() const {
 	}
 }
 
-void VboxVM::plug_dvd(fs::path path) {
+void VboxVM::plug_dvd(IsoId iso) {
 	try {
-		if (path.is_relative()) {
+		/*if (path.is_relative()) {
 			path = fs::absolute(path);
 		}
 
@@ -584,7 +584,7 @@ void VboxVM::plug_dvd(fs::path path) {
 		auto lock_machine = virtual_box.find_machine(id());
 		vbox::Lock lock(lock_machine, work_session, LockType_Shared);
 		auto machine = work_session.machine();
-		machine.mount_medium("IDE", 1, 0, dvd, false);
+		machine.mount_medium("IDE", 1, 0, dvd, false);*/
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
 	}

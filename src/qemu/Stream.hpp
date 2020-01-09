@@ -20,6 +20,7 @@ struct Stream {
 
 	//Read until the end of stream, but it's not the equalent of recv_all from man
 	size_t recv_all(uint8_t* buf, size_t size);
+	void send_all(uint8_t* buf, size_t size);
 	void finish();
 
 	::virStream* handle = nullptr;

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "FlashDrive.hpp"
+#include "../IsoId.hpp"
 #include <stb/Image.hpp>
 #include <nlohmann/json.hpp>
 
@@ -36,7 +37,7 @@ struct VM {
 	virtual void plug_flash_drive(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual bool is_dvd_plugged() const = 0;
-	virtual void plug_dvd(fs::path path) = 0;
+	virtual void plug_dvd(IsoId iso) = 0;
 	virtual void unplug_dvd() = 0;
 	virtual void start() = 0;
 	virtual void stop() = 0;

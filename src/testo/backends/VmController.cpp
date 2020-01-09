@@ -216,7 +216,9 @@ std::string VmController::dvd_signature() const {
 	auto config = vm->get_config();
 	std::string iso_query = config.at("iso").get<std::string>();
 
-	IsoId iso(iso_query);
+	fs::path src_file(config.at("src_file").get<std::string>());
+
+	IsoId iso(iso_query, src_file.parent_path());
 
 	if(iso.pool.length()) {
 		auto last_modifyed = env->get_last_modify_date(iso.name, iso.pool);
@@ -224,11 +226,6 @@ std::string VmController::dvd_signature() const {
 		result = std::to_string(h(last_modifyed));
 	} else {
 		fs::path iso_path(iso.name);
-		if (iso_path.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			iso_path = src_file.parent_path() / iso_path;
-		}
-		iso_path = fs::canonical(iso_path);
 		result = file_signature(iso_path);
 	}
 

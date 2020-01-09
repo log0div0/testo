@@ -897,33 +897,14 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 		std::string iso_query = template_parser.resolve(plug->path->text(), reg);
 
 		fs::path iso_path;
-		IsoId iso(iso_query);
-
-		if(iso.pool.length()) {
-			iso_path = env->resolve_path(iso.name, iso.pool);
-		} else {
-			iso_path = iso.name;
-			if (iso_path.is_relative()) {
-				iso_path = plug->t.pos().file.parent_path() / iso_path;
-			}
-			iso_path = fs::canonical(iso_path);
-
-			if (!fs::exists(iso_path)) {
-				throw std::runtime_error("specified iso file doesn't exist: " + iso_path.generic_string());
-			}
-
-			if (!fs::is_regular_file(iso_path)) {
-				throw std::runtime_error(std::string("specified iso is not a regular file: ")
-					+ iso_path.generic_string());
-			}
-		}
+		IsoId iso(iso_query, plug->t.pos().file.parent_path());
 
 		reporter.plug(vmc, "dvd", iso_query, true);
 
 		if (vmc->vm->is_dvd_plugged()) {
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
-		vmc->vm->plug_dvd(iso_path);
+		vmc->vm->plug_dvd(iso);
 	} else {
 		if (!vmc->vm->is_dvd_plugged()) {
 			// throw std::runtime_error(fmt::format("dvd is already unplugged"));

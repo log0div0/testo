@@ -224,7 +224,7 @@ bool HyperVVM::is_dvd_plugged() const {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
-void HyperVVM::plug_dvd(fs::path path) {
+void HyperVVM::plug_dvd(IsoId iso) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void HyperVVM::unplug_dvd() {

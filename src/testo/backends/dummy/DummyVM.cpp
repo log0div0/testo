@@ -103,7 +103,7 @@ void DummyVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 bool DummyVM::is_dvd_plugged() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void DummyVM::plug_dvd(fs::path path) {
+void DummyVM::plug_dvd(IsoId iso) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void DummyVM::unplug_dvd() {

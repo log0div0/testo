@@ -22,7 +22,7 @@ struct HyperVVM: VM {
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
 	void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
 	bool is_dvd_plugged() const override;
-	void plug_dvd(fs::path path) override;
+	void plug_dvd(IsoId iso) override;
 	void unplug_dvd() override;
 	void start() override;
 	void stop() override;
