@@ -11,7 +11,7 @@ namespace coro {
 template <typename Protocol>
 class Acceptor {
 public:
-	Acceptor(const typename Protocol::endpoint& endpoint): _handle(*IoService::current())
+	Acceptor(const typename Protocol::endpoint& endpoint): _handle(IoService::current()->_impl)
 	{
 		_handle.open(endpoint.protocol());
 		asio::socket_base::reuse_address option(true);
@@ -22,7 +22,7 @@ public:
 
 	typename Protocol::socket accept()
 	{
-		typename Protocol::socket socket(*IoService::current());
+		typename Protocol::socket socket(IoService::current()->_impl);
 
 		AsioTask1 task;
 		_handle.async_accept(socket, task.callback());

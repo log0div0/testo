@@ -9,10 +9,10 @@ namespace coro {
 template <typename Protocol>
 class DatagramSocket {
 public:
-	DatagramSocket(Protocol protocol = Protocol()): _handle(*IoService::current(), protocol) {
+	DatagramSocket(Protocol protocol = Protocol()): _handle(IoService::current()->_impl, protocol) {
 
 	}
-	DatagramSocket(const typename Protocol::endpoint& endpoint): _handle(*IoService::current(), endpoint.protocol())
+	DatagramSocket(const typename Protocol::endpoint& endpoint): _handle(IoService::current()->_impl, endpoint.protocol())
 	{
 		asio::socket_base::reuse_address option(true);
 		_handle.set_option(option);

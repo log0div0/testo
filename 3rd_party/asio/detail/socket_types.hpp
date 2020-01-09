@@ -2,7 +2,7 @@
 // detail/socket_types.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2019 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -59,7 +59,8 @@
 # include <sys/ioctl.h>
 # if (defined(__MACH__) && defined(__APPLE__)) \
    || defined(__FreeBSD__) || defined(__NetBSD__) \
-   || defined(__OpenBSD__) || defined(__linux__)
+   || defined(__OpenBSD__) || defined(__linux__) \
+   || defined(__EMSCRIPTEN__)
 #  include <poll.h>
 # elif !defined(__SYMBIAN32__)
 #  include <sys/poll.h>

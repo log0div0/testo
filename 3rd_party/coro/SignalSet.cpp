@@ -5,7 +5,7 @@
 namespace coro {
 
 SignalSet::SignalSet(const std::initializer_list<int32_t>& signals)
-	: _handle(*IoService::current())
+	: _handle(IoService::current()->_impl)
 {
 	for (auto signal: signals) {
 		_handle.add(signal);

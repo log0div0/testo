@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-file(GLOB_RECURSE FILES *.cpp)
+file(GLOB FILES *.cpp)
 if (WIN32)
 	list(REMOVE_ITEM FILES ${CMAKE_CURRENT_SOURCE_DIR}/FiberLinux.cpp)
 else()
@@ -12,3 +12,4 @@ if (APPLE)
 endif()
 
 add_library(coro STATIC ${FILES})
+add_subdirectory(tests)

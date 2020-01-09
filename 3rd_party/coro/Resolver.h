@@ -14,7 +14,7 @@ public:
 	typedef typename Impl::iterator Iterator;
 	typedef typename Impl::query Query;
 
-	Resolver(): _handle(*IoService::current()) {}
+	Resolver(): _handle(IoService::current()->_impl) {}
 
 	Iterator resolve(const Query& query) {
 		AsioTask2<Iterator> task;
