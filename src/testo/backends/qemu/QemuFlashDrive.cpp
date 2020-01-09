@@ -13,6 +13,11 @@ QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config
 		return;
 	}
 
+	auto qemu_env = std::dynamic_pointer_cast<QemuEnvironment>(env);
+	if (!qemu_env->is_local_uri()) {
+		throw std::runtime_error("flash drives with remote qemu is not supported yet");
+	}
+
 	for (auto& domain: qemu_connect.domains()) {
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");

@@ -33,9 +33,14 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 
 		IsoId iso(iso_path_query, src_file.parent_path());
 
+		auto qemu_env = std::dynamic_pointer_cast<QemuEnvironment>(env);
+
 		if (iso.pool.length()) {
 			iso_path = env->resolve_path(iso.name, iso.pool);
 		} else {
+			if (!qemu_env->is_local_uri()) {
+				throw std::runtime_error("Uploading iso to remote server is not supported yet");
+			}
 			iso_path = iso.name;
 		}
 
@@ -426,7 +431,8 @@ void QemuVM::rollback(const std::string& snapshot) {
 			}
 
 			if (snapshot_dvd.length()) {
-				plug_dvd(snapshot_dvd);
+				IsoId dvd_id(snapshot_dvd, "");
+				plug_dvd(dvd_id);
 			}
 		}
 
@@ -786,6 +792,11 @@ bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 
 void QemuVM::attach_flash_drive(const std::string& img_path) {
 	try {
+		auto qemu_env = std::dynamic_pointer_cast<QemuEnvironment>(env);
+		if (!qemu_env->is_local_uri()) {
+			throw std::runtime_error("Attaching flash drive to remote qemu is not supported yet");
+		}
+
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
 		std::string string_config = fmt::format(R"(
@@ -950,12 +961,13 @@ void QemuVM::plug_dvd(IsoId iso) {
 
 		fs::path iso_path;
 
-		if (pool.length()) {
+		if (iso.pool.length()) {
 			iso_path = env->resolve_path(iso.name, iso.pool);
 		} else {
 			if (qemu_env->is_local_uri()) {
 				iso_path = iso.name;
 			} else {
+				throw std::runtime_error("Uploading iso is not supported yet");
 				iso_path = upload_iso(iso.name);
 			}
 		}

@@ -67,7 +67,7 @@ private:
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 
-	void upload_iso(const fs::path& iso_path);
+	fs::path upload_iso(const fs::path& iso_path);
 
 	fs::path iso_path;
 
