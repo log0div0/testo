@@ -19,20 +19,23 @@ export function randomArrayElement(array) {
 	return array[randomInt(0, array.length)]
 }
 
-let char_groups = [
-	'0123456789',
-	'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-	'abcdefghijklmnopqrstuvwxyz',
-	'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
-	'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
-]
-
-let common = "0123456789!?\"'#$%&@()[]{}<>+-*/\\.,:;^~=|_"
+let digits = "0123456789"
+let other_symbols = "!?\"'#$%&@()[]{}<>+-*/\\.,:;^~=|_"
 let english = "abcdefghijklmnopqrstuvwxyz"
 let ENGLISH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 let russian = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 let RUSSIAN = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
-export let alphabet = common + english + ENGLISH + russian + RUSSIAN
+
+export let alphabet = digits + other_symbols + english + ENGLISH + russian + RUSSIAN
+
+let char_groups = [
+	digits,
+	other_symbols,
+	english,
+	ENGLISH,
+	russian,
+	RUSSIAN
+]
 
 export function Background(props) {
 	let divStyle = {
