@@ -6,8 +6,7 @@ export let families = [
 	'Calibri',
 	'Consolas',
 	'Courier New',
-	'DejaVu Sans Condensed',
-	'DejaVu Serif Condensed',
+	'DejaVu Sans Mono',
 	'Georgia',
 	'Lucida Console',
 	'Microsoft Sans Serif',
@@ -143,59 +142,31 @@ export let css = `
 }
 
 @font-face {
-	font-family: 'DejaVu Sans Condensed';
+	font-family: 'DejaVu Sans Mono';
 	font-weight: normal;
 	font-style: normal;
-	src: url('${fontsDir + '/dejavu/DejaVuSansCondensed.ttf'}') format('truetype');
+	src: url('${fontsDir + '/dejavu/DejaVuSansMono.ttf'}') format('truetype');
 }
 
 @font-face {
-	font-family: 'DejaVu Sans Condensed';
+	font-family: 'DejaVu Sans Mono';
 	font-weight: bold;
 	font-style: normal;
-	src: url('${fontsDir + '/dejavu/DejaVuSansCondensed-Bold.ttf'}') format('truetype');
+	src: url('${fontsDir + '/dejavu/DejaVuSansMono-Bold.ttf'}') format('truetype');
 }
 
 @font-face {
-	font-family: 'DejaVu Sans Condensed';
+	font-family: 'DejaVu Sans Mono';
 	font-weight: normal;
 	font-style: italic;
-	src: url('${fontsDir + '/dejavu/DejaVuSansCondensed-Oblique.ttf'}') format('truetype');
+	src: url('${fontsDir + '/dejavu/DejaVuSansMono-Oblique.ttf'}') format('truetype');
 }
 
 @font-face {
-	font-family: 'DejaVu Sans Condensed';
+	font-family: 'DejaVu Sans Mono';
 	font-weight: bold;
 	font-style: italic;
-	src: url('${fontsDir + '/dejavu/DejaVuSansCondensed-BoldOblique.ttf'}') format('truetype');
-}
-
-@font-face {
-	font-family: 'DejaVu Serif Condensed';
-	font-weight: normal;
-	font-style: normal;
-	src: url('${fontsDir + '/dejavu/DejaVuSerifCondensed.ttf'}') format('truetype');
-}
-
-@font-face {
-	font-family: 'DejaVu Serif Condensed';
-	font-weight: bold;
-	font-style: normal;
-	src: url('${fontsDir + '/dejavu/DejaVuSerifCondensed-Bold.ttf'}') format('truetype');
-}
-
-@font-face {
-	font-family: 'DejaVu Serif Condensed';
-	font-weight: normal;
-	font-style: italic;
-	src: url('${fontsDir + '/dejavu/DejaVuSerifCondensed-Italic.ttf'}') format('truetype');
-}
-
-@font-face {
-	font-family: 'DejaVu Serif Condensed';
-	font-weight: bold;
-	font-style: italic;
-	src: url('${fontsDir + '/dejavu/DejaVuSerifCondensed-BoldItalic.ttf'}') format('truetype');
+	src: url('${fontsDir + '/dejavu/DejaVuSansMono-BoldOblique.ttf'}') format('truetype');
 }
 
 @font-face {
