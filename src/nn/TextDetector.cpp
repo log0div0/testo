@@ -119,7 +119,7 @@ std::vector<Word> TextDetector::find_words() {
 			Rect a = chars[l-1];
 			while (true) {
 word_next:
-				for (int x = a.right; x <= (a.right + a.width()*2); ++x) {
+				for (int x = a.right; (x <= (a.right + a.width()*2)) && (x < out_w); ++x) {
 					for (int y = a.top; y <= a.bottom; ++y) {
 						uint16_t l = labelingWu.L[y*out_w + x];
 						if (!l) {
