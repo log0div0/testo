@@ -32,6 +32,11 @@ function App(props) {
 }
 
 function generate_label() {
+	let background = document.querySelector('#background')
+	let {x: min_x, y: min_y, width: max_x, height: max_y} = background.getBoundingClientRect()
+	if ((min_x != 0) || (min_y != 0)) {
+		throw Error("Invalid background position")
+	}
 	let label = {
 		textlines: []
 	}
@@ -54,8 +59,14 @@ function generate_label() {
 				text: text,
 				bbox: {x, y, top, bottom, left, right, width, height}
 			}
+			if ((top < min_y) || (bottom > max_y)) {
+				throw Error("(top < min_y) || (bottom > max_y)")
+			}
+			if ((left < min_x) || (right > max_x)) {
+				continue
+			}
 			if ((width == 0) || (height == 0)) {
-				throw Error(JSON.stringify(char))
+				throw Error("(width == 0) || (height == 0)")
 			}
 			textline.text += text
 			textline.chars.push(char)
@@ -96,12 +107,14 @@ async function generate_dataset(src_path) {
 					let label = await page.evaluate(generate_label)
 					await fs.promises.writeFile(path.join(dst_dir, `${i}.json`), JSON.stringify(label, null, 2))
 				} catch (error) {
-					errors_count += 1
-					if (errors_count < 10) {
-						continue
-					} else {
+					if (!error.message.includes("(width == 0) || (height == 0)")) {
 						throw error
 					}
+					errors_count += 1
+					if (errors_count > 10) {
+						throw error
+					}
+					continue
 				}
 				break
 			}
