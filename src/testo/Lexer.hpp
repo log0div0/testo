@@ -135,6 +135,7 @@ private:
 	Token type();
 	Token wait();
 	Token check();
+	Token js();
 	Token press();
 	Token mouse();
 	Token move();

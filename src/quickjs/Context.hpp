@@ -21,7 +21,11 @@ struct Context {
 	Value get_global_object();
 	Value eval(const std::string& script);
 
+	void set_opaque(void* opaque);
+	void* get_opaque();
+
 	void register_global_function(const std::string& name, size_t length, JSValue (*f)(JSContext*, JSValueConst, int, JSValueConst*));
+	void register_nn_functions();
 
 	Value create_bool(bool val);
 

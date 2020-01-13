@@ -48,24 +48,26 @@ struct String: public Node {
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
 struct SelectJS: public Node {
-	SelectJS(const Token& string):
-		Node(string) {}
+	SelectJS(const Token& js, std::shared_ptr<String> script):
+		Node(js), script(script) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return script->end();
 	}
 
 	operator std::string() const {
-		return t.value();
+		return std::string(*script);
 	}
 
 	std::string text() const {
-		return t.value().substr(1, t.value().length() - 2);
+		return script->text();
 	}
+
+	std::shared_ptr<String> script;
 };
 
 //String or SelectQuery. Used only in

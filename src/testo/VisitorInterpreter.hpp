@@ -5,6 +5,7 @@
 #include "Register.hpp"
 #include "TemplateParser.hpp"
 #include "Reporter.hpp"
+#include "quickjs/Runtime.hpp"
 #include <vector>
 #include <list>
 
@@ -107,6 +108,8 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
+	bool eval_js(const std::string& script, stb::Image& screenshot);
+
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
 
 	Register& reg;
@@ -157,4 +160,5 @@ private:
 	std::unordered_map<char, std::vector<std::string>> charmap;
 
 	std::string license_status;
+	quickjs::Runtime js_runtime;
 };

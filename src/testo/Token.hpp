@@ -12,6 +12,7 @@ struct Token {
 		print,
 		type_,
 		wait,
+		js,
 		check,
 		press,
 		mouse,
@@ -138,6 +139,10 @@ struct Token {
 			return "ACTION TYPE";
 		case wait:
 			return "ACTION WAIT";
+		case timeout:
+			return "TIMEOUT";
+		case js:
+			return "JS";
 		case press:
 			return "ACTION PRESS";
 		case plug:

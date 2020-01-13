@@ -24,6 +24,8 @@ static void sleep(const std::string& interval) {
 }
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
+	js_runtime = quickjs::create_runtime();
+
 	reporter = Reporter(config);
 
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
@@ -654,11 +656,28 @@ bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> sel
 	}
 }
 
+bool VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
+	auto js_ctx = js_runtime.create_context();
+	js_ctx.register_nn_functions();
+	js_ctx.set_opaque(&screenshot);
+	auto value = js_ctx.eval(script);
+
+	if (!value.is_bool()) {
+		throw std::runtime_error("Jsvascript selection should return only boolean values");
+	}
+	return value;
+}
+
 bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
 		return TextDetector::instance().detect(screenshot, text, "", "").size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
+		std::cout << "Are we here at least?\n";
+		auto script = template_parser.resolve(p->text(), reg);
+		std::cout << "SCRIPT IS: " << script << std::endl;
+		return eval_js(script, screenshot);
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
