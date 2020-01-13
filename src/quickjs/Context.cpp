@@ -40,4 +40,15 @@ Value Context::eval(const std::string& script) {
 	return result;
 }
 
+Value Context::create_bool(bool val) {
+	return Value(JS_NewBool(handle, true), handle);
+}
+
+void Context::register_global_function(const std::string& name, size_t length, JSValue (*f)(JSContext*, JSValueConst, int, JSValueConst*)) {
+	auto global = get_global_object();
+	if (JS_SetPropertyStr(handle, global.handle, name.c_str(), JS_NewCFunction(handle, f, name.c_str(), length)) < 0) {
+		throw std::runtime_error("Can't register global function " + name);
+	}
+}
+
 }

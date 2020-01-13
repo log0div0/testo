@@ -21,6 +21,10 @@ struct Context {
 	Value get_global_object();
 	Value eval(const std::string& script);
 
+	void register_global_function(const std::string& name, size_t length, JSValue (*f)(JSContext*, JSValueConst, int, JSValueConst*));
+
+	Value create_bool(bool val);
+
 	::JSContext* handle = nullptr;
 };
 
