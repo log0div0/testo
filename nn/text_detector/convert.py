@@ -1,7 +1,7 @@
 
 import torch
 import argparse
-from .craft import CRAFT
+from .model import Model
 
 parser = argparse.ArgumentParser()
 parser.add_argument('model_path')
@@ -9,7 +9,7 @@ args = parser.parse_args()
 
 dummy_input = torch.randn(1, 3, 480, 640)
 
-net = CRAFT()
+net = Model()
 net.load_state_dict(torch.load(args.model_path, map_location=torch.device('cpu')))
 net.eval()
 

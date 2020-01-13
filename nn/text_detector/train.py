@@ -4,7 +4,7 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 from torch import nn
 import traceback
-from .craft import CRAFT
+from .model import Model
 import os
 
 class Criterion(nn.Module):
@@ -13,35 +13,26 @@ class Criterion(nn.Module):
 		sum_loss = torch.mean(pre_loss.view(-1))*0
 		pre_loss = pre_loss.view(batch_size, -1)
 		loss_label = loss_label.view(batch_size, -1)
-		internel = batch_size
 		for i in range(batch_size):
-			average_number = 0
-			loss = torch.mean(pre_loss.view(-1)) * 0
 			positive_pixel = len(pre_loss[i][(loss_label[i] >= 0.1)])
-			average_number += positive_pixel
 			if positive_pixel != 0:
 				posi_loss = torch.mean(pre_loss[i][(loss_label[i] >= 0.1)])
 				sum_loss += posi_loss
 				if len(pre_loss[i][(loss_label[i] < 0.1)]) < 3*positive_pixel:
 					nega_loss = torch.mean(pre_loss[i][(loss_label[i] < 0.1)])
-					average_number += len(pre_loss[i][(loss_label[i] < 0.1)])
 				else:
 					nega_loss = torch.mean(torch.topk(pre_loss[i][(loss_label[i] < 0.1)], 3*positive_pixel)[0])
-					average_number += 3*positive_pixel
 				sum_loss += nega_loss
 			else:
 				nega_loss = torch.mean(torch.topk(pre_loss[i], 500)[0])
-				average_number += 500
 				sum_loss += nega_loss
-			#sum_loss += loss/average_number
-
 		return sum_loss
 
 	def forward(self, pred, region_scores, affinity_scores):
 		gh_label = region_scores
 		gah_label = affinity_scores
-		p_gh = pred[:, :, :, 0]
-		p_gah = pred[:, :, :, 1]
+		p_gh = pred[:, 0, :, :]
+		p_gah = pred[:, 1, :, :]
 
 		loss_fn = torch.nn.MSELoss(reduction='none')
 
@@ -70,7 +61,7 @@ step_start = 0
 step_finish = 100000
 step = step_start
 
-net = CRAFT()
+net = Model()
 if step != 0:
 	net.load_state_dict(torch.load("checkpoints/" + str(step) + ".pt"))
 net.to(device)

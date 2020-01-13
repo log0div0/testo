@@ -12,7 +12,7 @@ struct OCR {
 
 private:
 	TextDetector detector;
-	TextRecognizer recognizer;
+	// TextRecognizer recognizer;
 };
 
 }

@@ -19,8 +19,10 @@ void predict()
 	std::cout << time.count() << " seconds" << std::endl;
 
 	for (auto& textline: textlines) {
-		image.draw(textline.rect.left, textline.rect.top, textline.rect.right, textline.rect.bottom, 200, 20, 50);
-		std::cout << textline.text << std::endl;
+		for (auto& word: textline.words) {
+			image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
+		}
+		// std::cout << textline.text << std::endl;
 	}
 
 	image.write_png(output_file);

@@ -35,14 +35,14 @@ TextDetector::~TextDetector() {
 
 }
 
-std::vector<Word> TextDetector::detect(const stb::Image& image)
+std::vector<TextLine> TextDetector::detect(const stb::Image& image)
 {
 	if (!image.data) {
 		return {};
 	}
 
 	run_nn(image);
-	return find_words();
+	return find_textlines();
 }
 
 void TextDetector::run_nn(const stb::Image& image) {
@@ -64,7 +64,7 @@ void TextDetector::run_nn(const stb::Image& image) {
 		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
 		std::array<int64_t, 4> in_shape = {1, in_c, in_pad_h, in_pad_w};
-		std::array<int64_t, 4> out_shape = {1, out_pad_h, out_pad_w, out_c};
+		std::array<int64_t, 4> out_shape = {1, out_c, out_pad_h, out_pad_w};
 
 		in.resize(in_c * in_pad_h * in_pad_w);
 		out.resize(out_c * out_pad_h * out_pad_w);
@@ -80,16 +80,12 @@ void TextDetector::run_nn(const stb::Image& image) {
 		labelingWu = LabelingWu(out_w, out_h);
 	}
 
-	float mean[3] = {0.485, 0.456, 0.406};
-	float variance[3] = {0.229, 0.224, 0.225};
 	for (int y = 0; y < image.height; ++y) {
 		for (int x = 0; x < image.width; ++x) {
 			for (int c = 0; c < 3; ++c) {
 				int src_index = y * image.width * image.channels + x * image.channels + c;
 				int dst_index = c * in_pad_h * in_pad_w + y * in_pad_w + x;
 				in[dst_index] = float(image.data[src_index]) / 255.0f;
-				in[dst_index] -= mean[c];
-				in[dst_index] /= variance[c];
 			}
 		}
 	}
@@ -100,80 +96,74 @@ void TextDetector::run_nn(const stb::Image& image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<Word> TextDetector::find_words() {
-	std::vector<Rect> chars = find_chars();
-	std::vector<bool> visited_chars(chars.size(), false);
-	std::vector<Word> words;
+std::vector<TextLine> TextDetector::find_textlines() {
+	std::vector<Rect> words = find_words();
+	std::vector<bool> visited_words(words.size(), false);
+	std::vector<TextLine> textlines;
 	for (int x = 0; x < out_w; ++x) {
 		for (int y = 0; y < out_h; ++y) {
 			uint16_t l = labelingWu.L[y*out_w + x];
 			if (!l) {
 				continue;
 			}
-			if (visited_chars[l-1]) {
+			if (visited_words[l-1]) {
 				continue;
 			}
-			visited_chars[l-1] = true;
+			TextLine textline;
+			Rect a = words[l-1];
+			visited_words[l-1] = true;
+			textline.rect = a;
 			Word word;
-			word.rect = chars[l-1];
-			Rect a = chars[l-1];
+			word.rect = a;
+			textline.words.push_back(word);
 			while (true) {
-word_next:
+textline_next:
 				for (int x = a.right; (x <= (a.right + a.width()*2)) && (x < out_w); ++x) {
 					for (int y = a.top; y <= a.bottom; ++y) {
 						uint16_t l = labelingWu.L[y*out_w + x];
 						if (!l) {
 							continue;
 						}
-						if (visited_chars[l-1]) {
+						if (visited_words[l-1]) {
 							continue;
 						}
-						Rect b = chars[l-1];
-						if (a.right >= b.left) {
-							int32_t mean_height = (a.height() + b.height()) / 2;
-							int32_t min_bottom = std::min(a.bottom, b.bottom);
-							int32_t max_top = std::max(a.top, b.top);
-							if ((min_bottom - max_top) >= (mean_height / 2)) {
-								visited_chars[l-1] = true;
-								word.rect |= b;
-								a = b;
-								goto word_next;
-							}
-						}
-						for (int x = a.center_x(); x <= b.center_x(); ++x) {
+						Rect b = words[l-1];
+						for (int x = a.right; x <= b.left; ++x) {
 							for (int y = std::max(a.top, b.top); y <= std::min(a.bottom, b.bottom); ++y) {
-								if (out[y*out_pad_w*out_c + x*out_c + 1] >= 0.75) {
-									visited_chars[l-1] = true;
-									word.rect |= b;
+								if (out[out_pad_h*out_pad_w + y*out_pad_w + x] >= 0.75) {
+									visited_words[l-1] = true;
+									textline.rect |= b;
+									Word word;
+									word.rect = b;
+									textline.words.push_back(word);
 									a = b;
-									goto word_next;
+									goto textline_next;
 								}
 							}
 						}
-						goto word_finish;
+						goto textline_finish;
 					}
 				}
-				goto word_finish;
+				goto textline_finish;
 			}
-word_finish:
-			word.rect = adjust_rect(word.rect, 0.25);
-			words.push_back(word);
+textline_finish:
+			textlines.push_back(textline);
 		}
 	}
-	return words;
+	return textlines;
 }
 
-std::vector<Rect> TextDetector::find_chars() {
+std::vector<Rect> TextDetector::find_words() {
 	for (int y = 0; y < out_h; ++y) {
 		for (int x = 0; x < out_w; ++x) {
-			labelingWu.I[y*out_w + x] = out[y*out_pad_w*out_c + x*out_c] >= .75;
+			labelingWu.I[y*out_w + x] = out[y*out_pad_w + x] >= .75;
 		}
 	}
-	std::vector<Rect> chars = labelingWu.run();
-	for (size_t i = 0; i < chars.size(); ++i) {
-		chars[i] = adjust_rect(chars[i], 0.5);
+	std::vector<Rect> words = labelingWu.run();
+	for (size_t i = 0; i < words.size(); ++i) {
+		words[i] = adjust_rect(words[i], 0.25);
 	}
-	return chars;
+	return words;
 }
 
 Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
@@ -186,8 +176,8 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 			--x;
 			float max = 0;
 			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				if (max < out[y*out_pad_w*out_c + x*out_c]) {
-					max = out[y*out_pad_w*out_c + x*out_c];
+				if (max < out[y*out_pad_w + x]) {
+					max = out[y*out_pad_w + x];
 				}
 			}
 			if ((max < threshold) || (max > prev_max)) {
@@ -205,8 +195,8 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 			++x;
 			float max = 0;
 			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				if (max < out[y*out_pad_w*out_c + x*out_c]) {
-					max = out[y*out_pad_w*out_c + x*out_c];
+				if (max < out[y*out_pad_w + x]) {
+					max = out[y*out_pad_w + x];
 				}
 			}
 			if ((max < threshold) || (max > prev_max)) {
@@ -224,8 +214,8 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 			--y;
 			float max = 0;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				if (max < out[y*out_pad_w*out_c + x*out_c]) {
-					max = out[y*out_pad_w*out_c + x*out_c];
+				if (max < out[y*out_pad_w + x]) {
+					max = out[y*out_pad_w + x];
 				}
 			}
 			if ((max < threshold) || (max > prev_max)) {
@@ -243,8 +233,8 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 			++y;
 			float max = 0;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				if (max < out[y*out_pad_w*out_c + x*out_c]) {
-					max = out[y*out_pad_w*out_c + x*out_c];
+				if (max < out[y*out_pad_w + x]) {
+					max = out[y*out_pad_w + x];
 				}
 			}
 			if ((max < threshold) || (max > prev_max)) {
