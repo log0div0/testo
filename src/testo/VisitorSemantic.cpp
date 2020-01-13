@@ -390,13 +390,10 @@ void VisitorSemantic::visit_select_selectable(std::shared_ptr<AST::ISelectable> 
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		query = tql::text_to_query(text);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(selectable)) {
-		query = template_parser.resolve(p->text(), reg);
 	}
 
 	try {
-		tql::Interpreter::validate_sanity(query);
+		//try to validate javascript
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(std::string(selectable->begin()) + ": Error while parsing tql query"));
 	}

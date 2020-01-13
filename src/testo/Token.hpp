@@ -47,7 +47,6 @@ struct Token {
 		size,
 		quoted_string,
 		triple_quoted_string,
-		backticked_string, //`
 		double_ampersand,	//&&
 		double_vertical_bar,	//||
 		exclamation_mark,	//!

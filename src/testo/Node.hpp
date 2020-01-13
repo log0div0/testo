@@ -3,7 +3,6 @@
 
 #include "Pos.hpp"
 #include "Token.hpp"
-#include "tql/Interpreter.hpp"
 #include <vector>
 #include <set>
 #include <memory>
@@ -48,8 +47,8 @@ struct String: public Node {
 };
 
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
-struct SelectQuery: public Node {
-	SelectQuery(const Token& string):
+struct SelectJS: public Node {
+	SelectJS(const Token& string):
 		Node(string) {}
 
 	Pos begin() const {
@@ -74,7 +73,6 @@ struct SelectQuery: public Node {
 struct ISelectable: public Node {
 	using Node::Node;
 
-	std::unique_ptr<tql::Interpreter> query_interpreter = nullptr;
 	virtual std::string text() const = 0;
 };
 

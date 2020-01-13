@@ -636,25 +636,6 @@ Token Lexer::quoted_string() {
 	return Token(Token::category::quoted_string, value, tmp_pos);
 }
 
-Token Lexer::backticked_string() {
-	Pos tmp_pos = current_pos;
-
-	std::string value;
-	do {
-		if (test_eof()) {
-			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing backtick");
-		}
-
-		value += (*input)[current_pos];
-		current_pos.advance();
-	} while (!test_backtick());
-
-	value += (*input)[current_pos];
-	current_pos.advance(); //advance over closing quote
-
-	return Token(Token::category::backticked_string, value, tmp_pos);
-}
-
 Token Lexer::comma() {
 	Pos tmp_pos = current_pos;
 	current_pos.advance();
@@ -763,8 +744,6 @@ Token Lexer::get_next_token() {
 			return triple_quoted_string();
 		} else if (test_quote()) {
 			return quoted_string();
-		} else if (test_backtick()) {
-			return backticked_string();
 		} else if (test_comma()) {
 			return comma();
 		} else if (test_exclamation_mark()) {

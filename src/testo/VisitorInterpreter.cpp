@@ -10,6 +10,8 @@
 #include <wildcards.hpp>
 #include <rang.hpp>
 
+#include "nn/text_detector/TextDetector.hpp"
+
 #include <license/License.hpp>
 
 using namespace std::chrono_literals;
@@ -656,18 +658,10 @@ bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectabl
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		query = tql::text_to_query(text);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(selectable)) {
-		query = template_parser.resolve(p->text(), reg);
+		return TextDetector::instance().detect(screenshot, text, "", "").size();
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
-
-	if (!selectable->query_interpreter || (selectable->query_interpreter->input != query)) {
-		selectable->query_interpreter.reset(new tql::Interpreter(query));
-	}
-
-	return selectable->query_interpreter->exec(screenshot);
 }
 
 bool VisitorInterpreter::visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot) {
