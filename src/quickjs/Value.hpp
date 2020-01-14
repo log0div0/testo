@@ -2,6 +2,7 @@
 #pragma once
 
 #include "quickjs/quickjs.h"
+#include "CString.hpp"
 
 namespace quickjs {
 
@@ -14,9 +15,14 @@ struct Value {
 	Value& operator=(const Value& other);
 
 	operator bool();
+	operator CString();
 
 	bool is_exception();
+	bool is_error();
+	bool is_undefined();
 	bool is_bool();
+	bool is_string();
+
 
 	::JSContext* context = nullptr;
 	::JSValue handle;

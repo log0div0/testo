@@ -32,12 +32,31 @@ Value::operator bool() {
 	return JS_ToBool(context, handle);
 }
 
+Value::operator CString() {
+	/*if (!is_string()) {
+		throw std::runtime_error("Can't convert jsvalue to string because it is not a string");
+	}*/
+	return CString(JS_ToCString(context, handle), context);
+}
+
 bool Value::is_exception() {
 	return JS_IsException(handle);
 }
 
+bool Value::is_error() {
+	return JS_IsError(context, handle);
+}
+
+bool Value::is_undefined() {
+	return JS_IsUndefined(handle);
+}
+
 bool Value::is_bool() {
 	return JS_IsBool(handle);
+}
+
+bool Value::is_string() {
+	return JS_IsString(handle);
 }
 
 }

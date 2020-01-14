@@ -26,7 +26,7 @@ test install_astralinux {
 		start
 		wait js """
 		function some_shit() {
-			res = detect_text("${what_to_wait}") && detect_text("${what_to_wait}")
+			res = detect_text(${what_to_wait}) && detect_text("${what_to_wait}")
 			return res
 		}
 

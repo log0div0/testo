@@ -45,7 +45,7 @@ void* Context::get_opaque() {
 Value Context::eval(const std::string& script) {
 	Value result(JS_Eval(handle, script.c_str(), script.length(), "<input>", JS_EVAL_TYPE_GLOBAL), handle);
 	if (result.is_exception()) {
-		throw std::runtime_error("Error while executing javascript");
+		throw std::runtime_error(get_last_error());
 	}
 
 	return result;
@@ -62,6 +62,39 @@ void Context::register_global_function(const std::string& name, size_t length, J
 	}
 }
 
+Value Context::get_exception() {
+	return Value(JS_GetException(handle), handle);
+}
+
+Value Context::get_property_str(const Value& this_obj, const std::string& property) {
+	return Value(JS_GetPropertyStr(handle, this_obj.handle, property.c_str()), handle);
+}
+
+//TODO: set_property_str!
+
+std::string Context::get_last_error() {
+	std::string result;
+
+	Value exception_val = get_exception();
+	if (!exception_val.is_error()) {
+		result += "Throw: ";
+	}
+
+	CString exception_str(exception_val);
+	result += exception_str;
+
+	if (exception_val.is_error()) {
+		Value val = get_property_str(exception_val, "stack");
+		if (!val.is_undefined()) {
+			CString stack(val);
+			result += stack;
+			result += "\n";
+		}
+	}
+
+	return result;
+}
+
 JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
 	stb::Image* current_image = (stb::Image*)JS_GetContextOpaque(ctx);
 
@@ -73,8 +106,28 @@ JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 	return res;
 }
 
+JSValue js_print(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+	int i;
+	const char *str;
+
+	for(i = 0; i < argc; i++) {
+		if (i != 0) {
+			putchar(' ');
+		}
+		str = JS_ToCString(ctx, argv[i]);
+		if (!str) {
+			return JS_EXCEPTION;
+		}
+		fputs(str, stdout);
+		JS_FreeCString(ctx, str);
+	}
+	putchar('\n');
+	return JS_UNDEFINED;
+}
+
 void Context::register_nn_functions() {
 	register_global_function("detect_text", 1, detect_text);
+	register_global_function("print", 1, js_print);
 }
 
 }

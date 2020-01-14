@@ -674,10 +674,12 @@ bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectabl
 		auto text = template_parser.resolve(p->text(), reg);
 		return TextDetector::instance().detect(screenshot, text, "", "").size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		std::cout << "Are we here at least?\n";
 		auto script = template_parser.resolve(p->text(), reg);
-		std::cout << "SCRIPT IS: " << script << std::endl;
-		return eval_js(script, screenshot);
+		try {
+			return eval_js(script, screenshot);
+		} catch(const std::exception& error) {
+			std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
+		}
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
