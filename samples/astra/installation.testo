@@ -1,5 +1,5 @@
 
-#include "./macros.testo"
+include "./macros.testo"
 
 network nat {
 	mode: "nat"
@@ -26,9 +26,7 @@ test install_astralinux {
 		start
 		wait "Графическая установка" && js "detect_text(\"Русский\", \"white\", \"blue\")"
 		press Enter, Down
-		abort "stop here"
-		/*wait `select * from textlines
-			where text = "Установка" and foreground = "white"`; press Enter
+		wait js """detect_text("Установка", "white")"""; press Enter
 		wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
 		wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
 		wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
@@ -52,14 +50,14 @@ test install_astralinux {
 		wait "Установка завершена" timeout 3m; unplug dvd; select_menu_horizontal("Продолжить")
 		wait "${host_name} login:" timeout 5m; type "${login}"; press Enter
 		wait "Password:"; type "${password}"; press Enter
-		wait "${login}@${host_name}:"*/
+		wait "${login}@${host_name}:"
 
 	}
 }
-/*
+
 test install_guest_additions: install_astralinux {
 	astra {
 		install_guest_additions("${host_name}", "${login}", "${password}")
 		exec bash "echo Hello world"
 	}
-}*/
+}

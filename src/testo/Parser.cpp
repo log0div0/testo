@@ -1046,12 +1046,7 @@ std::shared_ptr<Check> Parser::check() {
 	match(Token::category::check);
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
-
 	select_expression = select_expr();
-	if (select_expression->t.type() == Token::category::triple_quoted_string) {
-		throw std::runtime_error(std::string(select_expression->begin()) +
-			": Error: multiline strings are not supported in check action");
-	}
 
 	Token timeout, time_interval;
 

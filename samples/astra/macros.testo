@@ -3,17 +3,13 @@ macro select_menu_horizontal(menu_entry) {
 	wait "${menu_entry}"
 
 	#check if it's enabled by default
-	if (check `select * from textlines
-		where text = "${menu_entry}" and foreground = "gray" and background = "red"`)
-	{
+	if (check js """detect_text("${menu_entry}", "gray", "red")""") {
 		press Enter
 	} else {
 		press Left*5
 
 		for i in 0..5 {
-			if (check `select * from textlines
-					where text = "${menu_entry}" and foreground = "gray" and background = "red"` timeout 50ms)
-			{
+			if (check js """detect_text("${menu_entry}", "gray", "red")""" timeout 50ms) {
 				press Enter;
 				break;
 			}
@@ -29,17 +25,13 @@ macro select_menu_vertical(menu_entry) {
 	wait "${menu_entry}"
 
 	#check if it's enabled by default
-	if (check `select * from textlines
-		where text = "${menu_entry}" and foreground = "gray" and background = "red"`)
-	{
+	if (check js """detect_text("${menu_entry}", "gray", "red")""") {
 		press Enter
 	} else {
 		press Up*20
 
 		for i in 0..20 {
-			if (check `select * from textlines
-					where text = "${menu_entry}" and foreground = "gray" and background = "red"` timeout 50ms)
-			{
+			if (check js """detect_text("${menu_entry}", "gray", "red")""" timeout 50ms)  {
 				press Enter;
 				break;
 			}
@@ -51,7 +43,7 @@ macro select_menu_vertical(menu_entry) {
 	}
 }
 
-macro do_select_checkbox_vertical(entry) {
+/*macro do_select_checkbox_vertical(entry) {
 	press Up*20
 
 	for i in 0..20 {
@@ -84,7 +76,7 @@ macro select_checkbox_vertical(name, state) {
 	} else {
 		abort "Unknown state: ${state}"
 	}
-}
+}*/
 
 macro enter_sudo(host_name, login, password) {
 	type "sudo su"; press Enter;
