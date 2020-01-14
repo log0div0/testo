@@ -75,7 +75,6 @@ private:
 			((*input)[current_pos + 1] == quote) &&
 			((*input)[current_pos + 2] == quote));
 	}
-	bool test_backtick() const { return ((*input)[current_pos] == '`'); }
 	bool test_double_ampersand() const {
 		if (test_eof(1)) {
 			return false;
@@ -136,6 +135,7 @@ private:
 	Token type();
 	Token wait();
 	Token check();
+	Token js();
 	Token press();
 	Token mouse();
 	Token move();
@@ -165,7 +165,6 @@ private:
 	Token continue_();
 	Token quoted_string();
 	Token triple_quoted_string();
-	Token backticked_string();
 	Token exclamation_mark();
 	Token double_ampersand();
 	Token double_vertical_bar();

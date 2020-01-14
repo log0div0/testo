@@ -5,6 +5,7 @@
 #include "Register.hpp"
 #include "TemplateParser.hpp"
 #include "backends/Environment.hpp"
+#include "quickjs/Runtime.hpp"
 
 #include <set>
 
@@ -46,7 +47,10 @@ struct VisitorSemantic {
 	nlohmann::json visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx);
 	void visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx);
 
+	void validate_js(const std::string& script);
+
 	bool is_button(const Token& t) const;
+
 	std::set<std::string> keys;
 
 	std::string prefix;
@@ -57,4 +61,6 @@ struct VisitorSemantic {
 
 	Register& reg;
 	template_literals::Parser template_parser;
+
+	quickjs::Runtime js_runtime;
 };

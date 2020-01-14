@@ -6,7 +6,7 @@
 VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	reg(reg)
 {
-
+	js_runtime = quickjs::create_runtime();
 	prefix = config.at("prefix").get<std::string>();
 
 	keys.insert("ESC");
@@ -386,19 +386,23 @@ void VisitorSemantic::visit_select_expr(std::shared_ptr<AST::ISelectExpr> select
 	}
 }
 
+void VisitorSemantic::validate_js(const std::string& script) {
+	auto js_ctx = js_runtime.create_context();
+	js_ctx.register_nn_functions();
+	js_ctx.eval(script, true);
+}
+
 void VisitorSemantic::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable) {
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		query = tql::text_to_query(text);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectQuery>>(selectable)) {
-		query = template_parser.resolve(p->text(), reg);
-	}
-
-	try {
-		tql::Interpreter::validate_sanity(query);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(std::string(selectable->begin()) + ": Error while parsing tql query"));
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
+		auto script = template_parser.resolve(p->text(), reg);
+		try {
+			validate_js(script);
+		} catch (const std::exception& error) {
+			std::throw_with_nested(std::runtime_error(std::string(p->begin()) + ": Error while validating javascript selection"));
+		}
 	}
 }
 

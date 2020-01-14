@@ -109,8 +109,7 @@ bool Parser::test_string() const {
 }
 
 bool Parser::test_selectable() const {
-	return (test_string() ||
-		(LA(1) == Token::category::backticked_string));
+	return (test_string() || (LA(1) == Token::category::js));
 }
 
 bool Parser::test_select_expr() const {
@@ -341,7 +340,7 @@ std::shared_ptr<Attr> Parser::attr() {
 	} else if (test_string()) {
 		auto str = string();
 		if (str->t.type() == Token::category::triple_quoted_string) {
-			throw std::runtime_error(std::string(str->begin()) + ": Cant' accept multiline as an attr value: " + std::string(*str));
+			throw std::runtime_error(std::string(str->begin()) + ": Can't accept multiline as an attr value: " + std::string(*str));
 		}
 		auto string_value = std::shared_ptr<StringAttr>(new StringAttr(str));
 		value = std::shared_ptr<AttrValue<StringAttr>>(new AttrValue<StringAttr>(string_value));
@@ -961,8 +960,8 @@ std::shared_ptr<ISelectable> Parser::selectable() {
 	std::shared_ptr<ISelectable> query;
 	if (test_string()) {
 		query = std::shared_ptr<Selectable<String>>(new Selectable<String>(string()));
-	} else if (LA(1) == Token::category::backticked_string) {
-		query = select_query();
+	} else if(LA(1) == Token::category::js) {
+		query = select_js();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown selective object type: " + LT(1).value());
 	}
@@ -970,21 +969,13 @@ std::shared_ptr<ISelectable> Parser::selectable() {
 	return query;
 }
 
-std::shared_ptr<Selectable<SelectQuery>> Parser::select_query() {
-	Token str = LT(1);
+std::shared_ptr<Selectable<SelectJS>> Parser::select_js() {
+	Token js = LT(1);
+	match(Token::category::js);
+	auto script = string();
+	auto select_js = std::shared_ptr<SelectJS>(new SelectJS(js, script));
 
-	match(Token::category::backticked_string);
-
-	auto query = std::shared_ptr<SelectQuery>(new SelectQuery(str));
-
-	try {
-		template_literals::Parser templ_parser;
-		templ_parser.validate_sanity(query->text());
-	} catch (const std::runtime_error& error) {
-		std::throw_with_nested(std::runtime_error(std::string(query->begin()) + ": Error parsing string: `" + query->text() + "`"));
-	}
-
-	return std::shared_ptr<Selectable<SelectQuery>>(new Selectable<SelectQuery>(query));
+	return std::shared_ptr<Selectable<SelectJS>>(new Selectable<SelectJS>(select_js));
 }
 
 std::shared_ptr<String> Parser::string() {
@@ -1055,12 +1046,7 @@ std::shared_ptr<Check> Parser::check() {
 	match(Token::category::check);
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
-
 	select_expression = select_expr();
-	if (select_expression->t.type() == Token::category::triple_quoted_string) {
-		throw std::runtime_error(std::string(select_expression->begin()) +
-			": Error: multiline strings are not supported in check action");
-	}
 
 	Token timeout, time_interval;
 

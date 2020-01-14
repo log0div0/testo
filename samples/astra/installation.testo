@@ -19,14 +19,14 @@ machine astra {
 param host_name "testo-astralinux"
 param login "user"
 param password "12345678"
+param what_to_wait "Графическая установка"
 
 test install_astralinux {
 	astra {
 		start
-		wait "Графическая установка" && `select * from textlines
-			where text = "Русский" and foreground = "white" and background = "blue"`; press Enter, Down
-		wait `select * from textlines
-			where text = "Установка" and foreground = "white"`; press Enter
+		wait "Графическая установка" && js "detect_text(\"Русский\", \"white\", \"blue\")"
+		press Enter, Down
+		wait js """detect_text("Установка", "white")"""; press Enter
 		wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
 		wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
 		wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
