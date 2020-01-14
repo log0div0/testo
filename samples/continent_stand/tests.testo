@@ -57,9 +57,7 @@ test install_UB {
 macro select_local_menu(string) {
 	wait "${string}"
 	for i in 0..20 {
-		if (check `select * from textlines
-				where text = "${string}" and foreground = "blue" and background = "gray"` timeout 50ms)
-		{
+		if (check js """detect_text("${string}", "blue", "gray")""" timeout 50ms) {
 			press Enter;
 			break;
 		}
@@ -73,9 +71,7 @@ macro select_local_menu(string) {
 macro select_local_menu_horizontal(string) {
 	wait "${string}"
 	for i in 0..5 {
-		if (check `select * from textlines
-				where text = "${string}" and foreground = "blue" and background = "gray"` timeout 50ms)
-		{
+		if (check js """detect_text("${string}", "blue", "gray")""" timeout 50ms) {
 			press Enter;
 			break;
 		}
