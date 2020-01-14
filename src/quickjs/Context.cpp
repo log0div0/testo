@@ -96,12 +96,44 @@ std::string Context::get_last_error() {
 }
 
 JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+	if (argc > 3) {
+		return JS_EXCEPTION;
+	}
+
 	stb::Image* current_image = (stb::Image*)JS_GetContextOpaque(ctx);
 
-	const char* text;
+	const char* text = nullptr;
+	const char* foreground = nullptr;
+	const char* background = nullptr;
+
+	std::string text_string, foreground_string, background_string;
 	text = JS_ToCString(ctx, argv[0]);
-	auto result = TextDetector::instance().detect(*current_image, text, "", "");
-	JS_FreeCString(ctx, text);
+	text_string = text;
+
+	if (argc > 1) {
+		foreground = JS_ToCString(ctx, argv[1]);
+		foreground_string = foreground;
+	}
+
+	if (argc > 2) {
+		background = JS_ToCString(ctx, argv[2]);
+		background_string = background;
+	}
+
+	auto result = TextDetector::instance().detect(*current_image, text_string, foreground_string, background_string);
+
+	if (text) {
+		JS_FreeCString(ctx, text);
+	}
+
+	if (foreground) {
+		JS_FreeCString(ctx, foreground);
+	}
+
+	if (background) {
+		JS_FreeCString(ctx, background);
+	}
+
 	auto res = JS_NewBool(ctx, result.size());
 	return res;
 }

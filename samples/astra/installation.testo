@@ -24,14 +24,8 @@ param what_to_wait "Графическая установка"
 test install_astralinux {
 	astra {
 		start
-		wait js """
-		function some_shit() {
-			res = detect_text(${what_to_wait}) && detect_text("${what_to_wait}")
-			return res
-		}
-
-		some_shit();
-		"""; press Enter, Down
+		wait "Графическая установка" && js "detect_text(\"Русский\", \"white\", \"blue\")"
+		press Enter, Down
 		abort "stop here"
 		/*wait `select * from textlines
 			where text = "Установка" and foreground = "white"`; press Enter
