@@ -49,7 +49,7 @@ class Criterion(nn.Module):
 		return char_loss/loss1.shape[0] + affi_loss/loss2.shape[0]
 
 def adjust_learning_rate(optimizer, step):
-	lr = 1e-3 * (0.5 ** (step // 10000))
+	lr = 1e-3 * (0.9 ** (step // 10000))
 	for param_group in optimizer.param_groups:
 		param_group['lr'] = lr
 
@@ -58,7 +58,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 writer = SummaryWriter()
 
 step_start = 0
-step_finish = 100000
 step = step_start
 
 net = Model()
@@ -98,10 +97,6 @@ try:
 				torch.save(net.state_dict(), "checkpoints/" + str(step) + ".pt")
 				adjust_learning_rate(optimizer, step)
 				print("CHECKPOINT " + str(step))
-
-			if step >= step_finish:
-				print("FINISH")
-				os._exit(0)
 
 except:
 	traceback.print_exc()

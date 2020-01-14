@@ -147,9 +147,19 @@ textline_next:
 				goto textline_finish;
 			}
 textline_finish:
+			for (size_t i = 1; i < textline.words.size(); ++i) {
+				auto& a = textline.words[i-1].rect;
+				auto& b = textline.words[i].rect;
+				int border = (a.right + b.left) / 2;
+				a.right = border;
+				b.left = border;
+			}
 			textlines.push_back(textline);
 		}
 	}
+	std::sort(textlines.begin(), textlines.end(), [](const TextLine& a, const TextLine& b) {
+		return a.rect.top < b.rect.top;
+	});
 	return textlines;
 }
 
