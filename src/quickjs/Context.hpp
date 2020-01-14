@@ -2,7 +2,10 @@
 #pragma once
 
 #include "Value.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "quickjs/quickjs.h"
+#pragma GCC diagnostic pop
 #include <string>
 
 namespace quickjs {
@@ -18,7 +21,7 @@ struct Context {
 	Context(Context&& other);
 	Context& operator=(Context&& other);
 
-	Value eval(const std::string& script);
+	Value eval(const std::string& script, bool compile_only = false);
 
 	void set_opaque(void* opaque);
 

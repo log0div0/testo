@@ -24,6 +24,7 @@ Context::Context(Context&& other): handle(other.handle) {
 
 Context& Context::operator=(Context&& other) {
 	std::swap(handle, other.handle);
+	return *this;
 }
 
 Value Context::get_global_object() {
@@ -42,8 +43,13 @@ void* Context::get_opaque() {
 	return JS_GetContextOpaque(handle);
 }
 
-Value Context::eval(const std::string& script) {
-	Value result(JS_Eval(handle, script.c_str(), script.length(), "<input>", JS_EVAL_TYPE_GLOBAL), handle);
+Value Context::eval(const std::string& script, bool compile_only) {
+	int flags = JS_EVAL_TYPE_GLOBAL;
+	if (compile_only) {
+		flags |= JS_EVAL_FLAG_COMPILE_ONLY;
+	}
+
+	Value result(JS_Eval(handle, script.c_str(), script.length(), "<input>", flags), handle);
 	if (result.is_exception()) {
 		throw std::runtime_error(get_last_error());
 	}
@@ -97,7 +103,10 @@ std::string Context::get_last_error() {
 
 JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
 	if (argc > 3) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 		return JS_EXCEPTION;
+#pragma GCC diagnostic pop
 	}
 
 	stb::Image* current_image = (stb::Image*)JS_GetContextOpaque(ctx);
@@ -148,13 +157,19 @@ JSValue js_print(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *
 		}
 		str = JS_ToCString(ctx, argv[i]);
 		if (!str) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 			return JS_EXCEPTION;
+#pragma GCC diagnostic pop
 		}
 		fputs(str, stdout);
 		JS_FreeCString(ctx, str);
 	}
 	putchar('\n');
-	return JS_UNDEFINED;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+		return JS_UNDEFINED;
+#pragma GCC diagnostic pop
 }
 
 void Context::register_nn_functions() {

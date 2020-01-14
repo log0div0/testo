@@ -33,9 +33,6 @@ Value::operator bool() {
 }
 
 Value::operator CString() {
-	/*if (!is_string()) {
-		throw std::runtime_error("Can't convert jsvalue to string because it is not a string");
-	}*/
 	return CString(JS_ToCString(context, handle), context);
 }
 

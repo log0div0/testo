@@ -21,6 +21,7 @@ Runtime::Runtime(Runtime&& other): handle(other.handle) {
 
 Runtime& Runtime::operator=(Runtime&& other) {
 	std::swap(handle, other.handle);
+	return *this;
 }
 
 Runtime create_runtime() {

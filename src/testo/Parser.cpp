@@ -340,7 +340,7 @@ std::shared_ptr<Attr> Parser::attr() {
 	} else if (test_string()) {
 		auto str = string();
 		if (str->t.type() == Token::category::triple_quoted_string) {
-			throw std::runtime_error(std::string(str->begin()) + ": Cant' accept multiline as an attr value: " + std::string(*str));
+			throw std::runtime_error(std::string(str->begin()) + ": Can't accept multiline as an attr value: " + std::string(*str));
 		}
 		auto string_value = std::shared_ptr<StringAttr>(new StringAttr(str));
 		value = std::shared_ptr<AttrValue<StringAttr>>(new AttrValue<StringAttr>(string_value));

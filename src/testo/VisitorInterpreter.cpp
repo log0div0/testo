@@ -657,15 +657,20 @@ bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> sel
 }
 
 bool VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
-	auto js_ctx = js_runtime.create_context();
-	js_ctx.register_nn_functions();
-	js_ctx.set_opaque(&screenshot);
-	auto value = js_ctx.eval(script);
+	try {
+		auto js_ctx = js_runtime.create_context();
+		js_ctx.register_nn_functions();
+		js_ctx.set_opaque(&screenshot);
+		auto value = js_ctx.eval(script);
 
-	if (!value.is_bool()) {
-		throw std::runtime_error("Jsvascript selection should return only boolean values");
+		if (!value.is_bool()) {
+			throw std::runtime_error("Jsvascript selection should return only boolean values");
+		}
+		return value;
+	} catch(const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
-	return value;
+
 }
 
 bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
@@ -675,11 +680,7 @@ bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectabl
 		return TextDetector::instance().detect(screenshot, text, "", "").size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
-		try {
-			return eval_js(script, screenshot);
-		} catch(const std::exception& error) {
-			std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
-		}
+		return eval_js(script, screenshot);
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}

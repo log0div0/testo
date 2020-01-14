@@ -10,7 +10,9 @@ CString::CString(const char* handle, JSContext* context): handle(handle), contex
 }
 
 CString::~CString() {
-	JS_FreeCString(context, handle);
+	if (context) {
+		JS_FreeCString(context, handle);
+	}
 }
 
 CString::CString(CString&& other): handle(other.handle), context(other.context) {
@@ -21,6 +23,7 @@ CString::CString(CString&& other): handle(other.handle), context(other.context) 
 CString& CString::operator=(CString&& other) {
 	std::swap(handle, other.handle);
 	std::swap(context, other.context);
+	return *this;
 }
 
 CString::operator std::string() {
