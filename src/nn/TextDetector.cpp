@@ -181,77 +181,81 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 
 	{
 		int32_t x = rect.left;
-		float prev_max = 1;
+		float min_mean = 1;
 		while (x > 0) {
 			--x;
-			float max = 0;
+			float mean = 0;
 			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				if (max < out[y*out_pad_w + x]) {
-					max = out[y*out_pad_w + x];
-				}
+				mean += out[y*out_pad_w + x];
 			}
-			if ((max < threshold) || (max > prev_max)) {
+			mean /= rect.height();
+			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
 				++x;
 				break;
 			}
-			prev_max = max;
+			if (min_mean > mean) {
+				min_mean = mean;
+			}
 		}
 		new_rect.left = x;
 	}
 	{
 		int32_t x = rect.right;
-		float prev_max = 1;
+		float min_mean = 1;
 		while (x < (out_w - 1)) {
 			++x;
-			float max = 0;
+			float mean = 0;
 			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				if (max < out[y*out_pad_w + x]) {
-					max = out[y*out_pad_w + x];
-				}
+				mean += out[y*out_pad_w + x];
 			}
-			if ((max < threshold) || (max > prev_max)) {
+			mean /= rect.height();
+			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
 				--x;
 				break;
 			}
-			prev_max = max;
+			if (min_mean > mean) {
+				min_mean = mean;
+			}
 		}
 		new_rect.right = x;
 	}
 	{
 		int32_t y = rect.top;
-		float prev_max = 1;
+		float min_mean = 1;
 		while (y > 0) {
 			--y;
-			float max = 0;
+			float mean = 0;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				if (max < out[y*out_pad_w + x]) {
-					max = out[y*out_pad_w + x];
-				}
+				mean += out[y*out_pad_w + x];
 			}
-			if ((max < threshold) || (max > prev_max)) {
+			mean /= rect.width();
+			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
 				++y;
 				break;
 			}
-			prev_max = max;
+			if (min_mean > mean) {
+				min_mean = mean;
+			}
 		}
 		new_rect.top = y;
 	}
 	{
 		int32_t y = rect.bottom;
-		float prev_max = 1;
+		float min_mean = 1;
 		while (y < (out_h - 1)) {
 			++y;
-			float max = 0;
+			float mean = 0;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				if (max < out[y*out_pad_w + x]) {
-					max = out[y*out_pad_w + x];
-				}
+				mean += out[y*out_pad_w + x];
 			}
-			if ((max < threshold) || (max > prev_max)) {
+			mean /= rect.width();
+			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
 				--y;
 				break;
 			}
-			prev_max = max;
+			if (min_mean > mean) {
+				min_mean = mean;
+			}
 		}
 		new_rect.bottom = y;
 	}
