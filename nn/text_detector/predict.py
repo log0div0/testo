@@ -65,12 +65,10 @@ for image_path in list_files(args.input_folder):
 	y = ort_outs[0][0]
 
 	score_text = y[0,:h,:w]
-	score_link = y[1,:h,:w]
 
-	res_img = np.hstack((score_text, score_link))
-	res_img = (np.clip(res_img, 0, 1) * 255).astype(np.uint8)
+	res_img = (np.clip(score_text, 0, 1) * 255).astype(np.uint8)
 	res_img = cv2.applyColorMap(res_img, cv2.COLORMAP_JET)
-	res_img = np.vstack((np.hstack((image,image)), res_img))
+	res_img = np.hstack((image,res_img))
 
 	filename, file_ext = os.path.splitext(os.path.basename(image_path))
 	res_img_file = os.path.join(args.output_folder, filename + '.png')

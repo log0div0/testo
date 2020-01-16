@@ -57,7 +57,7 @@ class Model(nn.Module):
 		self.upconv3 = DoubleConv(64, 32, 16)
 		self.upconv4 = DoubleConv(32, 16, 8)
 
-		num_class = 2
+		num_class = 1
 		self.conv_cls = nn.Sequential(
 			nn.Conv2d(8, 8, kernel_size=3, padding=1), nn.ReLU(inplace=True),
 			nn.Conv2d(8, 8, kernel_size=3, padding=1), nn.ReLU(inplace=True),

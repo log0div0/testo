@@ -28,25 +28,19 @@ class Criterion(nn.Module):
 				sum_loss += nega_loss
 		return sum_loss
 
-	def forward(self, pred, region_scores, affinity_scores):
+	def forward(self, pred, region_scores):
 		gh_label = region_scores
-		gah_label = affinity_scores
 		p_gh = pred[:, 0, :, :]
-		p_gah = pred[:, 1, :, :]
 
 		loss_fn = torch.nn.MSELoss(reduction='none')
 
-		assert p_gh.size() == gh_label.size() and p_gah.size() == gah_label.size()
 		loss1 = loss_fn(p_gh, gh_label)
-		loss2 = loss_fn(p_gah, gah_label)
 
 		char_loss = self.single_image_loss(loss1, gh_label)
-		affi_loss = self.single_image_loss(loss2, gah_label)
 
 		writer.add_scalar("loss/1-char", char_loss * 100, step)
-		writer.add_scalar("loss/2-affi", affi_loss * 100, step)
 
-		return char_loss/loss1.shape[0] + affi_loss/loss2.shape[0]
+		return char_loss/loss1.shape[0]
 
 def adjust_learning_rate(optimizer, step):
 	lr = 1e-3 * (0.9 ** (step // 10000))
@@ -82,12 +76,11 @@ try:
 		for data in data_loader:
 			image = data[0].to(device)
 			region_scores = data[1].to(device)
-			affinity_scores = data[2].to(device)
 
 			pred = net(image)
 
 			optimizer.zero_grad()
-			loss = criterion(pred, region_scores, affinity_scores)
+			loss = criterion(pred, region_scores)
 			loss.backward()
 			optimizer.step()
 

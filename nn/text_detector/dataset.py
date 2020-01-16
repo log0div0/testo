@@ -65,7 +65,6 @@ class Dataset:
 				words = []
 
 		region_image = Image.new('L', [image_width, image_height])
-		affinity_image = Image.new('L', [image_width, image_height])
 
 		textlines_bboxes = []
 		for words in textlines:
@@ -86,16 +85,8 @@ class Dataset:
 		for words_bboxes in textlines_bboxes:
 			for i in range(len(words_bboxes)):
 				region_image = self.draw(region_image, words_bboxes[i])
-				if i:
-					a = words_bboxes[i-1]
-					b = words_bboxes[i]
-					left = a[2]-1
-					top = (a[1] + b[1]) // 2
-					right = b[0]+1
-					bottom = (a[3] + b[3]) // 2
-					affinity_image = self.draw(affinity_image, [left, top, right, bottom])
 
-		return image, np.array(region_image), np.array(affinity_image)
+		return image, np.array(region_image)
 
 	def draw(self, image, bbox):
 		left, top, right, bottom = bbox
@@ -114,14 +105,13 @@ class Dataset:
 		return self.cache[idx]
 
 	def __getitem__(self, idx):
-		image, region_image, affinity_image = self.load_data(idx)
+		image, region_image = self.load_data(idx)
 
 		image = np.transpose(image, [2, 0, 1])
 
 		# vis = visdom.Visdom()
 		# vis.image(image)
 		# vis.image(region_image)
-		# vis.image(affinity_image)
 		# exit()
 
 		c, h, w = image.shape
@@ -131,13 +121,11 @@ class Dataset:
 		x = random.randint(0, w - crop_w)
 		image = image[:, y:y + crop_h, x:x + crop_w]
 		region_image = region_image[y:y + crop_h, x:x + crop_w]
-		affinity_image = affinity_image[y:y + crop_h, x:x + crop_w]
 
 		image = torch.from_numpy(image).float() / 255
 		region_image = torch.from_numpy(region_image).float() / 255
-		affinity_image = torch.from_numpy(affinity_image).float() / 255
 
-		return image, region_image, affinity_image
+		return image, region_image
 
 datasets = []
 

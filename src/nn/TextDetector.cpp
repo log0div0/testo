@@ -55,7 +55,7 @@ void TextDetector::run_nn(const stb::Image& image) {
 		in_pad_h = nearest_n_times_div_by_2(in_h, 4);
 		in_pad_w = nearest_n_times_div_by_2(in_w, 4);
 
-		out_c = 2;
+		out_c = 1;
 		out_h = in_h;
 		out_w = in_w;
 		out_pad_h = nearest_n_times_div_by_2(out_h, 4);
@@ -128,20 +128,13 @@ textline_next:
 							continue;
 						}
 						Rect b = words[l-1];
-						for (int x = a.right; x <= b.left; ++x) {
-							for (int y = std::max(a.top, b.top); y <= std::min(a.bottom, b.bottom); ++y) {
-								if (out[out_pad_h*out_pad_w + y*out_pad_w + x] >= 0.75) {
-									visited_words[l-1] = true;
-									textline.rect |= b;
-									Word word;
-									word.rect = b;
-									textline.words.push_back(word);
-									a = b;
-									goto textline_next;
-								}
-							}
-						}
-						goto textline_finish;
+						visited_words[l-1] = true;
+						textline.rect |= b;
+						Word word;
+						word.rect = b;
+						textline.words.push_back(word);
+						a = b;
+						goto textline_next;
 					}
 				}
 				goto textline_finish;
