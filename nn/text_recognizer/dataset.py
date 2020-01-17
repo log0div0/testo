@@ -41,12 +41,15 @@ class Dataset:
 
 		if left < 0:
 			left = 0
-		if right > (image.shape[1] - 1):
-			right = image.shape[1] - 1
+		if right > image.shape[1]:
+			right = image.shape[1]
 		if top < 0:
 			top = 0
-		if bottom > (image.shape[0] - 1):
-			bottom = image.shape[0] - 1
+		if bottom > image.shape[0]:
+			bottom = image.shape[0]
+
+		width = right - left
+		height = bottom - top
 
 		word_img = image[top:bottom, left:right]
 

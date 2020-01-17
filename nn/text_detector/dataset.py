@@ -53,8 +53,8 @@ class Dataset:
 				else:
 					left = math.floor(char['bbox']['left'])
 					top = math.floor(char['bbox']['top'])
-					right = math.ceil(char['bbox']['right'])
-					bottom = math.ceil(char['bbox']['bottom'])
+					right = math.ceil(char['bbox']['right']) + 1
+					bottom = math.ceil(char['bbox']['bottom']) + 1
 					chars.append([left, top, right, bottom])
 					space_count = 0
 			if len(chars):
