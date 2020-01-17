@@ -42,11 +42,9 @@ function generate_label() {
 	}
 	let textline_nodes = document.querySelectorAll(".textline")
 	for (let textline_node of textline_nodes) {
-		let {x, y, top, bottom, left, right, width, height} = textline_node.getBoundingClientRect()
 		let textline = {
 			text: '',
-			bbox: {x, y, top, bottom, left, right, width, height},
-			chars: []
+			chars: [],
 		}
 		let char_nodes = textline_node.querySelectorAll('.char')
 		for (let char_node of char_nodes) {
@@ -54,11 +52,14 @@ function generate_label() {
 			if (text == '') {
 				text = ' '
 			}
-			let {x, y, top, bottom, left, right, width, height} = char_node.getBoundingClientRect()
-			let char = {
-				text: text,
-				bbox: {x, y, top, bottom, left, right, width, height}
+			let {left, top, right, bottom} = char_node.getBoundingClientRect()
+			if (!char_node.classList.contains('console')) {
+				let style = window.getComputedStyle(char_node, null)
+				let height = parseFloat(style.fontSize)
+				top = bottom - height - 1
 			}
+			let width = right - left
+			let height = bottom - top
 			if ((top < min_y) || (bottom > max_y)) {
 				throw Error("(top < min_y) || (bottom > max_y)")
 			}
@@ -67,6 +68,10 @@ function generate_label() {
 			}
 			if ((width == 0) || (height == 0)) {
 				throw Error("(width == 0) || (height == 0)")
+			}
+			let char = {
+				text: text,
+				bbox: {left, top, right, bottom}
 			}
 			textline.text += text
 			textline.chars.push(char)

@@ -210,7 +210,7 @@ function ConsoleChar(props) {
 		style.backgroundColor = props.color
 		style.WebkitMaskImage = `url(${img})`
 	}
-	return <span className='char' style={style}>{props.children}</span>
+	return <span className='console char' style={style}>{props.children}</span>
 }
 
 export function ConsoleText(props) {
@@ -222,7 +222,7 @@ export function ConsoleText(props) {
 export function ConsoleTextLine(props) {
 	let {children, ...other} = positionStyle(defaultStyle(props))
 	other.style.filter = randomCSSFilter()
-	other.className = 'textline'
+	other.className = 'console textline'
 
 	return <ConsoleText {...other}>{children}</ConsoleText>
 }
