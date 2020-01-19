@@ -140,13 +140,6 @@ textline_next:
 				goto textline_finish;
 			}
 textline_finish:
-			for (size_t i = 1; i < textline.words.size(); ++i) {
-				auto& a = textline.words[i-1].rect;
-				auto& b = textline.words[i].rect;
-				int border = (a.right + b.left) / 2;
-				a.right = border;
-				b.left = border;
-			}
 			textlines.push_back(textline);
 		}
 	}
@@ -164,12 +157,12 @@ std::vector<Rect> TextDetector::find_words() {
 	}
 	std::vector<Rect> words = labelingWu.run();
 	for (size_t i = 0; i < words.size(); ++i) {
-		words[i] = adjust_rect(words[i], 0.25);
+		words[i] = adjust_rect(words[i]);
 	}
 	return words;
 }
 
-Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
+Rect TextDetector::adjust_rect(const Rect& rect) {
 	Rect new_rect;
 
 	{
@@ -182,7 +175,7 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 				mean += out[y*out_pad_w + x];
 			}
 			mean /= rect.height();
-			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
+			if ((mean < 0.25) || (mean > (min_mean))) {
 				++x;
 				break;
 			}
@@ -202,7 +195,7 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 				mean += out[y*out_pad_w + x];
 			}
 			mean /= rect.height();
-			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
+			if ((mean < 0.25) || (mean > (min_mean))) {
 				--x;
 				break;
 			}
@@ -218,11 +211,15 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 		while (y > 0) {
 			--y;
 			float mean = 0;
+			float min = 1;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
 				mean += out[y*out_pad_w + x];
+				if (min > out[y*out_pad_w + x]) {
+					min = out[y*out_pad_w + x];
+				}
 			}
 			mean /= rect.width();
-			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
+			if ((mean < 0.35) || (mean > (min_mean + 0.05)) || (min < 0.1)) {
 				++y;
 				break;
 			}
@@ -238,11 +235,15 @@ Rect TextDetector::adjust_rect(const Rect& rect, float threshold) {
 		while (y < (out_h - 1)) {
 			++y;
 			float mean = 0;
+			float min = 1;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
 				mean += out[y*out_pad_w + x];
+				if (min > out[y*out_pad_w + x]) {
+					min = out[y*out_pad_w + x];
+				}
 			}
 			mean /= rect.width();
-			if ((mean < threshold) || (mean > (min_mean + 0.05))) {
+			if ((mean < 0.25) || (mean > (min_mean + 0.05)) || (min < 0.1)) {
 				--y;
 				break;
 			}

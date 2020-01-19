@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cstdint>
+#include <algorithm>
 
 namespace nn {
 

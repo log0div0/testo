@@ -22,6 +22,9 @@ namespace nn {
 
 TextRecognizer::TextRecognizer() {
 	symbols = utf8::split_to_chars(alphabet);
+	for (size_t i = 0; i < symbols.size(); ++i) {
+		symbols_indexes.push_back(i);
+	}
 	session = LoadModel(TextRecognizer_onnx, TextRecognizer_onnx_len);
 }
 
@@ -110,6 +113,8 @@ void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
+#define THRESHOLD -10.0
+
 void TextRecognizer::decode_word(Word& word) {
 	int prev_max_pos = -1;
 	for (int x = 0; x < out_w; ++x) {
@@ -130,7 +135,23 @@ void TextRecognizer::decode_word(Word& word) {
 			continue;
 		}
 		prev_max_pos = max_pos;
-		word.text += symbols.at(max_pos - 1);
+
+		std::sort(symbols_indexes.begin(), symbols_indexes.end(), [&](size_t a, size_t b) {
+			return out[x * out_c + a + 1] > out[x * out_c + b + 1];
+		});
+
+		auto end = std::find_if(symbols_indexes.begin(), symbols_indexes.end(), [&](size_t code) {
+			return out[x * out_c + code + 1] < THRESHOLD;
+		});
+
+		Char char_;
+		for (auto it = symbols_indexes.begin(); it != end; ++it) {
+			char_.alternatives.push_back(symbols.at(*it));
+		}
+		if (char_.alternatives.size() == 0) {
+			throw std::runtime_error("What the fuck?");
+		}
+		word.chars.push_back(char_);
 	}
 }
 

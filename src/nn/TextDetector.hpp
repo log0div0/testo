@@ -21,7 +21,7 @@ private:
 	void run_nn(const stb::Image& image);
 	std::vector<TextLine> find_textlines();
 	std::vector<Rect> find_words();
-	Rect adjust_rect(const Rect& rect, float threshold);
+	Rect adjust_rect(const Rect& rect);
 
 	int in_w = 0;
 	int in_h = 0;

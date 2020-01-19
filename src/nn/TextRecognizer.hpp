@@ -3,7 +3,7 @@
 
 #include <stb/Image.hpp>
 #include <vector>
-#include "Word.hpp"
+#include "TextLine.hpp"
 #include "OnnxRuntime.hpp"
 
 namespace nn {
@@ -22,6 +22,7 @@ private:
 	void decode_word(Word& word);
 
 	std::vector<std::string> symbols;
+	std::vector<size_t> symbols_indexes;
 
 	int in_w = 0;
 	int in_c = 0;
