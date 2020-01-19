@@ -73,5 +73,9 @@ TEST_CASE("Ubuntu Server 18.04/Консоль") {
 	{
 		auto result = ocr.run("Ubuntu Server 18.04/Консоль/Установка питона.png");
 		CHECK(result.search("Setting up daemon").size() == 1);
+		CHECK(result.search("Unpacking python").size() == 2);
+		CHECK(result.search("Unpacking python2.7").size() == 1);
+		CHECK(result.search("Selecting previously unselected package").size() == 2);
+		CHECK(result.search("root@client:/home/user#").size() == 1);
 	}
 }
