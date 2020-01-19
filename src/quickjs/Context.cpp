@@ -1,6 +1,6 @@
 
 #include "Context.hpp"
-#include "nn/text_detector/TextDetector.hpp"
+#include "nn/OCR.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -129,7 +129,7 @@ JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 		background_string = background;
 	}
 
-	auto result = TextDetector::instance().detect(*current_image, text_string, foreground_string, background_string);
+	auto result = nn::OCR::instance().run(*current_image).search(text_string, foreground_string, background_string);
 
 	if (text) {
 		JS_FreeCString(ctx, text);

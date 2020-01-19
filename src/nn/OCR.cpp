@@ -37,7 +37,7 @@ std::map<std::string, std::string> char_map = ([] {
 	return result;
 })();
 
-std::vector<Rect> OCRResult::search(const std::string& query) {
+std::vector<Rect> OCRResult::search(const std::string& query, const std::string& fg_color, const std::string& bg_color) {
 	std::vector<std::vector<std::string>> words;
 	std::vector<std::string> word;
 	for (auto& char_: utf8::split_to_chars(query)) {

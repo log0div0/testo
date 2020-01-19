@@ -9,7 +9,7 @@
 namespace nn {
 
 struct OCRResult {
-	std::vector<Rect> search(const std::string& query);
+	std::vector<Rect> search(const std::string& query, const std::string& fg_color = {}, const std::string& bg_color = {});
 	std::vector<TextLine> textlines;
 };
 

@@ -13,6 +13,10 @@ if(NOT ONNX_RUNTIME_DIR)
 	message(FATAL_ERROR "ONNX_RUNTIME_DIR is not set")
 endif()
 
+include_directories(
+	${ONNX_RUNTIME_DIR}/include
+)
+
 link_directories(
 	${ONNX_RUNTIME_DIR}/lib/
 )

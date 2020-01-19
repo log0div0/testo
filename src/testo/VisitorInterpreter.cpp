@@ -10,7 +10,7 @@
 #include <wildcards.hpp>
 #include <rang.hpp>
 
-#include "nn/text_detector/TextDetector.hpp"
+#include "nn/OCR.hpp"
 
 #include <license/License.hpp>
 
@@ -677,7 +677,7 @@ bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectabl
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		return TextDetector::instance().detect(screenshot, text, "", "").size();
+		return nn::OCR::instance().run(screenshot).search(text).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
 		return eval_js(script, screenshot);
