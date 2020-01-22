@@ -4714,10 +4714,10 @@ private:
         //try flags first (alone, joinable or strict sequence)
         if(try_match_full(arg, detail::select_flags{})) return true;
         if(try_match_joined_flags(arg)) return true;
-        if(try_match_joined_sequence(arg, detail::select_flags{})) return true;
+        //if(try_match_joined_sequence(arg, detail::select_flags{})) return true;
         //try value params (alone or strict sequence)
         if(try_match_full(arg, detail::select_values{})) return true;
-        if(try_match_joined_sequence(arg, detail::select_all{})) return true;
+        //if(try_match_joined_sequence(arg, detail::select_all{})) return true;
         //try joinable params + values in any order
         if(try_match_joined_params(arg)) return true;
         return false;
