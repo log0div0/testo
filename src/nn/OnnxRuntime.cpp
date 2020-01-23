@@ -19,6 +19,9 @@ std::unique_ptr<Ort::Session> LoadModel(unsigned char* data, unsigned int size) 
 	}
 	Ort::SessionOptions session_options;
 	session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+	session_options.SetIntraOpNumThreads(1);
+	session_options.SetInterOpNumThreads(1);
+	session_options.SetExecutionMode(ORT_SEQUENTIAL);
 	return std::make_unique<Ort::Session>(*env, data, size, session_options);
 }
 
