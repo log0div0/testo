@@ -34,7 +34,7 @@ macro install_ubuntu(host_name, login, password) {
 	wait "How do you want to manage upgrades" timeout 6m; press Enter
 	wait "Choose software to install"; press Enter
 	wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
-	wait "Installation complete" timeout 1m; unplug dvd; wait timeout 15s; press Enter
+	wait "Installation complete" timeout 1m; unplug dvd; press Enter
 	wait "login:" timeout 2m; type "${login}"; press Enter
 	wait "Password:"; type "${password}"; press Enter
 	wait "Welcome to Ubuntu"

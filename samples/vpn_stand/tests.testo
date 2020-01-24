@@ -1,41 +1,69 @@
 
 include "./installations.testo"
 
-test sgw_basic: install_wireguard
-{
-	vpn_sgw1 exec bash """
-		ip a a 192.168.1.1/24 dev WAN
-		ip l s WAN up
+flash pubkey_flash {
+	fs: "ntfs"
+	size: 32Mb
+}
 
+param sgw1_vpn_ip "10.0.0.1"
+param sgw1_vpn_ip_netmask "24"
+param sgw2_vpn_ip "10.0.0.2"
+param sgw2_vpn_ip_netmask "24"
+
+param client1_network "192.168.1.0"
+param client2_network "192.168.4.0"
+
+test install_wireguard: sgws_prepare {
+	sgw1, sgw2 {
+		copyto "./WireGuard.tar.xz" "/opt/WireGuard.tar.xz"
+
+		exec bash """
+			cd /opt
+			tar -xf WireGuard.tar.xz
+			cd WireGuard/src
+			make
+			make install
+			modprobe wireguard
+			lsmod | fgrep wireguard
+		"""
+		wait timeout 1s
+	}
+
+}
+
+test sgw_basic: install_wireguard, router_prepare
+{
+	sgw1 exec bash "ping -c10 ${sgw2_outer_ip}"
+	sgw2 exec bash "ping -c10 ${sgw1_outer_ip}"
+
+	sgw1 exec bash """
 		wg genkey > private
 		wg pubkey < private > public.key
 
 		ip link add wg0 type wireguard
-		ip a a 10.0.0.1/24 dev wg0
+		ip a a ${sgw1_vpn_ip}/${sgw1_vpn_ip_netmask} dev wg0
 
 		wg set wg0 private-key private
 		wg set wg0 listen-port 51820
 		ip l s wg0 up
 	"""
 
-	vpn_sgw2 exec bash """
-		ip a a 192.168.1.2/24 dev WAN
-		ip l s WAN up
-
+	sgw2 exec bash """
 		sysctl net.ipv4.ip_forward=1
 
 		wg genkey > private
 		wg pubkey < private > public.key
 
 		ip link add wg0 type wireguard
-		ip a a 10.0.0.2/24 dev wg0
+		ip a a ${sgw2_vpn_ip}/${sgw2_vpn_ip_netmask} dev wg0
 
 		wg set wg0 private-key private
 		wg set wg0 listen-port 51820
 		ip l s wg0 up
 	"""
 
-	vpn_sgw1 {
+	sgw1 {
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
@@ -46,7 +74,7 @@ test sgw_basic: install_wireguard
 		unplug flash pubkey_flash
 	}
 
-	vpn_sgw2 {
+	sgw2 {
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
@@ -58,7 +86,7 @@ test sgw_basic: install_wireguard
 		unplug flash pubkey_flash
 	}
 
-	vpn_sgw1 {
+	sgw1 {
 		plug flash pubkey_flash;
 		wait timeout 5s
 		exec bash """
@@ -69,19 +97,18 @@ test sgw_basic: install_wireguard
 		unplug flash pubkey_flash
 	}
 
+	sgw1 exec bash "wg set wg0 peer $(cat ~/sgw2_public.key) allowed-ips ${sgw2_vpn_ip}/32 endpoint ${sgw2_outer_ip}:51820"
+	sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips ${sgw1_vpn_ip}/32 endpoint ${sgw1_outer_ip}:51820"
 
-	vpn_sgw1 exec bash "wg set wg0 peer $(cat ~/sgw2_public.key) allowed-ips 10.0.0.2/32 endpoint 192.168.1.2:51820"
-	vpn_sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips 10.0.0.1/32 endpoint 192.168.1.1:51820"
-
-	vpn_sgw1 {
-		enter_sudo("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
-		type "tcpdump -i WAN -w /tmp/captured.pcapng"; press Enter
+	router {
+		enter_sudo("${router_host_name}", "${router_login}", "${default_password}")
+		type "tcpdump -i sgw1_side -w /tmp/captured.pcapng"; press Enter
 	}
 
-	vpn_sgw1 exec bash "ping -c 10 10.0.0.2"
-	vpn_sgw2 exec bash "ping -c 10 10.0.0.1"
+	sgw1 exec bash "ping -c10 ${sgw2_vpn_ip}"
+	sgw2 exec bash "ping -c10 ${sgw1_vpn_ip}"
 
-	vpn_sgw1 {
+	router {
 		press LEFTCTRL+C
 		wait timeout 2s
 		exec python """
@@ -97,51 +124,30 @@ test sgw_basic: install_wireguard
 	}
 }
 
-test sgw_basic_with_clients: sgw_basic, clients_net_renamed
+[no_snapshots: true]
+test sgw_basic_with_clients: sgw_basic, clients_prepare
 {
-	vpn_sgw1 exec bash """
-		ip a a 192.168.0.1/24 dev LAN
-		ip l s LAN up
-
-		sysctl net.ipv4.ip_forward=1
-
-		ip r a default via 10.0.0.2 dev wg0 table 1056
-		ip rule add from 192.168.0.0/24 to 192.168.2.0/24 lookup 1056
+	sgw1 exec bash """
+		ip r a default via ${sgw2_vpn_ip} dev wg0 table 1056
+		ip rule add from ${client1_network}/${client1_main_ip_netmask} to ${client2_network}/${client2_main_ip_netmask} lookup 1056
 	"""
 
-	vpn_sgw2 exec bash """
-		ip a a 192.168.2.1/24 dev LAN
-		ip l s LAN up
-
-		sysctl net.ipv4.ip_forward=1
-
-		ip r a default via 10.0.0.1 dev wg0 table 1056
-		ip rule add from 192.168.2.0/24 to 192.168.0.0/24 lookup 1056
+	sgw2 exec bash """
+		ip r a default via ${sgw1_vpn_ip} dev wg0 table 1056
+		ip rule add from ${client2_network}/${client2_main_ip_netmask} to ${client1_network}/${client1_main_ip_netmask} lookup 1056
 	"""
 
-	vpn_sgw1 exec bash "wg set wg0 peer $(cat ~/sgw2_public.key) allowed-ips 10.0.0.2/32,192.168.2.0/24 endpoint 192.168.1.2:51820"
-	vpn_sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips 10.0.0.1/32,192.168.0.0/24 endpoint 192.168.1.1:51820"
+	sgw1 exec bash "wg set wg0 peer $(cat ~/sgw2_public.key) allowed-ips ${sgw2_vpn_ip}/32,${client2_network}/${client2_main_ip_netmask} endpoint ${sgw2_outer_ip}:51820"
+	sgw2 exec bash "wg set wg0 peer $(cat ~/sgw1_public.key) allowed-ips ${sgw1_vpn_ip}/32,${client1_network}/${client1_main_ip_netmask} endpoint ${sgw1_outer_ip}:51820"
 
-	vpn_sgw1 {
-		type "tcpdump -i WAN -w /tmp/captured.pcapng"; press Enter
+	router {
+		type "tcpdump -i sgw1_side -w /tmp/captured.pcapng"; press Enter
 	}
 
-	vpn_client1 exec bash """
-		ip a a 192.168.0.2/24 dev LAN
-		ip l s LAN up
-		ip r a default via 192.168.0.1
-	"""
+	client1 exec bash "ping -c 10 ${client2_main_ip}"
+	client2 exec bash "ping -c 10 ${client1_main_ip}"
 
-	vpn_client2 exec bash """
-		ip a a 192.168.2.2/24 dev LAN
-		ip l s LAN up
-		ip r a default via 192.168.2.1
-	"""
-
-	vpn_client1 exec bash "ping -c 10 192.168.2.2"
-	vpn_client2 exec bash "ping -c 10 192.168.0.2"
-
-	vpn_sgw1 {
+	router {
 		press LEFTCTRL+C
 		wait timeout 2s
 		exec python """
@@ -157,46 +163,24 @@ test sgw_basic_with_clients: sgw_basic, clients_net_renamed
 	}
 }
 
-test sgw_routes_misconfigured: sgw_basic, clients_net_renamed
+[no_snapshots: true]
+test sgw_routes_misconfigured: sgw_basic, clients_prepare
 {
-	vpn_sgw1 exec bash """
-		ip a a 192.168.0.1/24 dev LAN
-		ip l s LAN up
+	#Oh no! Somehow special routes for VPN tunnel were not installed
+	#In the Kernel! Maybe installing script had failed
+	#Let's see what will happen now...
 
-		sysctl net.ipv4.ip_forward=1
-
-		ip r a default via 192.168.1.2
-	"""
-
-	vpn_sgw2 exec bash """
-		ip a a 192.168.2.1/24 dev LAN
-		ip l s LAN up
-
-		sysctl net.ipv4.ip_forward=1
-
-		ip r a default via 192.168.1.1
-	"""
-
-	vpn_sgw1 {
-		type "tcpdump -i WAN -w /tmp/captured.pcapng"; press Enter
+	#Let's assume the router knows how to deliver packets to the end-point clients
+	router exec bash "ip r a ${client1_network}/${client1_main_ip_netmask} via ${sgw1_outer_ip}"
+	router exec bash "ip r a ${client2_network}/${client2_main_ip_netmask} via ${sgw2_outer_ip}"
+	router {
+		type "tcpdump -i sgw1_side -w /tmp/captured.pcapng"; press Enter
 	}
 
-	vpn_client1 exec bash """
-		ip a a 192.168.0.2/24 dev LAN
-		ip l s LAN up
-		ip r a default via 192.168.0.1
-	"""
+	client1 exec bash "ping -c 10 ${client2_main_ip}"
+	client2 exec bash "ping -c 10 ${client1_main_ip}"
 
-	vpn_client2 exec bash """
-		ip a a 192.168.2.2/24 dev LAN
-		ip l s LAN up
-		ip r a default via 192.168.2.1
-	"""
-
-	vpn_client1 exec bash "ping -c 10 192.168.2.2"
-	vpn_client2 exec bash "ping -c 10 192.168.0.2"
-
-	vpn_sgw1 {
+	router {
 		press LEFTCTRL+C
 		wait timeout 2s
 		exec python """
