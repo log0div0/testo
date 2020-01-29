@@ -32,13 +32,13 @@ TextRecognizer::~TextRecognizer() {
 
 }
 
-void TextRecognizer::recognize(const stb::Image& image, Word& word) {
+std::vector<Char> TextRecognizer::recognize(const stb::Image& image, Word& word) {
 	if (!image.data) {
-		return;
+		return {};
 	}
 
 	run_nn(image, word);
-	decode_word(word);
+	return decode_word(word);
 }
 
 void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
@@ -115,7 +115,8 @@ void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
 
 #define THRESHOLD -10.0
 
-void TextRecognizer::decode_word(Word& word) {
+std::vector<Char> TextRecognizer::decode_word(Word& word) {
+	std::vector<Char> result;
 	int prev_max_pos = -1;
 	for (int x = 0; x < out_w; ++x) {
 		int max_pos = -1;
@@ -145,14 +146,16 @@ void TextRecognizer::decode_word(Word& word) {
 		});
 
 		Char char_;
+		char_.rect = word.rect;
 		for (auto it = symbols_indexes.begin(); it != end; ++it) {
 			char_.alternatives.push_back(symbols.at(*it));
 		}
 		if (char_.alternatives.size() == 0) {
 			throw std::runtime_error("What the fuck?");
 		}
-		word.chars.push_back(char_);
+		result.push_back(char_);
 	}
+	return result;
 }
 
 }

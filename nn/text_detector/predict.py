@@ -5,7 +5,6 @@ import argparse
 import numpy as np
 from PIL import Image
 import onnxruntime
-import cv2
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_folder', required=True)
@@ -64,16 +63,17 @@ for image_path in list_files(args.input_folder):
 	ort_outs = ort_session.run(None, ort_inputs)
 	y = ort_outs[0][0]
 
-	score_text = y[0,:h,:w]
+	up_image = y[0,:h,:w]
+	down_image = y[1,:h,:w]
 
-	res_img = (np.clip(score_text, 0, 1) * 255).astype(np.uint8)
-	res_img = cv2.applyColorMap(res_img, cv2.COLORMAP_JET)
-	res_img = np.hstack((image,res_img))
+	up_image = (np.clip(up_image, 0, 1) * 255).astype(np.uint8)
+	down_image = (np.clip(down_image, 0, 1) * 255).astype(np.uint8)
+	res_img = np.hstack((image,np.stack([up_image, down_image, down_image], axis=2)))
 
 	filename, file_ext = os.path.splitext(os.path.basename(image_path))
 	res_img_file = os.path.join(args.output_folder, filename + '.png')
 
-	cv2.imwrite(res_img_file, res_img)
+	Image.fromarray(res_img).save(res_img_file)
 
 	del x
 	del y

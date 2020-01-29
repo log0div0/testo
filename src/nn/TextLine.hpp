@@ -8,21 +8,21 @@
 namespace nn {
 
 struct Char {
+	Rect rect;
 	std::vector<std::string> alternatives;
 	bool match(const std::string& query);
 };
 
 struct Word {
 	Rect rect;
-	std::vector<Char> chars;
-
-	bool match(const std::vector<std::string>& query);
-	bool match_begin(const std::vector<std::string>& query);
-	bool match_end(const std::vector<std::string>& query);
 };
 
 struct TextLine {
 	Rect rect;
+	std::vector<Char> chars;
+	std::vector<Rect> search(const std::vector<std::string>& query);
+
+// tmp
 	std::vector<Word> words;
 };
 

@@ -57,7 +57,7 @@ class Model(nn.Module):
 		self.upconv3 = DoubleConv(64, 32, 16)
 		self.upconv4 = DoubleConv(32, 16, 8)
 
-		num_class = 1
+		num_class = 2
 		self.conv_cls = nn.Sequential(
 			nn.Conv2d(8, 8, kernel_size=3, padding=1), nn.ReLU(inplace=True),
 			nn.Conv2d(8, 8, kernel_size=3, padding=1), nn.ReLU(inplace=True),
@@ -108,8 +108,17 @@ class Model(nn.Module):
 if __name__ == '__main__':
 	import time
 	import onnxruntime
+	import argparse
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--model')
+	args = parser.parse_args()
 
 	model = Model()
+	if args.model:
+		model.load_state_dict(torch.load(args.model, map_location=torch.device('cpu')))
+	model.eval()
+
 	print(model)
 	x = torch.randn(1, 3, 480, 640)
 	start_time = time.time()
@@ -119,7 +128,17 @@ if __name__ == '__main__':
 
 	torch.onnx.export(model, x, "model.onnx",
 		input_names=["input"],
-		output_names=["output"]
+		output_names=["output"],
+		dynamic_axes={
+			'input': {
+				2: 'height',
+				3: 'width'
+			},
+			'output': {
+				2: 'height',
+				3: 'width'
+			}
+		}
 	)
 
 	start_time = time.time()

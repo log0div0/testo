@@ -15,11 +15,11 @@ struct TextRecognizer {
 	TextRecognizer(const TextRecognizer& root) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
 
-	void recognize(const stb::Image& image, Word& word);
+	std::vector<Char> recognize(const stb::Image& image, Word& word);
 
 private:
 	void run_nn(const stb::Image& image, const Word& word);
-	void decode_word(Word& word);
+	std::vector<Char> decode_word(Word& word);
 
 	std::vector<std::string> symbols;
 	std::vector<size_t> symbols_indexes;

@@ -23,10 +23,9 @@ void predict()
 		for (auto& textline: result.textlines) {
 			for (auto& word: textline.words) {
 				image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
-				for (auto& char_: word.chars) {
-					std::cout << char_.alternatives[0];
-				}
-				std::cout << " ";
+			}
+			for (auto& char_: textline.chars) {
+				std::cout << char_.alternatives[0];
 			}
 			std::cout << std::endl;
 		}

@@ -29,75 +29,63 @@ class Dataset:
 		image = Image.open(image_path)
 		image = np.array(image)
 		image = image[:,:,:3]
+		image = np.transpose(image, [2, 0, 1])
 
-		image_height, image_width, _ = image.shape
+		_, image_height, image_width = image.shape
 
 		with open(label_path) as f:
 			label = json.loads(f.read())
 
-		textlines = []
-		words = []
-		chars = []
+		up_image = np.zeros([image_height, image_width], dtype=np.uint32)
+		down_image = np.zeros([image_height, image_width], dtype=np.uint32)
+
 		for textline in label['textlines']:
-			space_count = 0
+			up_bboxes = []
+			down_bboxes = []
 			for char in textline['chars']:
 				if char['text'] == ' ':
-					if len(chars):
-						words.append(chars)
-						chars = []
-					space_count += 1
-					if space_count > 1:
-						if len(words):
-							textlines.append(words)
-							words = []
-				else:
-					left = math.floor(char['bbox']['left'])
-					top = math.floor(char['bbox']['top'])
-					right = math.ceil(char['bbox']['right']) + 1
-					bottom = math.ceil(char['bbox']['bottom']) + 1
-					chars.append([left, top, right, bottom])
-					space_count = 0
-			if len(chars):
-				words.append(chars)
-				chars = []
-			if len(words):
-				textlines.append(words)
-				words = []
+					continue
+				left = math.floor(char['bbox']['left'])
+				top = math.floor(char['bbox']['top'])
+				right = math.ceil(char['bbox']['right']) + 1
+				bottom = math.ceil(char['bbox']['bottom']) + 1
+				center = math.floor((top + bottom) / 2) + 1
+				up_bboxes.append([left, top, right, center])
+				down_bboxes.append([left, center, right, bottom])
+			up_image = self.draw(up_image, up_bboxes)
+			down_image = self.draw(down_image, down_bboxes)
 
-		region_image = Image.new('L', [image_width, image_height])
+		up_image = np.clip(up_image, 0, 255).astype(np.uint8)
+		down_image = np.clip(down_image, 0, 255).astype(np.uint8)
 
-		textlines_bboxes = []
-		for words in textlines:
-			words_bboxes = []
-			for chars in words:
-				left = chars[0][0]
-				top = chars[0][1]
-				right = chars[0][2]
-				bottom = chars[0][3]
-				for char in chars[1:]:
-					left = min(left, char[0])
-					top = min(top, char[1])
-					right = max(right, char[2])
-					bottom = max(bottom, char[3])
-				words_bboxes.append([left, top, right, bottom])
-			textlines_bboxes.append(words_bboxes)
+		# label_image = np.stack([up_image, down_image, down_image], axis=0)
+		# vis = visdom.Visdom()
+		# vis.image(image)
+		# vis.image(label_image)
+		# exit()
 
-		for words_bboxes in textlines_bboxes:
-			for i in range(len(words_bboxes)):
-				region_image = self.draw(region_image, words_bboxes[i])
+		return image, up_image, down_image
 
-		return image, np.array(region_image)
-
-	def draw(self, image, bbox):
-		left, top, right, bottom = bbox
-		width = right - left
-		height = bottom - top
-		blur_radius = min(width, height) // 2
-		tmp_image = Image.new('L', image.size)
+	def draw(self, image, bboxes):
+		tmp_image = Image.new('L', (image.shape[1], image.shape[0]))
 		tmp_draw = ImageDraw.Draw(tmp_image)
-		tmp_draw.rectangle(bbox, fill=255)
-		tmp_image = tmp_image.filter(ImageFilter.BoxBlur(blur_radius))
-		return Image.composite(image, tmp_image, ImageOps.invert(tmp_image))
+
+		min_height = 0
+
+		for bbox in bboxes:
+			left, top, right, bottom = bbox
+			height = bottom - top
+
+			if min_height < height:
+				min_height = height
+
+			tmp_draw.rectangle(bbox, fill=255)
+
+		blur_radius = min_height // 3
+		if blur_radius > 1:
+			tmp_image = tmp_image.filter(ImageFilter.BoxBlur(blur_radius))
+
+		return image + np.array(tmp_image)
 
 	def load_data(self, idx):
 		if not self.cache[idx]:
@@ -105,14 +93,7 @@ class Dataset:
 		return self.cache[idx]
 
 	def __getitem__(self, idx):
-		image, region_image = self.load_data(idx)
-
-		image = np.transpose(image, [2, 0, 1])
-
-		# vis = visdom.Visdom()
-		# vis.image(image)
-		# vis.image(region_image)
-		# exit()
+		image, up_image, down_image = self.load_data(idx)
 
 		c, h, w = image.shape
 		crop_h = 480
@@ -120,12 +101,14 @@ class Dataset:
 		y = random.randint(0, h - crop_h)
 		x = random.randint(0, w - crop_w)
 		image = image[:, y:y + crop_h, x:x + crop_w]
-		region_image = region_image[y:y + crop_h, x:x + crop_w]
+		up_image = up_image[y:y + crop_h, x:x + crop_w]
+		down_image = down_image[y:y + crop_h, x:x + crop_w]
 
 		image = torch.from_numpy(image).float() / 255
-		region_image = torch.from_numpy(region_image).float() / 255
+		up_image = torch.from_numpy(up_image).float() / 255
+		down_image = torch.from_numpy(down_image).float() / 255
 
-		return image, region_image
+		return image, up_image, down_image
 
 datasets = []
 

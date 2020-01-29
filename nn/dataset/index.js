@@ -15,7 +15,8 @@ function App(props) {
 	let bodyStyle = {
 		margin: 0,
 		padding: 0,
-		fontFamily: fontFamily
+		fontFamily: fontFamily,
+		letterSpacing: randomArrayElement(['0', `-${Math.random()}px`])
 	}
 
 	return (

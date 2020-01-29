@@ -75,7 +75,7 @@ TEST_CASE("Ubuntu Server 18.04/Консоль") {
 		CHECK(result.search("Setting up daemon").size() == 1);
 		CHECK(result.search("Unpacking python").size() == 2);
 		CHECK(result.search("Unpacking python2.7").size() == 1);
-		CHECK(result.search("Selecting previously unselected package").size() == 2);
+		CHECK(result.search("Selecting previously unselected package").size() == 3);
 		CHECK(result.search("root@client:/home/user#").size() == 1);
 	}
 }

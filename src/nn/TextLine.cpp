@@ -13,10 +13,11 @@ bool Char::match(const std::string& query) {
 	return false;
 }
 
-bool Word::match(const std::vector<std::string>& query) {
+std::vector<Rect> TextLine::search(const std::vector<std::string>& query) {
 	if (chars.size() < query.size()) {
-		return false;
+		return {};
 	}
+	std::vector<Rect> result;
 	for (size_t i = 0; i < (chars.size() - query.size() + 1); ++i) {
 		bool match = true;
 		for (size_t j = 0; j < query.size(); ++j) {
@@ -26,35 +27,14 @@ bool Word::match(const std::vector<std::string>& query) {
 			}
 		}
 		if (match) {
-			return true;
+			Rect rect = chars[i].rect;
+			for (size_t j = 1; j < query.size(); ++j) {
+				rect |= chars[i + j].rect;
+			}
+			result.push_back(rect);
 		}
 	}
-	return false;
-}
-
-bool Word::match_begin(const std::vector<std::string>& query) {
-	if (chars.size() < query.size()) {
-		return false;
-	}
-	for (size_t j = 0; j < query.size(); ++j) {
-		if (!chars[j].match(query[j])) {
-			return false;
-		}
-	}
-	return true;
-}
-
-bool Word::match_end(const std::vector<std::string>& query) {
-	if (chars.size() < query.size()) {
-		return false;
-	}
-	size_t start = chars.size() - query.size();
-	for (size_t j = 0; j < query.size(); ++j) {
-		if (!chars[start + j].match(query[j])) {
-			return false;
-		}
-	}
-	return true;
+	return result;
 }
 
 }

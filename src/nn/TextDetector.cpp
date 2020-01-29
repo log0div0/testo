@@ -35,14 +35,14 @@ TextDetector::~TextDetector() {
 
 }
 
-std::vector<TextLine> TextDetector::detect(const stb::Image& image)
+std::vector<Word> TextDetector::detect(const stb::Image& image)
 {
 	if (!image.data) {
 		return {};
 	}
 
 	run_nn(image);
-	return find_textlines();
+	return find_words();
 }
 
 void TextDetector::run_nn(const stb::Image& image) {
@@ -55,7 +55,7 @@ void TextDetector::run_nn(const stb::Image& image) {
 		in_pad_h = nearest_n_times_div_by_2(in_h, 4);
 		in_pad_w = nearest_n_times_div_by_2(in_w, 4);
 
-		out_c = 1;
+		out_c = 2;
 		out_h = in_h;
 		out_w = in_w;
 		out_pad_h = nearest_n_times_div_by_2(out_h, 4);
@@ -77,7 +77,8 @@ void TextDetector::run_nn(const stb::Image& image) {
 		out_tensor = std::make_unique<Ort::Value>(
 			Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
 
-		labelingWu = LabelingWu(out_w, out_h);
+		labeling_wu[0] = LabelingWu(out_w, out_h);
+		labeling_wu[1] = LabelingWu(out_w, out_h);
 	}
 
 	for (int y = 0; y < image.height; ++y) {
@@ -96,73 +97,57 @@ void TextDetector::run_nn(const stb::Image& image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<TextLine> TextDetector::find_textlines() {
-	std::vector<Rect> words = find_words();
-	std::vector<bool> visited_words(words.size(), false);
-	std::vector<TextLine> textlines;
-	for (int x = 0; x < out_w; ++x) {
-		for (int y = 0; y < out_h; ++y) {
-			uint16_t l = labelingWu.L[y*out_w + x];
-			if (!l) {
-				continue;
-			}
-			if (visited_words[l-1]) {
-				continue;
-			}
-			TextLine textline;
-			Rect a = words[l-1];
-			visited_words[l-1] = true;
-			textline.rect = a;
-			Word word;
-			word.rect = a;
-			textline.words.push_back(word);
-			while (true) {
-textline_next:
-				for (int x = a.right; (x <= (a.right + a.width()*2)) && (x < out_w); ++x) {
-					for (int y = a.top; y <= a.bottom; ++y) {
-						uint16_t l = labelingWu.L[y*out_w + x];
-						if (!l) {
-							continue;
-						}
-						if (visited_words[l-1]) {
-							continue;
-						}
-						Rect b = words[l-1];
-						visited_words[l-1] = true;
-						textline.rect |= b;
-						Word word;
-						word.rect = b;
-						textline.words.push_back(word);
-						a = b;
-						goto textline_next;
+std::vector<Word> TextDetector::find_words() {
+	std::vector<Rect> up_rects = find_rects(0);
+	std::vector<Rect> down_rects = find_rects(1);
+	std::vector<Word> words;
+	for (const Rect& up_rect: up_rects) {
+		int x = up_rect.center_x();
+		int y_begin = up_rect.bottom;
+		int y_end = up_rect.bottom + up_rect.height();
+		if (y_end > out_h) {
+			y_end = out_h;
+		}
+		for (int y = y_begin; y < y_end; ++y) {
+			uint16_t l = labeling_wu[1].L[y*out_w + x];
+			if (l) {
+				const Rect& down_rect = down_rects.at(l-1);
+				Rect word_rect = up_rect | down_rect;
+				bool found = false;
+				for (auto& word: words) {
+					if (word.rect.iou(word_rect) > 0.25) {
+						word.rect |= word_rect;
+						found = true;
+						break;
 					}
 				}
-				goto textline_finish;
+				if (!found) {
+					Word word;
+					word.rect = word_rect;
+					words.push_back(word);
+				}
+				break;
 			}
-textline_finish:
-			textlines.push_back(textline);
 		}
 	}
-	std::sort(textlines.begin(), textlines.end(), [](const TextLine& a, const TextLine& b) {
-		return a.rect.top < b.rect.top;
-	});
-	return textlines;
-}
 
-std::vector<Rect> TextDetector::find_words() {
-	for (int y = 0; y < out_h; ++y) {
-		for (int x = 0; x < out_w; ++x) {
-			labelingWu.I[y*out_w + x] = out[y*out_pad_w + x] >= .75;
-		}
-	}
-	std::vector<Rect> words = labelingWu.run();
-	for (size_t i = 0; i < words.size(); ++i) {
-		words[i] = adjust_rect(words[i]);
-	}
 	return words;
 }
 
-Rect TextDetector::adjust_rect(const Rect& rect) {
+std::vector<Rect> TextDetector::find_rects(int c) {
+	for (int y = 0; y < out_h; ++y) {
+		for (int x = 0; x < out_w; ++x) {
+			labeling_wu[c].I[y*out_w + x] = out[c*out_pad_h*out_pad_w + y*out_pad_w + x] >= .5;
+		}
+	}
+	std::vector<Rect> rects = labeling_wu[c].run();
+	for (size_t i = 0; i < rects.size(); ++i) {
+		rects[i] = adjust_rect(c, rects[i]);
+	}
+	return rects;
+}
+
+Rect TextDetector::adjust_rect(int c, const Rect& rect) {
 	Rect new_rect;
 
 	{
@@ -172,10 +157,10 @@ Rect TextDetector::adjust_rect(const Rect& rect) {
 			--x;
 			float mean = 0;
 			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				mean += out[y*out_pad_w + x];
+				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
 			}
 			mean /= rect.height();
-			if ((mean < 0.25) || (mean > (min_mean))) {
+			if ((mean < 0.25) || (mean > min_mean)) {
 				++x;
 				break;
 			}
@@ -192,10 +177,10 @@ Rect TextDetector::adjust_rect(const Rect& rect) {
 			++x;
 			float mean = 0;
 			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				mean += out[y*out_pad_w + x];
+				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
 			}
 			mean /= rect.height();
-			if ((mean < 0.25) || (mean > (min_mean))) {
+			if ((mean < 0.25) || (mean > min_mean)) {
 				--x;
 				break;
 			}
@@ -211,15 +196,11 @@ Rect TextDetector::adjust_rect(const Rect& rect) {
 		while (y > 0) {
 			--y;
 			float mean = 0;
-			float min = 1;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				mean += out[y*out_pad_w + x];
-				if (min > out[y*out_pad_w + x]) {
-					min = out[y*out_pad_w + x];
-				}
+				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
 			}
 			mean /= rect.width();
-			if ((mean < 0.35) || (mean > (min_mean + 0.05)) || (min < 0.1)) {
+			if ((mean < 0.25) || (mean > min_mean)) {
 				++y;
 				break;
 			}
@@ -235,15 +216,11 @@ Rect TextDetector::adjust_rect(const Rect& rect) {
 		while (y < (out_h - 1)) {
 			++y;
 			float mean = 0;
-			float min = 1;
 			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				mean += out[y*out_pad_w + x];
-				if (min > out[y*out_pad_w + x]) {
-					min = out[y*out_pad_w + x];
-				}
+				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
 			}
 			mean /= rect.width();
-			if ((mean < 0.25) || (mean > (min_mean + 0.05)) || (min < 0.1)) {
+			if ((mean < 0.25) || (mean > min_mean)) {
 				--y;
 				break;
 			}
