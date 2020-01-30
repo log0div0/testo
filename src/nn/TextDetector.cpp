@@ -137,7 +137,7 @@ std::vector<Word> TextDetector::find_words() {
 std::vector<Rect> TextDetector::find_rects(int c) {
 	for (int y = 0; y < out_h; ++y) {
 		for (int x = 0; x < out_w; ++x) {
-			labeling_wu[c].I[y*out_w + x] = out[c*out_pad_h*out_pad_w + y*out_pad_w + x] >= .5;
+			labeling_wu[c].I[y*out_w + x] = out[c*out_pad_h*out_pad_w + y*out_pad_w + x] >= .75;
 		}
 	}
 	std::vector<Rect> rects = labeling_wu[c].run();

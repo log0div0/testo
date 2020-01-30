@@ -34,12 +34,12 @@ class Dataset:
 		_, image_height, image_width = image.shape
 
 		with open(label_path) as f:
-			label = json.loads(f.read())
+			data = json.loads(f.read())
 
-		up_image = np.zeros([image_height, image_width], dtype=np.uint32)
-		down_image = np.zeros([image_height, image_width], dtype=np.uint32)
+		label = np.zeros([2, image_height, image_width], dtype=np.uint32)
+		label_mask = np.zeros([2, image_height, image_width], dtype=np.uint32)
 
-		for textline in label['textlines']:
+		for textline in data['textlines']:
 			up_bboxes = []
 			down_bboxes = []
 			for char in textline['chars']:
@@ -52,21 +52,25 @@ class Dataset:
 				center = math.floor((top + bottom) / 2) + 1
 				up_bboxes.append([left, top, right, center])
 				down_bboxes.append([left, center, right, bottom])
-			up_image = self.draw(up_image, up_bboxes)
-			down_image = self.draw(down_image, down_bboxes)
+			label[0] = self.draw(label[0], up_bboxes, False)
+			label[1] = self.draw(label[1], down_bboxes, False)
+			label_mask[0] = self.draw(label_mask[0], up_bboxes, True)
+			label_mask[1] = self.draw(label_mask[1], down_bboxes, True)
 
-		up_image = np.clip(up_image, 0, 255).astype(np.uint8)
-		down_image = np.clip(down_image, 0, 255).astype(np.uint8)
+		label = np.clip(label, 0, 255).astype(np.uint8)
+		label_mask = np.clip(label_mask, 0, 255).astype(np.uint8)
 
-		# label_image = np.stack([up_image, down_image, down_image], axis=0)
+		# label_image = np.stack([label[0], label[1], label[1]], axis=0)
+		# label_mask_image = np.stack([label_mask[0], label_mask[1], label_mask[1]], axis=0)
 		# vis = visdom.Visdom()
 		# vis.image(image)
 		# vis.image(label_image)
+		# vis.image(label_mask_image)
 		# exit()
 
-		return image, up_image, down_image
+		return image, label, label_mask
 
-	def draw(self, image, bboxes):
+	def draw(self, image, bboxes, blur):
 		tmp_image = Image.new('L', (image.shape[1], image.shape[0]))
 		tmp_draw = ImageDraw.Draw(tmp_image)
 
@@ -81,9 +85,10 @@ class Dataset:
 
 			tmp_draw.rectangle(bbox, fill=255)
 
-		blur_radius = min_height // 3
-		if blur_radius > 1:
-			tmp_image = tmp_image.filter(ImageFilter.BoxBlur(blur_radius))
+		if blur:
+			blur_radius = min_height // 2
+			if blur_radius > 1:
+				tmp_image = tmp_image.filter(ImageFilter.BoxBlur(blur_radius))
 
 		return image + np.array(tmp_image)
 
@@ -93,7 +98,7 @@ class Dataset:
 		return self.cache[idx]
 
 	def __getitem__(self, idx):
-		image, up_image, down_image = self.load_data(idx)
+		image, label, label_mask = self.load_data(idx)
 
 		c, h, w = image.shape
 		crop_h = 480
@@ -101,14 +106,14 @@ class Dataset:
 		y = random.randint(0, h - crop_h)
 		x = random.randint(0, w - crop_w)
 		image = image[:, y:y + crop_h, x:x + crop_w]
-		up_image = up_image[y:y + crop_h, x:x + crop_w]
-		down_image = down_image[y:y + crop_h, x:x + crop_w]
+		label = label[:, y:y + crop_h, x:x + crop_w]
+		label_mask = label_mask[:, y:y + crop_h, x:x + crop_w]
 
 		image = torch.from_numpy(image).float() / 255
-		up_image = torch.from_numpy(up_image).float() / 255
-		down_image = torch.from_numpy(down_image).float() / 255
+		label = torch.from_numpy(label).float() / 255
+		label_mask = torch.from_numpy(label_mask).float() / 255
 
-		return image, up_image, down_image
+		return image, label, label_mask
 
 datasets = []
 
