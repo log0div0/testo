@@ -210,7 +210,7 @@ void QemuVM::install() {
 					<partition>/machine</partition>
 				</resource>
 				<os>
-					<type arch='x86_64' machine='ubuntu'>hvm</type>
+					<type>hvm</type>
 					<boot dev='cdrom'/>
 					<boot dev='hd'/>
 				</os>
@@ -236,7 +236,6 @@ void QemuVM::install() {
 					<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
 				</metadata>
 				<devices>
-					<emulator>/usr/bin/kvm-spice</emulator>
 					<disk type='file' device='disk'>
 						<driver name='qemu' type='qcow2'/>
 						<source file='{}'/>
