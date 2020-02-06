@@ -1,4 +1,11 @@
 #!/bin/bash -e
 
-systemctl stop testo-guest-additions
-systemctl disable testo-guest-additions
+service testo-guest-additions stop
+
+if [ -x "$(command -v update-rc.d)" ]; then
+	update-rc.d testo-guest-additions remove
+fi
+
+if [ -x "$(command -v chkconfig)" ]; then
+	chkconfig testo-guest-additions off
+fi

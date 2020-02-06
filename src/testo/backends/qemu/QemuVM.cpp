@@ -387,6 +387,9 @@ void QemuVM::rollback(const std::string& snapshot) {
 			//Possible variations:
 			//If we have something plugged - let's unplug it
 			if (current_dvd.length()) {
+				if (domain.state() != VIR_DOMAIN_SHUTOFF) {
+					stop();
+				}
 				unplug_dvd();
 			}
 
