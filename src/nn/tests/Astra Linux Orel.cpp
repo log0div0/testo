@@ -43,6 +43,17 @@ TEST_CASE("Astra Linux Orel/Установка (GUI)") {
 		CHECK(result.search("Продолжить").size() == 1);
 	}
 	{
+		auto result = ocr.run("Astra Linux Orel/Установка (GUI)/disks-2-alt.png");
+		CHECK(result.search("Операционная система").size() == 1);
+		CHECK(result.search("общего назначения").size() == 1);
+		CHECK(result.search("Орёл").size() == 1);
+		CHECK(result.search("Разметка дисков").size() == 1);
+		CHECK(result.search("Выберите диск для разметки").size() == 1);
+		CHECK(result.search("SCSI (0,0,0) (sda) - 21.5 GB ATA QEMU HARDDISK").size() == 1);
+		CHECK(result.search("Вернуться").size() == 1);
+		CHECK(result.search("Продолжить").size() == 1);
+	}
+	{
 		auto result = ocr.run("Astra Linux Orel/Установка (GUI)/grub.png");
 		CHECK(result.search("Установка системного загрузчика GRUB на жёсткий диск").size() == 1);
 		CHECK(result.search("Внимание!").size() == 1);
@@ -78,6 +89,16 @@ TEST_CASE("Astra Linux Orel/Установка (GUI)") {
 		auto result = ocr.run("Astra Linux Orel/Установка (GUI)/login_screen.png");
 		CHECK(result.search("Вход в astra").size() == 1);
 		CHECK(result.search("среда, 18 декабря 2019 г. 14:59:36 MSK").size() == 1);
+		CHECK(result.search("user").size() == 1);
+		CHECK(result.search("Имя:").size() == 1);
+		CHECK(result.search("Пароль:").size() == 1);
+		CHECK(result.search("Тип сессии").size() == 1);
+		CHECK(result.search("En").size() == 1);
+	}
+	{
+		auto result = ocr.run("Astra Linux Orel/Установка (GUI)/login_screen_alt.png");
+		CHECK(result.search("Вход в testo-astralinux").size() == 1);
+		CHECK(result.search("четверг, 6 февраля 2020 г. 16:39:23 MSK").size() == 1);
 		CHECK(result.search("user").size() == 1);
 		CHECK(result.search("Имя:").size() == 1);
 		CHECK(result.search("Пароль:").size() == 1);

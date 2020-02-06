@@ -74,7 +74,7 @@ test install_astralinux_gui {
 		wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}"; press Enter
 		wait "Выберите часовой пояс"; press Enter
 		wait "Метод разметки"; press Enter
-		wait "Разметка дисков"; press Enter
+		wait "Заметим, что все данные на выбранном диске будут стерты"; press Enter
 		wait "Схема разметки"; press Enter
 		wait "Закончить разметку и записать изменения на диск"; press Enter
 		wait "Записать изменения на диск?"; press Down, Enter
@@ -88,7 +88,7 @@ test install_astralinux_gui {
 
 		wait "Дополнительные настройки ОС" timeout 15m; press Tab, Enter
 		wait "Похоже, что данная система будет единственной"; press Enter
-		wait "Устройство для установки"; press Down, Enter
+		wait "Устройство для установки системного загрузчика"; press Down, Enter
 		wait "Установка завершена"
 		wait timeout 5s
 		unplug dvd
