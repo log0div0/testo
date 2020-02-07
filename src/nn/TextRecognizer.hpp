@@ -21,7 +21,7 @@ private:
 	void run_nn(const stb::Image& image, const Word& word);
 	std::vector<Char> decode_word(Word& word);
 
-	std::vector<std::string> symbols;
+	std::vector<std::vector<std::string>> symbols;
 	std::vector<size_t> symbols_indexes;
 
 	int in_w = 0;

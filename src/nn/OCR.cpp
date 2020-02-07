@@ -6,44 +6,13 @@
 
 namespace nn {
 
-std::map<std::string, std::string> char_map = ([] {
-	std::string common_str = "0123456789!?\"'#$%&@()[]{}<>+-*/\\.,:;^~=|_";
-	std::string english_str = "abcdefghijklmnopqrstuvwxyz";
-	std::string russian_str = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
-	std::string ENGLISH_str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	std::string RUSSIAN_str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-	std::string alphabet_str = common_str + ENGLISH_str + RUSSIAN_str;
-
-	std::vector<std::string> english = utf8::split_to_chars(english_str);
-	std::vector<std::string> russian = utf8::split_to_chars(russian_str);
-	std::vector<std::string> ENGLISH = utf8::split_to_chars(ENGLISH_str);
-	std::vector<std::string> RUSSIAN = utf8::split_to_chars(RUSSIAN_str);
-	std::vector<std::string> alphabet = utf8::split_to_chars(alphabet_str);
-
-	std::map<std::string, std::string> result;
-
-	for (size_t i = 0; i < alphabet.size(); ++i) {
-		char_map[alphabet[i]] = alphabet[i];
-	}
-	for (size_t i = 0; i < english.size(); ++i) {
-		char_map[english[i]] = ENGLISH[i];
-	}
-	for (size_t i = 0; i < russian.size(); ++i) {
-		char_map[russian[i]] = RUSSIAN[i];
-	}
-	char_map["«"] = char_map.at("\"");
-	char_map["»"] = char_map.at("\"");
-
-	return result;
-})();
-
 std::vector<Rect> OCRResult::search(const std::string& query_str, const std::string& fg_color, const std::string& bg_color) {
 	std::vector<std::string> query;
 	for (auto& char_: utf8::split_to_chars(query_str)) {
 		if (char_ == " ") {
 			continue;
 		}
-		query.push_back(char_map.at(char_));
+		query.push_back(char_);
 	}
 	std::vector<Rect> result;
 	for (auto& textline: textlines) {

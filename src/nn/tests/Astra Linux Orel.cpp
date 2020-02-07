@@ -26,7 +26,7 @@ TEST_CASE("Astra Linux Orel/Установка (GUI)") {
 		CHECK(result.search("Мой").size() == 1);
 		CHECK(result.search("компьютер").size() == 1);
 		CHECK(result.search("Помощь").size() == 1);
-		CHECK(result.search("AstraLinux").size() == 1);
+		CHECK(result.search("ASTRALINUX").size() == 1);
 		CHECK(result.search("EN").size() == 1);
 		CHECK(result.search("15:00").size() == 1);
 		CHECK(result.search("Ср, 18 дек").size() == 1);
@@ -38,7 +38,7 @@ TEST_CASE("Astra Linux Orel/Установка (GUI)") {
 		CHECK(result.search("Орёл").size() == 1);
 		CHECK(result.search("Разметка дисков").size() == 1);
 		CHECK(result.search("Выберите диск для разметки").size() == 1);
-		CHECK(result.search("SCSI (0,0,0) (sda) - 21.5 GB ATA QEMU HARDDISK").size() == 1);
+		CHECK(result.search("SCSI1 (0,0,0) (sda) - 21.5 GB ATA QEMU HARDDISK").size() == 1);
 		CHECK(result.search("Вернуться").size() == 1);
 		CHECK(result.search("Продолжить").size() == 1);
 	}
@@ -49,7 +49,7 @@ TEST_CASE("Astra Linux Orel/Установка (GUI)") {
 		CHECK(result.search("Орёл").size() == 1);
 		CHECK(result.search("Разметка дисков").size() == 1);
 		CHECK(result.search("Выберите диск для разметки").size() == 1);
-		CHECK(result.search("SCSI (0,0,0) (sda) - 21.5 GB ATA QEMU HARDDISK").size() == 1);
+		CHECK(result.search("SCSI1 (0,0,0) (sda) - 10.7 GB ATA QEMU HARDDISK").size() == 1);
 		CHECK(result.search("Вернуться").size() == 1);
 		CHECK(result.search("Продолжить").size() == 1);
 	}
@@ -148,7 +148,7 @@ TEST_CASE("Astra Linux Orel/Установка (Консоль)") {
 		auto result = ocr.run("Astra Linux Orel/Установка (Консоль)/disks-2.png");
 		CHECK(result.search("Разметка дисков").size() == 1);
 		CHECK(result.search("Выберите диск для разметки").size() == 1);
-		CHECK(result.search("SCSI (0,0,0) (sda) - 21.5 GB ATA QEMU HARDDISK").size() == 1);
+		CHECK(result.search("SCSI1 (0,0,0) (sda) - 21.5 GB ATA QEMU HARDDISK").size() == 1);
 		CHECK(result.search("Вернуться").size() == 1);
 	}
 	{

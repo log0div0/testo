@@ -23,7 +23,8 @@ TEST_CASE("Windows 7/Установка") {
 	{
 		auto result = ocr.run("Windows 7/Установка/Введите ключ продукта.png");
 		CHECK(result.search("Введите ключ продукта Windows").size() == 1);
-		CHECK(result.search("ключ продукта").size() == 3);
+		CHECK(result.search("ключ продукта").size() == 2);
+		CHECK(result.search("КЛЮЧ ПРОДУКТА").size() == 1);
 		CHECK(result.search("Наклейка с ключом продукта выглядит так:").size() == 1);
 		CHECK(result.search("XXXXX-XXXXX-XXXXX-XXXXX-XXXXX").size() == 1);
 		CHECK(result.search("Автоматически активировать Windows при подключении к Интернету").size() == 1);
@@ -120,8 +121,8 @@ TEST_CASE("Windows 7/Установка") {
 	{
 		auto result = ocr.run("Windows 7/Установка/Ознакомьтесь с лицензией.png");
 		CHECK(result.search("Ознакомьтесь с условиями лицензии").size() == 1);
-		CHECK(result.search("Условия лицензии на программное обеспечение Microsoft").size() == 1);
-		CHECK(result.search("Windows 7 Максимальная с пакетом обновления 1").size() == 1);
+		CHECK(result.search("УСЛОВИЯ ЛИЦЕНЗИИ НА ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ MICROSOFT").size() == 1);
+		CHECK(result.search("WINDOWS 7 МАКСИМАЛЬНАЯ С ПАКЕТОМ ОБНОВЛЕНИЯ 1").size() == 1);
 		CHECK(result.search("Я принимаю условия лицензии").size() == 1);
 		CHECK(result.search("Далее").size() == 1);
 	}

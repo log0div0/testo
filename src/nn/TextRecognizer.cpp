@@ -13,16 +13,103 @@ extern unsigned int TextRecognizer_onnx_len;
 
 #define IN_H 32
 
-std::string common = "0123456789!?\"'#$%&@()[]{}<>+-*/\\.,:;^~=|_";
-std::string english = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-std::string russian = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-std::string alphabet = common + english + russian;
+std::vector<std::string> char_groups = {
+	"0OoОо",
+	"1",
+	"2",
+	"3ЗзЭэ",
+	"4",
+	"5",
+	"6б",
+	"7",
+	"8",
+	"9",
+	"!",
+	"?",
+	"#",
+	"$",
+	"%",
+	"&",
+	"@",
+	"([{",
+	"<",
+	")]}",
+	">",
+	"+",
+	"-",
+	"*",
+	"/",
+	"\\",
+	".,",
+	":;",
+	"\"'",
+	"^",
+	"~",
+	"=",
+	"|lI",
+	"_",
+	"AА",
+	"aа",
+	"BВв",
+	"bЬьЪъ",
+	"CcСс",
+	"D",
+	"d",
+	"EЕЁ",
+	"eеё",
+	"F",
+	"f",
+	"G",
+	"g",
+	"HНн",
+	"h",
+	"i",
+	"J",
+	"j",
+	"KКк",
+	"k",
+	"L",
+	"MМм",
+	"m",
+	"N",
+	"n",
+	"PpРр",
+	"R",
+	"r",
+	"Q",
+	"q",
+	"Ss",
+	"TТт",
+	"t",
+	"U",
+	"u",
+	"Vv",
+	"Ww",
+	"XxХх",
+	"Y",
+	"yУу",
+	"Zz",
+	"Б",
+	"Гг",
+	"Дд",
+	"Жж",
+	"ИиЙй",
+	"Лл",
+	"Пп",
+	"Фф",
+	"Цц",
+	"Чч",
+	"ШшЩщ",
+	"Ыы",
+	"Юю",
+	"Яя"
+};
 
 namespace nn {
 
 TextRecognizer::TextRecognizer() {
-	symbols = utf8::split_to_chars(alphabet);
-	for (size_t i = 0; i < symbols.size(); ++i) {
+	for (size_t i = 0; i < char_groups.size(); ++i) {
+		symbols.push_back(utf8::split_to_chars(char_groups[i]));
 		symbols_indexes.push_back(i);
 	}
 	session = LoadModel(TextRecognizer_onnx, TextRecognizer_onnx_len);
@@ -148,7 +235,9 @@ std::vector<Char> TextRecognizer::decode_word(Word& word) {
 		Char char_;
 		char_.rect = word.rect;
 		for (auto it = symbols_indexes.begin(); it != end; ++it) {
-			char_.alternatives.push_back(symbols.at(*it));
+			for (auto& alternative: symbols.at(*it)) {
+				char_.alternatives.push_back(alternative);
+			}
 		}
 		if (char_.alternatives.size() == 0) {
 			throw std::runtime_error("What the fuck?");

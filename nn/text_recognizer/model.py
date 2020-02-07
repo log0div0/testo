@@ -24,46 +24,36 @@ class BidirectionalLSTM(nn.Module):
 
 		return output
 
+def ConvRelu(nIn, nOut, ks, ss, ps, batchNormalization=False):
+	seq = nn.Sequential()
+	seq.add_module('conv', nn.Conv2d(nIn, nOut, ks, ss, ps))
+	if batchNormalization:
+		seq.add_module('batchnorm', nn.BatchNorm2d(nOut))
+	seq.add_module('relu', nn.LeakyReLU(0.2, inplace=True))
+	return seq
 
 class Model(nn.Module):
 	def __init__(self):
 		super(Model, self).__init__()
 
-		ks = [3, 3, 3, 3, 3, 3, 2]
-		ps = [1, 1, 1, 1, 1, 1, 0]
-		ss = [1, 1, 1, 1, 1, 1, 1]
-		nm = [16, 32, 64, 64, 128, 128, 128]
-
-		cnn = nn.Sequential()
-
-		def convRelu(i, batchNormalization=False):
-			nIn = 3 if i == 0 else nm[i - 1]
-			nOut = nm[i]
-			cnn.add_module('conv{0}'.format(i), nn.Conv2d(nIn, nOut, ks[i], ss[i], ps[i]))
-			if batchNormalization:
-				cnn.add_module('batchnorm{0}'.format(i), nn.BatchNorm2d(nOut))
-			cnn.add_module('relu{0}'.format(i), nn.LeakyReLU(0.2, inplace=True))
-
-		convRelu(0)
-		cnn.add_module('pooling{0}'.format(0), nn.MaxPool2d(2, 2))  # 64x16x64
-		convRelu(1)
-		cnn.add_module('pooling{0}'.format(1), nn.MaxPool2d(2, 2))  # 128x8x32
-		convRelu(2, True)
-		convRelu(3)
-		cnn.add_module('pooling{0}'.format(2),
-					   nn.MaxPool2d((2, 2), (2, 1), (0, 1)))  # 256x4x16
-		convRelu(4, True)
-		convRelu(5)
-		cnn.add_module('pooling{0}'.format(3),
-					   nn.MaxPool2d((2, 2), (2, 1), (0, 1)))  # 512x2x16
-		convRelu(6, True)  # 512x1x16
-
-		self.cnn = cnn
+		self.cnn = nn.Sequential(
+			ConvRelu(3, 16, 3, 1, 1),
+			nn.MaxPool2d(2, 2),                    # 64x16x64
+			ConvRelu(16, 32, 3, 1, 1),
+			nn.MaxPool2d(2, 2),                    # 128x8x32
+			ConvRelu(32, 64, 3, 1, 1, True),
+			ConvRelu(64, 64, 3, 1, 1),
+			nn.MaxPool2d((2, 2), (2, 1), (0, 1)),  # 256x4x16
+			ConvRelu(64, 128, 3, 1, 1, True),
+			ConvRelu(128, 128, 3, 1, 1),
+			nn.MaxPool2d((2, 2), (2, 1), (0, 1)),  # 512x2x16
+			ConvRelu(128, 128, 2, 1, 0, True)      # 512x1x16
+		)
 
 		nh=128
 		self.rnn = nn.Sequential(
-			BidirectionalLSTM(nm[-1], nh, nh),
-			BidirectionalLSTM(nh, nh, len(alphabet.chars) + 1))
+			BidirectionalLSTM(128, nh, nh),
+			BidirectionalLSTM(nh, nh, len(alphabet.char_groups) + 1))
 
 		self.init_weights()
 
@@ -95,10 +85,19 @@ class Model(nn.Module):
 if __name__ == '__main__':
 	import time
 	import onnxruntime
+	import argparse
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--model')
+	args = parser.parse_args()
 
 	model = Model()
+	if args.model:
+		model.load_state_dict(torch.load(args.model, map_location=torch.device('cpu')))
+	model.eval()
+
 	print(model)
-	x = torch.randn(50, 3, 32, 100)
+	x = torch.randn(1, 3, 32, 100)
 	start_time = time.time()
 	output = model(x)
 	print("--- %s seconds ---" % (time.time() - start_time))
@@ -106,7 +105,15 @@ if __name__ == '__main__':
 
 	torch.onnx.export(model, x, "model.onnx",
 		input_names=["input"],
-		output_names=["output"]
+		output_names=["output"],
+			dynamic_axes={
+			'input': {
+				3: 'width'
+			},
+			'output': {
+				0: 'width',
+			}
+		}
 	)
 
 	start_time = time.time()
