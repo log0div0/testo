@@ -97,7 +97,6 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 			throw std::runtime_error("Can't take hypervisor snapshot with a flash drive plugged in. Please unplug the flash drive before the end of the test");
 		}
 
-
 		if (has_snapshot(snapshot)) {
 			delete_snapshot_with_children(snapshot);
 		}
