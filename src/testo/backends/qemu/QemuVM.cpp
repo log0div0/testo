@@ -369,7 +369,7 @@ void QemuVM::make_snapshot(const std::string& snapshot) {
 
 		domain.snapshot_create_xml(xml_config);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
+		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot {}", snapshot)));
 	}
 
 }
