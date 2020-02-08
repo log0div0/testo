@@ -203,6 +203,7 @@ void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
 #define THRESHOLD -10.0
 
 std::vector<Char> TextRecognizer::decode_word(Word& word) {
+	float ratio = float(word.rect.width()) / out_w;
 	std::vector<Char> result;
 	int prev_max_pos = -1;
 	for (int x = 0; x < out_w; ++x) {
@@ -220,6 +221,7 @@ std::vector<Char> TextRecognizer::decode_word(Word& word) {
 			continue;
 		}
 		if (prev_max_pos == max_pos) {
+			result.back().rect.right = word.rect.left + std::ceil(x * ratio);
 			continue;
 		}
 		prev_max_pos = max_pos;
@@ -233,7 +235,10 @@ std::vector<Char> TextRecognizer::decode_word(Word& word) {
 		});
 
 		Char char_;
-		char_.rect = word.rect;
+		char_.rect.top = word.rect.top;
+		char_.rect.bottom = word.rect.bottom;
+		char_.rect.left = word.rect.left + std::floor(x * ratio);
+		char_.rect.right = word.rect.left + std::ceil(x * ratio);
 		for (auto it = symbols_indexes.begin(); it != end; ++it) {
 			for (auto& alternative: symbols.at(*it)) {
 				char_.alternatives.push_back(alternative);
@@ -243,6 +248,12 @@ std::vector<Char> TextRecognizer::decode_word(Word& word) {
 			throw std::runtime_error("What the fuck?");
 		}
 		result.push_back(char_);
+	}
+	for (size_t i = 1; i < result.size(); ++i) {
+		result[i-1].rect.right = result[i].rect.left;
+	}
+	if (result.size()) {
+		result.back().rect.right = word.rect.right;
 	}
 	return result;
 }

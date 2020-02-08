@@ -21,10 +21,11 @@ void predict()
 
 	if (query.size() == 0) {
 		for (auto& textline: result.textlines) {
-			for (auto& word: textline.words) {
-				image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
-			}
+			// for (auto& word: textline.words) {
+			// 	image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
+			// }
 			for (auto& char_: textline.chars) {
+				image.draw(char_.rect.left, char_.rect.top, char_.rect.right, char_.rect.bottom, 200, 20, 50);
 				std::cout << char_.alternatives[0];
 			}
 			std::cout << std::endl;
