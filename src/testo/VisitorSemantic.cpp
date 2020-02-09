@@ -519,6 +519,7 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 	}
 }
 
+
 void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	// std::cout << "Registering machine " << machine->name.value() << std::endl;
 	if (reg.vmcs.find(machine->name) != reg.vmcs.end()) {
@@ -531,6 +532,21 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.pos().file.generic_string();
 
+	if (!config.count("iso")) {
+		throw std::runtime_error("Constructing VM " + machine->name.value() + " error: field ISO is not specified");
+	}
+
+	fs::path iso_file = config.at("iso").get<std::string>();
+	if (iso_file.is_relative()) {
+		fs::path src_file(config.at("src_file").get<std::string>());
+		iso_file = src_file.parent_path() / iso_file;
+	}
+	
+	if (!fs::exists(iso_file)) {
+		throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
+	}
+
+	config["iso"] = iso_file.generic_string();
 
 	auto vmc = env->create_vm_controller(config);
 	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
