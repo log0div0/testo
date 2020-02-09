@@ -5,7 +5,7 @@ import puppeteer from 'puppeteer'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import * as fonts from './fonts'
-import {randomArrayElement} from './common'
+import {randomArrayElement} from './random'
 
 function App(props) {
 
