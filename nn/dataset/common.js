@@ -2,7 +2,7 @@
 import React from 'react'
 import fs from 'fs'
 import path from 'path'
-import {randomCSSFilter, randomText, alphabet} from './random'
+import {randomCSSFilter, randomText, alphabet, randomColorShade} from './random'
 
 export function Background(props) {
 	let divStyle = {
@@ -125,17 +125,24 @@ function alignmentStyle(props) {
 }
 
 function Char(props) {
-	return <span className='char'>{props.children}</span>
+	return <span className='char'
+		data-color={props.color}
+		data-background-color={props.backgroundColor}>{props.children}</span>
 }
 
 export function Text(props) {
-	let {children, style, className} = props
-	return <span style={style} className={className}>{textToChars(children, Char, {})}</span>
+	let {children, style, className, color, backgroundColor} = defaultStyle(props)
+	if (color) {
+		style.color = randomColorShade(color)
+	}
+	if (backgroundColor) {
+		style.backgroundColor = randomColorShade(backgroundColor)
+	}
+	return <span style={style} className={className}>{textToChars(children, Char, {color, backgroundColor})}</span>
 }
 
 export function TextLine(props) {
 	let {children, ...other} = positionStyle(defaultStyle(props))
-	other.style.filter = randomCSSFilter()
 	other.style.whiteSpace = 'nowrap'
 	other.className = 'textline'
 
@@ -160,21 +167,27 @@ function ConsoleChar(props) {
 		let img_data = fs.readFileSync(img_path)
 		let img = "data:image/png;base64," + img_data.toString('base64')
 
-		style.backgroundColor = props.color
+		style.backgroundColor = props.colorShade
 		style.WebkitMaskImage = `url(${img})`
 	}
-	return <span className='console char' style={style}>{props.children}</span>
+	return <span className='console char'
+		data-color={props.color}
+		data-background-color={props.backgroundColor}
+		style={style}>{props.children}</span>
 }
 
 export function ConsoleText(props) {
-	let {children, color, font, style, className, marginRight} = defaultStyle(props)
+	let {children, color, backgroundColor, font, style, className, marginRight} = defaultStyle(props)
+	if (backgroundColor) {
+		style.backgroundColor = randomColorShade(backgroundColor)
+	}
 	style.display = 'flex'
-	return <span style={style} className={className}>{textToChars(children, ConsoleChar, {color, font, marginRight})}</span>
+	let charProps = {color, colorShade: randomColorShade(color), backgroundColor, font, marginRight}
+	return <span style={style} className={className}>{textToChars(children, ConsoleChar, charProps)}</span>
 }
 
 export function ConsoleTextLine(props) {
 	let {children, ...other} = positionStyle(defaultStyle(props))
-	other.style.filter = randomCSSFilter()
 	other.className = 'console textline'
 
 	return <ConsoleText {...other}>{children}</ConsoleText>

@@ -36,7 +36,7 @@ export function Example(props) {
 				<ConsoleTextLine font='TerminusBold16' color='white'>{"        0 errors"}</ConsoleTextLine>
 				<ConsoleTextLine font='TerminusBold16' color='white'>{"mountroot: unable to remount devfs under /dev (error 2)"}</ConsoleTextLine>
 				<ConsoleTextLine font='TerminusBold16' color='white'>{"mountroot: unable to unlink /dev/dev (error 2)"}</ConsoleTextLine>
-				<ConsoleTextLine font='Terminus16' color='#a8a8a8'>{"Нажмите Enter чтобы провести инсталляцию вручную"}</ConsoleTextLine>
+				<ConsoleTextLine font='Terminus16' color='gray'>{"Нажмите Enter чтобы провести инсталляцию вручную"}</ConsoleTextLine>
 				<ConsoleTextLine font='TerminusBold16' color='white'>{"uhub3: 6 ports with 6 removable, self powered"}</ConsoleTextLine>
 			</Column>
 		</Background>

@@ -13,7 +13,7 @@ export function Example(props) {
 			</TextLine>
 			<Column left='200px' top='280px'>
 				<ConsoleTextLine font='Continent4' color='white'>Установить Континент 4.1.0.919</ConsoleTextLine>
-				<ConsoleTextLine font='Continent4' color='#d4e9d2'>Тест памяти</ConsoleTextLine>
+				<ConsoleTextLine font='Continent4' color='white'>Тест памяти</ConsoleTextLine>
 			</Column>
 		</Background>
 	)

@@ -72,7 +72,9 @@ function generate_label() {
 			}
 			let char = {
 				text: text,
-				bbox: {left, top, right, bottom}
+				bbox: {left, top, right, bottom},
+				color: char_node.dataset.color,
+				backgroundColor: char_node.dataset.backgroundColor
 			}
 			textline.text += text
 			textline.chars.push(char)

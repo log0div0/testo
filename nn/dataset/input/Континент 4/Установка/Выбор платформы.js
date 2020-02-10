@@ -8,9 +8,9 @@ export function Example(props) {
 
 	return (
 		<Background src={bgPath}>
-			<ConsoleTextLine marginRight='1px' left="260px" top="88px" font='Continent4' color='#ff5757'>Выберите тип платформы</ConsoleTextLine>
+			<ConsoleTextLine marginRight='1px' left="260px" top="88px" font='Continent4' color='red'>Выберите тип платформы</ConsoleTextLine>
 			<Column left='252px' top='120px'>
-				<ConsoleTextLine marginRight='1px' font='Continent4' color='grey'>
+				<ConsoleTextLine marginRight='1px' font='Continent4' color='gray'>
 					<ConsoleText marginRight='1px' font='Continent4' color='white'>Настраиваемая</ConsoleText>/Custom
 				</ConsoleTextLine>
 				<ConsoleTextLine marginRight='1px' font='Continent4' color='black'>IPC-10 (LN010A)</ConsoleTextLine>
@@ -28,7 +28,7 @@ export function Example(props) {
 				<ConsoleTextLine marginRight='1px' font='Continent4' color='black'>IPC-1000 (MSS021)</ConsoleTextLine>
 				<ConsoleTextLine marginRight='1px' font='Continent4' color='black'>IPC-1000F (MSS021)</ConsoleTextLine>
 			</Column>
-			<ConsoleTextLine marginRight='1px' left="10px" bottom="0px"  font='Continent4' color='grey'>
+			<ConsoleTextLine marginRight='1px' left="10px" bottom="0px"  font='Continent4' color='gray'>
 				{"<Tab>/<Alt-Tab> "}
 				<ConsoleText marginRight='1px' font='Continent4' color='white'>между элементами</ConsoleText>
 				{"  |   <Space> "}

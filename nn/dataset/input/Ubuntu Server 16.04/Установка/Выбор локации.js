@@ -30,7 +30,7 @@ export function Example(props) {
 				<ConsoleTextLine font='Fixed16' color='black'>Singapore</ConsoleTextLine>
 				<ConsoleTextLine font='Fixed16' color='black'>South Africa</ConsoleTextLine>
 				<ConsoleTextLine font='Fixed16' color='black'>United Kingdom</ConsoleTextLine>
-				<ConsoleTextLine font='Fixed16' color='#e0e0e0'>United States</ConsoleTextLine>
+				<ConsoleTextLine font='Fixed16' color='white'>United States</ConsoleTextLine>
 				<ConsoleTextLine font='Fixed16' color='black'>Zambia</ConsoleTextLine>
 				<ConsoleTextLine font='Fixed16' color='black'>Zimbabwe</ConsoleTextLine>
 				<ConsoleTextLine font='Fixed16' color='black'>other</ConsoleTextLine>
