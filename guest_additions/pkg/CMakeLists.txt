@@ -12,16 +12,15 @@ install(FILES
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install(FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/lib/systemd/system/testo-guest-additions.service
-	DESTINATION /lib/systemd/system/
+	${CMAKE_CURRENT_SOURCE_DIR}/etc/init.d/testo-guest-additions
+	DESTINATION /etc/init.d
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST
 	/usr
 	/usr/sbin
-	/lib
-	/lib/systemd
-	/lib/systemd/system
+	/etc
+	/etc/init.d
 )
 
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/postinst)
@@ -35,5 +34,5 @@ ${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
 
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 
-add_package(guest-additions-package)
-add_dependencies(guest-additions-package testo-guest-additions)
+add_package(testo-guest-additions-package)
+add_dependencies(testo-guest-additions-package testo-guest-additions)

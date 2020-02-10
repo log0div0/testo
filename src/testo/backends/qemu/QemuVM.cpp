@@ -359,7 +359,7 @@ void QemuVM::make_snapshot(const std::string& snapshot) {
 
 		domain.snapshot_create_xml(xml_config);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
+		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot {}", snapshot)));
 	}
 
 }
@@ -377,6 +377,9 @@ void QemuVM::rollback(const std::string& snapshot) {
 			//Possible variations:
 			//If we have something plugged - let's unplug it
 			if (current_dvd.length()) {
+				if (domain.state() != VIR_DOMAIN_SHUTOFF) {
+					stop();
+				}
 				unplug_dvd();
 			}
 
