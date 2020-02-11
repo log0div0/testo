@@ -12,8 +12,12 @@ struct Char {
 	const stb::Image* image = nullptr;
 	Rect rect;
 	std::vector<std::string> codes;
+	std::string color;
+	std::string backgroundColor;
 
 	bool match(const std::string& query);
+	bool matchColor(const std::string& color);
+	bool matchBackgroundColor(const std::string& color);
 };
 
 struct Word {
@@ -27,7 +31,7 @@ struct TextLine {
 	std::vector<Char> chars;
 	std::vector<Word> words; // tmp
 
-	std::vector<Rect> search(const std::vector<std::string>& query);
+	std::vector<Rect> search(const std::vector<std::string>& query, const std::string& color, const std::string& backgroundColor);
 };
 
 struct OCR {

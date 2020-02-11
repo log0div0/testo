@@ -16,6 +16,7 @@ list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 embed_onnx_model(${CMAKE_CURRENT_SOURCE_DIR}/TextDetector.onnx)
 embed_onnx_model(${CMAKE_CURRENT_SOURCE_DIR}/TextRecognizer.onnx)
+embed_onnx_model(${CMAKE_CURRENT_SOURCE_DIR}/TextColorPicker.onnx)
 
 add_library(nn STATIC ${SRCS})
 target_link_libraries(nn stb onnxruntime pthread)

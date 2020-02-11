@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "TextDetector.hpp"
 #include "TextRecognizer.hpp"
+#include "TextColorPicker.hpp"
 
 namespace nn {
 
@@ -17,7 +18,27 @@ bool Char::match(const std::string& query) {
 	return false;
 }
 
-std::vector<Rect> TextLine::search(const std::vector<std::string>& query) {
+bool Char::matchColor(const std::string& color) {
+	if (!color.size()) {
+		return true;
+	}
+	if (!this->color.size()) {
+		TextColorPicker::instance().run(*this);
+	}
+	return this->color == color;
+}
+
+bool Char::matchBackgroundColor(const std::string& color) {
+	if (!color.size()) {
+		return true;
+	}
+	if (!this->backgroundColor.size()) {
+		TextColorPicker::instance().run(*this);
+	}
+	return this->backgroundColor == color;
+}
+
+std::vector<Rect> TextLine::search(const std::vector<std::string>& query, const std::string& color, const std::string& backgroundColor) {
 	if (chars.size() < query.size()) {
 		return {};
 	}
@@ -30,13 +51,30 @@ std::vector<Rect> TextLine::search(const std::vector<std::string>& query) {
 				break;
 			}
 		}
-		if (match) {
-			Rect rect = chars[i].rect;
-			for (size_t j = 1; j < query.size(); ++j) {
-				rect |= chars[i + j].rect;
-			}
-			result.push_back(rect);
+		if (!match) {
+			continue;
 		}
+		size_t matchColor = 0;
+		size_t matchBackgroundColor = 0;
+		for (size_t j = 0; j < query.size(); ++j) {
+			if (chars[i + j].matchColor(color)) {
+				++matchColor;
+			}
+			if (chars[i + j].matchBackgroundColor(backgroundColor)) {
+				++matchBackgroundColor;
+			}
+		}
+		if (matchColor <= (query.size() / 2)) {
+			continue;
+		}
+		if (matchBackgroundColor <= (query.size() / 2)) {
+			continue;
+		}
+		Rect rect = chars[i].rect;
+		for (size_t j = 1; j < query.size(); ++j) {
+			rect |= chars[i + j].rect;
+		}
+		result.push_back(rect);
 	}
 	return result;
 }
@@ -51,7 +89,7 @@ std::vector<Rect> OCR::search(const std::string& query_str, const std::string& c
 	}
 	std::vector<Rect> result;
 	for (auto& textline: textlines) {
-		for (auto& rect: textline.search(query)) {
+		for (auto& rect: textline.search(query, color, backgroundColor)) {
 			result.push_back(rect);
 		}
 	}
