@@ -60,8 +60,10 @@ class Dataset:
 			width += 1
 		width *= 2
 
+		resample = random.choice([Image.BILINEAR, Image.BICUBIC, Image.LANCZOS])
+
 		word_img = PIL.Image.fromarray(word_img)
-		word_img = word_img.resize([width, height], PIL.Image.BILINEAR)
+		word_img = word_img.resize([width, height], resample)
 		word_img = np.array(word_img)
 		word_img = np.transpose(word_img, [2, 0, 1])
 
@@ -131,7 +133,7 @@ def collate(words):
 	labels = [word['str'] for word in words]
 	return images, labels, torch.Tensor(images_size).long()
 
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True, collate_fn=collate)
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True, collate_fn=collate)
 
 if __name__ == '__main__':
 	for data in data_loader:
