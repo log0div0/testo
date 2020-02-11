@@ -22,16 +22,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		throw std::runtime_error("Constructing QemuVM " + id() + " error: field CPUS is not specified");
 	}
 
-	if (!config.count("iso")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field ISO is not specified");
-	}
-
-	fs::path iso_path(config.at("iso").get<std::string>());
-	if (!fs::exists(iso_path)) {
-		throw std::runtime_error(std::string("Constructing QemuVM " + id() + " error: specified iso file does not exist: ")
-			+ iso_path.generic_string());
-	}
-
 	if (!config.count("disk_size")) {
 		throw std::runtime_error("Constructing QemuVM error: field DISK SIZE is not specified");
 	}

@@ -98,6 +98,7 @@ int clean_mode() {
 				}
 			} catch (const std::exception& error) {
 				std::cout << "Couldn't remove network " << fs::path(file).filename() << std::endl;
+				std::cout << error << std::endl;
 			}
 
 		}
@@ -118,6 +119,7 @@ int clean_mode() {
 				}
 			} catch (const std::exception& error) {
 				std::cout << "Couldn't remove flash drive " << fs::path(file).filename() << std::endl;
+				std::cout << error << std::endl;
 			}
 		}
 	}
@@ -137,6 +139,7 @@ int clean_mode() {
 				}
 			} catch (const std::exception& error) {
 				std::cout << "Couldn't remove virtual machine " << fs::path(file).filename() << std::endl;
+				std::cout << error << std::endl;
 			}
 
 		}

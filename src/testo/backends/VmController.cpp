@@ -40,16 +40,7 @@ void VmController::create() {
 		}
 
 		fs::path iso_file = config.at("iso").get<std::string>();
-		if (iso_file.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			iso_file = src_file.parent_path() / iso_file;
-		}
-		iso_file = fs::canonical(iso_file);
-
-		if (!fs::exists(iso_file)) {
-			throw std::runtime_error("Target iso file doesn't exist");
-		}
-
+		
 		config.erase("src_file");
 		config.erase("metadata");
 
