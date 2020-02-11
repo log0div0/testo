@@ -1,25 +1,25 @@
 
 #pragma once
 
-#include <stb/Image.hpp>
 #include "LabelingWu.hpp"
 #include "OnnxRuntime.hpp"
-#include "TextLine.hpp"
+#include "OCR.hpp"
 
 namespace nn {
 
 struct TextDetector {
-	TextDetector();
+	static TextDetector& instance();
 	~TextDetector();
 
 	TextDetector(const TextDetector& root) = delete;
 	TextDetector& operator=(const TextDetector&) = delete;
 
-	std::vector<Word> detect(const stb::Image& image);
+	std::vector<Word> detect(const stb::Image* image);
 
 private:
-	void run_nn(const stb::Image& image);
-	std::vector<Word> find_words();
+	TextDetector();
+	void run_nn(const stb::Image* image);
+	std::vector<Word> run_postprocessing(const stb::Image* image);
 	std::vector<Rect> find_rects(int c);
 	Rect adjust_rect(int c, const Rect& rect);
 

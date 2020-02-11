@@ -1,25 +1,25 @@
 
 #pragma once
 
-#include <stb/Image.hpp>
-#include <vector>
-#include "TextLine.hpp"
 #include "OnnxRuntime.hpp"
+#include "OCR.hpp"
 
 namespace nn {
 
 struct TextRecognizer {
-	TextRecognizer();
+	static TextRecognizer& instance();
 	~TextRecognizer();
 
-	TextRecognizer(const TextRecognizer& root) = delete;
+	TextRecognizer(const TextRecognizer&) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
 
-	std::vector<Char> recognize(const stb::Image& image, Word& word);
+	std::vector<Char> recognize(const Word& word);
 
 private:
-	void run_nn(const stb::Image& image, const Word& word);
-	std::vector<Char> decode_word(Word& word);
+	TextRecognizer();
+
+	void run_nn(const Word& word);
+	std::vector<Char> run_postprocessing(const Word& word);
 
 	std::vector<std::vector<std::string>> symbols;
 	std::vector<size_t> symbols_indexes;
@@ -35,7 +35,7 @@ private:
 	std::unique_ptr<Ort::Value> in_tensor;
 	std::unique_ptr<Ort::Value> out_tensor;
 
-	std::vector<uint8_t> word_grey, word_grey_resized;
+	std::vector<uint8_t> word_img, word_img_resized;
 };
 
 }

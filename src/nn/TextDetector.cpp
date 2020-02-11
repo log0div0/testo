@@ -27,6 +27,11 @@ static inline int nearest_n_times_div_by_2(int value, size_t n) {
 	}
 }
 
+TextDetector& TextDetector::instance() {
+	static TextDetector instance;
+	return instance;
+}
+
 TextDetector::TextDetector() {
 	session = LoadModel(TextDetector_onnx, TextDetector_onnx_len);
 }
@@ -35,23 +40,23 @@ TextDetector::~TextDetector() {
 
 }
 
-std::vector<Word> TextDetector::detect(const stb::Image& image)
+std::vector<Word> TextDetector::detect(const stb::Image* image)
 {
-	if (!image.data) {
+	if (!image->data) {
 		return {};
 	}
 
 	run_nn(image);
-	return find_words();
+	return run_postprocessing(image);
 }
 
-void TextDetector::run_nn(const stb::Image& image) {
-	if ((in_w != image.width) ||
-		(in_h != image.height))
+void TextDetector::run_nn(const stb::Image* image) {
+	if ((in_w != image->width) ||
+		(in_h != image->height))
 	{
 		in_c = 3;
-		in_h = image.height;
-		in_w = image.width;
+		in_h = image->height;
+		in_w = image->width;
 		in_pad_h = nearest_n_times_div_by_2(in_h, 4);
 		in_pad_w = nearest_n_times_div_by_2(in_w, 4);
 
@@ -81,12 +86,12 @@ void TextDetector::run_nn(const stb::Image& image) {
 		labeling_wu[1] = LabelingWu(out_w, out_h);
 	}
 
-	for (int y = 0; y < image.height; ++y) {
-		for (int x = 0; x < image.width; ++x) {
+	for (int y = 0; y < image->height; ++y) {
+		for (int x = 0; x < image->width; ++x) {
 			for (int c = 0; c < 3; ++c) {
-				int src_index = y * image.width * image.channels + x * image.channels + c;
+				int src_index = y * image->width * image->channels + x * image->channels + c;
 				int dst_index = c * in_pad_h * in_pad_w + y * in_pad_w + x;
-				in[dst_index] = float(image.data[src_index]) / 255.0f;
+				in[dst_index] = float(image->data[src_index]) / 255.0f;
 			}
 		}
 	}
@@ -97,7 +102,7 @@ void TextDetector::run_nn(const stb::Image& image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<Word> TextDetector::find_words() {
+std::vector<Word> TextDetector::run_postprocessing(const stb::Image* image) {
 	std::vector<Rect> up_rects = find_rects(0);
 	std::vector<Rect> down_rects = find_rects(1);
 	std::vector<Word> words;
@@ -123,6 +128,7 @@ std::vector<Word> TextDetector::find_words() {
 				}
 				if (!found) {
 					Word word;
+					word.image = image;
 					word.rect = word_rect;
 					words.push_back(word);
 				}

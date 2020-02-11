@@ -1,28 +1,41 @@
 
 #pragma once
 
-#include "TextDetector.hpp"
-#include "TextRecognizer.hpp"
-#include "TextLine.hpp"
-#include <map>
+#include "Rect.hpp"
+#include <stb/Image.hpp>
+#include <string>
+#include <vector>
 
 namespace nn {
 
-struct OCRResult {
-	std::vector<Rect> search(const std::string& query, const std::string& fg_color = {}, const std::string& bg_color = {});
-	std::vector<TextLine> textlines;
+struct Char {
+	const stb::Image* image = nullptr;
+	Rect rect;
+	std::vector<std::string> codes;
+
+	bool match(const std::string& query);
+};
+
+struct Word {
+	const stb::Image* image = nullptr;
+	Rect rect;
+};
+
+struct TextLine {
+	const stb::Image* image = nullptr;
+	Rect rect;
+	std::vector<Char> chars;
+	std::vector<Word> words; // tmp
+
+	std::vector<Rect> search(const std::vector<std::string>& query);
 };
 
 struct OCR {
-	static OCR& instance();
+	const stb::Image* image = nullptr;
+	std::vector<TextLine> textlines;
 
-	OCRResult run(const stb::Image& image);
-
-private:
-	OCR() = default;
-
-	TextDetector detector;
-	TextRecognizer recognizer;
+	OCR(const stb::Image* image_);
+	std::vector<Rect> search(const std::string& query, const std::string& color = {}, const std::string& backgroundColor = {});
 };
 
 }

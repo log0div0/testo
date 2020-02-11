@@ -3,6 +3,7 @@
 #include <iostream>
 #include <clipp.h>
 #include "OCR.hpp"
+#include "OnnxRuntime.hpp"
 
 std::string image_file;
 std::string query;
@@ -11,27 +12,26 @@ std::string output_file = "output.png";
 void predict()
 {
 	stb::Image image(image_file);
-	nn::OCR& ocr = nn::OCR::instance();
 
 	auto start = std::chrono::high_resolution_clock::now();
-	auto result = ocr.run(image);
+	nn::OCR ocr(&image);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << "Time: " << time.count() << " seconds" << std::endl;
 
 	if (query.size() == 0) {
-		for (auto& textline: result.textlines) {
+		for (auto& textline: ocr.textlines) {
 			// for (auto& word: textline.words) {
 			// 	image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
 			// }
 			for (auto& char_: textline.chars) {
 				image.draw(char_.rect.left, char_.rect.top, char_.rect.right, char_.rect.bottom, 200, 20, 50);
-				std::cout << char_.alternatives[0];
+				std::cout << char_.codes[0];
 			}
 			std::cout << std::endl;
 		}
 	} else {
-		auto rects = result.search(query);
+		auto rects = ocr.search(query);
 		for (auto& rect: rects) {
 			image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
 		}

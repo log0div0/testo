@@ -107,6 +107,11 @@ std::vector<std::string> char_groups = {
 
 namespace nn {
 
+TextRecognizer& TextRecognizer::instance() {
+	static TextRecognizer instance;
+	return instance;
+}
+
 TextRecognizer::TextRecognizer() {
 	for (size_t i = 0; i < char_groups.size(); ++i) {
 		symbols.push_back(utf8::split_to_chars(char_groups[i]));
@@ -119,16 +124,12 @@ TextRecognizer::~TextRecognizer() {
 
 }
 
-std::vector<Char> TextRecognizer::recognize(const stb::Image& image, Word& word) {
-	if (!image.data) {
-		return {};
-	}
-
-	run_nn(image, word);
-	return decode_word(word);
+std::vector<Char> TextRecognizer::recognize(const Word& word) {
+	run_nn(word);
+	return run_postprocessing(word);
 }
 
-void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
+void TextRecognizer::run_nn(const Word& word) {
 
 	float ratio = float(word.rect.width()) / float(word.rect.height());
 	int new_in_w = std::floor(ratio * IN_H);
@@ -157,30 +158,32 @@ void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
 			Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
 	}
 
+	const stb::Image* image = word.image;
+
 	int word_h = word.rect.height();
 	int word_w = word.rect.width();
-	word_grey.resize(word_h * word_w * in_c);
+	word_img.resize(word_h * word_w * in_c);
 	for (int y = 0; y < word_h; ++y) {
 		for (int x = 0; x < word_w; ++x) {
 			for (int c = 0; c < in_c; ++c) {
-				int src_index = (word.rect.top + y) * image.width * image.channels + (word.rect.left + x) * image.channels + c;
+				int src_index = (word.rect.top + y) * image->width * image->channels + (word.rect.left + x) * image->channels + c;
 				int dst_index = y * word_w * in_c + x * in_c + c;
-				word_grey[dst_index] = image.data[src_index];
+				word_img[dst_index] = image->data[src_index];
 			}
 		}
 	}
 
-	word_grey_resized.resize(IN_H * in_w * in_c);
+	word_img_resized.resize(IN_H * in_w * in_c);
 	if (!stbir_resize_uint8(
-		word_grey.data(), word_w, word_h, 0,
-		word_grey_resized.data(), in_w, IN_H, 0,
+		word_img.data(), word_w, word_h, 0,
+		word_img_resized.data(), in_w, IN_H, 0,
 		in_c)
 	) {
 		throw std::runtime_error("stbir_resize_uint8 failed");
 	}
 
 	// std::string path = "tmp/" + std::to_string(b) + ".png";
-	// if (!stbi_write_png(path.c_str(), in_w, IN_H, in_c, word_grey_resized.data(), in_w*in_c)) {
+	// if (!stbi_write_png(path.c_str(), in_w, IN_H, in_c, word_img_resized.data(), in_w*in_c)) {
 	// 	throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
 	// }
 
@@ -189,7 +192,7 @@ void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
 			for (int c = 0; c < in_c; ++c) {
 				int src_index = y * in_w * in_c + x * in_c + c;
 				int dst_index = c * IN_H * in_w + y * in_w + x;
-				in[dst_index] = float(word_grey_resized[src_index]) / 255.0;
+				in[dst_index] = float(word_img_resized[src_index]) / 255.0;
 			}
 		}
 	}
@@ -202,7 +205,7 @@ void TextRecognizer::run_nn(const stb::Image& image, const Word& word) {
 
 #define THRESHOLD -10.0
 
-std::vector<Char> TextRecognizer::decode_word(Word& word) {
+std::vector<Char> TextRecognizer::run_postprocessing(const Word& word) {
 	float ratio = float(word.rect.width()) / out_w;
 	std::vector<Char> result;
 	int prev_max_pos = -1;
@@ -235,17 +238,18 @@ std::vector<Char> TextRecognizer::decode_word(Word& word) {
 		});
 
 		Char char_;
+		char_.image = word.image;
 		char_.rect.top = word.rect.top;
 		char_.rect.bottom = word.rect.bottom;
 		char_.rect.left = word.rect.left + std::floor(x * ratio);
 		char_.rect.right = word.rect.left + std::ceil(x * ratio);
 		for (auto it = symbols_indexes.begin(); it != end; ++it) {
-			for (auto& alternative: symbols.at(*it)) {
-				char_.alternatives.push_back(alternative);
+			for (auto& code: symbols.at(*it)) {
+				char_.codes.push_back(code);
 			}
 		}
-		if (char_.alternatives.size() == 0) {
-			throw std::runtime_error("What the fuck?");
+		if (char_.codes.size() == 0) {
+			throw std::runtime_error("TextRecognizer error");
 		}
 		result.push_back(char_);
 	}

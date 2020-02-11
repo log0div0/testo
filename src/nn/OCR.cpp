@@ -3,10 +3,45 @@
 #include <utf8.hpp>
 #include <iostream>
 #include <algorithm>
+#include "TextDetector.hpp"
+#include "TextRecognizer.hpp"
 
 namespace nn {
 
-std::vector<Rect> OCRResult::search(const std::string& query_str, const std::string& fg_color, const std::string& bg_color) {
+bool Char::match(const std::string& query) {
+	for (auto& code: codes) {
+		if (code == query) {
+			return true;
+		}
+	}
+	return false;
+}
+
+std::vector<Rect> TextLine::search(const std::vector<std::string>& query) {
+	if (chars.size() < query.size()) {
+		return {};
+	}
+	std::vector<Rect> result;
+	for (size_t i = 0; i < (chars.size() - query.size() + 1); ++i) {
+		bool match = true;
+		for (size_t j = 0; j < query.size(); ++j) {
+			if (!chars[i + j].match(query[j])) {
+				match = false;
+				break;
+			}
+		}
+		if (match) {
+			Rect rect = chars[i].rect;
+			for (size_t j = 1; j < query.size(); ++j) {
+				rect |= chars[i + j].rect;
+			}
+			result.push_back(rect);
+		}
+	}
+	return result;
+}
+
+std::vector<Rect> OCR::search(const std::string& query_str, const std::string& color, const std::string& backgroundColor) {
 	std::vector<std::string> query;
 	for (auto& char_: utf8::split_to_chars(query_str)) {
 		if (char_ == " ") {
@@ -23,20 +58,14 @@ std::vector<Rect> OCRResult::search(const std::string& query_str, const std::str
 	return result;
 }
 
-OCR& OCR::instance() {
-	static OCR ocr;
-	return ocr;
-}
-
-OCRResult OCR::run(const stb::Image& image) {
-	std::vector<Word> words = detector.detect(image);
+OCR::OCR(const stb::Image* image_): image(image_) {
+	std::vector<Word> words = TextDetector::instance().detect(image);
 
 	std::sort(words.begin(), words.end(), [](const Word& a, const Word& b) {
 		return a.rect.left < b.rect.left;
 	});
 
 	std::vector<bool> visited_words(words.size(), false);
-	std::vector<TextLine> textlines;
 	for (size_t i = 0; i < words.size(); ++i) {
 		if (visited_words[i]) {
 			continue;
@@ -45,8 +74,9 @@ OCRResult OCR::run(const stb::Image& image) {
 		size_t a = i;
 
 		TextLine textline;
+		textline.image = image;
 		textline.rect = words[a].rect;
-		for (auto& char_: recognizer.recognize(image, words[a])) {
+		for (auto& char_: TextRecognizer::instance().recognize(words[a])) {
 			textline.chars.push_back(char_);
 		}
 		textline.words.push_back(words[a]);
@@ -68,7 +98,7 @@ textline_next:
 				if ((min_bottom - max_top) >= (mean_height / 2)) {
 					visited_words[j] = true;
 					textline.rect |= words[b].rect;
-					for (auto& char_: recognizer.recognize(image, words[b])) {
+					for (auto& char_: TextRecognizer::instance().recognize(words[b])) {
 						textline.chars.push_back(char_);
 					}
 					textline.words.push_back(words[b]);
@@ -85,10 +115,6 @@ textline_finish:
 	std::sort(textlines.begin(), textlines.end(), [](const TextLine& a, const TextLine& b) {
 		return a.rect.top < b.rect.top;
 	});
-
-	OCRResult result;
-	result.textlines = std::move(textlines);
-	return result;
 }
 
 }
