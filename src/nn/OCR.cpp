@@ -64,10 +64,10 @@ std::vector<Rect> TextLine::search(const std::vector<std::string>& query, const 
 				++matchBackgroundColor;
 			}
 		}
-		if (matchColor <= (query.size() / 2)) {
+		if (matchColor < (query.size() / 2)) {
 			continue;
 		}
-		if (matchBackgroundColor <= (query.size() / 2)) {
+		if (matchBackgroundColor < (query.size() / 2)) {
 			continue;
 		}
 		Rect rect = chars[i].rect;

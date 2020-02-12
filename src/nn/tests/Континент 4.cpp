@@ -89,4 +89,15 @@ TEST_CASE("Континент 4/Локальное меню") {
 		nn::Context context(&image);
 		CHECK(context.ocr().search("Сертификаты УЦ").size() == 1);
 	}
+	{
+		stb::Image image("Континент 4/Локальное меню/Очистить локальные журналы.png");
+		nn::Context context(&image);
+		CHECK(context.ocr().search("Очистить локальные журналы?").size() == 1);
+		CHECK(context.ocr().search("Да").size() == 1);
+		CHECK(context.ocr().search("Да", "blue", "gray").size() == 1);
+		CHECK(context.ocr().search("Да", "gray", "blue").size() == 0);
+		CHECK(context.ocr().search("Нет").size() == 1);
+		CHECK(context.ocr().search("Нет", "gray", "blue").size() == 1);
+		CHECK(context.ocr().search("Нет", "blue", "gray").size() == 0);
+	}
 }
