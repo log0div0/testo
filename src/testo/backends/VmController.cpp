@@ -40,16 +40,7 @@ void VmController::create() {
 		}
 
 		fs::path iso_file = config.at("iso").get<std::string>();
-		if (iso_file.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			iso_file = src_file.parent_path() / iso_file;
-		}
-		iso_file = fs::canonical(iso_file);
-
-		if (!fs::exists(iso_file)) {
-			throw std::runtime_error("Target iso file doesn't exist");
-		}
-
+		
 		config.erase("src_file");
 		config.erase("metadata");
 
@@ -93,6 +84,10 @@ void VmController::undefine() {
 void VmController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
 {
 	try {
+		if (hypervisor_snapshot_needed && vm->is_flash_plugged(nullptr)) {
+			throw std::runtime_error("Can't take hypervisor snapshot with a flash drive plugged in. Please unplug the flash drive before the end of the test");
+		}
+
 		if (has_snapshot(snapshot)) {
 			delete_snapshot_with_children(snapshot);
 		}
@@ -123,7 +118,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 			write_metadata_file(parent_metadata_file, parent_metadata);
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("creating snapshot"));
+		std::throw_with_nested(std::runtime_error("creating snapshot " + snapshot));
 	}
 }
 

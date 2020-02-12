@@ -5,15 +5,19 @@ network nat {
 	mode: "nat"
 }
 
-network net1 {
+network sgw1_inner {
 	mode: "internal"
 }
 
-network net2 {
+network sgw2_inner {
 	mode: "internal"
 }
 
-network net3 {
+network sgw1_outer {
+	mode: "internal"
+}
+
+network sgw2_outer {
 	mode: "internal"
 }
 
@@ -21,19 +25,39 @@ param default_password "1111"
 
 param sgw1_login "vpn-sgw1"
 param sgw1_host_name "vpn-sgw1"
+param sgw1_inner_ip "192.168.1.1"
+param sgw1_inner_ip_netmask "24"
+param sgw1_outer_ip "192.168.2.2"
+param sgw1_outer_ip_netmask "24"
 
 param sgw2_login "vpn-sgw2"
 param sgw2_host_name "vpn-sgw2"
+param sgw2_inner_ip "192.168.4.1"
+param sgw2_inner_ip_netmask "24"
+param sgw2_outer_ip "192.168.3.2"
+param sgw2_outer_ip_netmask "24"
 
 param client1_login "vpn-client1"
 param client1_host_name "vpn-client1"
+param client1_main_ip "192.168.1.2"
+param client1_main_ip_netmask "24"
 
 param client2_login "vpn-client2"
 param client2_host_name "vpn-client2"
+param client2_main_ip "192.168.4.2"
+param client2_main_ip_netmask "24"
 
-machine vpn_sgw1 {
+param router_login "vpn-router"
+param router_host_name "vpn-router"
+param router_sgw1_side_ip "192.168.2.1"
+param router_sgw1_side_ip_netmask "24"
+param router_sgw2_side_ip "192.168.3.1"
+param router_sgw2_side_ip_netmask "24"
+
+
+machine sgw1 {
 	cpus: 1
-	ram: 1024Mb
+	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
@@ -42,21 +66,21 @@ machine vpn_sgw1 {
 	}
 
 	nic WAN: {
-		attached_to: "net2"
+		attached_to: "sgw1_outer"
 		mac: "52:54:00:00:00:00"
 		adapter_type: "e1000"
 	}
 
 	nic LAN: {
-		attached_to: "net1"
+		attached_to: "sgw1_inner"
 		mac: "52:54:00:00:00:11"
 		adapter_type: "e1000"
 	}
 }
 
-machine vpn_sgw2 {
+machine sgw2 {
 	cpus: 1
-	ram: 1024Mb
+	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk_size: 4Gb
 	nic nat: {
@@ -65,19 +89,19 @@ machine vpn_sgw2 {
 	}
 
 	nic WAN: {
-		attached_to: "net2"
+		attached_to: "sgw2_outer"
 		mac: "52:54:00:00:11:00"
 		adapter_type: "e1000"
 	}
 
 	nic LAN: {
-		attached_to: "net3"
+		attached_to: "sgw2_inner"
 		mac: "52:54:00:00:11:11"
 		adapter_type: "e1000"
 	}
 }
 
-machine vpn_client1 {
+machine client1 {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
@@ -89,13 +113,13 @@ machine vpn_client1 {
 	}
 
 	nic LAN: {
-		attached_to: "net1"
+		attached_to: "sgw1_inner"
 		mac: "52:54:00:00:22:00"
 		adapter_type: "e1000"
 	}
 }
 
-machine vpn_client2 {
+machine client2 {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
@@ -107,107 +131,157 @@ machine vpn_client2 {
 	}
 
 	nic LAN: {
-		attached_to: "net3"
+		attached_to: "sgw2_inner"
 		mac: "52:54:00:00:33:00"
 		adapter_type: "e1000"
 	}
 }
 
+machine router {
+	cpus: 1
+	ram: 512Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 5Gb
 
+	nic nat: {
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
 
-test sgws_installed {
-	vpn_sgw1 install_ubuntu("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
-	vpn_sgw2 install_ubuntu("${sgw2_host_name}", "${sgw2_login}", "${default_password}")
+	nic sgw1_side: {
+		attached_to: "sgw1_outer"
+		mac: "52:54:00:00:44:00"
+		adapter_type: "e1000"
+	}
+
+	nic sgw2_side: {
+		attached_to: "sgw2_outer"
+		mac: "52:54:00:00:44:11"
+		adapter_type: "e1000"
+	}
 }
 
-test clients_installed {
-	vpn_client1 install_ubuntu("${client1_host_name}", "${client1_login}", "${default_password}")
-	vpn_client2 install_ubuntu("${client2_host_name}", "${client2_login}", "${default_password}")
+test sgws_install_ubuntu {
+	sgw1 install_ubuntu("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
+	sgw2 install_ubuntu("${sgw2_host_name}", "${sgw2_login}", "${default_password}")
 }
 
-test sgws_guest_additions: sgws_installed  {
-	vpn_sgw1 install_guest_additions("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
-	vpn_sgw2 install_guest_additions("${sgw2_host_name}", "${sgw2_login}", "${default_password}")
-}
+test sgws_prepare: sgws_install_ubuntu  {
+	sgw1 install_guest_additions("${sgw1_host_name}", "${sgw1_login}", "${default_password}")
+	sgw2 install_guest_additions("${sgw2_host_name}", "${sgw2_login}", "${default_password}")
 
-test clients_guest_additions: clients_installed {
-	vpn_client1 install_guest_additions("${client1_host_name}", "${client1_login}", "${default_password}")
-	vpn_client2 install_guest_additions("${client2_host_name}", "${client2_login}", "${default_password}")
-}
-
-test sgws_pkgs: sgws_guest_additions {
-	vpn_sgw1, vpn_sgw2 {
+	sgw1, sgw2 {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
 		exec bash "chmod +x /tmp/rename_net.sh"
 	}
 
-	vpn_sgw1 {
+	sgw1 {
 		exec bash """
 			/tmp/rename_net.sh 52:54:00:00:00:00 WAN
 			/tmp/rename_net.sh 52:54:00:00:00:11 LAN
+			apt-get update
 			while true
 			do
-				dhclient -r
-				dhclient
 				apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break
 			done
 		"""
 	}
 
-	vpn_sgw2 {
+	sgw2 {
 		exec bash """
 			/tmp/rename_net.sh 52:54:00:00:11:00 WAN
 			/tmp/rename_net.sh 52:54:00:00:11:11 LAN
+			apt-get update
 			while true
 			do
-				dhclient -r
-				dhclient
 				apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config && break
 			done
 		"""
 	}
 
-	vpn_sgw1 unplug_nat("${sgw1_login}", "${default_password}")
-	vpn_sgw2 unplug_nat("${sgw2_login}", "${default_password}")
+	sgw1 unplug_nat("${sgw1_login}", "${default_password}")
+	sgw2 unplug_nat("${sgw2_login}", "${default_password}")
+
+	sgw1 {
+		exec bash "ip a a ${sgw1_inner_ip}/${sgw1_inner_ip_netmask} dev LAN"
+		exec bash "ip a a ${sgw1_outer_ip}/${sgw2_inner_ip_netmask} dev WAN"
+		exec bash "ip l s LAN up"
+		exec bash "ip l s WAN up"
+		exec bash "ip r a default via ${router_sgw1_side_ip}"
+		exec bash "sysctl net.ipv4.ip_forward=1"
+	}
+
+	sgw2 {
+		exec bash "ip a a ${sgw2_inner_ip}/${sgw2_inner_ip_netmask} dev LAN"
+		exec bash "ip a a ${sgw2_outer_ip}/${sgw2_outer_ip_netmask} dev WAN"
+		exec bash "ip l s LAN up"
+		exec bash "ip l s WAN up"
+		exec bash "ip r a default via ${router_sgw2_side_ip}"
+		exec bash "sysctl net.ipv4.ip_forward=1"
+	}
+
 }
 
-test clients_net_renamed: clients_guest_additions {
-	vpn_client1, vpn_client2 {
+test clients_install_ubuntu {
+	client1 install_ubuntu("${client1_host_name}", "${client1_login}", "${default_password}")
+	client2 install_ubuntu("${client2_host_name}", "${client2_login}", "${default_password}")
+}
+
+test clients_prepare: clients_install_ubuntu {
+	client1 install_guest_additions("${client1_host_name}", "${client1_login}", "${default_password}")
+	client2 install_guest_additions("${client2_host_name}", "${client2_login}", "${default_password}")
+
+	client1 unplug_nat("${client1_login}", "${default_password}")
+	client2 unplug_nat("${client2_login}", "${default_password}")
+
+	client1, client2 {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
 		exec bash "chmod +x /tmp/rename_net.sh"
 	}
 
-	vpn_client1 {
+	client1 {
 		exec bash "/tmp/rename_net.sh 52:54:00:00:22:00 LAN"
+		exec bash "ip a a ${client1_main_ip}/${client1_main_ip_netmask} dev LAN"
+		exec bash "ip l s LAN up"
+		exec bash "ip r a default via ${sgw1_inner_ip}"
 	}
 
-	vpn_client2 {
+	client2 {
 		exec bash "/tmp/rename_net.sh 52:54:00:00:33:00 LAN"
+		exec bash "ip a a ${client2_main_ip}/${client2_main_ip_netmask} dev LAN"
+		exec bash "ip l s LAN up"
+		exec bash "ip r a default via ${sgw2_inner_ip}"
 	}
-
-	vpn_client1 unplug_nat("${client1_login}", "${default_password}")
-	vpn_client2 unplug_nat("${client2_login}", "${default_password}")
 }
 
-test install_wireguard: sgws_pkgs {
-	vpn_sgw1, vpn_sgw2 {
-		copyto "./WireGuard.tar.xz" "/opt/WireGuard.tar.xz"
+test router_install_ubuntu {
+	router install_ubuntu("${router_host_name}", "${router_login}", "${default_password}")
+}
+
+test router_prepare: router_install_ubuntu {
+	router {
+		install_guest_additions("${router_host_name}", "${router_login}", "${default_password}")
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:44:00 sgw1_side"
+		exec bash "/tmp/rename_net.sh 52:54:00:00:44:11 sgw2_side"
 
 		exec bash """
-			cd /opt
-			tar -xf WireGuard.tar.xz
-			cd WireGuard/src
-			make
-			make install
-			modprobe wireguard
-			lsmod | fgrep wireguard
+			apt-get update
+			while true
+			do
+				apt-get install -y libmnl-dev libelf-dev linux-headers-$(uname -r) build-essential pkg-config python-scapy && break
+			done
 		"""
-		wait timeout 1s
 	}
 
-}
+	router unplug_nat("${router_login}", "${default_password}")
 
-flash pubkey_flash {
-	fs: "ntfs"
-	size: 32Mb
+	router {
+		exec bash "ip a a ${router_sgw1_side_ip}/${router_sgw1_side_ip_netmask} dev sgw1_side"
+		exec bash "ip a a ${router_sgw2_side_ip}/${router_sgw2_side_ip_netmask} dev sgw2_side"
+		exec bash "ip l s sgw1_side up"
+		exec bash "ip l s sgw2_side up"
+		exec bash "sysctl -w net.ipv4.ip_forward=1"
+	}
 }

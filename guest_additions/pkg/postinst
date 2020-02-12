@@ -1,5 +1,11 @@
 #!/bin/bash -e
 
-systemctl daemon-reload
-systemctl enable testo-guest-additions
-systemctl start testo-guest-additions
+if [ -x "$(command -v update-rc.d)" ]; then
+	update-rc.d testo-guest-additions defaults
+fi
+
+if [ -x "$(command -v chkconfig)" ]; then
+	chkconfig testo-guest-additions on
+fi
+
+service testo-guest-additions start

@@ -31,6 +31,18 @@ Connect& Connect::operator =(Connect&& other) {
 	return *this;
 }
 
+pugi::xml_document Connect::get_capabilities() const {
+	char* xml = virConnectGetCapabilities(handle);
+	if (!xml) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	pugi::xml_document result;
+	result.load_string(xml);
+	free(xml);
+	return result;
+}
+
 std::vector<Domain> Connect::domains(std::initializer_list<virConnectListAllDomainsFlags> flags) const {
 	std::vector<Domain> result;
 

@@ -41,8 +41,10 @@ void NetworkController::undefine() {
 
 		network->undefine();
 
-		if (!fs::remove_all(metadata_dir)) {
-			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		if (fs::exists(metadata_dir)) {
+			if (!fs::remove_all(metadata_dir)) {
+				throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+			}
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("undefining network controller"));

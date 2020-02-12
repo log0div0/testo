@@ -22,16 +22,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		throw std::runtime_error("Constructing QemuVM " + id() + " error: field CPUS is not specified");
 	}
 
-	if (!config.count("iso")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field ISO is not specified");
-	}
-
-	fs::path iso_path(config.at("iso").get<std::string>());
-	if (!fs::exists(iso_path)) {
-		throw std::runtime_error(std::string("Constructing QemuVM " + id() + " error: specified iso file does not exist: ")
-			+ iso_path.generic_string());
-	}
-
 	if (!config.count("disk_size")) {
 		throw std::runtime_error("Constructing QemuVM error: field DISK SIZE is not specified");
 	}
@@ -210,7 +200,7 @@ void QemuVM::install() {
 					<partition>/machine</partition>
 				</resource>
 				<os>
-					<type arch='x86_64' machine='ubuntu'>hvm</type>
+					<type>hvm</type>
 					<boot dev='cdrom'/>
 					<boot dev='hd'/>
 				</os>
@@ -236,7 +226,6 @@ void QemuVM::install() {
 					<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
 				</metadata>
 				<devices>
-					<emulator>/usr/bin/kvm-spice</emulator>
 					<disk type='file' device='disk'>
 						<driver name='qemu' type='qcow2'/>
 						<source file='{}'/>
@@ -370,7 +359,7 @@ void QemuVM::make_snapshot(const std::string& snapshot) {
 
 		domain.snapshot_create_xml(xml_config);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot")));
+		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot {}", snapshot)));
 	}
 
 }
@@ -388,6 +377,9 @@ void QemuVM::rollback(const std::string& snapshot) {
 			//Possible variations:
 			//If we have something plugged - let's unplug it
 			if (current_dvd.length()) {
+				if (domain.state() != VIR_DOMAIN_SHUTOFF) {
+					stop();
+				}
 				unplug_dvd();
 			}
 
