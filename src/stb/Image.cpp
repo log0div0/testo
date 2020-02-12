@@ -7,6 +7,8 @@
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include <stb_image_resize.h>
 
 namespace stb {
 
@@ -17,11 +19,14 @@ Image::Image(int w, int h, int c) {
 	data = (uint8_t*)stbi__malloc(w*h*c);
 }
 
-Image::Image(const std::string& path) {
-	data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+Image::Image(const char* path) {
+	data = stbi_load(path, &width, &height, &channels, 0);
 	if (!data) {
-		throw std::runtime_error("Cannot load image " + path + " because " + stbi_failure_reason());
+		throw std::runtime_error("Cannot load image " + std::string(path) + " because " + stbi_failure_reason());
 	}
+}
+
+Image::Image(const std::string& path): Image(path.c_str()) {
 }
 
 Image::Image(const uint8_t* buffer, size_t buffer_len) {

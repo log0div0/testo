@@ -11,7 +11,7 @@
 #include <wildcards.hpp>
 #include <rang.hpp>
 
-#include "nn/text_detector/TextDetector.hpp"
+#include "nn/Context.hpp"
 
 #include <license/License.hpp>
 
@@ -733,7 +733,8 @@ bool VisitorInterpreter::eval_js(const std::string& script, stb::Image& screensh
 	try {
 		auto js_ctx = js_runtime.create_context();
 		js_ctx.register_nn_functions();
-		js_ctx.set_opaque(&screenshot);
+		nn::Context nn_ctx(&screenshot);
+		js_ctx.set_opaque(&nn_ctx);
 		auto value = js_ctx.eval(script);
 
 		if (!value.is_bool()) {
@@ -750,7 +751,7 @@ bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectabl
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		return TextDetector::instance().detect(screenshot, text, "", "").size();
+		return nn::OCR(&screenshot).search(text).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
 		return eval_js(script, screenshot);

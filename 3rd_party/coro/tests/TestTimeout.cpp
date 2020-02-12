@@ -47,8 +47,6 @@ TEST_CASE("The timeout fired when the coro was busy", "[Timeout]") {
 }
 
 TEST_CASE("Cancel timeout", "[Timeout]") {
-	auto coro = Coro::current();
-
 	{
 		Timeout timeout(100ms);
 	}

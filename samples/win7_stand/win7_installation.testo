@@ -1,8 +1,12 @@
-machine testo_win7 {
-	cpus: 1
+network nat {
+	mode: "nat"
+}
+
+machine win7 {
+	cpus: 2
 	ram: 2Gb
-	iso: $ISO_DIR + "/win7.iso"
-	disk_size: 10Gb
+	iso: "${ISO_DIR}/win7.iso"
+	disk_size: 15Gb
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
@@ -10,14 +14,35 @@ machine testo_win7 {
 }
 
 test win7_installation {
-	testo_win7 {
+	win7 {
 		start
-		wait timeout 2s
+		wait "Choose an operating system"
 		press Down, Enter
-		wait timeout 35s
-		mouse click
-		wait timeout 3s
-		mouse click +160 +125
-		abort "stop here"
+		wait "Мой язык - русский" timeout 2m; press Down*2, Enter
+		wait "Выберите нужный язык"; press Enter
+		wait "Установить"; press Enter
+		wait "Выберите операционную систему"; press Enter
+		wait "Условия лицензии"; press Space, Enter
+		wait "Выберите тип установки"; press Down, Enter
+		wait "Где вы хотите установить Windows?"; press Enter
+		wait "Выберите имя пользователя" timeout 15m
+		unplug dvd
+		press LeftShift + LeftAlt; type "testo"; press Enter
+		wait "Установите пароль"; press Enter
+		wait "Введите ключ продукта"; press Tab, Space, Tab*3, Enter
+		wait "Помогите автоматически защитить компьютер"; press Down*2, Enter
+		wait "Проверьте настройку даты и времени"; press Enter
+		wait "Выберите текущее место расположения компьютера"; press Enter
+		wait "Корзина" timeout 10m
+		shutdown
+		start
+		wait "Корзина"
+	}
+}
+
+test guest_additions: win7_installation {
+	win7 {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		wait "Автозапуск"
 	}
 }

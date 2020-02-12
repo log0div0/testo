@@ -51,7 +51,6 @@ test install_astralinux {
 		wait "${host_name} login:" timeout 5m; type "${login}"; press Enter
 		wait "Password:"; type "${password}"; press Enter
 		wait "${login}@${host_name}:"
-
 	}
 }
 
@@ -59,5 +58,42 @@ test install_guest_additions: install_astralinux {
 	astra {
 		install_guest_additions("${host_name}", "${login}", "${password}")
 		exec bash "echo Hello world"
+	}
+}
+
+test install_astralinux_gui {
+	astra {
+		start
+		wait "ASTRALINUX"; press Enter;
+		wait !"Русский"; press Enter
+		wait "Лицензия"; press Enter
+		wait "Настройка клавиатуры"; press Enter
+		wait "Введите имя этого компьютера" timeout 5m;
+		press Backspace; type "${host_name}"; press Enter
+		wait "Выберите имя учётной записи администратора"; type "${login}"; press Enter
+		wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}"; press Enter
+		wait "Выберите часовой пояс"; press Enter
+		wait "Метод разметки"; press Enter
+		wait "Заметим, что все данные на выбранном диске будут стерты"; press Enter
+		wait "Схема разметки"; press Enter
+		wait "Закончить разметку и записать изменения на диск"; press Enter
+		wait "Записать изменения на диск?"; press Down, Enter
+		wait "Выберите устанавливаемое программное обеспечение" timeout 10m;
+		press Down*2, Space
+		press Down, Space
+		press Down, Space
+		press Down, Space
+		press Down*5, Space
+		press Tab, Enter
+
+		wait "Дополнительные настройки ОС" timeout 15m; press Tab, Enter
+		wait "Похоже, что данная система будет единственной"; press Enter
+		wait "Устройство для установки системного загрузчика"; press Down, Enter
+		wait "Установка завершена"
+		wait timeout 5s
+		unplug dvd
+		press Enter
+		wait "Вход" timeout 10m; type "${login}"; press Tab; type "${password}"; press Enter
+		wait "Корзина"
 	}
 }

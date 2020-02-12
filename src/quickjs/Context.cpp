@@ -1,6 +1,6 @@
 
 #include "Context.hpp"
-#include "nn/text_detector/TextDetector.hpp"
+#include "nn/Context.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -109,38 +109,38 @@ JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 #pragma GCC diagnostic pop
 	}
 
-	stb::Image* current_image = (stb::Image*)JS_GetContextOpaque(ctx);
+	nn::Context* nn_context = (nn::Context*)JS_GetContextOpaque(ctx);
 
 	const char* text = nullptr;
-	const char* foreground = nullptr;
-	const char* background = nullptr;
+	const char* color = nullptr;
+	const char* background_color = nullptr;
 
-	std::string text_string, foreground_string, background_string;
+	std::string text_string, color_string, background_color_string;
 	text = JS_ToCString(ctx, argv[0]);
 	text_string = text;
 
 	if (argc > 1) {
-		foreground = JS_ToCString(ctx, argv[1]);
-		foreground_string = foreground;
+		color = JS_ToCString(ctx, argv[1]);
+		color_string = color;
 	}
 
 	if (argc > 2) {
-		background = JS_ToCString(ctx, argv[2]);
-		background_string = background;
+		background_color = JS_ToCString(ctx, argv[2]);
+		background_color_string = background_color;
 	}
 
-	auto result = TextDetector::instance().detect(*current_image, text_string, foreground_string, background_string);
+	auto result = nn_context->ocr().search(text_string, color_string, background_color_string);
 
 	if (text) {
 		JS_FreeCString(ctx, text);
 	}
 
-	if (foreground) {
-		JS_FreeCString(ctx, foreground);
+	if (color) {
+		JS_FreeCString(ctx, color);
 	}
 
-	if (background) {
-		JS_FreeCString(ctx, background);
+	if (background_color) {
+		JS_FreeCString(ctx, background_color);
 	}
 
 	auto res = JS_NewBool(ctx, result.size());
