@@ -29,7 +29,7 @@ net.train()
 
 optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
 
-criterion = nn.NLLLoss()
+criterion = nn.NLLLoss(reduction='none')
 
 if not os.path.isdir("checkpoints"):
 	os.mkdir("checkpoints")
@@ -51,12 +51,11 @@ try:
 			loss_color = criterion(preds[:,:len(colors)], color)
 			loss_background_color = criterion(preds[:,len(colors):], background_color)
 			loss_total = loss_color + loss_background_color
+			loss_total = loss_total.topk(loss_total.size(0) // 2)[0].mean()
 			loss_total.backward()
 			optimizer.step()
 
 			writer.add_scalar("loss/0-total", loss_total * 100, step)
-			writer.add_scalar("loss/1-color", loss_color * 100, step)
-			writer.add_scalar("loss/2-background_color", loss_background_color * 100, step)
 
 			step += 1
 

@@ -115,7 +115,7 @@ for root, dirs, files in os.walk(args.dataset_folder):
 
 dataset = torch.utils.data.ConcatDataset(datasets)
 
-data_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True)
 
 if __name__ == '__main__':
 	for data in data_loader:
