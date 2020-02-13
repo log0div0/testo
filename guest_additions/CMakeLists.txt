@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_subdirectory(src)
+add_subdirectory(pkg)
 
 if (UNIX)
-	add_subdirectory(pkg)
 	add_custom_target(testo-guest-additions-iso
 		COMMAND
 			rm -f testo-guest-additions.iso &&

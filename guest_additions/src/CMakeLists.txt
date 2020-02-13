@@ -13,5 +13,5 @@ if (UNIX)
 endif()
 
 if (WIN32)
-	add_executable(testo-guest-additions Server.cpp win/main.cpp)
+	add_executable(testo-guest-additions win/main.cpp)
 endif()
