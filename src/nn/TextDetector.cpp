@@ -74,8 +74,8 @@ void TextDetector::run_nn(const stb::Image* image) {
 		in.resize(in_c * in_pad_h * in_pad_w);
 		out.resize(out_c * out_pad_h * out_pad_w);
 
-		std::fill(in.begin(), in.end(), 0);
-		std::fill(out.begin(), out.end(), 0);
+		std::fill(in.begin(), in.end(), (uint8_t)0);
+		std::fill(out.begin(), out.end(), (uint8_t)0);
 
 		in_tensor = std::make_unique<Ort::Value>(
 			Ort::Value::CreateTensor<float>(memory_info, in.data(), in.size(), in_shape.data(), in_shape.size()));
