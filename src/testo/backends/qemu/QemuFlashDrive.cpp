@@ -78,10 +78,6 @@ bool QemuFlashDrive::is_defined() {
 
 void QemuFlashDrive::create() {
 	try {
-		if (std::system("lsmod | grep nbd > /dev/null")) {
-			throw std::runtime_error("Please load nbd module (max parts=1)");
-		}
-
 		if (is_defined()) {
 			undefine();
 		}
