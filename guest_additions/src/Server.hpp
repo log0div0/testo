@@ -1,23 +1,16 @@
 
 #pragma once
 
-#include <string>
-#include <nlohmann/json.hpp>
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
+#include "Channel.hpp"
 
 struct Server {
 	Server(const fs::path& fd_path);
-	~Server();
 	Server(const Server&) = delete;
 	Server& operator=(const Server&) = delete;
 
 	void run();
 
 private:
-	nlohmann::json read();
-	void send(const nlohmann::json& response);
 
 	void handle_command(const nlohmann::json& command);
 	void handle_check_avaliable();
@@ -30,6 +23,6 @@ private:
 	void handle_execute(const nlohmann::json& args);
 
 	void send_error(const std::string& error);
-	int fd = 0;
+	Channel channel;
 	const fs::path fd_path;
 };

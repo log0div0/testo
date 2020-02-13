@@ -11,7 +11,7 @@
 
 #include <clipp.h>
 
-#include "Server.hpp"
+#include "../Server.hpp"
 
 #define APP_NAME "testo-guest-additions"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
