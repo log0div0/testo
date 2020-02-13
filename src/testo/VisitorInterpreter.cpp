@@ -315,7 +315,9 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 }
 
 bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
-	for (auto parent: test->parents) {
+	auto all_parents = reg.get_test_path(test);
+
+	for (auto parent: all_parents) {
 		for (auto cache_missed_test: cache_missed_tests) {
 			if (parent == cache_missed_test) {
 				return false;
