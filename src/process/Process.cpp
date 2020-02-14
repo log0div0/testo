@@ -112,8 +112,7 @@ Process::Process(const std::string& cmd) {
 	siStartInfo.hStdError = out_write.handle;
 	siStartInfo.hStdOutput = out_write.handle;
 	siStartInfo.hStdInput = in_read.handle;
-	siStartInfo.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-	siStartInfo.wShowWindow = SW_HIDE;
+	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
 
 	PROCESS_INFORMATION info = {};
 
