@@ -179,7 +179,7 @@ void Server::handle_execute(const nlohmann::json& args) {
 
 	Process process(cmd);
 
-	while (process.is_running()) {
+	while (!process.eof()) {
 		std::string output = process.read();
 		if (output.size()) {
 			nlohmann::json result = {
