@@ -168,6 +168,8 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		{"PAGEDOWN", 109},
 		{"INSERT", 110},
 		{"DELETE", 111},
+		{"LEFTMETA", 125},
+		{"RIGHTMETA", 126},
 		{"SCROLLUP", 177},
 		{"SCROLLDOWN", 178},
 	});

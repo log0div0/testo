@@ -94,6 +94,8 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	keys.insert("DELETE");
 	keys.insert("SCROLLUP");
 	keys.insert("SCROLLDOWN");
+	keys.insert("LEFTMETA");
+	keys.insert("RIGHTMETA");
 
 	//init attr ctx
 	attr_ctx vm_global_ctx;
@@ -541,7 +543,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 		fs::path src_file(config.at("src_file").get<std::string>());
 		iso_file = src_file.parent_path() / iso_file;
 	}
-	
+
 	if (!fs::exists(iso_file)) {
 		throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
 	}

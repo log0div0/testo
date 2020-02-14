@@ -43,7 +43,22 @@ test win7_installation {
 test guest_additions: win7_installation {
 	win7 {
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		wait "Автозапуск"
+		wait "Автозапуск"; press Enter
+		wait "Вас приветствует мастер установки"; press Enter
+		wait "Выбор папки для установки"; press Enter
+		wait "Подтверждение установки"; press Enter
+		wait "Разрешить внесение изменений"; press Left, Enter
+		wait "Не удалось проверить издателя этих драйверов";
+		press LeftAlt+Tab+Right # окно установки драйвером не в фокусе, переключаемся на него
+		wait timeout 2s
+		press Down, Enter
+		wait "Установка завершена"; press Enter
+		wait !"Установка завершена"
+		press LeftMeta+R
+		wait "Введите имя программы"
+		press LeftAlt+LeftShift; type "cmd"; press Enter
+		wait "C:\\Users\\testo>"
+		press LeftAlt+LeftShift; type "\"C:\\Program Files\\Testo Lang\\Testo Guest Additions\\testo-guest-additions.exe\""; press Enter
 		abort "stop here"
 	}
 }
