@@ -8,16 +8,16 @@
 #include <stdexcept>
 #include <fstream>
 
-Server::Server(const fs::path& fd_path_): fd_path(fd_path_) {}
+Server::Server(const std::string& fd_path_): fd_path(fd_path_) {}
 
 void Server::run() {
 	channel = Channel(fd_path);
 
-	spdlog::info("Connected to " + fd_path.generic_string());
+	spdlog::info("Connected to " + fd_path);
 	spdlog::info("Waiting for commands");
 
 	while (true) {
-		auto command = channel.read();
+		auto command = channel.receive();
 		handle_command(command);
 	}
 }

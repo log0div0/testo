@@ -11,6 +11,8 @@
 #include <setupapi.h>
 #include <initguid.h>
 
+#include "../Channel.hpp"
+
 namespace fs = std::filesystem;
 
 // using convert_type = std::codecvt_utf8<wchar_t>;
@@ -102,6 +104,10 @@ int main(int argc, char** argv) {
 		spdlog::info("HardwareDeviceInfo OK");
 		std::string device_path = info.getDeviceInterfaceDetail();
 		spdlog::info("device_path = " + device_path);
+		Channel channel(device_path);
+		spdlog::info("Channel OK");
+		auto request = channel.receive();
+		spdlog::info(request.dump(4));
 	}
 	catch (const std::exception& error) {
 		spdlog::error(error.what());

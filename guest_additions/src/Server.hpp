@@ -3,8 +3,16 @@
 
 #include "Channel.hpp"
 
+#ifdef __GNUC__
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
+
 struct Server {
-	Server(const fs::path& fd_path);
+	Server(const std::string& fd_path);
 	Server(const Server&) = delete;
 	Server& operator=(const Server&) = delete;
 
@@ -24,5 +32,5 @@ private:
 
 	void send_error(const std::string& error);
 	Channel channel;
-	const fs::path fd_path;
+	const std::string fd_path;
 };
