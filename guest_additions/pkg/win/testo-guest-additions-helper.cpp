@@ -24,7 +24,6 @@ enum class Command {
 };
 
 #define APP_NAME "testo-guest-additions-helper"
-#define LOG_FILE_PATH "C:/log.txt"
 
 std::string targetdir;
 Command selected_command;
@@ -49,7 +48,14 @@ void install() {
 }
 
 int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
-	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(LOG_FILE_PATH);
+
+	char szFileName[MAX_PATH];
+	GetModuleFileName(NULL, szFileName, MAX_PATH);
+
+	fs::path path(szFileName);
+	path = path.replace_extension("txt");
+
+	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.generic_string());
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 	auto logger = std::make_shared<spdlog::logger>("basic_logger", spdlog::sinks_init_list{file_sink, console_sink});
 	logger->set_level(spdlog::level::info);

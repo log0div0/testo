@@ -13,4 +13,5 @@ endif()
 
 if (WIN32)
 	add_executable(testo-guest-additions win/main.cpp)
+	target_link_libraries(testo-guest-additions SetupAPI)
 endif()

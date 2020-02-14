@@ -54,10 +54,13 @@ test guest_additions: win7_installation {
 		press Down, Enter
 		wait "Установка завершена"; press Enter
 		wait !"Установка завершена"
-		press LeftMeta+R
-		wait "Введите имя программы"
-		press LeftAlt+LeftShift; type "cmd"; press Enter
-		wait "C:\\Users\\testo>"
+		press LeftMeta
+		press LeftAlt+LeftShift; type "cmd";
+		wait "Программы (1)";
+		press LeftCtrl+LeftShift+Enter
+		wait "Разрешить следующей программе внести изменения"
+		press Left, Enter
+		wait "C:\\Windows\\system32>"
 		press LeftAlt+LeftShift; type "\"C:\\Program Files\\Testo Lang\\Testo Guest Additions\\testo-guest-additions.exe\""; press Enter
 		abort "stop here"
 	}
