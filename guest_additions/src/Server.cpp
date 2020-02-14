@@ -17,8 +17,14 @@ void Server::run() {
 	spdlog::info("Waiting for commands");
 
 	while (true) {
-		auto command = channel.receive();
-		handle_command(command);
+		try {
+			auto command = channel.receive();
+			spdlog::info(command.dump(2));
+			handle_command(command);
+		} catch (const std::exception& error) {
+			spdlog::error(error.what());
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
 	}
 }
 
@@ -100,7 +106,7 @@ nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path&
 
 	std::noskipws(testFile);
 	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
-	std::string encoded = base64_encode(fileContents.data(), fileContents.size());
+	std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
 
 	nlohmann::json request = {
 			{"method", "copy_file"},
@@ -175,7 +181,9 @@ void Server::handle_execute(const nlohmann::json& args) {
 
 	spdlog::info("Executing command " + cmd);
 
+#if __linux__
 	cmd += " 2>&1";
+#endif
 
 	Process process(cmd);
 

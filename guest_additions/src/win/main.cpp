@@ -11,7 +11,7 @@
 #include <setupapi.h>
 #include <initguid.h>
 
-#include "../Channel.hpp"
+#include "../Server.hpp"
 
 namespace fs = std::filesystem;
 
@@ -99,15 +99,14 @@ int main(int argc, char** argv) {
 	spdlog::set_default_logger(logger);
 
 	try {
-		spdlog::info("hello world");
+		spdlog::info("Started");
 		HardwareDeviceInfo info((LPGUID)&GUID_VIOSERIAL_PORT);
 		spdlog::info("HardwareDeviceInfo OK");
 		std::string device_path = info.getDeviceInterfaceDetail();
 		spdlog::info("device_path = " + device_path);
-		Channel channel(device_path);
-		spdlog::info("Channel OK");
-		auto request = channel.receive();
-		spdlog::info(request.dump(4));
+		Server server(device_path);
+		spdlog::info("Server OK");
+		server.run();
 	}
 	catch (const std::exception& error) {
 		spdlog::error(error.what());
