@@ -5,11 +5,10 @@ if (UNIX)
 	set(SRCS
 		Server.cpp
 		linux/Channel.cpp
-		linux/Process.cpp
 		linux/main.cpp
 	)
 	add_executable(testo-guest-additions ${SRCS})
-	target_link_libraries(testo-guest-additions stdc++fs)
+	target_link_libraries(testo-guest-additions stdc++fs process)
 endif()
 
 if (WIN32)

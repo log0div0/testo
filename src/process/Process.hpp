@@ -4,6 +4,8 @@
 #include <string>
 
 struct Process {
+	static std::string exec(const std::string& cmd);
+
 	Process(const std::string& cmd);
 	~Process();
 

@@ -1,8 +1,17 @@
 
-#include "../Process.hpp"
+#include "Process.hpp"
 
 #include <stdexcept>
 #include <array>
+
+std::string Process::exec(const std::string& cmd) {
+	Process process(cmd);
+	std::string result;
+	while (process.is_running()) {
+		result += process.read();
+	}
+	return result;
+}
 
 Process::Process(const std::string& cmd) {
 	pipe = popen(cmd.c_str(), "r");
