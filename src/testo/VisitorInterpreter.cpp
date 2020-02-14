@@ -1152,7 +1152,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 		std::string hash = std::to_string(h(script));
 
 		fs::path host_script_dir = fs::temp_directory_path();
-		fs::path guest_script_dir = fs::path("/tmp");
+		fs::path guest_script_dir = vmc->vm->get_tmp_dir();
 
 		fs::path host_script_file = host_script_dir / std::string(hash + extension);
 		fs::path guest_script_file = guest_script_dir / std::string(hash + extension);

@@ -44,6 +44,7 @@ struct VboxVM: public VM {
 	void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) override;
 	void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) override;
 	void remove_from_guest(const fs::path& obj) override;
+	std::string get_tmp_dir() override;
 
 private:
 	void copy_dir_to_guest(const fs::path& src, const fs::path& dst, vbox::GuestSession& gsession);

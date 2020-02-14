@@ -34,6 +34,8 @@ void Server::handle_command(const nlohmann::json& command) {
 	try {
 		if (method_name == "check_avaliable") {
 			return handle_check_avaliable();
+		} else if (method_name == "get_tmp_dir") {
+			return handle_get_tmp_dir();
 		} else if (method_name == "copy_file") {
 			return handle_copy_file(command.at("args"));
 		} else if (method_name == "copy_files_out") {
@@ -71,12 +73,30 @@ void Server::handle_check_avaliable() {
 	spdlog::info("Checking avaliability is OK");
 }
 
+void Server::handle_get_tmp_dir() {
+	spdlog::info("Getting tmp dir");
+
+	nlohmann::json response = {
+		{"success", true},
+		{"result", {
+			{"path", fs::temp_directory_path().generic_string()}
+		}}
+	};
+
+	channel.send(response);
+	spdlog::info("Getting tmp dir is OK");
+}
+
 void Server::handle_copy_file(const nlohmann::json& args) {
 	for (auto file: args) {
 		auto content64 = file.at("content").get<std::string>();
 		auto content = base64_decode(content64);
 		fs::path dst = file.at("path").get<std::string>();
 		spdlog::info("Copying file to guest: " + dst.generic_string());
+
+		if (dst.is_relative()) {
+			throw std::runtime_error("Destination path on vm must be absolute");
+		}
 
 		if (!fs::exists(dst.parent_path())) {
 			if (!fs::create_directories(dst.parent_path())) {

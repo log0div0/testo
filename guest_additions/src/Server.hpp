@@ -22,6 +22,7 @@ private:
 
 	void handle_command(const nlohmann::json& command);
 	void handle_check_avaliable();
+	void handle_get_tmp_dir();
 	void handle_copy_file(const nlohmann::json& args);
 
 	nlohmann::json copy_directory_out(const fs::path& dir, const fs::path& dst);
