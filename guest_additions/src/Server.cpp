@@ -1,97 +1,32 @@
 
 #include "Server.hpp"
+#include "process/Process.hpp"
+
 #include "base64.hpp"
+
 #include <spdlog/spdlog.h>
-
-#include <chrono>
-#include <thread>
-#include <iostream>
-#include <fstream>
 #include <stdexcept>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include <fstream>
 
-Server::Server(const fs::path& fd_path): fd_path(fd_path) {}
-
-Server::~Server() {
-	if (fd) {
-		close(fd);
-	}
-}
-
-nlohmann::json Server::read() {
-	uint32_t msg_size;
-	while (true) {
-		int bytes_read = ::read (fd, &msg_size, 4);
-		if (bytes_read == 0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			continue;
-		} else if (bytes_read < 0) {
-			throw std::runtime_error(std::string("Got error from reading socket: ") + strerror(errno));
-		} else if (bytes_read != 4) {
-			throw std::runtime_error("Can't read msg size");
-		} else {
-			break;
-		}
-	}
-
-	std::string json_str;
-	json_str.resize(msg_size);
-
-	int already_read = 0;
-
-	while (already_read < msg_size) {
-		int n = ::read (fd, &json_str[already_read], msg_size - already_read);
-		if (n == 0) {
-			throw std::runtime_error("EOF while reading");
-		} else if (n < 0) {
-			throw std::runtime_error(std::string("Got error from reading socket: ") + strerror(errno));
-		}
-		already_read += n;
-	}
-
-	nlohmann::json result = nlohmann::json::parse(json_str);
-	return result;
-}
-
-void Server::send(const nlohmann::json& response) {
-	auto response_str = response.dump();
-	std::vector<uint8_t> buffer;
-	uint32_t response_size = response_str.length();
-	buffer.reserve(sizeof(uint32_t) + response_str.length());
-	std::copy((uint8_t*)&response_size, (uint8_t*)(&response_size) + sizeof(uint32_t), std::back_inserter(buffer));
-
-	std::copy(response_str.begin(), response_str.end(), std::back_inserter(buffer));
-
-	int already_send = 0;
-
-	while (already_send < buffer.size()) {
-		int n = ::write (fd, &buffer[already_send], buffer.size() - already_send);
-		if (n == 0) {
-			throw std::runtime_error("EOF while writing");
-		} else if (n < 0) {
-			throw std::runtime_error(std::string("Got error while sending to socket: ") + strerror(errno));
-		}
-		already_send += n;
-	}
-}
+Server::Server(const std::string& fd_path_): fd_path(fd_path_) {}
 
 void Server::run() {
-	fd = open (fd_path.c_str(), O_RDWR);
-	if (fd < 0) {
-		std::string error_msg = "error " + std::to_string(errno) + " opening " + fd_path.generic_string() + ": " + strerror (errno);
-		throw std::runtime_error(error_msg);
-	}
+	channel = Channel(fd_path);
 
-	spdlog::info("Connected to " + fd_path.generic_string());
+	spdlog::info("Connected to " + fd_path);
 	spdlog::info("Waiting for commands");
 
 	while (true) {
-		auto command = read();
-		handle_command(command);
+		try {
+			auto command = channel.receive();
+			spdlog::info(command.dump(2));
+			handle_command(command);
+		} catch (const std::exception& error) {
+			spdlog::error("Error in Server::run loop");
+			spdlog::error(error.what());
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			spdlog::info("Continue handle commands ...");
+		}
 	}
 }
 
@@ -101,6 +36,8 @@ void Server::handle_command(const nlohmann::json& command) {
 	try {
 		if (method_name == "check_avaliable") {
 			return handle_check_avaliable();
+		} else if (method_name == "get_tmp_dir") {
+			return handle_get_tmp_dir();
 		} else if (method_name == "copy_file") {
 			return handle_copy_file(command.at("args"));
 		} else if (method_name == "copy_files_out") {
@@ -111,19 +48,20 @@ void Server::handle_command(const nlohmann::json& command) {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
 	} catch (const std::exception& error) {
+		spdlog::error("Error in Server::handle_command method");
 		spdlog::error(error.what());
 		send_error(error.what());
 	}
 }
 
 void Server::send_error(const std::string& error) {
-	spdlog::error("Sending error " + error);
+	spdlog::info("Sending error " + error);
 	nlohmann::json response = {
 		{"success", false},
 		{"error", error}
 	};
 
-	send(response);
+	channel.send(response);
 }
 
 void Server::handle_check_avaliable() {
@@ -134,8 +72,22 @@ void Server::handle_check_avaliable() {
 		{"result", nlohmann::json::object()}
 	};
 
-	send(response);
+	channel.send(response);
 	spdlog::info("Checking avaliability is OK");
+}
+
+void Server::handle_get_tmp_dir() {
+	spdlog::info("Getting tmp dir");
+
+	nlohmann::json response = {
+		{"success", true},
+		{"result", {
+			{"path", fs::temp_directory_path().generic_string()}
+		}}
+	};
+
+	channel.send(response);
+	spdlog::info("Getting tmp dir is OK");
 }
 
 void Server::handle_copy_file(const nlohmann::json& args) {
@@ -144,6 +96,10 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 		auto content = base64_decode(content64);
 		fs::path dst = file.at("path").get<std::string>();
 		spdlog::info("Copying file to guest: " + dst.generic_string());
+
+		if (dst.is_relative()) {
+			throw std::runtime_error("Destination path on vm must be absolute");
+		}
 
 		if (!fs::exists(dst.parent_path())) {
 			if (!fs::create_directories(dst.parent_path())) {
@@ -165,7 +121,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 		{"result", nlohmann::json::object()}
 	};
 
-	send(response);
+	channel.send(response);
 }
 
 nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
@@ -173,7 +129,7 @@ nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path&
 
 	std::noskipws(testFile);
 	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
-	std::string encoded = base64_encode(fileContents.data(), fileContents.size());
+	std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
 
 	nlohmann::json request = {
 			{"method", "copy_file"},
@@ -239,39 +195,36 @@ void Server::handle_copy_files_out(const nlohmann::json& args) {
 		{"result", files}
 	};
 
-	send(result);
+	channel.send(result);
 	spdlog::info("Copied FROM guest: " + src.generic_string());
 }
-
 
 void Server::handle_execute(const nlohmann::json& args) {
 	auto cmd = args[0].get<std::string>();
 
 	spdlog::info("Executing command " + cmd);
 
+#if __linux__
 	cmd += " 2>&1";
+#endif
 
-	std::array<char, 256> buffer;
-	auto pipe = popen(cmd.c_str(), "r");
+	Process process(cmd);
 
-	if (!pipe) {
-		throw std::runtime_error("popen() failed!");
-	}
-
-	while(!feof(pipe)) {
-		if (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+	while (!process.eof()) {
+		std::string output = process.read();
+		if (output.size()) {
 			nlohmann::json result = {
 				{"success", true},
 				{"result", {
 					{"status", "pending"},
-					{"stdout", buffer.data()}
+					{"stdout", output.data()}
 				}}
 			};
-			send(result);
+			channel.send(result);
 		}
 	}
 
-	auto rc = pclose(pipe);
+	int rc = process.wait();
 
 	nlohmann::json result = {
 		{"success", true},
@@ -281,7 +234,7 @@ void Server::handle_execute(const nlohmann::json& args) {
 		}}
 	};
 
-	send(result);
+	channel.send(result);
 
 	spdlog::info("Command finished: " + cmd);
 	spdlog::info("Return code: " + std::to_string(rc));

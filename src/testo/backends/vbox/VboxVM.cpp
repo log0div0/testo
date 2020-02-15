@@ -944,7 +944,9 @@ void VboxVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 void VboxVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	throw std::runtime_error("Implement me");
 }
-
+std::string VboxVM::get_tmp_dir() {
+	throw std::runtime_error("Implement me");
+}
 void VboxVM::remove_from_guest(const fs::path& obj) {
 	try {
 		auto lock_machine = virtual_box.find_machine(id());

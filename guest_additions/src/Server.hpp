@@ -1,26 +1,28 @@
 
 #pragma once
 
-#include <string>
-#include <nlohmann/json.hpp>
-#include <experimental/filesystem>
+#include "Channel.hpp"
 
+#ifdef __GNUC__
+#include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
 
 struct Server {
-	Server(const fs::path& fd_path);
-	~Server();
+	Server(const std::string& fd_path);
 	Server(const Server&) = delete;
 	Server& operator=(const Server&) = delete;
 
 	void run();
 
 private:
-	nlohmann::json read();
-	void send(const nlohmann::json& response);
 
 	void handle_command(const nlohmann::json& command);
 	void handle_check_avaliable();
+	void handle_get_tmp_dir();
 	void handle_copy_file(const nlohmann::json& args);
 
 	nlohmann::json copy_directory_out(const fs::path& dir, const fs::path& dst);
@@ -30,6 +32,6 @@ private:
 	void handle_execute(const nlohmann::json& args);
 
 	void send_error(const std::string& error);
-	int fd = 0;
-	const fs::path fd_path;
+	Channel channel;
+	const std::string fd_path;
 };

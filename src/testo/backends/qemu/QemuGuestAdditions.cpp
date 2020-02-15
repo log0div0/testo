@@ -46,6 +46,22 @@ bool QemuGuestAdditions::is_avaliable() {
 	}
 }
 
+std::string QemuGuestAdditions::get_tmp_dir() {
+	nlohmann::json request = {
+		{"method", "get_tmp_dir"}
+	};
+
+	coro::Timeout timeout(3s);
+
+	send(request);
+
+	auto response = recv();
+	if(!response.at("success").get<bool>()) {
+		throw std::runtime_error(response.at("error").get<std::string>());
+	}
+	return response.at("result").at("path");
+}
+
 void QemuGuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(timeout_milliseconds);
 	//4) Now we're all set

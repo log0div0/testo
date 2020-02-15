@@ -1,10 +1,14 @@
 
 #pragma once
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 #include <onnxruntime_cxx_api.h>
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 
 namespace nn {
 

@@ -1052,6 +1052,10 @@ static std::string build_shell_script(const std::string& body) {
 	return script;
 }
 
+static std::string build_batch_script(const std::string& body) {
+	return body;
+}
+
 static std::string build_python_script(const std::string& body) {
 	std::vector<std::string> strings;
 	std::stringstream iss(body);
@@ -1129,11 +1133,17 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 		}
 
 		std::string script, extension, interpreter;
+		std::vector<std::string> args;
 
 		if (exec->process_token.value() == "bash") {
 			script = build_shell_script(template_parser.resolve(exec->commands->text(), reg));
 			extension = ".sh";
 			interpreter = "bash";
+		} else if (exec->process_token.value() == "cmd") {
+			script = build_batch_script(template_parser.resolve(exec->commands->text(), reg));
+			extension = ".bat";
+			interpreter = "cmd";
+			args.push_back("/c");
 		} else if (exec->process_token.value() == "python") {
 			script = build_python_script(template_parser.resolve(exec->commands->text(), reg));
 			extension = ".py";
@@ -1154,7 +1164,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 		std::string hash = std::to_string(h(script));
 
 		fs::path host_script_dir = fs::temp_directory_path();
-		fs::path guest_script_dir = fs::path("/tmp");
+		fs::path guest_script_dir = vmc->vm->get_tmp_dir();
 
 		fs::path host_script_file = host_script_dir / std::string(hash + extension);
 		fs::path guest_script_file = guest_script_dir / std::string(hash + extension);
@@ -1170,7 +1180,8 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 
 		fs::remove(host_script_file.generic_string());
 
-		if (vmc->vm->run(interpreter, {guest_script_file.generic_string()}, time_to_milliseconds(wait_for)) != 0) {
+		args.push_back(guest_script_file.generic_string());
+		if (vmc->vm->run(interpreter, args, time_to_milliseconds(wait_for)) != 0) {
 			throw std::runtime_error(interpreter + " command failed");
 		}
 		vmc->vm->remove_from_guest(guest_script_file);

@@ -168,6 +168,8 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		{"PAGEDOWN", 109},
 		{"INSERT", 110},
 		{"DELETE", 111},
+		{"LEFTMETA", 125},
+		{"RIGHTMETA", 126},
 		{"SCROLLUP", 177},
 		{"SCROLLDOWN", 178},
 	});
@@ -1075,16 +1077,22 @@ bool QemuVM::is_additions_installed() {
 	}
 }
 
+std::string QemuVM::get_tmp_dir() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+		QemuGuestAdditions helper(domain);
+		return helper.get_tmp_dir();
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Getting tmp directory path on guest"));
+	}
+}
 
 void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
 			throw std::runtime_error("Source file/folder does not exist on host: " + src.generic_string());
-		}
-
-		if (dst.is_relative()) {
-			throw std::runtime_error("Destination path on vm must be absolute");
 		}
 
 		auto domain = qemu_connect.domain_lookup_by_name(id());
