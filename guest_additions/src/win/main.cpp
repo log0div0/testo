@@ -10,6 +10,7 @@
 
 #include <setupapi.h>
 #include <initguid.h>
+#include <tchar.h>
 
 #include "../Server.hpp"
 
@@ -84,7 +85,56 @@ struct HardwareDeviceInfo {
 	HDEVINFO handle = NULL;
 };
 
-int main(int argc, char** argv) {
+#define SERVICE_NAME _T("Testo Guest Additions")
+
+SERVICE_STATUS_HANDLE serviceStatusHandle = NULL;
+SERVICE_STATUS serviceStatus = {};
+
+void ControlHandler(DWORD request) {
+	switch(request)
+	{
+	case SERVICE_CONTROL_STOP:
+		spdlog::info("SERVICE_CONTROL_STOP");
+		break;
+	case SERVICE_CONTROL_SHUTDOWN:
+		spdlog::info("SERVICE_CONTROL_SHUTDOWN");
+		break;
+	default:
+		break;
+	}
+}
+
+void ServiceMain(int argc, char** argv) {
+	serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+	serviceStatus.dwCurrentState = SERVICE_START_PENDING;
+	serviceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+	serviceStatus.dwWin32ExitCode = 0;
+	serviceStatus.dwServiceSpecificExitCode = 0;
+	serviceStatus.dwCheckPoint = 0;
+	serviceStatus.dwWaitHint = 0;
+
+	serviceStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, (LPHANDLER_FUNCTION)ControlHandler);
+	if (!serviceStatusHandle) {
+		throw std::runtime_error("RegisterServiceCtrlHandler failed");
+	}
+
+	HardwareDeviceInfo info((LPGUID)&GUID_VIOSERIAL_PORT);
+	spdlog::info("HardwareDeviceInfo OK");
+	std::string device_path = info.getDeviceInterfaceDetail();
+	spdlog::info("device_path = " + device_path);
+	Server server(device_path);
+	spdlog::info("Server OK");
+
+	serviceStatus.dwCurrentState = SERVICE_RUNNING;
+	SetServiceStatus(serviceStatusHandle, &serviceStatus);
+
+	server.run();
+
+	serviceStatus.dwCurrentState = SERVICE_STOPPED;
+	SetServiceStatus(serviceStatusHandle, &serviceStatus);
+}
+
+int _tmain (int argc, TCHAR *argv[]) {
 	char szFileName[MAX_PATH];
 	GetModuleFileName(NULL, szFileName, MAX_PATH);
 
@@ -100,15 +150,21 @@ int main(int argc, char** argv) {
 
 	try {
 		spdlog::info("Started");
-		HardwareDeviceInfo info((LPGUID)&GUID_VIOSERIAL_PORT);
-		spdlog::info("HardwareDeviceInfo OK");
-		std::string device_path = info.getDeviceInterfaceDetail();
-		spdlog::info("device_path = " + device_path);
-		Server server(device_path);
-		spdlog::info("Server OK");
-		server.run();
+
+		SERVICE_TABLE_ENTRY ServiceTable[] =
+		{
+			{SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) ServiceMain},
+			{NULL, NULL}
+		};
+
+		if (StartServiceCtrlDispatcher(ServiceTable) == FALSE) {
+			throw std::runtime_error("StartServiceCtrlDispatcher failed");
+		}
+
+		spdlog::info("Stopped");
 	}
 	catch (const std::exception& error) {
+		spdlog::error("Error in main function");
 		spdlog::error(error.what());
 		return -1;
 	}

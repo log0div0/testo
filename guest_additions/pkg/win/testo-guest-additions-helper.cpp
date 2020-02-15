@@ -5,6 +5,9 @@
 #include <filesystem>
 #include <locale>
 #include <codecvt>
+#include <chrono>
+
+using namespace std::chrono_literals;
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -28,21 +31,114 @@ enum class Command {
 std::string targetdir;
 Command selected_command;
 
+struct Service {
+	Service(SC_HANDLE handle_): handle(handle_) {
+
+	}
+
+	~Service() {
+		if (handle) {
+			CloseServiceHandle(handle);
+		}
+	}
+
+	Service(Service&& other);
+	Service& operator=(Service&& other);
+
+	void start() {
+		if (!StartService(handle, 0, NULL)) {
+			throw std::runtime_error("StartService failed");
+		}
+	}
+
+	SERVICE_STATUS queryStatus() {
+		SERVICE_STATUS status = {};
+		if (!QueryServiceStatus(handle, &status)) {
+			throw std::runtime_error("QueryServiceStatus failed");
+		}
+		return status;
+	}
+
+private:
+	SC_HANDLE handle = NULL;
+};
+
+struct SCManager {
+	SCManager() {
+		handle = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+		if (!handle) {
+			throw std::runtime_error("OpenSCManager failed");
+		}
+	}
+
+	~SCManager() {
+		if (handle) {
+			CloseServiceHandle(handle);
+		}
+	}
+
+	SCManager(SCManager&& other);
+	SCManager& operator=(SCManager&& other);
+
+	Service service(const std::string& name) {
+		SC_HANDLE hService = OpenServiceA(handle, name.c_str(), SERVICE_QUERY_STATUS | SERVICE_START);
+		if (!hService) {
+			throw std::runtime_error("OpenServiceA failed");
+		}
+		return hService;
+	}
+
+private:
+	SC_HANDLE handle = NULL;
+};
+
 void install() {
 	spdlog::info("Install ...");
 
 	char szFileName[MAX_PATH];
 	GetModuleFileName(NULL, szFileName, MAX_PATH);
 
-	fs::path path(szFileName);
-	path = path.parent_path();
-	path = path / "vioserial" / "vioser.inf";
+	{
+		fs::path path(szFileName);
+		path = path.parent_path();
+		path = path / "vioserial" / "vioser.inf";
 
-	std::string cmd = "pnputil -i -a \"" + path.generic_string() + "\"";
-	spdlog::info("Command to execute: " + cmd);
+		std::string cmd = "pnputil -i -a \"" + path.generic_string() + "\"";
+		spdlog::info("Command to execute: " + cmd);
 
-	std::string output = Process::exec(cmd);
-	spdlog::info("Command output: " + output);
+		std::string output = Process::exec(cmd);
+		spdlog::info("Command output: " + output);
+	}
+
+	{
+		fs::path path(szFileName);
+		path = path.parent_path();
+		path = path / "testo-guest-additions.exe";
+
+		std::string cmd = "sc create \"Testo Guest Additions\" binPath= \"" + path.generic_string() + "\" start= auto";
+		spdlog::info("Command to execute: " + cmd);
+
+		std::string output = Process::exec(cmd);
+		spdlog::info("Command output: " + output);
+	}
+
+	{
+		SCManager manager;
+		Service service = manager.service("Testo Guest Additions");
+		service.start();
+		bool started = false;
+		for (size_t i = 0; i < 10; ++i) {
+			SERVICE_STATUS status = service.queryStatus();
+			if (status.dwCurrentState == SERVICE_RUNNING) {
+				started = true;
+				break;
+			}
+			std::this_thread::sleep_for(1s);
+		}
+		if (!started) {
+			throw std::runtime_error("Failed to start service");
+		}
+	}
 
 	spdlog::info("OK");
 }

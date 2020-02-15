@@ -22,8 +22,10 @@ void Server::run() {
 			spdlog::info(command.dump(2));
 			handle_command(command);
 		} catch (const std::exception& error) {
+			spdlog::error("Error in Server::run loop");
 			spdlog::error(error.what());
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			spdlog::info("Continue handle commands ...");
 		}
 	}
 }
@@ -46,13 +48,14 @@ void Server::handle_command(const nlohmann::json& command) {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
 	} catch (const std::exception& error) {
+		spdlog::error("Error in Server::handle_command method");
 		spdlog::error(error.what());
 		send_error(error.what());
 	}
 }
 
 void Server::send_error(const std::string& error) {
-	spdlog::error("Sending error " + error);
+	spdlog::info("Sending error " + error);
 	nlohmann::json response = {
 		{"success", false},
 		{"error", error}
