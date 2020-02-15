@@ -63,7 +63,7 @@ test guest_additions: win7_installation {
 		wait "C:\\Windows\\system32>"
 		press LeftAlt+LeftShift; type "\"C:\\Program Files\\Testo Lang\\Testo Guest Additions\\testo-guest-additions.exe\""; press Enter
 		wait "Server OK"
-		exec bash "hello world"
+		exec cmd "echo hello world"
 		abort "stop here"
 	}
 }

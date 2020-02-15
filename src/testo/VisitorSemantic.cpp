@@ -368,6 +368,7 @@ void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 
 void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
 	if ((exec->process_token.value() != "bash") &&
+		(exec->process_token.value() != "cmd") &&
 		(exec->process_token.value() != "python") &&
 		(exec->process_token.value() != "python2") &&
 		(exec->process_token.value() != "python3"))
