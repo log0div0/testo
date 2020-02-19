@@ -7,6 +7,13 @@
 
 QemuEnvironment::QemuEnvironment() {
 	setenv("QEMU", "1", false);
+
+	if (std::system("lsmod | grep nbd > /dev/null")) {
+		if (std::system("modprobe nbd max_parts=1")) {
+			throw std::runtime_error("Can't modprobe nbd module");
+		}
+	}
+
 }
 
 QemuEnvironment::~QemuEnvironment() {

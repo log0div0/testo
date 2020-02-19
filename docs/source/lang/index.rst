@@ -20,6 +20,7 @@
     test
     macro
     actions
+    js_selections
     if
     for
     keys
