@@ -13,8 +13,6 @@
 
 #include "nn/Context.hpp"
 
-#include <license/License.hpp>
-
 using namespace std::chrono_literals;
 
 Reporter reporter;
@@ -34,11 +32,6 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
-
-	std::string license_path = config.at("license").get<std::string>();
-	if (license_path.size()) {
-		license_status = verify_license(license_path, "2jqeSUIJCzooeIIPVzwXxbROsOHMmfot3WZelMoXRRg=");
-	}
 
 	charmap.insert({
 		{"0", {"ZERO"}},
@@ -478,10 +471,6 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 
 void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 	try {
-		if (license_status.size()) {
-			std::cout << license_status << std::endl;
-		}
-
 		//Ok, we're not cached and we need to run the test
 		reporter.prepare_environment();
 		//Check if one of the parents failed. If it did, just fail

@@ -159,6 +159,5 @@ private:
 
 	std::unordered_map<std::string, std::vector<std::string>> charmap;
 
-	std::string license_status;
 	quickjs::Runtime js_runtime;
 };

@@ -51,5 +51,5 @@ inline bool operator>(const Date& lhs, const Date& rhs) {
 		std::tie(rhs.year, rhs.month, rhs.day);
 }
 
-void sign_license(const std::string& license_path, const std::string& private_key);
-std::string verify_license(const std::string& license_path, const std::string& public_key);
+void sign_license(const std::string& in_path, const std::string& out_path, const std::string& private_key);
+void verify_license(const std::string& in_path, const std::string& public_key);

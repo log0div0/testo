@@ -1,9 +1,11 @@
 
 #include <iostream>
 #include <clipp.h>
-#include <sodium.h>
 #include <fstream>
 #include <base64.hpp>
+extern "C" {
+#include <tweetnacl/tweetnacl.h>
+}
 #include "License.hpp"
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
@@ -38,7 +40,7 @@ void write_file(const std::string& path, const std::string& data) {
 
 enum Mode {GEN_KEYS, SIGN, VERIFY};
 Mode mode;
-std::string license_path;
+std::string in_path, out_path;
 std::string private_key_path, public_key_path;
 
 void gen_keys() {
@@ -53,20 +55,15 @@ void gen_keys() {
 }
 
 void sign() {
-	sign_license(license_path, read_file(private_key_path));
+	sign_license(in_path, out_path, read_file(private_key_path));
 }
 
 void verify() {
-	std::string license_status = verify_license(license_path, read_file(public_key_path));
-	std::cout << "license status: " << (license_status.empty() ? "ok" : license_status) << std::endl;
+	verify_license(in_path, read_file(public_key_path));
 }
 
 int main(int argc, char** argv) {
 	try {
-		if (sodium_init() == -1) {
-        throw std::runtime_error("sodium_init failed");
-    }
-
 		using namespace clipp;
 
 		auto gen_keys_spec = (
@@ -77,13 +74,14 @@ int main(int argc, char** argv) {
 
 		auto sign_spec = (
 			command("sign").set(mode, SIGN),
-			required("--license") & value("path", license_path),
+			required("--in") & value("path", in_path),
+			required("--out") & value("path", out_path),
 			required("--private_key") & value("path", private_key_path)
 		);
 
 		auto verify_spec = (
 			command("verify").set(mode, VERIFY),
-			required("--license") & value("path", license_path),
+			required("--in") & value("path", in_path),
 			required("--public_key") & value("path", public_key_path)
 		);
 

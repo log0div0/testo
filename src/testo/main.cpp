@@ -22,6 +22,8 @@
 #include <fmt/format.h>
 #include <fstream>
 
+#include <license/License.hpp>
+
 using namespace clipp;
 
 struct Interruption {};
@@ -148,6 +150,8 @@ int clean_mode() {
 }
 
 int run_mode() {
+	verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+
 	auto params = nlohmann::json::array();
 
 	for (size_t i = 0; i < args.params_names.size(); ++i) {
@@ -167,7 +171,6 @@ int run_mode() {
 		{"report_folder", args.report_folder},
 		{"report_logs", args.report_logs},
 		{"report_screenshots", args.report_screenshots},
-		{"license", args.license},
 		{"prefix", args.prefix},
 		{"params", params}
 	};
@@ -218,7 +221,7 @@ int do_main(int argc, char** argv) {
 		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
-		(option("--license") & value("path", args.license)) % "Path to license file",
+		(required("--license") & value("path", args.license)) % "Path to license file",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
