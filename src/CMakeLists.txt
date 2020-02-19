@@ -21,6 +21,23 @@ link_directories(
 	${ONNX_RUNTIME_DIR}/lib/
 )
 
+set(ONNX_RUNTIME_LINKER_FLAGS " \
+	-Wl,--whole-archive \
+		-Wl,-lonnxruntime_common \
+		-Wl,-lonnxruntime_framework \
+		-Wl,-lonnxruntime_graph \
+		-Wl,-lonnxruntime_mlas \
+		-Wl,-lonnxruntime_optimizer \
+		-Wl,-lonnxruntime_providers \
+		-Wl,-lonnxruntime_session \
+		-Wl,-lonnxruntime_util \
+		-Wl,-lprotobuf-lite \
+		-Wl,-lonnx \
+		-Wl,-lonnx_proto \
+		-Wl,-lre2 \
+	-Wl,--no-whole-archive \
+")
+
 if (APPLE)
 include_directories(/usr/local/include)
 link_directories(/usr/local/lib)

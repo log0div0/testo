@@ -17,6 +17,9 @@ list(APPEND SRC_DIRS "tql/*.cpp")
 file(GLOB SRCS ${SRC_DIRS})
 
 add_executable(testo ${SRCS})
+
+set(CMAKE_EXE_LINKER_FLAGS "${ONNX_RUNTIME_LINKER_FLAGS}")
+
 target_link_libraries(testo coro quickjs-c++ vbox pugixml stb nn license)
 
 if(WIN32)

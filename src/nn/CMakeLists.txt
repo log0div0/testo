@@ -19,9 +19,12 @@ embed_onnx_model(${CMAKE_CURRENT_SOURCE_DIR}/TextRecognizer.onnx)
 embed_onnx_model(${CMAKE_CURRENT_SOURCE_DIR}/TextColorPicker.onnx)
 
 add_library(nn STATIC ${SRCS})
-target_link_libraries(nn stb onnxruntime)
+target_link_libraries(nn stb)
+
+set(CMAKE_EXE_LINKER_FLAGS "${ONNX_RUNTIME_LINKER_FLAGS}")
+
 if(UNIX)
-	target_link_libraries(nn pthread)
+	target_link_libraries(nn pthread dl)
 endif()
 
 add_executable(nn_demo main.cpp)
