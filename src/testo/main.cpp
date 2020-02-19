@@ -150,6 +150,11 @@ int clean_mode() {
 }
 
 int run_mode() {
+	if (!args.license.size()) {
+		std::cout << "Необходимо указать путь к файлу с лицензией (параметр --license)" << std::endl;
+		return 1;
+	}
+
 	verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
 
 	auto params = nlohmann::json::array();
@@ -221,7 +226,7 @@ int do_main(int argc, char** argv) {
 		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
-		(required("--license") & value("path", args.license)) % "Path to license file",
+		(option("--license") & value("path", args.license)) % "Path to license file",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
