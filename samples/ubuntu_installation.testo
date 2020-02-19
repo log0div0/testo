@@ -11,3 +11,8 @@ machine VM1 {
 test ubuntu_installation {
 	VM1 install_ubuntu("VM1", "user", "1111")
 }
+
+test install_guest_additions: ubuntu_installation {
+	VM1 install_guest_additions("VM1", "user", "1111")
+}
+
