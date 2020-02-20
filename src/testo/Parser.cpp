@@ -631,16 +631,17 @@ std::shared_ptr<Action<MouseEvent>> Parser::mouse_event() {
 	Token event_token = LT(1);
 	match({Token::category::move, Token::category::click, Token::category::rclick});
 
-	Token dx, dy;
+	std::shared_ptr<AST::String> object = nullptr;
 
-	if (event_token.value() == "move" || LA(1) == Token::category::number) {
-		dx = LT(1);
-		match(Token::category::number);
-		dy = LT(1);
-		match(Token::category::number);
+	if (test_string()) {
+		object = string();
 	}
 
-	auto action = std::shared_ptr<MouseEvent>(new MouseEvent(mouse_token, event_token, dx, dy));
+	if ((event_token.value() == "move") && (object == nullptr)) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: action mouse move requires an object");
+	}
+
+	auto action = std::shared_ptr<MouseEvent>(new MouseEvent(mouse_token, event_token, object));
 	return std::shared_ptr<Action<MouseEvent>>(new Action<MouseEvent>(action));
 }
 

@@ -420,39 +420,36 @@ struct Press: public Node {
 };
 
 struct MouseEvent: public Node {
-	MouseEvent(const Token& mouse, const Token& event, const Token& dx, const Token& dy):
-		Node(mouse), event(event), dx_token(dx), dy_token(dy) {}
+	MouseEvent(const Token& mouse, const Token& event, std::shared_ptr<String> object):
+		Node(mouse), event(event), object(object) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return dy_token.pos();
+		if (object) {
+			return object->end();
+		} else {
+			return t.pos();
+		}
 	}
 
 	operator std::string() const {
 		std::string result = t.value() + " " + event.value() + " ";
-		if (!dx_token.value().length()) {
-			result += "+0 ";
-		} else {
-			result += dx_token.value();
+		if (object) {
+			result += std::string(*object);
 		}
-
-		if (!dy_token.value().length()) {
-			result += "+0";
-		} else {
-			result += dy_token.value();
-		}
-
 		return result;
 	}
 
 	bool is_move_needed() const {
-		return dx_token.value().length() || dy_token.value().length();
+		return (object != nullptr);
 	}
 
-	Token event, dx_token, dy_token;
+	Token event;
+
+	std::shared_ptr<String> object = nullptr;
 };
 
 //Also is used for unplug

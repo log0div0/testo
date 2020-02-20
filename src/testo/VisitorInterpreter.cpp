@@ -834,8 +834,8 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
 	try {
 		if (mouse_event->is_move_needed()) {
-			reporter.mouse_move(vmc, mouse_event->dx_token, mouse_event->dy_token);
-			vmc->vm->mouse_move(mouse_event->dx_token.value(), mouse_event->dy_token.value());
+			//reporter.mouse_move(vmc, mouse_event->dx_token, mouse_event->dy_token);
+			//vmc->vm->mouse_move(mouse_event->dx_token.value(), mouse_event->dy_token.value());
 		}
 
 		if (mouse_event->event.value() == "move") {
