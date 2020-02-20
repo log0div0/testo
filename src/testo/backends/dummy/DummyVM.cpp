@@ -62,7 +62,7 @@ void DummyVM::press(const std::vector<std::string>& buttons) {
 	return;
 }
 
-void DummyVM::mouse_move(const std::string& x, const std::string& y) {
+void DummyVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	return;
 }
 

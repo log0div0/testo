@@ -835,7 +835,25 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 	try {
 		if (mouse_event->is_move_needed()) {
 			//reporter.mouse_move(vmc, mouse_event->dx_token, mouse_event->dy_token);
-			//vmc->vm->mouse_move(mouse_event->dx_token.value(), mouse_event->dy_token.value());
+
+			auto screenshot = vmc->vm->screenshot();
+			auto result = nn::OCR(&screenshot).search("Продолжить");
+
+			if (!result.size()) {
+				throw std::runtime_error("Can't find entry to click: Продолжить");
+			}
+
+			if (result.size() > 1) {
+				throw std::runtime_error("Too many occurences of entry to click: Продолжить");
+			}
+
+			auto x = result[0].center_x();
+			auto y = result[0].center_y();
+
+			std::cout << "X: " << x << std::endl;
+			std::cout << "Y: " << y << std::endl;
+
+			vmc->vm->mouse_move_abs(x, y);
 		}
 
 		if (mouse_event->event.value() == "move") {

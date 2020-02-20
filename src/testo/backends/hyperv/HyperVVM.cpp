@@ -188,7 +188,7 @@ void HyperVVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
-void HyperVVM::mouse_move(const std::string& x, const std::string& y) {
+void HyperVVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

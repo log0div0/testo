@@ -441,24 +441,47 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
-void QemuVM::mouse_move(const std::string& x, const std::string& y) {
+void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
+		auto tmp_screen = screenshot();
 
-		if (isdigit(x[0]) || isdigit(y[0])) {
-			std::throw_with_nested(std::runtime_error("absolute mouse movement is not implemented"));
+		double x_pos = double(32768) / double(tmp_screen.width) * double(x);
+		double y_pos = double(32768) / double(tmp_screen.height) * double(y);
+
+		std::cout << (int)x_pos << std::endl;
+		std::cout << (int)y_pos << std::endl;
+
+		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
+			{{
+				"execute": "input-send-event",
+				"arguments": {{
+					"events": [
+						{{
+							"type": "abs",
+							"data": {{
+								"axis": "x",
+								"value": {}
+							}}
+
+						}},
+						{{
+							"type": "abs",
+							"data": {{
+								"axis": "y",
+								"value": {}
+							}}
+						}}
+					]
+				}}
+			}}
+		)", (int)x_pos, (int)y_pos));
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
 		}
-
-		int dx = 0, dy = 0;
-
-		//ONLY FOR NOW!
-		dx = std::stoi(x);
-		dy = std::stoi(y);
-
-		std::string command = "mouse_move ";
-		command += x + " " + y;
-
-		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Mouse move error"));

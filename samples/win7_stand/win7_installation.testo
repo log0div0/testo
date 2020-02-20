@@ -42,7 +42,14 @@ test win7_installation {
 
 test guest_additions: win7_installation {
 	win7 {
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+
+		wait timeout 5s
+
+		mouse click "Продолжить"
+
+		abort "stop here"
+
+		/*plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
 		wait "Вас приветствует мастер установки"; press Enter
 		wait "Выбор папки для установки"; press Enter
@@ -55,6 +62,6 @@ test guest_additions: win7_installation {
 		wait "Установка завершена"; press Enter
 		wait !"Установка завершена"
 		exec cmd "echo hello world"
-		copyto "test.txt" "C:\\tmp\\test.txt"
+		copyto "test.txt" "C:\\tmp\\test.txt"*/
 	}
 }
