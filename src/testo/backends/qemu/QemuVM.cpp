@@ -449,9 +449,6 @@ void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 		double x_pos = double(32768) / double(tmp_screen.width) * double(x);
 		double y_pos = double(32768) / double(tmp_screen.height) * double(y);
 
-		std::cout << (int)x_pos << std::endl;
-		std::cout << (int)y_pos << std::endl;
-
 		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
 			{{
 				"execute": "input-send-event",
@@ -488,14 +485,74 @@ void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	}
 }
 
-void QemuVM::mouse_set_buttons(uint32_t button_mask) {
+void QemuVM::mouse_press(const std::vector<MouseButton>& buttons) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-		std::string command = "mouse_button " + std::to_string(button_mask);
-		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+
+		nlohmann::json json_command = R"(
+			{
+				"execute": "input-send-event",
+				"arguments": {
+					"events": [
+					]
+				}
+			}
+		)"_json;
+
+		for (auto& button: buttons) {
+			json_command.at("arguments").at("events").push_back({
+				{"type", "btn"},
+				{"data", {
+					{"down", true},
+					{"button", mouse_button_to_str(button)}
+				}}
+			});
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Mouse set buttons error"));
+		std::throw_with_nested(std::runtime_error("Mouse press buttons error"));
+	}
+}
+
+
+void QemuVM::mouse_release(const std::vector<MouseButton>& buttons) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command = R"(
+			{
+				"execute": "input-send-event",
+				"arguments": {
+					"events": [
+					]
+				}
+			}
+		)"_json;
+
+		for (auto& button: buttons) {
+			json_command.at("arguments").at("events").push_back({
+				{"type", "btn"},
+				{"data", {
+					{"down", false},
+					{"button", mouse_button_to_str(button)}
+				}}
+			});
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse release buttons error"));
 	}
 }
 
@@ -1192,5 +1249,13 @@ void QemuVM::create_disk() {
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));
+	}
+}
+
+std::string QemuVM::mouse_button_to_str(MouseButton btn) {
+	switch (btn) {
+		case Left: return "left";
+		case Right: return "right";
+		default: throw std::runtime_error("Unknown button: " + btn);
 	}
 }

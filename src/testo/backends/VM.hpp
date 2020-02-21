@@ -15,7 +15,7 @@ enum class VmState {
 enum MouseButton {
 	Left = 1,
 	Right = 2,
-	Middle = 4
+	Middle = 3
 };
 
 struct VM {
@@ -28,7 +28,8 @@ struct VM {
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual void press(const std::vector<std::string>& buttons) = 0;
 	virtual void mouse_move_abs(uint32_t x, uint32_t y) = 0;
-	virtual void mouse_set_buttons(uint32_t button_mask) = 0;
+	virtual void mouse_press(const std::vector<MouseButton>& buttons) = 0;
+	virtual void mouse_release(const std::vector<MouseButton>& buttons) = 0;
 	virtual bool is_nic_plugged(const std::string& nic) const = 0;
 	virtual void set_nic(const std::string& nic, bool is_enabled) = 0;
 	virtual bool is_link_plugged(const std::string& nic) const = 0;

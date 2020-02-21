@@ -66,14 +66,11 @@ test install_astralinux_gui {
 		start
 		wait "ASTRALINUX"; press Enter;
 		wait !"Русский"; press Enter
-		wait "Лицензия";
+		wait "Лицензия"; mouse click "Продолжить"
 
-		mouse click "Продолжить"
 
+		wait "Настройка клавиатуры"; mouse click "Продолжить"
 		abort "stop here"
-
-		press Enter
-		wait "Настройка клавиатуры"; press Enter
 		wait "Введите имя этого компьютера" timeout 5m;
 		press Backspace; type "${host_name}"; press Enter
 		wait "Выберите имя учётной записи администратора"; type "${login}"; press Enter

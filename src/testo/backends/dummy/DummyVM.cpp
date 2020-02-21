@@ -66,7 +66,11 @@ void DummyVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	return;
 }
 
-void DummyVM::mouse_set_buttons(uint32_t button_mask) {
+void DummyVM::mouse_press(const std::vector<MouseButton>& buttons) {
+	return;
+}
+
+void DummyVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	return;
 }
 

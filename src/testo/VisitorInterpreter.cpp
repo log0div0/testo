@@ -852,17 +852,14 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 		if (mouse_event->event.value() == "move") {
 			return;
 		} else if (mouse_event->event.value() == "click") {
-
-			vmc->vm->mouse_set_buttons(MouseButton::Left);
-			vmc->vm->mouse_set_buttons(0);
+			vmc->vm->mouse_press({MouseButton::Left});
+			vmc->vm->mouse_release({MouseButton::Left});
 		} else if (mouse_event->event.value() == "rclick") {
-
-			vmc->vm->mouse_set_buttons(MouseButton::Right);
-			vmc->vm->mouse_set_buttons(0);
+			vmc->vm->mouse_press({MouseButton::Right});
+			vmc->vm->mouse_release({MouseButton::Right});
 		} else {
 			throw std::runtime_error("Unsupported mouse event");
 		}
-
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(mouse_event, vmc));
 	}

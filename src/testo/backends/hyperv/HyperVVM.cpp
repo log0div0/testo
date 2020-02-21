@@ -192,7 +192,11 @@ void HyperVVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-void HyperVVM::mouse_set_buttons(uint32_t button_mask) {
+void HyperVVM::mouse_press(const std::vector<MouseButton>& buttons) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
+void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
