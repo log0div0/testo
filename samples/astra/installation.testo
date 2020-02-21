@@ -67,35 +67,36 @@ test install_astralinux_gui {
 		wait "ASTRALINUX"; press Enter;
 		wait !"Русский"; press Enter
 		wait "Лицензия"; mouse click "Продолжить"
-
-
 		wait "Настройка клавиатуры"; mouse click "Продолжить"
-		abort "stop here"
 		wait "Введите имя этого компьютера" timeout 5m;
-		press Backspace; type "${host_name}"; press Enter
-		wait "Выберите имя учётной записи администратора"; type "${login}"; press Enter
-		wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}"; press Enter
-		wait "Выберите часовой пояс"; press Enter
-		wait "Метод разметки"; press Enter
-		wait "Заметим, что все данные на выбранном диске будут стерты"; press Enter
-		wait "Схема разметки"; press Enter
-		wait "Закончить разметку и записать изменения на диск"; press Enter
-		wait "Записать изменения на диск?"; press Down, Enter
+		press Backspace; type "${host_name}"; mouse click "Продолжить"
+		wait "Выберите имя учётной записи администратора"; type "${login}"; mouse click "Продолжить"
+		wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}";
+		mouse click "Продолжить"
+		wait "Выберите часовой пояс" && js """detect_text("Москва+00", "white", "red")"""; mouse click "Продолжить"
+		wait "Метод разметки"; mouse click "Продолжить"
+		wait "Заметим, что все данные на выбранном диске будут стерты"; mouse click "Продолжить"
+		wait "Диск может быть размечен по одной из следующих схем"; mouse click "Продолжить"
+		wait "Закончить разметку и записать изменения на диск"; mouse click "Продолжить"
+		wait "Записать изменения на диск?"; mouse click "Да"; mouse click "Продолжить"
 		wait "Выберите устанавливаемое программное обеспечение" timeout 10m;
-		press Down*2, Space
-		press Down, Space
-		press Down, Space
-		press Down, Space
-		press Down*5, Space
-		press Tab, Enter
 
-		wait "Дополнительные настройки ОС" timeout 15m; press Tab, Enter
-		wait "Похоже, что данная система будет единственной"; press Enter
-		wait "Устройство для установки системного загрузчика"; press Down, Enter
+		mouse click "Приложения для работы с сенсорным экраном"; press Space
+		mouse click "Игры"; press Space
+		mouse click "Средства работы в Интернет"; press Space
+		mouse click "Офисные средства"; press Space
+		mouse click "Средства Мультимедиа"; press Space
+		mouse click "Продолжить"
+
+		wait "Дополнительные настройки ОС" timeout 15m;
+		mouse click "Системные часы установлены на местное время"; press Space
+		mouse click "Продолжить"
+		wait "Похоже, что данная система будет единственной"; mouse click "Продолжить"
+		wait "Устройство для установки системного загрузчика"; mouse click "/dev/sda"; mouse click "Продолжить"
 		wait "Установка завершена"
 		wait timeout 5s
 		unplug dvd
-		press Enter
+		mouse click "Продолжить"
 		wait "Вход" timeout 10m; type "${login}"; press Tab; type "${password}"; press Enter
 		wait "Корзина"
 	}

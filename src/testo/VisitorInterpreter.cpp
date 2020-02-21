@@ -741,9 +741,10 @@ std::vector<nn::Rect> VisitorInterpreter::visit_select_selectable(std::shared_pt
 		auto script = template_parser.resolve(p->text(), reg);
 		auto value = eval_js(script, screenshot);
 		std::vector<nn::Rect> result;
-		if (value.is_bool() && value) {
+		if (value.is_bool() && (bool)value) {
 			result.push_back(nn::Rect());
 		}
+		return result;
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}

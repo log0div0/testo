@@ -277,7 +277,7 @@ void QemuVM::install() {
 					<sound model='ich6'>
 					</sound>
 					<video>
-						<model type='vmvga' heads='1' primary='yes'/>
+						<model type='qxl' heads='1' primary='yes'/>
 					</video>
 					<redirdev bus='usb' type='spicevmc'>
 					</redirdev>
