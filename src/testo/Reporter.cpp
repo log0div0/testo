@@ -342,7 +342,7 @@ void Reporter::exec_command_output(const std::string& text) {
 
 void Reporter::save_screenshot(std::shared_ptr<VmController> vmc) {
 	auto screenshot = vmc->vm->screenshot();
-	screenshot.write_png(report_folder / (current_test->name + "_wait_failed.png"));
+	screenshot.write_png((report_folder / (current_test->name + "_wait_failed.png")).generic_string());
 	report(fmt::format("{} Saved screenshot from vm ", progress()), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }

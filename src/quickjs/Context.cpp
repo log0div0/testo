@@ -103,10 +103,14 @@ std::string Context::get_last_error() {
 
 JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
 	if (argc > 3) {
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 		return JS_EXCEPTION;
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 	}
 
 	nn::Context* nn_context = (nn::Context*)JS_GetContextOpaque(ctx);
@@ -157,19 +161,27 @@ JSValue js_print(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *
 		}
 		str = JS_ToCString(ctx, argv[i]);
 		if (!str) {
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 			return JS_EXCEPTION;
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 		}
 		fputs(str, stdout);
 		JS_FreeCString(ctx, str);
 	}
 	putchar('\n');
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 		return JS_UNDEFINED;
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 }
 
 void Context::register_nn_functions() {

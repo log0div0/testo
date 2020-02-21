@@ -301,9 +301,9 @@ stb::Image HyperVVM::screenshot() {
 				uint8_t g8 = Table6[g6];
 				uint8_t b8 = Table5[b5];
 
-				result._data[dst_index + 0] = r8;
-				result._data[dst_index + 1] = g8;
-				result._data[dst_index + 2] = b8;
+				result.data[dst_index + 0] = r8;
+				result.data[dst_index + 1] = g8;
+				result.data[dst_index + 2] = b8;
 			}
 		}
 
@@ -374,3 +374,6 @@ void HyperVVM::remove_from_guest(const fs::path& obj) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
+std::string HyperVVM::get_tmp_dir() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}

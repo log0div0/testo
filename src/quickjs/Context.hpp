@@ -2,11 +2,6 @@
 #pragma once
 
 #include "Value.hpp"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#include "quickjs/quickjs.h"
-#pragma GCC diagnostic pop
-#include <string>
 
 namespace quickjs {
 

@@ -1,8 +1,14 @@
+
 #pragma once
+
+#ifdef __GNUC__ 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
 #include "quickjs/quickjs.h"
+#ifdef __GNUC__ 
 #pragma GCC diagnostic pop
+#endif
 
 #include <string>
 

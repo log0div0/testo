@@ -1,11 +1,6 @@
 
 #pragma once
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#include "quickjs/quickjs.h"
-#pragma GCC diagnostic pop
-
 #include "CString.hpp"
 
 namespace quickjs {
