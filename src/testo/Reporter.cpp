@@ -329,6 +329,10 @@ void Reporter::mouse_event(std::shared_ptr<VmController> vmc, std::string event,
 		event = "moving";
 	} else if (event == "click") {
 		event = "clicking";
+	} else if (event == "rclick") {
+		event = "right clicking";
+	} else if (event == "dclick") {
+		event = "double clicking";
 	}
 
 	report(fmt::format("{} Mouse {} ", progress(), event), blue);

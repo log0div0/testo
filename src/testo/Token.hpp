@@ -19,6 +19,7 @@ struct Token {
 		move,
 		click,
 		rclick,
+		dclick,
 		plug,
 		unplug,
 		start,

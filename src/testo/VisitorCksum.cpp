@@ -124,6 +124,7 @@ std::string VisitorCksum::visit_press(std::shared_ptr<AST::Press> press) {
 
 std::string VisitorCksum::visit_mouse_event(std::shared_ptr<AST::MouseEvent> mouse_event) {
 	std::string result("mouse_event");
+	//TODO!
 	result += *mouse_event;
 	return result;
 }

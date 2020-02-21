@@ -629,7 +629,7 @@ std::shared_ptr<Action<MouseEvent>> Parser::mouse_event() {
 	match(Token::category::mouse);
 
 	Token event_token = LT(1);
-	match({Token::category::move, Token::category::click, Token::category::rclick});
+	match({Token::category::move, Token::category::click, Token::category::rclick, Token::category::dclick});
 
 	std::shared_ptr<AST::ISelectable> object = nullptr;
 

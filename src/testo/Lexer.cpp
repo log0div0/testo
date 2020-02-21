@@ -196,6 +196,8 @@ Token Lexer::id() {
 		return click();
 	} else if (value == "rclick") {
 		return rclick();
+	} else if (value == "dclick") {
+		return dclick();
 	} else if (value == "plug") {
 		return plug();
 	} else if (value == "unplug") {
@@ -345,6 +347,13 @@ Token Lexer::rclick() {
 	std::string value("rclick");
 	current_pos.advance(value.length());
 	return Token(Token::category::rclick, value, tmp_pos);
+}
+
+Token Lexer::dclick() {
+	Pos tmp_pos = current_pos;
+	std::string value("dclick");
+	current_pos.advance(value.length());
+	return Token(Token::category::dclick, value, tmp_pos);
 }
 
 Token Lexer::plug() {

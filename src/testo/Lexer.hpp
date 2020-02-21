@@ -141,6 +141,7 @@ private:
 	Token move();
 	Token click();
 	Token rclick();
+	Token dclick();
 	Token plug();
 	Token unplug();
 	Token start();
