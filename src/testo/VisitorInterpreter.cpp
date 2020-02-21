@@ -708,7 +708,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 
 bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
-		return visit_select_selectable(p->select_expr, screenshot);
+		return visit_select_selectable(p->select_expr, screenshot).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
 		return visit_select_unop(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
@@ -720,32 +720,30 @@ bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> sel
 	}
 }
 
-bool VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
+quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
 	try {
 		auto js_ctx = js_runtime.create_context();
 		js_ctx.register_nn_functions();
 		nn::Context nn_ctx(&screenshot);
 		js_ctx.set_opaque(&nn_ctx);
-		auto value = js_ctx.eval(script);
-
-		if (!value.is_bool()) {
-			throw std::runtime_error("Jsvascript selection should return only boolean values");
-		}
-		return value;
+		return js_ctx.eval(script);
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
 
 }
 
-bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
-	std::string query = "";
+std::vector<nn::Rect> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		return nn::OCR(&screenshot).search(text).size();
+		return nn::OCR(&screenshot).search(text);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
-		return eval_js(script, screenshot);
+		auto value = eval_js(script, screenshot);
+		std::vector<nn::Rect> result;
+		if (value.is_bool() && value) {
+			result.push_back(nn::Rect());
+		}
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}

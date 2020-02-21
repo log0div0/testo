@@ -420,7 +420,7 @@ struct Press: public Node {
 };
 
 struct MouseEvent: public Node {
-	MouseEvent(const Token& mouse, const Token& event, std::shared_ptr<String> object):
+	MouseEvent(const Token& mouse, const Token& event, std::shared_ptr<ISelectable> object):
 		Node(mouse), event(event), object(object) {}
 
 	Pos begin() const {
@@ -448,8 +448,7 @@ struct MouseEvent: public Node {
 	}
 
 	Token event;
-
-	std::shared_ptr<String> object = nullptr;
+	std::shared_ptr<ISelectable> object = nullptr;
 };
 
 //Also is used for unplug

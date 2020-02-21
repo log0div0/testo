@@ -6,6 +6,7 @@
 #include "TemplateParser.hpp"
 #include "Reporter.hpp"
 #include "quickjs/Runtime.hpp"
+#include <nn/Rect.hpp>
 #include <vector>
 #include <list>
 
@@ -81,7 +82,7 @@ struct VisitorInterpreter {
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	bool visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
-	bool visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	std::vector<nn::Rect> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
 	bool visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
 	bool visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
@@ -108,7 +109,7 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
-	bool eval_js(const std::string& script, stb::Image& screenshot);
+	quickjs::Value eval_js(const std::string& script, stb::Image& screenshot);
 
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
 
