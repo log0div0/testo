@@ -166,8 +166,11 @@ int dbuf_putstr(DynBuf *s, const char *str)
     return dbuf_put(s, (const uint8_t *)str, strlen(str));
 }
 
-int __attribute__((format(printf, 2, 3))) dbuf_printf(DynBuf *s,
-                                                      const char *fmt, ...)
+int
+#ifdef __GNUC__
+__attribute__((format(printf, 2, 3)))
+#endif
+dbuf_printf(DynBuf *s, const char *fmt, ...)
 {
     va_list ap;
     char buf[128];
@@ -257,23 +260,17 @@ int unicode_from_utf8(const uint8_t *p, int max_len, const uint8_t **pp)
         *pp = p;
         return c;
     }
-    switch(c) {
-    case 0xc0 ... 0xdf:
+    if ((c >= 0xc0) && (c <= 0xdf)) {
         l = 1;
-        break;
-    case 0xe0 ... 0xef:
+    } else if ((c >= 0xe0) && (c <= 0xef)) {
         l = 2;
-        break;
-    case 0xf0 ... 0xf7:
+    } else if ((c >= 0xf0) && (c <= 0xf7)) {
         l = 3;
-        break;
-    case 0xf8 ... 0xfb:
+    } else if ((c >= 0xf8) && (c <= 0xfb)) {
         l = 4;
-        break;
-    case 0xfc ... 0xfd:
+    } else if ((c >= 0xfc) && (c <= 0xfd)) {
         l = 5;
-        break;
-    default:
+    } else {
         return -1;
     }
     /* check that we have enough characters */
