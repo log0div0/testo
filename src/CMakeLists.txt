@@ -21,6 +21,22 @@ link_directories(
 	${ONNX_RUNTIME_DIR}/lib/
 )
 
+if (WIN32)
+set(ONNX_RUNTIME_LINKER_FLAGS " \
+	onnxruntime_common.lib \
+	onnxruntime_framework.lib \
+	onnxruntime_graph.lib \
+	onnxruntime_mlas.lib \
+	onnxruntime_optimizer.lib \
+	onnxruntime_providers.lib \
+	onnxruntime_session.lib \
+	onnxruntime_util.lib \
+	libprotobuf-lite.lib \
+	onnx.lib \
+	onnx_proto.lib \
+	re2.lib \
+")
+else()
 set(ONNX_RUNTIME_LINKER_FLAGS " \
 	-Wl,--whole-archive \
 		-Wl,-lonnxruntime_common \
@@ -37,6 +53,7 @@ set(ONNX_RUNTIME_LINKER_FLAGS " \
 		-Wl,-lre2 \
 	-Wl,--no-whole-archive \
 ")
+endif()
 
 if (APPLE)
 include_directories(/usr/local/include)

@@ -34,8 +34,10 @@ file(GLOB_RECURSE TEST_SRCS tests/*.cpp)
 add_executable(nn_tests ${TEST_SRCS})
 target_link_libraries(nn_tests nn)
 
+if(UNIX)
 add_custom_target(run-nn-tests
 	COMMAND ${CMAKE_BINARY_DIR}/out/sbin/nn_tests --durations yes
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests
 	DEPENDS nn_tests
 )
+endif()

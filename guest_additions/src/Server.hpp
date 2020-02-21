@@ -3,13 +3,8 @@
 
 #include "Channel.hpp"
 
-#ifdef __GNUC__
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
-namespace fs = std::filesystem;
-#endif
 
 struct Server {
 	Server(const std::string& fd_path);
