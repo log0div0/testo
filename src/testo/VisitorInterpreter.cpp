@@ -831,38 +831,31 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
 	try {
+		auto text = mouse_event->is_move_needed() ? template_parser.resolve(std::string(*mouse_event->object), reg) : "";
+		reporter.mouse_event(vmc, mouse_event->event.value(), text);
 		if (mouse_event->is_move_needed()) {
-			//reporter.mouse_move(vmc, mouse_event->dx_token, mouse_event->dy_token);
 
 			auto screenshot = vmc->vm->screenshot();
-			auto result = nn::OCR(&screenshot).search("Продолжить");
+			auto found = visit_select_selectable(mouse_event->object, screenshot);
 
-			if (!result.size()) {
-				throw std::runtime_error("Can't find entry to click: Продолжить");
+			if (!found.size()) {
+				throw std::runtime_error("Can't find entry to click: " + text);
 			}
 
-			if (result.size() > 1) {
-				throw std::runtime_error("Too many occurences of entry to click: Продолжить");
+			if (found.size() > 1) {
+				throw std::runtime_error("Too many occurences of entry to click: " + text);
 			}
 
-			auto x = result[0].center_x();
-			auto y = result[0].center_y();
-
-			std::cout << "X: " << x << std::endl;
-			std::cout << "Y: " << y << std::endl;
-
-			vmc->vm->mouse_move_abs(x, y);
+			vmc->vm->mouse_move_abs(found[0].center_x(), found[0].center_y());
 		}
 
 		if (mouse_event->event.value() == "move") {
 			return;
 		} else if (mouse_event->event.value() == "click") {
-			reporter.mouse_click(vmc, "Left Clicking");
 
 			vmc->vm->mouse_set_buttons(MouseButton::Left);
 			vmc->vm->mouse_set_buttons(0);
 		} else if (mouse_event->event.value() == "rclick") {
-			reporter.mouse_click(vmc, "Right Clicking");
 
 			vmc->vm->mouse_set_buttons(MouseButton::Right);
 			vmc->vm->mouse_set_buttons(0);

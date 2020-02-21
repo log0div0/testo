@@ -56,8 +56,7 @@ struct Reporter {
 	void plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on);
 	void exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout);
 	void copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
-	void mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y);
-	void mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type);
+	void mouse_event(std::shared_ptr<VmController> vmc, const std::string& event, std::string object);
 
 	//negotiator
 	void exec_command_output(const std::string& text);
