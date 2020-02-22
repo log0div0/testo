@@ -5,8 +5,8 @@ add_subdirectory(pkg)
 
 if (UNIX)
 	set(ISO_FILES
-		${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-1.0.0.deb
-		${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-1.0.0.rpm
+		${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-${TESTO_VERSION}.deb
+		${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-${TESTO_VERSION}.rpm
 		${CMAKE_CURRENT_SOURCE_DIR}/pkg/win/autorun.inf
 		${CMAKE_CURRENT_SOURCE_DIR}/pkg/win/testo-guest-additions.msi
 	)
