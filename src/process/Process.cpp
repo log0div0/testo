@@ -19,7 +19,7 @@ std::string Process::exec(const std::string& cmd) {
 	return result;
 }
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 Process::Process(const std::string& cmd) {
 	pipe = popen(cmd.c_str(), "r");
 	if (!pipe) {

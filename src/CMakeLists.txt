@@ -36,7 +36,8 @@ set(ONNX_RUNTIME_LINKER_FLAGS " \
 	onnx_proto.lib \
 	re2.lib \
 ")
-else()
+endif()
+if (UNIT AND NOT APPLE)
 set(ONNX_RUNTIME_LINKER_FLAGS " \
 	-Wl,--whole-archive \
 		-Wl,-lonnxruntime_common \
@@ -52,6 +53,22 @@ set(ONNX_RUNTIME_LINKER_FLAGS " \
 		-Wl,-lonnx_proto \
 		-Wl,-lre2 \
 	-Wl,--no-whole-archive \
+")
+endif()
+if (APPLE)
+set(ONNX_RUNTIME_LINKER_FLAGS " \
+	-lonnxruntime_common \
+	-lonnxruntime_framework \
+	-lonnxruntime_graph \
+	-lonnxruntime_mlas \
+	-lonnxruntime_optimizer \
+	-lonnxruntime_providers \
+	-lonnxruntime_session \
+	-lonnxruntime_util \
+	-lprotobuf-lite \
+	-lonnx \
+	-lonnx_proto \
+	-lre2 \
 ")
 endif()
 

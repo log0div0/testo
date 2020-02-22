@@ -45,7 +45,7 @@ struct Process {
 
 private:
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 	int rc = 0;
 	FILE* pipe = 0;
 #endif
