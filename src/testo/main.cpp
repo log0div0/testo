@@ -200,6 +200,7 @@ int do_main(int argc, char** argv) {
 #ifdef WIN32
 	wmi::CoInitializer initializer;
 	initializer.initalize_security();
+	SetConsoleOutputCP(CP_UTF8);
 #endif
 #ifdef WIN32
 	args.hypervisor = "hyperv";
