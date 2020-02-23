@@ -66,13 +66,12 @@ test win7_installation_mouse {
 		start
 		wait "Choose an operating system"
 		press Down, Enter
-		wait "Мой язык - русский" timeout 2m;
-		mouse click "Мой язык - русский";
+		mouse click "Мой язык - русский" timeout 2m;
 		
 		wait "Выберите нужный язык"; press Enter #2 "Далее"
-		wait "Установить"; mouse click "Установить"
+		mouse click "Установить" timeout 1m;
 		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
-		wait "Условия лицензии"; mouse click "Я принимаю условия лицензии"; mouse click "Далее"
+		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
 		wait "Выберите тип установки"; mouse click "Полная установка"
 		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
 		wait "Выберите имя пользователя" timeout 15m
@@ -97,7 +96,7 @@ test guest_additions_mouse: win7_installation_mouse {
 		wait timeout 5s
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		wait "Автозапуск"; mouse click "Выполнить testo-guest-additions"
+		mouse click "Выполнить testo-guest-additions" timeout 1m
 		wait "Вас приветствует мастер установки"; mouse click "Далее"
 		wait "Выбор папки для установки"; press Enter #2 "Далее"
 		wait "Подтверждение установки"; press Enter #2 "Далее"

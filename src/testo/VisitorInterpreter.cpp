@@ -833,11 +833,32 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
 	try {
 		auto text = mouse_event->is_move_needed() ? template_parser.resolve(std::string(*mouse_event->object), reg) : "";
-		reporter.mouse_event(vmc, mouse_event->event.value(), text);
+		std::string wait_for_report = mouse_event->time_interval ? mouse_event->time_interval.value() : "";
+		reporter.mouse_event(vmc, mouse_event->event.value(), text, wait_for_report);
 		if (mouse_event->is_move_needed()) {
 
-			auto screenshot = vmc->vm->screenshot();
-			auto found = visit_select_selectable(mouse_event->object, screenshot);
+			std::string wait_for = mouse_event->time_interval ? mouse_event->time_interval.value() : "1s";
+			auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
+
+			std::vector<nn::Rect> found;
+			while (std::chrono::system_clock::now() < deadline) {
+				auto start = std::chrono::high_resolution_clock::now();
+				auto screenshot = vmc->vm->screenshot();
+
+				found = visit_select_selectable(mouse_event->object, screenshot);
+				if (found.size()) {
+					break;
+				}
+
+				auto end = std::chrono::high_resolution_clock::now();
+				std::chrono::duration<double> time = end - start;
+				//std::cout << "time = " << time.count() << " seconds" << std::endl;
+				if (time < 1s) {
+					timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+				} else {
+					coro::CheckPoint();
+				}
+			}
 
 			if (!found.size()) {
 				throw std::runtime_error("Can't find entry to click: " + text);

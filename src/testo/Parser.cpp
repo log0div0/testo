@@ -631,6 +631,9 @@ std::shared_ptr<Action<MouseEvent>> Parser::mouse_event() {
 	Token event_token = LT(1);
 	match({Token::category::move, Token::category::click, Token::category::rclick, Token::category::dclick});
 
+	Token timeout = Token();
+	Token time_interval = Token();
+
 	std::shared_ptr<AST::ISelectable> object = nullptr;
 
 	if (test_selectable()) {
@@ -641,7 +644,19 @@ std::shared_ptr<Action<MouseEvent>> Parser::mouse_event() {
 		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: action mouse move requires an object");
 	}
 
-	auto action = std::shared_ptr<MouseEvent>(new MouseEvent(mouse_token, event_token, object));
+	if (LA(1) == Token::category::timeout) {
+		timeout = LT(1);
+		match(Token::category::timeout);
+
+		time_interval = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	if (timeout && (object == nullptr)) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: timeout can be used only with an object");
+	}
+
+	auto action = std::shared_ptr<MouseEvent>(new MouseEvent(mouse_token, event_token, object, timeout, time_interval));
 	return std::shared_ptr<Action<MouseEvent>>(new Action<MouseEvent>(action));
 }
 

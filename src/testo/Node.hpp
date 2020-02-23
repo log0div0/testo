@@ -420,15 +420,17 @@ struct Press: public Node {
 };
 
 struct MouseEvent: public Node {
-	MouseEvent(const Token& mouse, const Token& event, std::shared_ptr<ISelectable> object):
-		Node(mouse), event(event), object(object) {}
+	MouseEvent(const Token& mouse, const Token& event, std::shared_ptr<ISelectable> object, const Token& timeout, const Token& time_interval):
+		Node(mouse), event(event), object(object), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		if (object) {
+		if (timeout) {
+			return time_interval.pos();
+		} else if (object) {
 			return object->end();
 		} else {
 			return t.pos();
@@ -440,6 +442,9 @@ struct MouseEvent: public Node {
 		if (object) {
 			result += std::string(*object);
 		}
+		if (timeout) {
+			result += " " + timeout.value() + " " + time_interval.value();
+		}
 		return result;
 	}
 
@@ -449,6 +454,9 @@ struct MouseEvent: public Node {
 
 	Token event;
 	std::shared_ptr<ISelectable> object = nullptr;
+
+	Token timeout;
+	Token time_interval;
 };
 
 //Also is used for unplug

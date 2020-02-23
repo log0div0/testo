@@ -324,7 +324,7 @@ void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, 
 	report(fmt::format("with timeout {}\n", timeout), blue);
 }
 
-void Reporter::mouse_event(std::shared_ptr<VmController> vmc, std::string event, std::string object) {
+void Reporter::mouse_event(std::shared_ptr<VmController> vmc, std::string event, std::string object, const std::string& timeout) {
 	if (event == "move") {
 		event = "moving";
 	} else if (event == "click") {
@@ -338,6 +338,10 @@ void Reporter::mouse_event(std::shared_ptr<VmController> vmc, std::string event,
 	report(fmt::format("{} Mouse {} ", progress(), event), blue);
 	if (object.length()) {
 		report(fmt::format("on {} ", object), yellow);
+	}
+
+	if (timeout.length()) {
+		report(fmt::format("for {} ", timeout), blue);
 	}
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
