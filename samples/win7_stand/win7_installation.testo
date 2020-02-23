@@ -42,14 +42,9 @@ test win7_installation {
 
 test guest_additions: win7_installation {
 	win7 {
-
 		wait timeout 5s
 
-		mouse click "Продолжить"
-
-		abort "stop here"
-
-		/*plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
 		wait "Вас приветствует мастер установки"; press Enter
 		wait "Выбор папки для установки"; press Enter
@@ -62,6 +57,56 @@ test guest_additions: win7_installation {
 		wait "Установка завершена"; press Enter
 		wait !"Установка завершена"
 		exec cmd "echo hello world"
-		copyto "test.txt" "C:\\tmp\\test.txt"*/
+		copyto "test.txt" "C:\\tmp\\test.txt"
+	}
+}
+
+test win7_installation_mouse {
+	win7 {
+		start
+		wait "Choose an operating system"
+		press Down, Enter
+		wait "Мой язык - русский" timeout 2m;
+		mouse click "Мой язык - русский";
+		
+		wait "Выберите нужный язык"; press Enter #2 "Далее"
+		wait "Установить"; mouse click "Установить"
+		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
+		wait "Условия лицензии"; mouse click "Я принимаю условия лицензии"; mouse click "Далее"
+		wait "Выберите тип установки"; mouse click "Полная установка"
+		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
+		wait "Выберите имя пользователя" timeout 15m
+		unplug dvd
+		press LeftShift + LeftAlt; type "testo"; mouse click "Далее"
+		#wait "Установите пароль"; mouse click "Далее"
+		wait "Установите пароль"; press Enter
+		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
+		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
+		wait "Проверьте настройку даты и времени"; mouse click "Далее"
+		wait "Выберите текущее место расположения компьютера"; mouse click "Общественная сеть"
+		wait "Корзина" timeout 10m
+		shutdown
+		start
+		wait "Корзина"
+	}
+}
+
+
+test guest_additions_mouse: win7_installation_mouse {
+	win7 {
+		wait timeout 5s
+
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		wait "Автозапуск"; mouse click "Выполнить testo-guest-additions"
+		wait "Вас приветствует мастер установки"; mouse click "Далее"
+		wait "Выбор папки для установки"; press Enter #2 "Далее"
+		wait "Подтверждение установки"; press Enter #2 "Далее"
+		wait "Разрешить внесение изменений"; press Left, Enter
+		wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
+		
+		wait "Установка завершена"; press Enter #2 "Закрыть"
+		wait !"Установка завершена"
+		exec cmd "echo hello world"
+		copyto "test.txt" "C:\\tmp\\test.txt"
 	}
 }
