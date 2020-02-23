@@ -123,9 +123,18 @@ std::string VisitorCksum::visit_press(std::shared_ptr<AST::Press> press) {
 }
 
 std::string VisitorCksum::visit_mouse_event(std::shared_ptr<AST::MouseEvent> mouse_event) {
-	std::string result("mouse_event");
-	//TODO!
-	result += *mouse_event;
+	std::string result = "mouse";
+	result += mouse_event->event.value();
+	if (mouse_event->object) {
+		result += template_parser.resolve(std::string(*mouse_event->object), reg);
+	}
+
+	if (mouse_event->time_interval) {
+		result += mouse_event->time_interval.value();
+	} else {
+		result += "1s";
+	}
+
 	return result;
 }
 
