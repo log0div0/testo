@@ -37,7 +37,7 @@ set(ONNX_RUNTIME_LINKER_FLAGS " \
 	re2.lib \
 ")
 endif()
-if (UNIT AND NOT APPLE)
+if (UNIX AND NOT APPLE)
 set(ONNX_RUNTIME_LINKER_FLAGS " \
 	-Wl,--whole-archive \
 		-Wl,-lonnxruntime_common \

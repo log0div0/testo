@@ -2,24 +2,29 @@ cmake_minimum_required(VERSION 3.0)
 
 set(CPACK_PACKAGE_NAME "testo")
 set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
+
+set(CPACK_GENERATOR "DEB;RPM")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
-set(CPACK_GENERATOR "DEB")
 
-macro(install_without_symbols NAME)
-	add_custom_target(${NAME}-without-symbols
-		COMMAND strip --strip-debug ${CMAKE_BINARY_DIR}/out/sbin/${NAME}
-			-o ${CMAKE_BINARY_DIR}/out/sbin/${NAME}-without-symbols
-		DEPENDS ${NAME}
-	)
-	install(PROGRAMS
-		${CMAKE_BINARY_DIR}/out/sbin/${NAME}-without-symbols
-		DESTINATION /usr/sbin/
-		RENAME ${NAME}
-		PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-	)
-endmacro(install_without_symbols)
+install(PROGRAMS
+	${CMAKE_BINARY_DIR}/out/sbin/testo
+	DESTINATION /usr/sbin
+	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-install_without_symbols(testo)
+install(FILES
+	${CMAKE_SOURCE_DIR}/src/nn/TextDetector.onnx
+	${CMAKE_SOURCE_DIR}/src/nn/TextRecognizer.onnx
+	${CMAKE_SOURCE_DIR}/src/nn/TextColorPicker.onnx
+	DESTINATION /usr/share/testo
+	PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST
+	/usr
+	/usr/sbin
+)
+
+set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/preinst)
+set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/postrm)
 
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 	"${CMAKE_CURRENT_SOURCE_DIR}/preinst;\
@@ -34,4 +39,4 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 ")
 
 add_package(testo-package)
-add_dependencies(testo-package testo-without-symbols)
+add_dependencies(testo-package testo)

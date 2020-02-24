@@ -6,7 +6,7 @@ set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 set(CPACK_GENERATOR "DEB;RPM")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 
-install(FILES
+install(PROGRAMS
 	${CMAKE_BINARY_DIR}/out/sbin/testo-guest-additions
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
@@ -31,8 +31,6 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 "${CMAKE_CURRENT_SOURCE_DIR}/postinst;\
 ${CMAKE_CURRENT_SOURCE_DIR}/prerm;\
 ${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
-
-set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 
 add_package(testo-guest-additions-package)
 add_dependencies(testo-guest-additions-package testo-guest-additions)

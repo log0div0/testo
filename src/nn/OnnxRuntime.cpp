@@ -1,6 +1,10 @@
 
 #include "OnnxRuntime.hpp"
 
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
+
 namespace nn {
 
 std::unique_ptr<Ort::Env> env;
@@ -13,7 +17,11 @@ OnnxRuntime::~OnnxRuntime() {
 	env.reset();
 }
 
-std::unique_ptr<Ort::Session> LoadModel(unsigned char* data, unsigned int size) {
+fs::path GetModelDir() {
+	return "/usr/share/testo";
+}
+
+std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 	if (!env) {
 		throw std::runtime_error("Init onnx runtime first!");
 	}
@@ -22,7 +30,8 @@ std::unique_ptr<Ort::Session> LoadModel(unsigned char* data, unsigned int size) 
 	session_options.SetIntraOpNumThreads(1);
 	session_options.SetInterOpNumThreads(1);
 	session_options.SetExecutionMode(ORT_SEQUENTIAL);
-	return std::make_unique<Ort::Session>(*env, data, size, session_options);
+	fs::path model_path = GetModelDir() / (name + ".onnx");
+	return std::make_unique<Ort::Session>(*env, model_path.generic_string().c_str(), session_options);
 }
 
 }

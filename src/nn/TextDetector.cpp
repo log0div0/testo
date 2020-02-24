@@ -3,9 +3,6 @@
 #include <iostream>
 #include <algorithm>
 
-extern unsigned char TextDetector_onnx[];
-extern unsigned int TextDetector_onnx_len;
-
 namespace nn {
 
 static inline bool is_n_times_div_by_2(int value, size_t n) {
@@ -33,7 +30,7 @@ TextDetector& TextDetector::instance() {
 }
 
 TextDetector::TextDetector() {
-	session = LoadModel(TextDetector_onnx, TextDetector_onnx_len);
+	session = LoadModel("TextDetector");
 }
 
 TextDetector::~TextDetector() {
