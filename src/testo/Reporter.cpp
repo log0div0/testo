@@ -341,7 +341,7 @@ void Reporter::mouse_event(std::shared_ptr<VmController> vmc, std::string event,
 	}
 
 	if (timeout.length()) {
-		report(fmt::format("for {} ", timeout), blue);
+		report(fmt::format("with timeout {} ", timeout), blue);
 	}
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);

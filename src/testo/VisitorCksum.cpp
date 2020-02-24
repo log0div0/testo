@@ -127,6 +127,8 @@ std::string VisitorCksum::visit_mouse_event(std::shared_ptr<AST::MouseEvent> mou
 	result += mouse_event->event.value();
 	if (mouse_event->object) {
 		result += template_parser.resolve(std::string(*mouse_event->object), reg);
+	} else if (mouse_event->dx) {
+		result += mouse_event->dx.value() + " " + mouse_event->dy.value();
 	}
 
 	if (mouse_event->time_interval) {
