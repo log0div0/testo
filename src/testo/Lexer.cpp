@@ -198,6 +198,14 @@ Token Lexer::id() {
 		return rclick();
 	} else if (value == "dclick") {
 		return dclick();
+	} else if (value == "hold") {
+		return hold();
+	} else if (value == "release") {
+		return release();
+	} else if (value == "lbtn") {
+		return lbtn();
+	} else if (value == "rbtn") {
+		return rbtn();
 	} else if (value == "plug") {
 		return plug();
 	} else if (value == "unplug") {
@@ -354,6 +362,34 @@ Token Lexer::dclick() {
 	std::string value("dclick");
 	current_pos.advance(value.length());
 	return Token(Token::category::dclick, value, tmp_pos);
+}
+
+Token Lexer::hold() {
+	Pos tmp_pos = current_pos;
+	std::string value("hold");
+	current_pos.advance(value.length());
+	return Token(Token::category::hold, value, tmp_pos);
+}
+
+Token Lexer::release() {
+	Pos tmp_pos = current_pos;
+	std::string value("release");
+	current_pos.advance(value.length());
+	return Token(Token::category::release, value, tmp_pos);
+}
+
+Token Lexer::lbtn() {
+	Pos tmp_pos = current_pos;
+	std::string value("lbtn");
+	current_pos.advance(value.length());
+	return Token(Token::category::lbtn, value, tmp_pos);
+}
+
+Token Lexer::rbtn() {
+	Pos tmp_pos = current_pos;
+	std::string value("rbtn");
+	current_pos.advance(value.length());
+	return Token(Token::category::rbtn, value, tmp_pos);
 }
 
 Token Lexer::plug() {

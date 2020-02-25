@@ -142,6 +142,10 @@ private:
 	Token click();
 	Token rclick();
 	Token dclick();
+	Token hold();
+	Token release();
+	Token lbtn();
+	Token rbtn();
 	Token plug();
 	Token unplug();
 	Token start();

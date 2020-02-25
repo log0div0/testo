@@ -449,6 +449,14 @@ void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 		double x_pos = double(32768) / double(tmp_screen.width) * double(x);
 		double y_pos = double(32768) / double(tmp_screen.height) * double(y);
 
+		if ((int)x_pos == 0) {
+			x_pos = 1;
+		}
+
+		if ((int)y_pos == 0) {
+			y_pos = 1;
+		}
+
 		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
 			{{
 				"execute": "input-send-event",
@@ -498,6 +506,10 @@ void QemuVM::mouse_move_abs(const std::string& axis, uint32_t value) {
 			pos = double(32768) / double(tmp_screen.height) * double(value);
 		} else {
 			throw std::runtime_error("Unknown axis: " + axis);
+		}
+
+		if ((int)pos == 0) {
+			pos = 1;
 		}
 
 		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(

@@ -881,7 +881,7 @@ void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, st
 					vmc->vm->mouse_move_abs("x", std::stoul(dx));
 				}
 
-				auto dy = mouse_event->dx.value();
+				auto dy = mouse_event->dy.value();
 				if ((dy[0] == '+') || (dy[0] == '-')) {
 					vmc->vm->mouse_move_rel("y", std::stoi(dy));
 				} else {

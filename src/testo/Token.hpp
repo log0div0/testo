@@ -20,6 +20,10 @@ struct Token {
 		click,
 		rclick,
 		dclick,
+		hold,
+		release,
+		lbtn,
+		rbtn,
 		plug,
 		unplug,
 		start,
@@ -146,6 +150,22 @@ struct Token {
 			return "JS";
 		case press:
 			return "ACTION PRESS";
+		case mouse:
+			return "MOUSE EVENT";
+		case click:
+			return "ACTION CLICK";
+		case rclick:
+			return "ACTION RCLICK";
+		case dclick:
+			return "ACTION DCLICK";
+		case hold:
+			return "ACTION HOLD";
+		case release:
+			return "ACTION RELEASE";
+		case lbtn:
+			return "LBTN";
+		case rbtn:
+			return "RBTN";
 		case plug:
 			return "ACTION PLUG";
 		case unplug:

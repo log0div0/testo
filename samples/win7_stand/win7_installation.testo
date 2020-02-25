@@ -6,7 +6,7 @@ machine win7 {
 	cpus: 2
 	ram: 2Gb
 	iso: "${ISO_DIR}/win7.iso"
-	disk_size: 15Gb
+	disk_size: 20Gb
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
@@ -67,12 +67,18 @@ test win7_installation_mouse {
 		wait "Choose an operating system"
 		press Down, Enter
 		mouse click "Мой язык - русский" timeout 2m;
-		
+
 		wait "Выберите нужный язык"; press Enter #2 "Далее"
 		mouse click "Установить" timeout 1m;
-		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
+		wait "Выберите операционную систему"; mouse click "Далее"
+		wait "Условия лицензии"
 		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
-		wait "Выберите тип установки"; mouse click "Полная установка"
+		wait "Выберите тип установки";
+		if (check "Полная установка") {
+			mouse click "Полная установка"
+		} else {
+			mouse click "Выборочная"
+		}
 		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
 		wait "Выберите имя пользователя" timeout 15m
 		unplug dvd
@@ -91,6 +97,16 @@ test win7_installation_mouse {
 }
 
 
+test test_mouse: win7_installation_mouse {
+	win7 {
+		wait timeout 5s
+
+		mouse move 799 599
+
+		abort "Stop here"
+	}
+}
+
 test guest_additions_mouse: win7_installation_mouse {
 	win7 {
 		wait timeout 5s
@@ -102,7 +118,7 @@ test guest_additions_mouse: win7_installation_mouse {
 		wait "Подтверждение установки"; press Enter #2 "Далее"
 		wait "Разрешить внесение изменений"; press Left, Enter
 		wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
-		
+
 		wait "Установка завершена"; press Enter #2 "Закрыть"
 		wait !"Установка завершена"
 		exec cmd "echo hello world"
