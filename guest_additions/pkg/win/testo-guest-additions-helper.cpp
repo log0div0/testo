@@ -28,7 +28,6 @@ enum class Command {
 
 #define APP_NAME "testo-guest-additions-helper"
 
-std::string targetdir;
 Command selected_command;
 
 struct Service {

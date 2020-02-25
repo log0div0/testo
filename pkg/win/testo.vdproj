@@ -15,6 +15,12 @@
     {
         "Entry"
         {
+        "MsmKey" = "8:_06D2A1D50D73463F9742A0E1BF585941"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_162AB2F7B41044A3910B6F683CE1D667"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -83,6 +89,34 @@
     {
         "CustomAction"
         {
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_874AECA5E2D7460D8D8991E69D333CE3"
+            {
+            "Name" = "8:testo-helper.exe"
+            "Condition" = "8:"
+            "Object" = "8:_06D2A1D50D73463F9742A0E1BF585941"
+            "FileType" = "3:2"
+            "InstallAction" = "3:1"
+            "Arguments" = "8:install"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_308E4DCC_A56D_4A74_B0E7_065C0EF85372"
+            "InstallerClass" = "11:FALSE"
+            "CustomActionData" = "8:"
+            }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_95929995445F47699B0DEC558FBAAD5D"
+            {
+            "Name" = "8:testo-helper.exe"
+            "Condition" = "8:"
+            "Object" = "8:_06D2A1D50D73463F9742A0E1BF585941"
+            "FileType" = "3:2"
+            "InstallAction" = "3:4"
+            "Arguments" = "8:uninstall"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_570F2DCE_535F_4A16_8DF1_8858918C441C"
+            "InstallerClass" = "11:FALSE"
+            "CustomActionData" = "8:"
+            }
         }
         "DefaultFeature"
         {
@@ -98,6 +132,26 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_06D2A1D50D73463F9742A0E1BF585941"
+            {
+            "SourcePath" = "8:testo-helper.exe"
+            "TargetName" = "8:testo-helper.exe"
+            "Tag" = "8:"
+            "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_162AB2F7B41044A3910B6F683CE1D667"
             {
             "SourcePath" = "8:..\\..\\src\\nn\\TextRecognizer.onnx"
