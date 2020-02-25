@@ -21,57 +21,6 @@ link_directories(
 	${ONNX_RUNTIME_DIR}/lib/
 )
 
-if (WIN32)
-set(ONNX_RUNTIME_LINKER_FLAGS " \
-	onnxruntime_common.lib \
-	onnxruntime_framework.lib \
-	onnxruntime_graph.lib \
-	onnxruntime_mlas.lib \
-	onnxruntime_optimizer.lib \
-	onnxruntime_providers.lib \
-	onnxruntime_session.lib \
-	onnxruntime_util.lib \
-	libprotobuf-lite.lib \
-	onnx.lib \
-	onnx_proto.lib \
-	re2.lib \
-")
-endif()
-if (UNIX AND NOT APPLE)
-set(ONNX_RUNTIME_LINKER_FLAGS " \
-	-Wl,--whole-archive \
-		-Wl,-lonnxruntime_common \
-		-Wl,-lonnxruntime_framework \
-		-Wl,-lonnxruntime_graph \
-		-Wl,-lonnxruntime_mlas \
-		-Wl,-lonnxruntime_optimizer \
-		-Wl,-lonnxruntime_providers \
-		-Wl,-lonnxruntime_session \
-		-Wl,-lonnxruntime_util \
-		-Wl,-lprotobuf-lite \
-		-Wl,-lonnx \
-		-Wl,-lonnx_proto \
-		-Wl,-lre2 \
-	-Wl,--no-whole-archive \
-")
-endif()
-if (APPLE)
-set(ONNX_RUNTIME_LINKER_FLAGS " \
-	-lonnxruntime_common \
-	-lonnxruntime_framework \
-	-lonnxruntime_graph \
-	-lonnxruntime_mlas \
-	-lonnxruntime_optimizer \
-	-lonnxruntime_providers \
-	-lonnxruntime_session \
-	-lonnxruntime_util \
-	-lprotobuf-lite \
-	-lonnx \
-	-lonnx_proto \
-	-lre2 \
-")
-endif()
-
 if (APPLE)
 include_directories(/usr/local/include)
 link_directories(/usr/local/lib)
