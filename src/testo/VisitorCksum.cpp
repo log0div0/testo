@@ -122,13 +122,24 @@ std::string VisitorCksum::visit_press(std::shared_ptr<AST::Press> press) {
 	return result;
 }
 
+std::string VisitorCksum::visit_mouse_event_object(std::shared_ptr<AST::IMouseEventObject> object) {
+	std::string result;
+	if (auto p = std::dynamic_pointer_cast<AST::MouseEventObject<AST::MouseCoordinates>>(object)) {
+		result = std::string(*p->mouse_event_object);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEventObject<AST::ISelectable>>(object)) {
+		result = template_parser.resolve(std::string(*p->mouse_event_object), reg);
+	} else {
+		throw std::runtime_error("Unknown mouse even object");
+	}
+
+	return result;
+}
+
 std::string VisitorCksum::visit_mouse_event(std::shared_ptr<AST::MouseEvent> mouse_event) {
 	std::string result = "mouse";
 	result += mouse_event->event.value();
 	if (mouse_event->object) {
-		result += template_parser.resolve(std::string(*mouse_event->object), reg);
-	} else if (mouse_event->dx) {
-		result += mouse_event->dx.value() + " " + mouse_event->dy.value();
+		result += visit_mouse_event_object(mouse_event->object);
 	}
 
 	if (mouse_event->time_interval) {

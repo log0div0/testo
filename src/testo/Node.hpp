@@ -419,10 +419,67 @@ struct Press: public Node {
 	std::vector<std::shared_ptr<KeySpec>> keys;
 };
 
+//String or SelectQuery. Used only in
+//Wait, Check and Click (in future)
+struct IMouseEventObject: public Node {
+	using Node::Node;
+
+	virtual std::string text() const = 0;
+};
+
+
+template <typename MouseEventObjectType>
+struct MouseEventObject: public IMouseEventObject {
+	MouseEventObject(std::shared_ptr<MouseEventObjectType> mouse_event_object):
+		IMouseEventObject(mouse_event_object->t),
+		mouse_event_object(mouse_event_object) {}
+
+	Pos begin() const {
+		return mouse_event_object->begin();
+	}
+
+	Pos end() const {
+		return mouse_event_object->end();
+	}
+
+	operator std::string() const {
+		return std::string(*(mouse_event_object));
+	}
+
+	std::string text() const {
+		return mouse_event_object->text();
+	}
+
+	std::shared_ptr<MouseEventObjectType> mouse_event_object;
+};
+
+struct MouseCoordinates: public Node {
+	MouseCoordinates(const Token& dx, const Token& dy):
+		Node(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos())), dx(dx), dy(dy) {}
+
+	Pos begin() const {
+		return dx.pos();
+	}
+
+	Pos end() const {
+		return dy.pos();
+	}
+
+	operator std::string() const {
+		return dx.value() + " " + dy.value();;
+	}
+
+	std::string text() const {
+		return std::string(*this);
+	}
+
+	Token dx;
+	Token dy;
+};
+
 struct MouseEvent: public Node {
-	MouseEvent(const Token& mouse, const Token& event, std::shared_ptr<ISelectable> object, const Token& dx, const Token& dy,
-		const Token& timeout, const Token& time_interval):
-		Node(mouse), event(event), object(object), dx(dx), dy(dy), timeout(timeout), time_interval(time_interval) {}
+	MouseEvent(const Token& mouse, const Token& event, std::shared_ptr<IMouseEventObject> object, const Token& timeout, const Token& time_interval):
+		Node(mouse), event(event), object(object), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -433,10 +490,8 @@ struct MouseEvent: public Node {
 			return time_interval.pos();
 		} else if (object) {
 			return object->end();
-		} else if (dx) {
-			return dy.pos();
 		} else {
-			return t.pos();
+			return event.pos();
 		}
 	}
 
@@ -444,8 +499,6 @@ struct MouseEvent: public Node {
 		std::string result = t.value() + " " + event.value() + " ";
 		if (object) {
 			result += std::string(*object);
-		} else if (dx) {
-			result += dx.value() + " " + dy.value();
 		}
 		if (timeout) {
 			result += " " + timeout.value() + " " + time_interval.value();
@@ -454,14 +507,11 @@ struct MouseEvent: public Node {
 	}
 
 	bool is_move_needed() const {
-		return (object != nullptr) || dx;
+		return (object != nullptr);
 	}
 
 	Token event;
-	std::shared_ptr<ISelectable> object = nullptr;
-
-	Token dx;
-	Token dy;
+	std::shared_ptr<IMouseEventObject> object = nullptr;
 
 	Token timeout;
 	Token time_interval;

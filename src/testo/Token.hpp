@@ -90,6 +90,7 @@ struct Token {
 		none, //not initialized
 		binary, //true or false
 		program,
+		mouse_coordinates,
 		key_spec,
 		action_block,
 		attr,
@@ -152,6 +153,8 @@ struct Token {
 			return "ACTION PRESS";
 		case mouse:
 			return "MOUSE EVENT";
+		case mouse_coordinates:
+			return "MOUSE COORDINATES";
 		case click:
 			return "ACTION CLICK";
 		case rclick:

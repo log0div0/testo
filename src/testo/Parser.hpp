@@ -41,6 +41,7 @@ private:
 	bool test_select_expr() const;
 	bool test_binary() const;
 	bool test_comparison() const;
+	bool test_mouse_event_object() const;
 	bool is_button(const Token& t) const;
 
 	void newline_list();
@@ -64,6 +65,8 @@ private:
 	std::shared_ptr<AST::Action<AST::Wait>> wait();
 	std::shared_ptr<AST::Action<AST::Press>> press();
 	std::shared_ptr<AST::Action<AST::MouseEvent>> mouse_event();
+	std::shared_ptr<AST::IMouseEventObject> mouse_event_object();
+	std::shared_ptr<AST::MouseCoordinates> mouse_coordinates();
 	std::shared_ptr<AST::Action<AST::Plug>> plug();
 	std::shared_ptr<AST::Action<AST::Start>> start();
 	std::shared_ptr<AST::Action<AST::Stop>> stop();

@@ -830,63 +830,73 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
-	try {
-		std::string where_to_go = "";
-		if (mouse_event->is_move_needed()) {
-			where_to_go = mouse_event->object ? template_parser.resolve(std::string(*mouse_event->object), reg) : mouse_event->dx.value() + " " + mouse_event->dy.value();
+void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc,
+	std::shared_ptr<AST::ISelectable> selectable, const std::string& timeout)
+{
+	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
+
+	std::vector<nn::Rect> found;
+	while (std::chrono::system_clock::now() < deadline) {
+		auto start = std::chrono::high_resolution_clock::now();
+		auto screenshot = vmc->vm->screenshot();
+
+		found = visit_select_selectable(selectable, screenshot);
+		if (found.size()) {
+			break;
 		}
 
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> time = end - start;
+		//std::cout << "time = " << time.count() << " seconds" << std::endl;
+		if (time < 1s) {
+			timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
+		} else {
+			coro::CheckPoint();
+		}
+	}
+
+	if (!found.size()) {
+		throw std::runtime_error("Can't find entry to click: " + selectable->text());
+	}
+
+	if (found.size() > 1) {
+		throw std::runtime_error("Too many occurences of entry to click: " + selectable->text());
+	}
+
+	vmc->vm->mouse_move_abs(found[0].center_x(), found[0].center_y());
+}
+
+void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)
+{
+	auto dx = coordinates->dx.value();
+	if ((dx[0] == '+') || (dx[0] == '-')) {
+		vmc->vm->mouse_move_rel("x", std::stoi(dx));
+	} else {
+		vmc->vm->mouse_move_abs("x", std::stoul(dx));
+	}
+
+	auto dy = coordinates->dy.value();
+	if ((dy[0] == '+') || (dy[0] == '-')) {
+		vmc->vm->mouse_move_rel("y", std::stoi(dy));
+	} else {
+		vmc->vm->mouse_move_abs("y", std::stoul(dy));
+	}
+}
+
+void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
+	try {
+		std::string where_to_go = mouse_event->is_move_needed() ? mouse_event->object->text() : "";
 		std::string wait_for_report = mouse_event->time_interval ? mouse_event->time_interval.value() : "";
 		reporter.mouse_event(vmc, mouse_event->event.value(), where_to_go, wait_for_report);
+
 		if (mouse_event->is_move_needed()) {
-			if (mouse_event->object) {
+			if (auto p = std::dynamic_pointer_cast<AST::MouseEventObject<AST::MouseCoordinates>>(mouse_event->object)) {
+				visit_mouse_move_coordinates(vmc, p->mouse_event_object);
+			} else if (auto p = std::dynamic_pointer_cast<AST::MouseEventObject<AST::ISelectable>>(mouse_event->object)) {
 				std::string wait_for = mouse_event->time_interval ? mouse_event->time_interval.value() : "1s";
-				auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
-
-				std::vector<nn::Rect> found;
-				while (std::chrono::system_clock::now() < deadline) {
-					auto start = std::chrono::high_resolution_clock::now();
-					auto screenshot = vmc->vm->screenshot();
-
-					found = visit_select_selectable(mouse_event->object, screenshot);
-					if (found.size()) {
-						break;
-					}
-
-					auto end = std::chrono::high_resolution_clock::now();
-					std::chrono::duration<double> time = end - start;
-					//std::cout << "time = " << time.count() << " seconds" << std::endl;
-					if (time < 1s) {
-						timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
-					} else {
-						coro::CheckPoint();
-					}
-				}
-
-				if (!found.size()) {
-					throw std::runtime_error("Can't find entry to click: " + where_to_go);
-				}
-
-				if (found.size() > 1) {
-					throw std::runtime_error("Too many occurences of entry to click: " + where_to_go);
-				}
-
-				vmc->vm->mouse_move_abs(found[0].center_x(), found[0].center_y());
-			} else { //dx, dy
-				auto dx = mouse_event->dx.value();
-				if ((dx[0] == '+') || (dx[0] == '-')) {
-					vmc->vm->mouse_move_rel("x", std::stoi(dx));
-				} else {
-					vmc->vm->mouse_move_abs("x", std::stoul(dx));
-				}
-
-				auto dy = mouse_event->dy.value();
-				if ((dy[0] == '+') || (dy[0] == '-')) {
-					vmc->vm->mouse_move_rel("y", std::stoi(dy));
-				} else {
-					vmc->vm->mouse_move_abs("y", std::stoul(dy));
-				}
+				visit_mouse_move_selectable(vmc, p->mouse_event_object, wait_for);
+			} else {
+				throw std::runtime_error("Unknown mouse move action");
 			}
 		}
 
