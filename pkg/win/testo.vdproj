@@ -3,7 +3,7 @@
 "VSVersion" = "3:800"
 "ProjectType" = "8:{978C614F-708E-4E1A-B201-565925725DBA}"
 "IsWebType" = "8:FALSE"
-"ProjectName" = "8:testo-guest-additions"
+"ProjectName" = "8:testo"
 "LanguageId" = "3:1049"
 "CodePage" = "3:1251"
 "UILanguageId" = "3:1049"
@@ -13,36 +13,6 @@
 "SccProvider" = "8:"
     "Hierarchy"
     {
-        "Entry"
-        {
-        "MsmKey" = "8:_15F286DF9A1D479FB3F975886B57A6DB"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_62B11C80B842449F98354DE705D015B2"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_76AC046E0EAC44A6B3290279E3C71F66"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_ACE6E9227FD34FF7827A305939E9FCE1"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B3B90926EB184F028A4F3917070CEC04"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
         "Entry"
         {
         "MsmKey" = "8:_BD09AE4C781F497E872770B51E3D2341"
@@ -57,7 +27,7 @@
         "DisplayName" = "8:Default"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:testo-guest-additions.msi"
+        "OutputFilename" = "8:testo.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -89,20 +59,6 @@
     {
         "CustomAction"
         {
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_45EB27238913469BA3B3E7AB0F8103B5"
-            {
-            "Name" = "8:testo-guest-additions-helper.exe"
-            "Condition" = "8:"
-            "Object" = "8:_62B11C80B842449F98354DE705D015B2"
-            "FileType" = "3:2"
-            "InstallAction" = "3:1"
-            "Arguments" = "8:install"
-            "EntryPoint" = "8:"
-            "Sequence" = "3:1"
-            "Identifier" = "8:_5F34F683_84C0_433B_8D34_4282A9BAE2A1"
-            "InstallerClass" = "11:FALSE"
-            "CustomActionData" = "8:"
-            }
         }
         "DefaultFeature"
         {
@@ -118,110 +74,10 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_15F286DF9A1D479FB3F975886B57A6DB"
-            {
-            "SourcePath" = "8:vioserial\\WdfCoInstaller01009.dll"
-            "TargetName" = "8:WdfCoInstaller01009.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_62B11C80B842449F98354DE705D015B2"
-            {
-            "SourcePath" = "8:testo-guest-additions-helper.exe"
-            "TargetName" = "8:testo-guest-additions-helper.exe"
-            "Tag" = "8:"
-            "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_76AC046E0EAC44A6B3290279E3C71F66"
-            {
-            "SourcePath" = "8:vioserial\\vioser.sys"
-            "TargetName" = "8:vioser.sys"
-            "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_ACE6E9227FD34FF7827A305939E9FCE1"
-            {
-            "SourcePath" = "8:vioserial\\vioser.cat"
-            "TargetName" = "8:vioser.cat"
-            "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B3B90926EB184F028A4F3917070CEC04"
-            {
-            "SourcePath" = "8:vioserial\\vioser.inf"
-            "TargetName" = "8:vioser.inf"
-            "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BD09AE4C781F497E872770B51E3D2341"
             {
-            "SourcePath" = "8:testo-guest-additions.exe"
-            "TargetName" = "8:testo-guest-additions.exe"
+            "SourcePath" = "8:testo.exe"
+            "TargetName" = "8:testo.exe"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             "Condition" = "8:"
@@ -254,17 +110,6 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E6F180010EA34FA396B95B9EADAED24C"
-                    {
-                    "Name" = "8:vioserial"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_E9FD153F2F7248EEAFC7692328CD8801"
-                        "Folders"
-                        {
-                        }
-                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_8A0051F9839B4B3B8BA035BC1508816F"
@@ -304,10 +149,10 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:Testo Guest Additions"
-        "ProductCode" = "8:{E730A354-1A72-4D58-A832-188019986750}"
-        "PackageCode" = "8:{17489B92-74E1-496C-AE7A-E1274AA79C60}"
-        "UpgradeCode" = "8:{D80951FA-43DF-4B00-87CC-43A2824620D5}"
+        "ProductName" = "8:Testo"
+        "ProductCode" = "8:{5E35F151-2F97-494F-B351-A178C25A13D2}"
+        "PackageCode" = "8:{8C6EAEAC-8D66-487C-988E-D0828C426CE7}"
+        "UpgradeCode" = "8:{D80951FA-43DF-4B00-87CC-43A2824620D6}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
@@ -317,7 +162,7 @@
         "Manufacturer" = "8:Testo Lang"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
-        "Title" = "8:Testo Guest Additions"
+        "Title" = "8:Testo"
         "Subject" = "8:"
         "ARPCONTACT" = "8:Testo Lang"
         "Keywords" = "8:"
