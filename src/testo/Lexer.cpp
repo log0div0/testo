@@ -196,6 +196,8 @@ Token Lexer::id() {
 		return click();
 	} else if (value == "rclick") {
 		return rclick();
+	} else if (value == "mclick") {
+		return mclick();
 	} else if (value == "dclick") {
 		return dclick();
 	} else if (value == "hold") {
@@ -355,6 +357,13 @@ Token Lexer::rclick() {
 	std::string value("rclick");
 	current_pos.advance(value.length());
 	return Token(Token::category::rclick, value, tmp_pos);
+}
+
+Token Lexer::mclick() {
+	Pos tmp_pos = current_pos;
+	std::string value("mclick");
+	current_pos.advance(value.length());
+	return Token(Token::category::mclick, value, tmp_pos);
 }
 
 Token Lexer::dclick() {

@@ -18,7 +18,9 @@ struct Token {
 		mouse,
 		move,
 		click,
+		lclick,
 		rclick,
+		mclick,
 		dclick,
 		hold,
 		release,
@@ -157,8 +159,12 @@ struct Token {
 			return "MOUSE COORDINATES";
 		case click:
 			return "ACTION CLICK";
+		case lclick:
+			return "ACTION LCLICK";
 		case rclick:
 			return "ACTION RCLICK";
+		case mclick:
+			return "ACTION MCLICK";
 		case dclick:
 			return "ACTION DCLICK";
 		case hold:

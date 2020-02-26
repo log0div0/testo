@@ -630,9 +630,11 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 
 	std::shared_ptr<IMouseEvent> event = nullptr;
 
-	if (LA(1) == Token::category::click ||
-		LA(1) == Token::category::move ||
+	if (LA(1) == Token::category::move ||
+		LA(1) == Token::category::click ||
+		LA(1) == Token::category::lclick ||
 		LA(1) == Token::category::rclick ||
+		LA(1) == Token::category::mclick ||
 		LA(1) == Token::category::dclick)
 	{
 		event = mouse_move_click();
@@ -646,7 +648,12 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 
 std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click() {
 	Token event_token = LT(1);
-	match({Token::category::click, Token::category::move, Token::category::rclick, Token::category::dclick});
+	match({Token::category::click,
+		Token::category::lclick,
+		Token::category::move,
+		Token::category::rclick,
+		Token::category::mclick,
+		Token::category::dclick});
 
 	std::shared_ptr<IMouseMoveTarget> target = nullptr;
 	bool is_coordinates = false;

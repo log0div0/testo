@@ -1386,6 +1386,7 @@ std::string QemuVM::mouse_button_to_str(MouseButton btn) {
 	switch (btn) {
 		case Left: return "left";
 		case Right: return "right";
+		case Middle: return "middle";
 		default: throw std::runtime_error("Unknown button: " + btn);
 	}
 }

@@ -524,6 +524,42 @@ struct MouseMoveClick: public Node {
 	Token timeout;
 };
 
+struct MouseHold: public Node {
+	MouseHold(const Token& hold, const Token& button):
+		Node(hold), button(button) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return button.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + button.value();
+	}
+
+	Token button;
+};
+
+struct MouseRelease: public Node {
+	MouseRelease(const Token& release):
+		Node(release) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+};
+
 struct Mouse: public Node {
 	Mouse(const Token& mouse, std::shared_ptr<IMouseEvent> event):
 		Node(mouse), event(event) {}

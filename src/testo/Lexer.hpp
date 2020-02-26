@@ -141,6 +141,7 @@ private:
 	Token move();
 	Token click();
 	Token rclick();
+	Token mclick();
 	Token dclick();
 	Token hold();
 	Token release();

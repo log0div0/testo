@@ -853,12 +853,15 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 
 		if (mouse_move_click->t.type() == Token::category::move) {
 			return;
-		} else if (mouse_move_click->t.type() == Token::category::click) {
+		} else if (mouse_move_click->t.type() == Token::category::click || mouse_move_click->t.type() == Token::category::lclick) {
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
 		} else if (mouse_move_click->t.type() == Token::category::rclick) {
 			vmc->vm->mouse_press({MouseButton::Right});
 			vmc->vm->mouse_release({MouseButton::Right});
+		} else if (mouse_move_click->t.type() == Token::category::mclick) {
+			vmc->vm->mouse_press({MouseButton::Middle});
+			vmc->vm->mouse_release({MouseButton::Middle});
 		} else if (mouse_move_click->t.type() == Token::category::dclick) {
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
