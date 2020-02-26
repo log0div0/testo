@@ -50,8 +50,8 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 		return visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MouseEvent>>(action)) {
-		return visit_mouse_event(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
+		return visit_mouse(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
@@ -122,34 +122,45 @@ std::string VisitorCksum::visit_press(std::shared_ptr<AST::Press> press) {
 	return result;
 }
 
-std::string VisitorCksum::visit_mouse_event_object(std::shared_ptr<AST::IMouseEventObject> object) {
-	std::string result;
-	if (auto p = std::dynamic_pointer_cast<AST::MouseEventObject<AST::MouseCoordinates>>(object)) {
-		result = std::string(*p->mouse_event_object);
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEventObject<AST::ISelectable>>(object)) {
-		result = template_parser.resolve(std::string(*p->mouse_event_object), reg);
+std::string VisitorCksum::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
+	std::string result = "mouse";
+
+	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse->event)) {
+		result += visit_mouse_move_click(p->event);
 	} else {
-		throw std::runtime_error("Unknown mouse even object");
+		throw std::runtime_error("Unknown mouse action");
 	}
 
 	return result;
 }
 
-std::string VisitorCksum::visit_mouse_event(std::shared_ptr<AST::MouseEvent> mouse_event) {
-	std::string result = "mouse";
-	result += mouse_event->event.value();
-	if (mouse_event->object) {
-		result += visit_mouse_event_object(mouse_event->object);
+std::string VisitorCksum::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
+	std::string result = mouse_move_click->t.value();
+	if (mouse_move_click->object) {
+		result += visit_mouse_move_target(mouse_move_click->object);
 	}
 
-	if (mouse_event->time_interval) {
-		result += mouse_event->time_interval.value();
+	if (mouse_move_click->timeout) {
+		result += mouse_move_click->timeout.value();
 	} else {
 		result += "1s";
 	}
 
 	return result;
 }
+
+std::string VisitorCksum::visit_mouse_move_target(std::shared_ptr<AST::IMouseMoveTarget> target) {
+	std::string result;
+	if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(target)) {
+		result = std::string(*p->target);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::ISelectable>>(target)) {
+		result = template_parser.resolve(p->target->text(), reg);
+	} else {
+		throw std::runtime_error("Unknown mouse even object");
+	}
+	return result;
+}
+
 
 std::string VisitorCksum::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 	std::string result("key_spec");
