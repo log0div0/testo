@@ -1,5 +1,6 @@
 
 #include "OnnxRuntime.hpp"
+#include "winapi.hpp"
 
 #include <experimental/filesystem>
 
@@ -17,9 +18,17 @@ OnnxRuntime::~OnnxRuntime() {
 	env.reset();
 }
 
+#ifdef __linux__
 fs::path GetModelDir() {
 	return "/usr/share/testo";
 }
+#endif
+#ifdef WIN32
+fs::path GetModelDir() {
+	winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Testo Lang\\Testo");
+	return regkey.query_str("InstallDir");
+}
+#endif
 
 std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 	if (!env) {
@@ -31,11 +40,11 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 	session_options.SetInterOpNumThreads(1);
 	session_options.SetExecutionMode(ORT_SEQUENTIAL);
 	fs::path model_path = GetModelDir() / (name + ".onnx");
-	return std::make_unique<Ort::Session>(*env, 
+	return std::make_unique<Ort::Session>(*env,
 #ifdef WIN32
-		model_path.generic_wstring().c_str(), 
+		model_path.wstring().c_str(),
 #else
-		model_path.generic_string().c_str(), 
+		model_path.string().c_str(),
 #endif
 		session_options);
 }
