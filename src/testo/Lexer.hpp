@@ -147,6 +147,7 @@ private:
 	Token release();
 	Token lbtn();
 	Token rbtn();
+	Token mbtn();
 	Token plug();
 	Token unplug();
 	Token start();

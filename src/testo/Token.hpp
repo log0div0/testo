@@ -26,6 +26,7 @@ struct Token {
 		release,
 		lbtn,
 		rbtn,
+		mbtn,
 		plug,
 		unplug,
 		start,
@@ -175,6 +176,8 @@ struct Token {
 			return "LBTN";
 		case rbtn:
 			return "RBTN";
+		case mbtn:
+			return "MBTN";
 		case plug:
 			return "ACTION PLUG";
 		case unplug:

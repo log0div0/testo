@@ -638,6 +638,10 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 		LA(1) == Token::category::dclick)
 	{
 		event = mouse_move_click();
+	} else if (LA(1) == Token::category::hold) {
+		event = mouse_hold();
+	} else if (LA(1) == Token::category::release) {
+		event = mouse_release();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: unknown mouse action: " + LT(1).value());
 	}
@@ -685,6 +689,25 @@ std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click()
 
 	auto move_click = std::shared_ptr<MouseMoveClick>(new MouseMoveClick(event_token, target, timeout));
 	return std::shared_ptr<MouseEvent<MouseMoveClick>>(new MouseEvent(move_click));
+}
+
+std::shared_ptr<AST::MouseEvent<AST::MouseHold>> Parser::mouse_hold() {
+	Token event_token = LT(1);
+	match(Token::category::hold);
+
+	Token button = LT(1);
+	match({Token::category::lbtn, Token::category::rbtn, Token::category::mbtn});
+
+	auto move_hold = std::shared_ptr<MouseHold>(new MouseHold(event_token, button));
+	return std::shared_ptr<MouseEvent<MouseHold>>(new MouseEvent(move_hold));
+}
+
+std::shared_ptr<AST::MouseEvent<AST::MouseRelease>> Parser::mouse_release() {
+	Token event_token = LT(1);
+	match(Token::category::release);
+
+	auto move_release = std::shared_ptr<MouseRelease>(new MouseRelease(event_token));
+	return std::shared_ptr<MouseEvent<MouseRelease>>(new MouseEvent(move_release));
 }
 
 std::shared_ptr<MouseMoveTarget<MouseCoordinates>> Parser::mouse_coordinates() {

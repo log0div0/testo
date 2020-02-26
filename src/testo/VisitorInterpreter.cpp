@@ -833,8 +833,51 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_mouse(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Mouse> mouse) {
 	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse->event)) {
 		return visit_mouse_move_click(vmc, p->event);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse->event)) {
+		return visit_mouse_hold(vmc, p->event);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse->event)) {
+		return visit_mouse_release(vmc, p->event);
 	} else {
 		throw std::runtime_error("Unknown mouse actions");
+	}
+}
+
+void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseHold> mouse_hold) {
+	try {
+		if (mouse_hold->button.type() == Token::category::lbtn) {
+			vmc->vm->mouse_press({MouseButton::Left});
+			vmc->current_held_mouse_button = MouseButton::Left;
+		} else if (mouse_hold->button.type() == Token::category::rbtn) {
+			vmc->vm->mouse_press({MouseButton::Right});
+			vmc->current_held_mouse_button = MouseButton::Right;
+		} else if (mouse_hold->button.type() == Token::category::mbtn) {
+			vmc->vm->mouse_press({MouseButton::Middle});
+			vmc->current_held_mouse_button = MouseButton::Middle;
+		} else {
+			throw std::runtime_error("Unknown mouse button: " + mouse_hold->button.value());
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(mouse_hold, vmc));
+	}
+}
+
+void VisitorInterpreter::visit_mouse_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseRelease> mouse_release) {
+	try {
+		if (vmc->current_held_mouse_button == MouseButton::Left) {
+			vmc->vm->mouse_release({MouseButton::Left});
+		} else if (vmc->current_held_mouse_button == MouseButton::Right) {
+			vmc->vm->mouse_release({MouseButton::Right});
+		} else if (vmc->current_held_mouse_button == MouseButton::Middle) {
+			vmc->vm->mouse_release({MouseButton::Middle});
+		} else if (vmc->current_held_mouse_button == MouseButton::None) {
+			throw std::runtime_error("No mouse button is pressed right now");
+		} else {
+			throw std::runtime_error("Unknown button to release");
+		}
+
+		vmc->current_held_mouse_button = MouseButton::None;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(mouse_release, vmc));
 	}
 }
 
