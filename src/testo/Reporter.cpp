@@ -374,6 +374,14 @@ void Reporter::mouse_release(std::shared_ptr<VmController> vmc) {
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
+void Reporter::mouse_wheel(std::shared_ptr<VmController> vmc, const std::string& direction) {
+	report(fmt::format("{} Mouse wheel ", progress()), blue);
+	report(fmt::format("{} ", direction), yellow);
+
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
 void Reporter::exec_command_output(const std::string& text) {
 	report(text, regular);
 }

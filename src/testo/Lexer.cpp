@@ -210,6 +210,8 @@ Token Lexer::id() {
 		return rbtn();
 	} else if (value == "mbtn") {
 		return mbtn();
+	} else if (value == "wheel") {
+		return wheel();
 	} else if (value == "plug") {
 		return plug();
 	} else if (value == "unplug") {
@@ -408,6 +410,13 @@ Token Lexer::mbtn() {
 	std::string value("mbtn");
 	current_pos.advance(value.length());
 	return Token(Token::category::mbtn, value, tmp_pos);
+}
+
+Token Lexer::wheel() {
+	Pos tmp_pos = current_pos;
+	std::string value("wheel");
+	current_pos.advance(value.length());
+	return Token(Token::category::wheel, value, tmp_pos);
 }
 
 Token Lexer::plug() {

@@ -570,6 +570,25 @@ struct MouseRelease: public Node {
 	}
 };
 
+struct MouseWheel: public Node {
+	MouseWheel(const Token& wheel, const Token& direction):
+		Node(wheel), direction(direction) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return direction.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + direction.value();
+	}
+
+	Token direction;
+};
+
 struct Mouse: public Node {
 	Mouse(const Token& mouse, std::shared_ptr<IMouseEvent> event):
 		Node(mouse), event(event) {}

@@ -642,6 +642,8 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 		event = mouse_hold();
 	} else if (LA(1) == Token::category::release) {
 		event = mouse_release();
+	} else if (LA(1) == Token::category::wheel) {
+		event = mouse_wheel();
 	} else {
 		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: unknown mouse action: " + LT(1).value());
 	}
@@ -708,6 +710,22 @@ std::shared_ptr<AST::MouseEvent<AST::MouseRelease>> Parser::mouse_release() {
 
 	auto move_release = std::shared_ptr<MouseRelease>(new MouseRelease(event_token));
 	return std::shared_ptr<MouseEvent<MouseRelease>>(new MouseEvent(move_release));
+}
+
+std::shared_ptr<AST::MouseEvent<AST::MouseWheel>> Parser::mouse_wheel() {
+	Token event_token = LT(1);
+	match(Token::category::wheel);
+
+	Token direction = LT(1);
+
+	if (direction.value() != "up" && direction.value() != "down") {
+		throw std::runtime_error(std::string(direction.pos()) + " : Error: unknown wheel direction: " + direction.value());
+	}
+
+	match(Token::category::id);
+
+	auto mouse_wheel = std::shared_ptr<MouseWheel>(new MouseWheel(event_token, direction));
+	return std::shared_ptr<MouseEvent<MouseWheel>>(new MouseEvent(mouse_wheel));
 }
 
 std::shared_ptr<MouseMoveTarget<MouseCoordinates>> Parser::mouse_coordinates() {

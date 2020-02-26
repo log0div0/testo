@@ -59,6 +59,7 @@ struct Reporter {
 	void mouse_move_click(std::shared_ptr<VmController> vmc, std::string event, std::string object, const std::string& timeout);
 	void mouse_hold(std::shared_ptr<VmController> vmc, std::string button);
 	void mouse_release(std::shared_ptr<VmController> vmc);
+	void mouse_wheel(std::shared_ptr<VmController> vmc, const std::string& direction);
 
 	//negotiator
 	void exec_command_output(const std::string& text);

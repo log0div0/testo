@@ -131,6 +131,8 @@ std::string VisitorCksum::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
 		result += std::string(*(p->event));
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse->event)) {
 		result += std::string(*(p->event));
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseWheel>>(mouse->event)) {
+		result += std::string(*(p->event));
 	} else {
 		throw std::runtime_error("Unknown mouse action");
 	}

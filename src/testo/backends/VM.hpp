@@ -16,7 +16,9 @@ enum MouseButton {
 	None = 0,
 	Left = 1,
 	Right = 2,
-	Middle = 3
+	Middle = 3,
+	WheelUp = 4,
+	WheelDown = 5
 };
 
 struct VM {

@@ -148,6 +148,7 @@ private:
 	Token lbtn();
 	Token rbtn();
 	Token mbtn();
+	Token wheel();
 	Token plug();
 	Token unplug();
 	Token start();

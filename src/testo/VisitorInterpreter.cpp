@@ -837,6 +837,8 @@ void VisitorInterpreter::visit_mouse(std::shared_ptr<VmController> vmc, std::sha
 		return visit_mouse_hold(vmc, p->event);
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse->event)) {
 		return visit_mouse_release(vmc, p->event);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseWheel>>(mouse->event)) {
+		return visit_mouse_wheel(vmc, p->event);
 	} else {
 		throw std::runtime_error("Unknown mouse actions");
 	}
@@ -883,10 +885,29 @@ void VisitorInterpreter::visit_mouse_release(std::shared_ptr<VmController> vmc, 
 	}
 }
 
+void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseWheel> mouse_wheel) {
+	try {
+		reporter.mouse_wheel(vmc, mouse_wheel->direction.value());
+
+		if (mouse_wheel->direction.value() == "up") {
+			vmc->vm->mouse_press({MouseButton::WheelUp});
+			vmc->vm->mouse_release({MouseButton::WheelUp});
+		} else if (mouse_wheel->direction.value() == "down") {
+			vmc->vm->mouse_press({MouseButton::WheelDown});
+			vmc->vm->mouse_release({MouseButton::WheelDown});
+		} else {
+			throw std::runtime_error("Unknown wheel direction");
+		}
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(mouse_wheel, vmc));
+	}
+}
+
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
 		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
-		std::string wait_for = mouse_move_click->timeout ? mouse_move_click->timeout.value() : "1s";
+		std::string wait_for = mouse_move_click->timeout ? mouse_move_click->timeout.value() : "5s";
 		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
 
 		if (mouse_move_click->object) {
@@ -901,7 +922,13 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 
 		if (mouse_move_click->t.type() == Token::category::move) {
 			return;
-		} else if (mouse_move_click->t.type() == Token::category::click || mouse_move_click->t.type() == Token::category::lclick) {
+		}
+
+		if (vmc->current_held_mouse_button != MouseButton::None) {
+			throw std::runtime_error("Can't click anything with a held mouse button");
+		}
+
+		if (mouse_move_click->t.type() == Token::category::click || mouse_move_click->t.type() == Token::category::lclick) {
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
 		} else if (mouse_move_click->t.type() == Token::category::rclick) {
