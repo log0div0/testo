@@ -1,6 +1,8 @@
 
 #include "Channel.hpp"
 
+#include <locale>
+#include <codecvt>
 #include <thread>
 
 nlohmann::json Channel::receive() {
@@ -101,7 +103,9 @@ size_t Channel::write(uint8_t* data, size_t size) {
 #ifdef WIN32
 
 Channel::Channel(const std::string& fd_path) {
-	handle = CreateFileA(fd_path.c_str(),
+	using convert_type = std::codecvt_utf8<wchar_t>;
+	std::wstring_convert<convert_type, wchar_t> converter;
+	handle = CreateFile(converter.from_bytes(fd_path).c_str(),
 		GENERIC_WRITE | GENERIC_READ,
 		0,
 		NULL,

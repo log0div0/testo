@@ -19,6 +19,9 @@ using namespace std::chrono_literals;
 
 namespace fs = std::filesystem;
 
+using convert_type = std::codecvt_utf8<wchar_t>;
+std::wstring_convert<convert_type, wchar_t> converter;
+
 enum class Command {
 	Install,
 	Uninstall,
@@ -32,7 +35,7 @@ Command selected_command;
 void install() {
 	spdlog::info("Install ...");
 
-	char szFileName[MAX_PATH];
+	TCHAR szFileName[MAX_PATH] = {};
 	GetModuleFileName(NULL, szFileName, MAX_PATH);
 	fs::path path(szFileName);
 	path = path.parent_path();
@@ -45,7 +48,7 @@ void install() {
 void uninstall() {
 	spdlog::info("Uninstall ...");
 
-	char szFileName[MAX_PATH];
+	TCHAR szFileName[MAX_PATH] = {};
 	GetModuleFileName(NULL, szFileName, MAX_PATH);
 	fs::path path(szFileName);
 	path = path.parent_path();
@@ -57,7 +60,7 @@ void uninstall() {
 
 int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
-	char szFileName[MAX_PATH];
+	TCHAR szFileName[MAX_PATH] = {};
 	GetModuleFileName(NULL, szFileName, MAX_PATH);
 
 	fs::path path(szFileName);
@@ -75,8 +78,6 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
 	std::vector<std::string> args;
 	std::vector<char*> argv;
-	using convert_type = std::codecvt_utf8<wchar_t>;
-	std::wstring_convert<convert_type, wchar_t> converter;
 	for (size_t i = 0; i < argc; ++i) {
 		args.push_back(converter.to_bytes(szArglist[i]));
 		argv.push_back((char*)args.back().c_str());

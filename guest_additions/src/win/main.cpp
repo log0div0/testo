@@ -14,8 +14,8 @@
 
 #include "../Server.hpp"
 
-// using convert_type = std::codecvt_utf8<wchar_t>;
-// std::wstring_convert<convert_type, wchar_t> converter;
+using convert_type = std::codecvt_utf8<wchar_t>;
+std::wstring_convert<convert_type, wchar_t> converter;
 
 DEFINE_GUID(GUID_VIOSERIAL_PORT,
 0x6fde7521, 0x1b65, 0x48ae, 0xb6, 0x28, 0x80, 0xbe, 0x62, 0x1, 0x60, 0x26);
@@ -76,7 +76,7 @@ struct HardwareDeviceInfo {
 			throw std::runtime_error("SetupDiGetDeviceInterfaceDetail failed (2)");
 		}
 
-		return deviceInterfaceDetailData->DevicePath;
+		return converter.to_bytes(deviceInterfaceDetailData->DevicePath);
 	}
 
 	LPGUID interfaceGuid = NULL;
@@ -133,7 +133,7 @@ void ServiceMain(int argc, char** argv) {
 }
 
 int _tmain (int argc, TCHAR *argv[]) {
-	char szFileName[MAX_PATH];
+	TCHAR szFileName[MAX_PATH] = {};
 	GetModuleFileName(NULL, szFileName, MAX_PATH);
 
 	fs::path path(szFileName);
