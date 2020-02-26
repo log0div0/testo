@@ -2,13 +2,17 @@
 #include "dynlib.hpp"
 #include <stdexcept>
 
+#ifdef WIN32
+#include "winapi.hpp"
+#endif
+
 namespace vbox {
 
 DynLib::DynLib(const std::string& path) {
 #ifndef WIN32
 	_handle = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
 #else
-	_handle = LoadLibraryExA(path.c_str(), NULL, 0);
+	_handle = LoadLibraryEx(winapi::utf8_to_utf16(path).c_str(), NULL, 0);
 #endif
 	if (!_handle) {
 		throw std::runtime_error("Failed to load dynlib " + path);

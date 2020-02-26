@@ -22,6 +22,6 @@ struct OnnxRuntime {
 	OnnxRuntime& operator=(OnnxRuntime&&) = delete;
 };
 
-std::unique_ptr<Ort::Session> LoadModel(unsigned char* data, unsigned int size);
+std::unique_ptr<Ort::Session> LoadModel(const std::string& name);
 
 }

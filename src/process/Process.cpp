@@ -1,5 +1,6 @@
 
 #include "Process.hpp"
+#include "winapi.hpp"
 
 #include <array>
 
@@ -116,9 +117,10 @@ Process::Process(const std::string& cmd) {
 
 	PROCESS_INFORMATION info = {};
 
-	bool success = CreateProcessA(
+	std::wstring wcmd = winapi::utf8_to_utf16(cmd);
+	bool success = CreateProcess(
 		NULL,
-		(char*)cmd.c_str(),
+		&wcmd[0],
 		NULL,
 		NULL,
 		TRUE,

@@ -1,5 +1,6 @@
 
 #include "Channel.hpp"
+#include "winapi.hpp"
 
 #include <thread>
 
@@ -101,7 +102,7 @@ size_t Channel::write(uint8_t* data, size_t size) {
 #ifdef WIN32
 
 Channel::Channel(const std::string& fd_path) {
-	handle = CreateFileA(fd_path.c_str(),
+	handle = CreateFile(winapi::utf8_to_utf16(fd_path).c_str(),
 		GENERIC_WRITE | GENERIC_READ,
 		0,
 		NULL,

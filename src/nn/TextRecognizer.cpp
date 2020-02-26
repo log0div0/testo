@@ -8,9 +8,6 @@
 #include <stb_image_resize.h>
 #include <cmath>
 
-extern unsigned char TextRecognizer_onnx[];
-extern unsigned int TextRecognizer_onnx_len;
-
 #define IN_H 32
 
 std::vector<std::string> char_groups = {
@@ -117,7 +114,7 @@ TextRecognizer::TextRecognizer() {
 		symbols.push_back(utf8::split_to_chars(char_groups[i]));
 		symbols_indexes.push_back(i);
 	}
-	session = LoadModel(TextRecognizer_onnx, TextRecognizer_onnx_len);
+	session = LoadModel("TextRecognizer");
 }
 
 TextRecognizer::~TextRecognizer() {

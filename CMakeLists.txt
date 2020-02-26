@@ -60,28 +60,29 @@ if(WIN32)
 		-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 		-D_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 		-DNOMINMAX
+		-DUNICODE
+		-D_UNICODE
 	)
 else()
 	if(CMAKE_BUILD_TYPE MATCHES Release)
-		set(EXTRA_FLAGS "-Wall -Wextra -Wpedantic -Wno-unused-parameter -O2 -DNDEBUG -g")
+		add_definitions(-O2 -DNDEBUG)
 	elseif(CMAKE_BUILD_TYPE MATCHES Debug)
-		set(EXTRA_FLAGS "-O0 -D_DEBUG -g")
+		add_definitions(-O0 -D_DEBUG -g)
 	else()
 		MESSAGE(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE value: ${CMAKE_BUILD_TYPE}")
 	endif()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
+	add_definitions(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rd_party)
+add_subdirectory(src)
 if (NOT APPLE)
 	add_subdirectory(guest_additions)
+	add_subdirectory(pkg)
 endif()
 if (UNIX AND NOT APPLE)
-	add_subdirectory(pkg)
 	add_subdirectory(docs)
 	add_subdirectory(tests)
 endif()
-add_subdirectory(src)

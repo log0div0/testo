@@ -317,7 +317,12 @@ int HyperVVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t t
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
+		return false;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 bool HyperVVM::has_snapshot(const std::string& snapshot) {
 	try {

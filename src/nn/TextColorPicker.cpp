@@ -6,9 +6,6 @@
 #include <stb_image_resize.h>
 #include <cmath>
 
-extern unsigned char TextColorPicker_onnx[];
-extern unsigned int TextColorPicker_onnx_len;
-
 #define IN_H 32
 #define IN_W 16
 
@@ -33,7 +30,7 @@ TextColorPicker& TextColorPicker::instance() {
 }
 
 TextColorPicker::TextColorPicker() {
-	session = LoadModel(TextColorPicker_onnx, TextColorPicker_onnx_len);
+	session = LoadModel("TextColorPicker");
 }
 
 TextColorPicker::~TextColorPicker() {

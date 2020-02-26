@@ -3,19 +3,17 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include <locale>
-#include <codecvt>
 #include <chrono>
 
 using namespace std::chrono_literals;
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_sinks.h>
 
 #include <clipp.h>
 
 #include "process/Process.hpp"
+#include "winapi.hpp"
 
 #include <shellapi.h>
 
@@ -28,78 +26,13 @@ enum class Command {
 
 #define APP_NAME "testo-guest-additions-helper"
 
-std::string targetdir;
 Command selected_command;
-
-struct Service {
-	Service(SC_HANDLE handle_): handle(handle_) {
-
-	}
-
-	~Service() {
-		if (handle) {
-			CloseServiceHandle(handle);
-		}
-	}
-
-	Service(Service&& other);
-	Service& operator=(Service&& other);
-
-	void start() {
-		if (!StartService(handle, 0, NULL)) {
-			throw std::runtime_error("StartService failed");
-		}
-	}
-
-	SERVICE_STATUS queryStatus() {
-		SERVICE_STATUS status = {};
-		if (!QueryServiceStatus(handle, &status)) {
-			throw std::runtime_error("QueryServiceStatus failed");
-		}
-		return status;
-	}
-
-private:
-	SC_HANDLE handle = NULL;
-};
-
-struct SCManager {
-	SCManager() {
-		handle = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-		if (!handle) {
-			throw std::runtime_error("OpenSCManager failed");
-		}
-	}
-
-	~SCManager() {
-		if (handle) {
-			CloseServiceHandle(handle);
-		}
-	}
-
-	SCManager(SCManager&& other);
-	SCManager& operator=(SCManager&& other);
-
-	Service service(const std::string& name) {
-		SC_HANDLE hService = OpenServiceA(handle, name.c_str(), SERVICE_QUERY_STATUS | SERVICE_START);
-		if (!hService) {
-			throw std::runtime_error("OpenServiceA failed");
-		}
-		return hService;
-	}
-
-private:
-	SC_HANDLE handle = NULL;
-};
 
 void install() {
 	spdlog::info("Install ...");
 
-	char szFileName[MAX_PATH];
-	GetModuleFileName(NULL, szFileName, MAX_PATH);
-
 	{
-		fs::path path(szFileName);
+		fs::path path = winapi::get_module_file_name();
 		path = path.parent_path();
 		path = path / "vioserial" / "vioser.inf";
 
@@ -111,7 +44,7 @@ void install() {
 	}
 
 	{
-		fs::path path(szFileName);
+		fs::path path = winapi::get_module_file_name();
 		path = path.parent_path();
 		path = path / "testo-guest-additions.exe";
 
@@ -123,8 +56,8 @@ void install() {
 	}
 
 	{
-		SCManager manager;
-		Service service = manager.service("Testo Guest Additions");
+		winapi::SCManager manager;
+		winapi::Service service = manager.service("Testo Guest Additions");
 		service.start();
 		bool started = false;
 		for (size_t i = 0; i < 10; ++i) {
@@ -145,15 +78,8 @@ void install() {
 
 int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
-	char szFileName[MAX_PATH];
-	GetModuleFileName(NULL, szFileName, MAX_PATH);
-
-	fs::path path(szFileName);
-	path = path.replace_extension("txt");
-
-	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.generic_string());
-	auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
-	auto logger = std::make_shared<spdlog::logger>("basic_logger", spdlog::sinks_init_list{file_sink, console_sink});
+	fs::path log_path = winapi::get_module_file_name().replace_extension("txt");
+	auto logger = spdlog::basic_logger_mt("basic_logger", log_path.string());
 	logger->set_level(spdlog::level::info);
 	logger->flush_on(spdlog::level::info);
 	spdlog::set_default_logger(logger);
@@ -163,11 +89,13 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
 	std::vector<std::string> args;
 	std::vector<char*> argv;
-	using convert_type = std::codecvt_utf8<wchar_t>;
-	std::wstring_convert<convert_type, wchar_t> converter;
+	spdlog::info("argc = {}", argc);
 	for (size_t i = 0; i < argc; ++i) {
-		args.push_back(converter.to_bytes(szArglist[i]));
-		argv.push_back((char*)args.back().c_str());
+		args.push_back(winapi::utf16_to_utf8(szArglist[i]));
+		spdlog::info("arg {}: {}", i, args.back());
+	}
+	for (auto& arg: args) {
+		argv.push_back((char*)arg.c_str());
 	}
 
 	try {
@@ -178,7 +106,7 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 			command("help").set(selected_command, Command::ShowHelp));
 
 		if (!parse(argc, argv.data(), cli)) {
-			std::cout << make_man_page(cli, APP_NAME) << std::endl;
+			spdlog::error("failed to parse args");
 			return -1;
 		}
 
