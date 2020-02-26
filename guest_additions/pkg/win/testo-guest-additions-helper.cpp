@@ -3,8 +3,6 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include <locale>
-#include <codecvt>
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -15,13 +13,11 @@ using namespace std::chrono_literals;
 #include <clipp.h>
 
 #include "process/Process.hpp"
+#include "winapi.hpp"
 
 #include <shellapi.h>
 
 namespace fs = std::filesystem;
-
-using convert_type = std::codecvt_utf8<wchar_t>;
-std::wstring_convert<convert_type, wchar_t> converter;
 
 enum class Command {
 	Install,
@@ -32,75 +28,11 @@ enum class Command {
 
 Command selected_command;
 
-struct Service {
-	Service(SC_HANDLE handle_): handle(handle_) {
-
-	}
-
-	~Service() {
-		if (handle) {
-			CloseServiceHandle(handle);
-		}
-	}
-
-	Service(Service&& other);
-	Service& operator=(Service&& other);
-
-	void start() {
-		if (!StartService(handle, 0, NULL)) {
-			throw std::runtime_error("StartService failed");
-		}
-	}
-
-	SERVICE_STATUS queryStatus() {
-		SERVICE_STATUS status = {};
-		if (!QueryServiceStatus(handle, &status)) {
-			throw std::runtime_error("QueryServiceStatus failed");
-		}
-		return status;
-	}
-
-private:
-	SC_HANDLE handle = NULL;
-};
-
-struct SCManager {
-	SCManager() {
-		handle = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-		if (!handle) {
-			throw std::runtime_error("OpenSCManager failed");
-		}
-	}
-
-	~SCManager() {
-		if (handle) {
-			CloseServiceHandle(handle);
-		}
-	}
-
-	SCManager(SCManager&& other);
-	SCManager& operator=(SCManager&& other);
-
-	Service service(const std::string& name) {
-		SC_HANDLE hService = OpenService(handle, converter.from_bytes(name).c_str(), SERVICE_QUERY_STATUS | SERVICE_START);
-		if (!hService) {
-			throw std::runtime_error("OpenServiceA failed");
-		}
-		return hService;
-	}
-
-private:
-	SC_HANDLE handle = NULL;
-};
-
 void install() {
 	spdlog::info("Install ...");
 
-	TCHAR szFileName[MAX_PATH] = {};
-	GetModuleFileName(NULL, szFileName, MAX_PATH);
-
 	{
-		fs::path path(szFileName);
+		fs::path path = winapi::get_module_file_name();
 		path = path.parent_path();
 		path = path / "vioserial" / "vioser.inf";
 
@@ -112,7 +44,7 @@ void install() {
 	}
 
 	{
-		fs::path path(szFileName);
+		fs::path path = winapi::get_module_file_name();
 		path = path.parent_path();
 		path = path / "testo-guest-additions.exe";
 
@@ -124,8 +56,8 @@ void install() {
 	}
 
 	{
-		SCManager manager;
-		Service service = manager.service("Testo Guest Additions");
+		winapi::SCManager manager;
+		winapi::Service service = manager.service("Testo Guest Additions");
 		service.start();
 		bool started = false;
 		for (size_t i = 0; i < 10; ++i) {
@@ -146,9 +78,7 @@ void install() {
 
 int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
-	TCHAR szFileName[MAX_PATH] = {};
-	GetModuleFileName(NULL, szFileName, MAX_PATH);
-	fs::path log_path = fs::path(szFileName).replace_extension("txt");
+	fs::path log_path = winapi::get_module_file_name().replace_extension("txt");
 	auto logger = spdlog::basic_logger_mt("basic_logger", log_path.string());
 	logger->set_level(spdlog::level::info);
 	logger->flush_on(spdlog::level::info);
@@ -161,7 +91,7 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 	std::vector<char*> argv;
 	spdlog::info("argc = {}", argc);
 	for (size_t i = 0; i < argc; ++i) {
-		args.push_back(converter.to_bytes(szArglist[i]));
+		args.push_back(winapi::utf16_to_utf8(szArglist[i]));
 		spdlog::info("arg {}: {}", i, args.back());
 	}
 	for (auto& arg: args) {

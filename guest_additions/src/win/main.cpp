@@ -1,8 +1,6 @@
 
 #include <iostream>
 #include <filesystem>
-#include <locale>
-#include <codecvt>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -12,10 +10,9 @@
 #include <initguid.h>
 #include <tchar.h>
 
-#include "../Server.hpp"
+#include "winapi.hpp"
 
-using convert_type = std::codecvt_utf8<wchar_t>;
-std::wstring_convert<convert_type, wchar_t> converter;
+#include "../Server.hpp"
 
 DEFINE_GUID(GUID_VIOSERIAL_PORT,
 0x6fde7521, 0x1b65, 0x48ae, 0xb6, 0x28, 0x80, 0xbe, 0x62, 0x1, 0x60, 0x26);
@@ -76,7 +73,7 @@ struct HardwareDeviceInfo {
 			throw std::runtime_error("SetupDiGetDeviceInterfaceDetail failed (2)");
 		}
 
-		return converter.to_bytes(deviceInterfaceDetailData->DevicePath);
+		return winapi::utf16_to_utf8(deviceInterfaceDetailData->DevicePath);
 	}
 
 	LPGUID interfaceGuid = NULL;
@@ -133,12 +130,7 @@ void ServiceMain(int argc, char** argv) {
 }
 
 int _tmain (int argc, TCHAR *argv[]) {
-	TCHAR szFileName[MAX_PATH] = {};
-	GetModuleFileName(NULL, szFileName, MAX_PATH);
-
-	fs::path path(szFileName);
-	path = path.replace_extension("txt");
-
+	fs::path path = winapi::get_module_file_name().replace_extension("txt");
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.generic_string());
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 	auto logger = std::make_shared<spdlog::logger>("basic_logger", spdlog::sinks_init_list{file_sink, console_sink});

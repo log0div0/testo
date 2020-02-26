@@ -1,8 +1,7 @@
 
 #include "Process.hpp"
+#include "winapi.hpp"
 
-#include <locale>
-#include <codecvt>
 #include <array>
 
 std::string Process::exec(const std::string& cmd) {
@@ -118,9 +117,7 @@ Process::Process(const std::string& cmd) {
 
 	PROCESS_INFORMATION info = {};
 
-	using convert_type = std::codecvt_utf8<wchar_t>;
-	std::wstring_convert<convert_type, wchar_t> converter;
-	std::wstring wcmd = converter.from_bytes(cmd);
+	std::wstring wcmd = winapi::utf8_to_utf16(cmd);
 	bool success = CreateProcess(
 		NULL,
 		&wcmd[0],

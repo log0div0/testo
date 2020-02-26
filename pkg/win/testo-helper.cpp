@@ -3,8 +3,6 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include <locale>
-#include <codecvt>
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -17,10 +15,9 @@ using namespace std::chrono_literals;
 #include <tchar.h>
 #include <shellapi.h>
 
-namespace fs = std::filesystem;
+#include "winapi.hpp"
 
-using convert_type = std::codecvt_utf8<wchar_t>;
-std::wstring_convert<convert_type, wchar_t> converter;
+namespace fs = std::filesystem;
 
 enum class Command {
 	Install,
@@ -33,82 +30,6 @@ enum class Command {
 Command selected_command;
 
 std::string usersid;
-
-fs::path get_module_path() {
-	TCHAR szFileName[MAX_PATH] = {};
-	GetModuleFileName(NULL, szFileName, MAX_PATH);
-	return szFileName;
-}
-
-struct RegKey {
-	RegKey(HKEY key, const std::string& path) {
-		LSTATUS status = RegOpenKeyEx(
-		  key,
-		  converter.from_bytes(path).c_str(),
-		  0,
-		  KEY_ALL_ACCESS,
-		  &handle
-		);
-		if (status != ERROR_SUCCESS) {
-			throw std::runtime_error("RegOpenKeyExA failed");
-		}
-	}
-	~RegKey() {
-		if (handle) {
-			RegCloseKey(handle);
-			handle = NULL;
-		}
-	}
-
-	std::string query_str(const std::string& name) const {
-		DWORD size = 0;
-		DWORD type = REG_NONE;
-		LSTATUS status = RegQueryValueEx(handle,
-			converter.from_bytes(name).c_str(),
-			NULL,
-			&type,
-			NULL,
-			&size);
-		if (status != ERROR_SUCCESS) {
-			throw std::runtime_error("RegQueryValueEx failed (1)");
-		}
-		if (!((type == REG_EXPAND_SZ) || (type == REG_SZ))) {
-			throw std::runtime_error("RegQueryValueEx: it's not a string");
-		}
-		std::wstring value;
-		value.resize((size / sizeof(wchar_t)) - 1);
-		status = RegQueryValueEx(handle,
-			converter.from_bytes(name).c_str(),
-			NULL,
-			NULL,
-			(uint8_t*)&value[0],
-			&size);
-		if (status != ERROR_SUCCESS) {
-			throw std::runtime_error("RegQueryValueEx failed (2)");
-		}
-		return converter.to_bytes(value);
-	}
-
-	void set_expand_str(const std::string& name, const std::string& value) {
-		std::wstring wvalue = converter.from_bytes(value);
-		LSTATUS status = RegSetValueEx(handle,
-			converter.from_bytes(name).c_str(),
-			NULL,
-			REG_EXPAND_SZ,
-			(uint8_t*)wvalue.c_str(),
-			(wvalue.size() + 1) * sizeof(wchar_t)
-		);
-		if (status != ERROR_SUCCESS) {
-			throw std::runtime_error("RegSetValueEx failed");
-		}
-	}
-
-	RegKey(RegKey&&);
-	RegKey& operator=(RegKey&&);
-
-private:
-	HKEY handle = NULL;
-};
 
 std::vector<std::string> split(std::string strToSplit) {
 	std::stringstream ss(strToSplit);
@@ -136,10 +57,11 @@ void install() {
 	spdlog::info("Install ...");
 
 	{
-		fs::path testo_dir = get_module_path().parent_path();
+		fs::path testo_dir = winapi::get_module_file_name().parent_path();
 		spdlog::info("testo_dir is {}", testo_dir.string());
 
-		RegKey regkey(HKEY_USERS, usersid + "\\Environment");
+		winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment");
+		// winapi::RegKey regkey(HKEY_USERS, usersid + "\\Environment");
 		std::string env_path = regkey.query_str("PATH");
 		spdlog::info("current PATH is {}", env_path);
 
@@ -164,10 +86,11 @@ void uninstall() {
 	spdlog::info("Uninstall ...");
 
 	{
-		fs::path testo_dir = get_module_path().parent_path();
+		fs::path testo_dir = winapi::get_module_file_name().parent_path();
 		spdlog::info("testo_dir is {}", testo_dir.string());
 
-		RegKey regkey(HKEY_USERS, usersid + "\\Environment");
+		winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment");
+		// winapi::RegKey regkey(HKEY_USERS, usersid + "\\Environment");
 		std::string env_path = regkey.query_str("PATH");
 		spdlog::info("current PATH is {}", env_path);
 
@@ -190,7 +113,7 @@ void uninstall() {
 
 int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
-	fs::path log_path = get_module_path().replace_extension("txt");
+	fs::path log_path = winapi::get_module_file_name().replace_extension("txt");
 	auto logger = spdlog::basic_logger_mt("basic_logger", log_path.string());
 	logger->set_level(spdlog::level::info);
 	logger->flush_on(spdlog::level::info);
@@ -203,7 +126,7 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 	std::vector<char*> argv;
 	spdlog::info("argc = {}", argc);
 	for (size_t i = 0; i < argc; ++i) {
-		args.push_back(converter.to_bytes(szArglist[i]));
+		args.push_back(winapi::utf16_to_utf8(szArglist[i]));
 		spdlog::info("arg {}: {}", i, args.back());
 	}
 	for (auto& arg: args) {
