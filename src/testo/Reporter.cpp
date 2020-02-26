@@ -324,15 +324,19 @@ void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, 
 	report(fmt::format("with timeout {}\n", timeout), blue);
 }
 
-void Reporter::mouse_event(std::shared_ptr<VmController> vmc, std::string event, std::string object, const std::string& timeout) {
+void Reporter::mouse_move_click(std::shared_ptr<VmController> vmc, std::string event, std::string object, const std::string& timeout) {
 	if (event == "move") {
 		event = "moving";
 	} else if (event == "click") {
 		event = "clicking";
+	} else if (event == "lclick") {
+		event = "left-clicking";
 	} else if (event == "rclick") {
-		event = "right clicking";
+		event = "right-clicking";
+	} else if (event == "mclick") {
+		event = "middle-clicking";
 	} else if (event == "dclick") {
-		event = "double clicking";
+		event = "double-clicking";
 	}
 
 	report(fmt::format("{} Mouse {} ", progress(), event), blue);
@@ -343,6 +347,29 @@ void Reporter::mouse_event(std::shared_ptr<VmController> vmc, std::string event,
 	if (timeout.length()) {
 		report(fmt::format("with timeout {} ", timeout), blue);
 	}
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
+void Reporter::mouse_hold(std::shared_ptr<VmController> vmc, std::string button) {
+	if (button == "lbtn") {
+		button = "left button";
+	} else if (button == "rbtn") {
+		button = "right button";
+	} else if (button == "mbtn") {
+		button = "middle button";
+	}
+
+	report(fmt::format("{} Mouse hold the ", progress()), blue);
+	report(fmt::format("{} ", button), yellow);
+
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
+void Reporter::mouse_release(std::shared_ptr<VmController> vmc) {
+	report(fmt::format("{} Mouse release buttons ", progress()), blue);
+
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }

@@ -422,6 +422,8 @@ struct Press: public Node {
 
 struct IMouseMoveTarget: public Node {
 	using Node::Node;
+
+	virtual std::string text() const = 0;
 };
 
 template <typename MouseMoveTargetType>
@@ -442,6 +444,10 @@ struct MouseMoveTarget: public IMouseMoveTarget {
 		return std::string(*(target));
 	}
 
+	std::string text() const {
+		return target->text();
+	}
+
 	std::shared_ptr<MouseMoveTargetType> target;
 };
 
@@ -459,6 +465,10 @@ struct MouseCoordinates: public Node {
 
 	operator std::string() const {
 		return dx.value() + " " + dy.value();;
+	}
+
+	std::string text() const {
+		return std::string(*this);
 	}
 
 	Token dx;

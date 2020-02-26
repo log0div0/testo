@@ -97,13 +97,26 @@ test win7_installation_mouse {
 }
 
 
-test test_mouse: win7_installation_mouse {
+test new_folder: win7_installation_mouse {
 	win7 {
 		wait timeout 5s
 
-		mouse move 799 599
+		mouse move 400 300
+		mouse rclick
+		mouse move "Создать" timeout 10s
+		mouse click "Папку" timeout 10s
+		wait "Новая папка"; press Backspace; type "УДАЛИТЬ"; press Enter
+		wait timeout 2s
+	}
+}
 
-		abort "Stop here"
+test remove_folder: new_folder {
+	win7 {
+		mouse move "УДАЛИТЬ"
+		mouse hold lbtn
+		mouse move "Корзина"
+		mouse release
+		wait timeout 2s
 	}
 }
 

@@ -844,6 +844,7 @@ void VisitorInterpreter::visit_mouse(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseHold> mouse_hold) {
 	try {
+		reporter.mouse_hold(vmc, mouse_hold->button.value());
 		if (mouse_hold->button.type() == Token::category::lbtn) {
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->current_held_mouse_button = MouseButton::Left;
@@ -863,6 +864,7 @@ void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<VmController> vmc, std
 
 void VisitorInterpreter::visit_mouse_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseRelease> mouse_release) {
 	try {
+		reporter.mouse_release(vmc);
 		if (vmc->current_held_mouse_button == MouseButton::Left) {
 			vmc->vm->mouse_release({MouseButton::Left});
 		} else if (vmc->current_held_mouse_button == MouseButton::Right) {
@@ -883,11 +885,14 @@ void VisitorInterpreter::visit_mouse_release(std::shared_ptr<VmController> vmc, 
 
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
+		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
+		std::string wait_for = mouse_move_click->timeout ? mouse_move_click->timeout.value() : "1s";
+		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
+
 		if (mouse_move_click->object) {
 			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click->object)) {
 				visit_mouse_move_coordinates(vmc, p->target);
 			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::ISelectable>>(mouse_move_click->object)) {
-				std::string wait_for = mouse_move_click->timeout ? mouse_move_click->timeout.value() : "1s";
 				visit_mouse_move_selectable(vmc, p->target, wait_for);
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
