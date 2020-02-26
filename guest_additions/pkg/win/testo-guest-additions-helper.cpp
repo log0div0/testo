@@ -11,7 +11,6 @@ using namespace std::chrono_literals;
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_sinks.h>
 
 #include <clipp.h>
 
@@ -149,13 +148,8 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
 	TCHAR szFileName[MAX_PATH] = {};
 	GetModuleFileName(NULL, szFileName, MAX_PATH);
-
-	fs::path path(szFileName);
-	path = path.replace_extension("txt");
-
-	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.generic_string());
-	auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
-	auto logger = std::make_shared<spdlog::logger>("basic_logger", spdlog::sinks_init_list{file_sink, console_sink});
+	fs::path log_path = fs::path(szFileName).replace_extension("txt");
+	auto logger = spdlog::basic_logger_mt("basic_logger", log_path.string());
 	logger->set_level(spdlog::level::info);
 	logger->flush_on(spdlog::level::info);
 	spdlog::set_default_logger(logger);
@@ -165,9 +159,13 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
 	std::vector<std::string> args;
 	std::vector<char*> argv;
+	spdlog::info("argc = {}", argc);
 	for (size_t i = 0; i < argc; ++i) {
 		args.push_back(converter.to_bytes(szArglist[i]));
-		argv.push_back((char*)args.back().c_str());
+		spdlog::info("arg {}: {}", i, args.back());
+	}
+	for (auto& arg: args) {
+		argv.push_back((char*)arg.c_str());
 	}
 
 	try {
@@ -178,7 +176,7 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 			command("help").set(selected_command, Command::ShowHelp));
 
 		if (!parse(argc, argv.data(), cli)) {
-			std::cout << make_man_page(cli, APP_NAME) << std::endl;
+			spdlog::error("failed to parse args");
 			return -1;
 		}
 
