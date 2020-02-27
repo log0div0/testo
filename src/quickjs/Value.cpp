@@ -4,56 +4,76 @@
 
 namespace quickjs {
 
-Value::Value(JSValue handle, JSContext* context): handle(handle), context(context) {
+ValueRef::ValueRef(JSValue handle, JSContext* context): handle(handle), context(context) {
 	if (!context) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
 	}
 }
 
-Value::~Value() {
-	//context should always be valid
-	JS_FreeValue(context, handle);
-}
-
-Value::Value(const Value& other): context(other.context) {
-	handle = JS_DupValue(context, other.handle);
-}
-
-Value& Value::operator=(const Value& other) {
-	context = other.context;
-	handle = JS_DupValue(context, other.handle);
-	return *this;
-}
-
-Value::operator bool() {
+ValueRef::operator bool() const {
 	if (!is_bool()) {
 		throw std::runtime_error("Can't convert jsvalue to bool because it is not a bool");
 	}
 	return JS_ToBool(context, handle);
 }
 
-Value::operator CString() {
+ValueRef::operator CString() const {
 	return CString(JS_ToCString(context, handle), context);
 }
 
-bool Value::is_exception() {
+bool ValueRef::is_exception() const {
 	return JS_IsException(handle);
 }
 
-bool Value::is_error() {
+bool ValueRef::is_error() const {
 	return JS_IsError(context, handle);
 }
 
-bool Value::is_undefined() {
+bool ValueRef::is_undefined() const {
 	return JS_IsUndefined(handle);
 }
 
-bool Value::is_bool() {
+bool ValueRef::is_bool() const {
 	return JS_IsBool(handle);
 }
 
-bool Value::is_string() {
+bool ValueRef::is_string() const {
 	return JS_IsString(handle);
+}
+
+Value ValueRef::get_property_str(const std::string& name) const {
+	return Value(JS_GetPropertyStr(context, handle, name.c_str()), context);
+}
+
+void ValueRef::set_property_str(const std::string& name, Value val) {
+	if (JS_SetPropertyStr(context, handle, name.c_str(), val.release()) < 0) {
+		throw std::runtime_error("Can't set property " + name);
+	}
+}
+
+std::ostream& operator<<(std::ostream& stream, const ValueRef& value) {
+	CString str = value;
+	return stream << str;
+}
+
+Value::~Value() {
+	if (context) {
+		JS_FreeValue(context, handle);
+	}
+}
+
+Value::Value(const Value& other): ValueRef(JS_DupValue(other.context, other.handle), other.context) {
+}
+
+Value& Value::operator=(const Value& other) {
+	context = other.context;
+	handle = JS_DupValue(other.context, other.handle);
+	return *this;
+}
+
+JSValue Value::release() {
+	context = nullptr;
+	return handle;
 }
 
 }

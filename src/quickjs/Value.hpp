@@ -5,25 +5,38 @@
 
 namespace quickjs {
 
-struct Value {
+struct Value;
+
+struct ValueRef {
+	ValueRef(JSValue handle, JSContext* context);
+
+	operator bool() const;
+	operator CString() const;
+
+	bool is_exception() const;
+	bool is_error() const;
+	bool is_undefined() const;
+	bool is_bool() const;
+	bool is_string() const;
+
+	Value get_property_str(const std::string& name) const;
+	void set_property_str(const std::string& name, Value val);
+
+	::JSValue handle;
+	::JSContext* context = nullptr;
+};
+
+std::ostream& operator<<(std::ostream& stream, const ValueRef& value);
+
+struct Value: ValueRef {
 	Value() = delete;
-	Value(JSValue handle, JSContext* context);
+	using ValueRef::ValueRef;
 	~Value();
 
 	Value(const Value& other);
 	Value& operator=(const Value& other);
 
-	operator bool();
-	operator CString();
-
-	bool is_exception();
-	bool is_error();
-	bool is_undefined();
-	bool is_bool();
-	bool is_string();
-
-	::JSValue handle;
-	::JSContext* context = nullptr;
+	JSValue release();
 };
 
 }

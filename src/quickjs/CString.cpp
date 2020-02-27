@@ -1,5 +1,6 @@
 #include "CString.hpp"
 #include <stdexcept>
+#include <iostream>
 
 namespace quickjs {
 
@@ -28,6 +29,10 @@ CString& CString::operator=(CString&& other) {
 
 CString::operator std::string() {
 	return std::string(handle);
+}
+
+std::ostream& operator<<(std::ostream& stream, const CString& value) {
+	return stream << value.handle;
 }
 
 }

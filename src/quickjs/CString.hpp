@@ -1,12 +1,12 @@
 
 #pragma once
 
-#ifdef __GNUC__ 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 #include "quickjs/quickjs.h"
-#ifdef __GNUC__ 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
 
@@ -31,5 +31,6 @@ struct CString {
 	::JSContext* context = nullptr;
 };
 
+std::ostream& operator<<(std::ostream& stream, const CString& value);
 
 }

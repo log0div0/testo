@@ -25,7 +25,7 @@ int main() {
 		std::string script = "print('hello world')";
 		quickjs::Runtime js_runtime = quickjs::create_runtime();
 		quickjs::Context js_ctx = js_runtime.create_context();
-		// js_ctx.register_nn_functions();
+		js_ctx.register_nn_functions();
 		// nn::Context nn_ctx(&screenshot);
 		// js_ctx.set_opaque(&nn_ctx);
 		js_ctx.eval(script);
