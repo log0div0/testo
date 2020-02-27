@@ -378,10 +378,7 @@ struct Wait: public Node {
 
 	operator std::string() const {
 		std::string result = t.value();
-
-		if (select_expr) {
-			result += " " + std::string(*select_expr);
-		}
+		result += " " + std::string(*select_expr);
 
 		if (timeout) {
 			result += " " + timeout.value() + " " + time_interval.value();
@@ -1288,10 +1285,7 @@ struct Check: public Node {
 
 	operator std::string() const {
 		std::string result = t.value();
-
-		if (select_expr) {
-			result += " " + std::string(*select_expr);
-		}
+		result += " " + std::string(*select_expr);
 
 		if (timeout) {
 			result += " " + timeout.value() + " " + time_interval.value();

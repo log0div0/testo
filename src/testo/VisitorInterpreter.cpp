@@ -787,11 +787,6 @@ void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
 		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
-		if (!wait->select_expr) {
-			reporter.sleep(vmc, wait_for);
-			return sleep(wait->time_interval.value());
-		}
-
 		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);
 
 		reporter.wait(vmc, text, wait_for);
