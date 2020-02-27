@@ -94,7 +94,7 @@ test install_astralinux_gui {
 		wait "Похоже, что данная система будет единственной"; mouse click "Продолжить"
 		wait "Устройство для установки системного загрузчика"; mouse click "/dev/sda"; mouse click "Продолжить"
 		wait "Установка завершена"
-		wait timeout 5s
+		sleep 5s
 		unplug dvd
 		mouse click "Продолжить"
 		wait "Вход" timeout 10m; type "${login}"; press Tab; type "${password}"; press Enter

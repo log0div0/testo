@@ -39,7 +39,7 @@ test install_guest_additions: ubuntu_installation {
 	negotiator_testing {
 		enter_sudo("negotiator", "user", "1111")
 		plug dvd "${NEGOTIATOR_DIR}/testo-guest-additions.iso"
-		wait timeout 5s
+		sleep 5s
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounting read-only";
 		type "dpkg -i /media/testo-guest-additions-1.0.0.deb"; press Enter
@@ -96,7 +96,7 @@ test install_centos {
 		if (check "4) [!] Software selection") {
 			press Four, Enter;
 			wait "Base environment"; press C, Enter
-			wait timeout 3s;
+			sleep 3s;
 		}
 
 		press B, Enter
@@ -112,7 +112,7 @@ test centos_install_guest_additions: install_centos {
 	CentOS_guest_additions {
 		type "mkdir /media/cdrom"; press Enter
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		wait timeout 5s
+		sleep 5s
 		type "mount /dev/cdrom /media/cdrom"; press Enter
 		wait "mounting read-only"; type "rpm -i /media/cdrom/testo-guest-additions-1.0.0.rpm"; press Enter;
 		wait "Created symlink";

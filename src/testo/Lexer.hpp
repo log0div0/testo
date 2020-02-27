@@ -134,6 +134,7 @@ private:
 	Token print();
 	Token type();
 	Token wait();
+	Token sleep();
 	Token check();
 	Token js();
 	Token press();

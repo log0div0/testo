@@ -378,10 +378,7 @@ struct Wait: public Node {
 
 	operator std::string() const {
 		std::string result = t.value();
-
-		if (select_expr) {
-			result += " " + std::string(*select_expr);
-		}
+		result += " " + std::string(*select_expr);
 
 		if (timeout) {
 			result += " " + timeout.value() + " " + time_interval.value();
@@ -391,6 +388,26 @@ struct Wait: public Node {
 
 	std::shared_ptr<ISelectExpr> select_expr;
 	Token timeout;
+	Token time_interval;
+};
+
+struct Sleep: public Node {
+	Sleep(const Token& sleep, const Token& time_interval):
+		Node(sleep),  time_interval(time_interval) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return time_interval.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + " for " + time_interval.value();
+	}
+
+
 	Token time_interval;
 };
 
@@ -502,16 +519,16 @@ struct MouseEvent: public IMouseEvent {
 
 
 struct MouseMoveClick: public Node {
-	MouseMoveClick(const Token& event, std::shared_ptr<IMouseMoveTarget> object, const Token& timeout):
-		Node(event), object(object), timeout(timeout) {}
+	MouseMoveClick(const Token& event, std::shared_ptr<IMouseMoveTarget> object, const Token& timeout_interval):
+		Node(event), object(object), timeout_interval(timeout_interval) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		if (timeout) {
-			return timeout.pos();
+		if (timeout_interval) {
+			return timeout_interval.pos();
 		} else if (object) {
 			return object->end();
 		} else {
@@ -524,14 +541,14 @@ struct MouseMoveClick: public Node {
 		if (object) {
 			result += " " + std::string(*object);
 		}
-		if (timeout) {
-			result += " timeout " + timeout;
+		if (timeout_interval) {
+			result += " timeout " + timeout_interval;
 		}
 		return result;
 	}
 
 	std::shared_ptr<IMouseMoveTarget> object = nullptr;
-	Token timeout;
+	Token timeout_interval;
 };
 
 struct MouseHold: public Node {
@@ -1268,10 +1285,7 @@ struct Check: public Node {
 
 	operator std::string() const {
 		std::string result = t.value();
-
-		if (select_expr) {
-			result += " " + std::string(*select_expr);
-		}
+		result += " " + std::string(*select_expr);
 
 		if (timeout) {
 			result += " " + timeout.value() + " " + time_interval.value();

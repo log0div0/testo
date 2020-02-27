@@ -84,6 +84,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::print) ||
 		(LA(1) == Token::category::type_) ||
 		(LA(1) == Token::category::wait) ||
+		(LA(1) == Token::category::sleep) ||
 		(LA(1) == Token::category::press) ||
 		(LA(1) == Token::category::mouse) ||
 		(LA(1) == Token::category::plug) ||
@@ -476,6 +477,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = type();
 	} else if (LA(1) == Token::category::wait) {
 		action = wait();
+	} else if (LA(1) == Token::category::sleep) {
+		action = sleep();
 	} else if (LA(1) == Token::category::press) {
 		action = press();
 	} else if (LA(1) == Token::category::mouse) {
@@ -579,14 +582,16 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	Token timeout = Token();
 	Token time_interval = Token();
 
-	if (test_select_expr()) {
-		select_expression = select_expr();
+	if (!test_select_expr()) {
+		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted an object to wait");
 	}
+
+	select_expression = select_expr();
 
 	//special check for multiline strings. We don't support them yet.
 
 	//ToDo: Thiple check this part
-	if (select_expression && (select_expression->t.type() == Token::category::triple_quoted_string)) {
+	if (select_expression->t.type() == Token::category::triple_quoted_string) {
 		throw std::runtime_error(std::string(select_expression->begin()) +
 			": Error: multiline strings are not supported in wait action");
 	}
@@ -599,13 +604,19 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 		match(Token::category::time_interval);
 	}
 
-	if (!(select_expression || timeout)) {
-		throw std::runtime_error(std::string(wait_token.pos()) +
-			": Error: either TEXT or FOR (of both) must be specified for wait command");
-	}
-
 	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, time_interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
+}
+
+std::shared_ptr<Action<Sleep>> Parser::sleep() {
+	Token sleep_token = LT(1);
+	match(Token::category::sleep);
+
+	Token time_interval = LT(1);
+	match(Token::category::time_interval);
+
+	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, time_interval));
+	return std::shared_ptr<Action<Sleep>>(new Action<Sleep>(action));
 }
 
 std::shared_ptr<Action<Press>> Parser::press() {
@@ -1139,6 +1150,11 @@ std::shared_ptr<Check> Parser::check() {
 	match(Token::category::check);
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
+
+	if (!test_select_expr()) {
+		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted an object to check");
+	}
+
 	select_expression = select_expr();
 
 	Token timeout, time_interval;

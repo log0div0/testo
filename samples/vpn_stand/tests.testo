@@ -27,7 +27,7 @@ test install_wireguard: sgws_prepare {
 			modprobe wireguard
 			lsmod | fgrep wireguard
 		"""
-		wait timeout 1s
+		sleep 1s
 	}
 
 }
@@ -65,7 +65,7 @@ test sgw_basic: install_wireguard, router_prepare
 
 	sgw1 {
 		plug flash pubkey_flash;
-		wait timeout 5s
+		sleep 5s
 		exec bash """
 			mount /dev/sdb1 /media
 			cp public.key /media/sgw1_public.key
@@ -76,7 +76,7 @@ test sgw_basic: install_wireguard, router_prepare
 
 	sgw2 {
 		plug flash pubkey_flash;
-		wait timeout 5s
+		sleep 5s
 		exec bash """
 			mount /dev/sdb1 /media
 			cp public.key /media/sgw2_public.key
@@ -88,7 +88,7 @@ test sgw_basic: install_wireguard, router_prepare
 
 	sgw1 {
 		plug flash pubkey_flash;
-		wait timeout 5s
+		sleep 5s
 		exec bash """
 			mount /dev/sdb1 /media
 			cp /media/sgw2_public.key ~/
@@ -110,7 +110,7 @@ test sgw_basic: install_wireguard, router_prepare
 
 	router {
 		press LEFTCTRL+C
-		wait timeout 2s
+		sleep 2s
 		exec python """
 			from scapy.all import *
 
@@ -149,7 +149,7 @@ test sgw_basic_with_clients: sgw_basic, clients_prepare
 
 	router {
 		press LEFTCTRL+C
-		wait timeout 2s
+		sleep 2s
 		exec python """
 			from scapy.all import *
 
@@ -182,7 +182,7 @@ test sgw_routes_misconfigured: sgw_basic, clients_prepare
 
 	router {
 		press LEFTCTRL+C
-		wait timeout 2s
+		sleep 2s
 		exec python """
 			from scapy.all import *
 

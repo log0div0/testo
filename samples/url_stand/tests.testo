@@ -24,7 +24,7 @@ test http_interception: configure_net
 
 macro copy_cert_to_flash(cert) {
 	plug flash pubkey_flash;
-	wait timeout 5s
+	sleep 5s
 	exec bash """
 		mount /dev/sdb1 /media
 		cp ${cert} /media
@@ -48,7 +48,7 @@ test https_interception: configure_net
 
 	url_proxy, url_client {
 		plug flash pubkey_flash;
-		wait timeout 5s
+		sleep 5s
 		exec bash """
 			mount /dev/sdb1 /media
 			mkdir /usr/share/ca-certificates/extra
@@ -112,7 +112,7 @@ test https_proxy_cert_not_imported: configure_net
 
 	url_proxy, url_client {
 		plug flash pubkey_flash;
-		wait timeout 5s
+		sleep 5s
 		exec bash """
 			mount /dev/sdb1 /media
 			mkdir /usr/share/ca-certificates/extra

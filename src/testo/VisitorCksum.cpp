@@ -48,6 +48,8 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 		return visit_type(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		return visit_wait(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
+		return std::string(*(p->action));
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
@@ -101,9 +103,7 @@ std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::sha
 
 std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	std::string result = "wait";
-	if (wait->select_expr) {
-		result += template_parser.resolve(std::string(*wait->select_expr), reg);
-	}
+	result += template_parser.resolve(std::string(*wait->select_expr), reg);
 
 	if (wait->time_interval) {
 		result += wait->time_interval.value();
@@ -146,8 +146,8 @@ std::string VisitorCksum::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveC
 		result += visit_mouse_move_target(mouse_move_click->object);
 	}
 
-	if (mouse_move_click->timeout) {
-		result += mouse_move_click->timeout.value();
+	if (mouse_move_click->timeout_interval) {
+		result += mouse_move_click->timeout_interval.value();
 	} else {
 		result += "1s";
 	}

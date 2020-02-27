@@ -636,6 +636,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		return visit_type(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		return visit_wait(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
+		return visit_sleep(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
@@ -777,14 +779,14 @@ bool VisitorInterpreter::visit_select_binop(std::shared_ptr<AST::SelectBinOp> bi
 	}
 }
 
+void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep) {
+	reporter.sleep(vmc, sleep->time_interval.value());
+	::sleep(sleep->time_interval.value());
+}
+
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
 		std::string wait_for = wait->time_interval ? wait->time_interval.value() : "1m";
-		if (!wait->select_expr) {
-			reporter.sleep(vmc, wait_for);
-			return sleep(wait->time_interval.value());
-		}
-
 		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);
 
 		reporter.wait(vmc, text, wait_for);
@@ -907,7 +909,7 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
 		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
-		std::string wait_for = mouse_move_click->timeout ? mouse_move_click->timeout.value() : "5s";
+		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : "5s";
 		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
 
 		if (mouse_move_click->object) {
