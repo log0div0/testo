@@ -1,9 +1,9 @@
 
 macro install_ubuntu(host_name, login, password) {
 	start
-	wait timeout 2s
+	sleep 2s
 	wait "Language";
-	wait timeout 2s;
+	sleep 2s;
 	press Enter;
 	wait "Install Ubuntu Server"; press Enter;
 	wait "Choose the language";	press Enter
@@ -48,12 +48,12 @@ macro enter_sudo(host_name, login, password) {
 
 macro install_guest_additions(host_name, login, password) {
 	enter_sudo("${host_name}", "${login}", "${password}")
-	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; wait timeout 5s
+	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 	type "mount /dev/cdrom /media"; press Enter
 	wait "mounting read-only"; type "dpkg -i /media/*.deb"; press Enter;
 	wait "Setting up testo-guest-additions"
 	type "umount /media"; press Enter;
-	wait timeout 2s
+	sleep 2s
 	unplug dvd
 }
 

@@ -42,7 +42,7 @@ test win7_installation {
 
 test guest_additions: win7_installation {
 	win7 {
-		wait timeout 5s
+		sleep 5s
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
@@ -52,7 +52,7 @@ test guest_additions: win7_installation {
 		wait "Разрешить внесение изменений"; press Left, Enter
 		wait "Не удалось проверить издателя этих драйверов";
 		press LeftAlt+Tab+Right # окно установки драйвером не в фокусе, переключаемся на него
-		wait timeout 2s
+		sleep 2s
 		press Down, Enter
 		wait "Установка завершена"; press Enter
 		wait !"Установка завершена"
@@ -99,14 +99,14 @@ test win7_installation_mouse {
 
 test new_folder: win7_installation_mouse {
 	win7 {
-		wait timeout 5s
+		sleep 5s
 
 		mouse move 400 300
 		mouse rclick
 		mouse move "Создать" timeout 10s
 		mouse click "Папку" timeout 10s
 		wait "Новая папка"; press Backspace; type "УДАЛИТЬ"; press Enter
-		wait timeout 2s
+		sleep 2s
 	}
 }
 
@@ -116,13 +116,13 @@ test remove_folder: new_folder {
 		mouse hold lbtn
 		mouse move "Корзина"
 		mouse release
-		wait timeout 2s
+		sleep 2s
 	}
 }
 
 test guest_additions_mouse: win7_installation_mouse {
 	win7 {
-		wait timeout 5s
+		sleep 5s
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		mouse click "Выполнить testo-guest-additions" timeout 1m

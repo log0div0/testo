@@ -69,7 +69,7 @@ macro install_centos() {
 		press Two, Enter;
 		wait "Device configuration"; press One, Enter
 		wait "Enter new value for 'IPv4 address"; type "dhcp"; press Enter
-		wait timeout 2s; press Seven, Enter
+		sleep 2s; press Seven, Enter
 		wait "7) [x] Connect automatically after reboot"; press Eight, Enter
 		wait "8) [x] Apply configuration in installer"; press C, Enter
 	}
@@ -84,7 +84,7 @@ macro install_centos() {
 	if (check "4) [!] Software selection") {
 		press Four, Enter;
 		wait "Base environment"; press C, Enter
-		wait timeout 3s;
+		sleep 3s;
 	}
 
 	press B, Enter
@@ -105,7 +105,7 @@ test install_additions_and_disable_selinux: install_centos {
 	cas1, cas2 {
 		type "mkdir /media/cdrom"; press Enter
 		plug dvd $ISO_DIR + "/negotiator.iso"
-		wait timeout 5s
+		sleep 5s
 		type "mount /dev/cdrom /media/cdrom"; press Enter
 		wait "mounting read-only"; type "rpm -i /media/cdrom/negotiator-agent-0.0.1.rpm"; press Enter;
 		wait "Created symlink";
@@ -125,9 +125,9 @@ test install_additions_and_disable_selinux: install_centos {
 test install_jinn: install_additions_and_disable_selinux {
 	cas1 {
 		plug dvd $ISO_DIR + "/CentOS-7-x86_64-DVD-1810.iso"
-		wait timeout 5s
+		sleep 5s
 		exec bash "mount /dev/cdrom /media/cdrom"
-		wait timeout 5s
+		sleep 5s
 		exec bash "yum --disablerepo=\\* --enablerepo=c7-media install -y createrepo"
 		copyto $JINN_DIR + "/cas1" "/root/jinn_server"
 		exec bash """
@@ -145,9 +145,9 @@ test install_jinn: install_additions_and_disable_selinux {
 
 	cas2 {
 		plug dvd $ISO_DIR + "/CentOS-7-x86_64-DVD-1810.iso"
-		wait timeout 5s
+		sleep 5s
 		exec bash "mount /dev/cdrom /media/cdrom"
-		wait timeout 5s
+		sleep 5s
 		copyto $JINN_DIR + "/cas2" "/root/jinn_server"
 
 		exec bash "yum --disablerepo=\\* --enablerepo=c7-media install --nogpgcheck -y /root/jinn_server/*.rpm"

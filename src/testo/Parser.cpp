@@ -1152,7 +1152,7 @@ std::shared_ptr<Check> Parser::check() {
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
 
 	if (!test_select_expr()) {
-		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted an object to wait");
+		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted an object to check");
 	}
 
 	select_expression = select_expr();

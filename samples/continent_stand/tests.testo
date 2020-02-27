@@ -34,7 +34,7 @@ machine UB {
 
 macro install_continent(id) {
 	start
-	wait timeout 3s
+	sleep 3s
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter
 	wait "Введите идентификатор шлюза"; type "${id}"; press Enter*2
@@ -142,7 +142,7 @@ test config_UB: init_CUS, init_UB {
 		wait "F4 - создать запрос"; press F4
 		wait "Вставьте USB Flash накопитель"
 		plug flash ub_flash
-		wait timeout 5s
+		sleep 5s
 		press Enter
 		wait "Идёт создание запроса";
 		press Down; type "Security Code"
@@ -177,13 +177,13 @@ test config_UB: init_CUS, init_UB {
 		select_local_menu("Экспорт конфигурации УБ на носитель")
 		wait "Выгрузить политику"; type "${ub_id}"; press Enter
 		wait "Успешно"; press Enter
-		wait timeout 10s;
+		sleep 10s;
 		unplug flash ub_flash
 	}
 
 	UB {
 		plug flash ub_flash
-		wait timeout 5s
+		sleep 5s
 		select_local_menu("Подключиться к ЦУС")
 		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
 		wait "Выберите конфигурацию"; select_local_menu("gate-${ub_id}.json")
