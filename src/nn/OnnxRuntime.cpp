@@ -31,6 +31,11 @@ fs::path GetModelDir() {
 	return regkey.query_str("InstallDir");
 }
 #endif
+#ifdef __APPLE__
+fs::path GetModelDir() {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+#endif
 
 std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 	if (!env) {
