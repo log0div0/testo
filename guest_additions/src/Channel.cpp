@@ -1,6 +1,8 @@
 
 #include "Channel.hpp"
+#ifdef WIN32
 #include "winapi.hpp"
+#endif
 
 #include <thread>
 

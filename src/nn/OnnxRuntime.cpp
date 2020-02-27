@@ -1,6 +1,8 @@
 
 #include "OnnxRuntime.hpp"
+#ifdef WIN32
 #include "winapi.hpp"
+#endif
 
 #include <experimental/filesystem>
 

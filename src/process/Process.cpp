@@ -1,6 +1,8 @@
 
 #include "Process.hpp"
+#ifdef WIN32
 #include "winapi.hpp"
+#endif
 
 #include <array>
 
