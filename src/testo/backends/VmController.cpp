@@ -40,7 +40,7 @@ void VmController::create() {
 		}
 
 		fs::path iso_file = config.at("iso").get<std::string>();
-		
+
 		config.erase("src_file");
 		config.erase("metadata");
 
@@ -86,6 +86,10 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 	try {
 		if (hypervisor_snapshot_needed && vm->is_flash_plugged(nullptr)) {
 			throw std::runtime_error("Can't take hypervisor snapshot with a flash drive plugged in. Please unplug the flash drive before the end of the test");
+		}
+
+		if (current_held_mouse_button != MouseButton::None) {
+			throw std::runtime_error("There is some mouse button held down. Please release it before the end of test");
 		}
 
 		if (has_snapshot(snapshot)) {

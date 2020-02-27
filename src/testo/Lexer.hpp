@@ -141,6 +141,14 @@ private:
 	Token move();
 	Token click();
 	Token rclick();
+	Token mclick();
+	Token dclick();
+	Token hold();
+	Token release();
+	Token lbtn();
+	Token rbtn();
+	Token mbtn();
+	Token wheel();
 	Token plug();
 	Token unplug();
 	Token start();

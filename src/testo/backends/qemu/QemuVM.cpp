@@ -277,7 +277,7 @@ void QemuVM::install() {
 					<sound model='ich6'>
 					</sound>
 					<video>
-						<model type='vmvga' heads='1' primary='yes'/>
+						<model type='qxl' heads='1' primary='yes'/>
 					</video>
 					<redirdev bus='usb' type='spicevmc'>
 					</redirdev>
@@ -441,38 +441,248 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
-void QemuVM::mouse_move(const std::string& x, const std::string& y) {
+void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
+		auto tmp_screen = screenshot();
 
-		if (isdigit(x[0]) || isdigit(y[0])) {
-			std::throw_with_nested(std::runtime_error("absolute mouse movement is not implemented"));
+		double x_pos = double(32768) / double(tmp_screen.width) * double(x);
+		double y_pos = double(32768) / double(tmp_screen.height) * double(y);
+
+		if ((int)x_pos == 0) {
+			x_pos = 1;
 		}
 
-		int dx = 0, dy = 0;
+		if ((int)y_pos == 0) {
+			y_pos = 1;
+		}
 
-		//ONLY FOR NOW!
-		dx = std::stoi(x);
-		dy = std::stoi(y);
+		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
+			{{
+				"execute": "input-send-event",
+				"arguments": {{
+					"events": [
+						{{
+							"type": "abs",
+							"data": {{
+								"axis": "x",
+								"value": {}
+							}}
 
-		std::string command = "mouse_move ";
-		command += x + " " + y;
+						}},
+						{{
+							"type": "abs",
+							"data": {{
+								"axis": "y",
+								"value": {}
+							}}
+						}}
+					]
+				}}
+			}}
+		)", (int)x_pos, (int)y_pos));
 
-		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Mouse move error"));
 	}
 }
 
-void QemuVM::mouse_set_buttons(uint32_t button_mask) {
+void QemuVM::mouse_move_abs(const std::string& axis, uint32_t value) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-		std::string command = "mouse_button " + std::to_string(button_mask);
-		domain.monitor_command(command, {VIR_DOMAIN_QEMU_MONITOR_COMMAND_HMP});
+		auto tmp_screen = screenshot();
+
+		double pos;
+
+		if (axis == "x") {
+			pos = double(32768) / double(tmp_screen.width) * double(value);
+		} else if (axis == "y") {
+			pos = double(32768) / double(tmp_screen.height) * double(value);
+		} else {
+			throw std::runtime_error("Unknown axis: " + axis);
+		}
+
+		if ((int)pos == 0) {
+			pos = 1;
+		}
+
+		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
+			{{
+				"execute": "input-send-event",
+				"arguments": {{
+					"events": [
+						{{
+							"type": "abs",
+							"data": {{
+								"axis": "{}",
+								"value": {}
+							}}
+						}}
+					]
+				}}
+			}}
+		)", axis, (int)pos));
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Mouse set buttons error"));
+		std::throw_with_nested(std::runtime_error("Mouse move error"));
+	}
+}
+
+void QemuVM::mouse_move_rel(int x, int y) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
+			{{
+				"execute": "input-send-event",
+				"arguments": {{
+					"events": [
+						{{
+							"type": "rel",
+							"data": {{
+								"axis": "x",
+								"value": {}
+							}}
+						}},
+						{{
+							"type": "rel",
+							"data": {{
+								"axis": "y",
+								"value": {}
+							}}
+						}}
+					]
+				}}
+			}}
+		)", x, y));
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse move error"));
+	}
+}
+
+void QemuVM::mouse_move_rel(const std::string& axis, int value) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		if (axis != "x" && axis != "y") {
+			throw std::runtime_error("Unknown axis: " + axis);
+		}
+
+		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
+			{{
+				"execute": "input-send-event",
+				"arguments": {{
+					"events": [
+						{{
+							"type": "rel",
+							"data": {{
+								"axis": "{}",
+								"value": {}
+							}}
+						}}
+					]
+				}}
+			}}
+		)", axis, value));
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse move error"));
+	}
+}
+
+void QemuVM::mouse_press(const std::vector<MouseButton>& buttons) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command = R"(
+			{
+				"execute": "input-send-event",
+				"arguments": {
+					"events": [
+					]
+				}
+			}
+		)"_json;
+
+		for (auto& button: buttons) {
+			json_command.at("arguments").at("events").push_back({
+				{"type", "btn"},
+				{"data", {
+					{"down", true},
+					{"button", mouse_button_to_str(button)}
+				}}
+			});
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse press buttons error"));
+	}
+}
+
+
+void QemuVM::mouse_release(const std::vector<MouseButton>& buttons) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command = R"(
+			{
+				"execute": "input-send-event",
+				"arguments": {
+					"events": [
+					]
+				}
+			}
+		)"_json;
+
+		for (auto& button: buttons) {
+			json_command.at("arguments").at("events").push_back({
+				{"type", "btn"},
+				{"data", {
+					{"down", false},
+					{"button", mouse_button_to_str(button)}
+				}}
+			});
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Mouse release buttons error"));
 	}
 }
 
@@ -1169,5 +1379,16 @@ void QemuVM::create_disk() {
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));
+	}
+}
+
+std::string QemuVM::mouse_button_to_str(MouseButton btn) {
+	switch (btn) {
+		case Left: return "left";
+		case Right: return "right";
+		case Middle: return "middle";
+		case WheelUp: return "wheel-up";
+		case WheelDown: return "wheel-down";
+		default: throw std::runtime_error("Unknown button: " + btn);
 	}
 }

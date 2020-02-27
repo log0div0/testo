@@ -188,11 +188,27 @@ void HyperVVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
-void HyperVVM::mouse_move(const std::string& x, const std::string& y) {
+void HyperVVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-void HyperVVM::mouse_set_buttons(uint32_t button_mask) {
+void HyperVVM::mouse_move_abs(const std::string& axis, uint32_t value) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
+void HyperVVM::mouse_move_rel(int x, int y) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
+void HyperVVM::mouse_move_rel(const std::string& axis, int value) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
+void HyperVVM::mouse_press(const std::vector<MouseButton>& buttons) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
+void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

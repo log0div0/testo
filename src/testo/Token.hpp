@@ -18,7 +18,16 @@ struct Token {
 		mouse,
 		move,
 		click,
+		lclick,
 		rclick,
+		mclick,
+		dclick,
+		hold,
+		release,
+		lbtn,
+		rbtn,
+		mbtn,
+		wheel,
 		plug,
 		unplug,
 		start,
@@ -85,6 +94,7 @@ struct Token {
 		none, //not initialized
 		binary, //true or false
 		program,
+		mouse_coordinates,
 		key_spec,
 		action_block,
 		attr,
@@ -145,6 +155,32 @@ struct Token {
 			return "JS";
 		case press:
 			return "ACTION PRESS";
+		case mouse:
+			return "MOUSE EVENT";
+		case mouse_coordinates:
+			return "MOUSE COORDINATES";
+		case click:
+			return "ACTION CLICK";
+		case lclick:
+			return "ACTION LCLICK";
+		case rclick:
+			return "ACTION RCLICK";
+		case mclick:
+			return "ACTION MCLICK";
+		case dclick:
+			return "ACTION DCLICK";
+		case hold:
+			return "ACTION HOLD";
+		case release:
+			return "ACTION RELEASE";
+		case lbtn:
+			return "LBTN";
+		case rbtn:
+			return "RBTN";
+		case mbtn:
+			return "MBTN";
+		case wheel:
+			return "WHEEL";
 		case plug:
 			return "ACTION PLUG";
 		case unplug:

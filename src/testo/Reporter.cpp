@@ -324,15 +324,61 @@ void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, 
 	report(fmt::format("with timeout {}\n", timeout), blue);
 }
 
-void Reporter::mouse_move(std::shared_ptr<VmController> vmc, const std::string& X, const std::string& Y) {
-	report(fmt::format("{} Moving cursor ", progress()), blue);
-	report(fmt::format("X: {} Y: {} ", X, Y), yellow);
+void Reporter::mouse_move_click(std::shared_ptr<VmController> vmc, std::string event, std::string object, const std::string& timeout) {
+	if (event == "move") {
+		event = "moving";
+	} else if (event == "click") {
+		event = "clicking";
+	} else if (event == "lclick") {
+		event = "left-clicking";
+	} else if (event == "rclick") {
+		event = "right-clicking";
+	} else if (event == "mclick") {
+		event = "middle-clicking";
+	} else if (event == "dclick") {
+		event = "double-clicking";
+	}
+
+	report(fmt::format("{} Mouse {} ", progress(), event), blue);
+	if (object.length()) {
+		report(fmt::format("on {} ", object), yellow);
+	}
+
+	if (timeout.length()) {
+		report(fmt::format("with timeout {} ", timeout), blue);
+	}
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::mouse_click(std::shared_ptr<VmController> vmc, const std::string& click_type) {
-	report(fmt::format("{} {} on virtual machine ", progress(), click_type), blue);
+void Reporter::mouse_hold(std::shared_ptr<VmController> vmc, std::string button) {
+	if (button == "lbtn") {
+		button = "left button";
+	} else if (button == "rbtn") {
+		button = "right button";
+	} else if (button == "mbtn") {
+		button = "middle button";
+	}
+
+	report(fmt::format("{} Mouse hold the ", progress()), blue);
+	report(fmt::format("{} ", button), yellow);
+
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
+void Reporter::mouse_release(std::shared_ptr<VmController> vmc) {
+	report(fmt::format("{} Mouse release buttons ", progress()), blue);
+
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
+void Reporter::mouse_wheel(std::shared_ptr<VmController> vmc, const std::string& direction) {
+	report(fmt::format("{} Mouse wheel ", progress()), blue);
+	report(fmt::format("{} ", direction), yellow);
+
+	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 

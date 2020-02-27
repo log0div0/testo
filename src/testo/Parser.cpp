@@ -479,7 +479,7 @@ std::shared_ptr<IAction> Parser::action() {
 	} else if (LA(1) == Token::category::press) {
 		action = press();
 	} else if (LA(1) == Token::category::mouse) {
-		action = mouse_event();
+		action = mouse();
 	} else if ((LA(1) == Token::category::plug) || (LA(1) == Token::category::unplug)) {
 		action = plug();
 	} else if (LA(1) == Token::category::start) {
@@ -624,26 +624,119 @@ std::shared_ptr<Action<Press>> Parser::press() {
 	return std::shared_ptr<Action<Press>>(new Action<Press>(action));
 }
 
-std::shared_ptr<Action<MouseEvent>> Parser::mouse_event() {
+std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 	Token mouse_token = LT(1);
 	match(Token::category::mouse);
 
-	Token event_token = LT(1);
-	match({Token::category::move, Token::category::click, Token::category::rclick});
+	std::shared_ptr<IMouseEvent> event = nullptr;
 
-	Token dx, dy;
-
-	if (event_token.value() == "move" || LA(1) == Token::category::number) {
-		dx = LT(1);
-		match(Token::category::number);
-		dy = LT(1);
-		match(Token::category::number);
+	if (LA(1) == Token::category::move ||
+		LA(1) == Token::category::click ||
+		LA(1) == Token::category::lclick ||
+		LA(1) == Token::category::rclick ||
+		LA(1) == Token::category::mclick ||
+		LA(1) == Token::category::dclick)
+	{
+		event = mouse_move_click();
+	} else if (LA(1) == Token::category::hold) {
+		event = mouse_hold();
+	} else if (LA(1) == Token::category::release) {
+		event = mouse_release();
+	} else if (LA(1) == Token::category::wheel) {
+		event = mouse_wheel();
+	} else {
+		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: unknown mouse action: " + LT(1).value());
 	}
 
-	auto action = std::shared_ptr<MouseEvent>(new MouseEvent(mouse_token, event_token, dx, dy));
-	return std::shared_ptr<Action<MouseEvent>>(new Action<MouseEvent>(action));
+	auto action = std::shared_ptr<Mouse>(new Mouse(mouse_token, event));
+	return std::shared_ptr<Action<Mouse>>(new Action<Mouse>(action));
 }
 
+std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click() {
+	Token event_token = LT(1);
+	match({Token::category::click,
+		Token::category::lclick,
+		Token::category::move,
+		Token::category::rclick,
+		Token::category::mclick,
+		Token::category::dclick});
+
+	std::shared_ptr<IMouseMoveTarget> target = nullptr;
+	bool is_coordinates = false;
+
+	if (test_selectable()) {
+		auto object = selectable();
+		target = std::shared_ptr<MouseMoveTarget<ISelectable>>(new MouseMoveTarget<ISelectable>(object));
+	} else if (LA(1) == Token::category::number) {
+		is_coordinates = true;
+		target = mouse_coordinates();
+	}
+
+	Token timeout = Token();
+
+	if (LA(1) == Token::category::timeout) {
+		match(Token::category::timeout);
+
+		timeout = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	if (timeout && (target == nullptr)) {
+		throw std::runtime_error(std::string(timeout.pos()) + ": Error: timeout can be used only with an object");
+	}
+
+	if (timeout && is_coordinates) {
+		throw std::runtime_error(std::string(timeout.pos()) + ": Error: timeout can't be used with coordinates");
+	}
+
+	auto move_click = std::shared_ptr<MouseMoveClick>(new MouseMoveClick(event_token, target, timeout));
+	return std::shared_ptr<MouseEvent<MouseMoveClick>>(new MouseEvent(move_click));
+}
+
+std::shared_ptr<AST::MouseEvent<AST::MouseHold>> Parser::mouse_hold() {
+	Token event_token = LT(1);
+	match(Token::category::hold);
+
+	Token button = LT(1);
+	match({Token::category::lbtn, Token::category::rbtn, Token::category::mbtn});
+
+	auto move_hold = std::shared_ptr<MouseHold>(new MouseHold(event_token, button));
+	return std::shared_ptr<MouseEvent<MouseHold>>(new MouseEvent(move_hold));
+}
+
+std::shared_ptr<AST::MouseEvent<AST::MouseRelease>> Parser::mouse_release() {
+	Token event_token = LT(1);
+	match(Token::category::release);
+
+	auto move_release = std::shared_ptr<MouseRelease>(new MouseRelease(event_token));
+	return std::shared_ptr<MouseEvent<MouseRelease>>(new MouseEvent(move_release));
+}
+
+std::shared_ptr<AST::MouseEvent<AST::MouseWheel>> Parser::mouse_wheel() {
+	Token event_token = LT(1);
+	match(Token::category::wheel);
+
+	Token direction = LT(1);
+
+	if (direction.value() != "up" && direction.value() != "down") {
+		throw std::runtime_error(std::string(direction.pos()) + " : Error: unknown wheel direction: " + direction.value());
+	}
+
+	match(Token::category::id);
+
+	auto mouse_wheel = std::shared_ptr<MouseWheel>(new MouseWheel(event_token, direction));
+	return std::shared_ptr<MouseEvent<MouseWheel>>(new MouseEvent(mouse_wheel));
+}
+
+std::shared_ptr<MouseMoveTarget<MouseCoordinates>> Parser::mouse_coordinates() {
+	auto dx = LT(1);
+	match(Token::category::number);
+	auto dy = LT(1);
+	match(Token::category::number);
+
+	auto target = std::shared_ptr<MouseCoordinates>(new MouseCoordinates(dx, dy));
+	return std::shared_ptr<MouseMoveTarget<MouseCoordinates>>(new MouseMoveTarget<MouseCoordinates>(target));
+}
 
 std::shared_ptr<Action<Plug>> Parser::plug() {
 	Token plug_token = LT(1);

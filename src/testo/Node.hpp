@@ -419,40 +419,194 @@ struct Press: public Node {
 	std::vector<std::shared_ptr<KeySpec>> keys;
 };
 
-struct MouseEvent: public Node {
-	MouseEvent(const Token& mouse, const Token& event, const Token& dx, const Token& dy):
-		Node(mouse), event(event), dx_token(dx), dy_token(dy) {}
+
+struct IMouseMoveTarget: public Node {
+	using Node::Node;
+
+	virtual std::string text() const = 0;
+};
+
+template <typename MouseMoveTargetType>
+struct MouseMoveTarget: public IMouseMoveTarget {
+	MouseMoveTarget(std::shared_ptr<MouseMoveTargetType> target):
+		IMouseMoveTarget(target->t),
+		target(target) {}
+
+	Pos begin() const {
+		return target->begin();
+	}
+
+	Pos end() const {
+		return target->end();
+	}
+
+	operator std::string() const {
+		return std::string(*(target));
+	}
+
+	std::string text() const {
+		return target->text();
+	}
+
+	std::shared_ptr<MouseMoveTargetType> target;
+};
+
+struct MouseCoordinates: public Node {
+	MouseCoordinates(const Token& dx, const Token& dy):
+		Node(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos())), dx(dx), dy(dy) {}
+
+	Pos begin() const {
+		return dx.pos();
+	}
+
+	Pos end() const {
+		return dy.pos();
+	}
+
+	operator std::string() const {
+		return dx.value() + " " + dy.value();;
+	}
+
+	std::string text() const {
+		return std::string(*this);
+	}
+
+	Token dx;
+	Token dy;
+};
+
+struct IMouseEvent: public Node {
+	using Node::Node;
+};
+
+template <typename MouseEventType>
+struct MouseEvent: public IMouseEvent {
+	MouseEvent(std::shared_ptr<MouseEventType> event):
+		IMouseEvent(event->t),
+		event(event) {}
+
+	Pos begin() const {
+		return event->begin();
+	}
+
+	Pos end() const {
+		return event->end();
+	}
+
+	operator std::string() const {
+		return std::string(*(event));
+	}
+
+	std::shared_ptr<MouseEventType> event;
+};
+
+
+struct MouseMoveClick: public Node {
+	MouseMoveClick(const Token& event, std::shared_ptr<IMouseMoveTarget> object, const Token& timeout):
+		Node(event), object(object), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return dy_token.pos();
+		if (timeout) {
+			return timeout.pos();
+		} else if (object) {
+			return object->end();
+		} else {
+			return t.pos();
+		}
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + " " + event.value() + " ";
-		if (!dx_token.value().length()) {
-			result += "+0 ";
-		} else {
-			result += dx_token.value();
+		std::string result = t.value();
+		if (object) {
+			result += " " + std::string(*object);
 		}
-
-		if (!dy_token.value().length()) {
-			result += "+0";
-		} else {
-			result += dy_token.value();
+		if (timeout) {
+			result += " timeout " + timeout;
 		}
-
 		return result;
 	}
 
-	bool is_move_needed() const {
-		return dx_token.value().length() || dy_token.value().length();
+	std::shared_ptr<IMouseMoveTarget> object = nullptr;
+	Token timeout;
+};
+
+struct MouseHold: public Node {
+	MouseHold(const Token& hold, const Token& button):
+		Node(hold), button(button) {}
+
+	Pos begin() const {
+		return t.pos();
 	}
 
-	Token event, dx_token, dy_token;
+	Pos end() const {
+		return button.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + button.value();
+	}
+
+	Token button;
+};
+
+struct MouseRelease: public Node {
+	MouseRelease(const Token& release):
+		Node(release) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return t.pos();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+};
+
+struct MouseWheel: public Node {
+	MouseWheel(const Token& wheel, const Token& direction):
+		Node(wheel), direction(direction) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return direction.pos();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + direction.value();
+	}
+
+	Token direction;
+};
+
+struct Mouse: public Node {
+	Mouse(const Token& mouse, std::shared_ptr<IMouseEvent> event):
+		Node(mouse), event(event) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		return event->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + std::string(*event);
+		return result;
+	}
+
+	std::shared_ptr<IMouseEvent> event = nullptr;
 };
 
 //Also is used for unplug
