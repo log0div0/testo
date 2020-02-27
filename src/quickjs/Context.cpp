@@ -6,10 +6,44 @@
 
 namespace quickjs {
 
+JSValue js_print(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+	int i;
+	const char *str;
+
+	for(i = 0; i < argc; i++) {
+		if (i != 0) {
+			putchar(' ');
+		}
+		str = JS_ToCString(ctx, argv[i]);
+		if (!str) {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+			return JS_EXCEPTION;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+		}
+		fputs(str, stdout);
+		JS_FreeCString(ctx, str);
+	}
+	putchar('\n');
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+		return JS_UNDEFINED;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+}
+
 Context::Context(::JSContext* handle): handle(handle) {
 	if (!handle) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
 	}
+	register_global_function("print", 1, js_print);
 }
 
 Context::~Context() {
@@ -151,42 +185,8 @@ JSValue detect_text(JSContext* ctx, JSValueConst this_val, int argc, JSValueCons
 	return res;
 }
 
-JSValue js_print(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-	int i;
-	const char *str;
-
-	for(i = 0; i < argc; i++) {
-		if (i != 0) {
-			putchar(' ');
-		}
-		str = JS_ToCString(ctx, argv[i]);
-		if (!str) {
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-			return JS_EXCEPTION;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-		}
-		fputs(str, stdout);
-		JS_FreeCString(ctx, str);
-	}
-	putchar('\n');
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-		return JS_UNDEFINED;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-}
-
 void Context::register_nn_functions() {
 	register_global_function("detect_text", 1, detect_text);
-	register_global_function("print", 1, js_print);
 }
 
 }
