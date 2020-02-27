@@ -182,6 +182,8 @@ Token Lexer::id() {
 		return type();
 	} else if (value == "wait") {
 		return wait();
+	} else if (value == "sleep") {
+		return sleep();
 	} else if (value == "check") {
 		return check();
 	} else if (value == "js") {
@@ -312,6 +314,13 @@ Token Lexer::wait() {
 	std::string value("wait");
 	current_pos.advance(value.length());
 	return Token(Token::category::wait, value, tmp_pos);
+}
+
+Token Lexer::sleep() {
+	Pos tmp_pos = current_pos;
+	std::string value("sleep");
+	current_pos.advance(value.length());
+	return Token(Token::category::sleep, value, tmp_pos);
 }
 
 Token Lexer::check() {

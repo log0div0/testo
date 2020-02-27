@@ -84,6 +84,7 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::print) ||
 		(LA(1) == Token::category::type_) ||
 		(LA(1) == Token::category::wait) ||
+		(LA(1) == Token::category::sleep) ||
 		(LA(1) == Token::category::press) ||
 		(LA(1) == Token::category::mouse) ||
 		(LA(1) == Token::category::plug) ||
@@ -476,6 +477,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = type();
 	} else if (LA(1) == Token::category::wait) {
 		action = wait();
+	} else if (LA(1) == Token::category::sleep) {
+		action = sleep();
 	} else if (LA(1) == Token::category::press) {
 		action = press();
 	} else if (LA(1) == Token::category::mouse) {
@@ -606,6 +609,17 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, time_interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
+}
+
+std::shared_ptr<Action<Sleep>> Parser::sleep() {
+	Token sleep_token = LT(1);
+	match(Token::category::sleep);
+
+	Token time_interval = LT(1);
+	match(Token::category::time_interval);
+
+	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, time_interval));
+	return std::shared_ptr<Action<Sleep>>(new Action<Sleep>(action));
 }
 
 std::shared_ptr<Action<Press>> Parser::press() {

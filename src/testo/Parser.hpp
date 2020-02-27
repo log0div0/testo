@@ -62,6 +62,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Print>> print();
 	std::shared_ptr<AST::Action<AST::Type>> type();
 	std::shared_ptr<AST::Action<AST::Wait>> wait();
+	std::shared_ptr<AST::Action<AST::Sleep>> sleep();
 	std::shared_ptr<AST::Action<AST::Press>> press();
 	std::shared_ptr<AST::Action<AST::Mouse>> mouse();
 	std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> mouse_move_click();
