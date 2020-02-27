@@ -834,7 +834,14 @@ static inline JSValue JS_NewCFunctionMagic(JSContext *ctx, JSCFunctionMagic *fun
                                            const char *name,
                                            int length, JSCFunctionEnum cproto, int magic)
 {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     return JS_NewCFunction2(ctx, (JSCFunction *)func, name, length, cproto, magic);
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 }
 void JS_SetConstructor(JSContext *ctx, JSValueConst func_obj, 
                        JSValueConst proto);
