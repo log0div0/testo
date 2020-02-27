@@ -45,6 +45,7 @@ struct console_args {
 	std::vector<std::string> params_values;
 
 	bool show_help = false;
+	bool show_version = false;
 	bool stop_on_fail = false;
 	bool assume_yes = false;
 	bool report_logs = false;
@@ -237,7 +238,7 @@ int do_main(int argc, char** argv) {
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
-	auto cli = ( run_spec | clean_spec | command("help").set(args.show_help) );
+	auto cli = ( run_spec | clean_spec | command("help").set(args.show_help) | command("version").set(args.show_version) );
 
 	if (!parse(argc, argv, cli)) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
@@ -246,6 +247,12 @@ int do_main(int argc, char** argv) {
 
 	if (args.show_help) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
+		return 0;
+	}
+
+	if (args.show_version) {
+		std::string version(TESTO_VERSION);
+		std::cout << "Testo framework version " + version << std::endl;
 		return 0;
 	}
 

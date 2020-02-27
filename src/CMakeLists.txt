@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DFMT_HEADER_ONLY)
+add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
 if (WIN32)
 	add_definitions(
 		-D__PRETTY_FUNCTION__=__FUNCSIG__
