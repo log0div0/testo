@@ -28,32 +28,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <assert.h>
-#ifdef __GNUC__
 #include <sys/time.h>
-#endif
-#ifdef _MSC_VER
-#include <Windows.h>
-int gettimeofday(struct timeval * tp, struct timezone * tzp)
-{
-    // Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
-    // This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
-    // until 00:00:00 January 1, 1970 
-    static const uint64_t EPOCH = ((uint64_t) 116444736000000000ULL);
-
-    SYSTEMTIME  system_time;
-    FILETIME    file_time;
-    uint64_t    time;
-
-    GetSystemTime( &system_time );
-    SystemTimeToFileTime( &system_time, &file_time );
-    time =  ((uint64_t)file_time.dwLowDateTime )      ;
-    time += ((uint64_t)file_time.dwHighDateTime) << 32;
-
-    tp->tv_sec  = (long) ((time - EPOCH) / 10000000L);
-    tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
-    return 0;
-}
-#endif
 #include <time.h>
 #include <fenv.h>
 #include <math.h>
@@ -70,8 +45,6 @@ int gettimeofday(struct timeval * tp, struct timezone * tzp)
 #ifdef CONFIG_BIGNUM
 #include "libbf.h"
 #endif
-
-#define EMSCRIPTEN
 
 #define OPTIMIZE         1
 #define SHORT_OPCODES    1
@@ -220,11 +193,7 @@ typedef enum JSErrorEnum {
 #define JS_STACK_SIZE_MAX 65536
 #define JS_STRING_LEN_MAX ((1 << 30) - 1)
 
-#ifdef __GNUC__
 #define __exception __attribute__((warn_unused_result))
-#else
-#define __exception
-#endif
 
 typedef struct JSShape JSShape;
 typedef struct JSString JSString;
@@ -720,7 +689,7 @@ typedef struct JSShapeProperty {
 } JSShapeProperty;
 
 struct JSShape {
-    uint32_t prop_hash_end[1]; /* hash table of size hash_mask + 1
+    uint32_t prop_hash_end[0]; /* hash table of size hash_mask + 1
                                   before the start of the structure. */
     JSRefCountHeader header; /* must come first, 32-bit */
     JSGCHeader gc_header; /* must come after JSRefCountHeader, 8-bit */
@@ -885,11 +854,7 @@ static __exception int JS_ToArrayLengthFree(JSContext *ctx, uint32_t *plen,
                                             JSValue val);
 static JSValue JS_EvalObject(JSContext *ctx, JSValueConst this_obj,
                              JSValueConst val, int flags, int scope_idx);
-JSValue
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...);
+JSValue __attribute__((format(printf, 2, 3))) JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...);
 static __maybe_unused void JS_DumpAtoms(JSRuntime *rt);
 static __maybe_unused void JS_DumpString(JSRuntime *rt,
                                                   const JSString *p);
@@ -4371,19 +4336,7 @@ static JSValue JS_NewObjectFromShape(JSContext *ctx, JSShape *sh, JSClassID clas
         p->prop[0].u.value = JS_UNDEFINED;
         break;
     case JS_CLASS_ARGUMENTS:
-    case JS_CLASS_UINT8C_ARRAY:
-    case JS_CLASS_INT8_ARRAY:
-    case JS_CLASS_UINT8_ARRAY:
-    case JS_CLASS_INT16_ARRAY:
-    case JS_CLASS_UINT16_ARRAY:
-    case JS_CLASS_INT32_ARRAY:
-    case JS_CLASS_UINT32_ARRAY:
-#ifdef CONFIG_BIGNUM
-    case JS_CLASS_BIG_INT64_ARRAY:
-    case JS_CLASS_BIG_UINT64_ARRAY:
-#endif
-    case JS_CLASS_FLOAT32_ARRAY:
-    case JS_CLASS_FLOAT64_ARRAY:
+    case JS_CLASS_UINT8C_ARRAY ... JS_CLASS_FLOAT64_ARRAY:
         p->is_exotic = 1;
         p->fast_array = 1;
         p->u.array.u.ptr = NULL;
@@ -6170,11 +6123,7 @@ static JSValue JS_ThrowError(JSContext *ctx, JSErrorEnum error_num,
     return ret;
 }
 
-JSValue
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-JS_ThrowSyntaxError(JSContext *ctx, const char *fmt, ...)
+JSValue __attribute__((format(printf, 2, 3))) JS_ThrowSyntaxError(JSContext *ctx, const char *fmt, ...)
 {
     JSValue val;
     va_list ap;
@@ -6185,11 +6134,7 @@ JS_ThrowSyntaxError(JSContext *ctx, const char *fmt, ...)
     return val;
 }
 
-JSValue
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-JS_ThrowTypeError(JSContext *ctx, const char *fmt, ...)
+JSValue __attribute__((format(printf, 2, 3))) JS_ThrowTypeError(JSContext *ctx, const char *fmt, ...)
 {
     JSValue val;
     va_list ap;
@@ -6200,11 +6145,7 @@ JS_ThrowTypeError(JSContext *ctx, const char *fmt, ...)
     return val;
 }
 
-static int
-#ifdef __GNUC__
-__attribute__((format(printf, 3, 4)))
-#endif
-JS_ThrowTypeErrorOrFalse(JSContext *ctx, int flags, const char *fmt, ...)
+static int __attribute__((format(printf, 3, 4))) JS_ThrowTypeErrorOrFalse(JSContext *ctx, int flags, const char *fmt, ...)
 {
     va_list ap;
 
@@ -6232,11 +6173,7 @@ static int JS_ThrowTypeErrorReadOnly(JSContext *ctx, int flags, JSAtom atom)
     }
 }
 
-JSValue
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-JS_ThrowReferenceError(JSContext *ctx, const char *fmt, ...)
+JSValue __attribute__((format(printf, 2, 3))) JS_ThrowReferenceError(JSContext *ctx, const char *fmt, ...)
 {
     JSValue val;
     va_list ap;
@@ -6247,11 +6184,7 @@ JS_ThrowReferenceError(JSContext *ctx, const char *fmt, ...)
     return val;
 }
 
-JSValue
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-JS_ThrowRangeError(JSContext *ctx, const char *fmt, ...)
+JSValue __attribute__((format(printf, 2, 3))) JS_ThrowRangeError(JSContext *ctx, const char *fmt, ...)
 {
     JSValue val;
     va_list ap;
@@ -6262,11 +6195,7 @@ JS_ThrowRangeError(JSContext *ctx, const char *fmt, ...)
     return val;
 }
 
-JSValue
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...)
+JSValue __attribute__((format(printf, 2, 3))) JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...)
 {
     JSValue val;
     va_list ap;
@@ -9557,7 +9486,7 @@ static JSValue js_atod(JSContext *ctx, const char *str, const char **pp,
     } else {
  no_radix_prefix:
         if (!(flags & ATOD_INT_ONLY) && strstart(p, "Infinity", &p)) {
-            d = -INFINITY;
+            d = 1.0 / 0.0;
             goto done;
         }
     }
@@ -10945,19 +10874,7 @@ static __maybe_unused void JS_DumpObject(JSRuntime *rt, JSObject *p)
             case JS_CLASS_ARGUMENTS:
                 JS_DumpValueShort(rt, p->u.array.u.values[i]);
                 break;
-            case JS_CLASS_UINT8C_ARRAY:
-            case JS_CLASS_INT8_ARRAY:
-            case JS_CLASS_UINT8_ARRAY:
-            case JS_CLASS_INT16_ARRAY:
-            case JS_CLASS_UINT16_ARRAY:
-            case JS_CLASS_INT32_ARRAY:
-            case JS_CLASS_UINT32_ARRAY:
-#ifdef CONFIG_BIGNUM
-            case JS_CLASS_BIG_INT64_ARRAY:
-            case JS_CLASS_BIG_UINT64_ARRAY:
-#endif
-            case JS_CLASS_FLOAT32_ARRAY:
-            case JS_CLASS_FLOAT64_ARRAY:
+            case JS_CLASS_UINT8C_ARRAY ... JS_CLASS_FLOAT64_ARRAY:
                 {
                     int size = 1 << typed_array_size_log2(p->class_id);
                     const uint8_t *b = p->u.array.u.uint8_ptr + i * size;
@@ -18896,22 +18813,17 @@ static void free_token(JSParseState *s, JSToken *token)
         JS_FreeValue(s->ctx, token->u.regexp.flags);
         break;
     case TOK_IDENT:
+    case TOK_FIRST_KEYWORD ... TOK_LAST_KEYWORD:
     case TOK_PRIVATE_NAME:
         JS_FreeAtom(s->ctx, token->u.ident.atom);
         break;
     default:
-        if ((token->val >= TOK_FIRST_KEYWORD) && (token->val <= TOK_LAST_KEYWORD)) {
-            JS_FreeAtom(s->ctx, token->u.ident.atom);
-        }
         break;
     }
 }
 
-static void 
-#ifdef __GNUC__
-__attribute((unused))
-#endif
-dump_token(JSParseState *s, const JSToken *token)
+static void __attribute((unused)) dump_token(JSParseState *s,
+                                             const JSToken *token)
 {
     switch(token->val) {
     case TOK_NUMBER:
@@ -18971,11 +18883,7 @@ dump_token(JSParseState *s, const JSToken *token)
     }
 }
 
-int
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-js_parse_error(JSParseState *s, const char *fmt, ...)
+int __attribute__((format(printf, 2, 3))) js_parse_error(JSParseState *s, const char *fmt, ...)
 {
     JSContext *ctx = s->ctx;
     va_list ap;
@@ -19445,58 +19353,8 @@ static __exception int next_token(JSParseState *s)
             }
         }
         goto def_token;
-    case 'a':
-    case 'b':
-    case 'c':
-    case 'd':
-    case 'e':
-    case 'f':
-    case 'g':
-    case 'h':
-    case 'i':
-    case 'j':
-    case 'k':
-    case 'l':
-    case 'm':
-    case 'n':
-    case 'o':
-    case 'p':
-    case 'q':
-    case 'r':
-    case 's':
-    case 't':
-    case 'u':
-    case 'v':
-    case 'w':
-    case 'x':
-    case 'y':
-    case 'z':
-    case 'A':
-    case 'B':
-    case 'C':
-    case 'D':
-    case 'E':
-    case 'F':
-    case 'G':
-    case 'H':
-    case 'I':
-    case 'J':
-    case 'K':
-    case 'L':
-    case 'M':
-    case 'N':
-    case 'O':
-    case 'P':
-    case 'Q':
-    case 'R':
-    case 'S':
-    case 'T':
-    case 'U':
-    case 'V':
-    case 'W':
-    case 'X':
-    case 'Y':
-    case 'Z':
+    case 'a' ... 'z':
+    case 'A' ... 'Z':
     case '_':
     case '$':
         /* identifier */
@@ -19625,15 +19483,7 @@ static __exception int next_token(JSParseState *s)
             goto fail;
         }
         goto parse_number;
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
+    case '1' ... '9':
         /* number */
     parse_number:
 #ifdef CONFIG_BIGNUM
@@ -39544,7 +39394,7 @@ static JSValue js_math_min_max(JSContext *ctx, JSValueConst this_val,
     uint32_t tag;
 
     if (unlikely(argc == 0)) {
-        return __JS_NewFloat64(ctx, is_max ? -INFINITY : INFINITY);
+        return __JS_NewFloat64(ctx, is_max ? -1.0 / 0.0 : 1.0 / 0.0);
     }
 
     tag = JS_VALUE_GET_TAG(argv[0]);
@@ -45358,11 +45208,7 @@ static int isURIReserved(int c) {
     return c < 0x100 && memchr(";/?:@&=+$,#", c, sizeof(";/?:@&=+$,#") - 1) != NULL;
 }
 
-static int 
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-js_throw_URIError(JSContext *ctx, const char *fmt, ...)
+static int __attribute__((format(printf, 2, 3))) js_throw_URIError(JSContext *ctx, const char *fmt, ...)
 {
     va_list ap;
 

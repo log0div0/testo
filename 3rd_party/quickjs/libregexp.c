@@ -425,11 +425,7 @@ static void re_emit_op_u16(REParseState *s, int op, uint32_t val)
     dbuf_put_u16(&s->byte_code, val);
 }
 
-static int
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-re_parse_error(REParseState *s, const char *fmt, ...)
+static int __attribute__((format(printf, 2, 3))) re_parse_error(REParseState *s, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -561,14 +557,7 @@ int lre_parse_escape(const uint8_t **pp, int allow_utf16)
             }
         }
         break;
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
+    case '0' ... '7':
         c -= '0';
         if (allow_utf16 == 2) {
             /* only accept \0 not followed by digit */
@@ -1394,15 +1383,7 @@ static int re_parse_term(REParseState *s, BOOL is_backward_dir)
                 }
             }
             goto normal_char;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
+        case '1' ... '9':
             {
                 const uint8_t *q = ++p;
                 
