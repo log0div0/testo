@@ -17,8 +17,11 @@ ValueRef::operator bool() const {
 	return JS_ToBool(context, handle);
 }
 
-ValueRef::operator CString() const {
-	return CString(JS_ToCString(context, handle), context);
+ValueRef::operator std::string() const {
+	const char* str = JS_ToCString(context, handle);
+	std::string result(str);
+	JS_FreeCString(context, str);
+	return result;
 }
 
 bool ValueRef::is_exception() const {
@@ -52,7 +55,7 @@ void ValueRef::set_property_str(const std::string& name, Value val) {
 }
 
 std::ostream& operator<<(std::ostream& stream, const ValueRef& value) {
-	CString str = value;
+	std::string str = std::string(value);
 	return stream << str;
 }
 

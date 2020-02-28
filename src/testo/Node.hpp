@@ -412,8 +412,8 @@ struct Sleep: public Node {
 };
 
 struct Press: public Node {
-	Press(const Token& press, const std::vector<std::shared_ptr<KeySpec>> keys):
-		Node(press), keys(keys) {}
+	Press(const Token& press, const std::vector<std::shared_ptr<KeySpec>> keys, const Token& interval):
+		Node(press), keys(keys), interval(interval) {}
 
 	Pos begin() const {
 		return keys[0]->begin();
@@ -430,10 +430,15 @@ struct Press: public Node {
 			result += ", " + std::string(*keys[i]);
 		}
 
+		if (interval) {
+			result += " interval " + interval.value();
+		}
+
 		return result;
 	}
 
 	std::vector<std::shared_ptr<KeySpec>> keys;
+	Token interval;
 };
 
 

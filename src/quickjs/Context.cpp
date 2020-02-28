@@ -28,18 +28,17 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 	nn::Context* nn_context = (nn::Context*)ctx.get_opaque();
 
 	std::string text, color, background_color;
-	text = args.at(0);
+	text = std::string(args.at(0));
 
 	if (args.size() > 1) {
-		color = args.at(1);
+		color = std::string(args.at(1));
 	}
 
 	if (args.size() > 2) {
-		background_color = args.at(2);
+		background_color = std::string(args.at(2));
 	}
 
 	auto result = nn_context->ocr().search(text, color, background_color);
-
 	return ctx.new_bool(result.size());
 }
 
@@ -124,13 +123,13 @@ std::string ContextRef::get_last_error() {
 		result += "Throw: ";
 	}
 
-	CString exception_str(exception_val);
+	std::string exception_str(exception_val);
 	result += exception_str;
 
 	if (exception_val.is_error()) {
 		Value val = exception_val.get_property_str("stack");
 		if (!val.is_undefined()) {
-			CString stack(val);
+			std::string stack(val);
 			result += stack;
 			result += "\n";
 		}

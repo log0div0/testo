@@ -631,7 +631,15 @@ std::shared_ptr<Action<Press>> Parser::press() {
 		keys.push_back(key_spec());
 	}
 
-	auto action = std::shared_ptr<Press>(new Press(press_token, keys));
+	Token interval = Token();
+
+	if (LA(1) == Token::category::interval) {
+		match (Token::category::interval);
+		interval = LT(1);
+		match (Token::category::time_interval);
+	}
+
+	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));
 	return std::shared_ptr<Action<Press>>(new Action<Press>(action));
 }
 

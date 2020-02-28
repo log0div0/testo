@@ -823,9 +823,12 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
 	try {
+		std::string interval = press->interval ? press->interval.value() : "30ms";
+		auto press_interval = time_to_milliseconds(interval);
+
 		for (auto key_spec: press->keys) {
-			visit_key_spec(vmc, key_spec);
-			timer.waitFor(std::chrono::milliseconds(30));
+			visit_key_spec(vmc, key_spec, press_interval);
+			timer.waitFor(std::chrono::milliseconds(press_interval));
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
@@ -1013,14 +1016,14 @@ void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmControll
 
 //}
 
-void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec) {
+void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
 	uint32_t times = key_spec->get_times();
 
 	reporter.press_key(vmc, key_spec->get_buttons_str(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->get_buttons());
-		timer.waitFor(std::chrono::milliseconds(30));
+		timer.waitFor(std::chrono::milliseconds(interval));
 	}
 }
 

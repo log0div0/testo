@@ -38,6 +38,7 @@ struct Token {
 		copyto,
 		copyfrom,
 		timeout,
+		interval,
 		for_,
 		test,
 		machine,
@@ -152,16 +153,20 @@ struct Token {
 			return "ACTION WAIT";
 		case sleep:
 			return "ACTION SLEEP";
-		case timeout:
-			return "TIMEOUT";
 		case js:
 			return "JS";
+		case check:
+			return "CHECK";
 		case press:
 			return "ACTION PRESS";
+		case timeout:
+			return "TIMEOUT";
+		case interval:
+			return "INTERVAL";
 		case mouse:
 			return "MOUSE EVENT";
-		case mouse_coordinates:
-			return "MOUSE COORDINATES";
+		case move:
+			return "MOVE";
 		case click:
 			return "ACTION CLICK";
 		case lclick:
@@ -192,6 +197,14 @@ struct Token {
 			return "ACTION START";
 		case stop:
 			return "ACTION STOP";
+		case shutdown:
+			return "ACTION SHUTDOWN";
+		case exec:
+			return "ACTION EXEC";
+		case copyto:
+			return "ACTION COPYTO";
+		case copyfrom:
+			return "ACTION COPYFROM";
 		case for_:
 			return "FOR";
 		case test:
@@ -244,6 +257,8 @@ struct Token {
 			return "NONE";
 		case program:
 			return "PROGRAM";
+		case mouse_coordinates:
+			return "MOUSE COORDINATES";
 		case key_spec:
 			return "KEY SPECIFICATION";
 		case action_block:
