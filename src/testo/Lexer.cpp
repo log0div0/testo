@@ -86,8 +86,12 @@ bool Lexer::test_time_specifier() const {
 char Lexer::escaped_character() {
 	current_pos.advance();
 
-	if (test_eof() || test_newline()) {
-		throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected escaped character");
+	if (!test_eof() && test_newline()) {
+		current_pos.advance();
+	}
+
+	if (test_eof()) {
+		throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unexpected eof");
 	}
 
 	char res = (*input)[current_pos];
