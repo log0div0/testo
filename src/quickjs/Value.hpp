@@ -11,7 +11,7 @@ struct ValueRef {
 	ValueRef(JSValue handle, JSContext* context);
 
 	operator bool() const;
-	operator CString() const;
+	operator std::string() const;
 
 	bool is_exception() const;
 	bool is_error() const;

@@ -580,7 +580,7 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
 	Token timeout = Token();
-	Token time_interval = Token();
+	Token interval = Token();
 
 	if (!test_select_expr()) {
 		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted an object to wait");
@@ -597,14 +597,18 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	}
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
+		timeout = LT(1);
 		match(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, time_interval));
+	if (LA(1) == Token::category::interval) {
+		match(Token::category::interval);
+		interval = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
@@ -631,7 +635,15 @@ std::shared_ptr<Action<Press>> Parser::press() {
 		keys.push_back(key_spec());
 	}
 
-	auto action = std::shared_ptr<Press>(new Press(press_token, keys));
+	Token interval = Token();
+
+	if (LA(1) == Token::category::interval) {
+		match (Token::category::interval);
+		interval = LT(1);
+		match (Token::category::time_interval);
+	}
+
+	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));
 	return std::shared_ptr<Action<Press>>(new Action<Press>(action));
 }
 
@@ -1157,17 +1169,21 @@ std::shared_ptr<Check> Parser::check() {
 
 	select_expression = select_expr();
 
-	Token timeout, time_interval;
+	Token timeout, interval;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
+		timeout = LT(1);
 		match(Token::category::time_interval);
 	}
 
-	return std::shared_ptr<Check>(new Check(check_token, select_expression, timeout, time_interval));
+	if (LA(1) == Token::category::interval) {
+		match(Token::category::interval);
+		interval = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	return std::shared_ptr<Check>(new Check(check_token, select_expression, timeout, interval));
 }
 
 std::shared_ptr<Expr<BinOp>> Parser::binop(std::shared_ptr<IExpr> left) {

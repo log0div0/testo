@@ -94,7 +94,7 @@ struct VisitorInterpreter {
 	void visit_mouse_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseHold> mouse_hold);
 	void visit_mouse_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseRelease> mouse_release);
 	void visit_mouse_wheel(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseWheel> mouse_wheel);
-	void visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec);
+	void visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval);
 	void visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
 	void visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
 	void visit_plug_link(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);

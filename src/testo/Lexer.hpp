@@ -159,6 +159,7 @@ private:
 	Token copyto();
 	Token copyfrom();
 	Token timeout();
+	Token interval();
 	Token for_();
 	Token test();
 	Token machine();

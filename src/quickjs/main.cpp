@@ -22,7 +22,8 @@ std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
 
 int main() {
 	try {
-		std::string script = "print('hello world')";
+		//std::string script = "print('hello world')";
+		std::string script = "detect_text('Hello', 'white', 'red')";
 		quickjs::Runtime js_runtime = quickjs::create_runtime();
 		quickjs::Context js_ctx = js_runtime.create_context();
 		js_ctx.register_nn_functions();
