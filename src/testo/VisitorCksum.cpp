@@ -114,7 +114,7 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::sha
 	if (wait->interval) {
 		result += wait->interval.value();
 	} else {
-		result += "500ms";
+		result += "1s";
 	}
 
 	return result;
@@ -353,10 +353,16 @@ std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::sh
 	std::string result = "check";
 	result += template_parser.resolve(std::string(*check->select_expr), reg);
 
-	if (check->time_interval) {
-		result += check->time_interval.value();
+	if (check->timeout) {
+		result += check->timeout.value();
 	} else {
 		result += "1ms";
+	}
+
+	if (check->interval) {
+		result += check->interval.value();
+	} else {
+		result += "1s";
 	}
 
 	return result;

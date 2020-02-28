@@ -787,7 +787,7 @@ void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
 		std::string wait_for = wait->timeout ? wait->timeout.value() : "1m";
-		std::string interval_str = wait->interval ? wait->interval.value() : "500ms";
+		std::string interval_str = wait->interval ? wait->interval.value() : "1s";
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);
 
@@ -1517,9 +1517,11 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
-		std::string check_for = check->time_interval ? check->time_interval.value() : "1ms";
+		std::string check_for = check->timeout ? check->timeout.value() : "1ms";
+		std::string interval_str = check->interval ? check->interval.value() : "1s";
+		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*check->select_expr), reg);
-		reporter.check(vmc, text, check_for);
+		reporter.check(vmc, text, check_for, interval_str);
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
 
@@ -1534,10 +1536,8 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
 			//std::cout << "time = " << time.count() << " seconds" << std::endl;
-			if (time < 1s) {
-				timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
-			} else {
-				coro::CheckPoint();
+			if (interval > end - start) {
+				timer.waitFor(interval - (end - start));
 			}
 		}
 

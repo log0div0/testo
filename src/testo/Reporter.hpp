@@ -51,7 +51,7 @@ struct Reporter {
 	void type(std::shared_ptr<VmController> vmc, const std::string& text);
 	void sleep(std::shared_ptr<VmController> vmc, const std::string& timeout);
 	void wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout, const std::string& interval);
-	void check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout);
+	void check(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout, const std::string& interval);
 	void macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
 	void plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on);
 	void exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout);
