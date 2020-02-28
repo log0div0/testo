@@ -263,10 +263,10 @@ void Reporter::sleep(std::shared_ptr<VmController> vmc, const std::string& timeo
 	report(fmt::format(" for {}\n", timeout), blue);
 }
 
-void Reporter::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout) {
+void Reporter::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
 	report(fmt::format("{} Waiting ", progress()), blue);
 	report(fmt::format("{} ", text), yellow);
-	report(fmt::format("for {} in virtual machine ", timeout), blue);
+	report(fmt::format("for {} in virtual machine with interval {} ", timeout, interval), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 

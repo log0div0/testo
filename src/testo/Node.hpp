@@ -361,8 +361,8 @@ struct SelectParentedExpr: public Node {
 };
 
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<ISelectExpr> select_expr, const Token& timeout, const Token& time_interval):
-		Node(wait), select_expr(select_expr), timeout(timeout), time_interval(time_interval) {}
+	Wait(const Token& wait, std::shared_ptr<ISelectExpr> select_expr, const Token& timeout, const Token& interval):
+		Node(wait), select_expr(select_expr), timeout(timeout), interval(interval) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -381,34 +381,39 @@ struct Wait: public Node {
 		result += " " + std::string(*select_expr);
 
 		if (timeout) {
-			result += " " + timeout.value() + " " + time_interval.value();
+			result += " timeout "  + timeout.value();
 		}
+
+		if (interval) {
+			result += " interval "  + interval.value();
+		}
+
 		return result;
 	}
 
 	std::shared_ptr<ISelectExpr> select_expr;
 	Token timeout;
-	Token time_interval;
+	Token interval;
 };
 
 struct Sleep: public Node {
-	Sleep(const Token& sleep, const Token& time_interval):
-		Node(sleep),  time_interval(time_interval) {}
+	Sleep(const Token& sleep, const Token& timeout):
+		Node(sleep),  timeout(timeout) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		return time_interval.pos();
+		return timeout.pos();
 	}
 
 	operator std::string() const {
-		return t.value() + " for " + time_interval.value();
+		return t.value() + " for " + timeout.value();
 	}
 
 
-	Token time_interval;
+	Token timeout;
 };
 
 struct Press: public Node {

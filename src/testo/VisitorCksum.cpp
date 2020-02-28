@@ -105,10 +105,16 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::sha
 	std::string result = "wait";
 	result += template_parser.resolve(std::string(*wait->select_expr), reg);
 
-	if (wait->time_interval) {
-		result += wait->time_interval.value();
+	if (wait->timeout) {
+		result += wait->timeout.value();
 	} else {
 		result += "1m";
+	}
+
+	if (wait->interval) {
+		result += wait->interval.value();
+	} else {
+		result += "500ms";
 	}
 
 	return result;
