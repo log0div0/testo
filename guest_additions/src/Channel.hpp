@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 
 #ifdef WIN32
-#include <Windows.h>
+#include "winapi.hpp"
 #endif
 
 struct Channel {
@@ -26,6 +26,6 @@ struct Channel {
 #endif
 
 #ifdef WIN32
-	HANDLE handle = NULL;
+	winapi::File file;
 #endif
 };

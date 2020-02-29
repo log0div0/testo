@@ -103,48 +103,23 @@ size_t Channel::write(uint8_t* data, size_t size) {
 
 #ifdef WIN32
 
-Channel::Channel(const std::string& fd_path) {
-	handle = CreateFile(winapi::utf8_to_utf16(fd_path).c_str(),
-		GENERIC_WRITE | GENERIC_READ,
-		0,
-		NULL,
-		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL,
-		NULL);
-
-	if (handle == INVALID_HANDLE_VALUE) {
-		throw std::runtime_error("CreateFileA failed");
-	}
+Channel::Channel(const std::string& fd_path): file(fd_path, GENERIC_WRITE | GENERIC_READ, OPEN_EXISTING) {
 }
 
 Channel::~Channel() {
-	if (handle) {
-		CloseHandle(handle);
-		handle = NULL;
-	}
 }
 
 Channel& Channel::operator=(Channel&& other) {
-	std::swap(handle, other.handle);
+	std::swap(file, other.file);
 	return *this;
 }
 
 size_t Channel::read(uint8_t* data, size_t size) {
-	DWORD result = 0;
-	bool success = ReadFile(handle, data, (DWORD)size, &result, NULL);
-	if (!success) {
-		throw std::runtime_error("ReadFile failed");
-	}
-	return result;
+	return file.read(data, size);
 }
 
 size_t Channel::write(uint8_t* data, size_t size) {
-	DWORD result = 0;
-	bool success = WriteFile(handle, data, (DWORD)size, &result, NULL);
-	if (!success) {
-		throw std::runtime_error("WriteFile failed");
-	}
-	return result;
+	return file.write(data, size);
 }
 
 #endif

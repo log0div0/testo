@@ -1,12 +1,12 @@
 
 #include "Server.hpp"
 #include "process/Process.hpp"
+#include "File.hpp"
 
 #include "base64.hpp"
 
 #include <spdlog/spdlog.h>
 #include <stdexcept>
-#include <fstream>
 
 Server::Server(const std::string& fd_path_): fd_path(fd_path_) {}
 
@@ -107,12 +107,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 			}
 		}
 
-		std::ofstream file_stream(dst, std::ios::out | std::ios::binary);
-		if (!file_stream) {
-			throw std::runtime_error("Couldn't open file stream to write file " + dst.generic_string());
-		}
-		file_stream.write((const char*)&content[0], content.size());
-		file_stream.close();
+		write_file(dst, content);
 		spdlog::info("File copied successfully to guest: " + dst.generic_string());
 	}
 
@@ -125,10 +120,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 }
 
 nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
-	std::ifstream testFile(src.generic_string(), std::ios::binary);
-
-	std::noskipws(testFile);
-	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
+	std::vector<uint8_t> fileContents = read_file(src);
 	std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
 
 	nlohmann::json request = {
