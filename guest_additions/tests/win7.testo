@@ -58,3 +58,13 @@ test win7_guest_additions: win7_installation {
 		exec cmd "echo hello world"
 	}
 }
+
+test win7_copyto: win7_guest_additions {
+	win7 {
+		copyto "привет, мир!.txt" "C:\\привет, мир!.txt"
+		press LeftMeta
+		mouse click "Компьютер"
+		mouse dclick "Локальный диск (C:)"
+		wait "привет, мир!"
+	}
+}
