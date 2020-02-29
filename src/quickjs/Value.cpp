@@ -1,6 +1,7 @@
 
 #include "Value.hpp"
 #include <stdexcept>
+#include <ostream>
 
 namespace quickjs {
 
