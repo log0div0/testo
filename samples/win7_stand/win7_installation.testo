@@ -70,7 +70,7 @@ test win7_installation_mouse {
 
 		wait "Выберите нужный язык"; press Enter #2 "Далее"
 		mouse click "Установить" timeout 1m;
-		wait "Выберите операционную систему"; mouse click "Далее"
+		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
 		wait "Условия лицензии"
 		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
 		wait "Выберите тип установки";

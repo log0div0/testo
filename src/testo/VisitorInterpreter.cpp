@@ -808,6 +808,8 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (interval > end - start) {
 				timer.waitFor(interval - (end - start));
+			} else {
+				coro::CheckPoint();
 			}
 		}
 
@@ -1538,6 +1540,8 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (interval > end - start) {
 				timer.waitFor(interval - (end - start));
+			} else {
+				coro::CheckPoint();
 			}
 		}
 
