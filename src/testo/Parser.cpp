@@ -279,6 +279,10 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token name = LT(1);
 	match(Token::category::id);
 
+	if (LA(1) != Token::category::lparen) {
+		throw std::runtime_error(std::string(name.pos()) + ": Error: unknown action: " + name.value());
+	}
+
 	match(Token::category::lparen);
 
 	std::vector<Token> params;
