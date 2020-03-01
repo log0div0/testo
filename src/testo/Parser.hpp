@@ -48,6 +48,7 @@ private:
 	void handle_include();
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
+	std::shared_ptr<AST::MacroArg> macro_arg();
 	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
 	std::shared_ptr<AST::Stmt<AST::Param>> param();
 	std::shared_ptr<AST::Attr> attr();

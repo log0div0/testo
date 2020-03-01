@@ -261,9 +261,14 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
 	StackEntry new_ctx(true);
 
-	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->params[i]->text(), reg);
-		new_ctx.define(macro_call->macro->params[i].value(), value);
+	for (size_t i = 0; i < macro_call->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
+		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	}
+
+	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
+		new_ctx.define(macro_call->macro->args[i]->name(), value);
 	}
 
 	reg.local_vars.push_back(new_ctx);

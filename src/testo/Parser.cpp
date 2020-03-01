@@ -272,6 +272,21 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 
+std::shared_ptr<MacroArg> Parser::macro_arg() {
+	Token arg_name = LT(1);
+	match(Token::category::id);
+
+	std::shared_ptr<String> default_value = nullptr;
+
+	if (LA(1) == Token::category::assign) {
+		match(Token::category::assign);
+
+		default_value = string();
+	}
+
+	return std::shared_ptr<MacroArg>(new MacroArg(arg_name, default_value));
+}
+
 std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token macro = LT(1);
 	match(Token::category::macro);
@@ -285,20 +300,18 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 
 	match(Token::category::lparen);
 
-	std::vector<Token> params;
+	std::vector<std::shared_ptr<MacroArg>> args;
 
 	if (LA(1) == Token::category::id) {
-		params.push_back(LT(1));
-		match(Token::category::id);
+		args.push_back(macro_arg());
 	}
 
 	while (LA(1) == Token::category::comma) {
-		if (params.empty()) {
+		if (args.empty()) {
 			match(Token::category::rparen); //will cause failure
 		}
 		match(Token::category::comma);
-		params.push_back(LT(1));
-		match(Token::category::id);
+		args.push_back(macro_arg());
 	}
 
 	match(Token::category::rparen);
@@ -306,7 +319,7 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	newline_list();
 	auto actions = action_block();
 
-	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, params, actions));
+	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, actions));
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
 
