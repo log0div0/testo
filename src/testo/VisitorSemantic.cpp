@@ -196,6 +196,27 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 		throw std::runtime_error(std::string(macro->begin()) + ": Error while registering macro with name " +
 			macro->name.value());
 	}
+
+	for (size_t i = 0; i < macro->args.size(); ++i) {
+		for (size_t j = i + 1; j < macro->args.size(); ++j) {
+			if (macro->args[i]->name() == macro->args[j]->name()) {
+				throw std::runtime_error(std::string(macro->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->args[j]->name());
+			}
+		}
+	}
+
+	bool has_default = false;
+	for (auto arg: macro->args) {
+		if (arg->default_value) {
+			has_default = true;
+			continue;
+		}
+
+		if (has_default && !arg->default_value) {
+			throw std::runtime_error(std::string(arg->begin()) + ": Error: default value must be specified for macro arg " + arg->name());
+		}
+	}
+
 }
 
 void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
@@ -432,17 +453,36 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
 	}
 	macro_call->macro = macro->second;
-	if (macro_call->params.size() != macro_call->macro->params.size()) {
-		throw std::runtime_error(fmt::format("{}: Error: expected {} params, {} provided", std::string(macro_call->begin()),
-			macro_call->macro->params.size(), macro_call->params.size()));
+
+	uint32_t args_with_default = 0;
+
+	for (auto arg: macro_call->macro->args) {
+		if (arg->default_value) {
+			args_with_default++;
+		}
+	}
+
+	if (macro_call->args.size() < macro_call->macro->args.size() - args_with_default) {
+		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_call->begin()),
+			macro_call->macro->args.size() - args_with_default, macro_call->args.size()));
+	}
+
+	if (macro_call->args.size() > macro_call->macro->args.size()) {
+		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_call->begin()),
+			macro_call->macro->args.size(), macro_call->args.size()));
 	}
 
 	//push new ctx
 	StackEntry new_ctx(true);
 
-	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->params[i]->text(), reg);
-		new_ctx.define(macro_call->macro->params[i].value(), value);
+	for (size_t i = 0; i < macro_call->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
+		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	}
+
+	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
+		new_ctx.define(macro_call->macro->args[i]->name(), value);
 	}
 
 	reg.local_vars.push_back(new_ctx);

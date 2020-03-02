@@ -912,12 +912,43 @@ struct Stmt: public IStmt {
 	std::shared_ptr<StmtType> stmt;
 };
 
+struct MacroArg: public Node {
+	MacroArg(const Token& name, std::shared_ptr<String> default_value):
+		Node(name), default_value(default_value) {}
+
+	Pos begin() const {
+		return t.pos();
+	}
+
+	Pos end() const {
+		if (default_value) {
+			return default_value->end();
+		} else {
+			return t.pos();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = t.value();
+		if (default_value) {
+			result += "=" + std::string(*default_value);
+		}
+		return result;
+	}
+
+	std::string name() const {
+		return t.value();
+	}
+
+	std::shared_ptr<String> default_value = nullptr;
+};
+
 struct Macro: public Node {
 	Macro(const Token& macro,
 		const Token& name,
-		const std::vector<Token>& params,
+		const std::vector<std::shared_ptr<MacroArg>>& args,
 		std::shared_ptr<Action<ActionBlock>> action_block):
-			Node(macro), name(name), params(params),
+			Node(macro), name(name), args(args),
 			action_block(action_block) {}
 
 	Pos begin() const {
@@ -930,8 +961,8 @@ struct Macro: public Node {
 
 	operator std::string() const {
 		std::string result = t.value() + " " + name.value() + "(";
-		for (auto param: params) {
-			result += param.value() + " ,";
+		for (auto arg: args) {
+			result += std::string(*arg) + " ,";
 		}
 		result += ") ";
 		result += std::string(*action_block);
@@ -939,13 +970,13 @@ struct Macro: public Node {
 	}
 
 	Token name;
-	std::vector<Token> params;
+	std::vector<std::shared_ptr<MacroArg>> args;
 	std::shared_ptr<Action<ActionBlock>> action_block;
 };
 
 struct MacroCall: public Node {
-	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<String>>& params):
-		Node(macro_name), params(params) {}
+	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<String>>& args):
+		Node(macro_name), args(args) {}
 
 	Pos begin() const {
 		return t.pos();
@@ -957,8 +988,8 @@ struct MacroCall: public Node {
 
 	operator std::string() const {
 		std::string result = t.value() + ("(");
-		for (auto param: params) {
-			result += std::string(*param) + " ,";
+		for (auto arg: args) {
+			result += std::string(*arg) + " ,";
 		}
 		result += ")";
 		return result;
@@ -969,7 +1000,7 @@ struct MacroCall: public Node {
 	}
 
 	std::shared_ptr<Macro> macro;
-	std::vector<std::shared_ptr<String>> params;
+	std::vector<std::shared_ptr<String>> args;
 };
 
 

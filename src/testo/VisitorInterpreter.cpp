@@ -1376,19 +1376,26 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 	//push new ctx
 	StackEntry new_ctx(true);
 
-	std::vector<std::pair<std::string, std::string>> params;
+	std::vector<std::pair<std::string, std::string>> args;
 
-	for (size_t i = 0; i < macro_call->params.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->params[i]->text(), reg);
-		new_ctx.define(macro_call->macro->params[i].value(), value);
-		params.push_back(std::make_pair(macro_call->macro->params[i].value(), value));
+	for (size_t i = 0; i < macro_call->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
+		new_ctx.define(macro_call->macro->args[i]->name(), value);
+		args.push_back(std::make_pair(macro_call->macro->args[i]->name(), value));
 	}
+
+	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
+		new_ctx.define(macro_call->macro->args[i]->name(), value);
+		args.push_back(std::make_pair(macro_call->macro->args[i]->name(), value));
+	}
+
 	reg.local_vars.push_back(new_ctx);
 	coro::Finally finally([&] {
 		reg.local_vars.pop_back();
 	});
 
-	reporter.macro_call(vmc, macro_call->name(), params);
+	reporter.macro_call(vmc, macro_call->name(), args);
 	visit_action_block(vmc, macro_call->macro->action_block->action);
 }
 
