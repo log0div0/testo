@@ -6,8 +6,6 @@
 
 namespace quickjs {
 
-
-
 Value js_print(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
 	for (size_t i = 0; i < args.size(); i++) {
 		if (i != 0) {
@@ -39,6 +37,16 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 	}
 
 	auto result = nn_context->ocr().search(text, color, background_color);
+
+	auto array = ctx.new_array(result.size());
+
+	for (auto rect: result) {
+		auto obj = ctx.new_object_class(nn_rect_class_id);
+		if (obj.is_exception()) {
+			throw std::runtime_error("Can't create nn::Rect class object");
+		}
+	}
+
 	return ctx.new_bool(result.size());
 }
 
@@ -84,6 +92,10 @@ Value ContextRef::new_bool(bool val) {
 	return Value(JS_NewBool(handle, val), handle);
 }
 
+Value ContextRef::new_int32(int32_t val) {
+	return Value(JS_NewInt32(handle, val), handle);
+}
+
 Value ContextRef::new_undefined() {
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -101,6 +113,24 @@ Value ContextRef::new_string(const std::string& val) {
 
 Value ContextRef::new_function(JSCFunction* f, const std::string& name, size_t length) {
 	return Value(JS_NewCFunction(handle, f, name.c_str(), length), handle);
+}
+
+Value ContextRef::new_array(size_t length) {
+	auto result = Value(JS_NewArray(handle), handle);
+	result.set_property(JS_PROP_LENGTH, new_int32(length));
+	return result;
+}
+
+Value ContextRef::new_object_class(int class_id) {
+	return Value(JS_NewObjectClass(handle, class_id), handle);
+}
+
+void* ContextRef::mallocz(size_t size) {
+	return js_mallocz(handle, size);
+}
+
+void ContextRef::free(void* ptr) {
+	js_free(handle, ptr);
 }
 
 Value ContextRef::throw_(Value val) {

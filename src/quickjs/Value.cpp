@@ -1,5 +1,6 @@
 
 #include "Value.hpp"
+#include "nn/Context.hpp"
 #include <stdexcept>
 
 namespace quickjs {
@@ -32,6 +33,10 @@ bool ValueRef::is_error() const {
 	return JS_IsError(context, handle);
 }
 
+bool ValueRef::is_object() const {
+	return JS_IsObject(handle);
+}
+
 bool ValueRef::is_undefined() const {
 	return JS_IsUndefined(handle);
 }
@@ -54,6 +59,24 @@ void ValueRef::set_property_str(const std::string& name, Value val) {
 	}
 }
 
+Value ValueRef::get_property(JSAtom property) const {
+	return Value(JS_GetProperty(context, handle, property), context);
+}
+
+void ValueRef::set_property(JSAtom property, Value val) {
+	if (JS_SetProperty(context, handle, property, val.release()) < 0) {
+		throw std::runtime_error("Can't set property ");
+	}
+}
+
+void* ValueRef::get_opaque(int class_id) const {
+	return JS_GetOpaque(handle, class_id);
+}
+
+void ValueRef::set_opaque(void* ptr) {
+	JS_SetOpaque(handle, ptr);
+}
+
 std::ostream& operator<<(std::ostream& stream, const ValueRef& value) {
 	std::string str = std::string(value);
 	return stream << str;
@@ -71,6 +94,7 @@ Value::Value(const Value& other): ValueRef(JS_DupValue(other.context, other.hand
 Value& Value::operator=(const Value& other) {
 	context = other.context;
 	handle = JS_DupValue(other.context, other.handle);
+
 	return *this;
 }
 
