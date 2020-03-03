@@ -47,7 +47,7 @@ struct ContextRef {
 	Value new_string(const std::string& val);
 	Value new_function(JSCFunction* f, const std::string& name, size_t length);
 	Value new_array(size_t length);
-	Value new_object_class(int class_id);
+	ObjectValue new_object_class(int class_id);
 
 	void* mallocz(size_t size);
 	void free(void* ptr);

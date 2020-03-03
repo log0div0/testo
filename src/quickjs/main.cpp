@@ -1,6 +1,9 @@
 
 #include <iostream>
+#include "chrono"
+#include <thread>
 #include "Runtime.hpp"
+
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();
@@ -29,7 +32,12 @@ int main() {
 		js_ctx.register_nn_functions();
 		// nn::Context nn_ctx(&screenshot);
 		// js_ctx.set_opaque(&nn_ctx);
-		js_ctx.eval(script);
+		for (int i = 0; i < 10; i++) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			auto val = js_ctx.eval(script);
+
+		}
+
 		return 0;
 	} catch (const std::exception& error) {
 		std::cerr << error << std::endl;

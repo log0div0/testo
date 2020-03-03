@@ -37,20 +37,20 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 	}
 
 	auto result = nn_context->ocr().search(text, color, background_color);
-
 	auto array = ctx.new_array(result.size());
 
-	for (auto rect: result) {
-		auto obj = ctx.new_object_class(nn_rect_class_id);
+	//for (size_t i = 0; i < result.size(); ++i) {
+		/*auto obj = ctx.new_object_class(nn_rect_class_id);
 		if (obj.is_exception()) {
 			throw std::runtime_error("Can't create nn::Rect class object");
 		}
-	}
+		obj.set_opaque(std::make_shared<nn::Rect>(result[i]));
+		array.set_elem(i, obj);*/
+	//}
 
-	return ctx.new_bool(result.size());
+	//return ctx.new_bool(result.size());
+	return array;
 }
-
-
 
 ContextRef::ContextRef(::JSContext* handle): handle(handle) {
 	if (!handle) {
@@ -116,13 +116,11 @@ Value ContextRef::new_function(JSCFunction* f, const std::string& name, size_t l
 }
 
 Value ContextRef::new_array(size_t length) {
-	auto result = Value(JS_NewArray(handle), handle);
-	result.set_property(JS_PROP_LENGTH, new_int32(length));
-	return result;
+	return ArrayValue(length, JS_NewArray(handle), handle);
 }
 
-Value ContextRef::new_object_class(int class_id) {
-	return Value(JS_NewObjectClass(handle, class_id), handle);
+ObjectValue ContextRef::new_object_class(int class_id) {
+	return ObjectValue(class_id, JS_NewObjectClass(handle, class_id), handle);
 }
 
 void* ContextRef::mallocz(size_t size) {

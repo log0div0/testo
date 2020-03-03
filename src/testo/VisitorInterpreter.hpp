@@ -83,7 +83,7 @@ struct VisitorInterpreter {
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep);
 	bool visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
-	std::vector<nn::Rect> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	bool visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
 	bool visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
 	bool visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
@@ -168,4 +168,5 @@ private:
 	std::unordered_map<std::string, std::vector<std::string>> charmap;
 
 	quickjs::Runtime js_runtime;
+	std::shared_ptr<quickjs::Context> js_current_ctx;
 };

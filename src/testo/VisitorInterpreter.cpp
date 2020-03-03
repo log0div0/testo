@@ -710,7 +710,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 
 bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
-		return visit_select_selectable(p->select_expr, screenshot).size();
+		return visit_select_selectable(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
 		return visit_select_unop(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
@@ -724,29 +724,35 @@ bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> sel
 
 quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
 	try {
-		auto js_ctx = js_runtime.create_context();
-		js_ctx.register_nn_functions();
+		js_current_ctx.reset(new quickjs::Context(js_runtime.create_context()));
+		//auto js_ctx = js_runtime.create_context();
+		js_current_ctx->register_nn_functions();
 		nn::Context nn_ctx(&screenshot);
-		js_ctx.set_opaque(&nn_ctx);
-		return js_ctx.eval(script);
+		js_current_ctx->set_opaque(&nn_ctx);
+		return js_current_ctx->eval(script);
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
 
 }
 
-std::vector<nn::Rect> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+bool VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		return nn::OCR(&screenshot).search(text);
+		return nn::OCR(&screenshot).search(text).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
 		auto value = eval_js(script, screenshot);
-		std::vector<nn::Rect> result;
-		if (value.is_bool() && (bool)value) {
-			result.push_back(nn::Rect());
+		if (value.is_bool()) {
+			return (bool)value;
+		} else if (value.is_array()) {
+			quickjs::ArrayValue* array = (quickjs::ArrayValue*)(&value);
+			std::cout << "SIZE: " << array->size() << std::endl;
+
+			return array->size();
+		} else {
+ 			throw std::runtime_error("Unknown js return type");
 		}
-		return result;
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
@@ -967,7 +973,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
 
-		found = visit_select_selectable(selectable, screenshot);
+		//found = visit_select_selectable(selectable, screenshot);
 		if (found.size()) {
 			break;
 		}
