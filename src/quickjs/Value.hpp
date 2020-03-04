@@ -68,6 +68,8 @@ private:
 struct ArrayValue: Value {
 	ArrayValue(size_t length, JSValue handle, JSContext* context);
 
+	operator std::vector<nn::Rect>() const;
+
 	Value get_elem(size_t index) const;
 	void set_elem(size_t index, Value val);
 

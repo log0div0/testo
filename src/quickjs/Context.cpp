@@ -39,16 +39,15 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 	auto result = nn_context->ocr().search(text, color, background_color);
 	auto array = ctx.new_array(result.size());
 
-	//for (size_t i = 0; i < result.size(); ++i) {
-		/*auto obj = ctx.new_object_class(nn_rect_class_id);
+	for (size_t i = 0; i < result.size(); ++i) {
+		auto obj = ctx.new_object_class(nn_rect_class_id);
 		if (obj.is_exception()) {
 			throw std::runtime_error("Can't create nn::Rect class object");
 		}
 		obj.set_opaque(std::make_shared<nn::Rect>(result[i]));
-		array.set_elem(i, obj);*/
-	//}
+		array.set_elem(i, obj);
+	}
 
-	//return ctx.new_bool(result.size());
 	return array;
 }
 
@@ -115,7 +114,7 @@ Value ContextRef::new_function(JSCFunction* f, const std::string& name, size_t l
 	return Value(JS_NewCFunction(handle, f, name.c_str(), length), handle);
 }
 
-Value ContextRef::new_array(size_t length) {
+ArrayValue ContextRef::new_array(size_t length) {
 	return ArrayValue(length, JS_NewArray(handle), handle);
 }
 

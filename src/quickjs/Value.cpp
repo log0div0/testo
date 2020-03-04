@@ -158,4 +158,25 @@ void ArrayValue::set_elem(size_t index, Value val) {
 	set_property_uint32(index, val);
 }
 
+ArrayValue::operator std::vector<nn::Rect>() const {
+	std::vector<nn::Rect> result;
+
+	for (size_t i = 0; i < size(); ++i) {
+		auto val = get_elem(i);
+		if (!val.is_object()) {
+			throw std::runtime_error("Can't convert non-object value to nn::Rect");
+		}
+		ObjectValue* obj = (ObjectValue*)(&val);
+
+		auto rectangle = obj->get_opaque();
+		if (!rectangle) {
+			throw std::runtime_error("This object does not appear to be a rectangle, can't convert");
+		}
+
+		result.push_back(*rectangle);
+	}
+
+	return result;
+}
+
 }

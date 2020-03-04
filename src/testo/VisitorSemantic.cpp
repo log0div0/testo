@@ -398,15 +398,15 @@ void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
 	}
 }
 
-void VisitorSemantic::visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
+void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
-		return visit_select_selectable(p->select_expr);
+		return visit_detect_selectable(p->select_expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
-		return visit_select_unop(p->select_expr);
+		return visit_detect_unop(p->select_expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
-		return visit_select_binop(p->select_expr);
+		return visit_detect_binop(p->select_expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectParentedExpr>>(select_expr)) {
-		return visit_select_expr(p->select_expr->select_expr);
+		return visit_detect_expr(p->select_expr->select_expr);
 	}
 }
 
@@ -416,7 +416,7 @@ void VisitorSemantic::validate_js(const std::string& script) {
 	js_ctx.eval(script, true);*/
 }
 
-void VisitorSemantic::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable) {
+void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
@@ -430,13 +430,13 @@ void VisitorSemantic::visit_select_selectable(std::shared_ptr<AST::ISelectable> 
 	}
 }
 
-void VisitorSemantic::visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop) {
-	visit_select_expr(unop->select_expr);
+void VisitorSemantic::visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop) {
+	visit_detect_expr(unop->select_expr);
 }
 
-void VisitorSemantic::visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop) {
-	visit_select_expr(binop->left);
-	visit_select_expr(binop->right);
+void VisitorSemantic::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop) {
+	visit_detect_expr(binop->left);
+	visit_detect_expr(binop->right);
 }
 
 void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
@@ -444,7 +444,7 @@ void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
 		return;
 	}
 
-	visit_select_expr(wait->select_expr);
+	visit_detect_expr(wait->select_expr);
 }
 
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
@@ -516,7 +516,7 @@ void VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 }
 
 void VisitorSemantic::visit_check(std::shared_ptr<AST::Check> check) {
-	visit_select_expr(check->select_expr);
+	visit_detect_expr(check->select_expr);
 }
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {

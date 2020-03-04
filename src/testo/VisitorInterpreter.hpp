@@ -82,10 +82,11 @@ struct VisitorInterpreter {
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep);
-	bool visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
-	bool visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
-	bool visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
-	bool visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
+	std::vector<nn::Rect> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
+	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	bool visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
+	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
 	void visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ISelectable> selectable, const std::string& timeout);
 	void visit_mouse(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Mouse> mouse);
