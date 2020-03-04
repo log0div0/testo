@@ -736,25 +736,46 @@ quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image
 
 }
 
-std::vector<nn::Rect> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+	std::vector<Point> result;
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		return nn::OCR(&screenshot).search(text);
+		auto ocr_find = nn::OCR(&screenshot).search(text);
+		for (auto& rect: ocr_find) {
+			result.push_back({rect.center_x(), rect.center_y()});
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
 		auto value = eval_js(script, screenshot);
-		if (value.is_bool()) {
-			throw std::runtime_error("Can't process bool return value. Expect an object or an array of objects");
-		} else if (value.is_array()) {
-			quickjs::ArrayValue* array = (quickjs::ArrayValue*)(&value);
-			auto objects = (std::vector<nn::Rect>)(*array);
-			return objects;
-		} else {
- 			throw std::runtime_error("Unknown js return type");
+
+		if (!value.is_object()) {
+			throw std::runtime_error("Can't process return value type. We expect an object or an array of objects");
 		}
+
+		if (value.is_array()) {
+			auto size = (int32_t)(value.get_property(JS_PROP_LENGTH));
+			for (int32_t i = 0; i < size; ++i) {
+				auto elem = value.get_property_uint32(i);
+				auto x_prop = elem.get_property_str("X");
+				if (x_prop.is_undefined()) {
+					throw std::runtime_error("Object doesn't have the X propery");
+				}
+				auto y_prop = elem.get_property_str("Y");
+				if (y_prop.is_undefined()) {
+					throw std::runtime_error("Object doesn't have the Y propery");
+				}
+				result.push_back({(int32_t)x_prop, (int32_t)y_prop});
+			}
+		} else if (value.is_object()) {
+			//TODO
+		}
+
+		
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
+
+	return result;
 }
 
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
@@ -767,10 +788,7 @@ bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectabl
 		if (value.is_bool()) {
 			return (bool)value;
 		} else if (value.is_array()) {
-			quickjs::ArrayValue* array = (quickjs::ArrayValue*)(&value);
-			std::cout << "SIZE: " << array->size() << std::endl;
-
-			return array->size();
+			return (int32_t)(value.get_property(JS_PROP_LENGTH));
 		} else {
  			throw std::runtime_error("Unknown js return type");
 		}
@@ -989,7 +1007,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 {
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
-	std::vector<nn::Rect> found;
+	std::vector<Point> found;
 	while (std::chrono::system_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
@@ -1016,7 +1034,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 		throw std::runtime_error("Too many occurences of entry to click: " + selectable->text());
 	}
 
-	vmc->vm->mouse_move_abs(found[0].center_x(), found[0].center_y());
+	vmc->vm->mouse_move_abs(found[0].X, found[0].Y);
 }
 
 void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)

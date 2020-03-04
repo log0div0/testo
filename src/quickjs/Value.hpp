@@ -3,7 +3,6 @@
 
 #include "CString.hpp"
 #include <memory>
-#include "nn/Context.hpp"
 
 namespace quickjs {
 
@@ -34,6 +33,10 @@ struct ValueRef {
 	Value get_property(JSAtom property) const;
 	void set_property(JSAtom property, Value val);
 
+	void* get_opaque(JSClassID class_id) const;
+	void set_opaque(void* opaque);
+
+
 	::JSValue handle;
 	::JSContext* context = nullptr;
 };
@@ -49,31 +52,6 @@ struct Value: ValueRef {
 	Value& operator=(const Value& other);
 
 	JSValue release();
-
-	std::shared_ptr<nn::Rect> opaque;
-};
-
-struct ObjectValue: Value {
-	ObjectValue(int class_id, JSValue handle, JSContext* context): Value(handle, context), class_id(class_id) {}
-	using Value::Value;
-
-	std::shared_ptr<nn::Rect> get_opaque() const;
-	void set_opaque(std::shared_ptr<nn::Rect> opaque);
-
-private:
-	int class_id;
-	std::shared_ptr<nn::Rect> opaque;
-};
-
-struct ArrayValue: Value {
-	ArrayValue(size_t length, JSValue handle, JSContext* context);
-
-	operator std::vector<nn::Rect>() const;
-
-	Value get_elem(size_t index) const;
-	void set_elem(size_t index, Value val);
-
-	size_t size() const;
 };
 
 }

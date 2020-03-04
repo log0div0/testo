@@ -40,12 +40,16 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 	auto array = ctx.new_array(result.size());
 
 	for (size_t i = 0; i < result.size(); ++i) {
+		auto& rect = result[i];
 		auto obj = ctx.new_object_class(nn_rect_class_id);
 		if (obj.is_exception()) {
 			throw std::runtime_error("Can't create nn::Rect class object");
 		}
-		obj.set_opaque(std::make_shared<nn::Rect>(result[i]));
-		array.set_elem(i, obj);
+		// TODO obj.set_opaque(std::make_shared<nn::Rect>(result[i]));
+		obj.set_property_str("X", ctx.new_int32(rect.center_x()));
+		obj.set_property_str("Y", ctx.new_int32(rect.center_y()));
+
+		array.set_property_uint32(i, obj);
 	}
 
 	return array;
@@ -114,12 +118,14 @@ Value ContextRef::new_function(JSCFunction* f, const std::string& name, size_t l
 	return Value(JS_NewCFunction(handle, f, name.c_str(), length), handle);
 }
 
-ArrayValue ContextRef::new_array(size_t length) {
-	return ArrayValue(length, JS_NewArray(handle), handle);
+Value ContextRef::new_array(size_t length) {
+	auto result = Value(JS_NewArray(handle), handle);
+	result.set_property(JS_PROP_LENGTH, Value(JS_NewInt32(handle, length), handle));
+	return result;
 }
 
-ObjectValue ContextRef::new_object_class(int class_id) {
-	return ObjectValue(class_id, JS_NewObjectClass(handle, class_id), handle);
+Value ContextRef::new_object_class(int class_id) {
+	return Value(JS_NewObjectClass(handle, class_id), handle);
 }
 
 void* ContextRef::mallocz(size_t size) {

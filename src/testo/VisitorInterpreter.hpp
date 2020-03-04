@@ -11,6 +11,11 @@
 #include <list>
 
 struct VisitorInterpreter {
+	struct Point {
+		int32_t X;
+		int32_t Y;
+	};
+
 	struct InterpreterException: public std::exception {
 			explicit InterpreterException():
 				std::exception()
@@ -82,7 +87,7 @@ struct VisitorInterpreter {
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep);
-	std::vector<nn::Rect> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	std::vector<Point> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
 	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
 	bool visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);

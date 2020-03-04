@@ -411,9 +411,9 @@ void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select
 }
 
 void VisitorSemantic::validate_js(const std::string& script) {
-	/*auto js_ctx = js_runtime.create_context();
+	auto js_ctx = js_runtime.create_context();
 	js_ctx.register_nn_functions();
-	js_ctx.eval(script, true);*/
+	js_ctx.eval(script, true);
 }
 
 void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
