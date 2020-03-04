@@ -183,13 +183,9 @@ void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path&
 
 void QemuGuestAdditions::send(const nlohmann::json& command) {
 	auto command_str = command.dump();
-	std::vector<uint8_t> buffer;
 	uint32_t command_length = command_str.length();
-	buffer.reserve(sizeof(uint32_t) + command_str.length());
-	std::copy((uint8_t*)&command_length, (uint8_t*)(&command_length) + sizeof(uint32_t), std::back_inserter(buffer));
-
-	std::copy(command_str.begin(), command_str.end(), std::back_inserter(buffer));
-	socket.write(buffer);
+	socket.write((uint8_t*)&command_length, sizeof(command_length));
+	socket.write((uint8_t*)command_str.data(), command_str.size());
 }
 
 nlohmann::json QemuGuestAdditions::recv() {

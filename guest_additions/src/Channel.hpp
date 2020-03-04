@@ -5,6 +5,15 @@
 
 #ifdef WIN32
 #include "winapi.hpp"
+
+typedef struct _tagVirtioPortInfo {
+	UINT                Id;
+	BOOLEAN             OutVqFull;
+	BOOLEAN             HostConnected;
+	BOOLEAN             GuestConnected;
+	CHAR                Name[1];
+}VIRTIO_PORT_INFO, * PVIRTIO_PORT_INFO;
+
 #endif
 
 struct Channel {
@@ -26,6 +35,8 @@ struct Channel {
 #endif
 
 #ifdef WIN32
+	PVIRTIO_PORT_INFO getInfo();
+	std::vector<uint8_t> info_buf;
 	winapi::File file;
 #endif
 };

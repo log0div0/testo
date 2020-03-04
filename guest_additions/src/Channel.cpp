@@ -4,6 +4,7 @@
 #include "winapi.hpp"
 #endif
 
+#include <spdlog/spdlog.h>
 #include <thread>
 
 nlohmann::json Channel::receive() {
@@ -20,6 +21,8 @@ nlohmann::json Channel::receive() {
 		}
 	}
 
+	spdlog::info("msg_size = {}", msg_size);
+
 	std::string json_str;
 	json_str.resize(msg_size);
 
@@ -32,6 +35,8 @@ nlohmann::json Channel::receive() {
 		}
 		already_read += n;
 	}
+
+	spdlog::info("json_str = {}", json_str);
 
 	nlohmann::json result = nlohmann::json::parse(json_str);
 	return result;
@@ -104,6 +109,7 @@ size_t Channel::write(uint8_t* data, size_t size) {
 #ifdef WIN32
 
 Channel::Channel(const std::string& fd_path): file(fd_path, GENERIC_WRITE | GENERIC_READ, OPEN_EXISTING) {
+	info_buf.resize(sizeof(VIRTIO_PORT_INFO));
 }
 
 Channel::~Channel() {
@@ -111,10 +117,50 @@ Channel::~Channel() {
 
 Channel& Channel::operator=(Channel&& other) {
 	std::swap(file, other.file);
+	std::swap(info_buf, other.info_buf);
 	return *this;
 }
 
+#define IOCTL_GET_INFORMATION    CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
+
+PVIRTIO_PORT_INFO Channel::getInfo() {
+	DWORD lpBytesReturned = 0;
+	bool success = DeviceIoControl(
+		file.handle,
+		IOCTL_GET_INFORMATION,
+		NULL,
+		0,
+		info_buf.data(),
+		(DWORD)info_buf.size(),
+		&lpBytesReturned,
+		NULL);
+	if (success) {
+		return (PVIRTIO_PORT_INFO)info_buf.data();
+	}
+	if (GetLastError() != ERROR_MORE_DATA) {
+		throw std::runtime_error("ERROR_MORE_DATA expected");
+	}
+	info_buf.resize(lpBytesReturned);
+	success = DeviceIoControl(
+		file.handle,
+		IOCTL_GET_INFORMATION,
+		NULL,
+		0,
+		info_buf.data(),
+		(DWORD)info_buf.size(),
+		&lpBytesReturned,
+		NULL);
+	if (!success) {
+		throw std::runtime_error("DeviceIoControl failed");
+	}
+	return (PVIRTIO_PORT_INFO)info_buf.data();
+}
+
 size_t Channel::read(uint8_t* data, size_t size) {
+	PVIRTIO_PORT_INFO info = getInfo();
+	if (!info->HostConnected) {
+		return 0;
+	}
 	return file.read(data, size);
 }
 
