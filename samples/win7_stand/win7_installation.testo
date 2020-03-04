@@ -99,7 +99,12 @@ test win7_installation_mouse {
 
 test new_folder: win7_installation_mouse {
 	win7 {
-		mouse move js "detect_text('Корзина')" timeout 10s
+		#mouse move js "detect_text('Корзина')"
+
+		mouse move js """
+			array = detect_text('Корзина')
+			point = {X: array[0].X + 50, Y: array[0].Y}
+		""" timeout 10s
 		sleep 5s
 
 		mouse move 400 300

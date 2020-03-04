@@ -753,21 +753,14 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_select_selectab
 		}
 
 		if (value.is_array()) {
-			auto size = (int32_t)(value.get_property(JS_PROP_LENGTH));
+			auto size = (int32_t)value.get_property_str("length");
+			
 			for (int32_t i = 0; i < size; ++i) {
-				auto elem = value.get_property_uint32(i);
-				auto x_prop = elem.get_property_str("X");
-				if (x_prop.is_undefined()) {
-					throw std::runtime_error("Object doesn't have the X propery");
-				}
-				auto y_prop = elem.get_property_str("Y");
-				if (y_prop.is_undefined()) {
-					throw std::runtime_error("Object doesn't have the Y propery");
-				}
-				result.push_back({(int32_t)x_prop, (int32_t)y_prop});
+				auto elem = value.get_property_int32(i);
+				result.push_back(Point(elem));
 			}
 		} else if (value.is_object()) {
-			//TODO
+			result.push_back(Point(value));
 		}
 
 		

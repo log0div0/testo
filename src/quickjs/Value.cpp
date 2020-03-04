@@ -94,6 +94,16 @@ void ValueRef::set_property_uint32(size_t index, Value val) {
 	}
 }
 
+Value ValueRef::get_property_int32(int32_t index) const {
+	return Value(JS_GetPropertyUint32(context, handle, index), context);
+}
+
+void ValueRef::set_property_int32(int32_t index, Value val) {
+	if (JS_SetPropertyUint32(context, handle, index, val.release()) < 0) {
+		throw std::runtime_error("Can't set property uint32");
+	}
+}
+
 Value ValueRef::get_property(JSAtom property) const {
 	return Value(JS_GetProperty(context, handle, property), context);
 }

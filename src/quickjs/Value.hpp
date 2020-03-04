@@ -30,6 +30,9 @@ struct ValueRef {
 	Value get_property_uint32(size_t index) const;
 	void set_property_uint32(size_t index, Value val);
 
+	Value get_property_int32(int32_t index) const;
+	void set_property_int32(int32_t index, Value val);
+
 	Value get_property(JSAtom property) const;
 	void set_property(JSAtom property, Value val);
 

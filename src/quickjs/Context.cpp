@@ -49,7 +49,7 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 		obj.set_property_str("X", ctx.new_int32(rect.center_x()));
 		obj.set_property_str("Y", ctx.new_int32(rect.center_y()));
 
-		array.set_property_uint32(i, obj);
+		array.set_property_int32(i, obj);
 	}
 
 	return array;
@@ -119,9 +119,7 @@ Value ContextRef::new_function(JSCFunction* f, const std::string& name, size_t l
 }
 
 Value ContextRef::new_array(size_t length) {
-	auto result = Value(JS_NewArray(handle), handle);
-	result.set_property(JS_PROP_LENGTH, Value(JS_NewInt32(handle, length), handle));
-	return result;
+	return Value(JS_NewArray(handle), handle);;
 }
 
 Value ContextRef::new_object_class(int class_id) {

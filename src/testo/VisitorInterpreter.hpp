@@ -12,6 +12,22 @@
 
 struct VisitorInterpreter {
 	struct Point {
+		Point() = default;
+		Point(const quickjs::Value& val) {
+			auto x_prop = val.get_property_str("X");
+			if (x_prop.is_undefined()) {
+				throw std::runtime_error("Object doesn't have the X propery");
+			}
+			
+			auto y_prop = val.get_property_str("Y");
+			if (y_prop.is_undefined()) {
+				throw std::runtime_error("Object doesn't have the Y propery");
+			}
+
+			X = (int32_t)x_prop;
+			Y = (int32_t)y_prop;
+		}
+		Point(int32_t X, int32_t Y): X(X), Y(Y) {}
 		int32_t X;
 		int32_t Y;
 	};
