@@ -344,7 +344,8 @@ void Reporter::mouse_move_click(std::shared_ptr<VmController> vmc, std::string e
 
 	report(fmt::format("{} Mouse {} ", progress(), event), blue);
 	if (object.length()) {
-		report(fmt::format("on {} ", object), yellow);
+		report("on ", blue);
+		report(fmt::format("{} ", object), yellow);
 	}
 
 	if (timeout.length()) {
