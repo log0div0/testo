@@ -35,6 +35,7 @@ private:
 	bool test_test() const;
 	bool test_command() const;
 	bool test_action() const;
+	bool test_counter_list() const;
 	bool test_include() const;
 	bool test_string() const;
 	bool test_selectable() const;
@@ -80,6 +81,8 @@ private:
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
+	std::shared_ptr<AST::ICounterList> counter_list();
+	std::shared_ptr<AST::CounterList<AST::Range>> range();
 	std::shared_ptr<AST::Action<AST::ForClause>> for_clause();
 	std::shared_ptr<AST::Action<AST::CycleControl>> cycle_control();
 

@@ -104,6 +104,10 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::id)); //macro call
 }
 
+bool Parser::test_counter_list() const {
+	return LA(1) == Token::category::RANGE;
+}
+
 bool Parser::test_string() const {
 	return ((LA(1) == Token::category::quoted_string) ||
 		(LA(1) == Token::category::triple_quoted_string));
@@ -979,25 +983,44 @@ std::shared_ptr<Action<IfClause>> Parser::if_clause() {
 	return std::shared_ptr<Action<IfClause>>(new Action<IfClause>(action));
 }
 
+std::shared_ptr<CounterList<Range>> Parser::range() {
+	Token range_token = LT(1);
+	match(Token::category::RANGE);
+
+	std::shared_ptr<String> r1 = string();
+	std::shared_ptr<String> r2 = nullptr;
+	if (test_string()) {
+		r2 = string();
+	}
+
+	auto counter_list = std::shared_ptr<Range>(new Range(range_token, r1, r2));
+	return std::shared_ptr<CounterList<Range>>(new CounterList<Range>(counter_list));
+}
+
+std::shared_ptr<ICounterList> Parser::counter_list() {
+	if (LA(1) == Token::category::RANGE) {
+		return range();
+	} else {
+		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown counter_list specifier: " + LT(1).value());
+	}
+}
+
 std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 	Token for_token = LT(1);
 	match(Token::category::for_);
 
+	match(Token::category::lparen);
 	Token counter = LT(1);
+
 	match(Token::category::id);
 
-	Token in = LT(1);
 	match(Token::category::in);
 
-	Token begin = LT(1);
-	match(Token::category::number);
+	if (!test_counter_list()) {
+		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted a RANGE");
+	}
 
-	Token double_dot = LT(1);
-	match(Token::category::double_dot);
-
-	Token end = LT(1);
-	match(Token::category::number);
-
+	std::shared_ptr<ICounterList> list = counter_list();
 	newline_list();
 
 	auto cycle_body = action();
@@ -1015,10 +1038,7 @@ std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 	auto action = std::shared_ptr<ForClause>(new ForClause(
 		for_token,
 		counter,
-		in,
-		begin,
-		double_dot,
-		end,
+		list,
 		cycle_body,
 		else_token,
 		else_action
