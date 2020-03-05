@@ -61,16 +61,33 @@ test guest_additions: win7_installation {
 	}
 }
 
+macro click_lowermost(text, how_long = "normal") {
+	mouse click js """
+		arr = detect_text('${text}')
+		if (arr.length) {
+			arr.sort(function (a, b) {
+				return a.Y < b.Y
+			});
+
+			arr[arr.length - 1]
+		} else {
+			arr
+		}
+	""" timeout 2m
+}
+
 test win7_installation_mouse {
 	win7 {
 		start
 		wait "Choose an operating system"
 		press Down, Enter
+
 		mouse click "Мой язык - русский" timeout 2m;
 
-		wait "Выберите нужный язык"; press Enter #2 "Далее"
+		wait "Выберите нужный язык"; click_lowermost("Далее") #2 "Далее"
 		mouse click "Установить" timeout 1m;
-		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
+		#wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
+		wait "Выберите операционную систему"; mouse click "Далее"
 		wait "Условия лицензии"
 		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
 		wait "Выберите тип установки";
@@ -84,7 +101,7 @@ test win7_installation_mouse {
 		unplug dvd
 		press LeftShift + LeftAlt; type "testo"; mouse click "Далее"
 		#wait "Установите пароль"; mouse click "Далее"
-		wait "Установите пароль"; press Enter
+		wait "Установите пароль"; click_lowermost("Далее")
 		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
 		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
 		wait "Проверьте настройку даты и времени"; mouse click "Далее"
@@ -99,13 +116,10 @@ test win7_installation_mouse {
 
 test new_folder: win7_installation_mouse {
 	win7 {
-		#mouse move js "detect_text('Корзина')"
-
 		mouse move js """
 			array = detect_text('Корзина')
-			point = {X: array[0].X + 50, Y: array[0].Y}
+			point = {x: array[0].x + 50, y: array[0].y}
 		""" timeout 10s
-		sleep 5s
 
 		mouse move 400 300
 		mouse rclick

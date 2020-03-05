@@ -754,16 +754,16 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_select_selectab
 
 		if (value.is_array()) {
 			auto size = (int32_t)value.get_property_str("length");
-			
+
 			for (int32_t i = 0; i < size; ++i) {
-				auto elem = value.get_property_int32(i);
+				auto elem = value.get_property_uint32(i);
 				result.push_back(Point(elem));
 			}
 		} else if (value.is_object()) {
 			result.push_back(Point(value));
 		}
 
-		
+
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
@@ -952,7 +952,7 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
 		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
-		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : "5s";
+		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : "1m";
 		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
 
 		if (mouse_move_click->object) {
@@ -1027,7 +1027,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 		throw std::runtime_error("Too many occurences of entry to click: " + selectable->text());
 	}
 
-	vmc->vm->mouse_move_abs(found[0].X, found[0].Y);
+	vmc->vm->mouse_move_abs(found[0].x, found[0].y);
 }
 
 void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)

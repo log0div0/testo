@@ -147,7 +147,7 @@ std::string VisitorCksum::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveC
 	if (mouse_move_click->timeout_interval) {
 		result += mouse_move_click->timeout_interval.value();
 	} else {
-		result += "1s";
+		result += "1m";
 	}
 
 	return result;

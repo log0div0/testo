@@ -46,10 +46,10 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 			throw std::runtime_error("Can't create nn::Rect class object");
 		}
 		// TODO obj.set_opaque(std::make_shared<nn::Rect>(result[i]));
-		obj.set_property_str("X", ctx.new_int32(rect.center_x()));
-		obj.set_property_str("Y", ctx.new_int32(rect.center_y()));
+		obj.set_property_str("x", ctx.new_int32(rect.center_x()));
+		obj.set_property_str("y", ctx.new_int32(rect.center_y()));
 
-		array.set_property_int32(i, obj);
+		array.set_property_uint32(i, obj);
 	}
 
 	return array;
