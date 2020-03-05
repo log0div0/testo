@@ -263,9 +263,6 @@ void QemuVM::install() {
 					<channel type='unix'>
 						<target type='virtio' name='negotiator.0'/>
 					</channel>
-					<channel type='spicevmc'>
-						<target type='virtio' name='com.redhat.spice.0'/>
-					</channel>
 					<input type='tablet' bus='usb'>
 					</input>
 					<input type='mouse' bus='ps2'/>

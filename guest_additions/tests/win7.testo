@@ -27,7 +27,7 @@ test win7_installation {
 		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; press Enter
 		wait "Выберите имя пользователя" timeout 15m
 		unplug dvd
-		press LeftShift + LeftAlt; type "testo"; press Enter
+		press LeftShift+LeftAlt; type "testo"; press Enter
 		wait "Установите пароль"; press Enter
 		wait "Введите ключ продукта";
 		mouse click "Автоматически активировать Windows"
@@ -40,6 +40,7 @@ test win7_installation {
 		shutdown
 		start
 		wait "Корзина"
+		sleep 10s
 	}
 }
 
