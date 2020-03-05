@@ -28,6 +28,7 @@ struct VisitorCksum {
 	std::string visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy);
 	std::string visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call);
 	std::string visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause);
+	std::string visit_range(std::shared_ptr<AST::Range> range);
 	std::string visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause);
 
 	std::string visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr);
