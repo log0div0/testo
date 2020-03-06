@@ -1021,6 +1021,7 @@ std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 	}
 
 	std::shared_ptr<ICounterList> list = counter_list();
+	match(Token::category::rparen);
 	newline_list();
 
 	auto cycle_body = action();

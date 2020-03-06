@@ -781,7 +781,7 @@ bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectabl
 		if (value.is_bool()) {
 			return (bool)value;
 		} else if (value.is_array()) {
-			return (int32_t)(value.get_property(JS_PROP_LENGTH));
+			return (int32_t)value.get_property_str("length");
 		} else {
  			throw std::runtime_error("Unknown js return type");
 		}

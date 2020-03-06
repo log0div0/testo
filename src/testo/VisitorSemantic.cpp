@@ -534,15 +534,15 @@ void VisitorSemantic::visit_range(std::shared_ptr<AST::Range> range) {
 	try {
 		range->r1_num = std::stoul(r1);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(std::string(range->r1->begin()) + ": Error: Can't convert to uint"));
+		std::runtime_error(std::string(range->r1->begin()) + ": Error: Can't convert to uint: " + r1);
 	}
 
 	if (range->r2) {
 		r2 = template_parser.resolve(range->r2->text(), reg);
 		try {
-			range->r1_num = std::stoul(r2);
+			range->r2_num = std::stoul(r2);
 		} catch (const std::exception& error) {
-			std::throw_with_nested(std::runtime_error(std::string(range->r2->begin()) + ": Error: Can't convert to uint"));
+			std::runtime_error(std::string(range->r2->begin()) + ": Error: Can't convert to uint: " + r2);
 		}
 
 		if (range->r1_num >= range->r2_num) {

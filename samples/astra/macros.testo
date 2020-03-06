@@ -3,13 +3,13 @@ macro select_menu_horizontal(menu_entry) {
 	wait "${menu_entry}"
 
 	#check if it's enabled by default
-	if (check js """detect_text("${menu_entry}", "gray", "red")""") {
+	if (check js "detect_text('${menu_entry}', 'gray', 'red')") {
 		press Enter
 	} else {
 		press Left*5
 
-		for i in 0..5 {
-			if (check js """detect_text("${menu_entry}", "gray", "red")""" timeout 50ms) {
+		for (i in RANGE "5") {
+			if (check js "detect_text('${menu_entry}', 'gray', 'red')" timeout 50ms) {
 				press Enter;
 				break;
 			}
@@ -30,7 +30,7 @@ macro select_menu_vertical(menu_entry) {
 	} else {
 		press Up*20
 
-		for i in 0..20 {
+		for (i in RANGE "0" "20") {
 			if (check js """detect_text("${menu_entry}", "gray", "red")""" timeout 50ms)  {
 				press Enter;
 				break;
