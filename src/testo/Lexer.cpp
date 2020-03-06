@@ -260,6 +260,8 @@ Token Lexer::id() {
 		return else_();
 	} else if (value == "in") {
 		return in();
+	} else if (value == "RANGE") {
+		return RANGE();
 	} else if (value == "break") {
 		return break_();
 	} else if (value == "continue") {
@@ -581,6 +583,13 @@ Token Lexer::in() {
 	return Token(Token::category::in, value, tmp_pos);
 }
 
+Token Lexer::RANGE() {
+	Pos tmp_pos = current_pos;
+	std::string value("RANGE");
+	current_pos.advance(value.length());
+	return Token(Token::category::RANGE, value, tmp_pos);
+}
+
 Token Lexer::break_() {
 	Pos tmp_pos = current_pos;
 	std::string value("break");
@@ -829,12 +838,6 @@ Token Lexer::colon() {
 	return Token(Token::category::colon, ":", tmp_pos);
 }
 
-Token Lexer::double_dot() {
-	Pos tmp_pos = current_pos;
-	current_pos.advance(2);
-	return Token(Token::category::double_dot, "..", tmp_pos);
-}
-
 Token Lexer::get_next_token() {
 	while (!test_eof()) {
 		if (test_newline()) {
@@ -877,8 +880,6 @@ Token Lexer::get_next_token() {
 			return semi();
 		} else if (test_colon()) {
 			return colon();
-		} else if (test_double_dot()) {
-			return double_dot();
 		} else if (test_space()) {
 			skip_spaces();
 			continue;

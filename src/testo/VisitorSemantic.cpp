@@ -527,10 +527,36 @@ void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) 
 	}
 }
 
+void VisitorSemantic::visit_range(std::shared_ptr<AST::Range> range) {
+	std::string r1 = template_parser.resolve(range->r1->text(), reg);
+	std::string r2;
+
+	try {
+		range->r1_num = std::stoul(r1);
+	} catch (const std::exception& error) {
+		std::runtime_error(std::string(range->r1->begin()) + ": Error: Can't convert to uint: " + r1);
+	}
+
+	if (range->r2) {
+		r2 = template_parser.resolve(range->r2->text(), reg);
+		try {
+			range->r2_num = std::stoul(r2);
+		} catch (const std::exception& error) {
+			std::runtime_error(std::string(range->r2->begin()) + ": Error: Can't convert to uint: " + r2);
+		}
+
+		if (range->r1_num >= range->r2_num) {
+			throw std::runtime_error(std::string(range->begin()) + ": Error: start of the range " +
+				r1 + " is greater or equal to finish " + r2);
+		}
+	}
+}
+
 void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
-	if (for_clause->start() > for_clause->finish()) {
-		throw std::runtime_error(std::string(for_clause->begin()) + ": Error: start number of the cycle " +
-			for_clause->start_.value() + " is greater than finish number " + for_clause->finish_.value());
+	if (auto p = std::dynamic_pointer_cast<AST::CounterList<AST::Range>>(for_clause->counter_list)) {
+		visit_range(p->counter_list);
+	} else {
+		throw std::runtime_error("Unknown counter list type");
 	}
 
 	StackEntry new_ctx(false);
@@ -540,8 +566,8 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 		reg.local_vars.pop_back();
 	});
 
-	for (auto i = for_clause->start(); i <= for_clause->finish(); i++) {
-		reg.local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
+	for (auto i: for_clause->counter_list->values()) {
+		reg.local_vars[ctx_position].define(for_clause->counter.value(), i);
 		visit_action(for_clause->cycle_body);
 	}
 

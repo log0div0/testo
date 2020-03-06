@@ -50,6 +50,7 @@ struct Token {
 		if_,
 		else_,
 		in,
+		RANGE,
 		break_,
 		continue_,
 		true_,
@@ -74,7 +75,6 @@ struct Token {
 		rbracket,
 		semi,
 		colon,
-		double_dot,
 		include,
 
 		//expressions
@@ -213,6 +213,22 @@ struct Token {
 			return "MACHINE";
 		case flash:
 			return "FLASH";
+		case network:
+			return "NETWORK";
+		case param:
+			return "PARAM";
+		case macro:
+			return "MACRO";
+		case dvd:
+			return "DVD";
+		case if_:
+			return "IF";
+		case else_:
+			return "ELSE";
+		case in:
+			return "IN";
+		case RANGE:
+			return "RANGE";
 		case number:
 			return "NUMBER";
 		case time_interval:

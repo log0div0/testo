@@ -293,12 +293,29 @@ std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vmc, std
 	return result;
 }
 
+std::string VisitorCksum::visit_range(std::shared_ptr<AST::Range> range) {
+	std::string result = "RANGE";
+
+	result += template_parser.resolve(range->r1->text(), reg);
+
+	if (range->r2) {
+		result += " ";
+		result += template_parser.resolve(range->r2->text(), reg);
+	}
+
+	return result;
+}
+
 std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause) {
 	std::string result("for");
 	//we should drop the counter from cksum
-	result += for_clause->start_.value();
-	result += "..";
-	result += for_clause->finish_.value();
+
+	if (auto p = std::dynamic_pointer_cast<AST::CounterList<AST::Range>>(for_clause->counter_list)) {
+		result += visit_range(p->counter_list);
+	} else {
+		throw std::runtime_error("Unknown counter list");
+	}
+
 	result += visit_action(vmc, for_clause->cycle_body);
 	if (for_clause->else_token) {
 		result += "else";

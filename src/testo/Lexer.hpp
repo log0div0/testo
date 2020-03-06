@@ -171,6 +171,7 @@ private:
 	Token if_();
 	Token else_();
 	Token in();
+	Token RANGE();
 	Token break_();
 	Token continue_();
 	Token quoted_string();
@@ -190,7 +191,6 @@ private:
 	Token rbracket();
 	Token semi();
 	Token colon();
-	Token double_dot();
 	Token include();
 
 	//expressions

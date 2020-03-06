@@ -28,6 +28,7 @@ struct VisitorSemantic {
 	void visit_wait(std::shared_ptr<AST::Wait> wait);
 	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
+	void visit_range(std::shared_ptr<AST::Range> range);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
 
 	void visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr);

@@ -1448,16 +1448,94 @@ struct IfClause: public Node {
 	std::shared_ptr<IAction> else_action;
 };
 
+struct ICounterList: public Node {
+	using Node::Node;
+	virtual std::vector<std::string> values() const = 0;
+};
+
+template <typename CounterListType>
+struct CounterList: public ICounterList {
+	CounterList(std::shared_ptr<CounterListType> counter_list):
+		ICounterList(counter_list->t),
+		counter_list(counter_list) {}
+
+	Pos begin() const {
+		return counter_list->begin();
+	}
+
+	Pos end() const {
+		return counter_list->end();
+	}
+
+	operator std::string() const {
+		return std::string(*counter_list);
+	}
+
+	std::vector<std::string> values() const {
+		return counter_list->values();
+	}
+
+	std::shared_ptr<CounterListType> counter_list;
+};
+
+struct Range: public Node {
+	Range(const Token& range, std::shared_ptr<String> r1, std::shared_ptr<String> r2):
+		Node(range), r1(r1), r2(r2) {}
+
+	Pos begin() const {
+		return r1->begin();
+	}
+
+	Pos end() const {
+		if (r2) {
+			return r2->end();
+		} else {
+			return r1->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + std::string(*r1);
+		if (r2) {
+			result += " " + std::string(*r2);
+		}
+		return result;
+	}
+
+	std::vector<std::string> values() const {
+		std::vector<std::string> result;
+
+		uint32_t start = 0;
+		uint32_t finish = 0;
+		if (r2) {
+			start = r1_num;
+			finish = r2_num;
+		} else {
+			start = 0;
+			finish = r1_num;
+		}
+
+		for (uint32_t i = start; i < finish; ++i) {
+			result.push_back(std::to_string(i));
+		}
+
+		return result;
+	}
+
+	std::shared_ptr<String> r1 = nullptr;
+	std::shared_ptr<String> r2 = nullptr;
+
+	uint32_t r1_num = 0;
+	uint32_t r2_num = 0;
+};
+
 struct ForClause: public Node {
-	ForClause(const Token& for_token, const Token& counter, const Token& in, const Token& start,
-		const Token& double_dot, const Token& finish, std::shared_ptr<IAction> cycle_body,
-		const Token& else_token, std::shared_ptr<IAction> else_action):
+	ForClause(const Token& for_token, const Token& counter,	std::shared_ptr<ICounterList> counter_list,
+		std::shared_ptr<IAction> cycle_body, const Token& else_token,
+		std::shared_ptr<IAction> else_action):
 		Node(for_token),
 		counter(counter),
-		in(in),
-		start_(start),
-		double_dot(double_dot),
-		finish_(finish),
+		counter_list(counter_list),
 		cycle_body(cycle_body),
 		else_token(else_token),
 		else_action(else_action) {}
@@ -1475,18 +1553,17 @@ struct ForClause: public Node {
 	}
 
 	operator std::string() const {
-		return t.value();
+		std::string result = t.value() + "(" + counter.value() + " in " + std::string(*counter_list) + ")";
+
+		result += std::string(*cycle_body);
+		if (else_action) {
+			result += std::string(*else_action);
+		}
+		return result;
 	}
 
-	uint32_t start() const {
-		return std::stoul(start_.value());
-	}
-
-	uint32_t finish() const {
-		return std::stoul(finish_.value());
-	}
-
-	Token counter, in, start_, double_dot, finish_;
+	Token counter;
+	std::shared_ptr<ICounterList> counter_list = nullptr;
 	std::shared_ptr<IAction> cycle_body;
 
 	Token else_token;

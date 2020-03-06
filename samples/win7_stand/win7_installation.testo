@@ -61,7 +61,7 @@ test guest_additions: win7_installation {
 	}
 }
 
-macro click_lowermost(text, how_long = "normal") {
+macro click_lowermost(text) {
 	mouse click js """
 		arr = detect_text('${text}')
 		if (arr.length) {
