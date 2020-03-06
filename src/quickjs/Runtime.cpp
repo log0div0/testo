@@ -7,6 +7,10 @@ Runtime::Runtime(::JSRuntime* handle): handle(handle) {
 	if (!handle) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
 	}
+
+	if(JS_NewClass(handle, nn_rect_class_id, &nn_rect_class)) {
+		throw std::runtime_error("Can't register nn::rect js class");
+	}
 }
 
 Runtime::~Runtime() {

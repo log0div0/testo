@@ -708,15 +708,15 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
-bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot) {
+bool VisitorInterpreter::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
-		return visit_select_selectable(p->select_expr, screenshot).size();
+		return visit_detect_selectable(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
-		return visit_select_unop(p->select_expr, screenshot);
+		return visit_detect_unop(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
-		return visit_select_binop(p->select_expr, screenshot);
+		return visit_detect_binop(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectParentedExpr>>(select_expr)) {
-		return visit_select_expr(p->select_expr->select_expr, screenshot);
+		return visit_detect_expr(p->select_expr->select_expr, screenshot);
 	} else {
 		throw std::runtime_error("Unknown select expression type");
 	}
@@ -724,55 +724,93 @@ bool VisitorInterpreter::visit_select_expr(std::shared_ptr<AST::ISelectExpr> sel
 
 quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
 	try {
-		auto js_ctx = js_runtime.create_context();
-		js_ctx.register_nn_functions();
+		js_current_ctx.reset(new quickjs::Context(js_runtime.create_context()));
+		//auto js_ctx = js_runtime.create_context();
+		js_current_ctx->register_nn_functions();
 		nn::Context nn_ctx(&screenshot);
-		js_ctx.set_opaque(&nn_ctx);
-		return js_ctx.eval(script);
+		js_current_ctx->set_opaque(&nn_ctx);
+		return js_current_ctx->eval(script);
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
 
 }
 
-std::vector<nn::Rect> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+	std::vector<Point> result;
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		return nn::OCR(&screenshot).search(text);
+		auto ocr_find = nn::OCR(&screenshot).search(text);
+		for (auto& rect: ocr_find) {
+			result.push_back({rect.center_x(), rect.center_y()});
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
 		auto value = eval_js(script, screenshot);
-		std::vector<nn::Rect> result;
-		if (value.is_bool() && (bool)value) {
-			result.push_back(nn::Rect());
+
+		if (!value.is_object()) {
+			throw std::runtime_error("Can't process return value type. We expect an object or an array of objects");
 		}
-		return result;
+
+		if (value.is_array()) {
+			auto size = (int32_t)value.get_property_str("length");
+
+			for (int32_t i = 0; i < size; ++i) {
+				auto elem = value.get_property_uint32(i);
+				result.push_back(Point(elem));
+			}
+		} else if (value.is_object()) {
+			result.push_back(Point(value));
+		}
+
+
+	} else {
+		throw std::runtime_error("Unknown selectable type");
+	}
+
+	return result;
+}
+
+bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
+		auto text = template_parser.resolve(p->text(), reg);
+		return nn::OCR(&screenshot).search(text).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
+		auto script = template_parser.resolve(p->text(), reg);
+		auto value = eval_js(script, screenshot);
+		if (value.is_bool()) {
+			return (bool)value;
+		} else if (value.is_array()) {
+			return (int32_t)(value.get_property(JS_PROP_LENGTH));
+		} else {
+ 			throw std::runtime_error("Unknown js return type");
+		}
 	} else {
 		throw std::runtime_error("Unknown selectable type");
 	}
 }
 
-bool VisitorInterpreter::visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot) {
+bool VisitorInterpreter::visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot) {
 	if (unop->t.type() == Token::category::exclamation_mark) {
-		return !visit_select_expr(unop->select_expr, screenshot);
+		return !visit_detect_expr(unop->select_expr, screenshot);
 	} else {
 		throw std::runtime_error("Unknown unop operation");
 	}
 }
 
-bool VisitorInterpreter::visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot) {
-	auto left_value = visit_select_expr(binop->left, screenshot);
+bool VisitorInterpreter::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot) {
+	auto left_value = visit_detect_expr(binop->left, screenshot);
 	if (binop->t.type() == Token::category::double_ampersand) {
 		if (!left_value) {
 			return false;
 		} else {
-			return left_value && visit_select_expr(binop->right, screenshot);
+			return left_value && visit_detect_expr(binop->right, screenshot);
 		}
 	} else if (binop->t.type() == Token::category::double_vertical_bar) {
 		if (left_value) {
 			return true;
 		} else {
-			return left_value || visit_select_expr(binop->right, screenshot);
+			return left_value || visit_detect_expr(binop->right, screenshot);
 		}
 	} else {
 		throw std::runtime_error("Unknown binop operation");
@@ -799,7 +837,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
 
-			if (visit_select_expr(wait->select_expr, screenshot)) {
+			if (visit_detect_expr(wait->select_expr, screenshot)) {
 				return;
 			}
 
@@ -914,7 +952,7 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
 		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
-		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : "5s";
+		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : "1m";
 		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
 
 		if (mouse_move_click->object) {
@@ -962,7 +1000,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 {
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
-	std::vector<nn::Rect> found;
+	std::vector<Point> found;
 	while (std::chrono::system_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
@@ -989,7 +1027,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 		throw std::runtime_error("Too many occurences of entry to click: " + selectable->text());
 	}
 
-	vmc->vm->mouse_move_abs(found[0].center_x(), found[0].center_y());
+	vmc->vm->mouse_move_abs(found[0].x, found[0].y);
 }
 
 void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)
@@ -1538,7 +1576,7 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm->screenshot();
 
-			if (visit_select_expr(check->select_expr, screenshot)) {
+			if (visit_detect_expr(check->select_expr, screenshot)) {
 				return true;
 			}
 

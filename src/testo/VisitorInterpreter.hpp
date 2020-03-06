@@ -11,6 +11,27 @@
 #include <list>
 
 struct VisitorInterpreter {
+	struct Point {
+		Point() = default;
+		Point(const quickjs::Value& val) {
+			auto x_prop = val.get_property_str("x");
+			if (x_prop.is_undefined()) {
+				throw std::runtime_error("Object doesn't have the X propery");
+			}
+
+			auto y_prop = val.get_property_str("y");
+			if (y_prop.is_undefined()) {
+				throw std::runtime_error("Object doesn't have the Y propery");
+			}
+
+			x = (int32_t)x_prop;
+			y = (int32_t)y_prop;
+		}
+		Point(int32_t x, int32_t y): x(x), y(y) {}
+		int32_t x;
+		int32_t y;
+	};
+
 	struct InterpreterException: public std::exception {
 			explicit InterpreterException():
 				std::exception()
@@ -82,10 +103,11 @@ struct VisitorInterpreter {
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep);
-	bool visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
-	std::vector<nn::Rect> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
-	bool visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
-	bool visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
+	std::vector<Point> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
+	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
+	bool visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
+	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
 	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
 	void visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ISelectable> selectable, const std::string& timeout);
 	void visit_mouse(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Mouse> mouse);
@@ -168,4 +190,5 @@ private:
 	std::unordered_map<std::string, std::vector<std::string>> charmap;
 
 	quickjs::Runtime js_runtime;
+	std::shared_ptr<quickjs::Context> js_current_ctx;
 };

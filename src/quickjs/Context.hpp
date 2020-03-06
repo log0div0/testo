@@ -5,6 +5,25 @@
 
 namespace quickjs {
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+
+static JSClassID nn_rect_class_id;
+
+static JSClassDef nn_rect_class = {
+	"NN_Rect",
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+};
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 struct ContextRef {
 	ContextRef(JSContext* handle);
 
@@ -23,9 +42,15 @@ struct ContextRef {
 	Value throw_(Value val);
 
 	Value new_bool(bool val);
+	Value new_int32(int32_t val);
 	Value new_undefined();
 	Value new_string(const std::string& val);
 	Value new_function(JSCFunction* f, const std::string& name, size_t length);
+	Value new_array(size_t length);
+	Value new_object_class(int class_id);
+
+	void* mallocz(size_t size);
+	void free(void* ptr);
 
 	::JSContext* handle = nullptr;
 };
