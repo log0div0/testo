@@ -170,7 +170,7 @@ private:
 	Token dvd();
 	Token if_();
 	Token else_();
-	Token in();
+	Token IN();
 	Token RANGE();
 	Token break_();
 	Token continue_();

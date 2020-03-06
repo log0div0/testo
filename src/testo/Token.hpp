@@ -49,7 +49,7 @@ struct Token {
 		dvd,
 		if_,
 		else_,
-		in,
+		IN,
 		RANGE,
 		break_,
 		continue_,
@@ -225,7 +225,7 @@ struct Token {
 			return "IF";
 		case else_:
 			return "ELSE";
-		case in:
+		case IN:
 			return "IN";
 		case RANGE:
 			return "RANGE";

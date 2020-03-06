@@ -1014,7 +1014,7 @@ std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 
 	match(Token::category::id);
 
-	match(Token::category::in);
+	match(Token::category::IN);
 
 	if (!test_counter_list()) {
 		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted a RANGE");

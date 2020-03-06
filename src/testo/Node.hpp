@@ -1553,7 +1553,7 @@ struct ForClause: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + "(" + counter.value() + " in " + std::string(*counter_list) + ")";
+		std::string result = t.value() + "(" + counter.value() + " IN " + std::string(*counter_list) + ")";
 
 		result += std::string(*cycle_body);
 		if (else_action) {

@@ -258,8 +258,8 @@ Token Lexer::id() {
 		return if_();
 	} else if (value == "else") {
 		return else_();
-	} else if (value == "in") {
-		return in();
+	} else if (value == "IN") {
+		return IN();
 	} else if (value == "RANGE") {
 		return RANGE();
 	} else if (value == "break") {
@@ -576,11 +576,11 @@ Token Lexer::else_() {
 	return Token(Token::category::else_, value, tmp_pos);
 }
 
-Token Lexer::in() {
+Token Lexer::IN() {
 	Pos tmp_pos = current_pos;
-	std::string value("in");
+	std::string value("IN");
 	current_pos.advance(value.length());
-	return Token(Token::category::in, value, tmp_pos);
+	return Token(Token::category::IN, value, tmp_pos);
 }
 
 Token Lexer::RANGE() {
