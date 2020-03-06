@@ -27,7 +27,8 @@ test install_astralinux {
 		wait "Графическая установка" && js "detect_text(\"Русский\", \"white\", \"blue\")"
 		press Enter, Down
 		wait js """detect_text("Установка", "white")"""; press Enter
-		wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
+		#wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
+		wait js "detect_text('Лицензия')" timeout 2m; select_menu_horizontal("Да");
 		wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
 		wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
 		wait "Имя учётной записи администратора"; type "${login}"; press Enter

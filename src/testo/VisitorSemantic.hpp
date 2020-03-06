@@ -30,10 +30,10 @@ struct VisitorSemantic {
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
 
-	void visit_select_expr(std::shared_ptr<AST::ISelectExpr> select_expr);
-	void visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable);
-	void visit_select_unop(std::shared_ptr<AST::SelectUnOp> unop);
-	void visit_select_binop(std::shared_ptr<AST::SelectBinOp> binop);
+	void visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr);
+	void visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable);
+	void visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop);
+	void visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop);
 
 	void visit_expr(std::shared_ptr<AST::IExpr> expr);
 	void visit_binop(std::shared_ptr<AST::BinOp> binop);
