@@ -73,6 +73,10 @@ struct HardwareDeviceInfo {
 			throw std::runtime_error("SetupDiGetDeviceInterfaceDetail failed (2)");
 		}
 
+		if (deviceInterfaceDetailData->DevicePath == nullptr) {
+			throw std::runtime_error("deviceInterfaceDetailData->DevicePath == nullptr");
+		}
+
 		return winapi::utf16_to_utf8(deviceInterfaceDetailData->DevicePath);
 	}
 

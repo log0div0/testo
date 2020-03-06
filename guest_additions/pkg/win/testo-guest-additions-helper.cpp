@@ -55,6 +55,10 @@ void install() {
 		spdlog::info("Command output: " + output);
 	}
 
+	spdlog::info("Sleeping 10s");
+	std::this_thread::sleep_for(10s);
+	spdlog::info("Sleeping done");
+
 	{
 		winapi::SCManager manager;
 		winapi::Service service = manager.service("Testo Guest Additions");

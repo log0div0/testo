@@ -153,7 +153,11 @@ void HyperVVM::install() {
 }
 
 void HyperVVM::undefine() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		connect.machine(name()).destroy();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 
