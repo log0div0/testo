@@ -1461,8 +1461,11 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std
 		reg.local_vars.pop_back();
 	});
 	uint32_t i = 0;
-	for (i = for_clause->start(); i <= for_clause->finish(); i++) {
-		reg.local_vars[ctx_position].define(for_clause->counter.value(), std::to_string(i));
+	auto values = for_clause->counter_list->values();
+
+	for (i = 0; i < values.size(); ++i) {
+		reg.local_vars[ctx_position].define(for_clause->counter.value(), values[i]);
+
 		try {
 			visit_action(vmc, for_clause->cycle_body);
 		} catch (const CycleControlException& cycle_control) {
@@ -1476,7 +1479,7 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std
 		}
 	}
 
-	if ((i == for_clause->finish() + 1) && for_clause->else_token) {
+	if ((i == values.size()) && for_clause->else_token) {
 		visit_action(vmc, for_clause->else_action);
 	}
 }
