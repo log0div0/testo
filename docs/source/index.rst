@@ -12,4 +12,5 @@
 
    getting_started/index
    lang/index
+   rn/index
 
