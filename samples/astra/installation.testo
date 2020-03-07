@@ -24,11 +24,10 @@ param what_to_wait "Графическая установка"
 test install_astralinux {
 	astra {
 		start
-		wait "Графическая установка" && js "detect_text(\"Русский\", \"white\", \"blue\")"
+		wait "Графическая установка" && js "detect_text('Русский', 'white', 'blue')"
 		press Enter, Down
-		wait js """detect_text("Установка", "white")"""; press Enter
-		#wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
-		wait js "detect_text('Лицензия')" timeout 2m; select_menu_horizontal("Да");
+		wait js "detect_text('Установка', 'white')"; press Enter
+		wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
 		wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
 		wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
 		wait "Имя учётной записи администратора"; type "${login}"; press Enter
@@ -74,7 +73,7 @@ test install_astralinux_gui {
 		wait "Выберите имя учётной записи администратора"; type "${login}"; mouse click "Продолжить"
 		wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}";
 		mouse click "Продолжить"
-		wait "Выберите часовой пояс" && js """detect_text("Москва+00", "white", "red")"""; mouse click "Продолжить"
+		wait "Выберите часовой пояс" && js "detect_text('Москва+00', 'white', 'red')"; mouse click "Продолжить"
 		wait "Метод разметки"; mouse click "Продолжить"
 		wait "Заметим, что все данные на выбранном диске будут стерты"; mouse click "Продолжить"
 		wait "Диск может быть размечен по одной из следующих схем"; mouse click "Продолжить"

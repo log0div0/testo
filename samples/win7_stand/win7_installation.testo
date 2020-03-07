@@ -86,8 +86,8 @@ test win7_installation_mouse {
 
 		wait "Выберите нужный язык"; click_lowermost("Далее") #2 "Далее"
 		mouse click "Установить" timeout 1m;
-		#wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
-		wait "Выберите операционную систему"; mouse click "Далее"
+		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
+		#wait "Выберите операционную систему"; mouse click "Далее"
 		wait "Условия лицензии"
 		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
 		wait "Выберите тип установки";
@@ -116,18 +116,13 @@ test win7_installation_mouse {
 
 test new_folder: win7_installation_mouse {
 	win7 {
-		mouse move js """
-			array = detect_text('Корзина')
-			point = {x: array[0].x + 50, y: array[0].y}
-		""" timeout 10s
-
 		mouse move 400 300
 		mouse rclick
 		mouse move js "detect_text('Создать')" timeout 10s
 		#mouse move "Создать" timeout 10s
 		mouse click "Папку" timeout 10s
 		wait "Новая папка"; press Backspace; type "УДАЛИТЬ"; press Enter
-		sleep 2s
+		sleep 1s
 	}
 }
 
@@ -137,7 +132,7 @@ test remove_folder: new_folder {
 		mouse hold lbtn
 		mouse move "Корзина"
 		mouse release
-		sleep 2s
+		sleep 1s
 	}
 }
 
@@ -148,12 +143,12 @@ test guest_additions_mouse: win7_installation_mouse {
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		mouse click "Выполнить testo-guest-additions" timeout 1m
 		wait "Вас приветствует мастер установки"; mouse click "Далее"
-		wait "Выбор папки для установки"; press Enter #2 "Далее"
-		wait "Подтверждение установки"; press Enter #2 "Далее"
+		wait "Выбор папки для установки"; click_lowermost("Далее")
+		wait "Подтверждение установки"; click_lowermost("Далее")
 		wait "Разрешить внесение изменений"; press Left, Enter
 		wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
 
-		wait "Установка завершена"; press Enter #2 "Закрыть"
+		wait "Установка завершена"; click_lowermost("Закрыть")
 		wait !"Установка завершена"
 		exec cmd "echo hello world"
 		copyto "test.txt" "C:\\tmp\\test.txt"

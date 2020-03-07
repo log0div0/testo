@@ -34,11 +34,11 @@ machine UB {
 
 macro install_continent(id) {
 	start
-	sleep 3s
+	wait "Please select"; press Up, Enter
 	wait "Установить Континент"; press Enter
 	wait "Выберите тип платформы"; press Enter
 	wait "Введите идентификатор шлюза"; type "${id}"; press Enter*2
-	wait "Установить Континент" timeout 10m; stop; unplug dvd; start
+	wait "Please select" timeout 15m; stop; unplug dvd; start
 	wait "Главное меню" timeout 10m
 }
 
@@ -56,8 +56,8 @@ test install_UB {
 
 macro select_local_menu(string) {
 	wait "${string}"
-	for i in 0..20 {
-		if (check js """detect_text("${string}", "blue", "gray")""" timeout 50ms) {
+	for (i IN RANGE "20") {
+		if (check js "detect_text('${string}', 'blue', 'gray')" timeout 50ms) {
 			press Enter;
 			break;
 		}
@@ -70,8 +70,8 @@ macro select_local_menu(string) {
 
 macro select_local_menu_horizontal(string) {
 	wait "${string}"
-	for i in 0..5 {
-		if (check js """detect_text("${string}", "blue", "gray")""" timeout 50ms) {
+	for (i IN RANGE "5") {
+		if (check js "detect_text('${string}', 'blue', 'gray')" timeout 50ms) {
 			press Enter;
 			break;
 		}
@@ -86,7 +86,6 @@ test init_CUS: install_CUS {
 	CUS {
 		select_local_menu("Инициализация");
 		wait "Инициализировать устройство как"; press Up*2; select_local_menu("Начать инициализацию")
-		wait "Очистить локальные журналы"; select_local_menu_horizontal("Да")
 		wait "Успешно" timeout 5m; press Enter;
 		select_local_menu("Сертификаты");
 		select_local_menu("Сертификаты УЦ")
@@ -123,7 +122,6 @@ test init_UB: install_UB {
 	UB {
 		select_local_menu("Инициализация");
 		wait "Инициализировать устройство как"; press Enter
-		wait "Очистить локальные журналы"; select_local_menu_horizontal("Да")
 		wait "Успешно" timeout 6m; press Enter;
 		wait "Главное меню";
 	}
@@ -157,7 +155,10 @@ test config_UB: init_CUS, init_UB {
 	CUS {
 		plug flash ub_flash
 		select_local_menu("Вход в систему")
-		select_local_menu_horizontal("Соболь")
+		select_local_menu_horizontal("Учетная запись")
+		wait "Вход в систему"
+		type "admin"; press Tab
+		type "Cont-4.X"; press Enter
 		select_local_menu("Сертификаты")
 		select_local_menu("Сертификаты управления")
 		wait "F2 - Выпуск серт."; press F2
@@ -170,7 +171,7 @@ test config_UB: init_CUS, init_UB {
 		wait "Сертификаты управления"; press Esc
 		select_local_menu("Возврат в предыдущее меню")
 		select_local_menu("Инструменты")
-		select_local_menu("Создать узел безопасности")
+		select_local_menu("Создать Узел Безопасности")
 		wait "Введите ID узла безопасности"; type "${ub_id}"; press Enter
 		wait "Выбор сертификата управления"; select_local_menu("UB-${ub_id}")
 		wait "Узел безопасности ${ub_id} успешно создан" timeout 2m; press Enter
