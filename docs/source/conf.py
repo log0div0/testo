@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = u'testo'
-copyright = u'2019, Alexander Samoylov'
+copyright = u'2020, Alexander Samoylov'
 author = u'Alexander Samoylov'
 
 # The short X.Y version
