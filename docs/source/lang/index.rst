@@ -20,6 +20,7 @@
     test
     macro
     actions
+    mouse
     js_selections
     if
     for
