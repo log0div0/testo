@@ -100,7 +100,6 @@ test win7_installation_mouse {
 		wait "Выберите имя пользователя" timeout 15m
 		unplug dvd
 		press LeftShift + LeftAlt; type "testo"; mouse click "Далее"
-		#wait "Установите пароль"; mouse click "Далее"
 		wait "Установите пароль"; click_lowermost("Далее")
 		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
 		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
@@ -116,15 +115,9 @@ test win7_installation_mouse {
 
 test new_folder: win7_installation_mouse {
 	win7 {
-		mouse move js """
-			array = detect_text('Корзина')
-			point = {x: array[0].x + 50, y: array[0].y}
-		""" timeout 10s
-
 		mouse move 400 300
 		mouse rclick
-		mouse move js "detect_text('Создать')" timeout 10s
-		#mouse move "Создать" timeout 10s
+		mouse move "Создать" timeout 10s
 		mouse click "Папку" timeout 10s
 		wait "Новая папка"; press Backspace; type "УДАЛИТЬ"; press Enter
 		sleep 2s
