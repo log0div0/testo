@@ -1,5 +1,13 @@
 
+param default_netmask "24"
+param default_password "Cont-4.X"
+
 param cus_id "150"
+param cus_main_ip "192.168.0.1"
+
+param client_ip "192.168.0.5"
+param client_netmask "255.255.255.0"
+
 param ub_id "250"
 
 network cus_ub {
@@ -16,15 +24,13 @@ machine CUS {
 	iso: "${ISO_DIR}/Continent.iso"
 	disk_size: 20Gb
 
-	nic UB_side: {
-		slot: 0
-		attached_to: "cus_ub"
+	nic client_side: {
+		attached_to: "cus_client"
 		mac: "52:54:00:00:00:AA"
 	}
 
-	nic client_side: {
-		slot: 0
-		attached_to: "cus_client"
+	nic UB_side: {
+		attached_to: "cus_ub"
 		mac: "52:54:00:00:00:BB"
 	}
 }
@@ -131,9 +137,9 @@ test init_CUS: install_CUS {
 		select_local_menu("Настройка ЦУС")
 		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
 		wait "Выбор сертификата управления"; select_local_menu("Control")
-		wait "Пароль для встроенного администратора"; type "Cont-4.X"; press Down; type "Cont-4.X"; press Enter
+		wait "Пароль для встроенного администратора"; type "${default_password}"; press Down; type "${default_password}"; press Enter
 		wait "Выберите интерфейс управления"; select_local_menu("fe-0-0")
-		wait "Настройка интерфейса управления"; type "192.168.0.1/24"; press Enter
+		wait "Настройка интерфейса управления"; type "${cus_main_ip}/${default_netmask}"; press Enter
 		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
 		wait "Система успешно настроена" timeout 15m; press Enter
 	}
@@ -153,7 +159,7 @@ flash ub_flash {
 	size: 16Mb
 }
 
-test config_UB: init_CUS, init_UB {
+/*test config_UB: init_CUS, init_UB {
 	#CUS init
 	UB {
 		select_local_menu("Сертификаты")
@@ -225,7 +231,7 @@ test config_UB: init_CUS, init_UB {
 		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
 		wait "Инструменты"
 	}
-}
+}*/
 
 macro click_lowermost(text) {
 	mouse click js """
@@ -316,6 +322,44 @@ test client_configure_windows: client_install_guest_additions {
 test client_install_cryptopro: client_configure_windows {
 	client {
 		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
-		abort "stop here"
+		mouse dclick "CSPSetup"
+		mouse click "Установить (рекомендуется)"
+		wait "CSP успешно установлен" timeout 10m
+		mouse click "OK"
+		sleep 2s
+	}
+}
+
+test client_install_ms: client_install_cryptopro {
+	client {
+		copyto "${MS_DIR}/MS" "C:\\Users\\testo\\Desktop\\MS"
+
+		mouse dclick "MS"
+		mouse dclick "setup"
+		click_lowermost("Установить")
+		mouse move 0 0
+		wait "Вас приветствует программа установки" timeout 10m
+		click_lowermost("Далее")
+		mouse click "Я принимаю условия"; click_lowermost("Далее")
+		mouse move 0 0
+		wait "Папка назначения"; click_lowermost("Далее")
+		mouse move 0 0; click_lowermost("Установить")
+		mouse move 0 0
+		wait "Программа завершена" timeout 5m; click_lowermost("Готово")
+		wait "Требуется перезагрузка"; press Enter
+		sleep 5s
+		wait "Корзина" timeout 5m
+	}
+}
+
+test client_connect_CUS: client_install_ms {
+	client {
+		/*exec cmd "netsh interface ip set address \
+		name=\"Подключение по локальной сети\" \
+		static ${client_ip} ${client_netmask} ${cus_main_ip}"*/
+
+		#mouse click "Общественная сеть"; mouse click "Закрыть"
+
+		abort "Stop here"
 	}
 }

@@ -69,3 +69,11 @@ test win7_copyto: win7_guest_additions {
 		wait "привет, мир!"
 	}
 }
+
+test win7_exec_quotes: win7_guest_additions {
+	win7 {
+		exec cmd "netsh interface ip set address \
+		name=\"Подключение по локальной сети\" \
+		static 192.168.0.5 255.255.255.0 192.168.0.1"
+	}
+}
