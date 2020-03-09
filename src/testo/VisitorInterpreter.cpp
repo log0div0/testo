@@ -1239,7 +1239,9 @@ static std::string build_shell_script(const std::string& body) {
 }
 
 static std::string build_batch_script(const std::string& body) {
-	return body;
+	std::string script = "chcp 65001\n";
+	script += body;
+	return script;
 }
 
 static std::string build_python_script(const std::string& body) {
