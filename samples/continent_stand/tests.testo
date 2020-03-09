@@ -352,14 +352,56 @@ test client_install_ms: client_install_cryptopro {
 	}
 }
 
-test client_connect_CUS: client_install_ms {
+test client_connect_CUS: client_install_ms, init_CUS {
 	client {
-		/*exec cmd "netsh interface ip set address \
-		name=\"Подключение по локальной сети\" \
-		static ${client_ip} ${client_netmask} ${cus_main_ip}"*/
+		press LeftAlt + LeftShift
+		press LEFTMETA; wait "Все программы"
+		type "cmd"; press Enter
+		wait "cmd.exe"
+		press LeftAlt + LeftShift
+		type "netsh interface ip set address name=\""
+		press LeftAlt + LeftShift
+		type "Подключение по локальной сети"
+		press LeftAlt + LeftShift
+		type "\" static ${client_ip} ${client_netmask} ${cus_main_ip}"
+		press Enter
 
-		#mouse click "Общественная сеть"; mouse click "Закрыть"
+		type "exit"; press Enter
 
-		abort "Stop here"
+		mouse click "Общественная сеть"; mouse click "Закрыть"
+
+		mouse dclick "Менеджер"
+		wait "Подключение к ЦУС"
+		press LeftAlt + LeftShift
+
+		mouse click js "found = detect_text('Сервер')[0]; target = {x: found.x + 150, y: found.y}"
+		type "${cus_main_ip}"
+
+		mouse click js "found = detect_text('Учётная запись')[0]; target = {x: found.x + 150, y: found.y}"
+		type "admin"
+
+		mouse click js "found = detect_text('Пароль')[0]; target = {x: found.x + 150, y: found.y}"
+		type "${default_password}"
+
+		mouse click "Подключить"
+
+		wait "${cus_main_ip} - Континент"
+	}
+}
+
+test install_allow_all_policy: client_connect_CUS {
+	client {
+		press LeftAlt + Space
+		mouse click "Развернуть"
+		mouse click "Первое правило"
+		mouse click "Пропустить"
+		mouse click "Установить"
+
+		wait "Установить политики"
+		mouse click js "found = detect_text('node-${cus_id}')[0]; target = {x: found.x - 65, y: found.y}"
+		click_lowermost("ОК")
+
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет"
 	}
 }
