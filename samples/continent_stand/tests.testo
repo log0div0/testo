@@ -2,7 +2,11 @@
 param cus_id "150"
 param ub_id "250"
 
-network net1 {
+network cus_ub {
+	mode: "internal"
+}
+
+network cus_client {
 	mode: "internal"
 }
 
@@ -14,8 +18,14 @@ machine CUS {
 
 	nic UB_side: {
 		slot: 0
-		attached_to: "net1"
+		attached_to: "cus_ub"
 		mac: "52:54:00:00:00:AA"
+	}
+
+	nic client_side: {
+		slot: 0
+		attached_to: "cus_client"
+		mac: "52:54:00:00:00:BB"
 	}
 }
 
@@ -27,8 +37,19 @@ machine UB {
 
 	nic UB_side: {
 		slot: 0
-		attached_to: "net1"
-		mac: "52:54:00:00:00:BB"
+		attached_to: "cus_ub"
+		mac: "52:54:00:00:11:AA"
+	}
+}
+
+machine client {
+	cpus: 2
+	ram: 2Gb
+	iso: "${ISO_DIR}/win7.iso"
+	disk_size: 20Gb
+	nic nat: {
+		attached_to: "cus_client"
+		adapter_type: "e1000"
 	}
 }
 
@@ -203,5 +224,98 @@ test config_UB: init_CUS, init_UB {
 		wait "Локальные изменения"; press Space, Enter
 		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
 		wait "Инструменты"
+	}
+}
+
+macro click_lowermost(text) {
+	mouse click js """
+		arr = detect_text('${text}')
+		if (arr.length) {
+			arr.sort(function (a, b) {
+				return a.Y < b.Y
+			});
+
+			arr[arr.length - 1]
+		} else {
+			arr
+		}
+	""" timeout 2m
+}
+
+test client_install_win7 {
+	client {
+		start
+		wait "Choose an operating system"
+		press Down, Enter
+
+		mouse click "Мой язык - русский" timeout 2m;
+
+		wait "Выберите нужный язык"; click_lowermost("Далее") #2 "Далее"
+		mouse click "Установить" timeout 1m;
+		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
+		#wait "Выберите операционную систему"; mouse click "Далее"
+		wait "Условия лицензии"
+		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
+		wait "Выберите тип установки";
+		if (check "Полная установка") {
+			mouse click "Полная установка"
+		} else {
+			mouse click "Выборочная"
+		}
+		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
+		wait "Выберите имя пользователя" timeout 15m
+		unplug dvd
+		press LeftShift + LeftAlt; type "testo"; mouse click "Далее"
+		wait "Установите пароль"; click_lowermost("Далее")
+		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
+		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
+		wait "Проверьте настройку даты и времени"; mouse click "Далее"
+		wait "Выберите текущее место расположения компьютера"; mouse click "Общественная сеть"
+		wait "Корзина" timeout 10m
+		shutdown
+		start
+		wait "Корзина"
+	}
+}
+
+test client_install_guest_additions: client_install_win7 {
+	client {
+		sleep 5s
+
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		mouse click "Выполнить testo-guest-additions" timeout 1m
+		wait "Вас приветствует мастер установки"; mouse click "Далее"
+		wait "Выбор папки для установки"; click_lowermost("Далее")
+		wait "Подтверждение установки"; click_lowermost("Далее")
+		wait "Разрешить внесение изменений"; press Left, Enter
+		wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
+
+		wait "Установка завершена"; click_lowermost("Закрыть")
+		wait !"Установка завершена"
+		exec cmd "echo hello world"
+	}
+}
+
+test client_configure_windows: client_install_guest_additions {
+	client {
+		press LEFTMETA
+		mouse click "Панель управления"
+		mouse click "Категория"
+		mouse click "Мелкие значки"
+		mouse click "Учетные записи"
+		mouse click "Изменение параметров контроля учетных записей"
+		mouse dclick js "found = detect_text('Никогда')[0]; target = {x: found.x, y: found.y - 50}"
+		click_lowermost("ОК")
+		wait "Microsoft Windows"; press Left, Enter
+		wait "Внесение изменений в учетную запись"
+		press LeftAlt+F4
+		wait "Корзина"
+	}
+}
+
+test client_install_cryptopro: client_configure_windows {
+	client {
+		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
+		abort "stop here"
 	}
 }
