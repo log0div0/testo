@@ -95,6 +95,7 @@ mouse move
 Примеры:
 
 .. code-block:: none
+
 	#Сработает в любом случае
 	mouse move 400 0
 

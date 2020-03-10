@@ -12,16 +12,10 @@
 	- менеджер управления виртуальными машинами virt-manager (рекомендуется, но необязательно, нужен если требуется интерактивное взаимодействие с виртуальными машинами)
 
 Команды для установки
-	- Обязательно: sudo apt install libvirt0 libvirt-clients libvirt-daemon-system qemu qemu-kvm
+	- Обязательно: sudo apt install testo-1.4.0.deb
 	- Рекомендовано: sudo apt install virt-manager
 
 После установки пакетов нужно перезагрузить систему
-
-1.2. Установка платформы Testo
-
-Для установки платформы Testo достаточно выполнить одну команду:
-
-	sudo dpkg -i testo-1.4.0.deb
 
 2. Подготовка IDE с настройкой подсветки для синтаксиса
 
@@ -38,18 +32,22 @@
 
 Если по какой-то причине Вы не можете воспользоваться пакетным менеджером, можно установить файл с подсветкой синтаксиса вручную. Для этого скопируйте файл Testo.sublime-syntax в папку ~/.config/sublime-text-3/Pacakges/User/
 
-3. Запуск скриптов из папки samples
+3. Лицензия
 
-3.1. Запуск скрипта ubuntu_installation.testo
+Для работы платформы Testo требуется наличие лицензии. Если у вас нет в наличии файла с лицензией, напишите нам (a.samoylov@testo-lang.ru) и мы обязательного этот файл вам предоставим
+
+4. Запуск скриптов из папки samples
+
+4.1. Запуск скрипта ubuntu_installation.testo
 
 Требования:
-	- Наличие образа Ubuntu Server ubuntu-16.04.6-server-amd64.iso (подходят и другие версии ubuntu server. Если они называются по-другому, необходимо подправить файл ubuntu_installation.testo)
+	- Наличие установочного образа Ubuntu Server ubuntu-16.04.6-server-amd64.iso (подходят и другие версии ubuntu server. Если они называются по-другому, необходимо подправить файл ubuntu_installation.testo)
 
 Скрипт ubuntu_installation.testo автоматизирует установку ubuntu server 16.04.
 
-Предположим, что файл с образом Ubuntu Server находится в папке /opt/iso, а распакованная папка samples - в /opt/samples Тогда для запуска запустите следующую команду:
+Предположим, что файл с образом Ubuntu Server находится в папке /opt/iso, лицензия расположена в файле /opt/testo/license, а распакованная папка samples - в /opt/samples. Тогда для запуска запустите следующую команду:
 
-	sudo testo run /opt/samples/ubuntu_installation.testo --param ISO_DIR /opt/iso
+	sudo testo run /opt/samples/ubuntu_installation.testo --param ISO_DIR /opt/iso --license /opt/testo/license
 
 Работу интерпретатора Testo можно наблюдать в программе virt-manager
 
@@ -57,30 +55,28 @@
 
 	sudo testo clean
 
-3.2. Запуск стенда vpn_stand.testo
+4.2. Запуск стенда vpn_stand
 
 Требования:
-	- Наличие образа Ubuntu Server ubuntu-16.04.6-server-amd64.iso (подходят и другие версии ubuntu server. Если они называются по-другому, необходимо подправить файл ubuntu_installation.testo)
-	- Наличие образа negotiator.iso в одной папке с образом Ubuntu Server
+	- Наличие установочного образа Ubuntu Server ubuntu-16.04.6-server-amd64.iso (подходят и другие версии ubuntu server. Если они называются по-другому, необходимо подправить файл installations.testo)
+	- Наличие образа guest-additions.iso в одной папке с образом Ubuntu Server
 	- На хостовой машине налажен доступ в Интернет
 
 Предположим, что файлы с образами iso находятся в папке /opt/iso, а распакованная папка samples - в /opt/samples Тогда для запуска запустите следующую команду:
 
-	sudo testo run /opt/samples/vpn_stand --param ISO_DIR /opt/iso
+	sudo testo run /opt/samples/vpn_stand --param ISO_DIR /opt/iso --license /opt/testo/license
 
 Если для доступа в Интернет Вы используете прокси, то необходимо указать его адрес в виде отдельного параметра
 
-	sudo testo run /opt/samples/vpn_stand --param ISO_DIR /opt/iso --param HTTP_PROXY ${HTTP_PROXY}
+	sudo testo run /opt/samples/vpn_stand --param ISO_DIR /opt/iso --license /opt/testo/license --param HTTP_PROXY ${HTTP_PROXY}
 
-3.2. Запуск стенда url_stand.testo
 
-Запуск этого стенда полностью совпадает с запуском стенда vpn_stand.testo
+4.3. Запуск стенда astra
 
-ВНИМАНИЕ! В настоящее время тест configure_squid заканчивается неудачей из-за ошибки компиляции модуля ecap_clamav_adapter, что вызвано обновлением clamav в недавнее время.
+Требования:
+	- Наличие установочного образа Astralinux (orel-current.iso)
+	- Наличие образа guest-additions.iso в одной папке с образом Astralinux
 
-4. Использование лицензии
+Предположим, что файлы с образами iso находятся в папке /opt/iso, а распакованная папка samples - в /opt/samples Тогда для запуска запустите следующую команду:
 
-При наличии лицензии укажите путь к ней с помощью аргумента --license
-Например, если лицензия хранится в файле /opt/testo/liсense, то запуск сценария ubuntu_installations.testo будет выглядеть так:
-
-	sudo testo run /opt/samples/ubuntu_installation.testo --param ISO_DIR /opt/iso --license /opt/testo/license
+	sudo testo run /opt/samples/astra --param ISO_DIR /opt/iso --license /opt/testo/license
