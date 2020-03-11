@@ -109,7 +109,7 @@ void QemuFlashDrive::create() {
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 
 		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path().generic_string() + "\"");
-		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
+		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary ntfs 0% 100%");
 		auto fs = config.at("fs").get<std::string>();
 		if (fs == "ntfs") {
 			exec_and_throw_if_failed("mkfs." + fs + " -f /dev/nbd0p1");
