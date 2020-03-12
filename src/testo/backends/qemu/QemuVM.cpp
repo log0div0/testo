@@ -770,7 +770,7 @@ void QemuVM::attach_nic(const std::string& nic) {
 		}
 
 		//TODO: check if CURRENT is enough
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -794,7 +794,7 @@ void QemuVM::detach_nic(const std::string& nic) {
 		auto devices = config.first_child().child("devices");
 
 		//TODO: check if CURRENT is enough
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -904,7 +904,7 @@ void QemuVM::set_link(const std::string& nic, bool is_connected) {
 					}
 				}
 
-				std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+				std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 				if (domain.is_active()) {
 					flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -965,7 +965,7 @@ void QemuVM::attach_flash_drive(const std::string& img_path) {
 
 		//we just need to create new device
 		//TODO: check if CURRENT is enough
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -996,7 +996,7 @@ void QemuVM::detach_flash_drive() {
 		auto devices = config.first_child().child("devices");
 
 		//TODO: check if CURRENT is enough
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -1097,7 +1097,7 @@ void QemuVM::plug_dvd(fs::path path) {
 			</disk>
 		)", path.generic_string().c_str());
 
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -1124,7 +1124,7 @@ void QemuVM::unplug_dvd() {
 
 		cdrom.remove_child("source");
 
-		std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);

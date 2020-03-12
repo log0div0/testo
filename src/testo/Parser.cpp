@@ -692,8 +692,8 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: unknown mouse action: " + LT(1).value());
 	}
 
-	auto action = std::shared_ptr<Mouse>(new Mouse(mouse_token, event));
-	return std::shared_ptr<Action<Mouse>>(new Action<Mouse>(action));
+	auto action = std::make_shared<Mouse>(mouse_token, event);
+	return std::make_shared<Action<Mouse>>(action);
 }
 
 std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click() {
@@ -733,8 +733,8 @@ std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click()
 		throw std::runtime_error(std::string(timeout.pos()) + ": Error: timeout can't be used with coordinates");
 	}
 
-	auto move_click = std::shared_ptr<MouseMoveClick>(new MouseMoveClick(event_token, target, timeout));
-	return std::shared_ptr<MouseEvent<MouseMoveClick>>(new MouseEvent(move_click));
+	auto move_click = std::make_shared<MouseMoveClick>(event_token, target, timeout);
+	return std::make_shared<MouseEvent<MouseMoveClick>>(move_click);
 }
 
 std::shared_ptr<AST::MouseEvent<AST::MouseHold>> Parser::mouse_hold() {
@@ -744,16 +744,16 @@ std::shared_ptr<AST::MouseEvent<AST::MouseHold>> Parser::mouse_hold() {
 	Token button = LT(1);
 	match({Token::category::lbtn, Token::category::rbtn, Token::category::mbtn});
 
-	auto move_hold = std::shared_ptr<MouseHold>(new MouseHold(event_token, button));
-	return std::shared_ptr<MouseEvent<MouseHold>>(new MouseEvent(move_hold));
+	auto move_hold = std::make_shared<MouseHold>(event_token, button);
+	return std::make_shared<MouseEvent<MouseHold>>(move_hold);
 }
 
 std::shared_ptr<AST::MouseEvent<AST::MouseRelease>> Parser::mouse_release() {
 	Token event_token = LT(1);
 	match(Token::category::release);
 
-	auto move_release = std::shared_ptr<MouseRelease>(new MouseRelease(event_token));
-	return std::shared_ptr<MouseEvent<MouseRelease>>(new MouseEvent(move_release));
+	auto move_release = std::make_shared<MouseRelease>(event_token);
+	return std::make_shared<MouseEvent<MouseRelease>>(move_release);
 }
 
 std::shared_ptr<AST::MouseEvent<AST::MouseWheel>> Parser::mouse_wheel() {
@@ -768,8 +768,8 @@ std::shared_ptr<AST::MouseEvent<AST::MouseWheel>> Parser::mouse_wheel() {
 
 	match(Token::category::id);
 
-	auto mouse_wheel = std::shared_ptr<MouseWheel>(new MouseWheel(event_token, direction));
-	return std::shared_ptr<MouseEvent<MouseWheel>>(new MouseEvent(mouse_wheel));
+	auto mouse_wheel = std::make_shared<MouseWheel>(event_token, direction);
+	return std::make_shared<MouseEvent<MouseWheel>>(mouse_wheel);
 }
 
 std::shared_ptr<MouseMoveTarget<MouseCoordinates>> Parser::mouse_coordinates() {
@@ -778,8 +778,8 @@ std::shared_ptr<MouseMoveTarget<MouseCoordinates>> Parser::mouse_coordinates() {
 	auto dy = LT(1);
 	match(Token::category::number);
 
-	auto target = std::shared_ptr<MouseCoordinates>(new MouseCoordinates(dx, dy));
-	return std::shared_ptr<MouseMoveTarget<MouseCoordinates>>(new MouseMoveTarget<MouseCoordinates>(target));
+	auto target = std::make_shared<MouseCoordinates>(dx, dy);
+	return std::make_shared<MouseMoveTarget<MouseCoordinates>>(target);
 }
 
 std::shared_ptr<Action<Plug>> Parser::plug() {

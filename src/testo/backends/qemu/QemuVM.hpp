@@ -4,6 +4,7 @@
 #include <pugixml/pugixml.hpp>
 #include "../VM.hpp"
 #include <qemu/Host.hpp>
+#include <unordered_map>
 
 struct QemuVM: public VM {
 	QemuVM() = delete;

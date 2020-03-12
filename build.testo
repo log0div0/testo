@@ -1,0 +1,144 @@
+
+network nat {
+	mode: "nat"
+}
+
+machine astra {
+	cpus: 2
+	iso: "${ISO_DIR}/astralinux-orel.iso"
+	ram: 4096Mb
+	disk_size: 20Gb
+
+	nic nat: {
+		attached_to: "nat"
+	}
+}
+
+param host_name "builder"
+param login "user"
+param password "12345678"
+
+test astra_install_os {
+	astra {
+		start
+		wait "ASTRALINUX"; press Enter;
+		wait !"Русский"; press Enter
+		wait "Лицензия"; mouse click "Продолжить"
+		wait "Настройка клавиатуры"; mouse click "Продолжить"
+		wait "Введите имя этого компьютера" timeout 5m;
+		press Backspace; type "${host_name}"; mouse click "Продолжить"
+		wait "Выберите имя учётной записи администратора"; type "${login}"; mouse click "Продолжить"
+		wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}";
+		mouse click "Продолжить"
+		wait "Выберите часовой пояс"; mouse click "Продолжить"
+		wait "Метод разметки"; mouse click "Продолжить"
+		wait "Заметим, что все данные на выбранном диске будут стерты"; mouse click "Продолжить"
+		wait "Диск может быть размечен по одной из следующих схем"; mouse click "Продолжить"
+		wait "Закончить разметку и записать изменения на диск"; mouse click "Продолжить"
+		wait "Записать изменения на диск?"; mouse click "Да"; mouse click "Продолжить"
+		wait "Выберите устанавливаемое программное обеспечение" timeout 10m;
+
+		# это убираем
+		mouse click "Приложения для работы с сенсорным экраном"; press Space
+		mouse click "Игры"; press Space
+		mouse click "Средства работы в Интернет"; press Space
+		mouse click "Офисные средства"; press Space
+		mouse click "Средства Мультимедиа"; press Space
+
+		# это добавляем
+		mouse click "Средства разработки и отладки"; press Space
+
+		mouse click "Продолжить"
+		wait "Дополнительные настройки ОС" timeout 30m;
+		mouse click "Системные часы установлены на местное время"; press Space
+		mouse click "Продолжить"
+		wait "Похоже, что данная система будет единственной"; mouse click "Продолжить"
+		wait "Устройство для установки системного загрузчика"; mouse click "/dev/sda"; mouse click "Продолжить"
+		wait "Установка завершена"
+		sleep 5s
+		unplug dvd
+		mouse click "Продолжить"
+		wait "Вход" timeout 10m; type "${login}"; press Tab; type "${password}"; press Enter
+		wait "Корзина"
+	}
+}
+
+test astra_install_guest_additions: astra_install_os {
+	astra {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		sleep 5s
+		mouse click "Открыть в менеджере файлов"
+		mouse dclick "testo-guest-additions-1.4.0.deb"
+		mouse click "Установить пакет"
+		wait "Пароль:"
+		type "${password}"; press Enter
+		wait "Завершено"
+		mouse click "Закрыть"
+		exec bash "echo Hello world"
+		mouse click "Домашняя"
+		mouse rclick "CDROM"
+		mouse click "Извлечь"
+		sleep 5s
+		unplug dvd
+	}
+}
+
+test astra_install_extra_packages: astra_install_guest_additions {
+		astra {
+			exec bash """
+				apt update
+				apt install -y git libssl-dev
+			"""
+		}
+}
+
+test astra_install_cmake: astra_install_extra_packages {
+	astra {
+		exec bash """
+			cd /root
+			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
+			tar xf cmake.tar.gz
+			cd CMake-3.16.5
+			./configure
+			make
+			make install
+			cmake --version
+		""" timeout 30m
+	}
+}
+
+test astra_build_onnxruntime: astra_install_cmake {
+	astra {
+		copyto "3rd_party/onnxruntime" "/root/onnxruntime_patches"
+		exec bash """
+			apt install -y python3-dev
+			cd /root
+			git clone https://github.com/microsoft/onnxruntime.git
+			cd onnxruntime
+			git checkout v1.1.0
+			git apply ../onnxruntime_patches/single_thread.patch
+			git apply ../onnxruntime_patches/rename_dll.patch
+			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests
+			mkdir /root/onnxruntime_release
+			mkdir /root/onnxruntime_release/include
+			mkdir /root/onnxruntime_release/lib
+			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_release/lib
+			cp include/onnxruntime/core/session/* /root/onnxruntime_release/include
+		""" timeout 2h
+	}
+}
+
+test astra_build_testo: astra_build_onnxruntime {
+	astra {
+		copyto "." "/root/testo"
+		exec bash """
+			apt install -y libvirt-dev rpm
+			cd /root/
+			mkdir testo_build
+			cd testo_build
+			cmake -DONNX_RUNTIME_DIR=/root/onnxruntime_release ../testo
+			make testo-package testo-guest-additions-iso -j 2
+		"""
+		copyfrom "/root/testo_build/out/pkg" "${OUT_DIR}/astra"
+	}
+}

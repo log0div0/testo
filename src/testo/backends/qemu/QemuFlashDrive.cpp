@@ -43,7 +43,7 @@ QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config
 				}
 
 				if (need_to_detach) {
-					std::vector flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+					std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
 
 					if (domain.is_active()) {
 						flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
