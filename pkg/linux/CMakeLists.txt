@@ -38,11 +38,13 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 	${CMAKE_CURRENT_SOURCE_DIR}/postrm;")
 
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
-	libvirt0 (>= 4.0.0), \
-	libvirt-clients (>= 4.0.0), \
-	libvirt-daemon-system (>= 4.0.0), \
-	qemu (>= 1.2.11), \
-	qemu-kvm (>= 2.11) \
+	libvirt0 (>= 3.0.0), \
+	libvirt-clients (>= 3.0.0), \
+	libvirt-daemon-system (>= 3.0.0), \
+	qemu (>= 2.8), \
+	qemu-kvm (>= 2.8) \
+	ebtables \
+	dnsmasq-base \
 ")
 
 add_package(testo-package)
