@@ -209,7 +209,7 @@ void Server::handle_execute(const nlohmann::json& args) {
 				{"success", true},
 				{"result", {
 					{"status", "pending"},
-					{"stdout", output.data()}
+					{"stdout", base64_encode((uint8_t*)output.data(), output.size() + 1)}
 				}}
 			};
 			channel.send(result);

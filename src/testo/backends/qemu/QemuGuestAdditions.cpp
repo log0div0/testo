@@ -140,11 +140,13 @@ int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_mil
 		}
 
 		auto result = response.at("result");
-		if (result.count("stderr")) {
-			reporter.exec_command_output(result.at("stderr").get<std::string>());
-		}
 		if (result.count("stdout")) {
-			reporter.exec_command_output(result.at("stdout").get<std::string>());
+			std::string output_base64 = result.at("stdout");
+			std::vector<uint8_t> output = base64_decode(output_base64);
+			if (output.back() != 0) {
+				throw std::runtime_error("Expect null-terminated string");
+			}
+			reporter.exec_command_output((char*)output.data());
 		}
 		if (result.at("status").get<std::string>() == "finished") {
 			return result.at("exit_code").get<int>();
