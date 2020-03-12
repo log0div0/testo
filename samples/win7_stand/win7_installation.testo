@@ -61,15 +61,24 @@ test guest_additions: win7_installation {
 	}
 }
 
-macro click_lowermost(text) {
+macro click_lowermost(text, index="0", x_shift="+0", y_shift="+0") {
 	mouse click js """
 		arr = detect_text('${text}')
 		if (arr.length) {
 			arr.sort(function (a, b) {
-				return a.Y < b.Y
+				if (a.y < b.y) {
+					return 1
+				}
+
+				if (a.y > b.y) {
+					return -1
+				}
+
+				return 0
 			});
 
-			arr[arr.length - 1]
+			obj = arr[${index}]
+			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
 		} else {
 			arr
 		}

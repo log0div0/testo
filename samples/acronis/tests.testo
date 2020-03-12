@@ -13,15 +13,72 @@ machine win7 {
 	}
 }
 
-macro click_lowermost(text) {
+macro click_lowermost(text, index="0", x_shift="+0", y_shift="+0") {
 	mouse click js """
 		arr = detect_text('${text}')
 		if (arr.length) {
 			arr.sort(function (a, b) {
-				return a.Y < b.Y
+				if (a.y < b.y) {
+					return 1
+				}
+
+				if (a.y > b.y) {
+					return -1
+				}
+
+				return 0
 			});
 
-			arr[arr.length - 1]
+			obj = arr[${index}]
+			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
+		} else {
+			arr
+		}
+	""" timeout 2m
+}
+
+macro click_topmost(text, index="0", x_shift="+0", y_shift="+0") {
+	mouse click js """
+		arr = detect_text('${text}')
+		if (arr.length) {
+			arr.sort(function (a, b) {
+				if (a.y > b.y) {
+					return 1
+				}
+
+				if (a.y < b.y) {
+					return -1
+				}
+
+				return 0
+			});
+
+			obj = arr[${index}]
+			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
+		} else {
+			arr
+		}
+	""" timeout 2m
+}
+
+macro click_leftmost(text, index="0", x_shift="+0", y_shift="+0") {
+	mouse click js """
+		arr = detect_text('${text}')
+		if (arr.length) {
+			arr.sort(function (a, b) {
+				if (a.x < b.x) {
+					return -1
+				}
+
+				if (a.x > b.x) {
+					return 1
+				}
+
+				return 0
+			});
+
+			obj = arr[${index}]
+			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
 		} else {
 			arr
 		}
@@ -83,14 +140,88 @@ test guest_additions: win7_installation {
 
 
 flash acronis_distrib {
-	size: 512Mb
-	fs: "vfat"
+	size: 1Gb
+	fs: "ntfs"
+	folder: "${ACRONIS_DIR}"
 }
 
-test install_acronis: guest_additions {
+test prepare: guest_additions {
+	win7 {
+		press LEFTMETA
+		mouse click "Панель управления"
+		mouse click "Категория"
+		mouse click "Мелкие значки"
+		mouse click "Учетные записи"
+		mouse click "Изменение параметров контроля учетных записей"
+		sleep 2s
+		mouse dclick js "found = detect_text('Никогда')[0]; target = {x: found.x, y: found.y - 50}"
+		click_lowermost("ОК")
+		wait "Microsoft Windows"; press Left, Enter
+		wait "Внесение изменений в учетную запись"
+		press LeftAlt+F4
+		wait "Корзина"
+
+		mouse rclick 400 200
+		mouse click "Разрешение экрана"
+		mouse click "800"
+		mouse click "1024 x 768"
+		mouse dclick "Применить"
+		mouse click "Сохранить изменения"
+		press LeftAlt+F4
+		wait "Корзина"
+
+	}
+}
+
+test install_acronis: prepare {
 	win7 {
 		plug flash acronis_distrib
+		mouse click "Открыть папку"
+		wait "AcronisTrueImage2020"
+		press LeftCtrl+A, LeftCtrl+C
+		press LeftAlt+F4
+		press LeftCtrl+V
+		wait "Копирование"
+		wait !"Копирование" timeout 5m
+		unplug flash acronis_distrib
 
-		abort "stop here"
+		mouse dclick "Acronis"
+		mouse click "Установить" timeout 5m
+		wait "Windows Internet Explorer" timeout 10m; press LeftAlt+F4
+		wait "Установка завершена"; press LeftAlt+F4
+		wait !"Установка завершена";
+	}
+}
+
+test activate_acronis: install_acronis {
+	win7 {
+		mouse dclick "Activation"
+		mouse dclick "Patch"
+		mouse click "Поиск: Activation"; press LeftAlt+F4
+		mouse click "Make Backup"
+		click_lowermost("Patch")
+		wait "Can not find the file"; press Enter
+
+		sleep 2s
+		click_leftmost("Activation", "1", "+100", "+0")
+		
+		press LeftShift + LeftAlt
+		wait "C:\\Users"; press Backspace
+		type "C:\\Program Files (x86)\\Acronis\\TrueImageHome"; press Enter
+		click_topmost("ti_managers.dll"); press Enter
+
+		wait "Can not find the file"; press Enter
+		sleep 2s
+		click_topmost("TrueImageTools"); press Enter
+
+		wait "Can not find the file"; press Enter
+		sleep 2s
+		click_leftmost("TrueImageHome", "0", "+100", "+0")
+		
+		wait "C:\\Program Files"; press Backspace
+		type "C:\\Program Files (x86)\\Common Files\\Acronis\\TrueImageHome"; press Enter
+		click_topmost("TrueImageHomeService"); press Enter
+		wait "PATCHING DONE"; mouse click "Exit"
+		wait !"PATCHING DONE"
 	}
 }
