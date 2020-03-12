@@ -225,3 +225,27 @@ test activate_acronis: install_acronis {
 		wait !"PATCHING DONE"
 	}
 }
+
+flash acronis_backup {
+	size: 6Gb
+	fs: "ntfs"
+}
+
+test make_backup: activate_acronis {
+	win7 {
+		mouse dclick "Acronis True"
+		mouse click "Я принимаю это соглашение"
+		click_lowermost("OK")
+		wait "Полное резервное" timeout 3m
+		mouse click "Больше не показывать"; mouse click "Пропустить"
+		press LeftAlt + Space
+		mouse click "Развернуть"
+		plug flash acronis_backup
+		mouse click "Выбор"
+		mouse click "NTFS, 6ГБ"
+		mouse click "Создать копию"
+		wait "Резервное копирование успешно завершено" timeout 30m
+		unplug flash acronis_backup
+		sleep 5s
+	}
+}
