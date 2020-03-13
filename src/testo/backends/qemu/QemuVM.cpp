@@ -1140,6 +1140,17 @@ void QemuVM::unplug_dvd() {
 void QemuVM::start() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
+		auto xml = domain.dump_xml();
+		xml.first_child().remove_child("cpu");
+		pugi::xml_document cpu;
+		cpu.load_string(R"(
+			<cpu mode='host-model'>
+				<model fallback='forbid'/>
+			</cpu>
+		)");
+		xml.first_child().append_copy(cpu.first_child());
+		qemu_connect.domain_define_xml(xml);
+		domain = qemu_connect.domain_lookup_by_name(id());
 		domain.start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Starting vm"));

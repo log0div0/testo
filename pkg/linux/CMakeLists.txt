@@ -42,8 +42,8 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	libvirt-clients (>= 3.0.0), \
 	libvirt-daemon-system (>= 3.0.0), \
 	qemu (>= 2.8), \
-	qemu-kvm (>= 2.8) \
-	ebtables \
+	qemu-kvm (>= 2.8), \
+	ebtables, \
 	dnsmasq-base \
 ")
 
