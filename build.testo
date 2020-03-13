@@ -76,6 +76,7 @@ test astra_install_guest_additions: astra_install_os {
 		mouse click "Закрыть"
 		exec bash "echo Hello world"
 		mouse click "Домашняя"
+		sleep 3s
 		mouse rclick "CDROM"
 		mouse click "Извлечь"
 		sleep 5s
