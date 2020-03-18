@@ -16,8 +16,8 @@ struct FlashDrive {
 	virtual void create() = 0;
 	virtual void undefine() = 0;
 	virtual bool is_mounted() const = 0;
-	virtual void mount() const = 0;
-	virtual void umount() const = 0;
+	virtual void mount() = 0;
+	virtual void umount() = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
 	virtual void make_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot(const std::string& snapshot) = 0;
@@ -30,7 +30,7 @@ struct FlashDrive {
 	nlohmann::json get_config() const;
 	bool has_folder() const;
 	void validate_folder() const;
-	void load_folder() const;
+	void load_folder();
 
 protected:
 	nlohmann::json config;

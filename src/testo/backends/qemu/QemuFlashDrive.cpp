@@ -3,8 +3,31 @@
 #include <fmt/format.h>
 #include "QemuFlashDrive.hpp"
 #include "QemuEnvironment.hpp"
+#include "coro/Timer.h"
 #include <thread>
 #include <fstream>
+
+QemuNbd::QemuNbd(const fs::path& img_path) {
+	coro::Timer timer;
+	auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(120);
+
+	while (std::chrono::system_clock::now() < deadline) {
+		std::string fdisk = "fdisk -l | grep nbd0 > /dev/null";
+		if (std::system(fdisk.c_str()) == 0) {
+			timer.waitFor(std::chrono::seconds(2));
+			continue;
+		}
+
+		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path.generic_string() + "\"");
+		return;
+	}
+	
+	throw std::runtime_error("Timeout for trying plug flash drive to any free nbd slot");
+}
+
+QemuNbd::~QemuNbd() {
+	std::system("qemu-nbd -d /dev/nbd0");
+}
 
 QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
@@ -108,7 +131,8 @@ void QemuFlashDrive::create() {
 
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 
-		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path().generic_string() + "\"");
+		QemuNbd nbd_tmp(img_path());
+
 		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary ntfs 0% 100%");
 		auto fs = config.at("fs").get<std::string>();
 		if (fs == "ntfs") {
@@ -116,9 +140,7 @@ void QemuFlashDrive::create() {
 		} else {
 			exec_and_throw_if_failed("mkfs." + fs + " /dev/nbd0p1");
 		}
-		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
 	} catch (const std::exception& error) {
-		std::system("qemu-nbd -d /dev/nbd0");
 		std::throw_with_nested(std::runtime_error("Creating flash drive"));
 	}
 }
@@ -135,24 +157,19 @@ bool QemuFlashDrive::is_mounted() const {
 	return (std::system(query.c_str()) == 0);
 }
 
-void QemuFlashDrive::mount() const {
+void QemuFlashDrive::mount() {
 	try {
-		std::string fdisk = "fdisk -l | grep nbd0";
-		if (std::system(fdisk.c_str()) == 0) {
-			throw std::runtime_error("Can't mount flash drive: target host slot is busy");
-		}
-
-		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path().generic_string() + "\"");
+		nbd.reset(new QemuNbd(img_path()));
 		exec_and_throw_if_failed("mount /dev/nbd0p1 " + env->flash_drives_mount_dir().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
 	}
 }
 
-void QemuFlashDrive::umount() const {
+void QemuFlashDrive::umount() {
 	try {
 		exec_and_throw_if_failed("umount /dev/nbd0p1");
-		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
+		nbd.reset(nullptr);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
 	}

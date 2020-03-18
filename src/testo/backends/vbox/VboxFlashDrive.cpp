@@ -76,7 +76,7 @@ bool VboxFlashDrive::is_mounted() const {
 #endif
 }
 
-void VboxFlashDrive::mount() const {
+void VboxFlashDrive::mount() {
 	try {
 #ifdef __linux__
 		std::string fdisk = "fdisk -l | grep nbd0";
@@ -99,7 +99,7 @@ void VboxFlashDrive::mount() const {
 	}
 }
 
-void VboxFlashDrive::umount() const {
+void VboxFlashDrive::umount() {
 	try {
 #ifdef __linux__
 		exec_and_throw_if_failed("umount /dev/nbd0");

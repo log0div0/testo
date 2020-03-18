@@ -37,10 +37,10 @@ void DummyFlashDrive::undefine() {
 bool DummyFlashDrive::is_mounted() const {
 	return false;
 }
-void DummyFlashDrive::mount() const {
+void DummyFlashDrive::mount() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void DummyFlashDrive::umount() const {
+void DummyFlashDrive::umount() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 fs::path DummyFlashDrive::img_path() const {
