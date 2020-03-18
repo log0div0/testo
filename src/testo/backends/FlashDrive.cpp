@@ -73,7 +73,7 @@ void FlashDrive::validate_folder() const {
 
 }
 
-void FlashDrive::load_folder() const {
+void FlashDrive::load_folder() {
 	try {
 		validate_folder();
 		mount();

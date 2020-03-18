@@ -77,7 +77,7 @@ void VmController::undefine() {
 			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("undefining network controller"));
+		std::throw_with_nested(std::runtime_error("undefining vm controller"));
 	}
 }
 

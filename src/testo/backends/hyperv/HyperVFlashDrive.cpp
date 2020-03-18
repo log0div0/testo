@@ -23,10 +23,10 @@ bool HyperVFlashDrive::is_mounted() const {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 	return false;
 }
-void HyperVFlashDrive::mount() const {
+void HyperVFlashDrive::mount() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVFlashDrive::umount() const {
+void HyperVFlashDrive::umount() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 fs::path HyperVFlashDrive::img_path() const {

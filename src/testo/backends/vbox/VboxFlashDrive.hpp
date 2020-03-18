@@ -13,8 +13,8 @@ struct VboxFlashDrive: FlashDrive {
 	void create() override;
 	void undefine() override;
 	bool is_mounted() const override;
-	void mount() const override;
-	void umount() const override;
+	void mount() override;
+	void umount() override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void make_snapshot(const std::string& snapshot) override;
 	void delete_snapshot(const std::string& snapshot) override;
