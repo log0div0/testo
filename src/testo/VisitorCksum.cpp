@@ -51,7 +51,7 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
 		return std::string(*(p->action));
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		return std::string(*(p->action));
+		return visit_press(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
 		return visit_mouse(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
@@ -95,9 +95,24 @@ std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::sh
 	return result;
 }
 
+std::string VisitorCksum::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
+	std::string result = std::string(*press);
+	if (!press->interval) {
+		auto press_interval_found = reg.params.find("TESTO_PRESS_DEFAULT_INTERVAL");
+		result += (press_interval_found != reg.params.end()) ? press_interval_found->second : "30ms";
+	}
+	return result;
+}
+
 std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
 	std::string result("type");
 	result += template_parser.resolve(type->text->text(), reg);
+	if (type->interval) {
+		result += type->interval.value();
+	} else {
+		auto type_interval_found = reg.params.find("TESTO_TYPE_DEFAULT_INTERVAL");
+		result += (type_interval_found != reg.params.end()) ? type_interval_found->second : "30ms";
+	}
 	return result;
 }
 
@@ -108,13 +123,15 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::sha
 	if (wait->timeout) {
 		result += wait->timeout.value();
 	} else {
-		result += "1m";
+		auto wait_timeout_found = reg.params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
+		result += (wait_timeout_found != reg.params.end()) ? wait_timeout_found->second : "1m";
 	}
 
 	if (wait->interval) {
 		result += wait->interval.value();
 	} else {
-		result += "1s";
+		auto wait_interval_found = reg.params.find("TESTO_WAIT_DEFAULT_INTERVAL");
+		result += (wait_interval_found != reg.params.end()) ? wait_interval_found->second : "1s";
 	}
 
 	return result;
@@ -147,7 +164,8 @@ std::string VisitorCksum::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveC
 	if (mouse_move_click->timeout_interval) {
 		result += mouse_move_click->timeout_interval.value();
 	} else {
-		result += "1m";
+		auto mouse_move_click_timeout_found = reg.params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+		result += (mouse_move_click_timeout_found != reg.params.end()) ? mouse_move_click_timeout_found->second : "1m";
 	}
 
 	return result;
@@ -209,7 +227,8 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 	if (exec->time_interval) {
 		result += exec->time_interval.value();
 	} else {
-		result += "10m";
+		auto exec_default_timeout_found = reg.params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
+		result += (exec_default_timeout_found != reg.params.end()) ? exec_default_timeout_found->second : "10m";
 	}
 
 	return result;
@@ -252,7 +271,8 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 	if (copy->time_interval) {
 		result += copy->time_interval.value();
 	} else {
-		result += "10m";
+		auto copyto_default_timeout_found = reg.params.find("TESTO_COPYTO_DEFAULT_TIMEOUT");
+		result += (copyto_default_timeout_found != reg.params.end()) ? copyto_default_timeout_found->second : "10m";
 	}
 
 	return result;
@@ -378,13 +398,15 @@ std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::sh
 	if (check->timeout) {
 		result += check->timeout.value();
 	} else {
-		result += "1ms";
+		auto check_timeout_found = reg.params.find("TESTO_CHECK_DEFAULT_TIMEOUT");
+		result += (check_timeout_found != reg.params.end()) ? check_timeout_found->second : "1ms";
 	}
 
 	if (check->interval) {
 		result += check->interval.value();
 	} else {
-		result += "1s";
+		auto check_interval_found = reg.params.find("TESTO_CHECK_DEFAULT_INTERVAL");
+		result += (check_interval_found != reg.params.end()) ? check_interval_found->second : "1s";
 	}
 
 	return result;

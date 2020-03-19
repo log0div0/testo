@@ -190,6 +190,7 @@ private:
 	std::string check_default_interval;
 	std::string mouse_move_click_default_timeout;
 	std::string press_default_interval;
+	std::string type_default_interval;
 	std::string exec_default_timeout;
 	std::string copyto_default_timeout;
 
