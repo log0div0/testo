@@ -16,6 +16,7 @@ struct VisitorCksum {
 	std::string visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action);
 	std::string visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort);
 	std::string visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print);
+	std::string visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
 	std::string visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	std::string visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	std::string visit_mouse(std::shared_ptr<AST::Mouse> mouse);

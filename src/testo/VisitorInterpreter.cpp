@@ -208,22 +208,25 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	auto wait_interval_found = reg.params.find("TESTO_WAIT_DEFAULT_INTERVAL");
 	wait_default_interval = (wait_interval_found != reg.params.end()) ? wait_interval_found->second : "1s";
 
-	auto check_timeout_found = reg.params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
+	auto check_timeout_found = reg.params.find("TESTO_CHECK_DEFAULT_TIMEOUT");
 	check_default_timeout = (check_timeout_found != reg.params.end()) ? check_timeout_found->second : "1ms";
 
-	auto check_interval_found = reg.params.find("TESTO_WAIT_DEFAULT_INTERVAL");
+	auto check_interval_found = reg.params.find("TESTO_CHECK_DEFAULT_INTERVAL");
 	check_default_interval = (check_interval_found != reg.params.end()) ? check_interval_found->second : "1s";
 
 	auto mouse_move_click_timeout_found = reg.params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 	mouse_move_click_default_timeout = (mouse_move_click_timeout_found != reg.params.end()) ? mouse_move_click_timeout_found->second : "1m";
 
-	auto press_interval_found = reg.params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+	auto press_interval_found = reg.params.find("TESTO_PRESS_DEFAULT_INTERVAL");
 	press_default_interval = (press_interval_found != reg.params.end()) ? press_interval_found->second : "30ms";
+
+	auto type_interval_found = reg.params.find("TESTO_TYPE_DEFAULT_INTERVAL");
+	type_default_interval = (type_interval_found != reg.params.end()) ? type_interval_found->second : "30ms";
 
 	auto exec_default_timeout_found = reg.params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
 	exec_default_timeout = (exec_default_timeout_found != reg.params.end()) ? exec_default_timeout_found->second : "10m";
 
-	auto copyto_default_timeout_found = reg.params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
+	auto copyto_default_timeout_found = reg.params.find("TESTO_COPYTO_DEFAULT_TIMEOUT");
 	copyto_default_timeout = (copyto_default_timeout_found != reg.params.end()) ? copyto_default_timeout_found->second : "10m";
 }
 
@@ -716,7 +719,9 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 			return;
 		}
 
-		reporter.type(vmc, text);
+		std::string interval = type->interval ? type->interval.value() : type_default_interval;
+
+		reporter.type(vmc, text, interval);
 
 		for (auto c: utf8::split_to_chars(text)) {
 			auto buttons = charmap.find(c);
@@ -724,7 +729,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 				throw std::runtime_error("Unknown character to type");
 			}
 			vmc->vm->press(buttons->second);
-			timer.waitFor(std::chrono::milliseconds(30));
+			timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 		}
 
 	} catch (const std::exception& error) {

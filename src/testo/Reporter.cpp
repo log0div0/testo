@@ -249,10 +249,10 @@ void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::string& k
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::type(std::shared_ptr<VmController> vmc, const std::string& text) {
+void Reporter::type(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& interval) {
 	report(fmt::format("{} Typing ", progress()), blue);
 	report(fmt::format("\"{}\" ", text), yellow);
-	report("in virtual machine ", blue);
+	report(fmt::format(" with interval {} in virtual machine ", interval), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 
 }
@@ -266,7 +266,7 @@ void Reporter::sleep(std::shared_ptr<VmController> vmc, const std::string& timeo
 void Reporter::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
 	report(fmt::format("{} Waiting ", progress()), blue);
 	report(fmt::format("{} ", text), yellow);
-	report(fmt::format("for {} in virtual machine with interval {} ", timeout, interval), blue);
+	report(fmt::format("for {} with interval {} in virtual machine  ", timeout, interval), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 

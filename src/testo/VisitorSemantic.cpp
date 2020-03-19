@@ -141,6 +141,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_INTERVAL");
 	testo_timeout_params.insert("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 	testo_timeout_params.insert("TESTO_PRESS_DEFAULT_INTERVAL");
+	testo_timeout_params.insert("TESTO_TYPE_DEFAULT_INTERVAL");
 	testo_timeout_params.insert("TESTO_EXEC_DEFAULT_TIMEOUT");
 	testo_timeout_params.insert("TESTO_COPYTO_DEFAULT_TIMEOUT");
 
