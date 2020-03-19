@@ -136,6 +136,13 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	attr_ctxs.insert({"test_global", test_global_ctx});
 
 	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_INTERVAL");
+	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_INTERVAL");
+	testo_timeout_params.insert("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_PRESS_DEFAULT_INTERVAL");
+	testo_timeout_params.insert("TESTO_EXEC_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_COPYTO_DEFAULT_TIMEOUT");
 
 	for (auto param: config.at("params")) {
 		auto name = param.at("name").get<std::string>();

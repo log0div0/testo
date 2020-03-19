@@ -204,6 +204,27 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 
 	auto wait_timeout_found = reg.params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
 	wait_default_timeout = (wait_timeout_found != reg.params.end()) ? wait_timeout_found->second : "1m";
+
+	auto wait_interval_found = reg.params.find("TESTO_WAIT_DEFAULT_INTERVAL");
+	wait_default_interval = (wait_interval_found != reg.params.end()) ? wait_interval_found->second : "1s";
+
+	auto check_timeout_found = reg.params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
+	check_default_timeout = (check_timeout_found != reg.params.end()) ? check_timeout_found->second : "1ms";
+
+	auto check_interval_found = reg.params.find("TESTO_WAIT_DEFAULT_INTERVAL");
+	check_default_interval = (check_interval_found != reg.params.end()) ? check_interval_found->second : "1s";
+
+	auto mouse_move_click_timeout_found = reg.params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+	mouse_move_click_default_timeout = (mouse_move_click_timeout_found != reg.params.end()) ? mouse_move_click_timeout_found->second : "1m";
+
+	auto press_interval_found = reg.params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+	press_default_interval = (press_interval_found != reg.params.end()) ? press_interval_found->second : "30ms";
+
+	auto exec_default_timeout_found = reg.params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
+	exec_default_timeout = (exec_default_timeout_found != reg.params.end()) ? exec_default_timeout_found->second : "10m";
+
+	auto copyto_default_timeout_found = reg.params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
+	copyto_default_timeout = (copyto_default_timeout_found != reg.params.end()) ? copyto_default_timeout_found->second : "10m";
 }
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
@@ -828,7 +849,7 @@ void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
 		std::string wait_for = wait->timeout ? wait->timeout.value() : wait_default_timeout;
-		std::string interval_str = wait->interval ? wait->interval.value() : "1s";
+		std::string interval_str = wait->interval ? wait->interval.value() : wait_default_interval;
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);
 
@@ -866,7 +887,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
 	try {
-		std::string interval = press->interval ? press->interval.value() : "30ms";
+		std::string interval = press->interval ? press->interval.value() : press_default_interval;
 		auto press_interval = time_to_milliseconds(interval);
 
 		for (auto key_spec: press->keys) {
@@ -1049,15 +1070,6 @@ void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmControll
 		vmc->vm->mouse_move_abs("y", std::stoul(dy));
 	}
 }
-
-//void VisitorInterpreter::visit_mouse_event(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseEvent> mouse_event) {
-
-		/*std::string where_to_go = mouse_event->is_move_needed() ? mouse_event->object->text() : "";
-		std::string wait_for_report = mouse_event->time_interval ? mouse_event->time_interval.value() : "";
-		reporter.mouse_event(vmc, mouse_event->event.value(), where_to_go, wait_for_report);
-	*/
-
-//}
 
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
 	uint32_t times = key_spec->get_times();
@@ -1312,7 +1324,7 @@ static std::string build_python_script(const std::string& body) {
 
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
-		std::string wait_for = exec->time_interval ? exec->time_interval.value() : "10m";
+		std::string wait_for = exec->time_interval ? exec->time_interval.value() : exec_default_timeout;
 		reporter.exec(vmc, exec->process_token.value(), wait_for);
 
 		if (vmc->vm->state() != VmState::Running) {
@@ -1387,7 +1399,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 		fs::path from = template_parser.resolve(copy->from->text(), reg);
 		fs::path to = template_parser.resolve(copy->to->text(), reg);
 
-		std::string wait_for = copy->time_interval ? copy->time_interval.value() : "10m";
+		std::string wait_for = copy->time_interval ? copy->time_interval.value() : copyto_default_timeout;
 		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy->is_to_guest(), wait_for);
 
 		if (vmc->vm->state() != VmState::Running) {
@@ -1572,8 +1584,8 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
-		std::string check_for = check->timeout ? check->timeout.value() : "1ms";
-		std::string interval_str = check->interval ? check->interval.value() : "1s";
+		std::string check_for = check->timeout ? check->timeout.value() : check_default_timeout;
+		std::string interval_str = check->interval ? check->interval.value() : check_default_interval;
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*check->select_expr), reg);
 		reporter.check(vmc, text, check_for, interval_str);
