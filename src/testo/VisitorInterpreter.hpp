@@ -183,6 +183,16 @@ private:
 			}
 		}
 	}
+
+	std::string wait_default_timeout;
+	std::string wait_default_interval;
+	std::string check_default_timeout;
+	std::string check_default_interval;
+	std::string mouse_move_click_default_timeout;
+	std::string press_default_interval;
+	std::string exec_default_timeout;
+	std::string copyto_default_timeout;
+
 	coro::Timer timer;
 
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;

@@ -135,6 +135,14 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	test_global_ctx.insert({"description", std::make_pair(false, Token::category::quoted_string)});
 	attr_ctxs.insert({"test_global", test_global_ctx});
 
+	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_INTERVAL");
+	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_INTERVAL");
+	testo_timeout_params.insert("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_PRESS_DEFAULT_INTERVAL");
+	testo_timeout_params.insert("TESTO_EXEC_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_COPYTO_DEFAULT_TIMEOUT");
 
 	for (auto param: config.at("params")) {
 		auto name = param.at("name").get<std::string>();
@@ -143,6 +151,12 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 		if (reg.params.find(name) != reg.params.end()) {
 			throw std::runtime_error("Error: param with name " + name +
 				" already exists");
+		}
+
+		if (testo_timeout_params.find(name) != testo_timeout_params.end()) {
+			if (!check_if_time_interval(value)) {
+				throw std::runtime_error("Can't convert parameter " + name + " value " + value + " to time interval");
+			}
 		}
 
 		if (!reg.params.insert({name, value}).second) {
@@ -216,7 +230,6 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 			throw std::runtime_error(std::string(arg->begin()) + ": Error: default value must be specified for macro arg " + arg->name());
 		}
 	}
-
 }
 
 void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
@@ -226,6 +239,12 @@ void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
 	}
 
 	auto value = template_parser.resolve(param->value->text(), reg);
+
+	if (testo_timeout_params.find(param->name) != testo_timeout_params.end()) {
+		if (!check_if_time_interval(value)) {
+			throw std::runtime_error(std::string(param->begin()) + ": Error: can't convert parameter " + param->name.value() + " value " + value + " to time interval");
+		}
+	}
 
 	if (!reg.params.insert({param->name.value(), value}).second) {
 		throw std::runtime_error(std::string(param->begin()) + ": Error while registering param with name " +
