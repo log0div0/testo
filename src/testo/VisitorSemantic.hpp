@@ -63,5 +63,7 @@ struct VisitorSemantic {
 	Register& reg;
 	template_literals::Parser template_parser;
 
+	std::set<std::string> testo_timeout_params;
+
 	quickjs::Runtime js_runtime;
 };

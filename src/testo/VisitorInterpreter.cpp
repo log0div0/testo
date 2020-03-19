@@ -201,6 +201,9 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 		{"~", {"LEFTSHIFT", "GRAVE"}},
 		{" ", {"SPACE"}}
 	});
+
+	auto wait_timeout_found = reg.params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
+	wait_default_timeout = (wait_timeout_found != reg.params.end()) ? wait_timeout_found->second : "1m";
 }
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
@@ -824,7 +827,7 @@ void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
-		std::string wait_for = wait->timeout ? wait->timeout.value() : "1m";
+		std::string wait_for = wait->timeout ? wait->timeout.value() : wait_default_timeout;
 		std::string interval_str = wait->interval ? wait->interval.value() : "1s";
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);

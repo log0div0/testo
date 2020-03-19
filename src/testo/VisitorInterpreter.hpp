@@ -183,6 +183,9 @@ private:
 			}
 		}
 	}
+
+	std::string wait_default_timeout;
+
 	coro::Timer timer;
 
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
