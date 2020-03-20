@@ -981,7 +981,7 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
 		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
-		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : "1m";
+		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : mouse_move_click_default_timeout;
 		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
 
 		if (mouse_move_click->object) {
