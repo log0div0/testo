@@ -761,6 +761,10 @@ std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click()
 		target = mouse_coordinates();
 	}
 
+	if (event_token.type() == Token::category::move && !target) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: you must specify a target to move the mouse cursor");
+	}
+
 	auto move_click = std::make_shared<MouseMoveClick>(event_token, target);
 	return std::make_shared<MouseEvent<MouseMoveClick>>(move_click);
 }

@@ -502,7 +502,7 @@ struct MouseAdditionalSpecifier: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = name.value() + "(";
+		std::string result = "." + name.value() + "(";
 		if (arg) {
 			result += arg.value();
 		}

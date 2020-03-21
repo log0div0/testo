@@ -980,15 +980,13 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
-		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
-		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : mouse_move_click_default_timeout;
-		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
+		reporter.mouse_move_click(vmc, mouse_move_click->t.value());
 
 		if (mouse_move_click->object) {
 			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click->object)) {
 				visit_mouse_move_coordinates(vmc, p->target);
-			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::ISelectable>>(mouse_move_click->object)) {
-				visit_mouse_move_selectable(vmc, p->target, wait_for);
+			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click->object)) {
+				visit_mouse_move_selectable(vmc, p->target);
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
@@ -1024,9 +1022,17 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 	}
 }
 
-void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc,
-	std::shared_ptr<AST::ISelectable> selectable, const std::string& timeout)
+void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseSelectable> mouse_selectable)
 {
+	std::string timeout = mouse_selectable->timeout ? mouse_selectable->timeout.value() : mouse_move_click_default_timeout;
+	std::string where_to_go = template_parser.resolve(mouse_selectable->text(), reg);
+
+	for (auto specifier: mouse_selectable->specifiers) {
+		where_to_go += std::string(*specifier);
+	}
+
+	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
+
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
 	std::vector<Point> found;
@@ -1034,7 +1040,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
 
-		found = visit_select_selectable(selectable, screenshot);
+		found = visit_select_selectable(mouse_selectable->selectable, screenshot);
 		if (found.size()) {
 			break;
 		}
@@ -1049,11 +1055,11 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 	}
 
 	if (!found.size()) {
-		throw std::runtime_error("Can't find entry to click: " + selectable->text());
+		throw std::runtime_error("Can't find entry to click: " + mouse_selectable->text());
 	}
 
 	if (found.size() > 1) {
-		throw std::runtime_error("Too many occurences of entry to click: " + selectable->text());
+		throw std::runtime_error("Too many occurences of entry to click: " + mouse_selectable->text());
 	}
 
 	vmc->vm->mouse_move_abs(found[0].x, found[0].y);
@@ -1062,13 +1068,14 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)
 {
 	auto dx = coordinates->dx.value();
+	auto dy = coordinates->dy.value();
+	reporter.mouse_move_click_coordinates(vmc, dx, dy);
 	if ((dx[0] == '+') || (dx[0] == '-')) {
 		vmc->vm->mouse_move_rel("x", std::stoi(dx));
 	} else {
 		vmc->vm->mouse_move_abs("x", std::stoul(dx));
 	}
 
-	auto dy = coordinates->dy.value();
 	if ((dy[0] == '+') || (dy[0] == '-')) {
 		vmc->vm->mouse_move_rel("y", std::stoi(dy));
 	} else {
