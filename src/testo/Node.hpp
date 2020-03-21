@@ -549,6 +549,10 @@ struct MouseSelectable: public Node {
 		return result;
 	}
 
+	std::string text() const {
+		return "TODO";
+	}
+
 	std::shared_ptr<ISelectable> selectable = nullptr;
 	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
 	Token timeout;
