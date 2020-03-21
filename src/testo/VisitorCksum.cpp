@@ -161,8 +161,19 @@ std::string VisitorCksum::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveC
 		result += visit_mouse_move_target(mouse_move_click->object);
 	}
 
-	if (mouse_move_click->timeout_interval) {
-		result += mouse_move_click->timeout_interval.value();
+	return result;
+}
+
+
+std::string VisitorCksum::visit_mouse_selectable(std::shared_ptr<AST::MouseSelectable> mouse_selectable) {
+	std::string result = template_parser.resolve(mouse_selectable->text(), reg);
+
+	for (auto specifier: mouse_selectable->specifiers) {
+		result += std::string(*specifier);
+	}
+
+	if (mouse_selectable->timeout) {
+		result += mouse_selectable->timeout.value();
 	} else {
 		auto mouse_move_click_timeout_found = reg.params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 		result += (mouse_move_click_timeout_found != reg.params.end()) ? mouse_move_click_timeout_found->second : "1m";
@@ -175,8 +186,8 @@ std::string VisitorCksum::visit_mouse_move_target(std::shared_ptr<AST::IMouseMov
 	std::string result;
 	if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(target)) {
 		result = std::string(*p->target);
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::ISelectable>>(target)) {
-		result = template_parser.resolve(p->target->text(), reg);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(target)) {
+		result = visit_mouse_selectable(p->target);
 	} else {
 		throw std::runtime_error("Unknown mouse even object");
 	}

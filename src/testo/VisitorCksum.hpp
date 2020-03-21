@@ -21,6 +21,7 @@ struct VisitorCksum {
 	std::string visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	std::string visit_mouse(std::shared_ptr<AST::Mouse> mouse);
 	std::string visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click);
+	std::string visit_mouse_selectable(std::shared_ptr<AST::MouseSelectable> mouse_selectable);
 	std::string visit_mouse_move_target(std::shared_ptr<AST::IMouseMoveTarget> target);
 	std::string visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	std::string visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);

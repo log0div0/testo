@@ -550,7 +550,7 @@ struct MouseSelectable: public Node {
 	}
 
 	std::string text() const {
-		return "TODO";
+		return selectable->text();
 	}
 
 	std::shared_ptr<ISelectable> selectable = nullptr;
