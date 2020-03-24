@@ -510,6 +510,32 @@ struct MouseAdditionalSpecifier: public Node {
 		return result;
 	}
 
+	bool is_from() const {
+		return (name.value() == "from_top" ||
+			name.value() == "from_bottom" ||
+			name.value() == "from_left" ||
+			name.value() == "from_right");
+	}
+
+	bool is_centering() const {
+		return (name.value() == "left_bottom" ||
+			name.value() == "left_center" ||
+			name.value() == "left_top" ||
+			name.value() == "center_bottom" ||
+			name.value() == "center" ||
+			name.value() == "center_top" ||
+			name.value() == "right_bottom" ||
+			name.value() == "right_center" ||
+			name.value() == "right_top");
+	}
+
+	bool is_moving() const {
+		return (name.value() == "move_left" ||
+			name.value() == "move_right" ||
+			name.value() == "move_up" ||
+			name.value() == "move_down");
+	}
+
 	Token name;
 	Token arg;
 };

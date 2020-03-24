@@ -762,42 +762,17 @@ quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
-
 }
 
-std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
-	std::vector<Point> result;
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
-		auto text = template_parser.resolve(p->text(), reg);
-		auto ocr_find = nn::OCR(&screenshot).search(text);
-		for (auto& rect: ocr_find) {
-			result.push_back({rect.center_x(), rect.center_y()});
-		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		auto script = template_parser.resolve(p->text(), reg);
-		auto value = eval_js(script, screenshot);
+VisitorInterpreter::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot) {
+	auto script = template_parser.resolve(p->text(), reg);
+	auto value = eval_js(script, screenshot);
 
-		if (!value.is_object()) {
-			throw std::runtime_error("Can't process return value type. We expect an object or an array of objects");
-		}
-
-		if (value.is_array()) {
-			auto size = (int32_t)value.get_property_str("length");
-
-			for (int32_t i = 0; i < size; ++i) {
-				auto elem = value.get_property_uint32(i);
-				result.push_back(Point(elem));
-			}
-		} else if (value.is_object()) {
-			result.push_back(Point(value));
-		}
-
-
+	if (value.is_object() && !value.is_array()) {
+		return Point(value);
 	} else {
-		throw std::runtime_error("Unknown selectable type");
+		throw std::runtime_error("Can't process return value type. We expect a single object");
 	}
-
-	return result;
 }
 
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
@@ -1097,38 +1072,33 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier
 }
 
 
-std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_additional_specifier(
-	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
-	const std::vector<Point>& input)
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_additional_specifiers(
+	std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>> specifiers,
+	std::vector<nn::Rect> input)
 {
-	auto name = specifier->name.value();
+	size_t index = 0;
 
-	if (name == "from_top" ||
-		name == "from_bottom" ||
-		name == "from_left" ||
-		name == "from_right")
-	{
-		return visit_mouse_specifier_from(specifier, input);
-	} else if (name == "left_bottom" ||
-		name == "left_center" ||
-		name == "left_top" ||
-		name == "center_bottom" ||
-		name == "center" ||
-		name == "center_top" ||
-		name == "right_bottom" ||
-		name == "right_center" ||
-		name == "right_top")
-	{
-		return visit_mouse_specifier_centering(specifier, input);
-	} else if (name == "move_left" ||
-		name == "move_right" ||
-		name == "move_up" ||
-		name == "move_down")
-	{
-		return visit_mouse_specifier_moving(specifier, input);
-	} else {
-		throw std::runtime_error("Unknown mouse additional specifier!"); //should never happen
+	if ((specifiers.size() > index) && specifiers[index]->is_from()) {		
+		input = visit_mouse_specifier_from(specifiers[index], input);
+		index++;
 	}
+
+	std::vector<Point> result;
+
+	if (specifiers.size() > index) {
+		if (specifiers[index]->is_centering()) {
+			result = visit_mouse_specifier_centering(specifiers[index], input);
+			index++;
+		} else {
+			//result = default centering
+		}
+	}
+
+	for (size_t i = index; i < specifiers.size(); ++i) {
+		result = visit_mouse_specifier_moving(specifiers[i], result);
+	}
+
+	return result;
 }
 
 void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseSelectable> mouse_selectable)
@@ -1149,15 +1119,16 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 	while (std::chrono::system_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
-
-		found = visit_select_selectable(mouse_selectable->selectable, screenshot);
-
-		//each specifier can throw an exception if something goes wrong.
-		//Right now we need to ignore it
-
 		try {
-			for (auto specifier: mouse_selectable->specifiers) {
-				found = visit_mouse_additional_specifier(specifier, found);
+			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
+				found.push_back(visit_select_js(p, screenshot));
+			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
+				auto text = template_parser.resolve(p->text(), reg);
+				auto ocr_find = nn::OCR(&screenshot).search(text);
+
+				//each specifier can throw an exception if something goes wrong.
+				//Right now we need to ignore it
+				found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
 			}
 
 			//Nothing to click on
@@ -1182,17 +1153,21 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 				coro::CheckPoint();
 			}
 			continue;
-		}
+		} 
 	}
 
 	if (!is_cursor_moved) {
 		//Ok, now try one more time and let's see if we can do anything
 		//any fail now will result in total failure
 		auto screenshot = vmc->vm->screenshot();
-		found = visit_select_selectable(mouse_selectable->selectable, screenshot);
+		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
+			found.push_back(visit_select_js(p, screenshot));
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
+			auto ocr_found = visit_select_string(p, screenshot);
 
-		for (auto specifier: mouse_selectable->specifiers) {
-			found = visit_mouse_additional_specifier(specifier, found);
+			//each specifier can throw an exception if something goes wrong.
+			//Right now we need to ignore it
+			found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_found);
 		}
 
 		if (!found.size()) {
