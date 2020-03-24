@@ -765,7 +765,7 @@ quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image
 }
 
 VisitorInterpreter::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot) {
-	auto script = template_parser.resolve(p->text(), reg);
+	auto script = template_parser.resolve(js->text(), reg);
 	auto value = eval_js(script, screenshot);
 
 	if (value.is_object() && !value.is_array()) {
@@ -997,16 +997,10 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 	}
 }
 
-std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_from(
-	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
-	const std::vector<Point>& input)
-{
-	return {};
-}
 
-std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_centering(
+std::vector<nn::Rect> VisitorInterpreter::visit_mouse_specifier_from(
 	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
-	const std::vector<Point>& input)
+	std::vector<nn::Rect> input)
 {
 	auto name = specifier->name.value();
 	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
@@ -1015,28 +1009,78 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier
 		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": not enough objects in the input array");
 	}
 
-	auto tmp = input;
-	std::vector<Point> result;
+	std::vector<nn::Rect> result;
 
 	if (name == "from_top" ||
 		name == "from_bottom")
 	{
-		std::sort(tmp.begin(), tmp.end(), [](const Point& a, const Point& b) -> bool {return a.y < b.y;});
+		std::sort(input.begin(), input.end(), [](const nn::Rect& a, const nn::Rect& b) -> bool {return a.center_y() < b.center_y();});
 		if (name == "from_top") {
-			result.push_back(tmp[arg]);
+			result.push_back(input[arg]);
 		} else {
-			result.push_back(tmp[tmp.size() - arg - 1]);
+			result.push_back(input[input.size() - arg - 1]);
 		}
 
 	} else if (name == "from_left" ||
 		name == "from_right")
 	{
-		std::sort(tmp.begin(), tmp.end(), [](const Point& a, const Point& b) -> bool {return a.x < b.x;});
+		std::sort(input.begin(), input.end(), [](const nn::Rect& a, const nn::Rect& b) -> bool {return a.center_x() < b.center_x();});
 		if (name == "from_left") {
-			result.push_back(tmp[arg]);
+			result.push_back(input[arg]);
 		} else {
-			result.push_back(tmp[tmp.size() - arg - 1]);
+			result.push_back(input[input.size() - arg - 1]);
 		}
+	}
+
+	return result;
+}
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_centering(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	const std::vector<nn::Rect>& input)
+{
+	std::vector<Point> result;
+
+	if (!input.size()) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's no input object");
+	}
+
+	if (input.size() > 1) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's more than one object");
+	}
+
+	auto name = specifier->name.value();
+
+	if (name == "left_bottom") {
+		result.push_back({input[0].left, input[0].bottom});
+	} else if (name == "left_center") {
+		result.push_back({input[0].left, input[0].center_y()});
+	} else if (name == "left_top") {
+		result.push_back({input[0].left, input[0].top});
+	} else if (name == "center_bottom") {
+		result.push_back({input[0].center_x(), input[0].bottom});
+	} else if (name == "center") {
+		result.push_back({input[0].center_x(), input[0].center_y()});
+	} else if (name == "center_top") {
+		result.push_back({input[0].center_x(), input[0].top});
+	} else if (name == "right_bottom") {
+		result.push_back({input[0].right, input[0].bottom});
+	} else if (name == "right_center") {
+		result.push_back({input[0].right, input[0].center_y()});
+	} else if (name == "right_top") {
+		result.push_back({input[0].right, input[0].top});
+	} else {
+		throw std::runtime_error("Uknown center specifier");
+	}
+
+	return result;
+}
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_default_centering(const std::vector<nn::Rect>& input) {
+	std::vector<Point> result;
+
+	for (auto rect: input) {
+		result.push_back({rect.center_x(), rect.center_y()});
 	}
 
 	return result;
@@ -1085,13 +1129,11 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_additiona
 
 	std::vector<Point> result;
 
-	if (specifiers.size() > index) {
-		if (specifiers[index]->is_centering()) {
-			result = visit_mouse_specifier_centering(specifiers[index], input);
-			index++;
-		} else {
-			//result = default centering
-		}
+	if (specifiers.size() > index && specifiers[index]->is_centering()) {
+		result = visit_mouse_specifier_centering(specifiers[index], input);
+		index++;
+	} else {
+		result = visit_mouse_specifier_default_centering(input);
 	}
 
 	for (size_t i = index; i < specifiers.size(); ++i) {
@@ -1163,11 +1205,12 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
 			found.push_back(visit_select_js(p, screenshot));
 		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
-			auto ocr_found = visit_select_string(p, screenshot);
+			auto text = template_parser.resolve(p->text(), reg);
+			auto ocr_find = nn::OCR(&screenshot).search(text);
 
 			//each specifier can throw an exception if something goes wrong.
 			//Right now we need to ignore it
-			found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_found);
+			found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
 		}
 
 		if (!found.size()) {
