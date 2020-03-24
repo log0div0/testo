@@ -1022,6 +1022,115 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 	}
 }
 
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_from(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	const std::vector<Point>& input)
+{
+	return {};
+}
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_centering(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	const std::vector<Point>& input)
+{
+	auto name = specifier->name.value();
+	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
+
+	if ((int)input.size() < arg - 1) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": not enough objects in the input array");
+	}
+
+	auto tmp = input;
+	std::vector<Point> result;
+
+	if (name == "from_top" ||
+		name == "from_bottom")
+	{
+		std::sort(tmp.begin(), tmp.end(), [](const Point& a, const Point& b) -> bool {return a.y < b.y;});
+		if (name == "from_top") {
+			result.push_back(tmp[arg]);
+		} else {
+			result.push_back(tmp[tmp.size() - arg - 1]);
+		}
+
+	} else if (name == "from_left" ||
+		name == "from_right")
+	{
+		std::sort(tmp.begin(), tmp.end(), [](const Point& a, const Point& b) -> bool {return a.x < b.x;});
+		if (name == "from_left") {
+			result.push_back(tmp[arg]);
+		} else {
+			result.push_back(tmp[tmp.size() - arg - 1]);
+		}
+	}
+
+	return result;
+}
+
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_moving(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	const std::vector<Point>& input)
+{
+	if (!input.size()) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's no input object");
+	}
+
+	if (input.size() > 1) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's more than one object");
+	}
+
+	auto name = specifier->name.value();
+	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
+	auto result = input;
+
+	if (name == "move_left") {
+		result[0].x -= arg;
+	} else if (name == "move_right") {
+		result[0].x += arg;
+	} else if (name == "move_up") {
+		result[0].y += arg;
+	} else if (name == "move_down") {
+		result[0].y -= arg;
+	}
+	return result;;
+}
+
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_additional_specifier(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	const std::vector<Point>& input)
+{
+	auto name = specifier->name.value();
+
+	if (name == "from_top" ||
+		name == "from_bottom" ||
+		name == "from_left" ||
+		name == "from_right")
+	{
+		return visit_mouse_specifier_from(specifier, input);
+	} else if (name == "left_bottom" ||
+		name == "left_center" ||
+		name == "left_top" ||
+		name == "center_bottom" ||
+		name == "center" ||
+		name == "center_top" ||
+		name == "right_bottom" ||
+		name == "right_center" ||
+		name == "right_top")
+	{
+		return visit_mouse_specifier_centering(specifier, input);
+	} else if (name == "move_left" ||
+		name == "move_right" ||
+		name == "move_up" ||
+		name == "move_down")
+	{
+		return visit_mouse_specifier_moving(specifier, input);
+	} else {
+		throw std::runtime_error("Unknown mouse additional specifier!"); //should never happen
+	}
+}
+
 void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseSelectable> mouse_selectable)
 {
 	std::string timeout = mouse_selectable->timeout ? mouse_selectable->timeout.value() : mouse_move_click_default_timeout;
@@ -1036,33 +1145,65 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
 	std::vector<Point> found;
+	bool is_cursor_moved = false;
 	while (std::chrono::system_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
 
 		found = visit_select_selectable(mouse_selectable->selectable, screenshot);
-		if (found.size()) {
+
+		//each specifier can throw an exception if something goes wrong.
+		//Right now we need to ignore it
+
+		try {
+			for (auto specifier: mouse_selectable->specifiers) {
+				found = visit_mouse_additional_specifier(specifier, found);
+			}
+
+			//Nothing to click on
+			if (!found.size()) {
+				throw std::runtime_error("");
+			}
+
+			//Don't know where to click
+			if (found.size() > 1) {
+				throw std::runtime_error("");
+			}
+
+			vmc->vm->mouse_move_abs(found[0].x, found[0].y);
+			is_cursor_moved = true;
 			break;
+		} catch (const std::exception& error) {
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> time = end - start;
+			if (time < 1s) {
+				timer.waitFor(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time));
+			} else {
+				coro::CheckPoint();
+			}
+			continue;
+		}
+	}
+
+	if (!is_cursor_moved) {
+		//Ok, now try one more time and let's see if we can do anything
+		//any fail now will result in total failure
+		auto screenshot = vmc->vm->screenshot();
+		found = visit_select_selectable(mouse_selectable->selectable, screenshot);
+
+		for (auto specifier: mouse_selectable->specifiers) {
+			found = visit_mouse_additional_specifier(specifier, found);
 		}
 
-		auto end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> time = end - start;
-		if (time < 1s) {
-			timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
-		} else {
-			coro::CheckPoint();
+		if (!found.size()) {
+			throw std::runtime_error("Timeout: can't find entry to click: " + mouse_selectable->text());
 		}
-	}
 
-	if (!found.size()) {
-		throw std::runtime_error("Can't find entry to click: " + mouse_selectable->text());
+		if (found.size() > 1) {
+			throw std::runtime_error("Timeout: too many occurences of entry to click: " + mouse_selectable->text());
+		}
+		vmc->vm->mouse_move_abs(found[0].x, found[0].y);
 	}
-
-	if (found.size() > 1) {
-		throw std::runtime_error("Too many occurences of entry to click: " + mouse_selectable->text());
-	}
-
-	vmc->vm->mouse_move_abs(found[0].x, found[0].y);
 }
 
 void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)

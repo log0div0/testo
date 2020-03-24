@@ -103,6 +103,10 @@ struct VisitorInterpreter {
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep);
+	std::vector<Point> visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<Point>& input);
+	std::vector<Point> visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<Point>& input);
+	std::vector<Point> visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<Point>& input);
+	std::vector<Point> visit_mouse_additional_specifier(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<Point>& input);
 	std::vector<Point> visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
 	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
