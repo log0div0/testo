@@ -565,7 +565,7 @@ struct MouseSelectable: public Node {
 		std::string result = std::string(*selectable);
 
 		for (auto specifier: specifiers) {
-			result += "." + std::string(*specifier);
+			result += std::string(*specifier);
 		}
 
 		if (timeout) {

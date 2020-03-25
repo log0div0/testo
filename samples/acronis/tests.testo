@@ -1,3 +1,5 @@
+include "../common_win7.testo"
+
 network nat {
 	mode: "nat"
 }
@@ -13,129 +15,14 @@ machine win7 {
 	}
 }
 
-macro click_lowermost(text, index="0", x_shift="+0", y_shift="+0") {
-	mouse click js """
-		arr = detect_text('${text}')
-		if (arr.length) {
-			arr.sort(function (a, b) {
-				if (a.y < b.y) {
-					return 1
-				}
-
-				if (a.y > b.y) {
-					return -1
-				}
-
-				return 0
-			});
-
-			obj = arr[${index}]
-			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
-		} else {
-			arr
-		}
-	""" timeout 2m
-}
-
-macro click_topmost(text, index="0", x_shift="+0", y_shift="+0") {
-	mouse click js """
-		arr = detect_text('${text}')
-		if (arr.length) {
-			arr.sort(function (a, b) {
-				if (a.y > b.y) {
-					return 1
-				}
-
-				if (a.y < b.y) {
-					return -1
-				}
-
-				return 0
-			});
-
-			obj = arr[${index}]
-			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
-		} else {
-			arr
-		}
-	""" timeout 2m
-}
-
-macro click_leftmost(text, index="0", x_shift="+0", y_shift="+0") {
-	mouse click js """
-		arr = detect_text('${text}')
-		if (arr.length) {
-			arr.sort(function (a, b) {
-				if (a.x < b.x) {
-					return -1
-				}
-
-				if (a.x > b.x) {
-					return 1
-				}
-
-				return 0
-			});
-
-			obj = arr[${index}]
-			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
-		} else {
-			arr
-		}
-	""" timeout 2m
-}
 
 test win7_installation {
-	win7 {
-		start
-		wait "Choose an operating system"
-		press Down, Enter
-
-		mouse click "Мой язык - русский" timeout 2m;
-
-		wait "Выберите нужный язык"; click_lowermost("Далее") #2 "Далее"
-		mouse click "Установить" timeout 1m;
-		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
-		#wait "Выберите операционную систему"; mouse click "Далее"
-		wait "Условия лицензии"
-		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
-		wait "Выберите тип установки";
-		if (check "Полная установка") {
-			mouse click "Полная установка"
-		} else {
-			mouse click "Выборочная"
-		}
-		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
-		wait "Выберите имя пользователя" timeout 15m
-		unplug dvd
-		press LeftShift + LeftAlt; type "testo"; mouse click "Далее"
-		wait "Установите пароль"; click_lowermost("Далее")
-		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
-		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
-		wait "Проверьте настройку даты и времени"; mouse click "Далее"
-		wait "Выберите текущее место расположения компьютера"; mouse click "Общественная сеть"
-		wait "Корзина" timeout 10m
-		shutdown
-		start
-		wait "Корзина"
-	}
+	win7 install_win7("testo")
 }
 
 
 test guest_additions: win7_installation {
-	win7 {
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		mouse click "Выполнить testo-guest-additions" timeout 1m
-		wait "Вас приветствует мастер установки"; mouse click "Далее"
-		wait "Выбор папки для установки"; click_lowermost("Далее")
-		wait "Подтверждение установки"; click_lowermost("Далее")
-		wait "Разрешить внесение изменений"; press Left, Enter
-		wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
-
-		wait "Установка завершена"; click_lowermost("Закрыть")
-		wait !"Установка завершена"
-		exec cmd "echo hello world"
-	}
+	win7 install_guest_additions()
 }
 
 
@@ -145,6 +32,7 @@ flash acronis_distrib {
 	folder: "${ACRONIS_DIR}"
 }
 
+[no_snapshots: true]
 test prepare: guest_additions {
 	win7 {
 		press LEFTMETA
@@ -153,9 +41,8 @@ test prepare: guest_additions {
 		mouse click "Мелкие значки"
 		mouse click "Учетные записи"
 		mouse click "Изменение параметров контроля учетных записей"
-		sleep 2s
-		mouse dclick js "found = detect_text('Никогда')[0]; target = {x: found.x, y: found.y - 50}"
-		click_lowermost("ОК")
+		mouse dclick "Никогда".move_up(50);
+		mouse click "ОК".from_bottom(0);
 		wait "Microsoft Windows"; press Left, Enter
 		wait "Внесение изменений в учетную запись"
 		press LeftAlt+F4
@@ -193,34 +80,34 @@ test install_acronis: prepare {
 	}
 }
 
+
 test activate_acronis: install_acronis {
 	win7 {
 		mouse dclick "Activation"
 		mouse dclick "Patch"
 		mouse click "Поиск: Activation"; press LeftAlt+F4
 		mouse click "Make Backup"
-		click_lowermost("Patch")
+		mouse click "Patch".from_bottom(0)
 		wait "Can not find the file"; press Enter
 
-		sleep 2s
-		click_leftmost("Activation", "1", "+100", "+0")
+		wait "Открыть"
+		mouse click "Activation".from_left(1).right_center().move_right(30)
 		
 		press LeftShift + LeftAlt
 		wait "C:\\Users"; press Backspace
 		type "C:\\Program Files (x86)\\Acronis\\TrueImageHome"; press Enter
-		click_topmost("ti_managers.dll"); press Enter
+		mouse click "ti_managers.dll".from_top(0); press Enter
+		wait "Can not find the file"; press Enter
+		wait "Открыть"
+		mouse click "TrueImageTools".from_top(0); press Enter
 
 		wait "Can not find the file"; press Enter
-		sleep 2s
-		click_topmost("TrueImageTools"); press Enter
-
-		wait "Can not find the file"; press Enter
-		sleep 2s
-		click_leftmost("TrueImageHome", "0", "+100", "+0")
+		wait "Открыть"
+		mouse click "TrueImageHome".from_left(0).right_center().move_right(30)
 		
 		wait "C:\\Program Files"; press Backspace
 		type "C:\\Program Files (x86)\\Common Files\\Acronis\\TrueImageHome"; press Enter
-		click_topmost("TrueImageHomeService"); press Enter
+		mouse click "TrueImageHomeService".from_top(0); press Enter
 		wait "PATCHING DONE"; mouse click "Exit"
 		wait !"PATCHING DONE"
 	}
@@ -235,7 +122,7 @@ test make_backup: activate_acronis {
 	win7 {
 		mouse dclick "Acronis True"
 		mouse click "Я принимаю это соглашение"
-		click_lowermost("OK")
+		mouse click "OK".from_bottom(0)
 		wait "Полное резервное" timeout 3m
 		mouse click "Больше не показывать"; mouse click "Пропустить"
 		press LeftAlt + Space

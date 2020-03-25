@@ -428,6 +428,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
 			}
 			has_from = true;
+			continue;
 		} if (specifier->is_centering()) {
 			if (has_center) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after another \"precision\" specifier");
@@ -435,6 +436,9 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			if (has_move) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
 			}
+			continue;
+		} else if (!specifier->is_moving()) {
+			throw std::runtime_error(std::string(specifier->begin()) + ": Error: unknown specifier: " + specifier->name.value());
 		}
 	}
 }

@@ -709,7 +709,7 @@ std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
 
 	Token arg;
 	if (LA(1) != Token::category::rparen && LA(1) != Token::category::number) {
-		throw std::runtime_error(std::string(LT(1).pos() + " : Error: you can use only numbers as arguments in cursor specifiers"));
+		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: you can use only numbers as arguments in cursor specifiers");
 	}
 
 	if (LA(1) == Token::category::number) {

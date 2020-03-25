@@ -1,5 +1,5 @@
 
-include "./common.testo"
+include "./common_ubuntu_server.testo"
 
 machine VM1 {
 	cpus: 1

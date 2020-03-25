@@ -1005,7 +1005,7 @@ std::vector<nn::Rect> VisitorInterpreter::visit_mouse_specifier_from(
 	auto name = specifier->name.value();
 	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
 
-	if ((int)input.size() < arg - 1) {
+	if ((int)input.size() < arg + 1) {
 		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": not enough objects in the input array");
 	}
 
@@ -1108,9 +1108,9 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier
 	} else if (name == "move_right") {
 		result[0].x += arg;
 	} else if (name == "move_up") {
-		result[0].y += arg;
-	} else if (name == "move_down") {
 		result[0].y -= arg;
+	} else if (name == "move_down") {
+		result[0].y += arg;
 	}
 	return result;;
 }

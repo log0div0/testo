@@ -1,3 +1,5 @@
+include "../common_win7.testo"
+
 network nat {
 	mode: "nat"
 }
@@ -14,115 +16,14 @@ machine win7 {
 }
 
 test win7_installation {
-	win7 {
-		start
-		wait "Choose an operating system"
-		press Down, Enter
-		wait "Мой язык - русский" timeout 2m; press Down*2, Enter
-		wait "Выберите нужный язык"; press Enter
-		wait "Установить"; press Enter
-		wait "Выберите операционную систему"; press Down*8, Enter
-		wait "Условия лицензии"; press Space, Enter
-		wait "Выберите тип установки"; press Down, Enter
-		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; press Enter
-		wait "Выберите имя пользователя" timeout 15m
-		unplug dvd
-		press LeftShift + LeftAlt; type "testo"; press Enter
-		wait "Установите пароль"; press Enter
-		wait "Введите ключ продукта"; press Tab, Space, Tab*3, Enter
-		wait "Помогите автоматически защитить компьютер"; press Down*2, Enter
-		wait "Проверьте настройку даты и времени"; press Enter
-		wait "Выберите текущее место расположения компьютера"; press Enter
-		wait "Корзина" timeout 10m
-		shutdown
-		start
-		wait "Корзина"
-	}
+	win7 install_win7("testo")
 }
 
 test guest_additions: win7_installation {
-	win7 {
-		sleep 5s
-
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		wait "Автозапуск"; press Enter
-		wait "Вас приветствует мастер установки"; press Enter
-		wait "Выбор папки для установки"; press Enter
-		wait "Подтверждение установки"; press Enter
-		wait "Разрешить внесение изменений"; press Left, Enter
-		wait "Не удалось проверить издателя этих драйверов";
-		press LeftAlt+Tab+Right # окно установки драйвером не в фокусе, переключаемся на него
-		sleep 2s
-		press Down, Enter
-		wait "Установка завершена"; press Enter
-		wait !"Установка завершена"
-		exec cmd "echo hello world"
-		copyto "test.txt" "C:\\tmp\\test.txt"
-	}
+	win7 install_guest_additions()
 }
 
-macro click_lowermost(text, index="0", x_shift="+0", y_shift="+0") {
-	mouse click js """
-		arr = detect_text('${text}')
-		if (arr.length) {
-			arr.sort(function (a, b) {
-				if (a.y < b.y) {
-					return 1
-				}
-
-				if (a.y > b.y) {
-					return -1
-				}
-
-				return 0
-			});
-
-			obj = arr[${index}]
-			target = {'x': obj.x${x_shift}, 'y': obj.y${y_shift}}
-		} else {
-			arr
-		}
-	""" timeout 2m
-}
-
-test win7_installation_mouse {
-	win7 {
-		start
-		wait "Choose an operating system"
-		press Down, Enter
-
-		mouse click "Мой язык - русский" timeout 2m;
-
-		wait "Выберите нужный язык"; click_lowermost("Далее") #2 "Далее"
-		mouse click "Установить" timeout 1m;
-		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
-		#wait "Выберите операционную систему"; mouse click "Далее"
-		wait "Условия лицензии"
-		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
-		wait "Выберите тип установки";
-		if (check "Полная установка") {
-			mouse click "Полная установка"
-		} else {
-			mouse click "Выборочная"
-		}
-		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
-		wait "Выберите имя пользователя" timeout 15m
-		unplug dvd
-		press LeftShift + LeftAlt; type "testo"; mouse click "Далее"
-		wait "Установите пароль"; click_lowermost("Далее")
-		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
-		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
-		wait "Проверьте настройку даты и времени"; mouse click "Далее"
-		wait "Выберите текущее место расположения компьютера"; mouse click "Общественная сеть"
-		wait "Корзина" timeout 10m
-		shutdown
-		start
-		wait "Корзина"
-	}
-}
-
-
-test new_folder: win7_installation_mouse {
+test new_folder: win7_installation {
 	win7 {
 		mouse move 400 300
 		mouse rclick
@@ -140,24 +41,5 @@ test remove_folder: new_folder {
 		mouse move "Корзина"
 		mouse release
 		sleep 1s
-	}
-}
-
-test guest_additions_mouse: win7_installation_mouse {
-	win7 {
-		sleep 5s
-
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		mouse click "Выполнить testo-guest-additions" timeout 1m
-		wait "Вас приветствует мастер установки"; mouse click "Далее"
-		wait "Выбор папки для установки"; click_lowermost("Далее")
-		wait "Подтверждение установки"; click_lowermost("Далее")
-		wait "Разрешить внесение изменений"; press Left, Enter
-		wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
-
-		wait "Установка завершена"; click_lowermost("Закрыть")
-		wait !"Установка завершена"
-		exec cmd "echo hello world"
-		copyto "test.txt" "C:\\tmp\\test.txt"
 	}
 }

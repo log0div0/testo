@@ -1,4 +1,6 @@
 
+include "../common_win7.testo"
+
 param default_netmask "24"
 param default_password "Cont-4.X"
 
@@ -233,75 +235,15 @@ flash ub_flash {
 	}
 }*/
 
-macro click_lowermost(text) {
-	mouse click js """
-		arr = detect_text('${text}')
-		if (arr.length) {
-			arr.sort(function (a, b) {
-				return a.Y < b.Y
-			});
-
-			arr[arr.length - 1]
-		} else {
-			arr
-		}
-	""" timeout 2m
-}
-
 test client_install_win7 {
-	client {
-		start
-		wait "Choose an operating system"
-		press Down, Enter
-
-		mouse click "Мой язык - русский" timeout 2m;
-
-		wait "Выберите нужный язык"; click_lowermost("Далее") #2 "Далее"
-		mouse click "Установить" timeout 1m;
-		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
-		#wait "Выберите операционную систему"; mouse click "Далее"
-		wait "Условия лицензии"
-		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
-		wait "Выберите тип установки";
-		if (check "Полная установка") {
-			mouse click "Полная установка"
-		} else {
-			mouse click "Выборочная"
-		}
-		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
-		wait "Выберите имя пользователя" timeout 15m
-		unplug dvd
-		press LeftShift + LeftAlt; type "testo"; mouse click "Далее"
-		wait "Установите пароль"; click_lowermost("Далее")
-		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
-		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
-		wait "Проверьте настройку даты и времени"; mouse click "Далее"
-		wait "Выберите текущее место расположения компьютера"; mouse click "Общественная сеть"
-		wait "Корзина" timeout 10m
-		shutdown
-		start
-		wait "Корзина"
-	}
+	client install_win7("testo")
 }
 
 test client_install_guest_additions: client_install_win7 {
-	client {
-		sleep 5s
-
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		mouse click "Выполнить testo-guest-additions" timeout 1m
-		wait "Вас приветствует мастер установки"; mouse click "Далее"
-		wait "Выбор папки для установки"; click_lowermost("Далее")
-		wait "Подтверждение установки"; click_lowermost("Далее")
-		wait "Разрешить внесение изменений"; press Left, Enter
-		wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
-
-		wait "Установка завершена"; click_lowermost("Закрыть")
-		wait !"Установка завершена"
-		exec cmd "echo hello world"
-	}
+	client install_guest_additions()
 }
 
+[no_snapshots: true]
 test client_configure_windows: client_install_guest_additions {
 	client {
 		press LEFTMETA
@@ -310,8 +252,8 @@ test client_configure_windows: client_install_guest_additions {
 		mouse click "Мелкие значки"
 		mouse click "Учетные записи"
 		mouse click "Изменение параметров контроля учетных записей"
-		mouse dclick js "found = detect_text('Никогда')[0]; target = {x: found.x, y: found.y - 50}"
-		click_lowermost("ОК")
+		mouse dclick "Никогда".move_up(50);
+		mouse click "ОК".from_bottom(0);
 		wait "Microsoft Windows"; press Left, Enter
 		wait "Внесение изменений в учетную запись"
 		press LeftAlt+F4
@@ -333,19 +275,15 @@ test client_install_cryptopro: client_configure_windows {
 test client_install_ms: client_install_cryptopro {
 	client {
 		copyto "${MS_DIR}/MS" "C:\\Users\\testo\\Desktop\\MS"
-
 		mouse dclick "MS"
 		mouse dclick "setup"
-		click_lowermost("Установить")
-		mouse move 0 0
+		mouse click "Установить".from_bottom(0).center_bottom()
 		wait "Вас приветствует программа установки" timeout 10m
-		click_lowermost("Далее")
-		mouse click "Я принимаю условия"; click_lowermost("Далее")
-		mouse move 0 0
-		wait "Папка назначения"; click_lowermost("Далее")
-		mouse move 0 0; click_lowermost("Установить")
-		mouse move 0 0
-		wait "Программа завершена" timeout 5m; click_lowermost("Готово")
+		mouse click "Далее".from_bottom(0)
+		mouse click "Я принимаю условия"; mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Папка назначения"; mouse click "Далее".from_bottom(0).center_bottom()
+		mouse click "Установить".from_bottom(0).center_bottom()
+		wait "Программа завершена" timeout 5m; mouse click " Готово".from_bottom(0)
 		wait "Требуется перезагрузка"; press Enter
 		sleep 5s
 		wait "Корзина" timeout 5m
@@ -355,6 +293,7 @@ test client_install_ms: client_install_cryptopro {
 test client_connect_CUS: client_install_ms, init_CUS {
 	client {
 		press LeftAlt + LeftShift
+		sleep 5s
 		press LEFTMETA; wait "Все программы"
 		type "cmd"; press Enter
 		wait "cmd.exe"
@@ -365,26 +304,18 @@ test client_connect_CUS: client_install_ms, init_CUS {
 		press LeftAlt + LeftShift
 		type "\" static ${client_ip} ${client_netmask} ${cus_main_ip}"
 		press Enter
-
 		type "exit"; press Enter
-
 		mouse click "Общественная сеть"; mouse click "Закрыть"
-
 		mouse dclick "Менеджер"
 		wait "Подключение к ЦУС"
 		press LeftAlt + LeftShift
-
-		mouse click js "found = detect_text('Сервер')[0]; target = {x: found.x + 150, y: found.y}"
+		mouse click "Сервер".move_right(150)
 		type "${cus_main_ip}"
-
-		mouse click js "found = detect_text('Учётная запись')[0]; target = {x: found.x + 150, y: found.y}"
+		mouse click "Учётная запись".move_right(150)
 		type "admin"
-
-		mouse click js "found = detect_text('Пароль')[0]; target = {x: found.x + 150, y: found.y}"
+		mouse click "Пароль".move_right(150)
 		type "${default_password}"
-
 		mouse click "Подключить"
-
 		wait "${cus_main_ip} - Континент"
 	}
 }
@@ -398,8 +329,8 @@ test install_allow_all_policy: client_connect_CUS {
 		mouse click "Установить"
 
 		wait "Установить политики"
-		mouse click js "found = detect_text('node-${cus_id}')[0]; target = {x: found.x - 65, y: found.y}"
-		click_lowermost("ОК")
+		mouse click "node-${cus_id}".move_left(65)
+		mouse click "ОК".from_bottom(0)
 
 		wait "Установка политики на узлы безопасности"
 		wait "Новых уведомлений нет"
