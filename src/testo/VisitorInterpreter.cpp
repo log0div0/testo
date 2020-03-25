@@ -1117,7 +1117,7 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier
 
 
 std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_additional_specifiers(
-	std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>> specifiers,
+	const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers,
 	std::vector<nn::Rect> input)
 {
 	size_t index = 0;

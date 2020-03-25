@@ -362,6 +362,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_press(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
+		return visit_mouse(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
@@ -396,6 +398,68 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 			throw std::runtime_error(std::string(button.pos()) +
 				" :Error: Unknown key " + button.value());
 		}
+	}
+}
+
+
+void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers)
+{
+	//finally we're here
+
+	/*
+	what checks do we need?
+	1) If we have from, there could not be another from
+	2) If we have center, there could not be another center
+	3) From could not be after center or move
+	4) Center could not be after move
+	This should cover it
+	*/
+
+	bool has_from = false;
+	bool has_center = false;
+	bool has_move = false;
+
+	for (auto specifier: specifiers) {
+		if (specifier->is_from()) {
+			if (has_from) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after another \"from\" specifier");
+			}
+			if (has_move) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
+			}
+			has_from = true;
+		} if (specifier->is_centering()) {
+			if (has_center) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after another \"precision\" specifier");
+			}
+			if (has_move) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
+			}
+		}
+	}
+}
+
+void VisitorSemantic::visit_mouse_move_selectable(std::shared_ptr<AST::MouseSelectable> mouse_selectable) {
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
+		if (mouse_selectable->specifiers.size()) {
+			throw std::runtime_error(std::string(mouse_selectable->specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
+		}
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
+		return visit_mouse_additional_specifiers(mouse_selectable->specifiers);
+	}
+}
+
+void VisitorSemantic::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
+	if (mouse_move_click->object) {
+		if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click->object)) {
+			visit_mouse_move_selectable(p->target);
+		}
+	}
+}
+
+void VisitorSemantic::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
+	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse->event)) {
+		return visit_mouse_move_click(p->event);
 	}
 }
 

@@ -107,7 +107,7 @@ struct VisitorInterpreter {
 	std::vector<Point> visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<nn::Rect>& input);
 	std::vector<Point> visit_mouse_specifier_default_centering(const std::vector<nn::Rect>& input);
 	std::vector<Point> visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<Point>& input);
-	std::vector<Point> visit_mouse_additional_specifiers(std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>> specifiers, std::vector<nn::Rect> input);
+	std::vector<Point> visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, std::vector<nn::Rect> input);
 	Point visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
 	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
