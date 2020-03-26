@@ -420,9 +420,24 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 	bool has_move = false;
 
 	for (auto specifier: specifiers) {
+		auto arg = specifier->arg;
+
 		if (specifier->is_from()) {
+			if (!arg) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a number as an argument");
+			}
+
+			try {
+				std::stoi(arg.value());
+			} catch (const std::exception& error) {
+				throw std::runtime_error(std::string(arg.pos()) + ": Error: the argument must be a number");
+			}
+
 			if (has_from) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after another \"from\" specifier");
+			}
+			if (has_center) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"precision\" specifier");
 			}
 			if (has_move) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
@@ -430,14 +445,29 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			has_from = true;
 			continue;
 		} if (specifier->is_centering()) {
+			if (arg) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " must not have an argument");
+			}
 			if (has_center) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after another \"precision\" specifier");
 			}
 			if (has_move) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
 			}
+			has_center = true;
 			continue;
-		} else if (!specifier->is_moving()) {
+		} else if (specifier->is_moving()) {
+			if (!arg) {
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a number as an argument");
+			}
+			try {
+				std::stoi(arg.value());
+			} catch (const std::exception& error) {
+				throw std::runtime_error(std::string(arg.pos()) + ": Error: the argument must be a number");
+			}
+			has_move = true;
+			continue;
+		} else {
 			throw std::runtime_error(std::string(specifier->begin()) + ": Error: unknown specifier: " + specifier->name.value());
 		}
 	}
