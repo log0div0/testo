@@ -748,6 +748,12 @@ Token Lexer::quoted_string() {
 	return Token(Token::category::quoted_string, value, tmp_pos);
 }
 
+Token Lexer::dot() {
+	Pos tmp_pos = current_pos;
+	current_pos.advance();
+	return Token(Token::category::dot, ".", tmp_pos);
+}
+
 Token Lexer::comma() {
 	Pos tmp_pos = current_pos;
 	current_pos.advance();
@@ -850,6 +856,8 @@ Token Lexer::get_next_token() {
 			return triple_quoted_string();
 		} else if (test_quote()) {
 			return quoted_string();
+		} else if (test_dot()) {
+			return dot();
 		} else if (test_comma()) {
 			return comma();
 		} else if (test_exclamation_mark()) {

@@ -485,6 +485,105 @@ struct MouseMoveTarget: public IMouseMoveTarget {
 	std::shared_ptr<MouseMoveTargetType> target;
 };
 
+struct MouseAdditionalSpecifier: public Node {
+	MouseAdditionalSpecifier(const Token& name, const Token& arg):
+		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos())), name(name), arg(arg) {}
+
+	Pos begin() const {
+		return name.pos();
+	}
+
+	Pos end() const {
+		if (arg) {
+			return arg.pos();
+		} else {
+			return name.pos();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = "." + name.value() + "(";
+		if (arg) {
+			result += arg.value();
+		}
+		result += ")";
+		return result;
+	}
+
+	bool is_from() const {
+		return (name.value() == "from_top" ||
+			name.value() == "from_bottom" ||
+			name.value() == "from_left" ||
+			name.value() == "from_right");
+	}
+
+	bool is_centering() const {
+		return (name.value() == "left_bottom" ||
+			name.value() == "left_center" ||
+			name.value() == "left_top" ||
+			name.value() == "center_bottom" ||
+			name.value() == "center" ||
+			name.value() == "center_top" ||
+			name.value() == "right_bottom" ||
+			name.value() == "right_center" ||
+			name.value() == "right_top");
+	}
+
+	bool is_moving() const {
+		return (name.value() == "move_left" ||
+			name.value() == "move_right" ||
+			name.value() == "move_up" ||
+			name.value() == "move_down");
+	}
+
+	Token name;
+	Token arg;
+};
+
+struct MouseSelectable: public Node {
+	MouseSelectable(std::shared_ptr<ISelectable> selectable,
+		const std::vector<std::shared_ptr<MouseAdditionalSpecifier>>& specifiers,
+		const Token& timeout): 
+		Node(Token(Token::category::mouse_selectable, "mouse_selectable", Pos())),
+		selectable(selectable), specifiers(specifiers), timeout(timeout) {}
+
+	Pos begin() const {
+		return selectable->begin(); 
+	}
+
+	Pos end() const {
+		if (timeout) {
+			return timeout.pos();
+		} else if (specifiers.size()) {
+			return specifiers[specifiers.size() - 1]->end();
+		} else {
+			return selectable->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*selectable);
+
+		for (auto specifier: specifiers) {
+			result += std::string(*specifier);
+		}
+
+		if (timeout) {
+			result += " timeout " + timeout.value();
+		}
+
+		return result;
+	}
+
+	std::string text() const {
+		return selectable->text();
+	}
+
+	std::shared_ptr<ISelectable> selectable = nullptr;
+	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
+	Token timeout;
+};
+
 struct MouseCoordinates: public Node {
 	MouseCoordinates(const Token& dx, const Token& dy):
 		Node(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos())), dx(dx), dy(dy) {}
@@ -536,17 +635,15 @@ struct MouseEvent: public IMouseEvent {
 
 
 struct MouseMoveClick: public Node {
-	MouseMoveClick(const Token& event, std::shared_ptr<IMouseMoveTarget> object, const Token& timeout_interval):
-		Node(event), object(object), timeout_interval(timeout_interval) {}
+	MouseMoveClick(const Token& event, std::shared_ptr<IMouseMoveTarget> object):
+		Node(event), object(object) {}
 
 	Pos begin() const {
 		return t.pos();
 	}
 
 	Pos end() const {
-		if (timeout_interval) {
-			return timeout_interval.pos();
-		} else if (object) {
+		if (object) {
 			return object->end();
 		} else {
 			return t.pos();
@@ -558,14 +655,10 @@ struct MouseMoveClick: public Node {
 		if (object) {
 			result += " " + std::string(*object);
 		}
-		if (timeout_interval) {
-			result += " timeout " + timeout_interval;
-		}
 		return result;
 	}
 
 	std::shared_ptr<IMouseMoveTarget> object = nullptr;
-	Token timeout_interval;
 };
 
 struct MouseHold: public Node {

@@ -67,4 +67,3 @@ macro unplug_nat(login, password) {
 	wait "Password:"; type "${password}"; press Enter
 	wait "Welcome to Ubuntu"
 }
-

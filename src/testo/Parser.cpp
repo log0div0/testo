@@ -702,6 +702,48 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 	return std::make_shared<Action<Mouse>>(action);
 }
 
+std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
+	Token name = LT(1);
+	match(Token::category::id);
+	match(Token::category::lparen);
+
+	Token arg;
+	if (LA(1) != Token::category::rparen && LA(1) != Token::category::number) {
+		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: you can use only numbers as arguments in cursor specifiers");
+	}
+
+	if (LA(1) == Token::category::number) {
+		arg = LT(1);
+		match(Token::category::number);
+	}
+
+	match(Token::category::rparen);
+
+	return std::make_shared<MouseAdditionalSpecifier>(name, arg);
+}
+
+std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
+	auto select = selectable();
+
+	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
+
+	while (LA(1) == Token::category::dot) {
+		match(Token::category::dot);
+		specifiers.push_back(mouse_additional_specifier());
+	}
+
+	Token timeout;
+
+	if (LA(1) == Token::category::timeout) {
+		match(Token::category::timeout);
+		timeout = LT(1);
+		match(Token::category::time_interval);
+	}
+
+	auto mouse_selectable = std::make_shared<MouseSelectable>(select, specifiers, timeout);
+	return std::make_shared<MouseMoveTarget<MouseSelectable>>(mouse_selectable);
+}
+
 std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click() {
 	Token event_token = LT(1);
 	match({Token::category::click,
@@ -712,34 +754,18 @@ std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click()
 		Token::category::dclick});
 
 	std::shared_ptr<IMouseMoveTarget> target = nullptr;
-	bool is_coordinates = false;
 
 	if (test_selectable()) {
-		auto object = selectable();
-		target = std::shared_ptr<MouseMoveTarget<ISelectable>>(new MouseMoveTarget<ISelectable>(object));
+		target = mouse_selectable();
 	} else if (LA(1) == Token::category::number) {
-		is_coordinates = true;
 		target = mouse_coordinates();
 	}
 
-	Token timeout = Token();
-
-	if (LA(1) == Token::category::timeout) {
-		match(Token::category::timeout);
-
-		timeout = LT(1);
-		match(Token::category::time_interval);
+	if (event_token.type() == Token::category::move && !target) {
+		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: you must specify a target to move the mouse cursor");
 	}
 
-	if (timeout && (target == nullptr)) {
-		throw std::runtime_error(std::string(timeout.pos()) + ": Error: timeout can be used only with an object");
-	}
-
-	if (timeout && is_coordinates) {
-		throw std::runtime_error(std::string(timeout.pos()) + ": Error: timeout can't be used with coordinates");
-	}
-
-	auto move_click = std::make_shared<MouseMoveClick>(event_token, target, timeout);
+	auto move_click = std::make_shared<MouseMoveClick>(event_token, target);
 	return std::make_shared<MouseEvent<MouseMoveClick>>(move_click);
 }
 

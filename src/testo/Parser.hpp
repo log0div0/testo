@@ -71,6 +71,8 @@ private:
 	std::shared_ptr<AST::MouseEvent<AST::MouseHold>> mouse_hold();
 	std::shared_ptr<AST::MouseEvent<AST::MouseRelease>> mouse_release();
 	std::shared_ptr<AST::MouseEvent<AST::MouseWheel>> mouse_wheel();
+	std::shared_ptr<AST::MouseAdditionalSpecifier> mouse_additional_specifier();
+	std::shared_ptr<AST::MouseMoveTarget<AST::MouseSelectable>> mouse_selectable();
 	std::shared_ptr<AST::MouseMoveTarget<AST::MouseCoordinates>> mouse_coordinates();
 	std::shared_ptr<AST::Action<AST::Plug>> plug();
 	std::shared_ptr<AST::Action<AST::Start>> start();

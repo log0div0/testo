@@ -762,42 +762,17 @@ quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
-
 }
 
-std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_select_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
-	std::vector<Point> result;
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
-		auto text = template_parser.resolve(p->text(), reg);
-		auto ocr_find = nn::OCR(&screenshot).search(text);
-		for (auto& rect: ocr_find) {
-			result.push_back({rect.center_x(), rect.center_y()});
-		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		auto script = template_parser.resolve(p->text(), reg);
-		auto value = eval_js(script, screenshot);
+VisitorInterpreter::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot) {
+	auto script = template_parser.resolve(js->text(), reg);
+	auto value = eval_js(script, screenshot);
 
-		if (!value.is_object()) {
-			throw std::runtime_error("Can't process return value type. We expect an object or an array of objects");
-		}
-
-		if (value.is_array()) {
-			auto size = (int32_t)value.get_property_str("length");
-
-			for (int32_t i = 0; i < size; ++i) {
-				auto elem = value.get_property_uint32(i);
-				result.push_back(Point(elem));
-			}
-		} else if (value.is_object()) {
-			result.push_back(Point(value));
-		}
-
-
+	if (value.is_object() && !value.is_array()) {
+		return Point(value);
 	} else {
-		throw std::runtime_error("Unknown selectable type");
+		throw std::runtime_error("Can't process return value type. We expect a single object");
 	}
-
-	return result;
 }
 
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
@@ -980,15 +955,13 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 
 void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
-		std::string where_to_go = mouse_move_click->object ? mouse_move_click->object->text() : "";
-		std::string wait_for = mouse_move_click->timeout_interval ? mouse_move_click->timeout_interval.value() : "1m";
-		reporter.mouse_move_click(vmc, mouse_move_click->t.value(), where_to_go, wait_for);
+		reporter.mouse_move_click(vmc, mouse_move_click->t.value());
 
 		if (mouse_move_click->object) {
 			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click->object)) {
 				visit_mouse_move_coordinates(vmc, p->target);
-			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::ISelectable>>(mouse_move_click->object)) {
-				visit_mouse_move_selectable(vmc, p->target, wait_for);
+			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click->object)) {
+				visit_mouse_move_selectable(vmc, p->target);
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
@@ -1024,51 +997,244 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 	}
 }
 
-void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc,
-	std::shared_ptr<AST::ISelectable> selectable, const std::string& timeout)
+
+std::vector<nn::Rect> VisitorInterpreter::visit_mouse_specifier_from(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	std::vector<nn::Rect> input)
 {
+	auto name = specifier->name.value();
+	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
+
+	if ((int)input.size() < arg + 1) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": not enough objects in the input array");
+	}
+
+	std::vector<nn::Rect> result;
+
+	if (name == "from_top" ||
+		name == "from_bottom")
+	{
+		std::sort(input.begin(), input.end(), [](const nn::Rect& a, const nn::Rect& b) -> bool {return a.center_y() < b.center_y();});
+		if (name == "from_top") {
+			result.push_back(input[arg]);
+		} else {
+			result.push_back(input[input.size() - arg - 1]);
+		}
+
+	} else if (name == "from_left" ||
+		name == "from_right")
+	{
+		std::sort(input.begin(), input.end(), [](const nn::Rect& a, const nn::Rect& b) -> bool {return a.center_x() < b.center_x();});
+		if (name == "from_left") {
+			result.push_back(input[arg]);
+		} else {
+			result.push_back(input[input.size() - arg - 1]);
+		}
+	}
+
+	return result;
+}
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_centering(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	const std::vector<nn::Rect>& input)
+{
+	std::vector<Point> result;
+
+	if (!input.size()) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's no input object");
+	}
+
+	if (input.size() > 1) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's more than one object");
+	}
+
+	auto name = specifier->name.value();
+
+	if (name == "left_bottom") {
+		result.push_back({input[0].left, input[0].bottom});
+	} else if (name == "left_center") {
+		result.push_back({input[0].left, input[0].center_y()});
+	} else if (name == "left_top") {
+		result.push_back({input[0].left, input[0].top});
+	} else if (name == "center_bottom") {
+		result.push_back({input[0].center_x(), input[0].bottom});
+	} else if (name == "center") {
+		result.push_back({input[0].center_x(), input[0].center_y()});
+	} else if (name == "center_top") {
+		result.push_back({input[0].center_x(), input[0].top});
+	} else if (name == "right_bottom") {
+		result.push_back({input[0].right, input[0].bottom});
+	} else if (name == "right_center") {
+		result.push_back({input[0].right, input[0].center_y()});
+	} else if (name == "right_top") {
+		result.push_back({input[0].right, input[0].top});
+	} else {
+		throw std::runtime_error("Uknown center specifier");
+	}
+
+	return result;
+}
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_default_centering(const std::vector<nn::Rect>& input) {
+	std::vector<Point> result;
+
+	for (auto rect: input) {
+		result.push_back({rect.center_x(), rect.center_y()});
+	}
+
+	return result;
+}
+
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_specifier_moving(
+	std::shared_ptr<AST::MouseAdditionalSpecifier> specifier,
+	const std::vector<Point>& input)
+{
+	if (!input.size()) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's no input object");
+	}
+
+	if (input.size() > 1) {
+		throw std::runtime_error("Can't apply specifier " + specifier->name.value() + ": there's more than one object");
+	}
+
+	auto name = specifier->name.value();
+	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
+	auto result = input;
+
+	if (name == "move_left") {
+		result[0].x -= arg;
+	} else if (name == "move_right") {
+		result[0].x += arg;
+	} else if (name == "move_up") {
+		result[0].y -= arg;
+	} else if (name == "move_down") {
+		result[0].y += arg;
+	}
+	return result;;
+}
+
+
+std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_additional_specifiers(
+	const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers,
+	std::vector<nn::Rect> input)
+{
+	size_t index = 0;
+
+	if ((specifiers.size() > index) && specifiers[index]->is_from()) {		
+		input = visit_mouse_specifier_from(specifiers[index], input);
+		index++;
+	}
+
+	std::vector<Point> result;
+
+	if (specifiers.size() > index && specifiers[index]->is_centering()) {
+		result = visit_mouse_specifier_centering(specifiers[index], input);
+		index++;
+	} else {
+		result = visit_mouse_specifier_default_centering(input);
+	}
+
+	for (size_t i = index; i < specifiers.size(); ++i) {
+		result = visit_mouse_specifier_moving(specifiers[i], result);
+	}
+
+	return result;
+}
+
+void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseSelectable> mouse_selectable)
+{
+	std::string timeout = mouse_selectable->timeout ? mouse_selectable->timeout.value() : mouse_move_click_default_timeout;
+	std::string where_to_go = template_parser.resolve(mouse_selectable->text(), reg);
+
+	for (auto specifier: mouse_selectable->specifiers) {
+		where_to_go += std::string(*specifier);
+	}
+
+	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
+
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
 	std::vector<Point> found;
+	bool is_cursor_moved = false;
 	while (std::chrono::system_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
+		try {
+			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
+				found.push_back(visit_select_js(p, screenshot));
+			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
+				auto text = template_parser.resolve(p->text(), reg);
+				auto ocr_find = nn::OCR(&screenshot).search(text);
 
-		found = visit_select_selectable(selectable, screenshot);
-		if (found.size()) {
+				//each specifier can throw an exception if something goes wrong.
+				//Right now we need to ignore it
+				found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
+			}
+
+			//Nothing to click on
+			if (!found.size()) {
+				throw std::runtime_error("");
+			}
+
+			//Don't know where to click
+			if (found.size() > 1) {
+				throw std::runtime_error("");
+			}
+
+			vmc->vm->mouse_move_abs(found[0].x, found[0].y);
+			is_cursor_moved = true;
 			break;
+		} catch (const std::exception& error) {
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> time = end - start;
+			if (time < 1s) {
+				timer.waitFor(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time));
+			} else {
+				coro::CheckPoint();
+			}
+			continue;
+		} 
+	}
+
+	if (!is_cursor_moved) {
+		//Ok, now try one more time and let's see if we can do anything
+		//any fail now will result in total failure
+		auto screenshot = vmc->vm->screenshot();
+		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
+			found.push_back(visit_select_js(p, screenshot));
+		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
+			auto text = template_parser.resolve(p->text(), reg);
+			auto ocr_find = nn::OCR(&screenshot).search(text);
+
+			//each specifier can throw an exception if something goes wrong.
+			//Right now we need to ignore it
+			found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
 		}
 
-		auto end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> time = end - start;
-		if (time < 1s) {
-			timer.waitFor(std::chrono::milliseconds(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time)));
-		} else {
-			coro::CheckPoint();
+		if (!found.size()) {
+			throw std::runtime_error("Timeout: can't find entry to click: " + mouse_selectable->text());
 		}
-	}
 
-	if (!found.size()) {
-		throw std::runtime_error("Can't find entry to click: " + selectable->text());
+		if (found.size() > 1) {
+			throw std::runtime_error("Timeout: too many occurences of entry to click: " + mouse_selectable->text());
+		}
+		vmc->vm->mouse_move_abs(found[0].x, found[0].y);
 	}
-
-	if (found.size() > 1) {
-		throw std::runtime_error("Too many occurences of entry to click: " + selectable->text());
-	}
-
-	vmc->vm->mouse_move_abs(found[0].x, found[0].y);
 }
 
 void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)
 {
 	auto dx = coordinates->dx.value();
+	auto dy = coordinates->dy.value();
+	reporter.mouse_move_click_coordinates(vmc, dx, dy);
 	if ((dx[0] == '+') || (dx[0] == '-')) {
 		vmc->vm->mouse_move_rel("x", std::stoi(dx));
 	} else {
 		vmc->vm->mouse_move_abs("x", std::stoul(dx));
 	}
 
-	auto dy = coordinates->dy.value();
 	if ((dy[0] == '+') || (dy[0] == '-')) {
 		vmc->vm->mouse_move_rel("y", std::stoi(dy));
 	} else {

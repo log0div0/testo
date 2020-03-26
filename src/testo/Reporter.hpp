@@ -56,7 +56,9 @@ struct Reporter {
 	void plug(std::shared_ptr<VmController> vmc, const std::string& device, const std::string& device_name, bool is_on);
 	void exec(std::shared_ptr<VmController> vmc, const std::string& interpreter, const std::string& timeout);
 	void copy(std::shared_ptr<VmController> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
-	void mouse_move_click(std::shared_ptr<VmController> vmc, std::string event, std::string object, const std::string& timeout);
+	void mouse_move_click_coordinates(std::shared_ptr<VmController> vmc, const std::string& x, const std::string& y);
+	void mouse_move_click_selectable(std::shared_ptr<VmController> vmc, const std::string& object, const std::string& timeout);
+	void mouse_move_click(std::shared_ptr<VmController> vmc, std::string event);
 	void mouse_hold(std::shared_ptr<VmController> vmc, std::string button);
 	void mouse_release(std::shared_ptr<VmController> vmc);
 	void mouse_wheel(std::shared_ptr<VmController> vmc, const std::string& direction);

@@ -108,13 +108,7 @@ private:
 	bool test_rbracket() const { return ((*input)[current_pos] == ']'); }
 	bool test_semi() const { return ((*input)[current_pos] == ';'); }
 	bool test_colon() const { return ((*input)[current_pos] == ':'); }
-	bool test_double_dot() const {
-		if (test_eof(1)) {
-			return false;
-		}
-		return (((*input)[current_pos] == '.') &&
-			((*input)[current_pos + 1] == '.'));
-	}
+	bool test_dot() const { return ((*input)[current_pos] == '.'); }
 
 	void skip_spaces();
 	void skip_comments();
@@ -180,6 +174,7 @@ private:
 	Token double_ampersand();
 	Token double_vertical_bar();
 	Token assign();
+	Token dot();
 	Token comma();
 	Token plus();
 	Token asterisk();

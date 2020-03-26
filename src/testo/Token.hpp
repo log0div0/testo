@@ -64,6 +64,7 @@ struct Token {
 		double_vertical_bar,	//||
 		exclamation_mark,	//!
 		assign,
+		dot,
 		comma,
 		plus,
 		asterisk,
@@ -97,6 +98,8 @@ struct Token {
 		binary, //true or false
 		program,
 		mouse_coordinates,
+		mouse_selectable,
+		mouse_additional_specifier,
 		key_spec,
 		action_block,
 		attr,
@@ -247,6 +250,8 @@ struct Token {
 			return "&&";
 		case double_vertical_bar:
 			return "||";
+		case dot:
+			return ".";
 		case comma:
 			return ",";
 		case plus:
@@ -273,6 +278,10 @@ struct Token {
 			return "NONE";
 		case program:
 			return "PROGRAM";
+		case mouse_selectable:
+			return "MOUSE SELECTABLE";
+		case mouse_additional_specifier:
+			return "MOUSE ADDITIONAL SPECIFIER";
 		case mouse_coordinates:
 			return "MOUSE COORDINATES";
 		case key_spec:
