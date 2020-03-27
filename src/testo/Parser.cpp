@@ -703,8 +703,14 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 }
 
 std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
+	Token tmp = LT(1);
+	match(Token::category::dot);
 	Token name = LT(1);
+	if (!Pos::is_adjacent(tmp.end(), name.begin())) {
+		throw std::runtime_error(std::string(tmp.end()) + ": Error: expected a mouse specifier name");
+	}
 	match(Token::category::id);
+	Token lparen = LT(1);
 	match(Token::category::lparen);
 
 	Token arg;
@@ -717,9 +723,10 @@ std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
 		match(Token::category::number);
 	}
 
+	Token rparen = LT(1);
 	match(Token::category::rparen);
 
-	return std::make_shared<MouseAdditionalSpecifier>(name, arg);
+	return std::make_shared<MouseAdditionalSpecifier>(name, lparen, arg, rparen);
 }
 
 std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
@@ -727,9 +734,13 @@ std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
 
 	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
 
-	while (LA(1) == Token::category::dot) {
-		match(Token::category::dot);
-		specifiers.push_back(mouse_additional_specifier());
+	auto select_end = select->end();
+	auto tmp = LT(1);
+
+	for (Pos it = select->end(); LA(1) == Token::category::dot && Pos::is_adjacent(it, LT(1).begin());) {
+		auto specifier = mouse_additional_specifier();
+		specifiers.push_back(specifier);
+		it = specifier->end();
 	}
 
 	Token timeout;

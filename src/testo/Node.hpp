@@ -486,20 +486,15 @@ struct MouseMoveTarget: public IMouseMoveTarget {
 };
 
 struct MouseAdditionalSpecifier: public Node {
-	MouseAdditionalSpecifier(const Token& name, const Token& arg):
-		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos(), Pos())), name(name), arg(arg) {}
+	MouseAdditionalSpecifier(const Token& name, const Token& lparen, const Token& arg, const Token& rparen):
+		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos(), Pos())), name(name), lparen(lparen), arg(arg), rparen(rparen) {}
 
 	Pos begin() const {
 		return name.begin();
 	}
 
 	Pos end() const {
-		//TODO: !!!! RPAREN END!!!
-		if (arg) {
-			return arg.end();
-		} else {
-			return name.end();
-		}
+		return rparen.end();
 	}
 
 	operator std::string() const {
@@ -538,7 +533,9 @@ struct MouseAdditionalSpecifier: public Node {
 	}
 
 	Token name;
+	Token lparen;
 	Token arg;
+	Token rparen;
 };
 
 struct MouseSelectable: public Node {

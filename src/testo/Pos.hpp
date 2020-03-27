@@ -36,6 +36,16 @@ struct Pos {
 		return result;
 	}
 
+	bool operator==(const Pos& other) {
+		return (offset == other.offset && 
+			file == other.file);
+	}
+
+	static bool is_adjacent(Pos left, const Pos& right) {
+		left.offset++;
+		return left == right;
+	}
+
 	operator size_t() const {
 		return offset;
 	}
