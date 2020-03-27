@@ -545,7 +545,7 @@ std::shared_ptr<IAction> Parser::action() {
 			match(Token::category::semi);
 		} else {
 			throw std::runtime_error(std::string(LT(1).begin()) +
-				": Expected new line or ';' \"");
+				": Expected new line or ';'");
 		}
 		action->set_delim(delim);
 	}

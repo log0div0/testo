@@ -131,7 +131,7 @@ struct Token {
 	}
 
 	Pos end() const {
-		return _begin;
+		return _end;
 	}
 
 	operator bool() const {
