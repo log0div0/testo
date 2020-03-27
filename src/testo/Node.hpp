@@ -105,7 +105,7 @@ struct Selectable: public ISelectable {
 
 struct KeySpec: public Node {
 	KeySpec(const std::vector<Token>& buttons, const Token& times):
-		Node(Token(Token::category::key_spec, "key_spec", Pos())),
+		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
 		buttons(buttons),
 		times(times) {}
 
@@ -487,7 +487,7 @@ struct MouseMoveTarget: public IMouseMoveTarget {
 
 struct MouseAdditionalSpecifier: public Node {
 	MouseAdditionalSpecifier(const Token& name, const Token& arg):
-		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos())), name(name), arg(arg) {}
+		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos(), Pos())), name(name), arg(arg) {}
 
 	Pos begin() const {
 		return name.begin();
@@ -545,7 +545,7 @@ struct MouseSelectable: public Node {
 	MouseSelectable(std::shared_ptr<ISelectable> selectable,
 		const std::vector<std::shared_ptr<MouseAdditionalSpecifier>>& specifiers,
 		const Token& timeout): 
-		Node(Token(Token::category::mouse_selectable, "mouse_selectable", Pos())),
+		Node(Token(Token::category::mouse_selectable, "mouse_selectable", Pos(), Pos())),
 		selectable(selectable), specifiers(specifiers), timeout(timeout) {}
 
 	Pos begin() const {
@@ -587,7 +587,7 @@ struct MouseSelectable: public Node {
 
 struct MouseCoordinates: public Node {
 	MouseCoordinates(const Token& dx, const Token& dy):
-		Node(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos())), dx(dx), dy(dy) {}
+		Node(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos(), Pos())), dx(dx), dy(dy) {}
 
 	Pos begin() const {
 		return dx.begin();
@@ -900,7 +900,7 @@ struct Copy: public Node {
 
 struct ActionBlock: public Node {
 	ActionBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<IAction>> actions):
-		Node(Token(Token::category::action_block, "action_block", Pos())),
+		Node(Token(Token::category::action_block, "action_block", Pos(), Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
 		actions(actions) {}
@@ -930,7 +930,7 @@ struct ActionBlock: public Node {
 
 struct Cmd: public Node {
 	Cmd(const std::vector<Token>& vms, std::shared_ptr<IAction> action):
-		Node(Token(Token::category::cmd, "cmd", Pos())),
+		Node(Token(Token::category::cmd, "cmd", Pos(), Pos())),
 		vms(vms),
 		action(action) {}
 
@@ -958,7 +958,7 @@ struct Cmd: public Node {
 
 struct CmdBlock: public Node {
 	CmdBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Cmd>> commands):
-		Node(Token(Token::category::cmd_block, "cmd_block", Pos())),
+		Node(Token(Token::category::cmd_block, "cmd_block", Pos(),Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
 		commands(commands) {}
@@ -1149,7 +1149,7 @@ struct SimpleAttr: public Node {
 
 struct BinaryAttr: public Node {
 	BinaryAttr(const Token& _value):
-		Node(Token(Token::category::binary, _value.value(), _value.begin())),
+		Node(Token(Token::category::binary, _value.value(), _value.begin(), _value.end())),
 		value(_value) {}
 
 	Pos begin() const {
@@ -1189,7 +1189,7 @@ struct StringAttr: public Node {
 
 struct Attr: public Node {
 	Attr(const Token& name, const Token& id, std::shared_ptr<IAttrValue> value):
-		Node(Token(Token::category::attr, "", Pos())),
+		Node(Token(Token::category::attr, "", Pos(), Pos())),
 		name(name),
 		id(id),
 		value(value) {}
@@ -1213,7 +1213,7 @@ struct Attr: public Node {
 
 struct AttrBlock: public Node {
 	AttrBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Attr>> attrs):
-		Node(Token(Token::category::attr_block, "", Pos())),
+		Node(Token(Token::category::attr_block, "", Pos(),Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
 		attrs(attrs) {}
@@ -1325,7 +1325,7 @@ struct Param: public Node {
 
 struct Program: public Node {
 	Program (const std::vector<std::shared_ptr<IStmt>> stmts):
-		Node(Token(Token::category::program, "program", Pos())),
+		Node(Token(Token::category::program, "program", Pos(),Pos())),
 		stmts(stmts) {}
 
 	Pos begin() const {

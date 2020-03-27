@@ -113,8 +113,8 @@ struct Token {
 		_value = std::string("");
 	}
 
-	Token(category type, const std::string& value, Pos begin):
-		_type(type), _value(value), _begin(begin) {}
+	Token(category type, const std::string& value, Pos begin, Pos end):
+		_type(type), _value(value), _begin(begin), _end(end) {}
 
 
 	//we're doing getters to avoid occasional modifying of members
