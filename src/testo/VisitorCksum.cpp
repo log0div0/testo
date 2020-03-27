@@ -210,7 +210,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	if (plug->path) { //only for dvd
 		fs::path path = template_parser.resolve(plug->path->text(), reg);
 		if (path.is_relative()) {
-			path = plug->t.pos().file.parent_path() / path;
+			path = plug->t.begin().file.parent_path() / path;
 		}
 		//add signature for dvd file
 		result += file_signature(path);
@@ -251,7 +251,7 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 	fs::path from = template_parser.resolve(copy->from->text(), reg);
 
 	if (from.is_relative()) {
-		from = copy->t.pos().file.parent_path() / from;
+		from = copy->t.begin().file.parent_path() / from;
 	}
 
 	result += from.generic_string();
@@ -274,7 +274,7 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 	fs::path to = template_parser.resolve(copy->to->text(), reg);
 
 	if (to.is_relative()) {
-		to = copy->t.pos().file.parent_path() / to;
+		to = copy->t.begin().file.parent_path() / to;
 	}
 
 	result += to.generic_string();

@@ -84,7 +84,7 @@ struct VisitorInterpreter {
 		explicit CycleControlException(const Token& token):
 			InterpreterException(), token(token)
 		{
-			msg = std::string(token.pos()) + " error: cycle control action has not a correcponding cycle";
+			msg = std::string(token.begin()) + " error: cycle control action has not a correcponding cycle";
 		}
 
 		Token token;

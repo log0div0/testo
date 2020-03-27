@@ -26,7 +26,7 @@ void Parser::match(Token::category type) {
 	if (LA(1) == type) {
 		consume();
 	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) +
+		throw std::runtime_error(std::string(LT(1).begin()) +
 			": unexpected token \"" +
 			LT(1).value() + "\", expected: " + Token::type_to_string(type)); //TODO: more informative what we expected
 	}
@@ -40,7 +40,7 @@ void Parser::match(const std::vector<Token::category> types) {
 		}
 	}
 
-	throw std::runtime_error(std::string(LT(1).pos()) +
+	throw std::runtime_error(std::string(LT(1).begin()) +
 			": unexpected token \"" +
 			LT(1).value() + "\""); //TODO: more informative what we expected
 }
@@ -172,7 +172,7 @@ void Parser::handle_include() {
 		}
 
 		if (!fs::exists(combined)) {
-			throw std::runtime_error(std::string(include_token.pos()) + ": fatal error: no such file: " + dest_file.generic_string());
+			throw std::runtime_error(std::string(dest_file_token.begin()) + ": fatal error: no such file: " + dest_file.generic_string());
 		}
 		dest_file = fs::canonical(combined);
 	}
@@ -216,7 +216,7 @@ std::shared_ptr<Program> Parser::parse() {
 		} else if (test_include()) {
 			handle_include();
 		} else {
-			throw std::runtime_error(std::string(LT(1).pos()) + ":error: expected declaration or include");
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected declaration or include");
 		}
 	}
 
@@ -233,7 +233,7 @@ std::shared_ptr<IStmt> Parser::stmt() {
 	} else if (test_controller()) {
 		return controller();
 	} else {
-		throw std::runtime_error(std::string(LT(1).pos())
+		throw std::runtime_error(std::string(LT(1).begin())
 			+ ": Error: unsupported statement: " + LT(1).value());
 	}
 }
@@ -299,7 +299,7 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	match(Token::category::id);
 
 	if (LA(1) != Token::category::lparen) {
-		throw std::runtime_error(std::string(name.pos()) + ": Error: unknown action: " + name.value());
+		throw std::runtime_error(std::string(name.begin()) + ": Error: unknown action: " + name.value());
 	}
 
 	match(Token::category::lparen);
@@ -380,7 +380,7 @@ std::shared_ptr<Attr> Parser::attr() {
 		} else if (LA(1) == Token::category::size) {
 			match(Token::category::size);
 		} else {
-			throw std::runtime_error(std::string(LT(1).pos()) + ": Unknown attr type: " + LT(1).value());
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Unknown attr type: " + LT(1).value());
 		}
 	}
 
@@ -425,7 +425,7 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 
 	newline_list();
 	if (LA(1) != Token::category::lbrace) {
-		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: expected attribute block");
+		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: expected attribute block");
 	}
 	auto block = attr_block();
 	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
@@ -529,7 +529,7 @@ std::shared_ptr<IAction> Parser::action() {
 	} else if (LA(1) == Token::category::id) {
 		action = macro_call();
 	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown action: " + LT(1).value());
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown action: " + LT(1).value());
 	}
 
 	if (action->t.type() != Token::category::action_block &&
@@ -544,8 +544,8 @@ std::shared_ptr<IAction> Parser::action() {
 			delim = LT(1);
 			match(Token::category::semi);
 		} else {
-			throw std::runtime_error(std::string(LT(1).pos()) +
-				": Expected new line or ';' \"");
+			throw std::runtime_error(std::string(LT(1).begin()) +
+				": Expected new line or ';'");
 		}
 		action->set_delim(delim);
 	}
@@ -610,7 +610,7 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	Token interval = Token();
 
 	if (!test_select_expr()) {
-		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted an object to wait");
+		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to wait");
 	}
 
 	select_expression = select_expr();
@@ -695,7 +695,7 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 	} else if (LA(1) == Token::category::wheel) {
 		event = mouse_wheel();
 	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: unknown mouse action: " + LT(1).value());
+		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: unknown mouse action: " + LT(1).value());
 	}
 
 	auto action = std::make_shared<Mouse>(mouse_token, event);
@@ -703,13 +703,19 @@ std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
 }
 
 std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
+	Token tmp = LT(1);
+	match(Token::category::dot);
 	Token name = LT(1);
+	if (!Pos::is_adjacent(tmp.end(), name.begin())) {
+		throw std::runtime_error(std::string(tmp.end()) + ": Error: expected a mouse specifier name");
+	}
 	match(Token::category::id);
+	Token lparen = LT(1);
 	match(Token::category::lparen);
 
 	Token arg;
 	if (LA(1) != Token::category::rparen && LA(1) != Token::category::number) {
-		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: you can use only numbers as arguments in cursor specifiers");
+		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: you can use only numbers as arguments in cursor specifiers");
 	}
 
 	if (LA(1) == Token::category::number) {
@@ -717,9 +723,10 @@ std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
 		match(Token::category::number);
 	}
 
+	Token rparen = LT(1);
 	match(Token::category::rparen);
 
-	return std::make_shared<MouseAdditionalSpecifier>(name, arg);
+	return std::make_shared<MouseAdditionalSpecifier>(name, lparen, arg, rparen);
 }
 
 std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
@@ -727,9 +734,13 @@ std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
 
 	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
 
-	while (LA(1) == Token::category::dot) {
-		match(Token::category::dot);
-		specifiers.push_back(mouse_additional_specifier());
+	auto select_end = select->end();
+	auto tmp = LT(1);
+
+	for (Pos it = select->end(); LA(1) == Token::category::dot && Pos::is_adjacent(it, LT(1).begin());) {
+		auto specifier = mouse_additional_specifier();
+		specifiers.push_back(specifier);
+		it = specifier->end();
 	}
 
 	Token timeout;
@@ -762,7 +773,7 @@ std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> Parser::mouse_move_click()
 	}
 
 	if (event_token.type() == Token::category::move && !target) {
-		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: you must specify a target to move the mouse cursor");
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: you must specify a target to move the mouse cursor");
 	}
 
 	auto move_click = std::make_shared<MouseMoveClick>(event_token, target);
@@ -795,7 +806,7 @@ std::shared_ptr<AST::MouseEvent<AST::MouseWheel>> Parser::mouse_wheel() {
 	Token direction = LT(1);
 
 	if (direction.value() != "up" && direction.value() != "down") {
-		throw std::runtime_error(std::string(direction.pos()) + " : Error: unknown wheel direction: " + direction.value());
+		throw std::runtime_error(std::string(direction.begin()) + " : Error: unknown wheel direction: " + direction.value());
 	}
 
 	match(Token::category::id);
@@ -831,7 +842,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 	}
 	else {
 		if (LT(1).value() != "nic" && LT(1).value() != "link") {
-			throw std::runtime_error(std::string(LT(1).pos()) + ": Error: Unknown device type for plug/unplug");
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown device type for plug/unplug");
 		}
 		match(Token::category::id);
 	}
@@ -1033,7 +1044,7 @@ std::shared_ptr<ICounterList> Parser::counter_list() {
 	if (LA(1) == Token::category::RANGE) {
 		return range();
 	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown counter_list specifier: " + LT(1).value());
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown counter_list specifier: " + LT(1).value());
 	}
 }
 
@@ -1049,7 +1060,7 @@ std::shared_ptr<Action<ForClause>> Parser::for_clause() {
 	match(Token::category::IN_);
 
 	if (!test_counter_list()) {
-		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted a RANGE");
+		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted a RANGE");
 	}
 
 	std::shared_ptr<ICounterList> list = counter_list();
@@ -1149,7 +1160,7 @@ std::shared_ptr<ISelectable> Parser::selectable() {
 	} else if(LA(1) == Token::category::js) {
 		query = select_js();
 	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown selective object type: " + LT(1).value());
+		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: Unknown selective object type: " + LT(1).value());
 	}
 
 	return query;
@@ -1167,7 +1178,7 @@ std::shared_ptr<Selectable<SelectJS>> Parser::select_js() {
 std::shared_ptr<String> Parser::string() {
 	Token str = LT(1);
 	if (!test_string()) {
-		throw std::runtime_error(std::string(LT(1).pos()) + ": Error: expected string");
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected string");
 	}
 
 	match({Token::category::quoted_string, Token::category::triple_quoted_string});
@@ -1204,7 +1215,7 @@ std::shared_ptr<IFactor> Parser::factor() {
 	} else if (test_string()) {
 		return std::shared_ptr<Factor<String>>(new Factor<String>(not_token, string()));
 	} else {
-		throw std::runtime_error(std::string(LT(1).pos()) + ":Error: Unknown expression: " + LT(1).value());
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown expression: " + LT(1).value());
 	}
 }
 
@@ -1234,7 +1245,7 @@ std::shared_ptr<Check> Parser::check() {
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
 
 	if (!test_select_expr()) {
-		throw std::runtime_error(std::string(LT(1).pos()) + " : Error: expexted an object to check");
+		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to check");
 	}
 
 	select_expression = select_expr();

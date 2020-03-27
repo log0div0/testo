@@ -113,8 +113,8 @@ struct Token {
 		_value = std::string("");
 	}
 
-	Token(category type, const std::string& value, Pos pos):
-		_type(type), _value(value), _pos(pos) {}
+	Token(category type, const std::string& value, Pos begin, Pos end):
+		_type(type), _value(value), _begin(begin), _end(end) {}
 
 
 	//we're doing getters to avoid occasional modifying of members
@@ -126,8 +126,12 @@ struct Token {
 		return _value;
 	}
 
-	Pos pos() const {
-		return _pos;
+	Pos begin() const {
+		return _begin;
+	}
+
+	Pos end() const {
+		return _end;
 	}
 
 	operator bool() const {
@@ -310,5 +314,6 @@ struct Token {
 private:
 	category _type;
 	std::string _value;
-	Pos _pos;
+	Pos _begin;
+	Pos _end;
 };

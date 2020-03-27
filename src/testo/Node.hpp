@@ -26,11 +26,11 @@ struct String: public Node {
 		Node(string) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -52,7 +52,7 @@ struct SelectJS: public Node {
 		Node(js), script(script) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -105,19 +105,19 @@ struct Selectable: public ISelectable {
 
 struct KeySpec: public Node {
 	KeySpec(const std::vector<Token>& buttons, const Token& times):
-		Node(Token(Token::category::key_spec, "key_spec", Pos())),
+		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
 		buttons(buttons),
 		times(times) {}
 
 	Pos begin() const {
-		return buttons[0].pos();
+		return buttons[0].begin();
 	}
 
 	Pos end() const {
 		if (times) {
-			return times.pos();
+			return times.end();
 		} else {
-			return buttons[buttons.size() - 1].pos();
+			return buttons[buttons.size() - 1].end();
 		}
 	}
 
@@ -184,7 +184,7 @@ struct Action: public IAction {
 	}
 
 	Pos end() const {
-		return delim.pos();
+		return delim.end();
 	}
 
 	operator std::string() const {
@@ -207,11 +207,11 @@ struct Empty: public Node {
 	Empty(): Node(Token()) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -224,7 +224,7 @@ struct Abort: public Node {
 		Node(abort), message(message) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -243,7 +243,7 @@ struct Print: public Node {
 		Node(print), message(message) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -262,7 +262,7 @@ struct Type: public Node {
 		Node(type), text(text), interval(interval) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -313,7 +313,7 @@ struct SelectUnOp: public Node {
 		Node(op), select_expr(select_expr) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -352,11 +352,11 @@ struct SelectParentedExpr: public Node {
 		Node(lparen), select_expr(select_expr), rparen(rparen) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return rparen.pos();
+		return rparen.end();
 	}
 
 	operator std::string() const {
@@ -372,12 +372,12 @@ struct Wait: public Node {
 		Node(wait), select_expr(select_expr), timeout(timeout), interval(interval) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
 		if (timeout) {
-			return timeout.pos();
+			return timeout.end();
 		} else {
 			return select_expr->end();
 		}
@@ -408,11 +408,11 @@ struct Sleep: public Node {
 		Node(sleep),  timeout(timeout) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return timeout.pos();
+		return timeout.end();
 	}
 
 	operator std::string() const {
@@ -486,19 +486,15 @@ struct MouseMoveTarget: public IMouseMoveTarget {
 };
 
 struct MouseAdditionalSpecifier: public Node {
-	MouseAdditionalSpecifier(const Token& name, const Token& arg):
-		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos())), name(name), arg(arg) {}
+	MouseAdditionalSpecifier(const Token& name, const Token& lparen, const Token& arg, const Token& rparen):
+		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos(), Pos())), name(name), lparen(lparen), arg(arg), rparen(rparen) {}
 
 	Pos begin() const {
-		return name.pos();
+		return name.begin();
 	}
 
 	Pos end() const {
-		if (arg) {
-			return arg.pos();
-		} else {
-			return name.pos();
-		}
+		return rparen.end();
 	}
 
 	operator std::string() const {
@@ -537,14 +533,16 @@ struct MouseAdditionalSpecifier: public Node {
 	}
 
 	Token name;
+	Token lparen;
 	Token arg;
+	Token rparen;
 };
 
 struct MouseSelectable: public Node {
 	MouseSelectable(std::shared_ptr<ISelectable> selectable,
 		const std::vector<std::shared_ptr<MouseAdditionalSpecifier>>& specifiers,
 		const Token& timeout): 
-		Node(Token(Token::category::mouse_selectable, "mouse_selectable", Pos())),
+		Node(Token(Token::category::mouse_selectable, "mouse_selectable", Pos(), Pos())),
 		selectable(selectable), specifiers(specifiers), timeout(timeout) {}
 
 	Pos begin() const {
@@ -553,7 +551,7 @@ struct MouseSelectable: public Node {
 
 	Pos end() const {
 		if (timeout) {
-			return timeout.pos();
+			return timeout.end();
 		} else if (specifiers.size()) {
 			return specifiers[specifiers.size() - 1]->end();
 		} else {
@@ -586,14 +584,14 @@ struct MouseSelectable: public Node {
 
 struct MouseCoordinates: public Node {
 	MouseCoordinates(const Token& dx, const Token& dy):
-		Node(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos())), dx(dx), dy(dy) {}
+		Node(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos(), Pos())), dx(dx), dy(dy) {}
 
 	Pos begin() const {
-		return dx.pos();
+		return dx.begin();
 	}
 
 	Pos end() const {
-		return dy.pos();
+		return dy.end();
 	}
 
 	operator std::string() const {
@@ -639,14 +637,14 @@ struct MouseMoveClick: public Node {
 		Node(event), object(object) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
 		if (object) {
 			return object->end();
 		} else {
-			return t.pos();
+			return t.end();
 		}
 	}
 
@@ -666,11 +664,11 @@ struct MouseHold: public Node {
 		Node(hold), button(button) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return button.pos();
+		return button.end();
 	}
 
 	operator std::string() const {
@@ -685,11 +683,11 @@ struct MouseRelease: public Node {
 		Node(release) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -702,11 +700,11 @@ struct MouseWheel: public Node {
 		Node(wheel), direction(direction) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.end();
 	}
 
 	Pos end() const {
-		return direction.pos();
+		return direction.end();
 	}
 
 	operator std::string() const {
@@ -721,7 +719,7 @@ struct Mouse: public Node {
 		Node(mouse), event(event) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.end();
 	}
 
 	Pos end() const {
@@ -745,11 +743,11 @@ struct Plug: public Node {
 		path(path) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return name_token.pos();
+		return name_token.end();
 	}
 
 	operator std::string() const {
@@ -771,11 +769,11 @@ struct Start: public Node {
 		Node(start) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -788,11 +786,11 @@ struct Stop: public Node {
 		Node(stop) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -805,14 +803,14 @@ struct Shutdown: public Node {
 		Node(shutdown), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
 		if (timeout) {
-			return time_interval.pos();
+			return time_interval.end();
 		}
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -834,12 +832,12 @@ struct Exec: public Node {
 		commands(commands), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
 		if (timeout) {
-			return time_interval.pos();
+			return time_interval.end();
 		}
 		return commands->end();
 	}
@@ -867,12 +865,12 @@ struct Copy: public Node {
 		to(to), timeout(timeout), time_interval(time_interval) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
 		if (timeout) {
-			return time_interval.pos();
+			return time_interval.end();
 		}
 		return to->end();
 	}
@@ -899,17 +897,17 @@ struct Copy: public Node {
 
 struct ActionBlock: public Node {
 	ActionBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<IAction>> actions):
-		Node(Token(Token::category::action_block, "action_block", Pos())),
+		Node(Token(Token::category::action_block, "action_block", Pos(), Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
 		actions(actions) {}
 
 	Pos begin() const {
-		return open_brace.pos();
+		return open_brace.begin();
 	}
 
 	Pos end() const {
-		return close_brace.pos();
+		return close_brace.end();
 	}
 
 	operator std::string() const {
@@ -929,12 +927,12 @@ struct ActionBlock: public Node {
 
 struct Cmd: public Node {
 	Cmd(const std::vector<Token>& vms, std::shared_ptr<IAction> action):
-		Node(Token(Token::category::cmd, "cmd", Pos())),
+		Node(Token(Token::category::cmd, "cmd", Pos(), Pos())),
 		vms(vms),
 		action(action) {}
 
 	Pos begin() const {
-		return vms.begin()->pos();
+		return vms.begin()->begin();
 	}
 
 	Pos end() const {
@@ -957,17 +955,17 @@ struct Cmd: public Node {
 
 struct CmdBlock: public Node {
 	CmdBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Cmd>> commands):
-		Node(Token(Token::category::cmd_block, "cmd_block", Pos())),
+		Node(Token(Token::category::cmd_block, "cmd_block", Pos(),Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
 		commands(commands) {}
 
 	Pos begin() const {
-		return open_brace.pos();
+		return open_brace.begin();
 	}
 
 	Pos end() const {
-		return close_brace.pos();
+		return close_brace.end();
 	}
 
 	operator std::string() const {
@@ -1017,14 +1015,14 @@ struct MacroArg: public Node {
 		Node(name), default_value(default_value) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
 		if (default_value) {
 			return default_value->end();
 		} else {
-			return t.pos();
+			return t.end();
 		}
 	}
 
@@ -1052,7 +1050,7 @@ struct Macro: public Node {
 			action_block(action_block) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -1079,11 +1077,11 @@ struct MacroCall: public Node {
 		Node(macro_name), args(args) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -1134,11 +1132,11 @@ struct SimpleAttr: public Node {
 		Node(value) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {
@@ -1148,15 +1146,15 @@ struct SimpleAttr: public Node {
 
 struct BinaryAttr: public Node {
 	BinaryAttr(const Token& _value):
-		Node(Token(Token::category::binary, _value.value(), _value.pos())),
+		Node(Token(Token::category::binary, _value.value(), _value.begin(), _value.end())),
 		value(_value) {}
 
 	Pos begin() const {
-		return value.pos();
+		return value.begin();
 	}
 
 	Pos end() const {
-		return value.pos();
+		return value.end();
 	}
 
 	operator std::string() const {
@@ -1188,13 +1186,13 @@ struct StringAttr: public Node {
 
 struct Attr: public Node {
 	Attr(const Token& name, const Token& id, std::shared_ptr<IAttrValue> value):
-		Node(Token(Token::category::attr, "", Pos())),
+		Node(Token(Token::category::attr, "", Pos(), Pos())),
 		name(name),
 		id(id),
 		value(value) {}
 
 	Pos begin() const {
-		return name.pos();
+		return name.begin();
 	}
 
 	Pos end() const {
@@ -1212,17 +1210,17 @@ struct Attr: public Node {
 
 struct AttrBlock: public Node {
 	AttrBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Attr>> attrs):
-		Node(Token(Token::category::attr_block, "", Pos())),
+		Node(Token(Token::category::attr_block, "", Pos(),Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
 		attrs(attrs) {}
 
 	Pos begin() const {
-		return open_brace.pos();
+		return open_brace.begin();
 	}
 
 	Pos end() const {
-		return close_brace.pos();
+		return close_brace.end();
 	}
 
 	operator std::string() const {
@@ -1255,7 +1253,7 @@ struct Test: public Node {
 		if (attrs) {
 			return attrs->begin();
 		} else {
-			return t.pos();
+			return t.begin();
 		}
 	}
 
@@ -1286,7 +1284,7 @@ struct Controller: public Node {
 		attr_block(attr_block) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -1306,7 +1304,7 @@ struct Param: public Node {
 		Node(param_token), name(name), value(value) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -1324,7 +1322,7 @@ struct Param: public Node {
 
 struct Program: public Node {
 	Program (const std::vector<std::shared_ptr<IStmt>> stmts):
-		Node(Token(Token::category::program, "program", Pos())),
+		Node(Token(Token::category::program, "program", Pos(),Pos())),
 		stmts(stmts) {}
 
 	Pos begin() const {
@@ -1417,7 +1415,7 @@ struct Check: public Node {
 		Node(check), select_expr(select_expr), timeout(timeout), interval(interval) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -1511,7 +1509,7 @@ struct IfClause: public Node {
 	{}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -1641,7 +1639,7 @@ struct ForClause: public Node {
 		else_action(else_action) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -1674,11 +1672,11 @@ struct CycleControl: public Node {
 	CycleControl(const Token& control_token): Node(control_token) {}
 
 	Pos begin() const {
-		return t.pos();
+		return t.begin();
 	}
 
 	Pos end() const {
-		return t.pos();
+		return t.end();
 	}
 
 	operator std::string() const {

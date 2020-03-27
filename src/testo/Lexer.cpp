@@ -8,21 +8,27 @@ Lexer::Lexer(const fs::path& file, const std::string& input): input(new std::str
 	current_pos = Pos(file, this->input);
 }
 
+void Lexer::advance(size_t shift) {
+	current_pos.advance(shift - 1);
+	previous_pos = current_pos;
+	current_pos.advance();
+}
+
 void Lexer::skip_spaces() {
 	while (test_space() && !test_eof()) {
-		current_pos.advance();
+		advance();
 	}
 }
 
 void Lexer::skip_comments() {
 	while (!test_newline() && !test_eof()) {
-		current_pos.advance();
+		advance();
 	}
 }
 
 void Lexer::skip_multiline_comments() {
 	while(!test_end_multiline_comments()) {
-		current_pos.advance();
+		advance();
 		if (test_eof()) {
 			throw std::runtime_error(std::string(current_pos) + ": Error: can't find end of multiline comments");
 		}
@@ -32,8 +38,8 @@ void Lexer::skip_multiline_comments() {
 		}
 	}
 
-	current_pos.advance();
-	current_pos.advance();
+	advance();
+	advance();
 }
 
 
@@ -84,10 +90,10 @@ bool Lexer::test_time_specifier() const {
 }
 
 char Lexer::escaped_character() {
-	current_pos.advance();
+	advance();
 
 	if (!test_eof() && test_newline()) {
-		current_pos.advance();
+		advance();
 	}
 
 	if (test_eof()) {
@@ -95,7 +101,7 @@ char Lexer::escaped_character() {
 	}
 
 	char res = (*input)[current_pos];
-	current_pos.advance();
+	advance();
 
 	return res;
 }
@@ -103,14 +109,15 @@ char Lexer::escaped_character() {
 Token Lexer::newline() {
 	Pos tmp_pos = current_pos;
 	while ((test_newline() || test_space()) && !test_eof() ) {
-		current_pos.advance();
+		advance();
 	}
 
-	return Token(Token::category::newline, "\n", tmp_pos);
+	return Token(Token::category::newline, "\n", tmp_pos, tmp_pos);
 }
 
 Token Lexer::number() {
 	Pos tmp_pos = current_pos;
+
 	std::string value;
 
 	bool is_signed = false;
@@ -118,16 +125,16 @@ Token Lexer::number() {
 	if (test_plus() || test_minus()) {
 		is_signed = true;
 		value += (*input)[current_pos];
-		current_pos.advance();
+		advance();
 	}
 
 	while (test_digit() && !test_eof()) {
 		value += (*input)[current_pos];
-		current_pos.advance();
+		advance();
 	}
 
 	if (test_eof()) {
-		return Token(Token::category::number, value, tmp_pos);
+		return Token(Token::category::number, value, tmp_pos, previous_pos);
 	}
 
 	if (test_size_specifier()) {
@@ -143,27 +150,27 @@ Token Lexer::number() {
 	} else if (test_id()) {
 		throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: ID can't start with a number");
 	} else {
-		return Token(Token::category::number, value, tmp_pos);
+		return Token(Token::category::number, value, tmp_pos, previous_pos);
 	}
 
 }
 
 Token Lexer::time_interval(std::string time_number, const Pos& time_number_pos) {
 	time_number += (*input)[current_pos];
-	current_pos.advance();
+	advance();
 	if ((*input)[current_pos] == 's') {
 		time_number += (*input)[current_pos];
-		current_pos.advance();
+		advance();
 	}
-	return Token(Token::category::time_interval, time_number, time_number_pos);
+	return Token(Token::category::time_interval, time_number, time_number_pos, previous_pos);
 }
 
 Token Lexer::size(std::string size_number, const Pos& size_number_pos) {
 	size_number += (*input)[current_pos];
-	current_pos.advance();
+	advance();
 	size_number += (*input)[current_pos];
-	current_pos.advance();
-	return Token(Token::category::size, size_number, size_number_pos);
+	advance();
+	return Token(Token::category::size, size_number, size_number_pos, previous_pos);
 }
 
 Token Lexer::id() {
@@ -291,393 +298,393 @@ Token Lexer::id() {
 	}  else if (value == "OR") {
 		return OR();
 	} else {
-		current_pos.advance(shift);
-		return Token(Token::category::id, value, tmp_pos);
+		advance(shift);
+		return Token(Token::category::id, value, tmp_pos, previous_pos);
 	}
 }
 
 Token Lexer::abort() {
 	Pos tmp_pos = current_pos;
 	std::string value("abort");
-	current_pos.advance(value.length());
-	return Token(Token::category::abort, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::abort, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::print() {
 	Pos tmp_pos = current_pos;
 	std::string value("print");
-	current_pos.advance(value.length());
-	return Token(Token::category::print, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::print, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::type() {
 	Pos tmp_pos = current_pos;
 	std::string value("type");
-	current_pos.advance(value.length());
-	return Token(Token::category::type_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::type_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::wait() {
 	Pos tmp_pos = current_pos;
 	std::string value("wait");
-	current_pos.advance(value.length());
-	return Token(Token::category::wait, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::wait, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::sleep() {
 	Pos tmp_pos = current_pos;
 	std::string value("sleep");
-	current_pos.advance(value.length());
-	return Token(Token::category::sleep, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::sleep, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::check() {
 	Pos tmp_pos = current_pos;
 	std::string value("check");
-	current_pos.advance(value.length());
-	return Token(Token::category::check, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::check, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::js() {
 	Pos tmp_pos = current_pos;
 	std::string value("js");
-	current_pos.advance(value.length());
-	return Token(Token::category::js, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::js, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::press() {
 	Pos tmp_pos = current_pos;
 	std::string value("press");
-	current_pos.advance(value.length());
-	return Token(Token::category::press, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::press, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::mouse() {
 	Pos tmp_pos = current_pos;
 	std::string value("mouse");
-	current_pos.advance(value.length());
-	return Token(Token::category::mouse, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::mouse, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::move() {
 	Pos tmp_pos = current_pos;
 	std::string value("move");
-	current_pos.advance(value.length());
-	return Token(Token::category::move, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::move, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::click() {
 	Pos tmp_pos = current_pos;
 	std::string value("click");
-	current_pos.advance(value.length());
-	return Token(Token::category::click, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::click, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::rclick() {
 	Pos tmp_pos = current_pos;
 	std::string value("rclick");
-	current_pos.advance(value.length());
-	return Token(Token::category::rclick, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::rclick, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::mclick() {
 	Pos tmp_pos = current_pos;
 	std::string value("mclick");
-	current_pos.advance(value.length());
-	return Token(Token::category::mclick, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::mclick, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::dclick() {
 	Pos tmp_pos = current_pos;
 	std::string value("dclick");
-	current_pos.advance(value.length());
-	return Token(Token::category::dclick, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::dclick, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::hold() {
 	Pos tmp_pos = current_pos;
 	std::string value("hold");
-	current_pos.advance(value.length());
-	return Token(Token::category::hold, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::hold, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::release() {
 	Pos tmp_pos = current_pos;
 	std::string value("release");
-	current_pos.advance(value.length());
-	return Token(Token::category::release, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::release, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::lbtn() {
 	Pos tmp_pos = current_pos;
 	std::string value("lbtn");
-	current_pos.advance(value.length());
-	return Token(Token::category::lbtn, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::lbtn, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::rbtn() {
 	Pos tmp_pos = current_pos;
 	std::string value("rbtn");
-	current_pos.advance(value.length());
-	return Token(Token::category::rbtn, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::rbtn, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::mbtn() {
 	Pos tmp_pos = current_pos;
 	std::string value("mbtn");
-	current_pos.advance(value.length());
-	return Token(Token::category::mbtn, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::mbtn, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::wheel() {
 	Pos tmp_pos = current_pos;
 	std::string value("wheel");
-	current_pos.advance(value.length());
-	return Token(Token::category::wheel, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::wheel, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::plug() {
 	Pos tmp_pos = current_pos;
 	std::string value("plug");
-	current_pos.advance(value.length());
-	return Token(Token::category::plug, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::plug, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::unplug() {
 	Pos tmp_pos = current_pos;
 	std::string value("unplug");
-	current_pos.advance(value.length());
-	return Token(Token::category::unplug, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::unplug, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::start() {
 	Pos tmp_pos = current_pos;
 	std::string value("start");
-	current_pos.advance(value.length());
-	return Token(Token::category::start, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::start, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::stop() {
 	Pos tmp_pos = current_pos;
 	std::string value("stop");
-	current_pos.advance(value.length());
-	return Token(Token::category::stop, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::stop, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::shutdown() {
 	Pos tmp_pos = current_pos;
 	std::string value("shutdown");
-	current_pos.advance(value.length());
-	return Token(Token::category::shutdown, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::shutdown, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::exec() {
 	Pos tmp_pos = current_pos;
 	std::string value("exec");
-	current_pos.advance(value.length());
-	return Token(Token::category::exec, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::exec, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::copyto() {
 	Pos tmp_pos = current_pos;
 	std::string value("copyto");
-	current_pos.advance(value.length());
-	return Token(Token::category::copyto, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::copyto, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::copyfrom() {
 	Pos tmp_pos = current_pos;
 	std::string value("copyfrom");
-	current_pos.advance(value.length());
-	return Token(Token::category::copyfrom, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::copyfrom, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::timeout() {
 	Pos tmp_pos = current_pos;
 	std::string value("timeout");
-	current_pos.advance(value.length());
-	return Token(Token::category::timeout, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::timeout, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::interval() {
 	Pos tmp_pos = current_pos;
 	std::string value("interval");
-	current_pos.advance(value.length());
-	return Token(Token::category::interval, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::interval, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::for_() {
 	Pos tmp_pos = current_pos;
 	std::string value("for");
-	current_pos.advance(value.length());
-	return Token(Token::category::for_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::for_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::test() {
 	Pos tmp_pos = current_pos;
 	std::string value("test");
-	current_pos.advance(value.length());
-	return Token(Token::category::test, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::test, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::machine() {
 	Pos tmp_pos = current_pos;
 	std::string value("machine");
-	current_pos.advance(value.length());
-	return Token(Token::category::machine, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::machine, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::flash() {
 	Pos tmp_pos = current_pos;
 	std::string value("flash");
-	current_pos.advance(value.length());
-	return Token(Token::category::flash, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::flash, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::network() {
 	Pos tmp_pos = current_pos;
 	std::string value("network");
-	current_pos.advance(value.length());
-	return Token(Token::category::network, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::network, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::param() {
 	Pos tmp_pos = current_pos;
 	std::string value("param");
-	current_pos.advance(value.length());
-	return Token(Token::category::param, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::param, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::macro() {
 	Pos tmp_pos = current_pos;
 	std::string value("macro");
-	current_pos.advance(value.length());
-	return Token(Token::category::macro, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::macro, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::dvd() {
 	Pos tmp_pos = current_pos;
 	std::string value("dvd");
-	current_pos.advance(value.length());
-	return Token(Token::category::dvd, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::dvd, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::if_() {
 	Pos tmp_pos = current_pos;
 	std::string value("if");
-	current_pos.advance(value.length());
-	return Token(Token::category::if_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::if_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::else_() {
 	Pos tmp_pos = current_pos;
 	std::string value("else");
-	current_pos.advance(value.length());
-	return Token(Token::category::else_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::else_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::IN_() {
 	Pos tmp_pos = current_pos;
 	std::string value("IN");
-	current_pos.advance(value.length());
-	return Token(Token::category::IN_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::IN_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::RANGE() {
 	Pos tmp_pos = current_pos;
 	std::string value("RANGE");
-	current_pos.advance(value.length());
-	return Token(Token::category::RANGE, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::RANGE, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::break_() {
 	Pos tmp_pos = current_pos;
 	std::string value("break");
-	current_pos.advance(value.length());
-	return Token(Token::category::break_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::break_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::continue_() {
 	Pos tmp_pos = current_pos;
 	std::string value("continue");
-	current_pos.advance(value.length());
-	return Token(Token::category::continue_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::continue_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::include() {
 	Pos tmp_pos = current_pos;
 	std::string value("include");
-	current_pos.advance(value.length());
-	return Token(Token::category::include, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::include, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::true_() {
 	Pos tmp_pos = current_pos;
 	std::string value("true");
-	current_pos.advance(value.length());
-	return Token(Token::category::true_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::true_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::false_() {
 	Pos tmp_pos = current_pos;
 	std::string value("false");
-	current_pos.advance(value.length());
-	return Token(Token::category::false_, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::false_, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::LESS() {
 	Pos tmp_pos = current_pos;
 	std::string value("LESS");
-	current_pos.advance(value.length());
-	return Token(Token::category::LESS, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::LESS, value, tmp_pos, previous_pos);
 }
 Token Lexer::GREATER() {
 	Pos tmp_pos = current_pos;
 	std::string value("GREATER");
-	current_pos.advance(value.length());
-	return Token(Token::category::GREATER, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::GREATER, value, tmp_pos, previous_pos);
 }
 Token Lexer::EQUAL() {
 	Pos tmp_pos = current_pos;
 	std::string value("EQUAL");
-	current_pos.advance(value.length());
-	return Token(Token::category::EQUAL, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::EQUAL, value, tmp_pos, previous_pos);
 }
 Token Lexer::STRLESS() {
 	Pos tmp_pos = current_pos;
 	std::string value("STRLESS");
-	current_pos.advance(value.length());
-	return Token(Token::category::STRLESS, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::STRLESS, value, tmp_pos, previous_pos);
 }
 Token Lexer::STRGREATER() {
 	Pos tmp_pos = current_pos;
 	std::string value("STRGREATER");
-	current_pos.advance(value.length());
-	return Token(Token::category::STRGREATER, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::STRGREATER, value, tmp_pos, previous_pos);
 }
 Token Lexer::STREQUAL() {
 	Pos tmp_pos = current_pos;
 	std::string value("STREQUAL");
-	current_pos.advance(value.length());
-	return Token(Token::category::STREQUAL, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::STREQUAL, value, tmp_pos, previous_pos);
 }
 Token Lexer::NOT() {
 	Pos tmp_pos = current_pos;
 	std::string value("NOT");
-	current_pos.advance(value.length());
-	return Token(Token::category::NOT, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::NOT, value, tmp_pos, previous_pos);
 }
 Token Lexer::AND() {
 	Pos tmp_pos = current_pos;
 	std::string value("AND");
-	current_pos.advance(value.length());
-	return Token(Token::category::AND, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::AND, value, tmp_pos, previous_pos);
 }
 Token Lexer::OR() {
 	Pos tmp_pos = current_pos;
 	std::string value("OR");
-	current_pos.advance(value.length());
-	return Token(Token::category::OR, value, tmp_pos);
+	advance(value.length());
+	return Token(Token::category::OR, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::triple_quoted_string() {
@@ -688,11 +695,11 @@ Token Lexer::triple_quoted_string() {
 	//advance over first 3 characters for we already know that it's a triple quote
 	//If we don't do so, we could trip over something like """"
 	value += (*input)[current_pos];
-	current_pos.advance();
+	advance();
 	value += (*input)[current_pos];
-	current_pos.advance();
+	advance();
 	value += (*input)[current_pos];
-	current_pos.advance();
+	advance();
 
 	do {
 		if (test_eof()) {
@@ -705,22 +712,22 @@ Token Lexer::triple_quoted_string() {
 		}
 
 		value += (*input)[current_pos];
-		current_pos.advance();
+		advance();
 	} while (!test_triple_quote());
 
 	//Check if we have another quotes over the end. Like """"
 
 	while(test_triple_quote()) {
 		value += (*input)[current_pos];
-		current_pos.advance(); //advance over closing quote
+		advance(); //advance over closing quote
 	}
 
 	value += (*input)[current_pos];
-	current_pos.advance();
+	advance();
 	value += (*input)[current_pos];
-	current_pos.advance();
+	advance();
 
-	return Token(Token::category::triple_quoted_string, value, tmp_pos);
+	return Token(Token::category::triple_quoted_string, value, tmp_pos, previous_pos);
 }
 
 
@@ -739,109 +746,109 @@ Token Lexer::quoted_string() {
 		}
 
 		value += (*input)[current_pos];
-		current_pos.advance();
+		advance();
 	} while (!test_quote());
 
 	value += (*input)[current_pos];
-	current_pos.advance(); //advance over closing quote
+	advance(); //advance over closing quote
 
-	return Token(Token::category::quoted_string, value, tmp_pos);
+	return Token(Token::category::quoted_string, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::dot() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::dot, ".", tmp_pos);
+	advance();
+	return Token(Token::category::dot, ".", tmp_pos, previous_pos);
 }
 
 Token Lexer::comma() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::comma, ",", tmp_pos);
+	advance();
+	return Token(Token::category::comma, ",", tmp_pos, previous_pos);
 }
 
 Token Lexer::exclamation_mark() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::exclamation_mark, "!", tmp_pos);
+	advance();
+	return Token(Token::category::exclamation_mark, "!", tmp_pos, tmp_pos);
 }
 
 Token Lexer::double_ampersand() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance(2);
-	return Token(Token::category::double_ampersand, "&&", tmp_pos);
+	advance(2);
+	return Token(Token::category::double_ampersand, "&&", tmp_pos, previous_pos);
 }
 
 Token Lexer::double_vertical_bar() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance(2);
-	return Token(Token::category::double_vertical_bar, "||", tmp_pos);
+	advance(2);
+	return Token(Token::category::double_vertical_bar, "||", tmp_pos, previous_pos);
 }
 
 Token Lexer::assign() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::assign, "=", tmp_pos);
+	advance();
+	return Token(Token::category::assign, "=", tmp_pos, tmp_pos);
 }
 
 Token Lexer::plus() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::plus, "+", tmp_pos);
+	advance();
+	return Token(Token::category::plus, "+", tmp_pos, tmp_pos);
 }
 
 Token Lexer::asterisk() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::asterisk, "*", tmp_pos);
+	advance();
+	return Token(Token::category::asterisk, "*", tmp_pos, tmp_pos);
 }
 
 Token Lexer::lbrace() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::lbrace, "{", tmp_pos);
+	advance();
+	return Token(Token::category::lbrace, "{", tmp_pos, tmp_pos);
 }
 
 Token Lexer::rbrace() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::rbrace, "}", tmp_pos);
+	advance();
+	return Token(Token::category::rbrace, "}", tmp_pos, tmp_pos);
 }
 
 Token Lexer::lparen() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::lparen, "(", tmp_pos);
+	advance();
+	return Token(Token::category::lparen, "(", tmp_pos, tmp_pos);
 }
 
 Token Lexer::rparen() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::rparen, ")", tmp_pos);
+	advance();
+	return Token(Token::category::rparen, ")", tmp_pos, tmp_pos);
 }
 
 Token Lexer::lbracket() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::lbracket, "[", tmp_pos);
+	advance();
+	return Token(Token::category::lbracket, "[", tmp_pos, tmp_pos);
 }
 
 Token Lexer::rbracket() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::rbracket, "]", tmp_pos);
+	advance();
+	return Token(Token::category::rbracket, "]", tmp_pos, tmp_pos);
 }
 
 Token Lexer::semi() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::semi, ";", tmp_pos);
+	advance();
+	return Token(Token::category::semi, ";", tmp_pos, tmp_pos);
 }
 
 Token Lexer::colon() {
 	Pos tmp_pos = current_pos;
-	current_pos.advance();
-	return Token(Token::category::colon, ":", tmp_pos);
+	advance();
+	return Token(Token::category::colon, ":", tmp_pos, tmp_pos);
 }
 
 Token Lexer::get_next_token() {
@@ -902,6 +909,6 @@ Token Lexer::get_next_token() {
 		}
 	}
 
-	return Token(Token::category::eof, "", current_pos);
+	return Token(Token::category::eof, "", current_pos, current_pos);
 }
 

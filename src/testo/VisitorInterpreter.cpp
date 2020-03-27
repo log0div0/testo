@@ -656,46 +656,48 @@ void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vmc, s
 
 void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		return visit_abort(vmc, p->action);
+		visit_abort(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		return visit_print(vmc, p->action);
+		visit_print(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		return visit_type(vmc, p->action);
+		visit_type(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		return visit_wait(vmc, p->action);
+		visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		return visit_sleep(vmc, p->action);
+		visit_sleep(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		return visit_press(vmc, p->action);
+		visit_press(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		return visit_mouse(vmc, p->action);
+		visit_mouse(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		return visit_plug(vmc, p->action);
+		visit_plug(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		return visit_start(vmc, p->action);
+		visit_start(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		return visit_stop(vmc, p->action);
+		visit_stop(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		return visit_shutdown(vmc, p->action);
+		visit_shutdown(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		return visit_exec(vmc, p->action);
+		visit_exec(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		return visit_copy(vmc, p->action);
+		visit_copy(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(vmc, p->action);
+		visit_macro_call(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		return visit_if_clause(vmc, p->action);
+		visit_if_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		return visit_for_clause(vmc, p->action);
+		visit_for_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		throw CycleControlException(p->action->t);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		return visit_action_block(vmc, p->action);
+		visit_action_block(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
-		return;
+		;
 	} else {
 		throw std::runtime_error("Unknown action");
 	}
+
+	coro::CheckPoint();
 }
 
 void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
@@ -1357,7 +1359,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 	if (plug->is_on()) {
 		fs::path path = template_parser.resolve(plug->path->text(), reg);
 		if (path.is_relative()) {
-			path = plug->t.pos().file.parent_path() / path;
+			path = plug->t.begin().file.parent_path() / path;
 		}
 
 		reporter.plug(vmc, "dvd", path.generic_string(), true);
@@ -1583,12 +1585,12 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 
 		if(copy->is_to_guest()) {
 			if (from.is_relative()) {
-				from = copy->t.pos().file.parent_path() / from;
+				from = copy->t.begin().file.parent_path() / from;
 			}
 			vmc->vm->copy_to_guest(from, to, time_to_milliseconds(wait_for));
 		} else {
 			if (to.is_relative()) {
-				to = copy->t.pos().file.parent_path() / to;
+				to = copy->t.begin().file.parent_path() / to;
 			}
 			vmc->vm->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
 		}

@@ -16,6 +16,7 @@ struct Lexer {
 	}
 
 private:
+	void advance(size_t shift = 1);
 
 	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input->length()); }
 	bool test_newline() const { return ((*input)[current_pos] == '\n'); }
@@ -200,6 +201,7 @@ private:
 	Token AND();
 	Token OR();
 
+	Pos previous_pos;
 	Pos current_pos;
 	std::shared_ptr<std::string> input;
 };
