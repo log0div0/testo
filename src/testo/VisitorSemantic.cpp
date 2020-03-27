@@ -274,19 +274,19 @@ void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
 	for (auto parent_token: test->parents_tokens) {
 		auto parent = reg.tests.find(parent_token.value());
 		if (parent == reg.tests.end()) {
-			throw std::runtime_error(std::string(parent_token.pos()) + ": Error: unknown test: " + parent_token.value());
+			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
 		}
 
 		for (auto already_included: test->parents) {
 			if (already_included == parent->second) {
-				throw std::runtime_error(std::string(parent_token.pos()) + ": Error: this test was already specified in parent list " + parent_token.value());
+				throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
 			}
 		}
 
 		test->parents.push_back(parent->second);
 
 		if (parent_token.value() == test->name.value()) {
-			throw std::runtime_error(std::string(parent_token.pos()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
+			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
 		}
 	}
 
@@ -340,11 +340,11 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
 		auto vmc = reg.vmcs.find(vm_token.value());
 		if (vmc == reg.vmcs.end()) {
-			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: unknown vitrual machine name: " + vm_token.value());
+			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: unknown vitrual machine name: " + vm_token.value());
 		}
 
 		if (!unique_vmcs.insert(vmc->second).second) {
-			throw std::runtime_error(std::string(vm_token.pos()) + ": Error: this vmc was already specified in the virtual machines list: " + vm_token.value());
+			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: this vmc was already specified in the virtual machines list: " + vm_token.value());
 		}
 	}
 
@@ -388,14 +388,14 @@ void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
 void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 	if (key_spec->times.value().length()) {
 		if (std::stoi(key_spec->times.value()) < 1) {
-			throw std::runtime_error(std::string(key_spec->times.pos()) +
-					" :Error: Can't press a buttin less than 1 time: " + key_spec->times.value());
+			throw std::runtime_error(std::string(key_spec->times.begin()) +
+					" :Error: Can't press a button less than 1 time: " + key_spec->times.value());
 		}
 	}
 
 	for (auto button: key_spec->buttons) {
 		if (!is_button(button)) {
-			throw std::runtime_error(std::string(button.pos()) +
+			throw std::runtime_error(std::string(button.begin()) +
 				" :Error: Unknown key " + button.value());
 		}
 	}
@@ -430,7 +430,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			try {
 				std::stoi(arg.value());
 			} catch (const std::exception& error) {
-				throw std::runtime_error(std::string(arg.pos()) + ": Error: the argument must be a number");
+				throw std::runtime_error(std::string(arg.begin()) + ": Error: the argument must be a number");
 			}
 
 			if (has_from) {
@@ -463,7 +463,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			try {
 				std::stoi(arg.value());
 			} catch (const std::exception& error) {
-				throw std::runtime_error(std::string(arg.pos()) + ": Error: the argument must be a number");
+				throw std::runtime_error(std::string(arg.begin()) + ": Error: the argument must be a number");
 			}
 			has_move = true;
 			continue;
@@ -717,7 +717,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["prefix"] = prefix;
 	config["name"] = machine->name.value();
-	config["src_file"] = machine->name.pos().file.generic_string();
+	config["src_file"] = machine->name.begin().file.generic_string();
 
 	if (!config.count("iso")) {
 		throw std::runtime_error("Constructing VM " + machine->name.value() + " error: field ISO is not specified");
@@ -756,7 +756,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
 	config["prefix"] = prefix;
 	config["name"] = flash->name.value();
-	config["src_file"] = flash->name.pos().file.generic_string();
+	config["src_file"] = flash->name.begin().file.generic_string();
 
 	auto fdc = env->create_flash_drive_controller(config);
 
@@ -777,7 +777,7 @@ void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
 	auto config = visit_attr_block(network->attr_block, "network_global");
 	config["prefix"] = prefix;
 	config["name"] = network->name.value();
-	config["src_file"] = network->name.pos().file.generic_string();
+	config["src_file"] = network->name.begin().file.generic_string();
 
 	auto netc = env->create_network_controller(config);
 	reg.netcs.emplace(std::make_pair(network->name, netc));

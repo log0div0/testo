@@ -1357,7 +1357,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 	if (plug->is_on()) {
 		fs::path path = template_parser.resolve(plug->path->text(), reg);
 		if (path.is_relative()) {
-			path = plug->t.pos().file.parent_path() / path;
+			path = plug->t.begin().file.parent_path() / path;
 		}
 
 		reporter.plug(vmc, "dvd", path.generic_string(), true);
@@ -1583,12 +1583,12 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 
 		if(copy->is_to_guest()) {
 			if (from.is_relative()) {
-				from = copy->t.pos().file.parent_path() / from;
+				from = copy->t.begin().file.parent_path() / from;
 			}
 			vmc->vm->copy_to_guest(from, to, time_to_milliseconds(wait_for));
 		} else {
 			if (to.is_relative()) {
-				to = copy->t.pos().file.parent_path() / to;
+				to = copy->t.begin().file.parent_path() / to;
 			}
 			vmc->vm->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
 		}
