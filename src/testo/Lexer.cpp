@@ -24,11 +24,11 @@ void Lexer::skip_multiline_comments() {
 	while(!test_end_multiline_comments()) {
 		current_pos.advance();
 		if (test_eof()) {
-			throw std::runtime_error("Error: can't find end of multiline comments");
+			throw std::runtime_error(std::string(current_pos) + ": Error: can't find end of multiline comments");
 		}
 
 		if (test_begin_multiline_comments()) {
-			throw std::runtime_error(std::string(current_pos) + ":Error: nested multiline comments are not allowed");
+			throw std::runtime_error(std::string(current_pos) + ": Error: nested multiline comments are not allowed");
 		}
 	}
 
