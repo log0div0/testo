@@ -10,3 +10,4 @@ Release Notes
     :maxdepth: 1
 
     rn_1.4.0
+    rn_1.5.0
