@@ -3,7 +3,7 @@
 "VSVersion" = "3:800"
 "ProjectType" = "8:{978C614F-708E-4E1A-B201-565925725DBA}"
 "IsWebType" = "8:FALSE"
-"ProjectName" = "8:testo-guest-additions"
+"ProjectName" = "8:testo"
 "LanguageId" = "3:1049"
 "CodePage" = "3:1251"
 "UILanguageId" = "3:1049"
@@ -15,37 +15,37 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_15F286DF9A1D479FB3F975886B57A6DB"
+        "MsmKey" = "8:_06D2A1D50D73463F9742A0E1BF585941"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_62B11C80B842449F98354DE705D015B2"
+        "MsmKey" = "8:_162AB2F7B41044A3910B6F683CE1D667"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_76AC046E0EAC44A6B3290279E3C71F66"
+        "MsmKey" = "8:_29071CD0D41A4D3A8746D8482E3D4F32"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_ACE6E9227FD34FF7827A305939E9FCE1"
+        "MsmKey" = "8:_54898EB858AE4A28A910F4E3B0AC9CC2"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B3B90926EB184F028A4F3917070CEC04"
+        "MsmKey" = "8:_B3AF9B02BA154EAFAD182E7BD3CDA49C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_BD09AE4C781F497E872770B51E3D2341"
+        "MsmKey" = "8:_F06A840091A947F8B5F963AB8390A13B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -57,7 +57,7 @@
         "DisplayName" = "8:Default"
         "IsDebugOnly" = "11:FALSE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:testo-guest-additions.msi"
+        "OutputFilename" = "8:testo.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -89,17 +89,31 @@
     {
         "CustomAction"
         {
-            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_45EB27238913469BA3B3E7AB0F8103B5"
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_874AECA5E2D7460D8D8991E69D333CE3"
             {
-            "Name" = "8:testo-guest-additions-helper.exe"
+            "Name" = "8:testo-helper.exe"
             "Condition" = "8:"
-            "Object" = "8:_62B11C80B842449F98354DE705D015B2"
+            "Object" = "8:_06D2A1D50D73463F9742A0E1BF585941"
             "FileType" = "3:2"
             "InstallAction" = "3:1"
-            "Arguments" = "8:install"
+            "Arguments" = "8:install --usersid \"[UserSID]\""
             "EntryPoint" = "8:"
             "Sequence" = "3:1"
-            "Identifier" = "8:_5F34F683_84C0_433B_8D34_4282A9BAE2A1"
+            "Identifier" = "8:_308E4DCC_A56D_4A74_B0E7_065C0EF85372"
+            "InstallerClass" = "11:FALSE"
+            "CustomActionData" = "8:"
+            }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_95929995445F47699B0DEC558FBAAD5D"
+            {
+            "Name" = "8:testo-helper.exe"
+            "Condition" = "8:"
+            "Object" = "8:_06D2A1D50D73463F9742A0E1BF585941"
+            "FileType" = "3:2"
+            "InstallAction" = "3:4"
+            "Arguments" = "8:uninstall --usersid \"[UserSID]\""
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_570F2DCE_535F_4A16_8DF1_8858918C441C"
             "InstallerClass" = "11:FALSE"
             "CustomActionData" = "8:"
             }
@@ -118,30 +132,10 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_15F286DF9A1D479FB3F975886B57A6DB"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_06D2A1D50D73463F9742A0E1BF585941"
             {
-            "SourcePath" = "8:vioserial\\WdfCoInstaller01009.dll"
-            "TargetName" = "8:WdfCoInstaller01009.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_62B11C80B842449F98354DE705D015B2"
-            {
-            "SourcePath" = "8:testo-guest-additions-helper.exe"
-            "TargetName" = "8:testo-guest-additions-helper.exe"
+            "SourcePath" = "8:testo-helper.exe"
+            "TargetName" = "8:testo-helper.exe"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             "Condition" = "8:"
@@ -158,12 +152,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_76AC046E0EAC44A6B3290279E3C71F66"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_162AB2F7B41044A3910B6F683CE1D667"
             {
-            "SourcePath" = "8:vioserial\\vioser.sys"
-            "TargetName" = "8:vioser.sys"
+            "SourcePath" = "8:..\\..\\src\\nn\\TextRecognizer.onnx"
+            "TargetName" = "8:TextRecognizer.onnx"
             "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
+            "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -178,12 +172,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_ACE6E9227FD34FF7827A305939E9FCE1"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_29071CD0D41A4D3A8746D8482E3D4F32"
             {
-            "SourcePath" = "8:vioserial\\vioser.cat"
-            "TargetName" = "8:vioser.cat"
+            "SourcePath" = "8:onnxruntime_testo.dll"
+            "TargetName" = "8:onnxruntime_testo.dll"
             "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
+            "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -198,12 +192,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B3B90926EB184F028A4F3917070CEC04"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_54898EB858AE4A28A910F4E3B0AC9CC2"
             {
-            "SourcePath" = "8:vioserial\\vioser.inf"
-            "TargetName" = "8:vioser.inf"
+            "SourcePath" = "8:..\\..\\src\\nn\\TextDetector.onnx"
+            "TargetName" = "8:TextDetector.onnx"
             "Tag" = "8:"
-            "Folder" = "8:_E6F180010EA34FA396B95B9EADAED24C"
+            "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -218,10 +212,30 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BD09AE4C781F497E872770B51E3D2341"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B3AF9B02BA154EAFAD182E7BD3CDA49C"
             {
-            "SourcePath" = "8:testo-guest-additions.exe"
-            "TargetName" = "8:testo-guest-additions.exe"
+            "SourcePath" = "8:testo.exe"
+            "TargetName" = "8:testo.exe"
+            "Tag" = "8:"
+            "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F06A840091A947F8B5F963AB8390A13B"
+            {
+            "SourcePath" = "8:..\\..\\src\\nn\\TextColorPicker.onnx"
+            "TargetName" = "8:TextColorPicker.onnx"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             "Condition" = "8:"
@@ -246,7 +260,7 @@
         {
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             {
-            "DefaultLocation" = "8:[ProgramFiles64Folder][Manufacturer]\\[ProductName]"
+            "DefaultLocation" = "8:[ProgramFilesFolder][Manufacturer]\\[ProductName]"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -254,17 +268,6 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E6F180010EA34FA396B95B9EADAED24C"
-                    {
-                    "Name" = "8:vioserial"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_E9FD153F2F7248EEAFC7692328CD8801"
-                        "Folders"
-                        {
-                        }
-                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_8A0051F9839B4B3B8BA035BC1508816F"
@@ -304,20 +307,20 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:Testo Guest Additions"
-        "ProductCode" = "8:{9F3A4851-0C0C-4DA3-86FE-BDDAC9257DF9}"
-        "PackageCode" = "8:{AD2FCE30-E044-4A14-B218-E5D4B9EB089C}"
-        "UpgradeCode" = "8:{D80951FA-43DF-4B00-87CC-43A2824620D5}"
+        "ProductName" = "8:Testo"
+        "ProductCode" = "8:{4DFE1BA6-0C7D-4E68-B689-185F2A9B7842}"
+        "PackageCode" = "8:{1F02ACC0-A191-41D1-BB30-CF88EE4DF390}"
+        "UpgradeCode" = "8:{D80951FA-43DF-4B00-87CC-43A2824620D6}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.4.1"
+        "ProductVersion" = "8:1.5.0"
         "Manufacturer" = "8:Testo Lang"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
-        "Title" = "8:Testo Guest Additions"
+        "Title" = "8:Testo"
         "Subject" = "8:"
         "ARPCONTACT" = "8:Testo Lang"
         "Keywords" = "8:"
@@ -327,7 +330,7 @@
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
-        "TargetPlatform" = "3:1"
+        "TargetPlatform" = "3:0"
         "PreBuildEvent" = "8:"
         "PostBuildEvent" = "8:"
         "RunPostBuildEvent" = "3:0"
@@ -356,6 +359,28 @@
                             "Transitive" = "11:FALSE"
                                 "Keys"
                                 {
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_815A42433C8B454EA8F08C0391E118A7"
+                                    {
+                                    "Name" = "8:[ProductName]"
+                                    "Condition" = "8:"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "DeleteAtUninstall" = "11:FALSE"
+                                    "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                        }
+                                        "Values"
+                                        {
+                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_C9892F90AAAE4DE791FA61E985B80EBF"
+                                            {
+                                            "Name" = "8:InstallDir"
+                                            "Condition" = "8:"
+                                            "Transitive" = "11:FALSE"
+                                            "ValueTypes" = "3:1"
+                                            "Value" = "8:[TARGETDIR]"
+                                            }
+                                        }
+                                    }
                                 }
                                 "Values"
                                 {

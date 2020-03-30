@@ -125,13 +125,13 @@ struct File {
 		return result;
 	}
 
-	size_t size() const {
+	uint64_t size() const {
 		DWORD high = 0;
 		DWORD low = GetFileSize(handle, &high);
 		if (low == INVALID_FILE_SIZE) {
 			throw std::runtime_error("GetFileSize failed");
 		}
-		return (size_t(high) << 32) | low;
+		return (uint64_t(high) << 32) | low;
 	}
 
 	HANDLE handle = NULL;

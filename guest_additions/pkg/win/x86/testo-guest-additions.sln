@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "testo-guest-additions", "testo-guest-additions.vdproj", "{8ECD0597-BE77-4A14-8895-ADB0ADFA0012}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Default|Default = Default|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8ECD0597-BE77-4A14-8895-ADB0ADFA0012}.Default|Default.ActiveCfg = Default
+		{8ECD0597-BE77-4A14-8895-ADB0ADFA0012}.Default|Default.Build.0 = Default
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A381CA43-2DED-4627-9CCA-8121311A4D4B}
+	EndGlobalSection
+EndGlobal
