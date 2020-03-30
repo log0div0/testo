@@ -13,6 +13,51 @@ machine win7 {
 	}
 }
 
+test win7_x86_installation {
+	win7 {
+		start
+		wait "Мой язык - русский" timeout 2m; press Down*2, Enter
+		wait "Выберите нужный язык"; press Enter
+		wait "Установить"; press Enter
+		wait "Выберите операционную систему"; press Enter
+		wait "Условия лицензии"; press Space, Enter
+		wait "Выберите тип установки"; press Down, Enter
+		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; press Enter
+		wait "Выберите имя пользователя" timeout 15m
+		unplug dvd
+		press LeftShift+LeftAlt; type "testo"; press Enter
+		wait "Установите пароль"; press Enter
+		wait "Введите ключ продукта";
+		mouse click "Автоматически активировать Windows"
+		mouse click "Далее"
+		wait "Помогите автоматически защитить компьютер"
+		mouse click "Отложить решение"
+		wait "Проверьте настройку даты и времени"; press Enter
+		wait "Выберите текущее место расположения компьютера"; press Enter
+		wait "Корзина" timeout 10m
+		shutdown
+		start
+		wait "Корзина"
+		sleep 10s
+	}
+}
+
+test win7_x86_guest_additions: win7_x86_installation {
+	win7 {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		wait "Автозапуск"; press Enter
+		wait "Вас приветствует мастер установки"; press Enter
+		wait "Выбор папки для установки"; press Enter
+		wait "Подтверждение установки"; press Enter
+		wait "Разрешить внесение изменений"; press Left, Enter
+		wait "Установить программное обеспечение для данного устройства?";
+		mouse click "Установить".from_top(1)
+		wait "Установка завершена"; press Enter
+		wait !"Установка завершена"
+		exec cmd "echo hello world"
+	}
+}
+
 test win7_installation {
 	win7 {
 		start
@@ -52,8 +97,8 @@ test win7_guest_additions: win7_installation {
 		wait "Выбор папки для установки"; press Enter
 		wait "Подтверждение установки"; press Enter
 		wait "Разрешить внесение изменений"; press Left, Enter
-		wait "Не удалось проверить издателя этих драйверов";
-		mouse click "Все равно установить"
+		wait "Установить программное обеспечение для данного устройства?";
+		mouse click "Установить".from_top(1)
 		wait "Установка завершена"; press Enter
 		wait !"Установка завершена"
 		exec cmd "echo hello world"

@@ -5,16 +5,18 @@ add_subdirectory(pkg)
 
 if (UNIX)
 	set(ISO_FILES
-		${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-${TESTO_VERSION}.deb
-		${CMAKE_BINARY_DIR}/out/pkg/testo-guest-additions-${TESTO_VERSION}.rpm
-		${CMAKE_CURRENT_SOURCE_DIR}/pkg/win/autorun.inf
-		${CMAKE_CURRENT_SOURCE_DIR}/pkg/win/testo-guest-additions.msi
+		${CMAKE_CURRENT_SOURCE_DIR}/iso/testo-guest-additions.deb
+		${CMAKE_CURRENT_SOURCE_DIR}/iso/testo-guest-additions.rpm
+		${CMAKE_CURRENT_SOURCE_DIR}/iso/autorun.inf
+		${CMAKE_CURRENT_SOURCE_DIR}/iso/autorun.js
+		${CMAKE_CURRENT_SOURCE_DIR}/iso/testo-guest-additions-x86.msi
+		${CMAKE_CURRENT_SOURCE_DIR}/iso/testo-guest-additions-x64.msi
 	)
 
 	add_custom_target(testo-guest-additions-iso
 		COMMAND
 			rm -f testo-guest-additions.iso &&
-			genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot -o testo-guest-additions.iso ${ISO_FILES}
+			genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot -o testo-guest-additions-${TESTO_VERSION}.iso ${ISO_FILES}
 		DEPENDS
 			testo-guest-additions-package
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/out/pkg)

@@ -1,2 +1,2 @@
 [AutoRun]
-shellexecute=testo-guest-additions.msi
+shellexecute=autorun.js
