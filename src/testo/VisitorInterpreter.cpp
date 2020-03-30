@@ -226,8 +226,8 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	auto exec_default_timeout_found = reg.params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
 	exec_default_timeout = (exec_default_timeout_found != reg.params.end()) ? exec_default_timeout_found->second : "10m";
 
-	auto copyto_default_timeout_found = reg.params.find("TESTO_COPYTO_DEFAULT_TIMEOUT");
-	copyto_default_timeout = (copyto_default_timeout_found != reg.params.end()) ? copyto_default_timeout_found->second : "10m";
+	auto copy_default_timeout_found = reg.params.find("TESTO_COPY_DEFAULT_TIMEOUT");
+	copy_default_timeout = (copy_default_timeout_found != reg.params.end()) ? copy_default_timeout_found->second : "10m";
 }
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
@@ -1572,7 +1572,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 		fs::path from = template_parser.resolve(copy->from->text(), reg);
 		fs::path to = template_parser.resolve(copy->to->text(), reg);
 
-		std::string wait_for = copy->time_interval ? copy->time_interval.value() : copyto_default_timeout;
+		std::string wait_for = copy->time_interval ? copy->time_interval.value() : copy_default_timeout;
 		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy->is_to_guest(), wait_for);
 
 		if (vmc->vm->state() != VmState::Running) {

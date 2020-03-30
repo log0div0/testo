@@ -282,8 +282,8 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 	if (copy->time_interval) {
 		result += copy->time_interval.value();
 	} else {
-		auto copyto_default_timeout_found = reg.params.find("TESTO_COPYTO_DEFAULT_TIMEOUT");
-		result += (copyto_default_timeout_found != reg.params.end()) ? copyto_default_timeout_found->second : "10m";
+		auto copy_default_timeout_found = reg.params.find("TESTO_COPY_DEFAULT_TIMEOUT");
+		result += (copy_default_timeout_found != reg.params.end()) ? copy_default_timeout_found->second : "10m";
 	}
 
 	return result;
