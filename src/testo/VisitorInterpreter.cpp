@@ -786,10 +786,8 @@ bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectabl
 		auto value = eval_js(script, screenshot);
 		if (value.is_bool()) {
 			return (bool)value;
-		} else if (value.is_array()) {
-			return (int32_t)value.get_property_str("length");
 		} else {
- 			throw std::runtime_error("Unknown js return type");
+ 			throw std::runtime_error("Can't process return value type. We expect a single boolean");
 		}
 	} else {
 		throw std::runtime_error("Unknown selectable type");
@@ -1124,7 +1122,7 @@ std::vector<VisitorInterpreter::Point> VisitorInterpreter::visit_mouse_additiona
 {
 	size_t index = 0;
 
-	if ((specifiers.size() > index) && specifiers[index]->is_from()) {		
+	if ((specifiers.size() > index) && specifiers[index]->is_from()) {
 		input = visit_mouse_specifier_from(specifiers[index], input);
 		index++;
 	}
@@ -1197,7 +1195,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 				coro::CheckPoint();
 			}
 			continue;
-		} 
+		}
 	}
 
 	if (!is_cursor_moved) {
