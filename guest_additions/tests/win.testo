@@ -6,17 +6,117 @@ machine win7 {
 	cpus: 2
 	ram: 2Gb
 	iso: "${ISO_DIR}/win7.iso"
-	disk_size: 15Gb
+	disk_size: 20Gb
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
 	}
 }
 
+machine win10 {
+	cpus: 2
+	ram: 3Gb
+	iso: "${ISO_DIR}/win10.iso"
+	disk_size: 30Gb
+	nic nat: {
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+}
+
+test win10_installation_part_1 {
+	win10 {
+		start
+		mouse click "Мой язык - русский" timeout 10m
+		mouse click "Далее".from_bottom(0)
+		mouse click "Установить"
+		wait "Выберите операционную систему"
+		mouse click "Windows 10 Корпоративная".from_top(0)
+		mouse click "Далее".from_bottom(0)
+		mouse click "Я принимаю условия лицензии"
+		mouse click "Далее".from_bottom(0)
+		wait "Выберите тип установки"
+		mouse click "Выборочная"
+		wait "Где вы хотите установить Windows?"
+		mouse click "Далее".from_bottom(0)
+		wait "родолжить на выбранном языке?" timeout 30m interval 10s
+	}
+}
+
+test win10_installation_part_2: win10_installation_part_1 {
+	win10 {
+		wait "родолжить на выбранном языке?"
+		mouse click "Да".from_bottom(0)
+		wait "Давайте начнем с региона. Это правильно?"
+		mouse click "Да".from_bottom(0)
+		wait "Это правильная раскладка клавиатуры?"
+		mouse click "Да".from_bottom(0)
+		wait "Вы хотите добавить вторую раскладку"
+		mouse click "Пропустить".from_bottom(0)
+		wait "Лицензионное соглашение" timeout 10m
+		mouse move 0 0
+		mouse click "Принять".from_bottom(0)
+		wait "Какую учетную запись использовать?"
+		mouse click "Вместо этого присоединить к домену"
+		wait "Какое имя вы хотите использовать?"
+		mouse click "Имя".from_bottom(0)
+		press LeftAlt+LeftShift; type "user"; press Enter
+		mouse move 0 0
+		mouse click "Пароль".from_bottom(0)
+		type "1111"; press Enter
+		mouse click "Подтверждение пароля".from_bottom(0)
+		type "1111"; press Enter
+		mouse click "Контрольный вопрос (1 из 3)"
+		mouse move 0 0
+		mouse click "Кличка первого домашнего животного"
+		mouse move 0 0
+		mouse click "Ответ".from_bottom(0)
+		type "----"; press Enter
+		mouse click "Контрольный вопрос (2 из 3)"
+		mouse move 0 0
+		mouse click "В каком городе вы родились"
+		mouse move 0 0
+		mouse click "Ответ".from_bottom(0)
+		type "----"; press Enter
+		mouse click "Контрольный вопрос (3 из 3)"
+		mouse move 0 0
+		mouse click "Ваше прозвище в детстве"
+		mouse move 0 0
+		mouse click "Ответ".from_bottom(0)
+		type "----"; press Enter
+		wait "Удобная работа на разных устройствах"
+		mouse click "Нет".from_bottom(0)
+		wait "Выберите параметры конфиденциальности"
+		mouse click "Принять".from_bottom(0)
+		wait "Корзина" timeout 10m
+		unplug dvd
+		sleep 10s
+	}
+}
+
+test win10_guest_additions: win10_installation_part_2 {
+	win10 {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		mouse click "CD-дисковод"
+		mouse click "Выполнить autorun"
+		wait "Вас приветствует мастер установки"; press Enter
+		#wait "Выбор папки для установки"; press Enter
+		wait "Установщик установит"; press Enter
+		wait "Подтверждение установки"; press Enter
+		wait "Разрешить этому приложению"
+		mouse click "Да".from_bottom(0)
+		wait "Установить программное обеспечение для данного устройства?";
+		mouse click "Установить".from_top(1)
+		wait "Установка завершена"; press Enter
+		wait !"Установка завершена"
+		exec cmd "echo hello world"
+	}
+}
+
 test win7_x86_installation {
 	win7 {
 		start
-		wait "Мой язык - русский" timeout 2m; press Down*2, Enter
+		mouse click "Мой язык - русский" timeout 2m
 		wait "Выберите нужный язык"; press Enter
 		wait "Установить"; press Enter
 		wait "Выберите операционную систему"; press Enter
@@ -63,7 +163,7 @@ test win7_installation {
 		start
 		wait "Choose an operating system"
 		press Down, Enter
-		wait "Мой язык - русский" timeout 2m; press Down*2, Enter
+		mouse click "Мой язык - русский" timeout 2m
 		wait "Выберите нужный язык"; press Enter
 		wait "Установить"; press Enter
 		wait "Выберите операционную систему"; press Down*8, Enter
