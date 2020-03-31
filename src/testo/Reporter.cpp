@@ -252,7 +252,7 @@ void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::string& k
 void Reporter::type(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& interval) {
 	report(fmt::format("{} Typing ", progress()), blue);
 	report(fmt::format("\"{}\" ", text), yellow);
-	report(fmt::format(" with interval {} in virtual machine ", interval), blue);
+	report(fmt::format("with interval {} in virtual machine ", interval), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 
 }
@@ -266,7 +266,7 @@ void Reporter::sleep(std::shared_ptr<VmController> vmc, const std::string& timeo
 void Reporter::wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
 	report(fmt::format("{} Waiting ", progress()), blue);
 	report(fmt::format("{} ", text), yellow);
-	report(fmt::format("for {} with interval {} in virtual machine  ", timeout, interval), blue);
+	report(fmt::format("for {} with interval {} in virtual machine ", timeout, interval), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
@@ -328,8 +328,8 @@ void Reporter::copy(std::shared_ptr<VmController> vmc, const std::string& from, 
 }
 
 void Reporter::mouse_move_click_coordinates(std::shared_ptr<VmController> vmc, const std::string& x, const std::string& y) {
-	report(" on coordinates ", blue);
-	report(fmt::format("{} {}", x, y), yellow);
+	report("on coordinates ", blue);
+	report(fmt::format("{} {} ", x, y), yellow);
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }

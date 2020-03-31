@@ -133,7 +133,9 @@ Process::Process(const std::string& cmd) {
 		&info);
 
 	if (!success) {
-		throw std::runtime_error("CreateProcessA failed");
+		DWORD dwErrVal = GetLastError();
+		std::error_code ec(dwErrVal, std::system_category());
+		throw std::system_error(ec, "CreateProcess failed");
 	}
 
 	process = info.hProcess;

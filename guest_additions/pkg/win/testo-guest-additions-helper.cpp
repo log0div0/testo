@@ -16,6 +16,7 @@ using namespace std::chrono_literals;
 #include "winapi.hpp"
 
 #include <shellapi.h>
+#include <VersionHelpers.h>
 
 namespace fs = std::filesystem;
 
@@ -28,13 +29,27 @@ enum class Command {
 
 Command selected_command;
 
+std::string get_os() {
+	if (IsWindows10OrGreater()) {
+		return "w10";
+	} else if (IsWindows8Point1OrGreater()) {
+		return "w8.1";
+	} else if (IsWindows8OrGreater()) {
+		return "w8";
+	} else if (IsWindows7OrGreater()) {
+		return "w7";
+	} else {
+		throw std::runtime_error("Unsupported os");
+	}
+}
+
 void install() {
 	spdlog::info("Install ...");
 
 	{
 		fs::path path = winapi::get_module_file_name();
 		path = path.parent_path();
-		path = path / "vioserial" / "vioser.inf";
+		path = path / "vioserial" / get_os() / "vioser.inf";
 
 		std::string cmd = "pnputil -i -a \"" + path.generic_string() + "\"";
 		spdlog::info("Command to execute: " + cmd);
