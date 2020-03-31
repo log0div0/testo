@@ -3,7 +3,7 @@
 #include <thread>
 #include <fstream>
 #include "Runtime.hpp"
-#include <nn/Context.hpp>
+#include <stb/Image.hpp>
 #include <nn/OnnxRuntime.hpp>
 #include <clipp.h>
 
@@ -57,8 +57,7 @@ int main(int argc, char** argv) {
 		js_ctx.register_nn_functions();
 
 		nn::OnnxRuntime runtime;
-		nn::Context nn_ctx(&image);
-		js_ctx.set_opaque(&nn_ctx);
+		js_ctx.set_opaque(&image);
 
 		auto val = js_ctx.eval(script);
 

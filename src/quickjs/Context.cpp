@@ -1,6 +1,6 @@
 
 #include "Context.hpp"
-#include "nn/Context.hpp"
+#include "nn/OCR.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -23,7 +23,7 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 		throw std::runtime_error("Invalid arguments count in detect_text");
 	}
 
-	nn::Context* nn_context = (nn::Context*)ctx.get_opaque();
+	stb::Image* image = (stb::Image*)ctx.get_opaque();
 
 	std::string text, color, background_color;
 	text = std::string(args.at(0));
@@ -36,7 +36,7 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 		background_color = std::string(args.at(2));
 	}
 
-	auto result = nn_context->ocr().search(text, color, background_color);
+	auto result = nn::OCR(image).search(text, color, background_color);
 	auto array = ctx.new_array(result.size());
 
 	for (size_t i = 0; i < result.size(); ++i) {

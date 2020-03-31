@@ -11,7 +11,7 @@
 #include <wildcards.hpp>
 #include <rang.hpp>
 
-#include "nn/Context.hpp"
+#include "nn/OCR.hpp"
 
 using namespace std::chrono_literals;
 
@@ -758,8 +758,7 @@ quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image
 		js_current_ctx.reset(new quickjs::Context(js_runtime.create_context()));
 		//auto js_ctx = js_runtime.create_context();
 		js_current_ctx->register_nn_functions();
-		nn::Context nn_ctx(&screenshot);
-		js_current_ctx->set_opaque(&nn_ctx);
+		js_current_ctx->set_opaque(&screenshot);
 		return js_current_ctx->eval(script);
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
