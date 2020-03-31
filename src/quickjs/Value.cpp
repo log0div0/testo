@@ -37,6 +37,9 @@ ValueRef::operator bool() const {
 
 ValueRef::operator std::string() const {
 	const char* str = JS_ToCString(context, handle);
+	if (!str) {
+		throw std::runtime_error("Can't convert js value to string");
+	}
 	std::string result(str);
 	JS_FreeCString(context, str);
 	return result;
