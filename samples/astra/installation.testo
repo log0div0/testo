@@ -1,5 +1,5 @@
 
-include "./macros.testo"
+include "../common_astra.testo"
 
 network nat {
 	mode: "nat"
@@ -7,7 +7,7 @@ network nat {
 
 machine astra {
 	cpus: 1
-	iso: "${ISO_DIR}/orel-current.iso"
+	iso: "${ISO_DIR}/astralinux-orel.iso"
 	ram: 1024Mb
 	disk_size: 10Gb
 
@@ -22,82 +22,21 @@ param password "12345678"
 param what_to_wait "Графическая установка"
 
 test install_astralinux {
-	astra {
-		start
-		wait "Графическая установка" && js "detect_text('Русский', 'white', 'blue')"
-		press Enter, Down
-		wait js "detect_text('Установка', 'white')"; press Enter
-		wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
-		wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
-		wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
-		wait "Имя учётной записи администратора"; type "${login}"; press Enter
-		wait "Введите пароль для нового администратора"; type "${password}"; press Enter
-		wait "Введите пароль еще раз"; type "${password}"; press Enter
-		wait "Настройка времени"; select_menu_vertical("Москва+00");
-		wait "Метод разметки"; select_menu_vertical("Авто - использовать весь диск");
-		wait "Выберите диск для разметки"; select_menu_vertical("SCSI1 (0,0,0) (sda)");
-		wait "Схема разметки"; select_menu_vertical("Все файлы в одном разделе");
-		select_menu_vertical("Закончить разметку и записать изменения на диск");
-		wait "Записать изменения на диск?"; select_menu_horizontal("Да")
-		wait "Выбор программного обеспечения" timeout 10m;
-		press Down, Space
-		press Down, Space
-		press Down, Space
-		press Enter
-		wait "Дополнительные настройки ОС" timeout 20m; press Enter
-		wait "Установить системный загрузчик GRUB"; select_menu_horizontal("Да")
-		wait "Устройство для установки системного загрузчика"; select_menu_vertical("/dev/sda")
-		wait "Установка завершена" timeout 3m; unplug dvd; select_menu_horizontal("Продолжить")
-		wait "${host_name} login:" timeout 5m; type "${login}"; press Enter
-		wait "Password:"; type "${password}"; press Enter
-		wait "${login}@${host_name}:"
-	}
+	astra install_astra_console("${host_name}", "${login}", "${password}")
 }
 
 test install_guest_additions: install_astralinux {
 	astra {
-		install_guest_additions("${host_name}", "${login}", "${password}")
+		install_guest_additions_console("${ISO_DIR}", "${host_name}", "${login}", "${password}")
 		exec bash "echo Hello world"
 	}
 }
 
 test install_astralinux_gui {
-	astra {
-		start
-		wait "ASTRALINUX"; press Enter;
-		wait !"Русский"; press Enter
-		wait "Лицензия"; mouse click "Продолжить"
-		wait "Настройка клавиатуры"; mouse click "Продолжить"
-		wait "Введите имя этого компьютера" timeout 5m;
-		press Backspace; type "${host_name}"; mouse click "Продолжить"
-		wait "Выберите имя учётной записи администратора"; type "${login}"; mouse click "Продолжить"
-		wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}";
-		mouse click "Продолжить"
-		wait "Выберите часовой пояс" && js "detect_text('Москва+00', 'white', 'red')"; mouse click "Продолжить"
-		wait "Метод разметки"; mouse click "Продолжить"
-		wait "Заметим, что все данные на выбранном диске будут стерты"; mouse click "Продолжить"
-		wait "Диск может быть размечен по одной из следующих схем"; mouse click "Продолжить"
-		wait "Закончить разметку и записать изменения на диск"; mouse click "Продолжить"
-		wait "Записать изменения на диск?"; mouse click "Да"; mouse click "Продолжить"
-		wait "Выберите устанавливаемое программное обеспечение" timeout 10m;
+	astra install_astra_gui("${host_name}", "${login}", "${password}")
+}
 
-		mouse click "Приложения для работы с сенсорным экраном"; press Space
-		mouse click "Игры"; press Space
-		mouse click "Средства работы в Интернет"; press Space
-		mouse click "Офисные средства"; press Space
-		mouse click "Средства Мультимедиа"; press Space
-		mouse click "Продолжить"
 
-		wait "Дополнительные настройки ОС" timeout 15m;
-		mouse click "Системные часы установлены на местное время"; press Space
-		mouse click "Продолжить"
-		wait "Похоже, что данная система будет единственной"; mouse click "Продолжить"
-		wait "Устройство для установки системного загрузчика"; mouse click "/dev/sda"; mouse click "Продолжить"
-		wait "Установка завершена"
-		sleep 5s
-		unplug dvd
-		mouse click "Продолжить"
-		wait "Вход" timeout 10m; type "${login}"; press Tab; type "${password}"; press Enter
-		wait "Корзина"
-	}
+test astra_install_guest_additions: install_astralinux_gui {
+	astra install_guest_additions_gui("${ISO_DIR}", "${password}")
 }
