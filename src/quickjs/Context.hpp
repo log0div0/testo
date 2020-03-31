@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Value.hpp"
+#include <stb/Image.hpp>
 
 namespace quickjs {
 
@@ -29,15 +30,9 @@ struct ContextRef {
 
 	Value eval(const std::string& script, bool compile_only = false);
 
-	void set_opaque(void* opaque);
-
 	Value get_global_object();
-	void* get_opaque();
 	Value get_exception();
 	std::string get_last_error();
-
-	void register_global_function(const std::string& name, size_t length, JSCFunction* f);
-	void register_nn_functions();
 
 	Value throw_(Value val);
 
@@ -53,11 +48,20 @@ struct ContextRef {
 	void free(void* ptr);
 
 	::JSContext* handle = nullptr;
+
+	stb::Image* image() const;
+
+protected:
+	void set_opaque(void* opaque);
+	void* get_opaque() const;
+
+	void register_global_function(const std::string& name, size_t length, JSCFunction* f);
+	void register_global_functions();
 };
 
 struct Context: ContextRef {
 	Context() = delete;
-	using ContextRef::ContextRef;
+	Context(JSContext* handle, stb::Image* image);
 	~Context();
 
 	Context(const Context& other) = delete;

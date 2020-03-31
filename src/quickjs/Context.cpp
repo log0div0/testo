@@ -23,8 +23,6 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 		throw std::runtime_error("Invalid arguments count in detect_text");
 	}
 
-	stb::Image* image = (stb::Image*)ctx.get_opaque();
-
 	std::string text, color, background_color;
 	text = std::string(args.at(0));
 
@@ -36,7 +34,7 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 		background_color = std::string(args.at(2));
 	}
 
-	auto result = nn::OCR(image).search(text, color, background_color);
+	auto result = nn::OCR(ctx.image()).search(text, color, background_color);
 	auto array = ctx.new_array(result.size());
 
 	for (size_t i = 0; i < result.size(); ++i) {
@@ -59,6 +57,8 @@ ContextRef::ContextRef(::JSContext* handle): handle(handle) {
 	if (!handle) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
 	}
+
+	register_global_functions();
 }
 
 Value ContextRef::get_global_object() {
@@ -73,7 +73,7 @@ void ContextRef::set_opaque(void* opaque) {
 	JS_SetContextOpaque(handle, opaque);
 }
 
-void* ContextRef::get_opaque() {
+void* ContextRef::get_opaque() const {
 	return JS_GetContextOpaque(handle);
 }
 
@@ -187,9 +187,21 @@ JSValue js_func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *a
 	}
 }
 
-void ContextRef::register_nn_functions() {
+void ContextRef::register_global_functions() {
 	register_global_function("print", 1, js_func<js_print>);
 	register_global_function("detect_text", 1, js_func<detect_text>);
+}
+
+stb::Image* ContextRef::image() const {
+	if (!get_opaque()) {
+		throw std::runtime_error("Context opaque is nullptr");
+	}
+	return (stb::Image*)get_opaque();
+}
+
+Context::Context(JSContext* handle, stb::Image* image): ContextRef(handle) {
+	// image может быть нулевым, если мы просто хотим скомпилировать js
+	set_opaque(image);
 }
 
 Context::~Context() {

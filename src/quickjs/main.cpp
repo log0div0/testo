@@ -42,6 +42,8 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 
+		nn::OnnxRuntime runtime;
+
 		stb::Image image(image_path);
 		std::ifstream script_file(script_path);
 		if (!script_file.is_open()) {
@@ -53,11 +55,7 @@ int main(int argc, char** argv) {
 		};
 
 		quickjs::Runtime js_runtime = quickjs::create_runtime();
-		quickjs::Context js_ctx = js_runtime.create_context();
-		js_ctx.register_nn_functions();
-
-		nn::OnnxRuntime runtime;
-		js_ctx.set_opaque(&image);
+		quickjs::Context js_ctx = js_runtime.create_context(&image);
 
 		auto val = js_ctx.eval(script);
 

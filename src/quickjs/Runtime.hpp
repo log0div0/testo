@@ -15,7 +15,7 @@ struct Runtime {
 	Runtime(Runtime&& other);
 	Runtime& operator=(Runtime&&);
 
-	Context create_context();
+	Context create_context(stb::Image* image);
 
 	::JSRuntime* handle = nullptr;
 };

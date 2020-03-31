@@ -755,10 +755,7 @@ bool VisitorInterpreter::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> sel
 
 quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
 	try {
-		js_current_ctx.reset(new quickjs::Context(js_runtime.create_context()));
-		//auto js_ctx = js_runtime.create_context();
-		js_current_ctx->register_nn_functions();
-		js_current_ctx->set_opaque(&screenshot);
+		js_current_ctx.reset(new quickjs::Context(js_runtime.create_context(&screenshot)));
 		return js_current_ctx->eval(script);
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));

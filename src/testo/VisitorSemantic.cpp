@@ -529,8 +529,7 @@ void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select
 }
 
 void VisitorSemantic::validate_js(const std::string& script) {
-	auto js_ctx = js_runtime.create_context();
-	js_ctx.register_nn_functions();
+	auto js_ctx = js_runtime.create_context(nullptr);
 	js_ctx.eval(script, true);
 }
 

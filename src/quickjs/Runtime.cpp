@@ -32,8 +32,8 @@ Runtime create_runtime() {
 	return Runtime(JS_NewRuntime());
 }
 
-Context Runtime::create_context() {
-	return Context(JS_NewContext(handle));
+Context Runtime::create_context(stb::Image* image) {
+	return Context(JS_NewContext(handle), image);
 }
 
 }
