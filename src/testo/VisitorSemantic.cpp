@@ -143,7 +143,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	testo_timeout_params.insert("TESTO_PRESS_DEFAULT_INTERVAL");
 	testo_timeout_params.insert("TESTO_TYPE_DEFAULT_INTERVAL");
 	testo_timeout_params.insert("TESTO_EXEC_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_COPYTO_DEFAULT_TIMEOUT");
+	testo_timeout_params.insert("TESTO_COPY_DEFAULT_TIMEOUT");
 
 	for (auto param: config.at("params")) {
 		auto name = param.at("name").get<std::string>();

@@ -1,0 +1,159 @@
+macro select_menu_horizontal(menu_entry) {
+	wait "${menu_entry}"
+
+	#check if it's enabled by default
+	if (check js "detect_text('${menu_entry}', 'gray', 'red')") {
+		press Enter
+	} else {
+		press Left*5
+
+		for (i IN RANGE "5") {
+			if (check js "detect_text('${menu_entry}', 'gray', 'red')" timeout 50ms) {
+				press Enter;
+				break;
+			}
+
+			press Right
+		} else {
+			abort "Can't find menu entry ${menu_entry}"
+		}
+	}
+}
+
+macro select_menu_vertical(menu_entry) {
+	wait "${menu_entry}"
+
+	#check if it's enabled by default
+	if (check js "detect_text('${menu_entry}', 'gray', 'red')") {
+		press Enter
+	} else {
+		press Up*20
+
+		for (i IN RANGE "0" "20") {
+			if (check js "detect_text('${menu_entry}', 'gray', 'red')" timeout 50ms)  {
+				press Enter;
+				break;
+			}
+
+			press Down
+		} else {
+			abort "Can't find menu entry ${menu_entry}"
+		}
+	}
+}
+
+macro install_astra_console(host_name, login, password) {
+	start
+	wait "Графическая установка" && js "detect_text('Русский', 'white', 'blue')"
+	press Enter, Down
+	wait js "detect_text('Установка', 'white')"; press Enter
+	wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
+	wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
+	wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
+	wait "Имя учётной записи администратора"; type "${login}"; press Enter
+	wait "Введите пароль для нового администратора"; type "${password}"; press Enter
+	wait "Введите пароль еще раз"; type "${password}"; press Enter
+	wait "Настройка времени"; select_menu_vertical("Москва+00");
+	wait "Метод разметки"; select_menu_vertical("Авто - использовать весь диск");
+	wait "Выберите диск для разметки"; select_menu_vertical("SCSI1 (0,0,0) (sda)");
+	wait "Схема разметки"; select_menu_vertical("Все файлы в одном разделе");
+	select_menu_vertical("Закончить разметку и записать изменения на диск");
+	wait "Записать изменения на диск?"; select_menu_horizontal("Да")
+	wait "Выбор программного обеспечения" timeout 10m;
+	press Down, Space
+	press Down, Space
+	press Down, Space
+	press Enter
+	wait "Дополнительные настройки ОС" timeout 20m; press Enter
+	wait "Установить системный загрузчик GRUB"; select_menu_horizontal("Да")
+	wait "Устройство для установки системного загрузчика"; select_menu_vertical("/dev/sda")
+	wait "Установка завершена" timeout 3m; unplug dvd; select_menu_horizontal("Продолжить")
+	wait "${host_name} login:" timeout 5m; type "${login}"; press Enter
+	wait "Password:"; type "${password}"; press Enter
+	wait "${login}@${host_name}:"
+}
+
+macro enter_sudo(host_name, login, password) {
+	type "sudo su"; press Enter;
+	wait "root@${host_name}"
+}
+
+macro install_guest_additions_console(ISO_DIR, host_name, login, password) {
+	enter_sudo("${host_name}", "${login}", "${password}")
+	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
+	type "mount /dev/cdrom /media"; press Enter
+	wait "mounting read-only"; type "dpkg -i /media/*.deb"; press Enter;
+	wait "Настраивается пакет testo-guest-additions"
+	type "umount /media"; press Enter;
+	sleep 2s
+	unplug dvd
+}
+
+macro install_astra_gui(host_name, login, password) {
+	start
+	wait "ASTRALINUX"; press Enter;
+	wait !"Русский"; press Enter
+	wait "Лицензия"; mouse click "Продолжить".center_bottom()
+	wait "Настройка клавиатуры"; mouse click "Продолжить".center_bottom()
+	wait "Введите имя этого компьютера" timeout 5m;
+	press Backspace; type "${host_name}"; mouse click "Продолжить".center_bottom()
+	wait "Выберите имя учётной записи администратора"; type "${login}"; mouse click "Продолжить".center_bottom()
+	wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}";
+	mouse click "Продолжить".center_bottom()
+	wait "Выберите часовой пояс" && js "detect_text('Москва+00', 'white', 'red')"; mouse click "Продолжить".center_bottom()
+	wait "Метод разметки"; mouse click "Продолжить".center_bottom()
+	wait "Заметим, что все данные на выбранном диске будут стерты"; mouse click "Продолжить".center_bottom()
+	wait "Диск может быть размечен по одной из следующих схем"; mouse click "Продолжить".center_bottom()
+	wait "Закончить разметку и записать изменения на диск"; mouse click "Продолжить".center_bottom()
+	wait "Записать изменения на диск?"; mouse click "Да"; mouse click "Продолжить".center_bottom()
+	wait "Выберите устанавливаемое программное обеспечение" timeout 10m;
+
+	mouse click "Приложения для работы с сенсорным экраном"; press Space
+	mouse click "Игры"; press Space
+	mouse click "Средства работы в Интернет"; press Space
+	mouse click "Офисные средства"; press Space
+	mouse click "Средства Мультимедиа"; press Space
+	mouse click "Продолжить"
+
+	wait "Дополнительные настройки ОС" timeout 15m;
+	mouse click "Системные часы установлены на местное время"; press Space
+	mouse click "Продолжить".center_bottom()
+	wait "Похоже, что данная система будет единственной"; mouse click "Продолжить".center_bottom()
+	wait "Устройство для установки системного загрузчика"; mouse click "/dev/sda"; mouse click "Продолжить".center_bottom()
+	wait "Установка завершена"
+	sleep 5s
+	unplug dvd
+	mouse click "Продолжить".center_bottom()
+	wait "Вход" timeout 10m; type "${login}"; press Tab; type "${password}"; press Enter
+	wait "Корзина"
+}
+
+macro install_guest_additions_gui(ISO_DIR, password) {
+	plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+	mouse click "Компьютер"
+	sleep 2s
+	mouse dclick
+	mouse dclick "Накопители".from_right(0)
+	mouse dclick "CDROM".from_right(0)
+	mouse click "Примонтировать"
+	sleep 2s
+	mouse click "Отмена"
+	mouse dclick "Файловая система".from_right(0)
+	mouse dclick "media".from_right(0)
+	mouse dclick "cdrom0".from_right(0)
+	mouse dclick "testo-guest-additions-1.4.1.deb"
+	mouse click "Установить пакет"
+	wait "Пароль:"
+	type "${password}"; press Enter
+	wait "Завершено"
+	mouse click "Закрыть"
+	exec bash "echo Hello world"
+	mouse click "Компьютер".from_top(0)
+	sleep 3s
+	mouse rclick "CDROM"
+	mouse click "Извлечь"
+	sleep 5s
+	unplug dvd
+	press leftalt + F4
+	sleep 2s
+}
