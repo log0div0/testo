@@ -54,8 +54,8 @@ int main(int argc, char** argv) {
 			std::istreambuf_iterator<char>()
 		};
 
-		quickjs::Runtime js_runtime = quickjs::create_runtime();
-		quickjs::Context js_ctx = js_runtime.create_context(&image);
+		js::Runtime js_runtime = js::create_runtime();
+		js::Context js_ctx = js_runtime.create_context(&image);
 
 		auto val = js_ctx.eval(script);
 

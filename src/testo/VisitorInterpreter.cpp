@@ -23,7 +23,7 @@ static void sleep(const std::string& interval) {
 }
 
 VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
-	js_runtime = quickjs::create_runtime();
+	js_runtime = js::create_runtime();
 
 	reporter = Reporter(config);
 
@@ -753,9 +753,9 @@ bool VisitorInterpreter::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> sel
 	}
 }
 
-quickjs::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
+js::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& screenshot) {
 	try {
-		js_current_ctx.reset(new quickjs::Context(js_runtime.create_context(&screenshot)));
+		js_current_ctx.reset(new js::Context(js_runtime.create_context(&screenshot)));
 		return js_current_ctx->eval(script);
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));

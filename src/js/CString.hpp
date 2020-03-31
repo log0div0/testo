@@ -12,7 +12,7 @@
 
 #include <string>
 
-namespace quickjs {
+namespace js {
 
 struct CString {
 	CString() = delete;

@@ -4,7 +4,7 @@
 #include "Value.hpp"
 #include <stb/Image.hpp>
 
-namespace quickjs {
+namespace js {
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push

@@ -5,7 +5,7 @@
 #include "Register.hpp"
 #include "TemplateParser.hpp"
 #include "Reporter.hpp"
-#include "quickjs/Runtime.hpp"
+#include "js/Runtime.hpp"
 #include <nn/Rect.hpp>
 #include <vector>
 #include <list>
@@ -13,7 +13,7 @@
 struct VisitorInterpreter {
 	struct Point {
 		Point() = default;
-		Point(const quickjs::Value& val) {
+		Point(const js::Value& val) {
 			auto x_prop = val.get_property_str("x");
 			if (x_prop.is_undefined()) {
 				throw std::runtime_error("Object doesn't have the x propery");
@@ -143,7 +143,7 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
-	quickjs::Value eval_js(const std::string& script, stb::Image& screenshot);
+	js::Value eval_js(const std::string& script, stb::Image& screenshot);
 
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
 
@@ -205,6 +205,6 @@ private:
 
 	std::unordered_map<std::string, std::vector<std::string>> charmap;
 
-	quickjs::Runtime js_runtime;
-	std::shared_ptr<quickjs::Context> js_current_ctx;
+	js::Runtime js_runtime;
+	std::shared_ptr<js::Context> js_current_ctx;
 };

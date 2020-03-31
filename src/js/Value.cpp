@@ -5,7 +5,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace quickjs {
+namespace js {
 
 ValueRef::ValueRef(JSValue handle, JSContext* context): handle(handle), context(context) {
 	if (!context) {

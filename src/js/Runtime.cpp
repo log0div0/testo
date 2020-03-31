@@ -1,7 +1,7 @@
 #include "Runtime.hpp"
 #include <stdexcept>
 
-namespace quickjs {
+namespace js {
 
 Runtime::Runtime(::JSRuntime* handle): handle(handle) {
 	if (!handle) {

@@ -3,7 +3,7 @@
 #include "GlobalFunctions.hpp"
 #include <stdexcept>
 
-namespace quickjs {
+namespace js {
 
 ContextRef::ContextRef(::JSContext* handle): handle(handle) {
 	if (!handle) {

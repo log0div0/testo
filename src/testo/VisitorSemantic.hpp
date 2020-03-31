@@ -5,7 +5,7 @@
 #include "Register.hpp"
 #include "TemplateParser.hpp"
 #include "backends/Environment.hpp"
-#include "quickjs/Runtime.hpp"
+#include "js/Runtime.hpp"
 
 #include <set>
 
@@ -69,5 +69,5 @@ struct VisitorSemantic {
 
 	std::set<std::string> testo_timeout_params;
 
-	quickjs::Runtime js_runtime;
+	js::Runtime js_runtime;
 };

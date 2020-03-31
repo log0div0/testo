@@ -17,7 +17,7 @@ Interpreter::Interpreter(const fs::path& file, const nlohmann::json& config):
 
 	parser = Parser(file, input);
 
-	JS_NewClassID(&quickjs::nn_rect_class_id);
+	JS_NewClassID(&js::nn_rect_class_id);
 }
 
 Interpreter::Interpreter(const fs::path& dir, const std::string& input, const nlohmann::json& config):

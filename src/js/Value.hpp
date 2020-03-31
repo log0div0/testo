@@ -4,7 +4,7 @@
 #include "CString.hpp"
 #include <memory>
 
-namespace quickjs {
+namespace js {
 
 struct Value;
 

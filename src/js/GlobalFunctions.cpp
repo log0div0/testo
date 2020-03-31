@@ -3,7 +3,7 @@
 #include "nn/OCR.hpp"
 #include <iostream>
 
-namespace quickjs {
+namespace js {
 
 Value js_print(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
 	for (size_t i = 0; i < args.size(); i++) {

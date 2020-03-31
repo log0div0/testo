@@ -2,7 +2,7 @@
 
 #include "Context.hpp"
 
-namespace quickjs {
+namespace js {
 
 struct Runtime {
 	Runtime() = default;

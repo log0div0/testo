@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 
-namespace quickjs {
+namespace js {
 
 CString::CString(const char* handle, JSContext* context): handle(handle), context(context) {
 	if (!handle || !context) {

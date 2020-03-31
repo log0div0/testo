@@ -6,7 +6,7 @@
 VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	reg(reg)
 {
-	js_runtime = quickjs::create_runtime();
+	js_runtime = js::create_runtime();
 	prefix = config.at("prefix").get<std::string>();
 
 	keys.insert("ESC");
