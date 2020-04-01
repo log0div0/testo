@@ -140,7 +140,7 @@ stb::Image* ContextRef::image() const {
 	return (stb::Image*)get_opaque();
 }
 
-Context::Context(JSContext* handle, stb::Image* image): ContextRef(handle) {
+Context::Context(stb::Image* image): ContextRef(JS_NewContext(Runtime::instance().handle)) {
 	// image может быть нулевым, если мы просто хотим скомпилировать js
 	set_opaque(image);
 

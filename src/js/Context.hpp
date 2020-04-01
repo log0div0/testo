@@ -44,7 +44,7 @@ protected:
 
 struct Context: ContextRef {
 	Context() = delete;
-	Context(JSContext* handle, stb::Image* image);
+	Context(stb::Image* image);
 	~Context();
 
 	Context(const Context& other) = delete;

@@ -5,7 +5,7 @@
 #include "Register.hpp"
 #include "TemplateParser.hpp"
 #include "Reporter.hpp"
-#include "js/Runtime.hpp"
+#include "js/Context.hpp"
 #include <nn/Rect.hpp>
 #include <vector>
 #include <list>
@@ -14,12 +14,12 @@ struct VisitorInterpreter {
 	struct Point {
 		Point() = default;
 		Point(const js::Value& val) {
-			auto x_prop = val.get_property_str("x");
+			auto x_prop = val.get_property("x");
 			if (x_prop.is_undefined()) {
 				throw std::runtime_error("Object doesn't have the x propery");
 			}
 
-			auto y_prop = val.get_property_str("y");
+			auto y_prop = val.get_property("y");
 			if (y_prop.is_undefined()) {
 				throw std::runtime_error("Object doesn't have the y propery");
 			}
@@ -205,6 +205,5 @@ private:
 
 	std::unordered_map<std::string, std::vector<std::string>> charmap;
 
-	js::Runtime js_runtime;
 	std::shared_ptr<js::Context> js_current_ctx;
 };

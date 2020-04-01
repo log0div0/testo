@@ -8,24 +8,21 @@ namespace js {
 struct RuntimeRef {
 	RuntimeRef(::JSRuntime* handle);
 
-	Context create_context(stb::Image* image);
-
 	::JSRuntime* handle = nullptr;
 };
 
 struct Runtime: RuntimeRef {
-	Runtime() = default;
-	Runtime(::JSRuntime* handle);
-	~Runtime();
+	static Runtime& instance();
 
 	Runtime(const Runtime&) = delete;
 	Runtime& operator=(const Runtime&) = delete;
 
-	Runtime(Runtime&& other);
-	Runtime& operator=(Runtime&&);
+	Runtime(Runtime&& other) = delete;
+	Runtime& operator=(Runtime&&) = delete;
 
+private:
+	Runtime();
+	~Runtime();
 };
-
-Runtime create_runtime();
 
 }
