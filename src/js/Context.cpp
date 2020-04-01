@@ -1,6 +1,7 @@
 
 #include "Context.hpp"
 #include "GlobalFunctions.hpp"
+#include "FunctionsAdapters.hpp"
 #include <stdexcept>
 
 namespace js {
@@ -9,8 +10,6 @@ ContextRef::ContextRef(::JSContext* handle): handle(handle) {
 	if (!handle) {
 		throw std::runtime_error(__PRETTY_FUNCTION__);
 	}
-
-	register_global_functions();
 }
 
 Value ContextRef::get_global_object() {
@@ -121,29 +120,6 @@ std::string ContextRef::get_last_error() {
 	return result;
 }
 
-typedef Value FunctionType(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args);
-
-template <FunctionType F>
-JSValue js_func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-	ContextRef ctx_ref(ctx);
-	try {
-		std::vector<ValueRef> args;
-		for (int i = 0; i < argc; ++i) {
-			args.push_back(ValueRef(argv[i], ctx));
-		}
-		Value result = F(ctx, ValueRef(this_val, ctx), args);
-		return result.release();
-	} catch (const std::exception& error) {
-		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
-		return exception.release();
-	}
-}
-
-void ContextRef::register_global_functions() {
-	register_global_function("print", 1, js_func<js_print>);
-	register_global_function("detect_text", 1, js_func<detect_text>);
-}
-
 stb::Image* ContextRef::image() const {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
@@ -154,6 +130,8 @@ stb::Image* ContextRef::image() const {
 Context::Context(JSContext* handle, stb::Image* image): ContextRef(handle) {
 	// image может быть нулевым, если мы просто хотим скомпилировать js
 	set_opaque(image);
+
+	register_global_functions();
 }
 
 Context::~Context() {
@@ -169,6 +147,11 @@ Context::Context(Context&& other): ContextRef(other.handle) {
 Context& Context::operator=(Context&& other) {
 	std::swap(handle, other.handle);
 	return *this;
+}
+
+void Context::register_global_functions() {
+	register_global_function("print", 1, CFunction<js_print>);
+	register_global_function("detect_text", 1, CFunction<detect_text>);
 }
 
 }

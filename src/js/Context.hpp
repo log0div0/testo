@@ -56,7 +56,6 @@ protected:
 	void* get_opaque() const;
 
 	void register_global_function(const std::string& name, size_t length, JSCFunction* f);
-	void register_global_functions();
 };
 
 struct Context: ContextRef {
@@ -69,6 +68,9 @@ struct Context: ContextRef {
 
 	Context(Context&& other);
 	Context& operator=(Context&& other);
+
+private:
+	void register_global_functions();
 };
 
 }

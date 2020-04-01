@@ -1,10 +1,19 @@
+
 #pragma once
 
 #include "Context.hpp"
 
 namespace js {
 
-struct Runtime {
+struct RuntimeRef {
+	RuntimeRef(::JSRuntime* handle);
+
+	Context create_context(stb::Image* image);
+
+	::JSRuntime* handle = nullptr;
+};
+
+struct Runtime: RuntimeRef {
 	Runtime() = default;
 	Runtime(::JSRuntime* handle);
 	~Runtime();
@@ -15,9 +24,6 @@ struct Runtime {
 	Runtime(Runtime&& other);
 	Runtime& operator=(Runtime&&);
 
-	Context create_context(stb::Image* image);
-
-	::JSRuntime* handle = nullptr;
 };
 
 Runtime create_runtime();

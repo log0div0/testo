@@ -46,7 +46,7 @@ std::ostream& operator<<(std::ostream& stream, const ValueRef& value);
 struct Value: ValueRef {
 	Value() = delete;
 	using ValueRef::ValueRef;
-	virtual ~Value();
+	~Value();
 
 	Value(const Value& other);
 	Value& operator=(const Value& other);
