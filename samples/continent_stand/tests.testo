@@ -38,8 +38,8 @@ machine CUS {
 }
 
 machine UB {
-	cpus: 1
-	ram: 2048Mb
+	cpus: 2
+	ram: 3072Mb
 	iso: "${ISO_DIR}/Continent.iso"
 	disk_size: 20Gb
 
@@ -71,12 +71,14 @@ macro install_continent(id) {
 	wait "Главное меню" timeout 10m
 }
 
+[no_snapshots: true]
 test install_CUS {
 	CUS {
 		install_continent("${cus_id}")
 	}
 }
 
+[no_snapshots: true]
 test install_UB {
 	UB {
 		install_continent("${ub_id}")
@@ -111,6 +113,7 @@ macro select_local_menu_horizontal(string) {
 	}
 }
 
+[no_snapshots: true]
 test init_CUS: install_CUS {
 	CUS {
 		select_local_menu("Инициализация");
@@ -147,6 +150,7 @@ test init_CUS: install_CUS {
 	}
 }
 
+[no_snapshots: true]
 test init_UB: install_UB {
 	UB {
 		select_local_menu("Инициализация");
@@ -161,7 +165,7 @@ flash ub_flash {
 	size: 16Mb
 }
 
-/*test config_UB: init_CUS, init_UB {
+test config_UB: init_CUS, init_UB {
 	#CUS init
 	UB {
 		select_local_menu("Сертификаты")
@@ -233,7 +237,7 @@ flash ub_flash {
 		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
 		wait "Инструменты"
 	}
-}*/
+}
 
 test client_install_win7 {
 	client install_win7("testo")
@@ -290,7 +294,7 @@ test client_install_ms: client_install_cryptopro {
 	}
 }
 
-test client_connect_CUS: client_install_ms, init_CUS {
+test client_connect_CUS: client_install_ms, config_UB {
 	client {
 		press LeftAlt + LeftShift
 		sleep 5s
