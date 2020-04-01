@@ -2,6 +2,7 @@
 #include "Context.hpp"
 #include "GlobalFunctions.hpp"
 #include "FunctionsAdapters.hpp"
+#include "Rect.hpp"
 #include <stdexcept>
 
 namespace js {
@@ -73,8 +74,20 @@ Value ContextRef::new_array(size_t length) {
 	return Value(JS_NewArray(handle), handle);;
 }
 
+Value ContextRef::new_object() {
+	return Value(JS_NewObject(handle), handle);
+}
+
 Value ContextRef::new_object_class(int class_id) {
-	return Value(JS_NewObjectClass(handle, class_id), handle);
+	Value val(JS_NewObjectClass(handle, class_id), handle);
+	if (val.is_exception()) {
+		throw std::runtime_error("JS_NewObjectClass failed");
+	}
+	return val;
+}
+
+void ContextRef::set_class_proto(JSClassID class_id, Value obj) {
+	JS_SetClassProto(handle, class_id, obj.release());
 }
 
 void* ContextRef::mallocz(size_t size) {
@@ -90,7 +103,7 @@ Value ContextRef::throw_(Value val) {
 }
 
 void ContextRef::register_global_function(const std::string& name, size_t length, JSCFunction* f) {
-	get_global_object().set_property_str(name, new_function(f, name, length));
+	get_global_object().set_property(name, new_function(f, name, length));
 }
 
 Value ContextRef::get_exception() {
@@ -109,7 +122,7 @@ std::string ContextRef::get_last_error() {
 	result += exception_str;
 
 	if (exception_val.is_error()) {
-		Value val = exception_val.get_property_str("stack");
+		Value val = exception_val.get_property("stack");
 		if (!val.is_undefined()) {
 			std::string stack(val);
 			result += stack;
@@ -132,6 +145,7 @@ Context::Context(JSContext* handle, stb::Image* image): ContextRef(handle) {
 	set_opaque(image);
 
 	register_global_functions();
+	register_classes();
 }
 
 Context::~Context() {
@@ -150,8 +164,12 @@ Context& Context::operator=(Context&& other) {
 }
 
 void Context::register_global_functions() {
-	register_global_function("print", 1, CFunction<js_print>);
-	register_global_function("detect_text", 1, CFunction<detect_text>);
+	register_global_function("print", 1, Func<js_print>);
+	register_global_function("detect_text", 1, Func<detect_text>);
+}
+
+void Context::register_classes() {
+	Rect::register_class(*this);
 }
 
 }

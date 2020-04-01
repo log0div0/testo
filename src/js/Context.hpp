@@ -6,25 +6,6 @@
 
 namespace js {
 
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
-
-static JSClassID nn_rect_class_id;
-
-static JSClassDef nn_rect_class = {
-	"NN_Rect",
-	nullptr,
-	nullptr,
-	nullptr,
-	nullptr,
-};
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-
 struct ContextRef {
 	ContextRef(JSContext* handle);
 
@@ -42,7 +23,10 @@ struct ContextRef {
 	Value new_string(const std::string& val);
 	Value new_function(JSCFunction* f, const std::string& name, size_t length);
 	Value new_array(size_t length);
+	Value new_object();
 	Value new_object_class(int class_id);
+
+	void set_class_proto(JSClassID class_id, Value obj);
 
 	void* mallocz(size_t size);
 	void free(void* ptr);
@@ -71,6 +55,7 @@ struct Context: ContextRef {
 
 private:
 	void register_global_functions();
+	void register_classes();
 };
 
 }

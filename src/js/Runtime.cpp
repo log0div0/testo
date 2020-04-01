@@ -15,9 +15,6 @@ Context RuntimeRef::create_context(stb::Image* image) {
 }
 
 Runtime::Runtime(::JSRuntime* handle): RuntimeRef(handle) {
-	if(JS_NewClass(handle, nn_rect_class_id, &nn_rect_class)) {
-		throw std::runtime_error("Can't register nn::rect js class");
-	}
 }
 
 Runtime::~Runtime() {

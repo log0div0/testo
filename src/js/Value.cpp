@@ -76,21 +76,21 @@ bool ValueRef::is_object() const {
 	return JS_IsObject(handle);
 }
 
-Value ValueRef::get_property_str(const std::string& name) const {
+Value ValueRef::get_property(const std::string& name) const {
 	return Value(JS_GetPropertyStr(context, handle, name.c_str()), context);
 }
 
-void ValueRef::set_property_str(const std::string& name, Value val) {
+void ValueRef::set_property(const std::string& name, Value val) {
 	if (JS_SetPropertyStr(context, handle, name.c_str(), val.release()) < 0) {
 		throw std::runtime_error("Can't set property " + name);
 	}
 }
 
-Value ValueRef::get_property_uint32(size_t index) const {
+Value ValueRef::get_property(size_t index) const {
 	return Value(JS_GetPropertyUint32(context, handle, index), context);
 }
 
-void ValueRef::set_property_uint32(size_t index, Value val) {
+void ValueRef::set_property(size_t index, Value val) {
 	if (JS_SetPropertyUint32(context, handle, index, val.release()) < 0) {
 		throw std::runtime_error("Can't set property uint32");
 	}
@@ -104,6 +104,18 @@ void ValueRef::set_property(JSAtom property, Value val) {
 	if (JS_SetProperty(context, handle, property, val.release()) < 0) {
 		throw std::runtime_error("Can't set property ");
 	}
+}
+
+void ValueRef::set_property_function_list(const JSCFunctionListEntry *tab, int len) {
+	JS_SetPropertyFunctionList(context, handle, tab, len);
+}
+
+void* ValueRef::get_opaque(JSClassID class_id) const {
+	return JS_GetOpaque(handle, class_id);
+}
+
+void ValueRef::set_opaque(void* opaque) {
+	JS_SetOpaque(handle, opaque);
 }
 
 std::ostream& operator<<(std::ostream& stream, const ValueRef& value) {

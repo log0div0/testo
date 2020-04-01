@@ -1,6 +1,7 @@
 
 #include "GlobalFunctions.hpp"
 #include "nn/OCR.hpp"
+#include "Rect.hpp"
 #include <iostream>
 
 namespace js {
@@ -37,16 +38,8 @@ Value detect_text(ContextRef ctx, const ValueRef this_val, const std::vector<Val
 	auto array = ctx.new_array(result.size());
 
 	for (size_t i = 0; i < result.size(); ++i) {
-		auto& rect = result[i];
-		auto obj = ctx.new_object_class(nn_rect_class_id);
-		if (obj.is_exception()) {
-			throw std::runtime_error("Can't create nn::Rect class object");
-		}
-		// TODO obj.set_opaque(std::make_shared<nn::Rect>(result[i]));
-		obj.set_property_str("x", ctx.new_int32(rect.center_x()));
-		obj.set_property_str("y", ctx.new_int32(rect.center_y()));
-
-		array.set_property_uint32(i, obj);
+		auto obj = Rect(ctx, result[i]);
+		array.set_property(i, obj);
 	}
 
 	return array;

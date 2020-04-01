@@ -24,11 +24,11 @@ struct ValueRef {
 	bool is_array() const;
 	bool is_object() const;
 
-	Value get_property_str(const std::string& name) const;
-	void set_property_str(const std::string& name, Value val);
+	Value get_property(const std::string& name) const;
+	void set_property(const std::string& name, Value val);
 
-	Value get_property_uint32(size_t index) const;
-	void set_property_uint32(size_t index, Value val);
+	Value get_property(size_t index) const;
+	void set_property(size_t index, Value val);
 
 	Value get_property(JSAtom property) const;
 	void set_property(JSAtom property, Value val);
@@ -36,6 +36,7 @@ struct ValueRef {
 	void* get_opaque(JSClassID class_id) const;
 	void set_opaque(void* opaque);
 
+	void set_property_function_list(const JSCFunctionListEntry *tab, int len);
 
 	::JSValue handle;
 	::JSContext* context = nullptr;
