@@ -59,25 +59,30 @@ test win10_installation_part_2: win10_installation_part_1 {
 		wait "Какую учетную запись использовать?"
 		mouse click "Вместо этого присоединить к домену"
 		wait "Какое имя вы хотите использовать?"
+		mouse move 0 0
 		mouse click "Имя".from_bottom(0)
 		press LeftAlt+LeftShift; type "user"; press Enter
 		mouse move 0 0
 		mouse click "Пароль".from_bottom(0)
 		type "1111"; press Enter
+		mouse move 0 0
 		mouse click "Подтверждение пароля".from_bottom(0)
 		type "1111"; press Enter
+		mouse move 0 0
 		mouse click "Контрольный вопрос (1 из 3)"
 		mouse move 0 0
 		mouse click "Кличка первого домашнего животного"
 		mouse move 0 0
 		mouse click "Ответ".from_bottom(0)
 		type "----"; press Enter
+		mouse move 0 0
 		mouse click "Контрольный вопрос (2 из 3)"
 		mouse move 0 0
 		mouse click "В каком городе вы родились"
 		mouse move 0 0
 		mouse click "Ответ".from_bottom(0)
 		type "----"; press Enter
+		mouse move 0 0
 		mouse click "Контрольный вопрос (3 из 3)"
 		mouse move 0 0
 		mouse click "Ваше прозвище в детстве"
