@@ -9,37 +9,42 @@
 namespace nn {
 
 struct Char {
-	const stb::Image* image = nullptr;
 	Rect rect;
 	std::vector<std::string> codes;
-	std::string color;
-	std::string backgroundColor;
+	std::string foreground;
+	std::string background;
 
-	bool match(const std::string& query);
-	bool matchColor(const std::string& color);
-	bool matchBackgroundColor(const std::string& color);
+	bool match(const stb::Image* image, const std::string& text);
+	bool match_foreground(const stb::Image* image, const std::string& color);
+	bool match_background(const stb::Image* image, const std::string& color);
 };
 
 struct Word {
-	const stb::Image* image = nullptr;
 	Rect rect;
 };
 
 struct TextLine {
-	const stb::Image* image = nullptr;
 	Rect rect;
 	std::vector<Char> chars;
 	std::vector<Word> words; // tmp
 
-	std::vector<Rect> search(const std::vector<std::string>& query, const std::string& color, const std::string& backgroundColor);
+	std::vector<TextLine> match(const stb::Image* image, const std::string& text);
+	bool match_foreground(const stb::Image* image, const std::string& color);
+	bool match_background(const stb::Image* image, const std::string& color);
 };
 
-struct OCR {
-	const stb::Image* image = nullptr;
+struct Tensor {
 	std::vector<TextLine> textlines;
 
-	OCR(const stb::Image* image_);
-	std::vector<Rect> search(const std::string& query, const std::string& color = {}, const std::string& backgroundColor = {});
+	size_t size() const {
+		return textlines.size();
+	}
+
+	Tensor match(const stb::Image* image, const std::string& text);
+	Tensor match_foreground(const stb::Image* image, const std::string& color);
+	Tensor match_background(const stb::Image* image, const std::string& color);
 };
+
+Tensor find_text(const stb::Image* image);
 
 }

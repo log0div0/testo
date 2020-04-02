@@ -13,12 +13,12 @@ struct TextRecognizer {
 	TextRecognizer(const TextRecognizer&) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
 
-	std::vector<Char> recognize(const Word& word);
+	std::vector<Char> recognize(const stb::Image* image, const Word& word);
 
 private:
 	TextRecognizer();
 
-	void run_nn(const Word& word);
+	void run_nn(const stb::Image* image, const Word& word);
 	std::vector<Char> run_postprocessing(const Word& word);
 
 	std::vector<std::vector<std::string>> symbols;

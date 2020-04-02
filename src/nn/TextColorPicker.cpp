@@ -37,12 +37,12 @@ TextColorPicker::~TextColorPicker() {
 
 }
 
-void TextColorPicker::run(Char& char_) {
-	run_nn(char_);
+void TextColorPicker::run(const stb::Image* image, Char& char_) {
+	run_nn(image, char_);
 	return run_postprocessing(char_);
 }
 
-void TextColorPicker::run_nn(const Char& char_) {
+void TextColorPicker::run_nn(const stb::Image* image, const Char& char_) {
 
 	if (!in_c || !out_c) {
 		in_c = 3;
@@ -61,8 +61,6 @@ void TextColorPicker::run_nn(const Char& char_) {
 		out_tensor = std::make_unique<Ort::Value>(
 			Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
 	}
-
-	const stb::Image* image = char_.image;
 
 	int char_h = char_.rect.height();
 	int char_w = char_.rect.width();
@@ -117,7 +115,7 @@ void TextColorPicker::run_postprocessing(Char& char_) {
 				max_pos = i;
 			}
 		}
-		char_.color = colors.at(max_pos);
+		char_.foreground = colors.at(max_pos);
 	}
 	{
 		int max_pos = -1;
@@ -128,7 +126,7 @@ void TextColorPicker::run_postprocessing(Char& char_) {
 				max_pos = i;
 			}
 		}
-		char_.backgroundColor = colors.at(max_pos);
+		char_.background = colors.at(max_pos);
 	}
 }
 

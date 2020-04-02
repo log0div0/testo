@@ -121,12 +121,12 @@ TextRecognizer::~TextRecognizer() {
 
 }
 
-std::vector<Char> TextRecognizer::recognize(const Word& word) {
-	run_nn(word);
+std::vector<Char> TextRecognizer::recognize(const stb::Image* image, const Word& word) {
+	run_nn(image, word);
 	return run_postprocessing(word);
 }
 
-void TextRecognizer::run_nn(const Word& word) {
+void TextRecognizer::run_nn(const stb::Image* image, const Word& word) {
 
 	float ratio = float(word.rect.width()) / float(word.rect.height());
 	int new_in_w = std::floor(ratio * IN_H);
@@ -154,8 +154,6 @@ void TextRecognizer::run_nn(const Word& word) {
 		out_tensor = std::make_unique<Ort::Value>(
 			Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
 	}
-
-	const stb::Image* image = word.image;
 
 	int word_h = word.rect.height();
 	int word_w = word.rect.width();
@@ -235,7 +233,6 @@ std::vector<Char> TextRecognizer::run_postprocessing(const Word& word) {
 		});
 
 		Char char_;
-		char_.image = word.image;
 		char_.rect.top = word.rect.top;
 		char_.rect.bottom = word.rect.bottom;
 		char_.rect.left = word.rect.left + std::floor(x * ratio);

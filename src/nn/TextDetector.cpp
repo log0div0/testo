@@ -125,7 +125,6 @@ std::vector<Word> TextDetector::run_postprocessing(const stb::Image* image) {
 				}
 				if (!found) {
 					Word word;
-					word.image = image;
 					word.rect = word_rect;
 					words.push_back(word);
 				}

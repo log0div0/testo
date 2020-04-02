@@ -9,7 +9,7 @@
 
 namespace nn {
 
-bool Char::match(const std::string& query) {
+bool Char::match(const stb::Image* image, const std::string& query) {
 	for (auto& code: codes) {
 		if (code == query) {
 			return true;
@@ -18,35 +18,42 @@ bool Char::match(const std::string& query) {
 	return false;
 }
 
-bool Char::matchColor(const std::string& color) {
+bool Char::match_foreground(const stb::Image* image, const std::string& color) {
 	if (!color.size()) {
 		return true;
 	}
-	if (!this->color.size()) {
-		TextColorPicker::instance().run(*this);
+	if (!foreground.size()) {
+		TextColorPicker::instance().run(image, *this);
 	}
-	return this->color == color;
+	return foreground == color;
 }
 
-bool Char::matchBackgroundColor(const std::string& color) {
+bool Char::match_background(const stb::Image* image, const std::string& color) {
 	if (!color.size()) {
 		return true;
 	}
-	if (!this->backgroundColor.size()) {
-		TextColorPicker::instance().run(*this);
+	if (!background.size()) {
+		TextColorPicker::instance().run(image, *this);
 	}
-	return this->backgroundColor == color;
+	return background == color;
 }
 
-std::vector<Rect> TextLine::search(const std::vector<std::string>& query, const std::string& color, const std::string& backgroundColor) {
+std::vector<TextLine> TextLine::match(const stb::Image* image, const std::string& text) {
+	std::vector<std::string> query;
+	for (auto& char_: utf8::split_to_chars(text)) {
+		if (char_ == " ") {
+			continue;
+		}
+		query.push_back(char_);
+	}
 	if (chars.size() < query.size()) {
 		return {};
 	}
-	std::vector<Rect> result;
+	std::vector<TextLine> result;
 	for (size_t i = 0; i < (chars.size() - query.size() + 1); ++i) {
 		bool match = true;
 		for (size_t j = 0; j < query.size(); ++j) {
-			if (!chars[i + j].match(query[j])) {
+			if (!chars[i + j].match(image, query[j])) {
 				match = false;
 				break;
 			}
@@ -54,49 +61,71 @@ std::vector<Rect> TextLine::search(const std::vector<std::string>& query, const 
 		if (!match) {
 			continue;
 		}
-		size_t matchColor = 0;
-		size_t matchBackgroundColor = 0;
-		for (size_t j = 0; j < query.size(); ++j) {
-			if (chars[i + j].matchColor(color)) {
-				++matchColor;
-			}
-			if (chars[i + j].matchBackgroundColor(backgroundColor)) {
-				++matchBackgroundColor;
-			}
-		}
-		if (matchColor < (query.size() / 2)) {
-			continue;
-		}
-		if (matchBackgroundColor < (query.size() / 2)) {
-			continue;
-		}
-		Rect rect = chars[i].rect;
+		TextLine textline;
+		textline.chars.push_back(chars[i]);
+		textline.rect = chars[i].rect;
 		for (size_t j = 1; j < query.size(); ++j) {
-			rect |= chars[i + j].rect;
+			textline.chars.push_back(chars[i + j]);
+			textline.rect |= chars[i + j].rect;
 		}
-		result.push_back(rect);
+		result.push_back(textline);
 	}
 	return result;
 }
 
-std::vector<Rect> OCR::search(const std::string& query_str, const std::string& color, const std::string& backgroundColor) {
-	std::vector<std::string> query;
-	for (auto& char_: utf8::split_to_chars(query_str)) {
-		if (char_ == " ") {
-			continue;
+bool TextLine::match_foreground(const stb::Image* image, const std::string& color) {
+	size_t counter = 0;
+	for (size_t i = 0; i < chars.size(); ++i) {
+		if (chars[i].match_foreground(image, color)) {
+			++counter;
 		}
-		query.push_back(char_);
 	}
-	std::vector<Rect> result;
+	return counter >= (chars.size() / 2);
+}
+
+bool TextLine::match_background(const stb::Image* image, const std::string& color) {
+	size_t counter = 0;
+	for (size_t i = 0; i < chars.size(); ++i) {
+		if (chars[i].match_background(image, color)) {
+			++counter;
+		}
+	}
+	return counter >= (chars.size() / 2);
+}
+
+Tensor Tensor::match(const stb::Image* image, const std::string& text) {
+	Tensor result;
 	for (auto& textline: textlines) {
-		for (auto& rect: textline.search(query, color, backgroundColor)) {
-			result.push_back(rect);
+		for (auto& new_textline: textline.match(image, text)) {
+			result.textlines.push_back(new_textline);
 		}
 	}
 	return result;
 }
 
-OCR::OCR(const stb::Image* image_): image(image_) {
+Tensor Tensor::match_foreground(const stb::Image* image, const std::string& color) {
+	Tensor result;
+	for (auto& textline: textlines) {
+		if (textline.match_foreground(image, color)) {
+			result.textlines.push_back(textline);
+		}
+	}
+	return result;
+}
+
+Tensor Tensor::match_background(const stb::Image* image, const std::string& color) {
+	Tensor result;
+	for (auto& textline: textlines) {
+		if (textline.match_background(image, color)) {
+			result.textlines.push_back(textline);
+		}
+	}
+	return result;
+}
+
+Tensor find_text(const stb::Image* image) {
+	Tensor result;
+
 	std::vector<Word> words = TextDetector::instance().detect(image);
 
 	std::sort(words.begin(), words.end(), [](const Word& a, const Word& b) {
@@ -112,9 +141,8 @@ OCR::OCR(const stb::Image* image_): image(image_) {
 		size_t a = i;
 
 		TextLine textline;
-		textline.image = image;
 		textline.rect = words[a].rect;
-		for (auto& char_: TextRecognizer::instance().recognize(words[a])) {
+		for (auto& char_: TextRecognizer::instance().recognize(image, words[a])) {
 			textline.chars.push_back(char_);
 		}
 		textline.words.push_back(words[a]);
@@ -136,7 +164,7 @@ textline_next:
 				if ((min_bottom - max_top) >= (mean_height / 2)) {
 					visited_words[j] = true;
 					textline.rect |= words[b].rect;
-					for (auto& char_: TextRecognizer::instance().recognize(words[b])) {
+					for (auto& char_: TextRecognizer::instance().recognize(image, words[b])) {
 						textline.chars.push_back(char_);
 					}
 					textline.words.push_back(words[b]);
@@ -147,12 +175,14 @@ textline_next:
 			goto textline_finish;
 		}
 textline_finish:
-		textlines.push_back(textline);
+		result.textlines.push_back(textline);
 	}
 
-	std::sort(textlines.begin(), textlines.end(), [](const TextLine& a, const TextLine& b) {
+	std::sort(result.textlines.begin(), result.textlines.end(), [](const TextLine& a, const TextLine& b) {
 		return a.rect.top < b.rect.top;
 	});
+
+	return result;
 }
 
 }

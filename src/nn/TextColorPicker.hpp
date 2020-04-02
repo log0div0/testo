@@ -13,12 +13,12 @@ struct TextColorPicker {
 	TextColorPicker(const TextColorPicker&) = delete;
 	TextColorPicker& operator=(const TextColorPicker&) = delete;
 
-	void run(Char& char_);
+	void run(const stb::Image* image, Char& char_);
 
 private:
 	TextColorPicker();
 
-	void run_nn(const Char& char_);
+	void run_nn(const stb::Image* image, const Char& char_);
 	void run_postprocessing(Char& char_);
 
 	int in_w = 0;
