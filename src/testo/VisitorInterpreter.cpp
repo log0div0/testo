@@ -1137,7 +1137,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 			vmc->vm->mouse_move_abs(point.x, point.y);
 			is_cursor_moved = true;
 			break;
-		} catch (const nn::ErrorContinue& error) {
+		} catch (const nn::ContinueError& error) {
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
 			if (time < 1s) {

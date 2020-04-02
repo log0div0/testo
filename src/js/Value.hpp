@@ -23,6 +23,8 @@ struct ValueRef {
 	bool is_string() const;
 	bool is_array() const;
 	bool is_object() const;
+	bool is_function() const;
+	bool is_constructor() const;
 
 	Value get_property(const std::string& name) const;
 	void set_property(const std::string& name, Value val);

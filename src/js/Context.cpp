@@ -90,14 +90,6 @@ void ContextRef::set_class_proto(JSClassID class_id, Value obj) {
 	JS_SetClassProto(handle, class_id, obj.release());
 }
 
-void* ContextRef::mallocz(size_t size) {
-	return js_mallocz(handle, size);
-}
-
-void ContextRef::free(void* ptr) {
-	js_free(handle, ptr);
-}
-
 Value ContextRef::throw_(Value val) {
 	return Value(JS_Throw(handle, val.release()), handle);
 }
@@ -146,6 +138,15 @@ Context::Context(stb::Image* image): ContextRef(JS_NewContext(Runtime::instance(
 
 	register_global_functions();
 	register_classes();
+
+	eval(R"(
+		function ContinueError(message) {
+		  this.name = "ContinueError";
+		  this.message = message;
+		}
+
+		ContinueError.prototype = Object.create(Error.prototype);
+	)");
 }
 
 Context::~Context() {

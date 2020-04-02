@@ -28,9 +28,6 @@ struct ContextRef {
 
 	void set_class_proto(JSClassID class_id, Value obj);
 
-	void* mallocz(size_t size);
-	void free(void* ptr);
-
 	::JSContext* handle = nullptr;
 
 	stb::Image* image() const;

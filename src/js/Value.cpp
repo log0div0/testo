@@ -76,6 +76,14 @@ bool ValueRef::is_object() const {
 	return JS_IsObject(handle);
 }
 
+bool ValueRef::is_function() const {
+	return JS_IsFunction(context, handle);
+}
+
+bool ValueRef::is_constructor() const {
+	return JS_IsConstructor(context, handle);
+}
+
 Value ValueRef::get_property(const std::string& name) const {
 	return Value(JS_GetPropertyStr(context, handle, name.c_str()), context);
 }

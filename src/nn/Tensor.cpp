@@ -35,7 +35,7 @@ Tensor Tensor::match_background(const stb::Image* image, const std::string& colo
 
 Tensor Tensor::from_top(size_t i) const {
 	if (i >= textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"from_top\": not enough objects in the input array");
+		throw ContinueError("Can't apply specifier \"from_top\": not enough objects in the input array");
 	}
 
 	Tensor result = *this;
@@ -51,7 +51,7 @@ Tensor Tensor::from_top(size_t i) const {
 
 Tensor Tensor::from_bottom(size_t i) const {
 	if (i >= textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"from_bottom\": not enough objects in the input array");
+		throw ContinueError("Can't apply specifier \"from_bottom\": not enough objects in the input array");
 	}
 
 	Tensor result = *this;
@@ -67,7 +67,7 @@ Tensor Tensor::from_bottom(size_t i) const {
 
 Tensor Tensor::from_left(size_t i) const {
 	if (i >= textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"from_left\": not enough objects in the input array");
+		throw ContinueError("Can't apply specifier \"from_left\": not enough objects in the input array");
 	}
 
 	Tensor result = *this;
@@ -83,7 +83,7 @@ Tensor Tensor::from_left(size_t i) const {
 
 Tensor Tensor::from_right(size_t i) const {
 	if (i >= textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"from_right\": not enough objects in the input array");
+		throw ContinueError("Can't apply specifier \"from_right\": not enough objects in the input array");
 	}
 
 	Tensor result = *this;
@@ -99,7 +99,7 @@ Tensor Tensor::from_right(size_t i) const {
 
 Point Tensor::left_top() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"left_top\": there's no input object");
+		throw ContinueError("Can't apply specifier \"left_top\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -111,7 +111,7 @@ Point Tensor::left_top() const {
 
 Point Tensor::left_bottom() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"left_bottom\": there's no input object");
+		throw ContinueError("Can't apply specifier \"left_bottom\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -123,7 +123,7 @@ Point Tensor::left_bottom() const {
 
 Point Tensor::right_top() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"right_top\": there's no input object");
+		throw ContinueError("Can't apply specifier \"right_top\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -135,7 +135,7 @@ Point Tensor::right_top() const {
 
 Point Tensor::right_bottom() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"right_bottom\": there's no input object");
+		throw ContinueError("Can't apply specifier \"right_bottom\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -147,7 +147,7 @@ Point Tensor::right_bottom() const {
 
 Point Tensor::center() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"center\": there's no input object");
+		throw ContinueError("Can't apply specifier \"center\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -159,7 +159,7 @@ Point Tensor::center() const {
 
 Point Tensor::center_top() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"center_top\": there's no input object");
+		throw ContinueError("Can't apply specifier \"center_top\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -171,7 +171,7 @@ Point Tensor::center_top() const {
 
 Point Tensor::center_bottom() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"center_bottom\": there's no input object");
+		throw ContinueError("Can't apply specifier \"center_bottom\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -183,7 +183,7 @@ Point Tensor::center_bottom() const {
 
 Point Tensor::left_center() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"left_center\": there's no input object");
+		throw ContinueError("Can't apply specifier \"left_center\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
@@ -195,7 +195,7 @@ Point Tensor::left_center() const {
 
 Point Tensor::right_center() const {
 	if (!textlines.size()) {
-		throw ErrorContinue("Can't apply specifier \"right_center\": there's no input object");
+		throw ContinueError("Can't apply specifier \"right_center\": there's no input object");
 	}
 
 	if (textlines.size() > 1) {
