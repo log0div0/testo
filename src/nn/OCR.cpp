@@ -9,7 +9,7 @@
 
 namespace nn {
 
-bool Char::match(const stb::Image* image, const std::string& query) {
+bool Char::match(const std::string& query) {
 	for (auto& code: codes) {
 		if (code == query) {
 			return true;
@@ -38,7 +38,7 @@ bool Char::match_background(const stb::Image* image, const std::string& color) {
 	return background == color;
 }
 
-std::vector<TextLine> TextLine::match(const stb::Image* image, const std::string& text) {
+std::vector<TextLine> TextLine::match(const std::string& text) {
 	std::vector<std::string> query;
 	for (auto& char_: utf8::split_to_chars(text)) {
 		if (char_ == " ") {
@@ -53,7 +53,7 @@ std::vector<TextLine> TextLine::match(const stb::Image* image, const std::string
 	for (size_t i = 0; i < (chars.size() - query.size() + 1); ++i) {
 		bool match = true;
 		for (size_t j = 0; j < query.size(); ++j) {
-			if (!chars[i + j].match(image, query[j])) {
+			if (!chars[i + j].match(query[j])) {
 				match = false;
 				break;
 			}
@@ -93,10 +93,10 @@ bool TextLine::match_background(const stb::Image* image, const std::string& colo
 	return counter >= (chars.size() / 2);
 }
 
-Tensor Tensor::match(const stb::Image* image, const std::string& text) {
+Tensor Tensor::match(const std::string& text) {
 	Tensor result;
 	for (auto& textline: textlines) {
-		for (auto& new_textline: textline.match(image, text)) {
+		for (auto& new_textline: textline.match(text)) {
 			result.textlines.push_back(new_textline);
 		}
 	}
@@ -119,6 +119,14 @@ Tensor Tensor::match_background(const stb::Image* image, const std::string& colo
 		if (textline.match_background(image, color)) {
 			result.textlines.push_back(textline);
 		}
+	}
+	return result;
+}
+
+std::vector<Rect> Tensor::rects() const {
+	std::vector<Rect> result;
+	for (auto& textline: textlines) {
+		result.push_back(textline.rect);
 	}
 	return result;
 }

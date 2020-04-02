@@ -774,7 +774,7 @@ VisitorInterpreter::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AS
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
 		auto text = template_parser.resolve(p->text(), reg);
-		return nn::OCR(&screenshot).search(text).size();
+		return nn::find_text(&screenshot).match(text).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), reg);
 		auto value = eval_js(script, screenshot);
@@ -1160,11 +1160,11 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 				found.push_back(visit_select_js(p, screenshot));
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
 				auto text = template_parser.resolve(p->text(), reg);
-				auto ocr_find = nn::OCR(&screenshot).search(text);
+				auto ocr_find = nn::find_text(&screenshot).match(text);
 
 				//each specifier can throw an exception if something goes wrong.
 				//Right now we need to ignore it
-				found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
+				found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find.rects());
 			}
 
 			//Nothing to click on
@@ -1200,11 +1200,11 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 			found.push_back(visit_select_js(p, screenshot));
 		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
 			auto text = template_parser.resolve(p->text(), reg);
-			auto ocr_find = nn::OCR(&screenshot).search(text);
+			auto ocr_find = nn::find_text(&screenshot).match(text);
 
 			//each specifier can throw an exception if something goes wrong.
 			//Right now we need to ignore it
-			found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
+			found = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find.rects());
 		}
 
 		if (!found.size()) {

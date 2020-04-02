@@ -14,13 +14,13 @@ void predict()
 	stb::Image image(image_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
-	nn::OCR ocr(&image);
+	nn::Tensor tensor = nn::find_text(&image);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << "Time: " << time.count() << " seconds" << std::endl;
 
 	if (query.size() == 0) {
-		for (auto& textline: ocr.textlines) {
+		for (auto& textline: tensor.textlines) {
 			// for (auto& word: textline.words) {
 			// 	image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
 			// }
@@ -31,12 +31,12 @@ void predict()
 			std::cout << std::endl;
 		}
 	} else {
-		auto rects = ocr.search(query);
-		for (auto& rect: rects) {
-			image.draw(rect.left, rect.top, rect.right, rect.bottom, 200, 20, 50);
+		tensor = tensor.match(query);
+		for (auto& textline: tensor.textlines) {
+			image.draw(textline.rect.left, textline.rect.top, textline.rect.right, textline.rect.bottom, 200, 20, 50);
 		}
 
-		std::cout << "Found: " << rects.size() << std::endl;
+		std::cout << "Found: " << tensor.textlines.size() << std::endl;
 	}
 
 	image.write_png(output_file);

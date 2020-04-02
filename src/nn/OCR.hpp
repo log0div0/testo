@@ -14,7 +14,7 @@ struct Char {
 	std::string foreground;
 	std::string background;
 
-	bool match(const stb::Image* image, const std::string& text);
+	bool match(const std::string& text);
 	bool match_foreground(const stb::Image* image, const std::string& color);
 	bool match_background(const stb::Image* image, const std::string& color);
 };
@@ -28,7 +28,7 @@ struct TextLine {
 	std::vector<Char> chars;
 	std::vector<Word> words; // tmp
 
-	std::vector<TextLine> match(const stb::Image* image, const std::string& text);
+	std::vector<TextLine> match(const std::string& text);
 	bool match_foreground(const stb::Image* image, const std::string& color);
 	bool match_background(const stb::Image* image, const std::string& color);
 };
@@ -40,9 +40,11 @@ struct Tensor {
 		return textlines.size();
 	}
 
-	Tensor match(const stb::Image* image, const std::string& text);
+	Tensor match(const std::string& text);
 	Tensor match_foreground(const stb::Image* image, const std::string& color);
 	Tensor match_background(const stb::Image* image, const std::string& color);
+
+	std::vector<Rect> rects() const;
 };
 
 Tensor find_text(const stb::Image* image);

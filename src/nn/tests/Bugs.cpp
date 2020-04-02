@@ -6,6 +6,6 @@ TEST_CASE("Bugs") {
 	{
 		stb::Image image("Bugs/0.png");
 		nn::Tensor tensor = nn::find_text(&image);
-		CHECK(tensor.match(&image, "Все пакеты имеют последние версии").size() == 1);
+		CHECK(tensor.match("Все пакеты имеют последние версии").size() == 1);
 	}
 }

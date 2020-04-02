@@ -2,14 +2,14 @@
 #pragma once
 
 #include "Context.hpp"
-#include <nn/Rect.hpp>
+#include <nn/OCR.hpp>
 
 namespace js {
 
-struct Rect: Value {
+struct Tensor: Value {
 	static void register_class(ContextRef ctx);
 
-	Rect(ContextRef ctx, const nn::Rect& rect);
+	Tensor(ContextRef ctx, const nn::Tensor& tensor);
 };
 
 }

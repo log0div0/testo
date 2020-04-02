@@ -2,7 +2,7 @@
 #include "Context.hpp"
 #include "GlobalFunctions.hpp"
 #include "FunctionsAdapters.hpp"
-#include "Rect.hpp"
+#include "Tensor.hpp"
 #include <stdexcept>
 
 namespace js {
@@ -164,12 +164,12 @@ Context& Context::operator=(Context&& other) {
 }
 
 void Context::register_global_functions() {
-	register_global_function("print", 1, Func<js_print>);
-	register_global_function("detect_text", 1, Func<detect_text>);
+	register_global_function("print", 1, Func<print>);
+	register_global_function("find_text", 1, Func<find_text>);
 }
 
 void Context::register_classes() {
-	Rect::register_class(*this);
+	Tensor::register_class(*this);
 }
 
 }
