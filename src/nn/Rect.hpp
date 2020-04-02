@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include "Point.hpp"
 #include <algorithm>
 
 namespace nn {
@@ -68,6 +68,42 @@ struct Rect {
 
 	int32_t center_y() const {
 		return top + height() / 2;
+	}
+
+	Point left_top() const {
+		return {left, top};
+	}
+
+	Point left_bottom() const {
+		return {left, bottom};
+	}
+
+	Point right_top() const {
+		return {right, top};
+	}
+
+	Point right_bottom() const {
+		return {right, bottom};
+	}
+
+	Point center() const {
+		return {center_x(), center_y()};
+	};
+
+	Point center_top() const {
+		return {center_x(), top};
+	}
+
+	Point center_bottom() const {
+		return {center_x(), bottom};
+	}
+
+	Point left_center() const {
+		return {left, center_y()};
+	}
+
+	Point right_center() const {
+		return {right, center_y()};
 	}
 };
 
