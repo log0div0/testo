@@ -8,6 +8,7 @@ namespace nn {
 
 struct ContinueError: std::runtime_error {
 	ContinueError(const char* reason): std::runtime_error(reason) {}
+	ContinueError(const std::string& reason): ContinueError(reason.c_str()) {}
 };
 
 struct Tensor {

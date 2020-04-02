@@ -26,6 +26,8 @@ struct ValueRef {
 	bool is_function() const;
 	bool is_constructor() const;
 
+	bool is_instance_of(ValueRef obj) const;
+
 	Value get_property(const std::string& name) const;
 	void set_property(const std::string& name, Value val);
 

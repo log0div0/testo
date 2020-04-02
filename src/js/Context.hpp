@@ -13,7 +13,6 @@ struct ContextRef {
 
 	Value get_global_object();
 	Value get_exception();
-	std::string get_last_error();
 
 	Value throw_(Value val);
 

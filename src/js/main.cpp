@@ -5,6 +5,7 @@
 #include "Runtime.hpp"
 #include <stb/Image.hpp>
 #include <nn/OnnxRuntime.hpp>
+#include <nn/Tensor.hpp>
 #include <clipp.h>
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
@@ -59,6 +60,9 @@ int main(int argc, char** argv) {
 		auto val = js_ctx.eval(script);
 
 		return 0;
+	} catch (const nn::ContinueError& error) {
+		std::cerr << "C++ ContinueError!" << std::endl;
+		std::cerr << error.what() << std::endl;
 	} catch (const std::exception& error) {
 		std::cerr << error << std::endl;
 	}

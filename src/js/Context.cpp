@@ -4,6 +4,7 @@
 #include "FunctionsAdapters.hpp"
 #include "Tensor.hpp"
 #include <stdexcept>
+#include <iostream>
 
 namespace js {
 
@@ -37,7 +38,31 @@ Value ContextRef::eval(const std::string& script, bool compile_only) {
 
 	Value result(JS_Eval(handle, script.c_str(), script.length(), "<input>", flags), handle);
 	if (result.is_exception()) {
-		throw std::runtime_error(get_last_error());
+		Value exception_val = get_exception();
+		if (exception_val.is_instance_of(get_global_object().get_property("ContinueError"))) {
+			std::string message = exception_val.get_property("message");
+			throw nn::ContinueError(message);
+		} else {
+			std::string message;
+
+			if (!exception_val.is_error()) {
+				message += "Throw: ";
+			}
+
+			std::string exception_str(exception_val);
+			message += exception_str;
+
+			if (exception_val.is_error()) {
+				Value val = exception_val.get_property("stack");
+				if (!val.is_undefined()) {
+					std::string stack(val);
+					message += stack;
+					message += "\n";
+				}
+			}
+
+			throw std::runtime_error(message);
+		}
 	}
 
 	return result;
@@ -102,29 +127,6 @@ Value ContextRef::get_exception() {
 	return Value(JS_GetException(handle), handle);
 }
 
-std::string ContextRef::get_last_error() {
-	std::string result;
-
-	Value exception_val = get_exception();
-	if (!exception_val.is_error()) {
-		result += "Throw: ";
-	}
-
-	std::string exception_str(exception_val);
-	result += exception_str;
-
-	if (exception_val.is_error()) {
-		Value val = exception_val.get_property("stack");
-		if (!val.is_undefined()) {
-			std::string stack(val);
-			result += stack;
-			result += "\n";
-		}
-	}
-
-	return result;
-}
-
 stb::Image* ContextRef::image() const {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
@@ -141,8 +143,11 @@ Context::Context(stb::Image* image): ContextRef(JS_NewContext(Runtime::instance(
 
 	eval(R"(
 		function ContinueError(message) {
-		  this.name = "ContinueError";
-		  this.message = message;
+			if (!new.target) {
+				return new ContinueError(message);
+			}
+			this.name = "ContinueError";
+			this.message = message;
 		}
 
 		ContinueError.prototype = Object.create(Error.prototype);

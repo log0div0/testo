@@ -84,6 +84,10 @@ bool ValueRef::is_constructor() const {
 	return JS_IsConstructor(context, handle);
 }
 
+bool ValueRef::is_instance_of(ValueRef obj) const {
+	return JS_IsInstanceOf(context, handle, obj.handle);
+}
+
 Value ValueRef::get_property(const std::string& name) const {
 	return Value(JS_GetPropertyStr(context, handle, name.c_str()), context);
 }
