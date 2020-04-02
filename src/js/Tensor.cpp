@@ -13,7 +13,43 @@ static void finalizer(JSRuntime* rt, JSValue val) {
 	delete tensor;
 }
 
+static Value size(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	return ctx.new_int32(tensor->size());
+}
+
+static Value match(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match");
+	}
+	std::string text = args.at(0);
+	return Tensor(ctx, tensor->match(text));
+}
+
+static Value match_foreground(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_foreground");
+	}
+	std::string color = args.at(0);
+	return Tensor(ctx, tensor->match_foreground(ctx.image(), color));
+}
+
+static Value match_background(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_background");
+	}
+	std::string color = args.at(0);
+	return Tensor(ctx, tensor->match_background(ctx.image(), color));
+}
+
 static const JSCFunctionListEntry proto_funcs[] = {
+	Method<size>("size", 0),
+	Method<match>("match", 0),
+	Method<match_foreground>("match_foreground", 0),
+	Method<match_background>("match_background", 0),
 	Prop("[Symbol.toStringTag]", "Tensor"),
 };
 

@@ -6089,7 +6089,7 @@ static void build_backtrace(JSContext *ctx, JSValueConst error_obj,
     ctx->exception_needs_backtrace = FALSE;
     js_dbuf_init(ctx, &dbuf);
     if (filename) {
-        dbuf_printf(&dbuf, "    at %s", filename);
+        dbuf_printf(&dbuf, " at %s", filename);
         if (line_num != -1)
             dbuf_printf(&dbuf, ":%d", line_num);
         dbuf_putc(&dbuf, '\n');
@@ -6105,7 +6105,7 @@ static void build_backtrace(JSContext *ctx, JSValueConst error_obj,
             str1 = "<anonymous>";
         else
             str1 = func_name_str;
-        dbuf_printf(&dbuf, "    at %s", str1);
+        dbuf_printf(&dbuf, " at %s", str1);
         JS_FreeCString(ctx, func_name_str);
 
         p = JS_VALUE_GET_OBJ(sf->cur_func);
