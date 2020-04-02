@@ -3,6 +3,7 @@
 
 #include "Value.hpp"
 #include <stb/Image.hpp>
+#include <vector>
 
 namespace js {
 
@@ -10,6 +11,7 @@ struct ContextRef {
 	ContextRef(JSContext* handle);
 
 	Value eval(const std::string& script, bool compile_only = false);
+	Value call_constructor(Value constuctor, const std::vector<Value>& args);
 
 	Value get_global_object();
 	Value get_exception();
@@ -24,6 +26,7 @@ struct ContextRef {
 	Value new_array(size_t length);
 	Value new_object();
 	Value new_object_class(int class_id);
+	Value new_continue_error(const std::string& message);
 
 	void set_class_proto(JSClassID class_id, Value obj);
 

@@ -68,6 +68,15 @@ Value ContextRef::eval(const std::string& script, bool compile_only) {
 	return result;
 }
 
+Value ContextRef::call_constructor(Value constuctor, const std::vector<Value>& args) {
+	std::vector<JSValueConst> argv;
+	for (auto& arg: args) {
+		argv.push_back(arg.handle);
+	}
+	JSValue result = JS_CallConstructor(handle, constuctor.handle, argv.size(), argv.data());
+	return {result, handle};
+}
+
 Value ContextRef::new_bool(bool val) {
 	return Value(JS_NewBool(handle, val), handle);
 }
@@ -109,6 +118,10 @@ Value ContextRef::new_object_class(int class_id) {
 		throw std::runtime_error("JS_NewObjectClass failed");
 	}
 	return val;
+}
+
+Value ContextRef::new_continue_error(const std::string& message) {
+	return call_constructor(get_global_object().get_property("ContinueError"), {new_string(message)});
 }
 
 void ContextRef::set_class_proto(JSClassID class_id, Value obj) {

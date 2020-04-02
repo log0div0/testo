@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Runtime.hpp"
+#include <nn/Tensor.hpp>
 #include <vector>
 
 namespace js {
@@ -22,6 +23,10 @@ JSValue Func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv
 		}
 		Value result = F(ctx, ValueRef(this_val, ctx), args);
 		return result.release();
+	} catch (const nn::ContinueError& error) {
+		ContextRef ctx_ref(ctx);
+		Value exception = ctx_ref.throw_(ctx_ref.new_continue_error(error.what()));
+		return exception.release();
 	} catch (const std::exception& error) {
 		ContextRef ctx_ref(ctx);
 		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
@@ -34,6 +39,10 @@ JSValue Func(JSContext* ctx, JSValueConst this_val) {
 	try {
 		Value result = F(ctx, ValueRef(this_val, ctx));
 		return result.release();
+	} catch (const nn::ContinueError& error) {
+		ContextRef ctx_ref(ctx);
+		Value exception = ctx_ref.throw_(ctx_ref.new_continue_error(error.what()));
+		return exception.release();
 	} catch (const std::exception& error) {
 		ContextRef ctx_ref(ctx);
 		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
@@ -46,6 +55,10 @@ JSValue Func(JSContext* ctx, JSValueConst this_val, JSValueConst val) {
 	try {
 		Value result = F(ctx, ValueRef(this_val, ctx), ValueRef(val, ctx));
 		return result.release();
+	} catch (const nn::ContinueError& error) {
+		ContextRef ctx_ref(ctx);
+		Value exception = ctx_ref.throw_(ctx_ref.new_continue_error(error.what()));
+		return exception.release();
 	} catch (const std::exception& error) {
 		ContextRef ctx_ref(ctx);
 		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
