@@ -5,33 +5,12 @@
 #include "Register.hpp"
 #include "TemplateParser.hpp"
 #include "Reporter.hpp"
-#include "quickjs/Runtime.hpp"
-#include <nn/Rect.hpp>
+#include "js/Context.hpp"
+#include <nn/OCR.hpp>
 #include <vector>
 #include <list>
 
 struct VisitorInterpreter {
-	struct Point {
-		Point() = default;
-		Point(const quickjs::Value& val) {
-			auto x_prop = val.get_property_str("x");
-			if (x_prop.is_undefined()) {
-				throw std::runtime_error("Object doesn't have the x propery");
-			}
-
-			auto y_prop = val.get_property_str("y");
-			if (y_prop.is_undefined()) {
-				throw std::runtime_error("Object doesn't have the y propery");
-			}
-
-			x = (int32_t)x_prop;
-			y = (int32_t)y_prop;
-		}
-		Point(int32_t x, int32_t y): x(x), y(y) {}
-		int32_t x;
-		int32_t y;
-	};
-
 	struct InterpreterException: public std::exception {
 			explicit InterpreterException():
 				std::exception()
@@ -103,12 +82,12 @@ struct VisitorInterpreter {
 	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
 	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
 	void visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep);
-	std::vector<nn::Rect> visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, std::vector<nn::Rect> input);
-	std::vector<Point> visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<nn::Rect>& input);
-	std::vector<Point> visit_mouse_specifier_default_centering(const std::vector<nn::Rect>& input);
-	std::vector<Point> visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const std::vector<Point>& input);
-	std::vector<Point> visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, std::vector<nn::Rect> input);
-	Point visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot);
+	nn::Tensor visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input);
+	nn::Point visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input);
+	nn::Point visit_mouse_specifier_default_centering(const nn::Tensor& input);
+	nn::Point visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Point& input);
+	nn::Point visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const nn::Tensor& input);
+	nn::Point visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
 	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
 	bool visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
@@ -143,7 +122,7 @@ struct VisitorInterpreter {
 	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
-	quickjs::Value eval_js(const std::string& script, stb::Image& screenshot);
+	js::Value eval_js(const std::string& script, stb::Image& screenshot);
 
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
 
@@ -205,6 +184,5 @@ private:
 
 	std::unordered_map<std::string, std::vector<std::string>> charmap;
 
-	quickjs::Runtime js_runtime;
-	std::shared_ptr<quickjs::Context> js_current_ctx;
+	std::shared_ptr<js::Context> js_current_ctx;
 };

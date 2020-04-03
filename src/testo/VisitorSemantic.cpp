@@ -1,12 +1,12 @@
 
 #include "VisitorSemantic.hpp"
 #include "coro/Finally.h"
+#include "js/Context.hpp"
 #include <fmt/format.h>
 
 VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	reg(reg)
 {
-	js_runtime = quickjs::create_runtime();
 	prefix = config.at("prefix").get<std::string>();
 
 	keys.insert("ESC");
@@ -529,8 +529,7 @@ void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select
 }
 
 void VisitorSemantic::validate_js(const std::string& script) {
-	auto js_ctx = js_runtime.create_context();
-	js_ctx.register_nn_functions();
+	js::Context js_ctx(nullptr);
 	js_ctx.eval(script, true);
 }
 
