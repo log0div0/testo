@@ -67,7 +67,7 @@ JSValue Func(JSContext* ctx, JSValueConst this_val, JSValueConst val) {
 }
 
 template <JSCPPFunction func>
-JSCFunctionListEntry Method(const char* name, uint8_t length) {
+JSCFunctionListEntry Method(const char* name, uint8_t length = 0) {
 	JSCFunctionListEntry entry = {};
 	entry.name = name;
 	entry.prop_flags = JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE;
