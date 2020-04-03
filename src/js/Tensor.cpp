@@ -1,5 +1,6 @@
 
 #include "Tensor.hpp"
+#include "Point.hpp"
 #include "FunctionsAdapters.hpp"
 #include <iostream>
 
@@ -45,11 +46,144 @@ static Value match_background(ContextRef ctx, ValueRef this_val, const std::vect
 	return Tensor(ctx, tensor->match_background(ctx.image(), color));
 }
 
+static Value from_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_top");
+	}
+	int32_t index = args.at(0);
+	return Tensor(ctx, tensor->from_top(index));
+}
+
+static Value from_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_bottom");
+	}
+	int32_t index = args.at(0);
+	return Tensor(ctx, tensor->from_bottom(index));
+}
+
+static Value from_left(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_left");
+	}
+	int32_t index = args.at(0);
+	return Tensor(ctx, tensor->from_left(index));
+}
+
+static Value from_right(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_right");
+	}
+	int32_t index = args.at(0);
+	return Tensor(ctx, tensor->from_right(index));
+}
+
+static Value x(ContextRef ctx, ValueRef this_val) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	return ctx.new_int32(tensor->x());
+}
+
+static Value y(ContextRef ctx, ValueRef this_val) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	return ctx.new_int32(tensor->y());
+}
+
+static Value left_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::left_top");
+	}
+	return Point(ctx, tensor->left_top());
+}
+
+static Value left_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::left_bottom");
+	}
+	return Point(ctx, tensor->left_bottom());
+}
+
+static Value right_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::right_top");
+	}
+	return Point(ctx, tensor->right_top());
+}
+
+static Value right_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::right_bottom");
+	}
+	return Point(ctx, tensor->right_bottom());
+}
+
+static Value center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::center");
+	}
+	return Point(ctx, tensor->center());
+}
+
+static Value center_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::center_top");
+	}
+	return Point(ctx, tensor->center_top());
+}
+
+static Value center_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::center_bottom");
+	}
+	return Point(ctx, tensor->center_bottom());
+}
+
+static Value left_center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::left_center");
+	}
+	return Point(ctx, tensor->left_center());
+}
+
+static Value right_center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+	if (args.size() != 0) {
+		throw std::runtime_error("Invalid arguments count in Tensor::right_center");
+	}
+	return Point(ctx, tensor->right_center());
+}
+
 static const JSCFunctionListEntry proto_funcs[] = {
 	Method<size>("size", 0),
 	Method<match>("match", 0),
 	Method<match_foreground>("match_foreground", 0),
 	Method<match_background>("match_background", 0),
+	Method<from_top>("from_top", 0),
+	Method<from_bottom>("from_bottom", 0),
+	Method<from_left>("from_left", 0),
+	Method<from_right>("from_right", 0),
+	GetSet<x, nullptr>("x"),
+	GetSet<y, nullptr>("y"),
+	Method<left_top>("left_top", 0),
+	Method<left_bottom>("left_bottom", 0),
+	Method<right_top>("right_top", 0),
+	Method<right_bottom>("right_bottom", 0),
+	Method<center>("center", 0),
+	Method<center_top>("center_top", 0),
+	Method<center_bottom>("center_bottom", 0),
+	Method<left_center>("left_center", 0),
+	Method<right_center>("right_center", 0),
 	Prop("[Symbol.toStringTag]", "Tensor"),
 };
 

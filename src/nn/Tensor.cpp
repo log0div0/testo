@@ -97,6 +97,30 @@ Tensor Tensor::from_right(size_t i) const {
 	return result;
 }
 
+int32_t Tensor::x() const {
+	if (!textlines.size()) {
+		throw ContinueError("Can't get property \"x\": there's no input object");
+	}
+
+	if (textlines.size() > 1) {
+		throw std::runtime_error("Can't get property \"x\": there's more than one object");
+	}
+
+	return textlines.at(0).rect.center_x();
+}
+
+int32_t Tensor::y() const {
+	if (!textlines.size()) {
+		throw ContinueError("Can't get property \"y\": there's no input object");
+	}
+
+	if (textlines.size() > 1) {
+		throw std::runtime_error("Can't get property \"y\": there's more than one object");
+	}
+
+	return textlines.at(0).rect.center_y();
+}
+
 Point Tensor::left_top() const {
 	if (!textlines.size()) {
 		throw ContinueError("Can't apply specifier \"left_top\": there's no input object");
