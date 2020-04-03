@@ -863,7 +863,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		if (reporter.report_screenshots) {
 			reporter.save_screenshot(vmc);
 		}
-		throw std::runtime_error("Wait timeout");
+		throw std::runtime_error("Timeout");
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(wait, vmc));
@@ -1119,7 +1119,6 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
-	bool is_cursor_moved = false;
 	while (std::chrono::system_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm->screenshot();
@@ -1135,8 +1134,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 				point = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
 			}
 			vmc->vm->mouse_move_abs(point.x, point.y);
-			is_cursor_moved = true;
-			break;
+			return;
 		} catch (const nn::ContinueError& error) {
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
@@ -1149,22 +1147,11 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 		}
 	}
 
-	if (!is_cursor_moved) {
-		//Ok, now try one more time and let's see if we can do anything
-		//any fail now will result in total failure
-		auto screenshot = vmc->vm->screenshot();
-		nn::Point point;
-		if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
-			point = visit_select_js(p, screenshot);
-		} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
-			auto text = template_parser.resolve(p->text(), reg);
-			auto ocr_find = nn::find_text(&screenshot).match(text);
-
-			//each specifier can throw an exception if something goes wrong.
-			point = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
-		}
-		vmc->vm->mouse_move_abs(point.x, point.y);
+	if (reporter.report_screenshots) {
+		reporter.save_screenshot(vmc);
 	}
+
+	throw std::runtime_error("Timeout");
 }
 
 void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)
