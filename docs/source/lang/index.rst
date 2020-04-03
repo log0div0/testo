@@ -3,11 +3,11 @@
 
 .. _lang:
 
-Документация по скриптовому языку Testo
-=======================================
+Документация по скриптовому языку Testo-lang
+============================================
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :numbered:
 
     general
@@ -21,7 +21,7 @@
     macro
     actions
     mouse
-    js_selections
     if
     for
     keys
+    js/index
