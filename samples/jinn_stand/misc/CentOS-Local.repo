@@ -1,5 +1,0 @@
-
-[c7-contrib]
-name=CentOS-$releasever - Contrib
-baseurl=file:///root/jinn_server/contrib/repo
-gpgcheck=0
