@@ -3,6 +3,7 @@
 #include "GlobalFunctions.hpp"
 #include "FunctionsAdapters.hpp"
 #include "Tensor.hpp"
+#include "Point.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -189,6 +190,7 @@ void Context::register_global_functions() {
 
 void Context::register_classes() {
 	Tensor::register_class(*this);
+	Point::register_class(*this);
 }
 
 }
