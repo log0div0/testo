@@ -37,12 +37,12 @@ macro install_guest_additions() {
 	sleep 5s
 
 	plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-	mouse click "Выполнить testo-guest-additions" timeout 1m
+	mouse click "Выполнить autorun.js" timeout 1m
 	wait "Вас приветствует мастер установки"; mouse click "Далее"
 	wait "Выбор папки для установки"; mouse click "Далее".from_bottom(0)
 	wait "Подтверждение установки"; mouse click "Далее".from_bottom(0)
 	wait "Разрешить внесение изменений"; press Left, Enter
-	wait "Не удалось проверить издателя этих драйверов"; mouse click "Все равно установить"
+	mouse click "Установить".from_top(1)
 
 	wait "Установка завершена"; mouse click "Закрыть".from_bottom(0)
 	wait !"Установка завершена"

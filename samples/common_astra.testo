@@ -2,13 +2,13 @@ macro select_menu_horizontal(menu_entry) {
 	wait "${menu_entry}"
 
 	#check if it's enabled by default
-	if (check js "detect_text('${menu_entry}', 'gray', 'red')") {
+	if (check js "find_text().match('${menu_entry}').match_foreground('gray').match_background('red').size() == 1") {
 		press Enter
 	} else {
 		press Left*5
 
 		for (i IN RANGE "5") {
-			if (check js "detect_text('${menu_entry}', 'gray', 'red')" timeout 50ms) {
+			if (check js "find_text().match('${menu_entry}').match_foreground('gray').match_background('red').size() == 1" timeout 100ms) {
 				press Enter;
 				break;
 			}
@@ -24,13 +24,13 @@ macro select_menu_vertical(menu_entry) {
 	wait "${menu_entry}"
 
 	#check if it's enabled by default
-	if (check js "detect_text('${menu_entry}', 'gray', 'red')") {
+	if (check js "find_text().match('${menu_entry}').match_foreground('gray').match_background('red').size() == 1") {
 		press Enter
 	} else {
 		press Up*20
 
 		for (i IN RANGE "0" "20") {
-			if (check js "detect_text('${menu_entry}', 'gray', 'red')" timeout 50ms)  {
+			if (check js "find_text().match('${menu_entry}').match_foreground('gray').match_background('red').size() == 1" timeout 100ms)  {
 				press Enter;
 				break;
 			}
@@ -44,9 +44,9 @@ macro select_menu_vertical(menu_entry) {
 
 macro install_astra_console(host_name, login, password) {
 	start
-	wait "Графическая установка" && js "detect_text('Русский', 'white', 'blue')"
+	wait "Графическая установка" && js "find_text().match('Русский').match_foreground('white').match_background('blue').size() == 1"
 	press Enter, Down
-	wait js "detect_text('Установка', 'white')"; press Enter
+	wait js "find_text().match('Установка').match_foreground('white').size() == 1"; press Enter
 	wait "Лицензия" timeout 2m; select_menu_horizontal("Да");
 	wait "Настройка клавиатуры"; select_menu_vertical("Alt+Shift");
 	wait "Настройка сети" timeout 3m; press Backspace*10; type "${host_name}"; press Enter
@@ -78,7 +78,7 @@ macro enter_sudo(host_name, login, password) {
 	wait "root@${host_name}"
 }
 
-macro install_guest_additions_console(ISO_DIR, host_name, login, password) {
+macro install_guest_additions_console(host_name, login, password) {
 	enter_sudo("${host_name}", "${login}", "${password}")
 	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 	type "mount /dev/cdrom /media"; press Enter
@@ -100,7 +100,7 @@ macro install_astra_gui(host_name, login, password) {
 	wait "Выберите имя учётной записи администратора"; type "${login}"; mouse click "Продолжить".center_bottom()
 	wait "Введите пароль для нового администратора"; type "${password}"; press Tab; type "${password}";
 	mouse click "Продолжить".center_bottom()
-	wait "Выберите часовой пояс" && js "detect_text('Москва+00', 'white', 'red')"; mouse click "Продолжить".center_bottom()
+	wait "Выберите часовой пояс" && js "find_text().match('Москва+00').match_foreground('white').match_background('red').size() == 1"; mouse click "Продолжить".center_bottom()
 	wait "Метод разметки"; mouse click "Продолжить".center_bottom()
 	wait "Заметим, что все данные на выбранном диске будут стерты"; mouse click "Продолжить".center_bottom()
 	wait "Диск может быть размечен по одной из следующих схем"; mouse click "Продолжить".center_bottom()
@@ -128,7 +128,7 @@ macro install_astra_gui(host_name, login, password) {
 	wait "Корзина"
 }
 
-macro install_guest_additions_gui(ISO_DIR, password) {
+macro install_guest_additions_gui(password) {
 	plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 	mouse click "Компьютер"
 	sleep 2s
@@ -141,7 +141,7 @@ macro install_guest_additions_gui(ISO_DIR, password) {
 	mouse dclick "Файловая система".from_right(0)
 	mouse dclick "media".from_right(0)
 	mouse dclick "cdrom0".from_right(0)
-	mouse dclick "testo-guest-additions-1.4.1.deb"
+	mouse dclick "testo-guest-additions.deb"
 	mouse click "Установить пакет"
 	wait "Пароль:"
 	type "${password}"; press Enter

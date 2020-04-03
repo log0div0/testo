@@ -19,7 +19,6 @@ machine astra {
 param host_name "testo-astralinux"
 param login "user"
 param password "12345678"
-param what_to_wait "Графическая установка"
 
 test install_astralinux {
 	astra install_astra_console("${host_name}", "${login}", "${password}")
@@ -27,7 +26,7 @@ test install_astralinux {
 
 test install_guest_additions: install_astralinux {
 	astra {
-		install_guest_additions_console("${ISO_DIR}", "${host_name}", "${login}", "${password}")
+		install_guest_additions_console("${host_name}", "${login}", "${password}")
 		exec bash "echo Hello world"
 	}
 }
@@ -37,6 +36,7 @@ test install_astralinux_gui {
 }
 
 
-test astra_install_guest_additions: install_astralinux_gui {
-	astra install_guest_additions_gui("${ISO_DIR}", "${password}")
+test install_guest_additions_gui: install_astralinux_gui {
+	astra install_guest_additions_gui("${password}")
+	astra exec bash "echo Hello world"
 }
