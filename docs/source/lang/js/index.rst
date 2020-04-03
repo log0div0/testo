@@ -12,5 +12,4 @@ Javascript-запросы в языке Testo-lang
     general
     global_funcs
     tensor_textline
-    textline
     point
