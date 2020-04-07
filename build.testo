@@ -25,7 +25,7 @@ test astra_install_os {
 }
 
 test astra_install_guest_additions: astra_install_os {
-	astra install_guest_additions_gui("${ISO_DIR}", "${password}")
+	astra install_guest_additions_gui("${password}")
 }
 
 test astra_install_extra_packages: astra_install_guest_additions {

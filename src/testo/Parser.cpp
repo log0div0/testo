@@ -1006,6 +1006,7 @@ std::shared_ptr<Action<IfClause>> Parser::if_clause() {
 
 	auto if_action = action();
 
+	newline_list();
 	Token else_token = Token();
 	std::shared_ptr<IAction> else_action = nullptr;
 

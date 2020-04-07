@@ -113,6 +113,8 @@ macro install_astra_gui(host_name, login, password) {
 	mouse click "Средства работы в Интернет"; press Space
 	mouse click "Офисные средства"; press Space
 	mouse click "Средства Мультимедиа"; press Space
+	# это добавляем
+	mouse click "Средства разработки и отладки"; press Space
 	mouse click "Продолжить"
 
 	wait "Дополнительные настройки ОС" timeout 15m;

@@ -49,6 +49,7 @@ machine UB {
 	nic CUS_side: {
 		attached_to: "cus_ub"
 		mac: "52:54:00:00:11:AA"
+		adapter_type: "e1000"
 	}
 }
 
@@ -243,7 +244,7 @@ test config_UB: init_CUS, init_UB {
 		select_local_menu("Подключиться к ЦУС")
 		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
 		wait "Выберите конфигурацию"; select_local_menu("gate-${ub_id}.json")
-		wait "Выберите интерфейс управления"; select_local_menu("fe-0-0")
+		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
 		wait "Настройка интерфейса управления"; type "${ub_main_ip}/${default_netmask}"; press Enter
 		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
 		wait "Система успешно настроена" timeout 10m; press Enter
@@ -363,3 +364,44 @@ test install_allow_all_policy: client_connect_CUS {
 		wait "Новых уведомлений нет"
 	}
 }
+
+test install_nf2: install_allow_all_policy {
+	client {
+		mouse move "Список объектов ЦУС".left_center().move_left(5)
+		mouse hold lbtn
+		mouse move "ЦУС"
+		mouse release
+		mouse click "Структура"
+		mouse rclick "node-${ub_id}"
+		mouse click "Свойства".from_bottom(0)
+		mouse click "UTM"
+		mouse click "Высокопроизводитель"
+		mouse click "Приоритизация трафика".from_right(0)
+		mouse click "ОК".from_bottom(0)
+		mouse click "Установить"
+		wait "Установить политики"
+		mouse click "ОК".from_bottom(0)
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет"
+	}
+
+	UB {
+		select_local_menu("Вход в систему")
+		select_local_menu_horizontal("Учетная запись")
+		wait "Вход в систему"
+		type "admin"; press Tab
+		type "Cont-4.X"; press Enter
+		wait "Для завершения смены режима требуется перезагрузка"
+		select_local_menu("Завершение работы устройства")
+		select_local_menu_horizontal("Перезагрузка")
+		wait "Вход в систему" timeout 5m
+		press LeftAlt + F2
+		wait "node-${ub_id} login"
+		type "root"; press Enter
+		wait "Password"; type "${default_password}"; press Enter
+		wait "root@node-${ub_id}";
+		type "nf2 status"; press Enter
+		wait "Running"
+	}
+}
+

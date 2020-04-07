@@ -71,13 +71,12 @@
 	sudo testo run /opt/samples/vpn_stand --param ISO_DIR /opt/iso --license /opt/testo/license --param HTTP_PROXY ${HTTP_PROXY}
 
 
-4.3. Запуск стенда continent_stand
+4.3. Запуск стенда astra
 
 Требования:
-	- Наличие установочного образа Continent (проверялась сборка 4.1.0.1093)
-	- Наличие образа testo-guest-additions.iso в одной папке с образом Continent
-	- Наличие установочных файлов МК (только для русской версии архитектуры x64) в отдельной папке
+	- Наличие установочного образа Astralinux (orel-current.iso)
+	- Наличие образа testo-guest-additions.iso в одной папке с образом Astralinux
 
 Предположим, что файлы с образами iso находятся в папке /opt/iso, установочные файлы МК в папке /opt/MS, лицензия расположена в файле /opt/testo/license, а распакованная папка samples - в /opt/samples Тогда для запуска запустите следующую команду:
 
-	sudo testo run /opt/samples/continent_stand --param ISO_DIR /opt/iso --param MS_DIR /opt/MS --license /opt/testo/license
+	sudo testo run /opt/samples/astra --param ISO_DIR /opt/iso --license /opt/testo/license

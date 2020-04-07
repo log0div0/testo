@@ -213,6 +213,7 @@ void QemuVM::install() {
 				</features>
 				<cpu mode='host-model'>
 					<model fallback='forbid'/>
+					<topology sockets='1' cores='{}' threads='1'/>
 				</cpu>
 				<clock offset='utc'>
 					<timer name='rtc' tickpolicy='catchup'/>
@@ -282,7 +283,7 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>(), id());
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>(), id());
 
 		uint32_t nic_count = 0;
 
@@ -1141,13 +1142,12 @@ void QemuVM::start() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto xml = domain.dump_xml();
-		xml.first_child().remove_child("cpu");
+		xml.first_child().child("cpu").remove_child("model");
 		pugi::xml_document cpu;
-		cpu.load_string(R"(
-			<cpu mode='host-model'>
-				<model fallback='forbid'/>
-			</cpu>
-		)");
+		cpu.load_string(fmt::format(R"(
+			<model fallback='forbid'/>
+			<topology sockets='1' cores='{}' threads='1'/>
+		)", config.at("cpus").get<uint32_t>()).c_str());
 		xml.first_child().append_copy(cpu.first_child());
 		qemu_connect.domain_define_xml(xml);
 		domain = qemu_connect.domain_lookup_by_name(id());
