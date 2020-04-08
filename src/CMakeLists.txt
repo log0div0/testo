@@ -14,6 +14,10 @@ if(NOT ONNX_RUNTIME_DIR)
 	message(FATAL_ERROR "ONNX_RUNTIME_DIR is not set")
 endif()
 
+if (USE_CUDA)
+	add_definitions(-DUSE_CUDA=1)
+endif()
+
 include_directories(
 	${ONNX_RUNTIME_DIR}/include
 )

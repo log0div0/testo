@@ -6,6 +6,10 @@
 
 #include <experimental/filesystem>
 
+#ifdef USE_CUDA
+#include <cuda_provider_factory.h>
+#endif
+
 namespace fs = std::experimental::filesystem;
 
 namespace nn {
@@ -46,6 +50,9 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 	session_options.SetIntraOpNumThreads(1);
 	session_options.SetInterOpNumThreads(1);
 	session_options.SetExecutionMode(ORT_SEQUENTIAL);
+#ifdef USE_CUDA
+	Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0));
+#endif
 	fs::path model_path = GetModelDir() / (name + ".onnx");
 	return std::make_unique<Ort::Session>(*env,
 #ifdef WIN32
