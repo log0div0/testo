@@ -1,0 +1,48 @@
+
+macro install_continent(id) {
+	start
+	wait "Please select"; press Up, Enter
+	wait "Установить Континент"; press Enter
+	wait "Выберите тип платформы"; press Enter
+	wait "Введите идентификатор шлюза"; type "${id}"; press Enter*2
+	wait "Please select" timeout 15m; stop; unplug dvd; start
+	wait "Главное меню" timeout 10m
+}
+
+macro select_local_menu(string) {
+	wait "${string}"
+	for (i IN RANGE "20") {
+		if (check js "find_text().match('${string}').match_foreground('blue').match_background('gray').size() == 1" timeout 100ms) {
+			press Enter;
+			break;
+		}
+
+		press Down
+	} else {
+		abort "Can't find menu entry ${string}"
+	}
+}
+
+macro select_local_menu_horizontal(string) {
+	wait "${string}"
+	for (i IN RANGE "5") {
+		if (check js "find_text().match('${string}').match_foreground('blue').match_background('gray').size() == 1" timeout 100ms) {
+			press Enter;
+			break;
+		}
+
+		press Right
+	} else {
+		abort "Can't find menu entry ${string}"
+	}
+}
+
+macro cont_login(login, password) {
+	select_local_menu("Вход в систему")
+	select_local_menu_horizontal("Учетная запись")
+	wait "Вход в систему"
+	type "admin"; press Tab
+	type "Cont-4.X"; press Enter
+	wait "Главное меню"
+}
+

@@ -33,7 +33,7 @@ macro install_win7(login) {
 }
 
 
-macro install_guest_additions() {
+macro install_guest_additions_win7() {
 	sleep 5s
 
 	plug dvd "${ISO_DIR}/testo-guest-additions.iso"

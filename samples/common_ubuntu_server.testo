@@ -1,5 +1,5 @@
 
-macro install_ubuntu(host_name, login, password) {
+macro install_ubuntu_server(host_name, login, password) {
 	start
 	sleep 2s
 	wait "Language";
@@ -22,7 +22,9 @@ macro install_ubuntu(host_name, login, password) {
 	wait "Username for your account"; press Enter
 	wait "Choose a password for the new user"; type "${password}"; press Enter
 	wait "Re-enter password to verify"; type "${password}"; press Enter
-	wait "Use weak password?"; press Left, Enter
+	if (check "Use weak password?" timeout 3s) {
+		press Left, Enter
+	}
 	wait "Encrypt your home directory?"; press Enter
 	wait "Select your time zone" || "Moscow" timeout 2m; press Enter
 	wait "Partitioning method"; press Enter
@@ -46,7 +48,7 @@ macro enter_sudo(host_name, login, password) {
 	wait "root@${host_name}"
 }
 
-macro install_guest_additions(host_name, login, password) {
+macro install_guest_additions_ubuntu_server(host_name, login, password) {
 	enter_sudo("${host_name}", "${login}", "${password}")
 	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 	type "mount /dev/cdrom /media"; press Enter

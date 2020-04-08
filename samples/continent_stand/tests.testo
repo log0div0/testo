@@ -1,183 +1,14 @@
 
-include "../common_win7.testo"
-
-param default_netmask "24"
-param default_password "Cont-4.X"
-
-param cus_id "150"
-param cus_main_ip "192.168.0.1"
-param cus_ub_side_ip "192.168.1.1"
-
-param ub_main_ip "192.168.1.2"
-
-param client_ip "192.168.0.5"
-param client_netmask "255.255.255.0"
-
-param ub_id "250"
-
-network cus_ub {
-	mode: "internal"
-}
-
-network cus_client {
-	mode: "internal"
-}
-
-machine CUS {
-	cpus: 1
-	ram: 2048Mb
-	iso: "${ISO_DIR}/Continent.iso"
-	disk_size: 20Gb
-
-	nic client_side: {
-		attached_to: "cus_client"
-		mac: "52:54:00:00:00:AA"
-	}
-
-	nic UB_side: {
-		attached_to: "cus_ub"
-		mac: "52:54:00:00:00:BB"
-	}
-}
-
-machine UB {
-	cpus: 2
-	ram: 3072Mb
-	iso: "${ISO_DIR}/Continent.iso"
-	disk_size: 20Gb
-
-	nic CUS_side: {
-		attached_to: "cus_ub"
-		mac: "52:54:00:00:11:AA"
-		adapter_type: "e1000"
-	}
-}
-
-machine client {
-	cpus: 2
-	ram: 2Gb
-	iso: "${ISO_DIR}/win7.iso"
-	disk_size: 20Gb
-	nic nat: {
-		attached_to: "cus_client"
-		adapter_type: "e1000"
-	}
-}
-
-macro install_continent(id) {
-	start
-	wait "Please select"; press Up, Enter
-	wait "Установить Континент"; press Enter
-	wait "Выберите тип платформы"; press Enter
-	wait "Введите идентификатор шлюза"; type "${id}"; press Enter*2
-	wait "Please select" timeout 15m; stop; unplug dvd; start
-	wait "Главное меню" timeout 10m
-}
-
-[no_snapshots: true]
-test install_CUS {
-	CUS {
-		install_continent("${cus_id}")
-	}
-}
-
-[no_snapshots: true]
-test install_UB {
-	UB {
-		install_continent("${ub_id}")
-	}
-}
-
-macro select_local_menu(string) {
-	wait "${string}"
-	for (i IN RANGE "20") {
-		if (check js "find_text().match('${string}').match_foreground('blue').match_background('gray').size() == 1" timeout 100ms) {
-			press Enter;
-			break;
-		}
-
-		press Down
-	} else {
-		abort "Can't find menu entry ${string}"
-	}
-}
-
-macro select_local_menu_horizontal(string) {
-	wait "${string}"
-	for (i IN RANGE "5") {
-		if (check js "find_text().match('${string}').match_foreground('blue').match_background('gray').size() == 1" timeout 100ms) {
-			press Enter;
-			break;
-		}
-
-		press Right
-	} else {
-		abort "Can't find menu entry ${string}"
-	}
-}
-
-test init_CUS: install_CUS {
-	CUS {
-		select_local_menu("Инициализация");
-		wait "Инициализировать устройство как"; press Up*2; select_local_menu("Начать инициализацию")
-		wait "Успешно" timeout 5m; press Enter;
-		select_local_menu("Сертификаты");
-		select_local_menu("Сертификаты УЦ")
-		wait "Кому выдан"; press F2
-		select_local_menu("Выпуск корневого сертификата")
-		wait "Страна";
-		press Down; type "Security Code"
-		press Down; type "DevOps"
-		press Down; type "CA"; press Enter
-		wait "Успешно"; press Enter
-		select_local_menu("Возврат в предыдущее меню")
-		wait "Кому выдан"; press Esc
-		select_local_menu("Сертификаты управления")
-		wait "Кому выдан"; press F2
-		select_local_menu("Выпуск сертификата управления для ЦУС")
-		wait "Страна"; press Down*3; type "Control"; press Enter
-		wait "Выберите корневой сертификат"; select_local_menu("CA")
-		wait "Успешно"; press Enter
-		wait "Выпуск сертификата"; press Esc
-		wait "Кому выдан"; press Esc
-		select_local_menu("Возврат в предыдущее меню")
-		select_local_menu("Настройка ЦУС")
-		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
-		wait "Выбор сертификата управления"; select_local_menu("Control")
-		wait "Пароль для встроенного администратора"; type "${default_password}"; press Down; type "${default_password}"; press Enter
-		wait "Выберите интерфейс управления"; select_local_menu("fe-0-0")
-		wait "Настройка интерфейса управления"; type "${cus_main_ip}/${default_netmask}"; press Enter
-		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
-		wait "Система успешно настроена" timeout 15m; press Enter
-	}
-}
-
-test init_UB: install_UB {
-	UB {
-		select_local_menu("Инициализация");
-		wait "Инициализировать устройство как"; press Enter
-		wait "Успешно" timeout 6m; press Enter;
-		wait "Главное меню";
-	}
-}
-
-flash ub_flash {
-	fs: "ntfs"
-	size: 16Mb
-}
+include "installations.testo"
 
 test config_UB: init_CUS, init_UB {
 	#CUS init
 	CUS {
-		select_local_menu("Вход в систему")
-		select_local_menu_horizontal("Учетная запись")
-		wait "Вход в систему"
-		type "admin"; press Tab
-		type "Cont-4.X"; press Enter
+		cont_login("admin", "${default_password}")
 		select_local_menu("Настройки")
 		select_local_menu("Сеть")
 		select_local_menu("Сетевые интерфейсы")
-		select_local_menu("fe-1-0")
+		select_local_menu("ge-1-0")
 		wait "IP/Mask"
 		type "${cus_ub_side_ip}/${default_netmask}"; press Enter
 		wait "Имеются неприменённые локальные изменения"
@@ -240,12 +71,11 @@ test config_UB: init_CUS, init_UB {
 
 	UB {
 		plug flash ub_flash
-		sleep 5s
 		select_local_menu("Подключиться к ЦУС")
 		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
 		wait "Выберите конфигурацию"; select_local_menu("gate-${ub_id}.json")
 		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
-		wait "Настройка интерфейса управления"; type "${ub_main_ip}/${default_netmask}"; press Enter
+		wait "Настройка интерфейса управления"; type "${ub_cus_side_ip}/${default_netmask}"; press Enter
 		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
 		wait "Система успешно настроена" timeout 10m; press Enter
 		unplug flash ub_flash
@@ -260,65 +90,47 @@ test config_UB: init_CUS, init_UB {
 		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
 		wait "Инструменты"
 	}
-}
 
-test client_install_win7 {
-	client install_win7("testo")
-}
+	UB {
+		cont_login("admin", "${default_password}")
+		select_local_menu("Настройки")
+		select_local_menu("Сеть")
+		select_local_menu("Сетевые интерфейсы")
+		select_local_menu("ge-1-0") #WIN7_CLIENT_side
+		wait "IP/Mask"
+		type "${ub_win7_side_ip}/${default_netmask}"; press Enter
 
-test client_install_guest_additions: client_install_win7 {
-	client install_guest_additions()
+		select_local_menu("ge-2-0") # UBUNTU_CLIENT_side
+		wait "IP/Mask"
+		type "${ub_ubuntu_client_side_ip}/${default_netmask}"; press Enter
+
+		select_local_menu("ge-3-0") # UBUNTU_SERVER_side
+		wait "IP/Mask"
+		type "${ub_ubuntu_server_side_ip}/${default_netmask}"; press Enter
+
+		select_local_menu("Возврат в предыдущее меню")
+		press Up
+		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Применение локальной политики")
+		wait "Успешно" timeout 2m; press Enter
+		select_local_menu("Возврат в предыдущее меню")
+		wait "Главное меню"
+	}
+
+	CUS {
+		press Esc
+		wait "Имеются неподтвержденные изменения с узлов" timeout 4m;
+		select_local_menu("Инструменты")
+		select_local_menu("Подтверждение изменений настроек УБ")
+		wait "Локальные изменения"; press Space, Enter
+		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
+		wait "Инструменты"
+	}
 }
 
 [no_snapshots: true]
-test client_configure_windows: client_install_guest_additions {
-	client {
-		press LEFTMETA
-		mouse click "Панель управления"
-		mouse click "Категория"
-		mouse click "Мелкие значки"
-		mouse click "Учетные записи"
-		mouse click "Изменение параметров контроля учетных записей"
-		mouse dclick "Никогда".move_up(50);
-		mouse click "ОК".from_bottom(0);
-		wait "Microsoft Windows"; press Left, Enter
-		wait "Внесение изменений в учетную запись"
-		press LeftAlt+F4
-		wait "Корзина"
-	}
-}
-
-test client_install_cryptopro: client_configure_windows {
-	client {
-		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
-		mouse dclick "CSPSetup"
-		mouse click "Установить (рекомендуется)"
-		wait "CSP успешно установлен" timeout 10m
-		mouse click "OK"
-		sleep 2s
-	}
-}
-
-test client_install_ms: client_install_cryptopro {
-	client {
-		copyto "${MS_DIR}/MS" "C:\\Users\\testo\\Desktop\\MS"
-		mouse dclick "MS"
-		mouse dclick "setup"
-		mouse click "Установить".from_bottom(0).center_bottom()
-		wait "Вас приветствует программа установки" timeout 10m
-		mouse click "Далее".from_bottom(0)
-		mouse click "Я принимаю условия"; mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Папка назначения"; mouse click "Далее".from_bottom(0).center_bottom()
-		mouse click "Установить".from_bottom(0).center_bottom()
-		wait "Программа завершена" timeout 5m; mouse click " Готово".from_bottom(0)
-		wait "Требуется перезагрузка"; press Enter
-		sleep 5s
-		wait "Корзина" timeout 5m
-	}
-}
-
-test client_connect_CUS: client_install_ms, config_UB {
-	client {
+test win7_client_connect_CUS: win7_client_install_ms, config_UB {
+	win7_client {
 		press LeftAlt + LeftShift
 		sleep 5s
 		press LEFTMETA; wait "Все программы"
@@ -329,7 +141,7 @@ test client_connect_CUS: client_install_ms, config_UB {
 		press LeftAlt + LeftShift
 		type "Подключение по локальной сети"
 		press LeftAlt + LeftShift
-		type "\" static ${client_ip} ${client_netmask} ${cus_main_ip}"
+		type "\" static ${win7_cus_side_ip} ${win7_client_netmask} ${cus_main_ip}"
 		press Enter
 		type "exit"; press Enter
 		mouse click "Общественная сеть"; mouse click "Закрыть"
@@ -348,8 +160,9 @@ test client_connect_CUS: client_install_ms, config_UB {
 	}
 }
 
-test install_allow_all_policy: client_connect_CUS {
-	client {
+[no_snapshots: true]
+test install_allow_all_policy: win7_client_connect_CUS {
+	win7_client {
 		press LeftAlt + Space
 		mouse click "Развернуть"
 		mouse click "Первое правило"
@@ -366,7 +179,7 @@ test install_allow_all_policy: client_connect_CUS {
 }
 
 test install_nf2: install_allow_all_policy {
-	client {
+	win7_client {
 		mouse move "Список объектов ЦУС".left_center().move_left(5)
 		mouse hold lbtn
 		mouse move "ЦУС"
@@ -386,11 +199,7 @@ test install_nf2: install_allow_all_policy {
 	}
 
 	UB {
-		select_local_menu("Вход в систему")
-		select_local_menu_horizontal("Учетная запись")
-		wait "Вход в систему"
-		type "admin"; press Tab
-		type "Cont-4.X"; press Enter
+		cont_login("admin", "${default_password}")
 		wait "Для завершения смены режима требуется перезагрузка"
 		select_local_menu("Завершение работы устройства")
 		select_local_menu_horizontal("Перезагрузка")

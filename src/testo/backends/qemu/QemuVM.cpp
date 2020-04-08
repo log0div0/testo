@@ -1142,11 +1142,13 @@ void QemuVM::start() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto xml = domain.dump_xml();
-		xml.first_child().child("cpu").remove_child("model");
+		xml.first_child().child("cpu")	;
 		pugi::xml_document cpu;
 		cpu.load_string(fmt::format(R"(
-			<model fallback='forbid'/>
-			<topology sockets='1' cores='{}' threads='1'/>
+			<cpu mode='host-model'>
+				<model fallback='forbid'/>
+				<topology sockets='1' cores='{}' threads='1'/>
+			</cpu>
 		)", config.at("cpus").get<uint32_t>()).c_str());
 		xml.first_child().append_copy(cpu.first_child());
 		qemu_connect.domain_define_xml(xml);
