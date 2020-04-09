@@ -184,7 +184,14 @@ test ubuntu_server_prepare: ubuntu_server_install_guest_additions {
 		exec bash """
 			/tmp/rename_net.sh 52:54:00:00:33:aa UB_side
 			apt-get update
+			apt install -y vsftpd
 		"""
+
+		#configure anonymous login on ftp
+
+		exec bash "sed -i 's/anonymous_enable=NO/anonymous_enable=YES/g' /etc/vsftpd.conf"
+		#create test for ftp
+		exec bash "truncate -s 10M /srv/ftp/ftp_test.txt"
 
 		unplug_nat("${ubuntu_server_login}", "${default_password}")
 		exec bash "ip a a ${ubuntu_server_ip}/${default_netmask} dev UB_side"

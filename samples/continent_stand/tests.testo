@@ -214,3 +214,17 @@ test install_nf2: install_allow_all_policy {
 	}
 }
 
+[no_snapshots: true]
+test check_avaliability: install_nf2, ubuntu_client_prepare, ubuntu_server_prepare {
+	ubuntu_client sleep 10s
+	ubuntu_client exec bash "ping -c5 ${ubuntu_server_ip}"
+	ubuntu_server exec bash "ping -c5 ${ubuntu_client_ip}"
+
+	#check ftp active/passive
+
+	ubuntu_client {
+		#active mode
+		exec bash "curl -P - ftp://${ubuntu_server_ip}/ftp_test.txt"
+		exec bash "curl --ftp-pasv ftp://${ubuntu_server_ip}/ftp_test.txt"
+	}
+}
