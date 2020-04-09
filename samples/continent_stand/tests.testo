@@ -227,4 +227,11 @@ test check_avaliability: install_nf2, ubuntu_client_prepare, ubuntu_server_prepa
 		exec bash "curl -P - ftp://${ubuntu_server_ip}/ftp_test.txt"
 		exec bash "curl --ftp-pasv ftp://${ubuntu_server_ip}/ftp_test.txt"
 	}
+
+	#check smb
+	ubuntu_client {
+		#active mode
+		exec bash "curl -u \"guest:\" smb://${ubuntu_server_ip}/sambashare/samba_test.txt"
+	}
+
 }

@@ -184,7 +184,7 @@ test ubuntu_server_prepare: ubuntu_server_install_guest_additions {
 		exec bash """
 			/tmp/rename_net.sh 52:54:00:00:33:aa UB_side
 			apt-get update
-			apt install -y vsftpd
+			apt install -y vsftpd samba
 		"""
 
 		#configure anonymous login on ftp
@@ -192,6 +192,27 @@ test ubuntu_server_prepare: ubuntu_server_install_guest_additions {
 		exec bash "sed -i 's/anonymous_enable=NO/anonymous_enable=YES/g' /etc/vsftpd.conf"
 		#create test for ftp
 		exec bash "truncate -s 10M /srv/ftp/ftp_test.txt"
+
+		#configure smb
+
+		exec bash "mkdir /srv/samba"
+
+		exec bash "adduser --disabled-password --gecos \"\" samba_user"
+		exec bash "chown -R samba_user /srv/samba"
+		exec bash "(echo 1111; echo 1111) | smbpasswd -s -a samba_user"
+		exec bash "truncate -s 10M /srv/samba/samba_test.txt"
+
+		exec bash """
+			echo "[sambashare]" >> /etc/samba/smb.conf
+			echo "path = /srv/samba" >> /etc/samba/smb.conf
+			echo "read only = no" >> /etc/samba/smb.conf
+			echo "browsable = yes" >> /etc/samba/smb.conf
+			echo "guest ok = yes" >> /etc/samba/smb.conf
+			echo "writable = yes" >> /etc/samba/smb.conf
+			echo "guest_account = samba_user" >> /etc/samba/smb.conf
+			echo "create_mask = 0775" >> /etc/samba/smb.conf
+			echo "directory_mask = 0775" >> /etc/samba/smb.conf
+		"""
 
 		unplug_nat("${ubuntu_server_login}", "${default_password}")
 		exec bash "ip a a ${ubuntu_server_ip}/${default_netmask} dev UB_side"
