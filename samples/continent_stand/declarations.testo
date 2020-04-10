@@ -79,11 +79,13 @@ machine win7_client {
 	disk_size: 20Gb
 	nic CUS_side: {
 		attached_to: "cus_win7"
+		mac: "52:54:00:00:44:AA"
 		adapter_type: "e1000"
 	}
 
 	nic UB_side: {
 		attached_to: "ub_win7"
+		mac: "52:54:00:00:44:BB"
 		adapter_type: "e1000"
 	}
 }

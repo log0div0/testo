@@ -141,7 +141,13 @@ test win7_client_connect_CUS: win7_client_install_ms, config_UB {
 		press LeftAlt + LeftShift
 		type "Подключение по локальной сети"
 		press LeftAlt + LeftShift
-		type "\" static ${win7_cus_side_ip} ${win7_client_netmask} ${cus_main_ip}"
+		type "\" static ${win7_cus_side_ip} ${win7_client_netmask}"
+		press Enter
+		type "netsh interface ip set address name=\""
+		press LeftAlt + LeftShift
+		type "Подключение по локальной сети 2"
+		press LeftAlt + LeftShift
+		type "\" static ${win7_ub_side_ip} ${win7_client_netmask} ${ub_win7_side_ip}"
 		press Enter
 		type "exit"; press Enter
 		mouse click "Общественная сеть"; mouse click "Закрыть"
@@ -199,7 +205,11 @@ test install_nf2: install_allow_all_policy {
 	}
 
 	UB {
-		cont_login("admin", "${default_password}")
+		if (check "Вход в систему") {
+			cont_login("admin", "${default_password}")
+		} else {
+			press Enter, Esc
+		}
 		wait "Для завершения смены режима требуется перезагрузка"
 		select_local_menu("Завершение работы устройства")
 		select_local_menu_horizontal("Перезагрузка")
@@ -251,3 +261,4 @@ test check_avaliability: install_nf2, ubuntu_client_prepare, ubuntu_server_prepa
 		sleep 3s
 	}
 }
+

@@ -113,6 +113,7 @@ test win7_client_configure_windows: win7_client_install_guest_additions {
 	}
 }
 
+[no_snapshots: true]
 test win7_client_install_cryptopro: win7_client_configure_windows {
 	win7_client {
 		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
@@ -124,7 +125,25 @@ test win7_client_install_cryptopro: win7_client_configure_windows {
 	}
 }
 
-test win7_client_install_ms: win7_client_install_cryptopro {
+test win7_client_install_vlc: win7_client_install_cryptopro {
+	win7_client {
+		copyto "./vlc.exe" "C:\\Users\\testo\\Desktop\\vlc-setup.exe"
+		mouse dclick "vlc-setup"
+		mouse click "OK"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Ознакомьтесь с лицензионным соглашением"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Выберите компоненты"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Выберите папку для установки"
+		mouse click "Установить".from_bottom(0).center_bottom()
+		mouse click "Запустить VLC" timeout 3m
+		mouse click "Готово".from_bottom(0)
+		sleep 3s
+	}
+}
+
+test win7_client_install_ms: win7_client_install_vlc {
 	win7_client {
 		copyto "${MS_DIR}/MS" "C:\\Users\\testo\\Desktop\\MS"
 		mouse dclick "MS"
@@ -177,6 +196,12 @@ test ubuntu_server_install_guest_additions: ubuntu_server_install_ubuntu {
 	ubuntu_server install_guest_additions_ubuntu_server("${ubuntu_server_host_name}", "${ubuntu_server_login}", "${default_password}")
 }
 
+flash video_sample_flash {
+	fs: "ntfs"
+	size: 512Mb
+	folder: "${VIDEO_SAMPLE_DIR}"
+}
+
 test ubuntu_server_prepare: ubuntu_server_install_guest_additions {
 	ubuntu_server {
 		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
@@ -185,7 +210,7 @@ test ubuntu_server_prepare: ubuntu_server_install_guest_additions {
 		exec bash """
 			/tmp/rename_net.sh 52:54:00:00:33:aa UB_side
 			apt-get update
-			apt install -y vsftpd samba iperf
+			apt install -y vsftpd samba iperf vlc-nox
 		"""
 
 		#configure anonymous login on ftp
@@ -219,5 +244,21 @@ test ubuntu_server_prepare: ubuntu_server_install_guest_additions {
 		exec bash "ip a a ${ubuntu_server_ip}/${default_netmask} dev UB_side"
 		exec bash "ip l s UB_side up"
 		exec bash "ip r a default via ${ub_ubuntu_server_side_ip}"
+
+		#start vlc server
+		plug flash video_sample_flash
+		sleep 5s
+		exec bash """
+			mount /dev/sdb1 /media
+			cp /media/4k_sample.mp4 /opt/
+			umount /media
+		"""
+
+		unplug flash video_sample_flash
+
+		press LeftAlt + F2; wait "${ubuntu_server_host_name} login:"; type "${ubuntu_server_login}"; press Enter
+		wait "Password"; type "${default_password}"; press Enter; wait "Welcome to Ubuntu"
+		type "vlc -vvv /opt/4k_sample.mp4 --sout='#gather:std{access=http,mux=ffmpeg{mux=flv},dst=:8080/}' --sout-keep --loop"; press Enter
+		wait "writing header"
 	}
 }
