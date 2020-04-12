@@ -1,10 +1,36 @@
 {
   "docs": {
-    "Docusaurus": ["doc1"],
-    "First Category": ["doc2"],
-    "Second Category": ["doc3"]
-  },
-  "docs-other": {
-    "First Category": ["doc4", "doc5"]
+    "Общие сведения": [
+    	"getting_started/intro",
+      "getting_started/test_policy",
+      "getting_started/getting_started",
+      "getting_started/starting"
+    ],
+    "Тестовые сценарии": [
+      "lang/general",
+      "lang/lexems",
+      "lang/var_refs",
+      "lang/machine",
+      "lang/flash",
+      "lang/network",
+      "lang/param",
+      "lang/test",
+      "lang/macro",
+      "lang/actions",
+      "lang/mouse",
+      "lang/if",
+      "lang/for",
+      "lang/keys"
+    ],
+    "Запросы на языке Javascript": [
+      "js/general",
+      "js/global_funcs",
+      "js/tensor_textline",
+      "js/point"
+    ],
+    "История изменений": [
+      "rn/1.5.0",
+      "rn/1.4.0"
+    ]
   }
 }
