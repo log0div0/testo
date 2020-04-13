@@ -2,6 +2,7 @@
   "docs": {
     "Общие сведения": [
     	"getting_started/intro",
+      "getting_started/architecture",
       "getting_started/test_policy",
       "getting_started/getting_started",
       "getting_started/starting"
