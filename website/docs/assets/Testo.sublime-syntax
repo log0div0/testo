@@ -1,0 +1,176 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+file_extensions:
+  - testo
+scope: source.testo
+
+variables:
+  identifier: '[A-Za-z_][A-Za-z_0-9]*'
+
+contexts:
+  prototype:
+    - include: comments
+
+  main:
+    - include: machine
+    - include: flash
+    - include: network
+    - include: macro
+    - include: param
+    - include: test
+    - include: keywords
+    - include: numbers
+    - include: bools
+    - include: var_refs
+    - include: time_intervals
+    - include: size_specifiers
+    - include: multiline_strings
+    - include: backqouted_strings
+    - include: strings
+    - include: comparisons
+    - include: ops
+    - include: actions
+
+  machine:
+    - match: '\bmachine\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
+
+  flash:
+    - match: '\bflash\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
+
+  network:
+    - match: '\bnetwork\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
+
+  macro:
+    - match: '\bmacro\b'
+      scope: keyword.control.testo
+      set:
+        - match: '{{identifier}}'
+          scope: entity.name.function.testo
+          set:
+            - match: '\('
+              scope: punctuation.section.group.begin.testo
+              set:
+                - include: strings
+                - match: '{{identifier}}'
+                  scope: variable.parameter.testo
+                - match: '\)'
+                  scope: punctuation.section.group.end.testo
+                  pop: true
+            - match: '{'
+              pop: true
+
+  param:
+    - match: '\bparam\b'
+      scope: keyword.control.testo
+      push:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          pop: true
+
+  test:
+    - match: '\btest\b'
+      scope: keyword.control.testo
+      set:
+        - match: '{{identifier}}'
+          scope: entity.name.testo
+          set:
+            - match: ':'
+              set:
+                - match: '{{identifier}}'
+                  scope: entity.other.inherited-class.testo
+                - match: '{'
+                  pop: true
+            - match: '{'
+              pop: true
+
+  keywords:
+    - match: '\binclude\b'
+      scope: keyword.control.import.testo
+    - match: '\b(if|else|continue|break|for)\b'
+      scope: keyword.control.conditional.testo
+
+  numbers:
+    - match: '\b[0-9.]+\b'
+      scope: constant.numeric.testo
+
+  bools:
+    - match: '\b(true|false)\b'
+      scope: constant.language.testo
+
+  time_intervals:
+    - match: '\b[0-9.]+(s|m|h|ms)\b'
+      scope: constant.other
+
+  size_specifiers:
+    - match: '\b[0-9.]+[K,M,G]b\b'
+      scope: constant.other
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.testo
+      push:
+        - meta_include_prototype: false
+        - meta_scope: string.quoted.double.testo
+        - match: '\${{{identifier}}}'
+          scope: punctuation.definition.variable.testo
+        - match: '\\.'
+          scope: constant.character.escape.testo
+        - match: '"'
+          scope: punctuation.definition.string.end.testo
+          pop: true
+
+  multiline_strings:
+    - match: '"""'
+      scope: punctuation.definition.string.begin.testo
+      push:
+        - meta_include_prototype: false
+        - meta_scope: string.quoted.other
+        - match: '\${{{identifier}}}'
+          scope: punctuation.definition.variable.testo
+        - match: '\\.'
+          scope: constant.character.escape.testo
+        - match: '"""+'
+          scope: punctuation.definition.string.end.testo
+          pop: true
+
+  comparisons:
+    - match: '\b(EQUAL|LESS|GREATER|STREQUAL|STRGREATER|STRLESS|RANGE)\b'
+      scope: keyword.operator.comparison.testo
+
+  ops:
+    - match: '\b(NOT|AND|OR|check)\b'
+      scope: keyword.operator.logical.testo
+
+  actions:
+    - match: '\b(type|wait|press|plug|unplug|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep)\b'
+      scope: support.function.testo
+
+  comments:
+    - match: '#'
+      scope: punctuation.definition.comment.testo
+      push:
+        - meta_scope: comment.line.testo
+        - match: $\n?
+          pop: true
+    - match: '\/\*'
+      scope: punctuation.definition.comment.testo
+      push:
+        - meta_scope: comment.block.testo
+        - match: \*\/
+          pop: true
