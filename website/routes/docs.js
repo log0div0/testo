@@ -5,6 +5,7 @@ import mdx from '@mdx-js/mdx'
 import {MDXProvider, mdx as createElement} from '@mdx-js/react'
 import fs from 'fs'
 import * as babel from "@babel/core"
+import Layout from '../components/layout'
 
 function H1({children}) {
 	return <h1 style={{color: 'green'}}>{children}</h1>
@@ -37,10 +38,10 @@ module.exports = async function(req, res) {
 		{components},
 		element
 	)
-	const page = <html>
-		<body>
+	const page = (
+		<Layout>
 			{elementWithProvider}
-		</body>
-	</html>
+		</Layout>
+	)
 	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
 }

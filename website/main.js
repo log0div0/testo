@@ -10,7 +10,9 @@ app.set('view engine', 'js');
 app.engine('js', require('express-react-views').createEngine());
 app.use(express.static('public'))
 
-app.get('/', require('./routes/home'))
+app.get('/', function(req, res) {
+	res.render('home')
+})
 app.get('/docs/*', require('./routes/docs'))
 
 app.listen(port, () => console.log(`Listening on port ${port}`))

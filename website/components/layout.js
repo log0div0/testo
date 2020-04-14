@@ -2,7 +2,7 @@
 import React from 'React'
 import Header from '../components/header'
 
-module.exports = function() {
+module.exports = function({children}) {
 	return (
 		<html>
 			<head>
@@ -10,8 +10,7 @@ module.exports = function() {
 			</head>
 			<body>
 				<Header/>
-				Hello React
-				<a href="/docs/getting_started/intro">Docs</a>
+				{children}
 			</body>
 		</html>
 	)
