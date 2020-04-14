@@ -11,6 +11,7 @@ module.exports = function() {
 			<body>
 				<Header/>
 				Hello React
+				<a href="/docs/getting_started/intro">Docs</a>
 			</body>
 		</html>
 	)
