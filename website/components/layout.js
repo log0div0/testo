@@ -1,16 +1,19 @@
 
 import React from 'React'
-import Header from '../components/header'
+import Header from '../components/Header'
 
 module.exports = function({children}) {
 	return (
 		<html>
 			<head>
 				<title>Testo Lang</title>
+				<link rel="stylesheet" href="/main.css"/>
 			</head>
-			<body>
+			<body className="sideNavVisible separateOnPageNav">
 				<Header/>
-				{children}
+				<div className="navPusher">
+					{children}
+				</div>
 			</body>
 		</html>
 	)
