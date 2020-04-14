@@ -1,8 +1,23 @@
 {
+  "scripts": {
+    "dev": "nodemon --exec babel-node main.js"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "express-react-views": "^0.11.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/preset-react": "^7.9.4"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ]
   }
 }
