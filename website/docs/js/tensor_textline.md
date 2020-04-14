@@ -1,7 +1,4 @@
----
-id: tensor_textline
-title: Класс Tensor<TextLine>
----
+# Класс Tensor<TextLine>
 
 Класс Tensor<TextLine> хранит информацию о строках, найденных на
 экране.

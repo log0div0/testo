@@ -1,7 +1,4 @@
----
-id: getting_started
-title: Подготовка к запуску
----
+# Подготовка к запуску
 
 Эта страница содержит информацию, которая поможет вам подготовить систему к работе с тестировочной платформой Testo. Если у Вас имеются какие-либо проблемы с настройкой или если у Вас есть какие-нибудь вопросы, пожалуйста, обратитесь на почту a.samoylov@testo-lang.ru
 
@@ -17,7 +14,7 @@ title: Подготовка к запуску
 ```sh
 # sudo apt-get install libvirt0 libvirt-clients libvirt-daemon-system qemu qemu-kvm ebtables dnsmasq-base
 ```
-2. Установка самого пакета: 
+2. Установка самого пакета:
 ```sh
 # sudo dpkg -i testo-<version>.deb
 ```

@@ -1,7 +1,4 @@
----
-id: global_funcs
-title: Встроенные глобальные функции Javascript
----
+# Встроенные глобальные функции Javascript
 
 ## print()
 
