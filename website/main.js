@@ -2,16 +2,16 @@
 import express from 'express'
 import assert from 'assert'
 import sass from 'node-sass'
+import React from 'react'
+import ReactDOMServer from 'react-dom/server'
+import Home from './home'
+import renderMDX from './renderMDX'
 
 const app = express()
 const port = 80
 
-app.set('views', __dirname + '/views');
-app.set('view engine', 'js');
-app.engine('js', require('express-react-views').createEngine());
-
 app.get('/', (req, res) => {
-	res.render('home')
+	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(<Home/>))
 })
 
 app.get('/main.css', (req, res) => {
@@ -24,7 +24,10 @@ app.get('/main.css', (req, res) => {
 	})
 })
 
-app.get('/docs/*', require('./docs'))
+app.get('/docs/*', async (req, res) => {
+	const result = await renderMDX("." + req.originalUrl + ".md")
+	res.send('<!DOCTYPE html>' + result)
+})
 
 app.use(express.static('public'))
 app.listen(port, () => console.log(`Listening on port ${port}`))

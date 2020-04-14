@@ -1,6 +1,6 @@
 
 import React from 'React'
-import Layout from '../components/layout'
+import Layout from './components/layout'
 
 module.exports = function() {
 	return (

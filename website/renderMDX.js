@@ -5,14 +5,13 @@ import mdx from '@mdx-js/mdx'
 import {MDXProvider, mdx as createElement} from '@mdx-js/react'
 import fs from 'fs'
 import * as babel from "@babel/core"
-import Layout from './components/Layout'
+import DocsLayout from './components/DocsLayout'
 
 function H1({children}) {
 	return <h1 style={{color: 'green'}}>{children}</h1>
 }
 
-module.exports = async function(req, res) {
-	const docFile = "." + req.originalUrl + ".md"
+module.exports = async function(docFile) {
 	const content = await fs.promises.readFile(docFile);
 	const jsx = await mdx(content, { skipExport: true });
 	const {code} = babel.transform(jsx, {
@@ -39,9 +38,9 @@ module.exports = async function(req, res) {
 		element
 	)
 	const page = (
-		<Layout>
+		<DocsLayout>
 			{elementWithProvider}
-		</Layout>
+		</DocsLayout>
 	)
-	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
+	return ReactDOMServer.renderToStaticMarkup(page)
 }
