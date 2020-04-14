@@ -53,7 +53,7 @@
 разделить на 3 этапа
 
 ![Схема уточнения места, куда нужно переместить
-курсор](assets/mouse_specifiers_1.png)
+курсор](/img/mouse_specifiers_1.png)
 
 **Шаг 1. Выбор нужного объекта (надписи)**
 
@@ -232,7 +232,7 @@ mouse rclick "Корзина"
 
 **Пример 1**
 
-![](assets/mouse_specifiers_example_1.png)
+![](/img/mouse_specifiers_example_1.png)
 
 Задача: кликнуть на надпись "Установить", выделенную красным цветом
 
@@ -249,7 +249,7 @@ mouse click "Установить".from_top(1)
 
 **Пример 2**
 
-![](assets/mouse_specifiers_example_2.png)
+![](/img/mouse_specifiers_example_2.png)
 
 Задача: кликнуть на область, выделенную красным цветом
 

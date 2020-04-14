@@ -44,6 +44,6 @@
 
 ### Ручная установка файла с подсветкой
 
-1. Скачайте [Файл](assets/Testo.sublime-syntax) с подсветкой
+1. Скачайте [Файл](/Testo.sublime-syntax) с подсветкой
 2. Скопируйте файл с подсветкой в папку `~/.config/sublime-text-3/Packages/User`
 3. Перезапустите Sublime Text 3
