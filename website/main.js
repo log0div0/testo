@@ -25,7 +25,7 @@ app.get('/main.css', (req, res) => {
 })
 
 app.get('/docs/*', async (req, res) => {
-	const result = await renderMDX("." + req.originalUrl + ".md")
+	const result = await renderMDX('docs', `.${req.originalUrl}.md`)
 	res.send('<!DOCTYPE html>' + result)
 })
 
