@@ -1,6 +1,6 @@
 
 import React from 'React'
-import Header from '../components/Header'
+import Header from './Header'
 
 module.exports = function({children}) {
 	return (

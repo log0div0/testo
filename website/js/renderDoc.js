@@ -6,7 +6,7 @@ import {MDXProvider, mdx as createElement} from '@mdx-js/react'
 import fs from 'fs'
 import path from 'path'
 import * as babel from "@babel/core"
-import Layout from './components/Layout'
+import Layout from './Layout'
 
 async function GetTOC(docsRoot) {
 	let result = []
