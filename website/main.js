@@ -24,9 +24,8 @@ app.get('/main.css', (req, res) => {
 	})
 })
 
-app.get('/docs/*', async (req, res) => {
-	let url = decodeURI(req.originalUrl)
-	const page = await makeDocPage('docs', `.${url}.md`)
+app.get('/docs/:category_id/:page_id', async (req, res) => {
+	const page = await makeDocPage('docs', req.params.category_id, req.params.page_id)
 	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
 })
 

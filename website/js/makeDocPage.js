@@ -8,25 +8,53 @@ import * as babel from "@babel/core"
 import Layout from './Layout'
 import PageNotFound from './PageNotFound'
 
-async function GetTOC(docsRoot) {
+async function makePage(file_path) {
+	let parsed = path.parse(file_path)
+	if (parsed.ext != ".md") {
+		return null
+	}
+	let indexOfDash = parsed.name.indexOf('-')
+	if (indexOfDash < 0) {
+		return null
+	}
+	return {
+		id: parsed.name.substring(0, indexOfDash).trim(),
+		name: parsed.name.substring(indexOfDash + 1, parsed.name.length).trim(),
+		file_path
+	}
+}
+
+async function makeCategory(categoryRoot) {
+	const stats = await fs.promises.stat(categoryRoot)
+	if (!stats.isDirectory()) {
+		return null
+	}
+	let basename = path.basename(categoryRoot)
+	let indexOfDash = basename.indexOf('-')
+	if (indexOfDash < 0) {
+		return null
+	}
+	let result = {
+		id: basename.substring(0, indexOfDash).trim(),
+		name: basename.substring(indexOfDash + 1, basename.length).trim(),
+		pages: []
+	}
+	const files = await fs.promises.readdir(categoryRoot)
+	for (let file of files) {
+		let page = await makePage(path.join(categoryRoot, file))
+		if (page) {
+			result.pages.push(page)
+		}
+	}
+	return result
+}
+
+async function makeTOC(docsRoot) {
 	let result = []
 	const files = await fs.promises.readdir(docsRoot)
 	for (let file of files) {
-		const stats = await fs.promises.stat(path.join(docsRoot, file))
-		if (stats.isDirectory()) {
-			let category = {
-				name: file,
-				pages: []
-			}
-			const files = await fs.promises.readdir(path.join(docsRoot, file))
-			for (let file of files) {
-				if (path.extname(file) == ".md") {
-					let page = {
-						name: file
-					}
-					category.pages.push(page)
-				}
-			}
+		let category = await makeCategory(path.join(docsRoot, file))
+		if (category) {
 			result.push(category)
 		}
 	}
@@ -116,9 +144,19 @@ function DocsLayout({children, toc}) {
 	)
 }
 
-module.exports = async function(docsRoot, docFile) {
-	const toc = await GetTOC(docsRoot)
-	console.log(JSON.stringify(toc, 2))
-	const doc = await MDXtoReact(docFile)
-	return <DocsLayout toc={toc}>{doc}</DocsLayout>
+module.exports = async function(docsRoot, category_id, page_id) {
+	const toc = await makeTOC(docsRoot)
+	for (let category of toc) {
+		if (category.id != category_id) {
+			continue
+		}
+		for (let page of category.pages) {
+			if (page.id != page_id) {
+				continue
+			}
+			const doc = await MDXtoReact(page.file_path)
+			return <DocsLayout toc={toc}>{doc}</DocsLayout>
+		}
+	}
+	return <PageNotFound/>
 }

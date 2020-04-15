@@ -19,7 +19,7 @@ module.exports = function() {
 									<a href="#">Купить</a>
 								</li>
 								<li className="siteNavGroupActive siteNavItemActive">
-									<a href="#">Документация</a>
+									<a href="/docs/01/01">Документация</a>
 								</li>
 								<li>
 									<a href="#">Уроки</a>
