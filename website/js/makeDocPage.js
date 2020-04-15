@@ -64,45 +64,35 @@ function H1({children}) {
 	return <h1 className="postHeaderTitle">{children}</h1>
 }
 
-function NavGroup({category, category_id, page_id}) {
+function NavGroup({category}) {
 	let navListItems = category.pages.map((page, index) => {
-		let li_class = "navListItem"
-		if ((category.id == category_id) && (page.id == page_id)) {
-			li_class = "navListItem navListItemActive";
-		}
 		return (
-			<li key={index} className={li_class}>
+			<li key={index} className="navListItem">
 				<a className="navItem" href={`/docs/${category.id}/${page.id}`}>{page.name}</a>
 			</li>
 		)
 	})
-	let arrow_class = "arrow"
-	let ul_class = "hide"
-	if (category.id == category_id) {
-		arrow_class = "arrow rotate"
-		ul_class = ""
-	}
 
 	return (
 		<div className="navGroup">
 			<h3 className="navGroupCategoryTitle collapsible">
 				{category.name}
-				<span className={arrow_class}>
+				<span className="arrow">
 					<svg width="24" height="24" viewBox="0 0 24 24">
 						<path fill="#565656" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path>
 						<path d="M0 0h24v24H0z" fill="none"></path>
 					</svg>
 				</span>
 			</h3>
-			<ul className={ul_class}>
+			<ul className="hide">
 				{navListItems}
 			</ul>
 		</div>
 	)
 }
 
-function DocsLayout({children, toc, ...rest}) {
-	let navGroups = toc.map((category, index) => <NavGroup key={index} category={category} {...rest}/>)
+function DocsLayout({children, toc}) {
+	let navGroups = toc.map((category, index) => <NavGroup key={index} category={category}/>)
 	return (
 		<Layout>
 			<div className="docMainWrapper wrapper">
@@ -145,7 +135,7 @@ module.exports = async function(docsRoot, category_id, page_id) {
 				h1: H1
 			}
 			return (
-				<DocsLayout toc={toc} category_id={category_id} page_id={page_id}>
+				<DocsLayout toc={toc}>
 					<MDX components={components}>{content}</MDX>
 				</DocsLayout>
 			)
