@@ -34,7 +34,8 @@
       "rn/1.4.0"
     ],
     "Обучающие материалы": [
-      "tutorials/1_creating_vm"
+      "tutorials/1_creating_vm",
+      "tutorials/2_ubuntu_installation"
     ]
 
   }
