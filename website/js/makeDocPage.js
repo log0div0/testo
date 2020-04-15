@@ -1,7 +1,6 @@
 
 import React from 'react'
-import mdx from '@mdx-js/mdx'
-import {MDXProvider, mdx as createElement} from '@mdx-js/react'
+import MDX from '@mdx-js/runtime'
 import fs from 'fs'
 import path from 'path'
 import * as babel from "@babel/core"
@@ -65,28 +64,6 @@ function H1({children}) {
 	return <h1 className="postHeaderTitle">{children}</h1>
 }
 
-async function MDXtoReact(mdxFile) {
-	const content = await fs.promises.readFile(mdxFile)
-	const jsx = await mdx(content, { skipExport: true })
-	const {code} = babel.transform(jsx, {
-		presets: [
-			"@babel/preset-env",
-			"@babel/preset-react"
-		]
-	});
-	const scope = {mdx: createElement, require}
-	const fn = new Function(
-		'React',
-		...Object.keys(scope),
-		`${code}; return React.createElement(MDXContent)`
-	)
-	const element = fn(React, ...Object.values(scope))
-	const components = {
-		h1: H1
-	}
-	return React.createElement(MDXProvider, {components}, element)
-}
-
 function NavGroup({category, category_id, page_id}) {
 	let navListItems = category.pages.map((page, index) => {
 		let li_class = "navListItem"
@@ -94,7 +71,7 @@ function NavGroup({category, category_id, page_id}) {
 			li_class = "navListItem navListItemActive";
 		}
 		return (
-			<li className={li_class}>
+			<li key={index} className={li_class}>
 				<a className="navItem" href={`/docs/${category.id}/${page.id}`}>{page.name}</a>
 			</li>
 		)
@@ -163,8 +140,15 @@ module.exports = async function(docsRoot, category_id, page_id) {
 			if (page.id != page_id) {
 				continue
 			}
-			const doc = await MDXtoReact(page.file_path)
-			return <DocsLayout toc={toc} category_id={category_id} page_id={page_id}>{doc}</DocsLayout>
+			const content = await fs.promises.readFile(page.file_path)
+			const components = {
+				h1: H1
+			}
+			return (
+				<DocsLayout toc={toc} category_id={category_id} page_id={page_id}>
+					<MDX components={components}>{content}</MDX>
+				</DocsLayout>
+			)
 		}
 	}
 	return <PageNotFound/>
