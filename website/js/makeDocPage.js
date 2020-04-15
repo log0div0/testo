@@ -1,12 +1,12 @@
 
 import React from 'react'
-import ReactDOMServer from 'react-dom/server'
 import mdx from '@mdx-js/mdx'
 import {MDXProvider, mdx as createElement} from '@mdx-js/react'
 import fs from 'fs'
 import path from 'path'
 import * as babel from "@babel/core"
 import Layout from './Layout'
+import PageNotFound from './PageNotFound'
 
 async function GetTOC(docsRoot) {
 	let result = []
@@ -120,6 +120,5 @@ module.exports = async function(docsRoot, docFile) {
 	const toc = await GetTOC(docsRoot)
 	console.log(JSON.stringify(toc, 2))
 	const doc = await MDXtoReact(docFile)
-	const page = <DocsLayout toc={toc}>{doc}</DocsLayout>
-	return ReactDOMServer.renderToStaticMarkup(page)
+	return <DocsLayout toc={toc}>{doc}</DocsLayout>
 }

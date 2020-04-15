@@ -5,7 +5,7 @@ import sass from 'node-sass'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import Home from './js/Home'
-import renderDoc from './js/renderDoc'
+import makeDocPage from './js/makeDocPage'
 
 const app = express()
 const port = 80
@@ -26,8 +26,8 @@ app.get('/main.css', (req, res) => {
 
 app.get('/docs/*', async (req, res) => {
 	let url = decodeURI(req.originalUrl)
-	const result = await renderDoc('docs', `.${url}.md`)
-	res.send('<!DOCTYPE html>' + result)
+	const page = await makeDocPage('docs', `.${url}.md`)
+	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
 })
 
 app.use(express.static('public'))
