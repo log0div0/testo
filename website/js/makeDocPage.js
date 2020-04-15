@@ -87,36 +87,45 @@ async function MDXtoReact(mdxFile) {
 	return React.createElement(MDXProvider, {components}, element)
 }
 
-function NavListItem({page}) {
-	return (
-		<li className="navListItem navListItemActive">
-			<a className="navItem" href="/docs/en/installation">{page.name}</a>
-		</li>
-	)
-}
+function NavGroup({category, category_id, page_id}) {
+	let navListItems = category.pages.map((page, index) => {
+		let li_class = "navListItem"
+		if ((category.id == category_id) && (page.id == page_id)) {
+			li_class = "navListItem navListItemActive";
+		}
+		return (
+			<li className={li_class}>
+				<a className="navItem" href={`/docs/${category.id}/${page.id}`}>{page.name}</a>
+			</li>
+		)
+	})
+	let arrow_class = "arrow"
+	let ul_class = "hide"
+	if (category.id == category_id) {
+		arrow_class = "arrow rotate"
+		ul_class = ""
+	}
 
-function NavGroup({category}) {
-	let navListItems = category.pages.map((page, index) => <NavListItem key={index} page={page}/>)
 	return (
 		<div className="navGroup">
 			<h3 className="navGroupCategoryTitle collapsible">
 				{category.name}
-				<span className="arrow">
+				<span className={arrow_class}>
 					<svg width="24" height="24" viewBox="0 0 24 24">
 						<path fill="#565656" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path>
 						<path d="M0 0h24v24H0z" fill="none"></path>
 					</svg>
 				</span>
 			</h3>
-			<ul className="">
+			<ul className={ul_class}>
 				{navListItems}
 			</ul>
 		</div>
 	)
 }
 
-function DocsLayout({children, toc}) {
-	let navGroups = toc.map((category, index) => <NavGroup key={index} category={category}/>)
+function DocsLayout({children, toc, ...rest}) {
+	let navGroups = toc.map((category, index) => <NavGroup key={index} category={category} {...rest}/>)
 	return (
 		<Layout>
 			<div className="docMainWrapper wrapper">
@@ -155,7 +164,7 @@ module.exports = async function(docsRoot, category_id, page_id) {
 				continue
 			}
 			const doc = await MDXtoReact(page.file_path)
-			return <DocsLayout toc={toc}>{doc}</DocsLayout>
+			return <DocsLayout toc={toc} category_id={category_id} page_id={page_id}>{doc}</DocsLayout>
 		}
 	}
 	return <PageNotFound/>
