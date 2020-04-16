@@ -1,6 +1,7 @@
 
 import React from 'React'
 import Header from './Header'
+import Footer from './Footer'
 
 module.exports = function({children}) {
 	return (
@@ -14,6 +15,7 @@ module.exports = function({children}) {
 				<div className="navPusher">
 					{children}
 				</div>
+				<Footer/>
 				<script type="text/javascript" src="/client.js"></script>
 			</body>
 		</html>
