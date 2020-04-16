@@ -65,8 +65,21 @@ function H1({children}) {
 	return <h1 className="postHeaderTitle">{children}</h1>
 }
 
+const getText=(x)=>{
+	if (Array.isArray(x)) {
+		return x.map(elem => {
+			return getText(elem)
+		}).join('')
+	} else if ((typeof x == "string") || (x instanceof String)) {
+		return x
+	} else {
+		return getText(x.props.children)
+	}
+}
+
 function H2({children}) {
-	let id = children.replace(/\s+/g, '-').toLowerCase()
+	let text = getText(children)
+	let id = text.replace(/\s+/g, '-').toLowerCase()
 	let href = '#' + id
 	return (
 		<h2>
@@ -82,7 +95,8 @@ function H2({children}) {
 }
 
 function H3({children}) {
-	let id = children.replace(/\s+/g, '-').toLowerCase()
+	let text = getText(children)
+	let id = text.replace(/\s+/g, '-').toLowerCase()
 	let href = '#' + id
 	return (
 		<h3>
