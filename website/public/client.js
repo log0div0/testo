@@ -42,6 +42,10 @@ for (let x of xxx) {
 	}
 }
 
+if (location.pathname.startsWith("/docs")) {
+	document.getElementById("nav-site-docs").className = "siteNavGroupActive siteNavItemActive";
+}
+
 var ul = document.querySelector("ul.toc-headings")
 for (var h2 of toc) {
 	var li = document.createElement("li")
