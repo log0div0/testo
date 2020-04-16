@@ -1,0 +1,107 @@
+
+network nat {
+	mode: "nat"
+}
+
+network LAN1 {
+	mode: "internal"
+}
+
+network OSPF1 {
+	mode: "internal"
+}
+
+network OSPF2 {
+	mode: "internal"
+}
+
+network BGP {
+	mode: "internal"
+}
+
+network LAN3 {
+	mode: "internal"
+}
+
+param default_password "Cont-4.X"
+param default_netmask "24"
+
+param CUS_id "150"
+param CUS_ip "10.1.0.2"
+
+machine CUS {
+	cpus: 1
+	ram: 2048Mb
+	iso: "${ISO_DIR}/Continent.iso"
+	disk_size: 20Gb
+
+	nic LAN: {
+		attached_to: "LAN1"
+		mac: "52:54:00:00:00:AA"
+		adapter_type: "e1000"
+	}
+}
+
+param router1_hostname "router1"
+param router1_login "router1"
+
+param router1_LAN1_ip "10.1.0.1"
+param router1_OSPF1_ip "10.1.1.1"
+
+machine router1 {
+	cpus: 1
+	ram: 512Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+
+	nic nat: {
+		attached_to: "nat"
+	}
+
+	nic LAN1_side: {
+		attached_to: "LAN1"
+		mac: "52:54:00:00:11:AA"
+		adapter_type: "e1000"
+	}
+
+	nic OSPF1_side: {
+		attached_to: "OSPF1"
+		mac: "52:54:00:00:11:BB"
+		adapter_type: "e1000"
+	}
+}
+
+param UB1_id "250"
+
+param CUS_OSPF1_ip "10.1.1.2"
+
+machine UB1 {
+	cpus: 2
+	ram: 2048Mb
+	iso: "${ISO_DIR}/Continent.iso"
+	disk_size: 20Gb
+
+	nic OSPF1_side: {
+		attached_to: "OSPF1"
+		mac: "52:54:00:00:22:AA"
+		adapter_type: "e1000"
+	}
+
+	nic OSPF2_side: {
+		attached_to: "OSPF2"
+		mac: "52:54:00:00:22:BB"
+		adapter_type: "e1000"
+	}
+
+	nic BGP_side: {
+		attached_to: "BGP"
+		mac: "52:54:00:00:22:CC"
+		adapter_type: "e1000"
+	}
+
+	nic LAN3_side: {
+		attached_to: "LAN3"
+		mac: "52:54:00:00:22:DD"
+		adapter_type: "e1000"
+	}
+}

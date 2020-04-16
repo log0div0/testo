@@ -1,0 +1,166 @@
+include "declarations.testo"
+include "../common_ubuntu_server.testo"
+include "../common_continent.testo"
+
+[no_snapshots: true]
+test router1_install_ubuntu {
+	router1 install_ubuntu_server("${router1_hostname}", "${router1_login}", "${default_password}")
+}
+
+test router1_install_guest_additions: router1_install_ubuntu {
+	router1 install_guest_additions_ubuntu_server("${router1_hostname}", "${router1_login}", "${default_password}")
+}
+
+test router1_prepare: router1_install_guest_additions {
+	router1 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:11:aa LAN1_side
+			/tmp/rename_net.sh 52:54:00:00:11:bb OSPF1_side
+			apt-get update
+		"""
+
+		unplug_nat("${router1_login}", "${default_password}")
+		exec bash "ip a a ${router1_LAN1_ip}/${default_netmask} dev LAN1_side"
+		exec bash "ip l s LAN1_side up"
+
+		exec bash "ip a a ${router1_OSPF1_ip}/${default_netmask} dev OSPF1_side"
+		exec bash "ip l s OSPF1_side up"
+
+		exec bash "sysctl net.ipv4.ip_forward=1"
+	}
+}
+
+[no_snapshots: true]
+test CUS_install_continent {
+	CUS install_continent("${CUS_id}")
+}
+
+test CUS_init: CUS_install_continent {
+	CUS {
+		select_local_menu("Инициализация");
+		wait "Инициализировать устройство как"; press Up*2; select_local_menu("Начать инициализацию")
+		wait "Успешно" timeout 5m; press Enter;
+		select_local_menu("Сертификаты");
+		select_local_menu("Сертификаты УЦ")
+		wait "Кому выдан"; press F2
+		select_local_menu("Выпуск корневого сертификата")
+		wait "Страна";
+		press Down; type "Security Code"
+		press Down; type "DevOps"
+		press Down; type "CA"; press Enter
+		wait "Успешно"; press Enter
+		select_local_menu("Возврат в предыдущее меню")
+		wait "Кому выдан"; press Esc
+		select_local_menu("Сертификаты управления")
+		wait "Кому выдан"; press F2
+		select_local_menu("Выпуск сертификата управления для ЦУС")
+		wait "Страна"; press Down*3; type "Control"; press Enter
+		wait "Выберите корневой сертификат"; select_local_menu("CA")
+		wait "Успешно"; press Enter
+		wait "Выпуск сертификата"; press Esc
+		wait "Кому выдан"; press Esc
+		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Настройка ЦУС")
+		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
+		wait "Выбор сертификата управления"; select_local_menu("Control")
+		wait "Пароль для встроенного администратора"; type "${default_password}"; press Down; type "${default_password}"; press Enter
+		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
+		wait "Настройка интерфейса управления"; type "${CUS_ip}/${default_netmask}"; press Tab
+		type "${router1_LAN1_ip}";
+		press Enter
+		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
+		wait "Система успешно настроена" timeout 15m; press Enter
+		wait "Главное меню"
+	}
+}
+
+[no_snapshots: true]
+test UB1_install_continent {
+	UB1 install_continent("${UB1_id}")
+}
+
+test UB1_init: UB1_install_continent {
+	UB1 {
+		select_local_menu("Инициализация");
+		wait "Инициализировать устройство как"; press Enter
+		wait "Успешно" timeout 6m; press Enter;
+		wait "Главное меню";
+	}
+}
+
+flash ub1_flash {
+	fs: "ntfs"
+	size: 16Mb
+}
+
+test UB1_connect_to_CUS: UB1_init, CUS_init, router1_prepare {
+	UB1 {
+		select_local_menu("Сертификаты")
+		select_local_menu("Запросы на выпуск сертификата")
+		wait "F4 - создать запрос"; press F4
+		wait "Вставьте USB Flash накопитель"
+		plug flash ub1_flash
+		sleep 5s
+		press Enter
+		wait "Идёт создание запроса";
+		press Down; type "Security Code"
+		press Down; type "DevOps"
+		press Down; type "UB-${UB1_id}"; press Enter
+		wait "Запрос записан на носитель"; press Enter, Esc
+		wait "Возврат в предыдущее меню"; press Esc
+		wait "Главное меню";
+		unplug flash ub1_flash
+	}
+
+	CUS {
+		cont_login("admin", "${default_password}")
+		plug flash ub1_flash
+		select_local_menu("Сертификаты")
+		select_local_menu("Сертификаты управления")
+		wait "F2 - Выпуск серт."; press F2
+		select_local_menu("Выпуск сертификата управления для узла безопасности")
+		wait "Есть ли запрос для создания сертификата?"; select_local_menu_horizontal("[ Да ]")
+		wait "Выберите Запрос"; select_local_menu("continent-${UB1_id}.req")
+		wait "Выберите корневой сертификат"; select_local_menu("CA (")
+		wait "Успешно"; press Enter
+		wait "Выпуск сертификата"; press Esc
+		wait "Сертификаты управления"; press Esc
+		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Инструменты")
+		select_local_menu("Создать Узел Безопасности")
+		wait "Введите ID узла безопасности"; type "${UB1_id}"; press Enter
+		wait "Выбор сертификата управления"; select_local_menu("UB-${UB1_id}")
+		wait "Узел безопасности ${UB1_id} успешно создан" timeout 2m; press Enter
+		select_local_menu("Экспорт конфигурации УБ на носитель")
+		wait "Выгрузить политику"; type "${UB1_id}"; press Enter
+		wait "Успешно"; press Enter
+		sleep 10s;
+		unplug flash ub1_flash
+	}
+
+	UB1 {
+		plug flash ub1_flash
+		select_local_menu("Подключиться к ЦУС")
+		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
+		wait "Выберите конфигурацию"; select_local_menu("gate-${UB1_id}.json")
+		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
+		wait "Настройка интерфейса управления"; type "${CUS_OSPF1_ip}/${default_netmask}"; press Tab;
+		type "${router1_OSPF1_ip}"; press Enter
+		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
+		wait "Система успешно настроена" timeout 10m; press Enter
+		unplug flash ub1_flash
+	}
+
+	CUS {
+		press Esc
+		wait "Имеются неподтвержденные изменения с узлов" timeout 4m;
+		select_local_menu("Инструменты")
+		select_local_menu("Подтверждение изменений настроек УБ")
+		wait "Локальные изменения"; press Space, Enter
+		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
+		wait "Инструменты"
+	}
+}
