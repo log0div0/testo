@@ -124,8 +124,27 @@ function NavGroup({category}) {
 	)
 }
 
-function DocsLayout({children, toc}) {
+function DocsLayout({children, toc, prevPage, nextPage}) {
 	let navGroups = toc.map((category, index) => <NavGroup key={index} category={category}/>)
+	let prevButton = null
+	if (prevPage) {
+		prevButton = (
+			<a className="docs-prev button" href={prevPage.url}>
+				<span className="arrow-prev">← </span>
+				<span>{prevPage.name}</span>
+			</a>
+		)
+	}
+	let nextButtom = null
+	if (nextPage) {
+		nextButtom = (
+			<a className="docs-next button" href={nextPage.url}>
+				<span>{nextPage.name}</span>
+				<span className="arrow-next"> →</span>
+			</a>
+		)
+
+	}
 	return (
 		<Layout>
 			<div className="docMainWrapper wrapper">
@@ -145,6 +164,10 @@ function DocsLayout({children, toc}) {
 						<div className="post">
 							{children}
 						</div>
+						<div className="docs-prevnext">
+							{prevButton}
+							{nextButtom}
+						</div>
 					</div>
 				</div>
 				<nav className="onPageNav">
@@ -159,11 +182,13 @@ function DocsLayout({children, toc}) {
 
 module.exports = async function(docsRoot, category_id, page_id) {
 	const toc = await makeTOC(docsRoot)
-	for (let category of toc) {
+	for (let i = 0; i < toc.length; ++i) {
+		let category = toc[i];
 		if (category.id != category_id) {
 			continue
 		}
-		for (let page of category.pages) {
+		for (let j = 0; j < category.pages.length; ++j) {
+			let page = category.pages[j];
 			if (page.id != page_id) {
 				continue
 			}
@@ -173,8 +198,26 @@ module.exports = async function(docsRoot, category_id, page_id) {
 				h2: H2,
 				h3: H3
 			}
+			let prevPage = null
+			if (j > 0) {
+				prevPage = category.pages[j-1]
+			} else {
+				if (i > 0) {
+					let prevCategory = toc[i-1]
+					prevPage = prevCategory.pages[prevCategory.pages.length - 1]
+				}
+			}
+			let nextPage = null
+			if (j < (category.pages.length - 1)) {
+				nextPage = category.pages[j+1]
+			} else {
+				if (i < (toc.length - 1)) {
+					let nextCategory = toc[i+1]
+					nextPage = nextCategory.pages[0]
+				}
+			}
 			return (
-				<DocsLayout toc={toc}>
+				<DocsLayout toc={toc} prevPage={prevPage} nextPage={nextPage}>
 					<MDX components={components}>{content}</MDX>
 				</DocsLayout>
 			)
