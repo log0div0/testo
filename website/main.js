@@ -34,5 +34,5 @@ app.get('/tutorials/:category_id/:page_id', async (req, res) => {
 	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
 })
 
-app.use(express.static('public'))
+app.use('/static', express.static('static'))
 app.listen(port, () => console.log(`Listening on port ${port}`))

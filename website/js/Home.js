@@ -9,7 +9,7 @@ module.exports = function() {
 				<div className="index-hero">
 					<div className="index-hero-inner">
 						<h1 className="index-hero-project-tagline">
-							<img alt="Docusaurus with Keytar" className="index-hero-logo" src="/img/docusaurus_keytar.svg"/>Docusaurus makes it easy to maintain <span className="index-hero-project-keywords">Open Source</span> documentation websites.
+							<img alt="Docusaurus with Keytar" className="index-hero-logo" src="/static/img/docusaurus_keytar.svg"/>Docusaurus makes it easy to maintain <span className="index-hero-project-keywords">Open Source</span> documentation websites.
 						</h1>
 						<div className="index-ctas">
 							<a className="button index-ctas-get-started-button" href="/docs/ru/installation">Начало работы</a>
@@ -26,7 +26,7 @@ module.exports = function() {
 							<div className="gridBlock">
 								<div className="blockElement alignCenter imageAlignTop threeByGridBlock">
 									<div className="blockImage">
-										<img src="/img/undraw_typewriter.svg" alt="Markdown"/>
+										<img src="/static/img/undraw_typewriter.svg" alt="Markdown"/>
 									</div>
 									<div className="blockContent">
 										<h2>
@@ -48,7 +48,7 @@ module.exports = function() {
 								</div>
 								<div className="blockElement alignCenter imageAlignTop threeByGridBlock">
 									<div className="blockImage">
-										<img src="/img/undraw_react.svg" alt="React"/>
+										<img src="/static/img/undraw_react.svg" alt="React"/>
 									</div>
 									<div className="blockContent">
 										<h2>
@@ -69,7 +69,7 @@ module.exports = function() {
 								</div>
 								<div className="blockElement alignCenter imageAlignTop threeByGridBlock">
 									<div className="blockImage">
-										<img src="/img/undraw_around_the_world.svg" alt="Translation"/>
+										<img src="/static/img/undraw_around_the_world.svg" alt="Translation"/>
 									</div>
 									<div className="blockContent">
 										<h2>
@@ -93,7 +93,7 @@ module.exports = function() {
 							<div className="gridBlock">
 								<div className="blockElement alignCenter imageAlignTop twoByGridBlock">
 									<div className="blockImage">
-										<img src="/img/undraw_version_control.svg" alt="Document Versioning"/>
+										<img src="/static/img/undraw_version_control.svg" alt="Document Versioning"/>
 									</div>
 									<div className="blockContent">
 										<h2>
@@ -114,7 +114,7 @@ module.exports = function() {
 								</div>
 								<div className="blockElement alignCenter imageAlignTop twoByGridBlock">
 									<div className="blockImage">
-										<img src="/img/undraw_algolia.svg" alt="Document Search"/>
+										<img src="/static/img/undraw_algolia.svg" alt="Document Search"/>
 									</div>
 									<div className="blockContent">
 										<h2>
@@ -156,7 +156,7 @@ module.exports = function() {
 										</div>
 									</div>
 									<div className="blockImage">
-										<img src="/img/undraw_setup_wizard.svg" alt="Docusaurus on a Scooter"/>
+										<img src="/static/img/undraw_setup_wizard.svg" alt="Docusaurus on a Scooter"/>
 									</div>
 								</div>
 							</div>
@@ -167,7 +167,7 @@ module.exports = function() {
 							<div className="gridBlock">
 								<div className="blockElement imageAlignSide imageAlignLeft twoByGridBlock">
 									<div className="blockImage">
-										<img src="/img/docusaurus_live.gif" alt="Docusaurus Demo"/>
+										<img src="/static/img/docusaurus_live.gif" alt="Docusaurus Demo"/>
 									</div>
 									<div className="blockContent">
 										<h2>
@@ -217,7 +217,7 @@ module.exports = function() {
 										</div>
 									</div>
 									<div className="blockImage">
-										<img src="/img/undraw_features_overview.svg" alt="Monochromatic Docusaurus"/>
+										<img src="/static/img/undraw_features_overview.svg" alt="Monochromatic Docusaurus"/>
 									</div>
 								</div>
 							</div>
@@ -229,7 +229,7 @@ module.exports = function() {
 								<div className="gridBlock">
 									<div className="blockElement alignCenter imageAlignTop threeByGridBlock">
 										<div className="blockImage">
-											<img src="/img/christopher-chedeau.jpg" alt="Christopher &quot;vjeux&quot; Chedeau"/>
+											<img src="/static/img/christopher-chedeau.jpg" alt="Christopher &quot;vjeux&quot; Chedeau"/>
 										</div>
 										<div className="blockContent">
 											<h2>
@@ -252,7 +252,7 @@ module.exports = function() {
 									</div>
 									<div className="blockElement alignCenter imageAlignTop threeByGridBlock">
 										<div className="blockImage">
-											<img src="/img/hector-ramos.png" alt="Hector Ramos"/>
+											<img src="/static/img/hector-ramos.png" alt="Hector Ramos"/>
 										</div>
 										<div className="blockContent">
 											<h2>
@@ -273,7 +273,7 @@ module.exports = function() {
 									</div>
 									<div className="blockElement alignCenter imageAlignTop threeByGridBlock">
 										<div className="blockImage">
-											<img src="/img/ricky-vetter.jpg" alt="Ricky Vetter"/>
+											<img src="/static/img/ricky-vetter.jpg" alt="Ricky Vetter"/>
 										</div>
 										<div className="blockContent">
 											<h2>

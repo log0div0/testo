@@ -7,7 +7,7 @@ module.exports = function() {
 			<section className="sitemap">
 				<div className="footerSection">
 					<a href="/" className="nav-home">
-						<img src="/logo_v.svg" alt="Testo Lang"/>
+						<img src="/static/logo_v.svg" alt="Testo Lang"/>
 					</a>
 				</div>
 				<div className="footerSection">
