@@ -9,6 +9,7 @@ module.exports = function({children}) {
 			<head>
 				<title>Testo Lang</title>
 				<link rel="stylesheet" href="/main.css" type="text/css"/>
+				<link rel="stylesheet" href="/custom.css" type="text/css"/>
 			</head>
 			<body className="sideNavVisible separateOnPageNav">
 				<Header/>

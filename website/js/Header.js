@@ -6,7 +6,7 @@ module.exports = function() {
 		<div className="fixedHeaderContainer">
 			<div className="headerWrapper wrapper">
 				<header>
-					<a href="#">
+					<a href="/">
 						<h2 className="headerTitleWithLogo">Testo Lang</h2>
 					</a>
 					<div className="navigationWrapper navigationSlider">
