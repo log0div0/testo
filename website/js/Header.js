@@ -1,5 +1,5 @@
 
-import React from 'React'
+import React from 'react'
 
 module.exports = function() {
 	return (
