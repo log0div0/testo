@@ -11,7 +11,7 @@ title: Часть 2. Устанавливаем Ubuntu Server
 
 1. Платформа `testo` установлена.
 2. Установлен менеджер виртуальных машин `virt-manager`.
-3. Имеется установочный образ [Ubuntu server 16.04](http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso) с расположением `/opt/ubuntu_server.iso`. Местоположение и название установочного файла может быть другим, в этом случае нужно будет соответствуующим образом поправить тестовый скрипт.
+3. Имеется установочный образ [Ubuntu server 16.04](http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso) с расположением `/opt/iso/ubuntu_server.iso`. Местоположение и название установочного файла может быть другим, в этом случае нужно будет соответствуующим образом поправить тестовый скрипт.
 4. (Рекомендовано) Настроена [подсветка синтаксиса](/docs/getting_started/getting_started#настройка-подсветки-языка-testo-lang) `testo-lang` в Sublime Text 3.
 5. (Рекомендовано) Проделаны шаги из [первой части](1_creating_vm).
 
@@ -50,7 +50,7 @@ title: Часть 2. Устанавливаем Ubuntu Server
 		cpus: 1
 		ram: 512Mb
 		disk_size: 5Gb
-		iso: "/home/alex/work/iso/ubuntu-16.04.6-server-amd64.iso"
+		iso: "/opt/iso/ubuntu_server.iso"
 	}
 	
 	test my_first_test {

@@ -3,7 +3,7 @@ machine my_ubuntu {
 	cpus: 1
 	ram: 512Mb
 	disk_size: 5Gb
-	iso: "/home/alex/work/iso/ubuntu-16.04.6-server-amd64.iso"
+	iso: "/opt/iso/ubuntu_server.iso"
 }
 
 test my_first_test {
