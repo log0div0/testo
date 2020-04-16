@@ -21,8 +21,8 @@ module.exports = function() {
 								<li id="nav-site-docs">
 									<a href="/docs/01/01">Документация</a>
 								</li>
-								<li>
-									<a href="#">Обучающие материалы</a>
+								<li id="nav-site-tutorials">
+									<a href="/tutorials/01/01">Обучающие материалы</a>
 								</li>
 							</ul>
 						</nav>

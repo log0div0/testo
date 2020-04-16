@@ -42,6 +42,7 @@ async function makeCategory(categoryRoot) {
 	for (let file of files) {
 		let page = await makePage(path.join(categoryRoot, file))
 		if (page) {
+			page.url = "/" + path.dirname(categoryRoot) + "/" + result.id + "/" + page.id
 			result.pages.push(page)
 		}
 	}
@@ -100,7 +101,7 @@ function NavGroup({category}) {
 	let navListItems = category.pages.map((page, index) => {
 		return (
 			<li key={index} className="navListItem">
-				<a className="navItem" href={`/docs/${category.id}/${page.id}`}>{page.name}</a>
+				<a className="navItem" href={page.url}>{page.name}</a>
 			</li>
 		)
 	})

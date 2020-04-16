@@ -29,5 +29,10 @@ app.get('/docs/:category_id/:page_id', async (req, res) => {
 	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
 })
 
+app.get('/tutorials/:category_id/:page_id', async (req, res) => {
+	const page = await makeDocPage('tutorials', req.params.category_id, req.params.page_id)
+	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
+})
+
 app.use(express.static('public'))
 app.listen(port, () => console.log(`Listening on port ${port}`))
