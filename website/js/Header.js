@@ -22,7 +22,7 @@ module.exports = function() {
 									<a href="/docs/01/01">Документация</a>
 								</li>
 								<li>
-									<a href="#">Уроки</a>
+									<a href="#">Обучающие материалы</a>
 								</li>
 							</ul>
 						</nav>
