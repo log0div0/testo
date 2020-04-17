@@ -3,28 +3,55 @@ network nat {
 	mode: "nat"
 }
 
+param LAN1_ip "10.1.0.0"
 network LAN1 {
 	mode: "internal"
 }
 
-network OSPF1 {
+param LAN2_ip "10.108.1.0"
+network LAN2 {
 	mode: "internal"
 }
 
-network OSPF2 {
-	mode: "internal"
-}
-
-network BGP {
-	mode: "internal"
-}
-
+param LAN3_ip "10.8.1.0"
 network LAN3 {
 	mode: "internal"
 }
 
+param OSPF1_ip "10.1.1.0"
+network OSPF1 {
+	mode: "internal"
+}
+
+param OSPF2_ip "10.1.2.0"
+network OSPF2 {
+	mode: "internal"
+}
+
+param BGP_ip "172.33.0.0"
+param BGP_netmask "29"
+network BGP {
+	mode: "internal"
+}
+
+
 param default_password "Cont-4.X"
 param default_netmask "24"
+
+param MS_ip "10.1.0.10"
+param MS_netmask "255.255.255.0"
+
+machine MS {
+	cpus: 1
+	ram: 2Gb
+	iso: "${ISO_DIR}/win7.iso"
+	disk_size: 20Gb
+	nic LAN1_side: {
+		attached_to: "LAN1"
+		mac: "52:54:00:00:55:AA"
+		adapter_type: "e1000"
+	}
+}
 
 param CUS_id "150"
 param CUS_ip "10.1.0.2"
@@ -74,6 +101,9 @@ machine router1 {
 param UB1_id "250"
 
 param CUS_OSPF1_ip "10.1.1.2"
+param CUS_OSPF2_ip "10.1.2.2"
+param CUS_BGP_ip "10.1.2.2"
+param CUS_LAN3_ip "10.8.1.1"
 
 machine UB1 {
 	cpus: 2
@@ -102,6 +132,79 @@ machine UB1 {
 	nic LAN3_side: {
 		attached_to: "LAN3"
 		mac: "52:54:00:00:22:DD"
+		adapter_type: "e1000"
+	}
+}
+
+param router3_hostname "router3"
+param router3_login "router3"
+
+param router3_LAN2_ip "10.108.1.1"
+param router3_OSPF2_ip "10.1.2.1"
+
+machine router3 {
+	cpus: 1
+	ram: 512Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+
+	nic nat: {
+		attached_to: "nat"
+	}
+
+	nic LAN2_side: {
+		attached_to: "LAN2"
+		mac: "52:54:00:00:33:AA"
+		adapter_type: "e1000"
+	}
+
+	nic OSPF2_side: {
+		attached_to: "OSPF2"
+		mac: "52:54:00:00:33:BB"
+		adapter_type: "e1000"
+	}
+}
+
+param LAN2_ARM_hostname "LAN2-ARM"
+param LAN2_ARM_login "lan2-arm"
+
+param LAN2_ARM_ip "10.108.1.2"
+
+machine LAN2_ARM {
+	cpus: 1
+	ram: 512Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+
+	nic nat: {
+		attached_to: "nat"
+	}
+
+	nic LAN2_side: {
+		attached_to: "LAN2"
+		mac: "52:54:00:00:44:AA"
+		adapter_type: "e1000"
+	}
+}
+
+param LAN3_ARM_hostname "LAN3-ARM"
+param LAN3_ARM_login "lan3-arm"
+
+param LAN3_ARM_ip "10.8.1.2"
+
+machine LAN3_ARM {
+	cpus: 1
+	ram: 512Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+
+	nic nat: {
+		attached_to: "nat"
+	}
+
+	nic LAN3_side: {
+		attached_to: "LAN3"
+		mac: "52:54:00:00:66:AA"
 		adapter_type: "e1000"
 	}
 }
