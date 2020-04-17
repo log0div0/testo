@@ -4,14 +4,14 @@ import React from 'react'
 module.exports = function() {
 	return (
 		<div className="fixedHeaderContainer">
-			<div className="headerWrapper wrapper">
+			<div className="wrapper">
 				<header>
 					<a href="/">
 						<h2 className="headerTitleWithLogo">Testo Lang</h2>
 					</a>
-					<div className="navigationWrapper navigationSlider">
+					<div className="navigationSlider">
 						<nav className="slidingNav">
-							<ul className="nav-site nav-site-internal">
+							<ul>
 								<li>
 									<a href="#">Загрузить</a>
 								</li>

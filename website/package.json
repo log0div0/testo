@@ -5,7 +5,6 @@
   "dependencies": {
     "@mdx-js/runtime": "^1.5.8",
     "express": "^4.17.1",
-    "node-sass": "^4.13.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },

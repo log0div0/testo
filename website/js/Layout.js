@@ -8,9 +8,9 @@ module.exports = function({children}) {
 		<html>
 			<head>
 				<title>Testo Lang</title>
-				<link rel="stylesheet" href="/main.css" type="text/css"/>
+				<link rel="stylesheet" href="/static/client.css" type="text/css"/>
 			</head>
-			<body className="sideNavVisible separateOnPageNav">
+			<body>
 				<Header/>
 				<div className="navPusher">
 					{children}
