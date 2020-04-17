@@ -43,11 +43,11 @@ for (let x of xxx) {
 }
 
 if (location.pathname.startsWith("/docs")) {
-	document.getElementById("nav-site-docs").className = "siteNavGroupActive siteNavItemActive";
+	document.getElementById("nav-site-docs").className = "siteNavItemActive";
 }
 
 if (location.pathname.startsWith("/tutorials")) {
-	document.getElementById("nav-site-tutorials").className = "siteNavGroupActive siteNavItemActive";
+	document.getElementById("nav-site-tutorials").className = "siteNavItemActive";
 }
 
 var ul = document.querySelector("ul.toc-headings")

@@ -7,7 +7,7 @@ module.exports = function() {
 			<div className="wrapper">
 				<header>
 					<a href="/">
-						<h2 className="headerTitleWithLogo">Testo Lang</h2>
+						<h2>Testo Lang</h2>
 					</a>
 					<div className="navigationSlider">
 						<nav className="slidingNav">
