@@ -164,16 +164,14 @@ function DocsLayout({children, toc, prevPage, nextPage}) {
 			<div className="docMainWrapper wrapper">
 				<div className="docsNavContainer">
 					<nav className="toc">
-						<div className="toggleNav">
-							<section className="navWrapper wrapper">
-								<div className="navGroups">
-									{navGroups}
-								</div>
-							</section>
-						</div>
+						<section className="navWrapper wrapper">
+							<div className="navGroups">
+								{navGroups}
+							</div>
+						</section>
 					</nav>
 				</div>
-				<div className="container mainContainer docsContainer">
+				<div className="mainContainer">
 					<div className="wrapper">
 						<div className="post">
 							{children}

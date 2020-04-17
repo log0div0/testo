@@ -5,9 +5,7 @@ body {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 	font-size: 16px;
 	line-height: 1.5;
-	-ms-text-size-adjust: 100%;
-	-webkit-text-size-adjust: 100%;
-	word-wrap: break-word; }
+}
 
 @media only screen and (min-width: 736px) {
 	body {
@@ -98,9 +96,6 @@ ol ul ol,
 ol ol ol {
 	list-style-type: lower-alpha; }
 
-li {
-	word-wrap: break-all; }
-
 li > p {
 	margin-top: 1em; }
 
@@ -146,7 +141,10 @@ blockquote {
 	font-size: 16px;
 	margin: 0;
 	margin-bottom: 16px;
-	padding: 0 1em; }
+	background-color: rgba(255, 229, 100, 0.3);
+	border-left: 8px solid #ffe564;
+	padding: 15px 30px 15px 15px;
+}
 
 blockquote > :first-child {
 	margin-top: 0; }
@@ -179,15 +177,6 @@ pre code {
 	white-space: pre;
 	word-break: normal;
 	word-wrap: normal; }
-
-
-
-/*-------------------------------------------------------------------*/
-
-.wrapper {
-	margin: 0px auto;
-	max-width: 1400px;
-	padding: 0 20px; }
 
 
 /*-----------------------------------------------------------------*/
@@ -279,12 +268,143 @@ pre code {
 
 /*-------------------------------------------------------------------------*/
 
+.navPusher {
+	padding-top: 100px;
+}
 
-/* Links */
+@media screen and (min-width: 1024px) {
+	.navPusher {
+		padding-top: 50px;
+	}
+}
+
+/*-------------------------------------------------------------------------*/
+
+.wrapper {
+	margin: 0px auto;
+	max-width: 1400px;
+	padding: 0 20px;
+}
+
+.docMainWrapper .wrapper {
+	padding-left: 0;
+	padding-right: 0;
+}
+
+@media only screen and (min-width: 1024px) {
+	.docMainWrapper {
+		display: flex;
+	}
+	.docMainWrapper > * {
+		margin: 0 24px;
+	}
+	.docMainWrapper > *:first-child {
+		margin-left: 0;
+	}
+	.docMainWrapper > *:last-child {
+		margin-right: 0;
+	}
+}
+
+/*-------------------------------------------------------------------------*/
+
+.hide {
+	display: none; }
+
+.collapsible {
+	cursor: pointer; }
+
+.collapsible .arrow {
+	float: right;
+	margin-right: 8px;
+	margin-top: -4px;
+	transform: rotate(90deg);
+	transition: transform 200ms linear; }
+
+.collapsible .arrow.rotate {
+	transform: rotate(180deg); }
+
+.toc .navGroups {
+	display: none;
+}
+
+.toc .navGroup {
+	margin-bottom: 16px;
+}
+
+.toc .navGroup .navListItem {
+	margin: 0;
+}
+
+.toc .navGroup .navGroupCategoryTitle {
+	color: #393939;
+	font-size: 18px;
+	font-weight: 500;
+	line-height: 1.2em;
+	margin-bottom: 8px;
+	margin-top: 0;
+}
+
+.toc ul {
+	padding: 0 8px; }
+
+.toc ul li a {
+	border: none;
+	color: #717171;
+	display: block;
+	font-size: 14px;
+	padding: 4px 0;
+	transition: color 0.3s; }
+
+.toc ul li a:hover,
+.toc ul li a:focus,
+.toc ul li.navListItemActive a {
+	color: #2E8555;
+}
+
+@media only screen and (min-width: 1024px) {
+	.docsNavContainer {
+		flex: 0 0 240px;
+		height: calc(100vh - 50px);
+		position: sticky;
+		overflow-y: auto;
+		top: 50px;
+	}
+	.toc {
+		padding: 40px 0;
+	}
+	.toc .navGroups {
+		display: block;
+		padding: 0px;
+		padding-top: 8px;
+	}
+}
+
+/*-------------------------------------------------------------------------*/
+.mainContainer {
+		min-width: 0;
+}
+
+.mainContainer {
+	flex: 1 1 0%;
+	max-width: 100%;
+	padding: 40px 0;
+}
+
+.mainContainer .wrapper .post .postHeaderTitle {
+	margin-top: 0;
+}
+
+/*-------------------------------------------------------------------------*/
+
 .anchor {
 	display: block;
 	position: relative;
 	top: -80px; }
+
+@media only screen and (max-width: 735px) {
+	.anchor {
+		top: -144px; } }
 
 .hash-link {
 	line-height: 1;
@@ -318,7 +438,6 @@ pre code {
 	background: #2E8555;
 	color: #fff; }
 
-/* Headers */
 h1:hover .hash-link,
 h2:hover .hash-link,
 h3:hover .hash-link,
@@ -326,62 +445,8 @@ h4:hover .hash-link {
 	opacity: 0.5;
 	transition: none; }
 
-/* Blockquotes */
-blockquote {
-	background-color: rgba(255, 229, 100, 0.3);
-	border-left: 8px solid #ffe564;
-	padding: 15px 30px 15px 15px; }
+/*-------------------------------------------------------------------------*/
 
-/* Utils */
-
-.wrapper blockquote > p:first-child {
-	padding-top: 0; }
-
-/* End of Home Container */
-/* Main Container */
-.mainContainer {
-	flex: 1 1 0%;
-	max-width: 100%;
-	padding: 40px 0; }
-
-.mainContainer .wrapper {
-	text-align: left; }
-
-.mainContainer .wrapper .post {
-	position: relative; }
-
-.mainContainer .wrapper .post .postHeaderTitle {
-	margin-top: 0;
-	padding: 0; }
-
-.docsContainer .wrapper .post .postHeader:before,
-.docsContainer .wrapper .post .postHeaderTitle:before {
-	content: '';
-	display: block;
-	height: 90px;
-	/* fixed header height and empty space below it */
-	margin-top: -90px;
-	/* negative fixed header height and empty space below it  */
-	visibility: hidden;
-	pointer-events: none; }
-
-@media only screen and (min-width: 1024px) {
-	.mainContainer .wrapper .post {
-		display: block; } }
-
-@media only screen and (max-width: 1023px) {
-	.docsContainer .wrapper .post .postHeader:before,
-	.docsContainer .wrapper .post .postHeaderTitle:before {
-		content: '';
-		display: block;
-		height: 200px;
-		/* fixed header height and empty space below it */
-		margin-top: -200px;
-		/* negative fixed header height and empty space below it  */
-		visibility: hidden;
-		pointer-events: none; } }
-
-/* GridBlock */
 .gridBlock {
 	padding: 0; }
 
@@ -389,16 +454,8 @@ blockquote {
 	box-sizing: border-box; }
 
 .gridBlock .twoByGridBlock img,
-.gridBlock .threeByGridBlock img,
-.gridBlock .fourByGridBlock img {
+.gridBlock .threeByGridBlock img {
 	max-width: 100%; }
-
-.gridBlock .gridClear {
-	clear: both; }
-
-@media only screen and (max-width: 735px) {
-	.gridBlock .fourByGridBlock {
-		flex: 1 0 26%; } }
 
 @media only screen and (min-width: 736px) {
 	.gridBlock {
@@ -415,22 +472,13 @@ blockquote {
 		flex: 1 0 40%; }
 	.gridBlock .threeByGridBlock {
 		flex: 1 0 26%; }
-	.gridBlock .fourByGridBlock {
-		flex: 1 0 20%; }
 	h2 + .gridBlock {
 		padding-top: 20px; } }
 
-@media only screen and (min-width: 1400px) {
-	.gridBlock {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap; } }
+/*-------------------------------------------------------------------------*/
 
 .alignCenter {
 	text-align: center; }
-
-.alignRight {
-	text-align: right; }
 
 .imageAlignSide {
 	display: flex;
@@ -450,17 +498,10 @@ blockquote {
 .imageAlignSide .blockContent {
 	flex: 1 1; }
 
-.imageAlignBottom .blockImage {
-	margin: 0 auto 20px;
-	max-width: 730px; }
-
-.imageAlignBottom.alignCenter .blockImage {
-	margin-left: auto;
-	margin-right: auto; }
-
 .imageAlignTop .blockImage {
 	margin-bottom: 20px;
-	max-width: 80px; }
+	max-width: 60%;
+}
 
 .imageAlignTop.alignCenter .blockImage {
 	margin-left: auto;
@@ -472,8 +513,10 @@ blockquote {
 .imageAlignLeft .blockImage {
 	margin-right: 40px; }
 
-/* End of GridBlock */
-/* Start of Container */
+
+/*-------------------------------------------------------------------------*/
+
+
 .container .gridBlock .blockContent p {
 	padding: 0; }
 
@@ -512,57 +555,11 @@ blockquote {
 	.container.paddingTop {
 		padding-top: 20px; } }
 
-.navPusher {
-	left: 0;
-	min-height: 100%;
-	padding-top: 100px;
-	position: relative;
-	z-index: 99; }
+.testimonials img {
+	border-radius: 50%; }
 
-.navPusher:after {
-	background: rgba(0, 0, 0, 0.4);
-	content: '';
-	height: 0;
-	opacity: 0;
-	position: absolute;
-	right: 0;
-	top: 0;
-	-webkit-transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
-	transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
-	width: 0; }
+/*-------------------------------------------------------------------------*/
 
-@media screen and (min-width: 1024px) {
-	.navPusher {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-		min-height: calc(100vh - 50px);
-		padding-top: 50px; }
-	/* those make the footer sticky and work even in IE 11 */
-	.navPusher > :first-child {
-		flex-grow: 1; } }
-
-/* Start of Docs Main */
-.docMainWrapper .wrapper {
-	padding-left: 0;
-	padding-right: 0;
-	padding-top: 10px; }
-
-@media only screen and (min-width: 1024px) {
-	.docMainWrapper {
-		width: 100%; }
-	.docMainWrapper > * {
-		margin: 0 24px; }
-	.docMainWrapper > *:first-child {
-		margin-left: 0; }
-	.docMainWrapper > *:last-child {
-		margin-right: 0; }
-	.docMainWrapper .mainContainer {
-		min-width: 0;
-		/* Hack needed for flex-basis to work properly. */ } }
-
-/* End of Docs Main */
-/* Start of Docs Navigation */
 .docs-prevnext {
 	padding: 20px 0; }
 
@@ -598,158 +595,11 @@ blockquote {
 		overflow: hidden;
 		text-overflow: ellipsis; } }
 
-/* End of Docs Navigation */
-/* Start of Docs Sidebar */
-.hide {
-	display: none; }
+/*-------------------------------------------------------------------------*/
 
-.collapsible {
-	cursor: pointer; }
-
-.collapsible .arrow {
-	float: right;
-	margin-right: 8px;
-	margin-top: -4px;
-	transform: rotate(90deg);
-	transition: transform 200ms linear; }
-
-.collapsible .arrow.rotate {
-	transform: rotate(180deg); }
-
-@media only screen and (max-width: 1023px) {
-	.docsNavContainer {
-		background: #fff;
-		left: 0;
-		position: fixed;
-		width: 100%;
-		z-index: 100; } }
-
-@media only screen and (min-width: 1024px) {
-	.docsNavContainer {
-		flex: 0 0 240px;
-		height: calc(100vh - 50px);
-		position: -webkit-sticky;
-		position: sticky;
-		overflow-y: auto;
-		top: 50px;
-		/* Height of navbar */ } }
-
-.docsNavContainer .toc .navWrapper {
-	padding: 0; }
-
-@media only screen and (max-width: 735px) {
-	.anchor {
-		top: -144px; } }
-
-@media only screen and (min-width: 1024px) {
-	.toc {
-		padding: 40px 0; } }
-
-.toc section {
-	padding: 0;
-	position: relative; }
-
-.toc section .navGroups {
-	display: none;
-	padding: 48px 20px 60px; }
-
-.toc .toggleNav {
-	color: #393939;
-	position: relative; }
-
-.toc .toggleNav .navToggle {
-	cursor: pointer;
-	height: 32px;
-	margin-right: 10px;
-	position: relative;
-	text-align: left;
-	width: 18px; }
-
-.toc .toggleNav .navGroup {
-	margin-bottom: 16px; }
-
-.toc .toggleNav .subNavGroup {
-	margin-bottom: 0; }
-
-.toc .toggleNav .navGroup .navGroupCategoryTitle {
-	color: #393939;
-	font-size: 18px;
-	font-weight: 500;
-	line-height: 1.2em;
-	margin-bottom: 8px;
-	margin-top: 0; }
-
-.toc .toggleNav .navGroup .navGroupSubcategoryTitle {
-	color: #393939;
-	font-size: 14px;
-	font-weight: 500;
-	line-height: 1.5;
-	margin-bottom: 0;
-	margin-top: 0;
-	padding: 4px 0; }
-
-.toc .toggleNav .navGroup .navListItem {
-	margin: 0; }
-
-.toc .toggleNav .navGroup h3 i:not(:empty) {
-	box-sizing: border-box;
-	color: rgba(57, 57, 57, 0.5);
-	display: inline-block;
-	height: 16px;
-	margin-right: 10px;
-	text-align: center;
-	transition: color 0.2s;
-	width: 16px; }
-
-.toc .toggleNav ul {
-	padding: 0 8px; }
-
-.toc .toggleNav ul li {
-	list-style-type: none;
-	padding: 0; }
-
-.toc .toggleNav ul li a {
-	border: none;
-	color: #717171;
-	display: block;
-	font-size: 14px;
-	padding: 4px 0;
-	transition: color 0.3s; }
-
-.toc .toggleNav ul li a:hover,
-.toc .toggleNav ul li a:focus {
-	color: #2E8555; }
-
-.toc .toggleNav ul li.navListItemActive a {
-	color: #2E8555; }
-
-@media only screen and (min-width: 1024px) {
-	.docMainWrapper {
-		display: flex;
-		flex-flow: row nowrap; }
-	.docMainWrapper .wrapper {
-		padding-top: 0;
-		padding-left: 0;
-		padding-right: 0; } }
-
-/* Inner page navigation */
 .onPageNav {
 	display: none;
 	margin-bottom: 40px; }
-
-.onPageNav::-webkit-scrollbar {
-	width: 7px; }
-
-.onPageNav::-webkit-scrollbar-track {
-	background: #f1f1f1;
-	border-radius: 10px; }
-
-.onPageNav::-webkit-scrollbar-thumb {
-	background: #888;
-	border-radius: 10px; }
-
-.onPageNav::-webkit-scrollbar-thumb:hover {
-	background: #555; }
 
 .onPageNav a {
 	color: #717171; }
@@ -773,46 +623,8 @@ blockquote {
 .onPageNav ul ul li {
 	padding-bottom: 5px; }
 
-@media only screen and (min-width: 1024px) {
-	.toc section .navGroups {
-		display: block;
-		padding: 0px;
-		padding-top: 8px; }
-	.navBreadcrumb h2 {
-		padding: 0 10px; } }
-
 @supports (position: -webkit-sticky) or (position: sticky) {
-	@media only screen and (max-width: 1023px) {
-		.tocActive .onPageNav {
-			background: #fff;
-			bottom: 0;
-			display: block;
-			left: 0;
-			overflow-y: auto;
-			overscroll-behavior: contain;
-			padding: 0 20px;
-			position: fixed;
-			right: 0;
-			top: 148px;
-			z-index: 10;
-			margin-bottom: 0; }
-		.tocActive .singleRowMobileNav .onPageNav {
-			top: 98px; }
-		.tocActive .navToggle,
-		.tocActive .navBreadcrumb h2 {
-			visibility: hidden; }
-		.tocActive .onPageNav > .toc-headings {
-			padding: 12px 0; } }
 	@media only screen and (min-width: 1024px) {
-		.separateOnPageNav .wrapper,
-		.separateOnPageNav .headerWrapper.wrapper {
-			max-width: 1400px; }
-		.separateOnPageNav .toc {
-			width: auto; }
-		.separateOnPageNav.sideNavVisible .navPusher .mainContainer {
-			flex: 1 auto;
-			max-width: 100%;
-			min-width: 0; }
 		.onPageNav {
 			align-self: flex-start;
 			display: block;
@@ -826,31 +638,24 @@ blockquote {
 		.onPageNav > .toc-headings {
 			border-left: 1px solid #e0e0e0;
 			padding: 10px 0 2px 15px; }
-		.tocToggler {
-			display: none; } } }
+	}
+}
+
+/*-------------------------------------------------------------------------*/
 
 /* Start of Footer */
 .nav-footer {
 	background: #20232a;
-	border: none;
-	color: #202020;
 	font-size: 15px;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	font-weight: 400;
 	line-height: 24px;
 	padding-bottom: 2em;
 	padding-top: 2em;
-	position: relative; }
-
-@media only screen and (min-width: 1024px) {
-	.nav-footer {
-		flex-shrink: 0; } }
+}
 
 .nav-footer .sitemap {
 	display: flex;
 	justify-content: space-between;
-	margin: 0 auto 3em;
+	margin: 0 auto;
 	max-width: 1080px; }
 
 .nav-footer .sitemap div {
@@ -869,9 +674,7 @@ blockquote {
 
 @media only screen and (max-width: 735px) {
 	.nav-footer .sitemap {
-		display: flex;
 		flex-direction: column;
-		margin: 0 2em 3em;
 		width: calc(100% - 4em); }
 	.nav-footer .sitemap > div {
 		margin-bottom: 18px; } }
@@ -887,50 +690,15 @@ blockquote {
 	color: white;
 	text-decoration: none; }
 
-.nav-footer .sitemap h5 > a:hover,
-.nav-footer .sitemap h5 > a:focus {
-	color: white;
-	text-decoration: none; }
-
 .nav-footer .sitemap h5,
 .nav-footer .sitemap h6 {
-	margin: 0 0 10px; }
-
-.nav-footer .sitemap h5 {
+	margin: 0 0 10px;
 	color: white; }
-
-.nav-footer .sitemap h6,
-.nav-footer .sitemap h5 > a,
-.nav-footer .sitemap h6 > a {
-	color: white; }
-
-.nav-footer .sitemap h5 > a,
-.nav-footer .sitemap h6 > a {
-	margin: 0 -10px; }
-
-.nav-footer .fbOpenSource {
-	display: block;
-	margin: 1em auto;
-	opacity: 0.4;
-	transition: opacity 0.15s ease-in-out;
-	width: 170px; }
-
-.nav-footer .fbOpenSource:hover {
-	opacity: 1; }
-
-.nav-footer .copyright {
-	color: rgba(255, 255, 255, 0.4);
-	text-align: center; }
 
 .nav-footer .social {
 	padding: 5px 0; }
 
-/* End of Footer */
-.testimonials img {
-	border-radius: 50%; }
-
-table td:first-child > code {
-	white-space: nowrap; }
+/*-------------------------------------------------------------------------*/
 
 .announcement {
 	background-color: #20232a;
@@ -962,22 +730,7 @@ table td:first-child > code {
 .index-hero-project-keywords {
 	color: #2E8555; }
 
-@keyframes jackInTheBox {
-	from {
-		opacity: 0;
-		transform: scale(0.1) rotate(30deg);
-		transform-origin: center bottom; }
-	50% {
-		transform: rotate(-10deg); }
-	70% {
-		transform: rotate(3deg); }
-	to {
-		opacity: 1;
-		transform: scale(1); } }
-
 .index-hero-logo {
-	animation-duration: 2s;
-	animation-name: jackInTheBox;
 	float: right;
 	margin-top: 20px;
 	padding: 20px;
@@ -994,9 +747,6 @@ table td:first-child > code {
 	font-weight: bold;
 	margin-right: 24px;
 	padding: 18px 36px; }
-
-.index-ctas-github-button {
-	vertical-align: sub; }
 
 @media only screen and (max-width: 768px) {
 	.announcement {
@@ -1017,14 +767,3 @@ table td:first-child > code {
 		text-align: center; }
 	.index-ctas-github-button {
 		display: none; } }
-
-.imageAlignTop .blockImage {
-	max-width: 60%; }
-
-@media only screen and (max-width: 768px) {
-	.gridBlock .blockElement.imageAlignTop {
-		margin-bottom: 80px; } }
-
-.docImage {
-	margin: 3rem auto;
-	max-width: 400px; }
