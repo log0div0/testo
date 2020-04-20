@@ -1,0 +1,58 @@
+include "declarations.testo"
+include "../common_win7.testo"
+
+test MS_install_win7 {
+	MS install_win7("testo")
+}
+
+test MS_install_guest_additions: MS_install_win7 {
+	MS install_guest_additions_win7()
+}
+
+[no_snapshots: true]
+test MS_configure_windows: MS_install_guest_additions {
+	MS {
+		press LEFTMETA
+		mouse click "Панель управления"
+		mouse click "Категория"
+		mouse click "Мелкие значки"
+		mouse click "Учетные записи"
+		mouse click "Изменение параметров контроля учетных записей"
+		mouse dclick "Никогда".move_up(50);
+		mouse click "ОК".from_bottom(0);
+		wait "Microsoft Windows"; press Left, Enter
+		wait "Внесение изменений в учетную запись"
+		press LeftAlt+F4
+		wait "Корзина"
+	}
+}
+
+[no_snapshots: true]
+test MS_install_cryptopro: MS_configure_windows {
+	MS {
+		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
+		mouse dclick "CSPSetup"
+		mouse click "Установить (рекомендуется)"
+		wait "CSP успешно установлен" timeout 10m
+		mouse click "OK"
+		sleep 2s
+	}
+}
+
+test MS_install_ms: MS_install_cryptopro {
+	MS {
+		copyto "${MS_DIR}/MS" "C:\\Users\\testo\\Desktop\\MS"
+		mouse dclick "MS"
+		mouse dclick "setup"
+		mouse click "Установить".from_bottom(0).center_bottom()
+		wait "Вас приветствует программа установки" timeout 10m
+		mouse click "Далее".from_bottom(0)
+		mouse click "Я принимаю условия"; mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Папка назначения"; mouse click "Далее".from_bottom(0).center_bottom()
+		mouse click "Установить".from_bottom(0).center_bottom()
+		wait "Программа завершена" timeout 5m; mouse click " Готово".from_bottom(0)
+		wait "Требуется перезагрузка"; press Enter
+		sleep 5s
+		wait "Корзина" timeout 5m
+	}
+}

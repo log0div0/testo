@@ -1,0 +1,77 @@
+include "declarations.testo"
+include "../common_ubuntu_server.testo"
+
+[no_snapshots: true]
+test LAN2_ARM_install_ubuntu {
+	LAN2_ARM install_ubuntu_server("${LAN2_ARM_hostname}", "${LAN2_ARM_login}", "${default_password}")
+}
+
+test LAN2_ARM_install_guest_additions: LAN2_ARM_install_ubuntu {
+	LAN2_ARM install_guest_additions_ubuntu_server("${LAN2_ARM_hostname}", "${LAN2_ARM_login}", "${default_password}")
+}
+
+test LAN2_ARM_prepare: LAN2_ARM_install_guest_additions {
+	LAN2_ARM {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:44:aa LAN2_side
+			apt-get update
+		"""
+
+		unplug_nat("${LAN2_ARM_login}", "${default_password}")
+		exec bash "ip a a ${LAN2_ARM_ip}/${default_netmask} dev LAN2_side"
+		exec bash "ip l s LAN2_side up"
+	}
+}
+
+[no_snapshots: true]
+test LAN3_ARM_install_ubuntu {
+	LAN3_ARM install_ubuntu_server("${LAN3_ARM_hostname}", "${LAN3_ARM_login}", "${default_password}")
+}
+
+test LAN3_ARM_install_guest_additions: LAN3_ARM_install_ubuntu {
+	LAN3_ARM install_guest_additions_ubuntu_server("${LAN3_ARM_hostname}", "${LAN3_ARM_login}", "${default_password}")
+}
+
+test LAN3_ARM_prepare: LAN3_ARM_install_guest_additions {
+	LAN3_ARM {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:66:aa LAN3_side
+			apt-get update
+		"""
+
+		unplug_nat("${LAN3_ARM_login}", "${default_password}")
+		exec bash "ip a a ${LAN3_ARM_ip}/${default_netmask} dev LAN3_side"
+		exec bash "ip l s LAN3_side up"
+	}
+}
+
+[no_snapshots: true]
+test LAN4_ARM_install_ubuntu {
+	LAN4_ARM install_ubuntu_server("${LAN4_ARM_hostname}", "${LAN4_ARM_login}", "${default_password}")
+}
+
+test LAN4_ARM_install_guest_additions: LAN4_ARM_install_ubuntu {
+	LAN4_ARM install_guest_additions_ubuntu_server("${LAN4_ARM_hostname}", "${LAN4_ARM_login}", "${default_password}")
+}
+
+test LAN4_ARM_prepare: LAN4_ARM_install_guest_additions {
+	LAN4_ARM {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:77:aa LAN4_side
+			apt-get update
+		"""
+
+		unplug_nat("${LAN4_ARM_login}", "${default_password}")
+		exec bash "ip a a ${LAN4_ARM_ip}/${default_netmask} dev LAN4_side"
+		exec bash "ip l s LAN4_side up"
+	}
+}

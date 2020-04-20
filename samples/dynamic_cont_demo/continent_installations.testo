@@ -1,0 +1,74 @@
+include "declarations.testo"
+include "../common_continent.testo"
+
+[no_snapshots: true]
+test CUS_install_continent {
+	CUS install_continent("${CUS_id}")
+}
+
+test CUS_init: CUS_install_continent {
+	CUS {
+		select_local_menu("Инициализация");
+		wait "Инициализировать устройство как"; press Up*2; select_local_menu("Начать инициализацию")
+		wait "Успешно" timeout 5m; press Enter;
+		select_local_menu("Сертификаты");
+		select_local_menu("Сертификаты УЦ")
+		wait "Кому выдан"; press F2
+		select_local_menu("Выпуск корневого сертификата")
+		wait "Страна";
+		press Down; type "Security Code"
+		press Down; type "DevOps"
+		press Down; type "CA"; press Enter
+		wait "Успешно"; press Enter
+		select_local_menu("Возврат в предыдущее меню")
+		wait "Кому выдан"; press Esc
+		select_local_menu("Сертификаты управления")
+		wait "Кому выдан"; press F2
+		select_local_menu("Выпуск сертификата управления для ЦУС")
+		wait "Страна"; press Down*3; type "Control"; press Enter
+		wait "Выберите корневой сертификат"; select_local_menu("CA")
+		wait "Успешно"; press Enter
+		wait "Выпуск сертификата"; press Esc
+		wait "Кому выдан"; press Esc
+		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Настройка ЦУС")
+		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
+		wait "Выбор сертификата управления"; select_local_menu("Control")
+		wait "Пароль для встроенного администратора"; type "${default_password}"; press Down; type "${default_password}"; press Enter
+		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
+		wait "Настройка интерфейса управления"; type "${CUS_ip}/${default_netmask}"; press Tab
+		type "${router1_LAN1_ip}";
+		press Enter
+		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
+		wait "Система успешно настроена" timeout 15m; press Enter
+		wait "Главное меню"
+	}
+}
+
+[no_snapshots: true]
+test UB1_install_continent {
+	UB1 install_continent("${UB1_id}")
+}
+
+test UB1_init: UB1_install_continent {
+	UB1 {
+		select_local_menu("Инициализация");
+		wait "Инициализировать устройство как"; press Enter
+		wait "Успешно" timeout 6m; press Enter;
+		wait "Главное меню";
+	}
+}
+
+[no_snapshots: true]
+test UB2_install_continent {
+	UB2 install_continent("${UB2_id}")
+}
+
+test UB2_init: UB2_install_continent {
+	UB2 {
+		select_local_menu("Инициализация");
+		wait "Инициализировать устройство как"; press Enter
+		wait "Успешно" timeout 6m; press Enter;
+		wait "Главное меню";
+	}
+}

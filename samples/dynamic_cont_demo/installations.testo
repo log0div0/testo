@@ -1,243 +1,8 @@
 include "declarations.testo"
-include "../common_ubuntu_server.testo"
-include "../common_continent.testo"
-include "../common_win7.testo"
-
-[no_snapshots: true]
-test router1_install_ubuntu {
-	router1 install_ubuntu_server("${router1_hostname}", "${router1_login}", "${default_password}")
-}
-
-test router1_install_guest_additions: router1_install_ubuntu {
-	router1 install_guest_additions_ubuntu_server("${router1_hostname}", "${router1_login}", "${default_password}")
-}
-
-test router1_prepare: router1_install_guest_additions {
-	router1 {
-		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
-		exec bash "chmod +x /tmp/rename_net.sh"
-
-		exec bash """
-			/tmp/rename_net.sh 52:54:00:00:11:aa LAN1_side
-			/tmp/rename_net.sh 52:54:00:00:11:bb OSPF1_side
-			apt-get update
-		"""
-
-		unplug_nat("${router1_login}", "${default_password}")
-		exec bash "ip a a ${router1_LAN1_ip}/${default_netmask} dev LAN1_side"
-		exec bash "ip l s LAN1_side up"
-
-		exec bash "ip a a ${router1_OSPF1_ip}/${default_netmask} dev OSPF1_side"
-		exec bash "ip l s OSPF1_side up"
-
-		exec bash "sysctl net.ipv4.ip_forward=1"
-
-		#exec bash "ip r a 172.33.0.8/${BGP_netmask} via 10.1.1.2"
-	}
-}
-
-[no_snapshots: true]
-test router3_install_ubuntu {
-	router3 install_ubuntu_server("${router3_hostname}", "${router3_login}", "${default_password}")
-}
-
-test router3_install_guest_additions: router3_install_ubuntu {
-	router3 install_guest_additions_ubuntu_server("${router3_hostname}", "${router3_login}", "${default_password}")
-}
-
-test router3_prepare: router3_install_guest_additions {
-	router3 {
-		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
-		exec bash "chmod +x /tmp/rename_net.sh"
-
-		exec bash """
-			/tmp/rename_net.sh 52:54:00:00:33:aa LAN2_side
-			/tmp/rename_net.sh 52:54:00:00:33:bb OSPF2_side
-			apt-get update
-		"""
-
-		unplug_nat("${router3_login}", "${default_password}")
-		exec bash "ip a a ${router3_LAN2_ip}/${default_netmask} dev LAN2_side"
-		exec bash "ip l s LAN2_side up"
-
-		exec bash "ip a a ${router3_OSPF2_ip}/${default_netmask} dev OSPF2_side"
-		exec bash "ip l s OSPF2_side up"
-
-		exec bash "sysctl net.ipv4.ip_forward=1"
-
-		/*exec bash """
-			ip r a 10.1.0.0/24 via 172.33.0.1
-			ip r a 10.0.0.201/32 via 172.33.0.1
-			ip r a 10.0.0.101/32 via 172.33.0.1
-			ip r a 10.0.0.202/32 via 172.33.0.10
-			ip r a 10.0.0.102/32 via 172.33.0.10
-		"""*/
-	}
-}
-
-test MS_install_win7 {
-	MS install_win7("testo")
-}
-
-test MS_install_guest_additions: MS_install_win7 {
-	MS install_guest_additions_win7()
-}
-
-[no_snapshots: true]
-test MS_configure_windows: MS_install_guest_additions {
-	MS {
-		press LEFTMETA
-		mouse click "Панель управления"
-		mouse click "Категория"
-		mouse click "Мелкие значки"
-		mouse click "Учетные записи"
-		mouse click "Изменение параметров контроля учетных записей"
-		mouse dclick "Никогда".move_up(50);
-		mouse click "ОК".from_bottom(0);
-		wait "Microsoft Windows"; press Left, Enter
-		wait "Внесение изменений в учетную запись"
-		press LeftAlt+F4
-		wait "Корзина"
-	}
-}
-
-[no_snapshots: true]
-test MS_install_cryptopro: MS_configure_windows {
-	MS {
-		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
-		mouse dclick "CSPSetup"
-		mouse click "Установить (рекомендуется)"
-		wait "CSP успешно установлен" timeout 10m
-		mouse click "OK"
-		sleep 2s
-	}
-}
-
-test MS_install_ms: MS_install_cryptopro {
-	MS {
-		copyto "${MS_DIR}/MS" "C:\\Users\\testo\\Desktop\\MS"
-		mouse dclick "MS"
-		mouse dclick "setup"
-		mouse click "Установить".from_bottom(0).center_bottom()
-		wait "Вас приветствует программа установки" timeout 10m
-		mouse click "Далее".from_bottom(0)
-		mouse click "Я принимаю условия"; mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Папка назначения"; mouse click "Далее".from_bottom(0).center_bottom()
-		mouse click "Установить".from_bottom(0).center_bottom()
-		wait "Программа завершена" timeout 5m; mouse click " Готово".from_bottom(0)
-		wait "Требуется перезагрузка"; press Enter
-		sleep 5s
-		wait "Корзина" timeout 5m
-	}
-}
-
-[no_snapshots: true]
-test LAN2_ARM_install_ubuntu {
-	LAN2_ARM install_ubuntu_server("${LAN2_ARM_hostname}", "${LAN2_ARM_login}", "${default_password}")
-}
-
-test LAN2_ARM_install_guest_additions: LAN2_ARM_install_ubuntu {
-	LAN2_ARM install_guest_additions_ubuntu_server("${LAN2_ARM_hostname}", "${LAN2_ARM_login}", "${default_password}")
-}
-
-test LAN2_ARM_prepare: LAN2_ARM_install_guest_additions {
-	LAN2_ARM {
-		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
-		exec bash "chmod +x /tmp/rename_net.sh"
-
-		exec bash """
-			/tmp/rename_net.sh 52:54:00:00:44:aa LAN2_side
-			apt-get update
-		"""
-
-		unplug_nat("${LAN2_ARM_login}", "${default_password}")
-		exec bash "ip a a ${LAN2_ARM_ip}/${default_netmask} dev LAN2_side"
-		exec bash "ip l s LAN2_side up"
-	}
-}
-
-[no_snapshots: true]
-test LAN3_ARM_install_ubuntu {
-	LAN3_ARM install_ubuntu_server("${LAN3_ARM_hostname}", "${LAN3_ARM_login}", "${default_password}")
-}
-
-test LAN3_ARM_install_guest_additions: LAN3_ARM_install_ubuntu {
-	LAN3_ARM install_guest_additions_ubuntu_server("${LAN3_ARM_hostname}", "${LAN3_ARM_login}", "${default_password}")
-}
-
-test LAN3_ARM_prepare: LAN3_ARM_install_guest_additions {
-	LAN3_ARM {
-		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
-		exec bash "chmod +x /tmp/rename_net.sh"
-
-		exec bash """
-			/tmp/rename_net.sh 52:54:00:00:66:aa LAN3_side
-			apt-get update
-		"""
-
-		unplug_nat("${LAN3_ARM_login}", "${default_password}")
-		exec bash "ip a a ${LAN3_ARM_ip}/${default_netmask} dev LAN3_side"
-		exec bash "ip l s LAN3_side up"
-	}
-}
-
-[no_snapshots: true]
-test CUS_install_continent {
-	CUS install_continent("${CUS_id}")
-}
-
-test CUS_init: CUS_install_continent {
-	CUS {
-		select_local_menu("Инициализация");
-		wait "Инициализировать устройство как"; press Up*2; select_local_menu("Начать инициализацию")
-		wait "Успешно" timeout 5m; press Enter;
-		select_local_menu("Сертификаты");
-		select_local_menu("Сертификаты УЦ")
-		wait "Кому выдан"; press F2
-		select_local_menu("Выпуск корневого сертификата")
-		wait "Страна";
-		press Down; type "Security Code"
-		press Down; type "DevOps"
-		press Down; type "CA"; press Enter
-		wait "Успешно"; press Enter
-		select_local_menu("Возврат в предыдущее меню")
-		wait "Кому выдан"; press Esc
-		select_local_menu("Сертификаты управления")
-		wait "Кому выдан"; press F2
-		select_local_menu("Выпуск сертификата управления для ЦУС")
-		wait "Страна"; press Down*3; type "Control"; press Enter
-		wait "Выберите корневой сертификат"; select_local_menu("CA")
-		wait "Успешно"; press Enter
-		wait "Выпуск сертификата"; press Esc
-		wait "Кому выдан"; press Esc
-		select_local_menu("Возврат в предыдущее меню")
-		select_local_menu("Настройка ЦУС")
-		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
-		wait "Выбор сертификата управления"; select_local_menu("Control")
-		wait "Пароль для встроенного администратора"; type "${default_password}"; press Down; type "${default_password}"; press Enter
-		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
-		wait "Настройка интерфейса управления"; type "${CUS_ip}/${default_netmask}"; press Tab
-		type "${router1_LAN1_ip}";
-		press Enter
-		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
-		wait "Система успешно настроена" timeout 15m; press Enter
-		wait "Главное меню"
-	}
-}
-
-[no_snapshots: true]
-test UB1_install_continent {
-	UB1 install_continent("${UB1_id}")
-}
-
-test UB1_init: UB1_install_continent {
-	UB1 {
-		select_local_menu("Инициализация");
-		wait "Инициализировать устройство как"; press Enter
-		wait "Успешно" timeout 6m; press Enter;
-		wait "Главное меню";
-	}
-}
+include "routers_installations.testo"
+include "arms_installations.testo"
+include "ms_installations.testo"
+include "continent_installations.testo"
 
 flash ub1_flash {
 	fs: "ntfs"
@@ -295,7 +60,7 @@ test UB1_connect_to_CUS: UB1_init, CUS_init, router1_prepare {
 		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
 		wait "Выберите конфигурацию"; select_local_menu("gate-${UB1_id}.json")
 		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
-		wait "Настройка интерфейса управления"; type "${CUS_OSPF1_ip}/${default_netmask}"; press Tab;
+		wait "Настройка интерфейса управления"; type "${UB1_OSPF1_ip}/${default_netmask}"; press Tab;
 		type "${router1_OSPF1_ip}"; press Enter
 		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
 		wait "Система успешно настроена" timeout 10m; press Enter
@@ -320,11 +85,11 @@ test UB1_configure_network: UB1_connect_to_CUS {
 		select_local_menu("Сеть")
 		select_local_menu("Сетевые интерфейсы")
 		select_local_menu("ge-1-0") #OSPF2_side
-		wait "IP/Mask"; type "${CUS_OSPF2_ip}/${default_netmask}"; press Enter
-		select_local_menu("ge-2-0") #BGP_side
-		wait "IP/Mask"; type "${CUS_BGP_ip}/${BGP_netmask}"; press Enter
+		wait "IP/Mask"; type "${UB1_OSPF2_ip}/${default_netmask}"; press Enter
+		select_local_menu("ge-2-0") #BGP1_side
+		wait "IP/Mask"; type "${UB1_BGP1_ip}/${BGP_netmask}"; press Enter
 		select_local_menu("ge-3-0") #LAN3_side
-		wait "IP/Mask"; type "${CUS_LAN3_ip}/${default_netmask}"; press Enter
+		wait "IP/Mask"; type "${UB1_LAN3_ip}/${default_netmask}"; press Enter
 		select_local_menu("Возврат в предыдущее меню")
 		#Static routes
 		/*select_local_menu("Статические маршруты")
@@ -377,7 +142,7 @@ test UB1_allow_all_policy: UB1_configure_network, MS_install_ms {
 		type "${default_password}"
 		mouse click "Подключить"
 		wait "Конфигурация системы заблокирована"; mouse click "Восстановить"; mouse click "Продолжить".from_bottom(0)
-		wait "${CUS_ip} - Континент"
+		wait "${CUS_ip} - Континент" && !"Подключение к ЦУС"
 
 		press LeftAlt + Space
 		mouse click "Развернуть"

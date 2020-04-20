@@ -1,0 +1,106 @@
+include "declarations.testo"
+include "../common_ubuntu_server.testo"
+
+[no_snapshots: true]
+test router1_install_ubuntu {
+	router1 install_ubuntu_server("${router1_hostname}", "${router1_login}", "${default_password}")
+}
+
+test router1_install_guest_additions: router1_install_ubuntu {
+	router1 install_guest_additions_ubuntu_server("${router1_hostname}", "${router1_login}", "${default_password}")
+}
+
+test router1_prepare: router1_install_guest_additions {
+	router1 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:11:aa LAN1_side
+			/tmp/rename_net.sh 52:54:00:00:11:bb OSPF1_side
+			apt-get update
+		"""
+
+		unplug_nat("${router1_login}", "${default_password}")
+		exec bash "ip a a ${router1_LAN1_ip}/${default_netmask} dev LAN1_side"
+		exec bash "ip l s LAN1_side up"
+
+		exec bash "ip a a ${router1_OSPF1_ip}/${default_netmask} dev OSPF1_side"
+		exec bash "ip l s OSPF1_side up"
+
+		exec bash "sysctl net.ipv4.ip_forward=1"
+
+		#exec bash "ip r a 172.33.0.8/${BGP_netmask} via 10.1.1.2"
+	}
+}
+
+[no_snapshots: true]
+test router2_install_ubuntu {
+	router2 install_ubuntu_server("${router2_hostname}", "${router2_login}", "${default_password}")
+}
+
+test router2_install_guest_additions: router2_install_ubuntu {
+	router2 install_guest_additions_ubuntu_server("${router2_hostname}", "${router2_login}", "${default_password}")
+}
+
+test router2_prepare: router2_install_guest_additions {
+	router2 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:66:aa BGP1_side
+			/tmp/rename_net.sh 52:54:00:00:66:bb BGP2_side
+			apt-get update
+		"""
+
+		unplug_nat("${router2_login}", "${default_password}")
+		exec bash "ip a a ${router2_BGP1_ip}/${default_netmask} dev BGP1_side"
+		exec bash "ip l s BGP1_side up"
+
+		exec bash "ip a a ${router2_BGP2_ip}/${default_netmask} dev BGP2_side"
+		exec bash "ip l s BGP2_side up"
+
+		exec bash "sysctl net.ipv4.ip_forward=1"
+	}
+}
+
+
+[no_snapshots: true]
+test router3_install_ubuntu {
+	router3 install_ubuntu_server("${router3_hostname}", "${router3_login}", "${default_password}")
+}
+
+test router3_install_guest_additions: router3_install_ubuntu {
+	router3 install_guest_additions_ubuntu_server("${router3_hostname}", "${router3_login}", "${default_password}")
+}
+
+test router3_prepare: router3_install_guest_additions {
+	router3 {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:33:aa LAN2_side
+			/tmp/rename_net.sh 52:54:00:00:33:bb OSPF2_side
+			apt-get update
+		"""
+
+		unplug_nat("${router3_login}", "${default_password}")
+		exec bash "ip a a ${router3_LAN2_ip}/${default_netmask} dev LAN2_side"
+		exec bash "ip l s LAN2_side up"
+
+		exec bash "ip a a ${router3_OSPF2_ip}/${default_netmask} dev OSPF2_side"
+		exec bash "ip l s OSPF2_side up"
+
+		exec bash "sysctl net.ipv4.ip_forward=1"
+
+		/*exec bash """
+			ip r a 10.1.0.0/24 via 172.33.0.1
+			ip r a 10.0.0.201/32 via 172.33.0.1
+			ip r a 10.0.0.101/32 via 172.33.0.1
+			ip r a 10.0.0.202/32 via 172.33.0.10
+			ip r a 10.0.0.102/32 via 172.33.0.10
+		"""*/
+	}
+}
