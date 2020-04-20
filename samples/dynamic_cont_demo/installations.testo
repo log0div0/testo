@@ -92,13 +92,24 @@ test UB1_configure_network: UB1_connect_to_CUS {
 		wait "IP/Mask"; type "${UB1_LAN3_ip}/${default_netmask}"; press Enter
 		select_local_menu("Возврат в предыдущее меню")
 		#Static routes
-		/*select_local_menu("Статические маршруты")
-		wait "Адрес/подсеть"; press N
-		wait "IP-адрес"; press Delete*20
-		type "10.1.0.0/24"
-		abort "stop here"*/
-		press Up
-		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Статические маршруты")
+		press Down*2; wait js "find_text().match('0.0.0.0').match_foreground('blue').match_background('gray').size() == 1"
+		press Delete; wait "Удалить маршрут?"; select_local_menu_horizontal("[ Дa ]")
+		wait !"0.0.0.0"
+
+		press N; wait "Новый маршрут"; press Delete*10;
+		type "${LAN1_ip}/${default_netmask}"; press Tab
+		type "${router1_OSPF1_ip}"; press Enter
+		wait "Пожалуйста, подождите";
+		wait "${router1_OSPF1_ip}"
+
+		press N; wait "Новый маршрут"; press Delete*10;
+		type "${BGP2_ip}/${BGP_netmask}"; press Tab
+		type "${router2_BGP1_ip}"; press Enter
+		wait "Пожалуйста, подождите";
+		wait "${router2_BGP1_ip}"
+		press Esc; wait "Сетевые настройки"
+		press Esc
 		select_local_menu("Применение локальной политики")
 		wait "Успешно" timeout 2m; press Enter
 		select_local_menu("Возврат в предыдущее меню")
@@ -157,4 +168,80 @@ test UB1_allow_all_policy: UB1_configure_network, MS_install_ms {
 		wait "Установка политики на узлы безопасности"
 		wait "Новых уведомлений нет"
 	}
+}
+
+flash ub2_flash {
+	fs: "ntfs"
+	size: 16Mb
+}
+
+
+test UB2_connect_to_CUS: UB1_allow_all_policy, router2_prepare, UB2_init {
+	UB2 {
+		select_local_menu("Сертификаты")
+		select_local_menu("Запросы на выпуск сертификата")
+		wait "F4 - создать запрос"; press F4
+		wait "Вставьте USB Flash накопитель"
+		plug flash ub2_flash
+		sleep 5s
+		press Enter
+		wait "Идёт создание запроса";
+		press Down; type "Security Code"
+		press Down; type "DevOps"
+		press Down; type "UB-${UB2_id}"; press Enter
+		wait "Запрос записан на носитель"; press Enter, Esc
+		wait "Возврат в предыдущее меню"; press Esc
+		wait "Главное меню";
+		unplug flash ub2_flash
+	}
+
+	CUS {
+		wait "БД заблокирована текущим администратором"; press Enter
+		cont_login("admin", "${default_password}")
+		plug flash ub2_flash
+		select_local_menu("Сертификаты")
+		select_local_menu("Сертификаты управления")
+		wait "F2 - Выпуск серт."; press F2
+		select_local_menu("Выпуск сертификата управления для узла безопасности")
+		wait "Есть ли запрос для создания сертификата?"; select_local_menu_horizontal("[ Да ]")
+		wait "Выберите Запрос"; select_local_menu("continent-${UB2_id}.req")
+		wait "Выберите корневой сертификат"; select_local_menu("CA (")
+		wait "Успешно"; press Enter
+		wait "Выпуск сертификата"; press Esc
+		wait "Сертификаты управления"; press Esc
+		select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Инструменты")
+		select_local_menu("Создать Узел Безопасности")
+		wait "Введите ID узла безопасности"; type "${UB2_id}"; press Enter
+		wait "Выбор сертификата управления"; select_local_menu("UB-${UB2_id}")
+		wait "Узел безопасности ${UB2_id} успешно создан" timeout 2m; press Enter
+		select_local_menu("Экспорт конфигурации УБ на носитель")
+		wait "Выгрузить политику"; type "${UB2_id}"; press Enter
+		wait "Успешно"; press Enter
+		sleep 10s;
+		unplug flash ub2_flash
+	}
+
+	UB2 {
+		plug flash ub2_flash
+		select_local_menu("Подключиться к ЦУС")
+		wait "Все службы будут сконфигурированы заново"; select_local_menu_horizontal("Да")
+		wait "Выберите конфигурацию"; select_local_menu("gate-${UB2_id}.json")
+		wait "Выберите интерфейс управления"; select_local_menu("ge-0-0")
+		wait "Настройка интерфейса управления"; type "${UB2_BGP2_ip}/${BGP_netmask}"; press Tab;
+		type "${router2_BGP2_ip}"; press Enter
+		wait "Применить указанные настройки?"; select_local_menu_horizontal("Да")
+		wait "Система успешно настроена" timeout 10m; press Enter
+		unplug flash ub2_flash
+	}
+
+	CUS {
+		press Esc
+		wait "Имеются неподтвержденные изменения с узлов" timeout 4m;
+		select_local_menu("Инструменты")
+		select_local_menu("Подтверждение изменений настроек УБ")
+		wait "Локальные изменения"; press Space, Enter
+		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
+		wait "Инструменты"
+	}	
 }

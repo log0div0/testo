@@ -112,7 +112,7 @@ param UB1_id "250"
 
 param UB1_OSPF1_ip "10.1.1.2"
 param UB1_OSPF2_ip "10.1.2.2"
-param UB1_BGP1_ip "10.1.2.2"
+param UB1_BGP1_ip "172.33.0.1"
 param UB1_LAN3_ip "10.8.1.1"
 
 machine UB1 {

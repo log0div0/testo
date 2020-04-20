@@ -43,6 +43,9 @@ macro cont_login(login, password) {
 	wait "Вход в систему"
 	type "${login}"; press Tab
 	type "${password}"; press Enter
+	if (check "БД заблокирована текущим администратором" timeout 2s) {
+		select_local_menu_horizontal("Принудительно захватить блокировку")
+	}
 	wait "Главное меню"
 }
 
