@@ -19,10 +19,10 @@ module.exports = function() {
 									<a href="#">Купить</a>
 								</li>
 								<li id="nav-site-docs">
-									<a href="/docs/01/01">Документация</a>
+									<a href="/docs/getting_started/intro">Документация</a>
 								</li>
 								<li id="nav-site-tutorials">
-									<a href="/tutorials/01/01">Обучающие материалы</a>
+									<a href="/tutorials/1_creating_vm">Обучающие материалы</a>
 								</li>
 							</ul>
 						</nav>

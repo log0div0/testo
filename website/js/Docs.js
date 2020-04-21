@@ -7,60 +7,6 @@ import * as babel from "@babel/core"
 import Layout from './Layout'
 import PageNotFound from './PageNotFound'
 
-async function makePage(file_path) {
-	let parsed = path.parse(file_path)
-	if (parsed.ext != ".md") {
-		return null
-	}
-	let indexOfDash = parsed.name.indexOf('-')
-	if (indexOfDash < 0) {
-		return null
-	}
-	return {
-		id: parsed.name.substring(0, indexOfDash).trim(),
-		name: parsed.name.substring(indexOfDash + 1, parsed.name.length).trim(),
-		file_path
-	}
-}
-
-async function makeCategory(categoryRoot) {
-	const stats = await fs.promises.stat(categoryRoot)
-	if (!stats.isDirectory()) {
-		return null
-	}
-	let basename = path.basename(categoryRoot)
-	let indexOfDash = basename.indexOf('-')
-	if (indexOfDash < 0) {
-		return null
-	}
-	let result = {
-		id: basename.substring(0, indexOfDash).trim(),
-		name: basename.substring(indexOfDash + 1, basename.length).trim(),
-		pages: []
-	}
-	const files = await fs.promises.readdir(categoryRoot)
-	for (let file of files) {
-		let page = await makePage(path.join(categoryRoot, file))
-		if (page) {
-			page.url = "/" + path.dirname(categoryRoot) + "/" + result.id + "/" + page.id
-			result.pages.push(page)
-		}
-	}
-	return result
-}
-
-async function makeTOC(docsRoot) {
-	let result = []
-	const files = await fs.promises.readdir(docsRoot)
-	for (let file of files) {
-		let category = await makeCategory(path.join(docsRoot, file))
-		if (category) {
-			result.push(category)
-		}
-	}
-	return result
-}
-
 function H1({children}) {
 	return <h1 className="postHeaderTitle">{children}</h1>
 }
@@ -192,16 +138,37 @@ function DocsLayout({children, toc, prevPage, nextPage}) {
 	)
 }
 
-module.exports = async function(docsRoot, category_id, page_id) {
-	const toc = await makeTOC(docsRoot)
+export async function makeDocToc(src) {
+	let result = []
+	for (let category_name in src) {
+		let category = {
+			name: category_name,
+			pages: []
+		}
+		for (let page_url of src[category_name]) {
+			let page = {
+				url: page_url,
+				file_path: `.${page_url}.md`
+			}
+			const content = await fs.promises.readFile(page.file_path, 'utf-8')
+			let first_line = content.split(/\r?\n/)[0]
+			if (!first_line.startsWith("# ")) {
+				throw `The first line of file ${page.file_path} must starts with #`
+			}
+			page.name = first_line.substr(1).trim()
+			category.pages.push(page)
+		}
+		result.push(category)
+	}
+	return result
+}
+
+export async function makeDocPage(toc, page_url) {
 	for (let i = 0; i < toc.length; ++i) {
 		let category = toc[i];
-		if (category.id != category_id) {
-			continue
-		}
 		for (let j = 0; j < category.pages.length; ++j) {
 			let page = category.pages[j];
-			if (page.id != page_id) {
+			if (page.url != page_url) {
 				continue
 			}
 			const content = await fs.promises.readFile(page.file_path)
