@@ -78,6 +78,7 @@ test UB1_connect_to_CUS: UB1_init, CUS_init, router1_prepare {
 	}
 }
 
+[no_snapshots: true]
 test UB1_configure_network: UB1_connect_to_CUS {
 	UB1 {
 		cont_login("admin", "${default_password}")
@@ -175,7 +176,6 @@ flash ub2_flash {
 	size: 16Mb
 }
 
-
 test UB2_connect_to_CUS: UB1_allow_all_policy, router2_prepare, UB2_init {
 	UB2 {
 		select_local_menu("Сертификаты")
@@ -245,3 +245,56 @@ test UB2_connect_to_CUS: UB1_allow_all_policy, router2_prepare, UB2_init {
 		wait "Инструменты"
 	}	
 }
+
+[no_snapshots: true]
+test UB2_configure_network: UB2_connect_to_CUS {
+	UB2 {
+		cont_login("admin", "${default_password}")
+
+		select_local_menu("Настройки")
+		select_local_menu("Сеть")
+		select_local_menu("Сетевые интерфейсы")
+		select_local_menu("ge-1-0") #LAN4_side
+		wait "IP/Mask"; type "${UB2_LAN4_ip}/${default_netmask}"; press Enter
+		select_local_menu("Возврат в предыдущее меню")
+		press Up; select_local_menu("Возврат в предыдущее меню")
+		select_local_menu("Применение локальной политики")
+
+		wait "Успешно" timeout 2m; press Enter
+		select_local_menu("Возврат в предыдущее меню")
+		wait "Главное меню"
+
+	}
+
+	CUS {
+		wait "Инструменты"; press Esc
+		wait "Имеются неподтвержденные изменения с узлов" timeout 4m;
+		select_local_menu("Инструменты")
+		select_local_menu("Подтверждение изменений настроек УБ")
+		wait "Локальные изменения"; press Space, Enter
+		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
+		wait "Инструменты"
+	}
+}
+
+test UB2_install_allow_all: UB2_configure_network {
+	MS {
+		mouse click "Управление конфигурацией ЦУС захвачено"; press Enter
+		mouse click "Файл";
+		mouse click "Установить соединение"
+		wait "Подключение к ЦУС"
+		type "${default_password}"; mouse click "Подключить"
+		wait "Конфигурация системы заблокирована"; mouse click "Восстановить"; mouse click "Продолжить".from_bottom(0)
+		wait "${CUS_ip} - Континент" && !"Подключение к ЦУС"
+
+		mouse click "Установить"
+
+		wait "Установить политики"
+		mouse click "node-${UB2_id}".move_left(65)
+		mouse click "ОК".from_bottom(0)
+
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет"
+	}
+}
+

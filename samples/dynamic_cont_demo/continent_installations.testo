@@ -50,6 +50,7 @@ test UB1_install_continent {
 	UB1 install_continent("${UB1_id}")
 }
 
+[no_snapshots: true]
 test UB1_init: UB1_install_continent {
 	UB1 {
 		select_local_menu("Инициализация");
@@ -64,6 +65,7 @@ test UB2_install_continent {
 	UB2 install_continent("${UB2_id}")
 }
 
+[no_snapshots: true]
 test UB2_init: UB2_install_continent {
 	UB2 {
 		select_local_menu("Инициализация");

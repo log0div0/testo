@@ -1,6 +1,7 @@
 include "declarations.testo"
 include "../common_win7.testo"
 
+[no_snapshots: true]
 test MS_install_win7 {
 	MS install_win7("testo")
 }
@@ -30,7 +31,7 @@ test MS_configure_windows: MS_install_guest_additions {
 [no_snapshots: true]
 test MS_install_cryptopro: MS_configure_windows {
 	MS {
-		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
+		copyto "${CRYPTOPRO_DIR}/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
 		mouse dclick "CSPSetup"
 		mouse click "Установить (рекомендуется)"
 		wait "CSP успешно установлен" timeout 10m
