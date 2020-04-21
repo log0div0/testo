@@ -298,3 +298,54 @@ test UB2_install_allow_all: UB2_configure_network {
 	}
 }
 
+test UB_loopbacks: UB2_install_allow_all {
+	MS {
+		mouse move "Список объектов ЦУС".left_center().move_left(5)
+		mouse hold lbtn
+		mouse move "ЦУС"
+		mouse release
+		mouse click "Структура"
+		mouse rclick "node-${UB1_id}"
+		mouse click "Свойства".from_bottom(0)
+		mouse click "Интерфейсы"
+		mouse rclick "ge-3-0".center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB1_Lo0_ip}/${default_loopback_netmask}"; press Enter
+		mouse rclick "lo0".center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB1_Lo1_ip}/${default_loopback_netmask}"; press Enter
+		mouse click "ОК".from_bottom(0)
+
+		mouse rclick "node-${UB2_id}"
+		mouse click "Свойства".from_bottom(0)
+		mouse click "Интерфейсы"
+		mouse rclick "ge-1-0".center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB2_Lo0_ip}/${default_loopback_netmask}"; press Enter
+		mouse rclick "lo0".center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB1_Lo1_ip}/${default_loopback_netmask}"; press Enter
+		mouse click "ОК".from_bottom(0)
+
+		mouse click "Установить"
+
+		wait "Установить политики"
+		mouse click "ОК".from_bottom(0)
+
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет"
+	}
+}
+

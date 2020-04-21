@@ -47,6 +47,7 @@ network BGP2 {
 
 param default_password "Cont-4.X"
 param default_netmask "24"
+param default_loopback_netmask "32"
 
 param MS_ip "10.1.0.10"
 param MS_netmask "255.255.255.0"
@@ -115,6 +116,9 @@ param UB1_OSPF2_ip "10.1.2.2"
 param UB1_BGP1_ip "172.33.0.1"
 param UB1_LAN3_ip "10.8.1.1"
 
+param UB1_Lo0_ip "10.0.0.101"
+param UB1_Lo1_ip "10.0.0.201"
+
 machine UB1 {
 	cpus: 2
 	ram: 2048Mb
@@ -150,6 +154,9 @@ param UB2_id "350"
 
 param UB2_BGP2_ip "172.33.0.10"
 param UB2_LAN4_ip "10.8.2.1"
+
+param UB2_Lo0_ip "10.0.0.102"
+param UB2_Lo1_ip "10.0.0.202"
 
 machine UB2 {
 	cpus: 2
