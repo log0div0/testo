@@ -12,7 +12,7 @@
 
 1. Установка зависимостей:
 ```sh
-# sudo apt-get install libvirt0 libvirt-clients libvirt-daemon-system qemu qemu-kvm ebtables dnsmasq-base
+# sudo apt install libvirt0 libvirt-clients libvirt-daemon-system qemu qemu-kvm ebtables dnsmasq-base
 ```
 2. Установка самого пакета:
 ```sh
@@ -22,7 +22,7 @@
 Также рекомендуется (но не обязательно) установить графический клиент для QEMU/KVM под названием `virt-manager`. Virt-manager поможет наблюдать за происходящим внутри виртуальных машин, а также при необходимости управлять ими вручную. Установить его можно командой
 
 ```sh
-# sudo apt-install virt-manager
+# sudo apt install virt-manager
 ```
 
 После всех установок необходимо перезагрузиться

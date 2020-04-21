@@ -65,7 +65,9 @@ let tutorialsToc = {
 	"Обучающие материалы": [
 		"/tutorials/1_creating_vm",
 		"/tutorials/2_ubuntu_installation",
-		"/tutorials/3_guest_additions"
+		"/tutorials/3_guest_additions",
+		"/tutorials/4_params",
+		"/tutorials/5_caching"
 	]
 }
 
