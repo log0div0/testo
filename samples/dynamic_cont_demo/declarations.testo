@@ -23,6 +23,11 @@ network LAN4 {
 	mode: "internal"
 }
 
+param LAN5_ip "10.5.0.0"
+network LAN5 {
+	mode: "internal"
+}
+
 param OSPF1_ip "10.1.1.0"
 network OSPF1 {
 	mode: "internal"
@@ -182,6 +187,7 @@ param router2_login "router2"
 
 param router2_BGP1_ip "172.33.0.2"
 param router2_BGP2_ip "172.33.0.9"
+param router2_LAN5_ip "10.5.0.1"
 param router2_Lo0_ip "10.0.0.3"
 
 machine router2 {
@@ -203,6 +209,12 @@ machine router2 {
 	nic BGP2_side: {
 		attached_to: "BGP2"
 		mac: "52:54:00:00:66:BB"
+		adapter_type: "e1000"
+	}
+
+	nic LAN5_side: {
+		attached_to: "LAN5"
+		mac: "52:54:00:00:66:CC"
 		adapter_type: "e1000"
 	}
 }
@@ -298,6 +310,28 @@ machine LAN4_ARM {
 	nic LAN4_side: {
 		attached_to: "LAN4"
 		mac: "52:54:00:00:77:AA"
+		adapter_type: "e1000"
+	}
+}
+
+param LAN5_ARM_hostname "LAN5-ARM"
+param LAN5_ARM_login "lan5-arm"
+
+param LAN5_ARM_ip "10.5.0.2"
+
+machine LAN5_ARM {
+	cpus: 1
+	ram: 512Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+
+	nic nat: {
+		attached_to: "nat"
+	}
+
+	nic LAN5_side: {
+		attached_to: "LAN5"
+		mac: "52:54:00:00:99:AA"
 		adapter_type: "e1000"
 	}
 }

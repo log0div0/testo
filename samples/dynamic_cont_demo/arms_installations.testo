@@ -75,3 +75,28 @@ test LAN4_ARM_prepare: LAN4_ARM_install_guest_additions {
 		exec bash "ip l s LAN4_side up"
 	}
 }
+
+[no_snapshots: true]
+test LAN5_ARM_install_ubuntu {
+	LAN5_ARM install_ubuntu_server("${LAN5_ARM_hostname}", "${LAN5_ARM_login}", "${default_password}")
+}
+
+test LAN5_ARM_install_guest_additions: LAN5_ARM_install_ubuntu {
+	LAN5_ARM install_guest_additions_ubuntu_server("${LAN5_ARM_hostname}", "${LAN5_ARM_login}", "${default_password}")
+}
+
+test LAN5_ARM_prepare: LAN5_ARM_install_guest_additions {
+	LAN5_ARM {
+		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
+		exec bash "chmod +x /tmp/rename_net.sh"
+
+		exec bash """
+			/tmp/rename_net.sh 52:54:00:00:99:aa LAN5_side
+			apt-get update
+		"""
+
+		unplug_nat("${LAN5_ARM_login}", "${default_password}")
+		exec bash "ip a a ${LAN5_ARM_ip}/${default_netmask} dev LAN5_side"
+		exec bash "ip l s LAN5_side up"
+	}
+}

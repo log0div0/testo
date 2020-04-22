@@ -51,6 +51,7 @@ test router2_prepare: router2_install_guest_additions {
 		exec bash """
 			/tmp/rename_net.sh 52:54:00:00:66:aa BGP1_side
 			/tmp/rename_net.sh 52:54:00:00:66:bb BGP2_side
+			/tmp/rename_net.sh 52:54:00:00:66:cc LAN5_side
 			apt-get update
 		"""
 
@@ -60,6 +61,9 @@ test router2_prepare: router2_install_guest_additions {
 
 		exec bash "ip a a ${router2_BGP2_ip}/${BGP_netmask} dev BGP2_side"
 		exec bash "ip l s BGP2_side up"
+
+		exec bash "ip a a ${router2_LAN5_ip}/${default_netmask} dev LAN5_side"
+		exec bash "ip l s LAN5_side up"
 
 		exec bash "sysctl net.ipv4.ip_forward=1"
 
