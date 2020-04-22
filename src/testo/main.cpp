@@ -22,8 +22,6 @@
 #include <fmt/format.h>
 #include <fstream>
 
-#include <license/License.hpp>
-
 using namespace clipp;
 
 struct Interruption {};
@@ -152,13 +150,6 @@ int clean_mode() {
 }
 
 int run_mode() {
-	if (!args.license.size()) {
-		std::cout << "Необходимо указать путь к файлу с лицензией (параметр --license)" << std::endl;
-		return 1;
-	}
-
-	verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
-
 	auto params = nlohmann::json::array();
 
 	for (size_t i = 0; i < args.params_names.size(); ++i) {
@@ -180,6 +171,7 @@ int run_mode() {
 		{"report_screenshots", args.report_screenshots},
 		{"html", args.html},
 		{"prefix", args.prefix},
+		{"license", args.license},
 		{"params", params}
 	};
 
