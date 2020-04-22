@@ -1,6 +1,20 @@
 include "declarations.testo"
 include "../common_ubuntu_server.testo"
 
+macro install_bird() {
+	exec bash "apt install -y build-essential flex bison libncurses-dev libreadline-dev"
+	copyto "${BIRD_DIR}/bird-2.0.7.tar.gz" "/opt/bird/bird-2.0.7.tar.gz"
+	exec bash """
+		cd /opt/bird/
+		tar -xf bird-2.0.7.tar.gz
+		cd bird-2.0.7
+		./configure
+		make
+		make install
+	"""
+
+}
+
 [no_snapshots: true]
 test router1_install_ubuntu {
 	router1 install_ubuntu_server("${router1_hostname}", "${router1_login}", "${default_password}")
@@ -20,6 +34,7 @@ test router1_prepare: router1_install_guest_additions {
 			/tmp/rename_net.sh 52:54:00:00:11:bb OSPF1_side
 			apt-get update
 		"""
+		install_bird()
 
 		unplug_nat("${router1_login}", "${default_password}")
 		exec bash "ip a a ${router1_LAN1_ip}/${default_netmask} dev LAN1_side"
@@ -54,6 +69,8 @@ test router2_prepare: router2_install_guest_additions {
 			/tmp/rename_net.sh 52:54:00:00:66:cc LAN5_side
 			apt-get update
 		"""
+
+		install_bird()
 
 		unplug_nat("${router2_login}", "${default_password}")
 		exec bash "ip a a ${router2_BGP1_ip}/${BGP_netmask} dev BGP1_side"
@@ -93,6 +110,8 @@ test router3_prepare: router3_install_guest_additions {
 			/tmp/rename_net.sh 52:54:00:00:33:bb OSPF2_side
 			apt-get update
 		"""
+
+		install_bird()
 
 		unplug_nat("${router3_login}", "${default_password}")
 		exec bash "ip a a ${router3_LAN2_ip}/${default_netmask} dev LAN2_side"
