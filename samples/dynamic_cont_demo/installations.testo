@@ -79,56 +79,7 @@ test UB1_connect_to_CUS: UB1_init, CUS_init, router1_prepare {
 }
 
 [no_snapshots: true]
-test UB1_configure_network: UB1_connect_to_CUS {
-	UB1 {
-		cont_login("admin", "${default_password}")
-		select_local_menu("Настройки")
-		select_local_menu("Сеть")
-		select_local_menu("Сетевые интерфейсы")
-		select_local_menu("ge-1-0") #OSPF2_side
-		wait "IP/Mask"; type "${UB1_OSPF2_ip}/${default_netmask}"; press Enter
-		select_local_menu("ge-2-0") #BGP1_side
-		wait "IP/Mask"; type "${UB1_BGP1_ip}/${BGP_netmask}"; press Enter
-		select_local_menu("ge-3-0") #LAN3_side
-		wait "IP/Mask"; type "${UB1_LAN3_ip}/${default_netmask}"; press Enter
-		select_local_menu("Возврат в предыдущее меню")
-		#Static routes
-		select_local_menu("Статические маршруты")
-		press Down*2; wait js "find_text().match('0.0.0.0').match_foreground('blue').match_background('gray').size() == 1"
-		press Delete; wait "Удалить маршрут?"; select_local_menu_horizontal("[ Дa ]")
-		wait !"0.0.0.0"
-
-		press N; wait "Новый маршрут"; press Delete*10;
-		type "${LAN1_ip}/${default_netmask}"; press Tab
-		type "${router1_OSPF1_ip}"; press Enter
-		wait "Пожалуйста, подождите";
-		wait "${router1_OSPF1_ip}"
-
-		press N; wait "Новый маршрут"; press Delete*10;
-		type "${BGP2_ip}/${BGP_netmask}"; press Tab
-		type "${router2_BGP1_ip}"; press Enter
-		wait "Пожалуйста, подождите";
-		wait "${router2_BGP1_ip}"
-		press Esc; wait "Сетевые настройки"
-		press Esc
-		select_local_menu("Применение локальной политики")
-		wait "Успешно" timeout 2m; press Enter
-		select_local_menu("Возврат в предыдущее меню")
-		wait "Главное меню"
-	}
-
-	CUS {
-		wait "Инструменты"; press Esc
-		wait "Имеются неподтвержденные изменения с узлов" timeout 4m;
-		select_local_menu("Инструменты")
-		select_local_menu("Подтверждение изменений настроек УБ")
-		wait "Локальные изменения"; press Space, Enter
-		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
-		wait "Инструменты"
-	}
-}
-
-test UB1_allow_all_policy: UB1_configure_network, MS_install_ms {
+test MS_connect_CUS: UB1_connect_to_CUS, MS_install_ms {
 	MS {
 		sleep 5s
 		press LEFTMETA; wait "Все программы"
@@ -158,7 +109,98 @@ test UB1_allow_all_policy: UB1_configure_network, MS_install_ms {
 
 		press LeftAlt + Space
 		mouse click "Развернуть"
+
+		sleep 2s
+		mouse move "Список объектов ЦУС".left_center().move_left(5)
+		mouse hold lbtn
+		mouse move "ЦУС"
+		mouse release
+		sleep 2s
+	}
+}
+
+test UB1_configure_network: MS_connect_CUS {
+	MS {
+		mouse click "Структура"
+
+		mouse rclick "node-${UB1_id}"
+		mouse click "Свойства".from_bottom(0)
+		wait "Узел безопасности - node-${UB1_id}"
+		mouse move "node-${UB1_id}".from_top(0);
+		mouse hold lbtn
+		mouse move "Узел безопасности".from_top(0)
+		mouse release
+
+		mouse click "Интерфейсы"
+
+		#OSPF2_side
+		mouse click "ge-1-0"; press Right*3, Insert
+		wait "Ввод адреса"
+		type "${UB1_OSPF2_ip}/${default_netmask}"; press Enter
+
+		#BGP1_side
+		mouse click "ge-2-0"; press Right*3, Insert
+		wait "Ввод адреса"
+		type "${UB1_BGP1_ip}/${BGP_netmask}"; press Enter
+
+		#LAN3_side
+		mouse click "ge-3-0"; press Right*3, Insert
+		wait "Ввод адреса"
+		type "${UB1_LAN3_ip}/${default_netmask}"; press Enter
+
+		mouse move 0 0
+		mouse rclick "ge-3-0".center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB1_Lo0_ip}/${default_loopback_netmask}"; press Enter
+		mouse rclick "lo0".center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB1_Lo1_ip}/${default_loopback_netmask}"; press Enter
+
+		mouse click "Статические маршруты"
+
+		#Удалить маршрут
+		mouse click "0.0.0.0"; mouse click "Метрика".right_top().move_up(40)
+		mouse click "Удалить маршрут '0.0.0.0/0'?"; press Enter
+
+		#Добавить маршрут
+		mouse click "Следующий узел".right_top().move_up(40).move_right(10)
+		wait "Назначение:"; press Delete
+
+		type "${LAN1_ip}/${default_netmask}"; press Tab
+		type "${router1_OSPF1_ip}"; press Enter
+
+		#Добавить маршрут
+		mouse click "Следующий узел".right_top().move_up(40).move_right(10)
+		wait "Назначение:"; press Delete
+
+		type "${BGP2_ip}/${BGP_netmask}"; press Tab
+		type "${router2_BGP1_ip}"; press Enter
+
+		#Добавить маршрут
+		mouse click "Следующий узел".right_top().move_up(40).move_right(10)
+		wait "Назначение:"; press Delete
+
+		type "${router2_Lo0_ip}/${default_loopback_netmask}"; press Tab
+		type "${router2_BGP1_ip}"; press Enter
+
+		#Добавить маршрут
+		mouse click "Следующий узел".right_top().move_up(40).move_right(10)
+		wait "Назначение:"; press Delete
+
+		type "${UB2_Lo0_ip}/${default_loopback_netmask}"; press Tab
+		type "${router2_BGP1_ip}"; press Enter
+
+		mouse click "ОК".from_bottom(0)
+
+		mouse click "Контроль доступа"
 		mouse click "Первое правило"
+		wait "Любой"
 		mouse click "Пропустить"
 		mouse click "Установить"
 
@@ -167,7 +209,7 @@ test UB1_allow_all_policy: UB1_configure_network, MS_install_ms {
 		mouse click "ОК".from_bottom(0)
 
 		wait "Установка политики на узлы безопасности"
-		wait "Новых уведомлений нет"
+		wait "Новых уведомлений нет" timeout 3m
 	}
 }
 
@@ -176,7 +218,7 @@ flash ub2_flash {
 	size: 16Mb
 }
 
-test UB2_connect_to_CUS: UB1_allow_all_policy, router2_prepare, UB2_init {
+test UB2_connect_to_CUS: UB1_configure_network, router2_prepare, UB2_init {
 	UB2 {
 		select_local_menu("Сертификаты")
 		select_local_menu("Запросы на выпуск сертификата")
@@ -248,36 +290,6 @@ test UB2_connect_to_CUS: UB1_allow_all_policy, router2_prepare, UB2_init {
 
 [no_snapshots: true]
 test UB2_configure_network: UB2_connect_to_CUS {
-	UB2 {
-		cont_login("admin", "${default_password}")
-
-		select_local_menu("Настройки")
-		select_local_menu("Сеть")
-		select_local_menu("Сетевые интерфейсы")
-		select_local_menu("ge-1-0") #LAN4_side
-		wait "IP/Mask"; type "${UB2_LAN4_ip}/${default_netmask}"; press Enter
-		select_local_menu("Возврат в предыдущее меню")
-		press Up; select_local_menu("Возврат в предыдущее меню")
-		select_local_menu("Применение локальной политики")
-
-		wait "Успешно" timeout 2m; press Enter
-		select_local_menu("Возврат в предыдущее меню")
-		wait "Главное меню"
-
-	}
-
-	CUS {
-		wait "Инструменты"; press Esc
-		wait "Имеются неподтвержденные изменения с узлов" timeout 4m;
-		select_local_menu("Инструменты")
-		select_local_menu("Подтверждение изменений настроек УБ")
-		wait "Локальные изменения"; press Space, Enter
-		wait "Подтверждено конфигураций :1" timeout 1m; press Enter;
-		wait "Инструменты"
-	}
-}
-
-test UB2_install_allow_all: UB2_configure_network {
 	MS {
 		mouse click "Управление конфигурацией ЦУС захвачено"; press Enter
 		mouse click "Файл";
@@ -287,6 +299,48 @@ test UB2_install_allow_all: UB2_configure_network {
 		wait "Конфигурация системы заблокирована"; mouse click "Восстановить"; mouse click "Продолжить".from_bottom(0)
 		wait "${CUS_ip} - Континент" && !"Подключение к ЦУС"
 
+		mouse click "Структура"
+
+		mouse rclick "node-${UB2_id}"
+		mouse click "Свойства".from_bottom(0)
+		wait "Узел безопасности - node-${UB2_id}"
+		mouse move "node-${UB2_id}".from_top(0);
+		mouse hold lbtn
+		mouse move "Узел безопасности".from_top(0)
+		mouse release
+
+		mouse click "Интерфейсы"
+
+		#LAN4_side
+		mouse click "ge-1-0"; press Right*3, Insert
+		wait "Ввод адреса"
+		type "${UB2_LAN4_ip}/${default_netmask}"; press Enter
+
+		mouse move 0 0
+		mouse rclick "ge-1-0".center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB2_Lo0_ip}/${default_loopback_netmask}"; press Enter
+		mouse rclick "lo0".from_left(0).center_bottom().move_down(10)
+		mouse click "Создать Loopback-интерфейс"
+		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
+		mouse click "Insert"
+		wait "Ввод адреса"
+		type "${UB2_Lo1_ip}/${default_loopback_netmask}"; press Enter
+
+		mouse click "Статические маршруты"
+
+		#Добавить маршрут
+		mouse click "Следующий узел".right_top().move_up(40).move_right(10)
+		wait "Назначение:"; press Delete
+
+		type "${router2_Lo0_ip}/${default_loopback_netmask}"; press Tab
+		type "${router2_BGP2_ip}"; press Enter
+
+		mouse click "ОК".from_bottom(0)
+
 		mouse click "Установить"
 
 		wait "Установить политики"
@@ -294,58 +348,7 @@ test UB2_install_allow_all: UB2_configure_network {
 		mouse click "ОК".from_bottom(0)
 
 		wait "Установка политики на узлы безопасности"
-		wait "Новых уведомлений нет"
-	}
-}
-
-test UB_loopbacks: UB2_install_allow_all {
-	MS {
-		mouse move "Список объектов ЦУС".left_center().move_left(5)
-		mouse hold lbtn
-		mouse move "ЦУС"
-		mouse release
-		mouse click "Структура"
-		mouse rclick "node-${UB1_id}"
-		mouse click "Свойства".from_bottom(0)
-		mouse click "Интерфейсы"
-		mouse rclick "ge-3-0".center_bottom().move_down(10)
-		mouse click "Создать Loopback-интерфейс"
-		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
-		mouse click "Insert"
-		wait "Ввод адреса"
-		type "${UB1_Lo0_ip}/${default_loopback_netmask}"; press Enter
-		mouse rclick "lo0".center_bottom().move_down(10)
-		mouse click "Создать Loopback-интерфейс"
-		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
-		mouse click "Insert"
-		wait "Ввод адреса"
-		type "${UB1_Lo1_ip}/${default_loopback_netmask}"; press Enter
-		mouse click "ОК".from_bottom(0)
-
-		mouse rclick "node-${UB2_id}"
-		mouse click "Свойства".from_bottom(0)
-		mouse click "Интерфейсы"
-		mouse rclick "ge-1-0".center_bottom().move_down(10)
-		mouse click "Создать Loopback-интерфейс"
-		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
-		mouse click "Insert"
-		wait "Ввод адреса"
-		type "${UB2_Lo0_ip}/${default_loopback_netmask}"; press Enter
-		mouse rclick "lo0".center_bottom().move_down(10)
-		mouse click "Создать Loopback-интерфейс"
-		mouse rclick "Не определён".from_bottom(0).right_center().move_right(20)
-		mouse click "Insert"
-		wait "Ввод адреса"
-		type "${UB1_Lo1_ip}/${default_loopback_netmask}"; press Enter
-		mouse click "ОК".from_bottom(0)
-
-		mouse click "Установить"
-
-		wait "Установить политики"
-		mouse click "ОК".from_bottom(0)
-
-		wait "Установка политики на узлы безопасности"
-		wait "Новых уведомлений нет"
+		wait "Новых уведомлений нет" timeout 3m
 	}
 }
 

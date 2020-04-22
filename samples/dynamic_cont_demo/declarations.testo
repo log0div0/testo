@@ -182,6 +182,7 @@ param router2_login "router2"
 
 param router2_BGP1_ip "172.33.0.2"
 param router2_BGP2_ip "172.33.0.9"
+param router2_Lo0_ip "10.0.0.3"
 
 machine router2 {
 	cpus: 1
