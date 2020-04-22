@@ -75,7 +75,6 @@ void Reporter::init(const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,	
 	}
 
 	if (tests_to_run.size()) {
-		std::cout << rang::fgB::blue << rang::style::bold;
 		report("TESTS TO RUN:\n", style::blue, true);
 		for (auto test: tests_to_run) {
 			report(fmt::format("{}\n", test->name), magenta);
@@ -109,11 +108,8 @@ void Reporter::prepare_environment() {
 }
 
 void Reporter::run_test() {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Running test "
-		<< rang::fg::yellow << current_test->name
-		<< rang::style::reset << std::endl;
+	report(fmt::format("{} Running test ", progress()), blue);
+	report(fmt::format("{}\n", current_test->name), yellow);
 }
 
 void Reporter::skip_failed_test(const std::string& failed_parent) {
