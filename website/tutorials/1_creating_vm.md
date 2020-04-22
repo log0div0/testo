@@ -234,4 +234,4 @@
 
 ## Готовый тестовый скрипт
 
-Итоговый тестовый скрипт можно скачать [здесь](/docs//static/tutorials/1_creating_vm/creating_vm.testo)
+Итоговый тестовый скрипт можно скачать [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/1)

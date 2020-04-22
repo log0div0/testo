@@ -264,4 +264,4 @@
 </p>
 <br/><br/>
 
-Итоговый скрипт можно скачать [здесь](/docs/static/tutorials/3_guest_additions/guets_additions.testo)
+Итоговый скрипт можно скачать [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/3)
