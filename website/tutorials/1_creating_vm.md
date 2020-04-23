@@ -74,10 +74,14 @@
 ```
 Если всё было сделано правильно, то вы должны увидеть примерно следующий вывод интерпретатора:
 
-	PROCESSED TOTAL 0 TESTS IN 0h:0m:0s
-	UP-TO-DATE: 0
-	RUN SUCCESSFULLY: 0
-	FAILED: 0
+<Terminal>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo<br/></span>
+	<span className="bold blue">PROCESSED TOTAL 0 TESTS IN 0h:0m:0s<br/></span>
+	<span className="bold blue">UP-TO-DATE: 0<br/></span>
+	<span className="bold green">RUN SUCCESSFULLY: 0<br/></span>
+	<span className="bold red">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Мы видим, что несмотря на то, что мы не написали ни одного теста, такой файл все равно можно интерпретировать. При этом, очевидно, никаких тестов не запускается.
 

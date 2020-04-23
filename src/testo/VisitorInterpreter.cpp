@@ -2,6 +2,8 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
 
+#include <license/License.hpp>
+
 #include "coro/Finally.h"
 #include "coro/CheckPoint.h"
 #include "utf8.hpp"
@@ -28,6 +30,7 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
+	license = config.at("license").get<std::string>();
 
 	charmap.insert({
 		{"0", {"ZERO"}},
@@ -408,8 +411,12 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 	//And we can't use std::set because we need to
 	//keep the order of the tests
 
+	size_t total_tests_count = 0;
+
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
+			++total_tests_count;
+
 			auto test = p->stmt;
 
 			//invalidate tests at request
@@ -438,6 +445,14 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 			if (p->stmt->t.type() == Token::category::flash) {
 				flash_drives.push_back(p->stmt);
 			}
+		}
+	}
+
+	if (license.size()) {
+		verify_license(license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+	} else {
+		if (total_tests_count > 10) {
+			throw std::runtime_error("Для запуска более 10 тестов необходимо указать путь к файлу с лицензией (параметр --license)");
 		}
 	}
 

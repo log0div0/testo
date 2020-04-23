@@ -8,7 +8,8 @@ module.exports = function({children}) {
 		<html>
 			<head>
 				<title>Testo Lang</title>
-				<link rel="stylesheet" href="/static/client.css" type="text/css"/>
+				<link rel="stylesheet" href="/static/css/client.css" type="text/css"/>
+				<link rel="stylesheet" href="/static/css/terminal.css" type="text/css"/>
 			</head>
 			<body>
 				<Header/>
@@ -16,7 +17,7 @@ module.exports = function({children}) {
 					{children}
 				</div>
 				<Footer/>
-				<script type="text/javascript" src="/static/client.js"></script>
+				<script type="text/javascript" src="/static/js/client.js"></script>
 			</body>
 		</html>
 	)

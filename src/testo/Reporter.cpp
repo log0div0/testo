@@ -22,6 +22,7 @@ Reporter::Reporter(const nlohmann::json& config) {
 	report_folder = config.at("report_folder").get<std::string>();
 	report_logs = config.at("report_logs").get<bool>();
 	report_screenshots = config.at("report_screenshots").get<bool>();
+	html = config.at("html").get<bool>();
 
 	if ((report_logs || report_screenshots) && report_folder.empty()) {
 		throw std::runtime_error("--report_logs and --report_screenshots arguments are valid only with specified --report_folder");
@@ -75,7 +76,6 @@ void Reporter::init(const std::list<std::shared_ptr<AST::Test>>& _tests_to_run,	
 	}
 
 	if (tests_to_run.size()) {
-		std::cout << rang::fgB::blue << rang::style::bold;
 		report("TESTS TO RUN:\n", style::blue, true);
 		for (auto test: tests_to_run) {
 			report(fmt::format("{}\n", test->name), magenta);
@@ -109,11 +109,8 @@ void Reporter::prepare_environment() {
 }
 
 void Reporter::run_test() {
-	std::cout
-		<< rang::fgB::blue << progress()
-		<< " Running test "
-		<< rang::fg::yellow << current_test->name
-		<< rang::style::reset << std::endl;
+	report(fmt::format("{} Running test ", progress()), blue);
+	report(fmt::format("{}\n", current_test->name), yellow);
 }
 
 void Reporter::skip_failed_test(const std::string& failed_parent) {
@@ -460,7 +457,54 @@ nlohmann::json Reporter::create_json_report() const {
 	return report;
 }
 
+std::string newline_to_br(const std::string& str) {
+	std::string::size_type pos = 0;
+	std::stringstream ss;
+	while (true)
+	{
+		std::string::size_type n = str.find("\n", pos);
+		ss << str.substr(pos, n - pos);
+		if (n == std::string::npos) {
+			return ss.str();
+		} else {
+			ss << "<br/>";
+		}
+		pos = n + 1;
+	}
+}
+
 void Reporter::report(const std::string& message, style color, bool is_bold) {
+	if (html) {
+		std::cout << "<span className=\"";
+		switch (color) {
+			case regular:
+				break;
+			case blue:
+				std::cout << "blue";
+				break;
+			case magenta:
+				std::cout << "magenta";
+				break;
+			case yellow:
+				std::cout << "yellow";
+				break;
+			case green:
+				std::cout << "green";
+				break;
+			case red:
+				std::cout << "red";
+				break;
+		}
+		std::cout << " ";
+		if (is_bold) {
+			std::cout << "bold";
+		}
+		std::cout << "\">";
+		std::cout << newline_to_br(message);
+		std::cout << "</span>" << std::endl;
+		return;
+	}
+
 	std::cout << rang::style::reset;
 
 	switch (color) {

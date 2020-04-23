@@ -105,6 +105,7 @@ struct Reporter {
 
 	bool report_logs;
 	bool report_screenshots;
+	bool html;
 
 	fs::path report_folder;
 	std::ofstream summary_output_file;

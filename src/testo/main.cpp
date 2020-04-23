@@ -22,8 +22,6 @@
 #include <fmt/format.h>
 #include <fstream>
 
-#include <license/License.hpp>
-
 using namespace clipp;
 
 struct Interruption {};
@@ -50,6 +48,7 @@ struct console_args {
 	bool assume_yes = false;
 	bool report_logs = false;
 	bool report_screenshots = false;
+	bool html = false;
 };
 
 console_args args;
@@ -151,13 +150,6 @@ int clean_mode() {
 }
 
 int run_mode() {
-	if (!args.license.size()) {
-		std::cout << "Необходимо указать путь к файлу с лицензией (параметр --license)" << std::endl;
-		return 1;
-	}
-
-	verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
-
 	auto params = nlohmann::json::array();
 
 	for (size_t i = 0; i < args.params_names.size(); ++i) {
@@ -177,7 +169,9 @@ int run_mode() {
 		{"report_folder", args.report_folder},
 		{"report_logs", args.report_logs},
 		{"report_screenshots", args.report_screenshots},
+		{"html", args.html},
 		{"prefix", args.prefix},
+		{"license", args.license},
 		{"params", params}
 	};
 
@@ -228,6 +222,7 @@ int do_main(int argc, char** argv) {
 		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
+		(option("--html").set(args.html)) % "Format stdout as html",
 		(option("--license") & value("path", args.license)) % "Path to license file",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);

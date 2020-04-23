@@ -163,6 +163,22 @@ export async function makeDocToc(src) {
 	return result
 }
 
+function Terminal({children, height}) {
+	height = height ? height : "300px"
+	return (
+		<div className="terminal-window" style={{height: height}}>
+			<header>
+				<div className="terminal-button red"></div>
+				<div className="terminal-button yellow"></div>
+				<div className="terminal-button green"></div>
+			</header>
+			<section className="terminal">
+				{children}
+			</section>
+		</div>
+	)
+}
+
 export async function makeDocPage(toc, page_url) {
 	for (let i = 0; i < toc.length; ++i) {
 		let category = toc[i];
@@ -175,7 +191,8 @@ export async function makeDocPage(toc, page_url) {
 			const components = {
 				h1: H1,
 				h2: H2,
-				h3: H3
+				h3: H3,
+				Terminal
 			}
 			let prevPage = null
 			if (j > 0) {
