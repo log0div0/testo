@@ -29,24 +29,28 @@
 
 Для того, чтобы подключить виртуальную машину к Инетрнету, необходимо для начала в тестовых сценариях объявить виртуальную сеть, которая будет для этого использоваться. Для этого существует директива [`network`](/docs/lang/network)
 
-	network internet {
-		mode: "nat"
-	}
-	
+```testo
+network internet {
+	mode: "nat"
+}
+```
+
 Объявление виртуальной сети похоже на объявление виртуальной машины: после директивы `network` необходимо указать имя сети (должно быть уникальным), а также указать набор атрибутов, из которых обязательный только один: `mode` (режим работы). Существует всего два режима работы для сети: `nat` (для доступа во внешнюю сеть хоста, то есть в Интернет) и `internal` (внутренняя сеть, только для связи между несколькими виртуальными машинами).
 
 Теперь, после объявления самой виртуальной сети, необходимо добавить сетевой адаптер в машину `my_ubuntu`, который будет подключен к этой самой сети. Для этого нам потребуется новый атрибут `nic` в объявлении машины `my_ubuntu`
 
-	machine my_ubuntu {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "${ISO_DIR}/ubuntu_server.iso"
+```testo
+machine my_ubuntu {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "${ISO_DIR}/ubuntu_server.iso"
 
-		nic nat: {
-			attached_to: "internet"
-		}
+	nic nat: {
+		attached_to: "internet"
 	}
+}
+```
 
 Атрибут `nic`, в отличие от других атрибутов, должден иметь имеет имя (уникальное в пределах виртуальной машины). Это связано с тем, что сетевых адаптеров в виртуальной машине может быть несколько и мы должны быть в состоянии отличать их друг от друга.
 
@@ -56,7 +60,7 @@
 
 ## Подправляем тест ubuntu_installation
 
-Давайте запустим наш тестовый сценарий 
+Давайте запустим наш тестовый сценарий
 
 <Terminal height="600px">
 	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
@@ -152,24 +156,22 @@
 
 Действительно, если мы с помощью `virtual manager` зайдём посмотреть, что происходит с нашей виртуальной машиной, мы увидим экран
 
-<br/><br/>
-
 ![Hostname](/static/tutorials/6_nat/hostname.png)
-
-<br/><br/>
 
 Это произошло потому, что мы добавили сетевой интерфейс и теперь при установке Ubuntu Server больше не возникает предупреждение о том, что сетевых адаптеров не найдено.
 
 Давайте закомментируем пока строчку с ожиданием этой надписи в установочном скрипте. Правда, теперь 30 секунд может не хватить для появления надписи "Hostname", поэтому увеличим это ожидание до 5 минут
 
-	...
-	wait "Country of origin for the keyboard"; press Enter
-	wait "Keyboard layout"; press Enter
-	#wait "No network interfaces detected" timeout 5m; press Enter
-	wait "Hostname:" timeout 5m; press Backspace*36; type "${hostname}"; press Enter
-	wait "Full name for the new user"; type "${login}"; press Enter
-	wait "Username for your account"; press Enter
-	...
+```testo
+...
+wait "Country of origin for the keyboard"; press Enter
+wait "Keyboard layout"; press Enter
+#wait "No network interfaces detected" timeout 5m; press Enter
+wait "Hostname:" timeout 5m; press Backspace*36; type "${hostname}"; press Enter
+wait "Full name for the new user"; type "${login}"; press Enter
+wait "Username for your account"; press Enter
+...
+```
 
 И запустим скрипт заново.
 
@@ -341,33 +343,33 @@
 
 Вместо экрана с предложением выбрать часовой пояс мы увидим другой экран
 
-<br/><br/>
-
 ![Timezone](/static/tutorials/6_nat/timezone.png)
-
-<br/><br/>
 
 Это произошло потому что благодаря Интернету установщик Ubuntu Server может автоматически определить текущиий часовой пояс. Поэтому еще немного подкорректируем тестовый сценарий
 
-	...
-	wait "Re-enter password to verify"; type "${password}"; press Enter
-	wait "Use weak password?"; press Left, Enter
-	wait "Encrypt your home directory?"; press Enter
-	
-	#wait "Select your timezone" timeout 2m; press Enter
-	wait "Is this time zone correct?" timeout 2m; press Enter
-	wait "Partitioning method"; press Enter
-	...
+```testo
+...
+wait "Re-enter password to verify"; type "${password}"; press Enter
+wait "Use weak password?"; press Left, Enter
+wait "Encrypt your home directory?"; press Enter
+
+#wait "Select your timezone" timeout 2m; press Enter
+wait "Is this time zone correct?" timeout 2m; press Enter
+wait "Partitioning method"; press Enter
+...
+```
 
 Теперь все тесты должны успешно пройти.
 
 Для проверки того, что у нас внутри тестов действительно теперь есть доступ в Интернет, давайте переименуем тест `guest_additions_demo` в `check_internet` и переделаем его таким  образом
 
-	test check_internet: guest_additions_installation {
-		my_ubuntu {
-			exec bash "apt update"
-		}
+```testo
+test check_internet: guest_additions_installation {
+	my_ubuntu {
+		exec bash "apt update"
 	}
+}
+```
 
 Если запустить наш тестовый сценарий, то вывод будет следующим
 

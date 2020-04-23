@@ -191,27 +191,60 @@ function TestoDef(hljs) {
 		name: 'Testo Lang',
 		keywords: 'for if else continue break machine',
 			contains: [
-				hljs.QUOTE_STRING_MODE,
 				{
-					begin: /"""/,
-					end: /"""/,
-					contains: [hljs.BACKSLASH_ESCAPE]
+					className: 'string',
+					variants: [
+					 	{
+							begin: /"""/,
+							end: /"""/
+					 	},
+					 	{
+							begin: /"/,
+							end: /"/
+					 	}
+					],
+					contains: [
+						{
+							className: 'literal',
+							variants: [
+								{ begin: '\\\\"' },
+								{ begin: '\\\\n' }
+							]
+						},
+						{
+							className: 'subst',
+							begin: "\\${",
+							end: "}"
+						}
+					]
 				},
 				hljs.C_BLOCK_COMMENT_MODE,
 				hljs.HASH_COMMENT_MODE,
 				{
-				  className: 'number',
-				  begin: /\d+(Kb|Mb|Gb)?/
+					className: 'number',
+					begin: /\b\d+(Kb|Mb|Gb|s|m|h)?/
 				},
 				{
 					className: 'function',
-					beginKeywords: 'machine',
+					beginKeywords: 'machine test network flash',
 					end: /{/,
 					excludeEnd: true,
 					contains: [
 						hljs.UNDERSCORE_TITLE_MODE
 					]
-	      }
+				},
+				{
+					className: 'function',
+					keywords: 'param',
+					begin: "param\\s+",
+					contains: [
+						hljs.UNDERSCORE_TITLE_MODE
+					]
+				},
+				{
+					className: 'attribute',
+					begin: /type|wait|press|plug|unplug|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep/
+				}
 			]
 	}
 }
