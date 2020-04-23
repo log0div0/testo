@@ -6,6 +6,7 @@ import path from 'path'
 import * as babel from "@babel/core"
 import Layout from './Layout'
 import PageNotFound from './PageNotFound'
+import hljs from 'highlight.js'
 
 function H1({children}) {
 	return <h1 className="postHeaderTitle">{children}</h1>
@@ -179,6 +180,55 @@ function Terminal({children, height}) {
 	)
 }
 
+function Pre(props) {
+	return (
+		<pre {...props} />
+	)
+}
+
+function TestoDef(hljs) {
+	return {
+		name: 'Testo Lang',
+		keywords: 'for if else continue break machine',
+			contains: [
+				hljs.QUOTE_STRING_MODE,
+				{
+					begin: /"""/,
+					end: /"""/,
+					contains: [hljs.BACKSLASH_ESCAPE]
+				},
+				hljs.C_BLOCK_COMMENT_MODE,
+				hljs.HASH_COMMENT_MODE,
+				{
+				  className: 'number',
+				  begin: /\d+(Kb|Mb|Gb)?/
+				},
+				{
+					className: 'function',
+					beginKeywords: 'machine',
+					end: /{/,
+					excludeEnd: true,
+					contains: [
+						hljs.UNDERSCORE_TITLE_MODE
+					]
+	      }
+			]
+	}
+}
+
+hljs.registerLanguage('testo', TestoDef)
+
+function Code(props) {
+	let lang = 'text'
+	if (props.className) {
+		lang = props.className.substr("language-".length)
+	}
+	let {value} = hljs.highlight(lang, props.children)
+	return (
+		<code className="hljs" dangerouslySetInnerHTML={{__html: value}}/>
+	)
+}
+
 export async function makeDocPage(toc, page_url) {
 	for (let i = 0; i < toc.length; ++i) {
 		let category = toc[i];
@@ -192,7 +242,9 @@ export async function makeDocPage(toc, page_url) {
 				h1: H1,
 				h2: H2,
 				h3: H3,
-				Terminal
+				Terminal,
+				pre: Pre,
+				code: Code
 			}
 			let prevPage = null
 			if (j > 0) {

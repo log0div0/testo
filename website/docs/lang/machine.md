@@ -70,7 +70,7 @@
 параметра `ISO_DIR`. Если такой параметр не задан, то итоговая строка
 примет значение `/ubuntu-16.04.6-server-amd64.iso"`
 
-```
+```testo
 machine example_machine {
     cpus: 1
     ram: 1024Mb

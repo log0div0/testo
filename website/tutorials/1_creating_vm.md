@@ -43,12 +43,14 @@
 
 Давайте создадим пустой файлик `~/testo/hello_world.testo` и объявим в этом файлике первую собственную [виртуальную машину](/docs/lang/machine):
 
-	machine my_ubuntu {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "/opt/ubuntu_server.iso"
-	}
+```testo
+machine my_ubuntu {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "/opt/ubuntu_server.iso"
+}
+```
 
 Объявление виртуальной машины заключается в использовании директивы `machine` после которого должно идти имя машины. Имя должно быть уникальным в пределах тестового проекта.
 
