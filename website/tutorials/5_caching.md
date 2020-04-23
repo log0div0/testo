@@ -57,23 +57,22 @@
 </p>
 <br/><br/>
 
-Для начала необходимо прогнать все тесты и добиться того, чтобы они были закешированы (обратите внимание, запуск происходит без аргумента `invalidate`):
+Для начала необходимо прогнать все тесты и добиться того, чтобы они были закешированы (обратите внимание, запуск происходит без аргумента `invalidate`). Если какие-то тесты у вас были незакешированы, то пусть они выполнятся, а затем снова запустите testo с теми же аргументами.
 
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso
-```
-
-Если какие-то тесты у вас были незакешированы, то пусть они выполнятся, а затем снова запустите testo с теми же аргументами.
 В конечном счете вы должны увидеть такой вывод
 
-	UP-TO-DATE TESTS:
-	ubuntu_installation
-	guest_additions_installation
-	guest_additions_demo
-	PROCESSED TOTAL 3 TESTS IN 0h:0m:0s
-	UP-TO-DATE: 3
-	RUN SUCCESSFULLY: 0
-	FAILED: 0
+<Terminal>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:0s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 3<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 0<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Теперь давайте попробуем поэкспериментировать с нашими тестовыми сценариями и посмотрим, что будет происходить с кешем.
 
@@ -93,30 +92,48 @@
 
 Вывод будет следующим:
 
-	Some tests have lost their cache:
-		- guest_additions_demo
-	Do you confirm running them and all their children? [y/N]: y
-	UP-TO-DATE TESTS:
-	ubuntu_installation
-	guest_additions_installation
-	TESTS TO RUN:
-	guest_additions_demo
-	[ 67%] Preparing the environment for test guest_additions_demo
-	[ 67%] Restoring snapshot guest_additions_installation for virtual machine my_ubuntu
-	[ 67%] Running test guest_additions_demo
-	[ 67%] Executing bash command in virtual machine my_ubuntu with timeout 10m
-	+ echo Modified Hello world
-	Modified Hello world
-	+ echo from bash
-	from bash
-	[ 67%] Executing python3 command in virtual machine my_ubuntu with timeout 10m
-	Hello from python3!
-	[ 67%] Taking snapshot guest_additions_demo for virtual machine my_ubuntu
-	[100%] Test guest_additions_demo PASSED in 0h:0m:6s
-	PROCESSED TOTAL 3 TESTS IN 0h:0m:6s
-	UP-TO-DATE: 2
-	RUN SUCCESSFULLY: 1
-	FAILED: 0
+<Terminal height="650px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
+	<span className="">Some tests have lost their cache:<br/></span>
+	<span className="">	- guest_additions_demo<br/></span>
+	<span className="">Do you confirm running them and all their children? [y/N]: y<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Restoring snapshot </span>
+	<span className="yellow ">guest_additions_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 67%] Running test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ echo Modified Hello world<br/></span>
+	<span className=" ">Modified Hello world<br/></span>
+	<span className=" ">+ echo from bash<br/></span>
+	<span className=" ">from bash<br/></span>
+	<span className="blue ">[ 67%] Executing python3 command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">Hello from python3!<br/></span>
+	<span className="blue ">[ 67%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_demo</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_demo</span>
+	<span className="green bold"> PASSED in 0h:0m:5s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:5s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 2<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 1<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Ожидаемо, изменение тестового сценария привело к потере кеша в этом тесте. При этом можно заметить, что запустился только дочерний тест `guest_additions_demo`, причем для его проведения состояние виртуальной машины `my_ubuntu` было восстановлено из снепшота `guest_additions_installation`, который создался ранее во время успешного прогона соответствуующего теста.
 
@@ -146,14 +163,18 @@
 
 и снова выполним тестовый сценарий. Мы увидим следующий вывод
 
-	UP-TO-DATE TESTS:
-	ubuntu_installation
-	guest_additions_installation
-	guest_additions_demo
-	PROCESSED TOTAL 3 TESTS IN 0h:0m:0s
-	UP-TO-DATE: 3
-	RUN SUCCESSFULLY: 0
-	FAILED: 0
+<Terminal>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:0s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 3<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 0<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 То есть все тесты являются закешированными, несмотря на то, что мы только что изменили текст одного из тестов. Похожую ситуацию мы наблюдали в прошлой части обучения после введения параметров. Почему же так происходит?
 
@@ -170,18 +191,123 @@
 
 И попробуем запустить сценарий. Если вы не хотите каждый раз подтверждать своё согласие с тем, что кеш теста был потерян, вы можете использовать аргумент `--assume_yes`
 
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --assume_yes
-```
-
-Мы увидим следующий вывод
-
-	UP-TO-DATE TESTS:
-	ubuntu_installation
-	TESTS TO RUN:
-	guest_additions_installation
-	guest_additions_demo
-	....
+<Terminal height="600px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --assume_yes<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 33%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 33%] Restoring snapshot </span>
+	<span className="yellow ">ubuntu_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Running test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 33%] Plugging dvd </span>
+	<span className="yellow ">/opt/iso/testo-guest-additions.iso </span>
+	<span className="blue ">into virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"sudo su" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">password for my-ubuntu-login </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"1111" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">root@my-ubuntu </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"mount /dev/cdrom /media" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">mounting read-only </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"dpkg -i /media/testo-guest-additions*" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">Setting up testo-guest-additions </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"umount /media" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Sleeping in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> for 2s<br/></span>
+	<span className="blue ">[ 33%] Unplugging dvd </span>
+	<span className="yellow "> </span>
+	<span className="blue ">from virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[ 67%] Test </span>
+	<span className="yellow bold">guest_additions_installation</span>
+	<span className="green bold"> PASSED in 0h:0m:17s<br/></span>
+	<span className="blue ">[ 67%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Running test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ echo Modified Hello world<br/></span>
+	<span className=" ">Modified Hello world<br/></span>
+	<span className=" ">+ echo from bash<br/></span>
+	<span className=" ">from bash<br/></span>
+	<span className="blue ">[ 67%] Executing python3 command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">Hello from python3!<br/></span>
+	<span className="blue ">[ 67%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_demo</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_demo</span>
+	<span className="green bold"> PASSED in 0h:0m:3s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:21s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 1<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 2<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Очевидно, что наш тест `guest_additions_installation` потерял свой кеш, т.к. значение строки с параметром `guest_additions_pkg` изменилось. Здесь примечательно то, что вместе с потерей кеша в тесте `guest_additions_installation` автоматически был сброшен кеш производного теста `guest_additions_demo`, хотя никаких изменений в нем мы не проводили.
 
@@ -192,11 +318,6 @@
 
 Допустим, в ходе тестового сценария нам необходимо передать небольшой текстовый файл внутрь виртуальной машины. Давайте создадим такой файл в той же папке, что и наш тестовый сценарий `hello_world.testo`
 
-```sh
-# echo "This should be copied inside my_ubuntu" > testing_copyto.txt
-# ls
-hello_world.testo  testing_copyto.txt
-```
 Сам тестовый сценарий необходимо подкорректировать
 
 	test guest_additions_demo: guest_additions_installation {
@@ -213,6 +334,59 @@ hello_world.testo  testing_copyto.txt
 			exec bash "cat /tmp/testing_copyto.txt"
 		}
 	}
+
+<Terminal height="700px">
+	<span className="">user$ echo "This should be copied inside my_ubuntu" &gt; ~/testo/testing_copyto.txt<br/></span>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --assume_yes<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Restoring snapshot </span>
+	<span className="yellow ">guest_additions_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 67%] Running test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ echo Modified Hello world<br/></span>
+	<span className=" ">Modified Hello world<br/></span>
+	<span className=" ">+ echo from bash<br/></span>
+	<span className=" ">from bash<br/></span>
+	<span className="blue ">[ 67%] Executing python3 command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">Hello from python3!<br/></span>
+	<span className="blue ">[ 67%] Copying </span>
+	<span className="yellow ">./testing_copyto.txt </span>
+	<span className="blue ">to virtual machine </span>
+	<span className="yellow ">my_ubuntu </span>
+	<span className="blue ">to destination </span>
+	<span className="yellow ">/tmp/testing_copyto.txt </span>
+	<span className="blue ">with timeout 10m<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ cat /tmp/testing_copyto.txt<br/></span>
+	<span className=" ">This should be copied inside my_ubuntu<br/></span>
+	<span className="blue ">[ 67%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_demo</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_demo</span>
+	<span className="green bold"> PASSED in 0h:0m:5s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:5s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 2<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 1<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 В действии `copyto` необходимо указать копируемый файл (т.к. он лежит в одной папке с тестовым сценарием, то достаточно указать относительный путь `./`), а также **полный путь, включая имя конечного файла** куда необходимо скопировать этот файл.
 
@@ -239,9 +413,136 @@ hello_world.testo  testing_copyto.txt
 
 Например, если вы хотите сбросить кеш всех тестов, связанных с гостевыми дополнениями, выполните следующую команду 
 
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --invalidate guest_additions*
-```
+
+<Terminal height="600px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --invalidate guest_additions*<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 33%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 33%] Restoring snapshot </span>
+	<span className="yellow ">ubuntu_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Running test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 33%] Plugging dvd </span>
+	<span className="yellow ">/opt/iso/testo-guest-additions.iso </span>
+	<span className="blue ">into virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"sudo su" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">password for my-ubuntu-login </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"1111" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">root@my-ubuntu </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"mount /dev/cdrom /media" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">mounting read-only </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"dpkg -i /media/testo-guest-additions*" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Waiting </span>
+	<span className="yellow ">Setting up testo-guest-additions </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Typing </span>
+	<span className="yellow ">"umount /media" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Sleeping in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> for 2s<br/></span>
+	<span className="blue ">[ 33%] Unplugging dvd </span>
+	<span className="yellow "> </span>
+	<span className="blue ">from virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 33%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[ 67%] Test </span>
+	<span className="yellow bold">guest_additions_installation</span>
+	<span className="green bold"> PASSED in 0h:0m:17s<br/></span>
+	<span className="blue ">[ 67%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Running test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ echo Modified Hello world<br/></span>
+	<span className=" ">Modified Hello world<br/></span>
+	<span className=" ">+ echo from bash<br/></span>
+	<span className=" ">from bash<br/></span>
+	<span className="blue ">[ 67%] Executing python3 command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">Hello from python3!<br/></span>
+	<span className="blue ">[ 67%] Copying </span>
+	<span className="yellow ">./testing_copyto.txt </span>
+	<span className="blue ">to virtual machine </span>
+	<span className="yellow ">my_ubuntu </span>
+	<span className="blue ">to destination </span>
+	<span className="yellow ">/tmp/testing_copyto.txt </span>
+	<span className="blue ">with timeout 10m<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ cat /tmp/testing_copyto.txt<br/></span>
+	<span className=" ">This should be copied inside my_ubuntu<br/></span>
+	<span className="blue ">[ 67%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_demo</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_demo</span>
+	<span className="green bold"> PASSED in 0h:0m:4s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:21s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 1<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 2<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 ## Итоги
 

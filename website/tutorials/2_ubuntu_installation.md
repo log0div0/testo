@@ -77,19 +77,31 @@
 
 Такое действие `wait` вернет управление только тогда, когда на экране появится соответствующая надпись. Давайте попробуем запустить такой тест
 
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail
-```
 
-	TESTS TO RUN:
-	my_first_test
-	[  0%] Preparing the environment for test my_first_test
-	[  0%] Restoring snapshot initial for virtual machine my_ubuntu
-	[  0%] Running test my_first_test
-	[  0%] Starting virtual machine my_ubuntu
-	[  0%] Waiting English for 1m with interval 1s in virtual machine my_ubuntu
-	/home/alex/testo/hello_world.testo:13:3: Caught abort action on virtual machine my_ubuntu with message: Stop here
-	[100%] Test my_first_test FAILED in 0h:0m:5s
+<Terminal>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">English </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="red bold">/home/alex/testo/hello_world.testo:13:3: Caught abort action on virtual machine my_ubuntu with message: stop here<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">my_first_test</span>
+	<span className="red bold"> FAILED in 0h:0m:4s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Заметим, что действие `abort` все еще присутствует, выполняя роль своеобразного break point в нашем тестовом сценарии. Так процесс создания скрипта становится максимально наглядным, т.к. мы сразу же можем увидеть состояние виртуальной машины, в котором она оказывается в момент вызова `abort`
 
@@ -108,16 +120,34 @@
 
 Вывод:
 
-	TESTS TO RUN:
-	my_first_test
-	[  0%] Preparing the environment for test my_first_test
-	[  0%] Restoring snapshot initial for virtual machine my_ubuntu
-	[  0%] Running test my_first_test
-	[  0%] Starting virtual machine my_ubuntu
-	[  0%] Waiting English for 1m with interval 1s in virtual machine my_ubuntu
-	[  0%] Pressing key ENTER on virtual machine my_ubuntu
-	/home/alex/testo/hello_world.testo:14:3: Caught abort action on virtual machine my_ubuntu with message: Stop here
-	[100%] Test my_first_test FAILED in 0h:0m:4s
+<Terminal height="350px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">English </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="red bold">/home/alex/testo/hello_world.testo:13:3: Caught abort action on virtual machine my_ubuntu with message: stop here<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">my_first_test</span>
+	<span className="red bold"> FAILED in 0h:0m:4s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Если открыть виртуальную машину `my_ubuntu` в `virtual manager`, то мы увидим, что установка Убунту, действильно, немного сдвинулась с места: теперь перед нами второй экран установки с выбором необходимых действий.
 
@@ -160,16 +190,30 @@
 
 Вывод:
 
-	TESTS TO RUN:
-	my_first_test
-	[  0%] Preparing the environment for test my_first_test
-	[  0%] Restoring snapshot initial for virtual machine my_ubuntu
-	[  0%] Running test my_first_test
-	[  0%] Starting virtual machine my_ubuntu
-	[  0%] Waiting ALALA for 10s with interval 1s in virtual machine my_ubuntu
-	/home/alex/testo/hello_world.testo:12:3: Error while performing action wait ALALA timeout 10s on virtual machine my_ubuntu:
-		-Timeout
-	[100%] Test my_first_test FAILED in 0h:0m:11s
+<Terminal height="350px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">ALALA </span>
+	<span className="blue ">for 10s with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="red bold">/home/alex/testo/hello_world.testo:13:3: Error while performing action wait ALALA timeout 10s on virtual machine my_ubuntu:<br/>	-Timeout<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">my_first_test</span>
+	<span className="red bold"> FAILED in 0h:0m:11s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Видно, что ошибка произошла уже не в действии `abort`, а пораньше, в действии `wait`
 
