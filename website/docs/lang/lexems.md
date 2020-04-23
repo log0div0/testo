@@ -23,19 +23,23 @@
 Например, `"Hello world!"`. Внутри таких строк можно исопльзовать
 перенос строки, предварительно поставив экранирующий символ. Например,
 
-	"This is example \
-	of some \
-	multiline string"
+```testo
+"This is example \
+of some \
+multiline string"
+```
 
 **Строковые литералы с переносом строк** представляют собой любую
 последовательность символов, заключенную между тройными двойными
 кавычками `"""`. Внутри таких строк можно использовать перенос строки.
 Например,
 
-	"""This is example
-	of some
-	multiline string
-	"""
+```testo
+"""This is example
+of some
+multiline string
+"""
+```
 
 Внутри строк можно использовать экранирующий символ `\`. Например,
 строка `This is \"Hello World\" example` транслируется в
@@ -45,23 +49,27 @@
 `"`. Необходимо экранировать лишь тройные кавычки, если они встречаются
 в тексте `"""`
 
-	"""This is example
-	"Hello world"
-	of multiline string
-	"""
+```testo
+"""This is example
+"Hello world"
+of multiline string
+"""
 
-	"""This is example
-	\"""Triple qouted part\"""
-	of multiline string
-	"""
+"""This is example
+\"""Triple qouted part\"""
+of multiline string
+"""
+```
 
 Внутри строк можно использовать обращение к переменным
 
 Например, имеет место следующая конкатенация строк
 
-	"""This is example of ${VAR_REF}
-	string concatenation
-	"""
+```testo
+"""This is example of ${VAR_REF}
+string concatenation
+"""
+```
 
 В этом случае конечное значение строки будет зависеть от значения
 переменной `VAR_REF`

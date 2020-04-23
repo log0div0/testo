@@ -4,12 +4,14 @@
 виде обособленных именованных блоков. Формат объявления макроса выглядит
 следующим образом:
 
-	macro <name> ([arg1, arg2, ... argn="default_value1", argn+1="default_value2" ...]) {
-	    <attr1: <value1>
-	    <attr2: <value1>
-	    <attr3: <value1>
-	    ...
-	}
+```text
+macro <name> ([arg1, arg2, ... argn="default_value1", argn+1="default_value2" ...]) {
+	<attr1>: <value1>
+	<attr2>: <value1>
+	<attr3>: <value1>
+	...
+}
+```
 
 Макросы должны иметь имя в формате идентификатора, уникальное среди
 макросов. Макросы могут принимать агументы, к которым затем можно
