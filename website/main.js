@@ -69,6 +69,7 @@ let tutorialsToc = {
 		"/tutorials/4_params",
 		"/tutorials/5_caching",
 		"/tutorials/6_nat",
+		"/tutorials/7_ping"
 	]
 }
 
