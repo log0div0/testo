@@ -114,7 +114,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 геометрического центра строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### left_bottom()
 
@@ -126,7 +126,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 нижнего угла строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### left_center()
 
@@ -138,7 +138,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 края строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### left_top()
 
@@ -150,7 +150,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 верхнего угла строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### center_bottom()
 
@@ -162,7 +162,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 края строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### center_top()
 
@@ -174,7 +174,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 верхнего края строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### right_bottom()
 
@@ -186,7 +186,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 нижнего угла строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### right_center()
 
@@ -198,7 +198,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 края строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### right_top()
 
@@ -210,7 +210,7 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 верхнего угла строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ## Поля
 
@@ -219,11 +219,11 @@ white, gray, black, red, orange, yellow, green, cyan, blue, purple
 Значение координаты X геометрического центра строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.
 
 ### y <number\>
 
 Значение координаты Y геометрического центра строки
 
 > Обращение к этому полю возможно только в том случае, если количество
-> строк, хранимых в `Tensor<TextLine>`, ровно единице.
+> строк, хранимых в `Tensor<TextLine>`, равно единице.

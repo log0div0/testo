@@ -67,7 +67,8 @@ let tutorialsToc = {
 		"/tutorials/2_ubuntu_installation",
 		"/tutorials/3_guest_additions",
 		"/tutorials/4_params",
-		"/tutorials/5_caching"
+		"/tutorials/5_caching",
+		"/tutorials/6_nat",
 	]
 }
 

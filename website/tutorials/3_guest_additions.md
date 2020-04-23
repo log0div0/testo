@@ -77,48 +77,371 @@
 
 Давайте убедимся, что наш производный тест действительно зависит от базового.
 
-Для этого давайте запустим прогон тестового сценария, но при этом используем новый аргумент командной строки `--test_spec`
+Для этого давайте запустим прогон тестового сценария, но при этом используем новый аргумент командной строки `--test_spec`. Этот аргумент позволяет указывать, какой именно тест мы хотим выполнить (вместо того, чтобы выполнять все тесты подряд). Запустив выполнение, мы увидим в начале вывода следующую информацию:
 
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation
-```
+<Terminal>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">English </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="red bold">/home/alex/testo/hello_world.testo:13:3: Caught abort action on virtual machine my_ubuntu with message: stop here<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">my_first_test</span>
+	<span className="red bold"> FAILED in 0h:0m:4s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Этот аргумент позволяет указывать, какой именно тест мы хотим выполнить (вместо того, чтобы выполнять все тсеты подряд). Запустив выполнение, мы увидим в начале вывода следующую информацию:
 
-	TESTS TO RUN:
-	ubuntu_installation
-	guest_additions_installation
+<Terminal height="600px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">ubuntu_installation<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">ubuntu_installation<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">English </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Install Ubuntu Server </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Choose the language </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Select your location </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Detect keyboard layout? </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Country of origin for the keyboard </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Keyboard layout </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">No network interfaces detected </span>
+	<span className="blue ">for 5m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Hostname: </span>
+	<span className="blue ">for 30s with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">BACKSPACE </span>
+	<span className="blue ">36 times </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Typing </span>
+	<span className="yellow ">"my-ubuntu" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Full name for the new user </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Typing </span>
+	<span className="yellow ">"my-ubuntu-login" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Username for your account </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Choose a password for the new user </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Typing </span>
+	<span className="yellow ">"1111" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Re-enter password to verify </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Typing </span>
+	<span className="yellow ">"1111" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Use weak password? </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">LEFT </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Encrypt your home directory? </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Select your timezone </span>
+	<span className="blue ">for 2m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Partitioning method </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Select disk to partition </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Write the changes to disks and configure LVM? </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">LEFT </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Amount of volume group to use for guided partitioning </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Write the changes to disks? </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">LEFT </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">HTTP proxy information </span>
+	<span className="blue ">for 3m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">How do you want to manage upgrades </span>
+	<span className="blue ">for 6m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Choose software to install </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Install the GRUB boot loader to the master boot record? </span>
+	<span className="blue ">for 10m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Installation complete </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Unplugging dvd </span>
+	<span className="yellow "> </span>
+	<span className="blue ">from virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">login: </span>
+	<span className="blue ">for 2m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Typing </span>
+	<span className="yellow ">"my-ubuntu-login" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Password: </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Typing </span>
+	<span className="yellow ">"1111" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Welcome to Ubuntu </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Taking snapshot </span>
+	<span className="yellow ">ubuntu_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[ 50%] Test </span>
+	<span className="yellow bold">ubuntu_installation</span>
+	<span className="green bold"> PASSED in 0h:4m:22s<br/></span>
+	<span className="blue ">[ 50%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 50%] Running test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="red bold">/home/alex/testo/hello_world.testo:52:3: Caught abort action on virtual machine my_ubuntu with message: stop here<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_installation</span>
+	<span className="red bold"> FAILED in 0h:0m:0s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
-То есть, платформа Testo запланировала прогон теста `ubuntu_installation`, несмотря на то, что мы попросили запустить только guest_additions_installation. Это происходит потому, что мы пытаемся прогнать производный тест, при том что **базовый** тест еще не был проведен успешно. Поэтому платформа Testo автоматически попытается прогнать сначала базовый тест, а только затем перейдет к производному.
+ В начале вывода мы видим, что платорма Testo запланировала прогон теста `ubuntu_installation`, несмотря на то, что мы попросили запустить только guest_additions_installation. Это происходит потому, что мы пытаемся прогнать производный тест, при том что **базовый** тест еще не был проведен успешно. Поэтому платформа Testo автоматически попытается прогнать сначала базовый тест, а только затем перейдет к производному.
 
 Но разве мы не устанавливали уже успешно Ubuntu? В конце прошлой части мы закончили на том, что Ubuntu Server уже была успешно установлена, тест закончился, и состояние должно было зафиксироваться.
 
 Однако на самом деле тогда наш тест назывался `my_first_test`, и после переименования его в `ubuntu_installation` он выглядит для платформы Testo как совершенно новый тест, который никогда до этого не прогонялся.
 
-В конце вывода мы увидим
+В конце вывода мы увидим, что базовый тест был успешно выполнен, Testo приступило к прогону второго теста, но он закончился с ошибкой (из-за действия `abort`).
 
-	[  0%] Waiting Welcome to Ubuntu for 1m with interval 1s in virtual machine my_ubuntu
-	[  0%] Taking snapshot ubuntu_installation for virtual machine my_ubuntu
-	[ 50%] Test ubuntu_installation PASSED in 0h:4m:23s
-	[ 50%] Preparing the environment for test guest_additions_installation
-	[ 50%] Running test guest_additions_installation
-	/home/alex/testo/hello_world.testo:52:3: Caught abort action on virtual machine my_ubuntu with message: stop here
-	[100%] Test guest_additions_installation FAILED in 0h:0m:0s
+Если мы еще раз запустим Testo, то увидим уже следующее
 
-Что означает, что базовый тест был успешно выполнен, Testo приступило к прогону второго теста, но он закончился с ошибкой (из-за действия `abort`).
-
-Если мы еще раз запустим команду
-
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation
-```
-
-То увидим уже такую информацию
-
-	UP-TO-DATE TESTS:
-	ubuntu_installation
-	TESTS TO RUN:
-	guest_additions_installation
+<Terminal>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 50%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 50%] Restoring snapshot </span>
+	<span className="yellow ">ubuntu_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Running test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="red bold">/home/alex/testo/hello_world.testo:52:3: Caught abort action on virtual machine my_ubuntu with message: stop here<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_installation</span>
+	<span className="red bold"> FAILED in 0h:0m:0s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Это означает, что платформа Testo распознала, что `ubuntu_installation` уже был успешно выполнен и его состояние уже было зафиксировано. Поэтому вместо того, чтобы прогонять этот тест заново, можно просто восстановить стенд в то состояние, в котором он был зафиксирован на момент окончания `ubuntu_installation`.
 
@@ -179,15 +502,106 @@
 
 В конце можно убрать `abort` и зафиксировать тест.
 
+<Terminal height="600px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 50%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 50%] Restoring snapshot </span>
+	<span className="yellow ">ubuntu_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Running test </span>
+	<span className="yellow ">guest_additions_installation<br/></span>
+	<span className="blue ">[ 50%] Plugging dvd </span>
+	<span className="yellow ">/opt/iso/testo-guest-additions.iso </span>
+	<span className="blue ">into virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Typing </span>
+	<span className="yellow ">"sudo su" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Waiting </span>
+	<span className="yellow ">password for my-ubuntu-login </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Typing </span>
+	<span className="yellow ">"1111" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Waiting </span>
+	<span className="yellow ">root@my-ubuntu </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Typing </span>
+	<span className="yellow ">"mount /dev/cdrom /media" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Waiting </span>
+	<span className="yellow ">mounting read-only </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Typing </span>
+	<span className="yellow ">"dpkg -i /media/*.deb" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Waiting </span>
+	<span className="yellow ">Setting up testo-guest-additions </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Typing </span>
+	<span className="yellow ">"umount /media" </span>
+	<span className="blue ">with interval 30ms in virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Sleeping in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> for 2s<br/></span>
+	<span className="blue ">[ 50%] Unplugging dvd </span>
+	<span className="yellow "> </span>
+	<span className="blue ">from virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 50%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_installation</span>
+	<span className="green bold"> PASSED in 0h:0m:17s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 2 TESTS IN 0h:0m:17s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 1<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 1<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
+
 На этом установка гостевых дополнений закончена, давайте их испробуем в деле
 
 ## Пробуем гостевые дополнения в деле
 
 Для тестирования гостевых дополнений сделаем новый производный тест, который теперь будет зависеть от `guest_additions_installation`. После установки гостевых дополнений у нас появляется в арсенале несколько новых действий. В этой части мы сосредоточимся на действии `exec`. Попробуем выполнить баш-скрипт, который выводит на экран "Hello world!" (Можно обойтись без точки останова `abort`)
-
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_demo
-```
 
 	test guest_additions_demo: guest_additions_installation {
 		my_ubuntu {
@@ -195,25 +609,42 @@
 		}
 	}
 
+
 Результат будет таким
 
-	UP-TO-DATE TESTS:
-	ubuntu_installation
-	guest_additions_installation
-	TESTS TO RUN:
-	guest_additions_demo
-	[ 67%] Preparing the environment for test guest_additions_demo
-	[ 67%] Restoring snapshot guest_additions_installation for virtual machine my_ubuntu
-	[ 67%] Running test guest_additions_demo
-	[ 67%] Executing bash command in virtual machine my_ubuntu with timeout 10m
-	+ echo Hello world
-	Hello world
-	[ 67%] Taking snapshot guest_additions_demo for virtual machine my_ubuntu
-	[100%] Test guest_additions_demo PASSED in 0h:0m:5s
-	PROCESSED TOTAL 3 TESTS IN 0h:0m:5s
-	UP-TO-DATE: 2
-	RUN SUCCESSFULLY: 1
-	FAILED: 0
+<Terminal height="500px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_demo<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Restoring snapshot </span>
+	<span className="yellow ">guest_additions_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 67%] Running test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ echo Hello world<br/></span>
+	<span className=" ">Hello world<br/></span>
+	<span className="blue ">[ 67%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_demo</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_demo</span>
+	<span className="green bold"> PASSED in 0h:0m:4s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:4s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 2<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 1<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Видно, как была выполнена баш-команда. Вообще, `exec` не ограничивается запуском баш-команд. Например, можно запускать питоновские скрипты (конечно, если в гостевой системе вообще установлен интерпретатор python). При этом скрипты могут быть и многострочными, для этого их нужно заключать в тройные кавычки
 
@@ -229,30 +660,50 @@
 		}
 	}
 
-	UP-TO-DATE TESTS:
-	ubuntu_installation
-	guest_additions_installation
-	TESTS TO RUN:
-	guest_additions_demo
-	[ 67%] Preparing the environment for test guest_additions_demo
-	[ 67%] Restoring snapshot guest_additions_installation for virtual machine my_ubuntu
-	[ 67%] Running test guest_additions_demo
-	[ 67%] Executing bash command in virtual machine my_ubuntu with timeout 10m
-	+ echo Hello world
-	Hello world
-	+ echo from bash
-	from bash
-	[ 67%] Executing python3 command in virtual machine my_ubuntu with timeout 10m
-	Hello from python3!
-	[ 67%] Taking snapshot guest_additions_demo for virtual machine my_ubuntu
-	[100%] Test guest_additions_demo PASSED in 0h:0m:4s
-	PROCESSED TOTAL 3 TESTS IN 0h:0m:4s
-	UP-TO-DATE: 2
-	RUN SUCCESSFULLY: 1
-	FAILED: 0
+<Terminal height="650px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_demo<br/></span>
+	<span className="">Some tests have lost their cache:<br/></span>
+	<span className="">	- guest_additions_demo<br/></span>
+	<span className="">Do you confirm running them and all their children? [y/N]: y<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">ubuntu_installation<br/></span>
+	<span className="magenta ">guest_additions_installation<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Preparing the environment for test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Restoring snapshot </span>
+	<span className="yellow ">guest_additions_installation</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[ 67%] Running test </span>
+	<span className="yellow ">guest_additions_demo<br/></span>
+	<span className="blue ">[ 67%] Executing bash command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ echo Hello world<br/></span>
+	<span className=" ">Hello world<br/></span>
+	<span className=" ">+ echo from bash<br/></span>
+	<span className=" ">from bash<br/></span>
+	<span className="blue ">[ 67%] Executing python3 command in virtual machine </span>
+	<span className="yellow ">my_ubuntu</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">Hello from python3!<br/></span>
+	<span className="blue ">[ 67%] Taking snapshot </span>
+	<span className="yellow ">guest_additions_demo</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">guest_additions_demo</span>
+	<span className="green bold"> PASSED in 0h:0m:5s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:0m:5s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 2<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 1<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
-
-С остальными возможностями гостевых дополнений мы познакомимся в следующих уроках. В частности, действие `copyto` разбирается в [пятой](4_caching) части уроков
+С остальными возможностями гостевых дополнений мы познакомимся в следующих уроках. В частности, действие `copyto` разбирается в [пятой](5_caching) части уроков
 
 ## Итоги
 
@@ -264,4 +715,4 @@
 </p>
 <br/><br/>
 
-Итоговый скрипт можно скачать [здесь](/docs/static/tutorials/3_guest_additions/guets_additions.testo)
+Итоговый скрипт можно скачать [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/3)

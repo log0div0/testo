@@ -67,14 +67,11 @@
 
 ## Попробуем запустить
 
-Итак, мы закончили объявление виртуальной инфраструктуры нашего первого тестового проекта. Давайте попробуем запустить такой тестовый сценарий:
+Итак, мы закончили объявление виртуальной инфраструктуры нашего первого тестового проекта. Давайте попробуем запустить такой тестовый сценарий.
 
-```sh
-# sudo testo run ~/testo/hello_world.testo
-```
 Если всё было сделано правильно, то вы должны увидеть примерно следующий вывод интерпретатора:
 
-<Terminal>
+<Terminal height="200px">
 	<span className="">user$ sudo testo run ~/testo/hello_world.testo<br/></span>
 	<span className="bold blue">PROCESSED TOTAL 0 TESTS IN 0h:0m:0s<br/></span>
 	<span className="bold blue">UP-TO-DATE: 0<br/></span>
@@ -111,19 +108,35 @@
 
 В нашем примере в тесте `my_first_test` фигурирует всего одна команда. В этой команде к виртуальной машине `my_ubuntu` применяется действие [`start`](/docs/lang/actions#start), которое включает виртуальную машину. Давайте запустим этот тест и посмотрим, что у нас получилось.
 
-	TESTS TO RUN:
-	my_first_test
-	[  0%] Preparing the environment for test my_first_test
-	[  0%] Creating virtual machine my_ubuntu
-	[  0%] Taking snapshot initial for virtual machine my_ubuntu
-	[  0%] Running test my_first_test
-	[  0%] Starting virtual machine my_ubuntu
-	[  0%] Taking snapshot my_first_test for virtual machine my_ubuntu
-	[100%] Test my_first_test PASSED in 0h:0m:1s
-	PROCESSED TOTAL 1 TESTS IN 0h:0m:1s
-	UP-TO-DATE: 0
-	RUN SUCCESSFULLY: 1
-	FAILED: 0
+<Terminal height="400px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Creating virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Taking snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Taking snapshot </span>
+	<span className="yellow ">my_first_test</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">my_first_test</span>
+	<span className="green bold"> PASSED in 0h:0m:1s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 1 TESTS IN 0h:0m:1s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 0<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 1<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Мы видим, что тест `my_first_test` попал в очередь `TESTS TO RUN`, а значит платформа Testo готова этот тест выполнить. Затем начинается непосредственное выполнение теста.
 
@@ -169,23 +182,35 @@
 
 В нашем тесте всё ещё фигурирует одна команда, однако в качестве действия теперь указана целая группа действий, заключенная в фигурные скобочки. Добавилось действие `abort`, которое прерывает выполнение теста и выдает соответствующее сообщение об ошибке. Если запустить тест, мы увидим следующий вывод
 
-	Some tests have lost their cache:
-		- my_first_test
-	Do you confirm running them and all their children? [y/N]: y
-	TESTS TO RUN:
-	my_first_test
-	[  0%] Preparing the environment for test my_first_test
-	[  0%] Restoring snapshot initial for virtual machine my_ubuntu
-	[  0%] Running test my_first_test
-	[  0%] Starting virtual machine my_ubuntu
-	/home/alex/testo/hello_world.testo:12:3: Caught abort action on virtual machine my_ubuntu with message: Stop here
-	[100%] Test my_first_test FAILED in 0h:0m:1s
-	PROCESSED TOTAL 1 TESTS IN 0h:0m:1s
-	UP-TO-DATE: 0
-	RUN SUCCESSFULLY: 0
-	FAILED: 1
-		 -my_first_test
-	At least one of the tests failed
+<Terminal height="500px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo<br/></span>
+	<span className="">Some tests have lost their cache:<br/></span>
+	<span className="">	- my_first_test<br/></span>
+	<span className="">Do you confirm running them and all their children? [y/N]: y<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="red bold">/home/alex/testo/hello_world.testo:12:3: Caught abort action on virtual machine my_ubuntu with message: Stop here<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">my_first_test</span>
+	<span className="red bold"> FAILED in 0h:0m:1s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 1 TESTS IN 0h:0m:1s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 0<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 0<br/></span>
+	<span className="red bold">FAILED: 1<br/></span>
+	<span className="red ">	 -my_first_test<br/></span>
+	<span>At least one of the tests failed<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 В начале выполнения высвечивается предупреждение о потере кеша в тесте `my_first_test`. Кеширование мы рассмотрим в следующих уроках, поэтому сейчас просто молча соглашаемся в этим.
 
@@ -193,22 +218,29 @@
 
 Однако если мы откроем `virtual manager` и посмотрим на виртуальную машину `my_ubuntu`, то снова обнаружим ее в выключенном состоянии, хотя в этот раз тест не был успешно выполнен (в меню снепшотов теперь нет снепшота `my_first_test`). И снова, причина кроется в том, что платформа Testo выключает виртуальные машины сразу после того, как они становятся ненужными в процессе выполнения тестов. Даже если виртуальная машина становится ненужной из-за ошибки.
 
-Однако, существует способ остановить выполнение тестовых сценариев при возникновении любой ошибки. Для этого при запуске интерпретатора необходимо передать параметр командной строки `--stop_on_fail`
+Однако, существует способ остановить выполнение тестовых сценариев при возникновении любой ошибки. Для этого при запуске интерпретатора необходимо передать параметр командной строки `--stop_on_fail`.
 
 
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail
-```
-Мы увидим следующую картину
-
-	TESTS TO RUN:
-	my_first_test
-	[  0%] Preparing the environment for test my_first_test
-	[  0%] Restoring snapshot initial for virtual machine my_ubuntu
-	[  0%] Running test my_first_test
-	[  0%] Starting virtual machine my_ubuntu
-	/home/alex/testo/hello_world.testo:12:3: Caught abort action on virtual machine my_ubuntu with message: Stop here
-	[100%] Test my_first_test FAILED in 0h:0m:1s
+<Terminal>
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">my_first_test<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">my_ubuntu<br/></span>
+	<span className="red bold">home/alex/testo/hello_world.testo:12:3: Caught abort action on virtual machine my_ubuntu with message: Stop here<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">my_first_test</span>
+	<span className="red bold"> FAILED in 0h:0m:1s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
 Теперь если зайти в `virtual manager` мы увидим машину `my_server` в таком состоянии
 
@@ -224,18 +256,16 @@
 
 В процессе выполнения тестов мы увидели, что была создана виртуальная машина `my_ubuntu`, которая теперь будет существовать у нас на компьютере неопределенно долго. Если же мы хотим освободить место на жёстком диске и избавиться от созданной машины `my_ubuntu`, можно использовать режим очистки сущностей платформы Testo. Для этого достаточно написать команду
 
-```sh
-# sudo testo clean
-```
+<Terminal height="150px">
+	<span className="">user$ sudo testo clean<br/></span>
+	<span className="">Deleted virtual machine my_ubuntu<br/></span>
+	<span className="">user$ </span>
+</Terminal>
 
-Мы увидим следующий вывод
-
-	Deleted virtual machine my_ubuntu
-
-Что будет означать, что наша машина `my_ubuntu` успешно удалена.
+Мы видим, что наша машина `my_ubuntu` успешно удалена.
 
 > Команда `testo clean` не удаляет сущности, вручную созданные пользователем. Очищается только автоматически созданная инфраструктура
 
 ## Готовый тестовый скрипт
 
-Итоговый тестовый скрипт можно скачать [здесь](/docs//static/tutorials/1_creating_vm/creating_vm.testo)
+Итоговый тестовый скрипт можно скачать [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/1)
