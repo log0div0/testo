@@ -43,6 +43,8 @@ test router1_prepare: router1_install_guest_additions {
 		exec bash "ip a a ${router1_OSPF1_ip}/${default_netmask} dev OSPF1_side"
 		exec bash "ip l s OSPF1_side up"
 
+		exec bash "ip a a ${router1_Lo_ip}/${default_loopback_netmask} dev lo"
+
 		exec bash "sysctl net.ipv4.ip_forward=1"
 
 		exec bash "ip r a ${BGP2_ip}/${BGP_netmask} via ${UB1_OSPF1_ip}"
@@ -119,6 +121,8 @@ test router3_prepare: router3_install_guest_additions {
 
 		exec bash "ip a a ${router3_OSPF2_ip}/${default_netmask} dev OSPF2_side"
 		exec bash "ip l s OSPF2_side up"
+
+		exec bash "ip a a ${router3_Lo_ip}/${default_loopback_netmask} dev lo"
 
 		exec bash "sysctl net.ipv4.ip_forward=1"
 	}

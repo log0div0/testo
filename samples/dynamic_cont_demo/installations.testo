@@ -218,6 +218,7 @@ flash ub2_flash {
 	size: 16Mb
 }
 
+[no_snapshots: true]
 test UB2_connect_to_CUS: UB1_configure_network, router2_prepare, UB2_init {
 	UB2 {
 		select_local_menu("Сертификаты")
@@ -288,7 +289,6 @@ test UB2_connect_to_CUS: UB1_configure_network, router2_prepare, UB2_init {
 	}	
 }
 
-[no_snapshots: true]
 test UB2_configure_network: UB2_connect_to_CUS {
 	MS {
 		mouse click "Управление конфигурацией ЦУС захвачено"; press Enter

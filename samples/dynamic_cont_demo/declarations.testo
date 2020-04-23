@@ -90,6 +90,7 @@ param router1_login "router1"
 
 param router1_LAN1_ip "10.1.0.1"
 param router1_OSPF1_ip "10.1.1.1"
+param router1_Lo_ip "10.0.0.1"
 
 machine router1 {
 	cpus: 1
@@ -224,6 +225,7 @@ param router3_login "router3"
 
 param router3_LAN2_ip "10.108.1.1"
 param router3_OSPF2_ip "10.1.2.1"
+param router3_Lo_ip "10.0.0.103"
 
 machine router3 {
 	cpus: 1
