@@ -23,6 +23,7 @@ test LAN2_ARM_prepare: LAN2_ARM_install_guest_additions {
 		unplug_nat("${LAN2_ARM_login}", "${default_password}")
 		exec bash "ip a a ${LAN2_ARM_ip}/${default_netmask} dev LAN2_side"
 		exec bash "ip l s LAN2_side up"
+		exec bash "ip r a default via ${router3_LAN2_ip}"
 	}
 }
 
@@ -48,6 +49,7 @@ test LAN3_ARM_prepare: LAN3_ARM_install_guest_additions {
 		unplug_nat("${LAN3_ARM_login}", "${default_password}")
 		exec bash "ip a a ${LAN3_ARM_ip}/${default_netmask} dev LAN3_side"
 		exec bash "ip l s LAN3_side up"
+		exec bash "ip r a default via ${UB1_LAN3_ip}"
 	}
 }
 

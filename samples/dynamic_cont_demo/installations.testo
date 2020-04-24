@@ -91,7 +91,7 @@ test MS_connect_CUS: UB1_connect_to_CUS, MS_install_ms {
 		press LeftAlt + LeftShift
 		type "Подключение по локальной сети"
 		press LeftAlt + LeftShift
-		type "\" static ${MS_ip} ${MS_netmask}"
+		type "\" static ${MS_ip} ${MS_netmask} ${router1_LAN1_ip}"
 		press Enter
 		type "exit"; press Enter
 		mouse dclick "Менеджер"

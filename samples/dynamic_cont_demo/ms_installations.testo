@@ -23,6 +23,13 @@ test MS_configure_windows: MS_install_guest_additions {
 		mouse click "ОК".from_bottom(0);
 		wait "Microsoft Windows"; press Left, Enter
 		wait "Внесение изменений в учетную запись"
+		mouse click "домашняя страница"
+		mouse click "Брандмауэр Windows"
+		mouse click "Включение и отключение"
+		mouse click "Отключить брандмауэр Windows".from_top(0)
+		mouse click "Отключить брандмауэр Windows".from_bottom(0)
+		mouse click "ОК".from_bottom(0)
+		wait "Защитите свой компьютер"
 		press LeftAlt+F4
 		wait "Корзина"
 	}
