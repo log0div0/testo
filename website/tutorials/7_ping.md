@@ -38,86 +38,88 @@
 
 В итоге должен получиться такой скрипт:
 
-	network internet {
-		mode: "nat"
+```testo
+network internet {
+	mode: "nat"
+}
+
+machine server {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "${ISO_DIR}/ubuntu_server.iso"
+
+	nic nat: {
+		attached_to: "internet"
 	}
+}
 
-	machine server {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "${ISO_DIR}/ubuntu_server.iso"
+param server_hostname "server"
+param server_login "server-login"
+param default_password "1111"
 
-		nic nat: {
-			attached_to: "internet"
-		}
+test server_install_ubuntu {
+	server {
+		start
+		wait "English"
+		press Enter
+		#Действия могут разделяться символом новой строки
+		#или точкой с запятой
+		wait "Install Ubuntu Server"; press Enter;
+		wait "Choose the language";	press Enter
+		wait "Select your location"; press Enter
+		wait "Detect keyboard layout?";	press Enter
+		wait "Country of origin for the keyboard"; press Enter
+		wait "Keyboard layout"; press Enter
+		#wait "No network interfaces detected" timeout 5m; press Enter
+		wait "Hostname:" timeout 5m; press Backspace*36; type "${server_hostname}"; press Enter
+		wait "Full name for the new user"; type "${server_login}"; press Enter
+		wait "Username for your account"; press Enter
+		wait "Choose a password for the new user"; type "${default_password}"; press Enter
+		wait "Re-enter password to verify"; type "${default_password}"; press Enter
+		wait "Use weak password?"; press Left, Enter
+		wait "Encrypt your home directory?"; press Enter
+		
+		#wait "Select your timezone" timeout 2m; press Enter
+		wait "Is this time zone correct?" timeout 2m; press Enter
+		wait "Partitioning method"; press Enter
+		wait "Select disk to partition"; press Enter
+		wait "Write the changes to disks and configure LVM?"; press Left, Enter
+		wait "Amount of volume group to use for guided partitioning"; press Enter
+		wait "Write the changes to disks?"; press Left, Enter
+		wait "HTTP proxy information" timeout 3m; press Enter
+		wait "How do you want to manage upgrades" timeout 6m; press Enter
+		wait "Choose software to install"; press Enter
+		wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
+		wait "Installation complete" timeout 1m; 
+
+		unplug dvd; press Enter
+		wait "server_login:" timeout 2m; type "${server_login}"; press Enter
+		wait "Password:"; type "${default_password}"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
 
-	param server_hostname "server"
-	param server_login "server-login"
-	param default_password "1111"
+param guest_additions_pkg "testo-guest-additions*"
+test server_install_guest_additions: server_install_ubuntu {
+	server {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 
-	test server_install_ubuntu {
-		server {
-			start
-			wait "English"
-			press Enter
-			#Действия могут разделяться символом новой строки
-			#или точкой с запятой
-			wait "Install Ubuntu Server"; press Enter;
-			wait "Choose the language";	press Enter
-			wait "Select your location"; press Enter
-			wait "Detect keyboard layout?";	press Enter
-			wait "Country of origin for the keyboard"; press Enter
-			wait "Keyboard layout"; press Enter
-			#wait "No network interfaces detected" timeout 5m; press Enter
-			wait "Hostname:" timeout 5m; press Backspace*36; type "${server_hostname}"; press Enter
-			wait "Full name for the new user"; type "${server_login}"; press Enter
-			wait "Username for your account"; press Enter
-			wait "Choose a password for the new user"; type "${default_password}"; press Enter
-			wait "Re-enter password to verify"; type "${default_password}"; press Enter
-			wait "Use weak password?"; press Left, Enter
-			wait "Encrypt your home directory?"; press Enter
-			
-			#wait "Select your timezone" timeout 2m; press Enter
-			wait "Is this time zone correct?" timeout 2m; press Enter
-			wait "Partitioning method"; press Enter
-			wait "Select disk to partition"; press Enter
-			wait "Write the changes to disks and configure LVM?"; press Left, Enter
-			wait "Amount of volume group to use for guided partitioning"; press Enter
-			wait "Write the changes to disks?"; press Left, Enter
-			wait "HTTP proxy information" timeout 3m; press Enter
-			wait "How do you want to manage upgrades" timeout 6m; press Enter
-			wait "Choose software to install"; press Enter
-			wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
-			wait "Installation complete" timeout 1m; 
+		type "sudo su"; press Enter;
+		#Обратите внимание, обращаться к параметрам можно в любом участке строки
+		wait "password for ${server_login}"; type "${default_password}"; press Enter
+		wait "root@${server_hostname}"
 
-			unplug dvd; press Enter
-			wait "server_login:" timeout 2m; type "${server_login}"; press Enter
-			wait "Password:"; type "${default_password}"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
+		wait "Setting up testo-guest-additions"
+		type "umount /media"; press Enter;
+		#Дадим немного времени для команды umount
+		sleep 2s
+		unplug dvd
 	}
-
-	param guest_additions_pkg "testo-guest-additions*"
-	test server_install_guest_additions: server_install_ubuntu {
-		server {
-			plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-
-			type "sudo su"; press Enter;
-			#Обратите внимание, обращаться к параметрам можно в любом участке строки
-			wait "password for ${server_login}"; type "${default_password}"; press Enter
-			wait "root@${server_hostname}"
-
-			type "mount /dev/cdrom /media"; press Enter
-			wait "mounting read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
-			wait "Setting up testo-guest-additions"
-			type "umount /media"; press Enter;
-			#Дадим немного времени для команды umount
-			sleep 2s
-			unplug dvd
-		}
-	}
+}
+```
 
 Т.к. мы переименовали виртуальную машину в `server`, то для Testo эта машина выглядит как абсолютно новая сущность, и в итоге весь тестовый процесс будет пройден заново, в том числе и создание виртуальной машины.
 
@@ -510,127 +512,134 @@
 
 Пришло время создать вторую виртуальную машину. Как вы уже догадались, называться она будет `client` и будет, по большей части, копией машины `server`
 
-	machine client {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "${ISO_DIR}/ubuntu_server.iso"
+```testo
+machine client {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "${ISO_DIR}/ubuntu_server.iso"
 
-		nic nat: {
-			attached_to: "internet"
-		}
+	nic nat: {
+		attached_to: "internet"
 	}
+}
+```
 
 Но если мы оставим виртуальные машины в таком виде, они не будут связаны между собой. Для того, чтобы добавить между ними связность, нам необходимо объявить новую виртуальную сеть
 
-	network LAN {
-		mode: "internal"
-	}
+```testo
+network LAN {
+	mode: "internal"
+}
+```
 
 Обратите внимание, что эта сеть работает уже в режиме `internal`, то есть предназначена для внутреннего взаимодействия между машинами, без доступа во внешнюю среду.
 
 Осталось нам лишь добавить в виртуальные машины сетевые адаптеры, которые будут подлючаться к новой сети `LAN`:
 
-	machine client {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "${ISO_DIR}/ubuntu_server.iso"
+```testo
+machine client {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "${ISO_DIR}/ubuntu_server.iso"
 
-		nic nat: {
-			attached_to: "internet"
-		}
-
-		nic server_side: {
-			attached_to: "LAN"
-			mac: "52:54:00:00:00:AA"
-		}
+	nic nat: {
+		attached_to: "internet"
 	}
 
-
-	machine server {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "${ISO_DIR}/ubuntu_server.iso"
-
-		nic nat: {
-			attached_to: "internet"
-		}
-
-		nic client_side: {
-			attached_to: "LAN"
-			mac: "52:54:00:00:00:BB"
-		}
+	nic server_side: {
+		attached_to: "LAN"
+		mac: "52:54:00:00:00:AA"
 	}
+}
+
+machine server {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "${ISO_DIR}/ubuntu_server.iso"
+
+	nic nat: {
+		attached_to: "internet"
+	}
+
+	nic client_side: {
+		attached_to: "LAN"
+		mac: "52:54:00:00:00:BB"
+	}
+}
+```
 
 Обратите внимание, что для "внутренних" сетевых адаптеров мы указали еще атрибут `mac`. Указание точного MAC-адреса позволит нам чуть позже переименовать сетевые интерфейсы так, чтобы в них можно было легко ориентироваться внутри тестовых сценариев.
 
 Что ж, добавим два новых теста уже для машины `client`: `client_install_ubuntu` и `client_install_guest_additions`. Не забудем также добавить несколько новых параметров.
 
-	param client_hostname "client"
-	param client_login "client-login"
+```testo
+param client_hostname "client"
+param client_login "client-login"
 
-	test client_install_ubuntu {
-		client {
-			start
-			wait "English"
-			press Enter
-			#Действия могут разделяться символом новой строки
-			#или точкой с запятой
-			wait "Install Ubuntu Server"; press Enter;
-			wait "Choose the language";	press Enter
-			wait "Select your location"; press Enter
-			wait "Detect keyboard layout?";	press Enter
-			wait "Country of origin for the keyboard"; press Enter
-			wait "Keyboard layout"; press Enter
-			#wait "No network interfaces detected" timeout 5m; press Enter
-			wait "Hostname:" timeout 5m; press Backspace*36; type "${client_hostname}"; press Enter
-			wait "Full name for the new user"; type "${client_login}"; press Enter
-			wait "Username for your account"; press Enter
-			wait "Choose a password for the new user"; type "${default_password}"; press Enter
-			wait "Re-enter password to verify"; type "${default_password}"; press Enter
-			wait "Use weak password?"; press Left, Enter
-			wait "Encrypt your home directory?"; press Enter
-			
-			#wait "Select your timezone" timeout 2m; press Enter
-			wait "Is this time zone correct?" timeout 2m; press Enter
-			wait "Partitioning method"; press Enter
-			wait "Select disk to partition"; press Enter
-			wait "Write the changes to disks and configure LVM?"; press Left, Enter
-			wait "Amount of volume group to use for guided partitioning"; press Enter
-			wait "Write the changes to disks?"; press Left, Enter
-			wait "HTTP proxy information" timeout 3m; press Enter
-			wait "How do you want to manage upgrades" timeout 6m; press Enter
-			wait "Choose software to install"; press Enter
-			wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
-			wait "Installation complete" timeout 1m; 
+test client_install_ubuntu {
+	client {
+		start
+		wait "English"
+		press Enter
+		#Действия могут разделяться символом новой строки
+		#или точкой с запятой
+		wait "Install Ubuntu Server"; press Enter;
+		wait "Choose the language";	press Enter
+		wait "Select your location"; press Enter
+		wait "Detect keyboard layout?";	press Enter
+		wait "Country of origin for the keyboard"; press Enter
+		wait "Keyboard layout"; press Enter
+		#wait "No network interfaces detected" timeout 5m; press Enter
+		wait "Hostname:" timeout 5m; press Backspace*36; type "${client_hostname}"; press Enter
+		wait "Full name for the new user"; type "${client_login}"; press Enter
+		wait "Username for your account"; press Enter
+		wait "Choose a password for the new user"; type "${default_password}"; press Enter
+		wait "Re-enter password to verify"; type "${default_password}"; press Enter
+		wait "Use weak password?"; press Left, Enter
+		wait "Encrypt your home directory?"; press Enter
+		
+		#wait "Select your timezone" timeout 2m; press Enter
+		wait "Is this time zone correct?" timeout 2m; press Enter
+		wait "Partitioning method"; press Enter
+		wait "Select disk to partition"; press Enter
+		wait "Write the changes to disks and configure LVM?"; press Left, Enter
+		wait "Amount of volume group to use for guided partitioning"; press Enter
+		wait "Write the changes to disks?"; press Left, Enter
+		wait "HTTP proxy information" timeout 3m; press Enter
+		wait "How do you want to manage upgrades" timeout 6m; press Enter
+		wait "Choose software to install"; press Enter
+		wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
+		wait "Installation complete" timeout 1m; 
 
-			unplug dvd; press Enter
-			wait "${client_hostname} login:" timeout 2m; type "${client_login}"; press Enter
-			wait "Password:"; type "${default_password}"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+		unplug dvd; press Enter
+		wait "${client_hostname} login:" timeout 2m; type "${client_login}"; press Enter
+		wait "Password:"; type "${default_password}"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
 
-	test client_install_guest_additions: client_install_ubuntu {
-		client {
-			plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+test client_install_guest_additions: client_install_ubuntu {
+	client {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 
-			type "sudo su"; press Enter;
-			#Обратите внимание, обращаться к параметрам можно в любом участке строки
-			wait "password for ${client_login}"; type "${default_password}"; press Enter
-			wait "root@${client_hostname}"
+		type "sudo su"; press Enter;
+		#Обратите внимание, обращаться к параметрам можно в любом участке строки
+		wait "password for ${client_login}"; type "${default_password}"; press Enter
+		wait "root@${client_hostname}"
 
-			type "mount /dev/cdrom /media"; press Enter
-			wait "mounting read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
-			wait "Setting up testo-guest-additions"
-			type "umount /media"; press Enter;
-			#Дадим немного времени для команды umount
-			sleep 2s
-			unplug dvd
-		}
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
+		wait "Setting up testo-guest-additions"
+		type "umount /media"; press Enter;
+		#Дадим немного времени для команды umount
+		sleep 2s
+		unplug dvd
 	}
+}
+```
 
 Не стоит пока пугаться большого количества дублирующегося кода. В будущем мы познакомимся со способом объединять одинаковые действие в именованные блоки (макросы) и эти сценарии станут намного компакнтнее
 
@@ -731,10 +740,12 @@
 
 В качестве главного интерфейса нам нужно выбрать первый (то есть нажать Enter). Давайте подправим наш установочный сценарий.
 
-	wait "Keyboard layout"; press Enter
-	#wait "No network interfaces detected" timeout 5m; press Enter
-	wait "Primary network interface"; press Enter
-	wait "Hostname:" timeout 5m; press Backspace*36; type "${client_hostname}"; press Enter
+```testo
+wait "Keyboard layout"; press Enter
+#wait "No network interfaces detected" timeout 5m; press Enter
+wait "Primary network interface"; press Enter
+wait "Hostname:" timeout 5m; press Backspace*36; type "${client_hostname}"; press Enter
+```
 
 После этого можно еще раз запустить тесты и они должны отработать успешно.
 
@@ -753,17 +764,19 @@
 
 Давайте посмотрим на примере машины `server`. Создадим новый тест `server_unplug_nat`.
 
-	test server_unplug_nat: server_install_guest_additions {
-		server {
-			shutdown
-			unplug nic nat
-			start
+```testo
+test server_unplug_nat: server_install_guest_additions {
+	server {
+		shutdown
+		unplug nic nat
+		start
 
-			wait "${server_hostname} login:" timeout 2m; type "${server_login}"; press Enter
-			wait "Password:"; type "${default_password}"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+		wait "${server_hostname} login:" timeout 2m; type "${server_login}"; press Enter
+		wait "Password:"; type "${default_password}"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
+```
 
 Этот тест мы начинаем с того, что останавливаем виртуальную машину. Вообще, есть два способа остановить виртуальную машину извне: действие [`stop`](/docs/lang/actions#stop) (аналог "выдергивания шнура питания" из виртуальной машины) и действие [`shutdown`](/docs/lang/actions#shutdown) (аналог нажатия на кнопку питания на системном блоке). Действие `shutdown` несколько предпочтительнее.
 
@@ -839,17 +852,19 @@
 
 Также давайте продублируем этот тест для машины `client`
 
-	test client_unplug_nat: client_install_guest_additions {
-		client {
-			shutdown
-			unplug nic nat
-			start
+```testo
+test client_unplug_nat: client_install_guest_additions {
+	client {
+		shutdown
+		unplug nic nat
+		start
 
-			wait "${client_hostname} login:" timeout 2m; type "${client_login}"; press Enter
-			wait "Password:"; type "${default_password}"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+		wait "${client_hostname} login:" timeout 2m; type "${client_login}"; press Enter
+		wait "Password:"; type "${default_password}"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
+```
 
 <Terminal height="650px">
 	<span className="">user$ sudo testo run hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --test_spec client_unplug_nat<br/></span>
@@ -952,16 +967,18 @@ echo "Renaming success"
 
 После этого напишем новый тест для сервера `server_prepare`
 
-	test server_prepare: server_unplug_nat {
-		server {
-			copyto "./rename_net.sh" "/opt/rename_net.sh"
-			exec bash """
-				chmod +x /opt/rename_net.sh
-				/opt/rename_net.sh 52:54:00:00:00:bb client_side
-				ip ad 
-			"""
-		}
+```testo
+test server_prepare: server_unplug_nat {
+	server {
+		copyto "./rename_net.sh" "/opt/rename_net.sh"
+		exec bash """
+			chmod +x /opt/rename_net.sh
+			/opt/rename_net.sh 52:54:00:00:00:bb client_side
+			ip ad 
+		"""
 	}
+}
+```
 
 <Terminal height="600px">
 	<span className="">user$ sudo testo run hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --test_spec server_prepare<br/></span>
@@ -1021,18 +1038,20 @@ echo "Renaming success"
 
 Осталось лишь добавить сетевые настройки в этот сетевой интерфейс.
 
-	test server_prepare: server_unplug_nat {
-		server {
-			copyto "./rename_net.sh" "/opt/rename_net.sh"
-			exec bash """
-				chmod +x /opt/rename_net.sh
-				/opt/rename_net.sh 52:54:00:00:00:bb client_side
-				ip a a 192.168.1.1/24 dev client_side
-				ip l s client_side up
-				ip ad
-			"""
-		}
+```testo
+test server_prepare: server_unplug_nat {
+	server {
+		copyto "./rename_net.sh" "/opt/rename_net.sh"
+		exec bash """
+			chmod +x /opt/rename_net.sh
+			/opt/rename_net.sh 52:54:00:00:00:bb client_side
+			ip a a 192.168.1.1/24 dev client_side
+			ip l s client_side up
+			ip ad
+		"""
 	}
+}
+```
 
 И повторяем такие же действия для машины `client`
 
@@ -1150,10 +1169,12 @@ echo "Renaming success"
 
 Для этого создаём еще один тест `test_ping`, который, в отличие от всех предыдущих наших тестов, будет отнаследован сразу **от двух** родительских тестов, т.к. нам необходимо чтобы были выполнены тесты и `client_prepare` и `server_prepare`
 
-	test test_ping: client_prepare, server_prepare {
-		client exec bash "ping 192.168.1.2 -c5"
-		server exec bash "ping 192.168.1.1 -c5"
-	}
+```testo
+test test_ping: client_prepare, server_prepare {
+	client exec bash "ping 192.168.1.2 -c5"
+	server exec bash "ping 192.168.1.1 -c5"
+}
+```
 
 Попробуем запустить этот тест.
 
@@ -1233,4 +1254,10 @@ echo "Renaming success"
 
 ## Итоги
 
-Итоговый тестовый сценарий можно скачать [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/7)
+Виртуальные сети позволяют не только связывать виртуальные машины с Интернетом, но и служат для связи машин между собой.
+
+Платформа Testo позволяет реализовать подготовительные тесты с использованием Интернета, после чего отключить соответствующий сетевой адаптер и сосредоточиться на внутреннем взаимодействии машин.
+
+Для удобства ориентирования в сетевых адаптерах внутри тестовых сценариев рекомендуется назначать сетевым адаптерам заранее известный МАС-адрес и с его помощью переименовывать сетевые адаптеры.
+
+Итоговый тестовый сценарий и пример скрипта для переименования сетевых интерфейсов можно скачать [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/7)
