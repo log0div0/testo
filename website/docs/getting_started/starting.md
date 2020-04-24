@@ -15,7 +15,7 @@
 Ниже приведен список аргументов, которые можно передать в интерпретатор
 `testo` при запуске в режиме прогона тестов.
 
-```sh
+```text
 testo run <input file | input folder> [--param <param_name> <param_value>]... \
   [--prefix <prefix>] [--stop_on_fail] [--assume_yes] [--test_spec <wildcard pattern>] \
   [--exclude <wildcard pattern>] [--invalidate <wildcard pattern>] \
@@ -76,7 +76,7 @@ testo run <input file | input folder> [--param <param_name> <param_value>]... \
 Ниже приведен список аргументов, которые можно передать в интерпретатор
 `testo` при запуске в режиме очистки созданных сущностей
 
-```sh
+```text
 testo clean [--prefix <prefix>]
 ```
 

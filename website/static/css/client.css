@@ -395,6 +395,14 @@ pre code {
 	margin-top: 0;
 }
 
+.post img {
+	padding-top: 1em;
+	padding-bottom: 1em;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 /*-------------------------------------------------------------------------*/
 
 .anchor {

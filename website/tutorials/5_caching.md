@@ -15,7 +15,7 @@
 
 ## Вступление
 
-Платформа Testo построена на принципе "Если вы хотит что-то сделать с виртуальной машиной - делайте это внутри тестов". При этом в начальном состоянии виртуальной машины даже не существует - весь процесс создания и разворачивания виртуального стенда делается автоматически. С одной стороны, это даёт большое преимущество: все, что нужно иметь на компьютере для прогона тестов с нуля - это набор установочных iso-образов и файл с тестовым скриптом. Как следствие - тесты можно легко перемещать между компьютерами. С другой стороны, очевидный минус такого подхода - необходимость реализовывать в тестовых сценариях все подготовительные действия, даже установку стандартизированных ОС. 
+Платформа Testo построена на принципе "Если вы хотит что-то сделать с виртуальной машиной - делайте это внутри тестов". При этом в начальном состоянии виртуальной машины даже не существует - весь процесс создания и разворачивания виртуального стенда делается автоматически. С одной стороны, это даёт большое преимущество: все, что нужно иметь на компьютере для прогона тестов с нуля - это набор установочных iso-образов и файл с тестовым скриптом. Как следствие - тесты можно легко перемещать между компьютерами. С другой стороны, очевидный минус такого подхода - необходимость реализовывать в тестовых сценариях все подготовительные действия, даже установку стандартизированных ОС.
 
 Очевидно, что в таких условиях прогон тестов "с нуля" каждый раз становится крайне неэффективным - ведь подготовка виртуального стенда может занимать по времени гораздо больше времени, чем собственно проведение значимых тестов.
 
@@ -51,11 +51,7 @@
 
 Для примера возьмем набор тестов, которые мы сделали в предыдущей части
 
-<br/><br/>
-<p align="center">
-  <img src="/static/tutorials/5_caching/tests_tree.png" />
-</p>
-<br/><br/>
+![](/static/tutorials/5_caching/tests_tree.png)
 
 Для начала необходимо прогнать все тесты и добиться того, чтобы они были закешированы (обратите внимание, запуск происходит без аргумента `invalidate`). Если какие-то тесты у вас были незакешированы, то пусть они выполнятся, а затем снова запустите testo с теми же аргументами.
 
@@ -78,17 +74,19 @@
 
 Для начала давайте попробуем изменить тест `guest_additions_demo` и снова выполнить `testo`
 
-	test guest_additions_demo: guest_additions_installation {
-		my_ubuntu {
-			#Измененный скрипт 
-			exec bash """
-				echo Modified Hello world 
-				echo from bash
-			"""
-			#Двойные кавычки внутри скриптов необходимо экранировать
-			exec python3 "print(\"Hello from python3!\")"
-		}
+```testo
+test guest_additions_demo: guest_additions_installation {
+	my_ubuntu {
+		#Измененный скрипт
+		exec bash """
+			echo Modified Hello world
+			echo from bash
+		"""
+		#Двойные кавычки внутри скриптов необходимо экранировать
+		exec python3 "print(\"Hello from python3!\")"
 	}
+}
+```
 
 Вывод будет следующим:
 
@@ -141,25 +139,27 @@
 
 Давайте теперь рассмотрим тест `guest_additions_installation`. Давайте в этом тесте попробуем параметризировать строку с установкой deb-пакета
 
-	param guest_additions_pkg "*.deb"
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+```testo
+param guest_additions_pkg "*.deb"
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 
-			type "sudo su"; press Enter;
-			#Обратите внимание, обращаться к параметрам можно в любом участке строки
-			wait "password for ${login}"; type "${password}"; press Enter
-			wait "root@${hostname}"
+		type "sudo su"; press Enter;
+		#Обратите внимание, обращаться к параметрам можно в любом участке строки
+		wait "password for ${login}"; type "${password}"; press Enter
+		wait "root@${hostname}"
 
-			type "mount /dev/cdrom /media"; press Enter
-			wait "mounting read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
-			wait "Setting up testo-guest-additions"
-			type "umount /media"; press Enter;
-			#Дадим немного времени для команды umount
-			sleep 2s
-			unplug dvd
-		}
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
+		wait "Setting up testo-guest-additions"
+		type "umount /media"; press Enter;
+		#Дадим немного времени для команды umount
+		sleep 2s
+		unplug dvd
 	}
+}
+```
 
 и снова выполним тестовый сценарий. Мы увидим следующий вывод
 
@@ -182,12 +182,14 @@
 
 Однако, давайте попробуем поменять значение параметра
 
-	param guest_additions_pkg "testo-guest-additions*"
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			...
-		}
+```testo
+param guest_additions_pkg "testo-guest-additions*"
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		...
 	}
+}
+```
 
 И попробуем запустить сценарий. Если вы не хотите каждый раз подтверждать своё согласие с тем, что кеш теста был потерян, вы можете использовать аргумент `--assume_yes`
 
@@ -320,20 +322,22 @@
 
 Сам тестовый сценарий необходимо подкорректировать
 
-	test guest_additions_demo: guest_additions_installation {
-		my_ubuntu {
-			#Измененный скрипт 
-			exec bash """
-				echo Modified Hello world 
-				echo from bash
-			"""
-			#Двойные кавычки внутри скриптов необходимо экранировать
-			exec python3 "print(\"Hello from python3!\")"
+```testo
+test guest_additions_demo: guest_additions_installation {
+	my_ubuntu {
+		#Измененный скрипт
+		exec bash """
+			echo Modified Hello world
+			echo from bash
+		"""
+		#Двойные кавычки внутри скриптов необходимо экранировать
+		exec python3 "print(\"Hello from python3!\")"
 
-			copyto "./testing_copyto.txt" "/tmp/testing_copyto.txt"
-			exec bash "cat /tmp/testing_copyto.txt"
-		}
+		copyto "./testing_copyto.txt" "/tmp/testing_copyto.txt"
+		exec bash "cat /tmp/testing_copyto.txt"
 	}
+}
+```
 
 <Terminal height="700px">
 	<span className="">user$ echo "This should be copied inside my_ubuntu" &gt; ~/testo/testing_copyto.txt<br/></span>
@@ -411,7 +415,7 @@
 
 Конечно, в платформе Testo предусмотрена возможность вручную сбросить кеш у теста (или даже группы тестов). Для этого существует аргумент командной строки `invalidate`, который по своему формату совпадает с `--test_spec`, и позволяет указывать шаблон имён тех тестов, кеш которых надо сбросить.
 
-Например, если вы хотите сбросить кеш всех тестов, связанных с гостевыми дополнениями, выполните следующую команду 
+Например, если вы хотите сбросить кеш всех тестов, связанных с гостевыми дополнениями, выполните следующую команду
 
 
 <Terminal height="600px">

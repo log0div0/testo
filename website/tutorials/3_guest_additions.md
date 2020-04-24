@@ -21,14 +21,18 @@
 
 Однако имитация действий человека обладает и одним недостатком: неудобное выполнение консольных команд и других вспомогательных действий. В самом деле. для того, чтобы выполнить bash-команду, имитируя действия человека, необходимо написать что-то вроде
 
-	type "command_to_execute";
-	press Enter
-	type "echo Result is $?"; press enter
-	wait "Result is $?"
+```testo
+type "command_to_execute";
+press Enter
+type "echo Result is $?"; press Enter
+wait "Result is $?"
+```
 
 При этом, конечно, было бы удобно выполнить какое-то одно действие вроде
 
-	exec bash "command_to_execute"
+```testo
+exec bash "command_to_execute"
+```
 
 И положиться на код возврата этой команды
 
@@ -51,16 +55,18 @@
 
 Начнем с того, что переименуем тест `my_first_test` во что-то более осмысленное. Например, в `ubuntu_installation`
 
-	test ubuntu_installation {
-		my_ubuntu {
-			start
-			wait "English"
-			...
-			wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
-			wait "Password:"; type "1111"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+```testo
+test ubuntu_installation {
+	my_ubuntu {
+		start
+		wait "English"
+		...
+		wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
+		wait "Password:"; type "1111"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
+```
 
 
 Пока не следует запускать новый сценарий, мы сделаем это немного позже. Давайте лучше приступим к установке гостевых дополений на нашу машину `my_ubuntu`.
@@ -69,11 +75,13 @@
 
 Помимо базовых тестов существуют и **производные** тесты, которые запускаются только когда будут выполнены все родительские тесты. Для установки гостевых дополнений нам потребуется написать наш первый производный тест. Связь между тестами задается так:
 
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			abort "stop here"
-		}
+```testo
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		abort "stop here"
 	}
+}
+```
 
 Давайте убедимся, что наш производный тест действительно зависит от базового.
 
@@ -449,54 +457,56 @@
 
 Пора переходить к установке самих дополнений. В прошлой части мы познакомились с действием `unplug dvd`, которое извлекает текущий подключенный iso-образ из виртуального dvd-привода. Конечно, есть действие `plug dvd` и для обратного действия, для подключения iso-образа. Это действие, в отличие от `unplug dvd`, принимает аргумент - путь к iso-образу, который необходимо подключить.
 
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			plug dvd "/opt/iso/testo-guest-additions.iso"
-			abort "stop here"
-		}
+```testo
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "/opt/iso/testo-guest-additions.iso"
+		abort "stop here"
 	}
+}
+```
 
 Попробуйте запустить такой сценарий (не забудьте аргумент `--stop_on_fail`), дождитесь точки останова и с помощью virt-manager зайдите в свойства виртуальной машины. В разделе, посвященной cdrom, вы увидите информацию о подключенном iso-образе
 
-<br/><br/>
-
 ![CDROM plugged](/static/tutorials/3_guest_additions/plugged_cdrom.png)
-
-<br/><br/>
 
 Теперь нам необходимо смонтировать подключенный dvd-привод в файловую систему Ubuntu. Т.к. для этого требуются root-права, то можно для начала войти в sudo-режим
 
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			plug dvd "/opt/iso/testo-guest-additions.iso"
+```testo
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "/opt/iso/testo-guest-additions.iso"
 
-			type "sudo su"; press Enter;
-			wait "password for my-ubuntu-login"; type "1111"; press Enter
-			wait "root@my-ubuntu"
+		type "sudo su"; press Enter;
+		wait "password for my-ubuntu-login"; type "1111"; press Enter
+		wait "root@my-ubuntu"
 
-			abort "stop here"
-		}
+		abort "stop here"
 	}
+}
+```
 
 Ну а теперь переходим к установке самих дополнений. В конце не забудем отмонтировать cdrom и вытащить iso-образ из виртуального dvd-привода
 
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			plug dvd "/opt/iso/testo-guest-additions.iso"
+```testo
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "/opt/iso/testo-guest-additions.iso"
 
-			type "sudo su"; press Enter;
-			wait "password for my-ubuntu-login"; type "1111"; press Enter
-			wait "root@my-ubuntu"
+		type "sudo su"; press Enter;
+		wait "password for my-ubuntu-login"; type "1111"; press Enter
+		wait "root@my-ubuntu"
 
-			type "mount /dev/cdrom /media"; press Enter
-			wait "mounting read-only"; type "dpkg -i /media/*.deb"; press Enter;
-			wait "Setting up testo-guest-additions"
-			type "umount /media"; press Enter;
-			#Дадим немного времени для команды umount
-			sleep 2s
-			unplug dvd
-		}
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only"; type "dpkg -i /media/*.deb"; press Enter;
+		wait "Setting up testo-guest-additions"
+		type "umount /media"; press Enter;
+		#Дадим немного времени для команды umount
+		sleep 2s
+		unplug dvd
 	}
+}
+```
 
 Обратите внимание, что в сценарии появилось новое действие [`sleep`](/docs/lang/actions#sleep), которое работает ровно так, как это и можно представить: просто запускает безусловное ожидание на определенное количество времени.
 
@@ -603,12 +613,13 @@
 
 Для тестирования гостевых дополнений сделаем новый производный тест, который теперь будет зависеть от `guest_additions_installation`. После установки гостевых дополнений у нас появляется в арсенале несколько новых действий. В этой части мы сосредоточимся на действии `exec`. Попробуем выполнить баш-скрипт, который выводит на экран "Hello world!" (Можно обойтись без точки останова `abort`)
 
-	test guest_additions_demo: guest_additions_installation {
-		my_ubuntu {
-			exec bash "echo Hello world"
-		}
+```testo
+test guest_additions_demo: guest_additions_installation {
+	my_ubuntu {
+		exec bash "echo Hello world"
 	}
-
+}
+```
 
 Результат будет таким
 
@@ -648,17 +659,19 @@
 
 Видно, как была выполнена баш-команда. Вообще, `exec` не ограничивается запуском баш-команд. Например, можно запускать питоновские скрипты (конечно, если в гостевой системе вообще установлен интерпретатор python). При этом скрипты могут быть и многострочными, для этого их нужно заключать в тройные кавычки
 
-	test guest_additions_demo: guest_additions_installation {
-		my_ubuntu {
-			exec bash """
-				echo Hello world
-				echo from bash
-			"""
-			#Двойные кавычки внутри скриптов необходимо экранировать
-			exec python2 "print(\"Hello from python2!\")"
-			exec python3 "print(\"Hello from python3!\")"
-		}
+```testo
+test guest_additions_demo: guest_additions_installation {
+	my_ubuntu {
+		exec bash """
+			echo Hello world
+			echo from bash
+		"""
+		#Двойные кавычки внутри скриптов необходимо экранировать
+		exec python2 "print('Hello from python2!')"
+		exec python3 "print('Hello from python3!')"
 	}
+}
+```
 
 <Terminal height="650px">
 	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_demo<br/></span>
@@ -709,10 +722,6 @@
 
 В результате этого урока у нас получилось следующее дерево тестов
 
-<br/><br/>
-<p align="center">
-  <img src="/static/tutorials/3_guest_additions/tests_tree.png" />
-</p>
-<br/><br/>
+![](/static/tutorials/3_guest_additions/tests_tree.png)
 
 Итоговый скрипт можно скачать [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/3)

@@ -50,6 +50,11 @@ if (location.pathname.startsWith("/tutorials")) {
 	document.getElementById("nav-site-tutorials").className = "siteNavItemActive";
 }
 
+let terminals = document.querySelectorAll(".terminal")
+for (let terminal of terminals) {
+	terminal.scrollTop = terminal.scrollHeight;
+}
+
 var ul = document.querySelector("ul.toc-headings")
 for (var h2 of toc) {
 	var li = document.createElement("li")

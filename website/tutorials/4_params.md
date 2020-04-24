@@ -21,48 +21,52 @@
 
 ## С чего начать?
 
-Давайте вспомним, в каком виде находится тестовый сценарий на текущий момент. 
+Давайте вспомним, в каком виде находится тестовый сценарий на текущий момент.
 
-	...	
+```testo
+...
 
-	test ubuntu_installation {
-		my_ubuntu {
-			start
-			...
-			wait "Hostname:" timeout 30s; press Backspace*36; type "my-ubuntu"; press Enter
-			wait "Full name for the new user"; type "my-ubuntu-login"; press Enter
-			wait "Username for your account"; press Enter
-			wait "Choose a password for the new user"; type "1111"; press Enter
-			wait "Re-enter password to verify"; type "1111"; press Enter
-			...
-			unplug dvd; press Enter
-			wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
-			wait "Password:"; type "1111"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+test ubuntu_installation {
+	my_ubuntu {
+		start
+		...
+		wait "Hostname:" timeout 30s; press Backspace*36; type "my-ubuntu"; press Enter
+		wait "Full name for the new user"; type "my-ubuntu-login"; press Enter
+		wait "Username for your account"; press Enter
+		wait "Choose a password for the new user"; type "1111"; press Enter
+		wait "Re-enter password to verify"; type "1111"; press Enter
+		...
+		unplug dvd; press Enter
+		wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
+		wait "Password:"; type "1111"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
 
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			plug dvd "/opt/iso/testo-guest-additions.iso"
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "/opt/iso/testo-guest-additions.iso"
 
-			type "sudo su"; press Enter;
-			wait "password for my-ubuntu-login"; type "1111"; press Enter
-			wait "root@my-ubuntu"
-			...
-		}
+		type "sudo su"; press Enter;
+		wait "password for my-ubuntu-login"; type "1111"; press Enter
+		wait "root@my-ubuntu"
+		...
 	}
+}
 
-	...
+...
+```
 
 Можно заметить, что в тестовом сценарии несколько раз повторяются строковые константы `my-ubuntu`, `my-ubuntu-login` и `1111`. Понятно, что чем больше будет наш тестовый сценарий и чем больше там будет таких строковых констант, тем проще будет в них запутаться и рано или поздно допустить ошибку. Для того, чтобы избежать такой неприятной ситуации, давайте попробуем объявить несколько параметров.
 
-	param hostname "my-ubuntu"
-	param login "my-ubuntu-login"
-	param password "1111"
+```testo
+param hostname "my-ubuntu"
+param login "my-ubuntu-login"
+param password "1111"
 
-	test ubuntu_installation {
-		...
+test ubuntu_installation {
+	...
+```
 
 > Объявление параметров должно располагаться на том же уровне, что и объявление виртуальных машин или тестов (в глобальном пространстве). Нельзя объявлять параметры внутри тестов или внутри объявлений виртуальных машин и других сущностей
 
@@ -70,41 +74,43 @@
 
 Теперь внутри самих тестов мы можем использовать обращение к этим параметрам
 
-	...
-	param hostname "my-ubuntu"
-	param login "my-ubuntu-login"
-	param password "1111"
+```testo
+...
+param hostname "my-ubuntu"
+param login "my-ubuntu-login"
+param password "1111"
 
-	test ubuntu_installation {
-		my_ubuntu {
-			start
-			...
-			wait "Hostname:" timeout 30s; press Backspace*36; type "${hostname}"; press Enter
-			wait "Full name for the new user"; type "${login}"; press Enter
-			wait "Username for your account"; press Enter
-			wait "Choose a password for the new user"; type "${password}"; press Enter
-			wait "Re-enter password to verify"; type "${password}"; press Enter
-			...
-			unplug dvd; press Enter
-			wait "login:" timeout 2m; type "${login}"; press Enter
-			wait "Password:"; type "${password}"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+test ubuntu_installation {
+	my_ubuntu {
+		start
+		...
+		wait "Hostname:" timeout 30s; press Backspace*36; type "${hostname}"; press Enter
+		wait "Full name for the new user"; type "${login}"; press Enter
+		wait "Username for your account"; press Enter
+		wait "Choose a password for the new user"; type "${password}"; press Enter
+		wait "Re-enter password to verify"; type "${password}"; press Enter
+		...
+		unplug dvd; press Enter
+		wait "login:" timeout 2m; type "${login}"; press Enter
+		wait "Password:"; type "${password}"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
 
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			plug dvd "/opt/iso/testo-guest-additions.iso"
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "/opt/iso/testo-guest-additions.iso"
 
-			type "sudo su"; press Enter;
-			#Обратите внимание, обращаться к параметрам можно в любом участке строки
-			wait "password for ${login}"; type "${password}"; press Enter
-			wait "root@${hostname}"
-			...
-		}
+		type "sudo su"; press Enter;
+		#Обратите внимание, обращаться к параметрам можно в любом участке строки
+		wait "password for ${login}"; type "${password}"; press Enter
+		wait "root@${hostname}"
+		...
 	}
+}
 
-	...
+...
+```
 
 Теперь наш тестовый сценарий выглядит немного лаконичнее и легче читается. К тому же, если мы решим изменить логин или пароль, нам будет достаточно поменять значение только в одном месте.
 
@@ -116,19 +122,21 @@
 
 В языке Testo-lang существует возможность указывать параметры не только в виде языковой конструкции, но и как аргумент командной строки. Давайте посмотрим на примере.
 
-	machine my_ubuntu {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "${ISO_DIR}/ubuntu_server.iso"
+```testo
+machine my_ubuntu {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "${ISO_DIR}/ubuntu_server.iso"
+}
+...
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		...
 	}
-	...
-	test guest_additions_installation: ubuntu_installation {
-		my_ubuntu {
-			plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-			...
-		}
-	}
+}
+```
 
 Мы изменили тестовый сценарий таким образом, что теперь папка с нужными iso-файлами указывается в качестве параметра `ISO_DIR` (заметьте, что обращаться к параметрам можно и в объявлении виртуальных машин). Однако мы нигде не объявляли параметр `ISO_DIR`. Если мы попытаемся запустить этот тестовый сценарий таким же способом, как в предыдущем уроке, то увидим ошибку
 
@@ -142,9 +150,9 @@
 
 Для того, чтобы объявить параметр `ISO_DIR` мы будем использовать аргумент командной строки.
 
-```sh
-# sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation --param ISO_DIR /opt/iso
-```
+<Terminal height="100px">
+	<span className="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --test_spec guest_additions_installation --param ISO_DIR /opt/iso<br/></span>
+</Terminal>
 
 Таким образом, если по каким-то причинам расположение iso-файлов изменилось (нарпимер, сценарий запускается на другом компьютере), достаточно изменить один аргумент командной строки при запуске сценария, а менять сам сценарий не будет никакой необходимости.
 

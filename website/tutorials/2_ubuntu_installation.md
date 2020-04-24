@@ -20,19 +20,11 @@
 
 Давайте рассмотрим пример. После запуска виртуальной машины пользователь (человек) видит перед собой следующий экран
 
-<br/><br/>
-
 ![Убунту запущена](/static/tutorials/2_ubuntu_installation/ubuntu_started.png)
-
-<br/><br/>
 
 Когда человек видит этот экран, он понимает, что настало время предпринять какие-то действия. В данном случае, он понимает, что необходимо нажать клавишу Enter. После этого он дожидается следующего экрана
 
-<br/><br/>
-
 ![Убунту запущена 2](/static/tutorials/2_ubuntu_installation/ubuntu_started_2.png)
-
-<br/><br/>
 
 После чего пользователь снова нажимает Enter и дожидается следующего экрана... Процесс будет повторяться до полной установки Ubuntu Server
 
@@ -46,20 +38,21 @@
 
 Давайте рассмотрим это на примере и вернемся к текстовому сценарию, который мы написали в предыдущем уроке
 
+```testo
+machine my_ubuntu {
+	cpus: 1
+	ram: 512Mb
+	disk_size: 5Gb
+	iso: "/opt/iso/ubuntu_server.iso"
+}
 
-	machine my_ubuntu {
-		cpus: 1
-		ram: 512Mb
-		disk_size: 5Gb
-		iso: "/opt/iso/ubuntu_server.iso"
+test my_first_test {
+	my_ubuntu {
+		start
+		abort "Stop here"
 	}
-
-	test my_first_test {
-		my_ubuntu {
-			start
-			abort "Stop here"
-		}
-	}
+}
+```
 
 После запуска виртуальной машины мы видим экран с просьбой выбрать нужный язык, после чего нам необходимо нажать Enter (т.к. нас устраивает английский язык)
 
@@ -67,13 +60,15 @@
 
 Действие `wait` позволяет дождаться появления определенной надписи (или комбинации надписей) на экране. Для того, чтобы убедиться, что перед нами действительно экран выбора языка, достаточно убедиться, что на экране есть надпись "English"
 
-	test my_first_test {
-		my_ubuntu {
-			start
-			wait "English"
-			abort "Stop here"
-		}
+```testo
+test my_first_test {
+	my_ubuntu {
+		start
+		wait "English"
+		abort "Stop here"
 	}
+}
+```
 
 Такое действие `wait` вернет управление только тогда, когда на экране появится соответствующая надпись. Давайте попробуем запустить такой тест
 
@@ -109,14 +104,16 @@
 
 Теперь, когда в тестовом сценарии мы убедились, что перед нами действительно экран выбора языка, можно приступать к реагирование на наступление этого события. В нашем случае необходимо нажать клавишу Enter чтобы выбрать английский язык. Для нажатия клавиш в языке testo-lang есть действие [`press`](/docs/lang/actions#press)
 
-	test my_first_test {
-		my_ubuntu {
-			start
-			wait "English"
-			press Enter
-			abort "Stop here"
-		}
+```testo
+test my_first_test {
+	my_ubuntu {
+		start
+		wait "English"
+		press Enter
+		abort "Stop here"
 	}
+}
+```
 
 Вывод:
 
@@ -155,38 +152,37 @@
 
 Таким образом, процесс создания тестового сценария можно подытожить как набор связок "Дождаться события, прореагировать на событие". Выглядит это примерно так:
 
-<br/><br/>
-
 ![Action flow](/static/tutorials/2_ubuntu_installation/action_flow.png)
-
-<br/><br/>
 
 ## wait timeout
 
 Как уже упоминалось, действие `wait` не сработает до тех пор, пока на экрнане не появится соответствующая надпись. Но что делать, если надпись вообще никогда не появится? Такое может быть, например, если мы тестируем программу и ожидаем увидеть надпись "Успешно", а программа работает при этом неправильно и вместо "Успешно" появляется "Ошибка". В этом случае действие `wait` не будет работать вечно, т.к. у него есть таймаут, который по умолчанию равен одной минуте.
 
-
-	test my_first_test {
-		my_ubuntu {
-			start
-			wait "English" timeout 1m #Это эквивалентно действию wait "English"
-			press Enter
-			abort "Stop here"
-		}
+```testo
+test my_first_test {
+	my_ubuntu {
+		start
+		wait "English" timeout 1m #Это эквивалентно действию wait "English"
+		press Enter
+		abort "Stop here"
 	}
+}
+```
 
 Для обозначения временных интервалов в Testo-lang существуют [специальные литералы](/docs/lang/lexems#спецификатор-количества-времени)(как и для количества памяти).
 
 Давайте попробуем убедиться, что команда `wait` действительно не передаст управление дальше пока на экране действительо не появится нужная надпись. Попробуем вместо "English" искать какую-нибудь тарабарщину. А чтобы не ждать одну минуту, сделаем таймаут 10 секунд
 
-	test my_first_test {
-		my_ubuntu {
-			start
-			wait "ALALA" timeout 10s
-			press Enter
-			abort "Stop here"
-		}
+```testo
+test my_first_test {
+	my_ubuntu {
+		start
+		wait "ALALA" timeout 10s
+		press Enter
+		abort "Stop here"
 	}
+}
+```
 
 Вывод:
 
@@ -221,34 +217,32 @@
 
 Если продолжить написание тестового сценария, то на этом этапе
 
-	test my_first_test {
-		my_ubuntu {
-			start
-			wait "English";
-			press Enter;
-			wait "Install Ubuntu Server"; press Enter;
-			wait "Choose the language";	press Enter
-			wait "Select your location"; press Enter
-			wait "Detect keyboard layout?";	press Enter
-			wait "Country of origin for the keyboard"; press Enter
-			wait "Keyboard layout"; press Enter
-			wait "No network interfaces detected" timeout 5m
+```testo
+test my_first_test {
+	my_ubuntu {
+		start
+		wait "English";
+		press Enter;
+		wait "Install Ubuntu Server"; press Enter;
+		wait "Choose the language";	press Enter
+		wait "Select your location"; press Enter
+		wait "Detect keyboard layout?";	press Enter
+		wait "Country of origin for the keyboard"; press Enter
+		wait "Keyboard layout"; press Enter
+		wait "No network interfaces detected" timeout 5m
 
-			#Обратите внимание, при необходимости нажатия нескольких клавиш подряд
-			#их можно объединить в одном действии press с помощью запятой
-			press Right, Enter
-			wait "Hostname:"
-			abort "Stop here"
-		}
+		#Обратите внимание, при необходимости нажатия нескольких клавиш подряд
+		#их можно объединить в одном действии press с помощью запятой
+		press Right, Enter
+		wait "Hostname:"
+		abort "Stop here"
 	}
+}
+```
 
 Мы увидим следующий экран, в котором нам предлагаю выбрать имя хоста для нашей виртуальной машины
 
-<br/><br/>
-
 ![Hostname](/static/tutorials/2_ubuntu_installation/hostname.png)
-
-<br/><br/>
 
 Конечно, можно было бы оставить значение по-умолчанию, но что, если мы хотим ввести другое значение?
 
@@ -270,27 +264,25 @@
 
 После окончания всех необходимых установочных действий мы увидим экран с завершением установки, в котором нам предложат вытащить установочный диск и нажать Enter
 
-<br/><br/>
-
 ![Installation Complete](/static/tutorials/2_ubuntu_installation/installation_complete.png)
-
-<br/><br/>
 
 Платформа Testo позволяет не только имитировать ввод данных с помощью клавиатуры, но и управление оборудованием виртуальной машины. Для подключения-отключения различных устройств в виртуальной машине существует действия [`plug`](/docs/lang/actions#plug) и [`unplug`](/docs/lang/actions#unplug). В полной меере с использвоанием этих действий мы будем знакомиться постепенно в ходе дальнейших уроков, а сейчас сосредоточимся на том, как вытащить установочный диск из дисковода виртуальной машины. Для этого необходимо выполнить действие `unplug dvd`.
 
 После этого останется только дождаться завершения перезагрузки (появится экран с предложение ввести данные учётной записи) и выполнить логин
 
-	test my_first_test {
-		my_ubuntu {
-			...
+```testo
+test my_first_test {
+	my_ubuntu {
+		...
 
-			wait "Installation complete" timeout 1m;
-			unplug dvd; press Enter
-			wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
-			wait "Password:"; type "1111"; press Enter
-			wait "Welcome to Ubuntu"
-		}
+		wait "Installation complete" timeout 1m;
+		unplug dvd; press Enter
+		wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
+		wait "Password:"; type "1111"; press Enter
+		wait "Welcome to Ubuntu"
 	}
+}
+```
 
 Если все все действия отрабатывают успешно, можно убрать в конце точку останова `abort "stop here"`	 и, таким образом, завершить тест `my_first_test`.
 

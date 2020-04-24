@@ -6,7 +6,7 @@
 виртуальная машина должна быть выключена. Попытка запустить уже
 запущенную виртуальную машину приведет к ошибке.
 
-```
+```text
 start
 ```
 
@@ -19,7 +19,7 @@ start
 Попытка остановить уже остановленную виртуальную машину приведет к
 ошибке.
 
-```
+```text
 stop
 ```
 
@@ -36,7 +36,7 @@ stop
 Попытка остановить уже остановленную виртуальную машину приведет к
 ошибке.
 
-```
+```text
 shutdown [timeout timeout_time_spec]
 ```
 
@@ -55,7 +55,7 @@ shutdown [timeout timeout_time_spec]
 `interval_time_spec` можно регулировать временной интервал между нажатиями
 клавиш. Виртуальная машина должна быть запущена.
 
-```
+```text
 press <key_spec1>[,key_spec2][,key_spec3]... [interval interval_time_spec]
 ```
 
@@ -74,7 +74,7 @@ press <key_spec1>[,key_spec2][,key_spec3]... [interval interval_time_spec]
 Сочетание клавиш представляет собой особую языковую конструкцию, которая
 имеет следующий формат:
 
-```
+```text
 <key_id1>[+key_id2][+key_id3]...[*number]
 ```
 
@@ -118,7 +118,7 @@ press <key_spec1>[,key_spec2][,key_spec3]... [interval interval_time_spec]
 клавиши `Enter`. Если в строке будут присутствовать знаки табуляции,
 то они будут преобразованы в нажатие клавиши `Tab`.
 
-```
+```text
 type <string> [interval interval_time_spec]
 ```
 
@@ -134,7 +134,7 @@ type <string> [interval interval_time_spec]
 
 Примеры:
 
-```
+```testo
 type "Hello world"
 type "Hello ${World}"
 type """Hello ${World}
@@ -152,7 +152,7 @@ string
 
 Выполнить безусловное ожидание в течение времени, указанного в `timeout_time_spec`
 
-```
+```text
 sleep <timeout timeout_time_spec>
 ```
 
@@ -170,7 +170,7 @@ sleep <timeout timeout_time_spec>
 регулировать частоту проверки состояния экрана. Для работы действия
 виртуальная машина должна быть запущена.
 
-```
+```text
 wait <select_expr> [timeout timeout_time_spec] [interval interval_time_spec]
 ```
 
@@ -204,13 +204,13 @@ wait <select_expr> [timeout timeout_time_spec] [interval interval_time_spec]
 Если требуется простая проверка наличия надписи на экране, то достаточно
 использовать команду `wait` в следующем формате
 
-```
+```testo
 wait "Искомая строка"
 ```
 
 Внутри строк можно использовать обращение к параметрам
 
-```
+```testo
 wait "Искомая строка с параметром ${param}"
 ```
 
@@ -227,7 +227,7 @@ wait "Искомая строка с параметром ${param}"
 закончвится таймаут. Все остальные возвращаемые значения будут
 восприниматься как ошибка и приводить к остановке выполнения теста.
 
-```
+```testo
 wait js "find_text('Hello world').foreground('blue').background('gray').size() == 1"
 ```
 
@@ -247,14 +247,14 @@ world\", у которой цвет букв - синий, а цвет фона 
 
 Примеры:
 
-```
+```testo
 wait "Hello world" && "${param}"
 ```
 
 Дождаться одновременного наличия на экране надписи "Hello world" и
 надписи, содержащей значение переменной `param`
 
-```
+```testo
 wait !"Hello world" || js """
     find_text()
         .match("Menu entry")
@@ -273,7 +273,7 @@ wait !"Hello world" || js """
 
 Вызвать макрос `macro_name`. Макрос должен быть заранее объявлен.
 
-```
+```text
 <macro_name> ([param1, param2, ...])
 ```
 
@@ -292,7 +292,7 @@ wait !"Hello world" || js """
 
 Подключить флеш-накопитель к виртуальной машине.
 
-```
+```text
 plug flash <flash_name>
 ```
 
@@ -308,7 +308,7 @@ plug flash <flash_name>
 адаптера должно соответствовать имени, указанному в атрибуте `nic` в
 объявлении виртуальной машины.
 
-```
+```text
 plug nic <nic_name>
 ```
 
@@ -324,7 +324,7 @@ plug nic <nic_name>
 соответствовать имени, указанному в атрибуте `nic` в объявлении
 виртуальной машины.
 
-```
+```text
 plug link <nic_name>
 ```
 
@@ -339,7 +339,7 @@ plug link <nic_name>
 адаптера должно соответствовать имени, указанному в атрибуте `nic` в
 объявлении виртуальной машины.
 
-```
+```text
 plug dvd <path_to_iso_file>
 ```
 
@@ -356,7 +356,7 @@ plug dvd <path_to_iso_file>
 
 Отключить флеш-накопитель от виртуальной машины.
 
-```
+```text
 unplug flash <flash_name>
 ```
 
@@ -372,7 +372,7 @@ unplug flash <flash_name>
 адаптера должно соответствовать имени, указанному в атрибуте `nic` в
 объявлении виртуальной машины.
 
-```
+```text
 unplug nic <nic_name>
 ```
 
@@ -388,7 +388,7 @@ unplug nic <nic_name>
 соответствовать имени, указанному в атрибуте `nic` в объявлении
 виртуальной машины.
 
-```
+```text
 unplug link <nic_name>
 ```
 
@@ -401,7 +401,7 @@ unplug link <nic_name>
 
 Отключить текущий iso-образ от dvd-привода.
 
-```
+```text
 unplug dvd
 ```
 
@@ -419,7 +419,7 @@ unplug dvd
 пользователь может наблюдать за ходом выполнения команд в режиме
 реального времени.
 
-```
+```text
 exec <interpreter> <string> [timeout timeout_time_spec]
 ```
 
@@ -441,7 +441,7 @@ exec <interpreter> <string> [timeout timeout_time_spec]
 Для работы необходимо наличие в виртуальной машине агента
 `negotiator`.
 
-```
+```text
 copyto <from> <to> [timeout timeout_time_spec]
 ```
 
@@ -471,7 +471,7 @@ copyto <from> <to> [timeout timeout_time_spec]
 Копипует файл или папку из виртуальной машины на хост. Для работы
 необходимо наличие в виртуальной машине агента `negotiator`
 
-```
+```text
 copyfrom <from> <to> [timeout timeout_time_spec]
 ```
 
@@ -496,7 +496,7 @@ copyfrom <from> <to> [timeout timeout_time_spec]
 Аварийно завершает выполнение текущего теста и генерирует сообщение
 об ошибке. Тест считается неудачно завершившимся.
 
-```
+```text
 abort <error_message>
 ```
 
@@ -508,7 +508,7 @@ abort <error_message>
 
 Выводит на экран сообщение, после чего тест продолжает работу.
 
-```
+```text
 print <message>
 ```
 

@@ -3,17 +3,19 @@
 Для объявления тестов используется директива
 `test`. Формат теста выглядит следующим образом:
 
-    [[
-        <attr1: <value1>
-        <attr2: <value1>
-        <attr3: <value1>
-    ]]
-    test <test_name>[: test_parent1, test_parent2,...]
-    {
-        command1
-        command2
-        ...
-    }
+```text
+[[
+	<attr1>: <value1>
+	<attr2>: <value1>
+	<attr3>: <value1>
+]]
+test <test_name>[: test_parent1, test_parent2, ...]
+{
+	command1
+	command2
+	...
+}
+```
 
 Заголовок теста состоит из необязательного набора атрибутов, заключенных
 в квадратные скобки, после которого должен быть обязательный перенос
@@ -52,8 +54,8 @@
 Логической единицей теста является **команда**. Формат команды выглядит
 следующим образом:
 
-```
-<vm_name1>[, vm_name2, vm_name3...] <action>
+```text
+<vm_name1>[, vm_name2, vm_name3, ...] <action>
 ```
 
 Команда состоит из двух частей: перечисления виртуальных машин
@@ -62,15 +64,17 @@
 применить к это й машине. В качестве действия может выступать **блок
 действий**, в этом случае команда принимает вид:
 
-    <vm_name1>[, vm_name2, vm_name3...] {
-        action1
-        action2
-        action3; action4; action5
-        action6;
-        {
-            action7; action8
-        }
-    }
+```text
+<vm_name1>[, vm_name2, vm_name3, ...] {
+	action1
+	action2
+	action3; action4; action5
+	action6;
+	{
+		action7; action8
+	}
+}
+```
 
 Также вместо действий в команде можно использовать
 [циклы](for) и [условия](if).

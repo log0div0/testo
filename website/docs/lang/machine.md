@@ -3,12 +3,14 @@
 Для объявления виртуальных машин используется директива `machine`.
 Формат директивы выглядит следующим образом:
 
-    machine <name> {
-        <attr1 [name]: <value1>
-        <attr2 [name]: <value1>
-        <attr3 [name]: <value1>
-        ...
-    }
+```text
+machine <name> {
+	<attr1 [name]: <value1>
+	<attr2 [name]: <value1>
+	<attr3 [name]: <value1>
+	...
+}
+```
 
 > Объявление виртуальной машины само по себе не ведет к ее созданию в
 > гипервизоре. Реальное создание виртуальной машины произойдет при запуске
@@ -70,30 +72,28 @@
 параметра `ISO_DIR`. Если такой параметр не задан, то итоговая строка
 примет значение `/ubuntu-16.04.6-server-amd64.iso"`
 
-```
+```testo
 machine example_machine {
-    cpus: 1
-    ram: 1024Mb
-    iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-    disk_size: 4Gb
-    nic nat: {
-        attached_to: "nat"
-        adapter_type: "e1000"
-    }
+	cpus: 1
+	ram: 1024Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk_size: 4Gb
+	nic nat: {
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
 
-    nic WAN: {
-        attached_to: "internal"
-        network: "net2"
-        mac: "52:54:00:00:00:00"
-        adapter_type: "e1000"
-    }
+	nic WAN: {
+		attached_to: "net2"
+		mac: "52:54:00:00:00:00"
+		adapter_type: "e1000"
+	}
 
-    nic LAN: {
-        attached_to: "internal"
-        network: "net1"
-        mac: "52:54:00:00:00:11"
-        adapter_type: "e1000"
-    }
+	nic LAN: {
+		attached_to: "net1"
+		mac: "52:54:00:00:00:11"
+		adapter_type: "e1000"
+	}
 }
 ```
 

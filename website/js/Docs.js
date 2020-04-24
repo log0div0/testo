@@ -6,6 +6,7 @@ import path from 'path'
 import * as babel from "@babel/core"
 import Layout from './Layout'
 import PageNotFound from './PageNotFound'
+import hljs from 'highlight.js'
 
 function H1({children}) {
 	return <h1 className="postHeaderTitle">{children}</h1>
@@ -179,6 +180,103 @@ function Terminal({children, height}) {
 	)
 }
 
+function Pre(props) {
+	return (
+		<pre {...props} />
+	)
+}
+
+function TestoDef(hljs) {
+	let STRING = {
+		className: 'string',
+		variants: [
+		 	{
+				begin: /"""/,
+				end: /"""/
+		 	},
+		 	{
+				begin: /"/,
+				end: /"/
+		 	}
+		],
+		contains: [
+			{
+				className: 'literal',
+				variants: [
+					{ begin: '\\\\"""' },
+					{ begin: '\\\\"' },
+					{ begin: '\\\\n' }
+				]
+			},
+			{
+				className: 'subst',
+				begin: "\\${",
+				end: "}"
+			}
+		]
+	}
+	let NUMBER = {
+		className: 'number',
+		begin: /\b\d+(Kb|Mb|Gb|s|m|h)?\b/
+	}
+	let KEYWORDS = {
+		keyword: 'for if else continue break machine',
+		literal: 'true false'
+	}
+	return {
+		name: 'Testo Lang',
+		keywords: KEYWORDS,
+		contains: [
+			STRING,
+			NUMBER,
+			hljs.C_BLOCK_COMMENT_MODE,
+			hljs.HASH_COMMENT_MODE,
+			{
+				className: 'function',
+				beginKeywords: 'machine test network flash',
+				end: /{/,
+				excludeEnd: true,
+				contains: [
+					hljs.UNDERSCORE_TITLE_MODE
+				]
+			},
+			{
+				className: 'function',
+				keywords: 'param',
+				begin: "param\\s+",
+				contains: [
+					hljs.UNDERSCORE_TITLE_MODE
+				]
+			},
+			{
+				className: 'attribute',
+				begin: /\b(type|wait|press|plug|unplug|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep)\b/
+			},
+			{
+				className: 'strong',
+				begin: /\b(EQUAL|LESS|GREATER|STREQUAL|STRGREATER|STRLESS|IN|RANGE)\b/
+			},
+			{
+				className: 'attr',
+				begin: /\b(NOT|AND|OR|check)\b/
+			},
+		]
+	}
+}
+
+hljs.registerLanguage('testo', TestoDef)
+
+function Code({children, className}) {
+	if (!className) {
+		return <code>{children}</code>
+	}
+	let lang = className.substr("language-".length)
+	let {value} = hljs.highlight(lang, getText(children))
+	return (
+		<code className="hljs" dangerouslySetInnerHTML={{__html: value}}/>
+	)
+}
+
 export async function makeDocPage(toc, page_url) {
 	for (let i = 0; i < toc.length; ++i) {
 		let category = toc[i];
@@ -192,7 +290,9 @@ export async function makeDocPage(toc, page_url) {
 				h1: H1,
 				h2: H2,
 				h3: H3,
-				Terminal
+				Terminal,
+				pre: Pre,
+				code: Code
 			}
 			let prevPage = null
 			if (j > 0) {
