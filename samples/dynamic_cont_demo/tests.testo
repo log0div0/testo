@@ -1,6 +1,119 @@
 include "installations.testo"
 
-[description: "TESTCASE 88373: Проверка работы 2 OSPF роцессоа на УБ"]
+flash bird_flash {
+	fs: "ntfs"
+	size: 4Mb
+}
+
+
+macro safe_umount() {
+	press LEFTMETA; wait "Все программы"
+	type "cmd"; press Enter
+	wait "cmd.exe"
+	press LeftAlt + LeftShift
+	type "diskpart"; press Enter
+	type "select disk 1"; press Enter
+	type "offline disk"; press Enter
+	wait "Выбранный диск успешно переведен в состояние \"вне сети\""
+	press LeftCtrl + C
+	type "exit"; press Enter
+}
+
+[
+	description: "TESTCASE 89624: Проверка загрузки и валидации конфигурации bird"
+	no_snapshots: true
+]
+test validate_bird_config_iptables: UB1_configure_network {
+	MS {
+		copyto "bird_configs/bgp_big_test.conf" "C:\\Users\\testo\\Desktop\\bgp_big_test.conf"
+
+		mouse click "Структура"
+		mouse click "node-${UB1_id}"
+		sleep 2s
+		mouse click "Свойства".from_top(0)
+		wait "безопасности - node-${UB1_id}"
+
+		mouse click "Динамические маршруты"
+		mouse move 0 0
+		mouse click "Динамические маршруты".from_left(1)
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Рабочий стол"
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "bgp_big_test.conf"
+		mouse click "Открыть".from_bottom(0)
+		mouse click "Применить".from_bottom(0)
+
+		if (check "Ошибка сервера" timeout 5s) {
+			abort "valid bird has been rejected"
+		}
+
+		mouse click "else reject;"; press End, Backspace
+		mouse click "Применить".from_bottom(0)
+		
+		wait "syntax error, unexpected '}"; press Enter
+
+		mouse click "protocol kernel"; press Home, Delete
+		mouse click "Применить".from_bottom(0)
+		
+		wait "CF_SYM_UNDEFINED"; press Enter
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "bgp_big_test.conf"
+		mouse click "Открыть".from_bottom(0)
+		mouse click "Применить".from_bottom(0)
+		sleep 5s
+		plug flash bird_flash
+		mouse click "Конфигурация маршрутизации".right_center().move_right(270)
+
+		wait "Сохранить как"
+		mouse click "Компьютер".from_left(0)
+		mouse dclick "Локальный диск (Е:)"
+		mouse click "Сохранить".from_bottom(0)
+
+		safe_umount()
+
+		unplug flash bird_flash
+
+		mouse click "Конфигурация маршрутизации"
+		press LeftAlt + F4
+
+		mouse click "Установить"
+
+		wait "Установить политики"
+		sleep 3s
+		press Enter
+
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет" timeout 3m
+	}
+
+	UB1 {
+		press LeftAlt + F2
+		wait "host${UB1_id} login:";
+		type "root"; press Enter; wait "Password"; type "${default_password}"; press Enter
+		wait "root@node-${UB1_id}"
+
+		plug flash bird_flash
+		type "service bird status"; press Enter
+		wait "Выполняется"
+
+		type "mount /dev/sdb1 /media"; press Enter
+		type "cp /media/routes.conf /tmp/"; press Enter
+		type "umount /media"; press Enter
+		sleep 3s
+		unplug flash bird_flash
+
+		type "cmp /tmp/routes.conf /etc/bird.conf && echo result is $?"; press Enter
+		wait "result is 0"
+	}
+}
+
+[
+description: "TESTCASE 88373: Проверка работы 2 OSPF роцессоа на УБ"
+no_snapshots: true
+]
 test ospf_2_processes_iptables: UB2_configure_network, router3_prepare, LAN2_ARM_prepare, LAN3_ARM_prepare {
 	router1 {
 		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"

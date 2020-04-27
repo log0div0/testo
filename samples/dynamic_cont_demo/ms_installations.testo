@@ -13,6 +13,7 @@ test MS_install_guest_additions: MS_install_win7 {
 [no_snapshots: true]
 test MS_configure_windows: MS_install_guest_additions {
 	MS {
+		copyto "./utils/RemoveDrive.exe" "C:\\Users\\testo\\removedrive.exe"
 		press LEFTMETA
 		mouse click "Панель управления"
 		mouse click "Категория"
