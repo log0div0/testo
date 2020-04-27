@@ -4,7 +4,7 @@ import assert from 'assert'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import Home from './js/Home'
-import {makeDocPage, makeDocToc} from './js/Docs'
+import {renderDocChapter, makeDocToc} from './js/Docs'
 
 const app = express()
 const port = 3000
@@ -14,12 +14,12 @@ app.get('/', (req, res) => {
 })
 
 app.get('/docs/*', async (req, res) => {
-	const page = await makeDocPage(docsToc, req.originalUrl)
+	const page = await renderDocChapter(docsToc, req.originalUrl)
 	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
 })
 
 app.get('/tutorials/*', async (req, res) => {
-	const page = await makeDocPage(tutorialsToc, req.originalUrl)
+	const page = await renderDocChapter(tutorialsToc, req.originalUrl)
 	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
 })
 

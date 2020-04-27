@@ -33,57 +33,57 @@ function H3({children}) {
 	return <h3>{children}</h3>
 }
 
-function NavGroup({category}) {
-	let navGroupItems = category.pages.map((page, index) => {
-		return (
-			<li key={index}>
-				<a href={page.url}>{page.name}</a>
-			</li>
-		)
+function Chapter({chapter}) {
+	return (
+		<li>
+			<a href={chapter.url}>{chapter.name}</a>
+		</li>
+	)
+}
+
+function Book({book}) {
+	let chapters = book.chapters.map((chapter, index) => {
+		return <Chapter key={index} chapter={chapter}></Chapter>
 	})
 
 	return (
 		<div>
 			<h1>
-				{category.name}
+				{book.name}
 			</h1>
 			<ul>
-				{navGroupItems}
+				{chapters}
 			</ul>
 		</div>
 	)
 }
 
-function DocsLayout({children, toc, prevPage, nextPage}) {
-	let navGroups = toc.map((category, index) => <NavGroup key={index} category={category}/>)
+function DocsLayout({children, toc, prevChapter, nextChapter}) {
+	let books = toc.books.map((book, index) => {
+		return <Book key={index} book={book}/>
+	})
 	let prevButton = null
-	if (prevPage) {
-		prevButton = <a href={prevPage.url}>← {prevPage.name}</a>
+	if (prevChapter) {
+		prevButton = <a href={prevChapter.url}>← {prevChapter.name}</a>
 	}
 	let nextButtom = null
-	if (nextPage) {
-		nextButtom = <a href={nextPage.url}>{nextPage.name} →</a>
+	if (nextChapter) {
+		nextButtom = <a href={nextChapter.url}>{nextChapter.name} →</a>
 	}
 	return (
 		<Layout>
 			<main>
-				<section className="docs-left">
-					<nav>
-						{navGroups}
-					</nav>
+				<section className="docs-toc">
+					{books}
 				</section>
-				<section className="docs-center">
-					<main className="docs-article">
-						{children}
-					</main>
+				<section className="docs-article">
+					{children}
 					<footer>
 						{prevButton}
 						{nextButtom}
 					</footer>
 				</section>
-				<section className="docs-right">
-					<nav>
-					</nav>
+				<section className="docs-minitoc">
 				</section>
 			</main>
 		</Layout>
@@ -91,28 +91,30 @@ function DocsLayout({children, toc, prevPage, nextPage}) {
 }
 
 export async function makeDocToc(src) {
-	let result = []
-	for (let category_name in src) {
-		let category = {
-			name: category_name,
-			pages: []
+	let toc = {
+		books: []
+	}
+	for (let book_name in src) {
+		let book = {
+			name: book_name,
+			chapters: []
 		}
-		for (let page_url of src[category_name]) {
-			let page = {
-				url: page_url,
-				file_path: `.${page_url}.md`
+		for (let chapter_url of src[book_name]) {
+			let chapter = {
+				url: chapter_url,
+				file_path: `.${chapter_url}.md`
 			}
-			const content = await fs.promises.readFile(page.file_path, 'utf-8')
+			const content = await fs.promises.readFile(chapter.file_path, 'utf-8')
 			let first_line = content.split(/\r?\n/)[0]
 			if (!first_line.startsWith("# ")) {
-				throw `The first line of file ${page.file_path} must starts with #`
+				throw `The first line of file ${chapter.file_path} must starts with #`
 			}
-			page.name = first_line.substr(1).trim()
-			category.pages.push(page)
+			chapter.name = first_line.substr(1).trim()
+			book.chapters.push(chapter)
 		}
-		result.push(category)
+		toc.books.push(book)
 	}
-	return result
+	return toc
 }
 
 function Terminal({children, height}) {
@@ -144,41 +146,41 @@ function Code({children, className}) {
 	)
 }
 
-export async function makeDocPage(toc, page_url) {
-	for (let i = 0; i < toc.length; ++i) {
-		let category = toc[i];
-		for (let j = 0; j < category.pages.length; ++j) {
-			let page = category.pages[j];
-			if (page.url != page_url) {
+export async function renderDocChapter(toc, chapter_url) {
+	for (let i = 0; i < toc.books.length; ++i) {
+		let book = toc.books[i];
+		for (let j = 0; j < book.chapters.length; ++j) {
+			let chapter = book.chapters[j];
+			if (chapter.url != chapter_url) {
 				continue
 			}
-			const content = await fs.promises.readFile(page.file_path)
+			const content = await fs.promises.readFile(chapter.file_path)
 			const components = {
 				h2: H2,
 				h3: H3,
 				Terminal,
 				code: Code
 			}
-			let prevPage = null
+			let prevChapter = null
 			if (j > 0) {
-				prevPage = category.pages[j-1]
+				prevChapter = book.chapters[j-1]
 			} else {
 				if (i > 0) {
-					let prevCategory = toc[i-1]
-					prevPage = prevCategory.pages[prevCategory.pages.length - 1]
+					let prevBook = toc.books[i-1]
+					prevChapter = prevBook.chapters[prevBook.chapters.length - 1]
 				}
 			}
-			let nextPage = null
-			if (j < (category.pages.length - 1)) {
-				nextPage = category.pages[j+1]
+			let nextChapter = null
+			if (j < (book.chapters.length - 1)) {
+				nextChapter = book.chapters[j+1]
 			} else {
-				if (i < (toc.length - 1)) {
-					let nextCategory = toc[i+1]
-					nextPage = nextCategory.pages[0]
+				if (i < (toc.books.length - 1)) {
+					let nextBook = toc.books[i+1]
+					nextChapter = nextBook.chapters[0]
 				}
 			}
 			return (
-				<DocsLayout toc={toc} prevPage={prevPage} nextPage={nextPage}>
+				<DocsLayout toc={toc} prevChapter={prevChapter} nextChapter={nextChapter}>
 					<MDX components={components}>{content}</MDX>
 				</DocsLayout>
 			)

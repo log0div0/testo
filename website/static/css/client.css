@@ -91,28 +91,13 @@ body > main {
 }
 
 /*------------------------------*/
-/* docs */
-/*------------------------------*/
-
-.docs-left {
-	flex-basis: 250px;
-}
-
-.docs-center {
-	flex-basis: 900px;
-	padding: 0 50px;
-	min-width: 0;
-}
-
-.docs-right {
-	flex-basis: 250px;
-}
-
-/*------------------------------*/
 /* docs-article */
 /*------------------------------*/
 
 .docs-article {
+	flex-basis: 900px;
+	padding: 0 50px;
+	min-width: 0;
 	font-size: 16px;
 	line-height: 1.5em;
 }
@@ -137,7 +122,21 @@ body > main {
 	margin: 1em 0;
 }
 
+/*------------------------------*/
+/* docs-toc */
+/*------------------------------*/
 
+.docs-toc {
+	flex-basis: 250px;
+}
+
+/*------------------------------*/
+/* docs-minitoc */
+/*------------------------------*/
+
+.docs-minitoc {
+	flex-basis: 250px;
+}
 
 
 
