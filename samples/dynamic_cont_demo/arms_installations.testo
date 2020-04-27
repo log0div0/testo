@@ -75,6 +75,7 @@ test LAN4_ARM_prepare: LAN4_ARM_install_guest_additions {
 		unplug_nat("${LAN4_ARM_login}", "${default_password}")
 		exec bash "ip a a ${LAN4_ARM_ip}/${default_netmask} dev LAN4_side"
 		exec bash "ip l s LAN4_side up"
+		exec bash "ip r a default via ${UB2_LAN4_ip}"
 	}
 }
 

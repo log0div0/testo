@@ -84,10 +84,17 @@ test router2_prepare: router2_install_guest_additions {
 		exec bash "ip a a ${router2_LAN5_ip}/${default_netmask} dev LAN5_side"
 		exec bash "ip l s LAN5_side up"
 
+		exec bash "ip a a ${router2_Lo0_ip}/${default_loopback_netmask} dev lo"
+
 		exec bash "sysctl net.ipv4.ip_forward=1"
 
 		exec bash """
 			ip r a ${LAN1_ip}/${default_netmask} via ${UB1_BGP1_ip}
+
+			ip r a 10.0.0.101/32 via 172.33.0.1
+			ip r a 10.0.0.201/32 via 172.33.0.1
+			ip r a 10.0.0.102/32 via 172.33.0.10
+			ip r a 10.0.0.202/32 via 172.33.0.10
 		"""
 	}
 }
