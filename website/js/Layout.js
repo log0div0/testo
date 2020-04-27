@@ -10,7 +10,7 @@ module.exports = function({children}) {
 				<title>Testo Lang</title>
 				<link rel="stylesheet" href="/static/css/client.css" type="text/css"/>
 				<link rel="stylesheet" href="/static/css/terminal.css" type="text/css"/>
-				<link rel="stylesheet" href="/static/css/hljs-monokai-sublime.css" type="text/css"/>
+				<link rel="stylesheet" href="/static/css/hljs/monokai-sublime.css" type="text/css"/>
 			</head>
 			<body>
 				<Header/>
