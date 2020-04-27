@@ -3,21 +3,29 @@
 /* basic */
 /*------------------------------*/
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
+* {
+	box-sizing: border-box;
+}
 
 body {
 	margin: 0;
-	font-family: 'Roboto', sans-serif;
-	font-weight: 300;
+	font-family: "-apple-system",BlinkMacSystemFont,Arial,sans-serif;
+	color: #24292e;
 }
 
 a {
+	color: inherit;
 	text-decoration: none;
 }
 
-h1,h2,h3,h4,h5,h6{
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
 	margin: 0;
-	font-weight: 500;
+	font-weight: 600;
 }
 
 /*------------------------------*/
@@ -54,7 +62,7 @@ body > header section > *:last-child {
 }
 
 body > header a {
-	font-weight: 400;
+	font-weight: 500;
 	color: white;
 }
 
@@ -64,17 +72,80 @@ body > header a {
 
 body > footer {
 	background: #20232a;
-	padding: 50px 0;
 }
 
 body > footer nav {
 	max-width: 1400px;
 	margin: 0 auto;
-	text-align: right;
+	height: 150px;
 }
 
-body > footer h1 {
-	color: white;
-	font-size: 15px;
-	margin-bottom: 10px;
+/*------------------------------*/
+/* main */
+/*------------------------------*/
+
+body > main {
+	max-width: 1400px;
+	margin: 40px auto;
+	display: flex;
 }
+
+/*------------------------------*/
+/* docs */
+/*------------------------------*/
+
+.docs-left {
+	flex-basis: 250px;
+}
+
+.docs-center {
+	flex-basis: 900px;
+	padding: 0 50px;
+	min-width: 0;
+}
+
+.docs-right {
+	flex-basis: 250px;
+}
+
+/*------------------------------*/
+/* docs-article */
+/*------------------------------*/
+
+.docs-article {
+	font-size: 16px;
+	line-height: 1.5em;
+}
+
+.docs-article h1 {
+	font-size: 32px;
+	margin-bottom: 0.75em;
+}
+
+.docs-article h2 {
+	font-size: 24px;
+	margin-top: 1.5em;
+}
+
+.docs-article h3 {
+	font-size: 20px;
+	margin-top: 1.5em;
+}
+
+.docs-article img {
+	width: 100%;
+	margin: 1em 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

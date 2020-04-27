@@ -2,15 +2,10 @@
 import React from 'react'
 import MDX from '@mdx-js/runtime'
 import fs from 'fs'
-import path from 'path'
-import * as babel from "@babel/core"
 import Layout from './Layout'
 import PageNotFound from './PageNotFound'
+import HighlightTesto from './HighlightTesto'
 import hljs from 'highlight.js'
-
-function H1({children}) {
-	return <h1 className="postHeaderTitle">{children}</h1>
-}
 
 const getText=(x)=>{
 	if (Array.isArray(x)) {
@@ -28,58 +23,32 @@ function H2({children}) {
 	let text = getText(children)
 	let id = text.replace(/\s+/g, '-').toLowerCase()
 	let href = '#' + id
-	return (
-		<h2>
-			<a className="anchor" aria-hidden="true" id={id}></a>
-			<a href={href} aria-hidden="true" className="hash-link">
-				<svg className="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16">
-					<path fillRule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-				</svg>
-			</a>
-			{children}
-		</h2>
-	)
+	return <h2>{children}</h2>
 }
 
 function H3({children}) {
 	let text = getText(children)
 	let id = text.replace(/\s+/g, '-').toLowerCase()
 	let href = '#' + id
-	return (
-		<h3>
-			<a className="anchor" aria-hidden="true" id={id}></a>
-			<a href={href} aria-hidden="true" className="hash-link">
-				<svg className="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16">
-					<path fillRule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
-				</svg>
-			</a>
-			{children}
-		</h3>
-	)
+	return <h3>{children}</h3>
 }
 
 function NavGroup({category}) {
-	let navListItems = category.pages.map((page, index) => {
+	let navGroupItems = category.pages.map((page, index) => {
 		return (
-			<li key={index} className="navListItem">
-				<a className="navItem" href={page.url}>{page.name}</a>
+			<li key={index}>
+				<a href={page.url}>{page.name}</a>
 			</li>
 		)
 	})
 
 	return (
-		<div className="navGroup">
-			<h3 className="navGroupCategoryTitle collapsible">
+		<div>
+			<h1>
 				{category.name}
-				<span className="arrow">
-					<svg width="24" height="24" viewBox="0 0 24 24">
-						<path fill="#565656" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path>
-						<path d="M0 0h24v24H0z" fill="none"></path>
-					</svg>
-				</span>
-			</h3>
-			<ul className="hide">
-				{navListItems}
+			</h1>
+			<ul>
+				{navGroupItems}
 			</ul>
 		</div>
 	)
@@ -89,52 +58,34 @@ function DocsLayout({children, toc, prevPage, nextPage}) {
 	let navGroups = toc.map((category, index) => <NavGroup key={index} category={category}/>)
 	let prevButton = null
 	if (prevPage) {
-		prevButton = (
-			<a className="docs-prev button" href={prevPage.url}>
-				<span className="arrow-prev">← </span>
-				<span>{prevPage.name}</span>
-			</a>
-		)
+		prevButton = <a href={prevPage.url}>← {prevPage.name}</a>
 	}
 	let nextButtom = null
 	if (nextPage) {
-		nextButtom = (
-			<a className="docs-next button" href={nextPage.url}>
-				<span>{nextPage.name}</span>
-				<span className="arrow-next"> →</span>
-			</a>
-		)
-
+		nextButtom = <a href={nextPage.url}>{nextPage.name} →</a>
 	}
 	return (
 		<Layout>
-			<div className="docMainWrapper wrapper">
-				<div className="docsNavContainer">
-					<nav className="toc">
-						<section className="navWrapper wrapper">
-							<div className="navGroups">
-								{navGroups}
-							</div>
-						</section>
+			<main>
+				<section className="docs-left">
+					<nav>
+						{navGroups}
 					</nav>
-				</div>
-				<div className="mainContainer">
-					<div className="wrapper">
-						<div className="post">
-							{children}
-						</div>
-						<div className="docs-prevnext">
-							{prevButton}
-							{nextButtom}
-						</div>
-					</div>
-				</div>
-				<nav className="onPageNav">
-					<ul className="toc-headings">
-
-					</ul>
-				</nav>
-			</div>
+				</section>
+				<section className="docs-center">
+					<main className="docs-article">
+						{children}
+					</main>
+					<footer>
+						{prevButton}
+						{nextButtom}
+					</footer>
+				</section>
+				<section className="docs-right">
+					<nav>
+					</nav>
+				</section>
+			</main>
 		</Layout>
 	)
 }
@@ -180,91 +131,7 @@ function Terminal({children, height}) {
 	)
 }
 
-function Pre(props) {
-	return (
-		<pre {...props} />
-	)
-}
-
-function TestoDef(hljs) {
-	let STRING = {
-		className: 'string',
-		variants: [
-		 	{
-				begin: /"""/,
-				end: /"""/
-		 	},
-		 	{
-				begin: /"/,
-				end: /"/
-		 	}
-		],
-		contains: [
-			{
-				className: 'literal',
-				variants: [
-					{ begin: '\\\\"""' },
-					{ begin: '\\\\"' },
-					{ begin: '\\\\n' }
-				]
-			},
-			{
-				className: 'subst',
-				begin: "\\${",
-				end: "}"
-			}
-		]
-	}
-	let NUMBER = {
-		className: 'number',
-		begin: /\b\d+(Kb|Mb|Gb|s|m|h)?\b/
-	}
-	let KEYWORDS = {
-		keyword: 'for if else continue break machine',
-		literal: 'true false'
-	}
-	return {
-		name: 'Testo Lang',
-		keywords: KEYWORDS,
-		contains: [
-			STRING,
-			NUMBER,
-			hljs.C_BLOCK_COMMENT_MODE,
-			hljs.HASH_COMMENT_MODE,
-			{
-				className: 'function',
-				beginKeywords: 'machine test network flash',
-				end: /{/,
-				excludeEnd: true,
-				contains: [
-					hljs.UNDERSCORE_TITLE_MODE
-				]
-			},
-			{
-				className: 'function',
-				keywords: 'param',
-				begin: "param\\s+",
-				contains: [
-					hljs.UNDERSCORE_TITLE_MODE
-				]
-			},
-			{
-				className: 'attribute',
-				begin: /\b(type|wait|press|plug|unplug|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep)\b/
-			},
-			{
-				className: 'strong',
-				begin: /\b(EQUAL|LESS|GREATER|STREQUAL|STRGREATER|STRLESS|IN|RANGE)\b/
-			},
-			{
-				className: 'attr',
-				begin: /\b(NOT|AND|OR|check)\b/
-			},
-		]
-	}
-}
-
-hljs.registerLanguage('testo', TestoDef)
+hljs.registerLanguage('testo', HighlightTesto)
 
 function Code({children, className}) {
 	if (!className) {
@@ -287,11 +154,9 @@ export async function makeDocPage(toc, page_url) {
 			}
 			const content = await fs.promises.readFile(page.file_path)
 			const components = {
-				h1: H1,
 				h2: H2,
 				h3: H3,
 				Terminal,
-				pre: Pre,
 				code: Code
 			}
 			let prevPage = null

@@ -14,12 +14,10 @@ module.exports = function({children}) {
 			</head>
 			<body>
 				<Header/>
-				<div className="navPusher">
-					{children}
-				</div>
+				{children}
 				<Footer/>
-				<script type="text/javascript" src="/static/js/client.js"></script>
 			</body>
 		</html>
 	)
+				// <script type="text/javascript" src="/static/js/client.js"></script>
 }
