@@ -9,8 +9,8 @@ test UB1_install_nf2: UB1_configure_network {
 		mouse click "Высокопроизводитель"
 		mouse click "ОК".from_bottom(0)
 		mouse click "Установить"
-		wait "Установить политики"
-		sleep 3s
+		mouse click "Установить политики"
+		sleep 2s
 		press Enter
 		wait "Установка политики на узлы безопасности"
 		wait "Новых уведомлений нет" timeout 3m
@@ -119,5 +119,151 @@ test validate_bird_config_nf2: UB1_install_nf2 {
 
 		type "cmp /tmp/routes.conf /etc/bird-nf2.conf && echo result is $?"; press Enter
 		wait "result is 0"
+	}
+}
+
+[
+description: "TESTCASE 88373[NF2]: Проверка работы 2 OSPF процесса на УБ"
+no_snapshots: true
+]
+test ospf_2_processes_nf2: UB1_install_nf2, router3_prepare, LAN2_ARM_prepare, LAN3_ARM_prepare {
+	router1 {
+		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
+		exec bash "bird -c /opt/OSPF_R1.conf"
+	}
+
+	router3 {
+		copyto "bird_configs/OSPF_R3.conf" "/opt/OSPF_R3.conf"
+		exec bash "bird -c /opt/OSPF_R3.conf"
+	}
+
+	MS {
+		mouse rclick "node-${UB1_id}"
+		mouse click "Свойства".from_bottom(0)
+		wait "безопасности - node-${UB1_id}"
+
+		mouse click "Динамические маршруты"
+		mouse move 0 0
+		mouse click "Динамические маршруты".from_left(1)
+
+		copyto "bird_configs/2_OSPF_UB1.conf" "C:\\Users\\testo\\Desktop\\2_OSPF_UB1.conf"
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Рабочий стол"
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "2_OSPF_UB1.conf"
+		mouse click "Открыть".from_bottom(0)
+
+		mouse click "Интерфейсы"
+		#ge-0-0, OSPF1_side
+		mouse dclick "Не определён".from_top(0)
+		wait "Назначение:"
+		mouse click "Не определён";
+		mouse click "Внешний"
+		mouse click "Разрешенные протоколы:".right_center().move_right(30)
+		mouse click "OSPF"; press Space, Enter*2
+		wait !"Назначение:"
+
+		mouse dclick "Не определён".from_top(0)
+		wait "Назначение:"
+		mouse click "Не определён";
+		mouse click "Внешний"
+		mouse click "Разрешенные протоколы:".right_center().move_right(30)
+		mouse click "OSPF"; press Space, Enter*2
+		wait !"Назначение:"
+
+		mouse click "OK".from_bottom(0)
+
+		mouse click "Установить"
+		mouse click "Установить политики"
+		press Enter
+
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет" timeout 3m
+	}
+
+	UB1 {
+		wait "root@node-${UB1_id}"
+		type "birdc-nf2 show ospf neighbor ospf1"; press Enter
+		wait "Full/PtP" && "ge-0-0" && js "find_text().match('${router1_OSPF1_ip}').size() == 2"
+		type "clear"; press Enter
+		type "birdc-nf2 show ospf neighbor ospf2"; press Enter
+		wait "Full/PtP" && "ge-1-0" && js "find_text().match('${router3_OSPF2_ip}').size() == 2"
+		type "clear"; press Enter
+
+		type "birdc-nf2 show route protocol ospf1"; press Enter
+		wait "${LAN1_ip}" && "${router1_Lo_ip}" && js "find_text().match('via ${router1_OSPF1_ip}').size() == 2"
+		type "clear"; press Enter
+
+		type "birdc-nf2 show route protocol ospf2"; press Enter
+		wait "${LAN2_ip}" && "${router3_Lo_ip}" && js "find_text().match('via ${router3_OSPF2_ip}').size() == 2"
+		type "clear"; press Enter
+	}
+
+	router1 {
+		exec bash "ip r s | fgrep \"${LAN3_ip}/${default_netmask} via ${UB1_OSPF1_ip}\""
+		exec bash "ip r s | fgrep \"${OSPF2_ip}/${default_netmask} via ${UB1_OSPF1_ip}\""
+		exec bash "ip r s | fgrep \"${BGP1_ip}/${BGP_netmask} via ${UB1_OSPF1_ip}\""
+		exec bash "ip r s | fgrep \"${UB1_Lo0_ip} via ${UB1_OSPF1_ip}\""
+		exec bash "ip r s | fgrep \"${UB1_Lo1_ip} via ${UB1_OSPF1_ip}\""
+	}
+
+	router3 {
+		exec bash "ip r s | fgrep \"${LAN3_ip}/${default_netmask} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${OSPF1_ip}/${default_netmask} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${BGP1_ip}/${BGP_netmask} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${UB1_Lo0_ip} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${UB1_Lo1_ip} via ${UB1_OSPF2_ip}\""
+	}
+
+	LAN2_ARM {
+		exec bash "!(ping ${MS_ip} -c 5)"
+		exec bash "ping ${LAN3_ARM_ip} -c 5"
+	}
+
+	MS {
+		#exec cmd "ping ${LAN2_ARM_ip} && exit /b 1"
+		exec cmd "ping ${LAN3_ARM_ip}"
+	}
+
+	router3 {
+		unplug link OSPF2_side
+		sleep 5s
+		exec bash "!(ip r s | fgrep \"${LAN3_ip}/${default_netmask} via ${UB1_OSPF2_ip}\")"
+		exec bash "!(ip r s | fgrep \"${OSPF1_ip}/${default_netmask} via ${UB1_OSPF2_ip}\")"
+		exec bash "!(ip r s | fgrep \"${BGP1_ip}/${BGP_netmask} via ${UB1_OSPF2_ip}\")"
+		exec bash "!(ip r s | fgrep \"${UB1_Lo0_ip} via ${UB1_OSPF2_ip}\")"
+		exec bash "!(ip r s | fgrep \"${UB1_Lo1_ip} via ${UB1_OSPF2_ip}\")"
+	}
+
+	UB1 {
+		type "ip r s"; press Enter
+		wait !"${LAN2_ip}"
+		type "clear"; press Enter
+		type "birdc-nf2 show protocols ospf2"; press Enter
+		wait "Alone"
+		type "clear"; press Enter
+	}
+
+	router3 {
+		plug link OSPF2_side
+		sleep 10s
+	}
+
+	UB1 {
+		type "ip r s"; press Enter
+		wait "${LAN2_ip}"
+		type "clear"; press Enter
+		type "birdc-nf2 show protocols ospf1"; press Enter
+		wait "Running"
+		type "clear"; press Enter
+	}
+
+	router3 {
+		exec bash "ip r s | fgrep \"${LAN3_ip}/${default_netmask} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${OSPF1_ip}/${default_netmask} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${BGP1_ip}/${BGP_netmask} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${UB1_Lo0_ip} via ${UB1_OSPF2_ip}\""
+		exec bash "ip r s | fgrep \"${UB1_Lo1_ip} via ${UB1_OSPF2_ip}\""
 	}
 }

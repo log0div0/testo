@@ -94,6 +94,8 @@ test MS_connect_CUS: UB1_connect_to_CUS, MS_install_ms {
 		type "\" static ${MS_ip} ${MS_netmask} ${router1_LAN1_ip}"
 		press Enter
 		type "exit"; press Enter
+		mouse click "Общественная сеть" timeout 2m
+		mouse click "Закрыть".from_bottom(0)
 		mouse dclick "Менеджер"
 		wait "Подключение к ЦУС"
 		press LeftAlt + LeftShift
@@ -208,7 +210,6 @@ test UB1_configure_network: MS_connect_CUS {
 		mouse click "node-${UB1_id}".move_left(65)
 		mouse click "ОК".from_bottom(0)
 
-		wait "Установка политики на узлы безопасности"
 		wait "Новых уведомлений нет" timeout 3m
 	}
 }

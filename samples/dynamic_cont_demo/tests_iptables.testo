@@ -95,7 +95,7 @@ test validate_bird_config_iptables: UB1_configure_network {
 description: "TESTCASE 88373[IPTABLES]: Проверка работы 2 OSPF процесса на УБ"
 no_snapshots: true
 ]
-test ospf_2_processes_iptables: UB2_configure_network, router3_prepare, LAN2_ARM_prepare, LAN3_ARM_prepare {
+test ospf_2_processes_iptables: UB1_configure_network, router3_prepare, LAN2_ARM_prepare, LAN3_ARM_prepare {
 	router1 {
 		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
 		exec bash "bird -c /opt/OSPF_R1.conf"
@@ -107,6 +107,7 @@ test ospf_2_processes_iptables: UB2_configure_network, router3_prepare, LAN2_ARM
 	}
 
 	MS {
+		mouse click "Структура"
 		mouse rclick "node-${UB1_id}"
 		mouse click "Свойства".from_bottom(0)
 		wait "безопасности - node-${UB1_id}"
@@ -140,9 +141,8 @@ test ospf_2_processes_iptables: UB2_configure_network, router3_prepare, LAN2_ARM
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
-
-		mouse click "OK".from_bottom(0)
-
+		mouse click "Анонсируемые адреса"
+		press Enter
 		mouse click "Установить"
 
 		wait "Установить политики"
