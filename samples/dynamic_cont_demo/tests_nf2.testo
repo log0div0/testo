@@ -1,0 +1,123 @@
+include "installations.testo"
+
+test UB1_install_nf2: UB1_configure_network {
+	MS {
+		mouse click "Структура"
+		mouse rclick "node-${UB1_id}"
+		mouse click "Свойства".from_bottom(0)
+		mouse click "UTM"
+		mouse click "Высокопроизводитель"
+		mouse click "ОК".from_bottom(0)
+		mouse click "Установить"
+		wait "Установить политики"
+		sleep 3s
+		press Enter
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет" timeout 3m
+	}
+
+	UB1 {
+		cont_login("admin", "${default_password}")
+		wait "Для завершения смены режима требуется перезагрузка"
+		select_local_menu("Завершение работы устройства")
+		select_local_menu_horizontal("Перезагрузка")
+		wait "Вход в систему" timeout 5m
+		press LeftAlt + F2
+		wait "node-${UB1_id} login"
+		type "root"; press Enter
+		wait "Password"; type "${default_password}"; press Enter
+		wait "root@node-${UB1_id}";
+		type "nf2 status"; press Enter
+		wait "Running"
+		type "clear"; press Enter
+		sleep 2s
+	}
+}
+
+[
+	description: "TESTCASE 89624[NF2]: Проверка загрузки и валидации конфигурации bird"
+	no_snapshots: true
+]
+test validate_bird_config_nf2: UB1_install_nf2 {
+	MS {
+		copyto "bird_configs/bgp_big_test.conf" "C:\\Users\\testo\\Desktop\\bgp_big_test.conf"
+
+		mouse click "Структура"
+		mouse click "node-${UB1_id}"
+		sleep 2s
+		mouse click "Свойства".from_top(0)
+		wait "безопасности - node-${UB1_id}"
+
+		mouse click "Динамические маршруты"
+		mouse move 0 0
+		mouse click "Динамические маршруты".from_left(1)
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Рабочий стол"
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "bgp_big_test.conf"
+		mouse click "Открыть".from_bottom(0)
+		mouse click "Применить".from_bottom(0)
+
+		if (check "Ошибка сервера" timeout 5s) {
+			abort "valid bird has been rejected"
+		}
+
+		mouse click "else reject;"; press End, Backspace
+		mouse click "Применить".from_bottom(0)
+		
+		wait "syntax error, unexpected '}"; press Enter
+
+		mouse click "protocol kernel"; press Home, Delete
+		mouse click "Применить".from_bottom(0)
+		
+		wait "CF_SYM_UNDEFINED"; press Enter
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "bgp_big_test.conf"
+		mouse click "Открыть".from_bottom(0)
+		mouse click "Применить".from_bottom(0)
+		sleep 5s
+		plug flash bird_flash
+		mouse click "Конфигурация маршрутизации".right_center().move_right(270)
+
+		wait "Сохранить как"
+		mouse click "Компьютер".from_left(0)
+		mouse dclick "Локальный диск (Е:)"
+		mouse click "Сохранить".from_bottom(0)
+
+		safe_umount()
+
+		unplug flash bird_flash
+
+		mouse click "Конфигурация маршрутизации"
+		press LeftAlt + F4
+
+		mouse click "Установить"
+
+		wait "Установить политики"
+		sleep 3s
+		press Enter
+
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет" timeout 3m
+	}
+
+	UB1 {
+		wait "root@node-${UB1_id}"
+
+		plug flash bird_flash
+		type "service bird-nf2 status"; press Enter
+		wait "Выполняется"
+
+		type "mount /dev/sdb1 /media"; press Enter
+		type "cp /media/routes.conf /tmp/"; press Enter
+		type "umount /media"; press Enter
+		sleep 3s
+		unplug flash bird_flash
+
+		type "cmp /tmp/routes.conf /etc/bird-nf2.conf && echo result is $?"; press Enter
+		wait "result is 0"
+	}
+}

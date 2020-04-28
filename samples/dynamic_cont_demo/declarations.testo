@@ -127,7 +127,7 @@ param UB1_Lo1_ip "10.0.0.201"
 
 machine UB1 {
 	cpus: 2
-	ram: 2048Mb
+	ram: 3072Mb
 	iso: "${ISO_DIR}/Continent.iso"
 	disk_size: 20Gb
 
@@ -166,7 +166,7 @@ param UB2_Lo1_ip "10.0.0.202"
 
 machine UB2 {
 	cpus: 2
-	ram: 2048Mb
+	ram: 3072Mb
 	iso: "${ISO_DIR}/Continent.iso"
 	disk_size: 20Gb
 
@@ -337,3 +337,9 @@ machine LAN5_ARM {
 		adapter_type: "e1000"
 	}
 }
+
+flash bird_flash {
+	fs: "ntfs"
+	size: 4Mb
+}
+

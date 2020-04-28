@@ -1,24 +1,5 @@
 include "installations.testo"
 
-flash bird_flash {
-	fs: "ntfs"
-	size: 4Mb
-}
-
-
-macro safe_umount() {
-	press LEFTMETA; wait "Все программы"
-	type "cmd"; press Enter
-	wait "cmd.exe"
-	press LeftAlt + LeftShift
-	type "diskpart"; press Enter
-	type "select disk 1"; press Enter
-	type "offline disk"; press Enter
-	wait "Выбранный диск успешно переведен в состояние \"вне сети\""
-	press LeftCtrl + C
-	type "exit"; press Enter
-}
-
 [
 	description: "TESTCASE 89624[IPTABLES]: Проверка загрузки и валидации конфигурации bird"
 	no_snapshots: true

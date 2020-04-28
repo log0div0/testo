@@ -1,6 +1,19 @@
 include "declarations.testo"
 include "../common_win7.testo"
 
+macro safe_umount() {
+	press LEFTMETA; wait "Все программы"
+	type "cmd"; press Enter
+	wait "cmd.exe"
+	press LeftAlt + LeftShift
+	type "diskpart"; press Enter
+	type "select disk 1"; press Enter
+	type "offline disk"; press Enter
+	wait "Выбранный диск успешно переведен в состояние \"вне сети\""
+	press LeftCtrl + C
+	type "exit"; press Enter
+}
+
 [no_snapshots: true]
 test MS_install_win7 {
 	MS install_win7("testo")
