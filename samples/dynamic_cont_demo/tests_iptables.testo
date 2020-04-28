@@ -133,6 +133,7 @@ test ospf_2_processes_iptables: UB1_configure_network, router3_prepare, LAN2_ARM
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse dclick "Не определён".from_top(0)
 		wait "Назначение:"
@@ -141,7 +142,9 @@ test ospf_2_processes_iptables: UB1_configure_network, router3_prepare, LAN2_ARM
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 		mouse click "Анонсируемые адреса"
+		sleep 2s
 		press Enter
 		mouse click "Установить"
 
@@ -283,6 +286,7 @@ test ospf_ebgp_iptables: UB1_configure_network, router2_prepare, LAN3_ARM_prepar
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse dclick "Не определён".from_top(1)
 		wait "Назначение:"
@@ -291,6 +295,7 @@ test ospf_ebgp_iptables: UB1_configure_network, router2_prepare, LAN3_ARM_prepar
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "BGP"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		press Enter
 
@@ -432,6 +437,7 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN4_ARM_prepare {
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse dclick "Не определён".from_top(1)
 		wait "Назначение:"
@@ -440,6 +446,7 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN4_ARM_prepare {
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "BGP"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse click "OK".from_bottom(0)
 
@@ -466,6 +473,7 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN4_ARM_prepare {
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "BGP"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse click "OK".from_bottom(0)
 

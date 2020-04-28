@@ -1,101 +1,10 @@
 include "installations.testo"
 
-test UB1_install_nf2: UB1_configure_network {
-	MS {
-		mouse click "Структура"
-		mouse rclick "node-${UB1_id}"
-		mouse click "Свойства".from_bottom(0)
-		mouse click "UTM"
-		mouse click "Высокопроизводитель"
-		mouse click "ОК".from_bottom(0)
-		mouse click "Установить"
-		mouse click "Установить политики"
-		sleep 2s
-		press Enter
-		wait "Установка политики на узлы безопасности"
-		wait "Новых уведомлений нет" timeout 3m
-	}
-
-	UB1 {
-		cont_login("admin", "${default_password}")
-		wait "Для завершения смены режима требуется перезагрузка"
-		select_local_menu("Завершение работы устройства")
-		select_local_menu_horizontal("Перезагрузка")
-		wait "Вход в систему" timeout 5m
-		press LeftAlt + F2
-		wait "node-${UB1_id} login"
-		type "root"; press Enter
-		wait "Password"; type "${default_password}"; press Enter
-		wait "root@node-${UB1_id}";
-		type "nf2 status"; press Enter
-		wait "Running"
-		type "clear"; press Enter
-		sleep 2s
-	}
-}
-
-test UB2_install_nf2: UB2_configure_network {
-	MS {
-		mouse click "Структура"
-		mouse rclick "node-${UB1_id}"
-		mouse click "Свойства".from_bottom(0)
-		mouse click "UTM"
-		mouse click "Высокопроизводитель"
-		mouse click "ОК".from_bottom(0)
-
-		mouse rclick "node-${UB2_id}"
-		mouse click "Свойства".from_bottom(0)
-		mouse click "UTM"
-		mouse click "Высокопроизводитель"
-		mouse click "ОК".from_bottom(0)
-		mouse click "Установить"
-		mouse click "Установить политики"
-		sleep 2s
-		press Enter
-		wait "Установка политики на узлы безопасности"
-		wait "Новых уведомлений нет" timeout 3m
-	}
-
-	UB1 {
-		cont_login("admin", "${default_password}")
-		wait "Для завершения смены режима требуется перезагрузка"
-		select_local_menu("Завершение работы устройства")
-		select_local_menu_horizontal("Перезагрузка")
-		wait "Вход в систему" timeout 5m
-		press LeftAlt + F2
-		wait "node-${UB1_id} login"
-		type "root"; press Enter
-		wait "Password"; type "${default_password}"; press Enter
-		wait "root@node-${UB1_id}";
-		type "nf2 status"; press Enter
-		wait "Running"
-		type "clear"; press Enter
-		sleep 2s
-	}
-
-	UB2 {
-		cont_login("admin", "${default_password}")
-		wait "Для завершения смены режима требуется перезагрузка"
-		select_local_menu("Завершение работы устройства")
-		select_local_menu_horizontal("Перезагрузка")
-		wait "Вход в систему" timeout 5m
-		press LeftAlt + F2
-		wait "node-${UB2_id} login"
-		type "root"; press Enter
-		wait "Password"; type "${default_password}"; press Enter
-		wait "root@node-${UB2_id}";
-		type "nf2 status"; press Enter
-		wait "Running"
-		type "clear"; press Enter
-		sleep 2s
-	}
-}
-
 [
 	description: "TESTCASE 89624[NF2]: Проверка загрузки и валидации конфигурации bird"
 	no_snapshots: true
 ]
-test validate_bird_config_nf2: UB1_install_nf2 {
+test validate_bird_config_nf2: UB_install_nf2 {
 	MS {
 		copyto "bird_configs/bgp_big_test.conf" "C:\\Users\\testo\\Desktop\\bgp_big_test.conf"
 
@@ -183,7 +92,7 @@ test validate_bird_config_nf2: UB1_install_nf2 {
 description: "TESTCASE 88373[NF2]: Проверка работы 2 OSPF процесса на УБ"
 no_snapshots: true
 ]
-test ospf_2_processes_nf2: UB1_install_nf2, router3_prepare, LAN2_ARM_prepare, LAN3_ARM_prepare {
+test ospf_2_processes_nf2: UB_install_nf2, router3_prepare, LAN2_ARM_prepare, LAN3_ARM_prepare {
 	router1 {
 		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
 		exec bash "bird -c /opt/OSPF_R1.conf"
@@ -220,6 +129,7 @@ test ospf_2_processes_nf2: UB1_install_nf2, router3_prepare, LAN2_ARM_prepare, L
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse dclick "Не определён".from_top(0)
 		wait "Назначение:"
@@ -228,6 +138,7 @@ test ospf_2_processes_nf2: UB1_install_nf2, router3_prepare, LAN2_ARM_prepare, L
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse click "OK".from_bottom(0)
 
@@ -330,7 +241,7 @@ test ospf_2_processes_nf2: UB1_install_nf2, router3_prepare, LAN2_ARM_prepare, L
 description: "TESTCASE 88853 [NF2]: Проверка работы метрик протоколов OSPF и BGP"
 no_snapshots: true
 ]
-test ospf_ebgp_nf2: UB1_install_nf2, router2_prepare, LAN3_ARM_prepare, LAN5_ARM_prepare {
+test ospf_ebgp_nf2: UB_install_nf2, LAN3_ARM_prepare, LAN5_ARM_prepare {
 	router1 {
 		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
 		exec bash "bird -c /opt/OSPF_R1.conf"
@@ -368,6 +279,7 @@ test ospf_ebgp_nf2: UB1_install_nf2, router2_prepare, LAN3_ARM_prepare, LAN5_ARM
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse dclick "Не определён".from_top(1)
 		wait "Назначение:"
@@ -376,6 +288,7 @@ test ospf_ebgp_nf2: UB1_install_nf2, router2_prepare, LAN3_ARM_prepare, LAN5_ARM
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "BGP"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 		mouse click "Анонсируемые адреса"
 		press Enter
 
@@ -390,6 +303,8 @@ test ospf_ebgp_nf2: UB1_install_nf2, router2_prepare, LAN3_ARM_prepare, LAN5_ARM
 
 	UB1 {
 		wait "root@node-${UB1_id}"
+
+		sleep 10s
 
 		type "birdc-nf2 show protocols"; press Enter
 		wait "ospf1" && js "find_text().match('Running').size() == 1"
@@ -478,7 +393,7 @@ test ospf_ebgp_nf2: UB1_install_nf2, router2_prepare, LAN3_ARM_prepare, LAN5_ARM
 description: "TESTCASE 89109 [NF2]: Проверка редистрибуции маршрутов ospf и ibgp"
 no_snapshots: true
 ]
-test ospf_ibgp_nf2: UB2_install_nf2, LAN4_ARM_prepare {
+test ospf_ibgp_nf2: UB_install_nf2, LAN4_ARM_prepare {
 	router1 {
 		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
 		exec bash "bird -c /opt/OSPF_R1.conf"
@@ -515,6 +430,7 @@ test ospf_ibgp_nf2: UB2_install_nf2, LAN4_ARM_prepare {
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "OSPF"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse dclick "Не определён".from_top(1)
 		wait "Назначение:"
@@ -523,6 +439,7 @@ test ospf_ibgp_nf2: UB2_install_nf2, LAN4_ARM_prepare {
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "BGP"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 
 		mouse click "OK".from_bottom(0)
 
@@ -549,6 +466,7 @@ test ospf_ibgp_nf2: UB2_install_nf2, LAN4_ARM_prepare {
 		mouse click "Разрешенные протоколы:".right_center().move_right(30)
 		mouse click "BGP"; press Space, Enter*2
 		wait !"Назначение:"
+		sleep 2s
 		mouse click "OK".from_bottom(0)
 		mouse click "Установить"
 		mouse click "Установить политики"
@@ -564,6 +482,8 @@ test ospf_ibgp_nf2: UB2_install_nf2, LAN4_ARM_prepare {
 		type "birdc-nf2 show protocols"; press Enter
 		wait "ibgp1" && "ibgp2" && js "find_text().match('Established').size() == 2"
 		type "clear"; press Enter
+
+		sleep 10s
 
 		type "birdc-nf2 show route"; press Enter
 		wait "${router1_Lo_ip}/${default_loopback_netmask}" && "${UB2_Lo0_ip}/${default_loopback_netmask}" && "${UB2_Lo1_ip}/${default_loopback_netmask}"
