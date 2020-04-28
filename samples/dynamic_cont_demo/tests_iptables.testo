@@ -20,7 +20,7 @@ macro safe_umount() {
 }
 
 [
-	description: "TESTCASE 89624: Проверка загрузки и валидации конфигурации bird"
+	description: "TESTCASE 89624[IPTABLES]: Проверка загрузки и валидации конфигурации bird"
 	no_snapshots: true
 ]
 test validate_bird_config_iptables: UB1_configure_network {
@@ -111,7 +111,7 @@ test validate_bird_config_iptables: UB1_configure_network {
 }
 
 [
-description: "TESTCASE 88373: Проверка работы 2 OSPF процесса на УБ"
+description: "TESTCASE 88373[IPTABLES]: Проверка работы 2 OSPF процесса на УБ"
 no_snapshots: true
 ]
 test ospf_2_processes_iptables: UB2_configure_network, router3_prepare, LAN2_ARM_prepare, LAN3_ARM_prepare {
@@ -261,10 +261,10 @@ test ospf_2_processes_iptables: UB2_configure_network, router3_prepare, LAN2_ARM
 }
 
 [
-description: "TESTCASE 89109: Проверка редистрибуции маршрутов ospf и ibgp"
+description: "TESTCASE 89109 [IPTABLES]: Проверка редистрибуции маршрутов ospf и ibgp"
 no_snapshots: true
 ]
-test ospf_igbp_iptables: UB2_configure_network, LAN4_ARM_prepare {
+test ospf_ibgp_iptables: UB2_configure_network, LAN4_ARM_prepare {
 	router1 {
 		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
 		exec bash "bird -c /opt/OSPF_R1.conf"
@@ -455,5 +455,155 @@ test ospf_igbp_iptables: UB2_configure_network, LAN4_ARM_prepare {
 		exec bash "ping ${MS_ip} -c5"
 		exec bash "ping ${router2_BGP1_ip} -c5"
 		exec bash "ping ${router1_OSPF1_ip} -c5"
+	}
+}
+
+[
+description: "TESTCASE 88853 [IPTABLES]: Проверка работы метрик протоколов OSPF и BGP"
+no_snapshots: true
+]
+test ospf_ebgp_iptables: UB1_configure_network, router2_prepare, LAN3_ARM_prepare, LAN5_ARM_prepare {
+	router1 {
+		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
+		exec bash "bird -c /opt/OSPF_R1.conf"
+	}
+
+	router2 {
+		copyto "bird_configs/OSPF+eBGP_R2.conf" "/opt/OSPF+eBGP_R2.conf"
+		exec bash "bird -c /opt/OSPF+eBGP_R2.conf"
+	}
+
+	MS {
+		mouse click "Структура"
+		mouse rclick "node-${UB1_id}"
+		mouse click "Свойства".from_bottom(0)
+		wait "безопасности - node-${UB1_id}"
+
+		mouse click "Динамические маршруты"
+		mouse move 0 0
+		mouse click "Динамические маршруты".from_left(1)
+
+		copyto "bird_configs/OSPF+eBGP_UB1.conf" "C:\\Users\\testo\\Desktop\\OSPF+eBGP_UB1.conf"
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Рабочий стол"
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "OSPF+eBGP_UB1.conf"
+		mouse click "Открыть".from_bottom(0)
+
+		mouse click "Интерфейсы"
+		#ge-0-0, OSPF1_side
+		mouse dclick "Не определён".from_top(0)
+		wait "Назначение:"
+		mouse click "Не определён";
+		mouse click "Внешний"
+		mouse click "Разрешенные протоколы:".right_center().move_right(30)
+		mouse click "OSPF"; press Space, Enter*2
+		wait !"Назначение:"
+
+		mouse dclick "Не определён".from_top(1)
+		wait "Назначение:"
+		mouse click "Не определён";
+		mouse click "Внешний"
+		mouse click "Разрешенные протоколы:".right_center().move_right(30)
+		mouse click "BGP"; press Space, Enter*2
+		wait !"Назначение:"
+
+		press Enter
+
+		mouse click "Установить"
+
+		wait "Установить политики"
+		sleep 3s
+		press Enter
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет" timeout 3m
+	}
+
+	UB1 {
+		press LeftAlt + F2
+		wait "host${UB1_id} login:";
+		type "root"; press Enter; wait "Password"; type "${default_password}"; press Enter
+		wait "root@node-${UB1_id}"
+
+		type "birdc show protocols"; press Enter
+		wait "ospf1" && js "find_text().match('Running').size() == 1"
+		wait "ebgp1" && js "find_text().match('Established').size() == 1"
+		type "clear"; press Enter
+
+		type "birdc show route protocol ospf1"; press Enter
+
+		wait "${LAN1_ip}/${default_netmask}"
+		wait "${router1_Lo_ip}/${default_loopback_netmask}"
+		wait js "find_text().match('via ${router1_OSPF1_ip} on ge-0-0').size() == 2"
+
+		type "clear"; press Enter
+
+		type "birdc show route protocol ebgp1"; press Enter
+		wait "${router2_Lo0_ip}/${default_loopback_netmask}"
+		wait "${BGP2_ip}/${BGP_netmask}"
+		wait "${LAN5_ip}/${default_netmask}"
+
+		wait js "find_text().match('via ${router2_BGP1_ip} on ge-2-0').size() == 3"
+
+		type "clear"; press Enter
+
+		type "ip r s"; press Enter
+
+		wait "${LAN1_ip}/${default_netmask} via ${router1_OSPF1_ip} dev ge-0-0 proto bird metric 110"
+		wait "${router1_Lo_ip} via ${router1_OSPF1_ip} dev ge-0-0 proto bird metric 110"
+		wait "${router2_Lo0_ip} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		wait "${BGP2_ip}/${BGP_netmask} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		wait "${LAN5_ip}/${default_netmask} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		type "clear"; press Enter
+	}
+
+	LAN5_ARM {
+		exec bash "ping ${MS_ip} -c5"
+		exec bash "ping ${router1_Lo_ip} -c5"
+	}
+
+	MS {
+		exec cmd "ping ${LAN5_ARM_ip}"
+	}
+
+	router2 {
+		unplug link BGP1_side
+		sleep 10s
+	}
+
+	UB1 {
+		type "birdc show protocols"; press Enter
+		wait !"Established"
+		type "clear"; press Enter
+
+		type "ip r s"; press Enter
+		wait !"${router2_Lo0_ip} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		wait !"${BGP2_ip}/${BGP_netmask} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		wait !"${LAN5_ip}/${default_netmask} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		type "clear"; press Enter
+	}
+
+	router2 {
+		plug link BGP1_side
+		sleep 1m
+	}
+
+	UB1 {
+		type "ip r s"; press Enter
+
+		wait "${router2_Lo0_ip} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		wait "${BGP2_ip}/${BGP_netmask} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		wait "${LAN5_ip}/${default_netmask} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 20"
+		type "clear"; press Enter
+	}
+
+	LAN5_ARM {
+		exec bash "ping ${MS_ip} -c5"
+		exec bash "ping ${router1_Lo_ip} -c5"
+	}
+
+	MS {
+		exec cmd "ping ${LAN5_ARM_ip} -n 4"
 	}
 }

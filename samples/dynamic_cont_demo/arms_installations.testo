@@ -101,5 +101,6 @@ test LAN5_ARM_prepare: LAN5_ARM_install_guest_additions {
 		unplug_nat("${LAN5_ARM_login}", "${default_password}")
 		exec bash "ip a a ${LAN5_ARM_ip}/${default_netmask} dev LAN5_side"
 		exec bash "ip l s LAN5_side up"
+		exec bash "ip r a default via ${router2_LAN5_ip}"
 	}
 }
