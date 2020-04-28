@@ -40,8 +40,8 @@ Value ContextRef::eval(const std::string& script, bool compile_only) {
 	Value result(JS_Eval(handle, script.c_str(), script.length(), "<input>", flags), handle);
 	if (result.is_exception()) {
 		Value exception_val = get_exception();
-		if (exception_val.is_instance_of(get_global_object().get_property("ContinueError"))) {
-			std::string message = exception_val.get_property("message");
+		if (exception_val.is_instance_of(get_global_object().get_property_str("ContinueError"))) {
+			std::string message = exception_val.get_property_str("message");
 			throw nn::ContinueError(message);
 		} else {
 			std::string message;
@@ -54,7 +54,7 @@ Value ContextRef::eval(const std::string& script, bool compile_only) {
 			message += exception_str;
 
 			if (exception_val.is_error()) {
-				Value val = exception_val.get_property("stack");
+				Value val = exception_val.get_property_str("stack");
 				if (!val.is_undefined()) {
 					std::string stack(val);
 					message += stack;
@@ -122,7 +122,7 @@ Value ContextRef::new_object_class(int class_id) {
 }
 
 Value ContextRef::new_continue_error(const std::string& message) {
-	return call_constructor(get_global_object().get_property("ContinueError"), {new_string(message)});
+	return call_constructor(get_global_object().get_property_str("ContinueError"), {new_string(message)});
 }
 
 void ContextRef::set_class_proto(JSClassID class_id, Value obj) {
@@ -134,7 +134,7 @@ Value ContextRef::throw_(Value val) {
 }
 
 void ContextRef::register_global_function(const std::string& name, size_t length, JSCFunction* f) {
-	get_global_object().set_property(name, new_function(f, name, length));
+	get_global_object().set_property_str(name, new_function(f, name, length));
 }
 
 Value ContextRef::get_exception() {

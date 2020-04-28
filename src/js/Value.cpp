@@ -88,31 +88,31 @@ bool ValueRef::is_instance_of(ValueRef obj) const {
 	return JS_IsInstanceOf(context, handle, obj.handle);
 }
 
-Value ValueRef::get_property(const std::string& name) const {
+Value ValueRef::get_property_str(const std::string& name) const {
 	return Value(JS_GetPropertyStr(context, handle, name.c_str()), context);
 }
 
-void ValueRef::set_property(const std::string& name, Value val) {
+void ValueRef::set_property_str(const std::string& name, Value val) {
 	if (JS_SetPropertyStr(context, handle, name.c_str(), val.release()) < 0) {
 		throw std::runtime_error("Can't set property " + name);
 	}
 }
 
-Value ValueRef::get_property(size_t index) const {
+Value ValueRef::get_property_uint32(size_t index) const {
 	return Value(JS_GetPropertyUint32(context, handle, index), context);
 }
 
-void ValueRef::set_property(size_t index, Value val) {
+void ValueRef::set_property_uint32(size_t index, Value val) {
 	if (JS_SetPropertyUint32(context, handle, index, val.release()) < 0) {
 		throw std::runtime_error("Can't set property uint32");
 	}
 }
 
-Value ValueRef::get_property(JSAtom property) const {
+Value ValueRef::get_property_atom(JSAtom property) const {
 	return Value(JS_GetProperty(context, handle, property), context);
 }
 
-void ValueRef::set_property(JSAtom property, Value val) {
+void ValueRef::set_property_atom(JSAtom property, Value val) {
 	if (JS_SetProperty(context, handle, property, val.release()) < 0) {
 		throw std::runtime_error("Can't set property ");
 	}

@@ -778,12 +778,12 @@ nn::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AS
 	auto value = eval_js(script, screenshot);
 
 	if (value.is_object() && !value.is_array()) {
-		auto x_prop = value.get_property("x");
+		auto x_prop = value.get_property_str("x");
 		if (x_prop.is_undefined()) {
 			throw std::runtime_error("Object doesn't have the x propery");
 		}
 
-		auto y_prop = value.get_property("y");
+		auto y_prop = value.get_property_str("y");
 		if (y_prop.is_undefined()) {
 			throw std::runtime_error("Object doesn't have the y propery");
 		}
