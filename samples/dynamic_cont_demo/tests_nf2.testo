@@ -34,6 +34,63 @@ test UB1_install_nf2: UB1_configure_network {
 	}
 }
 
+test UB2_install_nf2: UB2_configure_network {
+	MS {
+		mouse click "Структура"
+		mouse rclick "node-${UB1_id}"
+		mouse click "Свойства".from_bottom(0)
+		mouse click "UTM"
+		mouse click "Высокопроизводитель"
+		mouse click "ОК".from_bottom(0)
+
+		mouse rclick "node-${UB2_id}"
+		mouse click "Свойства".from_bottom(0)
+		mouse click "UTM"
+		mouse click "Высокопроизводитель"
+		mouse click "ОК".from_bottom(0)
+		mouse click "Установить"
+		mouse click "Установить политики"
+		sleep 2s
+		press Enter
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет" timeout 3m
+	}
+
+	UB1 {
+		cont_login("admin", "${default_password}")
+		wait "Для завершения смены режима требуется перезагрузка"
+		select_local_menu("Завершение работы устройства")
+		select_local_menu_horizontal("Перезагрузка")
+		wait "Вход в систему" timeout 5m
+		press LeftAlt + F2
+		wait "node-${UB1_id} login"
+		type "root"; press Enter
+		wait "Password"; type "${default_password}"; press Enter
+		wait "root@node-${UB1_id}";
+		type "nf2 status"; press Enter
+		wait "Running"
+		type "clear"; press Enter
+		sleep 2s
+	}
+
+	UB2 {
+		cont_login("admin", "${default_password}")
+		wait "Для завершения смены режима требуется перезагрузка"
+		select_local_menu("Завершение работы устройства")
+		select_local_menu_horizontal("Перезагрузка")
+		wait "Вход в систему" timeout 5m
+		press LeftAlt + F2
+		wait "node-${UB2_id} login"
+		type "root"; press Enter
+		wait "Password"; type "${default_password}"; press Enter
+		wait "root@node-${UB2_id}";
+		type "nf2 status"; press Enter
+		wait "Running"
+		type "clear"; press Enter
+		sleep 2s
+	}
+}
+
 [
 	description: "TESTCASE 89624[NF2]: Проверка загрузки и валидации конфигурации bird"
 	no_snapshots: true
@@ -413,5 +470,195 @@ test ospf_ebgp_nf2: UB1_install_nf2, router2_prepare, LAN3_ARM_prepare, LAN5_ARM
 
 	MS {
 		exec cmd "ping ${LAN5_ARM_ip} -n 4"
+	}
+}
+
+
+[
+description: "TESTCASE 89109 [NF2]: Проверка редистрибуции маршрутов ospf и ibgp"
+no_snapshots: true
+]
+test ospf_ibgp_nf2: UB2_install_nf2, LAN4_ARM_prepare {
+	router1 {
+		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
+		exec bash "bird -c /opt/OSPF_R1.conf"
+	}
+
+	router2 {
+		copyto "bird_configs/OSPF+iBGP_R2.conf" "/opt/OSPF+iBGP_R2.conf"
+		exec bash "bird -c /opt/OSPF+iBGP_R2.conf"
+	}
+
+	MS {
+		mouse rclick "node-${UB1_id}"
+		mouse click "Свойства".from_bottom(0)
+		wait "безопасности - node-${UB1_id}"
+
+		mouse click "Динамические маршруты"
+		mouse move 0 0
+		mouse click "Динамические маршруты".from_left(1)
+
+		copyto "bird_configs/OSPF+iBGP_UB1.conf" "C:\\Users\\testo\\Desktop\\OSPF+iBGP_UB1.conf"
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Рабочий стол"
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "OSPF+iBGP_UB1.conf"
+		mouse click "Открыть".from_bottom(0)
+
+		mouse click "Интерфейсы"
+		#ge-0-0, OSPF1_side
+		mouse dclick "Не определён".from_top(0)
+		wait "Назначение:"
+		mouse click "Не определён";
+		mouse click "Внешний"
+		mouse click "Разрешенные протоколы:".right_center().move_right(30)
+		mouse click "OSPF"; press Space, Enter*2
+		wait !"Назначение:"
+
+		mouse dclick "Не определён".from_top(1)
+		wait "Назначение:"
+		mouse click "Не определён";
+		mouse click "Внешний"
+		mouse click "Разрешенные протоколы:".right_center().move_right(30)
+		mouse click "BGP"; press Space, Enter*2
+		wait !"Назначение:"
+
+		mouse click "OK".from_bottom(0)
+
+		mouse rclick "node-${UB2_id}"
+		mouse click "Свойства".from_bottom(0)
+		wait "безопасности - node-${UB2_id}"
+
+		mouse click "Динамические маршруты"
+		mouse move 0 0
+		mouse click "Динамические маршруты".from_left(1)
+
+		copyto "bird_configs/OSPF+iBGP_UB2.conf" "C:\\Users\\testo\\Desktop\\OSPF+iBGP_UB2.conf"
+
+		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
+		mouse click "Имя файла:".right_center().move_right(30)
+		type "OSPF+iBGP_UB2.conf"
+		mouse click "Открыть".from_bottom(0)
+
+		mouse click "Интерфейсы"
+		mouse dclick "Не определён".from_top(0)
+		wait "Назначение:"
+		mouse click "Не определён";
+		mouse click "Внешний"
+		mouse click "Разрешенные протоколы:".right_center().move_right(30)
+		mouse click "BGP"; press Space, Enter*2
+		wait !"Назначение:"
+		mouse click "OK".from_bottom(0)
+		mouse click "Установить"
+		mouse click "Установить политики"
+		sleep 3s
+		press Enter
+		wait "Установка политики на узлы безопасности"
+		wait "Новых уведомлений нет" timeout 3m
+	}
+
+	UB1 {
+		wait "root@node-${UB1_id}"
+
+		type "birdc-nf2 show protocols"; press Enter
+		wait "ibgp1" && "ibgp2" && js "find_text().match('Established').size() == 2"
+		type "clear"; press Enter
+
+		type "birdc-nf2 show route"; press Enter
+		wait "${router1_Lo_ip}/${default_loopback_netmask}" && "${UB2_Lo0_ip}/${default_loopback_netmask}" && "${UB2_Lo1_ip}/${default_loopback_netmask}"
+
+		type "clear"; press Enter
+		type "ip r s"; press Enter
+
+		wait "${router1_Lo_ip} via ${router1_OSPF1_ip} dev ge-0-0 proto bird metric 110"
+		wait "${UB2_Lo0_ip} via ${router2_BGP1_ip} dev ge-2-0"
+		wait "${UB2_Lo1_ip} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 200"
+
+		type "clear"; press Enter
+	}
+
+	UB2 {
+		wait "root@node-${UB2_id}"
+
+		type "birdc-nf2 show protocols"; press Enter
+		wait "ibgp1" && "ibgp2" && js "find_text().match('Established').size() == 2"
+		type "clear"; press Enter
+
+		type "birdc-nf2 show route"; press Enter
+
+		wait "${router1_Lo_ip}/${default_loopback_netmask}" && "${LAN1_ip}/${default_netmask}" && "${BGP1_ip}/${BGP_netmask}" && "${BGP2_ip}/${BGP_netmask}"
+		type "clear"; press Enter
+		type "ip r s"; press Enter
+
+		wait "${router1_Lo_ip} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
+		wait "${LAN1_ip}/${default_netmask} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
+		wait "${BGP1_ip}/${BGP_netmask} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
+
+		type "clear"; press Enter
+	}
+
+	LAN4_ARM {
+		exec bash "ping ${MS_ip} -c5"
+		exec bash "ping ${router2_BGP1_ip} -c5"
+		exec bash "ping ${router1_OSPF1_ip} -c5"
+	}
+
+	router2 {
+		unplug link BGP1_side
+		sleep 10s
+	}
+
+	UB1 {
+		type "clear"; press Enter
+		type "ip r s"; press Enter
+
+		sleep 2s
+
+		wait !"metric 200"
+
+		type "clear"; press Enter
+	}
+
+	UB2 {
+		type "ip r s"; press Enter
+		wait !"${router1_Lo_ip} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
+		wait !"${LAN1_ip}/${default_netmask} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
+
+		type "clear"; press Enter
+	}
+
+	LAN4_ARM {
+		exec bash "! (ping ${MS_ip} -c3)"
+		exec bash "! (ping ${router1_OSPF1_ip} -c3)"
+	}
+
+	router2 {
+		plug link BGP1_side
+		sleep 1m
+	}
+
+	UB1 {
+		type "ip r s"; press Enter
+
+		wait "${router1_Lo_ip} via ${router1_OSPF1_ip} dev ge-0-0 proto bird metric 110"
+		wait "${UB2_Lo0_ip} via ${router2_BGP1_ip} dev ge-2-0"
+		wait "${UB2_Lo1_ip} via ${router2_BGP1_ip} dev ge-2-0 proto bird metric 200"
+
+		type "clear"; press Enter
+	}
+
+	UB2 {
+		type "ip r s"; press Enter
+		wait "${router1_Lo_ip} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
+		wait "${LAN1_ip}/${default_netmask} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
+
+		type "clear"; press Enter
+	}
+
+	LAN4_ARM {
+		exec bash "ping ${MS_ip} -c5"
+		exec bash "ping ${router2_BGP1_ip} -c5"
+		exec bash "ping ${router1_OSPF1_ip} -c5"
 	}
 }
