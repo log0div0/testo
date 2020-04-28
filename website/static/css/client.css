@@ -28,6 +28,10 @@ h6 {
 	font-weight: 600;
 }
 
+code {
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
 /*------------------------------*/
 /* header */
 /*------------------------------*/
@@ -122,12 +126,55 @@ body > main {
 	margin: 1em 0;
 }
 
+.docs-article pre code {
+	font-size: 14px;
+	padding: 0.75em 1em;
+	border-radius: 4px;
+	line-height: 1.5em;
+}
+
 /*------------------------------*/
 /* docs-toc */
 /*------------------------------*/
 
 .docs-toc {
 	flex-basis: 250px;
+}
+
+.book {
+	margin-bottom: 20px;
+}
+
+.book-name {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.book-name h1 {
+	color: #393939;
+	font-size: 18px;
+	font-weight: 500;
+}
+
+.book-name .arrow-right {
+	background: #393939;
+	width: 16px;
+	height: 16px;
+	-webkit-mask: url(/static/svg/arrow-right.svg) no-repeat center;
+	mask: url(/static/svg/arrow-right.svg) no-repeat center;
+}
+
+.book-chapters {
+	margin-left: 8px;
+}
+
+.book-chapters a {
+	display: block;
+	font-size: 14px;
+	color: #717171;
+	margin: 10px 0;
 }
 
 /*------------------------------*/

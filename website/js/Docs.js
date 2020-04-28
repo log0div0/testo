@@ -33,27 +33,20 @@ function H3({children}) {
 	return <h3>{children}</h3>
 }
 
-function Chapter({chapter}) {
-	return (
-		<li>
-			<a href={chapter.url}>{chapter.name}</a>
-		</li>
-	)
-}
-
 function Book({book}) {
-	let chapters = book.chapters.map((chapter, index) => {
-		return <Chapter key={index} chapter={chapter}></Chapter>
+	let book_chapters = book.chapters.map((chapter, index) => {
+		return <a key={index} href={chapter.url}>{chapter.name}</a>
 	})
 
 	return (
-		<div>
-			<h1>
-				{book.name}
-			</h1>
-			<ul>
-				{chapters}
-			</ul>
+		<div className="book">
+			<div className="book-name">
+				<h1>{book.name}</h1>
+				<div className="arrow-right"/>
+			</div>
+			<div className="book-chapters">
+				{book_chapters}
+			</div>
 		</div>
 	)
 }
