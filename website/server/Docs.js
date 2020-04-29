@@ -19,27 +19,31 @@ const getText=(x)=>{
 	}
 }
 
-function H2({children}) {
-	let text = getText(children)
-	let id = text.replace(/\s+/g, '-').toLowerCase()
-	let href = '#' + id
-	return <h2>{children}</h2>
+function makeHeader(Tag) {
+	return function({children}) {
+		let text = getText(children)
+		let id = text.replace(/\s+/g, '-').toLowerCase()
+		let href = '#' + id
+		return (
+			<Tag>
+				<a href={href} className="archor" id={id}></a>
+				{children}
+			</Tag>
+		)
+	}
 }
 
-function H3({children}) {
-	let text = getText(children)
-	let id = text.replace(/\s+/g, '-').toLowerCase()
-	let href = '#' + id
-	return <h3>{children}</h3>
-}
-
-function Book({book}) {
+function Book({book, currentChapterUrl}) {
+	let className = "book close"
 	let chapters = book.chapters.map((chapter, index) => {
+		if (chapter.url == currentChapterUrl) {
+			className = "book"
+		}
 		return <a key={index} href={chapter.url}>{chapter.name}</a>
 	})
 
 	return (
-		<div className="book close">
+		<div className={className}>
 			<div className="name">
 				<h1>{book.name}</h1>
 				<div className="arrow"/>
@@ -51,9 +55,9 @@ function Book({book}) {
 	)
 }
 
-function DocsLayout({children, toc, prevChapter, nextChapter}) {
+function DocsLayout({children, toc, prevChapter, nextChapter, currentChapterUrl}) {
 	let books = toc.books.map((book, index) => {
-		return <Book key={index} book={book}/>
+		return <Book key={index} book={book} currentChapterUrl={currentChapterUrl}/>
 	})
 	let prevButton = null
 	if (prevChapter) {
@@ -151,8 +155,8 @@ export async function renderDocChapter(toc, chapter_url) {
 			}
 			const content = await fs.promises.readFile(chapter.file_path)
 			const components = {
-				h2: H2,
-				h3: H3,
+				h2: makeHeader("h2"),
+				h3: makeHeader("h3"),
 				Terminal,
 				code: Code
 			}
@@ -175,7 +179,7 @@ export async function renderDocChapter(toc, chapter_url) {
 				}
 			}
 			return (
-				<DocsLayout toc={toc} prevChapter={prevChapter} nextChapter={nextChapter}>
+				<DocsLayout toc={toc} prevChapter={prevChapter} nextChapter={nextChapter} currentChapterUrl={chapter_url}>
 					<MDX components={components}>{content}</MDX>
 				</DocsLayout>
 			)

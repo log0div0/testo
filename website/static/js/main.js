@@ -15,7 +15,6 @@ function setup_toc() {
 		let a = chapters.querySelector(`a[href="${location.pathname}"]`)
 		if (a) {
 			a.classList.toggle('active')
-			toggle_book()
 		}
 	}
 }
@@ -24,7 +23,6 @@ function setup_minitoc() {
 	let article = document.getElementById("docs-article")
 	let container = document.createElement("div")
 	container.className = 'container'
-	let sections = []
 	for (let element of article.children) {
 		if ((element.tagName == "H2") || (element.tagName == "H3")) {
 			let a = document.createElement('a')
@@ -33,6 +31,9 @@ function setup_minitoc() {
 			a.className = element.tagName
 			container.appendChild(a)
 		}
+	}
+	if (!container.children.length) {
+		return
 	}
 	let minitoc = document.getElementById("docs-minitoc")
 	minitoc.appendChild(container)
