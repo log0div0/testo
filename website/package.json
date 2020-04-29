@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "nodemon --exec babel-node main.js"
+    "dev": "nodemon --watch server --exec babel-node server/main.js"
   },
   "dependencies": {
     "@mdx-js/runtime": "^1.5.8",

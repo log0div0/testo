@@ -4,8 +4,8 @@ import assert from 'assert'
 import sass from 'node-sass'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
-import Home from './js/Home'
-import {renderDocChapter, makeDocToc} from './js/Docs'
+import Home from './Home'
+import {renderDocChapter, makeDocToc} from './Docs'
 
 const app = express()
 const port = 3000
