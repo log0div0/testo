@@ -1,6 +1,7 @@
 
 import express from 'express'
 import assert from 'assert'
+import sass from 'node-sass'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import Home from './js/Home'
@@ -11,6 +12,16 @@ const port = 3000
 
 app.get('/', (req, res) => {
 	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(<Home/>))
+})
+
+app.get('/main.css', (req, res) => {
+	sass.render({file: 'main.scss'}, function(err, result) {
+		if (err) {
+			return res.status(500).send(err.message)
+		}
+		res.set('Content-Type', 'text/css')
+		res.send(result.css)
+	})
 })
 
 app.get('/docs/*', async (req, res) => {
