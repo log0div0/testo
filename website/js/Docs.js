@@ -66,17 +66,17 @@ function DocsLayout({children, toc, prevChapter, nextChapter}) {
 	return (
 		<Layout>
 			<main>
-				<section className="docs-toc">
+				<section id="docs-toc">
 					{books}
 				</section>
-				<section className="docs-article">
+				<section id="docs-article">
 					{children}
 					<footer>
 						{prevButton}
 						{nextButtom}
 					</footer>
 				</section>
-				<section className="docs-minitoc">
+				<section id="docs-minitoc">
 				</section>
 			</main>
 		</Layout>

@@ -94,7 +94,7 @@ body > footer {
 /* docs-article */
 /*------------------------------*/
 
-.docs-article {
+#docs-article {
 	flex-basis: 900px;
 	padding: 0 50px;
 	min-width: 0;
@@ -133,7 +133,7 @@ body > footer {
 /* docs-toc */
 /*------------------------------*/
 
-.docs-toc {
+#docs-toc {
 	flex-basis: 250px;
 
 	.book {
@@ -177,6 +177,6 @@ body > footer {
 /* docs-minitoc */
 /*------------------------------*/
 
-.docs-minitoc {
+#docs-minitoc {
 	flex-basis: 250px;
 }

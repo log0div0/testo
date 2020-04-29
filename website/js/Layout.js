@@ -17,7 +17,7 @@ module.exports = function({children}) {
 				{children}
 				<Footer/>
 			</body>
+			<script type="text/javascript" src="/static/js/client.js"></script>
 		</html>
 	)
-				// <script type="text/javascript" src="/static/js/client.js"></script>
 }
