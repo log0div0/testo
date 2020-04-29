@@ -71,7 +71,7 @@ function DocsLayout({children, toc, prevChapter, nextChapter}) {
 				</section>
 				<section id="docs-article">
 					{children}
-					<div id="prev-next-buttons">
+					<div id="docs-prev-next-buttons">
 						{prevButton}
 						{nextButtom}
 					</div>

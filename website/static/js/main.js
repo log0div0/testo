@@ -20,4 +20,22 @@ function setup_toc() {
 	}
 }
 
+function setup_minitoc() {
+	let article = document.getElementById("docs-article")
+	let div = document.createElement("div")
+	let sections = []
+	for (let element of article.children) {
+		if ((element.tagName == "H2") || (element.tagName == "H3")) {
+			let a = document.createElement('a')
+			// a.href = element.querySelector('.hash-link').href
+			a.innerText = element.innerText
+			a.className = element.tagName
+			div.appendChild(a)
+		}
+	}
+	let minitoc = document.getElementById("docs-minitoc")
+	minitoc.appendChild(div)
+}
+
 setup_toc()
+setup_minitoc()
