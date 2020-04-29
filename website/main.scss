@@ -151,12 +151,13 @@ body > footer {
 				font-weight: 500;
 			}
 
-			.arrow-right {
+			.arrow {
 				background: #393939;
 				width: 16px;
 				height: 16px;
 				-webkit-mask: url(/static/svg/arrow-right.svg) no-repeat center;
 				mask: url(/static/svg/arrow-right.svg) no-repeat center;
+				transition: transform 200ms linear;
 			}
 		}
 
@@ -168,6 +169,22 @@ body > footer {
 				font-size: 14px;
 				color: #717171;
 				margin: 10px 0;
+
+				&.active, &:hover {
+					color: #2e8555;
+				}
+			}
+		}
+
+		&.close {
+			.name {
+				.arrow {
+					transform: rotate(90deg);
+					transition: transform 200ms linear;
+				}
+			}
+			.chapters {
+				display: none;
 			}
 		}
 	}

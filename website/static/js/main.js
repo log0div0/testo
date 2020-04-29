@@ -8,31 +8,16 @@ function setup_toc() {
 	for (let book of books) {
 		let name = book.querySelector('.name')
 		let chapters = book.querySelector('.chapters')
-		name.addEventListener('click', function() {
-			chapters.classList.toggle('hide')
-		})
+		let toggle_book = function() {
+			book.classList.toggle('close')
+		}
+		name.addEventListener('click', toggle_book)
+		let a = chapters.querySelector(`a[href="${location.pathname}"]`)
+		if (a) {
+			a.classList.toggle('active')
+			toggle_book()
+		}
 	}
-	console.log("OK")
-// 	if (a) {
-// 		var li = a.parentNode;
-// 		li.classList.toggle("navListItemActive")
-// 		var ul = li.parentNode;
-// 		var coll = ul.previousElementSibling
-// 		var arrow = coll.childNodes[1];
-// 		arrow.classList.toggle('rotate');
-// 		var content = coll.nextElementSibling;
-// 		content.classList.toggle('hide');
-// 	}
-//
-// 	var coll = document.getElementsByClassName('collapsible');
-// 	for (var i = 0; i < coll.length; i++) {
-// 		coll[i].addEventListener('click', function() {
-// 			var arrow = this.childNodes[1];
-// 			arrow.classList.toggle('rotate');
-// 			var content = this.nextElementSibling;
-// 			content.classList.toggle('hide');
-// 		});
-// 	}
 }
 
 setup_toc()

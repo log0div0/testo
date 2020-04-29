@@ -39,10 +39,10 @@ function Book({book}) {
 	})
 
 	return (
-		<div className="book">
+		<div className="book close">
 			<div className="name">
 				<h1>{book.name}</h1>
-				<div className="arrow-right"/>
+				<div className="arrow"/>
 			</div>
 			<div className="chapters">
 				{chapters}
