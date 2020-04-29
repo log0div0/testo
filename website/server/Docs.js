@@ -67,7 +67,9 @@ function DocsLayout({children, toc, prevChapter, nextChapter}) {
 		<Layout>
 			<main>
 				<section id="docs-toc">
-					{books}
+					<div className="container">
+						{books}
+					</div>
 				</section>
 				<section id="docs-article">
 					{children}

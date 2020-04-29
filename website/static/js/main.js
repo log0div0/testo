@@ -22,7 +22,8 @@ function setup_toc() {
 
 function setup_minitoc() {
 	let article = document.getElementById("docs-article")
-	let div = document.createElement("div")
+	let container = document.createElement("div")
+	container.className = 'container'
 	let sections = []
 	for (let element of article.children) {
 		if ((element.tagName == "H2") || (element.tagName == "H3")) {
@@ -30,11 +31,11 @@ function setup_minitoc() {
 			// a.href = element.querySelector('.hash-link').href
 			a.innerText = element.innerText
 			a.className = element.tagName
-			div.appendChild(a)
+			container.appendChild(a)
 		}
 	}
 	let minitoc = document.getElementById("docs-minitoc")
-	minitoc.appendChild(div)
+	minitoc.appendChild(container)
 }
 
 setup_toc()

@@ -195,6 +195,13 @@ body > footer {
 #docs-toc {
 	flex-basis: 250px;
 
+	.container {
+		position: sticky;
+		top: 50px;
+		overflow-y: scroll;
+		max-height: calc(100vh - 100px);
+	}
+
 	.book {
 		margin-bottom: 20px;
 
@@ -255,10 +262,10 @@ body > footer {
 #docs-minitoc {
 	flex-basis: 250px;
 
-	div {
+	.container {
 		color: #717171;
 		border-left: 1px solid #e0e0e0;
-		padding: 1px 0 1px 15px;
+		padding: 12px 0 12px 15px;
 		position: sticky;
 		top: 50px;
 		overflow-y: scroll;
@@ -273,8 +280,15 @@ body > footer {
 			}
 
 			&.H3 {
-				margin-left: 20px;
-				margin-bottom: 8px;
+				margin: 8px 0 8px 20px;
+			}
+
+			&:first-child {
+				margin-top: 0;
+			}
+
+			&:last-child {
+				margin-bottom: 0;
 			}
 		}
 	}
