@@ -261,13 +261,15 @@ body > footer {
 		padding: 1px 0 1px 15px;
 		position: sticky;
 		top: 50px;
+		overflow-y: scroll;
+		max-height: calc(100vh - 100px);
 
 		a {
 			display: block;
 			font-size: 12px;
 
 			&.H2 {
-				margin: 12px 0;
+				margin: 10px 0;
 			}
 
 			&.H3 {
