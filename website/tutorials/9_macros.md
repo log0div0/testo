@@ -215,4 +215,127 @@ test client_install_ubuntu {
 
 ## Установка гостевых дополнений
 
-Теперь давайте займёмся установкой
+Теперь давайте займёмся установкой гостевых дополнений. Конечно же, и для клиента и для сервера установка гостевых дополнений выглядит практически одинаково, поэтому здесь мы можем поступить так же, как и с установкой ОС
+
+```testo
+param guest_additions_pkg "testo-guest-additions*"
+
+macro install_guest_additions(hostname, login, password="${default_password}") {
+	plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+
+	type "sudo su"; press Enter;
+	#Обратите внимание, обращаться к параметрам можно в любом участке строки
+	wait "password for ${login}"; type "${password}"; press Enter
+	wait "root@${hostname}"
+
+	type "mount /dev/cdrom /media"; press Enter
+	wait "mounting read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
+	wait "Setting up testo-guest-additions"
+	type "umount /media"; press Enter;
+	#Дадим немного времени для команды umount
+	sleep 2s
+	unplug dvd
+}
+```
+
+Обратите внимание, что внутри этого макроса мы обращаемся к параметрам `ISO_DIR` и `guest_additions_pkg`, несмотря на то, что они не входят в список аргументов. Такая схема успешно работает благодаря алгоритму разрешения имён параметров при обращении к ним с помощью оператора `${}`:
+
+1. Если обращение к параметру происходит внутри макроса, то сначала проверяется, входит ли этот параметр в список аргументов макроса. Если входит, то поиск значения параметра на этом прекращается. Например, в нашем макросе алгоритм завершит работу на этом шаге при обращении к `${hostname}`, `${login}` и `${password}`.
+2. Происходит поиск значений глобально объявленных параметров (в том числе параметров, объявленных с помощью аргумента `--param`). Если нужное значение найдено, то поиск на этом завершается. В нашем макросе алгоритм завершит работу на этом шаге при обращении к `${ISO_DIR}` и `${guest_additions_pkg}`.
+3. Если на предыдущих шагах ниичего не было найдено, то возвращается пустое значение.
+
+Сами тесты при использовании макроса становятся гораздо компактнее
+
+```testo
+test server_install_guest_additions: server_install_ubuntu {
+	server install_guest_additions("${server_hostname}", "${server_login}")
+}
+
+test client_install_guest_additions: client_install_ubuntu {
+	client install_guest_additions("${client_hostname}", "${client_login}")
+}
+```
+
+И вновь, если запустить тесты, мы увидим, что всё закешировано:
+
+<Terminal height="400px">
+	<span className="">user$ sudo testo run hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">server_install_ubuntu<br/></span>
+	<span className="magenta ">server_install_guest_additions<br/></span>
+	<span className="magenta ">server_unplug_nat<br/></span>
+	<span className="magenta ">server_prepare<br/></span>
+	<span className="magenta ">client_install_ubuntu<br/></span>
+	<span className="magenta ">client_install_guest_additions<br/></span>
+	<span className="magenta ">client_unplug_nat<br/></span>
+	<span className="magenta ">client_prepare<br/></span>
+	<span className="magenta ">test_ping<br/></span>
+	<span className="magenta ">exchange_files_with_flash<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 10 TESTS IN 0h:0m:0s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 10<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 0<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
+
+Напоследок мы предлагаем вам самостоятельно вынести в макрос действия из теста `client_unplug_nat`.
+
+## Директива include
+
+Конечно, благодаря макросам наш файл `hello_world.testo` стал гораздо компактнее, но в нем все еще есть ощущение "кучи малы". В одном файле у нас расположены и объявления сущностей, и подготвительные тесты, и "боевые" тесты. Сейчас это может не доставлять особых неудобств, но в будущем, с ростом количества кода, разложение кода по полочкам будет все более и более актуальным. Давайте попробуем реорганизовать наши файлы и наш код внутри них.
+
+Вместо одного файла `hello_world.testo` у нас появится несколько файлов: `declarations.testo`, `macros.testo` и `tests.testo`. В файл `declarations.testo` мы занесем все объявления виртуальных сущностей (`machine`, `flash` и `network`), а также параметры; в файл `macros.testo` перенесём все макросы, и все тесты будут лежать в `tests.testo`. Конечно, надо понимать, что такое разделение достаточно условное и что вы можете перемещать код из разных файлов так, как вам удобнее.
+
+Конечно же, сам по себе набор файлов не даёт возможности рассматривать их как части одного тестового проекта. Для этого необходимо эти файлы связать между собой. В языке `testo-lang` для этого используется знакомый многим механизм включения файлов `include`.
+
+В нашем проекте файл `declarations.testo` не зависит ни от чего, поэтому он не нуждается в директиве `include`. Файл `macros.testo` же зависит от `declarations.testo`, потому что для макросы используют параметры `default_password` и `guest_additions_pkg`, которые объявлены в `declarations.testo`. Для правильного функционирования подсчета контрольных сумм нам необходимо удостовериться, что эти параметры точно будут объявлены на момент объявления макросов. Поэтому в начале файла `macros.testo` необходимо добавить директиву `include`
+
+```testo
+include "declarations.testo"
+
+macro install_ubuntu(hostname, login, password = "${default_password}") {
+	...
+```
+
+Файл с тестами `tests.testo` явно зависит как от `declarations.testo`, так и от `macros.testo`. Но т.к. `declarations.testo` уже включены в `macros.testo`, нам достаточно включить только `macros.testo` 
+
+```testo
+include "macros.testo"
+
+test server_install_ubuntu {
+	server install_ubuntu("${server_hostname}", "${server_login}")
+}
+...
+```
+Теперь все наши  тестовые сценарии выглядят достаточно компактно и расположены по полочкам. Остаётся вопрос, как же теперь запускать наши тесты? Для этого есть два способа:
+
+1. Указание "конечного" файла с тестами: `sudo testo run tests.testo --stop_on_fail --param ISO_DIR /opt/iso`
+2. Указание целой папки с тестами: `sudo testo run ./ --stop_on_fail --param ISO_DIR /opt/iso`
+
+В любом случае вы должны снова увидеть, что все тесты закешированы, потому что реально тествые сценарии мы так и не поменяли за весь текущий урок:
+
+<Terminal height="400px">
+	<span className="">user$ sudo testo run ./ --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">server_install_ubuntu<br/></span>
+	<span className="magenta ">server_install_guest_additions<br/></span>
+	<span className="magenta ">server_unplug_nat<br/></span>
+	<span className="magenta ">server_prepare<br/></span>
+	<span className="magenta ">client_install_ubuntu<br/></span>
+	<span className="magenta ">client_install_guest_additions<br/></span>
+	<span className="magenta ">client_unplug_nat<br/></span>
+	<span className="magenta ">client_prepare<br/></span>
+	<span className="magenta ">test_ping<br/></span>
+	<span className="magenta ">exchange_files_with_flash<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 10 TESTS IN 0h:0m:0s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 10<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 0<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
+
+## Итоги
+
+Макросы и связывание файлов с помощью директивы `include` позволяют существенно упростить и реорганизовать код тестовых сценариев, сделать его гораздо более читаемым и понятным. Чем больше у вас будет кода, тем больше и больше вам будет нужна инкапсуляция и разнесение кода по файлам. Постарайтесь начать этот процесс как можно раньше, чтобы не превращать свои тестовые сценарии в одную большую сплошную "кучу малу". Механизм кеширования в Testo позволяет вам не перезапускать уже успешно пройденные тесты, даже после внедрения макросов, если все сделать правильно и аккуратно.
+
+Готовые скрипты можно найти [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/9)
