@@ -1,80 +1,73 @@
 
-.terminal-window {
-  text-align: left;
-  height: 300px;
-  margin: auto;
-  position: relative;
-  margin-bottom: 1em;
-}
+.terminal {
+	margin: 1em 0;
 
-.terminal-window header {
-  background: #E0E8F0;
-  height: 30px;
-  border-radius: 8px 8px 0 0;
-  padding-left: 10px;
-}
+	header {
+		background: #E0E8F0;
+		height: 30px;
+		border-radius: 8px 8px 0 0;
+		padding-left: 10px;
 
-.terminal-window header .terminal-button {
-  width: 12px;
-  height: 12px;
-  margin: 10px 4px 0 0;
-  display: inline-block;
-  border-radius: 8px;
-}
+		.button {
+			width: 12px;
+			height: 12px;
+			margin: 10px 4px 0 0;
+			display: inline-block;
+			border-radius: 8px;
 
-.terminal-window header .terminal-button.green {
-  background: #3BB662;
-}
+			&.green {
+				background: #3BB662;
+			}
 
-.terminal-window header .terminal-button.yellow {
-  background: #E5C30F;
-}
+			&.yellow {
+				background: #E5C30F;
+			}
 
-.terminal-window header .terminal-button.red {
-  background: #E75448;
-}
+			&.red {
+				background: #E75448;
+			}
+		}
+	}
 
-.terminal-window section.terminal {
-  white-space: pre;
-  color: white;
-  font-family: Menlo, Monaco, "Consolas", "Courier New", "Courier";
-  font-size: 10pt;
-  background: #30353A;
-  padding: 10px;
-  box-sizing: border-box;
-  position: absolute;
-  width: 100%;
-  top: 30px;
-  bottom: 0;
-  border-radius: 0 0 8px 8px;
-  overflow: auto;
-}
+	main {
+		height: 300px;
+		white-space: pre;
+		color: white;
+		font-family: monospace;
+		font-size: 14px;
+		line-height: 20px;
+		background: #30353A;
+		padding: 10px;
+		border-radius: 0 0 8px 8px;
+		overflow: auto;
 
-.terminal-window section.terminal .terminal-cursor {
-    opacity: 1;
-    -webkit-animation: blink 0.7s infinite;
-    -moz-animation: blink 0.7s infinite;
-    animation: blink 0.7s infinite;
-}
-@keyframes blink{
-    0% { opacity:1; }
-    50% { opacity:0; }
-    100% { opacity:1; }
-}
-@-webkit-keyframes blink{
-    0% { opacity:1; }
-    50% { opacity:0; }
-    100% { opacity:1; }
-}
-@-moz-keyframes blink{
-    0% { opacity:1; }
-    50% { opacity:0; }
-    100% { opacity:1; }
-}
+		.red { color: #e62237; }
+		.blue { color: #349fbf; }
+		.green { color: #68e33b;}
+		.magenta { color: #a855ab;}
+		.yellow { color: #dfe866;}
+		.bold { font-weight: bold;}
 
-.terminal-window .red { color: #e62237; }
-.terminal-window .blue { color: #349fbf; }
-.terminal-window .green { color: #68e33b;}
-.terminal-window .magenta { color: #a855ab;}
-.terminal-window .yellow { color: #dfe866;}
-.terminal-window .bold { font-weight: bold;}
+		.cursor {
+				opacity: 1;
+				-webkit-animation: blink 0.7s infinite;
+				-moz-animation: blink 0.7s infinite;
+				animation: blink 0.7s infinite;
+		}
+		@keyframes blink{
+				0% { opacity:1; }
+				50% { opacity:0; }
+				100% { opacity:1; }
+		}
+		@-webkit-keyframes blink{
+				0% { opacity:1; }
+				50% { opacity:0; }
+				100% { opacity:1; }
+		}
+		@-moz-keyframes blink{
+				0% { opacity:1; }
+				50% { opacity:0; }
+				100% { opacity:1; }
+		}
+	}
+}

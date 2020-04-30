@@ -49,9 +49,13 @@
 		}
 	}
 
+	a {
+		color: #2e8555;
+	}
+
 	img {
-		width: 100%;
-		margin: 1em 0;
+		display: block;
+		margin: 1em auto;
 	}
 
 	pre > code {

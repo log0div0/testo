@@ -120,15 +120,15 @@ export async function makeDocToc(src) {
 function Terminal({children, height}) {
 	height = height ? height : "300px"
 	return (
-		<div className="terminal-window" style={{height: height}}>
+		<div className="terminal">
 			<header>
-				<div className="terminal-button red"></div>
-				<div className="terminal-button yellow"></div>
-				<div className="terminal-button green"></div>
+				<div className="red button"></div>
+				<div className="yellow button"></div>
+				<div className="green button"></div>
 			</header>
-			<section className="terminal">
+			<main style={{height: height}}>
 				{children}
-			</section>
+			</main>
 		</div>
 	)
 }

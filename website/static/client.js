@@ -89,7 +89,15 @@ function setup_minitoc_scroll_spy() {
 	onScroll()
 }
 
+function setup_terminals() {
+	let terminals = document.querySelectorAll(".terminal main")
+	for (let terminal of terminals) {
+		terminal.scrollTop = terminal.scrollHeight;
+	}
+}
+
 setup_header()
 setup_toc()
 setup_minitoc()
 setup_minitoc_scroll_spy()
+setup_terminals()
