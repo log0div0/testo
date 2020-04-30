@@ -10,7 +10,6 @@ import PageNotFound from './PageNotFound'
 import Downloads from './Downloads'
 import Features from './Features'
 import Buy from './Buy'
-import Examples from './Examples'
 import Contact from './Contact'
 import License from './License'
 import Help from './Help'
@@ -40,10 +39,6 @@ app.get('/license', (req, res) => {
 
 app.get('/features', (req, res) => {
 	res.send(renderHtml(<Features/>))
-})
-
-app.get('/examples', (req, res) => {
-	res.send(renderHtml(<Examples/>))
 })
 
 app.get('/contact', (req, res) => {
