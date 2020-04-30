@@ -10,6 +10,8 @@ import PageNotFound from './PageNotFound'
 import Downloads from './Downloads'
 import Features from './Features'
 import Buy from './Buy'
+import Examples from './Examples'
+import Contact from './Contact'
 
 const app = express()
 const port = 3000
@@ -32,6 +34,14 @@ app.get('/buy', (req, res) => {
 
 app.get('/features', (req, res) => {
 	res.send(renderHtml(<Features/>))
+})
+
+app.get('/examples', (req, res) => {
+	res.send(renderHtml(<Examples/>))
+})
+
+app.get('/contact', (req, res) => {
+	res.send(renderHtml(<Contact/>))
 })
 
 app.get('/main.css', (req, res) => {

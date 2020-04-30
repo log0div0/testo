@@ -21,10 +21,10 @@ module.exports = function({children}) {
 							<a href="/downloads">Загрузить</a>
 							<a href="/buy">Купить</a>
 							<a href="/features">Возможности платформы</a>
-							<a href="#">Посмотреть в действии</a>
+							<a href="/examples">Посмотреть в действии</a>
 							<a href="/tutorials/1_creating_vm">Обучающие материалы</a>
 							<a href="/docs/getting_started/intro">Документация</a>
-							<a href="#">Связаться с нами</a>
+							<a href="/contact">Связаться с нами</a>
 							<a href="#">Помощь</a>
 						</section>
 					</nav>
