@@ -81,6 +81,10 @@ let tutorialsToc = {
 		"/tutorials/4_params",
 		"/tutorials/5_caching",
 		"/tutorials/6_nat",
+		"/tutorials/7_ping",
+		"/tutorials/8_flash",
+		"/tutorials/9_macros",
+		"/tutorials/10_if",
 	]
 }
 

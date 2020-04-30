@@ -45,6 +45,17 @@ export default function(hljs) {
 			hljs.C_BLOCK_COMMENT_MODE,
 			hljs.HASH_COMMENT_MODE,
 			{
+				className: 'attribute',
+				begin: /\b(plug|unplug)\b /,
+				starts: {
+					begin: /\b(flash|nic|iso)\b/,
+					end: '$',
+					contains: [
+
+					]
+				}
+			},
+			{
 				className: 'function',
 				beginKeywords: 'machine test network flash',
 				end: /{/,
@@ -63,7 +74,7 @@ export default function(hljs) {
 			},
 			{
 				className: 'attribute',
-				begin: /\b(type|wait|press|plug|unplug|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep)\b/
+				begin: /\b(type|wait|press|start|stop|exec|copyto|copyfrom|shutdown|print|abort|mouse|sleep)\b/
 			},
 			{
 				className: 'strong',
