@@ -13,6 +13,7 @@ import Buy from './Buy'
 import Examples from './Examples'
 import Contact from './Contact'
 import License from './License'
+import Help from './Help'
 
 const app = express()
 const port = 3000
@@ -47,6 +48,10 @@ app.get('/examples', (req, res) => {
 
 app.get('/contact', (req, res) => {
 	res.send(renderHtml(<Contact/>))
+})
+
+app.get('/help', (req, res) => {
+	res.send(renderHtml(<Help/>))
 })
 
 app.get('/main.css', (req, res) => {

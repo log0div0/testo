@@ -25,7 +25,7 @@ module.exports = function({children}) {
 							<a href="/tutorials/1_creating_vm">Обучающие материалы</a>
 							<a href="/docs/getting_started/intro">Документация</a>
 							<a href="/contact">Связаться с нами</a>
-							<a href="#">Помощь</a>
+							<a href="/help">Помощь</a>
 						</section>
 					</nav>
 				</header>
