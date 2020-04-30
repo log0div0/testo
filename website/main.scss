@@ -118,7 +118,7 @@ body > footer {
 
 	.anchor {
 		position: relative;
-		top: -20px;
+		top: -50px;
 	}
 
 	h2, h3 {
@@ -303,6 +303,11 @@ body > footer {
 		a {
 			display: block;
 			font-size: 12px;
+
+			&.active {
+				color: #2e8555;
+				font-weight: 500;
+			}
 
 			&.H2 {
 				margin: 10px 0;

@@ -39,5 +39,46 @@ function setup_minitoc() {
 	minitoc.appendChild(container)
 }
 
+function setup_minitoc_scroll_spy() {
+	let sections = document.querySelectorAll("#docs-minitoc a")
+	if (!sections.length) {
+		return
+	}
+	let getActiveSectionIndex = function() {
+		for (let i = 0; i < sections.length; i++) {
+			let id = decodeURIComponent(sections[i].href.split('#')[1])
+			let anchor = document.getElementById(id)
+			let {top} = anchor.getBoundingClientRect()
+			if (top > 0) {
+				if (i > 0) {
+					return i - 1
+				} else {
+					return i
+				}
+			}
+		}
+		return sections.length - 1
+	}
+	let timer
+	let onScroll = function() {
+		if (timer) {
+			return
+		}
+		timer = setTimeout(function() {
+			timer = null
+			for (let i = 0; i < sections.length; i++) {
+				sections[i].classList.remove('active')
+			}
+			let index = getActiveSectionIndex()
+			sections[index].classList.add('active')
+		}, 100)
+	}
+
+	document.addEventListener('scroll', onScroll)
+	document.addEventListener('resize', onScroll)
+	onScroll()
+}
+
 setup_toc()
 setup_minitoc()
+setup_minitoc_scroll_spy()
