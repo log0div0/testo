@@ -13,7 +13,9 @@ module.exports = function({children}) {
 			</head>
 			<body>
 				<Header/>
-				{children}
+				<main>
+					{children}
+				</main>
 				<Footer/>
 			</body>
 			<script type="text/javascript" src="/static/client.js"></script>

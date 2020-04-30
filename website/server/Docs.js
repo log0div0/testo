@@ -2,9 +2,9 @@
 import React from 'react'
 import MDX from '@mdx-js/runtime'
 import fs from 'fs'
-import Layout from './Layout'
+import Layout from './components/Layout'
 import PageNotFound from './PageNotFound'
-import HighlightTesto from './HighlightTesto'
+import HighlightTesto from './components/HighlightTesto'
 import hljs from 'highlight.js'
 
 const getText=(x)=>{
@@ -70,7 +70,7 @@ function DocsLayout({children, toc, prevChapter, nextChapter, currentChapterUrl}
 	}
 	return (
 		<Layout>
-			<main>
+			<div id="docs">
 				<section id="docs-toc">
 					<div className="container">
 						{books}
@@ -85,7 +85,7 @@ function DocsLayout({children, toc, prevChapter, nextChapter, currentChapterUrl}
 				</section>
 				<section id="docs-minitoc">
 				</section>
-			</main>
+			</div>
 		</Layout>
 	)
 }

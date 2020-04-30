@@ -1,6 +1,11 @@
 
 @import "reset";
 @import "layout";
+
+#docs {
+	display: flex;
+}
+
 @import "docs-article";
 @import "docs-toc";
 @import "docs-minitoc";

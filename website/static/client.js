@@ -31,6 +31,9 @@ function setup_toc() {
 
 function setup_minitoc() {
 	let article = document.getElementById("docs-article")
+	if (!article) {
+		return
+	}
 	let container = document.createElement("div")
 	container.className = 'container'
 	for (let element of article.children) {

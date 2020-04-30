@@ -6,6 +6,7 @@ import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import Home from './Home'
 import {renderDocChapter, makeDocToc} from './Docs'
+import PageNotFound from './PageNotFound'
 
 const app = express()
 const port = 3000
@@ -36,6 +37,12 @@ app.get('/tutorials/*', async (req, res) => {
 })
 
 app.use('/static', express.static('static'))
+
+app.use(function(req, res, next) {
+	res.status(404)
+	const page = <PageNotFound/>
+	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page));
+});
 
 let docsToc = {
 	"Общие сведения": [
