@@ -5,14 +5,23 @@ import sass from 'node-sass'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import Home from './Home'
-import {renderDocChapter, makeDocToc} from './Docs'
+import {makeDocChapter, makeDocToc} from './Docs'
 import PageNotFound from './PageNotFound'
+import Downloads from './Downloads'
 
 const app = express()
 const port = 3000
 
+function renderHtml(page) {
+	return '<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page)
+}
+
 app.get('/', (req, res) => {
-	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(<Home/>))
+	res.send(renderHtml(<Home/>))
+})
+
+app.get('/downloads', (req, res) => {
+	res.send(renderHtml(<Downloads/>))
 })
 
 app.get('/main.css', (req, res) => {
@@ -27,13 +36,13 @@ app.get('/main.css', (req, res) => {
 })
 
 app.get('/docs/*', async (req, res) => {
-	const page = await renderDocChapter(docsToc, req.originalUrl)
-	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
+	const page = await makeDocChapter(docsToc, req.originalUrl)
+	res.send(renderHtml(page))
 })
 
 app.get('/tutorials/*', async (req, res) => {
-	const page = await renderDocChapter(tutorialsToc, req.originalUrl)
-	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page))
+	const page = await makeDocChapter(tutorialsToc, req.originalUrl)
+	res.send(renderHtml(page))
 })
 
 app.use('/static', express.static('static'))
@@ -41,7 +50,7 @@ app.use('/static', express.static('static'))
 app.use(function(req, res, next) {
 	res.status(404)
 	const page = <PageNotFound/>
-	res.send('<!DOCTYPE html>' + ReactDOMServer.renderToStaticMarkup(page));
+	res.send(renderHtml(page));
 });
 
 let docsToc = {

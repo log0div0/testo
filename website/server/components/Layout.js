@@ -1,7 +1,5 @@
 
 import React from 'react'
-import Header from './Header'
-import Footer from './Footer'
 
 module.exports = function({children}) {
 	return (
@@ -12,11 +10,32 @@ module.exports = function({children}) {
 				<link rel="stylesheet" href="/main.css" type="text/css"/>
 			</head>
 			<body>
-				<Header/>
+				<header>
+					<nav>
+						<section>
+							<a href="/">
+								<h1>Testo Lang</h1>
+							</a>
+						</section>
+						<section>
+							<a href="/downloads">Загрузить</a>
+							<a href="#">Купить</a>
+							<a href="#">Возможности платформы</a>
+							<a href="#">Посмотреть в действии</a>
+							<a href="/tutorials/1_creating_vm">Обучающие материалы</a>
+							<a href="/docs/getting_started/intro">Документация</a>
+							<a href="#">Связаться с нами</a>
+							<a href="#">Форум</a>
+						</section>
+					</nav>
+				</header>
 				<main>
 					{children}
 				</main>
-				<Footer/>
+				<footer>
+					<nav>
+					</nav>
+				</footer>
 			</body>
 			<script type="text/javascript" src="/static/client.js"></script>
 		</html>

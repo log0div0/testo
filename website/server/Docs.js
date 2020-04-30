@@ -146,7 +146,7 @@ function Code({children, className}) {
 	)
 }
 
-export async function renderDocChapter(toc, chapter_url) {
+export async function makeDocChapter(toc, chapter_url) {
 	for (let i = 0; i < toc.books.length; ++i) {
 		let book = toc.books[i];
 		for (let j = 0; j < book.chapters.length; ++j) {
