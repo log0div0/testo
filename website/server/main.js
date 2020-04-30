@@ -15,8 +15,9 @@ app.get('/', (req, res) => {
 })
 
 app.get('/main.css', (req, res) => {
-	sass.render({file: 'main.scss'}, function(err, result) {
+	sass.render({file: './styles/main.scss'}, function(err, result) {
 		if (err) {
+			console.log(err)
 			return res.status(500).send(err.message)
 		}
 		res.set('Content-Type', 'text/css')
