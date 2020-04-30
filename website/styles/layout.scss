@@ -33,7 +33,7 @@ body > header {
 
 		&:last-child {
 			a {
-				font-weight: 500;
+				font-weight: $semiboldWeight;
 				color: hsla(0,0%,100%,.8);
 
 				&:hover, &.active {
