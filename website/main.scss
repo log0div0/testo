@@ -59,9 +59,19 @@ body > header {
 			margin-right: 0;
 		}
 
-		a {
-			font-weight: 500;
+		&:first-child {
 			color: white;
+		}
+
+		&:last-child {
+			a {
+				font-weight: 500;
+				color: hsla(0,0%,100%,.8);
+
+				&:hover, &.active {
+					color: white;
+				}
+			}
 		}
 	}
 }
@@ -191,29 +201,33 @@ body > footer {
 }
 
 /*------------------------------*/
-/* prev-next-buttons */
+/* prev-button / next-button */
 /*------------------------------*/
 
-#docs-prev-next-buttons {
-	margin: 30px 0;
-	display: flex;
-	justify-content: space-between;
+#docs-next-button, #docs-prev-button {
+	margin: 10px 0;
 
-	a {
-		border: 1px solid #2e8555;
-		font-size: 14px;
-		border-radius: 3px;
-		color: #2e8555;
-		line-height: 1.2em;
-		padding: 10px;
-		text-transform: uppercase;
-		transition: background .3s, color .3s;
+	border: 1px solid #2e8555;
+	font-size: 14px;
+	border-radius: 3px;
+	color: #2e8555;
+	line-height: 1.2em;
+	padding: 10px;
+	text-transform: uppercase;
+	transition: background .3s, color .3s;
 
-		&:hover {
-			background: #2e8555;
-			color: #fff;
-		}
+	&:hover {
+		background: #2e8555;
+		color: #fff;
 	}
+}
+
+#docs-next-button {
+	float: right;
+}
+
+#docs-prev-button {
+	float: left;
 }
 
 /*------------------------------*/
@@ -226,7 +240,7 @@ body > footer {
 	.container {
 		position: sticky;
 		top: 50px;
-		overflow-y: scroll;
+		overflow-y: auto;
 		max-height: calc(100vh - 100px);
 	}
 
@@ -297,7 +311,7 @@ body > footer {
 		padding: 12px 0 12px 15px;
 		position: sticky;
 		top: 50px;
-		overflow-y: scroll;
+		overflow-y: auto;
 		max-height: calc(100vh - 100px);
 
 		a {

@@ -1,4 +1,14 @@
 
+function setup_header() {
+	if (location.pathname.startsWith("/docs")) {
+		document.querySelector('body > header a[href^="/docs"]').className = "active";
+	}
+
+	if (location.pathname.startsWith("/tutorials")) {
+		document.querySelector('body > header a[href^="/tutorials"]').className = "active";
+	}
+}
+
 function setup_toc() {
 	let toc = document.getElementById(`docs-toc`)
 	if (!toc) {
@@ -79,6 +89,7 @@ function setup_minitoc_scroll_spy() {
 	onScroll()
 }
 
+setup_header()
 setup_toc()
 setup_minitoc()
 setup_minitoc_scroll_spy()

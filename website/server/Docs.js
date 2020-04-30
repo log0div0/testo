@@ -62,11 +62,11 @@ function DocsLayout({children, toc, prevChapter, nextChapter, currentChapterUrl}
 	})
 	let prevButton = null
 	if (prevChapter) {
-		prevButton = <a href={prevChapter.url}>← {prevChapter.name}</a>
+		prevButton = <a id="docs-prev-button" href={prevChapter.url}>← {prevChapter.name}</a>
 	}
 	let nextButtom = null
 	if (nextChapter) {
-		nextButtom = <a href={nextChapter.url}>{nextChapter.name} →</a>
+		nextButtom = <a id="docs-next-button" href={nextChapter.url}>{nextChapter.name} →</a>
 	}
 	return (
 		<Layout>
@@ -78,7 +78,7 @@ function DocsLayout({children, toc, prevChapter, nextChapter, currentChapterUrl}
 				</section>
 				<section id="docs-article">
 					{children}
-					<div id="docs-prev-next-buttons">
+					<div>
 						{prevButton}
 						{nextButtom}
 					</div>
