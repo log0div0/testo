@@ -28,7 +28,9 @@ body > header {
 		}
 
 		&:first-child {
-			color: white;
+			a {
+				color: white;
+			}
 		}
 
 		&:last-child {

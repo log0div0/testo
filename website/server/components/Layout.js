@@ -19,7 +19,7 @@ module.exports = function({children}) {
 						</section>
 						<section>
 							<a href="/downloads">Загрузить</a>
-							<a href="#">Купить</a>
+							<a href="/buy">Купить</a>
 							<a href="#">Возможности платформы</a>
 							<a href="#">Посмотреть в действии</a>
 							<a href="/tutorials/1_creating_vm">Обучающие материалы</a>

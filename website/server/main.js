@@ -8,6 +8,7 @@ import Home from './Home'
 import {makeDocChapter, makeDocToc} from './Docs'
 import PageNotFound from './PageNotFound'
 import Downloads from './Downloads'
+import Buy from './Buy'
 
 const app = express()
 const port = 3000
@@ -22,6 +23,10 @@ app.get('/', (req, res) => {
 
 app.get('/downloads', (req, res) => {
 	res.send(renderHtml(<Downloads/>))
+})
+
+app.get('/buy', (req, res) => {
+	res.send(renderHtml(<Buy/>))
 })
 
 app.get('/main.css', (req, res) => {
