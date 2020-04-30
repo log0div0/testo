@@ -12,6 +12,7 @@ import Features from './Features'
 import Buy from './Buy'
 import Examples from './Examples'
 import Contact from './Contact'
+import License from './License'
 
 const app = express()
 const port = 3000
@@ -30,6 +31,10 @@ app.get('/downloads', (req, res) => {
 
 app.get('/buy', (req, res) => {
 	res.send(renderHtml(<Buy/>))
+})
+
+app.get('/license', (req, res) => {
+	res.send(renderHtml(<License/>))
 })
 
 app.get('/features', (req, res) => {
