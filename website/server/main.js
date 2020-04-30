@@ -8,6 +8,7 @@ import Home from './Home'
 import {makeDocChapter, makeDocToc} from './Docs'
 import PageNotFound from './PageNotFound'
 import Downloads from './Downloads'
+import Features from './Features'
 import Buy from './Buy'
 
 const app = express()
@@ -27,6 +28,10 @@ app.get('/downloads', (req, res) => {
 
 app.get('/buy', (req, res) => {
 	res.send(renderHtml(<Buy/>))
+})
+
+app.get('/features', (req, res) => {
+	res.send(renderHtml(<Features/>))
 })
 
 app.get('/main.css', (req, res) => {
