@@ -26,7 +26,8 @@ function makeHeader(Tag) {
 		let href = '#' + id
 		return (
 			<Tag>
-				<a href={href} className="archor" id={id}></a>
+				<a id={id} className="anchor"/>
+				<a href={href} className="anchor-icon"/>
 				{children}
 			</Tag>
 		)

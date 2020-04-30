@@ -116,6 +116,34 @@ body > footer {
 		margin-top: 1.5em;
 	}
 
+	.anchor {
+		position: relative;
+		top: -20px;
+	}
+
+	h2, h3 {
+		margin-left: -24px;
+
+		.anchor-icon {
+			margin-right: 8px;
+			display: inline-block;
+			background: transparent;
+			width: 16px;
+			height: 16px;
+			-webkit-mask: url(/static/svg/link.svg) no-repeat center;
+			mask: url(/static/svg/link.svg) no-repeat center;
+		}
+
+		&:hover {
+			.anchor-icon {
+				background: #717171;
+				&:hover {
+					 background: #393939;
+				}
+			}
+		}
+	}
+
 	img {
 		width: 100%;
 		margin: 1em 0;
