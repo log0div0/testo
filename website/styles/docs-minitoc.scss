@@ -1,0 +1,40 @@
+
+#docs-minitoc {
+	flex-basis: 250px;
+
+	.container {
+		color: #717171;
+		border-left: 1px solid #e0e0e0;
+		padding: 12px 0 12px 15px;
+		position: sticky;
+		top: 50px;
+		overflow-y: auto;
+		max-height: calc(100vh - 100px);
+
+		a {
+			display: block;
+			font-size: 12px;
+
+			&.active {
+				color: #2e8555;
+				font-weight: $semiboldWeight;
+			}
+
+			&.H2 {
+				margin: 10px 0;
+			}
+
+			&.H3 {
+				margin: 8px 0 8px 20px;
+			}
+
+			&:first-child {
+				margin-top: 0;
+			}
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+	}
+}

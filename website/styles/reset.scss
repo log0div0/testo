@@ -1,0 +1,25 @@
+
+* {
+	box-sizing: border-box;
+}
+
+$regularWeight: 400;
+$semiboldWeight: 500;
+$boldWeight: 700;
+
+body {
+	margin: 0;
+	font-family: 'Roboto', sans-serif;
+	font-weight: $regularWeight;
+	color: #24292e;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin: 0;
+	font-weight: $boldWeight;
+}
