@@ -1,0 +1,64 @@
+
+#docs-toc {
+	flex-basis: 250px;
+
+	.container {
+		position: sticky;
+		top: 50px;
+		overflow-y: auto;
+		max-height: calc(100vh - 100px);
+	}
+
+	.book {
+		margin-bottom: 20px;
+
+		.name {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 10px;
+			cursor: pointer;
+
+			h1 {
+				color: #393939;
+				font-size: 18px;
+				font-weight: $semiboldWeight;
+			}
+
+			.arrow {
+				background: #393939;
+				width: 16px;
+				height: 16px;
+				-webkit-mask: url(/static/svg/arrow-right.svg) no-repeat center;
+				mask: url(/static/svg/arrow-right.svg) no-repeat center;
+				transition: transform 200ms linear;
+			}
+		}
+
+		.chapters {
+			margin-left: 8px;
+
+			a {
+				display: block;
+				font-size: 14px;
+				color: #717171;
+				margin: 10px 0;
+
+				&.active, &:hover {
+					color: #2e8555;
+				}
+			}
+		}
+
+		&.close {
+			.name {
+				.arrow {
+					transform: rotate(90deg);
+				}
+			}
+			.chapters {
+				display: none;
+			}
+		}
+	}
+}

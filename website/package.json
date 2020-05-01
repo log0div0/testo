@@ -1,11 +1,12 @@
 {
   "scripts": {
-    "dev": "nodemon --exec babel-node main.js"
+    "dev": "nodemon --watch server --exec babel-node server/main.js"
   },
   "dependencies": {
     "@mdx-js/runtime": "^1.5.8",
     "express": "^4.17.1",
     "highlight.js": "^10.0.0",
+    "node-sass": "^4.14.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },

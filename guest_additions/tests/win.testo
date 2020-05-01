@@ -103,6 +103,7 @@ test win10_guest_additions: win10_installation_part_2 {
 	win10 {
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		mouse click "CD-дисковод"
+		sleep 5s
 		mouse click "Выполнить autorun"
 		wait "Вас приветствует мастер установки"; press Enter
 		#wait "Выбор папки для установки"; press Enter
@@ -217,6 +218,7 @@ test win7_copyto: win7_guest_additions {
 		mouse click "Компьютер"
 		mouse dclick "Локальный диск (C:)"
 		wait "привет, мир!"
+		copyto "привет, мир!.txt" "C:\\привет, мир!.txt"
 	}
 }
 

@@ -28,14 +28,14 @@ struct ValueRef {
 
 	bool is_instance_of(ValueRef obj) const;
 
-	Value get_property(const std::string& name) const;
-	void set_property(const std::string& name, Value val);
+	Value get_property_str(const std::string& name) const;
+	void set_property_str(const std::string& name, Value val);
 
-	Value get_property(size_t index) const;
-	void set_property(size_t index, Value val);
+	Value get_property_uint32(size_t index) const;
+	void set_property_uint32(size_t index, Value val);
 
-	Value get_property(JSAtom property) const;
-	void set_property(JSAtom property, Value val);
+	Value get_property_atom(JSAtom property) const;
+	void set_property_atom(JSAtom property, Value val);
 
 	void* get_opaque(JSClassID class_id) const;
 	void set_opaque(void* opaque);

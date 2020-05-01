@@ -16,7 +16,7 @@ using namespace std::chrono_literals;
 #include "winapi.hpp"
 
 #include <shellapi.h>
-#include <VersionHelpers.h>
+#include <Lm.h>
 
 namespace fs = std::filesystem;
 
@@ -29,14 +29,26 @@ enum class Command {
 
 Command selected_command;
 
+WKSTA_INFO_100 get_os_info() {
+	LPBYTE pinfoRawData = nullptr;
+	if (NERR_Success != NetWkstaGetInfo(NULL, 100, &pinfoRawData)) {
+		throw std::runtime_error("NetWkstaGetInfo failed");
+	}
+	WKSTA_INFO_100 info = *(WKSTA_INFO_100*)pinfoRawData;
+	NetApiBufferFree(pinfoRawData);
+	return info;
+}
+
 std::string get_os() {
-	if (IsWindows10OrGreater()) {
+	WKSTA_INFO_100 info = get_os_info();
+	spdlog::info("OS VERSION: major {} minor {}", info.wki100_ver_major, info.wki100_ver_minor);
+	if (info.wki100_ver_major == 10) {
 		return "w10";
-	} else if (IsWindows8Point1OrGreater()) {
+	} else if ((info.wki100_ver_major == 6) && (info.wki100_ver_minor == 3)) {
 		return "w8.1";
-	} else if (IsWindows8OrGreater()) {
+	} else if ((info.wki100_ver_major == 6) && (info.wki100_ver_minor == 2)) {
 		return "w8";
-	} else if (IsWindows7OrGreater()) {
+	} else if ((info.wki100_ver_major == 6) && (info.wki100_ver_minor == 1)) {
 		return "w7";
 	} else {
 		throw std::runtime_error("Unsupported os");
