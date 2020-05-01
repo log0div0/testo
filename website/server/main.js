@@ -126,6 +126,7 @@ let tutorialsToc = {
 		"/tutorials/8_flash",
 		"/tutorials/9_macros",
 		"/tutorials/10_if",
+		"/tutorials/12_mouse"
 	]
 }
 
