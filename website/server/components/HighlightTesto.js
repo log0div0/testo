@@ -49,9 +49,9 @@ export default function(hljs) {
 				begin: /\b(plug|unplug)\b /,
 				starts: {
 					begin: /\b(flash|nic|iso)\b/,
-					end: '$',
+					end: ';|$',
 					contains: [
-
+						STRING
 					]
 				}
 			},
@@ -63,6 +63,35 @@ export default function(hljs) {
 				contains: [
 					hljs.UNDERSCORE_TITLE_MODE
 				]
+			},
+			{
+				className: 'function',
+				beginKeywords: 'include',
+				end: /$/,
+				contains: [
+					STRING
+				]
+			},
+			{
+				className: 'function',
+				beginKeywords: 'macro',
+				end: /\(/,
+				excludeEnd: true,
+				contains: [
+					hljs.UNDERSCORE_TITLE_MODE
+				],
+				starts: {
+					begin: /\(/,
+					end: /\)/,
+					contains: [
+						STRING,
+						NUMBER,
+						{
+							className: 'params',
+							begin: /[_A-Za-z0-9]+/
+						}
+					]
+				}
 			},
 			{
 				className: 'function',
