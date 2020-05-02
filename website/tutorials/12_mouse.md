@@ -117,6 +117,8 @@ test install_ubuntu {
 
 ![Welcome](/static/tutorials/12_mouse/welcome.png)
 
+> Обратите внимание, что иногда установка `Ubuntu` начинается по другому сценарию - первым появляется графический экран с предложением выбрать `Try Ubuntu` или `Install Ubuntu`. Попробуйте использовать свои знания из предыдущих уроков и модифицировать скрипт таким образом, чтобы он учитывал оба сценария начала установки.
+
 Очевидно, что для продолжения установки нам необходимо нажать на кнопку `Continue`. Для этого мы воспользуемся действием [`mouse click`](/docs/lang/mouse#mouse-click(lckick,-rclick,-dclick))
 
 ```testo
@@ -243,6 +245,350 @@ mouse click "Install Now".center_bottom()
 
 ## Выбор нужного экземпляра надписи
 
-Сразу после 
+Теперь перед нами появляется такой экран.
 
 ![Write changes](/static/tutorials/12_mouse/write_changes_to_disk.png)
+
+Конечно, нам необходимо нажать на `Continue`. Однако, если мы попробуем это сделать привычным нам способом:
+
+```testo
+mouse click "Download updates while installing"; mouse click "Continue"
+wait "Installation type"; mouse move 0 0; mouse click "Install Now".center_bottom()
+wait "Write the changes to disks?";
+mouse click "Continue".center_bottom()
+```
+
+То мы увидим, что это приводит к ошибке
+
+<Terminal height="620px">
+	<span className="">user$ sudo testo run mouse.testo --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">install_ubuntu<br/></span>
+	<span className="blue ">[  0%] Preparing the environment for test </span>
+	<span className="yellow ">install_ubuntu<br/></span>
+	<span className="blue ">[  0%] Restoring snapshot </span>
+	<span className="yellow ">initial</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Running test </span>
+	<span className="yellow ">install_ubuntu<br/></span>
+	<span className="blue ">[  0%] Starting virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">English </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Try Ubuntu without installing </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">DOWN </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Pressing key </span>
+	<span className="yellow ">ENTER </span>
+	<span className="blue ">on virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Welcome </span>
+	<span className="blue ">for 5m with interval 1s in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse clicking </span>
+	<span className="blue ">on </span>
+	<span className="yellow ">Continue.center_bottom() </span>
+	<span className="blue ">with timeout 1m in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Keyboard layout </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse clicking </span>
+	<span className="blue ">on </span>
+	<span className="yellow ">Continue.center_bottom() </span>
+	<span className="blue ">with timeout 1m in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Updates and other software </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse clicking </span>
+	<span className="blue ">on </span>
+	<span className="yellow ">Minimal installation </span>
+	<span className="blue ">with timeout 1m in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse clicking </span>
+	<span className="blue ">on </span>
+	<span className="yellow ">Download updates while installing </span>
+	<span className="blue ">with timeout 1m in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse clicking </span>
+	<span className="blue ">on </span>
+	<span className="yellow ">Continue </span>
+	<span className="blue ">with timeout 1m in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Installation type </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse moving </span>
+	<span className="blue ">on coordinates </span>
+	<span className="yellow ">0 0 </span>
+	<span className="blue ">in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse clicking </span>
+	<span className="blue ">on </span>
+	<span className="yellow ">Install Now.center_bottom() </span>
+	<span className="blue ">with timeout 1m in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Waiting </span>
+	<span className="yellow ">Write the changes to disks? </span>
+	<span className="blue ">for 1m with interval 1s in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="blue ">[  0%] Mouse clicking </span>
+	<span className="blue ">on </span>
+	<span className="yellow ">Continue.center_bottom() </span>
+	<span className="blue ">with timeout 1m in virtual machine </span>
+	<span className="yellow ">ubuntu_desktop<br/></span>
+	<span className="red bold">/home/alex/testo/mouse.testo:42:45: Error while performing action click Continue.center_bottom() on virtual machine ubuntu_desktop:<br/>	-Can't apply specifier "center_bottom": there's more than one object<br/></span>
+	<span className="red bold">[100%] Test </span>
+	<span className="yellow bold">install_ubuntu</span>
+	<span className="red bold"> FAILED in 0h:1m:11s<br/></span>
+	<span className="">user$ </span>
+</Terminal>
+
+С чем же это связано? Дело в том, что на этом экране две надписи `Continue`:
+
+![Write changes 2](/static/tutorials/12_mouse/write_changes_to_disk_2.png)
+
+Несмотря на то, что одна надпись начинается с заглавной буквы "С", а другая - с прописной, механизм распознавания изображений иногда может расценивать такие надписи как одинаковые (хотя механизм распознавания строк изначально чувствителен к регистру). Такое иногда случается, и ничего страшного в этом нет.
+
+В чем же проблема, почему наша попытка применить спецификатор `center_bottom` привела к ошибке? Дело в том, что когда на экране несколько экземпляром надписи, на которую мы хотим кликнуть (или просто передвинуть курсор), платформа Testo не может быть уверена, какую именно надпись мы имеем в виду. Соответственно, т.к. платформа не может быть уверена, какую именно надпись мы имеем в виду, она не может применить к ней спецификатор `center_bottom` (о чем и свидетельствует текст ошибки).
+
+Для того, чтобы исправить эту ошибку, достаточно воспользоваться спицификатором выбора конкретной надписи. Таких спецификаторов всего 4: `from_left()`, `from_right()`, `from_top()` и `from_bottom()`. Здесь мы воспользуемся спецификатором `from_bottom()`:
+
+```testo
+mouse click "Download updates while installing"; mouse click "Continue"
+wait "Installation type"; mouse move 0 0; mouse click "Install Now".center_bottom()
+wait "Write the changes to disks?";
+mouse click "Continue".from_bottom(0).center_bottom()
+```
+Что же мы имеем в виду таким действием? Такое действие необходимо читать так:
+
+1. Найди на экране все надписи `Continue` (если надписей вообще нет - дождись появления хотя бы одной надписи в течение 1 минуты);
+2. Из всех найденных надписей выбери ту, которая ближе всего к нижней границе экрана;
+3. К выбранной надписи примени спецификатор `center_bottom` - то есть передвинь курсор к нижней границе надписи по центру относительно оси Х;
+4. После передвижения курсора выполни клик левой кнопкой мыши.
+
+Раньше, когда необходимая надпись на экране у нас присутствовала в единственном экзкмпляре, этот уточняющий шаг можно было пропустить, но теперь он нам необходим. Если бы мы хотели кликнуть по верхней надписи `Continue`, мы бы использовали уточнение `from_bottom(1)` или `from_top(0)`. Конечно, если мы попытаемся обратиться к элементу `from_top(2)`, то получим ошибку, т.к. фактически "выйдем за пределы массива" доступных объектов.
+
+## Финальное уточняющее позиционирование курсора
+
+Очень скоро мы экран с предложением ввести логин и пароль.
+
+![Who are you](/static/tutorials/12_mouse/who_are_you.png)
+
+Конечно, мы можем ввести все данные, исопльзуя исключительно клавиатуру (для переключения между полями ввода достаточно нажимать клавишу Tab), но в показательных целях мы попробуем сделать это с помощью мышки.
+
+Для начала наша цель будет заключаться в том, что нам нужно будет кликнуть на поле ввода нашего имени (Your name). Это поле ввода уже выделено по-умолчанию, но мы можем притвориться, что мы этого не знаем.
+
+Для этого мы воспользуемся ещё одной возможностью уточнения позиционирования курсора в языке `testo-lang` - спецификатором `move`
+
+```testo
+wait "Where are you?"; mouse click "Continue".center_bottom()
+wait "Who are you?";
+mouse click "Your name:".right_center().move_right(20);
+type "${login}"
+```
+
+В этом действии мы придержимаемся следующей логики:
+
+1. Необходимо найти "точку отсчета" - некоторый объект на экране, от которого мы могли бы оттолкнуться при поиске необходимо поля ввода. В данном случае на эту роль отлично подойдёт надпись "Your name:". Т.к. это единственная надпись "Your name" на экране, мы можем пропустить уточнение `.from`;
+2. Теперь нам необходимо спозиционировать курсор внутри найденной надписи. Т.к. необходимое поле ввода находится строго справа от надписи "Your name", то выглядит логичным пододвинуть курсор к правому краю найденной надписи. Для этого мы дописываем спецификатор `.right_center()`;
+3. Но этого всё еще недостаточно, ведь курсор всё еще надохится не там, где нужно. Для того, чтобы наконец попасть курсором на нужное текстовое поле, нам необходимо сдвинуть мышку вправо на какое-то количество пикселей. Мы прикидываем, что 20 пикселей должно быть достаточно, и дописываем спецификатор `move_right(20)`. Этого должно быть полностью достаточно для того, чтобы курсор попал в необходимую область и мы смогли бы, наконец, выполнить клик;
+4. Нужное поле ввода выделено, можно писать свой логин.
+
+> Можно было бы пропустить уточнение `.right_center()` и написать сразу `mouse click "Your name:".move_right(20)`, но тогда отсчёт 20 пикселей начинался бы с центра надписи, а не с правого её края, что не очень удобно
+
+> После применения спецификатора `.move_right(20)` не обязательно останавливаться - можно двигать курсор в любом направлении и сколько угодно. Например, `mouse click "Your name:".move_right(20).move_down(50).move_left(10).move_left(30)` и так далее
+
+После того, как мы ввёдем свое имя (оно же логин), мы увидим ужасающее сгенерированное имя компьютера, которое нас совершенно не устраивает:
+
+![Hostname](/static/tutorials/12_mouse/hostname.png)
+
+Для того, чтобы его исправить, воспользуемся таким же приёмом:
+
+```testo
+wait "Where are you?"; mouse click "Continue".center_bottom()
+wait "Who are you?";
+mouse click "Your name:".right_center().move_right(20); type "${login}"
+mouse click "Your computer's name".right_center().move_right(20); 
+press LeftCtrl + A, Delete; type "${hostname}"
+```
+Отметим, что для удаления мы для начала должны выделить весь текст, используя сочетание CTRL+A.
+
+А для записи пароля мы попробуем ориентироваться только на слово `Password` на экране и попробуем преминить все три спецификатора одновременно.
+
+```testo
+mouse click "Your computer's name".right_center().move_right(20); press LeftCtrl + A, Delete;  type "${hostname}"
+mouse click "password:".from_top(0).right_center().move_right(20); type "${password}"
+mouse click "password:".from_top(1).right_center().move_right(20); type "${password}"
+```
+Поздравляем, теперь вы познакомились с концепцией уточняющих спецификаторов при работе с мышкой в языке `testo-lang`! Давайте вкратце просуммируем основную логику применение уточнений:
+
+1. Необходимо найти нужный экземпляр искомой надписи. Для этого используйте отсчеты от краёв экрана, а поможет вам в этом один из спецификаторов `from`. Если нужна вам надписаь находится на экране в единственном экземпляре, этот шаг можно пропустить.
+2. Спозиционировать курсор внутри искомой надписи. Если вас устраивает позиционирование курсора по центру надписи, этот шаг можно пропустить.
+3. Передвинуть курсор на некоторое количество пикселей относительно найденной точки. Если дополнительно двигаться курсор не нужно, этот шаг можно пропустить. Двигать можно влево-вправо-вверх-вниз неограниченное количество раз.
+
+## Заканчиваем установку
+
+С помощью действий `mouse` иногда можно сэкономить немного места в тестовом сценарии: в случае, когда вам нужно кликнуть на надпись, которая сама по себе является индикатором нужного вам события (то есть то, что вы обычно пишете в `wait`), то `wait` можно просто опустить.
+
+Такой код
+
+```testo
+mouse click "password:".from_top(1).right_center().move_right(20); type "${password}"
+mouse click "Continue".center_bottom()
+wait "Restart now" timeout 10m; mouse click "Restart Now"
+```
+
+Будет полностью эквивалентен следующему коду
+
+```testo
+mouse click "password:".from_top(1).right_center().move_right(20); type "${password}"
+mouse click "Continue".center_bottom()
+mouse click "Restart Now" timeout 10m
+```
+
+Действие `mouse click` включает в себя ожидание нужной надписи в течение заданного таймаута и точно так же выдаст ошибку, как и `wait` в случае, если надпись так и не появится.
+
+Обратите внимание, что, в отличие от установки Ubuntu Server, нам нельзя вытаскивать установочный диск на экране "Installation complete" (это приводит к зависанию виртуальной машины). Поэтому необходимо начать перезагруку и дождаться следующего экрана.
+
+![Please remove](/static/tutorials/12_mouse/please_remove.png)
+
+Для перезагрузки можно нажать Enter, а можно использовать комбинацию `stop, start`
+
+```testo
+mouse click "Restart Now" timeout 10m
+wait "Please remove the installation medium" timeout 2m;
+unplug dvd; stop; start
+```
+
+Наконец, необходимо выполнить логин в свежеустановленную ОС, чтобы убедиться, что всё хорошо. Экран логина выглядит так
+
+![Login](/static/tutorials/12_mouse/login.png)
+
+Чтобы понять, что появился именно логин-экран, можно было бы использовать `wait "${login}"`. Но мы выбрали логин `desktop`, который мог бы теоритически появляться на экране ещё и в процессе загрузки самой ОС. Может быть, это и не так, но мы не хотим лишний раз рисковать преждевременным срабатыванием действия `wait`, поэтому воспользуемся поисковым выражением `wait "${login} && "Not listed?"`. Это выражение сработает только в том случае, если на экране одновременно присуствует как `${login}`, так и `Not listed` - чего точно не возникнет во время загрузки ОС. Благодаря такому поисковому выражению мы можем быть достаточно уверены, что перед нами именно экран с логином.
+
+В итоге завершающие действия будут выглядеть так:
+
+```testo
+unplug dvd; stop; start
+wait "${login}" && "Not listed?" timeout 3m
+
+mouse click "${login}";
+wait "Password"; type "${password}"; mouse click "Sign In"
+wait "Welcome to Ubuntu"
+```
+
+На этом установка Ubuntu Desktop, наконец, закончена, но нам нужно посмотреть ещё немного моментов
+
+## Ещё примеры работы с мышкой
+
+Для того, чтобы ещё немного поупражняться в работе с мышкой, мы попробуем написать тест, в котором мы создаем папку и затем перемещаем её в корзину.
+
+Давайте приступим.
+
+Для начала избавимся от этого назойливого экрана
+
+![Welcome to Ubuntu](/static/tutorials/12_mouse/welcome_to_ubuntu.png)
+
+```testo
+test mouse_demo: install_ubuntu {
+	ubuntu_desktop {
+		mouse click "Welcome to Ubuntu"
+		mouse click "Quit"
+		abort "stop here"
+	}
+}
+```
+
+Обратите внимание, что мы не дожидаемся появления надписи `Quit`, а сразу же пытаемся на неё нажать. Напоминаю, что это возможно благодаря тому, что действие `mouse` сначала дожидается появления нужной надписи на экране (по умолчанию в течение 1 минуты).
+
+Теперь попробуем создать новую папку.
+
+```testo
+test mouse_demo: install_ubuntu {
+	ubuntu_desktop {
+		mouse click "Welcome to Ubuntu"
+		mouse click "Quit"
+
+		mouse rclick 400 300
+		mouse click "New Folder"
+		wait "Folder name"; type "My folder"; mouse click "Create"
+		wait "My folder" && !"Create"
+
+		abort "stop here"
+	}
+}
+```
+
+Обратите внимание, что для создания папки мы должны кликнуть правой кнопкой мышки по пустому месту на рабочем столе. Для правого клика существует действие `mouse rclick`, а в качестве места для клика мы выбираем координаты "Примерно серердины экрана" (текущее разрешение у нас 800х600). В конце мы убеждаемся, что папка создалась (то есть на экране присутствует надпись `My folder`, но отсутствует надпись `Create`).
+
+![Folder created](/static/tutorials/12_mouse/folder_created.png)
+
+Теперь давайте попробуем удалить папку. Для этого мы сделаем следующее:
+
+1. Наведем курсор на надпись `My folder`;
+2. Зажмём левую кнопку мыши;
+3. Переведём курсор на какое-нибудь место на рабочем столе
+4. Переведём курсор на надпись `Trash`;
+5. Отпустим левую кнопку мыши;
+6. Убедимся, что надпись `My folder` пропала
+
+Может вызывать вопрос пункт 3: зачем куда-то двигать папку перед тем, как положить её в корзину? На самом деле, по какой-то неизвестной причине графический интерфейс не отрабатывает, если пропустить этот шаг и попытаться перевести папку напрямую в корзину. Попробуйте и убедитесь в этом сами (можно в какой-то степени сказать, что мы нашли наш первый реальный баг и успешно воспроизвели его).
+
+```testo
+#Move the folder to trash
+mouse move "My folder";
+mouse hold lbtn
+mouse move 200 300
+mouse move "Trash"
+mouse release
+
+wait !"My folder"
+```
+
+Обратите внимание на новые действий `mouse hold` и `mouse release`. Действие `mouse hold` позволяет зажимать какую-то кнопку мышки, а `mouse release` отпускает все зажатые кнопки мышки.
+
+> Нельзя зажимать одновременно несколько кнопок мыши.
+
+> Если вы зажали какую-либо кнопку мыши, её **обязательно** необходимо отпустить в том же тесте, в котором вы ее зажали.
+
+> Пока у вас в тесте зажата кнопка мыши, вы не можете выполнять никакие клики.
+
+Наконец, давайте попробуем очистить корзину от только что переданной туда папки `My folder`
+
+```testo
+#Empty trash
+mouse move 0 0 #move cursor aside
+mouse dclick "Trash"
+#Check if our folder actually is in the trash
+wait "My folder"
+mouse click "Empty"
+mouse click "Empty Trash"
+mouse move 0 0
+wait "Trash is Empty"
+```
+
+Обратите внимание на действие `mouse dclick` - удобный способ выполнить двойной щелчок левой кнопки мышки. Также обратите внимание на `mouse move 0 0` - это действие нужно добавить, т.к. курсор загораживает надпись "Trash" после перемещения в корзину папки `My folder`, а также после очистки корзины курсор загораживает надпись `Trash is Empty`.  Все остальные действия должны быть достаточно понятны.
+
+## Итоги
+
+Управление мышкой в языке `testo-lang` реализовано в довольно мощном действии `mouse`. Формат действия выбран таким образом, чтобы простые клики выглядели максимально лаконично и не перегружнно, но при этом при надобности вы могли бы добавлять соответствующие уточнения максимально естественным образом. Попробуйте немного попрактиковаться в применении этого действия и скоро вы убедитесь, что в ней нет ничего сложного.
+
+Готовые скрипты можно найти [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/12)
