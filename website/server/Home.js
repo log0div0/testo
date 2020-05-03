@@ -30,6 +30,7 @@ module.exports = function() {
 					<ul>
 						<li><a href="/downloads">Загрузите</a> и установите платформу Testo</li>
 						<li>Узнайте как пользоваться платформой в <a href="/tutorials">уроках</a></li>
+						<li><a href="/help">Напишите </a> нам, если у вас возникли вопросы</li>
 					</ul>
 			</ul>
 		</Layout>

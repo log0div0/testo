@@ -10,7 +10,6 @@ import PageNotFound from './PageNotFound'
 import Downloads from './Downloads'
 import Features from './Features'
 import Buy from './Buy'
-import Contact from './Contact'
 import License from './License'
 import Help from './Help'
 
@@ -39,10 +38,6 @@ app.get('/license', (req, res) => {
 
 app.get('/features', (req, res) => {
 	res.send(renderHtml(<Features/>))
-})
-
-app.get('/contact', (req, res) => {
-	res.send(renderHtml(<Contact/>))
 })
 
 app.get('/help', (req, res) => {
