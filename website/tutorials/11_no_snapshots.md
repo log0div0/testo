@@ -486,4 +486,250 @@ test client_unplug_nat: client_install_guest_additions {
 	<span className="">user$ </span>
 </Terminal>
 
-И мы с вами увидим очень интересную картину
+И мы с вами увидим очень интересную картину: тест `client_unplug_nat` одновременно помечен и как `UP-TO-DATE` и как `TEST TO RUN`. Давайте разберёмся, почему так происходит.
+
+Когда Testo сканирует дерево тестов чтобы определить, какие тесты необходимо выполнить, каждый тест анализируется отдельно. Т.к. мы хотим запустить тест `client_prepare`, то предварительно анализируются на предмет закешированности все его предки: `client_install_ubuntu`, `client_install_guest_additions` и `client_unplug_nat`. Все эти тесты имеют валидный кеш, поэтому они и помечаются как `UP-TO-DATE`, что мы и видим.
+
+Затем приходит черед проанализировать закешированность самого теста `client_prepare`. Кеш этого теста недействителен (потому что мы ранее меняли в предыдущем шаге `client_unplug_nat`), а значит его необходимо выполнить. Остаётся вопрос - а как его выполнить?
+
+Если бы тест `client_unplug_nat` не был бы помечен, как `no_snapshots`, то мы могли бы откатиться к снепшотам виртуальных машин на момент окончания `client_unplug_nat`. Но у этого теста нет снепшотов, поэтому и откатиться нам некуда. Возникает вопрос - а как вернуть виртуальную машину `client` в состояние на момент окончания `client_unplug_nat`? В этом случае платформа Testo начинает идти вверх по иерархии тестов в попытке найти хоть один снепшот, за которой можно было бы "зацепиться". В нашем случае - это тест `client_install_guest_additions` - потому что он не был помечен атрибутом `no_snapshots`.
+
+В итоге мы откатываемся к снепшоту `client_install_guest_additions` и начинаем заново прогонять тест `client_unplug_nat` **чтобы вернуть виртуальную машину `client` в нужное состояние** (в состояние на момент окончания теста `client_unplug_nat`). Именно поэтому мы видим `client_unplug_nat` в списке `TESTS TO RUN`.
+
+После того, как мы вернули машину в нужное состояние, мы можем, наконец, запустить сам тест `client_prepare`. Этот процесс можно визуализировать примерно так
+
+![Tests resolve](/static/tutorials/11_no_snapshots/search.png)
+
+Если бы тест `client_install_guest_additions` был бы тоже помечен как `no_snapshots`, то итоговый план выполнения тестов выглядел бы так: `client_install_guest_additions->client_unplug_nat->client_prepare`
+
+Попробуйте сбросить кеш теста `client_unplug_nat` (поменяйте в нем что-нибудь или используйте `invalidate`) и убедитесь, что тест `client_unplug_nat` также выполняется.
+
+После этого давайте попробуем запустить все тесты целиком
+
+
+<Terminal height="600px">
+	<span className="">user$ sudo testo run ./ --stop_on_fail --param ISO_DIR /opt/iso --assume_yes<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">server_install_ubuntu<br/></span>
+	<span className="magenta ">server_install_guest_additions<br/></span>
+	<span className="magenta ">server_unplug_nat<br/></span>
+	<span className="magenta ">server_prepare<br/></span>
+	<span className="magenta ">client_install_ubuntu<br/></span>
+	<span className="magenta ">client_install_guest_additions<br/></span>
+	<span className="magenta ">client_unplug_nat<br/></span>
+	<span className="magenta ">client_prepare<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">test_ping<br/></span>
+	<span className="magenta ">exchange_files_with_flash<br/></span>
+	<span className="blue ">[ 80%] Preparing the environment for test </span>
+	<span className="yellow ">test_ping<br/></span>
+	<span className="blue ">[ 80%] Restoring snapshot </span>
+	<span className="yellow ">client_prepare</span>
+	<span className="blue "> for flash drive </span>
+	<span className="yellow ">exchange_flash<br/></span>
+	<span className="blue ">[ 80%] Restoring snapshot </span>
+	<span className="yellow ">client_prepare</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">client<br/></span>
+	<span className="blue ">[ 80%] Restoring snapshot </span>
+	<span className="yellow ">server_prepare</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">server<br/></span>
+	<span className="blue ">[ 80%] Running test </span>
+	<span className="yellow ">test_ping<br/></span>
+	<span className="blue ">[ 80%] Executing bash command in virtual machine </span>
+	<span className="yellow ">client</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ ping 192.168.1.2 -c5<br/></span>
+	<span className=" ">PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.<br/></span>
+	<span className=" ">64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=0.071 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=0.036 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=0.041 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.2: icmp_seq=4 ttl=64 time=0.038 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.2: icmp_seq=5 ttl=64 time=0.046 ms<br/></span>
+	<span className=" "><br/></span>
+	<span className=" ">--- 192.168.1.2 ping statistics ---<br/></span>
+	<span className=" ">5 packets transmitted, 5 received, 0% packet loss, time 3996ms<br/></span>
+	<span className=" ">rtt min/avg/max/mdev = 0.036/0.046/0.071/0.014 ms<br/></span>
+	<span className="blue ">[ 80%] Executing bash command in virtual machine </span>
+	<span className="yellow ">server</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ ping 192.168.1.1 -c5<br/></span>
+	<span className=" ">PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.<br/></span>
+	<span className=" ">64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=0.060 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=0.036 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=0.066 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.1: icmp_seq=4 ttl=64 time=0.043 ms<br/></span>
+	<span className=" ">64 bytes from 192.168.1.1: icmp_seq=5 ttl=64 time=0.065 ms<br/></span>
+	<span className=" "><br/></span>
+	<span className=" ">--- 192.168.1.1 ping statistics ---<br/></span>
+	<span className=" ">5 packets transmitted, 5 received, 0% packet loss, time 3998ms<br/></span>
+	<span className=" ">rtt min/avg/max/mdev = 0.036/0.054/0.066/0.012 ms<br/></span>
+	<span className="blue ">[ 80%] Taking snapshot </span>
+	<span className="yellow ">test_ping</span>
+	<span className="blue "> for flash drive </span>
+	<span className="yellow ">exchange_flash<br/></span>
+	<span className="blue ">[ 80%] Taking snapshot </span>
+	<span className="yellow ">test_ping</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">client<br/></span>
+	<span className="blue ">[ 80%] Taking snapshot </span>
+	<span className="yellow ">test_ping</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">server<br/></span>
+	<span className="green bold">[ 90%] Test </span>
+	<span className="yellow bold">test_ping</span>
+	<span className="green bold"> PASSED in 0h:0m:13s<br/></span>
+	<span className="blue ">[ 90%] Preparing the environment for test </span>
+	<span className="yellow ">exchange_files_with_flash<br/></span>
+	<span className="blue ">[ 90%] Restoring snapshot </span>
+	<span className="yellow ">client_prepare</span>
+	<span className="blue "> for flash drive </span>
+	<span className="yellow ">exchange_flash<br/></span>
+	<span className="blue ">[ 90%] Restoring snapshot </span>
+	<span className="yellow ">client_prepare</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">client<br/></span>
+	<span className="blue ">[ 90%] Restoring snapshot </span>
+	<span className="yellow ">server_prepare</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">server<br/></span>
+	<span className="blue ">[ 90%] Running test </span>
+	<span className="yellow ">exchange_files_with_flash<br/></span>
+	<span className="blue ">[ 90%] Executing bash command in virtual machine </span>
+	<span className="yellow ">client</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ echo 'Hello from client!'<br/></span>
+	<span className="blue ">[ 90%] Plugging flash drive </span>
+	<span className="yellow ">exchange_flash </span>
+	<span className="blue ">into virtual machine </span>
+	<span className="yellow ">client<br/></span>
+	<span className="blue ">[ 90%] Sleeping in virtual machine </span>
+	<span className="yellow ">client</span>
+	<span className="blue "> for 5s<br/></span>
+	<span className="blue ">[ 90%] Executing bash command in virtual machine </span>
+	<span className="yellow ">client</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ mount /dev/sdb1 /media<br/></span>
+	<span className=" ">+ cp /tmp/copy_me_to_server.txt /media<br/></span>
+	<span className=" ">+ umount /media<br/></span>
+	<span className="blue ">[ 90%] Unplugging flash drive </span>
+	<span className="yellow ">exchange_flash </span>
+	<span className="blue ">from virtual machine </span>
+	<span className="yellow ">client<br/></span>
+	<span className="blue ">[ 90%] Plugging flash drive </span>
+	<span className="yellow ">exchange_flash </span>
+	<span className="blue ">into virtual machine </span>
+	<span className="yellow ">server<br/></span>
+	<span className="blue ">[ 90%] Sleeping in virtual machine </span>
+	<span className="yellow ">server</span>
+	<span className="blue "> for 5s<br/></span>
+	<span className="blue ">[ 90%] Executing bash command in virtual machine </span>
+	<span className="yellow ">server</span>
+	<span className="blue "> with timeout 10m<br/></span>
+	<span className=" ">+ mount /dev/sdb1 /media<br/></span>
+	<span className=" ">+ cp /media/copy_me_to_server.txt /tmp<br/></span>
+	<span className=" ">+ umount /media<br/></span>
+	<span className=" ">+ cat /tmp/copy_me_to_server.txt<br/></span>
+	<span className=" ">Hello from client!<br/></span>
+	<span className="blue ">[ 90%] Unplugging flash drive </span>
+	<span className="yellow ">exchange_flash </span>
+	<span className="blue ">from virtual machine </span>
+	<span className="yellow ">server<br/></span>
+	<span className="blue ">[ 90%] Taking snapshot </span>
+	<span className="yellow ">exchange_files_with_flash</span>
+	<span className="blue "> for flash drive </span>
+	<span className="yellow ">exchange_flash<br/></span>
+	<span className="blue ">[ 90%] Taking snapshot </span>
+	<span className="yellow ">exchange_files_with_flash</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">client<br/></span>
+	<span className="blue ">[ 90%] Taking snapshot </span>
+	<span className="yellow ">exchange_files_with_flash</span>
+	<span className="blue "> for virtual machine </span>
+	<span className="yellow ">server<br/></span>
+	<span className="green bold">[100%] Test </span>
+	<span className="yellow bold">exchange_files_with_flash</span>
+	<span className="green bold"> PASSED in 0h:0m:15s<br/></span>
+	<span className="blue bold">PROCESSED TOTAL 10 TESTS IN 0h:0m:29s<br/></span>
+	<span className="blue bold">UP-TO-DATE: 8<br/></span>
+	<span className="green bold">RUN SUCCESSFULLY: 2<br/></span>
+	<span className="red bold">FAILED: 0<br/></span>
+	<span className="">user$ </span>
+</Terminal>
+
+Что же мы видим? Мы видим, что несмотря на то, что наш тест `client_unplug_nat` заимел атрибут `no_snapshots`, наше время прогона **ЛИСТОВЫХ** тестов не пострадало: ведь мы всё еще можем использовать снепшоты от теста `client_prepare`.
+
+> Получается, что применение атрибута `no_snapshots` в промежуточных тестах может сэкономить место на диске, но в некоторых случаях в ущерб времени прогона тестов.
+
+Попробуйте самостоятельно добавить атрибут `no_snapshots` в тест `server_unplug_nat` и внимательно поизучайте какие тесты в каких случаях будут запускаться.
+
+Теперь давайте рассмотрим ещё один момент, после которого мы сформулируем несколько правил относительно того, где стоит применять `no_snapshots`, а где не стоит.
+
+## no_snapshots в опорных тестах - плохая идея
+
+Перед дальнейшим шагом убедитесь, что тесты `client_unplug_nic`, `server_unplug_nic`, `test_ping` и `exchange_files_with_flash` имеют атрибут `no_snapshots`, все тесты должны быть прогнаны и закешированы.
+
+При таком раскладе получается, что мы сэкономили довольно много места и при условии что мы не будем трогать тесты `client_prepare` и `server_prepare` тесты `test_ping` и `exchange_files_with_flash` прогоняются так же быстро, как если бы все тесты имели полноценные снепшоты. Мы достигли определённого баланса - места гораздо меньше, и неудобства от увеличенного времени прогона тестов пока не сильно ощущаются.
+
+Но давайте продемонстрируем, что иногда очень важно бывает вовремя остановиться в попытках сэкономить используемое место.
+
+Давайте добавим `no_snapshots` в тесты `client_prepare` и `server_prepare` и попробуем прогнать все тесты
+
+
+<Terminal height="350px">
+	<span className="">user$ sudo testo run ./ --stop_on_fail --param ISO_DIR /opt/iso --test_spec test_ping --assume_yes<br/></span>
+	<span className="blue bold">UP-TO-DATE TESTS:<br/></span>
+	<span className="magenta ">server_install_ubuntu<br/></span>
+	<span className="magenta ">server_install_guest_additions<br/></span>
+	<span className="magenta ">server_unplug_nat<br/></span>
+	<span className="magenta ">client_install_ubuntu<br/></span>
+	<span className="magenta ">client_install_guest_additions<br/></span>
+	<span className="magenta ">client_unplug_nat<br/></span>
+	<span className="blue bold">TESTS TO RUN:<br/></span>
+	<span className="magenta ">server_unplug_nat<br/></span>
+	<span className="magenta ">server_prepare<br/></span>
+	<span className="magenta ">client_unplug_nat<br/></span>
+	<span className="magenta ">client_prepare<br/></span>
+	<span className="magenta ">test_ping<br/></span>
+	<span className="magenta ">client_unplug_nat<br/></span>
+	<span className="magenta ">client_prepare<br/></span>
+	<span className="magenta ">server_unplug_nat<br/></span>
+	<span className="magenta ">server_prepare<br/></span>
+	<span className="magenta ">exchange_files_with_flash<br/></span>
+	...
+	<span className="">user$ </span>
+</Terminal>
+
+Посмотрите насколько выросла очередь `TESTS TO RUN`. Мы видим, что тесты `server_unplug_nat`, `client_unplug_nat`, `server_prepare` и `client_prepare` планируются к выполнению аж два раза! Давайте проанализируем, почему так происходит:
+
+1. Нам необходимо выполнить два листовых теста: `test_ping` и `exchange_files_with_flash`, которые оба полагаются на опорные тесты `client_prepare` и `server_prepare`;
+2. Т.к. тесты `client_prepare` и `server_prepare` теперь не имеют реальных снепшотов, платформе Testo ничего не остаётся кроме как выполнить поиск ближайших тестов, к результатам которых можно откатиться;
+3. Сначала такой поиск происходит для теста `test_ping`, в результате появляется путь выполнения `server_unplug_nat->server_prepare->client_unplug_nat->client_prepare`, который берет свое начало с момента успешного окончания тестов `client_install_guest_additions` и `server_install_guest_additions`;
+4. Такой же поиск приходится проделать и для теста `exchange_files_with_flash`! Ведь отсутствие снепшотов никто не отменял. В итоге некоторые тесты запланированы к выполнению аж два раза!
+
+В данном случае мы, конечно, ещё сэкономили место на диске, но с другой стороны явно перегнули палку с точки зрения времени выполнения тестов. Наше решение никак нельзя назвать эффективным: неудобства значительно превысили пользу.
+
+В связи с этим возникает вопрос, а какое же распредение атрибутов `no_snapshots` в тестах можно назвать оптимальным (в большинстве случаев)? Мы предлагаем такой алгоритм:
+
+1. Все листовые (не имеющие потомков) тесты можно безболезненно помечать атрибутом `no_snapshots`, поэтому следует это сделать;
+2. Промежуточные тесты следует помечать атрибутом `no_snapshots`, если эти тесты не являются **опорными**, то есть если к результатам их выполнения не будет происходить откатов (по крайней мере часто);
+3. Тесты, имеющие несколько потомков, **не следует** помечать атрибутом `no_snapshots`.
+
+Если попытаться применить этот алгоритм к нашему дереву тестов, то получается следующая картина:
+
+1. Тесты `test_ping` и `exchange_files_flash` являются листовыми, поэтому им следует назначить атрибут `no_snapshots`;
+2. Тесты `client_prepare` и `server_prepare` явно **не должны** иметь атрибут `no_snapshots`, т.к. от этих тестов зависит более одного теста;
+3. Тесты `client_unplug_nat` и `server_unplug_nat` следует пометить атрибутом `no_snapshots` в том случае, если тесты `client_prepare` и `server_prepare` будут закешированы большую часть времени. Если эти тесты будут постоянно терять целостность кеша, то лучше оставить тесты `client_unplug_nat` и `server_unplug_nat` в первоначальном виде;
+4. Тесты `install_ubuntu` достаточно трудоемкие и выполняются долго. Их можно оставить в изначальном виде, даже с учётом, что к ним редко будет происходить откат, просто чтобы сэкономить себе время на лишней установке ОС в том случае в случае непредвиденных обстоятельств;
+5. Тесты `install_guest_additions` можно пометить атрибутом `no_snapshots`.
+
+Проведя такую оптимизацию, мы достигнем неплохого баланса между экономией места на диске и скоростью прогона тестов. Многие подготовительные тесты имеют атрибут `no_snapshots`, потому что мы предполагаем, что подготовка будет происходить редко (в идеале - ровно один раз), после чего мы фиксируем итоги подготовки в тестах `client_prepare` и `server_prepare`. Производные сложны тесты, котрые предположительно будут прогоняться часто, всегда смогут положиться на результат тестов `prepare`, поэтому время их прогона не пострадает.
+
+Этот алгоритм не является панацеей и универсальным решением. Конечно, в разных случаях могут быть свои нюансы, которые потребуют принимать во внимание другие факторы. Не бойтесь экспериментировать!
+
+## Итоги
+
+Механизм `no_snapshots` в языке `testo-lang` позволяет экономить место на диске в ущерб времени прогона тестов. Впрочем, если грамотно распоряжаться этим механизмом, то потеря времени на прогонах тестов может оказаться очень несущественной или вовсе отсутствовать. Поэтому при достижении определенного количества тестов определенно следует остановиться и подумать, какие тесты будут выполняться часто, а какие редко - и в каких тестах можно безболезненно поставить атрибут `no_snapshots`.
+
+Готовые скрипты можно найти [здесь](https://github.com/CIDJEY/Testo_tutorials/tree/master/11)
