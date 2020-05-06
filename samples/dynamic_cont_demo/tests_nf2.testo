@@ -341,6 +341,7 @@ test ospf_ebgp_nf2: UB_install_nf2, LAN3_ARM_prepare, LAN5_ARM_prepare {
 	LAN5_ARM {
 		exec bash "ping ${MS_ip} -c5"
 		exec bash "ping ${router1_Lo_ip} -c5"
+		exec bash "ping ${LAN3_ARM_ip} -c5"
 	}
 
 	MS {
@@ -381,6 +382,7 @@ test ospf_ebgp_nf2: UB_install_nf2, LAN3_ARM_prepare, LAN5_ARM_prepare {
 	LAN5_ARM {
 		exec bash "ping ${MS_ip} -c5"
 		exec bash "ping ${router1_Lo_ip} -c5"
+		exec bash "ping ${LAN3_ARM_ip} -c5"
 	}
 
 	MS {
@@ -393,7 +395,7 @@ test ospf_ebgp_nf2: UB_install_nf2, LAN3_ARM_prepare, LAN5_ARM_prepare {
 description: "TESTCASE 89109 [NF2]: Проверка редистрибуции маршрутов ospf и ibgp"
 no_snapshots: true
 ]
-test ospf_ibgp_nf2: UB_install_nf2, LAN4_ARM_prepare {
+test ospf_ibgp_nf2: UB_install_nf2, LAN3_ARM_prepare, LAN4_ARM_prepare {
 	router1 {
 		copyto "bird_configs/OSPF_R1.conf" "/opt/OSPF_R1.conf"
 		exec bash "bird -c /opt/OSPF_R1.conf"
@@ -522,6 +524,7 @@ test ospf_ibgp_nf2: UB_install_nf2, LAN4_ARM_prepare {
 		exec bash "ping ${MS_ip} -c5"
 		exec bash "ping ${router2_BGP1_ip} -c5"
 		exec bash "ping ${router1_OSPF1_ip} -c5"
+		exec bash "ping ${LAN3_ARM_ip} -c5"
 	}
 
 	router2 {
@@ -580,5 +583,6 @@ test ospf_ibgp_nf2: UB_install_nf2, LAN4_ARM_prepare {
 		exec bash "ping ${MS_ip} -c5"
 		exec bash "ping ${router2_BGP1_ip} -c5"
 		exec bash "ping ${router1_OSPF1_ip} -c5"
+		exec bash "ping ${LAN3_ARM_ip} -c5"
 	}
 }
