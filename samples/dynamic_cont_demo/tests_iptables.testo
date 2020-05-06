@@ -29,14 +29,17 @@ test validate_bird_config_iptables: UB1_configure_network {
 			abort "valid bird has been rejected"
 		}
 
+		sleep 5s
 		mouse click "else reject;"; press End, Backspace
 		mouse click "Применить".from_bottom(0)
 		
+		sleep 10s
 		wait "syntax error, unexpected '}"; press Enter
 
 		mouse click "protocol kernel"; press Home, Delete
 		mouse click "Применить".from_bottom(0)
 		
+		sleep 10s
 		wait "CF_SYM_UNDEFINED"; press Enter
 
 		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
@@ -88,6 +91,7 @@ test validate_bird_config_iptables: UB1_configure_network {
 
 		type "cmp /tmp/routes.conf /etc/bird.conf && echo result is $?"; press Enter
 		wait "result is 0"
+		abort "stop here"
 	}
 }
 
@@ -107,6 +111,10 @@ test ospf_2_processes_iptables: UB1_configure_network, router3_prepare, LAN2_ARM
 	}
 
 	MS {
+		copyto "bird_configs/2_OSPF_UB1.conf" "C:\\Users\\testo\\Desktop\\2_OSPF_UB1.conf"
+
+		abort "stop here"
+
 		mouse click "Структура"
 		mouse rclick "node-${UB1_id}"
 		mouse click "Свойства".from_bottom(0)
@@ -116,7 +124,6 @@ test ospf_2_processes_iptables: UB1_configure_network, router3_prepare, LAN2_ARM
 		mouse move 0 0
 		mouse click "Динамические маршруты".from_left(1)
 
-		copyto "bird_configs/2_OSPF_UB1.conf" "C:\\Users\\testo\\Desktop\\2_OSPF_UB1.conf"
 
 		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
 		mouse click "Рабочий стол"
@@ -260,6 +267,9 @@ test ospf_ebgp_iptables: UB1_configure_network, router2_prepare, LAN3_ARM_prepar
 	}
 
 	MS {
+		copyto "bird_configs/OSPF+eBGP_UB1.conf" "C:\\Users\\testo\\Desktop\\OSPF+eBGP_UB1.conf"
+		abort "stop here"
+		
 		mouse click "Структура"
 		mouse rclick "node-${UB1_id}"
 		mouse click "Свойства".from_bottom(0)
@@ -269,7 +279,6 @@ test ospf_ebgp_iptables: UB1_configure_network, router2_prepare, LAN3_ARM_prepar
 		mouse move 0 0
 		mouse click "Динамические маршруты".from_left(1)
 
-		copyto "bird_configs/OSPF+eBGP_UB1.conf" "C:\\Users\\testo\\Desktop\\OSPF+eBGP_UB1.conf"
 
 		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
 		mouse click "Рабочий стол"
@@ -414,6 +423,11 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN3_ARM_prepare, LAN4_ARM_prepa
 	}
 
 	MS {
+		copyto "bird_configs/OSPF+iBGP_UB1.conf" "C:\\Users\\testo\\Desktop\\OSPF+iBGP_UB1.conf"
+		copyto "bird_configs/OSPF+iBGP_UB2.conf" "C:\\Users\\testo\\Desktop\\OSPF+iBGP_UB2.conf"
+
+		abort "stop here"
+
 		mouse rclick "node-${UB1_id}"
 		mouse click "Свойства".from_bottom(0)
 		wait "безопасности - node-${UB1_id}"
@@ -422,7 +436,6 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN3_ARM_prepare, LAN4_ARM_prepa
 		mouse move 0 0
 		mouse click "Динамические маршруты".from_left(1)
 
-		copyto "bird_configs/OSPF+iBGP_UB1.conf" "C:\\Users\\testo\\Desktop\\OSPF+iBGP_UB1.conf"
 
 		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
 		mouse click "Рабочий стол"
@@ -460,7 +473,6 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN3_ARM_prepare, LAN4_ARM_prepa
 		mouse move 0 0
 		mouse click "Динамические маршруты".from_left(1)
 
-		copyto "bird_configs/OSPF+iBGP_UB2.conf" "C:\\Users\\testo\\Desktop\\OSPF+iBGP_UB2.conf"
 
 		mouse click "Конфигурация маршрутизации".right_center().move_right(240)
 		mouse click "Имя файла:".right_center().move_right(30)
