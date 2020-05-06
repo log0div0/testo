@@ -123,7 +123,8 @@ let tutorialsToc = {
 		"/tutorials/10_if",
 		"/tutorials/11_no_snapshots",
 		"/tutorials/12_mouse",
-		"/tutorials/13_js"
+		"/tutorials/13_js",
+		"/tutorials/14_for"
 	]
 }
 
