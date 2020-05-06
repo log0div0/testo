@@ -576,6 +576,10 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN3_ARM_prepare, LAN4_ARM_prepa
 	}
 
 	UB1 {
+		type "birdc show protocols"; press Enter
+		wait "ibgp1" && "ibgp2" && js "find_text().match('Established').size() == 2"
+		type "clear"; press Enter
+
 		type "ip r s"; press Enter
 
 		wait "${router1_Lo_ip} via ${router1_OSPF1_ip} dev ge-0-0 proto bird metric 110"
@@ -586,6 +590,10 @@ test ospf_ibgp_iptables: UB2_configure_network, LAN3_ARM_prepare, LAN4_ARM_prepa
 	}
 
 	UB2 {
+		type "birdc show protocols"; press Enter
+		wait "ibgp1" && "ibgp2" && js "find_text().match('Established').size() == 2"
+		type "clear"; press Enter
+		
 		type "ip r s"; press Enter
 		wait "${router1_Lo_ip} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
 		wait "${LAN1_ip}/${default_netmask} via ${router2_BGP2_ip} dev ge-0-0 proto bird metric 200"
