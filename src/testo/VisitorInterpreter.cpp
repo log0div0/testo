@@ -1007,6 +1007,7 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 		} else if (mouse_move_click->t.type() == Token::category::dclick) {
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
+			timer.waitFor(std::chrono::milliseconds(20));
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
 		} else {
