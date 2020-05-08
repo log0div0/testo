@@ -768,7 +768,10 @@ js::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& scr
 	try {
 		js_current_ctx.reset(new js::Context(&screenshot));
 		return js_current_ctx->eval(script);
-	} catch(const std::exception& error) {
+	} catch (const nn::ContinueError& error) {
+		throw error;
+	}
+	catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
 }
