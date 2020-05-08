@@ -21,11 +21,12 @@ QemuNbd::QemuNbd(const fs::path& img_path) {
 		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path.generic_string() + "\"");
 		return;
 	}
-	
+
 	throw std::runtime_error("Timeout for trying plug flash drive to any free nbd slot");
 }
 
 QemuNbd::~QemuNbd() {
+	sync();
 	std::system("qemu-nbd -d /dev/nbd0");
 }
 
@@ -168,6 +169,7 @@ void QemuFlashDrive::mount() {
 
 void QemuFlashDrive::umount() {
 	try {
+		sync();
 		exec_and_throw_if_failed("umount /dev/nbd0p1");
 		nbd.reset(nullptr);
 	} catch (const std::exception& error) {
