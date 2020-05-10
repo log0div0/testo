@@ -100,6 +100,7 @@ let docsToc = {
 	"Запросы на языке Javascript": [
 		"/docs/js/general",
 		"/docs/js/global_funcs",
+		"/docs/js/exceptions",
 		"/docs/js/tensor_textline",
 		"/docs/js/point"
 	],
