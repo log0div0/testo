@@ -600,7 +600,18 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 			}
 		}
 
-		for (auto controller: reg.get_all_controllers(test)) {
+		//we need to take snapshots in the right order
+		//1) all the vms - so we could check that all the fds are unplugged
+		for (auto controller: reg.get_all_vmcs(test)) {
+			if (!controller->has_snapshot(test->name.value())) {
+				reporter.take_snapshot(controller, test->name);
+				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
+			}
+			controller->set_metadata("current_state", test->name.value());
+		}
+
+		//2) all the fdcs - the rest
+		for (auto controller: reg.get_all_fdcs(test)) {
 			if (!controller->has_snapshot(test->name.value())) {
 				reporter.take_snapshot(controller, test->name);
 				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
