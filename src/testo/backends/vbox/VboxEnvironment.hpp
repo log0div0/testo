@@ -24,7 +24,7 @@ struct VboxEnvironment: public Environment {
 		throw std::runtime_error("Implement me");
 	}
 
-	VboxEnvironment();
+	VboxEnvironment(const nlohmann::json& config);
 	~VboxEnvironment();
 
 	void setup() override;

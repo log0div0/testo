@@ -7,7 +7,7 @@
 #include <vbox/virtual_box_client.hpp>
 #include <vbox/virtual_box.hpp>
 
-VboxEnvironment::VboxEnvironment() {
+VboxEnvironment::VboxEnvironment(const nlohmann::json& config): Environment(config) {
 #ifdef WIN32
 	_putenv_s("VBOX", "1");
 #else

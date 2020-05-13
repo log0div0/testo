@@ -1,5 +1,6 @@
 
 #include "VisitorCksum.hpp"
+#include "backends/Environment.hpp"
 #include "coro/Finally.h"
 #include <algorithm>
 
@@ -213,7 +214,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 			path = plug->t.begin().file.parent_path() / path;
 		}
 		//add signature for dvd file
-		result += file_signature(path);
+		result += file_signature(path, env->content_cksum_maxsize());
 	}
 
 	return result;
@@ -263,9 +264,9 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 
 		//now we should take care of last modify date of every file and folder in the folder
 		if (fs::is_regular_file(from)) {
-			result += file_signature(from);
+			result += file_signature(from, env->content_cksum_maxsize());
 		} else if (fs::is_directory(from)) {
-			result += directory_signature(from);
+			result += directory_signature(from, env->content_cksum_maxsize());
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
 		}

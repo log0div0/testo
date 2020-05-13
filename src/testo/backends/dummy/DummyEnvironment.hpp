@@ -7,7 +7,7 @@
 #include "../Environment.hpp"
 
 struct DummyEnvironment: Environment {
-	DummyEnvironment() {}
+	DummyEnvironment(const nlohmann::json& config): Environment(config) {}
 	~DummyEnvironment() {}
 
 	fs::path testo_dir() const override;
