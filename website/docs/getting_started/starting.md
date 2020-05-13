@@ -20,7 +20,8 @@ testo run <input file | input folder> [--param <param_name> <param_value>]... \
   [--prefix <prefix>] [--stop_on_fail] [--assume_yes] [--test_spec <wildcard pattern>] \
   [--exclude <wildcard pattern>] [--invalidate <wildcard pattern>] \
   [--report_folder </path/to/folder>] [--report_logs] [--report_screenshots] \
-  [--license <path>] [--hypervisor <hypervisor type>]
+  [--content_cksum_maxsize <Size in Megabytes>][--license <path>] \
+  [--hypervisor <hypervisor type>]
 ```
 
 -   `input_file` или `input_folder`: Путь к файлу или к папке с
@@ -63,6 +64,10 @@ testo run <input file | input folder> [--param <param_name> <param_value>]... \
     `wait`. Скриншоты будут создаваться в папке, указанной в аргументе
     `report_folder`. Этот аргумент можно указывать только в совокупности
     с аргументом `report_folder`
+-   `content_cksum_maxsize <Size in Megabytes>`: задать максимальный размер
+    файлов, для которых контроль целостности будет осуществляться на основе
+    содержимого, а не на основе времени последнего изменения. Подробности можно прочитать [здесь](/docs/lang/test#проверка-кеша).
+    Значение по-умолчанию: 1 Мегабайт.
 -   `license <path>`: Путь к файлу с действующей лицензией.
 -   `hypervisor <hypervisor type>`: Указать используемый гипервизор. В
     настоящее время полноценно поддерживается гипервизор `qemu`.
