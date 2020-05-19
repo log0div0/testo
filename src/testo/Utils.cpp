@@ -60,12 +60,6 @@ uint32_t time_to_milliseconds(const std::string& time) {
 	return milliseconds;
 }
 
-void exec_and_throw_if_failed(const std::string& command) {
-	if (std::system(command.c_str())) {
-		throw std::runtime_error("Command failed: " + command);
-	}
-}
-
 std::string file_signature(const fs::path& file, uint64_t thresh) {
 	if (!fs::exists(file)) {
 		return file.filename().generic_string() + "not exists";

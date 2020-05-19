@@ -4,6 +4,7 @@
 #include <functional>
 #include <thread>
 #include <chrono>
+#include "process/Process.hpp"
 
 #ifdef __linux__
 const std::string disk_format = "vmdk";
@@ -27,7 +28,7 @@ bool VboxFlashDrive::is_defined() {
 void VboxFlashDrive::create() {
 	try {
 #ifdef __linux__
-		if (std::system("lsmod | grep nbd > /dev/null")) {
+		if (Process::is_failed("lsmod | grep nbd")) {
 			throw std::runtime_error("Please load nbd module (max parts=1)");
 		}
 #endif
@@ -39,10 +40,10 @@ void VboxFlashDrive::create() {
 		handle.create_base_storage(disk_size, MediumVariant_Fixed).wait_and_throw_if_failed();
 
 #ifdef __linux__
-		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f " + disk_format + " \"" + img_path().generic_string() + "\"");
-		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
-		exec_and_throw_if_failed("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
-		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
+		Process::exec("qemu-nbd --connect=/dev/nbd0 -f " + disk_format + " \"" + img_path().generic_string() + "\"");
+		Process::exec("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary 0% 100%");
+		Process::exec("mkfs." + config.at("fs").get<std::string>() + " /dev/nbd0p1");
+		Process::exec("qemu-nbd -d /dev/nbd0");
 #elif WIN32
 		VirtualDisk virtualDisk(img_path().generic_string());
 		virtualDisk.attach();
@@ -68,7 +69,7 @@ void VboxFlashDrive::undefine() {
 bool VboxFlashDrive::is_mounted() const {
 #ifdef __linux__
 	std::string query = "mountpoint -q \"" + env->flash_drives_mount_dir().generic_string() + "\"";
-	return (std::system(query.c_str()) == 0);
+	return Process::is_succeeded(query.c_str());
 #elif WIN32
 	return VirtualDisk(img_path().generic_string()).isLoaded();
 #elif __APPLE__
@@ -80,12 +81,12 @@ void VboxFlashDrive::mount() {
 	try {
 #ifdef __linux__
 		std::string fdisk = "fdisk -l | grep nbd0";
-		if (std::system(fdisk.c_str()) == 0) {
+		if (Process::is_succeeded(fdisk.c_str())) {
 			throw std::runtime_error("Can't mount flash drive: target host slot is busy");
 		}
 
-		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f " + disk_format +	" \"" + img_path().generic_string() + "\"");
-		exec_and_throw_if_failed("mount /dev/nbd0");
+		Process::exec("qemu-nbd --connect=/dev/nbd0 -f " + disk_format +	" \"" + img_path().generic_string() + "\"");
+		Process::exec("mount /dev/nbd0");
 #elif WIN32
 		VirtualDisk virtualDisk(img_path().generic_string());
 		virtualDisk.attach();
@@ -102,8 +103,8 @@ void VboxFlashDrive::mount() {
 void VboxFlashDrive::umount() {
 	try {
 #ifdef __linux__
-		exec_and_throw_if_failed("umount /dev/nbd0");
-		exec_and_throw_if_failed("qemu-nbd -d /dev/nbd0");
+		Process::exec("umount /dev/nbd0");
+		Process::exec("qemu-nbd -d /dev/nbd0");
 #elif WIN32
 		msft::Connect connect;
 		auto disk = connect.virtualDisk(img_path().generic_string());

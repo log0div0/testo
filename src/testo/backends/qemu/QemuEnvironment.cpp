@@ -4,12 +4,13 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuNetwork.hpp"
 #include <fmt/format.h>
+#include <process/Process.hpp>
 
 QemuEnvironment::QemuEnvironment(const nlohmann::json& config): Environment(config) {
 	setenv("QEMU", "1", false);
 
-	if (std::system("lsmod | grep nbd > /dev/null")) {
-		if (std::system("modprobe nbd max_parts=1")) {
+	if (Process::is_failed("lsmod | grep nbd")) {
+		if (Process::is_failed("modprobe nbd max_parts=1")) {
 			throw std::runtime_error("Can't modprobe nbd module");
 		}
 	}
