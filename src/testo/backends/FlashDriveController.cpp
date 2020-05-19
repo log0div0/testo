@@ -94,7 +94,7 @@ void FlashDriveController::undefine() {
 			}
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("undefining network controller"));
+		std::throw_with_nested(std::runtime_error("undefining flash drive controller"));
 	}
 }
 

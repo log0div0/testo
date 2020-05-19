@@ -4,8 +4,10 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuEnvironment.hpp"
 #include "coro/Timer.h"
+#include "process/Process.hpp"
 #include <thread>
 #include <fstream>
+#include <regex>
 
 QemuNbd::QemuNbd(const fs::path& img_path) {
 	coro::Timer timer;
@@ -179,8 +181,11 @@ void QemuFlashDrive::umount() {
 
 bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
 	try {
-		std::string check = "qemu-img snapshot -l " + img_path().generic_string() + " | grep " + snapshot + " > /dev/null";
-		if (std::system(check.c_str()) == 0) {
+		std::string command = "qemu-img snapshot -l " + img_path().generic_string();
+		std::string output = Process::exec(command);
+		std::regex re("\\bwin10_x86_tls_install\\b");
+		std::smatch match;
+		if (std::regex_search(output, match, re)) {
 			return true;
 		}
 		return false;
