@@ -70,6 +70,22 @@
 - F11
 - F12
 - NUMLOCK
+- KP_0 (Num Pad 0)
+- KP_1 (Num Pad 1)
+- KP_2 (Num Pad 2)
+- KP_3 (Num Pad 3)
+- KP_4 (Num Pad 4)
+- KP_5 (Num Pad 5)
+- KP_6 (Num Pad 6)
+- KP_7 (Num Pad 7)
+- KP_8 (Num Pad 8)
+- KP_9 (Num Pad 9)
+- KP_PLUS (Num Pad +)
+- KP_MINUS (Num Pad -)
+- KP_SLASH (Num Pad /)
+- KP_ASTERISK (Num Pad \*)
+- KP_ENTER (Num Pad Enter)
+- KP_DOT (Num Pad .)
 - SCROLLLOCK
 - RIGHTCTRL
 - RIGHTALT
