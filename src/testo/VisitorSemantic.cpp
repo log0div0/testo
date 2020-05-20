@@ -79,6 +79,22 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 	keys.insert("F11"),
 	keys.insert("F12"),
 	keys.insert("NUMLOCK");
+	keys.insert("KP_0");
+	keys.insert("KP_1");
+	keys.insert("KP_2");
+	keys.insert("KP_3");
+	keys.insert("KP_4");
+	keys.insert("KP_5");
+	keys.insert("KP_6");
+	keys.insert("KP_7");
+	keys.insert("KP_8");
+	keys.insert("KP_9");
+	keys.insert("KP_PLUS");
+	keys.insert("KP_MINUS");
+	keys.insert("KP_SLASH");
+	keys.insert("KP_ASTERISK");
+	keys.insert("KP_ENTER");
+	keys.insert("KP_DOT");
 	keys.insert("SCROLLLOCK");
 	keys.insert("RIGHTCTRL");
 	keys.insert("RIGHTALT");
