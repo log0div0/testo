@@ -69,7 +69,7 @@ struct VisitorInterpreter {
 		Token token;
 	};
 
-	VisitorInterpreter(Register& reg, const nlohmann::json& config);
+	VisitorInterpreter(const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_test(std::shared_ptr<AST::Test> test);
@@ -125,8 +125,6 @@ struct VisitorInterpreter {
 	js::Value eval_js(const std::string& script, stb::Image& screenshot);
 
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
-
-	Register& reg;
 	template_literals::Parser template_parser;
 
 private:

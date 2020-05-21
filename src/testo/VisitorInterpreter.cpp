@@ -22,7 +22,7 @@ static void sleep(const std::string& interval) {
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
-VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
+VisitorInterpreter::VisitorInterpreter(const nlohmann::json& config) {
 	reporter = Reporter(config);
 
 	stop_on_fail = config.at("stop_on_fail").get<bool>();

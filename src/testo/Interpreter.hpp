@@ -15,5 +15,4 @@ private:
 	nn::OnnxRuntime onnx_runtime;
 	Parser parser;
 	nlohmann::json config;
-	Register reg;
 };
