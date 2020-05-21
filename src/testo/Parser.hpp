@@ -5,12 +5,13 @@
 #include "Node.hpp"
 #include "Utils.hpp"
 #include "Token.hpp"
+#include "Register.hpp"
 #include <set>
 #include <array>
 
 struct Parser {
 	Parser() = default;
-	Parser(const fs::path& file, const std::string& input);
+	Parser(std::shared_ptr<Register> reg, const fs::path& file, const std::string& input);
 
 	std::shared_ptr<AST::Program> parse();
 private:
@@ -108,4 +109,6 @@ private:
 	std::vector<Ctx> lexers;
 
 	std::vector<fs::path> already_included;
+
+	std::shared_ptr<Register> reg;
 };

@@ -4,7 +4,7 @@
 #include "VmController.hpp"
 #include "FlashDriveController.hpp"
 #include "NetworkController.hpp"
-#include "../Register.hpp"
+//#include "../Register.hpp"
 
 struct Environment {
 	Environment(const nlohmann::json& config) {

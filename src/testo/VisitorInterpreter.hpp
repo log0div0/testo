@@ -69,7 +69,7 @@ struct VisitorInterpreter {
 		Token token;
 	};
 
-	VisitorInterpreter(const nlohmann::json& config);
+	VisitorInterpreter(std::shared_ptr<Register> reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_test(std::shared_ptr<AST::Test> test);
@@ -156,7 +156,7 @@ private:
 	void update_progress();
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
-		for (auto vmc: reg.get_all_vmcs(test)) {
+		for (auto vmc: reg->get_all_vmcs(test)) {
 			if (vmc->is_defined()) {
 				if (vmc->vm->state() != VmState::Stopped) {
 					vmc->vm->stop();
@@ -177,6 +177,7 @@ private:
 	std::string copy_default_timeout;
 
 	coro::Timer timer;
+	std::shared_ptr<Register> reg;
 
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 

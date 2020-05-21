@@ -34,5 +34,3 @@ struct Register {
 private:
 	std::set<std::shared_ptr<FlashDriveController>> extract_fdcs_from_action(std::shared_ptr<AST::IAction> action) const;
 };
-
-extern Register reg;

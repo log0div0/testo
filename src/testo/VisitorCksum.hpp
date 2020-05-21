@@ -8,7 +8,7 @@
 #include "backends/VmController.hpp"
 
 struct VisitorCksum {
-	VisitorCksum(Register& reg): reg(reg) {}
+	VisitorCksum(std::shared_ptr<Register> reg): reg(reg) {}
 
 	uint64_t visit(std::shared_ptr<AST::Test> test);
 	std::string visit_cmd(std::shared_ptr<AST::Cmd> cmd);
@@ -39,6 +39,6 @@ struct VisitorCksum {
 	std::string visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
 	std::string visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
 
-	Register& reg;
+	std::shared_ptr<Register> reg;
 	template_literals::Parser template_parser;
 };

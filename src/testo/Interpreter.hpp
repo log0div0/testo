@@ -12,7 +12,9 @@ struct Interpreter {
 	Interpreter(const fs::path& dir, const std::string& input, const nlohmann::json& config);
 	int run();
 private:
+	std::shared_ptr<Register> reg;
 	nn::OnnxRuntime onnx_runtime;
 	Parser parser;
 	nlohmann::json config;
+
 };
