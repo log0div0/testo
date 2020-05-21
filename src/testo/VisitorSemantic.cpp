@@ -312,19 +312,6 @@ void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
-	/*bool is_test_queued = false;
-
-	for (auto queued: tests_queue) {
-		if (queued->name.value() == test->name.value()) {
-			is_test_queued = true;
-			break;
-		}
-	}
-
-	if (!is_test_queued) {
-		return;
-	}*/
-
 	if (std::find(tests_queue.begin(), tests_queue.end(), test) == tests_queue.end()) {
 		return;
 	}
@@ -616,12 +603,6 @@ void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
 }
 
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
-	auto macro = reg->macros.find(macro_call->name());
-	if (macro == reg->macros.end()) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
-	}
-	macro_call->macro = macro->second;
-
 	uint32_t args_with_default = 0;
 
 	for (auto arg: macro_call->macro->args) {
@@ -758,6 +739,19 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 
 
 void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
+	bool is_used = false;
+	for (auto test: tests_queue) {
+		auto machines = reg->get_all_vm_names(test);
+		if (machines.find(machine->name.value()) != machines.end()) {
+			is_used = true;
+			break;
+		}
+	}
+
+	if (!is_used) {
+		return;
+	}
+
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["prefix"] = prefix;
 	config["name"] = machine->name.value();
@@ -791,6 +785,20 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
+	bool is_used = false;
+	for (auto test: tests_queue) {
+		auto fds = reg->get_all_fd_names(test);
+		if (fds.find(flash->name.value()) != fds.end()) {
+			is_used = true;
+			break;
+		}
+	}
+
+	if (!is_used) {
+		return;
+	}
+
+
 	//no need to check for duplicates
 	//It's already done in Parser while registering Controller
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
