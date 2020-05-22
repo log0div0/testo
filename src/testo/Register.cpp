@@ -9,60 +9,6 @@ Register::~Register() {
 	}
 }
 
-std::set<std::string> Register::get_all_controller_names(std::shared_ptr<AST::Test> test) const {
-	std::set<std::string> result;
-
-	auto vms = get_all_vm_names(test);
-	result.insert(vms.begin(), vms.end());
-
-	auto fds = get_all_fd_names(test);
-	result.insert(fds.begin(), fds.end());
-
-	return result;
-}
-
-std::set<std::string> Register::extract_fd_names_from_action(std::shared_ptr<AST::IAction> action) const {
-	std::set<std::string> result;
-
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		if (p->action->type.value() == "flash") {
-			result.insert(p->action->name_token.value());
-		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		for (auto action: p->action->actions) {
-			auto tmp = extract_fd_names_from_action(action);
-			result.insert(tmp.begin(), tmp.end());
-		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		auto tmp = extract_fd_names_from_action(p->action->macro->action_block);
-		result.insert(tmp.begin(), tmp.end());
-	}
-
-	return result;
-}
-
-std::set<std::string> Register::get_all_fd_names(std::shared_ptr<AST::Test> test) const {
-	std::set<std::string> result;
-
-	for (auto command: test->cmd_block->commands) {
-		auto fds = extract_fd_names_from_action(command->action);
-		result.insert(fds.begin(), fds.end());
-	}
-	return result;
-}
-
-std::set<std::string> Register::get_all_vm_names(std::shared_ptr<AST::Test> test) const {
-	std::set<std::string> result;
-
-	for (auto command: test->cmd_block->commands) {
-		for (auto vm_token: command->vms) {
-			result.insert(vm_token.value());
-		}
-	}
-
-	return result;
-}
-
 std::set<std::shared_ptr<Controller>> Register::get_all_controllers(std::shared_ptr<AST::Test> test) const {
 	std::set<std::shared_ptr<Controller>> result;
 

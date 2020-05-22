@@ -741,7 +741,7 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	bool is_used = false;
 	for (auto test: tests_queue) {
-		auto machines = reg->get_all_vm_names(test);
+		auto machines = test->get_all_vm_names();
 		if (machines.find(machine->name.value()) != machines.end()) {
 			is_used = true;
 			break;
@@ -787,7 +787,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	bool is_used = false;
 	for (auto test: tests_queue) {
-		auto fds = reg->get_all_fd_names(test);
+		auto fds = test->get_all_fd_names();
 		if (fds.find(flash->name.value()) != fds.end()) {
 			is_used = true;
 			break;
@@ -797,7 +797,6 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	if (!is_used) {
 		return;
 	}
-
 
 	//no need to check for duplicates
 	//It's already done in Parser while registering Controller

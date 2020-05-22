@@ -24,13 +24,6 @@ struct Register {
 
 	std::vector<StackEntry> local_vars;
 
-	std::set<std::string> get_all_controller_names(std::shared_ptr<AST::Test> test) const;
-	std::set<std::string> extract_fd_names_from_action(std::shared_ptr<AST::IAction> action) const;
-	std::set<std::string> get_all_fd_names(std::shared_ptr<AST::Test> test) const;
-	std::set<std::string> get_all_vm_names(std::shared_ptr<AST::Test> test) const;
-
-
-	std::set<std::string> get_all_conrtollers_names(std::shared_ptr<AST::Test> test) const;
 	std::set<std::shared_ptr<Controller>> get_all_controllers(std::shared_ptr<AST::Test> test) const;
 	std::set<std::shared_ptr<VmController>> get_all_vmcs(std::shared_ptr<AST::Test> test) const;
 	std::set<std::shared_ptr<NetworkController>> get_all_netcs(std::shared_ptr<AST::Test> test) const;
