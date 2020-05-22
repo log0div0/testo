@@ -3,11 +3,12 @@
 #include "coro/Finally.h"
 #include "js/Context.hpp"
 #include <fmt/format.h>
+#include <wildcards.hpp>
 
-VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
-	reg(reg)
-{
+VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::json& config): reg(reg) {
 	prefix = config.at("prefix").get<std::string>();
+	test_spec = config.at("test_spec").get<std::string>();
+	exclude = config.at("exclude").get<std::string>();
 
 	keys.insert("ESC");
 	keys.insert("ONE");
@@ -165,9 +166,16 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 		auto name = param.at("name").get<std::string>();
 		auto value = param.at("value").get<std::string>();
 
-		if (reg.params.find(name) != reg.params.end()) {
-			throw std::runtime_error("Error: param with name " + name +
-				" already exists");
+		if (reg->params.find(name) != reg->params.end()) {
+			throw std::runtime_error("Error: param \"" + name +
+				"\" already exists");
+		}
+
+		auto node_found = reg->param_nodes.find(name);
+
+		if (node_found != reg->param_nodes.end()) {
+			throw std::runtime_error("Error: param with name \"" + name +
+				"\" is already defined here: " + std::string((*node_found).second->begin()));
 		}
 
 		if (testo_timeout_params.find(name) != testo_timeout_params.end()) {
@@ -176,7 +184,7 @@ VisitorSemantic::VisitorSemantic(Register& reg, const nlohmann::json& config):
 			}
 		}
 
-		if (!reg.params.insert({name, value}).second) {
+		if (!reg->params.insert({name, value}).second) {
 			throw std::runtime_error("Error: while registering param with name " + name);
 		}
 	}
@@ -195,7 +203,58 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
+void VisitorSemantic::setup_tests_parents(std::shared_ptr<AST::Program> program) {
+	for (auto stmt: program->stmts) {
+		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
+			auto test = p->stmt;
+
+			for (auto parent_token: test->parents_tokens) {
+				auto parent = reg->tests.find(parent_token.value());
+				if (parent == reg->tests.end()) {
+					throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
+				}
+
+				for (auto already_included: test->parents) {
+					if (already_included == parent->second) {
+						throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
+					}
+				}
+
+				test->parents.push_back(parent->second);
+
+				if (parent_token.value() == test->name.value()) {
+					throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
+				}
+			}
+		}
+	}
+}
+
+
+void VisitorSemantic::setup_vars(std::shared_ptr<AST::Program> program) {
+	for (auto stmt: program->stmts) {
+		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
+			auto test = p->stmt;
+			//invalidate tests at request
+			//So for every test
+			//we need to check if it's suitable for test spec
+			//if it is - push back to list and remove all the parents duplicates
+
+			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
+				continue;
+			}
+
+			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
+				continue;
+			}
+			concat_unique(tests_queue, reg->get_test_path(test));
+		}
+	}
+}
+
 void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
+	setup_tests_parents(program);
+	setup_vars(program);
 	for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
 	}
@@ -216,18 +275,6 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
 }
 
 void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
-	// std::cout << "Registering macro " << macro->name.value() << std::endl;
-
-	if (reg.macros.find(macro->name) != reg.macros.end()) {
-		throw std::runtime_error(std::string(macro->begin()) + ": Error: macro with name " + macro->name.value() +
-			" already exists");
-	}
-
-	if (!reg.macros.insert({macro->name, macro}).second) {
-		throw std::runtime_error(std::string(macro->begin()) + ": Error while registering macro with name " +
-			macro->name.value());
-	}
-
 	for (size_t i = 0; i < macro->args.size(); ++i) {
 		for (size_t j = i + 1; j < macro->args.size(); ++j) {
 			if (macro->args[i]->name() == macro->args[j]->name()) {
@@ -250,11 +297,6 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 }
 
 void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
-	if (reg.params.find(param->name) != reg.params.end()) {
-		throw std::runtime_error(std::string(param->begin()) + ": Error: param with name " + param->name.value() +
-			" already exists");
-	}
-
 	auto value = template_parser.resolve(param->value->text(), reg);
 
 	if (testo_timeout_params.find(param->name) != testo_timeout_params.end()) {
@@ -263,13 +305,17 @@ void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
 		}
 	}
 
-	if (!reg.params.insert({param->name.value(), value}).second) {
+	if (!reg->params.insert({param->name.value(), value}).second) {
 		throw std::runtime_error(std::string(param->begin()) + ": Error while registering param with name " +
 			param->name.value());
 	}
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
+	if (std::find(tests_queue.begin(), tests_queue.end(), test) == tests_queue.end()) {
+		return;
+	}
+
 	//Check for duplicates in attrs
 	nlohmann::json attrs = nlohmann::json::object();
 
@@ -287,30 +333,6 @@ void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
 		test->description = attrs.at("description").get<std::string>();
 	}
 
-	for (auto parent_token: test->parents_tokens) {
-		auto parent = reg.tests.find(parent_token.value());
-		if (parent == reg.tests.end()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
-		}
-
-		for (auto already_included: test->parents) {
-			if (already_included == parent->second) {
-				throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
-			}
-		}
-
-		test->parents.push_back(parent->second);
-
-		if (parent_token.value() == test->name.value()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
-		}
-	}
-
-	if (!reg.tests.insert({test->name.value(), test}).second) {
-		throw std::runtime_error(std::string(test->begin()) + ": Error test is already defined: " +
-			test->name.value());
-	}
-
 	visit_command_block(test->cmd_block);
 
 	//Now that we've checked that all commands are ligit we could check that
@@ -321,7 +343,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
 
 	//populate our parents paths
 	for (auto parent: test->parents) {
-		parents_subtries.push_back(reg.get_all_vmcs(parent));
+		parents_subtries.push_back(reg->get_all_vmcs(parent));
 	}
 
 	//check that parents path are independent
@@ -354,8 +376,8 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	std::set<std::shared_ptr<VmController>> unique_vmcs;
 	for (auto vm_token: cmd->vms) {
-		auto vmc = reg.vmcs.find(vm_token.value());
-		if (vmc == reg.vmcs.end()) {
+		auto vmc = reg->vmcs.find(vm_token.value());
+		if (vmc == reg->vmcs.end()) {
 			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: unknown vitrual machine name: " + vm_token.value());
 		}
 
@@ -515,7 +537,7 @@ void VisitorSemantic::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
 
 void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 	if (plug->type.value() == "flash") {
-		if (reg.fdcs.find(plug->name_token.value()) == reg.fdcs.end()) {
+		if (reg->fdcs.find(plug->name_token.value()) == reg->fdcs.end()) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
 		}
 	}
@@ -581,12 +603,6 @@ void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
 }
 
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
-	auto macro = reg.macros.find(macro_call->name());
-	if (macro == reg.macros.end()) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
-	}
-	macro_call->macro = macro->second;
-
 	uint32_t args_with_default = 0;
 
 	for (auto arg: macro_call->macro->args) {
@@ -618,9 +634,9 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 		new_ctx.define(macro_call->macro->args[i]->name(), value);
 	}
 
-	reg.local_vars.push_back(new_ctx);
+	reg->local_vars.push_back(new_ctx);
 	coro::Finally finally([&] {
-		reg.local_vars.pop_back();
+		reg->local_vars.pop_back();
 	});
 
 	visit_action_block(macro_call->macro->action_block->action);
@@ -693,14 +709,14 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 	}
 
 	StackEntry new_ctx(false);
-	reg.local_vars.push_back(new_ctx);
-	size_t ctx_position = reg.local_vars.size() - 1;
+	reg->local_vars.push_back(new_ctx);
+	size_t ctx_position = reg->local_vars.size() - 1;
 	coro::Finally finally([&]{
-		reg.local_vars.pop_back();
+		reg->local_vars.pop_back();
 	});
 
 	for (auto i: for_clause->counter_list->values()) {
-		reg.local_vars[ctx_position].define(for_clause->counter.value(), i);
+		reg->local_vars[ctx_position].define(for_clause->counter.value(), i);
 		visit_action(for_clause->cycle_body);
 	}
 
@@ -723,10 +739,17 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 
 
 void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
-	// std::cout << "Registering machine " << machine->name.value() << std::endl;
-	if (reg.vmcs.find(machine->name) != reg.vmcs.end()) {
-		throw std::runtime_error(std::string(machine->begin()) + ": Error: machine with name " + machine->name.value() +
-			" already exists");
+	bool is_used = false;
+	for (auto test: tests_queue) {
+		auto machines = test->get_all_vm_names();
+		if (machines.find(machine->name.value()) != machines.end()) {
+			is_used = true;
+			break;
+		}
+	}
+
+	if (!is_used) {
+		return;
 	}
 
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
@@ -751,23 +774,32 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	config["iso"] = iso_file.generic_string();
 
 	auto vmc = env->create_vm_controller(config);
-	reg.vmcs.emplace(std::make_pair(machine->name, vmc));
+	reg->vmcs.emplace(std::make_pair(machine->name, vmc));
 
 	//additional check that all the networks are defined earlier
 	for (auto network: vmc->vm->networks()) {
-		if (reg.netcs.find(network) == reg.netcs.end()) {
+		if (reg->netcs.find(network) == reg->netcs.end()) {
 			throw std::runtime_error(std::string(machine->begin()) + ": Error: specified network " + network + " is not defined");
 		}
 	}
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
-	// std::cout << "Registering flash " << flash->name.value() << std::endl;
-	if (reg.fdcs.find(flash->name) != reg.fdcs.end()) {
-		throw std::runtime_error(std::string(flash->begin()) + ": Error: flash drive with name " + flash->name.value() +
-			" already exists");
+	bool is_used = false;
+	for (auto test: tests_queue) {
+		auto fds = test->get_all_fd_names();
+		if (fds.find(flash->name.value()) != fds.end()) {
+			is_used = true;
+			break;
+		}
 	}
 
+	if (!is_used) {
+		return;
+	}
+
+	//no need to check for duplicates
+	//It's already done in Parser while registering Controller
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
 	config["prefix"] = prefix;
 	config["name"] = flash->name.value();
@@ -779,23 +811,17 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 		fdc->fd->validate_folder();
 	}
 
-	reg.fdcs.emplace(std::make_pair(flash->name, fdc));
+	reg->fdcs.emplace(std::make_pair(flash->name, fdc));
 }
 
 void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
-	// std::cout << "Registering network " << network->name.value() << std::endl;
-	if (reg.netcs.find(network->name) != reg.netcs.end()) {
-		throw std::runtime_error(std::string(network->begin()) + ": Error: network with name " + network->name.value() +
-			" already exists");
-	}
-
 	auto config = visit_attr_block(network->attr_block, "network_global");
 	config["prefix"] = prefix;
 	config["name"] = network->name.value();
 	config["src_file"] = network->name.begin().file.generic_string();
 
 	auto netc = env->create_network_controller(config);
-	reg.netcs.emplace(std::make_pair(network->name, netc));
+	reg->netcs.emplace(std::make_pair(network->name, netc));
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {

@@ -17,6 +17,10 @@ struct Node {
 	virtual Pos end() const = 0;
 	virtual operator std::string() const = 0;
 
+	virtual std::set<std::string> get_all_fd_names() const {
+		return {};
+	}
+
 	Token t;
 };
 
@@ -197,6 +201,10 @@ struct Action: public IAction {
 
 	void set_delim (const Token& delim) {
 		this->delim = delim;
+	}
+
+	std::set<std::string> get_all_fd_names() const override {
+		return action->get_all_fd_names();
 	}
 
 	std::shared_ptr<ActionType> action;
@@ -758,6 +766,13 @@ struct Plug: public Node {
 		return (t.type() == Token::category::plug);
 	}
 
+	std::set<std::string> get_all_fd_names() const override {
+		if (type.value() == "flash") {
+			return {name_token.value()};
+		}
+		return {};
+	}
+
 	Token type; //nic or flash or dvd
 	Token name_token; //name of resource to be plugged/unplugged
 	std::shared_ptr<String> path; //used only for dvd
@@ -917,6 +932,16 @@ struct ActionBlock: public Node {
 			result += std::string(*action);
 
 		}
+		return result;
+	}
+
+	std::set<std::string> get_all_fd_names() const override {
+		std::set<std::string> result;
+		for (auto action: actions) {
+			auto tmp = action->get_all_fd_names();
+			result.insert(tmp.begin(), tmp.end());
+		}
+
 		return result;
 	}
 
@@ -1097,6 +1122,10 @@ struct MacroCall: public Node {
 		return t;
 	}
 
+	std::set<std::string> get_all_fd_names() const override {
+		return macro->action_block->get_all_fd_names();
+	}
+
 	std::shared_ptr<Macro> macro;
 	std::vector<std::shared_ptr<String>> args;
 };
@@ -1264,6 +1293,28 @@ struct Test: public Node {
 	operator std::string() const {
 		std::string result = t.value() + " " + name.value();
 		return result; //for now
+	}
+
+	std::set<std::string> get_all_vm_names() const {
+		std::set<std::string> result;
+
+		for (auto command: cmd_block->commands) {
+			for (auto vm_token: command->vms) {
+				result.insert(vm_token.value());
+			}
+		}
+		return result;
+	}
+
+	std::set<std::string> get_all_fd_names() const override {
+		std::set<std::string> result;
+
+		for (auto command: cmd_block->commands) {
+			auto fds = command->action->get_all_fd_names();
+			result.insert(fds.begin(), fds.end());
+		}
+
+		return result;
 	}
 
 	std::shared_ptr<AttrBlock> attrs;
