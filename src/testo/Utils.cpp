@@ -60,18 +60,12 @@ uint32_t time_to_milliseconds(const std::string& time) {
 	return milliseconds;
 }
 
-void exec_and_throw_if_failed(const std::string& command) {
-	if (std::system(command.c_str())) {
-		throw std::runtime_error("Command failed: " + command);
-	}
-}
-
-std::string file_signature(const fs::path& file) {
+std::string file_signature(const fs::path& file, uint64_t thresh) {
 	if (!fs::exists(file)) {
 		return file.filename().generic_string() + "not exists";
 	}
 
-	if(fs::file_size(file) > 1048576) { //1Mb
+	if(fs::file_size(file) > thresh) { //1Mb
 		auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
 		return file.filename().generic_string() + std::to_string(last_modify_time);
 	} else {
@@ -86,13 +80,13 @@ std::string file_signature(const fs::path& file) {
 
 }
 
-std::string directory_signature(const fs::path& dir) {
+std::string directory_signature(const fs::path& dir, uint64_t thresh) {
 	std::string result("");
 	for (auto& file: fs::directory_iterator(dir)) {
 		if (fs::is_regular_file(file)) {
-			result += file_signature(file);
+			result += file_signature(file, thresh);
 		} else if (fs::is_directory(file)) {
-			result += directory_signature(file);
+			result += directory_signature(file, thresh);
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
 		}

@@ -31,7 +31,10 @@ struct ProcessError: std::runtime_error {
 };
 
 struct Process {
+	static std::pair<std::string, int> exec_no_throw(const std::string& cmd);
 	static std::string exec(const std::string& cmd);
+	static bool is_succeeded(const std::string& cmd);
+	static bool is_failed(const std::string& cmd);
 
 	Process(const std::string& cmd);
 	~Process();

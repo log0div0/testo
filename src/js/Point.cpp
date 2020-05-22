@@ -16,8 +16,8 @@ static void finalizer(JSRuntime* rt, JSValue val) {
 static Value toJSON(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
 	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
 	Value result = ctx.new_object();
-	result.set_property("x", ctx.new_int32(point->x));
-	result.set_property("y", ctx.new_int32(point->y));
+	result.set_property_str("x", ctx.new_int32(point->x));
+	result.set_property_str("y", ctx.new_int32(point->y));
 	return result;
 }
 

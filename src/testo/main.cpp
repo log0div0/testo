@@ -22,8 +22,6 @@
 #include <fmt/format.h>
 #include <fstream>
 
-#include <license/License.hpp>
-
 using namespace clipp;
 
 struct Interruption {};
@@ -44,12 +42,15 @@ struct console_args {
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
 
+	std::string content_cksum_maxsize = "1";
+
 	bool show_help = false;
 	bool show_version = false;
 	bool stop_on_fail = false;
 	bool assume_yes = false;
 	bool report_logs = false;
 	bool report_screenshots = false;
+	bool html = false;
 };
 
 console_args args;
@@ -151,13 +152,6 @@ int clean_mode() {
 }
 
 int run_mode() {
-	if (!args.license.size()) {
-		std::cout << "Необходимо указать путь к файлу с лицензией (параметр --license)" << std::endl;
-		return 1;
-	}
-
-	verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
-
 	auto params = nlohmann::json::array();
 
 	for (size_t i = 0; i < args.params_names.size(); ++i) {
@@ -177,7 +171,9 @@ int run_mode() {
 		{"report_folder", args.report_folder},
 		{"report_logs", args.report_logs},
 		{"report_screenshots", args.report_screenshots},
+		{"html", args.html},
 		{"prefix", args.prefix},
+		{"license", args.license},
 		{"params", params}
 	};
 
@@ -228,6 +224,8 @@ int do_main(int argc, char** argv) {
 		(option("--report_folder") & value("/path/to/folder", args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(args.report_logs)) % "Save text output in report folder",
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
+		(option("--content_cksum_maxsize") & value("Size in Megabytes", args.content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
+		(option("--html").set(args.html)) % "Format stdout as html",
 		(option("--license") & value("path", args.license)) % "Path to license file",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
@@ -256,27 +254,39 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
+	for (auto c: args.content_cksum_maxsize) {
+		if (!isdigit(c)) {
+			throw std::runtime_error("content_cksum_maxsize must be a number");
+		}
+	}
+
+	nlohmann::json env_config= {
+		{"content_cksum_maxsize", std::stoul(args.content_cksum_maxsize)}
+	};
+
 	if (args.hypervisor == "qemu") {
 #ifndef __linux__
 		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
 #else
-		env = std::make_shared<QemuEnvironment>();
+		env = std::make_shared<QemuEnvironment>(env_config);
 #endif
 	} else if (args.hypervisor == "vbox") {
-		env = std::make_shared<VboxEnvironment>();
+		env = std::make_shared<VboxEnvironment>(env_config);
 	} else if (args.hypervisor == "hyperv") {
 #ifndef WIN32
 		throw std::runtime_error("Can't use hyperv not in Windows");
 #else
-		env = std::make_shared<HyperVEnvironment>();
+		env = std::make_shared<HyperVEnvironment>(env_config);
 #endif
 	} else if (args.hypervisor == "vsphere") {
 		throw std::runtime_error("TODO");
 	} else if (args.hypervisor == "dummy") {
-		env = std::make_shared<DummyEnvironment>();
+		env = std::make_shared<DummyEnvironment>(env_config);
 	} else {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + args.hypervisor);
 	}
+
+	
 
 	coro::CoroPool pool;
 	pool.exec([&] {

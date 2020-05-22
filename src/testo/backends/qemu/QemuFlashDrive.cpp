@@ -4,29 +4,33 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuEnvironment.hpp"
 #include "coro/Timer.h"
+#include "coro/Timeout.h"
+#include "process/Process.hpp"
 #include <thread>
 #include <fstream>
+#include <regex>
+#include <linux/nbd.h>
+
+using namespace std::chrono_literals;
 
 QemuNbd::QemuNbd(const fs::path& img_path) {
-	coro::Timer timer;
-	auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(120);
+	try {
+		coro::Timeout timeout{30s};
+		coro::Timer timer;
 
-	while (std::chrono::system_clock::now() < deadline) {
-		std::string fdisk = "fdisk -l | grep nbd0 > /dev/null";
-		if (std::system(fdisk.c_str()) == 0) {
-			timer.waitFor(std::chrono::seconds(2));
-			continue;
+		while (Process::is_succeeded("fdisk -l | grep nbd0")) {
+			timer.waitFor(2s);
 		}
 
-		exec_and_throw_if_failed("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path.generic_string() + "\"");
-		return;
+		Process::exec("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path.generic_string() + "\"");
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Trying plug flash drive to any free nbd slot"));
 	}
-	
-	throw std::runtime_error("Timeout for trying plug flash drive to any free nbd slot");
 }
 
 QemuNbd::~QemuNbd() {
-	std::system("qemu-nbd -d /dev/nbd0");
+	sync();
+	Process::exec("qemu-nbd -d /dev/nbd0");
 }
 
 QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config_),
@@ -133,12 +137,12 @@ void QemuFlashDrive::create() {
 
 		QemuNbd nbd_tmp(img_path());
 
-		exec_and_throw_if_failed("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary ntfs 0% 100%");
+		Process::exec("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary ntfs 0% 100%");
 		auto fs = config.at("fs").get<std::string>();
 		if (fs == "ntfs") {
-			exec_and_throw_if_failed("mkfs." + fs + " -f /dev/nbd0p1");
+			Process::exec("mkfs." + fs + " -f /dev/nbd0p1");
 		} else {
-			exec_and_throw_if_failed("mkfs." + fs + " /dev/nbd0p1");
+			Process::exec("mkfs." + fs + " /dev/nbd0p1");
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating flash drive"));
@@ -154,13 +158,20 @@ void QemuFlashDrive::undefine() {
 
 bool QemuFlashDrive::is_mounted() const {
 	std::string query = "mountpoint -q \"" +env->flash_drives_mount_dir().generic_string() + "\"";
-	return (std::system(query.c_str()) == 0);
+	return Process::is_succeeded(query.c_str());
 }
 
 void QemuFlashDrive::mount() {
 	try {
 		nbd.reset(new QemuNbd(img_path()));
-		exec_and_throw_if_failed("mount /dev/nbd0p1 " + env->flash_drives_mount_dir().generic_string());
+		{
+			coro::Timeout timeout{30s};
+			coro::Timer timer;
+			while (Process::is_failed("ls /dev/nbd0p1")) {
+				timer.waitFor(1s);
+			}
+		}
+		Process::exec("mount /dev/nbd0p1 " + env->flash_drives_mount_dir().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
 	}
@@ -168,7 +179,8 @@ void QemuFlashDrive::mount() {
 
 void QemuFlashDrive::umount() {
 	try {
-		exec_and_throw_if_failed("umount /dev/nbd0p1");
+		sync();
+		Process::exec("umount /dev/nbd0p1");
 		nbd.reset(nullptr);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
@@ -177,8 +189,11 @@ void QemuFlashDrive::umount() {
 
 bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
 	try {
-		std::string check = "qemu-img snapshot -l " + img_path().generic_string() + " | grep " + snapshot + " > /dev/null";
-		if (std::system(check.c_str()) == 0) {
+		std::string command = "qemu-img snapshot -l " + img_path().generic_string();
+		std::string output = Process::exec(command);
+		std::regex re("\\bwin10_x86_tls_install\\b");
+		std::smatch match;
+		if (std::regex_search(output, match, re)) {
 			return true;
 		}
 		return false;
@@ -189,7 +204,7 @@ bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
 
 void QemuFlashDrive::make_snapshot(const std::string& snapshot) {
 	try {
-		exec_and_throw_if_failed("qemu-img snapshot -c " + snapshot + " " + img_path().generic_string());
+		Process::exec("qemu-img snapshot -c " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive making snapshot"));
 	}
@@ -197,7 +212,7 @@ void QemuFlashDrive::make_snapshot(const std::string& snapshot) {
 
 void QemuFlashDrive::delete_snapshot(const std::string& snapshot) {
 	try {
-		exec_and_throw_if_failed("qemu-img snapshot -d " + snapshot + " " + img_path().generic_string());
+		Process::exec("qemu-img snapshot -d " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive deleting snapshot"));
 	}
@@ -205,7 +220,7 @@ void QemuFlashDrive::delete_snapshot(const std::string& snapshot) {
 
 void QemuFlashDrive::rollback(const std::string& snapshot) {
 	try {
-		exec_and_throw_if_failed("qemu-img snapshot -a " + snapshot + " " + img_path().generic_string());
+		Process::exec("qemu-img snapshot -a " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive rolling back"));
 	}

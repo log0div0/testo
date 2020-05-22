@@ -49,7 +49,7 @@ void FlashDriveController::create() {
 				folder = src_file.parent_path() / folder;
 			}
 			folder = fs::canonical(folder);
-			cksum_input += directory_signature(folder);
+			cksum_input += directory_signature(folder, env->content_cksum_maxsize());
 		}
 
 		std::hash<std::string> h;
@@ -94,7 +94,7 @@ void FlashDriveController::undefine() {
 			}
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("undefining network controller"));
+		std::throw_with_nested(std::runtime_error("undefining flash drive controller"));
 	}
 }
 
@@ -211,7 +211,7 @@ bool FlashDriveController::check_config_relevance() {
 			folder = src_file.parent_path() / folder;
 		}
 		folder = fs::canonical(folder);
-		cksum_input += directory_signature(folder);
+		cksum_input += directory_signature(folder, env->content_cksum_maxsize());
 	}
 
 	std::hash<std::string> h;

@@ -24,10 +24,9 @@ static void backtrace(std::ostream& stream, const std::exception& error) {
 
 bool check_if_time_interval(const std::string& time);
 uint32_t time_to_milliseconds(const std::string& time);
-void exec_and_throw_if_failed(const std::string& command);
 
-std::string file_signature(const fs::path& file);
-std::string directory_signature(const fs::path& dir);
+std::string file_signature(const fs::path& file, uint64_t thresh);
+std::string directory_signature(const fs::path& dir, uint64_t thresh);
 
 bool is_number(const std::string& s);
 

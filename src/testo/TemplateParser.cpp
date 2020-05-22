@@ -3,8 +3,8 @@
 
 namespace template_literals {
 
-std::string Parser::resolve_var(const std::string& var, Register& reg) {
-	for (auto it = reg.local_vars.rbegin(); it != reg.local_vars.rend(); ++it) {
+std::string Parser::resolve_var(const std::string& var, std::shared_ptr<Register> reg) {
+	for (auto it = reg->local_vars.rbegin(); it != reg->local_vars.rend(); ++it) {
 		if (it->is_defined(var)) {
 			return it->ref(var);
 		}
@@ -13,15 +13,15 @@ std::string Parser::resolve_var(const std::string& var, Register& reg) {
 		}
 	}
 
-	auto found = reg.params.find(var);
-	if (found == reg.params.end()) {
+	auto found = reg->params.find(var);
+	if (found == reg->params.end()) {
 		return "";
 	}
 
 	return found->second;
 }
 
-std::string Parser::resolve(const std::string& input, Register& reg) {
+std::string Parser::resolve(const std::string& input, std::shared_ptr<Register> reg) {
 	this->input = input;
 	current_pos = Pos(input);
 

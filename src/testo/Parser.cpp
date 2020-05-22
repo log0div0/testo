@@ -2,11 +2,12 @@
 #include "Parser.hpp"
 #include "Utils.hpp"
 #include "TemplateParser.hpp"
+#include "Register.hpp"
 #include <fstream>
 
 using namespace AST;
 
-Parser::Parser(const fs::path& file, const std::string& input)
+Parser::Parser(std::shared_ptr<Register> reg, const fs::path& file, const std::string& input): reg(reg)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
@@ -273,6 +274,13 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	newline_list();
 	auto commands = command_block();
 	auto stmt = std::shared_ptr<Test>(new Test(attrs, test, name, parents, commands));
+
+	auto inserted = reg->tests.insert({stmt->name.value(), stmt});
+	if (!inserted.second) {
+		throw std::runtime_error(std::string(stmt->begin()) + ": Error: test \"" + stmt->name.value() + "\" is already defined here: " + 
+			std::string(inserted.first->second->begin()));
+	}
+
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 
@@ -324,6 +332,13 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	auto actions = action_block();
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, actions));
+
+	auto inserted = reg->macros.insert({stmt->name.value(), stmt});
+	if (!inserted.second) {
+		throw std::runtime_error(std::string(stmt->begin()) + ": Error: macro \"" + stmt->name.value() + "\" is already defined here: " + 
+			std::string(inserted.first->second->begin()));
+	}
+
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
 
@@ -337,6 +352,13 @@ std::shared_ptr<Stmt<Param>> Parser::param() {
 	auto value = string();
 
 	auto stmt = std::shared_ptr<Param>(new Param(param_token, name, value));
+
+	auto inserted = reg->param_nodes.insert({stmt->name.value(), stmt});
+	if (!inserted.second) {
+		throw std::runtime_error(std::string(stmt->begin()) + ": Error: param \"" + stmt->name.value() + "\" is already defined here: " + 
+			std::string(inserted.first->second->begin()));
+	}
+
 	return std::shared_ptr<Stmt<Param>>(new Stmt<Param>(stmt));
 }
 
@@ -429,6 +451,13 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 	}
 	auto block = attr_block();
 	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
+
+	auto inserted = reg->controllers.insert({stmt->name.value(), stmt});
+	if (!inserted.second) {
+		throw std::runtime_error(std::string(stmt->begin()) + ": Error: entity \"" + stmt->name.value() + "\" is already defined here: " + 
+			std::string(inserted.first->second->begin()));
+	}
+
 	return std::shared_ptr<AST::Stmt<AST::Controller>>(new AST::Stmt<AST::Controller>(stmt));
 }
 
@@ -988,6 +1017,13 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 	match(Token::category::rparen);
 
 	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
+
+	auto macro = reg->macros.find(macro_name.value());
+	if (macro == reg->macros.end()) {
+		throw std::runtime_error(std::string(action->begin()) + ": Error: unknown macro: " + action->name().value());
+	}
+	action->macro = macro->second;
+
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
 }
 

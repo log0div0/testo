@@ -9,7 +9,9 @@
 #include <set>
 
 struct VisitorSemantic {
-	VisitorSemantic(Register& reg, const nlohmann::json& config);
+	VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::json& config);
+	void setup_tests_parents(std::shared_ptr<AST::Program> program);
+	void setup_vars(std::shared_ptr<AST::Program> program);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
@@ -58,13 +60,16 @@ struct VisitorSemantic {
 	std::set<std::string> keys;
 
 	std::string prefix;
+	std::string test_spec, exclude;
+
+	std::shared_ptr<Register> reg;
 
 	//bool is for "requires a name"
 	using attr_ctx = std::unordered_map<std::string, std::pair<bool, Token::category>>;
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
-
-	Register& reg;
 	template_literals::Parser template_parser;
 
 	std::set<std::string> testo_timeout_params;
+
+	std::list<std::shared_ptr<AST::Test>> tests_queue;
 };

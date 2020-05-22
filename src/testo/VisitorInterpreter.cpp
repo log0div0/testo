@@ -2,6 +2,8 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
 
+#include <license/License.hpp>
+
 #include "coro/Finally.h"
 #include "coro/CheckPoint.h"
 #include "utf8.hpp"
@@ -20,7 +22,7 @@ static void sleep(const std::string& interval) {
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
-VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& config): reg(reg) {
+VisitorInterpreter::VisitorInterpreter(std::shared_ptr<Register> reg, const nlohmann::json& config): reg(reg) {
 	reporter = Reporter(config);
 
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
@@ -28,6 +30,7 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
+	license = config.at("license").get<std::string>();
 
 	charmap.insert({
 		{"0", {"ZERO"}},
@@ -198,40 +201,40 @@ VisitorInterpreter::VisitorInterpreter(Register& reg, const nlohmann::json& conf
 		{" ", {"SPACE"}}
 	});
 
-	auto wait_timeout_found = reg.params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
-	wait_default_timeout = (wait_timeout_found != reg.params.end()) ? wait_timeout_found->second : "1m";
+	auto wait_timeout_found = reg->params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
+	wait_default_timeout = (wait_timeout_found != reg->params.end()) ? wait_timeout_found->second : "1m";
 
-	auto wait_interval_found = reg.params.find("TESTO_WAIT_DEFAULT_INTERVAL");
-	wait_default_interval = (wait_interval_found != reg.params.end()) ? wait_interval_found->second : "1s";
+	auto wait_interval_found = reg->params.find("TESTO_WAIT_DEFAULT_INTERVAL");
+	wait_default_interval = (wait_interval_found != reg->params.end()) ? wait_interval_found->second : "1s";
 
-	auto check_timeout_found = reg.params.find("TESTO_CHECK_DEFAULT_TIMEOUT");
-	check_default_timeout = (check_timeout_found != reg.params.end()) ? check_timeout_found->second : "1ms";
+	auto check_timeout_found = reg->params.find("TESTO_CHECK_DEFAULT_TIMEOUT");
+	check_default_timeout = (check_timeout_found != reg->params.end()) ? check_timeout_found->second : "1ms";
 
-	auto check_interval_found = reg.params.find("TESTO_CHECK_DEFAULT_INTERVAL");
-	check_default_interval = (check_interval_found != reg.params.end()) ? check_interval_found->second : "1s";
+	auto check_interval_found = reg->params.find("TESTO_CHECK_DEFAULT_INTERVAL");
+	check_default_interval = (check_interval_found != reg->params.end()) ? check_interval_found->second : "1s";
 
-	auto mouse_move_click_timeout_found = reg.params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
-	mouse_move_click_default_timeout = (mouse_move_click_timeout_found != reg.params.end()) ? mouse_move_click_timeout_found->second : "1m";
+	auto mouse_move_click_timeout_found = reg->params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+	mouse_move_click_default_timeout = (mouse_move_click_timeout_found != reg->params.end()) ? mouse_move_click_timeout_found->second : "1m";
 
-	auto press_interval_found = reg.params.find("TESTO_PRESS_DEFAULT_INTERVAL");
-	press_default_interval = (press_interval_found != reg.params.end()) ? press_interval_found->second : "30ms";
+	auto press_interval_found = reg->params.find("TESTO_PRESS_DEFAULT_INTERVAL");
+	press_default_interval = (press_interval_found != reg->params.end()) ? press_interval_found->second : "30ms";
 
-	auto type_interval_found = reg.params.find("TESTO_TYPE_DEFAULT_INTERVAL");
-	type_default_interval = (type_interval_found != reg.params.end()) ? type_interval_found->second : "30ms";
+	auto type_interval_found = reg->params.find("TESTO_TYPE_DEFAULT_INTERVAL");
+	type_default_interval = (type_interval_found != reg->params.end()) ? type_interval_found->second : "30ms";
 
-	auto exec_default_timeout_found = reg.params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
-	exec_default_timeout = (exec_default_timeout_found != reg.params.end()) ? exec_default_timeout_found->second : "10m";
+	auto exec_default_timeout_found = reg->params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
+	exec_default_timeout = (exec_default_timeout_found != reg->params.end()) ? exec_default_timeout_found->second : "10m";
 
-	auto copy_default_timeout_found = reg.params.find("TESTO_COPY_DEFAULT_TIMEOUT");
-	copy_default_timeout = (copy_default_timeout_found != reg.params.end()) ? copy_default_timeout_found->second : "10m";
+	auto copy_default_timeout_found = reg->params.find("TESTO_COPY_DEFAULT_TIMEOUT");
+	copy_default_timeout = (copy_default_timeout_found != reg->params.end()) ? copy_default_timeout_found->second : "10m";
 }
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
 {
-	auto controllers = reg.get_all_controllers(test);
-	auto all_parents = reg.get_test_path(test);
+	auto controllers = reg->get_all_controllers(test);
+	auto all_parents = reg->get_test_path(test);
 
 	bool result = false;
 
@@ -255,7 +258,7 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 			continue;
 		}
 
-		auto other_controllers = reg.get_all_controllers(*rit);
+		auto other_controllers = reg->get_all_controllers(*rit);
 		if (std::find_first_of (controllers.begin(), controllers.end(), other_controllers.begin(), other_controllers.end()) != controllers.end()) {
 			break;
 		}
@@ -308,7 +311,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 	}
 
 	//check networks aditionally
-	for (auto netc: reg.get_all_netcs(test)) {
+	for (auto netc: reg->get_all_netcs(test)) {
 		if (netc->is_defined() &&
 			netc->check_config_relevance())
 		{
@@ -317,7 +320,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 		return false;
 	}
 
-	for (auto controller: reg.get_all_controllers(test)) {
+	for (auto controller: reg->get_all_controllers(test)) {
 		if (controller->is_defined() &&
 			controller->check_config_relevance() &&
 			controller->has_snapshot(test->name.value()) &&
@@ -331,7 +334,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 }
 
 bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
-	auto all_parents = reg.get_test_path(test);
+	auto all_parents = reg->get_test_path(test);
 
 	for (auto parent: all_parents) {
 		for (auto cache_missed_test: cache_missed_tests) {
@@ -342,7 +345,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 	}
 
 	//check networks aditionally
-	for (auto netc: reg.get_all_netcs(test)) {
+	for (auto netc: reg->get_all_netcs(test)) {
 		if (netc->is_defined()) {
 			if (!netc->check_config_relevance()) {
 				return true;
@@ -350,7 +353,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 		}
 	}
 
-	for (auto controller: reg.get_all_controllers(test)) {
+	for (auto controller: reg->get_all_controllers(test)) {
 		if (controller->is_defined()) {
 			if (controller->has_snapshot(test->name.value())) {
 				if (controller->get_snapshot_cksum(test->name.value()) != test_cksum(test)) {
@@ -383,7 +386,7 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 
 void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue) {
 	for (auto test: tests_queue) {
-		for (auto controller: reg.get_all_controllers(test)) {
+		for (auto controller: reg->get_all_controllers(test)) {
 			if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
 				controller->delete_snapshot_with_children(test->name.value());
 			}
@@ -408,14 +411,18 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 	//And we can't use std::set because we need to
 	//keep the order of the tests
 
+	size_t total_tests_count = 0;
+
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
+			++total_tests_count;
+
 			auto test = p->stmt;
 
 			//invalidate tests at request
 
 			if (invalidate.length() && wildcards::match(test->name.value(), invalidate)) {
-				for (auto controller: reg.get_all_controllers(test)) {
+				for (auto controller: reg->get_all_controllers(test)) {
 					if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
 						controller->delete_snapshot_with_children(test->name.value());
 					}
@@ -433,11 +440,19 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
 				continue;
 			}
-			concat_unique(tests_queue, reg.get_test_path(test));
+			concat_unique(tests_queue, reg->get_test_path(test));
 		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
 			if (p->stmt->t.type() == Token::category::flash) {
 				flash_drives.push_back(p->stmt);
 			}
+		}
+	}
+
+	if (license.size()) {
+		verify_license(license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+	} else {
+		if (total_tests_count > 10) {
+			throw std::runtime_error("Для запуска более 10 тестов необходимо указать путь к файлу с лицензией (параметр --license)");
 		}
 	}
 
@@ -467,7 +482,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 
 void VisitorInterpreter::reset_cache() {
 	for (auto test: tests_to_run) {
-		for (auto controller: reg.get_all_controllers(test)) {
+		for (auto controller: reg->get_all_controllers(test)) {
 			if (controller->is_defined()) {
 				controller->set_metadata("current_state", "");
 			}
@@ -510,7 +525,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		//vms from parents - rollback them to parents if we need to
 		//We need to do it only if our current state is not the parent
 		for (auto parent: test->parents) {
-			for (auto controller: reg.get_all_controllers(parent)) {
+			for (auto controller: reg->get_all_controllers(parent)) {
 				if (controller->get_metadata("current_state") != parent->name.value()) {
 					reporter.restore_snapshot(controller, parent->name);
 					controller->restore_snapshot(parent->name.value());
@@ -520,7 +535,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		//check all the networks
 
-		for (auto netc: reg.get_all_netcs(test)) {
+		for (auto netc: reg->get_all_netcs(test)) {
 			if (netc->is_defined() &&
 				netc->check_config_relevance())
 			{
@@ -531,11 +546,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		//new vms - install
 
-		for (auto controller: reg.get_all_controllers(test)) {
+		for (auto controller: reg->get_all_controllers(test)) {
 			//check if it's a new one
 			auto is_new = true;
 			for (auto parent: test->parents) {
-				auto parent_controller = reg.get_all_controllers(parent);
+				auto parent_controller = reg->get_all_controllers(parent);
 				if (parent_controller.find(controller) != parent_controller.end()) {
 					//not new, go to the next vmc
 					is_new = false;
@@ -566,7 +581,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		for (auto parent: test->parents) {
-			for (auto vmc: reg.get_all_vmcs(parent)) {
+			for (auto vmc: reg->get_all_vmcs(parent)) {
 				if (vmc->vm->state() == VmState::Suspended) {
 					vmc->vm->resume();
 				}
@@ -579,13 +594,24 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		visit_command_block(test->cmd_block);
 
 		//But that's not everything - we need to create according snapshots to all included vms
-		for (auto vmc: reg.get_all_vmcs(test)) {
+		for (auto vmc: reg->get_all_vmcs(test)) {
 			if (vmc->vm->state() == VmState::Running) {
 				vmc->vm->suspend();
 			}
 		}
 
-		for (auto controller: reg.get_all_controllers(test)) {
+		//we need to take snapshots in the right order
+		//1) all the vms - so we could check that all the fds are unplugged
+		for (auto controller: reg->get_all_vmcs(test)) {
+			if (!controller->has_snapshot(test->name.value())) {
+				reporter.take_snapshot(controller, test->name);
+				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
+			}
+			controller->set_metadata("current_state", test->name.value());
+		}
+
+		//2) all the fdcs - the rest
+		for (auto controller: reg->get_all_fdcs(test)) {
 			if (!controller->has_snapshot(test->name.value())) {
 				reporter.take_snapshot(controller, test->name);
 				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
@@ -638,7 +664,7 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 
 void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
-		auto vmc = reg.vmcs.find(vm_token.value());
+		auto vmc = reg->vmcs.find(vm_token.value());
 		visit_action(vmc->second, cmd->action);
 	}
 }
@@ -753,7 +779,10 @@ js::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& scr
 	try {
 		js_current_ctx.reset(new js::Context(&screenshot));
 		return js_current_ctx->eval(script);
-	} catch(const std::exception& error) {
+	} catch (const nn::ContinueError& error) {
+		throw error;
+	}
+	catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
 }
@@ -763,12 +792,12 @@ nn::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AS
 	auto value = eval_js(script, screenshot);
 
 	if (value.is_object() && !value.is_array()) {
-		auto x_prop = value.get_property("x");
+		auto x_prop = value.get_property_str("x");
 		if (x_prop.is_undefined()) {
 			throw std::runtime_error("Object doesn't have the x propery");
 		}
 
-		auto y_prop = value.get_property("y");
+		auto y_prop = value.get_property_str("y");
 		if (y_prop.is_undefined()) {
 			throw std::runtime_error("Object doesn't have the y propery");
 		}
@@ -992,6 +1021,7 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 		} else if (mouse_move_click->t.type() == Token::category::dclick) {
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
+			timer.waitFor(std::chrono::milliseconds(20));
 			vmc->vm->mouse_press({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
 		} else {
@@ -1262,7 +1292,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
+	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	if (vmc->vm->is_flash_plugged(fdc->fd)) {
@@ -1273,7 +1303,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg.fdcs.find(plug->name_token.value())->second; //should always be found
+	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm->is_flash_plugged(fdc->fd)) {
@@ -1546,9 +1576,9 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 		args.push_back(std::make_pair(macro_call->macro->args[i]->name(), value));
 	}
 
-	reg.local_vars.push_back(new_ctx);
+	reg->local_vars.push_back(new_ctx);
 	coro::Finally finally([&] {
-		reg.local_vars.pop_back();
+		reg->local_vars.pop_back();
 	});
 
 	reporter.macro_call(vmc, macro_call->name(), args);
@@ -1573,16 +1603,16 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vmc, std:
 
 void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause) {
 	StackEntry new_ctx(false);
-	reg.local_vars.push_back(new_ctx);
-	size_t ctx_position = reg.local_vars.size() - 1;
+	reg->local_vars.push_back(new_ctx);
+	size_t ctx_position = reg->local_vars.size() - 1;
 	coro::Finally finally([&]{
-		reg.local_vars.pop_back();
+		reg->local_vars.pop_back();
 	});
 	uint32_t i = 0;
 	auto values = for_clause->counter_list->values();
 
 	for (i = 0; i < values.size(); ++i) {
-		reg.local_vars[ctx_position].define(for_clause->counter.value(), values[i]);
+		reg->local_vars[ctx_position].define(for_clause->counter.value(), values[i]);
 
 		try {
 			visit_action(vmc, for_clause->cycle_body);

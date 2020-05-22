@@ -6,7 +6,7 @@
 #include "winapi.hpp"
 
 void write_file(const std::experimental::filesystem::path& path, const std::vector<uint8_t>& data) {
-	winapi::File file(path.string(), GENERIC_WRITE, CREATE_NEW);
+	winapi::File file(path.string(), GENERIC_WRITE, CREATE_ALWAYS);
 	file.write((uint8_t*)&data[0], data.size());
 }
 

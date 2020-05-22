@@ -4,22 +4,38 @@
 #include "winapi.hpp"
 #endif
 
+#include <iostream>
 #include <array>
 
-std::string Process::exec(const std::string& cmd) {
+std::pair<std::string, int> Process::exec_no_throw(const std::string& cmd) {
+	// std::cout << "PROCESS: " << cmd << std::endl;
 	Process process(cmd);
 	std::string result;
 	while (!process.eof()) {
 		result += process.read();
 	}
 	int rc = process.wait();
-	if (rc) {
-		ProcessError error("Command " + cmd + " exits with code " + std::to_string(rc));
-		error.exit_code = rc;
-		error.output = result;
+	// std::cout << "ERROR CODE: " << rc << std::endl;
+	return {result, rc};
+}
+
+std::string Process::exec(const std::string& cmd) {
+	auto pair = exec_no_throw(cmd);
+	if (pair.second) {
+		ProcessError error("Command " + cmd + " exits with code " + std::to_string(pair.second));
+		error.exit_code = pair.second;
+		error.output = pair.first;
 		throw error;
 	}
-	return result;
+	return pair.first;
+}
+
+bool Process::is_succeeded(const std::string& cmd) {
+	return exec_no_throw(cmd).second == 0;
+}
+
+bool Process::is_failed(const std::string& cmd) {
+	return exec_no_throw(cmd).second != 0;
 }
 
 #if defined(__linux__) || defined(__APPLE__)

@@ -5,6 +5,7 @@
 #include <fstream>
 
 Interpreter::Interpreter(const fs::path& file, const nlohmann::json& config):
+	reg(new Register()),
 	config(config)
 {
 	std::ifstream input_stream(file);
@@ -15,11 +16,12 @@ Interpreter::Interpreter(const fs::path& file, const nlohmann::json& config):
 
 	std::string input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
 
-	parser = Parser(file, input);
+	parser = Parser(reg, file, input);
 }
 
 Interpreter::Interpreter(const fs::path& dir, const std::string& input, const nlohmann::json& config):
-	parser(dir, input),
+	reg(new Register()),
+	parser(reg, dir, input),
 	config(config)
 {}
 

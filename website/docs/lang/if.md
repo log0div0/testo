@@ -1,21 +1,20 @@
----
-id: if
-title: Условия
----
+# Условия
 
 Язык Testo поддерживает использование условий. Формат условий выглядит
 следующим образом:
 
-	if (expression) {
-		action1
-		action2
-		action3
-		...
-	} [else {
-		action1
-		action2
-		...
-	}]
+```text
+if (expression) {
+	action1
+	action2
+	action3
+	...
+} [else {
+	action1
+	action2
+	...
+}]
+```
 
 Формат условий `if` достаточно традиционен: конструкция состоит из
 оценки выражения `expression`, которое может принимать значения `true`
@@ -29,7 +28,7 @@ title: Условия
 
 Условия можно комбинировать в каскадные конструкции:
 
-```
+```text
 if (expression) {
 
 } else if {
@@ -53,10 +52,10 @@ if (expression) {
 - Отрицание выражения. Имеет формат `NOT <expr>`. Делает логическое
   инвертирование значения, полученного при вычислении `expr`
 - Сравнения. Разобрано ниже.
-- Логическое \"И\" двух выражений. Имеет формат `<expr> AND <expr>`.
+- Логическое "И" двух выражений. Имеет формат `<expr> AND <expr>`.
   Возвращает `true`, когда оба выражения равны `true` и `false` в
   противном случае.
-- Логическое \"ИЛИ\" двух выражений. Имеет формат
+- Логическое "ИЛИ" двух выражений. Имеет формат
   `<expr> OR <expr>`. Возвращает `true`, когда хотя бы одно из
   выражений равно `true` и `false` в противном случае.
 - Проверка наличия на экране определенного выражения
@@ -98,14 +97,14 @@ if (expression) {
 
 ### Примеры
 
-```
-"SOME STRING" - true
-"" - false
-$some_var - значение зависит от того, определена ли переменная
-check "Hello world" - true, если на экране присутствует надпись Hello world
-"5" EQUAL $some_var - true, если $some_var принимает значение "5"
-"ABC" STRLESS "BCD" - true
-NOT ("ABC" STRLESS "BCD") - false
-NOT ("ABC" STRLESS "BCD") OR "5" EQUAL "5" - true
-NOT ("ABC" STRLESS "BCD" AND "5" EQUAL "5") - false
+```testo
+"SOME STRING" # true
+"" # false
+"${some_var}" # значение зависит от того, определена ли переменная
+check "Hello world" # true, если на экране присутствует надпись Hello world
+"5" EQUAL "${some_var}" # true, если "${some_var}" принимает значение "5"
+"ABC" STRLESS "BCD" # true
+NOT ("ABC" STRLESS "BCD") # false
+NOT ("ABC" STRLESS "BCD") OR "5" EQUAL "5" # true
+NOT ("ABC" STRLESS "BCD" AND "5" EQUAL "5") # false
 ```

@@ -69,7 +69,7 @@ struct VisitorInterpreter {
 		Token token;
 	};
 
-	VisitorInterpreter(Register& reg, const nlohmann::json& config);
+	VisitorInterpreter(std::shared_ptr<Register> reg, const nlohmann::json& config);
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_test(std::shared_ptr<AST::Test> test);
@@ -125,15 +125,13 @@ struct VisitorInterpreter {
 	js::Value eval_js(const std::string& script, stb::Image& screenshot);
 
 	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
-
-	Register& reg;
 	template_literals::Parser template_parser;
 
 private:
 	//settings
 	bool stop_on_fail;
 	bool assume_yes;
-	std::string test_spec, exclude, invalidate;
+	std::string test_spec, exclude, invalidate, license;
 
 	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
@@ -158,7 +156,7 @@ private:
 	void update_progress();
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
-		for (auto vmc: reg.get_all_vmcs(test)) {
+		for (auto vmc: reg->get_all_vmcs(test)) {
 			if (vmc->is_defined()) {
 				if (vmc->vm->state() != VmState::Stopped) {
 					vmc->vm->stop();
@@ -179,6 +177,7 @@ private:
 	std::string copy_default_timeout;
 
 	coro::Timer timer;
+	std::shared_ptr<Register> reg;
 
 	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 

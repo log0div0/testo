@@ -183,3 +183,17 @@ TEST_CASE("Windows 7/Установка") {
 		CHECK(tensor.match("Windows 7 Максимальная").size() == 1);
 	}
 }
+
+TEST_CASE("Windows 7/Континент CSP") {
+	{
+		stb::Image image("Windows 7/Континент CSP/Набор энтропии.png");
+		nn::Tensor tensor = nn::find_text(&image);
+		CHECK(tensor.match("Для создание шаров-мишеней").size() == 1);
+		CHECK(tensor.match("нажимайте левой кнопкой мыши").size() == 1);
+		CHECK(tensor.match("пока индикатор не заполнится").size() == 1);
+		CHECK(tensor.match("целиком").size() == 1);
+		CHECK(tensor.match("Корзина").size() == 1);
+		CHECK(tensor.match("Континент").size() == 1);
+		CHECK(tensor.match("TLS-клиент").size() == 1);
+	}
+}

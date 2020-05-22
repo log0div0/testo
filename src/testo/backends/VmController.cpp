@@ -46,7 +46,7 @@ void VmController::create() {
 
 		metadata["vm_config"] = config.dump();
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(iso_file);
+		metadata["dvd_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
 		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
@@ -220,7 +220,7 @@ bool VmController::check_config_relevance() {
 	}
 	iso_file = fs::canonical(iso_file);
 
-	bool iso_is_ok = (file_signature(iso_file) == get_metadata("dvd_signature"));
+	bool iso_is_ok = (file_signature(iso_file, env->content_cksum_maxsize()) == get_metadata("dvd_signature"));
 
 	return (config_is_ok && iso_is_ok);
 }

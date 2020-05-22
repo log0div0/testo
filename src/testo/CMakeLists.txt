@@ -17,7 +17,7 @@ list(APPEND SRC_DIRS "tql/*.cpp")
 file(GLOB SRCS ${SRC_DIRS})
 
 add_executable(testo ${SRCS})
-target_link_libraries(testo coro js vbox pugixml stb nn license)
+target_link_libraries(testo coro js vbox pugixml stb nn license process)
 
 if(WIN32)
 	target_link_libraries(testo hyperv msft virtdisk++)
