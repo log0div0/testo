@@ -9,7 +9,9 @@ machine astra {
 	cpus: 2
 	iso: "${ISO_DIR}/astralinux-orel.iso"
 	ram: 4096Mb
-	disk_size: 20Gb
+	disk main: {
+		size: 20Gb
+	}
 
 	nic nat: {
 		attached_to: "nat"

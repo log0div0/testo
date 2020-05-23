@@ -26,7 +26,9 @@ machine CUS {
 	cpus: 1
 	ram: 2048Mb
 	iso: "${ISO_DIR}/Continent.iso"
-	disk_size: 20Gb
+	disk main: {
+		size: 20Gb
+	}
 
 	nic client_side: {
 		attached_to: "cus_win7"
@@ -45,7 +47,9 @@ machine UB {
 	cpus: 2
 	ram: 3072Mb
 	iso: "${ISO_DIR}/Continent.iso"
-	disk_size: 20Gb
+	disk main: {
+		size: 20Gb
+	}
 
 	nic CUS_side: {
 		attached_to: "cus_ub"
@@ -76,7 +80,9 @@ machine win7_client {
 	cpus: 2
 	ram: 2Gb
 	iso: "${ISO_DIR}/win7.iso"
-	disk_size: 20Gb
+	disk main: {
+		size: 20Gb
+	}
 	nic CUS_side: {
 		attached_to: "cus_win7"
 		mac: "52:54:00:00:44:AA"
@@ -94,7 +100,9 @@ machine ubuntu_client {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 4Gb
+	disk main: {
+		size: 4Gb
+	}
 
 	nic nat: {
 		attached_to: "nat"
@@ -111,7 +119,9 @@ machine ubuntu_server {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 4Gb
+	disk main: {
+		size: 4Gb
+	}
 
 	nic nat: {
 		attached_to: "nat"

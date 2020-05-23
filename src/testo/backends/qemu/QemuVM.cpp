@@ -22,21 +22,45 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		throw std::runtime_error("Constructing QemuVM " + id() + " error: field CPUS is not specified");
 	}
 
-	if (!config.count("disk_size")) {
-		throw std::runtime_error("Constructing QemuVM error: field DISK SIZE is not specified");
+	if (!config.count("disk")) {
+		throw std::runtime_error("Constructing QemuVM " + id() + " error: you must specify at least 1 disk");
+	}
+
+	if (config.count("disk")) {
+		auto disks = config.at("disk");
+
+		if (disks.size() > disk_targets.size() - 1) {
+			throw std::runtime_error("Constructing QemuVM" + id() + "error: too many disks specified, maximum amount: " + std::to_string(disk_targets.size() - 1));
+		}
+
+		for (auto& disk: disks) {
+			if (!disk.count("size")) {
+				throw std::runtime_error("Constructing QemuVM" + id() + "error: field \"size\" must be specified for the disk " +
+					disk.at("name").get<std::string>());
+			}
+		}
+
+		for (uint32_t i = 0; i < disks.size(); i++) {
+			for (uint32_t j = i + 1; j < disks.size(); j++) {
+				if (disks[i].at("name") == disks[j].at("name")) {
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: two identical disk names: " +
+						disks[i].at("name").get<std::string>());
+				}
+			}
+		}
 	}
 
 	if (config.count("nic")) {
 		auto nics = config.at("nic");
 		for (auto& nic: nics) {
 			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing QemuVM error: field attached_to is not specified for the nic " +
+				throw std::runtime_error("Constructing QemuVM" + id() + "error: field attached_to is not specified for the nic " +
 					nic.at("name").get<std::string>());
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "internal") {
 				if (!nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM error: nic " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
 					nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
 				}
 			}
@@ -44,13 +68,13 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 			if (nic.count("mac")) {
 				std::string mac = nic.at("mac").get<std::string>();
 				if (!is_mac_correct(mac)) {
-					throw std::runtime_error(std::string("Incorrect mac string: ") + mac);
+					throw std::runtime_error("Constructing QemuVM" + id() + "error:Incorrect mac string: " + mac);
 				}
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "nat") {
 				if (nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM error: nic " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
 					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
 				}
 			}
@@ -68,7 +92,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 					driver != "virtio" &&
 					driver != "sungem")
 				{
-					throw std::runtime_error("Constructing QemuVM error: nic " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
 						nic.at("name").get<std::string>() + " has unsupported adaptertype internal: " + driver);
 				}
 			}
@@ -77,12 +101,19 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		for (uint32_t i = 0; i < nics.size(); i++) {
 			for (uint32_t j = i + 1; j < nics.size(); j++) {
 				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing QemuVM error: two identical NIC names: " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: two identical NIC names: " +
 						nics[i].at("name").get<std::string>());
 				}
 			}
 		}
 	}
+
+	disk_targets = {
+		"hda",
+		"hdb",
+		"hdc",
+		"hdd"
+	};
 
 	scancodes.insert({
 		{"ESC", 1},
@@ -193,7 +224,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 
 QemuVM::~QemuVM() {
 	if (!is_defined()) {
-		remove_disk();
+		remove_disks();
 	}
 }
 
@@ -204,10 +235,9 @@ void QemuVM::install() {
 		}
 
 		//now create disks
-		create_disk();
+		create_disks();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		fs::path volume_path = pool.path() / (id() + ".img");
 
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
@@ -245,17 +275,6 @@ void QemuVM::install() {
 					<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
 				</metadata>
 				<devices>
-					<disk type='file' device='disk'>
-						<driver name='qemu' type='qcow2'/>
-						<source file='{}'/>
-						<target dev='hda' bus='ide'/>
-					</disk>
-					<disk type='file' device='cdrom'>
-						<driver name='qemu' type='raw'/>
-						<source file='{}'/>
-						<target dev='hdb' bus='ide'/>
-						<readonly/>
-					</disk>
 					<controller type='usb' index='0' model='ich9-ehci1'>
 					</controller>
 					<controller type='usb' index='0' model='ich9-uhci1'>
@@ -299,7 +318,32 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>(), id());
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>());
+
+		if (config.count("disk")) {
+			auto disks = config.at("disk");
+			for (size_t i = 0; i < disks.size(); i++) {
+				auto& disk = disks[i];
+				fs::path volume_path = pool.path() / (id() + "@" + disk.at("name").get<std::string>() + ".img");
+				string_config += fmt::format(R"(
+					<disk type='file' device='disk'>
+						<driver name='qemu' type='qcow2'/>
+						<source file='{}'/>
+						<target dev='{}' bus='ide'/>
+						<alias name='ua-{}'/>
+					</disk>
+				)", volume_path.generic_string(), disk_targets[i], disk.at("name").get<std::string>());
+			}
+		}
+
+		string_config += fmt::format(R"(
+			<disk type='file' device='cdrom'>
+				<driver name='qemu' type='raw'/>
+				<source file='{}'/>
+				<target dev='{}' bus='ide'/>
+				<readonly/>
+			</disk>
+		)", config.at("iso").get<std::string>(), disk_targets[config.count("disk")]);
 
 		uint32_t nic_count = 0;
 
@@ -349,12 +393,11 @@ void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
-
 		if (state() != VmState::Stopped) {
 			stop();
 		}
 		//delete the storage
-		remove_disk();
+		remove_disks();
 
 		domain.undefine();
 	} catch (const std::exception& error) {
@@ -1359,16 +1402,20 @@ void QemuVM::remove_from_guest(const fs::path& obj) {
 	//TODO!!
 }
 
-void QemuVM::remove_disk() {
+void QemuVM::remove_disks() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 
-		auto vol_name = id() + ".img";
+		//TODO
 
 		for (auto& vol: pool.volumes()) {
-			if (vol.name() == vol_name) {
+			std::string volume_name = vol.name();
+			if (volume_name.find("@") == std::string::npos) {
+				continue;
+			}
+			volume_name = volume_name.substr(0, volume_name.find("@"));
+			if (volume_name == id()) {
 				vol.erase();
-				break;
 			}
 		}
 	} catch (const std::exception& error) {
@@ -1377,32 +1424,42 @@ void QemuVM::remove_disk() {
 
 }
 
-void QemuVM::create_disk() {
+void QemuVM::create_disks() {
 	try {
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		pugi::xml_document xml_config;
-		xml_config.load_string(fmt::format(R"(
-			<volume type='file'>
-				<name>{}.img</name>
-				<source>
-				</source>
-				<capacity unit='M'>{}</capacity>
-				<target>
-					<path>{}/{}.img</path>
-					<format type='qcow2'/>
-					<permissions>
-					</permissions>
-					<timestamps>
-					</timestamps>
-					<compat>1.1</compat>
-					<features>
-						<lazy_refcounts/>
-					</features>
-				</target>
-			</volume>
-		)", id(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), id()).c_str());
+		if (!config.count("disk")) {
+			return;
+		}
 
-		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+
+		auto disks = config.at("disk");
+		for (size_t i = 0; i < disks.size(); ++i) {
+			auto& disk = disks[i];
+			pugi::xml_document xml_config;
+			std::string disk_name = id() + "@" + disk.at("name").get<std::string>();
+
+			xml_config.load_string(fmt::format(R"(
+				<volume type='file'>
+					<name>{}.img</name>
+					<source>
+					</source>
+					<capacity unit='M'>{}</capacity>
+					<target>
+						<path>{}/{}.img</path>
+						<format type='qcow2'/>
+						<permissions>
+						</permissions>
+						<timestamps>
+						</timestamps>
+						<compat>1.1</compat>
+						<features>
+							<lazy_refcounts/>
+						</features>
+					</target>
+				</volume>
+			)", disk_name, disk.at("size").get<uint32_t>(), pool.path().generic_string(), disk_name).c_str());
+			auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));
 	}
