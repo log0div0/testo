@@ -32,7 +32,11 @@ machine ubuntu_desktop {
 	cpus: 1
 	ram: 2Gb
 	iso: "${ISO_DIR}/ubuntu_desktop.iso"
-	disk_size: 20Gb
+	
+	disk main: {
+		size: 20Gb
+	}
+
 	nic internet: {
 		attached_to: "internet"
 		adapter_type: "e1000"

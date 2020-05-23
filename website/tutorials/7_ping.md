@@ -46,7 +46,9 @@ network internet {
 machine server {
 	cpus: 1
 	ram: 512Mb
-	disk_size: 5Gb
+	disk main: {
+		size: 5Gb
+	}
 	iso: "${ISO_DIR}/ubuntu_server.iso"
 
 	nic nat: {
@@ -516,7 +518,9 @@ test server_install_guest_additions: server_install_ubuntu {
 machine client {
 	cpus: 1
 	ram: 512Mb
-	disk_size: 5Gb
+	disk main: {
+		size: 5Gb
+	}
 	iso: "${ISO_DIR}/ubuntu_server.iso"
 
 	nic nat: {
@@ -541,7 +545,9 @@ network LAN {
 machine client {
 	cpus: 1
 	ram: 512Mb
-	disk_size: 5Gb
+	disk main: {
+		size: 5Gb
+	}
 	iso: "${ISO_DIR}/ubuntu_server.iso"
 
 	nic nat: {
@@ -557,7 +563,9 @@ machine client {
 machine server {
 	cpus: 1
 	ram: 512Mb
-	disk_size: 5Gb
+	disk main: {
+		size: 5Gb
+	}
 	iso: "${ISO_DIR}/ubuntu_server.iso"
 
 	nic nat: {
