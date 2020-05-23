@@ -8,7 +8,9 @@ machine win7 {
 	cpus: 2
 	ram: 2Gb
 	iso: "${ISO_DIR}/win7.iso"
-	disk_size: 20Gb
+	disk main: {
+		size: 20Gb
+	}
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"

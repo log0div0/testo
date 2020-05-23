@@ -59,7 +59,9 @@ machine sgw1 {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 4Gb
+	disk main: {
+		size: 4Gb
+	}
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
@@ -82,7 +84,9 @@ machine sgw2 {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 4Gb
+	disk main: {
+		size: 4Gb
+	}
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
@@ -105,7 +109,9 @@ machine client1 {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 4Gb
+	disk main: {
+		size: 4Gb
+	}
 
 	nic nat: {
 		attached_to: "nat"
@@ -123,7 +129,9 @@ machine client2 {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 5Gb
+	disk main: {
+		size: 4Gb
+	}
 
 	nic nat: {
 		attached_to: "nat"
@@ -141,7 +149,9 @@ machine router {
 	cpus: 1
 	ram: 512Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
-	disk_size: 5Gb
+	disk main: {
+		size: 4Gb
+	}
 
 	nic nat: {
 		attached_to: "nat"

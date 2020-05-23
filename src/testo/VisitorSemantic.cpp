@@ -117,13 +117,18 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 	//init attr ctx
 	attr_ctx vm_global_ctx;
 	vm_global_ctx.insert({"ram", std::make_pair(false, Token::category::size)});
-	vm_global_ctx.insert({"disk_size", std::make_pair(false, Token::category::size)});
 	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::quoted_string)});
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
+	vm_global_ctx.insert({"disk", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
+
+	attr_ctx disk_ctx;
+	disk_ctx.insert({"size", std::make_pair(false, Token::category::size)});
+	
+	attr_ctxs.insert({"disk", disk_ctx});
 
 	attr_ctx vm_network_ctx;
 	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});

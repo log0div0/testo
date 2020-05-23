@@ -53,8 +53,8 @@ struct QemuVM: public VM {
 	std::string get_tmp_dir() override;
 
 private:
-	void remove_disk();
-	void create_disk();
+	void remove_disks();
+	void create_disks();
 
 	std::string get_dvd_path();
 	std::string get_dvd_path(vir::Snapshot& snapshot);
@@ -73,6 +73,7 @@ private:
 
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;
+	std::vector<std::string> disk_targets; //10 + a cdrom
 	std::vector<uint8_t> screenshot_buffer;
 
 	std::string mouse_button_to_str(MouseButton btn);

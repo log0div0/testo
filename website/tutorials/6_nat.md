@@ -43,7 +43,9 @@ network internet {
 machine my_ubuntu {
 	cpus: 1
 	ram: 512Mb
-	disk_size: 5Gb
+	disk main: {
+		size: 5Gb
+	}
 	iso: "${ISO_DIR}/ubuntu_server.iso"
 
 	nic nat: {
