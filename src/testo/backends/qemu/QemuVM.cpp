@@ -10,6 +10,13 @@
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
+	disk_targets = {
+		"hda",
+		"hdb",
+		"hdc",
+		"hdd"
+	};
+
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing QemuVM " + id() + " error: field NAME is not specified");
 	}
@@ -34,8 +41,8 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		}
 
 		for (auto& disk: disks) {
-			if (!disk.count("size")) {
-				throw std::runtime_error("Constructing QemuVM" + id() + "error: field \"size\" must be specified for the disk " +
+			if (!(disk.count("size") ^ disk.count("source"))) {
+				throw std::runtime_error("Constructing QemuVM" + id() + "error: either field \"size\" or \"source\" must be specified for the disk " +
 					disk.at("name").get<std::string>());
 			}
 		}
@@ -107,13 +114,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 			}
 		}
 	}
-
-	disk_targets = {
-		"hda",
-		"hdb",
-		"hdc",
-		"hdd"
-	};
 
 	scancodes.insert({
 		{"ESC", 1},
@@ -1421,7 +1421,44 @@ void QemuVM::remove_disks() {
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Removing existing disks"));
 	}
+}
 
+void QemuVM::create_new_disk(const std::string& name, uint32_t size) {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+
+	fs::path disk_path = pool.path() / (name + ".img");
+
+	pugi::xml_document xml_config;
+	xml_config.load_string(fmt::format(R"(
+		<volume type='file'>
+			<name>{}.img</name>
+			<source>
+			</source>
+			<capacity unit='M'>{}</capacity>
+			<target>
+				<path>{}</path>
+				<format type='qcow2'/>
+				<permissions>
+				</permissions>
+				<timestamps>
+				</timestamps>
+				<compat>1.1</compat>
+				<features>
+					<lazy_refcounts/>
+				</features>
+			</target>
+		</volume>
+	)", name, size, disk_path.generic_string()).c_str());
+
+	auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+}
+
+void QemuVM::import_disk(const std::string& name, const fs::path& source) {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+	fs::path disk_path = pool.path() / (name + ".img");
+	fs::copy(source, disk_path);
+
+	pool.refresh();
 }
 
 void QemuVM::create_disks() {
@@ -1429,36 +1466,17 @@ void QemuVM::create_disks() {
 		if (!config.count("disk")) {
 			return;
 		}
-
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-
 		auto disks = config.at("disk");
 		for (size_t i = 0; i < disks.size(); ++i) {
 			auto& disk = disks[i];
-			pugi::xml_document xml_config;
 			std::string disk_name = id() + "@" + disk.at("name").get<std::string>();
 
-			xml_config.load_string(fmt::format(R"(
-				<volume type='file'>
-					<name>{}.img</name>
-					<source>
-					</source>
-					<capacity unit='M'>{}</capacity>
-					<target>
-						<path>{}/{}.img</path>
-						<format type='qcow2'/>
-						<permissions>
-						</permissions>
-						<timestamps>
-						</timestamps>
-						<compat>1.1</compat>
-						<features>
-							<lazy_refcounts/>
-						</features>
-					</target>
-				</volume>
-			)", disk_name, disk.at("size").get<uint32_t>(), pool.path().generic_string(), disk_name).c_str());
-			auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+			if (disk.count("source")) {
+				fs::path source_disk = disk.at("source").get<std::string>();
+				import_disk(disk_name, source_disk);
+			} else {
+				create_new_disk(disk_name, disk.at("size").get<uint32_t>());
+			}			
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));

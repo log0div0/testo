@@ -54,6 +54,8 @@ struct QemuVM: public VM {
 
 private:
 	void remove_disks();
+	void import_disk(const std::string& name, const fs::path& source);
+	void create_new_disk(const std::string& name, uint32_t size);
 	void create_disks();
 
 	std::string get_dvd_path();

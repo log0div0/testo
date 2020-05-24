@@ -127,6 +127,7 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 
 	attr_ctx disk_ctx;
 	disk_ctx.insert({"size", std::make_pair(false, Token::category::size)});
+	disk_ctx.insert({"source", std::make_pair(false, Token::category::quoted_string)});
 	
 	attr_ctxs.insert({"disk", disk_ctx});
 
