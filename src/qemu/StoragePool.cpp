@@ -78,6 +78,13 @@ void StoragePool::start(std::initializer_list<virStoragePoolCreateFlags> flags) 
 	}
 }
 
+void StoragePool::refresh() {
+	auto res = virStoragePoolRefresh(handle, 0);
+	if (res < 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
 StorageVolume StoragePool::volume_create_xml(const pugi::xml_node& xml, std::initializer_list<virStorageVolCreateFlags> flags) {
 	uint32_t flag_bitmask = 0;
 
