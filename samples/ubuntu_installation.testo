@@ -16,6 +16,10 @@ machine VM2 {
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk main: {
 		#size: 4Gb
+		#source: "../../../../../../var/lib/libvirt/images/hand_created.qcow2"
+		source: "/var/lib/libvirt/images/hand_created.qcow2"
+	}
+	disk secondary: {
 		source: "/var/lib/libvirt/images/hand_created.qcow2"
 	}
 }

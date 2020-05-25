@@ -320,9 +320,11 @@ void QemuVM::install() {
 					</memballoon>
 		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>());
 
+		size_t i = 0;
+
 		if (config.count("disk")) {
 			auto disks = config.at("disk");
-			for (size_t i = 0; i < disks.size(); i++) {
+			for (i = 0; i < disks.size(); i++) {
 				auto& disk = disks[i];
 				fs::path volume_path = pool.path() / (id() + "@" + disk.at("name").get<std::string>() + ".img");
 				string_config += fmt::format(R"(
@@ -343,7 +345,7 @@ void QemuVM::install() {
 				<target dev='{}' bus='ide'/>
 				<readonly/>
 			</disk>
-		)", config.at("iso").get<std::string>(), disk_targets[config.count("disk")]);
+		)", config.at("iso").get<std::string>(), disk_targets[i + 1]);
 
 		uint32_t nic_count = 0;
 
