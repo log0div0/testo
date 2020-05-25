@@ -338,14 +338,24 @@ void QemuVM::install() {
 			}
 		}
 
-		string_config += fmt::format(R"(
-			<disk type='file' device='cdrom'>
-				<driver name='qemu' type='raw'/>
-				<source file='{}'/>
-				<target dev='{}' bus='ide'/>
-				<readonly/>
-			</disk>
-		)", config.at("iso").get<std::string>(), disk_targets[i + 1]);
+		if (config.count("iso")) {
+			string_config += fmt::format(R"(
+				<disk type='file' device='cdrom'>
+					<driver name='qemu' type='raw'/>
+					<source file='{}'/>
+					<target dev='{}' bus='ide'/>
+					<readonly/>
+				</disk>
+			)", config.at("iso").get<std::string>(), disk_targets[i + 1]);
+		} else {
+			string_config += fmt::format(R"(
+				<disk type='file' device='cdrom'>
+					<driver name='qemu' type='raw'/>
+					<target dev='{}' bus='ide'/>
+					<readonly/>
+				</disk>
+			)", disk_targets[i + 1]);
+		}
 
 		uint32_t nic_count = 0;
 

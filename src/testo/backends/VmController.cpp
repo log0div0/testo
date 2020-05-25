@@ -39,14 +39,17 @@ void VmController::create() {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
 
-		fs::path iso_file = config.at("iso").get<std::string>();
 
 		config.erase("src_file");
 		config.erase("metadata");
 
 		metadata["vm_config"] = config.dump();
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
+
+		if (config.count("iso")) {
+			fs::path iso_file = config.at("iso").get<std::string>();
+			metadata["iso_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
+		}
 
 		if (config.count("disk")) {
 			for (auto& disk: config.at("disk")) {
@@ -210,9 +213,15 @@ bool VmController::check_config_relevance() {
 		return false;
 	}
 
-	fs::path iso_file = new_config.at("iso").get<std::string>();
-	if (file_signature(iso_file, env->content_cksum_maxsize()) != get_metadata("dvd_signature")) {
-		return false;
+	if (new_config.count("iso")) {
+		if (!has_key("iso_signature")) {
+			return false;
+		}
+		
+		fs::path iso_file = new_config.at("iso").get<std::string>();
+		if (file_signature(iso_file, env->content_cksum_maxsize()) != get_metadata("iso_signature")) {
+			return false;
+		}
 	}
 
 	//So... check the disks...
