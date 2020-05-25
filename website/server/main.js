@@ -105,6 +105,7 @@ let docsToc = {
 		"/docs/js/point"
 	],
 	"История изменений": [
+		"/docs/rn/1.5.1",
 		"/docs/rn/1.5.0",
 		"/docs/rn/1.4.0"
 	]
