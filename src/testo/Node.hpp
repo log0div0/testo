@@ -457,7 +457,7 @@ struct Press: public Node {
 		Node(press), keys(keys), interval(interval) {}
 
 	Pos begin() const {
-		return keys[0]->begin();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -480,6 +480,43 @@ struct Press: public Node {
 
 	std::vector<std::shared_ptr<KeySpec>> keys;
 	Token interval;
+};
+
+struct Hold: public Node {
+	Hold(const Token& hold, std::shared_ptr<KeyCombination> combination):
+		Node(hold), combination(combination) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return combination->end();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + std::string(*combination);
+	}
+
+	std::shared_ptr<KeyCombination> combination;
+};
+
+struct Release: public Node {
+	Release(const Token& release):
+		Node(release) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return t.end();
+	}
+
+	operator std::string() const {
+		return t.value();
+	}
+	
 };
 
 struct IMouseMoveTarget: public Node {

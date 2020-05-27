@@ -87,6 +87,8 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::wait) ||
 		(LA(1) == Token::category::sleep) ||
 		(LA(1) == Token::category::press) ||
+		(LA(1) == Token::category::hold) ||
+		(LA(1) == Token::category::release) ||
 		(LA(1) == Token::category::mouse) ||
 		(LA(1) == Token::category::plug) ||
 		(LA(1) == Token::category::unplug) ||
@@ -537,6 +539,10 @@ std::shared_ptr<IAction> Parser::action() {
 		action = sleep();
 	} else if (LA(1) == Token::category::press) {
 		action = press();
+	} else if (LA(1) == Token::category::hold) {
+		action = hold();
+	} else if (LA(1) == Token::category::release) {
+		action = release();
 	} else if (LA(1) == Token::category::mouse) {
 		action = mouse();
 	} else if ((LA(1) == Token::category::plug) || (LA(1) == Token::category::unplug)) {
@@ -707,6 +713,24 @@ std::shared_ptr<Action<Press>> Parser::press() {
 
 	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));
 	return std::shared_ptr<Action<Press>>(new Action<Press>(action));
+}
+
+std::shared_ptr<Action<Hold>> Parser::hold() {
+	Token hold_token = LT(1);
+	match(Token::category::hold);
+
+	auto combination = key_combination();
+
+	auto action = std::shared_ptr<Hold>(new Hold(hold_token, combination));
+	return std::shared_ptr<Action<Hold>>(new Action<Hold>(action));
+}
+
+std::shared_ptr<Action<Release>> Parser::release() {
+	Token release_token = LT(1);
+	match(Token::category::release);
+
+	auto action = std::shared_ptr<Release>(new Release(release_token));
+	return std::shared_ptr<Action<Release>>(new Action<Release>(action));
 }
 
 std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
