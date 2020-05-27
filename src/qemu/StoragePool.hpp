@@ -25,6 +25,7 @@ struct StoragePool {
 	std::vector<StorageVolume> volumes() const;
 
 	void start(std::initializer_list<virStoragePoolCreateFlags> flags = {});
+	void refresh();
 
 	StorageVolume volume_create_xml(const pugi::xml_node& xml, std::initializer_list<virStorageVolCreateFlags> flags = {});
 	std::string dump_xml() const;

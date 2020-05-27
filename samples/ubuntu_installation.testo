@@ -1,20 +1,39 @@
 
 include "./common_ubuntu_server.testo"
 
-machine VM1 {
+/*machine VM1 {
 	cpus: 1
 	ram: 1024Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk main: {
 		size: 4Gb
 	}
+}*/
+
+machine VM2 {
+	cpus: 1
+	ram: 1024Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		#size: 4Gb
+		#source: "../../../../../../var/lib/libvirt/images/hand_created.qcow2"
+		source: "/var/lib/libvirt/images/hand_created.qcow2"
+	}
+	disk secondary: {
+		source: "/var/lib/libvirt/images/hand_created.qcow2"
+	}
 }
 
 test ubuntu_installation {
-	VM1 install_ubuntu_server("VM1", "user", "1111")
+	VM2 {
+		unplug dvd
+		start
+		abort "stop here"
+	}
+	
 }
 
 test install_guest_additions: ubuntu_installation {
-	VM1 install_guest_additions_ubuntu_server("VM1", "user", "1111")
+	VM2 install_guest_additions_ubuntu_server("VM1", "user", "1111")
 }
 

@@ -39,14 +39,27 @@ void VmController::create() {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
 
-		fs::path iso_file = config.at("iso").get<std::string>();
 
 		config.erase("src_file");
 		config.erase("metadata");
 
 		metadata["vm_config"] = config.dump();
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
+
+		if (config.count("iso")) {
+			fs::path iso_file = config.at("iso").get<std::string>();
+			metadata["iso_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
+		}
+
+		if (config.count("disk")) {
+			for (auto& disk: config.at("disk")) {
+				if (disk.count("source")) {
+					std::string signature_name = std::string("disk_signature@") + disk.at("name").get<std::string>();
+					metadata[signature_name] = file_signature(disk.at("source").get<std::string>(), env->content_cksum_maxsize());
+				}
+			}
+		}
+
 		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
@@ -200,29 +213,46 @@ bool VmController::check_config_relevance() {
 		return false;
 	}
 
+	if (new_config.count("iso")) {
+		if (!has_key("iso_signature")) {
+			return false;
+		}
+		
+		fs::path iso_file = new_config.at("iso").get<std::string>();
+		if (file_signature(iso_file, env->content_cksum_maxsize()) != get_metadata("iso_signature")) {
+			return false;
+		}
+	}
+
+	//So... check the disks...
+	//We are not sure about anything...
+
+	//So for every disk in new config
+	//check signature if we could
+
+	if (new_config.count("disk")) {
+		for (auto& disk: new_config.at("disk")) {
+			if (disk.count("source")) {
+				//Let's check we even have the metadata
+				std::string signature_name = std::string("disk_signature@") + disk.at("name").get<std::string>();
+				if (!has_key(signature_name)) {
+					return false;
+				}
+
+				if (file_signature(disk.at("source").get<std::string>(), env->content_cksum_maxsize()) != get_metadata(signature_name)) {
+					return false;
+				}
+			}
+		}
+	}
+
 	new_config.erase("nic");
 	old_config.erase("nic");
-
-	new_config.erase("iso");
-	old_config.erase("iso");
 
 	new_config.erase("src_file");
 	//old_config already doesn't have the src_file
 
-	bool config_is_ok = (old_config == new_config);
-
-	//Check also dvd contingency
-
-	fs::path iso_file = vm->get_config().at("iso").get<std::string>();
-	if (iso_file.is_relative()) {
-		fs::path src_file(vm->get_config().at("src_file").get<std::string>());
-		iso_file = src_file.parent_path() / iso_file;
-	}
-	iso_file = fs::canonical(iso_file);
-
-	bool iso_is_ok = (file_signature(iso_file, env->content_cksum_maxsize()) == get_metadata("dvd_signature"));
-
-	return (config_is_ok && iso_is_ok);
+	return old_config == new_config;
 }
 
 fs::path VmController::get_metadata_dir() const {

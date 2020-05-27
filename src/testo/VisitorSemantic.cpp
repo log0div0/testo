@@ -127,6 +127,7 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 
 	attr_ctx disk_ctx;
 	disk_ctx.insert({"size", std::make_pair(false, Token::category::size)});
+	disk_ctx.insert({"source", std::make_pair(false, Token::category::quoted_string)});
 	
 	attr_ctxs.insert({"disk", disk_ctx});
 
@@ -762,21 +763,42 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.begin().file.generic_string();
 
-	if (!config.count("iso")) {
-		throw std::runtime_error("Constructing VM " + machine->name.value() + " error: field ISO is not specified");
+	if (config.count("iso")) {
+		fs::path iso_file = config.at("iso").get<std::string>();
+		if (iso_file.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			iso_file = src_file.parent_path() / iso_file;
+		}
+
+		if (!fs::exists(iso_file)) {
+			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
+		}
+
+		iso_file = fs::canonical(iso_file);
+
+		config["iso"] = iso_file.generic_string();
 	}
 
-	fs::path iso_file = config.at("iso").get<std::string>();
-	if (iso_file.is_relative()) {
-		fs::path src_file(config.at("src_file").get<std::string>());
-		iso_file = src_file.parent_path() / iso_file;
-	}
+	if (config.count("disk")) {
+		auto& disks = config.at("disk");
 
-	if (!fs::exists(iso_file)) {
-		throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
-	}
+		for (auto& disk: disks) {
+			if (disk.count("source")) {
+				fs::path source_file = disk.at("source").get<std::string>();
+				if (source_file.is_relative()) {
+					fs::path src_file(config.at("src_file").get<std::string>());
+					source_file = src_file.parent_path() / source_file;
+				}
 
-	config["iso"] = iso_file.generic_string();
+				if (!fs::exists(source_file)) {
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", machine->name.value(), source_file.generic_string()));
+				}
+
+				source_file = fs::canonical(source_file);
+				disk["source"] = source_file;
+			}
+		}
+	}
 
 	auto vmc = env->create_vm_controller(config);
 	reg->vmcs.emplace(std::make_pair(machine->name, vmc));
