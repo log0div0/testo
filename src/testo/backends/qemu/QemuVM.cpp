@@ -512,10 +512,43 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 
 void QemuVM::hold(const std::vector<std::string>& buttons) {
 	try {
-		throw std::runtime_error("HOLD TO DO");
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command({
+			{"execute", "input-send-event"},
+			{"arguments", {
+				{"events", nlohmann::json::array()}
+			}}
+		});
+
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+
+			uint32_t scancode = scancodes[button];
+			nlohmann::json button_spec = nlohmann::json::parse(fmt::format(R"(
+				{{
+					"type": "key",
+					"data": {{
+						"down": true,
+						"key": {{
+							"type": "number",
+							"data": {}
+						}}
+					}}
+				}}
+			)", scancode));
+
+			json_command["arguments"]["events"].push_back(button_spec);
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
+		std::throw_with_nested(std::runtime_error("Holding buttons error"));
 	}
 }
 
