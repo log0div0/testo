@@ -1031,7 +1031,7 @@ void QemuVM::attach_flash_drive(const std::string& img_path) {
 			<disk type='file'>
 				<driver name='qemu' type='qcow2'/>
 				<source file='{}'/>
-				<target dev='sdb' bus='usb'/>
+				<target dev='sdb' bus='usb' removable='on'/>
 			</disk>
 			)", img_path);
 
