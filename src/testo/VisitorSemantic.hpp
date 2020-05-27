@@ -27,6 +27,7 @@ struct VisitorSemantic {
 	void visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click);
 	void visit_mouse(std::shared_ptr<AST::Mouse> mouse);
 	void visit_press(std::shared_ptr<AST::Press> press);
+	void visit_key_combination(std::shared_ptr<AST::KeyCombination> combination);
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<AST::Plug> plug);
 	void visit_exec(std::shared_ptr<AST::Exec> exec);

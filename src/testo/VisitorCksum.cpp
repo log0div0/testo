@@ -53,6 +53,10 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 		return std::string(*(p->action));
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
+		return std::string(*p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
+		return "release";
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
 		return visit_mouse(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
