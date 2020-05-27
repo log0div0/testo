@@ -58,6 +58,7 @@ private:
 	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
 	std::shared_ptr<AST::Cmd> command();
 	std::shared_ptr<AST::CmdBlock> command_block();
+	std::shared_ptr<AST::KeyCombination> key_combination();
 	std::shared_ptr<AST::KeySpec> key_spec();
 	std::shared_ptr<AST::IAction> action();
 	std::shared_ptr<AST::Action<AST::Empty>> empty_action();

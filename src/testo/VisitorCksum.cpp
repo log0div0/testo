@@ -198,7 +198,7 @@ std::string VisitorCksum::visit_mouse_move_target(std::shared_ptr<AST::IMouseMov
 
 std::string VisitorCksum::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 	std::string result("key_spec");
-	result += key_spec->get_buttons_str();
+	result += key_spec->combination->get_buttons_str();
 	result += std::to_string(key_spec->get_times());
 	return result;
 }

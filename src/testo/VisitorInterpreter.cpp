@@ -1205,10 +1205,10 @@ void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmControll
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
 	uint32_t times = key_spec->get_times();
 
-	reporter.press_key(vmc, key_spec->get_buttons_str(), times);
+	reporter.press_key(vmc, key_spec->combination->get_buttons_str(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
-		vmc->vm->press(key_spec->get_buttons());
+		vmc->vm->press(key_spec->combination->get_buttons());
 		timer.waitFor(std::chrono::milliseconds(interval));
 	}
 }

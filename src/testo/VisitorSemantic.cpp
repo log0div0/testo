@@ -437,7 +437,7 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 		}
 	}
 
-	for (auto button: key_spec->buttons) {
+	for (auto button: key_spec->combination->buttons) {
 		if (!is_button(button)) {
 			throw std::runtime_error(std::string(button.begin()) +
 				" :Error: Unknown key " + button.value());

@@ -495,9 +495,8 @@ std::shared_ptr<CmdBlock> Parser::command_block() {
 	return std::shared_ptr<CmdBlock>(new CmdBlock(lbrace, rbrace, commands));
 }
 
-std::shared_ptr<KeySpec> Parser::key_spec() {
+std::shared_ptr<KeyCombination> Parser::key_combination() {
 	std::vector<Token> buttons;
-	Token times = Token();
 
 	do {
 		buttons.push_back(LT(1));
@@ -508,13 +507,20 @@ std::shared_ptr<KeySpec> Parser::key_spec() {
 		}
 	} while (LA(1) == Token::category::id);
 
+	return std::shared_ptr<KeyCombination>(new KeyCombination(buttons));
+}
+
+std::shared_ptr<KeySpec> Parser::key_spec() {
+	Token times = Token();
+	auto combination = key_combination();
+
 	if (LA(1) == Token::category::asterisk) {
 		match(Token::category::asterisk);
 		times = LT(1);
 		match(Token::category::number);
 	}
 
-	return std::shared_ptr<KeySpec>(new KeySpec(buttons, times));
+	return std::shared_ptr<KeySpec>(new KeySpec(combination, times));
 }
 
 std::shared_ptr<IAction> Parser::action() {

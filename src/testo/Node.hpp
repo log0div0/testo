@@ -107,31 +107,23 @@ struct Selectable: public ISelectable {
 	std::shared_ptr<SelectableType> selectable;
 };
 
-struct KeySpec: public Node {
-	KeySpec(const std::vector<Token>& buttons, const Token& times):
-		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
-		buttons(buttons),
-		times(times) {}
+struct KeyCombination: public Node {
+	KeyCombination(const std::vector<Token>& buttons):
+		Node(Token(Token::category::key_combination, "key_combination", Pos(), Pos())),
+		buttons(buttons) {}
 
 	Pos begin() const {
 		return buttons[0].begin();
 	}
 
 	Pos end() const {
-		if (times) {
-			return times.end();
-		} else {
-			return buttons[buttons.size() - 1].end();
-		}
+		return buttons[buttons.size() - 1].end();
 	}
 
 	operator std::string() const {
 		std::string result = buttons[0].value();
 		for (size_t i = 1; i < buttons.size(); i++) {
 			result += "+" + buttons[i].value();
-		}
-		if (times) {
-			result += "*" + times.value();
 		}
 		return result;
 	}
@@ -158,6 +150,35 @@ struct KeySpec: public Node {
 		return result;
 	}
 
+	std::vector<Token> buttons;
+};
+
+struct KeySpec: public Node {
+	KeySpec(std::shared_ptr<KeyCombination> combination, const Token& times):
+		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
+		combination(combination),
+		times(times) {}
+
+	Pos begin() const {
+		return combination->begin();
+	}
+
+	Pos end() const {
+		if (times) {
+			return times.end();
+		} else {
+			return combination->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*combination);
+		if (times) {
+			result += "*" + times.value();
+		}
+		return result;
+	}
+
 	uint32_t get_times() const {
 		if (times) {
 			return std::stoul(times.value());
@@ -166,7 +187,7 @@ struct KeySpec: public Node {
 		}
 	}
 
-	std::vector<Token> buttons;
+	std::shared_ptr<KeyCombination> combination;
 	Token times;
 };
 
@@ -460,7 +481,6 @@ struct Press: public Node {
 	std::vector<std::shared_ptr<KeySpec>> keys;
 	Token interval;
 };
-
 
 struct IMouseMoveTarget: public Node {
 	using Node::Node;
