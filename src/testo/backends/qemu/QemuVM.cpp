@@ -510,6 +510,15 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
+void QemuVM::hold(const std::vector<std::string>& buttons) {
+	try {
+		throw std::runtime_error("HOLD TO DO");
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
+	}
+}
+
 void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());

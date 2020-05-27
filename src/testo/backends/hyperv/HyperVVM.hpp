@@ -13,6 +13,7 @@ struct HyperVVM: VM {
 	void make_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;
+	void hold(const std::vector<std::string>& buttons) override;
 	void mouse_move_abs(uint32_t x, uint32_t y) override;
 	void mouse_move_abs(const std::string& axis, uint32_t value) override;
 	void mouse_move_rel(int x, int y) override;

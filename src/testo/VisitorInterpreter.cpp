@@ -689,6 +689,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		visit_sleep(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		visit_press(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
+		visit_hold(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
 		visit_mouse(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
@@ -910,6 +912,15 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press, vmc));
+	}
+}
+
+void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Hold> hold) {
+	try {
+		reporter.hold_key(vmc, hold->combination->get_buttons_str());
+		vmc->vm->hold(hold->combination->get_buttons());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(hold, vmc));
 	}
 }
 
