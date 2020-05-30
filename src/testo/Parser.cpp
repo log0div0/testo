@@ -729,7 +729,12 @@ std::shared_ptr<Action<Release>> Parser::release() {
 	Token release_token = LT(1);
 	match(Token::category::release);
 
-	auto action = std::shared_ptr<Release>(new Release(release_token));
+	std::shared_ptr<AST::KeyCombination> combination = nullptr;
+	if (LA(1) == Token::category::id) {
+		combination = key_combination();
+	}
+
+	auto action = std::shared_ptr<Release>(new Release(release_token, combination));
 	return std::shared_ptr<Action<Release>>(new Action<Release>(action));
 }
 

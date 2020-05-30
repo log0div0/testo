@@ -66,6 +66,10 @@ void DummyVM::hold(const std::vector<std::string>& buttons) {
 	return;
 }
 
+void DummyVM::release(const std::vector<std::string>& buttons) {
+	return;
+}
+
 void DummyVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	return;
 }

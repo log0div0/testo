@@ -122,9 +122,13 @@ struct KeyCombination: public Node {
 
 	operator std::string() const {
 		std::string result = buttons[0].value();
+		std::transform(result.begin(), result.end(), result.begin(), ::toupper);
 		for (size_t i = 1; i < buttons.size(); i++) {
-			result += "+" + buttons[i].value();
+			auto button_str = buttons[i].value();
+			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
+			result += "+" + button_str;
 		}
+
 		return result;
 	}
 
@@ -133,18 +137,6 @@ struct KeyCombination: public Node {
 
 		for (auto& button: buttons) {
 			result.push_back(button.value());
-		}
-
-		return result;
-	}
-
-	std::string get_buttons_str() const {
-		std::string result = buttons[0].value();
-		std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-		for (size_t i = 1; i < buttons.size(); i++) {
-			auto button_str = buttons[i].value();
-			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
-			result += "+" + button_str;
 		}
 
 		return result;
@@ -502,21 +494,31 @@ struct Hold: public Node {
 };
 
 struct Release: public Node {
-	Release(const Token& release):
-		Node(release) {}
+	Release(const Token& release, std::shared_ptr<KeyCombination> combination):
+		Node(release), combination(combination) {}
 
 	Pos begin() const {
 		return t.begin();
 	}
 
 	Pos end() const {
-		return t.end();
+		if (combination) {
+			return combination->end();
+		} else {
+			return t.end();
+		}
 	}
 
 	operator std::string() const {
-		return t.value();
+		std::string result = t.value();
+		if (combination) {
+			result += " " + std::string(*combination);
+		}
+		
+		return result;
 	}
-	
+
+	std::shared_ptr<KeyCombination> combination = nullptr;
 };
 
 struct IMouseMoveTarget: public Node {

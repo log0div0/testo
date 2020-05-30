@@ -47,8 +47,12 @@ struct Reporter {
 	void start(std::shared_ptr<VmController> vmc);
 	void stop(std::shared_ptr<VmController> vmc);
 	void shutdown(std::shared_ptr<VmController> vmc, const std::string& timeout);
-	void press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times);
-	void hold_key(std::shared_ptr<VmController> vmc, const std::string& key);
+
+	std::string keys_to_str(const std::vector<std::string>& keys) const;
+
+	void press_key(std::shared_ptr<VmController> vmc, const std::vector<std::string>& keys, uint32_t times);
+	void hold_key(std::shared_ptr<VmController> vmc, const std::vector<std::string>& keys);
+	void release_key(std::shared_ptr<VmController> vmc, const std::vector<std::string>& keys);
 	void type(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& interval);
 	void sleep(std::shared_ptr<VmController> vmc, const std::string& timeout);
 	void wait(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& timeout, const std::string& interval);

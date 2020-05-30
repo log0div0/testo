@@ -691,6 +691,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		visit_press(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
 		visit_hold(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
+		visit_release(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
 		visit_mouse(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
@@ -917,12 +919,29 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Hold> hold) {
 	try {
-		reporter.hold_key(vmc, hold->combination->get_buttons_str());
+		reporter.hold_key(vmc, hold->combination->get_buttons());
 		vmc->vm->hold(hold->combination->get_buttons());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(hold, vmc));
 	}
 }
+
+void VisitorInterpreter::visit_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Release> release) {
+	try {
+		std::vector<std::string> buttons_to_release;
+
+		if (release->combination) {
+			buttons_to_release = release->combination->get_buttons();
+		} else {
+			//TODO
+		}
+		reporter.release_key(vmc, buttons_to_release);
+		vmc->vm->release(buttons_to_release);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(release, vmc));
+	}
+}
+
 
 void VisitorInterpreter::visit_mouse(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Mouse> mouse) {
 	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse->event)) {
@@ -1216,7 +1235,7 @@ void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmControll
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
 	uint32_t times = key_spec->get_times();
 
-	reporter.press_key(vmc, key_spec->combination->get_buttons_str(), times);
+	reporter.press_key(vmc, key_spec->combination->get_buttons(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->combination->get_buttons());

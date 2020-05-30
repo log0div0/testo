@@ -552,6 +552,15 @@ void QemuVM::hold(const std::vector<std::string>& buttons) {
 	}
 }
 
+
+void QemuVM::release(const std::vector<std::string>& buttons) {
+	try {
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Releasing buttons error"));
+	}
+}
+
 void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());

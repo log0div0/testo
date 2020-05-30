@@ -406,6 +406,10 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_press(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
 		return visit_key_combination(p->action->combination);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
+		if (p->action->combination) {
+			return visit_key_combination(p->action->combination);
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
