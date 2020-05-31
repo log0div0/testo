@@ -919,7 +919,7 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Hold> hold) {
 	try {
-		reporter.hold_key(vmc, hold->combination->get_buttons());
+		reporter.hold_key(vmc, std::string(*hold->combination));
 		vmc->vm->hold(hold->combination->get_buttons());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(hold, vmc));
@@ -935,7 +935,7 @@ void VisitorInterpreter::visit_release(std::shared_ptr<VmController> vmc, std::s
 		} else {
 			//TODO
 		}
-		reporter.release_key(vmc, buttons_to_release);
+		reporter.release_key(vmc, std::string(*release->combination));
 		vmc->vm->release(buttons_to_release);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(release, vmc));
@@ -1235,7 +1235,7 @@ void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmControll
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
 	uint32_t times = key_spec->get_times();
 
-	reporter.press_key(vmc, key_spec->combination->get_buttons(), times);
+	reporter.press_key(vmc, *key_spec->combination, times);
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->vm->press(key_spec->combination->get_buttons());

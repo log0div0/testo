@@ -121,12 +121,10 @@ struct KeyCombination: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = buttons[0].value();
-		std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+		auto btns = get_buttons();
+		std::string result = buttons[0];
 		for (size_t i = 1; i < buttons.size(); i++) {
-			auto button_str = buttons[i].value();
-			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
-			result += "+" + button_str;
+			result += "+" + buttons[i];
 		}
 
 		return result;
@@ -136,7 +134,9 @@ struct KeyCombination: public Node {
 		std::vector<std::string> result;
 
 		for (auto& button: buttons) {
-			result.push_back(button.value());
+			std::string button_str = button.value();
+			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
+			result.push_back(button_str);
 		}
 
 		return result;

@@ -234,21 +234,9 @@ void Reporter::shutdown(std::shared_ptr<VmController> vmc, const std::string& ti
 	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
 
-std::string Reporter::keys_to_str(const std::vector<std::string>& keys) const {
-	std::string result = keys[0];
-	std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-	for (size_t i = 1; i < keys.size(); i++) {
-		auto key_str = keys[i];
-		std::transform(key_str.begin(), key_str.end(), key_str.begin(), ::toupper);
-		result += "+" + key_str;
-	}
-
-	return result;
-}
-
-void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::vector<std::string>& keys, uint32_t times) {
+void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::string& key, uint32_t times) {
 	report(fmt::format("{} Pressing key ", progress()), blue);
-	report(fmt::format("{} ", keys_to_str(keys)), yellow);
+	report(fmt::format("{} ", key), yellow);
 
 	if (times > 1) {
 		report(fmt::format("{} times ", times), blue);
@@ -258,17 +246,17 @@ void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::vector<st
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::hold_key(std::shared_ptr<VmController> vmc, const std::vector<std::string>& keys) {
+void Reporter::hold_key(std::shared_ptr<VmController> vmc, const std::string& key) {
 	report(fmt::format("{} Holding key ", progress()), blue);
-	report(fmt::format("{} ", keys_to_str(keys)), yellow);
+	report(fmt::format("{} ", key), yellow);
 
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::release_key(std::shared_ptr<VmController> vmc, const std::vector<std::string>& keys) {
+void Reporter::release_key(std::shared_ptr<VmController> vmc, const std::string& keys) {
 	report(fmt::format("{} Releasing key ", progress()), blue);
-	report(fmt::format("{} ", keys_to_str(keys)), yellow);
+	report(fmt::format("{} ", keys), yellow);
 
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
