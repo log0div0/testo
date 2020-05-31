@@ -122,9 +122,9 @@ struct KeyCombination: public Node {
 
 	operator std::string() const {
 		auto btns = get_buttons();
-		std::string result = buttons[0];
-		for (size_t i = 1; i < buttons.size(); i++) {
-			result += "+" + buttons[i];
+		std::string result = btns[0];
+		for (size_t i = 1; i < btns.size(); i++) {
+			result += "+" + btns[i];
 		}
 
 		return result;

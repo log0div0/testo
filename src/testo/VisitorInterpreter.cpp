@@ -920,7 +920,9 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Hold> hold) {
 	try {
 		reporter.hold_key(vmc, std::string(*hold->combination));
-		vmc->vm->hold(hold->combination->get_buttons());
+		auto buttons = hold->combination->get_buttons();
+		vmc->vm->hold(buttons);
+		std::copy(buttons.begin(), buttons.end(), std::inserter(vmc->current_held_keyboard_buttons, vmc->current_held_keyboard_buttons.end()));
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(hold, vmc));
 	}
@@ -929,13 +931,20 @@ void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::visit_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Release> release) {
 	try {
 		std::vector<std::string> buttons_to_release;
+		std::string buttons_to_release_str;
 
 		if (release->combination) {
 			buttons_to_release = release->combination->get_buttons();
+			buttons_to_release_str = std::string(*release->combination);
 		} else {
-			//TODO
+			std::copy(vmc->current_held_keyboard_buttons.begin(), vmc->current_held_keyboard_buttons.end(), std::back_inserter(buttons_to_release));
+			buttons_to_release_str = buttons_to_release[0];
+
+			for (size_t i = 1; i < buttons_to_release.size(); i++) {
+				buttons_to_release_str += "+" + buttons_to_release[i];
+			}
 		}
-		reporter.release_key(vmc, std::string(*release->combination));
+		reporter.release_key(vmc, buttons_to_release_str);
 		vmc->vm->release(buttons_to_release);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(release, vmc));

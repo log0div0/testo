@@ -26,4 +26,5 @@ struct VmController: public Controller {
 	std::shared_ptr<VM> vm;
 
 	MouseButton current_held_mouse_button = MouseButton::None;
+	std::set<std::string> current_held_keyboard_buttons;
 };
