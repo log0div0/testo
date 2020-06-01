@@ -105,6 +105,10 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 			throw std::runtime_error("There is some mouse button held down. Please release it before the end of test");
 		}
 
+		if (current_held_keyboard_buttons.size()) {
+			throw std::runtime_error("There are some keyboard buttons held down. Please release them before the end of test");
+		}
+
 		if (has_snapshot(snapshot)) {
 			delete_snapshot_with_children(snapshot);
 		}
