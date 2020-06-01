@@ -769,7 +769,7 @@ void QemuVM::mouse_move_rel(const std::string& axis, int value) {
 	}
 }
 
-void QemuVM::mouse_press(const std::vector<MouseButton>& buttons) {
+void QemuVM::mouse_hold(const std::vector<MouseButton>& buttons) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 

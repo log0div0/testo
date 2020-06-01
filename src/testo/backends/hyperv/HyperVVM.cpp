@@ -216,7 +216,7 @@ void HyperVVM::mouse_move_rel(const std::string& axis, int value) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-void HyperVVM::mouse_press(const std::vector<MouseButton>& buttons) {
+void HyperVVM::mouse_hold(const std::vector<MouseButton>& buttons) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

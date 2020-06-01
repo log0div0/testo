@@ -36,7 +36,7 @@ struct VM {
 	virtual void mouse_move_abs(const std::string& axis, uint32_t value) = 0;
 	virtual void mouse_move_rel(int x, int y) = 0;
 	virtual void mouse_move_rel(const std::string& axis, int value) = 0;
-	virtual void mouse_press(const std::vector<MouseButton>& buttons) = 0;
+	virtual void mouse_hold(const std::vector<MouseButton>& buttons) = 0;
 	virtual void mouse_release(const std::vector<MouseButton>& buttons) = 0;
 	virtual bool is_nic_plugged(const std::string& nic) const = 0;
 	virtual void set_nic(const std::string& nic, bool is_enabled) = 0;

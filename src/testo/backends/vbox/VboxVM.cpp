@@ -404,7 +404,7 @@ void VboxVM::mouse_move_rel(const std::string& axis, int value) {
 	throw std::runtime_error("Implement me");
 }
 
-void VboxVM::mouse_press(const std::vector<MouseButton>& buttons) {
+void VboxVM::mouse_hold(const std::vector<MouseButton>& buttons) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

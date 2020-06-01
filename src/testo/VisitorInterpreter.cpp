@@ -992,13 +992,13 @@ void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<VmController> vmc, std
 	try {
 		reporter.mouse_hold(vmc, mouse_hold->button.value());
 		if (mouse_hold->button.type() == Token::category::lbtn) {
-			vmc->vm->mouse_press({MouseButton::Left});
+			vmc->vm->mouse_hold({MouseButton::Left});
 			vmc->current_held_mouse_button = MouseButton::Left;
 		} else if (mouse_hold->button.type() == Token::category::rbtn) {
-			vmc->vm->mouse_press({MouseButton::Right});
+			vmc->vm->mouse_hold({MouseButton::Right});
 			vmc->current_held_mouse_button = MouseButton::Right;
 		} else if (mouse_hold->button.type() == Token::category::mbtn) {
-			vmc->vm->mouse_press({MouseButton::Middle});
+			vmc->vm->mouse_hold({MouseButton::Middle});
 			vmc->current_held_mouse_button = MouseButton::Middle;
 		} else {
 			throw std::runtime_error("Unknown mouse button: " + mouse_hold->button.value());
@@ -1034,10 +1034,10 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 		reporter.mouse_wheel(vmc, mouse_wheel->direction.value());
 
 		if (mouse_wheel->direction.value() == "up") {
-			vmc->vm->mouse_press({MouseButton::WheelUp});
+			vmc->vm->mouse_hold({MouseButton::WheelUp});
 			vmc->vm->mouse_release({MouseButton::WheelUp});
 		} else if (mouse_wheel->direction.value() == "down") {
-			vmc->vm->mouse_press({MouseButton::WheelDown});
+			vmc->vm->mouse_hold({MouseButton::WheelDown});
 			vmc->vm->mouse_release({MouseButton::WheelDown});
 		} else {
 			throw std::runtime_error("Unknown wheel direction");
@@ -1071,19 +1071,19 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vm
 		}
 
 		if (mouse_move_click->t.type() == Token::category::click || mouse_move_click->t.type() == Token::category::lclick) {
-			vmc->vm->mouse_press({MouseButton::Left});
+			vmc->vm->mouse_hold({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
 		} else if (mouse_move_click->t.type() == Token::category::rclick) {
-			vmc->vm->mouse_press({MouseButton::Right});
+			vmc->vm->mouse_hold({MouseButton::Right});
 			vmc->vm->mouse_release({MouseButton::Right});
 		} else if (mouse_move_click->t.type() == Token::category::mclick) {
-			vmc->vm->mouse_press({MouseButton::Middle});
+			vmc->vm->mouse_hold({MouseButton::Middle});
 			vmc->vm->mouse_release({MouseButton::Middle});
 		} else if (mouse_move_click->t.type() == Token::category::dclick) {
-			vmc->vm->mouse_press({MouseButton::Left});
+			vmc->vm->mouse_hold({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
 			timer.waitFor(std::chrono::milliseconds(20));
-			vmc->vm->mouse_press({MouseButton::Left});
+			vmc->vm->mouse_hold({MouseButton::Left});
 			vmc->vm->mouse_release({MouseButton::Left});
 		} else {
 			throw std::runtime_error("Unsupported click type");
