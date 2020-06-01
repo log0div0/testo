@@ -263,3 +263,38 @@ fs::path VmController::get_metadata_dir() const {
 	return env->vm_metadata_dir() / id();
 }
 
+void VmController::mouse_press(const std::vector<MouseButton>& buttons) {
+	if (buttons.size() > 1) {
+		throw std::runtime_error("Can't press more than 1 mouse button");
+	}
+
+	if (current_held_mouse_button != MouseButton::None) {
+		throw std::runtime_error("Can't press a mouse button with any already held mouse buttons");
+	}
+
+	vm->mouse_hold(buttons);
+	vm->mouse_release(buttons);
+}
+
+void VmController::mouse_hold(const std::vector<MouseButton>& buttons) {
+	if (buttons.size() > 1) {
+		throw std::runtime_error("Can't hold more than 1 mouse button");
+	}
+
+	if (current_held_mouse_button != MouseButton::None) {
+		throw std::runtime_error("Can't hold a mouse button: there is an already held mouse button");
+	}
+
+	vm->mouse_hold(buttons);
+	current_held_mouse_button = buttons[0];
+}
+
+void VmController::mouse_release() {
+	if (current_held_mouse_button == MouseButton::None) {
+		throw std::runtime_error("Can't release any mouse button: there is no held mouse buttons");
+	}
+
+	vm->mouse_release({current_held_mouse_button});
+	current_held_mouse_button = MouseButton::None;
+}
+
