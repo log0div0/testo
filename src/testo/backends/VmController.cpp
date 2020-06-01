@@ -1,6 +1,7 @@
 
 #include "VmController.hpp"
 #include "Environment.hpp"
+#include "coro/Timer.h"
 #include <fmt/format.h>
 
 std::string VmController::id() const {
@@ -103,6 +104,10 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 
 		if (current_held_mouse_button != MouseButton::None) {
 			throw std::runtime_error("There is some mouse button held down. Please release it before the end of test");
+		}
+
+		if (current_held_keyboard_buttons.size()) {
+			throw std::runtime_error("There are some keyboard buttons held down. Please release them before the end of test");
 		}
 
 		if (has_snapshot(snapshot)) {
@@ -257,5 +262,91 @@ bool VmController::check_config_relevance() {
 
 fs::path VmController::get_metadata_dir() const {
 	return env->vm_metadata_dir() / id();
+}
+
+void VmController::press(const std::vector<std::string>& buttons) {
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't press an already held button: " + button);
+		}
+	}
+
+	vm->press(buttons);
+}
+
+void VmController::hold(const std::vector<std::string>& buttons) {
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't hold an already held button: " + button);
+		}
+	}
+
+	vm->hold(buttons);
+	std::copy(buttons.begin(), buttons.end(), std::inserter(current_held_keyboard_buttons, current_held_keyboard_buttons.end()));
+}
+
+void VmController::release(const std::vector<std::string>& buttons) {
+	if (!current_held_keyboard_buttons.size()) {
+		throw std::runtime_error("There is no held buttons to release");
+	}
+
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) == current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't release a button that's not held: " + button);
+		}
+	}
+
+	vm->release(buttons);
+
+	for (auto& button: buttons) {
+		current_held_keyboard_buttons.erase(button);
+	}
+}
+
+void VmController::release() {
+	if (!current_held_keyboard_buttons.size()) {
+		throw std::runtime_error("There is no held buttons to release");
+	}
+
+	std::vector<std::string> buttons_to_release(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end());
+	vm->release(buttons_to_release);
+	current_held_keyboard_buttons.clear();
+}
+
+void VmController::mouse_press(const std::vector<MouseButton>& buttons) {
+	if (buttons.size() > 1) {
+		throw std::runtime_error("Can't press more than 1 mouse button");
+	}
+
+	if (current_held_mouse_button != MouseButton::None) {
+		throw std::runtime_error("Can't press a mouse button with any already held mouse buttons");
+	}
+
+	vm->mouse_hold(buttons);
+	coro::Timer timer;
+	timer.waitFor(std::chrono::milliseconds(20));
+	vm->mouse_release(buttons);
+}
+
+void VmController::mouse_hold(const std::vector<MouseButton>& buttons) {
+	if (buttons.size() > 1) {
+		throw std::runtime_error("Can't hold more than 1 mouse button");
+	}
+
+	if (current_held_mouse_button != MouseButton::None) {
+		throw std::runtime_error("Can't hold a mouse button: there is an already held mouse button");
+	}
+
+	vm->mouse_hold(buttons);
+	current_held_mouse_button = buttons[0];
+}
+
+void VmController::mouse_release() {
+	if (current_held_mouse_button == MouseButton::None) {
+		throw std::runtime_error("Can't release any mouse button: there is no held mouse buttons");
+	}
+
+	vm->mouse_release({current_held_mouse_button});
+	current_held_mouse_button = MouseButton::None;
 }
 

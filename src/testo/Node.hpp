@@ -107,32 +107,26 @@ struct Selectable: public ISelectable {
 	std::shared_ptr<SelectableType> selectable;
 };
 
-struct KeySpec: public Node {
-	KeySpec(const std::vector<Token>& buttons, const Token& times):
-		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
-		buttons(buttons),
-		times(times) {}
+struct KeyCombination: public Node {
+	KeyCombination(const std::vector<Token>& buttons):
+		Node(Token(Token::category::key_combination, "key_combination", Pos(), Pos())),
+		buttons(buttons) {}
 
 	Pos begin() const {
 		return buttons[0].begin();
 	}
 
 	Pos end() const {
-		if (times) {
-			return times.end();
-		} else {
-			return buttons[buttons.size() - 1].end();
-		}
+		return buttons.back().end();
 	}
 
 	operator std::string() const {
-		std::string result = buttons[0].value();
-		for (size_t i = 1; i < buttons.size(); i++) {
-			result += "+" + buttons[i].value();
+		auto btns = get_buttons();
+		std::string result = btns[0];
+		for (size_t i = 1; i < btns.size(); i++) {
+			result += "+" + btns[i];
 		}
-		if (times) {
-			result += "*" + times.value();
-		}
+
 		return result;
 	}
 
@@ -140,21 +134,40 @@ struct KeySpec: public Node {
 		std::vector<std::string> result;
 
 		for (auto& button: buttons) {
-			result.push_back(button.value());
+			std::string button_str = button.value();
+			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
+			result.push_back(button_str);
 		}
 
 		return result;
 	}
 
-	std::string get_buttons_str() const {
-		std::string result = buttons[0].value();
-		std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-		for (size_t i = 1; i < buttons.size(); i++) {
-			auto button_str = buttons[i].value();
-			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
-			result += "+" + button_str;
-		}
+	std::vector<Token> buttons;
+};
 
+struct KeySpec: public Node {
+	KeySpec(std::shared_ptr<KeyCombination> combination, const Token& times):
+		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
+		combination(combination),
+		times(times) {}
+
+	Pos begin() const {
+		return combination->begin();
+	}
+
+	Pos end() const {
+		if (times) {
+			return times.end();
+		} else {
+			return combination->end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*combination);
+		if (times) {
+			result += "*" + times.value();
+		}
 		return result;
 	}
 
@@ -166,7 +179,7 @@ struct KeySpec: public Node {
 		}
 	}
 
-	std::vector<Token> buttons;
+	std::shared_ptr<KeyCombination> combination;
 	Token times;
 };
 
@@ -436,7 +449,7 @@ struct Press: public Node {
 		Node(press), keys(keys), interval(interval) {}
 
 	Pos begin() const {
-		return keys[0]->begin();
+		return t.begin();
 	}
 
 	Pos end() const {
@@ -461,6 +474,52 @@ struct Press: public Node {
 	Token interval;
 };
 
+struct Hold: public Node {
+	Hold(const Token& hold, std::shared_ptr<KeyCombination> combination):
+		Node(hold), combination(combination) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return combination->end();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + std::string(*combination);
+	}
+
+	std::shared_ptr<KeyCombination> combination;
+};
+
+struct Release: public Node {
+	Release(const Token& release, std::shared_ptr<KeyCombination> combination):
+		Node(release), combination(combination) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		if (combination) {
+			return combination->end();
+		} else {
+			return t.end();
+		}
+	}
+
+	operator std::string() const {
+		std::string result = t.value();
+		if (combination) {
+			result += " " + std::string(*combination);
+		}
+		
+		return result;
+	}
+
+	std::shared_ptr<KeyCombination> combination = nullptr;
+};
 
 struct IMouseMoveTarget: public Node {
 	using Node::Node;

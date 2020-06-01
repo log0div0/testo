@@ -346,7 +346,7 @@ void QemuVM::install() {
 					<target dev='{}' bus='ide'/>
 					<readonly/>
 				</disk>
-			)", config.at("iso").get<std::string>(), disk_targets[i + 1]);
+			)", config.at("iso").get<std::string>(), disk_targets[i]);
 		} else {
 			string_config += fmt::format(R"(
 				<disk type='file' device='cdrom'>
@@ -354,7 +354,7 @@ void QemuVM::install() {
 					<target dev='{}' bus='ide'/>
 					<readonly/>
 				</disk>
-			)", disk_targets[i + 1]);
+			)", disk_targets[i]);
 		}
 
 		uint32_t nic_count = 0;
@@ -507,6 +507,91 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
+	}
+}
+
+void QemuVM::hold(const std::vector<std::string>& buttons) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command({
+			{"execute", "input-send-event"},
+			{"arguments", {
+				{"events", nlohmann::json::array()}
+			}}
+		});
+
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+
+			uint32_t scancode = scancodes[button];
+			nlohmann::json button_spec = nlohmann::json::parse(fmt::format(R"(
+				{{
+					"type": "key",
+					"data": {{
+						"down": true,
+						"key": {{
+							"type": "number",
+							"data": {}
+						}}
+					}}
+				}}
+			)", scancode));
+
+			json_command["arguments"]["events"].push_back(button_spec);
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Holding buttons error"));
+	}
+}
+
+
+void QemuVM::release(const std::vector<std::string>& buttons) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command({
+			{"execute", "input-send-event"},
+			{"arguments", {
+				{"events", nlohmann::json::array()}
+			}}
+		});
+
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+
+			uint32_t scancode = scancodes[button];
+			nlohmann::json button_spec = nlohmann::json::parse(fmt::format(R"(
+				{{
+					"type": "key",
+					"data": {{
+						"down": false,
+						"key": {{
+							"type": "number",
+							"data": {}
+						}}
+					}}
+				}}
+			)", scancode));
+
+			json_command["arguments"]["events"].push_back(button_spec);
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Releasing buttons error"));
 	}
 }
 
@@ -684,7 +769,7 @@ void QemuVM::mouse_move_rel(const std::string& axis, int value) {
 	}
 }
 
-void QemuVM::mouse_press(const std::vector<MouseButton>& buttons) {
+void QemuVM::mouse_hold(const std::vector<MouseButton>& buttons) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 

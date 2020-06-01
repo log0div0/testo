@@ -100,6 +100,7 @@ struct Token {
 		mouse_coordinates,
 		mouse_selectable,
 		mouse_additional_specifier,
+		key_combination,
 		key_spec,
 		action_block,
 		attr,
@@ -288,6 +289,8 @@ struct Token {
 			return "MOUSE ADDITIONAL SPECIFIER";
 		case mouse_coordinates:
 			return "MOUSE COORDINATES";
+		case key_combination:
+			return "KEY COMBINATION";
 		case key_spec:
 			return "KEY SPECIFICATION";
 		case action_block:

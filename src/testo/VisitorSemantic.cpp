@@ -404,6 +404,12 @@ void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> actio
 void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
+		return visit_key_combination(p->action->combination);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
+		if (p->action->combination) {
+			return visit_key_combination(p->action->combination);
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
@@ -429,18 +435,30 @@ void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
 	}
 }
 
+void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination> combination) {
+	for (size_t i = 0; i < combination->buttons.size(); ++i) {
+		auto button = combination->buttons[i];
+		if (!is_button(button)) {
+			throw std::runtime_error(std::string(button.begin()) +
+				" :Error: Unknown key " + button.value());
+		}
+
+		for (size_t j = i + 1; j < combination->buttons.size(); ++j) {
+			if (button.value() == combination->buttons[j].value()) {
+				throw std::runtime_error(std::string(combination->buttons[j].begin()) +
+					" :Error: duplicate key " + button.value());
+			}
+		}
+	}
+}
+
 void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
+	visit_key_combination(key_spec->combination);
+
 	if (key_spec->times.value().length()) {
 		if (std::stoi(key_spec->times.value()) < 1) {
 			throw std::runtime_error(std::string(key_spec->times.begin()) +
 					" :Error: Can't press a button less than 1 time: " + key_spec->times.value());
-		}
-	}
-
-	for (auto button: key_spec->buttons) {
-		if (!is_button(button)) {
-			throw std::runtime_error(std::string(button.begin()) +
-				" :Error: Unknown key " + button.value());
 		}
 	}
 }

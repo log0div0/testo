@@ -23,7 +23,17 @@ struct VmController: public Controller {
 
 	fs::path get_metadata_dir() const override;
 
+	void press(const std::vector<std::string>& buttons);
+	void hold(const std::vector<std::string>& buttons);
+	void release(); 
+	void release(const std::vector<std::string>& buttons); 
+
+	void mouse_press(const std::vector<MouseButton>& buttons);
+	void mouse_hold(const std::vector<MouseButton>& buttons);
+	void mouse_release();
+
 	std::shared_ptr<VM> vm;
 
 	MouseButton current_held_mouse_button = MouseButton::None;
+	std::set<std::string> current_held_keyboard_buttons;
 };
