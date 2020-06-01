@@ -756,7 +756,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 			if (buttons == charmap.end()) {
 				throw std::runtime_error("Unknown character to type");
 			}
-			vmc->vm->press(buttons->second);
+			vmc->press(buttons->second);
 			timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 		}
 
@@ -919,17 +919,8 @@ void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Hold> hold) {
 	try {
-		auto buttons = hold->combination->get_buttons();
-
-		for (auto& button: buttons) {
-			if (vmc->current_held_keyboard_buttons.find(button) != vmc->current_held_keyboard_buttons.end()) {
-				throw std::runtime_error("You can't hold an already held button: " + button);
-			}
-		}
-
 		reporter.hold_key(vmc, std::string(*hold->combination));
-		vmc->vm->hold(buttons);
-		std::copy(buttons.begin(), buttons.end(), std::inserter(vmc->current_held_keyboard_buttons, vmc->current_held_keyboard_buttons.end()));
+		vmc->hold(hold->combination->get_buttons());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(hold, vmc));
 	}
@@ -937,37 +928,13 @@ void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Release> release) {
 	try {
-		if (!vmc->current_held_keyboard_buttons.size()) {
-			throw std::runtime_error("There is no held buttons to release");
-		}
-
-		std::vector<std::string> buttons_to_release;
-		std::string buttons_to_release_str;
-
 		if (release->combination) {
-			buttons_to_release = release->combination->get_buttons();
-			for (auto& button: buttons_to_release) {
-				if (vmc->current_held_keyboard_buttons.find(button) == vmc->current_held_keyboard_buttons.end()) {
-					throw std::runtime_error("You can't release a button that's not held: " + button);
-				}
-			}
-
-			buttons_to_release_str = std::string(*release->combination);
+			reporter.release_key(vmc, std::string(*release->combination));
+			vmc->release(release->combination->get_buttons());
 		} else {
-			std::copy(vmc->current_held_keyboard_buttons.begin(), vmc->current_held_keyboard_buttons.end(), std::back_inserter(buttons_to_release));
-			buttons_to_release_str = buttons_to_release[0];
-
-			for (size_t i = 1; i < buttons_to_release.size(); i++) {
-				buttons_to_release_str += "+" + buttons_to_release[i];
-			}
+			reporter.release_key(vmc);
+			vmc->release();
 		}
-		reporter.release_key(vmc, buttons_to_release_str);
-		vmc->vm->release(buttons_to_release);
-
-		for (auto& button: buttons_to_release) {
-			vmc->current_held_keyboard_buttons.erase(button);
-		}
-
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(release, vmc));
 	}
@@ -1238,20 +1205,12 @@ void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmControll
 }
 
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
-	auto buttons = key_spec->combination->get_buttons();
-
-	for (auto& button: buttons) {
-		if (vmc->current_held_keyboard_buttons.find(button) != vmc->current_held_keyboard_buttons.end()) {
-			throw std::runtime_error("You can't press an already held button: " + button);
-		}
-	}
-
 	uint32_t times = key_spec->get_times();
 
 	reporter.press_key(vmc, *key_spec->combination, times);
 
 	for (uint32_t i = 0; i < times; i++) {
-		vmc->vm->press(key_spec->combination->get_buttons());
+		vmc->press(key_spec->combination->get_buttons());
 		timer.waitFor(std::chrono::milliseconds(interval));
 	}
 }

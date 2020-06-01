@@ -1,6 +1,7 @@
 
 #include "VmController.hpp"
 #include "Environment.hpp"
+#include "coro/Timer.h"
 #include <fmt/format.h>
 
 std::string VmController::id() const {
@@ -263,6 +264,55 @@ fs::path VmController::get_metadata_dir() const {
 	return env->vm_metadata_dir() / id();
 }
 
+void VmController::press(const std::vector<std::string>& buttons) {
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't press an already held button: " + button);
+		}
+	}
+
+	vm->press(buttons);
+}
+
+void VmController::hold(const std::vector<std::string>& buttons) {
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't hold an already held button: " + button);
+		}
+	}
+
+	vm->hold(buttons);
+	std::copy(buttons.begin(), buttons.end(), std::inserter(current_held_keyboard_buttons, current_held_keyboard_buttons.end()));
+}
+
+void VmController::release(const std::vector<std::string>& buttons) {
+	if (!current_held_keyboard_buttons.size()) {
+		throw std::runtime_error("There is no held buttons to release");
+	}
+
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) == current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't release a button that's not held: " + button);
+		}
+	}
+
+	vm->release(buttons);
+
+	for (auto& button: buttons) {
+		current_held_keyboard_buttons.erase(button);
+	}
+}
+
+void VmController::release() {
+	if (!current_held_keyboard_buttons.size()) {
+		throw std::runtime_error("There is no held buttons to release");
+	}
+
+	std::vector<std::string> buttons_to_release(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end());
+	vm->release(buttons_to_release);
+	current_held_keyboard_buttons.clear();
+}
+
 void VmController::mouse_press(const std::vector<MouseButton>& buttons) {
 	if (buttons.size() > 1) {
 		throw std::runtime_error("Can't press more than 1 mouse button");
@@ -273,6 +323,8 @@ void VmController::mouse_press(const std::vector<MouseButton>& buttons) {
 	}
 
 	vm->mouse_hold(buttons);
+	coro::Timer timer;
+	timer.waitFor(std::chrono::milliseconds(20));
 	vm->mouse_release(buttons);
 }
 

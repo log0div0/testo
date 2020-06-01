@@ -262,6 +262,14 @@ void Reporter::release_key(std::shared_ptr<VmController> vmc, const std::string&
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
+void Reporter::release_key(std::shared_ptr<VmController> vmc) {
+	report(fmt::format("{} Releasing ", progress()), blue);
+	report("all held ", yellow);
+
+	report("keys in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
 void Reporter::type(std::shared_ptr<VmController> vmc, const std::string& text, const std::string& interval) {
 	report(fmt::format("{} Typing ", progress()), blue);
 	report(fmt::format("\"{}\" ", text), yellow);

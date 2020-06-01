@@ -117,7 +117,7 @@ struct KeyCombination: public Node {
 	}
 
 	Pos end() const {
-		return buttons[buttons.size() - 1].end();
+		return buttons.back().end();
 	}
 
 	operator std::string() const {
