@@ -209,29 +209,56 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
+void VisitorSemantic::setup_test_parents(std::shared_ptr<AST::Test> test) {
+	for (auto parent_token: test->parents_tokens) {
+		bool already_found = false;
+		for (auto parent: test->parents) {
+			if (parent->name.value() == parent_token.value()) {
+				already_found = true;
+				break;
+			}
+		}
+
+		if (already_found) {
+			continue;
+		}
+
+		auto parent = reg->tests.find(parent_token.value());
+		if (parent == reg->tests.end()) {
+			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
+		}
+
+		for (auto already_included: test->parents) {
+			if (already_included == parent->second) {
+				throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
+			}
+		}
+
+		if (parent_token.value() == test->name.value()) {
+			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
+		}
+
+		test->parents.push_back(parent->second);
+	}
+
+	for (auto parent: test->parents) {
+		setup_test_parents(parent);
+	}
+}
+
 void VisitorSemantic::setup_tests_parents(std::shared_ptr<AST::Program> program) {
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
 			auto test = p->stmt;
 
-			for (auto parent_token: test->parents_tokens) {
-				auto parent = reg->tests.find(parent_token.value());
-				if (parent == reg->tests.end()) {
-					throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
-				}
-
-				for (auto already_included: test->parents) {
-					if (already_included == parent->second) {
-						throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
-					}
-				}
-
-				test->parents.push_back(parent->second);
-
-				if (parent_token.value() == test->name.value()) {
-					throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
-				}
+			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
+				continue;
 			}
+
+			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
+				continue;
+			}
+			setup_test_parents(test);
 		}
 	}
 }

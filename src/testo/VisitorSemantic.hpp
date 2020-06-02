@@ -10,6 +10,7 @@
 
 struct VisitorSemantic {
 	VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::json& config);
+	void setup_test_parents(std::shared_ptr<AST::Test> test);
 	void setup_tests_parents(std::shared_ptr<AST::Program> program);
 	void setup_vars(std::shared_ptr<AST::Program> program);
 
