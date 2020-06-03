@@ -1052,13 +1052,6 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 	match(Token::category::rparen);
 
 	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
-
-	auto macro = reg->macros.find(macro_name.value());
-	if (macro == reg->macros.end()) {
-		throw std::runtime_error(std::string(action->begin()) + ": Error: unknown macro: " + action->name().value());
-	}
-	action->macro = macro->second;
-
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
 }
 
