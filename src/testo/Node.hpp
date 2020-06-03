@@ -1382,6 +1382,7 @@ struct Test: public Node {
 	std::list<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
 	bool snapshots_needed = true;
+	bool is_initialized = false;
 	std::string description;
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point stop_timestamp;

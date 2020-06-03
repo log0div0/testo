@@ -209,20 +209,61 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
-void VisitorSemantic::setup_test_parents(std::shared_ptr<AST::Test> test) {
+void VisitorSemantic::setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
+	for (auto action: action_block->actions) {
+		setup_macros_action(action);
+	}
+}
+
+void VisitorSemantic::setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+	auto macro = reg->macros.find(macro_call->name().value());
+	if (macro == reg->macros.end()) {
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
+	}
+	macro_call->macro = macro->second;
+
+	setup_macros_action_block(macro_call->macro->action_block->action);
+}
+
+void VisitorSemantic::setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
+	setup_macros_action(if_clause->if_action);
+	if (if_clause->has_else()) {
+		setup_macros_action(if_clause->else_action);
+	}
+}
+
+void VisitorSemantic::setup_macros_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
+	setup_macros_action(for_clause->cycle_body);
+
+	if (for_clause->else_token) {
+		setup_macros_action(for_clause->else_action);
+	}
+}
+
+void VisitorSemantic::setup_macros_action(std::shared_ptr<AST::IAction> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
+		return setup_macros_action_block(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
+		return setup_macros_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
+		return setup_macros_if_clause(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
+		return setup_macros_for_clause(p->action);
+	}
+}
+
+void VisitorSemantic::setup_macros(std::shared_ptr<AST::Test> test) {
+	for (auto cmd: test->cmd_block->commands) {
+		setup_macros_action(cmd->action);
+	}
+}
+
+void VisitorSemantic::setup_test(std::shared_ptr<AST::Test> test) {
+	if (test->is_initialized) {
+		return;
+	}
+
 	for (auto parent_token: test->parents_tokens) {
-		bool already_found = false;
-		for (auto parent: test->parents) {
-			if (parent->name.value() == parent_token.value()) {
-				already_found = true;
-				break;
-			}
-		}
-
-		if (already_found) {
-			continue;
-		}
-
 		auto parent = reg->tests.find(parent_token.value());
 		if (parent == reg->tests.end()) {
 			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
@@ -241,12 +282,16 @@ void VisitorSemantic::setup_test_parents(std::shared_ptr<AST::Test> test) {
 		test->parents.push_back(parent->second);
 	}
 
+	setup_macros(test);
+
 	for (auto parent: test->parents) {
-		setup_test_parents(parent);
+		setup_test(parent);
 	}
+
+	test->is_initialized = true;
 }
 
-void VisitorSemantic::setup_tests_parents(std::shared_ptr<AST::Program> program) {
+void VisitorSemantic::setup_tests(std::shared_ptr<AST::Program> program) {
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
 			auto test = p->stmt;
@@ -258,7 +303,7 @@ void VisitorSemantic::setup_tests_parents(std::shared_ptr<AST::Program> program)
 			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
 				continue;
 			}
-			setup_test_parents(test);
+			setup_test(test);
 		}
 	}
 }
@@ -286,7 +331,7 @@ void VisitorSemantic::setup_vars(std::shared_ptr<AST::Program> program) {
 }
 
 void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
-	setup_tests_parents(program);
+	setup_tests(program);
 	setup_vars(program);
 	for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
