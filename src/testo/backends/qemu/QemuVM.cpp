@@ -892,7 +892,7 @@ void QemuVM::attach_nic(const std::string& nic) {
 
 		for (auto& nic_json: config.at("nic")) {
 			if (nic_json.at("name") == nic) {
-				std::string source_network("testo-");
+				std::string source_network;
 
 				if (nic_json.at("attached_to").get<std::string>() == "internal") {
 					source_network += nic_json.at("network").get<std::string>();
