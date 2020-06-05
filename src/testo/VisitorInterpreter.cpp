@@ -1330,13 +1330,22 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 		vmc->vm->plug_dvd(path);
 	} else {
 		if (!vmc->vm->is_dvd_plugged()) {
-			// throw std::runtime_error(fmt::format("dvd is already unplugged"));
+			throw std::runtime_error(fmt::format("dvd is already unplugged"));
 			// это нормально, потому что поведение отличается от гипервизора к гипервизору
 			// иногда у ОС получается открыть дисковод, иногда - нет
-			return;
 		}
 		reporter.plug(vmc, "dvd", "", false);
 		vmc->vm->unplug_dvd();
+
+		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(10);
+		while (std::chrono::system_clock::now() < deadline) {
+			if (!vmc->vm->is_dvd_plugged()) {
+				return;
+			}
+			timer.waitFor(std::chrono::milliseconds(300));
+		}
+
+		throw std::runtime_error(fmt::format("Timeout expired for unplugging dvd"));
 	}
 }
 
