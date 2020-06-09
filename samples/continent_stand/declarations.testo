@@ -25,7 +25,7 @@ network ub_server {
 machine CUS {
 	cpus: 1
 	ram: 2048Mb
-	iso: "${ISO_DIR}/Continent.iso"
+	iso: "${ISO_DIR}/Continent/${BUILD_NUM}/Continent.iso"
 	disk main: {
 		size: 20Gb
 	}
@@ -46,7 +46,7 @@ machine CUS {
 machine UB {
 	cpus: 2
 	ram: 3072Mb
-	iso: "${ISO_DIR}/Continent.iso"
+	iso: "${ISO_DIR}/Continent/${BUILD_NUM}/Continent.iso"
 	disk main: {
 		size: 20Gb
 	}

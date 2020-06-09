@@ -110,6 +110,15 @@ test win7_client_configure_windows: win7_client_install_guest_additions {
 		wait "Внесение изменений в учетную запись"
 		press LeftAlt+F4
 		wait "Корзина"
+		mouse rclick 300 400
+		mouse click "Разрешение экрана"
+		mouse click "800 x 600"
+		mouse click "1024 x 768"
+		mouse click 0 0
+		mouse click "ОК".from_bottom(0)
+		mouse click "Сохранить изменения"
+		sleep 1s
+		wait "Корзина"
 	}
 }
 
@@ -125,7 +134,7 @@ test win7_client_install_cryptopro: win7_client_configure_windows {
 	}
 }
 
-test win7_client_install_vlc: win7_client_install_cryptopro {
+/*test win7_client_install_vlc: win7_client_install_cryptopro {
 	win7_client {
 		copyto "./vlc.exe" "C:\\Users\\testo\\Desktop\\vlc-setup.exe"
 		mouse dclick "vlc-setup"
@@ -141,13 +150,13 @@ test win7_client_install_vlc: win7_client_install_cryptopro {
 		mouse click "Готово".from_bottom(0)
 		sleep 3s
 	}
-}
+}*/
 
-test win7_client_install_ms: win7_client_install_vlc {
+test win7_client_install_ms: win7_client_install_cryptopro {
 	win7_client {
-		copyto "${MS_DIR}/MS" "C:\\Users\\testo\\Desktop\\MS"
+		copyto "${ISO_DIR}/Continent/${BUILD_NUM}/MS/x64" "C:\\Users\\testo\\Desktop\\MS"
 		mouse dclick "MS"
-		mouse dclick "setup"
+		mouse dclick "setup".from_right(0)
 		mouse click "Установить".from_bottom(0).center_bottom()
 		wait "Вас приветствует программа установки" timeout 10m
 		mouse click "Далее".from_bottom(0)
