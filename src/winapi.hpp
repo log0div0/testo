@@ -227,7 +227,15 @@ struct Service {
 		}
 	}
 
-	SERVICE_STATUS queryStatus() {
+	SERVICE_STATUS control(DWORD signal) {
+		SERVICE_STATUS status = {};
+		if (ControlService(handle, signal, &status)) {
+			throw std::runtime_error("ControlService failed");
+		}
+		return status;
+	}
+
+	SERVICE_STATUS queryStatus() const {
 		SERVICE_STATUS status = {};
 		if (!QueryServiceStatus(handle, &status)) {
 			throw std::runtime_error("QueryServiceStatus failed");
