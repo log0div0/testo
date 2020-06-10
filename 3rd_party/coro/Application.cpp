@@ -22,4 +22,10 @@ void Application::run() {
 	_ioService.run();
 }
 
+void Application::cancel() {
+	_ioService.post([=] {
+		_coro.cancel();
+	});
+}
+
 }

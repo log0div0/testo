@@ -4,6 +4,7 @@
 #include <fstream>
 #include <filesystem>
 #include <chrono>
+#include <regex>
 
 using namespace std::chrono_literals;
 
@@ -82,7 +83,7 @@ void create_service() {
 
 void start_service() {
 	winapi::SCManager manager;
-	winapi::Service service = manager.service("Testo Guest Additions");
+	winapi::Service service = manager.service("Testo Guest Additions", SERVICE_QUERY_STATUS | SERVICE_START);
 	service.start();
 	for (size_t i = 0; i < 10; ++i) {
 		SERVICE_STATUS status = service.queryStatus();
@@ -111,7 +112,7 @@ void install() {
 
 void stop_service() {
 	winapi::SCManager manager;
-	winapi::Service service = manager.service("Testo Guest Additions");
+	winapi::Service service = manager.service("Testo Guest Additions", SERVICE_QUERY_STATUS | SERVICE_STOP);
 
 	SERVICE_STATUS status = service.queryStatus();
 	if (status.dwCurrentState == SERVICE_STOPPED) {
@@ -129,6 +130,7 @@ void stop_service() {
 		if (status.dwCurrentState == SERVICE_STOPPED) {
 			return;
 		}
+		std::this_thread::sleep_for(1s);
 	}
 
 	throw std::runtime_error("Failed to stop service");
@@ -142,12 +144,26 @@ void delete_service() {
 	spdlog::info("Command output: " + output);
 }
 
-void uninstall_driver() {
-	fs::path path = winapi::get_module_file_name();
-	path = path.parent_path();
-	path = path / "vioserial" / get_os() / "vioser.inf";
+std::string get_driver_oem() {
+	std::string cmd = "pnputil /enum-drivers";
+	spdlog::info("Command to execute: " + cmd);
 
-	std::string cmd = "pnputil -d \"" + path.generic_string() + "\"";
+	std::string output = Process::exec(cmd);
+	spdlog::info("Command output: " + output);
+
+	std::regex re(R"((oem\d+\.inf)\r\n.+vioser\.inf)");
+	std::smatch match;
+	if (!std::regex_search(output, match, re)) {
+		throw std::runtime_error("regex_search failed");
+	}
+
+	return match[1];
+}
+
+void uninstall_driver() {
+	std::string oem_inf = get_driver_oem();
+
+	std::string cmd = "pnputil /delete-driver " + oem_inf + " /uninstall";
 	spdlog::info("Command to execute: " + cmd);
 
 	std::string output = Process::exec(cmd);

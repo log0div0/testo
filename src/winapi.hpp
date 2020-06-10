@@ -229,7 +229,7 @@ struct Service {
 
 	SERVICE_STATUS control(DWORD signal) {
 		SERVICE_STATUS status = {};
-		if (ControlService(handle, signal, &status)) {
+		if (!ControlService(handle, signal, &status)) {
 			throw std::runtime_error("ControlService failed");
 		}
 		return status;
@@ -264,8 +264,8 @@ struct SCManager {
 	SCManager(SCManager&& other);
 	SCManager& operator=(SCManager&& other);
 
-	Service service(const std::string& name) {
-		SC_HANDLE hService = OpenService(handle, utf8_to_utf16(name).c_str(), SERVICE_QUERY_STATUS | SERVICE_START);
+	Service service(const std::string& name, DWORD dwDesiredAccess) {
+		SC_HANDLE hService = OpenService(handle, utf8_to_utf16(name).c_str(), dwDesiredAccess);
 		if (!hService) {
 			throw std::runtime_error("OpenServiceA failed");
 		}
@@ -274,6 +274,33 @@ struct SCManager {
 
 private:
 	SC_HANDLE handle = NULL;
+};
+
+struct Event {
+	Event(BOOL manual_reset, BOOL is_signaled) {
+		handle = CreateEvent(NULL, manual_reset, is_signaled, NULL);
+		if (!handle) {
+			throw std::runtime_error("CreateEvent failed");
+		}
+	}
+
+	~Event() {
+		CloseHandle(handle);
+	}
+
+	Event(Event&& other);
+	Event& operator=(Event&& other);
+
+	void set() {
+		SetEvent(handle);
+	}
+
+	DWORD wait(DWORD ms) {
+		return WaitForSingleObject(handle, ms);
+	}
+
+private:
+	HANDLE handle = NULL;
 };
 
 }

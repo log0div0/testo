@@ -14,6 +14,6 @@ endif()
 
 if (WIN32)
 	list(APPEND SRCS win/main.cpp)
-	add_executable(testo-guest-additions ${SRCS})
-	target_link_libraries(testo-guest-additions SetupAPI process)
+	add_executable(testo-guest-additions ${SRCS} Channel_getInfo.cpp)
+	target_link_libraries(testo-guest-additions SetupAPI process coro)
 endif()

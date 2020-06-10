@@ -31,6 +31,8 @@ public:
 	/// Запускает приложение в текущем потоке
 	void run();
 
+	void cancel();
+
 private:
 	IoService _ioService;
 	Coro _coro;
