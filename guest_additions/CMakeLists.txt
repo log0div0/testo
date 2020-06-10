@@ -17,7 +17,5 @@ if (UNIX)
 		COMMAND
 			rm -f testo-guest-additions.iso &&
 			genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot -o testo-guest-additions-${TESTO_VERSION}.iso ${ISO_FILES}
-		DEPENDS
-			testo-guest-additions-package
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/out/pkg)
 endif()

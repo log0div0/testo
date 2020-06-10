@@ -8,12 +8,11 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
-Server::Server(const std::string& fd_path_): fd_path(fd_path_) {}
+Server::Server(const std::string& fd_path_): channel(fd_path_) {
+	spdlog::info("Connected to " + fd_path_);
+}
 
 void Server::run() {
-	channel = Channel(fd_path);
-
-	spdlog::info("Connected to " + fd_path);
 	spdlog::info("Waiting for commands");
 
 	while (true) {

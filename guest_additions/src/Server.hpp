@@ -28,5 +28,4 @@ private:
 
 	void send_error(const std::string& error);
 	Channel channel;
-	const std::string fd_path;
 };
