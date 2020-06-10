@@ -9,7 +9,7 @@ if (UNIX)
 	set(CMAKE_EXE_LINKER_FLAGS "-static")
 	list(APPEND SRCS linux/main.cpp)
 	add_executable(testo-guest-additions ${SRCS})
-	target_link_libraries(testo-guest-additions stdc++fs process)
+	target_link_libraries(testo-guest-additions stdc++fs process pthread)
 endif()
 
 if (WIN32)
