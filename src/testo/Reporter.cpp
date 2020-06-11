@@ -242,7 +242,31 @@ void Reporter::press_key(std::shared_ptr<VmController> vmc, const std::string& k
 		report(fmt::format("{} times ", times), blue);
 	}
 
-	report("on virtual machine ", blue);
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
+void Reporter::hold_key(std::shared_ptr<VmController> vmc, const std::string& key) {
+	report(fmt::format("{} Holding key ", progress()), blue);
+	report(fmt::format("{} ", key), yellow);
+
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
+void Reporter::release_key(std::shared_ptr<VmController> vmc, const std::string& keys) {
+	report(fmt::format("{} Releasing key ", progress()), blue);
+	report(fmt::format("{} ", keys), yellow);
+
+	report("in virtual machine ", blue);
+	report(fmt::format("{}\n", vmc->name()), yellow);
+}
+
+void Reporter::release_key(std::shared_ptr<VmController> vmc) {
+	report(fmt::format("{} Releasing ", progress()), blue);
+	report("all held ", yellow);
+
+	report("keys in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 

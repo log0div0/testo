@@ -117,13 +117,19 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 	//init attr ctx
 	attr_ctx vm_global_ctx;
 	vm_global_ctx.insert({"ram", std::make_pair(false, Token::category::size)});
-	vm_global_ctx.insert({"disk_size", std::make_pair(false, Token::category::size)});
 	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::quoted_string)});
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
+	vm_global_ctx.insert({"disk", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
+
+	attr_ctx disk_ctx;
+	disk_ctx.insert({"size", std::make_pair(false, Token::category::size)});
+	disk_ctx.insert({"source", std::make_pair(false, Token::category::quoted_string)});
+	
+	attr_ctxs.insert({"disk", disk_ctx});
 
 	attr_ctx vm_network_ctx;
 	vm_network_ctx.insert({"slot", std::make_pair(false, Token::category::number)});
@@ -203,29 +209,101 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
-void VisitorSemantic::setup_tests_parents(std::shared_ptr<AST::Program> program) {
+void VisitorSemantic::setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
+	for (auto action: action_block->actions) {
+		setup_macros_action(action);
+	}
+}
+
+void VisitorSemantic::setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+	auto macro = reg->macros.find(macro_call->name().value());
+	if (macro == reg->macros.end()) {
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
+	}
+	macro_call->macro = macro->second;
+
+	setup_macros_action_block(macro_call->macro->action_block->action);
+}
+
+void VisitorSemantic::setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
+	setup_macros_action(if_clause->if_action);
+	if (if_clause->has_else()) {
+		setup_macros_action(if_clause->else_action);
+	}
+}
+
+void VisitorSemantic::setup_macros_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
+	setup_macros_action(for_clause->cycle_body);
+
+	if (for_clause->else_token) {
+		setup_macros_action(for_clause->else_action);
+	}
+}
+
+void VisitorSemantic::setup_macros_action(std::shared_ptr<AST::IAction> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
+		return setup_macros_action_block(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
+		return setup_macros_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
+		return setup_macros_if_clause(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
+		return setup_macros_for_clause(p->action);
+	}
+}
+
+void VisitorSemantic::setup_macros(std::shared_ptr<AST::Test> test) {
+	for (auto cmd: test->cmd_block->commands) {
+		setup_macros_action(cmd->action);
+	}
+}
+
+void VisitorSemantic::setup_test(std::shared_ptr<AST::Test> test) {
+	if (test->is_initialized) {
+		return;
+	}
+
+	for (auto parent_token: test->parents_tokens) {
+		auto parent = reg->tests.find(parent_token.value());
+		if (parent == reg->tests.end()) {
+			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
+		}
+
+		for (auto already_included: test->parents) {
+			if (already_included == parent->second) {
+				throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
+			}
+		}
+
+		if (parent_token.value() == test->name.value()) {
+			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
+		}
+
+		test->parents.push_back(parent->second);
+	}
+
+	setup_macros(test);
+
+	for (auto parent: test->parents) {
+		setup_test(parent);
+	}
+
+	test->is_initialized = true;
+}
+
+void VisitorSemantic::setup_tests(std::shared_ptr<AST::Program> program) {
 	for (auto stmt: program->stmts) {
 		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
 			auto test = p->stmt;
 
-			for (auto parent_token: test->parents_tokens) {
-				auto parent = reg->tests.find(parent_token.value());
-				if (parent == reg->tests.end()) {
-					throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
-				}
-
-				for (auto already_included: test->parents) {
-					if (already_included == parent->second) {
-						throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
-					}
-				}
-
-				test->parents.push_back(parent->second);
-
-				if (parent_token.value() == test->name.value()) {
-					throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
-				}
+			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
+				continue;
 			}
+
+			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
+				continue;
+			}
+			setup_test(test);
 		}
 	}
 }
@@ -253,7 +331,7 @@ void VisitorSemantic::setup_vars(std::shared_ptr<AST::Program> program) {
 }
 
 void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
-	setup_tests_parents(program);
+	setup_tests(program);
 	setup_vars(program);
 	for (auto stmt: program->stmts) {
 		visit_stmt(stmt);
@@ -398,6 +476,12 @@ void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> actio
 void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
+		return visit_key_combination(p->action->combination);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
+		if (p->action->combination) {
+			return visit_key_combination(p->action->combination);
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
@@ -423,18 +507,30 @@ void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
 	}
 }
 
+void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination> combination) {
+	for (size_t i = 0; i < combination->buttons.size(); ++i) {
+		auto button = combination->buttons[i];
+		if (!is_button(button)) {
+			throw std::runtime_error(std::string(button.begin()) +
+				" :Error: Unknown key " + button.value());
+		}
+
+		for (size_t j = i + 1; j < combination->buttons.size(); ++j) {
+			if (button.value() == combination->buttons[j].value()) {
+				throw std::runtime_error(std::string(combination->buttons[j].begin()) +
+					" :Error: duplicate key " + button.value());
+			}
+		}
+	}
+}
+
 void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
+	visit_key_combination(key_spec->combination);
+
 	if (key_spec->times.value().length()) {
 		if (std::stoi(key_spec->times.value()) < 1) {
 			throw std::runtime_error(std::string(key_spec->times.begin()) +
 					" :Error: Can't press a button less than 1 time: " + key_spec->times.value());
-		}
-	}
-
-	for (auto button: key_spec->buttons) {
-		if (!is_button(button)) {
-			throw std::runtime_error(std::string(button.begin()) +
-				" :Error: Unknown key " + button.value());
 		}
 	}
 }
@@ -757,21 +853,42 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.begin().file.generic_string();
 
-	if (!config.count("iso")) {
-		throw std::runtime_error("Constructing VM " + machine->name.value() + " error: field ISO is not specified");
+	if (config.count("iso")) {
+		fs::path iso_file = config.at("iso").get<std::string>();
+		if (iso_file.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			iso_file = src_file.parent_path() / iso_file;
+		}
+
+		if (!fs::exists(iso_file)) {
+			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
+		}
+
+		iso_file = fs::canonical(iso_file);
+
+		config["iso"] = iso_file.generic_string();
 	}
 
-	fs::path iso_file = config.at("iso").get<std::string>();
-	if (iso_file.is_relative()) {
-		fs::path src_file(config.at("src_file").get<std::string>());
-		iso_file = src_file.parent_path() / iso_file;
-	}
+	if (config.count("disk")) {
+		auto& disks = config.at("disk");
 
-	if (!fs::exists(iso_file)) {
-		throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
-	}
+		for (auto& disk: disks) {
+			if (disk.count("source")) {
+				fs::path source_file = disk.at("source").get<std::string>();
+				if (source_file.is_relative()) {
+					fs::path src_file(config.at("src_file").get<std::string>());
+					source_file = src_file.parent_path() / source_file;
+				}
 
-	config["iso"] = iso_file.generic_string();
+				if (!fs::exists(source_file)) {
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", machine->name.value(), source_file.generic_string()));
+				}
+
+				source_file = fs::canonical(source_file);
+				disk["source"] = source_file;
+			}
+		}
+	}
 
 	auto vmc = env->create_vm_controller(config);
 	reg->vmcs.emplace(std::make_pair(machine->name, vmc));

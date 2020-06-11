@@ -11,6 +11,7 @@
 #include <tchar.h>
 
 #include "winapi.hpp"
+#include "coro/Application.h"
 
 #include "../Server.hpp"
 
@@ -84,19 +85,40 @@ struct HardwareDeviceInfo {
 	HDEVINFO handle = NULL;
 };
 
-#define SERVICE_NAME _T("Testo Guest Additions")
+std::function app_main = [&]() {
+	try {
+		HardwareDeviceInfo info((LPGUID)&GUID_VIOSERIAL_PORT);
+		spdlog::info("HardwareDeviceInfo OK");
+		std::string device_path = info.getDeviceInterfaceDetail();
+		spdlog::info("device_path = " + device_path);
 
-SERVICE_STATUS_HANDLE serviceStatusHandle = NULL;
-SERVICE_STATUS serviceStatus = {};
+		Server server(device_path);
+		server.run();
+	} catch (const std::exception& err) {
+		spdlog::error("app_main std error: {}", err.what());
+	} catch (const coro::CancelError&) {
+		spdlog::error("app_main CancelError");
+	} catch (...) {
+		spdlog::error("app_main unknown error");
+	}
+};
+
+coro::Application app(app_main);
+
+#define SERVICE_NAME _T("Testo Guest Additions")
 
 void ControlHandler(DWORD request) {
 	switch(request)
 	{
 	case SERVICE_CONTROL_STOP:
-		spdlog::info("SERVICE_CONTROL_STOP");
+		spdlog::info("SERVICE_CONTROL_STOP BEGIN");
+		app.cancel();
+		spdlog::info("SERVICE_CONTROL_STOP END");
 		break;
 	case SERVICE_CONTROL_SHUTDOWN:
-		spdlog::info("SERVICE_CONTROL_SHUTDOWN");
+		spdlog::info("SERVICE_CONTROL_SHUTDOWN BEGIN");
+		app.cancel();
+		spdlog::info("SERVICE_CONTROL_SHUTDOWN END");
 		break;
 	default:
 		break;
@@ -104,6 +126,7 @@ void ControlHandler(DWORD request) {
 }
 
 void ServiceMain(int argc, char** argv) {
+	SERVICE_STATUS serviceStatus = {};
 	serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 	serviceStatus.dwCurrentState = SERVICE_START_PENDING;
 	serviceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
@@ -112,23 +135,16 @@ void ServiceMain(int argc, char** argv) {
 	serviceStatus.dwCheckPoint = 0;
 	serviceStatus.dwWaitHint = 0;
 
-	serviceStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, (LPHANDLER_FUNCTION)ControlHandler);
+	SERVICE_STATUS_HANDLE serviceStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, (LPHANDLER_FUNCTION)ControlHandler);
 	if (!serviceStatusHandle) {
 		throw std::runtime_error("RegisterServiceCtrlHandler failed");
 	}
 
-	HardwareDeviceInfo info((LPGUID)&GUID_VIOSERIAL_PORT);
-	spdlog::info("HardwareDeviceInfo OK");
-	std::string device_path = info.getDeviceInterfaceDetail();
-	spdlog::info("device_path = " + device_path);
-	Server server(device_path);
-	spdlog::info("Server OK");
-
+	spdlog::info("App start");
 	serviceStatus.dwCurrentState = SERVICE_RUNNING;
 	SetServiceStatus(serviceStatusHandle, &serviceStatus);
-
-	server.run();
-
+	app.run();
+	spdlog::info("App stop");
 	serviceStatus.dwCurrentState = SERVICE_STOPPED;
 	SetServiceStatus(serviceStatusHandle, &serviceStatus);
 }

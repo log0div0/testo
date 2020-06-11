@@ -62,6 +62,14 @@ void DummyVM::press(const std::vector<std::string>& buttons) {
 	return;
 }
 
+void DummyVM::hold(const std::vector<std::string>& buttons) {
+	return;
+}
+
+void DummyVM::release(const std::vector<std::string>& buttons) {
+	return;
+}
+
 void DummyVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	return;
 }
@@ -78,7 +86,7 @@ void DummyVM::mouse_move_rel(const std::string& axis, int value) {
 	return;
 }
 
-void DummyVM::mouse_press(const std::vector<MouseButton>& buttons) {
+void DummyVM::mouse_hold(const std::vector<MouseButton>& buttons) {
 	return;
 }
 

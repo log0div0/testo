@@ -169,6 +169,20 @@
             "InstallerClass" = "11:FALSE"
             "CustomActionData" = "8:"
             }
+            "{4AA51A2D-7D85-4A59-BA75-B0809FC8B380}:_B54509813C0349C98AB9666375AFDFC2"
+            {
+            "Name" = "8:testo-guest-additions-helper.exe"
+            "Condition" = "8:"
+            "Object" = "8:_4CCC3FD8F1804D139F903FF54FBC53EA"
+            "FileType" = "3:2"
+            "InstallAction" = "3:4"
+            "Arguments" = "8:uninstall"
+            "EntryPoint" = "8:"
+            "Sequence" = "3:1"
+            "Identifier" = "8:_AA84E780_7AB0_4725_B5D9_DF9F3A1409CD"
+            "InstallerClass" = "11:FALSE"
+            "CustomActionData" = "8:"
+            }
         }
         "DefaultFeature"
         {
@@ -635,15 +649,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Testo Guest Additions"
-        "ProductCode" = "8:{E214ABE3-0949-494D-BD3C-04AE302D5CCC}"
-        "PackageCode" = "8:{9A52AB3D-D8EC-4196-8FEC-35CDB29BB48D}"
+        "ProductCode" = "8:{9F74759E-4AA8-4804-9C58-4B47955A85DC}"
+        "PackageCode" = "8:{3D1CE82C-BA6F-4E96-8285-F7882609E125}"
         "UpgradeCode" = "8:{D80951FA-43DF-4B00-87CC-43A2824620D5}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.5.0"
+        "ProductVersion" = "8:1.6.0"
         "Manufacturer" = "8:Testo Lang"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

@@ -87,6 +87,8 @@ bool Parser::test_action() const {
 		(LA(1) == Token::category::wait) ||
 		(LA(1) == Token::category::sleep) ||
 		(LA(1) == Token::category::press) ||
+		(LA(1) == Token::category::hold) ||
+		(LA(1) == Token::category::release) ||
 		(LA(1) == Token::category::mouse) ||
 		(LA(1) == Token::category::plug) ||
 		(LA(1) == Token::category::unplug) ||
@@ -495,9 +497,8 @@ std::shared_ptr<CmdBlock> Parser::command_block() {
 	return std::shared_ptr<CmdBlock>(new CmdBlock(lbrace, rbrace, commands));
 }
 
-std::shared_ptr<KeySpec> Parser::key_spec() {
+std::shared_ptr<KeyCombination> Parser::key_combination() {
 	std::vector<Token> buttons;
-	Token times = Token();
 
 	do {
 		buttons.push_back(LT(1));
@@ -508,13 +509,20 @@ std::shared_ptr<KeySpec> Parser::key_spec() {
 		}
 	} while (LA(1) == Token::category::id);
 
+	return std::shared_ptr<KeyCombination>(new KeyCombination(buttons));
+}
+
+std::shared_ptr<KeySpec> Parser::key_spec() {
+	Token times = Token();
+	auto combination = key_combination();
+
 	if (LA(1) == Token::category::asterisk) {
 		match(Token::category::asterisk);
 		times = LT(1);
 		match(Token::category::number);
 	}
 
-	return std::shared_ptr<KeySpec>(new KeySpec(buttons, times));
+	return std::shared_ptr<KeySpec>(new KeySpec(combination, times));
 }
 
 std::shared_ptr<IAction> Parser::action() {
@@ -531,6 +539,10 @@ std::shared_ptr<IAction> Parser::action() {
 		action = sleep();
 	} else if (LA(1) == Token::category::press) {
 		action = press();
+	} else if (LA(1) == Token::category::hold) {
+		action = hold();
+	} else if (LA(1) == Token::category::release) {
+		action = release();
 	} else if (LA(1) == Token::category::mouse) {
 		action = mouse();
 	} else if ((LA(1) == Token::category::plug) || (LA(1) == Token::category::unplug)) {
@@ -701,6 +713,29 @@ std::shared_ptr<Action<Press>> Parser::press() {
 
 	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));
 	return std::shared_ptr<Action<Press>>(new Action<Press>(action));
+}
+
+std::shared_ptr<Action<Hold>> Parser::hold() {
+	Token hold_token = LT(1);
+	match(Token::category::hold);
+
+	auto combination = key_combination();
+
+	auto action = std::shared_ptr<Hold>(new Hold(hold_token, combination));
+	return std::shared_ptr<Action<Hold>>(new Action<Hold>(action));
+}
+
+std::shared_ptr<Action<Release>> Parser::release() {
+	Token release_token = LT(1);
+	match(Token::category::release);
+
+	std::shared_ptr<AST::KeyCombination> combination = nullptr;
+	if (LA(1) == Token::category::id) {
+		combination = key_combination();
+	}
+
+	auto action = std::shared_ptr<Release>(new Release(release_token, combination));
+	return std::shared_ptr<Action<Release>>(new Action<Release>(action));
 }
 
 std::shared_ptr<AST::Action<AST::Mouse>> Parser::mouse() {
@@ -1017,13 +1052,6 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 	match(Token::category::rparen);
 
 	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
-
-	auto macro = reg->macros.find(macro_name.value());
-	if (macro == reg->macros.end()) {
-		throw std::runtime_error(std::string(action->begin()) + ": Error: unknown macro: " + action->name().value());
-	}
-	action->macro = macro->second;
-
 	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
 }
 

@@ -10,6 +10,13 @@
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
+	disk_targets = {
+		"hda",
+		"hdb",
+		"hdc",
+		"hdd"
+	};
+
 	if (!config.count("name")) {
 		throw std::runtime_error("Constructing QemuVM " + id() + " error: field NAME is not specified");
 	}
@@ -22,21 +29,45 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		throw std::runtime_error("Constructing QemuVM " + id() + " error: field CPUS is not specified");
 	}
 
-	if (!config.count("disk_size")) {
-		throw std::runtime_error("Constructing QemuVM error: field DISK SIZE is not specified");
+	if (!config.count("disk")) {
+		throw std::runtime_error("Constructing QemuVM " + id() + " error: you must specify at least 1 disk");
+	}
+
+	if (config.count("disk")) {
+		auto disks = config.at("disk");
+
+		if (disks.size() > disk_targets.size() - 1) {
+			throw std::runtime_error("Constructing QemuVM" + id() + "error: too many disks specified, maximum amount: " + std::to_string(disk_targets.size() - 1));
+		}
+
+		for (auto& disk: disks) {
+			if (!(disk.count("size") ^ disk.count("source"))) {
+				throw std::runtime_error("Constructing QemuVM" + id() + "error: either field \"size\" or \"source\" must be specified for the disk " +
+					disk.at("name").get<std::string>());
+			}
+		}
+
+		for (uint32_t i = 0; i < disks.size(); i++) {
+			for (uint32_t j = i + 1; j < disks.size(); j++) {
+				if (disks[i].at("name") == disks[j].at("name")) {
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: two identical disk names: " +
+						disks[i].at("name").get<std::string>());
+				}
+			}
+		}
 	}
 
 	if (config.count("nic")) {
 		auto nics = config.at("nic");
 		for (auto& nic: nics) {
 			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing QemuVM error: field attached_to is not specified for the nic " +
+				throw std::runtime_error("Constructing QemuVM" + id() + "error: field attached_to is not specified for the nic " +
 					nic.at("name").get<std::string>());
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "internal") {
 				if (!nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM error: nic " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
 					nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
 				}
 			}
@@ -44,13 +75,13 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 			if (nic.count("mac")) {
 				std::string mac = nic.at("mac").get<std::string>();
 				if (!is_mac_correct(mac)) {
-					throw std::runtime_error(std::string("Incorrect mac string: ") + mac);
+					throw std::runtime_error("Constructing QemuVM" + id() + "error:Incorrect mac string: " + mac);
 				}
 			}
 
 			if (nic.at("attached_to").get<std::string>() == "nat") {
 				if (nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM error: nic " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
 					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
 				}
 			}
@@ -68,7 +99,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 					driver != "virtio" &&
 					driver != "sungem")
 				{
-					throw std::runtime_error("Constructing QemuVM error: nic " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
 						nic.at("name").get<std::string>() + " has unsupported adaptertype internal: " + driver);
 				}
 			}
@@ -77,7 +108,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		for (uint32_t i = 0; i < nics.size(); i++) {
 			for (uint32_t j = i + 1; j < nics.size(); j++) {
 				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing QemuVM error: two identical NIC names: " +
+					throw std::runtime_error("Constructing QemuVM" + id() + "error: two identical NIC names: " +
 						nics[i].at("name").get<std::string>());
 				}
 			}
@@ -193,7 +224,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 
 QemuVM::~QemuVM() {
 	if (!is_defined()) {
-		remove_disk();
+		remove_disks();
 	}
 }
 
@@ -204,10 +235,9 @@ void QemuVM::install() {
 		}
 
 		//now create disks
-		create_disk();
+		create_disks();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		fs::path volume_path = pool.path() / (id() + ".img");
 
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
@@ -245,17 +275,6 @@ void QemuVM::install() {
 					<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
 				</metadata>
 				<devices>
-					<disk type='file' device='disk'>
-						<driver name='qemu' type='qcow2'/>
-						<source file='{}'/>
-						<target dev='hda' bus='ide'/>
-					</disk>
-					<disk type='file' device='cdrom'>
-						<driver name='qemu' type='raw'/>
-						<source file='{}'/>
-						<target dev='hdb' bus='ide'/>
-						<readonly/>
-					</disk>
 					<controller type='usb' index='0' model='ich9-ehci1'>
 					</controller>
 					<controller type='usb' index='0' model='ich9-uhci1'>
@@ -299,7 +318,44 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>(), volume_path.generic_string(), config.at("iso").get<std::string>(), id());
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>());
+
+		size_t i = 0;
+
+		if (config.count("disk")) {
+			auto disks = config.at("disk");
+			for (i = 0; i < disks.size(); i++) {
+				auto& disk = disks[i];
+				fs::path volume_path = pool.path() / (id() + "@" + disk.at("name").get<std::string>() + ".img");
+				string_config += fmt::format(R"(
+					<disk type='file' device='disk'>
+						<driver name='qemu' type='qcow2'/>
+						<source file='{}'/>
+						<target dev='{}' bus='ide'/>
+						<alias name='ua-{}'/>
+					</disk>
+				)", volume_path.generic_string(), disk_targets[i], disk.at("name").get<std::string>());
+			}
+		}
+
+		if (config.count("iso")) {
+			string_config += fmt::format(R"(
+				<disk type='file' device='cdrom'>
+					<driver name='qemu' type='raw'/>
+					<source file='{}'/>
+					<target dev='{}' bus='ide'/>
+					<readonly/>
+				</disk>
+			)", config.at("iso").get<std::string>(), disk_targets[i]);
+		} else {
+			string_config += fmt::format(R"(
+				<disk type='file' device='cdrom'>
+					<driver name='qemu' type='raw'/>
+					<target dev='{}' bus='ide'/>
+					<readonly/>
+				</disk>
+			)", disk_targets[i]);
+		}
 
 		uint32_t nic_count = 0;
 
@@ -349,12 +405,11 @@ void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
-
 		if (state() != VmState::Stopped) {
 			stop();
 		}
 		//delete the storage
-		remove_disk();
+		remove_disks();
 
 		domain.undefine();
 	} catch (const std::exception& error) {
@@ -452,6 +507,91 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
+	}
+}
+
+void QemuVM::hold(const std::vector<std::string>& buttons) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command({
+			{"execute", "input-send-event"},
+			{"arguments", {
+				{"events", nlohmann::json::array()}
+			}}
+		});
+
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+
+			uint32_t scancode = scancodes[button];
+			nlohmann::json button_spec = nlohmann::json::parse(fmt::format(R"(
+				{{
+					"type": "key",
+					"data": {{
+						"down": true,
+						"key": {{
+							"type": "number",
+							"data": {}
+						}}
+					}}
+				}}
+			)", scancode));
+
+			json_command["arguments"]["events"].push_back(button_spec);
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Holding buttons error"));
+	}
+}
+
+
+void QemuVM::release(const std::vector<std::string>& buttons) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		nlohmann::json json_command({
+			{"execute", "input-send-event"},
+			{"arguments", {
+				{"events", nlohmann::json::array()}
+			}}
+		});
+
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+
+			uint32_t scancode = scancodes[button];
+			nlohmann::json button_spec = nlohmann::json::parse(fmt::format(R"(
+				{{
+					"type": "key",
+					"data": {{
+						"down": false,
+						"key": {{
+							"type": "number",
+							"data": {}
+						}}
+					}}
+				}}
+			)", scancode));
+
+			json_command["arguments"]["events"].push_back(button_spec);
+		}
+
+		auto result = domain.monitor_command(json_command.dump());
+
+		if (result.count("error")) {
+			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
+		}
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Releasing buttons error"));
 	}
 }
 
@@ -629,7 +769,7 @@ void QemuVM::mouse_move_rel(const std::string& axis, int value) {
 	}
 }
 
-void QemuVM::mouse_press(const std::vector<MouseButton>& buttons) {
+void QemuVM::mouse_hold(const std::vector<MouseButton>& buttons) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
@@ -752,7 +892,7 @@ void QemuVM::attach_nic(const std::string& nic) {
 
 		for (auto& nic_json: config.at("nic")) {
 			if (nic_json.at("name") == nic) {
-				std::string source_network("testo-");
+				std::string source_network;
 
 				if (nic_json.at("attached_to").get<std::string>() == "internal") {
 					source_network += nic_json.at("network").get<std::string>();
@@ -976,7 +1116,7 @@ void QemuVM::attach_flash_drive(const std::string& img_path) {
 			<disk type='file'>
 				<driver name='qemu' type='qcow2'/>
 				<source file='{}'/>
-				<target dev='sdb' bus='usb'/>
+				<target dev='sdb' bus='usb' removable='on'/>
 			</disk>
 			)", img_path);
 
@@ -1359,50 +1499,82 @@ void QemuVM::remove_from_guest(const fs::path& obj) {
 	//TODO!!
 }
 
-void QemuVM::remove_disk() {
+void QemuVM::remove_disks() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 
-		auto vol_name = id() + ".img";
+		//TODO
 
 		for (auto& vol: pool.volumes()) {
-			if (vol.name() == vol_name) {
+			std::string volume_name = vol.name();
+			if (volume_name.find("@") == std::string::npos) {
+				continue;
+			}
+			volume_name = volume_name.substr(0, volume_name.find("@"));
+			if (volume_name == id()) {
 				vol.erase();
-				break;
 			}
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Removing existing disks"));
 	}
-
 }
 
-void QemuVM::create_disk() {
-	try {
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		pugi::xml_document xml_config;
-		xml_config.load_string(fmt::format(R"(
-			<volume type='file'>
-				<name>{}.img</name>
-				<source>
-				</source>
-				<capacity unit='M'>{}</capacity>
-				<target>
-					<path>{}/{}.img</path>
-					<format type='qcow2'/>
-					<permissions>
-					</permissions>
-					<timestamps>
-					</timestamps>
-					<compat>1.1</compat>
-					<features>
-						<lazy_refcounts/>
-					</features>
-				</target>
-			</volume>
-		)", id(), config.at("disk_size").get<uint32_t>(), pool.path().generic_string(), id()).c_str());
+void QemuVM::create_new_disk(const std::string& name, uint32_t size) {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 
-		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+	fs::path disk_path = pool.path() / (name + ".img");
+
+	pugi::xml_document xml_config;
+	xml_config.load_string(fmt::format(R"(
+		<volume type='file'>
+			<name>{}.img</name>
+			<source>
+			</source>
+			<capacity unit='M'>{}</capacity>
+			<target>
+				<path>{}</path>
+				<format type='qcow2'/>
+				<permissions>
+				</permissions>
+				<timestamps>
+				</timestamps>
+				<compat>1.1</compat>
+				<features>
+					<lazy_refcounts/>
+				</features>
+			</target>
+		</volume>
+	)", name, size, disk_path.generic_string()).c_str());
+
+	auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+}
+
+void QemuVM::import_disk(const std::string& name, const fs::path& source) {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+	fs::path disk_path = pool.path() / (name + ".img");
+	fs::copy(source, disk_path);
+
+	pool.refresh();
+}
+
+void QemuVM::create_disks() {
+	try {
+		if (!config.count("disk")) {
+			return;
+		}
+		auto disks = config.at("disk");
+		for (size_t i = 0; i < disks.size(); ++i) {
+			auto& disk = disks[i];
+			std::string disk_name = id() + "@" + disk.at("name").get<std::string>();
+
+			if (disk.count("source")) {
+				fs::path source_disk = disk.at("source").get<std::string>();
+				import_disk(disk_name, source_disk);
+			} else {
+				create_new_disk(disk_name, disk.at("size").get<uint32_t>());
+			}			
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));
 	}

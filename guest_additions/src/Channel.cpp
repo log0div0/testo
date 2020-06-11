@@ -1,9 +1,6 @@
 
 #include "Channel.hpp"
-#ifdef WIN32
-#include "winapi.hpp"
-#endif
-
+#include <coro/IoService.h>
 #include <spdlog/spdlog.h>
 #include <thread>
 
@@ -108,7 +105,23 @@ size_t Channel::write(uint8_t* data, size_t size) {
 
 #ifdef WIN32
 
-Channel::Channel(const std::string& fd_path): file(fd_path, GENERIC_WRITE | GENERIC_READ, OPEN_EXISTING) {
+#include "winapi.hpp"
+#include "Channel_getInfo.hpp"
+
+Channel::Channel(const std::string& fd_path):
+	stream(asio::windows::stream_handle(coro::IoService::current()->_impl))
+{
+	HANDLE handle = CreateFile(winapi::utf8_to_utf16(fd_path).c_str(),
+		GENERIC_WRITE | GENERIC_READ,
+		0,
+		NULL,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+		NULL);
+	if (handle == INVALID_HANDLE_VALUE) {
+		throw std::runtime_error("CreateFile failed");
+	}
+	stream.handle().assign(handle);
 	info_buf.resize(sizeof(VIRTIO_PORT_INFO));
 }
 
@@ -116,56 +129,21 @@ Channel::~Channel() {
 }
 
 Channel& Channel::operator=(Channel&& other) {
-	std::swap(file, other.file);
+	std::swap(stream, other.stream);
 	std::swap(info_buf, other.info_buf);
 	return *this;
 }
 
-#define IOCTL_GET_INFORMATION    CTL_CODE(FILE_DEVICE_UNKNOWN, 0x800, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
-
-PVIRTIO_PORT_INFO Channel::getInfo() {
-	DWORD lpBytesReturned = 0;
-	bool success = DeviceIoControl(
-		file.handle,
-		IOCTL_GET_INFORMATION,
-		NULL,
-		0,
-		info_buf.data(),
-		(DWORD)info_buf.size(),
-		&lpBytesReturned,
-		NULL);
-	if (success) {
-		return (PVIRTIO_PORT_INFO)info_buf.data();
-	}
-	if (GetLastError() != ERROR_MORE_DATA) {
-		throw std::runtime_error("ERROR_MORE_DATA expected");
-	}
-	info_buf.resize(lpBytesReturned);
-	success = DeviceIoControl(
-		file.handle,
-		IOCTL_GET_INFORMATION,
-		NULL,
-		0,
-		info_buf.data(),
-		(DWORD)info_buf.size(),
-		&lpBytesReturned,
-		NULL);
-	if (!success) {
-		throw std::runtime_error("DeviceIoControl failed");
-	}
-	return (PVIRTIO_PORT_INFO)info_buf.data();
-}
-
 size_t Channel::read(uint8_t* data, size_t size) {
-	PVIRTIO_PORT_INFO info = getInfo();
+	PVIRTIO_PORT_INFO info = Channel_getInfo(stream.handle().native_handle(), info_buf);
 	if (!info->HostConnected) {
 		return 0;
 	}
-	return file.read(data, size);
+	return stream.read(asio::buffer(data, size));
 }
 
 size_t Channel::write(uint8_t* data, size_t size) {
-	return file.write(data, size);
+	return stream.write(asio::buffer(data, size));
 }
 
 #endif

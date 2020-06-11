@@ -10,7 +10,14 @@
 
 struct VisitorSemantic {
 	VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::json& config);
-	void setup_tests_parents(std::shared_ptr<AST::Program> program);
+	void setup_macros(std::shared_ptr<AST::Test> test);
+	void setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block);
+	void setup_macros_action(std::shared_ptr<AST::IAction> action);
+	void setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
+	void setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause);
+	void setup_macros_for_clause(std::shared_ptr<AST::ForClause> for_clause);
+	void setup_test(std::shared_ptr<AST::Test> test);
+	void setup_tests(std::shared_ptr<AST::Program> program);
 	void setup_vars(std::shared_ptr<AST::Program> program);
 
 	void visit(std::shared_ptr<AST::Program> program);
@@ -27,6 +34,7 @@ struct VisitorSemantic {
 	void visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click);
 	void visit_mouse(std::shared_ptr<AST::Mouse> mouse);
 	void visit_press(std::shared_ptr<AST::Press> press);
+	void visit_key_combination(std::shared_ptr<AST::KeyCombination> combination);
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<AST::Plug> plug);
 	void visit_exec(std::shared_ptr<AST::Exec> exec);

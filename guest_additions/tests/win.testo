@@ -6,7 +6,9 @@ machine win7 {
 	cpus: 2
 	ram: 2Gb
 	iso: "${ISO_DIR}/win7.iso"
-	disk_size: 20Gb
+	disk main: {
+		size: 20Gb
+	}
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
@@ -17,7 +19,9 @@ machine win10 {
 	cpus: 2
 	ram: 3Gb
 	iso: "${ISO_DIR}/win10.iso"
-	disk_size: 30Gb
+	disk main: {
+		size: 30Gb
+	}
 	nic nat: {
 		attached_to: "nat"
 		adapter_type: "e1000"
@@ -119,6 +123,33 @@ test win10_guest_additions: win10_installation_part_2 {
 	}
 }
 
+[no_snapshots: true]
+test win10_guest_additions_uninstall: win10_guest_additions {
+	win10 {
+		press LeftMeta; sleep 2s
+		type "Установка"
+		wait "Установка и удаление"
+		press Enter
+		wait "Приложения и возможности"; sleep 2s
+		mouse click "Искать в этом списке"; sleep 2s
+		press LeftAlt+LeftShift; type "Testo"
+		press Down*3
+		mouse click "Закрыть".from_bottom(0)
+		sleep 3s
+		mouse click "Testo Guest Additions"
+		sleep 3s
+		mouse click "Удалить".from_bottom(0)
+		wait "Это приложение и все его"
+		mouse click "Удалить".from_bottom(1)
+		if (NOT check "Разрешить этому приложению" timeout 5s) {
+			press LeftAlt+Tab
+		}
+		wait "Разрешить этому приложению"
+		press Left, Enter
+		wait "Приложения и возможности" && "Сортировать по" && !"Testo Guest Additions"
+	}
+}
+
 test win7_x86_installation {
 	win7 {
 		start
@@ -211,6 +242,7 @@ test win7_guest_additions: win7_installation {
 	}
 }
 
+[no_snapshots: true]
 test win7_copyto: win7_guest_additions {
 	win7 {
 		copyto "привет, мир!.txt" "C:\\привет, мир!.txt"
@@ -222,6 +254,7 @@ test win7_copyto: win7_guest_additions {
 	}
 }
 
+[no_snapshots: true]
 test win7_exec_quotes: win7_guest_additions {
 	win7 {
 		exec cmd "netsh interface ip set address \

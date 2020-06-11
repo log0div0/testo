@@ -1,6 +1,7 @@
 
 #include "VmController.hpp"
 #include "Environment.hpp"
+#include "coro/Timer.h"
 #include <fmt/format.h>
 
 std::string VmController::id() const {
@@ -39,14 +40,27 @@ void VmController::create() {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
 
-		fs::path iso_file = config.at("iso").get<std::string>();
 
 		config.erase("src_file");
 		config.erase("metadata");
 
 		metadata["vm_config"] = config.dump();
 		metadata["current_state"] = "";
-		metadata["dvd_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
+
+		if (config.count("iso")) {
+			fs::path iso_file = config.at("iso").get<std::string>();
+			metadata["iso_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
+		}
+
+		if (config.count("disk")) {
+			for (auto& disk: config.at("disk")) {
+				if (disk.count("source")) {
+					std::string signature_name = std::string("disk_signature@") + disk.at("name").get<std::string>();
+					metadata[signature_name] = file_signature(disk.at("source").get<std::string>(), env->content_cksum_maxsize());
+				}
+			}
+		}
+
 		write_metadata_file(main_file(), metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
@@ -90,6 +104,10 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 
 		if (current_held_mouse_button != MouseButton::None) {
 			throw std::runtime_error("There is some mouse button held down. Please release it before the end of test");
+		}
+
+		if (current_held_keyboard_buttons.size()) {
+			throw std::runtime_error("There are some keyboard buttons held down. Please release them before the end of test");
 		}
 
 		if (has_snapshot(snapshot)) {
@@ -200,32 +218,135 @@ bool VmController::check_config_relevance() {
 		return false;
 	}
 
+	if (new_config.count("iso")) {
+		if (!has_key("iso_signature")) {
+			return false;
+		}
+		
+		fs::path iso_file = new_config.at("iso").get<std::string>();
+		if (file_signature(iso_file, env->content_cksum_maxsize()) != get_metadata("iso_signature")) {
+			return false;
+		}
+	}
+
+	//So... check the disks...
+	//We are not sure about anything...
+
+	//So for every disk in new config
+	//check signature if we could
+
+	if (new_config.count("disk")) {
+		for (auto& disk: new_config.at("disk")) {
+			if (disk.count("source")) {
+				//Let's check we even have the metadata
+				std::string signature_name = std::string("disk_signature@") + disk.at("name").get<std::string>();
+				if (!has_key(signature_name)) {
+					return false;
+				}
+
+				if (file_signature(disk.at("source").get<std::string>(), env->content_cksum_maxsize()) != get_metadata(signature_name)) {
+					return false;
+				}
+			}
+		}
+	}
+
 	new_config.erase("nic");
 	old_config.erase("nic");
-
-	new_config.erase("iso");
-	old_config.erase("iso");
 
 	new_config.erase("src_file");
 	//old_config already doesn't have the src_file
 
-	bool config_is_ok = (old_config == new_config);
-
-	//Check also dvd contingency
-
-	fs::path iso_file = vm->get_config().at("iso").get<std::string>();
-	if (iso_file.is_relative()) {
-		fs::path src_file(vm->get_config().at("src_file").get<std::string>());
-		iso_file = src_file.parent_path() / iso_file;
-	}
-	iso_file = fs::canonical(iso_file);
-
-	bool iso_is_ok = (file_signature(iso_file, env->content_cksum_maxsize()) == get_metadata("dvd_signature"));
-
-	return (config_is_ok && iso_is_ok);
+	return old_config == new_config;
 }
 
 fs::path VmController::get_metadata_dir() const {
 	return env->vm_metadata_dir() / id();
+}
+
+void VmController::press(const std::vector<std::string>& buttons) {
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't press an already held button: " + button);
+		}
+	}
+
+	vm->press(buttons);
+}
+
+void VmController::hold(const std::vector<std::string>& buttons) {
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't hold an already held button: " + button);
+		}
+	}
+
+	vm->hold(buttons);
+	std::copy(buttons.begin(), buttons.end(), std::inserter(current_held_keyboard_buttons, current_held_keyboard_buttons.end()));
+}
+
+void VmController::release(const std::vector<std::string>& buttons) {
+	if (!current_held_keyboard_buttons.size()) {
+		throw std::runtime_error("There is no held buttons to release");
+	}
+
+	for (auto& button: buttons) {
+		if (current_held_keyboard_buttons.find(button) == current_held_keyboard_buttons.end()) {
+			throw std::runtime_error("You can't release a button that's not held: " + button);
+		}
+	}
+
+	vm->release(buttons);
+
+	for (auto& button: buttons) {
+		current_held_keyboard_buttons.erase(button);
+	}
+}
+
+void VmController::release() {
+	if (!current_held_keyboard_buttons.size()) {
+		throw std::runtime_error("There is no held buttons to release");
+	}
+
+	std::vector<std::string> buttons_to_release(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end());
+	vm->release(buttons_to_release);
+	current_held_keyboard_buttons.clear();
+}
+
+void VmController::mouse_press(const std::vector<MouseButton>& buttons) {
+	if (buttons.size() > 1) {
+		throw std::runtime_error("Can't press more than 1 mouse button");
+	}
+
+	if (current_held_mouse_button != MouseButton::None) {
+		throw std::runtime_error("Can't press a mouse button with any already held mouse buttons");
+	}
+
+	vm->mouse_hold(buttons);
+	coro::Timer timer;
+	timer.waitFor(std::chrono::milliseconds(20));
+	vm->mouse_release(buttons);
+}
+
+void VmController::mouse_hold(const std::vector<MouseButton>& buttons) {
+	if (buttons.size() > 1) {
+		throw std::runtime_error("Can't hold more than 1 mouse button");
+	}
+
+	if (current_held_mouse_button != MouseButton::None) {
+		throw std::runtime_error("Can't hold a mouse button: there is an already held mouse button");
+	}
+
+	vm->mouse_hold(buttons);
+	current_held_mouse_button = buttons[0];
+}
+
+void VmController::mouse_release() {
+	if (current_held_mouse_button == MouseButton::None) {
+		throw std::runtime_error("Can't release any mouse button: there is no held mouse buttons");
+	}
+
+	vm->mouse_release({current_held_mouse_button});
+	current_held_mouse_button = MouseButton::None;
 }
 

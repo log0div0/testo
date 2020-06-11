@@ -380,6 +380,14 @@ void VboxVM::press(const std::vector<std::string>& buttons) {
 	}
 }
 
+void VboxVM::hold(const std::vector<std::string>& buttons) {
+	throw std::runtime_error("Implement me");
+}
+
+void VboxVM::release(const std::vector<std::string>& buttons) {
+	throw std::runtime_error("Implement me");
+}
+
 void VboxVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	throw std::runtime_error("Implement me");
 }
@@ -396,7 +404,7 @@ void VboxVM::mouse_move_rel(const std::string& axis, int value) {
 	throw std::runtime_error("Implement me");
 }
 
-void VboxVM::mouse_press(const std::vector<MouseButton>& buttons) {
+void VboxVM::mouse_hold(const std::vector<MouseButton>& buttons) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
