@@ -1,7 +1,7 @@
+
 include "declarations.testo"
 include "macros.testo"
-include "../common_win7.testo"
-include "../common_ubuntu_server.testo"
+include "../../common_win7.testo"
 
 param default_netmask "24"
 param default_password "Cont-4.X"
@@ -12,21 +12,9 @@ param cus_ub_side_ip "192.168.1.1"
 
 param ub_id "250"
 param ub_cus_side_ip "192.168.1.2"
-param ub_win7_side_ip "192.168.2.1"
-param ub_ubuntu_client_side_ip "192.168.3.1"
-param ub_ubuntu_server_side_ip "192.168.4.1"
 
 param win7_cus_side_ip "192.168.0.2"
-param win7_ub_side_ip "192.168.2.2"
 param win7_client_netmask "255.255.255.0"
-
-param ubuntu_client_host_name "ubuntu-client"
-param ubuntu_client_login "ubuntu-client"
-param ubuntu_client_ip "192.168.3.2"
-
-param ubuntu_server_host_name "ubuntu-server"
-param ubuntu_server_login "ubuntu-server"
-param ubuntu_server_ip "192.168.4.2"
 
 [no_snapshots: true]
 test install_CUS {
@@ -125,7 +113,7 @@ test win7_client_configure_windows: win7_client_install_guest_additions {
 [no_snapshots: true]
 test win7_client_install_cryptopro: win7_client_configure_windows {
 	win7_client {
-		copyto "./CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
+		copyto "../CSP/CSPSetup.exe" "C:\\Users\\testo\\Desktop\\CSPSetup.exe"
 		mouse dclick "CSPSetup"
 		mouse click "Установить (рекомендуется)"
 		wait "CSP успешно установлен" timeout 10m
@@ -133,24 +121,6 @@ test win7_client_install_cryptopro: win7_client_configure_windows {
 		sleep 2s
 	}
 }
-
-/*test win7_client_install_vlc: win7_client_install_cryptopro {
-	win7_client {
-		copyto "./vlc.exe" "C:\\Users\\testo\\Desktop\\vlc-setup.exe"
-		mouse dclick "vlc-setup"
-		mouse click "OK"
-		mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Ознакомьтесь с лицензионным соглашением"
-		mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Выберите компоненты"
-		mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Выберите папку для установки"
-		mouse click "Установить".from_bottom(0).center_bottom()
-		mouse click "Запустить VLC" timeout 3m
-		mouse click "Готово".from_bottom(0)
-		sleep 3s
-	}
-}*/
 
 test win7_client_install_ms: win7_client_install_cryptopro {
 	win7_client {
@@ -167,107 +137,5 @@ test win7_client_install_ms: win7_client_install_cryptopro {
 		wait "Требуется перезагрузка"; press Enter
 		sleep 5s
 		wait "Корзина" timeout 5m
-	}
-}
-
-[no_snapshots: true]
-test ubuntu_client_install_ubuntu {
-	ubuntu_client install_ubuntu_server("${ubuntu_client_host_name}", "${ubuntu_client_login}", "${default_password}")
-}
-
-test ubuntu_client_install_guest_additions: ubuntu_client_install_ubuntu {
-	ubuntu_client install_guest_additions_ubuntu_server("${ubuntu_client_host_name}", "${ubuntu_client_login}", "${default_password}")
-}
-
-test ubuntu_client_prepare: ubuntu_client_install_guest_additions {
-	ubuntu_client {
-		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
-		exec bash "chmod +x /tmp/rename_net.sh"
-
-		exec bash """
-			/tmp/rename_net.sh 52:54:00:00:22:aa UB_side
-			apt-get update
-			apt install -y iperf
-		"""
-		unplug_nat("${ubuntu_client_login}", "${default_password}")
-		exec bash "ip a a ${ubuntu_client_ip}/${default_netmask} dev UB_side"
-		exec bash "ip l s UB_side up"
-		exec bash "ip r a default via ${ub_ubuntu_client_side_ip}"
-	}
-}
-
-[no_snapshots: true]
-test ubuntu_server_install_ubuntu {
-	ubuntu_server install_ubuntu_server("${ubuntu_server_host_name}", "${ubuntu_server_login}", "${default_password}")
-}
-
-test ubuntu_server_install_guest_additions: ubuntu_server_install_ubuntu {
-	ubuntu_server install_guest_additions_ubuntu_server("${ubuntu_server_host_name}", "${ubuntu_server_login}", "${default_password}")
-}
-
-flash video_sample_flash {
-	fs: "ntfs"
-	size: 512Mb
-	folder: "${VIDEO_SAMPLE_DIR}"
-}
-
-test ubuntu_server_prepare: ubuntu_server_install_guest_additions {
-	ubuntu_server {
-		copyto "./utils/rename_net.sh" "/tmp/rename_net.sh"
-		exec bash "chmod +x /tmp/rename_net.sh"
-
-		exec bash """
-			/tmp/rename_net.sh 52:54:00:00:33:aa UB_side
-			apt-get update
-			apt install -y vsftpd samba iperf vlc-nox
-		"""
-
-		#configure anonymous login on ftp
-
-		exec bash "sed -i 's/anonymous_enable=NO/anonymous_enable=YES/g' /etc/vsftpd.conf"
-		#create test for ftp
-		exec bash "truncate -s 10M /srv/ftp/ftp_test.txt"
-
-		#configure smb
-
-		exec bash "mkdir /srv/samba"
-
-		exec bash "adduser --disabled-password --gecos \"\" samba_user"
-		exec bash "chown -R samba_user /srv/samba"
-		exec bash "(echo 1111; echo 1111) | smbpasswd -s -a samba_user"
-		exec bash "truncate -s 10M /srv/samba/samba_test.txt"
-
-		exec bash """
-			echo "[sambashare]" >> /etc/samba/smb.conf
-			echo "path = /srv/samba" >> /etc/samba/smb.conf
-			echo "read only = no" >> /etc/samba/smb.conf
-			echo "browsable = yes" >> /etc/samba/smb.conf
-			echo "guest ok = yes" >> /etc/samba/smb.conf
-			echo "writable = yes" >> /etc/samba/smb.conf
-			echo "guest_account = samba_user" >> /etc/samba/smb.conf
-			echo "create_mask = 0775" >> /etc/samba/smb.conf
-			echo "directory_mask = 0775" >> /etc/samba/smb.conf
-		"""
-
-		unplug_nat("${ubuntu_server_login}", "${default_password}")
-		exec bash "ip a a ${ubuntu_server_ip}/${default_netmask} dev UB_side"
-		exec bash "ip l s UB_side up"
-		exec bash "ip r a default via ${ub_ubuntu_server_side_ip}"
-
-		#start vlc server
-		plug flash video_sample_flash
-		sleep 5s
-		exec bash """
-			mount /dev/sdb1 /media
-			cp /media/4k_sample.mp4 /opt/
-			umount /media
-		"""
-
-		unplug flash video_sample_flash
-
-		press LeftAlt + F2; wait "${ubuntu_server_host_name} login:"; type "${ubuntu_server_login}"; press Enter
-		wait "Password"; type "${default_password}"; press Enter; wait "Welcome to Ubuntu"
-		type "vlc -vvv /opt/4k_sample.mp4 --sout='#gather:std{access=http,mux=ffmpeg{mux=flv},dst=:8080/}' --sout-keep --loop"; press Enter
-		wait "writing header"
 	}
 }
