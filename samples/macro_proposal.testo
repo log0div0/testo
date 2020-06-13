@@ -1,0 +1,45 @@
+$include "./tls_client_install.testo"
+
+
+$def proxy_test(client_ver, csp_ver, tls_ver, gost_ver) {
+	[
+		no_snapshots: true
+		description: "Подключение к proxy: клиент ${client_ver}, КБ CSP ${csp_ver}, ресурс c авторизацией и с TLS ${tls_ver}, клиент весь ГОСТ-${gost_ver} и TLS ${tls_ver}"
+	]
+	test proxy_ct${client_ver}_sc${csp_ver}_auth_tls${tls_ver}_use_all_gost_${gost_ver}: ct${tls_ver}_sc${csp_ver}_config, main_server_import_prepared_backup, web_server {
+		win10x64 {
+			${set_tls_ver "${tls_ver}"}
+			${gost${gost_ver}_mode "use_all_gost"}
+			${client_launch}
+			${web_proxy "proxy-auth-tls${tls_ver}.server"}
+		}
+	}
+}
+
+$def name(a, b, c) djdjdjdjj{djjj${a}dsfsdfs}
+
+$def name jdjdjdjdjdjjd
+
+${proxy_test (LeftAlt, Enter), 1_0, 41, 2015}
+
+$if DEFINED ${CUDA} {
+	$if ${CUDA} EQUAL "YES" {
+		$for i in 1, 2, 3, 4 {
+
+			[
+				no_snapshots: true
+				description: "Подключение к proxy: клиент ${client_ver}, КБ CSP ${csp_ver}, ресурс c авторизацией и с TLS ${tls_ver}, клиент весь ГОСТ-${gost_ver} и TLS ${tls_ver}"
+			]
+			test proxy_ct${client_ver}_sc${csp_ver}_auth_tls${tls_ver}_use_all_gost_${gost_ver}: ct${tls_ver}_sc${csp_ver}_config, main_server_import_prepared_backup, web_server {
+				win10x64 {
+
+
+					${set_tls_ver "${tls_ver}"}
+					${gost${gost_ver}_mode "use_all_gost"}
+					${client_launch}
+					${web_proxy "proxy-auth-tls${tls_ver}.server"}
+				}
+			}
+		}
+	}
+}
