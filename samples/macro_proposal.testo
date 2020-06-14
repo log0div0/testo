@@ -22,9 +22,9 @@ $def name jdjdjdjdjdjjd
 
 ${proxy_test (LeftAlt, Enter), 1_0, 41, 2015}
 
-$if DEFINED ${CUDA} {
-	$if ${CUDA} EQUAL "YES" {
-		$for i in 1, 2, 3, 4 {
+$if (DEFINED CUDA) {
+	$if (CUDA STREQUAL "YES") {
+		$for (i in 1, 2, 3, 4) {
 
 			[
 				no_snapshots: true
@@ -33,6 +33,38 @@ $if DEFINED ${CUDA} {
 			test proxy_ct${client_ver}_sc${csp_ver}_auth_tls${tls_ver}_use_all_gost_${gost_ver}: ct${tls_ver}_sc${csp_ver}_config, main_server_import_prepared_backup, web_server {
 				win10x64 {
 
+					$if (DEFINED HTTP_PROXY) {
+						if (check "trololo") {
+
+						}
+					}
+
+
+					if (check "trololo") {
+						press Enter
+					} timeout 5s
+
+
+					switch {
+						case (check "trololo"): {
+							type "rrertert"
+							press Enter
+						}
+						case (check js "aaaaaa" || "dsfsf"): {
+							plug flash my_flash
+						}
+						default: {
+							abort
+						}
+					}
+
+
+					# препроцессор раскрывает цикл, интерпретатор выдаёт ошибку
+					$for (i in 1, 2, 3, 4) {
+						if (check "trololo") {
+							break
+						}
+					}
 
 					${set_tls_ver "${tls_ver}"}
 					${gost${gost_ver}_mode "use_all_gost"}
