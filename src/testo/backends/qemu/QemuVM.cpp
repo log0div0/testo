@@ -1192,8 +1192,7 @@ bool QemuVM::is_dvd_plugged() const {
 		if (cdrom.child("source").empty()) {
 			return false;
 		}
-
-		return cdrom.attribute("file");
+		return !cdrom.child("source").attribute("file").empty();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Checking if dvd is plugged"));
 	}
