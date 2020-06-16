@@ -119,6 +119,10 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 }
 
 nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
+	if (src.is_relative()) {
+		throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
+	}
+
 	std::vector<uint8_t> fileContents = read_file(src);
 	std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
 
