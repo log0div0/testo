@@ -1492,7 +1492,7 @@ void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t 
 
 		helper.copy_from_guest(src, dst, timeout_milliseconds);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
+		std::throw_with_nested(std::runtime_error("Copying file(s) from the guest"));
 	}
 }
 

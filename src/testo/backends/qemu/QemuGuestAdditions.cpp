@@ -155,32 +155,35 @@ int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_mil
 }
 
 void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
-	std::ifstream testFile(src.generic_string(), std::ios::binary);
+	try {
+		std::ifstream testFile(src.generic_string(), std::ios::binary);
 
-	std::noskipws(testFile);
-	std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
-	std::string encoded = base64_encode(fileContents.data(), fileContents.size());
+		std::noskipws(testFile);
+		std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
+		std::string encoded = base64_encode(fileContents.data(), fileContents.size());
 
-	nlohmann::json request = {
-			{"method", "copy_file"},
-			{"args", {
-				{
-					{"path", dst.generic_string()},
-					{"content", encoded}
-				}
-			}}
-	};
+		nlohmann::json request = {
+				{"method", "copy_file"},
+				{"args", {
+					{
+						{"path", dst.generic_string()},
+						{"content", encoded}
+					}
+				}}
+		};
 
-	coro::Timeout timeout(deadline - std::chrono::system_clock::now());
+		coro::Timeout timeout(deadline - std::chrono::system_clock::now());
 
-	send(request);
+		send(request);
 
-	auto response = recv();
+		auto response = recv();
 
-	if(!response.at("success").get<bool>()) {
-		throw std::runtime_error(response.at("error").get<std::string>());
+		if(!response.at("success").get<bool>()) {
+			throw std::runtime_error(response.at("error").get<std::string>());
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Failed to copy host " + src.generic_string() + " to guest " + dst.generic_string()));
 	}
-
 }
 
 void QemuGuestAdditions::send(const nlohmann::json& command) {
