@@ -48,6 +48,8 @@ if(APPLE)
 endif()
 
 if(WIN32)
+	add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 	add_definitions(
 		-D_WIN32_WINNT=0x0601
 		-D_SCL_SECURE_NO_WARNINGS

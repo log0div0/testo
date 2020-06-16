@@ -154,7 +154,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_162AB2F7B41044A3910B6F683CE1D667"
             {
-            "SourcePath" = "8:..\\..\\src\\nn\\TextRecognizer.onnx"
+            "SourcePath" = "8:..\\..\\..\\src\\nn\\TextRecognizer.onnx"
             "TargetName" = "8:TextRecognizer.onnx"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
@@ -194,7 +194,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_54898EB858AE4A28A910F4E3B0AC9CC2"
             {
-            "SourcePath" = "8:..\\..\\src\\nn\\TextDetector.onnx"
+            "SourcePath" = "8:..\\..\\..\\src\\nn\\TextDetector.onnx"
             "TargetName" = "8:TextDetector.onnx"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
@@ -234,7 +234,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F06A840091A947F8B5F963AB8390A13B"
             {
-            "SourcePath" = "8:..\\..\\src\\nn\\TextColorPicker.onnx"
+            "SourcePath" = "8:..\\..\\..\\src\\nn\\TextColorPicker.onnx"
             "TargetName" = "8:TextColorPicker.onnx"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
