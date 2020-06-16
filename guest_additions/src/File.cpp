@@ -18,10 +18,28 @@ std::vector<uint8_t> read_file(const std::experimental::filesystem::path& path) 
 	return result;
 }
 
+void make_directories(const std::experimental::filesystem::path& path) {
+	if (std::experimental::filesystem::exists(winapi::utf8_to_utf16(path.generic_string()))) {
+		return;
+	}
+	if (!std::experimental::filesystem::create_directories(winapi::utf8_to_utf16(path.generic_string()))) {
+		throw std::runtime_error("Can't create directory: " + path.generic_string());
+	}
+}
+
 #else
 
 #include <iterator>
 #include <fstream>
+
+void make_directories(const std::experimental::filesystem::path& path) {
+	if (std::experimental::filesystem::exists(path)) {
+		return;
+	}
+	if (!std::experimental::filesystem::create_directories(path)) {
+		throw std::runtime_error("Can't create directory: " + path.generic_string());
+	}
+}
 
 std::vector<uint8_t> read_file(const std::experimental::filesystem::path& path) {
 	std::ifstream stream(path, std::ios::binary);

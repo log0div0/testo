@@ -100,12 +100,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 			throw std::runtime_error("Destination path on vm must be absolute");
 		}
 
-		if (!fs::exists(dst.parent_path())) {
-			if (!fs::create_directories(dst.parent_path())) {
-				throw std::runtime_error(std::string("Can't create directory: ") + dst.parent_path().generic_string());
-			}
-		}
-
+		make_directories(dst.parent_path());
 		write_file(dst, content);
 		spdlog::info("File copied successfully to guest: " + dst.generic_string());
 	}
