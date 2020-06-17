@@ -1,0 +1,4 @@
+
+network nat {
+	mode: "nat"
+}

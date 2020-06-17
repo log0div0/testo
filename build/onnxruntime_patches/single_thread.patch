@@ -1,0 +1,103 @@
+diff --git a/build.sh b/build.sh
+index e155dd80..1be1e32b 100755
+--- a/build.sh
++++ b/build.sh
+@@ -6,4 +6,4 @@
+ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ 
+ #requires python3.6 or higher
+-python3 $DIR/tools/ci_build/build.py --use_openmp --build_dir $DIR/build/Linux "$@"
++python3 $DIR/tools/ci_build/build.py --build_dir $DIR/build/Linux "$@"
+diff --git a/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc b/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc
+index 13ad07f8..976c4eb7 100644
+--- a/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc
++++ b/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc
+@@ -196,7 +196,6 @@ class UniDirectionalLstm {
+                      const gsl::span<const T>& initial_hidden_state, const gsl::span<const T>& initial_cell_state,
+                      const ActivationFuncs::Entry& activation_func_f, const ActivationFuncs::Entry& activation_func_g,
+                      const ActivationFuncs::Entry& activation_func_h, float clip,
+-                     concurrency::ThreadPool& lstm_tp_,
+                      concurrency::ThreadPool* mlas_tp_);
+ 
+   void Compute(const gsl::span<const T>& inputs, const gsl::span<const int>& sequence_lengths, int num_directions,
+@@ -279,7 +278,6 @@ class UniDirectionalLstm {
+   ActivationInfo<deepcpu::ActivationFuncPtr> activation_g_;
+   ActivationInfo<deepcpu::LstmMergeGatesFuncPtr> activation_h_;
+ 
+-  concurrency::ThreadPool& lstm_tp_;
+   concurrency::ThreadPool* mlas_tp_;
+ };
+ 
+@@ -458,7 +456,7 @@ Status DeepCpuLstmOp::ComputeImpl(OpKernelContext& context) const {
+                                      activation_funcs_.Entries()[0],
+                                      activation_funcs_.Entries()[1],
+                                      activation_funcs_.Entries()[2],
+-                                     clip_, lstm_tp_, mlas_thread_pool);
++                                     clip_, mlas_thread_pool);
+ 
+     detail::UniDirectionalLstm<T> bw(alloc, logger, seq_length, batch_size, input_size,
+                                      hidden_size_, Direction::kReverse, input_forget_,
+@@ -466,7 +464,7 @@ Status DeepCpuLstmOp::ComputeImpl(OpKernelContext& context) const {
+                                      activation_funcs_.Entries()[3],
+                                      activation_funcs_.Entries()[4],
+                                      activation_funcs_.Entries()[5],
+-                                     clip_, lstm_tp_, mlas_thread_pool);
++                                     clip_, mlas_thread_pool);
+ 
+     fw.Compute(input, sequence_lens_span, num_directions_, input_weights_1, recurrent_weights_1,
+                output_1, hidden_output_1, last_cell_1);
+@@ -479,7 +477,7 @@ Status DeepCpuLstmOp::ComputeImpl(OpKernelContext& context) const {
+                                      activation_funcs_.Entries()[0],
+                                      activation_funcs_.Entries()[1],
+                                      activation_funcs_.Entries()[2],
+-                                     clip_, lstm_tp_, mlas_thread_pool);
++                                     clip_, mlas_thread_pool);
+ 
+     fw.Compute(input, sequence_lens_span, num_directions_, input_weights_1, recurrent_weights_1,
+                output_1, hidden_output_1, last_cell_1);
+@@ -552,7 +550,6 @@ UniDirectionalLstm<T>::UniDirectionalLstm(AllocatorPtr allocator,
+                                           const ActivationFuncs::Entry& activation_func_g,
+                                           const ActivationFuncs::Entry& activation_func_h,
+                                           const float clip,
+-                                          concurrency::ThreadPool& lstm_tp,
+                                           concurrency::ThreadPool* mlas_tp)
+     : allocator_(allocator),
+       logger_(logger),
+@@ -565,7 +562,6 @@ UniDirectionalLstm<T>::UniDirectionalLstm(AllocatorPtr allocator,
+       clip_(clip),
+       use_bias_(!bias.empty()),
+       use_peepholes_(!peephole_weights.empty()),
+-      lstm_tp_(lstm_tp),
+       mlas_tp_(mlas_tp) {
+   activation_f_ = {deepcpu::ActivationFuncByName(activation_func_f.name),
+                    activation_func_f.alpha,
+@@ -883,8 +879,9 @@ void UniDirectionalLstm<T>::Compute(const gsl::span<const T>& inputs_arg,
+       }
+     };
+ 
+-    ExecuteLambdaInParallel("Processing batch", hidden_gemm_and_activations, batch_size_, fused_hidden_rows, lstm_tp_, logger_);
+-
++    for (int i = 0; i < batch_size_; i += fused_hidden_rows) {
++      hidden_gemm_and_activations(i);
++    }
+   } else {
+     span_T_const_iter previous_state_end = batched_hidden_state_one_step.cend();
+ 
+diff --git a/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.h b/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.h
+index faf32e3a..0ebab72e 100644
+--- a/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.h
++++ b/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.h
+@@ -77,13 +77,6 @@ class DeepCpuLstmOp final : public OpKernel {
+   bool input_forget_ = false;
+ 
+   rnn::detail::ActivationFuncs activation_funcs_;
+-
+-  // Threadpool for operator. If concurrent Compute calls are possible, it will be shared
+-  // across them. mutable due to this.
+-  // The alternative would be to create a threadpool in each call to Compute but that would incur thread creation
+-  // cost on every call.
+-  mutable onnxruntime::concurrency::ThreadPool lstm_tp_{"DEEPCPU_LSTM",
+-                                                        static_cast<int>(std::thread::hardware_concurrency())};
+ };
+ 
+ }  // namespace onnxruntime
