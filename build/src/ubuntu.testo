@@ -13,10 +13,6 @@ machine ubuntu {
 	}
 }
 
-param host_name "builder"
-param login "user"
-param password "12345678"
-
 test ubuntu_install_os {
 	ubuntu {
 		start
@@ -144,7 +140,7 @@ test ubuntu_build_testo_cpu: ubuntu_build_onnxruntime_cpu {
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.deb" "${TESTO_DIST_DIR}/testo-${TESTO_VERSION}-cpu.deb"
+		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo-${TESTO_VERSION}-cpu.deb"
 	}
 }
 
@@ -204,6 +200,6 @@ test ubuntu_build_testo_gpu: ubuntu_build_onnxruntime_gpu {
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.deb" "${TESTO_DIST_DIR}/testo-${TESTO_VERSION}-gpu.deb"
+		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo-${TESTO_VERSION}-gpu.deb"
 	}
 }

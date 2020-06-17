@@ -1,0 +1,57 @@
+
+include "common.testo"
+
+machine centos {
+	cpus: 4
+	iso: "${ISO_DIR}/CentOS-7-x86_64-DVD-1804.iso"
+	ram: 8Gb
+	disk main: {
+		size: 32Gb
+	}
+	nic nat: {
+		attached_to: "nat"
+	}
+}
+
+test centos_install_os {
+	centos {
+		start
+		abort "stop here"
+		wait "Install CentOS 7"; press Enter
+		wait "What language would you"; mouse click "Continue"
+		mouse click "INSTALLATION DESTINATION"
+		mouse click "Done"
+		wait "Begin Installation"
+		wait !"Please complete items"
+		mouse click js "find_text().match('Begin Installation').match_background('blue').from_top(0)"
+		mouse click "ROOT PASSWORD";
+		wait "Enter a password"; type "${password}"
+		press Tab; type "${password}"
+		mouse click "Done".from_top(0)
+		mouse move 200 200
+		mouse click "Done".from_top(0)
+		wait "CentOS is now successfully installed" timeout 20m
+		unplug dvd
+		stop
+		start
+		wait "localhost login"
+	}
+}
+
+test centos_install_guest_additions: centos_install_os {
+	centos {
+		wait "localhost login:"; type "root"; press Enter
+		wait "Password:"; type "${password}"; press Enter
+		wait "root@localhost"
+
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm"; press Enter
+		abort "stop here"
+		wait "Processing triggers for ureadahead"
+		type "umount /media"; press Enter
+		sleep 5s; unplug dvd
+
+		exec bash "echo hello world"
+	}
+}

@@ -1,0 +1,8 @@
+
+network nat {
+	mode: "nat"
+}
+
+param host_name "builder"
+param login "user"
+param password "12345678"

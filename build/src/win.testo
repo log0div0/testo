@@ -108,7 +108,7 @@ test win_build_testo_msi_cpu_x64: win_build_testo_cpu_x64 {
 			cd C:\\work\\testo\\pkg\\win\\x64\\
 			devenv testo.sln /Build "Default|Default"
 		"""
-		copyfrom "C:\\work\\testo\\pkg\\win\\x64\\testo.msi" "${TESTO_DIST_DIR}/testo-${TESTO_VERSION}-cpu.msi"
+		copyfrom "C:\\work\\testo\\pkg\\win\\x64\\testo.msi" "${OUT_DIR}/testo-${TESTO_VERSION}-cpu.msi"
 		exec cmd """
 			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
 			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\
