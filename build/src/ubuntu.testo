@@ -77,7 +77,7 @@ test ubuntu_install_guest_additions: ubuntu_install_os {
 test ubuntu_install_packages: ubuntu_install_guest_additions {
 	ubuntu {
 		exec bash """
-			apt -y install git gcc g++ make libssl-dev
+			apt -y install git gcc g++ make libssl-dev python3-dev libvirt-dev
 			cd /root
 			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
 			tar xf cmake.tar.gz
@@ -107,7 +107,6 @@ test ubuntu_build_onnxruntime_cpu: ubuntu_download_onnxruntime {
 	ubuntu {
 		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
-			apt -y install python3-dev
 			cd /root/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch
 			git apply ../onnxruntime_patches/rename_dll.patch
@@ -120,19 +119,20 @@ test ubuntu_build_onnxruntime_cpu: ubuntu_download_onnxruntime {
 			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_dist/lib
 			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
 		""" timeout 2h
+		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_ubuntu_cpu"
 	}
 }
 
 [no_snapshots: true]
-test ubuntu_build_testo_cpu: ubuntu_build_onnxruntime_cpu {
+test ubuntu_build_testo_cpu: ubuntu_install_packages {
 	ubuntu {
+		copyto "${TMP_DIR}/onnxruntime_dist_ubuntu_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
-			apt -y install libvirt-dev
 			cd /root/
 			mkdir testo_build
 			cd testo_build
@@ -165,7 +165,6 @@ test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
 		exec bash """
 			cd /root
 			tar xf /root/cudnn-10.0-linux-x64-v7.6.4.38.tar.xz
-			apt -y install python3-dev
 			cd /root/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch
 			git apply ../onnxruntime_patches/rename_dll.patch
@@ -180,19 +179,20 @@ test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
 			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
 			cp include/onnxruntime/core/providers/cuda/cuda_provider_factory.h /root/onnxruntime_dist/include
 		""" timeout 2h
+		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_ubuntu_gpu"
 	}
 }
 
 [no_snapshots: true]
-test ubuntu_build_testo_gpu: ubuntu_build_onnxruntime_gpu {
+test ubuntu_build_testo_gpu: ubuntu_install_packages {
 	ubuntu {
+		copyto "${TMP_DIR}/onnxruntime_dist_ubuntu_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
-			apt -y install libvirt-dev
 			cd /root/
 			mkdir testo_build
 			cd testo_build

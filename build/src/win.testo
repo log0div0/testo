@@ -58,7 +58,7 @@ test win_download_onnxruntime: win_install_guest_additions {
 	}
 }
 
-test win_build_onnxruntime_cpu: win_download_onnxruntime {
+test win_build_onnxruntime_cpu_x64: win_download_onnxruntime {
 	win {
 		copyto "onnxruntime_patches" "C:/work/onnxruntime_patches"
 		exec cmd """
@@ -77,11 +77,13 @@ test win_build_onnxruntime_cpu: win_download_onnxruntime {
 			copy build\\Windows\\Release\\Release\\onnxruntime_testo.* C:\\work\\onnxruntime_dist\\lib
 			copy include\\onnxruntime\\core\\session\\* C:\\work\\onnxruntime_dist\\include
 		"""
+		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x64"
 	}
 }
 
-test win_build_testo_cpu_x64: win_build_onnxruntime_cpu {
+test win_build_testo_cpu_x64: win_install_guest_additions {
 	win {
+		copyto "${TMP_DIR}/onnxruntime_dist_win_cpu_x64" "C:\\work\\onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "C:/work/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "C:/work/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "C:/work/testo/pkg"

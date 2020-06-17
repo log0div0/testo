@@ -3,7 +3,7 @@ include "common.testo"
 
 machine centos {
 	cpus: 4
-	iso: "${ISO_DIR}/CentOS-7-x86_64-DVD-1804.iso"
+	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
 	ram: 8Gb
 	disk main: {
 		size: 32Gb
@@ -16,24 +16,24 @@ machine centos {
 test centos_install_os {
 	centos {
 		start
-		abort "stop here"
-		wait "Install CentOS 7"; press Enter
-		wait "What language would you"; mouse click "Continue"
-		mouse click "INSTALLATION DESTINATION"
+		wait "Install CentOS Linux 8"; press Enter
+		wait "Press [Esc]"; press Esc
+		wait "What language would you" timeout 10m; mouse click "Continue"
+		mouse click "Installation Dest"
 		mouse click "Done"
-		wait "Begin Installation"
-		wait !"Please complete items"
+		mouse click "Software selection"
+		mouse click "Minimal Install"
+		mouse click "Done".from_top(0)
 		mouse click js "find_text().match('Begin Installation').match_background('blue').from_top(0)"
-		mouse click "ROOT PASSWORD";
+		mouse click "Root Password".from_top(0);
 		wait "Enter a password"; type "${password}"
 		press Tab; type "${password}"
 		mouse click "Done".from_top(0)
 		mouse move 200 200
 		mouse click "Done".from_top(0)
-		wait "CentOS is now successfully installed" timeout 20m
+		wait "CentOS Linux is now successfully installed" timeout 20m
 		unplug dvd
-		stop
-		start
+		mouse click "Reboot".from_bottom(0)
 		wait "localhost login"
 	}
 }
@@ -46,12 +46,64 @@ test centos_install_guest_additions: centos_install_os {
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 		type "mount /dev/cdrom /media"; press Enter
-		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm"; press Enter
-		abort "stop here"
-		wait "Processing triggers for ureadahead"
+		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm && echo result is $?"; press Enter
+		wait "result is 0"
 		type "umount /media"; press Enter
 		sleep 5s; unplug dvd
 
 		exec bash "echo hello world"
+	}
+}
+
+test centos_install_packages: centos_install_guest_additions {
+	centos {
+		exec bash """
+			sed 's/ONBOOT=no/ONBOOT=yes/g' /etc/sysconfig/network-scripts/ifcfg-ens3
+			nmcli connection up ens3
+			echo "nameserver 8.8.8.8" > /etc/resolv.conf
+			yum -y install git gcc gcc-c++ make openssl-devel python38-devel libvirt-devel tar wget vim
+			cd /root
+			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
+			tar xf cmake.tar.gz
+			cd CMake-3.16.5
+			./configure
+			make -j$(nproc)
+			make install
+		""" timeout 30m
+	}
+}
+
+test centos_download_onnxruntime: centos_install_packages {
+	centos {
+		exec bash """
+			cd /root
+			git clone https://github.com/microsoft/onnxruntime.git
+			cd onnxruntime
+			git checkout v1.1.0
+			git submodule sync --recursive
+			git submodule update --init --recursive
+		""" timeout 2h
+	}
+}
+
+test centos_build_onnxruntime_cpu: centos_download_onnxruntime {
+	centos {
+		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
+		exec bash """
+			export PATH=$PATH:/usr/local/bin
+			cd /root/onnxruntime
+			git apply ../onnxruntime_patches/single_thread.patch
+			git apply ../onnxruntime_patches/rename_dll.patch
+			git apply ../onnxruntime_patches/cuda.patch
+			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			git apply ../onnxruntime_patches/python38.patch
+			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests
+			mkdir /root/onnxruntime_dist
+			mkdir /root/onnxruntime_dist/include
+			mkdir /root/onnxruntime_dist/lib
+			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_dist/lib
+			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
+		""" timeout 2h
+		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_centos_cpu"
 	}
 }
