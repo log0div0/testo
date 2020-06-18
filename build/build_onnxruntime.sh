@@ -1,3 +1,3 @@
+#!/usr/bin/env bash
 
-SCRIPT_DIR=$(dirname "$0")
-$SCRIPT_DIR/build.sh *build_onnxruntime*
+$(dirname "$0")/build.sh *build_onnxruntime*

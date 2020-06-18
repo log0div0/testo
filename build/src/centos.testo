@@ -166,7 +166,7 @@ test centos_build_testo_cpu: centos_install_packages {
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo-${TESTO_VERSION}-cpu.rpm"
+		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo-cpu.rpm"
 	}
 }
 
@@ -189,6 +189,6 @@ test centos_build_testo_gpu: centos_install_packages {
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo-${TESTO_VERSION}-gpu.rpm"
+		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo-gpu.rpm"
 	}
 }
