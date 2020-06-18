@@ -1,0 +1,24 @@
+diff --git a/build.sh b/build.sh
+index e155dd80a..1be1e32b7 100755
+--- a/build.sh
++++ b/build.sh
+@@ -6,4 +6,4 @@
+ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ 
+ #requires python3.6 or higher
+-python3 $DIR/tools/ci_build/build.py --use_openmp --build_dir $DIR/build/Linux "$@"
++python3 $DIR/tools/ci_build/build.py --build_dir $DIR/build/Linux "$@"
+diff --git a/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc b/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc
+index 97dc76d73..321fe3e39 100644
+--- a/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc
++++ b/onnxruntime/core/providers/cpu/rnn/deep_cpu_lstm.cc
+@@ -160,7 +160,9 @@ static inline void ExecuteLambdaInParallel(TLambda lambda, int max, int step, do
+                                            onnxruntime::concurrency::ThreadPool* ttp) {
+   // #define NOTHREADS to execute the lambdas directly and in order if you need to do that to debug
+ 
++#define NOTHREADS
+ #ifdef NOTHREADS
++  ORT_UNUSED_PARAMETER(cost);
+   ORT_UNUSED_PARAMETER(ttp);
+ 
+   for (int i = 0; i < max; i += step) {

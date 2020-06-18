@@ -1,0 +1,28 @@
+diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
+index 5db7fbc4c..ebdc40869 100644
+--- a/cmake/CMakeLists.txt
++++ b/cmake/CMakeLists.txt
+@@ -783,22 +783,11 @@ configure_file(onnxruntime_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime_c
+ 
+ if (onnxruntime_USE_CUDA)
+   add_definitions(-DUSE_CUDA=1)
+-  #The following 6 lines are copied from https://gitlab.kitware.com/cmake/cmake/issues/17559
+-  set( CMAKE_CUDA_FLAGS "" CACHE STRING "" )
+-  if ( CMAKE_CUDA_FLAGS )
+-    list(REMOVE_ITEM CMAKE_CUDA_FLAGS "-cudart static")
+-  endif()
+-  if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.0")
+-    # cmake 3.17.0 introduces CMAKE_CUDA_RUNTIME which must be used instead of explicit -cudart shared flag
+-    set(CMAKE_CUDA_RUNTIME_LIBRARY Shared)
+-  else()
+-    string(APPEND CMAKE_CUDA_FLAGS "-cudart shared")
+-  endif()
+   enable_language(CUDA)
+   set(CMAKE_CUDA_STANDARD 11)
+   file(TO_CMAKE_PATH ${onnxruntime_CUDNN_HOME} onnxruntime_CUDNN_HOME)
+   set(ONNXRUNTIME_CUDA_LIBRARIES ${CUDA_LIBRARIES})
+-  list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cublas cudnn curand cufft)
++  list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cublas_static cudnn_static curand_static cufft_static culibos cublasLt_static)
+   if (WIN32)
+     link_directories(${onnxruntime_CUDNN_HOME}/lib/x64)
+ 

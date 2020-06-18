@@ -1,0 +1,221 @@
+
+include "common.testo"
+
+machine win {
+	cpus: 4
+	ram: 8Gb
+	disk main: {
+		source: "/var/lib/libvirt/images/testo-builder-win10-template.qcow2"
+	}
+	nic nat: {
+		attached_to: "nat"
+	}
+}
+
+test win_start {
+	win {
+		start
+		wait "Recycle Bin" timeout 10m
+		sleep 5s
+	}
+}
+
+test win_install_guest_additions: win_start {
+	win {
+		wait "Do you want to allow"; mouse click "No".from_bottom(0)
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		mouse click "CD Drive"
+		sleep 5s
+		mouse click "Run autorun"
+		wait "Вас приветствует мастер установки"; press Enter
+		wait "Установщик установит"; press Enter
+		wait "Подтверждение установки"; press Enter
+		wait "Do you want to allow"
+		press Left,Enter
+		wait "Would you like to install"
+		mouse click "Would you like to install"; sleep 5s # focus
+		press Left,Enter
+		wait "Установка завершена"; press Enter
+		wait !"Установка завершена"
+		exec cmd "echo hello world"
+		unplug dvd
+		sleep 5s
+	}
+}
+
+test win_download_onnxruntime: win_install_guest_additions {
+	win {
+		exec cmd """
+			cd C:/
+			mkdir work
+			cd work
+			git clone https://github.com/microsoft/onnxruntime.git
+			cd onnxruntime
+			git checkout ${onnxruntime_tagname}
+			git submodule sync --recursive
+			git submodule update --init --recursive
+		""" timeout 2h
+	}
+}
+
+[no_snapshots: true]
+test win_build_onnxruntime_cpu_x64: win_download_onnxruntime {
+	win {
+		copyto "onnxruntime_patches" "C:/work/onnxruntime_patches"
+		exec cmd """
+			cd C:/work/onnxruntime
+			git apply ../onnxruntime_patches/single_thread.patch
+			git apply ../onnxruntime_patches/rename_dll.patch
+			git apply ../onnxruntime_patches/cuda.patch
+			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			.\\build.bat --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --cmake_generator "Visual Studio 16 2019"
+		""" timeout 2h
+		exec cmd """
+			cd C:/work/onnxruntime
+			mkdir C:\\work\\onnxruntime_dist
+			mkdir C:\\work\\onnxruntime_dist\\include
+			mkdir C:\\work\\onnxruntime_dist\\lib
+			copy build\\Windows\\Release\\Release\\onnxruntime_testo.* C:\\work\\onnxruntime_dist\\lib
+			copy include\\onnxruntime\\core\\session\\* C:\\work\\onnxruntime_dist\\include
+		"""
+		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x64"
+	}
+}
+
+[no_snapshots: true]
+test win_build_onnxruntime_cpu_x86: win_download_onnxruntime {
+	win {
+		copyto "onnxruntime_patches" "C:/work/onnxruntime_patches"
+		exec cmd """
+			cd C:/work/onnxruntime
+			git apply ../onnxruntime_patches/single_thread.patch
+			git apply ../onnxruntime_patches/rename_dll.patch
+			git apply ../onnxruntime_patches/cuda.patch
+			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			.\\build.bat --x86 --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --cmake_generator "Visual Studio 16 2019"
+		""" timeout 2h
+		exec cmd """
+			cd C:/work/onnxruntime
+			mkdir C:\\work\\onnxruntime_dist
+			mkdir C:\\work\\onnxruntime_dist\\include
+			mkdir C:\\work\\onnxruntime_dist\\lib
+			copy build\\Windows\\Release\\Release\\onnxruntime_testo.* C:\\work\\onnxruntime_dist\\lib
+			copy include\\onnxruntime\\core\\session\\* C:\\work\\onnxruntime_dist\\include
+		"""
+		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x86"
+	}
+}
+
+[no_snapshots: true]
+test win_build_testo_guest_additions_x64: win_install_guest_additions {
+	win {
+		copyto "${TESTO_SRC_DIR}/3rd_party" "C:/work/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/guest_additions" "C:/work/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/pkg" "C:/work/testo/pkg"
+		copyto "${TESTO_SRC_DIR}/src" "C:/work/testo/src"
+		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:/work/testo/CMakeLists.txt"
+		exec cmd """
+			cd C:/work/
+			mkdir testo_build
+			cd testo_build
+			cmake -G "Visual Studio 16 2019" -A x64 ../testo
+			cmake --build . --target testo-guest-additions --config Release
+			cmake --build . --target testo-guest-additions-helper --config Release
+		""" timeout 30m
+		exec cmd """
+			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions-helper.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\
+			cd C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\
+			devenv testo-guest-additions.sln /Build "Default|Default"
+
+		"""
+		copyfrom "C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\testo-guest-additions.msi" "${TMP_DIR}/testo-guest-additions-x64.msi"
+	}
+}
+
+[no_snapshots: true]
+test win_build_testo_guest_additions_x86: win_install_guest_additions {
+	win {
+		copyto "${TESTO_SRC_DIR}/3rd_party" "C:/work/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/guest_additions" "C:/work/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/pkg" "C:/work/testo/pkg"
+		copyto "${TESTO_SRC_DIR}/src" "C:/work/testo/src"
+		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:/work/testo/CMakeLists.txt"
+		exec cmd """
+			cd C:/work/
+			mkdir testo_build
+			cd testo_build
+			cmake -G "Visual Studio 16 2019" -A Win32 ../testo
+			cmake --build . --target testo-guest-additions --config Release
+			cmake --build . --target testo-guest-additions-helper --config Release
+		""" timeout 30m
+		exec cmd """
+			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars32.bat"
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions-helper.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\
+			cd C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\
+			devenv testo-guest-additions.sln /Build "Default|Default"
+
+		"""
+		copyfrom "C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\testo-guest-additions.msi" "${TMP_DIR}/testo-guest-additions-x86.msi"
+	}
+}
+
+[no_snapshots: true]
+test win_build_testo_cpu_x64: win_install_guest_additions {
+	win {
+		copyto "${TMP_DIR}/onnxruntime_dist_win_cpu_x64" "C:\\work\\onnxruntime_dist"
+		copyto "${TESTO_SRC_DIR}/3rd_party" "C:/work/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/guest_additions" "C:/work/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/pkg" "C:/work/testo/pkg"
+		copyto "${TESTO_SRC_DIR}/src" "C:/work/testo/src"
+		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:/work/testo/CMakeLists.txt"
+		exec cmd """
+			cd C:/work/
+			mkdir testo_build
+			cd testo_build
+			cmake -G "Visual Studio 16 2019" -A x64 -DONNX_RUNTIME_DIR=C:/work/onnxruntime_dist -DUSE_CUDA=off ../testo
+			cmake --build . --target testo --config Release
+			cmake --build . --target testo-helper --config Release
+		""" timeout 30m
+		exec cmd """
+			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
+			copy C:\\work\\onnxruntime_dist\\lib\\onnxruntime_testo.dll C:\\work\\testo\\pkg\\win\\x64\\
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo.exe C:\\work\\testo\\pkg\\win\\x64\\
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-helper.exe C:\\work\\testo\\pkg\\win\\x64\\
+			cd C:\\work\\testo\\pkg\\win\\x64\\
+			devenv testo.sln /Build "Default|Default"
+		""" timeout 5m
+		copyfrom "C:\\work\\testo\\pkg\\win\\x64\\testo.msi" "${OUT_DIR}/testo-cpu-x64.msi"
+	}
+}
+
+[no_snapshots: true]
+test win_build_testo_cpu_x86: win_install_guest_additions {
+	win {
+		copyto "${TMP_DIR}/onnxruntime_dist_win_cpu_x86" "C:\\work\\onnxruntime_dist"
+		copyto "${TESTO_SRC_DIR}/3rd_party" "C:/work/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/guest_additions" "C:/work/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/pkg" "C:/work/testo/pkg"
+		copyto "${TESTO_SRC_DIR}/src" "C:/work/testo/src"
+		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:/work/testo/CMakeLists.txt"
+		exec cmd """
+			cd C:/work/
+			mkdir testo_build
+			cd testo_build
+			cmake -G "Visual Studio 16 2019" -A Win32 -DONNX_RUNTIME_DIR=C:/work/onnxruntime_dist -DUSE_CUDA=off ../testo
+			cmake --build . --target testo --config Release
+			cmake --build . --target testo-helper --config Release
+		""" timeout 30m
+		exec cmd """
+			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars32.bat"
+			copy C:\\work\\onnxruntime_dist\\lib\\onnxruntime_testo.dll C:\\work\\testo\\pkg\\win\\x86\\
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo.exe C:\\work\\testo\\pkg\\win\\x86\\
+			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-helper.exe C:\\work\\testo\\pkg\\win\\x86\\
+			cd C:\\work\\testo\\pkg\\win\\x86\\
+			devenv testo.sln /Build "Default|Default"
+		""" timeout 5m
+		copyfrom "C:\\work\\testo\\pkg\\win\\x86\\testo.msi" "${OUT_DIR}/testo-cpu-x86.msi"
+	}
+}

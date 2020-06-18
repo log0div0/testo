@@ -1483,10 +1483,6 @@ void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 
 void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	try {
-		if (src.is_relative()) {
-			throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
-		}
-
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 
