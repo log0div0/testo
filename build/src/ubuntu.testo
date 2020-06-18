@@ -146,32 +146,33 @@ test ubuntu_build_testo_cpu: ubuntu_install_packages {
 
 test ubuntu_install_cuda: ubuntu_download_onnxruntime {
 	ubuntu {
-		copyto "cuda/cuda-repo-ubuntu1804_10.0.130-1_amd64.deb" "/root/cuda-repo-ubuntu1804_10.0.130-1_amd64.deb"
+		plug flash nvidia
+		sleep 5s
 		exec bash """
-			apt -y install ntpdate
-			ntpdate 1.ro.pool.ntp.org
-			dpkg -i /root/cuda-repo-ubuntu1804_10.0.130-1_amd64.deb
-			apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-			apt update
-			apt -y install cuda-10-0
-		""" timeout 4h
+			mount /dev/sdb1 /media
+			ls /media
+			/media/cuda_10.0.130_410.48_linux.run --silent --toolkit --override
+			/usr/local/cuda-10.0/bin/nvcc --version
+			tar xf /media/cudnn-10.0-linux-x64-v7.6.4.38.tgz -C /root
+			ls /root
+			umount /media
+		""" timeout 10m
+		sleep 5s
+		unplug flash nvidia
 	}
 }
 
 test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
 	ubuntu {
-		copyto "${ISO_DIR}/cudnn-10.0-linux-x64-v7.6.4.38.tar.xz" "/root/cudnn-10.0-linux-x64-v7.6.4.38.tar.xz"
 		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
-			cd /root
-			tar xf /root/cudnn-10.0-linux-x64-v7.6.4.38.tar.xz
 			cd /root/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch
 			git apply ../onnxruntime_patches/rename_dll.patch
 			git apply ../onnxruntime_patches/cuda.patch
 			git apply ../onnxruntime_patches/disable_unit_tests.patch
 			export PATH="$PATH:/usr/local/cuda-10.0/bin"
-			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --use_cuda --cuda_home /usr/local/cuda-10.0/targets/x86_64-linux/ --cudnn_home /root/cudnn-10.0-linux-x64-v7.6.4.38/cuda
+			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --use_cuda --cuda_home /usr/local/cuda-10.0 --cudnn_home /root/cuda
 			mkdir /root/onnxruntime_dist
 			mkdir /root/onnxruntime_dist/include
 			mkdir /root/onnxruntime_dist/lib

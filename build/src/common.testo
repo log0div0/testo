@@ -6,3 +6,9 @@ network nat {
 param host_name "builder"
 param login "user"
 param password "12345678"
+
+flash nvidia {
+	fs: "fat"
+	size: 8Gb
+	folder: "${ISO_DIR}/nvidia"
+}
