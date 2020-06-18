@@ -3,7 +3,7 @@ include "common.testo"
 
 machine centos {
 	cpus: 4
-	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
+	iso: "${ISO_DIR}/CentOS-7-x86_64-Minimal-1804.iso"
 	ram: 8Gb
 	disk main: {
 		size: 32Gb
@@ -16,24 +16,23 @@ machine centos {
 test centos_install_os {
 	centos {
 		start
-		wait "Install CentOS Linux 8"; press Enter
-		wait "Press [Esc]"; press Esc
-		wait "What language would you" timeout 10m; mouse click "Continue"
-		mouse click "Installation Dest"
+		wait "Install CentOS 7"; press Enter
+		wait "What language would you"; mouse click "Continue"
+		mouse click "INSTALLATION DESTINATION"
 		mouse click "Done"
-		mouse click "Software selection"
-		mouse click "Minimal Install"
-		mouse click "Done".from_top(0)
+		wait "Begin Installation"
+		wait !"Please complete items"
 		mouse click js "find_text().match('Begin Installation').match_background('blue').from_top(0)"
-		mouse click "Root Password".from_top(0);
+		mouse click "ROOT PASSWORD";
 		wait "Enter a password"; type "${password}"
 		press Tab; type "${password}"
 		mouse click "Done".from_top(0)
 		mouse move 200 200
 		mouse click "Done".from_top(0)
-		wait "CentOS Linux is now successfully installed" timeout 20m
+		wait "CentOS is now successfully installed" timeout 20m
 		unplug dvd
-		mouse click "Reboot".from_bottom(0)
+		stop
+		start
 		wait "localhost login"
 	}
 }
@@ -44,9 +43,13 @@ test centos_install_guest_additions: centos_install_os {
 		wait "Password:"; type "${password}"; press Enter
 		wait "root@localhost"
 
+		type "depmod -a && echo result is $?"; press Enter
+		wait "result is 0"
+		type "clear"; press Enter
+
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 		type "mount /dev/cdrom /media"; press Enter
-		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm && echo result is $?"; press Enter
+		wait "mounting read-only"; type "rpm -i /media/testo-guest-additions.rpm && echo result is $?"; press Enter
 		wait "result is 0"
 		type "umount /media"; press Enter
 		sleep 5s; unplug dvd
@@ -58,10 +61,9 @@ test centos_install_guest_additions: centos_install_os {
 test centos_install_packages: centos_install_guest_additions {
 	centos {
 		exec bash """
-			sed 's/ONBOOT=no/ONBOOT=yes/g' /etc/sysconfig/network-scripts/ifcfg-ens3
-			nmcli connection up ens3
+			dhclient ens3
 			echo "nameserver 8.8.8.8" > /etc/resolv.conf
-			yum -y install git gcc gcc-c++ make openssl-devel python38-devel libvirt-devel tar wget vim
+			yum -y install git gcc gcc-c++ make openssl-devel python3 python3-devel libvirt-devel tar wget vim
 			cd /root
 			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
 			tar xf cmake.tar.gz

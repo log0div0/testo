@@ -81,6 +81,29 @@ test win_build_onnxruntime_cpu_x64: win_download_onnxruntime {
 	}
 }
 
+test win_build_onnxruntime_cpu_x86: win_download_onnxruntime {
+	win {
+		copyto "onnxruntime_patches" "C:/work/onnxruntime_patches"
+		exec cmd """
+			cd C:/work/onnxruntime
+			git apply ../onnxruntime_patches/single_thread.patch
+			git apply ../onnxruntime_patches/rename_dll.patch
+			git apply ../onnxruntime_patches/cuda.patch
+			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			.\\build.bat --x86 --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --cmake_generator "Visual Studio 16 2019"
+		""" timeout 2h
+		exec cmd """
+			cd C:/work/onnxruntime
+			mkdir C:\\work\\onnxruntime_dist
+			mkdir C:\\work\\onnxruntime_dist\\include
+			mkdir C:\\work\\onnxruntime_dist\\lib
+			copy build\\Windows\\Release\\Release\\onnxruntime_testo.* C:\\work\\onnxruntime_dist\\lib
+			copy include\\onnxruntime\\core\\session\\* C:\\work\\onnxruntime_dist\\include
+		"""
+		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x86"
+	}
+}
+
 test win_build_testo_cpu_x64: win_install_guest_additions {
 	win {
 		copyto "${TMP_DIR}/onnxruntime_dist_win_cpu_x64" "C:\\work\\onnxruntime_dist"
