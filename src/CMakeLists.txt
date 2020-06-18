@@ -10,21 +10,10 @@ if (WIN32)
 	)
 endif()
 
-if(NOT ONNX_RUNTIME_DIR)
-	message(FATAL_ERROR "ONNX_RUNTIME_DIR is not set")
-endif()
-
 if (USE_CUDA)
 	add_definitions(-DUSE_CUDA=1)
 endif()
 
-include_directories(
-	${ONNX_RUNTIME_DIR}/include
-)
-
-link_directories(
-	${ONNX_RUNTIME_DIR}/lib/
-)
 
 if (APPLE)
 include_directories(/usr/local/include)
@@ -44,5 +33,16 @@ add_subdirectory(qemu)
 endif()
 add_subdirectory(js)
 add_subdirectory(stb)
-add_subdirectory(nn)
-add_subdirectory(testo)
+
+if (ONNX_RUNTIME_DIR)
+	include_directories(
+		${ONNX_RUNTIME_DIR}/include
+	)
+
+	link_directories(
+		${ONNX_RUNTIME_DIR}/lib/
+	)
+
+	add_subdirectory(nn)
+	add_subdirectory(testo)
+endif()

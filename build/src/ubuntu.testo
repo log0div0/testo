@@ -103,6 +103,7 @@ test ubuntu_download_onnxruntime: ubuntu_install_packages {
 	}
 }
 
+[no_snapshots: true]
 test ubuntu_build_onnxruntime_cpu: ubuntu_download_onnxruntime {
 	ubuntu {
 		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
@@ -120,27 +121,6 @@ test ubuntu_build_onnxruntime_cpu: ubuntu_download_onnxruntime {
 			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
 		""" timeout 2h
 		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_ubuntu_cpu"
-	}
-}
-
-[no_snapshots: true]
-test ubuntu_build_testo_cpu: ubuntu_install_packages {
-	ubuntu {
-		copyto "${TMP_DIR}/onnxruntime_dist_ubuntu_cpu" "/root/onnxruntime_dist"
-		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
-		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
-		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
-		exec bash """
-			cd /root/
-			mkdir testo_build
-			cd testo_build
-			cmake -DONNX_RUNTIME_DIR=/root/onnxruntime_dist -DUSE_CUDA=off -DCPACK_GENERATOR=DEB -DCMAKE_BUILD_TYPE=Release ../testo
-			make testo-package -j$(nproc)
-			ls out/pkg
-		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo-${TESTO_VERSION}-cpu.deb"
 	}
 }
 
@@ -162,6 +142,7 @@ test ubuntu_install_cuda: ubuntu_download_onnxruntime {
 	}
 }
 
+[no_snapshots: true]
 test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
 	ubuntu {
 		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
@@ -185,6 +166,49 @@ test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
 }
 
 [no_snapshots: true]
+test ubuntu_build_testo_guest_additions: ubuntu_install_packages {
+	ubuntu {
+		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
+		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
+		copyto "${TESTO_SRC_DIR}/tests" "/root/testo/tests"
+		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
+		exec bash """
+			cd /root/
+			mkdir testo_build
+			cd testo_build
+			cmake -DCPACK_GENERATOR=DEB -DCMAKE_BUILD_TYPE=Release ../testo
+			make testo-guest-additions-package -j$(nproc)
+			ls out/pkg
+		""" timeout 30m
+		copyfrom "/root/testo_build/out/pkg/testo-guest-additions.deb" "${TMP_DIR}/testo-guest-additions.deb"
+	}
+}
+
+[no_snapshots: true]
+test ubuntu_build_testo_cpu: ubuntu_install_packages {
+	ubuntu {
+		copyto "${TMP_DIR}/onnxruntime_dist_ubuntu_cpu" "/root/onnxruntime_dist"
+		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
+		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
+		copyto "${TESTO_SRC_DIR}/tests" "/root/testo/tests"
+		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
+		exec bash """
+			cd /root/
+			mkdir testo_build
+			cd testo_build
+			cmake -DONNX_RUNTIME_DIR=/root/onnxruntime_dist -DUSE_CUDA=off -DCPACK_GENERATOR=DEB -DCMAKE_BUILD_TYPE=Release ../testo
+			make testo-package -j$(nproc)
+			ls out/pkg
+		""" timeout 30m
+		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo-${TESTO_VERSION}-cpu.deb"
+	}
+}
+
+[no_snapshots: true]
 test ubuntu_build_testo_gpu: ubuntu_install_packages {
 	ubuntu {
 		copyto "${TMP_DIR}/onnxruntime_dist_ubuntu_gpu" "/root/onnxruntime_dist"
@@ -192,6 +216,7 @@ test ubuntu_build_testo_gpu: ubuntu_install_packages {
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
+		copyto "${TESTO_SRC_DIR}/tests" "/root/testo/tests"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
 			cd /root/
