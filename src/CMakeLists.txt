@@ -31,7 +31,6 @@ endif()
 if (UNIX AND NOT APPLE)
 add_subdirectory(qemu)
 endif()
-add_subdirectory(js)
 add_subdirectory(stb)
 
 if (ONNX_RUNTIME_DIR)
@@ -43,6 +42,7 @@ if (ONNX_RUNTIME_DIR)
 		${ONNX_RUNTIME_DIR}/lib/
 	)
 
+	add_subdirectory(js)
 	add_subdirectory(nn)
 	add_subdirectory(testo)
 endif()

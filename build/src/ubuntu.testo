@@ -96,7 +96,7 @@ test ubuntu_download_onnxruntime: ubuntu_install_packages {
 			cd /root
 			git clone https://github.com/microsoft/onnxruntime.git
 			cd onnxruntime
-			git checkout v1.1.0
+			git checkout ${onnxruntime_tagname}
 			git submodule sync --recursive
 			git submodule update --init --recursive
 		""" timeout 2h
@@ -131,9 +131,9 @@ test ubuntu_install_cuda: ubuntu_download_onnxruntime {
 		exec bash """
 			mount /dev/sdb1 /media
 			ls /media
-			/media/cuda_10.0.130_410.48_linux.run --silent --toolkit --override
-			/usr/local/cuda-10.0/bin/nvcc --version
-			tar xf /media/cudnn-10.0-linux-x64-v7.6.4.38.tgz -C /root
+			/media/${cuda_linux_filename} --silent --toolkit --override
+			/usr/local/cuda/bin/nvcc --version
+			tar xf /media/${cudnn_linux_filename} -C /root
 			ls /root
 			umount /media
 		""" timeout 10m
@@ -152,8 +152,8 @@ test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
 			git apply ../onnxruntime_patches/rename_dll.patch
 			git apply ../onnxruntime_patches/cuda.patch
 			git apply ../onnxruntime_patches/disable_unit_tests.patch
-			export PATH="$PATH:/usr/local/cuda-10.0/bin"
-			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --use_cuda --cuda_home /usr/local/cuda-10.0 --cudnn_home /root/cuda
+			export PATH="$PATH:/usr/local/cuda/bin"
+			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --use_cuda --cuda_home /usr/local/cuda --cudnn_home /root/cuda
 			mkdir /root/onnxruntime_dist
 			mkdir /root/onnxruntime_dist/include
 			mkdir /root/onnxruntime_dist/lib

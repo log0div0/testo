@@ -51,7 +51,7 @@ test win_download_onnxruntime: win_install_guest_additions {
 			cd work
 			git clone https://github.com/microsoft/onnxruntime.git
 			cd onnxruntime
-			git checkout v1.1.0
+			git checkout ${onnxruntime_tagname}
 			git submodule sync --recursive
 			git submodule update --init --recursive
 		""" timeout 2h
