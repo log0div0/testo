@@ -77,7 +77,7 @@ test ubuntu_install_guest_additions: ubuntu_install_os {
 test ubuntu_install_packages: ubuntu_install_guest_additions {
 	ubuntu {
 		exec bash """
-			apt -y install git gcc g++ make libssl-dev python3-dev libvirt-dev
+			apt -y install git gcc g++ make libssl-dev python3-dev libvirt-dev rpm
 			cd /root
 			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
 			tar xf cmake.tar.gz
@@ -178,11 +178,12 @@ test ubuntu_build_testo_guest_additions: ubuntu_install_packages {
 			cd /root/
 			mkdir testo_build
 			cd testo_build
-			cmake -DCPACK_GENERATOR=DEB -DCMAKE_BUILD_TYPE=Release ../testo
+			cmake -DCPACK_GENERATOR="DEB;RPM" -DCMAKE_BUILD_TYPE=Release ../testo
 			make testo-guest-additions-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
 		copyfrom "/root/testo_build/out/pkg/testo-guest-additions.deb" "${TMP_DIR}/testo-guest-additions.deb"
+		copyfrom "/root/testo_build/out/pkg/testo-guest-additions.rpm" "${TMP_DIR}/testo-guest-additions.rpm"
 	}
 }
 
