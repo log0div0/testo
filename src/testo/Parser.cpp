@@ -55,7 +55,7 @@ Token::category Parser::LA(size_t i) const {
 }
 
 bool Parser::test_stmt() const {
-	return ((LA(1) == Token::category::macro) ||
+	return ((LA(1) == Token::category::macro_action) ||
 		(LA(1) == Token::category::param) ||
 		test_controller() ||
 		test_test());
@@ -229,8 +229,8 @@ std::shared_ptr<Program> Parser::parse() {
 std::shared_ptr<IStmt> Parser::stmt() {
 	if (test_test()) {
 		return test();
-	} else if (LA(1) == Token::category::macro) {
-		return macro();
+	} else if (LA(1) == Token::category::macro_action) {
+		return macro_action();
 	} else if (LA(1) == Token::category::param) {
 		return param();
 	} else if (test_controller()) {
@@ -301,9 +301,9 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 	return std::shared_ptr<MacroArg>(new MacroArg(arg_name, default_value));
 }
 
-std::shared_ptr<Stmt<Macro>> Parser::macro() {
-	Token macro = LT(1);
-	match(Token::category::macro);
+std::shared_ptr<Stmt<MacroAction>> Parser::macro_action() {
+	Token macro_action = LT(1);
+	match(Token::category::macro_action);
 
 	Token name = LT(1);
 	match(Token::category::id);
@@ -333,15 +333,15 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	newline_list();
 	auto actions = action_block();
 
-	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, actions));
+	auto stmt = std::shared_ptr<MacroAction>(new MacroAction(macro_action, name, args, actions));
 
-	auto inserted = reg->macros.insert({stmt->name.value(), stmt});
+	auto inserted = reg->macros_action.insert({stmt->name.value(), stmt});
 	if (!inserted.second) {
 		throw std::runtime_error(std::string(stmt->begin()) + ": Error: macro \"" + stmt->name.value() + "\" is already defined here: " + 
 			std::string(inserted.first->second->begin()));
 	}
 
-	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
+	return std::shared_ptr<Stmt<MacroAction>>(new Stmt<MacroAction>(stmt));
 }
 
 std::shared_ptr<Stmt<Param>> Parser::param() {
@@ -568,7 +568,7 @@ std::shared_ptr<IAction> Parser::action() {
 	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
 		return empty_action();
 	} else if (LA(1) == Token::category::id) {
-		action = macro_call();
+		action = macro_action_call();
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown action: " + LT(1).value());
 	}
@@ -1029,7 +1029,7 @@ std::shared_ptr<Action<ActionBlock>> Parser::action_block() {
 	return std::shared_ptr<Action<ActionBlock>>(new Action<ActionBlock>(action));
 }
 
-std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
+std::shared_ptr<Action<MacroActionCall>> Parser::macro_action_call() {
 	Token macro_name = LT(1);
 	match(Token::category::id);
 
@@ -1051,8 +1051,8 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 
 	match(Token::category::rparen);
 
-	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
-	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
+	auto action = std::shared_ptr<MacroActionCall>(new MacroActionCall(macro_name, params));
+	return std::shared_ptr<Action<MacroActionCall>>(new Action<MacroActionCall>(action));
 }
 
 std::shared_ptr<Action<IfClause>> Parser::if_clause() {

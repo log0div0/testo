@@ -71,8 +71,8 @@ std::set<std::shared_ptr<FlashDriveController>> Register::extract_fdcs_from_acti
 			auto tmp = extract_fdcs_from_action(action);
 			result.insert(tmp.begin(), tmp.end());
 		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		auto tmp = extract_fdcs_from_action(p->action->macro->action_block);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroActionCall>>(action)) {
+		auto tmp = extract_fdcs_from_action(p->action->macro_action->action_block);
 		result.insert(tmp.begin(), tmp.end());
 	}
 

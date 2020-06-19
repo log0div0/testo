@@ -1125,12 +1125,12 @@ struct MacroArg: public Node {
 	std::shared_ptr<String> default_value = nullptr;
 };
 
-struct Macro: public Node {
-	Macro(const Token& macro,
+struct MacroAction: public Node {
+	MacroAction(const Token& macro_action,
 		const Token& name,
 		const std::vector<std::shared_ptr<MacroArg>>& args,
 		std::shared_ptr<Action<ActionBlock>> action_block):
-			Node(macro), name(name), args(args),
+			Node(macro_action), name(name), args(args),
 			action_block(action_block) {}
 
 	Pos begin() const {
@@ -1156,8 +1156,8 @@ struct Macro: public Node {
 	std::shared_ptr<Action<ActionBlock>> action_block;
 };
 
-struct MacroCall: public Node {
-	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<String>>& args):
+struct MacroActionCall: public Node {
+	MacroActionCall(const Token& macro_name, const std::vector<std::shared_ptr<String>>& args):
 		Node(macro_name), args(args) {}
 
 	Pos begin() const {
@@ -1182,10 +1182,10 @@ struct MacroCall: public Node {
 	}
 
 	std::set<std::string> get_all_fd_names() const override {
-		return macro->action_block->get_all_fd_names();
+		return macro_action->action_block->get_all_fd_names();
 	}
 
-	std::shared_ptr<Macro> macro;
+	std::shared_ptr<MacroAction> macro_action;
 	std::vector<std::shared_ptr<String>> args;
 };
 

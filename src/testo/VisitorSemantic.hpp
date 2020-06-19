@@ -13,7 +13,7 @@ struct VisitorSemantic {
 	void setup_macros(std::shared_ptr<AST::Test> test);
 	void setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block);
 	void setup_macros_action(std::shared_ptr<AST::IAction> action);
-	void setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
+	void setup_macros_macro_action_call(std::shared_ptr<AST::MacroActionCall> macro_action_call);
 	void setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	void setup_macros_for_clause(std::shared_ptr<AST::ForClause> for_clause);
 	void setup_test(std::shared_ptr<AST::Test> test);
@@ -22,7 +22,7 @@ struct VisitorSemantic {
 
 	void visit(std::shared_ptr<AST::Program> program);
 	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
-	void visit_macro(std::shared_ptr<AST::Macro> macro);
+	void visit_macro_action(std::shared_ptr<AST::MacroAction> macro_action);
 	void visit_param(std::shared_ptr<AST::Param> param);
 	void visit_test(std::shared_ptr<AST::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
@@ -39,7 +39,7 @@ struct VisitorSemantic {
 	void visit_plug(std::shared_ptr<AST::Plug> plug);
 	void visit_exec(std::shared_ptr<AST::Exec> exec);
 	void visit_wait(std::shared_ptr<AST::Wait> wait);
-	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
+	void visit_macro_action_call(std::shared_ptr<AST::MacroActionCall> macro_action_call);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	void visit_range(std::shared_ptr<AST::Range> range);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);

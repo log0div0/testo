@@ -257,8 +257,8 @@ Token Lexer::id() {
 		return network();
 	} else if (value == "param") {
 		return param();
-	} else if (value == "macro") {
-		return macro();
+	} else if (value == "macro_action") {
+		return macro_action();
 	} else if (value == "dvd") {
 		return dvd();
 	} else if (value == "if") {
@@ -555,11 +555,11 @@ Token Lexer::param() {
 	return Token(Token::category::param, value, tmp_pos, previous_pos);
 }
 
-Token Lexer::macro() {
+Token Lexer::macro_action() {
 	Pos tmp_pos = current_pos;
-	std::string value("macro");
+	std::string value("macro_action");
 	advance(value.length());
-	return Token(Token::category::macro, value, tmp_pos, previous_pos);
+	return Token(Token::category::macro_action, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::dvd() {

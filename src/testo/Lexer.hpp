@@ -161,7 +161,7 @@ private:
 	Token flash();
 	Token network();
 	Token param();
-	Token macro();
+	Token macro_action();
 	Token dvd();
 	Token if_();
 	Token else_();

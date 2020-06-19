@@ -215,14 +215,14 @@ void VisitorSemantic::setup_macros_action_block(std::shared_ptr<AST::ActionBlock
 	}
 }
 
-void VisitorSemantic::setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
-	auto macro = reg->macros.find(macro_call->name().value());
-	if (macro == reg->macros.end()) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
+void VisitorSemantic::setup_macros_macro_action_call(std::shared_ptr<AST::MacroActionCall> macro_action_call) {
+	auto macro_action = reg->macros_action.find(macro_action_call->name().value());
+	if (macro_action == reg->macros_action.end()) {
+		throw std::runtime_error(std::string(macro_action_call->begin()) + ": Error: unknown macro_action: " + macro_action_call->name().value());
 	}
-	macro_call->macro = macro->second;
+	macro_action_call->macro_action = macro_action->second;
 
-	setup_macros_action_block(macro_call->macro->action_block->action);
+	setup_macros_action_block(macro_action_call->macro_action->action_block->action);
 }
 
 void VisitorSemantic::setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
@@ -243,8 +243,8 @@ void VisitorSemantic::setup_macros_for_clause(std::shared_ptr<AST::ForClause> fo
 void VisitorSemantic::setup_macros_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return setup_macros_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return setup_macros_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroActionCall>>(action)) {
+		return setup_macros_macro_action_call(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return setup_macros_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -341,8 +341,8 @@ void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
 void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
 	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
 		return visit_test(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
-		return visit_macro(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::MacroAction>>(stmt)) {
+		return visit_macro_action(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
 		return visit_param(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
@@ -352,17 +352,17 @@ void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
 	}
 }
 
-void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
-	for (size_t i = 0; i < macro->args.size(); ++i) {
-		for (size_t j = i + 1; j < macro->args.size(); ++j) {
-			if (macro->args[i]->name() == macro->args[j]->name()) {
-				throw std::runtime_error(std::string(macro->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->args[j]->name());
+void VisitorSemantic::visit_macro_action(std::shared_ptr<AST::MacroAction> macro_action) {
+	for (size_t i = 0; i < macro_action->args.size(); ++i) {
+		for (size_t j = i + 1; j < macro_action->args.size(); ++j) {
+			if (macro_action->args[i]->name() == macro_action->args[j]->name()) {
+				throw std::runtime_error(std::string(macro_action->args[j]->begin()) + ": Error: duplicate macro arg: " + macro_action->args[j]->name());
 			}
 		}
 	}
 
 	bool has_default = false;
-	for (auto arg: macro->args) {
+	for (auto arg: macro_action->args) {
 		if (arg->default_value) {
 			has_default = true;
 			continue;
@@ -492,8 +492,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_exec(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		return visit_wait(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroActionCall>>(action)) {
+		return visit_macro_action_call(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -698,36 +698,36 @@ void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
 	visit_detect_expr(wait->select_expr);
 }
 
-void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+void VisitorSemantic::visit_macro_action_call(std::shared_ptr<AST::MacroActionCall> macro_action_call) {
 	uint32_t args_with_default = 0;
 
-	for (auto arg: macro_call->macro->args) {
+	for (auto arg: macro_action_call->macro_action->args) {
 		if (arg->default_value) {
 			args_with_default++;
 		}
 	}
 
-	if (macro_call->args.size() < macro_call->macro->args.size() - args_with_default) {
-		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_call->begin()),
-			macro_call->macro->args.size() - args_with_default, macro_call->args.size()));
+	if (macro_action_call->args.size() < macro_action_call->macro_action->args.size() - args_with_default) {
+		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_action_call->begin()),
+			macro_action_call->macro_action->args.size() - args_with_default, macro_action_call->args.size()));
 	}
 
-	if (macro_call->args.size() > macro_call->macro->args.size()) {
-		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_call->begin()),
-			macro_call->macro->args.size(), macro_call->args.size()));
+	if (macro_action_call->args.size() > macro_action_call->macro_action->args.size()) {
+		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_action_call->begin()),
+			macro_action_call->macro_action->args.size(), macro_action_call->args.size()));
 	}
 
 	//push new ctx
 	StackEntry new_ctx(true);
 
-	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	for (size_t i = 0; i < macro_action_call->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_action_call->args[i]->text(), reg);
+		new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
 	}
 
-	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	for (size_t i = macro_action_call->args.size(); i < macro_action_call->macro_action->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_action_call->macro_action->args[i]->default_value->text(), reg);
+		new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
 	}
 
 	reg->local_vars.push_back(new_ctx);
@@ -735,7 +735,7 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 		reg->local_vars.pop_back();
 	});
 
-	visit_action_block(macro_call->macro->action_block->action);
+	visit_action_block(macro_action_call->macro_action->action_block->action);
 }
 
 void VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {

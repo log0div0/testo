@@ -51,7 +51,7 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
 	std::shared_ptr<AST::MacroArg> macro_arg();
-	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
+	std::shared_ptr<AST::Stmt<AST::MacroAction>> macro_action();
 	std::shared_ptr<AST::Stmt<AST::Param>> param();
 	std::shared_ptr<AST::Attr> attr();
 	std::shared_ptr<AST::AttrBlock> attr_block();
@@ -85,7 +85,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Exec>> exec();
 	std::shared_ptr<AST::Action<AST::Copy>> copy();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
-	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
+	std::shared_ptr<AST::Action<AST::MacroActionCall>> macro_action_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
 	std::shared_ptr<AST::ICounterList> counter_list();
 	std::shared_ptr<AST::CounterList<AST::Range>> range();

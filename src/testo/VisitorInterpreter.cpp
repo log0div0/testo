@@ -707,8 +707,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 		visit_exec(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
 		visit_copy(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroActionCall>>(action)) {
+		visit_macro_action_call(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		visit_if_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -1570,22 +1570,22 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 
 }
 
-void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
+void VisitorInterpreter::visit_macro_action_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroActionCall> macro_action_call) {
 	//push new ctx
 	StackEntry new_ctx(true);
 
 	std::vector<std::pair<std::string, std::string>> args;
 
-	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
-		args.push_back(std::make_pair(macro_call->macro->args[i]->name(), value));
+	for (size_t i = 0; i < macro_action_call->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_action_call->args[i]->text(), reg);
+		new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
+		args.push_back(std::make_pair(macro_action_call->macro_action->args[i]->name(), value));
 	}
 
-	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
-		args.push_back(std::make_pair(macro_call->macro->args[i]->name(), value));
+	for (size_t i = macro_action_call->args.size(); i < macro_action_call->macro_action->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_action_call->macro_action->args[i]->default_value->text(), reg);
+		new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
+		args.push_back(std::make_pair(macro_action_call->macro_action->args[i]->name(), value));
 	}
 
 	reg->local_vars.push_back(new_ctx);
@@ -1593,8 +1593,8 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std
 		reg->local_vars.pop_back();
 	});
 
-	reporter.macro_call(vmc, macro_call->name(), args);
-	visit_action_block(vmc, macro_call->macro->action_block->action);
+	reporter.macro_action_call(vmc, macro_action_call->name(), args);
+	visit_action_block(vmc, macro_action_call->macro_action->action_block->action);
 }
 
 void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause) {

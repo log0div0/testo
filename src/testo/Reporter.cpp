@@ -304,8 +304,8 @@ void Reporter::check(std::shared_ptr<VmController> vmc, const std::string& text,
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::macro_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
-	report(fmt::format("{} Calling macro ", progress()), blue);
+void Reporter::macro_action_call(std::shared_ptr<VmController> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
+	report(fmt::format("{} Calling action macro ", progress()), blue);
 	report(fmt::format("{}(", macro_name), yellow);
 
 	for (auto it = params.begin(); it != params.end(); ++it) {

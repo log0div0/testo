@@ -71,8 +71,8 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 		return visit_exec(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
 		return visit_copy(vmc, p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(vmc, p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroActionCall>>(action)) {
+		return visit_macro_action_call(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -294,17 +294,17 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
+std::string VisitorCksum::visit_macro_action_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroActionCall> macro_action_call) {
 	StackEntry new_ctx(true);
 
-	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	for (size_t i = 0; i < macro_action_call->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_action_call->args[i]->text(), reg);
+		new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
 	}
 
-	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	for (size_t i = macro_action_call->args.size(); i < macro_action_call->macro_action->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_action_call->macro_action->args[i]->default_value->text(), reg);
+		new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
 	}
 
 	reg->local_vars.push_back(new_ctx);
@@ -312,7 +312,7 @@ std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, st
 		reg->local_vars.pop_back();
 	});
 
-	return visit_action_block(vmc, macro_call->macro->action_block->action);
+	return visit_action_block(vmc, macro_action_call->macro_action->action_block->action);
 }
 
 std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause) {

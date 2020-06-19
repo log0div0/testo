@@ -18,7 +18,7 @@ struct Register {
 	std::unordered_map<std::string, std::shared_ptr<NetworkController>> netcs;
 	std::unordered_map<std::string, std::shared_ptr<AST::Test>> tests;
 	std::unordered_map<std::string, std::shared_ptr<AST::Controller>> controllers;
-	std::unordered_map<std::string, std::shared_ptr<AST::Macro>> macros;
+	std::unordered_map<std::string, std::shared_ptr<AST::MacroAction>> macros_action;
 	std::unordered_map<std::string, std::shared_ptr<AST::Param>> param_nodes;
 	std::unordered_map<std::string, std::string> params;
 

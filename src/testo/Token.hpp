@@ -45,7 +45,7 @@ struct Token {
 		flash,
 		network,
 		param,
-		macro,
+		macro_action,
 		dvd,
 		if_,
 		else_,
@@ -225,8 +225,8 @@ struct Token {
 			return "NETWORK";
 		case param:
 			return "PARAM";
-		case macro:
-			return "MACRO";
+		case macro_action:
+			return "MACRO_ACTION";
 		case dvd:
 			return "DVD";
 		case if_:
