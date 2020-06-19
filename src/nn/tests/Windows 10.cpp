@@ -52,3 +52,28 @@ TEST_CASE("Windows 10/Установка") {
 		CHECK(tensor.match("Удобная работа на разных устройствах").size() == 1);
 	}
 }
+
+TEST_CASE("Windows 10/Валидата CSP") {
+	{
+		stb::Image image("Windows 10/Валидата CSP/Выберите считыватель ключа.png");
+		nn::Tensor tensor = nn::find_text(&image);
+		CHECK(tensor.match("Программа конфигурации Валидата CSP").size() == 1);
+		CHECK(tensor.match("ДСЧ").size() == 1);
+		CHECK(tensor.match("Считыватели ключа").size() == 1);
+		CHECK(tensor.match("Ключи").size() == 1);
+		CHECK(tensor.match("Сертификаты").size() == 1);
+		CHECK(tensor.match("Совместимость").size() == 1);
+		CHECK(tensor.match("Сервис").size() == 1);
+		CHECK(tensor.match("Выберите считыватель ключа").size() == 1);
+		CHECK(tensor.match("Считыватель съёмного диска").size() == 1);
+		CHECK(tensor.match("Считыватель 'Соболь'").size() == 1);
+		CHECK(tensor.match("Считыватель 'Аккорд'").size() == 1);
+		CHECK(tensor.match("Считыватель реестра").size() == 1);
+		CHECK(tensor.match("Считыватель ruToken").size() == 1);
+		CHECK(tensor.match("Считыватель eToken").size() == 1);
+		CHECK(tensor.match("Считыватель vdToken").size() == 2);
+		CHECK(tensor.match("Отмена").size() == 2);
+		CHECK(tensor.match("Применить").size() == 1);
+		CHECK(tensor.match("Validata").size() == 1);
+	}
+}

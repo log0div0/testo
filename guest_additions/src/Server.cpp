@@ -100,12 +100,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 			throw std::runtime_error("Destination path on vm must be absolute");
 		}
 
-		if (!fs::exists(dst.parent_path())) {
-			if (!fs::create_directories(dst.parent_path())) {
-				throw std::runtime_error(std::string("Can't create directory: ") + dst.parent_path().generic_string());
-			}
-		}
-
+		make_directories(dst.parent_path());
 		write_file(dst, content);
 		spdlog::info("File copied successfully to guest: " + dst.generic_string());
 	}
@@ -119,6 +114,10 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 }
 
 nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
+	if (src.is_relative()) {
+		throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
+	}
+
 	std::vector<uint8_t> fileContents = read_file(src);
 	std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
 

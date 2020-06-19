@@ -1189,7 +1189,10 @@ bool QemuVM::is_dvd_plugged() const {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
-		return !bool(cdrom.child("source").empty());
+		if (cdrom.child("source").empty()) {
+			return false;
+		}
+		return !cdrom.child("source").attribute("file").empty();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Checking if dvd is plugged"));
 	}
@@ -1235,10 +1238,8 @@ void QemuVM::plug_dvd(fs::path path) {
 				+ path.generic_string());
 		}
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-		auto config = domain.dump_xml();
-		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
-		if (!cdrom.child("source").empty()) {
+		if (is_dvd_plugged()) {
 			throw std::runtime_error("Some dvd is already plugged in");
 		}
 
@@ -1275,13 +1276,13 @@ void QemuVM::unplug_dvd() {
 		auto config = domain.dump_xml();
 		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
 
-		if (cdrom.child("source").empty()) {
+		if (!is_dvd_plugged()) {
 			throw std::runtime_error("Dvd is already unplugged");
 		}
 
 		cdrom.remove_child("source");
 
-		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -1482,16 +1483,12 @@ void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 
 void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
 	try {
-		if (src.is_relative()) {
-			throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
-		}
-
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 
 		helper.copy_from_guest(src, dst, timeout_milliseconds);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
+		std::throw_with_nested(std::runtime_error("Copying file(s) from the guest"));
 	}
 }
 
@@ -1573,7 +1570,7 @@ void QemuVM::create_disks() {
 				import_disk(disk_name, source_disk);
 			} else {
 				create_new_disk(disk_name, disk.at("size").get<uint32_t>());
-			}			
+			}
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));

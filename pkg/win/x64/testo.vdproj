@@ -154,7 +154,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_162AB2F7B41044A3910B6F683CE1D667"
             {
-            "SourcePath" = "8:..\\..\\src\\nn\\TextRecognizer.onnx"
+            "SourcePath" = "8:..\\..\\..\\src\\nn\\TextRecognizer.onnx"
             "TargetName" = "8:TextRecognizer.onnx"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
@@ -194,7 +194,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_54898EB858AE4A28A910F4E3B0AC9CC2"
             {
-            "SourcePath" = "8:..\\..\\src\\nn\\TextDetector.onnx"
+            "SourcePath" = "8:..\\..\\..\\src\\nn\\TextDetector.onnx"
             "TargetName" = "8:TextDetector.onnx"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
@@ -234,7 +234,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F06A840091A947F8B5F963AB8390A13B"
             {
-            "SourcePath" = "8:..\\..\\src\\nn\\TextColorPicker.onnx"
+            "SourcePath" = "8:..\\..\\..\\src\\nn\\TextColorPicker.onnx"
             "TargetName" = "8:TextColorPicker.onnx"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
@@ -308,15 +308,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Testo"
-        "ProductCode" = "8:{4DFE1BA6-0C7D-4E68-B689-185F2A9B7842}"
-        "PackageCode" = "8:{1F02ACC0-A191-41D1-BB30-CF88EE4DF390}"
+        "ProductCode" = "8:{2BA03BE0-316E-4482-BE04-970294C1F5CC}"
+        "PackageCode" = "8:{60C88626-8964-4EC9-A8A6-4F719071CAD3}"
         "UpgradeCode" = "8:{D80951FA-43DF-4B00-87CC-43A2824620D6}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.5.0"
+        "ProductVersion" = "8:1.6.1"
         "Manufacturer" = "8:Testo Lang"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

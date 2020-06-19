@@ -4,17 +4,22 @@ cmake_policy(SET CMP0091 NEW)
 
 project(testo)
 
-set(TESTO_VERSION "1.6.0")
+set(TESTO_VERSION "1.6.1")
+set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
+if (NOT CPACK_GENERATOR)
+	set(CPACK_GENERATOR "DEB")
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/sbin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
+set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 
 add_definitions(-DASIO_STANDALONE)
 
@@ -28,7 +33,7 @@ include_directories(
 )
 
 macro(add_package NAME)
-	set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+	set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")
 	set(CPACK_PACKAGE_CONTACT "s.lvov@testo-lang.ru")
 	set(CPACK_OUTPUT_CONFIG_FILE CPackConfig.cmake)
 	set(CPACK_SOURCE_OUTPUT_CONFIG_FILE CPackSourceConfig.cmake)
@@ -43,6 +48,8 @@ if(APPLE)
 endif()
 
 if(WIN32)
+	add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 	add_definitions(
 		-D_WIN32_WINNT=0x0601
 		-D_SCL_SECURE_NO_WARNINGS
@@ -70,7 +77,10 @@ add_subdirectory(3rd_party)
 add_subdirectory(src)
 if (NOT APPLE)
 	add_subdirectory(guest_additions)
-	add_subdirectory(pkg)
+
+	if (ONNX_RUNTIME_DIR)
+		add_subdirectory(pkg)
+	endif()
 endif()
 if (UNIX AND NOT APPLE)
 	add_subdirectory(tests)

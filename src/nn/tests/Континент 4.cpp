@@ -4,6 +4,15 @@
 
 TEST_CASE("Континент 4/Установка") {
 	{
+		stb::Image image("Континент 4/Установка/Select language.png");
+		nn::Tensor tensor = nn::find_text(&image);
+		CHECK(tensor.match("Please select Language").size() == 1);
+		CHECK(tensor.match("English").size() == 1);
+		CHECK(tensor.match("Russian").size() == 1);
+		CHECK(tensor.match("Autodeploy").size() == 1);
+		CHECK(tensor.match("Automatic boot in 30 seconds").size() == 1);
+	}
+	{
 		stb::Image image("Континент 4/Установка/Начальный экран.png");
 		nn::Tensor tensor = nn::find_text(&image);
 		CHECK(tensor.match("Установить Континент 4.1.0.919").size() == 1);
