@@ -921,30 +921,30 @@ struct Stop: public Node {
 };
 
 struct Shutdown: public Node {
-	Shutdown(const Token& shutdown, const Token& timeout, const Token& time_interval):
-		Node(shutdown), timeout(timeout), time_interval(time_interval) {}
+	Shutdown(const Token& shutdown, const Token& timeout_token, std::shared_ptr<StringTokenUnion> timeout):
+		Node(shutdown), timeout_token(timeout_token), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.begin();
 	}
 
 	Pos end() const {
-		if (timeout) {
-			return time_interval.end();
+		if (timeout_token) {
+			return timeout->end();
 		}
 		return t.end();
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
-		if (timeout) {
-			result += " timeout " + time_interval.value();
+		if (timeout_token) {
+			result += " timeout " + std::string(*timeout);
 		}
 		return result;
 	}
 
-	Token timeout;
-	Token time_interval;
+	Token timeout_token;
+	std::shared_ptr<StringTokenUnion> timeout;
 };
 
 struct Exec: public Node {

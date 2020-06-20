@@ -1372,7 +1372,7 @@ void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown) {
 	try {
-		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
+		std::string wait_for = shutdown->timeout ? template_parser.resolve(shutdown->timeout->text(), reg) : "1m";
 		reporter.shutdown(vmc, wait_for);
 		vmc->vm->power_button();
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));

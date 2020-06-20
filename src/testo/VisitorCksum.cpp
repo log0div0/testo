@@ -234,7 +234,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<AST::Shutdown> shutdown) {
 	std::string result("shutdown");
 	if (shutdown->time_interval) {
-		result += shutdown->time_interval.value();
+		result += template_parser.resolve(shutdown->timeout->text(), reg);
 	} else {
 		result += "1m";
 	}

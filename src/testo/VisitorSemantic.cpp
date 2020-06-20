@@ -511,6 +511,10 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
 		return visit_string_token_union(p->action->timeout);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
+		if (p->action->timeout) {
+			return visit_string_token_union(p->action->timeout);
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
