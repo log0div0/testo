@@ -120,6 +120,26 @@ test win10_guest_additions: win10_installation_part_2 {
 		wait "Установка завершена"; press Enter
 		wait !"Установка завершена"
 		exec cmd "echo hello world"
+		unplug dvd
+		sleep 5s
+	}
+}
+
+[no_snapshots: true]
+test win10_guest_additions_stop_service: win10_guest_additions {
+	win10 {
+		press LeftMeta+R
+		wait "Выполнить"
+		press LeftAlt+LeftShift
+		type "services.msc"; press Enter
+		wait "Службы (локальные)"
+		mouse click "DNS-клиент"
+		press Down*20
+		mouse dclick "Testo Guest Additions"
+		wait "Свойства: Testo Guest Additions"
+		exec cmd """type "C:\\Program Files\\Testo Lang\\Testo Guest Additions\\testo-guest-additions.txt""""
+		mouse click "Остановить".from_right(1)
+		wait "Остановлена"
 	}
 }
 
@@ -146,6 +166,8 @@ test win10_guest_additions_uninstall: win10_guest_additions {
 		wait "Приложения и возможности" && "Сортировать по" && !"Testo Guest Additions"
 	}
 }
+
+
 
 test win7_x86_installation {
 	win7 {

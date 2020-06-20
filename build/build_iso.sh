@@ -2,7 +2,7 @@
 
 source "$(dirname "$0")/vars.sh"
 
-genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot \
+sudo genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot \
 	-o ${OUT_DIR}/testo-guest-additions.iso \
 	${SCRIPT_DIR}/autorun.inf \
 	${SCRIPT_DIR}/autorun.js \
