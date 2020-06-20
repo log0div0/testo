@@ -517,6 +517,10 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
+		if (p->action->timeout) {
+			return visit_string_token_union(p->action->timeout);
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		return visit_wait(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroActionCall>>(action)) {

@@ -921,30 +921,30 @@ struct Stop: public Node {
 };
 
 struct Shutdown: public Node {
-	Shutdown(const Token& shutdown, const Token& timeout_token, std::shared_ptr<StringTokenUnion> timeout):
-		Node(shutdown), timeout_token(timeout_token), timeout(timeout) {}
+	Shutdown(const Token& shutdown, std::shared_ptr<StringTokenUnion> timeout):
+		Node(shutdown), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.begin();
 	}
 
 	Pos end() const {
-		if (timeout_token) {
+		if (timeout) {
 			return timeout->end();
+		} else {
+			return t.end();
 		}
-		return t.end();
 	}
 
 	operator std::string() const {
 		std::string result = t.value();
-		if (timeout_token) {
+		if (timeout) {
 			result += " timeout " + std::string(*timeout);
 		}
 		return result;
 	}
 
-	Token timeout_token;
-	std::shared_ptr<StringTokenUnion> timeout;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 };
 
 struct Exec: public Node {
@@ -981,10 +981,10 @@ struct Exec: public Node {
 //Now this node holds actions copyto and copyfrom
 //Cause they're really similar
 struct Copy: public Node {
-	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, const Token& timeout, const Token& time_interval):
+	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, std::shared_ptr<StringTokenUnion> timeout):
 		Node(copy),
 		from(from),
-		to(to), timeout(timeout), time_interval(time_interval) {}
+		to(to), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.begin();
@@ -992,7 +992,7 @@ struct Copy: public Node {
 
 	Pos end() const {
 		if (timeout) {
-			return time_interval.end();
+			return timeout->end();
 		}
 		return to->end();
 	}
@@ -1000,7 +1000,7 @@ struct Copy: public Node {
 	operator std::string() const {
 		std::string result = t.value() + " " + std::string(*from) + " " + std::string(*to);
 		if (timeout) {
-			result += " timeout " + time_interval.value();
+			result += " timeout " + std::string(*timeout);
 		}
 		return result;
 	}
@@ -1013,8 +1013,7 @@ struct Copy: public Node {
 
 	std::shared_ptr<String> from;
 	std::shared_ptr<String> to;
-	Token timeout;
-	Token time_interval;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 };
 
 struct ActionBlock: public Node {

@@ -233,7 +233,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 
 std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<AST::Shutdown> shutdown) {
 	std::string result("shutdown");
-	if (shutdown->time_interval) {
+	if (shutdown->timeout) {
 		result += template_parser.resolve(shutdown->timeout->text(), reg);
 	} else {
 		result += "1m";
@@ -291,8 +291,8 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 
 	result += to.generic_string();
 
-	if (copy->time_interval) {
-		result += copy->time_interval.value();
+	if (copy->timeout) {
+		result += template_parser.resolve(copy->timeout->text(), reg);
 	} else {
 		auto copy_default_timeout_found = reg->params.find("TESTO_COPY_DEFAULT_TIMEOUT");
 		result += (copy_default_timeout_found != reg->params.end()) ? copy_default_timeout_found->second : "10m";

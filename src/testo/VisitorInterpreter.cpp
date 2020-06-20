@@ -1543,7 +1543,7 @@ void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shar
 		fs::path from = template_parser.resolve(copy->from->text(), reg);
 		fs::path to = template_parser.resolve(copy->to->text(), reg);
 
-		std::string wait_for = copy->time_interval ? copy->time_interval.value() : copy_default_timeout;
+		std::string wait_for = copy->timeout ? template_parser.resolve(copy->timeout->text(), reg) : copy_default_timeout;
 		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy->is_to_guest(), wait_for);
 
 		if (vmc->vm->state() != VmState::Running) {

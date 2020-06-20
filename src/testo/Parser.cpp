@@ -947,17 +947,15 @@ std::shared_ptr<Action<Shutdown>> Parser::shutdown() {
 	Token shutdown_token = LT(1);
 	match(Token::category::shutdown);
 
-	Token timeout_token = Token();
 	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout_token = LT(1);
 		match(Token::category::timeout);
 
 		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token, timeout_token, timeout));
+	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token, timeout));
 	return std::shared_ptr<Action<Shutdown>>(new Action<Shutdown>(action));
 }
 
@@ -992,18 +990,14 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 	auto from = string();
 	auto to = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout, time_interval));
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout));
 	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 
