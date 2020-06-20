@@ -85,6 +85,8 @@ struct HardwareDeviceInfo {
 	HDEVINFO handle = NULL;
 };
 
+Server* g_server = nullptr;
+
 std::function app_main = [&]() {
 	try {
 		HardwareDeviceInfo info((LPGUID)&GUID_VIOSERIAL_PORT);
@@ -93,6 +95,7 @@ std::function app_main = [&]() {
 		spdlog::info("device_path = " + device_path);
 
 		Server server(device_path);
+		g_server = &server;
 		server.run();
 	} catch (const std::exception& err) {
 		spdlog::error("app_main std error: {}", err.what());
@@ -112,12 +115,12 @@ void ControlHandler(DWORD request) {
 	{
 	case SERVICE_CONTROL_STOP:
 		spdlog::info("SERVICE_CONTROL_STOP BEGIN");
-		app.cancel();
+		g_server->force_cancel();
 		spdlog::info("SERVICE_CONTROL_STOP END");
 		break;
 	case SERVICE_CONTROL_SHUTDOWN:
 		spdlog::info("SERVICE_CONTROL_SHUTDOWN BEGIN");
-		app.cancel();
+		g_server->force_cancel();
 		spdlog::info("SERVICE_CONTROL_SHUTDOWN END");
 		break;
 	default:

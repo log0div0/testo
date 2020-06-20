@@ -16,6 +16,7 @@ struct Channel {
 
 	size_t read(uint8_t* data, size_t size);
 	size_t write(uint8_t* data, size_t size);
+	void close();
 
 #ifdef __linux__
 	int fd = -1;

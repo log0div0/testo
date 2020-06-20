@@ -12,8 +12,10 @@ struct Server {
 	Server& operator=(const Server&) = delete;
 
 	void run();
+	void force_cancel();
 
 private:
+	bool is_canceled = false;
 
 	void handle_command(const nlohmann::json& command);
 	void handle_check_avaliable();

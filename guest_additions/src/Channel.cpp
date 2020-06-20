@@ -101,6 +101,10 @@ size_t Channel::write(uint8_t* data, size_t size) {
 	return n;
 }
 
+void Channel::close() {
+	close(fd);
+}
+
 #endif
 
 #ifdef WIN32
@@ -116,7 +120,7 @@ Channel::Channel(const std::string& fd_path):
 		0,
 		NULL,
 		OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,
+		FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED,
 		NULL);
 	if (handle == INVALID_HANDLE_VALUE) {
 		throw std::runtime_error("CreateFile failed");
@@ -139,11 +143,15 @@ size_t Channel::read(uint8_t* data, size_t size) {
 	if (!info->HostConnected) {
 		return 0;
 	}
-	return stream.read(asio::buffer(data, size));
+	return stream.readSome(asio::buffer(data, size));
 }
 
 size_t Channel::write(uint8_t* data, size_t size) {
 	return stream.write(asio::buffer(data, size));
+}
+
+void Channel::close() {
+	CloseHandle(stream.handle().native_handle());
 }
 
 #endif

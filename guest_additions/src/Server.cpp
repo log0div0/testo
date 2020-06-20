@@ -15,7 +15,7 @@ Server::Server(const std::string& fd_path_): channel(fd_path_) {
 void Server::run() {
 	spdlog::info("Waiting for commands");
 
-	while (true) {
+	while (!is_canceled) {
 		try {
 			auto command = channel.receive();
 			spdlog::info(command.dump(2));
@@ -27,6 +27,12 @@ void Server::run() {
 			spdlog::info("Continue handle commands ...");
 		}
 	}
+}
+
+void Server::force_cancel() {
+	spdlog::info("Force cancel");
+	is_canceled = true;
+	channel.close();
 }
 
 void Server::handle_command(const nlohmann::json& command) {

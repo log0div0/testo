@@ -119,15 +119,15 @@ test win_build_testo_guest_additions_x64: win_install_guest_additions {
 			mkdir testo_build
 			cd testo_build
 			cmake -G "Visual Studio 16 2019" -A x64 ../testo
-			cmake --build . --target testo-guest-additions --config Release
-			cmake --build . --target testo-guest-additions-helper --config Release
+			cmake --build . --target testo-guest-additions --config Release || exit /b 1
+			cmake --build . --target testo-guest-additions-helper --config Release || exit /b 1
 		""" timeout 30m
 		exec cmd """
 			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
 			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\
 			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions-helper.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\
 			cd C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\
-			devenv testo-guest-additions.sln /Build "Default|Default"
+			devenv testo-guest-additions.sln /Build "Default|Default" || exit /b 1
 
 		"""
 		copyfrom "C:\\work\\testo\\guest_additions\\pkg\\win\\x64\\testo-guest-additions.msi" "${TMP_DIR}/testo-guest-additions-x64.msi"
@@ -147,15 +147,15 @@ test win_build_testo_guest_additions_x86: win_install_guest_additions {
 			mkdir testo_build
 			cd testo_build
 			cmake -G "Visual Studio 16 2019" -A Win32 ../testo
-			cmake --build . --target testo-guest-additions --config Release
-			cmake --build . --target testo-guest-additions-helper --config Release
+			cmake --build . --target testo-guest-additions --config Release || exit /b 1
+			cmake --build . --target testo-guest-additions-helper --config Release || exit /b 1
 		""" timeout 30m
 		exec cmd """
 			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars32.bat"
 			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\
 			copy C:\\work\\testo_build\\out\\sbin\\Release\\testo-guest-additions-helper.exe C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\
 			cd C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\
-			devenv testo-guest-additions.sln /Build "Default|Default"
+			devenv testo-guest-additions.sln /Build "Default|Default" || exit /b 1
 
 		"""
 		copyfrom "C:\\work\\testo\\guest_additions\\pkg\\win\\x86\\testo-guest-additions.msi" "${TMP_DIR}/testo-guest-additions-x86.msi"
