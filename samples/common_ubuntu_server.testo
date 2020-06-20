@@ -1,5 +1,5 @@
 
-macro install_ubuntu_server(host_name, login, password) {
+macro_action install_ubuntu_server(host_name, login, password) {
 	start
 	sleep 2s
 	wait "Language";
@@ -45,13 +45,13 @@ macro install_ubuntu_server(host_name, login, password) {
 	wait "Welcome to Ubuntu"
 }
 
-macro enter_sudo(host_name, login, password) {
+macro_action enter_sudo(host_name, login, password) {
 	type "sudo su"; press Enter;
 	wait "password for ${login}"; type "${password}"; press Enter
 	wait "root@${host_name}"
 }
 
-macro install_guest_additions_ubuntu_server(host_name, login, password) {
+macro_action install_guest_additions_ubuntu_server(host_name, login, password) {
 	enter_sudo("${host_name}", "${login}", "${password}")
 	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 	type "mount /dev/cdrom /media"; press Enter
@@ -62,7 +62,7 @@ macro install_guest_additions_ubuntu_server(host_name, login, password) {
 	unplug dvd
 }
 
-macro unplug_nat(login, password) {
+macro_action unplug_nat(login, password) {
 	shutdown
 
 	unplug nic nat

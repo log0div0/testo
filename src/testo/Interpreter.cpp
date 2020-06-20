@@ -1,7 +1,7 @@
 
 #include "Interpreter.hpp"
-#include "VisitorInterpreter.hpp"
 #include "VisitorSemantic.hpp"
+#include "VisitorInterpreter.hpp"
 #include <fstream>
 
 Interpreter::Interpreter(const fs::path& file, const nlohmann::json& config):

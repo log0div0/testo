@@ -37,6 +37,7 @@ struct VisitorSemantic {
 	void visit_key_combination(std::shared_ptr<AST::KeyCombination> combination);
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<AST::Plug> plug);
+	void visit_sleep(std::shared_ptr<AST::Sleep> sleep);
 	void visit_exec(std::shared_ptr<AST::Exec> exec);
 	void visit_wait(std::shared_ptr<AST::Wait> wait);
 	void visit_macro_action_call(std::shared_ptr<AST::MacroActionCall> macro_action_call);

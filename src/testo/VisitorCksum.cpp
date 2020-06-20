@@ -50,7 +50,7 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		return visit_wait(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		return std::string(*(p->action));
+		return visit_sleep(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(vmc, p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
@@ -139,6 +139,13 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::sha
 		result += (wait_interval_found != reg->params.end()) ? wait_interval_found->second : "1s";
 	}
 
+	return result;
+}
+
+std::string VisitorCksum::visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep) {
+	std::string result = "sleep";
+	result += template_parser.resolve(sleep->timeout->text(), reg);
+	
 	return result;
 }
 

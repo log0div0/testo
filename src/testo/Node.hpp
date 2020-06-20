@@ -50,6 +50,55 @@ struct String: public Node {
 	}
 };
 
+/*
+This is a special Node
+It incapsulates the case when
+Parser expects either String either regular Token.
+Semantic later should convert the String to a specific Token if
+needed.
+*/
+struct StringTokenUnion: public Node {
+	StringTokenUnion(const Token& token, std::shared_ptr<String> string, Token::category expected_token_type):
+		Node(Token(Token::category::string_token_union, "string_token_union", Pos(), Pos())),
+		token(token), string(string), expected_token_type(expected_token_type) {}
+
+	Pos begin() const {
+		if (string) {
+			return string->begin();
+		} else {
+			return token.begin();
+		}
+	}
+
+	Pos end() const {
+		if (string) {
+			return string->end();
+		} else {
+			return token.end();
+		}
+	}
+
+	operator std::string() const {
+		if (string) {
+			return std::string(*string);
+		} else {
+			return token.value();
+		}
+	}
+
+	std::string text() const {
+		if (string) {
+			return string->text();
+		} else {
+			return token.value();
+		}
+	}
+
+	Token token;
+	std::shared_ptr<String> string;
+	Token::category expected_token_type;
+};
+
 //basic unit of expressions - could be double quoted string or a var_ref (variable)
 struct SelectJS: public Node {
 	SelectJS(const Token& js, std::shared_ptr<String> script):
@@ -425,7 +474,7 @@ struct Wait: public Node {
 };
 
 struct Sleep: public Node {
-	Sleep(const Token& sleep, const Token& timeout):
+	Sleep(const Token& sleep, std::shared_ptr<StringTokenUnion> timeout):
 		Node(sleep),  timeout(timeout) {}
 
 	Pos begin() const {
@@ -433,15 +482,14 @@ struct Sleep: public Node {
 	}
 
 	Pos end() const {
-		return timeout.end();
+		return timeout->end();
 	}
 
 	operator std::string() const {
-		return t.value() + " for " + timeout.value();
+		return t.value() + " for " + std::string(*timeout);
 	}
 
-
-	Token timeout;
+	std::shared_ptr<StringTokenUnion> timeout;
 };
 
 struct Press: public Node {

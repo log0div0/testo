@@ -684,10 +684,9 @@ std::shared_ptr<Action<Sleep>> Parser::sleep() {
 	Token sleep_token = LT(1);
 	match(Token::category::sleep);
 
-	Token time_interval = LT(1);
-	match(Token::category::time_interval);
+	auto timeout = string_token_union(Token::category::time_interval);
 
-	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, time_interval));
+	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, timeout));
 	return std::shared_ptr<Action<Sleep>>(new Action<Sleep>(action));
 }
 
@@ -1258,6 +1257,26 @@ std::shared_ptr<String> Parser::string() {
 	}
 
 	return new_node;
+}
+
+
+std::shared_ptr<AST::StringTokenUnion> Parser::string_token_union(Token::category expected_token_type) {
+	if (!test_string() && LA(1) != expected_token_type) {
+		throw std::runtime_error(std::string(LT(1)) + ": Error: expected a string or " + Token::type_to_string(expected_token_type) + ", but got " + 
+			Token::type_to_string(LA(1)) + " " + LT(1).value());
+	}
+
+	Token token;
+	std::shared_ptr<String> str = nullptr;
+
+	if (test_string()) {
+		str = string();
+	} else {
+		token = LT(1);
+		match(expected_token_type);
+	}
+
+	return std::shared_ptr<StringTokenUnion>(new StringTokenUnion(token, str, expected_token_type));
 }
 
 std::shared_ptr<IFactor> Parser::factor() {

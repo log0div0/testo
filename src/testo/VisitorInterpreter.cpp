@@ -860,8 +860,9 @@ bool VisitorInterpreter::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> bi
 }
 
 void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep) {
-	reporter.sleep(vmc, sleep->timeout.value());
-	::sleep(sleep->timeout.value());
+	auto timeout_value = template_parser.resolve(sleep->timeout->text(), reg);
+	reporter.sleep(vmc, timeout_value);
+	::sleep(timeout_value);
 }
 
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {

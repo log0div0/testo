@@ -1,5 +1,6 @@
 
 #include "VisitorSemantic.hpp"
+#include "Lexer.hpp"
 #include "coro/Finally.h"
 #include "js/Context.hpp"
 #include <fmt/format.h>
@@ -488,6 +489,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_mouse(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
+		return visit_sleep(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
@@ -498,7 +501,7 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		return visit_for_clause(p->action);
-	}
+	} 
 }
 
 void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
@@ -638,6 +641,27 @@ void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 		}
 	}
 }
+
+void VisitorSemantic::visit_sleep(std::shared_ptr<AST::Sleep> sleep) {
+	auto timeout_value = template_parser.resolve(sleep->timeout->text(), reg);
+
+	Lexer lex(".", timeout_value);
+	try {
+		if (lex.get_next_token().type() != sleep->timeout->expected_token_type) {
+			throw;
+		}
+	} catch(...) {
+		throw std::runtime_error(std::string(sleep->timeout->begin()) + ": Error: can't convert string value " + timeout_value + 
+			" to " + Token::type_to_string(sleep->timeout->expected_token_type));
+	}
+	
+
+	auto t = lex.get_next_token();
+	if (t.type() != Token::category::eof) {
+		throw std::runtime_error(std::string(sleep->timeout->begin()) + ": Error: unexpected junk at the end of string: " + t.value());
+	}
+}
+
 
 void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
 	if ((exec->process_token.value() != "bash") &&

@@ -10,15 +10,19 @@ machine VM1 {
 	}
 }
 
+macro_action sleep_for(how_much) {
+	sleep "${how_much}"
+}
 
 test ubuntu_installation {
 	VM1 {
-		VM1 install_ubuntu_server("VM1", "user", "1111")
+		#VM1 install_ubuntu_server("VM1", "user", "1111")
+		sleep_for("3swadaw")
 	}
 	
 }
 
-test install_guest_additions: ubuntu_installation {
+/*test install_guest_additions: ubuntu_installation {
 	VM2 install_guest_additions_ubuntu_server("VM1", "user", "1111")
 }
-
+*/
