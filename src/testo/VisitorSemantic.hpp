@@ -37,13 +37,13 @@ struct VisitorSemantic {
 	void visit_key_combination(std::shared_ptr<AST::KeyCombination> combination);
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
 	void visit_plug(std::shared_ptr<AST::Plug> plug);
-	void visit_sleep(std::shared_ptr<AST::Sleep> sleep);
 	void visit_exec(std::shared_ptr<AST::Exec> exec);
 	void visit_wait(std::shared_ptr<AST::Wait> wait);
 	void visit_macro_action_call(std::shared_ptr<AST::MacroActionCall> macro_action_call);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	void visit_range(std::shared_ptr<AST::Range> range);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
+	void visit_string_token_union(std::shared_ptr<AST::StringTokenUnion> stu);
 
 	void visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr);
 	void visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable);
@@ -65,6 +65,7 @@ struct VisitorSemantic {
 	void validate_js(const std::string& script);
 
 	bool is_button(const Token& t) const;
+
 
 	std::set<std::string> keys;
 

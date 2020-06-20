@@ -210,6 +210,26 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
+void VisitorSemantic::visit_string_token_union(std::shared_ptr<AST::StringTokenUnion> stu) {
+	auto value = template_parser.resolve(stu->text(), reg);
+
+	Lexer lex(".", value);
+	try {
+		if (lex.get_next_token().type() != stu->expected_token_type) {
+			throw;
+		}
+	} catch(...) {
+		throw std::runtime_error(std::string(stu->begin()) + ": Error: can't convert string value " + value + 
+			" to " + Token::type_to_string(stu->expected_token_type));
+	}
+	
+
+	auto t = lex.get_next_token();
+	if (t.type() != Token::category::eof) {
+		throw std::runtime_error(std::string(stu->begin()) + ": Error: unexpected junk at the end of string: " + t.value());
+	}
+}
+
 void VisitorSemantic::setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
 		setup_macros_action(action);
@@ -490,7 +510,7 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		return visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		return visit_sleep(p->action);
+		return visit_string_token_union(p->action->timeout);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		return visit_exec(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
@@ -641,27 +661,6 @@ void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 		}
 	}
 }
-
-void VisitorSemantic::visit_sleep(std::shared_ptr<AST::Sleep> sleep) {
-	auto timeout_value = template_parser.resolve(sleep->timeout->text(), reg);
-
-	Lexer lex(".", timeout_value);
-	try {
-		if (lex.get_next_token().type() != sleep->timeout->expected_token_type) {
-			throw;
-		}
-	} catch(...) {
-		throw std::runtime_error(std::string(sleep->timeout->begin()) + ": Error: can't convert string value " + timeout_value + 
-			" to " + Token::type_to_string(sleep->timeout->expected_token_type));
-	}
-	
-
-	auto t = lex.get_next_token();
-	if (t.type() != Token::category::eof) {
-		throw std::runtime_error(std::string(sleep->timeout->begin()) + ": Error: unexpected junk at the end of string: " + t.value());
-	}
-}
-
 
 void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
 	if ((exec->process_token.value() != "bash") &&
