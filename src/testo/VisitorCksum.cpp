@@ -102,10 +102,14 @@ std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::sh
 
 std::string VisitorCksum::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
 	std::string result = std::string(*press);
-	if (!press->interval) {
+
+	if (press->interval) {
+		result += template_parser.resolve(press->interval->text(), reg);
+	} else {
 		auto press_interval_found = reg->params.find("TESTO_PRESS_DEFAULT_INTERVAL");
 		result += (press_interval_found != reg->params.end()) ? press_interval_found->second : "30ms";
 	}
+
 	return result;
 }
 

@@ -906,7 +906,7 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
 	try {
-		std::string interval = press->interval ? press->interval.value() : press_default_interval;
+		std::string interval = press->interval ? template_parser.resolve(press->interval->text(), reg) : press_default_interval;
 		auto press_interval = time_to_milliseconds(interval);
 
 		for (auto key_spec: press->keys) {

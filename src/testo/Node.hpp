@@ -499,7 +499,7 @@ struct Sleep: public Node {
 };
 
 struct Press: public Node {
-	Press(const Token& press, const std::vector<std::shared_ptr<KeySpec>> keys, const Token& interval):
+	Press(const Token& press, const std::vector<std::shared_ptr<KeySpec>> keys, std::shared_ptr<StringTokenUnion> interval):
 		Node(press), keys(keys), interval(interval) {}
 
 	Pos begin() const {
@@ -507,7 +507,11 @@ struct Press: public Node {
 	}
 
 	Pos end() const {
-		return keys[keys.size() - 1]->end();
+		if (interval) {
+			return interval->end();
+		} else {
+			return keys[keys.size() - 1]->end();
+		}
 	}
 
 	operator std::string() const {
@@ -518,14 +522,14 @@ struct Press: public Node {
 		}
 
 		if (interval) {
-			result += " interval " + interval.value();
+			result += " interval " + std::string(*interval);
 		}
 
 		return result;
 	}
 
 	std::vector<std::shared_ptr<KeySpec>> keys;
-	Token interval;
+	std::shared_ptr<StringTokenUnion> interval;
 };
 
 struct Hold: public Node {

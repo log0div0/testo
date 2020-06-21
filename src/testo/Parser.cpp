@@ -699,12 +699,11 @@ std::shared_ptr<Action<Press>> Parser::press() {
 		keys.push_back(key_spec());
 	}
 
-	Token interval = Token();
+	std::shared_ptr<StringTokenUnion> interval(nullptr);
 
 	if (LA(1) == Token::category::interval) {
-		match (Token::category::interval);
-		interval = LT(1);
-		match (Token::category::time_interval);
+		match(Token::category::interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));

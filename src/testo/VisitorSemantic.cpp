@@ -540,6 +540,10 @@ void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
 	for (auto key_spec: press->keys) {
 		visit_key_spec(key_spec);
 	}
+	
+	if (press->interval) {
+		visit_string_token_union(press->interval);
+	}
 }
 
 void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination> combination) {
