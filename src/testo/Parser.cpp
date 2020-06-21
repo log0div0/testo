@@ -632,11 +632,10 @@ std::shared_ptr<Action<Type>> Parser::type() {
 
 	auto text = string();
 
-	Token interval;
+	std::shared_ptr<StringTokenUnion> interval(nullptr);
 	if (LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 	auto action = std::shared_ptr<Type>(new Type(type_token, text, interval));
 	return std::shared_ptr<Action<Type>>(new Action<Type>(action));

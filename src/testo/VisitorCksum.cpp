@@ -113,7 +113,7 @@ std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::sha
 	std::string result("type");
 	result += template_parser.resolve(type->text->text(), reg);
 	if (type->interval) {
-		result += type->interval.value();
+		result += template_parser.resolve(type->interval->text(), reg);
 	} else {
 		auto type_interval_found = reg->params.find("TESTO_TYPE_DEFAULT_INTERVAL");
 		result += (type_interval_found != reg->params.end()) ? type_interval_found->second : "30ms";

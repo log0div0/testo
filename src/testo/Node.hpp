@@ -328,7 +328,7 @@ struct Print: public Node {
 };
 
 struct Type: public Node {
-	Type(const Token& type, std::shared_ptr<String> text, const Token& interval):
+	Type(const Token& type, std::shared_ptr<String> text, std::shared_ptr<StringTokenUnion> interval):
 		Node(type), text(text), interval(interval) {}
 
 	Pos begin() const {
@@ -336,21 +336,25 @@ struct Type: public Node {
 	}
 
 	Pos end() const {
-		return text->end();
+		if (interval) {
+			return interval->end();
+		} else {
+			return text->end();
+		}
 	}
 
 	operator std::string() const {
 		std::string result = t.value() + " " + std::string(*text);
 
 		if (interval) {
-			result += interval.value();
+			result += std::string(*interval);
 		}
 
 		return result;
 	}
 
 	std::shared_ptr<String> text;
-	Token interval;
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 };
 
 struct ISelectExpr: public Node {

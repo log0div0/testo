@@ -497,9 +497,13 @@ void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> actio
 void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
+		if (p->action->interval) {
+			return visit_string_token_union(p->action->interval);
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
 		return visit_key_combination(p->action->combination);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
+	}  else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
 		if (p->action->combination) {
 			return visit_key_combination(p->action->combination);
 		}

@@ -747,7 +747,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 			return;
 		}
 
-		std::string interval = type->interval ? type->interval.value() : type_default_interval;
+		std::string interval = type->interval ? template_parser.resolve(type->interval->text(), reg) : type_default_interval;
 
 		reporter.type(vmc, text, interval);
 
