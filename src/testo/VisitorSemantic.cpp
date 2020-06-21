@@ -722,11 +722,15 @@ void VisitorSemantic::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop
 }
 
 void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
-	if (!wait->select_expr) {
-		return;
+	visit_detect_expr(wait->select_expr);
+
+	if (wait->timeout) {
+		visit_string_token_union(wait->timeout);
 	}
 
-	visit_detect_expr(wait->select_expr);
+	if (wait->interval) {
+		visit_string_token_union(wait->interval);
+	}
 }
 
 void VisitorSemantic::visit_macro_action_call(std::shared_ptr<AST::MacroActionCall> macro_action_call) {
@@ -793,6 +797,14 @@ void VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 
 void VisitorSemantic::visit_check(std::shared_ptr<AST::Check> check) {
 	visit_detect_expr(check->select_expr);
+
+	if (check->timeout) {
+		visit_string_token_union(check->timeout);
+	}
+
+	if (check->interval) {
+		visit_string_token_union(check->interval);
+	}
 }
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {

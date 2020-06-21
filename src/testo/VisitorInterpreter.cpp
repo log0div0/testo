@@ -867,8 +867,8 @@ void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::sha
 
 void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
 	try {
-		std::string wait_for = wait->timeout ? wait->timeout.value() : wait_default_timeout;
-		std::string interval_str = wait->interval ? wait->interval.value() : wait_default_interval;
+		std::string wait_for = wait->timeout ? template_parser.resolve(wait->timeout->text(), reg) : wait_default_timeout;
+		std::string interval_str = wait->interval ? template_parser.resolve(wait->interval->text(), reg) : wait_default_interval;
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);
 
@@ -1728,8 +1728,8 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 
 bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
 	try {
-		std::string check_for = check->timeout ? check->timeout.value() : check_default_timeout;
-		std::string interval_str = check->interval ? check->interval.value() : check_default_interval;
+		std::string check_for = check->timeout ? template_parser.resolve(check->timeout->text(), reg) : check_default_timeout;
+		std::string interval_str = check->interval ? template_parser.resolve(check->interval->text(), reg) : check_default_interval;
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*check->select_expr), reg);
 		reporter.check(vmc, text, check_for, interval_str);

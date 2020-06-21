@@ -126,14 +126,14 @@ std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::sha
 	result += template_parser.resolve(std::string(*wait->select_expr), reg);
 
 	if (wait->timeout) {
-		result += wait->timeout.value();
+		result += template_parser.resolve(wait->timeout->text(), reg);
 	} else {
 		auto wait_timeout_found = reg->params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
 		result += (wait_timeout_found != reg->params.end()) ? wait_timeout_found->second : "1m";
 	}
 
 	if (wait->interval) {
-		result += wait->interval.value();
+		result += template_parser.resolve(wait->interval->text(), reg);
 	} else {
 		auto wait_interval_found = reg->params.find("TESTO_WAIT_DEFAULT_INTERVAL");
 		result += (wait_interval_found != reg->params.end()) ? wait_interval_found->second : "1s";
@@ -419,14 +419,14 @@ std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::sh
 	result += template_parser.resolve(std::string(*check->select_expr), reg);
 
 	if (check->timeout) {
-		result += check->timeout.value();
+		result += template_parser.resolve(check->timeout->text(), reg);
 	} else {
 		auto check_timeout_found = reg->params.find("TESTO_CHECK_DEFAULT_TIMEOUT");
 		result += (check_timeout_found != reg->params.end()) ? check_timeout_found->second : "1ms";
 	}
 
 	if (check->interval) {
-		result += check->interval.value();
+		result += template_parser.resolve(check->interval->text(), reg);
 	} else {
 		auto check_interval_found = reg->params.find("TESTO_CHECK_DEFAULT_INTERVAL");
 		result += (check_interval_found != reg->params.end()) ? check_interval_found->second : "1s";
