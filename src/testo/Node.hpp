@@ -958,10 +958,10 @@ struct Shutdown: public Node {
 };
 
 struct Exec: public Node {
-	Exec(const Token& exec, const Token& process, std::shared_ptr<String> commands, const Token& timeout, const Token& time_interval):
+	Exec(const Token& exec, const Token& process, std::shared_ptr<String> commands, std::shared_ptr<StringTokenUnion> timeout):
 		Node(exec),
 		process_token(process),
-		commands(commands), timeout(timeout), time_interval(time_interval) {}
+		commands(commands), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.begin();
@@ -969,7 +969,7 @@ struct Exec: public Node {
 
 	Pos end() const {
 		if (timeout) {
-			return time_interval.end();
+			return timeout->end();
 		}
 		return commands->end();
 	}
@@ -977,15 +977,14 @@ struct Exec: public Node {
 	operator std::string() const {
 		std::string result = t.value() + " " + process_token.value() + " " + std::string(*commands);
 		if (timeout) {
-			result += " timeout " + time_interval.value();
+			result += " timeout " + std::string(*timeout);
 		}
 		return result;
 	}
 
 	Token process_token;
 	std::shared_ptr<String> commands;
-	Token timeout;
-	Token time_interval;
+	std::shared_ptr<StringTokenUnion> timeout;
 };
 
 //Now this node holds actions copyto and copyfrom

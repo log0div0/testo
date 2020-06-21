@@ -685,7 +685,11 @@ void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
 		(exec->process_token.value() != "python2") &&
 		(exec->process_token.value() != "python3"))
 	{
-		throw std::runtime_error(std::string(exec->begin()) + ": Error: unknown process name: " + exec->process_token.value());
+		throw std::runtime_error(std::string(exec->begin()) + ": Error: unsupported interpreter: " + exec->process_token.value());
+	}
+
+	if (exec->timeout) {
+		visit_string_token_union(exec->timeout);
 	}
 }
 

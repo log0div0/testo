@@ -251,8 +251,8 @@ std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::sha
 	result += exec->process_token.value();
 	result += template_parser.resolve(exec->commands->text(), reg);
 
-	if (exec->time_interval) {
-		result += exec->time_interval.value();
+	if (exec->timeout) {
+		result += template_parser.resolve(exec->timeout->text(), reg);
 	} else {
 		auto exec_default_timeout_found = reg->params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
 		result += (exec_default_timeout_found != reg->params.end()) ? exec_default_timeout_found->second : "10m";

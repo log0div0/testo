@@ -1468,7 +1468,7 @@ static std::string build_python_script(const std::string& body) {
 
 void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
 	try {
-		std::string wait_for = exec->time_interval ? exec->time_interval.value() : exec_default_timeout;
+		std::string wait_for = exec->timeout ? template_parser.resolve(exec->timeout->text(), reg) : exec_default_timeout;
 		reporter.exec(vmc, exec->process_token.value(), wait_for);
 
 		if (vmc->vm->state() != VmState::Running) {

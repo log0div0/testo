@@ -964,18 +964,15 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 
 	auto commands = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout(nullptr);
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
 
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout, time_interval));
+	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout));
 	return std::shared_ptr<Action<Exec>>(new Action<Exec>(action));
 }
 
