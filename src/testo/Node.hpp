@@ -1410,28 +1410,6 @@ struct Test: public Node {
 		return result; //for now
 	}
 
-	std::set<std::string> get_all_vm_names() const {
-		std::set<std::string> result;
-
-		for (auto command: cmd_block->commands) {
-			for (auto vm_token: command->vms) {
-				result.insert(vm_token.value());
-			}
-		}
-		return result;
-	}
-
-	std::set<std::string> get_all_fd_names() const override {
-		std::set<std::string> result;
-
-		for (auto command: cmd_block->commands) {
-			auto fds = command->action->get_all_fd_names();
-			result.insert(fds.begin(), fds.end());
-		}
-
-		return result;
-	}
-
 	std::shared_ptr<AttrBlock> attrs;
 	Token name;
 	std::vector<Token> parents_tokens;

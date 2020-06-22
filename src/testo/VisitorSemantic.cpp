@@ -346,7 +346,7 @@ void VisitorSemantic::setup_vars(std::shared_ptr<AST::Program> program) {
 			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
 				continue;
 			}
-			concat_unique(tests_queue, reg->get_test_path(test));
+			concat_unique(tests_queue, get_test_path(test, reg));
 		}
 	}
 }
@@ -442,7 +442,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
 
 	//populate our parents paths
 	for (auto parent: test->parents) {
-		parents_subtries.push_back(reg->get_all_vmcs(parent));
+		parents_subtries.push_back(get_all_vmcs(parent, reg));
 	}
 
 	//check that parents path are independent
@@ -890,7 +890,8 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 
 
 void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
-	bool is_used = false;
+	//We will do the new logic here
+	/*bool is_used = false;
 	for (auto test: tests_queue) {
 		auto machines = test->get_all_vm_names();
 		if (machines.find(machine->name.value()) != machines.end()) {
@@ -901,7 +902,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 
 	if (!is_used) {
 		return;
-	}
+	}*/
 
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["prefix"] = prefix;
@@ -957,7 +958,8 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
-	bool is_used = false;
+	//We will do the new logic here
+	/*bool is_used = false;
 	for (auto test: tests_queue) {
 		auto fds = test->get_all_fd_names();
 		if (fds.find(flash->name.value()) != fds.end()) {
@@ -968,7 +970,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 
 	if (!is_used) {
 		return;
-	}
+	}*/
 
 	//no need to check for duplicates
 	//It's already done in Parser while registering Controller

@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Node.hpp"
-#include "Register.hpp"
+#include "RegisterUtils.hpp"
 #include "TemplateParser.hpp"
 #include "backends/Environment.hpp"
 
