@@ -26,8 +26,8 @@ std::string VisitorCksum::visit_cmd(std::shared_ptr<AST::Cmd> cmd) {
 
 	for (auto vm_token: cmd->vms) {
 		result += vm_token.value();
-		auto vmc = reg->vmcs.find(vm_token);
-		result += visit_action(vmc->second, cmd->action);
+		auto vmc_request = reg->vmc_requests.find(vm_token);
+		result += visit_action(vmc_request->second.get_vmc(), cmd->action);
 	}
 	return result;
 }

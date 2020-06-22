@@ -664,8 +664,8 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 
 void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
-		auto vmc = reg->vmcs.find(vm_token.value());
-		visit_action(vmc->second, cmd->action);
+		auto vmc_request = reg->vmc_requests.find(vm_token.value());
+		visit_action(vmc_request->second.get_vmc(), cmd->action);
 	}
 }
 
@@ -1295,7 +1295,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
+	auto fdc = reg->fdc_requests.find(plug->name_token.value())->second.get_fdc(); //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	if (vmc->vm->is_flash_plugged(fdc->fd)) {
@@ -1306,7 +1306,7 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
+	auto fdc = reg->fdc_requests.find(plug->name_token.value())->second.get_fdc(); //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm->is_flash_plugged(fdc->fd)) {

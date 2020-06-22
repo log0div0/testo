@@ -1,6 +1,22 @@
 
 include "./common_ubuntu_server.testo"
 
+machine lila {
+
+	iso: "parampapam"
+
+	disk main: {
+		size: 5Gb
+	}
+}
+
+flash pipka {
+	fs: "ntfs"
+	size: 5Mb
+	folder: "pra"
+
+}
+
 machine VM1 {
 	cpus: 1
 	ram: 1024Mb
@@ -21,6 +37,7 @@ macro_action shutdown_for(how_much) {
 
 test ubuntu_installation {
 	VM1 {
+		plug flash pipka
 		start
 		sleep_for("3s")
 		shutdown_for("5s")

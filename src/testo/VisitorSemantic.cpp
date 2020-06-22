@@ -475,12 +475,12 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	std::set<std::shared_ptr<VmController>> unique_vmcs;
 	for (auto vm_token: cmd->vms) {
-		auto vmc = reg->vmcs.find(vm_token.value());
-		if (vmc == reg->vmcs.end()) {
+		auto vmc_request = reg->vmc_requests.find(vm_token.value());
+		if (vmc_request == reg->vmc_requests.end()) {
 			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: unknown vitrual machine name: " + vm_token.value());
 		}
 
-		if (!unique_vmcs.insert(vmc->second).second) {
+		if (!unique_vmcs.insert(vmc_request->second.get_vmc()).second) {
 			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: this vmc was already specified in the virtual machines list: " + vm_token.value());
 		}
 	}
@@ -672,7 +672,7 @@ void VisitorSemantic::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
 
 void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 	if (plug->type.value() == "flash") {
-		if (reg->fdcs.find(plug->name_token.value()) == reg->fdcs.end()) {
+		if (reg->fdc_requests.find(plug->name_token.value()) == reg->fdc_requests.end()) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
 		}
 	}
@@ -890,88 +890,15 @@ void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controll
 
 
 void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
-	//We will do the new logic here
-	/*bool is_used = false;
-	for (auto test: tests_queue) {
-		auto machines = test->get_all_vm_names();
-		if (machines.find(machine->name.value()) != machines.end()) {
-			is_used = true;
-			break;
-		}
-	}
-
-	if (!is_used) {
-		return;
-	}*/
-
 	auto config = visit_attr_block(machine->attr_block, "vm_global");
 	config["prefix"] = prefix;
 	config["name"] = machine->name.value();
 	config["src_file"] = machine->name.begin().file.generic_string();
 
-	if (config.count("iso")) {
-		fs::path iso_file = config.at("iso").get<std::string>();
-		if (iso_file.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			iso_file = src_file.parent_path() / iso_file;
-		}
-
-		if (!fs::exists(iso_file)) {
-			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
-		}
-
-		iso_file = fs::canonical(iso_file);
-
-		config["iso"] = iso_file.generic_string();
-	}
-
-	if (config.count("disk")) {
-		auto& disks = config.at("disk");
-
-		for (auto& disk: disks) {
-			if (disk.count("source")) {
-				fs::path source_file = disk.at("source").get<std::string>();
-				if (source_file.is_relative()) {
-					fs::path src_file(config.at("src_file").get<std::string>());
-					source_file = src_file.parent_path() / source_file;
-				}
-
-				if (!fs::exists(source_file)) {
-					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", machine->name.value(), source_file.generic_string()));
-				}
-
-				source_file = fs::canonical(source_file);
-				disk["source"] = source_file;
-			}
-		}
-	}
-
-	auto vmc = env->create_vm_controller(config);
-	reg->vmcs.emplace(std::make_pair(machine->name, vmc));
-
-	//additional check that all the networks are defined earlier
-	for (auto network: vmc->vm->networks()) {
-		if (reg->netcs.find(network) == reg->netcs.end()) {
-			throw std::runtime_error(std::string(machine->begin()) + ": Error: specified network " + network + " is not defined");
-		}
-	}
+	reg->vmc_requests.emplace(std::make_pair(machine->name, VmControllerRequest(config, reg)));
 }
 
 void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
-	//We will do the new logic here
-	/*bool is_used = false;
-	for (auto test: tests_queue) {
-		auto fds = test->get_all_fd_names();
-		if (fds.find(flash->name.value()) != fds.end()) {
-			is_used = true;
-			break;
-		}
-	}
-
-	if (!is_used) {
-		return;
-	}*/
-
 	//no need to check for duplicates
 	//It's already done in Parser while registering Controller
 	auto config = visit_attr_block(flash->attr_block, "fd_global");
@@ -979,13 +906,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
 	config["name"] = flash->name.value();
 	config["src_file"] = flash->name.begin().file.generic_string();
 
-	auto fdc = env->create_flash_drive_controller(config);
-
-	if (fdc->fd->has_folder()) {
-		fdc->fd->validate_folder();
-	}
-
-	reg->fdcs.emplace(std::make_pair(flash->name, fdc));
+	reg->fdc_requests.emplace(std::make_pair(flash->name, FlashDriveControllerRequest(config)));
 }
 
 void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {

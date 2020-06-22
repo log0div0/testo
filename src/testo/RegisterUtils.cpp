@@ -25,11 +25,11 @@ std::set<std::shared_ptr<VmController>> get_all_vmcs(std::shared_ptr<AST::Test> 
 
 	for (auto command: test->cmd_block->commands) {
 		for (auto vm_token: command->vms) {
-			auto vmc = reg->vmcs.find(vm_token.value());
-			if (vmc == reg->vmcs.end()) {
+			auto vmc_request = reg->vmc_requests.find(vm_token.value());
+			if (vmc_request == reg->vmc_requests.end()) {
 				throw std::runtime_error("get_all_vmcs"); //should never happen
 			}
-			result.insert(vmc->second);
+			result.insert(vmc_request->second.get_vmc());
 		}
 	}
 
@@ -56,7 +56,7 @@ std::set<std::shared_ptr<FlashDriveController>> extract_fdcs_from_action(std::sh
 
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		if (p->action->type.value() == "flash") {
-			result.insert(reg->fdcs.find(p->action->name_token.value())->second);
+			result.insert(reg->fdc_requests.find(p->action->name_token.value())->second.get_fdc());
 		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		for (auto action: p->action->actions) {
