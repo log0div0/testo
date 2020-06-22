@@ -1242,7 +1242,7 @@ void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
-	auto nic = plug->name_token.value();
+	auto nic = template_parser.resolve(plug->name->text(), reg);
 
 	reporter.plug(vmc, "nic", nic, plug->is_on());
 
@@ -1270,7 +1270,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 
-	auto nic = plug->name_token.value();
+	auto nic = template_parser.resolve(plug->name->text(), reg);
 
 	reporter.plug(vmc, "link", nic, plug->is_on());
 
@@ -1295,7 +1295,8 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdc_requests.find(plug->name_token.value())->second.get_fdc(); //should always be found
+	auto name = template_parser.resolve(plug->name->text(), reg);
+	auto fdc = reg->fdc_requests.find(name)->second.get_fdc(); //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	if (vmc->vm->is_flash_plugged(fdc->fd)) {
@@ -1306,7 +1307,8 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdc_requests.find(plug->name_token.value())->second.get_fdc(); //should always be found
+	auto name = template_parser.resolve(plug->name->text(), reg);
+	auto fdc = reg->fdc_requests.find(name)->second.get_fdc(); //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm->is_flash_plugged(fdc->fd)) {

@@ -222,7 +222,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	std::string result("plug");
 	result += std::to_string(plug->is_on());
 	result += plug->type.value();
-	result += plug->name_token.value();
+	result += template_parser.resolve(plug->name->text(), reg);
 	if (plug->path) { //only for dvd
 		fs::path path = template_parser.resolve(plug->path->text(), reg);
 		if (path.is_relative()) {

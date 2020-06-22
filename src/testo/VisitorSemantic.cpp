@@ -216,11 +216,11 @@ void VisitorSemantic::visit_string_token_union(std::shared_ptr<AST::StringTokenU
 	Lexer lex(".", value);
 	try {
 		if (lex.get_next_token().type() != stu->expected_token_type) {
-			throw;
+			throw std::runtime_error("");
 		}
-	} catch(...) {
-		throw std::runtime_error(std::string(stu->begin()) + ": Error: can't convert string value " + value + 
-			" to " + Token::type_to_string(stu->expected_token_type));
+	} catch(const std::exception& error) {
+		throw std::runtime_error(std::string(stu->begin()) + ": Error: can't convert string value \"" + value + 
+			"\" to " + Token::type_to_string(stu->expected_token_type));
 	}
 	
 
@@ -671,9 +671,14 @@ void VisitorSemantic::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
 }
 
 void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
+	if (plug->name) {
+		visit_string_token_union(plug->name);
+	}
+
 	if (plug->type.value() == "flash") {
-		if (reg->fdc_requests.find(plug->name_token.value()) == reg->fdc_requests.end()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
+		auto name = template_parser.resolve(plug->name->text(), reg);
+		if (reg->fdc_requests.find(name) == reg->fdc_requests.end()) {
+			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + name);
 		}
 	}
 }

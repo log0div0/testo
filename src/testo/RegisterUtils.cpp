@@ -1,5 +1,8 @@
 
 #include "RegisterUtils.hpp"
+#include "TemplateParser.hpp"
+#include "StackEntry.hpp"
+#include "coro/Finally.h"
 
 std::set<std::shared_ptr<Controller>> get_all_controllers(std::shared_ptr<AST::Test> test, std::shared_ptr<Register> reg) {
 	std::set<std::shared_ptr<Controller>> result;
@@ -54,9 +57,13 @@ std::set<std::shared_ptr<NetworkController>> get_all_netcs(std::shared_ptr<AST::
 std::set<std::shared_ptr<FlashDriveController>> extract_fdcs_from_action(std::shared_ptr<AST::IAction> action, std::shared_ptr<Register> reg) {
 	std::set<std::shared_ptr<FlashDriveController>> result;
 
+	template_literals::Parser template_parser;
+
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
 		if (p->action->type.value() == "flash") {
-			result.insert(reg->fdc_requests.find(p->action->name_token.value())->second.get_fdc());
+			template_literals::Parser template_parser;
+			auto name = template_parser.resolve(p->action->name->text(), reg);
+			result.insert(reg->fdc_requests.find(name)->second.get_fdc());
 		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		for (auto action: p->action->actions) {
@@ -64,6 +71,28 @@ std::set<std::shared_ptr<FlashDriveController>> extract_fdcs_from_action(std::sh
 			result.insert(tmp.begin(), tmp.end());
 		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroActionCall>>(action)) {
+		auto macro_action_call = p->action;
+
+		//Okay now, we need to push local args
+
+		//push new ctx
+		StackEntry new_ctx(true);
+
+		for (size_t i = 0; i < macro_action_call->args.size(); ++i) {
+			auto value = template_parser.resolve(macro_action_call->args[i]->text(), reg);
+			new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
+		}
+
+		for (size_t i = macro_action_call->args.size(); i < macro_action_call->macro_action->args.size(); ++i) {
+			auto value = template_parser.resolve(macro_action_call->macro_action->args[i]->default_value->text(), reg);
+			new_ctx.define(macro_action_call->macro_action->args[i]->name(), value);
+		}
+
+		reg->local_vars.push_back(new_ctx);
+		coro::Finally finally([&] {
+			reg->local_vars.pop_back();
+		});
+
 		auto tmp = extract_fdcs_from_action(p->action->macro_action->action_block, reg);
 		result.insert(tmp.begin(), tmp.end());
 	}
