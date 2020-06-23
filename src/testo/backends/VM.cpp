@@ -4,7 +4,42 @@
 #include <fmt/format.h>
 
 VM::VM(const nlohmann::json& config_): config(config_) {
+	if (config.count("iso")) {
+		fs::path iso_file = config.at("iso").get<std::string>();
+		if (iso_file.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			iso_file = src_file.parent_path() / iso_file;
+		}
 
+		if (!fs::exists(iso_file)) {
+			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", name(), iso_file.generic_string()));
+		}
+
+		iso_file = fs::canonical(iso_file);
+
+		config["iso"] = iso_file.generic_string();
+	}
+
+	if (config.count("disk")) {
+		auto& disks = config.at("disk");
+
+		for (auto& disk: disks) {
+			if (disk.count("source")) {
+				fs::path source_file = disk.at("source").get<std::string>();
+				if (source_file.is_relative()) {
+					fs::path src_file(config.at("src_file").get<std::string>());
+					source_file = src_file.parent_path() / source_file;
+				}
+
+				if (!fs::exists(source_file)) {
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", name(), source_file.generic_string()));
+				}
+
+				source_file = fs::canonical(source_file);
+				disk["source"] = source_file;
+			}
+		}
+	}
 }
 
 nlohmann::json VM::get_config() const {

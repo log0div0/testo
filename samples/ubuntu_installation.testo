@@ -1,6 +1,12 @@
 
 include "./common_ubuntu_server.testo"
 
+flash pipka {
+	fs: "ntfs"
+	size: 5Mb
+
+}
+
 machine VM1 {
 	cpus: 1
 	ram: 1024Mb
@@ -10,20 +16,18 @@ machine VM1 {
 	}
 }
 
-macro_action sleep_for(how_much) {
-	sleep "${how_much}"
+macro_action inner_plug_flash(flash_name) {
+	plug flash "${flash_name}"
 }
 
-macro_action shutdown_for(how_much) {
-	shutdown timeout "${how_much}"
+macro_action plug_flash(flash_name) {
+	inner_plug_flash("${flash_name}ka")
+	unplug flash "${flash_name}ka"
 }
-
 
 test ubuntu_installation {
 	VM1 {
-		start
-		sleep_for("3s")
-		shutdown_for("5s")
+		plug_flash("pip")
 	}
 	
 }

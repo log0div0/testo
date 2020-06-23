@@ -233,8 +233,8 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
 	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
 {
-	auto controllers = reg->get_all_controllers(test);
-	auto all_parents = reg->get_test_path(test);
+	auto controllers = get_all_controllers(test, reg);
+	auto all_parents = get_test_path(test, reg);
 
 	bool result = false;
 
@@ -258,7 +258,7 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 			continue;
 		}
 
-		auto other_controllers = reg->get_all_controllers(*rit);
+		auto other_controllers = get_all_controllers(*rit, reg);
 		if (std::find_first_of (controllers.begin(), controllers.end(), other_controllers.begin(), other_controllers.end()) != controllers.end()) {
 			break;
 		}
@@ -311,7 +311,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 	}
 
 	//check networks aditionally
-	for (auto netc: reg->get_all_netcs(test)) {
+	for (auto netc: get_all_netcs(test, reg)) {
 		if (netc->is_defined() &&
 			netc->check_config_relevance())
 		{
@@ -320,7 +320,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 		return false;
 	}
 
-	for (auto controller: reg->get_all_controllers(test)) {
+	for (auto controller: get_all_controllers(test, reg)) {
 		if (controller->is_defined() &&
 			controller->check_config_relevance() &&
 			controller->has_snapshot(test->name.value()) &&
@@ -334,7 +334,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 }
 
 bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
-	auto all_parents = reg->get_test_path(test);
+	auto all_parents = get_test_path(test, reg);
 
 	for (auto parent: all_parents) {
 		for (auto cache_missed_test: cache_missed_tests) {
@@ -345,7 +345,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 	}
 
 	//check networks aditionally
-	for (auto netc: reg->get_all_netcs(test)) {
+	for (auto netc: get_all_netcs(test, reg)) {
 		if (netc->is_defined()) {
 			if (!netc->check_config_relevance()) {
 				return true;
@@ -353,7 +353,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 		}
 	}
 
-	for (auto controller: reg->get_all_controllers(test)) {
+	for (auto controller: get_all_controllers(test, reg)) {
 		if (controller->is_defined()) {
 			if (controller->has_snapshot(test->name.value())) {
 				if (controller->get_snapshot_cksum(test->name.value()) != test_cksum(test)) {
@@ -386,7 +386,7 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 
 void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue) {
 	for (auto test: tests_queue) {
-		for (auto controller: reg->get_all_controllers(test)) {
+		for (auto controller: get_all_controllers(test, reg)) {
 			if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
 				controller->delete_snapshot_with_children(test->name.value());
 			}
@@ -422,7 +422,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 			//invalidate tests at request
 
 			if (invalidate.length() && wildcards::match(test->name.value(), invalidate)) {
-				for (auto controller: reg->get_all_controllers(test)) {
+				for (auto controller: get_all_controllers(test, reg)) {
 					if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
 						controller->delete_snapshot_with_children(test->name.value());
 					}
@@ -440,7 +440,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
 				continue;
 			}
-			concat_unique(tests_queue, reg->get_test_path(test));
+			concat_unique(tests_queue, get_test_path(test, reg));
 		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
 			if (p->stmt->t.type() == Token::category::flash) {
 				flash_drives.push_back(p->stmt);
@@ -482,7 +482,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 
 void VisitorInterpreter::reset_cache() {
 	for (auto test: tests_to_run) {
-		for (auto controller: reg->get_all_controllers(test)) {
+		for (auto controller: get_all_controllers(test, reg)) {
 			if (controller->is_defined()) {
 				controller->set_metadata("current_state", "");
 			}
@@ -525,7 +525,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		//vms from parents - rollback them to parents if we need to
 		//We need to do it only if our current state is not the parent
 		for (auto parent: test->parents) {
-			for (auto controller: reg->get_all_controllers(parent)) {
+			for (auto controller: get_all_controllers(parent, reg)) {
 				if (controller->get_metadata("current_state") != parent->name.value()) {
 					reporter.restore_snapshot(controller, parent->name);
 					controller->restore_snapshot(parent->name.value());
@@ -535,7 +535,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		//check all the networks
 
-		for (auto netc: reg->get_all_netcs(test)) {
+		for (auto netc: get_all_netcs(test, reg)) {
 			if (netc->is_defined() &&
 				netc->check_config_relevance())
 			{
@@ -546,11 +546,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		//new vms - install
 
-		for (auto controller: reg->get_all_controllers(test)) {
+		for (auto controller: get_all_controllers(test, reg)) {
 			//check if it's a new one
 			auto is_new = true;
 			for (auto parent: test->parents) {
-				auto parent_controller = reg->get_all_controllers(parent);
+				auto parent_controller = get_all_controllers(parent, reg);
 				if (parent_controller.find(controller) != parent_controller.end()) {
 					//not new, go to the next vmc
 					is_new = false;
@@ -581,7 +581,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		for (auto parent: test->parents) {
-			for (auto vmc: reg->get_all_vmcs(parent)) {
+			for (auto vmc: get_all_vmcs(parent, reg)) {
 				if (vmc->vm->state() == VmState::Suspended) {
 					vmc->vm->resume();
 				}
@@ -594,7 +594,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		visit_command_block(test->cmd_block);
 
 		//But that's not everything - we need to create according snapshots to all included vms
-		for (auto vmc: reg->get_all_vmcs(test)) {
+		for (auto vmc: get_all_vmcs(test, reg)) {
 			if (vmc->vm->state() == VmState::Running) {
 				vmc->vm->suspend();
 			}
@@ -602,7 +602,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		//we need to take snapshots in the right order
 		//1) all the vms - so we could check that all the fds are unplugged
-		for (auto controller: reg->get_all_vmcs(test)) {
+		for (auto controller: get_all_vmcs(test, reg)) {
 			if (!controller->has_snapshot(test->name.value())) {
 				reporter.take_snapshot(controller, test->name);
 				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
@@ -611,7 +611,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		}
 
 		//2) all the fdcs - the rest
-		for (auto controller: reg->get_all_fdcs(test)) {
+		for (auto controller: get_all_fdcs(test, reg)) {
 			if (!controller->has_snapshot(test->name.value())) {
 				reporter.take_snapshot(controller, test->name);
 				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
@@ -664,8 +664,8 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 
 void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
-		auto vmc = reg->vmcs.find(vm_token.value());
-		visit_action(vmc->second, cmd->action);
+		auto vmc_request = reg->vmc_requests.find(vm_token.value());
+		visit_action(vmc_request->second.get_vmc(), cmd->action);
 	}
 }
 
@@ -1242,7 +1242,7 @@ void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vmc, std::shar
 void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
-	auto nic = plug->name_token.value();
+	auto nic = template_parser.resolve(plug->name->text(), reg);
 
 	reporter.plug(vmc, "nic", nic, plug->is_on());
 
@@ -1270,7 +1270,7 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 
-	auto nic = plug->name_token.value();
+	auto nic = template_parser.resolve(plug->name->text(), reg);
 
 	reporter.plug(vmc, "link", nic, plug->is_on());
 
@@ -1295,7 +1295,8 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 }
 
 void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
+	auto name = template_parser.resolve(plug->name->text(), reg);
+	auto fdc = reg->fdc_requests.find(name)->second.get_fdc(); //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	if (vmc->vm->is_flash_plugged(fdc->fd)) {
@@ -1306,7 +1307,8 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shar
 }
 
 void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
+	auto name = template_parser.resolve(plug->name->text(), reg);
+	auto fdc = reg->fdc_requests.find(name)->second.get_fdc(); //should always be found
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm->is_flash_plugged(fdc->fd)) {

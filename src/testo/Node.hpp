@@ -17,10 +17,6 @@ struct Node {
 	virtual Pos end() const = 0;
 	virtual operator std::string() const = 0;
 
-	virtual std::set<std::string> get_all_fd_names() const {
-		return {};
-	}
-
 	Token t;
 };
 
@@ -263,10 +259,6 @@ struct Action: public IAction {
 
 	void set_delim (const Token& delim) {
 		this->delim = delim;
-	}
-
-	std::set<std::string> get_all_fd_names() const override {
-		return action->get_all_fd_names();
 	}
 
 	std::shared_ptr<ActionType> action;
@@ -861,10 +853,10 @@ struct Mouse: public Node {
 
 //Also is used for unplug
 struct Plug: public Node {
-	Plug(const Token& plug, const Token& type, const Token& name, std::shared_ptr<String> path):
+	Plug(const Token& plug, const Token& type, std::shared_ptr<StringTokenUnion> name, std::shared_ptr<String> path):
 		Node(plug),
 		type(type),
-		name_token(name),
+		name(name),
 		path(path) {}
 
 	Pos begin() const {
@@ -872,26 +864,29 @@ struct Plug: public Node {
 	}
 
 	Pos end() const {
-		return name_token.end();
+		if (name) {
+			return name->end();
+		} else {
+			return path->end();
+		}
 	}
 
 	operator std::string() const {
-		return t.value() + " " + type.value() + " " + name_token.value();
+		std::string result = t.value() + " " + type.value() + " ";
+		if (name) {
+			result += std::string(*name);
+		} else {
+			result += std::string(*path);
+		}
+		return result;
 	}
 
 	bool is_on() const {
 		return (t.type() == Token::category::plug);
 	}
 
-	std::set<std::string> get_all_fd_names() const override {
-		if (type.value() == "flash") {
-			return {name_token.value()};
-		}
-		return {};
-	}
-
 	Token type; //nic or flash or dvd
-	Token name_token; //name of resource to be plugged/unplugged
+	std::shared_ptr<StringTokenUnion> name; //name of resource to be plugged/unplugged
 	std::shared_ptr<String> path; //used only for dvd
 };
 
@@ -1047,16 +1042,6 @@ struct ActionBlock: public Node {
 			result += std::string(*action);
 
 		}
-		return result;
-	}
-
-	std::set<std::string> get_all_fd_names() const override {
-		std::set<std::string> result;
-		for (auto action: actions) {
-			auto tmp = action->get_all_fd_names();
-			result.insert(tmp.begin(), tmp.end());
-		}
-
 		return result;
 	}
 
@@ -1237,10 +1222,6 @@ struct MacroActionCall: public Node {
 		return t;
 	}
 
-	std::set<std::string> get_all_fd_names() const override {
-		return macro_action->action_block->get_all_fd_names();
-	}
-
 	std::shared_ptr<MacroAction> macro_action;
 	std::vector<std::shared_ptr<String>> args;
 };
@@ -1408,28 +1389,6 @@ struct Test: public Node {
 	operator std::string() const {
 		std::string result = t.value() + " " + name.value();
 		return result; //for now
-	}
-
-	std::set<std::string> get_all_vm_names() const {
-		std::set<std::string> result;
-
-		for (auto command: cmd_block->commands) {
-			for (auto vm_token: command->vms) {
-				result.insert(vm_token.value());
-			}
-		}
-		return result;
-	}
-
-	std::set<std::string> get_all_fd_names() const override {
-		std::set<std::string> result;
-
-		for (auto command: cmd_block->commands) {
-			auto fds = command->action->get_all_fd_names();
-			result.insert(fds.begin(), fds.end());
-		}
-
-		return result;
 	}
 
 	std::shared_ptr<AttrBlock> attrs;

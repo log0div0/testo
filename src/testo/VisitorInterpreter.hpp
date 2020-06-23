@@ -2,7 +2,7 @@
 #pragma once
 #include "coro/Timer.h"
 #include "Node.hpp"
-#include "Register.hpp"
+#include "RegisterUtils.hpp"
 #include "TemplateParser.hpp"
 #include "Reporter.hpp"
 #include "js/Context.hpp"
@@ -158,7 +158,7 @@ private:
 	void update_progress();
 
 	void stop_all_vms(std::shared_ptr<AST::Test> test) {
-		for (auto vmc: reg->get_all_vmcs(test)) {
+		for (auto vmc: get_all_vmcs(test, reg)) {
 			if (vmc->is_defined()) {
 				if (vmc->vm->state() != VmState::Stopped) {
 					vmc->vm->stop();

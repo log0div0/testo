@@ -68,7 +68,7 @@ void FlashDrive::validate_folder() const {
 				folder.generic_string(), name()));
 		}
 	} catch (const std::runtime_error& error) {
-		std::throw_with_nested(std::runtime_error("Validating host folder failed"));
+		std::throw_with_nested(std::runtime_error("Validating host folder for flash drive " + name() + " failed"));
 	}
 
 }
