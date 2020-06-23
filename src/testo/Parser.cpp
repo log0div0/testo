@@ -1077,10 +1077,10 @@ std::shared_ptr<CounterList<Range>> Parser::range() {
 	Token range_token = LT(1);
 	match(Token::category::RANGE);
 
-	std::shared_ptr<String> r1 = string();
-	std::shared_ptr<String> r2 = nullptr;
-	if (test_string()) {
-		r2 = string();
+	std::shared_ptr<StringTokenUnion> r1 = string_token_union(Token::category::number);
+	std::shared_ptr<StringTokenUnion> r2 = nullptr;
+	if (test_string() || LA(1) == Token::category::number) {
+		r2 = string_token_union(Token::category::number);
 	}
 
 	auto counter_list = std::shared_ptr<Range>(new Range(range_token, r1, r2));

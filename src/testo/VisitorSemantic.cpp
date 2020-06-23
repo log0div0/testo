@@ -837,6 +837,8 @@ void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) 
 }
 
 void VisitorSemantic::visit_range(std::shared_ptr<AST::Range> range) {
+	visit_string_token_union(range->r1);
+
 	std::string r1 = template_parser.resolve(range->r1->text(), reg);
 	std::string r2;
 
@@ -847,6 +849,7 @@ void VisitorSemantic::visit_range(std::shared_ptr<AST::Range> range) {
 	}
 
 	if (range->r2) {
+		visit_string_token_union(range->r2);
 		r2 = template_parser.resolve(range->r2->text(), reg);
 		try {
 			range->r2_num = std::stoul(r2);

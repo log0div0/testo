@@ -95,7 +95,27 @@ std::set<std::shared_ptr<FlashDriveController>> extract_fdcs_from_action(std::sh
 
 		auto tmp = extract_fdcs_from_action(p->action->macro_action->action_block, reg);
 		result.insert(tmp.begin(), tmp.end());
-	}
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
+		auto for_clause = p->action;
+
+		StackEntry new_ctx(false);
+		reg->local_vars.push_back(new_ctx);
+		size_t ctx_position = reg->local_vars.size() - 1;
+		coro::Finally finally([&] {
+			reg->local_vars.pop_back();
+		});
+
+		for (auto i: for_clause->counter_list->values()) {
+			reg->local_vars[ctx_position].define(for_clause->counter.value(), i);
+			auto tmp = extract_fdcs_from_action(for_clause->cycle_body, reg);
+			result.insert(tmp.begin(), tmp.end());
+		}
+
+		if (for_clause->else_token) {
+			auto tmp = extract_fdcs_from_action(for_clause->else_action, reg);
+			result.insert(tmp.begin(), tmp.end());
+		}
+	} 
 
 	return result;
 }
