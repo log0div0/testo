@@ -189,7 +189,7 @@ std::string VisitorCksum::visit_mouse_selectable(std::shared_ptr<AST::MouseSelec
 	}
 
 	if (mouse_selectable->timeout) {
-		result += mouse_selectable->timeout.value();
+		result += template_parser.resolve(mouse_selectable->timeout->text(), reg);
 	} else {
 		auto mouse_move_click_timeout_found = reg->params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 		result += (mouse_move_click_timeout_found != reg->params.end()) ? mouse_move_click_timeout_found->second : "1m";

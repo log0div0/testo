@@ -658,7 +658,7 @@ struct MouseAdditionalSpecifier: public Node {
 struct MouseSelectable: public Node {
 	MouseSelectable(std::shared_ptr<ISelectable> selectable,
 		const std::vector<std::shared_ptr<MouseAdditionalSpecifier>>& specifiers,
-		const Token& timeout): 
+		std::shared_ptr<StringTokenUnion> timeout): 
 		Node(Token(Token::category::mouse_selectable, "mouse_selectable", Pos(), Pos())),
 		selectable(selectable), specifiers(specifiers), timeout(timeout) {}
 
@@ -668,7 +668,7 @@ struct MouseSelectable: public Node {
 
 	Pos end() const {
 		if (timeout) {
-			return timeout.end();
+			return timeout->end();
 		} else if (specifiers.size()) {
 			return specifiers[specifiers.size() - 1]->end();
 		} else {
@@ -684,7 +684,7 @@ struct MouseSelectable: public Node {
 		}
 
 		if (timeout) {
-			result += " timeout " + timeout.value();
+			result += " timeout " + std::string(*timeout);
 		}
 
 		return result;
@@ -696,7 +696,7 @@ struct MouseSelectable: public Node {
 
 	std::shared_ptr<ISelectable> selectable = nullptr;
 	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
-	Token timeout;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 };
 
 struct MouseCoordinates: public Node {

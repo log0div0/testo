@@ -1141,7 +1141,7 @@ nn::Point VisitorInterpreter::visit_mouse_additional_specifiers(
 
 void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseSelectable> mouse_selectable)
 {
-	std::string timeout = mouse_selectable->timeout ? mouse_selectable->timeout.value() : mouse_move_click_default_timeout;
+	std::string timeout = mouse_selectable->timeout ? template_parser.resolve(mouse_selectable->timeout->text(), reg) : mouse_move_click_default_timeout;
 	std::string where_to_go = template_parser.resolve(mouse_selectable->text(), reg);
 
 	for (auto specifier: mouse_selectable->specifiers) {

@@ -652,7 +652,11 @@ void VisitorSemantic::visit_mouse_move_selectable(std::shared_ptr<AST::MouseSele
 			throw std::runtime_error(std::string(mouse_selectable->specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
 		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
-		return visit_mouse_additional_specifiers(mouse_selectable->specifiers);
+		visit_mouse_additional_specifiers(mouse_selectable->specifiers);
+	}
+
+	if (mouse_selectable->timeout) {
+		visit_string_token_union(mouse_selectable->timeout);
 	}
 }
 
