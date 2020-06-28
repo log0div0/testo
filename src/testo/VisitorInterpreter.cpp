@@ -2,8 +2,6 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
 
-#include <license/License.hpp>
-
 #include "coro/Finally.h"
 #include "coro/CheckPoint.h"
 #include "utf8.hpp"
@@ -30,7 +28,6 @@ VisitorInterpreter::VisitorInterpreter(std::shared_ptr<Register> reg, const nloh
 	test_spec = config.at("test_spec").get<std::string>();
 	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
-	license = config.at("license").get<std::string>();
 
 	charmap.insert({
 		{"0", {"ZERO"}},
@@ -445,14 +442,6 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 			if (p->stmt->t.type() == Token::category::flash) {
 				flash_drives.push_back(p->stmt);
 			}
-		}
-	}
-
-	if (license.size()) {
-		verify_license(license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
-	} else {
-		if (total_tests_count > 10) {
-			throw std::runtime_error("Для запуска более 10 тестов необходимо указать путь к файлу с лицензией (параметр --license)");
 		}
 	}
 

@@ -13,6 +13,10 @@
 #include "backends/qemu/QemuEnvironment.hpp"
 #endif
 
+#ifdef USE_CUDA
+#include <license/License.hpp>
+#endif
+
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -37,7 +41,9 @@ struct console_args {
 	std::string invalidate;
 	std::string hypervisor;
 	std::string report_folder;
+#ifdef USE_CUDA
 	std::string license;
+#endif
 
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
@@ -152,6 +158,15 @@ int clean_mode() {
 }
 
 int run_mode() {
+
+#ifdef USE_CUDA
+	if (args.license.size()) {
+		verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+	} else {
+		throw std::runtime_error("Для запуска программы необходимо указать путь к файлу с лицензией (параметр --license)");
+	}
+#endif
+
 	auto params = nlohmann::json::array();
 
 	for (size_t i = 0; i < args.params_names.size(); ++i) {
@@ -173,7 +188,6 @@ int run_mode() {
 		{"report_screenshots", args.report_screenshots},
 		{"html", args.html},
 		{"prefix", args.prefix},
-		{"license", args.license},
 		{"params", params}
 	};
 
@@ -226,7 +240,9 @@ int do_main(int argc, char** argv) {
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", args.content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(args.html)) % "Format stdout as html",
+#ifdef USE_CUDA
 		(option("--license") & value("path", args.license)) % "Path to license file",
+#endif
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
 	);
 
@@ -286,7 +302,7 @@ int do_main(int argc, char** argv) {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + args.hypervisor);
 	}
 
-	
+
 
 	coro::CoroPool pool;
 	pool.exec([&] {

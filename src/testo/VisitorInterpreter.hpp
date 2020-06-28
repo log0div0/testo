@@ -133,7 +133,7 @@ private:
 	//settings
 	bool stop_on_fail;
 	bool assume_yes;
-	std::string test_spec, exclude, invalidate, license;
+	std::string test_spec, exclude, invalidate;
 
 	std::list<std::shared_ptr<AST::Test>> tests_to_run;
 	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;

@@ -75,7 +75,7 @@ Channel::Channel(const std::string& fd_path) {
 
 Channel::~Channel() {
 	if (fd >= 0) {
-		close(fd);
+		::close(fd);
 		fd = -1;
 	}
 }
@@ -102,7 +102,7 @@ size_t Channel::write(uint8_t* data, size_t size) {
 }
 
 void Channel::close() {
-	close(fd);
+	::close(fd);
 }
 
 #endif
