@@ -1,9 +1,9 @@
 
 include "common.testo"
 
-machine ubuntu {
+machine debian {
 	cpus: 4
-	iso: "${ISO_DIR}/ubuntu-18.04.2-live-server-amd64.iso"
+	iso: "${ISO_DIR}/debian-9.12.0-amd64-xfce-CD-1.iso"
 	ram: 8Gb
 	disk main: {
 		size: 32Gb
@@ -13,60 +13,63 @@ machine ubuntu {
 	}
 }
 
-test ubuntu_install_os {
-	ubuntu {
+test debian_install_os {
+	debian {
 		start
-		wait "English" || "Install Ubuntu Server" || "Please choose your preferred language" timeout 5m
-		if (check "English" && !"Install Ubuntu Server" && !"Please choose your preferred language") {
-			press Enter
-		}
-		wait "Install Ubuntu Server" || "Please choose your preferred language"
-		if (check "Install Ubuntu Server" && !"Please choose your preferred language") {
-			press Enter
-		}
-		wait "Please choose your preferred language"; press Enter
-		wait "Please select your keyboard layout"; press Enter
-		wait "Install Ubuntu"; press Enter
-		wait "Configure at least one interface"; press Enter
-		wait "Proxy address:"; press Enter
-		wait "Mirror address:"; press Enter
-		wait "Use An Entire Disk"; press Enter
-		wait "Choose the disk to install to:"; press Enter
-		wait "Filesystem setup"; press Enter
-		wait "Confirm destructive action"; press Down, Enter
-		wait "Enter the username and password"
-		type "${login}"; press Enter
+		wait "installer boot menu"; press Enter
+		wait "Select a language"; press Enter
+		wait "Select your location"; press Enter
+		wait "Configure the keyboard"; press Enter
+		wait "Please enter the hostname"
 		type "${host_name}"; press Enter
-		type "${login}"; press Enter
-		type "${password}"; press Enter
-		type "${password}"; press Enter
+		wait "The domain name is"; press Enter
+		wait "You need to set a password"
+		type "${password}"; press Tab*2
+		type "${password}"; press Tab*2
 		press Enter
-		wait "You can choose to install the OpenSSH server package"; press Tab, Enter
-		wait "These are popular snaps in server environment"; press Tab, Enter
-		wait "Installation complete!" timeout 30m; press Enter
-		wait "Please remove the installation medium"; unplug dvd; press Enter
-		wait "${host_name} login:" timeout 30m;
+		wait "Please enter the real name of this user"
+		type "${login}"; press Enter
+		wait "Select a username"
+		type "${login}"; press Enter
+		wait "A good password"
+		type "${password}"; press Tab*2
+		type "${password}"; press Tab*2
+		press Enter
+		wait "If the desired time zone"; press Enter
+		wait "The installer can guide you"; press Enter
+		wait "Note that all data on the disk"; press Enter
+		wait "The disk can be partitioned"; press Enter
+		wait "Finish partitioning"; press Enter
+		wait "If you continue"; press Down, Enter
+		wait "A network mirror can be used" timeout 10m; press Enter
+		wait "The goal is to find"; press Enter
+		wait "Please select a Debian archive mirror"; press Enter
+		wait "If you need to use a HTTP proxy"; press Enter
+		wait "The system may anonymously" timeout 10m; press Enter
+		wait "choose to install one or more"
+		mouse click "Debian desktop environment".left_center().move_left(15)
+		mouse click "... Xfce".left_center().move_left(15)
+		mouse click "Continue"
+		wait "It seems that this new installation" timeout 30m; press Enter
+		wait "You need to make the"; press Down, Enter
+		wait "Installation is complete"; unplug dvd; press Enter
+		wait "${host_name} login"
 	}
 }
 
-test ubuntu_install_guest_additions: ubuntu_install_os {
-	ubuntu {
-		wait "${host_name} login:"; type "${login}"; press Enter
+test debian_install_guest_additions: debian_install_os {
+	debian {
+		wait "${host_name} login:"; type "root"; press Enter
 		wait "Password:"; type "${password}"; press Enter
-		sleep 30s; press Enter*10
-		wait "${login}@${host_name}:~$"
+		wait "root@${host_name}:~#"
 
-		type "sudo su"; press Enter;
-		wait "password for ${login}"; type "${password}"; press Enter
 		type "apt update"; press Enter
 		wait "Reading package lists... Done"
-		type "apt purge -y netplan.io && echo exit code is $?"; press Enter
-		wait "exit code is 0"
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 		type "mount /dev/cdrom /media"; press Enter
-		wait "mounted read-only"; type "dpkg -i /media/testo-guest-additions.deb"; press Enter
-		wait "Processing triggers for ureadahead"
+		wait "mounting read-only"; type "dpkg -i /media/testo-guest-additions.deb"; press Enter
+		wait "Processing triggers for systemd"
 		type "umount /media"; press Enter
 		sleep 5s; unplug dvd
 
@@ -74,9 +77,11 @@ test ubuntu_install_guest_additions: ubuntu_install_os {
 	}
 }
 
-test ubuntu_install_packages: ubuntu_install_guest_additions {
-	ubuntu {
+test debian_install_packages: debian_install_guest_additions {
+	debian {
 		exec bash """
+			sed -i '/cdrom/d' /etc/apt/sources.list
+			apt update
 			apt -y install git gcc g++ make libssl-dev python3-dev libvirt-dev rpm
 			cd /root
 			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
@@ -90,8 +95,8 @@ test ubuntu_install_packages: ubuntu_install_guest_additions {
 	}
 }
 
-test ubuntu_download_onnxruntime: ubuntu_install_packages {
-	ubuntu {
+test debian_download_onnxruntime: debian_install_packages {
+	debian {
 		exec bash """
 			cd /root
 			git clone https://github.com/microsoft/onnxruntime.git
@@ -104,8 +109,8 @@ test ubuntu_download_onnxruntime: ubuntu_install_packages {
 }
 
 [no_snapshots: true]
-test ubuntu_build_onnxruntime_cpu: ubuntu_download_onnxruntime {
-	ubuntu {
+test debian_build_onnxruntime_cpu: debian_download_onnxruntime {
+	debian {
 		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			cd /root/onnxruntime
@@ -120,12 +125,12 @@ test ubuntu_build_onnxruntime_cpu: ubuntu_download_onnxruntime {
 			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_dist/lib
 			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
 		""" timeout 2h
-		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_ubuntu_cpu"
+		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_debian_cpu"
 	}
 }
 
-test ubuntu_install_cuda: ubuntu_download_onnxruntime {
-	ubuntu {
+test debian_install_cuda: debian_download_onnxruntime {
+	debian {
 		plug flash nvidia
 		sleep 5s
 		exec bash """
@@ -143,8 +148,8 @@ test ubuntu_install_cuda: ubuntu_download_onnxruntime {
 }
 
 [no_snapshots: true]
-test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
-	ubuntu {
+test debian_build_onnxruntime_gpu: debian_install_cuda {
+	debian {
 		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			cd /root/onnxruntime
@@ -161,13 +166,13 @@ test ubuntu_build_onnxruntime_gpu: ubuntu_install_cuda {
 			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
 			cp include/onnxruntime/core/providers/cuda/cuda_provider_factory.h /root/onnxruntime_dist/include
 		""" timeout 2h
-		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_ubuntu_gpu"
+		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_debian_gpu"
 	}
 }
 
 [no_snapshots: true]
-test ubuntu_build_testo_guest_additions: ubuntu_install_packages {
-	ubuntu {
+test debian_build_testo_guest_additions: debian_install_packages {
+	debian {
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
@@ -188,9 +193,9 @@ test ubuntu_build_testo_guest_additions: ubuntu_install_packages {
 }
 
 [no_snapshots: true]
-test ubuntu_build_testo_cpu: ubuntu_install_packages {
-	ubuntu {
-		copyto "${TMP_DIR}/onnxruntime_dist_ubuntu_cpu" "/root/onnxruntime_dist"
+test debian_build_testo_cpu: debian_install_packages {
+	debian {
+		copyto "${TMP_DIR}/onnxruntime_dist_debian_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
@@ -210,9 +215,9 @@ test ubuntu_build_testo_cpu: ubuntu_install_packages {
 }
 
 [no_snapshots: true]
-test ubuntu_build_testo_gpu: ubuntu_install_packages {
-	ubuntu {
-		copyto "${TMP_DIR}/onnxruntime_dist_ubuntu_gpu" "/root/onnxruntime_dist"
+test debian_build_testo_gpu: debian_install_packages {
+	debian {
+		copyto "${TMP_DIR}/onnxruntime_dist_debian_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
