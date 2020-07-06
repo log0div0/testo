@@ -2,9 +2,9 @@
 
 source "$(dirname "$0")/vars.sh"
 
-sudo testo run "$SCRIPT_DIR/src" \
+sudo testo run "$SCRIPT_DIR/../tests" \
 	--stop_on_fail \
 	--prefix tt_ \
 	--param ISO_DIR "$ISO_DIR" \
-	--param TESTO_BUILD_DIR "$TESTO_BUILD_DIR" \
-	--license "$LICENSE_PATH" 
+	--param TESTO_BUILD_DIR "$OUT_DIR" \
+	--license "$LICENSE_PATH"
