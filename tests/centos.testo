@@ -3,7 +3,7 @@ include "common.testo"
 
 machine centos {
 	cpus: 4
-	iso: "${ISO_DIR}/CentOS-8.2.2004-x86_64-dvd1.iso"
+	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
 	ram: 8Gb
 	disk main: {
 		size: 32Gb
@@ -47,8 +47,9 @@ test centos_install_os {
 		wait "Welcome" timeout 2m; mouse click "Next".center_bottom();
 		wait "Privacy"; mouse click "Next".center_bottom();
 		wait "Online Accounts"; mouse click "Skip";
-		wait "About You"; mouse click "Full Name".right_center().move_right(30); 
-		type "${login}"; mouse click "Next"
+		wait "About You"; mouse click "Full Name".right_center().move_right(30);
+		type "${login}";
+		mouse click js "find_text().match('Next').match_background('blue').from_top(0)"
 		wait "Set a Password"; type "${password}"; press Tab; type "${password}"; mouse click "Next"
 		mouse click "Start Using CentOS Linux"
 		wait "GNOME Help" timeout 2m
@@ -85,11 +86,10 @@ test centos_install_guest_additions: centos_install_os {
 	}
 }
 
-[no_snapshots: true]
 test centos_install_dependencies: centos_install_guest_additions {
 	centos {
 		exec bash "nmcli connection up ens3"
-		exec bash "yum -y install qemu-kvm libvirt virt-manager"
+		exec bash "yum -y install qemu-kvm libvirt iptables-ebtables dnsmasq virt-manager" timeout 30m
 	}
 }
 

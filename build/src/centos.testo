@@ -155,7 +155,6 @@ test centos_build_testo_cpu: centos_install_packages {
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
-		copyto "${TESTO_SRC_DIR}/tests" "/root/testo/tests"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
 			cd /root/
@@ -178,7 +177,6 @@ test centos_build_testo_gpu: centos_install_packages {
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
-		copyto "${TESTO_SRC_DIR}/tests" "/root/testo/tests"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
 			cd /root/
