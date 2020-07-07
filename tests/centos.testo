@@ -1,0 +1,101 @@
+
+include "common.testo"
+
+machine centos {
+	cpus: 4
+	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
+	ram: 8Gb
+	disk main: {
+		size: 32Gb
+	}
+	nic nat: {
+		attached_to: "nat"
+	}
+}
+
+test centos_install_os {
+	centos {
+		start
+		wait "Install CentOS Linux 8"; press Enter
+		wait "Press [Esc]"; press Esc
+		wait "What language would you" timeout 10m; mouse click "Continue"
+		mouse click "Installation Dest"
+		mouse click "Done"
+		sleep 2s
+		mouse click "Software selection"
+		mouse click "Workstation".from_top(0)
+		mouse click "Done".from_top(0)
+		sleep 5s
+		mouse click js "find_text().match('Begin Installation').match_background('blue').from_top(0)"
+		sleep 2s
+		mouse click "Root Password".from_top(0);
+		wait "Enter a password"; type "${password}"
+		press Tab; type "${password}"
+		mouse click "Done".from_top(0)
+		sleep 2s
+		mouse move 200 200
+		mouse click "Done".from_top(0)
+		wait "CentOS Linux is now successfully installed" timeout 20m
+		unplug dvd
+		mouse click "Reboot".from_bottom(0)
+		wait "License" timeout 7m; mouse move 0 0
+		mouse click "License Information"
+		mouse click "I accept"
+		mouse click "Done".from_top(0)
+		sleep 2s
+		mouse click "FINISH CONFIGURATION"
+		wait "Welcome" timeout 2m; mouse click "Next".center_bottom();
+		wait "Privacy"; mouse click "Next".center_bottom();
+		wait "Online Accounts"; mouse click "Skip";
+		wait "About You"; mouse click "Full Name".right_center().move_right(30);
+		type "${login}";
+		mouse click js "find_text().match('Next').match_background('blue').from_top(0)"
+		wait "Set a Password"; type "${password}"; press Tab; type "${password}"; mouse click "Next"
+		mouse click "Start Using CentOS Linux"
+		wait "GNOME Help" timeout 2m
+		mouse click "Help".from_top(0); mouse click "Quit"
+		wait !"GNOME Help"
+	}
+}
+
+macro open_terminal() {
+	mouse click "Activities"
+	wait "Type to search"
+	type "Term"; mouse click "Terminal"
+	wait "${login}@localhost"
+}
+
+macro enter_sudo() {
+	type "sudo su"; press Enter
+	wait "[sudo] password for ${login}"; type "${password}"; press Enter
+	wait "root@localhost"
+}
+
+test centos_install_guest_additions: centos_install_os {
+	centos {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
+		open_terminal()
+		enter_sudo()
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm && echo result is $?"; press Enter
+		wait "result is 0"
+		type "umount /media"; press Enter
+		sleep 5s; unplug dvd
+
+		exec bash "echo hello world"
+	}
+}
+
+test centos_install_dependencies: centos_install_guest_additions {
+	centos {
+		exec bash "nmcli connection up ens3"
+		exec bash "yum -y install qemu-kvm libvirt iptables-ebtables dnsmasq virt-manager" timeout 30m
+	}
+}
+
+test centos_install_testo_cpu: centos_install_dependencies {
+	centos {
+		copyto "${TESTO_BUILD_DIR}" "/home/${login}/testo_distrib"
+		exec bash "rpm -i /home/${login}/testo_distrib/testo-cpu.rpm"
+	}
+}

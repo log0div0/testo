@@ -43,5 +43,24 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	dnsmasq-base \
 ")
 
+set(CPACK_RPM_PACKAGE_PROVIDES "\
+	libonnxruntime_testo.so.1.3.0()(64bit), \
+	libonnxruntime_testo.so.1.3.0(VERS_1.3.0)(64bit) \
+")
+
+set(CPACK_RPM_PACKAGE_REQUIRES "\
+	libvirt >= 3.0.0 \
+	qemu-kvm >= 2.8 \
+	iptables-ebtables \
+	dnsmasq \
+")
+
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST
+	/usr
+	/usr/sbin
+	/usr/lib
+	/usr/share/
+)
+
 add_package(testo-package)
 add_dependencies(testo-package testo)
