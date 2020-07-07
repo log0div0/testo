@@ -149,6 +149,16 @@ test centos_prepare_2: centos_prepare_1 {
 			depmod -a
 			modprobe nbd
 		"""
+
+		plug flash iso; sleep 5s;
+		exec bash """
+			mount /dev/sdb1 /media
+			cp /media/ubuntu-16.04.6-server-amd64.iso /opt/
+			umount /media
+		"""
+		unplug flash iso
+
+		open_virt_manager()
 	}
 }
 
@@ -160,20 +170,11 @@ macro open_virt_manager() {
 	wait !"Authentication Required" && "Virtual Machine Manager"
 }
 
+[no_snapshots: true]
 test centos_prepare_testo: centos_prepare_2 {
 	centos {
 		copyto "${TESTO_BUILD_DIR}/testo-cpu.rpm" "/home/${login}/testo-cpu.rpm"
 		exec bash "rpm -i /home/${login}/testo-cpu.rpm"
-
-		open_virt_manager()
-
-		plug flash iso; sleep 5s;
-		exec bash """
-			mount /dev/sdb1 /media
-			cp /media/ubuntu-16.04.6-server-amd64.iso /opt/
-			umount /media
-		"""
-		unplug flash iso
 
 		copyto "${TESTO_TESTS_DIR}" "/opt/scripts" 
 	}
@@ -182,7 +183,9 @@ test centos_prepare_testo: centos_prepare_2 {
 [no_snapshots: true]
 test centos_start_offline_machine: centos_prepare_testo {
 	centos {
-		exec bash "testo run /opt/scripts --stop_on_fail --test_spec start_offline_machine"
-		abort "stop here"
+		exec bash "!(testo run /opt/scripts --stop_on_fail --test_spec start_offline_machine)"
+		wait "my_ubuntu_server" && "Running"
+		mouse dclick "my_ubuntu_server"
+		wait "Language" && "English"
 	}
 }

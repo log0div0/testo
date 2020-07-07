@@ -13,4 +13,5 @@ sudo testo run "$SCRIPT_DIR/src" \
 	--param TMP_DIR "$TMP_DIR" \
 	--param OUT_DIR "$OUT_DIR" \
 	--license "$LICENSE_PATH" \
-	--test_spec $1
+	--test_spec $1 \
+	--assume_yes

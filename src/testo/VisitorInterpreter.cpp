@@ -1343,6 +1343,14 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::sha
 	try {
 		reporter.start(vmc);
 		vmc->vm->start();
+		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(5000);
+		while (std::chrono::system_clock::now() < deadline) {
+			if (vmc->vm->state() == VmState::Running) {
+				return;
+			}
+			timer.waitFor(std::chrono::milliseconds(300));
+		}
+		throw std::runtime_error("Start timeout");
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(start, vmc));
 	}
