@@ -1,0 +1,9 @@
+
+include "declarations.testo"
+
+test start_offline_machine {
+	my_ubuntu_server {
+		start;
+		abort "stop here"
+	}
+}
