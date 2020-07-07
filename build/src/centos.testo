@@ -21,9 +21,11 @@ test centos_install_os {
 		wait "What language would you" timeout 10m; mouse click "Continue"
 		mouse click "Installation Dest"
 		mouse click "Done"
+		sleep 2s
 		mouse click "Software selection"
 		mouse click "Minimal Install"
 		mouse click "Done".from_top(0)
+		sleep 5s
 		mouse click js "find_text().match('Begin Installation').match_background('blue').from_top(0)"
 		mouse click "Root Password".from_top(0);
 		wait "Enter a password"; type "${password}"
