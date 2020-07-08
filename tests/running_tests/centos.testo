@@ -222,3 +222,11 @@ test centos_stop_offline_machine: centos_prepare_testo {
 	}
 }
 
+test centos_install_ubuntu_server: centos_prepare_testo {
+	centos {
+		exec bash """
+			testo run /opt/scripts --stop_on_fail --test_spec install_ubuntu_server
+		""" timeout 30m
+	}
+}
+
