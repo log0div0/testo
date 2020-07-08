@@ -22,6 +22,7 @@ struct Connect {
 	Connect& operator=(Connect&&);
 
 	pugi::xml_document get_capabilities() const;
+	pugi::xml_document get_domain_capabilities() const;
 
 	std::vector<Domain> domains(std::initializer_list<virConnectListAllDomainsFlags> flags = {}) const;
 	Domain domain_lookup_by_name(const std::string& name) const;

@@ -15,6 +15,12 @@ using namespace std::chrono_literals;
 
 QemuNbd::QemuNbd(const fs::path& img_path) {
 	try {
+		if (Process::is_failed("lsmod | grep nbd")) {
+			if (Process::is_failed("modprobe nbd max_parts=1")) {
+				throw std::runtime_error("Can't modprobe nbd module");
+			}
+		}
+		
 		coro::Timeout timeout{30s};
 		coro::Timer timer;
 

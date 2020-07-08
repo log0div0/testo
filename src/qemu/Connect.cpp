@@ -43,6 +43,18 @@ pugi::xml_document Connect::get_capabilities() const {
 	return result;
 }
 
+pugi::xml_document Connect::get_domain_capabilities() const {
+	char* xml = virConnectGetDomainCapabilities(handle, nullptr, nullptr, nullptr, nullptr, 0);
+	if (!xml) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+
+	pugi::xml_document result;
+	result.load_string(xml);
+	free(xml);
+	return result;
+}
+
 std::vector<Domain> Connect::domains(std::initializer_list<virConnectListAllDomainsFlags> flags) const {
 	std::vector<Domain> result;
 

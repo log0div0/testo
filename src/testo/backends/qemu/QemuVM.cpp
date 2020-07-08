@@ -238,6 +238,7 @@ void QemuVM::install() {
 		create_disks();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+		auto video_model = preferable_video_model(); 
 
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
@@ -310,7 +311,7 @@ void QemuVM::install() {
 					<sound model='ich6'>
 					</sound>
 					<video>
-						<model type='vmvga' heads='1' primary='yes'/>
+						<model type='{}' heads='1' primary='yes'/>
 					</video>
 					<redirdev bus='usb' type='spicevmc'>
 					</redirdev>
@@ -318,7 +319,7 @@ void QemuVM::install() {
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>());
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>(), video_model);
 
 		size_t i = 0;
 
@@ -1255,7 +1256,7 @@ void QemuVM::plug_dvd(fs::path path) {
 			</disk>
 		)", path.generic_string().c_str());
 
-		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
@@ -1575,6 +1576,30 @@ void QemuVM::create_disks() {
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating disks"));
 	}
+}
+
+std::string QemuVM::preferable_video_model() {
+	auto dom_caps = qemu_connect.get_domain_capabilities();
+	auto models_node = dom_caps.first_child().child("devices").child("video").child("enum");
+
+	std::set<std::string> models;
+	std::vector<std::string> preferable = {
+		"vmvga",
+		"qxl",
+		"cirrus"
+	};
+
+	for (auto model = models_node.child("value"); model; model = model.next_sibling("value")) {
+		models.insert(model.text().as_string());
+	}
+
+	for (auto& model: preferable) {
+		if (models.find(model) != models.end()) {
+			return model;
+		}
+	}
+
+	throw std::runtime_error("Can't find any acceptable video model");
 }
 
 std::string QemuVM::mouse_button_to_str(MouseButton btn) {

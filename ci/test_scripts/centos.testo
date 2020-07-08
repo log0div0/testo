@@ -1,0 +1,194 @@
+
+include "common.testo"
+
+machine centos {
+	cpus: 4
+	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
+	ram: 8Gb
+	disk main: {
+		size: 32Gb
+	}
+	nic nat: {
+		attached_to: "nat"
+	}
+}
+
+test centos_install_os {
+	centos {
+		start
+		wait "Install CentOS Linux 8"; press Enter
+		wait "Press [Esc]"; press Esc
+		wait "What language would you" timeout 10m; mouse click "Continue"
+		mouse click "Installation Dest"
+		mouse click "Done"
+		sleep 2s
+		mouse click "Software selection"
+		mouse click "Workstation".from_top(0)
+		mouse click "Done".from_top(0)
+		sleep 5s
+		mouse click js "find_text().match('Begin Installation').match_background('blue').from_top(0)"
+		sleep 2s
+		mouse click "Root Password".from_top(0);
+		wait "Enter a password"; type "${password}"
+		press Tab; type "${password}"
+		mouse click "Done".from_top(0)
+		sleep 2s
+		mouse move 200 200
+		mouse click "Done".from_top(0)
+		wait "CentOS Linux is now successfully installed" timeout 20m
+		unplug dvd
+		mouse click "Reboot".from_bottom(0)
+		wait "License" timeout 7m; mouse move 0 0
+		mouse click "License Information"
+		mouse click "I accept"
+		mouse click "Done".from_top(0)
+		sleep 2s
+		mouse click "FINISH CONFIGURATION"
+		wait "Welcome" timeout 2m; mouse click "Next".center_bottom();
+		wait "Privacy"; mouse click "Next".center_bottom();
+		wait "Online Accounts"; mouse click "Skip";
+		wait "About You"; mouse click "Full Name".right_center().move_right(30);
+		type "${login}";
+		mouse click js "find_text().match('Next').match_background('blue').from_top(0)"
+		wait "Set a Password"; type "${password}"; press Tab; type "${password}"; mouse click "Next"
+		mouse click "Start Using CentOS Linux"
+		wait "GNOME Help" timeout 2m
+		mouse click "Help".from_top(0); mouse click "Quit"
+		wait !"GNOME Help"
+	}
+}
+
+macro open_terminal() {
+	mouse click "Activities"
+	wait "Type to search"
+	type "Term"; mouse click "Terminal"
+	wait "${login}@localhost"
+}
+
+macro enter_sudo() {
+	type "sudo su"; press Enter
+	wait "[sudo] password for ${login}"; type "${password}"; press Enter
+	wait "root@localhost"
+}
+
+macro open_virt_manager() {
+	mouse click "Activities"
+	wait "Type to search"
+	type "virt"; mouse click "Virtual Machine"
+	wait "Authentication Required"; type "${password}"; press Enter
+	wait !"Authentication Required" && "Virtual Machine Manager"
+}
+
+test centos_install_guest_additions: centos_install_os {
+	centos {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
+		open_terminal()
+		enter_sudo()
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm && echo result is $?"; press Enter
+		wait "result is 0"
+		type "umount /media"; press Enter
+		sleep 5s; unplug dvd
+
+		exec bash "echo hello world"
+		type "exit"; press Enter; type "exit"; press Enter; wait !"root@localhost"
+	}
+}
+
+[no_snapshots: true]
+test centos_prepare_1: centos_install_guest_additions {
+	centos {
+		mouse click "Activities"
+		wait "Type to search"
+		type "Sett"; mouse click "Settings".from_top(0)
+		wait "Bluetooth"
+		mouse click "Wi-Fi".from_left(0); sleep 1s; press Down*11, Enter
+		wait "Power Saving"; mouse click "5 minutes"; sleep 1s; mouse click "5 minutes"; mouse click "Never"
+		mouse click "Power".from_left(0); sleep 1s; press Down*2, Enter
+		wait "Displays"; mouse click "Resolution";
+		for (i IN RANGE "0" "100") {
+			if (check "1024 x 768") {
+				mouse click "1024 x 768"
+				break
+			}
+			press Down*5
+		} else {
+			abort "fail"
+		}
+		mouse click "Apply".from_right(0); mouse click "Keep Changes"; sleep 2s; press LeftAlt + F4;
+		wait !"Displays"
+
+		exec bash "nmcli connection up ens3"
+		exec bash "yum -y install qemu-kvm libvirt iptables-ebtables dnsmasq virt-manager" timeout 30m
+	}
+}
+
+test centos_prepare_2: centos_prepare_1 {
+	centos {
+		exec bash """
+			yum groupinstall -y "Development Tools"
+			yum install -y ncurses-devel
+			yum install -y hmaccalc zlib-devel binutils-devel elfutils-libelf-devel
+			rpm -i http://vault.centos.org/8.0.1905/BaseOS/Source/SPackages/kernel-4.18.0-80.el8.src.rpm
+		""" timeout 30m
+
+		exec bash """
+			cd /rpmbuild/SPECS
+			for pkg in `rpmbuild -bp --target=$(uname -m) kernel.spec 2>&1 | grep 'is needed by' | awk '{print $1}' | tr '\\n' ' '`
+				do sudo yum install $pkg -y
+			done
+
+			rpmbuild -bp --target=$(uname -m) kernel.spec
+			cd /rpmbuild/BUILD/kernel-*/linux-*/
+			make oldconfig
+		""" timeout 30m
+
+		open_terminal()
+		enter_sudo()
+		type "cd /rpmbuild/BUILD/kernel-*/linux-*/"; press Enter
+		type "make menuconfig"; press Enter
+		wait "Kernel Configuration";
+		press Down*11; wait js "find_text().match('Device Drivers').match_background('blue').size() > 0"; press Enter
+		press Down*7; wait js "find_text().match('Block devices').match_background('blue').size() > 0"; press Enter
+		press Down*14; wait js "find_text().match('Network block device support').match_background('blue').size() > 0"; press M
+		press Right*3; wait js "find_text().match('Save').match_background('blue').size() > 0"; press Enter
+		wait "Enter a filename"; press Enter
+		wait "Configuration written"; press Enter
+		press LeftAlt + F4; mouse click "Close Terminal"
+
+		exec bash """
+			cd /rpmbuild/BUILD/kernel-*/linux-*/
+			make prepare
+			make modules_prepare
+			make -j 2 M=drivers/block
+			mkdir -p /lib/modules/$(uname -r)/extra/
+			cp drivers/block/nbd.ko /lib/modules/$(uname -r)/extra/
+			depmod -a
+			modprobe nbd
+		""" timeout 30m
+	}
+}
+
+test centos_prepare_3: centos_prepare_2 {
+	centos {
+		plug flash iso; sleep 5s;
+		exec bash """
+			mount /dev/sdb1 /media
+			cp /media/ubuntu-16.04.6-server-amd64.iso /opt/
+			umount /media
+		"""
+		unplug flash iso
+
+		open_virt_manager()
+	}
+}
+
+[no_snapshots: true]
+test centos_prepare_testo: centos_prepare_3 {
+	centos {
+		copyto "${OUT_DIR}/testo-cpu.rpm" "/home/${login}/testo-cpu.rpm"
+		exec bash "rpm -i /home/${login}/testo-cpu.rpm"
+
+		copyto "${TEST_ASSETS_DIR}" "/opt/scripts"
+	}
+}

@@ -8,12 +8,6 @@
 
 QemuEnvironment::QemuEnvironment(const nlohmann::json& config): Environment(config) {
 	setenv("QEMU", "1", false);
-
-	if (Process::is_failed("lsmod | grep nbd")) {
-		if (Process::is_failed("modprobe nbd max_parts=1")) {
-			throw std::runtime_error("Can't modprobe nbd module");
-		}
-	}
 }
 
 QemuEnvironment::~QemuEnvironment() {

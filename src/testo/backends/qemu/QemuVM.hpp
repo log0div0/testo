@@ -75,10 +75,12 @@ private:
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 
+	std::string preferable_video_model();
+	std::string mouse_button_to_str(MouseButton btn);
+
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;
 	std::vector<std::string> disk_targets; //10 + a cdrom
 	std::vector<uint8_t> screenshot_buffer;
 
-	std::string mouse_button_to_str(MouseButton btn);
 };

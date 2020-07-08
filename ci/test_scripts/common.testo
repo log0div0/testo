@@ -6,3 +6,9 @@ network nat {
 param host_name "tester"
 param login "user"
 param password "12345678"
+
+flash iso {
+	fs: "fat"
+	size: 1Gb
+	folder: "${ISO_DIR}/tests_iso"
+}
