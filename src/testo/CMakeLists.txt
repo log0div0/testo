@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.0)
 list(APPEND SRC_DIRS "*.cpp")
 
 list(APPEND SRC_DIRS "backends/*.cpp")
-list(APPEND SRC_DIRS "backends/dummy/*.cpp")
 list(APPEND SRC_DIRS "backends/vbox/*.cpp")
 if (WIN32)
 list(APPEND SRC_DIRS "backends/hyperv/*.cpp")

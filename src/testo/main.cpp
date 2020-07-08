@@ -4,7 +4,6 @@
 #include <coro/SignalSet.h>
 #include "Interpreter.hpp"
 
-#include "backends/dummy/DummyEnvironment.hpp"
 #include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
@@ -243,13 +242,13 @@ int do_main(int argc, char** argv) {
 #ifdef USE_CUDA
 		(option("--license") & value("path", args.license)) % "Path to license file",
 #endif
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)"
 	);
 
 	auto clean_spec = "clean options" % (
 		command("clean").set(args.selected_mode, mode::clean),
 		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vsphere, vbox, dummy)"
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)"
 	);
 
 	auto cli = ( run_spec | clean_spec | command("help").set(args.show_help) | command("version").set(args.show_version) );
@@ -294,10 +293,6 @@ int do_main(int argc, char** argv) {
 #else
 		env = std::make_shared<HyperVEnvironment>(env_config);
 #endif
-	} else if (args.hypervisor == "vsphere") {
-		throw std::runtime_error("TODO");
-	} else if (args.hypervisor == "dummy") {
-		env = std::make_shared<DummyEnvironment>(env_config);
 	} else {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + args.hypervisor);
 	}
