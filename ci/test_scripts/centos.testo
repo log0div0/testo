@@ -173,10 +173,10 @@ macro open_virt_manager() {
 [no_snapshots: true]
 test centos_prepare_testo: centos_prepare_2 {
 	centos {
-		copyto "${TESTO_BUILD_DIR}/testo-cpu.rpm" "/home/${login}/testo-cpu.rpm"
+		copyto "${OUT_DIR}/testo-cpu.rpm" "/home/${login}/testo-cpu.rpm"
 		exec bash "rpm -i /home/${login}/testo-cpu.rpm"
 
-		copyto "${TESTO_TESTS_DIR}" "/opt/scripts" 
+		copyto "${TEST_ASSETS_DIR}" "/opt/scripts"
 	}
 }
 

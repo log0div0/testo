@@ -89,7 +89,7 @@ test centos_download_onnxruntime: centos_install_packages {
 [no_snapshots: true]
 test centos_build_onnxruntime_cpu: centos_download_onnxruntime {
 	centos {
-		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
+		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			export PATH=$PATH:/usr/local/bin
 			cd /root/onnxruntime
@@ -129,7 +129,7 @@ test centos_install_cuda: centos_download_onnxruntime {
 [no_snapshots: true]
 test centos_build_onnxruntime_gpu: centos_install_cuda {
 	centos {
-		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
+		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			cd /root/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch

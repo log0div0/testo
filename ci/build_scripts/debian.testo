@@ -111,7 +111,7 @@ test debian_download_onnxruntime: debian_install_packages {
 [no_snapshots: true]
 test debian_build_onnxruntime_cpu: debian_download_onnxruntime {
 	debian {
-		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
+		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			cd /root/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch
@@ -150,7 +150,7 @@ test debian_install_cuda: debian_download_onnxruntime {
 [no_snapshots: true]
 test debian_build_onnxruntime_gpu: debian_install_cuda {
 	debian {
-		copyto "onnxruntime_patches" "/root/onnxruntime_patches"
+		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			cd /root/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch

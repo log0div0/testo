@@ -61,7 +61,7 @@ test win_download_onnxruntime: win_install_guest_additions {
 [no_snapshots: true]
 test win_build_onnxruntime_cpu_x64: win_download_onnxruntime {
 	win {
-		copyto "onnxruntime_patches" "C:/work/onnxruntime_patches"
+		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "C:/work/onnxruntime_patches"
 		exec cmd """
 			cd C:/work/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch
@@ -85,7 +85,7 @@ test win_build_onnxruntime_cpu_x64: win_download_onnxruntime {
 [no_snapshots: true]
 test win_build_onnxruntime_cpu_x86: win_download_onnxruntime {
 	win {
-		copyto "onnxruntime_patches" "C:/work/onnxruntime_patches"
+		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "C:/work/onnxruntime_patches"
 		exec cmd """
 			cd C:/work/onnxruntime
 			git apply ../onnxruntime_patches/single_thread.patch
