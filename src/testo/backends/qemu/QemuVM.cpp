@@ -1256,7 +1256,7 @@ void QemuVM::plug_dvd(fs::path path) {
 			</disk>
 		)", path.generic_string().c_str());
 
-		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
 
 		if (domain.is_active()) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);

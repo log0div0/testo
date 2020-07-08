@@ -9,4 +9,5 @@ sudo testo run "$SCRIPT_DIR/../tests/running_tests" \
 	--param TESTO_BUILD_DIR "$OUT_DIR" \
 	--param TESTO_TESTS_DIR "$TESTO_TESTS_DIR" \
 	--license "$LICENSE_PATH" \
+	--test_spec $1 \
 	--assume_yes

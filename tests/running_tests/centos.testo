@@ -183,7 +183,9 @@ test centos_prepare_testo: centos_prepare_2 {
 [no_snapshots: true]
 test centos_start_offline_machine: centos_prepare_testo {
 	centos {
-		exec bash "!(testo run /opt/scripts --stop_on_fail --test_spec start_offline_machine)"
+		exec bash """
+			!(testo run /opt/scripts --stop_on_fail --test_spec start_offline_machine) | grep "stop here"
+		"""
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
 		wait "Language" && "English"
