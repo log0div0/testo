@@ -96,8 +96,17 @@ test centos_prepare_1: centos_install_guest_additions {
 		wait "Bluetooth"
 		mouse click "Wi-Fi".from_left(0); sleep 1s; press Down*11, Enter
 		wait "Power Saving"; mouse click "5 minutes"; sleep 1s; mouse click "5 minutes"; mouse click "Never"
-		mouse click "Power".from_left(0); press Down*2, Enter
-		wait "Displays"; mouse click "Resolution"; press Down*22; mouse click "1024 x 768"
+		mouse click "Power".from_left(0); sleep 1s; press Down*2, Enter
+		wait "Displays"; mouse click "Resolution";
+		for (i IN RANGE "0" "100") {
+			if (check "1024 x 768") {
+				mouse click "1024 x 768"
+				break
+			}
+			press Down*5
+		} else {
+			abort "fail"
+		}
 		mouse click "Apply".from_right(0); mouse click "Keep Changes"; sleep 2s; press LeftAlt + F4;
 		wait !"Displays"
 
@@ -113,7 +122,7 @@ test centos_prepare_2: centos_prepare_1 {
 			yum install -y ncurses-devel
 			yum install -y hmaccalc zlib-devel binutils-devel elfutils-libelf-devel
 			rpm -i http://vault.centos.org/8.0.1905/BaseOS/Source/SPackages/kernel-4.18.0-80.el8.src.rpm
-		"""
+		""" timeout 30m
 
 		exec bash """
 			cd /rpmbuild/SPECS
@@ -124,7 +133,7 @@ test centos_prepare_2: centos_prepare_1 {
 			rpmbuild -bp --target=$(uname -m) kernel.spec
 			cd /rpmbuild/BUILD/kernel-*/linux-*/
 			make oldconfig
-		"""
+		""" timeout 30m
 
 		open_terminal()
 		enter_sudo()
@@ -148,8 +157,12 @@ test centos_prepare_2: centos_prepare_1 {
 			cp drivers/block/nbd.ko /lib/modules/$(uname -r)/extra/
 			depmod -a
 			modprobe nbd
-		"""
+		""" timeout 30m
+	}
+}
 
+test centos_prepare_3: centos_prepare_2 {
+	centos {
 		plug flash iso; sleep 5s;
 		exec bash """
 			mount /dev/sdb1 /media
@@ -171,7 +184,7 @@ macro open_virt_manager() {
 }
 
 [no_snapshots: true]
-test centos_prepare_testo: centos_prepare_2 {
+test centos_prepare_testo: centos_prepare_3 {
 	centos {
 		copyto "${OUT_DIR}/testo-cpu.rpm" "/home/${login}/testo-cpu.rpm"
 		exec bash "rpm -i /home/${login}/testo-cpu.rpm"
