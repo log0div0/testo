@@ -191,3 +191,34 @@ test centos_start_offline_machine: centos_prepare_testo {
 		wait "Language" && "English"
 	}
 }
+
+[no_snapshots: true]
+test centos_start_online_machine: centos_prepare_testo {
+	centos {
+		exec bash """
+			!(testo run /opt/scripts --stop_on_fail --test_spec start_online_machine) | grep "domain is already running"
+		"""
+	}
+}
+
+[no_snapshots: true]
+test centos_stop_online_machine: centos_prepare_testo {
+	centos {
+		exec bash """
+			!(testo run /opt/scripts --stop_on_fail --test_spec stop_online_machine) | grep "stop here"
+		"""
+		wait "my_ubuntu_server" && !"Running"
+		mouse dclick "my_ubuntu_server"
+		wait "Guest is not running"
+	}
+}
+
+[no_snapshots: true]
+test centos_stop_offline_machine: centos_prepare_testo {
+	centos {
+		exec bash """
+			!(testo run /opt/scripts --stop_on_fail --test_spec stop_offline_machine) | grep "domain is not running"
+		"""
+	}
+}
+
