@@ -1,0 +1,8 @@
+
+test A {
+
+}
+
+test B: A, A {
+
+}
