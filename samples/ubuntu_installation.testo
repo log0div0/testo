@@ -13,12 +13,12 @@ machine VM1 {
 
 test ubuntu_installation {
 	VM1 {
-		VM1 install_ubuntu_server("VM1", "user", "1111")
+		install_ubuntu_server("VM1", "user", "1111")
 	}
 	
 }
 
 test install_guest_additions: ubuntu_installation {
-	VM2 install_guest_additions_ubuntu_server("VM1", "user", "1111")
+	VM1 install_guest_additions_ubuntu_server("VM1", "user", "1111")
 }
 

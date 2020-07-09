@@ -1,8 +1,68 @@
 
 #include "Utils.hpp"
+#include "coro/CheckPoint.h"
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <algorithm>
 #include <fstream>
+
+#include "../linuxapi.hpp"
+
+void fs_copy_file(const fs::path& from, const fs::path& to) {
+	linuxapi::File source(from, O_RDONLY, 0);
+	linuxapi::File dest(to, O_WRONLY | O_CREAT, 0644);
+
+	uint8_t buf[8192];
+	ssize_t size;
+
+	while ((size = source.read(buf, sizeof(buf))) > 0) {
+		dest.write(buf, sizeof(buf));
+		coro::CheckPoint();
+	}
+}
+
+void fs_copy(const fs::path& from, const fs::path& to) {
+
+	if (!fs::exists(from)) {
+		throw std::runtime_error("Fs_copy error: \"from\" path " + from.generic_string() + " does not exist");
+	}
+
+	if (fs::equivalent(from, to)) {
+		throw std::runtime_error("Fs_copy error: \"from\" path " + from.generic_string() + " and \"to\" path " + to.generic_string() + " are equalent");
+	}
+
+	if (!fs::is_regular_file(to) && !fs::is_directory(to) && fs::exists(to)) {
+		throw std::runtime_error("Fs_copy: Unsupported type of file: " + to.generic_string());
+	}
+
+	if (fs::is_directory(from) && fs::is_regular_file(to)) {
+		throw std::runtime_error("Fs_copy: can't copy a directory " + from.generic_string() + " to a regular file " + to.generic_string());
+	}
+
+	//if from is a regular file
+	if (fs::is_regular_file(from)) {
+		if (fs::is_directory(to)) {
+			fs_copy_file(from, to / from.filename());
+		} else {
+			if (!fs::exists(to.parent_path()) && !fs::create_directories(to.parent_path())) {
+				throw std::runtime_error("Fs_copy error: can't create directory " + to.parent_path().generic_string());
+			}
+			fs_copy_file(from, to);
+		}
+	} else if (fs::is_directory(from)) {
+		if (!fs::exists(to.parent_path()) && !fs::create_directories(to)) {
+			throw std::runtime_error("Fs_copy error: can't create directory " + to.generic_string());
+		}
+		for (auto& directory_entry: fs::directory_iterator(from)) {
+			fs_copy(directory_entry.path(), to / directory_entry.path().filename());
+		}
+
+	} else {
+		throw std::runtime_error("Fs_copy: Unsupported type of file: " + from.generic_string());
+	}
+}
 
 bool check_if_time_interval(const std::string& time) {
 	std::string number;
