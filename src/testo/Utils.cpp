@@ -1,21 +1,27 @@
 
 #include "Utils.hpp"
 #include "coro/CheckPoint.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <algorithm>
 #include <fstream>
+#include <sys/types.h>
 
+#ifdef WIN32
+#include "../winapi.hpp"
+#else
 #include "../linuxapi.hpp"
+#endif
 
 void fs_copy_file(const fs::path& from, const fs::path& to) {
+#ifdef WIN32
+	winapi::File source(from.generic_string(), GENERIC_READ, OPEN_EXISTING);
+	winapi::File dest(to.generic_string(), GENERIC_WRITE, CREATE_ALWAYS);
+#else
 	linuxapi::File source(from, O_RDONLY, 0);
 	linuxapi::File dest(to, O_WRONLY | O_CREAT, 0644);
+#endif
 
 	uint8_t buf[8192];
-	ssize_t size;
+	size_t size;
 
 	while ((size = source.read(buf, sizeof(buf))) > 0) {
 		dest.write(buf, sizeof(buf));

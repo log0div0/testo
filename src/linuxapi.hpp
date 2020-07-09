@@ -11,8 +11,8 @@ namespace linuxapi {
 
 struct File {
 	File() = default;
-	File(const std::experimental::filesystem::path& path, int DesiredAccess, int CreationDisposition): path(path) {
-		handle = ::open(path.generic_string().c_str(), DesiredAccess, CreationDisposition);
+	File(const std::experimental::filesystem::path& path, int flags, int mode): path(path) {
+		handle = ::open(path.generic_string().c_str(), flags, mode);
 
 		if (handle  < 0) {
 			throw std::runtime_error("CreateFile " + path.generic_string() + " failed: " + strerror(errno));
