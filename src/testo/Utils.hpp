@@ -22,6 +22,8 @@ static void backtrace(std::ostream& stream, const std::exception& error) {
 	}
 }
 
+void fs_copy(const fs::path& from, const fs::path& to);
+
 bool check_if_time_interval(const std::string& time);
 uint32_t time_to_milliseconds(const std::string& time);
 

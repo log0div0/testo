@@ -85,7 +85,7 @@ void FlashDrive::load_folder() {
 		}
 		folder = fs::canonical(folder);
 
-		fs::copy(folder, env->flash_drives_mount_dir(), fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+		fs_copy(folder, env->flash_drives_mount_dir());
 
 		umount();
 	} catch (const std::exception& error) {
