@@ -1,0 +1,15 @@
+
+include "../backend/declarations.testo"
+
+macro my_iterations_macro(from_where, iterations) {
+	for (i IN RANGE "${iterations}") {
+		print "${from_where}: iteration #${i}"
+	}
+}
+
+test for_range_param {
+	my_ubuntu_server {
+		my_iterations_macro("0", "4")
+		my_iterations_macro("1", "3")
+	}
+}
