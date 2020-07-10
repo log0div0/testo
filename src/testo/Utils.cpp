@@ -24,7 +24,7 @@ void fs_copy_file(const fs::path& from, const fs::path& to) {
 	size_t size;
 
 	while ((size = source.read(buf, sizeof(buf))) > 0) {
-		dest.write(buf, sizeof(buf));
+		dest.write(buf, size);
 		coro::CheckPoint();
 	}
 }

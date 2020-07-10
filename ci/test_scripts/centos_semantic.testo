@@ -2,11 +2,11 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_semantic: centos_prepare_testo {
+test centos_semantic: centos_prepare_testo_part1 {
 	centos {
 		exec bash """
 			set +o pipefail
-			cp /opt/scripts/semantic/* /
+			cp /opt/scripts/part1/semantic/* /
 			testo run /0001.testo | grep '/0001.testo:6:1: Error: test "A" is already defined here: /0001.testo:2:1'
 			testo run /0002.testo | grep '/0002.testo:6:1: Error: macro "A" is already defined here: /0002.testo:2:1'
 			testo run /0003.testo | grep '/0003.testo:4:1: Error: param "A" is already defined here: /0003.testo:2:1'

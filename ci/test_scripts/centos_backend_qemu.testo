@@ -2,11 +2,11 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_backend_qemu_start_offline_machine: centos_prepare_testo {
+test centos_backend_qemu_start_offline_machine: centos_prepare_testo_part1 {
 	centos {
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/backend --stop_on_fail --test_spec start_offline_machine | grep "stop here"
+			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec start_offline_machine | grep "stop here"
 		"""
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
@@ -15,21 +15,21 @@ test centos_backend_qemu_start_offline_machine: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_start_online_machine: centos_prepare_testo {
+test centos_backend_qemu_start_online_machine: centos_prepare_testo_part1 {
 	centos {
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/backend --stop_on_fail --test_spec start_online_machine | grep "domain is already running"
+			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec start_online_machine | grep "domain is already running"
 		"""
 	}
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_stop_online_machine: centos_prepare_testo {
+test centos_backend_qemu_stop_online_machine: centos_prepare_testo_part1 {
 	centos {
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/backend --stop_on_fail --test_spec stop_online_machine | grep "stop here"
+			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec stop_online_machine | grep "stop here"
 		"""
 		wait "my_ubuntu_server" && !"Running"
 		mouse dclick "my_ubuntu_server"
@@ -38,20 +38,77 @@ test centos_backend_qemu_stop_online_machine: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_stop_offline_machine: centos_prepare_testo {
+test centos_backend_qemu_stop_offline_machine: centos_prepare_testo_part1 {
 	centos {
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/backend --stop_on_fail --test_spec stop_offline_machine | grep "domain is not running"
+			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec stop_offline_machine | grep "domain is not running"
 		"""
 	}
 }
 
-test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
+test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo_part1 {
 	centos {
 		exec bash """
-			testo run /opt/scripts/backend --stop_on_fail --test_spec install_ubuntu_server
+			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec install_ubuntu_server
 		""" timeout 30m
 	}
 }
+
+macro exec_bash(script) {
+	type "clear"; press Enter
+	type "${script} && echo result is $?"; press Enter
+	wait "result is 0"
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_plug_flash: centos_prepare_testo_part2 {
+	centos {
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_flash | grep "stop here"
+		""" timeout 30m
+
+		wait "my_ubuntu_server" && "Running"
+		mouse dclick "my_ubuntu_server"
+		wait "Welcome to Ubuntu"
+		type "sudo su"; press Enter
+		wait "password for user"; type "1111"; press Enter
+		wait "root@ubuntu"
+		exec_bash("mount /dev/sdb1 /media")
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_plug_flash_with_files: centos_prepare_testo_part2 {
+	centos {
+		exec bash """
+			mkdir /opt/flash_folder
+			mkdir /opt/flash_folder/first_inner_folder
+			mkdir /opt/flash_folder/first_inner_folder/super_inner_folder
+			mkdir /opt/flash_folder/second_inner_folder
+
+			echo "Hello from root folder" > /opt/flash_folder/hello1.txt
+			echo "Hello from first inner folder" > /opt/flash_folder/first_inner_folder/hello2.txt
+			echo "Hello from second inner folder" > /opt/flash_folder/second_inner_folder/hello3.txt
+
+			truncate -s 5G /opt/flash_folder/first_inner_folder/super_inner_folder/super_big_file.txt
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_flash_with_files --report_folder /opt/reports/ | grep "stop here"
+		""" timeout 30m
+
+		wait "my_ubuntu_server" && "Running"
+		mouse dclick "my_ubuntu_server"
+		wait "Welcome to Ubuntu"
+		type "sudo su"; press Enter
+		wait "password for user"; type "1111"; press Enter
+		wait "root@ubuntu"
+		exec_bash("mount /dev/sdb1 /media")
+		abort "stop here"
+	}
+}
+
 
