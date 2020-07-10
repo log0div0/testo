@@ -27,9 +27,6 @@ struct FlashDrive {
 	std::string id() const;
 	std::string name() const;
 	std::string prefix() const;
-	nlohmann::json get_config() const;
-	bool has_folder() const;
-	void validate_folder() const;
 	void load_folder();
 
 protected:

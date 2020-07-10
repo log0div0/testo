@@ -1,15 +1,15 @@
 
 #pragma once
 
-#include "VmController.hpp"
-#include "FlashDriveController.hpp"
-#include "NetworkController.hpp"
+#include "VM.hpp"
+#include "FlashDrive.hpp"
+#include "Network.hpp"
 
 struct Environment {
 	Environment(const nlohmann::json& config) {
 		_content_cksum_maxsize = config.at("content_cksum_maxsize").get<uint32_t>() * 1048576;
 	}
-	
+
 	virtual ~Environment() = default;
 
 	virtual fs::path testo_dir() const = 0;
@@ -26,9 +26,9 @@ struct Environment {
 	virtual void setup() = 0;
 	virtual void cleanup() = 0;
 
-	virtual std::shared_ptr<VmController> create_vm_controller(const nlohmann::json& config) = 0;
-	virtual std::shared_ptr<FlashDriveController> create_flash_drive_controller(const nlohmann::json& config) = 0;
-	virtual std::shared_ptr<NetworkController> create_network_controller(const nlohmann::json& config) = 0;
+	virtual std::shared_ptr<VM> create_vm(const nlohmann::json& config) = 0;
+	virtual std::shared_ptr<FlashDrive> create_flash_drive(const nlohmann::json& config) = 0;
+	virtual std::shared_ptr<Network> create_network(const nlohmann::json& config) = 0;
 
 private:
 	uint64_t _content_cksum_maxsize;

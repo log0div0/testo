@@ -17,10 +17,6 @@ struct Node {
 	virtual Pos end() const = 0;
 	virtual operator std::string() const = 0;
 
-	virtual std::set<std::string> get_all_fd_names() const {
-		return {};
-	}
-
 	Token t;
 };
 
@@ -214,10 +210,6 @@ struct Action: public IAction {
 
 	void set_delim (const Token& delim) {
 		this->delim = delim;
-	}
-
-	std::set<std::string> get_all_fd_names() const override {
-		return action->get_all_fd_names();
 	}
 
 	std::shared_ptr<ActionType> action;
@@ -514,7 +506,7 @@ struct Release: public Node {
 		if (combination) {
 			result += " " + std::string(*combination);
 		}
-		
+
 		return result;
 	}
 
@@ -608,12 +600,12 @@ struct MouseAdditionalSpecifier: public Node {
 struct MouseSelectable: public Node {
 	MouseSelectable(std::shared_ptr<ISelectable> selectable,
 		const std::vector<std::shared_ptr<MouseAdditionalSpecifier>>& specifiers,
-		const Token& timeout): 
+		const Token& timeout):
 		Node(Token(Token::category::mouse_selectable, "mouse_selectable", Pos(), Pos())),
 		selectable(selectable), specifiers(specifiers), timeout(timeout) {}
 
 	Pos begin() const {
-		return selectable->begin(); 
+		return selectable->begin();
 	}
 
 	Pos end() const {
@@ -825,13 +817,6 @@ struct Plug: public Node {
 		return (t.type() == Token::category::plug);
 	}
 
-	std::set<std::string> get_all_fd_names() const override {
-		if (type.value() == "flash") {
-			return {name_token.value()};
-		}
-		return {};
-	}
-
 	Token type; //nic or flash or dvd
 	Token name_token; //name of resource to be plugged/unplugged
 	std::shared_ptr<String> path; //used only for dvd
@@ -991,16 +976,6 @@ struct ActionBlock: public Node {
 			result += std::string(*action);
 
 		}
-		return result;
-	}
-
-	std::set<std::string> get_all_fd_names() const override {
-		std::set<std::string> result;
-		for (auto action: actions) {
-			auto tmp = action->get_all_fd_names();
-			result.insert(tmp.begin(), tmp.end());
-		}
-
 		return result;
 	}
 
@@ -1181,11 +1156,6 @@ struct MacroCall: public Node {
 		return t;
 	}
 
-	std::set<std::string> get_all_fd_names() const override {
-		return macro->action_block->get_all_fd_names();
-	}
-
-	std::shared_ptr<Macro> macro;
 	std::vector<std::shared_ptr<String>> args;
 };
 
@@ -1354,38 +1324,10 @@ struct Test: public Node {
 		return result; //for now
 	}
 
-	std::set<std::string> get_all_vm_names() const {
-		std::set<std::string> result;
-
-		for (auto command: cmd_block->commands) {
-			for (auto vm_token: command->vms) {
-				result.insert(vm_token.value());
-			}
-		}
-		return result;
-	}
-
-	std::set<std::string> get_all_fd_names() const override {
-		std::set<std::string> result;
-
-		for (auto command: cmd_block->commands) {
-			auto fds = command->action->get_all_fd_names();
-			result.insert(fds.begin(), fds.end());
-		}
-
-		return result;
-	}
-
 	std::shared_ptr<AttrBlock> attrs;
 	Token name;
 	std::vector<Token> parents_tokens;
-	std::list<std::shared_ptr<AST::Test>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
-	bool snapshots_needed = true;
-	bool is_initialized = false;
-	std::string description;
-	std::chrono::system_clock::time_point start_timestamp;
-	std::chrono::system_clock::time_point stop_timestamp;
 };
 
 struct Controller: public Node {

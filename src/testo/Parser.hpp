@@ -2,16 +2,19 @@
 #pragma once
 
 #include "Lexer.hpp"
-#include "Node.hpp"
+#include "AST.hpp"
 #include "Utils.hpp"
 #include "Token.hpp"
-#include "Register.hpp"
 #include <set>
 #include <array>
 
 struct Parser {
+	static Parser load_dir(const fs::path& dir);
+	static Parser load_file(const fs::path& file);
+	static Parser load(const fs::path& path);
+
 	Parser() = default;
-	Parser(std::shared_ptr<Register> reg, const fs::path& file, const std::string& input);
+	Parser(const fs::path& file, const std::string& input);
 
 	std::shared_ptr<AST::Program> parse();
 private:
@@ -112,6 +115,4 @@ private:
 	std::vector<Ctx> lexers;
 
 	std::vector<fs::path> already_included;
-
-	std::shared_ptr<Register> reg;
 };

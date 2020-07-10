@@ -1,27 +1,9 @@
 
-#include "TemplateParser.hpp"
+#include "TemplateLiterals.hpp"
 
 namespace template_literals {
 
-std::string Parser::resolve_var(const std::string& var, std::shared_ptr<Register> reg) {
-	for (auto it = reg->local_vars.rbegin(); it != reg->local_vars.rend(); ++it) {
-		if (it->is_defined(var)) {
-			return it->ref(var);
-		}
-		if (it->is_terminate) {
-			break;
-		}
-	}
-
-	auto found = reg->params.find(var);
-	if (found == reg->params.end()) {
-		return "";
-	}
-
-	return found->second;
-}
-
-std::string Parser::resolve(const std::string& input, std::shared_ptr<Register> reg) {
+std::string Parser::resolve(const std::string& input, const std::shared_ptr<StackNode>& stack) {
 	this->input = input;
 	current_pos = Pos(input);
 
@@ -31,7 +13,7 @@ std::string Parser::resolve(const std::string& input, std::shared_ptr<Register> 
 
 	for (auto token: tokens) {
 		if (token.type() == Token::category::var_ref) {
-			result += resolve_var(token.value().substr(2, token.value().length() - 3), reg);
+			result += stack->resolve_var(token.value().substr(2, token.value().length() - 3));
 		} else if (token.type() == Token::category::regular_string) {
 			result += token.value();
 		} else {

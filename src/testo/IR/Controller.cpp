@@ -1,7 +1,8 @@
 
 #include "Controller.hpp"
-
 #include <fmt/format.h>
+
+namespace IR {
 
 bool Controller::is_defined() const {
 	return fs::exists(main_file());
@@ -38,13 +39,12 @@ bool Controller::has_key(const std::string& key) {
 	}
 }
 
-
 std::string Controller::get_metadata(const std::string& key) const {
 	try {
 		return ::get_metadata(main_file(), key);
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Getting vm metadata with key {}", key)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
 	}
 }
 
@@ -56,4 +56,12 @@ void Controller::set_metadata(const std::string& key, const std::string& value) 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
 	}
+}
+
+fs::path Controller::main_file() const {
+	fs::path result = get_metadata_dir();
+	result = result / id();
+	return result;
+}
+
 }

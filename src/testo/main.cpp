@@ -2,7 +2,8 @@
 #include <coro/Application.h>
 #include <coro/CoroPool.h>
 #include <coro/SignalSet.h>
-#include "Interpreter.hpp"
+#include "IR/Program.hpp"
+#include "Parser.hpp"
 
 #include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
@@ -62,46 +63,17 @@ console_args args;
 
 std::shared_ptr<Environment> env;
 
-std::string generate_script(const fs::path& folder, const fs::path& current_prefix = ".") {
-	std::string result("");
-	for (auto& file: fs::directory_iterator(folder)) {
-		if (fs::is_regular_file(file)) {
-			if (fs::path(file).extension() == ".testo") {
-				result += fmt::format("include \"{}\"\n", fs::path(current_prefix / fs::path(file).filename()).generic_string());
-			}
-		} else if (fs::is_directory(file)) {
-			result += generate_script(file, current_prefix / fs::path(file).filename());
-		} else {
-			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
-		}
-	}
-
-	return result;
-}
-
-void run_file(const fs::path& file, const nlohmann::json& config) {
-	Interpreter runner(file, config);
-	runner.run();
-}
-
-void run_folder(const fs::path& folder, const nlohmann::json& config) {
-	auto generated = generate_script(folder);
-	Interpreter runner(folder, generated, config);
-	runner.run();
-}
-
 int clean_mode() {
 	//cleanup networks
 	for (auto& network_folder: fs::directory_iterator(env->network_metadata_dir())) {
 		for (auto& file: fs::directory_iterator(network_folder)) {
 			try {
 				if (fs::path(file).filename() == fs::path(network_folder).filename()) {
-					auto config = nlohmann::json::parse(get_metadata(file, "network_config"));
-
-					auto network_controller = env->create_network_controller(config);
-					if (network_controller->prefix() == args.prefix) {
-						network_controller->undefine();
-						std::cout << "Deleted network " << network_controller->id() << std::endl;
+					IR::Network network;
+					network.config = nlohmann::json::parse(get_metadata(file, "network_config"));
+					if (network.nw()->prefix() == args.prefix) {
+						network.undefine();
+						std::cout << "Deleted network " << network.nw()->id() << std::endl;
 						break;
 					}
 				}
@@ -118,11 +90,11 @@ int clean_mode() {
 		for (auto& file: fs::directory_iterator(flash_drive_folder)) {
 			try {
 				if (fs::path(file).filename() == fs::path(flash_drive_folder).filename()) {
-					auto config = nlohmann::json::parse(get_metadata(file, "fd_config"));
-					auto flash_drive_contoller = env->create_flash_drive_controller(config);
-					if (flash_drive_contoller->prefix() == args.prefix) {
-						flash_drive_contoller->undefine();
-						std::cout << "Deleted flash drive " << flash_drive_contoller->id() << std::endl;
+					IR::FlashDrive flash_drive;
+					flash_drive.config = nlohmann::json::parse(get_metadata(file, "fd_config"));
+					if (flash_drive.fd()->prefix() == args.prefix) {
+						flash_drive.undefine();
+						std::cout << "Deleted flash drive " << flash_drive.fd()->id() << std::endl;
 						break;
 					}
 				}
@@ -138,11 +110,11 @@ int clean_mode() {
 		for (auto& file: fs::directory_iterator(vm_folder)) {
 			try {
 				if (fs::path(file).filename() == fs::path(vm_folder).filename()) {
-					auto config = nlohmann::json::parse(get_metadata(file, "vm_config"));
-					auto vm_contoller = env->create_vm_controller(config);
-					if (vm_contoller->prefix() == args.prefix) {
-						vm_contoller->undefine();
-						std::cout << "Deleted virtual machine " << vm_contoller->id() << std::endl;
+					IR::Machine machine;
+					machine.config = nlohmann::json::parse(get_metadata(file, "vm_config"));
+					if (machine.vm()->prefix() == args.prefix) {
+						machine.undefine();
+						std::cout << "Deleted virtual machine " << machine.vm()->id() << std::endl;
 						break;
 					}
 				}
@@ -168,7 +140,13 @@ int run_mode() {
 
 	auto params = nlohmann::json::array();
 
+	std::set<std::string> unique_param_names;
+
 	for (size_t i = 0; i < args.params_names.size(); ++i) {
+		auto result = unique_param_names.insert(args.params_names[i]);
+		if (!result.second) {
+			throw std::runtime_error("Error: param \"" + args.params_names[i] + "\" is defined multiple times as a command line argument");
+		}
 		nlohmann::json json_param = {
 			{ "name", args.params_names[i]},
 			{ "value", args.params_values[i]}
@@ -194,13 +172,11 @@ int run_mode() {
 		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + args.target);
 	}
 
-	if (fs::is_regular_file(args.target)) {
-		run_file(args.target, config);
-	} else if (fs::is_directory(args.target)) {
-		run_folder(args.target, config);
-	} else {
-		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + args.target);
-	}
+	auto parser = Parser::load(args.target);
+	auto ast = parser.parse();
+	IR::Program program(ast, config);
+	program.validate();
+	program.run();
 
 	return 0;
 }

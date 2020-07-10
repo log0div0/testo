@@ -1,14 +1,12 @@
 
 #include "VisitorSemantic.hpp"
-#include "coro/Finally.h"
+#include "IR/Program.hpp"
 #include "js/Context.hpp"
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
-VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::json& config): reg(reg) {
+VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
 	prefix = config.at("prefix").get<std::string>();
-	test_spec = config.at("test_spec").get<std::string>();
-	exclude = config.at("exclude").get<std::string>();
 
 	keys.insert("ESC");
 	keys.insert("ONE");
@@ -128,7 +126,7 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 	attr_ctx disk_ctx;
 	disk_ctx.insert({"size", std::make_pair(false, Token::category::size)});
 	disk_ctx.insert({"source", std::make_pair(false, Token::category::quoted_string)});
-	
+
 	attr_ctxs.insert({"disk", disk_ctx});
 
 	attr_ctx vm_network_ctx;
@@ -157,43 +155,6 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
 	test_global_ctx.insert({"description", std::make_pair(false, Token::category::quoted_string)});
 	attr_ctxs.insert({"test_global", test_global_ctx});
-
-	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_PRESS_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_TYPE_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_EXEC_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_COPY_DEFAULT_TIMEOUT");
-
-	for (auto param: config.at("params")) {
-		auto name = param.at("name").get<std::string>();
-		auto value = param.at("value").get<std::string>();
-
-		if (reg->params.find(name) != reg->params.end()) {
-			throw std::runtime_error("Error: param \"" + name +
-				"\" already exists");
-		}
-
-		auto node_found = reg->param_nodes.find(name);
-
-		if (node_found != reg->param_nodes.end()) {
-			throw std::runtime_error("Error: param with name \"" + name +
-				"\" is already defined here: " + std::string((*node_found).second->begin()));
-		}
-
-		if (testo_timeout_params.find(name) != testo_timeout_params.end()) {
-			if (!check_if_time_interval(value)) {
-				throw std::runtime_error("Can't convert parameter " + name + " value " + value + " to time interval");
-			}
-		}
-
-		if (!reg->params.insert({name, value}).second) {
-			throw std::runtime_error("Error: while registering param with name " + name);
-		}
-	}
 }
 
 static uint32_t size_to_mb(const std::string& size) {
@@ -209,160 +170,62 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
-void VisitorSemantic::setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
-	for (auto action: action_block->actions) {
-		setup_macros_action(action);
+void VisitorSemantic::visit() {
+	for (auto& test: IR::program->all_selected_tests) {
+		visit_test(test);
+	}
+	for (auto& test: IR::program->all_selected_tests) {
+		//Now that we've checked that all commands are ligit we could check that
+		//all parents have totally separate vms. We can't do that before command block because
+		//a user may specify unexisting vmc in some command and we need to catch that before that hierarchy check
+
+		std::vector<std::set<std::shared_ptr<IR::Machine>>> parents_subtries;
+
+		//populate our parents paths
+		for (auto parent: test->parents) {
+			parents_subtries.push_back(parent->get_all_machines());
+		}
+
+		//check that parents path are independent
+		for (size_t i = 0; i < parents_subtries.size(); ++i) {
+			for (size_t j = 0; j < parents_subtries.size(); ++j) {
+				if (i == j) {
+					continue;
+				}
+
+				std::vector<std::shared_ptr<IR::Machine>> intersection;
+
+				std::set_intersection(
+					parents_subtries[i].begin(), parents_subtries[i].end(),
+					parents_subtries[j].begin(), parents_subtries[j].end(),
+					std::back_inserter(intersection));
+
+				if (intersection.size() != 0) {
+					throw std::runtime_error(std::string(test->ast_node->begin()) + ":Error: some parents have common vms");
+				}
+			}
+		}
 	}
 }
 
-void VisitorSemantic::setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
-	auto macro = reg->macros.find(macro_call->name().value());
-	if (macro == reg->macros.end()) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
-	}
-	macro_call->macro = macro->second;
-
-	setup_macros_action_block(macro_call->macro->action_block->action);
-}
-
-void VisitorSemantic::setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
-	setup_macros_action(if_clause->if_action);
-	if (if_clause->has_else()) {
-		setup_macros_action(if_clause->else_action);
-	}
-}
-
-void VisitorSemantic::setup_macros_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
-	setup_macros_action(for_clause->cycle_body);
-
-	if (for_clause->else_token) {
-		setup_macros_action(for_clause->else_action);
-	}
-}
-
-void VisitorSemantic::setup_macros_action(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		return setup_macros_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return setup_macros_macro_call(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		return setup_macros_if_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		return setup_macros_for_clause(p->action);
-	}
-}
-
-void VisitorSemantic::setup_macros(std::shared_ptr<AST::Test> test) {
-	for (auto cmd: test->cmd_block->commands) {
-		setup_macros_action(cmd->action);
-	}
-}
-
-void VisitorSemantic::setup_test(std::shared_ptr<AST::Test> test) {
-	if (test->is_initialized) {
+void VisitorSemantic::visit_macro(std::shared_ptr<IR::Macro> macro) {
+	auto result = visited_macros.insert(macro);
+	if (!result.second) {
 		return;
 	}
 
-	for (auto parent_token: test->parents_tokens) {
-		auto parent = reg->tests.find(parent_token.value());
-		if (parent == reg->tests.end()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
-		}
+	StackPusher<VisitorSemantic> new_ctx(this, macro->stack);
 
-		for (auto already_included: test->parents) {
-			if (already_included == parent->second) {
-				throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
-			}
-		}
-
-		if (parent_token.value() == test->name.value()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
-		}
-
-		test->parents.push_back(parent->second);
-	}
-
-	setup_macros(test);
-
-	for (auto parent: test->parents) {
-		setup_test(parent);
-	}
-
-	test->is_initialized = true;
-}
-
-void VisitorSemantic::setup_tests(std::shared_ptr<AST::Program> program) {
-	for (auto stmt: program->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-			auto test = p->stmt;
-
-			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
-				continue;
-			}
-
-			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
-				continue;
-			}
-			setup_test(test);
-		}
-	}
-}
-
-
-void VisitorSemantic::setup_vars(std::shared_ptr<AST::Program> program) {
-	for (auto stmt: program->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-			auto test = p->stmt;
-			//invalidate tests at request
-			//So for every test
-			//we need to check if it's suitable for test spec
-			//if it is - push back to list and remove all the parents duplicates
-
-			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
-				continue;
-			}
-
-			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
-				continue;
-			}
-			concat_unique(tests_queue, reg->get_test_path(test));
-		}
-	}
-}
-
-void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
-	setup_tests(program);
-	setup_vars(program);
-	for (auto stmt: program->stmts) {
-		visit_stmt(stmt);
-	}
-}
-
-void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
-	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-		return visit_test(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
-		return visit_macro(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
-		return visit_param(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
-		return visit_controller(p->stmt);
-	} else {
-		throw std::runtime_error("Unknown statement");
-	}
-}
-
-void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
-	for (size_t i = 0; i < macro->args.size(); ++i) {
-		for (size_t j = i + 1; j < macro->args.size(); ++j) {
-			if (macro->args[i]->name() == macro->args[j]->name()) {
-				throw std::runtime_error(std::string(macro->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->args[j]->name());
+	for (size_t i = 0; i < macro->ast_node->args.size(); ++i) {
+		for (size_t j = i + 1; j < macro->ast_node->args.size(); ++j) {
+			if (macro->ast_node->args[i]->name() == macro->ast_node->args[j]->name()) {
+				throw std::runtime_error(std::string(macro->ast_node->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->ast_node->args[j]->name());
 			}
 		}
 	}
 
 	bool has_default = false;
-	for (auto arg: macro->args) {
+	for (auto arg: macro->ast_node->args) {
 		if (arg->default_value) {
 			has_default = true;
 			continue;
@@ -374,75 +237,15 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 	}
 }
 
-void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
-	auto value = template_parser.resolve(param->value->text(), reg);
-
-	if (testo_timeout_params.find(param->name) != testo_timeout_params.end()) {
-		if (!check_if_time_interval(value)) {
-			throw std::runtime_error(std::string(param->begin()) + ": Error: can't convert parameter " + param->name.value() + " value " + value + " to time interval");
-		}
+void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
+	if (test->ast_node->attrs) {
+		test->attrs = visit_attr_block(test->ast_node->attrs, "test_global");
 	}
 
-	if (!reg->params.insert({param->name.value(), value}).second) {
-		throw std::runtime_error(std::string(param->begin()) + ": Error while registering param with name " +
-			param->name.value());
-	}
-}
-
-void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
-	if (std::find(tests_queue.begin(), tests_queue.end(), test) == tests_queue.end()) {
-		return;
-	}
-
-	//Check for duplicates in attrs
-	nlohmann::json attrs = nlohmann::json::object();
-
-	if (test->attrs) {
-		attrs = visit_attr_block(test->attrs, "test_global");
-	}
-
-	if (attrs.count("no_snapshots")) {
-		if (attrs.at("no_snapshots").get<bool>()) {
-			test->snapshots_needed = false;
-		}
-	}
-
-	if (attrs.count("description")) {
-		test->description = attrs.at("description").get<std::string>();
-	}
-
-	visit_command_block(test->cmd_block);
-
-	//Now that we've checked that all commands are ligit we could check that
-	//all parents have totally separate vms. We can't do that before command block because
-	//a user may specify unexisting vmc in some command and we need to catch that before that hierarchy check
-
-	std::vector<std::set<std::shared_ptr<VmController>>> parents_subtries;
-
-	//populate our parents paths
-	for (auto parent: test->parents) {
-		parents_subtries.push_back(reg->get_all_vmcs(parent));
-	}
-
-	//check that parents path are independent
-	for (size_t i = 0; i < parents_subtries.size(); ++i) {
-		for (size_t j = 0; j < parents_subtries.size(); ++j) {
-			if (i == j) {
-				continue;
-			}
-
-			std::vector<std::shared_ptr<VmController>> intersection;
-
-			std::set_intersection(
-				parents_subtries[i].begin(), parents_subtries[i].end(),
-				parents_subtries[j].begin(), parents_subtries[j].end(),
-				std::back_inserter(intersection));
-
-			if (intersection.size() != 0) {
-				throw std::runtime_error(std::string(test->begin()) + ":Error: some parents have common vms");
-			}
-		}
-	}
+	current_test = test;
+	StackPusher<VisitorSemantic> new_ctx(this, test->stack);
+	visit_command_block(test->ast_node->cmd_block);
+	current_test = nullptr;
 }
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
@@ -452,15 +255,27 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 }
 
 void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	std::set<std::shared_ptr<VmController>> unique_vmcs;
+	std::set<std::shared_ptr<IR::Machine>> unique_vmcs;
 	for (auto vm_token: cmd->vms) {
-		auto vmc = reg->vmcs.find(vm_token.value());
-		if (vmc == reg->vmcs.end()) {
+		auto vmc = IR::program->get_machine_or_null(vm_token.value());
+		if (!vmc) {
 			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: unknown vitrual machine name: " + vm_token.value());
 		}
 
-		if (!unique_vmcs.insert(vmc->second).second) {
+		if (!unique_vmcs.insert(vmc).second) {
 			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: this vmc was already specified in the virtual machines list: " + vm_token.value());
+		}
+
+		visit_machine(vmc);
+		if (vmc->config.count("nic")) {
+			auto nics = vmc->config.at("nic");
+			for (auto& nic: nics) {
+				if (nic.count("attached_to")) {
+					std::string network_name = nic.at("attached_to");
+					auto network = IR::program->get_network_or_throw(network_name); // TODO нету токена позиции, ошибка неинформативная
+					visit_network(network);
+				}
+			}
 		}
 	}
 
@@ -633,9 +448,11 @@ void VisitorSemantic::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
 
 void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
 	if (plug->type.value() == "flash") {
-		if (reg->fdcs.find(plug->name_token.value()) == reg->fdcs.end()) {
+		auto flash_drive = IR::program->get_flash_drive_or_null(plug->name_token.value());
+		if (!flash_drive) {
 			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
 		}
+		visit_flash(flash_drive);
 	}
 }
 
@@ -670,9 +487,9 @@ void VisitorSemantic::validate_js(const std::string& script) {
 void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
 	std::string query = "";
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
-		auto text = template_parser.resolve(p->text(), reg);
+		auto text = template_parser.resolve(p->text(), stack);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		auto script = template_parser.resolve(p->text(), reg);
+		auto script = template_parser.resolve(p->text(), stack);
 		try {
 			validate_js(script);
 		} catch (const std::exception& error) {
@@ -699,43 +516,45 @@ void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
 }
 
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+	auto macro = IR::program->get_macro_or_null(macro_call->name().value());
+	if (!macro) {
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: Unknown macro: " + macro_call->name().value());
+	}
+
+	visit_macro(macro);
+
 	uint32_t args_with_default = 0;
 
-	for (auto arg: macro_call->macro->args) {
+	for (auto arg: macro->ast_node->args) {
 		if (arg->default_value) {
 			args_with_default++;
 		}
 	}
 
-	if (macro_call->args.size() < macro_call->macro->args.size() - args_with_default) {
+	if (macro_call->args.size() < macro->ast_node->args.size() - args_with_default) {
 		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_call->begin()),
-			macro_call->macro->args.size() - args_with_default, macro_call->args.size()));
+			macro->ast_node->args.size() - args_with_default, macro_call->args.size()));
 	}
 
-	if (macro_call->args.size() > macro_call->macro->args.size()) {
+	if (macro_call->args.size() > macro->ast_node->args.size()) {
 		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_call->begin()),
-			macro_call->macro->args.size(), macro_call->args.size()));
+			macro->ast_node->args.size(), macro_call->args.size()));
 	}
 
-	//push new ctx
-	StackEntry new_ctx(true);
+	std::map<std::string, std::string> vars;
 
 	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
 	}
 
-	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
+		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
 	}
 
-	reg->local_vars.push_back(new_ctx);
-	coro::Finally finally([&] {
-		reg->local_vars.pop_back();
-	});
-
-	visit_action_block(macro_call->macro->action_block->action);
+	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
+	visit_action_block(macro->ast_node->action_block->action);
 }
 
 void VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
@@ -773,7 +592,7 @@ void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) 
 }
 
 void VisitorSemantic::visit_range(std::shared_ptr<AST::Range> range) {
-	std::string r1 = template_parser.resolve(range->r1->text(), reg);
+	std::string r1 = template_parser.resolve(range->r1->text(), stack);
 	std::string r2;
 
 	try {
@@ -783,7 +602,7 @@ void VisitorSemantic::visit_range(std::shared_ptr<AST::Range> range) {
 	}
 
 	if (range->r2) {
-		r2 = template_parser.resolve(range->r2->text(), reg);
+		r2 = template_parser.resolve(range->r2->text(), stack);
 		try {
 			range->r2_num = std::stoul(r2);
 		} catch (const std::exception& error) {
@@ -804,15 +623,13 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 		throw std::runtime_error("Unknown counter list type");
 	}
 
-	StackEntry new_ctx(false);
-	reg->local_vars.push_back(new_ctx);
-	size_t ctx_position = reg->local_vars.size() - 1;
-	coro::Finally finally([&]{
-		reg->local_vars.pop_back();
-	});
-
+	std::map<std::string, std::string> vars;
 	for (auto i: for_clause->counter_list->values()) {
-		reg->local_vars[ctx_position].define(for_clause->counter.value(), i);
+		vars[for_clause->counter.value()] = i;
+		auto new_stack = std::make_shared<StackNode>();
+		new_stack->parent = stack;
+		new_stack->vars = vars;
+		StackPusher<VisitorSemantic> new_ctx(this, new_stack);
 		visit_action(for_clause->cycle_body);
 	}
 
@@ -821,67 +638,50 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 	}
 }
 
-void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controller) {
-	if (controller->t.type() == Token::category::machine) {
-		return visit_machine(controller);
-	} else if (controller->t.type() == Token::category::flash) {
-		return visit_flash(controller);
-	} else if (controller->t.type() == Token::category::network) {
-		return visit_network(controller);
-	} else {
-		throw std::runtime_error("Unknown controller type");
-	}
-}
+void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
+	current_test->mentioned_machines.insert(machine);
 
-
-void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
-	bool is_used = false;
-	for (auto test: tests_queue) {
-		auto machines = test->get_all_vm_names();
-		if (machines.find(machine->name.value()) != machines.end()) {
-			is_used = true;
-			break;
-		}
-	}
-
-	if (!is_used) {
+	auto result = visited_machines.insert(machine);
+	if (!result.second) {
 		return;
 	}
 
-	auto config = visit_attr_block(machine->attr_block, "vm_global");
-	config["prefix"] = prefix;
-	config["name"] = machine->name.value();
-	config["src_file"] = machine->name.begin().file.generic_string();
+	StackPusher<VisitorSemantic> new_ctx(this, machine->stack);
 
-	if (config.count("iso")) {
-		fs::path iso_file = config.at("iso").get<std::string>();
+	machine->config = visit_attr_block(machine->ast_node->attr_block, "vm_global");
+	machine->config["prefix"] = prefix;
+	machine->config["name"] = machine->name();
+	machine->config["src_file"] = machine->ast_node->name.begin().file.generic_string();
+
+	if (machine->config.count("iso")) {
+		fs::path iso_file = machine->config.at("iso").get<std::string>();
 		if (iso_file.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
+			fs::path src_file(machine->config.at("src_file").get<std::string>());
 			iso_file = src_file.parent_path() / iso_file;
 		}
 
 		if (!fs::exists(iso_file)) {
-			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
+			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name(), iso_file.generic_string()));
 		}
 
 		iso_file = fs::canonical(iso_file);
 
-		config["iso"] = iso_file.generic_string();
+		machine->config["iso"] = iso_file.generic_string();
 	}
 
-	if (config.count("disk")) {
-		auto& disks = config.at("disk");
+	if (machine->config.count("disk")) {
+		auto& disks = machine->config.at("disk");
 
 		for (auto& disk: disks) {
 			if (disk.count("source")) {
 				fs::path source_file = disk.at("source").get<std::string>();
 				if (source_file.is_relative()) {
-					fs::path src_file(config.at("src_file").get<std::string>());
+					fs::path src_file(machine->config.at("src_file").get<std::string>());
 					source_file = src_file.parent_path() / source_file;
 				}
 
 				if (!fs::exists(source_file)) {
-					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", machine->name.value(), source_file.generic_string()));
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", machine->name(), source_file.generic_string()));
 				}
 
 				source_file = fs::canonical(source_file);
@@ -889,56 +689,44 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 			}
 		}
 	}
-
-	auto vmc = env->create_vm_controller(config);
-	reg->vmcs.emplace(std::make_pair(machine->name, vmc));
-
-	//additional check that all the networks are defined earlier
-	for (auto network: vmc->vm->networks()) {
-		if (reg->netcs.find(network) == reg->netcs.end()) {
-			throw std::runtime_error(std::string(machine->begin()) + ": Error: specified network " + network + " is not defined");
-		}
-	}
 }
 
-void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
-	bool is_used = false;
-	for (auto test: tests_queue) {
-		auto fds = test->get_all_fd_names();
-		if (fds.find(flash->name.value()) != fds.end()) {
-			is_used = true;
-			break;
-		}
-	}
+void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
+	current_test->mentioned_flash_drives.insert(flash);
 
-	if (!is_used) {
+	auto result = visited_flash_drives.insert(flash);
+	if (!result.second) {
 		return;
 	}
 
+	StackPusher<VisitorSemantic> new_ctx(this, flash->stack);
+
 	//no need to check for duplicates
 	//It's already done in Parser while registering Controller
-	auto config = visit_attr_block(flash->attr_block, "fd_global");
-	config["prefix"] = prefix;
-	config["name"] = flash->name.value();
-	config["src_file"] = flash->name.begin().file.generic_string();
+	flash->config = visit_attr_block(flash->ast_node->attr_block, "fd_global");
+	flash->config["prefix"] = prefix;
+	flash->config["name"] = flash->name();
+	flash->config["src_file"] = flash->ast_node->name.begin().file.generic_string();
 
-	auto fdc = env->create_flash_drive_controller(config);
-
-	if (fdc->fd->has_folder()) {
-		fdc->fd->validate_folder();
+	if (flash->has_folder()) {
+		flash->validate_folder();
 	}
-
-	reg->fdcs.emplace(std::make_pair(flash->name, fdc));
 }
 
-void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
-	auto config = visit_attr_block(network->attr_block, "network_global");
-	config["prefix"] = prefix;
-	config["name"] = network->name.value();
-	config["src_file"] = network->name.begin().file.generic_string();
+void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
+	current_test->mentioned_networks.insert(network);
 
-	auto netc = env->create_network_controller(config);
-	reg->netcs.emplace(std::make_pair(network->name, netc));
+	auto result = visited_networks.insert(network);
+	if (!result.second) {
+		return;
+	}
+
+	StackPusher<VisitorSemantic> new_ctx(this, network->stack);
+
+	network->config = visit_attr_block(network->ast_node->attr_block, "network_global");
+	network->config["prefix"] = prefix;
+	network->config["name"] = network->name();
+	network->config["src_file"] = network->ast_node->name.begin().file.generic_string();
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {
@@ -985,7 +773,7 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	}
 
 	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::StringAttr>>(attr->value)) {
-		auto value = template_parser.resolve(p->attr_value->value->text(), reg);
+		auto value = template_parser.resolve(p->attr_value->value->text(), stack);
 		config[attr->name.value()] = value;
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
 		auto value = p->attr_value->value;

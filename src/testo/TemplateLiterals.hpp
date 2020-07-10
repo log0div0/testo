@@ -1,6 +1,8 @@
 
 #pragma once
-#include "Register.hpp"
+
+#include "Stack.hpp"
+#include <vector>
 
 namespace template_literals {
 
@@ -101,7 +103,8 @@ private:
 struct Parser {
 	Parser() = default;
 
-	std::string resolve(const std::string& input, std::shared_ptr<Register> reg);
+	std::string resolve(const std::string& input, const std::shared_ptr<StackNode>& stack);
+
 	void validate_sanity(const std::string& input);
 
 
@@ -110,7 +113,6 @@ private:
 	Pos current_pos;
 
 	std::vector<Token> tokenize();
-	std::string resolve_var(const std::string& var, std::shared_ptr<Register> reg);
 
 	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input.length()); }
 	bool test_escaped() const;
@@ -118,6 +120,5 @@ private:
 	bool test_id(size_t shift = 0) const;
 	Token var_ref();
 };
-
 
 }

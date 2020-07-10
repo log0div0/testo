@@ -1,26 +1,30 @@
 
-#include "VmController.hpp"
-#include "Environment.hpp"
-#include "coro/Timer.h"
-#include <fmt/format.h>
+#include "Machine.hpp"
+#include "../backends/Environment.hpp"
+#include <coro/Timer.h>
 
-std::string VmController::id() const {
-	return vm->id();
+namespace IR {
+
+std::shared_ptr<::VM> Machine::vm() const {
+	if (!_vm) {
+		_vm = env->create_vm(config);
+	}
+	return _vm;
 }
 
-std::string VmController::name() const {
-	return vm->name();
+std::string Machine::type() const {
+	return "virtual machine";
 }
 
-std::string VmController::prefix() const {
-	return vm->prefix();
+std::string Machine::id() const {
+	return vm()->id();
 }
 
-bool VmController::is_defined() const {
-	return Controller::is_defined() && vm->is_defined();
+bool Machine::is_defined() const {
+	return Controller::is_defined() && vm()->is_defined();
 }
 
-void VmController::create() {
+void Machine::create() {
 	try {
 		undefine();
 
@@ -30,9 +34,9 @@ void VmController::create() {
 			}
 		}
 
-		vm->install();
+		vm()->install();
 
-		auto config = vm->get_config();
+		auto vm_config = config;
 
 		nlohmann::json metadata;
 
@@ -40,20 +44,18 @@ void VmController::create() {
 			throw std::runtime_error("Error creating metadata dir " + get_metadata_dir().generic_string());
 		}
 
+		vm_config.erase("src_file");
+		vm_config.erase("metadata");
 
-		config.erase("src_file");
-		config.erase("metadata");
+		metadata["vm_config"] = vm_config.dump();
 
-		metadata["vm_config"] = config.dump();
-		metadata["current_state"] = "";
-
-		if (config.count("iso")) {
-			fs::path iso_file = config.at("iso").get<std::string>();
+		if (vm_config.count("iso")) {
+			fs::path iso_file = vm_config.at("iso").get<std::string>();
 			metadata["iso_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
 		}
 
-		if (config.count("disk")) {
-			for (auto& disk: config.at("disk")) {
+		if (vm_config.count("disk")) {
+			for (auto& disk: vm_config.at("disk")) {
 				if (disk.count("source")) {
 					std::string signature_name = std::string("disk_signature@") + disk.at("name").get<std::string>();
 					metadata[signature_name] = file_signature(disk.at("source").get<std::string>(), env->content_cksum_maxsize());
@@ -67,10 +69,10 @@ void VmController::create() {
 	}
 }
 
-void VmController::undefine() {
+void Machine::undefine() {
 	try {
 		auto metadata_dir = get_metadata_dir();
-		if (!vm->is_defined()) {
+		if (!vm()->is_defined()) {
 			if (fs::exists(metadata_dir)) {
 				//The check would be valid only if we have the main file
 
@@ -85,7 +87,7 @@ void VmController::undefine() {
 			delete_snapshot_with_children("_init");
 		}
 
-		vm->undefine();
+		vm()->undefine();
 
 		if (!fs::remove_all(metadata_dir)) {
 			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
@@ -95,10 +97,10 @@ void VmController::undefine() {
 	}
 }
 
-void VmController::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
+void Machine::create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed)
 {
 	try {
-		if (hypervisor_snapshot_needed && vm->is_flash_plugged(nullptr)) {
+		if (hypervisor_snapshot_needed && vm()->is_flash_plugged(nullptr)) {
 			throw std::runtime_error("Can't take hypervisor snapshot with a flash drive plugged in. Please unplug the flash drive before the end of the test");
 		}
 
@@ -116,14 +118,12 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 
 		//1) Let's try and create the actual snapshot. If we fail then no additional work
 		if (hypervisor_snapshot_needed) {
-			vm->make_snapshot(snapshot);
+			vm()->make_snapshot(snapshot);
 		}
 
 		//Where to store new metadata file?
 		fs::path metadata_file = get_metadata_dir();
-		metadata_file /= vm->id() + "_" + snapshot;
-
-		auto current_state = get_metadata("current_state");
+		metadata_file /= vm()->id() + "_" + snapshot;
 
 		nlohmann::json metadata;
 		metadata["cksum"] = cksum;
@@ -134,7 +134,7 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 		//link parent to a child
 		if (current_state.length()) {
 			fs::path parent_metadata_file = get_metadata_dir();
-			parent_metadata_file /= vm->id() + "_" + current_state;
+			parent_metadata_file /= vm()->id() + "_" + current_state;
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			parent_metadata.at("children").push_back(snapshot);
 			write_metadata_file(parent_metadata_file, parent_metadata);
@@ -144,18 +144,18 @@ void VmController::create_snapshot(const std::string& snapshot, const std::strin
 	}
 }
 
-void VmController::restore_snapshot(const std::string& snapshot) {
-	vm->rollback(snapshot);
-	set_metadata("current_state", snapshot);
+void Machine::restore_snapshot(const std::string& snapshot) {
+	vm()->rollback(snapshot);
+	current_state = snapshot;
 }
 
-void VmController::delete_snapshot_with_children(const std::string& snapshot)
+void Machine::delete_snapshot_with_children(const std::string& snapshot)
 {
 	try {
 		//This thins needs to be recursive
 		//I guess... go through the children and call recursively on them
 		fs::path metadata_file = get_metadata_dir();
-		metadata_file /= vm->id() + "_" + snapshot;
+		metadata_file /= vm()->id() + "_" + snapshot;
 
 		auto metadata = read_metadata_file(metadata_file);
 
@@ -166,8 +166,8 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 		//Now we're at the bottom of the hierarchy
 		//Delete the hypervisor child if we have one
 
-		if (vm->has_snapshot(snapshot)) {
-			vm->delete_snapshot(snapshot);
+		if (vm()->has_snapshot(snapshot)) {
+			vm()->delete_snapshot(snapshot);
 		}
 
 		//Ok, now we need to get our parent
@@ -176,7 +176,7 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 		//Unlink the parent
 		if (parent.length()) {
 			fs::path parent_metadata_file = get_metadata_dir();
-			parent_metadata_file /= vm->id() + "_" + parent;
+			parent_metadata_file /= vm()->id() + "_" + parent;
 
 			auto parent_metadata = read_metadata_file(parent_metadata_file);
 			auto& children = parent_metadata.at("children");
@@ -200,9 +200,9 @@ void VmController::delete_snapshot_with_children(const std::string& snapshot)
 	}
 }
 
-bool VmController::check_config_relevance() {
+bool Machine::check_config_relevance() {
 	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
-	auto new_config = vm->get_config();
+	auto new_config = config;
 	//So....
 
 	//1)Check if both have or don't have nics
@@ -222,7 +222,7 @@ bool VmController::check_config_relevance() {
 		if (!has_key("iso_signature")) {
 			return false;
 		}
-		
+
 		fs::path iso_file = new_config.at("iso").get<std::string>();
 		if (file_signature(iso_file, env->content_cksum_maxsize()) != get_metadata("iso_signature")) {
 			return false;
@@ -260,32 +260,32 @@ bool VmController::check_config_relevance() {
 	return old_config == new_config;
 }
 
-fs::path VmController::get_metadata_dir() const {
+fs::path Machine::get_metadata_dir() const {
 	return env->vm_metadata_dir() / id();
 }
 
-void VmController::press(const std::vector<std::string>& buttons) {
+void Machine::press(const std::vector<std::string>& buttons) {
 	for (auto& button: buttons) {
 		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
 			throw std::runtime_error("You can't press an already held button: " + button);
 		}
 	}
 
-	vm->press(buttons);
+	vm()->press(buttons);
 }
 
-void VmController::hold(const std::vector<std::string>& buttons) {
+void Machine::hold(const std::vector<std::string>& buttons) {
 	for (auto& button: buttons) {
 		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
 			throw std::runtime_error("You can't hold an already held button: " + button);
 		}
 	}
 
-	vm->hold(buttons);
+	vm()->hold(buttons);
 	std::copy(buttons.begin(), buttons.end(), std::inserter(current_held_keyboard_buttons, current_held_keyboard_buttons.end()));
 }
 
-void VmController::release(const std::vector<std::string>& buttons) {
+void Machine::release(const std::vector<std::string>& buttons) {
 	if (!current_held_keyboard_buttons.size()) {
 		throw std::runtime_error("There is no held buttons to release");
 	}
@@ -296,24 +296,24 @@ void VmController::release(const std::vector<std::string>& buttons) {
 		}
 	}
 
-	vm->release(buttons);
+	vm()->release(buttons);
 
 	for (auto& button: buttons) {
 		current_held_keyboard_buttons.erase(button);
 	}
 }
 
-void VmController::release() {
+void Machine::release() {
 	if (!current_held_keyboard_buttons.size()) {
 		throw std::runtime_error("There is no held buttons to release");
 	}
 
 	std::vector<std::string> buttons_to_release(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end());
-	vm->release(buttons_to_release);
+	vm()->release(buttons_to_release);
 	current_held_keyboard_buttons.clear();
 }
 
-void VmController::mouse_press(const std::vector<MouseButton>& buttons) {
+void Machine::mouse_press(const std::vector<MouseButton>& buttons) {
 	if (buttons.size() > 1) {
 		throw std::runtime_error("Can't press more than 1 mouse button");
 	}
@@ -322,13 +322,13 @@ void VmController::mouse_press(const std::vector<MouseButton>& buttons) {
 		throw std::runtime_error("Can't press a mouse button with any already held mouse buttons");
 	}
 
-	vm->mouse_hold(buttons);
+	vm()->mouse_hold(buttons);
 	coro::Timer timer;
 	timer.waitFor(std::chrono::milliseconds(20));
-	vm->mouse_release(buttons);
+	vm()->mouse_release(buttons);
 }
 
-void VmController::mouse_hold(const std::vector<MouseButton>& buttons) {
+void Machine::mouse_hold(const std::vector<MouseButton>& buttons) {
 	if (buttons.size() > 1) {
 		throw std::runtime_error("Can't hold more than 1 mouse button");
 	}
@@ -337,16 +337,18 @@ void VmController::mouse_hold(const std::vector<MouseButton>& buttons) {
 		throw std::runtime_error("Can't hold a mouse button: there is an already held mouse button");
 	}
 
-	vm->mouse_hold(buttons);
+	vm()->mouse_hold(buttons);
 	current_held_mouse_button = buttons[0];
 }
 
-void VmController::mouse_release() {
+void Machine::mouse_release() {
 	if (current_held_mouse_button == MouseButton::None) {
 		throw std::runtime_error("Can't release any mouse button: there is no held mouse buttons");
 	}
 
-	vm->mouse_release({current_held_mouse_button});
+	vm()->mouse_release({current_held_mouse_button});
 	current_held_mouse_button = MouseButton::None;
 }
 
+
+}

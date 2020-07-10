@@ -11,7 +11,7 @@ if (UNIX AND NOT APPLE)
 list(APPEND SRC_DIRS "backends/qemu/*.cpp")
 endif()
 
-list(APPEND SRC_DIRS "tql/*.cpp")
+list(APPEND SRC_DIRS "IR/*.cpp")
 
 file(GLOB SRCS ${SRC_DIRS})
 

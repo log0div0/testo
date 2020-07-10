@@ -1,13 +1,56 @@
 
 #include "Parser.hpp"
 #include "Utils.hpp"
-#include "TemplateParser.hpp"
-#include "Register.hpp"
+#include "TemplateLiterals.hpp"
 #include <fstream>
+#include <fmt/format.h>
 
 using namespace AST;
 
-Parser::Parser(std::shared_ptr<Register> reg, const fs::path& file, const std::string& input): reg(reg)
+std::string generate_script(const fs::path& folder, const fs::path& current_prefix = ".") {
+	std::string result("");
+	for (auto& file: fs::directory_iterator(folder)) {
+		if (fs::is_regular_file(file)) {
+			if (fs::path(file).extension() == ".testo") {
+				result += fmt::format("include \"{}\"\n", fs::path(current_prefix / fs::path(file).filename()).generic_string());
+			}
+		} else if (fs::is_directory(file)) {
+			result += generate_script(file, current_prefix / fs::path(file).filename());
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
+		}
+	}
+
+	return result;
+}
+
+Parser Parser::load_dir(const fs::path& dir) {
+	return Parser(dir, generate_script(dir));
+}
+
+Parser Parser::load_file(const fs::path& file) {
+	std::ifstream input_stream(file);
+
+	if (!input_stream) {
+		throw std::runtime_error("Can't open file: " + file.generic_string());
+	}
+
+	std::string input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
+
+	return Parser(file, input);
+}
+
+Parser Parser::load(const fs::path& path) {
+	if (fs::is_regular_file(path)) {
+		return load_file(path);
+	} else if (fs::is_directory(path)) {
+		return load_dir(path);
+	} else {
+		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + path.generic_string());
+	}
+}
+
+Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
@@ -277,12 +320,6 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	auto commands = command_block();
 	auto stmt = std::shared_ptr<Test>(new Test(attrs, test, name, parents, commands));
 
-	auto inserted = reg->tests.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: test \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
-
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 
@@ -335,12 +372,6 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, actions));
 
-	auto inserted = reg->macros.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: macro \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
-
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
 
@@ -354,12 +385,6 @@ std::shared_ptr<Stmt<Param>> Parser::param() {
 	auto value = string();
 
 	auto stmt = std::shared_ptr<Param>(new Param(param_token, name, value));
-
-	auto inserted = reg->param_nodes.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: param \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
 
 	return std::shared_ptr<Stmt<Param>>(new Stmt<Param>(stmt));
 }
@@ -453,12 +478,6 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 	}
 	auto block = attr_block();
 	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
-
-	auto inserted = reg->controllers.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: entity \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
 
 	return std::shared_ptr<AST::Stmt<AST::Controller>>(new AST::Stmt<AST::Controller>(stmt));
 }

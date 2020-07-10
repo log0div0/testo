@@ -1,19 +1,20 @@
 
 #include "VisitorCksum.hpp"
 #include "backends/Environment.hpp"
-#include "coro/Finally.h"
+#include "IR/Program.hpp"
 #include <algorithm>
 
-uint64_t VisitorCksum::visit(std::shared_ptr<AST::Test> test) {
-	std::string result = test->name.value();
+uint64_t VisitorCksum::visit(std::shared_ptr<IR::Test> test) {
+	std::string result = test->name();
 
 	for (auto parent: test->parents) {
-		result += parent->name.value();
+		result += parent->name();
 	}
 
-	result += test->snapshots_needed;
+	result += test->snapshots_needed();
 
-	for (auto cmd: test->cmd_block->commands) {
+	StackPusher<VisitorCksum> pusher(this, test->stack);
+	for (auto cmd: test->ast_node->cmd_block->commands) {
 		result += visit_cmd(cmd);
 	}
 
@@ -26,33 +27,32 @@ std::string VisitorCksum::visit_cmd(std::shared_ptr<AST::Cmd> cmd) {
 
 	for (auto vm_token: cmd->vms) {
 		result += vm_token.value();
-		auto vmc = reg->vmcs.find(vm_token);
-		result += visit_action(vmc->second, cmd->action);
+		result += visit_action(cmd->action);
 	}
 	return result;
 }
 
-std::string VisitorCksum::visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ActionBlock> action_block) {
+std::string VisitorCksum::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	std::string result("BLOCK");
 	for (auto action: action_block->actions) {
-		result += visit_action(vmc, action);
+		result += visit_action(action);
 	}
 	return result;
 }
 
-std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action) {
+std::string VisitorCksum::visit_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		return visit_abort(vmc, p->action);
+		return visit_abort(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		return visit_print(vmc, p->action);
+		return visit_print(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		return visit_type(vmc, p->action);
+		return visit_type({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		return visit_wait(vmc, p->action);
+		return visit_wait({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
 		return std::string(*(p->action));
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		return visit_press(vmc, p->action);
+		return visit_press({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
 		return std::string(*p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
@@ -60,27 +60,27 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
 		return visit_mouse(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		return visit_plug(vmc, p->action);
+		return visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		return visit_shutdown(vmc, p->action);
+		return visit_shutdown(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
 		return "start";
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
 		return "stop";
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		return visit_exec(vmc, p->action);
+		return visit_exec({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		return visit_copy(vmc, p->action);
+		return visit_copy({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(vmc, p->action);
+		return visit_macro_call(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		return visit_if_clause(vmc, p->action);
+		return visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		return visit_for_clause(vmc, p->action);
+		return visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		return p->action->t.value();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		return visit_action_block(vmc, p->action);
+		return visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		return "";
 	} else {
@@ -88,57 +88,36 @@ std::string VisitorCksum::visit_action(std::shared_ptr<VmController> vmc, std::s
 	}
 }
 
-std::string VisitorCksum::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
+std::string VisitorCksum::visit_abort(std::shared_ptr<AST::Abort> abort) {
 	std::string result("abort");
-	result += template_parser.resolve(abort->message->text(), reg);
+	result += template_parser.resolve(abort->message->text(), stack);
 	return result;
 }
 
-std::string VisitorCksum::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print) {
+std::string VisitorCksum::visit_print(std::shared_ptr<AST::Print> print) {
 	std::string result("print");
-	result += template_parser.resolve(print->message->text(), reg);
+	result += template_parser.resolve(print->message->text(), stack);
 	return result;
 }
 
-std::string VisitorCksum::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
-	std::string result = std::string(*press);
-	if (!press->interval) {
-		auto press_interval_found = reg->params.find("TESTO_PRESS_DEFAULT_INTERVAL");
-		result += (press_interval_found != reg->params.end()) ? press_interval_found->second : "30ms";
-	}
+std::string VisitorCksum::visit_press(const IR::Press& press) {
+	std::string result = std::string(*press.ast_node);
+	result += press.interval();
 	return result;
 }
 
-std::string VisitorCksum::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
+std::string VisitorCksum::visit_type(const IR::Type& type) {
 	std::string result("type");
-	result += template_parser.resolve(type->text->text(), reg);
-	if (type->interval) {
-		result += type->interval.value();
-	} else {
-		auto type_interval_found = reg->params.find("TESTO_TYPE_DEFAULT_INTERVAL");
-		result += (type_interval_found != reg->params.end()) ? type_interval_found->second : "30ms";
-	}
+	result += type.text();;
+	result += type.interval();
 	return result;
 }
 
-std::string VisitorCksum::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
+std::string VisitorCksum::visit_wait(const IR::Wait& wait) {
 	std::string result = "wait";
-	result += template_parser.resolve(std::string(*wait->select_expr), reg);
-
-	if (wait->timeout) {
-		result += wait->timeout.value();
-	} else {
-		auto wait_timeout_found = reg->params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
-		result += (wait_timeout_found != reg->params.end()) ? wait_timeout_found->second : "1m";
-	}
-
-	if (wait->interval) {
-		result += wait->interval.value();
-	} else {
-		auto wait_interval_found = reg->params.find("TESTO_WAIT_DEFAULT_INTERVAL");
-		result += (wait_interval_found != reg->params.end()) ? wait_interval_found->second : "1s";
-	}
-
+	result += template_parser.resolve(std::string(*wait.ast_node->select_expr), wait.stack);
+	result += wait.timeout();
+	result += wait.interval();
 	return result;
 }
 
@@ -170,19 +149,14 @@ std::string VisitorCksum::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveC
 }
 
 
-std::string VisitorCksum::visit_mouse_selectable(std::shared_ptr<AST::MouseSelectable> mouse_selectable) {
-	std::string result = template_parser.resolve(mouse_selectable->text(), reg);
+std::string VisitorCksum::visit_mouse_selectable(const IR::MouseSelectable& mouse_selectable) {
+	std::string result = template_parser.resolve(mouse_selectable.ast_node->text(), mouse_selectable.stack);
 
-	for (auto specifier: mouse_selectable->specifiers) {
+	for (auto specifier: mouse_selectable.ast_node->specifiers) {
 		result += std::string(*specifier);
 	}
 
-	if (mouse_selectable->timeout) {
-		result += mouse_selectable->timeout.value();
-	} else {
-		auto mouse_move_click_timeout_found = reg->params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
-		result += (mouse_move_click_timeout_found != reg->params.end()) ? mouse_move_click_timeout_found->second : "1m";
-	}
+	result += mouse_selectable.timeout();
 
 	return result;
 }
@@ -192,7 +166,7 @@ std::string VisitorCksum::visit_mouse_move_target(std::shared_ptr<AST::IMouseMov
 	if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(target)) {
 		result = std::string(*p->target);
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(target)) {
-		result = visit_mouse_selectable(p->target);
+		result = visit_mouse_selectable({p->target, stack});
 	} else {
 		throw std::runtime_error("Unknown mouse even object");
 	}
@@ -207,13 +181,13 @@ std::string VisitorCksum::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec)
 	return result;
 }
 
-std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
+std::string VisitorCksum::visit_plug(std::shared_ptr<AST::Plug> plug) {
 	std::string result("plug");
 	result += std::to_string(plug->is_on());
 	result += plug->type.value();
 	result += plug->name_token.value();
 	if (plug->path) { //only for dvd
-		fs::path path = template_parser.resolve(plug->path->text(), reg);
+		fs::path path = template_parser.resolve(plug->path->text(), stack);
 		if (path.is_relative()) {
 			path = plug->t.begin().file.parent_path() / path;
 		}
@@ -224,7 +198,7 @@ std::string VisitorCksum::visit_plug(std::shared_ptr<VmController> vmc, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::shared_ptr<AST::Shutdown> shutdown) {
+std::string VisitorCksum::visit_shutdown(std::shared_ptr<AST::Shutdown> shutdown) {
 	std::string result("shutdown");
 	if (shutdown->time_interval) {
 		result += shutdown->time_interval.value();
@@ -234,36 +208,26 @@ std::string VisitorCksum::visit_shutdown(std::shared_ptr<VmController>, std::sha
 	return result;
 }
 
-std::string VisitorCksum::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
+std::string VisitorCksum::visit_exec(const IR::Exec& exec) {
 	std::string result("exec");
 
-	result += exec->process_token.value();
-	result += template_parser.resolve(exec->commands->text(), reg);
-
-	if (exec->time_interval) {
-		result += exec->time_interval.value();
-	} else {
-		auto exec_default_timeout_found = reg->params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
-		result += (exec_default_timeout_found != reg->params.end()) ? exec_default_timeout_found->second : "10m";
-	}
+	result += exec.ast_node->process_token.value();
+	result += exec.text();
+	result += exec.timeout();
 
 	return result;
 }
 
-std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
-	std::string result(copy->t.value());
+std::string VisitorCksum::visit_copy(const IR::Copy& copy) {
+	std::string result(copy.ast_node->t.value());
 
-	fs::path from = template_parser.resolve(copy->from->text(), reg);
+	std::string from = copy.from();
 
-	if (from.is_relative()) {
-		from = copy->t.begin().file.parent_path() / from;
-	}
+	result += from;
 
-	result += from.generic_string();
-
-	if (copy->is_to_guest()) {
+	if (copy.ast_node->is_to_guest()) {
 		if (!fs::exists(from)) {
-			throw std::runtime_error("Specified path doesn't exist: " + fs::path(from).generic_string());
+			throw std::runtime_error("Specified path doesn't exist: " + from);
 		}
 
 		//now we should take care of last modify date of every file and folder in the folder
@@ -272,58 +236,44 @@ std::string VisitorCksum::visit_copy(std::shared_ptr<VmController> vmc, std::sha
 		} else if (fs::is_directory(from)) {
 			result += directory_signature(from, env->content_cksum_maxsize());
 		} else {
-			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
+			throw std::runtime_error("Unknown type of file: " + from);
 		}
 	} //TODO: I wonder what it must be for the from copy
 
-	fs::path to = template_parser.resolve(copy->to->text(), reg);
-
-	if (to.is_relative()) {
-		to = copy->t.begin().file.parent_path() / to;
-	}
-
-	result += to.generic_string();
-
-	if (copy->time_interval) {
-		result += copy->time_interval.value();
-	} else {
-		auto copy_default_timeout_found = reg->params.find("TESTO_COPY_DEFAULT_TIMEOUT");
-		result += (copy_default_timeout_found != reg->params.end()) ? copy_default_timeout_found->second : "10m";
-	}
+	result += copy.to();
+	result += copy.timeout();
 
 	return result;
 }
 
-std::string VisitorCksum::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
-	StackEntry new_ctx(true);
+std::string VisitorCksum::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+	auto macro = IR::program->get_macro_or_throw(macro_call->name().value());
+
+	std::map<std::string, std::string> args;
 
 	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
+		args[macro->ast_node->args[i]->name()] = value;
 	}
 
-	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
+		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
+		args[macro->ast_node->args[i]->name()] = value;
 	}
 
-	reg->local_vars.push_back(new_ctx);
-	coro::Finally finally([&] {
-		reg->local_vars.pop_back();
-	});
-
-	return visit_action_block(vmc, macro_call->macro->action_block->action);
+	StackPusher<VisitorCksum> pusher(this, macro->new_stack(args));
+	return visit_action_block(macro->ast_node->action_block->action);
 }
 
-std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause) {
+std::string VisitorCksum::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
 	std::string result("if");
-	result += visit_expr(vmc, if_clause->expr);
+	result += visit_expr(if_clause->expr);
 
-	result += visit_action(vmc, if_clause->if_action);
+	result += visit_action(if_clause->if_action);
 
 	if (if_clause->has_else()) {
 		result += "else";
-		result += visit_action(vmc, if_clause->else_action);
+		result += visit_action(if_clause->else_action);
 	}
 
 	return result;
@@ -332,17 +282,17 @@ std::string VisitorCksum::visit_if_clause(std::shared_ptr<VmController> vmc, std
 std::string VisitorCksum::visit_range(std::shared_ptr<AST::Range> range) {
 	std::string result = "RANGE";
 
-	result += template_parser.resolve(range->r1->text(), reg);
+	result += template_parser.resolve(range->r1->text(), stack);
 
 	if (range->r2) {
 		result += " ";
-		result += template_parser.resolve(range->r2->text(), reg);
+		result += template_parser.resolve(range->r2->text(), stack);
 	}
 
 	return result;
 }
 
-std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause) {
+std::string VisitorCksum::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
 	std::string result("for");
 	//we should drop the counter from cksum
 
@@ -352,46 +302,46 @@ std::string VisitorCksum::visit_for_clause(std::shared_ptr<VmController> vmc, st
 		throw std::runtime_error("Unknown counter list");
 	}
 
-	result += visit_action(vmc, for_clause->cycle_body);
+	result += visit_action(for_clause->cycle_body);
 	if (for_clause->else_token) {
 		result += "else";
-		result += visit_action(vmc, for_clause->else_action);
+		result += visit_action(for_clause->else_action);
 	}
 	return result;
 }
 
-std::string VisitorCksum::visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr) {
+std::string VisitorCksum::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
-		return visit_binop(vmc, p->expr);
+		return visit_binop(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
-		return visit_factor(vmc, p->expr);
+		return visit_factor(p->expr);
 	} else {
 		throw std::runtime_error("Unknown expr type");
 	}
 }
 
-std::string VisitorCksum::visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop) {
+std::string VisitorCksum::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	std::string result("binop");
-	result += visit_expr(vmc, binop->left);
-	result += visit_expr(vmc, binop->right);
+	result += visit_expr(binop->left);
+	result += visit_expr(binop->right);
 
 	return result;
 }
 
-std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
+std::string VisitorCksum::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	std::string result("factor");
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
 		result += std::to_string(p->is_negated());
-		result += template_parser.resolve(p->factor->text(), reg);
+		result += template_parser.resolve(p->factor->text(), stack);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		result += std::to_string(p->is_negated());
-		result += visit_comparison(vmc, p->factor);
+		result += visit_comparison(p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		result += std::to_string(p->is_negated());
-		result += visit_check(vmc, p->factor);
+		result += visit_check({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
 		result += std::to_string(p->is_negated());
-		result += visit_expr(vmc, p->factor);
+		result += visit_expr(p->factor);
 	} else {
 		throw std::runtime_error("Unknown factor type");
 	}
@@ -399,31 +349,18 @@ std::string VisitorCksum::visit_factor(std::shared_ptr<VmController> vmc, std::s
 	return result;
 }
 
-std::string VisitorCksum::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
+std::string VisitorCksum::visit_comparison(std::shared_ptr<AST::Comparison> comparison) {
 	std::string result("comparison");
-	result += template_parser.resolve(comparison->left->text(), reg);
-	result += template_parser.resolve(comparison->right->text(), reg);
+	result += template_parser.resolve(comparison->left->text(), stack);
+	result += template_parser.resolve(comparison->right->text(), stack);
 	result += comparison->op().value();
 	return result;
 }
 
-std::string VisitorCksum::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
+std::string VisitorCksum::visit_check(const IR::Check& check) {
 	std::string result = "check";
-	result += template_parser.resolve(std::string(*check->select_expr), reg);
-
-	if (check->timeout) {
-		result += check->timeout.value();
-	} else {
-		auto check_timeout_found = reg->params.find("TESTO_CHECK_DEFAULT_TIMEOUT");
-		result += (check_timeout_found != reg->params.end()) ? check_timeout_found->second : "1ms";
-	}
-
-	if (check->interval) {
-		result += check->interval.value();
-	} else {
-		auto check_interval_found = reg->params.find("TESTO_CHECK_DEFAULT_INTERVAL");
-		result += (check_interval_found != reg->params.end()) ? check_interval_found->second : "1s";
-	}
-
+	result += template_parser.resolve(std::string(*check.ast_node->select_expr), check.stack);
+	result += check.timeout();
+	result += check.interval();
 	return result;
 }

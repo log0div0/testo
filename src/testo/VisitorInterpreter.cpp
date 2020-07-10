@@ -1,8 +1,8 @@
 
 #include "VisitorInterpreter.hpp"
 #include "VisitorCksum.hpp"
+#include "IR/Program.hpp"
 
-#include "coro/Finally.h"
 #include "coro/CheckPoint.h"
 #include "utf8.hpp"
 #include <fmt/format.h>
@@ -20,13 +20,11 @@ static void sleep(const std::string& interval) {
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
 }
 
-VisitorInterpreter::VisitorInterpreter(std::shared_ptr<Register> reg, const nlohmann::json& config): reg(reg) {
+VisitorInterpreter::VisitorInterpreter(const nlohmann::json& config) {
 	reporter = Reporter(config);
 
 	stop_on_fail = config.at("stop_on_fail").get<bool>();
 	assume_yes = config.at("assume_yes").get<bool>();
-	test_spec = config.at("test_spec").get<std::string>();
-	exclude = config.at("exclude").get<std::string>();
 	invalidate = config.at("invalidate").get<std::string>();
 
 	charmap.insert({
@@ -197,46 +195,19 @@ VisitorInterpreter::VisitorInterpreter(std::shared_ptr<Register> reg, const nloh
 		{"~", {"LEFTSHIFT", "GRAVE"}},
 		{" ", {"SPACE"}}
 	});
-
-	auto wait_timeout_found = reg->params.find("TESTO_WAIT_DEFAULT_TIMEOUT");
-	wait_default_timeout = (wait_timeout_found != reg->params.end()) ? wait_timeout_found->second : "1m";
-
-	auto wait_interval_found = reg->params.find("TESTO_WAIT_DEFAULT_INTERVAL");
-	wait_default_interval = (wait_interval_found != reg->params.end()) ? wait_interval_found->second : "1s";
-
-	auto check_timeout_found = reg->params.find("TESTO_CHECK_DEFAULT_TIMEOUT");
-	check_default_timeout = (check_timeout_found != reg->params.end()) ? check_timeout_found->second : "1ms";
-
-	auto check_interval_found = reg->params.find("TESTO_CHECK_DEFAULT_INTERVAL");
-	check_default_interval = (check_interval_found != reg->params.end()) ? check_interval_found->second : "1s";
-
-	auto mouse_move_click_timeout_found = reg->params.find("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
-	mouse_move_click_default_timeout = (mouse_move_click_timeout_found != reg->params.end()) ? mouse_move_click_timeout_found->second : "1m";
-
-	auto press_interval_found = reg->params.find("TESTO_PRESS_DEFAULT_INTERVAL");
-	press_default_interval = (press_interval_found != reg->params.end()) ? press_interval_found->second : "30ms";
-
-	auto type_interval_found = reg->params.find("TESTO_TYPE_DEFAULT_INTERVAL");
-	type_default_interval = (type_interval_found != reg->params.end()) ? type_interval_found->second : "30ms";
-
-	auto exec_default_timeout_found = reg->params.find("TESTO_EXEC_DEFAULT_TIMEOUT");
-	exec_default_timeout = (exec_default_timeout_found != reg->params.end()) ? exec_default_timeout_found->second : "10m";
-
-	auto copy_default_timeout_found = reg->params.find("TESTO_COPY_DEFAULT_TIMEOUT");
-	copy_default_timeout = (copy_default_timeout_found != reg->params.end()) ? copy_default_timeout_found->second : "10m";
 }
 
-bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
-	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
-	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
+bool VisitorInterpreter::parent_is_ok(std::shared_ptr<IR::Test> test, std::shared_ptr<IR::Test> parent,
+	std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
+	std::list<std::shared_ptr<IR::Test>>::reverse_iterator end)
 {
-	auto controllers = reg->get_all_controllers(test);
-	auto all_parents = reg->get_test_path(test);
+	auto controllers = test->get_all_controllers();
+	auto all_parents = IR::Test::get_test_path(test);
 
 	bool result = false;
 
 	for (auto rit = tests_to_run.rbegin(); rit != tests_to_run.rend(); ++rit) {
-		if ((*rit)->name.value() == parent->name.value()) {
+		if ((*rit)->name() == parent->name()) {
 			//This parent is good
 			result = true;
 			break;
@@ -245,7 +216,7 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 		//If it's just another parent - we don't care
 		bool another_parent = false;
 		for (auto test_it: all_parents) {
-			if (test_it->name.value() == (*rit)->name.value()) {
+			if (test_it->name() == (*rit)->name()) {
 				another_parent = true;
 				break;
 			}
@@ -255,7 +226,7 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 			continue;
 		}
 
-		auto other_controllers = reg->get_all_controllers(*rit);
+		auto other_controllers = (*rit)->get_all_controllers();
 		if (std::find_first_of (controllers.begin(), controllers.end(), other_controllers.begin(), other_controllers.end()) != controllers.end()) {
 			break;
 		}
@@ -264,10 +235,10 @@ bool VisitorInterpreter::parent_is_ok(std::shared_ptr<AST::Test> test, std::shar
 	return result;
 }
 
-void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
-	std::list<std::shared_ptr<AST::Test>>& test_plan,
-	std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
-	std::list<std::shared_ptr<AST::Test>>::reverse_iterator end)
+void VisitorInterpreter::build_test_plan(std::shared_ptr<IR::Test> test,
+	std::list<std::shared_ptr<IR::Test>>& test_plan,
+	std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
+	std::list<std::shared_ptr<IR::Test>>::reverse_iterator end)
 {
 	//we need to check could we start right away?
 
@@ -276,12 +247,12 @@ void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
 		//so starting from the end of tests_to_run, we move backwards
 		//and we try to find the parent test
 
-		if (!parent_is_ok(test, parent, begin, end) && !parent->snapshots_needed) {
+		if (!parent_is_ok(test, parent, begin, end) && !parent->snapshots_needed()) {
 			//New tests to run should be JUST before the parent
-			std::list<std::shared_ptr<AST::Test>> new_tests_to_run;
+			std::list<std::shared_ptr<IR::Test>> new_tests_to_run;
 
 			for (auto rit = begin; rit != end; ++rit) {
-				if ((*rit)->name.value() == parent->name.value()) {
+				if ((*rit)->name() == parent->name()) {
 					begin = ++rit;
 					break;
 				}
@@ -293,11 +264,11 @@ void VisitorInterpreter::build_test_plan(std::shared_ptr<AST::Test> test,
 	test_plan.push_back(test);
 }
 
-bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
+bool VisitorInterpreter::is_cached(std::shared_ptr<IR::Test> test) const {
 	for (auto parent: test->parents) {
 		bool parent_cached = false;
 		for (auto cached: up_to_date_tests) {
-			if (parent->name.value() == cached->name.value()) {
+			if (parent->name() == cached->name()) {
 				parent_cached = true;
 				break;
 			}
@@ -308,20 +279,20 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 	}
 
 	//check networks aditionally
-	for (auto netc: reg->get_all_netcs(test)) {
-		if (netc->is_defined() &&
-			netc->check_config_relevance())
+	for (auto network: test->get_all_networks()) {
+		if (network->is_defined() &&
+			network->check_config_relevance())
 		{
 			continue;
 		}
 		return false;
 	}
 
-	for (auto controller: reg->get_all_controllers(test)) {
+	for (auto controller: test->get_all_controllers()) {
 		if (controller->is_defined() &&
 			controller->check_config_relevance() &&
-			controller->has_snapshot(test->name.value()) &&
-			(controller->get_snapshot_cksum(test->name.value()) == test_cksum(test)))
+			controller->has_snapshot(test->name()) &&
+			(controller->get_snapshot_cksum(test->name()) == test_cksum(test)))
 		{
 			continue;
 		}
@@ -330,8 +301,8 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<AST::Test> test) const {
 	return true;
 }
 
-bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
-	auto all_parents = reg->get_test_path(test);
+bool VisitorInterpreter::is_cache_miss(std::shared_ptr<IR::Test> test) const {
+	auto all_parents = IR::Test::get_test_path(test);
 
 	for (auto parent: all_parents) {
 		for (auto cache_missed_test: cache_missed_tests) {
@@ -342,7 +313,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 	}
 
 	//check networks aditionally
-	for (auto netc: reg->get_all_netcs(test)) {
+	for (auto netc: test->get_all_networks()) {
 		if (netc->is_defined()) {
 			if (!netc->check_config_relevance()) {
 				return true;
@@ -350,10 +321,10 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 		}
 	}
 
-	for (auto controller: reg->get_all_controllers(test)) {
+	for (auto controller: test->get_all_controllers()) {
 		if (controller->is_defined()) {
-			if (controller->has_snapshot(test->name.value())) {
-				if (controller->get_snapshot_cksum(test->name.value()) != test_cksum(test)) {
+			if (controller->has_snapshot(test->name())) {
+				if (controller->get_snapshot_cksum(test->name()) != test_cksum(test)) {
 					return true;
 				}
 				if (!controller->check_config_relevance()) {
@@ -366,7 +337,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<AST::Test> test) const {
 	return false;
 }
 
-void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue) {
+void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<IR::Test>>& tests_queue) {
 	//Check every test
 	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
 		if (is_cached(*test_it)) {
@@ -381,18 +352,18 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<AST::T
 	}
 }
 
-void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue) {
+void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<IR::Test>>& tests_queue) {
 	for (auto test: tests_queue) {
-		for (auto controller: reg->get_all_controllers(test)) {
-			if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
-				controller->delete_snapshot_with_children(test->name.value());
+		for (auto controller: test->get_all_controllers()) {
+			if (controller->is_defined() && controller->has_snapshot(test->name())) {
+				controller->delete_snapshot_with_children(test->name());
 			}
 		}
 
 		//Now the interesting part
 		//We already have the logic involving current_state, so all we need to do...
 		//is to fill up the test queue with intermediate tests
-		std::list<std::shared_ptr<AST::Test>> test_plan;
+		std::list<std::shared_ptr<IR::Test>> test_plan;
 
 		build_test_plan(test, test_plan, tests_to_run.rbegin(), tests_to_run.rend());
 
@@ -401,48 +372,26 @@ void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<AST::Test
 	}
 }
 
-void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
-	std::list<std::shared_ptr<AST::Test>> tests_queue; //temporary, only needed for general execution plan
+void VisitorInterpreter::setup_vars() {
+	std::list<std::shared_ptr<IR::Test>> tests_queue; //temporary, only needed for general execution plan
 
 	//Need to check that we don't have duplicates
 	//And we can't use std::set because we need to
 	//keep the order of the tests
 
-	size_t total_tests_count = 0;
+	for (auto& test: IR::program->all_selected_tests) {
 
-	for (auto stmt: program->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-			++total_tests_count;
+		//invalidate tests at request
 
-			auto test = p->stmt;
-
-			//invalidate tests at request
-
-			if (invalidate.length() && wildcards::match(test->name.value(), invalidate)) {
-				for (auto controller: reg->get_all_controllers(test)) {
-					if (controller->is_defined() && controller->has_snapshot(test->name.value())) {
-						controller->delete_snapshot_with_children(test->name.value());
-					}
+		if (invalidate.length() && wildcards::match(test->name(), invalidate)) {
+			for (auto controller: test->get_all_controllers()) {
+				if (controller->is_defined() && controller->has_snapshot(test->name())) {
+					controller->delete_snapshot_with_children(test->name());
 				}
 			}
-
-			//So for every test
-			//we need to check if it's suitable for test spec
-			//if it is - push back to list and remove all the parents duplicates
-
-			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
-				continue;
-			}
-
-			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
-				continue;
-			}
-			concat_unique(tests_queue, reg->get_test_path(test));
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
-			if (p->stmt->t.type() == Token::category::flash) {
-				flash_drives.push_back(p->stmt);
-			}
 		}
+
+		concat_unique(tests_queue, IR::Test::get_test_path(test));
 	}
 
 	check_up_to_date_tests(tests_queue);
@@ -451,7 +400,7 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 		std::cout << "Some tests have lost their cache:" << std::endl;
 
 		for (auto cache_missed: cache_missed_tests) {
-			std::cout << "\t- " << cache_missed->name.value() << std::endl;
+			std::cout << "\t- " << cache_missed->name() << std::endl;
 		}
 
 		std::cout << "Do you confirm running them and all their children? [y/N]: ";
@@ -471,16 +420,16 @@ void VisitorInterpreter::setup_vars(std::shared_ptr<AST::Program> program) {
 
 void VisitorInterpreter::reset_cache() {
 	for (auto test: tests_to_run) {
-		for (auto controller: reg->get_all_controllers(test)) {
+		for (auto controller: test->get_all_controllers()) {
 			if (controller->is_defined()) {
-				controller->set_metadata("current_state", "");
+				controller->current_state = "";
 			}
 		}
 	}
 }
 
-void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
-	setup_vars(program);
+void VisitorInterpreter::visit() {
+	setup_vars();
 
 	reporter.init(tests_to_run, up_to_date_tests);
 
@@ -496,15 +445,15 @@ void VisitorInterpreter::visit(std::shared_ptr<AST::Program> program) {
 	}
 }
 
-void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
+void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 	try {
 		//Ok, we're not cached and we need to run the test
 		reporter.prepare_environment();
 		//Check if one of the parents failed. If it did, just fail
 		for (auto parent: test->parents) {
 			for (auto failed: reporter.failed_tests) {
-				if (parent->name.value() == failed->name) {
-					reporter.skip_failed_test(parent->name);
+				if (parent->name() == failed->name()) {
+					reporter.skip_failed_test(parent->name());
 					return;
 				}
 			}
@@ -514,17 +463,17 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		//vms from parents - rollback them to parents if we need to
 		//We need to do it only if our current state is not the parent
 		for (auto parent: test->parents) {
-			for (auto controller: reg->get_all_controllers(parent)) {
-				if (controller->get_metadata("current_state") != parent->name.value()) {
-					reporter.restore_snapshot(controller, parent->name);
-					controller->restore_snapshot(parent->name.value());
+			for (auto controller: parent->get_all_controllers()) {
+				if (controller->current_state != parent->name()) {
+					reporter.restore_snapshot(controller, parent->name());
+					controller->restore_snapshot(parent->name());
 				}
 			}
 		}
 
 		//check all the networks
 
-		for (auto netc: reg->get_all_netcs(test)) {
+		for (auto netc: test->get_all_networks()) {
 			if (netc->is_defined() &&
 				netc->check_config_relevance())
 			{
@@ -535,11 +484,11 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		//new vms - install
 
-		for (auto controller: reg->get_all_controllers(test)) {
+		for (auto controller: test->get_all_controllers()) {
 			//check if it's a new one
 			auto is_new = true;
 			for (auto parent: test->parents) {
-				auto parent_controller = reg->get_all_controllers(parent);
+				auto parent_controller = parent->get_all_controllers();
 				if (parent_controller.find(controller) != parent_controller.end()) {
 					//not new, go to the next vmc
 					is_new = false;
@@ -564,15 +513,15 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 					reporter.take_snapshot(controller, "initial");
 					controller->create_snapshot("_init", "", true);
-					controller->set_metadata("current_state", "_init");
+					controller->current_state = "_init";
 				}
 			}
 		}
 
 		for (auto parent: test->parents) {
-			for (auto vmc: reg->get_all_vmcs(parent)) {
-				if (vmc->vm->state() == VmState::Suspended) {
-					vmc->vm->resume();
+			for (auto vmc: parent->get_all_machines()) {
+				if (vmc->vm()->state() == VmState::Suspended) {
+					vmc->vm()->resume();
 				}
 			}
 		}
@@ -580,32 +529,35 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 		reporter.run_test();
 
 		//Everything is in the right state so we could actually do the test
-		visit_command_block(test->cmd_block);
+		{
+			StackPusher<VisitorInterpreter> pusher(this, test->stack);
+			visit_command_block(test->ast_node->cmd_block);
+		}
 
 		//But that's not everything - we need to create according snapshots to all included vms
-		for (auto vmc: reg->get_all_vmcs(test)) {
-			if (vmc->vm->state() == VmState::Running) {
-				vmc->vm->suspend();
+		for (auto vmc: test->get_all_machines()) {
+			if (vmc->vm()->state() == VmState::Running) {
+				vmc->vm()->suspend();
 			}
 		}
 
 		//we need to take snapshots in the right order
 		//1) all the vms - so we could check that all the fds are unplugged
-		for (auto controller: reg->get_all_vmcs(test)) {
-			if (!controller->has_snapshot(test->name.value())) {
-				reporter.take_snapshot(controller, test->name);
-				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
+		for (auto controller: test->get_all_machines()) {
+			if (!controller->has_snapshot(test->name())) {
+				reporter.take_snapshot(controller, test->name());
+				controller->create_snapshot(test->name(), test_cksum(test), test->snapshots_needed());
 			}
-			controller->set_metadata("current_state", test->name.value());
+			controller->current_state = test->name();
 		}
 
 		//2) all the fdcs - the rest
-		for (auto controller: reg->get_all_fdcs(test)) {
-			if (!controller->has_snapshot(test->name.value())) {
-				reporter.take_snapshot(controller, test->name);
-				controller->create_snapshot(test->name.value(), test_cksum(test), test->snapshots_needed);
+		for (auto controller: test->get_all_flash_drives()) {
+			if (!controller->has_snapshot(test->name())) {
+				reporter.take_snapshot(controller, test->name());
+				controller->create_snapshot(test->name(), test_cksum(test), test->snapshots_needed());
 			}
-			controller->set_metadata("current_state", test->name.value());
+			controller->current_state = test->name();
 		}
 
 		//We need to check if we need to stop all the vms
@@ -617,7 +569,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<AST::Test> test) {
 
 		for (auto it: tests_to_run) {
 			for (auto parent: it->parents) {
-				if (parent->name.value() == test->name.value()) {
+				if (parent->name() == test->name()) {
 					need_to_stop = false;
 					break;
 				}
@@ -653,59 +605,60 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 
 void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 	for (auto vm_token: cmd->vms) {
-		auto vmc = reg->vmcs.find(vm_token.value());
-		visit_action(vmc->second, cmd->action);
+		vmc = IR::program->get_machine_or_throw(vm_token.value());
+		visit_action(cmd->action);
+		vmc = nullptr;
 	}
 }
 
 
-void VisitorInterpreter::visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ActionBlock> action_block) {
+void VisitorInterpreter::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
-		visit_action(vmc, action);
+		visit_action(action);
 	}
 }
 
-void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action) {
+void VisitorInterpreter::visit_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort(vmc, p->action);
+		visit_abort(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print(vmc, p->action);
+		visit_print(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		visit_type(vmc, p->action);
+		visit_type({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		visit_wait(vmc, p->action);
+		visit_wait({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		visit_sleep(vmc, p->action);
+		visit_sleep(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		visit_press(vmc, p->action);
+		visit_press({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
-		visit_hold(vmc, p->action);
+		visit_hold(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
-		visit_release(vmc, p->action);
+		visit_release(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		visit_mouse(vmc, p->action);
+		visit_mouse(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		visit_plug(vmc, p->action);
+		visit_plug(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		visit_start(vmc, p->action);
+		visit_start(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		visit_stop(vmc, p->action);
+		visit_stop(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		visit_shutdown(vmc, p->action);
+		visit_shutdown(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		visit_exec(vmc, p->action);
+		visit_exec({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		visit_copy(vmc, p->action);
+		visit_copy({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call(vmc, p->action);
+		visit_macro_call(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		visit_if_clause(vmc, p->action);
+		visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		visit_for_clause(vmc, p->action);
+		visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		throw CycleControlException(p->action->t);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		visit_action_block(vmc, p->action);
+		visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		;
 	} else {
@@ -715,28 +668,28 @@ void VisitorInterpreter::visit_action(std::shared_ptr<VmController> vmc, std::sh
 	coro::CheckPoint();
 }
 
-void VisitorInterpreter::visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort) {
-	std::string message = template_parser.resolve(abort->message->text(), reg);
+void VisitorInterpreter::visit_abort(std::shared_ptr<AST::Abort> abort) {
+	std::string message = template_parser.resolve(abort->message->text(), stack);
 	throw AbortException(abort, vmc, message);
 }
 
-void VisitorInterpreter::visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action) {
+void VisitorInterpreter::visit_print(std::shared_ptr<AST::Print> print_action) {
 	try {
-		std::string message = template_parser.resolve(print_action->message->text(), reg);
+		std::string message = template_parser.resolve(print_action->message->text(), stack);
 		reporter.print(vmc, message);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(print_action, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type) {
+void VisitorInterpreter::visit_type(const IR::Type& type) {
 	try {
-		std::string text = template_parser.resolve(type->text->text(), reg);
+		std::string text = type.text();
 		if (text.size() == 0) {
 			return;
 		}
 
-		std::string interval = type->interval ? type->interval.value() : type_default_interval;
+		std::string interval = type.interval();
 
 		reporter.type(vmc, text, interval);
 
@@ -750,7 +703,7 @@ void VisitorInterpreter::visit_type(std::shared_ptr<VmController> vmc, std::shar
 		}
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(type, vmc));
+		std::throw_with_nested(ActionException(type.ast_node, vmc));
 	}
 }
 
@@ -781,7 +734,7 @@ js::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& scr
 }
 
 nn::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot) {
-	auto script = template_parser.resolve(js->text(), reg);
+	auto script = template_parser.resolve(js->text(), stack);
 	auto value = eval_js(script, screenshot);
 
 	if (value.is_object() && !value.is_array()) {
@@ -806,10 +759,10 @@ nn::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AS
 
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
-		auto text = template_parser.resolve(p->text(), reg);
+		auto text = template_parser.resolve(p->text(), stack);
 		return nn::find_text(&screenshot).match(text).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		auto script = template_parser.resolve(p->text(), reg);
+		auto script = template_parser.resolve(p->text(), stack);
 		auto value = eval_js(script, screenshot);
 		if (value.is_bool()) {
 			return (bool)value;
@@ -848,17 +801,17 @@ bool VisitorInterpreter::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> bi
 	}
 }
 
-void VisitorInterpreter::visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep) {
+void VisitorInterpreter::visit_sleep(std::shared_ptr<AST::Sleep> sleep) {
 	reporter.sleep(vmc, sleep->timeout.value());
 	::sleep(sleep->timeout.value());
 }
 
-void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait) {
+void VisitorInterpreter::visit_wait(const IR::Wait& wait) {
 	try {
-		std::string wait_for = wait->timeout ? wait->timeout.value() : wait_default_timeout;
-		std::string interval_str = wait->interval ? wait->interval.value() : wait_default_interval;
+		std::string wait_for = wait.timeout();
+		std::string interval_str = wait.interval();
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
-		auto text = template_parser.resolve(std::string(*wait->select_expr), reg);
+		auto text = template_parser.resolve(std::string(*wait.ast_node->select_expr), wait.stack);
 
 		reporter.wait(vmc, text, wait_for, interval_str);
 
@@ -866,9 +819,9 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto screenshot = vmc->vm->screenshot();
+			auto screenshot = vmc->vm()->screenshot();
 
-			if (visit_detect_expr(wait->select_expr, screenshot)) {
+			if (visit_detect_expr(wait.ast_node->select_expr, screenshot)) {
 				return;
 			}
 
@@ -888,25 +841,25 @@ void VisitorInterpreter::visit_wait(std::shared_ptr<VmController> vmc, std::shar
 		throw std::runtime_error("Timeout");
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(wait, vmc));
+		std::throw_with_nested(ActionException(wait.ast_node, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press) {
+void VisitorInterpreter::visit_press(const IR::Press& press) {
 	try {
-		std::string interval = press->interval ? press->interval.value() : press_default_interval;
+		std::string interval = press.interval();
 		auto press_interval = time_to_milliseconds(interval);
 
-		for (auto key_spec: press->keys) {
-			visit_key_spec(vmc, key_spec, press_interval);
+		for (auto key_spec: press.ast_node->keys) {
+			visit_key_spec(key_spec, press_interval);
 			timer.waitFor(std::chrono::milliseconds(press_interval));
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(press, vmc));
+		std::throw_with_nested(ActionException(press.ast_node, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Hold> hold) {
+void VisitorInterpreter::visit_hold(std::shared_ptr<AST::Hold> hold) {
 	try {
 		reporter.hold_key(vmc, std::string(*hold->combination));
 		vmc->hold(hold->combination->get_buttons());
@@ -915,7 +868,7 @@ void VisitorInterpreter::visit_hold(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Release> release) {
+void VisitorInterpreter::visit_release(std::shared_ptr<AST::Release> release) {
 	try {
 		if (release->combination) {
 			reporter.release_key(vmc, std::string(*release->combination));
@@ -930,21 +883,21 @@ void VisitorInterpreter::visit_release(std::shared_ptr<VmController> vmc, std::s
 }
 
 
-void VisitorInterpreter::visit_mouse(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Mouse> mouse) {
+void VisitorInterpreter::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
 	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse->event)) {
-		return visit_mouse_move_click(vmc, p->event);
+		return visit_mouse_move_click(p->event);
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse->event)) {
-		return visit_mouse_hold(vmc, p->event);
+		return visit_mouse_hold(p->event);
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse->event)) {
-		return visit_mouse_release(vmc, p->event);
+		return visit_mouse_release(p->event);
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseWheel>>(mouse->event)) {
-		return visit_mouse_wheel(vmc, p->event);
+		return visit_mouse_wheel(p->event);
 	} else {
 		throw std::runtime_error("Unknown mouse actions");
 	}
 }
 
-void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseHold> mouse_hold) {
+void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<AST::MouseHold> mouse_hold) {
 	try {
 		reporter.mouse_hold(vmc, mouse_hold->button.value());
 		if (mouse_hold->button.type() == Token::category::lbtn) {
@@ -961,7 +914,7 @@ void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<VmController> vmc, std
 	}
 }
 
-void VisitorInterpreter::visit_mouse_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseRelease> mouse_release) {
+void VisitorInterpreter::visit_mouse_release(std::shared_ptr<AST::MouseRelease> mouse_release) {
 	try {
 		reporter.mouse_release(vmc);
 		vmc->mouse_release();
@@ -970,7 +923,7 @@ void VisitorInterpreter::visit_mouse_release(std::shared_ptr<VmController> vmc, 
 	}
 }
 
-void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseWheel> mouse_wheel) {
+void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mouse_wheel) {
 	try {
 		reporter.mouse_wheel(vmc, mouse_wheel->direction.value());
 
@@ -987,15 +940,15 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<VmController> vmc, st
 	}
 }
 
-void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
+void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
 	try {
 		reporter.mouse_move_click(vmc, mouse_move_click->t.value());
 
 		if (mouse_move_click->object) {
 			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click->object)) {
-				visit_mouse_move_coordinates(vmc, p->target);
+				visit_mouse_move_coordinates(p->target);
 			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click->object)) {
-				visit_mouse_move_selectable(vmc, p->target);
+				visit_mouse_move_selectable({p->target, stack});
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
@@ -1127,12 +1080,12 @@ nn::Point VisitorInterpreter::visit_mouse_additional_specifiers(
 	return result;
 }
 
-void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseSelectable> mouse_selectable)
+void VisitorInterpreter::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable)
 {
-	std::string timeout = mouse_selectable->timeout ? mouse_selectable->timeout.value() : mouse_move_click_default_timeout;
-	std::string where_to_go = template_parser.resolve(mouse_selectable->text(), reg);
+	std::string timeout = mouse_selectable.timeout();
+	std::string where_to_go = template_parser.resolve(mouse_selectable.ast_node->text(), mouse_selectable.stack);
 
-	for (auto specifier: mouse_selectable->specifiers) {
+	for (auto specifier: mouse_selectable.ast_node->specifiers) {
 		where_to_go += std::string(*specifier);
 	}
 
@@ -1142,19 +1095,19 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 
 	while (std::chrono::system_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
-		auto screenshot = vmc->vm->screenshot();
+		auto screenshot = vmc->vm()->screenshot();
 		try {
 			nn::Point point;
-			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
+			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
 				point = visit_select_js(p, screenshot);
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
-				auto text = template_parser.resolve(p->text(), reg);
+			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable.ast_node->selectable)) {
+				auto text = template_parser.resolve(p->text(), stack);
 				auto ocr_find = nn::find_text(&screenshot).match(text);
 
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable->specifiers, ocr_find);
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, ocr_find);
 			}
-			vmc->vm->mouse_move_abs(point.x, point.y);
+			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return;
 		} catch (const nn::ContinueError& error) {
 			auto end = std::chrono::high_resolution_clock::now();
@@ -1175,25 +1128,25 @@ void VisitorInterpreter::visit_mouse_move_selectable(std::shared_ptr<VmControlle
 	throw std::runtime_error("Timeout");
 }
 
-void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates)
+void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<AST::MouseCoordinates> coordinates)
 {
 	auto dx = coordinates->dx.value();
 	auto dy = coordinates->dy.value();
 	reporter.mouse_move_click_coordinates(vmc, dx, dy);
 	if ((dx[0] == '+') || (dx[0] == '-')) {
-		vmc->vm->mouse_move_rel("x", std::stoi(dx));
+		vmc->vm()->mouse_move_rel("x", std::stoi(dx));
 	} else {
-		vmc->vm->mouse_move_abs("x", std::stoul(dx));
+		vmc->vm()->mouse_move_abs("x", std::stoul(dx));
 	}
 
 	if ((dy[0] == '+') || (dy[0] == '-')) {
-		vmc->vm->mouse_move_rel("y", std::stoi(dy));
+		vmc->vm()->mouse_move_rel("y", std::stoi(dy));
 	} else {
-		vmc->vm->mouse_move_abs("y", std::stoul(dy));
+		vmc->vm()->mouse_move_abs("y", std::stoul(dy));
 	}
 }
 
-void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
+void VisitorInterpreter::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
 	uint32_t times = key_spec->get_times();
 
 	reporter.press_key(vmc, *key_spec->combination, times);
@@ -1204,19 +1157,19 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<VmController> vmc, std::
 	}
 }
 
-void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
+void VisitorInterpreter::visit_plug(std::shared_ptr<AST::Plug> plug) {
 	try {
 		if (plug->type.value() == "nic") {
-			return visit_plug_nic(vmc, plug);
+			return visit_plug_nic(plug);
 		} else if (plug->type.value() == "link") {
-			return visit_plug_link(vmc, plug);
+			return visit_plug_link(plug);
 		} else if (plug->type.value() == "dvd") {
-			return visit_plug_dvd(vmc, plug);
+			return visit_plug_dvd(plug);
 		} else if (plug->type.value() == "flash") {
 			if(plug->is_on()) {
-				return plug_flash(vmc, plug);
+				return plug_flash(plug);
 			} else {
-				return unplug_flash(vmc, plug);
+				return unplug_flash(plug);
 			}
 		} else {
 			throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
@@ -1227,23 +1180,23 @@ void VisitorInterpreter::visit_plug(std::shared_ptr<VmController> vmc, std::shar
 	}
 }
 
-void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
+void VisitorInterpreter::visit_plug_nic(std::shared_ptr<AST::Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 	auto nic = plug->name_token.value();
 
 	reporter.plug(vmc, "nic", nic, plug->is_on());
 
-	auto nics = vmc->vm->nics();
+	auto nics = vmc->vm()->nics();
 	if (nics.find(nic) == nics.end()) {
 		throw std::runtime_error(fmt::format("specified nic {} is not present in this virtual machine", nic));
 	}
 
-	if (vmc->vm->state() != VmState::Stopped) {
+	if (vmc->vm()->state() != VmState::Stopped) {
 		throw std::runtime_error(fmt::format("virtual machine is running, but must be stopped"));
 	}
 
-	if (vmc->vm->is_nic_plugged(nic) == plug->is_on()) {
+	if (vmc->vm()->is_nic_plugged(nic) == plug->is_on()) {
 		if (plug->is_on()) {
 			throw std::runtime_error(fmt::format("specified nic {} is already plugged in this virtual machine", nic));
 		} else {
@@ -1251,10 +1204,10 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<VmController> vmc, std::
 		}
 	}
 
-	vmc->vm->set_nic(nic, plug->is_on());
+	vmc->vm()->set_nic(nic, plug->is_on());
 }
 
-void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
+void VisitorInterpreter::visit_plug_link(std::shared_ptr<AST::Plug> plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 
@@ -1262,16 +1215,16 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 
 	reporter.plug(vmc, "link", nic, plug->is_on());
 
-	auto nics = vmc->vm->nics();
+	auto nics = vmc->vm()->nics();
 	if (nics.find(nic) == nics.end()) {
 		throw std::runtime_error(fmt::format("the nic for specified link {} is not present in this virtual machine", nic));
 	}
 
-	if (!vmc->vm->is_nic_plugged(nic)) {
+	if (!vmc->vm()->is_nic_plugged(nic)) {
 		throw std::runtime_error(fmt::format("the nic for specified link {} is unplugged, you must to plug it first", nic));
 	}
 
-	if (plug->is_on() == vmc->vm->is_link_plugged(nic)) {
+	if (plug->is_on() == vmc->vm()->is_link_plugged(nic)) {
 		if (plug->is_on()) {
 			throw std::runtime_error(fmt::format("specified link {} is already plugged in this virtual machine", nic));
 		} else {
@@ -1279,57 +1232,57 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<VmController> vmc, std:
 		}
 	}
 
-	vmc->vm->set_link(nic, plug->is_on());
+	vmc->vm()->set_link(nic, plug->is_on());
 }
 
-void VisitorInterpreter::plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
+void VisitorInterpreter::plug_flash(std::shared_ptr<AST::Plug> plug) {
+	auto fdc = IR::program->get_flash_drive_or_throw(plug->name_token.value());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
-	if (vmc->vm->is_flash_plugged(fdc->fd)) {
+	if (vmc->vm()->is_flash_plugged(fdc->fd())) {
 		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fdc->name()));
 	}
 
-	vmc->vm->plug_flash_drive(fdc->fd);
+	vmc->vm()->plug_flash_drive(fdc->fd());
 }
 
-void VisitorInterpreter::unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
-	auto fdc = reg->fdcs.find(plug->name_token.value())->second; //should always be found
+void VisitorInterpreter::unplug_flash(std::shared_ptr<AST::Plug> plug) {
+	auto fdc = IR::program->get_flash_drive_or_throw(plug->name_token.value());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
-	if (!vmc->vm->is_flash_plugged(fdc->fd)) {
+	if (!vmc->vm()->is_flash_plugged(fdc->fd())) {
 		throw std::runtime_error(fmt::format("specified flash {} is already unplugged from this virtual machine", fdc->name()));
 	}
 
-	vmc->vm->unplug_flash_drive(fdc->fd);
+	vmc->vm()->unplug_flash_drive(fdc->fd());
 }
 
-void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug) {
+void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<AST::Plug> plug) {
 	if (plug->is_on()) {
-		fs::path path = template_parser.resolve(plug->path->text(), reg);
+		fs::path path = template_parser.resolve(plug->path->text(), stack);
 		if (path.is_relative()) {
 			path = plug->t.begin().file.parent_path() / path;
 		}
 
 		reporter.plug(vmc, "dvd", path.generic_string(), true);
 
-		if (vmc->vm->is_dvd_plugged()) {
+		if (vmc->vm()->is_dvd_plugged()) {
 			throw std::runtime_error(fmt::format("some dvd is already plugged"));
 		}
-		vmc->vm->plug_dvd(path);
+		vmc->vm()->plug_dvd(path);
 	} else {
 		reporter.plug(vmc, "dvd", "", false);
 
-		if (!vmc->vm->is_dvd_plugged()) {
+		if (!vmc->vm()->is_dvd_plugged()) {
 			std::cout << "DVD is already unplugged" << std::endl;
 			// не считаем ошибкой, потому что дисковод мог быть вынут программным образом
 			return;
 		}
-		vmc->vm->unplug_dvd();
+		vmc->vm()->unplug_dvd();
 
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(10);
 		while (std::chrono::system_clock::now() < deadline) {
-			if (!vmc->vm->is_dvd_plugged()) {
+			if (!vmc->vm()->is_dvd_plugged()) {
 				return;
 			}
 			timer.waitFor(std::chrono::milliseconds(300));
@@ -1339,13 +1292,13 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<VmController> vmc, std::
 	}
 }
 
-void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Start> start) {
+void VisitorInterpreter::visit_start(std::shared_ptr<AST::Start> start) {
 	try {
 		reporter.start(vmc);
-		vmc->vm->start();
+		vmc->vm()->start();
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(5000);
 		while (std::chrono::system_clock::now() < deadline) {
-			if (vmc->vm->state() == VmState::Running) {
+			if (vmc->vm()->state() == VmState::Running) {
 				return;
 			}
 			timer.waitFor(std::chrono::milliseconds(300));
@@ -1356,24 +1309,24 @@ void VisitorInterpreter::visit_start(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-void VisitorInterpreter::visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Stop> stop) {
+void VisitorInterpreter::visit_stop(std::shared_ptr<AST::Stop> stop) {
 	try {
 		reporter.stop(vmc);
-		vmc->vm->stop();
+		vmc->vm()->stop();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(stop, vmc));
 
 	}
 }
 
-void VisitorInterpreter::visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown) {
+void VisitorInterpreter::visit_shutdown(std::shared_ptr<AST::Shutdown> shutdown) {
 	try {
 		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
 		reporter.shutdown(vmc, wait_for);
-		vmc->vm->power_button();
+		vmc->vm()->power_button();
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
 		while (std::chrono::system_clock::now() < deadline) {
-			if (vmc->vm->state() == VmState::Stopped) {
+			if (vmc->vm()->state() == VmState::Stopped) {
 				return;
 			}
 			timer.waitFor(std::chrono::milliseconds(300));
@@ -1462,41 +1415,41 @@ static std::string build_python_script(const std::string& body) {
 }
 
 
-void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec) {
+void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 	try {
-		std::string wait_for = exec->time_interval ? exec->time_interval.value() : exec_default_timeout;
-		reporter.exec(vmc, exec->process_token.value(), wait_for);
+		std::string wait_for = exec.timeout();
+		reporter.exec(vmc, exec.ast_node->process_token.value(), wait_for);
 
-		if (vmc->vm->state() != VmState::Running) {
+		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
 		}
 
-		if (!vmc->vm->is_additions_installed()) {
+		if (!vmc->vm()->is_additions_installed()) {
 			throw std::runtime_error(fmt::format("guest additions is not installed"));
 		}
 
 		std::string script, extension, interpreter;
 		std::vector<std::string> args;
 
-		if (exec->process_token.value() == "bash") {
-			script = build_shell_script(template_parser.resolve(exec->commands->text(), reg));
+		if (exec.ast_node->process_token.value() == "bash") {
+			script = build_shell_script(exec.text());
 			extension = ".sh";
 			interpreter = "bash";
-		} else if (exec->process_token.value() == "cmd") {
-			script = build_batch_script(template_parser.resolve(exec->commands->text(), reg));
+		} else if (exec.ast_node->process_token.value() == "cmd") {
+			script = build_batch_script(exec.text());
 			extension = ".bat";
 			interpreter = "cmd";
 			args.push_back("/c");
-		} else if (exec->process_token.value() == "python") {
-			script = build_python_script(template_parser.resolve(exec->commands->text(), reg));
+		} else if (exec.ast_node->process_token.value() == "python") {
+			script = build_python_script(exec.text());
 			extension = ".py";
 			interpreter = "python";
-		} else if (exec->process_token.value() == "python2") {
-			script = build_python_script(template_parser.resolve(exec->commands->text(), reg));
+		} else if (exec.ast_node->process_token.value() == "python2") {
+			script = build_python_script(exec.text());
 			extension = ".py";
 			interpreter = "python2";
 		} else {
-			script = build_python_script(template_parser.resolve(exec->commands->text(), reg));
+			script = build_python_script(exec.text());
 			extension = ".py";
 			interpreter = "python3";
 		}
@@ -1507,7 +1460,7 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 		std::string hash = std::to_string(h(script));
 
 		fs::path host_script_dir = fs::temp_directory_path();
-		fs::path guest_script_dir = vmc->vm->get_tmp_dir();
+		fs::path guest_script_dir = vmc->vm()->get_tmp_dir();
 
 		fs::path host_script_file = host_script_dir / std::string(hash + extension);
 		fs::path guest_script_file = guest_script_dir / std::string(hash + extension);
@@ -1519,112 +1472,101 @@ void VisitorInterpreter::visit_exec(std::shared_ptr<VmController> vmc, std::shar
 		script_stream << script;
 		script_stream.close();
 
-		vmc->vm->copy_to_guest(host_script_file, guest_script_file, 5000); //5 seconds should be enough to pass any script
+		vmc->vm()->copy_to_guest(host_script_file, guest_script_file, 5000); //5 seconds should be enough to pass any script
 
 		fs::remove(host_script_file.generic_string());
 
 		args.push_back(guest_script_file.generic_string());
-		if (vmc->vm->run(interpreter, args, time_to_milliseconds(wait_for)) != 0) {
+		if (vmc->vm()->run(interpreter, args, time_to_milliseconds(wait_for)) != 0) {
 			throw std::runtime_error(interpreter + " command failed");
 		}
-		vmc->vm->remove_from_guest(guest_script_file);
+		vmc->vm()->remove_from_guest(guest_script_file);
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(exec, vmc));
+		std::throw_with_nested(ActionException(exec.ast_node, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy) {
+void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 	try {
-		fs::path from = template_parser.resolve(copy->from->text(), reg);
-		fs::path to = template_parser.resolve(copy->to->text(), reg);
+		fs::path from = copy.from();
+		fs::path to = copy.to();
 
-		std::string wait_for = copy->time_interval ? copy->time_interval.value() : copy_default_timeout;
-		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy->is_to_guest(), wait_for);
+		std::string wait_for = copy.timeout();
+		reporter.copy(vmc, from, to, copy.ast_node->is_to_guest(), wait_for);
 
-		if (vmc->vm->state() != VmState::Running) {
+		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
 		}
 
-		if (!vmc->vm->is_additions_installed()) {
+		if (!vmc->vm()->is_additions_installed()) {
 			throw std::runtime_error(fmt::format("guest additions are not installed"));
 		}
 
-		if(copy->is_to_guest()) {
-			if (from.is_relative()) {
-				from = copy->t.begin().file.parent_path() / from;
-			}
-			vmc->vm->copy_to_guest(from, to, time_to_milliseconds(wait_for));
+		if(copy.ast_node->is_to_guest()) {
+			vmc->vm()->copy_to_guest(from, to, time_to_milliseconds(wait_for));
 		} else {
-			if (to.is_relative()) {
-				to = copy->t.begin().file.parent_path() / to;
-			}
-			vmc->vm->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
+			vmc->vm()->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(copy, vmc));
+		std::throw_with_nested(ActionException(copy.ast_node, vmc));
 	}
 
 }
 
-void VisitorInterpreter::visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call) {
-	//push new ctx
-	StackEntry new_ctx(true);
-
+void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
 	std::vector<std::pair<std::string, std::string>> args;
+	std::map<std::string, std::string> vars;
+	auto macro = IR::program->get_macro_or_throw(macro_call->name().value());
 
 	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
-		args.push_back(std::make_pair(macro_call->macro->args[i]->name(), value));
+		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
+		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
 	}
 
-	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
-		args.push_back(std::make_pair(macro_call->macro->args[i]->name(), value));
+	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
+		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
+		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
 	}
-
-	reg->local_vars.push_back(new_ctx);
-	coro::Finally finally([&] {
-		reg->local_vars.pop_back();
-	});
 
 	reporter.macro_call(vmc, macro_call->name(), args);
-	visit_action_block(vmc, macro_call->macro->action_block->action);
+
+	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
+	visit_action_block(macro->ast_node->action_block->action);
 }
 
-void VisitorInterpreter::visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause) {
+void VisitorInterpreter::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
 	bool expr_result;
 	try {
-		expr_result = visit_expr(vmc, if_clause->expr);
+		expr_result = visit_expr(if_clause->expr);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(if_clause, vmc));
 	}
 	//everything else should be caught at test level
 	if (expr_result) {
-		return visit_action(vmc, if_clause->if_action);
+		return visit_action(if_clause->if_action);
 	} else if (if_clause->has_else()) {
-		return visit_action(vmc, if_clause->else_action);
+		return visit_action(if_clause->else_action);
 	}
 
 }
 
-void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause) {
-	StackEntry new_ctx(false);
-	reg->local_vars.push_back(new_ctx);
-	size_t ctx_position = reg->local_vars.size() - 1;
-	coro::Finally finally([&]{
-		reg->local_vars.pop_back();
-	});
+void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
 	uint32_t i = 0;
 	auto values = for_clause->counter_list->values();
 
+	std::map<std::string, std::string> vars;
 	for (i = 0; i < values.size(); ++i) {
-		reg->local_vars[ctx_position].define(for_clause->counter.value(), values[i]);
+		vars[for_clause->counter.value()] = values[i];
 
 		try {
-			visit_action(vmc, for_clause->cycle_body);
+			auto new_stack = std::make_shared<StackNode>();
+			new_stack->parent = stack;
+			new_stack->vars = vars;
+			StackPusher<VisitorInterpreter> new_ctx(this, new_stack);
+			visit_action(for_clause->cycle_body);
 		} catch (const CycleControlException& cycle_control) {
 			if (cycle_control.token.type() == Token::category::break_) {
 				break;
@@ -1637,23 +1579,23 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<VmController> vmc, std
 	}
 
 	if ((i == values.size()) && for_clause->else_token) {
-		visit_action(vmc, for_clause->else_action);
+		visit_action(for_clause->else_action);
 	}
 }
 
-bool VisitorInterpreter::visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr) {
+bool VisitorInterpreter::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
-		return visit_binop(vmc, p->expr);
+		return visit_binop(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
-		return visit_factor(vmc, p->expr);
+		return visit_factor(p->expr);
 	} else {
 		throw std::runtime_error("Unknown expr type");
 	}
 }
 
-bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop) {
-	auto left = visit_expr(vmc, binop->left);
-	auto right = visit_expr(vmc, binop->right);
+bool VisitorInterpreter::visit_binop(std::shared_ptr<AST::BinOp> binop) {
+	auto left = visit_expr(binop->left);
+	auto right = visit_expr(binop->right);
 
 	if (binop->op().type() == Token::category::AND) {
 		return left && right;
@@ -1664,23 +1606,23 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<VmController> vmc, std::sha
 	}
 }
 
-bool VisitorInterpreter::visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor) {
+bool VisitorInterpreter::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
-		return p->is_negated() ^ (bool)template_parser.resolve(p->factor->text(), reg).length();
+		return p->is_negated() ^ (bool)template_parser.resolve(p->factor->text(), stack).length();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
-		return p->is_negated() ^ visit_comparison(vmc, p->factor);
+		return p->is_negated() ^ visit_comparison(p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
-		return p->is_negated() ^ visit_check(vmc, p->factor);
+		return p->is_negated() ^ visit_check({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
-		return p->is_negated() ^ visit_expr(vmc, p->factor);
+		return p->is_negated() ^ visit_expr(p->factor);
 	} else {
 		throw std::runtime_error("Unknown factor type");
 	}
 }
 
-bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison) {
-	auto left = template_parser.resolve(comparison->left->text(), reg);
-	auto right = template_parser.resolve(comparison->right->text(), reg);
+bool VisitorInterpreter::visit_comparison(std::shared_ptr<AST::Comparison> comparison) {
+	auto left = template_parser.resolve(comparison->left->text(), stack);
+	auto right = template_parser.resolve(comparison->right->text(), stack);
 	if (comparison->op().type() == Token::category::GREATER) {
 		if (!is_number(left)) {
 			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
@@ -1722,21 +1664,21 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<VmController> vmc, std
 	}
 }
 
-bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check) {
+bool VisitorInterpreter::visit_check(const IR::Check& check) {
 	try {
-		std::string check_for = check->timeout ? check->timeout.value() : check_default_timeout;
-		std::string interval_str = check->interval ? check->interval.value() : check_default_interval;
+		std::string check_for = check.timeout();
+		std::string interval_str = check.interval();
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
-		auto text = template_parser.resolve(std::string(*check->select_expr), reg);
+		auto text = template_parser.resolve(std::string(*check.ast_node->select_expr), check.stack);
 		reporter.check(vmc, text, check_for, interval_str);
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
 
 		while (std::chrono::system_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto screenshot = vmc->vm->screenshot();
+			auto screenshot = vmc->vm()->screenshot();
 
-			if (visit_detect_expr(check->select_expr, screenshot)) {
+			if (visit_detect_expr(check.ast_node->select_expr, screenshot)) {
 				return true;
 			}
 
@@ -1752,11 +1694,22 @@ bool VisitorInterpreter::visit_check(std::shared_ptr<VmController> vmc, std::sha
 
 		return false;
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(check, vmc));
+		std::throw_with_nested(ActionException(check.ast_node, vmc));
 	}
 }
 
-std::string VisitorInterpreter::test_cksum(std::shared_ptr<AST::Test> test) const {
-	VisitorCksum visitor(reg);
+void VisitorInterpreter::stop_all_vms(std::shared_ptr<IR::Test> test) {
+	for (auto vmc: test->get_all_machines()) {
+		if (vmc->is_defined()) {
+			if (vmc->vm()->state() != VmState::Stopped) {
+				vmc->vm()->stop();
+			}
+			vmc->current_state = "";
+		}
+	}
+}
+
+std::string VisitorInterpreter::test_cksum(std::shared_ptr<IR::Test> test) const {
+	VisitorCksum visitor;
 	return std::to_string(visitor.visit(test));
 }

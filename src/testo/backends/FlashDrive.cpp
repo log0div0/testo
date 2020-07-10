@@ -41,41 +41,8 @@ std::string FlashDrive::prefix() const {
 	return config.at("prefix").get<std::string>();
 }
 
-bool FlashDrive::has_folder() const {
-	return config.count("folder");
-}
-
-nlohmann::json FlashDrive::get_config() const {
-	return config;
-}
-
-void FlashDrive::validate_folder() const {
-	try {
-		fs::path folder(config.at("folder").get<std::string>());
-		if (folder.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			folder = src_file.parent_path() / folder;
-		}
-
-		if (!fs::exists(folder)) {
-			throw std::runtime_error("Target folder doesn't exist");
-		}
-
-		folder = fs::canonical(folder);
-
-		if (!fs::is_directory(folder)) {
-			throw std::runtime_error(fmt::format("specified folder {} for flash drive {} is not a folder",
-				folder.generic_string(), name()));
-		}
-	} catch (const std::runtime_error& error) {
-		std::throw_with_nested(std::runtime_error("Validating host folder failed"));
-	}
-
-}
-
 void FlashDrive::load_folder() {
 	try {
-		validate_folder();
 		mount();
 
 		fs::path folder(config.at("folder").get<std::string>());

@@ -1,9 +1,9 @@
 
 #pragma once
 #include "coro/Timer.h"
-#include "Node.hpp"
-#include "Register.hpp"
-#include "TemplateParser.hpp"
+#include "IR/Test.hpp"
+#include "IR/Action.hpp"
+#include "TemplateLiterals.hpp"
 #include "Reporter.hpp"
 #include "js/Context.hpp"
 #include <nn/OCR.hpp>
@@ -26,7 +26,7 @@ struct VisitorInterpreter {
 	};
 
 	struct ActionException: public InterpreterException {
-		explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<VmController> vmc):
+		explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Machine> vmc):
 			InterpreterException(), node(node), vmc(vmc)
 		{
 			msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node) + " ";
@@ -37,11 +37,11 @@ struct VisitorInterpreter {
 		}
 	private:
 		std::shared_ptr<AST::Node> node;
-		std::shared_ptr<VmController> vmc;
+		std::shared_ptr<IR::Machine> vmc;
 	};
 
 	struct AbortException: public InterpreterException {
-		explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<VmController> vmc, const std::string& message):
+		explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Machine> vmc, const std::string& message):
 			InterpreterException(), node(node), vmc(vmc)
 		{
 			msg = std::string(node->begin()) + ": Caught abort action ";
@@ -55,7 +55,7 @@ struct VisitorInterpreter {
 		}
 	private:
 		std::shared_ptr<AST::Node> node;
-		std::shared_ptr<VmController> vmc;
+		std::shared_ptr<IR::Machine> vmc;
 	};
 
 
@@ -69,19 +69,19 @@ struct VisitorInterpreter {
 		Token token;
 	};
 
-	VisitorInterpreter(std::shared_ptr<Register> reg, const nlohmann::json& config);
+	VisitorInterpreter(const nlohmann::json& config);
 
-	void visit(std::shared_ptr<AST::Program> program);
-	void visit_test(std::shared_ptr<AST::Test> test);
+	void visit();
+	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
-	void visit_action_block(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ActionBlock> action_block);
-	void visit_action(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IAction> action);
-	void visit_abort(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Abort> abort);
-	void visit_print(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Print> print_action);
-	void visit_type(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Type> type);
-	void visit_wait(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Wait> wait);
-	void visit_sleep(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Sleep> sleep);
+	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
+	void visit_action(std::shared_ptr<AST::IAction> action);
+	void visit_abort(std::shared_ptr<AST::Abort> abort);
+	void visit_print(std::shared_ptr<AST::Print> print_action);
+	void visit_type(const IR::Type& type);
+	void visit_wait(const IR::Wait& wait);
+	void visit_sleep(std::shared_ptr<AST::Sleep> sleep);
 	nn::Tensor visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input);
 	nn::Point visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input);
 	nn::Point visit_mouse_specifier_default_centering(const nn::Tensor& input);
@@ -92,98 +92,80 @@ struct VisitorInterpreter {
 	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
 	bool visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot);
 	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
-	void visit_press(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Press> press);
-	void visit_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Hold> hold);
-	void visit_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Release> release);
-	void visit_mouse_move_selectable(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseSelectable> mouse_selectable);
-	void visit_mouse(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Mouse> mouse);
-	void visit_mouse_move_click(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseMoveClick> mouse_move_click);
-	void visit_mouse_move_coordinates(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseCoordinates> coordinates);
-	void visit_mouse_hold(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseHold> mouse_hold);
-	void visit_mouse_release(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseRelease> mouse_release);
-	void visit_mouse_wheel(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MouseWheel> mouse_wheel);
-	void visit_key_spec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval);
-	void visit_plug(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
-	void visit_plug_nic(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
-	void visit_plug_link(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
-	void visit_plug_dvd(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
-	void plug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
-	void unplug_flash(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Plug> plug);
-	void visit_start(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Start> start);
-	void visit_stop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Stop> stop);
-	void visit_shutdown(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Shutdown> shutdown);
-	void visit_exec(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Exec> exec);
-	void visit_copy(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Copy> copy);
-	void visit_macro_call(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::MacroCall> macro_call);
-	void visit_if_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IfClause> if_clause);
-	void visit_for_clause(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::ForClause> for_clause);
+	void visit_press(const IR::Press& press);
+	void visit_hold(std::shared_ptr<AST::Hold> hold);
+	void visit_release(std::shared_ptr<AST::Release> release);
+	void visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable);
+	void visit_mouse(std::shared_ptr<AST::Mouse> mouse);
+	void visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click);
+	void visit_mouse_move_coordinates(std::shared_ptr<AST::MouseCoordinates> coordinates);
+	void visit_mouse_hold(std::shared_ptr<AST::MouseHold> mouse_hold);
+	void visit_mouse_release(std::shared_ptr<AST::MouseRelease> mouse_release);
+	void visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mouse_wheel);
+	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval);
+	void visit_plug(std::shared_ptr<AST::Plug> plug);
+	void visit_plug_nic(std::shared_ptr<AST::Plug> plug);
+	void visit_plug_link(std::shared_ptr<AST::Plug> plug);
+	void visit_plug_dvd(std::shared_ptr<AST::Plug> plug);
+	void plug_flash(std::shared_ptr<AST::Plug> plug);
+	void unplug_flash(std::shared_ptr<AST::Plug> plug);
+	void visit_start(std::shared_ptr<AST::Start> start);
+	void visit_stop(std::shared_ptr<AST::Stop> stop);
+	void visit_shutdown(std::shared_ptr<AST::Shutdown> shutdown);
+	void visit_exec(const IR::Exec& exec);
+	void visit_copy(const IR::Copy& copy);
+	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
+	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
+	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
 
-	bool visit_expr(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IExpr> expr);
-	bool visit_binop(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::BinOp> binop);
-	bool visit_factor(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::IFactor> factor);
-	bool visit_comparison(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Comparison> comparison);
-	bool visit_check(std::shared_ptr<VmController> vmc, std::shared_ptr<AST::Check> check);
+	bool visit_expr(std::shared_ptr<AST::IExpr> expr);
+	bool visit_binop(std::shared_ptr<AST::BinOp> binop);
+	bool visit_factor(std::shared_ptr<AST::IFactor> factor);
+	bool visit_comparison(std::shared_ptr<AST::Comparison> comparison);
+	bool visit_check(const IR::Check& check);
 
 	js::Value eval_js(const std::string& script, stb::Image& screenshot);
 
-	std::string test_cksum(std::shared_ptr<AST::Test> test) const;
+	std::string test_cksum(std::shared_ptr<IR::Test> test) const;
 	template_literals::Parser template_parser;
+
+	std::shared_ptr<StackNode> stack;
 
 private:
 	//settings
 	bool stop_on_fail;
 	bool assume_yes;
-	std::string test_spec, exclude, invalidate;
+	std::string invalidate;
 
-	std::list<std::shared_ptr<AST::Test>> tests_to_run;
-	std::vector<std::shared_ptr<AST::Test>> up_to_date_tests;
-	std::vector<std::shared_ptr<AST::Test>> cache_missed_tests;
+	std::list<std::shared_ptr<IR::Test>> tests_to_run;
+	std::vector<std::shared_ptr<IR::Test>> up_to_date_tests;
+	std::vector<std::shared_ptr<IR::Test>> cache_missed_tests;
 
-	void setup_vars(std::shared_ptr<AST::Program> program);
+	void setup_vars();
 	void reset_cache();
 
-	bool parent_is_ok(std::shared_ptr<AST::Test> test, std::shared_ptr<AST::Test> parent,
-		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
-		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
+	bool parent_is_ok(std::shared_ptr<IR::Test> test, std::shared_ptr<IR::Test> parent,
+		std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
+		std::list<std::shared_ptr<IR::Test>>::reverse_iterator end);
 
-	void build_test_plan(std::shared_ptr<AST::Test> test,
-		std::list<std::shared_ptr<AST::Test>>& test_plan,
-		std::list<std::shared_ptr<AST::Test>>::reverse_iterator begin,
-		std::list<std::shared_ptr<AST::Test>>::reverse_iterator end);
+	void build_test_plan(std::shared_ptr<IR::Test> test,
+		std::list<std::shared_ptr<IR::Test>>& test_plan,
+		std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
+		std::list<std::shared_ptr<IR::Test>>::reverse_iterator end);
 
-	bool is_cached(std::shared_ptr<AST::Test> test) const;
-	bool is_cache_miss(std::shared_ptr<AST::Test> test) const;
-	void check_up_to_date_tests(std::list<std::shared_ptr<AST::Test>>& tests_queue);
-	void resolve_tests(const std::list<std::shared_ptr<AST::Test>>& tests_queue);
+	bool is_cached(std::shared_ptr<IR::Test> test) const;
+	bool is_cache_miss(std::shared_ptr<IR::Test> test) const;
+	void check_up_to_date_tests(std::list<std::shared_ptr<IR::Test>>& tests_queue);
+	void resolve_tests(const std::list<std::shared_ptr<IR::Test>>& tests_queue);
 	void update_progress();
 
-	void stop_all_vms(std::shared_ptr<AST::Test> test) {
-		for (auto vmc: reg->get_all_vmcs(test)) {
-			if (vmc->is_defined()) {
-				if (vmc->vm->state() != VmState::Stopped) {
-					vmc->vm->stop();
-				}
-				vmc->set_metadata("current_state", "");
-			}
-		}
-	}
-
-	std::string wait_default_timeout;
-	std::string wait_default_interval;
-	std::string check_default_timeout;
-	std::string check_default_interval;
-	std::string mouse_move_click_default_timeout;
-	std::string press_default_interval;
-	std::string type_default_interval;
-	std::string exec_default_timeout;
-	std::string copy_default_timeout;
+	void stop_all_vms(std::shared_ptr<IR::Test> test);
 
 	coro::Timer timer;
-	std::shared_ptr<Register> reg;
-
-	std::vector<std::shared_ptr<AST::Controller>> flash_drives;
 
 	std::unordered_map<std::string, std::vector<std::string>> charmap;
 
 	std::shared_ptr<js::Context> js_current_ctx;
+
+	std::shared_ptr<IR::Machine> vmc;
 };
