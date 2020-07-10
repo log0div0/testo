@@ -6,11 +6,32 @@ flash my_flash {
 	size: 32Mb
 }
 
+flash my_another_flash {
+	fs: "fat"
+	size: 32Mb
+}
+
 test plug_flash: install_ubuntu_server {
 	my_ubuntu_server {
 		plug flash my_flash;
 		sleep 5s
 		abort "stop here"
+	}
+}
+
+test plug_already_plugged_flash: install_ubuntu_server {
+	my_ubuntu_server {
+		plug flash my_flash;
+		sleep 5s
+		plug flash my_flash;
+	}
+}
+
+test plug_already_plugged_flash_2: install_ubuntu_server {
+	my_ubuntu_server {
+		plug flash my_flash;
+		sleep 5s
+		plug flash my_another_flash;
 	}
 }
 

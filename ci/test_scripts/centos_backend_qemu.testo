@@ -134,4 +134,15 @@ test centos_backend_qemu_plug_flash_with_files: centos_prepare_testo_part2 {
 	}
 }
 
+[no_snapshots: true]
+test centos_backend_qemu_plug_flash_exceptions: centos_prepare_testo_part2 {
+	centos {
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_already_plugged_flash | grep "specified flash my_flash is already plugged into this virtual machine"
+			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_already_plugged_flash_2
+		""" timeout 30m
+	}
+}
+
 
