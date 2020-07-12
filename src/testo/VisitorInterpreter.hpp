@@ -3,6 +3,7 @@
 #include "coro/Timer.h"
 #include "IR/Test.hpp"
 #include "IR/Action.hpp"
+#include "IR/Expr.hpp"
 #include "TemplateLiterals.hpp"
 #include "Reporter.hpp"
 #include "js/Context.hpp"
@@ -122,6 +123,7 @@ struct VisitorInterpreter {
 	bool visit_binop(std::shared_ptr<AST::BinOp> binop);
 	bool visit_factor(std::shared_ptr<AST::IFactor> factor);
 	bool visit_comparison(std::shared_ptr<AST::Comparison> comparison);
+	bool visit_defined(const IR::Defined& defined);
 	bool visit_check(const IR::Check& check);
 
 	js::Value eval_js(const std::string& script, stb::Image& screenshot);

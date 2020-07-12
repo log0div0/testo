@@ -3,6 +3,7 @@
 
 #include "IR/Test.hpp"
 #include "IR/Action.hpp"
+#include "IR/Expr.hpp"
 #include "TemplateLiterals.hpp"
 
 struct VisitorCksum {
@@ -32,6 +33,7 @@ struct VisitorCksum {
 	std::string visit_expr(std::shared_ptr<AST::IExpr> expr);
 	std::string visit_binop(std::shared_ptr<AST::BinOp> binop);
 	std::string visit_factor(std::shared_ptr<AST::IFactor> factor);
+	std::string visit_defined(const IR::Defined& defined);
 	std::string visit_comparison(std::shared_ptr<AST::Comparison> comparison);
 	std::string visit_check(const IR::Check& check);
 

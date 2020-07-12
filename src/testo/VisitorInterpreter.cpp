@@ -1611,6 +1611,8 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 		return p->is_negated() ^ (bool)template_parser.resolve(p->factor->text(), stack).length();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		return p->is_negated() ^ visit_comparison(p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Defined>>(factor)) {
+		return p->is_negated() ^ visit_defined({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		return p->is_negated() ^ visit_check({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
@@ -1662,6 +1664,10 @@ bool VisitorInterpreter::visit_comparison(std::shared_ptr<AST::Comparison> compa
 	} else {
 		throw std::runtime_error("Unknown comparison op");
 	}
+}
+
+bool VisitorInterpreter::visit_defined(const IR::Defined& defined) {
+	return defined.is_defined();
 }
 
 bool VisitorInterpreter::visit_check(const IR::Check& check) {

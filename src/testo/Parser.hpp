@@ -46,6 +46,7 @@ private:
 	bool test_select_expr() const;
 	bool test_binary() const;
 	bool test_comparison() const;
+	bool test_defined() const;
 	bool is_button(const Token& t) const;
 
 	void newline_list();
@@ -109,6 +110,7 @@ private:
 	std::shared_ptr<AST::IFactor> factor();
 	std::shared_ptr<AST::Check> check();
 	std::shared_ptr<AST::Comparison> comparison();
+	std::shared_ptr<AST::Defined> defined();
 	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
 	std::shared_ptr<AST::IExpr> expr();
 

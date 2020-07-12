@@ -190,6 +190,10 @@ bool Parser::test_comparison() const {
 	return false;
 }
 
+bool Parser::test_defined() const {
+	return LA(1) == Token::category::DEFINED;
+}
+
 void Parser::newline_list() {
 	while (LA(1) == Token::category::newline) {
 		match (Token::category::newline);
@@ -1291,6 +1295,8 @@ std::shared_ptr<IFactor> Parser::factor() {
 		return std::shared_ptr<Factor<Check>>(new Factor<Check>(not_token, check()));
 	} else if(test_comparison()) {
 		return std::shared_ptr<Factor<Comparison>>(new Factor<Comparison>(not_token, comparison()));
+	} else if(test_defined()) {
+		return std::shared_ptr<Factor<Defined>>(new Factor<Defined>(not_token, defined()));
 	} else if (LA(1) == Token::category::lparen) {
 		match(Token::category::lparen);
 		auto result = std::shared_ptr<Factor<IExpr>>(new Factor<IExpr>(not_token, expr()));
@@ -1320,6 +1326,15 @@ std::shared_ptr<Comparison> Parser::comparison() {
 	auto right = string();
 
 	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
+}
+
+std::shared_ptr<Defined> Parser::defined() {
+	auto defined_token = LT(1);
+	match(Token::category::DEFINED);
+	Token var = LT(1);
+	match(Token::category::id);
+
+	return std::shared_ptr<Defined>(new Defined(defined_token, var));
 }
 
 std::shared_ptr<Check> Parser::check() {

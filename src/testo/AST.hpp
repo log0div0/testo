@@ -1439,6 +1439,25 @@ struct Factor: public IFactor {
 	std::shared_ptr<FactorType> factor;
 };
 
+struct Defined: public Node {
+	Defined(const Token& defined, const Token& var):
+		Node(defined), var(var) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return var.end();
+	}
+
+	operator std::string() const {
+		return t.value() + " " + var.value();
+	}
+
+	Token var;
+};
+
 struct Comparison: public Node {
 	Comparison(const Token& op, std::shared_ptr<String> left, std::shared_ptr<String> right):
 		Node(op), left(left), right(right) {}

@@ -80,6 +80,8 @@ struct Token {
 
 		//expressions
 
+		DEFINED,
+
 		//comparisons
 		LESS,
 		GREATER,
@@ -279,6 +281,26 @@ struct Token {
 			return ";";
 		case colon:
 			return ":";
+		case DEFINED:
+			return "DEFINED";
+		case LESS:
+			return "LESS";
+		case GREATER:
+			return "GREATER";
+		case EQUAL:
+			return "EQUAL";
+		case STRLESS:
+			return "STRLESS";
+		case STRGREATER:
+			return "STRGREATER";
+		case STREQUAL:
+			return "STREQUAL";
+		case NOT:
+			return "NOT";
+		case AND:
+			return "AND";
+		case OR:
+			return "OR";
 		case none:
 			return "NONE";
 		case program:

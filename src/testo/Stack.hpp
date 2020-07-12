@@ -23,6 +23,17 @@ struct StackNode {
 		return parent->resolve_var(name);
 	}
 
+	bool is_defined(const std::string& var) const {
+		auto it = vars.find(var);
+		if (it != vars.end()) {
+			return true;
+		}
+		if (!parent) {
+			return false;
+		}
+		return parent->is_defined(var);
+	}
+
 	std::shared_ptr<StackNode> parent;
 	std::map<std::string, std::string> vars;
 };

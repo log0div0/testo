@@ -336,6 +336,9 @@ std::string VisitorCksum::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_comparison(p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Defined>>(factor)) {
+		result += std::to_string(p->is_negated());
+		result += visit_defined({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		result += std::to_string(p->is_negated());
 		result += visit_check({p->factor, stack});
@@ -346,6 +349,12 @@ std::string VisitorCksum::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 		throw std::runtime_error("Unknown factor type");
 	}
 
+	return result;
+}
+
+std::string VisitorCksum::visit_defined(const IR::Defined& defined) {
+	std::string result = std::string(*defined.ast_node);
+	result += defined.is_defined();	
 	return result;
 }
 
