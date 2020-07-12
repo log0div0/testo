@@ -10,9 +10,9 @@ test centos_semantic: centos_prepare_testo_part1 {
 			testo run /0001.testo | grep '/0001.testo:6:1: Error: test "A" is already defined here: /0001.testo:2:1'
 			testo run /0002.testo | grep '/0002.testo:6:1: Error: macro "A" is already defined here: /0002.testo:2:1'
 			testo run /0003.testo | grep '/0003.testo:4:1: Error: param "A" is already defined here: /0003.testo:2:1'
-			testo run /0004.testo | grep '/0004.testo:6:1: Error: entity "A" is already defined here: /0004.testo:2:1'
-			testo run /0005.testo | grep '/0005.testo:6:1: Error: entity "A" is already defined here: /0005.testo:2:1'
-			testo run /0006.testo | grep '/0006.testo:6:1: Error: entity "A" is already defined here: /0006.testo:2:1'
+			testo run /0004.testo | grep '/0004.testo:6:1: Error: machine "A" is already defined here: /0004.testo:2:1'
+			testo run /0005.testo | grep '/0005.testo:6:1: Error: flash drive "A" is already defined here: /0005.testo:2:1'
+			testo run /0006.testo | grep '/0006.testo:6:1: Error: network "A" is already defined here: /0006.testo:2:1'
 			testo run /0007.testo | grep "/0007.testo:2:9: Error: can't specify test as a parent to itself A"
 			testo run /0008.testo | grep '/0008.testo:2:9: Error: unknown test: B'
 			testo run /0009.testo | grep '/0009.testo:6:12: Error: this test was already specified in parent list A'

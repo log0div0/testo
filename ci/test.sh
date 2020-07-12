@@ -3,6 +3,7 @@
 source "$(dirname "$0")/vars.sh"
 
 sudo testo run "$SCRIPT_DIR/test_scripts" \
+	--stop_on_fail \
 	--prefix tt_ \
 	--param ISO_DIR "$ISO_DIR" \
 	--param OUT_DIR "$OUT_DIR" \
