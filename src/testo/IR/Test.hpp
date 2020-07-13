@@ -22,6 +22,8 @@ struct Test: Object<AST::Test> {
 	std::string description() const;
 	bool snapshots_needed() const;
 
+	std::string cksum_input;
+
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point stop_timestamp;
 	std::ofstream output_file;

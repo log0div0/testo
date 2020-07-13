@@ -243,6 +243,13 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	}
 
 	current_test = test;
+
+	current_test->cksum_input = test->name();
+	for (auto parent: test->parents) {
+		current_test->cksum_input += parent->name();
+	}
+	current_test->cksum_input += test->snapshots_needed();
+
 	StackPusher<VisitorSemantic> new_ctx(this, test->stack);
 	visit_command_block(test->ast_node->cmd_block);
 	current_test = nullptr;
@@ -267,6 +274,8 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 		}
 
 		visit_machine(vmc);
+
+
 		if (vmc->config.count("nic")) {
 			auto nics = vmc->config.at("nic");
 			for (auto& nic: nics) {
@@ -277,6 +286,8 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 				}
 			}
 		}
+
+		current_test->cksum_input += vm_token.value();
 	}
 
 	visit_action(cmd->action);
@@ -289,7 +300,9 @@ void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> actio
 }
 
 void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
+		return visit_abort({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		return visit_press(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
 		return visit_key_combination(p->action->combination);
@@ -314,6 +327,11 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		return visit_for_clause(p->action);
 	}
+}
+
+void VisitorSemantic::visit_abort(const IR::Abort& abort) {
+	current_test->cksum_input += "abort ";
+	current_test->cksum_input += abort.message();
 }
 
 void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {

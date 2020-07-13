@@ -78,7 +78,7 @@ struct VisitorInterpreter {
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
 	void visit_action(std::shared_ptr<AST::IAction> action);
-	void visit_abort(std::shared_ptr<AST::Abort> abort);
+	void visit_abort(const IR::Abort& abort);
 	void visit_print(std::shared_ptr<AST::Print> print_action);
 	void visit_type(const IR::Type& type);
 	void visit_wait(const IR::Wait& wait);

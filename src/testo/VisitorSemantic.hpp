@@ -3,6 +3,7 @@
 
 #include "IR/Test.hpp"
 #include "IR/Macro.hpp"
+#include "IR/Action.hpp"
 #include "TemplateLiterals.hpp"
 
 #include <set>
@@ -22,6 +23,7 @@ struct VisitorSemantic {
 	void visit_mouse_move_selectable(std::shared_ptr<AST::MouseSelectable> mouse_selectable);
 	void visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click);
 	void visit_mouse(std::shared_ptr<AST::Mouse> mouse);
+	void visit_abort(const IR::Abort& abort);
 	void visit_press(std::shared_ptr<AST::Press> press);
 	void visit_key_combination(std::shared_ptr<AST::KeyCombination> combination);
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);

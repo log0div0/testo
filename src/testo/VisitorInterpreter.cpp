@@ -620,7 +620,7 @@ void VisitorInterpreter::visit_action_block(std::shared_ptr<AST::ActionBlock> ac
 
 void VisitorInterpreter::visit_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort(p->action);
+		visit_abort({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
 		visit_print(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
@@ -668,9 +668,8 @@ void VisitorInterpreter::visit_action(std::shared_ptr<AST::IAction> action) {
 	coro::CheckPoint();
 }
 
-void VisitorInterpreter::visit_abort(std::shared_ptr<AST::Abort> abort) {
-	std::string message = template_parser.resolve(abort->message->text(), stack);
-	throw AbortException(abort, vmc, message);
+void VisitorInterpreter::visit_abort(const IR::Abort& abort) {
+	throw AbortException(abort.ast_node, vmc, abort.message());
 }
 
 void VisitorInterpreter::visit_print(std::shared_ptr<AST::Print> print_action) {

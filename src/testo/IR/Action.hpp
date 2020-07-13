@@ -14,6 +14,11 @@ struct Action {
 	std::shared_ptr<StackNode> stack;
 };
 
+struct Abort: Action<AST::Abort> {
+	using Action<AST::Abort>::Action;
+	std::string message() const;
+};
+
 struct Press: Action<AST::Press> {
 	using Action<AST::Press>::Action;
 	std::string interval() const;

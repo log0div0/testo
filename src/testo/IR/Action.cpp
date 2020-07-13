@@ -5,6 +5,10 @@
 
 namespace IR {
 
+std::string Abort::message() const {
+	return template_literals::Parser().resolve(ast_node->message->text(), stack);
+}
+
 std::string Press::interval() const {
 	if (ast_node->interval) {
 		return ast_node->interval.value();
