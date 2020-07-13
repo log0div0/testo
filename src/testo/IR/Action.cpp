@@ -9,12 +9,27 @@ std::string Abort::message() const {
 	return template_literals::Parser().resolve(ast_node->message->text(), stack);
 }
 
+std::string Print::message() const {
+	return template_literals::Parser().resolve(ast_node->message->text(), stack);
+}
+
 std::string Press::interval() const {
 	if (ast_node->interval) {
 		return ast_node->interval.value();
 	} else {
 		return program->stack->resolve_var("TESTO_PRESS_DEFAULT_INTERVAL");
 	}
+}
+
+std::vector<std::string> Hold::buttons() const {
+	return ast_node->combination->get_buttons();
+}
+
+std::vector<std::string> Release::buttons() const {
+	if (ast_node->combination) {
+		return ast_node->combination->get_buttons();
+	}
+	return {};
 }
 
 std::string Type::text() const {
@@ -27,6 +42,10 @@ std::string Type::interval() const {
 	} else {
 		return program->stack->resolve_var("TESTO_TYPE_DEFAULT_INTERVAL");
 	}
+}
+
+std::string Wait::select_expr() const {
+	return template_literals::Parser().resolve(std::string(*ast_node->select_expr), stack);
 }
 
 std::string Wait::timeout() const {
@@ -45,12 +64,74 @@ std::string Wait::interval() const {
 	}
 }
 
+std::string Sleep::timeout() const {
+	return ast_node->timeout.value();
+}
+
+std::string MouseMoveClick::event_type() const {
+	return ast_node->t.value();
+}
+
+std::string MouseCoordinates::x() const {
+	return ast_node->dx.value();
+}
+
+std::string MouseCoordinates::y() const {
+	return ast_node->dy.value();
+}
+
 std::string MouseSelectable::timeout() const {
 	if (ast_node->timeout) {
 		return ast_node->timeout.value();
 	} else {
 		return program->stack->resolve_var("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 	}
+}
+
+std::string SelectJS::script() const {
+	return template_literals::Parser().resolve(ast_node->text(), stack);
+}
+
+std::string SelectText::text() const {
+	return template_literals::Parser().resolve(ast_node->text(), stack);
+}
+
+std::string MouseHold::button() const {
+	return ast_node->button.value();
+}
+
+bool Plug::is_on() const {
+	return ast_node->is_on();
+}
+
+std::string Plug::entity_type() const {
+	return ast_node->type.value();
+}
+
+std::string Plug::entity_name() const {
+	return ast_node->name_token.value();
+}
+
+fs::path Plug::dvd_path() const {
+	fs::path path = template_literals::Parser().resolve(ast_node->path->text(), stack);
+	if (path.is_relative()) {
+		path = ast_node->t.begin().file.parent_path() / path;
+	}
+
+	return path;
+}
+
+std::string Shutdown::timeout() const {
+	if (ast_node->timeout) {
+		return ast_node->timeout.value();
+	} else {
+		return "1m";
+	}
+}
+
+std::string Exec::interpreter() const {
+	return ast_node->process_token.value();
+
 }
 
 std::string Exec::timeout() const {
@@ -61,7 +142,7 @@ std::string Exec::timeout() const {
 	}
 }
 
-std::string Exec::text() const {
+std::string Exec::script() const {
 	return template_literals::Parser().resolve(ast_node->commands->text(), stack);
 }
 
@@ -112,5 +193,10 @@ std::string Check::interval() const {
 		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_INTERVAL");
 	}
 }
+
+std::string CycleControl::type() const {
+	return ast_node->t.value();
+}
+
 
 }

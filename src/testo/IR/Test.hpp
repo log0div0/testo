@@ -23,6 +23,7 @@ struct Test: Object<AST::Test> {
 	bool snapshots_needed() const;
 
 	std::string cksum_input;
+	std::string cksum;
 
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point stop_timestamp;

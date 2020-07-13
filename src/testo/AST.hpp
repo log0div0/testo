@@ -70,6 +70,29 @@ struct SelectJS: public Node {
 	std::shared_ptr<String> script;
 };
 
+struct SelectText: public Node {
+	SelectText(std::shared_ptr<String> text):
+		Node(Token(Token::category::select_text, "select_text", Pos(), Pos())), _text(text) {}
+
+	Pos begin() const {
+		return _text->begin();
+	}
+
+	Pos end() const {
+		return _text->end();
+	}
+
+	operator std::string() const {
+		return std::string(*_text);
+	}
+
+	std::string text() const {
+		return _text->text();
+	}
+
+	std::shared_ptr<String> _text;
+};
+
 //String or SelectQuery. Used only in
 //Wait, Check and Click (in future)
 struct ISelectable: public Node {
@@ -1404,6 +1427,8 @@ struct Program: public Node {
 
 struct IFactor: public Node {
 	using Node::Node;
+
+	virtual bool is_negated() const = 0;
 };
 
 //String, comparison, check or expr
@@ -1620,7 +1645,6 @@ struct IfClause: public Node {
 
 struct ICounterList: public Node {
 	using Node::Node;
-	virtual std::vector<std::string> values() const = 0;
 };
 
 template <typename CounterListType>
@@ -1639,10 +1663,6 @@ struct CounterList: public ICounterList {
 
 	operator std::string() const {
 		return std::string(*counter_list);
-	}
-
-	std::vector<std::string> values() const {
-		return counter_list->values();
 	}
 
 	std::shared_ptr<CounterListType> counter_list;
@@ -1672,31 +1692,8 @@ struct Range: public Node {
 		return result;
 	}
 
-	std::vector<std::string> values() const {
-		std::vector<std::string> result;
-
-		uint32_t start = 0;
-		uint32_t finish = 0;
-		if (r2) {
-			start = r1_num;
-			finish = r2_num;
-		} else {
-			start = 0;
-			finish = r1_num;
-		}
-
-		for (uint32_t i = start; i < finish; ++i) {
-			result.push_back(std::to_string(i));
-		}
-
-		return result;
-	}
-
 	std::shared_ptr<String> r1 = nullptr;
 	std::shared_ptr<String> r2 = nullptr;
-
-	uint32_t r1_num = 0;
-	uint32_t r2_num = 0;
 };
 
 struct ForClause: public Node {

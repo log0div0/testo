@@ -1,6 +1,5 @@
 
 #include "VisitorInterpreter.hpp"
-#include "VisitorCksum.hpp"
 #include "IR/Program.hpp"
 
 #include "coro/CheckPoint.h"
@@ -292,7 +291,7 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<IR::Test> test) const {
 		if (controller->is_defined() &&
 			controller->check_config_relevance() &&
 			controller->has_snapshot(test->name()) &&
-			(controller->get_snapshot_cksum(test->name()) == test_cksum(test)))
+			(controller->get_snapshot_cksum(test->name()) == test->cksum))
 		{
 			continue;
 		}
@@ -324,7 +323,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<IR::Test> test) const {
 	for (auto controller: test->get_all_controllers()) {
 		if (controller->is_defined()) {
 			if (controller->has_snapshot(test->name())) {
-				if (controller->get_snapshot_cksum(test->name()) != test_cksum(test)) {
+				if (controller->get_snapshot_cksum(test->name()) != test->cksum) {
 					return true;
 				}
 				if (!controller->check_config_relevance()) {
@@ -546,7 +545,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		for (auto controller: test->get_all_machines()) {
 			if (!controller->has_snapshot(test->name())) {
 				reporter.take_snapshot(controller, test->name());
-				controller->create_snapshot(test->name(), test_cksum(test), test->snapshots_needed());
+				controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
 			}
 			controller->current_state = test->name();
 		}
@@ -555,7 +554,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		for (auto controller: test->get_all_flash_drives()) {
 			if (!controller->has_snapshot(test->name())) {
 				reporter.take_snapshot(controller, test->name());
-				controller->create_snapshot(test->name(), test_cksum(test), test->snapshots_needed());
+				controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
 			}
 			controller->current_state = test->name();
 		}
@@ -622,29 +621,29 @@ void VisitorInterpreter::visit_action(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
 		visit_abort({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print(p->action);
+		visit_print({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
 		visit_type({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		visit_wait({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		visit_sleep(p->action);
+		visit_sleep({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
 		visit_press({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
-		visit_hold(p->action);
+		visit_hold({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
-		visit_release(p->action);
+		visit_release({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		visit_mouse(p->action);
+		visit_mouse({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		visit_plug(p->action);
+		visit_plug({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		visit_start(p->action);
+		visit_start({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		visit_stop(p->action);
+		visit_stop({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		visit_shutdown(p->action);
+		visit_shutdown({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
 		visit_exec({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
@@ -672,12 +671,11 @@ void VisitorInterpreter::visit_abort(const IR::Abort& abort) {
 	throw AbortException(abort.ast_node, vmc, abort.message());
 }
 
-void VisitorInterpreter::visit_print(std::shared_ptr<AST::Print> print_action) {
+void VisitorInterpreter::visit_print(const IR::Print& print) {
 	try {
-		std::string message = template_parser.resolve(print_action->message->text(), stack);
-		reporter.print(vmc, message);
+		reporter.print(vmc, print.message());
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(print_action, vmc));
+		std::throw_with_nested(ActionException(print.ast_node, vmc));
 	}
 }
 
@@ -732,9 +730,8 @@ js::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& scr
 	}
 }
 
-nn::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AST::SelectJS>> js, stb::Image& screenshot) {
-	auto script = template_parser.resolve(js->text(), stack);
-	auto value = eval_js(script, screenshot);
+nn::Point VisitorInterpreter::visit_select_js(const IR::SelectJS& js, stb::Image& screenshot) {
+	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_object() && !value.is_array()) {
 		auto x_prop = value.get_property_str("x");
@@ -756,10 +753,14 @@ nn::Point VisitorInterpreter::visit_select_js(std::shared_ptr<AST::Selectable<AS
 	}
 }
 
+nn::Tensor VisitorInterpreter::visit_select_text(const IR::SelectText& text, stb::Image& screenshot) {
+	auto parsed = text.text();
+	return  nn::find_text(&screenshot).match(parsed);	
+}
+
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
-		auto text = template_parser.resolve(p->text(), stack);
-		return nn::find_text(&screenshot).match(text).size();
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
+		return visit_select_text({p->selectable, stack}, screenshot).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		auto script = template_parser.resolve(p->text(), stack);
 		auto value = eval_js(script, screenshot);
@@ -800,9 +801,9 @@ bool VisitorInterpreter::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> bi
 	}
 }
 
-void VisitorInterpreter::visit_sleep(std::shared_ptr<AST::Sleep> sleep) {
-	reporter.sleep(vmc, sleep->timeout.value());
-	::sleep(sleep->timeout.value());
+void VisitorInterpreter::visit_sleep(const IR::Sleep& sleep) {
+	reporter.sleep(vmc, sleep.timeout());
+	::sleep(sleep.timeout());
 }
 
 void VisitorInterpreter::visit_wait(const IR::Wait& wait) {
@@ -810,7 +811,7 @@ void VisitorInterpreter::visit_wait(const IR::Wait& wait) {
 		std::string wait_for = wait.timeout();
 		std::string interval_str = wait.interval();
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
-		auto text = template_parser.resolve(std::string(*wait.ast_node->select_expr), wait.stack);
+		auto text = wait.select_expr();
 
 		reporter.wait(vmc, text, wait_for, interval_str);
 
@@ -858,67 +859,69 @@ void VisitorInterpreter::visit_press(const IR::Press& press) {
 	}
 }
 
-void VisitorInterpreter::visit_hold(std::shared_ptr<AST::Hold> hold) {
+void VisitorInterpreter::visit_hold(const IR::Hold& hold) {
 	try {
-		reporter.hold_key(vmc, std::string(*hold->combination));
-		vmc->hold(hold->combination->get_buttons());
+		reporter.hold_key(vmc, std::string(*hold.ast_node->combination));
+		vmc->hold(hold.buttons());
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(hold, vmc));
+		std::throw_with_nested(ActionException(hold.ast_node, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_release(std::shared_ptr<AST::Release> release) {
+void VisitorInterpreter::visit_release(const IR::Release& release) {
 	try {
-		if (release->combination) {
-			reporter.release_key(vmc, std::string(*release->combination));
-			vmc->release(release->combination->get_buttons());
+		auto buttons = release.buttons();
+
+		if (buttons.size()) {
+			reporter.release_key(vmc, std::string(*release.ast_node->combination));
+			vmc->release(release.buttons());
 		} else {
 			reporter.release_key(vmc);
 			vmc->release();
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(release, vmc));
+		std::throw_with_nested(ActionException(release.ast_node, vmc));
 	}
 }
 
 
-void VisitorInterpreter::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
-	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse->event)) {
-		return visit_mouse_move_click(p->event);
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse->event)) {
-		return visit_mouse_hold(p->event);
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse->event)) {
-		return visit_mouse_release(p->event);
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseWheel>>(mouse->event)) {
-		return visit_mouse_wheel(p->event);
+void VisitorInterpreter::visit_mouse(const IR::Mouse& mouse) {
+	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse.ast_node->event)) {
+		return visit_mouse_move_click({p->event, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse.ast_node->event)) {
+		return visit_mouse_hold({p->event, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse.ast_node->event)) {
+		return visit_mouse_release({p->event, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseWheel>>(mouse.ast_node->event)) {
+		throw std::runtime_error("Not implemented yet");
 	} else {
 		throw std::runtime_error("Unknown mouse actions");
 	}
 }
 
-void VisitorInterpreter::visit_mouse_hold(std::shared_ptr<AST::MouseHold> mouse_hold) {
+void VisitorInterpreter::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
 	try {
-		reporter.mouse_hold(vmc, mouse_hold->button.value());
-		if (mouse_hold->button.type() == Token::category::lbtn) {
+		reporter.mouse_hold(vmc, mouse_hold.button());
+		if (mouse_hold.button() == "lbtn") {
 			vmc->mouse_hold({MouseButton::Left});
-		} else if (mouse_hold->button.type() == Token::category::rbtn) {
+		} else if (mouse_hold.button() == "rbtn") {
 			vmc->mouse_hold({MouseButton::Right});
-		} else if (mouse_hold->button.type() == Token::category::mbtn) {
+		} else if (mouse_hold.button() == "mbtn") {
 			vmc->mouse_hold({MouseButton::Middle});
 		} else {
-			throw std::runtime_error("Unknown mouse button: " + mouse_hold->button.value());
+			throw std::runtime_error("Unknown mouse button: " + mouse_hold.button());
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(mouse_hold, vmc));
+		std::throw_with_nested(ActionException(mouse_hold.ast_node, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_mouse_release(std::shared_ptr<AST::MouseRelease> mouse_release) {
+void VisitorInterpreter::visit_mouse_release(const IR::MouseRelease& mouse_release) {
 	try {
 		reporter.mouse_release(vmc);
 		vmc->mouse_release();
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(mouse_release, vmc));
+		std::throw_with_nested(ActionException(mouse_release.ast_node, vmc));
 	}
 }
 
@@ -939,31 +942,31 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mous
 	}
 }
 
-void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
+void VisitorInterpreter::visit_mouse_move_click(const IR::MouseMoveClick& mouse_move_click) {
 	try {
-		reporter.mouse_move_click(vmc, mouse_move_click->t.value());
+		reporter.mouse_move_click(vmc, mouse_move_click.event_type());
 
-		if (mouse_move_click->object) {
-			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click->object)) {
-				visit_mouse_move_coordinates(p->target);
-			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click->object)) {
+		if (mouse_move_click.ast_node->object) {
+			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click.ast_node->object)) {
+				visit_mouse_move_coordinates({p->target, stack});
+			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click.ast_node->object)) {
 				visit_mouse_move_selectable({p->target, stack});
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
 		}
 
-		if (mouse_move_click->t.type() == Token::category::move) {
+		if (mouse_move_click.event_type() == "move") {
 			return;
 		}
 
-		if (mouse_move_click->t.type() == Token::category::click || mouse_move_click->t.type() == Token::category::lclick) {
+		if (mouse_move_click.event_type() == "click" || mouse_move_click.event_type() == "lclick") {
 			vmc->mouse_press({MouseButton::Left});
-		} else if (mouse_move_click->t.type() == Token::category::rclick) {
+		} else if (mouse_move_click.event_type() == "rclick") {
 			vmc->mouse_press({MouseButton::Right});
-		} else if (mouse_move_click->t.type() == Token::category::mclick) {
+		} else if (mouse_move_click.event_type() == "mclick") {
 			vmc->mouse_press({MouseButton::Middle});
-		} else if (mouse_move_click->t.type() == Token::category::dclick) {
+		} else if (mouse_move_click.event_type() == "dclick") {
 			vmc->mouse_press({MouseButton::Left});
 			timer.waitFor(std::chrono::milliseconds(20));
 			vmc->mouse_press({MouseButton::Left});
@@ -971,7 +974,7 @@ void VisitorInterpreter::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveCl
 			throw std::runtime_error("Unsupported click type");
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(mouse_move_click, vmc));
+		std::throw_with_nested(ActionException(mouse_move_click.ast_node, vmc));
 	}
 }
 
@@ -1098,13 +1101,11 @@ void VisitorInterpreter::visit_mouse_move_selectable(const IR::MouseSelectable& 
 		try {
 			nn::Point point;
 			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
-				point = visit_select_js(p, screenshot);
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable.ast_node->selectable)) {
-				auto text = template_parser.resolve(p->text(), stack);
-				auto ocr_find = nn::find_text(&screenshot).match(text);
-
+				point = visit_select_js({p->selectable, stack}, screenshot);
+			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
+				auto ocr_found = visit_select_text({p->selectable, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, ocr_find);
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, ocr_found);
 			}
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return;
@@ -1127,10 +1128,10 @@ void VisitorInterpreter::visit_mouse_move_selectable(const IR::MouseSelectable& 
 	throw std::runtime_error("Timeout");
 }
 
-void VisitorInterpreter::visit_mouse_move_coordinates(std::shared_ptr<AST::MouseCoordinates> coordinates)
+void VisitorInterpreter::visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates)
 {
-	auto dx = coordinates->dx.value();
-	auto dy = coordinates->dy.value();
+	auto dx = coordinates.x();
+	auto dy = coordinates.y();
 	reporter.mouse_move_click_coordinates(vmc, dx, dy);
 	if ((dx[0] == '+') || (dx[0] == '-')) {
 		vmc->vm()->mouse_move_rel("x", std::stoi(dx));
@@ -1156,35 +1157,35 @@ void VisitorInterpreter::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec, 
 	}
 }
 
-void VisitorInterpreter::visit_plug(std::shared_ptr<AST::Plug> plug) {
+void VisitorInterpreter::visit_plug(const IR::Plug& plug) {
 	try {
-		if (plug->type.value() == "nic") {
+		if (plug.entity_type() == "nic") {
 			return visit_plug_nic(plug);
-		} else if (plug->type.value() == "link") {
+		} else if (plug.entity_type() == "link") {
 			return visit_plug_link(plug);
-		} else if (plug->type.value() == "dvd") {
+		} else if (plug.entity_type() == "dvd") {
 			return visit_plug_dvd(plug);
-		} else if (plug->type.value() == "flash") {
-			if(plug->is_on()) {
-				return plug_flash(plug);
+		} else if (plug.entity_type() == "flash") {
+			if(plug.is_on()) {
+				return visit_plug_flash(plug);
 			} else {
-				return unplug_flash(plug);
+				return visit_unplug_flash(plug);
 			}
 		} else {
 			throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
-				plug->type.value());
+				plug.entity_type());
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(plug, vmc));
+		std::throw_with_nested(ActionException(plug.ast_node, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_plug_nic(std::shared_ptr<AST::Plug> plug) {
+void VisitorInterpreter::visit_plug_nic(const IR::Plug& plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
-	auto nic = plug->name_token.value();
+	auto nic = plug.entity_name();
 
-	reporter.plug(vmc, "nic", nic, plug->is_on());
+	reporter.plug(vmc, "nic", nic, plug.is_on());
 
 	auto nics = vmc->vm()->nics();
 	if (nics.find(nic) == nics.end()) {
@@ -1195,24 +1196,24 @@ void VisitorInterpreter::visit_plug_nic(std::shared_ptr<AST::Plug> plug) {
 		throw std::runtime_error(fmt::format("virtual machine is running, but must be stopped"));
 	}
 
-	if (vmc->vm()->is_nic_plugged(nic) == plug->is_on()) {
-		if (plug->is_on()) {
+	if (vmc->vm()->is_nic_plugged(nic) == plug.is_on()) {
+		if (plug.is_on()) {
 			throw std::runtime_error(fmt::format("specified nic {} is already plugged in this virtual machine", nic));
 		} else {
 			throw std::runtime_error(fmt::format("specified nic {} is not unplugged from this virtual machine", nic));
 		}
 	}
 
-	vmc->vm()->set_nic(nic, plug->is_on());
+	vmc->vm()->set_nic(nic, plug.is_on());
 }
 
-void VisitorInterpreter::visit_plug_link(std::shared_ptr<AST::Plug> plug) {
+void VisitorInterpreter::visit_plug_link(const IR::Plug& plug) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 
-	auto nic = plug->name_token.value();
+	auto nic = plug.entity_name();
 
-	reporter.plug(vmc, "link", nic, plug->is_on());
+	reporter.plug(vmc, "link", nic, plug.is_on());
 
 	auto nics = vmc->vm()->nics();
 	if (nics.find(nic) == nics.end()) {
@@ -1223,19 +1224,19 @@ void VisitorInterpreter::visit_plug_link(std::shared_ptr<AST::Plug> plug) {
 		throw std::runtime_error(fmt::format("the nic for specified link {} is unplugged, you must to plug it first", nic));
 	}
 
-	if (plug->is_on() == vmc->vm()->is_link_plugged(nic)) {
-		if (plug->is_on()) {
+	if (plug.is_on() == vmc->vm()->is_link_plugged(nic)) {
+		if (plug.is_on()) {
 			throw std::runtime_error(fmt::format("specified link {} is already plugged in this virtual machine", nic));
 		} else {
 			throw std::runtime_error(fmt::format("specified link {} is already unplugged from this virtual machine", nic));
 		}
 	}
 
-	vmc->vm()->set_link(nic, plug->is_on());
+	vmc->vm()->set_link(nic, plug.is_on());
 }
 
-void VisitorInterpreter::plug_flash(std::shared_ptr<AST::Plug> plug) {
-	auto fdc = IR::program->get_flash_drive_or_throw(plug->name_token.value());
+void VisitorInterpreter::visit_plug_flash(const IR::Plug& plug) {
+	auto fdc = IR::program->get_flash_drive_or_throw(plug.entity_name());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	if (vmc->vm()->is_flash_plugged(fdc->fd())) {
@@ -1245,8 +1246,8 @@ void VisitorInterpreter::plug_flash(std::shared_ptr<AST::Plug> plug) {
 	vmc->vm()->plug_flash_drive(fdc->fd());
 }
 
-void VisitorInterpreter::unplug_flash(std::shared_ptr<AST::Plug> plug) {
-	auto fdc = IR::program->get_flash_drive_or_throw(plug->name_token.value());
+void VisitorInterpreter::visit_unplug_flash(const IR::Plug& plug) {
+	auto fdc = IR::program->get_flash_drive_or_throw(plug.entity_name());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm()->is_flash_plugged(fdc->fd())) {
@@ -1256,13 +1257,9 @@ void VisitorInterpreter::unplug_flash(std::shared_ptr<AST::Plug> plug) {
 	vmc->vm()->unplug_flash_drive(fdc->fd());
 }
 
-void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<AST::Plug> plug) {
-	if (plug->is_on()) {
-		fs::path path = template_parser.resolve(plug->path->text(), stack);
-		if (path.is_relative()) {
-			path = plug->t.begin().file.parent_path() / path;
-		}
-
+void VisitorInterpreter::visit_plug_dvd(const IR::Plug& plug) {
+	if (plug.is_on()) {
+		auto path = plug.dvd_path();
 		reporter.plug(vmc, "dvd", path.generic_string(), true);
 
 		if (vmc->vm()->is_dvd_plugged()) {
@@ -1291,7 +1288,7 @@ void VisitorInterpreter::visit_plug_dvd(std::shared_ptr<AST::Plug> plug) {
 	}
 }
 
-void VisitorInterpreter::visit_start(std::shared_ptr<AST::Start> start) {
+void VisitorInterpreter::visit_start(const IR::Start& start) {
 	try {
 		reporter.start(vmc);
 		vmc->vm()->start();
@@ -1304,23 +1301,23 @@ void VisitorInterpreter::visit_start(std::shared_ptr<AST::Start> start) {
 		}
 		throw std::runtime_error("Start timeout");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(start, vmc));
+		std::throw_with_nested(ActionException(start.ast_node, vmc));
 	}
 }
 
-void VisitorInterpreter::visit_stop(std::shared_ptr<AST::Stop> stop) {
+void VisitorInterpreter::visit_stop(const IR::Stop& stop) {
 	try {
 		reporter.stop(vmc);
 		vmc->vm()->stop();
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(stop, vmc));
+		std::throw_with_nested(ActionException(stop.ast_node, vmc));
 
 	}
 }
 
-void VisitorInterpreter::visit_shutdown(std::shared_ptr<AST::Shutdown> shutdown) {
+void VisitorInterpreter::visit_shutdown(const IR::Shutdown& shutdown) {
 	try {
-		std::string wait_for = shutdown->time_interval ? shutdown->time_interval.value() : "1m";
+		std::string wait_for = shutdown.timeout();
 		reporter.shutdown(vmc, wait_for);
 		vmc->vm()->power_button();
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
@@ -1332,7 +1329,7 @@ void VisitorInterpreter::visit_shutdown(std::shared_ptr<AST::Shutdown> shutdown)
 		}
 		throw std::runtime_error("Shutdown timeout");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(shutdown, vmc));
+		std::throw_with_nested(ActionException(shutdown.ast_node, vmc));
 
 	}
 }
@@ -1416,8 +1413,7 @@ static std::string build_python_script(const std::string& body) {
 
 void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 	try {
-		std::string wait_for = exec.timeout();
-		reporter.exec(vmc, exec.ast_node->process_token.value(), wait_for);
+		reporter.exec(vmc, exec.interpreter(), exec.timeout());
 
 		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -1430,25 +1426,25 @@ void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 		std::string script, extension, interpreter;
 		std::vector<std::string> args;
 
-		if (exec.ast_node->process_token.value() == "bash") {
-			script = build_shell_script(exec.text());
+		if (exec.interpreter() == "bash") {
+			script = build_shell_script(exec.script());
 			extension = ".sh";
 			interpreter = "bash";
-		} else if (exec.ast_node->process_token.value() == "cmd") {
-			script = build_batch_script(exec.text());
+		} else if (exec.interpreter() == "cmd") {
+			script = build_batch_script(exec.script());
 			extension = ".bat";
 			interpreter = "cmd";
 			args.push_back("/c");
-		} else if (exec.ast_node->process_token.value() == "python") {
-			script = build_python_script(exec.text());
+		} else if (exec.interpreter() == "python") {
+			script = build_python_script(exec.script());
 			extension = ".py";
 			interpreter = "python";
-		} else if (exec.ast_node->process_token.value() == "python2") {
-			script = build_python_script(exec.text());
+		} else if (exec.interpreter() == "python2") {
+			script = build_python_script(exec.script());
 			extension = ".py";
 			interpreter = "python2";
 		} else {
-			script = build_python_script(exec.text());
+			script = build_python_script(exec.script());
 			extension = ".py";
 			interpreter = "python3";
 		}
@@ -1476,7 +1472,7 @@ void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 		fs::remove(host_script_file.generic_string());
 
 		args.push_back(guest_script_file.generic_string());
-		if (vmc->vm()->run(interpreter, args, time_to_milliseconds(wait_for)) != 0) {
+		if (vmc->vm()->run(interpreter, args, time_to_milliseconds(exec.timeout())) != 0) {
 			throw std::runtime_error(interpreter + " command failed");
 		}
 		vmc->vm()->remove_from_guest(guest_script_file);
@@ -1549,12 +1545,22 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<AST::IfClause> if_claus
 	} else if (if_clause->has_else()) {
 		return visit_action(if_clause->else_action);
 	}
+}
 
+std::vector<std::string> VisitorInterpreter::visit_range(const IR::Range& range) {
+	return range.values();
 }
 
 void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
 	uint32_t i = 0;
-	auto values = for_clause->counter_list->values();
+
+	std::vector<std::string> values;
+
+	if (auto p = std::dynamic_pointer_cast<AST::CounterList<AST::Range>>(for_clause->counter_list)) {
+		values = visit_range({p->counter_list, stack});
+	} else {
+		throw std::runtime_error("Unknown counter list type");
+	}
 
 	std::map<std::string, std::string> vars;
 	for (i = 0; i < values.size(); ++i) {
@@ -1606,59 +1612,61 @@ bool VisitorInterpreter::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 }
 
 bool VisitorInterpreter::visit_factor(std::shared_ptr<AST::IFactor> factor) {
+	bool is_negated = factor->is_negated();
+
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
-		return p->is_negated() ^ (bool)template_parser.resolve(p->factor->text(), stack).length();
+		return is_negated ^ (bool)template_parser.resolve(p->factor->text(), stack).length();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
-		return p->is_negated() ^ visit_comparison(p->factor);
+		return is_negated ^ visit_comparison({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Defined>>(factor)) {
-		return p->is_negated() ^ visit_defined({p->factor, stack});
+		return is_negated ^ visit_defined({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
-		return p->is_negated() ^ visit_check({p->factor, stack});
+		return is_negated ^ visit_check({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
-		return p->is_negated() ^ visit_expr(p->factor);
+		return is_negated ^ visit_expr(p->factor);
 	} else {
 		throw std::runtime_error("Unknown factor type");
 	}
 }
 
-bool VisitorInterpreter::visit_comparison(std::shared_ptr<AST::Comparison> comparison) {
-	auto left = template_parser.resolve(comparison->left->text(), stack);
-	auto right = template_parser.resolve(comparison->right->text(), stack);
-	if (comparison->op().type() == Token::category::GREATER) {
+bool VisitorInterpreter::visit_comparison(const IR::Comparison& comparison) {
+	auto left = comparison.left();
+	auto right = comparison.right();
+	if (comparison.op() == "GREATER") {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison.ast_node->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(*comparison->right) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison.ast_node->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) > std::stoul(right);
 
-	} else if (comparison->op().type() == Token::category::LESS) {
+	} else if (comparison.op() == "LESS") {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison.ast_node->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(*comparison->right) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison.ast_node->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) < std::stoul(right);
 
-	} else if (comparison->op().type() == Token::category::EQUAL) {
+	} else if (comparison.op() == "EQUAL") {
 		if (!is_number(left)) {
-			throw std::runtime_error(std::string(*comparison->left) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison.ast_node->left) + " is not an integer number");
 		}
 		if (!is_number(right)) {
-			throw std::runtime_error(std::string(*comparison->right) + " is not an integer number");
+			throw std::runtime_error(std::string(*comparison.ast_node->right) + " is not an integer number");
 		}
 
 		return std::stoul(left) == std::stoul(right);
 
-	} else if (comparison->op().type() == Token::category::STRGREATER) {
+	} else if (comparison.op() == "STRGREATER") {
 		return left > right;
-	} else if (comparison->op().type() == Token::category::STRLESS) {
+	} else if (comparison.op() == "STRLESS") {
 		return left < right;
-	} else if (comparison->op().type() == Token::category::STREQUAL) {
+	} else if (comparison.op() == "STREQUAL") {
 		return left == right;
 	} else {
 		throw std::runtime_error("Unknown comparison op");
@@ -1712,9 +1720,4 @@ void VisitorInterpreter::stop_all_vms(std::shared_ptr<IR::Test> test) {
 			vmc->current_state = "";
 		}
 	}
-}
-
-std::string VisitorInterpreter::test_cksum(std::shared_ptr<IR::Test> test) const {
-	VisitorCksum visitor;
-	return std::to_string(visitor.visit(test));
 }
