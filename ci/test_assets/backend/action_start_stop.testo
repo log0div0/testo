@@ -1,5 +1,4 @@
 
-include "declarations.testo"
 include "common.testo"
 
 [no_snapshots: true]
@@ -33,9 +32,3 @@ test stop_offline_machine {
 		stop;
 	}
 }
-
-test install_ubuntu_server {
-	my_ubuntu_server install_ubuntu_server("ubuntu", "user", "1111")
-}
-
-

@@ -1,5 +1,5 @@
 
-include "../../part1/backend/action_tests_part1.testo"
+include "install_ubuntu.testo"
 
 flash my_flash {
 	fs: "fat"
