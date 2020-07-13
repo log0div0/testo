@@ -1244,7 +1244,7 @@ std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> Parser::select_binop(std::sha
 std::shared_ptr<ISelectable> Parser::selectable() {
 	std::shared_ptr<ISelectable> query;
 	if (test_string()) {
-		query = std::shared_ptr<Selectable<String>>(new Selectable<String>(string()));
+		query = select_text();
 	} else if(LA(1) == Token::category::js) {
 		query = select_js();
 	} else {
@@ -1261,6 +1261,13 @@ std::shared_ptr<Selectable<SelectJS>> Parser::select_js() {
 	auto select_js = std::shared_ptr<SelectJS>(new SelectJS(js, script));
 
 	return std::shared_ptr<Selectable<SelectJS>>(new Selectable<SelectJS>(select_js));
+}
+
+std::shared_ptr<Selectable<SelectText>> Parser::select_text() {
+	auto text = string();
+	auto select_txt = std::shared_ptr<SelectText>(new SelectText(text));
+
+	return std::shared_ptr<Selectable<SelectText>>(new Selectable<SelectText>(select_txt));
 }
 
 std::shared_ptr<String> Parser::string() {
