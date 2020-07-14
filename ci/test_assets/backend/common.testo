@@ -42,7 +42,7 @@ macro install_ubuntu_server(host_name, login, password) {
 	wait "Write the changes to disks?"; press Left, Enter
 	wait "HTTP proxy information" timeout 7m; 
 	if (DEFINED HTTP_PROXY) {
-		#type "${HTTP_PROXY}"
+		type "${HTTP_PROXY}"
 	}
 	press Enter
 	wait "How do you want to manage upgrades" timeout 6m; press Enter

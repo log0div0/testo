@@ -24,6 +24,7 @@ struct Comparison: Factor<AST::Comparison> {
 	std::string op() const;
 	std::string left() const;
 	std::string right() const;
+	bool calculate() const;
 };
 
 template <typename ASTType>

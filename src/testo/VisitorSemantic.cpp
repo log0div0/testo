@@ -711,66 +711,106 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 	visit_action_block(macro->ast_node->action_block->action);
 }
 
-void VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
+std::optional<bool> VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
 		return visit_binop(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
 		return visit_factor(p->expr);
+	} else {
+		throw std::runtime_error("Unknown expr type");
 	}
 }
 
 
-void VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
-	visit_expr(binop->left);
+std::optional<bool> VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
+	auto left = visit_expr(binop->left);
 	current_test->cksum_input += binop->op().value();
-	visit_expr(binop->right);
+
+	if (binop->op().value() == "AND") {
+		if (left.has_value() && !left.value()) {
+			return left;
+		} else {
+			return visit_expr(binop->right);
+		}
+	} else if (binop->op().value() == "OR") {
+		if (left.has_value() && left.value()) {
+			return left;
+		} else {
+			return visit_expr(binop->right);
+		}
+	} else {
+		throw std::runtime_error("Unknown binop operation");
+	}
 }
 
-void VisitorSemantic::visit_defined(const IR::Defined& defined) {
+bool VisitorSemantic::visit_defined(const IR::Defined& defined) {
 	current_test->cksum_input += "DEFINED ";
 	current_test->cksum_input += defined.var();
-	current_test->cksum_input += defined.is_defined();
+	bool is_defined = defined.is_defined();
+	current_test->cksum_input += is_defined;
+
+	return is_defined;
 }
 
-void VisitorSemantic::visit_comparison(const IR::Comparison& comparison) {
+bool VisitorSemantic::visit_comparison(const IR::Comparison& comparison) {
 	current_test->cksum_input += comparison.left();
 	current_test->cksum_input += comparison.op();
 	current_test->cksum_input += comparison.right();
+
+	return comparison.calculate();
 }
 
-void VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
+std::optional<bool> VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	bool is_negated = factor->is_negated();
 	current_test->cksum_input += std::to_string(is_negated);
 
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		return visit_check({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
-		return visit_expr(p->factor);
+		auto value = visit_expr(p->factor);
+		if (value.has_value()) {
+			value.value() = is_negated ^ value.value();
+		}
+		return value;
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Defined>>(factor)) {
-		return visit_defined({p->factor, stack});
+		return is_negated ^ visit_defined({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
-		return visit_comparison({p->factor, stack});
+		return is_negated ^ visit_comparison({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
-		auto text = template_parser.resolve(p->factor->text(), stack).length();
+		auto text = template_parser.resolve(p->factor->text(), stack);
 		current_test->cksum_input += text;
+		return is_negated ^ (bool)text.length();
+	} else {
+		throw std::runtime_error("Unknown factor type");
 	}
 }
 
-void VisitorSemantic::visit_check(const IR::Check& check) {
+std::optional<bool> VisitorSemantic::visit_check(const IR::Check& check) {
 	current_test->cksum_input += "check ";
 	visit_detect_expr(check.ast_node->select_expr);
 	current_test->cksum_input += check.timeout();
 	current_test->cksum_input += check.interval();
+	return {};
 }
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
 	current_test->cksum_input += "if";
 
-	visit_expr(if_clause->expr);
-	visit_action(if_clause->if_action);
-	if (if_clause->has_else()) {
-		current_test->cksum_input += "else";
-		visit_action(if_clause->else_action);
+	auto expr_value = visit_expr(if_clause->expr);
+
+	if (expr_value.has_value()) {
+		if (expr_value.value()) {
+			visit_action(if_clause->if_action);
+		} else if (if_clause->has_else()) {
+			current_test->cksum_input += "else";
+			visit_action(if_clause->else_action);
+		}
+	} else {
+		visit_action(if_clause->if_action);
+		if (if_clause->has_else()) {
+			current_test->cksum_input += "else";
+			visit_action(if_clause->else_action);
+		}
 	}
 }
 

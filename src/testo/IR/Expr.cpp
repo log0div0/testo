@@ -1,6 +1,7 @@
 
 #include "Expr.hpp"
 #include "Program.hpp"
+#include "../Utils.hpp"
 #include "../TemplateLiterals.hpp"
 
 
@@ -25,6 +26,50 @@ std::string Comparison::left() const {
 
 std::string Comparison::right() const {
 	return template_literals::Parser().resolve(ast_node->right->text(), stack);
+}
+
+bool Comparison::calculate() const {
+	auto l = left();
+	auto r = right();
+	if (op() == "GREATER") {
+		if (!is_number(l)) {
+			throw std::runtime_error(std::string(*ast_node->left) + " is not an integer number");
+		}
+		if (!is_number(r)) {
+			throw std::runtime_error(std::string(*ast_node->right) + " is not an integer number");
+		}
+
+		return std::stoul(l) > std::stoul(r);
+
+	} else if (op() == "LESS") {
+		if (!is_number(l)) {
+			throw std::runtime_error(std::string(*ast_node->left) + " is not an integer number");
+		}
+		if (!is_number(r)) {
+			throw std::runtime_error(std::string(*ast_node->right) + " is not an integer number");
+		}
+
+		return std::stoul(l) < std::stoul(r);
+
+	} else if (op() == "EQUAL") {
+		if (!is_number(l)) {
+			throw std::runtime_error(std::string(*ast_node->left) + " is not an integer number");
+		}
+		if (!is_number(r)) {
+			throw std::runtime_error(std::string(*ast_node->right) + " is not an integer number");
+		}
+
+		return std::stoul(l) == std::stoul(r);
+
+	} else if (op() == "STRGREATER") {
+		return l > r;
+	} else if (op() == "STRLESS") {
+		return l < r;
+	} else if (op() == "STREQUAL") {
+		return l == r;
+	} else {
+		throw std::runtime_error("Unknown comparison op");
+	}
 }
 
 std::vector<std::string> Range::values() const {

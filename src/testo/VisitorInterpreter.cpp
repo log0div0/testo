@@ -1600,12 +1600,19 @@ bool VisitorInterpreter::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 
 bool VisitorInterpreter::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	auto left = visit_expr(binop->left);
-	auto right = visit_expr(binop->right);
 
-	if (binop->op().type() == Token::category::AND) {
-		return left && right;
-	} else if (binop->op().type() == Token::category::OR) {
-		return left || right;
+	if (binop->op().value() == "AND") {
+		if (!left) {
+			return left;
+		} else {
+			return visit_expr(binop->right);
+		}
+	} else if (binop->op().value() == "OR") {
+		if (left) {
+			return left;
+		} else {
+			return visit_expr(binop->right);
+		}
 	} else {
 		throw std::runtime_error("Unknown binop operation");
 	}
@@ -1630,47 +1637,7 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 }
 
 bool VisitorInterpreter::visit_comparison(const IR::Comparison& comparison) {
-	auto left = comparison.left();
-	auto right = comparison.right();
-	if (comparison.op() == "GREATER") {
-		if (!is_number(left)) {
-			throw std::runtime_error(std::string(*comparison.ast_node->left) + " is not an integer number");
-		}
-		if (!is_number(right)) {
-			throw std::runtime_error(std::string(*comparison.ast_node->right) + " is not an integer number");
-		}
-
-		return std::stoul(left) > std::stoul(right);
-
-	} else if (comparison.op() == "LESS") {
-		if (!is_number(left)) {
-			throw std::runtime_error(std::string(*comparison.ast_node->left) + " is not an integer number");
-		}
-		if (!is_number(right)) {
-			throw std::runtime_error(std::string(*comparison.ast_node->right) + " is not an integer number");
-		}
-
-		return std::stoul(left) < std::stoul(right);
-
-	} else if (comparison.op() == "EQUAL") {
-		if (!is_number(left)) {
-			throw std::runtime_error(std::string(*comparison.ast_node->left) + " is not an integer number");
-		}
-		if (!is_number(right)) {
-			throw std::runtime_error(std::string(*comparison.ast_node->right) + " is not an integer number");
-		}
-
-		return std::stoul(left) == std::stoul(right);
-
-	} else if (comparison.op() == "STRGREATER") {
-		return left > right;
-	} else if (comparison.op() == "STRLESS") {
-		return left < right;
-	} else if (comparison.op() == "STREQUAL") {
-		return left == right;
-	} else {
-		throw std::runtime_error("Unknown comparison op");
-	}
+	return comparison.calculate();
 }
 
 bool VisitorInterpreter::visit_defined(const IR::Defined& defined) {

@@ -56,12 +56,12 @@ struct VisitorSemantic {
 	void visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop);
 	void visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop);
 
-	void visit_expr(std::shared_ptr<AST::IExpr> expr);
-	void visit_binop(std::shared_ptr<AST::BinOp> binop);
-	void visit_defined(const IR::Defined& defined);
-	void visit_comparison(const IR::Comparison& defined);
-	void visit_factor(std::shared_ptr<AST::IFactor> factor);
-	void visit_check(const IR::Check& check);
+	std::optional<bool> visit_expr(std::shared_ptr<AST::IExpr> expr);
+	std::optional<bool> visit_binop(std::shared_ptr<AST::BinOp> binop);
+	bool visit_defined(const IR::Defined& defined);
+	bool visit_comparison(const IR::Comparison& defined);
+	std::optional<bool> visit_factor(std::shared_ptr<AST::IFactor> factor);
+	std::optional<bool> visit_check(const IR::Check& check);
 
 	void visit_machine(std::shared_ptr<IR::Machine> machine);
 	void visit_flash(std::shared_ptr<IR::FlashDrive> flash); //flash drive
