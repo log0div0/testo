@@ -185,20 +185,11 @@ test centos_prepare_3: centos_prepare_2 {
 	}
 }
 
-test centos_prepare_testo_part1: centos_prepare_3 {
+test centos_prepare_testo: centos_prepare_3 {
 	centos {
 		copyto "${OUT_DIR}/testo-cpu.rpm" "/home/${login}/testo-cpu.rpm"
 		exec bash "rpm -i /home/${login}/testo-cpu.rpm"
-
-		copyto "${TEST_ASSETS_DIR}/part1" "/opt/scripts/part1"
 	}
 }
 
-include "centos_backend_qemu.testo"
-
-test centos_prepare_testo_part2: centos_backend_qemu_install_ubuntu_server {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/part2" "/opt/scripts/part2"
-	}
-}
 

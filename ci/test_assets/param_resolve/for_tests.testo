@@ -1,5 +1,12 @@
 
-include "../backend/declarations.testo"
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
 
 macro my_iterations_macro(from_where, iterations) {
 	for (i IN RANGE "${iterations}") {
