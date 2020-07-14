@@ -158,4 +158,33 @@ test centos_backend_qemu_plug_flash_exceptions: centos_backend_qemu_install_ubun
 	}
 }
 
+[no_snapshots: true]
+test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_simple_vm			
+		""" timeout 30m
+
+		wait "my_ubuntu_server"
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_create_vm_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
+	centos {
+		mouse rclick "my_ubuntu_server";
+		mouse click "Delete"
+		mouse click "Delete associated storage files"
+		wait !"hda"
+		mouse click "Delete".from_bottom(0)
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_simple_vm			
+		""" timeout 30m
+
+		wait "my_ubuntu_server"
+	}
+}
+
 
