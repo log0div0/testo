@@ -160,6 +160,13 @@ void HyperVVM::undefine() {
 	}
 }
 
+void HyperVVM::remove_disks() {
+	try {
+		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
 
 void HyperVVM::make_snapshot(const std::string& snapshot) {
 	try {

@@ -71,6 +71,12 @@ void Machine::create() {
 
 void Machine::undefine() {
 	try {
+		if (vm()->is_defined() && vm()->state() != VmState::Stopped) {
+			vm()->stop();
+		}
+
+		vm()->remove_disks();
+
 		auto metadata_dir = get_metadata_dir();
 		if (!vm()->is_defined()) {
 			if (fs::exists(metadata_dir)) {

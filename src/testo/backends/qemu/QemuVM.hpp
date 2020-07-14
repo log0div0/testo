@@ -13,6 +13,7 @@ struct QemuVM: public VM {
 	QemuVM(const QemuVM& other) = delete;
 	void install() override;
 	void undefine() override;
+	void remove_disks() override;
 	void make_snapshot(const std::string& snapshot) override;
 
 	void rollback(const std::string& snapshot) override;
@@ -55,7 +56,6 @@ struct QemuVM: public VM {
 	std::string get_tmp_dir() override;
 
 private:
-	void remove_disks();
 	void import_disk(const std::string& name, const fs::path& source);
 	void create_new_disk(const std::string& name, uint32_t size);
 	void create_disks();

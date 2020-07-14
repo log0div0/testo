@@ -10,6 +10,7 @@ struct HyperVVM: VM {
 	~HyperVVM() override;
 	void install() override;
 	void undefine() override;
+	void remove_disks() override;
 	void make_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot) override;
 	void press(const std::vector<std::string>& buttons) override;

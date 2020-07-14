@@ -187,4 +187,21 @@ test centos_backend_qemu_create_vm_after_manual_delete_no_disks: centos_backend_
 	}
 }
 
+[no_snapshots: true]
+test centos_backend_qemu_clean_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
+	centos {
+		mouse rclick "my_ubuntu_server";
+		mouse click "Delete"
+		mouse click "Delete associated storage files"
+		wait !"hda"
+		mouse click "Delete".from_bottom(0)
+
+		exec bash """
+			testo clean	| grep 'Deleted virtual machine my_ubuntu_server'
+		""" timeout 30m
+
+		exec bash "!([ -f /var/lib/libvirt/testo/testo-storage-pool/my_ubuntu_server@main.img ])"
+	}
+}
+
 

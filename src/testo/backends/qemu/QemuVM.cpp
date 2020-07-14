@@ -230,10 +230,6 @@ QemuVM::~QemuVM() {
 
 void QemuVM::install() {
 	try {
-		if (is_defined()) {
-			undefine();
-		}
-
 		//now create disks
 		create_disks();
 
@@ -405,13 +401,6 @@ void QemuVM::install() {
 void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-
-		if (state() != VmState::Stopped) {
-			stop();
-		}
-		//delete the storage
-		remove_disks();
-
 		domain.undefine();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Undefining vm {}", id())));
