@@ -5,6 +5,7 @@ include "centos.testo"
 test centos_semantic: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/semantic" "/opt/scripts/semantic"
+
 		exec bash """
 			set +o pipefail
 			cp /opt/scripts/semantic/* /
@@ -17,6 +18,21 @@ test centos_semantic: centos_prepare_testo {
 			testo run /0007.testo | grep "/0007.testo:2:9: Error: can't specify test as a parent to itself A"
 			testo run /0008.testo | grep '/0008.testo:2:9: Error: unknown test: B'
 			testo run /0009.testo | grep '/0009.testo:6:12: Error: this test was already specified in parent list A'
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /mouse_specificators_exceptions.testo --test_spec from_0 | grep "Error: specifier from_top requires a non-negative number as an argument"
+			testo run /mouse_specificators_exceptions.testo --test_spec from_1 | grep "Error: specifier from_left requires a non-negative number as an argument"
+			testo run /mouse_specificators_exceptions.testo --test_spec from_2 | grep "Error: you can\'t use specifier from_top after another \\\"from\\\" specifier"
+			testo run /mouse_specificators_exceptions.testo --test_spec from_3 | grep "Error: you can\'t use specifier from_top after a \\\"precision\\\" specifier"
+			testo run /mouse_specificators_exceptions.testo --test_spec from_4 | grep "Error: you can\'t use specifier from_left after a \\\"move\\\" specifier"
+			testo run /mouse_specificators_exceptions.testo --test_spec centering_0 | grep "Error: specifier center must not have an argument"
+			testo run /mouse_specificators_exceptions.testo --test_spec centering_1 | grep "Error: you can\'t use specifier right_top after another \\\"precision\\\" specifier"
+			testo run /mouse_specificators_exceptions.testo --test_spec centering_2 | grep "Error: you can\'t use specifier right_center after a \\\"move\\\" specifier"
+			testo run /mouse_specificators_exceptions.testo --test_spec move_0 | grep "Error: specifier move_right requires a non-negative number as an argument"
+			testo run /mouse_specificators_exceptions.testo --test_spec move_1 | grep "Error: specifier move_right requires a non-negative number as an argument"
+			testo run /mouse_specificators_exceptions.testo --test_spec unknown | grep "Error: unknown specifier: move_bottom"
 		"""
 	}
 }

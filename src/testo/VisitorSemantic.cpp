@@ -423,13 +423,12 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 
 		if (specifier->is_from()) {
 			if (!arg) {
-				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a number as an argument");
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
-			try {
-				std::stoi(arg.value());
-			} catch (const std::exception& error) {
-				throw std::runtime_error(std::string(arg.begin()) + ": Error: the argument must be a number");
+			auto i = std::stoi(arg.value());
+			if (i < 0) {
+				throw std::runtime_error(std::string(arg.begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
 			if (has_from) {
@@ -457,12 +456,12 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			continue;
 		} else if (specifier->is_moving()) {
 			if (!arg) {
-				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a number as an argument");
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
-			try {
-				std::stoi(arg.value());
-			} catch (const std::exception& error) {
-				throw std::runtime_error(std::string(arg.begin()) + ": Error: the argument must be a number");
+
+			auto i = std::stoi(arg.value());
+			if (i < 0) {
+				throw std::runtime_error(std::string(arg.begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 			has_move = true;
 			continue;

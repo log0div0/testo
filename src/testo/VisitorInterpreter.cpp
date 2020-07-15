@@ -982,7 +982,7 @@ nn::Tensor VisitorInterpreter::visit_mouse_specifier_from(
 	const nn::Tensor& input)
 {
 	auto name = specifier->name.value();
-	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
+	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
 
 	if (name == "from_top") {
 		return input.from_top(arg);
@@ -1035,7 +1035,7 @@ nn::Point VisitorInterpreter::visit_mouse_specifier_moving(
 	const nn::Point& input)
 {
 	auto name = specifier->name.value();
-	auto arg = std::stoi(specifier->arg.value()); //should never fail since we have semantic checks
+	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
 
 	if (name == "move_left") {
 		return input.move_left(arg);
