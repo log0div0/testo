@@ -55,6 +55,21 @@ test centos_backend_qemu_stop_offline_machine: centos_prepare_testo {
 	}
 }
 
+[no_snapshots: true]
+test centos_backend_qemu_wait: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_wait.testo" "/opt/scripts/action_wait.testo"
+
+		exec bash """
+			set +o pipefail
+			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug)
+			[[ $output == *"Error while performing action wait !Unexisting text"* ]]
+			[[ $output == *"Timeout"* ]]
+		"""
+	}
+}
+
 test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"

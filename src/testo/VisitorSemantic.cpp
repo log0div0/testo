@@ -484,13 +484,13 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	auto script = js.script();
 
 	if (!script.length()) {
-		throw std::runtime_error(std::string(js.ast_node->begin()) + ": Error: empty script in wait js selection");
+		throw std::runtime_error(std::string(js.ast_node->begin()) + ": Error: empty script in js selection");
 	}
 
 	try {
 		validate_js(script);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating javascript selection"));
+		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
 	}
 
 	current_test->cksum_input += "js ";
@@ -500,7 +500,7 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 	auto txt = text.text();
 	if (!txt.length()) {
-		throw std::runtime_error(std::string(text.ast_node->begin()) + ": Error: empty string in wait selection");
+		throw std::runtime_error(std::string(text.ast_node->begin()) + ": Error: empty string in text selection");
 	}
 
 	current_test->cksum_input += "text ";

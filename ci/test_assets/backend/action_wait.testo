@@ -1,0 +1,11 @@
+
+include "common.testo"
+
+test wait_expr_bug {
+	my_ubuntu_server {
+		start
+		sleep 4s
+		wait !"Unexisting text" && "Another nonsense" timeout 5s
+	}
+
+}

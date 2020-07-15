@@ -72,3 +72,9 @@ test unknown {
 		mouse move "somewhere".move_bottom(50)
 	}
 }
+
+test js_with_specificators {
+	my_ubuntu_server {
+		mouse move js "x=5".from_left(0)
+	}
+}

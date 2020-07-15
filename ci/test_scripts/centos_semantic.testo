@@ -10,6 +10,16 @@ test centos_semantic: centos_prepare_testo {
 
 		exec bash """
 			set +o pipefail
+			testo run /misc.testo --test_spec empty_wait_text | grep "Error: empty string in text selection"
+			testo run /misc.testo --test_spec empty_mouse_move_text | grep "Error: empty string in text selection"
+			testo run /misc.testo --test_spec empty_wait_js | grep "Error: empty script in js selection"
+			testo run /misc.testo --test_spec empty_mouse_move_js | grep "Error: empty script in js selection"
+			testo run /misc.testo --test_spec invalid_wait_js | grep "Error while validating js selection"
+			testo run /misc.testo --test_spec invalid_mouse_move_js | grep "Error while validating js selection"
+		"""
+
+		exec bash """
+			set +o pipefail
 			testo run /0001.testo | grep '/0001.testo:6:1: Error: test "A" is already defined here: /0001.testo:2:1'
 			testo run /0002.testo | grep '/0002.testo:6:1: Error: macro "A" is already defined here: /0002.testo:2:1'
 			testo run /0003.testo | grep '/0003.testo:4:1: Error: param "A" is already defined here: /0003.testo:2:1'
@@ -34,6 +44,7 @@ test centos_semantic: centos_prepare_testo {
 			testo run /mouse_specificators.testo --test_spec move_0 | grep "Error: specifier move_right requires a non-negative number as an argument"
 			testo run /mouse_specificators.testo --test_spec move_1 | grep "Error: specifier move_right requires a non-negative number as an argument"
 			testo run /mouse_specificators.testo --test_spec unknown | grep "Error: unknown specifier: move_bottom"
+			testo run /mouse_specificators.testo --test_spec js_with_specificators | grep "Error: mouse specifiers are not supported for js selections"
 		"""
 
 		exec bash """

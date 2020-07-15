@@ -1,0 +1,44 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test empty_wait_text {
+	my_ubuntu_server {
+		wait "something" && ""
+	}
+}
+
+test empty_mouse_move_text {
+	my_ubuntu_server {
+		mouse move ""
+	}
+}
+
+test empty_wait_js {
+	my_ubuntu_server {
+		wait "something" && js ""
+	}
+}
+
+test empty_mouse_move_js {
+	my_ubuntu_server {
+		mouse move js ""
+	}
+}
+
+test invalid_wait_js {
+	my_ubuntu_server {
+		wait "something" && js "bim bada bum"
+	}
+}
+
+test invalid_mouse_move_js {
+	my_ubuntu_server {
+		mouse move js "bim bada bum"
+	}
+}
