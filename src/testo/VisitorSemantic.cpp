@@ -267,33 +267,25 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 }
 
 void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	std::set<std::shared_ptr<IR::Machine>> unique_vmcs;
-	for (auto vm_token: cmd->vms) {
-		auto vmc = IR::program->get_machine_or_null(vm_token.value());
-		if (!vmc) {
-			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: unknown vitrual machine name: " + vm_token.value());
-		}
+	auto vmc = IR::program->get_machine_or_throw(cmd->vm.value());
+	if (!vmc) {
+		throw std::runtime_error(std::string(cmd->vm.begin()) + ": Error: unknown vitrual machine name: " + cmd->vm.value());
+	}
 
-		if (!unique_vmcs.insert(vmc).second) {
-			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: this vmc was already specified in the virtual machines list: " + vm_token.value());
-		}
+	visit_machine(vmc);
 
-		visit_machine(vmc);
-
-
-		if (vmc->config.count("nic")) {
-			auto nics = vmc->config.at("nic");
-			for (auto& nic: nics) {
-				if (nic.count("attached_to")) {
-					std::string network_name = nic.at("attached_to");
-					auto network = IR::program->get_network_or_throw(network_name); // TODO нету токена позиции, ошибка неинформативная
-					visit_network(network);
-				}
+	if (vmc->config.count("nic")) {
+		auto nics = vmc->config.at("nic");
+		for (auto& nic: nics) {
+			if (nic.count("attached_to")) {
+				std::string network_name = nic.at("attached_to");
+				auto network = IR::program->get_network_or_throw(network_name); // TODO нету токена позиции, ошибка неинформативная
+				visit_network(network);
 			}
 		}
-
-		current_test->cksum_input += vm_token.value();
 	}
+
+	current_test->cksum_input += cmd->vm.value();
 
 	visit_action(cmd->action);
 }

@@ -603,11 +603,9 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 }
 
 void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	for (auto vm_token: cmd->vms) {
-		vmc = IR::program->get_machine_or_throw(vm_token.value());
-		visit_action(cmd->action);
-		vmc = nullptr;
-	}
+	vmc = IR::program->get_machine_or_throw(cmd->vm.value());
+	visit_action(cmd->action);
+	vmc = nullptr;
 }
 
 

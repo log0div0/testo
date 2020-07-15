@@ -487,19 +487,11 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 }
 
 std::shared_ptr<Cmd> Parser::command() {
-	std::vector<Token> vms;
-	vms.push_back(LT(1));
+	Token vm = LT(1);
 	match(Token::category::id);
 
-	while (LA(1) == Token::category::comma) {
-		match(Token::category::comma);
-		vms.push_back(LT(1));
-		match(Token::category::id);
-	}
-
-	newline_list();
 	std::shared_ptr<IAction> act = action();
-	return std::shared_ptr<Cmd>(new Cmd(vms, act));
+	return std::shared_ptr<Cmd>(new Cmd(vm, act));
 }
 
 std::shared_ptr<CmdBlock> Parser::command_block() {
