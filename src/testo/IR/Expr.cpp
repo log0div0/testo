@@ -75,8 +75,8 @@ bool Comparison::calculate() const {
 std::vector<std::string> Range::values() const {
 	std::vector<std::string> result;
 
-	auto r1_num = std::stoul(r1());
-	auto r2_num = std::stoul(r2());
+	auto r1_num = std::stoi(r1());
+	auto r2_num = std::stoi(r2());
 
 	for (uint32_t i = r1_num; i < r2_num; ++i) {
 		result.push_back(std::to_string(i));

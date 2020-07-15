@@ -809,18 +809,24 @@ std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
 	std::string r1 = range.r1();
 	std::string r2 = range.r2();
 
-	uint32_t r1_num, r2_num;
-
-	try {
-		r1_num = std::stoul(r1);
-	} catch (const std::exception& error) {
-		std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert to uint: " + r1);
+	if (!is_number(r1)) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + r1 + " to a non-negative number");
 	}
 
-	try {
-		r2_num = std::stoul(r2);
-	} catch (const std::exception& error) {
-		std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert to uint: " + r2);
+	auto r1_num = std::stoi(r1);
+
+	if (r1_num < 0) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + r1 + " to a non-negative number");
+	}
+
+	if (!is_number(r2)) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + r2 + " to a non-negative number");
+	}
+
+	auto r2_num = std::stoi(r2);
+
+	if (r2_num < 0) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + r2 + " to a non-negative number");
 	}
 
 	if (r1_num >= r2_num) {

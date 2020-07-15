@@ -44,5 +44,17 @@ test centos_semantic: centos_prepare_testo {
 			testo run /macro_call.testo --test_spec wrong_macro_0 | grep "Error: duplicate macro arg: arg1"
 			testo run /macro_call.testo --test_spec wrong_macro_1 | grep "Error: default value must be specified for macro arg arg3"
 		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /for.testo --test_spec wrong_r1_0 | grep "Error: Can\'t convert range start 30ms to a non-negative number"
+			testo run /for.testo --test_spec wrong_r1_1 | grep "Error: Can\'t convert range start -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_r2_0 | grep "Error: Can\'t convert range finish 30ms to a non-negative number"
+			testo run /for.testo --test_spec wrong_r2_1 | grep "Error: Can\'t convert range finish -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_r2_2 | grep "Error: Can\'t convert range finish 30ms to a non-negative number"
+			testo run /for.testo --test_spec wrong_r2_3 | grep "Error: Can\'t convert range finish -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_start_finish_0 | grep "Error: start of the range 5 is greater or equal to finish 4"
+			testo run /for.testo --test_spec wrong_start_finish_1 | grep "Error: start of the range 0 is greater or equal to finish 0"
+		"""
 	}
 }

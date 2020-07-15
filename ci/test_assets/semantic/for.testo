@@ -1,0 +1,64 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test wrong_r1_0 {
+	my_ubuntu_server {
+		for (i IN RANGE "30ms" "30") {
+		}
+	}
+}
+
+test wrong_r1_1 {
+	my_ubuntu_server {
+		for (i IN RANGE "-5" "30") {
+		}
+	}
+}
+
+test wrong_r2_0 {
+	my_ubuntu_server {
+		for (i IN RANGE "0" "30ms") {
+		}
+	}
+}
+
+test wrong_r2_1 {
+	my_ubuntu_server {
+		for (i IN RANGE "0" "-5") {
+		}
+	}
+}
+
+test wrong_r2_2 {
+	my_ubuntu_server {
+		for (i IN RANGE "30ms") {
+		}
+	}
+}
+
+test wrong_r2_3 {
+	my_ubuntu_server {
+		for (i IN RANGE "-5") {
+		}
+	}
+}
+
+test wrong_start_finish_0 {
+	my_ubuntu_server {
+		for (i IN RANGE "5" "4") {
+		}
+	}
+}
+
+test wrong_start_finish_1 {
+	my_ubuntu_server {
+		for (i IN RANGE "0") {
+		}
+	}
+}
