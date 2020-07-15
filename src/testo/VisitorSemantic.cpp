@@ -663,7 +663,7 @@ void VisitorSemantic::visit_sleep(const IR::Sleep& sleep) {
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
 	auto macro = IR::program->get_macro_or_null(macro_call->name().value());
 	if (!macro) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: Unknown macro: " + macro_call->name().value());
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
 	}
 
 	visit_macro(macro);

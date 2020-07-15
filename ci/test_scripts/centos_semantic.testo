@@ -6,9 +6,10 @@ test centos_semantic: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/semantic" "/opt/scripts/semantic"
 
+		exec bash "cp /opt/scripts/semantic/* /"
+
 		exec bash """
 			set +o pipefail
-			cp /opt/scripts/semantic/* /
 			testo run /0001.testo | grep '/0001.testo:6:1: Error: test "A" is already defined here: /0001.testo:2:1'
 			testo run /0002.testo | grep '/0002.testo:6:1: Error: macro "A" is already defined here: /0002.testo:2:1'
 			testo run /0003.testo | grep '/0003.testo:4:1: Error: param "A" is already defined here: /0003.testo:2:1'
@@ -22,17 +23,26 @@ test centos_semantic: centos_prepare_testo {
 
 		exec bash """
 			set +o pipefail
-			testo run /mouse_specificators_exceptions.testo --test_spec from_0 | grep "Error: specifier from_top requires a non-negative number as an argument"
-			testo run /mouse_specificators_exceptions.testo --test_spec from_1 | grep "Error: specifier from_left requires a non-negative number as an argument"
-			testo run /mouse_specificators_exceptions.testo --test_spec from_2 | grep "Error: you can\'t use specifier from_top after another \\\"from\\\" specifier"
-			testo run /mouse_specificators_exceptions.testo --test_spec from_3 | grep "Error: you can\'t use specifier from_top after a \\\"precision\\\" specifier"
-			testo run /mouse_specificators_exceptions.testo --test_spec from_4 | grep "Error: you can\'t use specifier from_left after a \\\"move\\\" specifier"
-			testo run /mouse_specificators_exceptions.testo --test_spec centering_0 | grep "Error: specifier center must not have an argument"
-			testo run /mouse_specificators_exceptions.testo --test_spec centering_1 | grep "Error: you can\'t use specifier right_top after another \\\"precision\\\" specifier"
-			testo run /mouse_specificators_exceptions.testo --test_spec centering_2 | grep "Error: you can\'t use specifier right_center after a \\\"move\\\" specifier"
-			testo run /mouse_specificators_exceptions.testo --test_spec move_0 | grep "Error: specifier move_right requires a non-negative number as an argument"
-			testo run /mouse_specificators_exceptions.testo --test_spec move_1 | grep "Error: specifier move_right requires a non-negative number as an argument"
-			testo run /mouse_specificators_exceptions.testo --test_spec unknown | grep "Error: unknown specifier: move_bottom"
+			testo run /mouse_specificators.testo --test_spec from_0 | grep "Error: specifier from_top requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec from_1 | grep "Error: specifier from_left requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec from_2 | grep "Error: you can\'t use specifier from_top after another \\\"from\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec from_3 | grep "Error: you can\'t use specifier from_top after a \\\"precision\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec from_4 | grep "Error: you can\'t use specifier from_left after a \\\"move\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec centering_0 | grep "Error: specifier center must not have an argument"
+			testo run /mouse_specificators.testo --test_spec centering_1 | grep "Error: you can\'t use specifier right_top after another \\\"precision\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec centering_2 | grep "Error: you can\'t use specifier right_center after a \\\"move\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec move_0 | grep "Error: specifier move_right requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec move_1 | grep "Error: specifier move_right requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec unknown | grep "Error: unknown specifier: move_bottom"
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /macro_call.testo --test_spec unknown_macro | grep "Error: unknown macro: some_macro"
+			testo run /macro_call.testo --test_spec too_few_args | grep "Error: expected at least 2 args, 1 provided"
+			testo run /macro_call.testo --test_spec too_many_args | grep "Error: expected at most 4 args, 5 provided"
+			testo run /macro_call.testo --test_spec wrong_macro_0 | grep "Error: duplicate macro arg: arg1"
+			testo run /macro_call.testo --test_spec wrong_macro_1 | grep "Error: default value must be specified for macro arg arg3"
 		"""
 	}
 }

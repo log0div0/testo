@@ -1,0 +1,51 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+macro my_macro(arg1, arg2, default_arg1="value1", default_arg2="value2") {
+	print "Hello from macro"
+}
+
+macro my_wrong_macro_0(arg1, arg2, arg1) {
+	print "Hello from macro"
+}
+
+macro my_wrong_macro_1(arg1, arg2="value2", arg3) {
+	print "Hello from macro"
+}
+
+test unknown_macro {
+	my_ubuntu_server {
+		some_macro()
+	}
+}
+
+test too_few_args {
+	my_ubuntu_server {
+		my_macro("arg1")
+	}
+}
+
+test too_many_args {
+	my_ubuntu_server {
+		my_macro("arg1", "arg2", "arg3", "arg4", "arg5")
+	}
+}
+
+test wrong_macro_0 {
+	my_ubuntu_server {
+		my_wrong_macro_0()
+	}
+}
+
+test wrong_macro_1 {
+	my_ubuntu_server {
+		my_wrong_macro_1()
+	}
+}
+
