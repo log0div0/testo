@@ -124,7 +124,8 @@ void Program::collect_top_level_objects(const std::shared_ptr<AST::Program>& ast
 }
 
 void Program::collect_test(const std::shared_ptr<AST::Test>& test) {
-	insert_object(test, tests);
+	auto inserted = insert_object(test, tests);
+	ordered_tests.push_back(inserted);;
 }
 void Program::collect_macro(const std::shared_ptr<AST::Macro>& macro) {
 	insert_object(macro, macros);
@@ -160,9 +161,8 @@ void Program::setup_tests_parents() {
 	std::string test_spec = config.at("test_spec").get<std::string>();
 	std::string exclude = config.at("exclude").get<std::string>();
 
-	for (auto& kv: tests) {
-		auto& test_name = kv.first;
-		auto& test = kv.second;
+	for (auto& test: ordered_tests) {
+		auto test_name = test->ast_node->name.value();
 
 		if (test_spec.length() && !wildcards::match(test_name, test_spec)) {
 			continue;
@@ -177,10 +177,13 @@ void Program::setup_tests_parents() {
 }
 
 void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
-	auto result = all_selected_tests.insert(test);
-	if (!result.second) {
-		return;
+	for (auto& t: all_selected_tests) {
+		if (t == test) {
+			return;
+		}
 	}
+
+	all_selected_tests.push_back(test);
 	for (auto& parent_token: test->ast_node->parents_tokens) {
 		std::string parent_name = parent_token.value();
 

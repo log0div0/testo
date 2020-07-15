@@ -44,7 +44,8 @@ public:
 	std::shared_ptr<FlashDrive> get_flash_drive_or_null(const std::string& name);
 	std::shared_ptr<Network> get_network_or_null(const std::string& name);
 
-	std::unordered_set<std::shared_ptr<Test>> all_selected_tests;
+	std::vector<std::shared_ptr<Test>> ordered_tests;
+	std::vector<std::shared_ptr<Test>> all_selected_tests;
 	std::shared_ptr<StackNode> stack;
 
 private:
