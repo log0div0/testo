@@ -1,11 +1,16 @@
 
 include "common.testo"
 
-test wait_expr_bug {
+test wait_expr_bug_0 {
 	my_ubuntu_server {
 		start
-		sleep 4s
 		wait !"Unexisting text" && "Another nonsense" timeout 5s
 	}
+}
 
+test wait_expr_bug_1 {
+	my_ubuntu_server {
+		start
+		wait !(!"Unexisting text" && !"Another nonsense") timeout 5s
+	}
 }

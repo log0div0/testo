@@ -1179,16 +1179,7 @@ std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
 }
 
 std::shared_ptr<ISelectExpr> Parser::select_expr() {
-	if (LA(1) == Token::category::exclamation_mark) {
-		return select_unop();
-	}
-
-	if (LA(1) == Token::category::lparen) {
-		return select_parented_expr();
-	}
-
-	std::shared_ptr<ISelectExpr> left = std::shared_ptr<SelectExpr<ISelectable>>(new SelectExpr<ISelectable>(selectable()));
-
+	auto left = std::shared_ptr<SelectExpr<ISelectable>>(new SelectExpr<ISelectable>(selectable()));
 	if ((LA(1) == Token::category::double_ampersand) ||
 		(LA(1) == Token::category::double_vertical_bar)) {
 		return select_binop(left);
@@ -1197,19 +1188,7 @@ std::shared_ptr<ISelectExpr> Parser::select_expr() {
 	}
 }
 
-
-std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>> Parser::select_unop() {
-	auto op = LT(1);
-
-	match(Token::category::exclamation_mark);
-
-	auto expression = select_expr();
-
-	auto unop = std::shared_ptr<AST::SelectUnOp>(new AST::SelectUnOp(op, expression));
-	return std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>>(new AST::SelectExpr<AST::SelectUnOp>(unop));
-}
-
-std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> Parser::select_parented_expr() {
+std::shared_ptr<AST::SelectParentedExpr> Parser::select_parented_expr() {
 	auto lparen = LT(1);
 	match(Token::category::lparen);
 
@@ -1217,8 +1196,7 @@ std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> Parser::select_parente
 
 	auto rparen = LT(1);
 	match(Token::category::rparen);
-	auto parented_expr = std::shared_ptr<AST::SelectParentedExpr>(new AST::SelectParentedExpr(lparen, expression, rparen));
-	return std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>>(new AST::SelectExpr<AST::SelectParentedExpr>(parented_expr));
+	return std::shared_ptr<AST::SelectParentedExpr>(new AST::SelectParentedExpr(lparen, expression, rparen));
 }
 
 std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> Parser::select_binop(std::shared_ptr<AST::ISelectExpr> left) {
@@ -1234,32 +1212,33 @@ std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> Parser::select_binop(std::sha
 }
 
 std::shared_ptr<ISelectable> Parser::selectable() {
-	std::shared_ptr<ISelectable> query;
+	auto not_token = Token();
+	if (LA(1) == Token::category::exclamation_mark) {
+		not_token = LT(1);
+		match(Token::category::exclamation_mark);
+	}
+
 	if (test_string()) {
-		query = select_text();
+		return std::shared_ptr<Selectable<SelectText>>(new Selectable<SelectText>(not_token, select_text()));
 	} else if(LA(1) == Token::category::js) {
-		query = select_js();
+		return std::shared_ptr<Selectable<SelectJS>>(new Selectable<SelectJS>(not_token, select_js()));
+	} else if(LA(1) == Token::category::lparen) {
+		return std::shared_ptr<Selectable<SelectParentedExpr>>(new Selectable<SelectParentedExpr>(not_token, select_parented_expr()));
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: Unknown selective object type: " + LT(1).value());
 	}
-
-	return query;
 }
 
-std::shared_ptr<Selectable<SelectJS>> Parser::select_js() {
+std::shared_ptr<SelectJS> Parser::select_js() {
 	Token js = LT(1);
 	match(Token::category::js);
 	auto script = string();
-	auto select_js = std::shared_ptr<SelectJS>(new SelectJS(js, script));
-
-	return std::shared_ptr<Selectable<SelectJS>>(new Selectable<SelectJS>(select_js));
+	return std::shared_ptr<SelectJS>(new SelectJS(js, script));
 }
 
-std::shared_ptr<Selectable<SelectText>> Parser::select_text() {
+std::shared_ptr<SelectText> Parser::select_text() {
 	auto text = string();
-	auto select_txt = std::shared_ptr<SelectText>(new SelectText(text));
-
-	return std::shared_ptr<Selectable<SelectText>>(new Selectable<SelectText>(select_txt));
+	return std::shared_ptr<SelectText>(new SelectText(text));
 }
 
 std::shared_ptr<String> Parser::string() {

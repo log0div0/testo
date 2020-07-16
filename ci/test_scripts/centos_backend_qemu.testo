@@ -63,8 +63,17 @@ test centos_backend_qemu_wait: centos_prepare_testo {
 
 		exec bash """
 			set +o pipefail
-			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug)
-			[[ $output == *"Error while performing action wait !Unexisting text"* ]]
+			set +e
+			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_0)
+			[[ $output == *"Error while performing action wait !\\\"Unexisting text\\\""* ]]
+			[[ $output == *"Timeout"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_1)
+			[[ $output == *"Error while performing action wait !\\\"Unexisting text\\\""* ]]
 			[[ $output == *"Timeout"* ]]
 		"""
 	}

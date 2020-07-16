@@ -76,6 +76,7 @@ struct MouseCoordinates: Action<AST::MouseCoordinates> {
 
 struct MouseSelectable: Action<AST::MouseSelectable> {
 	using Action<AST::MouseSelectable>::Action;
+	std::string where_to_go() const;
 	std::string timeout() const;
 };
 

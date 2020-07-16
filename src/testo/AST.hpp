@@ -98,13 +98,14 @@ struct SelectText: public Node {
 struct ISelectable: public Node {
 	using Node::Node;
 
-	virtual std::string text() const = 0;
+	virtual bool is_negated() const = 0;
 };
 
 template <typename SelectableType>
 struct Selectable: public ISelectable {
-	Selectable(std::shared_ptr<SelectableType> selectable):
+	Selectable(const Token& not_token, std::shared_ptr<SelectableType> selectable):
 		ISelectable(selectable->t),
+		excl_mark(not_token),
 		selectable(selectable) {}
 
 	Pos begin() const {
@@ -116,13 +117,19 @@ struct Selectable: public ISelectable {
 	}
 
 	operator std::string() const {
-		return text();
+		std::string result;
+		if (is_negated()) {
+			result += "!";
+		}
+		result += std::string(*selectable);
+		return result;
 	}
 
-	std::string text() const {
-		return selectable->text();
+	bool is_negated() const {
+		return excl_mark.type() == Token::category::exclamation_mark;
 	}
 
+	Token excl_mark;
 	std::shared_ptr<SelectableType> selectable;
 };
 
@@ -344,25 +351,6 @@ struct SelectExpr: public ISelectExpr {
 	std::shared_ptr<SelectExprType> select_expr;
 };
 
-struct SelectUnOp: public Node {
-	SelectUnOp(const Token& op, std::shared_ptr<ISelectExpr> select_expr):
-		Node(op), select_expr(select_expr) {}
-
-	Pos begin() const {
-		return t.begin();
-	}
-
-	Pos end() const {
-		return select_expr->end();
-	}
-
-	operator std::string() const {
-		return t.value() + std::string(*select_expr);
-	}
-
-	std::shared_ptr<ISelectExpr> select_expr;
-};
-
 struct SelectBinOp: public Node {
 	SelectBinOp(std::shared_ptr<ISelectExpr> left, const Token& op, std::shared_ptr<ISelectExpr> right):
 		Node(op), left(left), right(right) {}
@@ -538,8 +526,6 @@ struct Release: public Node {
 
 struct IMouseMoveTarget: public Node {
 	using Node::Node;
-
-	virtual std::string text() const = 0;
 };
 
 template <typename MouseMoveTargetType>
@@ -558,10 +544,6 @@ struct MouseMoveTarget: public IMouseMoveTarget {
 
 	operator std::string() const {
 		return std::string(*(target));
-	}
-
-	std::string text() const {
-		return target->text();
 	}
 
 	std::shared_ptr<MouseMoveTargetType> target;
@@ -653,10 +635,6 @@ struct MouseSelectable: public Node {
 		}
 
 		return result;
-	}
-
-	std::string text() const {
-		return selectable->text();
 	}
 
 	std::shared_ptr<ISelectable> selectable = nullptr;

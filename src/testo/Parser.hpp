@@ -98,13 +98,12 @@ private:
 
 	//expressions
 	std::shared_ptr<AST::ISelectExpr> select_expr();
-	std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>> select_unop();
-	std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> select_parented_expr();
+	std::shared_ptr<AST::SelectParentedExpr> select_parented_expr();
 	std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> select_binop(std::shared_ptr<AST::ISelectExpr> left);
 
 	std::shared_ptr<AST::ISelectable> selectable();
-	std::shared_ptr<AST::Selectable<AST::SelectJS>> select_js();
-	std::shared_ptr<AST::Selectable<AST::SelectText>> select_text();
+	std::shared_ptr<AST::SelectJS> select_js();
+	std::shared_ptr<AST::SelectText> select_text();
 
 	std::shared_ptr<AST::String> string();
 

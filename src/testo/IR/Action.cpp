@@ -80,6 +80,22 @@ std::string MouseCoordinates::y() const {
 	return ast_node->dy.value();
 }
 
+std::string MouseSelectable::where_to_go() const {
+	std::string result;
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(ast_node->selectable)) {
+		result += "js selection \"";
+		result += IR::SelectJS(p->selectable, stack).script();
+		result += "\"";
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(ast_node->selectable)) {
+		result += "\"";
+		result += IR::SelectText(p->selectable, stack).text();
+		result += "\"";
+	} else {
+		throw std::runtime_error("Where to go is unapplicable");
+	}
+	return result;
+}
+
 std::string MouseSelectable::timeout() const {
 	if (ast_node->timeout) {
 		return ast_node->timeout.value();

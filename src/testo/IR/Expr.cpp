@@ -78,7 +78,7 @@ std::vector<std::string> Range::values() const {
 	auto r1_num = std::stoi(r1());
 	auto r2_num = std::stoi(r2());
 
-	for (uint32_t i = r1_num; i < r2_num; ++i) {
+	for (int32_t i = r1_num; i < r2_num; ++i) {
 		result.push_back(std::to_string(i));
 	}
 

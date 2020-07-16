@@ -705,12 +705,8 @@ void VisitorInterpreter::visit_type(const IR::Type& type) {
 bool VisitorInterpreter::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
 		return visit_detect_selectable(p->select_expr, screenshot);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
-		return visit_detect_unop(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
 		return visit_detect_binop(p->select_expr, screenshot);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectParentedExpr>>(select_expr)) {
-		return visit_detect_expr(p->select_expr->select_expr, screenshot);
 	} else {
 		throw std::runtime_error("Unknown select expression type");
 	}
@@ -725,6 +721,16 @@ js::Value VisitorInterpreter::eval_js(const std::string& script, stb::Image& scr
 	}
 	catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
+	}
+}
+
+bool VisitorInterpreter::visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot) {
+	auto value = eval_js(js.script(), screenshot);
+
+	if (value.is_bool()) {
+		return (bool)value;
+	} else {
+	 	throw std::runtime_error("Can't process return value type. We expect a single boolean");
 	}
 }
 
@@ -757,26 +763,16 @@ nn::Tensor VisitorInterpreter::visit_select_text(const IR::SelectText& text, stb
 }
 
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
-		return visit_select_text({p->selectable, stack}, screenshot).size();
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		auto script = template_parser.resolve(p->text(), stack);
-		auto value = eval_js(script, screenshot);
-		if (value.is_bool()) {
-			return (bool)value;
-		} else {
- 			throw std::runtime_error("Can't process return value type. We expect a single boolean");
-		}
-	} else {
-		throw std::runtime_error("Unknown selectable type");
-	}
-}
+	bool is_negated = selectable->is_negated();
 
-bool VisitorInterpreter::visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop, stb::Image& screenshot) {
-	if (unop->t.type() == Token::category::exclamation_mark) {
-		return !visit_detect_expr(unop->select_expr, screenshot);
-	} else {
-		throw std::runtime_error("Unknown unop operation");
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
+		return is_negated ^ visit_select_text({p->selectable, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
+		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);		
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
+		return is_negated ^ visit_detect_expr(p->selectable->select_expr, screenshot);
+	}  else {
+		throw std::runtime_error("Unknown selectable type");
 	}
 }
 
@@ -1083,7 +1079,7 @@ nn::Point VisitorInterpreter::visit_mouse_additional_specifiers(
 void VisitorInterpreter::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable)
 {
 	std::string timeout = mouse_selectable.timeout();
-	std::string where_to_go = template_parser.resolve(mouse_selectable.ast_node->text(), mouse_selectable.stack);
+	std::string where_to_go = mouse_selectable.where_to_go();
 
 	for (auto specifier: mouse_selectable.ast_node->specifiers) {
 		where_to_go += std::string(*specifier);

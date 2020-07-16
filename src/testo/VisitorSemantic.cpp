@@ -516,6 +516,8 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
 		visit_select_text({p->selectable, stack});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(mouse_selectable.ast_node->selectable)) {
+		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");
 	}
 }
 
@@ -614,12 +616,10 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
 		return visit_detect_selectable(p->select_expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
-		return visit_detect_unop(p->select_expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
 		return visit_detect_binop(p->select_expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectParentedExpr>>(select_expr)) {
-		return visit_detect_expr(p->select_expr->select_expr);
+	} else {
+		throw std::runtime_error("Unknown detect expr type");
 	}
 }
 
@@ -629,17 +629,25 @@ void VisitorSemantic::validate_js(const std::string& script) {
 }
 
 void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
-	std::string query = "";
+	bool is_negated = selectable->is_negated();
+	current_test->cksum_input += std::to_string(is_negated);
+
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
 		visit_select_text({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		visit_select_js({p->selectable, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
+		visit_detect_parented(p->selectable);
+	} else {
+		throw std::runtime_error("Unknown selectable type");
 	}
 }
 
-void VisitorSemantic::visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop) {
-	current_test->cksum_input += unop->t.value();
-	visit_detect_expr(unop->select_expr);
+void VisitorSemantic::visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented) {
+	current_test->cksum_input += "(";
+	visit_detect_expr(parented->select_expr);
+	current_test->cksum_input += ")";
+
 }
 
 void VisitorSemantic::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop) {

@@ -53,7 +53,7 @@ struct VisitorSemantic {
 
 	void visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr);
 	void visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable);
-	void visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop);
+	void visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented);
 	void visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop);
 
 	std::optional<bool> visit_expr(std::shared_ptr<AST::IExpr> expr);
