@@ -113,6 +113,7 @@ private:
 	std::shared_ptr<AST::Defined> defined();
 	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
 	std::shared_ptr<AST::IExpr> expr();
+	std::shared_ptr<AST::ParentedExpr> parented_expr();
 
 	std::vector<Ctx> lexers;
 

@@ -61,6 +61,7 @@ struct VisitorSemantic {
 	bool visit_defined(const IR::Defined& defined);
 	bool visit_comparison(const IR::Comparison& defined);
 	std::optional<bool> visit_factor(std::shared_ptr<AST::IFactor> factor);
+	std::optional<bool> visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented);
 	std::optional<bool> visit_check(const IR::Check& check);
 
 	void visit_machine(std::shared_ptr<IR::Machine> machine);

@@ -775,6 +775,12 @@ std::optional<bool> VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> 
 		return is_negated ^ visit_defined({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
 		return is_negated ^ visit_comparison({p->factor, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::ParentedExpr>>(factor)) {
+		auto value = visit_parented_expr(p->factor);
+		if (value.has_value()) {
+			value.value() = is_negated ^ value.value();
+		}
+		return value;
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
 		auto text = template_parser.resolve(p->factor->text(), stack);
 		current_test->cksum_input += text;
@@ -782,6 +788,13 @@ std::optional<bool> VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> 
 	} else {
 		throw std::runtime_error("Unknown factor type");
 	}
+}
+
+std::optional<bool> VisitorSemantic::visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented) {
+	current_test->cksum_input += "(";
+	auto result = visit_expr(parented->expr);
+	current_test->cksum_input += ")";
+	return result;
 }
 
 std::optional<bool> VisitorSemantic::visit_check(const IR::Check& check) {

@@ -1276,15 +1276,23 @@ std::shared_ptr<IFactor> Parser::factor() {
 	} else if(test_defined()) {
 		return std::shared_ptr<Factor<Defined>>(new Factor<Defined>(not_token, defined()));
 	} else if (LA(1) == Token::category::lparen) {
-		match(Token::category::lparen);
-		auto result = std::shared_ptr<Factor<IExpr>>(new Factor<IExpr>(not_token, expr()));
-		match(Token::category::rparen);
-		return result;
+		return std::shared_ptr<Factor<ParentedExpr>>(new Factor<ParentedExpr>(not_token, parented_expr()));
 	} else if (test_string()) {
 		return std::shared_ptr<Factor<String>>(new Factor<String>(not_token, string()));
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown expression: " + LT(1).value());
 	}
+}
+
+std::shared_ptr<ParentedExpr> Parser::parented_expr() {
+	auto lparen = LT(1);
+	match(Token::category::lparen);
+
+	auto expression = expr();
+
+	auto rparen = LT(1);
+	match(Token::category::rparen);
+	return std::shared_ptr<AST::ParentedExpr>(new AST::ParentedExpr(lparen, expression, rparen));
 }
 
 std::shared_ptr<Comparison> Parser::comparison() {
@@ -1366,4 +1374,3 @@ std::shared_ptr<IExpr> Parser::expr() {
 		return left;
 	}
 }
-

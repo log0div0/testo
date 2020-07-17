@@ -1540,6 +1540,26 @@ struct Expr: IExpr {
 };
 
 
+struct ParentedExpr: public Node {
+	ParentedExpr(const Token& lparen, std::shared_ptr<IExpr> expr, const Token& rparen):
+		Node(lparen), expr(expr), rparen(rparen) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return rparen.end();
+	}
+
+	operator std::string() const {
+		return t.value() + std::string(*expr) + rparen.value();
+	}
+
+	std::shared_ptr<IExpr> expr;
+	Token rparen;
+};
+
 struct BinOp: public Node {
 	BinOp(const Token& op, std::shared_ptr<IExpr> left, std::shared_ptr<IExpr> right):
 		Node(op), left(left), right(right) {}

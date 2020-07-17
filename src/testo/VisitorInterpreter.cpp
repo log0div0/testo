@@ -1623,6 +1623,8 @@ bool VisitorInterpreter::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 		return is_negated ^ visit_defined({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		return is_negated ^ visit_check({p->factor, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::ParentedExpr>>(factor)) {
+		return is_negated ^ visit_expr(p->factor->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
 		return is_negated ^ visit_expr(p->factor);
 	} else {
