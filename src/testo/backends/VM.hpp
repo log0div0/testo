@@ -54,7 +54,8 @@ struct VM {
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
 	virtual stb::Image screenshot() = 0;
-	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) = 0;
+	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+		const std::function<void(const std::string&)>& callback) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;

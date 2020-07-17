@@ -234,7 +234,7 @@ void QemuVM::install() {
 		create_disks();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		auto video_model = preferable_video_model(); 
+		auto video_model = preferable_video_model();
 
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
@@ -1363,7 +1363,8 @@ stb::Image QemuVM::screenshot() {
 	return screenshot;
 }
 
-int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
+int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+	const std::function<void(const std::string&)>& callback) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
@@ -1374,7 +1375,7 @@ int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t tim
 			command += arg;
 		}
 
-		return helper.execute(command, timeout_milliseconds);
+		return helper.execute(command, timeout_milliseconds, callback);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Run guest process"));
 	}

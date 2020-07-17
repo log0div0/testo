@@ -101,5 +101,3 @@ struct Reporter {
 	fs::path report_folder;
 	std::ofstream summary_output_file;
 };
-
-extern Reporter reporter;

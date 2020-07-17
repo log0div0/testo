@@ -757,7 +757,9 @@ stb::Image VboxVM::screenshot() {
 	}
 }
 
-int VboxVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
+int VboxVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+	const std::function<void(const std::string&)>& callback)
+{
 	try {
 		args.insert(args.begin(), "--");
 		uint32_t timeout = timeout_milliseconds * 1000 * 1000;

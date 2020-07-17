@@ -89,7 +89,7 @@ struct VisitorInterpreter {
 	nn::Point visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Point& input);
 	nn::Point visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const nn::Tensor& input);
 	nn::Tensor visit_select_text(const IR::SelectText& text, stb::Image& screenshot);
-	bool visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot); 
+	bool visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot);
 	nn::Point visit_select_js(const IR::SelectJS& js, stb::Image& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
 	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
@@ -171,4 +171,6 @@ private:
 	std::shared_ptr<js::Context> js_current_ctx;
 
 	std::shared_ptr<IR::Machine> vmc;
+
+	Reporter reporter;
 };

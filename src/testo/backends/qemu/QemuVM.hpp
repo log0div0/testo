@@ -41,7 +41,8 @@ struct QemuVM: public VM {
 	void suspend() override;
 	void resume() override;
 	stb::Image screenshot() override;
-	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) override;
+	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+		const std::function<void(const std::string&)>& callback) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;

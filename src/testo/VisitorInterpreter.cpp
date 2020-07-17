@@ -12,8 +12,6 @@
 
 using namespace std::chrono_literals;
 
-Reporter reporter;
-
 static void sleep(const std::string& interval) {
 	coro::Timer timer;
 	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
@@ -759,7 +757,7 @@ nn::Point VisitorInterpreter::visit_select_js(const IR::SelectJS& js, stb::Image
 
 nn::Tensor VisitorInterpreter::visit_select_text(const IR::SelectText& text, stb::Image& screenshot) {
 	auto parsed = text.text();
-	return  nn::find_text(&screenshot).match(parsed);	
+	return  nn::find_text(&screenshot).match(parsed);
 }
 
 bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
@@ -768,7 +766,7 @@ bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectabl
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
 		return is_negated ^ visit_select_text({p->selectable, stack}, screenshot).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);		
+		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
 		return is_negated ^ visit_detect_expr(p->selectable->select_expr, screenshot);
 	}  else {
@@ -1466,7 +1464,10 @@ void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 		fs::remove(host_script_file.generic_string());
 
 		args.push_back(guest_script_file.generic_string());
-		if (vmc->vm()->run(interpreter, args, time_to_milliseconds(exec.timeout())) != 0) {
+		auto result = vmc->vm()->run(interpreter, args, time_to_milliseconds(exec.timeout()), [&](const std::string& output) {
+			reporter.exec_command_output(output);
+		});
+		if (result != 0) {
 			throw std::runtime_error(interpreter + " command failed");
 		}
 		vmc->vm()->remove_from_guest(guest_script_file);
