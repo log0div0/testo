@@ -14,3 +14,11 @@ test wait_expr_bug_1 {
 		wait !(!"Unexisting text" && !"Another nonsense") timeout 5s
 	}
 }
+
+test wait_expr_bug_2 {
+	my_ubuntu_server {
+		start
+		wait !"Lala" && ("Unexisting text" || !(!"Another nonsense")) timeout 5s
+	}
+}
+

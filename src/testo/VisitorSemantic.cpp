@@ -370,13 +370,13 @@ void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination>
 		auto button = combination->buttons[i];
 		if (!is_button(button)) {
 			throw std::runtime_error(std::string(button.begin()) +
-				" :Error: Unknown key " + button.value());
+				" :Error: unknown key: " + button.value());
 		}
 
 		for (size_t j = i + 1; j < combination->buttons.size(); ++j) {
 			if (button.value() == combination->buttons[j].value()) {
 				throw std::runtime_error(std::string(combination->buttons[j].begin()) +
-					" :Error: duplicate key " + button.value());
+					" :Error: duplicate key: " + button.value());
 			}
 		}
 	}
@@ -388,17 +388,21 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 	if (key_spec->times.value().length()) {
 		if (std::stoi(key_spec->times.value()) < 1) {
 			throw std::runtime_error(std::string(key_spec->times.begin()) +
-					" :Error: Can't press a button less than 1 time: " + key_spec->times.value());
+					" :Error: can't press a button less than 1 time: " + key_spec->times.value());
 		}
 	}
 }
 
 void VisitorSemantic::visit_hold(const IR::Hold& hold) {
 	current_test->cksum_input += std::string(*hold.ast_node);
+	visit_key_combination(hold.ast_node->combination);
 }
 
 void VisitorSemantic::visit_release(const IR::Release& release) {
 	current_test->cksum_input += std::string(*release.ast_node);
+	if (release.ast_node->combination) {
+		visit_key_combination(release.ast_node->combination);
+	}
 }
 
 void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers)
@@ -508,6 +512,10 @@ void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 } 
 
 void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
+	if (mouse_selectable.ast_node->selectable->is_negated()) {
+		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: negation is not supported for mouse move/click actions");
+	}
+
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
 		if (mouse_selectable.ast_node->specifiers.size()) {
 			throw std::runtime_error(std::string(mouse_selectable.ast_node->specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");

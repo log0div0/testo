@@ -43,7 +43,6 @@ private:
 	bool test_include() const;
 	bool test_string() const;
 	bool test_selectable() const;
-	bool test_select_expr() const;
 	bool test_binary() const;
 	bool test_comparison() const;
 	bool test_defined() const;

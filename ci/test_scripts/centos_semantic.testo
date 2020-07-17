@@ -16,7 +16,15 @@ test centos_semantic: centos_prepare_testo {
 			testo run /misc.testo --test_spec empty_mouse_move_js | grep "Error: empty script in js selection"
 			testo run /misc.testo --test_spec invalid_wait_js | grep "Error while validating js selection"
 			testo run /misc.testo --test_spec invalid_mouse_move_js | grep "Error while validating js selection"
+			testo run /misc.testo --test_spec invalid_mouse_parented_expr_0 | grep "Error: select expressions are not supported for mouse move/click actions"
+			testo run /misc.testo --test_spec invalid_mouse_parented_expr_1 | grep "Error: negation is not supported for mouse move/click actions"
+			testo run /misc.testo --test_spec invalid_key_0 | grep "Error: unknown key: SomeButton"
+			testo run /misc.testo --test_spec invalid_key_1 | grep "Error: duplicate key: LeftShift"
+			testo run /misc.testo --test_spec invalid_press_times_0 | grep "Error: can't press a button less than 1 time: 0"
+			testo run /misc.testo --test_spec invalid_press_times_1 | grep "Error: can't press a button less than 1 time: -1"
 		"""
+
+
 
 		exec bash """
 			set +o pipefail

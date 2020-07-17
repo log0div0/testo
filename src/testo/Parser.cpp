@@ -160,12 +160,8 @@ bool Parser::test_string() const {
 }
 
 bool Parser::test_selectable() const {
-	return (test_string() || (LA(1) == Token::category::js));
-}
-
-bool Parser::test_select_expr() const {
-	return (test_selectable() ||
-		(LA(1) == Token::category::exclamation_mark) ||
+	return (test_string() || (LA(1) == Token::category::js)  ||
+		(LA(1) == Token::category::exclamation_mark) || 
 		(LA(1) == Token::category::lparen));
 }
 
@@ -665,7 +661,7 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	Token timeout = Token();
 	Token interval = Token();
 
-	if (!test_select_expr()) {
+	if (!test_selectable()) {
 		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to wait");
 	}
 
@@ -1329,7 +1325,7 @@ std::shared_ptr<Check> Parser::check() {
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
 
-	if (!test_select_expr()) {
+	if (!test_selectable()) {
 		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to check");
 	}
 
