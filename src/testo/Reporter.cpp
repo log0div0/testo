@@ -49,7 +49,9 @@ void Reporter::init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,	c
 	}
 
 	for (auto test: _tests_to_run) {
-		test->output_file = std::ofstream(report_folder / test->name());
+		if (report_logs) {
+			test->output_file = std::ofstream(report_folder / test->name());
+		}
 		tests_to_run.push_back(test);
 	}
 	for (auto test: _up_to_date_tests) {
