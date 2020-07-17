@@ -66,15 +66,15 @@ std::shared_ptr<Param> Program::get_param_or_null(const std::string& name) {
 }
 
 std::shared_ptr<Machine> Program::get_machine_or_null(const std::string& name) {
-	return get_or_throw(name, machines);
+	return get_or_null(name, machines);
 }
 
 std::shared_ptr<FlashDrive> Program::get_flash_drive_or_null(const std::string& name) {
-	return get_or_throw(name, flash_drives);
+	return get_or_null(name, flash_drives);
 }
 
 std::shared_ptr<Network> Program::get_network_or_null(const std::string& name) {
-	return get_or_throw(name, networks);
+	return get_or_null(name, networks);
 }
 
 std::map<std::string, std::string> testo_timeout_params = {

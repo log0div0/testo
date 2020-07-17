@@ -33,30 +33,30 @@ bool Comparison::calculate() const {
 	auto r = right();
 	if (op() == "GREATER") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(*ast_node->left) + " is not an integer number");
+			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(*ast_node->right) + " is not an integer number");
+			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) > std::stoul(r);
 
 	} else if (op() == "LESS") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(*ast_node->left) + " is not an integer number");
+			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(*ast_node->right) + " is not an integer number");
+			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) < std::stoul(r);
 
 	} else if (op() == "EQUAL") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(*ast_node->left) + " is not an integer number");
+			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(*ast_node->right) + " is not an integer number");
+			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) == std::stoul(r);

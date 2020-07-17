@@ -180,16 +180,18 @@ void VisitorSemantic::visit() {
 		//all parents have totally separate vms. We can't do that before command block because
 		//a user may specify unexisting vmc in some command and we need to catch that before that hierarchy check
 
-		std::vector<std::set<std::shared_ptr<IR::Machine>>> parents_subtries;
+		std::vector<std::set<std::shared_ptr<IR::Machine>>> parents_subtries_vm;
+		std::vector<std::set<std::shared_ptr<IR::FlashDrive>>> parents_subtries_fd;
 
 		//populate our parents paths
 		for (auto parent: test->parents) {
-			parents_subtries.push_back(parent->get_all_machines());
+			parents_subtries_vm.push_back(parent->get_all_machines());
+			parents_subtries_fd.push_back(parent->get_all_flash_drives());
 		}
 
 		//check that parents path are independent
-		for (size_t i = 0; i < parents_subtries.size(); ++i) {
-			for (size_t j = 0; j < parents_subtries.size(); ++j) {
+		for (size_t i = 0; i < parents_subtries_vm.size(); ++i) {
+			for (size_t j = 0; j < parents_subtries_vm.size(); ++j) {
 				if (i == j) {
 					continue;
 				}
@@ -197,12 +199,32 @@ void VisitorSemantic::visit() {
 				std::vector<std::shared_ptr<IR::Machine>> intersection;
 
 				std::set_intersection(
-					parents_subtries[i].begin(), parents_subtries[i].end(),
-					parents_subtries[j].begin(), parents_subtries[j].end(),
+					parents_subtries_vm[i].begin(), parents_subtries_vm[i].end(),
+					parents_subtries_vm[j].begin(), parents_subtries_vm[j].end(),
 					std::back_inserter(intersection));
 
 				if (intersection.size() != 0) {
-					throw std::runtime_error(std::string(test->ast_node->begin()) + ":Error: some parents have common vms");
+					throw std::runtime_error(std::string(test->ast_node->begin()) + ": Error: some parents have common virtual machines");
+				}
+			}
+		}
+
+		//check that parents path are independent
+		for (size_t i = 0; i < parents_subtries_fd.size(); ++i) {
+			for (size_t j = 0; j < parents_subtries_fd.size(); ++j) {
+				if (i == j) {
+					continue;
+				}
+
+				std::vector<std::shared_ptr<IR::FlashDrive>> intersection;
+
+				std::set_intersection(
+					parents_subtries_fd[i].begin(), parents_subtries_fd[i].end(),
+					parents_subtries_fd[j].begin(), parents_subtries_fd[j].end(),
+					std::back_inserter(intersection));
+
+				if (intersection.size() != 0) {
+					throw std::runtime_error(std::string(test->ast_node->begin()) + ": Error: some parents have common flash drives");
 				}
 			}
 		}
@@ -267,9 +289,9 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 }
 
 void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	auto vmc = IR::program->get_machine_or_throw(cmd->vm.value());
+	auto vmc = IR::program->get_machine_or_null(cmd->vm.value());
 	if (!vmc) {
-		throw std::runtime_error(std::string(cmd->vm.begin()) + ": Error: unknown vitrual machine name: " + cmd->vm.value());
+		throw std::runtime_error(std::string(cmd->vm.begin()) + ": Error: unknown virtual machine: " + cmd->vm.value());
 	}
 
 	visit_machine(vmc);
@@ -578,7 +600,7 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 	if (plug.entity_type() == "flash") {
 		auto flash_drive = IR::program->get_flash_drive_or_null(plug.entity_name());
 		if (!flash_drive) {
-			throw std::runtime_error(std::string(plug.ast_node->begin()) + ": Error: Unknown flash drive: " + plug.entity_name());
+			throw std::runtime_error(std::string(plug.ast_node->begin()) + ": Error: unknown flash drive: " + plug.entity_name());
 		}
 		visit_flash(flash_drive);
 	}

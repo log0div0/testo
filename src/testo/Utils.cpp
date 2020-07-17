@@ -196,8 +196,16 @@ std::string normalized_mac(const std::string& mac) {
 }
 
 bool is_number(const std::string& s) {
-	return !s.empty() && std::find_if(s.begin(),
-		s.end(), [](char c) { return !isdigit(c); }) == s.end();
+	if (s.empty()) {
+		return false;
+	}
+
+	auto begin = s.begin();
+	if (s[0] == '-') {
+		begin++;
+	}
+
+	return std::find_if(begin, s.end(), [](char c) { return !isdigit(c); }) == s.end();
 }
 
 void replace_all(std::string& str, const std::string& from, const std::string& to) {

@@ -79,4 +79,74 @@ test invalid_press_times_1 {
 	}
 }
 
+test invalid_exec_interpreter {
+	my_ubuntu_server {
+		exec some_interpreter "lalala"
+	}
+}
+
+test unknown_flash_0 {
+	my_ubuntu_server {
+		plug flash unexisting_flash
+	}
+}
+
+test unknown_flash_1 {
+	my_ubuntu_server {
+		unplug flash unexisting_flash
+	}
+}
+
+test unknown_vm {
+	some_vm {
+	}
+}
+
+test common_vm_parent1 {
+	my_ubuntu_server {
+	}
+}
+
+test common_vm_parent2 {
+	my_ubuntu_server {
+	}
+}
+
+test common_vm_child: common_vm_parent1, common_vm_parent2 {
+	my_ubuntu_server {
+	}
+}
+
+
+machine another_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+flash my_flash {
+	fs: "vfat"
+	size: 16Mb
+}
+
+test common_flash_parent1 {
+	my_ubuntu_server {
+		plug flash my_flash
+	}
+}
+
+test common_flash_parent2 {
+	another_server {
+		plug flash my_flash
+	}
+}
+
+test common_flash_child: common_flash_parent1, common_flash_parent2 {
+	my_ubuntu_server {
+	}
+}
+
 

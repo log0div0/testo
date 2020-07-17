@@ -10,6 +10,16 @@ test centos_semantic: centos_prepare_testo {
 
 		exec bash """
 			set +o pipefail
+			testo run /expr.testo --test_spec comparison_0 | grep "Error: \\\"lala\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_1 | grep "Error: \\\"lala\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_2 | grep "Error: \\\"30ms\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_3 | grep "Error: \\\"-5ms\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_4 | grep "Error: \\\"Русский\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_5 | grep "Error: \\\"- 5ms\\\" is not an integer number"
+		"""
+
+		exec bash """
+			set +o pipefail
 			testo run /misc.testo --test_spec empty_wait_text | grep "Error: empty string in text selection"
 			testo run /misc.testo --test_spec empty_mouse_move_text | grep "Error: empty string in text selection"
 			testo run /misc.testo --test_spec empty_wait_js | grep "Error: empty script in js selection"
@@ -22,9 +32,12 @@ test centos_semantic: centos_prepare_testo {
 			testo run /misc.testo --test_spec invalid_key_1 | grep "Error: duplicate key: LeftShift"
 			testo run /misc.testo --test_spec invalid_press_times_0 | grep "Error: can't press a button less than 1 time: 0"
 			testo run /misc.testo --test_spec invalid_press_times_1 | grep "Error: can't press a button less than 1 time: -1"
+			testo run /misc.testo --test_spec unknown_flash_0 | grep "Error: unknown flash drive: unexisting_flash"
+			testo run /misc.testo --test_spec unknown_flash_1 | grep "Error: unknown flash drive: unexisting_flash"
+			testo run /misc.testo --test_spec unknown_vm | grep "Error: unknown virtual machine: some_vm"
+			testo run /misc.testo --test_spec common_vm_child | grep "Error: some parents have common virtual machines"
+			testo run /misc.testo --test_spec common_flash_child | grep "Error: some parents have common flash drives"
 		"""
-
-
 
 		exec bash """
 			set +o pipefail
