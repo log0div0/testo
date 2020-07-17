@@ -330,7 +330,7 @@ void Machine::mouse_press(const std::vector<MouseButton>& buttons) {
 
 	vm()->mouse_hold(buttons);
 	coro::Timer timer;
-	timer.waitFor(std::chrono::milliseconds(20));
+	timer.waitFor(std::chrono::milliseconds(60));
 	vm()->mouse_release(buttons);
 }
 
