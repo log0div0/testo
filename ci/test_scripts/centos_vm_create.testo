@@ -1,0 +1,28 @@
+include "centos.testo"
+
+[no_snapshots: true]
+test centos_vm_create: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_no_cpus | grep "Constructing QemuVM \\\"vm_no_cpus\\\" error: field \\\"cpu\\\" is not specified"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_no_ram | grep "Constructing QemuVM \\\"vm_no_ram\\\" error: field \\\"ram\\\" is not specified"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_no_disk | grep "Constructing QemuVM \\\"vm_no_disk\\\" error: you must specify at least 1 disk"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_too_many_disks | grep "Constructing QemuVM \\\"vm_too_many_disks\\\" error: too many disks specified, maximum amount: 3"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_disk_no_size | grep "Constructing QemuVM \\\"vm_disk_no_size\\\" error: either field \\\"size\\\" or \\\"source\\\" must be specified for the disk \\\"main\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_identical_disks | grep "Constructing QemuVM \\\"vm_identical_disks\\\" error: two identical disk names: \\\"first\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_nic_no_attached_to | grep "Constructing QemuVM \\\"vm_nic_no_attached_to\\\" error: field attached_to is not specified for the nic \\\"my_nic\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_nic_incorrect_mac | grep "Constructing QemuVM \\\"vm_nic_incorrect_mac\\\" error: incorrect mac string: \\\"AA:BB:CC:DD:EE:FF:AA\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_nic_incorrect_type | grep "Constructing QemuVM \\\"vm_nic_incorrect_type\\\" error: nic \\\"my_nic\\\" has unsupported adapter type: \\\"some_type\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_identical_nic_names | grep "Constructing QemuVM \\\"vm_identical_nic_names\\\" error: two identical NIC names: \\\"my_nic\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_iso_does_not_exist | grep "Can't construct VmController for vm \\\"vm_iso_does_not_exist\\\": target iso file \\\"/opt/some_iso.iso\\\" does not exist"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_iso_does_not_exist_1 | grep "Can't construct VmController for vm \\\"vm_iso_does_not_exist_1\\\": target iso file \\\"/opt/scripts/../some_iso.iso\\\" does not exist"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist | grep "Can't construct VmController for vm \\\"vm_image_does_not_exist\\\": source disk image \\\"/opt/some_image.img\\\" does not exist"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist_1 | grep "Can't construct VmController for vm \\\"vm_image_does_not_exist_1\\\": source disk image \\\"/opt/scripts/../some_image.img\\\" does not exist"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_network | grep "Can't construct VmController for vm \\\"vm_unknown_network\\\": nic \\\"my_nic\\\" is attached to an unknown network: \\\"some_network\\\""
+		""" timeout 30m
+
+
+	}
+}

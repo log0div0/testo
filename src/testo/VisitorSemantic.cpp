@@ -301,7 +301,11 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 		for (auto& nic: nics) {
 			if (nic.count("attached_to")) {
 				std::string network_name = nic.at("attached_to");
-				auto network = IR::program->get_network_or_throw(network_name); // TODO нету токена позиции, ошибка неинформативная
+				auto network = IR::program->get_network_or_null(network_name);
+				if (!network) {
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": nic \"{}\" is attached to an unknown network: \"{}\"",
+						vmc->config.at("name").get<std::string>(), nic.at("name").get<std::string>(), network_name));
+				}
 				visit_network(network);
 			}
 		}
@@ -359,7 +363,7 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		return visit_cycle_control({p->action, stack});
-	} 
+	}
 }
 
 void VisitorSemantic::visit_abort(const IR::Abort& abort) {
@@ -531,7 +535,7 @@ void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 
 	current_test->cksum_input += "text ";
 	current_test->cksum_input += txt;
-} 
+}
 
 void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
 	if (mouse_selectable.ast_node->selectable->is_negated()) {
@@ -944,7 +948,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 		}
 
 		if (!fs::exists(iso_file)) {
-			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name(), iso_file.generic_string()));
+			throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": target iso file \"{}\" does not exist", machine->name(), iso_file.generic_string()));
 		}
 
 		iso_file = fs::canonical(iso_file);
@@ -964,7 +968,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 				}
 
 				if (!fs::exists(source_file)) {
-					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", machine->name(), source_file.generic_string()));
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": source disk image \"{}\" does not exist", machine->name(), source_file.generic_string()));
 				}
 
 				source_file = fs::canonical(source_file);
