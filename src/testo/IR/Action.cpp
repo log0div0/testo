@@ -39,7 +39,7 @@ std::string Type::text() const {
 
 std::string Type::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_TYPE_DEFAULT_INTERVAL");
 	}
@@ -66,8 +66,7 @@ std::string Wait::interval() const {
 }
 
 std::string Sleep::timeout() const {
-	StringTokenUnion stu(ast_node->timeout, stack);
-	return stu.resolve();
+	return StringTokenUnion(ast_node->timeout, stack).resolve();
 }
 
 std::string MouseMoveClick::event_type() const {

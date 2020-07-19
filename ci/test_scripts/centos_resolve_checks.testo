@@ -26,9 +26,13 @@ test centos_actions_param: centos_prepare_testo {
 		copyto "${TEST_ASSETS_DIR}/param_resolve/actions.testo" "/opt/scripts/actions.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/actions.testo --test_spec sleep_param | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
-			testo run /opt/scripts/actions.testo --test_spec sleep_param_invalid | grep "Error: can't convert string value \\\"-7\\\" to TIME INTERVAL"
-			testo run /opt/scripts/actions.testo --test_spec sleep_token | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
+			testo run /opt/scripts/actions.testo --test_spec check_sleep_param | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
+			testo run /opt/scripts/actions.testo --test_spec check_sleep_param_invalid | grep "Error: can't convert string value \\\"-7\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec check_sleep_token | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
+
+			testo run /opt/scripts/actions.testo --test_spec check_type_param | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_type_param_invalid | grep "Error: can't convert string value \\\"interval\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec check_type_token | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
 		"""
 	}
 }

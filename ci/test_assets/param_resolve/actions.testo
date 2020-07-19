@@ -10,22 +10,46 @@ machine my_ubuntu_server {
 param sleep_param "1s"
 
 [no_snapshots: true]
-test sleep_param {
+test check_sleep_param {
 	my_ubuntu_server {
 		sleep "${sleep_param}"
 	}
 }
 
 [no_snapshots: true]
-test sleep_param_invalid {
+test check_sleep_param_invalid {
 	my_ubuntu_server {
 		sleep "-7"
 	}
 }
 
 [no_snapshots: true]
-test sleep_token {
+test check_sleep_token {
 	my_ubuntu_server {
 		sleep 1s
+	}
+}
+
+param type_param "1s"
+
+[no_snapshots: true]
+test check_type_param {
+	my_ubuntu_server {
+		type "Hello ${type_param}" interval "${type_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_type_param_invalid {
+	my_ubuntu_server {
+		type "Hello ${type_param}" interval "interval"
+	}
+}
+
+
+[no_snapshots: true]
+test check_type_token {
+	my_ubuntu_server {
+		type "Hello ${type_param}" interval 1s
 	}
 }
