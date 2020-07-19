@@ -147,4 +147,9 @@ struct CycleControl: Action<AST::CycleControl> {
 	std::string type() const;
 };
 
+struct StringTokenUnion: Action<AST::StringTokenUnion> {
+	using Action<AST::StringTokenUnion>::Action;
+	std::string resolve() const;
+};
+
 }

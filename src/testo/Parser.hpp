@@ -105,6 +105,7 @@ private:
 	std::shared_ptr<AST::SelectText> select_text();
 
 	std::shared_ptr<AST::String> string();
+	std::shared_ptr<AST::StringTokenUnion> string_token_union(Token::category expected_token_type);
 
 	std::shared_ptr<AST::IFactor> factor();
 	std::shared_ptr<AST::Check> check();

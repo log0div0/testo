@@ -99,6 +99,7 @@ struct Token {
 		none, //not initialized
 		binary, //true or false
 		program,
+		string_token_union,
 		mouse_coordinates,
 		mouse_selectable,
 		mouse_additional_specifier,
@@ -306,6 +307,8 @@ struct Token {
 			return "NONE";
 		case program:
 			return "PROGRAM";
+		case string_token_union:
+			return "STRING_TOKEN_UNION";
 		case mouse_selectable:
 			return "MOUSE SELECTABLE";
 		case mouse_additional_specifier:

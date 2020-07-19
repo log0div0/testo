@@ -1,0 +1,31 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+param sleep_param "1s"
+
+[no_snapshots: true]
+test sleep_param {
+	my_ubuntu_server {
+		sleep "${sleep_param}"
+	}
+}
+
+[no_snapshots: true]
+test sleep_param_invalid {
+	my_ubuntu_server {
+		sleep "-7"
+	}
+}
+
+[no_snapshots: true]
+test sleep_token {
+	my_ubuntu_server {
+		sleep 1s
+	}
+}

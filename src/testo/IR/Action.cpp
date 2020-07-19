@@ -2,6 +2,7 @@
 #include "Action.hpp"
 #include "Program.hpp"
 #include "../TemplateLiterals.hpp"
+#include "../Lexer.hpp"
 
 namespace IR {
 
@@ -65,7 +66,8 @@ std::string Wait::interval() const {
 }
 
 std::string Sleep::timeout() const {
-	return ast_node->timeout.value();
+	StringTokenUnion stu(ast_node->timeout, stack);
+	return stu.resolve();
 }
 
 std::string MouseMoveClick::event_type() const {
@@ -214,5 +216,26 @@ std::string CycleControl::type() const {
 	return ast_node->t.value();
 }
 
+std::string StringTokenUnion::resolve() const {
+	std::string result;
+
+	if (ast_node->string) {
+		result = template_literals::Parser().resolve(ast_node->string->text(), stack);
+		Lexer lex(".", result);
+
+		try {
+			if (lex.get_next_token().type() != ast_node->expected_token_type) {
+				throw std::runtime_error("");
+			}
+		} catch(const std::exception& error) {
+			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: can't convert string value \"" + result +
+				"\" to " + Token::type_to_string(ast_node->expected_token_type));
+		}
+	} else {
+		result = ast_node->token.value();
+	}
+
+	return result;
+}
 
 }

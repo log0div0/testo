@@ -19,3 +19,16 @@ test centos_for_range_param: centos_prepare_testo {
 		"""
 	}
 }
+
+[no_snapshots: true]
+test centos_actions_param: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/param_resolve/actions.testo" "/opt/scripts/actions.testo"
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/actions.testo --test_spec sleep_param | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
+			testo run /opt/scripts/actions.testo --test_spec sleep_param_invalid | grep "Error: can't convert string value \\\"-7\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec sleep_token | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
+		"""
+	}
+}
