@@ -657,8 +657,8 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	match(Token::category::wait);
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
-	Token timeout = Token();
-	Token interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (!test_selectable()) {
 		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to wait");
@@ -676,14 +676,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	if (LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, interval));

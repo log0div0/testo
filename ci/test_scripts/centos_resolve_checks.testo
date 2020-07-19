@@ -33,6 +33,10 @@ test centos_actions_param: centos_prepare_testo {
 			testo run /opt/scripts/actions.testo --test_spec check_type_param | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
 			testo run /opt/scripts/actions.testo --test_spec check_type_param_invalid | grep "Error: can't convert string value \\\"interval\\\" to TIME INTERVAL"
 			testo run /opt/scripts/actions.testo --test_spec check_type_token | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_wait_param | grep "Waiting \\\"Hello 200ms\\\" for 200ms with interval 200ms in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_wait_param_invalid | grep "Error: can't convert string value \\\"interval\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec check_wait_token | grep "Waiting \\\"Hello 200ms\\\" for 200ms with interval 200ms in virtual machine my_ubuntu_server"
 		"""
 	}
 }

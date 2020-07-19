@@ -445,7 +445,7 @@ struct SelectParentedExpr: public Node {
 };
 
 struct Wait: public Node {
-	Wait(const Token& wait, std::shared_ptr<ISelectExpr> select_expr, const Token& timeout, const Token& interval):
+	Wait(const Token& wait, std::shared_ptr<ISelectExpr> select_expr, std::shared_ptr<StringTokenUnion> timeout, std::shared_ptr<StringTokenUnion> interval):
 		Node(wait), select_expr(select_expr), timeout(timeout), interval(interval) {}
 
 	Pos begin() const {
@@ -453,8 +453,10 @@ struct Wait: public Node {
 	}
 
 	Pos end() const {
-		if (timeout) {
-			return timeout.end();
+		if (interval) {
+			return interval->end();
+		} else if (timeout) {
+			return timeout->end();
 		} else {
 			return select_expr->end();
 		}
@@ -465,19 +467,19 @@ struct Wait: public Node {
 		result += " " + std::string(*select_expr);
 
 		if (timeout) {
-			result += " timeout "  + timeout.value();
+			result += " timeout "  + std::string(*timeout);
 		}
 
 		if (interval) {
-			result += " interval "  + interval.value();
+			result += " interval "  + std::string(*interval);
 		}
 
 		return result;
 	}
 
 	std::shared_ptr<ISelectExpr> select_expr;
-	Token timeout;
-	Token interval;
+	std::shared_ptr<StringTokenUnion> timeout;
+	std::shared_ptr<StringTokenUnion> interval;
 };
 
 struct Sleep: public Node {

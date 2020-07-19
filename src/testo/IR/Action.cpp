@@ -51,7 +51,7 @@ std::string Wait::select_expr() const {
 
 std::string Wait::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_WAIT_DEFAULT_TIMEOUT");
 	}
@@ -59,7 +59,7 @@ std::string Wait::timeout() const {
 
 std::string Wait::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_WAIT_DEFAULT_INTERVAL");
 	}
