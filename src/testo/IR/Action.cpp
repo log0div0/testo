@@ -140,7 +140,7 @@ fs::path Plug::dvd_path() const {
 
 std::string Shutdown::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return "1m";
 	}
