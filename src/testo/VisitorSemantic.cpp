@@ -1033,29 +1033,29 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	auto found = ctx->second.find(attr->name);
 
 	if (found == ctx->second.end()) {
-		throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
+		throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attribute name: \"" + attr->name.value() + "\"");
 	}
 
 	auto match = found->second;
 	if (attr->id != match.first) {
 		if (match.first) {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-				" requires a name");
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute \"" + attr->name.value() +
+				"\" requires a name");
 		} else {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-				" must have no name");
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute \"" + attr->name.value() +
+				"\" must have no name");
 		}
 	}
 
 	if (attr->value->t.type() != match.second) {
-		throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
-			Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " +
-			Token::type_to_string(match.second));
+		throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type \"" +
+			Token::type_to_string(attr->value->t.type()) + "\" for attribute \"" + attr->name.value() + "\", expected \"" +
+			Token::type_to_string(match.second) + "\"");
 	}
 
 	if (config.count(attr->name.value())) {
 		if (!config.at(attr->name.value()).is_array()) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: duplicate attr " + attr->name.value());
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: duplicate attribute: \"" + attr->name.value() + "\"");
 		}
 	}
 

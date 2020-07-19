@@ -21,6 +21,12 @@ test centos_vm_create: centos_prepare_testo {
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist | grep "Can't construct VmController for vm \\\"vm_image_does_not_exist\\\": source disk image \\\"/opt/some_image.img\\\" does not exist"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist_1 | grep "Can't construct VmController for vm \\\"vm_image_does_not_exist_1\\\": source disk image \\\"/opt/scripts/../some_image.img\\\" does not exist"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_network | grep "Can't construct VmController for vm \\\"vm_unknown_network\\\": nic \\\"my_nic\\\" is attached to an unknown network: \\\"some_network\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_attr | grep "Error: unknown attribute name: \\\"some_attr\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_requires_name | grep "Error: attribute \\\"disk\\\" requires a name"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_must_have_no_name | grep "Error: attribute \\\"ram\\\" must have no name"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_type_mismatch | grep "Error: unexpected value type \\\"QUOTED STRING\\\" for attribute \\\"size\\\", expected \\\"SIZE\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_diplucates | grep "Error: duplicate attribute: \\\"cpus\\\""
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_negative_attribute | grep "Error: numeric attr can't be negative: -7"
 		""" timeout 30m
 
 
