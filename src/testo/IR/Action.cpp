@@ -16,7 +16,7 @@ std::string Print::message() const {
 
 std::string Press::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_PRESS_DEFAULT_INTERVAL");
 	}
@@ -152,8 +152,8 @@ std::string Exec::interpreter() const {
 }
 
 std::string Exec::timeout() const {
-	if (ast_node->time_interval) {
-		return ast_node->time_interval.value();
+	if (ast_node->timeout) {
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_EXEC_DEFAULT_TIMEOUT");
 	}
@@ -188,8 +188,8 @@ std::string Copy::to() const {
 }
 
 std::string Copy::timeout() const {
-	if (ast_node->time_interval) {
-		return ast_node->time_interval.value();
+	if (ast_node->timeout) {
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_COPY_DEFAULT_TIMEOUT");
 	}
@@ -197,7 +197,7 @@ std::string Copy::timeout() const {
 
 std::string Check::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_TIMEOUT");
 	}
@@ -205,7 +205,7 @@ std::string Check::timeout() const {
 
 std::string Check::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_INTERVAL");
 	}

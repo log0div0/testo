@@ -70,7 +70,6 @@ test check_wait_param_invalid {
 	}
 }
 
-
 [no_snapshots: true]
 test check_wait_token {
 	my_ubuntu_server {
@@ -94,7 +93,6 @@ test check_shutdown_param_invalid {
 	}
 }
 
-
 [no_snapshots: true]
 test check_shutdown_token {
 	my_ubuntu_server {
@@ -102,3 +100,70 @@ test check_shutdown_token {
 	}
 }
 
+param copyto_param "200ms"
+
+[no_snapshots: true]
+test check_copyto_param {
+	my_ubuntu_server {
+		copyto "/opt/scripts/actions.testo" "/opt/scripts/actions.testo" timeout "${copyto_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_copyto_token {
+	my_ubuntu_server {
+		copyto "/opt/scripts/actions.testo" "/opt/scripts/actions.testo" timeout 200ms
+	}
+}
+
+param exec_param "200ms"
+
+[no_snapshots: true]
+test check_exec_param {
+	my_ubuntu_server {
+		exec bash "echo Hello ${exec_param}" timeout "${exec_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_exec_token {
+	my_ubuntu_server {
+		exec bash "echo Hello 200ms" timeout 200ms
+	}
+}
+
+param check_param "200ms"
+
+[no_snapshots: true]
+test check_check_param {
+	my_ubuntu_server {
+		if (check "Hello ${check_param}" timeout "${check_param}" interval "300ms") {
+
+		}
+	}
+}
+
+[no_snapshots: true]
+test check_check_token {
+	my_ubuntu_server {
+		if (check "Hello 200ms" timeout 200ms interval 300ms) {
+
+		}
+	}
+}
+
+param press_param "200ms"
+
+[no_snapshots: true]
+test check_press_param {
+	my_ubuntu_server {
+		press A*2 interval "${press_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_press_token {
+	my_ubuntu_server {
+		press A*2 interval 200ms
+	}
+}

@@ -291,14 +291,14 @@ void Reporter::wait(std::shared_ptr<IR::Machine> vmc, const std::string& text, c
 
 void Reporter::check(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
 	report(fmt::format("{} Checking ", progress()), blue);
-	report(fmt::format("{} ", text), yellow);
+	report(fmt::format("{}", text), yellow);
 	if (timeout != "1ms") {
-		report(fmt::format(" for {} ", timeout), blue);
+		report(fmt::format(" for {}", timeout), blue);
 	}
 	if (interval != "1s") {
-		report(fmt::format("with interval {} ", interval), blue);
+		report(fmt::format(" with interval {}", interval), blue);
 	}
-	report(fmt::format("in virtual machine "), blue);
+	report(fmt::format(" in virtual machine "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 

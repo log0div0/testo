@@ -710,12 +710,11 @@ std::shared_ptr<Action<Press>> Parser::press() {
 		keys.push_back(key_spec());
 	}
 
-	Token interval = Token();
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (LA(1) == Token::category::interval) {
 		match (Token::category::interval);
-		interval = LT(1);
-		match (Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));
@@ -975,18 +974,14 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 
 	auto commands = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout, time_interval));
+	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout));
 	return std::shared_ptr<Action<Exec>>(new Action<Exec>(action));
 }
 
@@ -997,18 +992,14 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 	auto from = string();
 	auto to = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout, time_interval));
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout));
 	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 
@@ -1342,18 +1333,17 @@ std::shared_ptr<Check> Parser::check() {
 
 	select_expression = select_expr();
 
-	Token timeout, interval;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	if (LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	return std::shared_ptr<Check>(new Check(check_token, select_expression, timeout, interval));

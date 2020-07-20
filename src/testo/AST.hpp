@@ -503,7 +503,7 @@ struct Sleep: public Node {
 };
 
 struct Press: public Node {
-	Press(const Token& press, const std::vector<std::shared_ptr<KeySpec>> keys, const Token& interval):
+	Press(const Token& press, const std::vector<std::shared_ptr<KeySpec>> keys, std::shared_ptr<StringTokenUnion> interval):
 		Node(press), keys(keys), interval(interval) {}
 
 	Pos begin() const {
@@ -511,7 +511,11 @@ struct Press: public Node {
 	}
 
 	Pos end() const {
-		return keys[keys.size() - 1]->end();
+		if (interval) {
+			return interval->end();
+		} else {
+			return keys[keys.size() - 1]->end();
+		}
 	}
 
 	operator std::string() const {
@@ -522,14 +526,14 @@ struct Press: public Node {
 		}
 
 		if (interval) {
-			result += " interval " + interval.value();
+			result += " interval " + std::string(*interval);
 		}
 
 		return result;
 	}
 
 	std::vector<std::shared_ptr<KeySpec>> keys;
-	Token interval;
+	std::shared_ptr<StringTokenUnion> interval;
 };
 
 struct Hold: public Node {
@@ -941,10 +945,10 @@ struct Shutdown: public Node {
 };
 
 struct Exec: public Node {
-	Exec(const Token& exec, const Token& process, std::shared_ptr<String> commands, const Token& timeout, const Token& time_interval):
+	Exec(const Token& exec, const Token& process, std::shared_ptr<String> commands, std::shared_ptr<StringTokenUnion> timeout):
 		Node(exec),
 		process_token(process),
-		commands(commands), timeout(timeout), time_interval(time_interval) {}
+		commands(commands), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.begin();
@@ -952,7 +956,7 @@ struct Exec: public Node {
 
 	Pos end() const {
 		if (timeout) {
-			return time_interval.end();
+			return timeout->end();
 		}
 		return commands->end();
 	}
@@ -960,24 +964,23 @@ struct Exec: public Node {
 	operator std::string() const {
 		std::string result = t.value() + " " + process_token.value() + " " + std::string(*commands);
 		if (timeout) {
-			result += " timeout " + time_interval.value();
+			result += " timeout " + std::string(*timeout);
 		}
 		return result;
 	}
 
 	Token process_token;
 	std::shared_ptr<String> commands;
-	Token timeout;
-	Token time_interval;
+	std::shared_ptr<StringTokenUnion> timeout;
 };
 
 //Now this node holds actions copyto and copyfrom
 //Cause they're really similar
 struct Copy: public Node {
-	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, const Token& timeout, const Token& time_interval):
+	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, std::shared_ptr<StringTokenUnion> timeout):
 		Node(copy),
 		from(from),
-		to(to), timeout(timeout), time_interval(time_interval) {}
+		to(to), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.begin();
@@ -985,7 +988,7 @@ struct Copy: public Node {
 
 	Pos end() const {
 		if (timeout) {
-			return time_interval.end();
+			return timeout->end();
 		}
 		return to->end();
 	}
@@ -993,7 +996,7 @@ struct Copy: public Node {
 	operator std::string() const {
 		std::string result = t.value() + " " + std::string(*from) + " " + std::string(*to);
 		if (timeout) {
-			result += " timeout " + time_interval.value();
+			result += " timeout " + std::string(*timeout);
 		}
 		return result;
 	}
@@ -1006,8 +1009,7 @@ struct Copy: public Node {
 
 	std::shared_ptr<String> from;
 	std::shared_ptr<String> to;
-	Token timeout;
-	Token time_interval;
+	std::shared_ptr<StringTokenUnion> timeout;
 };
 
 struct ActionBlock: public Node {
@@ -1535,7 +1537,7 @@ struct Comparison: public Node {
 };
 
 struct Check: public Node {
-	Check(const Token& check, std::shared_ptr<ISelectExpr> select_expr, const Token& timeout, const Token& interval):
+	Check(const Token& check, std::shared_ptr<ISelectExpr> select_expr, std::shared_ptr<StringTokenUnion> timeout, std::shared_ptr<StringTokenUnion> interval):
 		Node(check), select_expr(select_expr), timeout(timeout), interval(interval) {}
 
 	Pos begin() const {
@@ -1543,7 +1545,13 @@ struct Check: public Node {
 	}
 
 	Pos end() const {
-		return select_expr->end();
+		if (interval) {
+			return interval->end();
+		} else if (timeout) {
+			return timeout->end();
+		} else {
+			return select_expr->end();
+		}
 	}
 
 	operator std::string() const {
@@ -1551,11 +1559,11 @@ struct Check: public Node {
 		result += " " + std::string(*select_expr);
 
 		if (timeout) {
-			result += " timeout " + timeout.value();
+			result += " timeout " + std::string(*timeout);
 		}
 
 		if (interval) {
-			result += " interval " + interval.value();
+			result += " interval " + std::string(*interval);
 		}
 
 		return result;
@@ -1563,8 +1571,8 @@ struct Check: public Node {
 
 	std::shared_ptr<ISelectExpr> select_expr;
 
-	Token timeout;
-	Token interval;
+	std::shared_ptr<StringTokenUnion> timeout;
+	std::shared_ptr<StringTokenUnion> interval;
 };
 
 struct IExpr: public Node {

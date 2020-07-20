@@ -41,6 +41,18 @@ test centos_actions_param: centos_prepare_testo {
 			testo run /opt/scripts/actions.testo --test_spec check_shutdown_param | grep "Shutting down virtual machine my_ubuntu_server with timeout 200ms"
 			testo run /opt/scripts/actions.testo --test_spec check_shutdown_param_invalid | grep "Error: can't convert string value \\\"\\\" to TIME INTERVAL"
 			testo run /opt/scripts/actions.testo --test_spec check_shutdown_token | grep "Shutting down virtual machine my_ubuntu_server with timeout 200ms"
+
+			testo run /opt/scripts/actions.testo --test_spec check_copyto_param | grep "Copying /opt/scripts/actions.testo to virtual machine my_ubuntu_server to destination /opt/scripts/actions.testo with timeout 200ms"
+			testo run /opt/scripts/actions.testo --test_spec check_copyto_token | grep "Copying /opt/scripts/actions.testo to virtual machine my_ubuntu_server to destination /opt/scripts/actions.testo with timeout 200ms"
+
+			testo run /opt/scripts/actions.testo --test_spec check_exec_param | grep "Executing bash command in virtual machine my_ubuntu_server with timeout 200ms"
+			testo run /opt/scripts/actions.testo --test_spec check_exec_token | grep "Executing bash command in virtual machine my_ubuntu_server with timeout 200ms"
+
+			testo run /opt/scripts/actions.testo --test_spec check_check_param | grep "Checking \\\"Hello 200ms\\\" for 200ms with interval 300ms in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_check_token | grep "Checking \\\"Hello 200ms\\\" for 200ms with interval 300ms in virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_press_param | grep "Pressing key A 2 times in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_press_token | grep "Pressing key A 2 times in virtual machine my_ubuntu_server"
 		"""
 	}
 }
