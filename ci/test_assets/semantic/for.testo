@@ -21,6 +21,13 @@ test wrong_r1_1 {
 	}
 }
 
+test wrong_r1_2 {
+	my_ubuntu_server {
+		for (i IN RANGE -5 "30") {
+		}
+	}
+}
+
 test wrong_r2_0 {
 	my_ubuntu_server {
 		for (i IN RANGE "0" "30ms") {
@@ -48,6 +55,14 @@ test wrong_r2_3 {
 		}
 	}
 }
+
+test wrong_r2_4 {
+	my_ubuntu_server {
+		for (i IN RANGE "0" -5) {
+		}
+	}
+}
+
 
 test wrong_start_finish_0 {
 	my_ubuntu_server {

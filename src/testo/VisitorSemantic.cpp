@@ -599,7 +599,9 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 		return;
 	}
 
-	current_test->cksum_input += plug.entity_name();
+	if (plug.entity_type() != "dvd") {
+		current_test->cksum_input += plug.entity_name();
+	}
 
 	if (plug.entity_type() == "flash") {
 		auto flash_drive = IR::program->get_flash_drive_or_null(plug.entity_name());

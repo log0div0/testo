@@ -1,6 +1,7 @@
 
 #include "Expr.hpp"
 #include "Program.hpp"
+#include "Action.hpp"
 #include "../Utils.hpp"
 #include "../TemplateLiterals.hpp"
 
@@ -87,7 +88,7 @@ std::vector<std::string> Range::values() const {
 
 std::string Range::r1() const {
 	if (ast_node->r2) {
-		return template_literals::Parser().resolve(ast_node->r1->text(), stack);
+		return StringTokenUnion(ast_node->r1, stack).resolve();
 	} else {
 		return "0";
 	}
@@ -95,9 +96,9 @@ std::string Range::r1() const {
 
 std::string Range::r2() const {
 	if (ast_node->r2) {
-		return template_literals::Parser().resolve(ast_node->r2->text(), stack);
+		return StringTokenUnion(ast_node->r2, stack).resolve();
 	} else {
-		return template_literals::Parser().resolve(ast_node->r1->text(), stack);
+		return StringTokenUnion(ast_node->r1, stack).resolve();
 	}
 }
 

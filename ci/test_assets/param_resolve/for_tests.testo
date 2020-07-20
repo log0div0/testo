@@ -14,9 +14,32 @@ macro my_iterations_macro(from_where, iterations) {
 	}
 }
 
+[no_snapshots: true]
 test for_range_param {
 	my_ubuntu_server {
 		my_iterations_macro("0", "4")
 		my_iterations_macro("1", "3")
+	}
+}
+
+param range_begin "3"
+param range_end "5"
+
+[no_snapshots: true]
+test for_range_str_0 {
+	my_ubuntu_server {
+		for (i IN RANGE "${range_begin}" "${range_end}") {
+			print "iteration #${i}"
+		}
+	}
+}
+
+
+[no_snapshots: true]
+test for_range_token {
+	my_ubuntu_server {
+		for (i IN RANGE 3 5) {
+			print "iteration #${i}"
+		}
 	}
 }

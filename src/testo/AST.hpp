@@ -1734,7 +1734,7 @@ struct CounterList: public ICounterList {
 };
 
 struct Range: public Node {
-	Range(const Token& range, std::shared_ptr<String> r1, std::shared_ptr<String> r2):
+	Range(const Token& range, std::shared_ptr<StringTokenUnion> r1, std::shared_ptr<StringTokenUnion> r2):
 		Node(range), r1(r1), r2(r2) {}
 
 	Pos begin() const {
@@ -1757,8 +1757,8 @@ struct Range: public Node {
 		return result;
 	}
 
-	std::shared_ptr<String> r1 = nullptr;
-	std::shared_ptr<String> r2 = nullptr;
+	std::shared_ptr<StringTokenUnion> r1 = nullptr;
+	std::shared_ptr<StringTokenUnion> r2 = nullptr;
 };
 
 struct ForClause: public Node {

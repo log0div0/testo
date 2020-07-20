@@ -17,6 +17,20 @@ test centos_for_range_param: centos_prepare_testo {
 			[[ $output == *"1: iteration #2"* ]]
 			[[ $output != *"1: iteration #3"* ]]
 		"""
+
+		exec bash """
+			output=$(testo run /opt/scripts/for_tests.testo --test_spec for_range_str_0)"
+			[[ $output == *"iteration #3"* ]]
+			[[ $output == *"iteration #4"* ]]
+			[[ $output != *"iteration #5"* ]]
+		"""
+
+		exec bash """
+			output=$(testo run /opt/scripts/for_tests.testo --test_spec for_range_token)"
+			[[ $output == *"iteration #3"* ]]
+			[[ $output == *"iteration #4"* ]]
+			[[ $output != *"iteration #5"* ]]
+		"""
 	}
 }
 
