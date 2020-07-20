@@ -813,12 +813,11 @@ std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
 		it = specifier->end();
 	}
 
-	Token timeout;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	auto mouse_selectable = std::make_shared<MouseSelectable>(select, specifiers, timeout);
@@ -917,7 +916,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 		match(Token::category::id);
 	}
 
-	Token name = Token();
+	std::shared_ptr<StringTokenUnion> name = nullptr;
 
 	std::shared_ptr<String> path(nullptr);
 
@@ -926,8 +925,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 			path = string();
 		} //else this should be the end of unplug commands
 	} else {
-		name = LT(1);
-		match(Token::category::id);
+		name = string_token_union(Token::category::id);
 	}
 
 	auto action = std::shared_ptr<Plug>(new Plug(plug_token, type, name, path));

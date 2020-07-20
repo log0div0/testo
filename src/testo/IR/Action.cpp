@@ -99,7 +99,7 @@ std::string MouseSelectable::where_to_go() const {
 
 std::string MouseSelectable::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 	}
@@ -126,7 +126,11 @@ std::string Plug::entity_type() const {
 }
 
 std::string Plug::entity_name() const {
-	return ast_node->name_token.value();
+	if (ast_node->name) {
+		return StringTokenUnion(ast_node->name, stack).resolve();
+	}
+
+	throw std::runtime_error("name is not defined");
 }
 
 fs::path Plug::dvd_path() const {

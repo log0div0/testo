@@ -53,6 +53,18 @@ test centos_actions_param: centos_prepare_testo {
 
 			testo run /opt/scripts/actions.testo --test_spec check_press_param | grep "Pressing key A 2 times in virtual machine my_ubuntu_server"
 			testo run /opt/scripts/actions.testo --test_spec check_press_token | grep "Pressing key A 2 times in virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_flash_param | grep "Plugging flash drive my_flash into virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_flash_token | grep "Unplugging flash drive my_flash from virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_nic_param | grep "Plugging nic my_nic into virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_nic_token | grep "Unplugging nic my_nic from virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_link_param | grep "Plugging link my_nic into virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_link_token | grep "Unplugging link my_nic from virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_mouse_param | grep "Mouse moving on \\\"lala\\\" with timeout 200ms in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_mouse_token | grep "Mouse moving on \\\"lala\\\" with timeout 200ms in virtual machine my_ubuntu_server"
 		"""
 	}
 }
