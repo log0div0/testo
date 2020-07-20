@@ -2,6 +2,7 @@
 #include "Action.hpp"
 #include "Program.hpp"
 #include "../TemplateLiterals.hpp"
+#include "../Lexer.hpp"
 
 namespace IR {
 
@@ -15,7 +16,7 @@ std::string Print::message() const {
 
 std::string Press::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_PRESS_DEFAULT_INTERVAL");
 	}
@@ -38,7 +39,7 @@ std::string Type::text() const {
 
 std::string Type::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_TYPE_DEFAULT_INTERVAL");
 	}
@@ -50,7 +51,7 @@ std::string Wait::select_expr() const {
 
 std::string Wait::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_WAIT_DEFAULT_TIMEOUT");
 	}
@@ -58,14 +59,14 @@ std::string Wait::timeout() const {
 
 std::string Wait::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_WAIT_DEFAULT_INTERVAL");
 	}
 }
 
 std::string Sleep::timeout() const {
-	return ast_node->timeout.value();
+	return StringTokenUnion(ast_node->timeout, stack).resolve();
 }
 
 std::string MouseMoveClick::event_type() const {
@@ -98,7 +99,7 @@ std::string MouseSelectable::where_to_go() const {
 
 std::string MouseSelectable::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 	}
@@ -125,7 +126,11 @@ std::string Plug::entity_type() const {
 }
 
 std::string Plug::entity_name() const {
-	return ast_node->name_token.value();
+	if (ast_node->name) {
+		return StringTokenUnion(ast_node->name, stack).resolve();
+	}
+
+	throw std::runtime_error("name is not defined");
 }
 
 fs::path Plug::dvd_path() const {
@@ -139,7 +144,7 @@ fs::path Plug::dvd_path() const {
 
 std::string Shutdown::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return "1m";
 	}
@@ -151,8 +156,8 @@ std::string Exec::interpreter() const {
 }
 
 std::string Exec::timeout() const {
-	if (ast_node->time_interval) {
-		return ast_node->time_interval.value();
+	if (ast_node->timeout) {
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_EXEC_DEFAULT_TIMEOUT");
 	}
@@ -187,8 +192,8 @@ std::string Copy::to() const {
 }
 
 std::string Copy::timeout() const {
-	if (ast_node->time_interval) {
-		return ast_node->time_interval.value();
+	if (ast_node->timeout) {
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_COPY_DEFAULT_TIMEOUT");
 	}
@@ -196,7 +201,7 @@ std::string Copy::timeout() const {
 
 std::string Check::timeout() const {
 	if (ast_node->timeout) {
-		return ast_node->timeout.value();
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_TIMEOUT");
 	}
@@ -204,7 +209,7 @@ std::string Check::timeout() const {
 
 std::string Check::interval() const {
 	if (ast_node->interval) {
-		return ast_node->interval.value();
+		return StringTokenUnion(ast_node->interval, stack).resolve();
 	} else {
 		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_INTERVAL");
 	}
@@ -214,5 +219,26 @@ std::string CycleControl::type() const {
 	return ast_node->t.value();
 }
 
+std::string StringTokenUnion::resolve() const {
+	std::string result;
+
+	if (ast_node->string) {
+		result = template_literals::Parser().resolve(ast_node->string->text(), stack);
+		Lexer lex(".", result);
+
+		try {
+			if (lex.get_next_token().type() != ast_node->expected_token_type) {
+				throw std::runtime_error("");
+			}
+		} catch(const std::exception& error) {
+			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: can't convert string value \"" + result +
+				"\" to " + Token::type_to_string(ast_node->expected_token_type));
+		}
+	} else {
+		result = ast_node->token.value();
+	}
+
+	return result;
+}
 
 }

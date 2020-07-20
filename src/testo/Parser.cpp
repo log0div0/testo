@@ -161,7 +161,7 @@ bool Parser::test_string() const {
 
 bool Parser::test_selectable() const {
 	return (test_string() || (LA(1) == Token::category::js)  ||
-		(LA(1) == Token::category::exclamation_mark) || 
+		(LA(1) == Token::category::exclamation_mark) ||
 		(LA(1) == Token::category::lparen));
 }
 
@@ -640,14 +640,13 @@ std::shared_ptr<Action<Type>> Parser::type() {
 	match(Token::category::type_);
 
 	Token value = LT(1);
-
 	auto text = string();
 
-	Token interval;
-	if (LA(1) == Token::category::interval) {
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
+
+	if (test_string() || LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 	auto action = std::shared_ptr<Type>(new Type(type_token, text, interval));
 	return std::shared_ptr<Action<Type>>(new Action<Type>(action));
@@ -658,8 +657,8 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	match(Token::category::wait);
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
-	Token timeout = Token();
-	Token interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (!test_selectable()) {
 		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to wait");
@@ -677,14 +676,12 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	if (LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, interval));
@@ -695,10 +692,9 @@ std::shared_ptr<Action<Sleep>> Parser::sleep() {
 	Token sleep_token = LT(1);
 	match(Token::category::sleep);
 
-	Token time_interval = LT(1);
-	match(Token::category::time_interval);
+	auto timeout = string_token_union(Token::category::time_interval);
 
-	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, time_interval));
+	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, timeout));
 	return std::shared_ptr<Action<Sleep>>(new Action<Sleep>(action));
 }
 
@@ -714,12 +710,11 @@ std::shared_ptr<Action<Press>> Parser::press() {
 		keys.push_back(key_spec());
 	}
 
-	Token interval = Token();
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (LA(1) == Token::category::interval) {
 		match (Token::category::interval);
-		interval = LT(1);
-		match (Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));
@@ -818,12 +813,11 @@ std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
 		it = specifier->end();
 	}
 
-	Token timeout;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	auto mouse_selectable = std::make_shared<MouseSelectable>(select, specifiers, timeout);
@@ -922,7 +916,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 		match(Token::category::id);
 	}
 
-	Token name = Token();
+	std::shared_ptr<StringTokenUnion> name = nullptr;
 
 	std::shared_ptr<String> path(nullptr);
 
@@ -931,8 +925,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 			path = string();
 		} //else this should be the end of unplug commands
 	} else {
-		name = LT(1);
-		match(Token::category::id);
+		name = string_token_union(Token::category::id);
 	}
 
 	auto action = std::shared_ptr<Plug>(new Plug(plug_token, type, name, path));
@@ -959,18 +952,14 @@ std::shared_ptr<Action<Shutdown>> Parser::shutdown() {
 	Token shutdown_token = LT(1);
 	match(Token::category::shutdown);
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token, timeout, time_interval));
+	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token, timeout));
 	return std::shared_ptr<Action<Shutdown>>(new Action<Shutdown>(action));
 }
 
@@ -983,18 +972,14 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 
 	auto commands = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout, time_interval));
+	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout));
 	return std::shared_ptr<Action<Exec>>(new Action<Exec>(action));
 }
 
@@ -1005,18 +990,14 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 	auto from = string();
 	auto to = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout, time_interval));
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout));
 	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 
@@ -1257,6 +1238,25 @@ std::shared_ptr<String> Parser::string() {
 	return new_node;
 }
 
+std::shared_ptr<AST::StringTokenUnion> Parser::string_token_union(Token::category expected_token_type) {
+	if (!test_string() && LA(1) != expected_token_type) {
+		throw std::runtime_error(std::string(LT(1)) + ": Error: expected a string or " + Token::type_to_string(expected_token_type) + ", but got " +
+			Token::type_to_string(LA(1)) + " " + LT(1).value());
+	}
+
+	Token token;
+	std::shared_ptr<String> str = nullptr;
+
+	if (test_string()) {
+		str = string();
+	} else {
+		token = LT(1);
+		match(expected_token_type);
+	}
+
+	return std::shared_ptr<StringTokenUnion>(new StringTokenUnion(token, str, expected_token_type));
+}
+
 std::shared_ptr<IFactor> Parser::factor() {
 	auto not_token = Token();
 	if (LA(1) == Token::category::NOT) {
@@ -1331,18 +1331,17 @@ std::shared_ptr<Check> Parser::check() {
 
 	select_expression = select_expr();
 
-	Token timeout, interval;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	if (LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	return std::shared_ptr<Check>(new Check(check_token, select_expression, timeout, interval));
