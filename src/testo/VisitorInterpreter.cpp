@@ -960,7 +960,7 @@ void VisitorInterpreter::visit_mouse_move_click(const IR::MouseMoveClick& mouse_
 			vmc->mouse_press({MouseButton::Middle});
 		} else if (mouse_move_click.event_type() == "dclick") {
 			vmc->mouse_press({MouseButton::Left});
-			timer.waitFor(std::chrono::milliseconds(20));
+			timer.waitFor(std::chrono::milliseconds(60));
 			vmc->mouse_press({MouseButton::Left});
 		} else {
 			throw std::runtime_error("Unsupported click type");
