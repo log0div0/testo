@@ -41,9 +41,7 @@ struct console_args {
 	std::string invalidate;
 	std::string hypervisor;
 	std::string report_folder;
-#ifdef USE_CUDA
 	std::string license;
-#endif
 
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
@@ -78,8 +76,8 @@ int clean_mode() {
 					}
 				}
 			} catch (const std::exception& error) {
-				std::cout << "Couldn't remove network " << fs::path(file).filename() << std::endl;
-				std::cout << error << std::endl;
+				std::cerr << "Couldn't remove network " << fs::path(file).filename() << std::endl;
+				std::cerr << error << std::endl;
 			}
 
 		}
@@ -99,8 +97,8 @@ int clean_mode() {
 					}
 				}
 			} catch (const std::exception& error) {
-				std::cout << "Couldn't remove flash drive " << fs::path(file).filename() << std::endl;
-				std::cout << error << std::endl;
+				std::cerr << "Couldn't remove flash drive " << fs::path(file).filename() << std::endl;
+				std::cerr << error << std::endl;
 			}
 		}
 	}
@@ -119,8 +117,8 @@ int clean_mode() {
 					}
 				}
 			} catch (const std::exception& error) {
-				std::cout << "Couldn't remove virtual machine " << fs::path(file).filename() << std::endl;
-				std::cout << error << std::endl;
+				std::cerr << "Couldn't remove virtual machine " << fs::path(file).filename() << std::endl;
+				std::cerr << error << std::endl;
 			}
 
 		}
@@ -134,7 +132,7 @@ int run_mode() {
 	if (args.license.size()) {
 		verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
 	} else {
-		throw std::runtime_error("Для запуска программы необходимо указать путь к файлу с лицензией (параметр --license)");
+		throw std::runtime_error("To start the program you must specify the path to the license file (--license argument)");
 	}
 #endif
 
@@ -196,6 +194,8 @@ int do_main(int argc, char** argv) {
 	args.hypervisor = "vsphere";
 #endif
 
+	std::vector<std::string> wrong;
+
 	auto params_defs_spec = repeatable(
 		option("--param") & value("param_name", args.params_names) & value("param_value", args.params_values)
 	) % "Parameters to define for test cases";
@@ -215,22 +215,33 @@ int do_main(int argc, char** argv) {
 		(option("--report_screenshots").set(args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", args.content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(args.html)) % "Format stdout as html",
-#ifdef USE_CUDA
-		(option("--license") & value("path", args.license)) % "Path to license file",
-#endif
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)"
+		(option("--license") & value("path", args.license)) % "Path to the license file (for GPU version only)",
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
+		any_other(wrong)
 	);
 
 	auto clean_spec = "clean options" % (
 		command("clean").set(args.selected_mode, mode::clean),
 		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)"
+		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
+		any_other(wrong)
 	);
 
 	auto cli = ( run_spec | clean_spec | command("help").set(args.show_help) | command("version").set(args.show_version) );
 
-	if (!parse(argc, argv, cli)) {
-		std::cout << make_man_page(cli, "testo") << std::endl;
+	auto res = parse(argc, argv, cli);
+
+	if (wrong.size()) {
+		for (const std::string& arg: wrong) {
+			std::cerr << "Error: '" << arg << "' is not a valid argument" << std::endl;
+		}
+		std::cout << "Usage:" << std::endl << usage_lines(cli, argv[0]) << std::endl;
+		return -1;
+	}
+
+	if (!res) {
+		std::cerr << "Error: invalid command line arguments" << std::endl;
+		std::cout << "Usage:" << std::endl << usage_lines(cli, argv[0]) << std::endl;
 		return -1;
 	}
 
@@ -240,8 +251,7 @@ int do_main(int argc, char** argv) {
 	}
 
 	if (args.show_version) {
-		std::string version(TESTO_VERSION);
-		std::cout << "Testo framework version " + version << std::endl;
+		std::cout << "Testo framework version " << TESTO_VERSION << std::endl;
 		return 0;
 	}
 
@@ -297,10 +307,10 @@ int main(int argc, char** argv) {
 		try {
 			result = do_main(argc, argv);
 		} catch (const std::exception& error) {
-			std::cout << error << std::endl;
+			std::cerr << error << std::endl;
 			result = 1;
 		} catch (const Interruption&) {
-			std::cout << "Interrupted by user" << std::endl;
+			std::cerr << "Interrupted by user" << std::endl;
 			result = 1;
 		}
 	}).run();
