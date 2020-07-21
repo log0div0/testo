@@ -946,6 +946,8 @@ void VisitorInterpreter::visit_mouse_move_click(const IR::MouseMoveClick& mouse_
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
+		} else {
+			reporter.mouse_no_object();
 		}
 
 		if (mouse_move_click.event_type() == "move") {

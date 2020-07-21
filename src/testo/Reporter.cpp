@@ -378,6 +378,10 @@ void Reporter::mouse_move_click(std::shared_ptr<IR::Machine> vmc, std::string ev
 	report(fmt::format("{} Mouse {} ", progress(), event), blue);
 }
 
+void Reporter::mouse_no_object() {
+	report("\n", blue);
+}
+
 void Reporter::mouse_hold(std::shared_ptr<IR::Machine> vmc, std::string button) {
 	if (button == "lbtn") {
 		button = "left button";
