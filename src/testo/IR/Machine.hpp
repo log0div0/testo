@@ -7,7 +7,7 @@
 namespace IR {
 
 struct Machine: Controller {
-	static std::string type_name() { return "machine"; }
+	static std::string type_name() { return "virtual machine"; }
 
 	std::shared_ptr<::VM> vm() const;
 

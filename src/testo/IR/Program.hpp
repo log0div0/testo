@@ -30,6 +30,7 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<Machine>> machines;
 	std::unordered_map<std::string, std::shared_ptr<FlashDrive>> flash_drives;
 	std::unordered_map<std::string, std::shared_ptr<Network>> networks;
+	std::unordered_map<std::string, std::shared_ptr<Controller>> controllers;
 
 public:
 	std::shared_ptr<Macro> get_macro_or_throw(const std::string& name);
@@ -76,6 +77,18 @@ private:
 				std::string(inserted.first->second->ast_node->begin()));
 		}
 		return t;
+	}
+
+	template <typename T>
+	std::shared_ptr<T> insert_controller(const std::shared_ptr<typename T::ASTType>& ast_node, std::unordered_map<std::string, std::shared_ptr<T>>& map) {
+		auto controller = insert_object(ast_node, map);
+
+		auto inserted = controllers.insert({controller->name(), controller});
+		if (!inserted.second) {
+			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: " + inserted.first->second->type() + " \"" + controller->name() + "\" is already defined here: " +
+				std::string(inserted.first->second->ast_node->begin()));
+		}
+		return controller;
 	}
 
 	template <typename T>

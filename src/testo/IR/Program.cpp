@@ -139,13 +139,13 @@ void Program::collect_param(const std::shared_ptr<AST::Param>& param_ast) {
 	stack->vars[param->name()] = param->value();
 }
 void Program::collect_machine(const std::shared_ptr<AST::Controller>& machine) {
-	insert_object(machine, machines);
+	insert_controller(machine, machines);
 }
 void Program::collect_flash_drive(const std::shared_ptr<AST::Controller>& flash) {
-	insert_object(flash, flash_drives);
+	insert_controller(flash, flash_drives);
 }
 void Program::collect_network(const std::shared_ptr<AST::Controller>& network) {
-	insert_object(network, networks);
+	insert_controller(network, networks);
 }
 
 void Program::validate_special_params() {

@@ -184,7 +184,7 @@ test centos_backend_qemu_plug_flash_exceptions: centos_backend_qemu_install_ubun
 		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_already_plugged_flash | grep "specified flash my_flash is already plugged into this virtual machine"
+			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash | grep "specified flash my_flash is already plugged into this virtual machine"
 			#testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_already_plugged_flash_2
 		""" timeout 30m
 	}
