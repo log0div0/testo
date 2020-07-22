@@ -2,9 +2,17 @@
 include "install_guest_additions.testo"
 
 [no_snapshots: true]
-test copyto_cksum: install_ubuntu_server_guest_additions {
+test copyto_cksum_file: install_ubuntu_server_guest_additions {
 	my_ubuntu_server {
 		copyto "/opt/copyto_folder/test_file.txt" "/opt/test_file.txt"
 		exec bash "cat /opt/test_file.txt"
+	}
+}
+
+[no_snapshots: true]
+test copyto_cksum_folder: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		copyto "/opt/copyto_folder" "/opt/copyto_folder"
+		exec bash "cat /opt/copyto_folder/test_file.txt"
 	}
 }

@@ -644,7 +644,25 @@ void VisitorSemantic::visit_exec(const IR::Exec& exec) {
 void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 	current_test->cksum_input += "copy ";
 	current_test->cksum_input += copy.ast_node->is_to_guest();
-	current_test->cksum_input += copy.from();
+
+	auto from = copy.from();
+
+	if (copy.ast_node->is_to_guest()) {
+		if (!fs::exists(from)) {
+			throw std::runtime_error(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from);
+		}
+
+		if (fs::is_regular_file(from)) {
+			current_test->cksum_input += file_signature(from, env->content_cksum_maxsize());
+		} else if (fs::is_directory(from)) {
+			current_test->cksum_input += directory_signature(from, env->content_cksum_maxsize());
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
+		}
+
+		current_test->cksum_input += from;
+	}
+
 	current_test->cksum_input += copy.to();
 	current_test->cksum_input += copy.timeout();
 }

@@ -149,4 +149,10 @@ test common_flash_child: common_flash_parent1, common_flash_parent2 {
 	}
 }
 
+test copyto_from_not_exist {
+	my_ubuntu_server {
+		copyto "/some/unexisting_shit" "/opt"
+	}
+}
+
 

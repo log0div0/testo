@@ -1,7 +1,7 @@
 include "centos_backend_qemu.testo"
 
 [no_snapshots: true]
-test centos_copyto_cksum: centos_backend_qemu_install_guest_additions {
+test centos_copyto_cksum_file: centos_backend_qemu_install_guest_additions {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/cksum/copyto.testo" "/opt/scripts/copyto.testo"
 
@@ -11,7 +11,7 @@ test centos_copyto_cksum: centos_backend_qemu_install_guest_additions {
 		"""
 
 		exec bash """
-			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum
+			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum_file
 		""" timeout 30m
 
 		exec bash """
@@ -19,7 +19,31 @@ test centos_copyto_cksum: centos_backend_qemu_install_guest_additions {
 		"""
 
 		exec bash """
-			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum --assume_yes | grep "RUN SUCCESSFULLY: 1"
+			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum_file --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+	}
+}
+
+[no_snapshots: true]
+test centos_copyto_cksum_folder: centos_backend_qemu_install_guest_additions {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/cksum/copyto.testo" "/opt/scripts/copyto.testo"
+
+		exec bash """
+			mkdir /opt/copyto_folder
+			echo "Hello world!" > /opt/copyto_folder/test_file.txt
+		"""
+
+		exec bash """
+			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum_folder
+		""" timeout 30m
+
+		exec bash """
+			echo "Another Hello world!" >> /opt/copyto_folder/test_file.txt
+		"""
+
+		exec bash """
+			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum_folder --assume_yes | grep "RUN SUCCESSFULLY: 1"
 		""" timeout 30m
 	}
 }
