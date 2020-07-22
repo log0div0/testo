@@ -47,3 +47,31 @@ test centos_copyto_cksum_folder: centos_backend_qemu_install_guest_additions {
 		""" timeout 30m
 	}
 }
+
+[no_snapshots: true]
+test centos_flash_cksum_folder: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/cksum/flash.testo" "/opt/scripts/flash.testo"
+
+		exec bash """
+			mkdir /opt/flash_folder
+			echo "Hello world!" > /opt/flash_folder/test_file.txt
+		"""
+
+		exec bash """
+			testo run /opt/scripts/flash.testo --test_spec flash_cksum
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/flash.testo --test_spec flash_cksum --assume_yes | grep "RUN SUCCESSFULLY: 0"
+		""" timeout 30m
+
+		exec bash """
+			echo "Another Hello world!" >> /opt/flash_folder/test_file.txt
+		"""
+
+		exec bash """
+			testo run /opt/scripts/flash.testo --test_spec flash_cksum --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+	}
+}

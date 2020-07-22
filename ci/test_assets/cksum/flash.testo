@@ -1,0 +1,24 @@
+
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+flash my_flash {
+	fs: "vfat"
+	size: 32Mb
+	folder: "/opt/flash_folder"
+}
+
+
+[no_snapshots: true]
+test flash_cksum {
+	my_ubuntu_server {
+		plug flash my_flash
+		unplug flash my_flash
+	}
+}
