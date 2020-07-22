@@ -8,4 +8,9 @@ TEST_CASE("Bugs") {
 		nn::Tensor tensor = nn::find_text(&image);
 		CHECK(tensor.match("Все пакеты имеют последние версии").size() == 1);
 	}
+	{
+		stb::Image image("Bugs/1.png");
+		nn::Tensor tensor = nn::find_text(&image);
+		CHECK(tensor.match("Введите пароль администратора").size() == 1);
+	}
 }
