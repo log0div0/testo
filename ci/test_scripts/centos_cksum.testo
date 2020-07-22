@@ -1,0 +1,25 @@
+include "centos_backend_qemu.testo"
+
+[no_snapshots: true]
+test centos_copyto_cksum: centos_backend_qemu_install_guest_additions {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/cksum/copyto.testo" "/opt/scripts/copyto.testo"
+
+		exec bash """
+			mkdir /opt/copyto_folder
+			echo "Hello world!" > /opt/copyto_folder/test_file.txt
+		"""
+
+		exec bash """
+			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum
+		""" timeout 30m
+
+		exec bash """
+			echo "Another Hello world!" >> /opt/copyto_folder/test_file.txt
+		"""
+
+		exec bash """
+			testo run /opt/scripts/copyto.testo --test_spec copyto_cksum --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+	}
+}
