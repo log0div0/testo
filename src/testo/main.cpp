@@ -30,10 +30,9 @@ using namespace clipp;
 
 struct Interruption {};
 
-enum mode {run, clean};
+enum class mode {run, clean, help, version};
 
 struct console_args {
-	mode selected_mode;
 	std::string target;
 	std::string prefix;
 	std::string test_spec;
@@ -45,8 +44,6 @@ struct console_args {
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
 
-	bool show_help = false;
-	bool show_version = false;
 	bool stop_on_fail = false;
 	bool assume_yes = false;
 	bool report_logs = false;
@@ -127,6 +124,7 @@ int do_main(int argc, char** argv) {
 	std::string hypervisor = "vsphere";
 #endif
 
+	mode selected_mode;
 	std::vector<std::string> wrong;
 
 	auto params_defs_spec = repeatable(
@@ -134,7 +132,7 @@ int do_main(int argc, char** argv) {
 	) % "Parameters to define for test cases";
 
 	auto run_spec = "run options" % (
-		command("run").set(args.selected_mode, mode::run),
+		command("run").set(selected_mode, mode::run),
 		value("input file or folder", args.target) % "Path to a file with testcases or to a folder with such files",
 		params_defs_spec,
 		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
@@ -156,13 +154,21 @@ int do_main(int argc, char** argv) {
 	CleanModeArgs clean_args;
 
 	auto clean_spec = "clean options" % (
-		command("clean").set(args.selected_mode, mode::clean),
+		command("clean").set(selected_mode, mode::clean),
 		(option("--prefix") & value("prefix", clean_args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
 		any_other(wrong)
 	);
 
-	auto cli = ( run_spec | clean_spec | command("help").set(args.show_help) | command("version").set(args.show_version) );
+	auto help_spec = command("help").set(selected_mode, mode::help);
+	auto version_spec = command("version").set(selected_mode, mode::version);
+
+	auto cli = (
+		run_spec |
+		clean_spec |
+		help_spec |
+		version_spec
+	);
 
 	auto res = parse(argc, argv, cli);
 
@@ -180,12 +186,12 @@ int do_main(int argc, char** argv) {
 		return -1;
 	}
 
-	if (args.show_help) {
+	if (selected_mode == mode::help) {
 		std::cout << make_man_page(cli, "testo") << std::endl;
 		return 0;
 	}
 
-	if (args.show_version) {
+	if (selected_mode == mode::version) {
 		std::cout << "Testo framework version " << TESTO_VERSION << std::endl;
 		return 0;
 	}
@@ -217,9 +223,9 @@ int do_main(int argc, char** argv) {
 		throw Interruption();
 	});
 
-	if (args.selected_mode == mode::clean) {
+	if (selected_mode == mode::clean) {
 		return clean_mode(clean_args);
-	} else if (args.selected_mode == mode::run) {
+	} else if (selected_mode == mode::run) {
 		return run_mode();
 	} else {
 		throw std::runtime_error("Unknown mode");
