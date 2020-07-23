@@ -22,8 +22,8 @@
 #include <chrono>
 
 #include "Utils.hpp"
+#include "ModeClean.hpp"
 #include <clipp.h>
-#include <fmt/format.h>
 #include <fstream>
 
 using namespace clipp;
@@ -58,71 +58,6 @@ struct console_args {
 console_args args;
 
 std::shared_ptr<Environment> env;
-
-int clean_mode() {
-	//cleanup networks
-	for (auto& network_folder: fs::directory_iterator(env->network_metadata_dir())) {
-		for (auto& file: fs::directory_iterator(network_folder)) {
-			try {
-				if (fs::path(file).filename() == fs::path(network_folder).filename()) {
-					IR::Network network;
-					network.config = nlohmann::json::parse(get_metadata(file, "network_config"));
-					if (network.nw()->prefix() == args.prefix) {
-						network.undefine();
-						std::cout << "Deleted network " << network.nw()->id() << std::endl;
-						break;
-					}
-				}
-			} catch (const std::exception& error) {
-				std::cerr << "Couldn't remove network " << fs::path(file).filename() << std::endl;
-				std::cerr << error << std::endl;
-			}
-
-		}
-	}
-
-	//cleanup flash drives
-	for (auto& flash_drive_folder: fs::directory_iterator(env->flash_drives_metadata_dir())) {
-		for (auto& file: fs::directory_iterator(flash_drive_folder)) {
-			try {
-				if (fs::path(file).filename() == fs::path(flash_drive_folder).filename()) {
-					IR::FlashDrive flash_drive;
-					flash_drive.config = nlohmann::json::parse(get_metadata(file, "fd_config"));
-					if (flash_drive.fd()->prefix() == args.prefix) {
-						flash_drive.undefine();
-						std::cout << "Deleted flash drive " << flash_drive.fd()->id() << std::endl;
-						break;
-					}
-				}
-			} catch (const std::exception& error) {
-				std::cerr << "Couldn't remove flash drive " << fs::path(file).filename() << std::endl;
-				std::cerr << error << std::endl;
-			}
-		}
-	}
-
-	//cleanup virtual machines
-	for (auto& vm_folder: fs::directory_iterator(env->vm_metadata_dir())) {
-		for (auto& file: fs::directory_iterator(vm_folder)) {
-			try {
-				if (fs::path(file).filename() == fs::path(vm_folder).filename()) {
-					IR::Machine machine;
-					machine.config = nlohmann::json::parse(get_metadata(file, "vm_config"));
-					if (machine.vm()->prefix() == args.prefix) {
-						machine.undefine();
-						std::cout << "Deleted virtual machine " << machine.vm()->id() << std::endl;
-						break;
-					}
-				}
-			} catch (const std::exception& error) {
-				std::cerr << "Couldn't remove virtual machine " << fs::path(file).filename() << std::endl;
-				std::cerr << error << std::endl;
-			}
-
-		}
-	}
-	return 0;
-}
 
 int run_mode() {
 
@@ -218,9 +153,11 @@ int do_main(int argc, char** argv) {
 		any_other(wrong)
 	);
 
+	CleanModeArgs clean_args;
+
 	auto clean_spec = "clean options" % (
 		command("clean").set(args.selected_mode, mode::clean),
-		(option("--prefix") & value("prefix", args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
+		(option("--prefix") & value("prefix", clean_args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
 		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
 		any_other(wrong)
 	);
@@ -281,7 +218,7 @@ int do_main(int argc, char** argv) {
 	});
 
 	if (args.selected_mode == mode::clean) {
-		return clean_mode();
+		return clean_mode(clean_args);
 	} else if (args.selected_mode == mode::run) {
 		return run_mode();
 	} else {
