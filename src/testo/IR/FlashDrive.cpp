@@ -239,14 +239,14 @@ void FlashDrive::validate_folder() const {
 		}
 
 		if (!fs::exists(folder)) {
-			throw std::runtime_error("Target folder doesn't exist");
+			throw std::runtime_error(fmt::format("Constructing FlashDrive \"{}\" Error: target folder {} doesn't exist", name(), folder.generic_string()));
 		}
 
 		folder = fs::canonical(folder);
 
 		if (!fs::is_directory(folder)) {
-			throw std::runtime_error(fmt::format("specified folder {} for flash drive {} is not a folder",
-				folder.generic_string(), name()));
+			throw std::runtime_error(fmt::format("Constructing FlashDrive \"{}\" Error: specified folder {} is not a folder",
+				name(), folder.generic_string()));
 		}
 	} catch (const std::runtime_error& error) {
 		std::throw_with_nested(std::runtime_error("Validating host folder failed"));
