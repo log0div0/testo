@@ -39,7 +39,6 @@ struct console_args {
 	std::string test_spec;
 	std::string exclude;
 	std::string invalidate;
-	std::string hypervisor;
 	std::string report_folder;
 	std::string license;
 
@@ -119,12 +118,13 @@ int do_main(int argc, char** argv) {
 	initializer.initalize_security();
 	SetConsoleOutputCP(CP_UTF8);
 #endif
+
 #ifdef WIN32
-	args.hypervisor = "hyperv";
+	std::string hypervisor = "hyperv";
 #elif __linux__
-	args.hypervisor = "qemu";
+	std::string hypervisor = "qemu";
 #elif __APPLE__
-	args.hypervisor = "vsphere";
+	std::string hypervisor = "vsphere";
 #endif
 
 	std::vector<std::string> wrong;
@@ -149,7 +149,7 @@ int do_main(int argc, char** argv) {
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(args.html)) % "Format stdout as html",
 		(option("--license") & value("path", args.license)) % "Path to the license file (for GPU version only)",
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
+		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
 		any_other(wrong)
 	);
 
@@ -158,7 +158,7 @@ int do_main(int argc, char** argv) {
 	auto clean_spec = "clean options" % (
 		command("clean").set(args.selected_mode, mode::clean),
 		(option("--prefix") & value("prefix", clean_args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
-		(option("--hypervisor") & value("hypervisor type", args.hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
+		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
 		any_other(wrong)
 	);
 
@@ -190,22 +190,22 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
-	if (args.hypervisor == "qemu") {
+	if (hypervisor == "qemu") {
 #ifndef __linux__
 		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
 #else
 		env = std::make_shared<QemuEnvironment>();
 #endif
-	} else if (args.hypervisor == "vbox") {
+	} else if (hypervisor == "vbox") {
 		env = std::make_shared<VboxEnvironment>();
-	} else if (args.hypervisor == "hyperv") {
+	} else if (hypervisor == "hyperv") {
 #ifndef WIN32
 		throw std::runtime_error("Can't use hyperv not in Windows");
 #else
 		env = std::make_shared<HyperVEnvironment>();
 #endif
 	} else {
-		throw std::runtime_error(std::string("Unknown hypervisor: ") + args.hypervisor);
+		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
 	}
 
 
