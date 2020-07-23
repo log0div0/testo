@@ -25,7 +25,7 @@ struct QemuEnvironment : public Environment {
 		return "/var/lib/libvirt/testo/fd_metadata";
 	}
 
-	QemuEnvironment(const nlohmann::json& config);
+	QemuEnvironment();
 	~QemuEnvironment();
 
 	void setup() override;

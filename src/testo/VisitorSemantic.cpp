@@ -595,7 +595,7 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 	if (plug.entity_type() == "dvd" && plug.is_on()) {
 		auto dvd_path = plug.dvd_path();
 		current_test->cksum_input += dvd_path.generic_string();
-		current_test->cksum_input += file_signature(dvd_path, env->content_cksum_maxsize());
+		current_test->cksum_input += file_signature(dvd_path);
 		return;
 	}
 
@@ -653,9 +653,9 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 		}
 
 		if (fs::is_regular_file(from)) {
-			current_test->cksum_input += file_signature(from, env->content_cksum_maxsize());
+			current_test->cksum_input += file_signature(from);
 		} else if (fs::is_directory(from)) {
-			current_test->cksum_input += directory_signature(from, env->content_cksum_maxsize());
+			current_test->cksum_input += directory_signature(from);
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
 		}

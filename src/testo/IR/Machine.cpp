@@ -51,14 +51,14 @@ void Machine::create() {
 
 		if (vm_config.count("iso")) {
 			fs::path iso_file = vm_config.at("iso").get<std::string>();
-			metadata["iso_signature"] = file_signature(iso_file, env->content_cksum_maxsize());
+			metadata["iso_signature"] = file_signature(iso_file);
 		}
 
 		if (vm_config.count("disk")) {
 			for (auto& disk: vm_config.at("disk")) {
 				if (disk.count("source")) {
 					std::string signature_name = std::string("disk_signature@") + disk.at("name").get<std::string>();
-					metadata[signature_name] = file_signature(disk.at("source").get<std::string>(), env->content_cksum_maxsize());
+					metadata[signature_name] = file_signature(disk.at("source").get<std::string>());
 				}
 			}
 		}
@@ -230,7 +230,7 @@ bool Machine::check_config_relevance() {
 		}
 
 		fs::path iso_file = new_config.at("iso").get<std::string>();
-		if (file_signature(iso_file, env->content_cksum_maxsize()) != get_metadata("iso_signature")) {
+		if (file_signature(iso_file) != get_metadata("iso_signature")) {
 			return false;
 		}
 	}
@@ -250,7 +250,7 @@ bool Machine::check_config_relevance() {
 					return false;
 				}
 
-				if (file_signature(disk.at("source").get<std::string>(), env->content_cksum_maxsize()) != get_metadata(signature_name)) {
+				if (file_signature(disk.at("source").get<std::string>()) != get_metadata(signature_name)) {
 					return false;
 				}
 			}
