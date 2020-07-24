@@ -9,7 +9,24 @@
 
 #include <set>
 #include <unordered_set>
-#include <optional>
+#include <unordered_map>
+
+enum class Tribool: uint8_t { no, yes, maybe };
+
+inline Tribool operator^(bool a, Tribool b) {
+	if (a) {
+		switch (b) {
+			case Tribool::yes:
+				return Tribool::no;
+			case Tribool::no:
+				return Tribool::yes;
+			default:
+				return Tribool::maybe;
+		}
+	} else {
+		return b;
+	}
+}
 
 struct VisitorSemantic {
 	VisitorSemantic(const nlohmann::json& config);
@@ -57,13 +74,13 @@ struct VisitorSemantic {
 	void visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented);
 	void visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop);
 
-	std::optional<bool> visit_expr(std::shared_ptr<AST::IExpr> expr);
-	std::optional<bool> visit_binop(std::shared_ptr<AST::BinOp> binop);
-	bool visit_defined(const IR::Defined& defined);
-	bool visit_comparison(const IR::Comparison& defined);
-	std::optional<bool> visit_factor(std::shared_ptr<AST::IFactor> factor);
-	std::optional<bool> visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented);
-	std::optional<bool> visit_check(const IR::Check& check);
+	Tribool visit_expr(std::shared_ptr<AST::IExpr> expr);
+	Tribool visit_binop(std::shared_ptr<AST::BinOp> binop);
+	Tribool visit_defined(const IR::Defined& defined);
+	Tribool visit_comparison(const IR::Comparison& defined);
+	Tribool visit_factor(std::shared_ptr<AST::IFactor> factor);
+	Tribool visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented);
+	Tribool visit_check(const IR::Check& check);
 
 	void visit_machine(std::shared_ptr<IR::Machine> machine);
 	void visit_flash(std::shared_ptr<IR::FlashDrive> flash); //flash drive
