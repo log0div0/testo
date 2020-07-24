@@ -1,5 +1,7 @@
 
 #include "OnnxRuntime.hpp"
+#include "OCR.hpp"
+#include "SelfTestImg.hpp"
 #ifdef WIN32
 #include "winapi.hpp"
 #endif
@@ -61,6 +63,14 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 		model_path.string().c_str(),
 #endif
 		session_options);
+}
+
+void OnnxRuntime::selftest() {
+	stb::Image img(SelfTestImg, SelfTestImg_len);
+	nn::Tensor tensor = find_text(&img);
+	if (tensor.match("Добро пожаловать").size() != 1) {
+		throw std::runtime_error("Neural networks are not working correctly");
+	}
 }
 
 }

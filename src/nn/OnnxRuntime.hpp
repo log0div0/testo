@@ -20,6 +20,8 @@ struct OnnxRuntime {
 	OnnxRuntime& operator=(const OnnxRuntime&) = delete;
 	OnnxRuntime(OnnxRuntime&&) = delete;
 	OnnxRuntime& operator=(OnnxRuntime&&) = delete;
+
+	void selftest();
 };
 
 std::unique_ptr<Ort::Session> LoadModel(const std::string& name);
