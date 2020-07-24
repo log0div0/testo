@@ -6,6 +6,9 @@
 
 #ifdef USE_CUDA
 #include <license/License.hpp>
+void verify_license(const std::string& path_to_license) {
+	throw std::runtime_error("Implement verify_license");
+}
 #endif
 
 
@@ -13,7 +16,7 @@ int run_mode(const RunModeArgs& args) {
 
 #ifdef USE_CUDA
 	if (args.license.size()) {
-		verify_license(args.license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+		verify_license(args.license);
 	} else {
 		throw std::runtime_error("To start the program you must specify the path to the license file (--license argument)");
 	}

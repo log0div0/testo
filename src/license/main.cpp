@@ -38,10 +38,8 @@ void write_file(const std::string& path, const std::string& data) {
 	file << data;
 }
 
-enum Mode {GEN_KEYS, SIGN, VERIFY};
+enum Mode {GEN_KEYS, ISSUE, DUMP_JSON};
 Mode mode;
-std::string in_path, out_path;
-std::string private_key_path, public_key_path;
 
 void gen_keys() {
 	uint8_t public_key[crypto_sign_PUBLICKEYBYTES] = {};
@@ -50,16 +48,16 @@ void gen_keys() {
 	if (result) {
 		throw std::runtime_error("crypto_sign_keypair failed");
 	}
-	write_file(public_key_path, base64_encode(public_key, crypto_sign_PUBLICKEYBYTES));
-	write_file(private_key_path, base64_encode(private_key, crypto_sign_SECRETKEYBYTES));
+	std::cout << "PUBLIC: " << base64_encode(public_key, crypto_sign_PUBLICKEYBYTES) << std::endl;
+	std::cout << "PRIVATE: " << base64_encode(private_key, crypto_sign_SECRETKEYBYTES) << std::endl;
 }
 
-void sign() {
-	sign_license(in_path, out_path, read_file(private_key_path));
+void issue(const std::string& license_type) {
+	throw std::runtime_error("Implement me");
 }
 
-void verify() {
-	verify_license(in_path, read_file(public_key_path));
+void dump_json() {
+	throw std::runtime_error("Implement me");
 }
 
 int main(int argc, char** argv) {
@@ -67,28 +65,24 @@ int main(int argc, char** argv) {
 		using namespace clipp;
 
 		auto gen_keys_spec = (
-			command("gen_keys").set(mode, GEN_KEYS),
-			required("--private_key") & value("path", private_key_path),
-			required("--public_key") & value("path", public_key_path)
+			command("gen_keys").set(mode, GEN_KEYS)
 		);
 
-		auto sign_spec = (
-			command("sign").set(mode, SIGN),
-			required("--in") & value("path", in_path),
-			required("--out") & value("path", out_path),
-			required("--private_key") & value("path", private_key_path)
+		std::string license_type;
+
+		auto issue_spec = (
+			command("issue").set(mode, ISSUE),
+			required("--type") & value("license type", license_type)
 		);
 
-		auto verify_spec = (
-			command("verify").set(mode, VERIFY),
-			required("--in") & value("path", in_path),
-			required("--public_key") & value("path", public_key_path)
+		auto dump_json_spec = (
+			command("dump_json").set(mode, DUMP_JSON)
 		);
 
-		auto cli = ( gen_keys_spec | sign_spec | verify_spec );
+		auto cli = ( gen_keys_spec | issue_spec | dump_json_spec );
 
 		if (!parse(argc, argv, cli)) {
-			std::cout << make_man_page(cli, "license_demo") << std::endl;
+			std::cout << make_man_page(cli, "testo_license_cgi") << std::endl;
 			return -1;
 		}
 
@@ -96,11 +90,11 @@ int main(int argc, char** argv) {
 			case GEN_KEYS:
 				gen_keys();
 				break;
-			case SIGN:
-				sign();
+			case ISSUE:
+				issue(license_type);
 				break;
-			case VERIFY:
-				verify();
+			case DUMP_JSON:
+				dump_json();
 				break;
 			default:
 				throw std::runtime_error("Should not be here");

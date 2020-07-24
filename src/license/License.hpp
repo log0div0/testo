@@ -5,6 +5,8 @@
 #include <regex>
 #include <chrono>
 
+namespace license {
+
 struct Date {
 	static Date from_string(const std::string& str) {
 		std::regex regex(R"((\d+).(\d+).(\d+))");
@@ -51,5 +53,4 @@ inline bool operator>(const Date& lhs, const Date& rhs) {
 		std::tie(rhs.year, rhs.month, rhs.day);
 }
 
-void sign_license(const std::string& in_path, const std::string& out_path, const std::string& private_key);
-void verify_license(const std::string& in_path, const std::string& public_key);
+}
