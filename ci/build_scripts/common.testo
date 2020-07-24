@@ -11,6 +11,14 @@ param onnxruntime_tagname "v1.3.0"
 param cuda_linux_filename "cuda_10.1.243_418.87.00_linux.run"
 param cudnn_linux_filename "cudnn-10.1-linux-x64-v7.6.5.32.tgz"
 
+param onnxruntime_patch_commands """
+	git apply ../onnxruntime_patches/single_thread.patch
+	git apply ../onnxruntime_patches/rename_dll.patch
+	git apply ../onnxruntime_patches/cuda.patch
+	git apply ../onnxruntime_patches/disable_unit_tests.patch
+	git apply ../onnxruntime_patches/cuda_device_info.patch
+"""
+
 flash nvidia {
 	fs: "fat"
 	size: 8Gb

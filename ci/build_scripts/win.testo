@@ -64,10 +64,7 @@ test win_build_onnxruntime_cpu_x64: win_download_onnxruntime {
 		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "C:/work/onnxruntime_patches"
 		exec cmd """
 			cd C:/work/onnxruntime
-			git apply ../onnxruntime_patches/single_thread.patch
-			git apply ../onnxruntime_patches/rename_dll.patch
-			git apply ../onnxruntime_patches/cuda.patch
-			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			${onnxruntime_patch_commands}
 			.\\build.bat --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --cmake_generator "Visual Studio 16 2019"
 		""" timeout 2h
 		exec cmd """
@@ -88,10 +85,7 @@ test win_build_onnxruntime_cpu_x86: win_download_onnxruntime {
 		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "C:/work/onnxruntime_patches"
 		exec cmd """
 			cd C:/work/onnxruntime
-			git apply ../onnxruntime_patches/single_thread.patch
-			git apply ../onnxruntime_patches/rename_dll.patch
-			git apply ../onnxruntime_patches/cuda.patch
-			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			${onnxruntime_patch_commands}
 			.\\build.bat --x86 --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --cmake_generator "Visual Studio 16 2019"
 		""" timeout 2h
 		exec cmd """
