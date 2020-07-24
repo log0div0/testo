@@ -13,4 +13,9 @@ TEST_CASE("Bugs") {
 		nn::Tensor tensor = nn::find_text(&image);
 		CHECK(tensor.match("Введите пароль администратора").size() == 1);
 	}
+	{
+		stb::Image image("Bugs/2.png");
+		nn::Tensor tensor = nn::find_text(&image);
+		CHECK(tensor.match("Type to search").size() == 1);
+	}
 }

@@ -1,5 +1,6 @@
 
 #include "TemplateLiterals.hpp"
+#include <stdexcept>
 
 namespace template_literals {
 

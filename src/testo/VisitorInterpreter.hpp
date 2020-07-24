@@ -10,6 +10,7 @@
 #include <nn/OCR.hpp>
 #include <vector>
 #include <list>
+#include <unordered_map>
 
 struct VisitorInterpreter {
 	struct InterpreterException: public std::exception {

@@ -6,10 +6,6 @@
 #include "Network.hpp"
 
 struct Environment {
-	Environment(const nlohmann::json& config) {
-		_content_cksum_maxsize = config.at("content_cksum_maxsize").get<uint32_t>() * 1048576;
-	}
-
 	virtual ~Environment() = default;
 
 	virtual fs::path testo_dir() const = 0;
@@ -19,19 +15,12 @@ struct Environment {
 	virtual fs::path network_metadata_dir() const = 0;
 	virtual fs::path flash_drives_metadata_dir() const = 0;
 
-	uint64_t content_cksum_maxsize() const {
-		return _content_cksum_maxsize;
-	}
-
 	virtual void setup() = 0;
 	virtual void cleanup() = 0;
 
 	virtual std::shared_ptr<VM> create_vm(const nlohmann::json& config) = 0;
 	virtual std::shared_ptr<FlashDrive> create_flash_drive(const nlohmann::json& config) = 0;
 	virtual std::shared_ptr<Network> create_network(const nlohmann::json& config) = 0;
-
-private:
-	uint64_t _content_cksum_maxsize;
 };
 
 extern std::shared_ptr<Environment> env;

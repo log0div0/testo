@@ -3,6 +3,7 @@
 
 #include "Stack.hpp"
 #include <vector>
+#include <ostream>
 
 namespace template_literals {
 

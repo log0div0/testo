@@ -6,7 +6,7 @@
 #include <fmt/format.h>
 #include <process/Process.hpp>
 
-QemuEnvironment::QemuEnvironment(const nlohmann::json& config): Environment(config) {
+QemuEnvironment::QemuEnvironment() {
 	setenv("QEMU", "1", false);
 }
 

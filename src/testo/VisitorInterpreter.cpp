@@ -764,7 +764,7 @@ bool VisitorInterpreter::visit_detect_selectable(std::shared_ptr<AST::ISelectabl
 	bool is_negated = selectable->is_negated();
 
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
-		return is_negated ^ visit_select_text({p->selectable, stack}, screenshot).size();
+		return is_negated ^ (bool)visit_select_text({p->selectable, stack}, screenshot).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
@@ -1485,7 +1485,7 @@ void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 		fs::path to = copy.to();
 
 		std::string wait_for = copy.timeout();
-		reporter.copy(vmc, from, to, copy.ast_node->is_to_guest(), wait_for);
+		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
 
 		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
