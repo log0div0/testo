@@ -70,9 +70,12 @@ void OnnxRuntime::selftest() {
 }
 
 #ifdef USE_CUDA
-CUDA_DeviceInfo OnnxRuntime::get_device_info() const {
+CUDA_DeviceInfo GetDeviceInfo() {
 	CUDA_DeviceInfo info = {};
-	CUDA_GetDeviceInfo(&info, 0);
+	auto result = CUDA_GetDeviceInfo(&info, 0);
+	if (result) {
+		throw std::runtime_error("GetDeviceInfo");
+	}
 	return info;
 }
 #endif

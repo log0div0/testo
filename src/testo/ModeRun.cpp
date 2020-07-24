@@ -6,8 +6,29 @@
 
 #ifdef USE_CUDA
 #include <license/License.hpp>
+#include <nn/OnnxRuntime.hpp>
 void verify_license(const std::string& path_to_license) {
-	throw std::runtime_error("Implement verify_license");
+	std::string container = license::read_file(path_to_license);
+	nlohmann::json license = license::unpack(container, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+
+	license::Date not_before(license.at("not_before").get<std::string>());
+	license::Date not_after(license.at("not_after").get<std::string>());
+	license::Date now(std::chrono::system_clock::now());
+
+	if (now < not_before) {
+		throw std::runtime_error("The license period has not yet come");
+	}
+
+	if (now > not_after) {
+		throw std::runtime_error("The license period has already ended");
+	}
+
+	auto info = nn::GetDeviceInfo();
+
+	std::string device_uuid = license.at("device_uuid");
+	if (info.uuid_str != device_uuid) {
+		throw std::runtime_error("The graphics accelerator does not match the one specified in the license");
+	}
 }
 #endif
 
