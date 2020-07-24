@@ -8,10 +8,6 @@
 
 #include <experimental/filesystem>
 
-#ifdef USE_CUDA
-#include <cuda_provider_factory.h>
-#endif
-
 namespace fs = std::experimental::filesystem;
 
 namespace nn {
@@ -72,5 +68,13 @@ void OnnxRuntime::selftest() {
 		throw std::runtime_error("Neural networks are not working correctly");
 	}
 }
+
+#ifdef USE_CUDA
+CUDA_DeviceInfo OnnxRuntime::get_device_info() const {
+	CUDA_DeviceInfo info = {};
+	CUDA_GetDeviceInfo(&info, 0);
+	return info;
+}
+#endif
 
 }

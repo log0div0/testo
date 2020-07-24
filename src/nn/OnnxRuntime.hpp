@@ -10,6 +10,10 @@
 #pragma GCC diagnostic pop
 #endif
 
+#ifdef USE_CUDA
+#include <cuda_provider_factory.h>
+#endif
+
 namespace nn {
 
 struct OnnxRuntime {
@@ -22,6 +26,10 @@ struct OnnxRuntime {
 	OnnxRuntime& operator=(OnnxRuntime&&) = delete;
 
 	void selftest();
+
+#ifdef USE_CUDA
+	CUDA_DeviceInfo get_device_info() const;
+#endif
 };
 
 std::unique_ptr<Ort::Session> LoadModel(const std::string& name);

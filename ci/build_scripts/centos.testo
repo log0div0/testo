@@ -93,10 +93,7 @@ test centos_build_onnxruntime_cpu: centos_download_onnxruntime {
 		exec bash """
 			export PATH=$PATH:/usr/local/bin
 			cd /root/onnxruntime
-			git apply ../onnxruntime_patches/single_thread.patch
-			git apply ../onnxruntime_patches/rename_dll.patch
-			git apply ../onnxruntime_patches/cuda.patch
-			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			${onnxruntime_patch_commands}
 			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests
 			mkdir /root/onnxruntime_dist
 			mkdir /root/onnxruntime_dist/include
@@ -132,10 +129,7 @@ test centos_build_onnxruntime_gpu: centos_install_cuda {
 		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			cd /root/onnxruntime
-			git apply ../onnxruntime_patches/single_thread.patch
-			git apply ../onnxruntime_patches/rename_dll.patch
-			git apply ../onnxruntime_patches/cuda.patch
-			git apply ../onnxruntime_patches/disable_unit_tests.patch
+			${onnxruntime_patch_commands}
 			export PATH="$PATH:/usr/local/bin:/usr/local/cuda/bin"
 			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --use_cuda --cuda_home /usr/local/cuda --cudnn_home /root/cuda
 			mkdir /root/onnxruntime_dist
