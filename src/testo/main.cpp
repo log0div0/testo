@@ -15,13 +15,23 @@
 
 #include "ModeClean.hpp"
 #include "ModeRun.hpp"
+#include "ModeRequestLicense.hpp"
+
 #include <clipp.h>
 
 using namespace clipp;
 
 struct Interruption {};
 
-enum class mode {run, clean, help, version};
+enum class mode {
+	run,
+	clean,
+#ifdef USE_CUDA
+	request_license,
+#endif
+	help,
+	version
+};
 
 std::shared_ptr<Environment> env;
 
@@ -79,12 +89,25 @@ int do_main(int argc, char** argv) {
 		any_other(wrong)
 	);
 
+#ifdef USE_CUDA
+	RequestLicenseModeArgs request_license_args;
+
+	auto request_license_spec = "request_license options" % (
+		command("request_license").set(selected_mode, mode::request_license),
+		(option("--out") & value("path", request_license_args.out)) % "The path where you want to save the request"
+	);
+
+#endif
+
 	auto help_spec = command("help").set(selected_mode, mode::help);
 	auto version_spec = command("version").set(selected_mode, mode::version);
 
 	auto cli = (
 		run_spec |
 		clean_spec |
+#ifdef USE_CUDA
+		request_license_spec |
+#endif
 		help_spec |
 		version_spec
 	);
@@ -115,6 +138,12 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
+#ifdef USE_CUDA
+	if (selected_mode == mode::request_license) {
+		return request_license_mode(request_license_args);
+	}
+#endif
+
 	if (hypervisor == "qemu") {
 #ifndef __linux__
 		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
@@ -132,8 +161,6 @@ int do_main(int argc, char** argv) {
 	} else {
 		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
 	}
-
-
 
 	coro::CoroPool pool;
 	pool.exec([&] {
