@@ -37,8 +37,7 @@ void issue(const std::string& license_type) {
 	license::Date not_before(now);
 	license["not_before"] = not_before.to_string();
 	if (license_type == "full") {
-		license::Date not_after(now);
-		not_after.year += 1;
+		license::Date not_after(now + std::chrono::hours(24 * 365));
 		license["not_after"] = not_after.to_string();
 	} else if (license_type == "demo") {
 		license::Date not_after(now + std::chrono::hours(24 * 14));
