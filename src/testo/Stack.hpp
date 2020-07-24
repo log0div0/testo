@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <map>
+#include <string>
+#include <stdexcept>
 
 struct StackNode {
 	StackNode() = default;

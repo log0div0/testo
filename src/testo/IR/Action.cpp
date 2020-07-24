@@ -176,7 +176,7 @@ std::string Copy::from() const {
 		}
 	}
 
-	return from;
+	return from.generic_string();
 }
 
 std::string Copy::to() const {
@@ -188,7 +188,7 @@ std::string Copy::to() const {
 		}
 	}
 
-	return to;
+	return to.generic_string();
 }
 
 std::string Copy::timeout() const {

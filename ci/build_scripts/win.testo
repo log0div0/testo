@@ -176,8 +176,8 @@ test win_build_testo_cpu_x64: win_install_guest_additions {
 			mkdir testo_build
 			cd testo_build
 			cmake -G "Visual Studio 16 2019" -A x64 -DONNX_RUNTIME_DIR=C:/work/onnxruntime_dist -DUSE_CUDA=off ../testo
-			cmake --build . --target testo --config Release
-			cmake --build . --target testo-helper --config Release
+			cmake --build . --target testo --config Release || exit /b 1
+			cmake --build . --target testo-helper --config Release || exit /b 1
 		""" timeout 30m
 		exec cmd """
 			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat"
@@ -205,8 +205,8 @@ test win_build_testo_cpu_x86: win_install_guest_additions {
 			mkdir testo_build
 			cd testo_build
 			cmake -G "Visual Studio 16 2019" -A Win32 -DONNX_RUNTIME_DIR=C:/work/onnxruntime_dist -DUSE_CUDA=off ../testo
-			cmake --build . --target testo --config Release
-			cmake --build . --target testo-helper --config Release
+			cmake --build . --target testo --config Release || exit /b 1
+			cmake --build . --target testo-helper --config Release || exit /b 1
 		""" timeout 30m
 		exec cmd """
 			call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Auxiliary\\Build\\vcvars32.bat"

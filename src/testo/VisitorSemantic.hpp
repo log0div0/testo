@@ -9,6 +9,7 @@
 
 #include <set>
 #include <unordered_set>
+#include <optional>
 
 struct VisitorSemantic {
 	VisitorSemantic(const nlohmann::json& config);

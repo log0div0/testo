@@ -688,14 +688,14 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
-std::shared_ptr<Action<Sleep>> Parser::sleep() {
+std::shared_ptr<Action<AST::Sleep>> Parser::sleep() {
 	Token sleep_token = LT(1);
 	match(Token::category::sleep);
 
 	auto timeout = string_token_union(Token::category::time_interval);
 
-	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, timeout));
-	return std::shared_ptr<Action<Sleep>>(new Action<Sleep>(action));
+	auto action = std::shared_ptr<AST::Sleep>(new AST::Sleep(sleep_token, timeout));
+	return std::shared_ptr<Action<AST::Sleep>>(new Action<AST::Sleep>(action));
 }
 
 std::shared_ptr<Action<Press>> Parser::press() {
