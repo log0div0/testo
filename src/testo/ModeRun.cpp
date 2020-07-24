@@ -7,7 +7,18 @@
 #ifdef USE_CUDA
 #include <license/License.hpp>
 #include <nn/OnnxRuntime.hpp>
+
 void verify_license(const std::string& path_to_license) {
+	try {
+		return license::verify_license_legacy(path_to_license, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+	} catch (const std::exception&) {
+		// fallthrough
+	}
+
+	if (!fs::exists(path_to_license)) {
+		throw std::runtime_error("File " + path_to_license + " does not exists");
+	}
+
 	std::string container = license::read_file(path_to_license);
 	nlohmann::json license = license::unpack(container, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
 

@@ -1,6 +1,9 @@
 
 #include "License.hpp"
 #include <base64.hpp>
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
 
 extern "C" {
 #include <tweetnacl/tweetnacl.h>
@@ -51,5 +54,56 @@ nlohmann::json unpack(const std::string& container, const std::string& public_ke
 
 	return nlohmann::json::parse(message);
 }
+
+
+
+
+
+void verify_license_legacy(const std::string& in_path, const std::string& public_key_base64) {
+	if (!fs::exists(in_path)) {
+		throw std::runtime_error("File " + in_path + " does not exists");
+	}
+
+	std::vector<uint8_t> sig;
+	{
+		std::ifstream file(in_path, std::ios::binary | std::ios::ate);
+		if (!file.is_open()) {
+			throw std::runtime_error("Failed to open file " + in_path);
+		}
+		int size = file.tellg();
+		file.seekg(0, std::ios::beg);
+		sig.resize(size);
+		file.read((char*)sig.data(), size);
+	}
+
+	std::vector<uint8_t> public_key = base64_decode(public_key_base64);
+	if (public_key.size() != crypto_sign_PUBLICKEYBYTES) {
+		throw std::runtime_error("Invalid size of public key");
+	}
+
+	std::string message;
+	message.resize(sig.size());
+	long long unsigned message_size = 0;
+	int result = crypto_sign_open((uint8_t*)message.data(), &message_size, (uint8_t*)sig.data(), sig.size(), public_key.data());
+	if (result) {
+		throw std::runtime_error("crypto_sign_open failed");
+	}
+	message.resize(message_size);
+
+	nlohmann::json license = nlohmann::json::parse(message);
+
+	Date not_before(license.at("not_before").get<std::string>());
+	Date not_after(license.at("not_after").get<std::string>());
+	license::Date now(std::chrono::system_clock::now());
+
+	if (now < not_before) {
+		throw std::runtime_error("Период действия лицензии ещё не настал");
+	}
+
+	if (now > not_after) {
+		throw std::runtime_error("Период действия лицензии уже закончился");
+	}
+}
+
 
 }
