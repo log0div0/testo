@@ -19,6 +19,11 @@ void verify_license(const std::string& path_to_license) {
 	license::Date not_before(license.at("not_before").get<std::string>());
 	license::Date not_after(license.at("not_after").get<std::string>());
 	license::Date now(std::chrono::system_clock::now());
+	license::Date release_date(TESTO_RELEASE_DATE);
+
+	if (now < release_date) {
+		throw std::runtime_error("System time is incorrect");
+	}
 
 	if (now < not_before) {
 		throw std::runtime_error("The license period has not yet come");
