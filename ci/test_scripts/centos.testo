@@ -125,53 +125,8 @@ test centos_prepare_1: centos_install_guest_additions {
 	}
 }
 
+
 test centos_prepare_2: centos_prepare_1 {
-	centos {
-		exec bash """
-			yum groupinstall -y "Development Tools"
-			yum install -y ncurses-devel
-			yum install -y hmaccalc zlib-devel binutils-devel elfutils-libelf-devel
-			rpm -i http://vault.centos.org/8.0.1905/BaseOS/Source/SPackages/kernel-4.18.0-80.el8.src.rpm
-		""" timeout 30m
-
-		exec bash """
-			cd /rpmbuild/SPECS
-			for pkg in `rpmbuild -bp --target=$(uname -m) kernel.spec 2>&1 | grep 'is needed by' | awk '{print $1}' | tr '\\n' ' '`
-				do sudo yum install $pkg -y
-			done
-
-			rpmbuild -bp --target=$(uname -m) kernel.spec
-			cd /rpmbuild/BUILD/kernel-*/linux-*/
-			make oldconfig
-		""" timeout 30m
-
-		open_terminal()
-		enter_sudo()
-		type "cd /rpmbuild/BUILD/kernel-*/linux-*/"; press Enter
-		type "make menuconfig"; press Enter
-		wait "Kernel Configuration";
-		press Down*11; wait js "find_text().match('Device Drivers').match_background('blue').size() > 0"; press Enter
-		press Down*7; wait js "find_text().match('Block devices').match_background('blue').size() > 0"; press Enter
-		press Down*14; wait js "find_text().match('Network block device support').match_background('blue').size() > 0"; press M
-		press Right*3; wait js "find_text().match('Save').match_background('blue').size() > 0"; press Enter
-		wait "Enter a filename"; press Enter
-		wait "Configuration written"; press Enter
-		press LeftAlt + F4; mouse click "Close Terminal"
-
-		exec bash """
-			cd /rpmbuild/BUILD/kernel-*/linux-*/
-			make prepare
-			make modules_prepare
-			make -j 2 M=drivers/block
-			mkdir -p /lib/modules/$(uname -r)/extra/
-			cp drivers/block/nbd.ko /lib/modules/$(uname -r)/extra/
-			depmod -a
-			modprobe nbd
-		""" timeout 30m
-	}
-}
-
-test centos_prepare_3: centos_prepare_2 {
 	centos {
 		plug flash iso; sleep 5s;
 		exec bash """
@@ -185,7 +140,7 @@ test centos_prepare_3: centos_prepare_2 {
 	}
 }
 
-test centos_prepare_testo: centos_prepare_3 {
+test centos_prepare_testo: centos_prepare_2 {
 	centos {
 		copyto "${OUT_DIR}/testo-cpu.rpm" "/home/${login}/testo-cpu.rpm"
 		exec bash "rpm -i /home/${login}/testo-cpu.rpm"
