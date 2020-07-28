@@ -36,7 +36,7 @@ test plug_already_plugged_flash_2: install_ubuntu_server {
 }
 
 flash my_flash_with_files {
-	fs: "ntfs"
+	fs: "ext4"
 	size: 6Gb
 	folder: "/opt/flash_folder"
 }

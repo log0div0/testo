@@ -178,7 +178,7 @@ test check_press_token {
 
 flash my_flash {
 	size: 16Mb
-	fs: "ntfs"
+	fs: "ext4"
 }
 
 param flash_param "my_"

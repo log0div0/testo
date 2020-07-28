@@ -31,6 +31,7 @@ add_subdirectory(hyperv)
 endif()
 if (UNIX AND NOT APPLE)
 add_subdirectory(qemu)
+add_subdirectory(guestfs)
 endif()
 add_subdirectory(stb)
 

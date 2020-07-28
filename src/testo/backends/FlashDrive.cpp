@@ -40,22 +40,3 @@ std::string FlashDrive::name() const {
 std::string FlashDrive::prefix() const {
 	return config.at("prefix").get<std::string>();
 }
-
-void FlashDrive::load_folder() {
-	try {
-		mount();
-
-		fs::path folder(config.at("folder").get<std::string>());
-		if (folder.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
-			folder = src_file.parent_path() / folder;
-		}
-		folder = fs::canonical(folder);
-
-		fs_copy(folder, env->flash_drives_mount_dir());
-
-		umount();
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}

@@ -15,19 +15,16 @@ struct FlashDrive {
 	virtual bool is_defined() = 0;
 	virtual void create() = 0;
 	virtual void undefine() = 0;
-	virtual bool is_mounted() const = 0;
-	virtual void mount() = 0;
-	virtual void umount() = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
 	virtual void make_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual fs::path img_path() const = 0;
+	virtual void load_folder(const fs::path& folder) = 0;
 
 	std::string id() const;
 	std::string name() const;
 	std::string prefix() const;
-	void load_folder();
 
 protected:
 	nlohmann::json config;
