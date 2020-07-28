@@ -4,6 +4,5 @@ include(ExternalProject)
 
 add_subdirectory(coro)
 add_subdirectory(quickjs)
-add_subdirectory(VBoxCAPI)
 add_subdirectory(pugixml)
 add_subdirectory(tweetnacl)

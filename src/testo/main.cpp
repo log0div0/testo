@@ -3,7 +3,6 @@
 #include <coro/CoroPool.h>
 #include <coro/SignalSet.h>
 
-#include "backends/vbox/VboxEnvironment.hpp"
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
 #include <wmi.hpp>
@@ -76,7 +75,7 @@ int do_main(int argc, char** argv) {
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(run_args.html)) % "Format stdout as html",
 		(option("--license") & value("path", run_args.license)) % "Path to the license file (for GPU version only)",
-		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
+		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
 		any_other(wrong)
 	);
 
@@ -85,7 +84,7 @@ int do_main(int argc, char** argv) {
 	auto clean_spec = "clean options" % (
 		command("clean").set(selected_mode, mode::clean),
 		(option("--prefix") & value("prefix", clean_args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
-		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv, vbox)",
+		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
 		any_other(wrong)
 	);
 
@@ -150,8 +149,6 @@ int do_main(int argc, char** argv) {
 #else
 		env = std::make_shared<QemuEnvironment>();
 #endif
-	} else if (hypervisor == "vbox") {
-		env = std::make_shared<VboxEnvironment>();
 	} else if (hypervisor == "hyperv") {
 #ifndef WIN32
 		throw std::runtime_error("Can't use hyperv not in Windows");

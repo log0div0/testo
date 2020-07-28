@@ -120,7 +120,6 @@ VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"disk", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
-	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
