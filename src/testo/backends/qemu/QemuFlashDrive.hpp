@@ -4,12 +4,6 @@
 #include "../FlashDrive.hpp"
 #include <qemu/Host.hpp>
 
-struct QemuNbd {
-	QemuNbd(const fs::path& img_path);
-	QemuNbd() = delete;
-	~QemuNbd();
-};
-
 struct QemuFlashDrive: FlashDrive {
 	QemuFlashDrive() = delete;
 	QemuFlashDrive(const QemuFlashDrive& other) = delete;
@@ -30,5 +24,4 @@ struct QemuFlashDrive: FlashDrive {
 
 private:
 	vir::Connect qemu_connect;
-	std::unique_ptr<QemuNbd> nbd;
 };
