@@ -23,7 +23,7 @@ if(WIN32)
 endif()
 
 if (UNIX AND NOT APPLE)
-	target_link_libraries(testo qemu tguestfs)
+	target_link_libraries(testo qemu guestfs++)
 endif()
 
 if(UNIX)

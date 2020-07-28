@@ -131,6 +131,7 @@ test centos_backend_qemu_plug_flash_with_files: centos_backend_qemu_install_ubun
 			mkdir /opt/flash_folder/first_inner_folder
 			mkdir /opt/flash_folder/first_inner_folder/super_inner_folder
 			mkdir /opt/flash_folder/second_inner_folder
+			mkdir /opt/flash_folder/third_inner_folder
 
 			echo "Hello from root folder" > /opt/flash_folder/hello1.txt
 			echo "Hello from first inner folder" > /opt/flash_folder/first_inner_folder/hello2.txt
@@ -151,30 +152,18 @@ test centos_backend_qemu_plug_flash_with_files: centos_backend_qemu_install_ubun
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
 		exec_bash("mount /dev/sdb1 /media")
-		type "ls -l /media"; press Enter
-		wait "hello1.txt" && "first_inner_folder" && "second_inner_folder"
-		type "clear"; press Enter
-
+		exec_bash("""[ -f "/media/hello1.txt" ]""")
+		exec_bash("""[ -d "/media/first_inner_folder" ]""")
+		exec_bash("""[ -d "/media/second_inner_folder" ]""")
+		exec_bash("""[ -d "/media/third_inner_folder" ]""")
 		exec_bash("""[ "$(cat /media/hello1.txt)" == "Hello from root folder" ]""")
-		type "clear"; press Enter
-
-		type "ls -l /media/first_inner_folder"; press Enter
-		wait "hello2.txt" && "super_inner_folder"
-
+		exec_bash("""[ -f "/media/first_inner_folder/hello2.txt" ]""")
+		exec_bash("""[ -d "/media/first_inner_folder/super_inner_folder" ]""")
 		exec_bash("""[ "$(cat /media/first_inner_folder/hello2.txt)" == "Hello from first inner folder" ]""")
-		type "clear"; press Enter
-
-		type "ls -l /media/second_inner_folder"; press Enter
-		wait "hello3.txt"
-
+		exec_bash("""[ -f "/media/second_inner_folder/hello3.txt" ]""")
 		exec_bash("""[ "$(cat /media/second_inner_folder/hello3.txt)" == "Hello from second inner folder" ]""")
-		type "clear"; press Enter
-
-		type "ls -l /media/first_inner_folder/super_inner_folder"; press Enter
-		wait "super_big_file.txt"
-
+		exec_bash("""[ -f "/media/first_inner_folder/super_inner_folder/super_big_file.txt" ]""")
 		exec_bash("""[ "$(stat -c %s /media/first_inner_folder/super_inner_folder/super_big_file.txt)" == "5000000000" ]""")
-		type "clear"; press Enter
 	}
 }
 

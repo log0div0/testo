@@ -14,10 +14,6 @@ struct File {
 		if (!handle) {
 			throw std::runtime_error(__PRETTY_FUNCTION__);
 		}
-
-		if (guestfs_write(handle, path.generic_string().c_str(), nullptr, 0) < 0) {
-			throw std::runtime_error(guestfs_last_error(handle));
-		}
 	}
 
 	File(File&& other): handle(other.handle) {

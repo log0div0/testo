@@ -63,12 +63,6 @@ QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config
 	}
 }
 
-QemuFlashDrive::~QemuFlashDrive() {
-	if (is_mounted()) {
-		umount();
-	}
-}
-
 bool QemuFlashDrive::is_defined() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
@@ -130,22 +124,13 @@ void QemuFlashDrive::undefine() {
 	vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
 }
 
-bool QemuFlashDrive::is_mounted() const {
-	std::string query = "mountpoint -q \"" +env->flash_drives_mount_dir().generic_string() + "\"";
-	return Process::is_succeeded(query.c_str());
-}
-
-void QemuFlashDrive::mount() {
+void QemuFlashDrive::load_folder(const fs::path& folder) {
 	try {
+		guestfs::Guestfs gfs(img_path());
+		gfs.mount();
+		gfs.upload(folder, "/");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
-	}
-}
-
-void QemuFlashDrive::umount() {
-	try {
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
+		std::throw_with_nested(std::runtime_error(fmt::format("Loading folder {} to flash drive {} error", folder.generic_string(), name())));
 	}
 }
 

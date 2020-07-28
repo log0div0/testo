@@ -1,6 +1,14 @@
 
 #include "guestfs.hpp"
 
+#ifdef WIN32
+#include "../winapi.hpp"
+#else
+#include "../linuxapi.hpp"
+#endif
+
+#include "coro/CheckPoint.h"
+
 namespace guestfs {
 
 Guestfs::Guestfs(const fs::path& path) {
@@ -43,10 +51,6 @@ std::vector<std::string> Guestfs::list_partitions() const {
 	return result;
 }
 
-File Guestfs::file(const fs::path& path) {
-	return File(handle, path);
-}
-
 void Guestfs::part_disk() {
 	if (guestfs_part_disk(handle, "/dev/sda", "mbr") < 0) {
 		throw std::runtime_error(guestfs_last_error(handle));
@@ -82,9 +86,50 @@ void Guestfs::mkdir_p(const fs::path& dir) {
 	}
 }
 
+void Guestfs::upload_file(const fs::path& from, const fs::path& to) {
+#ifdef WIN32
+	winapi::File source(from.generic_string(), GENERIC_READ, OPEN_EXISTING);
+#else
+	linuxapi::File source(from, O_RDONLY, 0);
+#endif
+
+	File dest(handle, to);
+	uint8_t buf[8192];
+	size_t size;
+	while ((size = source.read(buf, sizeof(buf))) > 0) {
+		dest.write(buf, size);
+		coro::CheckPoint();
+	}
+}
+
 void Guestfs::upload(const fs::path& from, const fs::path& to) {
-	if (guestfs_upload(handle, from.generic_string().c_str(), to.generic_string().c_str()) < 0) {
-		throw std::runtime_error(guestfs_last_error(handle));
+	if (!fs::exists(from)) {
+		throw std::runtime_error("upload error: \"from\" path " + from.generic_string() + " does not exist");
+	}
+
+	if (!is_file(to) && !is_dir(to) && exists(to)) {
+		throw std::runtime_error("Fs_copy: Unsupported type of destination: " + to.generic_string());
+	}
+
+	if (fs::is_directory(from) && is_file(to)) {
+		throw std::runtime_error("Fs_copy: can't copy a directory " + from.generic_string() + " to a regular file " + to.generic_string());
+	}
+
+	//if from is a regular file
+	if (fs::is_regular_file(from)) {
+		if (is_dir(to)) {
+			upload_file(from, to / from.filename());
+		} else {
+			mkdir_p(to.parent_path());
+			upload_file(from, to);
+		}
+	} else if (fs::is_directory(from)) {
+		mkdir_p(to);
+		for (auto& directory_entry: fs::directory_iterator(from)) {
+			upload(directory_entry.path(), to / directory_entry.path().filename());
+		}
+	} else {
+		throw std::runtime_error("Fs_copy: Unsupported type of file: " + from.generic_string());
 	}
 }
 
@@ -99,6 +144,30 @@ void Guestfs::touch(const fs::path& path) {
 	if (guestfs_touch(handle, path.generic_string().c_str())) {
 		throw std::runtime_error(guestfs_last_error(handle));
 	}
+}
+
+bool Guestfs::exists(const fs::path& path) {
+	int result = guestfs_exists(handle, path.generic_string().c_str());
+	if (result < 0) {
+		throw std::runtime_error(guestfs_last_error(handle));
+	}
+	return result;
+}
+
+bool Guestfs::is_file(const fs::path& path) {
+	int result = guestfs_is_file(handle, path.generic_string().c_str());
+	if (result < 0) {
+		throw std::runtime_error(guestfs_last_error(handle));
+	}
+	return result;
+}
+
+bool Guestfs::is_dir(const fs::path& path) {
+	int result = guestfs_is_dir(handle, path.generic_string().c_str());
+	if (result < 0) {
+		throw std::runtime_error(guestfs_last_error(handle));
+	}
+	return result;
 }
 
 void Guestfs::add_drive(const fs::path& path) {

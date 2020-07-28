@@ -65,57 +65,8 @@ void VboxFlashDrive::undefine() {
 	throw std::runtime_error("Implement me");
 }
 
-
-bool VboxFlashDrive::is_mounted() const {
-#ifdef __linux__
-	std::string query = "mountpoint -q \"" + env->flash_drives_mount_dir().generic_string() + "\"";
-	return Process::is_succeeded(query.c_str());
-#elif WIN32
-	return VirtualDisk(img_path().generic_string()).isLoaded();
-#elif __APPLE__
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-#endif
-}
-
-void VboxFlashDrive::mount() {
-	try {
-#ifdef __linux__
-		std::string fdisk = "fdisk -l | grep nbd0";
-		if (Process::is_succeeded(fdisk.c_str())) {
-			throw std::runtime_error("Can't mount flash drive: target host slot is busy");
-		}
-
-		Process::exec("qemu-nbd --connect=/dev/nbd0 -f " + disk_format +	" \"" + img_path().generic_string() + "\"");
-		Process::exec("mount /dev/nbd0");
-#elif WIN32
-		VirtualDisk virtualDisk(img_path().generic_string());
-		virtualDisk.attach();
-		msft::Connect connect;
-		auto disk = connect.virtualDisk(img_path().generic_string());
-		auto partition = disk.partitions().at(0);
-		partition.addAccessPath(env->flash_drives_mount_dir().generic_string());
-#endif
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
-}
-
-void VboxFlashDrive::umount() {
-	try {
-#ifdef __linux__
-		Process::exec("umount /dev/nbd0");
-		Process::exec("qemu-nbd -d /dev/nbd0");
-#elif WIN32
-		msft::Connect connect;
-		auto disk = connect.virtualDisk(img_path().generic_string());
-		auto partition = disk.partitions().at(0);
-		partition.removeAccessPath(env->flash_drives_mount_dir().generic_string());
-		VirtualDisk virtualDisk(img_path().generic_string());
-		virtualDisk.detach();
-#endif
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(__PRETTY_FUNCTION__));
-	}
+void VboxFlashDrive::load_folder(const fs::path& folder) {
+	throw std::runtime_error("Implement me");
 }
 
 bool VboxFlashDrive::has_snapshot(const std::string& snapshot) {

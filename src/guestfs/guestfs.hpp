@@ -16,14 +16,17 @@ struct Guestfs {
 
 	std::vector<std::string> list_partitions() const;
 
-	File file(const fs::path& path);
 	void part_disk();
 	void mkfs(const std::string& fs);
 	void mount();
 	void mkdir_p(const fs::path& dir);
+	void upload_file(const fs::path& from, const fs::path& to);
 	void upload(const fs::path& from, const fs::path& to);
 	void umount();
 	void touch(const fs::path& path);
+	bool exists(const fs::path& path);
+	bool is_file(const fs::path& path);
+	bool is_dir(const fs::path& path);
 
 private:
 	void add_drive(const fs::path& path);

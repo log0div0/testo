@@ -40,7 +40,8 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	qemu (>= 2.8), \
 	qemu-kvm (>= 2.8), \
 	ebtables, \
-	dnsmasq-base \
+	dnsmasq-base, \
+	libguestfs (>= 1.34.6) \
 ")
 
 set(CPACK_RPM_PACKAGE_PROVIDES "\
@@ -53,6 +54,7 @@ set(CPACK_RPM_PACKAGE_REQUIRES "\
 	qemu-kvm >= 2.8 \
 	iptables-ebtables \
 	dnsmasq \
+	libguestfs >= 1.38.4 \
 ")
 
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST

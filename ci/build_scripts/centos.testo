@@ -61,7 +61,7 @@ test centos_install_packages: centos_install_guest_additions {
 	centos {
 		exec bash """
 			nmcli connection up ens3
-			yum -y install git gcc gcc-c++ make openssl-devel python38-devel libvirt-devel tar wget vim rpm-build
+			yum -y install git gcc gcc-c++ make openssl-devel python38-devel libvirt-devel tar wget vim rpm-build libguestfs-devel
 			cd /root
 			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
 			tar xf cmake.tar.gz

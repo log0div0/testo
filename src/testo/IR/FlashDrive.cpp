@@ -33,10 +33,6 @@ void FlashDrive::create() {
 
 		fd()->create();
 
-		if (has_folder()) {
-			fd()->load_folder();
-		}
-
 		auto fd_config = config;
 
 		nlohmann::json metadata;
@@ -55,6 +51,8 @@ void FlashDrive::create() {
 			}
 			folder = fs::canonical(folder);
 			cksum_input += directory_signature(folder);
+
+			fd()->load_folder(folder);
 		}
 
 		std::hash<std::string> h;
