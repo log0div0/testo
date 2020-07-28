@@ -68,6 +68,4 @@ inline void write_file(const std::string& path, const std::string& data) {
 std::string pack(const nlohmann::json& j, const std::string& private_key_base64);
 nlohmann::json unpack(const std::string& container, const std::string& public_key_base64);
 
-void verify_license_legacy(const std::string& in_path, const std::string& public_key);
-
 }
