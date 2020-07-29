@@ -4,39 +4,41 @@
 #include <string>
 #include <regex>
 #include <chrono>
+#include <fstream>
+#include <nlohmann/json.hpp>
+
+namespace license {
 
 struct Date {
-	static Date from_string(const std::string& str) {
+	Date(const std::string& str) {
 		std::regex regex(R"((\d+).(\d+).(\d+))");
 		std::cmatch match;
 		if (!std::regex_match(str.data(), match, regex)) {
 			throw std::runtime_error("Invalid date format");
 		}
-		Date date;
-		date.day = stoi(match[1]);
-		date.month = stoi(match[2]);
-		date.year = stoi(match[3]);
+		day = stoi(match[1]);
+		month = stoi(match[2]);
+		year = stoi(match[3]);
 
-		if (date.month > 12) {
+		if (month > 12) {
 			throw std::runtime_error("Invalid month number");
 		}
-		if (date.day > 31) {
+		if (day > 31) {
 			throw std::runtime_error("Invalid day number");
 		}
-
-		return date;
 	}
 
-	static Date now() {
-		std::time_t time = std::time(nullptr);
-		std::tm* tm = std::localtime(&time);
-		Date date;
-		date.day = tm->tm_mday;
-		date.month = tm->tm_mon + 1;
-		date.year = tm->tm_year + 1900;
-		return date;
+	Date(const std::chrono::system_clock::time_point& time_point) {
+		std::time_t time = std::chrono::system_clock::to_time_t(time_point);
+		std::tm* tm = std::gmtime(&time);
+		day = tm->tm_mday;
+		month = tm->tm_mon + 1;
+		year = tm->tm_year + 1900;
 	}
 
+	std::string to_string() const {
+		return std::to_string(day) + "." + std::to_string(month) + "." + std::to_string(year);
+	}
 
 	uint16_t day = 0, month = 0, year = 0;
 };
@@ -51,5 +53,19 @@ inline bool operator>(const Date& lhs, const Date& rhs) {
 		std::tie(rhs.year, rhs.month, rhs.day);
 }
 
-void sign_license(const std::string& in_path, const std::string& out_path, const std::string& private_key);
-void verify_license(const std::string& in_path, const std::string& public_key);
+inline std::string read_file(const std::string& path) {
+	std::ifstream file(path);
+	std::string data;
+	file >> data;
+	return data;
+}
+
+inline void write_file(const std::string& path, const std::string& data) {
+	std::ofstream file(path);
+	file << data;
+}
+
+std::string pack(const nlohmann::json& j, const std::string& private_key_base64);
+nlohmann::json unpack(const std::string& container, const std::string& public_key_base64);
+
+}

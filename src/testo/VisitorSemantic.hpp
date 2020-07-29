@@ -1,63 +1,90 @@
 
 #pragma once
 
-#include "Node.hpp"
-#include "Register.hpp"
-#include "TemplateParser.hpp"
-#include "backends/Environment.hpp"
+#include "IR/Test.hpp"
+#include "IR/Macro.hpp"
+#include "IR/Action.hpp"
+#include "IR/Expr.hpp"
+#include "TemplateLiterals.hpp"
 
 #include <set>
+#include <unordered_set>
+#include <unordered_map>
+
+enum class Tribool: uint8_t { no, yes, maybe };
+
+inline Tribool operator^(bool a, Tribool b) {
+	if (a) {
+		switch (b) {
+			case Tribool::yes:
+				return Tribool::no;
+			case Tribool::no:
+				return Tribool::yes;
+			default:
+				return Tribool::maybe;
+		}
+	} else {
+		return b;
+	}
+}
 
 struct VisitorSemantic {
-	VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::json& config);
-	void setup_macros(std::shared_ptr<AST::Test> test);
-	void setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block);
-	void setup_macros_action(std::shared_ptr<AST::IAction> action);
-	void setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
-	void setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause);
-	void setup_macros_for_clause(std::shared_ptr<AST::ForClause> for_clause);
-	void setup_test(std::shared_ptr<AST::Test> test);
-	void setup_tests(std::shared_ptr<AST::Program> program);
-	void setup_vars(std::shared_ptr<AST::Program> program);
+	VisitorSemantic(const nlohmann::json& config);
 
-	void visit(std::shared_ptr<AST::Program> program);
-	void visit_stmt(std::shared_ptr<AST::IStmt> stmt);
-	void visit_macro(std::shared_ptr<AST::Macro> macro);
-	void visit_param(std::shared_ptr<AST::Param> param);
-	void visit_test(std::shared_ptr<AST::Test> test);
+	void visit();
+	void visit_macro(std::shared_ptr<IR::Macro> macro);
+	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
 	void visit_action(std::shared_ptr<AST::IAction> action);
 	void visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers);
-	void visit_mouse_move_selectable(std::shared_ptr<AST::MouseSelectable> mouse_selectable);
-	void visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click);
-	void visit_mouse(std::shared_ptr<AST::Mouse> mouse);
-	void visit_press(std::shared_ptr<AST::Press> press);
+	void visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates);
+	void visit_select_text(const IR::SelectText& text);
+	void visit_select_js(const IR::SelectJS& js);
+	void visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable);
+	void visit_mouse_move_click(const IR::MouseMoveClick& mouse_move_click);
+	void visit_mouse_hold(const IR::MouseHold& mouse_hold);
+	void visit_mouse_release(const IR::MouseRelease& mouse_release);
+	void visit_mouse(const IR::Mouse& mouse);
+	void visit_abort(const IR::Abort& abort);
+	void visit_print(const IR::Print& print);
+	void visit_type(const IR::Type& type);
+	void visit_press(const IR::Press& press);
 	void visit_key_combination(std::shared_ptr<AST::KeyCombination> combination);
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
-	void visit_plug(std::shared_ptr<AST::Plug> plug);
-	void visit_exec(std::shared_ptr<AST::Exec> exec);
-	void visit_wait(std::shared_ptr<AST::Wait> wait);
+	void visit_hold(const IR::Hold& hold);
+	void visit_release(const IR::Release& release);
+	void visit_plug(const IR::Plug& plug);
+	void visit_start(const IR::Start& start);
+	void visit_stop(const IR::Stop& stop);
+	void visit_shutdown(const IR::Shutdown& shutdown);
+	void visit_exec(const IR::Exec& exec);
+	void visit_copy(const IR::Copy& copy);
+	void visit_wait(const IR::Wait& wait);
+	void visit_sleep(const IR::Sleep& sleep);
 	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
-	void visit_range(std::shared_ptr<AST::Range> range);
+	std::vector<std::string> visit_range(const IR::Range& range);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
+	void visit_cycle_control(const IR::CycleControl& cycle_control);
 
 	void visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr);
 	void visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable);
-	void visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop);
+	void visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented);
 	void visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop);
 
-	void visit_expr(std::shared_ptr<AST::IExpr> expr);
-	void visit_binop(std::shared_ptr<AST::BinOp> binop);
-	void visit_factor(std::shared_ptr<AST::IFactor> factor);
-	void visit_check(std::shared_ptr<AST::Check> check);
+	Tribool visit_expr(std::shared_ptr<AST::IExpr> expr);
+	Tribool visit_binop(std::shared_ptr<AST::BinOp> binop);
+	Tribool visit_defined(const IR::Defined& defined);
+	Tribool visit_comparison(const IR::Comparison& defined);
+	Tribool visit_factor(std::shared_ptr<AST::IFactor> factor);
+	Tribool visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented);
+	Tribool visit_check(const IR::Check& check);
 
-	void visit_controller(std::shared_ptr<AST::Controller> controller);
-	void visit_machine(std::shared_ptr<AST::Controller> machine);
-	void visit_flash(std::shared_ptr<AST::Controller> flash); //flash drive
-	void visit_network(std::shared_ptr<AST::Controller> network); //flash drive
+	void visit_machine(std::shared_ptr<IR::Machine> machine);
+	void visit_flash(std::shared_ptr<IR::FlashDrive> flash); //flash drive
+	void visit_network(std::shared_ptr<IR::Network> network); //flash drive
 	nlohmann::json visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx);
 	void visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx);
 
@@ -68,16 +95,17 @@ struct VisitorSemantic {
 	std::set<std::string> keys;
 
 	std::string prefix;
-	std::string test_spec, exclude;
-
-	std::shared_ptr<Register> reg;
 
 	//bool is for "requires a name"
 	using attr_ctx = std::unordered_map<std::string, std::pair<bool, Token::category>>;
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 	template_literals::Parser template_parser;
+	std::shared_ptr<StackNode> stack;
 
-	std::set<std::string> testo_timeout_params;
+	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
+	std::unordered_set<std::shared_ptr<IR::Machine>> visited_machines;
+	std::unordered_set<std::shared_ptr<IR::FlashDrive>> visited_flash_drives;
+	std::unordered_set<std::shared_ptr<IR::Network>> visited_networks;
 
-	std::list<std::shared_ptr<AST::Test>> tests_queue;
+	std::shared_ptr<IR::Test> current_test;
 };

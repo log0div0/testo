@@ -191,6 +191,8 @@ private:
 
 	//expressions
 
+	Token DEFINED();
+
 	Token LESS();
 	Token GREATER();
 	Token EQUAL();

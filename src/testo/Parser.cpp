@@ -1,13 +1,56 @@
 
 #include "Parser.hpp"
 #include "Utils.hpp"
-#include "TemplateParser.hpp"
-#include "Register.hpp"
+#include "TemplateLiterals.hpp"
 #include <fstream>
+#include <fmt/format.h>
 
 using namespace AST;
 
-Parser::Parser(std::shared_ptr<Register> reg, const fs::path& file, const std::string& input): reg(reg)
+std::string generate_script(const fs::path& folder, const fs::path& current_prefix = ".") {
+	std::string result("");
+	for (auto& file: fs::directory_iterator(folder)) {
+		if (fs::is_regular_file(file)) {
+			if (fs::path(file).extension() == ".testo") {
+				result += fmt::format("include \"{}\"\n", fs::path(current_prefix / fs::path(file).filename()).generic_string());
+			}
+		} else if (fs::is_directory(file)) {
+			result += generate_script(file, current_prefix / fs::path(file).filename());
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
+		}
+	}
+
+	return result;
+}
+
+Parser Parser::load_dir(const fs::path& dir) {
+	return Parser(dir, generate_script(dir));
+}
+
+Parser Parser::load_file(const fs::path& file) {
+	std::ifstream input_stream(file);
+
+	if (!input_stream) {
+		throw std::runtime_error("Can't open file: " + file.generic_string());
+	}
+
+	std::string input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
+
+	return Parser(file, input);
+}
+
+Parser Parser::load(const fs::path& path) {
+	if (fs::is_regular_file(path)) {
+		return load_file(path);
+	} else if (fs::is_directory(path)) {
+		return load_dir(path);
+	} else {
+		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + path.generic_string());
+	}
+}
+
+Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
@@ -117,11 +160,7 @@ bool Parser::test_string() const {
 }
 
 bool Parser::test_selectable() const {
-	return (test_string() || (LA(1) == Token::category::js));
-}
-
-bool Parser::test_select_expr() const {
-	return (test_selectable() ||
+	return (test_string() || (LA(1) == Token::category::js)  ||
 		(LA(1) == Token::category::exclamation_mark) ||
 		(LA(1) == Token::category::lparen));
 }
@@ -145,6 +184,10 @@ bool Parser::test_comparison() const {
 		}
 	}
 	return false;
+}
+
+bool Parser::test_defined() const {
+	return LA(1) == Token::category::DEFINED;
 }
 
 void Parser::newline_list() {
@@ -277,12 +320,6 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	auto commands = command_block();
 	auto stmt = std::shared_ptr<Test>(new Test(attrs, test, name, parents, commands));
 
-	auto inserted = reg->tests.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: test \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
-
 	return std::shared_ptr<Stmt<Test>>(new Stmt<Test>(stmt));
 }
 
@@ -335,12 +372,6 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, actions));
 
-	auto inserted = reg->macros.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: macro \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
-
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
 
@@ -354,12 +385,6 @@ std::shared_ptr<Stmt<Param>> Parser::param() {
 	auto value = string();
 
 	auto stmt = std::shared_ptr<Param>(new Param(param_token, name, value));
-
-	auto inserted = reg->param_nodes.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: param \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
 
 	return std::shared_ptr<Stmt<Param>>(new Stmt<Param>(stmt));
 }
@@ -454,29 +479,15 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 	auto block = attr_block();
 	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
 
-	auto inserted = reg->controllers.insert({stmt->name.value(), stmt});
-	if (!inserted.second) {
-		throw std::runtime_error(std::string(stmt->begin()) + ": Error: entity \"" + stmt->name.value() + "\" is already defined here: " + 
-			std::string(inserted.first->second->begin()));
-	}
-
 	return std::shared_ptr<AST::Stmt<AST::Controller>>(new AST::Stmt<AST::Controller>(stmt));
 }
 
 std::shared_ptr<Cmd> Parser::command() {
-	std::vector<Token> vms;
-	vms.push_back(LT(1));
+	Token vm = LT(1);
 	match(Token::category::id);
 
-	while (LA(1) == Token::category::comma) {
-		match(Token::category::comma);
-		vms.push_back(LT(1));
-		match(Token::category::id);
-	}
-
-	newline_list();
 	std::shared_ptr<IAction> act = action();
-	return std::shared_ptr<Cmd>(new Cmd(vms, act));
+	return std::shared_ptr<Cmd>(new Cmd(vm, act));
 }
 
 std::shared_ptr<CmdBlock> Parser::command_block() {
@@ -629,14 +640,13 @@ std::shared_ptr<Action<Type>> Parser::type() {
 	match(Token::category::type_);
 
 	Token value = LT(1);
-
 	auto text = string();
 
-	Token interval;
-	if (LA(1) == Token::category::interval) {
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
+
+	if (test_string() || LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 	auto action = std::shared_ptr<Type>(new Type(type_token, text, interval));
 	return std::shared_ptr<Action<Type>>(new Action<Type>(action));
@@ -647,10 +657,10 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 	match(Token::category::wait);
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
-	Token timeout = Token();
-	Token interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
-	if (!test_select_expr()) {
+	if (!test_selectable()) {
 		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to wait");
 	}
 
@@ -666,29 +676,26 @@ std::shared_ptr<Action<Wait>> Parser::wait() {
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	if (LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	auto action = std::shared_ptr<Wait>(new Wait(wait_token, select_expression, timeout, interval));
 	return std::shared_ptr<Action<Wait>>(new Action<Wait>(action));
 }
 
-std::shared_ptr<Action<Sleep>> Parser::sleep() {
+std::shared_ptr<Action<AST::Sleep>> Parser::sleep() {
 	Token sleep_token = LT(1);
 	match(Token::category::sleep);
 
-	Token time_interval = LT(1);
-	match(Token::category::time_interval);
+	auto timeout = string_token_union(Token::category::time_interval);
 
-	auto action = std::shared_ptr<Sleep>(new Sleep(sleep_token, time_interval));
-	return std::shared_ptr<Action<Sleep>>(new Action<Sleep>(action));
+	auto action = std::shared_ptr<AST::Sleep>(new AST::Sleep(sleep_token, timeout));
+	return std::shared_ptr<Action<AST::Sleep>>(new Action<AST::Sleep>(action));
 }
 
 std::shared_ptr<Action<Press>> Parser::press() {
@@ -703,12 +710,11 @@ std::shared_ptr<Action<Press>> Parser::press() {
 		keys.push_back(key_spec());
 	}
 
-	Token interval = Token();
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (LA(1) == Token::category::interval) {
 		match (Token::category::interval);
-		interval = LT(1);
-		match (Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	auto action = std::shared_ptr<Press>(new Press(press_token, keys, interval));
@@ -807,12 +813,11 @@ std::shared_ptr<MouseMoveTarget<MouseSelectable>> Parser::mouse_selectable() {
 		it = specifier->end();
 	}
 
-	Token timeout;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	auto mouse_selectable = std::make_shared<MouseSelectable>(select, specifiers, timeout);
@@ -911,7 +916,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 		match(Token::category::id);
 	}
 
-	Token name = Token();
+	std::shared_ptr<StringTokenUnion> name = nullptr;
 
 	std::shared_ptr<String> path(nullptr);
 
@@ -920,8 +925,7 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 			path = string();
 		} //else this should be the end of unplug commands
 	} else {
-		name = LT(1);
-		match(Token::category::id);
+		name = string_token_union(Token::category::id);
 	}
 
 	auto action = std::shared_ptr<Plug>(new Plug(plug_token, type, name, path));
@@ -948,18 +952,14 @@ std::shared_ptr<Action<Shutdown>> Parser::shutdown() {
 	Token shutdown_token = LT(1);
 	match(Token::category::shutdown);
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token, timeout, time_interval));
+	auto action = std::shared_ptr<Shutdown>(new Shutdown(shutdown_token, timeout));
 	return std::shared_ptr<Action<Shutdown>>(new Action<Shutdown>(action));
 }
 
@@ -972,18 +972,14 @@ std::shared_ptr<Action<Exec>> Parser::exec() {
 
 	auto commands = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout, time_interval));
+	auto action = std::shared_ptr<Exec>(new Exec(exec_token, process_token, commands, timeout));
 	return std::shared_ptr<Action<Exec>>(new Action<Exec>(action));
 }
 
@@ -994,18 +990,14 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 	auto from = string();
 	auto to = string();
 
-	Token timeout = Token();
-	Token time_interval = Token();
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
-		timeout = LT(1);
 		match(Token::category::timeout);
-
-		time_interval = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout, time_interval));
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout));
 	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 
@@ -1095,10 +1087,10 @@ std::shared_ptr<CounterList<Range>> Parser::range() {
 	Token range_token = LT(1);
 	match(Token::category::RANGE);
 
-	std::shared_ptr<String> r1 = string();
-	std::shared_ptr<String> r2 = nullptr;
-	if (test_string()) {
-		r2 = string();
+	std::shared_ptr<StringTokenUnion> r1 = string_token_union(Token::category::number);
+	std::shared_ptr<StringTokenUnion> r2 = nullptr;
+	if (test_string() || LA(1) == Token::category::number) {
+		r2 = string_token_union(Token::category::number);
 	}
 
 	auto counter_list = std::shared_ptr<Range>(new Range(range_token, r1, r2));
@@ -1164,16 +1156,7 @@ std::shared_ptr<Action<CycleControl>> Parser::cycle_control() {
 }
 
 std::shared_ptr<ISelectExpr> Parser::select_expr() {
-	if (LA(1) == Token::category::exclamation_mark) {
-		return select_unop();
-	}
-
-	if (LA(1) == Token::category::lparen) {
-		return select_parented_expr();
-	}
-
-	std::shared_ptr<ISelectExpr> left = std::shared_ptr<SelectExpr<ISelectable>>(new SelectExpr<ISelectable>(selectable()));
-
+	auto left = std::shared_ptr<SelectExpr<ISelectable>>(new SelectExpr<ISelectable>(selectable()));
 	if ((LA(1) == Token::category::double_ampersand) ||
 		(LA(1) == Token::category::double_vertical_bar)) {
 		return select_binop(left);
@@ -1182,19 +1165,7 @@ std::shared_ptr<ISelectExpr> Parser::select_expr() {
 	}
 }
 
-
-std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>> Parser::select_unop() {
-	auto op = LT(1);
-
-	match(Token::category::exclamation_mark);
-
-	auto expression = select_expr();
-
-	auto unop = std::shared_ptr<AST::SelectUnOp>(new AST::SelectUnOp(op, expression));
-	return std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>>(new AST::SelectExpr<AST::SelectUnOp>(unop));
-}
-
-std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> Parser::select_parented_expr() {
+std::shared_ptr<AST::SelectParentedExpr> Parser::select_parented_expr() {
 	auto lparen = LT(1);
 	match(Token::category::lparen);
 
@@ -1202,8 +1173,7 @@ std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> Parser::select_parente
 
 	auto rparen = LT(1);
 	match(Token::category::rparen);
-	auto parented_expr = std::shared_ptr<AST::SelectParentedExpr>(new AST::SelectParentedExpr(lparen, expression, rparen));
-	return std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>>(new AST::SelectExpr<AST::SelectParentedExpr>(parented_expr));
+	return std::shared_ptr<AST::SelectParentedExpr>(new AST::SelectParentedExpr(lparen, expression, rparen));
 }
 
 std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> Parser::select_binop(std::shared_ptr<AST::ISelectExpr> left) {
@@ -1219,25 +1189,33 @@ std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> Parser::select_binop(std::sha
 }
 
 std::shared_ptr<ISelectable> Parser::selectable() {
-	std::shared_ptr<ISelectable> query;
+	auto not_token = Token();
+	if (LA(1) == Token::category::exclamation_mark) {
+		not_token = LT(1);
+		match(Token::category::exclamation_mark);
+	}
+
 	if (test_string()) {
-		query = std::shared_ptr<Selectable<String>>(new Selectable<String>(string()));
+		return std::shared_ptr<Selectable<SelectText>>(new Selectable<SelectText>(not_token, select_text()));
 	} else if(LA(1) == Token::category::js) {
-		query = select_js();
+		return std::shared_ptr<Selectable<SelectJS>>(new Selectable<SelectJS>(not_token, select_js()));
+	} else if(LA(1) == Token::category::lparen) {
+		return std::shared_ptr<Selectable<SelectParentedExpr>>(new Selectable<SelectParentedExpr>(not_token, select_parented_expr()));
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: Unknown selective object type: " + LT(1).value());
 	}
-
-	return query;
 }
 
-std::shared_ptr<Selectable<SelectJS>> Parser::select_js() {
+std::shared_ptr<SelectJS> Parser::select_js() {
 	Token js = LT(1);
 	match(Token::category::js);
 	auto script = string();
-	auto select_js = std::shared_ptr<SelectJS>(new SelectJS(js, script));
+	return std::shared_ptr<SelectJS>(new SelectJS(js, script));
+}
 
-	return std::shared_ptr<Selectable<SelectJS>>(new Selectable<SelectJS>(select_js));
+std::shared_ptr<SelectText> Parser::select_text() {
+	auto text = string();
+	return std::shared_ptr<SelectText>(new SelectText(text));
 }
 
 std::shared_ptr<String> Parser::string() {
@@ -1260,6 +1238,25 @@ std::shared_ptr<String> Parser::string() {
 	return new_node;
 }
 
+std::shared_ptr<AST::StringTokenUnion> Parser::string_token_union(Token::category expected_token_type) {
+	if (!test_string() && LA(1) != expected_token_type) {
+		throw std::runtime_error(std::string(LT(1)) + ": Error: expected a string or " + Token::type_to_string(expected_token_type) + ", but got " +
+			Token::type_to_string(LA(1)) + " " + LT(1).value());
+	}
+
+	Token token;
+	std::shared_ptr<String> str = nullptr;
+
+	if (test_string()) {
+		str = string();
+	} else {
+		token = LT(1);
+		match(expected_token_type);
+	}
+
+	return std::shared_ptr<StringTokenUnion>(new StringTokenUnion(token, str, expected_token_type));
+}
+
 std::shared_ptr<IFactor> Parser::factor() {
 	auto not_token = Token();
 	if (LA(1) == Token::category::NOT) {
@@ -1272,16 +1269,26 @@ std::shared_ptr<IFactor> Parser::factor() {
 		return std::shared_ptr<Factor<Check>>(new Factor<Check>(not_token, check()));
 	} else if(test_comparison()) {
 		return std::shared_ptr<Factor<Comparison>>(new Factor<Comparison>(not_token, comparison()));
+	} else if(test_defined()) {
+		return std::shared_ptr<Factor<Defined>>(new Factor<Defined>(not_token, defined()));
 	} else if (LA(1) == Token::category::lparen) {
-		match(Token::category::lparen);
-		auto result = std::shared_ptr<Factor<IExpr>>(new Factor<IExpr>(not_token, expr()));
-		match(Token::category::rparen);
-		return result;
+		return std::shared_ptr<Factor<ParentedExpr>>(new Factor<ParentedExpr>(not_token, parented_expr()));
 	} else if (test_string()) {
 		return std::shared_ptr<Factor<String>>(new Factor<String>(not_token, string()));
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown expression: " + LT(1).value());
 	}
+}
+
+std::shared_ptr<ParentedExpr> Parser::parented_expr() {
+	auto lparen = LT(1);
+	match(Token::category::lparen);
+
+	auto expression = expr();
+
+	auto rparen = LT(1);
+	match(Token::category::rparen);
+	return std::shared_ptr<AST::ParentedExpr>(new AST::ParentedExpr(lparen, expression, rparen));
 }
 
 std::shared_ptr<Comparison> Parser::comparison() {
@@ -1303,30 +1310,38 @@ std::shared_ptr<Comparison> Parser::comparison() {
 	return std::shared_ptr<Comparison>(new Comparison(op, left, right));
 }
 
+std::shared_ptr<Defined> Parser::defined() {
+	auto defined_token = LT(1);
+	match(Token::category::DEFINED);
+	Token var = LT(1);
+	match(Token::category::id);
+
+	return std::shared_ptr<Defined>(new Defined(defined_token, var));
+}
+
 std::shared_ptr<Check> Parser::check() {
 	Token check_token = LT(1);
 	match(Token::category::check);
 
 	std::shared_ptr<ISelectExpr> select_expression(nullptr);
 
-	if (!test_select_expr()) {
+	if (!test_selectable()) {
 		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to check");
 	}
 
 	select_expression = select_expr();
 
-	Token timeout, interval;
+	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<StringTokenUnion> interval = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
 		match(Token::category::timeout);
-		timeout = LT(1);
-		match(Token::category::time_interval);
+		timeout = string_token_union(Token::category::time_interval);
 	}
 
 	if (LA(1) == Token::category::interval) {
 		match(Token::category::interval);
-		interval = LT(1);
-		match(Token::category::time_interval);
+		interval = string_token_union(Token::category::time_interval);
 	}
 
 	return std::shared_ptr<Check>(new Check(check_token, select_expression, timeout, interval));
@@ -1354,4 +1369,3 @@ std::shared_ptr<IExpr> Parser::expr() {
 		return left;
 	}
 }
-

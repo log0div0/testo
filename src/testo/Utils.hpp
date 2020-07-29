@@ -27,8 +27,9 @@ void fs_copy(const fs::path& from, const fs::path& to);
 bool check_if_time_interval(const std::string& time);
 uint32_t time_to_milliseconds(const std::string& time);
 
-std::string file_signature(const fs::path& file, uint64_t thresh);
-std::string directory_signature(const fs::path& dir, uint64_t thresh);
+extern uint64_t content_cksum_maxsize;
+std::string file_signature(const fs::path& file);
+std::string directory_signature(const fs::path& dir);
 
 bool is_number(const std::string& s);
 

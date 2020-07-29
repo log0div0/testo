@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DFMT_HEADER_ONLY)
 add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
+add_definitions(-DTESTO_RELEASE_DATE="28.07.2020")
 if (WIN32)
 	add_definitions(
 		-D__PRETTY_FUNCTION__=__FUNCSIG__
@@ -20,7 +21,6 @@ include_directories(/usr/local/include)
 link_directories(/usr/local/lib)
 endif()
 
-add_subdirectory(vbox)
 add_subdirectory(process)
 add_subdirectory(license)
 if (WIN32)
@@ -30,6 +30,7 @@ add_subdirectory(hyperv)
 endif()
 if (UNIX AND NOT APPLE)
 add_subdirectory(qemu)
+add_subdirectory(guestfs)
 endif()
 add_subdirectory(stb)
 

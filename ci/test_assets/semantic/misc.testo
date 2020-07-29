@@ -1,0 +1,158 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test empty_wait_text {
+	my_ubuntu_server {
+		wait "something" && ""
+	}
+}
+
+test empty_mouse_move_text {
+	my_ubuntu_server {
+		mouse move ""
+	}
+}
+
+test empty_wait_js {
+	my_ubuntu_server {
+		wait "something" && js ""
+	}
+}
+
+test empty_mouse_move_js {
+	my_ubuntu_server {
+		mouse move js ""
+	}
+}
+
+test invalid_wait_js {
+	my_ubuntu_server {
+		wait "something" && js "bim bada bum"
+	}
+}
+
+test invalid_mouse_move_js {
+	my_ubuntu_server {
+		mouse move js "bim bada bum"
+	}
+}
+
+test invalid_mouse_parented_expr_0 {
+	my_ubuntu_server {
+		mouse move ("lala" && !js "another lala")
+	}
+}
+
+test invalid_mouse_parented_expr_1 {
+	my_ubuntu_server {
+		mouse move ! js "lala"
+	}
+}
+
+test invalid_key_0 {
+	my_ubuntu_server {
+		hold SomeButton
+	}
+}
+
+test invalid_key_1 {
+	my_ubuntu_server {
+		press LeftShift + LeftAlt + FIVE + LeftShift
+	}
+}
+
+test invalid_press_times_0 {
+	my_ubuntu_server {
+		press LeftShift*0
+	}
+}
+
+test invalid_press_times_1 {
+	my_ubuntu_server {
+		press LeftShift*-1
+	}
+}
+
+test invalid_exec_interpreter {
+	my_ubuntu_server {
+		exec some_interpreter "lalala"
+	}
+}
+
+test unknown_flash_0 {
+	my_ubuntu_server {
+		plug flash unexisting_flash
+	}
+}
+
+test unknown_flash_1 {
+	my_ubuntu_server {
+		unplug flash unexisting_flash
+	}
+}
+
+test unknown_vm {
+	some_vm {
+	}
+}
+
+test common_vm_parent1 {
+	my_ubuntu_server {
+	}
+}
+
+test common_vm_parent2 {
+	my_ubuntu_server {
+	}
+}
+
+test common_vm_child: common_vm_parent1, common_vm_parent2 {
+	my_ubuntu_server {
+	}
+}
+
+
+machine another_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+flash my_flash {
+	fs: "vfat"
+	size: 16Mb
+}
+
+test common_flash_parent1 {
+	my_ubuntu_server {
+		plug flash my_flash
+	}
+}
+
+test common_flash_parent2 {
+	another_server {
+		plug flash my_flash
+	}
+}
+
+test common_flash_child: common_flash_parent1, common_flash_parent2 {
+	my_ubuntu_server {
+	}
+}
+
+test copyto_from_not_exist {
+	my_ubuntu_server {
+		copyto "/some/unexisting_shit" "/opt"
+	}
+}
+
+

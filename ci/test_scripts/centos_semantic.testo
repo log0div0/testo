@@ -2,20 +2,95 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_semantic: centos_prepare_testo_part1 {
+test centos_semantic: centos_prepare_testo {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/semantic" "/opt/scripts/semantic"
+
+		exec bash "cp /opt/scripts/semantic/* /"
+
 		exec bash """
 			set +o pipefail
-			cp /opt/scripts/part1/semantic/* /
-			testo run /0001.testo | grep '/0001.testo:6:1: Error: test "A" is already defined here: /0001.testo:2:1'
-			testo run /0002.testo | grep '/0002.testo:6:1: Error: macro "A" is already defined here: /0002.testo:2:1'
-			testo run /0003.testo | grep '/0003.testo:4:1: Error: param "A" is already defined here: /0003.testo:2:1'
-			testo run /0004.testo | grep '/0004.testo:6:1: Error: entity "A" is already defined here: /0004.testo:2:1'
-			testo run /0005.testo | grep '/0005.testo:6:1: Error: entity "A" is already defined here: /0005.testo:2:1'
-			testo run /0006.testo | grep '/0006.testo:6:1: Error: entity "A" is already defined here: /0006.testo:2:1'
-			testo run /0007.testo | grep "/0007.testo:2:9: Error: can't specify test as a parent to itself A"
-			testo run /0008.testo | grep '/0008.testo:2:9: Error: unknown test: B'
-			testo run /0009.testo | grep '/0009.testo:6:12: Error: this test was already specified in parent list A'
+			testo run /expr.testo --test_spec comparison_0 2>&1 > /dev/null | grep "Error: \\\"lala\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_1 2>&1 > /dev/null | grep "Error: \\\"lala\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_2 2>&1 > /dev/null | grep "Error: \\\"30ms\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_3 2>&1 > /dev/null | grep "Error: \\\"-5ms\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_4 2>&1 > /dev/null | grep "Error: \\\"Русский\\\" is not an integer number"
+			testo run /expr.testo --test_spec comparison_5 2>&1 > /dev/null | grep "Error: \\\"- 5ms\\\" is not an integer number"
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /misc.testo --test_spec empty_wait_text 2>&1 > /dev/null | grep "Error: empty string in text selection"
+			testo run /misc.testo --test_spec empty_mouse_move_text 2>&1 > /dev/null | grep "Error: empty string in text selection"
+			testo run /misc.testo --test_spec empty_wait_js 2>&1 > /dev/null | grep "Error: empty script in js selection"
+			testo run /misc.testo --test_spec empty_mouse_move_js 2>&1 > /dev/null | grep "Error: empty script in js selection"
+			testo run /misc.testo --test_spec invalid_wait_js 2>&1 > /dev/null | grep "Error while validating js selection"
+			testo run /misc.testo --test_spec invalid_mouse_move_js 2>&1 > /dev/null | grep "Error while validating js selection"
+			testo run /misc.testo --test_spec invalid_mouse_parented_expr_0 2>&1 > /dev/null | grep "Error: select expressions are not supported for mouse move/click actions"
+			testo run /misc.testo --test_spec invalid_mouse_parented_expr_1 2>&1 > /dev/null | grep "Error: negation is not supported for mouse move/click actions"
+			testo run /misc.testo --test_spec invalid_key_0 2>&1 > /dev/null | grep "Error: unknown key: SomeButton"
+			testo run /misc.testo --test_spec invalid_key_1 2>&1 > /dev/null | grep "Error: duplicate key: LeftShift"
+			testo run /misc.testo --test_spec invalid_press_times_0 2>&1 > /dev/null | grep "Error: can't press a button less than 1 time: 0"
+			testo run /misc.testo --test_spec invalid_press_times_1 2>&1 > /dev/null | grep "Error: can't press a button less than 1 time: -1"
+			testo run /misc.testo --test_spec unknown_flash_0 2>&1 > /dev/null | grep "Error: unknown flash drive: unexisting_flash"
+			testo run /misc.testo --test_spec unknown_flash_1 2>&1 > /dev/null | grep "Error: unknown flash drive: unexisting_flash"
+			testo run /misc.testo --test_spec unknown_vm 2>&1 > /dev/null | grep "Error: unknown virtual machine: some_vm"
+			testo run /misc.testo --test_spec common_vm_child 2>&1 > /dev/null | grep "Error: some parents have common virtual machines"
+			testo run /misc.testo --test_spec common_flash_child 2>&1 > /dev/null | grep "Error: some parents have common flash drives"
+			testo run /misc.testo --test_spec copyto_from_not_exist 2>&1 > /dev/null | grep "Error: specified path doesn't exist: /some/unexisting_shit"
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /0001.testo 2>&1 > /dev/null | grep '/0001.testo:6:1: Error: test "A" is already defined here: /0001.testo:2:1'
+			testo run /0002.testo 2>&1 > /dev/null | grep '/0002.testo:6:1: Error: macro "A" is already defined here: /0002.testo:2:1'
+			testo run /0003.testo 2>&1 > /dev/null | grep '/0003.testo:4:1: Error: param "A" is already defined here: /0003.testo:2:1'
+			testo run /0004.testo 2>&1 > /dev/null | grep '/0004.testo:6:1: Error: virtual machine "A" is already defined here: /0004.testo:2:1'
+			testo run /0005.testo 2>&1 > /dev/null | grep '/0005.testo:6:1: Error: flash drive "A" is already defined here: /0005.testo:2:1'
+			testo run /0006.testo 2>&1 > /dev/null | grep '/0006.testo:6:1: Error: network "A" is already defined here: /0006.testo:2:1'
+			testo run /0007.testo 2>&1 > /dev/null | grep "/0007.testo:2:9: Error: can't specify test as a parent to itself A"
+			testo run /0008.testo 2>&1 > /dev/null | grep '/0008.testo:2:9: Error: unknown test: B'
+			testo run /0009.testo 2>&1 > /dev/null | grep '/0009.testo:6:12: Error: this test was already specified in parent list A'
+			testo run /0010.testo 2>&1 > /dev/null | grep '/0010.testo:6:1: Error: virtual machine "A" is already defined here: /0010.testo:2:1'
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /mouse_specificators.testo --test_spec from_0 2>&1 > /dev/null | grep "Error: specifier from_top requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec from_1 2>&1 > /dev/null | grep "Error: specifier from_left requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec from_2 2>&1 > /dev/null | grep "Error: you can\'t use specifier from_top after another \\\"from\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec from_3 2>&1 > /dev/null | grep "Error: you can\'t use specifier from_top after a \\\"precision\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec from_4 2>&1 > /dev/null | grep "Error: you can\'t use specifier from_left after a \\\"move\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec centering_0 2>&1 > /dev/null | grep "Error: specifier center must not have an argument"
+			testo run /mouse_specificators.testo --test_spec centering_1 2>&1 > /dev/null | grep "Error: you can\'t use specifier right_top after another \\\"precision\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec centering_2 2>&1 > /dev/null | grep "Error: you can\'t use specifier right_center after a \\\"move\\\" specifier"
+			testo run /mouse_specificators.testo --test_spec move_0 2>&1 > /dev/null | grep "Error: specifier move_right requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec move_1 2>&1 > /dev/null | grep "Error: specifier move_right requires a non-negative number as an argument"
+			testo run /mouse_specificators.testo --test_spec unknown 2>&1 > /dev/null | grep "Error: unknown specifier: move_bottom"
+			testo run /mouse_specificators.testo --test_spec js_with_specificators 2>&1 > /dev/null | grep "Error: mouse specifiers are not supported for js selections"
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /macro_call.testo --test_spec unknown_macro 2>&1 > /dev/null | grep "Error: unknown macro: some_macro"
+			testo run /macro_call.testo --test_spec too_few_args 2>&1 > /dev/null | grep "Error: expected at least 2 args, 1 provided"
+			testo run /macro_call.testo --test_spec too_many_args 2>&1 > /dev/null | grep "Error: expected at most 4 args, 5 provided"
+			testo run /macro_call.testo --test_spec wrong_macro_0 2>&1 > /dev/null | grep "Error: duplicate macro arg: arg1"
+			testo run /macro_call.testo --test_spec wrong_macro_1 2>&1 > /dev/null | grep "Error: default value must be specified for macro arg arg3"
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /for.testo --test_spec wrong_r1_0 2>&1 > /dev/null | grep "Error: can't convert string value \\\"30ms\\\" to NUMBER"
+			testo run /for.testo --test_spec wrong_r1_1 2>&1 > /dev/null | grep "Error: Can't convert range start -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_r1_2 2>&1 > /dev/null | grep "Error: Can't convert range start -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_r2_0 2>&1 > /dev/null | grep "Error: can't convert string value \\\"30ms\\\" to NUMBER"
+			testo run /for.testo --test_spec wrong_r2_1 2>&1 > /dev/null | grep "Error: Can't convert range finish -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_r2_2 2>&1 > /dev/null | grep "Error: can't convert string value \\\"30ms\\\" to NUMBER"
+			testo run /for.testo --test_spec wrong_r2_3 2>&1 > /dev/null | grep "Error: Can't convert range finish -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_r2_4 2>&1 > /dev/null | grep "Error: Can't convert range finish -5 to a non-negative number"
+			testo run /for.testo --test_spec wrong_start_finish_0 2>&1 > /dev/null | grep "Error: start of the range 5 is greater or equal to finish 4"
+			testo run /for.testo --test_spec wrong_start_finish_1 2>&1 > /dev/null | grep "Error: start of the range 0 is greater or equal to finish 0"
 		"""
 	}
 }

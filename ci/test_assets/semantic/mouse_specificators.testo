@@ -1,0 +1,80 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test from_0 {
+	my_ubuntu_server {
+		mouse move "somewhere".from_top()
+	}
+}
+
+test from_1 {
+	my_ubuntu_server {
+		mouse move "somewhere".from_left(-4)
+	}
+}
+
+test from_2 {
+	my_ubuntu_server {
+		mouse move "somewhere".from_right(0).from_top(0)
+	}
+}
+
+test from_3 {
+	my_ubuntu_server {
+		mouse move "somewhere".center().from_top(0)
+	}
+}
+
+test from_4 {
+	my_ubuntu_server {
+		mouse move "somewhere".move_right(40).from_left(4)
+	}
+}
+
+test centering_0 {
+	my_ubuntu_server {
+		mouse move "somewhere".center(40)
+	}
+}
+
+test centering_1 {
+	my_ubuntu_server {
+		mouse move "somewhere".left_bottom().right_top()
+	}
+}
+
+test centering_2 {
+	my_ubuntu_server {
+		mouse move "somewhere".move_right(40).right_center()
+	}
+}
+
+test move_0 {
+	my_ubuntu_server {
+		mouse move "somewhere".move_right()
+	}
+}
+
+test move_1 {
+	my_ubuntu_server {
+		mouse move "somewhere".move_right(-50)
+	}
+}
+
+test unknown {
+	my_ubuntu_server {
+		mouse move "somewhere".move_bottom(50)
+	}
+}
+
+test js_with_specificators {
+	my_ubuntu_server {
+		mouse move js "x=5".from_left(0)
+	}
+}

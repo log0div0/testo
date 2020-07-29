@@ -6,7 +6,7 @@
 #include <fmt/format.h>
 #include <process/Process.hpp>
 
-QemuEnvironment::QemuEnvironment(const nlohmann::json& config): Environment(config) {
+QemuEnvironment::QemuEnvironment() {
 	setenv("QEMU", "1", false);
 }
 
@@ -92,14 +92,14 @@ void QemuEnvironment::cleanup() {
 
 }
 
-std::shared_ptr<VmController> QemuEnvironment::create_vm_controller(const nlohmann::json& config) {
-	return std::make_shared<VmController>(std::shared_ptr<VM>(new QemuVM(config)));
+std::shared_ptr<VM> QemuEnvironment::create_vm(const nlohmann::json& config) {
+	return std::shared_ptr<VM>(new QemuVM(config));
 }
 
-std::shared_ptr<FlashDriveController> QemuEnvironment::create_flash_drive_controller(const nlohmann::json& config) {
-	return std::make_shared<FlashDriveController>(std::shared_ptr<FlashDrive>(new QemuFlashDrive(config)));
+std::shared_ptr<FlashDrive> QemuEnvironment::create_flash_drive(const nlohmann::json& config) {
+	return std::shared_ptr<FlashDrive>(new QemuFlashDrive(config));
 }
 
-std::shared_ptr<NetworkController> QemuEnvironment::create_network_controller(const nlohmann::json& config) {
-	return std::make_shared<NetworkController>(std::shared_ptr<Network>(new QemuNetwork(config)));
+std::shared_ptr<Network> QemuEnvironment::create_network(const nlohmann::json& config) {
+	return std::shared_ptr<Network>(new QemuNetwork(config));
 }

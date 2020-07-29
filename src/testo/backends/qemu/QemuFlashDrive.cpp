@@ -9,35 +9,9 @@
 #include <thread>
 #include <fstream>
 #include <regex>
-#include <linux/nbd.h>
+#include "../../../guestfs/guestfs.hpp"
 
 using namespace std::chrono_literals;
-
-QemuNbd::QemuNbd(const fs::path& img_path) {
-	try {
-		if (Process::is_failed("lsmod | grep nbd")) {
-			if (Process::is_failed("modprobe nbd max_parts=1")) {
-				throw std::runtime_error("Can't modprobe nbd module");
-			}
-		}
-		
-		coro::Timeout timeout{30s};
-		coro::Timer timer;
-
-		while (Process::is_succeeded("fdisk -l | grep nbd0")) {
-			timer.waitFor(2s);
-		}
-
-		Process::exec("qemu-nbd --connect=/dev/nbd0 -f qcow2 \"" + img_path.generic_string() + "\"");
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Trying plug flash drive to any free nbd slot"));
-	}
-}
-
-QemuNbd::~QemuNbd() {
-	sync();
-	Process::exec("qemu-nbd -d /dev/nbd0");
-}
 
 QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
@@ -89,12 +63,6 @@ QemuFlashDrive::QemuFlashDrive(const nlohmann::json& config_): FlashDrive(config
 	}
 }
 
-QemuFlashDrive::~QemuFlashDrive() {
-	if (is_mounted()) {
-		umount();
-	}
-}
-
 bool QemuFlashDrive::is_defined() {
 	try {
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-flash-drives-pool");
@@ -141,15 +109,9 @@ void QemuFlashDrive::create() {
 
 		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
 
-		QemuNbd nbd_tmp(img_path());
-
-		Process::exec("parted --script -a optimal /dev/nbd0 mklabel msdos mkpart primary ntfs 0% 100%");
-		auto fs = config.at("fs").get<std::string>();
-		if (fs == "ntfs") {
-			Process::exec("mkfs." + fs + " -f /dev/nbd0p1");
-		} else {
-			Process::exec("mkfs." + fs + " /dev/nbd0p1");
-		}
+		guestfs::Guestfs gfs(img_path());
+		gfs.part_disk();
+		gfs.mkfs(config.at("fs").get<std::string>());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating flash drive"));
 	}
@@ -162,34 +124,13 @@ void QemuFlashDrive::undefine() {
 	vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
 }
 
-bool QemuFlashDrive::is_mounted() const {
-	std::string query = "mountpoint -q \"" +env->flash_drives_mount_dir().generic_string() + "\"";
-	return Process::is_succeeded(query.c_str());
-}
-
-void QemuFlashDrive::mount() {
+void QemuFlashDrive::load_folder(const fs::path& folder) {
 	try {
-		nbd.reset(new QemuNbd(img_path()));
-		{
-			coro::Timeout timeout{30s};
-			coro::Timer timer;
-			while (Process::is_failed("ls /dev/nbd0p1")) {
-				timer.waitFor(1s);
-			}
-		}
-		Process::exec("mount /dev/nbd0p1 " + env->flash_drives_mount_dir().generic_string());
+		guestfs::Guestfs gfs(img_path());
+		gfs.mount();
+		gfs.upload(folder, "/");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive mount to host"));
-	}
-}
-
-void QemuFlashDrive::umount() {
-	try {
-		sync();
-		Process::exec("umount /dev/nbd0p1");
-		nbd.reset(nullptr);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
+		std::throw_with_nested(std::runtime_error(fmt::format("Loading folder {} to flash drive {} error", folder.generic_string(), name())));
 	}
 }
 

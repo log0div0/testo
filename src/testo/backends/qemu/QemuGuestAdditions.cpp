@@ -1,5 +1,4 @@
 
-#include "../../Reporter.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "base64.hpp"
 #include <fmt/format.h>
@@ -121,7 +120,9 @@ void QemuGuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& 
 	}
 }
 
-int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_milliseconds) {
+int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_milliseconds,
+	const std::function<void(const std::string&)>& callback)
+{
 	auto timeout_chrono = std::chrono::milliseconds(timeout_milliseconds);
 	coro::Timeout timeout(timeout_chrono);
 	nlohmann::json request = {
@@ -146,7 +147,7 @@ int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_mil
 			if (output.back() != 0) {
 				throw std::runtime_error("Expect null-terminated string");
 			}
-			reporter.exec_command_output((char*)output.data());
+			callback((char*)output.data());
 		}
 		if (result.at("status").get<std::string>() == "finished") {
 			return result.at("exit_code").get<int>();

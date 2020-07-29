@@ -2,11 +2,13 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_backend_qemu_start_offline_machine: centos_prepare_testo_part1 {
+test centos_backend_qemu_start_offline_machine: centos_prepare_testo {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec start_offline_machine | grep "stop here"
+			testo run /opt/scripts/action_start_stop.testo --stop_on_fail --test_spec start_offline_machine | grep "stop here"
 		"""
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
@@ -15,21 +17,25 @@ test centos_backend_qemu_start_offline_machine: centos_prepare_testo_part1 {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_start_online_machine: centos_prepare_testo_part1 {
+test centos_backend_qemu_start_online_machine: centos_prepare_testo {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec start_online_machine | grep "domain is already running"
+			testo run /opt/scripts/action_start_stop.testo --stop_on_fail --test_spec start_online_machine | grep "domain is already running"
 		"""
 	}
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_stop_online_machine: centos_prepare_testo_part1 {
+test centos_backend_qemu_stop_online_machine: centos_prepare_testo {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec stop_online_machine | grep "stop here"
+			testo run /opt/scripts/action_start_stop.testo --stop_on_fail --test_spec stop_online_machine | grep "stop here"
 		"""
 		wait "my_ubuntu_server" && !"Running"
 		mouse dclick "my_ubuntu_server"
@@ -38,19 +44,55 @@ test centos_backend_qemu_stop_online_machine: centos_prepare_testo_part1 {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_stop_offline_machine: centos_prepare_testo_part1 {
+test centos_backend_qemu_stop_offline_machine: centos_prepare_testo {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec stop_offline_machine | grep "domain is not running"
+			testo run /opt/scripts/action_start_stop.testo --stop_on_fail --test_spec stop_offline_machine | grep "domain is not running"
 		"""
 	}
 }
 
-test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo_part1 {
+[no_snapshots: true]
+test centos_backend_qemu_wait: centos_prepare_testo {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_wait.testo" "/opt/scripts/action_wait.testo"
+
 		exec bash """
-			testo run /opt/scripts/part1/backend --stop_on_fail --test_spec install_ubuntu_server
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_0)
+			[[ $output == *"Error while performing action wait !\\\"Unexisting text\\\""* ]]
+			[[ $output == *"Timeout"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_1)
+			[[ $output == *"Error while performing action wait !\\\"Unexisting text\\\""* ]]
+			[[ $output == *"Timeout"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_2)
+			[[ $output == *"Error while performing action wait !\\\"Lala\\\""* ]]
+			[[ $output == *"Timeout"* ]]
+		"""
+	}
+}
+
+test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/install_ubuntu.testo" "/opt/scripts/install_ubuntu.testo"
+		exec bash """
+			testo run /opt/scripts/install_ubuntu.testo --stop_on_fail --test_spec install_ubuntu_server
 		""" timeout 30m
 	}
 }
@@ -62,11 +104,12 @@ macro exec_bash(script) {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_plug_flash: centos_prepare_testo_part2 {
+test centos_backend_qemu_plug_flash: centos_backend_qemu_install_ubuntu_server {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_flash | grep "stop here"
+			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_flash | grep "stop here"
 		""" timeout 30m
 
 		wait "my_ubuntu_server" && "Running"
@@ -80,13 +123,15 @@ test centos_backend_qemu_plug_flash: centos_prepare_testo_part2 {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_plug_flash_with_files: centos_prepare_testo_part2 {
+test centos_backend_qemu_plug_flash_with_files: centos_backend_qemu_install_ubuntu_server {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
 		exec bash """
 			mkdir /opt/flash_folder
 			mkdir /opt/flash_folder/first_inner_folder
 			mkdir /opt/flash_folder/first_inner_folder/super_inner_folder
 			mkdir /opt/flash_folder/second_inner_folder
+			mkdir /opt/flash_folder/third_inner_folder
 
 			echo "Hello from root folder" > /opt/flash_folder/hello1.txt
 			echo "Hello from first inner folder" > /opt/flash_folder/first_inner_folder/hello2.txt
@@ -97,7 +142,7 @@ test centos_backend_qemu_plug_flash_with_files: centos_prepare_testo_part2 {
 
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_flash_with_files --report_folder /opt/reports/ | grep "stop here"
+			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_flash_with_files --report_folder /opt/reports/ | grep "stop here"
 		""" timeout 30m
 
 		wait "my_ubuntu_server" && "Running"
@@ -107,42 +152,86 @@ test centos_backend_qemu_plug_flash_with_files: centos_prepare_testo_part2 {
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
 		exec_bash("mount /dev/sdb1 /media")
-		type "ls -l /media"; press Enter
-		wait "hello1.txt" && "first_inner_folder" && "second_inner_folder"
-		type "clear"; press Enter
-
+		exec_bash("""[ -f "/media/hello1.txt" ]""")
+		exec_bash("""[ -d "/media/first_inner_folder" ]""")
+		exec_bash("""[ -d "/media/second_inner_folder" ]""")
+		exec_bash("""[ -d "/media/third_inner_folder" ]""")
 		exec_bash("""[ "$(cat /media/hello1.txt)" == "Hello from root folder" ]""")
-		type "clear"; press Enter
-
-		type "ls -l /media/first_inner_folder"; press Enter
-		wait "hello2.txt" && "super_inner_folder"
-
+		exec_bash("""[ -f "/media/first_inner_folder/hello2.txt" ]""")
+		exec_bash("""[ -d "/media/first_inner_folder/super_inner_folder" ]""")
 		exec_bash("""[ "$(cat /media/first_inner_folder/hello2.txt)" == "Hello from first inner folder" ]""")
-		type "clear"; press Enter
-
-		type "ls -l /media/second_inner_folder"; press Enter
-		wait "hello3.txt"
-
+		exec_bash("""[ -f "/media/second_inner_folder/hello3.txt" ]""")
 		exec_bash("""[ "$(cat /media/second_inner_folder/hello3.txt)" == "Hello from second inner folder" ]""")
-		type "clear"; press Enter
-
-		type "ls -l /media/first_inner_folder/super_inner_folder"; press Enter
-		wait "super_big_file.txt"
-
+		exec_bash("""[ -f "/media/first_inner_folder/super_inner_folder/super_big_file.txt" ]""")
 		exec_bash("""[ "$(stat -c %s /media/first_inner_folder/super_inner_folder/super_big_file.txt)" == "5000000000" ]""")
-		type "clear"; press Enter
 	}
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_plug_flash_exceptions: centos_prepare_testo_part2 {
+test centos_backend_qemu_plug_flash_exceptions: centos_backend_qemu_install_ubuntu_server {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_already_plugged_flash | grep "specified flash my_flash is already plugged into this virtual machine"
-			testo run /opt/scripts/part2/backend --stop_on_fail --test_spec plug_already_plugged_flash_2
+			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash | grep "specified flash my_flash is already plugged into this virtual machine"
+			#testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_already_plugged_flash_2
 		""" timeout 30m
 	}
 }
 
+[no_snapshots: true]
+test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm
+		""" timeout 30m
+
+		wait "basic_machine"
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_create_vm_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
+	centos {
+		mouse rclick "basic_machine";
+		mouse click "Delete"
+		mouse click "Delete associated storage files"
+		wait !"hda"
+		mouse click "Delete".from_bottom(0)
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm
+		""" timeout 30m
+
+		wait "basic_machine"
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_clean_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
+	centos {
+		mouse rclick "basic_machine";
+		mouse click "Delete"
+		mouse click "Delete associated storage files"
+		wait !"hda"
+		mouse click "Delete".from_bottom(0)
+
+		exec bash """
+			testo clean	| grep 'Deleted virtual machine basic_machine'
+		""" timeout 30m
+
+		exec bash "!([ -f /var/lib/libvirt/testo/testo-storage-pool/basic_machine@main.img ])"
+	}
+}
+
+test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ubuntu_server {
+	centos {
+		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/iso/testo-guest-additions.iso"
+		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"
+		exec bash """
+			testo run /opt/scripts/install_guest_additions.testo --test_spec install_ubuntu_server_guest_additions
+		""" timeout 30m
+	}
+}
 

@@ -279,6 +279,8 @@ Token Lexer::id() {
 		return true_();
 	} else if (value == "false") {
 		return false_();
+	} else if (value == "DEFINED") {
+		return DEFINED();
 	} else if (value == "LESS") {
 		return LESS();
 	} else if (value == "GREATER") {
@@ -632,54 +634,69 @@ Token Lexer::false_() {
 	return Token(Token::category::false_, value, tmp_pos, previous_pos);
 }
 
+Token Lexer::DEFINED() {
+	Pos tmp_pos = current_pos;
+	std::string value("DEFINED");
+	advance(value.length());
+	return Token(Token::category::DEFINED, value, tmp_pos, previous_pos);
+}
+
 Token Lexer::LESS() {
 	Pos tmp_pos = current_pos;
 	std::string value("LESS");
 	advance(value.length());
 	return Token(Token::category::LESS, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::GREATER() {
 	Pos tmp_pos = current_pos;
 	std::string value("GREATER");
 	advance(value.length());
 	return Token(Token::category::GREATER, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::EQUAL() {
 	Pos tmp_pos = current_pos;
 	std::string value("EQUAL");
 	advance(value.length());
 	return Token(Token::category::EQUAL, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::STRLESS() {
 	Pos tmp_pos = current_pos;
 	std::string value("STRLESS");
 	advance(value.length());
 	return Token(Token::category::STRLESS, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::STRGREATER() {
 	Pos tmp_pos = current_pos;
 	std::string value("STRGREATER");
 	advance(value.length());
 	return Token(Token::category::STRGREATER, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::STREQUAL() {
 	Pos tmp_pos = current_pos;
 	std::string value("STREQUAL");
 	advance(value.length());
 	return Token(Token::category::STREQUAL, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::NOT() {
 	Pos tmp_pos = current_pos;
 	std::string value("NOT");
 	advance(value.length());
 	return Token(Token::category::NOT, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::AND() {
 	Pos tmp_pos = current_pos;
 	std::string value("AND");
 	advance(value.length());
 	return Token(Token::category::AND, value, tmp_pos, previous_pos);
 }
+
 Token Lexer::OR() {
 	Pos tmp_pos = current_pos;
 	std::string value("OR");

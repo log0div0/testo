@@ -1,0 +1,56 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test comparison_0 {
+	my_ubuntu_server {
+		if ("lala" GREATER "5") {
+
+		}
+	}
+}
+
+test comparison_1 {
+	my_ubuntu_server {
+		if ("-5" GREATER "lala") {
+			
+		}
+	}
+}
+
+test comparison_2 {
+	my_ubuntu_server {
+		if ("30ms" LESS "5") {
+
+		}
+	}
+}
+
+test comparison_3 {
+	my_ubuntu_server {
+		if ("-5" LESS "-5ms") {
+			
+		}
+	}
+}
+
+test comparison_4 {
+	my_ubuntu_server {
+		if ("Русский" EQUAL "5") {
+
+		}
+	}
+}
+
+test comparison_5 {
+	my_ubuntu_server {
+		if ("50" EQUAL "- 5ms") {
+			
+		}
+	}
+}

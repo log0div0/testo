@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.0)
 list(APPEND SRC_DIRS "*.cpp")
 
 list(APPEND SRC_DIRS "backends/*.cpp")
-list(APPEND SRC_DIRS "backends/vbox/*.cpp")
 if (WIN32)
 list(APPEND SRC_DIRS "backends/hyperv/*.cpp")
 endif()
@@ -11,19 +10,19 @@ if (UNIX AND NOT APPLE)
 list(APPEND SRC_DIRS "backends/qemu/*.cpp")
 endif()
 
-list(APPEND SRC_DIRS "tql/*.cpp")
+list(APPEND SRC_DIRS "IR/*.cpp")
 
 file(GLOB SRCS ${SRC_DIRS})
 
 add_executable(testo ${SRCS})
-target_link_libraries(testo coro js vbox pugixml stb nn license process)
+target_link_libraries(testo coro js pugixml stb nn license process)
 
 if(WIN32)
 	target_link_libraries(testo hyperv msft virtdisk++)
 endif()
 
 if (UNIX AND NOT APPLE)
-	target_link_libraries(testo qemu)
+	target_link_libraries(testo qemu guestfs++)
 endif()
 
 if(UNIX)

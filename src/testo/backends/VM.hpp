@@ -27,6 +27,7 @@ struct VM {
 	virtual ~VM() = default;
 	virtual void install() = 0;
 	virtual void undefine() = 0;
+	virtual void remove_disks() = 0;
 	virtual void make_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual void press(const std::vector<std::string>& buttons) = 0;
@@ -53,7 +54,8 @@ struct VM {
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
 	virtual stb::Image screenshot() = 0;
-	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) = 0;
+	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+		const std::function<void(const std::string&)>& callback) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
@@ -73,7 +75,6 @@ struct VM {
 	std::string id() const;
 	std::string name() const;
 	std::string prefix() const;
-	nlohmann::json get_config() const;
 
 protected:
 	nlohmann::json config;

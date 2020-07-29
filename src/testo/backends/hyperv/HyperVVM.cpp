@@ -160,6 +160,13 @@ void HyperVVM::undefine() {
 	}
 }
 
+void HyperVVM::remove_disks() {
+	try {
+		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
 
 void HyperVVM::make_snapshot(const std::string& snapshot) {
 	try {
@@ -341,9 +348,12 @@ stb::Image HyperVVM::screenshot() {
 	}
 }
 
-int HyperVVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
+int HyperVVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+	const std::function<void(const std::string&)>& callback)
+{
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
 bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	try {
 		std::cout << "TODO: " << __FUNCSIG__ << std::endl;

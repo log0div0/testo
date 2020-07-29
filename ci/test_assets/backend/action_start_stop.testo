@@ -1,0 +1,34 @@
+
+include "common.testo"
+
+[no_snapshots: true]
+test start_offline_machine {
+	my_ubuntu_server {
+		start;
+		abort "stop here"
+	}
+}
+
+[no_snapshots: true]
+test start_online_machine {
+	my_ubuntu_server {
+		start;
+		start;
+	}
+}
+
+[no_snapshots: true]
+test stop_online_machine {
+	my_ubuntu_server {
+		start;
+		stop;
+		abort "stop here"
+	}
+}
+
+[no_snapshots: true]
+test stop_offline_machine {
+	my_ubuntu_server {
+		stop;
+	}
+}

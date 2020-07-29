@@ -1,0 +1,244 @@
+network my_network {
+	mode: "internal"
+}
+
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+
+	nic my_nic: {
+		attached_to: "my_network"
+	}
+}
+
+param sleep_param "1s"
+
+[no_snapshots: true]
+test check_sleep_param {
+	my_ubuntu_server {
+		sleep "${sleep_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_sleep_param_invalid {
+	my_ubuntu_server {
+		sleep "-7"
+	}
+}
+
+[no_snapshots: true]
+test check_sleep_token {
+	my_ubuntu_server {
+		sleep 1s
+	}
+}
+
+param type_param "1s"
+
+[no_snapshots: true]
+test check_type_param {
+	my_ubuntu_server {
+		type "Hello ${type_param}" interval "${type_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_type_param_invalid {
+	my_ubuntu_server {
+		type "Hello ${type_param}" interval "interval"
+	}
+}
+
+
+[no_snapshots: true]
+test check_type_token {
+	my_ubuntu_server {
+		type "Hello ${type_param}" interval 1s
+	}
+}
+
+param wait_param "200ms"
+
+[no_snapshots: true]
+test check_wait_param {
+	my_ubuntu_server {
+		wait "Hello ${wait_param}" timeout "${wait_param}" interval "${wait_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_wait_param_invalid {
+	my_ubuntu_server {
+		wait "Hello ${wait_param}" interval "interval"
+	}
+}
+
+[no_snapshots: true]
+test check_wait_token {
+	my_ubuntu_server {
+		wait "Hello ${wait_param}" timeout 200ms interval 200ms
+	}
+}
+
+param shutdown_param "200ms"
+
+[no_snapshots: true]
+test check_shutdown_param {
+	my_ubuntu_server {
+		shutdown timeout "${shutdown_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_shutdown_param_invalid {
+	my_ubuntu_server {
+		shutdown timeout ""
+	}
+}
+
+[no_snapshots: true]
+test check_shutdown_token {
+	my_ubuntu_server {
+		shutdown timeout 200ms
+	}
+}
+
+param copyto_param "200ms"
+
+[no_snapshots: true]
+test check_copyto_param {
+	my_ubuntu_server {
+		copyto "/opt/scripts/actions.testo" "/opt/scripts/actions.testo" timeout "${copyto_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_copyto_token {
+	my_ubuntu_server {
+		copyto "/opt/scripts/actions.testo" "/opt/scripts/actions.testo" timeout 200ms
+	}
+}
+
+param exec_param "200ms"
+
+[no_snapshots: true]
+test check_exec_param {
+	my_ubuntu_server {
+		exec bash "echo Hello ${exec_param}" timeout "${exec_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_exec_token {
+	my_ubuntu_server {
+		exec bash "echo Hello 200ms" timeout 200ms
+	}
+}
+
+param check_param "200ms"
+
+[no_snapshots: true]
+test check_check_param {
+	my_ubuntu_server {
+		if (check "Hello ${check_param}" timeout "${check_param}" interval "300ms") {
+
+		}
+	}
+}
+
+[no_snapshots: true]
+test check_check_token {
+	my_ubuntu_server {
+		if (check "Hello 200ms" timeout 200ms interval 300ms) {
+
+		}
+	}
+}
+
+param press_param "200ms"
+
+[no_snapshots: true]
+test check_press_param {
+	my_ubuntu_server {
+		press A*2 interval "${press_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_press_token {
+	my_ubuntu_server {
+		press A*2 interval 200ms
+	}
+}
+
+flash my_flash {
+	size: 16Mb
+	fs: "ext4"
+}
+
+param flash_param "my_"
+
+[no_snapshots: true]
+test check_flash_param {
+	my_ubuntu_server {
+		plug flash "${flash_param}flash"
+	}
+}
+
+[no_snapshots: true]
+test check_flash_token {
+	my_ubuntu_server {
+		unplug flash my_flash
+	}
+}
+
+param nic_param "my_"
+
+[no_snapshots: true]
+test check_nic_param {
+	my_ubuntu_server {
+		plug nic "${nic_param}nic"
+	}
+}
+
+[no_snapshots: true]
+test check_nic_token {
+	my_ubuntu_server {
+		unplug nic my_nic
+	}
+}
+
+[no_snapshots: true]
+test check_link_param {
+	my_ubuntu_server {
+		plug link "${nic_param}nic"
+	}
+}
+
+[no_snapshots: true]
+test check_link_token {
+	my_ubuntu_server {
+		unplug link my_nic
+	}
+}
+
+param mouse_param "200ms"
+
+[no_snapshots: true]
+test check_mouse_param {
+	my_ubuntu_server {
+		mouse move "lala" timeout "${mouse_param}"
+	}
+}
+
+[no_snapshots: true]
+test check_mouse_token {
+	my_ubuntu_server {
+		mouse move "lala" timeout 200ms
+	}
+}

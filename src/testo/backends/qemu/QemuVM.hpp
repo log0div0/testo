@@ -13,6 +13,7 @@ struct QemuVM: public VM {
 	QemuVM(const QemuVM& other) = delete;
 	void install() override;
 	void undefine() override;
+	void remove_disks() override;
 	void make_snapshot(const std::string& snapshot) override;
 
 	void rollback(const std::string& snapshot) override;
@@ -40,7 +41,8 @@ struct QemuVM: public VM {
 	void suspend() override;
 	void resume() override;
 	stb::Image screenshot() override;
-	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) override;
+	int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+		const std::function<void(const std::string&)>& callback) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
@@ -55,7 +57,6 @@ struct QemuVM: public VM {
 	std::string get_tmp_dir() override;
 
 private:
-	void remove_disks();
 	void import_disk(const std::string& name, const fs::path& source);
 	void create_new_disk(const std::string& name, uint32_t size);
 	void create_disks();

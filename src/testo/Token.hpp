@@ -80,6 +80,8 @@ struct Token {
 
 		//expressions
 
+		DEFINED,
+
 		//comparisons
 		LESS,
 		GREATER,
@@ -97,9 +99,11 @@ struct Token {
 		none, //not initialized
 		binary, //true or false
 		program,
+		string_token_union,
 		mouse_coordinates,
 		mouse_selectable,
 		mouse_additional_specifier,
+		select_text,
 		key_combination,
 		key_spec,
 		action_block,
@@ -279,14 +283,38 @@ struct Token {
 			return ";";
 		case colon:
 			return ":";
+		case DEFINED:
+			return "DEFINED";
+		case LESS:
+			return "LESS";
+		case GREATER:
+			return "GREATER";
+		case EQUAL:
+			return "EQUAL";
+		case STRLESS:
+			return "STRLESS";
+		case STRGREATER:
+			return "STRGREATER";
+		case STREQUAL:
+			return "STREQUAL";
+		case NOT:
+			return "NOT";
+		case AND:
+			return "AND";
+		case OR:
+			return "OR";
 		case none:
 			return "NONE";
 		case program:
 			return "PROGRAM";
+		case string_token_union:
+			return "STRING_TOKEN_UNION";
 		case mouse_selectable:
 			return "MOUSE SELECTABLE";
 		case mouse_additional_specifier:
 			return "MOUSE ADDITIONAL SPECIFIER";
+		case select_text:
+			return "SELECT TEXT";
 		case mouse_coordinates:
 			return "MOUSE COORDINATES";
 		case key_combination:

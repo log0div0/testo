@@ -18,40 +18,40 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	};
 
 	if (!config.count("name")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field NAME is not specified");
+		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field \"name\" is not specified");
 	}
 
 	if (!config.count("ram")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field RAM is not specified");
+		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field \"ram\" is not specified");
 	}
 
 	if (!config.count("cpus")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: field CPUS is not specified");
+		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field \"cpu\" is not specified");
 	}
 
 	if (!config.count("disk")) {
-		throw std::runtime_error("Constructing QemuVM " + id() + " error: you must specify at least 1 disk");
+		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: you must specify at least 1 disk");
 	}
 
 	if (config.count("disk")) {
 		auto disks = config.at("disk");
 
 		if (disks.size() > disk_targets.size() - 1) {
-			throw std::runtime_error("Constructing QemuVM" + id() + "error: too many disks specified, maximum amount: " + std::to_string(disk_targets.size() - 1));
+			throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: too many disks specified, maximum amount: " + std::to_string(disk_targets.size() - 1));
 		}
 
 		for (auto& disk: disks) {
 			if (!(disk.count("size") ^ disk.count("source"))) {
-				throw std::runtime_error("Constructing QemuVM" + id() + "error: either field \"size\" or \"source\" must be specified for the disk " +
-					disk.at("name").get<std::string>());
+				throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: either field \"size\" or \"source\" must be specified for the disk \"" +
+					disk.at("name").get<std::string>() + "\"");
 			}
 		}
 
 		for (uint32_t i = 0; i < disks.size(); i++) {
 			for (uint32_t j = i + 1; j < disks.size(); j++) {
 				if (disks[i].at("name") == disks[j].at("name")) {
-					throw std::runtime_error("Constructing QemuVM" + id() + "error: two identical disk names: " +
-						disks[i].at("name").get<std::string>());
+					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: two identical disk names: \"" +
+						disks[i].at("name").get<std::string>() + "\"");
 				}
 			}
 		}
@@ -61,28 +61,14 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		auto nics = config.at("nic");
 		for (auto& nic: nics) {
 			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing QemuVM" + id() + "error: field attached_to is not specified for the nic " +
-					nic.at("name").get<std::string>());
-			}
-
-			if (nic.at("attached_to").get<std::string>() == "internal") {
-				if (!nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
-					nic.at("name").get<std::string>() + " has type internal, but field network is not specified");
-				}
+				throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field attached_to is not specified for the nic \"" +
+					nic.at("name").get<std::string>() + "\"");
 			}
 
 			if (nic.count("mac")) {
 				std::string mac = nic.at("mac").get<std::string>();
 				if (!is_mac_correct(mac)) {
-					throw std::runtime_error("Constructing QemuVM" + id() + "error:Incorrect mac string: " + mac);
-				}
-			}
-
-			if (nic.at("attached_to").get<std::string>() == "nat") {
-				if (nic.count("network")) {
-					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
-					nic.at("name").get<std::string>() + " has type NAT, you must not specify field network");
+					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: incorrect mac string: \"" + mac + "\"");
 				}
 			}
 
@@ -99,8 +85,8 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 					driver != "virtio" &&
 					driver != "sungem")
 				{
-					throw std::runtime_error("Constructing QemuVM" + id() + "error: nic " +
-						nic.at("name").get<std::string>() + " has unsupported adaptertype internal: " + driver);
+					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: nic \"" +
+						nic.at("name").get<std::string>() + "\" has unsupported adapter type: \"" + driver + "\"");
 				}
 			}
 		}
@@ -108,8 +94,8 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		for (uint32_t i = 0; i < nics.size(); i++) {
 			for (uint32_t j = i + 1; j < nics.size(); j++) {
 				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing QemuVM" + id() + "error: two identical NIC names: " +
-						nics[i].at("name").get<std::string>());
+					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: two identical NIC names: \"" +
+						nics[i].at("name").get<std::string>() + "\"");
 				}
 			}
 		}
@@ -230,15 +216,11 @@ QemuVM::~QemuVM() {
 
 void QemuVM::install() {
 	try {
-		if (is_defined()) {
-			undefine();
-		}
-
 		//now create disks
 		create_disks();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		auto video_model = preferable_video_model(); 
+		auto video_model = preferable_video_model();
 
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
@@ -405,13 +387,6 @@ void QemuVM::install() {
 void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-
-		if (state() != VmState::Stopped) {
-			stop();
-		}
-		//delete the storage
-		remove_disks();
-
 		domain.undefine();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Undefining vm {}", id())));
@@ -1374,7 +1349,8 @@ stb::Image QemuVM::screenshot() {
 	return screenshot;
 }
 
-int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds) {
+int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+	const std::function<void(const std::string&)>& callback) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
@@ -1385,7 +1361,7 @@ int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t tim
 			command += arg;
 		}
 
-		return helper.execute(command, timeout_milliseconds);
+		return helper.execute(command, timeout_milliseconds, callback);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Run guest process"));
 	}

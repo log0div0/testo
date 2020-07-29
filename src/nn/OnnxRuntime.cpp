@@ -1,14 +1,12 @@
 
 #include "OnnxRuntime.hpp"
+#include "OCR.hpp"
+#include "SelfTestImg.hpp"
 #ifdef WIN32
 #include "winapi.hpp"
 #endif
 
 #include <experimental/filesystem>
-
-#ifdef USE_CUDA
-#include <cuda_provider_factory.h>
-#endif
 
 namespace fs = std::experimental::filesystem;
 
@@ -62,5 +60,24 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 #endif
 		session_options);
 }
+
+void OnnxRuntime::selftest() {
+	stb::Image img(SelfTestImg, SelfTestImg_len);
+	nn::Tensor tensor = find_text(&img);
+	if (tensor.match("Добро пожаловать").size() != 1) {
+		throw std::runtime_error("Neural networks are not working correctly");
+	}
+}
+
+#ifdef USE_CUDA
+CUDA_DeviceInfo GetDeviceInfo() {
+	CUDA_DeviceInfo info = {};
+	auto result = CUDA_GetDeviceInfo(&info, 0);
+	if (result) {
+		throw std::runtime_error("GetDeviceInfo");
+	}
+	return info;
+}
+#endif
 
 }

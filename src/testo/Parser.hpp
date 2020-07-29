@@ -2,16 +2,19 @@
 #pragma once
 
 #include "Lexer.hpp"
-#include "Node.hpp"
+#include "AST.hpp"
 #include "Utils.hpp"
 #include "Token.hpp"
-#include "Register.hpp"
 #include <set>
 #include <array>
 
 struct Parser {
+	static Parser load_dir(const fs::path& dir);
+	static Parser load_file(const fs::path& file);
+	static Parser load(const fs::path& path);
+
 	Parser() = default;
-	Parser(std::shared_ptr<Register> reg, const fs::path& file, const std::string& input);
+	Parser(const fs::path& file, const std::string& input);
 
 	std::shared_ptr<AST::Program> parse();
 private:
@@ -40,9 +43,9 @@ private:
 	bool test_include() const;
 	bool test_string() const;
 	bool test_selectable() const;
-	bool test_select_expr() const;
 	bool test_binary() const;
 	bool test_comparison() const;
+	bool test_defined() const;
 	bool is_button(const Token& t) const;
 
 	void newline_list();
@@ -94,24 +97,25 @@ private:
 
 	//expressions
 	std::shared_ptr<AST::ISelectExpr> select_expr();
-	std::shared_ptr<AST::SelectExpr<AST::SelectUnOp>> select_unop();
-	std::shared_ptr<AST::SelectExpr<AST::SelectParentedExpr>> select_parented_expr();
+	std::shared_ptr<AST::SelectParentedExpr> select_parented_expr();
 	std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> select_binop(std::shared_ptr<AST::ISelectExpr> left);
 
 	std::shared_ptr<AST::ISelectable> selectable();
-	std::shared_ptr<AST::Selectable<AST::SelectJS>> select_js();
+	std::shared_ptr<AST::SelectJS> select_js();
+	std::shared_ptr<AST::SelectText> select_text();
 
 	std::shared_ptr<AST::String> string();
+	std::shared_ptr<AST::StringTokenUnion> string_token_union(Token::category expected_token_type);
 
 	std::shared_ptr<AST::IFactor> factor();
 	std::shared_ptr<AST::Check> check();
 	std::shared_ptr<AST::Comparison> comparison();
+	std::shared_ptr<AST::Defined> defined();
 	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
 	std::shared_ptr<AST::IExpr> expr();
+	std::shared_ptr<AST::ParentedExpr> parented_expr();
 
 	std::vector<Ctx> lexers;
 
 	std::vector<fs::path> already_included;
-
-	std::shared_ptr<Register> reg;
 };

@@ -1,14 +1,13 @@
 
 #include "VisitorSemantic.hpp"
-#include "coro/Finally.h"
+#include "backends/Environment.hpp"
+#include "IR/Program.hpp"
 #include "js/Context.hpp"
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
-VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::json& config): reg(reg) {
+VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
 	prefix = config.at("prefix").get<std::string>();
-	test_spec = config.at("test_spec").get<std::string>();
-	exclude = config.at("exclude").get<std::string>();
 
 	keys.insert("ESC");
 	keys.insert("ONE");
@@ -121,14 +120,13 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"disk", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
-	vm_global_ctx.insert({"vbox_os_type", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
 	attr_ctx disk_ctx;
 	disk_ctx.insert({"size", std::make_pair(false, Token::category::size)});
 	disk_ctx.insert({"source", std::make_pair(false, Token::category::quoted_string)});
-	
+
 	attr_ctxs.insert({"disk", disk_ctx});
 
 	attr_ctx vm_network_ctx;
@@ -157,43 +155,6 @@ VisitorSemantic::VisitorSemantic(std::shared_ptr<Register> reg, const nlohmann::
 	test_global_ctx.insert({"no_snapshots", std::make_pair(false, Token::category::binary)});
 	test_global_ctx.insert({"description", std::make_pair(false, Token::category::quoted_string)});
 	attr_ctxs.insert({"test_global", test_global_ctx});
-
-	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_WAIT_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_CHECK_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_PRESS_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_TYPE_DEFAULT_INTERVAL");
-	testo_timeout_params.insert("TESTO_EXEC_DEFAULT_TIMEOUT");
-	testo_timeout_params.insert("TESTO_COPY_DEFAULT_TIMEOUT");
-
-	for (auto param: config.at("params")) {
-		auto name = param.at("name").get<std::string>();
-		auto value = param.at("value").get<std::string>();
-
-		if (reg->params.find(name) != reg->params.end()) {
-			throw std::runtime_error("Error: param \"" + name +
-				"\" already exists");
-		}
-
-		auto node_found = reg->param_nodes.find(name);
-
-		if (node_found != reg->param_nodes.end()) {
-			throw std::runtime_error("Error: param with name \"" + name +
-				"\" is already defined here: " + std::string((*node_found).second->begin()));
-		}
-
-		if (testo_timeout_params.find(name) != testo_timeout_params.end()) {
-			if (!check_if_time_interval(value)) {
-				throw std::runtime_error("Can't convert parameter " + name + " value " + value + " to time interval");
-			}
-		}
-
-		if (!reg->params.insert({name, value}).second) {
-			throw std::runtime_error("Error: while registering param with name " + name);
-		}
-	}
 }
 
 static uint32_t size_to_mb(const std::string& size) {
@@ -209,160 +170,84 @@ static uint32_t size_to_mb(const std::string& size) {
 	return result;
 }
 
-void VisitorSemantic::setup_macros_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
-	for (auto action: action_block->actions) {
-		setup_macros_action(action);
+void VisitorSemantic::visit() {
+	for (auto& test: IR::program->all_selected_tests) {
+		visit_test(test);
+	}
+	for (auto& test: IR::program->all_selected_tests) {
+		//Now that we've checked that all commands are ligit we could check that
+		//all parents have totally separate vms. We can't do that before command block because
+		//a user may specify unexisting vmc in some command and we need to catch that before that hierarchy check
+
+		std::vector<std::set<std::shared_ptr<IR::Machine>>> parents_subtries_vm;
+		std::vector<std::set<std::shared_ptr<IR::FlashDrive>>> parents_subtries_fd;
+
+		//populate our parents paths
+		for (auto parent: test->parents) {
+			parents_subtries_vm.push_back(parent->get_all_machines());
+			parents_subtries_fd.push_back(parent->get_all_flash_drives());
+		}
+
+		//check that parents path are independent
+		for (size_t i = 0; i < parents_subtries_vm.size(); ++i) {
+			for (size_t j = 0; j < parents_subtries_vm.size(); ++j) {
+				if (i == j) {
+					continue;
+				}
+
+				std::vector<std::shared_ptr<IR::Machine>> intersection;
+
+				std::set_intersection(
+					parents_subtries_vm[i].begin(), parents_subtries_vm[i].end(),
+					parents_subtries_vm[j].begin(), parents_subtries_vm[j].end(),
+					std::back_inserter(intersection));
+
+				if (intersection.size() != 0) {
+					throw std::runtime_error(std::string(test->ast_node->begin()) + ": Error: some parents have common virtual machines");
+				}
+			}
+		}
+
+		//check that parents path are independent
+		for (size_t i = 0; i < parents_subtries_fd.size(); ++i) {
+			for (size_t j = 0; j < parents_subtries_fd.size(); ++j) {
+				if (i == j) {
+					continue;
+				}
+
+				std::vector<std::shared_ptr<IR::FlashDrive>> intersection;
+
+				std::set_intersection(
+					parents_subtries_fd[i].begin(), parents_subtries_fd[i].end(),
+					parents_subtries_fd[j].begin(), parents_subtries_fd[j].end(),
+					std::back_inserter(intersection));
+
+				if (intersection.size() != 0) {
+					throw std::runtime_error(std::string(test->ast_node->begin()) + ": Error: some parents have common flash drives");
+				}
+			}
+		}
 	}
 }
 
-void VisitorSemantic::setup_macros_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
-	auto macro = reg->macros.find(macro_call->name().value());
-	if (macro == reg->macros.end()) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
-	}
-	macro_call->macro = macro->second;
-
-	setup_macros_action_block(macro_call->macro->action_block->action);
-}
-
-void VisitorSemantic::setup_macros_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
-	setup_macros_action(if_clause->if_action);
-	if (if_clause->has_else()) {
-		setup_macros_action(if_clause->else_action);
-	}
-}
-
-void VisitorSemantic::setup_macros_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
-	setup_macros_action(for_clause->cycle_body);
-
-	if (for_clause->else_token) {
-		setup_macros_action(for_clause->else_action);
-	}
-}
-
-void VisitorSemantic::setup_macros_action(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		return setup_macros_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return setup_macros_macro_call(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		return setup_macros_if_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		return setup_macros_for_clause(p->action);
-	}
-}
-
-void VisitorSemantic::setup_macros(std::shared_ptr<AST::Test> test) {
-	for (auto cmd: test->cmd_block->commands) {
-		setup_macros_action(cmd->action);
-	}
-}
-
-void VisitorSemantic::setup_test(std::shared_ptr<AST::Test> test) {
-	if (test->is_initialized) {
+void VisitorSemantic::visit_macro(std::shared_ptr<IR::Macro> macro) {
+	auto result = visited_macros.insert(macro);
+	if (!result.second) {
 		return;
 	}
 
-	for (auto parent_token: test->parents_tokens) {
-		auto parent = reg->tests.find(parent_token.value());
-		if (parent == reg->tests.end()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_token.value());
-		}
+	StackPusher<VisitorSemantic> new_ctx(this, macro->stack);
 
-		for (auto already_included: test->parents) {
-			if (already_included == parent->second) {
-				throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_token.value());
-			}
-		}
-
-		if (parent_token.value() == test->name.value()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_token.value());
-		}
-
-		test->parents.push_back(parent->second);
-	}
-
-	setup_macros(test);
-
-	for (auto parent: test->parents) {
-		setup_test(parent);
-	}
-
-	test->is_initialized = true;
-}
-
-void VisitorSemantic::setup_tests(std::shared_ptr<AST::Program> program) {
-	for (auto stmt: program->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-			auto test = p->stmt;
-
-			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
-				continue;
-			}
-
-			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
-				continue;
-			}
-			setup_test(test);
-		}
-	}
-}
-
-
-void VisitorSemantic::setup_vars(std::shared_ptr<AST::Program> program) {
-	for (auto stmt: program->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-			auto test = p->stmt;
-			//invalidate tests at request
-			//So for every test
-			//we need to check if it's suitable for test spec
-			//if it is - push back to list and remove all the parents duplicates
-
-			if (test_spec.length() && !wildcards::match(test->name.value(), test_spec)) {
-				continue;
-			}
-
-			if (exclude.length() && wildcards::match(test->name.value(), exclude)) {
-				continue;
-			}
-			concat_unique(tests_queue, reg->get_test_path(test));
-		}
-	}
-}
-
-void VisitorSemantic::visit(std::shared_ptr<AST::Program> program) {
-	setup_tests(program);
-	setup_vars(program);
-	for (auto stmt: program->stmts) {
-		visit_stmt(stmt);
-	}
-}
-
-void VisitorSemantic::visit_stmt(std::shared_ptr<AST::IStmt> stmt) {
-	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-		return visit_test(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
-		return visit_macro(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
-		return visit_param(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
-		return visit_controller(p->stmt);
-	} else {
-		throw std::runtime_error("Unknown statement");
-	}
-}
-
-void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
-	for (size_t i = 0; i < macro->args.size(); ++i) {
-		for (size_t j = i + 1; j < macro->args.size(); ++j) {
-			if (macro->args[i]->name() == macro->args[j]->name()) {
-				throw std::runtime_error(std::string(macro->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->args[j]->name());
+	for (size_t i = 0; i < macro->ast_node->args.size(); ++i) {
+		for (size_t j = i + 1; j < macro->ast_node->args.size(); ++j) {
+			if (macro->ast_node->args[i]->name() == macro->ast_node->args[j]->name()) {
+				throw std::runtime_error(std::string(macro->ast_node->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->ast_node->args[j]->name());
 			}
 		}
 	}
 
 	bool has_default = false;
-	for (auto arg: macro->args) {
+	for (auto arg: macro->ast_node->args) {
 		if (arg->default_value) {
 			has_default = true;
 			continue;
@@ -374,75 +259,26 @@ void VisitorSemantic::visit_macro(std::shared_ptr<AST::Macro> macro) {
 	}
 }
 
-void VisitorSemantic::visit_param(std::shared_ptr<AST::Param> param) {
-	auto value = template_parser.resolve(param->value->text(), reg);
-
-	if (testo_timeout_params.find(param->name) != testo_timeout_params.end()) {
-		if (!check_if_time_interval(value)) {
-			throw std::runtime_error(std::string(param->begin()) + ": Error: can't convert parameter " + param->name.value() + " value " + value + " to time interval");
-		}
+void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
+	if (test->ast_node->attrs) {
+		test->attrs = visit_attr_block(test->ast_node->attrs, "test_global");
 	}
 
-	if (!reg->params.insert({param->name.value(), value}).second) {
-		throw std::runtime_error(std::string(param->begin()) + ": Error while registering param with name " +
-			param->name.value());
-	}
-}
+	current_test = test;
 
-void VisitorSemantic::visit_test(std::shared_ptr<AST::Test> test) {
-	if (std::find(tests_queue.begin(), tests_queue.end(), test) == tests_queue.end()) {
-		return;
-	}
-
-	//Check for duplicates in attrs
-	nlohmann::json attrs = nlohmann::json::object();
-
-	if (test->attrs) {
-		attrs = visit_attr_block(test->attrs, "test_global");
-	}
-
-	if (attrs.count("no_snapshots")) {
-		if (attrs.at("no_snapshots").get<bool>()) {
-			test->snapshots_needed = false;
-		}
-	}
-
-	if (attrs.count("description")) {
-		test->description = attrs.at("description").get<std::string>();
-	}
-
-	visit_command_block(test->cmd_block);
-
-	//Now that we've checked that all commands are ligit we could check that
-	//all parents have totally separate vms. We can't do that before command block because
-	//a user may specify unexisting vmc in some command and we need to catch that before that hierarchy check
-
-	std::vector<std::set<std::shared_ptr<VmController>>> parents_subtries;
-
-	//populate our parents paths
+	current_test->cksum_input = test->name();
 	for (auto parent: test->parents) {
-		parents_subtries.push_back(reg->get_all_vmcs(parent));
+		current_test->cksum_input += parent->name();
 	}
+	current_test->cksum_input += test->snapshots_needed();
 
-	//check that parents path are independent
-	for (size_t i = 0; i < parents_subtries.size(); ++i) {
-		for (size_t j = 0; j < parents_subtries.size(); ++j) {
-			if (i == j) {
-				continue;
-			}
+	StackPusher<VisitorSemantic> new_ctx(this, test->stack);
+	visit_command_block(test->ast_node->cmd_block);
 
-			std::vector<std::shared_ptr<VmController>> intersection;
+	std::hash<std::string> h;
+	current_test->cksum = std::to_string(h(current_test->cksum_input));
 
-			std::set_intersection(
-				parents_subtries[i].begin(), parents_subtries[i].end(),
-				parents_subtries[j].begin(), parents_subtries[j].end(),
-				std::back_inserter(intersection));
-
-			if (intersection.size() != 0) {
-				throw std::runtime_error(std::string(test->begin()) + ":Error: some parents have common vms");
-			}
-		}
-	}
+	current_test = nullptr;
 }
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
@@ -452,17 +288,29 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 }
 
 void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	std::set<std::shared_ptr<VmController>> unique_vmcs;
-	for (auto vm_token: cmd->vms) {
-		auto vmc = reg->vmcs.find(vm_token.value());
-		if (vmc == reg->vmcs.end()) {
-			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: unknown vitrual machine name: " + vm_token.value());
-		}
+	auto vmc = IR::program->get_machine_or_null(cmd->vm.value());
+	if (!vmc) {
+		throw std::runtime_error(std::string(cmd->vm.begin()) + ": Error: unknown virtual machine: " + cmd->vm.value());
+	}
 
-		if (!unique_vmcs.insert(vmc->second).second) {
-			throw std::runtime_error(std::string(vm_token.begin()) + ": Error: this vmc was already specified in the virtual machines list: " + vm_token.value());
+	visit_machine(vmc);
+
+	if (vmc->config.count("nic")) {
+		auto nics = vmc->config.at("nic");
+		for (auto& nic: nics) {
+			if (nic.count("attached_to")) {
+				std::string network_name = nic.at("attached_to");
+				auto network = IR::program->get_network_or_null(network_name);
+				if (!network) {
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": nic \"{}\" is attached to an unknown network: \"{}\"",
+						vmc->config.at("name").get<std::string>(), nic.at("name").get<std::string>(), network_name));
+				}
+				visit_network(network);
+			}
 		}
 	}
+
+	current_test->cksum_input += cmd->vm.value();
 
 	visit_action(cmd->action);
 }
@@ -474,37 +322,72 @@ void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> actio
 }
 
 void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		return visit_press(p->action);
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
+		return visit_abort({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
+		return visit_print({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
+		return visit_type({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
+		return visit_press({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
-		return visit_key_combination(p->action->combination);
+		return visit_hold({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
-		if (p->action->combination) {
-			return visit_key_combination(p->action->combination);
-		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
+		return visit_release({p->action, stack});
+	}  else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		return visit_mouse(p->action);
+		return visit_mouse({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		return visit_plug(p->action);
+		return visit_plug({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
+		return visit_start({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
+		return visit_stop({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
+		return visit_shutdown({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		return visit_exec(p->action);
+		return visit_exec({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
+		return visit_copy({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		return visit_wait(p->action);
+		return visit_wait({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
+		return visit_sleep({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		return visit_macro_call(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		return visit_for_clause(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
+		return visit_cycle_control({p->action, stack});
 	}
 }
 
-void VisitorSemantic::visit_press(std::shared_ptr<AST::Press> press) {
-	for (auto key_spec: press->keys) {
+void VisitorSemantic::visit_abort(const IR::Abort& abort) {
+	current_test->cksum_input += "abort ";
+	current_test->cksum_input += abort.message();
+}
+
+void VisitorSemantic::visit_print(const IR::Print& print) {
+	current_test->cksum_input += "print ";
+	current_test->cksum_input += print.message();
+}
+
+void VisitorSemantic::visit_type(const IR::Type& type) {
+	current_test->cksum_input += "type ";
+	current_test->cksum_input += type.text();
+	current_test->cksum_input += type.interval();
+}
+
+void VisitorSemantic::visit_press(const IR::Press& press) {
+	for (auto key_spec: press.ast_node->keys) {
 		visit_key_spec(key_spec);
 	}
+
+	current_test->cksum_input += std::string(*press.ast_node);
+	current_test->cksum_input += press.interval();
 }
 
 void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination> combination) {
@@ -512,13 +395,13 @@ void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination>
 		auto button = combination->buttons[i];
 		if (!is_button(button)) {
 			throw std::runtime_error(std::string(button.begin()) +
-				" :Error: Unknown key " + button.value());
+				" :Error: unknown key: " + button.value());
 		}
 
 		for (size_t j = i + 1; j < combination->buttons.size(); ++j) {
 			if (button.value() == combination->buttons[j].value()) {
 				throw std::runtime_error(std::string(combination->buttons[j].begin()) +
-					" :Error: duplicate key " + button.value());
+					" :Error: duplicate key: " + button.value());
 			}
 		}
 	}
@@ -530,11 +413,22 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 	if (key_spec->times.value().length()) {
 		if (std::stoi(key_spec->times.value()) < 1) {
 			throw std::runtime_error(std::string(key_spec->times.begin()) +
-					" :Error: Can't press a button less than 1 time: " + key_spec->times.value());
+					" :Error: can't press a button less than 1 time: " + key_spec->times.value());
 		}
 	}
 }
 
+void VisitorSemantic::visit_hold(const IR::Hold& hold) {
+	current_test->cksum_input += std::string(*hold.ast_node);
+	visit_key_combination(hold.ast_node->combination);
+}
+
+void VisitorSemantic::visit_release(const IR::Release& release) {
+	current_test->cksum_input += std::string(*release.ast_node);
+	if (release.ast_node->combination) {
+		visit_key_combination(release.ast_node->combination);
+	}
+}
 
 void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers)
 {
@@ -558,13 +452,12 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 
 		if (specifier->is_from()) {
 			if (!arg) {
-				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a number as an argument");
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
-			try {
-				std::stoi(arg.value());
-			} catch (const std::exception& error) {
-				throw std::runtime_error(std::string(arg.begin()) + ": Error: the argument must be a number");
+			auto i = std::stoi(arg.value());
+			if (i < 0) {
+				throw std::runtime_error(std::string(arg.begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
 			if (has_from) {
@@ -592,73 +485,194 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			continue;
 		} else if (specifier->is_moving()) {
 			if (!arg) {
-				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a number as an argument");
+				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
-			try {
-				std::stoi(arg.value());
-			} catch (const std::exception& error) {
-				throw std::runtime_error(std::string(arg.begin()) + ": Error: the argument must be a number");
+
+			auto i = std::stoi(arg.value());
+			if (i < 0) {
+				throw std::runtime_error(std::string(arg.begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 			has_move = true;
 			continue;
 		} else {
 			throw std::runtime_error(std::string(specifier->begin()) + ": Error: unknown specifier: " + specifier->name.value());
 		}
+
+		current_test->cksum_input += std::string(*specifier);
 	}
 }
 
-void VisitorSemantic::visit_mouse_move_selectable(std::shared_ptr<AST::MouseSelectable> mouse_selectable) {
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable->selectable)) {
-		if (mouse_selectable->specifiers.size()) {
-			throw std::runtime_error(std::string(mouse_selectable->specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
+void VisitorSemantic::visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates) {
+	current_test->cksum_input += "coordinates x:";
+	current_test->cksum_input += coordinates.x();
+	current_test->cksum_input += " y:";
+	current_test->cksum_input += coordinates.y();
+}
+
+void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
+	auto script = js.script();
+
+	if (!script.length()) {
+		throw std::runtime_error(std::string(js.ast_node->begin()) + ": Error: empty script in js selection");
+	}
+
+	try {
+		validate_js(script);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
+	}
+
+	current_test->cksum_input += "js ";
+	current_test->cksum_input += script;
+}
+
+void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
+	auto txt = text.text();
+	if (!txt.length()) {
+		throw std::runtime_error(std::string(text.ast_node->begin()) + ": Error: empty string in text selection");
+	}
+
+	current_test->cksum_input += "text ";
+	current_test->cksum_input += txt;
+}
+
+void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
+	if (mouse_selectable.ast_node->selectable->is_negated()) {
+		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: negation is not supported for mouse move/click actions");
+	}
+
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
+		if (mouse_selectable.ast_node->specifiers.size()) {
+			throw std::runtime_error(std::string(mouse_selectable.ast_node->specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
 		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(mouse_selectable->selectable)) {
-		return visit_mouse_additional_specifiers(mouse_selectable->specifiers);
+		visit_select_js({p->selectable, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
+		visit_select_text({p->selectable, stack});
+		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(mouse_selectable.ast_node->selectable)) {
+		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");
 	}
 }
 
-void VisitorSemantic::visit_mouse_move_click(std::shared_ptr<AST::MouseMoveClick> mouse_move_click) {
-	if (mouse_move_click->object) {
-		if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click->object)) {
-			visit_mouse_move_selectable(p->target);
+void VisitorSemantic::visit_mouse_move_click(const IR::MouseMoveClick& mouse_move_click) {
+	current_test->cksum_input += mouse_move_click.event_type() + " ";
+	if (mouse_move_click.ast_node->object) {
+		if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click.ast_node->object)) {
+			visit_mouse_move_coordinates({p->target, stack});
+		} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click.ast_node->object)) {
+			visit_mouse_move_selectable({p->target, stack});
 		}
 	}
 }
 
-void VisitorSemantic::visit_mouse(std::shared_ptr<AST::Mouse> mouse) {
-	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse->event)) {
-		return visit_mouse_move_click(p->event);
+void VisitorSemantic::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
+	current_test->cksum_input += "hold ";
+	current_test->cksum_input += mouse_hold.button();
+}
+
+void VisitorSemantic::visit_mouse_release(const IR::MouseRelease& mouse_release) {
+	current_test->cksum_input += "release";
+}
+
+void VisitorSemantic::visit_mouse(const IR::Mouse& mouse) {
+	current_test->cksum_input += "mouse ";
+
+	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse.ast_node->event)) {
+		return visit_mouse_move_click({p->event, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse.ast_node->event)) {
+		return visit_mouse_hold({p->event, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse.ast_node->event)) {
+		return visit_mouse_release({p->event, stack});
 	}
 }
 
-void VisitorSemantic::visit_plug(std::shared_ptr<AST::Plug> plug) {
-	if (plug->type.value() == "flash") {
-		if (reg->fdcs.find(plug->name_token.value()) == reg->fdcs.end()) {
-			throw std::runtime_error(std::string(plug->begin()) + ": Error: Unknown flash drive: " + plug->name_token.value());
+void VisitorSemantic::visit_plug(const IR::Plug& plug) {
+	current_test->cksum_input += "plug ";
+	current_test->cksum_input += std::to_string(plug.is_on());
+	current_test->cksum_input += plug.entity_type();
+
+	if (plug.entity_type() == "dvd" && plug.is_on()) {
+		auto dvd_path = plug.dvd_path();
+		current_test->cksum_input += dvd_path.generic_string();
+		current_test->cksum_input += file_signature(dvd_path);
+		return;
+	}
+
+	if (plug.entity_type() != "dvd") {
+		current_test->cksum_input += plug.entity_name();
+	}
+
+	if (plug.entity_type() == "flash") {
+		auto flash_drive = IR::program->get_flash_drive_or_null(plug.entity_name());
+		if (!flash_drive) {
+			throw std::runtime_error(std::string(plug.ast_node->begin()) + ": Error: unknown flash drive: " + plug.entity_name());
 		}
+		visit_flash(flash_drive);
 	}
 }
 
-void VisitorSemantic::visit_exec(std::shared_ptr<AST::Exec> exec) {
-	if ((exec->process_token.value() != "bash") &&
-		(exec->process_token.value() != "cmd") &&
-		(exec->process_token.value() != "python") &&
-		(exec->process_token.value() != "python2") &&
-		(exec->process_token.value() != "python3"))
+void VisitorSemantic::visit_start(const IR::Start& start) {
+	current_test->cksum_input += "start";
+}
+
+void VisitorSemantic::visit_stop(const IR::Stop& stop) {
+	current_test->cksum_input += "stop";
+}
+
+void VisitorSemantic::visit_shutdown(const IR::Shutdown& shutdown) {
+	current_test->cksum_input += "shutdown ";
+	current_test->cksum_input += shutdown.timeout();
+}
+
+void VisitorSemantic::visit_exec(const IR::Exec& exec) {
+	if ((exec.interpreter() != "bash") &&
+		(exec.interpreter() != "cmd") &&
+		(exec.interpreter() != "python") &&
+		(exec.interpreter() != "python2") &&
+		(exec.interpreter() != "python3"))
 	{
-		throw std::runtime_error(std::string(exec->begin()) + ": Error: unknown process name: " + exec->process_token.value());
+		throw std::runtime_error(std::string(exec.ast_node->begin()) + ": Error: unknown process name: " + exec.interpreter());
 	}
+
+	current_test->cksum_input += "exec ";
+	current_test->cksum_input += exec.interpreter();
+	current_test->cksum_input += exec.script();
+	current_test->cksum_input += exec.timeout();
+}
+
+void VisitorSemantic::visit_copy(const IR::Copy& copy) {
+	current_test->cksum_input += "copy ";
+	current_test->cksum_input += copy.ast_node->is_to_guest();
+
+	auto from = copy.from();
+
+	if (copy.ast_node->is_to_guest()) {
+		if (!fs::exists(from)) {
+			throw std::runtime_error(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from);
+		}
+
+		if (fs::is_regular_file(from)) {
+			current_test->cksum_input += file_signature(from);
+		} else if (fs::is_directory(from)) {
+			current_test->cksum_input += directory_signature(from);
+		} else {
+			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
+		}
+
+		current_test->cksum_input += from;
+	}
+
+	current_test->cksum_input += copy.to();
+	current_test->cksum_input += copy.timeout();
 }
 
 void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
 		return visit_detect_selectable(p->select_expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectUnOp>>(select_expr)) {
-		return visit_detect_unop(p->select_expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
 		return visit_detect_binop(p->select_expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectParentedExpr>>(select_expr)) {
-		return visit_detect_expr(p->select_expr->select_expr);
+	} else {
+		throw std::runtime_error("Unknown detect expr type");
 	}
 }
 
@@ -668,220 +682,308 @@ void VisitorSemantic::validate_js(const std::string& script) {
 }
 
 void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
-	std::string query = "";
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::String>>(selectable)) {
-		auto text = template_parser.resolve(p->text(), reg);
+	bool is_negated = selectable->is_negated();
+	current_test->cksum_input += std::to_string(is_negated);
+
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
+		visit_select_text({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		auto script = template_parser.resolve(p->text(), reg);
-		try {
-			validate_js(script);
-		} catch (const std::exception& error) {
-			std::throw_with_nested(std::runtime_error(std::string(p->begin()) + ": Error while validating javascript selection"));
-		}
+		visit_select_js({p->selectable, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
+		visit_detect_parented(p->selectable);
+	} else {
+		throw std::runtime_error("Unknown selectable type");
 	}
 }
 
-void VisitorSemantic::visit_detect_unop(std::shared_ptr<AST::SelectUnOp> unop) {
-	visit_detect_expr(unop->select_expr);
+void VisitorSemantic::visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented) {
+	current_test->cksum_input += "(";
+	visit_detect_expr(parented->select_expr);
+	current_test->cksum_input += ")";
+
 }
 
 void VisitorSemantic::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop) {
 	visit_detect_expr(binop->left);
+	current_test->cksum_input += binop->t.value();
 	visit_detect_expr(binop->right);
 }
 
-void VisitorSemantic::visit_wait(std::shared_ptr<AST::Wait> wait) {
-	if (!wait->select_expr) {
-		return;
-	}
+void VisitorSemantic::visit_wait(const IR::Wait& wait) {
+	current_test->cksum_input += "wait ";
+	visit_detect_expr(wait.ast_node->select_expr);
+	current_test->cksum_input += wait.timeout();
+	current_test->cksum_input += wait.interval();
+}
 
-	visit_detect_expr(wait->select_expr);
+void VisitorSemantic::visit_sleep(const IR::Sleep& sleep) {
+	current_test->cksum_input += "sleep ";
+	current_test->cksum_input += sleep.timeout();
 }
 
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+	auto macro = IR::program->get_macro_or_null(macro_call->name().value());
+	if (!macro) {
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
+	}
+
+	visit_macro(macro);
+
 	uint32_t args_with_default = 0;
 
-	for (auto arg: macro_call->macro->args) {
+	for (auto arg: macro->ast_node->args) {
 		if (arg->default_value) {
 			args_with_default++;
 		}
 	}
 
-	if (macro_call->args.size() < macro_call->macro->args.size() - args_with_default) {
+	if (macro_call->args.size() < macro->ast_node->args.size() - args_with_default) {
 		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_call->begin()),
-			macro_call->macro->args.size() - args_with_default, macro_call->args.size()));
+			macro->ast_node->args.size() - args_with_default, macro_call->args.size()));
 	}
 
-	if (macro_call->args.size() > macro_call->macro->args.size()) {
+	if (macro_call->args.size() > macro->ast_node->args.size()) {
 		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_call->begin()),
-			macro_call->macro->args.size(), macro_call->args.size()));
+			macro->ast_node->args.size(), macro_call->args.size()));
 	}
 
-	//push new ctx
-	StackEntry new_ctx(true);
+	std::map<std::string, std::string> vars;
 
 	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
 	}
 
-	for (size_t i = macro_call->args.size(); i < macro_call->macro->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->macro->args[i]->default_value->text(), reg);
-		new_ctx.define(macro_call->macro->args[i]->name(), value);
+	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
+		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
 	}
 
-	reg->local_vars.push_back(new_ctx);
-	coro::Finally finally([&] {
-		reg->local_vars.pop_back();
-	});
-
-	visit_action_block(macro_call->macro->action_block->action);
+	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
+	visit_action_block(macro->ast_node->action_block->action);
 }
 
-void VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
+Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
 		return visit_binop(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
 		return visit_factor(p->expr);
+	} else {
+		throw std::runtime_error("Unknown expr type");
 	}
 }
 
 
-void VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
-	visit_expr(binop->left);
-	visit_expr(binop->right);
+Tribool VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
+	auto left = visit_expr(binop->left);
+	current_test->cksum_input += binop->op().value();
+
+	if (binop->op().value() == "AND") {
+		if (left == Tribool::no) {
+			return left;
+		} else {
+			return visit_expr(binop->right);
+		}
+	} else if (binop->op().value() == "OR") {
+		if (left == Tribool::yes) {
+			return left;
+		} else {
+			return visit_expr(binop->right);
+		}
+	} else {
+		throw std::runtime_error("Unknown binop operation");
+	}
 }
 
-void VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
+Tribool VisitorSemantic::visit_defined(const IR::Defined& defined) {
+	current_test->cksum_input += "DEFINED ";
+	current_test->cksum_input += defined.var();
+	bool is_defined = defined.is_defined();
+	current_test->cksum_input += is_defined;
+
+	return is_defined ? Tribool::yes : Tribool::no;
+}
+
+Tribool VisitorSemantic::visit_comparison(const IR::Comparison& comparison) {
+	current_test->cksum_input += comparison.left();
+	current_test->cksum_input += comparison.op();
+	current_test->cksum_input += comparison.right();
+
+	return comparison.calculate() ? Tribool::yes : Tribool::no;
+}
+
+Tribool VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
+	bool is_negated = factor->is_negated();
+	current_test->cksum_input += std::to_string(is_negated);
+
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
-		return visit_check(p->factor);
+		return visit_check({p->factor, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
-		return visit_expr(p->factor);
+		return is_negated ^ visit_expr(p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Defined>>(factor)) {
+		return is_negated ^ visit_defined({p->factor, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
+		return is_negated ^ visit_comparison({p->factor, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::ParentedExpr>>(factor)) {
+		return is_negated ^ visit_parented_expr(p->factor);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
+		auto text = template_parser.resolve(p->factor->text(), stack);
+		current_test->cksum_input += text;
+		return is_negated ^ (text.length() ? Tribool::yes : Tribool::no);
+	} else {
+		throw std::runtime_error("Unknown factor type");
 	}
 }
 
-void VisitorSemantic::visit_check(std::shared_ptr<AST::Check> check) {
-	visit_detect_expr(check->select_expr);
+Tribool VisitorSemantic::visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented) {
+	current_test->cksum_input += "(";
+	auto result = visit_expr(parented->expr);
+	current_test->cksum_input += ")";
+	return result;
+}
+
+Tribool VisitorSemantic::visit_check(const IR::Check& check) {
+	current_test->cksum_input += "check ";
+	visit_detect_expr(check.ast_node->select_expr);
+	current_test->cksum_input += check.timeout();
+	current_test->cksum_input += check.interval();
+	return {};
 }
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
-	visit_expr(if_clause->expr);
-	visit_action(if_clause->if_action);
-	if (if_clause->has_else()) {
-		visit_action(if_clause->else_action);
+	current_test->cksum_input += "if";
+
+	auto expr_value = visit_expr(if_clause->expr);
+
+	switch (expr_value) {
+		case Tribool::yes:
+			visit_action(if_clause->if_action);
+			break;
+		case Tribool::no:
+			if (if_clause->has_else()) {
+				current_test->cksum_input += "else";
+				visit_action(if_clause->else_action);
+			}
+			break;
+		default:
+			visit_action(if_clause->if_action);
+			if (if_clause->has_else()) {
+				current_test->cksum_input += "else";
+				visit_action(if_clause->else_action);
+			}
+			break;
 	}
 }
 
-void VisitorSemantic::visit_range(std::shared_ptr<AST::Range> range) {
-	std::string r1 = template_parser.resolve(range->r1->text(), reg);
-	std::string r2;
+std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
+	std::string r1 = range.r1();
+	std::string r2 = range.r2();
 
-	try {
-		range->r1_num = std::stoul(r1);
-	} catch (const std::exception& error) {
-		std::runtime_error(std::string(range->r1->begin()) + ": Error: Can't convert to uint: " + r1);
+	if (!is_number(r1)) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + r1 + " to a non-negative number");
 	}
 
-	if (range->r2) {
-		r2 = template_parser.resolve(range->r2->text(), reg);
-		try {
-			range->r2_num = std::stoul(r2);
-		} catch (const std::exception& error) {
-			std::runtime_error(std::string(range->r2->begin()) + ": Error: Can't convert to uint: " + r2);
-		}
+	auto r1_num = std::stoi(r1);
 
-		if (range->r1_num >= range->r2_num) {
-			throw std::runtime_error(std::string(range->begin()) + ": Error: start of the range " +
-				r1 + " is greater or equal to finish " + r2);
-		}
+	if (r1_num < 0) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + r1 + " to a non-negative number");
 	}
+
+	if (!is_number(r2)) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + r2 + " to a non-negative number");
+	}
+
+	auto r2_num = std::stoi(r2);
+
+	if (r2_num < 0) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + r2 + " to a non-negative number");
+	}
+
+	if (r1_num >= r2_num) {
+		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: start of the range " +
+			r1 + " is greater or equal to finish " + r2);
+	}
+
+	current_test->cksum_input += "RANGE ";
+	current_test->cksum_input += r1;
+	current_test->cksum_input += r2;
+
+	return range.values();
 }
 
 void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
+	current_test->cksum_input += "for ";
+	std::vector<std::string> values;
 	if (auto p = std::dynamic_pointer_cast<AST::CounterList<AST::Range>>(for_clause->counter_list)) {
-		visit_range(p->counter_list);
+		values = visit_range({p->counter_list, stack});
 	} else {
 		throw std::runtime_error("Unknown counter list type");
 	}
 
-	StackEntry new_ctx(false);
-	reg->local_vars.push_back(new_ctx);
-	size_t ctx_position = reg->local_vars.size() - 1;
-	coro::Finally finally([&]{
-		reg->local_vars.pop_back();
-	});
-
-	for (auto i: for_clause->counter_list->values()) {
-		reg->local_vars[ctx_position].define(for_clause->counter.value(), i);
+	std::map<std::string, std::string> vars;
+	for (auto i: values) {
+		vars[for_clause->counter.value()] = i;
+		auto new_stack = std::make_shared<StackNode>();
+		new_stack->parent = stack;
+		new_stack->vars = vars;
+		StackPusher<VisitorSemantic> new_ctx(this, new_stack);
 		visit_action(for_clause->cycle_body);
 	}
 
 	if (for_clause->else_token) {
+		current_test->cksum_input += "else ";
 		visit_action(for_clause->else_action);
 	}
 }
 
-void VisitorSemantic::visit_controller(std::shared_ptr<AST::Controller> controller) {
-	if (controller->t.type() == Token::category::machine) {
-		return visit_machine(controller);
-	} else if (controller->t.type() == Token::category::flash) {
-		return visit_flash(controller);
-	} else if (controller->t.type() == Token::category::network) {
-		return visit_network(controller);
-	} else {
-		throw std::runtime_error("Unknown controller type");
-	}
+void VisitorSemantic::visit_cycle_control(const IR::CycleControl& cycle_control) {
+	current_test->cksum_input += cycle_control.type();
 }
 
+void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
+	current_test->mentioned_machines.insert(machine);
 
-void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
-	bool is_used = false;
-	for (auto test: tests_queue) {
-		auto machines = test->get_all_vm_names();
-		if (machines.find(machine->name.value()) != machines.end()) {
-			is_used = true;
-			break;
-		}
-	}
-
-	if (!is_used) {
+	auto result = visited_machines.insert(machine);
+	if (!result.second) {
 		return;
 	}
 
-	auto config = visit_attr_block(machine->attr_block, "vm_global");
-	config["prefix"] = prefix;
-	config["name"] = machine->name.value();
-	config["src_file"] = machine->name.begin().file.generic_string();
+	StackPusher<VisitorSemantic> new_ctx(this, machine->stack);
 
-	if (config.count("iso")) {
-		fs::path iso_file = config.at("iso").get<std::string>();
+	machine->config = visit_attr_block(machine->ast_node->attr_block, "vm_global");
+	machine->config["prefix"] = prefix;
+	machine->config["name"] = machine->name();
+	machine->config["src_file"] = machine->ast_node->name.begin().file.generic_string();
+
+	if (machine->config.count("iso")) {
+		fs::path iso_file = machine->config.at("iso").get<std::string>();
 		if (iso_file.is_relative()) {
-			fs::path src_file(config.at("src_file").get<std::string>());
+			fs::path src_file(machine->config.at("src_file").get<std::string>());
 			iso_file = src_file.parent_path() / iso_file;
 		}
 
 		if (!fs::exists(iso_file)) {
-			throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: target iso file {} doesn't exist", machine->name.value(), iso_file.generic_string()));
+			throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": target iso file \"{}\" does not exist", machine->name(), iso_file.generic_string()));
 		}
 
 		iso_file = fs::canonical(iso_file);
 
-		config["iso"] = iso_file.generic_string();
+		machine->config["iso"] = iso_file.generic_string();
 	}
 
-	if (config.count("disk")) {
-		auto& disks = config.at("disk");
+	if (machine->config.count("disk")) {
+		auto& disks = machine->config.at("disk");
 
 		for (auto& disk: disks) {
 			if (disk.count("source")) {
 				fs::path source_file = disk.at("source").get<std::string>();
 				if (source_file.is_relative()) {
-					fs::path src_file(config.at("src_file").get<std::string>());
+					fs::path src_file(machine->config.at("src_file").get<std::string>());
 					source_file = src_file.parent_path() / source_file;
 				}
 
 				if (!fs::exists(source_file)) {
-					throw std::runtime_error(fmt::format("Can't construct VmController for vm {}: source disk image {} doesn't exist", machine->name.value(), source_file.generic_string()));
+					throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": source disk image \"{}\" does not exist", machine->name(), source_file.generic_string()));
 				}
 
 				source_file = fs::canonical(source_file);
@@ -889,56 +991,44 @@ void VisitorSemantic::visit_machine(std::shared_ptr<AST::Controller> machine) {
 			}
 		}
 	}
-
-	auto vmc = env->create_vm_controller(config);
-	reg->vmcs.emplace(std::make_pair(machine->name, vmc));
-
-	//additional check that all the networks are defined earlier
-	for (auto network: vmc->vm->networks()) {
-		if (reg->netcs.find(network) == reg->netcs.end()) {
-			throw std::runtime_error(std::string(machine->begin()) + ": Error: specified network " + network + " is not defined");
-		}
-	}
 }
 
-void VisitorSemantic::visit_flash(std::shared_ptr<AST::Controller> flash) {
-	bool is_used = false;
-	for (auto test: tests_queue) {
-		auto fds = test->get_all_fd_names();
-		if (fds.find(flash->name.value()) != fds.end()) {
-			is_used = true;
-			break;
-		}
-	}
+void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
+	current_test->mentioned_flash_drives.insert(flash);
 
-	if (!is_used) {
+	auto result = visited_flash_drives.insert(flash);
+	if (!result.second) {
 		return;
 	}
 
+	StackPusher<VisitorSemantic> new_ctx(this, flash->stack);
+
 	//no need to check for duplicates
 	//It's already done in Parser while registering Controller
-	auto config = visit_attr_block(flash->attr_block, "fd_global");
-	config["prefix"] = prefix;
-	config["name"] = flash->name.value();
-	config["src_file"] = flash->name.begin().file.generic_string();
+	flash->config = visit_attr_block(flash->ast_node->attr_block, "fd_global");
+	flash->config["prefix"] = prefix;
+	flash->config["name"] = flash->name();
+	flash->config["src_file"] = flash->ast_node->name.begin().file.generic_string();
 
-	auto fdc = env->create_flash_drive_controller(config);
-
-	if (fdc->fd->has_folder()) {
-		fdc->fd->validate_folder();
+	if (flash->has_folder()) {
+		flash->validate_folder();
 	}
-
-	reg->fdcs.emplace(std::make_pair(flash->name, fdc));
 }
 
-void VisitorSemantic::visit_network(std::shared_ptr<AST::Controller> network) {
-	auto config = visit_attr_block(network->attr_block, "network_global");
-	config["prefix"] = prefix;
-	config["name"] = network->name.value();
-	config["src_file"] = network->name.begin().file.generic_string();
+void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
+	current_test->mentioned_networks.insert(network);
 
-	auto netc = env->create_network_controller(config);
-	reg->netcs.emplace(std::make_pair(network->name, netc));
+	auto result = visited_networks.insert(network);
+	if (!result.second) {
+		return;
+	}
+
+	StackPusher<VisitorSemantic> new_ctx(this, network->stack);
+
+	network->config = visit_attr_block(network->ast_node->attr_block, "network_global");
+	network->config["prefix"] = prefix;
+	network->config["name"] = network->name();
+	network->config["src_file"] = network->ast_node->name.begin().file.generic_string();
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {
@@ -958,34 +1048,34 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	auto found = ctx->second.find(attr->name);
 
 	if (found == ctx->second.end()) {
-		throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attr name: " + attr->name.value());
+		throw std::runtime_error(std::string(attr->begin()) + ": Error: unknown attribute name: \"" + attr->name.value() + "\"");
 	}
 
 	auto match = found->second;
 	if (attr->id != match.first) {
 		if (match.first) {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-				" requires a name");
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute \"" + attr->name.value() +
+				"\" requires a name");
 		} else {
-			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute " + attr->name.value() +
-				" must have no name");
+			throw std::runtime_error(std::string(attr->end()) + ": Error: attribute \"" + attr->name.value() +
+				"\" must have no name");
 		}
 	}
 
 	if (attr->value->t.type() != match.second) {
-		throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type " +
-			Token::type_to_string(attr->value->t.type()) + " for attr " + attr->name.value() + ", expected " +
-			Token::type_to_string(match.second));
+		throw std::runtime_error(std::string(attr->end()) + ": Error: unexpected value type \"" +
+			Token::type_to_string(attr->value->t.type()) + "\" for attribute \"" + attr->name.value() + "\", expected \"" +
+			Token::type_to_string(match.second) + "\"");
 	}
 
 	if (config.count(attr->name.value())) {
 		if (!config.at(attr->name.value()).is_array()) {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: duplicate attr " + attr->name.value());
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: duplicate attribute: \"" + attr->name.value() + "\"");
 		}
 	}
 
 	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::StringAttr>>(attr->value)) {
-		auto value = template_parser.resolve(p->attr_value->value->text(), reg);
+		auto value = template_parser.resolve(p->attr_value->value->text(), stack);
 		config[attr->name.value()] = value;
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
 		auto value = p->attr_value->value;

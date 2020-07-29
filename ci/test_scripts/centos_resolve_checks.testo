@@ -2,10 +2,11 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_for_range_param: centos_prepare_testo_part1 {
+test centos_for_range_param: centos_prepare_testo {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/param_resolve/for_tests.testo" "/opt/scripts/for_tests.testo"
 		exec bash """
-			output=$(testo run /opt/scripts/part1/param_resolve --stop_on_fail --test_spec for_range_param --report_folder /opt/report)
+			output=$(testo run /opt/scripts/for_tests.testo --stop_on_fail --test_spec for_range_param --report_folder /opt/report)
 			[[ $output == *"0: iteration #0"* ]]
 			[[ $output == *"0: iteration #1"* ]]
 			[[ $output == *"0: iteration #2"* ]]
@@ -15,6 +16,69 @@ test centos_for_range_param: centos_prepare_testo_part1 {
 			[[ $output == *"1: iteration #1"* ]]
 			[[ $output == *"1: iteration #2"* ]]
 			[[ $output != *"1: iteration #3"* ]]
+		"""
+
+		exec bash """
+			output=$(testo run /opt/scripts/for_tests.testo --test_spec for_range_str_0)"
+			[[ $output == *"iteration #3"* ]]
+			[[ $output == *"iteration #4"* ]]
+			[[ $output != *"iteration #5"* ]]
+		"""
+
+		exec bash """
+			output=$(testo run /opt/scripts/for_tests.testo --test_spec for_range_token)"
+			[[ $output == *"iteration #3"* ]]
+			[[ $output == *"iteration #4"* ]]
+			[[ $output != *"iteration #5"* ]]
+		"""
+	}
+}
+
+[no_snapshots: true]
+test centos_actions_param: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/param_resolve/actions.testo" "/opt/scripts/actions.testo"
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/actions.testo --test_spec check_sleep_param | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
+			testo run /opt/scripts/actions.testo --test_spec check_sleep_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"-7\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec check_sleep_token | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
+
+			testo run /opt/scripts/actions.testo --test_spec check_type_param | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_type_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"interval\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec check_type_token | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_wait_param | grep "Waiting \\\"Hello 200ms\\\" for 200ms with interval 200ms in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_wait_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"interval\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec check_wait_token | grep "Waiting \\\"Hello 200ms\\\" for 200ms with interval 200ms in virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_shutdown_param | grep "Shutting down virtual machine my_ubuntu_server with timeout 200ms"
+			testo run /opt/scripts/actions.testo --test_spec check_shutdown_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"\\\" to TIME INTERVAL"
+			testo run /opt/scripts/actions.testo --test_spec check_shutdown_token | grep "Shutting down virtual machine my_ubuntu_server with timeout 200ms"
+
+			testo run /opt/scripts/actions.testo --test_spec check_copyto_param | grep "Copying /opt/scripts/actions.testo to virtual machine my_ubuntu_server to destination /opt/scripts/actions.testo with timeout 200ms"
+			testo run /opt/scripts/actions.testo --test_spec check_copyto_token | grep "Copying /opt/scripts/actions.testo to virtual machine my_ubuntu_server to destination /opt/scripts/actions.testo with timeout 200ms"
+
+			testo run /opt/scripts/actions.testo --test_spec check_exec_param | grep "Executing bash command in virtual machine my_ubuntu_server with timeout 200ms"
+			testo run /opt/scripts/actions.testo --test_spec check_exec_token | grep "Executing bash command in virtual machine my_ubuntu_server with timeout 200ms"
+
+			testo run /opt/scripts/actions.testo --test_spec check_check_param | grep "Checking \\\"Hello 200ms\\\" for 200ms with interval 300ms in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_check_token | grep "Checking \\\"Hello 200ms\\\" for 200ms with interval 300ms in virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_press_param | grep "Pressing key A 2 times in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_press_token | grep "Pressing key A 2 times in virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_flash_param | grep "Plugging flash drive my_flash into virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_flash_token | grep "Unplugging flash drive my_flash from virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_nic_param | grep "Plugging nic my_nic into virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_nic_token | grep "Unplugging nic my_nic from virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_link_param | grep "Plugging link my_nic into virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_link_token | grep "Unplugging link my_nic from virtual machine my_ubuntu_server"
+
+			testo run /opt/scripts/actions.testo --test_spec check_mouse_param | grep "Mouse moving on \\\"lala\\\" with timeout 200ms in virtual machine my_ubuntu_server"
+			testo run /opt/scripts/actions.testo --test_spec check_mouse_token | grep "Mouse moving on \\\"lala\\\" with timeout 200ms in virtual machine my_ubuntu_server"
 		"""
 	}
 }

@@ -4,23 +4,15 @@
 #include "../FlashDrive.hpp"
 #include <qemu/Host.hpp>
 
-struct QemuNbd {
-	QemuNbd(const fs::path& img_path);
-	QemuNbd() = delete;
-	~QemuNbd();
-};
-
 struct QemuFlashDrive: FlashDrive {
 	QemuFlashDrive() = delete;
 	QemuFlashDrive(const QemuFlashDrive& other) = delete;
 	QemuFlashDrive(const nlohmann::json& config);
-	~QemuFlashDrive();
+	~QemuFlashDrive() {}
 	bool is_defined() override;
 	void create() override;
 	void undefine() override;
-	bool is_mounted() const override;
-	void mount() override;
-	void umount() override;
+	void load_folder(const fs::path& folder) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void make_snapshot(const std::string& snapshot) override;
 	void delete_snapshot(const std::string& snapshot) override;
@@ -30,5 +22,4 @@ struct QemuFlashDrive: FlashDrive {
 
 private:
 	vir::Connect qemu_connect;
-	std::unique_ptr<QemuNbd> nbd;
 };
