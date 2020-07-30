@@ -1,0 +1,50 @@
+include "os_installation.testo"
+
+flash dr_web_flash {
+	size: 2Gb
+	fs: "ntfs"
+	folder: "${DR_WEB_DIR}"
+}
+
+macro try_login() {
+	for (i IN RANGE 30) {
+		mouse click
+		if (check("testo")) {
+			break;
+		}
+		sleep 3s
+	}
+}
+
+test dr_web_install: win10_prepare {
+	win10 {
+		plug flash dr_web_flash
+		sleep 5s
+		mouse click "USB Drive"
+		mouse click "Open folder"
+		mouse click "drweb"
+		press LeftCtrl + C
+		mouse click "Edge".move_down(50)
+		press LeftCtrl + V
+		wait "Copying"
+		wait !"Copying" timeout 5m
+		mouse click "USB Drive".from_top(0)
+		press LeftAlt + F4
+		unplug flash dr_web_flash
+		sleep 3s
+		mouse dclick "drweb"
+		wait "Do you want to allow"; mouse click "Yes".from_bottom(0)
+		wait "Thank you for choosing Dr.Web" timeout 3m
+		mouse click "I want to connect to Dr.Web Cloud".right_center()
+		mouse click "Install Dr.Web Firewall"
+		mouse click "Next".from_bottom(0)
+		mouse click "Receive license later"
+		mouse click "Install"
+		wait "Installation complete" timeout 10m
+		mouse click "Restart now"
+		wait "Please wait" timeout 3m
+		try_login()
+		type "1111"; press Enter
+		wait "Type here to search" && "Dr.Web" && "Scanner" timeout 3m
+	}
+}
