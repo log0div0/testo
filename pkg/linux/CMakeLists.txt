@@ -41,7 +41,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	qemu-kvm (>= 2.8), \
 	ebtables, \
 	dnsmasq-base, \
-	libguestfs (>= 1.34.6) \
+	libguestfs0 (>= 1.34.6) \
 ")
 
 set(CPACK_RPM_PACKAGE_PROVIDES "\
