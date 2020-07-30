@@ -1,0 +1,96 @@
+
+network internet {
+	mode: "nat"
+}
+
+machine alt_workstation {
+	cpus: 2
+	ram: 4096Mb
+	iso: "${ISO_DIR}/alt-workstation-9.1-x86_64.iso"
+	disk main: {
+		size: 20Gb
+	}
+
+	nic nat: {
+		attached_to: "internet"
+	}
+}
+
+param hostname "my-alt-workstation"
+param login "testo-user"
+param password "1111"
+
+test alt_install_os {
+	alt_workstation {
+		start
+		wait "Загрузка с жёсткого диска";
+		press Down, Enter
+		wait "Выберите язык" timeout 3m
+		mouse click "Русский";
+		mouse click "Клавиши Alt и Shift одновременно"
+		mouse click "Далее"
+		wait "Лицензионный договор"
+		mouse click "согласен с условиями".from_bottom(0)
+		mouse click "Далее".from_bottom(0)
+		wait "Дата и время" && "Россия"
+		mouse click "Москва"; mouse click "Далее"
+		wait "Подготовка диска"
+		mouse click "Удалить все разделы и создать разделы автоматически"
+		mouse click "Далее"
+		wait "Предупреждение"; mouse click "ОК"
+		wait "Установка системы"
+		mouse click "Офис".center_top().move_down(4); press Space*3 interval 500ms
+		mouse click "Интернет/сети".center_top().move_down(4); press Space*3 interval 500ms
+		mouse click "Мультимедиа".center_top().move_down(4); press Space*3 interval 500ms
+		mouse click "Далее".center_bottom()
+		wait "Установка загрузчика" timeout 20m
+		mouse click "Далее".center_bottom()
+		wait "Настройка сети"
+		mouse click "Имя компьютера".right_center().move_right(30);
+		press LeftCtrl + A, Backspace; type "${hostname}"
+		mouse click "Далее".center_bottom()
+		wait "Администратор системы"
+		type "${password}"; press Tab; type "${password}"
+		mouse click "Далее".center_bottom()
+		wait "Системный пользователь"
+		type "${login}"; press Tab*3;
+		type "${password}"; press Tab; type "${password}"
+		mouse click "Далее".center_bottom()
+		wait "Завершение установки"
+		mouse click "Завершить"
+		wait "You may safely reboot your system"; unplug dvd; press Enter
+		wait "Добро пожаловать" timeout 3m
+	}
+}
+
+macro enter_sudo(password) {
+	type "sudo su"; press Enter
+	wait "[sudo] password"; type "${password}"; press Enter
+	wait ""
+}
+
+test alt_install_guest_additions: alt_install_os {
+	alt_workstation {
+		type "${password}"; mouse click "Войти"
+		wait "Компьютер";
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+
+		mouse dclick "Компьютер"
+		mouse dclick "DVD-ROM"
+		mouse dclick "rpm"
+		mouse click "Установить"
+		wait "Введите пароль"; type "${password}"; press Enter
+		wait "Установка завершена успешно"; mouse click "Выход"
+		sleep 300ms
+		press LeftAlt + F4
+		unplug dvd
+
+		exec bash "echo hello from alt linux workstation!"
+	}
+}
+
+test alt_update_packages: alt_install_guest_additions {
+	alt_workstation {
+		exec bash "apt-get update"
+	}
+}
