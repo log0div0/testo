@@ -24,16 +24,6 @@ void HyperVFlashDrive::load_folder(const fs::path& folder) {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }
 
-bool HyperVFlashDrive::is_mounted() const {
-	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
-	return false;
-}
-void HyperVFlashDrive::mount() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
-void HyperVFlashDrive::umount() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
 fs::path HyperVFlashDrive::img_path() const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
