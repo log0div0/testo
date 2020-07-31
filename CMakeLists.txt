@@ -4,8 +4,8 @@ cmake_policy(SET CMP0091 NEW)
 
 project(testo)
 
-set(TESTO_VERSION "1.6.3")
-set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
+set(TESTO_VERSION "2.0.0")
+set(TESTO_RELEASE_DATE "31.07.2020")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -34,7 +34,7 @@ include_directories(
 
 macro(add_package NAME)
 	set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")
-	set(CPACK_PACKAGE_CONTACT "s.lvov@testo-lang.ru")
+	set(CPACK_PACKAGE_CONTACT "support@testo-lang.ru")
 	set(CPACK_OUTPUT_CONFIG_FILE CPackConfig.cmake)
 	set(CPACK_SOURCE_OUTPUT_CONFIG_FILE CPackSourceConfig.cmake)
 	set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_CURRENT_BINARY_DIR};${NAME};ALL;/")

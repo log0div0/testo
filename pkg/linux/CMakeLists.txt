@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 set(CPACK_PACKAGE_NAME "testo")
+set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 
 install(PROGRAMS
 	${CMAKE_BINARY_DIR}/out/sbin/testo
