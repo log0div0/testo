@@ -160,3 +160,32 @@ test win_server_configure_deployment: win_server_configure_ad {
 		wait "Dashboard" timeout 2m
 	}
 }
+
+test win_server_add_user: win_server_configure_deployment {
+	win_server {
+		mouse click "Tools".from_right(0)
+		mouse click "Active Directory Users and Computers"
+		wait "testo.ad.example"
+		mouse click "testo.ad.example".from_left(0)
+		sleep 2s
+		mouse dclick
+		sleep 200ms
+		mouse rclick "Users".from_left(0)
+		mouse move "New".from_left(0)
+		sleep 2s
+		mouse click "User".from_bottom(0)
+		wait "New Object - User"
+		mouse click "First name".right_center().move_right(100); type "Alt"
+		mouse click "Last name".right_center().move_right(100); type "Linux"
+		mouse click "User logon name".from_bottom(1).center_bottom().move_down(10); type "AltLinux"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Password"; type "${win_password}"; press Tab; type "${win_password}"
+		mouse click "User must change"
+		mouse click "Password never expires"
+		mouse click "Next".from_bottom(0).center_bottom()
+		mouse click "Finish".from_bottom(0)
+		sleep 1s
+		press LeftAlt + F4
+		wait !"testo.ad.example"
+	}
+}
