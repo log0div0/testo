@@ -11,15 +11,18 @@ namespace license {
 
 struct Date {
 	Date(const std::string& str) {
-		std::regex regex(R"((\d+).(\d+).(\d+))");
+		std::regex regex(R"((\d\d\d\d).(\d\d).(\d\d))");
 		std::cmatch match;
 		if (!std::regex_match(str.data(), match, regex)) {
 			throw std::runtime_error("Invalid date format");
 		}
-		day = stoi(match[1]);
+		year = stoi(match[1]);
 		month = stoi(match[2]);
-		year = stoi(match[3]);
+		day = stoi(match[3]);
 
+		if ((year < 2000) || (year > 2100)) {
+			throw std::runtime_error("Invalid year number");
+		}
 		if (month > 12) {
 			throw std::runtime_error("Invalid month number");
 		}
@@ -37,7 +40,16 @@ struct Date {
 	}
 
 	std::string to_string() const {
-		return std::to_string(day) + "." + std::to_string(month) + "." + std::to_string(year);
+		std::string result = std::to_string(year) + ".";
+		if (month < 10) {
+			result += "0";
+		}
+		result += std::to_string(month) + ".";
+		if (day < 10) {
+			result += "0";
+		}
+		result += std::to_string(day);
+		return result;
 	}
 
 	uint16_t day = 0, month = 0, year = 0;
