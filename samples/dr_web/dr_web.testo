@@ -48,3 +48,69 @@ test dr_web_install: win10_prepare {
 		wait "Type here to search" && "Dr.Web" && "Scanner" timeout 3m
 	}
 }
+
+macro open_app(app) {
+	mouse click "Type here to search"
+	wait "Top apps"
+	type "${app}"
+	wait "Open"
+	press Enter
+}
+
+test dr_web_prepare: dr_web_install {
+	win10 {
+		open_app("Security Center")
+		wait "Computer is protected"
+		mouse click "Click to make changes"
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "Computer is protected"
+	}
+}
+
+flash access_denied {
+	fs: "ntfs"
+	size: 16Mb
+}
+
+test dr_web_flash_drive_restriction: dr_web_prepare {
+	win10 {
+		plug flash access_denied
+		wait "USB Drive (E:)"
+		mouse rclick "This folder is empty"
+		mouse move "New"; sleep 3s
+		mouse click "Text Document".from_top(1)
+		wait "New Text Document";
+		press Backspace; type "my_file"; press Enter
+		mouse rclick "USB Drive (E:)".from_left(0); mouse click "Eject"
+		wait "Safe To Remove Hardware"
+		unplug flash access_denied
+
+		mouse click "Devices and Personal Data"
+		mouse click "Configure device access rules"
+		mouse click "Block removable media"
+		sleep 2s
+		plug flash access_denied
+
+		open_app("File Explorer")
+		wait "Frequent folders"
+		mouse click "USB Drive (E:)".from_left(0)
+		wait "Access is denied"
+		mouse click "OK".from_right(0)
+
+		mouse rclick "USB Drive (E:)".from_left(0); mouse click "Eject"
+		wait "Safe To Remove Hardware"
+		unplug flash access_denied
+		press LeftAlt + F4
+		mouse click "Block removable media"
+		plug flash access_denied
+		wait "USB Drive (E:)" && "my_file"
+		mouse rclick "my_file"
+		mouse click "Delete"
+		wait "Are you sure"; mouse click "Yes".from_right(0)
+		mouse rclick "This folder is empty"
+		mouse rclick "USB Drive (E:)".from_left(0); mouse click "Eject"
+		wait "Safe To Remove Hardware"
+		unplug flash access_denied
+	}
+}
