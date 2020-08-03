@@ -1,9 +1,17 @@
+network internet {
+	mode: "nat"
+}
+
 machine my_ubuntu_server {
 	cpus: 1
 	ram: 512Mb
 	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
 	disk main: {
 		size: 4Gb
+	}
+
+	nic nat: {
+		attached_to: "internet"
 	}
 }
 
@@ -40,7 +48,7 @@ macro install_ubuntu_server(host_name, login, password) {
 	wait "Write the changes to disks and configure LVM?"; press Left, Enter
 	wait "Amount of volume group to use for guided partitioning"; press Enter
 	wait "Write the changes to disks?"; press Left, Enter
-	wait "HTTP proxy information" timeout 7m; 
+	wait "HTTP proxy information" timeout 7m;
 	if (DEFINED HTTP_PROXY) {
 		type "${HTTP_PROXY}"
 	}

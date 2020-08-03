@@ -1,0 +1,12 @@
+
+include "common.testo"
+
+[no_snapshots: true]
+test unplug_plug_nic {
+	my_ubuntu_server {
+		unplug nic nat
+		plug nic nat
+		start
+		abort "stop here"
+	}
+}

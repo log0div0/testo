@@ -56,6 +56,23 @@ test centos_backend_qemu_stop_offline_machine: centos_prepare_testo {
 }
 
 [no_snapshots: true]
+test centos_backend_qemu_unplug_plug_nic: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_nic.testo" "/opt/scripts/action_nic.testo"
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/action_nic.testo --stop_on_fail --test_spec unplug_plug_nic | grep "stop here"
+		"""
+
+		wait "my_ubuntu_server" && "Running"
+		mouse dclick "my_ubuntu_server"
+		wait "Language" && "English"
+	}
+}
+
+
+[no_snapshots: true]
 test centos_backend_qemu_wait: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
