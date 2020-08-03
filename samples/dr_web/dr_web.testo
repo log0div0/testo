@@ -6,6 +6,7 @@ flash dr_web_flash {
 	folder: "${DR_WEB_DIR}"
 }
 
+
 macro try_login() {
 	for (i IN RANGE 30) {
 		mouse click
@@ -57,7 +58,12 @@ macro open_app(app) {
 	press Enter
 }
 
-test dr_web_prepare: dr_web_install {
+flash access_denied {
+	fs: "ntfs"
+	size: 16Mb
+}
+
+test dr_web_flash_drive_restriction: dr_web_install {
 	win10 {
 		open_app("Security Center")
 		wait "Computer is protected"
@@ -65,16 +71,7 @@ test dr_web_prepare: dr_web_install {
 		wait "Do you want to allow"
 		mouse click "Yes".from_bottom(0)
 		wait "Computer is protected"
-	}
-}
 
-flash access_denied {
-	fs: "ntfs"
-	size: 16Mb
-}
-
-test dr_web_flash_drive_restriction: dr_web_prepare {
-	win10 {
 		plug flash access_denied
 		wait "USB Drive (E:)"
 		mouse rclick "This folder is empty"
@@ -114,3 +111,77 @@ test dr_web_flash_drive_restriction: dr_web_prepare {
 		unplug flash access_denied
 	}
 }
+
+test win10_enable_internet: dr_web_install {
+	win10 {
+		shutdown
+		plug nic nat
+		start
+		try_login()
+		type "1111"; press Enter
+		wait "Networks"
+		mouse click "No".from_right(0)
+		wait !"Networks"
+		sleep 2s
+	}
+}
+
+
+test dr_web_network_restriction: win10_enable_internet {
+	win10 {
+		open_app("Security Center")
+		wait "Computer is protected"
+		mouse click "Click to make changes"
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "Computer is protected"
+
+		mouse dclick "Edge"
+		mouse click "www.microsoft.com"; sleep 1s
+		press LeftCtrl + A, Backspace; type "www.yandex.ru"; press Enter
+		wait "Сейчас в СМИ"
+		press LeftAlt + F4;
+		wait "Do you want to close all tabs?"; mouse click "Always close all tabs"
+		mouse click "Close all".from_bottom(0)
+
+		wait "Computer is protected"
+		mouse click "Devices and Personal Data"
+		mouse click "Configure device access rules"
+		mouse click "Block data transfer over network"
+
+		mouse dclick "Edge"
+		mouse click "Search or enter web address"; sleep 6s;
+		type "www.yandex.ru"; press Enter
+		wait "can't reach this page"; press LeftAlt + F4;
+
+		mouse click "Block data transfer over network"
+		mouse dclick "Edge"
+		mouse click "Search or enter web address"; sleep 6s
+		type "www.yandex.ru"; press Enter
+		wait "Сейчас в СМИ"
+	}
+}
+
+test win10_install_ga: dr_web_install {
+	win10 {
+		unplug dvd
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		sleep 5s
+		mouse click "CDROM"
+		mouse click "Run autorun"
+		wait "Вас приветствует мастер установки"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Выбор папки для установки"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Подтверждение установки"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "Would you like to install"
+		mouse click "Install".from_right(1)
+		wait "Установка завершена"
+		mouse click "Закрыть".from_bottom(0);
+		wait !"Установка завершена"
+	}
+}
+

@@ -1,4 +1,8 @@
 
+network internet {
+	mode: "nat"
+}
+
 machine win10 {
 	cpus: 2
 	ram: 2Gb
@@ -6,10 +10,16 @@ machine win10 {
 	disk main: {
 		size: 20Gb
 	}
+
+	nic nat: {
+		attached_to: "internet"
+		adapter_type: "e1000"
+	}
 }
 
 test win10_installation {
 	win10 {
+		unplug nic nat
 		start
 
 		# Экран выбора языка
