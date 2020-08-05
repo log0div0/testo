@@ -1,11 +1,4 @@
-
-network internet {
-	mode: "nat"
-}
-
-network net1 {
-	mode: "internal"
-}
+include "common.testo"
 
 machine win_server {
 	cpus: 2
@@ -13,10 +6,6 @@ machine win_server {
 	iso: "${ISO_DIR}/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
 	disk main: {
 		size: 30Gb
-	}
-
-	nic nat: {
-		attached_to: "internet"
 	}
 
 	nic LAN: {
@@ -43,13 +32,17 @@ test win_server_os_installation {
 		mouse click "Next".from_bottom(0)
 		wait "Administrator" timeout 20m
 
-		type "${win_password}"; press Tab; type "${win_password}"
+		sleep 3s
+		type "${win_password}"
+		press Tab
+		sleep 3s
+		type "${win_password}"
 		mouse click "Finish"
 		wait "Press Ctrl+Alt+Delete to unlock"
 		press LeftCtrl + LeftAlt + Delete
 		wait "Administrator"
 		type "${win_password}"; press Enter
-		wait "Dashboard" timeout 2m
+		wait "Try managing servers" timeout 2m
 	}
 }
 
@@ -61,7 +54,7 @@ macro run_command(command) {
 
 test win_server_os_prepare: win_server_os_installation {
 	win_server {
-		mouse dclick "Don't show this message again"
+		mouse dclick "show this message again"
 		press LeftAlt + F4
 		run_command("devmgmt.msc")
 		wait "Device Manager"
@@ -90,13 +83,14 @@ test win_server_os_prepare: win_server_os_installation {
 		mouse click "Network and Internet"
 		mouse click "Network and Sharing Center"
 		mouse click "Change adapter settings"
-		wait "Ethernet 2"
-		mouse rclick "Ethernet 2"
+		wait "Ethernet"
+		mouse rclick "Ethernet"
 		mouse click "Properties"
 		mouse click "TCP/IPv4"
 		mouse click "Properties".from_bottom(0)
 		mouse click "Use the following IP address"
 		mouse click "IP address".from_bottom(0).right_center().move_right(150)
+		sleep 1s
 		type "${win_LAN_ip}"; press Tab, Enter
 		mouse click "Close".from_bottom(0)
 		wait !"Properties"
@@ -115,12 +109,21 @@ test win_server_configure_ad: win_server_os_prepare {
 		wait "Select installation type"; mouse click "Next".from_bottom(0).center_bottom()
 		wait "Select destination server"; mouse click "Next".from_bottom(0).center_bottom()
 
-		wait "Select server roles"; mouse dclick "Active Directory Domain Services"
+		wait "Select server roles";
+		mouse dclick "Active Directory Domain Services".left_center().move_left(20)
+		mouse click "Add Features"
+		mouse click "DHCP Server".left_center().move_left(20)
+		mouse click "Add Features"
+		mouse click "DNS Server".left_center().move_left(20)
 		mouse click "Add Features"
 		mouse click "Next".from_bottom(0).center_bottom()
 		wait "Select features"
 		mouse click "Next".from_bottom(0).center_bottom()
 		wait "Active Directory Domain Services"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Dynamic Host Configuration Protocol"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Domain Name System"
 		mouse click "Next".from_bottom(0).center_bottom()
 		wait "Confirm installation selections"
 		mouse click "Install".from_bottom(0)
@@ -136,7 +139,7 @@ test win_server_configure_deployment: win_server_configure_ad {
 		mouse move 0 0
 		mouse click "Add a new forest"
 		mouse click "Root domain name".right_center().move_right(200)
-		type "testo.ad.example"
+		type "example.testo"
 		mouse click "Next".from_bottom(0).center_bottom()
 		wait "Select functional level"
 		sleep 7s
@@ -145,7 +148,7 @@ test win_server_configure_deployment: win_server_configure_ad {
 		mouse click "Next".from_bottom(0).center_bottom()
 		wait "DNS delegation"
 		mouse click "Next".from_bottom(0).center_bottom()
-		wait "NetBIOS name" && "TESTO"
+		wait "NetBIOS name" && "EXAMPLE"
 		mouse click "Next".from_bottom(0).center_bottom()
 		wait "Specify the location"
 		mouse click "Next".from_bottom(0).center_bottom()
@@ -165,8 +168,8 @@ test win_server_add_user: win_server_configure_deployment {
 	win_server {
 		mouse click "Tools".from_right(0)
 		mouse click "Active Directory Users and Computers"
-		wait "testo.ad.example"
-		mouse click "testo.ad.example".from_left(0)
+		wait "example.testo"
+		mouse click "example.testo".from_left(0)
 		sleep 2s
 		mouse dclick
 		sleep 200ms
@@ -186,6 +189,40 @@ test win_server_add_user: win_server_configure_deployment {
 		mouse click "Finish".from_bottom(0)
 		sleep 1s
 		press LeftAlt + F4
-		wait !"testo.ad.example"
+		wait !"example.testo"
+	}
+}
+
+test win_configure_dhcp: win_server_add_user {
+	win_server {
+		mouse click "Manage".from_right(0).left_center().move_left(20)
+		mouse click "DHCP configuration"
+		mouse click "Next >"
+		wait "Specify the credentials"
+		mouse click "Commit".center_bottom()
+		mouse click "Close"
+		mouse click "Tools".from_right(0)
+		mouse click "DHCP".from_right(0)
+		mouse dclick "example.testo"
+		mouse dclick "IPv4".from_right(0)
+		mouse rclick "IPv4".from_left(0)
+		mouse click "New Scope"
+		wait "Welcome to the New Scope"
+		mouse click "Next >".center_bottom()
+		wait "You have to provide"
+		type "SCOPE1"
+		mouse click "Next >".center_bottom()
+		wait "You define the scope"
+		type "192.168.1.2"; press Tab
+		type "192.168.1.254"; press Enter
+		wait "Add Exclusions"; press Enter
+		wait "Lease Duration"; press Enter
+		wait "DHCP Options"; press Enter
+		wait "Default Gateway"; press Enter
+		wait "Domain Name"; press Enter
+		wait "WINS Servers"; press Enter
+		wait "Activate Scope"; press Enter
+		wait "You have successfully"; press Enter
+		wait !"You have successfully"
 	}
 }

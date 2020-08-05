@@ -1,0 +1,8 @@
+
+network internet {
+	mode: "nat"
+}
+
+network net1 {
+	mode: "internal"
+}
