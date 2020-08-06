@@ -10,9 +10,12 @@ struct File {
 	File(const File& other) = delete;
 	File& operator=(const File& other) = delete;
 
-	File(guestfs_h *handle, const fs::path& path): path(path), handle(handle) {
+	File(guestfs_h *handle_, const fs::path& path_): path(path_), handle(handle_) {
 		if (!handle) {
 			throw std::runtime_error(__PRETTY_FUNCTION__);
+		}
+		if (guestfs_touch(handle, path.generic_string().c_str()) < 0) {
+			throw std::runtime_error(guestfs_last_error(handle));
 		}
 	}
 
