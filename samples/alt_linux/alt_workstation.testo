@@ -1,7 +1,4 @@
-
-network internet {
-	mode: "nat"
-}
+include "common.testo"
 
 machine alt_workstation {
 	cpus: 2
@@ -11,8 +8,8 @@ machine alt_workstation {
 		size: 20Gb
 	}
 
-	nic nat: {
-		attached_to: "internet"
+	nic LAN: {
+		attached_to: "net1"
 	}
 }
 
@@ -67,30 +64,4 @@ macro enter_sudo(password) {
 	type "sudo su"; press Enter
 	wait "[sudo] password"; type "${password}"; press Enter
 	wait ""
-}
-
-test alt_install_guest_additions: alt_install_os {
-	alt_workstation {
-		type "${password}"; mouse click "Войти"
-		wait "Компьютер";
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-
-		mouse dclick "Компьютер"
-		mouse dclick "DVD-ROM"
-		mouse dclick "rpm"
-		mouse click "Установить"
-		wait "Введите пароль"; type "${password}"; press Enter
-		wait "Установка завершена успешно"; mouse click "Выход"
-		sleep 300ms
-		press LeftAlt + F4
-		unplug dvd
-
-		exec bash "echo hello from alt linux workstation!"
-	}
-}
-
-test alt_update_packages: alt_install_guest_additions {
-	alt_workstation {
-		exec bash "apt-get update"
-	}
 }

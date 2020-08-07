@@ -1,0 +1,228 @@
+include "common.testo"
+
+machine win_server {
+	cpus: 2
+	ram: 4096Mb
+	iso: "${ISO_DIR}/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+	disk main: {
+		size: 30Gb
+	}
+
+	nic LAN: {
+		attached_to: "net1"
+	}
+}
+
+param win_password "ThisIsStrongPassword1!"
+param win_LAN_ip "192.168.1.1"
+
+test win_server_os_installation {
+	win_server {
+		start
+		wait "Windows Setup" timeout 5m
+		mouse click "Next".from_bottom(0)
+		mouse click "Install now"
+
+		wait "Operating system"
+		mouse click "Standard Evaluation (Desktop"
+		mouse click "Next".from_bottom(0)
+		mouse click "I accept the license terms"
+		mouse click "Next".from_bottom(0)
+		mouse click "Install Windows only"
+		mouse click "Next".from_bottom(0)
+		wait "Administrator" timeout 20m
+
+		sleep 3s
+		type "${win_password}"
+		press Tab
+		sleep 3s
+		type "${win_password}"
+		mouse click "Finish"
+		wait "Press Ctrl+Alt+Delete to unlock"
+		press LeftCtrl + LeftAlt + Delete
+		wait "Administrator"
+		type "${win_password}"; press Enter
+		wait "Try managing servers" timeout 2m
+	}
+}
+
+macro run_command(command) {
+	press LeftMeta + R;
+	wait "Type the name of a program";
+	type "${command}"; press Enter
+}
+
+test win_server_os_prepare: win_server_os_installation {
+	win_server {
+		mouse dclick "show this message again"
+		press LeftAlt + F4
+		run_command("devmgmt.msc")
+		wait "Device Manager"
+
+		mouse dclick "Human Interface Devices"
+		mouse move 0 0
+		mouse dclick "USB Input Device"
+
+		# Переходим на вкладку "Power Management"
+		# и снимаем галочку с пункта "Allow the computer to turn off ..."
+		mouse click "Power Management"
+		mouse click "Allow the computer"
+		sleep 5s
+
+		# Закрываем окно свойств устройства "USB Input Device"
+		press Enter
+		wait !"Power Management"
+
+		# Закрываем окно "Device Manager"
+		press LeftAlt+F4
+		wait !"Device Manager"
+
+		mouse move 0 0
+		run_command("control")
+		wait "Control Panel"
+		mouse click "Network and Internet"
+		mouse click "Network and Sharing Center"
+		mouse click "Change adapter settings"
+		wait "Ethernet"
+		mouse rclick "Ethernet"
+		mouse click "Properties"
+		mouse click "TCP/IPv4"
+		mouse click "Properties".from_bottom(0)
+		mouse click "Use the following IP address"
+		mouse click "IP address".from_bottom(0).right_center().move_right(150)
+		sleep 1s
+		type "${win_LAN_ip}"; press Tab, Enter
+		mouse click "Close".from_bottom(0)
+		wait !"Properties"
+		press LeftAlt + F4
+		wait !"Network Connections"
+		press LeftAlt + F4
+		wait !"Network and Sharing Center"
+	}
+}
+
+test win_server_configure_ad: win_server_os_prepare {
+	win_server {
+		mouse click "Manage".from_right(0)
+		mouse click "Add Roles and Features"
+		wait "Before you begin"; mouse click "Next".from_bottom(0).center_bottom()
+		wait "Select installation type"; mouse click "Next".from_bottom(0).center_bottom()
+		wait "Select destination server"; mouse click "Next".from_bottom(0).center_bottom()
+
+		wait "Select server roles";
+		mouse dclick "Active Directory Domain Services".left_center().move_left(20)
+		mouse click "Add Features"
+		mouse click "DHCP Server".left_center().move_left(20)
+		mouse click "Add Features"
+		mouse click "DNS Server".left_center().move_left(20)
+		mouse click "Add Features"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Select features"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Active Directory Domain Services"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Dynamic Host Configuration Protocol"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Domain Name System"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Confirm installation selections"
+		mouse click "Install".from_bottom(0)
+
+		wait "Promote this server to a domain controller" timeout 5m
+	}
+}
+
+test win_server_configure_deployment: win_server_configure_ad {
+	win_server {
+		mouse click "Promote this server to a domain controller"
+		wait "Deployment Configuration"
+		mouse move 0 0
+		mouse click "Add a new forest"
+		mouse click "Root domain name".right_center().move_right(200)
+		type "example.testo"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Select functional level"
+		sleep 7s
+		mouse click "Password".from_bottom(1).right_center().move_right(200);
+		type "${win_password}"; press Tab; type "${win_password}"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "DNS delegation"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "NetBIOS name" && "EXAMPLE"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Specify the location"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Review your selections"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "All prerequisite checks passed"
+		mouse click "Install".from_bottom(0).center_bottom()
+		wait "Press Ctrl+Alt+Delete to unlock" timeout 30m
+		press LeftCtrl + LeftAlt + Delete
+		wait "Administrator"
+		type "${win_password}"; press Enter
+		wait "Dashboard" timeout 2m
+	}
+}
+
+test win_server_add_user: win_server_configure_deployment {
+	win_server {
+		mouse click "Tools".from_right(0)
+		mouse click "Active Directory Users and Computers"
+		wait "example.testo"
+		mouse click "example.testo".from_left(0)
+		sleep 2s
+		mouse dclick
+		sleep 200ms
+		mouse rclick "Users".from_left(0)
+		mouse move "New".from_left(0)
+		sleep 2s
+		mouse click "User".from_bottom(0)
+		wait "New Object - User"
+		mouse click "First name".right_center().move_right(100); type "Alt"
+		mouse click "Last name".right_center().move_right(100); type "Linux"
+		mouse click "User logon name".from_bottom(1).center_bottom().move_down(10); type "AltLinux"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Password"; type "${win_password}"; press Tab; type "${win_password}"
+		mouse click "User must change"
+		mouse click "Password never expires"
+		mouse click "Next".from_bottom(0).center_bottom()
+		mouse click "Finish".from_bottom(0)
+		sleep 1s
+		press LeftAlt + F4
+		wait !"example.testo"
+	}
+}
+
+test win_configure_dhcp: win_server_add_user {
+	win_server {
+		mouse click "Manage".from_right(0).left_center().move_left(20)
+		mouse click "DHCP configuration"
+		mouse click "Next >"
+		wait "Specify the credentials"
+		mouse click "Commit".center_bottom()
+		mouse click "Close"
+		mouse click "Tools".from_right(0)
+		mouse click "DHCP".from_right(0)
+		mouse dclick "example.testo"
+		mouse dclick "IPv4".from_right(0)
+		mouse rclick "IPv4".from_left(0)
+		mouse click "New Scope"
+		wait "Welcome to the New Scope"
+		mouse click "Next >".center_bottom()
+		wait "You have to provide"
+		type "SCOPE1"
+		mouse click "Next >".center_bottom()
+		wait "You define the scope"
+		type "192.168.1.2"; press Tab
+		type "192.168.1.254"; press Enter
+		wait "Add Exclusions"; press Enter
+		wait "Lease Duration"; press Enter
+		wait "DHCP Options"; press Enter
+		wait "Default Gateway"; press Enter
+		wait "Domain Name"; press Enter
+		wait "WINS Servers"; press Enter
+		wait "Activate Scope"; press Enter
+		wait "You have successfully"; press Enter
+		wait !"You have successfully"
+	}
+}

@@ -1,0 +1,54 @@
+
+include "alt_workstation.testo"
+include "win_server.testo"
+
+test connect_to_domain: alt_install_os, win_configure_dhcp {
+	alt_workstation {
+		type "${password}"; mouse click "Войти"
+		wait "Компьютер"
+		mouse click "Меню"
+		mouse click "Центр управления сис"
+		wait "Введите пароль"
+		type "${password}"
+		press Enter
+		mouse dclick "Центр управления системой"
+		mouse click "Аутентификация"
+		mouse click "Домен Active Directory"
+		mouse click "my-alt-workstation".from_top(0)
+		press LeftCtrl+A, Backspace
+		type "AltPC"
+		mouse click "Применить"
+		wait "Введите пароль"
+		press Tab*2
+		type "${win_password}"
+		press Tab*2; press Enter
+		wait "Добро пожаловать"
+		press Enter
+		wait !"Добро пожаловать"
+		mouse click "Меню"
+		mouse click "Выйти"
+		mouse click "Перезагрузить"
+		wait "Добро пожаловать" timeout 10m
+	}
+}
+
+test active_directory_login: connect_to_domain {
+	alt_workstation {
+		type "AltLinux"
+		mouse click "Войти"
+		wait "Пароль"
+		type "${win_password}";
+		mouse click "Войти"
+		wait "Компьютер"
+	}
+}
+
+test active_directory_login_bug: connect_to_domain {
+	alt_workstation {
+		type "WrongLogin"
+		mouse click "Войти"
+		if (check "Неверный пароль" timeout 3s) {
+			abort "Так быть не должно!"
+		}
+	}
+}
