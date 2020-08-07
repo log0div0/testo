@@ -305,3 +305,97 @@ test dr_web_restrict_program: win10_install_freecommander {
 		wait !"my_file"
 	}
 }
+
+test win10_add_user: win10_install_ga {
+	win10 {
+		open_app("Computer Management")
+		mouse click "Local Users"
+		wait "Users" && "Groups"
+		mouse rclick "Users".from_right(1)
+		mouse click "New User"
+		wait "User name"
+
+		# Создадим нового пользователя
+		type "MySuperUser"
+		mouse click "Create"
+
+		# Закроем окно добавления нового опльзователя
+		mouse click "Close"
+		wait !"User name"
+
+		# Закроем окно "Computer Management"
+		press LeftAlt+F4
+		wait !"Computer Management"
+
+		press LeftCtrl + LeftAlt + Delete
+		mouse click "Switch user"
+
+		mouse click "MySuperUser"
+		mouse click "Sign in".center_bottom()
+		wait "The user's password must be changed"
+		mouse click "OK"
+		wait "New password"
+		type "1111"; press Tab; type "1111"; press Enter
+		wait "Your password has been changed"; mouse click "OK"
+		wait "Microsoft puts you in control" timeout 5m
+		mouse click "Accept".from_bottom(0).center_bottom()
+		wait "Recycle Bin"
+	}
+}
+
+test dr_web_parental_control_file: win10_add_user {
+	win10 {
+		exec cmd """
+			mkdir C:\\shared_folder
+			echo Hello world! > C:\\shared_folder\\my_file.txt
+		"""
+
+		open_app("File Explorer")
+		wait "Frequent folders"
+
+		mouse click "This PC".from_left(0)
+		mouse dclick "Local Disk (C:)"
+		mouse dclick "shared_folder"
+		mouse rclick "my_file"
+		mouse click "Open".from_top(0)
+		wait "Hello world!"; press LeftAlt + F4
+		wait !"Hello world!"; press Delete;
+		wait !"my_file"
+
+		exec cmd """
+			echo Hello world! > C:\\shared_folder\\my_file.txt
+		"""
+
+		mouse move 0 0
+		wait "my_file"
+		open_app("Security Center")
+		wait "Computer is protected"
+		mouse click "Click to make changes"
+		wait "Do you want to allow"
+		type "1111"
+		mouse click "Yes".from_bottom(0)
+		wait "Computer is protected"
+
+		mouse click "Parental Control"
+		mouse click "MySuperUser"
+
+		mouse click "Files and Folders"
+
+		mouse click "Object".from_bottom(0).left_top().move_up(30)
+		wait "Open file or folder"
+		mouse dclick "shared_folder".from_right(0)
+		mouse click "my_file.txt"; press Enter
+		wait !"Open file or folder"
+		wait "C:\\shared_folder\\my_file.txt" && "Read-only"
+		press LeftAlt + F4
+		wait !"Parental Control"
+
+		mouse dclick "my_file"
+		wait "Hello world!"; press LeftAlt + F4
+		wait !"Hello world!"; press Delete;
+
+		wait "File Access Denied"; mouse click "Continue"
+		wait "Do you want to allow"; type "1111"; mouse click "Yes"
+		wait ("This folder is empty" || "Working on it") && !"my_file"
+	}
+}
