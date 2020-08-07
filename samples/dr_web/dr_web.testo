@@ -6,6 +6,7 @@ flash dr_web_flash {
 	folder: "${DR_WEB_DIR}"
 }
 
+
 macro try_login() {
 	for (i IN RANGE 30) {
 		mouse click
@@ -21,6 +22,7 @@ test dr_web_install: win10_prepare {
 		plug flash dr_web_flash
 		sleep 5s
 		mouse click "USB Drive"
+		sleep 3s
 		mouse click "Open folder"
 		mouse click "drweb"
 		press LeftCtrl + C
@@ -42,9 +44,358 @@ test dr_web_install: win10_prepare {
 		mouse click "Install"
 		wait "Installation complete" timeout 10m
 		mouse click "Restart now"
-		wait "Please wait" timeout 3m
 		try_login()
 		type "1111"; press Enter
 		wait "Type here to search" && "Dr.Web" && "Scanner" timeout 3m
+	}
+}
+
+macro open_app(app) {
+	mouse click "Type here to search"
+	wait "Top apps"
+	type "${app}"
+	wait "Open"
+	press Enter
+}
+
+flash access_denied {
+	fs: "ntfs"
+	size: 16Mb
+}
+
+
+test dr_web_flash_drive_restriction: dr_web_install {
+	win10 {
+		open_app("Security Center")
+		wait "Computer is protected"
+		mouse click "Click to make changes"
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "Computer is protected"
+
+		plug flash access_denied
+		wait "USB Drive (E:)"
+		mouse rclick "This folder is empty"
+		mouse move "New"; sleep 3s
+		mouse click "Text Document".from_top(1)
+		wait "New Text Document";
+		press Backspace; type "my_file"; press Enter
+		mouse rclick "USB Drive (E:)".from_left(0); mouse click "Eject"
+		wait "Safe To Remove Hardware"
+		unplug flash access_denied
+
+		mouse click "Devices and Personal Data"
+		mouse click "Configure device access rules"
+		mouse click "Block removable media"
+		sleep 2s
+		plug flash access_denied
+
+		open_app("File Explorer")
+		wait "Frequent folders"
+		mouse click "USB Drive (E:)".from_left(0)
+		wait "Access is denied"
+		mouse click "OK".from_right(0)
+
+		mouse rclick "USB Drive (E:)".from_left(0); mouse click "Eject"
+		wait "Safe To Remove Hardware"
+		unplug flash access_denied
+		press LeftAlt + F4
+		mouse click "Block removable media"
+		plug flash access_denied
+		wait "USB Drive (E:)" && "my_file"
+		mouse rclick "my_file"
+		mouse click "Delete"
+		wait "Are you sure"; mouse click "Yes".from_right(0)
+		mouse rclick "This folder is empty"
+		mouse rclick "USB Drive (E:)".from_left(0); mouse click "Eject"
+		wait "Safe To Remove Hardware"
+		unplug flash access_denied
+	}
+}
+
+test win10_enable_internet: dr_web_install {
+	win10 {
+		shutdown
+		plug nic nat
+		start
+		try_login()
+		type "1111"; press Enter
+		wait "Networks"
+		mouse click "No".from_right(0)
+		wait !"Networks"
+		sleep 2s
+	}
+}
+
+
+test dr_web_network_restriction: win10_enable_internet {
+	win10 {
+		open_app("Security Center")
+		wait "Computer is protected"
+		mouse click "Click to make changes"
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "Computer is protected"
+
+		mouse dclick "Edge"
+		mouse click "www.microsoft.com"; sleep 1s
+		press LeftCtrl + A, Backspace; type "www.yandex.ru"; press Enter
+		wait "Сейчас в СМИ"
+		press LeftAlt + F4;
+		wait "Do you want to close all tabs?"; mouse click "Always close all tabs"
+		mouse click "Close all".from_bottom(0)
+
+		wait "Computer is protected"
+		mouse click "Devices and Personal Data"
+		mouse click "Configure device access rules"
+		mouse click "Block data transfer over network"
+
+		mouse dclick "Edge"
+		sleep 6s;
+		if (check "Search or enter web address" timeout 5s) {
+			mouse click "Search or enter web address";
+		} else if (check "www.msn.com" timeout 5s) {
+			mouse click "www.msn.com";
+		}
+		press LeftCtrl + A, Backspace;
+		type "www.yandex.ru"; press Enter
+		wait "can't reach this page"; press LeftAlt + F4;
+
+		mouse click "Block data transfer over network"
+		mouse dclick "Edge"
+		sleep 6s;
+		if (check "Search or enter web address" timeout 5s) {
+			mouse click "Search or enter web address";
+		} else if (check "www.msn.com" timeout 5s) {
+			mouse click "www.msn.com";
+		}
+		type "www.yandex.ru"; press Enter
+		wait "Сейчас в СМИ"
+	}
+}
+
+test win10_install_ga: dr_web_install {
+	win10 {
+		unplug dvd
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		open_app("File Explorer")
+		wait "Frequent folders"
+		mouse click "This PC".from_left(0)
+		mouse dclick "CD Drive"
+		mouse dclick "autorun".from_top(1)
+		wait "Вас приветствует мастер установки"
+		press Enter
+		wait "Выбор папки для установки"
+		press Enter
+		wait "Подтверждение установки"
+		press Enter
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "Would you like to install"
+		mouse click "Install".from_left(0)
+		wait "Установка завершена"
+		mouse click "Закрыть".from_bottom(0);
+		wait !"Установка завершена"
+		press LeftAlt + F4; wait !"CD Drive"
+	}
+}
+
+test win10_install_freecommander: win10_install_ga {
+	win10 {
+		copyto "${FREE_COMMANDER_DIR}/FreeCommanderXE-32-public_setup.zip" "C:\\Users\\testo\\Desktop\\FreeCommander.zip"
+		mouse dclick "FreeComm"
+		wait "Extract";
+		mouse dclick "FreeCommanderXE"
+		wait "Do you wish to continue?"
+		mouse click "Yes"
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "English"; mouse click "OK"
+		wait "License Agreement"
+		mouse click "I accept the agreement"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Destination Location"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Would you like the folder to be created?"
+		mouse click "Yes"
+		wait "Select Start Menu Folder"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Select Additional Tasks"
+		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Ready to Install"
+		mouse click "Install".from_bottom(0).center_bottom()
+		wait "Completing";
+		mouse click "View ReadMe"
+		mouse click "Start FreeCommander"
+		mouse click "Finish".from_bottom(0)
+		wait !"Completing" && "Extract";
+		press LeftAlt + F4; wait !"Extract"
+		mouse click "FreeComm".from_top(0); sleep 500ms; press Delete
+		mouse move 0 0
+		wait js "find_text().match('FreeComm').size() == 1"
+	}
+}
+
+test dr_web_restrict_program: win10_install_freecommander {
+	win10 {
+		mouse rclick "Recycle Bin".move_right(100)
+		mouse move "New"
+		mouse click "Folder".from_top(0)
+		type "Protected"; press Enter
+		mouse dclick "Protected"
+		mouse rclick "This folder is empty"
+		mouse move "New"; sleep 3s
+		mouse click "Text Document".from_top(1)
+		wait "New Text Document";
+		press Backspace; type "my_file"; press Enter
+
+		open_app("Security Center")
+		wait "Computer is protected"
+		mouse click "Click to make changes"
+		wait "Do you want to allow"
+		mouse click "Yes".from_bottom(0)
+		wait "Computer is protected"
+
+		mouse click "Devices and Personal Data"
+		mouse move 0 0
+		mouse click "Data Loss Prevention"
+
+		mouse click "Protected folder".left_top().move_up(20)
+		wait "Add folder to protect"
+
+		mouse click "Browse"
+		wait "Open folder"
+		mouse dclick "Users"
+		mouse dclick "testo"
+		mouse dclick "Desktop"
+		mouse click "Protected".from_right(0)
+		type "C:\\Users\\testo\\Desktop\\Protected"
+		mouse click "OK".from_right(0)
+		wait !"Open folder"
+
+		mouse click "Application".from_bottom(0).left_top().move_up(20)
+		wait "Open file"
+		mouse click "C:\\".from_top(0)
+		press LeftCtrl + A; press Backspace;
+		type "C:\\Program Files (x86)\\FreeCommander XE\\FreeCommander.exe";
+		press Enter
+		wait !"Open file"
+
+		mouse click "OK".from_bottom(0)
+
+		wait "Protected folder" && "C:\\Users\\testo\\Desktop\\Protected"
+		press LeftAlt + F4
+		wait !"Protected folder"
+
+		mouse click "my_file"; press Delete
+		wait "administrator permission"
+		mouse click "Continue"
+
+		wait "Modification of the folder contents is blocked"
+		mouse click "Cancel"
+
+		wait !"Modification of the folder contents is blocked"
+
+		mouse dclick "FreeComm"
+		wait "Desktop - FreeCommander XE"
+
+		mouse dclick "Protected".from_left(0)
+		mouse click "my_file.txt"
+		press Delete; mouse move 0 0
+		wait !"my_file"
+	}
+}
+
+test win10_add_user: win10_install_ga {
+	win10 {
+		open_app("Computer Management")
+		mouse click "Local Users"
+		wait "Users" && "Groups"
+		mouse rclick "Users".from_right(1)
+		mouse click "New User"
+		wait "User name"
+
+		# Создадим нового пользователя
+		type "MySuperUser"
+		mouse click "Create"
+
+		# Закроем окно добавления нового опльзователя
+		mouse click "Close"
+		wait !"User name"
+
+		# Закроем окно "Computer Management"
+		press LeftAlt+F4
+		wait !"Computer Management"
+
+		press LeftCtrl + LeftAlt + Delete
+		mouse click "Switch user"
+
+		mouse click "MySuperUser"
+		mouse click "Sign in".center_bottom()
+		wait "The user's password must be changed"
+		mouse click "OK"
+		wait "New password"
+		type "1111"; press Tab; type "1111"; press Enter
+		wait "Your password has been changed"; mouse click "OK"
+		wait "Microsoft puts you in control" timeout 5m
+		mouse click "Accept".from_bottom(0).center_bottom()
+		wait "Recycle Bin"
+	}
+}
+
+test dr_web_parental_control_file: win10_add_user {
+	win10 {
+		exec cmd """
+			mkdir C:\\shared_folder
+			echo Hello world! > C:\\shared_folder\\my_file.txt
+		"""
+
+		open_app("File Explorer")
+		wait "Frequent folders"
+
+		mouse click "This PC".from_left(0)
+		mouse dclick "Local Disk (C:)"
+		mouse dclick "shared_folder"
+		mouse rclick "my_file"
+		mouse click "Open".from_top(0)
+		wait "Hello world!"; press LeftAlt + F4
+		wait !"Hello world!"; press Delete;
+		wait !"my_file"
+
+		exec cmd """
+			echo Hello world! > C:\\shared_folder\\my_file.txt
+		"""
+
+		mouse move 0 0
+		wait "my_file"
+		open_app("Security Center")
+		wait "Computer is protected"
+		mouse click "Click to make changes"
+		wait "Do you want to allow"
+		type "1111"
+		mouse click "Yes".from_bottom(0)
+		wait "Computer is protected"
+
+		mouse click "Parental Control"
+		mouse click "MySuperUser"
+
+		mouse click "Files and Folders"
+
+		mouse click "Object".from_bottom(0).left_top().move_up(30)
+		wait "Open file or folder"
+		mouse dclick "shared_folder".from_right(0)
+		mouse click "my_file.txt"; press Enter
+		wait !"Open file or folder"
+		wait "C:\\shared_folder\\my_file.txt" && "Read-only"
+		press LeftAlt + F4
+		wait !"Parental Control"
+
+		mouse dclick "my_file"
+		wait "Hello world!"; press LeftAlt + F4
+		wait !"Hello world!"; press Delete;
+
+		wait "File Access Denied"; mouse click "Continue"
+		wait "Do you want to allow"; type "1111"; mouse click "Yes"
+		wait ("This folder is empty" || "Working on it") && !"my_file"
 	}
 }
