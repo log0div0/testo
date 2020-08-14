@@ -27,16 +27,16 @@ test win_install_guest_additions: win_start {
 		mouse click "CD Drive"
 		sleep 5s
 		mouse click "Run autorun"
-		wait "Вас приветствует мастер установки"; press Enter
-		wait "Установщик установит"; press Enter
-		wait "Подтверждение установки"; press Enter
+		wait "Testo Guest Additions"; press Enter
+		wait "Select Installation Folder"; press Enter
+		wait "Confirm Installation"; press Enter
 		wait "Do you want to allow"
 		press Left,Enter
 		wait "Would you like to install"
 		mouse click "Would you like to install"; sleep 5s # focus
 		press Left,Enter
-		wait "Установка завершена"; press Enter
-		wait !"Установка завершена"
+		wait "Installation Complete"; press Enter
+		wait !"Installation Complete"
 		exec cmd "echo hello world"
 		unplug dvd
 		sleep 5s
