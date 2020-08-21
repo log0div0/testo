@@ -1,6 +1,10 @@
 
 include "./common_ubuntu_server.testo"
 
+network int2 {
+	mode: "nat"
+}
+
 machine VM1 {
 	cpus: 1
 	ram: 1024Mb
@@ -8,14 +12,22 @@ machine VM1 {
 	disk main: {
 		size: 4Gb
 	}
+
+	nic internet: {
+		attached_to: "int2"
+		adapter_type: "e1000"
+	}
 }
 
 
 test ubuntu_installation {
 	VM1 {
-		install_ubuntu_server("VM1", "user", "1111")
+		start
+		unplug link internet
+		abort "stop here"
+		#install_ubuntu_server("VM1", "user", "1111")
 	}
-	
+
 }
 
 test install_guest_additions: ubuntu_installation {

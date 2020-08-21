@@ -1,0 +1,138 @@
+
+include "common.testo"
+
+machine debian {
+	cpus: 4
+	iso: "${ISO_DIR}/debian-9.12.0-amd64-xfce-CD-1.iso"
+	ram: 8Gb
+	disk main: {
+		size: 32Gb
+	}
+	nic nat: {
+		attached_to: "nat"
+	}
+}
+
+test debian_install_os {
+	debian {
+		start
+		wait "installer boot menu"; press Enter
+		wait "Select a language"; press Enter
+		wait "Select your location"; press Enter
+		wait "Configure the keyboard"; press Enter
+		wait "Please enter the hostname"
+		type "${host_name}"; press Enter
+		wait "The domain name is"; press Enter
+		wait "You need to set a password"
+		type "${password}"; press Tab*2
+		type "${password}"; press Tab*2
+		press Enter
+		wait "Please enter the real name of this user"
+		type "${login}"; press Enter
+		wait "Select a username"
+		type "${login}"; press Enter
+		wait "A good password"
+		type "${password}"; press Tab*2
+		type "${password}"; press Tab*2
+		press Enter
+		wait "If the desired time zone"; press Enter
+		wait "The installer can guide you"; press Enter
+		wait "Note that all data on the disk"; press Enter
+		wait "The disk can be partitioned"; press Enter
+		wait "Finish partitioning"; press Enter
+		wait "If you continue"; press Down, Enter
+		wait "A network mirror can be used" timeout 10m; press Enter
+		wait "The goal is to find"; press Enter
+		wait "Please select a Debian archive mirror"; press Enter
+		wait "If you need to use a HTTP proxy"; press Enter
+		wait "The system may anonymously" timeout 10m; press Enter
+		wait "choose to install one or more"
+		mouse click "Continue"
+		sleep 15m
+		mouse move 0 0
+		wait "It seems that this new installation" timeout 50m; press Enter
+		wait "You need to make the"; press Down, Enter
+		wait "Installation is complete"; unplug dvd; press Enter
+		wait "Log In"
+	}
+}
+
+test debian_install_guest_additions: debian_install_os {
+	debian {
+		type "root"; press Tab; sleep 1s
+		type "${password}"; press Enter
+		wait "Welcome to the first start"; mouse click "Use default config"
+
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
+
+		mouse rclick 200 200
+		mouse click "Open Terminal Here"
+		wait "root@${host_name}"
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only"; type "dpkg -i /media/testo-guest-additions.deb"; press Enter
+		wait "Processing triggers for systemd"
+		type "umount /media"; press Enter
+		sleep 5s; unplug dvd
+
+		exec bash "echo hello world"
+		type "exit"; press Enter; wait !"root@${host_name}"
+	}
+}
+
+test debian_prepare_1: debian_install_guest_additions {
+	debian {
+		mouse click "Applications"
+		mouse click "Settings"
+		mouse click "Display"
+		mouse click "800x600"
+		mouse click "1024x768"
+		mouse click "Apply"; sleep 3s
+		mouse click "Close"
+
+		mouse click "Applications"
+		mouse click "Settings"
+		mouse click "Power Manager"
+		wait "Xfce Power Manager"
+		mouse click "Display"
+		mouse click "Handle display power management"
+		mouse move "10 Minutes".from_top(0).center_top().move_up(5)
+		mouse hold lbtn
+		mouse move "Blank after"
+		mouse release
+		mouse click "Close"
+
+		mouse rclick 200 200
+		mouse click "Open Terminal Here"
+		wait "root@${host_name}"
+
+		exec bash """
+			sed -i '/cdrom/d' /etc/apt/sources.list
+			apt update
+			apt install -y libvirt0 libvirt-clients libvirt-daemon-system libguestfs0 qemu qemu-kvm ebtables dnsmasq-base virt-manager
+		""" timeout 30m
+	}
+}
+
+test debian_prepare_2: debian_prepare_1 {
+	debian {
+		plug flash iso; sleep 5s;
+		exec bash """
+			mount /dev/sdb1 /media
+			cp /media/ubuntu-16.04.6-server-amd64.iso /opt/
+			umount /media
+		"""
+		unplug flash iso
+		type "virt-manager"; press Enter
+		wait "Virtual Machine Manager"
+	}
+}
+
+test debian_prepare_testo: debian_prepare_2 {
+	debian {
+		copyto "${OUT_DIR}/testo-cpu.deb" "/home/${login}/testo-cpu.deb"
+		exec bash "dpkg -i /home/${login}/testo-cpu.deb"
+		type "virt-manager"; press Enter
+		wait "Virtual Machine Manager"
+	}
+}
+
