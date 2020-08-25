@@ -26,8 +26,9 @@ struct QemuVM: public VM {
 	void mouse_move_rel(const std::string& axis, int value) override;
 	void mouse_hold(const std::vector<MouseButton>& buttons) override;
 	void mouse_release(const std::vector<MouseButton>& buttons) override;
-	bool is_nic_plugged(const std::string& nic) const override;
-	void set_nic(const std::string& nic, bool is_enabled) override;
+	bool is_nic_plugged(const std::string& pci_addr) const override;
+	std::string attach_nic(const std::string& nic) override;
+	void detach_nic(const std::string& pci_addr) override;
 	bool is_link_plugged(const std::string& nic) const override;
 	void set_link(const std::string& nic, bool is_connected) override;
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
@@ -69,15 +70,14 @@ private:
 
 	bool is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic);
 
-	void attach_nic(const std::string& nic);
-	void detach_nic(const std::string& nic);
-
 	std::string get_flash_img();
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 
 	std::string preferable_video_model();
 	std::string mouse_button_to_str(MouseButton btn);
+
+	std::set<std::string> plugged_nics() const;
 
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, uint32_t> scancodes;

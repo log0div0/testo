@@ -1190,7 +1190,7 @@ void VisitorInterpreter::visit_plug_nic(const IR::Plug& plug) {
 		throw std::runtime_error(fmt::format("virtual machine is running, but must be stopped"));
 	}
 
-	if (vmc->vm()->is_nic_plugged(nic) == plug.is_on()) {
+	if (vmc->is_nic_plugged(nic) == plug.is_on()) {
 		if (plug.is_on()) {
 			throw std::runtime_error(fmt::format("specified nic {} is already plugged in this virtual machine", nic));
 		} else {
@@ -1198,7 +1198,11 @@ void VisitorInterpreter::visit_plug_nic(const IR::Plug& plug) {
 		}
 	}
 
-	vmc->vm()->set_nic(nic, plug.is_on());
+	if (plug.is_on()) {
+		vmc->plug_nic(nic);
+	} else {
+		vmc->unplug_nic(nic);
+	}
 }
 
 void VisitorInterpreter::visit_plug_link(const IR::Plug& plug) {
@@ -1214,7 +1218,7 @@ void VisitorInterpreter::visit_plug_link(const IR::Plug& plug) {
 		throw std::runtime_error(fmt::format("the nic for specified link {} is not present in this virtual machine", nic));
 	}
 
-	if (!vmc->vm()->is_nic_plugged(nic)) {
+	if (!vmc->is_nic_plugged(nic)) {
 		throw std::runtime_error(fmt::format("the nic for specified link {} is unplugged, you must to plug it first", nic));
 	}
 
@@ -1226,7 +1230,11 @@ void VisitorInterpreter::visit_plug_link(const IR::Plug& plug) {
 		}
 	}
 
-	vmc->vm()->set_link(nic, plug.is_on());
+	if (plug.is_on()) {
+		vmc->plug_link(nic);
+	} else {
+		vmc->unplug_link(nic);
+	}
 }
 
 void VisitorInterpreter::visit_plug_flash(const IR::Plug& plug) {

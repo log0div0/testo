@@ -3,6 +3,7 @@
 
 #include "Controller.hpp"
 #include "../backends/VM.hpp"
+#include <unordered_map>
 
 namespace IR {
 
@@ -23,6 +24,16 @@ struct Machine: Controller {
 	virtual void create() override;
 	virtual void undefine() override;
 
+	bool is_nic_plugged(const std::string& nic);
+
+	void plug_nic(const std::string& nic);
+	void unplug_nic(const std::string& nic);
+
+	bool is_link_plugged(const std::string& nic);
+
+	void plug_link(const std::string& nic);
+	void unplug_link(const std::string& nic);
+
 	void press(const std::vector<std::string>& buttons);
 	void hold(const std::vector<std::string>& buttons);
 	void release();
@@ -37,6 +48,8 @@ private:
 	virtual fs::path get_metadata_dir() const override;
 
 	mutable std::shared_ptr<::VM> _vm;
+
+	std::unordered_map<std::string, std::string> nic_pci_map;
 	MouseButton current_held_mouse_button = MouseButton::None;
 	std::set<std::string> current_held_keyboard_buttons;
 };

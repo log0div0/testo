@@ -6,6 +6,7 @@ test debian_backend_qemu_unplug_plug_nic: debian_prepare_testo {
 	debian {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_nic.testo" "/opt/scripts/action_nic.testo"
+		abort "stop here"
 		exec bash """
 			set +o pipefail
 			testo run /opt/scripts/action_nic.testo --stop_on_fail --test_spec unplug_plug_nic | grep "stop here"

@@ -231,10 +231,13 @@ void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-bool HyperVVM::is_nic_plugged(const std::string& nic) const {
+bool HyperVVM::is_nic_plugged(const std::string& pci_addr) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVVM::set_nic(const std::string& nic, bool is_enabled) {
+std::string HyperVVM::attach_nic(const std::string& nic) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+void HyperVVM::detach_nic(const std::string& pci_addr) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVM::is_link_plugged(const std::string& nic) const {

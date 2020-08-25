@@ -22,8 +22,9 @@ struct HyperVVM: VM {
 	void mouse_move_rel(const std::string& axis, int value) override;
 	void mouse_hold(const std::vector<MouseButton>& buttons) override;
 	void mouse_release(const std::vector<MouseButton>& buttons) override;
-	bool is_nic_plugged(const std::string& nic) const override;
-	void set_nic(const std::string& nic, bool is_enabled) override;
+	bool is_nic_plugged(const std::string& pci_addr) const override;
+	std::string attach_nic(const std::string& nic) override;
+	void detach_nic(const std::string& pci_addr) override;
 	bool is_link_plugged(const std::string& nic) const override;
 	void set_link(const std::string& nic, bool is_connected) override;
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
