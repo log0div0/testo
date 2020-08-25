@@ -168,15 +168,16 @@ void HyperVVM::remove_disks() {
 	}
 }
 
-void HyperVVM::make_snapshot(const std::string& snapshot) {
+nlohmann::json HyperVVM::make_snapshot(const std::string& snapshot) {
 	try {
 		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+		return nlohmann::json::object();
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
 
-void HyperVVM::rollback(const std::string& snapshot) {
+void HyperVVM::rollback(const std::string& snapshot, const nlohmann::json& opaque) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 

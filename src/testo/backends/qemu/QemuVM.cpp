@@ -3,6 +3,7 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "QemuEnvironment.hpp"
+#include <base64.hpp>
 
 #include <fmt/format.h>
 #include <thread>
@@ -359,7 +360,7 @@ void QemuVM::undefine() {
 	}
 }
 
-void QemuVM::make_snapshot(const std::string& snapshot) {
+nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
@@ -371,70 +372,31 @@ void QemuVM::make_snapshot(const std::string& snapshot) {
 			)", snapshot).c_str());
 
 		domain.snapshot_create_xml(xml_config);
+
+		auto new_config = domain.dump_xml();
+		std::stringstream ss;
+		new_config.save(ss,"  ");
+		auto result = nlohmann::json::object();
+		result["config"] = base64_encode((uint8_t*)ss.str().c_str(), ss.str().length());
+		return result;
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot {}", snapshot)));
 	}
 
 }
 
-void QemuVM::rollback(const std::string& snapshot) {
+void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
+		auto config_str = opaque["config"].get<std::string>();
+		auto config = base64_decode(config_str);
+		std::stringstream ss;
+		ss.write((const char*)&config[0], config.size());
+
+		pugi::xml_document config_xml;
+		config_xml.load_string(ss.str().c_str());
+
+		auto domain = qemu_connect.domain_define_xml(config_xml);
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
-
-		//Now let's take care of possible dvd discontingency
-		std::string current_dvd = get_dvd_path();
-		std::string snapshot_dvd = get_dvd_path(snap);
-
-		if (current_dvd != snapshot_dvd) {
-			//Possible variations:
-			//If we have something plugged - let's unplug it
-			if (current_dvd.length()) {
-				if (domain.state() != VIR_DOMAIN_SHUTOFF) {
-					stop();
-				}
-				unplug_dvd();
-			}
-
-			if (snapshot_dvd.length()) {
-				plug_dvd(snapshot_dvd);
-			}
-		}
-
-		//nics contingency
-		/*if (config.count("nic")) {
-			for (auto& nic: config.at("nic")) {
-
-				std::string nic_name = nic.at("name").get<std::string>();
-				auto currently_plugged = is_nic_plugged(nic_name);
-				auto snapshot_plugged = is_nic_plugged(snap, nic_name);
-				if (currently_plugged != snapshot_plugged) {
-					if (domain.state() != VIR_DOMAIN_SHUTOFF) {
-						stop();
-					}
-
-					if (snapshot_plugged) {
-						attach_nic(nic_name);
-					} else {
-						detach_nic(nic_name);
-					}
-				}
-			}
-		}*/
-
-		/*//links contingency
-		for (auto& nic: nics()) {
-			auto currently_plugged = is_link_plugged(nic);
-			auto snapshot_plugged = is_link_plugged(snap, nic);
-			if (currently_plugged != snapshot_plugged) {
-				set_link(nic, snapshot_plugged);
-			}
-		}*/
-
-		std::string flash_attached = get_flash_img();
-		if (flash_attached.length()) {
-			detach_flash_drive();
-		}
 
 		domain.revert_to_snapshot(snap);
 	} catch (const std::exception& error) {
@@ -910,10 +872,6 @@ std::string QemuVM::attach_nic(const std::string& nic) {
 
 		std::set_difference(new_plugged_nics.begin(), new_plugged_nics.end(), already_plugged_nics.begin(), already_plugged_nics.end(),
 			std::inserter(diff, diff.begin()));
-
-		if (diff.size() != 1) {
-			throw std::runtime_error("Something went wrong");
-		}
 
 		return *diff.begin();
 	} catch (const std::exception& error) {

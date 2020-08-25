@@ -42,7 +42,7 @@ macro install_ubuntu_server(host_name, login, password) {
 		press Left, Enter
 	}
 	wait "Encrypt your home directory?"; press Enter
-	wait "Select your time zone" || "Moscow" timeout 2m; press Enter
+	wait "Select your time zone" || "your time zone is" timeout 2m; press Enter
 	wait "Partitioning method"; press Enter
 	wait "Select disk to partition"; press Enter
 	wait "Write the changes to disks and configure LVM?"; press Left, Enter

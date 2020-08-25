@@ -14,9 +14,8 @@ struct QemuVM: public VM {
 	void install() override;
 	void undefine() override;
 	void remove_disks() override;
-	void make_snapshot(const std::string& snapshot) override;
-
-	void rollback(const std::string& snapshot) override;
+	nlohmann::json make_snapshot(const std::string& snapshot) override;
+	void rollback(const std::string& snapshot, const nlohmann::json& opaque) override;
 	void press(const std::vector<std::string>& buttons) override;
 	void hold(const std::vector<std::string>& buttons) override;
 	void release(const std::vector<std::string>& buttons) override;

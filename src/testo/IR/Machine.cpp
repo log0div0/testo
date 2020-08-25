@@ -190,8 +190,10 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 		}
 
 		//1) Let's try and create the actual snapshot. If we fail then no additional work
+
+		nlohmann::json opaque = nlohmann::json::object();
 		if (hypervisor_snapshot_needed) {
-			vm()->make_snapshot(snapshot);
+			opaque = vm()->make_snapshot(snapshot);
 		}
 
 		//Where to store new metadata file?
@@ -202,6 +204,7 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 		metadata["cksum"] = cksum;
 		metadata["children"] = nlohmann::json::array();
 		metadata["parent"] = current_state;
+		metadata["opaque"] = opaque;
 
 		//nics
 		metadata["nics"] = nlohmann::json::object();
@@ -225,9 +228,6 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 }
 
 void Machine::restore_snapshot(const std::string& snapshot) {
-	vm()->rollback(snapshot);
-	current_state = snapshot;
-
 	nic_pci_map.clear();
 
 	fs::path metadata_file = get_metadata_dir();
@@ -238,6 +238,9 @@ void Machine::restore_snapshot(const std::string& snapshot) {
 	for (auto it = nics.begin(); it != nics.end(); ++it) {
 		nic_pci_map[it.key()] = it.value().get<std::string>();
 	}
+
+	vm()->rollback(snapshot, metadata.at("opaque"));
+	current_state = snapshot;
 }
 
 void Machine::delete_snapshot_with_children(const std::string& snapshot)
