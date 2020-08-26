@@ -115,6 +115,21 @@ test debian_prepare_1: debian_install_guest_additions {
 
 test debian_prepare_2: debian_prepare_1 {
 	debian {
+		exec bash "usermod -aG kvm root"
+		stop
+		start
+		wait "Log In"
+		type "root"; press Tab; sleep 1s
+		type "${password}"; press Enter
+
+		wait "File System"
+
+		mouse rclick 200 200
+		mouse click "Open Terminal Here"
+		wait "root@${host_name}"
+
+		type "virt-manager"; press Enter
+		wait "Virtual Machine Manager"
 		plug flash iso; sleep 5s;
 		exec bash """
 			mount /dev/sdb1 /media
@@ -122,8 +137,7 @@ test debian_prepare_2: debian_prepare_1 {
 			umount /media
 		"""
 		unplug flash iso
-		type "virt-manager"; press Enter
-		wait "Virtual Machine Manager"
+		sleep 5s
 	}
 }
 
@@ -131,8 +145,6 @@ test debian_prepare_testo: debian_prepare_2 {
 	debian {
 		copyto "${OUT_DIR}/testo-cpu.deb" "/home/${login}/testo-cpu.deb"
 		exec bash "dpkg -i /home/${login}/testo-cpu.deb"
-		type "virt-manager"; press Enter
-		wait "Virtual Machine Manager"
 	}
 }
 
