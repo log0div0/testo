@@ -773,28 +773,6 @@ bool QemuVM::is_nic_plugged(const std::string& pci_addr) const {
 	}
 }
 
-bool QemuVM::is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic) {
-	try {
-		auto nic_name = std::string("ua-nic-") + nic;
-		auto config = snapshot.dump_xml();
-		auto devices = config.first_child().child("domain").child("devices");
-
-		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-			if (std::string(nic_node.attribute("type").value()) != "network") {
-				continue;
-			}
-
-			if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
-				return true;
-			}
-		}
-
-		return false;
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged from snapshot", nic)));
-	}
-}
-
 std::set<std::string> QemuVM::plugged_nics() const {
 	auto domain = qemu_connect.domain_lookup_by_name(id());
 	auto xml_config = domain.dump_xml();
@@ -914,16 +892,25 @@ void QemuVM::detach_nic(const std::string& pci_addr) {
 	}
 }
 
-bool QemuVM::is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const {
+bool QemuVM::is_link_plugged(const std::string& pci_addr) const {
 	try {
-		std::string nic_name = std::string("ua-nic-") + nic;
-
+		auto config = qemu_connect.domain_lookup_by_name(id()).dump_xml();
+		auto devices = config.first_child().child("domain").child("devices");
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
 			if (std::string(nic_node.attribute("type").value()) != "network") {
 				continue;
 			}
 
-			if (std::string(nic_node.child("alias").attribute("name").value()) == nic_name) {
+			std::string pci_address;
+			pci_address += std::string(nic_node.child("address").attribute("bus").value()).substr(2) + ":";
+			pci_address += std::string(nic_node.child("address").attribute("slot").value()).substr(2) + ".";
+			pci_address += std::string(nic_node.child("address").attribute("function").value()).substr(2);
+
+			if (pci_address == pci_addr) {
+				return true;
+			}
+
+			if (pci_address == pci_addr) {
 				if (nic_node.child("link").empty()) {
 					return false;
 				}
@@ -939,28 +926,9 @@ bool QemuVM::is_link_plugged(const pugi::xml_node& devices, const std::string& n
 				}
 			}
 		}
-		return false;
+		throw std::runtime_error("Nic with address " + pci_addr + " not found");
 	} catch (const std::exception& error) {
-		throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged", nic)));
-	}
-}
-
-bool QemuVM::is_link_plugged(vir::Snapshot& snapshot, const std::string& nic) {
-	try {
-		auto config = snapshot.dump_xml();
-		return is_link_plugged(config.first_child().child("domain").child("devices"), nic);
-	} catch (const std::exception& error) {
-		throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged from snapshot", nic)));
-	}
-
-}
-
-bool QemuVM::is_link_plugged(const std::string& nic) const {
-	try {
-		auto config = qemu_connect.domain_lookup_by_name(id()).dump_xml();
-		return is_link_plugged(config.first_child().child("devices"), nic);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking link status on nic {}", nic)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking link status on nic {}", pci_addr)));
 	}
 }
 
@@ -1011,7 +979,7 @@ void QemuVM::set_link(const std::string& pci_addr, bool is_connected) {
 	}
 }
 
-std::string QemuVM::get_flash_img() {
+bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
@@ -1029,17 +997,9 @@ std::string QemuVM::get_flash_img() {
 			}
 		}
 
-		return result;
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Getting flash image"));
-	}
-}
-
-bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
-	try {
-		return get_flash_img().length();
+		return result.length();
 	} catch (const std::string& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking if flash drive {} is pluged", fd->name())));
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking if flash drive {} is plugged", fd->name())));
 	}
 }
 
@@ -1130,34 +1090,6 @@ bool QemuVM::is_dvd_plugged() const {
 		return !cdrom.child("source").attribute("file").empty();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Checking if dvd is plugged"));
-	}
-}
-
-std::string QemuVM::get_dvd_path() {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		auto config = domain.dump_xml();
-		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
-		if (cdrom.child("source").empty()) {
-			return "";
-		}
-		return cdrom.child("source").attribute("file").value();
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Getting dvd path"));
-	}
-}
-
-
-std::string QemuVM::get_dvd_path(vir::Snapshot& snap) {
-	try {
-		auto config = snap.dump_xml();
-		auto cdrom = config.first_child().child("domain").child("devices").find_child_by_attribute("device", "cdrom");
-		if (cdrom.child("source").empty()) {
-			return "";
-		}
-		return cdrom.child("source").attribute("file").value();
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Getting dvd path from snapshot"));
 	}
 }
 

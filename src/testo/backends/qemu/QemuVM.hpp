@@ -28,7 +28,7 @@ struct QemuVM: public VM {
 	bool is_nic_plugged(const std::string& pci_addr) const override;
 	std::string attach_nic(const std::string& nic) override;
 	void detach_nic(const std::string& pci_addr) override;
-	bool is_link_plugged(const std::string& nic) const override;
+	bool is_link_plugged(const std::string& pci_addr) const override;
 	void set_link(const std::string& nic, bool is_connected) override;
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
 	void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
@@ -60,16 +60,6 @@ private:
 	void import_disk(const std::string& name, const fs::path& source);
 	void create_new_disk(const std::string& name, uint32_t size);
 	void create_disks();
-
-	std::string get_dvd_path();
-	std::string get_dvd_path(vir::Snapshot& snapshot);
-
-	bool is_link_plugged(const pugi::xml_node& devices, const std::string& nic) const;
-	bool is_link_plugged(vir::Snapshot& snapshot, const std::string& nic);
-
-	bool is_nic_plugged(vir::Snapshot& snapshot, const std::string& nic);
-
-	std::string get_flash_img();
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 

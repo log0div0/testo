@@ -1222,7 +1222,7 @@ void VisitorInterpreter::visit_plug_link(const IR::Plug& plug) {
 		throw std::runtime_error(fmt::format("the nic for specified link {} is unplugged, you must to plug it first", nic));
 	}
 
-	if (plug.is_on() == vmc->vm()->is_link_plugged(nic)) {
+	if (plug.is_on() == vmc->is_link_plugged(nic)) {
 		if (plug.is_on()) {
 			throw std::runtime_error(fmt::format("specified link {} is already plugged in this virtual machine", nic));
 		} else {
