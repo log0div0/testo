@@ -11,8 +11,15 @@ test debian_backend_qemu_unplug_plug_nic: debian_prepare_testo {
 			testo run /opt/scripts/action_nic.testo --stop_on_fail --test_spec unplug_plug_nic | grep "stop here"
 		"""
 
-		wait "my_ubuntu_server" && "Running"
-		mouse dclick "my_ubuntu_server"
+		wait "Running"
+		mouse dclick "Running"
+		wait "Language" && "English"
+
+		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
+		wait js "find_text().match('NIC').size() == 1"
+		mouse click "NIC"
+		wait "Virtual network 'internet': NAT"
+		mouse click "File".from_top(1).center_bottom().move_down(20)
 		wait "Language" && "English"
 	}
 }

@@ -2,6 +2,10 @@ network internet {
 	mode: "nat"
 }
 
+network internal {
+	mode: "internal"
+}
+
 machine my_ubuntu_server {
 	cpus: 1
 	ram: 512Mb
@@ -12,6 +16,10 @@ machine my_ubuntu_server {
 
 	nic nat: {
 		attached_to: "internet"
+	}
+
+	nic internal: {
+		attached_to: "internal"
 	}
 }
 
@@ -42,7 +50,7 @@ macro install_ubuntu_server(host_name, login, password) {
 		press Left, Enter
 	}
 	wait "Encrypt your home directory?"; press Enter
-	wait "Select your time zone" || "Moscow" timeout 2m; press Enter
+	wait "Select your time zone" || "your time zone is" timeout 2m; press Enter
 	wait "Partitioning method"; press Enter
 	wait "Select disk to partition"; press Enter
 	wait "Write the changes to disks and configure LVM?"; press Left, Enter
@@ -59,7 +67,7 @@ macro install_ubuntu_server(host_name, login, password) {
 	if (check "Device for boot loader installation" timeout 3s) {
 		press Down, Enter
 	}
-	wait "Installation complete" timeout 1m; unplug dvd; press Enter
+	wait "Installation complete" timeout 10m; unplug dvd; press Enter
 	wait "login:" timeout 2m; type "${login}"; press Enter
 	wait "Password:"; type "${password}"; press Enter
 	wait "Welcome to Ubuntu"

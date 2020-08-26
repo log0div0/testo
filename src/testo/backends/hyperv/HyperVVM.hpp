@@ -11,8 +11,8 @@ struct HyperVVM: VM {
 	void install() override;
 	void undefine() override;
 	void remove_disks() override;
-	void make_snapshot(const std::string& snapshot) override;
-	void rollback(const std::string& snapshot) override;
+	nlohmann::json make_snapshot(const std::string& snapshot) override;
+	void rollback(const std::string& snapshot, const nlohmann::json& opaque) override;
 	void press(const std::vector<std::string>& buttons) override;
 	void hold(const std::vector<std::string>& buttons) override;
 	void release(const std::vector<std::string>& buttons) override;
@@ -22,8 +22,9 @@ struct HyperVVM: VM {
 	void mouse_move_rel(const std::string& axis, int value) override;
 	void mouse_hold(const std::vector<MouseButton>& buttons) override;
 	void mouse_release(const std::vector<MouseButton>& buttons) override;
-	bool is_nic_plugged(const std::string& nic) const override;
-	void set_nic(const std::string& nic, bool is_enabled) override;
+	bool is_nic_plugged(const std::string& pci_addr) const override;
+	std::string attach_nic(const std::string& nic) override;
+	void detach_nic(const std::string& pci_addr) override;
 	bool is_link_plugged(const std::string& nic) const override;
 	void set_link(const std::string& nic, bool is_connected) override;
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;

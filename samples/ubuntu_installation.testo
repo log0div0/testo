@@ -17,14 +17,26 @@ machine VM1 {
 		attached_to: "int2"
 		adapter_type: "e1000"
 	}
+
+	nic internet2: {
+		attached_to: "int2"
+		adapter_type: "e1000"
+	}
+
+	nic internet3: {
+		attached_to: "int2"
+		adapter_type: "e1000"
+	}
 }
 
 
 test ubuntu_installation {
 	VM1 {
-		start
-		unplug link internet
+		unplug link internet2
 		abort "stop here"
+		plug nic internet2
+		start
+		#unplug link internet
 		#install_ubuntu_server("VM1", "user", "1111")
 	}
 
