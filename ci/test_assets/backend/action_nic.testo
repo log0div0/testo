@@ -5,8 +5,37 @@ include "common.testo"
 test unplug_plug_nic {
 	my_ubuntu_server {
 		unplug nic nat
+		unplug nic internal
 		plug nic nat
 		start
 		abort "stop here"
 	}
 }
+
+[no_snapshots: true]
+test rollback_after_unplug_plug_nic {
+	my_ubuntu_server {
+		start
+		abort "stop here"
+	}
+}
+
+[no_snapshots: true]
+test unplug_plug_link {
+	my_ubuntu_server {
+		unplug link nat
+		unplug link internal
+		plug link nat
+		start
+		abort "stop here"
+	}
+}
+
+[no_snapshots: true]
+test rollback_after_unplug_plug_link {
+	my_ubuntu_server {
+		start
+		abort "stop here"
+	}
+}
+

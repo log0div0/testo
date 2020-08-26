@@ -895,7 +895,7 @@ void QemuVM::detach_nic(const std::string& pci_addr) {
 bool QemuVM::is_link_plugged(const std::string& pci_addr) const {
 	try {
 		auto config = qemu_connect.domain_lookup_by_name(id()).dump_xml();
-		auto devices = config.first_child().child("domain").child("devices");
+		auto devices = config.first_child().child("devices");
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
 			if (std::string(nic_node.attribute("type").value()) != "network") {
 				continue;
@@ -907,22 +907,17 @@ bool QemuVM::is_link_plugged(const std::string& pci_addr) const {
 			pci_address += std::string(nic_node.child("address").attribute("function").value()).substr(2);
 
 			if (pci_address == pci_addr) {
-				return true;
-			}
-
-			if (pci_address == pci_addr) {
 				if (nic_node.child("link").empty()) {
 					return false;
 				}
 
 				std::string state = nic_node.child("link").attribute("state").value();
 
+				std::cout << "The state is: " << state << std::endl;
 				if (state == "up") {
 					return true;
 				} else if (state == "down") {
 					return false;
-				} else {
-					throw std::runtime_error("Unknown link state");
 				}
 			}
 		}
