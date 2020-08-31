@@ -267,8 +267,13 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	current_test = test;
 
 	current_test->cksum_input = test->name();
+	std::vector<std::string> parents_names;
 	for (auto parent: test->parents) {
-		current_test->cksum_input += parent->name();
+		parents_names.push_back(parent->name());
+	}
+	std::sort(parents_names.begin(), parents_names.end());
+	for (auto name: parents_names) {
+		current_test->cksum_input += name;
 	}
 	current_test->cksum_input += test->snapshots_needed();
 
