@@ -177,6 +177,7 @@ test centos_backend_qemu_rollback_after_unplug_dvd: centos_backend_qemu_unplug_d
 			testo run /opt/scripts/action_unplug_dvd.testo --stop_on_fail --test_spec rollback_after_unplug_dvd | grep "stop here"
 		"""
 
+		mouse click "File".from_top(0).center_bottom().move_down(20)
 		wait "Language" && "English"
 
 		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
