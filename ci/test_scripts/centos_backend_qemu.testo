@@ -256,6 +256,18 @@ test centos_backend_qemu_plug_flash: centos_backend_qemu_install_ubuntu_server {
 }
 
 [no_snapshots: true]
+test centos_backend_qemu_rollback_after_plug_flash: centos_backend_qemu_plug_flash {
+	centos {
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_flash | grep "stop here"
+		""" timeout 30m
+		wait "Welcome to Ubuntu"
+	}
+}
+
+
+[no_snapshots: true]
 test centos_backend_qemu_plug_flash_with_files: centos_backend_qemu_install_ubuntu_server {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
