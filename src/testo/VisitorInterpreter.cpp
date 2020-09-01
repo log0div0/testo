@@ -464,6 +464,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 				if (controller->current_state != parent->name()) {
 					reporter.restore_snapshot(controller, parent->name());
 					controller->restore_snapshot(parent->name());
+					coro::CheckPoint();
 				}
 			}
 		}
@@ -504,6 +505,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 				{
 					reporter.restore_snapshot(controller, "initial");
 					controller->restore_snapshot("_init");
+					coro::CheckPoint();
 				} else {
 					reporter.create_controller(controller);
 					controller->create();
@@ -511,6 +513,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 					reporter.take_snapshot(controller, "initial");
 					controller->create_snapshot("_init", "", true);
 					controller->current_state = "_init";
+					coro::CheckPoint();
 				}
 			}
 		}
@@ -544,6 +547,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 			if (!controller->has_snapshot(test->name())) {
 				reporter.take_snapshot(controller, test->name());
 				controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
+				coro::CheckPoint();
 			}
 			controller->current_state = test->name();
 		}
@@ -553,6 +557,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 			if (!controller->has_snapshot(test->name())) {
 				reporter.take_snapshot(controller, test->name());
 				controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
+				coro::CheckPoint();
 			}
 			controller->current_state = test->name();
 		}
