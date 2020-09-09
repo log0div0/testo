@@ -16,6 +16,8 @@
 #include "ModeRun.hpp"
 #include "ModeRequestLicense.hpp"
 
+#include "Exceptions.hpp"
+
 #include <clipp.h>
 
 using namespace clipp;

@@ -1,6 +1,7 @@
 
 #include "VisitorInterpreter.hpp"
 #include "IR/Program.hpp"
+#include "Exceptions.hpp"
 
 #include "coro/CheckPoint.h"
 #include "utf8.hpp"
@@ -1539,7 +1540,11 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_
 	reporter.macro_call(vmc, macro_call->name(), args);
 
 	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
-	visit_action_block(macro->ast_node->action_block->action);
+	try {
+		visit_action_block(macro->ast_node->action_block->action);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(MacroException(macro_call));
+	}
 }
 
 void VisitorInterpreter::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {

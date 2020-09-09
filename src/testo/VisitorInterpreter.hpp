@@ -13,64 +13,6 @@
 #include <unordered_map>
 
 struct VisitorInterpreter {
-	struct InterpreterException: public std::exception {
-			explicit InterpreterException():
-				std::exception()
-			{
-				msg = "";
-			}
-
-			const char* what() const noexcept override {
-				return msg.c_str();
-			}
-		protected:
-			std::string msg;
-	};
-
-	struct ActionException: public InterpreterException {
-		explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Machine> vmc):
-			InterpreterException(), node(node), vmc(vmc)
-		{
-			msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node) + " ";
-			if (vmc) {
-				msg += "on virtual machine ";
-				msg += vmc->name();
-			}
-		}
-	private:
-		std::shared_ptr<AST::Node> node;
-		std::shared_ptr<IR::Machine> vmc;
-	};
-
-	struct AbortException: public InterpreterException {
-		explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Machine> vmc, const std::string& message):
-			InterpreterException(), node(node), vmc(vmc)
-		{
-			msg = std::string(node->begin()) + ": Caught abort action ";
-			if (vmc) {
-				msg += "on virtual machine ";
-				msg += vmc->name();
-			}
-
-			msg += " with message: ";
-			msg += message;
-		}
-	private:
-		std::shared_ptr<AST::Node> node;
-		std::shared_ptr<IR::Machine> vmc;
-	};
-
-
-	struct CycleControlException: public InterpreterException {
-		explicit CycleControlException(const Token& token):
-			InterpreterException(), token(token)
-		{
-			msg = std::string(token.begin()) + " error: cycle control action has not a correcponding cycle";
-		}
-
-		Token token;
-	};
-
 	VisitorInterpreter(const nlohmann::json& config);
 
 	void visit();

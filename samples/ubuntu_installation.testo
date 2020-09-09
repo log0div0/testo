@@ -29,15 +29,17 @@ machine VM1 {
 	}
 }
 
+macro m2() {
+	stop
+}
+
+macro m1() {
+	m2()
+}
 
 test ubuntu_installation {
 	VM1 {
-		unplug link internet2
-		abort "stop here"
-		plug nic internet2
-		start
-		#unplug link internet
-		#install_ubuntu_server("VM1", "user", "1111")
+		m1()
 	}
 
 }
