@@ -37,7 +37,7 @@ struct Pos {
 	}
 
 	bool operator==(const Pos& other) {
-		return (offset == other.offset && 
+		return (offset == other.offset &&
 			file == other.file);
 	}
 

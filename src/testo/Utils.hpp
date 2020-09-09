@@ -9,19 +9,6 @@
 
 namespace fs = std::experimental::filesystem;
 
-static void backtrace(std::ostream& stream, const std::exception& error) {
-	stream << error.what();
-	try {
-		std::rethrow_if_nested(error);
-	} catch (const std::exception& error) {
-		stream << ":\n\t-";
-		backtrace(stream, error);
-	} catch(...) {
-		stream << std::endl;
-		stream << "[Unknown exception type]";
-	}
-}
-
 void fs_copy(const fs::path& from, const fs::path& to);
 
 bool check_if_time_interval(const std::string& time);
@@ -56,9 +43,4 @@ void concat_unique(std::list<T>& left, const std::list<T>& right) {
 			left.push_back(it_right);
 		}
 	}
-}
-
-inline std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
-	backtrace(stream, error);
-	return stream;
 }
