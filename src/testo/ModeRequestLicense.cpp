@@ -26,7 +26,7 @@ int request_license_mode(const RequestLicenseModeArgs& args) {
 	license::write_file(path_to_save, container);
 	std::cout << "Everything is OK" << std::endl;
 	std::cout << "The request is saved to the file \"" << path_to_save << "\"" << std::endl;
-	std::cout << "Please upload this file to the payment form on the page https://testo-lang.ru/sales" << std::endl;
+	std::cout << "Please upload this file to the payment form on the site https://testo-lang.ru" << std::endl;
 	return 0;
 }
 
