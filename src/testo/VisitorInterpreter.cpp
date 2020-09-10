@@ -288,6 +288,8 @@ bool VisitorInterpreter::is_cached(std::shared_ptr<IR::Test> test) const {
 
 	for (auto controller: test->get_all_controllers()) {
 		if (controller->is_defined() &&
+			controller->has_snapshot("_init") &&
+			controller->check_metadata_version() &&
 			controller->check_config_relevance() &&
 			controller->has_snapshot(test->name()) &&
 			(controller->get_snapshot_cksum(test->name()) == test->cksum))
@@ -502,6 +504,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 				//Otherwise we're creating the controller and taking init snapshot
 				if (controller->is_defined() &&
 					controller->has_snapshot("_init") &&
+					controller->check_metadata_version() &&
 					controller->check_config_relevance())
 				{
 					reporter.restore_snapshot(controller, "initial");

@@ -324,52 +324,6 @@ test centos_backend_qemu_plug_flash_exceptions: centos_backend_qemu_install_ubun
 	}
 }
 
-[no_snapshots: true]
-test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
-		exec bash """
-			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm
-		""" timeout 30m
-
-		wait "basic_machine"
-	}
-}
-
-[no_snapshots: true]
-test centos_backend_qemu_create_vm_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
-	centos {
-		mouse rclick "basic_machine";
-		mouse click "Delete"
-		mouse click "Delete associated storage files"
-		wait !"hda"
-		mouse click "Delete".from_bottom(0)
-
-		exec bash """
-			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm
-		""" timeout 30m
-
-		wait "basic_machine"
-	}
-}
-
-[no_snapshots: true]
-test centos_backend_qemu_clean_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
-	centos {
-		mouse rclick "basic_machine";
-		mouse click "Delete"
-		mouse click "Delete associated storage files"
-		wait !"hda"
-		mouse click "Delete".from_bottom(0)
-
-		exec bash """
-			testo clean	| grep 'Deleted virtual machine basic_machine'
-		""" timeout 30m
-
-		exec bash "!([ -f /var/lib/libvirt/testo/testo-storage-pool/basic_machine@main.img ])"
-	}
-}
-
 test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ubuntu_server {
 	centos {
 		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/iso/testo-guest-additions.iso"

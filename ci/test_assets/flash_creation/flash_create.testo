@@ -30,3 +30,16 @@ test flash_not_a_folder {
 		plug flash not_a_folder
 	}
 }
+
+flash basic_flash {
+	fs: "vfat"
+	size: 8Mb
+}
+
+[no_snapshots: true]
+test create_basic_flash {
+	basic_machine {
+		plug flash basic_flash
+		unplug flash basic_flash
+	}
+}

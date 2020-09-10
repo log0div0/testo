@@ -205,6 +205,7 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 		metadata["children"] = nlohmann::json::array();
 		metadata["parent"] = current_state;
 		metadata["opaque"] = opaque;
+		metadata["metadata_version"] = "2";
 
 		//nics
 		metadata["nics"] = nlohmann::json::object();

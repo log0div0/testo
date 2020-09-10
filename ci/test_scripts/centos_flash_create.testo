@@ -11,3 +11,56 @@ test centos_flash_create: centos_prepare_testo {
 		""" timeout 30m
 	}
 }
+
+test centos_backend_qemu_create_simple_flash: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/flash_creation/flash_create.testo" "/opt/scripts/flash_create.testo"
+		exec bash """
+			testo run /opt/scripts/flash_create.testo --test_spec create_basic_flash
+		""" timeout 30m
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_meta_version0_flash_recovery: centos_backend_qemu_create_simple_flash {
+	centos {
+		exec python3 """
+			import json
+
+			with open('/var/lib/libvirt/testo/fd_metadata/basic_flash/basic_flash__init') as data_file:
+			    data = json.load(data_file)
+
+			del data['opaque']
+
+			with open('/var/lib/libvirt/testo/fd_metadata/basic_flash/basic_flash__init', 'w') as data_file:
+			    data = json.dump(data, data_file)
+		"""
+
+		exec bash """
+			testo run /opt/scripts/flash_create.testo --test_spec create_basic_flash | grep "Creating flash drive basic_flash"
+		""" timeout 30m
+
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_meta_version1_flash_recovery: centos_backend_qemu_create_simple_flash {
+	centos {
+		exec python3 """
+			import json
+
+			with open('/var/lib/libvirt/testo/fd_metadata/basic_flash/basic_flash__init') as data_file:
+			    data = json.load(data_file)
+
+			del data['metadata_version']
+
+			with open('/var/lib/libvirt/testo/fd_metadata/basic_flash/basic_flash__init', 'w') as data_file:
+			    data = json.dump(data, data_file)
+		"""
+
+		exec bash """
+			testo run /opt/scripts/flash_create.testo --test_spec create_basic_flash | grep "Creating flash drive basic_flash"
+		""" timeout 30m
+
+	}
+}

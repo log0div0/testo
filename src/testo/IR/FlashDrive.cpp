@@ -120,6 +120,8 @@ void FlashDrive::create_snapshot(const std::string& snapshot, const std::string&
 		metadata["cksum"] = cksum;
 		metadata["children"] = nlohmann::json::array();
 		metadata["parent"] = current_state;
+		metadata["opaque"] = nlohmann::json::object();
+		metadata["metadata_version"] = "2";
 		write_metadata_file(metadata_file, metadata);
 
 		//link parent to a child
