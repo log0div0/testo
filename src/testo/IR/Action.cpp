@@ -2,16 +2,25 @@
 #include "Action.hpp"
 #include "Program.hpp"
 #include "../TemplateLiterals.hpp"
+#include "../Exceptions.hpp"
 #include "../Lexer.hpp"
 
 namespace IR {
 
 std::string Abort::message() const {
-	return template_literals::Parser().resolve(ast_node->message->text(), stack);
+	try {
+		return template_literals::Parser().resolve(ast_node->message->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->message->begin(), ast_node->message->text()));
+	}
 }
 
 std::string Print::message() const {
-	return template_literals::Parser().resolve(ast_node->message->text(), stack);
+	try {
+		return template_literals::Parser().resolve(ast_node->message->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->message->begin(), ast_node->message->text()));
+	}
 }
 
 std::string Press::interval() const {
@@ -34,7 +43,11 @@ std::vector<std::string> Release::buttons() const {
 }
 
 std::string Type::text() const {
-	return template_literals::Parser().resolve(ast_node->text->text(), stack);
+	try {
+		return template_literals::Parser().resolve(ast_node->text->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->text->begin(), ast_node->text->text()));
+	}
 }
 
 std::string Type::interval() const {
@@ -46,7 +59,11 @@ std::string Type::interval() const {
 }
 
 std::string Wait::select_expr() const {
-	return template_literals::Parser().resolve(std::string(*ast_node->select_expr), stack);
+	try {
+		return template_literals::Parser().resolve(std::string(*ast_node->select_expr), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->select_expr->begin(), std::string(*ast_node->select_expr)));
+	}
 }
 
 std::string Wait::timeout() const {
@@ -106,11 +123,19 @@ std::string MouseSelectable::timeout() const {
 }
 
 std::string SelectJS::script() const {
-	return template_literals::Parser().resolve(ast_node->text(), stack);
+	try {
+		return template_literals::Parser().resolve(ast_node->text(), stack);
+	} catch (const std::exception) {
+		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
+	}
 }
 
 std::string SelectText::text() const {
-	return template_literals::Parser().resolve(ast_node->text(), stack);
+	try {
+		return template_literals::Parser().resolve(ast_node->text(), stack);
+	} catch (const std::exception) {
+		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
+	}
 }
 
 std::string MouseHold::button() const {
@@ -134,7 +159,12 @@ std::string Plug::entity_name() const {
 }
 
 fs::path Plug::dvd_path() const {
-	fs::path path = template_literals::Parser().resolve(ast_node->path->text(), stack);
+	fs::path path;
+	try {
+		path = template_literals::Parser().resolve(ast_node->path->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->path->begin(), ast_node->path->text()));
+	}
 	if (path.is_relative()) {
 		path = ast_node->t.begin().file.parent_path() / path;
 	}
@@ -164,11 +194,20 @@ std::string Exec::timeout() const {
 }
 
 std::string Exec::script() const {
-	return template_literals::Parser().resolve(ast_node->commands->text(), stack);
+	try {
+		return template_literals::Parser().resolve(ast_node->commands->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->commands->begin(), ast_node->commands->text()));
+	}
 }
 
 std::string Copy::from() const {
-	fs::path from = template_literals::Parser().resolve(ast_node->from->text(), stack);
+	fs::path from;
+	try {
+		from = template_literals::Parser().resolve(ast_node->from->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->from->begin(), ast_node->from->text()));
+	}
 
 	if (ast_node->is_to_guest()) {
 		if (from.is_relative()) {
@@ -180,7 +219,12 @@ std::string Copy::from() const {
 }
 
 std::string Copy::to() const {
-	fs::path to = template_literals::Parser().resolve(ast_node->to->text(), stack);
+	fs::path to;
+	try {
+		to = template_literals::Parser().resolve(ast_node->to->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->to->begin(), ast_node->to->text()));
+	}
 
 	if (!ast_node->is_to_guest()) {
 		if (to.is_relative()) {
@@ -223,17 +267,22 @@ std::string StringTokenUnion::resolve() const {
 	std::string result;
 
 	if (ast_node->string) {
-		result = template_literals::Parser().resolve(ast_node->string->text(), stack);
-		Lexer lex(".", result);
-
 		try {
-			if (lex.get_next_token().type() != ast_node->expected_token_type) {
-				throw std::runtime_error("");
+			result = template_literals::Parser().resolve(ast_node->string->text(), stack);
+			Lexer lex(".", result);
+
+			try {
+				if (lex.get_next_token().type() != ast_node->expected_token_type) {
+					throw std::runtime_error("");
+				}
+			} catch(const std::exception& error) {
+				throw std::runtime_error("Can't convert string value \"" + result +
+					"\" to " + Token::type_to_string(ast_node->expected_token_type));
 			}
-		} catch(const std::exception& error) {
-			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: can't convert string value \"" + result +
-				"\" to " + Token::type_to_string(ast_node->expected_token_type));
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(ast_node->string->begin(), ast_node->string->text()));
 		}
+
 	} else {
 		result = ast_node->token.value();
 	}
