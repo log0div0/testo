@@ -4,8 +4,8 @@
 #include <stdexcept>
 #include <string>
 
-struct InterpreterException: public std::exception {
-	explicit InterpreterException():
+struct Exception: public std::exception {
+	explicit Exception():
 		std::exception()
 	{
 		msg = "";
@@ -18,9 +18,9 @@ protected:
 	std::string msg;
 };
 
-struct ActionException: public InterpreterException {
+struct ActionException: public Exception {
 	explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Machine> vmc):
-		InterpreterException()
+		Exception()
 	{
 		msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node);
 		if (vmc) {
@@ -30,17 +30,17 @@ struct ActionException: public InterpreterException {
 	}
 };
 
-struct MacroException: public InterpreterException {
+struct MacroException: public Exception {
 	explicit MacroException(std::shared_ptr<AST::MacroCall> macro_call):
-		InterpreterException()
+		Exception()
 	{
 		msg = std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->name().value();
 	}
 };
 
-struct AbortException: public InterpreterException {
+struct AbortException: public Exception {
 	explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Machine> vmc, const std::string& message):
-		InterpreterException()
+		Exception()
 	{
 		msg = std::string(node->begin()) + ": Caught abort action ";
 		if (vmc) {
@@ -54,9 +54,9 @@ struct AbortException: public InterpreterException {
 };
 
 
-struct CycleControlException: public InterpreterException {
+struct CycleControlException: public Exception {
 	explicit CycleControlException(const Token& token):
-		InterpreterException(), token(token)
+		Exception(), token(token)
 	{
 		msg = std::string(token.begin()) + " error: cycle control action has not a correcponding cycle";
 	}
@@ -64,14 +64,19 @@ struct CycleControlException: public InterpreterException {
 	Token token;
 };
 
+struct ResolveException: public Exception {
+	explicit ResolveException(const Pos& pos, const std::string& string):
+		Exception()
+	{
+		msg = std::string(pos) + ": Error while resolving \"" + string + "\"";
+	}
+};
+
 static void backtrace(std::ostream& stream, const std::exception& error) {
 	stream << error.what();
 	try {
 		std::rethrow_if_nested(error);
-	} catch (const MacroException& error) {
-		stream << "\n";
-		backtrace(stream, error);
-	} catch (const InterpreterException& error) {
+	} catch (const Exception& error) {
 		stream << "\n";
 		backtrace(stream, error);
 	} catch (const std::exception& error) {

@@ -38,22 +38,19 @@ test centos_for_range_param: centos_prepare_testo {
 test centos_actions_param: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/param_resolve/actions.testo" "/opt/scripts/actions.testo"
+
 		exec bash """
 			set +o pipefail
 			testo run /opt/scripts/actions.testo --test_spec check_sleep_param | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
-			testo run /opt/scripts/actions.testo --test_spec check_sleep_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"-7\\\" to TIME INTERVAL"
 			testo run /opt/scripts/actions.testo --test_spec check_sleep_token | grep "Sleeping in virtual machine my_ubuntu_server for 1s"
 
 			testo run /opt/scripts/actions.testo --test_spec check_type_param | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
-			testo run /opt/scripts/actions.testo --test_spec check_type_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"interval\\\" to TIME INTERVAL"
 			testo run /opt/scripts/actions.testo --test_spec check_type_token | grep "Typing \\\"Hello 1s\\\" with interval 1s in virtual machine my_ubuntu_server"
 
 			testo run /opt/scripts/actions.testo --test_spec check_wait_param | grep "Waiting \\\"Hello 200ms\\\" for 200ms with interval 200ms in virtual machine my_ubuntu_server"
-			testo run /opt/scripts/actions.testo --test_spec check_wait_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"interval\\\" to TIME INTERVAL"
 			testo run /opt/scripts/actions.testo --test_spec check_wait_token | grep "Waiting \\\"Hello 200ms\\\" for 200ms with interval 200ms in virtual machine my_ubuntu_server"
 
 			testo run /opt/scripts/actions.testo --test_spec check_shutdown_param | grep "Shutting down virtual machine my_ubuntu_server with timeout 200ms"
-			testo run /opt/scripts/actions.testo --test_spec check_shutdown_param_invalid 2>&1 > /dev/null | grep "Error: can't convert string value \\\"\\\" to TIME INTERVAL"
 			testo run /opt/scripts/actions.testo --test_spec check_shutdown_token | grep "Shutting down virtual machine my_ubuntu_server with timeout 200ms"
 
 			testo run /opt/scripts/actions.testo --test_spec check_copyto_param | grep "Copying /opt/scripts/actions.testo to virtual machine my_ubuntu_server to destination /opt/scripts/actions.testo with timeout 200ms"
@@ -80,5 +77,174 @@ test centos_actions_param: centos_prepare_testo {
 			testo run /opt/scripts/actions.testo --test_spec check_mouse_param | grep "Mouse moving on \\\"lala\\\" with timeout 200ms in virtual machine my_ubuntu_server"
 			testo run /opt/scripts/actions.testo --test_spec check_mouse_token | grep "Mouse moving on \\\"lala\\\" with timeout 200ms in virtual machine my_ubuntu_server"
 		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/actions.testo --test_spec check_sleep_param_invalid 2>&1)
+			[[ $output == *"/opt/scripts/actions.testo:30:9: Error while resolving \\\"-7\\\""* ]]
+			[[ $output == *"Can't convert string value \\\"-7\\\" to TIME INTERVAL"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/actions.testo --test_spec check_type_param_invalid 2>&1)
+			[[ $output == *"/opt/scripts/actions.testo:53:39: Error while resolving \\\"interval\\\""* ]]
+			[[ $output == *"Can't convert string value \\\"interval\\\" to TIME INTERVAL"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/actions.testo --test_spec check_wait_param_invalid 2>&1)
+			[[ $output == *"/opt/scripts/actions.testo:77:39: Error while resolving \\\"interval\\\""* ]]
+			[[ $output == *"Can't convert string value \\\"interval\\\" to TIME INTERVAL"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/actions.testo --test_spec check_shutdown_param_invalid 2>&1)
+			[[ $output == *"/opt/scripts/actions.testo:100:20: Error while resolving \\\"\\\""* ]]
+			[[ $output == *"Can't convert string value \\\"\\\" to TIME INTERVAL"* ]]
+		"""
+
+	}
+}
+
+[no_snapshots: true]
+test centos_param_not_defined: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/param_resolve/not_defined.testo" "/opt/scripts/not_defined.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec sleep_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec print_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec abort_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec type_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec wait_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec mouse_text_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec mouse_js_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec flash_not_defined 2>&1)
+			[[ $output == *"In a macro call plug_flash"* ]]
+			[[ $output == *"unknown flash drive: undefined_flash"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec dvd_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec from_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec to_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec exec_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${not_defined}\\\""* ]]
+			[[ $output == *"param \\\"not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec macro_arg_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${arg_not_defined}\\\""* ]]
+			[[ $output == *"param \\\"arg_not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec macro_default_arg_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${default_not_defined}\\\""* ]]
+			[[ $output == *"param \\\"default_not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec factor_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${factor_not_defined}\\\""* ]]
+			[[ $output == *"param \\\"factor_not_defined\\\" is not defined"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/not_defined.testo --test_spec attr_not_defined 2>&1)
+			[[ $output == *"Error while resolving \\\"\\$${iso_not_defined}\\\""* ]]
+			[[ $output == *"param \\\"iso_not_defined\\\" is not defined"* ]]
+		"""
+
 	}
 }

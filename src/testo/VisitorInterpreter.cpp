@@ -587,7 +587,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		}
 		reporter.test_passed();
 
-	} catch (const InterpreterException& error) {
+	} catch (const Exception& error) {
 		std::stringstream ss;
 		ss << error << std::endl;
 		reporter.test_failed(ss.str());

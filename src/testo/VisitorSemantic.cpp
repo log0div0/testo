@@ -1,6 +1,7 @@
 
 #include "VisitorSemantic.hpp"
 #include "backends/Environment.hpp"
+#include "Exceptions.hpp"
 #include "IR/Program.hpp"
 #include "js/Context.hpp"
 #include <fmt/format.h>
@@ -755,17 +756,29 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 	std::map<std::string, std::string> vars;
 
 	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
-		vars[macro->ast_node->args[i]->name()] = value;
+		try {
+			auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
+			vars[macro->ast_node->args[i]->name()] = value;
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(macro_call->args[i]->begin(), macro_call->args[i]->text()));
+		}
 	}
 
 	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
-		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
-		vars[macro->ast_node->args[i]->name()] = value;
+		try {
+			auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
+			vars[macro->ast_node->args[i]->name()] = value;
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(macro->ast_node->args[i]->default_value->begin(), macro->ast_node->args[i]->default_value->text()));
+		}
 	}
 
 	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
-	visit_action_block(macro->ast_node->action_block->action);
+	try {
+		visit_action_block(macro->ast_node->action_block->action);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(MacroException(macro_call));
+	}
 }
 
 Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
@@ -832,9 +845,13 @@ Tribool VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::ParentedExpr>>(factor)) {
 		return is_negated ^ visit_parented_expr(p->factor);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
-		auto text = template_parser.resolve(p->factor->text(), stack);
-		current_test->cksum_input += text;
-		return is_negated ^ (text.length() ? Tribool::yes : Tribool::no);
+		try {
+			auto text = template_parser.resolve(p->factor->text(), stack);
+			current_test->cksum_input += text;
+			return is_negated ^ (text.length() ? Tribool::yes : Tribool::no);
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(p->factor->begin(), p->factor->text()));
+		}
 	} else {
 		throw std::runtime_error("Unknown factor type");
 	}
@@ -1080,8 +1097,12 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	}
 
 	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::StringAttr>>(attr->value)) {
-		auto value = template_parser.resolve(p->attr_value->value->text(), stack);
-		config[attr->name.value()] = value;
+		try {
+			auto value = template_parser.resolve(p->attr_value->value->text(), stack);
+			config[attr->name.value()] = value;
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(p->attr_value->value->begin(), p->attr_value->value->text()));
+		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
 		auto value = p->attr_value->value;
 		if (value.type() == Token::category::true_) {

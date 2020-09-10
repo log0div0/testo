@@ -20,7 +20,7 @@ struct StackNode {
 			return it->second;
 		}
 		if (!parent) {
-			throw std::runtime_error(std::string("Var ") + name + " not defined");
+			throw std::runtime_error(std::string("param \"") + name + "\" is not defined");
 		}
 		return parent->resolve_var(name);
 	}

@@ -29,8 +29,10 @@ machine VM1 {
 	}
 }
 
+param suka "500"
+
 macro m2() {
-	stop
+	sleep "${asuka}"
 }
 
 macro m1() {
