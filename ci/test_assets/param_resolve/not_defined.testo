@@ -1,0 +1,147 @@
+network my_network {
+	mode: "internal"
+}
+
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+
+	nic my_nic: {
+		attached_to: "my_network"
+	}
+}
+
+[no_snapshots: true]
+test sleep_not_defined {
+	my_ubuntu_server {
+		sleep "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test print_not_defined {
+	my_ubuntu_server {
+		print "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test abort_not_defined {
+	my_ubuntu_server {
+		abort "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test type_not_defined {
+	my_ubuntu_server {
+		type "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test wait_not_defined {
+	my_ubuntu_server {
+		wait "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test mouse_text_not_defined {
+	my_ubuntu_server {
+		mouse move "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test mouse_js_not_defined {
+	my_ubuntu_server {
+		mouse move js "${not_defined}"
+	}
+}
+
+flash my_flash {
+	size: 16Mb
+	fs: "fat"
+}
+
+macro plug_flash(name) {
+	plug flash "${name}"
+}
+
+[no_snapshots: true]
+test flash_not_defined {
+	my_ubuntu_server {
+		plug_flash("my_flash")
+		plug_flash("undefined_flash")
+	}
+}
+
+[no_snapshots: true]
+test dvd_not_defined {
+	my_ubuntu_server {
+		plug dvd "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test from_not_defined {
+	my_ubuntu_server {
+		copyto "${not_defined}" "lala"
+	}
+}
+
+[no_snapshots: true]
+test to_not_defined {
+	my_ubuntu_server {
+		copyfrom "lala" "${not_defined}"
+	}
+}
+
+[no_snapshots: true]
+test exec_not_defined {
+	my_ubuntu_server {
+		exec bash "${not_defined}"
+	}
+}
+
+macro my_macro(arg, default="${default_not_defined}") {
+}
+
+[no_snapshots: true]
+test macro_arg_not_defined {
+	my_ubuntu_server {
+		my_macro("${arg_not_defined}")
+	}
+}
+
+[no_snapshots: true]
+test macro_default_arg_not_defined {
+	my_ubuntu_server {
+		my_macro("1")
+	}
+}
+
+[no_snapshots: true]
+test factor_not_defined {
+	my_ubuntu_server {
+		if ("${factor_not_defined}") {
+
+		}
+	}
+}
+
+machine my_machine {
+	iso: "${iso_not_defined}"
+}
+
+[no_snapshots: true]
+test attr_not_defined {
+	my_machine {
+
+	}
+}
