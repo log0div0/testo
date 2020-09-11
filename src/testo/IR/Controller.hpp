@@ -12,10 +12,12 @@ struct Controller: Object<AST::Controller> {
 
 	std::string get_snapshot_cksum(const std::string& snapshot);
 	bool has_snapshot(const std::string& snapshot);
+	bool check_metadata_version();
 	virtual void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) = 0;
 	virtual void restore_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot_with_children(const std::string& snapshot) = 0;
 
+	//To be called only if the
 	virtual bool check_config_relevance() = 0;
 	void set_metadata(const std::string& key, const std::string& value);
 	std::string get_metadata(const std::string& key) const;

@@ -14,6 +14,26 @@ bool Controller::has_snapshot(const std::string& snapshot) {
 	return fs::exists(metadata_file);
 }
 
+bool Controller::check_metadata_version() {
+	try {
+		fs::path metadata_file = get_metadata_dir();
+		metadata_file /= id() + "_" + "_init";
+		auto metadata = read_metadata_file(metadata_file);
+		if (!metadata.count("opaque")) {
+			return false;
+		}
+
+		if (!metadata.count("metadata_version")) {
+			return false;
+		}
+
+		return metadata.at("metadata_version").get<std::string>() == "2";
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("getting snapshot cksum error"));
+	}
+}
+
 std::string Controller::get_snapshot_cksum(const std::string& snapshot) {
 	try {
 		fs::path metadata_file = get_metadata_dir();

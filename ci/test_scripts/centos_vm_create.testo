@@ -32,3 +32,94 @@ test centos_vm_create: centos_prepare_testo {
 
 	}
 }
+
+
+test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm
+		""" timeout 30m
+
+		wait "basic_machine"
+	}
+}
+
+
+[no_snapshots: true]
+test centos_backend_qemu_create_vm_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
+	centos {
+		mouse rclick "basic_machine";
+		mouse click "Delete"
+		mouse click "Delete associated storage files"
+		wait !"hda"
+		mouse click "Delete".from_bottom(0)
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm
+		""" timeout 30m
+
+		wait "basic_machine"
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_clean_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {
+	centos {
+		mouse rclick "basic_machine";
+		mouse click "Delete"
+		mouse click "Delete associated storage files"
+		wait !"hda"
+		mouse click "Delete".from_bottom(0)
+
+		exec bash """
+			testo clean	| grep 'Deleted virtual machine basic_machine'
+		""" timeout 30m
+
+		exec bash "!([ -f /var/lib/libvirt/testo/testo-storage-pool/basic_machine@main.img ])"
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_meta_version0_vm_recovery: centos_backend_qemu_create_simple_vm {
+	centos {
+		exec python3 """
+			import json
+
+			with open('/var/lib/libvirt/testo/vm_metadata/basic_machine/basic_machine__init') as data_file:
+			    data = json.load(data_file)
+
+			del data['opaque']
+
+			with open('/var/lib/libvirt/testo/vm_metadata/basic_machine/basic_machine__init', 'w') as data_file:
+			    data = json.dump(data, data_file)
+		"""
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --test_spec create_basic_vm | grep "Creating virtual machine basic_machine"
+		""" timeout 30m
+
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_meta_version1_vm_recovery: centos_backend_qemu_create_simple_vm {
+	centos {
+		exec python3 """
+			import json
+
+			with open('/var/lib/libvirt/testo/vm_metadata/basic_machine/basic_machine__init') as data_file:
+			    data = json.load(data_file)
+
+			del data['metadata_version']
+
+			with open('/var/lib/libvirt/testo/vm_metadata/basic_machine/basic_machine__init', 'w') as data_file:
+			    data = json.dump(data, data_file)
+		"""
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --test_spec create_basic_vm | grep "Creating virtual machine basic_machine"
+		""" timeout 30m
+
+	}
+}
