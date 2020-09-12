@@ -334,13 +334,13 @@ void Reporter::exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpr
 	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
 
-void Reporter::copy(std::shared_ptr<IR::Machine> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) {
+void Reporter::copy(std::shared_ptr<IR::Controller> controller, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) {
 	std::string from_to = is_to_guest ? "to" : "from";
 
 	report(fmt::format("{} Copying ", progress()), blue);
 	report(fmt::format("{} ", from), yellow);
-	report(fmt::format("{} virtual machine ", from_to), blue);
-	report(fmt::format("{} ", vmc->name()), yellow);
+	report(fmt::format("{} {} ", from_to, controller->type()), blue);
+	report(fmt::format("{} ", controller->name()), yellow);
 	report(fmt::format("to destination "), blue);
 	report(fmt::format("{} ", to), yellow);
 	report(fmt::format("with timeout {}\n", timeout), blue);

@@ -48,7 +48,7 @@ struct Reporter {
 	void macro_call(std::shared_ptr<IR::Machine> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
 	void plug(std::shared_ptr<IR::Machine> vmc, const std::string& device, const std::string& device_name, bool is_on);
 	void exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpreter, const std::string& timeout);
-	void copy(std::shared_ptr<IR::Machine> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
+	void copy(std::shared_ptr<IR::Controller> controller, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
 	void mouse_move_click_coordinates(std::shared_ptr<IR::Machine> vmc, const std::string& x, const std::string& y);
 	void mouse_move_click_selectable(std::shared_ptr<IR::Machine> vmc, const std::string& object, const std::string& timeout);
 	void mouse_no_object();

@@ -124,13 +124,31 @@ void QemuFlashDrive::undefine() {
 	vol.erase({VIR_STORAGE_VOL_DELETE_NORMAL});
 }
 
-void QemuFlashDrive::load_folder(const fs::path& folder) {
+void QemuFlashDrive::upload(const fs::path& from, const fs::path& to) {
 	try {
 		guestfs::Guestfs gfs(img_path());
 		gfs.mount();
-		gfs.upload(folder, "/");
+
+		if (to.has_parent_path()) {
+			gfs.mkdir_p(to.parent_path());
+		}
+		gfs.upload(from, to);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Loading folder {} to flash drive {} error", folder.generic_string(), name())));
+		std::throw_with_nested(std::runtime_error(fmt::format("Uploading from {} to {} on the flash drive {} error", from.generic_string(), to.generic_string(), name())));
+	}
+}
+
+void QemuFlashDrive::download(const fs::path& from, const fs::path& to) {
+	try {
+		guestfs::Guestfs gfs(img_path());
+		gfs.mount();
+
+		if (to.has_parent_path()) {
+			fs::create_directories(to.parent_path());
+		}
+		gfs.download(from, to);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Downloading from {} to {} on the flash drive {} error", from.generic_string(), to.generic_string(), name())));
 	}
 }
 

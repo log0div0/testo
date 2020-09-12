@@ -52,7 +52,7 @@ void FlashDrive::create() {
 			folder = fs::canonical(folder);
 			cksum_input += directory_signature(folder);
 
-			fd()->load_folder(folder);
+			fd()->upload(folder, "/");
 		}
 
 		std::hash<std::string> h;

@@ -133,6 +133,54 @@ void Guestfs::upload(const fs::path& from, const fs::path& to) {
 	}
 }
 
+void Guestfs::download(const fs::path& from, const fs::path& to) {
+	if (!exists(from)) {
+		throw std::runtime_error("download error: \"from\" path " + from.generic_string() + " does not exist");
+	}
+
+	if (!is_file(to) && !is_dir(to) && exists(to)) {
+		throw std::runtime_error("Fs_copy: Unsupported type of destination: " + to.generic_string());
+	}
+
+	if (is_dir(from) && fs::is_regular_file(to)) {
+		throw std::runtime_error("Fs_copy: can't copy a directory " + from.generic_string() + " to a regular file " + to.generic_string());
+	}
+
+	//if from is a regular file
+	if (is_file(from)) {
+		if (fs::is_directory(to)) {
+			download_file(from, to / from.filename());
+		} else {
+			fs::create_directories(to.parent_path());
+			download_file(from, to);
+		}
+	} else if (is_dir(from)) {
+		fs::create_directories(to);
+
+		for (auto& directory_entry: ls(from)) {
+			download(directory_entry, to / directory_entry.filename());
+		}
+	} else {
+		throw std::runtime_error("Fs_copy: Unsupported type of file: " + from.generic_string());
+	}
+}
+
+void Guestfs::download_file(const fs::path& from, const fs::path& to) {
+	File source(handle, from);
+#ifdef WIN32
+	winapi::File dest(to.generic_string(), GENERIC_WRITE, CREATE_ALWAYS);
+#else
+	linuxapi::File dest(to, O_WRONLY | O_CREAT, 0644);
+#endif
+
+	uint8_t buf[8192];
+	size_t size;
+	while ((size = source.read(buf, sizeof(buf))) > 0) {
+		dest.write(buf, size);
+		coro::CheckPoint();
+	}
+}
+
 void Guestfs::umount() {
 	if (guestfs_umount(handle, "/") < 0) {
 		throw std::runtime_error(guestfs_last_error(handle));
@@ -167,6 +215,24 @@ bool Guestfs::is_dir(const fs::path& path) {
 	if (result < 0) {
 		throw std::runtime_error(guestfs_last_error(handle));
 	}
+	return result;
+}
+
+std::vector<fs::path> Guestfs::ls(const fs::path& dir) const {
+	char** ls_result = guestfs_ls(handle, dir.generic_string().c_str());
+
+	if (!ls_result) {
+		throw std::runtime_error(guestfs_last_error(handle));
+	}
+
+	std::vector<fs::path> result;
+
+	for (size_t i = 0; ls_result[i] != nullptr; i++) {
+		result.push_back(dir / fs::path(ls_result[i]));
+		free(ls_result[i]);
+	}
+
+	free(ls_result);
 	return result;
 }
 

@@ -623,11 +623,15 @@ void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 
 void VisitorInterpreter::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
-		if (std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
-			visit_action_vm(action);
-		} else {
-			visit_action_fd(action);
-		}
+		visit_action(action);
+	}
+}
+
+void VisitorInterpreter::visit_action(std::shared_ptr<AST::IAction> action) {
+	if (std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
+		visit_action_vm(action);
+	} else {
+		visit_action_fd(action);
 	}
 }
 
@@ -1559,21 +1563,35 @@ void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 		fs::path to = copy.to();
 
 		std::string wait_for = copy.timeout();
-		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
-		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
+		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
 
-		if (vmc->vm()->state() != VmState::Running) {
-			throw std::runtime_error(fmt::format("virtual machine is not running"));
+		if (auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
+			if (vmc->vm()->state() != VmState::Running) {
+				throw std::runtime_error(fmt::format("virtual machine is not running"));
+			}
+
+			if (!vmc->vm()->is_additions_installed()) {
+				throw std::runtime_error(fmt::format("guest additions are not installed"));
+			}
+
+			if(copy.ast_node->is_to_guest()) {
+				vmc->vm()->copy_to_guest(from, to, time_to_milliseconds(wait_for));
+			} else {
+				vmc->vm()->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
+			}
 		}
+		else {
+			auto fdc = std::dynamic_pointer_cast<IR::FlashDrive>(current_controller);
 
-		if (!vmc->vm()->is_additions_installed()) {
-			throw std::runtime_error(fmt::format("guest additions are not installed"));
-		}
+			//TODO: check is it's plugged somewhere
 
-		if(copy.ast_node->is_to_guest()) {
-			vmc->vm()->copy_to_guest(from, to, time_to_milliseconds(wait_for));
-		} else {
-			vmc->vm()->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
+			//TODO: timeouts
+			if(copy.ast_node->is_to_guest()) {
+				fdc->fd()->upload(from, to);
+			} else {
+				fdc->fd()->download(from, to);
+			}
+
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(copy.ast_node, current_controller));
@@ -1617,11 +1635,10 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<AST::IfClause> if_claus
 		std::throw_with_nested(ActionException(if_clause, current_controller));
 	}
 	//everything else should be caught at test level
-	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorInterpreter::visit_action_vm : &VisitorInterpreter::visit_action_fd;
 	if (expr_result) {
-		return (this->*action_handler)(if_clause->if_action);
+		return visit_action(if_clause->if_action);
 	} else if (if_clause->has_else()) {
-		return (this->*action_handler)(if_clause->else_action);
+		return visit_action(if_clause->else_action);
 	}
 }
 
@@ -1640,8 +1657,6 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_cl
 		throw std::runtime_error("Unknown counter list type");
 	}
 
-	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorInterpreter::visit_action_vm : &VisitorInterpreter::visit_action_fd;
-
 	std::map<std::string, std::string> vars;
 	for (i = 0; i < values.size(); ++i) {
 		vars[for_clause->counter.value()] = values[i];
@@ -1651,7 +1666,7 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_cl
 			new_stack->parent = stack;
 			new_stack->vars = vars;
 			StackPusher<VisitorInterpreter> new_ctx(this, new_stack);
-				(this->*action_handler)(for_clause->cycle_body);
+				visit_action(for_clause->cycle_body);
 
 		} catch (const CycleControlException& cycle_control) {
 			if (cycle_control.token.type() == Token::category::break_) {
@@ -1665,7 +1680,7 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_cl
 	}
 
 	if ((i == values.size()) && for_clause->else_token) {
-		(this->*action_handler)(for_clause->else_action);
+		visit_action(for_clause->else_action);
 	}
 }
 

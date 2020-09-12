@@ -22,11 +22,15 @@ struct Guestfs {
 	void mkdir_p(const fs::path& dir);
 	void upload_file(const fs::path& from, const fs::path& to);
 	void upload(const fs::path& from, const fs::path& to);
+	void download_file(const fs::path& from, const fs::path& to);
+	void download(const fs::path& from, const fs::path& to);
 	void umount();
 	void touch(const fs::path& path);
 	bool exists(const fs::path& path);
 	bool is_file(const fs::path& path);
 	bool is_dir(const fs::path& path);
+
+	std::vector<fs::path> ls(const fs::path& dir) const;
 
 private:
 	void add_drive(const fs::path& path);

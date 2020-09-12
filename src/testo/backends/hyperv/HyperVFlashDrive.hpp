@@ -11,7 +11,8 @@ struct HyperVFlashDrive: FlashDrive {
 	bool is_defined() override;
 	void create() override;
 	void undefine() override;
-	void load_folder(const fs::path& folder) override;
+	void upload(const fs::path& from, const fs::path& to) override;
+	void download(const fs::path& from, const fs::path& to) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void make_snapshot(const std::string& snapshot) override;
 	void delete_snapshot(const std::string& snapshot) override;

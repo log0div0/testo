@@ -326,11 +326,15 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 
 void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
-		if (std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
-			visit_action_vm(action);
-		} else {
-			visit_action_fd(action);
-		}
+		visit_action(action);
+	}
+}
+
+void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
+	if (std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
+		visit_action_vm(action);
+	} else {
+		visit_action_fd(action);
 	}
 }
 
@@ -915,22 +919,20 @@ void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) 
 
 	auto expr_value = visit_expr(if_clause->expr);
 
-	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorSemantic::visit_action_vm : &VisitorSemantic::visit_action_fd;
-
 	switch (expr_value) {
 		case Tribool::yes:
-			(this->*action_handler)(if_clause->if_action);
+			visit_action(if_clause->if_action);
 			break;
 		case Tribool::no:
 			if (if_clause->has_else()) {
-				(this->*action_handler)(if_clause->else_action);
+				visit_action(if_clause->else_action);
 			}
 			break;
 		default:
-			(this->*action_handler)(if_clause->if_action);
+			visit_action(if_clause->if_action);
 			if (if_clause->has_else()) {
 				current_test->cksum_input += "else";
-				(this->*action_handler)(if_clause->else_action);
+				visit_action(if_clause->else_action);
 			}
 			break;
 	}
@@ -981,8 +983,6 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 		throw std::runtime_error("Unknown counter list type");
 	}
 
-	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorSemantic::visit_action_vm : &VisitorSemantic::visit_action_fd;
-
 	std::map<std::string, std::string> vars;
 	for (auto i: values) {
 		vars[for_clause->counter.value()] = i;
@@ -990,12 +990,12 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 		new_stack->parent = stack;
 		new_stack->vars = vars;
 		StackPusher<VisitorSemantic> new_ctx(this, new_stack);
-		(this->*action_handler)(for_clause->cycle_body);
+		visit_action(for_clause->cycle_body);
 	}
 
 	if (for_clause->else_token) {
 		current_test->cksum_input += "else ";
-		(this->*action_handler)(for_clause->else_action);
+		visit_action(for_clause->else_action);
 	}
 }
 
