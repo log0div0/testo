@@ -20,7 +20,8 @@ struct VisitorInterpreter {
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
-	void visit_action(std::shared_ptr<AST::IAction> action);
+	void visit_action_vm(std::shared_ptr<AST::IAction> action);
+	void visit_action_fd(std::shared_ptr<AST::IAction> action);
 	void visit_abort(const IR::Abort& abort);
 	void visit_print(const IR::Print& print);
 	void visit_type(const IR::Type& type);
@@ -113,7 +114,7 @@ private:
 
 	std::shared_ptr<js::Context> js_current_ctx;
 
-	std::shared_ptr<IR::Machine> vmc;
+	std::shared_ptr<IR::Controller> current_controller;
 
 	Reporter reporter;
 };

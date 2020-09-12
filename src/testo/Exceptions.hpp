@@ -19,13 +19,12 @@ protected:
 };
 
 struct ActionException: public Exception {
-	explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Machine> vmc):
+	explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller):
 		Exception()
 	{
 		msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node);
-		if (vmc) {
-			msg += " on virtual machine ";
-			msg += vmc->name();
+		if (controller) {
+			msg += " on " + controller->type() + " " + controller->name();
 		}
 	}
 };
@@ -39,13 +38,12 @@ struct MacroException: public Exception {
 };
 
 struct AbortException: public Exception {
-	explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Machine> vmc, const std::string& message):
+	explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Controller> controller, const std::string& message):
 		Exception()
 	{
 		msg = std::string(node->begin()) + ": Caught abort action ";
-		if (vmc) {
-			msg += "on virtual machine ";
-			msg += vmc->name();
+		if (controller) {
+			msg += "on " + controller->type() + " " +  controller->name();
 		}
 
 		msg += " with message: ";

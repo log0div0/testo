@@ -294,40 +294,47 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 }
 
 void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	auto vmc = IR::program->get_machine_or_null(cmd->vm.value());
-	if (!vmc) {
-		throw std::runtime_error(std::string(cmd->vm.begin()) + ": Error: unknown virtual machine: " + cmd->vm.value());
-	}
+	current_controller = nullptr;
+	current_test->cksum_input += cmd->entity.value();
+	if (current_controller = IR::program->get_machine_or_null(cmd->entity.value())) {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
+		visit_machine(vmc);
 
-	visit_machine(vmc);
-
-	if (vmc->config.count("nic")) {
-		auto nics = vmc->config.at("nic");
-		for (auto& nic: nics) {
-			if (nic.count("attached_to")) {
-				std::string network_name = nic.at("attached_to");
-				auto network = IR::program->get_network_or_null(network_name);
-				if (!network) {
-					throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": nic \"{}\" is attached to an unknown network: \"{}\"",
-						vmc->config.at("name").get<std::string>(), nic.at("name").get<std::string>(), network_name));
+		if (vmc->config.count("nic")) {
+			auto nics = vmc->config.at("nic");
+			for (auto& nic: nics) {
+				if (nic.count("attached_to")) {
+					std::string network_name = nic.at("attached_to");
+					auto network = IR::program->get_network_or_null(network_name);
+					if (!network) {
+						throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": nic \"{}\" is attached to an unknown network: \"{}\"",
+							vmc->config.at("name").get<std::string>(), nic.at("name").get<std::string>(), network_name));
+					}
+					visit_network(network);
 				}
-				visit_network(network);
 			}
 		}
+		visit_action_vm(cmd->action);
+	} else if (current_controller = IR::program->get_flash_drive_or_null(cmd->entity.value())) {
+		auto fdc = std::dynamic_pointer_cast<IR::FlashDrive>(current_controller);
+		visit_flash(fdc);
+		visit_action_fd(cmd->action);
+	} else {
+		throw std::runtime_error(std::string(cmd->entity.begin()) + ": Error: unknown virtual entity: " + cmd->entity.value());
 	}
-
-	current_test->cksum_input += cmd->vm.value();
-
-	visit_action(cmd->action);
 }
 
 void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
-		visit_action(action);
+		if (std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
+			visit_action_vm(action);
+		} else {
+			visit_action_fd(action);
+		}
 	}
 }
 
-void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
+void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
 		return visit_abort({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
@@ -340,7 +347,7 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_hold({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
 		return visit_release({p->action, stack});
-	}  else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
 		return visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
 		return visit_mouse({p->action, stack});
@@ -368,7 +375,38 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 		return visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		return visit_cycle_control({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+		;
+	} else {
+		throw std::runtime_error(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a virtual machine");
 	}
+}
+
+void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
+		return visit_abort({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
+		return visit_print({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
+		return visit_copy({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
+		return visit_sleep({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
+		return visit_action_block(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+		;
+	} else {
+		throw std::runtime_error(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a flash drive");
+	}
+	/*else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
+		return visit_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
+		return visit_if_clause(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
+		return visit_for_clause(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
+		return visit_cycle_control({p->action, stack});
+	}*/
 }
 
 void VisitorSemantic::visit_abort(const IR::Abort& abort) {
@@ -877,21 +915,22 @@ void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) 
 
 	auto expr_value = visit_expr(if_clause->expr);
 
+	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorSemantic::visit_action_vm : &VisitorSemantic::visit_action_fd;
+
 	switch (expr_value) {
 		case Tribool::yes:
-			visit_action(if_clause->if_action);
+			(this->*action_handler)(if_clause->if_action);
 			break;
 		case Tribool::no:
 			if (if_clause->has_else()) {
-				current_test->cksum_input += "else";
-				visit_action(if_clause->else_action);
+				(this->*action_handler)(if_clause->else_action);
 			}
 			break;
 		default:
-			visit_action(if_clause->if_action);
+			(this->*action_handler)(if_clause->if_action);
 			if (if_clause->has_else()) {
 				current_test->cksum_input += "else";
-				visit_action(if_clause->else_action);
+				(this->*action_handler)(if_clause->else_action);
 			}
 			break;
 	}
@@ -942,6 +981,8 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 		throw std::runtime_error("Unknown counter list type");
 	}
 
+	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorSemantic::visit_action_vm : &VisitorSemantic::visit_action_fd;
+
 	std::map<std::string, std::string> vars;
 	for (auto i: values) {
 		vars[for_clause->counter.value()] = i;
@@ -949,12 +990,12 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 		new_stack->parent = stack;
 		new_stack->vars = vars;
 		StackPusher<VisitorSemantic> new_ctx(this, new_stack);
-		visit_action(for_clause->cycle_body);
+		(this->*action_handler)(for_clause->cycle_body);
 	}
 
 	if (for_clause->else_token) {
 		current_test->cksum_input += "else ";
-		visit_action(for_clause->else_action);
+		(this->*action_handler)(for_clause->else_action);
 	}
 }
 

@@ -29,21 +29,16 @@ machine VM1 {
 	}
 }
 
-param suka "500"
-
-macro m2() {
-	sleep "${asuka}"
-}
-
-macro m1() {
-	m2()
+flash my_flash {
+	fs: "vfat"
+	size: 8Mb
 }
 
 test ubuntu_installation {
-	VM1 {
-		m1()
+	my_flash {
+		print "Hello"
+		sleep 5s
 	}
-
 }
 
 test install_guest_additions: ubuntu_installation {

@@ -37,7 +37,8 @@ struct VisitorSemantic {
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
-	void visit_action(std::shared_ptr<AST::IAction> action);
+	void visit_action_vm(std::shared_ptr<AST::IAction> action);
+	void visit_action_fd(std::shared_ptr<AST::IAction> action);
 	void visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers);
 	void visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates);
 	void visit_select_text(const IR::SelectText& text);
@@ -101,6 +102,8 @@ struct VisitorSemantic {
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 	template_literals::Parser template_parser;
 	std::shared_ptr<StackNode> stack;
+
+	std::shared_ptr<IR::Controller> current_controller;
 
 	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
 	std::unordered_set<std::shared_ptr<IR::Machine>> visited_machines;

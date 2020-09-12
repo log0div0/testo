@@ -610,19 +610,28 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 }
 
 void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	vmc = IR::program->get_machine_or_throw(cmd->vm.value());
-	visit_action(cmd->action);
-	vmc = nullptr;
+	current_controller = nullptr;
+	if (current_controller = IR::program->get_machine_or_null(cmd->entity.value())) {
+		visit_action_vm(cmd->action);
+	} else if (current_controller = IR::program->get_flash_drive_or_null(cmd->entity.value())) {
+		visit_action_fd(cmd->action);
+	} else {
+		throw std::runtime_error("Should never happen");
+	}
 }
 
 
 void VisitorInterpreter::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
 	for (auto action: action_block->actions) {
-		visit_action(action);
+		if (std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
+			visit_action_vm(action);
+		} else {
+			visit_action_fd(action);
+		}
 	}
 }
 
-void VisitorInterpreter::visit_action(std::shared_ptr<AST::IAction> action) {
+void VisitorInterpreter::visit_action_vm(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
 		visit_abort({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
@@ -666,21 +675,49 @@ void VisitorInterpreter::visit_action(std::shared_ptr<AST::IAction> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		;
 	} else {
-		throw std::runtime_error("Unknown action");
+		throw std::runtime_error("Should never happen");
+	}
+
+	coro::CheckPoint();
+}
+
+void VisitorInterpreter::visit_action_fd(std::shared_ptr<AST::IAction> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
+		visit_abort({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
+		visit_print({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
+		visit_sleep({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
+		visit_copy({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
+		visit_action_block(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+		;
+	/*} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
+		visit_macro_call(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
+		visit_if_clause(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
+		visit_for_clause(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
+		throw CycleControlException(p->action->t);*/
+	}  else {
+		throw std::runtime_error("Should never happen");
 	}
 
 	coro::CheckPoint();
 }
 
 void VisitorInterpreter::visit_abort(const IR::Abort& abort) {
-	throw AbortException(abort.ast_node, vmc, abort.message());
+	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
 void VisitorInterpreter::visit_print(const IR::Print& print) {
 	try {
-		reporter.print(vmc, print.message());
+		reporter.print(current_controller, print.message());
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(print.ast_node, vmc));
+		std::throw_with_nested(ActionException(print.ast_node, current_controller));
 	}
 }
 
@@ -693,6 +730,7 @@ void VisitorInterpreter::visit_type(const IR::Type& type) {
 
 		std::string interval = type.interval();
 
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.type(vmc, text, interval);
 
 		for (auto c: utf8::split_to_chars(text)) {
@@ -705,7 +743,7 @@ void VisitorInterpreter::visit_type(const IR::Type& type) {
 		}
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(type.ast_node, vmc));
+		std::throw_with_nested(ActionException(type.ast_node, current_controller));
 	}
 }
 
@@ -803,7 +841,7 @@ bool VisitorInterpreter::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> bi
 }
 
 void VisitorInterpreter::visit_sleep(const IR::Sleep& sleep) {
-	reporter.sleep(vmc, sleep.timeout());
+	reporter.sleep(current_controller, sleep.timeout());
 	::sleep(sleep.timeout());
 }
 
@@ -814,6 +852,7 @@ void VisitorInterpreter::visit_wait(const IR::Wait& wait) {
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = wait.select_expr();
 
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.wait(vmc, text, wait_for, interval_str);
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
@@ -842,7 +881,7 @@ void VisitorInterpreter::visit_wait(const IR::Wait& wait) {
 		throw std::runtime_error("Timeout");
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(wait.ast_node, vmc));
+		std::throw_with_nested(ActionException(wait.ast_node, current_controller));
 	}
 }
 
@@ -856,16 +895,17 @@ void VisitorInterpreter::visit_press(const IR::Press& press) {
 			timer.waitFor(std::chrono::milliseconds(press_interval));
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(press.ast_node, vmc));
+		std::throw_with_nested(ActionException(press.ast_node, current_controller));
 	}
 }
 
 void VisitorInterpreter::visit_hold(const IR::Hold& hold) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.hold_key(vmc, std::string(*hold.ast_node->combination));
 		vmc->hold(hold.buttons());
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(hold.ast_node, vmc));
+		std::throw_with_nested(ActionException(hold.ast_node, current_controller));
 	}
 }
 
@@ -873,6 +913,7 @@ void VisitorInterpreter::visit_release(const IR::Release& release) {
 	try {
 		auto buttons = release.buttons();
 
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		if (buttons.size()) {
 			reporter.release_key(vmc, std::string(*release.ast_node->combination));
 			vmc->release(release.buttons());
@@ -881,7 +922,7 @@ void VisitorInterpreter::visit_release(const IR::Release& release) {
 			vmc->release();
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(release.ast_node, vmc));
+		std::throw_with_nested(ActionException(release.ast_node, current_controller));
 	}
 }
 
@@ -902,6 +943,7 @@ void VisitorInterpreter::visit_mouse(const IR::Mouse& mouse) {
 
 void VisitorInterpreter::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.mouse_hold(vmc, mouse_hold.button());
 		if (mouse_hold.button() == "lbtn") {
 			vmc->mouse_hold({MouseButton::Left});
@@ -913,21 +955,23 @@ void VisitorInterpreter::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
 			throw std::runtime_error("Unknown mouse button: " + mouse_hold.button());
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(mouse_hold.ast_node, vmc));
+		std::throw_with_nested(ActionException(mouse_hold.ast_node, current_controller));
 	}
 }
 
 void VisitorInterpreter::visit_mouse_release(const IR::MouseRelease& mouse_release) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.mouse_release(vmc);
 		vmc->mouse_release();
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(mouse_release.ast_node, vmc));
+		std::throw_with_nested(ActionException(mouse_release.ast_node, current_controller));
 	}
 }
 
 void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mouse_wheel) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.mouse_wheel(vmc, mouse_wheel->direction.value());
 
 		if (mouse_wheel->direction.value() == "up") {
@@ -939,12 +983,13 @@ void VisitorInterpreter::visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mous
 		}
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(mouse_wheel, vmc));
+		std::throw_with_nested(ActionException(mouse_wheel, current_controller));
 	}
 }
 
 void VisitorInterpreter::visit_mouse_move_click(const IR::MouseMoveClick& mouse_move_click) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.mouse_move_click(vmc, mouse_move_click.event_type());
 
 		if (mouse_move_click.ast_node->object) {
@@ -977,7 +1022,7 @@ void VisitorInterpreter::visit_mouse_move_click(const IR::MouseMoveClick& mouse_
 			throw std::runtime_error("Unsupported click type");
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(mouse_move_click.ast_node, vmc));
+		std::throw_with_nested(ActionException(mouse_move_click.ast_node, current_controller));
 	}
 }
 
@@ -1094,6 +1139,7 @@ void VisitorInterpreter::visit_mouse_move_selectable(const IR::MouseSelectable& 
 		where_to_go += std::string(*specifier);
 	}
 
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
 	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
@@ -1135,6 +1181,7 @@ void VisitorInterpreter::visit_mouse_move_coordinates(const IR::MouseCoordinates
 {
 	auto dx = coordinates.x();
 	auto dy = coordinates.y();
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 	reporter.mouse_move_click_coordinates(vmc, dx, dy);
 	if ((dx[0] == '+') || (dx[0] == '-')) {
 		vmc->vm()->mouse_move_rel("x", std::stoi(dx));
@@ -1152,6 +1199,7 @@ void VisitorInterpreter::visit_mouse_move_coordinates(const IR::MouseCoordinates
 void VisitorInterpreter::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
 	uint32_t times = key_spec->get_times();
 
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 	reporter.press_key(vmc, *key_spec->combination, times);
 
 	for (uint32_t i = 0; i < times; i++) {
@@ -1179,7 +1227,7 @@ void VisitorInterpreter::visit_plug(const IR::Plug& plug) {
 				plug.entity_type());
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(plug.ast_node, vmc));
+		std::throw_with_nested(ActionException(plug.ast_node, current_controller));
 	}
 }
 
@@ -1188,6 +1236,7 @@ void VisitorInterpreter::visit_plug_nic(const IR::Plug& plug) {
 	//the vmc while semantic analisys
 	auto nic = plug.entity_name();
 
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 	reporter.plug(vmc, "nic", nic, plug.is_on());
 
 	auto nics = vmc->vm()->nics();
@@ -1220,6 +1269,7 @@ void VisitorInterpreter::visit_plug_link(const IR::Plug& plug) {
 
 	auto nic = plug.entity_name();
 
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 	reporter.plug(vmc, "link", nic, plug.is_on());
 
 	auto nics = vmc->vm()->nics();
@@ -1248,6 +1298,7 @@ void VisitorInterpreter::visit_plug_link(const IR::Plug& plug) {
 
 void VisitorInterpreter::visit_plug_flash(const IR::Plug& plug) {
 	auto fdc = IR::program->get_flash_drive_or_throw(plug.entity_name());
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	if (vmc->vm()->is_flash_plugged(fdc->fd())) {
@@ -1259,6 +1310,7 @@ void VisitorInterpreter::visit_plug_flash(const IR::Plug& plug) {
 
 void VisitorInterpreter::visit_unplug_flash(const IR::Plug& plug) {
 	auto fdc = IR::program->get_flash_drive_or_throw(plug.entity_name());
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm()->is_flash_plugged(fdc->fd())) {
@@ -1269,6 +1321,7 @@ void VisitorInterpreter::visit_unplug_flash(const IR::Plug& plug) {
 }
 
 void VisitorInterpreter::visit_plug_dvd(const IR::Plug& plug) {
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 	if (plug.is_on()) {
 		auto path = plug.dvd_path();
 		reporter.plug(vmc, "dvd", path.generic_string(), true);
@@ -1301,6 +1354,7 @@ void VisitorInterpreter::visit_plug_dvd(const IR::Plug& plug) {
 
 void VisitorInterpreter::visit_start(const IR::Start& start) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.start(vmc);
 		vmc->vm()->start();
 		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(5000);
@@ -1312,22 +1366,24 @@ void VisitorInterpreter::visit_start(const IR::Start& start) {
 		}
 		throw std::runtime_error("Start timeout");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(start.ast_node, vmc));
+		std::throw_with_nested(ActionException(start.ast_node, current_controller));
 	}
 }
 
 void VisitorInterpreter::visit_stop(const IR::Stop& stop) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.stop(vmc);
 		vmc->vm()->stop();
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(stop.ast_node, vmc));
+		std::throw_with_nested(ActionException(stop.ast_node, current_controller));
 
 	}
 }
 
 void VisitorInterpreter::visit_shutdown(const IR::Shutdown& shutdown) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		std::string wait_for = shutdown.timeout();
 		reporter.shutdown(vmc, wait_for);
 		vmc->vm()->power_button();
@@ -1340,7 +1396,7 @@ void VisitorInterpreter::visit_shutdown(const IR::Shutdown& shutdown) {
 		}
 		throw std::runtime_error("Shutdown timeout");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(shutdown.ast_node, vmc));
+		std::throw_with_nested(ActionException(shutdown.ast_node, current_controller));
 
 	}
 }
@@ -1424,6 +1480,7 @@ static std::string build_python_script(const std::string& body) {
 
 void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 	try {
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.exec(vmc, exec.interpreter(), exec.timeout());
 
 		if (vmc->vm()->state() != VmState::Running) {
@@ -1492,7 +1549,7 @@ void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 		vmc->vm()->remove_from_guest(guest_script_file);
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(exec.ast_node, vmc));
+		std::throw_with_nested(ActionException(exec.ast_node, current_controller));
 	}
 }
 
@@ -1502,6 +1559,7 @@ void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 		fs::path to = copy.to();
 
 		std::string wait_for = copy.timeout();
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.copy(vmc, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
 
 		if (vmc->vm()->state() != VmState::Running) {
@@ -1518,7 +1576,7 @@ void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 			vmc->vm()->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(copy.ast_node, vmc));
+		std::throw_with_nested(ActionException(copy.ast_node, current_controller));
 	}
 
 }
@@ -1540,6 +1598,7 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_
 		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
 	}
 
+	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 	reporter.macro_call(vmc, macro_call->name(), args);
 
 	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
@@ -1555,13 +1614,14 @@ void VisitorInterpreter::visit_if_clause(std::shared_ptr<AST::IfClause> if_claus
 	try {
 		expr_result = visit_expr(if_clause->expr);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(if_clause, vmc));
+		std::throw_with_nested(ActionException(if_clause, current_controller));
 	}
 	//everything else should be caught at test level
+	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorInterpreter::visit_action_vm : &VisitorInterpreter::visit_action_fd;
 	if (expr_result) {
-		return visit_action(if_clause->if_action);
+		return (this->*action_handler)(if_clause->if_action);
 	} else if (if_clause->has_else()) {
-		return visit_action(if_clause->else_action);
+		return (this->*action_handler)(if_clause->else_action);
 	}
 }
 
@@ -1580,6 +1640,8 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_cl
 		throw std::runtime_error("Unknown counter list type");
 	}
 
+	auto action_handler = (std::dynamic_pointer_cast<IR::Machine>(current_controller)) ? &VisitorInterpreter::visit_action_vm : &VisitorInterpreter::visit_action_fd;
+
 	std::map<std::string, std::string> vars;
 	for (i = 0; i < values.size(); ++i) {
 		vars[for_clause->counter.value()] = values[i];
@@ -1589,7 +1651,8 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_cl
 			new_stack->parent = stack;
 			new_stack->vars = vars;
 			StackPusher<VisitorInterpreter> new_ctx(this, new_stack);
-			visit_action(for_clause->cycle_body);
+				(this->*action_handler)(for_clause->cycle_body);
+
 		} catch (const CycleControlException& cycle_control) {
 			if (cycle_control.token.type() == Token::category::break_) {
 				break;
@@ -1602,7 +1665,7 @@ void VisitorInterpreter::visit_for_clause(std::shared_ptr<AST::ForClause> for_cl
 	}
 
 	if ((i == values.size()) && for_clause->else_token) {
-		visit_action(for_clause->else_action);
+		(this->*action_handler)(for_clause->else_action);
 	}
 }
 
@@ -1670,6 +1733,8 @@ bool VisitorInterpreter::visit_check(const IR::Check& check) {
 		std::string interval_str = check.interval();
 		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
 		auto text = template_parser.resolve(std::string(*check.ast_node->select_expr), check.stack);
+
+		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		reporter.check(vmc, text, check_for, interval_str);
 
 		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
@@ -1694,7 +1759,7 @@ bool VisitorInterpreter::visit_check(const IR::Check& check) {
 
 		return false;
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ActionException(check.ast_node, vmc));
+		std::throw_with_nested(ActionException(check.ast_node, current_controller));
 	}
 }
 
