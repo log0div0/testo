@@ -40,13 +40,12 @@ test ubuntu_installation {
 }
 
 test check_copyto: ubuntu_installation {
-	my_flash {
-		copyto "./macro_proposal.testo" "/"
-	}
-
 	VM1 {
 		plug flash my_flash
-		abort "stop here"
+		unplug flash my_flash
+	}
+	my_flash {
+		copyto "./macro_proposal.testo" "/"
 	}
 }
 

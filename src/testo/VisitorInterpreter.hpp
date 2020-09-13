@@ -116,6 +116,7 @@ private:
 	std::shared_ptr<js::Context> js_current_ctx;
 
 	std::shared_ptr<IR::Controller> current_controller;
+	std::shared_ptr<IR::Test> current_test;
 
 	Reporter reporter;
 };

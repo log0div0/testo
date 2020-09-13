@@ -989,10 +989,14 @@ bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 
 			if (std::string(disk.child("target").attribute("dev").value()) == "sdb") {
 				result = disk.child("source").attribute("file").value();
+
+				if (result == fd->img_path().generic_string()) {
+					return true;
+				}
 			}
 		}
 
-		return result.length();
+		return false;
 	} catch (const std::string& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Checking if flash drive {} is plugged", fd->name())));
 	}

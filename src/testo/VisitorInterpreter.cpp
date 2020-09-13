@@ -447,6 +447,7 @@ void VisitorInterpreter::visit() {
 
 void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 	try {
+		current_test = nullptr;
 		//Ok, we're not cached and we need to run the test
 		reporter.prepare_environment();
 		//Check if one of the parents failed. If it did, just fail
@@ -535,6 +536,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		//Everything is in the right state so we could actually do the test
 		{
 			StackPusher<VisitorInterpreter> pusher(this, test->stack);
+			current_test = test;
 			visit_command_block(test->ast_node->cmd_block);
 		}
 
@@ -1305,8 +1307,10 @@ void VisitorInterpreter::visit_plug_flash(const IR::Plug& plug) {
 	auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
-	if (vmc->vm()->is_flash_plugged(fdc->fd())) {
-		throw std::runtime_error(fmt::format("specified flash {} is already plugged into this virtual machine", fdc->name()));
+	for (auto vmc: current_test->get_all_machines()) {
+		if (vmc->vm()->is_flash_plugged(fdc->fd())) {
+			throw std::runtime_error(fmt::format("Flash drive {} is already plugged into vm {}. You should unplug it first", fdc->name(), vmc->name()));
+		}
 	}
 
 	vmc->vm()->plug_flash_drive(fdc->fd());
@@ -1583,7 +1587,11 @@ void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 		else {
 			auto fdc = std::dynamic_pointer_cast<IR::FlashDrive>(current_controller);
 
-			//TODO: check is it's plugged somewhere
+			for (auto vmc: current_test->get_all_machines()) {
+				if (vmc->vm()->is_flash_plugged(fdc->fd())) {
+					throw std::runtime_error(fmt::format("Flash drive {} is already plugged into vm {}. You should unplug it first", fdc->name(), vmc->name()));
+				}
+			}
 
 			//TODO: timeouts
 			if(copy.ast_node->is_to_guest()) {
