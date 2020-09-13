@@ -4,6 +4,7 @@
 #include "Exceptions.hpp"
 
 #include "coro/CheckPoint.h"
+#include "coro/Timeout.h"
 #include "utf8.hpp"
 #include <fmt/format.h>
 #include <fstream>
@@ -1543,12 +1544,15 @@ void VisitorInterpreter::visit_exec(const IR::Exec& exec) {
 		script_stream << script;
 		script_stream.close();
 
-		vmc->vm()->copy_to_guest(host_script_file, guest_script_file, 5000); //5 seconds should be enough to pass any script
+		vmc->vm()->copy_to_guest(host_script_file, guest_script_file); //5 seconds should be enough to pass any script
 
 		fs::remove(host_script_file.generic_string());
 
 		args.push_back(guest_script_file.generic_string());
-		auto result = vmc->vm()->run(interpreter, args, time_to_milliseconds(exec.timeout()), [&](const std::string& output) {
+
+		coro::Timeout timeout(std::chrono::milliseconds(time_to_milliseconds(exec.timeout())));
+
+		auto result = vmc->vm()->run(interpreter, args, [&](const std::string& output) {
 			reporter.exec_command_output(output);
 		});
 		if (result != 0) {
@@ -1569,6 +1573,8 @@ void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 		std::string wait_for = copy.timeout();
 		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
 
+		coro::Timeout timeout(std::chrono::milliseconds(time_to_milliseconds(wait_for)));
+
 		if (auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
 			if (vmc->vm()->state() != VmState::Running) {
 				throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -1579,9 +1585,9 @@ void VisitorInterpreter::visit_copy(const IR::Copy& copy) {
 			}
 
 			if(copy.ast_node->is_to_guest()) {
-				vmc->vm()->copy_to_guest(from, to, time_to_milliseconds(wait_for));
+				vmc->vm()->copy_to_guest(from, to);
 			} else {
-				vmc->vm()->copy_from_guest(from, to, time_to_milliseconds(wait_for));;
+				vmc->vm()->copy_from_guest(from, to);;
 			}
 		}
 		else {

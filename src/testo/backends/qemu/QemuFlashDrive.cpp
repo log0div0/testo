@@ -134,7 +134,7 @@ void QemuFlashDrive::upload(const fs::path& from, const fs::path& to) {
 		}
 		gfs.upload(from, to);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Uploading from {} to {} on the flash drive {} error", from.generic_string(), to.generic_string(), name())));
+		std::throw_with_nested(std::runtime_error(fmt::format("Uploading from {} to {} on the flash drive {}", from.generic_string(), to.generic_string(), name())));
 	}
 }
 
@@ -148,7 +148,7 @@ void QemuFlashDrive::download(const fs::path& from, const fs::path& to) {
 		}
 		gfs.download(from, to);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Downloading from {} to {} on the flash drive {} error", from.generic_string(), to.generic_string(), name())));
+		std::throw_with_nested(std::runtime_error(fmt::format("Downloading from {} to {} on the flash drive {}", from.generic_string(), to.generic_string(), name())));
 	}
 }
 

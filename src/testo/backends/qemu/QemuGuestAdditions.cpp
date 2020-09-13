@@ -61,19 +61,18 @@ std::string QemuGuestAdditions::get_tmp_dir() {
 	return response.at("result").at("path");
 }
 
-void QemuGuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
-	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(timeout_milliseconds);
+void QemuGuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	//4) Now we're all set
 	if (fs::is_regular_file(src)) {
-		copy_file_to_guest(src, dst, deadline);
+		copy_file_to_guest(src, dst);
 	} else if (fs::is_directory(src)) {
-		copy_dir_to_guest(src, dst, deadline);
+		copy_dir_to_guest(src, dst);
 	} else {
 		throw std::runtime_error("Unknown type of file: " + src.generic_string());
 	}
 }
 
-void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
+void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	nlohmann::json request = {
 		{"method", "copy_files_out"}
 	};
@@ -81,9 +80,6 @@ void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& ds
 	request["args"] = nlohmann::json::array();
 	request["args"].push_back(src.generic_string());
 	request["args"].push_back(dst.generic_string());
-
-	auto chrono_seconds = std::chrono::milliseconds(timeout_milliseconds);
-	coro::Timeout timeout(chrono_seconds); //actually, it really depends on file size, TODO
 
 	send(request);
 
@@ -108,23 +104,21 @@ void QemuGuestAdditions::copy_from_guest(const fs::path& src, const fs::path& ds
 	}
 }
 
-void QemuGuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
+void QemuGuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& dst) {
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {
-			copy_file_to_guest(file, dst / file.path().filename(), deadline);
+			copy_file_to_guest(file, dst / file.path().filename());
 		} else if (fs::is_directory(file)) {
-			copy_dir_to_guest(file, dst / file.path().filename(), deadline);
+			copy_dir_to_guest(file, dst / file.path().filename());
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
 		}
 	}
 }
 
-int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_milliseconds,
+int QemuGuestAdditions::execute(const std::string& command,
 	const std::function<void(const std::string&)>& callback)
 {
-	auto timeout_chrono = std::chrono::milliseconds(timeout_milliseconds);
-	coro::Timeout timeout(timeout_chrono);
 	nlohmann::json request = {
 			{"method", "execute"},
 			{"args", {
@@ -155,7 +149,7 @@ int QemuGuestAdditions::execute(const std::string& command, uint32_t timeout_mil
 	}
 }
 
-void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst, std::chrono::system_clock::time_point deadline) {
+void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		std::ifstream testFile(src.generic_string(), std::ios::binary);
 
@@ -172,8 +166,6 @@ void QemuGuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path&
 					}
 				}}
 		};
-
-		coro::Timeout timeout(deadline - std::chrono::system_clock::now());
 
 		send(request);
 

@@ -69,7 +69,7 @@ test check_copyfrom: install_guest_additions {
 	}
 
 	my_flash {
-		copyfrom "/super_big_file.txt" "/home/alex/work/testo/copyfrom_testing/inner_shit/"
+		copyfrom "/super_big_file.txt" "/home/alex/work/testo/copyfrom_testing/inner_shit/" timeout 10s
 	}
 }
 
