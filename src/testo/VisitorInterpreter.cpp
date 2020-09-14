@@ -1314,6 +1314,12 @@ void VisitorInterpreter::visit_plug_flash(const IR::Plug& plug) {
 		}
 	}
 
+	for (auto fdc: current_test->get_all_flash_drives()) {
+		if (vmc->vm()->is_flash_plugged(fdc->fd())) {
+			throw std::runtime_error(fmt::format("Another flash drive {} is already plugged into vm {}. You should unplug it first", fdc->name(), vmc->name()));
+		}
+	}
+
 	vmc->vm()->plug_flash_drive(fdc->fd());
 }
 

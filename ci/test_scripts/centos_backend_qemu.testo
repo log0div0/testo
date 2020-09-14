@@ -224,6 +224,7 @@ test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/install_ubuntu.testo" "/opt/scripts/install_ubuntu.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"
 		exec bash """
 			testo run /opt/scripts/install_ubuntu.testo --stop_on_fail --test_spec install_ubuntu_server
 		""" timeout 30m
@@ -236,98 +237,9 @@ macro exec_bash(script) {
 	wait "result is 0"
 }
 
-[no_snapshots: true]
-test centos_backend_qemu_plug_flash: centos_backend_qemu_install_ubuntu_server {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
-		exec bash """
-			set +o pipefail
-			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_flash | grep "stop here"
-		""" timeout 30m
-
-		wait "my_ubuntu_server" && "Running"
-		mouse dclick "my_ubuntu_server"
-		wait "Welcome to Ubuntu"
-		type "sudo su"; press Enter
-		wait "password for user"; type "1111"; press Enter
-		wait "root@ubuntu"
-		exec_bash("mount /dev/sdb1 /media")
-	}
-}
-
-[no_snapshots: true]
-test centos_backend_qemu_rollback_after_plug_flash: centos_backend_qemu_plug_flash {
-	centos {
-		exec bash """
-			set +o pipefail
-			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_flash | grep "stop here"
-		""" timeout 30m
-		wait "Welcome to Ubuntu"
-	}
-}
-
-
-[no_snapshots: true]
-test centos_backend_qemu_plug_flash_with_files: centos_backend_qemu_install_ubuntu_server {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
-		exec bash """
-			mkdir /opt/flash_folder
-			mkdir /opt/flash_folder/first_inner_folder
-			mkdir /opt/flash_folder/first_inner_folder/super_inner_folder
-			mkdir /opt/flash_folder/second_inner_folder
-			mkdir /opt/flash_folder/third_inner_folder
-
-			echo "Hello from root folder" > /opt/flash_folder/hello1.txt
-			echo "Hello from first inner folder" > /opt/flash_folder/first_inner_folder/hello2.txt
-			echo "Hello from second inner folder" > /opt/flash_folder/second_inner_folder/hello3.txt
-
-			truncate -s 5000000000 /opt/flash_folder/first_inner_folder/super_inner_folder/super_big_file.txt
-		"""
-
-		exec bash """
-			set +o pipefail
-			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_flash_with_files --report_folder /opt/reports/ | grep "stop here"
-		""" timeout 30m
-
-		wait "my_ubuntu_server" && "Running"
-		mouse dclick "my_ubuntu_server"
-		wait "Welcome to Ubuntu"
-		type "sudo su"; press Enter
-		wait "password for user"; type "1111"; press Enter
-		wait "root@ubuntu"
-		exec_bash("mount /dev/sdb1 /media")
-		exec_bash("""[ -f "/media/hello1.txt" ]""")
-		exec_bash("""[ -d "/media/first_inner_folder" ]""")
-		exec_bash("""[ -d "/media/second_inner_folder" ]""")
-		exec_bash("""[ -d "/media/third_inner_folder" ]""")
-		exec_bash("""[ "$(cat /media/hello1.txt)" == "Hello from root folder" ]""")
-		exec_bash("""[ -f "/media/first_inner_folder/hello2.txt" ]""")
-		exec_bash("""[ -d "/media/first_inner_folder/super_inner_folder" ]""")
-		exec_bash("""[ "$(cat /media/first_inner_folder/hello2.txt)" == "Hello from first inner folder" ]""")
-		exec_bash("""[ -f "/media/second_inner_folder/hello3.txt" ]""")
-		exec_bash("""[ "$(cat /media/second_inner_folder/hello3.txt)" == "Hello from second inner folder" ]""")
-		exec_bash("""[ -f "/media/first_inner_folder/super_inner_folder/super_big_file.txt" ]""")
-		exec_bash("""[ "$(stat -c %s /media/first_inner_folder/super_inner_folder/super_big_file.txt)" == "5000000000" ]""")
-	}
-}
-
-[no_snapshots: true]
-test centos_backend_qemu_plug_flash_exceptions: centos_backend_qemu_install_ubuntu_server {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
-		exec bash """
-			set +o pipefail
-			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash | grep "specified flash my_flash is already plugged into this virtual machine"
-			#testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_already_plugged_flash_2
-		""" timeout 30m
-	}
-}
-
 test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ubuntu_server {
 	centos {
 		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/iso/testo-guest-additions.iso"
-		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"
 		exec bash """
 			testo run /opt/scripts/install_guest_additions.testo --test_spec install_ubuntu_server_guest_additions
 		""" timeout 30m
