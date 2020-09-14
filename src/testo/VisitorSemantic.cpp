@@ -399,10 +399,7 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
 		return visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		;
-	} else {
-		throw std::runtime_error(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a flash drive");
-	}
-	/*else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		return visit_macro_call(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(p->action);
@@ -410,7 +407,9 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
 		return visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
 		return visit_cycle_control({p->action, stack});
-	}*/
+	} else {
+		throw std::runtime_error(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a flash drive");
+	}
 }
 
 void VisitorSemantic::visit_abort(const IR::Abort& abort) {
@@ -907,6 +906,10 @@ Tribool VisitorSemantic::visit_parented_expr(std::shared_ptr<AST::ParentedExpr> 
 }
 
 Tribool VisitorSemantic::visit_check(const IR::Check& check) {
+	if (std::dynamic_pointer_cast<IR::FlashDrive>(current_controller)) {
+		throw std::runtime_error(std::string(check.ast_node->begin()) + ": Error: The \"check\" expression is not applicable to a flash drive");
+	}
+
 	current_test->cksum_input += "check ";
 	visit_detect_expr(check.ast_node->select_expr);
 	current_test->cksum_input += check.timeout();

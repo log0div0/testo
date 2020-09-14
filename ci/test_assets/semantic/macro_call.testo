@@ -49,3 +49,25 @@ test wrong_macro_1 {
 	}
 }
 
+macro wrong_flash_macro() {
+	type "lala"
+}
+
+macro right_flash_macro() {
+	print "Hello"
+	wrong_flash_macro()
+}
+
+
+flash my_flash {
+	fs: "vfat"
+	size: 8Mb
+}
+
+test wrong_flash_macro {
+	my_flash {
+		right_flash_macro()
+	}
+}
+
+

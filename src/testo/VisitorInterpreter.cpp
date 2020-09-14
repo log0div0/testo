@@ -701,14 +701,14 @@ void VisitorInterpreter::visit_action_fd(std::shared_ptr<AST::IAction> action) {
 		visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		;
-	/*} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		visit_macro_call(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
 		visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		throw CycleControlException(p->action->t);*/
+		throw CycleControlException(p->action->t);
 	}  else {
 		throw std::runtime_error("Should never happen");
 	}

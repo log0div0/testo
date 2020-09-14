@@ -16,6 +16,7 @@ test centos_semantic: centos_prepare_testo {
 			testo run /expr.testo --test_spec comparison_3 2>&1 > /dev/null | grep "Error: \\\"-5ms\\\" is not an integer number"
 			testo run /expr.testo --test_spec comparison_4 2>&1 > /dev/null | grep "Error: \\\"Русский\\\" is not an integer number"
 			testo run /expr.testo --test_spec comparison_5 2>&1 > /dev/null | grep "Error: \\\"- 5ms\\\" is not an integer number"
+			testo run /expr.testo --test_spec check_flash 2>&1 > /dev/null | grep "Error: The \\\"check\\\" expression is not applicable to a flash drive"
 		"""
 
 		exec bash """
@@ -77,6 +78,7 @@ test centos_semantic: centos_prepare_testo {
 			testo run /macro_call.testo --test_spec too_many_args 2>&1 > /dev/null | grep "Error: expected at most 4 args, 5 provided"
 			testo run /macro_call.testo --test_spec wrong_macro_0 2>&1 > /dev/null | grep "Error: duplicate macro arg: arg1"
 			testo run /macro_call.testo --test_spec wrong_macro_1 2>&1 > /dev/null | grep "Error: default value must be specified for macro arg arg3"
+			testo run /macro_call.testo --test_spec wrong_flash_macro 2>&1 > /dev/null | grep "Error: The action \\\"type\\\" is not applicable to a flash drive"
 		"""
 
 		exec bash """
