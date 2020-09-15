@@ -20,7 +20,8 @@ struct FlashDrive {
 	virtual void delete_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot) = 0;
 	virtual fs::path img_path() const = 0;
-	virtual void load_folder(const fs::path& folder) = 0;
+	virtual void upload(const fs::path& from, const fs::path& to) = 0;
+	virtual void download(const fs::path& from, const fs::path& to) = 0;
 
 	std::string id() const;
 	std::string name() const;

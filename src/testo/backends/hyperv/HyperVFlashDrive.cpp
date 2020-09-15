@@ -20,7 +20,11 @@ void HyperVFlashDrive::undefine() {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }
 
-void HyperVFlashDrive::load_folder(const fs::path& folder) {
+void HyperVFlashDrive::upload(const fs::path& from, const fs::path& to) {
+	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+}
+
+void HyperVFlashDrive::download(const fs::path& from, const fs::path& to) {
 	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }
 

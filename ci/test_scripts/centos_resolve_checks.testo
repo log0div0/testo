@@ -31,6 +31,24 @@ test centos_for_range_param: centos_prepare_testo {
 			[[ $output == *"iteration #4"* ]]
 			[[ $output != *"iteration #5"* ]]
 		"""
+
+		exec bash """
+			touch "/opt/scripts/0000.testo"
+			touch "/opt/scripts/0001.testo"
+			touch "/opt/scripts/0002.testo"
+			touch "/opt/scripts/0003.testo"
+			touch "/opt/scripts/0004.testo"
+		"""
+
+		exec bash """
+			output=$(testo run /opt/scripts/for_tests.testo --test_spec for_copyto)
+			[[ $output == *"Copying /opt/scripts/./0000.testo to flash drive my_flash to destination /0000.testo"* ]]
+			[[ $output == *"Copying /opt/scripts/./0001.testo to flash drive my_flash to destination /0001.testo"* ]]
+			[[ $output == *"Copying /opt/scripts/./0002.testo to flash drive my_flash to destination /0002.testo"* ]]
+			[[ $output == *"Copying /opt/scripts/./0003.testo to flash drive my_flash to destination /0003.testo"* ]]
+			[[ $output == *"Copying /opt/scripts/./0004.testo to flash drive my_flash to destination /0004.testo"* ]]
+			[[ $output != *"Copying /opt/scripts/./0005.testo to flash drive my_flash to destination /0005.testo"* ]]
+		"""
 	}
 }
 

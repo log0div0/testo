@@ -1,5 +1,5 @@
 
-include "install_ubuntu.testo"
+include "install_guest_additions.testo"
 
 flash my_flash {
 	fs: "fat"
@@ -11,6 +11,15 @@ flash my_another_flash {
 	size: 32Mb
 }
 
+machine dummy_machine {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
 test plug_flash: install_ubuntu_server {
 	my_ubuntu_server {
 		plug flash my_flash;
@@ -19,7 +28,7 @@ test plug_flash: install_ubuntu_server {
 	}
 }
 
-test plug_already_plugged_flash: install_ubuntu_server {
+test plug_already_plugged_flash {
 	my_ubuntu_server {
 		plug flash my_flash;
 		sleep 5s
@@ -27,11 +36,30 @@ test plug_already_plugged_flash: install_ubuntu_server {
 	}
 }
 
-test plug_already_plugged_flash_2: install_ubuntu_server {
+test plug_already_plugged_flash_2 {
 	my_ubuntu_server {
 		plug flash my_flash;
 		sleep 5s
 		plug flash my_another_flash;
+	}
+}
+
+test plug_already_plugged_flash_3 {
+	dummy_machine {
+		plug flash my_flash
+	}
+	my_ubuntu_server {
+		plug flash my_flash;
+	}
+}
+
+
+test plug_already_plugged_flash_4 {
+	dummy_machine {
+		plug flash my_flash
+	}
+	my_flash {
+		copyfrom "/lala" "/lala"
 	}
 }
 
@@ -46,5 +74,64 @@ test plug_flash_with_files: install_ubuntu_server {
 		plug flash my_flash_with_files;
 		sleep 5s
 		abort "stop here"
+	}
+}
+
+flash my_flash_empty {
+	fs: "ext4"
+	size: 6Gb
+}
+
+test flash_copyto: install_ubuntu_server {
+	my_flash_empty {
+		copyto "/opt/flash_folder" "/some/inner/shit/"
+	}
+
+	my_ubuntu_server {
+		plug flash my_flash_empty;
+		sleep 5s
+		abort "stop here"
+	}
+}
+
+test flash_copyto_timeout: install_ubuntu_server {
+	my_flash_empty {
+		copyto "/opt/flash_folder" "/some/inner/shit/" timeout 10s
+	}
+}
+
+
+[no_snapshots: true]
+test flash_copyfrom: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		exec bash """
+			mkdir /opt/flash_folder
+			mkdir /opt/flash_folder/first_inner_folder
+			mkdir /opt/flash_folder/first_inner_folder/super_inner_folder
+			mkdir /opt/flash_folder/second_inner_folder
+			mkdir /opt/flash_folder/third_inner_folder
+
+			echo "Hello from root folder" > /opt/flash_folder/hello1.txt
+			echo "Hello from first inner folder" > /opt/flash_folder/first_inner_folder/hello2.txt
+			echo "Hello from second inner folder" > /opt/flash_folder/second_inner_folder/hello3.txt
+
+			truncate -s 5000000000 /opt/flash_folder/first_inner_folder/super_inner_folder/super_big_file.txt
+		"""
+
+		plug flash my_flash_empty;
+		sleep 5s
+
+		exec bash """
+			mount /dev/sdb1 /media
+			cp -r /opt/flash_folder /media/flash_folder
+			umount /media
+		"""
+
+		sleep 5s
+		unplug flash my_flash_empty;
+	}
+
+	my_flash_empty {
+		copyfrom "/flash_folder" "/opt/some/inner/shit/"
 	}
 }

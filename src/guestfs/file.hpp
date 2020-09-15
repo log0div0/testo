@@ -1,5 +1,6 @@
 #include <experimental/filesystem>
 #include <stdexcept>
+#include <cstring>
 
 namespace guestfs {
 
@@ -28,12 +29,30 @@ struct File {
 		return *this;
 	}
 
+	size_t read(uint8_t* data, size_t size) {
+		size_t read_bytes = 0;
+		auto result = guestfs_pread(handle, path.generic_string().c_str(), size, current_offset, &read_bytes);
+
+		if (!result) {
+			throw std::runtime_error(guestfs_last_error(handle));
+		}
+
+		std::memcpy((void*)data, (void*)result, read_bytes);
+
+		delete result;
+
+		current_offset += read_bytes;
+		return read_bytes;
+	}
+
 	size_t write(const uint8_t* data, size_t size) {
 		if (guestfs_write_append(handle, path.generic_string().c_str(), (char*)data, size) < 0) {
 			throw std::runtime_error(guestfs_last_error(handle));
 		}
 		return size;
 	}
+
+	int64_t current_offset = 0;
 
 	fs::path path;
 	guestfs_h *handle = nullptr;

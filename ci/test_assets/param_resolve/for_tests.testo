@@ -43,3 +43,18 @@ test for_range_token {
 		}
 	}
 }
+
+flash my_flash {
+	fs: "vfat"
+	size: 8Mb
+}
+
+[no_snapshots: true]
+test for_copyto {
+	my_flash {
+		for (i IN RANGE 5) {
+			copyto "./000${i}.testo" "/000${i}.testo"
+			copyto "./0001.testo" "/1000.testo"
+		}
+	}
+}

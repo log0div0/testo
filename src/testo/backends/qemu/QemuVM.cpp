@@ -989,10 +989,14 @@ bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 
 			if (std::string(disk.child("target").attribute("dev").value()) == "sdb") {
 				result = disk.child("source").attribute("file").value();
+
+				if (result == fd->img_path().generic_string()) {
+					return true;
+				}
 			}
 		}
 
-		return result.length();
+		return false;
 	} catch (const std::string& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Checking if flash drive {} is plugged", fd->name())));
 	}
@@ -1235,7 +1239,7 @@ stb::Image QemuVM::screenshot() {
 	return screenshot;
 }
 
-int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+int QemuVM::run(const fs::path& exe, std::vector<std::string> args,
 	const std::function<void(const std::string&)>& callback) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
@@ -1247,7 +1251,7 @@ int QemuVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t tim
 			command += arg;
 		}
 
-		return helper.execute(command, timeout_milliseconds, callback);
+		return helper.execute(command, callback);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Run guest process"));
 	}
@@ -1328,7 +1332,7 @@ std::string QemuVM::get_tmp_dir() {
 	}
 }
 
-void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
+void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		//1) if there's no src on host - fuck you
 		if (!fs::exists(src)) {
@@ -1338,18 +1342,18 @@ void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t ti
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 
-		helper.copy_to_guest(src, dst, timeout_milliseconds);
+		helper.copy_to_guest(src, dst);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
 	}
 }
 
-void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
+void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		QemuGuestAdditions helper(domain);
 
-		helper.copy_from_guest(src, dst, timeout_milliseconds);
+		helper.copy_from_guest(src, dst);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Copying file(s) from the guest"));
 	}

@@ -29,24 +29,47 @@ machine VM1 {
 	}
 }
 
-param suka "500"
-
-macro m2() {
-	sleep "${asuka}"
-}
-
-macro m1() {
-	m2()
+flash my_flash {
+	fs: "vfat"
+	size: 5Gb
+	#folder: "./astra"
 }
 
 test ubuntu_installation {
-	VM1 {
-		m1()
-	}
+	VM1 install_ubuntu_server("VM1", "user", "1111")
+}
 
+test check_copyto: ubuntu_installation {
+	VM1 {
+		plug flash my_flash
+		unplug flash my_flash
+	}
+	my_flash {
+		copyto "./macro_proposal.testo" "/"
+	}
 }
 
 test install_guest_additions: ubuntu_installation {
 	VM1 install_guest_additions_ubuntu_server("VM1", "user", "1111")
+}
+
+[no_snapshots: true]
+test check_copyfrom: install_guest_additions {
+	VM1 {
+		plug flash my_flash
+		sleep 3s
+
+		exec bash """
+			mount /dev/sdb1 /media
+			truncate -s 2000000000 /media/super_big_file.txt
+			umount /media
+		"""
+
+		unplug flash my_flash
+	}
+
+	my_flash {
+		copyfrom "/super_big_file.txt" "/home/alex/work/testo/copyfrom_testing/inner_shit/" timeout 10s
+	}
 }
 

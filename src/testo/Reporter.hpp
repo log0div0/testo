@@ -30,8 +30,11 @@ struct Reporter {
 	void take_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot);
 	void restore_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot);
 
+	//both controller actions
+	void print(std::shared_ptr<IR::Controller> controller, const std::string& message);
+	void sleep(std::shared_ptr<IR::Controller> controller, const std::string& timeout);
+
 	//vm actions
-	void print(std::shared_ptr<IR::Machine> vmc, const std::string& message);
 	void start(std::shared_ptr<IR::Machine> vmc);
 	void stop(std::shared_ptr<IR::Machine> vmc);
 	void shutdown(std::shared_ptr<IR::Machine> vmc, const std::string& timeout);
@@ -40,13 +43,12 @@ struct Reporter {
 	void release_key(std::shared_ptr<IR::Machine> vmc, const std::string& key);
 	void release_key(std::shared_ptr<IR::Machine> vmc);
 	void type(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& interval);
-	void sleep(std::shared_ptr<IR::Machine> vmc, const std::string& timeout);
 	void wait(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval);
 	void check(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval);
 	void macro_call(std::shared_ptr<IR::Machine> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
 	void plug(std::shared_ptr<IR::Machine> vmc, const std::string& device, const std::string& device_name, bool is_on);
 	void exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpreter, const std::string& timeout);
-	void copy(std::shared_ptr<IR::Machine> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
+	void copy(std::shared_ptr<IR::Controller> controller, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
 	void mouse_move_click_coordinates(std::shared_ptr<IR::Machine> vmc, const std::string& x, const std::string& y);
 	void mouse_move_click_selectable(std::shared_ptr<IR::Machine> vmc, const std::string& object, const std::string& timeout);
 	void mouse_no_object();

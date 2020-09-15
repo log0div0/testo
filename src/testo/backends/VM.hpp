@@ -55,7 +55,7 @@ struct VM {
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
 	virtual stb::Image screenshot() = 0;
-	virtual int run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+	virtual int run(const fs::path& exe, std::vector<std::string> args,
 		const std::function<void(const std::string&)>& callback) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) = 0;
@@ -65,8 +65,8 @@ struct VM {
 	virtual VmState state() const = 0;
 	virtual bool is_additions_installed() = 0;
 
-	virtual void copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) = 0;
-	virtual void copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) = 0;
+	virtual void copy_to_guest(const fs::path& src, const fs::path& dst) = 0;
+	virtual void copy_from_guest(const fs::path& src, const fs::path& dst) = 0;
 	virtual void remove_from_guest(const fs::path& obj) = 0;
 	virtual std::string get_tmp_dir() = 0;
 

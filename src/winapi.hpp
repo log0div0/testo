@@ -107,7 +107,7 @@ struct File {
 		return *this;
 	}
 
-	size_t read(uint8_t* data, size_t size) const {
+	size_t read(uint8_t* data, size_t size) {
 		DWORD result = 0;
 		bool success = ReadFile(handle, data, (DWORD)size, &result, NULL);
 		if (!success) {

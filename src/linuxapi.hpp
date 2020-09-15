@@ -35,7 +35,7 @@ struct File {
 		return *this;
 	}
 
-	size_t read(uint8_t* data, size_t size) const {
+	size_t read(uint8_t* data, size_t size) {
 		auto result = ::read(handle, data, size);
 		if (result < 0) {
 			throw std::runtime_error("ReadFile " + path.generic_string() + " failed: " + strerror(errno));

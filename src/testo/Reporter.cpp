@@ -210,9 +210,9 @@ void Reporter::restore_snapshot(std::shared_ptr<IR::Controller> controller, cons
 	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
-void Reporter::print(std::shared_ptr<IR::Machine> vmc, const std::string& message) {
+void Reporter::print(std::shared_ptr<IR::Controller> controller, const std::string& message) {
 	report(progress() + " ", blue);
-	report(vmc->name(), yellow);
+	report(controller->name(), yellow);
 	report(fmt::format(": {}\n", message), blue);
 }
 
@@ -276,9 +276,9 @@ void Reporter::type(std::shared_ptr<IR::Machine> vmc, const std::string& text, c
 
 }
 
-void Reporter::sleep(std::shared_ptr<IR::Machine> vmc, const std::string& timeout) {
-	report(fmt::format("{} Sleeping in virtual machine ", progress()), blue);
-	report(fmt::format("{}", vmc->name()), yellow);
+void Reporter::sleep(std::shared_ptr<IR::Controller> controller, const std::string& timeout) {
+	report(fmt::format("{} Sleeping in {} ", progress(), controller->type()), blue);
+	report(fmt::format("{}", controller->name()), yellow);
 	report(fmt::format(" for {}\n", timeout), blue);
 }
 
@@ -334,13 +334,13 @@ void Reporter::exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpr
 	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
 
-void Reporter::copy(std::shared_ptr<IR::Machine> vmc, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) {
+void Reporter::copy(std::shared_ptr<IR::Controller> controller, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) {
 	std::string from_to = is_to_guest ? "to" : "from";
 
 	report(fmt::format("{} Copying ", progress()), blue);
 	report(fmt::format("{} ", from), yellow);
-	report(fmt::format("{} virtual machine ", from_to), blue);
-	report(fmt::format("{} ", vmc->name()), yellow);
+	report(fmt::format("{} {} ", from_to, controller->type()), blue);
+	report(fmt::format("{} ", controller->name()), yellow);
 	report(fmt::format("to destination "), blue);
 	report(fmt::format("{} ", to), yellow);
 	report(fmt::format("with timeout {}\n", timeout), blue);
