@@ -29,7 +29,7 @@ struct File {
 		return *this;
 	}
 
-	size_t read(uint8_t* data, size_t size) const {
+	size_t read(uint8_t* data, size_t size) {
 		size_t read_bytes = 0;
 		auto result = guestfs_pread(handle, path.generic_string().c_str(), size, current_offset, &read_bytes);
 
@@ -52,7 +52,7 @@ struct File {
 		return size;
 	}
 
-	mutable int64_t current_offset = 0;
+	int64_t current_offset = 0;
 
 	fs::path path;
 	guestfs_h *handle = nullptr;
