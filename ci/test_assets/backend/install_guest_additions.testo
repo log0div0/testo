@@ -20,7 +20,7 @@ macro install_guest_additions_ubuntu_server(host_name, login, password) {
 
 test install_ubuntu_server_guest_additions: install_ubuntu_server {
 	my_ubuntu_server {
-		sleep 5s
+		sleep 10s
 		install_guest_additions_ubuntu_server("ubuntu", "user", "1111")
 	}
 }

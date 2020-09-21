@@ -1,0 +1,89 @@
+
+include "centos.testo"
+
+flash win7_flash {
+	fs: "ext4"
+	size: 5Gb
+}
+
+flash win10_flash {
+	fs: "ext4"
+	size: 6Gb
+}
+
+test centos_qemu_install_win7: centos_prepare_testo {
+	win7_flash {
+		copyto "${ISO_DIR}/win7.iso" "/win7.iso"
+	}
+	centos {
+		copyto "${TEST_ASSETS_DIR}/win.testo" "/opt/scripts/win.testo"
+		plug flash win7_flash
+		sleep 5s
+		exec bash "cp /run/media/user/*/win7.iso /opt/"
+		exec bash "umount /run/media/user/*"
+		sleep 5s
+		unplug flash win7_flash
+
+		exec bash "testo run /opt/scripts/win.testo --test_spec win7_installation --stop_on_fail --param ISO_DIR /opt/" timeout 1h
+	}
+}
+
+[no_snapshots: true]
+test centos_qemu_win7_ga: centos_qemu_install_win7 {
+	centos {
+		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/testo-guest-additions.iso"
+		exec bash "echo \"Hello world!\" > \"/opt/scripts/привет, мир!.txt\""
+		exec bash "testo run /opt/scripts/win.testo --test_spec win7* --exclude win7_x86* --stop_on_fail --param ISO_DIR /opt/" timeout 20m
+	}
+}
+
+test centos_qemu_install_win7_x86: centos_prepare_testo {
+	win7_flash {
+		copyto "${ISO_DIR}/win7.iso" "/win7.iso"
+	}
+	centos {
+		copyto "${TEST_ASSETS_DIR}/win.testo" "/opt/scripts/win.testo"
+		plug flash win7_flash
+		sleep 5s
+		exec bash "cp /run/media/user/*/win7.iso /opt/"
+		exec bash "umount /run/media/user/*"
+		sleep 5s
+		unplug flash win7_flash
+
+		exec bash "testo run /opt/scripts/win.testo --test_spec win7_x86_installation --stop_on_fail --param ISO_DIR /opt/" timeout 1h
+	}
+}
+
+[no_snapshots: true]
+test centos_qemu_win7_x86_ga: centos_qemu_install_win7_x86 {
+	centos {
+		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/testo-guest-additions.iso"
+		exec bash "testo run /opt/scripts/win.testo --test_spec win7_x86_guest_additions --stop_on_fail --param ISO_DIR /opt/" timeout 20m
+	}
+}
+
+test centos_qemu_install_win10: centos_prepare_testo {
+	win10_flash {
+		copyto "${ISO_DIR}/win10.iso" "/win10.iso"
+	}
+	centos {
+		copyto "${TEST_ASSETS_DIR}/win.testo" "/opt/scripts/win.testo"
+		plug flash win10_flash
+		sleep 5s
+		exec bash "cp /run/media/user/*/win10.iso /opt/"
+		exec bash "umount /run/media/user/*"
+		sleep 5s
+		unplug flash win10_flash
+
+		exec bash "testo run /opt/scripts/win.testo --test_spec win10_installation_part_2 --stop_on_fail --param ISO_DIR /opt/" timeout 1h
+	}
+}
+
+[no_snapshots: true]
+test centos_qemu_win10_ga: centos_qemu_install_win10 {
+	centos {
+		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/testo-guest-additions.iso"
+		exec bash "testo run /opt/scripts/win.testo --test_spec win10* --stop_on_fail --param ISO_DIR /opt/" timeout 20m
+	}
+}
+

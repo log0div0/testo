@@ -1,5 +1,11 @@
 
-include "common.testo"
+network nat {
+	mode: "nat"
+}
+
+param host_name "tester"
+param login "user"
+param password "12345678"
 
 machine win7 {
 	cpus: 2
@@ -30,7 +36,7 @@ machine win10 {
 test win10_installation_part_1 {
 	win10 {
 		start
-		mouse click "Мой язык - русский" timeout 10m
+		mouse click "Мой язык - русский" timeout 20m
 		mouse click "Далее".from_bottom(0)
 		mouse click "Установить"
 		wait "Выберите операционную систему"
@@ -42,7 +48,7 @@ test win10_installation_part_1 {
 		mouse click "Выборочная"
 		wait "Где вы хотите установить Windows?"
 		mouse click "Далее".from_bottom(0)
-		wait "родолжить на выбранном языке?" timeout 30m interval 10s
+		wait "родолжить на выбранном языке?" timeout 1h interval 10s
 	}
 }
 
@@ -56,7 +62,7 @@ test win10_installation_part_2: win10_installation_part_1 {
 		mouse click "Да".from_bottom(0)
 		wait "Вы хотите добавить вторую раскладку"
 		mouse click "Пропустить".from_bottom(0)
-		wait "Лицензионное соглашение" timeout 10m
+		wait "Лицензионное соглашение" timeout 20m
 		mouse move 0 0
 		mouse click "Принять".from_bottom(0)
 		wait "Какую учетную запись использовать?"
@@ -96,7 +102,7 @@ test win10_installation_part_2: win10_installation_part_1 {
 		mouse click "Нет".from_bottom(0)
 		wait "Выберите параметры конфиденциальности"
 		mouse click "Принять".from_bottom(0)
-		wait "Корзина" timeout 10m
+		wait "Корзина" timeout 20m
 		unplug dvd
 		sleep 10s
 	}
@@ -104,7 +110,7 @@ test win10_installation_part_2: win10_installation_part_1 {
 
 test win10_guest_additions: win10_installation_part_2 {
 	win10 {
-		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		mouse click "CD-дисковод"
 		sleep 5s
 		mouse click "Выполнить autorun"
@@ -178,7 +184,7 @@ test win7_x86_installation {
 		wait "Условия лицензии"; press Space, Enter
 		wait "Выберите тип установки"; press Down, Enter
 		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; press Enter
-		wait "Выберите имя пользователя" timeout 15m
+		wait "Выберите имя пользователя" timeout 45m
 		unplug dvd
 		press LeftShift+LeftAlt; type "testo"; press Enter
 		wait "Установите пароль"; press Enter
@@ -189,7 +195,7 @@ test win7_x86_installation {
 		mouse click "Отложить решение"
 		wait "Проверьте настройку даты и времени"; press Enter
 		wait "Выберите текущее место расположения компьютера"; press Enter
-		wait "Корзина" timeout 10m
+		wait "Корзина" timeout 20m
 		shutdown
 		start
 		wait "Корзина"
@@ -199,7 +205,7 @@ test win7_x86_installation {
 
 test win7_x86_guest_additions: win7_x86_installation {
 	win7 {
-		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
 		wait "Вас приветствует мастер установки"; press Enter
 		wait "Выбор папки для установки"; press Enter
@@ -225,7 +231,7 @@ test win7_installation {
 		wait "Условия лицензии"; press Space, Enter
 		wait "Выберите тип установки"; press Down, Enter
 		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; press Enter
-		wait "Выберите имя пользователя" timeout 15m
+		wait "Выберите имя пользователя" timeout 45m
 		unplug dvd
 		press LeftShift+LeftAlt; type "testo"; press Enter
 		wait "Установите пароль"; press Enter
@@ -236,7 +242,7 @@ test win7_installation {
 		mouse click "Отложить решение"
 		wait "Проверьте настройку даты и времени"; press Enter
 		wait "Выберите текущее место расположения компьютера"; press Enter
-		wait "Корзина" timeout 10m
+		wait "Корзина" timeout 20m
 		shutdown
 		start
 		wait "Корзина"
@@ -246,7 +252,7 @@ test win7_installation {
 
 test win7_guest_additions: win7_installation {
 	win7 {
-		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
 		wait "Вас приветствует мастер установки"; press Enter
 		wait "Выбор папки для установки"; press Enter
