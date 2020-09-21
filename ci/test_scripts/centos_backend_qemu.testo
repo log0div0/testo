@@ -245,3 +245,26 @@ test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ub
 		""" timeout 30m
 	}
 }
+
+[no_snapshots: true]
+test centos_backend_qemu_cache_miss: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/cache_miss/original.testo" "/opt/scripts/script.testo"
+
+		exec bash """
+			testo run /opt/scripts/script.testo
+		""" timeout 30m
+
+		copyto "${TEST_ASSETS_DIR}/cache_miss/modified.testo" "/opt/scripts/script.testo"
+
+		open_terminal()
+		enter_sudo()
+
+		type "testo run /opt/scripts/script.testo"; press Enter
+		wait "Some tests have lost"
+		wait js "find_text().match('test_parent').size() == 1"
+		wait js "find_text().match('test_child1').size() == 1"
+		wait js "find_text().match('test_child2').size() == 1"
+		wait js "find_text().match('child3').size() == 1"
+	}
+}

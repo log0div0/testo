@@ -129,7 +129,7 @@ bool VisitorInterpreter::is_cache_miss(std::shared_ptr<IR::Test> test) const {
 	for (auto parent: all_parents) {
 		for (auto cache_missed_test: cache_missed_tests) {
 			if (parent == cache_missed_test) {
-				return false;
+				return true;
 			}
 		}
 	}
@@ -167,7 +167,17 @@ void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<IR::Te
 			tests_queue.erase(test_it++);
 		} else {
 			if (is_cache_miss(*test_it)) {
-				cache_missed_tests.push_back(*test_it);
+				bool is_already_pushed = false;
+
+				for (auto test: cache_missed_tests) {
+					if (test == *test_it) {
+						is_already_pushed = true;
+						break;
+					}
+				}
+				if (!is_already_pushed) {
+					cache_missed_tests.push_back(*test_it);
+				}
 			}
 			test_it++;
 		}
@@ -225,7 +235,7 @@ void VisitorInterpreter::setup_vars() {
 			std::cout << "\t- " << cache_missed->name() << std::endl;
 		}
 
-		std::cout << "Do you confirm running them and all their children? [y/N]: ";
+		std::cout << "Do you confirm running them? [y/N]: ";
 		std::string choice;
 		std::getline(std::cin, choice);
 
