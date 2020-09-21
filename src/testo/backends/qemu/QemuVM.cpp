@@ -398,6 +398,9 @@ void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque)
 		auto domain = qemu_connect.domain_define_xml(config_xml);
 		auto snap = domain.snapshot_lookup_by_name(snapshot);
 
+		if (domain.state() != VIR_DOMAIN_SHUTOFF) {
+			domain.stop();
+		}
 		domain.revert_to_snapshot(snap);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Performing rollback error"));
