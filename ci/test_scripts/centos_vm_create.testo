@@ -73,7 +73,7 @@ test centos_backend_qemu_clean_after_manual_delete_no_disks: centos_backend_qemu
 		mouse click "Delete".from_bottom(0)
 
 		exec bash """
-			testo clean	| grep 'Deleted virtual machine basic_machine'
+			testo clean --assume_yes | grep 'Deleted virtual machine basic_machine'
 		""" timeout 30m
 
 		exec bash "!([ -f /var/lib/libvirt/testo/testo-storage-pool/basic_machine@main.img ])"

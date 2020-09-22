@@ -79,6 +79,12 @@ macro open_virt_manager() {
 	wait !"Authentication Required" && "Virtual Machine Manager"
 }
 
+macro exec_bash(script) {
+	type "clear"; press Enter
+	type "${script} && echo result is $?"; press Enter
+	wait "result is 0"
+}
+
 test centos_install_guest_additions: centos_install_os {
 	centos {
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s

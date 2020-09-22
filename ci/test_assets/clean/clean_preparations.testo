@@ -1,0 +1,54 @@
+network net1 {
+	mode: "nat"
+}
+
+network net2 {
+	mode: "internal"
+}
+
+machine vm1 {
+	cpus: 1
+	ram: 256Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 1Gb
+	}
+	nic main: {
+		attached_to: "net1"
+	}
+}
+
+machine vm2 {
+	cpus: 1
+	ram: 256Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 1Gb
+	}
+	nic main: {
+		attached_to: "net2"
+	}
+}
+
+flash flash1 {
+	fs: "ext4"
+	size: 8Mb
+}
+
+flash flash2 {
+	fs: "ext4"
+	size: 8Mb
+}
+
+test create_everything {
+	vm1 {
+		plug flash flash1
+		unplug flash flash1
+	}
+
+	vm2 {
+		plug flash flash2
+		unplug flash flash2
+	}
+}
+

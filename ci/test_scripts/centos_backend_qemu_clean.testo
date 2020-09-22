@@ -1,0 +1,80 @@
+
+include "centos.testo"
+
+[no_snapshots: true]
+test centos_backend_qemu_clean_nothing: centos_prepare_testo {
+	centos {
+		open_terminal()
+		enter_sudo()
+
+		exec_bash("testo clean")
+		wait !"Testo is about to erase"
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_clean_entities: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/clean/clean_preparations.testo" "/opt/scripts/clean_preparations.testo"
+		exec bash """
+			sudo testo run /opt/scripts/clean_preparations.testo
+		"""
+
+		exec bash """
+			sudo testo run /opt/scripts/clean_preparations.testo --prefix jk
+		"""
+
+		open_terminal()
+		enter_sudo()
+
+		type "testo clean"; press Enter
+
+		wait "Testo is about to erase" && "net1" && "net2" && "flash1" && "flash2" && "vm1" && "vm2" && !"jkvm1"
+
+		press LeftCtrl + C;
+		wait "Aborted"; type "clear"; press Enter
+
+		type "testo clean"; press Enter
+
+		wait "Testo is about to erase" && "net1" && "net2" && "flash1" && "flash2" && "vm1" && "vm2" && !"jkvm1"
+
+		press Y, Enter
+
+		wait "Deleted network net1" && "Deleted network net2" &&
+			"Deleted flash drive flash1" && "Deleted flash drive flash2" &&
+			"Deleted virtual machine vm1" && "Deleted virtual machine vm2"
+
+		exec_bash("testo clean")
+		wait !"Testo is about to erase"
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_clean_entities_prefix: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/clean/clean_preparations.testo" "/opt/scripts/clean_preparations.testo"
+		exec bash """
+			sudo testo run /opt/scripts/clean_preparations.testo
+		"""
+
+		exec bash """
+			sudo testo run /opt/scripts/clean_preparations.testo --prefix jk
+		"""
+
+		open_terminal()
+		enter_sudo()
+
+		type "testo clean --prefix jk"; press Enter
+
+		wait "Testo is about to erase" && "jknet1" && "jknet2" && "jkflash1" && "jkflash2" && "jkvm1" && "jkvm2"
+
+		press Y, Enter
+
+		wait "Deleted network jknet1" && "Deleted network jknet2" &&
+			"Deleted flash drive jkflash1" && "Deleted flash drive jkflash2" &&
+			"Deleted virtual machine jkvm1" && "Deleted virtual machine jkvm2" && !"Deleted virtual machine vm1"
+
+		exec_bash("testo clean --prefix jk")
+		wait !"Testo is about to erase"
+	}
+}

@@ -231,12 +231,6 @@ test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
 	}
 }
 
-macro exec_bash(script) {
-	type "clear"; press Enter
-	type "${script} && echo result is $?"; press Enter
-	wait "result is 0"
-}
-
 test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ubuntu_server {
 	centos {
 		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/iso/testo-guest-additions.iso"

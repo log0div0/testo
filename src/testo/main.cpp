@@ -86,6 +86,7 @@ int do_main(int argc, char** argv) {
 	auto clean_spec = "clean options" % (
 		command("clean").set(selected_mode, mode::clean),
 		(option("--prefix") & value("prefix", clean_args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
+		(option("--assume_yes").set(clean_args.assume_yes)) % "Quietly agree to erase all the virtual entities",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
 		any_other(wrong)
 	);
