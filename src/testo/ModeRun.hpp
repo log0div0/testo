@@ -5,13 +5,20 @@
 #include <string>
 
 struct RunModeArgs {
+
+	struct TemplateMatch {
+		TemplateMatch(bool type, const std::string& pattern): type(type), pattern(pattern) {}
+		bool type; //true for test_spec, false for exclude
+		std::string pattern;
+	};
+
 	std::string target;
 	std::string prefix;
-	std::string test_spec;
-	std::string exclude;
 	std::string invalidate;
 	std::string report_folder;
 	std::string license;
+
+	std::vector<TemplateMatch> template_patterns;
 
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;

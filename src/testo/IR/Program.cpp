@@ -157,22 +157,34 @@ void Program::validate_special_params() {
 	}
 }
 
+bool Program::validate_test_name(const std::string& name, const std::vector<std::pair<bool, std::string>>& patterns) const {
+	for (auto& pattern: patterns) {
+		auto result = (pattern.first) ? wildcards::match(name, pattern.second) : !wildcards::match(name, pattern.second);
+		if (!result) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void Program::setup_tests_parents() {
-	std::string test_spec = config.at("test_spec").get<std::string>();
-	std::string exclude = config.at("exclude").get<std::string>();
+
+	//first arg of the pair is bool
+	// True for "test_spec"
+	//False for "exclude"
+	std::vector<std::pair<bool, std::string>> patterns;
+
+	for (auto& pattern: config.at("template_patterns")) {
+		patterns.push_back({pattern.at("type").get<bool>(), pattern.at("pattern").get<std::string>()});
+	}
 
 	for (auto& test: ordered_tests) {
 		auto test_name = test->ast_node->name.value();
 
-		if (test_spec.length() && !wildcards::match(test_name, test_spec)) {
-			continue;
+		if (validate_test_name(test_name, patterns)) {
+			setup_test_parents(test);
 		}
-
-		if (exclude.length() && wildcards::match(test_name, exclude)) {
-			continue;
-		}
-
-		setup_test_parents(test);
 	}
 }
 

@@ -57,19 +57,30 @@ int do_main(int argc, char** argv) {
 
 	RunModeArgs run_args;
 
+	auto test_spec_filer = [&](const std::string& arg) { run_args.template_patterns.push_back({true, arg}); return true; };
+	auto exclude_filer = [&](const std::string& arg) { run_args.template_patterns.push_back({false, arg}); return true; };
+
 	auto params_defs_spec = repeatable(
 		option("--param") & value("param_name", run_args.params_names) & value("param_value", run_args.params_values)
 	) % "Parameters to define for test cases";
+
+	auto test_spec = repeatable(
+		option("--test_spec") & value(test_spec_filer, "wildcard pattern")
+	) % "Run specific tests";
+
+	auto exclude_spec = repeatable(
+		option("--exclude") & value(exclude_filer, "wildcard pattern")
+	) % "Do not run specific tests";
 
 	auto run_spec = "run options" % (
 		command("run").set(selected_mode, mode::run),
 		value("input file or folder", run_args.target) % "Path to a file with testcases or to a folder with such files",
 		params_defs_spec,
+		test_spec,
+		exclude_spec,
 		(option("--prefix") & value("prefix", run_args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
 		(option("--stop_on_fail").set(run_args.stop_on_fail)) % "Stop executing after first failed test",
 		(option("--assume_yes").set(run_args.assume_yes)) % "Quietly agree to run lost cache tests",
-		(option("--test_spec") & value("wildcard pattern", run_args.test_spec)) % "Run specific tests",
-		(option("--exclude") & value("wildcard pattern", run_args.exclude)) % "Do not run specific tests",
 		(option("--invalidate") & value("wildcard pattern", run_args.invalidate)) % "Invalidate specific tests",
 		(option("--report_folder") & value("/path/to/folder", run_args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
 		(option("--report_logs").set(run_args.report_logs)) % "Save text output in report folder",

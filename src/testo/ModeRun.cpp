@@ -72,16 +72,22 @@ int run_mode(const RunModeArgs& args) {
 	nlohmann::json config = {
 		{"stop_on_fail", args.stop_on_fail},
 		{"assume_yes", args.assume_yes},
-		{"test_spec", args.test_spec},
-		{"exclude", args.exclude},
 		{"invalidate", args.invalidate},
 		{"report_folder", args.report_folder},
 		{"report_logs", args.report_logs},
 		{"report_screenshots", args.report_screenshots},
 		{"html", args.html},
 		{"prefix", args.prefix},
-		{"params", params}
+		{"params", params},
+		{"template_patterns", nlohmann::json::array()}
 	};
+
+	for (auto& template_match: args.template_patterns) {
+		config["template_patterns"].push_back({
+			{"type", template_match.type},
+			{"pattern", template_match.pattern}
+		});
+	}
 
 	if (!fs::exists(args.target)) {
 		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + args.target);

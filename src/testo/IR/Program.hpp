@@ -60,6 +60,7 @@ private:
 	void collect_flash_drive(const std::shared_ptr<AST::Controller>& ast);
 	void collect_network(const std::shared_ptr<AST::Controller>& ast);
 
+	bool validate_test_name(const std::string& name, const std::vector<std::pair<bool, std::string>>& patterns) const;
 	void validate_special_params();
 
 	void setup_tests_parents();

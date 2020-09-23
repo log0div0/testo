@@ -11,7 +11,7 @@ flash win10_flash {
 	size: 6Gb
 }
 
-test centos_qemu_install_win7: centos_prepare_testo {
+test centos_qemu_ga_install_win7: centos_prepare_testo {
 	win7_flash {
 		copyto "${ISO_DIR}/win7.iso" "/win7.iso"
 	}
@@ -29,7 +29,7 @@ test centos_qemu_install_win7: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_qemu_win7_ga: centos_qemu_install_win7 {
+test centos_qemu_ga_win7_install_ga: centos_qemu_ga_install_win7 {
 	centos {
 		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/testo-guest-additions.iso"
 		exec bash "echo \"Hello world!\" > \"/opt/scripts/привет, мир!.txt\""
@@ -37,7 +37,7 @@ test centos_qemu_win7_ga: centos_qemu_install_win7 {
 	}
 }
 
-test centos_qemu_install_win7_x86: centos_prepare_testo {
+test centos_qemu_ga_install_win7_x86: centos_prepare_testo {
 	win7_flash {
 		copyto "${ISO_DIR}/win7.iso" "/win7.iso"
 	}
@@ -55,14 +55,14 @@ test centos_qemu_install_win7_x86: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_qemu_win7_x86_ga: centos_qemu_install_win7_x86 {
+test centos_qemu_ga_win7_x86_install_ga: centos_qemu_ga_install_win7_x86 {
 	centos {
 		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/testo-guest-additions.iso"
 		exec bash "testo run /opt/scripts/win.testo --test_spec win7_x86_guest_additions --stop_on_fail --param ISO_DIR /opt/" timeout 20m
 	}
 }
 
-test centos_qemu_install_win10: centos_prepare_testo {
+test centos_qemu_ga_install_win10: centos_prepare_testo {
 	win10_flash {
 		copyto "${ISO_DIR}/win10.iso" "/win10.iso"
 	}
@@ -80,7 +80,7 @@ test centos_qemu_install_win10: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_qemu_win10_ga: centos_qemu_install_win10 {
+test centos_qemu_ga_win10_ga: centos_qemu_ga_install_win10 {
 	centos {
 		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/testo-guest-additions.iso"
 		exec bash "testo run /opt/scripts/win.testo --test_spec win10* --stop_on_fail --param ISO_DIR /opt/" timeout 20m

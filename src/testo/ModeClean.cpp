@@ -77,8 +77,6 @@ int clean_mode(const CleanModeArgs& args) {
 		}
 	}
 
-
-
 	if (networks_to_delete.size() || flash_drives_to_delete.size() || machines_to_delete.size()) {
 		if (!args.assume_yes) {
 			std::cout << "Testo is about to erase the following entities:\n";
