@@ -120,7 +120,8 @@ bool Parser::test_test() const {
 }
 
 bool Parser::test_command() const {
-	return (LA(1) == Token::category::id);
+	return (LA(1) == Token::category::id ||
+		test_string());
 }
 
 bool Parser::test_action() const {
@@ -483,8 +484,7 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 }
 
 std::shared_ptr<Cmd> Parser::command() {
-	Token entity = LT(1);
-	match(Token::category::id);
+	auto entity = string_token_union(Token::category::id);
 
 	std::shared_ptr<IAction> act = action();
 	return std::shared_ptr<Cmd>(new Cmd(entity, act));

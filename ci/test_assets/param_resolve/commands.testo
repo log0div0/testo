@@ -1,0 +1,27 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+flash my_flash {
+	fs: "ext4"
+	size: 8Mb
+}
+
+param whose "my"
+
+test machine_as_string {
+	"${whose}_ubuntu_server" {
+		print "Hello world"
+	}
+}
+
+test flash_as_string {
+	"${whose}_flash" {
+		print "Hello world"
+	}
+}

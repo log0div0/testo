@@ -439,15 +439,15 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
 	for (auto command: block->commands) {
-		visit_command(command);
+		visit_command({command, stack});
 	}
 }
 
-void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	if (auto current_controller = IR::program->get_machine_or_null(cmd->entity.value())) {
-		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(cmd->action);
-	} else if (auto current_controller = IR::program->get_flash_drive_or_null(cmd->entity.value())) {
-		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(cmd->action);
+void VisitorInterpreter::visit_command(const IR::Command& cmd) {
+	if (auto current_controller = IR::program->get_machine_or_null(cmd.entity())) {
+		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(cmd.ast_node->action);
+	} else if (auto current_controller = IR::program->get_flash_drive_or_null(cmd.entity())) {
+		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(cmd.ast_node->action);
 	} else {
 		throw std::runtime_error("Should never happen");
 	}

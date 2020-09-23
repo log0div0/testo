@@ -2,6 +2,7 @@
 #pragma once
 #include "IR/Test.hpp"
 #include "IR/Action.hpp"
+#include "IR/Command.hpp"
 #include "IR/Expr.hpp"
 #include "Reporter.hpp"
 #include <nn/OCR.hpp>
@@ -12,7 +13,7 @@ struct VisitorInterpreter {
 	void visit();
 	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
-	void visit_command(std::shared_ptr<AST::Cmd> cmd);
+	void visit_command(const IR::Command& cmd);
 
 	std::shared_ptr<StackNode> stack;
 

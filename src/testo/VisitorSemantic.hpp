@@ -4,6 +4,7 @@
 #include "IR/Test.hpp"
 #include "IR/Macro.hpp"
 #include "IR/Action.hpp"
+#include "IR/Command.hpp"
 #include "IR/Expr.hpp"
 #include "TemplateLiterals.hpp"
 
@@ -35,7 +36,7 @@ struct VisitorSemantic {
 	void visit_macro(std::shared_ptr<IR::Macro> macro);
 	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
-	void visit_command(std::shared_ptr<AST::Cmd> cmd);
+	void visit_command(const IR::Command&  cmd);
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
 	void visit_action(std::shared_ptr<AST::IAction> action);
 	void visit_action_vm(std::shared_ptr<AST::IAction> action);

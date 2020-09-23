@@ -1053,13 +1053,13 @@ struct ActionBlock: public Node {
 };
 
 struct Cmd: public Node {
-	Cmd(const Token& entity, std::shared_ptr<IAction> action):
+	Cmd(std::shared_ptr<StringTokenUnion> entity, std::shared_ptr<IAction> action):
 		Node(Token(Token::category::cmd, "cmd", Pos(), Pos())),
 		entity(entity),
 		action(action) {}
 
 	Pos begin() const {
-		return entity.begin();
+		return entity->begin();
 	}
 
 	Pos end() const {
@@ -1067,10 +1067,10 @@ struct Cmd: public Node {
 	}
 
 	operator std::string() const {
-		return entity.value() + " " + std::string(*action);
+		return std::string(*entity) + " " + std::string(*action);
 	}
 
-	Token entity;
+	std::shared_ptr<StringTokenUnion> entity;
 	std::shared_ptr<IAction> action;
 };
 

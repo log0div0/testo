@@ -289,14 +289,14 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
 	for (auto command: block->commands) {
-		visit_command(command);
+		visit_command({command, stack});
 	}
 }
 
-void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
+void VisitorSemantic::visit_command(const IR::Command& cmd) {
 	current_controller = nullptr;
-	current_test->cksum_input += cmd->entity.value();
-	if (current_controller = IR::program->get_machine_or_null(cmd->entity.value())) {
+	current_test->cksum_input += cmd.entity();
+	if (current_controller = IR::program->get_machine_or_null(cmd.entity())) {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		visit_machine(vmc);
 
@@ -314,13 +314,13 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
 				}
 			}
 		}
-		visit_action_vm(cmd->action);
-	} else if (current_controller = IR::program->get_flash_drive_or_null(cmd->entity.value())) {
+		visit_action_vm(cmd.ast_node->action);
+	} else if (current_controller = IR::program->get_flash_drive_or_null(cmd.entity())) {
 		auto fdc = std::dynamic_pointer_cast<IR::FlashDrive>(current_controller);
 		visit_flash(fdc);
-		visit_action_fd(cmd->action);
+		visit_action_fd(cmd.ast_node->action);
 	} else {
-		throw std::runtime_error(std::string(cmd->entity.begin()) + ": Error: unknown virtual entity: " + cmd->entity.value());
+		throw std::runtime_error(std::string(cmd.ast_node->entity->begin()) + ": Error: unknown virtual entity: " + cmd.entity());
 	}
 }
 

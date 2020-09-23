@@ -266,3 +266,24 @@ test centos_param_not_defined: centos_prepare_testo {
 
 	}
 }
+
+[no_snapshots: true]
+test centos_cmd_param: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/param_resolve/commands.testo" "/opt/scripts/commands.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/commands.testo --test_spec machine_as_string)
+			[[ $output == *"my_ubuntu_server: Hello world"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/commands.testo --test_spec flash_as_string)
+			[[ $output == *"my_flash: Hello world"* ]]
+		"""
+	}
+}
