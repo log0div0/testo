@@ -1,0 +1,34 @@
+
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+[no_snapshots: true]
+test mouse_modifiers1 {
+	my_ubuntu_server {
+		start
+		mouse click "Language".from_top(0)
+	}
+}
+
+[no_snapshots: true]
+test mouse_modifiers2 {
+	my_ubuntu_server {
+		start
+		mouse click "Language".center_top()
+	}
+}
+
+
+[no_snapshots: true]
+test mouse_modifiers3 {
+	my_ubuntu_server {
+		start
+		mouse click "Language".move_right(20)
+	}
+}

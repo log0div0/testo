@@ -75,3 +75,50 @@ test centos_flash_cksum_folder: centos_prepare_testo {
 		""" timeout 30m
 	}
 }
+
+[no_snapshots: true]
+test centos_mouse_specifiers: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/cksum/actions_original.testo" "/opt/scripts/actions.testo"
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers1 | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers2 | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers3 | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers1 --assume_yes | grep "RUN SUCCESSFULLY: 0"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers2 --assume_yes | grep "RUN SUCCESSFULLY: 0"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers3 --assume_yes | grep "RUN SUCCESSFULLY: 0"
+		""" timeout 30m
+
+
+		copyto "${TEST_ASSETS_DIR}/cksum/actions_modified.testo" "/opt/scripts/actions.testo"
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers1 --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers2 --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/actions.testo --test_spec mouse_modifiers3 --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+
+	}
+}

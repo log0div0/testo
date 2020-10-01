@@ -497,6 +497,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 	for (auto specifier: specifiers) {
 		auto arg = specifier->arg;
 
+		current_test->cksum_input += std::string(*specifier);
 		if (specifier->is_from()) {
 			if (!arg) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
@@ -545,7 +546,6 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			throw std::runtime_error(std::string(specifier->begin()) + ": Error: unknown specifier: " + specifier->name.value());
 		}
 
-		current_test->cksum_input += std::string(*specifier);
 	}
 }
 
