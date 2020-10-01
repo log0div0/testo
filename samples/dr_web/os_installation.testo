@@ -158,3 +158,66 @@ test win10_prepare: win10_installation {
 		wait !"Device Manager"
 	}
 }
+
+macro open_app(app) {
+	mouse click "Type here to search"
+	wait "Top apps"
+	type "${app}"
+	wait "Open"
+	press Enter
+}
+
+test enable_autologin: win10_prepare {
+	win10 {
+		open_app("Regedt32.exe")
+		wait "Do you want to allow"; press Left, Enter
+		wait "Registry Editor"
+		mouse click "Computer".from_top(0); press End
+		type "\\HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"; press Enter
+		mouse dclick "AutoAdminLogon"
+		wait "Edit String"
+		type "1"; press Enter
+		sleep 2s
+		mouse dclick "DefaultUserName"
+		wait "Edit String"
+		press Enter
+		sleep 1s
+		mouse click "Edit".from_left(0)
+		sleep 1s
+		mouse move "New".from_left(0)
+		mouse click "String Value".from_top(0)
+		wait "New Value #1"; press Backspace; type "DefaultPassword"; press Enter
+		sleep 1s
+		mouse dclick "DefaultPassword"
+		wait "Edit String"
+		type "1111"; press Enter
+		sleep 2s
+		press LeftAlt + F4
+		wait !"Registry Editor"
+		press LeftMeta
+		mouse move 1 300
+		mouse click "Power"
+		mouse click "Shut down".center_top()
+		sleep 11s
+	}
+}
+
+flash my_simple_app_flash {
+	fs: "ntfs"
+	size: 128Mb
+	folder: "/home/alex/work/testo/testo-articles/02/dist/ok"
+}
+
+[no_snapshots: true]
+test launch_my_simple_app: enable_autologin {
+	win10 {
+		start
+		wait "Recycle Bin" timeout 10m
+		plug flash my_simple_app_flash
+		mouse click "USB Drive (E:)"
+		mouse click "Open folder to view files"
+		mouse dclick "MySuperApp"
+		wait "MySuperApp is working!"
+		unplug flash my_simple_app_flash
+	}
+}

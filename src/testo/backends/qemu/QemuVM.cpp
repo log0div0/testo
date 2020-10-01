@@ -371,7 +371,13 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 			</domainsnapshot>
 			)", snapshot).c_str());
 
-		domain.snapshot_create_xml(xml_config);
+		auto snap = domain.snapshot_create_xml(xml_config);
+
+		// If we created the _init snapshot
+		if (domain.snapshots().size() == 1) {
+			snap.destroy();
+			snap = domain.snapshot_create_xml(xml_config);
+		}
 
 		auto new_config = domain.dump_xml();
 		std::stringstream ss;
