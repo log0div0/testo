@@ -229,7 +229,7 @@ void VisitorInterpreter::setup_vars() {
 	check_up_to_date_tests(tests_queue);
 
 	if (!assume_yes && cache_missed_tests.size()) {
-		std::cout << "Some tests have lost their cache:" << std::endl;
+		std::cout << "Because of the cache loss, Testo is scheduled to run the following tests:" << std::endl;
 
 		for (auto cache_missed: cache_missed_tests) {
 			std::cout << "\t- " << cache_missed->name() << std::endl;
