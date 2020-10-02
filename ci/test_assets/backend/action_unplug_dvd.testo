@@ -12,9 +12,26 @@ test unplug_dvd {
 }
 
 [no_snapshots: true]
-test  rollback_after_unplug_dvd {
+test rollback_after_unplug_dvd {
 	my_ubuntu_server {
 		start
+		abort "stop here"
+	}
+}
+
+test rollback_after_plug_dvd_part1 {
+	my_ubuntu_server {
+		start
+		unplug dvd
+		sleep 5s
+	}
+}
+
+[no_snapshots: true]
+test rollback_after_plug_dvd_part2: rollback_after_plug_dvd_part1 {
+	my_ubuntu_server {
+		plug dvd "/opt/ubuntu-16.04.6-server-amd64.iso"
+		sleep 3s
 		abort "stop here"
 	}
 }

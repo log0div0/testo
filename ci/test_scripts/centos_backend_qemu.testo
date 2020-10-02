@@ -189,6 +189,23 @@ test centos_backend_qemu_rollback_after_unplug_dvd: centos_backend_qemu_unplug_d
 }
 
 [no_snapshots: true]
+test centos_backend_qemu_rollback_after_plug_dvd: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_unplug_dvd.testo" "/opt/scripts/action_unplug_dvd.testo"
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/action_unplug_dvd.testo --stop_on_fail --test_spec rollback_after_plug_dvd_part2 | grep "stop here"
+		"""
+
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/action_unplug_dvd.testo --stop_on_fail --test_spec rollback_after_plug_dvd_part2 | grep "stop here"
+		"""
+	}
+}
+
+[no_snapshots: true]
 test centos_backend_qemu_wait: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
@@ -255,8 +272,8 @@ test centos_backend_qemu_cache_miss: centos_prepare_testo {
 		enter_sudo()
 
 		type "testo run /opt/scripts/script.testo"; press Enter
-		wait "Some tests have lost"
-		wait js "find_text().match('test_parent').size() == 1"
+		wait "Because of the cache loss"
+		wait js "find_text().match('parent').size() == 1"
 		wait js "find_text().match('test_child1').size() == 1"
 		wait js "find_text().match('test_child2').size() == 1"
 		wait js "find_text().match('child3').size() == 1"
