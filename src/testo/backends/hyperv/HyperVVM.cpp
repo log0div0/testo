@@ -352,7 +352,7 @@ stb::Image HyperVVM::screenshot() {
 	}
 }
 
-int HyperVVM::run(const fs::path& exe, std::vector<std::string> args, uint32_t timeout_milliseconds,
+int HyperVVM::run(const fs::path& exe, std::vector<std::string> args,
 	const std::function<void(const std::string&)>& callback)
 {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
@@ -411,10 +411,10 @@ VmState HyperVVM::state() const {
 bool HyperVVM::is_additions_installed() {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVVM::copy_to_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
+void HyperVVM::copy_to_guest(const fs::path& src, const fs::path& dst) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-void HyperVVM::copy_from_guest(const fs::path& src, const fs::path& dst, uint32_t timeout_milliseconds) {
+void HyperVVM::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 void HyperVVM::remove_from_guest(const fs::path& obj) {
