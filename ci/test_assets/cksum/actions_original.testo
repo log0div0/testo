@@ -12,7 +12,7 @@ machine my_ubuntu_server {
 test mouse_modifiers1 {
 	my_ubuntu_server {
 		start
-		mouse click "Language".from_top(0)
+		mouse click "English".from_top(0)
 	}
 }
 
@@ -20,7 +20,7 @@ test mouse_modifiers1 {
 test mouse_modifiers2 {
 	my_ubuntu_server {
 		start
-		mouse click "Language".center_top()
+		mouse click "English".center_top()
 	}
 }
 
@@ -29,6 +29,6 @@ test mouse_modifiers2 {
 test mouse_modifiers3 {
 	my_ubuntu_server {
 		start
-		mouse click "Language".move_right(20)
+		mouse click "English".move_right(20)
 	}
 }
