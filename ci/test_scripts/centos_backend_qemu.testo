@@ -241,7 +241,6 @@ test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/install_ubuntu.testo" "/opt/scripts/install_ubuntu.testo"
-		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"
 		exec bash """
 			testo run /opt/scripts/install_ubuntu.testo --stop_on_fail --test_spec install_ubuntu_server
 		""" timeout 30m
@@ -250,9 +249,10 @@ test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
 
 test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ubuntu_server {
 	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"
 		copyto "${OUT_DIR}/testo-guest-additions.iso" "/opt/iso/testo-guest-additions.iso"
 		exec bash """
-			testo run /opt/scripts/install_guest_additions.testo --test_spec install_ubuntu_server_guest_additions
+			testo run /opt/scripts/install_guest_additions.testo --stop_on_fail --test_spec install_ubuntu_server_guest_additions
 		""" timeout 30m
 	}
 }
