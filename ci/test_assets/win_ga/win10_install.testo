@@ -1,0 +1,90 @@
+
+network nat {
+	mode: "nat"
+}
+
+machine win10 {
+	cpus: 2
+	ram: 3Gb
+	iso: "${ISO_DIR}/win10.iso"
+	disk main: {
+		size: 20Gb
+	}
+	nic nat: {
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+}
+
+[no_snapshots: true]
+test win10_installation_part_1 {
+	win10 {
+		start
+		mouse click "Мой язык - русский" timeout 20m
+		mouse click "Далее".from_bottom(0)
+		mouse click "Установить"
+		wait "Выберите операционную систему"
+		mouse click "Windows 10 Корпоративная".from_top(0)
+		mouse click "Далее".from_bottom(0)
+		mouse click "Я принимаю условия лицензии"
+		mouse click "Далее".from_bottom(0)
+		wait "Выберите тип установки"
+		mouse click "Выборочная"
+		wait "Где вы хотите установить Windows?"
+		mouse click "Далее".from_bottom(0)
+		wait "родолжить на выбранном языке?" timeout 1h interval 10s
+	}
+}
+
+test win10_installation_part_2: win10_installation_part_1 {
+	win10 {
+		wait "родолжить на выбранном языке?"
+		mouse click "Да".from_bottom(0)
+		wait "Давайте начнем с региона. Это правильно?"
+		mouse click "Да".from_bottom(0)
+		wait "Это правильная раскладка клавиатуры?"
+		mouse click "Да".from_bottom(0)
+		wait "Вы хотите добавить вторую раскладку"
+		mouse click "Пропустить".from_bottom(0)
+		wait "Лицензионное соглашение" timeout 20m
+		mouse move 0 0
+		mouse click "Принять".from_bottom(0)
+		wait "Какую учетную запись использовать?"
+		mouse click "Вместо этого присоединить к домену"
+		wait "Какое имя вы хотите использовать?"
+		mouse move 0 0
+		mouse click "Имя".from_bottom(0)
+		press LeftAlt+LeftShift; type "user"; press Enter
+		mouse move 0 0
+		mouse click "Пароль".from_bottom(0)
+		type "1111"; press Enter
+		mouse move 0 0
+		mouse click "Подтверждение пароля".from_bottom(0)
+		type "1111"; press Enter
+		mouse move 0 0
+		mouse click "Контрольный вопрос (1 из 3)"
+		mouse move 0 0
+		mouse click "Кличка первого домашнего животного"
+		mouse move 0 0
+		press Tab; type "----"; press Enter
+		mouse move 0 0
+		mouse click "Контрольный вопрос (2 из 3)"
+		mouse move 0 0
+		mouse click "В каком городе вы родились"
+		mouse move 0 0
+		press Tab; type "----"; press Enter
+		mouse move 0 0
+		mouse click "Контрольный вопрос (3 из 3)"
+		mouse move 0 0
+		mouse click "Ваше прозвище в детстве"
+		mouse move 0 0
+		press Tab; type "----"; press Enter
+		wait "Удобная работа на разных устройствах"
+		mouse click "Нет".from_bottom(0)
+		wait "Выберите параметры конфиденциальности"
+		mouse click "Принять".from_bottom(0)
+		wait "Корзина" timeout 20m
+		unplug dvd
+		sleep 10s
+	}
+}

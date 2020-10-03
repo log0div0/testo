@@ -1,0 +1,48 @@
+
+network nat {
+	mode: "nat"
+}
+
+machine win7 {
+	cpus: 2
+	ram: 2Gb
+	iso: "${ISO_DIR}/win7.iso"
+	disk main: {
+		size: 20Gb
+	}
+	nic nat: {
+		attached_to: "nat"
+		adapter_type: "e1000"
+	}
+}
+
+test win7_installation {
+	win7 {
+		start
+		wait "Choose an operating system"
+		press Down, Enter
+		mouse click "Мой язык - русский" timeout 2m
+		wait "Выберите нужный язык"; press Enter
+		wait "Установить"; press Enter
+		wait "Выберите операционную систему"; press Down*8, Enter
+		wait "Условия лицензии"; press Space, Enter
+		wait "Выберите тип установки"; press Down, Enter
+		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; press Enter
+		wait "Выберите имя пользователя" timeout 45m
+		unplug dvd
+		press LeftShift+LeftAlt; type "testo"; press Enter
+		wait "Установите пароль"; press Enter
+		wait "Введите ключ продукта";
+		mouse click "Автоматически активировать Windows"
+		mouse click "Далее"
+		wait "Помогите автоматически защитить компьютер"
+		mouse click "Отложить решение"
+		wait "Проверьте настройку даты и времени"; press Enter
+		wait "Выберите текущее место расположения компьютера"; press Enter
+		wait "Корзина" timeout 20m
+		shutdown
+		start
+		wait "Корзина"
+		sleep 10s
+	}
+}

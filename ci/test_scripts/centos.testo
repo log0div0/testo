@@ -6,7 +6,7 @@ machine centos {
 	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
 	ram: 8Gb
 	disk main: {
-		size: 50Gb
+		size: 64Gb
 	}
 	nic nat: {
 		attached_to: "nat"
@@ -20,7 +20,37 @@ test centos_install_os {
 		wait "Press [Esc]"; press Esc
 		wait "What language would you" timeout 10m; mouse click "Continue"
 		mouse click "Installation Dest"
+		mouse click "Custom"
 		mouse click "Done"
+
+		mouse click "AVAILABLE".center_top().move_up(30)
+		wait "ADD A NEW MOUNT POINT"
+		mouse click "Mount Point:".from_bottom(0).right_center().move_right(220)
+		mouse click "/boot"
+		mouse click "Desired Capacity:".right_center().move_right(50)
+		type "1Gb"
+		mouse click "Add mount point"
+		wait !"ADD A NEW MOUNT POINT"
+
+		mouse click "AVAILABLE".center_top().move_up(30)
+		wait "ADD A NEW MOUNT POINT"
+		mouse click "Mount Point:".from_bottom(0).right_center().move_right(220)
+		mouse click "swap"
+		mouse click "Desired Capacity:".right_center().move_right(50)
+		type "2Gb"
+		mouse click "Add mount point"
+		wait !"ADD A NEW MOUNT POINT"
+
+		mouse click "AVAILABLE".center_top().move_up(30)
+		wait "ADD A NEW MOUNT POINT"
+		mouse click "Mount Point:".from_bottom(0).right_center().move_right(220)
+		mouse click "/home".center().move_up(30)
+		mouse click "Add mount point"
+		wait !"ADD A NEW MOUNT POINT"
+
+		mouse click "Done"
+		mouse click "Accept Changes"
+
 		sleep 2s
 		mouse click "Software selection"
 		mouse click "Workstation".from_top(0)
@@ -60,7 +90,7 @@ test centos_install_os {
 
 macro open_terminal() {
 	mouse click "Activities"
-	wait "Type to search"
+	sleep 5s
 	type "Term"; mouse click "Terminal"
 	wait "${login}@localhost"
 }
@@ -73,7 +103,7 @@ macro enter_sudo() {
 
 macro open_virt_manager() {
 	mouse click "Activities"
-	wait "Type to search"
+	sleep 5s
 	type "virt"; mouse click "Virtual Machine"
 	wait "Authentication Required"; type "${password}"; press Enter
 	wait !"Authentication Required" && "Virtual Machine Manager"
