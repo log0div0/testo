@@ -1162,20 +1162,67 @@ struct MacroArg: public Node {
 	std::shared_ptr<String> default_value = nullptr;
 };
 
+struct IMacroBody: public Node {
+	using Node::Node;
+};
+
+//IfClause if also an action
+template <typename MacroBodyType>
+struct MacroBody: public IMacroBody {
+	MacroBody(std::shared_ptr<MacroBodyType> macro_body):
+		IMacroBody(macro_body->t),
+		macro_body(macro_body) {}
+
+	Pos begin() const {
+		return macro_body->begin();
+	}
+
+	Pos end() const {
+		return macro_body->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*macro_body);
+		return result;
+	}
+
+	std::shared_ptr<MacroBodyType> macro_body;
+};
+
+struct MacroBodyAction: public Node {
+	MacroBodyAction(std::shared_ptr<Action<ActionBlock>> action_block):
+		Node(action_block->t), action_block(action_block) {}
+
+	Pos begin() const {
+		return action_block->begin();
+	}
+
+	Pos end() const {
+		return action_block->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*action_block);
+		return result;
+	}
+
+	std::shared_ptr<Action<ActionBlock>> action_block;
+};
+
 struct Macro: public Node {
 	Macro(const Token& macro,
 		const Token& name,
 		const std::vector<std::shared_ptr<MacroArg>>& args,
-		std::shared_ptr<Action<ActionBlock>> action_block):
+		std::shared_ptr<IMacroBody> body):
 			Node(macro), name(name), args(args),
-			action_block(action_block) {}
+			body(body) {}
 
 	Pos begin() const {
 		return t.begin();
 	}
 
 	Pos end() const {
-		return action_block->end();
+		return body->end();
 	}
 
 	operator std::string() const {
@@ -1184,13 +1231,13 @@ struct Macro: public Node {
 			result += std::string(*arg) + " ,";
 		}
 		result += ") ";
-		result += std::string(*action_block);
+		result += std::string(*body);
 		return result;
 	}
 
 	Token name;
 	std::vector<std::shared_ptr<MacroArg>> args;
-	std::shared_ptr<Action<ActionBlock>> action_block;
+	std::shared_ptr<IMacroBody> body;
 };
 
 struct MacroCall: public Node {

@@ -339,6 +339,13 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 	return std::shared_ptr<MacroArg>(new MacroArg(arg_name, default_value));
 }
 
+std::shared_ptr<IMacroBody> Parser::macro_body() {
+	auto actions = action_block();
+	auto body = std::shared_ptr<MacroBodyAction>(new MacroBodyAction(actions));
+	return std::shared_ptr<MacroBody<MacroBodyAction>>(new MacroBody<MacroBodyAction>(body));
+}
+
+
 std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token macro = LT(1);
 	match(Token::category::macro);
@@ -369,9 +376,9 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	match(Token::category::rparen);
 
 	newline_list();
-	auto actions = action_block();
+	auto body = macro_body();
 
-	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, actions));
+	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, body));
 
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }

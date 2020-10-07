@@ -816,7 +816,11 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 
 	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
 	try {
-		visit_action_block(macro->ast_node->action_block->action);
+		if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body)) {
+			visit_action_block(p->macro_body->action_block->action);
+		} else {
+			throw std::runtime_error("Unknown macro body type");
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(MacroException(macro_call));
 	}
