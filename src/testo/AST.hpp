@@ -1052,9 +1052,35 @@ struct ActionBlock: public Node {
 	std::vector<std::shared_ptr<IAction>> actions;
 };
 
-struct Cmd: public Node {
-	Cmd(std::shared_ptr<StringTokenUnion> entity, std::shared_ptr<IAction> action):
-		Node(Token(Token::category::cmd, "cmd", Pos(), Pos())),
+struct ICmd: public Node {
+	using Node::Node;
+};
+
+template <typename CmdType>
+struct Cmd: public ICmd {
+	Cmd(std::shared_ptr<CmdType> cmd):
+		ICmd(cmd->t),
+		cmd(cmd) {}
+
+	Pos begin() const {
+		return cmd->begin();
+	}
+
+	Pos end() const {
+		return cmd->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*cmd);
+		return result;
+	}
+
+	std::shared_ptr<CmdType> cmd;
+};
+
+struct RegularCmd: public Node {
+	RegularCmd(std::shared_ptr<StringTokenUnion> entity, std::shared_ptr<IAction> action):
+		Node(Token(Token::category::regular_cmd, "regular_cmd", Pos(), Pos())),
 		entity(entity),
 		action(action) {}
 
@@ -1075,7 +1101,7 @@ struct Cmd: public Node {
 };
 
 struct CmdBlock: public Node {
-	CmdBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Cmd>> commands):
+	CmdBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<ICmd>> commands):
 		Node(Token(Token::category::cmd_block, "cmd_block", Pos(),Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
@@ -1101,7 +1127,7 @@ struct CmdBlock: public Node {
 
 	Token open_brace;
 	Token close_brace;
-	std::vector<std::shared_ptr<Cmd>> commands;
+	std::vector<std::shared_ptr<ICmd>> commands;
 };
 
 //High-level constructions

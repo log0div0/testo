@@ -5,7 +5,7 @@
 
 namespace IR {
 
-std::string Command::entity() const {
+std::string RegularCommand::entity() const {
 	try {
 		return template_literals::Parser().resolve(ast_node->entity->text(), stack);
 	} catch (const std::exception& error) {

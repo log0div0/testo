@@ -36,7 +36,8 @@ struct VisitorSemantic {
 	void visit_macro(std::shared_ptr<IR::Macro> macro);
 	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
-	void visit_command(const IR::Command&  cmd);
+	void visit_command(std::shared_ptr<AST::ICmd> cmd);
+	void visit_regular_command(const IR::RegularCommand& regular_cmd);
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
 	void visit_action(std::shared_ptr<AST::IAction> action);
 	void visit_action_vm(std::shared_ptr<AST::IAction> action);

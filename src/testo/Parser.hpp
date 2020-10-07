@@ -60,7 +60,7 @@ private:
 	std::shared_ptr<AST::Attr> attr();
 	std::shared_ptr<AST::AttrBlock> attr_block();
 	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
-	std::shared_ptr<AST::Cmd> command();
+	std::shared_ptr<AST::ICmd> command();
 	std::shared_ptr<AST::CmdBlock> command_block();
 	std::shared_ptr<AST::KeyCombination> key_combination();
 	std::shared_ptr<AST::KeySpec> key_spec();

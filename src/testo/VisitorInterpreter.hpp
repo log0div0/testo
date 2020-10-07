@@ -13,7 +13,8 @@ struct VisitorInterpreter {
 	void visit();
 	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
-	void visit_command(const IR::Command& cmd);
+	void visit_command(std::shared_ptr<AST::ICmd> cmd);
+	void visit_regular_command(const IR::RegularCommand& regular_cmd);
 
 	std::shared_ptr<StackNode> stack;
 

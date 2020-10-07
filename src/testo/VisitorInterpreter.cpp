@@ -439,15 +439,25 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 
 void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
 	for (auto command: block->commands) {
-		visit_command({command, stack});
+		visit_command(command);
 	}
 }
 
-void VisitorInterpreter::visit_command(const IR::Command& cmd) {
-	if (auto current_controller = IR::program->get_machine_or_null(cmd.entity())) {
-		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(cmd.ast_node->action);
-	} else if (auto current_controller = IR::program->get_flash_drive_or_null(cmd.entity())) {
-		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(cmd.ast_node->action);
+void VisitorInterpreter::visit_command(std::shared_ptr<AST::ICmd> cmd) {
+	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
+		visit_regular_command({p->cmd, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
+		//visit_print({p->cmd, stack});
+	} else {
+		throw std::runtime_error("Should never happen");
+	}
+}
+
+void VisitorInterpreter::visit_regular_command(const IR::RegularCommand& regular_command) {
+	if (auto current_controller = IR::program->get_machine_or_null(regular_command.entity())) {
+		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+	} else if (auto current_controller = IR::program->get_flash_drive_or_null(regular_command.entity())) {
+		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
 	} else {
 		throw std::runtime_error("Should never happen");
 	}

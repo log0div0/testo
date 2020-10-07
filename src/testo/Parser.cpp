@@ -515,15 +515,15 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 	}
 	auto block = attr_block();
 	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
-
 	return std::shared_ptr<AST::Stmt<AST::Controller>>(new AST::Stmt<AST::Controller>(stmt));
 }
 
-std::shared_ptr<Cmd> Parser::command() {
+std::shared_ptr<ICmd> Parser::command() {
 	auto entity = string_token_union(Token::category::id);
-
 	std::shared_ptr<IAction> act = action();
-	return std::shared_ptr<Cmd>(new Cmd(entity, act));
+
+	auto cmd = std::shared_ptr<AST::RegularCmd>(new AST::RegularCmd(entity, act));
+	return std::shared_ptr<AST::Cmd<AST::RegularCmd>>(new AST::Cmd<AST::RegularCmd>(cmd));
 }
 
 std::shared_ptr<CmdBlock> Parser::command_block() {
@@ -531,7 +531,7 @@ std::shared_ptr<CmdBlock> Parser::command_block() {
 	match(Token::category::lbrace);
 
 	newline_list();
-	std::vector<std::shared_ptr<Cmd>> commands;
+	std::vector<std::shared_ptr<ICmd>> commands;
 
 	while (test_command()) {
 		commands.push_back(command());

@@ -109,7 +109,7 @@ struct Token {
 		action_block,
 		attr,
 		attr_block,
-		cmd,
+		regular_cmd,
 		cmd_block
 	};
 
@@ -327,7 +327,7 @@ struct Token {
 			return "MACHINE ATTRIBUTE";
 		case attr_block:
 			return "MACHINE ATTRIBUTE BLOCK";
-		case cmd:
+		case regular_cmd:
 			return "COMMAND";
 		case cmd_block:
 			return "COMMAND BLOCK";

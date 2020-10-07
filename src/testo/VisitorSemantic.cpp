@@ -289,13 +289,23 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
 	for (auto command: block->commands) {
-		visit_command({command, stack});
+		visit_command(command);
 	}
 }
 
-void VisitorSemantic::visit_command(const IR::Command& cmd) {
-	current_test->cksum_input += cmd.entity();
-	if (current_controller = IR::program->get_machine_or_null(cmd.entity())) {
+void VisitorSemantic::visit_command(std::shared_ptr<AST::ICmd> cmd) {
+	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
+		visit_regular_command({p->cmd, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
+		//visit_print({p->cmd, stack});
+	} else {
+		throw std::runtime_error("Should never happen");
+	}
+}
+
+void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cmd) {
+	current_test->cksum_input += regular_cmd.entity();
+	if (current_controller = IR::program->get_machine_or_null(regular_cmd.entity())) {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		visit_machine(vmc);
 
@@ -313,13 +323,13 @@ void VisitorSemantic::visit_command(const IR::Command& cmd) {
 				}
 			}
 		}
-		visit_action_vm(cmd.ast_node->action);
-	} else if (current_controller = IR::program->get_flash_drive_or_null(cmd.entity())) {
+		visit_action_vm(regular_cmd.ast_node->action);
+	} else if (current_controller = IR::program->get_flash_drive_or_null(regular_cmd.entity())) {
 		auto fdc = std::dynamic_pointer_cast<IR::FlashDrive>(current_controller);
 		visit_flash(fdc);
-		visit_action_fd(cmd.ast_node->action);
+		visit_action_fd(regular_cmd.ast_node->action);
 	} else {
-		throw std::runtime_error(std::string(cmd.ast_node->entity->begin()) + ": Error: unknown virtual entity: " + cmd.entity());
+		throw std::runtime_error(std::string(regular_cmd.ast_node->entity->begin()) + ": Error: unknown virtual entity: " + regular_cmd.entity());
 	}
 
 	current_controller = nullptr;
