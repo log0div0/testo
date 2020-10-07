@@ -57,6 +57,8 @@ void VisitorInterpreterAction::visit_macro_call(std::shared_ptr<AST::MacroCall> 
 	try {
 		if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body)) {
 			visit_action_block(p->macro_body->action_block->action);
+		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyEmpty>>(macro->ast_node->body)) {
+			;
 		} else {
 			throw std::runtime_error("Unknown macro body type");
 		}

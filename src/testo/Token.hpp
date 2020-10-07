@@ -110,6 +110,7 @@ struct Token {
 		attr,
 		attr_block,
 		regular_cmd,
+		macro_body_empty,
 		cmd_block
 	};
 
@@ -329,6 +330,8 @@ struct Token {
 			return "MACHINE ATTRIBUTE BLOCK";
 		case regular_cmd:
 			return "COMMAND";
+		case macro_body_empty:
+			return "MACRO BODY EMPTY";
 		case cmd_block:
 			return "COMMAND BLOCK";
 		case true_:

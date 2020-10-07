@@ -5,6 +5,7 @@
 #include "IR/Command.hpp"
 #include "IR/Expr.hpp"
 #include "Reporter.hpp"
+#include "TemplateLiterals.hpp"
 #include <nn/OCR.hpp>
 
 struct VisitorInterpreter {
@@ -14,6 +15,7 @@ struct VisitorInterpreter {
 	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::ICmd> cmd);
+	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
 	void visit_regular_command(const IR::RegularCommand& regular_cmd);
 
 	std::shared_ptr<StackNode> stack;
@@ -49,6 +51,6 @@ private:
 	void stop_all_vms(std::shared_ptr<IR::Test> test);
 
 	std::shared_ptr<IR::Test> current_test;
-
+	template_literals::Parser template_parser;
 	Reporter reporter;
 };

@@ -1217,6 +1217,26 @@ struct MacroBody: public IMacroBody {
 
 //TODO: Empty macro body
 
+struct MacroBodyEmpty: public Node {
+	MacroBodyEmpty(const Token& lbrace, const Token& rbrace):
+		Node(Token(Token::category::macro_body_empty, "macro_body_empty", Pos(),Pos())),
+		lbrace(lbrace), rbrace(rbrace) {}
+
+	Pos begin() const {
+		return lbrace.begin();
+	}
+
+	Pos end() const {
+		return rbrace.end();
+	}
+
+	operator std::string() const {
+		return "{}";
+	}
+
+	Token lbrace, rbrace;
+};
+
 struct MacroBodyCommand: public Node {
 	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
 		Node(cmd_block->t), cmd_block(cmd_block) {}

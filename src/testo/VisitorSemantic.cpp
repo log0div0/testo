@@ -837,6 +837,8 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call a command macro " + macro_call->name().value() + "  inside another command");
 			}
 			visit_command_block(p->macro_body->cmd_block);
+		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyEmpty>>(macro->ast_node->body)) {
+			;
 		} else {
 			throw std::runtime_error("Unknown macro body type");
 		}

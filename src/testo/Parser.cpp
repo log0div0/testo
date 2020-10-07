@@ -244,7 +244,7 @@ void Parser::handle_include() {
 	lexers.push_back(new_ctx);
 	already_included.push_back(dest_file);
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 4; i++) {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }
@@ -340,8 +340,8 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 }
 
 std::shared_ptr<IMacroBody> Parser::macro_body() {
-	if (LA(1) != Token::category::lbracket) {
-		throw std::runtime_error(LT(1).begin() + ": Error: expected a '{' symbol, but got " + LT(1).value() + " instead");
+	if (LA(1) != Token::category::lbrace) {
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected a '{' symbol, but got " + LT(1).value() + " instead");
 	}
 
 	size_t check_token_index = 2;
@@ -350,7 +350,7 @@ std::shared_ptr<IMacroBody> Parser::macro_body() {
 		check_token_index = 3;
 	}
 
-	bool is_action = false, is_command = false;
+	bool is_action = false, is_command = false, is_empty = false;
 
 	if (LA(check_token_index) == Token::category::id && LA(check_token_index + 1) == Token::category::lparen) {
 		//macro call
@@ -359,6 +359,8 @@ std::shared_ptr<IMacroBody> Parser::macro_body() {
 		is_command = true;
 	} else if (test_action(check_token_index)) {
 		is_action = true;
+	} else if (LA(check_token_index) == Token::category::rbrace) {
+		is_empty = true;
 	}
 
 	if (is_action) {
@@ -369,8 +371,16 @@ std::shared_ptr<IMacroBody> Parser::macro_body() {
 		auto commands = command_block();
 		auto body = std::shared_ptr<MacroBodyCommand>(new MacroBodyCommand(commands));
 		return std::shared_ptr<MacroBody<MacroBodyCommand>>(new MacroBody<MacroBodyCommand>(body));
+	} else if (is_empty) {
+		auto lbrace = LT(1);
+		match(Token::category::lbrace);
+		newline_list();
+		auto rbrace = LT(1);
+		match(Token::category::rbrace);
+		auto body = std::shared_ptr<MacroBodyEmpty>(new MacroBodyEmpty(lbrace, rbrace));
+		return std::shared_ptr<MacroBody<MacroBodyEmpty>>(new MacroBody<MacroBodyEmpty>(body));
 	} else {
-		throw std::runtime_error(LT(check_token_index).begin() + ": Error: expected a command or an action, but got " + LT(check_token_index).value() + " instead");
+		throw std::runtime_error(std::string(LT(check_token_index).begin()) + ": Error: expected a command or an action, but got " + LT(check_token_index).value() + " instead");
 	}
 }
 
@@ -519,11 +529,15 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 }
 
 std::shared_ptr<ICmd> Parser::command() {
-	auto entity = string_token_union(Token::category::id);
-	std::shared_ptr<IAction> act = action();
-
-	auto cmd = std::shared_ptr<AST::RegularCmd>(new AST::RegularCmd(entity, act));
-	return std::shared_ptr<AST::Cmd<AST::RegularCmd>>(new AST::Cmd<AST::RegularCmd>(cmd));
+	if (LA(1) == Token::category::id && LA(2) == Token::category::lparen) {
+		auto call = macro_call();
+		return std::shared_ptr<AST::Cmd<AST::MacroCall>>(new AST::Cmd<AST::MacroCall>(call));
+	} else {
+		auto entity = string_token_union(Token::category::id);
+		std::shared_ptr<IAction> act = action();
+		auto cmd = std::shared_ptr<AST::RegularCmd>(new AST::RegularCmd(entity, act));
+		return std::shared_ptr<AST::Cmd<AST::RegularCmd>>(new AST::Cmd<AST::RegularCmd>(cmd));
+	}
 }
 
 std::shared_ptr<CmdBlock> Parser::command_block() {
@@ -615,7 +629,8 @@ std::shared_ptr<IAction> Parser::action() {
 	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
 		return empty_action();
 	} else if (LA(1) == Token::category::id) {
-		action = macro_call();
+		auto call = macro_call();
+		action = std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(call));
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown action: " + LT(1).value());
 	}
@@ -1057,7 +1072,7 @@ std::shared_ptr<Action<ActionBlock>> Parser::action_block() {
 	return std::shared_ptr<Action<ActionBlock>>(new Action<ActionBlock>(action));
 }
 
-std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
+std::shared_ptr<MacroCall> Parser::macro_call() {
 	Token macro_name = LT(1);
 	match(Token::category::id);
 
@@ -1078,9 +1093,7 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 	}
 
 	match(Token::category::rparen);
-
-	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
-	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
+	return std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
 }
 
 std::shared_ptr<Action<IfClause>> Parser::if_clause() {
