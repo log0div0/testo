@@ -63,6 +63,15 @@ test plug_already_plugged_flash_4 {
 	}
 }
 
+macro some_flash_macro() {
+	print "Hello world from flash macro"
+}
+
+[no_snapshots: true]
+test flash_macro_call {
+	my_flash some_flash_macro()
+}
+
 flash my_flash_with_files {
 	fs: "ext4"
 	size: 6Gb

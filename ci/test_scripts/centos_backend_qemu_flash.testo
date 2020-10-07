@@ -188,10 +188,14 @@ test centos_backend_qemu_plug_flash_exceptions: centos_prepare_testo {
 		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
 		exec bash """
 			set +o pipefail
-			#testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash | grep "Flash drive my_flash is already plugged into vm my_ubuntu_server. You should unplug it first"
-			#testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_2 | grep "Another flash drive my_flash is already plugged into vm my_ubuntu_server. You should unplug it first"
-			#testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_3 | grep "Flash drive my_flash is already plugged into vm dummy_machine. You should unplug it first"
+			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash | grep "Flash drive my_flash is already plugged into vm my_ubuntu_server. You should unplug it first"
+			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_2 | grep "Another flash drive my_flash is already plugged into vm my_ubuntu_server. You should unplug it first"
+			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_3 | grep "Flash drive my_flash is already plugged into vm dummy_machine. You should unplug it first"
 			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_4 | grep "Flash drive my_flash is already plugged into vm dummy_machine. You should unplug it first"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/action_flash.testo --test_spec flash_macro_call | grep "Hello world from flash macro"
 		""" timeout 30m
 	}
 }

@@ -282,6 +282,23 @@ void Reporter::sleep(std::shared_ptr<IR::Controller> controller, const std::stri
 	report(fmt::format(" for {}\n", timeout), blue);
 }
 
+void Reporter::macro_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
+	report(fmt::format("{} Calling macro ", progress()), blue);
+	report(fmt::format("{}(", macro_name), yellow);
+
+	for (auto it = params.begin(); it != params.end(); ++it) {
+		report(fmt::format("{}=\"{}\"", it->first, it->second), yellow);
+
+		if ((it + 1) != params.end()) {
+			report(", ", yellow);
+		}
+	}
+
+	report(")", yellow);
+	report(fmt::format(" in {} ", controller->type()), blue);
+	report(fmt::format("{}\n", controller->name()), yellow);
+}
+
 void Reporter::wait(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
 	report(fmt::format("{} Waiting ", progress()), blue);
 	report(fmt::format("{} ", text), yellow);
@@ -299,23 +316,6 @@ void Reporter::check(std::shared_ptr<IR::Machine> vmc, const std::string& text, 
 		report(fmt::format(" with interval {}", interval), blue);
 	}
 	report(fmt::format(" in virtual machine "), blue);
-	report(fmt::format("{}\n", vmc->name()), yellow);
-}
-
-void Reporter::macro_call(std::shared_ptr<IR::Machine> vmc, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
-	report(fmt::format("{} Calling macro ", progress()), blue);
-	report(fmt::format("{}(", macro_name), yellow);
-
-	for (auto it = params.begin(); it != params.end(); ++it) {
-		report(fmt::format("{}=\"{}\"", it->first, it->second), yellow);
-
-		if ((it + 1) != params.end()) {
-			report(", ", yellow);
-		}
-	}
-
-	report(")", yellow);
-	report(" in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
