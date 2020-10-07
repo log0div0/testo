@@ -1189,6 +1189,28 @@ struct MacroBody: public IMacroBody {
 	std::shared_ptr<MacroBodyType> macro_body;
 };
 
+//TODO: Empty macro body
+
+struct MacroBodyCommand: public Node {
+	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
+		Node(cmd_block->t), cmd_block(cmd_block) {}
+
+	Pos begin() const {
+		return cmd_block->begin();
+	}
+
+	Pos end() const {
+		return cmd_block->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*cmd_block);
+		return result;
+	}
+
+	std::shared_ptr<CmdBlock> cmd_block;
+};
+
 struct MacroBodyAction: public Node {
 	MacroBodyAction(std::shared_ptr<Action<ActionBlock>> action_block):
 		Node(action_block->t), action_block(action_block) {}

@@ -294,7 +294,6 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 }
 
 void VisitorSemantic::visit_command(const IR::Command& cmd) {
-	current_controller = nullptr;
 	current_test->cksum_input += cmd.entity();
 	if (current_controller = IR::program->get_machine_or_null(cmd.entity())) {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
@@ -322,6 +321,8 @@ void VisitorSemantic::visit_command(const IR::Command& cmd) {
 	} else {
 		throw std::runtime_error(std::string(cmd.ast_node->entity->begin()) + ": Error: unknown virtual entity: " + cmd.entity());
 	}
+
+	current_controller = nullptr;
 }
 
 void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
@@ -817,7 +818,15 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
 	try {
 		if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body)) {
+			if (!current_controller) {
+				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call an action macro " + macro_call->name().value() + " not inside a command");
+			}
 			visit_action_block(p->macro_body->action_block->action);
+		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body)) {
+			if (current_controller) {
+				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call a command macro " + macro_call->name().value() + "  inside another command");
+			}
+			visit_command_block(p->macro_body->cmd_block);
 		} else {
 			throw std::runtime_error("Unknown macro body type");
 		}

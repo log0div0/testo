@@ -48,13 +48,13 @@ Parser Parser::load(const fs::path& path) {
 	} else {
 		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + path.generic_string());
 	}
-}
 
+}
 Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 4; i++) {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }
@@ -63,7 +63,7 @@ void Parser::consume() {
 	Ctx& current_lexer = lexers[lexers.size() - 1];
 
 	current_lexer.lookahead[current_lexer.p] = current_lexer.lex.get_next_token();
-	current_lexer.p = (current_lexer.p + 1) % 2;
+	current_lexer.p = (current_lexer.p + 1) % 4;
 }
 
 void Parser::match(Token::category type) {
@@ -90,7 +90,7 @@ void Parser::match(const std::vector<Token::category> types) {
 }
 
 Token Parser::LT(size_t i) const {
-	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % 2]; //circular fetch
+	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % 4]; //circular fetch
 }
 
 Token::category Parser::LA(size_t i) const {
@@ -119,45 +119,45 @@ bool Parser::test_test() const {
 		(LA(1) == Token::category::lbracket);
 }
 
-bool Parser::test_command() const {
-	return (LA(1) == Token::category::id ||
-		test_string());
+bool Parser::test_command(size_t index) const {
+	return (LA(index) == Token::category::id ||
+		test_string(index));
 }
 
-bool Parser::test_action() const {
-	return ((LA(1) == Token::category::abort) ||
-		(LA(1) == Token::category::print) ||
-		(LA(1) == Token::category::type_) ||
-		(LA(1) == Token::category::wait) ||
-		(LA(1) == Token::category::sleep) ||
-		(LA(1) == Token::category::press) ||
-		(LA(1) == Token::category::hold) ||
-		(LA(1) == Token::category::release) ||
-		(LA(1) == Token::category::mouse) ||
-		(LA(1) == Token::category::plug) ||
-		(LA(1) == Token::category::unplug) ||
-		(LA(1) == Token::category::start) ||
-		(LA(1) == Token::category::stop) ||
-		(LA(1) == Token::category::shutdown) ||
-		(LA(1) == Token::category::exec) ||
-		(LA(1) == Token::category::copyto) ||
-		(LA(1) == Token::category::copyfrom) ||
-		(LA(1) == Token::category::lbrace) ||
-		(LA(1) == Token::category::if_) ||
-		(LA(1) == Token::category::for_) ||
-		(LA(1) == Token::category::break_) ||
-		(LA(1) == Token::category::continue_) ||
-		(LA(1) == Token::category::semi) ||
-		(LA(1) == Token::category::id)); //macro call
+bool Parser::test_action(size_t index) const {
+	return ((LA(index) == Token::category::abort) ||
+		(LA(index) == Token::category::print) ||
+		(LA(index) == Token::category::type_) ||
+		(LA(index) == Token::category::wait) ||
+		(LA(index) == Token::category::sleep) ||
+		(LA(index) == Token::category::press) ||
+		(LA(index) == Token::category::hold) ||
+		(LA(index) == Token::category::release) ||
+		(LA(index) == Token::category::mouse) ||
+		(LA(index) == Token::category::plug) ||
+		(LA(index) == Token::category::unplug) ||
+		(LA(index) == Token::category::start) ||
+		(LA(index) == Token::category::stop) ||
+		(LA(index) == Token::category::shutdown) ||
+		(LA(index) == Token::category::exec) ||
+		(LA(index) == Token::category::copyto) ||
+		(LA(index) == Token::category::copyfrom) ||
+		(LA(index) == Token::category::lbrace) ||
+		(LA(index) == Token::category::if_) ||
+		(LA(index) == Token::category::for_) ||
+		(LA(index) == Token::category::break_) ||
+		(LA(index) == Token::category::continue_) ||
+		(LA(index) == Token::category::semi) ||
+		(LA(index) == Token::category::id)); //macro call
 }
 
 bool Parser::test_counter_list() const {
 	return LA(1) == Token::category::RANGE;
 }
 
-bool Parser::test_string() const {
-	return ((LA(1) == Token::category::quoted_string) ||
-		(LA(1) == Token::category::triple_quoted_string));
+bool Parser::test_string(size_t index) const {
+	return ((LA(index) == Token::category::quoted_string) ||
+		(LA(index) == Token::category::triple_quoted_string));
 }
 
 bool Parser::test_selectable() const {
@@ -244,7 +244,7 @@ void Parser::handle_include() {
 	lexers.push_back(new_ctx);
 	already_included.push_back(dest_file);
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 3; i++) {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }
@@ -340,9 +340,38 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 }
 
 std::shared_ptr<IMacroBody> Parser::macro_body() {
-	auto actions = action_block();
-	auto body = std::shared_ptr<MacroBodyAction>(new MacroBodyAction(actions));
-	return std::shared_ptr<MacroBody<MacroBodyAction>>(new MacroBody<MacroBodyAction>(body));
+	if (LA(1) != Token::category::lbracket) {
+		throw std::runtime_error(LT(1).begin() + ": Error: expected a '{' symbol, but got " + LT(1).value() + " instead");
+	}
+
+	size_t check_token_index = 2;
+
+	if (LA(2) == Token::category::newline) {
+		check_token_index = 3;
+	}
+
+	bool is_action = false, is_command = false;
+
+	if (LA(check_token_index) == Token::category::id && LA(check_token_index + 1) == Token::category::lparen) {
+		//macro call
+		is_action = true;
+	} else if (test_command(check_token_index)) {
+		is_command = true;
+	} else if (test_action(check_token_index)) {
+		is_action = true;
+	}
+
+	if (is_action) {
+		auto actions = action_block();
+		auto body = std::shared_ptr<MacroBodyAction>(new MacroBodyAction(actions));
+		return std::shared_ptr<MacroBody<MacroBodyAction>>(new MacroBody<MacroBodyAction>(body));
+	} else if (is_command) {
+		auto commands = command_block();
+		auto body = std::shared_ptr<MacroBodyCommand>(new MacroBodyCommand(commands));
+		return std::shared_ptr<MacroBody<MacroBodyCommand>>(new MacroBody<MacroBodyCommand>(body));
+	} else {
+		throw std::runtime_error(LT(check_token_index).begin() + ": Error: expected a command or an action, but got " + LT(check_token_index).value() + " instead");
+	}
 }
 
 

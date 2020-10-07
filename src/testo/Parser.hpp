@@ -22,7 +22,7 @@ private:
 	struct Ctx {
 		Ctx(const fs::path& file, const std::string& input): lex(file, input) {}
 		Lexer lex;
-		std::array<Token, 2> lookahead;
+		std::array<Token, 4> lookahead;
 		size_t p = 0; //current position in lookahead buffer
 	};
 
@@ -37,11 +37,11 @@ private:
 	bool test_stmt() const;
 	bool test_controller() const;
 	bool test_test() const;
-	bool test_command() const;
-	bool test_action() const;
+	bool test_command(size_t index = 1) const;
+	bool test_action(size_t index = 1) const;
 	bool test_counter_list() const;
 	bool test_include() const;
-	bool test_string() const;
+	bool test_string(size_t index = 1) const;
 	bool test_selectable() const;
 	bool test_binary() const;
 	bool test_comparison() const;
