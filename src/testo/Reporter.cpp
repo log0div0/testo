@@ -282,7 +282,7 @@ void Reporter::sleep(std::shared_ptr<IR::Controller> controller, const std::stri
 	report(fmt::format(" for {}\n", timeout), blue);
 }
 
-void Reporter::macro_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
+void Reporter::macro_action_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
 	report(fmt::format("{} Calling macro ", progress()), blue);
 	report(fmt::format("{}(", macro_name), yellow);
 
@@ -297,6 +297,21 @@ void Reporter::macro_call(std::shared_ptr<IR::Controller> controller, const std:
 	report(")", yellow);
 	report(fmt::format(" in {} ", controller->type()), blue);
 	report(fmt::format("{}\n", controller->name()), yellow);
+}
+
+void Reporter::macro_command_call(const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
+	report(fmt::format("{} Calling command macro ", progress()), blue);
+	report(fmt::format("{}(", macro_name), yellow);
+
+	for (auto it = params.begin(); it != params.end(); ++it) {
+		report(fmt::format("{}=\"{}\"", it->first, it->second), yellow);
+
+		if ((it + 1) != params.end()) {
+			report(", ", yellow);
+		}
+	}
+
+	report(")\n", yellow);
 }
 
 void Reporter::wait(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {

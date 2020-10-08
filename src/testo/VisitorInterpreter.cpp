@@ -480,8 +480,7 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_
 		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
 	}
 
-	//???
-	//reporter.macro_call(current_controller, macro_call->name(), args);
+	reporter.macro_command_call(macro_call->name(), args);
 
 	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
 	try {

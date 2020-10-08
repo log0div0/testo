@@ -263,7 +263,6 @@ test centos_param_not_defined: centos_prepare_testo {
 			[[ $output == *"Error while resolving \\\"\\$${iso_not_defined}\\\""* ]]
 			[[ $output == *"param \\\"iso_not_defined\\\" is not defined"* ]]
 		"""
-
 	}
 }
 
@@ -284,6 +283,39 @@ test centos_cmd_param: centos_prepare_testo {
 			set +e
 			output=$(testo run /opt/scripts/commands.testo --test_spec flash_as_string)
 			[[ $output == *"my_flash: Hello world"* ]]
+		"""
+	}
+}
+
+[no_snapshots: true]
+test centos_cmd_macro_args: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/param_resolve/commands.testo" "/opt/scripts/commands.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/commands.testo --test_spec basic_macro_command)
+			[[ $output == *"Calling command macro some_command_macro"* ]]
+			[[ $output == *"Typing \\\"Hello world\\\" with interval 30ms in virtual machine my_ubuntu_server"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/commands.testo --test_spec basic_macro_command_flash)
+			[[ $output == *"Calling command macro some_command_flash_macro"* ]]
+			[[ $output == *"my_flash: Hello world"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/commands.testo --test_spec check_empty_macros)
+			[[ $output == *"Calling command macro empty_macro1"* ]]
+			[[ $output == *"Calling command macro empty_macro2"* ]]
+			[[ $output == *"Calling macro empty_macro1"* ]]
+			[[ $output == *"Calling macro empty_macro2"* ]]
 		"""
 	}
 }

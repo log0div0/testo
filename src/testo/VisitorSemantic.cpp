@@ -297,7 +297,7 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
 		visit_regular_command({p->cmd, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
-		//visit_print({p->cmd, stack});
+		visit_macro_call(p->cmd);
 	} else {
 		throw std::runtime_error("Should never happen");
 	}
@@ -834,7 +834,7 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 			visit_action_block(p->macro_body->action_block->action);
 		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body)) {
 			if (current_controller) {
-				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call a command macro " + macro_call->name().value() + "  inside another command");
+				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call a command macro " + macro_call->name().value() + " inside another command");
 			}
 			visit_command_block(p->macro_body->cmd_block);
 		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyEmpty>>(macro->ast_node->body)) {

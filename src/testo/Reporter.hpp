@@ -33,7 +33,8 @@ struct Reporter {
 	//both controller actions
 	void print(std::shared_ptr<IR::Controller> controller, const std::string& message);
 	void sleep(std::shared_ptr<IR::Controller> controller, const std::string& timeout);
-	void macro_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
+	void macro_action_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
+	void macro_command_call(const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
 
 	//vm actions
 	void start(std::shared_ptr<IR::Machine> vmc);
