@@ -54,7 +54,7 @@ Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
-	for (int i = 0; i < 4; i++) {
+	for (size_t i = 0; i < LOOKAHEAD_BUFFER_SIZE; i++) {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }
@@ -63,7 +63,7 @@ void Parser::consume() {
 	Ctx& current_lexer = lexers[lexers.size() - 1];
 
 	current_lexer.lookahead[current_lexer.p] = current_lexer.lex.get_next_token();
-	current_lexer.p = (current_lexer.p + 1) % 4;
+	current_lexer.p = (current_lexer.p + 1) % LOOKAHEAD_BUFFER_SIZE;
 }
 
 void Parser::match(Token::category type) {
@@ -90,7 +90,7 @@ void Parser::match(const std::vector<Token::category> types) {
 }
 
 Token Parser::LT(size_t i) const {
-	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % 4]; //circular fetch
+	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % LOOKAHEAD_BUFFER_SIZE]; //circular fetch
 }
 
 Token::category Parser::LA(size_t i) const {
@@ -244,7 +244,7 @@ void Parser::handle_include() {
 	lexers.push_back(new_ctx);
 	already_included.push_back(dest_file);
 
-	for (int i = 0; i < 4; i++) {
+	for (size_t i = 0; i < LOOKAHEAD_BUFFER_SIZE; i++) {
 		consume();	//Populate lookahead buffer with tokens
 	}
 }

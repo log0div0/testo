@@ -8,6 +8,8 @@
 #include <set>
 #include <array>
 
+constexpr static size_t LOOKAHEAD_BUFFER_SIZE = 4;
+
 struct Parser {
 	static Parser load_dir(const fs::path& dir);
 	static Parser load_file(const fs::path& file);
@@ -22,7 +24,7 @@ private:
 	struct Ctx {
 		Ctx(const fs::path& file, const std::string& input): lex(file, input) {}
 		Lexer lex;
-		std::array<Token, 4> lookahead;
+		std::array<Token, LOOKAHEAD_BUFFER_SIZE> lookahead;
 		size_t p = 0; //current position in lookahead buffer
 	};
 
