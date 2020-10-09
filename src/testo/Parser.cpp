@@ -54,16 +54,11 @@ Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
-	for (size_t i = 0; i < LOOKAHEAD_BUFFER_SIZE; i++) {
-		consume();	//Populate lookahead buffer with tokens
-	}
 }
 
 void Parser::consume() {
-	Ctx& current_lexer = lexers[lexers.size() - 1];
-
-	current_lexer.lookahead[current_lexer.p] = current_lexer.lex.get_next_token();
-	current_lexer.p = (current_lexer.p + 1) % LOOKAHEAD_BUFFER_SIZE;
+	Ctx& current_lexer = lexers.back();
+	current_lexer.p++;
 }
 
 void Parser::match(Token::category type) {
@@ -90,7 +85,7 @@ void Parser::match(const std::vector<Token::category> types) {
 }
 
 Token Parser::LT(size_t i) const {
-	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % LOOKAHEAD_BUFFER_SIZE]; //circular fetch
+	return lexers.back().tokens[lexers.back().p + i - 1];
 }
 
 Token::category Parser::LA(size_t i) const {
@@ -208,7 +203,7 @@ void Parser::handle_include() {
 	fs::path dest_file = dest_file_token.value().substr(1, dest_file_token.value().length() - 2);
 
 	if (dest_file.is_relative()) {
-		auto current_path = lexers[lexers.size() - 1].lex.file();
+		auto current_path = lexers.back().tokens[0].begin().file;
 		fs::path combined;
 		if (fs::is_regular_file(current_path)) {
 			combined = current_path.parent_path() / dest_file;
@@ -243,10 +238,6 @@ void Parser::handle_include() {
 	Ctx new_ctx(dest_file, input);
 	lexers.push_back(new_ctx);
 	already_included.push_back(dest_file);
-
-	for (size_t i = 0; i < LOOKAHEAD_BUFFER_SIZE; i++) {
-		consume();	//Populate lookahead buffer with tokens
-	}
 }
 
 std::shared_ptr<Program> Parser::parse() {

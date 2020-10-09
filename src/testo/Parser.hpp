@@ -22,10 +22,19 @@ struct Parser {
 private:
 
 	struct Ctx {
-		Ctx(const fs::path& file, const std::string& input): lex(file, input) {}
-		Lexer lex;
-		std::array<Token, LOOKAHEAD_BUFFER_SIZE> lookahead;
-		size_t p = 0; //current position in lookahead buffer
+		Ctx(const fs::path& file, const std::string& input) {
+			Lexer lex(file, input);
+			Token t;
+			for (t = lex.get_next_token(); t.type() != Token::category::eof; t = lex.get_next_token()) {
+				tokens.push_back(t);
+			}
+
+			tokens.push_back(t);
+		}
+
+		Ctx(const std::vector<Token>& tokens): tokens(tokens) {}
+		std::vector<Token> tokens;
+		size_t p = 0; //current position in tokens buffer
 	};
 
 	//inner helpers
