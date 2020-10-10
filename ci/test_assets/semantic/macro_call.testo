@@ -125,7 +125,21 @@ test call_macro_action_outside_command {
 	my_macro("arg1", "arg2")
 }
 
+test call_macro_action_outside_command2 {
+	my_ubuntu_server {
+		my_macro("arg1", "arg2")
+	}
+	my_macro("arg1", "arg2")
+}
+
 test call_macro_command_inside_command {
+	my_ubuntu_server {
+		my_command_macro("arg1", "arg2")
+	}
+}
+
+test call_macro_command_inside_command2 {
+	my_command_macro("arg1", "arg2")
 	my_ubuntu_server {
 		my_command_macro("arg1", "arg2")
 	}
@@ -174,5 +188,3 @@ macro starts_with_semicolon() {
 test call_macro_starts_with_semicolon {
 	starts_with_semicolon()
 }
-
-

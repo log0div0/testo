@@ -1215,28 +1215,6 @@ struct MacroBody: public IMacroBody {
 	std::shared_ptr<MacroBodyType> macro_body;
 };
 
-//TODO: Empty macro body
-
-struct MacroBodyEmpty: public Node {
-	MacroBodyEmpty(const Token& lbrace, const Token& rbrace):
-		Node(Token(Token::category::macro_body_empty, "macro_body_empty", Pos(),Pos())),
-		lbrace(lbrace), rbrace(rbrace) {}
-
-	Pos begin() const {
-		return lbrace.begin();
-	}
-
-	Pos end() const {
-		return rbrace.end();
-	}
-
-	operator std::string() const {
-		return "{}";
-	}
-
-	Token lbrace, rbrace;
-};
-
 struct MacroBodyCommand: public Node {
 	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
 		Node(cmd_block->t), cmd_block(cmd_block) {}
@@ -1281,16 +1259,16 @@ struct Macro: public Node {
 	Macro(const Token& macro,
 		const Token& name,
 		const std::vector<std::shared_ptr<MacroArg>>& args,
-		const std::vector<Token>& body):
+		const std::vector<Token>& body_tokens):
 			Node(macro), name(name), args(args),
-			body(body) {}
+			body_tokens(body_tokens) {}
 
 	Pos begin() const {
 		return t.begin();
 	}
 
 	Pos end() const {
-		return body.back().end();
+		return body_tokens.back().end();
 	}
 
 	operator std::string() const {
@@ -1300,7 +1278,7 @@ struct Macro: public Node {
 		}
 		result += ")";
 
-		for (auto t: body) {
+		for (auto t: body_tokens) {
 			result += " ";
 			result += t.value();
 		}
@@ -1310,7 +1288,8 @@ struct Macro: public Node {
 
 	Token name;
 	std::vector<std::shared_ptr<MacroArg>> args;
-	std::vector<Token> body;
+	std::shared_ptr<IMacroBody> body = nullptr;
+	std::vector<Token> body_tokens;
 };
 
 struct MacroCall: public Node {

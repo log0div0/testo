@@ -68,7 +68,7 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
 	std::shared_ptr<AST::MacroArg> macro_arg();
-	std::vector<Token> macro_body();
+	std::vector<Token> macro_body(const std::string& name);
 	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
 	std::shared_ptr<AST::Stmt<AST::Param>> param();
 	std::shared_ptr<AST::Attr> attr();

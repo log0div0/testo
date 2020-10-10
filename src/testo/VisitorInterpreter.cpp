@@ -484,10 +484,13 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_
 	reporter.macro_command_call(macro_call->name(), args);
 
 	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
+
 	try {
-		Parser parser(macro->ast_node->body);
-		auto cmd_block = parser.command_block();
-		visit_command_block(cmd_block);
+		auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body);
+		if (p == nullptr) {
+			throw std::runtime_error("Should never happen");
+		}
+		visit_command_block(p->macro_body->cmd_block);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(MacroException(macro_call));
 	}

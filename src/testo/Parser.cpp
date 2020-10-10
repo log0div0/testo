@@ -72,7 +72,7 @@ void Parser::match(Token::category type) {
 		consume();
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) +
-			": unexpected token \"" +
+			": Error: unexpected token \"" +
 			LT(1).value() + "\", expected: " + Token::type_to_string(type)); //TODO: more informative what we expected
 	}
 }
@@ -86,7 +86,7 @@ void Parser::match(const std::vector<Token::category> types) {
 	}
 
 	throw std::runtime_error(std::string(LT(1).begin()) +
-			": unexpected token \"" +
+			": Error: unexpected token \"" +
 			LT(1).value() + "\""); //TODO: more informative what we expected
 }
 
@@ -336,7 +336,7 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 	return std::shared_ptr<MacroArg>(new MacroArg(arg_name, default_value));
 }
 
-std::vector<Token> Parser::macro_body() {
+std::vector<Token> Parser::macro_body(const std::string& name) {
 	std::vector<Token> result;
 
 	result.push_back(LT(1));
@@ -349,6 +349,8 @@ std::vector<Token> Parser::macro_body() {
 			braces_count++;
 		} else if (LA(1) == Token::category::rbrace) {
 			braces_count--;
+		} else if (LA(1) == Token::category::eof) {
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: macro \"" + name + "\" body reached the end of file without closing \"}\"");
 		}
 
 		result.push_back(LT(1));
@@ -358,18 +360,12 @@ std::vector<Token> Parser::macro_body() {
 	return result;
 }
 
-
 std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token macro = LT(1);
 	match(Token::category::macro);
 
 	Token name = LT(1);
 	match(Token::category::id);
-
-	if (LA(1) != Token::category::lparen) {
-		throw std::runtime_error(std::string(name.begin()) + ": Error: unknown action: " + name.value());
-	}
-
 	match(Token::category::lparen);
 
 	std::vector<std::shared_ptr<MacroArg>> args;
@@ -389,7 +385,7 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	match(Token::category::rparen);
 
 	newline_list();
-	auto body = macro_body();
+	auto body = macro_body(name.value());
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, body));
 

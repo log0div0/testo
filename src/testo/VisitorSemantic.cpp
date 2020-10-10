@@ -298,7 +298,7 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
 		visit_regular_command({p->cmd, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
-		visit_macro_call(p->cmd);
+		visit_macro_call(p->cmd, true);
 	} else {
 		throw std::runtime_error("Should never happen");
 	}
@@ -384,7 +384,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::IAction> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
 		return visit_sleep({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(p->action);
+		return visit_macro_call(p->action, false);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -412,7 +412,7 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		;
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(p->action);
+		return visit_macro_call(p->action, false);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		return visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -780,7 +780,7 @@ void VisitorSemantic::visit_sleep(const IR::Sleep& sleep) {
 	current_test->cksum_input += sleep.timeout();
 }
 
-void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call, bool is_command_macro) {
 	auto macro = IR::program->get_macro_or_null(macro_call->name().value());
 	if (!macro) {
 		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
@@ -827,46 +827,36 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 	}
 
 	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
-	try {
-		if (!current_controller) {
-			//So it's supposed to be a command macro. Let's try to analize what's going on
 
-			std::shared_ptr<AST::CmdBlock> cmd_block;
-			try {
-				Parser parser(macro->ast_node->body);
-				cmd_block = parser.command_block();
-			} catch (const std::exception& error) {
-				//soo... MAYBE the user tried to pass an action macro instead of a cmd one.
-				//Let's check that
-				try {
-					Parser parser(macro->ast_node->body);
-					parser.action_block();
-				} catch(const std::exception& dummy_error) {
-					throw error;
-				}
-				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call an action macro " + macro_call->name().value() + " not inside a command");
-
-			}
-			visit_command_block(cmd_block);
+	if (!macro->ast_node->body) {
+		Parser parser(macro->ast_node->body_tokens);
+		if (is_command_macro) {
+			auto cmd_block = parser.command_block();
+			auto body = std::shared_ptr<AST::MacroBodyCommand>(new AST::MacroBodyCommand(cmd_block));
+			macro->ast_node->body = std::shared_ptr<AST::MacroBody<AST::MacroBodyCommand>>(new AST::MacroBody<AST::MacroBodyCommand>(body));
 		} else {
 			//So it' supposed to be an action macro.
+			auto action_block = parser.action_block();
+			auto body = std::shared_ptr<AST::MacroBodyAction>(new AST::MacroBodyAction(action_block));
+			macro->ast_node->body = std::shared_ptr<AST::MacroBody<AST::MacroBodyAction>>(new AST::MacroBody<AST::MacroBodyAction>(body));
+		}
+	}
 
-			std::shared_ptr<AST::Action<AST::ActionBlock>> act_block;
-			try {
-				Parser parser(macro->ast_node->body);
-				act_block = parser.action_block();
-			} catch (const std::exception& error) {
-				//soo... MAYBE the user tried to pass a command macro instead of an action one.
-				//Let's check that
-				try {
-					Parser parser(macro->ast_node->body);
-					parser.command_block();
-				} catch(const std::exception& dummy_error) {
-					throw error;
-				}
-				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call a command macro " + macro_call->name().value() + " inside another command");
+	try {
+		if (is_command_macro) {
+			auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body);
+			if (p == nullptr) {
+				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: the \"" + macro_call->name().value() + "\" macro does not contain commands, as expected");
 			}
-			visit_action_block(act_block->action);
+
+			visit_command_block(p->macro_body->cmd_block);
+		} else {
+			auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body);
+			if (p == nullptr) {
+				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: the \"" + macro_call->name().value() + "\" macro does not contain actions, as expected");
+			}
+
+			visit_action_block(p->macro_body->action_block->action);
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(MacroException(macro_call));
