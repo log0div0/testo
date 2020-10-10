@@ -4,6 +4,7 @@
 #include "VisitorInterpreterActionFlashDrive.hpp"
 #include "IR/Program.hpp"
 #include "Exceptions.hpp"
+#include "Parser.hpp"
 
 #include "coro/CheckPoint.h"
 #include <fmt/format.h>
@@ -484,13 +485,9 @@ void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_
 
 	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
 	try {
-		if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body)) {
-			visit_command_block(p->macro_body->cmd_block);
-		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyEmpty>>(macro->ast_node->body)) {
-			;
-		} else {
-			throw std::runtime_error("Unknown macro body type");
-		}
+		Parser parser(macro->ast_node->body);
+		auto cmd_block = parser.command_block();
+		visit_command_block(cmd_block);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(MacroException(macro_call));
 	}

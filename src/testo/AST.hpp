@@ -1281,7 +1281,7 @@ struct Macro: public Node {
 	Macro(const Token& macro,
 		const Token& name,
 		const std::vector<std::shared_ptr<MacroArg>>& args,
-		std::shared_ptr<IMacroBody> body):
+		const std::vector<Token>& body):
 			Node(macro), name(name), args(args),
 			body(body) {}
 
@@ -1290,7 +1290,7 @@ struct Macro: public Node {
 	}
 
 	Pos end() const {
-		return body->end();
+		return body.back().end();
 	}
 
 	operator std::string() const {
@@ -1298,14 +1298,19 @@ struct Macro: public Node {
 		for (auto arg: args) {
 			result += std::string(*arg) + " ,";
 		}
-		result += ") ";
-		result += std::string(*body);
+		result += ")";
+
+		for (auto t: body) {
+			result += " ";
+			result += t.value();
+		}
+
 		return result;
 	}
 
 	Token name;
 	std::vector<std::shared_ptr<MacroArg>> args;
-	std::shared_ptr<IMacroBody> body;
+	std::vector<Token> body;
 };
 
 struct MacroCall: public Node {

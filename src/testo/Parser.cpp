@@ -50,9 +50,15 @@ Parser Parser::load(const fs::path& path) {
 	}
 
 }
+
 Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
+	lexers.push_back(ctx);
+}
+
+Parser::Parser(const std::vector<Token>& tokens) {
+	Ctx ctx(tokens);
 	lexers.push_back(ctx);
 }
 
@@ -330,49 +336,26 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 	return std::shared_ptr<MacroArg>(new MacroArg(arg_name, default_value));
 }
 
-std::shared_ptr<IMacroBody> Parser::macro_body() {
-	if (LA(1) != Token::category::lbrace) {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected a '{' symbol, but got " + LT(1).value() + " instead");
+std::vector<Token> Parser::macro_body() {
+	std::vector<Token> result;
+
+	result.push_back(LT(1));
+	match(Token::category::lbrace);
+
+	size_t braces_count = 1;
+
+	while (braces_count != 0) {
+		if (LA(1) == Token::category::lbrace) {
+			braces_count++;
+		} else if (LA(1) == Token::category::rbrace) {
+			braces_count--;
+		}
+
+		result.push_back(LT(1));
+		match(LA(1));
 	}
 
-	size_t check_token_index = 2;
-
-	if (LA(2) == Token::category::newline) {
-		check_token_index = 3;
-	}
-
-	bool is_action = false, is_command = false, is_empty = false;
-
-	if (LA(check_token_index) == Token::category::id && LA(check_token_index + 1) == Token::category::lparen) {
-		//macro call
-		is_action = true;
-	} else if (test_command(check_token_index)) {
-		is_command = true;
-	} else if (test_action(check_token_index)) {
-		is_action = true;
-	} else if (LA(check_token_index) == Token::category::rbrace) {
-		is_empty = true;
-	}
-
-	if (is_action) {
-		auto actions = action_block();
-		auto body = std::shared_ptr<MacroBodyAction>(new MacroBodyAction(actions));
-		return std::shared_ptr<MacroBody<MacroBodyAction>>(new MacroBody<MacroBodyAction>(body));
-	} else if (is_command) {
-		auto commands = command_block();
-		auto body = std::shared_ptr<MacroBodyCommand>(new MacroBodyCommand(commands));
-		return std::shared_ptr<MacroBody<MacroBodyCommand>>(new MacroBody<MacroBodyCommand>(body));
-	} else if (is_empty) {
-		auto lbrace = LT(1);
-		match(Token::category::lbrace);
-		newline_list();
-		auto rbrace = LT(1);
-		match(Token::category::rbrace);
-		auto body = std::shared_ptr<MacroBodyEmpty>(new MacroBodyEmpty(lbrace, rbrace));
-		return std::shared_ptr<MacroBody<MacroBodyEmpty>>(new MacroBody<MacroBodyEmpty>(body));
-	} else {
-		throw std::runtime_error(std::string(LT(check_token_index).begin()) + ": Error: expected a command or an action, but got " + LT(check_token_index).value() + " instead");
-	}
+	return result;
 }
 
 

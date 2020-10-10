@@ -17,8 +17,11 @@ struct Parser {
 
 	Parser() = default;
 	Parser(const fs::path& file, const std::string& input);
+	Parser(const std::vector<Token>& tokens);
 
 	std::shared_ptr<AST::Program> parse();
+	std::shared_ptr<AST::CmdBlock> command_block();
+	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 private:
 
 	struct Ctx {
@@ -65,14 +68,13 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
 	std::shared_ptr<AST::MacroArg> macro_arg();
-	std::shared_ptr<AST::IMacroBody> macro_body();
+	std::vector<Token> macro_body();
 	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
 	std::shared_ptr<AST::Stmt<AST::Param>> param();
 	std::shared_ptr<AST::Attr> attr();
 	std::shared_ptr<AST::AttrBlock> attr_block();
 	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
 	std::shared_ptr<AST::ICmd> command();
-	std::shared_ptr<AST::CmdBlock> command_block();
 	std::shared_ptr<AST::KeyCombination> key_combination();
 	std::shared_ptr<AST::KeySpec> key_spec();
 	std::shared_ptr<AST::IAction> action();
@@ -99,7 +101,6 @@ private:
 	std::shared_ptr<AST::Action<AST::Shutdown>> shutdown();
 	std::shared_ptr<AST::Action<AST::Exec>> exec();
 	std::shared_ptr<AST::Action<AST::Copy>> copy();
-	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 	std::shared_ptr<AST::MacroCall> macro_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
 	std::shared_ptr<AST::ICounterList> counter_list();

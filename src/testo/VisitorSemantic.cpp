@@ -3,6 +3,7 @@
 #include "backends/Environment.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
+#include "Parser.hpp"
 #include "js/Context.hpp"
 #include <fmt/format.h>
 #include <wildcards.hpp>
@@ -827,20 +828,45 @@ void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_cal
 
 	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
 	try {
-		if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body)) {
-			if (!current_controller) {
+		if (!current_controller) {
+			//So it's supposed to be a command macro. Let's try to analize what's going on
+
+			std::shared_ptr<AST::CmdBlock> cmd_block;
+			try {
+				Parser parser(macro->ast_node->body);
+				cmd_block = parser.command_block();
+			} catch (const std::exception& error) {
+				//soo... MAYBE the user tried to pass an action macro instead of a cmd one.
+				//Let's check that
+				try {
+					Parser parser(macro->ast_node->body);
+					parser.action_block();
+				} catch(const std::exception& dummy_error) {
+					throw error;
+				}
 				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call an action macro " + macro_call->name().value() + " not inside a command");
+
 			}
-			visit_action_block(p->macro_body->action_block->action);
-		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body)) {
-			if (current_controller) {
+			visit_command_block(cmd_block);
+		} else {
+			//So it' supposed to be an action macro.
+
+			std::shared_ptr<AST::Action<AST::ActionBlock>> act_block;
+			try {
+				Parser parser(macro->ast_node->body);
+				act_block = parser.action_block();
+			} catch (const std::exception& error) {
+				//soo... MAYBE the user tried to pass a command macro instead of an action one.
+				//Let's check that
+				try {
+					Parser parser(macro->ast_node->body);
+					parser.command_block();
+				} catch(const std::exception& dummy_error) {
+					throw error;
+				}
 				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: can't call a command macro " + macro_call->name().value() + " inside another command");
 			}
-			visit_command_block(p->macro_body->cmd_block);
-		} else if (auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyEmpty>>(macro->ast_node->body)) {
-			;
-		} else {
-			throw std::runtime_error("Unknown macro body type");
+			visit_action_block(act_block->action);
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(MacroException(macro_call));
