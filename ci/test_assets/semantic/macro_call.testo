@@ -70,4 +70,121 @@ test wrong_flash_macro {
 	}
 }
 
+macro wrong_flash_macro2(fd) {
+	"${fd}" {
+		type "lala"
+	}
+}
 
+test wrong_flash_macro2 {
+	wrong_flash_macro2("my_flash")
+}
+
+
+# Command macro calls
+
+macro my_command_macro(arg1, arg2, default_arg1="value1", default_arg2="value2") {
+	my_ubuntu_server {
+		print "Hello world"
+	}
+}
+
+macro my_wrong_command_macro_0(arg1, arg2, arg1) {
+	my_ubuntu_server {
+		print "Hello from macro"
+	}
+}
+
+macro my_wrong_command_macro_1(arg1, arg2="value2", arg3) {
+	my_ubuntu_server {
+		print "Hello from macro"
+	}
+}
+
+test unknown_command_macro {
+	some_macro()
+}
+
+test too_few_args_command {
+	my_command_macro("arg1")
+}
+
+test too_many_args_command {
+	my_command_macro("arg1", "arg2", "arg3", "arg4", "arg5")
+}
+
+test wrong_macro_0_command {
+	my_wrong_command_macro_0()
+}
+
+test wrong_macro_1_command {
+	my_wrong_command_macro_1()
+}
+
+test call_macro_action_outside_command {
+	my_macro("arg1", "arg2")
+}
+
+test call_macro_action_outside_command2 {
+	my_ubuntu_server {
+		my_macro("arg1", "arg2")
+	}
+	my_macro("arg1", "arg2")
+}
+
+test call_macro_command_inside_command {
+	my_ubuntu_server {
+		my_command_macro("arg1", "arg2")
+	}
+}
+
+test call_macro_command_inside_command2 {
+	my_command_macro("arg1", "arg2")
+	my_ubuntu_server {
+		my_command_macro("arg1", "arg2")
+	}
+}
+
+macro my_action_macro2() {
+	print "Hello world"
+	my_command_macro("lala", "lala")
+}
+
+test call_nested_macro1 {
+	my_ubuntu_server {
+		my_action_macro2()
+	}
+}
+
+macro my_command_macro2() {
+	my_ubuntu_server print "Hello world"
+	my_macro("lala", "lala")
+}
+
+test call_nested_macro2 {
+	my_command_macro2()
+}
+
+macro starts_with_if() {
+	if (check "lala") {}
+}
+
+test call_macro_starts_with_if {
+	starts_with_if()
+}
+
+macro starts_with_for() {
+	for (i IN RANGE 0 5) {}
+}
+
+test call_macro_starts_with_for {
+	starts_with_for()
+}
+
+macro starts_with_semicolon() {
+	;
+}
+
+test call_macro_starts_with_semicolon {
+	starts_with_semicolon()
+}

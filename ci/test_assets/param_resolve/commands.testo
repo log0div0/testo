@@ -1,0 +1,66 @@
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+flash my_flash {
+	fs: "ext4"
+	size: 8Mb
+}
+
+param whose "my"
+
+test machine_as_string {
+	"${whose}_ubuntu_server" {
+		print "Hello world"
+	}
+}
+
+test flash_as_string {
+	"${whose}_flash" {
+		print "Hello world"
+	}
+}
+
+macro some_command_macro(vm1, string1) {
+	"${vm1}" {
+		start
+		type "${string1}"
+	}
+}
+
+[no_snapshots: true]
+test basic_macro_command {
+	some_command_macro("my_ubuntu_server", "Hello world")
+}
+
+macro some_command_flash_macro(fd1, string1) {
+	"${fd1}" {
+		print "${string1}"
+	}
+}
+
+[no_snapshots: true]
+test basic_macro_command_flash {
+	some_command_flash_macro("my_flash", "Hello world")
+}
+
+macro empty_macro1() {}
+
+macro empty_macro2() {
+
+}
+
+[no_snapshots: true]
+test check_empty_macros {
+	my_ubuntu_server{
+		empty_macro1()
+		empty_macro2()
+	}
+	my_ubuntu_server empty_macro1()
+	my_ubuntu_server empty_macro2()
+}

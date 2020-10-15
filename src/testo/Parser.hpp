@@ -8,6 +8,8 @@
 #include <set>
 #include <array>
 
+constexpr static size_t LOOKAHEAD_BUFFER_SIZE = 4;
+
 struct Parser {
 	static Parser load_dir(const fs::path& dir);
 	static Parser load_file(const fs::path& file);
@@ -15,15 +17,27 @@ struct Parser {
 
 	Parser() = default;
 	Parser(const fs::path& file, const std::string& input);
+	Parser(const std::vector<Token>& tokens);
 
 	std::shared_ptr<AST::Program> parse();
+	std::shared_ptr<AST::CmdBlock> command_block();
+	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
 private:
 
 	struct Ctx {
-		Ctx(const fs::path& file, const std::string& input): lex(file, input) {}
-		Lexer lex;
-		std::array<Token, 2> lookahead;
-		size_t p = 0; //current position in lookahead buffer
+		Ctx(const fs::path& file, const std::string& input) {
+			Lexer lex(file, input);
+			Token t;
+			for (t = lex.get_next_token(); t.type() != Token::category::eof; t = lex.get_next_token()) {
+				tokens.push_back(t);
+			}
+
+			tokens.push_back(t);
+		}
+
+		Ctx(const std::vector<Token>& tokens): tokens(tokens) {}
+		std::vector<Token> tokens;
+		size_t p = 0; //current position in tokens buffer
 	};
 
 	//inner helpers
@@ -37,11 +51,11 @@ private:
 	bool test_stmt() const;
 	bool test_controller() const;
 	bool test_test() const;
-	bool test_command() const;
-	bool test_action() const;
+	bool test_command(size_t index = 1) const;
+	bool test_action(size_t index = 1) const;
 	bool test_counter_list() const;
 	bool test_include() const;
-	bool test_string() const;
+	bool test_string(size_t index = 1) const;
 	bool test_selectable() const;
 	bool test_binary() const;
 	bool test_comparison() const;
@@ -54,13 +68,13 @@ private:
 	std::shared_ptr<AST::IStmt> stmt();
 	std::shared_ptr<AST::Stmt<AST::Test>> test();
 	std::shared_ptr<AST::MacroArg> macro_arg();
+	std::vector<Token> macro_body(const std::string& name);
 	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
 	std::shared_ptr<AST::Stmt<AST::Param>> param();
 	std::shared_ptr<AST::Attr> attr();
 	std::shared_ptr<AST::AttrBlock> attr_block();
 	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
-	std::shared_ptr<AST::Cmd> command();
-	std::shared_ptr<AST::CmdBlock> command_block();
+	std::shared_ptr<AST::ICmd> command();
 	std::shared_ptr<AST::KeyCombination> key_combination();
 	std::shared_ptr<AST::KeySpec> key_spec();
 	std::shared_ptr<AST::IAction> action();
@@ -87,8 +101,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Shutdown>> shutdown();
 	std::shared_ptr<AST::Action<AST::Exec>> exec();
 	std::shared_ptr<AST::Action<AST::Copy>> copy();
-	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
-	std::shared_ptr<AST::Action<AST::MacroCall>> macro_call();
+	std::shared_ptr<AST::MacroCall> macro_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
 	std::shared_ptr<AST::ICounterList> counter_list();
 	std::shared_ptr<AST::CounterList<AST::Range>> range();

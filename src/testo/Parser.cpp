@@ -48,22 +48,23 @@ Parser Parser::load(const fs::path& path) {
 	} else {
 		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + path.generic_string());
 	}
+
 }
 
 Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
-	for (int i = 0; i < 2; i++) {
-		consume();	//Populate lookahead buffer with tokens
-	}
+}
+
+Parser::Parser(const std::vector<Token>& tokens) {
+	Ctx ctx(tokens);
+	lexers.push_back(ctx);
 }
 
 void Parser::consume() {
-	Ctx& current_lexer = lexers[lexers.size() - 1];
-
-	current_lexer.lookahead[current_lexer.p] = current_lexer.lex.get_next_token();
-	current_lexer.p = (current_lexer.p + 1) % 2;
+	Ctx& current_lexer = lexers.back();
+	current_lexer.p++;
 }
 
 void Parser::match(Token::category type) {
@@ -71,7 +72,7 @@ void Parser::match(Token::category type) {
 		consume();
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) +
-			": unexpected token \"" +
+			": Error: unexpected token \"" +
 			LT(1).value() + "\", expected: " + Token::type_to_string(type)); //TODO: more informative what we expected
 	}
 }
@@ -85,12 +86,12 @@ void Parser::match(const std::vector<Token::category> types) {
 	}
 
 	throw std::runtime_error(std::string(LT(1).begin()) +
-			": unexpected token \"" +
+			": Error: unexpected token \"" +
 			LT(1).value() + "\""); //TODO: more informative what we expected
 }
 
 Token Parser::LT(size_t i) const {
-	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % 2]; //circular fetch
+	return lexers.back().tokens[lexers.back().p + i - 1];
 }
 
 Token::category Parser::LA(size_t i) const {
@@ -119,44 +120,45 @@ bool Parser::test_test() const {
 		(LA(1) == Token::category::lbracket);
 }
 
-bool Parser::test_command() const {
-	return (LA(1) == Token::category::id);
+bool Parser::test_command(size_t index) const {
+	return (LA(index) == Token::category::id ||
+		test_string(index));
 }
 
-bool Parser::test_action() const {
-	return ((LA(1) == Token::category::abort) ||
-		(LA(1) == Token::category::print) ||
-		(LA(1) == Token::category::type_) ||
-		(LA(1) == Token::category::wait) ||
-		(LA(1) == Token::category::sleep) ||
-		(LA(1) == Token::category::press) ||
-		(LA(1) == Token::category::hold) ||
-		(LA(1) == Token::category::release) ||
-		(LA(1) == Token::category::mouse) ||
-		(LA(1) == Token::category::plug) ||
-		(LA(1) == Token::category::unplug) ||
-		(LA(1) == Token::category::start) ||
-		(LA(1) == Token::category::stop) ||
-		(LA(1) == Token::category::shutdown) ||
-		(LA(1) == Token::category::exec) ||
-		(LA(1) == Token::category::copyto) ||
-		(LA(1) == Token::category::copyfrom) ||
-		(LA(1) == Token::category::lbrace) ||
-		(LA(1) == Token::category::if_) ||
-		(LA(1) == Token::category::for_) ||
-		(LA(1) == Token::category::break_) ||
-		(LA(1) == Token::category::continue_) ||
-		(LA(1) == Token::category::semi) ||
-		(LA(1) == Token::category::id)); //macro call
+bool Parser::test_action(size_t index) const {
+	return ((LA(index) == Token::category::abort) ||
+		(LA(index) == Token::category::print) ||
+		(LA(index) == Token::category::type_) ||
+		(LA(index) == Token::category::wait) ||
+		(LA(index) == Token::category::sleep) ||
+		(LA(index) == Token::category::press) ||
+		(LA(index) == Token::category::hold) ||
+		(LA(index) == Token::category::release) ||
+		(LA(index) == Token::category::mouse) ||
+		(LA(index) == Token::category::plug) ||
+		(LA(index) == Token::category::unplug) ||
+		(LA(index) == Token::category::start) ||
+		(LA(index) == Token::category::stop) ||
+		(LA(index) == Token::category::shutdown) ||
+		(LA(index) == Token::category::exec) ||
+		(LA(index) == Token::category::copyto) ||
+		(LA(index) == Token::category::copyfrom) ||
+		(LA(index) == Token::category::lbrace) ||
+		(LA(index) == Token::category::if_) ||
+		(LA(index) == Token::category::for_) ||
+		(LA(index) == Token::category::break_) ||
+		(LA(index) == Token::category::continue_) ||
+		(LA(index) == Token::category::semi) ||
+		(LA(index) == Token::category::id)); //macro call
 }
 
 bool Parser::test_counter_list() const {
 	return LA(1) == Token::category::RANGE;
 }
 
-bool Parser::test_string() const {
-	return ((LA(1) == Token::category::quoted_string) ||
-		(LA(1) == Token::category::triple_quoted_string));
+bool Parser::test_string(size_t index) const {
+	return ((LA(index) == Token::category::quoted_string) ||
+		(LA(index) == Token::category::triple_quoted_string));
 }
 
 bool Parser::test_selectable() const {
@@ -207,7 +209,7 @@ void Parser::handle_include() {
 	fs::path dest_file = dest_file_token.value().substr(1, dest_file_token.value().length() - 2);
 
 	if (dest_file.is_relative()) {
-		auto current_path = lexers[lexers.size() - 1].lex.file();
+		auto current_path = lexers.back().tokens[0].begin().file;
 		fs::path combined;
 		if (fs::is_regular_file(current_path)) {
 			combined = current_path.parent_path() / dest_file;
@@ -242,10 +244,6 @@ void Parser::handle_include() {
 	Ctx new_ctx(dest_file, input);
 	lexers.push_back(new_ctx);
 	already_included.push_back(dest_file);
-
-	for (int i = 0; i < 2; i++) {
-		consume();	//Populate lookahead buffer with tokens
-	}
 }
 
 std::shared_ptr<Program> Parser::parse() {
@@ -338,17 +336,36 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 	return std::shared_ptr<MacroArg>(new MacroArg(arg_name, default_value));
 }
 
+std::vector<Token> Parser::macro_body(const std::string& name) {
+	std::vector<Token> result;
+
+	result.push_back(LT(1));
+	match(Token::category::lbrace);
+
+	size_t braces_count = 1;
+
+	while (braces_count != 0) {
+		if (LA(1) == Token::category::lbrace) {
+			braces_count++;
+		} else if (LA(1) == Token::category::rbrace) {
+			braces_count--;
+		} else if (LA(1) == Token::category::eof) {
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: macro \"" + name + "\" body reached the end of file without closing \"}\"");
+		}
+
+		result.push_back(LT(1));
+		match(LA(1));
+	}
+
+	return result;
+}
+
 std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token macro = LT(1);
 	match(Token::category::macro);
 
 	Token name = LT(1);
 	match(Token::category::id);
-
-	if (LA(1) != Token::category::lparen) {
-		throw std::runtime_error(std::string(name.begin()) + ": Error: unknown action: " + name.value());
-	}
-
 	match(Token::category::lparen);
 
 	std::vector<std::shared_ptr<MacroArg>> args;
@@ -368,9 +385,9 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	match(Token::category::rparen);
 
 	newline_list();
-	auto actions = action_block();
+	auto body = macro_body(name.value());
 
-	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, actions));
+	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, body));
 
 	return std::shared_ptr<Stmt<Macro>>(new Stmt<Macro>(stmt));
 }
@@ -478,16 +495,19 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 	}
 	auto block = attr_block();
 	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
-
 	return std::shared_ptr<AST::Stmt<AST::Controller>>(new AST::Stmt<AST::Controller>(stmt));
 }
 
-std::shared_ptr<Cmd> Parser::command() {
-	Token entity = LT(1);
-	match(Token::category::id);
-
-	std::shared_ptr<IAction> act = action();
-	return std::shared_ptr<Cmd>(new Cmd(entity, act));
+std::shared_ptr<ICmd> Parser::command() {
+	if (LA(1) == Token::category::id && LA(2) == Token::category::lparen) {
+		auto call = macro_call();
+		return std::shared_ptr<AST::Cmd<AST::MacroCall>>(new AST::Cmd<AST::MacroCall>(call));
+	} else {
+		auto entity = string_token_union(Token::category::id);
+		std::shared_ptr<IAction> act = action();
+		auto cmd = std::shared_ptr<AST::RegularCmd>(new AST::RegularCmd(entity, act));
+		return std::shared_ptr<AST::Cmd<AST::RegularCmd>>(new AST::Cmd<AST::RegularCmd>(cmd));
+	}
 }
 
 std::shared_ptr<CmdBlock> Parser::command_block() {
@@ -495,7 +515,7 @@ std::shared_ptr<CmdBlock> Parser::command_block() {
 	match(Token::category::lbrace);
 
 	newline_list();
-	std::vector<std::shared_ptr<Cmd>> commands;
+	std::vector<std::shared_ptr<ICmd>> commands;
 
 	while (test_command()) {
 		commands.push_back(command());
@@ -579,7 +599,8 @@ std::shared_ptr<IAction> Parser::action() {
 	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
 		return empty_action();
 	} else if (LA(1) == Token::category::id) {
-		action = macro_call();
+		auto call = macro_call();
+		action = std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(call));
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown action: " + LT(1).value());
 	}
@@ -1021,7 +1042,7 @@ std::shared_ptr<Action<ActionBlock>> Parser::action_block() {
 	return std::shared_ptr<Action<ActionBlock>>(new Action<ActionBlock>(action));
 }
 
-std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
+std::shared_ptr<MacroCall> Parser::macro_call() {
 	Token macro_name = LT(1);
 	match(Token::category::id);
 
@@ -1042,9 +1063,7 @@ std::shared_ptr<Action<MacroCall>> Parser::macro_call() {
 	}
 
 	match(Token::category::rparen);
-
-	auto action = std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
-	return std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(action));
+	return std::shared_ptr<MacroCall>(new MacroCall(macro_name, params));
 }
 
 std::shared_ptr<Action<IfClause>> Parser::if_clause() {

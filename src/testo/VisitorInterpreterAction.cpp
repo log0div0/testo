@@ -2,6 +2,7 @@
 #include "VisitorInterpreterAction.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
+#include "Parser.hpp"
 
 #include "coro/Timer.h"
 
@@ -51,11 +52,16 @@ void VisitorInterpreterAction::visit_macro_call(std::shared_ptr<AST::MacroCall> 
 		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
 	}
 
-	reporter.macro_call(current_controller, macro_call->name(), args);
+	reporter.macro_action_call(current_controller, macro_call->name(), args);
 
 	StackPusher<VisitorInterpreterAction> new_ctx(this, macro->new_stack(vars));
+
 	try {
-		visit_action_block(macro->ast_node->action_block->action);
+		auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body);
+		if (p == nullptr) {
+			throw std::runtime_error("Should never happen");
+		}
+		visit_action_block(p->macro_body->action_block->action);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(MacroException(macro_call));
 	}

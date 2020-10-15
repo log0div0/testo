@@ -4,6 +4,7 @@
 #include "VisitorInterpreterActionFlashDrive.hpp"
 #include "IR/Program.hpp"
 #include "Exceptions.hpp"
+#include "Parser.hpp"
 
 #include "coro/CheckPoint.h"
 #include <fmt/format.h>
@@ -443,13 +444,55 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 	}
 }
 
-void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
-	if (auto current_controller = IR::program->get_machine_or_null(cmd->entity.value())) {
-		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(cmd->action);
-	} else if (auto current_controller = IR::program->get_flash_drive_or_null(cmd->entity.value())) {
-		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(cmd->action);
+void VisitorInterpreter::visit_command(std::shared_ptr<AST::ICmd> cmd) {
+	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
+		visit_regular_command({p->cmd, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
+		visit_macro_call(p->cmd);
 	} else {
 		throw std::runtime_error("Should never happen");
+	}
+}
+
+void VisitorInterpreter::visit_regular_command(const IR::RegularCommand& regular_command) {
+	if (auto current_controller = IR::program->get_machine_or_null(regular_command.entity())) {
+		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+	} else if (auto current_controller = IR::program->get_flash_drive_or_null(regular_command.entity())) {
+		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+	} else {
+		throw std::runtime_error("Should never happen");
+	}
+}
+
+void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
+	std::vector<std::pair<std::string, std::string>> args;
+	std::map<std::string, std::string> vars;
+	auto macro = IR::program->get_macro_or_throw(macro_call->name().value());
+
+	for (size_t i = 0; i < macro_call->args.size(); ++i) {
+		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
+		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
+	}
+
+	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
+		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
+		vars[macro->ast_node->args[i]->name()] = value;
+		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
+	}
+
+	reporter.macro_command_call(macro_call->name(), args);
+
+	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
+
+	try {
+		auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body);
+		if (p == nullptr) {
+			throw std::runtime_error("Should never happen");
+		}
+		visit_command_block(p->macro_body->cmd_block);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(MacroException(macro_call));
 	}
 }
 

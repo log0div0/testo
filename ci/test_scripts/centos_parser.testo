@@ -1,0 +1,16 @@
+
+include "centos.testo"
+
+[no_snapshots: true]
+test centos_parser: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/parser" "/opt/scripts/parser"
+
+		exec bash "cp /opt/scripts/parser/* /"
+
+		exec bash """
+			set +o pipefail
+			testo run /macro_body_eof.testo 2>&1 > /dev/null | grep "Error: macro \\\"some_macro\\\" body reached the end of file without closing \\\"}\\\""
+		"""
+	}
+}

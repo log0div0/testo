@@ -1052,14 +1052,40 @@ struct ActionBlock: public Node {
 	std::vector<std::shared_ptr<IAction>> actions;
 };
 
-struct Cmd: public Node {
-	Cmd(const Token& entity, std::shared_ptr<IAction> action):
-		Node(Token(Token::category::cmd, "cmd", Pos(), Pos())),
+struct ICmd: public Node {
+	using Node::Node;
+};
+
+template <typename CmdType>
+struct Cmd: public ICmd {
+	Cmd(std::shared_ptr<CmdType> cmd):
+		ICmd(cmd->t),
+		cmd(cmd) {}
+
+	Pos begin() const {
+		return cmd->begin();
+	}
+
+	Pos end() const {
+		return cmd->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*cmd);
+		return result;
+	}
+
+	std::shared_ptr<CmdType> cmd;
+};
+
+struct RegularCmd: public Node {
+	RegularCmd(std::shared_ptr<StringTokenUnion> entity, std::shared_ptr<IAction> action):
+		Node(Token(Token::category::regular_cmd, "regular_cmd", Pos(), Pos())),
 		entity(entity),
 		action(action) {}
 
 	Pos begin() const {
-		return entity.begin();
+		return entity->begin();
 	}
 
 	Pos end() const {
@@ -1067,15 +1093,15 @@ struct Cmd: public Node {
 	}
 
 	operator std::string() const {
-		return entity.value() + " " + std::string(*action);
+		return std::string(*entity) + " " + std::string(*action);
 	}
 
-	Token entity;
+	std::shared_ptr<StringTokenUnion> entity;
 	std::shared_ptr<IAction> action;
 };
 
 struct CmdBlock: public Node {
-	CmdBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Cmd>> commands):
+	CmdBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<ICmd>> commands):
 		Node(Token(Token::category::cmd_block, "cmd_block", Pos(),Pos())),
 		open_brace(open_brace),
 		close_brace(close_brace),
@@ -1101,7 +1127,7 @@ struct CmdBlock: public Node {
 
 	Token open_brace;
 	Token close_brace;
-	std::vector<std::shared_ptr<Cmd>> commands;
+	std::vector<std::shared_ptr<ICmd>> commands;
 };
 
 //High-level constructions
@@ -1162,16 +1188,59 @@ struct MacroArg: public Node {
 	std::shared_ptr<String> default_value = nullptr;
 };
 
-struct Macro: public Node {
-	Macro(const Token& macro,
-		const Token& name,
-		const std::vector<std::shared_ptr<MacroArg>>& args,
-		std::shared_ptr<Action<ActionBlock>> action_block):
-			Node(macro), name(name), args(args),
-			action_block(action_block) {}
+struct IMacroBody: public Node {
+	using Node::Node;
+};
+
+//IfClause if also an action
+template <typename MacroBodyType>
+struct MacroBody: public IMacroBody {
+	MacroBody(std::shared_ptr<MacroBodyType> macro_body):
+		IMacroBody(macro_body->t),
+		macro_body(macro_body) {}
 
 	Pos begin() const {
-		return t.begin();
+		return macro_body->begin();
+	}
+
+	Pos end() const {
+		return macro_body->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*macro_body);
+		return result;
+	}
+
+	std::shared_ptr<MacroBodyType> macro_body;
+};
+
+struct MacroBodyCommand: public Node {
+	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
+		Node(cmd_block->t), cmd_block(cmd_block) {}
+
+	Pos begin() const {
+		return cmd_block->begin();
+	}
+
+	Pos end() const {
+		return cmd_block->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*cmd_block);
+		return result;
+	}
+
+	std::shared_ptr<CmdBlock> cmd_block;
+};
+
+struct MacroBodyAction: public Node {
+	MacroBodyAction(std::shared_ptr<Action<ActionBlock>> action_block):
+		Node(action_block->t), action_block(action_block) {}
+
+	Pos begin() const {
+		return action_block->begin();
 	}
 
 	Pos end() const {
@@ -1179,18 +1248,48 @@ struct Macro: public Node {
 	}
 
 	operator std::string() const {
+		std::string result = std::string(*action_block);
+		return result;
+	}
+
+	std::shared_ptr<Action<ActionBlock>> action_block;
+};
+
+struct Macro: public Node {
+	Macro(const Token& macro,
+		const Token& name,
+		const std::vector<std::shared_ptr<MacroArg>>& args,
+		const std::vector<Token>& body_tokens):
+			Node(macro), name(name), args(args),
+			body_tokens(body_tokens) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return body_tokens.back().end();
+	}
+
+	operator std::string() const {
 		std::string result = t.value() + " " + name.value() + "(";
 		for (auto arg: args) {
 			result += std::string(*arg) + " ,";
 		}
-		result += ") ";
-		result += std::string(*action_block);
+		result += ")";
+
+		for (auto t: body_tokens) {
+			result += " ";
+			result += t.value();
+		}
+
 		return result;
 	}
 
 	Token name;
 	std::vector<std::shared_ptr<MacroArg>> args;
-	std::shared_ptr<Action<ActionBlock>> action_block;
+	std::shared_ptr<IMacroBody> body = nullptr;
+	std::vector<Token> body_tokens;
 };
 
 struct MacroCall: public Node {
