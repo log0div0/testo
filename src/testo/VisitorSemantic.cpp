@@ -624,6 +624,8 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
 		visit_select_text({p->selectable, stack});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
+		visit_select_img({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(mouse_selectable.ast_node->selectable)) {
 		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");
 	}

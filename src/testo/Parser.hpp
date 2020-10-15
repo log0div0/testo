@@ -8,7 +8,7 @@
 #include <set>
 #include <array>
 
-constexpr static size_t LOOKAHEAD_BUFFER_SIZE = 4;
+constexpr static size_t LOOKAHEAD_BUFFER_SIZE = 2;
 
 struct Parser {
 	static Parser load_dir(const fs::path& dir);
