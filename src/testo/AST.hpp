@@ -142,6 +142,29 @@ struct SelectText: public Node {
 	std::shared_ptr<String> _text;
 };
 
+struct SelectImg: public Node {
+	SelectImg(const Token& img, std::shared_ptr<String> img_path):
+		Node(img), img_path(img_path) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return img_path->end();
+	}
+
+	operator std::string() const {
+		return std::string(*img_path);
+	}
+
+	std::string text() const {
+		return img_path->text();
+	}
+
+	std::shared_ptr<String> img_path;
+};
+
 //String or SelectQuery. Used only in
 //Wait, Check and Click (in future)
 struct ISelectable: public Node {

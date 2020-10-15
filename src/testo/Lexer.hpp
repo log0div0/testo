@@ -132,6 +132,7 @@ private:
 	Token sleep();
 	Token check();
 	Token js();
+	Token img();
 	Token press();
 	Token mouse();
 	Token move();

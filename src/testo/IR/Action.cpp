@@ -130,6 +130,21 @@ std::string SelectJS::script() const {
 	}
 }
 
+fs::path SelectImg::img_path() const {
+	fs::path path;
+	try {
+		path = template_literals::Parser().resolve(ast_node->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
+	}
+	if (path.is_relative()) {
+		path = ast_node->t.begin().file.parent_path() / path;
+	}
+
+	return path;
+}
+
+
 std::string SelectText::text() const {
 	try {
 		return template_literals::Parser().resolve(ast_node->text(), stack);

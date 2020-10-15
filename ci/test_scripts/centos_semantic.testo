@@ -58,6 +58,9 @@ test centos_semantic: centos_prepare_testo {
 			testo run /misc.testo --test_spec common_vm_child 2>&1 > /dev/null | grep "Error: some parents have common virtual machines"
 			testo run /misc.testo --test_spec common_flash_child 2>&1 > /dev/null | grep "Error: some parents have common flash drives"
 			testo run /misc.testo --test_spec copyto_from_not_exist 2>&1 > /dev/null | grep "Error: specified path doesn't exist: /some/unexisting_shit"
+			testo run /misc.testo --test_spec img_doesnt_exist1 2>&1 > /dev/null | grep "Error: specified image path does not exist: /someshit"
+			testo run /misc.testo --test_spec img_doesnt_exist2 2>&1 > /dev/null | grep "Error: specified image path does not exist: /./someshit"
+			testo run /misc.testo --test_spec img_doesnt_lead_to_a_file 2>&1 > /dev/null | grep "Error: specified image path does not lead to a regular file: /usr/sbin"
 		"""
 
 		exec bash """

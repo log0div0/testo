@@ -85,6 +85,11 @@ struct SelectJS: Action<AST::SelectJS> {
 	std::string script() const;
 };
 
+struct SelectImg: Action<AST::SelectImg> {
+	using Action<AST::SelectImg>::Action;
+	fs::path img_path() const;
+};
+
 struct SelectText: Action<AST::SelectText> {
 	using Action<AST::SelectText>::Action;
 	std::string text() const;

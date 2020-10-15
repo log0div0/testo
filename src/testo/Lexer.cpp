@@ -199,6 +199,8 @@ Token Lexer::id() {
 		return check();
 	} else if (value == "js") {
 		return js();
+	} else if (value == "img") {
+		return img();
 	} else if (value == "press") {
 		return press();
 	} else if (value == "mouse") {
@@ -352,6 +354,13 @@ Token Lexer::js() {
 	std::string value("js");
 	advance(value.length());
 	return Token(Token::category::js, value, tmp_pos, previous_pos);
+}
+
+Token Lexer::img() {
+	Pos tmp_pos = current_pos;
+	std::string value("img");
+	advance(value.length());
+	return Token(Token::category::img, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::press() {

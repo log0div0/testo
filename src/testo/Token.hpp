@@ -14,6 +14,7 @@ struct Token {
 		wait,
 		sleep,
 		js,
+		img,
 		check,
 		press,
 		mouse,
@@ -168,6 +169,8 @@ struct Token {
 			return "ACTION SLEEP";
 		case js:
 			return "JS";
+		case img:
+			return "IMG";
 		case check:
 			return "CHECK";
 		case press:

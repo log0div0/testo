@@ -8,7 +8,7 @@
 #include <set>
 #include <array>
 
-constexpr static size_t LOOKAHEAD_BUFFER_SIZE = 4;
+constexpr static size_t LOOKAHEAD_BUFFER_SIZE = 2;
 
 struct Parser {
 	static Parser load_dir(const fs::path& dir);
@@ -115,6 +115,7 @@ private:
 
 	std::shared_ptr<AST::ISelectable> selectable();
 	std::shared_ptr<AST::SelectJS> select_js();
+	std::shared_ptr<AST::SelectImg> select_img();
 	std::shared_ptr<AST::SelectText> select_text();
 
 	std::shared_ptr<AST::String> string();

@@ -585,6 +585,22 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	current_test->cksum_input += script;
 }
 
+void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
+	auto img_path = img.img_path();
+
+	if (!fs::exists(img_path)) {
+		throw std::runtime_error(std::string(img.ast_node->begin()) + ": Error: specified image path does not exist: " + img_path.generic_string());
+	}
+
+	if (!fs::is_regular_file(img_path)) {
+		throw std::runtime_error(std::string(img.ast_node->begin()) + ": Error: specified image path does not lead to a regular file: " + img_path.generic_string());
+	}
+
+	current_test->cksum_input += "img ";
+	current_test->cksum_input += img_path.generic_string();
+	current_test->cksum_input += file_signature(img_path);
+}
+
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 	auto txt = text.text();
 	if (!txt.length()) {
@@ -608,6 +624,8 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
 		visit_select_text({p->selectable, stack});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
+		visit_select_img({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(mouse_selectable.ast_node->selectable)) {
 		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");
 	}
@@ -652,6 +670,9 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 
 	if (plug.entity_type() == "dvd" && plug.is_on()) {
 		auto dvd_path = plug.dvd_path();
+		if (!fs::exists(dvd_path)) {
+			throw std::runtime_error(std::string(plug.ast_node->begin()) + ": Error: specified dvd image path does not exist: " + dvd_path.generic_string());
+		}
 		current_test->cksum_input += dvd_path.generic_string();
 		current_test->cksum_input += file_signature(dvd_path);
 		return;
@@ -748,6 +769,8 @@ void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> 
 		visit_select_text({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		visit_select_js({p->selectable, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
+		visit_select_img({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
 		visit_detect_parented(p->selectable);
 	} else {

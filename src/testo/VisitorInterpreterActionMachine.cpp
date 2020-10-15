@@ -530,6 +530,11 @@ nn::Tensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectTe
 	return nn::find_text(&screenshot).match(parsed);
 }
 
+nn::Tensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image& screenshot) {
+	auto parsed = img.img_path();
+	return nn::find_img(&screenshot, parsed);
+}
+
 bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
@@ -581,6 +586,8 @@ bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AS
 		return is_negated ^ (bool)visit_select_text({p->selectable, stack}, screenshot).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
+		return is_negated ^ (bool)visit_select_img({p->selectable, stack}, screenshot).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
 		return is_negated ^ visit_detect_expr(p->selectable->select_expr, screenshot);
 	}  else {
@@ -669,6 +676,10 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 				auto ocr_found = visit_select_text({p->selectable, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
 				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, ocr_found);
+			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
+				auto ocr_found = visit_select_img({p->selectable, stack}, screenshot);
+				//each specifier can throw an exception if something goes wrong.
+				point = ocr_found.center();
 			}
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return;
