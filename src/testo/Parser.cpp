@@ -50,20 +50,21 @@ Parser Parser::load(const fs::path& path) {
 	}
 
 }
+
 Parser::Parser(const fs::path& file, const std::string& input)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
-	for (size_t i = 0; i < LOOKAHEAD_BUFFER_SIZE; i++) {
-		consume();	//Populate lookahead buffer with tokens
-	}
+}
+
+Parser::Parser(const std::vector<Token>& tokens) {
+	Ctx ctx(tokens);
+	lexers.push_back(ctx);
 }
 
 void Parser::consume() {
-	Ctx& current_lexer = lexers[lexers.size() - 1];
-
-	current_lexer.lookahead[current_lexer.p] = current_lexer.lex.get_next_token();
-	current_lexer.p = (current_lexer.p + 1) % LOOKAHEAD_BUFFER_SIZE;
+	Ctx& current_lexer = lexers.back();
+	current_lexer.p++;
 }
 
 void Parser::match(Token::category type) {
@@ -71,7 +72,7 @@ void Parser::match(Token::category type) {
 		consume();
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin()) +
-			": unexpected token \"" +
+			": Error: unexpected token \"" +
 			LT(1).value() + "\", expected: " + Token::type_to_string(type)); //TODO: more informative what we expected
 	}
 }
@@ -85,12 +86,12 @@ void Parser::match(const std::vector<Token::category> types) {
 	}
 
 	throw std::runtime_error(std::string(LT(1).begin()) +
-			": unexpected token \"" +
+			": Error: unexpected token \"" +
 			LT(1).value() + "\""); //TODO: more informative what we expected
 }
 
 Token Parser::LT(size_t i) const {
-	return lexers[lexers.size() - 1].lookahead[(lexers[lexers.size() - 1].p + i - 1) % LOOKAHEAD_BUFFER_SIZE]; //circular fetch
+	return lexers.back().tokens[lexers.back().p + i - 1];
 }
 
 Token::category Parser::LA(size_t i) const {
@@ -208,7 +209,7 @@ void Parser::handle_include() {
 	fs::path dest_file = dest_file_token.value().substr(1, dest_file_token.value().length() - 2);
 
 	if (dest_file.is_relative()) {
-		auto current_path = lexers[lexers.size() - 1].lex.file();
+		auto current_path = lexers.back().tokens[0].begin().file;
 		fs::path combined;
 		if (fs::is_regular_file(current_path)) {
 			combined = current_path.parent_path() / dest_file;
@@ -243,10 +244,6 @@ void Parser::handle_include() {
 	Ctx new_ctx(dest_file, input);
 	lexers.push_back(new_ctx);
 	already_included.push_back(dest_file);
-
-	for (size_t i = 0; i < LOOKAHEAD_BUFFER_SIZE; i++) {
-		consume();	//Populate lookahead buffer with tokens
-	}
 }
 
 std::shared_ptr<Program> Parser::parse() {
@@ -339,51 +336,29 @@ std::shared_ptr<MacroArg> Parser::macro_arg() {
 	return std::shared_ptr<MacroArg>(new MacroArg(arg_name, default_value));
 }
 
-std::shared_ptr<IMacroBody> Parser::macro_body() {
-	if (LA(1) != Token::category::lbrace) {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected a '{' symbol, but got " + LT(1).value() + " instead");
+std::vector<Token> Parser::macro_body(const std::string& name) {
+	std::vector<Token> result;
+
+	result.push_back(LT(1));
+	match(Token::category::lbrace);
+
+	size_t braces_count = 1;
+
+	while (braces_count != 0) {
+		if (LA(1) == Token::category::lbrace) {
+			braces_count++;
+		} else if (LA(1) == Token::category::rbrace) {
+			braces_count--;
+		} else if (LA(1) == Token::category::eof) {
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: macro \"" + name + "\" body reached the end of file without closing \"}\"");
+		}
+
+		result.push_back(LT(1));
+		match(LA(1));
 	}
 
-	size_t check_token_index = 2;
-
-	if (LA(2) == Token::category::newline) {
-		check_token_index = 3;
-	}
-
-	bool is_action = false, is_command = false, is_empty = false;
-
-	if (LA(check_token_index) == Token::category::id && LA(check_token_index + 1) == Token::category::lparen) {
-		//macro call
-		is_action = true;
-	} else if (test_command(check_token_index)) {
-		is_command = true;
-	} else if (test_action(check_token_index)) {
-		is_action = true;
-	} else if (LA(check_token_index) == Token::category::rbrace) {
-		is_empty = true;
-	}
-
-	if (is_action) {
-		auto actions = action_block();
-		auto body = std::shared_ptr<MacroBodyAction>(new MacroBodyAction(actions));
-		return std::shared_ptr<MacroBody<MacroBodyAction>>(new MacroBody<MacroBodyAction>(body));
-	} else if (is_command) {
-		auto commands = command_block();
-		auto body = std::shared_ptr<MacroBodyCommand>(new MacroBodyCommand(commands));
-		return std::shared_ptr<MacroBody<MacroBodyCommand>>(new MacroBody<MacroBodyCommand>(body));
-	} else if (is_empty) {
-		auto lbrace = LT(1);
-		match(Token::category::lbrace);
-		newline_list();
-		auto rbrace = LT(1);
-		match(Token::category::rbrace);
-		auto body = std::shared_ptr<MacroBodyEmpty>(new MacroBodyEmpty(lbrace, rbrace));
-		return std::shared_ptr<MacroBody<MacroBodyEmpty>>(new MacroBody<MacroBodyEmpty>(body));
-	} else {
-		throw std::runtime_error(std::string(LT(check_token_index).begin()) + ": Error: expected a command or an action, but got " + LT(check_token_index).value() + " instead");
-	}
+	return result;
 }
-
 
 std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	Token macro = LT(1);
@@ -391,11 +366,6 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 
 	Token name = LT(1);
 	match(Token::category::id);
-
-	if (LA(1) != Token::category::lparen) {
-		throw std::runtime_error(std::string(name.begin()) + ": Error: unknown action: " + name.value());
-	}
-
 	match(Token::category::lparen);
 
 	std::vector<std::shared_ptr<MacroArg>> args;
@@ -415,7 +385,7 @@ std::shared_ptr<Stmt<Macro>> Parser::macro() {
 	match(Token::category::rparen);
 
 	newline_list();
-	auto body = macro_body();
+	auto body = macro_body(name.value());
 
 	auto stmt = std::shared_ptr<Macro>(new Macro(macro, name, args, body));
 
