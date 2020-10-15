@@ -199,6 +199,8 @@ Token Lexer::id() {
 		return check();
 	} else if (value == "js") {
 		return js();
+	} else if (value == "img") {
+		return img();
 	} else if (value == "press") {
 		return press();
 	} else if (value == "mouse") {

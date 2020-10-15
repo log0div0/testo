@@ -155,4 +155,21 @@ test copyto_from_not_exist {
 	}
 }
 
+test img_doesnt_exist1 {
+	my_ubuntu_server {
+		wait img "someshit"
+	}
+}
+
+test img_doesnt_exist2 {
+	my_ubuntu_server {
+		mouse click img "./someshit"
+	}
+}
+
+test img_doesnt_lead_to_a_file {
+	my_ubuntu_server {
+		mouse click img "/usr/sbin"
+	}
+}
 
