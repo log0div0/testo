@@ -527,7 +527,7 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(con
 
 nn::Tensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image& screenshot) {
 	auto parsed = text.text();
-	return  nn::find_text(&screenshot).match(parsed);
+	return nn::find_text(&screenshot).match(parsed);
 }
 
 bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot) {

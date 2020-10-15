@@ -57,8 +57,10 @@ macro empty_macro2() {
 
 [no_snapshots: true]
 test check_empty_macros {
-	empty_macro1()
-	empty_macro2()
+	my_ubuntu_server{
+		empty_macro1()
+		empty_macro2()
+	}
 	my_ubuntu_server empty_macro1()
 	my_ubuntu_server empty_macro2()
 }
