@@ -354,6 +354,13 @@ Token Lexer::js() {
 	return Token(Token::category::js, value, tmp_pos, previous_pos);
 }
 
+Token Lexer::img() {
+	Pos tmp_pos = current_pos;
+	std::string value("img");
+	advance(value.length());
+	return Token(Token::category::img, value, tmp_pos, previous_pos);
+}
+
 Token Lexer::press() {
 	Pos tmp_pos = current_pos;
 	std::string value("press");

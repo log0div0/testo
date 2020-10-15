@@ -69,4 +69,8 @@ textline_finish:
 	return result;
 }
 
+Tensor find_img(const stb::Image* image, const fs::path& path_to_img) {
+	throw std::runtime_error("Todo");
+}
+
 }
