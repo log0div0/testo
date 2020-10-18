@@ -28,10 +28,6 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/src
 )
 
-include_directories(
-	${CMAKE_BINARY_DIR}/out/include
-)
-
 macro(add_package NAME)
 	set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")
 	set(CPACK_PACKAGE_CONTACT "support@testo-lang.ru")
