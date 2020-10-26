@@ -28,8 +28,6 @@ test centos_vm_create: centos_prepare_testo {
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_diplucates 2>&1 > /dev/null | grep "Error: duplicate attribute: \\\"cpus\\\""
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_negative_attribute 2>&1 > /dev/null | grep "Error: numeric attr can't be negative: -7"
 		""" timeout 30m
-
-
 	}
 }
 

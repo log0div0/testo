@@ -194,12 +194,15 @@ int main(int argc, char** argv) {
 	coro::Application([&]{
 		try {
 			result = do_main(argc, argv);
-		} catch (const std::exception& error) {
-			std::cerr << error << std::endl;
+		} catch (const TestFailedException& error) {
+			std::cout << error << std::endl;
 			result = 1;
+		}  catch (const std::exception& error) {
+			std::cerr << error << std::endl;
+			result = 2;
 		} catch (const Interruption&) {
 			std::cerr << "Interrupted by user" << std::endl;
-			result = 1;
+			result = 3;
 		}
 	}).run();
 

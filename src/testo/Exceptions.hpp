@@ -18,6 +18,14 @@ protected:
 	std::string msg;
 };
 
+struct TestFailedException: public Exception {
+	explicit TestFailedException():
+		Exception()
+	{
+		msg = "At least one of the tests failed";
+	}
+};
+
 struct ActionException: public Exception {
 	explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller):
 		Exception()

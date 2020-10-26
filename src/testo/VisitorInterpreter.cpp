@@ -274,7 +274,7 @@ void VisitorInterpreter::visit() {
 
 	reporter.finish();
 	if (reporter.failed_tests.size()) {
-		throw std::runtime_error("At least one of the tests failed");
+		throw TestFailedException();
 	}
 }
 

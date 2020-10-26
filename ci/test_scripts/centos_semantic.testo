@@ -116,5 +116,15 @@ test centos_semantic: centos_prepare_testo {
 			testo run /for.testo --test_spec wrong_start_finish_0 2>&1 > /dev/null | grep "Error: start of the range 5 is greater or equal to finish 4"
 			testo run /for.testo --test_spec wrong_start_finish_1 2>&1 > /dev/null | grep "Error: start of the range 0 is greater or equal to finish 0"
 		"""
+
+		# check exit code
+		exec bash """
+			set +e
+			testo run /misc.testo --test_spec empty_wait_text
+			if [ $? -ne 2 ]
+			then
+				echo $?; exit 1;
+			fi
+		"""
 	}
 }
