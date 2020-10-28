@@ -1,0 +1,48 @@
+include "win_server.testo"
+include "workstation.testo"
+
+test connect_to_domain: win_configure_dhcp, workstation_install_win7 {
+	workstation {
+		mouse click "Сеть предприятия"
+		wait "Расположение сети изменилось"
+		mouse click "Закрыть".from_bottom(0)
+		sleep 200ms
+		press LeftMeta
+		mouse rclick "Компьютер"
+		mouse click "Свойства"
+
+		mouse click "Изменить"
+		mouse click "Изменить..."
+
+		mouse click "домена:"
+		mouse move 0 0
+		mouse click "домена:".center_bottom().move_down(10)
+		press LeftAlt + LeftShift
+		type "${domain_name}"; press Enter
+		wait "Использовать это нестандартное имя"; press Enter
+		wait "Введите имя и пароль учетной записи"; type "${ad_user_login}";
+		press Tab; type "${ad_user_default_password}"; press Enter
+
+		wait "Добро пожаловать в домен"; press Enter
+		wait "нужно перезагрузить компьютер"; press Enter
+
+		mouse click "Закрыть".from_bottom(0)
+
+		mouse click "Перезагрузить сейчас"
+
+		wait "CTRL + ALT + DEL" timeout 3m
+		press LeftCtrl + LeftAlt + Delete
+		wait "Пароль"
+		mouse click "RU"
+		mouse click "Английский"
+		wait !"Английский"
+
+		mouse click "Сменить пользователя"
+		mouse click "Другой пользователь"
+		sleep 500ms
+
+		type "${ad_user_login}"; press Tab; type "${ad_user_default_password}"; press Enter
+
+		wait "Корзина" timeout 2m
+	}
+}
