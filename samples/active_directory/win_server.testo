@@ -56,6 +56,7 @@ macro run_command(command) {
 
 test win_server_os_prepare: win_server_os_installation {
 	win_server {
+		sleep 2s
 		mouse click "РУС".from_bottom(0)
 		mouse click "Английский"
 		wait !"Английский"
@@ -78,13 +79,26 @@ test win_server_os_prepare: win_server_os_installation {
 		press LeftAlt+F4
 		wait !"Диспетчер устройств"
 
-		mouse move 0 0
-		run_command("control")
-		wait "Панель управления"
-		mouse click "Категория"; mouse click "Мелкие значки"
+		mouse click "Локальный сервер".from_bottom(0)
+		mouse click "IPv4-адрес назначен DHCP"
+		wait "Сетевые подключения"
 
-		mouse click "Система"
-		mouse click "Изменить"
+		mouse rclick "Ethernet".from_top(0)
+		mouse click "Свойства"
+		mouse move 0 0
+		mouse click "TCP/IPv4"
+		mouse click "Свойства".from_bottom(0)
+		mouse click "Использовать следующий IP-адрес"
+		mouse click "IP-адрес".from_bottom(0).right_center().move_right(150)
+		sleep 1s
+		type "${win_server_LAN_ip}"; press Tab, Enter
+		wait !"Использовать следующий IP-адрес"
+		mouse click "Закрыть".from_bottom(0)
+		wait !"свойства"
+		press LeftAlt + F4
+		wait !"Сетевые подключения"
+
+		mouse click "WIN-".from_top(1)
 
 		wait "Свойства системы"
 		mouse click "Изменить..."
@@ -101,32 +115,7 @@ test win_server_os_prepare: win_server_os_installation {
 		wait "Администратор"
 		type "${win_password}"; press Enter
 		wait "Вас приветствует диспетчер серверов" timeout 2m
-
 		sleep 10s
-
-		mouse click "РУС".from_bottom(0)
-		mouse click "Английский"
-		wait !"Английский"
-		run_command("control")
-
-		mouse click "Центр управления сетями"
-		mouse click "Изменение параметров"
-		wait "Ethernet"
-		mouse rclick "Ethernet".from_top(0)
-		mouse click "Свойства"
-		mouse click "TCP/IPv4"
-		mouse click "Свойства".from_bottom(0)
-		mouse click "Использовать следующий IP-адрес"
-		mouse click "IP-адрес".from_bottom(0).right_center().move_right(150)
-		sleep 1s
-		type "${win_server_LAN_ip}"; press Tab, Enter
-		wait !"Использовать следующий IP-адрес"
-		mouse click "Закрыть".from_bottom(0)
-		wait !"свойства"
-		press LeftAlt + F4
-		wait !"Сетевые подключения"
-		press LeftAlt + F4
-		wait !"Центр управления сетями"
 	}
 }
 
@@ -135,7 +124,9 @@ test win_server_configure_ad: win_server_os_prepare {
 		mouse click "Добавить роли и компоненты".from_right(0)
 		wait "Перед началом работы"; mouse click "Далее".from_bottom(0).center_bottom()
 		wait "Выбор типа установки"; mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Выбор целевого сервера"; mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Выбор целевого сервера";
+
+		mouse click "Далее".from_bottom(0).center_bottom()
 
 		wait "Выбор ролей сервера";
 		mouse dclick "Доменные службы Active Directory"
@@ -166,6 +157,9 @@ test win_server_configure_deployment: win_server_configure_ad {
 		mouse click "Повысить роль этого сервера до уровня контроллера домена"
 		wait "Конфигурация развертывания"
 		mouse click "Добавить новый лес"
+		mouse click "РУС".from_bottom(0)
+		mouse click "Английский"
+		wait !"Английский"
 		mouse click "Имя корневого домена".right_center().move_right(200)
 		type "${domain_name}"
 		press Enter
@@ -191,40 +185,12 @@ test win_server_configure_deployment: win_server_configure_ad {
 	}
 }
 
-test win_server_add_user: win_server_configure_deployment {
+test win_configure_dhcp: win_server_configure_deployment {
 	win_server {
 		mouse click "РУС".from_bottom(0)
 		mouse click "Английский"
 		wait !"Английский"
-		mouse click "Средства".from_right(0)
-		mouse click "Пользователи и компьютеры Active Directory"
-		wait "${domain_name}"
-		mouse click "${domain_name}".from_left(0)
-		sleep 1s
-		mouse dclick
-		sleep 200ms
-		mouse rclick "Users".from_left(0)
-		mouse move "Создать".from_left(0)
-		sleep 1s
-		mouse click "Пользователь".from_bottom(0)
-		wait "Новый объект - Пользователь"
-		mouse click "Имя".from_top(0).right_center().move_right(100); type "${ad_user_name}"
-		mouse click "Фамилия".right_center().move_right(100); type "${ad_user_lastname}"
-		mouse click "Имя входа пользователя".from_bottom(1).center_bottom().move_down(10); type "${ad_user_login}"
-		mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Пароль"; type "${ad_user_default_password}"; press Tab; type "${ad_user_default_password}"
-		mouse click "Требовать смены пароля"
-		mouse click "Далее".from_bottom(0).center_bottom()
-		mouse click "Готово".from_bottom(0)
-		sleep 1s
-		press LeftAlt + F4
-		wait !"${domain_name}"
-	}
-}
 
-test win_configure_dhcp: win_server_add_user {
-	win_server {
-		#mouse click "Manage".from_right(0).left_center().move_left(20)
 		mouse click "DHCP".from_left(0)
 		wait "DHCP-сервер - требуется настройка"
 		mouse click "Подробнее"
@@ -253,8 +219,8 @@ test win_configure_dhcp: win_server_add_user {
 		type "SCOPE1"
 		mouse click "Далее".from_bottom(0).center_bottom()
 		wait "Определить диапазон адресов области"
-		type "${win_dhcp_start_addr}"; press Tab
-		type "${win_dhcp_end_addr}"; press Enter
+		type "${win_dhcp_start_addr}" interval 100ms; press Tab
+		type "${win_dhcp_end_addr}" interval 100ms; press Enter
 		wait "Добавление исключений"; press Enter
 		wait "Срок действия аренды адреса"; press Enter
 		wait "Настройка параметров DHCP"; press Enter
@@ -264,5 +230,33 @@ test win_configure_dhcp: win_server_add_user {
 		wait "Активировать область"; press Enter
 		wait "Завершение мастера"; press Enter
 		wait !"Завершение мастера"
+	}
+}
+
+test win_server_add_user: win_configure_dhcp {
+	win_server {
+		mouse click "Средства".from_right(0)
+		mouse click "Пользователи и компьютеры Active Directory"
+		wait "${domain_name}"
+		mouse click "${domain_name}".from_left(0)
+		sleep 1s
+		mouse dclick
+		sleep 200ms
+		mouse rclick "Users".from_left(0)
+		mouse move "Создать".from_left(0)
+		sleep 1s
+		mouse click "Пользователь".from_bottom(0)
+		wait "Новый объект - Пользователь"
+		mouse click "Имя".from_top(0).right_center().move_right(100); type "${ad_user_name}"
+		mouse click "Фамилия".right_center().move_right(100); type "${ad_user_lastname}"
+		mouse click "Имя входа пользователя".from_bottom(1).center_bottom().move_down(10); type "${ad_user_login}"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Пароль"; type "${ad_user_default_password}"; press Tab; type "${ad_user_default_password}"
+		mouse click "Требовать смены пароля"
+		mouse click "Далее".from_bottom(0).center_bottom()
+		mouse click "Готово".from_bottom(0)
+		sleep 1s
+		press LeftAlt + F4
+		wait !"${domain_name}"
 	}
 }

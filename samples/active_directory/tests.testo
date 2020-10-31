@@ -1,13 +1,19 @@
 include "win_server.testo"
 include "workstation.testo"
 
-test connect_to_domain: win_configure_dhcp, workstation_install_win7 {
+test connect_to_domain: win_server_add_user, workstation_install_win7 {
 	workstation {
-		mouse click "Сеть предприятия"
-		wait "Расположение сети изменилось"
-		mouse click "Закрыть".from_bottom(0)
-		sleep 200ms
+		sleep 5s
+
+		if (check "Выберите расположение" timeout 10s) {
+			mouse click "Общественная сеть"
+			wait "Расположение сети изменилось"
+			mouse click "Закрыть"
+			wait !"Расположение сети изменилось"
+		}
+
 		press LeftMeta
+		wait "Все программы"
 		mouse rclick "Компьютер"
 		mouse click "Свойства"
 
@@ -44,5 +50,10 @@ test connect_to_domain: win_configure_dhcp, workstation_install_win7 {
 		type "${ad_user_login}"; press Tab; type "${ad_user_default_password}"; press Enter
 
 		wait "Корзина" timeout 2m
+
+		sleep 5s
+		press LeftMeta; wait "Все программы"; mouse rclick "Компьютер"
+		mouse click "Свойства"
+		wait "${domain_name}"
 	}
 }
