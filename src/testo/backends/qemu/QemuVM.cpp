@@ -341,6 +341,14 @@ void QemuVM::install() {
 			)", disk_targets[i]);
 		}
 
+
+		if (config.value("qemu_spice_agent", false)) {
+			string_config += R"(
+			<channel type='spicevmc'>
+				<target type='virtio' name='com.redhat.spice.0'/>
+			</channel>)";
+		}
+
 		string_config += "\n </devices> \n </domain>";
 
 		pugi::xml_document xml_config;
