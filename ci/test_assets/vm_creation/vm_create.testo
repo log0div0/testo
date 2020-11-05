@@ -14,15 +14,21 @@ test create_basic_vm {
 machine basic_machine_uefi {
 	cpus: 1
 	ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
 	disk main: {
 		size: 4Gb
 	}
-	loader: "/usr/share/OVMF/OVMF_CODE.secboot.fd"
+	loader: "/usr/share/OVMF/OVMF_CODE.fd"
+
+	video main: {
+		qemu_mode: "qxl"
+	}
 }
 
 test create_basic_vm_uefi {
-	basic_machine_uefi {}
+	basic_machine_uefi {
+		start
+		wait "UEFI Interactive Shell"
+	}
 }
 
 machine vm_no_cpus {

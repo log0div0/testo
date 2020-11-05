@@ -50,13 +50,21 @@ test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
 [no_snapshots: true]
 test centos_backend_qemu_create_simple_vm_uefi: centos_prepare_testo {
 	centos {
+		copyto "ovmf/OVMF_CODE.fd" "/usr/share/OVMF/OVMF_CODE.fd"
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
 		exec bash """
-			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi | grep "RUN SUCCESSFULLY: 1"
 		""" timeout 30m
 
-		wait "basic_machine_uefi"
-		abort "stop here"
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi | grep "UP-TO-DATE: 1"
+		""" timeout 30m
+
+		exec bash "touch -m /usr/share/OVMF/OVMF_CODE.fd"
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
 	}
 }
 
