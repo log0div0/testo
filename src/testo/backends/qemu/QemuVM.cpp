@@ -276,48 +276,68 @@ void QemuVM::install() {
 				<metadata>
 					<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
 				</metadata>
-				<devices>
-					<controller type='usb' index='0' model='ich9-ehci1'>
-					</controller>
-					<controller type='usb' index='0' model='ich9-uhci1'>
-					</controller>
-					<controller type='usb' index='0' model='ich9-uhci2'>
-					</controller>
-					<controller type='usb' index='0' model='ich9-uhci3'>
-					</controller>
-					<controller type='ide' index='0'>
-					</controller>
-					<controller type='virtio-serial' index='0'>
-					</controller>
-					<controller type='pci' index='0' model='pci-root'/>
-					<serial type='pty'>
-						<target type='isa-serial' port='0'>
-							<model name='isa-serial'/>
-						</target>
-					</serial>
-					<console type='pty'>
-						<target type='serial' port='0'/>
-					</console>
-					<channel type='unix'>
-						<target type='virtio' name='negotiator.0'/>
-					</channel>
-					<input type='tablet' bus='usb'>
-					</input>
-					<input type='mouse' bus='ps2'/>
-					<input type='keyboard' bus='ps2'/>
-					<graphics type='spice' autoport='yes'>
-						<listen type='address'/>
-						<image compression='off'/>
-					</graphics>
-					<sound model='ich6'>
-					</sound>
-					<redirdev bus='usb' type='spicevmc'>
-					</redirdev>
-					<redirdev bus='usb' type='spicevmc'>
-					</redirdev>
-					<memballoon model='virtio'>
-					</memballoon>
 		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>());
+
+		string_config += R"(
+			<os>
+				<type>hvm</type>
+				<boot dev='cdrom'/>
+				<boot dev='hd'/>
+		)";
+
+		if (config.count("loader")) {
+			string_config += fmt::format(R"(
+				<loader readonly='yes' type='rom'>{}</loader>
+			)", config.at("loader").get<std::string>());
+		}
+
+		string_config += R"(
+			</os>
+		)";
+
+		string_config += R"(
+			<devices>
+				<controller type='usb' index='0' model='ich9-ehci1'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci1'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci2'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci3'>
+				</controller>
+				<controller type='ide' index='0'>
+				</controller>
+				<controller type='virtio-serial' index='0'>
+				</controller>
+				<controller type='pci' index='0' model='pci-root'/>
+				<serial type='pty'>
+					<target type='isa-serial' port='0'>
+						<model name='isa-serial'/>
+					</target>
+				</serial>
+				<console type='pty'>
+					<target type='serial' port='0'/>
+				</console>
+				<channel type='unix'>
+					<target type='virtio' name='negotiator.0'/>
+				</channel>
+				<input type='tablet' bus='usb'>
+				</input>
+				<input type='mouse' bus='ps2'/>
+				<input type='keyboard' bus='ps2'/>
+				<graphics type='spice' autoport='yes'>
+					<listen type='address'/>
+					<image compression='off'/>
+				</graphics>
+				<sound model='ich6'>
+				</sound>
+				<redirdev bus='usb' type='spicevmc'>
+				</redirdev>
+				<redirdev bus='usb' type='spicevmc'>
+				</redirdev>
+				<memballoon model='virtio'>
+				</memballoon>
+		)";
 
 		string_config += R"(
 			<video>

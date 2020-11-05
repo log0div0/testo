@@ -108,7 +108,7 @@ test debian_prepare_1: debian_install_guest_additions {
 		exec bash """
 			sed -i '/cdrom/d' /etc/apt/sources.list
 			apt update
-			apt install -y libvirt0 libvirt-clients libvirt-daemon-system libguestfs0 qemu qemu-kvm ebtables dnsmasq-base virt-manager
+			apt install -y libvirt0 libvirt-clients libvirt-daemon-system libguestfs0 qemu qemu-kvm ebtables dnsmasq-base virt-manager ovmf
 		""" timeout 30m
 	}
 }

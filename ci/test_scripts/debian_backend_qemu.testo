@@ -23,3 +23,23 @@ test debian_backend_qemu_unplug_plug_nic: debian_prepare_testo {
 		wait "Language" && "English"
 	}
 }
+
+[no_snapshots: true]
+test debian_backend_create_vm_uefi: debian_prepare_testo {
+	debian {
+		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi | grep "UP-TO-DATE: 1"
+		""" timeout 30m
+
+		exec bash "touch -m /usr/share/OVMF/OVMF_CODE.fd"
+
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi --assume_yes | grep "RUN SUCCESSFULLY: 1"
+		""" timeout 30m
+	}
+}
