@@ -27,6 +27,8 @@ test centos_vm_create: centos_prepare_testo {
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_type_mismatch 2>&1 > /dev/null | grep "Error: unexpected value type \\\"QUOTED STRING\\\" for attribute \\\"size\\\", expected \\\"SIZE\\\""
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_diplucates 2>&1 > /dev/null | grep "Error: duplicate attribute: \\\"cpus\\\""
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_negative_attribute 2>&1 > /dev/null | grep "Error: numeric attr can't be negative: -7"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_video_mode 2>&1 > /dev/null | grep "Constructing QemuVM \\\"vm_unknown_video_mode\\\" error: unsupported qemu_mode \\\"some_video_mode\\\" for video main_video"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_multiple_videos 2>&1 > /dev/null | grep "Constructing QemuVM \\\"vm_multiple_videos\\\" error: multiple video devices are not supported at the moment"
 		""" timeout 30m
 	}
 }
@@ -43,6 +45,23 @@ test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
 	}
 }
 
+
+[no_snapshots: true]
+test centos_backend_qemu_create_simple_vm_qxl: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_qxl | grep "stop here"
+		""" timeout 30m
+
+		wait "basic_machine_qxl"
+		mouse dclick "basic_machine_qxl"
+		wait "Language"
+		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
+		wait "Video QXL"
+	}
+}
 
 [no_snapshots: true]
 test centos_backend_qemu_create_vm_after_manual_delete_no_disks: centos_backend_qemu_create_simple_vm {

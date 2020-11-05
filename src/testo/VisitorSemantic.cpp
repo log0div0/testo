@@ -121,6 +121,7 @@ VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
 	vm_global_ctx.insert({"iso", std::make_pair(false, Token::category::quoted_string)});
 	vm_global_ctx.insert({"nic", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"disk", std::make_pair(true, Token::category::attr_block)});
+	vm_global_ctx.insert({"video", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 	vm_global_ctx.insert({"qemu_spice_agent", std::make_pair(false, Token::category::binary)});
 
@@ -139,6 +140,11 @@ VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
 	vm_network_ctx.insert({"adapter_type", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"nic", vm_network_ctx});
+
+	attr_ctx video_ctx;
+	video_ctx.insert({"qemu_mode", std::make_pair(false, Token::category::quoted_string)});
+
+	attr_ctxs.insert({"video", video_ctx});
 
 	attr_ctx fd_global_ctx;
 	fd_global_ctx.insert({"fs", std::make_pair(false, Token::category::quoted_string)});
