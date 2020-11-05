@@ -324,3 +324,52 @@ machine vm_negative_attribute {
 test create_vm_negative_attribute {
 	vm_negative_attribute {}
 }
+
+machine vm_unknown_video_mode {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+	video main_video: {
+		qemu_mode: "some_video_mode"
+	}
+}
+
+test create_vm_unknown_video_mode {
+	vm_unknown_video_mode {}
+}
+
+
+machine vm_multiple_videos {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 4Gb
+	}
+
+	video video1: {}
+	video video2: {}
+}
+
+test create_vm_multiple_videos {
+	vm_multiple_videos {}
+}
+
+machine basic_machine_qxl {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test create_basic_vm_qxl {
+	basic_machine_qxl {
+		start
+		wait "Language"
+		abort "stop here"
+	}
+}

@@ -102,6 +102,25 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		}
 	}
 
+	if (config.count("video")) {
+		auto videos = config.at("video");
+
+		if (videos.size() > 1) {
+			throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: multiple video devices are not supported at the moment");
+		}
+
+		for (auto& video: videos) {
+			auto video_model = video.value("qemu_mode", preferable_video_model());
+
+			if ((video_model != "vmvga") &&
+				(video_model != "qxl") &&
+				(video_model != "cirrus"))
+			{
+				throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: unsupported qemu_mode \"" + video_model + "\" for video " + video.at("name").get<std::string>());
+			}
+		}
+	}
+
 	scancodes.insert({
 		{"ESC", 1},
 		{"ONE", 2},
@@ -221,7 +240,6 @@ void QemuVM::install() {
 		create_disks();
 
 		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-		auto video_model = preferable_video_model();
 
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
@@ -293,16 +311,36 @@ void QemuVM::install() {
 					</graphics>
 					<sound model='ich6'>
 					</sound>
-					<video>
-						<model type='{}' heads='1' primary='yes'/>
-					</video>
 					<redirdev bus='usb' type='spicevmc'>
 					</redirdev>
 					<redirdev bus='usb' type='spicevmc'>
 					</redirdev>
 					<memballoon model='virtio'>
 					</memballoon>
-		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>(), video_model);
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>(), config.at("cpus").get<uint32_t>());
+
+		string_config += R"(
+			<video>
+		)";
+
+		if (config.count("video")) {
+			auto videos = config.at("video");
+			for (auto& video: videos) {
+				auto video_model = video.value("qemu_mode", preferable_video_model());
+
+				string_config += fmt::format(R"(
+					<model type='{}' heads='1' primary='yes'/>
+				)", video_model);
+			}
+		} else {
+			string_config += fmt::format(R"(
+				<model type='{}' heads='1' primary='yes'/>
+			)", preferable_video_model());
+		}
+
+		string_config += R"(
+			</video>
+		)";
 
 		size_t i = 0;
 
