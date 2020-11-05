@@ -18,6 +18,7 @@ test centos_vm_create: centos_prepare_testo {
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_identical_nic_names 2>&1 > /dev/null | grep "Constructing QemuVM \\\"vm_identical_nic_names\\\" error: two identical NIC names: \\\"my_nic\\\""
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_iso_does_not_exist 2>&1 > /dev/null | grep "Can't construct VmController for vm \\\"vm_iso_does_not_exist\\\": target iso file \\\"/opt/some_iso.iso\\\" does not exist"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_iso_does_not_exist_1 2>&1 > /dev/null | grep "Can't construct VmController for vm \\\"vm_iso_does_not_exist_1\\\": target iso file \\\"/opt/scripts/../some_iso.iso\\\" does not exist"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_loader_does_not_exist 2>&1 > /dev/null | grep "Can't construct VmController for vm \\\"vm_loader_does_not_exist\\\": target loader file \\\""/opt/some_loader.fd"\\\" does not exist"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist 2>&1 > /dev/null | grep "Can't construct VmController for vm \\\"vm_image_does_not_exist\\\": source disk image \\\"/opt/some_image.img\\\" does not exist"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist_1 2>&1 > /dev/null | grep "Can't construct VmController for vm \\\"vm_image_does_not_exist_1\\\": source disk image \\\"/opt/scripts/../some_image.img\\\" does not exist"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_network 2>&1 > /dev/null | grep "Can't construct VmController for vm \\\"vm_unknown_network\\\": nic \\\"my_nic\\\" is attached to an unknown network: \\\"some_network\\\""
@@ -42,6 +43,20 @@ test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
 		""" timeout 30m
 
 		wait "basic_machine"
+	}
+}
+
+
+[no_snapshots: true]
+test centos_backend_qemu_create_simple_vm_uefi: centos_prepare_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
+		exec bash """
+			testo run /opt/scripts/vm_create.testo --stop_on_fail --test_spec create_basic_vm_uefi
+		""" timeout 30m
+
+		wait "basic_machine_uefi"
+		abort "stop here"
 	}
 }
 

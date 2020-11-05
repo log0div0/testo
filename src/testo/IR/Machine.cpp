@@ -54,6 +54,11 @@ void Machine::create() {
 			metadata["iso_signature"] = file_signature(iso_file);
 		}
 
+		if (vm_config.count("loader")) {
+			fs::path loader_file = vm_config.at("loader").get<std::string>();
+			metadata["loader_signature"] = file_signature(loader_file);
+		}
+
 		if (vm_config.count("disk")) {
 			for (auto& disk: vm_config.at("disk")) {
 				if (disk.count("source")) {
@@ -311,6 +316,17 @@ bool Machine::check_config_relevance() {
 
 	if (!std::is_permutation(old_nics.begin(), old_nics.end(), new_nics.begin())) {
 		return false;
+	}
+
+	if (new_config.count("loader")) {
+		if (!has_key("loader_signature")) {
+			return false;
+		}
+
+		fs::path loader_file = new_config.at("loader").get<std::string>();
+		if (file_signature(loader_file) != get_metadata("loader_signature")) {
+			return false;
+		}
 	}
 
 	if (new_config.count("iso")) {

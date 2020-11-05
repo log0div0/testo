@@ -11,6 +11,20 @@ test create_basic_vm {
 	basic_machine {}
 }
 
+machine basic_machine_uefi {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+	loader: "/usr/share/OVMF/OVMF_CODE.secboot.fd"
+}
+
+test create_basic_vm_uefi {
+	basic_machine_uefi {}
+}
+
 machine vm_no_cpus {
 	ram: 512Mb
 	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
@@ -209,6 +223,19 @@ machine vm_image_does_not_exist {
 	disk first: {
 		source: "/opt/some_image.img"
 	}
+}
+
+machine vm_loader_does_not_exist {
+	cpus: 1
+	ram: 512Mb
+	loader: "/opt/some_loader.fd"
+	disk first: {
+		size: 4Gb
+	}
+}
+
+test create_vm_loader_does_not_exist {
+	vm_loader_does_not_exist {}
 }
 
 test create_vm_image_does_not_exist {

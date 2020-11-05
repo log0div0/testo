@@ -124,6 +124,7 @@ VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
 	vm_global_ctx.insert({"video", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 	vm_global_ctx.insert({"qemu_spice_agent", std::make_pair(false, Token::category::binary)});
+	vm_global_ctx.insert({"loader", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
@@ -1106,6 +1107,22 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 		iso_file = fs::canonical(iso_file);
 
 		machine->config["iso"] = iso_file.generic_string();
+	}
+
+	if (machine->config.count("loader")) {
+		fs::path loader_file = machine->config.at("loader").get<std::string>();
+		if (loader_file.is_relative()) {
+			fs::path src_file(machine->config.at("src_file").get<std::string>());
+			loader_file = src_file.parent_path() / loader_file;
+		}
+
+		if (!fs::exists(loader_file)) {
+			throw std::runtime_error(fmt::format("Can't construct VmController for vm \"{}\": target loader file \"{}\" does not exist", machine->name(), loader_file.generic_string()));
+		}
+
+		loader_file = fs::canonical(loader_file);
+
+		machine->config["loader"] = loader_file.generic_string();
 	}
 
 	if (machine->config.count("disk")) {
