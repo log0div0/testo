@@ -91,7 +91,7 @@ test centos_install_os {
 macro open_terminal() {
 	mouse click "Activities"
 	sleep 5s
-	type "Term"; mouse click "Terminal"
+	type "Term"; mouse click "Terminal".from_top(0)
 	wait "${login}@localhost"
 }
 
