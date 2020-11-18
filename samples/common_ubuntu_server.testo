@@ -49,17 +49,17 @@ macro install_ubuntu_server(host_name, login, password) {
 	wait "Welcome to Ubuntu"
 }
 
-macro enter_sudo(host_name, login, password) {
+macro enter_sudo_ubunbtu_server(host_name, login, password) {
 	type "sudo su"; press Enter;
 	wait "password for ${login}"; type "${password}"; press Enter
 	wait "root@${host_name}"
 }
 
 macro install_guest_additions_ubuntu_server(host_name, login, password) {
-	enter_sudo("${host_name}", "${login}", "${password}")
+	enter_sudo_ubunbtu_server("${host_name}", "${login}", "${password}")
 	plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 	type "mount /dev/cdrom /media"; press Enter
-	wait "mounting read-only"; type "dpkg -i /media/*.deb"; press Enter;
+	wait "read-only"; type "dpkg -i /media/*.deb"; press Enter;
 	wait "Setting up testo-guest-additions"
 	type "umount /media"; press Enter;
 	sleep 2s
