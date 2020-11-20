@@ -39,7 +39,7 @@ std::vector<TextLine> TextLine::match(const std::string& text) {
 	return result;
 }
 
-bool TextLine::match_foreground(const stb::Image* image, const std::string& color) {
+bool TextLine::match_foreground(const stb::Image<stb::RGB>* image, const std::string& color) {
 	size_t counter = 0;
 	for (size_t i = 0; i < chars.size(); ++i) {
 		if (chars[i].match_foreground(image, color)) {
@@ -49,7 +49,7 @@ bool TextLine::match_foreground(const stb::Image* image, const std::string& colo
 	return counter >= (chars.size() / 2);
 }
 
-bool TextLine::match_background(const stb::Image* image, const std::string& color) {
+bool TextLine::match_background(const stb::Image<stb::RGB>* image, const std::string& color) {
 	size_t counter = 0;
 	for (size_t i = 0; i < chars.size(); ++i) {
 		if (chars[i].match_background(image, color)) {

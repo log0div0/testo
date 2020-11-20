@@ -14,12 +14,12 @@ struct TextDetector {
 	TextDetector(const TextDetector& root) = delete;
 	TextDetector& operator=(const TextDetector&) = delete;
 
-	std::vector<Word> detect(const stb::Image* image);
+	std::vector<Word> detect(const stb::Image<stb::RGB>* image);
 
 private:
 	TextDetector();
-	void run_nn(const stb::Image* image);
-	std::vector<Word> run_postprocessing(const stb::Image* image);
+	void run_nn(const stb::Image<stb::RGB>* image);
+	std::vector<Word> run_postprocessing(const stb::Image<stb::RGB>* image);
 	std::vector<Rect> find_rects(int c);
 	Rect adjust_rect(int c, const Rect& rect);
 

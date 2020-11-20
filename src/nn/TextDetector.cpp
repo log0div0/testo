@@ -37,7 +37,7 @@ TextDetector::~TextDetector() {
 
 }
 
-std::vector<Word> TextDetector::detect(const stb::Image* image)
+std::vector<Word> TextDetector::detect(const stb::Image<stb::RGB>* image)
 {
 	if (!image->data) {
 		return {};
@@ -47,13 +47,13 @@ std::vector<Word> TextDetector::detect(const stb::Image* image)
 	return run_postprocessing(image);
 }
 
-void TextDetector::run_nn(const stb::Image* image) {
-	if ((in_w != image->width) ||
-		(in_h != image->height))
+void TextDetector::run_nn(const stb::Image<stb::RGB>* image) {
+	if ((in_w != image->w) ||
+		(in_h != image->h))
 	{
 		in_c = 3;
-		in_h = image->height;
-		in_w = image->width;
+		in_h = image->h;
+		in_w = image->w;
 		in_pad_h = nearest_n_times_div_by_2(in_h, 4);
 		in_pad_w = nearest_n_times_div_by_2(in_w, 4);
 
@@ -83,10 +83,10 @@ void TextDetector::run_nn(const stb::Image* image) {
 		labeling_wu[1] = LabelingWu(out_w, out_h);
 	}
 
-	for (int y = 0; y < image->height; ++y) {
-		for (int x = 0; x < image->width; ++x) {
+	for (int y = 0; y < image->h; ++y) {
+		for (int x = 0; x < image->w; ++x) {
 			for (int c = 0; c < 3; ++c) {
-				int src_index = y * image->width * image->channels + x * image->channels + c;
+				int src_index = y * image->w * image->c + x * image->c + c;
 				int dst_index = c * in_pad_h * in_pad_w + y * in_pad_w + x;
 				in[dst_index] = float(image->data[src_index]) / 255.0f;
 			}
@@ -99,7 +99,7 @@ void TextDetector::run_nn(const stb::Image* image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<Word> TextDetector::run_postprocessing(const stb::Image* image) {
+std::vector<Word> TextDetector::run_postprocessing(const stb::Image<stb::RGB>* image) {
 	std::vector<Rect> up_rects = find_rects(0);
 	std::vector<Rect> down_rects = find_rects(1);
 	std::vector<Word> words;

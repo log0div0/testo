@@ -22,13 +22,13 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	nn::Point visit_mouse_specifier_default_centering(const nn::Tensor& input);
 	nn::Point visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Point& input);
 	nn::Point visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const nn::Tensor& input);
-	nn::Tensor visit_select_text(const IR::SelectText& text, stb::Image& screenshot);
-	nn::Tensor visit_select_img(const IR::SelectImg& img, stb::Image& screenshot);
-	bool visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot);
-	nn::Point visit_select_js(const IR::SelectJS& js, stb::Image& screenshot);
-	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot);
-	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot);
-	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot);
+	nn::Tensor visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot);
+	nn::Tensor visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot);
+	bool visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot);
+	nn::Point visit_select_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot);
+	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image<stb::RGB>& screenshot);
+	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image<stb::RGB>& screenshot);
+	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image<stb::RGB>& screenshot);
 	void visit_press(const IR::Press& press);
 	void visit_hold(const IR::Hold& hold);
 	void visit_release(const IR::Release& release);
@@ -51,7 +51,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	void visit_shutdown(const IR::Shutdown& shutdown);
 	void visit_exec(const IR::Exec& exec);
 
-	js::Value eval_js(const std::string& script, stb::Image& screenshot);
+	js::Value eval_js(const std::string& script, stb::Image<stb::RGB>& screenshot);
 
 	std::shared_ptr<IR::Machine> vmc;
 	std::shared_ptr<IR::Test> current_test;

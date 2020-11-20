@@ -62,7 +62,7 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 }
 
 void OnnxRuntime::selftest() {
-	stb::Image img(SelfTestImg, SelfTestImg_len);
+	stb::Image<stb::RGB> img(SelfTestImg, SelfTestImg_len);
 	nn::Tensor tensor = find_text(&img);
 	if (tensor.match("Добро пожаловать").size() != 1) {
 		throw std::runtime_error("Neural networks are not working correctly");

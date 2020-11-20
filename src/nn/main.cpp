@@ -9,9 +9,20 @@ std::string image_file;
 std::string query;
 std::string output_file = "output.png";
 
+void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
+	for (int y = bbox.top; y <= bbox.bottom; ++y) {
+		img.at(bbox.left, y) = color;
+		img.at(bbox.right, y) = color;
+	}
+	for (int x = bbox.left; x < bbox.right; ++x) {
+		img.at(x, bbox.top) = color;
+		img.at(x, bbox.bottom) = color;
+	}
+}
+
 void predict()
 {
-	stb::Image image(image_file);
+	stb::Image<stb::RGB> image(image_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
 	nn::Tensor tensor = nn::find_text(&image);
@@ -21,11 +32,8 @@ void predict()
 
 	if (query.size() == 0) {
 		for (auto& textline: tensor.textlines) {
-			// for (auto& word: textline.words) {
-			// 	image.draw(word.rect.left, word.rect.top, word.rect.right, word.rect.bottom, 200, 20, 50);
-			// }
 			for (auto& char_: textline.chars) {
-				image.draw(char_.rect.left, char_.rect.top, char_.rect.right, char_.rect.bottom, 200, 20, 50);
+				draw_rect(image, char_.rect, {200, 20, 50});
 				std::cout << char_.codes[0];
 			}
 			std::cout << std::endl;
@@ -33,7 +41,7 @@ void predict()
 	} else {
 		tensor = tensor.match(query);
 		for (auto& textline: tensor.textlines) {
-			image.draw(textline.rect.left, textline.rect.top, textline.rect.right, textline.rect.bottom, 200, 20, 50);
+			draw_rect(image, textline.rect, {200, 20, 50});
 		}
 
 		std::cout << "Found: " << tensor.textlines.size() << std::endl;

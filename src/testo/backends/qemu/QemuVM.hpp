@@ -40,7 +40,7 @@ struct QemuVM: public VM {
 	void power_button() override;
 	void suspend() override;
 	void resume() override;
-	stb::Image screenshot() override;
+	stb::Image<stb::RGB> screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args,
 		const std::function<void(const std::string&)>& callback) override;
 

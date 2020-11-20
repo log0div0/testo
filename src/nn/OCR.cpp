@@ -7,7 +7,7 @@
 
 namespace nn {
 
-Tensor find_text(const stb::Image* image) {
+Tensor find_text(const stb::Image<stb::RGB>* image) {
 	Tensor result;
 
 	std::vector<Word> words = TextDetector::instance().detect(image);
@@ -69,7 +69,7 @@ textline_finish:
 	return result;
 }
 
-Tensor find_img(const stb::Image* image, const fs::path& path_to_img) {
+Tensor find_img(const stb::Image<stb::RGB>* image, const fs::path& path_to_img) {
 	throw std::runtime_error("Todo");
 }
 

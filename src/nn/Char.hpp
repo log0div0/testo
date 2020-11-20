@@ -15,8 +15,8 @@ struct Char {
 	std::string background;
 
 	bool match(const std::string& text);
-	bool match_foreground(const stb::Image* image, const std::string& color);
-	bool match_background(const stb::Image* image, const std::string& color);
+	bool match_foreground(const stb::Image<stb::RGB>* image, const std::string& color);
+	bool match_background(const stb::Image<stb::RGB>* image, const std::string& color);
 };
 
 }

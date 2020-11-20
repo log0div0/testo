@@ -37,12 +37,12 @@ TextColorPicker::~TextColorPicker() {
 
 }
 
-void TextColorPicker::run(const stb::Image* image, Char& char_) {
+void TextColorPicker::run(const stb::Image<stb::RGB>* image, Char& char_) {
 	run_nn(image, char_);
 	return run_postprocessing(char_);
 }
 
-void TextColorPicker::run_nn(const stb::Image* image, const Char& char_) {
+void TextColorPicker::run_nn(const stb::Image<stb::RGB>* image, const Char& char_) {
 
 	if (!in_c || !out_c) {
 		in_c = 3;
@@ -68,7 +68,7 @@ void TextColorPicker::run_nn(const stb::Image* image, const Char& char_) {
 	for (int y = 0; y < char_h; ++y) {
 		for (int x = 0; x < char_w; ++x) {
 			for (int c = 0; c < in_c; ++c) {
-				int src_index = (char_.rect.top + y) * image->width * image->channels + (char_.rect.left + x) * image->channels + c;
+				int src_index = (char_.rect.top + y) * image->w * image->c + (char_.rect.left + x) * image->c + c;
 				int dst_index = y * char_w * in_c + x * in_c + c;
 				char_img[dst_index] = image->data[src_index];
 			}

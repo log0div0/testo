@@ -54,7 +54,7 @@ struct VM {
 	virtual void power_button() = 0;
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
-	virtual stb::Image screenshot() = 0;
+	virtual stb::Image<stb::RGB> screenshot() = 0;
 	virtual int run(const fs::path& exe, std::vector<std::string> args,
 		const std::function<void(const std::string&)>& callback) = 0;
 

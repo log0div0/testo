@@ -121,12 +121,12 @@ TextRecognizer::~TextRecognizer() {
 
 }
 
-std::vector<Char> TextRecognizer::recognize(const stb::Image* image, const Word& word) {
+std::vector<Char> TextRecognizer::recognize(const stb::Image<stb::RGB>* image, const Word& word) {
 	run_nn(image, word);
 	return run_postprocessing(word);
 }
 
-void TextRecognizer::run_nn(const stb::Image* image, const Word& word) {
+void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, const Word& word) {
 
 	float ratio = float(word.rect.width()) / float(word.rect.height());
 	int new_in_w = std::floor(ratio * IN_H);
@@ -161,7 +161,7 @@ void TextRecognizer::run_nn(const stb::Image* image, const Word& word) {
 	for (int y = 0; y < word_h; ++y) {
 		for (int x = 0; x < word_w; ++x) {
 			for (int c = 0; c < in_c; ++c) {
-				int src_index = (word.rect.top + y) * image->width * image->channels + (word.rect.left + x) * image->channels + c;
+				int src_index = (word.rect.top + y) * image->w * image->c + (word.rect.left + x) * image->c + c;
 				int dst_index = y * word_w * in_c + x * in_c + c;
 				word_img[dst_index] = image->data[src_index];
 			}

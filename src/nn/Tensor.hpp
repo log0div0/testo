@@ -19,8 +19,8 @@ struct Tensor {
 	}
 
 	Tensor match(const std::string& text);
-	Tensor match_foreground(const stb::Image* image, const std::string& color);
-	Tensor match_background(const stb::Image* image, const std::string& color);
+	Tensor match_foreground(const stb::Image<stb::RGB>* image, const std::string& color);
+	Tensor match_background(const stb::Image<stb::RGB>* image, const std::string& color);
 
 	Tensor from_top(size_t i) const;
 	Tensor from_bottom(size_t i) const;

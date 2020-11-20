@@ -13,7 +13,7 @@ Tensor Tensor::match(const std::string& text) {
 	return result;
 }
 
-Tensor Tensor::match_foreground(const stb::Image* image, const std::string& color) {
+Tensor Tensor::match_foreground(const stb::Image<stb::RGB>* image, const std::string& color) {
 	Tensor result;
 	for (auto& textline: textlines) {
 		if (textline.match_foreground(image, color)) {
@@ -23,7 +23,7 @@ Tensor Tensor::match_foreground(const stb::Image* image, const std::string& colo
 	return result;
 }
 
-Tensor Tensor::match_background(const stb::Image* image, const std::string& color) {
+Tensor Tensor::match_background(const stb::Image<stb::RGB>* image, const std::string& color) {
 	Tensor result;
 	for (auto& textline: textlines) {
 		if (textline.match_background(image, color)) {

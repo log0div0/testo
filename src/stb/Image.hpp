@@ -2,34 +2,187 @@
 #pragma once
 
 #include <string>
+#include <algorithm>
+#include <stdexcept>
+#include <stb_image.h>
+#include <stb_image_write.h>
+#include <stb_image_resize.h>
+#include <string.h>
 
 namespace stb {
 
-struct Image {
-	Image() {}
-	Image(int w, int h, int c);
-	Image(const char* path);
-	Image(const std::string& path);
-	Image(const uint8_t* buffer, size_t buffer_len);
-	~Image();
+struct RGBA {
+	uint8_t r, g, b, a;
+} __attribute__((__packed__));
 
-	Image(const Image& other) = delete;
-	Image& operator=(const Image& other) = delete;
-	Image(Image&& other);
-	Image& operator=(Image&& other);
+struct RGB {
+	uint8_t r, g, b;
 
-	void write_png(const std::string& path);
-
-	size_t size() const {
-		return width * height * channels;
+	static RGB white() {
+		return {255, 255, 255};
 	}
 
-	void draw(int left, int top, int right, int bottom, uint8_t r, uint8_t g, uint8_t b);
+	static RGB black() {
+		return {0, 0, 0};
+	}
+
+	bool operator==(const RGB& other) const {
+		return
+			(r == other.r) &&
+			(g == other.g) &&
+			(b == other.b);
+	}
+
+	bool operator!=(const RGB& other) const {
+		return
+			(r != other.r) ||
+			(g != other.g) ||
+			(b != other.b);
+	}
+
+	const uint8_t& operator[](uint8_t index) const {
+		uint8_t* data = (uint8_t*)this;
+		return data[index];
+	}
+
+	uint8_t& operator[](uint8_t index) {
+		uint8_t* data = (uint8_t*)this;
+		return data[index];
+	}
+} __attribute__((__packed__));
+
+template <typename Pixel>
+struct Image {
+	static constexpr int c = sizeof(Pixel);
+
+	Image() {}
+
+	Image(int w_, int h_) {
+		w = w_;
+		h = h_;
+		data = (uint8_t*)malloc(w*h*c);
+		if (!data) {
+			throw std::runtime_error("malloc failed");
+		}
+	}
+
+	Image(int w_, int h_, Pixel pixel): Image(w_, h_) {
+			fill(pixel);
+	}
+
+	Image(const char* path) {
+		int actual_c = 0;
+		data = stbi_load(path, &w, &h, &actual_c, c);
+		if (!data) {
+			throw std::runtime_error("Cannot load image " + std::string(path) + " because " + stbi_failure_reason());
+		}
+	}
+
+	Image(const std::string& path): Image(path.c_str()) {}
+
+	Image(const uint8_t* buffer, size_t buffer_len) {
+		int actual_c = 0;
+		data = stbi_load_from_memory(buffer, buffer_len, &w, &h, &actual_c, c);
+		if (!data) {
+			throw std::runtime_error(std::string("Cannot parse image because ") + stbi_failure_reason());
+		}
+	}
+
+	~Image() {
+		if (data) {
+			stbi_image_free(data);
+			data = nullptr;
+		}
+	}
+
+	Image(const Image& other): Image(other.w, other.h) {
+		memcpy(data, other.data, other.data_len());
+	}
+
+	Image& operator=(const Image& other) {
+		uint8_t* new_data = (uint8_t*)realloc(data, other.data_len());
+		if (!new_data) {
+			throw std::runtime_error("realloc failed");
+		}
+		data = new_data;
+		w = other.w;
+		h = other.h;
+		memcpy(data, other.data, other.data_len());
+		return *this;
+	}
+
+	Image(Image&& other):
+		data(other.data),
+		w(other.w),
+		h(other.h)
+	{
+		other.data = nullptr;
+		other.w = 0;
+		other.h = 0;
+	}
+
+	Image& operator=(Image&& other) {
+		std::swap(data, other.data);
+		std::swap(w, other.w);
+		std::swap(h, other.h);
+		return *this;
+	}
+
+	void fill(Pixel p) {
+		for (int y = 0; y < h; ++y) {
+			for (int x = 0; x < w; ++x) {
+				at(x, y) = p;
+			}
+		}
+	}
+
+	Pixel& at(int x, int y) {
+		return *(Pixel*)&data[y*w*c + x*c];
+	}
+
+	const Pixel& at(int x, int y) const {
+		return *(Pixel*)&data[y*w*c + x*c];
+	}
+
+	void write_png(const std::string& path) {
+		if (!stbi_write_png(path.c_str(), w, h, c, data, w*c)) {
+			throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
+		}
+	}
+
+	void write_jpg(const std::string& path, int quality) {
+		if (!stbi_write_jpg(path.c_str(), w, h, c, data, quality)) {
+			throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
+		}
+	}
+
+	size_t pixels_count() const {
+		return w * h;
+	}
+
+	size_t data_len() const {
+		return w * h * c;
+	}
+
+	size_t stride() const {
+		return w * c;
+	}
+
+	Image resize(int out_w, int out_h) const {
+		Image result(out_w, out_h);
+		if (!stbir_resize_uint8(
+			this->data, this->w, this->h, this->stride(),
+			result.data, result.w, result.h, result.stride(),
+			sizeof(Pixel))
+		) {
+			throw std::runtime_error("stbir_resize_uint8 failed");
+		}
+		return result;
+	}
 
 	uint8_t* data = nullptr;
-	int width = 0;
-	int height = 0;
-	int channels = 0;
+	int w = 0;
+	int h = 0;
 };
 
 }

@@ -525,17 +525,17 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(con
 	return result;
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image& screenshot) {
+nn::Tensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = text.text();
 	return nn::find_text(&screenshot).match(parsed);
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image& screenshot) {
+nn::Tensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = img.img_path();
 	return nn::find_img(&screenshot, parsed);
 }
 
-bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_bool()) {
@@ -545,7 +545,7 @@ bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, st
 	}
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, stb::Image& screenshot) {
+nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_object() && !value.is_array()) {
@@ -568,7 +568,7 @@ nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& j
 	}
 }
 
-bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot)  {
+bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image<stb::RGB>& screenshot)  {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
 		return visit_detect_selectable(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
@@ -579,7 +579,7 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 }
 
 
-bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image<stb::RGB>& screenshot) {
 	bool is_negated = selectable->is_negated();
 
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
@@ -595,7 +595,7 @@ bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AS
 	}
 }
 
-bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image<stb::RGB>& screenshot) {
 	auto left_value = visit_detect_expr(binop->left, screenshot);
 	if (binop->t.type() == Token::category::double_ampersand) {
 		if (!left_value) {
@@ -1096,7 +1096,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 	}
 }
 
-js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, stb::Image& screenshot) {
+js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, stb::Image<stb::RGB>& screenshot) {
 	try {
 		js_current_ctx.reset(new js::Context(&screenshot));
 		return js_current_ctx->eval(script);

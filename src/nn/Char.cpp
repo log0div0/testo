@@ -13,7 +13,7 @@ bool Char::match(const std::string& query) {
 	return false;
 }
 
-bool Char::match_foreground(const stb::Image* image, const std::string& color) {
+bool Char::match_foreground(const stb::Image<stb::RGB>* image, const std::string& color) {
 	if (!color.size()) {
 		return true;
 	}
@@ -23,7 +23,7 @@ bool Char::match_foreground(const stb::Image* image, const std::string& color) {
 	return foreground == color;
 }
 
-bool Char::match_background(const stb::Image* image, const std::string& color) {
+bool Char::match_background(const stb::Image<stb::RGB>* image, const std::string& color) {
 	if (!color.size()) {
 		return true;
 	}

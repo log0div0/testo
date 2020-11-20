@@ -8,7 +8,7 @@ namespace fs = std::experimental::filesystem;
 
 namespace nn {
 
-Tensor find_text(const stb::Image* image);
-Tensor find_img(const stb::Image* image, const fs::path& path_to_img);
+Tensor find_text(const stb::Image<stb::RGB>* image);
+Tensor find_img(const stb::Image<stb::RGB>* image, const fs::path& path_to_img);
 
 }
