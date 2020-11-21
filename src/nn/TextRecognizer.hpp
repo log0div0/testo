@@ -13,13 +13,13 @@ struct TextRecognizer {
 	TextRecognizer(const TextRecognizer&) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
 
-	std::vector<Char> recognize(const stb::Image<stb::RGB>* image, const Word& word);
+	void recognize(const stb::Image<stb::RGB>* image, TextLine& textline);
 
 private:
 	TextRecognizer();
 
-	void run_nn(const stb::Image<stb::RGB>* image, const Word& word);
-	std::vector<Char> run_postprocessing(const Word& word);
+	void run_nn(const stb::Image<stb::RGB>* image, TextLine& textline);
+	void run_postprocessing(TextLine& textline);
 
 	std::vector<std::vector<std::string>> symbols;
 	std::vector<size_t> symbols_indexes;
@@ -35,7 +35,7 @@ private:
 	std::unique_ptr<Ort::Value> in_tensor;
 	std::unique_ptr<Ort::Value> out_tensor;
 
-	std::vector<uint8_t> word_img, word_img_resized;
+	std::vector<uint8_t> textline_img, textline_img_resized;
 };
 
 }

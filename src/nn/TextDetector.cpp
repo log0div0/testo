@@ -37,7 +37,7 @@ TextDetector::~TextDetector() {
 
 }
 
-std::vector<Word> TextDetector::detect(const stb::Image<stb::RGB>* image)
+std::vector<TextLine> TextDetector::detect(const stb::Image<stb::RGB>* image)
 {
 	if (!image->data) {
 		return {};
@@ -99,10 +99,10 @@ void TextDetector::run_nn(const stb::Image<stb::RGB>* image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<Word> TextDetector::run_postprocessing(const stb::Image<stb::RGB>* image) {
+std::vector<TextLine> TextDetector::run_postprocessing(const stb::Image<stb::RGB>* image) {
 	std::vector<Rect> up_rects = find_rects(0);
 	std::vector<Rect> down_rects = find_rects(1);
-	std::vector<Word> words;
+	std::vector<TextLine> textlines;
 	for (const Rect& up_rect: up_rects) {
 		int x = up_rect.center_x();
 		int y_begin = up_rect.bottom;
@@ -114,26 +114,26 @@ std::vector<Word> TextDetector::run_postprocessing(const stb::Image<stb::RGB>* i
 			uint16_t l = labeling_wu[1].L[y*out_w + x];
 			if (l) {
 				const Rect& down_rect = down_rects.at(l-1);
-				Rect word_rect = up_rect | down_rect;
+				Rect textline_rect = up_rect | down_rect;
 				bool found = false;
-				for (auto& word: words) {
-					if (word.rect.iou(word_rect) > 0.25) {
-						word.rect |= word_rect;
+				for (auto& textline: textlines) {
+					if (textline.rect.iou(textline_rect) > 0.25) {
+						textline.rect |= textline_rect;
 						found = true;
 						break;
 					}
 				}
 				if (!found) {
-					Word word;
-					word.rect = word_rect;
-					words.push_back(word);
+					TextLine textline;
+					textline.rect = textline_rect;
+					textlines.push_back(textline);
 				}
 				break;
 			}
 		}
 	}
 
-	return words;
+	return textlines;
 }
 
 std::vector<Rect> TextDetector::find_rects(int c) {
@@ -143,97 +143,7 @@ std::vector<Rect> TextDetector::find_rects(int c) {
 		}
 	}
 	std::vector<Rect> rects = labeling_wu[c].run();
-	for (size_t i = 0; i < rects.size(); ++i) {
-		rects[i] = adjust_rect(c, rects[i]);
-	}
 	return rects;
-}
-
-Rect TextDetector::adjust_rect(int c, const Rect& rect) {
-	Rect new_rect;
-
-	{
-		int32_t x = rect.left;
-		float min_mean = 1;
-		while (x > 0) {
-			--x;
-			float mean = 0;
-			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
-			}
-			mean /= rect.height();
-			if ((mean < 0.25) || (mean > min_mean)) {
-				++x;
-				break;
-			}
-			if (min_mean > mean) {
-				min_mean = mean;
-			}
-		}
-		new_rect.left = x;
-	}
-	{
-		int32_t x = rect.right;
-		float min_mean = 1;
-		while (x < (out_w - 1)) {
-			++x;
-			float mean = 0;
-			for (int32_t y = rect.top; y <= rect.bottom; ++y) {
-				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
-			}
-			mean /= rect.height();
-			if ((mean < 0.25) || (mean > min_mean)) {
-				--x;
-				break;
-			}
-			if (min_mean > mean) {
-				min_mean = mean;
-			}
-		}
-		new_rect.right = x;
-	}
-	{
-		int32_t y = rect.top;
-		float min_mean = 1;
-		while (y > 0) {
-			--y;
-			float mean = 0;
-			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
-			}
-			mean /= rect.width();
-			if ((mean < 0.25) || (mean > min_mean)) {
-				++y;
-				break;
-			}
-			if (min_mean > mean) {
-				min_mean = mean;
-			}
-		}
-		new_rect.top = y;
-	}
-	{
-		int32_t y = rect.bottom;
-		float min_mean = 1;
-		while (y < (out_h - 1)) {
-			++y;
-			float mean = 0;
-			for (int32_t x = rect.left; x <= rect.right; ++x) {
-				mean += out[c*out_pad_h*out_pad_w + y*out_pad_w + x];
-			}
-			mean /= rect.width();
-			if ((mean < 0.25) || (mean > min_mean)) {
-				--y;
-				break;
-			}
-			if (min_mean > mean) {
-				min_mean = mean;
-			}
-		}
-		new_rect.bottom = y;
-	}
-
-	return new_rect;
 }
 
 }
