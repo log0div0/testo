@@ -56,6 +56,6 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	std::shared_ptr<IR::Machine> vmc;
 	std::shared_ptr<IR::Test> current_test;
 	coro::Timer timer;
-	std::unordered_map<std::string, std::vector<std::string>> charmap;
+	std::unordered_map<char32_t, std::vector<std::string>> charmap;
 	std::shared_ptr<js::Context> js_current_ctx;
 };

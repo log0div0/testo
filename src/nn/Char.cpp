@@ -4,9 +4,9 @@
 
 namespace nn {
 
-bool Char::match(const std::string& query) {
-	for (auto& code: codes) {
-		if (code == query) {
+bool Char::match(char32_t query) {
+	for (auto& codepoint: codepoints) {
+		if (codepoint == query) {
 			return true;
 		}
 	}

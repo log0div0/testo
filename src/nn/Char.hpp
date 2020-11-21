@@ -10,11 +10,11 @@ namespace nn {
 
 struct Char {
 	Rect rect;
-	std::vector<std::string> codes;
+	std::u32string codepoints;
 	std::string foreground;
 	std::string background;
 
-	bool match(const std::string& text);
+	bool match(char32_t query);
 	bool match_foreground(const stb::Image<stb::RGB>* image, const std::string& color);
 	bool match_background(const stb::Image<stb::RGB>* image, const std::string& color);
 };

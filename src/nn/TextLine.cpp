@@ -1,13 +1,16 @@
 
 #include "TextLine.hpp"
-#include <utf8.hpp>
+#include <codecvt>
+#include <locale>
 
 namespace nn {
 
+static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+
 std::vector<TextLine> TextLine::match(const std::string& text) {
-	std::vector<std::string> query;
-	for (auto& char_: utf8::split_to_chars(text)) {
-		if (char_ == " ") {
+	std::vector<char32_t> query;
+	for (char32_t char_: conv.from_bytes(text)) {
+		if (char_ == U' ') {
 			continue;
 		}
 		query.push_back(char_);

@@ -21,7 +21,6 @@ private:
 	void run_nn(const stb::Image<stb::RGB>* image, TextLine& textline);
 	void run_postprocessing(TextLine& textline);
 
-	std::vector<std::vector<std::string>> symbols;
 	std::vector<size_t> symbols_indexes;
 
 	int in_w = 0;

@@ -2,7 +2,6 @@
 #include "TextRecognizer.hpp"
 #include <iostream>
 #include <algorithm>
-#include <utf8.hpp>
 #include <stb_image.h>
 #include <stb_image_write.h>
 #include <stb_image_resize.h>
@@ -10,96 +9,96 @@
 
 #define IN_H 32
 
-std::vector<std::string> char_groups = {
-	"0OoОо",
-	"1",
-	"2",
-	"3ЗзЭэ",
-	"4",
-	"5",
-	"6б",
-	"7",
-	"8",
-	"9",
-	"!",
-	"?",
-	"#",
-	"$",
-	"%",
-	"&",
-	"@",
-	"([{",
-	"<",
-	")]}",
-	">",
-	"+",
-	"-",
-	"*",
-	"/",
-	"\\",
-	".,",
-	":;",
-	"\"'",
-	"^",
-	"~",
-	"=",
-	"|lI",
-	"_",
-	"AА",
-	"aа",
-	"BВв",
-	"bЬьЪъ",
-	"CcСс",
-	"D",
-	"d",
-	"EЕЁ",
-	"eеё",
-	"F",
-	"f",
-	"G",
-	"g",
-	"HНн",
-	"h",
-	"i",
-	"J",
-	"j",
-	"KКк",
-	"k",
-	"L",
-	"MМм",
-	"m",
-	"N",
-	"n",
-	"PpРр",
-	"R",
-	"r",
-	"Q",
-	"q",
-	"Ss",
-	"TТт",
-	"t",
-	"U",
-	"u",
-	"Vv",
-	"Ww",
-	"XxХх",
-	"Y",
-	"yУу",
-	"Zz",
-	"Б",
-	"Гг",
-	"Дд",
-	"Жж",
-	"ИиЙй",
-	"Лл",
-	"Пп",
-	"Фф",
-	"Цц",
-	"Чч",
-	"ШшЩщ",
-	"Ыы",
-	"Юю",
-	"Яя"
+std::vector<std::u32string> symbols = {
+	U"0OoОо",
+	U"1",
+	U"2",
+	U"3ЗзЭэ",
+	U"4",
+	U"5",
+	U"6б",
+	U"7",
+	U"8",
+	U"9",
+	U"!",
+	U"?",
+	U"#",
+	U"$",
+	U"%",
+	U"&",
+	U"@",
+	U"([{",
+	U"<",
+	U")]}",
+	U">",
+	U"+",
+	U"-",
+	U"*",
+	U"/",
+	U"\\",
+	U".,",
+	U":;",
+	U"\"'",
+	U"^",
+	U"~",
+	U"=",
+	U"|lI",
+	U"_",
+	U"AА",
+	U"aа",
+	U"BВв",
+	U"bЬьЪъ",
+	U"CcСс",
+	U"D",
+	U"d",
+	U"EЕЁ",
+	U"eеё",
+	U"F",
+	U"f",
+	U"G",
+	U"g",
+	U"HНн",
+	U"h",
+	U"i",
+	U"J",
+	U"j",
+	U"KКк",
+	U"k",
+	U"L",
+	U"MМм",
+	U"m",
+	U"N",
+	U"n",
+	U"PpРр",
+	U"R",
+	U"r",
+	U"Q",
+	U"q",
+	U"Ss",
+	U"TТт",
+	U"t",
+	U"U",
+	U"u",
+	U"Vv",
+	U"Ww",
+	U"XxХх",
+	U"Y",
+	U"yУу",
+	U"Zz",
+	U"Б",
+	U"Гг",
+	U"Дд",
+	U"Жж",
+	U"ИиЙй",
+	U"Лл",
+	U"Пп",
+	U"Фф",
+	U"Цц",
+	U"Чч",
+	U"ШшЩщ",
+	U"Ыы",
+	U"Юю",
+	U"Яя"
 };
 
 namespace nn {
@@ -110,8 +109,7 @@ TextRecognizer& TextRecognizer::instance() {
 }
 
 TextRecognizer::TextRecognizer() {
-	for (size_t i = 0; i < char_groups.size(); ++i) {
-		symbols.push_back(utf8::split_to_chars(char_groups[i]));
+	for (size_t i = 0; i < symbols.size(); ++i) {
 		symbols_indexes.push_back(i);
 	}
 	session = LoadModel("TextRecognizer");
@@ -237,11 +235,9 @@ void TextRecognizer::run_postprocessing(TextLine& textline) {
 		char_.rect.left = textline.rect.left + std::floor(x * ratio);
 		char_.rect.right = textline.rect.left + std::ceil(x * ratio);
 		for (auto it = symbols_indexes.begin(); it != end; ++it) {
-			for (auto& code: symbols.at(*it)) {
-				char_.codes.push_back(code);
-			}
+			char_.codepoints += symbols.at(*it);
 		}
-		if (char_.codes.size() == 0) {
+		if (char_.codepoints.size() == 0) {
 			throw std::runtime_error("TextRecognizer error");
 		}
 		textline.chars.push_back(char_);

@@ -20,6 +20,8 @@ void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
 	}
 }
 
+std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+
 void predict()
 {
 	stb::Image<stb::RGB> image(image_file);
@@ -34,7 +36,7 @@ void predict()
 		for (auto& textline: tensor.textlines) {
 			for (auto& char_: textline.chars) {
 				draw_rect(image, char_.rect, {200, 20, 50});
-				std::cout << char_.codes[0];
+				std::cout << conv.to_bytes(char_.codepoints[0]);
 			}
 			std::cout << std::endl;
 		}
