@@ -83,12 +83,15 @@ void TextDetector::run_nn(const stb::Image<stb::RGB>* image) {
 		labeling_wu[1] = LabelingWu(out_w, out_h);
 	}
 
+	float mean[3] = {0.485f, 0.456f, 0.406f};
+	float std[3] = {0.229f, 0.224f, 0.225f};
+
 	for (int y = 0; y < image->h; ++y) {
 		for (int x = 0; x < image->w; ++x) {
 			for (int c = 0; c < 3; ++c) {
 				int src_index = y * image->w * image->c + x * image->c + c;
 				int dst_index = c * in_pad_h * in_pad_w + y * in_pad_w + x;
-				in[dst_index] = float(image->data[src_index]) / 255.0f;
+				in[dst_index] = ((float(image->data[src_index]) / 255.0f) - mean[c]) / std[c];
 			}
 		}
 	}

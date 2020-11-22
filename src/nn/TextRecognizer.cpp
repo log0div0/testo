@@ -180,12 +180,15 @@ void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textlin
 	// 	throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
 	// }
 
+	float mean[3] = {0.485f, 0.456f, 0.406f};
+	float std[3] = {0.229f, 0.224f, 0.225f};
+
 	for (int y = 0; y < IN_H; ++y) {
 		for (int x = 0; x < in_w; ++x) {
 			for (int c = 0; c < in_c; ++c) {
 				int src_index = y * in_w * in_c + x * in_c + c;
 				int dst_index = c * IN_H * in_w + y * in_w + x;
-				in[dst_index] = float(textline_img_resized[src_index]) / 255.0;
+				in[dst_index] = ((float(textline_img_resized[src_index]) / 255.0f) - mean[c]) / std[c];
 			}
 		}
 	}
