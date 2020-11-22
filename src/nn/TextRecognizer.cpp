@@ -126,12 +126,8 @@ void TextRecognizer::recognize(const stb::Image<stb::RGB>* image, TextLine& text
 
 void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textline) {
 
-	float ratio = float(textline.rect.width()) / float(textline.rect.height());
-	int new_in_w = std::floor(ratio * IN_H);
-	if (new_in_w % 2) {
-		++new_in_w;
-	}
-	new_in_w *= 2;
+	int ratio = ceilf(float(textline.rect.width()) / float(textline.rect.height()));
+	int new_in_w = ratio * IN_H * 2;
 
 	if (in_w != new_in_w) {
 		in_w = new_in_w;
@@ -175,7 +171,8 @@ void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textlin
 		throw std::runtime_error("stbir_resize_uint8 failed");
 	}
 
-	// std::string path = "tmp/" + std::to_string(b) + ".png";
+	// static int b = 0;
+	// std::string path = "tmp/" + std::to_string(b++) + ".png";
 	// if (!stbi_write_png(path.c_str(), in_w, IN_H, in_c, textline_img_resized.data(), in_w*in_c)) {
 	// 	throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
 	// }
@@ -246,9 +243,11 @@ void TextRecognizer::run_postprocessing(TextLine& textline) {
 		textline.chars.push_back(char_);
 	}
 	for (size_t i = 1; i < textline.chars.size(); ++i) {
-		textline.chars[i-1].rect.right = textline.chars[i].rect.left;
+		int pos = (textline.chars[i-1].rect.right + textline.chars[i].rect.right) / 2;
+		textline.chars[i-1].rect.right = textline.chars[i].rect.left = pos;
 	}
 	if (textline.chars.size()) {
+		textline.chars.front().rect.left = textline.rect.left;
 		textline.chars.back().rect.right = textline.rect.right;
 	}
 }

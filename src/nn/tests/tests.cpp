@@ -605,7 +605,7 @@ TEST_CASE("000057") {
 TEST_CASE("000058") {
 	stb::Image<stb::RGB> image("imgs/000058.png");
 	nn::Tensor tensor = nn::find_text(&image);
-	CHECK(tensor.match("Для создание шаров-мишеней").size() == 1);
+	CHECK(tensor.match("Для создания шаров-мишеней").size() == 1);
 	CHECK(tensor.match("нажимайте левой кнопкой мыши").size() == 1);
 	CHECK(tensor.match("пока индикатор не заполнится").size() == 1);
 	CHECK(tensor.match("целиком").size() == 1);
