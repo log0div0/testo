@@ -109,7 +109,7 @@ std::vector<TextLine> TextDetector::run_postprocessing() {
 std::vector<Rect> TextDetector::find_rects(int c) {
 	for (int y = 0; y < out_h; ++y) {
 		for (int x = 0; x < out_w; ++x) {
-			labeling_wu[c].I[y*out_w + x] = out.at(x, y)[c] >= .75;
+			labeling_wu[c].I[y*out_w + x] = out.at(x, y, c) >= .75;
 		}
 	}
 	std::vector<Rect> rects = labeling_wu[c].run();

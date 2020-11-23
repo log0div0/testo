@@ -31,7 +31,7 @@ void Program::validate() {
 
 void Program::run() {
 	env->setup();
-	nn::OnnxRuntime onnx_runtime;
+	nn::onnx::Runtime onnx_runtime;
 	VisitorInterpreter runner(config);
 	runner.visit();
 }

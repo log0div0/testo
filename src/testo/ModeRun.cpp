@@ -33,7 +33,7 @@ void verify_license(const std::string& path_to_license) {
 		throw std::runtime_error("The license period has already ended");
 	}
 
-	auto info = nn::GetDeviceInfo();
+	auto info = nn::onnx::GetDeviceInfo();
 
 	std::string device_uuid = license.at("device_uuid");
 	if (info.uuid_str != device_uuid) {

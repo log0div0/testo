@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		nn::OnnxRuntime onnx_runtime;
+		nn::onnx::Runtime onnx_runtime;
 		switch (selected_mode) {
 			case mode::text:
 				text_mode(text_args);

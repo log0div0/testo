@@ -135,7 +135,7 @@ void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textlin
 	}
 
 	stb::Image<stb::RGB> textline_img = image->sub_img(
-		textline.rect.top, textline.rect.left,
+		textline.rect.left, textline.rect.top,
 		textline.rect.width(), textline.rect.height()
 	).resize(in_w, IN_H);
 

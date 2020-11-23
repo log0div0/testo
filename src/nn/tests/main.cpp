@@ -4,6 +4,6 @@
 #include <catch.hpp>
 
 int main( int argc, char* const argv[] ) {
-	nn::OnnxRuntime runtime;
+	nn::onnx::Runtime runtime;
 	return Catch::Session().run(argc, argv);
 }

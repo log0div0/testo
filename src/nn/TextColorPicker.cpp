@@ -45,7 +45,7 @@ void TextColorPicker::run_nn(const stb::Image<stb::RGB>* image, const Char& char
 	}
 
 	stb::Image<stb::RGB> char_img = image->sub_img(
-		char_.rect.top, char_.rect.left,
+		char_.rect.left, char_.rect.top,
 		char_.rect.width(), char_.rect.height()
 	).resize(IN_W, IN_H);
 

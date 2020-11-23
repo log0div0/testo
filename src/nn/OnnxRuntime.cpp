@@ -23,6 +23,14 @@ Runtime::~Runtime() {
 	env.reset();
 }
 
+void Runtime::selftest() {
+	stb::Image<stb::RGB> img(SelfTestImg, SelfTestImg_len);
+	nn::TextTensor tensor = find_text(&img);
+	if (tensor.match("Добро пожаловать").size() != 1) {
+		throw std::runtime_error("Neural networks are not working correctly");
+	}
+}
+
 #ifdef __linux__
 fs::path GetModelDir() {
 	return "/usr/share/testo";
@@ -40,7 +48,7 @@ fs::path GetModelDir() {
 }
 #endif
 
-std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
+Model::Model(const char* name) {
 	if (!env) {
 		throw std::runtime_error("Init onnx runtime first!");
 	}
@@ -52,8 +60,8 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 #ifdef USE_CUDA
 	Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0));
 #endif
-	fs::path model_path = GetModelDir() / (name + ".onnx");
-	return std::make_unique<Ort::Session>(*env,
+	fs::path model_path = GetModelDir() / (std::string(name) + ".onnx");
+	session = std::make_unique<Ort::Session>(*env,
 #ifdef WIN32
 		model_path.wstring().c_str(),
 #else
@@ -62,11 +70,60 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 		session_options);
 }
 
-void Runtime::selftest() {
-	stb::Image<stb::RGB> img(SelfTestImg, SelfTestImg_len);
-	nn::TextTensor tensor = find_text(&img);
-	if (tensor.match("Добро пожаловать").size() != 1) {
-		throw std::runtime_error("Neural networks are not working correctly");
+void Model::run(std::initializer_list<Value*> in, std::initializer_list<Value*> out) {
+	std::vector<const char*> in_names;
+	std::vector<const char*> out_names;
+	std::vector<Ort::Value> in_tensors;
+	std::vector<Ort::Value> out_tensors;
+
+	for (auto x: in) {
+		in_names.push_back(x->name());
+		in_tensors.push_back(x->tensor());
+	}
+	for (auto x: out) {
+		out_names.push_back(x->name());
+		out_tensors.push_back(x->tensor());
+	}
+
+	session->Run(Ort::RunOptions{nullptr},
+		in_names.data(), in_tensors.data(), in.size(),
+		out_names.data(), out_tensors.data(), out.size());
+}
+
+Ort::Value Value::tensor() {
+	auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+	return Ort::Value::CreateTensor<float>(memory_info, _buf.data(), _buf.size(), _shape.data(), _shape.size());
+}
+
+void Image::set(const stb::Image<stb::RGB>& img, bool normalize) {
+	if (_shape.at(1) != img.c) {
+		throw std::runtime_error("_shape.at(1) != img.c");
+	}
+	if (_shape.at(2) < img.h) {
+		throw std::runtime_error("_shape.at(2) < img.h");
+	}
+	if (_shape.at(3) < img.w) {
+		throw std::runtime_error("_shape.at(3) < img.w");
+	}
+	if (normalize) {
+		float mean[3] = {0.485f, 0.456f, 0.406f};
+		float std[3] = {0.229f, 0.224f, 0.225f};
+
+		for (int y = 0; y < img.h; ++y) {
+			for (int x = 0; x < img.w; ++x) {
+				for (int c = 0; c < img.c; ++c) {
+					at(x, y, c) = ((float(img.at(x, y)[c]) / 255.0f) - mean[c]) / std[c];
+				}
+			}
+		}
+	} else {
+		for (int y = 0; y < img.h; ++y) {
+			for (int x = 0; x < img.w; ++x) {
+				for (int c = 0; c < img.c; ++c) {
+					at(x, y, c) = float(img.at(x, y)[c]) / 255.0f;
+				}
+			}
+		}
 	}
 }
 

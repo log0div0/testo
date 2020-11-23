@@ -33,8 +33,12 @@ private:
 	struct Output: onnx::Value {
 		using onnx::Value::Value;
 
-		void resize(int w, int c);
-		float* operator[](int x);
+		void resize(int w, int c) {
+			Value::resize({w, 1, c});
+		}
+		float* operator[](int x) {
+			return &_buf[x * _shape[2]];
+		}
 	};
 
 	Output out = "output";

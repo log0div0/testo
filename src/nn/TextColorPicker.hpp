@@ -28,8 +28,12 @@ private:
 
 	struct Output: onnx::Value {
 		using onnx::Value::Value;
-		void resize(int classes_count);
-		float operator[](size_t index);
+		void resize(int classes_count) {
+			Value::resize({1, classes_count});
+		}
+		float operator[](size_t index) {
+			return _buf[index];
+		}
 	};
 
 	Output out = "output";
