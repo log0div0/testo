@@ -191,6 +191,28 @@ struct Image {
 		return result;
 	}
 
+	Image sub_img(int off_x, int off_y, int sub_w, int sub_h) const {
+		if (off_x < 0) {
+			throw std::runtime_error("off_x < 0");
+		}
+		if (off_y < 0) {
+			throw std::runtime_error("off_y < 0");
+		}
+		if ((off_x + sub_w) > w) {
+			throw std::runtime_error("(off_x + sub_w) > w");
+		}
+		if ((off_y + sub_h) > h) {
+			throw std::runtime_error("(off_y + sub_h) > h");
+		}
+		Image sub(sub_w, sub_h);
+		for (int y = 0; y < sub_h; ++y) {
+			for (int x = 0; x < sub_w; ++x) {
+				sub.at(x, y) = at(off_x + x, off_y + y);
+			}
+		}
+		return sub;
+	}
+
 	uint8_t* data = nullptr;
 	int w = 0;
 	int h = 0;

@@ -29,14 +29,6 @@ TextDetector& TextDetector::instance() {
 	return instance;
 }
 
-TextDetector::TextDetector() {
-	session = LoadModel("TextDetector");
-}
-
-TextDetector::~TextDetector() {
-
-}
-
 std::vector<TextLine> TextDetector::detect(const stb::Image<stb::RGB>* image)
 {
 	if (!image->data) {
@@ -54,52 +46,27 @@ void TextDetector::run_nn(const stb::Image<stb::RGB>* image) {
 		in_c = 3;
 		in_h = image->h;
 		in_w = image->w;
-		in_pad_h = nearest_n_times_div_by_2(in_h, 4);
-		in_pad_w = nearest_n_times_div_by_2(in_w, 4);
+		int in_pad_h = nearest_n_times_div_by_2(in_h, 4);
+		int in_pad_w = nearest_n_times_div_by_2(in_w, 4);
 
 		out_c = 2;
 		out_h = in_h;
 		out_w = in_w;
-		out_pad_h = nearest_n_times_div_by_2(out_h, 4);
-		out_pad_w = nearest_n_times_div_by_2(out_w, 4);
+		int out_pad_h = nearest_n_times_div_by_2(out_h, 4);
+		int out_pad_w = nearest_n_times_div_by_2(out_w, 4);
 
-		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-
-		std::array<int64_t, 4> in_shape = {1, in_c, in_pad_h, in_pad_w};
-		std::array<int64_t, 4> out_shape = {1, out_c, out_pad_h, out_pad_w};
-
-		in.resize(in_c * in_pad_h * in_pad_w);
-		out.resize(out_c * out_pad_h * out_pad_w);
-
-		std::fill(in.begin(), in.end(), (uint8_t)0);
-		std::fill(out.begin(), out.end(), (uint8_t)0);
-
-		in_tensor = std::make_unique<Ort::Value>(
-			Ort::Value::CreateTensor<float>(memory_info, in.data(), in.size(), in_shape.data(), in_shape.size()));
-		out_tensor = std::make_unique<Ort::Value>(
-			Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
+		in.resize(in_pad_w, in_pad_h, in_c);
+		out.resize(out_pad_w, out_pad_h, out_c);
+		in.fill(0);
+		out.fill(0);
 
 		labeling_wu[0] = LabelingWu(out_w, out_h);
 		labeling_wu[1] = LabelingWu(out_w, out_h);
 	}
 
-	float mean[3] = {0.485f, 0.456f, 0.406f};
-	float std[3] = {0.229f, 0.224f, 0.225f};
+	in.set(*image, true);
 
-	for (int y = 0; y < image->h; ++y) {
-		for (int x = 0; x < image->w; ++x) {
-			for (int c = 0; c < 3; ++c) {
-				int src_index = y * image->w * image->c + x * image->c + c;
-				int dst_index = c * in_pad_h * in_pad_w + y * in_pad_w + x;
-				in[dst_index] = ((float(image->data[src_index]) / 255.0f) - mean[c]) / std[c];
-			}
-		}
-	}
-
-	const char* in_names[] = {"input"};
-	const char* out_names[] = {"output"};
-
-	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
+	model.run({&in}, {&out});
 }
 
 std::vector<TextLine> TextDetector::run_postprocessing() {
@@ -142,7 +109,7 @@ std::vector<TextLine> TextDetector::run_postprocessing() {
 std::vector<Rect> TextDetector::find_rects(int c) {
 	for (int y = 0; y < out_h; ++y) {
 		for (int x = 0; x < out_w; ++x) {
-			labeling_wu[c].I[y*out_w + x] = out[c*out_pad_h*out_pad_w + y*out_pad_w + x] >= .75;
+			labeling_wu[c].I[y*out_w + x] = out.at(x, y)[c] >= .75;
 		}
 	}
 	std::vector<Rect> rects = labeling_wu[c].run();

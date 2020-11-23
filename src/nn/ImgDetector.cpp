@@ -29,14 +29,6 @@ ImgDetector& ImgDetector::instance() {
 	return instance;
 }
 
-ImgDetector::ImgDetector() {
-	session = LoadModel("ImgDetector");
-}
-
-ImgDetector::~ImgDetector() {
-
-}
-
 std::vector<Img> ImgDetector::detect(const stb::Image<stb::RGB>* image, const std::string& ref_img_path)
 {
 	if (!image->data) {

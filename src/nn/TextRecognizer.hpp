@@ -8,7 +8,6 @@ namespace nn {
 
 struct TextRecognizer {
 	static TextRecognizer& instance();
-	~TextRecognizer();
 
 	TextRecognizer(const TextRecognizer&) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
@@ -27,14 +26,18 @@ private:
 	int in_c = 0;
 	int out_w = 0;
 	int out_c = 0;
-	std::vector<float> in;
-	std::vector<float> out;
 
-	std::unique_ptr<Ort::Session> session;
-	std::unique_ptr<Ort::Value> in_tensor;
-	std::unique_ptr<Ort::Value> out_tensor;
+	onnx::Model model = "TextRecognizer";
+	onnx::Image in = "input";
 
-	std::vector<uint8_t> textline_img, textline_img_resized;
+	struct Output: onnx::Value {
+		using onnx::Value::Value;
+
+		void resize(int w, int c);
+		float* operator[](int x);
+	};
+
+	Output out = "output";
 };
 
 }

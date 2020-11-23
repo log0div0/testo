@@ -14,24 +14,45 @@
 #include <cuda_provider_factory.h>
 #endif
 
+#include <stb/Image.hpp>
+
 namespace nn {
+namespace onnx {
 
-struct OnnxRuntime {
-	OnnxRuntime();
-	~OnnxRuntime();
+struct Runtime {
+	Runtime();
+	~Runtime();
 
-	OnnxRuntime(const OnnxRuntime&) = delete;
-	OnnxRuntime& operator=(const OnnxRuntime&) = delete;
-	OnnxRuntime(OnnxRuntime&&) = delete;
-	OnnxRuntime& operator=(OnnxRuntime&&) = delete;
+	Runtime(const Runtime&) = delete;
+	Runtime& operator=(const Runtime&) = delete;
+	Runtime(Runtime&&) = delete;
+	Runtime& operator=(Runtime&&) = delete;
 
 	void selftest();
 };
 
-std::unique_ptr<Ort::Session> LoadModel(const std::string& name);
+struct Value {
+	Value(const char* name);
+};
+
+struct Image: Value {
+	using Value::Value;
+	void resize(int w, int h, int c);
+	template <typename T>
+	void set(const stb::Image<T>& img, bool normalize);
+	void fill(float value);
+	float* at(int x, int y);
+};
+
+struct Model {
+	Model(const char* name);
+
+	void run(std::initializer_list<Value*> in, std::initializer_list<Value*> out);
+};
 
 #ifdef USE_CUDA
 	CUDA_DeviceInfo GetDeviceInfo();
 #endif
 
+}
 }

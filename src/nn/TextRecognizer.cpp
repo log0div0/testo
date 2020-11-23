@@ -112,11 +112,6 @@ TextRecognizer::TextRecognizer() {
 	for (size_t i = 0; i < symbols.size(); ++i) {
 		symbols_indexes.push_back(i);
 	}
-	session = LoadModel("TextRecognizer");
-}
-
-TextRecognizer::~TextRecognizer() {
-
 }
 
 void TextRecognizer::recognize(const stb::Image<stb::RGB>* image, TextLine& textline) {
@@ -135,65 +130,18 @@ void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textlin
 		out_w = new_in_w / 4 + 1;
 		out_c = symbols.size() + 1;
 
-		auto memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-
-		std::array<int64_t, 4> in_shape = {1, in_c, IN_H, in_w};
-		std::array<int64_t, 3> out_shape = {out_w, 1, out_c};
-
-		in.resize(in_c * IN_H * in_w);
-		out.resize(out_w * out_c);
-
-		in_tensor = std::make_unique<Ort::Value>(
-			Ort::Value::CreateTensor<float>(memory_info, in.data(), in.size(), in_shape.data(), in_shape.size()));
-		out_tensor = std::make_unique<Ort::Value>(
-			Ort::Value::CreateTensor<float>(memory_info, out.data(), out.size(), out_shape.data(), out_shape.size()));
+		in.resize(in_w, IN_H, in_c);
+		out.resize(out_w, out_c);
 	}
 
-	int textline_h = textline.rect.height();
-	int textline_w = textline.rect.width();
-	textline_img.resize(textline_h * textline_w * in_c);
-	for (int y = 0; y < textline_h; ++y) {
-		for (int x = 0; x < textline_w; ++x) {
-			for (int c = 0; c < in_c; ++c) {
-				int src_index = (textline.rect.top + y) * image->w * image->c + (textline.rect.left + x) * image->c + c;
-				int dst_index = y * textline_w * in_c + x * in_c + c;
-				textline_img[dst_index] = image->data[src_index];
-			}
-		}
-	}
+	stb::Image<stb::RGB> textline_img = image->sub_img(
+		textline.rect.top, textline.rect.left,
+		textline.rect.width(), textline.rect.height()
+	).resize(in_w, IN_H);
 
-	textline_img_resized.resize(IN_H * in_w * in_c);
-	if (!stbir_resize_uint8(
-		textline_img.data(), textline_w, textline_h, 0,
-		textline_img_resized.data(), in_w, IN_H, 0,
-		in_c)
-	) {
-		throw std::runtime_error("stbir_resize_uint8 failed");
-	}
+	in.set(textline_img, true);
 
-	// static int b = 0;
-	// std::string path = "tmp/" + std::to_string(b++) + ".png";
-	// if (!stbi_write_png(path.c_str(), in_w, IN_H, in_c, textline_img_resized.data(), in_w*in_c)) {
-	// 	throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
-	// }
-
-	float mean[3] = {0.485f, 0.456f, 0.406f};
-	float std[3] = {0.229f, 0.224f, 0.225f};
-
-	for (int y = 0; y < IN_H; ++y) {
-		for (int x = 0; x < in_w; ++x) {
-			for (int c = 0; c < in_c; ++c) {
-				int src_index = y * in_w * in_c + x * in_c + c;
-				int dst_index = c * IN_H * in_w + y * in_w + x;
-				in[dst_index] = ((float(textline_img_resized[src_index]) / 255.0f) - mean[c]) / std[c];
-			}
-		}
-	}
-
-	const char* in_names[] = {"input"};
-	const char* out_names[] = {"output"};
-
-	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
+	model.run({&in}, {&out});
 }
 
 #define THRESHOLD -10.0
@@ -205,9 +153,8 @@ void TextRecognizer::run_postprocessing(TextLine& textline) {
 		int max_pos = -1;
 		float max_value = std::numeric_limits<float>::lowest();
 		for (int c = 0; c < out_c; ++c) {
-			int index = x * out_c + c;
-			if (max_value < out[index]) {
-				max_value = out[index];
+			if (max_value < out[x][c]) {
+				max_value = out[x][c];
 				max_pos = c;
 			}
 		}
@@ -222,11 +169,11 @@ void TextRecognizer::run_postprocessing(TextLine& textline) {
 		prev_max_pos = max_pos;
 
 		std::sort(symbols_indexes.begin(), symbols_indexes.end(), [&](size_t a, size_t b) {
-			return out[x * out_c + a + 1] > out[x * out_c + b + 1];
+			return out[x][a + 1] > out[x][b + 1];
 		});
 
 		auto end = std::find_if(symbols_indexes.begin(), symbols_indexes.end(), [&](size_t code) {
-			return out[x * out_c + code + 1] < THRESHOLD;
+			return out[x][code + 1] < THRESHOLD;
 		});
 
 		Char char_;

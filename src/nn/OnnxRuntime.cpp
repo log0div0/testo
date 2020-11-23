@@ -11,14 +11,15 @@
 namespace fs = std::experimental::filesystem;
 
 namespace nn {
+namespace onnx {
 
 std::unique_ptr<Ort::Env> env;
 
-OnnxRuntime::OnnxRuntime() {
+Runtime::Runtime() {
 	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_ERROR, "testo");
 }
 
-OnnxRuntime::~OnnxRuntime() {
+Runtime::~Runtime() {
 	env.reset();
 }
 
@@ -61,7 +62,7 @@ std::unique_ptr<Ort::Session> LoadModel(const std::string& name) {
 		session_options);
 }
 
-void OnnxRuntime::selftest() {
+void Runtime::selftest() {
 	stb::Image<stb::RGB> img(SelfTestImg, SelfTestImg_len);
 	nn::TextTensor tensor = find_text(&img);
 	if (tensor.match("Добро пожаловать").size() != 1) {
@@ -80,4 +81,5 @@ CUDA_DeviceInfo GetDeviceInfo() {
 }
 #endif
 
+}
 }

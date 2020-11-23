@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 
-		nn::OnnxRuntime runtime;
+		nn::onnx::Runtime runtime;
 
 		stb::Image<stb::RGB> image(image_path);
 		std::ifstream script_file(script_path);
