@@ -186,10 +186,12 @@ Context& Context::operator=(Context&& other) {
 void Context::register_global_functions() {
 	register_global_function("print", 1, Func<print>);
 	register_global_function("find_text", 1, Func<find_text>);
+	register_global_function("find_img", 1, Func<find_img>);
 }
 
 void Context::register_classes() {
-	Tensor::register_class(*this);
+	TextTensor::register_class(*this);
+	ImgTensor::register_class(*this);
 	Point::register_class(*this);
 }
 

@@ -7,23 +7,23 @@
 
 namespace nn {
 
-Tensor find_text(const stb::Image<stb::RGB>* image) {
-	Tensor result;
+TextTensor find_text(const stb::Image<stb::RGB>* image) {
+	TextTensor result;
 
-	result.textlines = TextDetector::instance().detect(image);
+	result.objects = TextDetector::instance().detect(image);
 
-	for (auto& textline: result.textlines) {
+	for (auto& textline: result.objects) {
 		TextRecognizer::instance().recognize(image, textline);
 	}
 
-	std::sort(result.textlines.begin(), result.textlines.end(), [](const TextLine& a, const TextLine& b) {
+	std::sort(result.objects.begin(), result.objects.end(), [](const TextLine& a, const TextLine& b) {
 		return a.rect.top < b.rect.top;
 	});
 
 	return result;
 }
 
-Tensor find_img(const stb::Image<stb::RGB>* image, const fs::path& path_to_img) {
+ImgTensor find_img(const stb::Image<stb::RGB>* image, const fs::path& path_to_img) {
 	throw std::runtime_error("Todo");
 }
 

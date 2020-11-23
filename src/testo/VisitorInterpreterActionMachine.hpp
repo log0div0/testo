@@ -17,13 +17,17 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 
 	void visit_type(const IR::Type& type);
 	void visit_wait(const IR::Wait& wait);
-	nn::Tensor visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input);
-	nn::Point visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input);
-	nn::Point visit_mouse_specifier_default_centering(const nn::Tensor& input);
+	template <typename NNTensor>
+	NNTensor visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input);
+	template <typename NNTensor>
+	nn::Point visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input);
+	template <typename NNTensor>
+	nn::Point visit_mouse_specifier_default_centering(const NNTensor& input);
 	nn::Point visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Point& input);
-	nn::Point visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const nn::Tensor& input);
-	nn::Tensor visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot);
-	nn::Tensor visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot);
+	template <typename NNTensor>
+	nn::Point visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const NNTensor& input);
+	nn::TextTensor visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot);
+	nn::ImgTensor visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot);
 	nn::Point visit_select_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image<stb::RGB>& screenshot);

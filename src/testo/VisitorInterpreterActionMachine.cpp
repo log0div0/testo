@@ -436,7 +436,8 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 	}
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input) {
+template <typename NNTensor>
+NNTensor VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input) {
 	auto name = specifier->name.value();
 	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
 
@@ -453,7 +454,8 @@ nn::Tensor VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shar
 	throw std::runtime_error("Should not be there");
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input) {
+template <typename NNTensor>
+nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input) {
 	auto name = specifier->name.value();
 
 	if (name == "left_bottom") {
@@ -479,7 +481,8 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::
 	throw std::runtime_error("Uknown center specifier");
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_default_centering(const nn::Tensor& input) {
+template <typename NNTensor>
+nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_default_centering(const NNTensor& input) {
 	return input.center();
 }
 
@@ -500,10 +503,11 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_moving(std::sha
 	throw std::runtime_error("Should not be there");
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const nn::Tensor& input_) {
+template <typename NNTensor>
+nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const NNTensor& input_) {
 	size_t index = 0;
 
-	nn::Tensor input = input_;
+	NNTensor input = input_;
 
 	if ((specifiers.size() > index) && specifiers[index]->is_from()) {
 		input = visit_mouse_specifier_from(specifiers[index], input);
@@ -526,12 +530,12 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(con
 	return result;
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot) {
+nn::TextTensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = text.text();
 	return nn::find_text(&screenshot).match(parsed);
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot) {
+nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = img.img_path();
 	return nn::find_img(&screenshot, parsed);
 }

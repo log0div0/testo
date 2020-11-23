@@ -27,13 +27,13 @@ void predict()
 	stb::Image<stb::RGB> image(image_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
-	nn::Tensor tensor = nn::find_text(&image);
+	nn::TextTensor tensor = nn::find_text(&image);
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << "Time: " << time.count() << " seconds" << std::endl;
 
 	if (query.size() == 0) {
-		for (auto& textline: tensor.textlines) {
+		for (auto& textline: tensor.objects) {
 			for (auto& char_: textline.chars) {
 				draw_rect(image, char_.rect, {200, 20, 50});
 				std::cout << conv.to_bytes(char_.codepoints[0]);
@@ -42,11 +42,11 @@ void predict()
 		}
 	} else {
 		tensor = tensor.match(query);
-		for (auto& textline: tensor.textlines) {
+		for (auto& textline: tensor.objects) {
 			draw_rect(image, textline.rect, {200, 20, 50});
 		}
 
-		std::cout << "Found: " << tensor.textlines.size() << std::endl;
+		std::cout << "Found: " << tensor.objects.size() << std::endl;
 	}
 
 	image.write_png(output_file);
