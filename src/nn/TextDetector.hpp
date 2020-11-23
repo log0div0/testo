@@ -19,7 +19,7 @@ struct TextDetector {
 private:
 	TextDetector();
 	void run_nn(const stb::Image<stb::RGB>* image);
-	std::vector<TextLine> run_postprocessing(const stb::Image<stb::RGB>* image);
+	std::vector<TextLine> run_postprocessing();
 	std::vector<Rect> find_rects(int c);
 
 	int in_w = 0;

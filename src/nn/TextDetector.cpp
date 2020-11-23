@@ -44,7 +44,7 @@ std::vector<TextLine> TextDetector::detect(const stb::Image<stb::RGB>* image)
 	}
 
 	run_nn(image);
-	return run_postprocessing(image);
+	return run_postprocessing();
 }
 
 void TextDetector::run_nn(const stb::Image<stb::RGB>* image) {
@@ -102,7 +102,7 @@ void TextDetector::run_nn(const stb::Image<stb::RGB>* image) {
 	session->Run(Ort::RunOptions{nullptr}, in_names, &*in_tensor, 1, out_names, &*out_tensor, 1);
 }
 
-std::vector<TextLine> TextDetector::run_postprocessing(const stb::Image<stb::RGB>* image) {
+std::vector<TextLine> TextDetector::run_postprocessing() {
 	std::vector<Rect> up_rects = find_rects(0);
 	std::vector<Rect> down_rects = find_rects(1);
 	std::vector<TextLine> textlines;

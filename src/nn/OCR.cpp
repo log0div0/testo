@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "TextDetector.hpp"
 #include "TextRecognizer.hpp"
+#include "ImgDetector.hpp"
 
 namespace nn {
 
@@ -24,7 +25,15 @@ TextTensor find_text(const stb::Image<stb::RGB>* image) {
 }
 
 ImgTensor find_img(const stb::Image<stb::RGB>* image, const fs::path& path_to_img) {
-	throw std::runtime_error("Todo");
+	ImgTensor result;
+
+	result.objects = ImgDetector::instance().detect(image, path_to_img);
+
+	std::sort(result.objects.begin(), result.objects.end(), [](const Img& a, const Img& b) {
+		return a.rect.top < b.rect.top;
+	});
+
+	return result;
 }
 
 }
