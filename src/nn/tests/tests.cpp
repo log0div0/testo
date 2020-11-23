@@ -790,3 +790,19 @@ TEST_CASE("000076") {
 	CHECK(tensor.match("Нет").match_foreground(&image, "gray").match_background(&image, "blue").size() == 1);
 	CHECK(tensor.match("Нет").match_foreground(&image, "blue").match_background(&image, "gray").size() == 0);
 }
+
+TEST_CASE("000077") {
+	stb::Image<stb::RGB> image("imgs/000077.png");
+	nn::TextTensor tensor = nn::find_text(&image);
+	CHECK(tensor.match("The installer is ready to install Testo Guest Additions on your computer").size() == 1);
+	CHECK(tensor.match("Click \"Next\" to start the installation").size() == 1);
+	CHECK(tensor.match("Back").size() == 1);
+	CHECK(tensor.match("Next").size() == 2);
+	CHECK(tensor.match("Cancel").size() == 1);
+	CHECK(tensor.match("RU").size() == 1);
+	CHECK(tensor.match("Корзина").size() == 1);
+	CHECK(tensor.match("9:06").size() == 1);
+	CHECK(tensor.match("09.11.2020").size() == 1);
+	CHECK(tensor.match("Testo Guest Additions").size() == 2);
+	CHECK(tensor.match("Confirm Installation").size() == 1);
+}
