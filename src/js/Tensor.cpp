@@ -112,7 +112,7 @@ Value from_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& a
 		throw std::runtime_error("Invalid arguments count in Tensor::from_top");
 	}
 	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_top(index));
+	return JSTensor(ctx, tensor->from_top(index));
 }
 
 template <typename JSTensor>
@@ -122,7 +122,7 @@ Value from_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>
 		throw std::runtime_error("Invalid arguments count in Tensor::from_bottom");
 	}
 	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_bottom(index));
+	return JSTensor(ctx, tensor->from_bottom(index));
 }
 
 template <typename JSTensor>
@@ -132,7 +132,7 @@ Value from_left(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& 
 		throw std::runtime_error("Invalid arguments count in Tensor::from_left");
 	}
 	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_left(index));
+	return JSTensor(ctx, tensor->from_left(index));
 }
 
 template <typename JSTensor>
@@ -142,7 +142,7 @@ Value from_right(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>&
 		throw std::runtime_error("Invalid arguments count in Tensor::from_right");
 	}
 	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_right(index));
+	return JSTensor(ctx, tensor->from_right(index));
 }
 
 template <typename JSTensor>
@@ -152,7 +152,7 @@ Value match(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args
 		throw std::runtime_error("Invalid arguments count in Tensor::match");
 	}
 	std::string text = args.at(0);
-	return Tensor(ctx, tensor->match(text));
+	return JSTensor(ctx, tensor->match(text));
 }
 
 template <typename JSTensor>
@@ -162,7 +162,7 @@ Value match_foreground(ContextRef ctx, ValueRef this_val, const std::vector<Valu
 		throw std::runtime_error("Invalid arguments count in Tensor::match_foreground");
 	}
 	std::string color = args.at(0);
-	return Tensor(ctx, tensor->match_foreground(ctx.image(), color));
+	return JSTensor(ctx, tensor->match_foreground(ctx.image(), color));
 }
 
 template <typename JSTensor>
@@ -172,7 +172,7 @@ Value match_background(ContextRef ctx, ValueRef this_val, const std::vector<Valu
 		throw std::runtime_error("Invalid arguments count in Tensor::match_background");
 	}
 	std::string color = args.at(0);
-	return Tensor(ctx, tensor->match_background(ctx.image(), color));
+	return JSTensor(ctx, tensor->match_background(ctx.image(), color));
 }
 
 void TextTensor::register_class(ContextRef ctx) {

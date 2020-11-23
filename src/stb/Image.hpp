@@ -11,9 +11,16 @@
 
 namespace stb {
 
+#ifdef WIN32
+#define __PACKED__
+#pragma pack(push,1)
+#else
+#define __PACKED__ __attribute__((__packed__))
+#endif
+
 struct RGBA {
 	uint8_t r, g, b, a;
-} __attribute__((__packed__));
+} __PACKED__;
 
 struct RGB {
 	uint8_t r, g, b;
@@ -49,7 +56,11 @@ struct RGB {
 		uint8_t* data = (uint8_t*)this;
 		return data[index];
 	}
-} __attribute__((__packed__));
+} __PACKED__;
+
+#ifdef WIN32
+#pragma pack(pop)
+#endif
 
 template <typename Pixel>
 struct Image {

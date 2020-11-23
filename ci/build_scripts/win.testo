@@ -27,9 +27,9 @@ test win_install_guest_additions: win_start {
 		mouse click "CD Drive"
 		sleep 5s
 		mouse click "Run autorun"
-		wait "Testo Guest Additions"; press Enter
-		wait "Select Installation Folder"; press Enter
-		wait "Confirm Installation"; press Enter
+		wait "Testo Guest Additions"; sleep 5s; press Enter
+		wait "Select Installation Folder"; sleep 5s; press Enter
+		wait "Confirm Installation"; sleep 5s; press Enter
 		wait "Do you want to allow"
 		press Left,Enter
 		wait "Would you like to install"
