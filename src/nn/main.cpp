@@ -5,10 +5,6 @@
 #include "OCR.hpp"
 #include "OnnxRuntime.hpp"
 
-std::string image_file;
-std::string query;
-std::string output_file = "output.png";
-
 void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
 	for (int y = bbox.top; y <= bbox.bottom; ++y) {
 		img.at(bbox.left, y) = color;
@@ -22,9 +18,14 @@ void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
 
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 
-void predict()
+struct TextArgs {
+	std::string img_file;
+	std::string query;
+};
+
+void text_mode(const TextArgs& args)
 {
-	stb::Image<stb::RGB> image(image_file);
+	stb::Image<stb::RGB> image(args.img_file);
 
 	auto start = std::chrono::high_resolution_clock::now();
 	nn::TextTensor tensor = nn::find_text(&image);
@@ -32,7 +33,7 @@ void predict()
 	std::chrono::duration<double> time = end - start;
 	std::cout << "Time: " << time.count() << " seconds" << std::endl;
 
-	if (query.size() == 0) {
+	if (args.query.size() == 0) {
 		for (auto& textline: tensor.objects) {
 			for (auto& char_: textline.chars) {
 				draw_rect(image, char_.rect, {200, 20, 50});
@@ -41,7 +42,7 @@ void predict()
 			std::cout << std::endl;
 		}
 	} else {
-		tensor = tensor.match(query);
+		tensor = tensor.match(args.query);
 		for (auto& textline: tensor.objects) {
 			draw_rect(image, textline.rect, {200, 20, 50});
 		}
@@ -49,19 +50,60 @@ void predict()
 		std::cout << "Found: " << tensor.objects.size() << std::endl;
 	}
 
-	image.write_png(output_file);
+	image.write_png("output.png");
 }
+
+struct ImgArgs {
+	std::string search_img_file;
+	std::string ref_img_file;
+};
+
+void img_mode(const ImgArgs& args)
+{
+	stb::Image<stb::RGB> image(args.search_img_file);
+
+	auto start = std::chrono::high_resolution_clock::now();
+	nn::ImgTensor tensor = nn::find_img(&image, args.ref_img_file);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time = end - start;
+	std::cout << "Time: " << time.count() << " seconds" << std::endl;
+
+	std::cout << "Fount: " << tensor.size() << std::endl;
+
+	for (auto& img: tensor.objects) {
+		draw_rect(image, img.rect, {200, 20, 50});
+	}
+
+	image.write_png("output.png");
+}
+
+enum class mode {
+	text,
+	img,
+};
 
 int main(int argc, char **argv)
 {
 	try {
 		using namespace clipp;
 
-		auto cli = (
-			value("input image", image_file),
-			option("-q", "--query") & value("the text to search for", query),
-			option("-o", "--output") & value("output image", output_file)
+		mode selected_mode;
+
+		TextArgs text_args;
+		auto text_spec = (
+			command("text").set(selected_mode, mode::text),
+			value("input image", text_args.img_file),
+			option("--query") & value("the text to search for", text_args.query)
 		);
+
+		ImgArgs img_args;
+		auto img_spec = (
+			command("img").set(selected_mode, mode::img),
+			value("search image", img_args.search_img_file),
+			value("ref image", img_args.ref_img_file)
+		);
+
+		auto cli = (text_spec | img_spec);
 
 		if (!parse(argc, argv, cli)) {
 			std::cout << make_man_page(cli, argv[0]) << std::endl;
@@ -69,7 +111,16 @@ int main(int argc, char **argv)
 		}
 
 		nn::OnnxRuntime onnx_runtime;
-		predict();
+		switch (selected_mode) {
+			case mode::text:
+				text_mode(text_args);
+				break;
+			case mode::img:
+				img_mode(img_args);
+				break;
+			default:
+				throw std::runtime_error("Invalid mode");
+		}
 	}
 	catch (const std::exception& error) {
 		std::cerr << error.what() << std::endl;
