@@ -830,3 +830,12 @@ TEST_CASE("000079") {
 	CHECK(tensor.match("test_child2").size() == 1);
 	CHECK(tensor.match("test_child3").size() == 1);
 }
+
+TEST_CASE("000080") {
+	stb::Image<stb::RGB> image("imgs/000080.png");
+	nn::TextTensor tensor = nn::find_text(&image);
+	CHECK(tensor.match("Windows Server 2016 Standard Evaluation (возможности ра").size() == 1);
+	CHECK(tensor.match("Windows Server 2016 Standard Evaluation").size() == 2);
+	CHECK(tensor.match("Windows Server 2016 Datacenter Evaluation").size() == 2);
+	CHECK(tensor.match("Windows Server 2016").size() == 4);
+}
