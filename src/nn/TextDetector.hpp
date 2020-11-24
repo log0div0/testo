@@ -23,10 +23,8 @@ private:
 
 	int in_w = 0;
 	int in_h = 0;
-	int in_c = 0;
 	int out_w = 0;
 	int out_h = 0;
-	int out_c = 0;
 	std::array<LabelingWu, 2> labeling_wu;
 
 	onnx::Model model = "TextDetector";

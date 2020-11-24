@@ -43,20 +43,18 @@ void TextDetector::run_nn(const stb::Image<stb::RGB>* image) {
 	if ((in_w != image->w) ||
 		(in_h != image->h))
 	{
-		in_c = 3;
 		in_h = image->h;
 		in_w = image->w;
 		int in_pad_h = nearest_n_times_div_by_2(in_h, 4);
 		int in_pad_w = nearest_n_times_div_by_2(in_w, 4);
 
-		out_c = 2;
 		out_h = in_h;
 		out_w = in_w;
 		int out_pad_h = nearest_n_times_div_by_2(out_h, 4);
 		int out_pad_w = nearest_n_times_div_by_2(out_w, 4);
 
-		in.resize(in_pad_w, in_pad_h, in_c);
-		out.resize(out_pad_w, out_pad_h, out_c);
+		in.resize(in_pad_w, in_pad_h, 3);
+		out.resize(out_pad_w, out_pad_h, 2);
 		in.fill(0);
 		out.fill(0);
 

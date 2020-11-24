@@ -47,7 +47,7 @@ void text_mode(const TextArgs& args)
 			draw_rect(image, textline.rect, {200, 20, 50});
 		}
 
-		std::cout << "Found: " << tensor.objects.size() << std::endl;
+		std::cout << "Found: " << tensor.size() << std::endl;
 	}
 
 	image.write_png("output.png");
@@ -68,7 +68,7 @@ void img_mode(const ImgArgs& args)
 	std::chrono::duration<double> time = end - start;
 	std::cout << "Time: " << time.count() << " seconds" << std::endl;
 
-	std::cout << "Fount: " << tensor.size() << std::endl;
+	std::cout << "Found: " << tensor.size() << std::endl;
 
 	for (auto& img: tensor.objects) {
 		draw_rect(image, img.rect, {200, 20, 50});
