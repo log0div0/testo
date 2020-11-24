@@ -9,7 +9,7 @@ test win10_guest_additions: win10_installation_part_2 {
 		mouse click "Выполнить autorun"
 		wait "Testo Guest Additions"; press Enter
 		wait "Select Installation Folder"; press Enter
-		wait "The installer is ready"; press Enter
+		wait "Confirm Installation"; press Enter
 		wait "Разрешить этому приложению"
 		mouse click "Да".from_bottom(0)
 		wait "Установить программное обеспечение для данного устройства?";
@@ -56,9 +56,9 @@ test win10_guest_additions_uninstall: win10_guest_additions {
 		sleep 5s
 		mouse click "Testo Guest Additions"
 		sleep 5s
-		mouse click "Удалить".from_bottom(0)
+		mouse click "Удалить".from_bottom(0).center_bottom()
 		wait "Это приложение и все его"
-		mouse click "Удалить".from_bottom(1)
+		mouse click "Удалить".from_bottom(1).center_bottom()
 		if (NOT check "Разрешить этому приложению" timeout 5s) {
 			press LeftAlt+Tab
 		}

@@ -32,57 +32,75 @@ test win10_installation_part_1 {
 		mouse click "Выборочная"
 		wait "Где вы хотите установить Windows?"
 		mouse click "Далее".from_bottom(0)
-		wait "родолжить на выбранном языке?" timeout 1h interval 10s
+		wait "Продолжить на выбранном языке?" timeout 1h interval 10s
 	}
 }
 
 test win10_installation_part_2: win10_installation_part_1 {
 	win10 {
-		wait "родолжить на выбранном языке?"
+		wait "Продолжить на выбранном языке?"
+		mouse move 0 0; sleep 5s
 		mouse click "Да".from_bottom(0)
+
 		wait "Давайте начнем с региона. Это правильно?"
+		mouse move 0 0; sleep 5s
 		mouse click "Да".from_bottom(0)
+
 		wait "Это правильная раскладка клавиатуры?"
+		mouse move 0 0; sleep 5s
 		mouse click "Да".from_bottom(0)
+
 		wait "Вы хотите добавить вторую раскладку"
+		mouse move 0 0; sleep 5s
 		mouse click "Пропустить".from_bottom(0)
+
 		wait "Лицензионное соглашение" timeout 20m
-		mouse move 0 0
+		mouse move 0 0; sleep 5s
 		mouse click "Принять".from_bottom(0)
+
 		wait "Какую учетную запись использовать?"
+		mouse move 0 0; sleep 5s
 		mouse click "Вместо этого присоединить к домену"
+
 		wait "Какое имя вы хотите использовать?"
-		mouse move 0 0
+		mouse move 0 0; sleep 5s
 		mouse click "Имя".from_bottom(0)
 		press LeftAlt+LeftShift; type "user"; press Enter
-		mouse move 0 0
+
+		mouse move 0 0; sleep 5s
 		mouse click "Пароль".from_bottom(0)
 		type "1111"; press Enter
-		mouse move 0 0
+
+		mouse move 0 0; sleep 5s
 		mouse click "Подтверждение пароля".from_bottom(0)
 		type "1111"; press Enter
-		mouse move 0 0
+
+		mouse move 0 0; sleep 5s
 		mouse click "Контрольный вопрос (1 из 3)"
-		mouse move 0 0
-		mouse click "Кличка первого домашнего животного"
-		mouse move 0 0
+		mouse move 0 0; sleep 5s
+		mouse move "Кличка первого домашнего животного"; sleep 5s; mouse click; sleep 5s
 		press Tab; type "----"; press Enter
-		mouse move 0 0
+
+		mouse move 0 0; sleep 5s
 		mouse click "Контрольный вопрос (2 из 3)"
-		mouse move 0 0
-		mouse click "В каком городе вы родились"
-		mouse move 0 0
+		mouse move 0 0; sleep 5s
+		mouse move "В каком городе вы родились"; sleep 5s; mouse click; sleep 5s
 		press Tab; type "----"; press Enter
-		mouse move 0 0
+
+		mouse move 0 0; sleep 5s
 		mouse click "Контрольный вопрос (3 из 3)"
-		mouse move 0 0
-		mouse click "Ваше прозвище в детстве"
-		mouse move 0 0
+		mouse move 0 0; sleep 5s
+		mouse move "Ваше прозвище в детстве"; sleep 5s; mouse click; sleep 5s
 		press Tab; type "----"; press Enter
+
 		wait "Удобная работа на разных устройствах"
+		mouse move 0 0; sleep 5s
 		mouse click "Нет".from_bottom(0)
+
 		wait "Выберите параметры конфиденциальности"
+		mouse move 0 0; sleep 5s
 		mouse click "Принять".from_bottom(0)
+
 		wait "Корзина" timeout 20m
 		unplug dvd
 		sleep 10s

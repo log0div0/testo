@@ -806,3 +806,27 @@ TEST_CASE("000077") {
 	CHECK(tensor.match("Testo Guest Additions").size() == 2);
 	CHECK(tensor.match("Confirm Installation").size() == 1);
 }
+
+TEST_CASE("000078") {
+	stb::Image<stb::RGB> image("imgs/000078.png");
+	nn::TextTensor tensor = nn::find_text(&image);
+	CHECK(tensor.match("Virtual network 'internet' : NAT").size() == 1);
+	CHECK(tensor.match("rtl8139").size() == 1);
+	CHECK(tensor.match("MAC address").size() == 1);
+	CHECK(tensor.match("Controller").size() == 3);
+	CHECK(tensor.match("Add Hardware").size() == 1);
+	CHECK(tensor.match("Remove").size() == 1);
+	CHECK(tensor.match("Cancel").size() == 1);
+	CHECK(tensor.match("Apply").size() == 1);
+	CHECK(tensor.match("Details").size() == 1);
+	CHECK(tensor.match("Send Key").size() == 1);
+}
+
+TEST_CASE("000079") {
+	stb::Image<stb::RGB> image("imgs/000079.png");
+	nn::TextTensor tensor = nn::find_text(&image);
+	CHECK(tensor.match("test_parent").size() == 1);
+	CHECK(tensor.match("test_child1").size() == 1);
+	CHECK(tensor.match("test_child2").size() == 1);
+	CHECK(tensor.match("test_child3").size() == 1);
+}

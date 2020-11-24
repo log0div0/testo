@@ -7,7 +7,7 @@ test win7_guest_additions: win7_installation {
 		wait "Автозапуск"; press Enter
 		wait "Testo Guest Additions"; press Enter
 		wait "Select Installation Folder"; press Enter
-		wait "The installer is ready"; press Enter
+		wait "Confirm Installation"; press Enter
 		wait "Разрешить внесение изменений"; press Left, Enter
 		wait "Установить программное обеспечение для данного устройства?";
 		mouse click "Установить".from_top(1)
