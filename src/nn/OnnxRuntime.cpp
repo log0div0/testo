@@ -95,15 +95,15 @@ Ort::Value Value::tensor() {
 	return Ort::Value::CreateTensor<float>(memory_info, _buf.data(), _buf.size(), _shape.data(), _shape.size());
 }
 
-void Image::set(const stb::Image<stb::RGB>& img, bool normalize) {
+void Image::set(const stb::Image<stb::RGB>& img, bool normalize, int x_off, int y_off) {
 	if (_shape.at(1) != img.c) {
 		throw std::runtime_error("_shape.at(1) != img.c");
 	}
-	if (_shape.at(2) < img.h) {
-		throw std::runtime_error("_shape.at(2) < img.h");
+	if (_shape.at(2) < (y_off + img.h)) {
+		throw std::runtime_error("_shape.at(2) < (y_off + img.h)");
 	}
-	if (_shape.at(3) < img.w) {
-		throw std::runtime_error("_shape.at(3) < img.w");
+	if (_shape.at(3) < (x_off + img.w)) {
+		throw std::runtime_error("_shape.at(3) < (x_off + img.w)");
 	}
 	if (normalize) {
 		float mean[3] = {0.485f, 0.456f, 0.406f};
@@ -112,7 +112,7 @@ void Image::set(const stb::Image<stb::RGB>& img, bool normalize) {
 		for (int y = 0; y < img.h; ++y) {
 			for (int x = 0; x < img.w; ++x) {
 				for (int c = 0; c < img.c; ++c) {
-					at(x, y, c) = ((float(img.at(x, y)[c]) / 255.0f) - mean[c]) / std[c];
+					at(x_off + x, y_off + y, c) = ((float(img.at(x, y)[c]) / 255.0f) - mean[c]) / std[c];
 				}
 			}
 		}
@@ -120,7 +120,7 @@ void Image::set(const stb::Image<stb::RGB>& img, bool normalize) {
 		for (int y = 0; y < img.h; ++y) {
 			for (int x = 0; x < img.w; ++x) {
 				for (int c = 0; c < img.c; ++c) {
-					at(x, y, c) = float(img.at(x, y)[c]) / 255.0f;
+					at(x_off + x, y_off + y, c) = float(img.at(x, y)[c]) / 255.0f;
 				}
 			}
 		}

@@ -64,7 +64,7 @@ struct Image: Value {
 		stride_y = w;
 	}
 
-	void set(const stb::Image<stb::RGB>& img, bool normalize);
+	void set(const stb::Image<stb::RGB>& img, bool normalize, int x_off = 0, int y_off = 0);
 
 	void fill(float value) {
 		std::fill(_buf.begin(), _buf.end(), value);
