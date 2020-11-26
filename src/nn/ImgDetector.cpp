@@ -44,7 +44,17 @@ std::vector<Img> ImgDetector::detect(const stb::Image<stb::RGB>* srch_img, const
 				img.rect.top = y;
 				img.rect.right = x + icon.w - 1;
 				img.rect.bottom = y + icon.h - 1;
-				result.push_back(img);
+				bool found = false;
+				for (auto& other: result) {
+					if (other.rect.iou(img.rect) >= 0.75f) {
+						other.rect |= img.rect;
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					result.push_back(img);
+				}
 			}
 		}
 	}
