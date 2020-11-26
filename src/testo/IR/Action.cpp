@@ -110,7 +110,7 @@ std::string MouseSelectable::where_to_go() const {
 		result += "\"";
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(ast_node->selectable)) {
 		result += "image \"";
-		result += IR::SelectImg(p->selectable, stack).img_path();
+		result += IR::SelectImg(p->selectable, stack).img_path().generic_string();
 		result += "\"";
 	}else {
 		throw std::runtime_error("Where to go is unapplicable");
