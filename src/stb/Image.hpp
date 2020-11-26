@@ -56,6 +56,17 @@ struct RGB {
 		uint8_t* data = (uint8_t*)this;
 		return data[index];
 	}
+
+	int max_channel_diff(const RGB& other) const {
+		return
+			std::max(
+				std::max(
+					std::abs(int(r) - int(other.r)),
+					std::abs(int(g) - int(other.g))
+				),
+				std::abs(int(b) - int(other.b))
+			);
+	}
 } __PACKED__;
 
 #ifdef WIN32
