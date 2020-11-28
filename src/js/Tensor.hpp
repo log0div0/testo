@@ -2,7 +2,8 @@
 #pragma once
 
 #include "Context.hpp"
-#include <nn/OCR.hpp>
+#include <nn/TextTensor.hpp>
+#include <nn/ImgTensor.hpp>
 
 namespace js {
 

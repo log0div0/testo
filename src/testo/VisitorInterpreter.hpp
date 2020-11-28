@@ -6,7 +6,6 @@
 #include "IR/Expr.hpp"
 #include "Reporter.hpp"
 #include "TemplateLiterals.hpp"
-#include <nn/OCR.hpp>
 
 struct VisitorInterpreter {
 	VisitorInterpreter(const nlohmann::json& config);

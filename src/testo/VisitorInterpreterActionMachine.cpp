@@ -681,13 +681,13 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
 				point = visit_select_js({p->selectable, stack}, screenshot);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
-				auto ocr_found = visit_select_text({p->selectable, stack}, screenshot);
+				auto tensor = visit_select_text({p->selectable, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, ocr_found);
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
-				auto ocr_found = visit_select_img({p->selectable, stack}, screenshot);
+				auto tensor = visit_select_img({p->selectable, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, ocr_found);
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			}
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return;

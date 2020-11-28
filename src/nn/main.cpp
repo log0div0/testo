@@ -2,7 +2,8 @@
 #include <chrono>
 #include <iostream>
 #include <clipp.h>
-#include "OCR.hpp"
+#include "TextTensor.hpp"
+#include "ImgTensor.hpp"
 #include "OnnxRuntime.hpp"
 
 void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {

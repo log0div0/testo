@@ -3,7 +3,7 @@
 
 #include "LabelingWu.hpp"
 #include "OnnxRuntime.hpp"
-#include "OCR.hpp"
+#include "TextLine.hpp"
 
 namespace nn {
 

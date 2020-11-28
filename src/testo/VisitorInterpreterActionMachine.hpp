@@ -2,7 +2,8 @@
 #pragma once
 
 #include "VisitorInterpreterAction.hpp"
-#include <nn/OCR.hpp>
+#include <nn/TextTensor.hpp>
+#include <nn/ImgTensor.hpp>
 #include "js/Context.hpp"
 #include "coro/Timer.h"
 

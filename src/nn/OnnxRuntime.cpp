@@ -1,6 +1,6 @@
 
 #include "OnnxRuntime.hpp"
-#include "OCR.hpp"
+#include "TextTensor.hpp"
 #include "SelfTestImg.hpp"
 #ifdef WIN32
 #include "winapi.hpp"

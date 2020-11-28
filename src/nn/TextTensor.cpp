@@ -1,5 +1,8 @@
 
-#include "Tensor.hpp"
+#include "TextTensor.hpp"
+#include "TextDetector.hpp"
+#include "TextRecognizer.hpp"
+#include <algorithm>
 
 namespace nn {
 
@@ -30,6 +33,22 @@ TextTensor TextTensor::match_background(const stb::Image<stb::RGB>* image, const
 			result.objects.push_back(textline);
 		}
 	}
+	return result;
+}
+
+TextTensor find_text(const stb::Image<stb::RGB>* image) {
+	TextTensor result;
+
+	result.objects = TextDetector::instance().detect(image);
+
+	for (auto& textline: result.objects) {
+		TextRecognizer::instance().recognize(image, textline);
+	}
+
+	std::sort(result.objects.begin(), result.objects.end(), [](const TextLine& a, const TextLine& b) {
+		return a.rect.top < b.rect.top;
+	});
+
 	return result;
 }
 

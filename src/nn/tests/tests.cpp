@@ -1,6 +1,6 @@
 
 #include <catch.hpp>
-#include "nn/OCR.hpp"
+#include <nn/TextTensor.hpp>
 
 TEST_CASE("000000") {
 	stb::Image<stb::RGB> image("imgs/000000.png");

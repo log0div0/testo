@@ -1,8 +1,10 @@
 
 #pragma once
 
-#include "TextLine.hpp"
 #include <stdexcept>
+#include <vector>
+#include <algorithm>
+#include "Point.hpp"
 
 namespace nn {
 
@@ -219,28 +221,5 @@ TensorType from_right(const TensorType& tensor, size_t i) {
 
 	return result;
 }
-
-struct TextTensor: Tensor<TextLine> {
-	TextTensor from_left(size_t i) const { return nn::from_left(*this, i); }
-	TextTensor from_top(size_t i) const { return nn::from_top(*this, i); }
-	TextTensor from_right(size_t i) const { return nn::from_right(*this, i); }
-	TextTensor from_bottom(size_t i) const { return nn::from_bottom(*this, i); }
-
-	TextTensor match(const std::string& text);
-	TextTensor match_foreground(const stb::Image<stb::RGB>* image, const std::string& color);
-	TextTensor match_background(const stb::Image<stb::RGB>* image, const std::string& color);
-};
-
-struct Img {
-	Rect rect;
-};
-
-struct ImgTensor: Tensor<Img> {
-	ImgTensor from_left(size_t i) const { return nn::from_left(*this, i); }
-	ImgTensor from_top(size_t i) const { return nn::from_top(*this, i); }
-	ImgTensor from_right(size_t i) const { return nn::from_right(*this, i); }
-	ImgTensor from_bottom(size_t i) const { return nn::from_bottom(*this, i); }
-
-};
 
 }

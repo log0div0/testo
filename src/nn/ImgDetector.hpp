@@ -1,7 +1,9 @@
 
 #pragma once
 
-#include "OCR.hpp"
+#include <vector>
+#include <stb/Image.hpp>
+#include "Img.hpp"
 
 namespace nn {
 

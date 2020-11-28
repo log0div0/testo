@@ -2,7 +2,7 @@
 #pragma once
 
 #include "OnnxRuntime.hpp"
-#include "OCR.hpp"
+#include "Char.hpp"
 
 namespace nn {
 
