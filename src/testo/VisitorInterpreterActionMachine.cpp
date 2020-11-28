@@ -370,6 +370,11 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	}
 }
 
+void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
+	reporter.save_screenshot(vmc);
+	throw AbortException(abort.ast_node, current_controller, abort.message());
+}
+
 static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
@@ -426,9 +431,7 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 			}
 		}
 
-		if (reporter.report_screenshots) {
-			reporter.save_screenshot(vmc);
-		}
+		reporter.save_screenshot(vmc);
 		throw std::runtime_error("Timeout");
 
 	} catch (const std::exception& error) {
@@ -700,10 +703,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 		}
 	}
 
-	if (reporter.report_screenshots) {
-		reporter.save_screenshot(vmc);
-	}
-
+	reporter.save_screenshot(vmc);
 	throw std::runtime_error("Timeout");
 }
 

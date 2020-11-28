@@ -90,6 +90,7 @@ struct Reporter {
 	std::vector<std::shared_ptr<IR::Test>> failed_tests;
 	std::vector<std::shared_ptr<IR::Test>> up_to_date_tests;
 
+private:
 	std::shared_ptr<IR::Test> current_test;
 
 	float progress_step = 0;

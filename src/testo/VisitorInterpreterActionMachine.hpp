@@ -14,6 +14,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	void visit_action(std::shared_ptr<AST::IAction> action) override;
 	void visit_copy(const IR::Copy& copy) override;
 	bool visit_check(const IR::Check& check) override;
+	void visit_abort(const IR::Abort& abort) override;
 
 	void visit_type(const IR::Type& type);
 	void visit_wait(const IR::Wait& wait);

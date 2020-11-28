@@ -64,3 +64,7 @@ void VisitorInterpreterActionFlashDrive::visit_copy(const IR::Copy& copy) {
 bool VisitorInterpreterActionFlashDrive::visit_check(const IR::Check& check) {
 	throw std::runtime_error("Shouldn't get here");
 }
+
+void VisitorInterpreterActionFlashDrive::visit_abort(const IR::Abort& abort) {
+	throw AbortException(abort.ast_node, current_controller, abort.message());
+}
