@@ -1,0 +1,64 @@
+
+network net1 {
+	mode: "internal"
+}
+
+machine android {
+	cpus: 2
+	ram: 4Gb
+	iso: "${ISO_DIR}/android-x86_64-9.0-r2.iso"
+	disk main: {
+		size: 10Gb
+	}
+
+	nic LAN: {
+		attached_to: "net1"
+	}
+}
+
+test install_android {
+	android {
+		start
+		wait "Android-x86 Live & Installation"
+		press Down*2, Enter
+		wait "Please select a partition"; press C, Enter
+		wait "Do you want to use GPT?"; press Enter
+		wait "cfdisk"; press Right
+		wait "Create new partition from free space"; press Enter
+		wait "Primary"; press Enter
+		wait "Size (in MB)"; press Enter
+		wait "Toggle bootable flag"; press Enter
+
+		press Left; wait "Write partition table to disk"; press Enter
+		wait "Are you sure you want to write"; type "yes"; press Enter
+		wait "Wrote partition table to disk";
+		press Right*5; wait "Quit program without writing"; press Enter
+		wait "Please select a partition"; press Enter
+		wait "Please select a filesystem"; press Down, Enter
+		wait "You chose to format sda1 to ext4"; press Left, Enter
+		wait "Do you want to install boot loader GRUB?"; press Left, Enter
+
+		wait "Do you want to install /system directory as read-write"; press Enter
+
+		wait "Android-X86 is installed successfully"; unplug dvd; press Down, Enter
+
+		wait "Hi there" timeout 5m
+		mouse click "START"
+		wait "Connect to Wi-Fi"; mouse click "SKIP"
+		wait "Skip Wi-Fi?"; mouse click "CONTINUE"
+
+		wait "Date & time"; mouse click "NEXT"
+		wait "Google Services"
+
+		mouse click img "icons/toggle.png".from_top(0); mouse move 0 0
+		wait img "icons/toggle_off.png"; mouse click "MORE"
+		sleep 1s
+		mouse click img "icons/toggle_2.png".from_top(0); mouse click "ACCEPT"
+
+		wait "Protect your tablet"; mouse click "Not now"; sleep 1s; mouse click; mouse click "SKIP ANYWAY"
+
+		wait "Select a Home app"; mouse click "Quickstep"; mouse click "ALWAYS"
+		wait "Play Store"
+		sleep 5s
+	}
+}
