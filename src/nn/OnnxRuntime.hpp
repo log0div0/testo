@@ -20,7 +20,11 @@ namespace nn {
 namespace onnx {
 
 struct Runtime {
-	Runtime();
+	Runtime(
+#ifdef USE_CUDA
+		bool use_cpu_ = false
+#endif
+	);
 	~Runtime();
 
 	Runtime(const Runtime&) = delete;

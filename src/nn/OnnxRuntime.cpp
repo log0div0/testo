@@ -14,9 +14,17 @@ namespace nn {
 namespace onnx {
 
 std::unique_ptr<Ort::Env> env;
+bool use_cpu = false;
 
-Runtime::Runtime() {
+Runtime::Runtime(
+#ifdef USE_CUDA
+	bool use_cpu_
+#endif
+) {
 	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_ERROR, "testo");
+#ifdef USE_CUDA
+	use_cpu = use_cpu_;
+#endif
 }
 
 Runtime::~Runtime() {
@@ -58,7 +66,9 @@ Model::Model(const char* name) {
 	session_options.SetInterOpNumThreads(1);
 	session_options.SetExecutionMode(ORT_SEQUENTIAL);
 #ifdef USE_CUDA
-	Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0));
+	if (!use_cpu) {
+		Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0));
+	}
 #endif
 	fs::path model_path = GetModelDir() / (std::string(name) + ".onnx");
 	session = std::make_unique<Ort::Session>(*env,

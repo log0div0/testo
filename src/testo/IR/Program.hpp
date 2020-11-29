@@ -30,6 +30,8 @@ struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig {
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
 
+	bool use_cpu = false;
+
 	bool validate_test_name(const std::string& name) const;
 	void validate() const;
 };
