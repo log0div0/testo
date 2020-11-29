@@ -8,8 +8,12 @@
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
-VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
-	prefix = config.at("prefix").get<std::string>();
+void VisitorSemanticConfig::validate() const {
+
+}
+
+VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
+	prefix = config.prefix;
 
 	keys.insert("ESC");
 	keys.insert("ONE");

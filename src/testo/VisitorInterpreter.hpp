@@ -7,8 +7,16 @@
 #include "Reporter.hpp"
 #include "TemplateLiterals.hpp"
 
+struct VisitorInterpreterConfig: ReporterConfig {
+	bool stop_on_fail = false;
+	bool assume_yes = false;
+	std::string invalidate;
+
+	void validate() const;
+};
+
 struct VisitorInterpreter {
-	VisitorInterpreter(const nlohmann::json& config);
+	VisitorInterpreter(const VisitorInterpreterConfig& config);
 
 	void visit();
 	void visit_test(std::shared_ptr<IR::Test> test);

@@ -4,13 +4,38 @@
 #include "Test.hpp"
 #include "Macro.hpp"
 #include "Param.hpp"
+#include "../VisitorSemantic.hpp"
+#include "../VisitorInterpreter.hpp"
 #include <unordered_set>
 #include <unordered_map>
 
 namespace IR {
 
+struct TestNameFilter {
+	enum class Type {
+		test_spec,
+		exclude
+	};
+	Type type;
+	std::string pattern;
+
+	bool validate_test_name(const std::string& name) const;
+};
+
+struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig {
+	std::string target;
+
+	std::vector<TestNameFilter> test_name_filters;
+
+	std::vector<std::string> params_names;
+	std::vector<std::string> params_values;
+
+	bool validate_test_name(const std::string& name) const;
+	void validate() const;
+};
+
 struct Program {
-	Program(const std::shared_ptr<AST::Program>& ast, const nlohmann::json& config);
+	Program(const std::shared_ptr<AST::Program>& ast, const ProgramConfig& config);
 	~Program();
 
 	Program(const Program& other) = delete;
@@ -21,7 +46,7 @@ struct Program {
 	void validate();
 	void run();
 
-	nlohmann::json config;
+	const ProgramConfig& config;
 
 private:
 	std::unordered_map<std::string, std::shared_ptr<Test>> tests;

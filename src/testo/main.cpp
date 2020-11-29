@@ -57,8 +57,14 @@ int do_main(int argc, char** argv) {
 
 	RunModeArgs run_args;
 
-	auto test_spec_filer = [&](const std::string& arg) { run_args.template_patterns.push_back({true, arg}); return true; };
-	auto exclude_filer = [&](const std::string& arg) { run_args.template_patterns.push_back({false, arg}); return true; };
+	auto test_spec_filer = [&](const std::string& arg) {
+		run_args.test_name_filters.push_back({IR::TestNameFilter::Type::test_spec, arg});
+		return true;
+	};
+	auto exclude_filer = [&](const std::string& arg) {
+		run_args.test_name_filters.push_back({IR::TestNameFilter::Type::exclude, arg});
+		return true;
+	};
 
 	auto params_defs_spec = repeatable(
 		option("--param") & value("param_name", run_args.params_names) & value("param_value", run_args.params_values)

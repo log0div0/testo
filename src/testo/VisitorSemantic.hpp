@@ -29,8 +29,14 @@ inline Tribool operator^(bool a, Tribool b) {
 	}
 }
 
+struct VisitorSemanticConfig {
+	std::string prefix;
+
+	void validate() const;
+};
+
 struct VisitorSemantic {
-	VisitorSemantic(const nlohmann::json& config);
+	VisitorSemantic(const VisitorSemanticConfig& config);
 
 	void visit();
 	void visit_macro(std::shared_ptr<IR::Macro> macro);
