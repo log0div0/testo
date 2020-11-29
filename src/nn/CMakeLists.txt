@@ -11,5 +11,3 @@ endif()
 
 add_executable(nn_demo main.cpp)
 target_link_libraries(nn_demo nn)
-
-add_subdirectory(tests)

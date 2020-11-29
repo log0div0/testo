@@ -2,6 +2,9 @@
 #include <chrono>
 #include <iostream>
 #include <clipp.h>
+#include <fstream>
+#include <set>
+#include <nlohmann/json.hpp>
 #include "TextTensor.hpp"
 #include "ImgTensor.hpp"
 #include "OnnxRuntime.hpp"
@@ -78,9 +81,115 @@ void img_mode(const ImgArgs& args)
 	image.write_png("output.png");
 }
 
+struct DatasetArgs {
+	std::string dataset_path;
+};
+
+nlohmann::json load_json(const std::string& path) {
+	std::ifstream file(path);
+	if (!file.is_open()) {
+		throw std::runtime_error("Failed to open file " + path);
+	}
+	return nlohmann::json::parse(file);
+}
+
+struct DatasetMode {
+	DatasetMode(const DatasetArgs& args_): args(args_) {
+
+	}
+
+	void run() {
+		std::vector<fs::path> meta_paths;
+		for (const auto& entry: fs::directory_iterator(args.dataset_path)) {
+			std::string ext = entry.path().extension();
+			if (ext != ".json") {
+				continue;
+			}
+			fs::path meta_path = entry.path();
+			meta_paths.push_back(meta_path);
+		}
+		std::sort(meta_paths.begin(), meta_paths.end());
+		for (auto& meta_path: meta_paths) {
+			run_doc(meta_path);
+		}
+
+		std::cout
+			<< "Total: " << (success_counter + fail_counter)
+			<< ", Success: " << success_counter
+			<< ", Fail: " << fail_counter
+			<< ", Accuracy: " << (float(success_counter) / float(success_counter + fail_counter))
+			<< std::endl;
+	}
+
+	void run_doc(fs::path meta_path) {
+		std::cout << meta_path.stem();
+		std::cout.flush();
+
+		fs::path img_path = meta_path;
+		img_path.replace_extension(".png");
+
+		stb::Image<stb::RGB> img(img_path.string());
+		if (img.w > 1920 || img.h > 1080) {
+			std::cout << " skipping (" << img.w << "x" << img.h << ")" << std::endl;
+			return;
+		}
+		nlohmann::json meta = load_json(meta_path);
+
+		std::cout << std::endl;
+
+		nn::TextTensor text_tensor = nn::find_text(&img);
+		std::set<std::u32string> visited_textlines;
+		for (auto& obj: meta.at("objs")) {
+			if (obj.at("type") == "text") {
+				std::string text = obj.at("text");
+				std::u32string u32text = conv.from_bytes(text);
+				if (u32text.size() < 2) {
+					continue;
+				}
+				auto res = visited_textlines.insert(u32text);
+				if (!res.second) {
+					continue;
+				}
+				size_t actual = text_tensor.match(text).size();
+				size_t expected = get_text_match_count(meta, u32text);
+				if (actual != expected) {
+					std::cout << "expected: " << expected << ", actual:" << actual << ", text: " << text << std::endl;
+					fail_counter++;
+				} else {
+					success_counter++;
+				}
+			} else {
+				throw std::runtime_error("Unknown type of object");
+			}
+		}
+	}
+
+	size_t get_text_match_count(const nlohmann::json& meta, const std::u32string& substr) {
+		size_t count = 0;
+		for (auto& obj: meta.at("objs")) {
+			if (obj.at("type") == "text") {
+				std::string s_ = obj.at("text");
+				std::u32string s = conv.from_bytes(s_);
+				size_t nPos = s.find(substr, 0);
+				while (nPos != std::string::npos)
+				{
+					count++;
+					nPos = s.find(substr, nPos + substr.size());
+				}
+			}
+		}
+		return count;
+	}
+
+	size_t fail_counter = 0;
+	size_t success_counter = 0;
+	DatasetArgs args;
+};
+
 enum class mode {
 	text,
 	img,
+	dataset
 };
 
 int main(int argc, char **argv)
@@ -104,7 +213,13 @@ int main(int argc, char **argv)
 			value("ref image", img_args.ref_img_file)
 		);
 
-		auto cli = (text_spec | img_spec);
+		DatasetArgs dataset_args;
+		auto dataset_spec = (
+			command("dataset").set(selected_mode, mode::dataset),
+			value("dataset path", dataset_args.dataset_path)
+		);
+
+		auto cli = (text_spec | img_spec | dataset_spec);
 
 		if (!parse(argc, argv, cli)) {
 			std::cout << make_man_page(cli, argv[0]) << std::endl;
@@ -118,6 +233,9 @@ int main(int argc, char **argv)
 				break;
 			case mode::img:
 				img_mode(img_args);
+				break;
+			case mode::dataset:
+				DatasetMode(dataset_args).run();
 				break;
 			default:
 				throw std::runtime_error("Invalid mode");
