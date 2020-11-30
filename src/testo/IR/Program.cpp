@@ -67,11 +67,11 @@ void Program::validate() {
 
 void Program::run() {
 	env->setup();
-	nn::onnx::Runtime onnx_runtime(
 #ifdef USE_CUDA
-		config.use_cpu
+	nn::onnx::Runtime onnx_runtime(config.use_cpu);
+#else
+	nn::onnx::Runtime onnx_runtime;
 #endif
-	);
 	VisitorInterpreter runner(config);
 	runner.visit();
 }

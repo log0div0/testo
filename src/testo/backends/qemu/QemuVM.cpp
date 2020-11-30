@@ -113,6 +113,9 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 			auto video_model = video.value("qemu_mode", preferable_video_model());
 
 			if ((video_model != "vmvga") &&
+				(video_model != "vga") &&
+				(video_model != "xen") &&
+				(video_model != "virtio") &&
 				(video_model != "qxl") &&
 				(video_model != "cirrus"))
 			{
