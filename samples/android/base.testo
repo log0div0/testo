@@ -1,6 +1,12 @@
 
+include "../common_ubuntu_server.testo"
+
 network net1 {
 	mode: "internal"
+}
+
+network internet {
+	mode: "nat"
 }
 
 machine android {
@@ -9,6 +15,23 @@ machine android {
 	iso: "${ISO_DIR}/android-x86_64-9.0-r2.iso"
 	disk main: {
 		size: 10Gb
+	}
+
+	nic LAN: {
+		attached_to: "net1"
+	}
+}
+
+machine ftp_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 5Gb
+	}
+
+	nic WAN: {
+		attached_to: "internet"
 	}
 
 	nic LAN: {
@@ -57,8 +80,129 @@ test install_android {
 
 		wait "Protect your tablet"; mouse click "Not now"; sleep 1s; mouse click; mouse click "SKIP ANYWAY"
 
-		wait "Select a Home app"; mouse click "Quickstep"; mouse click "ALWAYS"
-		wait "Play Store"
+		wait "Select a Home app"; mouse click "Taskbar"; mouse click "ALWAYS"
+		wait img "icons/apps.png"
 		sleep 5s
+	}
+}
+
+
+test ftp_server_install_ubuntu {
+	ftp_server install_ubuntu_server("FTP", "user", "1111")
+}
+
+test ftp_server_install_ga: ftp_server_install_ubuntu {
+	ftp_server install_guest_additions_ubuntu_server("FTP", "user", "1111")
+}
+
+test ftp_server_prepare: ftp_server_install_ga {
+	ftp_server {
+		exec bash """
+			apt update
+			apt install -y isc-dhcp-server vsftpd
+		"""
+
+		exec bash """
+			sed -i 's/listen=NO/listen=YES/g'  /etc/vsftpd.conf
+			sed -i 's/listen_ipv6=YES/listen_ipv6=NO/g'  /etc/vsftpd.conf
+			sed -i 's/anonymous_enable=NO/anonymous_enable=YES/g'  /etc/vsftpd.conf
+			sed -i 's/anonymous_enable=NO/anonymous_enable=YES/g'  /etc/vsftpd.conf
+			sed -i 's/#anon_upload_enable=YES/anon_upload_enable=YES/g'  /etc/vsftpd.conf
+		"""
+
+		exec bash """
+			echo "Hello world" > /srv/ftp/hello_world.txt
+		"""
+
+		exec bash """
+			sed -i 's/INTERFACES=""/INTERFACES="ens8"/g'  /etc/default/isc-dhcp-server
+
+			echo "subnet 192.168.1.0 netmask 255.255.255.0 {
+					option routers	192.168.1.1;
+					option subnet-mask	255.255.255.0;
+					range 192.168.1.10 192.168.1.100;
+				}" >> /etc/dhcp/dhcpd.conf
+		"""
+
+		unplug_nic("WAN", "user", "1111")
+
+		exec bash """
+			ip l s ens8 up
+			ip a a 192.168.1.1/24 dev ens8
+
+			service isc-dhcp-server start
+			service isc-dhcp-server status
+		"""
+	}
+}
+
+test andorid_connect_to_ftp: install_android, ftp_server_prepare {
+	android {
+		#mouse click "icons/settings_android.png"
+		mouse click 30 0
+		mouse click "VirtWifi"
+		wait "Wi-Fi preferences"
+		mouse click "VirtWifi"; sleep 5s; mouse click
+
+		wait "Connected, no internet"
+
+		mouse click img "icons/go_home.png"
+
+		wait img "icons/apps.png"
+	}
+}
+
+flash my_flash {
+	fs: "ext4"
+	size: 32Mb
+	folder: "./ftp_client"
+}
+
+test andorid_install_ftp_client: andorid_connect_to_ftp {
+	android {
+		plug flash my_flash
+		mouse click img "icons/apps.png"
+		mouse click "Files"
+		wait "Downloads"
+		mouse click "QEMU USB drive"
+		mouse rclick "AndFTP"
+		mouse click "Copy"
+		mouse click "Downloads"
+		mouse rclick "No items"
+		mouse click "Paste"
+		mouse dclick "AndFTP"
+		mouse click "CONTINUE"
+		wait "Do you want to install this application?"
+		mouse click "INSTALL".center_bottom()
+		wait "App installed"
+		mouse click "OPEN"
+
+		wait "Allow AndFTP to access"
+		mouse click "ALLOW"
+		wait "Tip of the day"
+		mouse click "Close"
+
+		unplug flash my_flash
+		sleep 3s
+	}
+}
+
+test andoid_connect_ftp: andorid_install_ftp_client {
+	android {
+		mouse click img "icons/add_server.png"
+		mouse click "yourserver.com"
+		type "192.168.1.1"
+		mouse click "Save"
+		wait "Name FTP settings to be saved"
+		mouse click "OK"
+		wait "FTP server settings saved"
+		mouse click "OK"
+		mouse move 0 0
+		#mouse click "icons/FTP_server.png"
+		mouse click "192.168.1.1"
+		wait "Authentication"
+		type "anonymous"; press Tab; type "test"
+		mouse click "OK"
+		wait "hello_world.txt"
 	}
 }
