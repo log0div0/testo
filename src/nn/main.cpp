@@ -121,6 +121,19 @@ struct DatasetMode {
 			<< std::endl;
 	}
 
+	bool filter_text_obj(const nlohmann::json& obj) {
+		std::string text = obj.at("text");
+		std::u32string u32text = conv.from_bytes(text);
+		if (u32text.size() < 2) {
+			return false;
+		}
+		float h = obj.at("height");
+		if (h <= 10) {
+			return false;
+		}
+		return true;
+	}
+
 	void run_doc(fs::path meta_path) {
 		std::cout << meta_path.stem();
 		std::cout.flush();
@@ -141,19 +154,19 @@ struct DatasetMode {
 		std::set<std::u32string> visited_textlines;
 		for (auto& obj: meta.at("objs")) {
 			if (obj.at("type") == "text") {
-				std::string text = obj.at("text");
-				std::u32string u32text = conv.from_bytes(text);
-				if (u32text.size() < 2) {
+				if (!filter_text_obj(obj)) {
 					continue;
 				}
+				std::string text = obj.at("text");
+				std::u32string u32text = conv.from_bytes(text);
 				auto res = visited_textlines.insert(u32text);
 				if (!res.second) {
 					continue;
 				}
-				size_t actual = text_tensor.match(text).size();
-				size_t expected = get_text_match_count(meta, u32text);
-				if (actual != expected) {
-					std::cout << "expected: " << expected << ", actual:" << actual << ", text: " << text << std::endl;
+				size_t detected = text_tensor.match(text).size();
+				size_t labeled = get_text_match_count(meta, u32text);
+				if (detected != labeled) {
+					std::cout << "labeled: " << labeled << ", detected:" << detected << ", text: " << text << std::endl;
 					fail_counter++;
 				} else {
 					success_counter++;
@@ -168,6 +181,9 @@ struct DatasetMode {
 		size_t count = 0;
 		for (auto& obj: meta.at("objs")) {
 			if (obj.at("type") == "text") {
+				if (!filter_text_obj(obj)) {
+					continue;
+				}
 				std::string s_ = obj.at("text");
 				std::u32string s = conv.from_bytes(s_);
 				size_t nPos = s.find(substr, 0);
