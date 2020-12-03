@@ -1,0 +1,165 @@
+{
+	"objs": {
+		"694e821b-b2c5-431a-8ac9-268e744628d9": {
+			"type": "text",
+			"x": 168.57,
+			"y": 9.67,
+			"width": 120.86,
+			"height": 12.62,
+			"text": "Search and launch"
+		},
+		"f89c10b9-d007-4db7-97a8-b19ea6d7aa5b": {
+			"type": "text",
+			"x": 591.84,
+			"y": 10.86,
+			"width": 61.55,
+			"height": 13.47,
+			"text": "Page one"
+		},
+		"bff90c10-13f5-438b-b485-7effa69ec4c7": {
+			"type": "text",
+			"x": 970.77,
+			"y": 9.08,
+			"width": 6.58,
+			"height": 15.07,
+			"text": "i"
+		},
+		"2d7a467f-6d70-46b2-87e8-38c058633236": {
+			"type": "text",
+			"x": 993.63,
+			"y": 6.62,
+			"width": 60.9,
+			"height": 17.77,
+			"text": "19:37"
+		},
+		"2dd3d925-a511-4601-bd9a-4cba120a6273": {
+			"type": "text",
+			"x": 1092.87,
+			"y": 9.64,
+			"width": 97.48,
+			"height": 14.67,
+			"text": "5 running apps"
+		},
+		"1cc05deb-5994-488d-993a-b07e1d6f24ce": {
+			"type": "text",
+			"x": 583.48,
+			"y": 112.77,
+			"width": 33.84,
+			"height": 12.57,
+			"text": "KMail"
+		},
+		"f4def394-420d-4c93-a1de-06024cba2fcb": {
+			"type": "text",
+			"x": 657.72,
+			"y": 106.67,
+			"width": 47.72,
+			"height": 14.59,
+			"text": "System"
+		},
+		"227eb110-f66a-4d32-b5c0-77a9082b71ed": {
+			"type": "text",
+			"x": 653.6,
+			"y": 120.52,
+			"width": 54.94,
+			"height": 15.03,
+			"text": "Settings"
+		},
+		"985e1fad-bf37-47b5-8bd4-7828505c4f7c": {
+			"type": "text",
+			"x": 746.86,
+			"y": 113.47,
+			"width": 38.5,
+			"height": 12.04,
+			"text": "Home"
+		},
+		"bf8740be-4e0f-4e9d-86e6-15c87c579c5e": {
+			"type": "text",
+			"x": 525.53,
+			"y": 161.64,
+			"width": 32.92,
+			"height": 12.69,
+			"text": "Back"
+		},
+		"bc42faba-6ce2-4f4d-ac02-bd6d83a5cc18": {
+			"type": "text",
+			"x": 589.65,
+			"y": 162.56,
+			"width": 40.89,
+			"height": 14.78,
+			"text": "image"
+		},
+		"773fa8b4-8a5a-465c-bd7b-cfd0ac7db4a6": {
+			"type": "text",
+			"x": 337.63,
+			"y": 499.48,
+			"width": 42.98,
+			"height": 12.72,
+			"text": "promo"
+		},
+		"517e3fdb-9a8c-42dd-a844-3c7d3c89124f": {
+			"type": "text",
+			"x": 335.81,
+			"y": 511.72,
+			"width": 47.83,
+			"height": 14.72,
+			"text": "images"
+		},
+		"7e127874-ad7f-4c6d-8ba8-d9334acb162f": {
+			"type": "text",
+			"x": 420.34,
+			"y": 497.55,
+			"width": 94.2,
+			"height": 14.75,
+			"text": "AcquireImages"
+		},
+		"2e5b2a9b-c7b9-4639-a79a-a77c8f0fa8db": {
+			"type": "text",
+			"x": 553.95,
+			"y": 496.65,
+			"width": 52.18,
+			"height": 12.76,
+			"text": "Skanlite"
+		},
+		"cfc429ee-3dd9-4495-9d47-448cc5377afc": {
+			"type": "text",
+			"x": 642.78,
+			"y": 497.55,
+			"width": 63.17,
+			"height": 11.88,
+			"text": "Gwenview"
+		},
+		"d45661af-e697-4c30-834a-cedda48ee21f": {
+			"type": "text",
+			"x": 743.55,
+			"y": 497.56,
+			"width": 74.67,
+			"height": 11.81,
+			"text": "AcetoneISO"
+		},
+		"4164dbe4-3d3e-469a-9e48-ed6620bcf06f": {
+			"type": "text",
+			"x": 864.49,
+			"y": 497.39,
+			"width": 31.06,
+			"height": 12.2,
+			"text": "Krita"
+		},
+		"bf4829c4-f0cb-418e-9ea5-f0d0753bf690": {
+			"type": "text",
+			"x": 960.32,
+			"y": 449.43,
+			"width": 51.23,
+			"height": 19.94,
+			"text": "DNG"
+		},
+		"7fd124a6-f917-469e-a3c0-08d6e7af33cd": {
+			"type": "text",
+			"x": 940.63,
+			"y": 497.43,
+			"width": 91.82,
+			"height": 12.38,
+			"text": "DNGConverter"
+		}
+	},
+	"verified": true
+}

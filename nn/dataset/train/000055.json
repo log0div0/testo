@@ -1,0 +1,421 @@
+{
+	"objs": {
+		"619e8980-9eb3-46c8-8c7a-b960de459861": {
+			"type": "text",
+			"x": 398.06,
+			"y": 27.84,
+			"width": 250.28,
+			"height": 15.53,
+			"text": "/dev/nvme0n1 - KDE Partition Manager"
+		},
+		"655b56b1-ad5d-48d8-8fd2-8b1b7bfaef0f": {
+			"type": "text",
+			"x": 29.88,
+			"y": 58.02,
+			"width": 22.29,
+			"height": 12.32,
+			"text": "File"
+		},
+		"208c4646-8705-4916-b903-bdda7888f598": {
+			"type": "text",
+			"x": 70.57,
+			"y": 57.56,
+			"width": 25.85,
+			"height": 12.78,
+			"text": "Edit"
+		},
+		"920db689-56f1-435d-ba70-f1453613fcda": {
+			"type": "text",
+			"x": 114.7,
+			"y": 57.99,
+			"width": 41.69,
+			"height": 12.33,
+			"text": "Device"
+		},
+		"fc45756f-58b3-4a03-85eb-83c3944cadaf": {
+			"type": "text",
+			"x": 175.72,
+			"y": 57.87,
+			"width": 53.8,
+			"height": 12.36,
+			"text": "Partition"
+		},
+		"d156daf0-90f1-477d-8f45-6dcda2f30247": {
+			"type": "text",
+			"x": 247.76,
+			"y": 57.94,
+			"width": 34.55,
+			"height": 12.23,
+			"text": "Tools"
+		},
+		"23de018e-20ac-4d13-9179-2947bd44eb7b": {
+			"type": "text",
+			"x": 300.55,
+			"y": 57.94,
+			"width": 50.95,
+			"height": 15.3,
+			"text": "Settings"
+		},
+		"76067b7f-f45f-447f-acdf-a7f8d3832c96": {
+			"type": "text",
+			"x": 370.65,
+			"y": 57.8,
+			"width": 29.86,
+			"height": 15.66,
+			"text": "Help"
+		},
+		"3766abc6-b765-433c-b101-cd8c937406ac": {
+			"type": "text",
+			"x": 55.68,
+			"y": 91.83,
+			"width": 36.68,
+			"height": 15.53,
+			"text": "Apply"
+		},
+		"318b9d7c-7c5b-471d-9ca7-7ccb0c0f1227": {
+			"type": "text",
+			"x": 135.4,
+			"y": 92.01,
+			"width": 35.22,
+			"height": 12.35,
+			"text": "Undo"
+		},
+		"4a57f857-4dbf-40f3-986d-e77401a2a781": {
+			"type": "text",
+			"x": 199.96,
+			"y": 100.08,
+			"width": 6.93,
+			"height": 6.59,
+			"text": "+"
+		},
+		"f729169b-c808-4b3b-b53c-8e08d12c8181": {
+			"type": "text",
+			"x": 213.83,
+			"y": 92.92,
+			"width": 28.08,
+			"height": 11.35,
+			"text": "New"
+		},
+		"9b10df69-d369-4c3b-8200-642958aee7b6": {
+			"type": "text",
+			"x": 286.64,
+			"y": 91.97,
+			"width": 77.94,
+			"height": 12.46,
+			"text": "Resize/Move"
+		},
+		"bc3793e7-f6db-4e1d-bf3c-ebf52d80e159": {
+			"type": "text",
+			"x": 407.53,
+			"y": 92.12,
+			"width": 40.66,
+			"height": 12.15,
+			"text": "Delete"
+		},
+		"a57870de-072e-40dc-949d-75960e6fb3e0": {
+			"type": "text",
+			"x": 491.69,
+			"y": 92.04,
+			"width": 119.71,
+			"height": 12.3,
+			"text": "New Partition Table"
+		},
+		"a84599dd-b75f-42cc-96bb-7c5452a9c5f7": {
+			"type": "text",
+			"x": 621.78,
+			"y": 133.68,
+			"width": 63.45,
+			"height": 13.45,
+			"text": "nvme0n1p2"
+		},
+		"09133d98-bfb6-459d-abfe-531b9882851d": {
+			"type": "text",
+			"x": 624.84,
+			"y": 148.63,
+			"width": 57.4,
+			"height": 10.7,
+			"text": "215.48 GiB"
+		},
+		"9181d724-e7d6-49c3-8421-35db4ef898c5": {
+			"type": "text",
+			"x": 25.79,
+			"y": 125.97,
+			"width": 47.57,
+			"height": 12.38,
+			"text": "Devices"
+		},
+		"f49dfb1d-ff24-4f50-a34b-b97c7718ceca": {
+			"type": "text",
+			"x": 63.39,
+			"y": 159.47,
+			"width": 207.26,
+			"height": 14.73,
+			"text": "Samsung SSD 960 EVO 250GB - ..."
+		},
+		"5f03dd1d-cd32-417d-b474-5cd9aad1af46": {
+			"type": "text",
+			"x": 64.53,
+			"y": 191.65,
+			"width": 207.77,
+			"height": 11.74,
+			"text": "KINGSTON SA400S37240G - 223..."
+		},
+		"5cd9913a-7b96-4022-92e8-afef475e28b3": {
+			"type": "text",
+			"x": 25.56,
+			"y": 492.79,
+			"width": 122.91,
+			"height": 15.54,
+			"text": "Pending Operations"
+		},
+		"000e17f0-39a4-4fac-8c65-cb2e605d7fde": {
+			"type": "text",
+			"x": 20.72,
+			"y": 715.5,
+			"width": 132.73,
+			"height": 15.62,
+			"text": "0 pending operations"
+		},
+		"deeef4a9-42e2-439a-88fe-e59341a0ac63": {
+			"type": "text",
+			"x": 322.74,
+			"y": 224.42,
+			"width": 362.78,
+			"height": 15.71,
+			"text": "Samsung SSD 960 EVO 250GB - 232.88 GiB (/dev/nvme0n1)"
+		},
+		"ced1ab51-d4a5-4755-9d5b-44a4394cdc34": {
+			"type": "text",
+			"x": 288.31,
+			"y": 193.97,
+			"width": 54.09,
+			"height": 12.48,
+			"text": "Partition"
+		},
+		"4e71c65e-b3bc-44ba-8d47-657ee299adec": {
+			"type": "text",
+			"x": 427.68,
+			"y": 194.62,
+			"width": 31.73,
+			"height": 14.69,
+			"text": "Type"
+		},
+		"c20c8153-d1d3-4f99-a3b4-5e7506e65f77": {
+			"type": "text",
+			"x": 578.45,
+			"y": 193.89,
+			"width": 78.11,
+			"height": 12.61,
+			"text": "Mount Point"
+		},
+		"d0937ed7-2a9e-40f6-bda3-f437a829af5a": {
+			"type": "text",
+			"x": 698.78,
+			"y": 193.75,
+			"width": 33.73,
+			"height": 12.61,
+			"text": "Label"
+		},
+		"e847cfba-a84e-49d0-a498-988659bee255": {
+			"type": "text",
+			"x": 778.44,
+			"y": 193.68,
+			"width": 89.88,
+			"height": 12.96,
+			"text": "Partition Label"
+		},
+		"c3aa1bd4-9772-457f-979d-78aef4ec5fd7": {
+			"type": "text",
+			"x": 887.49,
+			"y": 193.92,
+			"width": 26.73,
+			"height": 12.48,
+			"text": "Size"
+		},
+		"62951d8e-7a0a-46e5-93b6-eb82f5f1b602": {
+			"type": "text",
+			"x": 978.52,
+			"y": 194.01,
+			"width": 31.97,
+			"height": 12.22,
+			"text": "Used"
+		},
+		"57f54dac-d837-4c99-8531-7e2b0f5efbd3": {
+			"type": "text",
+			"x": 305.56,
+			"y": 256.66,
+			"width": 72.81,
+			"height": 12.78,
+			"text": "unallocated"
+		},
+		"3814c204-fa34-4b46-8fa9-af8ecb2e8c2c": {
+			"type": "text",
+			"x": 445.42,
+			"y": 256.89,
+			"width": 58.28,
+			"height": 12.66,
+			"text": "unknown"
+		},
+		"d6d3bd8c-6227-4a46-9064-91d155a7626f": {
+			"type": "text",
+			"x": 304.68,
+			"y": 288.75,
+			"width": 103.66,
+			"height": 15.63,
+			"text": "/dev/nvme0n1p1"
+		},
+		"d1ca3146-ed1c-4709-a332-1958b00c58af": {
+			"type": "text",
+			"x": 304.95,
+			"y": 320.7,
+			"width": 105.25,
+			"height": 15.63,
+			"text": "/dev/nvme0n1p2"
+		},
+		"3dcf5cdd-9c4f-44b8-9b8a-e2bae9010878": {
+			"type": "text",
+			"x": 305.01,
+			"y": 352.6,
+			"width": 105.25,
+			"height": 15.63,
+			"text": "/dev/nvme0n1p3"
+		},
+		"dd30b295-1b7c-4dbf-ab12-18ee8732b40a": {
+			"type": "text",
+			"x": 305.71,
+			"y": 384.87,
+			"width": 72.68,
+			"height": 12.61,
+			"text": "unallocated"
+		},
+		"0d0d2acf-f22e-4d5d-bf22-599565e5c4c5": {
+			"type": "text",
+			"x": 444.72,
+			"y": 288.76,
+			"width": 33.72,
+			"height": 12.5,
+			"text": "fat32"
+		},
+		"1995497f-3753-4426-8d09-01390ad4b610": {
+			"type": "text",
+			"x": 444.91,
+			"y": 321.59,
+			"width": 28.24,
+			"height": 11.91,
+			"text": "ext4"
+		},
+		"38c83d34-a2a1-451f-94f8-ca20ecefb3c4": {
+			"type": "text",
+			"x": 445.34,
+			"y": 352.67,
+			"width": 63.1,
+			"height": 15.69,
+			"text": "linuxswap"
+		},
+		"268a04b7-60ec-4ce5-bca7-996a2da5433a": {
+			"type": "text",
+			"x": 445.63,
+			"y": 384.79,
+			"width": 57.76,
+			"height": 12.76,
+			"text": "unknown"
+		},
+		"a18be337-3e87-48b2-b607-acddb06f4037": {
+			"type": "text",
+			"x": 612.29,
+			"y": 321.37,
+			"width": 8.01,
+			"height": 11.73,
+			"text": "/"
+		},
+		"9f56ac86-5821-4bec-b831-eac0e3cc1345": {
+			"type": "text",
+			"x": 612.42,
+			"y": 288.69,
+			"width": 55.04,
+			"height": 12.74,
+			"text": "/boot/efi"
+		},
+		"36b888a5-a0a2-46d1-afc0-669375e45fd1": {
+			"type": "text",
+			"x": 885.11,
+			"y": 256.53,
+			"width": 54.52,
+			"height": 13,
+			"text": "1.00 MiB"
+		},
+		"ce9e456d-2ad9-47ee-a038-6034fb1ddb55": {
+			"type": "text",
+			"x": 974.21,
+			"y": 262.08,
+			"width": 15.3,
+			"height": 4.58,
+			"text": ""
+		},
+		"439b9ad0-93fc-40d6-a435-49724c2b40ea": {
+			"type": "text",
+			"x": 974.69,
+			"y": 390.57,
+			"width": 14.73,
+			"height": 3.61,
+			"text": ""
+		},
+		"e0d70d38-05e3-4f14-af20-84fc8f14a2fc": {
+			"type": "text",
+			"x": 884.48,
+			"y": 289.02,
+			"width": 69.97,
+			"height": 12.48,
+			"text": "300.00 MiB"
+		},
+		"99fd4e32-d298-421f-a6ce-3466d2337aaa": {
+			"type": "text",
+			"x": 884.28,
+			"y": 320.86,
+			"width": 68.32,
+			"height": 12.84,
+			"text": "215.48 GiB"
+		},
+		"5444ee2b-02dc-45f4-82b4-1ee65744fa55": {
+			"type": "text",
+			"x": 974.77,
+			"y": 288.9,
+			"width": 51.41,
+			"height": 12.28,
+			"text": ""
+		},
+		"6d8de6e0-6637-4328-9d8e-a6564a71ac79": {
+			"type": "text",
+			"x": 974.46,
+			"y": 321.17,
+			"width": 51.03,
+			"height": 12.13,
+			"text": "62.79 Gi"
+		},
+		"d86377e5-58ca-4593-b3a1-6deb5abda7f6": {
+			"type": "text",
+			"x": 885.39,
+			"y": 352.6,
+			"width": 59.32,
+			"height": 13.1,
+			"text": "17.11 GiB"
+		},
+		"007d56a7-eac9-423c-800d-4d4d41583374": {
+			"type": "text",
+			"x": 974.62,
+			"y": 353.55,
+			"width": 21.89,
+			"height": 11.75,
+			"text": "0 B"
+		},
+		"75f1eebd-8cba-4b2f-be56-ad46d811423e": {
+			"type": "text",
+			"x": 884.4,
+			"y": 384.61,
+			"width": 55.27,
+			"height": 12.84,
+			"text": "2.48 MiB"
+		}
+	},
+	"verified": true
+}

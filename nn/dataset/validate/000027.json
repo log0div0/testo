@@ -1,0 +1,52 @@
+{
+	"objs": {
+		"10017592-4a38-4230-b72b-b8d7c1605744": {
+			"type": "text",
+			"x": 103.54,
+			"y": 18.31,
+			"width": 152.66,
+			"height": 13.11,
+			"text": "Network connections"
+		},
+		"3d9414b3-40af-474a-8953-4a1963976e1a": {
+			"type": "text",
+			"x": 160.8,
+			"y": 129.74,
+			"width": 237.97,
+			"height": 15.37,
+			"text": "192.168.122.219/24 (from dhcp)"
+		},
+		"c176ed3b-a63a-48bb-842c-27c810bb6e21": {
+			"type": "text",
+			"x": 50.82,
+			"y": 130.12,
+			"width": 45.39,
+			"height": 13.88,
+			"text": "[ ens3"
+		},
+		"6af71713-8057-4686-a0a2-fdc685a7323b": {
+			"type": "text",
+			"x": 111.61,
+			"y": 130.09,
+			"width": 24.5,
+			"height": 12.96,
+			"text": "eth"
+		},
+		"bb89e322-304b-42b6-8054-0ac404ddedce": {
+			"type": "text",
+			"x": 63.48,
+			"y": 145.95,
+			"width": 840.88,
+			"height": 14.16,
+			"text": "52:54:00:45:12:e7 / Realtek Semiconductor Co., Ltd. / RTL-8100/8101L/8139 PCI Fast Ethernet Adapter (QEMU"
+		},
+		"3085a189-c8dd-48c6-ae6d-51c0321e52ab": {
+			"type": "text",
+			"x": 103.98,
+			"y": 65.8,
+			"width": 800.28,
+			"height": 15.3,
+			"text": "Configure at least one interface this server can use to talk to other machines, and which preferably"
+		}
+	}
+}

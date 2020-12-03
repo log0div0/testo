@@ -25,6 +25,7 @@ add_definitions(-DASIO_STANDALONE -DASIO_ENABLE_CANCELIO)
 
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
+	${CMAKE_SOURCE_DIR}/lib
 	${CMAKE_SOURCE_DIR}/src
 )
 
@@ -55,6 +56,8 @@ if(WIN32)
 		-DNOMINMAX
 		-DUNICODE
 		-D_UNICODE
+		/W1
+		/WX
 	)
 else()
 	if(CMAKE_BUILD_TYPE MATCHES Release)
@@ -70,11 +73,10 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(3rd_party)
+add_subdirectory(lib)
 add_subdirectory(src)
+add_subdirectory(nn)
 if (NOT APPLE)
 	add_subdirectory(guest_additions)
-
-	if (ONNX_RUNTIME_DIR)
-		add_subdirectory(pkg)
-	endif()
+	add_subdirectory(pkg)
 endif()

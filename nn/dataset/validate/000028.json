@@ -1,0 +1,20 @@
+{
+	"objs": {
+		"ef49b195-8138-45fb-8df5-1038c9841c74": {
+			"type": "text",
+			"x": 103.74,
+			"y": 18.1,
+			"width": 120.61,
+			"height": 15.03,
+			"text": "Configure proxy"
+		},
+		"01cc4b1a-66a9-4e88-9b68-fa4b042039a8": {
+			"type": "text",
+			"x": 232.45,
+			"y": 177.04,
+			"width": 302.07,
+			"height": 15.82,
+			"text": "\"http://[[user][:pass]@]host[:port]/\"."
+		}
+	}
+}

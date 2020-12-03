@@ -1,0 +1,605 @@
+{
+	"objs": {
+		"0839d0a5-d7a3-4d2f-a6ca-259ea75acb7b": {
+			"type": "text",
+			"x": 92.74,
+			"y": 27.73,
+			"width": 126,
+			"height": 16.62,
+			"text": "Search or jump to..."
+		},
+		"ee71a5be-6cd9-44a9-822a-eb59680bad9d": {
+			"type": "text",
+			"x": 330.85,
+			"y": 30.09,
+			"width": 7.25,
+			"height": 10.97,
+			"text": "/"
+		},
+		"d25e834e-0793-43b0-ba3d-bcd19b2f3dc1": {
+			"type": "text",
+			"x": 367.53,
+			"y": 27.58,
+			"width": 90.83,
+			"height": 16.7,
+			"text": "Pull requests"
+		},
+		"2a362533-dea2-4059-89db-cb4606605a92": {
+			"type": "text",
+			"x": 471.66,
+			"y": 28.51,
+			"width": 46.68,
+			"height": 12.96,
+			"text": "Issues"
+		},
+		"5bd32942-5f48-4ee1-a802-97155afae7bd": {
+			"type": "text",
+			"x": 531.46,
+			"y": 27.61,
+			"width": 84,
+			"height": 16.73,
+			"text": "Marketplace"
+		},
+		"279a217b-a533-46dd-9942-a2bb2f6e6539": {
+			"type": "text",
+			"x": 628.72,
+			"y": 27.77,
+			"width": 53.66,
+			"height": 16.44,
+			"text": "Explore"
+		},
+		"b25bbe74-ff65-4056-a1db-8c3950623ccb": {
+			"type": "text",
+			"x": 898.87,
+			"y": 27.69,
+			"width": 14.48,
+			"height": 14.52,
+			"text": "+"
+		},
+		"27f6ddb6-12bf-4321-8b52-46349b6c33e9": {
+			"type": "text",
+			"x": 56.43,
+			"y": 87.49,
+			"width": 241.81,
+			"height": 21.65,
+			"text": "rafellerc / Pytorch-SiamFC"
+		},
+		"7c95927e-68b8-46db-94cb-63f8578cce4b": {
+			"type": "text",
+			"x": 47.15,
+			"y": 145.74,
+			"width": 60.41,
+			"height": 14.01,
+			"text": "<> Code"
+		},
+		"f320646a-e061-447c-9fc9-1cf6077c8ea8": {
+			"type": "text",
+			"x": 143.78,
+			"y": 148.16,
+			"width": 4.35,
+			"height": 9.82,
+			"text": "!"
+		},
+		"3999226e-f043-489b-bc30-affa9a5087bc": {
+			"type": "text",
+			"x": 160.61,
+			"y": 146.68,
+			"width": 42.88,
+			"height": 12.76,
+			"text": "Issues"
+		},
+		"fc0d4298-f0cd-4f75-9cdc-921e4216cf2d": {
+			"type": "text",
+			"x": 213.86,
+			"y": 146.67,
+			"width": 15.51,
+			"height": 11.53,
+			"text": "15"
+		},
+		"0511094f-4c47-438b-a1e7-4ed04bae3f6d": {
+			"type": "text",
+			"x": 291.7,
+			"y": 145.73,
+			"width": 82.96,
+			"height": 16.33,
+			"text": "Pull requests"
+		},
+		"459dbeab-93a9-49ef-b0a5-f64cb2d9e091": {
+			"type": "text",
+			"x": 386.71,
+			"y": 146.96,
+			"width": 9.36,
+			"height": 11.11,
+			"text": "2"
+		},
+		"e46c70df-46b2-486f-ac22-147ad9303685": {
+			"type": "text",
+			"x": 456.35,
+			"y": 145.59,
+			"width": 49.34,
+			"height": 13.98,
+			"text": "Actions"
+		},
+		"7281f9b2-5c60-43cf-b75a-b97cfccc10cf": {
+			"type": "text",
+			"x": 562.74,
+			"y": 145.55,
+			"width": 52.57,
+			"height": 16.77,
+			"text": "Projects"
+		},
+		"815e1160-48f1-4fde-8671-7df03bcd650d": {
+			"type": "text",
+			"x": 669.64,
+			"y": 145.7,
+			"width": 29.02,
+			"height": 13.65,
+			"text": "Wiki"
+		},
+		"1b125dba-9561-458c-ab8e-3ee3cd463584": {
+			"type": "text",
+			"x": 736.81,
+			"y": 148.01,
+			"width": 4.5,
+			"height": 10.18,
+			"text": "!"
+		},
+		"ee0380c0-bbd5-40eb-9619-12954855a997": {
+			"type": "text",
+			"x": 753.92,
+			"y": 145.88,
+			"width": 53.48,
+			"height": 16.28,
+			"text": "Security"
+		},
+		"7abb4daf-4b26-41be-abd9-969a9fdbbb76": {
+			"type": "text",
+			"x": 624.68,
+			"y": 91.47,
+			"width": 37.65,
+			"height": 11.94,
+			"text": "Watch"
+		},
+		"5871f605-6283-486c-9745-cdcd63bf69af": {
+			"type": "text",
+			"x": 699.74,
+			"y": 91.68,
+			"width": 16.5,
+			"height": 11.53,
+			"text": "25"
+		},
+		"924bc2a8-c8d5-4f1a-83f1-d4d0a34d0489": {
+			"type": "text",
+			"x": 768.49,
+			"y": 91.66,
+			"width": 24.78,
+			"height": 11.69,
+			"text": "Star"
+		},
+		"c7e2cbc9-d33a-4dec-b553-39199d4c74f9": {
+			"type": "text",
+			"x": 814.51,
+			"y": 91.57,
+			"width": 24.06,
+			"height": 11.75,
+			"text": "446"
+		},
+		"b27cd7cc-1808-48c7-8b62-337854e45adc": {
+			"type": "text",
+			"x": 890.61,
+			"y": 91.57,
+			"width": 27.76,
+			"height": 11.67,
+			"text": "Fork"
+		},
+		"74144d15-4478-4a9a-a954-fa841d310d61": {
+			"type": "text",
+			"x": 939.49,
+			"y": 91.39,
+			"width": 22.97,
+			"height": 11.94,
+			"text": "105"
+		},
+		"f885a85e-8934-4e17-a1fa-43dd08584d26": {
+			"type": "text",
+			"x": 72.52,
+			"y": 219.95,
+			"width": 46.13,
+			"height": 12.38,
+			"text": "master"
+		},
+		"c690989e-7d5c-421b-88f8-56b11537aeee": {
+			"type": "text",
+			"x": 184.34,
+			"y": 218.47,
+			"width": 57.27,
+			"height": 14.11,
+			"text": "1 branch"
+		},
+		"406d4621-21c1-495d-9515-324c56f313d0": {
+			"type": "text",
+			"x": 274.6,
+			"y": 219.59,
+			"width": 40.95,
+			"height": 15.72,
+			"text": "0 tags"
+		},
+		"2b86cd1a-1c14-4968-a492-8504a480957b": {
+			"type": "text",
+			"x": 440.58,
+			"y": 218.66,
+			"width": 58.99,
+			"height": 13.78,
+			"text": "Go to file"
+		},
+		"6cae13a7-fb3b-42e9-9316-f1dadf5c9f99": {
+			"type": "text",
+			"x": 537.51,
+			"y": 218.6,
+			"width": 50.77,
+			"height": 13.78,
+			"text": "Add file"
+		},
+		"0150749b-207f-44e3-97a4-d44676384075": {
+			"type": "text",
+			"x": 662.83,
+			"y": 218.68,
+			"width": 36.62,
+			"height": 13.78,
+			"text": "Code"
+		},
+		"58b37c6f-ef70-4756-80ae-86c47ed47502": {
+			"type": "text",
+			"x": 761.61,
+			"y": 213.77,
+			"width": 49.91,
+			"height": 14.64,
+			"text": "About"
+		},
+		"c1f04e5e-437c-4553-9f47-469419f49846": {
+			"type": "text",
+			"x": 761.71,
+			"y": 253.47,
+			"width": 188.73,
+			"height": 17.54,
+			"text": "Pytorch implementation of"
+		},
+		"c132b0fe-e0c4-432f-bc38-eb72f8480559": {
+			"type": "text",
+			"x": 761.69,
+			"y": 277.68,
+			"width": 210.73,
+			"height": 17.54,
+			"text": "\"Fully-Convolutional Siamese"
+		},
+		"efee03e2-92bf-4bb8-96b8-4f61a6ddd792": {
+			"type": "text",
+			"x": 761.88,
+			"y": 301.85,
+			"width": 143.41,
+			"height": 17.54,
+			"text": "Networks for Object"
+		},
+		"a3b2d288-bf64-42a4-b08d-8f9d48fb775b": {
+			"type": "text",
+			"x": 760.78,
+			"y": 325.73,
+			"width": 69.77,
+			"height": 17.54,
+			"text": "Tracking\""
+		},
+		"620f6ebb-e87f-4cbe-8886-9b651a50622c": {
+			"type": "text",
+			"x": 772.39,
+			"y": 367.76,
+			"width": 94.07,
+			"height": 11.66,
+			"text": "siamese-network"
+		},
+		"92fe24e6-9afa-43ff-acae-ad3b7caebf02": {
+			"type": "text",
+			"x": 772.45,
+			"y": 395.68,
+			"width": 76.1,
+			"height": 14.56,
+			"text": "deep-learning"
+		},
+		"42784452-7428-42d8-803c-477ae22e5f99": {
+			"type": "text",
+			"x": 872.58,
+			"y": 395.72,
+			"width": 87.85,
+			"height": 14.56,
+			"text": "computer-vision"
+		},
+		"6c57891b-447f-401a-9a80-ec1394797425": {
+			"type": "text",
+			"x": 889.6,
+			"y": 367.7,
+			"width": 44.92,
+			"height": 14.56,
+			"text": "tracking"
+		},
+		"6cf7f6d5-b7ec-494f-9073-8433daed9669": {
+			"type": "text",
+			"x": 772.69,
+			"y": 423.95,
+			"width": 41.78,
+			"height": 14.56,
+			"text": "pytorch"
+		},
+		"d16522b1-32f0-4fbc-b53b-3408d7ea5961": {
+			"type": "text",
+			"x": 789.64,
+			"y": 464.77,
+			"width": 55.9,
+			"height": 13.62,
+			"text": "Readme"
+		},
+		"a7151fcd-b2c2-4ea1-9a17-66944249436d": {
+			"type": "text",
+			"x": 788.68,
+			"y": 501.75,
+			"width": 80.65,
+			"height": 13.62,
+			"text": "View license"
+		},
+		"0b628883-b6ae-454e-a86c-881e3864d423": {
+			"type": "text",
+			"x": 761.71,
+			"y": 572.54,
+			"width": 71.7,
+			"height": 14.84,
+			"text": "Releases"
+		},
+		"5deea7d2-ecf9-4344-8ecf-8cdd13d1059c": {
+			"type": "text",
+			"x": 761.55,
+			"y": 611.54,
+			"width": 120.92,
+			"height": 14.67,
+			"text": "No releases published"
+		},
+		"95cb9f48-fee2-495f-b867-2d0261489059": {
+			"type": "text",
+			"x": 80.49,
+			"y": 277.54,
+			"width": 310.87,
+			"height": 16.84,
+			"text": "rafellerc Merge pull request #26 from clement-l..."
+		},
+		"20cf9632-e165-4e68-a08a-4c119d2f878b": {
+			"type": "text",
+			"x": 446.28,
+			"y": 278.27,
+			"width": 161.28,
+			"height": 15.15,
+			"text": "d64d0fe on Jun 19, 2019"
+		},
+		"d226fd43-2568-4b4d-aabd-bd1b737eb6a2": {
+			"type": "text",
+			"x": 640.67,
+			"y": 277.86,
+			"width": 74.89,
+			"height": 13.55,
+			"text": "26 commits"
+		},
+		"6ab8a274-97c6-4c65-80e4-203f1d88b8b8": {
+			"type": "text",
+			"x": 639.57,
+			"y": 324.79,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"07c149ca-31b6-4ac9-8a30-47b111f7d486": {
+			"type": "text",
+			"x": 639.57,
+			"y": 361.54,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"f9935d95-cd45-4975-9a6e-90d8f7211aa9": {
+			"type": "text",
+			"x": 639.44,
+			"y": 398.9,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"7e48e3cc-d283-418e-b7ce-49497cdbeefb": {
+			"type": "text",
+			"x": 639.74,
+			"y": 435.82,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"b1a7cc95-bd3d-45aa-8c73-83ce80d34008": {
+			"type": "text",
+			"x": 639.59,
+			"y": 472.81,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"9bcb93f4-36d9-4149-92d3-534973ab63a2": {
+			"type": "text",
+			"x": 639.67,
+			"y": 509.73,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"14f1d98e-1e42-462b-8473-5bb9c2be5c2a": {
+			"type": "text",
+			"x": 639.51,
+			"y": 546.8,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"f5b8d2f1-3302-46f3-a3d5-24b00799186c": {
+			"type": "text",
+			"x": 639.59,
+			"y": 583.72,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"40b61e18-d5bd-48f2-8971-141a4c973af4": {
+			"type": "text",
+			"x": 639.51,
+			"y": 620.64,
+			"width": 75.79,
+			"height": 15.58,
+			"text": "2 years ago"
+		},
+		"3198deec-420f-4d38-88f7-6875ad967804": {
+			"type": "text",
+			"x": 80.48,
+			"y": 323.68,
+			"width": 76.9,
+			"height": 16.71,
+			"text": "appSiamFC"
+		},
+		"6a195ec0-aae6-4494-8bfe-dca2e1762894": {
+			"type": "text",
+			"x": 80.81,
+			"y": 360.84,
+			"width": 48.24,
+			"height": 16.62,
+			"text": "images"
+		},
+		"78f6c6af-60f4-48ac-9ac5-6a5d938e5e25": {
+			"type": "text",
+			"x": 80.55,
+			"y": 397.95,
+			"width": 48.7,
+			"height": 16.62,
+			"text": "training"
+		},
+		"c4a3641b-d9df-402e-ba9c-8219afeb66de": {
+			"type": "text",
+			"x": 80.8,
+			"y": 434.72,
+			"width": 27.71,
+			"height": 13.7,
+			"text": "utils"
+		},
+		"0f8c1acc-a308-4ef2-93f1-722006b13577": {
+			"type": "text",
+			"x": 81.6,
+			"y": 471.8,
+			"width": 59.64,
+			"height": 16.57,
+			"text": ".gitignore"
+		},
+		"3a647cd3-d54e-44e6-a0ca-ace4d0d12989": {
+			"type": "text",
+			"x": 80.54,
+			"y": 508.89,
+			"width": 164.86,
+			"height": 16.57,
+			"text": "BaselinePretrained.pth.tar"
+		},
+		"886d2cdc-f5cf-4c0a-8cdb-864943547674": {
+			"type": "text",
+			"x": 80.85,
+			"y": 546.32,
+			"width": 62.76,
+			"height": 13.24,
+			"text": "LICENSE"
+		},
+		"399b948a-eab5-43d5-9087-b1c3404d7386": {
+			"type": "text",
+			"x": 80.6,
+			"y": 582.61,
+			"width": 85.92,
+			"height": 13.98,
+			"text": "README.md"
+		},
+		"21aa3de9-2edb-426f-a01d-931200c68bf4": {
+			"type": "text",
+			"x": 80.63,
+			"y": 619.85,
+			"width": 112.78,
+			"height": 16.44,
+			"text": "environment.yaml"
+		},
+		"3b217aff-d8c4-4474-ab88-8b191d1e03ef": {
+			"type": "text",
+			"x": 263.89,
+			"y": 323.58,
+			"width": 316.63,
+			"height": 16.69,
+			"text": "Expose the alpha value as argument to vis_app.py"
+		},
+		"5fc45330-0f39-4fbe-9590-bf5c6d01a651": {
+			"type": "text",
+			"x": 263.66,
+			"y": 360.76,
+			"width": 268.88,
+			"height": 16.69,
+			"text": "Update the README. Add vis_app.py stuff"
+		},
+		"b2ad7b62-2c22-401a-a578-bb4e85087ac5": {
+			"type": "text",
+			"x": 263.84,
+			"y": 397.66,
+			"width": 333.74,
+			"height": 16.69,
+			"text": "[PATCH] Correct normalization to display summary ..."
+		},
+		"bf8ad7e4-797f-41da-bd91-9ca75d48226f": {
+			"type": "text",
+			"x": 263.44,
+			"y": 434.54,
+			"width": 166.15,
+			"height": 14.1,
+			"text": "First outside world commit"
+		},
+		"1f55f661-733a-4111-84e7-422351dfedb5": {
+			"type": "text",
+			"x": 263.84,
+			"y": 471.75,
+			"width": 332.6,
+			"height": 16.5,
+			"text": "Remove experiment data from repo. Add .gitignore ..."
+		},
+		"c1e53b94-f696-4be8-b5f0-f5cfd4219219": {
+			"type": "text",
+			"x": 263.5,
+			"y": 508.8,
+			"width": 266.84,
+			"height": 16.5,
+			"text": "Add BaselinePretrained, Update README"
+		},
+		"760195aa-2d51-40bf-978b-b1f509832565": {
+			"type": "text",
+			"x": 263.73,
+			"y": 546.53,
+			"width": 108.72,
+			"height": 12.98,
+			"text": "Create LICENSE"
+		},
+		"869f8cf7-5ff3-4383-856e-f3a531aeca96": {
+			"type": "text",
+			"x": 263.63,
+			"y": 582.84,
+			"width": 134.63,
+			"height": 16.38,
+			"text": "Update README.md"
+		},
+		"f81e5691-0a97-422e-9c3e-88c94c0f93dd": {
+			"type": "text",
+			"x": 263.6,
+			"y": 619.68,
+			"width": 292.81,
+			"height": 16.38,
+			"text": "Add the environment.yaml to create conda env"
+		}
+	},
+	"verified": true
+}

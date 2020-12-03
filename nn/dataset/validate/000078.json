@@ -1,0 +1,356 @@
+{
+	"objs": {
+		"1dacd4ad-440a-40f0-bc90-ee0b027d1fdd": {
+			"type": "text",
+			"x": 363.68,
+			"y": 224.67,
+			"width": 198.39,
+			"height": 14.59,
+			"text": "Virtual network 'internet' : NAT"
+		},
+		"6dd4ddcf-5fec-4fb2-ad35-d19321ac96bb": {
+			"type": "text",
+			"x": 240.76,
+			"y": 156.87,
+			"width": 48.18,
+			"height": 13.57,
+			"text": "Details"
+		},
+		"d79b492e-9f3e-41ed-90b9-b3fbd4fa9e18": {
+			"type": "text",
+			"x": 318.66,
+			"y": 157.15,
+			"width": 31.52,
+			"height": 13.18,
+			"text": "XML"
+		},
+		"ccb2b33c-5b2f-453f-947d-df66e19fa032": {
+			"type": "text",
+			"x": 225.78,
+			"y": 191.71,
+			"width": 173.71,
+			"height": 14.07,
+			"text": "Virtual Network Interface"
+		},
+		"b0d52b7e-1173-4d21-b935-1e5a93faa849": {
+			"type": "text",
+			"x": 241.52,
+			"y": 220.73,
+			"width": 106.64,
+			"height": 13.68,
+			"text": "Network source:"
+		},
+		"16b3f250-0549-477e-acf9-2754bb84df41": {
+			"type": "text",
+			"x": 256.22,
+			"y": 264.8,
+			"width": 91.98,
+			"height": 13.6,
+			"text": "Device model:"
+		},
+		"565b10dc-d6b8-403a-9ab5-28b6787a047b": {
+			"type": "text",
+			"x": 362.32,
+			"y": 264.7,
+			"width": 47.82,
+			"height": 13.6,
+			"text": "rtl8139"
+		},
+		"45e44815-dc3e-462e-adb5-966ebf20c83c": {
+			"type": "text",
+			"x": 259.26,
+			"y": 297.71,
+			"width": 210.8,
+			"height": 14.19,
+			"text": "MAC address: 52:54:00:ee:da:16"
+		},
+		"0b5275fa-45f0-4048-8c3b-3901105bd0f7": {
+			"type": "text",
+			"x": 277.53,
+			"y": 331.02,
+			"width": 136.87,
+			"height": 13.48,
+			"text": "IP address: Unknown"
+		},
+		"395391fb-52b6-424c-b696-525b977e350f": {
+			"type": "text",
+			"x": 282.87,
+			"y": 366.07,
+			"width": 65.31,
+			"height": 13.24,
+			"text": "Link state:"
+		},
+		"9e11741d-3a30-47e1-b9c8-98c8db79357a": {
+			"type": "text",
+			"x": 376.74,
+			"y": 366.07,
+			"width": 38.58,
+			"height": 13.11,
+			"text": "active"
+		},
+		"af67c9c2-bd52-4d88-bc60-9885083b0b69": {
+			"type": "text",
+			"x": 63.7,
+			"y": 712.66,
+			"width": 92.82,
+			"height": 14.62,
+			"text": "Add Hardware"
+		},
+		"e69be0ad-710a-4e12-80d1-b013c99f4ff4": {
+			"type": "text",
+			"x": 567.92,
+			"y": 713.18,
+			"width": 52.46,
+			"height": 14.07,
+			"text": "Remove"
+		},
+		"b0af68f8-e3f7-47b6-a005-4bc22112728d": {
+			"type": "text",
+			"x": 668.6,
+			"y": 712.88,
+			"width": 45.53,
+			"height": 13.49,
+			"text": "Cancel"
+		},
+		"f7af7fab-38a4-4635-abd2-58aa5634846f": {
+			"type": "text",
+			"x": 768.84,
+			"y": 712.81,
+			"width": 38.32,
+			"height": 17.38,
+			"text": "Apply"
+		},
+		"a26f6513-782d-4152-85dd-dfc98e706592": {
+			"type": "text",
+			"x": 31.61,
+			"y": 5.74,
+			"width": 65.45,
+			"height": 13.58,
+			"text": "Activities"
+		},
+		"6b91c9d6-556f-42ba-967d-53806464484b": {
+			"type": "text",
+			"x": 136.69,
+			"y": 5.77,
+			"width": 165.38,
+			"height": 17.16,
+			"text": "Virtual Machine Manager"
+		},
+		"9f18581c-491a-462d-b9d2-3eba833f5062": {
+			"type": "text",
+			"x": 477.75,
+			"y": 5.76,
+			"width": 69.55,
+			"height": 13.66,
+			"text": "Mon 03:15"
+		},
+		"f40100ba-0e76-476a-bcab-b85bca9d542b": {
+			"type": "text",
+			"x": 305.73,
+			"y": 37.94,
+			"width": 232.13,
+			"height": 17,
+			"text": "my_ubuntu_server on QEMU/KVM"
+		},
+		"4cd58e9d-297b-4b45-b0b1-8cbeb7b9ec52": {
+			"type": "text",
+			"x": 8.24,
+			"y": 71.34,
+			"width": 23.08,
+			"height": 12.87,
+			"text": "File"
+		},
+		"e8d8d336-2f1e-4027-863d-ba799729d453": {
+			"type": "text",
+			"x": 45.89,
+			"y": 71.28,
+			"width": 99.26,
+			"height": 13.09,
+			"text": "Virtual Machine"
+		},
+		"f6fa837b-d25b-459b-a8f4-3a23e4f4a731": {
+			"type": "text",
+			"x": 159.75,
+			"y": 71.36,
+			"width": 34.07,
+			"height": 13.01,
+			"text": "View"
+		},
+		"d34c77ba-ad4f-4593-b2f8-5208d6bc24cf": {
+			"type": "text",
+			"x": 207.66,
+			"y": 70.94,
+			"width": 62.59,
+			"height": 17.2,
+			"text": "Send Key"
+		},
+		"c53c92d5-591d-4067-bef3-6dfae8b02dbf": {
+			"type": "text",
+			"x": 46.74,
+			"y": 153.22,
+			"width": 62.17,
+			"height": 13.42,
+			"text": "Overview"
+		},
+		"8c0af5fd-2116-4187-b8b4-f75d3f902cda": {
+			"type": "text",
+			"x": 46.23,
+			"y": 179.06,
+			"width": 96.91,
+			"height": 13.26,
+			"text": "OS information"
+		},
+		"e414d7b0-12f8-4c53-a4dc-7de6d95d77f3": {
+			"type": "text",
+			"x": 45.9,
+			"y": 204.99,
+			"width": 82.31,
+			"height": 13.34,
+			"text": "Performance"
+		},
+		"2de3de26-fb0b-4e31-a6ae-823663a18366": {
+			"type": "text",
+			"x": 45.98,
+			"y": 230.75,
+			"width": 35.32,
+			"height": 13.42,
+			"text": "CPUs"
+		},
+		"eecd1b21-1e8a-404b-9652-110ba749044c": {
+			"type": "text",
+			"x": 46.82,
+			"y": 257.18,
+			"width": 53.62,
+			"height": 17.12,
+			"text": "Memory"
+		},
+		"63c53f4a-86cf-4e4a-9e6e-edff0456b851": {
+			"type": "text",
+			"x": 46.82,
+			"y": 283.11,
+			"width": 84.49,
+			"height": 16.86,
+			"text": "Boot Options"
+		},
+		"9fb9ab00-adbc-4453-ac3d-b058439416f7": {
+			"type": "text",
+			"x": 46.99,
+			"y": 309.2,
+			"width": 66.12,
+			"height": 13.09,
+			"text": "IDE Disk 1"
+		},
+		"2acbef79-e2d1-4cf6-8b51-001fe83adf3d": {
+			"type": "text",
+			"x": 46.99,
+			"y": 335.05,
+			"width": 90.11,
+			"height": 13.09,
+			"text": "IDE CDROM 1"
+		},
+		"8ac8cc31-8451-4cf4-9b94-a373155a66ff": {
+			"type": "text",
+			"x": 46.99,
+			"y": 360.55,
+			"width": 88.6,
+			"height": 14.01,
+			"text": "NIC :ee:da:16"
+		},
+		"e28d0a67-8935-4a1d-9711-e1a33db2db9e": {
+			"type": "text",
+			"x": 46.95,
+			"y": 387.22,
+			"width": 83.22,
+			"height": 12.97,
+			"text": "NIC :aa:8f:2a"
+		},
+		"a163d9c6-7f4b-4543-966b-cdd26fe7617c": {
+			"type": "text",
+			"x": 46.1,
+			"y": 413.33,
+			"width": 42.12,
+			"height": 12.78,
+			"text": "Tablet"
+		},
+		"848551c0-0935-41f8-98e6-bb6b23bc4af4": {
+			"type": "text",
+			"x": 46.62,
+			"y": 438.82,
+			"width": 43.56,
+			"height": 13.57,
+			"text": "Mouse"
+		},
+		"a5497a11-7a47-4600-9e8d-7054302ad84d": {
+			"type": "text",
+			"x": 46.98,
+			"y": 465.21,
+			"width": 61.01,
+			"height": 16.71,
+			"text": "Keyboard"
+		},
+		"9524e10a-b8c0-4457-abbf-82c61972eee0": {
+			"type": "text",
+			"x": 46.8,
+			"y": 491.15,
+			"width": 85.19,
+			"height": 16.8,
+			"text": "Display Spice"
+		},
+		"fb1f486d-dbd2-414b-882d-6325823bd81f": {
+			"type": "text",
+			"x": 46.89,
+			"y": 516.81,
+			"width": 72.36,
+			"height": 13.66,
+			"text": "Sound ich6"
+		},
+		"bdb7eb91-a116-4986-bce8-295e06cca0c5": {
+			"type": "text",
+			"x": 46.67,
+			"y": 542.96,
+			"width": 49.73,
+			"height": 13.12,
+			"text": "Serial 1"
+		},
+		"b0b76243-916a-44a1-9a75-011c0e7069d1": {
+			"type": "text",
+			"x": 46.52,
+			"y": 568.57,
+			"width": 131.85,
+			"height": 13.82,
+			"text": "Channel Unix socket"
+		},
+		"957bb6b8-14a8-4af7-b9fa-060e067929b7": {
+			"type": "text",
+			"x": 46.03,
+			"y": 595.01,
+			"width": 69.31,
+			"height": 13.2,
+			"text": "Video QXL"
+		},
+		"983b55b0-89e4-4904-84fd-b4a0c5be04e7": {
+			"type": "text",
+			"x": 46.03,
+			"y": 620.48,
+			"width": 110.48,
+			"height": 13.75,
+			"text": "Controller USB 0"
+		},
+		"0a309d16-7199-45b9-87c1-86fdc2353a1d": {
+			"type": "text",
+			"x": 46.86,
+			"y": 646.82,
+			"width": 103.19,
+			"height": 13.51,
+			"text": "Controller IDE 0"
+		},
+		"4cc6be28-87fa-4bd9-b824-c4f57800d75e": {
+			"type": "text",
+			"x": 47.23,
+			"y": 673.11,
+			"width": 157.98,
+			"height": 13.02,
+			"text": "Controller VirtIO Serial 0"
+		}
+	}
+}

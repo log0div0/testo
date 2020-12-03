@@ -1,0 +1,237 @@
+{
+	"objs": {
+		"19defc1e-0ac2-4e30-8b28-2eabafb03991": {
+			"type": "text",
+			"x": 7.87,
+			"y": 7.72,
+			"width": 76.44,
+			"height": 15.51,
+			"text": "Applications"
+		},
+		"56c864af-3328-4e4d-b7df-e7c1d54742c6": {
+			"type": "text",
+			"x": 1315.64,
+			"y": 10.39,
+			"width": 14.12,
+			"height": 10.21,
+			"text": "Ro"
+		},
+		"6545ddca-a113-4b3c-8496-852b1e481a8c": {
+			"type": "text",
+			"x": 1242,
+			"y": 59.67,
+			"width": 22.12,
+			"height": 17.41,
+			"text": "$_"
+		},
+		"973ec371-493a-4e6e-975a-fc769b6738dc": {
+			"type": "text",
+			"x": 1286.2,
+			"y": 56.29,
+			"width": 81.31,
+			"height": 13.12,
+			"text": "Task finished"
+		},
+		"e68fc877-49b5-4ec3-9d1b-72eb24396012": {
+			"type": "text",
+			"x": 1286.57,
+			"y": 73.77,
+			"width": 109.04,
+			"height": 15.56,
+			"text": "sudo apt-get update"
+		},
+		"78f00990-d514-4a6a-bf10-b36ea98ffd3c": {
+			"type": "text",
+			"x": 945.6,
+			"y": 877.7,
+			"width": 21.9,
+			"height": 20.47,
+			"text": ""
+		},
+		"ef6a7dce-883a-417f-9048-3983cacadf73": {
+			"type": "text",
+			"x": 1065.23,
+			"y": 870.54,
+			"width": 21.13,
+			"height": 17.16,
+			"text": "$_"
+		},
+		"27c6d98b-b2fc-4ff0-acd4-a5733cf7d501": {
+			"type": "text",
+			"x": 125.52,
+			"y": 129.98,
+			"width": 60.01,
+			"height": 15.95,
+			"text": "All Settings"
+		},
+		"e29487ee-f26f-457a-a3c3-a4b2336ee2e5": {
+			"type": "text",
+			"x": 476.86,
+			"y": 129.6,
+			"width": 79.56,
+			"height": 13.74,
+			"text": "Notifications"
+		},
+		"20df8970-0884-4e35-b788-06b020cb3a52": {
+			"type": "text",
+			"x": 788.47,
+			"y": 130.6,
+			"width": 83.67,
+			"height": 15.76,
+			"text": "Search Settings"
+		},
+		"0a8303c6-7382-41c2-961a-f03ecdd034f8": {
+			"type": "text",
+			"x": 85.86,
+			"y": 177.27,
+			"width": 13.06,
+			"height": 10.97,
+			"text": "$_"
+		},
+		"3deae746-d4f5-4ab1-b1fa-828dd6567769": {
+			"type": "text",
+			"x": 116.07,
+			"y": 171.98,
+			"width": 63.42,
+			"height": 13.21,
+			"text": "Terminal"
+		},
+		"f79bc8fe-16a9-471e-99c9-63f6a9909c0c": {
+			"type": "text",
+			"x": 116.84,
+			"y": 189.64,
+			"width": 79.37,
+			"height": 11.4,
+			"text": "Bubbles, Sounds"
+		},
+		"dc54e953-463b-4c07-8eea-9e783a76144d": {
+			"type": "text",
+			"x": 117.39,
+			"y": 223.96,
+			"width": 46.13,
+			"height": 13.29,
+			"text": "Midori"
+		},
+		"add0f240-2c23-4b4c-a947-d8c157edc244": {
+			"type": "text",
+			"x": 116.83,
+			"y": 241.75,
+			"width": 79.37,
+			"height": 11.4,
+			"text": "Bubbles, Sounds"
+		},
+		"c80bf2fc-aa43-4a39-8fa7-c7c43b7ca63c": {
+			"type": "text",
+			"x": 116.88,
+			"y": 293.77,
+			"width": 79.37,
+			"height": 11.4,
+			"text": "Bubbles, Sounds"
+		},
+		"2f89d868-a565-4663-887e-b82f9d361f27": {
+			"type": "text",
+			"x": 117.03,
+			"y": 345.58,
+			"width": 79.37,
+			"height": 11.4,
+			"text": "Bubbles, Sounds"
+		},
+		"d359f51a-e715-4879-819d-f8016a0bf171": {
+			"type": "text",
+			"x": 116.93,
+			"y": 397.73,
+			"width": 79.37,
+			"height": 11.4,
+			"text": "Bubbles, Sounds"
+		},
+		"f1d37e4e-e64e-4384-9976-87380ce44516": {
+			"type": "text",
+			"x": 116.72,
+			"y": 275.7,
+			"width": 74.68,
+			"height": 17.54,
+			"text": "Geary Mail"
+		},
+		"29586ab9-c31a-42e7-bd11-5ad95292be44": {
+			"type": "text",
+			"x": 116.86,
+			"y": 328.35,
+			"width": 44.92,
+			"height": 17.22,
+			"text": "image"
+		},
+		"ed427517-2637-4ad5-8ed2-1fde33e618bf": {
+			"type": "text",
+			"x": 116.55,
+			"y": 379.7,
+			"width": 79.63,
+			"height": 17.7,
+			"text": "notify-send"
+		},
+		"afb1dce9-8fbf-4765-92a8-90300f08e417": {
+			"type": "text",
+			"x": 78.56,
+			"y": 657.71,
+			"width": 87.87,
+			"height": 12.71,
+			"text": "Do Not Disturb"
+		},
+		"9d7551a7-c2ec-493e-8af8-ba3f9df51d01": {
+			"type": "text",
+			"x": 329.14,
+			"y": 182.71,
+			"width": 21.69,
+			"height": 17.34,
+			"text": "$_"
+		},
+		"9b4f2e3f-5623-44d7-9187-0c53f77fa5a1": {
+			"type": "text",
+			"x": 379.23,
+			"y": 185.52,
+			"width": 76.08,
+			"height": 16.88,
+			"text": "Terminal"
+		},
+		"fc22bf98-bd91-4692-8c58-205752f73c96": {
+			"type": "text",
+			"x": 516.04,
+			"y": 287.19,
+			"width": 57.52,
+			"height": 14.33,
+			"text": "Bubbles"
+		},
+		"37556d8d-6faf-4d69-887c-d9a333ff460d": {
+			"type": "text",
+			"x": 515.61,
+			"y": 350.58,
+			"width": 435.88,
+			"height": 15.95,
+			"text": "Bubbles appear in the top right corner of the display and disappear automatically."
+		},
+		"ddfe8e5d-b05c-4f39-9f64-11be3d439364": {
+			"type": "text",
+			"x": 515.38,
+			"y": 442.83,
+			"width": 54.2,
+			"height": 13.76,
+			"text": "Sounds"
+		},
+		"71d77868-fe20-4a0d-9346-8955fc32c5de": {
+			"type": "text",
+			"x": 515.64,
+			"y": 505.77,
+			"width": 267.56,
+			"height": 15.57,
+			"text": "Sounds play once when a new notification arrives."
+		},
+		"8542b5c5-2467-4a26-baeb-08e7973b460c": {
+			"type": "text",
+			"x": 90.02,
+			"y": 382.07,
+			"width": 11.07,
+			"height": 22.44,
+			"text": "i"
+		}
+	},
+	"verified": true
+}

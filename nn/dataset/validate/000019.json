@@ -1,0 +1,20 @@
+{
+	"objs": {
+		"5f09531c-401c-4eb7-809f-7328f524db3f": {
+			"type": "text",
+			"x": 225.3,
+			"y": 151.41,
+			"width": 137.96,
+			"height": 14,
+			"text": "ROOT PASSWORD"
+		},
+		"04442eaf-9d3f-417a-bcaf-c9a666e12013": {
+			"type": "text",
+			"x": 224.56,
+			"y": 172.66,
+			"width": 168.42,
+			"height": 17.32,
+			"text": "Root password is not set"
+		}
+	}
+}

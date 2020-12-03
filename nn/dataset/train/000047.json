@@ -1,0 +1,389 @@
+{
+	"objs": {
+		"d01082ce-fbf0-4c3d-9518-80e96c8e3ccf": {
+			"type": "text",
+			"x": 98.4,
+			"y": 13.81,
+			"width": 20.8,
+			"height": 26.35,
+			"text": "S"
+		},
+		"5995a4c4-0266-419f-b5e6-966fb97c5644": {
+			"type": "text",
+			"x": 205.83,
+			"y": 19.82,
+			"width": 40.54,
+			"height": 13.45,
+			"text": "Menu"
+		},
+		"4df266ed-53fb-4963-ae6c-a9f4939be7a9": {
+			"type": "text",
+			"x": 76.6,
+			"y": 70.49,
+			"width": 61.88,
+			"height": 16.9,
+			"text": "Divider"
+		},
+		"eea08831-d1b9-4da1-8b63-8df8ef58c334": {
+			"type": "text",
+			"x": 151.42,
+			"y": 136.67,
+			"width": 14.09,
+			"height": 12.56,
+			"text": "A"
+		},
+		"9deed8b6-e69d-459f-b8c1-0becf6e28b85": {
+			"type": "text",
+			"x": 218.47,
+			"y": 136.54,
+			"width": 25.01,
+			"height": 12.69,
+			"text": "OR"
+		},
+		"030d401d-5b3d-463a-83ed-fda75fdb1dd4": {
+			"type": "text",
+			"x": 316.83,
+			"y": 136.84,
+			"width": 11.19,
+			"height": 12.18,
+			"text": "B"
+		},
+		"6c8c115f-3778-414e-9ec4-7a205aff4574": {
+			"type": "text",
+			"x": 475.55,
+			"y": 64.44,
+			"width": 40.8,
+			"height": 17.19,
+			"text": "Feed"
+		},
+		"6609d432-71ba-438d-8598-522d288b2423": {
+			"type": "text",
+			"x": 926.15,
+			"y": 21.2,
+			"width": 31.9,
+			"height": 9.83,
+			"text": "Tweet"
+		},
+		"4258b436-f9d1-45d8-b8b8-c36d76abb06c": {
+			"type": "text",
+			"x": 999.98,
+			"y": 21.1,
+			"width": 23.77,
+			"height": 9.95,
+			"text": "Star"
+		},
+		"4e8e6bc3-ec16-4b6b-a938-deed97d687c7": {
+			"type": "text",
+			"x": 1036.19,
+			"y": 20.92,
+			"width": 35.8,
+			"height": 11.74,
+			"text": "48,680"
+		},
+		"834781d1-1868-42b3-8421-d9e422841e89": {
+			"type": "text",
+			"x": 1142.55,
+			"y": 19.67,
+			"width": 48.57,
+			"height": 16.47,
+			"text": "English"
+		},
+		"6c4af7ad-e4dc-4497-9e62-02d5480a8399": {
+			"type": "text",
+			"x": 75.45,
+			"y": 268.62,
+			"width": 84.88,
+			"height": 16.85,
+			"text": "Accordion"
+		},
+		"8b750ab4-e0ca-46fb-b68a-f546507e064b": {
+			"type": "text",
+			"x": 93.37,
+			"y": 324.6,
+			"width": 26.95,
+			"height": 12.74,
+			"text": "Size"
+		},
+		"dd91edbc-88cc-4ac3-8492-2f23f5296840": {
+			"type": "text",
+			"x": 119.51,
+			"y": 355.46,
+			"width": 33.91,
+			"height": 12.79,
+			"text": "Small"
+		},
+		"ea308d1e-d78c-450d-9b78-cb76f3e4acae": {
+			"type": "text",
+			"x": 119.3,
+			"y": 379.33,
+			"width": 53,
+			"height": 12.93,
+			"text": "Medium"
+		},
+		"38bc5fb0-deac-44d7-98e2-0ffb95bb41ab": {
+			"type": "text",
+			"x": 119.7,
+			"y": 403.75,
+			"width": 35.58,
+			"height": 14.37,
+			"text": "Large"
+		},
+		"71edaf88-69f6-460e-b7ea-15808410343d": {
+			"type": "text",
+			"x": 118.46,
+			"y": 427.68,
+			"width": 50.98,
+			"height": 14.69,
+			"text": "X-Large"
+		},
+		"12d8b274-afb6-4dd8-abfe-2f6abc6a0aab": {
+			"type": "text",
+			"x": 93.49,
+			"y": 478.52,
+			"width": 41.94,
+			"height": 12.82,
+			"text": "Colors"
+		},
+		"2602783b-5e71-4f92-a016-236329fa6ae4": {
+			"type": "text",
+			"x": 76.88,
+			"y": 586.42,
+			"width": 72.69,
+			"height": 20.14,
+			"text": "Message"
+		},
+		"75a86ce6-c702-4ec2-a3cd-2bf1f518c2c0": {
+			"type": "text",
+			"x": 96.5,
+			"y": 642.63,
+			"width": 135.09,
+			"height": 13.02,
+			"text": "This site uses cookies"
+		},
+		"be00adc2-6d2d-413a-8abb-192352f514cc": {
+			"type": "text",
+			"x": 97.86,
+			"y": 701.64,
+			"width": 123.59,
+			"height": 16.91,
+			"text": "Looking for help?"
+		},
+		"047642f3-7019-46fb-ab99-8479893c7718": {
+			"type": "text",
+			"x": 111.35,
+			"y": 727.55,
+			"width": 123.04,
+			"height": 14.57,
+			"text": "Use our help center"
+		},
+		"72685c24-3b98-49c3-a73c-550f93cf398d": {
+			"type": "text",
+			"x": 111.6,
+			"y": 750.64,
+			"width": 95.95,
+			"height": 14.75,
+			"text": "Check our FAQ"
+		},
+		"76903ef1-a7f1-447e-aa45-bfb9c6fbd0ad": {
+			"type": "text",
+			"x": 526.59,
+			"y": 113.33,
+			"width": 170.88,
+			"height": 14.72,
+			"text": "Mark added you as a friend"
+		},
+		"75a72fbb-5c12-4689-8979-d24e63c9e168": {
+			"type": "text",
+			"x": 526.04,
+			"y": 160.76,
+			"width": 265.59,
+			"height": 14.27,
+			"text": "You added Lena to the group Close Friends"
+		},
+		"bd6f93d1-6bae-408a-ba49-d712e021781e": {
+			"type": "text",
+			"x": 526.64,
+			"y": 207.59,
+			"width": 178.85,
+			"height": 14.79,
+			"text": "Eve just posted on your page"
+		},
+		"d4428747-4cfc-479c-8089-dc7d5fb23b9d": {
+			"type": "text",
+			"x": 475.78,
+			"y": 317.44,
+			"width": 44.7,
+			"height": 17.36,
+			"text": "Label"
+		},
+		"9fd625a9-98d7-404d-a8f6-e25bc50cf357": {
+			"type": "text",
+			"x": 511.55,
+			"y": 364.84,
+			"width": 113.78,
+			"height": 13.47,
+			"text": "molly@thebears.com"
+		},
+		"fdf89a91-44bb-4c52-9552-c508c4d2dbe3": {
+			"type": "text",
+			"x": 505.61,
+			"y": 403.43,
+			"width": 43.75,
+			"height": 10.91,
+			"text": "Dresses"
+		},
+		"1d72f831-94d4-4b30-a6b1-5a54659c1a44": {
+			"type": "text",
+			"x": 690.49,
+			"y": 365.35,
+			"width": 45.33,
+			"height": 11.31,
+			"text": "23 New"
+		},
+		"473d8314-f64b-4040-9962-d08879aa603f": {
+			"type": "text",
+			"x": 475.53,
+			"y": 511.54,
+			"width": 38.22,
+			"height": 20.01,
+			"text": "Step"
+		},
+		"9191396d-6cba-4e9d-82ad-aebfc6bd7868": {
+			"type": "text",
+			"x": 559.78,
+			"y": 569.59,
+			"width": 63.61,
+			"height": 16.67,
+			"text": "Shipping"
+		},
+		"e2c79800-ebb1-4f85-896d-9d0f2422b9e3": {
+			"type": "text",
+			"x": 559.75,
+			"y": 587.54,
+			"width": 171.5,
+			"height": 14.84,
+			"text": "Choose your shipping options"
+		},
+		"65ee3fc5-4b7f-4ea4-a3cd-e4ba120ff611": {
+			"type": "text",
+			"x": 560.55,
+			"y": 637.66,
+			"width": 45.85,
+			"height": 16.62,
+			"text": "Billing"
+		},
+		"fe5b47c2-a788-4491-bae6-356d18546999": {
+			"type": "text",
+			"x": 560.18,
+			"y": 656.5,
+			"width": 139.27,
+			"height": 14.69,
+			"text": "Enter billing information"
+		},
+		"fec758e3-3553-4c41-8922-5de57d147008": {
+			"type": "text",
+			"x": 559.5,
+			"y": 706.54,
+			"width": 106.03,
+			"height": 14,
+			"text": "Confirm Order"
+		},
+		"84547c4c-232a-470b-90fb-bb5195e2881a": {
+			"type": "text",
+			"x": 559.13,
+			"y": 724.73,
+			"width": 110.22,
+			"height": 14.62,
+			"text": "Verify order details"
+		},
+		"989b364c-066c-4849-a707-f3cc1df5c902": {
+			"type": "text",
+			"x": 874.98,
+			"y": 118.61,
+			"width": 44.47,
+			"height": 19.59,
+			"text": "Input"
+		},
+		"a5bee083-22b0-491b-aa3d-896ecb130e41": {
+			"type": "text",
+			"x": 912.71,
+			"y": 169.66,
+			"width": 53.55,
+			"height": 12.76,
+			"text": "Search..."
+		},
+		"007f3053-25cc-45ca-b7a6-8cf6323e46d4": {
+			"type": "text",
+			"x": 1124.42,
+			"y": 170.67,
+			"width": 44.72,
+			"height": 12.83,
+			"text": "Search"
+		},
+		"194c3982-46c2-4698-86f1-0d3a64d378ec": {
+			"type": "text",
+			"x": 886.7,
+			"y": 237.71,
+			"width": 40.63,
+			"height": 14.33,
+			"text": "http://"
+		},
+		"9e56fcf8-7672-48f0-81b5-4b6ed7801fe7": {
+			"type": "text",
+			"x": 951.74,
+			"y": 237.83,
+			"width": 71.55,
+			"height": 14.4,
+			"text": "mysite.com"
+		},
+		"2739a9c4-92d0-42da-9306-f9e3d3e4c509": {
+			"type": "text",
+			"x": 889.85,
+			"y": 305.75,
+			"width": 101.45,
+			"height": 14.51,
+			"text": "Enter categories"
+		},
+		"7d0cbd5b-7d8d-487b-b25e-0f90ea7790bd": {
+			"type": "text",
+			"x": 1100.26,
+			"y": 305.3,
+			"width": 60.19,
+			"height": 15.32,
+			"text": "Add Tags"
+		},
+		"3ae45419-927d-416c-9394-f9c267c28e34": {
+			"type": "text",
+			"x": 874.53,
+			"y": 410.51,
+			"width": 81.84,
+			"height": 17.02,
+			"text": "Checkbox"
+		},
+		"5fc324bf-5d31-4809-b79b-d1fac490bc4f": {
+			"type": "text",
+			"x": 900.76,
+			"y": 452.77,
+			"width": 110.46,
+			"height": 14.63,
+			"text": "I enjoy having fun"
+		},
+		"99704c4c-86dc-44f3-9053-356ca4872edd": {
+			"type": "text",
+			"x": 937.47,
+			"y": 501.56,
+			"width": 210.97,
+			"height": 14.59,
+			"text": "Receive weekly poodle newsletter"
+		},
+		"0b38fac7-506a-44fc-848f-1cdf39017e18": {
+			"type": "text",
+			"x": 937.64,
+			"y": 551.65,
+			"width": 176.75,
+			"height": 14.55,
+			"text": "Make my dog's profile public"
+		}
+	},
+	"verified": true
+}

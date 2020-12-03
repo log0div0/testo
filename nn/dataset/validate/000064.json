@@ -1,0 +1,44 @@
+{
+	"objs": {
+		"313564d3-1df1-462e-9d13-d9b9ffef5393": {
+			"type": "text",
+			"x": 230.46,
+			"y": 248.8,
+			"width": 184.27,
+			"height": 16.09,
+			"text": "Please select Language:"
+		},
+		"e4269f87-dc92-462a-98ba-783becebc0cd": {
+			"type": "text",
+			"x": 183,
+			"y": 281.12,
+			"width": 57.05,
+			"height": 14.74,
+			"text": "English"
+		},
+		"0e1dec8e-12f0-44a7-8046-b01d5d1fd992": {
+			"type": "text",
+			"x": 182.9,
+			"y": 297.01,
+			"width": 57.15,
+			"height": 12.14,
+			"text": "Russian"
+		},
+		"a3abaa23-294a-4537-9194-36e9d83a90f5": {
+			"type": "text",
+			"x": 182.96,
+			"y": 329.07,
+			"width": 81.21,
+			"height": 14.9,
+			"text": "Autodeploy"
+		},
+		"2d4a2346-b170-4c9a-9055-c594799f4ca1": {
+			"type": "text",
+			"x": 198.77,
+			"y": 456.86,
+			"width": 226.49,
+			"height": 13.41,
+			"text": "Automatic boot in 30 seconds"
+		}
+	}
+}

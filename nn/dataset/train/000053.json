@@ -1,0 +1,749 @@
+{
+	"objs": {
+		"5d0aa341-001b-4267-8cc7-7ae34fe1c519": {
+			"type": "text",
+			"x": 42.95,
+			"y": 9.84,
+			"width": 20.53,
+			"height": 11.86,
+			"text": ""
+		},
+		"c2ba8224-f70c-4fbc-9c44-0433d41160fa": {
+			"type": "text",
+			"x": 80.89,
+			"y": 9.75,
+			"width": 22.7,
+			"height": 11.56,
+			"text": "Edit"
+		},
+		"77856c0b-d58d-41f0-b1d7-9c637f7d8ad5": {
+			"type": "text",
+			"x": 120.34,
+			"y": 9.43,
+			"width": 28.03,
+			"height": 11.9,
+			"text": "View"
+		},
+		"0c6badf2-0b84-43a7-b432-ea66e7b13f1d": {
+			"type": "text",
+			"x": 165.95,
+			"y": 9.6,
+			"width": 39.34,
+			"height": 14.56,
+			"text": "Project"
+		},
+		"53386831-cea2-4b86-9330-80b0228fbd7b": {
+			"type": "text",
+			"x": 222.89,
+			"y": 9.6,
+			"width": 29.38,
+			"height": 11.62,
+			"text": "Build"
+		},
+		"673316bc-9602-4eb8-92e4-03d6b1134484": {
+			"type": "text",
+			"x": 269.68,
+			"y": 9.44,
+			"width": 37.89,
+			"height": 14.95,
+			"text": "Debug"
+		},
+		"85df820e-5ce8-4332-9db3-62bf174019ce": {
+			"type": "text",
+			"x": 325.01,
+			"y": 10.05,
+			"width": 22.22,
+			"height": 11.2,
+			"text": "Test"
+		},
+		"bc82dd42-770a-4d0a-958e-075b723f62b2": {
+			"type": "text",
+			"x": 364.8,
+			"y": 9.76,
+			"width": 43.48,
+			"height": 14.43,
+			"text": "Analyze"
+		},
+		"95c4c572-5b4d-439f-9e14-90007a5cf0e6": {
+			"type": "text",
+			"x": 425.95,
+			"y": 9.96,
+			"width": 29.52,
+			"height": 11.27,
+			"text": "Tools"
+		},
+		"a4ea7291-f6df-49bf-9175-b18cdd355eb9": {
+			"type": "text",
+			"x": 472.95,
+			"y": 9.76,
+			"width": 58.42,
+			"height": 11.7,
+			"text": "Extensions"
+		},
+		"2a7dfd31-99f1-4f7b-86e1-f190d321cd25": {
+			"type": "text",
+			"x": 548.53,
+			"y": 9.51,
+			"width": 47.14,
+			"height": 12.26,
+			"text": "Window"
+		},
+		"85238c97-568d-4326-a71f-385258339daa": {
+			"type": "text",
+			"x": 612.79,
+			"y": 9.74,
+			"width": 27.52,
+			"height": 14.4,
+			"text": "Help"
+		},
+		"871b122d-4102-41d7-841b-643a116dceda": {
+			"type": "text",
+			"x": 663.65,
+			"y": 9.53,
+			"width": 84.53,
+			"height": 13.57,
+			"text": "Search (Ctrl+Q)"
+		},
+		"a33e13b4-f7cc-4279-89d7-a31529e3420e": {
+			"type": "text",
+			"x": 811.52,
+			"y": 9.72,
+			"width": 60.08,
+			"height": 11.66,
+			"text": "Cons...ion1"
+		},
+		"09acf7ed-6980-4613-bdd8-61bdc6205fee": {
+			"type": "text",
+			"x": 1001.73,
+			"y": 70.36,
+			"width": 11.76,
+			"height": 69.84,
+			"text": ""
+		},
+		"b5ba3f35-d9ad-4a27-9cef-b177f0a5902e": {
+			"type": "text",
+			"x": 875.68,
+			"y": 741.55,
+			"width": 25.79,
+			"height": 11.75,
+			"text": "ENG"
+		},
+		"ebbb5c48-ca3b-437b-ad96-2fd2beec5e3d": {
+			"type": "text",
+			"x": 916.77,
+			"y": 732.67,
+			"width": 44.76,
+			"height": 11.63,
+			"text": "5:57 PM"
+		},
+		"45ec7f77-7e25-48d7-ac1c-3aa0c92943ec": {
+			"type": "text",
+			"x": 908.82,
+			"y": 750.6,
+			"width": 60.75,
+			"height": 12.66,
+			"text": "11/16/2020"
+		},
+		"64537e5b-dab0-4283-9b67-c66bdaf7d586": {
+			"type": "text",
+			"x": 994.77,
+			"y": 748.94,
+			"width": 6.49,
+			"height": 11.13,
+			"text": "1"
+		},
+		"e98bc349-4ab4-42f0-9288-6420d65fa2bb": {
+			"type": "text",
+			"x": 997.06,
+			"y": 714.96,
+			"width": 5.23,
+			"height": 9.94,
+			"text": "1"
+		},
+		"692e491f-2a59-4b3f-989c-7fdb3772a7cc": {
+			"type": "text",
+			"x": 831.69,
+			"y": 710.8,
+			"width": 120.46,
+			"height": 11.43,
+			"text": "Add to Source Control"
+		},
+		"d5a67bae-273f-48a3-8852-e7a7de51126a": {
+			"type": "text",
+			"x": 26.6,
+			"y": 710.65,
+			"width": 173.87,
+			"height": 14.66,
+			"text": "Creating project 'ConsoleAppli..."
+		},
+		"6c664bea-d3fa-4e8f-9b50-b6d0b1152d32": {
+			"type": "text",
+			"x": 63.76,
+			"y": 735.79,
+			"width": 22.66,
+			"height": 24.56,
+			"text": "e"
+		},
+		"87ab7d54-f7bb-48bf-beb2-8edb119ddf5f": {
+			"type": "text",
+			"x": 11.59,
+			"y": 69.78,
+			"width": 11.52,
+			"height": 43.4,
+			"text": ""
+		},
+		"53ab140d-7579-435f-889b-095f285f70f0": {
+			"type": "text",
+			"x": 277.99,
+			"y": 39.97,
+			"width": 37.15,
+			"height": 14.13,
+			"text": "Debug"
+		},
+		"ba03b55f-e127-41c0-aa25-29581104a180": {
+			"type": "text",
+			"x": 348.06,
+			"y": 39.91,
+			"width": 21.41,
+			"height": 11.27,
+			"text": "x86"
+		},
+		"91fb9563-92db-4140-8318-d0639e69a140": {
+			"type": "text",
+			"x": 481.81,
+			"y": 39.7,
+			"width": 138.31,
+			"height": 14.5,
+			"text": "Local Windows Debugger"
+		},
+		"476c881f-1dde-4b97-aab9-be2e0afcd148": {
+			"type": "text",
+			"x": 648.53,
+			"y": 76.59,
+			"width": 93.82,
+			"height": 14.61,
+			"text": "Solution Explorer"
+		},
+		"168c57ad-e283-4eac-a218-1308ba292ee1": {
+			"type": "text",
+			"x": 34.67,
+			"y": 75.78,
+			"width": 135.49,
+			"height": 14.32,
+			"text": "ConsoleApplication1.cpp"
+		},
+		"71b97a69-d337-4fd9-aa75-8a27ec4e0b70": {
+			"type": "text",
+			"x": 51.83,
+			"y": 96.75,
+			"width": 111.41,
+			"height": 14.32,
+			"text": "ConsoleApplication1"
+		},
+		"3b567b2e-890b-44a8-8d4b-70dcfd125230": {
+			"type": "text",
+			"x": 254.54,
+			"y": 96.63,
+			"width": 79.79,
+			"height": 14.43,
+			"text": "(Global Scope)"
+		},
+		"3f541dcf-0e1c-41e1-b35d-83e29cf1a719": {
+			"type": "text",
+			"x": 33.23,
+			"y": 684.64,
+			"width": 32.25,
+			"height": 10.85,
+			"text": "100 %"
+		},
+		"4a124c20-cf85-4d0d-bd12-96e1e59da264": {
+			"type": "text",
+			"x": 130.57,
+			"y": 684.73,
+			"width": 86.89,
+			"height": 10.73,
+			"text": "No issues found"
+		},
+		"b27844e9-ffa1-48b1-b294-c85a7adabc89": {
+			"type": "text",
+			"x": 475.97,
+			"y": 684.79,
+			"width": 25.33,
+			"height": 10.54,
+			"text": "Ln: 1"
+		},
+		"602de03b-ada3-42a3-97be-6b642d3aeddc": {
+			"type": "text",
+			"x": 517.83,
+			"y": 684.25,
+			"width": 27.56,
+			"height": 11.22,
+			"text": "Ch: 1"
+		},
+		"37e1ad19-2466-4c06-b8a5-37209acc2e48": {
+			"type": "text",
+			"x": 562.47,
+			"y": 685.46,
+			"width": 22.12,
+			"height": 10.76,
+			"text": "SPC"
+		},
+		"fa0e8163-e8a1-4722-ae62-06b42d412a1e": {
+			"type": "text",
+			"x": 601.5,
+			"y": 685.52,
+			"width": 28.09,
+			"height": 10.74,
+			"text": "CRLF"
+		},
+		"17c9f9ff-577b-4176-99ab-4a550eab38ea": {
+			"type": "text",
+			"x": 649.83,
+			"y": 125.75,
+			"width": 171.53,
+			"height": 14.38,
+			"text": "Search Solution Explorer (Ctrl+;)"
+		},
+		"bc98be9d-5d82-4d99-9baf-0618e8f1a1c0": {
+			"type": "text",
+			"x": 677.49,
+			"y": 147.5,
+			"width": 245.95,
+			"height": 14.62,
+			"text": "Solution 'ConsoleApplication1' (1 of 1 project)"
+		},
+		"98422173-2ab4-4aa1-8ae4-e388b4dc1569": {
+			"type": "text",
+			"x": 695.7,
+			"y": 165.61,
+			"width": 113.52,
+			"height": 14.48,
+			"text": "ConsoleApplication1"
+		},
+		"74bf45ee-df43-4d87-8670-079ccf55c5e7": {
+			"type": "text",
+			"x": 713.69,
+			"y": 183.54,
+			"width": 59.91,
+			"height": 12.14,
+			"text": "References"
+		},
+		"3fe01375-6902-4b25-8988-84fbaffc8391": {
+			"type": "text",
+			"x": 713.51,
+			"y": 201.63,
+			"width": 122.03,
+			"height": 14.63,
+			"text": "External Dependencies"
+		},
+		"b0e2a0f1-6d76-44b4-a6a8-5f32350b3cc6": {
+			"type": "text",
+			"x": 713.78,
+			"y": 219.6,
+			"width": 66.54,
+			"height": 11.91,
+			"text": "Header Files"
+		},
+		"0e7af6ca-37da-432d-88e9-442a326b782d": {
+			"type": "text",
+			"x": 713.55,
+			"y": 237.56,
+			"width": 76.91,
+			"height": 11.85,
+			"text": "Resource Files"
+		},
+		"20436042-f39a-4022-b232-e670558c6e1b": {
+			"type": "text",
+			"x": 713.41,
+			"y": 255.51,
+			"width": 64.99,
+			"height": 11.85,
+			"text": "Source Files"
+		},
+		"54e60c23-1962-4475-9dce-1b33fa2c0795": {
+			"type": "text",
+			"x": 649.69,
+			"y": 413.66,
+			"width": 93.37,
+			"height": 14.51,
+			"text": "Solution Explorer"
+		},
+		"58876dc8-e4ca-485b-a02f-73388ed53986": {
+			"type": "text",
+			"x": 751.67,
+			"y": 413.87,
+			"width": 77.73,
+			"height": 14.35,
+			"text": "Team Explorer"
+		},
+		"5a42af46-8949-43a3-a50a-fd2a45f598a3": {
+			"type": "text",
+			"x": 648.94,
+			"y": 442.89,
+			"width": 55.6,
+			"height": 14.12,
+			"text": "Properties"
+		},
+		"8a6e3c64-5221-4177-98b4-c8b25c103252": {
+			"type": "text",
+			"x": 676.39,
+			"y": 489.4,
+			"width": 6.48,
+			"height": 6.34,
+			"text": "A"
+		},
+		"b5ff589e-ead0-46b1-b033-ec537ed6b40a": {
+			"type": "text",
+			"x": 676.35,
+			"y": 497.46,
+			"width": 6.35,
+			"height": 6.23,
+			"text": "Z"
+		},
+		"86e42c3a-a0e6-4a72-8951-f9f52d4c5d70": {
+			"type": "text",
+			"x": 76.12,
+			"y": 116.97,
+			"width": 9,
+			"height": 10.08,
+			"text": "1"
+		},
+		"472958b1-2469-47d6-a469-5cd2b532cc49": {
+			"type": "text",
+			"x": 75.9,
+			"y": 133.06,
+			"width": 9.2,
+			"height": 9.85,
+			"text": "2"
+		},
+		"fe5216df-eb03-432f-8eb0-10522c1b1da0": {
+			"type": "text",
+			"x": 76.04,
+			"y": 148.88,
+			"width": 8.97,
+			"height": 10.06,
+			"text": "3"
+		},
+		"7d752254-95ff-47f1-8d71-eed5150d2025": {
+			"type": "text",
+			"x": 75.01,
+			"y": 164.81,
+			"width": 10.13,
+			"height": 10.22,
+			"text": "4"
+		},
+		"25fef34b-5766-42d0-94b7-026eb960c069": {
+			"type": "text",
+			"x": 75.88,
+			"y": 180.92,
+			"width": 9.2,
+			"height": 10.29,
+			"text": "5"
+		},
+		"eed91b4e-9b36-4a8f-a550-e0f93fa9313e": {
+			"type": "text",
+			"x": 75.87,
+			"y": 196.95,
+			"width": 9.33,
+			"height": 10.19,
+			"text": "6"
+		},
+		"ffe76cc2-a4d0-4f62-9ad3-ea9288586c35": {
+			"type": "text",
+			"x": 75.86,
+			"y": 212.92,
+			"width": 9.3,
+			"height": 10.2,
+			"text": "7"
+		},
+		"06a3a182-6af3-4020-9b14-10ae0bf3ee52": {
+			"type": "text",
+			"x": 75.84,
+			"y": 228.82,
+			"width": 9.28,
+			"height": 10.33,
+			"text": "8"
+		},
+		"aa736d51-2e98-44d3-a764-c71039065de8": {
+			"type": "text",
+			"x": 75.8,
+			"y": 244.85,
+			"width": 9.46,
+			"height": 10.27,
+			"text": "9"
+		},
+		"a296205a-da48-4981-861c-6be0ea929ad1": {
+			"type": "text",
+			"x": 68.8,
+			"y": 260.55,
+			"width": 16.47,
+			"height": 10.71,
+			"text": "10"
+		},
+		"01123b8f-0e03-407d-a51b-7632247dd987": {
+			"type": "text",
+			"x": 68.89,
+			"y": 276.77,
+			"width": 16.29,
+			"height": 10.38,
+			"text": "11"
+		},
+		"ad0818d9-7b85-4bbc-acb3-dd0e093bcbda": {
+			"type": "text",
+			"x": 69.02,
+			"y": 292.6,
+			"width": 16.32,
+			"height": 10.61,
+			"text": "12"
+		},
+		"45aba5dc-18e8-4f6b-840e-60702949a2d0": {
+			"type": "text",
+			"x": 69,
+			"y": 308.64,
+			"width": 16.3,
+			"height": 10.51,
+			"text": "13"
+		},
+		"5670458a-1a42-410c-b948-475c626b496e": {
+			"type": "text",
+			"x": 68.74,
+			"y": 324.63,
+			"width": 16.56,
+			"height": 10.71,
+			"text": "14"
+		},
+		"ca3a7092-3c6a-4c66-8d7a-538e649115b2": {
+			"type": "text",
+			"x": 69.22,
+			"y": 340.77,
+			"width": 15.97,
+			"height": 10.62,
+			"text": "15"
+		},
+		"15812dc5-b932-42e6-ba7e-eeea00619cc1": {
+			"type": "text",
+			"x": 68.82,
+			"y": 356.55,
+			"width": 16.59,
+			"height": 10.7,
+			"text": "16"
+		},
+		"ef735976-a20d-47bf-a363-2c9b41a92720": {
+			"type": "text",
+			"x": 68.5,
+			"y": 372.43,
+			"width": 16.87,
+			"height": 10.78,
+			"text": "17"
+		},
+		"72184243-40b6-41ed-97b8-4ec6c6a22486": {
+			"type": "text",
+			"x": 68.83,
+			"y": 388.67,
+			"width": 16.72,
+			"height": 10.71,
+			"text": "18"
+		},
+		"84b9673e-8209-4e8d-81e5-ff3da83ef2ad": {
+			"type": "text",
+			"x": 68.9,
+			"y": 404.54,
+			"width": 16.72,
+			"height": 10.71,
+			"text": "19"
+		},
+		"b25052c0-653b-445d-a951-598e5317f1bc": {
+			"type": "text",
+			"x": 68.76,
+			"y": 420.55,
+			"width": 16.72,
+			"height": 10.71,
+			"text": "20"
+		},
+		"0d92d665-094c-49b9-9b90-541b2dc48a56": {
+			"type": "text",
+			"x": 68.54,
+			"y": 436.6,
+			"width": 16.72,
+			"height": 10.71,
+			"text": "21"
+		},
+		"9f7f5178-5503-4220-bb08-c5a3a3ee14e4": {
+			"type": "text",
+			"x": 123.11,
+			"y": 116.05,
+			"width": 496.81,
+			"height": 14.04,
+			"text": "// ConsoleApplication1.cpp : This file contains the 'main' function. Pr"
+		},
+		"47046eba-6e86-4393-8b10-7d8cf7308266": {
+			"type": "text",
+			"x": 122.12,
+			"y": 131.88,
+			"width": 15.91,
+			"height": 12.03,
+			"text": "//"
+		},
+		"0b135e37-48fd-4d6c-a7d5-e738893781db": {
+			"type": "text",
+			"x": 121.22,
+			"y": 163.88,
+			"width": 135.9,
+			"height": 11.57,
+			"text": "#include <iostream>"
+		},
+		"7def1cff-e46c-4d94-b40b-29c504296df7": {
+			"type": "text",
+			"x": 122.92,
+			"y": 195.89,
+			"width": 70.26,
+			"height": 14.23,
+			"text": "int main()"
+		},
+		"4c26a4ae-33ce-44f5-8e5a-322c09d85f51": {
+			"type": "text",
+			"x": 122.04,
+			"y": 211.88,
+			"width": 9.17,
+			"height": 14.12,
+			"text": "{"
+		},
+		"20738878-86af-48da-ae2b-14b65255066e": {
+			"type": "text",
+			"x": 123.05,
+			"y": 244.09,
+			"width": 7.89,
+			"height": 13.85,
+			"text": "}"
+		},
+		"986bd86d-b302-4904-83bb-54fc83cefe37": {
+			"type": "text",
+			"x": 150.68,
+			"y": 227.95,
+			"width": 209.62,
+			"height": 13.05,
+			"text": "std::cout << \"Hello World!\\n\";"
+		},
+		"33e46558-e4ec-4d9f-b767-2fdb25c06fda": {
+			"type": "text",
+			"x": 121.81,
+			"y": 275.72,
+			"width": 457.46,
+			"height": 14.43,
+			"text": "// Run program: Ctrl + F5 or Debug > Start Without Debugging menu"
+		},
+		"e755c51e-1a23-4180-9639-db791f8ff61c": {
+			"type": "text",
+			"x": 121.73,
+			"y": 291.74,
+			"width": 366.56,
+			"height": 14.43,
+			"text": "// Debug program: F5 or Debug > Start Debugging menu"
+		},
+		"01340356-aed2-40bf-9252-8106875e30fb": {
+			"type": "text",
+			"x": 121.69,
+			"y": 323.81,
+			"width": 196.87,
+			"height": 14.43,
+			"text": "// Tips for Getting Started: "
+		},
+		"4e371a76-804d-4ffc-bdc7-d38b67358def": {
+			"type": "text",
+			"x": 121.75,
+			"y": 339.95,
+			"width": 16.45,
+			"height": 12.26,
+			"text": "//"
+		},
+		"46b24604-a148-4296-97f7-cea0edaf1e49": {
+			"type": "text",
+			"x": 121.81,
+			"y": 355.94,
+			"width": 16.45,
+			"height": 12.26,
+			"text": "//"
+		},
+		"da76a5fc-ed0c-43c8-9a6e-31050c54891e": {
+			"type": "text",
+			"x": 121.81,
+			"y": 371.87,
+			"width": 16.45,
+			"height": 12.26,
+			"text": "//"
+		},
+		"f96ab932-7a21-40f8-bea3-9c4d06bd12aa": {
+			"type": "text",
+			"x": 121.75,
+			"y": 387.98,
+			"width": 16.45,
+			"height": 12.26,
+			"text": "//"
+		},
+		"4464829e-c30f-467e-9ea3-fa7c71bb644a": {
+			"type": "text",
+			"x": 121.69,
+			"y": 403.97,
+			"width": 16.45,
+			"height": 12.26,
+			"text": "//"
+		},
+		"468b1b34-ca82-419c-885e-a546799d9b3b": {
+			"type": "text",
+			"x": 121.69,
+			"y": 419.9,
+			"width": 16.45,
+			"height": 12.26,
+			"text": "//"
+		},
+		"add2fb4b-bd27-4597-9566-01c2741d7a40": {
+			"type": "text",
+			"x": 156.78,
+			"y": 339.81,
+			"width": 387.41,
+			"height": 14.43,
+			"text": "1. Use the Solution Explorer window to add/manage files"
+		},
+		"72dc5923-263e-4528-ac52-1a245f5cdd0f": {
+			"type": "text",
+			"x": 156.92,
+			"y": 355.7,
+			"width": 422.39,
+			"height": 14.43,
+			"text": "2. Use the Team Explorer window to connect to source control"
+		},
+		"9e070557-d856-4840-a10e-976104ea6e2a": {
+			"type": "text",
+			"x": 156.96,
+			"y": 371.6,
+			"width": 443.03,
+			"height": 14.43,
+			"text": "3. Use the Output window to see build output and other messages"
+		},
+		"579b1efa-ac69-40fe-8c7d-c1f871cb6a06": {
+			"type": "text",
+			"x": 156.93,
+			"y": 387.72,
+			"width": 303.28,
+			"height": 11.94,
+			"text": "4. Use the Error List window to view errors"
+		},
+		"d37c3a5d-4e3f-48d0-8564-42bb726b9999": {
+			"type": "text",
+			"x": 156.97,
+			"y": 403.78,
+			"width": 463,
+			"height": 14.43,
+			"text": "5. Go to Project > Add New Item to create new code files, or Proje"
+		},
+		"dd5aaf98-27ce-4e7e-8549-b10a681936ec": {
+			"type": "text",
+			"x": 156.98,
+			"y": 419.84,
+			"width": 457.08,
+			"height": 14.43,
+			"text": "6. In the future, to open this project again, go to File > Open >"
+		}
+	},
+	"verified": true
+}

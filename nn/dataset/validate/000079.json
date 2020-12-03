@@ -1,0 +1,148 @@
+{
+	"objs": {
+		"7d440c67-eb76-4b07-a8bc-0b4c5ee519d7": {
+			"type": "text",
+			"x": 272.8,
+			"y": 37.85,
+			"width": 187.34,
+			"height": 16.39,
+			"text": "user@localhost:/home/user"
+		},
+		"fea69946-101b-47e0-a089-c27f352e992e": {
+			"type": "text",
+			"x": 137.15,
+			"y": 5.97,
+			"width": 61.9,
+			"height": 13.36,
+			"text": "Terminal"
+		},
+		"1630a6d9-e3e4-4c3f-9a22-a5de36249fc4": {
+			"type": "text",
+			"x": 8.06,
+			"y": 71.04,
+			"width": 23.14,
+			"height": 13.49,
+			"text": "File"
+		},
+		"b5bcf303-d3f0-49d7-b8d4-562c09e43b5f": {
+			"type": "text",
+			"x": 47.08,
+			"y": 71.04,
+			"width": 25.15,
+			"height": 13.55,
+			"text": "Edit"
+		},
+		"d37f63c7-56ba-4a5f-9e35-1652e92f4102": {
+			"type": "text",
+			"x": 85.72,
+			"y": 71.04,
+			"width": 34.23,
+			"height": 13.43,
+			"text": "View"
+		},
+		"f2dcadb1-a6f0-43a8-89ff-8d8ec8c88401": {
+			"type": "text",
+			"x": 133.07,
+			"y": 70.85,
+			"width": 45.26,
+			"height": 13.43,
+			"text": "Search"
+		},
+		"4f59c0f1-137b-44aa-ae03-a06038062658": {
+			"type": "text",
+			"x": 192.7,
+			"y": 71.04,
+			"width": 57.62,
+			"height": 13.24,
+			"text": "Terminal"
+		},
+		"faea0e36-9b44-4c1f-b79b-0e1293d64e60": {
+			"type": "text",
+			"x": 264.63,
+			"y": 70.73,
+			"width": 32.59,
+			"height": 17.34,
+			"text": "Help"
+		},
+		"11a4a2b6-fbe6-4f98-b011-1c04c49bd2b1": {
+			"type": "text",
+			"x": 2.63,
+			"y": 94.67,
+			"width": 241.54,
+			"height": 15.56,
+			"text": "[user@localhost ~]$ sudo su"
+		},
+		"ccd1f567-233c-4b58-8d27-1ed1d0febaf4": {
+			"type": "text",
+			"x": 2.6,
+			"y": 112.57,
+			"width": 221.44,
+			"height": 16.46,
+			"text": "[sudo] password for user:"
+		},
+		"801911f3-5db6-4e96-8aa6-c2c7a77fbf77": {
+			"type": "text",
+			"x": 2.99,
+			"y": 130.73,
+			"width": 520.59,
+			"height": 16.11,
+			"text": "[root@localhost user]# testo run /opt/scripts/script.testo"
+		},
+		"280e6011-ded0-4f73-b363-2eba4d380402": {
+			"type": "text",
+			"x": 0.84,
+			"y": 148.86,
+			"width": 655.42,
+			"height": 16.32,
+			"text": "Because of the cache loss, Testo is scheduled to run the following tests:"
+		},
+		"9a4449f2-0331-42b2-aec3-935966d3b76c": {
+			"type": "text",
+			"x": 73.48,
+			"y": 167.91,
+			"width": 116.94,
+			"height": 16.24,
+			"text": "- test_parent"
+		},
+		"b80882b7-7a20-4bd5-8329-051403604ad6": {
+			"type": "text",
+			"x": 98.14,
+			"y": 176.09,
+			"width": 0,
+			"height": 0,
+			"text": ""
+		},
+		"0652d72a-c94b-4231-b027-4e7e13e1a495": {
+			"type": "text",
+			"x": 73.48,
+			"y": 184.53,
+			"width": 116.94,
+			"height": 17.24,
+			"text": "- test_child1"
+		},
+		"c4489a96-9e5a-4f34-adc3-1b5ba07b134a": {
+			"type": "text",
+			"x": 73.64,
+			"y": 202.54,
+			"width": 116.94,
+			"height": 17.24,
+			"text": "- test_child2"
+		},
+		"f0d97fec-3930-4219-832c-6e96477bb50f": {
+			"type": "text",
+			"x": 73.64,
+			"y": 220.3,
+			"width": 116.94,
+			"height": 17.24,
+			"text": "- test_child3"
+		},
+		"f1e8a395-f2d4-4cc8-b233-1f9851b4f0d5": {
+			"type": "text",
+			"x": 0.75,
+			"y": 238.87,
+			"width": 313.71,
+			"height": 16.17,
+			"text": "Do you confirm running them? [y/N]:"
+		}
+	}
+}

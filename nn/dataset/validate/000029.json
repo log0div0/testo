@@ -1,0 +1,20 @@
+{
+	"objs": {
+		"5762de41-4490-4bcf-85df-10c94e8162d9": {
+			"type": "text",
+			"x": 104.94,
+			"y": 18.16,
+			"width": 173.32,
+			"height": 14.85,
+			"text": "Installation complete!"
+		},
+		"31d66386-1ee2-4ee0-bae3-bf9555bd9c94": {
+			"type": "text",
+			"x": 443.14,
+			"y": 689.96,
+			"width": 94.22,
+			"height": 13.91,
+			"text": "[ Reboot Now"
+		}
+	}
+}

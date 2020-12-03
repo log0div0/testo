@@ -1,0 +1,125 @@
+{
+	"objs": {
+		"941634ae-9003-4228-a5fb-010d6a7f83c5": {
+			"type": "text",
+			"x": 543.48,
+			"y": 713.52,
+			"width": 124.14,
+			"height": 14.36,
+			"text": "CLOUDFLARE"
+		},
+		"48055fb6-6a6f-4bee-bf63-90dc65259d1a": {
+			"type": "text",
+			"x": 84.56,
+			"y": 186.38,
+			"width": 111.1,
+			"height": 15.97,
+			"text": "NTS-KE server"
+		},
+		"25e5299b-a77d-46d6-be92-6fb12ae4ddd8": {
+			"type": "text",
+			"x": 343.46,
+			"y": 185.68,
+			"width": 46.07,
+			"height": 16.64,
+			"text": "Client"
+		},
+		"a88d6b98-a297-488b-a9d2-a880d1d6d78c": {
+			"type": "text",
+			"x": 550.81,
+			"y": 186.59,
+			"width": 86.55,
+			"height": 15.89,
+			"text": "NTP server"
+		},
+		"8db2259e-1ea3-4d4d-b8ce-1e081b82f5f5": {
+			"type": "text",
+			"x": 196.52,
+			"y": 239.9,
+			"width": 120.02,
+			"height": 16.49,
+			"text": "TLS Handshake"
+		},
+		"154f01f7-d99a-455f-83b1-6342efd4a0a8": {
+			"type": "text",
+			"x": 221.11,
+			"y": 297.25,
+			"width": 63.68,
+			"height": 19.01,
+			"text": "Request"
+		},
+		"3aed08d7-6b18-44ae-ae10-a92c98fc4817": {
+			"type": "text",
+			"x": 215.62,
+			"y": 344.68,
+			"width": 74.76,
+			"height": 18.46,
+			"text": "Response"
+		},
+		"2bc15389-b013-494e-be47-bf45dbb99224": {
+			"type": "text",
+			"x": 197.63,
+			"y": 362.95,
+			"width": 105.65,
+			"height": 20.13,
+			"text": "(with cookies)"
+		},
+		"a1bbe516-920d-4234-9ac7-71ac6cf0ac79": {
+			"type": "text",
+			"x": 250.7,
+			"y": 412.15,
+			"width": 232.45,
+			"height": 18.95,
+			"text": "Has cookies from the response"
+		},
+		"90328443-d66a-4e5f-b466-deecff2a3cbd": {
+			"type": "text",
+			"x": 265.58,
+			"y": 441.65,
+			"width": 197.68,
+			"height": 19.76,
+			"text": "Derives C2S and S2C keys"
+		},
+		"4380dee5-3854-4cc5-bef8-9a6aeb57ddd6": {
+			"type": "text",
+			"x": 398.76,
+			"y": 501.72,
+			"width": 158.53,
+			"height": 20.38,
+			"text": "Query (with a cookie)"
+		},
+		"26384d1a-9ff3-451d-ad9f-cc3f353f9b69": {
+			"type": "text",
+			"x": 409.26,
+			"y": 521.91,
+			"width": 137.35,
+			"height": 16.56,
+			"text": "AEAD'ed with C2S"
+		},
+		"686d6c0d-1124-45c5-b490-dfe75e559214": {
+			"type": "text",
+			"x": 441.52,
+			"y": 561.62,
+			"width": 75.99,
+			"height": 18.54,
+			"text": "Response"
+		},
+		"056518b7-6e49-404d-93d6-fb1a5c4cc934": {
+			"type": "text",
+			"x": 404.57,
+			"y": 580.25,
+			"width": 149.55,
+			"height": 19.75,
+			"text": "(with more cookies)"
+		},
+		"9db39131-ce66-4c68-bd0b-1a3c04358f41": {
+			"type": "text",
+			"x": 412.83,
+			"y": 600.96,
+			"width": 137.35,
+			"height": 16.56,
+			"text": "AEAD'ed with S2C"
+		}
+	},
+	"verified": true
+}

@@ -1,0 +1,677 @@
+{
+	"objs": {
+		"b80668a3-f296-46a3-9171-6c5b581ccbc4": {
+			"type": "text",
+			"x": 539.51,
+			"y": 15.73,
+			"width": 44.9,
+			"height": 17.64,
+			"text": "Page 1"
+		},
+		"b27dc987-df5a-4862-9c80-38acda26ea04": {
+			"type": "text",
+			"x": 660.79,
+			"y": 15.73,
+			"width": 45.59,
+			"height": 17.64,
+			"text": "Page 2"
+		},
+		"c6246e9b-90fb-4d06-8b4b-207b1b5cb98a": {
+			"type": "text",
+			"x": 781.62,
+			"y": 15.86,
+			"width": 45.59,
+			"height": 18.16,
+			"text": "Page 3"
+		},
+		"9d40c64c-cf3e-40ed-96e4-dcd659f66631": {
+			"type": "text",
+			"x": 18.23,
+			"y": 66.7,
+			"width": 103.02,
+			"height": 17.23,
+			"text": "comboboxentry"
+		},
+		"5c2a423f-7e44-4e35-9f06-d7b2deecfb20": {
+			"type": "text",
+			"x": 17.59,
+			"y": 110.67,
+			"width": 103.58,
+			"height": 17.72,
+			"text": "comboboxentry"
+		},
+		"7c90c819-0a4e-4b77-8afb-8cea868b69f6": {
+			"type": "text",
+			"x": 17.93,
+			"y": 154.85,
+			"width": 169.57,
+			"height": 17.53,
+			"text": "Click icon to change mode"
+		},
+		"0e6bc89e-5d4e-434a-95b8-777a9747d878": {
+			"type": "text",
+			"x": 17.79,
+			"y": 199.86,
+			"width": 36.61,
+			"height": 16.37,
+			"text": "entry"
+		},
+		"dcdd201d-e53d-4c01-bceb-2309354f1ab0": {
+			"type": "text",
+			"x": 17.62,
+			"y": 243.87,
+			"width": 36.61,
+			"height": 16.37,
+			"text": "entry"
+		},
+		"9fa5a632-433b-41ca-b1d0-265328fc70a2": {
+			"type": "text",
+			"x": 21.36,
+			"y": 286.58,
+			"width": 28.37,
+			"height": 14.81,
+			"text": "Left"
+		},
+		"10c6a65a-bb6e-4471-84e9-3f8f87836d7c": {
+			"type": "text",
+			"x": 140.26,
+			"y": 286.18,
+			"width": 46.52,
+			"height": 15.32,
+			"text": "Middle"
+		},
+		"54a4fba3-22e8-462e-91e3-c0d710aaa139": {
+			"type": "text",
+			"x": 258.5,
+			"y": 286.48,
+			"width": 35.82,
+			"height": 18.64,
+			"text": "Right"
+		},
+		"d365ac9e-238d-45ca-92bf-0d7348ddca41": {
+			"type": "text",
+			"x": 9.54,
+			"y": 330.52,
+			"width": 33.66,
+			"height": 13.86,
+			"text": "label"
+		},
+		"f908590c-e7b4-46c1-905c-d814151c88ed": {
+			"type": "text",
+			"x": 61.72,
+			"y": 330.68,
+			"width": 33.66,
+			"height": 13.86,
+			"text": "label"
+		},
+		"58747fe6-0ac6-4af3-9772-51ef56613f19": {
+			"type": "text",
+			"x": 122.42,
+			"y": 330.82,
+			"width": 19.03,
+			"height": 13.75,
+			"text": "50"
+		},
+		"66a24622-eb40-476c-83b7-09b2a5597bf3": {
+			"type": "text",
+			"x": 169.81,
+			"y": 334.72,
+			"width": 14.04,
+			"height": 6.48,
+			"text": "-"
+		},
+		"6f520faa-7ad4-4320-81fc-6711cc24dc1a": {
+			"type": "text",
+			"x": 205.46,
+			"y": 331.45,
+			"width": 13.12,
+			"height": 13.01,
+			"text": "+"
+		},
+		"d3e280e1-be85-4581-8296-6cb5e3c05294": {
+			"type": "text",
+			"x": 305.72,
+			"y": 335.03,
+			"width": 14.04,
+			"height": 6.48,
+			"text": "-"
+		},
+		"97a7ac8e-dc38-4ce3-9f7b-792a684c0a77": {
+			"type": "text",
+			"x": 341.39,
+			"y": 331.39,
+			"width": 13.12,
+			"height": 13.01,
+			"text": "+"
+		},
+		"e02b2e80-21f7-49a1-8ed9-a290cac1e9b9": {
+			"type": "text",
+			"x": 32.46,
+			"y": 369.52,
+			"width": 82.03,
+			"height": 14.22,
+			"text": "checkbutton"
+		},
+		"b74344d1-db47-4d79-989c-d6903d0b7de2": {
+			"type": "text",
+			"x": 32.37,
+			"y": 398.25,
+			"width": 82.03,
+			"height": 14.22,
+			"text": "checkbutton"
+		},
+		"847a2746-97dd-47ff-8c61-4f5cbbb2d831": {
+			"type": "text",
+			"x": 32.53,
+			"y": 427.42,
+			"width": 82.03,
+			"height": 14.22,
+			"text": "checkbutton"
+		},
+		"88462df0-8d4a-40c3-a9f2-7f3196f84270": {
+			"type": "text",
+			"x": 32.65,
+			"y": 456.28,
+			"width": 82.03,
+			"height": 14.22,
+			"text": "checkbutton"
+		},
+		"c3562544-bb85-4549-b2fd-23218cad2aeb": {
+			"type": "text",
+			"x": 32.4,
+			"y": 485.52,
+			"width": 82.03,
+			"height": 14.22,
+			"text": "checkbutton"
+		},
+		"796cdd49-b5f9-4cae-8d4b-87d232e360fd": {
+			"type": "text",
+			"x": 32.65,
+			"y": 514.64,
+			"width": 82.03,
+			"height": 14.22,
+			"text": "checkbutton"
+		},
+		"d4cf05d7-c926-4ee1-a9d1-b11a6bba9129": {
+			"type": "text",
+			"x": 158.46,
+			"y": 369.59,
+			"width": 78.18,
+			"height": 14.04,
+			"text": "radiobutton"
+		},
+		"9e990083-e58f-4dfa-9553-597295f363d2": {
+			"type": "text",
+			"x": 158.37,
+			"y": 398.66,
+			"width": 78.18,
+			"height": 14.04,
+			"text": "radiobutton"
+		},
+		"7605d985-2936-4e90-8e24-0263c2b26898": {
+			"type": "text",
+			"x": 158.46,
+			"y": 427.55,
+			"width": 78.18,
+			"height": 14.04,
+			"text": "radiobutton"
+		},
+		"6145606e-02ab-4d2d-b34b-5b1e5bc63d1d": {
+			"type": "text",
+			"x": 158.35,
+			"y": 456.69,
+			"width": 78.18,
+			"height": 14.04,
+			"text": "radiobutton"
+		},
+		"87fdaa26-1d1b-4d21-b301-c2b3416bfa92": {
+			"type": "text",
+			"x": 158.46,
+			"y": 485.73,
+			"width": 78.18,
+			"height": 14.04,
+			"text": "radiobutton"
+		},
+		"974ed784-3c7c-4441-8077-8255e7455560": {
+			"type": "text",
+			"x": 158.35,
+			"y": 514.66,
+			"width": 78.18,
+			"height": 14.04,
+			"text": "radiobutton"
+		},
+		"49106b17-5fd1-4ce1-80ec-10e18c8f6174": {
+			"type": "text",
+			"x": 30.44,
+			"y": 596.83,
+			"width": 43.79,
+			"height": 17.59,
+			"text": "page 1"
+		},
+		"43043e54-4f8f-49b7-bc2f-dfc6ec0042fe": {
+			"type": "text",
+			"x": 104.76,
+			"y": 596.95,
+			"width": 43.79,
+			"height": 17.59,
+			"text": "page 2"
+		},
+		"0dae94bd-dfa1-42df-a2c6-7f3c26932dc1": {
+			"type": "text",
+			"x": 179.69,
+			"y": 596.53,
+			"width": 44.8,
+			"height": 17.84,
+			"text": "page 3"
+		},
+		"9627c9c1-d2e1-4c38-91fb-faf55781f231": {
+			"type": "text",
+			"x": 621.49,
+			"y": 604.82,
+			"width": 43.79,
+			"height": 17.59,
+			"text": "page 1"
+		},
+		"2714877f-d4ec-4b2f-9912-d7ef338758f7": {
+			"type": "text",
+			"x": 621.52,
+			"y": 648.44,
+			"width": 45.01,
+			"height": 17.89,
+			"text": "page 2"
+		},
+		"3befa3d8-bd75-4027-b978-05b87339d34b": {
+			"type": "text",
+			"x": 621.72,
+			"y": 692.52,
+			"width": 44.8,
+			"height": 17.84,
+			"text": "page 3"
+		},
+		"2fa753af-f633-4782-b792-b9e423c1b012": {
+			"type": "text",
+			"x": 708.21,
+			"y": 704.78,
+			"width": 43.79,
+			"height": 17.59,
+			"text": "page 1"
+		},
+		"41963f22-4796-4289-8b7b-82f778e1a551": {
+			"type": "text",
+			"x": 782.86,
+			"y": 704.59,
+			"width": 44.56,
+			"height": 17.74,
+			"text": "page 2"
+		},
+		"21d46e58-31f3-446d-801c-079ca84952f7": {
+			"type": "text",
+			"x": 857.84,
+			"y": 704.71,
+			"width": 44.8,
+			"height": 17.84,
+			"text": "page 3"
+		},
+		"b830bd9e-b0e8-4605-bf91-0ff09c4756e8": {
+			"type": "text",
+			"x": 1039.51,
+			"y": 604.83,
+			"width": 43.79,
+			"height": 17.59,
+			"text": "page 1"
+		},
+		"1ee7262b-8076-41fd-8c03-f2615936acee": {
+			"type": "text",
+			"x": 1039.58,
+			"y": 648.58,
+			"width": 44.8,
+			"height": 17.84,
+			"text": "page 2"
+		},
+		"552b4841-53a3-4ff7-8ac7-73ac2059ec18": {
+			"type": "text",
+			"x": 1039.6,
+			"y": 692.77,
+			"width": 44.8,
+			"height": 17.84,
+			"text": "page 3"
+		},
+		"0c67e814-639a-4299-9ece-be7598458b8f": {
+			"type": "text",
+			"x": 414.49,
+			"y": 66.71,
+			"width": 85.92,
+			"height": 18.24,
+			"text": "togglebutton"
+		},
+		"5acfd751-a64c-4bee-8779-cc26f4b33b09": {
+			"type": "text",
+			"x": 414.52,
+			"y": 110.53,
+			"width": 85.92,
+			"height": 18.24,
+			"text": "togglebutton"
+		},
+		"4080a509-6c1f-4f3a-9264-21a297b35e90": {
+			"type": "text",
+			"x": 414.58,
+			"y": 154.25,
+			"width": 85.92,
+			"height": 18.24,
+			"text": "togglebutton"
+		},
+		"d1677aa8-40d5-4cf8-9fb7-029cb2b63557": {
+			"type": "text",
+			"x": 414.54,
+			"y": 198.37,
+			"width": 85.92,
+			"height": 18.24,
+			"text": "togglebutton"
+		},
+		"13750204-8e01-4e1d-a238-291ff6dad1dc": {
+			"type": "text",
+			"x": 397.28,
+			"y": 242.5,
+			"width": 50.57,
+			"height": 15.26,
+			"text": "Andrea"
+		},
+		"326d92c5-b6fe-4dbe-9e33-c041b6b81a1c": {
+			"type": "text",
+			"x": 398.29,
+			"y": 286.49,
+			"width": 31.35,
+			"height": 14.16,
+			"text": "Otto"
+		},
+		"adcb7470-4215-4aed-ad6d-ac110c8f1c20": {
+			"type": "text",
+			"x": 401.34,
+			"y": 330.41,
+			"width": 88.23,
+			"height": 18.55,
+			"text": "Sans Regular"
+		},
+		"6f036562-ce13-4697-8f1f-2a943f5e57ff": {
+			"type": "text",
+			"x": 497.39,
+			"y": 330.31,
+			"width": 18.08,
+			"height": 14.8,
+			"text": "12"
+		},
+		"796f3a86-adc7-4fc4-b83c-c195de20ac2c": {
+			"type": "text",
+			"x": 400.14,
+			"y": 418.5,
+			"width": 45.6,
+			"height": 17,
+			"text": "(None)"
+		},
+		"f04da6d3-521d-46d4-81eb-186a358a3cdc": {
+			"type": "text",
+			"x": 423.58,
+			"y": 462.71,
+			"width": 69.89,
+			"height": 14.19,
+			"text": "link button"
+		},
+		"efb5b569-ce26-4dd7-8f8b-97981cce93c7": {
+			"type": "text",
+			"x": 691.76,
+			"y": 79.47,
+			"width": 29.53,
+			"height": 11.96,
+			"text": "50%"
+		},
+		"71455683-1f2d-43ee-bbbf-65f86ff5ec41": {
+			"type": "text",
+			"x": 749.23,
+			"y": 249.44,
+			"width": 32.21,
+			"height": 14.02,
+			"text": "50.0"
+		},
+		"9085c010-39cf-4a6a-b33c-141234987925": {
+			"type": "text",
+			"x": 883.51,
+			"y": 59.54,
+			"width": 35.01,
+			"height": 14.04,
+			"text": "Inset"
+		},
+		"06c462dd-99a0-46b7-b898-6caf5f3b8e9b": {
+			"type": "text",
+			"x": 882.37,
+			"y": 188.4,
+			"width": 49.42,
+			"height": 14.43,
+			"text": "Outset"
+		},
+		"eaf85983-2105-414f-8f6e-21b6e7ca43da": {
+			"type": "text",
+			"x": 882.28,
+			"y": 316.38,
+			"width": 50.87,
+			"height": 14.39,
+			"text": "Groove"
+		},
+		"0d8bb97b-630a-4eb3-966d-00c7261bb661": {
+			"type": "text",
+			"x": 883.51,
+			"y": 443.96,
+			"width": 39.65,
+			"height": 18.4,
+			"text": "Ridge"
+		},
+		"a36db10d-1587-4476-9275-a551043c3f6b": {
+			"type": "text",
+			"x": 1085.59,
+			"y": 62.43,
+			"width": 32.93,
+			"height": 14.17,
+			"text": "Cool"
+		},
+		"1e0fd23d-20e4-40e2-8df0-c0666b0e38ea": {
+			"type": "text",
+			"x": 1128.52,
+			"y": 62.49,
+			"width": 28.97,
+			"height": 14.01,
+			"text": "Icon"
+		},
+		"767c3b4a-2b9f-4c04-8e5c-1714302ca3c4": {
+			"type": "text",
+			"x": 1168.52,
+			"y": 62.7,
+			"width": 41.85,
+			"height": 13.81,
+			"text": "Name"
+		},
+		"b0da1f94-3c8d-4041-a499-2e5470495f49": {
+			"type": "text",
+			"x": 1239.41,
+			"y": 61.93,
+			"width": 32.13,
+			"height": 14.54,
+			"text": "Nick"
+		},
+		"25efb4a0-c9a4-4961-8235-69de6d459443": {
+			"type": "text",
+			"x": 1140.44,
+			"y": 113.88,
+			"width": 5.05,
+			"height": 12.21,
+			"text": "!"
+		},
+		"40a991e8-c6b6-4104-b9d3-5f1086f025be": {
+			"type": "text",
+			"x": 1165.72,
+			"y": 88.49,
+			"width": 49.78,
+			"height": 13.83,
+			"text": "Andrea"
+		},
+		"4b600f1f-705c-4792-95c0-320713a7488a": {
+			"type": "text",
+			"x": 1166.37,
+			"y": 113.61,
+			"width": 31.1,
+			"height": 13.74,
+			"text": "Otto"
+		},
+		"d610f031-0dbb-44b6-a746-c3484fa2e056": {
+			"type": "text",
+			"x": 1166.47,
+			"y": 138.48,
+			"width": 44.99,
+			"height": 13.92,
+			"text": "Orville"
+		},
+		"043640c9-cbd4-465a-9682-9ad75454aba4": {
+			"type": "text",
+			"x": 1166.67,
+			"y": 163.74,
+			"width": 64.76,
+			"height": 17.45,
+			"text": "Benjamin"
+		},
+		"cca49c45-6b2c-4c66-84bf-fb8abcb9c9e7": {
+			"type": "text",
+			"x": 1236.69,
+			"y": 88.62,
+			"width": 32.87,
+			"height": 13.64,
+			"text": "Cimi"
+		},
+		"cf269f85-8709-4a1f-b09b-67d99fc1ddea": {
+			"type": "text",
+			"x": 1236.62,
+			"y": 113.54,
+			"width": 50.12,
+			"height": 13.93,
+			"text": "chaotic"
+		},
+		"67901e76-0738-4a7c-bc71-b00894f51d5c": {
+			"type": "text",
+			"x": 1237.4,
+			"y": 138.65,
+			"width": 88.07,
+			"height": 13.68,
+			"text": "Redenbacher"
+		},
+		"202c7b18-3bee-442b-bc10-9de8c6b0b61f": {
+			"type": "text",
+			"x": 1236.64,
+			"y": 163.65,
+			"width": 64.93,
+			"height": 17.87,
+			"text": "Company"
+		},
+		"cd39df20-1363-49db-b58e-6168fea6074f": {
+			"type": "text",
+			"x": 1090.72,
+			"y": 329.6,
+			"width": 183.84,
+			"height": 17.76,
+			"text": "Lorem ipsum dolor sit amet,"
+		},
+		"e9de6194-24ee-48f6-ac90-d2707fc93021": {
+			"type": "text",
+			"x": 1089.45,
+			"y": 348.71,
+			"width": 175.75,
+			"height": 17.52,
+			"text": "consectetur adipiscing elit."
+		},
+		"462a535f-d687-44b4-a7e9-4bfb8abab7bf": {
+			"type": "text",
+			"x": 1090.54,
+			"y": 367.48,
+			"width": 251.05,
+			"height": 17.76,
+			"text": "Nullam fringilla, est ut feugiat ultrices,"
+		},
+		"2cf5a080-b7fb-4afe-94c4-ea3cf5e814ba": {
+			"type": "text",
+			"x": 1089.65,
+			"y": 386.53,
+			"width": 234.8,
+			"height": 16.52,
+			"text": "elit lacus ultricies nibh, id commodo"
+		},
+		"40632be1-7fd1-4b78-811b-a9333cf3ef43": {
+			"type": "text",
+			"x": 1089.55,
+			"y": 405.46,
+			"width": 109.08,
+			"height": 14.1,
+			"text": "tortor nisi id elit."
+		},
+		"9425b032-44d7-4baf-8d69-98b7722d7f3c": {
+			"type": "text",
+			"x": 1089.77,
+			"y": 424.65,
+			"width": 235.72,
+			"height": 17.46,
+			"text": "Class aptent taciti sociosqu ad litora"
+		},
+		"05dfeb51-7633-462d-9a3c-fb04b2f9c3fd": {
+			"type": "text",
+			"x": 1089.61,
+			"y": 443.84,
+			"width": 211.9,
+			"height": 17.45,
+			"text": "torquent per conubia nostra, per"
+		},
+		"c3bf013c-68ac-46b2-a0a6-ab90bf61f9f9": {
+			"type": "text",
+			"x": 1090.39,
+			"y": 462.67,
+			"width": 135.03,
+			"height": 17.54,
+			"text": "inceptos himenaeos."
+		},
+		"b469ba58-5bbb-448d-b1a6-54ede0c257cd": {
+			"type": "text",
+			"x": 1090.52,
+			"y": 481.62,
+			"width": 190.67,
+			"height": 14.32,
+			"text": "Morbi vel elit erat. Maecenas"
+		},
+		"e97ebec9-f68f-4fd3-8b70-d1791a98176b": {
+			"type": "text",
+			"x": 1089.65,
+			"y": 500.7,
+			"width": 220.84,
+			"height": 17.52,
+			"text": "dignissim, dui et pharetra rutrum,"
+		},
+		"146a2259-bd2e-4b42-9808-624a50ce29e9": {
+			"type": "text",
+			"x": 1089.66,
+			"y": 519.72,
+			"width": 224.58,
+			"height": 16.31,
+			"text": "tellus lectus rutrum mi, a convallis"
+		},
+		"c47b0877-1f68-4d07-ba95-e062ee0c14d7": {
+			"type": "text",
+			"x": 1090.43,
+			"y": 538.49,
+			"width": 137.92,
+			"height": 17.74,
+			"text": "libero nisi quis tellus."
+		},
+		"aba6008e-cd95-427e-a625-3811a6b0eb88": {
+			"type": "text",
+			"x": 1090.38,
+			"y": 557.39,
+			"width": 245.92,
+			"height": 6.92,
+			"text": ""
+		}
+	},
+	"verified": true
+}

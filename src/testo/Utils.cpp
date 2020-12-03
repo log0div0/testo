@@ -6,9 +6,9 @@
 #include <sys/types.h>
 
 #ifdef WIN32
-#include "../winapi.hpp"
+#include <winapi.hpp>
 #else
-#include "../linuxapi.hpp"
+#include <linuxapi.hpp>
 #endif
 
 void fs_copy_file(const fs::path& from, const fs::path& to) {

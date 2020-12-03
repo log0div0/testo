@@ -1,0 +1,60 @@
+{
+	"objs": {
+		"3836a472-2b43-4e58-9286-73657619dc89": {
+			"type": "text",
+			"x": -0.22,
+			"y": 273.87,
+			"width": 294.25,
+			"height": 14.83,
+			"text": "Setting up daemon (0.6.4-1build1)"
+		},
+		"b917b7d4-39d9-4252-ab01-b7c5c7773259": {
+			"type": "text",
+			"x": -0.05,
+			"y": 177.93,
+			"width": 276.4,
+			"height": 15.23,
+			"text": "Unpacking python (2.7.15~rc1-1)"
+		},
+		"d6d2c63a-21f3-456d-b3e1-cf92881da8aa": {
+			"type": "text",
+			"x": -0.4,
+			"y": 2.1,
+			"width": 402.59,
+			"height": 15.11,
+			"text": "Unpacking python2.7 (2.7.15-4ubuntu4~18.04.2)"
+		},
+		"b5613217-30d8-4c59-bc65-e97beca090b1": {
+			"type": "text",
+			"x": 0.13,
+			"y": 130,
+			"width": 420.38,
+			"height": 15.23,
+			"text": "Selecting previously unselected package python."
+		},
+		"587accc0-6902-4f0f-b80b-5777c84ae635": {
+			"type": "text",
+			"x": -0.34,
+			"y": 17.59,
+			"width": 565.21,
+			"height": 15.23,
+			"text": "Selecting previously unselected package libpython-stdlib:amd64."
+		},
+		"be0d6544-b37f-46fa-92b1-7e0473083207": {
+			"type": "text",
+			"x": -0.17,
+			"y": 193.85,
+			"width": 420.38,
+			"height": 15.23,
+			"text": "Selecting previously unselected package daemon."
+		},
+		"146b74e0-0ea6-4aed-8f45-82244473ea69": {
+			"type": "text",
+			"x": 0.24,
+			"y": 354.93,
+			"width": 206.76,
+			"height": 12.49,
+			"text": "root@client:/home/user#"
+		}
+	}
+}

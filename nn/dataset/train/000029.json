@@ -1,0 +1,29 @@
+{
+	"objs": {
+		"fb790337-cb95-4ed8-9418-3a0ee776d5af": {
+			"type": "text",
+			"x": 31.57,
+			"y": 5.28,
+			"width": 65.92,
+			"height": 14.66,
+			"text": "Activities"
+		},
+		"65348a2f-0440-439d-9a65-437c8de857c4": {
+			"type": "text",
+			"x": 370.34,
+			"y": 5.22,
+			"width": 60.06,
+			"height": 14.48,
+			"text": "Fri 06:32"
+		},
+		"c377ca74-67de-4e14-ba57-37905b67b1e0": {
+			"type": "text",
+			"x": 267.5,
+			"y": 61.54,
+			"width": 105.82,
+			"height": 17.78,
+			"text": "Type to search..."
+		}
+	},
+	"verified": true
+}

@@ -1,0 +1,397 @@
+{
+	"objs": {
+		"5c93f22b-bb0e-4f43-99e7-ff0f9810e030": {
+			"type": "text",
+			"x": 35.32,
+			"y": 110.28,
+			"width": 40.3,
+			"height": 12.51,
+			"text": "poorya"
+		},
+		"0a9fd6a7-bb07-41d5-8311-0ba9c97412e2": {
+			"type": "text",
+			"x": 131.41,
+			"y": 107.36,
+			"width": 75.2,
+			"height": 12.21,
+			"text": "Control Panel"
+		},
+		"9fa3af99-94a5-471d-bac1-8eab1ce415b1": {
+			"type": "text",
+			"x": 34.79,
+			"y": 289.58,
+			"width": 42.42,
+			"height": 11.93,
+			"text": "This PC"
+		},
+		"751bd0a1-52b0-4f71-896c-12b7ba7ae130": {
+			"type": "text",
+			"x": 151,
+			"y": 289.91,
+			"width": 36.47,
+			"height": 11.72,
+			"text": "theme"
+		},
+		"99a14a17-79fa-43cb-8604-be68bed884f3": {
+			"type": "text",
+			"x": 31.92,
+			"y": 471.69,
+			"width": 47.59,
+			"height": 11.66,
+			"text": "Network"
+		},
+		"5be39d89-d3f4-4483-8922-2dc6c470025a": {
+			"type": "text",
+			"x": 129.82,
+			"y": 471.77,
+			"width": 78.98,
+			"height": 11.72,
+			"text": "IconPack Vista"
+		},
+		"fabd9e83-f4e2-4938-8b34-2d2375cdd5c5": {
+			"type": "text",
+			"x": 24.97,
+			"y": 653.6,
+			"width": 62.65,
+			"height": 14.63,
+			"text": "Recycle Bin"
+		},
+		"dbe84e45-b06d-4ae9-8e5d-a9035d00f0dc": {
+			"type": "text",
+			"x": 113.33,
+			"y": 653.35,
+			"width": 111.34,
+			"height": 12.08,
+			"text": "Vista ThemePack 1.0"
+		},
+		"de2f99ac-5d55-48fe-8413-fe0612bab731": {
+			"type": "text",
+			"x": 1291.74,
+			"y": 735.57,
+			"width": 42.43,
+			"height": 10.78,
+			"text": "3:32 AM"
+		},
+		"8eddf348-12bc-4816-89b6-740822b5030d": {
+			"type": "text",
+			"x": 1286.57,
+			"y": 751.84,
+			"width": 52.76,
+			"height": 13.3,
+			"text": "6/23/2015"
+		},
+		"5afa2308-7558-4341-9e37-cb12a7d4b65d": {
+			"type": "text",
+			"x": 543.59,
+			"y": 82.5,
+			"width": 42.87,
+			"height": 11.98,
+			"text": "This PC"
+		},
+		"202fc8ee-cff7-43ba-a3e9-bdb840f5425a": {
+			"type": "text",
+			"x": 1181.7,
+			"y": 81.34,
+			"width": 64.56,
+			"height": 13.11,
+			"text": "Search Thi..."
+		},
+		"3f1dda5c-adc1-4449-b94a-05dc2ddf10a4": {
+			"type": "text",
+			"x": 439.73,
+			"y": 116.55,
+			"width": 49.71,
+			"height": 14.79,
+			"text": "Organize"
+		},
+		"c91765bb-d008-4665-80ee-b1ad24c6a7e2": {
+			"type": "text",
+			"x": 530.57,
+			"y": 116.63,
+			"width": 97.02,
+			"height": 14.67,
+			"text": "System properties"
+		},
+		"cde5bde4-5805-48e2-b076-029fbfa31591": {
+			"type": "text",
+			"x": 655.17,
+			"y": 116.69,
+			"width": 162.16,
+			"height": 14.59,
+			"text": "Uninstall or change a program"
+		},
+		"e2aa07be-2b24-4fdc-b175-f96b4fbb8a67": {
+			"type": "text",
+			"x": 844.85,
+			"y": 116.46,
+			"width": 101.8,
+			"height": 15,
+			"text": "Map network drive"
+		},
+		"5570688b-24b3-4eda-b31a-b9bd819d6208": {
+			"type": "text",
+			"x": 973.82,
+			"y": 116.58,
+			"width": 106.82,
+			"height": 14.78,
+			"text": "Open Control Panel"
+		},
+		"7df02ddb-0ce1-46fa-b483-b9f5854073ba": {
+			"type": "text",
+			"x": 1250.43,
+			"y": 118.04,
+			"width": 7.97,
+			"height": 10.58,
+			"text": "?"
+		},
+		"cd0e86a4-6fc0-4a09-8a3a-fd196a1fc640": {
+			"type": "text",
+			"x": 431.61,
+			"y": 597.66,
+			"width": 40.74,
+			"height": 11.83,
+			"text": "7 items"
+		},
+		"54175dac-be6b-444f-ac56-cd28184de88e": {
+			"type": "text",
+			"x": 504.41,
+			"y": 542.18,
+			"width": 101.73,
+			"height": 15.03,
+			"text": "WIN8 Workgroup:"
+		},
+		"79fec6fc-aa6b-4c5f-aced-de000ff8430b": {
+			"type": "text",
+			"x": 549.7,
+			"y": 560.54,
+			"width": 56.61,
+			"height": 11.88,
+			"text": "Processor:"
+		},
+		"13413c6b-04a5-453d-8db2-e2c415e87549": {
+			"type": "text",
+			"x": 614.44,
+			"y": 542.61,
+			"width": 75.8,
+			"height": 11.66,
+			"text": "WORKGROUP"
+		},
+		"3163bf4a-4df6-4d8d-ac45-e6c00a5e6033": {
+			"type": "text",
+			"x": 614.65,
+			"y": 560.8,
+			"width": 129.14,
+			"height": 13.17,
+			"text": "Pentium(R) Dual-Core..."
+		},
+		"d5972ee4-ed03-432e-995e-d4f396cb9f50": {
+			"type": "text",
+			"x": 741.82,
+			"y": 542.57,
+			"width": 50.48,
+			"height": 14.7,
+			"text": "Memory:"
+		},
+		"f84e9557-e518-448f-8da1-f7962bef94c1": {
+			"type": "text",
+			"x": 800.93,
+			"y": 542.58,
+			"width": 41.47,
+			"height": 11.88,
+			"text": "1.95 GB"
+		},
+		"8a78c167-d92c-491e-9863-dd9624ce687f": {
+			"type": "text",
+			"x": 462.9,
+			"y": 521.8,
+			"width": 48.35,
+			"height": 11.41,
+			"text": "Network"
+		},
+		"a946430b-d678-45ad-8668-9885039a9746": {
+			"type": "text",
+			"x": 462.49,
+			"y": 164.61,
+			"width": 67.99,
+			"height": 14.73,
+			"text": "Homegroup"
+		},
+		"e1132654-af58-43d4-9887-cc0d3e30e799": {
+			"type": "text",
+			"x": 462.59,
+			"y": 206.38,
+			"width": 46.78,
+			"height": 11.85,
+			"text": "Libraries"
+		},
+		"c8154f9f-c555-4a5d-8105-afdaa959f04e": {
+			"type": "text",
+			"x": 473,
+			"y": 227.76,
+			"width": 63.37,
+			"height": 11.41,
+			"text": "Documents"
+		},
+		"ed6f47c4-455c-412d-b561-f03b58ef24d3": {
+			"type": "text",
+			"x": 472.96,
+			"y": 248.57,
+			"width": 34.29,
+			"height": 11.65,
+			"text": "Music"
+		},
+		"a1e2169b-d210-4568-8e96-e6c6683eb97e": {
+			"type": "text",
+			"x": 473,
+			"y": 269.7,
+			"width": 44.47,
+			"height": 11.67,
+			"text": "Pictures"
+		},
+		"3de931c3-5e66-49f8-96cf-4cc81232443a": {
+			"type": "text",
+			"x": 472.65,
+			"y": 290.74,
+			"width": 37.94,
+			"height": 11.58,
+			"text": "Videos"
+		},
+		"87dc67dc-848f-4bf2-b9aa-2da68a10b2c2": {
+			"type": "text",
+			"x": 462.83,
+			"y": 332.63,
+			"width": 42.55,
+			"height": 11.85,
+			"text": "This PC"
+		},
+		"7f0c71eb-23c4-40c1-88fe-8f03343d9df8": {
+			"type": "text",
+			"x": 472.68,
+			"y": 353.49,
+			"width": 45.56,
+			"height": 14.67,
+			"text": "Desktop"
+		},
+		"9ea24404-0bff-45b7-ace0-3a3b13b54f3d": {
+			"type": "text",
+			"x": 472.9,
+			"y": 374.67,
+			"width": 63.52,
+			"height": 11.93,
+			"text": "Documents"
+		},
+		"450cdea5-5871-4b82-ad67-f69b7a472e51": {
+			"type": "text",
+			"x": 472.7,
+			"y": 395.46,
+			"width": 61.84,
+			"height": 12.04,
+			"text": "Downloads"
+		},
+		"a6a97e54-9679-4405-a5f3-cdf6e04b252b": {
+			"type": "text",
+			"x": 472.96,
+			"y": 416.54,
+			"width": 34.46,
+			"height": 11.93,
+			"text": "Music"
+		},
+		"81a7144a-240f-4ea2-abe7-d0f96b1b3482": {
+			"type": "text",
+			"x": 472.94,
+			"y": 437.68,
+			"width": 44.38,
+			"height": 11.66,
+			"text": "Pictures"
+		},
+		"456bb08d-1800-45d8-90b9-df8d43e827d0": {
+			"type": "text",
+			"x": 473.03,
+			"y": 458.83,
+			"width": 37.35,
+			"height": 11.62,
+			"text": "Videos"
+		},
+		"dd254572-4eb8-45ef-8684-e42600ff9b75": {
+			"type": "text",
+			"x": 473.08,
+			"y": 479.61,
+			"width": 77.25,
+			"height": 13.87,
+			"text": "Local Disk (C:)"
+		},
+		"a29d9ab1-0aac-4ce2-a5d3-9b3b50e350e8": {
+			"type": "text",
+			"x": 610.49,
+			"y": 150.7,
+			"width": 71.66,
+			"height": 15.65,
+			"text": "Folders (6)"
+		},
+		"f5ff3ca2-833e-4033-b3c6-ce4b496df487": {
+			"type": "text",
+			"x": 610.55,
+			"y": 297.51,
+			"width": 146.97,
+			"height": 15.83,
+			"text": "Devices and drives (1)"
+		},
+		"9ae64c9e-690f-4998-8cb5-75ae789d4be2": {
+			"type": "text",
+			"x": 633.92,
+			"y": 272.79,
+			"width": 45.56,
+			"height": 14.67,
+			"text": "Desktop"
+		},
+		"a3106d06-d35c-4744-b370-a21ebff6cca2": {
+			"type": "text",
+			"x": 736.83,
+			"y": 272.97,
+			"width": 63.52,
+			"height": 11.93,
+			"text": "Documents"
+		},
+		"040afbeb-7c10-416c-8aed-e825c42f4654": {
+			"type": "text",
+			"x": 850.05,
+			"y": 272.59,
+			"width": 61.84,
+			"height": 12.04,
+			"text": "Downloads"
+		},
+		"d0037af4-bf8b-41d6-b7da-f2fc892938bb": {
+			"type": "text",
+			"x": 975.1,
+			"y": 272.66,
+			"width": 34.46,
+			"height": 11.93,
+			"text": "Music"
+		},
+		"b32ee974-a5c1-42e5-8d41-6105bee8758e": {
+			"type": "text",
+			"x": 1082.05,
+			"y": 272.85,
+			"width": 44.38,
+			"height": 11.66,
+			"text": "Pictures"
+		},
+		"d1632010-00fb-4b07-8c7e-da310e636659": {
+			"type": "text",
+			"x": 1197.86,
+			"y": 272.93,
+			"width": 37.35,
+			"height": 11.62,
+			"text": "Videos"
+		},
+		"937e06bd-9bbb-48b2-a731-17146f57d6a9": {
+			"type": "text",
+			"x": 617.89,
+			"y": 419.33,
+			"width": 77.25,
+			"height": 13.87,
+			"text": "Local Disk (C:)"
+		}
+	},
+	"verified": true
+}

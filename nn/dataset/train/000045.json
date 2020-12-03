@@ -1,0 +1,1181 @@
+{
+	"objs": {
+		"4c318c74-6380-4411-91d8-bd9beeb15048": {
+			"type": "text",
+			"x": 29.56,
+			"y": 96.53,
+			"width": 21.94,
+			"height": 24.07,
+			"text": "Qt"
+		},
+		"e4f6d3ac-78b5-4b99-bb47-eb02e40a4090": {
+			"type": "text",
+			"x": 12.88,
+			"y": 13.92,
+			"width": 12.38,
+			"height": 13.92,
+			"text": "Qt"
+		},
+		"bb505bfc-d416-46f9-bf60-38a056b13fcc": {
+			"type": "text",
+			"x": 33.48,
+			"y": 15.75,
+			"width": 166.69,
+			"height": 16.47,
+			"text": "validators.ui - Qt Creator"
+		},
+		"068a5af8-8b51-43a7-8b8e-80ac58a7c72e": {
+			"type": "text",
+			"x": 17.46,
+			"y": 43.69,
+			"width": 25.03,
+			"height": 13.45,
+			"text": "File"
+		},
+		"1adeb1dc-1a10-4990-b692-4658d4ac92e4": {
+			"type": "text",
+			"x": 56.77,
+			"y": 43.62,
+			"width": 27.74,
+			"height": 13.59,
+			"text": "Edit"
+		},
+		"641e8dd7-9f7b-4b8a-8820-bd328d68bace": {
+			"type": "text",
+			"x": 98.7,
+			"y": 43.77,
+			"width": 34.85,
+			"height": 13.65,
+			"text": "Build"
+		},
+		"2224218f-4d17-41b4-be4a-614639ab9c33": {
+			"type": "text",
+			"x": 148.76,
+			"y": 43.7,
+			"width": 45.69,
+			"height": 16.52,
+			"text": "Debug"
+		},
+		"48795e94-1b55-452a-81ac-f6ad9ab57f98": {
+			"type": "text",
+			"x": 208.57,
+			"y": 43.47,
+			"width": 54.99,
+			"height": 16.78,
+			"text": "Analyze"
+		},
+		"75b67132-3a58-4a83-9998-7ea0307793fa": {
+			"type": "text",
+			"x": 276.6,
+			"y": 43.61,
+			"width": 36.94,
+			"height": 13.86,
+			"text": "Tools"
+		},
+		"bfc3f4cf-e8c4-4420-80be-cf64ef5a8369": {
+			"type": "text",
+			"x": 326.22,
+			"y": 43.47,
+			"width": 58.35,
+			"height": 14.11,
+			"text": "Window"
+		},
+		"a4d80a81-03e6-42cf-878d-0f1e824c7fb2": {
+			"type": "text",
+			"x": 398.55,
+			"y": 43.58,
+			"width": 33.91,
+			"height": 16.77,
+			"text": "Help"
+		},
+		"e1e56804-2849-40e0-89f0-3ed37a14cc0a": {
+			"type": "text",
+			"x": 108.96,
+			"y": 69.79,
+			"width": 80.5,
+			"height": 12.61,
+			"text": "validators.ui*"
+		},
+		"75020d59-5541-42b4-bbcb-82a5fa3ac5f4": {
+			"type": "text",
+			"x": 84.67,
+			"y": 92.88,
+			"width": 30.6,
+			"height": 12.38,
+			"text": "Filter"
+		},
+		"ef38a74b-0441-4c27-a5db-6b7190eb772f": {
+			"type": "text",
+			"x": 13.56,
+			"y": 126.93,
+			"width": 60.77,
+			"height": 13.11,
+			"text": "Welcome"
+		},
+		"986cd592-7352-45cc-b56b-9eb69580aab1": {
+			"type": "text",
+			"x": 30.58,
+			"y": 182.79,
+			"width": 27.66,
+			"height": 13.13,
+			"text": "Edit"
+		},
+		"c2cac67d-ff86-4daa-b4d7-183e30ed00b3": {
+			"type": "text",
+			"x": 20.89,
+			"y": 238.92,
+			"width": 45.34,
+			"height": 16.16,
+			"text": "Design"
+		},
+		"34fc60b1-7ebe-4c9c-bdf4-e40aef8ff661": {
+			"type": "text",
+			"x": 21.78,
+			"y": 294.49,
+			"width": 43.61,
+			"height": 16.73,
+			"text": "Debug"
+		},
+		"ea88a3b9-2829-453a-a061-8f303328d974": {
+			"type": "text",
+			"x": 15.77,
+			"y": 350.76,
+			"width": 56.55,
+			"height": 15.44,
+			"text": "Projects"
+		},
+		"2ef6960b-b7c7-4a0e-b9ff-7efe3485b1f6": {
+			"type": "text",
+			"x": 15.84,
+			"y": 406.75,
+			"width": 55.59,
+			"height": 16.25,
+			"text": "Analyze"
+		},
+		"314f2fa9-a138-4afa-9892-8289ececedef": {
+			"type": "text",
+			"x": 38.82,
+			"y": 436.96,
+			"width": 12.36,
+			"height": 19.03,
+			"text": "?"
+		},
+		"1946f075-6e54-4b81-95ee-f72a99e237bc": {
+			"type": "text",
+			"x": 28.57,
+			"y": 462.79,
+			"width": 30.74,
+			"height": 16.1,
+			"text": "Help"
+		},
+		"1ff075fc-df86-493d-b3f2-4d2147717309": {
+			"type": "text",
+			"x": 140.73,
+			"y": 115.64,
+			"width": 51.68,
+			"height": 16.31,
+			"text": "Layouts"
+		},
+		"efabb0d0-b5ec-485b-90e8-51c5c651f492": {
+			"type": "text",
+			"x": 110.68,
+			"y": 138.29,
+			"width": 100.96,
+			"height": 16.92,
+			"text": "Vertical Layout"
+		},
+		"6cd00abc-3efc-4292-b78d-27c1f8af221b": {
+			"type": "text",
+			"x": 111.72,
+			"y": 162.74,
+			"width": 119.71,
+			"height": 16.39,
+			"text": "Horizontal Layout"
+		},
+		"a579af6f-5b43-4951-8ce5-02631a453532": {
+			"type": "text",
+			"x": 110.61,
+			"y": 186.32,
+			"width": 78.97,
+			"height": 16.96,
+			"text": "Grid Layout"
+		},
+		"5f3812b8-2626-4fee-abd9-efe473c7fa94": {
+			"type": "text",
+			"x": 111.51,
+			"y": 210.53,
+			"width": 84.16,
+			"height": 16.7,
+			"text": "Form Layout"
+		},
+		"8cc849ec-f189-4e92-8cd7-7f6809e90e67": {
+			"type": "text",
+			"x": 138.65,
+			"y": 234.39,
+			"width": 53.94,
+			"height": 16.89,
+			"text": "Spacers"
+		},
+		"720ae186-6951-4f4e-81d4-900682729572": {
+			"type": "text",
+			"x": 111.45,
+			"y": 257.71,
+			"width": 121.74,
+			"height": 16.55,
+			"text": "Horizontal Spacer"
+		},
+		"2419bd7b-9b3f-4f2b-93f8-aa6f335f5490": {
+			"type": "text",
+			"x": 110.64,
+			"y": 281.67,
+			"width": 102.98,
+			"height": 16.62,
+			"text": "Vertical Spacer"
+		},
+		"dadb67ee-4513-4163-8779-01fc3825fa62": {
+			"type": "text",
+			"x": 140.7,
+			"y": 305.6,
+			"width": 51.78,
+			"height": 13.87,
+			"text": "Buttons"
+		},
+		"6651524a-2f95-4260-948d-6c1b44790249": {
+			"type": "text",
+			"x": 88.12,
+			"y": 330,
+			"width": 12.92,
+			"height": 7.15,
+			"text": "OK"
+		},
+		"e40be741-fc85-4066-aad3-e796fcb86d85": {
+			"type": "text",
+			"x": 111.46,
+			"y": 328.62,
+			"width": 79.81,
+			"height": 13.62,
+			"text": "Push Button"
+		},
+		"4338b955-d2b3-470d-940f-60e4947a1432": {
+			"type": "text",
+			"x": 110.74,
+			"y": 352.66,
+			"width": 78.57,
+			"height": 13.69,
+			"text": "Tool Button"
+		},
+		"1d83ceea-270d-4448-817d-2f478d4068ee": {
+			"type": "text",
+			"x": 111.6,
+			"y": 376.78,
+			"width": 88.57,
+			"height": 13.45,
+			"text": "Radio Button"
+		},
+		"e68503bf-9c40-4453-867a-2a8d8e3a16f3": {
+			"type": "text",
+			"x": 110.68,
+			"y": 400.42,
+			"width": 71.01,
+			"height": 14.04,
+			"text": "Check Box"
+		},
+		"89860e9b-ff8a-4885-9c19-b0e41adcfd40": {
+			"type": "text",
+			"x": 110.35,
+			"y": 424.44,
+			"width": 118.14,
+			"height": 14.05,
+			"text": "Comman...Button"
+		},
+		"3adb0adf-1b38-4562-a994-8cfc344950d7": {
+			"type": "text",
+			"x": 111.5,
+			"y": 448.57,
+			"width": 74.96,
+			"height": 13.81,
+			"text": "Button Box"
+		},
+		"552cb16a-ef55-4743-86c3-585c09cff989": {
+			"type": "text",
+			"x": 103.76,
+			"y": 472.43,
+			"width": 123.72,
+			"height": 15.71,
+			"text": "Item Vie...l-Based)"
+		},
+		"540c0f63-0201-4921-8d25-99275b87212d": {
+			"type": "text",
+			"x": 111.48,
+			"y": 495.61,
+			"width": 59.89,
+			"height": 13.81,
+			"text": "List View"
+		},
+		"b35a7491-462c-49c2-868e-db5de45af3ef": {
+			"type": "text",
+			"x": 110.66,
+			"y": 519.5,
+			"width": 65.79,
+			"height": 13.87,
+			"text": "Tree View"
+		},
+		"771d44f8-6465-48ef-b075-940b9e8bc5d9": {
+			"type": "text",
+			"x": 110.7,
+			"y": 543.58,
+			"width": 73.76,
+			"height": 13.96,
+			"text": "Table View"
+		},
+		"789a5d1a-0a2d-4064-a989-e7525b4ebb6f": {
+			"type": "text",
+			"x": 110.52,
+			"y": 567.57,
+			"width": 90.17,
+			"height": 13.87,
+			"text": "Column View"
+		},
+		"96b85d8e-12e1-47b5-b512-cee0be715366": {
+			"type": "text",
+			"x": 107.47,
+			"y": 591.47,
+			"width": 116.79,
+			"height": 15.71,
+			"text": "Item Wi...-Based)"
+		},
+		"937c926e-ac7a-4181-9900-c431ed10b1a0": {
+			"type": "text",
+			"x": 111.64,
+			"y": 614.57,
+			"width": 76.9,
+			"height": 16.57,
+			"text": "List Widget"
+		},
+		"92e61695-8e74-4c21-bfc1-bf7fc5fd2bad": {
+			"type": "text",
+			"x": 110.63,
+			"y": 638.44,
+			"width": 82.81,
+			"height": 16.96,
+			"text": "Tree Widget"
+		},
+		"7cf2b14f-9851-4ffc-901e-033ed00f4012": {
+			"type": "text",
+			"x": 110.86,
+			"y": 662.49,
+			"width": 90.65,
+			"height": 16.71,
+			"text": "Table Widget"
+		},
+		"836d7b8f-3a24-490c-b332-1e550b398e81": {
+			"type": "text",
+			"x": 129.46,
+			"y": 687.02,
+			"width": 72.74,
+			"height": 12.97,
+			"text": "Containers"
+		},
+		"2d235cca-a4a8-4313-91da-c7a9bd1c7ed0": {
+			"type": "text",
+			"x": 142.48,
+			"y": 706.91,
+			"width": 139.09,
+			"height": 16.24,
+			"text": "Type to locate (Ctrl..."
+		},
+		"2bbdc8e4-d035-47ec-a1c3-8fc141a4482a": {
+			"type": "text",
+			"x": 331.63,
+			"y": 708.19,
+			"width": 8.01,
+			"height": 10.57,
+			"text": "1"
+		},
+		"7f5617a2-612b-4800-87c1-97615752aa8e": {
+			"type": "text",
+			"x": 396.9,
+			"y": 707.75,
+			"width": 9.17,
+			"height": 11.35,
+			"text": "2"
+		},
+		"df788c72-9e80-4d1e-a369-42e6ef076926": {
+			"type": "text",
+			"x": 492.95,
+			"y": 707.7,
+			"width": 9.05,
+			"height": 11.4,
+			"text": "3"
+		},
+		"4878c291-68cc-4cfd-9f81-3e31b6582ddb": {
+			"type": "text",
+			"x": 588.95,
+			"y": 707.56,
+			"width": 9.04,
+			"height": 11.54,
+			"text": "4"
+		},
+		"0b38542a-860e-4f91-9a8a-8087326116af": {
+			"type": "text",
+			"x": 685.69,
+			"y": 707.97,
+			"width": 9.56,
+			"height": 11.07,
+			"text": "5"
+		},
+		"1efaf9c8-512e-41de-8ae1-8184fd0bcfee": {
+			"type": "text",
+			"x": 781.66,
+			"y": 707.78,
+			"width": 9.6,
+			"height": 11.37,
+			"text": "6"
+		},
+		"90874e87-cc82-4745-b8ee-c4d0ce5fc09c": {
+			"type": "text",
+			"x": 877.78,
+			"y": 707.98,
+			"width": 9.43,
+			"height": 11.04,
+			"text": "7"
+		},
+		"a7627702-ba58-497d-aa7a-1330971f7788": {
+			"type": "text",
+			"x": 974.14,
+			"y": 707.84,
+			"width": 8.94,
+			"height": 11.23,
+			"text": "8"
+		},
+		"9eef03c3-223b-46d4-9ab2-852ae2df6ecc": {
+			"type": "text",
+			"x": 346.89,
+			"y": 707.92,
+			"width": 39.32,
+			"height": 11.24,
+			"text": "Issues"
+		},
+		"5db66aab-450c-48d4-84a4-aa1e18cafd0c": {
+			"type": "text",
+			"x": 412.92,
+			"y": 706.85,
+			"width": 65.4,
+			"height": 12.4,
+			"text": "Search R..."
+		},
+		"f1b034f4-8ac3-4297-a426-fd8fafbb9361": {
+			"type": "text",
+			"x": 507.8,
+			"y": 706.85,
+			"width": 69.3,
+			"height": 15.08,
+			"text": "Applicatio..."
+		},
+		"72a320d6-c75f-4cba-991b-d48c61de48f4": {
+			"type": "text",
+			"x": 604.62,
+			"y": 706.8,
+			"width": 63.69,
+			"height": 15.33,
+			"text": "Compile ..."
+		},
+		"739b7ced-1847-4512-b2e4-217b8e4d24b3": {
+			"type": "text",
+			"x": 701.5,
+			"y": 706.65,
+			"width": 69.11,
+			"height": 14.57,
+			"text": "QML/JS C..."
+		},
+		"bdbc0f61-ab6b-45ea-895e-3ef3876ea41d": {
+			"type": "text",
+			"x": 796.7,
+			"y": 707.4,
+			"width": 69.49,
+			"height": 12.43,
+			"text": "To-Do Ent..."
+		},
+		"31cce757-424a-4eb5-b088-cfad062541fd": {
+			"type": "text",
+			"x": 892.63,
+			"y": 707.33,
+			"width": 69.13,
+			"height": 12.43,
+			"text": "Version C..."
+		},
+		"7a171d6c-0dec-4ccc-8a66-f8b4a38de81e": {
+			"type": "text",
+			"x": 989.22,
+			"y": 706.92,
+			"width": 72.33,
+			"height": 12.75,
+			"text": "General M..."
+		},
+		"b51a1760-f210-4f2f-a498-073ca16e1fcd": {
+			"type": "text",
+			"x": 288.88,
+			"y": 139.96,
+			"width": 77.18,
+			"height": 14.21,
+			"text": "QIntValidator"
+		},
+		"f2aed56f-1c78-4a51-97b1-d821aea4f02a": {
+			"type": "text",
+			"x": 293.77,
+			"y": 175.29,
+			"width": 26.54,
+			"height": 12.1,
+			"text": "Min:"
+		},
+		"7e44ad16-59ba-43c4-bd68-4d2f85005561": {
+			"type": "text",
+			"x": 328.5,
+			"y": 175.54,
+			"width": 9.65,
+			"height": 11.79,
+			"text": "0"
+		},
+		"b38590ec-fb30-4905-89d9-1ba4609441c4": {
+			"type": "text",
+			"x": 290.52,
+			"y": 208.02,
+			"width": 30.41,
+			"height": 11.32,
+			"text": "Max:"
+		},
+		"555d03f9-a828-4548-b3b9-1dcb514d2edb": {
+			"type": "text",
+			"x": 329.45,
+			"y": 207.55,
+			"width": 30.17,
+			"height": 11.89,
+			"text": "1000"
+		},
+		"4e22fd29-1683-45fa-9538-44844d73d176": {
+			"type": "text",
+			"x": 670.49,
+			"y": 204.21,
+			"width": 98.17,
+			"height": 16.36,
+			"text": "editingFinished()"
+		},
+		"aa7e24d7-8ef3-4ca2-82b9-21e22645269a": {
+			"type": "text",
+			"x": 288.49,
+			"y": 301.78,
+			"width": 102.03,
+			"height": 14.52,
+			"text": "QDoubleValidator"
+		},
+		"5f13e5b3-7668-43f6-8c0f-53de418b2463": {
+			"type": "text",
+			"x": 293.97,
+			"y": 337.81,
+			"width": 26.59,
+			"height": 11.63,
+			"text": "Min:"
+		},
+		"67a4b014-3107-4426-b738-30bea70bbffc": {
+			"type": "text",
+			"x": 328.41,
+			"y": 337.81,
+			"width": 28.14,
+			"height": 11.63,
+			"text": "0.00"
+		},
+		"a5be6682-94eb-4645-9a88-872fcd7eca4b": {
+			"type": "text",
+			"x": 290.78,
+			"y": 369.79,
+			"width": 29.54,
+			"height": 11.67,
+			"text": "Max:"
+		},
+		"e546b480-2a95-42f4-8b7d-93e74b76e89e": {
+			"type": "text",
+			"x": 329.34,
+			"y": 369.38,
+			"width": 48.24,
+			"height": 12.14,
+			"text": "1000.00"
+		},
+		"2eb7ae5c-8932-49fd-adf9-34dda5e3338a": {
+			"type": "text",
+			"x": 519.66,
+			"y": 337.49,
+			"width": 47.46,
+			"height": 11.88,
+			"text": "Format:"
+		},
+		"44b720da-5268-4dea-af1a-a035f859e45b": {
+			"type": "text",
+			"x": 575.84,
+			"y": 336.69,
+			"width": 54.57,
+			"height": 12.77,
+			"text": "Standard"
+		},
+		"afa62494-56ee-4fc6-85f2-1986334f8ab4": {
+			"type": "text",
+			"x": 509.82,
+			"y": 369.02,
+			"width": 57.59,
+			"height": 12.26,
+			"text": "Decimals:"
+		},
+		"df9b62a6-a6e8-442f-9ac4-2a5a309fe8bf": {
+			"type": "text",
+			"x": 575.56,
+			"y": 369.76,
+			"width": 9.82,
+			"height": 11.41,
+			"text": "2"
+		},
+		"e5ef8254-be77-4557-9969-5a97e494dae8": {
+			"type": "text",
+			"x": 670.35,
+			"y": 366.35,
+			"width": 98.17,
+			"height": 16.36,
+			"text": "editingFinished()"
+		},
+		"eba8787b-d55b-4e14-9f30-8ad06a254582": {
+			"type": "text",
+			"x": 727.46,
+			"y": 478.39,
+			"width": 27.14,
+			"height": 13.92,
+			"text": "Quit"
+		},
+		"d67a88ea-658e-4899-9e51-305a239867e5": {
+			"type": "text",
+			"x": 263.97,
+			"y": 545.71,
+			"width": 21.97,
+			"height": 20.75,
+			"text": "+"
+		},
+		"521982e3-dba8-41c3-b3ae-0dd76ff8e996": {
+			"type": "text",
+			"x": 292.34,
+			"y": 551.05,
+			"width": 22.88,
+			"height": 9.23,
+			"text": "-"
+		},
+		"78254d73-4c96-4570-a760-39e2cfb20c74": {
+			"type": "text",
+			"x": 263.85,
+			"y": 576.68,
+			"width": 49.66,
+			"height": 13.73,
+			"text": "Sender"
+		},
+		"c5c69e0b-a555-4763-bde1-0c3cca98daed": {
+			"type": "text",
+			"x": 261.8,
+			"y": 599.49,
+			"width": 76.66,
+			"height": 16.86,
+			"text": "pushButton"
+		},
+		"22394677-d0bb-47ce-8d41-bc0e5221a4b4": {
+			"type": "text",
+			"x": 363.49,
+			"y": 576.62,
+			"width": 42.92,
+			"height": 16.5,
+			"text": "Signal"
+		},
+		"1ad83f13-495c-4842-b6b8-9287c61db091": {
+			"type": "text",
+			"x": 361.6,
+			"y": 599.52,
+			"width": 58,
+			"height": 16.96,
+			"text": "clicked()"
+		},
+		"cb002372-6ec4-4025-ab2f-f9ab664f6e57": {
+			"type": "text",
+			"x": 464.42,
+			"y": 576.33,
+			"width": 57.87,
+			"height": 14.12,
+			"text": "Receiver"
+		},
+		"6b18b8db-5c4b-4798-8370-dfcb4f332ef5": {
+			"type": "text",
+			"x": 460.71,
+			"y": 599.58,
+			"width": 91.79,
+			"height": 13.99,
+			"text": "Valid...sForm"
+		},
+		"ae314af0-e78b-4e72-bb12-f9f74e676e66": {
+			"type": "text",
+			"x": 563.29,
+			"y": 576.47,
+			"width": 29.22,
+			"height": 13.88,
+			"text": "Slot"
+		},
+		"2e4af765-ef0c-4f1a-b4c1-a6e37c4b2a2c": {
+			"type": "text",
+			"x": 561.63,
+			"y": 599.59,
+			"width": 47.98,
+			"height": 16.67,
+			"text": "close()"
+		},
+		"ed5aede4-fb09-447a-98a1-7210a236277b": {
+			"type": "text",
+			"x": 273,
+			"y": 679.95,
+			"width": 76.25,
+			"height": 12.49,
+			"text": "Action Editor"
+		},
+		"cb9891cf-c17b-446d-b926-62bbd56328ab": {
+			"type": "text",
+			"x": 375.35,
+			"y": 680.8,
+			"width": 127.01,
+			"height": 15.33,
+			"text": "Signals & Slots Editor"
+		},
+		"b5329b9a-d647-4885-8a8e-a7b9e7abc3b7": {
+			"type": "text",
+			"x": 829.4,
+			"y": 95.3,
+			"width": 46.96,
+			"height": 17.02,
+			"text": "Object"
+		},
+		"d025decf-b657-40fa-914d-b4b99638918e": {
+			"type": "text",
+			"x": 1061.53,
+			"y": 95.53,
+			"width": 36.05,
+			"height": 14.1,
+			"text": "Class"
+		},
+		"634c69d0-28d1-4607-80ba-c3ea5b975a64": {
+			"type": "text",
+			"x": 873.64,
+			"y": 120.53,
+			"width": 102.77,
+			"height": 14.01,
+			"text": "ValidatorsForm"
+		},
+		"180d0fbd-8110-4a68-baa4-291ca95de31f": {
+			"type": "text",
+			"x": 895.1,
+			"y": 143.74,
+			"width": 74.2,
+			"height": 10.46,
+			"text": "<noname>"
+		},
+		"be37c761-66a7-4fc8-9281-7736047f3342": {
+			"type": "text",
+			"x": 889.05,
+			"y": 163.67,
+			"width": 74.2,
+			"height": 10.46,
+			"text": "<noname>"
+		},
+		"ec70ecd1-663c-41e4-add3-4a003c7f082c": {
+			"type": "text",
+			"x": 888.5,
+			"y": 180.47,
+			"width": 96.79,
+			"height": 14,
+			"text": "localeSelector"
+		},
+		"318f0eb9-1207-4644-bee7-275058710d0c": {
+			"type": "text",
+			"x": 894.94,
+			"y": 203.58,
+			"width": 74.2,
+			"height": 10.46,
+			"text": "<noname>"
+		},
+		"d84a1a4d-96ab-4400-a28c-c2bc22857b4c": {
+			"type": "text",
+			"x": 888.85,
+			"y": 223.67,
+			"width": 74.2,
+			"height": 10.46,
+			"text": "<noname>"
+		},
+		"1cd18b4c-be36-44c2-8295-a2c345350a34": {
+			"type": "text",
+			"x": 869,
+			"y": 263.72,
+			"width": 74.2,
+			"height": 10.46,
+			"text": "<noname>"
+		},
+		"bc5e2f37-8c0c-43f9-971f-ce8865bdeec9": {
+			"type": "text",
+			"x": 888.55,
+			"y": 240.67,
+			"width": 76.91,
+			"height": 16.56,
+			"text": "pushButton"
+		},
+		"1b1c32d0-fc9d-4f86-8dde-d05f9e856386": {
+			"type": "text",
+			"x": 893.6,
+			"y": 280.91,
+			"width": 67.91,
+			"height": 16.28,
+			"text": "groupBox"
+		},
+		"28f77c53-b8e1-4d63-a2b5-930493c35c82": {
+			"type": "text",
+			"x": 914.92,
+			"y": 303.66,
+			"width": 74.2,
+			"height": 10.46,
+			"text": "<noname>"
+		},
+		"00a6c308-bda6-4cf3-bbac-72d8612e1475": {
+			"type": "text",
+			"x": 935.01,
+			"y": 323.6,
+			"width": 74.37,
+			"height": 10.46,
+			"text": "<noname>"
+		},
+		"82e1ee28-abd3-4a06-95f0-c63d36be0b98": {
+			"type": "text",
+			"x": 928.6,
+			"y": 340.79,
+			"width": 34.01,
+			"height": 13.5,
+			"text": "label"
+		},
+		"69070dce-a814-4282-9285-e6ae0b3d2dbb": {
+			"type": "text",
+			"x": 928.88,
+			"y": 360.78,
+			"width": 48.43,
+			"height": 7.44,
+			"text": ""
+		},
+		"6fe8a6d3-d9ff-48f0-b9fd-ccf1ab3cc6f8": {
+			"type": "text",
+			"x": 1085.36,
+			"y": 120.38,
+			"width": 63.25,
+			"height": 17.04,
+			"text": "QWidget"
+		},
+		"0092999a-a2fb-4816-b38c-9e8fbe515b83": {
+			"type": "text",
+			"x": 1085.49,
+			"y": 140.54,
+			"width": 93.99,
+			"height": 16.64,
+			"text": "QHBoxLayout"
+		},
+		"a0aedc7e-2208-436a-998b-9eb325edd3bf": {
+			"type": "text",
+			"x": 1085.31,
+			"y": 160.45,
+			"width": 49.08,
+			"height": 16.88,
+			"text": "Spacer"
+		},
+		"7bc707ae-2a6d-4f64-9f94-14ac750c61ca": {
+			"type": "text",
+			"x": 1086.4,
+			"y": 180.6,
+			"width": 83.15,
+			"height": 13.7,
+			"text": "Local...ector"
+		},
+		"66f4e6f0-61a0-4579-8d2f-0cf04cb49c73": {
+			"type": "text",
+			"x": 1085.44,
+			"y": 200.42,
+			"width": 93.99,
+			"height": 16.89,
+			"text": "QHBoxLayout"
+		},
+		"059642da-c182-4711-b183-2637bd7e7f93": {
+			"type": "text",
+			"x": 1085.42,
+			"y": 220.51,
+			"width": 49.08,
+			"height": 16.88,
+			"text": "Spacer"
+		},
+		"c109c8b1-ee51-4f40-9200-606f17b527d2": {
+			"type": "text",
+			"x": 1085.5,
+			"y": 240.58,
+			"width": 88.07,
+			"height": 16.89,
+			"text": "QPushButton"
+		},
+		"d4538a93-7b74-45e8-800e-cca92bd92fb1": {
+			"type": "text",
+			"x": 1064.22,
+			"y": 242.14,
+			"width": 12.74,
+			"height": 6.73,
+			"text": "OK"
+		},
+		"e74676c3-c657-4108-aa8d-9b9f4fa0ffab": {
+			"type": "text",
+			"x": 1085.6,
+			"y": 260.62,
+			"width": 48.82,
+			"height": 16.58,
+			"text": "Spacer"
+		},
+		"6a057741-e6be-4060-b928-e49231ea48e7": {
+			"type": "text",
+			"x": 1085.56,
+			"y": 280.57,
+			"width": 80.06,
+			"height": 16.64,
+			"text": "QGroupBox"
+		},
+		"5ae5407f-e135-405c-90c9-e013ed8406e0": {
+			"type": "text",
+			"x": 1085.63,
+			"y": 300.38,
+			"width": 93.99,
+			"height": 16.89,
+			"text": "QHBoxLayout"
+		},
+		"928cf29c-4dc8-43b1-b999-12541c8894c3": {
+			"type": "text",
+			"x": 1085.45,
+			"y": 320.33,
+			"width": 86.11,
+			"height": 16.83,
+			"text": "QGridLayout"
+		},
+		"70c9f7aa-2f74-4346-81e2-4472cefb6150": {
+			"type": "text",
+			"x": 1085.59,
+			"y": 340.14,
+			"width": 49.16,
+			"height": 17.24,
+			"text": "QLabel"
+		},
+		"e17b6012-6342-4568-aa9e-32430bcd9a54": {
+			"type": "text",
+			"x": 1085.45,
+			"y": 360.46,
+			"width": 48.93,
+			"height": 8.1,
+			"text": ""
+		},
+		"cdd0777e-7a68-427c-a86a-a3f10d205177": {
+			"type": "text",
+			"x": 1134.54,
+			"y": 370.31,
+			"width": 18.91,
+			"height": 17.46,
+			"text": "+"
+		},
+		"528c7562-e70c-45fe-846a-e04c3e6de418": {
+			"type": "text",
+			"x": 1157.52,
+			"y": 375.59,
+			"width": 19.06,
+			"height": 6.65,
+			"text": "-"
+		},
+		"c175e95e-b1a9-474c-a5cb-ad4d20e4e768": {
+			"type": "text",
+			"x": 830.71,
+			"y": 373,
+			"width": 30.45,
+			"height": 12.08,
+			"text": "Filter"
+		},
+		"532f130e-a6e2-43ca-9107-6a6efbd64482": {
+			"type": "text",
+			"x": 826.57,
+			"y": 394.51,
+			"width": 152.96,
+			"height": 15.71,
+			"text": "ValidatorsForm : QWidget"
+		},
+		"18be5e11-519a-4717-9768-c048b3818b7f": {
+			"type": "text",
+			"x": 830.33,
+			"y": 420.5,
+			"width": 60.64,
+			"height": 16.96,
+			"text": "Property"
+		},
+		"b0bdef26-19e5-4210-bd74-94b5bd73dd01": {
+			"type": "text",
+			"x": 847.29,
+			"y": 447.4,
+			"width": 59.18,
+			"height": 16.72,
+			"text": "QObject"
+		},
+		"66c24f59-4b42-41bf-911d-087c89ccbb1d": {
+			"type": "text",
+			"x": 847.72,
+			"y": 471.57,
+			"width": 87.79,
+			"height": 16.69,
+			"text": "objectName"
+		},
+		"ad03537a-3da9-4045-834a-ece4f56ebaef": {
+			"type": "text",
+			"x": 847.35,
+			"y": 495.4,
+			"width": 64.97,
+			"height": 16.88,
+			"text": "QWidget"
+		},
+		"47e7715d-f683-4e42-b1c7-19336654df86": {
+			"type": "text",
+			"x": 847.43,
+			"y": 519.85,
+			"width": 55.98,
+			"height": 13.43,
+			"text": "enabled"
+		},
+		"a6ddc034-dfaf-4cb8-994f-706fe7c13620": {
+			"type": "text",
+			"x": 847.36,
+			"y": 544.67,
+			"width": 73.15,
+			"height": 15.79,
+			"text": "geometry"
+		},
+		"3237e012-a6dc-4541-a0ed-9490073d4b5e": {
+			"type": "text",
+			"x": 867.94,
+			"y": 567.99,
+			"width": 11.23,
+			"height": 13.24,
+			"text": "X"
+		},
+		"07a04438-7a0e-432b-af28-b9ba2e9f2f94": {
+			"type": "text",
+			"x": 867.74,
+			"y": 591.8,
+			"width": 10.99,
+			"height": 13.34,
+			"text": "Y"
+		},
+		"47f09602-b347-40d2-b141-9c1e7722cfdd": {
+			"type": "text",
+			"x": 867.7,
+			"y": 615.55,
+			"width": 42.55,
+			"height": 13.8,
+			"text": "Width"
+		},
+		"311a516b-0081-4c75-a31f-95730e9d2d64": {
+			"type": "text",
+			"x": 868.61,
+			"y": 639.56,
+			"width": 46.99,
+			"height": 16.55,
+			"text": "Height"
+		},
+		"9479380d-f011-4951-8257-10b30fe611d0": {
+			"type": "text",
+			"x": 847.51,
+			"y": 663.74,
+			"width": 66.76,
+			"height": 16.5,
+			"text": "sizePolicy"
+		},
+		"8aaab5ad-b974-42c5-a6d7-c6a649e5e32e": {
+			"type": "text",
+			"x": 868.57,
+			"y": 687.49,
+			"width": 114.75,
+			"height": 12.75,
+			"text": ""
+		},
+		"42ebff5d-6b69-46c7-a0db-631eb48dd350": {
+			"type": "text",
+			"x": 1029.3,
+			"y": 420.31,
+			"width": 39.26,
+			"height": 14.16,
+			"text": "Value"
+		},
+		"533c3f72-9616-4dc6-b60f-805162d9c881": {
+			"type": "text",
+			"x": 1027.39,
+			"y": 471.62,
+			"width": 103.25,
+			"height": 13.8,
+			"text": "ValidatorsForm"
+		},
+		"73fa2c16-200f-41f0-98d9-5eb1e8cc8dd8": {
+			"type": "text",
+			"x": 1028.49,
+			"y": 543.31,
+			"width": 114.03,
+			"height": 16.03,
+			"text": "[(0, 0), 526 x 409]"
+		},
+		"cfc1d274-8717-4e37-b261-a5fe141c3e96": {
+			"type": "text",
+			"x": 1027.33,
+			"y": 567.48,
+			"width": 11.03,
+			"height": 14.06,
+			"text": "0"
+		},
+		"9418675b-de00-4bf9-8048-b26c854633e8": {
+			"type": "text",
+			"x": 1027.79,
+			"y": 591.62,
+			"width": 10.76,
+			"height": 13.56,
+			"text": "0"
+		},
+		"48a4509c-c79b-4886-b65d-8e3597d3d23c": {
+			"type": "text",
+			"x": 1027.79,
+			"y": 615.61,
+			"width": 26.61,
+			"height": 13.75,
+			"text": "526"
+		},
+		"e853ce70-1614-4f4f-943a-d686cd56ccd7": {
+			"type": "text",
+			"x": 1026.97,
+			"y": 639.33,
+			"width": 27.36,
+			"height": 14.12,
+			"text": "409"
+		},
+		"332326db-6dfa-4b53-af76-94664dcd524c": {
+			"type": "text",
+			"x": 1028.57,
+			"y": 663.51,
+			"width": 149.95,
+			"height": 16.08,
+			"text": "[Preferred, Preferred,..."
+		},
+		"9c5d17d0-8561-4ad5-96fa-b3ce83d38c8d": {
+			"type": "text",
+			"x": 1028.76,
+			"y": 687.7,
+			"width": 61.51,
+			"height": 12.48,
+			"text": ""
+		}
+	},
+	"verified": true
+}

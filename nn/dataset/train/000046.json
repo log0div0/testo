@@ -1,0 +1,493 @@
+{
+	"objs": {
+		"0a2e0486-2229-424a-a37e-dd31554852c5": {
+			"type": "text",
+			"x": 909.96,
+			"y": 8.69,
+			"width": 32.39,
+			"height": 14.52,
+			"text": "14.0"
+		},
+		"d767e01c-c728-4e24-8baf-d2b1ae14b79c": {
+			"type": "text",
+			"x": 950.59,
+			"y": 6.89,
+			"width": 95.69,
+			"height": 19.26,
+			"text": "Arch, Bavaria"
+		},
+		"ce77dee2-894b-4387-a598-c7bd177dc8ec": {
+			"type": "text",
+			"x": 1075.68,
+			"y": 8.48,
+			"width": 23.89,
+			"height": 14.88,
+			"text": "GB"
+		},
+		"90754128-4f6e-437c-bbbd-b2891eb2006c": {
+			"type": "text",
+			"x": 1251.47,
+			"y": 8.42,
+			"width": 63.26,
+			"height": 15.13,
+			"text": "8:51 AM"
+		},
+		"77f04d8d-e862-4d79-a826-f4b6d11f00ea": {
+			"type": "text",
+			"x": 79.29,
+			"y": 11.32,
+			"width": 9.66,
+			"height": 7.34,
+			"text": ">_"
+		},
+		"d42b8f5e-0885-4ee5-b175-d676e57b5ba7": {
+			"type": "text",
+			"x": 46.72,
+			"y": 63.71,
+			"width": 39.08,
+			"height": 17.46,
+			"text": "Mail"
+		},
+		"11fdf2d3-75af-4bbc-8274-d357436161f5": {
+			"type": "text",
+			"x": 22.88,
+			"y": 108.03,
+			"width": 22.35,
+			"height": 16.12,
+			"text": "All"
+		},
+		"7c5675bc-5ed7-4d44-b762-637c8d1b5375": {
+			"type": "text",
+			"x": 22.71,
+			"y": 143.7,
+			"width": 85.86,
+			"height": 15.7,
+			"text": "Accessories"
+		},
+		"68e2d379-f59c-4965-8cc2-22e7002f1d68": {
+			"type": "text",
+			"x": 23.56,
+			"y": 178.66,
+			"width": 71.94,
+			"height": 15.68,
+			"text": "Education"
+		},
+		"aaa0a47c-30b0-4b7d-b31c-a3c8970c4bc0": {
+			"type": "text",
+			"x": 22.77,
+			"y": 214.69,
+			"width": 51.77,
+			"height": 14.82,
+			"text": "Games"
+		},
+		"e008c435-3646-4f6f-8c0a-34e9907ad480": {
+			"type": "text",
+			"x": 22.66,
+			"y": 248.11,
+			"width": 63.98,
+			"height": 19.15,
+			"text": "Graphics"
+		},
+		"f216f901-526d-4127-8721-578800064b11": {
+			"type": "text",
+			"x": 23.24,
+			"y": 284.32,
+			"width": 61.37,
+			"height": 15.47,
+			"text": "Internet"
+		},
+		"d06580a1-3a7e-4895-8d75-738258ff1cb4": {
+			"type": "text",
+			"x": 22.46,
+			"y": 318.49,
+			"width": 47.88,
+			"height": 16.1,
+			"text": "Office"
+		},
+		"ee42d41b-8435-4ae3-bba8-ff6638c0386d": {
+			"type": "text",
+			"x": 23.68,
+			"y": 353.69,
+			"width": 99.73,
+			"height": 18.54,
+			"text": "Programming"
+		},
+		"712a5449-b4be-429a-8499-518fc949ecf6": {
+			"type": "text",
+			"x": 22.53,
+			"y": 388.71,
+			"width": 109.04,
+			"height": 15.97,
+			"text": "Sound & Video"
+		},
+		"c8a649a9-3c9f-4a1b-aad0-85deefdea9e8": {
+			"type": "text",
+			"x": 22.66,
+			"y": 423.05,
+			"width": 96.68,
+			"height": 19.34,
+			"text": "System Tools"
+		},
+		"6852e459-0415-4f1c-a7f4-405123f0d824": {
+			"type": "text",
+			"x": 23.62,
+			"y": 457.97,
+			"width": 56.99,
+			"height": 16.6,
+			"text": "Utilities"
+		},
+		"abbe959f-746a-4788-b02d-64ae3a9321fd": {
+			"type": "text",
+			"x": 22.61,
+			"y": 493.16,
+			"width": 45.67,
+			"height": 16.19,
+			"text": "Other"
+		},
+		"8f0e162d-c4cd-464b-ab02-4f6054e9e7a1": {
+			"type": "text",
+			"x": 159.6,
+			"y": 106.53,
+			"width": 73.69,
+			"height": 16.07,
+			"text": "Internet"
+		},
+		"cb392296-4dce-4755-9979-eb47d1e0695f": {
+			"type": "text",
+			"x": 189.73,
+			"y": 139.97,
+			"width": 91.78,
+			"height": 16.3,
+			"text": "Thunderbird"
+		},
+		"aa3125b8-afb0-4d0e-b378-56d035620dfd": {
+			"type": "text",
+			"x": 190.36,
+			"y": 177.44,
+			"width": 69.03,
+			"height": 20.06,
+			"text": "Sylpheed"
+		},
+		"4a5e2a16-98e1-4f1f-b038-77ba3a50b379": {
+			"type": "text",
+			"x": 158.7,
+			"y": 215.4,
+			"width": 57.28,
+			"height": 17.39,
+			"text": "Office"
+		},
+		"87aa057d-52bc-4a5a-ad7d-32719e61d15f": {
+			"type": "text",
+			"x": 191.56,
+			"y": 249.77,
+			"width": 201.14,
+			"height": 16.88,
+			"text": "Evolution Mail and Calendar"
+		},
+		"15bc1b04-f52e-4dec-a2a9-29a4c4ce0cd2": {
+			"type": "text",
+			"x": 444.91,
+			"y": 247.54,
+			"width": 55.3,
+			"height": 11.75,
+			"text": ""
+		},
+		"4c9320fc-594e-4059-a50d-bd75d784815c": {
+			"type": "text",
+			"x": 445.37,
+			"y": 437.94,
+			"width": 17.15,
+			"height": 16.45,
+			"text": ""
+		},
+		"9e110977-2ed8-4180-94ca-7b27a2a54b7b": {
+			"type": "text",
+			"x": 826.36,
+			"y": 203.61,
+			"width": 115.13,
+			"height": 18.86,
+			"text": "Budgie Settings"
+		},
+		"786b9e75-a962-42bd-bd5f-68e74e3f5316": {
+			"type": "text",
+			"x": 460.65,
+			"y": 279.88,
+			"width": 38.88,
+			"height": 19.42,
+			"text": "Style"
+		},
+		"2747f13c-8e0d-48df-be80-04f33602bb62": {
+			"type": "text",
+			"x": 461.61,
+			"y": 319.65,
+			"width": 61.02,
+			"height": 19.79,
+			"text": "Desktop"
+		},
+		"9242673d-adfb-454b-9003-3cb01873efc7": {
+			"type": "text",
+			"x": 461.7,
+			"y": 361.59,
+			"width": 41.86,
+			"height": 14.84,
+			"text": "Fonts"
+		},
+		"df4e663a-39b0-4674-b99d-95eedfcba3d0": {
+			"type": "text",
+			"x": 460.51,
+			"y": 400.84,
+			"width": 68.09,
+			"height": 15.66,
+			"text": "Windows"
+		},
+		"ac33ba50-fa7f-4394-a9d0-69ed17692335": {
+			"type": "text",
+			"x": 460.74,
+			"y": 474.8,
+			"width": 73.37,
+			"height": 19.32,
+			"text": "Top Panel"
+		},
+		"ff805030-14c4-40ea-a9aa-ec283c21a189": {
+			"type": "text",
+			"x": 460.47,
+			"y": 514.76,
+			"width": 129.18,
+			"height": 19.52,
+			"text": "Create new panel"
+		},
+		"0579d930-6fb1-41b9-ab49-3a2b432702cf": {
+			"type": "text",
+			"x": 412.37,
+			"y": 553.7,
+			"width": 57.1,
+			"height": 15.68,
+			"text": "Session"
+		},
+		"0905f5ef-9ca7-4827-97bb-abc26637bb3b": {
+			"type": "text",
+			"x": 460.04,
+			"y": 591.46,
+			"width": 72.39,
+			"height": 15.19,
+			"text": "Autostart"
+		},
+		"ace09fed-97c5-46cc-a1f9-f6bedd415cba": {
+			"type": "text",
+			"x": 892.24,
+			"y": 246.9,
+			"width": 58.63,
+			"height": 19.36,
+			"text": "Applets"
+		},
+		"5ab577f9-d21c-434d-b312-636086ae11ca": {
+			"type": "text",
+			"x": 990.44,
+			"y": 247.5,
+			"width": 62.16,
+			"height": 19.04,
+			"text": "Settings"
+		},
+		"ce69e2ea-4996-468b-8074-d70e2030fe56": {
+			"type": "text",
+			"x": 678.55,
+			"y": 346.32,
+			"width": 39.02,
+			"height": 15.16,
+			"text": "Start"
+		},
+		"e5d74d2e-9015-4456-ab2c-c33952fdbb1a": {
+			"type": "text",
+			"x": 719.4,
+			"y": 372.66,
+			"width": 97.08,
+			"height": 18.68,
+			"text": "Budgie Menu"
+		},
+		"a6c65844-c62e-43a6-9fcd-a44032647a32": {
+			"type": "text",
+			"x": 718.42,
+			"y": 404.62,
+			"width": 51.97,
+			"height": 17.56,
+			"text": "Spacer"
+		},
+		"bf0abb60-8b04-4d6a-8a39-ed8feb83c683": {
+			"type": "text",
+			"x": 719.52,
+			"y": 433.9,
+			"width": 96.07,
+			"height": 16.56,
+			"text": "Icon Task List"
+		},
+		"32196cf6-64bd-4731-ac2a-d919421112a0": {
+			"type": "text",
+			"x": 679.31,
+			"y": 461.81,
+			"width": 29.31,
+			"height": 15.76,
+			"text": "End"
+		},
+		"30892a94-0bcf-44ee-bf0a-d5145fc1abad": {
+			"type": "text",
+			"x": 718.35,
+			"y": 489.43,
+			"width": 51.96,
+			"height": 17.81,
+			"text": "Spacer"
+		},
+		"dd6738fa-cba5-4336-adde-4a91cd1ea233": {
+			"type": "text",
+			"x": 718.44,
+			"y": 519.09,
+			"width": 66.01,
+			"height": 16.24,
+			"text": "Weather"
+		},
+		"f2c37c3a-1e47-4519-ae8a-4fee827a668c": {
+			"type": "text",
+			"x": 718.56,
+			"y": 551.63,
+			"width": 73.82,
+			"height": 17.61,
+			"text": "Separator"
+		},
+		"c0d759d6-ad2f-497e-8e97-b229ed4dbf28": {
+			"type": "text",
+			"x": 719.45,
+			"y": 580.92,
+			"width": 188.77,
+			"height": 19.48,
+			"text": "Keyboard Layout Indicator"
+		},
+		"8d590ec6-1b74-42f0-aad5-292ed0495721": {
+			"type": "text",
+			"x": 718.42,
+			"y": 613.45,
+			"width": 73.82,
+			"height": 17.61,
+			"text": "Separator"
+		},
+		"d9052edb-6a20-40b2-8bc2-bfd144cd489a": {
+			"type": "text",
+			"x": 718.42,
+			"y": 675.61,
+			"width": 73.82,
+			"height": 17.61,
+			"text": "Separator"
+		},
+		"7e09de48-690a-42c1-b6eb-4c50ced48111": {
+			"type": "text",
+			"x": 719.55,
+			"y": 642.82,
+			"width": 82.8,
+			"height": 19.42,
+			"text": "Night Light"
+		},
+		"646b244b-d0b6-4f19-bb99-f4e85d6a95b1": {
+			"type": "text",
+			"x": 718.41,
+			"y": 706.52,
+			"width": 90.53,
+			"height": 18.02,
+			"text": "System Tray"
+		},
+		"425da222-c341-4296-97e7-55229e1b7c34": {
+			"type": "text",
+			"x": 1280.97,
+			"y": 321.85,
+			"width": 12.26,
+			"height": 12.32,
+			"text": "+"
+		},
+		"aaa61fdc-6901-4671-bb27-bea6542d5202": {
+			"type": "text",
+			"x": 957.65,
+			"y": 308.55,
+			"width": 82.83,
+			"height": 19.89,
+			"text": "Add applet"
+		},
+		"255226c7-f209-40ae-af7b-385c4615ef0b": {
+			"type": "text",
+			"x": 958.74,
+			"y": 327.94,
+			"width": 291.7,
+			"height": 19.32,
+			"text": "Choose a new applet to add to this panel"
+		},
+		"8fc8fd33-e169-4d5f-bc5b-cabe4d338085": {
+			"type": "text",
+			"x": 958.63,
+			"y": 370.66,
+			"width": 123.86,
+			"height": 19.63,
+			"text": "Configure applet"
+		},
+		"9b294bf9-4de1-4590-80e1-be45d593b35e": {
+			"type": "text",
+			"x": 958.39,
+			"y": 404.78,
+			"width": 129.98,
+			"height": 16.7,
+			"text": "Show Menu Label"
+		},
+		"f9d34984-a8ec-42af-9737-dc1b359c184c": {
+			"type": "text",
+			"x": 958.64,
+			"y": 440.59,
+			"width": 86.96,
+			"height": 17.01,
+			"text": "Menu Label"
+		},
+		"b9d53677-4eeb-4690-969b-a60545598a88": {
+			"type": "text",
+			"x": 958.45,
+			"y": 480.49,
+			"width": 77.04,
+			"height": 14.91,
+			"text": "Menu Icon"
+		},
+		"9ad9bb49-1349-4f91-911b-2562e943a76a": {
+			"type": "text",
+			"x": 958.47,
+			"y": 515.66,
+			"width": 110.98,
+			"height": 18.65,
+			"text": "Compact Mode"
+		},
+		"5e81ec6b-b176-47b5-bd51-fe9fc8e0473f": {
+			"type": "text",
+			"x": 958.45,
+			"y": 549.66,
+			"width": 105.13,
+			"height": 16.15,
+			"text": "Show Headers"
+		},
+		"fcdb2d36-bf1d-4cd7-91a1-712004a6241c": {
+			"type": "text",
+			"x": 959.32,
+			"y": 582.6,
+			"width": 118.37,
+			"height": 17.17,
+			"text": "Roll-over mouse"
+		},
+		"5c6883f3-aad5-4c20-b3dc-f454a6d7534c": {
+			"type": "text",
+			"x": 1109.7,
+			"y": 442.81,
+			"width": 43.66,
+			"height": 14.45,
+			"text": "Menu"
+		},
+		"f7efcb86-ee10-4978-b6e5-6ade0bfcbcf8": {
+			"type": "text",
+			"x": 1109.59,
+			"y": 478.72,
+			"width": 140.89,
+			"height": 19.74,
+			"text": "start-here-symbolic"
+		}
+	},
+	"verified": true
+}

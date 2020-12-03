@@ -1,0 +1,45 @@
+{
+	"objs": {
+		"270cbd61-926b-4450-b1a9-d49bbad3ffc3": {
+			"type": "text",
+			"x": 14.97,
+			"y": 58.94,
+			"width": 50.93,
+			"height": 17.16,
+			"text": "Корзина"
+		},
+		"c79eef4b-4dd1-417e-9180-430ea68cc0d2": {
+			"type": "text",
+			"x": 609.48,
+			"y": 571.51,
+			"width": 18.34,
+			"height": 12.15,
+			"text": "RU"
+		},
+		"9fdd5adc-4e43-46f4-a078-3fabe58a8e7a": {
+			"type": "text",
+			"x": 732.49,
+			"y": 566.68,
+			"width": 29.87,
+			"height": 11.65,
+			"text": "13:56"
+		},
+		"9364a53a-3ea7-4789-8e1a-d2c49cebd856": {
+			"type": "text",
+			"x": 718.41,
+			"y": 583.46,
+			"width": 56.9,
+			"height": 12.03,
+			"text": "23.11.2019"
+		},
+		"99654201-ab31-499b-8440-cea996f847bb": {
+			"type": "text",
+			"x": 76.18,
+			"y": 566.29,
+			"width": 28.57,
+			"height": 26.77,
+			"text": "e"
+		}
+	},
+	"verified": true
+}

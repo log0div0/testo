@@ -1,0 +1,76 @@
+{
+	"objs": {
+		"c0f18acb-e642-4978-bc67-4f1425b1b12f": {
+			"type": "text",
+			"x": 125.51,
+			"y": 326.86,
+			"width": 94.76,
+			"height": 11.59,
+			"text": "597 54.329335"
+		},
+		"e5e45c9e-cd71-4417-8269-0ec0e5e7486e": {
+			"type": "text",
+			"x": 125.29,
+			"y": 312.98,
+			"width": 94.81,
+			"height": 11.24,
+			"text": "596 54.278386"
+		},
+		"89214c7b-6016-4253-a01c-33683fc83bc3": {
+			"type": "text",
+			"x": 125.29,
+			"y": 298.71,
+			"width": 94.81,
+			"height": 11.83,
+			"text": "595 54.229275"
+		},
+		"070348bb-ebc2-4373-818b-b7ad914c3b94": {
+			"type": "text",
+			"x": 125.46,
+			"y": 340.67,
+			"width": 94.65,
+			"height": 11.66,
+			"text": "598 54.429358"
+		},
+		"0b6431d0-e68f-491d-90c2-cdfd252a89f4": {
+			"type": "text",
+			"x": 382.8,
+			"y": 6.19,
+			"width": 193.61,
+			"height": 19.03,
+			"text": "NF2-sync228_problem.pcap"
+		},
+		"163a36e9-30a3-4c5f-a526-b268e558ad8b": {
+			"type": "text",
+			"x": 63.37,
+			"y": 779.76,
+			"width": 189.68,
+			"height": 17.31,
+			"text": "NF2-sync228_problem.pcap"
+		},
+		"8566c98d-7862-4fe8-8e11-5f742b258229": {
+			"type": "text",
+			"x": 530.76,
+			"y": 780.2,
+			"width": 93.15,
+			"height": 14.11,
+			"text": "Packets: 2213"
+		},
+		"a82c744e-9d7f-40d8-aeb8-2bdf04079ae8": {
+			"type": "text",
+			"x": 633.72,
+			"y": 780.14,
+			"width": 172.32,
+			"height": 16.8,
+			"text": "Displayed: 2213 (100.0%)"
+		},
+		"b2efe290-3586-4180-8396-36e6c7fe1e63": {
+			"type": "text",
+			"x": 826.72,
+			"y": 780.03,
+			"width": 106.31,
+			"height": 14.35,
+			"text": "Profile: Default"
+		}
+	}
+}

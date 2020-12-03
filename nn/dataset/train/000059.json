@@ -1,0 +1,221 @@
+{
+	"objs": {
+		"e9d337cd-ead6-4005-952f-44c7a90e08f3": {
+			"type": "text",
+			"x": 407.57,
+			"y": 52.86,
+			"width": 94.6,
+			"height": 16.21,
+			"text": "System Settings"
+		},
+		"3b9c9e8f-4cdf-4d05-832d-99cde3920b57": {
+			"type": "text",
+			"x": 60.73,
+			"y": 94.74,
+			"width": 53.01,
+			"height": 12.81,
+			"text": "Personal"
+		},
+		"0a48b7f2-7381-4775-b4c8-85187790c464": {
+			"type": "text",
+			"x": 60.77,
+			"y": 253.83,
+			"width": 59.69,
+			"height": 12.85,
+			"text": "Hardware"
+		},
+		"93adf8ac-780b-478c-a600-fda1e4eefe80": {
+			"type": "text",
+			"x": 60.76,
+			"y": 412.67,
+			"width": 130.66,
+			"height": 13.14,
+			"text": "Network and Wireless"
+		},
+		"a00730ae-48af-4b9d-9da8-0b5f0c291b06": {
+			"type": "text",
+			"x": 59.68,
+			"y": 502.39,
+			"width": 91.71,
+			"height": 13.42,
+			"text": "Administration"
+		},
+		"9b7e06dd-50f0-47c7-9b91-a5214cd4efd4": {
+			"type": "text",
+			"x": 98.66,
+			"y": 155.62,
+			"width": 69.53,
+			"height": 15.68,
+			"text": "Applications"
+		},
+		"565b0a8a-affa-4a9a-8cd4-111cdbed58a0": {
+			"type": "text",
+			"x": 84.54,
+			"y": 224.75,
+			"width": 99.77,
+			"height": 15.42,
+			"text": "Security & Privacy"
+		},
+		"9364dbc7-5ae6-475f-8f35-7347789cd61f": {
+			"type": "text",
+			"x": 114.38,
+			"y": 315.04,
+			"width": 38.86,
+			"height": 12.32,
+			"text": "Colour"
+		},
+		"ae2a12a3-17c3-47c8-8b2d-69960baf9583": {
+			"type": "text",
+			"x": 115.55,
+			"y": 384.54,
+			"width": 37.23,
+			"height": 11.98,
+			"text": "Power"
+		},
+		"d5b9aa7c-4888-49b6-9214-6ddeb043b18e": {
+			"type": "text",
+			"x": 106.48,
+			"y": 473.4,
+			"width": 55.03,
+			"height": 13.11,
+			"text": "Bluetooth"
+		},
+		"6cf93756-b169-4c79-aefc-3d8d71210a13": {
+			"type": "text",
+			"x": 127.86,
+			"y": 534.19,
+			"width": 11.41,
+			"height": 22.15,
+			"text": "i"
+		},
+		"29c2a9c3-9dc0-4d3b-85dd-21203844642f": {
+			"type": "text",
+			"x": 115.64,
+			"y": 563.73,
+			"width": 36.56,
+			"height": 12.67,
+			"text": "About"
+		},
+		"01bea375-e521-4929-ae5e-e53e53f0b349": {
+			"type": "text",
+			"x": 272.83,
+			"y": 155.75,
+			"width": 45.75,
+			"height": 15.39,
+			"text": "Desktop"
+		},
+		"288f253d-fbe8-4b46-9371-99025c5f43ff": {
+			"type": "text",
+			"x": 455.51,
+			"y": 126.71,
+			"width": 12.76,
+			"height": 13.44,
+			"text": "A"
+		},
+		"ca4d8d42-fe6c-434b-9570-f4284399923c": {
+			"type": "text",
+			"x": 406.76,
+			"y": 155.69,
+			"width": 102.91,
+			"height": 15.67,
+			"text": "Language & Region"
+		},
+		"42a58193-a47d-4aa4-961e-f4c71075b9cf": {
+			"type": "text",
+			"x": 584.5,
+			"y": 155.51,
+			"width": 72.12,
+			"height": 13.11,
+			"text": "Notifications"
+		},
+		"55d80ac8-7b1c-4cca-b6d9-5e46a4716ef5": {
+			"type": "text",
+			"x": 272.88,
+			"y": 314.4,
+			"width": 46.45,
+			"height": 15.94,
+			"text": "Displays"
+		},
+		"2327ec2b-fbbf-4650-9eff-6efe4980b629": {
+			"type": "text",
+			"x": 273.39,
+			"y": 383.74,
+			"width": 45.98,
+			"height": 12.84,
+			"text": "Printers"
+		},
+		"70afd361-99af-4863-b3e6-6ff39a13c9d6": {
+			"type": "text",
+			"x": 271.45,
+			"y": 473.73,
+			"width": 49.58,
+			"height": 12.69,
+			"text": "Network"
+		},
+		"866405df-e2ce-47fd-9ad9-94bec9f44cdd": {
+			"type": "text",
+			"x": 262.49,
+			"y": 563.87,
+			"width": 67.96,
+			"height": 12.9,
+			"text": "Date & Time"
+		},
+		"ac1a0eda-247d-4c32-859c-e0e785f595f9": {
+			"type": "text",
+			"x": 430.56,
+			"y": 314.76,
+			"width": 53.83,
+			"height": 15.52,
+			"text": "Keyboard"
+		},
+		"1bde33b7-ba11-4591-8174-2152ca69c62e": {
+			"type": "text",
+			"x": 453.69,
+			"y": 287.54,
+			"width": 14.07,
+			"height": 13.55,
+			"text": "@"
+		},
+		"22732cff-f845-4a17-970b-6e567889fb26": {
+			"type": "text",
+			"x": 438.85,
+			"y": 383.69,
+			"width": 37.68,
+			"height": 12.66,
+			"text": "Sound"
+		},
+		"afecb1f8-6767-4d48-8cb9-e0431f291a1a": {
+			"type": "text",
+			"x": 412.51,
+			"y": 563.89,
+			"width": 90.84,
+			"height": 12.61,
+			"text": "Universal Access"
+		},
+		"0ff58413-dfed-4f3f-9a1a-790dcd78666e": {
+			"type": "text",
+			"x": 580.67,
+			"y": 564.68,
+			"width": 79.77,
+			"height": 11.86,
+			"text": "User Accounts"
+		},
+		"b80264aa-9316-405b-8f0e-924fb7260bf9": {
+			"type": "text",
+			"x": 579.72,
+			"y": 383.71,
+			"width": 79.66,
+			"height": 12.81,
+			"text": "Wacom Tablet"
+		},
+		"fdbd82f0-6b2f-4442-96a5-5960f2ff3b15": {
+			"type": "text",
+			"x": 567.54,
+			"y": 314.83,
+			"width": 103.86,
+			"height": 15.39,
+			"text": "Mouse & Touchpad"
+		}
+	},
+	"verified": true
+}

@@ -1,0 +1,117 @@
+{
+	"objs": {
+		"d02a7387-65ad-495e-bb1d-99a8f1a76282": {
+			"type": "text",
+			"x": 14.25,
+			"y": 59.3,
+			"width": 81.58,
+			"height": 17.17,
+			"text": "Веб-браузер"
+		},
+		"ee4ea3db-8b4f-4821-ba87-b948a2793914": {
+			"type": "text",
+			"x": 33.01,
+			"y": 79.23,
+			"width": 44.75,
+			"height": 14.71,
+			"text": "Firefox"
+		},
+		"a494b461-5134-4df3-ab99-4b06ae2bf640": {
+			"type": "text",
+			"x": 27.29,
+			"y": 153.19,
+			"width": 55.81,
+			"height": 16.36,
+			"text": "Корзина"
+		},
+		"7ddfe30d-66cd-4de6-acfb-36423ed32576": {
+			"type": "text",
+			"x": 38.96,
+			"y": 246.95,
+			"width": 30.87,
+			"height": 15.01,
+			"text": "Мой"
+		},
+		"3d2cca3f-d2a9-4865-bdfe-5dde3dd8eedb": {
+			"type": "text",
+			"x": 17.09,
+			"y": 266.95,
+			"width": 75.61,
+			"height": 14.37,
+			"text": "компьютер"
+		},
+		"defe2de2-08f3-4a36-8b6a-ed9e7ab11ae8": {
+			"type": "text",
+			"x": 26.32,
+			"y": 341.42,
+			"width": 58.85,
+			"height": 15.08,
+			"text": "Помощь"
+		},
+		"2c8f7c63-46f9-41ed-9c73-dafb41102682": {
+			"type": "text",
+			"x": 773.94,
+			"y": 629.41,
+			"width": 159.69,
+			"height": 27.6,
+			"text": "ASTRALINUX"
+		},
+		"20e40c62-2cf2-47a4-8dda-bb80327cc524": {
+			"type": "text",
+			"x": 214.13,
+			"y": 731.16,
+			"width": 7.59,
+			"height": 12.32,
+			"text": "1"
+		},
+		"e933e4f3-1318-49e7-82d1-7dd25d831437": {
+			"type": "text",
+			"x": 244.1,
+			"y": 730.22,
+			"width": 10.42,
+			"height": 12.72,
+			"text": "2"
+		},
+		"5b6bfd23-a9d5-44e2-bf19-5e01bc2e089b": {
+			"type": "text",
+			"x": 212.38,
+			"y": 754.29,
+			"width": 10.26,
+			"height": 11.86,
+			"text": "3"
+		},
+		"bbd42aee-6cc0-4a95-b997-6739e023ab2e": {
+			"type": "text",
+			"x": 244.33,
+			"y": 754.3,
+			"width": 10.95,
+			"height": 12.01,
+			"text": "4"
+		},
+		"f9b2257c-c5b7-4daf-bf38-7d4438f5f43b": {
+			"type": "text",
+			"x": 907.43,
+			"y": 735.45,
+			"width": 20.24,
+			"height": 14.12,
+			"text": "EN"
+		},
+		"abe58437-54f9-4abc-9090-9fa08707b02c": {
+			"type": "text",
+			"x": 950.5,
+			"y": 726.24,
+			"width": 51.17,
+			"height": 17.69,
+			"text": "15:00"
+		},
+		"2ae7c20a-9770-4cd5-97b8-ca32218f1a53": {
+			"type": "text",
+			"x": 939.57,
+			"y": 746.26,
+			"width": 76.56,
+			"height": 18.27,
+			"text": "Ср, 18 дек"
+		}
+	},
+	"verified": true
+}

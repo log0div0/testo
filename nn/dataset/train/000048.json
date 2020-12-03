@@ -1,0 +1,629 @@
+{
+	"objs": {
+		"2f452288-e045-4dfb-8345-0c2c795d799b": {
+			"type": "text",
+			"x": 46.88,
+			"y": 19.69,
+			"width": 158.38,
+			"height": 30.47,
+			"text": "Яндекс Метрика"
+		},
+		"70e98dc4-2371-40e8-8372-6457b09560ae": {
+			"type": "text",
+			"x": 53.76,
+			"y": 93.66,
+			"width": 54.37,
+			"height": 16.3,
+			"text": "Сводка"
+		},
+		"81aff229-6504-4e67-8ed1-1460a9cdffcb": {
+			"type": "text",
+			"x": 53.63,
+			"y": 133.62,
+			"width": 56.75,
+			"height": 13.61,
+			"text": "Отчеты"
+		},
+		"bc839682-c0de-4bf9-88b6-ada9fe988ea6": {
+			"type": "text",
+			"x": 53.96,
+			"y": 173.78,
+			"width": 47.1,
+			"height": 16.36,
+			"text": "Карты"
+		},
+		"8115c955-d083-4a4e-9d79-da5ad7b2de05": {
+			"type": "text",
+			"x": 53.87,
+			"y": 212.83,
+			"width": 72.42,
+			"height": 17.35,
+			"text": "Вебвизор"
+		},
+		"25b2d9c4-4bc7-430a-874e-b0aae3e5a9f4": {
+			"type": "text",
+			"x": 53.93,
+			"y": 253.73,
+			"width": 87.54,
+			"height": 13.63,
+			"text": "Посетители"
+		},
+		"d6fe0879-a4ac-4b23-9157-5c1f0cf022cf": {
+			"type": "text",
+			"x": 53.42,
+			"y": 293.75,
+			"width": 73.98,
+			"height": 13.7,
+			"text": "Сегменты"
+		},
+		"eb95bdcf-1696-4359-b992-009236bcb12b": {
+			"type": "text",
+			"x": 53.75,
+			"y": 333.56,
+			"width": 90.56,
+			"height": 16.85,
+			"text": "Интеграции"
+		},
+		"c07fac3d-bf73-46c9-a7f2-eb15317af020": {
+			"type": "text",
+			"x": 53.62,
+			"y": 373.5,
+			"width": 79.94,
+			"height": 16.75,
+			"text": "Настройка"
+		},
+		"966a581f-ee06-43aa-bd5c-ca81f199605a": {
+			"type": "text",
+			"x": 298.56,
+			"y": 27.64,
+			"width": 70,
+			"height": 13.87,
+			"text": "Счетчики"
+		},
+		"5bf5554c-1641-436f-ad46-8af9adbc759f": {
+			"type": "text",
+			"x": 406.55,
+			"y": 27.55,
+			"width": 115.96,
+			"height": 16.68,
+			"text": "Целевой звонок"
+		},
+		"341e5f7b-e831-4d82-8c06-261f0b74ea3e": {
+			"type": "text",
+			"x": 560.7,
+			"y": 27.62,
+			"width": 109.58,
+			"height": 16.67,
+			"text": "Представители"
+		},
+		"ab047f7e-9dae-4f5e-a5ad-c7ebd52d35e9": {
+			"type": "text",
+			"x": 708.35,
+			"y": 27.57,
+			"width": 25.02,
+			"height": 13.78,
+			"text": "API"
+		},
+		"e0d79320-2343-4757-9e11-06d12dc89143": {
+			"type": "text",
+			"x": 772.79,
+			"y": 27.61,
+			"width": 33.5,
+			"height": 13.61,
+			"text": "Блог"
+		},
+		"828a97cf-2826-4b4f-a2c8-50b707088437": {
+			"type": "text",
+			"x": 847.72,
+			"y": 27.57,
+			"width": 60.49,
+			"height": 16.41,
+			"text": "Помощь"
+		},
+		"d407bba8-be25-487c-b4e9-e48c516768b9": {
+			"type": "text",
+			"x": 1180.81,
+			"y": 26.36,
+			"width": 60.61,
+			"height": 16.99,
+			"text": "log0div0"
+		},
+		"2ea02e30-0e14-4ad9-a0d7-ffee72129956": {
+			"type": "text",
+			"x": 28.55,
+			"y": 693.98,
+			"width": 8.94,
+			"height": 13.12,
+			"text": "<"
+		},
+		"c4c5a1c0-f3ad-4f87-927d-27aec1e3d43c": {
+			"type": "text",
+			"x": 53.7,
+			"y": 693.7,
+			"width": 68.72,
+			"height": 16.67,
+			"text": "Свернуть"
+		},
+		"df2ec10d-bf65-4330-b3d2-0d7177541c2c": {
+			"type": "text",
+			"x": 202.84,
+			"y": 88.77,
+			"width": 75.38,
+			"height": 15.46,
+			"text": "Testo Lang"
+		},
+		"3c05f500-e9f9-4253-aafa-498c018cd1d8": {
+			"type": "text",
+			"x": 324.88,
+			"y": 87.8,
+			"width": 91.26,
+			"height": 16.44,
+			"text": "testo-lang.ru"
+		},
+		"b2eadb72-0399-4f65-9e78-ec7d34a1890d": {
+			"type": "text",
+			"x": 429.49,
+			"y": 87.62,
+			"width": 70.07,
+			"height": 13.86,
+			"text": "67203352"
+		},
+		"21545d82-912d-4f9b-a05b-f7c14f4603d8": {
+			"type": "text",
+			"x": 215.68,
+			"y": 158.6,
+			"width": 51.67,
+			"height": 14.55,
+			"text": "Сегодня"
+		},
+		"1f87728f-e00d-4179-a2f6-00b82b58bb83": {
+			"type": "text",
+			"x": 291.05,
+			"y": 159.06,
+			"width": 39.01,
+			"height": 13.95,
+			"text": "Вчера"
+		},
+		"f168ed74-e233-44f7-a0b6-2833d3c4bb0b": {
+			"type": "text",
+			"x": 352.82,
+			"y": 158.84,
+			"width": 46.46,
+			"height": 14.26,
+			"text": "Неделя"
+		},
+		"ff504506-a2ac-4294-8ae9-d57da4511107": {
+			"type": "text",
+			"x": 423.58,
+			"y": 158.76,
+			"width": 40.83,
+			"height": 14.63,
+			"text": "Месяц"
+		},
+		"c3faa4ae-bd81-4eda-b9c4-f3a1c44e123e": {
+			"type": "text",
+			"x": 487.6,
+			"y": 158.75,
+			"width": 50.77,
+			"height": 14.45,
+			"text": "Квартал"
+		},
+		"1f6d7c94-bd19-4995-a0b6-dacda8d5a491": {
+			"type": "text",
+			"x": 561.64,
+			"y": 158.93,
+			"width": 22.73,
+			"height": 14.35,
+			"text": "Год"
+		},
+		"766a263b-963b-4d8b-b092-7686d5d388e6": {
+			"type": "text",
+			"x": 645.83,
+			"y": 158.68,
+			"width": 129.81,
+			"height": 11.75,
+			"text": "16 окт - 15 ноя 2020"
+		},
+		"3e649989-bd29-4206-b6d9-46270245d704": {
+			"type": "text",
+			"x": 936.84,
+			"y": 158.08,
+			"width": 14.27,
+			"height": 13.98,
+			"text": "+"
+		},
+		"2c26533e-17f9-4b05-ae4a-5906302ae284": {
+			"type": "text",
+			"x": 954.17,
+			"y": 158.71,
+			"width": 98.88,
+			"height": 14.37,
+			"text": "Создать виджет"
+		},
+		"b1fce2e4-74b6-47dd-9b0b-76c340ceadb4": {
+			"type": "text",
+			"x": 1089.46,
+			"y": 157.57,
+			"width": 133.96,
+			"height": 15.8,
+			"text": "Библиотека виджетов"
+		},
+		"5a46656e-c941-4af9-acd2-f6a43839eefb": {
+			"type": "text",
+			"x": 214.77,
+			"y": 201.64,
+			"width": 137.49,
+			"height": 14.81,
+			"text": "Детализация: по дням"
+		},
+		"c35bce3f-ddab-47ff-90db-80995445cb2a": {
+			"type": "text",
+			"x": 400.48,
+			"y": 201.44,
+			"width": 98.32,
+			"height": 12.39,
+			"text": "Точность: 100%"
+		},
+		"5ddc2436-0bf4-44c2-8049-5ea0334d20a1": {
+			"type": "text",
+			"x": 557.77,
+			"y": 201.84,
+			"width": 20.51,
+			"height": 11.43,
+			"text": "7/7"
+		},
+		"6ffb23e6-b136-4c30-8246-677db086fef1": {
+			"type": "text",
+			"x": 228.51,
+			"y": 273.62,
+			"width": 101.69,
+			"height": 16.75,
+			"text": "Посетители"
+		},
+		"04e0658d-6ede-42f9-a40e-8a8e38f83755": {
+			"type": "text",
+			"x": 228,
+			"y": 328.12,
+			"width": 13.22,
+			"height": 8.96,
+			"text": "80"
+		},
+		"a294638c-d6b6-4ac3-a21c-42401e6265b8": {
+			"type": "text",
+			"x": 227.16,
+			"y": 391.24,
+			"width": 14.12,
+			"height": 8.7,
+			"text": "40"
+		},
+		"bd462717-f14b-4fb6-bee2-a463e93719ba": {
+			"type": "text",
+			"x": 227.93,
+			"y": 457.85,
+			"width": 41.21,
+			"height": 9.19,
+			"text": "16.10.20"
+		},
+		"9f2df15b-814f-4b7f-9060-ecba7419f0c1": {
+			"type": "text",
+			"x": 401.32,
+			"y": 446.35,
+			"width": 7.44,
+			"height": 6.37,
+			"text": "Н"
+		},
+		"b245b78b-c26a-4ff9-82a0-9d0b9e5d6aed": {
+			"type": "text",
+			"x": 752.83,
+			"y": 446.35,
+			"width": 7.44,
+			"height": 6.37,
+			"text": "Н"
+		},
+		"c20e0e25-eeb7-4c26-9fff-c6be536b2771": {
+			"type": "text",
+			"x": 467.91,
+			"y": 457.81,
+			"width": 40.32,
+			"height": 9.27,
+			"text": "15.11.20"
+		},
+		"50297458-6f8f-4efa-a366-37b0f687fe3a": {
+			"type": "text",
+			"x": 483.74,
+			"y": 494.01,
+			"width": 24.34,
+			"height": 11.13,
+			"text": "349"
+		},
+		"1e53c3b0-9bf5-403a-a0b2-aaa559b9dd72": {
+			"type": "text",
+			"x": 243.02,
+			"y": 493.86,
+			"width": 73.18,
+			"height": 11.35,
+			"text": "Посетители"
+		},
+		"23245193-d019-4b1c-92ea-8ecff92a1c82": {
+			"type": "text",
+			"x": 228.66,
+			"y": 589.89,
+			"width": 158.61,
+			"height": 19.24,
+			"text": "Источник трафика"
+		},
+		"f6bdac54-d100-4747-8554-4f2924521825": {
+			"type": "text",
+			"x": 228.02,
+			"y": 619.02,
+			"width": 40.16,
+			"height": 10.09,
+			"text": "Визиты"
+		},
+		"d54f6bc5-7b38-4a35-a69f-f7615e95e892": {
+			"type": "text",
+			"x": 580.74,
+			"y": 274.03,
+			"width": 157.47,
+			"height": 16.04,
+			"text": "Новые посетители"
+		},
+		"2890d2fc-76b0-429e-a873-175161789ac7": {
+			"type": "text",
+			"x": 579.17,
+			"y": 328.12,
+			"width": 13.93,
+			"height": 8.77,
+			"text": "80"
+		},
+		"13d6d663-a162-40ca-8738-800e14d9e012": {
+			"type": "text",
+			"x": 579.19,
+			"y": 390.88,
+			"width": 13.93,
+			"height": 9.13,
+			"text": "40"
+		},
+		"03859e2f-ce3d-448f-b161-2a056e354408": {
+			"type": "text",
+			"x": 579.79,
+			"y": 457.65,
+			"width": 41.21,
+			"height": 9.53,
+			"text": "16.10.20"
+		},
+		"14f70e16-8a0a-45bc-add5-3caf90072a54": {
+			"type": "text",
+			"x": 819.71,
+			"y": 458.1,
+			"width": 40.4,
+			"height": 8.89,
+			"text": "15.11.20"
+		},
+		"ec7f32bc-c894-4f35-acd7-257d3ad8b004": {
+			"type": "text",
+			"x": 594.71,
+			"y": 493.81,
+			"width": 113.45,
+			"height": 11.3,
+			"text": "Новые посетители"
+		},
+		"45cb7fd8-a8c1-42ff-a91a-80bdc8bab8b9": {
+			"type": "text",
+			"x": 835.8,
+			"y": 493.92,
+			"width": 23.68,
+			"height": 11.18,
+			"text": "322"
+		},
+		"05bd7493-ee7b-4262-905a-c7c9edaa543f": {
+			"type": "text",
+			"x": 579.56,
+			"y": 589.59,
+			"width": 63.66,
+			"height": 16.69,
+			"text": "Отказы"
+		},
+		"634da175-b01e-44f6-b74c-b00b88d88d76": {
+			"type": "text",
+			"x": 580.38,
+			"y": 622.54,
+			"width": 69.11,
+			"height": 23.65,
+			"text": "8,37 %"
+		},
+		"b9a4a812-ee5a-48a8-aac7-a9f7907f38ec": {
+			"type": "text",
+			"x": 580.74,
+			"y": 652.8,
+			"width": 43.29,
+			"height": 12.17,
+			"text": "-1,28 %"
+		},
+		"9e8f4226-8c02-4406-8224-8ac8149ca21a": {
+			"type": "text",
+			"x": 930.63,
+			"y": 273.66,
+			"width": 141.44,
+			"height": 19.67,
+			"text": "Адрес страницы"
+		},
+		"ee011c19-9e50-417d-ac85-cb0f4d7bfab8": {
+			"type": "text",
+			"x": 930.8,
+			"y": 323.82,
+			"width": 106.37,
+			"height": 13.4,
+			"text": "Адрес страницы"
+		},
+		"81e2d65a-b31b-42c2-95cf-df5bef341f19": {
+			"type": "text",
+			"x": 950.6,
+			"y": 358.03,
+			"width": 94.72,
+			"height": 14.19,
+			"text": "testo-lang.ru/ru"
+		},
+		"9dfcfa0c-d3f2-4a51-b1a8-615f9e65d4bf": {
+			"type": "text",
+			"x": 950.82,
+			"y": 395.07,
+			"width": 176.69,
+			"height": 14.19,
+			"text": "testo-lang.ru/ru/docs/gettin..."
+		},
+		"c5ddb770-0135-4099-85b7-e46ed1db7fb4": {
+			"type": "text",
+			"x": 950.72,
+			"y": 431.95,
+			"width": 164.18,
+			"height": 14.61,
+			"text": "testo-lang.ru/ru/downloads"
+		},
+		"8d7b3b97-d90d-42b1-9a82-cfd3bfb6180b": {
+			"type": "text",
+			"x": 950.48,
+			"y": 468.95,
+			"width": 130.04,
+			"height": 14.34,
+			"text": "testo-lang.ru/ru/sales"
+		},
+		"164b8d26-8e31-414e-bdd1-0e50b63b069a": {
+			"type": "text",
+			"x": 950.89,
+			"y": 505.96,
+			"width": 176.61,
+			"height": 14.34,
+			"text": "testo-lang.ru/ru/docs/gettin..."
+		},
+		"0f34c051-a375-49f6-9cad-cd38da5bb53f": {
+			"type": "text",
+			"x": 950.49,
+			"y": 542.56,
+			"width": 176.61,
+			"height": 14.34,
+			"text": "testo-lang.ru/ru/docs/gettin..."
+		},
+		"7e81562a-c3d0-490c-aa3c-a542be5bbe41": {
+			"type": "text",
+			"x": 950.24,
+			"y": 579.7,
+			"width": 175.62,
+			"height": 14.34,
+			"text": "testo-lang.ru/ru/docs/tutori..."
+		},
+		"b584f62e-22ad-4355-a7ed-5c96cb7e05c3": {
+			"type": "text",
+			"x": 950.56,
+			"y": 616.99,
+			"width": 97.78,
+			"height": 14.34,
+			"text": "testo-lang.ru/en"
+		},
+		"863ad1e4-02a9-4466-8669-92c297b2f7f4": {
+			"type": "text",
+			"x": 950.56,
+			"y": 653.86,
+			"width": 177.41,
+			"height": 14.53,
+			"text": "testo-lang.ru/ru/docs/gettin..."
+		},
+		"92e2387d-c83d-48cd-907a-2b95fd58a63a": {
+			"type": "text",
+			"x": 950.54,
+			"y": 690.82,
+			"width": 175.63,
+			"height": 14.34,
+			"text": "testo-lang.ru/ru/docs/tutori..."
+		},
+		"479a8c85-a5ab-41fd-9915-d7ec5a60a529": {
+			"type": "text",
+			"x": 1135.67,
+			"y": 323.98,
+			"width": 74.45,
+			"height": 13.27,
+			"text": "Просмотры"
+		},
+		"4668e22a-bd73-4312-8f28-d5aa1fdb2210": {
+			"type": "text",
+			"x": 1186.64,
+			"y": 358.79,
+			"width": 23.72,
+			"height": 11.58,
+			"text": "493"
+		},
+		"52995506-82df-49f3-a992-7a4f8e366536": {
+			"type": "text",
+			"x": 1186.32,
+			"y": 395.89,
+			"width": 22.92,
+			"height": 11.46,
+			"text": "271"
+		},
+		"8361cfdb-852c-4afa-8ba3-2599a8a22f0a": {
+			"type": "text",
+			"x": 1186.64,
+			"y": 432.79,
+			"width": 23.81,
+			"height": 11.51,
+			"text": "205"
+		},
+		"67b12a98-86c7-41ae-a28a-00bba96b3829": {
+			"type": "text",
+			"x": 1187.04,
+			"y": 469.32,
+			"width": 24.01,
+			"height": 12.21,
+			"text": "118"
+		},
+		"4c10847d-6ec6-4c1f-93ba-926a659a403d": {
+			"type": "text",
+			"x": 1186.78,
+			"y": 506.85,
+			"width": 24.52,
+			"height": 11.54,
+			"text": "112"
+		},
+		"260decfe-d246-46df-a610-565440df3eba": {
+			"type": "text",
+			"x": 1193.45,
+			"y": 543.66,
+			"width": 17.95,
+			"height": 11.63,
+			"text": "94"
+		},
+		"abacf980-2f8c-40f4-a27f-d7f06b68f49f": {
+			"type": "text",
+			"x": 1193.7,
+			"y": 580.79,
+			"width": 17.5,
+			"height": 11.45,
+			"text": "92"
+		},
+		"b5d4cf98-c7a2-4737-9d73-f216368d0ddd": {
+			"type": "text",
+			"x": 1193.77,
+			"y": 617.84,
+			"width": 17.48,
+			"height": 11.46,
+			"text": "90"
+		},
+		"6a2c72d9-4743-45ff-925d-68852d31e02d": {
+			"type": "text",
+			"x": 1193.49,
+			"y": 654.68,
+			"width": 16.05,
+			"height": 11.53,
+			"text": "71"
+		},
+		"ec293085-9145-409a-804f-51d7ca41a1a7": {
+			"type": "text",
+			"x": 1193.64,
+			"y": 691.38,
+			"width": 17.61,
+			"height": 12.06,
+			"text": "58"
+		}
+	},
+	"verified": true
+}

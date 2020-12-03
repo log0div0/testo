@@ -1,0 +1,132 @@
+{
+	"objs": {
+		"67f28b8f-579a-402a-8771-f891e2c87306": {
+			"type": "text",
+			"x": 4.8,
+			"y": 159.06,
+			"width": 79.25,
+			"height": 16.78,
+			"text": "ark_dir/"
+		},
+		"694dc16e-2d45-45b5-8ebf-73b4a7b670e5": {
+			"type": "text",
+			"x": 4.98,
+			"y": 179.02,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_4"
+		},
+		"fdc5146f-7937-414c-b1d1-8d09a50e92f3": {
+			"type": "text",
+			"x": 5.01,
+			"y": 198.98,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_6"
+		},
+		"369ee705-7d11-48a2-9537-83fcb0d5eb06": {
+			"type": "text",
+			"x": 5.16,
+			"y": 219.05,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_2"
+		},
+		"ab9b2f2d-5da6-46ee-9b91-aff9d7e9f79a": {
+			"type": "text",
+			"x": 5.01,
+			"y": 238.67,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_5"
+		},
+		"b45eac3e-e909-4cb9-955f-ac66f7bbdb70": {
+			"type": "text",
+			"x": 5.01,
+			"y": 258.88,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_3"
+		},
+		"475f8627-a485-4dce-80fa-c1b26f09f944": {
+			"type": "text",
+			"x": 4.83,
+			"y": 279.03,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_7"
+		},
+		"eb5d0d8c-8f36-4ef4-8543-ae9d4f9d1856": {
+			"type": "text",
+			"x": 4.65,
+			"y": 298.81,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_1"
+		},
+		"274145f2-b3c6-4769-bd0d-b147d8d6452e": {
+			"type": "text",
+			"x": 4.83,
+			"y": 318.6,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_9"
+		},
+		"9913642e-cac1-4163-ba7e-d78b7048055d": {
+			"type": "text",
+			"x": 5.01,
+			"y": 339.1,
+			"width": 179.07,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_8"
+		},
+		"987aae80-a3f7-4caa-8e1a-e37e09acaab8": {
+			"type": "text",
+			"x": 4.83,
+			"y": 359.07,
+			"width": 189.14,
+			"height": 16.78,
+			"text": "ark_dir/ark_file_10"
+		},
+		"8dea76d7-42fd-4d87-80d2-4853cfb057b1": {
+			"type": "text",
+			"x": 4.75,
+			"y": 378.03,
+			"width": 99.73,
+			"height": 17.34,
+			"text": "u@susrv:~$"
+		},
+		"5afe45bd-a1ca-4680-bfae-4f6c054d5655": {
+			"type": "text",
+			"x": 4.67,
+			"y": 137.89,
+			"width": 437.4,
+			"height": 19.19,
+			"text": "u@susrv:~$ tar -tf ~/ark.tar.gz 2> /dev/null"
+		},
+		"b4ce7b00-e13d-4580-9963-020ed7ceee90": {
+			"type": "text",
+			"x": 4.94,
+			"y": 97.79,
+			"width": 389.19,
+			"height": 19.3,
+			"text": "u@susrv:~$ ls -1 /home/$USER/ark.tar.gz"
+		},
+		"7794125a-215b-4f49-9fd7-d1d0f0f66d56": {
+			"type": "text",
+			"x": 4.66,
+			"y": 118.55,
+			"width": 180.94,
+			"height": 18.78,
+			"text": "/home/u/ark.tar.gz"
+		},
+		"a8852354-b135-454b-83c4-9477ad59ed3e": {
+			"type": "text",
+			"x": 312.4,
+			"y": 735.03,
+			"width": 121.14,
+			"height": 16.95,
+			"text": "ark_dir - Менед..."
+		}
+	}
+}

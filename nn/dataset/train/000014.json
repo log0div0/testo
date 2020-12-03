@@ -1,0 +1,165 @@
+{
+	"objs": {
+		"43a243e6-5cff-4456-aaf9-e358ea5b95a9": {
+			"type": "text",
+			"x": 103.67,
+			"y": 17.64,
+			"width": 152.99,
+			"height": 13.7,
+			"text": "Network connections"
+		},
+		"076a1fa5-4c08-48f7-b890-eca46e845047": {
+			"type": "text",
+			"x": 103.84,
+			"y": 65.64,
+			"width": 800.2,
+			"height": 15.47,
+			"text": "Configure at least one interface this server can use to talk to other machines, and which preferably"
+		},
+		"e56de5bf-f66b-4a4e-bb7a-ea97c0aa38ca": {
+			"type": "text",
+			"x": 103.93,
+			"y": 81.31,
+			"width": 310.46,
+			"height": 14.54,
+			"text": "provides sufficient access for updates."
+		},
+		"81987d5d-a1fb-4655-b9b9-1f01861ebba9": {
+			"type": "text",
+			"x": 63.77,
+			"y": 114.63,
+			"width": 32.36,
+			"height": 12.49,
+			"text": "NAME"
+		},
+		"980cc0b1-44b5-4cb2-99dd-0b5e784fe680": {
+			"type": "text",
+			"x": 112,
+			"y": 114.86,
+			"width": 32.34,
+			"height": 12.24,
+			"text": "TYPE"
+		},
+		"f40aad88-e6c1-4179-930e-d0b2064fe41b": {
+			"type": "text",
+			"x": 159.94,
+			"y": 114.68,
+			"width": 136.21,
+			"height": 12.66,
+			"text": "NOTES / ADDRESSES"
+		},
+		"9adbefad-bedd-4f49-ab10-6079a49211c9": {
+			"type": "text",
+			"x": 50.98,
+			"y": 130.01,
+			"width": 45.28,
+			"height": 13.92,
+			"text": "[ ens3"
+		},
+		"4c2c5197-c726-407a-9c03-b3ff36e7785a": {
+			"type": "text",
+			"x": 112.12,
+			"y": 130,
+			"width": 23.93,
+			"height": 13.41,
+			"text": "eth"
+		},
+		"ec8c7814-bf48-485d-864f-2717d5b0c540": {
+			"type": "text",
+			"x": 160.4,
+			"y": 130.68,
+			"width": 237.77,
+			"height": 14.66,
+			"text": "192.168.122.219/24 (from dhcp)"
+		},
+		"f9dab410-f35b-4cc2-be20-6842a636b043": {
+			"type": "text",
+			"x": 63.73,
+			"y": 145.54,
+			"width": 840.75,
+			"height": 15.57,
+			"text": "52:54:00:45:12:e7 / Realtek Semiconductor Co., Ltd. / RTL-8100/8101L/8139 PCI Fast Ethernet Adapter (QEMU"
+		},
+		"0fdc9222-e9e4-43eb-8efd-a20ef6e1ebf8": {
+			"type": "text",
+			"x": 959.8,
+			"y": 129.96,
+			"width": 5.36,
+			"height": 14.03,
+			"text": "]"
+		},
+		"bc174f1a-ecb8-45d3-8146-01c717d0271a": {
+			"type": "text",
+			"x": 63.59,
+			"y": 161.39,
+			"width": 127.02,
+			"height": 15.09,
+			"text": "Virtual Machine)"
+		},
+		"cfe2e163-b3ab-400b-b484-980fa0b9d989": {
+			"type": "text",
+			"x": 50.92,
+			"y": 193.61,
+			"width": 105.35,
+			"height": 14.33,
+			"text": "[ Create bond"
+		},
+		"a2829fc1-0651-4e83-b2bf-683d05b856f3": {
+			"type": "text",
+			"x": 458.91,
+			"y": 673.79,
+			"width": 45.6,
+			"height": 14.39,
+			"text": "[ Done"
+		},
+		"9d0116c4-5fe2-4f3f-a4c5-83a3e1bd971d": {
+			"type": "text",
+			"x": 559.84,
+			"y": 673.7,
+			"width": 5.25,
+			"height": 14.34,
+			"text": "]"
+		},
+		"01767854-bdb8-4676-8d73-e94cb5e1e9c4": {
+			"type": "text",
+			"x": 458.86,
+			"y": 689.63,
+			"width": 45.78,
+			"height": 14.61,
+			"text": "[ Back"
+		},
+		"989aac5c-41ca-4a06-b8f1-22aec9056a72": {
+			"type": "text",
+			"x": 559.86,
+			"y": 689.83,
+			"width": 5.2,
+			"height": 14.36,
+			"text": "]"
+		},
+		"ea8dbc00-edec-4bc7-a3d7-b0406aab3afd": {
+			"type": "text",
+			"x": 487.9,
+			"y": 722.49,
+			"width": 48.21,
+			"height": 12.94,
+			"text": "4 / 12"
+		},
+		"2a36d75a-6b88-4b6b-8782-b74b8fcb0197": {
+			"type": "text",
+			"x": 103.82,
+			"y": 753.86,
+			"width": 495.98,
+			"height": 15.17,
+			"text": "Select an interface to configure it or select Done to continue"
+		},
+		"4ad213a4-aaa1-4c67-bd7a-2978260d5227": {
+			"type": "text",
+			"x": 175.58,
+			"y": 193.81,
+			"width": 5.49,
+			"height": 14.39,
+			"text": "]"
+		}
+	},
+	"verified": true
+}

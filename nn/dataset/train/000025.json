@@ -1,0 +1,157 @@
+{
+	"objs": {
+		"076ee8bb-4687-47d8-b044-82a39858d8c3": {
+			"type": "text",
+			"x": 260.06,
+			"y": 49.06,
+			"width": 198.91,
+			"height": 14.83,
+			"text": "Выберите тип платформы"
+		},
+		"9381813b-e94b-4969-b2d9-202072338b82": {
+			"type": "text",
+			"x": 251.2,
+			"y": 80.9,
+			"width": 181.08,
+			"height": 14.99,
+			"text": "Настраиваемая/Custom"
+		},
+		"9cc0ed60-b03a-4d46-bf62-f7f98c0e7a4c": {
+			"type": "text",
+			"x": 253.06,
+			"y": 97.09,
+			"width": 132.06,
+			"height": 11.9,
+			"text": "IPC-10 (LN010A)"
+		},
+		"d1ebe678-0911-4531-b04f-8fbd954b13f3": {
+			"type": "text",
+			"x": 253.18,
+			"y": 113.12,
+			"width": 140.74,
+			"height": 11.94,
+			"text": "IPC-25 (MSS1151)"
+		},
+		"1d9a3659-4865-4e6d-aad6-4f7772da874e": {
+			"type": "text",
+			"x": 253.1,
+			"y": 129.05,
+			"width": 131.82,
+			"height": 11.92,
+			"text": "IPC-50 (LN010C)"
+		},
+		"8db23032-d9b1-4f7c-a1f9-f93e34b555bb": {
+			"type": "text",
+			"x": 253.2,
+			"y": 145.24,
+			"width": 140.72,
+			"height": 11.73,
+			"text": "IPC-50M (LN010M)"
+		},
+		"fcd33d0b-4dfb-488b-8e11-040a2fb6c54f": {
+			"type": "text",
+			"x": 253.2,
+			"y": 161.1,
+			"width": 149.89,
+			"height": 11.92,
+			"text": "IPC-100 (MSS102A)"
+		},
+		"d1f8e83c-ffd7-4e7d-8553-22bc9fa2d7db": {
+			"type": "text",
+			"x": 253.29,
+			"y": 177.28,
+			"width": 140.4,
+			"height": 11.64,
+			"text": "IPC-400 (MSS021)"
+		},
+		"5d36cc48-a9f2-4373-9f0c-0992b164316c": {
+			"type": "text",
+			"x": 253.15,
+			"y": 193.08,
+			"width": 140.91,
+			"height": 11.88,
+			"text": "IPC-500 (LN015B)"
+		},
+		"5b9bad6b-4fac-41d4-b1fe-57da7315ff32": {
+			"type": "text",
+			"x": 253.21,
+			"y": 209.19,
+			"width": 149.51,
+			"height": 11.55,
+			"text": "IPC-500F (LN015C)"
+		},
+		"c480aa94-c0da-4215-a501-772ffbe2527b": {
+			"type": "text",
+			"x": 253.38,
+			"y": 225.4,
+			"width": 149.51,
+			"height": 11.33,
+			"text": "IPC-500M (LN015M)"
+		},
+		"45ae6098-8e43-4750-b98b-aaedf9310907": {
+			"type": "text",
+			"x": 253.42,
+			"y": 241.24,
+			"width": 140.46,
+			"height": 11.7,
+			"text": "IPC-600 (DV030A)"
+		},
+		"e715e8d2-240a-4572-bcd2-d5f6b63099d5": {
+			"type": "text",
+			"x": 253.34,
+			"y": 257.37,
+			"width": 149.48,
+			"height": 11.44,
+			"text": "IPC-600M (DV030M)"
+		},
+		"bd3e62ec-61fb-457a-bd6d-7f05573a4354": {
+			"type": "text",
+			"x": 253.42,
+			"y": 273.28,
+			"width": 149.47,
+			"height": 11.67,
+			"text": "IPC-800F (DV030B)"
+		},
+		"05c55078-f573-4c36-8d72-fe37bb829ead": {
+			"type": "text",
+			"x": 253.38,
+			"y": 289.32,
+			"width": 149.64,
+			"height": 11.33,
+			"text": "IPC-1000 (MSS021)"
+		},
+		"d1d97e5a-a099-4d7b-8be2-1806553f16a0": {
+			"type": "text",
+			"x": 253.31,
+			"y": 305.33,
+			"width": 158.32,
+			"height": 11.34,
+			"text": "IPC-1000F (MSS021)"
+		},
+		"848b9af0-0451-4eba-8edc-3214d5ed0ba2": {
+			"type": "text",
+			"x": 18.04,
+			"y": 384.84,
+			"width": 287.35,
+			"height": 15.28,
+			"text": "<Tab>/<Alt-Tab> между элементами"
+		},
+		"bf7c6be2-7907-4d6e-98cb-08b98dedcae9": {
+			"type": "text",
+			"x": 352.18,
+			"y": 384.73,
+			"width": 114.6,
+			"height": 15.15,
+			"text": "<Space> выбор"
+		},
+		"1d24dc17-3503-4f91-9fa1-5bc24574fdeb": {
+			"type": "text",
+			"x": 522.28,
+			"y": 385.13,
+			"width": 186.62,
+			"height": 14.57,
+			"text": "<F12> следующий экран"
+		}
+	},
+	"verified": true
+}
