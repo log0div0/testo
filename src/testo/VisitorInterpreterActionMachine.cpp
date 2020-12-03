@@ -535,7 +535,7 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(con
 
 nn::TextTensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = text.text();
-	return nn::find_text(&screenshot).match(parsed);
+	return nn::find_text(&screenshot).match_text(&screenshot, parsed);
 }
 
 nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot) {

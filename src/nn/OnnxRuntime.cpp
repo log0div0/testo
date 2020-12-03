@@ -34,7 +34,7 @@ Runtime::~Runtime() {
 void Runtime::selftest() {
 	stb::Image<stb::RGB> img(SelfTestImg, SelfTestImg_len);
 	nn::TextTensor tensor = find_text(&img);
-	if (tensor.match("Добро пожаловать").size() != 1) {
+	if (tensor.match_text(&img, "Добро пожаловать").size() != 1) {
 		throw std::runtime_error("Neural networks are not working correctly");
 	}
 }

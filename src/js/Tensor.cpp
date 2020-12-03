@@ -152,7 +152,7 @@ Value match(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args
 		throw std::runtime_error("Invalid arguments count in Tensor::match");
 	}
 	std::string text = args.at(0);
-	return JSTensor(ctx, tensor->match(text));
+	return JSTensor(ctx, tensor->match_text(ctx.image(), text));
 }
 
 template <typename JSTensor>
@@ -162,7 +162,7 @@ Value match_foreground(ContextRef ctx, ValueRef this_val, const std::vector<Valu
 		throw std::runtime_error("Invalid arguments count in Tensor::match_foreground");
 	}
 	std::string color = args.at(0);
-	return JSTensor(ctx, tensor->match_foreground(ctx.image(), color));
+	return JSTensor(ctx, tensor->match_color(ctx.image(), color, {}));
 }
 
 template <typename JSTensor>
@@ -172,7 +172,34 @@ Value match_background(ContextRef ctx, ValueRef this_val, const std::vector<Valu
 		throw std::runtime_error("Invalid arguments count in Tensor::match_background");
 	}
 	std::string color = args.at(0);
-	return JSTensor(ctx, tensor->match_background(ctx.image(), color));
+	return JSTensor(ctx, tensor->match_color(ctx.image(), {}, color));
+}
+
+template <typename JSTensor>
+Value match_text(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_text");
+	}
+	std::string text = args.at(0);
+	return JSTensor(ctx, tensor->match_text(ctx.image(), text));
+}
+
+template <typename JSTensor>
+Value match_color(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if ((args.size() != 2)) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_color");
+	}
+	std::string fg;
+	if (args.at(0).is_string()) {
+		fg = (std::string)args.at(0);
+	}
+	std::string bg;
+	if (args.at(1).is_string()) {
+		bg = (std::string)args.at(1);
+	}
+	return JSTensor(ctx, tensor->match_color(ctx.image(), fg, bg));
 }
 
 void TextTensor::register_class(ContextRef ctx) {
@@ -196,9 +223,13 @@ void TextTensor::register_class(ContextRef ctx) {
 		Method<from_left<TextTensor>>("from_left"),
 		Method<from_right<TextTensor>>("from_right"),
 		// specific
-		Method<match<TextTensor>>("match"),
-		Method<match_foreground<TextTensor>>("match_foreground"),
-		Method<match_background<TextTensor>>("match_background"),
+
+		Method<match<TextTensor>>("match"), //< deprecated
+		Method<match_foreground<TextTensor>>("match_foreground"), //< deprecated
+		Method<match_background<TextTensor>>("match_background"), //< deprecated
+
+		Method<match_text<TextTensor>>("match_text"),
+		Method<match_color<TextTensor>>("match_color"),
 	};
 
 	Tensor::register_class(ctx, "TextTensor", proto_funcs);

@@ -33,25 +33,17 @@ void text_mode(const TextArgs& args)
 
 	auto start = std::chrono::high_resolution_clock::now();
 	nn::TextTensor tensor = nn::find_text(&image);
+	if (args.query.size()) {
+		tensor = tensor.match_text(&image, args.query);
+	}
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
 	std::cout << "Time: " << time.count() << " seconds" << std::endl;
 
-	if (args.query.size() == 0) {
-		for (auto& textline: tensor.objects) {
-			for (auto& char_: textline.chars) {
-				draw_rect(image, char_.rect, {200, 20, 50});
-				std::cout << conv.to_bytes(char_.codepoints[0]);
-			}
-			std::cout << std::endl;
-		}
-	} else {
-		tensor = tensor.match(args.query);
-		for (auto& textline: tensor.objects) {
-			draw_rect(image, textline.rect, {200, 20, 50});
-		}
+	std::cout << "Found: " << tensor.size() << std::endl;
 
-		std::cout << "Found: " << tensor.size() << std::endl;
+	for (auto& textline: tensor.objects) {
+		draw_rect(image, textline.rect, {200, 20, 50});
 	}
 
 	image.write_png("output.png");
@@ -163,7 +155,7 @@ struct DatasetMode {
 				if (!res.second) {
 					continue;
 				}
-				size_t detected = text_tensor.match(text).size();
+				size_t detected = text_tensor.match_text(&img, text).size();
 				size_t labeled = get_text_match_count(meta, u32text);
 				if (detected != labeled) {
 					std::cout << "labeled: " << labeled << ", detected:" << detected << ", text: " << text << std::endl;

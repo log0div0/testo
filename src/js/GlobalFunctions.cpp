@@ -18,11 +18,15 @@ Value print(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>
 
 
 Value find_text(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
-	if (args.size() > 0) {
+	if (args.size() > 1) {
 		throw std::runtime_error("Invalid arguments count in find_text");
 	}
 
 	nn::TextTensor tensor = nn::find_text(ctx.image());
+	if (args.size() == 1) {
+		std::string text = args.at(0);
+		tensor = tensor.match_text(ctx.image(), text);
+	}
 	return TextTensor(ctx, tensor);
 }
 
