@@ -11,7 +11,9 @@
 
 #define IN_H 32
 
-std::vector<std::u32string> symbols = {
+namespace nn {
+
+const std::vector<std::u32string> TextRecognizer::symbols = {
 	U"",
 	U"0OoОо",
 	U"1",
@@ -104,8 +106,6 @@ std::vector<std::u32string> symbols = {
 	U"Яя"
 };
 
-namespace nn {
-
 TextRecognizer& TextRecognizer::instance() {
 	static TextRecognizer instance;
 	return instance;
@@ -117,12 +117,17 @@ TextRecognizer::TextRecognizer() {
 	}
 }
 
-std::vector<TextLine> TextRecognizer::recognize(const stb::Image<stb::RGB>* image, const TextLine& textline, const std::string& query) {
+std::vector<TextLine> TextRecognizer::recognize(const stb::Image<stb::RGB>* image, TextLine& textline, const std::string& query) {
 	run_nn(image, textline);
 	return run_postprocessing(textline, query);
 }
 
-void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, const TextLine& textline) {
+#define THRESHOLD -10.0
+
+void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textline) {
+	if (textline.text_recognizer_cache.predictions.size()) {
+		return;
+	}
 
 	int ratio = ceilf(float(textline.rect.width()) / float(textline.rect.height()));
 	int new_in_w = ratio * IN_H * 2;
@@ -145,83 +150,8 @@ void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, const TextLine& t
 	in.set(textline_img, true);
 
 	model.run({&in}, {&out});
-}
 
-#define THRESHOLD -10.0
-
-std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-
-struct Matcher {
-	struct Prediction {
-		bool maybe_blank = false;
-		std::u32string codepoints;
-
-		bool match(char32_t codepoint) {
-			for (char32_t cp: codepoints) {
-				if (cp == codepoint) {
-					return true;
-				}
-			}
-			return false;
-		}
-	};
-
-	std::vector<Prediction> predictions;
-
-	int match(size_t x, const std::u32string& query) {
-		size_t y = 0;
-		while (x < predictions.size() && (y < query.size())) {
-			if (predictions[x].match(query[y])) {
-				++y;
-				++x;
-				continue;
-			}
-			if ((y > 0) && predictions[x].match(query[y-1])) {
-				++x;
-				continue;
-			}
-			if (predictions[x].maybe_blank) {
-				++x;
-				continue;
-			}
-			break;
-		}
-		if (y == query.size()) {
-			return x;
-		} else {
-			return -1;
-		}
-	}
-
-	void print() {
-		for (size_t i = 0; i < predictions.size(); ++i) {
-			auto prediction = predictions[i];
-			std::cout << i << " ";
-			if (prediction.maybe_blank) {
-				std::cout << conv.to_bytes(U'•');
-			}
-			for (char32_t codepoint: prediction.codepoints) {
-				std::cout << conv.to_bytes(codepoint);
-			}
-			std::cout << std::endl;
-		}
-	}
-};
-
-std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textline, const std::string& query) {
-	if (query.size() == 0) {
-		throw std::runtime_error("Empty query in TextRecognizer");
-	}
-	if (query.size() > (size_t)out_w) {
-		return {};
-	}
-	// std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-	// static int f = 0;
-	// if (f++ != 2) {
-	// 	return {};
-	// }
-	Matcher matcher;
-	matcher.predictions.resize(out_w);
+	textline.text_recognizer_cache.predictions.resize(out_w);
 	for (int x = 0; x < out_w; ++x) {
 		std::sort(symbols_indexes.begin(), symbols_indexes.end(), [&](size_t a, size_t b) {
 			return out[x][a] > out[x][b];
@@ -238,14 +168,34 @@ std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textlin
 		for (auto it = symbols_indexes.begin(); it != end; ++it) {
 			const std::u32string& tmp = symbols.at(*it);
 			if (tmp.size()) {
-				matcher.predictions[x].codepoints += tmp;
+				textline.text_recognizer_cache.predictions[x].codepoints += tmp;
 			} else {
-				matcher.predictions[x].maybe_blank = true;
+				textline.text_recognizer_cache.predictions[x].maybe_blank = true;
 			}
 		}
 	}
+}
 
-	float ratio = float(textline.rect.width()) / out_w;
+static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+
+std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textline, const std::string& query) {
+	const TextRecognizerCache& cache = textline.text_recognizer_cache;
+
+	if (query.size() == 0) {
+		throw std::runtime_error("Empty query in TextRecognizer");
+	}
+	if (query.size() > cache.predictions.size()) {
+		return {};
+	}
+
+	// static int f = 0;
+	// std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " << (f++) << std::endl;
+	// if (f != 12) {
+	// 	return {};
+	// }
+	// cache.print();
+
+	float ratio = float(textline.rect.width()) / cache.predictions.size();
 	std::u32string u32query;
 	for (char32_t ch: conv.from_bytes(query)) {
 		if (ch != U' ') {
@@ -253,17 +203,15 @@ std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textlin
 		}
 	}
 
-	// matcher.print();
-
 	std::vector<TextLine> result;
-	for (size_t x = 0; x < (out_w - query.size()); ++x) {
-		while (x < (out_w - query.size())) {
-			if (matcher.predictions[x].codepoints.size()) {
+	for (size_t x = 0; x < (cache.predictions.size() - query.size()); ++x) {
+		while (x < (cache.predictions.size() - query.size())) {
+			if (cache.predictions[x].codepoints.size()) {
 				break;
 			}
 			++x;
 		}
-		int pos = matcher.match(x, u32query);
+		int pos = cache.match(x, u32query);
 		if (pos < 0) {
 			continue;
 		}

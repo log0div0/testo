@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 #include "TextTensor.hpp"
 #include "ImgTensor.hpp"
+#include "TextRecognizer.hpp"
 #include "OnnxRuntime.hpp"
 
 void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
@@ -20,116 +21,17 @@ void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
 	}
 }
 
-struct Symbol {
-	Symbol(const char32_t* codepoints_): codepoints(codepoints_) {}
-
-	std::u32string codepoints;
-};
-
-std::vector<Symbol> symbols = {
-	U"0OoОо",
-	U"1",
-	U"2",
-	U"3ЗзЭэ",
-	U"4",
-	U"5",
-	U"6б",
-	U"7",
-	U"8",
-	U"9",
-	U"!",
-	U"?",
-	U"#",
-	U"$",
-	U"%",
-	U"&",
-	U"@",
-	U"([{",
-	U"<",
-	U")]}",
-	U">",
-	U"+",
-	U"-",
-	U"*",
-	U"/",
-	U"\\",
-	U".,",
-	U":;",
-	U"\"'",
-	U"^",
-	U"~",
-	U"=",
-	U"|lI",
-	U"_",
-	U"AА",
-	U"aа",
-	U"BВв",
-	U"bЬьЪъ",
-	U"CcСс",
-	U"D",
-	U"d",
-	U"EЕЁ",
-	U"eеё",
-	U"F",
-	U"f",
-	U"G",
-	U"g",
-	U"HНн",
-	U"h",
-	U"i",
-	U"J",
-	U"j",
-	U"KКк",
-	U"k",
-	U"L",
-	U"MМм",
-	U"m",
-	U"N",
-	U"n",
-	U"PpРр",
-	U"R",
-	U"r",
-	U"Q",
-	U"q",
-	U"Ss",
-	U"TТт",
-	U"t",
-	U"U",
-	U"u",
-	U"Vv",
-	U"Ww",
-	U"XxХх",
-	U"Y",
-	U"yУу",
-	U"Zz",
-	U"Б",
-	U"Гг",
-	U"Дд",
-	U"Жж",
-	U"ИиЙй",
-	U"Лл",
-	U"Пп",
-	U"Фф",
-	U"Цц",
-	U"Чч",
-	U"ШшЩщ",
-	U"Ыы",
-	U"Юю",
-	U"Яя"
-};
-
-std::map<char32_t, size_t> symbols_map = ([&]() {
-	std::map<char32_t, size_t> result;
-	for (size_t symbol_index = 0; symbol_index < symbols.size(); ++symbol_index) {
-		const Symbol& symbol = symbols.at(symbol_index);
-		for (char32_t codepoint: symbol.codepoints) {
-			result[codepoint] = symbol_index;
-		}
-	}
-	return result;
-})();
+std::map<char32_t, size_t> symbols_map;
 
 size_t find_substr(const std::u32string& str, const std::u32string& substr, size_t pos) {
+	if (!symbols_map.size()) {
+		for (size_t symbol_index = 0; symbol_index < nn::TextRecognizer::symbols.size(); ++symbol_index) {
+			auto& symbol = nn::TextRecognizer::symbols.at(symbol_index);
+			for (char32_t codepoint: symbol) {
+				symbols_map[codepoint] = symbol_index;
+			}
+		}
+	}
 	while ((pos + substr.size()) <= str.size()) {
 		size_t i = 0;
 		for (; i < substr.size(); ++i) {

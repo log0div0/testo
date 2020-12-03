@@ -7,17 +7,19 @@
 namespace nn {
 
 struct TextRecognizer {
+	static const std::vector<std::u32string> symbols;
+
 	static TextRecognizer& instance();
 
 	TextRecognizer(const TextRecognizer&) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
 
-	std::vector<TextLine> recognize(const stb::Image<stb::RGB>* image, const TextLine& textline, const std::string& query);
+	std::vector<TextLine> recognize(const stb::Image<stb::RGB>* image, TextLine& textline, const std::string& query);
 
 private:
 	TextRecognizer();
 
-	void run_nn(const stb::Image<stb::RGB>* image, const TextLine& textline);
+	void run_nn(const stb::Image<stb::RGB>* image, TextLine& textline);
 	std::vector<TextLine> run_postprocessing(const TextLine& textline, const std::string& query);
 
 	std::vector<size_t> symbols_indexes;
