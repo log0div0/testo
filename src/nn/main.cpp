@@ -20,6 +20,143 @@ void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
 	}
 }
 
+struct Symbol {
+	Symbol(const char32_t* codepoints_): codepoints(codepoints_) {}
+
+	std::u32string codepoints;
+};
+
+std::vector<Symbol> symbols = {
+	U"0OoОо",
+	U"1",
+	U"2",
+	U"3ЗзЭэ",
+	U"4",
+	U"5",
+	U"6б",
+	U"7",
+	U"8",
+	U"9",
+	U"!",
+	U"?",
+	U"#",
+	U"$",
+	U"%",
+	U"&",
+	U"@",
+	U"([{",
+	U"<",
+	U")]}",
+	U">",
+	U"+",
+	U"-",
+	U"*",
+	U"/",
+	U"\\",
+	U".,",
+	U":;",
+	U"\"'",
+	U"^",
+	U"~",
+	U"=",
+	U"|lI",
+	U"_",
+	U"AА",
+	U"aа",
+	U"BВв",
+	U"bЬьЪъ",
+	U"CcСс",
+	U"D",
+	U"d",
+	U"EЕЁ",
+	U"eеё",
+	U"F",
+	U"f",
+	U"G",
+	U"g",
+	U"HНн",
+	U"h",
+	U"i",
+	U"J",
+	U"j",
+	U"KКк",
+	U"k",
+	U"L",
+	U"MМм",
+	U"m",
+	U"N",
+	U"n",
+	U"PpРр",
+	U"R",
+	U"r",
+	U"Q",
+	U"q",
+	U"Ss",
+	U"TТт",
+	U"t",
+	U"U",
+	U"u",
+	U"Vv",
+	U"Ww",
+	U"XxХх",
+	U"Y",
+	U"yУу",
+	U"Zz",
+	U"Б",
+	U"Гг",
+	U"Дд",
+	U"Жж",
+	U"ИиЙй",
+	U"Лл",
+	U"Пп",
+	U"Фф",
+	U"Цц",
+	U"Чч",
+	U"ШшЩщ",
+	U"Ыы",
+	U"Юю",
+	U"Яя"
+};
+
+std::map<char32_t, size_t> symbols_map = ([&]() {
+	std::map<char32_t, size_t> result;
+	for (size_t symbol_index = 0; symbol_index < symbols.size(); ++symbol_index) {
+		const Symbol& symbol = symbols.at(symbol_index);
+		for (char32_t codepoint: symbol.codepoints) {
+			result[codepoint] = symbol_index;
+		}
+	}
+	return result;
+})();
+
+size_t find_substr(const std::u32string& str, const std::u32string& substr, size_t pos) {
+	while ((pos + substr.size()) <= str.size()) {
+		size_t i = 0;
+		for (; i < substr.size(); ++i) {
+			size_t a = symbols_map.at(substr[i]);
+			size_t b = symbols_map.at(str[pos+i]);
+			if (a != b) {
+				break;
+			}
+		}
+		if (i == substr.size()) {
+			return pos;
+		}
+		++pos;
+	}
+	return std::string::npos;
+}
+
+std::u32string remove_spaces(const std::u32string str) {
+	std::u32string result;
+	for (char32_t cp: str) {
+		if (cp != U' ') {
+			result.push_back(cp);
+		}
+	}
+	return result;
+}
+
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 
 struct TextArgs {
@@ -169,7 +306,7 @@ struct DatasetMode {
 		}
 	}
 
-	size_t get_text_match_count(const nlohmann::json& meta, const std::u32string& substr) {
+	size_t get_text_match_count(const nlohmann::json& meta, std::u32string substr) {
 		size_t count = 0;
 		for (auto& obj: meta.at("objs")) {
 			if (obj.at("type") == "text") {
@@ -177,12 +314,13 @@ struct DatasetMode {
 					continue;
 				}
 				std::string s_ = obj.at("text");
-				std::u32string s = conv.from_bytes(s_);
-				size_t nPos = s.find(substr, 0);
+				std::u32string s = remove_spaces(conv.from_bytes(s_));
+				substr = remove_spaces(substr);
+				size_t nPos = find_substr(s, substr, 0);
 				while (nPos != std::string::npos)
 				{
 					count++;
-					nPos = s.find(substr, nPos + substr.size());
+					nPos = find_substr(s, substr, nPos + substr.size());
 				}
 			}
 		}
