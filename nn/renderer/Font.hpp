@@ -17,8 +17,10 @@ struct Font {
 struct TTFont: Font {
 	stb::ScaledFont font;
 	bool use_antialiasing;
+	float letter_spacing;
 
-	TTFont(stb::ScaledFont font_, bool use_antialiasing_): font(font_), use_antialiasing(use_antialiasing_) {}
+	TTFont(stb::ScaledFont font_, bool use_antialiasing_, float letter_spacing_):
+		font(font_), use_antialiasing(use_antialiasing_), letter_spacing(letter_spacing_) {}
 
 	virtual float size() override {
 		return font.ascent() - font.descent();
@@ -29,7 +31,7 @@ struct TTFont: Font {
 	}
 
 	virtual float codepointKernAdvance(char32_t ch1, char32_t ch2) override {
-		return font.codepointKernAdvance(ch1, ch2);
+		return font.codepointKernAdvance(ch1, ch2) + letter_spacing;
 	}
 
 	virtual Char renderCodepoint(char32_t codepoint, float xpos) override {

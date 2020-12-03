@@ -164,7 +164,8 @@ std::unique_ptr<Font> random_font() {
 		bool use_antialiasing = random_bool();
 		int font_size = random_int(use_antialiasing ? 13 : 14, 48);
 		stb::ScaledFont font = _random_tt_font().scaleForPixelHeight(font_size);
-		return std::unique_ptr<Font>(new TTFont(font, use_antialiasing));
+		float letter_spacing = random_float(float(-font_size) / 10, 0);
+		return std::unique_ptr<Font>(new TTFont(font, use_antialiasing, letter_spacing));
 	} else {
 		return std::unique_ptr<Font>(new PSFFont(_random_psf_font()));
 	}
