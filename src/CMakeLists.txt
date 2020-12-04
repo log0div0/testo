@@ -4,6 +4,10 @@ add_definitions(-DFMT_HEADER_ONLY)
 add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
 add_definitions(-DTESTO_RELEASE_DATE="${TESTO_RELEASE_DATE}")
 
+if (WIN32)
+	add_definitions(-D__PRETTY_FUNCTION__=__FUNCSIG__)
+endif()
+
 if (USE_CUDA)
 	add_definitions(-DUSE_CUDA=1)
 endif()
