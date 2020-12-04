@@ -63,7 +63,7 @@ std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 
 struct TextArgs {
 	std::string img_file;
-	std::string query;
+	std::string query, fg, bg;
 };
 
 void text_mode(const TextArgs& args)
@@ -74,6 +74,9 @@ void text_mode(const TextArgs& args)
 	nn::TextTensor tensor = nn::find_text(&image);
 	if (args.query.size()) {
 		tensor = tensor.match_text(&image, args.query);
+	}
+	if (args.fg.size() || args.bg.size()) {
+		tensor = tensor.match_color(&image, args.fg, args.bg);
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time = end - start;
@@ -251,7 +254,9 @@ int main(int argc, char **argv)
 		auto text_spec = (
 			command("text").set(selected_mode, mode::text),
 			value("input image", text_args.img_file),
-			option("--query") & value("the text to search for", text_args.query)
+			option("--query") & value("the text to search for", text_args.query),
+			option("--fg") & value("foreground color", text_args.fg),
+			option("--bg") & value("background color", text_args.bg)
 		);
 
 		ImgArgs img_args;
