@@ -169,8 +169,7 @@ test debian_build_testo_guest_additions: debian_install_packages {
 	debian {
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
-		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
-		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
 			cd /root/
@@ -190,7 +189,7 @@ test debian_build_testo_cpu: debian_install_packages {
 	debian {
 		copyto "${TMP_DIR}/onnxruntime_dist_debian_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
@@ -211,7 +210,7 @@ test debian_build_testo_gpu: debian_install_packages {
 	debian {
 		copyto "${TMP_DIR}/onnxruntime_dist_debian_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
