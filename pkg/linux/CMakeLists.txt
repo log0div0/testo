@@ -16,7 +16,6 @@ install(FILES
 install(FILES
 	${CMAKE_SOURCE_DIR}/src/nn/TextDetector.onnx
 	${CMAKE_SOURCE_DIR}/src/nn/TextRecognizer.onnx
-	${CMAKE_SOURCE_DIR}/src/nn/TextColorPicker.onnx
 	DESTINATION /usr/share/testo
 	PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
