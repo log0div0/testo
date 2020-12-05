@@ -1,5 +1,5 @@
 
-include "../common_ubuntu_server.testo"
+include "../../common_ubuntu_server.testo"
 
 network net1 {
 	mode: "internal"

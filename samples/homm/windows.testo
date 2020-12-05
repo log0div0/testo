@@ -1,0 +1,101 @@
+include "../common_win7.testo"
+include "common.testo"
+
+machine win7 {
+	cpus: 2
+	ram: 2Gb
+	iso: "${ISO_DIR}/win7.iso"
+	disk main: {
+		size: 20Gb
+	}
+	nic nat: {
+		attached_to: "lan"
+		adapter_type: "e1000"
+	}
+}
+
+test win7_installation {
+	win7 {
+		start
+		wait "Choose an operating system"
+		press Down, Enter
+
+		mouse click "Мой язык - русский" timeout 2m;
+
+		wait "Выберите нужный язык"; mouse click "Далее".from_bottom(0)
+		mouse click "Установить" timeout 1m;
+		wait "Выберите операционную систему"; press Down*8; mouse click "Далее"
+		#wait "Выберите операционную систему"; mouse click "Далее"
+		wait "Условия лицензии"
+		mouse click "Я принимаю условия лицензии" timeout 1m; mouse click "Далее"
+		wait "Выберите тип установки";
+		if (check "Полная установка") {
+			mouse click "Полная установка"
+		} else {
+			mouse click "Выборочная"
+		}
+		wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее".center_bottom()
+		wait "Выберите имя пользователя" timeout 15m
+		unplug dvd
+		press LeftShift + LeftAlt; type "testo"; mouse click "Далее".center_bottom()
+		wait "Установите пароль"; mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее".center_bottom()
+		wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
+		wait "Проверьте настройку даты и времени"; mouse click "Далее".center_bottom()
+		wait "Выберите текущее место расположения компьютера"; mouse click "Домашняя сеть"
+		wait "Корзина" timeout 10m
+		shutdown
+		start
+		wait "Корзина"
+	}
+}
+
+test win7_install_ga: win7_installation {
+	win7 {
+		sleep 5s
+
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		mouse click "Выполнить autorun.js" timeout 1m
+		wait "Welcome to the Testo Guest Additions Setup"; mouse click "Next".center_bottom()
+		wait "Select Installation Folder"; mouse click "Next".from_bottom(0).center_bottom()
+		wait "Confirm Installation"; mouse click "Next".from_bottom(0).center_bottom()
+		wait "Разрешить внесение изменений"; press Left, Enter
+		mouse click "Установить".from_top(1).center_bottom()
+
+		#wait "Installation Complete"; mouse click "Close".from_bottom(0).center_bottom()
+		wait "Installation Complete"; press Enter
+		wait !"Installation Complete"
+		exec cmd "echo hello world"
+	}
+}
+
+test win7_configure: win7_install_ga {
+	win7 {
+		press LEFTMETA
+		mouse click "Панель управления"
+		mouse click "Категория"
+		mouse click "Мелкие значки"
+		mouse click "Центр управления сетями"
+		mouse click "Изменение параметров".from_left(0)
+		mouse rclick "Подключение по локальной сети"
+		mouse click "Свойства"
+		mouse dclick "IPv4"
+		mouse click "Использовать следующий IP-адрес"
+		mouse click "IP-адрес".from_top(1).right_bottom().move_down(10)
+
+		type "${windows_ip}"; press Tab, Enter
+		mouse click "OK".from_bottom(0); wait !"IPv4"
+
+		press LeftAlt+F4
+		wait "Корзина"
+		mouse rclick 300 400
+		mouse click "Разрешение экрана"
+		mouse click "800 x 600"
+		mouse click "1024 x 768"
+		mouse click 0 0
+		mouse click "ОК".from_bottom(0)
+		mouse click "Сохранить изменения"
+		sleep 1s
+		wait "Корзина"
+	}
+}
