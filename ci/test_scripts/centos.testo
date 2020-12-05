@@ -78,9 +78,12 @@ test centos_install_os {
 		wait "Privacy"; mouse click "Next".center_bottom();
 		wait "Online Accounts"; mouse click "Skip";
 		wait "About You"; mouse click "Full Name".right_center().move_right(30);
-		type "${login}";
+		type "${login}"
 		mouse click js "find_text('Next').match_color(null, 'blue').from_top(0)"
-		wait "Set a Password"; type "${password}"; press Tab; type "${password}"; mouse click "Next"
+		wait "Set a Password";
+		type "${password}"; press Tab; type "${password}";
+		mouse move 0 0
+		mouse click js "find_text('Next').match_color(null, 'blue').from_top(0)"
 		mouse click "Start Using CentOS Linux"
 		wait "GNOME Help" timeout 2m
 		mouse click "Help".from_top(0); mouse click "Quit"

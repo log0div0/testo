@@ -48,7 +48,6 @@ test debian_install_os {
 		wait "The system may anonymously" timeout 10m; press Enter
 		wait "choose to install one or more"
 		mouse click "Continue"
-		sleep 15m
 		mouse move 0 0
 		wait "It seems that this new installation" timeout 50m; press Enter
 		wait "You need to make the"; press Down, Enter
