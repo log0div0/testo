@@ -91,9 +91,5 @@ private:
 	std::unique_ptr<Ort::Session> session;
 };
 
-#ifdef USE_CUDA
-	CUDA_DeviceInfo GetDeviceInfo();
-#endif
-
 }
 }

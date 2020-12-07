@@ -1,5 +1,6 @@
 
 #include "ModeRequestLicense.hpp"
+#include "GetDeviceInfo.hpp"
 #include <license/License.hpp>
 #include <nn/OnnxRuntime.hpp>
 #include <iostream>
@@ -17,7 +18,7 @@ int request_license_mode(const RequestLicenseModeArgs& args) {
 	std::cout << "Checking that the system meets the requirements ..." << std::endl;
 	nn::onnx::Runtime runtime;
 	runtime.selftest();
-	auto info = nn::onnx::GetDeviceInfo();
+	auto info = GetDeviceInfo(0);
 	nlohmann::json request = {
 		{"device_name", info.name},
 		{"device_uuid", info.uuid_str}

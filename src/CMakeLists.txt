@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DFMT_HEADER_ONLY)
-add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
-add_definitions(-DTESTO_RELEASE_DATE="${TESTO_RELEASE_DATE}")
 
 if (WIN32)
 	add_definitions(-D__PRETTY_FUNCTION__=__FUNCSIG__)
@@ -17,13 +15,13 @@ include_directories(/usr/local/include)
 link_directories(/usr/local/lib)
 endif()
 
-include_directories(
-	${ONNX_RUNTIME_DIR}/include
-)
+include_directories(${ONNX_RUNTIME_DIR}/include/onnxruntime/core/session/)
 
-link_directories(
-	${ONNX_RUNTIME_DIR}/lib/
-)
+if (USE_CUDA)
+	include_directories(${ONNX_RUNTIME_DIR}/include/onnxruntime/core/providers/cuda/)
+endif()
+
+link_directories(${ONNX_RUNTIME_DIR}/lib/)
 
 add_subdirectory(license)
 add_subdirectory(js)

@@ -1,5 +1,6 @@
 
 #include "ModeRun.hpp"
+#include "GetDeviceInfo.hpp"
 #include "IR/Program.hpp"
 #include "Parser.hpp"
 #include "Utils.hpp"
@@ -33,7 +34,7 @@ void verify_license(const std::string& path_to_license) {
 		throw std::runtime_error("The license period has already ended");
 	}
 
-	auto info = nn::onnx::GetDeviceInfo();
+	auto info = GetDeviceInfo(0);
 
 	std::string device_uuid = license.at("device_uuid");
 	if (info.uuid_str != device_uuid) {

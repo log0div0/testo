@@ -168,8 +168,8 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_29071CD0D41A4D3A8746D8482E3D4F32"
             {
-            "SourcePath" = "8:onnxruntime_testo.dll"
-            "TargetName" = "8:onnxruntime_testo.dll"
+            "SourcePath" = "8:onnxruntime.dll"
+            "TargetName" = "8:onnxruntime.dll"
             "Tag" = "8:"
             "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
             "Condition" = "8:"

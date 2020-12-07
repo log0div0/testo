@@ -137,16 +137,5 @@ void Image::set(const stb::Image<stb::RGB>& img, bool normalize, int x_off, int 
 	}
 }
 
-#ifdef USE_CUDA
-CUDA_DeviceInfo GetDeviceInfo() {
-	CUDA_DeviceInfo info = {};
-	auto result = CUDA_GetDeviceInfo(&info, 0);
-	if (result) {
-		throw std::runtime_error("GetDeviceInfo");
-	}
-	return info;
-}
-#endif
-
 }
 }
