@@ -2,7 +2,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_semantic: centos_prepare_testo {
+test centos_semantic: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/semantic" "/opt/scripts/semantic"
 

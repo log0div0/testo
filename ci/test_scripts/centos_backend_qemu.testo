@@ -2,7 +2,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_backend_qemu_start_offline_machine: centos_prepare_testo {
+test centos_backend_qemu_start_offline_machine: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
@@ -17,7 +17,7 @@ test centos_backend_qemu_start_offline_machine: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_start_online_machine: centos_prepare_testo {
+test centos_backend_qemu_start_online_machine: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
@@ -29,7 +29,7 @@ test centos_backend_qemu_start_online_machine: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_stop_online_machine: centos_prepare_testo {
+test centos_backend_qemu_stop_online_machine: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
@@ -44,7 +44,7 @@ test centos_backend_qemu_stop_online_machine: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_stop_offline_machine: centos_prepare_testo {
+test centos_backend_qemu_stop_offline_machine: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
@@ -56,7 +56,7 @@ test centos_backend_qemu_stop_offline_machine: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_unplug_plug_nic: centos_prepare_testo {
+test centos_backend_qemu_unplug_plug_nic: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_nic.testo" "/opt/scripts/action_nic.testo"
@@ -99,7 +99,7 @@ test centos_backend_qemu_rollback_after_unplug_plug_nic: centos_backend_qemu_unp
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_unplug_plug_link: centos_prepare_testo {
+test centos_backend_qemu_unplug_plug_link: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_nic.testo" "/opt/scripts/action_nic.testo"
@@ -150,7 +150,7 @@ test centos_backend_qemu_rollback_after_unplug_plug_link: centos_backend_qemu_un
 
 
 [no_snapshots: true]
-test centos_backend_qemu_unplug_dvd: centos_prepare_testo {
+test centos_backend_qemu_unplug_dvd: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_unplug_dvd.testo" "/opt/scripts/action_unplug_dvd.testo"
@@ -189,7 +189,7 @@ test centos_backend_qemu_rollback_after_unplug_dvd: centos_backend_qemu_unplug_d
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_rollback_after_plug_dvd: centos_prepare_testo {
+test centos_backend_qemu_rollback_after_plug_dvd: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_unplug_dvd.testo" "/opt/scripts/action_unplug_dvd.testo"
@@ -206,7 +206,7 @@ test centos_backend_qemu_rollback_after_plug_dvd: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_wait: centos_prepare_testo {
+test centos_backend_qemu_wait: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_wait.testo" "/opt/scripts/action_wait.testo"
@@ -237,7 +237,7 @@ test centos_backend_qemu_wait: centos_prepare_testo {
 	}
 }
 
-test centos_backend_qemu_install_ubuntu_server: centos_prepare_testo {
+test centos_backend_qemu_install_ubuntu_server: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/install_ubuntu.testo" "/opt/scripts/install_ubuntu.testo"
@@ -258,7 +258,7 @@ test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ub
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_cache_miss: centos_prepare_testo {
+test centos_backend_qemu_cache_miss: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/cache_miss/original.testo" "/opt/scripts/script.testo"
 

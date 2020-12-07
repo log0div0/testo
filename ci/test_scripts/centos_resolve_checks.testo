@@ -2,7 +2,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_for_range_param: centos_prepare_testo {
+test centos_for_range_param: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/param_resolve/for_tests.testo" "/opt/scripts/for_tests.testo"
 		exec bash """
@@ -53,7 +53,7 @@ test centos_for_range_param: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_actions_param: centos_prepare_testo {
+test centos_actions_param: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/param_resolve/actions.testo" "/opt/scripts/actions.testo"
 
@@ -132,7 +132,7 @@ test centos_actions_param: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_param_not_defined: centos_prepare_testo {
+test centos_param_not_defined: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/param_resolve/not_defined.testo" "/opt/scripts/not_defined.testo"
 
@@ -267,7 +267,7 @@ test centos_param_not_defined: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_cmd_param: centos_prepare_testo {
+test centos_cmd_param: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/param_resolve/commands.testo" "/opt/scripts/commands.testo"
 
@@ -288,7 +288,7 @@ test centos_cmd_param: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_cmd_macro_args: centos_prepare_testo {
+test centos_cmd_macro_args: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/param_resolve/commands.testo" "/opt/scripts/commands.testo"
 

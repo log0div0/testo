@@ -2,7 +2,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_backend_qemu_clean_nothing: centos_prepare_testo {
+test centos_backend_qemu_clean_nothing: centos_install_testo_cpu {
 	centos {
 		open_terminal()
 		enter_sudo()
@@ -13,7 +13,7 @@ test centos_backend_qemu_clean_nothing: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_clean_entities: centos_prepare_testo {
+test centos_backend_qemu_clean_entities: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/clean/clean_preparations.testo" "/opt/scripts/clean_preparations.testo"
 		exec bash """
@@ -50,7 +50,7 @@ test centos_backend_qemu_clean_entities: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_clean_entities_prefix: centos_prepare_testo {
+test centos_backend_qemu_clean_entities_prefix: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/clean/clean_preparations.testo" "/opt/scripts/clean_preparations.testo"
 		exec bash """

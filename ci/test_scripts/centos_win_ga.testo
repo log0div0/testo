@@ -11,7 +11,7 @@ flash win10_flash {
 	size: 6Gb
 }
 
-test centos_qemu_ga_win7_x86_install: centos_prepare_testo {
+test centos_qemu_ga_win7_x86_install: centos_install_testo_cpu {
 	win7_flash {
 		copyto "${ISO_DIR}/win7.iso" "/win7.iso"
 	}
@@ -38,7 +38,7 @@ test centos_qemu_ga_win7_x86_tests: centos_qemu_ga_win7_x86_install {
 	}
 }
 
-test centos_qemu_ga_win7_x64_install: centos_prepare_testo {
+test centos_qemu_ga_win7_x64_install: centos_install_testo_cpu {
 	win7_flash {
 		copyto "${ISO_DIR}/win7.iso" "/win7.iso"
 	}
@@ -65,7 +65,7 @@ test centos_qemu_ga_win7_x64_tests: centos_qemu_ga_win7_x64_install {
 	}
 }
 
-test centos_qemu_ga_win10_install: centos_prepare_testo {
+test centos_qemu_ga_win10_install: centos_install_testo_cpu {
 	win10_flash {
 		copyto "${ISO_DIR}/win10.iso" "/win10.iso"
 	}

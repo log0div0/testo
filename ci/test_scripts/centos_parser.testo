@@ -2,7 +2,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_parser: centos_prepare_testo {
+test centos_parser: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/parser" "/opt/scripts/parser"
 

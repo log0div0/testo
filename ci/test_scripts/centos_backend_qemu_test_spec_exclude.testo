@@ -3,7 +3,7 @@ include "centos.testo"
 
 
 [no_snapshots: true]
-test centos_backend_qemu_simple_test_spec: centos_prepare_testo {
+test centos_backend_qemu_simple_test_spec: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
 
@@ -20,7 +20,7 @@ test centos_backend_qemu_simple_test_spec: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_multiple_test_spec: centos_prepare_testo {
+test centos_backend_qemu_multiple_test_spec: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
 
@@ -38,7 +38,7 @@ test centos_backend_qemu_multiple_test_spec: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_simple_exclude: centos_prepare_testo {
+test centos_backend_qemu_simple_exclude: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
 
@@ -56,7 +56,7 @@ test centos_backend_qemu_simple_exclude: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_multiple_exclude: centos_prepare_testo {
+test centos_backend_qemu_multiple_exclude: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
 
@@ -74,7 +74,7 @@ test centos_backend_qemu_multiple_exclude: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_test_spec_exclude_pipeline1: centos_prepare_testo {
+test centos_backend_qemu_test_spec_exclude_pipeline1: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
 
@@ -92,7 +92,7 @@ test centos_backend_qemu_test_spec_exclude_pipeline1: centos_prepare_testo {
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_test_spec_exclude_pipeline2: centos_prepare_testo {
+test centos_backend_qemu_test_spec_exclude_pipeline2: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
 
