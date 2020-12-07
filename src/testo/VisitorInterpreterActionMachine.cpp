@@ -344,9 +344,9 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 
 		reporter.check(vmc, text, check_for, interval_str);
 
-		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
+		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
 
-		while (std::chrono::system_clock::now() < deadline) {
+		while (std::chrono::steady_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm()->screenshot();
 
@@ -411,9 +411,9 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 
 		reporter.wait(vmc, text, wait_for, interval_str);
 
-		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
+		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
 
-		while (std::chrono::system_clock::now() < deadline) {
+		while (std::chrono::steady_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm()->screenshot();
 
@@ -671,9 +671,9 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
-	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
+	auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
-	while (std::chrono::system_clock::now() < deadline) {
+	while (std::chrono::steady_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm()->screenshot();
 		try {
@@ -937,8 +937,8 @@ void VisitorInterpreterActionMachine::visit_plug_dvd(const IR::Plug& plug) {
 		}
 		vmc->vm()->unplug_dvd();
 
-		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(10);
-		while (std::chrono::system_clock::now() < deadline) {
+		auto deadline = std::chrono::steady_clock::now() +  std::chrono::seconds(10);
+		while (std::chrono::steady_clock::now() < deadline) {
 			if (!vmc->vm()->is_dvd_plugged()) {
 				return;
 			}
@@ -983,8 +983,8 @@ void VisitorInterpreterActionMachine::visit_start(const IR::Start& start) {
 	try {
 		reporter.start(vmc);
 		vmc->vm()->start();
-		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(5000);
-		while (std::chrono::system_clock::now() < deadline) {
+		auto deadline = std::chrono::steady_clock::now() +  std::chrono::milliseconds(5000);
+		while (std::chrono::steady_clock::now() < deadline) {
 			if (vmc->vm()->state() == VmState::Running) {
 				return;
 			}
@@ -1011,8 +1011,8 @@ void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdow
 		std::string wait_for = shutdown.timeout();
 		reporter.shutdown(vmc, wait_for);
 		vmc->vm()->power_button();
-		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
-		while (std::chrono::system_clock::now() < deadline) {
+		auto deadline = std::chrono::steady_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
+		while (std::chrono::steady_clock::now() < deadline) {
 			if (vmc->vm()->state() == VmState::Stopped) {
 				return;
 			}
