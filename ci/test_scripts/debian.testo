@@ -4,7 +4,7 @@ include "common.testo"
 machine debian {
 	cpus: 4
 	iso: "${ISO_DIR}/debian-9.12.0-amd64-xfce-CD-1.iso"
-	ram: 8Gb
+	ram: 4Gb
 	disk main: {
 		size: 32Gb
 	}
@@ -56,6 +56,7 @@ test debian_install_os {
 	}
 }
 
+[no_snapshots: true]
 test debian_install_guest_additions: debian_install_os {
 	debian {
 		type "root"; press Tab; sleep 1s
@@ -78,6 +79,7 @@ test debian_install_guest_additions: debian_install_os {
 	}
 }
 
+[no_snapshots: true]
 test debian_prepare_1: debian_install_guest_additions {
 	debian {
 		mouse click "Applications"

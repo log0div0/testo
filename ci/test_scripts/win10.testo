@@ -1,14 +1,12 @@
 
-network nat {
-	mode: "nat"
-}
+include "common.testo"
 
 machine win10 {
-	cpus: 2
-	ram: 3Gb
+	cpus: 4
+	ram: 4Gb
 	iso: "${ISO_DIR}/win10.iso"
 	disk main: {
-		size: 20Gb
+		size: 32Gb
 	}
 	nic nat: {
 		attached_to: "nat"

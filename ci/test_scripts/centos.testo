@@ -6,7 +6,7 @@ machine centos {
 	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
 	ram: 8Gb
 	disk main: {
-		size: 64Gb
+		size: 32Gb
 	}
 	nic nat: {
 		attached_to: "nat"
@@ -118,6 +118,7 @@ macro exec_bash(script) {
 	wait "result is 0"
 }
 
+[no_snapshots: true]
 test centos_install_guest_additions: centos_install_os {
 	centos {
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
@@ -137,6 +138,17 @@ test centos_install_guest_additions: centos_install_os {
 [no_snapshots: true]
 test centos_prepare_1: centos_install_guest_additions {
 	centos {
+		plug dvd "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
+		sleep 5s
+		exec bash """
+			mkdir /media/CentOS
+			mount /dev/cdrom /media/CentOS
+			yum --disablerepo=* --enablerepo=c8-media* -y install qemu-kvm libvirt iptables-ebtables dnsmasq virt-manager libguestfs edk2-ovmf
+			nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep ens`
+			yum -y install epel-release
+			yum -y install ntfsprogs
+		""" timeout 30m
+
 		mouse click "Activities"
 		sleep 5s
 		type "Sett"; mouse click "Settings".from_top(0)
@@ -156,12 +168,6 @@ test centos_prepare_1: centos_install_guest_additions {
 		}
 		mouse click "Apply".from_right(0); mouse click "Keep Changes"; sleep 2s; press LeftAlt + F4;
 		wait !"Displays"
-
-		exec bash "nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep ens`"
-		exec bash "yum -y install qemu-kvm libvirt iptables-ebtables dnsmasq virt-manager libguestfs " timeout 30m
-		exec bash "yum install -y epel-release"
-		exec bash "yum install -y ntfsprogs"
-		exec bash "dnf install -y edk2-ovmf"
 	}
 }
 

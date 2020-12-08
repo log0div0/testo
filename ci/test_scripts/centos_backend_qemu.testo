@@ -106,23 +106,9 @@ test centos_backend_qemu_unplug_plug_link: centos_install_testo_cpu {
 		exec bash """
 			set +o pipefail
 			testo run /opt/scripts/action_nic.testo --stop_on_fail --test_spec unplug_plug_link | grep "stop here"
+			virsh dumpxml my_ubuntu_server | xmllint --xpath '(//interface)[1]' - | grep 'link state="up"'
+			virsh dumpxml my_ubuntu_server | xmllint --xpath '(//interface)[2]' - | grep 'link state="down"'
 		"""
-
-		wait "my_ubuntu_server" && "Running"
-		mouse dclick "my_ubuntu_server"
-		wait "Language" && "English"
-
-		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
-		wait js "find_text().match('NIC').size() == 2"
-		mouse click "NIC".from_top(0)
-		wait "Virtual network 'internet': NAT"
-		mouse click "XML"
-		wait "link state=\"up\""
-		mouse move 0 0
-		mouse click "NIC".from_top(1)
-		wait "link state=\"down\""
-		mouse click "File".from_top(0).center_bottom().move_down(20)
-		wait "Language" && "English"
 	}
 }
 
@@ -132,18 +118,9 @@ test centos_backend_qemu_rollback_after_unplug_plug_link: centos_backend_qemu_un
 		exec bash """
 			set +o pipefail
 			testo run /opt/scripts/action_nic.testo --stop_on_fail --test_spec rollback_after_unplug_plug_link | grep "stop here"
+			virsh dumpxml my_ubuntu_server | xmllint --xpath '(//interface)[1]' - | grep 'link state="up"'
+			virsh dumpxml my_ubuntu_server | xmllint --xpath '(//interface)[2]' - | grep 'link state="up"'
 		"""
-
-		wait "Language" && "English"
-
-		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
-		wait js "find_text().match('NIC').size() == 2"
-		mouse click "NIC".from_top(0)
-		wait "link state=\"up\""
-		mouse move 0 0
-		mouse click "NIC".from_top(1)
-		sleep 1s
-		wait "link state=\"up\""
 	}
 }
 

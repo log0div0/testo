@@ -4,7 +4,7 @@ include "common.testo"
 machine centos {
 	cpus: 4
 	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
-	ram: 8Gb
+	ram: 4Gb
 	disk main: {
 		size: 32Gb
 	}
@@ -40,6 +40,7 @@ test centos_install_os {
 	}
 }
 
+[no_snapshots: true]
 test centos_install_guest_additions: centos_install_os {
 	centos {
 		wait "localhost login:"; type "root"; press Enter
@@ -57,6 +58,7 @@ test centos_install_guest_additions: centos_install_os {
 	}
 }
 
+[no_snapshots: true]
 test centos_install_packages: centos_install_guest_additions {
 	centos {
 		exec bash """

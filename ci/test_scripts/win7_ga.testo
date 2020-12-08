@@ -1,9 +1,9 @@
 
-include "win7_install.testo"
+include "win7.testo"
 
 test win7_guest_additions: win7_installation {
 	win7 {
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
 		wait "Testo Guest Additions"; press Enter
 		wait "Select Installation Folder"; press Enter
@@ -20,12 +20,12 @@ test win7_guest_additions: win7_installation {
 [no_snapshots: true]
 test win7_copyto: win7_guest_additions {
 	win7 {
-		copyto "привет, мир!.txt" "C:\\привет, мир!.txt"
+		copyto "${TEST_ASSETS_DIR}/привет, мир!.txt" "C:\\привет, мир!.txt"
 		press LeftMeta
 		mouse click "Компьютер"
 		mouse dclick "Локальный диск (C:)"
 		wait "привет, мир!"
-		copyto "привет, мир!.txt" "C:\\привет, мир!.txt"
+		copyto "${TEST_ASSETS_DIR}/привет, мир!.txt" "C:\\привет, мир!.txt"
 	}
 }
 

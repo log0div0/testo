@@ -3,7 +3,7 @@ include "common.testo"
 
 machine win {
 	cpus: 4
-	ram: 8Gb
+	ram: 4Gb
 	disk main: {
 		source: "/var/lib/libvirt/images/testo-builder-win10-template.qcow2"
 	}
@@ -12,6 +12,7 @@ machine win {
 	}
 }
 
+[no_snapshots: true]
 test win_start {
 	win {
 		start
