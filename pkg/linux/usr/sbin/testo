@@ -2,4 +2,4 @@
 
 export LD_LIBRARY_PATH="/usr/lib/testo:${LD_LIBRARY_PATH}"
 
-/usr/libexec/testo $@
+/usr/libexec/testo "$@"
