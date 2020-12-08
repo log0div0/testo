@@ -188,3 +188,33 @@ macro starts_with_semicolon() {
 test call_macro_starts_with_semicolon {
 	starts_with_semicolon()
 }
+
+macro if_check_macro1() {
+	print "Hello world1"
+}
+
+macro if_check_macro2() {
+	print "Hello world2"
+}
+
+test call_macro_inside_if_check1 {
+	my_ubuntu_server {
+		start;
+		sleep 5s
+		if (check "Language") {
+			if_check_macro1()
+		}
+	}
+}
+
+test call_macro_inside_if_check2 {
+	my_ubuntu_server {
+		start;
+		sleep 5s
+		if (check "lala") {
+		} else {
+			if_check_macro2()
+		}
+	}
+}
+

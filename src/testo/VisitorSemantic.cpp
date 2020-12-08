@@ -991,7 +991,7 @@ Tribool VisitorSemantic::visit_check(const IR::Check& check) {
 	visit_detect_expr(check.ast_node->select_expr);
 	current_test->cksum_input += check.timeout();
 	current_test->cksum_input += check.interval();
-	return {};
+	return Tribool::maybe;
 }
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {

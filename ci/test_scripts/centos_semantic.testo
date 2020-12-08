@@ -29,6 +29,22 @@ test centos_semantic: centos_install_testo_cpu {
 
 		exec bash """
 			set +o pipefail
+			set +e
+			output=$(testo run /macro_call.testo --test_spec call_macro_inside_if_check1)
+			[[ $output == *"Hello world1"* ]]
+			[[ $output != *"Hello world2"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /macro_call.testo --test_spec call_macro_inside_if_check2)
+			[[ $output != *"Hello world1"* ]]
+			[[ $output == *"Hello world2"* ]]
+		"""
+
+		exec bash """
+			set +o pipefail
 			testo run /expr.testo --test_spec comparison_0 2>&1 > /dev/null | grep "Error: \\\"lala\\\" is not an integer number"
 			testo run /expr.testo --test_spec comparison_1 2>&1 > /dev/null | grep "Error: \\\"lala\\\" is not an integer number"
 			testo run /expr.testo --test_spec comparison_2 2>&1 > /dev/null | grep "Error: \\\"30ms\\\" is not an integer number"
