@@ -84,13 +84,25 @@ Example generate_example(int ratio) {
 	int off_top = random_int(textline.bitmap.h / 2);
 	int off_right = random_int(textline.bitmap.h / 2);
 	int off_bottom = random_int(textline.bitmap.h / 2);
+	int pad_left = random_int(0, off_left);
+	int pad_top = random_int(0, off_top);
+	int pad_right = random_int(0, off_right);
+	int pad_bottom = random_int(0, off_bottom);
 	std::pair<Color, Color> colors = random_color_pair();
+	stb::RGB fg_color = colors.first.random_shade();
+	stb::RGB bg_color = colors.second.random_shade();
+	stb::RGB pad_color = random_bool() ? fg_color : random_RGB();
 	stb::Image<stb::RGB> img(
 		off_left + textline.bitmap.w + off_right,
 		off_top + textline.bitmap.h + off_bottom,
-		colors.second.random_shade()
+		pad_color
 	);
-	img.blend(off_left, off_top, colors.first.random_shade(), textline.bitmap);
+	for (int y = pad_top; y < (img.h - pad_bottom); ++y) {
+		for (int x = pad_left; x < (img.w - pad_right); ++x) {
+			img.at(x, y) = bg_color;
+		}
+	}
+	img.blend(off_left, off_top, fg_color, textline.bitmap);
 	Example example;
 	example.img = std::move(img);
 	example.fg = colors.first.name;
