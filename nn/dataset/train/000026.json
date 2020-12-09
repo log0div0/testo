@@ -47,6 +47,14 @@
 			"width": 187.03,
 			"height": 15.09,
 			"text": "<F12> следующий экран"
+		},
+		"984944cc-c354-4662-94df-04ecce04e2ab": {
+			"type": "text",
+			"x": 440.4,
+			"y": 161.33,
+			"width": 90.76,
+			"height": 14.21,
+			"text": ""
 		}
 	},
 	"verified": true

@@ -551,6 +551,22 @@
 			"width": 42.93,
 			"height": 12.56,
 			"text": "Cancel"
+		},
+		"4f1a6c58-97d5-43c1-84c5-bac770337b93": {
+			"type": "text",
+			"x": 427.2,
+			"y": 237.24,
+			"width": 60.05,
+			"height": 15.46,
+			"text": ""
+		},
+		"37fc0517-764c-4278-8452-cbf5fb70eed1": {
+			"type": "text",
+			"x": 407.28,
+			"y": 260.1,
+			"width": 100.66,
+			"height": 9.74,
+			"text": "1 352 000+ articulos"
 		}
 	},
 	"verified": true
