@@ -1,0 +1,20 @@
+{
+	"objs": {
+		"c409a5cf-33e2-46eb-8239-439c0440df72": {
+			"type": "text",
+			"x": -0.48,
+			"y": 737.97,
+			"width": 328.71,
+			"height": 14.99,
+			"text": "-----a--------e---- /tmp/testdir/del_fail"
+		},
+		"8b6b5ae4-87cd-4576-b5ca-8aab3fce5e76": {
+			"type": "text",
+			"x": -0.21,
+			"y": 402.04,
+			"width": 310.65,
+			"height": 15.03,
+			"text": "Astra Linux Directory сконфигурирована."
+		}
+	}
+}
