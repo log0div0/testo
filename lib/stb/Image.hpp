@@ -193,13 +193,13 @@ struct Image {
 		return *(Pixel*)&data[y*w*c + x*c];
 	}
 
-	void write_png(const std::string& path) {
+	void write_png(const std::string& path) const {
 		if (!stbi_write_png(path.c_str(), w, h, c, data, w*c)) {
 			throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
 		}
 	}
 
-	void write_jpg(const std::string& path, int quality) {
+	void write_jpg(const std::string& path, int quality) const {
 		if (!stbi_write_jpg(path.c_str(), w, h, c, data, quality)) {
 			throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
 		}

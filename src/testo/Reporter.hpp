@@ -70,7 +70,7 @@ struct Reporter {
 	//negotiator
 	void exec_command_output(const std::string& text);
 
-	void save_screenshot(std::shared_ptr<IR::Machine> vmc);
+	void save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot);
 
 	std::string progress() const {
 		std::stringstream ss;

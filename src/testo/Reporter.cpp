@@ -434,11 +434,10 @@ void Reporter::exec_command_output(const std::string& text) {
 	report(text, regular);
 }
 
-void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc) {
+void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
 	if (!report_screenshots) {
 		return;
 	}
-	auto screenshot = vmc->vm()->screenshot();
 	screenshot.write_png((report_folder / (current_test->name() + "_wait_failed.png")).generic_string());
 	report(fmt::format("{} Saved screenshot from vm ", progress()), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);

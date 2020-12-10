@@ -9,8 +9,11 @@
 namespace nn {
 
 struct ContinueError: std::runtime_error {
-	ContinueError(const char* reason): std::runtime_error(reason) {}
-	ContinueError(const std::string& reason): ContinueError(reason.c_str()) {}
+	using std::runtime_error::runtime_error;
+};
+
+struct LogicError: std::runtime_error {
+	using std::runtime_error::runtime_error;
 };
 
 template <typename Object>
@@ -27,7 +30,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't get property \"x\": there's more than one object");
+			throw LogicError("Can't get property \"x\": there's more than one object");
 		}
 
 		return objects.at(0).rect.center_x();
@@ -39,7 +42,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't get property \"y\": there's more than one object");
+			throw LogicError("Can't get property \"y\": there's more than one object");
 		}
 
 		return objects.at(0).rect.center_y();
@@ -51,7 +54,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"left_top\": there's more than one object");
+			throw LogicError("Can't apply specifier \"left_top\": there's more than one object");
 		}
 
 		return objects.at(0).rect.left_top();
@@ -63,7 +66,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"left_bottom\": there's more than one object");
+			throw LogicError("Can't apply specifier \"left_bottom\": there's more than one object");
 		}
 
 		return objects.at(0).rect.left_bottom();
@@ -75,7 +78,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"right_top\": there's more than one object");
+			throw LogicError("Can't apply specifier \"right_top\": there's more than one object");
 		}
 
 		return objects.at(0).rect.right_top();
@@ -87,7 +90,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"right_bottom\": there's more than one object");
+			throw LogicError("Can't apply specifier \"right_bottom\": there's more than one object");
 		}
 
 		return objects.at(0).rect.right_bottom();
@@ -99,7 +102,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"center\": there's more than one object");
+			throw LogicError("Can't apply specifier \"center\": there's more than one object");
 		}
 
 		return objects.at(0).rect.center();
@@ -111,7 +114,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"center_top\": there's more than one object");
+			throw LogicError("Can't apply specifier \"center_top\": there's more than one object");
 		}
 
 		return objects.at(0).rect.center_top();
@@ -123,7 +126,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"center_bottom\": there's more than one object");
+			throw LogicError("Can't apply specifier \"center_bottom\": there's more than one object");
 		}
 
 		return objects.at(0).rect.center_bottom();
@@ -135,7 +138,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"left_center\": there's more than one object");
+			throw LogicError("Can't apply specifier \"left_center\": there's more than one object");
 		}
 
 		return objects.at(0).rect.left_center();
@@ -147,7 +150,7 @@ struct Tensor {
 		}
 
 		if (objects.size() > 1) {
-			throw std::runtime_error("Can't apply specifier \"right_center\": there's more than one object");
+			throw LogicError("Can't apply specifier \"right_center\": there's more than one object");
 		}
 
 		return objects.at(0).rect.right_center();

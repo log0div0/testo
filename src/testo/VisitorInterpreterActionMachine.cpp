@@ -346,7 +346,7 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 
 		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
 
-		while (std::chrono::steady_clock::now() < deadline) {
+		do {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm()->screenshot();
 
@@ -362,7 +362,7 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 			} else {
 				coro::CheckPoint();
 			}
-		}
+		} while (std::chrono::steady_clock::now() < deadline);
 
 		return false;
 	} catch (const std::exception& error) {
@@ -371,7 +371,7 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 }
 
 void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
-	reporter.save_screenshot(vmc);
+	reporter.save_screenshot(vmc, vmc->vm()->screenshot());
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
@@ -412,10 +412,11 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 		reporter.wait(vmc, text, wait_for, interval_str);
 
 		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
+		stb::Image<stb::RGB> screenshot;
 
-		while (std::chrono::steady_clock::now() < deadline) {
+		do {
 			auto start = std::chrono::high_resolution_clock::now();
-			auto screenshot = vmc->vm()->screenshot();
+			screenshot = vmc->vm()->screenshot();
 
 			if (visit_detect_expr(wait.ast_node->select_expr, screenshot)) {
 				return;
@@ -429,9 +430,9 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 			} else {
 				coro::CheckPoint();
 			}
-		}
+		} while (std::chrono::steady_clock::now() < deadline);
 
-		reporter.save_screenshot(vmc);
+		reporter.save_screenshot(vmc, screenshot);
 		throw std::runtime_error("Timeout");
 
 	} catch (const std::exception& error) {
@@ -672,10 +673,11 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
 	auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
+	stb::Image<stb::RGB> screenshot;
 
-	while (std::chrono::steady_clock::now() < deadline) {
+	do {
 		auto start = std::chrono::high_resolution_clock::now();
-		auto screenshot = vmc->vm()->screenshot();
+		screenshot = vmc->vm()->screenshot();
 		try {
 			nn::Point point;
 			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
@@ -691,7 +693,10 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 			}
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return;
-		} catch (const nn::ContinueError& error) {
+		} catch (const nn::LogicError&) {
+			reporter.save_screenshot(vmc, screenshot);
+			throw;
+		} catch (const nn::ContinueError&) {
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> time = end - start;
 			if (time < 1s) {
@@ -701,9 +706,9 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 			}
 			continue;
 		}
-	}
+	} while (std::chrono::steady_clock::now() < deadline);
 
-	reporter.save_screenshot(vmc);
+	reporter.save_screenshot(vmc, screenshot);
 	throw std::runtime_error("Timeout");
 }
 
