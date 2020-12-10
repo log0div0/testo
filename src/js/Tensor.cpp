@@ -6,202 +6,258 @@
 
 namespace js {
 
-static JSClassID class_id = 0;
-static JSClassDef class_def = {};
-
-static void finalizer(JSRuntime* rt, JSValue val) {
-	nn::Tensor* tensor = (nn::Tensor*)JS_GetOpaque(val, class_id);
-	delete tensor;
-}
-
-static Value size(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value size(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	return ctx.new_int32(tensor->size());
 }
 
-static Value match(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
-	if (args.size() != 1) {
-		throw std::runtime_error("Invalid arguments count in Tensor::match");
-	}
-	std::string text = args.at(0);
-	return Tensor(ctx, tensor->match(text));
-}
-
-static Value match_foreground(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
-	if (args.size() != 1) {
-		throw std::runtime_error("Invalid arguments count in Tensor::match_foreground");
-	}
-	std::string color = args.at(0);
-	return Tensor(ctx, tensor->match_foreground(ctx.image(), color));
-}
-
-static Value match_background(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
-	if (args.size() != 1) {
-		throw std::runtime_error("Invalid arguments count in Tensor::match_background");
-	}
-	std::string color = args.at(0);
-	return Tensor(ctx, tensor->match_background(ctx.image(), color));
-}
-
-static Value from_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
-	if (args.size() != 1) {
-		throw std::runtime_error("Invalid arguments count in Tensor::from_top");
-	}
-	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_top(index));
-}
-
-static Value from_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
-	if (args.size() != 1) {
-		throw std::runtime_error("Invalid arguments count in Tensor::from_bottom");
-	}
-	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_bottom(index));
-}
-
-static Value from_left(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
-	if (args.size() != 1) {
-		throw std::runtime_error("Invalid arguments count in Tensor::from_left");
-	}
-	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_left(index));
-}
-
-static Value from_right(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
-	if (args.size() != 1) {
-		throw std::runtime_error("Invalid arguments count in Tensor::from_right");
-	}
-	int32_t index = args.at(0);
-	return Tensor(ctx, tensor->from_right(index));
-}
-
-static Value x(ContextRef ctx, ValueRef this_val) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value x(ContextRef ctx, ValueRef this_val) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	return ctx.new_int32(tensor->x());
 }
 
-static Value y(ContextRef ctx, ValueRef this_val) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value y(ContextRef ctx, ValueRef this_val) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	return ctx.new_int32(tensor->y());
 }
 
-static Value left_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value left_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::left_top");
 	}
 	return Point(ctx, tensor->left_top());
 }
 
-static Value left_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value left_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::left_bottom");
 	}
 	return Point(ctx, tensor->left_bottom());
 }
 
-static Value right_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value right_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::right_top");
 	}
 	return Point(ctx, tensor->right_top());
 }
 
-static Value right_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value right_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::right_bottom");
 	}
 	return Point(ctx, tensor->right_bottom());
 }
 
-static Value center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::center");
 	}
 	return Point(ctx, tensor->center());
 }
 
-static Value center_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value center_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::center_top");
 	}
 	return Point(ctx, tensor->center_top());
 }
 
-static Value center_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value center_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::center_bottom");
 	}
 	return Point(ctx, tensor->center_bottom());
 }
 
-static Value left_center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value left_center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::left_center");
 	}
 	return Point(ctx, tensor->left_center());
 }
 
-static Value right_center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Tensor* tensor = (nn::Tensor*)this_val.get_opaque(class_id);
+template <typename JSTensor>
+Value right_center(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
 	if (args.size() != 0) {
 		throw std::runtime_error("Invalid arguments count in Tensor::right_center");
 	}
 	return Point(ctx, tensor->right_center());
 }
 
-static const JSCFunctionListEntry proto_funcs[] = {
-	Method<size>("size"),
-	Method<match>("match"),
-	Method<match_foreground>("match_foreground"),
-	Method<match_background>("match_background"),
-	Method<from_top>("from_top"),
-	Method<from_bottom>("from_bottom"),
-	Method<from_left>("from_left"),
-	Method<from_right>("from_right"),
-	GetSet<x, nullptr>("x"),
-	GetSet<y, nullptr>("y"),
-	Method<left_top>("left_top"),
-	Method<left_bottom>("left_bottom"),
-	Method<right_top>("right_top"),
-	Method<right_bottom>("right_bottom"),
-	Method<center>("center"),
-	Method<center_top>("center_top"),
-	Method<center_bottom>("center_bottom"),
-	Method<left_center>("left_center"),
-	Method<right_center>("right_center"),
-	Prop("[Symbol.toStringTag]", "Tensor"),
-};
-
-void Tensor::register_class(ContextRef ctx) {
-	if (!class_id) {
-		JS_NewClassID(&class_id);
-		class_def.class_name = "Tensor";
-		class_def.finalizer = finalizer;
-		JS_NewClass(JS_GetRuntime(ctx.handle), class_id, &class_def);
+template <typename JSTensor>
+Value from_top(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_top");
 	}
-
-	Value proto = ctx.new_object();
-	proto.set_property_function_list(proto_funcs, std::size(proto_funcs));
-	ctx.set_class_proto(class_id, std::move(proto));
+	int32_t index = args.at(0);
+	return JSTensor(ctx, tensor->from_top(index));
 }
 
-Tensor::Tensor(ContextRef ctx, const nn::Tensor& tensor): Value(ctx.new_object_class(class_id)) {
-	set_opaque(new nn::Tensor(tensor));
+template <typename JSTensor>
+Value from_bottom(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_bottom");
+	}
+	int32_t index = args.at(0);
+	return JSTensor(ctx, tensor->from_bottom(index));
+}
+
+template <typename JSTensor>
+Value from_left(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_left");
+	}
+	int32_t index = args.at(0);
+	return JSTensor(ctx, tensor->from_left(index));
+}
+
+template <typename JSTensor>
+Value from_right(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::from_right");
+	}
+	int32_t index = args.at(0);
+	return JSTensor(ctx, tensor->from_right(index));
+}
+
+template <typename JSTensor>
+Value match(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match");
+	}
+	std::string text = args.at(0);
+	return JSTensor(ctx, tensor->match_text(ctx.image(), text));
+}
+
+template <typename JSTensor>
+Value match_foreground(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_foreground");
+	}
+	std::string color = args.at(0);
+	return JSTensor(ctx, tensor->match_color(ctx.image(), color, {}));
+}
+
+template <typename JSTensor>
+Value match_background(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_background");
+	}
+	std::string color = args.at(0);
+	return JSTensor(ctx, tensor->match_color(ctx.image(), {}, color));
+}
+
+template <typename JSTensor>
+Value match_text(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_text");
+	}
+	std::string text = args.at(0);
+	return JSTensor(ctx, tensor->match_text(ctx.image(), text));
+}
+
+template <typename JSTensor>
+Value match_color(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+	if ((args.size() != 2)) {
+		throw std::runtime_error("Invalid arguments count in Tensor::match_color");
+	}
+	std::string fg;
+	if (args.at(0).is_string()) {
+		fg = (std::string)args.at(0);
+	}
+	std::string bg;
+	if (args.at(1).is_string()) {
+		bg = (std::string)args.at(1);
+	}
+	return JSTensor(ctx, tensor->match_color(ctx.image(), fg, bg));
+}
+
+void TextTensor::register_class(ContextRef ctx) {
+
+	static const std::vector<JSCFunctionListEntry> proto_funcs = {
+		Prop("[Symbol.toStringTag]", "TextTensor"),
+		Method<size<TextTensor>>("size"),
+		GetSet<x<TextTensor>, nullptr>("x"),
+		GetSet<y<TextTensor>, nullptr>("y"),
+		Method<left_top<TextTensor>>("left_top"),
+		Method<left_bottom<TextTensor>>("left_bottom"),
+		Method<right_top<TextTensor>>("right_top"),
+		Method<right_bottom<TextTensor>>("right_bottom"),
+		Method<center<TextTensor>>("center"),
+		Method<center_top<TextTensor>>("center_top"),
+		Method<center_bottom<TextTensor>>("center_bottom"),
+		Method<left_center<TextTensor>>("left_center"),
+		Method<right_center<TextTensor>>("right_center"),
+		Method<from_top<TextTensor>>("from_top"),
+		Method<from_bottom<TextTensor>>("from_bottom"),
+		Method<from_left<TextTensor>>("from_left"),
+		Method<from_right<TextTensor>>("from_right"),
+		// specific
+
+		Method<match<TextTensor>>("match"), //< deprecated
+		Method<match_foreground<TextTensor>>("match_foreground"), //< deprecated
+		Method<match_background<TextTensor>>("match_background"), //< deprecated
+
+		Method<match_text<TextTensor>>("match_text"),
+		Method<match_color<TextTensor>>("match_color"),
+	};
+
+	Tensor::register_class(ctx, "TextTensor", proto_funcs);
+}
+
+void ImgTensor::register_class(ContextRef ctx) {
+
+	static const std::vector<JSCFunctionListEntry> proto_funcs = {
+		Prop("[Symbol.toStringTag]", "ImgTensor"),
+		Method<size<ImgTensor>>("size"),
+		GetSet<x<ImgTensor>, nullptr>("x"),
+		GetSet<y<ImgTensor>, nullptr>("y"),
+		Method<left_top<ImgTensor>>("left_top"),
+		Method<left_bottom<ImgTensor>>("left_bottom"),
+		Method<right_top<ImgTensor>>("right_top"),
+		Method<right_bottom<ImgTensor>>("right_bottom"),
+		Method<center<ImgTensor>>("center"),
+		Method<center_top<ImgTensor>>("center_top"),
+		Method<center_bottom<ImgTensor>>("center_bottom"),
+		Method<left_center<ImgTensor>>("left_center"),
+		Method<right_center<ImgTensor>>("right_center"),
+		Method<from_top<ImgTensor>>("from_top"),
+		Method<from_bottom<ImgTensor>>("from_bottom"),
+		Method<from_left<ImgTensor>>("from_left"),
+		Method<from_right<ImgTensor>>("from_right"),
+	};
+
+	Tensor::register_class(ctx, "ImgTensor", proto_funcs);
 }
 
 }

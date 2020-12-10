@@ -7,10 +7,10 @@ macro install_ubuntu20_desktop(host_name, login, password) {
 		wait "Try Ubuntu without installing"
 		press Down*2, Enter
 		wait "Welcome" timeout 3m
-		mouse click "Continue".from_right(0).center_bottom()
+		mouse click "Continue".from_right(0).center_bottom().move_down(5)
 	} else {
 		wait "Welcome" timeout 3m
-		mouse click "Install Ubuntu".from_right(0).center_bottom()
+		mouse click "Install Ubuntu".from_right(0).center_bottom().move_down(5)
 	}
 	wait "Keyboard layout"
 	mouse click "Continue".center_bottom()
@@ -67,6 +67,7 @@ macro install_ga_ubuntu20_desktop(host_name, login, password, iso_dir = "${ISO_D
 	type "rm -rf /var/lib/dpkg/lock-frontend"; press Enter
 	type "dpkg -i /media/testo-guest-additions.deb"; press Enter
 	wait "Processing triggers for systemd"
+	#wait "triggers for systemd"
 	exec bash "echo hello world"
 
 	exec bash "umount /media"

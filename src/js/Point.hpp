@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Context.hpp"
-#include <nn/OCR.hpp>
+#include <nn/Point.hpp>
 
 namespace js {
 

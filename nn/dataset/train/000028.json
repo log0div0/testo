@@ -1,0 +1,357 @@
+{
+	"objs": {
+		"613c4b3a-6a09-4fad-a188-c2a91672fb4c": {
+			"type": "text",
+			"x": 37.04,
+			"y": 6.96,
+			"width": 156.58,
+			"height": 15.2,
+			"text": "-:bash - Терминал Fly"
+		},
+		"a30d6f21-df6a-491f-9112-16d11e810743": {
+			"type": "text",
+			"x": 13.92,
+			"y": 35.69,
+			"width": 34.39,
+			"height": 12.83,
+			"text": "Файл"
+		},
+		"0e93bb5b-a0bc-48c7-9e79-9b0f41458150": {
+			"type": "text",
+			"x": 67.69,
+			"y": 36.72,
+			"width": 47.17,
+			"height": 14.43,
+			"text": "Правка"
+		},
+		"8023c501-3585-4c6b-b557-dadb1358097e": {
+			"type": "text",
+			"x": 133.82,
+			"y": 35.86,
+			"width": 68.25,
+			"height": 15.32,
+			"text": "Настройка"
+		},
+		"1292c652-3f43-4b2e-a094-5a2c83c108c3": {
+			"type": "text",
+			"x": 219.9,
+			"y": 36.77,
+			"width": 54.26,
+			"height": 14.41,
+			"text": "Справка"
+		},
+		"f0714088-971e-4459-9f74-2a964dc4e8b5": {
+			"type": "text",
+			"x": 222.97,
+			"y": 69.91,
+			"width": 11.23,
+			"height": 12.35,
+			"text": "ls"
+		},
+		"68f8ca43-3a2e-4c5d-84e5-d294a9538f24": {
+			"type": "text",
+			"x": 9.64,
+			"y": 101.46,
+			"width": 339.79,
+			"height": 18.89,
+			"text": "Генерируется файл настройки grub ..."
+		},
+		"c5b7765b-cfba-4032-b6a3-051a3c4b1cb5": {
+			"type": "text",
+			"x": 9.5,
+			"y": 121.79,
+			"width": 710.14,
+			"height": 18.27,
+			"text": "Found background image: /usr/share/images/desktop-base/desktop-grub.png"
+		},
+		"59287caa-c9c3-4acd-b254-0df2ceed74bc": {
+			"type": "text",
+			"x": 10.03,
+			"y": 140.96,
+			"width": 509.69,
+			"height": 19.24,
+			"text": "Найден образ linux: /boot/vmlinuz-4.15.3-2-hardened"
+		},
+		"78a60ec7-6f85-47a5-98c6-afeb0c9a9a7b": {
+			"type": "text",
+			"x": 9.64,
+			"y": 160.77,
+			"width": 550.29,
+			"height": 19.05,
+			"text": "Найден образ initrd: /boot/initrd.img-4.15.3-2-hardened"
+		},
+		"e3b5e8f9-c5fb-48ff-b9c0-250af3a40182": {
+			"type": "text",
+			"x": 9.73,
+			"y": 180.06,
+			"width": 500.68,
+			"height": 21.02,
+			"text": "Найден образ linux: /boot/vmlinuz-4.15.3-2-generic"
+		},
+		"3bbcf25d-afcc-4f53-9b78-01c191b95ce0": {
+			"type": "text",
+			"x": 9.66,
+			"y": 201.06,
+			"width": 540.21,
+			"height": 19.5,
+			"text": "Найден образ initrd: /boot/initrd.img-4.15.3-2-generic"
+		},
+		"c8009190-1f9d-4b68-a28a-bd038f1dc0ec": {
+			"type": "text",
+			"x": 9.69,
+			"y": 220.66,
+			"width": 90.5,
+			"height": 20.81,
+			"text": "завершено"
+		},
+		"cb04d0a0-5eaf-423d-b57c-38e6d661c4e0": {
+			"type": "text",
+			"x": 9.49,
+			"y": 240.96,
+			"width": 771.43,
+			"height": 19.65,
+			"text": "Обрабатываются триггеры для linux-image-4.15.3-2-generic (4.15.3-2.astra25) ..."
+		},
+		"f167a18c-3a8e-478e-9f73-24ad40b274a1": {
+			"type": "text",
+			"x": 10.39,
+			"y": 260.74,
+			"width": 386.61,
+			"height": 19.35,
+			"text": "/etc/kernel/postinst.d/initramfs-tools:"
+		},
+		"a51af5f1-4241-4005-a76c-2f4e159e8377": {
+			"type": "text",
+			"x": 9.29,
+			"y": 320.59,
+			"width": 341.32,
+			"height": 20.37,
+			"text": "Генерируется файл настройки grub ..."
+		},
+		"3049797c-cd75-40c1-bd39-9256c76c6fbe": {
+			"type": "text",
+			"x": 9.39,
+			"y": 440.89,
+			"width": 90.68,
+			"height": 19.47,
+			"text": "завершено"
+		},
+		"97f90004-f5af-45fa-a6b1-4f3b9cfe0e39": {
+			"type": "text",
+			"x": 9.64,
+			"y": 280.7,
+			"width": 620.18,
+			"height": 19.96,
+			"text": "update-initramfs: Generating /boot/initrd.img-4.15.3-2-generic"
+		},
+		"e89eb059-26c8-4c23-a7e6-2a24279bf32e": {
+			"type": "text",
+			"x": 10.49,
+			"y": 300.78,
+			"width": 375.98,
+			"height": 19.64,
+			"text": "/etc/kernel/postinst.d/zz-update-grub:"
+		},
+		"e2e18841-6d97-4e27-8154-90b660227061": {
+			"type": "text",
+			"x": 9.42,
+			"y": 340.99,
+			"width": 710.01,
+			"height": 19.54,
+			"text": "Found background image: /usr/share/images/desktop-base/desktop-grub.png"
+		},
+		"c53b9c5d-fa91-44e5-89de-99ff43c5ce83": {
+			"type": "text",
+			"x": 9.3,
+			"y": 360.58,
+			"width": 510.43,
+			"height": 20.28,
+			"text": "Найден образ linux: /boot/vmlinuz-4.15.3-2-hardened"
+		},
+		"ef098505-92c3-449f-9616-dcf92f94d19d": {
+			"type": "text",
+			"x": 9.38,
+			"y": 380.77,
+			"width": 550.59,
+			"height": 19.94,
+			"text": "Найден образ initrd: /boot/initrd.img-4.15.3-2-hardened"
+		},
+		"84e8b1fb-fd1d-4f5b-a1d1-cb898765aefc": {
+			"type": "text",
+			"x": 9.28,
+			"y": 400.65,
+			"width": 500.82,
+			"height": 20.13,
+			"text": "Найден образ linux: /boot/vmlinuz-4.15.3-2-generic"
+		},
+		"ccf7c735-319b-4299-ae49-d71eaf93f9bc": {
+			"type": "text",
+			"x": 9.44,
+			"y": 420.64,
+			"width": 540.68,
+			"height": 19.8,
+			"text": "Найден образ initrd: /boot/initrd.img-4.15.3-2-generic"
+		},
+		"7533c910-742d-4db7-9572-33f7b3c1b92d": {
+			"type": "text",
+			"x": 9.49,
+			"y": 461.05,
+			"width": 290.75,
+			"height": 19.79,
+			"text": "root@suac:/home/u# apt update"
+		},
+		"e82d0015-7da7-46f8-9bf3-e0074d90d4c2": {
+			"type": "text",
+			"x": 9.33,
+			"y": 481.04,
+			"width": 830.32,
+			"height": 19.67,
+			"text": "Пол:1 ftp://192.168.32.1/astra/current/smolensk/mounted-iso-main smolensk InRelease"
+		},
+		"c7b9138a-58fd-47af-981e-0a00ee702b4b": {
+			"type": "text",
+			"x": 9.11,
+			"y": 500.59,
+			"width": 830.88,
+			"height": 20.34,
+			"text": "Игн:1 ftp://192.168.32.1/astra/current/smolensk/mounted-iso-main smolensk InRelease"
+		},
+		"91829af0-bfee-4ac4-8c37-5e75db1ca96d": {
+			"type": "text",
+			"x": 9.04,
+			"y": 521.11,
+			"width": 840.79,
+			"height": 19.08,
+			"text": "Сущ:2 ftp://192.168.32.1/astra/current/smolensk/mounted-iso-devel smolensk InRelease"
+		},
+		"a6c5c118-1d92-4614-8842-f5e978c6ab17": {
+			"type": "text",
+			"x": 9.28,
+			"y": 540.27,
+			"width": 901.04,
+			"height": 19.98,
+			"text": "Сущ:3 ftp://192.168.32.1/astra/current/smolensk/repository-update-5RC10 smolensk InRelease"
+		},
+		"a4cd6099-18ca-4c72-a0ce-c0ba658f916e": {
+			"type": "text",
+			"x": 9.11,
+			"y": 560.12,
+			"width": 811.31,
+			"height": 20.88,
+			"text": "Сущ:4 ftp://192.168.32.1/astra/current/smolensk/mounted-iso-main smolensk Release"
+		},
+		"810144cb-c5fa-4950-ac24-a46c4bff480a": {
+			"type": "text",
+			"x": 9.16,
+			"y": 580.97,
+			"width": 300.55,
+			"height": 18.83,
+			"text": "Чтение списков пакетов... Готово"
+		},
+		"63d36b3b-4281-4750-9143-9dbaea8b4ef2": {
+			"type": "text",
+			"x": 9.19,
+			"y": 600.47,
+			"width": 300.86,
+			"height": 20.85,
+			"text": "Построение дерева зависимостей"
+		},
+		"15e936c8-6c04-40b6-be0f-9040d764ba95": {
+			"type": "text",
+			"x": 9.47,
+			"y": 620.88,
+			"width": 370,
+			"height": 19.87,
+			"text": "Чтение информации о состоянии... Готово"
+		},
+		"0a33d4ed-4ab2-4f7f-b6c4-c0319dd87c15": {
+			"type": "text",
+			"x": 9.35,
+			"y": 640.95,
+			"width": 337.38,
+			"height": 19.77,
+			"text": "Все пакеты имеют последние версии."
+		},
+		"88baaa9e-50b8-4c43-a19a-a040f0f891ca": {
+			"type": "text",
+			"x": 9.21,
+			"y": 660.93,
+			"width": 180.15,
+			"height": 17.19,
+			"text": "root@suac:/home/u#"
+		},
+		"69a697a3-b963-4336-b491-81d8627da99b": {
+			"type": "text",
+			"x": 73.41,
+			"y": 694,
+			"width": 6.89,
+			"height": 11.01,
+			"text": "1"
+		},
+		"9dd9b33b-f4f1-423f-8e9d-904a3238c764": {
+			"type": "text",
+			"x": 244.73,
+			"y": 730.94,
+			"width": 9.57,
+			"height": 11.38,
+			"text": "2"
+		},
+		"c173c016-d6d1-49d9-b7d9-33238fa00fcc": {
+			"type": "text",
+			"x": 212.52,
+			"y": 754.83,
+			"width": 9.73,
+			"height": 11.38,
+			"text": "3"
+		},
+		"d84d687a-c7ec-4cac-8ec0-6a66b8f2f31c": {
+			"type": "text",
+			"x": 244.79,
+			"y": 754.73,
+			"width": 10.32,
+			"height": 11.51,
+			"text": "4"
+		},
+		"0f62bece-c7bd-4169-8f48-025976ed4de5": {
+			"type": "text",
+			"x": 316.2,
+			"y": 734.91,
+			"width": 116.17,
+			"height": 18.23,
+			"text": "-:bash - Тер..."
+		},
+		"dbf578d1-4414-4577-9042-b830067e9ee1": {
+			"type": "text",
+			"x": 884.01,
+			"y": 734.53,
+			"width": 25.34,
+			"height": 16.89,
+			"text": "EN"
+		},
+		"255b5f2c-3486-483a-bbe1-b611516f0f90": {
+			"type": "text",
+			"x": 931.84,
+			"y": 736.65,
+			"width": 9.21,
+			"height": 11.37,
+			"text": "0"
+		},
+		"1c4a3839-ce95-417f-a831-a440564cd001": {
+			"type": "text",
+			"x": 955.75,
+			"y": 732.48,
+			"width": 51.39,
+			"height": 16.86,
+			"text": "21:39"
+		},
+		"e080ccde-3fba-4104-9dc6-c1bd8ddd6847": {
+			"type": "text",
+			"x": 289.93,
+			"y": 738.92,
+			"width": 18.11,
+			"height": 13.23,
+			"text": ">_"
+		}
+	},
+	"verified": true
+}

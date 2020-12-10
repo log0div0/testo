@@ -4,7 +4,7 @@ include "common.testo"
 machine centos {
 	cpus: 4
 	iso: "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
-	ram: 8Gb
+	ram: 4Gb
 	disk main: {
 		size: 32Gb
 	}
@@ -26,7 +26,7 @@ test centos_install_os {
 		mouse click "Minimal Install"
 		mouse click "Done".from_top(0)
 		sleep 5s
-		mouse click js "find_text().match('Begin Installation').match_background('blue').from_top(0)"
+		mouse click js "find_text('Begin Installation').match_color(null, 'blue').from_top(0)"
 		mouse click "Root Password".from_top(0);
 		wait "Enter a password"; type "${password}"
 		press Tab; type "${password}"
@@ -40,6 +40,7 @@ test centos_install_os {
 	}
 }
 
+[no_snapshots: true]
 test centos_install_guest_additions: centos_install_os {
 	centos {
 		wait "localhost login:"; type "root"; press Enter
@@ -57,6 +58,7 @@ test centos_install_guest_additions: centos_install_os {
 	}
 }
 
+[no_snapshots: true]
 test centos_install_packages: centos_install_guest_additions {
 	centos {
 		exec bash """
@@ -86,7 +88,6 @@ test centos_download_onnxruntime: centos_install_packages {
 	}
 }
 
-[no_snapshots: true]
 test centos_build_onnxruntime_cpu: centos_download_onnxruntime {
 	centos {
 		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
@@ -94,12 +95,17 @@ test centos_build_onnxruntime_cpu: centos_download_onnxruntime {
 			export PATH=$PATH:/usr/local/bin
 			cd /root/onnxruntime
 			${onnxruntime_patch_commands}
-			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests
-			mkdir /root/onnxruntime_dist
-			mkdir /root/onnxruntime_dist/include
-			mkdir /root/onnxruntime_dist/lib
-			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_dist/lib
-			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
+			mkdir -p /root/onnxruntime_build
+			cd /root/onnxruntime_build
+			cmake ../onnxruntime/cmake \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCMAKE_INSTALL_PREFIX=/root/onnxruntime_dist \
+				-DCMAKE_INSTALL_LIBDIR=lib \
+				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
+				-Donnxruntime_BUILD_SHARED_LIB=ON \
+				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
+				-Donnxruntime_USE_CUDA=OFF
+			make install -j$(nproc)
 		""" timeout 2h
 		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_centos_cpu"
 	}
@@ -123,41 +129,48 @@ test centos_install_cuda: centos_download_onnxruntime {
 	}
 }
 
-[no_snapshots: true]
 test centos_build_onnxruntime_gpu: centos_install_cuda {
 	centos {
 		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
+			export PATH="$PATH:/usr/local/bin:/usr/local/cuda/bin"
 			cd /root/onnxruntime
 			${onnxruntime_patch_commands}
-			export PATH="$PATH:/usr/local/bin:/usr/local/cuda/bin"
-			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --use_cuda --cuda_home /usr/local/cuda --cudnn_home /root/cuda
-			mkdir /root/onnxruntime_dist
-			mkdir /root/onnxruntime_dist/include
-			mkdir /root/onnxruntime_dist/lib
-			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_dist/lib
-			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
-			cp include/onnxruntime/core/providers/cuda/cuda_provider_factory.h /root/onnxruntime_dist/include
+			mkdir -p /root/onnxruntime_build
+			cd /root/onnxruntime_build
+			cmake ../onnxruntime/cmake \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCMAKE_INSTALL_PREFIX=/root/onnxruntime_dist \
+				-DCMAKE_INSTALL_LIBDIR=lib \
+				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
+				-Donnxruntime_BUILD_SHARED_LIB=ON \
+				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
+				-Donnxruntime_USE_CUDA=ON \
+				-Donnxruntime_CUDNN_HOME=/root/cuda
+			make install -j$(nproc)
 		""" timeout 2h
 		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_centos_gpu"
 	}
 }
 
 [no_snapshots: true]
-test centos_build_testo_cpu: centos_install_packages {
+test centos_build_testo_cpu: centos_build_onnxruntime_cpu {
 	centos {
-		copyto "${TMP_DIR}/onnxruntime_dist_centos_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
+			export PATH=$PATH:/usr/local/bin
 			cd /root/
 			mkdir testo_build
 			cd testo_build
-			export PATH=$PATH:/usr/local/bin
-			cmake -DONNX_RUNTIME_DIR=/root/onnxruntime_dist -DUSE_CUDA=off -DCPACK_GENERATOR=RPM -DCMAKE_BUILD_TYPE=Release ../testo
+			cmake ../testo \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCPACK_GENERATOR=RPM \
+				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
+				-DUSE_CUDA=off
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
@@ -166,20 +179,23 @@ test centos_build_testo_cpu: centos_install_packages {
 }
 
 [no_snapshots: true]
-test centos_build_testo_gpu: centos_install_packages {
+test centos_build_testo_gpu: centos_build_onnxruntime_gpu {
 	centos {
-		copyto "${TMP_DIR}/onnxruntime_dist_centos_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
+			export PATH="$PATH:/usr/local/bin:/usr/local/cuda/bin"
 			cd /root/
 			mkdir testo_build
 			cd testo_build
-			export PATH=$PATH:/usr/local/bin
-			cmake -DONNX_RUNTIME_DIR=/root/onnxruntime_dist -DUSE_CUDA=on -DCPACK_GENERATOR=RPM -DCMAKE_BUILD_TYPE=Release ../testo
+			cmake ../testo \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCPACK_GENERATOR=RPM \
+				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
+				-DUSE_CUDA=on
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m

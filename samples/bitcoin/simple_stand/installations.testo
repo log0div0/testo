@@ -178,16 +178,32 @@ test client_prepare: client_install_configure_and_install_ga {
 	bitcoin_client {
 		exec bash "hwclock --hctosys "
 
+
+		wait img "../icons/firefox.png"
+		wait img "../icons/folder.png"
+		mouse click img "../icons/network.png"
+		#
+		mouse click img "../icons/nic_connecting.png"
+		#mouse click "Intel Ethernet"
+		mouse click "Wired Settings"
+		wait img "../icons/settings_network.png"
+		mouse click img "../icons/settings.png".from_top(1)
+		mouse click "IPv4"
+		mouse click "Manual"
+		mouse click "Address".from_bottom(0).center_bottom().move_down(10); type "192.168.1.2"
+		mouse click "Netmask".from_bottom(0).center_bottom().move_down(10); type "255.255.255.0"
+		mouse click "Apply"
+		wait js "find_text().match('Connected').size() == 2"
+
 		exec bash """
 			add-apt-repository ppa:luke-jr/bitcoincore
 			apt-get update
+			rm -f /var/lib/apt/lists/lock
+			rm -f /var/cache/apt/archives/lock
+			rm -f /var/lib/dpkg/lock
+			rm -f /var/lib/dpkg/lock-frontend
 			apt-get install bitcoin-qt -y
 		"""
-
-		exec bash "apt purge -y netplan.io"
-
-		exec bash "ip l s ens8 up"
-		exec bash "ip a a 192.168.1.2/24 dev ens8"
 	}
 }
 

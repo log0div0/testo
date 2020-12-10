@@ -1,0 +1,60 @@
+{
+	"objs": {
+		"70b64a2c-9c11-4a34-bafe-ae0cd8eff081": {
+			"type": "text",
+			"x": 0.17,
+			"y": 82.1,
+			"width": 135.99,
+			"height": 14.63,
+			"text": "astra login: user"
+		},
+		"f79bb92f-d31d-49cc-a022-aa2b82a5d0a9": {
+			"type": "text",
+			"x": 0.11,
+			"y": 146.18,
+			"width": 135.99,
+			"height": 14.63,
+			"text": "astra login: user"
+		},
+		"b6ba6350-23ec-476f-beeb-9eaab3763bda": {
+			"type": "text",
+			"x": 0,
+			"y": 98.18,
+			"width": 70.54,
+			"height": 13.18,
+			"text": "Password:"
+		},
+		"0be73980-476f-4958-92a8-c8fd6bab7505": {
+			"type": "text",
+			"x": -0.31,
+			"y": 162.2,
+			"width": 70.54,
+			"height": 13.18,
+			"text": "Password:"
+		},
+		"b9aae3c3-67f6-4482-be38-ccefc02a503a": {
+			"type": "text",
+			"x": 0.01,
+			"y": 129.97,
+			"width": 119.34,
+			"height": 14.91,
+			"text": "Login incorrect"
+		},
+		"fc777fcb-1e7c-48a5-95c9-03ebe46c0847": {
+			"type": "text",
+			"x": -0.51,
+			"y": 177.88,
+			"width": 111.19,
+			"height": 13.82,
+			"text": "You have mail."
+		},
+		"77a560e6-8269-410c-b9b3-65b9be4acc0f": {
+			"type": "text",
+			"x": -0.07,
+			"y": 193.93,
+			"width": 105.24,
+			"height": 15.61,
+			"text": "user@astra:~$"
+		}
+	}
+}

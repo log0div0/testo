@@ -1,0 +1,60 @@
+{
+	"objs": {
+		"0ff35589-b6b6-4d36-8e52-c49b4cdb2d68": {
+			"type": "text",
+			"x": 88.64,
+			"y": 12.92,
+			"width": 152.66,
+			"height": 15.17,
+			"text": "Вход в testo-astralinux"
+		},
+		"7b883d59-9cc9-453a-bcd1-db2b99a9fab1": {
+			"type": "text",
+			"x": 422.4,
+			"y": 12.89,
+			"width": 280.82,
+			"height": 16.25,
+			"text": "четверг, 6 февраля 2020 г. 16:39:23 MSK"
+		},
+		"cba37f16-00ee-412b-ac86-bdc67cb357cb": {
+			"type": "text",
+			"x": 65.02,
+			"y": 295.95,
+			"width": 35.82,
+			"height": 10.09,
+			"text": "user"
+		},
+		"106b10c4-96a2-466f-a3e3-cf55ce3eb59c": {
+			"type": "text",
+			"x": 268.78,
+			"y": 280.11,
+			"width": 37.5,
+			"height": 13.18,
+			"text": "Имя:"
+		},
+		"50e620ce-cc54-49fe-9a78-be33c3c69e28": {
+			"type": "text",
+			"x": 268.83,
+			"y": 305.82,
+			"width": 62.13,
+			"height": 16.23,
+			"text": "Пароль:"
+		},
+		"76cc19d5-ceaf-4155-a0bf-8b1840d82e1c": {
+			"type": "text",
+			"x": 638.63,
+			"y": 261.77,
+			"width": 85.45,
+			"height": 13.47,
+			"text": "Тип сессии"
+		},
+		"127a3743-b4c7-415d-81c4-e87f7d53c03f": {
+			"type": "text",
+			"x": 749.89,
+			"y": 562.7,
+			"width": 20.32,
+			"height": 13.37,
+			"text": "En"
+		}
+	}
+}

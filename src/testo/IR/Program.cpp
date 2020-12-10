@@ -1,14 +1,50 @@
 
 #include "Program.hpp"
-#include "../VisitorSemantic.hpp"
-#include "../VisitorInterpreter.hpp"
 #include "../backends/Environment.hpp"
 #include "nn/OnnxRuntime.hpp"
 #include <wildcards.hpp>
 
 namespace IR {
 
-Program::Program(const std::shared_ptr<AST::Program>& ast, const nlohmann::json& config_): config(config_) {
+bool TestNameFilter::validate_test_name(const std::string& name) const {
+	switch (type) {
+		case Type::test_spec:
+			return wildcards::match(name, pattern);
+		case Type::exclude:
+			return !wildcards::match(name, pattern);
+		default:
+			throw std::runtime_error("Should not be there");
+	}
+}
+
+bool ProgramConfig::validate_test_name(const std::string& name) const {
+	for (auto& filter: test_name_filters) {
+		if (!filter.validate_test_name(name)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+void ProgramConfig::validate() const {
+	if (!fs::exists(target)) {
+		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + target);
+	}
+
+	std::set<std::string> unique_param_names;
+
+	for (size_t i = 0; i < params_names.size(); ++i) {
+		auto result = unique_param_names.insert(params_names[i]);
+		if (!result.second) {
+			throw std::runtime_error("Error: param \"" + params_names[i] + "\" is defined multiple times as a command line argument");
+		}
+	}
+
+	VisitorSemanticConfig::validate();
+	VisitorInterpreterConfig::validate();
+}
+
+Program::Program(const std::shared_ptr<AST::Program>& ast, const ProgramConfig& config_): config(config_) {
 	if (program != nullptr) {
 		throw std::runtime_error("Only one instance of IR::Program can exists");
 	}
@@ -31,7 +67,11 @@ void Program::validate() {
 
 void Program::run() {
 	env->setup();
-	nn::OnnxRuntime onnx_runtime;
+#ifdef USE_CUDA
+	nn::onnx::Runtime onnx_runtime(config.use_cpu);
+#else
+	nn::onnx::Runtime onnx_runtime;
+#endif
 	VisitorInterpreter runner(config);
 	runner.visit();
 }
@@ -94,8 +134,8 @@ void Program::setup_stack() {
 	predefined->vars = testo_timeout_params;
 	stack = std::make_shared<StackNode>();
 	stack->parent = predefined;
-	for (auto& item: config.at("params")) {
-		stack->vars[item.at("name").get<std::string>()] = item.at("value").get<std::string>();
+	for (size_t i = 0; i < config.params_names.size(); ++i) {
+		stack->vars[config.params_names.at(i)] = config.params_values.at(i);
 	}
 }
 
@@ -157,32 +197,11 @@ void Program::validate_special_params() {
 	}
 }
 
-bool Program::validate_test_name(const std::string& name, const std::vector<std::pair<bool, std::string>>& patterns) const {
-	for (auto& pattern: patterns) {
-		auto result = (pattern.first) ? wildcards::match(name, pattern.second) : !wildcards::match(name, pattern.second);
-		if (!result) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void Program::setup_tests_parents() {
-
-	//first arg of the pair is bool
-	// True for "test_spec"
-	//False for "exclude"
-	std::vector<std::pair<bool, std::string>> patterns;
-
-	for (auto& pattern: config.at("template_patterns")) {
-		patterns.push_back({pattern.at("type").get<bool>(), pattern.at("pattern").get<std::string>()});
-	}
-
 	for (auto& test: ordered_tests) {
 		auto test_name = test->ast_node->name.value();
 
-		if (validate_test_name(test_name, patterns)) {
+		if (config.validate_test_name(test_name)) {
 			setup_test_parents(test);
 		}
 	}

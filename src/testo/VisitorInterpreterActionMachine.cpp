@@ -5,7 +5,6 @@
 #include "coro/CheckPoint.h"
 #include "coro/Timeout.h"
 #include <fmt/format.h>
-#include "utf8.hpp"
 
 using namespace std::chrono_literals;
 
@@ -89,172 +88,172 @@ VisitorInterpreterActionMachine::VisitorInterpreterActionMachine(std::shared_ptr
 	VisitorInterpreterAction(vmc, stack, reporter), vmc(vmc), current_test(current_test)
 {
 	charmap.insert({
-		{"0", {"ZERO"}},
-		{"1", {"ONE"}},
-		{"2", {"TWO"}},
-		{"3", {"THREE"}},
-		{"4", {"FOUR"}},
-		{"5", {"FIVE"}},
-		{"6", {"SIX"}},
-		{"7", {"SEVEN"}},
-		{"8", {"EIGHT"}},
-		{"9", {"NINE"}},
-		{")", {"LEFTSHIFT", "ZERO"}},
-		{"!", {"LEFTSHIFT", "ONE"}},
-		{"@", {"LEFTSHIFT", "TWO"}},
-		{"#", {"LEFTSHIFT", "THREE"}},
-		{"$", {"LEFTSHIFT", "FOUR"}},
-		{"%", {"LEFTSHIFT", "FIVE"}},
-		{"^", {"LEFTSHIFT", "SIX"}},
-		{"&", {"LEFTSHIFT", "SEVEN"}},
-		{"*", {"LEFTSHIFT", "EIGHT"}},
-		{"(", {"LEFTSHIFT", "NINE"}},
-		{"a", {"A"}},
-		{"b", {"B"}},
-		{"c", {"C"}},
-		{"d", {"D"}},
-		{"e", {"E"}},
-		{"f", {"F"}},
-		{"g", {"G"}},
-		{"h", {"H"}},
-		{"i", {"I"}},
-		{"j", {"J"}},
-		{"k", {"K"}},
-		{"l", {"L"}},
-		{"m", {"M"}},
-		{"n", {"N"}},
-		{"o", {"O"}},
-		{"p", {"P"}},
-		{"q", {"Q"}},
-		{"r", {"R"}},
-		{"s", {"S"}},
-		{"t", {"T"}},
-		{"u", {"U"}},
-		{"v", {"V"}},
-		{"w", {"W"}},
-		{"x", {"X"}},
-		{"y", {"Y"}},
-		{"z", {"Z"}},
-		{"A", {"LEFTSHIFT", "A"}},
-		{"B", {"LEFTSHIFT", "B"}},
-		{"C", {"LEFTSHIFT", "C"}},
-		{"D", {"LEFTSHIFT", "D"}},
-		{"E", {"LEFTSHIFT", "E"}},
-		{"F", {"LEFTSHIFT", "F"}},
-		{"G", {"LEFTSHIFT", "G"}},
-		{"H", {"LEFTSHIFT", "H"}},
-		{"I", {"LEFTSHIFT", "I"}},
-		{"J", {"LEFTSHIFT", "J"}},
-		{"K", {"LEFTSHIFT", "K"}},
-		{"L", {"LEFTSHIFT", "L"}},
-		{"M", {"LEFTSHIFT", "M"}},
-		{"N", {"LEFTSHIFT", "N"}},
-		{"O", {"LEFTSHIFT", "O"}},
-		{"P", {"LEFTSHIFT", "P"}},
-		{"Q", {"LEFTSHIFT", "Q"}},
-		{"R", {"LEFTSHIFT", "R"}},
-		{"S", {"LEFTSHIFT", "S"}},
-		{"T", {"LEFTSHIFT", "T"}},
-		{"U", {"LEFTSHIFT", "U"}},
-		{"V", {"LEFTSHIFT", "V"}},
-		{"W", {"LEFTSHIFT", "W"}},
-		{"X", {"LEFTSHIFT", "X"}},
-		{"Y", {"LEFTSHIFT", "Y"}},
-		{"Z", {"LEFTSHIFT", "Z"}},
+		{U'0', {"ZERO"}},
+		{U'1', {"ONE"}},
+		{U'2', {"TWO"}},
+		{U'3', {"THREE"}},
+		{U'4', {"FOUR"}},
+		{U'5', {"FIVE"}},
+		{U'6', {"SIX"}},
+		{U'7', {"SEVEN"}},
+		{U'8', {"EIGHT"}},
+		{U'9', {"NINE"}},
+		{U')', {"LEFTSHIFT", "ZERO"}},
+		{U'!', {"LEFTSHIFT", "ONE"}},
+		{U'@', {"LEFTSHIFT", "TWO"}},
+		{U'#', {"LEFTSHIFT", "THREE"}},
+		{U'$', {"LEFTSHIFT", "FOUR"}},
+		{U'%', {"LEFTSHIFT", "FIVE"}},
+		{U'^', {"LEFTSHIFT", "SIX"}},
+		{U'&', {"LEFTSHIFT", "SEVEN"}},
+		{U'*', {"LEFTSHIFT", "EIGHT"}},
+		{U'(', {"LEFTSHIFT", "NINE"}},
+		{U'a', {"A"}},
+		{U'b', {"B"}},
+		{U'c', {"C"}},
+		{U'd', {"D"}},
+		{U'e', {"E"}},
+		{U'f', {"F"}},
+		{U'g', {"G"}},
+		{U'h', {"H"}},
+		{U'i', {"I"}},
+		{U'j', {"J"}},
+		{U'k', {"K"}},
+		{U'l', {"L"}},
+		{U'm', {"M"}},
+		{U'n', {"N"}},
+		{U'o', {"O"}},
+		{U'p', {"P"}},
+		{U'q', {"Q"}},
+		{U'r', {"R"}},
+		{U's', {"S"}},
+		{U't', {"T"}},
+		{U'u', {"U"}},
+		{U'v', {"V"}},
+		{U'w', {"W"}},
+		{U'x', {"X"}},
+		{U'y', {"Y"}},
+		{U'z', {"Z"}},
+		{U'A', {"LEFTSHIFT", "A"}},
+		{U'B', {"LEFTSHIFT", "B"}},
+		{U'C', {"LEFTSHIFT", "C"}},
+		{U'D', {"LEFTSHIFT", "D"}},
+		{U'E', {"LEFTSHIFT", "E"}},
+		{U'F', {"LEFTSHIFT", "F"}},
+		{U'G', {"LEFTSHIFT", "G"}},
+		{U'H', {"LEFTSHIFT", "H"}},
+		{U'I', {"LEFTSHIFT", "I"}},
+		{U'J', {"LEFTSHIFT", "J"}},
+		{U'K', {"LEFTSHIFT", "K"}},
+		{U'L', {"LEFTSHIFT", "L"}},
+		{U'M', {"LEFTSHIFT", "M"}},
+		{U'N', {"LEFTSHIFT", "N"}},
+		{U'O', {"LEFTSHIFT", "O"}},
+		{U'P', {"LEFTSHIFT", "P"}},
+		{U'Q', {"LEFTSHIFT", "Q"}},
+		{U'R', {"LEFTSHIFT", "R"}},
+		{U'S', {"LEFTSHIFT", "S"}},
+		{U'T', {"LEFTSHIFT", "T"}},
+		{U'U', {"LEFTSHIFT", "U"}},
+		{U'V', {"LEFTSHIFT", "V"}},
+		{U'W', {"LEFTSHIFT", "W"}},
+		{U'X', {"LEFTSHIFT", "X"}},
+		{U'Y', {"LEFTSHIFT", "Y"}},
+		{U'Z', {"LEFTSHIFT", "Z"}},
 
-		{"а", {"F"}},
-		{"б", {"COMMA"}},
-		{"в", {"D"}},
-		{"г", {"U"}},
-		{"д", {"L"}},
-		{"е", {"T"}},
-		{"ё", {"GRAVE"}},
-		{"ж", {"SEMICOLON"}},
-		{"з", {"P"}},
-		{"и", {"B"}},
-		{"й", {"Q"}},
-		{"к", {"R"}},
-		{"л", {"K"}},
-		{"м", {"V"}},
-		{"н", {"Y"}},
-		{"о", {"J"}},
-		{"п", {"G"}},
-		{"р", {"H"}},
-		{"с", {"C"}},
-		{"т", {"N"}},
-		{"у", {"E"}},
-		{"ф", {"A"}},
-		{"х", {"LEFTBRACE"}},
-		{"ц", {"W"}},
-		{"ч", {"X"}},
-		{"ш", {"I"}},
-		{"щ", {"O"}},
-		{"ъ", {"RIGHTBRACE"}},
-		{"ы", {"S"}},
-		{"ь", {"M"}},
-		{"э", {"APOSTROPHE"}},
-		{"ю", {"DOT"}},
-		{"я", {"Z"}},
+		{U'а', {"F"}},
+		{U'б', {"COMMA"}},
+		{U'в', {"D"}},
+		{U'г', {"U"}},
+		{U'д', {"L"}},
+		{U'е', {"T"}},
+		{U'ё', {"GRAVE"}},
+		{U'ж', {"SEMICOLON"}},
+		{U'з', {"P"}},
+		{U'и', {"B"}},
+		{U'й', {"Q"}},
+		{U'к', {"R"}},
+		{U'л', {"K"}},
+		{U'м', {"V"}},
+		{U'н', {"Y"}},
+		{U'о', {"J"}},
+		{U'п', {"G"}},
+		{U'р', {"H"}},
+		{U'с', {"C"}},
+		{U'т', {"N"}},
+		{U'у', {"E"}},
+		{U'ф', {"A"}},
+		{U'х', {"LEFTBRACE"}},
+		{U'ц', {"W"}},
+		{U'ч', {"X"}},
+		{U'ш', {"I"}},
+		{U'щ', {"O"}},
+		{U'ъ', {"RIGHTBRACE"}},
+		{U'ы', {"S"}},
+		{U'ь', {"M"}},
+		{U'э', {"APOSTROPHE"}},
+		{U'ю', {"DOT"}},
+		{U'я', {"Z"}},
 
-		{"А", {"LEFTSHIFT", "F"}},
-		{"Б", {"LEFTSHIFT", "COMMA"}},
-		{"В", {"LEFTSHIFT", "D"}},
-		{"Г", {"LEFTSHIFT", "U"}},
-		{"Д", {"LEFTSHIFT", "L"}},
-		{"Е", {"LEFTSHIFT", "T"}},
-		{"Ё", {"LEFTSHIFT", "GRAVE"}},
-		{"Ж", {"LEFTSHIFT", "SEMICOLON"}},
-		{"З", {"LEFTSHIFT", "P"}},
-		{"И", {"LEFTSHIFT", "B"}},
-		{"Й", {"LEFTSHIFT", "Q"}},
-		{"К", {"LEFTSHIFT", "R"}},
-		{"Л", {"LEFTSHIFT", "K"}},
-		{"М", {"LEFTSHIFT", "V"}},
-		{"Н", {"LEFTSHIFT", "Y"}},
-		{"О", {"LEFTSHIFT", "J"}},
-		{"П", {"LEFTSHIFT", "G"}},
-		{"Р", {"LEFTSHIFT", "H"}},
-		{"С", {"LEFTSHIFT", "C"}},
-		{"Т", {"LEFTSHIFT", "N"}},
-		{"У", {"LEFTSHIFT", "E"}},
-		{"Ф", {"LEFTSHIFT", "A"}},
-		{"Х", {"LEFTSHIFT", "LEFTBRACE"}},
-		{"Ц", {"LEFTSHIFT", "W"}},
-		{"Ч", {"LEFTSHIFT", "X"}},
-		{"Ш", {"LEFTSHIFT", "I"}},
-		{"Щ", {"LEFTSHIFT", "O"}},
-		{"Ъ", {"LEFTSHIFT", "RIGHTBRACE"}},
-		{"Ы", {"LEFTSHIFT", "S"}},
-		{"Ь", {"LEFTSHIFT", "M"}},
-		{"Э", {"LEFTSHIFT", "APOSTROPHE"}},
-		{"Ю", {"LEFTSHIFT", "DOT"}},
-		{"Я", {"LEFTSHIFT", "Z"}},
+		{U'А', {"LEFTSHIFT", "F"}},
+		{U'Б', {"LEFTSHIFT", "COMMA"}},
+		{U'В', {"LEFTSHIFT", "D"}},
+		{U'Г', {"LEFTSHIFT", "U"}},
+		{U'Д', {"LEFTSHIFT", "L"}},
+		{U'Е', {"LEFTSHIFT", "T"}},
+		{U'Ё', {"LEFTSHIFT", "GRAVE"}},
+		{U'Ж', {"LEFTSHIFT", "SEMICOLON"}},
+		{U'З', {"LEFTSHIFT", "P"}},
+		{U'И', {"LEFTSHIFT", "B"}},
+		{U'Й', {"LEFTSHIFT", "Q"}},
+		{U'К', {"LEFTSHIFT", "R"}},
+		{U'Л', {"LEFTSHIFT", "K"}},
+		{U'М', {"LEFTSHIFT", "V"}},
+		{U'Н', {"LEFTSHIFT", "Y"}},
+		{U'О', {"LEFTSHIFT", "J"}},
+		{U'П', {"LEFTSHIFT", "G"}},
+		{U'Р', {"LEFTSHIFT", "H"}},
+		{U'С', {"LEFTSHIFT", "C"}},
+		{U'Т', {"LEFTSHIFT", "N"}},
+		{U'У', {"LEFTSHIFT", "E"}},
+		{U'Ф', {"LEFTSHIFT", "A"}},
+		{U'Х', {"LEFTSHIFT", "LEFTBRACE"}},
+		{U'Ц', {"LEFTSHIFT", "W"}},
+		{U'Ч', {"LEFTSHIFT", "X"}},
+		{U'Ш', {"LEFTSHIFT", "I"}},
+		{U'Щ', {"LEFTSHIFT", "O"}},
+		{U'Ъ', {"LEFTSHIFT", "RIGHTBRACE"}},
+		{U'Ы', {"LEFTSHIFT", "S"}},
+		{U'Ь', {"LEFTSHIFT", "M"}},
+		{U'Э', {"LEFTSHIFT", "APOSTROPHE"}},
+		{U'Ю', {"LEFTSHIFT", "DOT"}},
+		{U'Я', {"LEFTSHIFT", "Z"}},
 
-		{"-", {"MINUS"}},
-		{"_", {"LEFTSHIFT", "MINUS"}},
-		{"=", {"EQUALSIGN"}},
-		{"+", {"LEFTSHIFT", "EQUALSIGN"}},
-		{"\'", {"APOSTROPHE"}},
-		{"\"", {"LEFTSHIFT", "APOSTROPHE"}},
-		{"\\", {"BACKSLASH"}},
-		{"\n", {"ENTER"}},
-		{"\t", {"TAB"}},
-		{"|", {"LEFTSHIFT", "BACKSLASH"}},
-		{",", {"COMMA"}},
-		{"<", {"LEFTSHIFT", "COMMA"}},
-		{".", {"DOT"}},
-		{">", {"LEFTSHIFT", "DOT"}},
-		{"/", {"SLASH"}},
-		{"?", {"LEFTSHIFT", "SLASH"}},
-		{";", {"SEMICOLON"}},
-		{":", {"LEFTSHIFT", "SEMICOLON"}},
-		{"[", {"LEFTBRACE"}},
-		{"{", {"LEFTSHIFT", "LEFTBRACE"}},
-		{"]", {"RIGHTBRACE"}},
-		{"}", {"LEFTSHIFT", "RIGHTBRACE"}},
-		{"`", {"GRAVE"}},
-		{"~", {"LEFTSHIFT", "GRAVE"}},
-		{" ", {"SPACE"}}
+		{U'-', {"MINUS"}},
+		{U'_', {"LEFTSHIFT", "MINUS"}},
+		{U'=', {"EQUALSIGN"}},
+		{U'+', {"LEFTSHIFT", "EQUALSIGN"}},
+		{U'\'', {"APOSTROPHE"}},
+		{U'\"', {"LEFTSHIFT", "APOSTROPHE"}},
+		{U'\\', {"BACKSLASH"}},
+		{U'\n', {"ENTER"}},
+		{U'\t', {"TAB"}},
+		{U'|', {"LEFTSHIFT", "BACKSLASH"}},
+		{U',', {"COMMA"}},
+		{U'<', {"LEFTSHIFT", "COMMA"}},
+		{U'.', {"DOT"}},
+		{U'>', {"LEFTSHIFT", "DOT"}},
+		{U'/', {"SLASH"}},
+		{U'?', {"LEFTSHIFT", "SLASH"}},
+		{U';', {"SEMICOLON"}},
+		{U':', {"LEFTSHIFT", "SEMICOLON"}},
+		{U'[', {"LEFTBRACE"}},
+		{U'{', {"LEFTSHIFT", "LEFTBRACE"}},
+		{U']', {"RIGHTBRACE"}},
+		{U'}', {"LEFTSHIFT", "RIGHTBRACE"}},
+		{U'`', {"GRAVE"}},
+		{U'~', {"LEFTSHIFT", "GRAVE"}},
+		{U' ', {"SPACE"}}
 	});
 }
 
@@ -345,9 +344,9 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 
 		reporter.check(vmc, text, check_for, interval_str);
 
-		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
+		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
 
-		while (std::chrono::system_clock::now() < deadline) {
+		while (std::chrono::steady_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm()->screenshot();
 
@@ -371,6 +370,13 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	}
 }
 
+void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
+	reporter.save_screenshot(vmc);
+	throw AbortException(abort.ast_node, current_controller, abort.message());
+}
+
+static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 	try {
 		std::string text = type.text();
@@ -382,7 +388,7 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 
 		reporter.type(vmc, text, interval);
 
-		for (auto c: utf8::split_to_chars(text)) {
+		for (char32_t c: conv.from_bytes(text)) {
 			auto buttons = charmap.find(c);
 			if (buttons == charmap.end()) {
 				throw std::runtime_error("Unknown character to type");
@@ -405,9 +411,9 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 
 		reporter.wait(vmc, text, wait_for, interval_str);
 
-		auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
+		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
 
-		while (std::chrono::system_clock::now() < deadline) {
+		while (std::chrono::steady_clock::now() < deadline) {
 			auto start = std::chrono::high_resolution_clock::now();
 			auto screenshot = vmc->vm()->screenshot();
 
@@ -425,9 +431,7 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 			}
 		}
 
-		if (reporter.report_screenshots) {
-			reporter.save_screenshot(vmc);
-		}
+		reporter.save_screenshot(vmc);
 		throw std::runtime_error("Timeout");
 
 	} catch (const std::exception& error) {
@@ -435,7 +439,8 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 	}
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input) {
+template <typename NNTensor>
+NNTensor VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input) {
 	auto name = specifier->name.value();
 	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
 
@@ -452,7 +457,8 @@ nn::Tensor VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shar
 	throw std::runtime_error("Should not be there");
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Tensor& input) {
+template <typename NNTensor>
+nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input) {
 	auto name = specifier->name.value();
 
 	if (name == "left_bottom") {
@@ -478,7 +484,8 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::
 	throw std::runtime_error("Uknown center specifier");
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_default_centering(const nn::Tensor& input) {
+template <typename NNTensor>
+nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_default_centering(const NNTensor& input) {
 	return input.center();
 }
 
@@ -499,10 +506,11 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_moving(std::sha
 	throw std::runtime_error("Should not be there");
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const nn::Tensor& input_) {
+template <typename NNTensor>
+nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const NNTensor& input_) {
 	size_t index = 0;
 
-	nn::Tensor input = input_;
+	NNTensor input = input_;
 
 	if ((specifiers.size() > index) && specifiers[index]->is_from()) {
 		input = visit_mouse_specifier_from(specifiers[index], input);
@@ -525,17 +533,17 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(con
 	return result;
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image& screenshot) {
+nn::TextTensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = text.text();
-	return nn::find_text(&screenshot).match(parsed);
+	return nn::find_text(&screenshot).match_text(&screenshot, parsed);
 }
 
-nn::Tensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image& screenshot) {
+nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = img.img_path();
 	return nn::find_img(&screenshot, parsed);
 }
 
-bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_bool()) {
@@ -545,7 +553,7 @@ bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, st
 	}
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, stb::Image& screenshot) {
+nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_object() && !value.is_array()) {
@@ -568,7 +576,7 @@ nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& j
 	}
 }
 
-bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image& screenshot)  {
+bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image<stb::RGB>& screenshot)  {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
 		return visit_detect_selectable(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
@@ -579,7 +587,7 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 }
 
 
-bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image<stb::RGB>& screenshot) {
 	bool is_negated = selectable->is_negated();
 
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
@@ -595,7 +603,7 @@ bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AS
 	}
 }
 
-bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image<stb::RGB>& screenshot) {
 	auto left_value = visit_detect_expr(binop->left, screenshot);
 	if (binop->t.type() == Token::category::double_ampersand) {
 		if (!left_value) {
@@ -663,9 +671,9 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
-	auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
+	auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
 
-	while (std::chrono::system_clock::now() < deadline) {
+	while (std::chrono::steady_clock::now() < deadline) {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto screenshot = vmc->vm()->screenshot();
 		try {
@@ -673,13 +681,13 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
 				point = visit_select_js({p->selectable, stack}, screenshot);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
-				auto ocr_found = visit_select_text({p->selectable, stack}, screenshot);
+				auto tensor = visit_select_text({p->selectable, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, ocr_found);
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
-				auto ocr_found = visit_select_img({p->selectable, stack}, screenshot);
+				auto tensor = visit_select_img({p->selectable, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = ocr_found.center();
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			}
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return;
@@ -695,10 +703,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 		}
 	}
 
-	if (reporter.report_screenshots) {
-		reporter.save_screenshot(vmc);
-	}
-
+	reporter.save_screenshot(vmc);
 	throw std::runtime_error("Timeout");
 }
 
@@ -932,8 +937,8 @@ void VisitorInterpreterActionMachine::visit_plug_dvd(const IR::Plug& plug) {
 		}
 		vmc->vm()->unplug_dvd();
 
-		auto deadline = std::chrono::system_clock::now() +  std::chrono::seconds(10);
-		while (std::chrono::system_clock::now() < deadline) {
+		auto deadline = std::chrono::steady_clock::now() +  std::chrono::seconds(10);
+		while (std::chrono::steady_clock::now() < deadline) {
 			if (!vmc->vm()->is_dvd_plugged()) {
 				return;
 			}
@@ -978,8 +983,8 @@ void VisitorInterpreterActionMachine::visit_start(const IR::Start& start) {
 	try {
 		reporter.start(vmc);
 		vmc->vm()->start();
-		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(5000);
-		while (std::chrono::system_clock::now() < deadline) {
+		auto deadline = std::chrono::steady_clock::now() +  std::chrono::milliseconds(5000);
+		while (std::chrono::steady_clock::now() < deadline) {
 			if (vmc->vm()->state() == VmState::Running) {
 				return;
 			}
@@ -1006,8 +1011,8 @@ void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdow
 		std::string wait_for = shutdown.timeout();
 		reporter.shutdown(vmc, wait_for);
 		vmc->vm()->power_button();
-		auto deadline = std::chrono::system_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
-		while (std::chrono::system_clock::now() < deadline) {
+		auto deadline = std::chrono::steady_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
+		while (std::chrono::steady_clock::now() < deadline) {
 			if (vmc->vm()->state() == VmState::Stopped) {
 				return;
 			}
@@ -1096,7 +1101,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 	}
 }
 
-js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, stb::Image& screenshot) {
+js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, stb::Image<stb::RGB>& screenshot) {
 	try {
 		js_current_ctx.reset(new js::Context(&screenshot));
 		return js_current_ctx->eval(script);

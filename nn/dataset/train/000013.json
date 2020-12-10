@@ -1,0 +1,117 @@
+{
+	"objs": {
+		"a71ad75f-1688-41e6-8802-7b2be3f6577c": {
+			"type": "text",
+			"x": 71.46,
+			"y": 17.83,
+			"width": 107.96,
+			"height": 14,
+			"text": "Ubuntu 18.04"
+		},
+		"1f423623-2f9c-4475-9afe-c6f322292012": {
+			"type": "text",
+			"x": 71.53,
+			"y": 65.39,
+			"width": 548.35,
+			"height": 16.44,
+			"text": "Welcome to Ubuntu! The world's favourite platform for clouds,"
+		},
+		"83e96206-5f1b-40c1-b649-a342cbdf586c": {
+			"type": "text",
+			"x": 71.67,
+			"y": 81.38,
+			"width": 540.81,
+			"height": 15.54,
+			"text": "clusters, and amazing internet things. This is the installer"
+		},
+		"0ee2f78e-124c-4408-853e-7b0d6bee7eaa": {
+			"type": "text",
+			"x": 71.63,
+			"y": 97.12,
+			"width": 385.46,
+			"height": 14.69,
+			"text": "for Ubuntu on servers and internet devices."
+		},
+		"ac670cc9-e65c-4ed9-9bdd-e51c5fd6607e": {
+			"type": "text",
+			"x": 74.99,
+			"y": 129.5,
+			"width": 141.48,
+			"height": 14.89,
+			"text": "[ Install Ubuntu"
+		},
+		"8eebcdc3-64e3-4b33-a263-aaa7115a14bb": {
+			"type": "text",
+			"x": 74.83,
+			"y": 145.65,
+			"width": 354.85,
+			"height": 15.85,
+			"text": "[ Install MAAS bare-metal cloud (region)"
+		},
+		"6dbcfe6d-ad03-44ac-831c-c24aeabc496d": {
+			"type": "text",
+			"x": 74.69,
+			"y": 161.73,
+			"width": 336.45,
+			"height": 14.21,
+			"text": "[ Install MAAS bare-metal cloud (rack)"
+		},
+		"6c9a2899-5e4c-4686-92b7-d28278f09f0b": {
+			"type": "text",
+			"x": 629.88,
+			"y": 129.87,
+			"width": 5.44,
+			"height": 14.39,
+			"text": "]"
+		},
+		"22357f07-b8ee-4b45-8eeb-2e5ae9ce7cc6": {
+			"type": "text",
+			"x": 629.93,
+			"y": 145.75,
+			"width": 5.29,
+			"height": 14.27,
+			"text": "]"
+		},
+		"2512b54e-2eb0-41d7-b403-20ed04d67dea": {
+			"type": "text",
+			"x": 629.91,
+			"y": 161.73,
+			"width": 5.29,
+			"height": 14.42,
+			"text": "]"
+		},
+		"148b0b36-7ae1-4176-87c9-cb7b431d0285": {
+			"type": "text",
+			"x": 290.76,
+			"y": 321.84,
+			"width": 50.51,
+			"height": 14.18,
+			"text": "[ Back"
+		},
+		"4f611d7e-9318-4376-9c60-ff25f110a56e": {
+			"type": "text",
+			"x": 404.97,
+			"y": 321.57,
+			"width": 5.23,
+			"height": 14.58,
+			"text": "]"
+		},
+		"d410ebd2-bab9-4834-b078-7b830798c006": {
+			"type": "text",
+			"x": 333.11,
+			"y": 354.57,
+			"width": 53.09,
+			"height": 12.76,
+			"text": "3 / 12"
+		},
+		"18a2bde3-1b64-48a9-8a83-b5225d4e64ff": {
+			"type": "text",
+			"x": 71.8,
+			"y": 386.12,
+			"width": 494.37,
+			"height": 14.3,
+			"text": "Use UP, DOWN arrow keys, and ENTER, to navigate options"
+		}
+	},
+	"verified": true
+}

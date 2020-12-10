@@ -4,7 +4,7 @@ include "common.testo"
 machine debian {
 	cpus: 4
 	iso: "${ISO_DIR}/debian-9.12.0-amd64-xfce-CD-1.iso"
-	ram: 8Gb
+	ram: 4Gb
 	disk main: {
 		size: 32Gb
 	}
@@ -48,7 +48,6 @@ test debian_install_os {
 		wait "The system may anonymously" timeout 10m; press Enter
 		wait "choose to install one or more"
 		mouse click "Continue"
-		sleep 15m
 		mouse move 0 0
 		wait "It seems that this new installation" timeout 50m; press Enter
 		wait "You need to make the"; press Down, Enter
@@ -57,6 +56,7 @@ test debian_install_os {
 	}
 }
 
+[no_snapshots: true]
 test debian_install_guest_additions: debian_install_os {
 	debian {
 		type "root"; press Tab; sleep 1s
@@ -79,6 +79,7 @@ test debian_install_guest_additions: debian_install_os {
 	}
 }
 
+[no_snapshots: true]
 test debian_prepare_1: debian_install_guest_additions {
 	debian {
 		mouse click "Applications"
@@ -130,21 +131,29 @@ test debian_prepare_2: debian_prepare_1 {
 
 		type "virt-manager"; press Enter
 		wait "Virtual Machine Manager"
-		plug flash iso; sleep 5s;
-		exec bash """
-			mount /dev/sdb1 /media
-			cp /media/ubuntu-16.04.6-server-amd64.iso /opt/
-			umount /media
-		"""
-		unplug flash iso
-		sleep 5s
+
+		copyto "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso" "/opt/ubuntu-16.04.6-server-amd64.iso"
 	}
 }
 
-test debian_prepare_testo: debian_prepare_2 {
+test debian_install_testo_cpu: debian_prepare_2 {
 	debian {
 		copyto "${OUT_DIR}/testo-cpu.deb" "/home/${login}/testo-cpu.deb"
-		exec bash "dpkg -i /home/${login}/testo-cpu.deb"
+		exec bash """
+			dpkg -i /home/${login}/testo-cpu.deb
+			testo version
+		"""
+	}
+}
+
+[no_snapshots: true]
+test debian_install_testo_gpu: debian_prepare_2 {
+	debian {
+		copyto "${OUT_DIR}/testo-gpu.deb" "/home/${login}/testo-gpu.deb"
+		exec bash """
+			dpkg -i /home/${login}/testo-gpu.deb
+			testo version
+		"""
 	}
 }
 

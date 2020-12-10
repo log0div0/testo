@@ -1,0 +1,11 @@
+{
+	"video": {
+		"driver": "software",
+		"fullscreen": true,
+		"readFullscreen": true,
+		"screenRes": {
+			"height": 768,
+			"width": 1024
+		}
+	}
+}

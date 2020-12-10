@@ -1,0 +1,573 @@
+{
+	"objs": {
+		"666853a5-a18f-4d1d-8d73-749511ed8461": {
+			"type": "text",
+			"x": 20.08,
+			"y": 57.07,
+			"width": 59.1,
+			"height": 14.15,
+			"text": "Bluebirds"
+		},
+		"3e2c1119-9ab2-4dc0-8cc7-420b299580ab": {
+			"type": "text",
+			"x": 27.04,
+			"y": 151.64,
+			"width": 41.27,
+			"height": 13.69,
+			"text": "2.8GB"
+		},
+		"69c662c7-c35c-4145-bb9d-163f6d4f960b": {
+			"type": "text",
+			"x": 10.54,
+			"y": 164.67,
+			"width": 73.99,
+			"height": 14.76,
+			"text": "Removabl..."
+		},
+		"81d2fe16-1ee9-4057-8ecc-18707c42a826": {
+			"type": "text",
+			"x": 160.07,
+			"y": 33.86,
+			"width": 17.83,
+			"height": 12.07,
+			"text": "W"
+		},
+		"1feaabe9-ad0e-4262-9b3b-dc4d788f5fae": {
+			"type": "text",
+			"x": 181.8,
+			"y": 31.67,
+			"width": 66.69,
+			"height": 15.46,
+			"text": "Wikipedia"
+		},
+		"e346fe95-9588-494d-b495-aa44608622fc": {
+			"type": "text",
+			"x": 256.76,
+			"y": 63.78,
+			"width": 46.84,
+			"height": 13.55,
+			"text": "Sicuro"
+		},
+		"73627b3c-673b-43a1-bde4-c88d5ff97e39": {
+			"type": "text",
+			"x": 319.68,
+			"y": 63.49,
+			"width": 182.79,
+			"height": 16.93,
+			"text": "https://www.wikipedia.org"
+		},
+		"1c4d2391-eb57-4bcc-8d82-387d94a5d16d": {
+			"type": "text",
+			"x": 545.74,
+			"y": 3.7,
+			"width": 152.71,
+			"height": 15.39,
+			"text": "Wikipedia - Chromium"
+		},
+		"5df07b4c-a6fc-4857-9de1-a955219df656": {
+			"type": "text",
+			"x": 560.63,
+			"y": 99.62,
+			"width": 168.59,
+			"height": 28.45,
+			"text": ""
+		},
+		"3244c414-72d0-4c2c-9e89-16ab19b90934": {
+			"type": "text",
+			"x": 575.86,
+			"y": 137.87,
+			"width": 137.2,
+			"height": 18.15,
+			"text": "L'enciclopedia libera"
+		},
+		"d092e9e5-b985-4697-a9ed-c55b30ee6efd": {
+			"type": "text",
+			"x": 483.54,
+			"y": 171.4,
+			"width": 56.76,
+			"height": 14.12,
+			"text": "Italiano"
+		},
+		"1235c277-aa95-4737-9e81-bffb941367f8": {
+			"type": "text",
+			"x": 472.13,
+			"y": 194.66,
+			"width": 80.17,
+			"height": 10.71,
+			"text": "1 380 000+ voci"
+		},
+		"2baaccc3-04c9-46de-b943-179c67516c2a": {
+			"type": "text",
+			"x": 748.7,
+			"y": 171.73,
+			"width": 57.48,
+			"height": 16.39,
+			"text": "English"
+		},
+		"7b27f371-bdf6-4d16-96bc-436fb8d33677": {
+			"type": "text",
+			"x": 728.64,
+			"y": 194.61,
+			"width": 96.65,
+			"height": 10.94,
+			"text": "5 472 000+ articles"
+		},
+		"c85969b4-28cc-4c38-853d-f29d3ab92f86": {
+			"type": "text",
+			"x": 809.61,
+			"y": 233.71,
+			"width": 46.47,
+			"height": 17.57,
+			"text": ""
+		},
+		"688cda65-6ebc-4c45-9784-8c78105379c9": {
+			"type": "text",
+			"x": 790.81,
+			"y": 258.88,
+			"width": 82.46,
+			"height": 12.42,
+			"text": ""
+		},
+		"de10d3e8-d0fe-4e3a-b912-6b155058344a": {
+			"type": "text",
+			"x": 1165.74,
+			"y": 786.72,
+			"width": 236.57,
+			"height": 23.58,
+			"text": "Powered by Trinity"
+		},
+		"e6148f01-9a6d-40df-9788-cfdf83d18293": {
+			"type": "text",
+			"x": 560.6,
+			"y": 305.62,
+			"width": 254.49,
+			"height": 17.37,
+			"text": "big_buck_bunny_1080p_surround.avi"
+		},
+		"b036ca27-9554-4d40-81cf-5d4ea1b6d682": {
+			"type": "text",
+			"x": 398.84,
+			"y": 329.93,
+			"width": 46.5,
+			"height": 13.53,
+			"text": "Filmato"
+		},
+		"0cfb77fc-5df1-45da-8ff0-9b55afe77e16": {
+			"type": "text",
+			"x": 460.65,
+			"y": 329.92,
+			"width": 52.72,
+			"height": 13.39,
+			"text": "Modifica"
+		},
+		"82198f6c-d6f1-4823-ad5e-2af1e714fb6f": {
+			"type": "text",
+			"x": 527.73,
+			"y": 329.98,
+			"width": 64.59,
+			"height": 13.25,
+			"text": "Visualizza"
+		},
+		"651c17f9-b640-4f4b-a8e1-e9d590833b68": {
+			"type": "text",
+			"x": 606.7,
+			"y": 330.93,
+			"width": 20.47,
+			"height": 12.3,
+			"text": "Vai"
+		},
+		"d1688891-895b-4ecf-b483-b60dc3f81b5e": {
+			"type": "text",
+			"x": 641.61,
+			"y": 330,
+			"width": 37.51,
+			"height": 13.5,
+			"text": "Audio"
+		},
+		"bcd8739e-8d8a-475e-a03c-bc7846d097ec": {
+			"type": "text",
+			"x": 693.67,
+			"y": 330.72,
+			"width": 34.65,
+			"height": 12.61,
+			"text": "Aiuto"
+		},
+		"6c7c4079-22a2-4717-a08f-0194d8e57379": {
+			"type": "text",
+			"x": 41.67,
+			"y": 466.59,
+			"width": 107.7,
+			"height": 15.48,
+			"text": "All Applications"
+		},
+		"76a553e1-68a5-4d64-922d-ac8c469bfc7d": {
+			"type": "text",
+			"x": 38.78,
+			"y": 490.07,
+			"width": 117.49,
+			"height": 13.93,
+			"text": "Press '/' to search..."
+		},
+		"e7a01f67-6025-415b-b200-5986102f5ba3": {
+			"type": "text",
+			"x": 30.83,
+			"y": 516.88,
+			"width": 42.49,
+			"height": 12.36,
+			"text": "Debian"
+		},
+		"55e12cf1-0ead-416d-ad15-5931226f0050": {
+			"type": "text",
+			"x": 29.73,
+			"y": 542.84,
+			"width": 55.69,
+			"height": 15.26,
+			"text": "Graphics"
+		},
+		"725b4f51-610c-47fe-a7d7-a5e946b9b0c9": {
+			"type": "text",
+			"x": 30.66,
+			"y": 569.66,
+			"width": 50.77,
+			"height": 11.7,
+			"text": "Internet"
+		},
+		"ea4fde5c-810c-4997-8476-b91692c8caf1": {
+			"type": "text",
+			"x": 30.65,
+			"y": 594.84,
+			"width": 67.78,
+			"height": 12.45,
+			"text": "Multimedia"
+		},
+		"42d033a3-b740-445e-9ede-f4f2415ec566": {
+			"type": "text",
+			"x": 29.71,
+			"y": 620.53,
+			"width": 36.56,
+			"height": 12.88,
+			"text": "Office"
+		},
+		"4b1aefab-d6ed-40cf-8fab-95a94450d2b2": {
+			"type": "text",
+			"x": 29.78,
+			"y": 646.88,
+			"width": 52.57,
+			"height": 15.34,
+			"text": "Settings"
+		},
+		"6a8c5685-ee17-4670-80fa-7633e7c03529": {
+			"type": "text",
+			"x": 29.69,
+			"y": 673.7,
+			"width": 46.76,
+			"height": 14.5,
+			"text": "System"
+		},
+		"8ecaf3d3-42b9-4281-a0ca-d2ee63886247": {
+			"type": "text",
+			"x": 30.54,
+			"y": 698.73,
+			"width": 45.76,
+			"height": 12.56,
+			"text": "Utilities"
+		},
+		"83c5eae3-c10c-4e16-8a6e-2c513b7502d8": {
+			"type": "text",
+			"x": 30.73,
+			"y": 724.87,
+			"width": 27.62,
+			"height": 15.19,
+			"text": "Help"
+		},
+		"f7c56880-b621-4cb6-b0a0-d99212efcb6d": {
+			"type": "text",
+			"x": 68.67,
+			"y": 746.86,
+			"width": 52.71,
+			"height": 12.5,
+			"text": "Actions"
+		},
+		"4b963355-0d38-49f9-8782-3eb956025a53": {
+			"type": "text",
+			"x": 30.69,
+			"y": 769.89,
+			"width": 102.61,
+			"height": 12.36,
+			"text": "Run Command..."
+		},
+		"1573d2d8-3ed5-4e30-8d79-12262334f6ef": {
+			"type": "text",
+			"x": 30.5,
+			"y": 802.89,
+			"width": 77.94,
+			"height": 12.49,
+			"text": "Lock Session"
+		},
+		"7a15a901-1122-431a-a464-6fee98e0b284": {
+			"type": "text",
+			"x": 30.54,
+			"y": 829.7,
+			"width": 60.9,
+			"height": 14.5,
+			"text": "Log Out..."
+		},
+		"98f736e6-2966-423b-9d5a-3dafa9571dd8": {
+			"type": "text",
+			"x": 179.48,
+			"y": 856.76,
+			"width": 134.85,
+			"height": 15.23,
+			"text": "Wikipedia - Chromium"
+		},
+		"fd045e0c-8173-49fc-9b16-7d070d5bb858": {
+			"type": "text",
+			"x": 159.58,
+			"y": 878.8,
+			"width": 18.66,
+			"height": 18.41,
+			"text": "X"
+		},
+		"2050b67b-0d6c-439d-ad92-c1c179df657c": {
+			"type": "text",
+			"x": 11.32,
+			"y": 864.36,
+			"width": 20.14,
+			"height": 17.7,
+			"text": "T"
+		},
+		"ab1196ff-fb4d-4684-9d7e-bed301db6200": {
+			"type": "text",
+			"x": 180.67,
+			"y": 880.9,
+			"width": 146.7,
+			"height": 12.39,
+			"text": "Bluebirds - TDE Daemon"
+		},
+		"36294ef8-c6d9-4ce9-a1cf-636f3295e313": {
+			"type": "text",
+			"x": 380.84,
+			"y": 857.15,
+			"width": 176.16,
+			"height": 15.37,
+			"text": ""
+		},
+		"025c1fe7-5369-48e5-b872-1c90d44b1512": {
+			"type": "text",
+			"x": 518.93,
+			"y": 795.73,
+			"width": 66.38,
+			"height": 13.33,
+			"text": "1.03 / 9.56"
+		},
+		"947176f0-90a1-46a4-b91d-88fd5cbba8dc": {
+			"type": "text",
+			"x": 213.69,
+			"y": 624,
+			"width": 111.51,
+			"height": 12.38,
+			"text": "KPDF - PDF Viewer"
+		},
+		"d13cfd80-85cf-4cf5-b815-350d2766aae7": {
+			"type": "text",
+			"x": 213.65,
+			"y": 649.7,
+			"width": 65.81,
+			"height": 12.8,
+			"text": "LibreOffice"
+		},
+		"8a4e68fb-38b4-48bd-9c8a-0d96b4d90059": {
+			"type": "text",
+			"x": 213.89,
+			"y": 675.74,
+			"width": 249.18,
+			"height": 15.2,
+			"text": "LibreOffice Base - Database Development"
+		},
+		"6744d32c-fb39-40f8-a761-2f3ce2a4516f": {
+			"type": "text",
+			"x": 213.81,
+			"y": 701.42,
+			"width": 182.44,
+			"height": 15.57,
+			"text": "LibreOffice Calc - Spreadsheet"
+		},
+		"04bd8fbd-e7aa-4dbc-9ca7-302dd47c9a6e": {
+			"type": "text",
+			"x": 213.76,
+			"y": 727.57,
+			"width": 216.56,
+			"height": 15.4,
+			"text": "LibreOffice Draw - Drawing Program"
+		},
+		"38537074-ce7e-4abf-9f6d-031f781d35e2": {
+			"type": "text",
+			"x": 213.62,
+			"y": 753.67,
+			"width": 203.58,
+			"height": 15.32,
+			"text": "LibreOffice Impress - Presentation"
+		},
+		"c225cadf-2cf2-4490-830f-a555cfb762ff": {
+			"type": "text",
+			"x": 213.49,
+			"y": 779.77,
+			"width": 200.78,
+			"height": 12.8,
+			"text": "LibreOffice Math - Formula Editor"
+		},
+		"e94c26b6-2f61-47ee-a2f7-156cf853d4e7": {
+			"type": "text",
+			"x": 213.6,
+			"y": 805.69,
+			"width": 211.6,
+			"height": 12.8,
+			"text": "LibreOffice Writer - Word Processor"
+		},
+		"d5b5ba22-230c-4941-8732-41bb01af54c8": {
+			"type": "text",
+			"x": 1209.73,
+			"y": 856.79,
+			"width": 10.54,
+			"height": 13.39,
+			"text": "1"
+		},
+		"639403d7-651d-450a-a277-80bd84dd527c": {
+			"type": "text",
+			"x": 1209.81,
+			"y": 880.96,
+			"width": 10.11,
+			"height": 12.95,
+			"text": "2"
+		},
+		"931f674d-7d52-40bf-9e62-a283d06b7555": {
+			"type": "text",
+			"x": 1320.39,
+			"y": 860.37,
+			"width": 51.67,
+			"height": 15.07,
+			"text": "23:48"
+		},
+		"c76bb5ac-cfba-43da-8ced-a4db7369920a": {
+			"type": "text",
+			"x": 1308.65,
+			"y": 886.63,
+			"width": 73.77,
+			"height": 11.63,
+			"text": "2017-09-25"
+		},
+		"77159dfa-6c02-4498-bb39-c4c5d822e37a": {
+			"type": "text",
+			"x": 1054.72,
+			"y": 371.19,
+			"width": 17.34,
+			"height": 16.92,
+			"text": "X"
+		},
+		"17d9a493-7e7e-4aff-92dc-42e07fd3bd47": {
+			"type": "text",
+			"x": 1120.59,
+			"y": 370.7,
+			"width": 164.75,
+			"height": 12.75,
+			"text": "Bluebirds - TDE Daemon"
+		},
+		"088918ea-a665-4254-bdaa-ee19d7876da3": {
+			"type": "text",
+			"x": 1336.94,
+			"y": 372.74,
+			"width": 10.86,
+			"height": 13.1,
+			"text": "?"
+		},
+		"e6f4be54-28cd-4d07-ba72-987729d83b74": {
+			"type": "text",
+			"x": 1151.59,
+			"y": 430.73,
+			"width": 213.71,
+			"height": 12.55,
+			"text": "A new medium has been detected."
+		},
+		"094634ab-7eea-4299-b0d2-af4f143d704f": {
+			"type": "text",
+			"x": 1151.97,
+			"y": 445.92,
+			"width": 172.39,
+			"height": 15.21,
+			"text": "What do you want to do?"
+		},
+		"6f9ff21f-f12a-442f-af56-d81b20b2b59f": {
+			"type": "text",
+			"x": 1068.68,
+			"y": 494.81,
+			"width": 205.86,
+			"height": 15.25,
+			"text": "Medium type: Mounted CD-ROM"
+		},
+		"56712755-5b12-4556-8292-589c3d50417a": {
+			"type": "text",
+			"x": 1106.69,
+			"y": 535.85,
+			"width": 131.61,
+			"height": 15.13,
+			"text": "Open in New Window"
+		},
+		"502ba947-c0fb-42e1-b26a-b1f3be1893b2": {
+			"type": "text",
+			"x": 1107.62,
+			"y": 567.57,
+			"width": 68.78,
+			"height": 15.93,
+			"text": "Do Nothing"
+		},
+		"dcd89950-db64-4fb2-a14c-ec3d65517fe5": {
+			"type": "text",
+			"x": 1090.53,
+			"y": 702.84,
+			"width": 221.85,
+			"height": 15.34,
+			"text": "Always do this for this type of media"
+		},
+		"1458fff7-6d2a-4878-bf12-e585c1b19419": {
+			"type": "text",
+			"x": 1172.51,
+			"y": 750.75,
+			"width": 71.78,
+			"height": 15.41,
+			"text": "Configure..."
+		},
+		"f44db53e-0847-4a8d-bf1c-5b151bc4d325": {
+			"type": "text",
+			"x": 1302.89,
+			"y": 751.85,
+			"width": 20.11,
+			"height": 13.39,
+			"text": "OK"
+		},
+		"0644347f-b170-4d6b-a100-4f55637a5389": {
+			"type": "text",
+			"x": 1381.66,
+			"y": 750.91,
+			"width": 42.93,
+			"height": 12.56,
+			"text": "Cancel"
+		},
+		"4f1a6c58-97d5-43c1-84c5-bac770337b93": {
+			"type": "text",
+			"x": 427.2,
+			"y": 237.24,
+			"width": 60.05,
+			"height": 15.46,
+			"text": ""
+		},
+		"37fc0517-764c-4278-8452-cbf5fb70eed1": {
+			"type": "text",
+			"x": 407.28,
+			"y": 260.1,
+			"width": 100.66,
+			"height": 9.74,
+			"text": "1 352 000+ articulos"
+		}
+	},
+	"verified": true
+}

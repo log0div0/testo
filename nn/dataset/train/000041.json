@@ -1,0 +1,557 @@
+{
+	"objs": {
+		"891c1359-326d-4835-8ff6-2dc6753819e5": {
+			"type": "text",
+			"x": 1192.88,
+			"y": 5.43,
+			"width": 51.11,
+			"height": 16.32,
+			"text": "Desktop"
+		},
+		"77864e6b-50a1-4491-afb4-447efe1330ec": {
+			"type": "text",
+			"x": 795.3,
+			"y": 5.49,
+			"width": 13.18,
+			"height": 18.03,
+			"text": "?"
+		},
+		"93b27f1e-5fc7-42c3-b42b-0d6a16ef61d3": {
+			"type": "text",
+			"x": 436.53,
+			"y": 81.47,
+			"width": 87.17,
+			"height": 13.66,
+			"text": "home - Dolphin"
+		},
+		"55c7f0f1-fcbd-4cff-878e-66e91ee61d41": {
+			"type": "text",
+			"x": 321.6,
+			"y": 107.63,
+			"width": 23.87,
+			"height": 10.75,
+			"text": "Find"
+		},
+		"aad719ec-cd3b-445a-84e7-82cb4f97b3f4": {
+			"type": "text",
+			"x": 385.64,
+			"y": 107.65,
+			"width": 44.7,
+			"height": 10.84,
+			"text": "Preview"
+		},
+		"609e3631-8a70-4c72-a05d-eafc177e13d2": {
+			"type": "text",
+			"x": 469.43,
+			"y": 107.63,
+			"width": 26.88,
+			"height": 12.61,
+			"text": "Split"
+		},
+		"c9517037-959f-4c81-b89f-c8bd0227da0d": {
+			"type": "text",
+			"x": 536.57,
+			"y": 107.62,
+			"width": 41.99,
+			"height": 10.89,
+			"text": "Control"
+		},
+		"82b36f14-0698-4155-8e0f-807a1fa6fbc7": {
+			"type": "text",
+			"x": 98.56,
+			"y": 132.69,
+			"width": 39.83,
+			"height": 12.79,
+			"text": "Places"
+		},
+		"e56c5287-b152-408a-a048-9da7cf08ea99": {
+			"type": "text",
+			"x": 118.74,
+			"y": 156.75,
+			"width": 36.8,
+			"height": 11.65,
+			"text": "Home"
+		},
+		"46a64491-5cf4-41e5-9000-1b28de202f96": {
+			"type": "text",
+			"x": 118.47,
+			"y": 175.86,
+			"width": 52.15,
+			"height": 12.5,
+			"text": "Network"
+		},
+		"a973443d-85d6-4c6f-afee-fc38d2cd328e": {
+			"type": "text",
+			"x": 118.68,
+			"y": 196.64,
+			"width": 28.56,
+			"height": 11.55,
+			"text": "Root"
+		},
+		"d9ea99e2-22a1-4884-aeed-9d29eb12c291": {
+			"type": "text",
+			"x": 117.57,
+			"y": 215.83,
+			"width": 33.82,
+			"height": 12.37,
+			"text": "Trash"
+		},
+		"b44e2e65-0bb3-42eb-bb0e-91b918ec1d63": {
+			"type": "text",
+			"x": 98.6,
+			"y": 242.66,
+			"width": 112.65,
+			"height": 15.63,
+			"text": "Recently Accessed"
+		},
+		"ccce9a6c-cdd6-48f9-b496-ab4248f8bf1d": {
+			"type": "text",
+			"x": 117.79,
+			"y": 265.83,
+			"width": 37.69,
+			"height": 15.38,
+			"text": "Today"
+		},
+		"9fd906b8-379b-48c7-ba70-533f0007b141": {
+			"type": "text",
+			"x": 117.82,
+			"y": 285.94,
+			"width": 60.2,
+			"height": 15.19,
+			"text": "Yesterday"
+		},
+		"be553b1e-5c59-41b7-91e2-29f7a19648b7": {
+			"type": "text",
+			"x": 117.82,
+			"y": 305.84,
+			"width": 67.49,
+			"height": 12.5,
+			"text": "This Month"
+		},
+		"fffa8d5e-6361-4394-9da7-68554fe1f4e0": {
+			"type": "text",
+			"x": 118.64,
+			"y": 326.04,
+			"width": 67.68,
+			"height": 12.3,
+			"text": "Last Month"
+		},
+		"b147f70d-a393-4b66-bde2-9094271afb23": {
+			"type": "text",
+			"x": 97.94,
+			"y": 352.91,
+			"width": 67.33,
+			"height": 12.48,
+			"text": "Search For"
+		},
+		"bf747b2d-a660-4c04-b759-2f13cc9a5431": {
+			"type": "text",
+			"x": 118.58,
+			"y": 376.46,
+			"width": 69.91,
+			"height": 11.91,
+			"text": "Documents"
+		},
+		"b265b815-5c33-43c7-b884-7466b66d221f": {
+			"type": "text",
+			"x": 118.75,
+			"y": 396.83,
+			"width": 45.33,
+			"height": 14.49,
+			"text": "Images"
+		},
+		"a2c1d156-ede0-48ae-a895-2d26df5ca492": {
+			"type": "text",
+			"x": 117.68,
+			"y": 415.51,
+			"width": 66.65,
+			"height": 13.18,
+			"text": "Audio Files"
+		},
+		"95b6aa09-f5f4-404f-9524-178ec7c80f4a": {
+			"type": "text",
+			"x": 117.72,
+			"y": 435.88,
+			"width": 42.59,
+			"height": 12.42,
+			"text": "Videos"
+		},
+		"e497b5ba-50c5-401c-8174-8aa7a83710d2": {
+			"type": "text",
+			"x": 98.72,
+			"y": 462.61,
+			"width": 48.78,
+			"height": 12.88,
+			"text": "Devices"
+		},
+		"a3b3f1fb-a94e-4fa5-a05d-9fda24fc7578": {
+			"type": "text",
+			"x": 118.6,
+			"y": 485.8,
+			"width": 128.94,
+			"height": 12.63,
+			"text": "171.1 GiB Hard Drive"
+		},
+		"aa5a0b53-add6-46e1-9efa-d4a781ff66e7": {
+			"type": "text",
+			"x": 118.77,
+			"y": 505.91,
+			"width": 120.73,
+			"height": 12.41,
+			"text": "10.0 GiB Hard Drive"
+		},
+		"963951b8-09fc-40ce-b77c-40a0868903eb": {
+			"type": "text",
+			"x": 118.6,
+			"y": 525.89,
+			"width": 128.94,
+			"height": 12.63,
+			"text": "114.0 GiB Hard Drive"
+		},
+		"c999939c-c287-43eb-9adf-ca6e8eaaa3d6": {
+			"type": "text",
+			"x": 280.09,
+			"y": 604.59,
+			"width": 57.13,
+			"height": 12.89,
+			"text": "8 Folders"
+		},
+		"052c3ffc-cd35-40bd-a683-bbf36322ea7c": {
+			"type": "text",
+			"x": 361.63,
+			"y": 135.8,
+			"width": 35.74,
+			"height": 12.71,
+			"text": "home"
+		},
+		"addae832-1842-43e9-8ba5-38ce49a49cf5": {
+			"type": "text",
+			"x": 557.68,
+			"y": 136.95,
+			"width": 32.82,
+			"height": 12.35,
+			"text": "trash"
+		},
+		"f199ed5e-c480-484d-9f54-36e54da31965": {
+			"type": "text",
+			"x": 295.46,
+			"y": 163.52,
+			"width": 40.86,
+			"height": 11.86,
+			"text": "Home"
+		},
+		"6b220080-3006-4860-a62a-897a8330219e": {
+			"type": "text",
+			"x": 281.45,
+			"y": 164.6,
+			"width": 9.74,
+			"height": 12.61,
+			"text": ">"
+		},
+		"e0e8744e-921e-4dd1-a7eb-99733498c01b": {
+			"type": "text",
+			"x": 948.37,
+			"y": 479.5,
+			"width": 9.74,
+			"height": 12.61,
+			"text": ">"
+		},
+		"1a47614e-91e9-4519-95a4-87e04e4d7915": {
+			"type": "text",
+			"x": 948.48,
+			"y": 587.62,
+			"width": 9.74,
+			"height": 12.61,
+			"text": ">"
+		},
+		"36b4619e-be65-4704-9a1a-5ce759489e83": {
+			"type": "text",
+			"x": 948.37,
+			"y": 611.69,
+			"width": 9.74,
+			"height": 12.61,
+			"text": ">"
+		},
+		"1f7b4abb-905d-427c-95e3-b8ccca874cab": {
+			"type": "text",
+			"x": 948.37,
+			"y": 635.54,
+			"width": 9.74,
+			"height": 12.61,
+			"text": ">"
+		},
+		"1260578d-b096-478e-9994-b140fe67aa61": {
+			"type": "text",
+			"x": 948.57,
+			"y": 707.51,
+			"width": 9.74,
+			"height": 12.61,
+			"text": ">"
+		},
+		"cee9fdca-5977-46dc-a15e-ba114f160add": {
+			"type": "text",
+			"x": 356.33,
+			"y": 292.33,
+			"width": 20.94,
+			"height": 13.18,
+			"text": "bin"
+		},
+		"46935b2d-9956-44ee-bb0b-4849f3e3c969": {
+			"type": "text",
+			"x": 480.64,
+			"y": 292.73,
+			"width": 50.54,
+			"height": 15.49,
+			"text": "Desktop"
+		},
+		"d2786b11-da70-4155-a2c9-068491f8b7e2": {
+			"type": "text",
+			"x": 609.81,
+			"y": 293.79,
+			"width": 70.49,
+			"height": 11.62,
+			"text": "Documents"
+		},
+		"282bd60c-87b5-4a09-9138-ef54e5bd9177": {
+			"type": "text",
+			"x": 750.64,
+			"y": 292.88,
+			"width": 67.47,
+			"height": 12.41,
+			"text": "Downloads"
+		},
+		"7b57cefe-6271-40af-8ad3-08898b645748": {
+			"type": "text",
+			"x": 348.59,
+			"y": 417.11,
+			"width": 36.1,
+			"height": 12.38,
+			"text": "Music"
+		},
+		"30bd30fc-a504-417f-a625-f5092ddbfec5": {
+			"type": "text",
+			"x": 481.32,
+			"y": 416.52,
+			"width": 49.75,
+			"height": 12.82,
+			"text": "Pictures"
+		},
+		"0752ce9d-8df4-4bcd-9837-36c1462775f5": {
+			"type": "text",
+			"x": 609.51,
+			"y": 416.89,
+			"width": 71.01,
+			"height": 15.32,
+			"text": "public_html"
+		},
+		"6a3de895-76b1-48e1-860b-116035f32195": {
+			"type": "text",
+			"x": 762.84,
+			"y": 416.92,
+			"width": 42.41,
+			"height": 12.38,
+			"text": "Videos"
+		},
+		"3d6616be-0969-44e0-84b4-35fbedaf8e9b": {
+			"type": "text",
+			"x": 651.73,
+			"y": 479.78,
+			"width": 72.53,
+			"height": 11.44,
+			"text": "Create New"
+		},
+		"2c97e76a-c67e-4c30-b727-50c6e81d039b": {
+			"type": "text",
+			"x": 652.68,
+			"y": 506.89,
+			"width": 78.62,
+			"height": 12.41,
+			"text": "New Window"
+		},
+		"3e1e2727-7752-487f-85a3-d89d37fe50cf": {
+			"type": "text",
+			"x": 652.78,
+			"y": 530.82,
+			"width": 51.45,
+			"height": 12.49,
+			"text": "New Tab"
+		},
+		"4423560f-265c-4e3e-b5cd-3fe7a48d5ba1": {
+			"type": "text",
+			"x": 652.66,
+			"y": 559.55,
+			"width": 33.58,
+			"height": 11.84,
+			"text": "Paste"
+		},
+		"72caa530-f3b8-4d0c-b4c6-3dc01b131659": {
+			"type": "text",
+			"x": 651.88,
+			"y": 586.87,
+			"width": 65.32,
+			"height": 15.28,
+			"text": "Open With"
+		},
+		"b8358827-f2b4-47b0-96e3-bdad42505bcd": {
+			"type": "text",
+			"x": 651.38,
+			"y": 610.62,
+			"width": 46.99,
+			"height": 15.56,
+			"text": "Actions"
+		},
+		"a982a9f2-313e-4809-a8bc-fc74f9529b85": {
+			"type": "text",
+			"x": 651.6,
+			"y": 635.62,
+			"width": 62.7,
+			"height": 14.65,
+			"text": "Compress"
+		},
+		"914c9a30-2b1e-4cc4-822b-c665baade4d3": {
+			"type": "text",
+			"x": 652.47,
+			"y": 658.79,
+			"width": 226.94,
+			"height": 15.34,
+			"text": "Export from a subversion repository..."
+		},
+		"d6c959ec-7f87-4593-b3c2-2d29c23bc067": {
+			"type": "text",
+			"x": 651.7,
+			"y": 682.77,
+			"width": 175.6,
+			"height": 15.41,
+			"text": "Checkout from a repository..."
+		},
+		"c21025b8-70a6-4f01-b3da-96291538f77f": {
+			"type": "text",
+			"x": 651.39,
+			"y": 706.74,
+			"width": 57.76,
+			"height": 12.62,
+			"text": "Activities"
+		},
+		"8c952127-ce9d-46d6-8603-c4b8d2e64b48": {
+			"type": "text",
+			"x": 652.69,
+			"y": 730.85,
+			"width": 62.47,
+			"height": 15.26,
+			"text": "Properties"
+		},
+		"3a0a821a-20f5-4cc3-be93-781fa5578024": {
+			"type": "text",
+			"x": 877.3,
+			"y": 730.77,
+			"width": 68.21,
+			"height": 12.64,
+			"text": "Alt + Return"
+		},
+		"1506298e-d0b2-4470-8753-cfcda8bb723a": {
+			"type": "text",
+			"x": 964.74,
+			"y": 710.85,
+			"width": 16.75,
+			"height": 16.41,
+			"text": "+"
+		},
+		"3cece6c8-d1ca-41e4-b551-3ba806581902": {
+			"type": "text",
+			"x": 985.57,
+			"y": 711.67,
+			"width": 160.82,
+			"height": 15.63,
+			"text": "Link to the current activity"
+		},
+		"1fc6a046-af8e-4d4f-ac50-975f51717180": {
+			"type": "text",
+			"x": 1034.63,
+			"y": 735.89,
+			"width": 52.62,
+			"height": 12.24,
+			"text": "Link to:"
+		},
+		"46caca49-c992-482a-82eb-5ba8024b88e9": {
+			"type": "text",
+			"x": 985.92,
+			"y": 759.83,
+			"width": 50.28,
+			"height": 15.16,
+			"text": "Desktop"
+		},
+		"8af34765-8db0-40b7-bfb2-3a94e393b2e3": {
+			"type": "text",
+			"x": 1204.16,
+			"y": 780.26,
+			"width": 54.1,
+			"height": 12.88,
+			"text": "12:36 AM"
+		},
+		"d51d052c-e033-4bec-96fb-4f1554df248f": {
+			"type": "text",
+			"x": 903.62,
+			"y": 507.07,
+			"width": 41.72,
+			"height": 12.16,
+			"text": "Ctrl+N"
+		},
+		"b841a50e-c02d-4709-93ef-aec6818046a3": {
+			"type": "text",
+			"x": 904.85,
+			"y": 530.73,
+			"width": 41.47,
+			"height": 12.55,
+			"text": "Ctrl+T"
+		},
+		"b563c142-ade5-4c26-91ee-0f43d95329c9": {
+			"type": "text",
+			"x": 903.94,
+			"y": 558.78,
+			"width": 42.21,
+			"height": 12.67,
+			"text": "Ctrl+V"
+		},
+		"cba2ae4b-8652-4798-a2c9-32922c6f72fe": {
+			"type": "text",
+			"x": 9.98,
+			"y": 777.05,
+			"width": 12.21,
+			"height": 13.87,
+			"text": "K"
+		},
+		"e24f107d-76f6-42ad-ade9-0105205c1466": {
+			"type": "text",
+			"x": 180.13,
+			"y": 780.17,
+			"width": 95.88,
+			"height": 15.79,
+			"text": "home - Dolphin"
+		},
+		"4bfb8d15-4896-4c04-acdf-5ce3806e206d": {
+			"type": "text",
+			"x": 777.18,
+			"y": 381.07,
+			"width": 12.18,
+			"height": 13.93,
+			"text": "2"
+		},
+		"92353239-26a9-4919-9018-42fb24920bcc": {
+			"type": "text",
+			"x": 796.44,
+			"y": 381.12,
+			"width": 11.81,
+			"height": 13.93,
+			"text": "4"
+		},
+		"3a375781-efa0-4623-b5fe-dbc8a2c62491": {
+			"type": "text",
+			"x": 815.06,
+			"y": 380.84,
+			"width": 11.98,
+			"height": 14.27,
+			"text": "5"
+		}
+	},
+	"verified": true
+}

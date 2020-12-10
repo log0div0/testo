@@ -9,7 +9,7 @@
 #include <thread>
 #include <fstream>
 #include <regex>
-#include "../../../guestfs/guestfs.hpp"
+#include "guestfs/guestfs.hpp"
 
 using namespace std::chrono_literals;
 

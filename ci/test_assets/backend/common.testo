@@ -68,7 +68,7 @@ macro install_ubuntu_server(host_name, login, password) {
 		press Down, Enter
 	}
 	wait "Installation complete" timeout 10m; unplug dvd; press Enter
-	wait "login:" timeout 2m; type "${login}"; press Enter
+	wait "ubuntu login:" timeout 2m; type "${login}"; press Enter
 	wait "Password:"; type "${password}"; press Enter
 	wait "Welcome to Ubuntu"
 }

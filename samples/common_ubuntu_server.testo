@@ -66,10 +66,10 @@ macro install_guest_additions_ubuntu_server(host_name, login, password) {
 	unplug dvd
 }
 
-macro unplug_nat(login, password) {
+macro unplug_nic(nic_name, login, password) {
 	shutdown
 
-	unplug nic nat
+	unplug nic "${nic_name}"
 	start
 
 	wait "login:"; type "${login}"; press Enter

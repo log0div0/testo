@@ -17,14 +17,14 @@ macro install_win7(login) {
 	} else {
 		mouse click "Выборочная"
 	}
-	wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее"
+	wait "Где вы хотите установить Windows?" || "Выберите раздел для установки Windows"; mouse click "Далее".center_bottom()
 	wait "Выберите имя пользователя" timeout 15m
 	unplug dvd
-	press LeftShift + LeftAlt; type "${login}"; mouse click "Далее"
-	wait "Установите пароль"; mouse click "Далее".from_bottom(0)
-	wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее"
+	press LeftShift + LeftAlt; type "${login}"; mouse click "Далее".center_bottom()
+	wait "Установите пароль"; mouse click "Далее".from_bottom(0).center_bottom()
+	wait "Введите ключ продукта"; mouse click "Автоматически активировать Windows"; mouse click "Далее".center_bottom()
 	wait "Помогите автоматически защитить компьютер"; mouse click "Отложить решение"
-	wait "Проверьте настройку даты и времени"; mouse click "Далее"
+	wait "Проверьте настройку даты и времени"; mouse click "Далее".center_bottom()
 	wait "Выберите текущее место расположения компьютера"; mouse click "Общественная сеть"
 	wait "Корзина" timeout 10m
 	shutdown

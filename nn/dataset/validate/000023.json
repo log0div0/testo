@@ -1,0 +1,76 @@
+{
+	"objs": {
+		"bd69d0b8-acba-4043-ae73-3ccf5f8ab68d": {
+			"type": "text",
+			"x": 316.86,
+			"y": 13.15,
+			"width": 64.28,
+			"height": 13.87,
+			"text": "Language"
+		},
+		"fa5bea79-c0e6-4711-acb0-5ab43a19d753": {
+			"type": "text",
+			"x": 76.79,
+			"y": 453.99,
+			"width": 86.42,
+			"height": 14.19,
+			"text": "F2 Language"
+		},
+		"4e7c8eba-154b-4580-9f6f-ef0f43eb52f7": {
+			"type": "text",
+			"x": 99.12,
+			"y": 313.91,
+			"width": 53.86,
+			"height": 14.99,
+			"text": "English"
+		},
+		"9b820c3e-a823-4515-899a-37f84407137e": {
+			"type": "text",
+			"x": 353.05,
+			"y": 293.05,
+			"width": 55.84,
+			"height": 15.76,
+			"text": "Русский"
+		},
+		"fc4ca160-c75c-464a-9ee1-19bfbf0a4211": {
+			"type": "text",
+			"x": 11.01,
+			"y": 454.01,
+			"width": 51.97,
+			"height": 14.04,
+			"text": "F1 Help"
+		},
+		"d42e8aa4-56b2-4c83-af1c-2a243e1a8ea2": {
+			"type": "text",
+			"x": 176.94,
+			"y": 453.91,
+			"width": 71.18,
+			"height": 14.1,
+			"text": "F3 Keymap"
+		},
+		"68118c55-6d87-434e-9e51-804773da5698": {
+			"type": "text",
+			"x": 261.91,
+			"y": 453.18,
+			"width": 62.36,
+			"height": 13.08,
+			"text": "F4 Modes"
+		},
+		"3deca814-70ca-4626-9e9e-0d467d06e30b": {
+			"type": "text",
+			"x": 337.45,
+			"y": 453.03,
+			"width": 121.75,
+			"height": 15.02,
+			"text": "F5 Accessibility"
+		},
+		"cce5cb45-d618-433e-a007-21cd6c3fcd51": {
+			"type": "text",
+			"x": 472.7,
+			"y": 453.03,
+			"width": 119.48,
+			"height": 14.77,
+			"text": "F6 Other Options"
+		}
+	}
+}

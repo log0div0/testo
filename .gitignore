@@ -2,3 +2,5 @@
 *.pyc
 node_modules
 package-lock.json
+tmp
+__pycache__

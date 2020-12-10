@@ -37,7 +37,7 @@ struct HyperVVM: VM {
 	void suspend() override;
 	void resume() override;
 	void power_button() override;
-	stb::Image screenshot() override;
+	stb::Image<stb::RGB> screenshot() override;
 	int run(const fs::path& exe, std::vector<std::string> args,
 		const std::function<void(const std::string&)>& callback) override;
 

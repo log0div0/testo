@@ -1,7 +1,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_vm_create: centos_prepare_testo {
+test centos_vm_create: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
 		exec bash """
@@ -35,7 +35,7 @@ test centos_vm_create: centos_prepare_testo {
 }
 
 
-test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
+test centos_backend_qemu_create_simple_vm: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
 		exec bash """
@@ -48,7 +48,7 @@ test centos_backend_qemu_create_simple_vm: centos_prepare_testo {
 
 
 [no_snapshots: true]
-test centos_backend_qemu_create_simple_vm_uefi: centos_prepare_testo {
+test centos_backend_qemu_create_simple_vm_uefi: centos_install_testo_cpu {
 	centos {
 		copyto "ovmf/OVMF_CODE.fd" "/usr/share/OVMF/OVMF_CODE.fd"
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
@@ -70,7 +70,7 @@ test centos_backend_qemu_create_simple_vm_uefi: centos_prepare_testo {
 
 
 [no_snapshots: true]
-test centos_backend_qemu_create_simple_vm_qxl: centos_prepare_testo {
+test centos_backend_qemu_create_simple_vm_qxl: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
 		exec bash """

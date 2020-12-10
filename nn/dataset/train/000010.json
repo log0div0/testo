@@ -1,0 +1,125 @@
+{
+	"objs": {
+		"469907ed-13fa-4194-9053-4a173f8d9e43": {
+			"type": "text",
+			"x": 269.43,
+			"y": 120.39,
+			"width": 102.38,
+			"height": 31.78,
+			"text": "ubuntu"
+		},
+		"1b24fbc3-e2df-405c-ad88-92ef4f57bc66": {
+			"type": "text",
+			"x": 242.72,
+			"y": 223.24,
+			"width": 156.44,
+			"height": 15.04,
+			"text": "Install Ubuntu Server"
+		},
+		"a75e1915-614b-4f4c-beed-c374b92c567b": {
+			"type": "text",
+			"x": 172.29,
+			"y": 244.48,
+			"width": 297.89,
+			"height": 14.45,
+			"text": "Install Ubuntu Server with the HWE kernel"
+		},
+		"999b581f-bcd3-4c04-8275-3269cb3892ee": {
+			"type": "text",
+			"x": 210.48,
+			"y": 266.13,
+			"width": 221.15,
+			"height": 15.12,
+			"text": "Install MAAS Region Controller"
+		},
+		"a0a8ef22-29d2-4c1d-938c-088f0d59ebda": {
+			"type": "text",
+			"x": 217.67,
+			"y": 287.39,
+			"width": 205.67,
+			"height": 13.35,
+			"text": "Install MAAS Rack Controller"
+		},
+		"600ab03d-8da0-40f2-9e10-64ca38712681": {
+			"type": "text",
+			"x": 240.92,
+			"y": 307.57,
+			"width": 160.53,
+			"height": 14.24,
+			"text": "Check disc for defects"
+		},
+		"0321e5da-44c1-49db-b5b0-962f40c5e764": {
+			"type": "text",
+			"x": 277.71,
+			"y": 329.37,
+			"width": 86.74,
+			"height": 15.08,
+			"text": "Test memory"
+		},
+		"96e27faa-052a-44b2-8158-97169f7498f2": {
+			"type": "text",
+			"x": 230.45,
+			"y": 349.44,
+			"width": 179.37,
+			"height": 14.26,
+			"text": "Boot from first hard disk"
+		},
+		"2d525503-f9c2-46b9-b18a-1f0ff91c770c": {
+			"type": "text",
+			"x": 238.67,
+			"y": 370.49,
+			"width": 164.48,
+			"height": 14.41,
+			"text": "Rescue a broken system"
+		},
+		"f01938c3-8865-4640-bd40-621051b103a1": {
+			"type": "text",
+			"x": 10.56,
+			"y": 453.2,
+			"width": 52.93,
+			"height": 14.98,
+			"text": "F1 Help"
+		},
+		"c81d1ffc-9e9f-4f6b-af3b-fe2603707dfe": {
+			"type": "text",
+			"x": 76.55,
+			"y": 453.57,
+			"width": 86.82,
+			"height": 14.72,
+			"text": "F2 Language"
+		},
+		"044b5977-2f28-4b76-a165-044219023cce": {
+			"type": "text",
+			"x": 176.55,
+			"y": 453.36,
+			"width": 71.9,
+			"height": 14.98,
+			"text": "F3 Keymap"
+		},
+		"69348ec3-a42c-40d7-8379-68fce85b0aa8": {
+			"type": "text",
+			"x": 261.46,
+			"y": 453,
+			"width": 63.17,
+			"height": 13.81,
+			"text": "F4 Modes"
+		},
+		"13fa8147-8d49-419d-81f5-fb8c47191f45": {
+			"type": "text",
+			"x": 337.34,
+			"y": 452.21,
+			"width": 122.23,
+			"height": 16.24,
+			"text": "F5 Accessibility"
+		},
+		"d0e1c443-ecf6-4138-b1ca-068b2d53ccde": {
+			"type": "text",
+			"x": 472.3,
+			"y": 452.35,
+			"width": 120.51,
+			"height": 16.16,
+			"text": "F6 Other Options"
+		}
+	},
+	"verified": true
+}

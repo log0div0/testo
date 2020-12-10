@@ -113,6 +113,9 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 			auto video_model = video.value("qemu_mode", preferable_video_model());
 
 			if ((video_model != "vmvga") &&
+				(video_model != "vga") &&
+				(video_model != "xen") &&
+				(video_model != "virtio") &&
 				(video_model != "qxl") &&
 				(video_model != "cirrus"))
 			{
@@ -583,8 +586,8 @@ void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto tmp_screen = screenshot();
 
-		double x_pos = double(32768) / double(tmp_screen.width) * double(x);
-		double y_pos = double(32768) / double(tmp_screen.height) * double(y);
+		double x_pos = double(32768) / double(tmp_screen.w) * double(x);
+		double y_pos = double(32768) / double(tmp_screen.h) * double(y);
 
 		if ((int)x_pos == 0) {
 			x_pos = 1;
@@ -638,9 +641,9 @@ void QemuVM::mouse_move_abs(const std::string& axis, uint32_t value) {
 		double pos;
 
 		if (axis == "x") {
-			pos = double(32768) / double(tmp_screen.width) * double(value);
+			pos = double(32768) / double(tmp_screen.w) * double(value);
 		} else if (axis == "y") {
-			pos = double(32768) / double(tmp_screen.height) * double(value);
+			pos = double(32768) / double(tmp_screen.h) * double(value);
 		} else {
 			throw std::runtime_error("Unknown axis: " + axis);
 		}
@@ -1297,7 +1300,7 @@ void QemuVM::resume() {
 	}
 }
 
-stb::Image QemuVM::screenshot() {
+stb::Image<stb::RGB> QemuVM::screenshot() {
 	auto domain = qemu_connect.domain_lookup_by_name(id());
 	auto stream = qemu_connect.new_stream();
 	auto mime = domain.screenshot(stream);
@@ -1310,7 +1313,7 @@ stb::Image QemuVM::screenshot() {
 
 	stream.finish();
 
-	stb::Image screenshot(screenshot_buffer.data(), bytes);
+	stb::Image<stb::RGB> screenshot(screenshot_buffer.data(), bytes);
 	return screenshot;
 }
 

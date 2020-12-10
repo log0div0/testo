@@ -1,0 +1,253 @@
+{
+	"objs": {
+		"b871085d-d4e7-4de0-9eaa-92ec8db03b23": {
+			"type": "text",
+			"x": 53.85,
+			"y": 337.84,
+			"width": 47.46,
+			"height": 22.61,
+			"text": "GPU"
+		},
+		"1a29306c-94d6-48bb-8652-03b8bc7e51fc": {
+			"type": "text",
+			"x": 443.5,
+			"y": 349.69,
+			"width": 37.7,
+			"height": 18.34,
+			"text": "GPU"
+		},
+		"96ac1042-0e71-4f84-a378-7c1703b3b91f": {
+			"type": "text",
+			"x": 347.52,
+			"y": 349.35,
+			"width": 36.82,
+			"height": 18.72,
+			"text": "CPU"
+		},
+		"ced3ef8f-f20a-474f-9237-dd627d77dc3f": {
+			"type": "text",
+			"x": 342.61,
+			"y": 390.7,
+			"width": 48.83,
+			"height": 17.77,
+			"text": "FPGA"
+		},
+		"47ceda7a-a2c2-4502-8aec-9bda46b671ef": {
+			"type": "text",
+			"x": 444.58,
+			"y": 390.42,
+			"width": 34.79,
+			"height": 18.34,
+			"text": "DSP"
+		},
+		"da52cc5f-5be8-43df-a43f-09c191dc556b": {
+			"type": "text",
+			"x": 353.64,
+			"y": 432.49,
+			"width": 120.72,
+			"height": 18.45,
+			"text": "AI/Tensor HW"
+		},
+		"1fd08799-6c56-43c5-b30c-146937cbb9f4": {
+			"type": "text",
+			"x": 335.65,
+			"y": 472.74,
+			"width": 156.72,
+			"height": 19.46,
+			"text": "Custom Hardware"
+		},
+		"9b2bdee6-e3ab-4a75-9e95-98ef5b9dd7e3": {
+			"type": "text",
+			"x": 192.85,
+			"y": 35.05,
+			"width": 80.3,
+			"height": 26.21,
+			"text": "SYCL"
+		},
+		"b1dd00d0-a5b1-4e65-956e-40083bb2460d": {
+			"type": "text",
+			"x": 389.72,
+			"y": 27.74,
+			"width": 153.37,
+			"height": 43.38,
+			"text": ""
+		},
+		"46720a94-10dd-4064-8740-a29e4e833e20": {
+			"type": "text",
+			"x": 637.64,
+			"y": 33.68,
+			"width": 94.7,
+			"height": 24.74,
+			"text": "NNEF"
+		},
+		"9c62f4fd-86bc-4412-89e6-4a5a8fe79e08": {
+			"type": "text",
+			"x": 349.69,
+			"y": 187.77,
+			"width": 123.71,
+			"height": 33.54,
+			"text": "OpenCL"
+		},
+		"ed544fc9-f632-4aa9-93f3-79d00f248bcb": {
+			"type": "text",
+			"x": 216.83,
+			"y": 184.66,
+			"width": 66.45,
+			"height": 24.58,
+			"text": "SPIR"
+		},
+		"a1b2b1a3-d3d3-444f-84e9-fae2e4cf943a": {
+			"type": "text",
+			"x": 25.76,
+			"y": 182.6,
+			"width": 115.59,
+			"height": 29.65,
+			"text": ""
+		},
+		"6831f7ae-9871-44e6-8394-3f6ed4e96b2c": {
+			"type": "text",
+			"x": 114.68,
+			"y": 79.78,
+			"width": 217.92,
+			"height": 17.36,
+			"text": "Single source C++ programming"
+		},
+		"4895611f-4cd3-4f8b-a9f3-2df94091f22e": {
+			"type": "text",
+			"x": 129.32,
+			"y": 97.22,
+			"width": 185.91,
+			"height": 17.74,
+			"text": "with compute acceleration"
+		},
+		"8c6efb39-7aa8-4e4f-9038-99e67f863d55": {
+			"type": "text",
+			"x": 388.95,
+			"y": 78.91,
+			"width": 162.37,
+			"height": 18.23,
+			"text": "Graph-based vision and"
+		},
+		"de6ff2b8-de93-4145-a714-f663bd6b47ef": {
+			"type": "text",
+			"x": 384.81,
+			"y": 97.25,
+			"width": 170,
+			"height": 17.97,
+			"text": "inferencing acceleration"
+		},
+		"58bca4de-7893-4d82-b2b1-2a4234375142": {
+			"type": "text",
+			"x": 574.81,
+			"y": 73.96,
+			"width": 48.35,
+			"height": 17.02,
+			"text": "Import"
+		},
+		"f6765848-ef39-48df-a07c-5b0e1b3b4899": {
+			"type": "text",
+			"x": 567.76,
+			"y": 96.13,
+			"width": 182.34,
+			"height": 18.33,
+			"text": "Network exchange format"
+		},
+		"9d8c6aab-162b-40e2-b495-8075df1380bf": {
+			"type": "text",
+			"x": 626.64,
+			"y": 76.13,
+			"width": 102.7,
+			"height": 15.61,
+			"text": "Trained Neural"
+		},
+		"381ce9c9-e2bf-411c-9ac1-b95c05987922": {
+			"type": "text",
+			"x": 18.68,
+			"y": 223.95,
+			"width": 115.64,
+			"height": 18.38,
+			"text": "GPU rendering +"
+		},
+		"e6f26e58-6e53-49a8-a37a-c61c8450d538": {
+			"type": "text",
+			"x": 46.49,
+			"y": 242.68,
+			"width": 62.26,
+			"height": 16.52,
+			"text": "compute"
+		},
+		"049a16f5-758d-40ea-9255-c9cbfe869c30": {
+			"type": "text",
+			"x": 34.5,
+			"y": 259.48,
+			"width": 84.88,
+			"height": 14.98,
+			"text": "acceleration"
+		},
+		"59587486-a047-4c90-9f8f-88c0c2ee6922": {
+			"type": "text",
+			"x": 198.26,
+			"y": 223.82,
+			"width": 93.55,
+			"height": 15.86,
+			"text": "Intermediate"
+		},
+		"e5235b23-2211-4b03-ae5c-f593ee21da60": {
+			"type": "text",
+			"x": 176.56,
+			"y": 242.6,
+			"width": 134.61,
+			"height": 18.21,
+			"text": "Representation (IR)"
+		},
+		"272fc7c0-4c64-441e-9191-9d857240e33f": {
+			"type": "text",
+			"x": 178.84,
+			"y": 259.74,
+			"width": 130.39,
+			"height": 17.59,
+			"text": "supporting parallel"
+		},
+		"e92a15c3-ed3a-4700-98bd-3e331ff81192": {
+			"type": "text",
+			"x": 194.47,
+			"y": 277.18,
+			"width": 99.98,
+			"height": 15.19,
+			"text": "execution and"
+		},
+		"094d209d-91f4-4ff1-9fb1-840639034e0a": {
+			"type": "text",
+			"x": 214.65,
+			"y": 294.91,
+			"width": 58.6,
+			"height": 18.38,
+			"text": "graphics"
+		},
+		"3a6efb1e-dff5-4f98-bd78-03d51b381ed0": {
+			"type": "text",
+			"x": 358.43,
+			"y": 232.58,
+			"width": 105.86,
+			"height": 17.72,
+			"text": "Heterogeneous"
+		},
+		"f7a44bd7-afa1-44c2-87c2-ae73be439faf": {
+			"type": "text",
+			"x": 380.48,
+			"y": 251.8,
+			"width": 62.79,
+			"height": 16.33,
+			"text": "compute"
+		},
+		"3a2d547e-9d89-4e42-b9ab-236cc9425c1b": {
+			"type": "text",
+			"x": 369.66,
+			"y": 268.03,
+			"width": 85.69,
+			"height": 14.25,
+			"text": "acceleration"
+		}
+	},
+	"verified": true
+}

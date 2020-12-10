@@ -4,8 +4,8 @@ cmake_policy(SET CMP0091 NEW)
 
 project(testo)
 
-set(TESTO_VERSION "2.1.2")
-set(TESTO_RELEASE_DATE "2020.11.08")
+set(TESTO_VERSION "2.2.5")
+set(TESTO_RELEASE_DATE "2020.12.04")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -23,10 +23,24 @@ set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 
 add_definitions(-DASIO_STANDALONE -DASIO_ENABLE_CANCELIO)
 
+if(WIN32)
+	add_definitions(
+		-D_WIN32_WINNT=0x0601
+		-D_SCL_SECURE_NO_WARNINGS
+		-D_WINSOCK_DEPRECATED_NO_WARNINGS
+		-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+		-D_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+		-DNOMINMAX
+		-DUNICODE
+		-D_UNICODE
+	)
+endif()
+
 include_directories(
 	${CMAKE_SOURCE_DIR}/3rd_party
-	${CMAKE_SOURCE_DIR}/src
 )
+
+add_subdirectory(3rd_party)
 
 macro(add_package NAME)
 	set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")
@@ -46,35 +60,30 @@ endif()
 if(WIN32)
 	add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-	add_definitions(
-		-D_WIN32_WINNT=0x0601
-		-D_SCL_SECURE_NO_WARNINGS
-		-D_WINSOCK_DEPRECATED_NO_WARNINGS
-		-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
-		-D_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-		-DNOMINMAX
-		-DUNICODE
-		-D_UNICODE
-	)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W1 /WX")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W1 /WX")
 else()
-	if(CMAKE_BUILD_TYPE MATCHES Release)
-		add_definitions(-O2 -DNDEBUG)
-	elseif(CMAKE_BUILD_TYPE MATCHES Debug)
-		add_definitions(-O0 -D_DEBUG -g)
-	else()
-		MESSAGE(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE value: ${CMAKE_BUILD_TYPE}")
-	endif()
-	add_definitions(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter")
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_subdirectory(3rd_party)
-add_subdirectory(src)
-if (NOT APPLE)
-	add_subdirectory(guest_additions)
+include_directories(
+	${CMAKE_SOURCE_DIR}/lib
+	${CMAKE_SOURCE_DIR}/src
+)
 
-	if (ONNX_RUNTIME_DIR)
-		add_subdirectory(pkg)
+macro(add_subdirectory_if_exists NAME)
+	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${NAME}")
+		add_subdirectory(${NAME})
 	endif()
+endmacro()
+
+add_subdirectory_if_exists(lib)
+add_subdirectory_if_exists(src)
+add_subdirectory_if_exists(nn)
+if (NOT APPLE)
+	add_subdirectory_if_exists(guest_additions)
+	add_subdirectory_if_exists(pkg)
 endif()

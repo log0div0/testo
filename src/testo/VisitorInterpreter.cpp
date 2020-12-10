@@ -10,12 +10,16 @@
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
-VisitorInterpreter::VisitorInterpreter(const nlohmann::json& config) {
+void VisitorInterpreterConfig::validate() const {
+	ReporterConfig::validate();
+}
+
+VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
 	reporter = Reporter(config);
 
-	stop_on_fail = config.at("stop_on_fail").get<bool>();
-	assume_yes = config.at("assume_yes").get<bool>();
-	invalidate = config.at("invalidate").get<std::string>();
+	stop_on_fail = config.stop_on_fail;
+	assume_yes = config.assume_yes;
+	invalidate = config.invalidate;
 }
 
 bool VisitorInterpreter::parent_is_ok(std::shared_ptr<IR::Test> test, std::shared_ptr<IR::Test> parent,

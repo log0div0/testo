@@ -1,0 +1,677 @@
+{
+	"objs": {
+		"1b0c4b70-2928-449a-99b0-e1961bcd7fa1": {
+			"type": "text",
+			"x": 84.73,
+			"y": 103.87,
+			"width": 70.09,
+			"height": 13.43,
+			"text": "FOLDERS"
+		},
+		"10f4991f-8357-4729-a90d-cc05e269c4eb": {
+			"type": "text",
+			"x": 119.62,
+			"y": 127.22,
+			"width": 33.16,
+			"height": 12.53,
+			"text": "testo"
+		},
+		"ee8d9d6c-66f9-4790-9f7f-7516d830d6b0": {
+			"type": "text",
+			"x": 119.42,
+			"y": 150.2,
+			"width": 83.44,
+			"height": 12.35,
+			"text": "testo-website"
+		},
+		"5b6decc8-9703-4427-956f-3782d17452bd": {
+			"type": "text",
+			"x": 119.39,
+			"y": 172.33,
+			"width": 82.15,
+			"height": 13.58,
+			"text": "Continent4.0"
+		},
+		"b6403be2-4e8a-491b-afad-345e76e86c97": {
+			"type": "text",
+			"x": 119.66,
+			"y": 196.18,
+			"width": 52.17,
+			"height": 12.73,
+			"text": "testo-nn"
+		},
+		"cb7b1560-145b-462d-b16b-2a381bd36a66": {
+			"type": "text",
+			"x": 131.2,
+			"y": 218.31,
+			"width": 48.36,
+			"height": 13.61,
+			"text": "dataset"
+		},
+		"87754c0f-2632-4f83-8120-13a45aeee70e": {
+			"type": "text",
+			"x": 131.16,
+			"y": 241.3,
+			"width": 87.45,
+			"height": 13.55,
+			"text": "dataset-editor"
+		},
+		"76de3241-d39f-4064-8195-58f254bb725a": {
+			"type": "text",
+			"x": 144.19,
+			"y": 264.09,
+			"width": 60.43,
+			"height": 16.61,
+			"text": ".gitignore"
+		},
+		"561fb65f-27f3-4590-b10d-f85fb0fdff30": {
+			"type": "text",
+			"x": 143.91,
+			"y": 287.32,
+			"width": 67.96,
+			"height": 13.66,
+			"text": "index.html"
+		},
+		"95240cd0-a2d2-4ef4-9ac3-654d90ea4fb7": {
+			"type": "text",
+			"x": 143.79,
+			"y": 310.15,
+			"width": 48.8,
+			"height": 16.54,
+			"text": "index.js"
+		},
+		"f5de2e0b-2b36-42dc-a892-526828093e81": {
+			"type": "text",
+			"x": 143.74,
+			"y": 333.29,
+			"width": 45.81,
+			"height": 16.41,
+			"text": "main.js"
+		},
+		"fcf25283-a28e-4c3b-8105-a0f4c7dadc03": {
+			"type": "text",
+			"x": 143.78,
+			"y": 356.47,
+			"width": 81.19,
+			"height": 16.07,
+			"text": "package.json"
+		},
+		"28d65d6d-3457-414e-99c7-9f2065e8101d": {
+			"type": "text",
+			"x": 131.71,
+			"y": 379.58,
+			"width": 76.84,
+			"height": 13.39,
+			"text": "README.md"
+		},
+		"f1a7c66d-439c-427b-b9d8-212d625f73a1": {
+			"type": "text",
+			"x": 10.51,
+			"y": 6.45,
+			"width": 65.03,
+			"height": 13.96,
+			"text": "Activities"
+		},
+		"a0e759f6-9767-4ca1-a6b6-07ea2c0a96aa": {
+			"type": "text",
+			"x": 128.6,
+			"y": 5.61,
+			"width": 31.85,
+			"height": 14.85,
+			"text": "Files"
+		},
+		"8b3b0bbd-fc83-4eba-b302-c0c25dce62a2": {
+			"type": "text",
+			"x": 77.61,
+			"y": 68.49,
+			"width": 25.97,
+			"height": 15.07,
+			"text": "File"
+		},
+		"9a3ceffc-d6c4-4751-bfb4-712d396aea99": {
+			"type": "text",
+			"x": 117.33,
+			"y": 68.32,
+			"width": 29.17,
+			"height": 15.55,
+			"text": "Edit"
+		},
+		"36d08a25-3acc-4497-93b4-893066724ef8": {
+			"type": "text",
+			"x": 159.68,
+			"y": 68.52,
+			"width": 64.71,
+			"height": 15.02,
+			"text": "Selection"
+		},
+		"5cdf22a3-5afa-4785-9a58-32a64f186b7a": {
+			"type": "text",
+			"x": 238.2,
+			"y": 68.6,
+			"width": 30.32,
+			"height": 14.95,
+			"text": "Find"
+		},
+		"b3d30d72-bd85-41b7-b060-9b6b0a935b78": {
+			"type": "text",
+			"x": 282.52,
+			"y": 69.52,
+			"width": 36.78,
+			"height": 14.31,
+			"text": "View"
+		},
+		"41738980-5eed-4670-8810-aeaaea25403e": {
+			"type": "text",
+			"x": 331.64,
+			"y": 69.71,
+			"width": 36.68,
+			"height": 13.92,
+			"text": "Goto"
+		},
+		"efeb2fa5-e0d3-4ec4-a766-aa658191bda6": {
+			"type": "text",
+			"x": 381.64,
+			"y": 68.6,
+			"width": 38.84,
+			"height": 15.05,
+			"text": "Tools"
+		},
+		"2090f869-cb14-4ec3-a8aa-86dee8ec3ef4": {
+			"type": "text",
+			"x": 434.43,
+			"y": 69.24,
+			"width": 51.12,
+			"height": 17.22,
+			"text": "Project"
+		},
+		"3070cd08-645c-4778-80f4-a22181d94fa8": {
+			"type": "text",
+			"x": 499.24,
+			"y": 69.46,
+			"width": 83.21,
+			"height": 14.33,
+			"text": "Preferences"
+		},
+		"9c0a1c9b-7558-4dc3-bd02-addb062c057b": {
+			"type": "text",
+			"x": 596.23,
+			"y": 68.4,
+			"width": 33.09,
+			"height": 18.05,
+			"text": "Help"
+		},
+		"30227cd2-c38e-4c05-90e6-8caf00d7badf": {
+			"type": "text",
+			"x": 566.61,
+			"y": 37.37,
+			"width": 856.86,
+			"height": 18.77,
+			"text": "~/work/testo-nn/dataset-editor/index.js (testo, testo-website, Continent4.0, testo-nn) - Sublime Text (UNREGISTERED)"
+		},
+		"44cf3ce1-5365-4c12-8b95-0a5b6bba5bfb": {
+			"type": "text",
+			"x": 951.35,
+			"y": 6.24,
+			"width": 87.59,
+			"height": 13.67,
+			"text": "авг 18 19:38"
+		},
+		"e38d462b-107b-4242-8dee-2e5b21c52a90": {
+			"type": "text",
+			"x": 1748.74,
+			"y": 9.62,
+			"width": 18.67,
+			"height": 10.67,
+			"text": "en"
+		},
+		"6aac5fdf-3cf0-4a84-bc5a-2ff526e966c8": {
+			"type": "text",
+			"x": 693.49,
+			"y": 101.68,
+			"width": 75.95,
+			"height": 13.67,
+			"text": "package.json"
+		},
+		"c7271e35-b51b-4027-9646-7c53aedd6925": {
+			"type": "text",
+			"x": 857.04,
+			"y": 101.48,
+			"width": 62.19,
+			"height": 11.92,
+			"text": "index.html"
+		},
+		"b82b1157-2501-4c07-afdd-821ad5b1ac4d": {
+			"type": "text",
+			"x": 1020.75,
+			"y": 101.65,
+			"width": 46.73,
+			"height": 13.84,
+			"text": "index.js"
+		},
+		"2d2c33a3-1933-48be-a8b7-1eda46ceb3d7": {
+			"type": "text",
+			"x": 1185.1,
+			"y": 101.5,
+			"width": 43.25,
+			"height": 14.03,
+			"text": "main.js"
+		},
+		"874c827c-7432-4861-b21d-5fc5eab7aa1a": {
+			"type": "text",
+			"x": 1349.5,
+			"y": 101.34,
+			"width": 56.57,
+			"height": 14.29,
+			"text": ".gitignore"
+		},
+		"a87f3d79-e5e9-40ba-890d-27dcc84135a1": {
+			"type": "text",
+			"x": 652.89,
+			"y": 124.52,
+			"width": 10.62,
+			"height": 12.98,
+			"text": "1"
+		},
+		"901b57c7-44ca-494b-8e00-de1f8ed8e996": {
+			"type": "text",
+			"x": 686.5,
+			"y": 123.67,
+			"width": 194.68,
+			"height": 15.48,
+			"text": "const fs = require('fs')"
+		},
+		"0eb06d23-a5e1-4b7f-a312-6fc600ea2cf4": {
+			"type": "text",
+			"x": 652.91,
+			"y": 141.46,
+			"width": 10.57,
+			"height": 13.12,
+			"text": "2"
+		},
+		"5ec4abe6-168a-4a71-b3ad-e4e570d634d1": {
+			"type": "text",
+			"x": 652.84,
+			"y": 158.44,
+			"width": 10.68,
+			"height": 13.04,
+			"text": "3"
+		},
+		"e4826de1-179d-4757-a7a1-c36848ce6270": {
+			"type": "text",
+			"x": 652.8,
+			"y": 175.44,
+			"width": 10.68,
+			"height": 12.97,
+			"text": "4"
+		},
+		"28c9db40-3531-4ef9-bcd6-abfebfe3fe5f": {
+			"type": "text",
+			"x": 652.82,
+			"y": 192.5,
+			"width": 10.68,
+			"height": 13.33,
+			"text": "5"
+		},
+		"b41a9885-0f68-418b-a9e3-acfcad377739": {
+			"type": "text",
+			"x": 652.55,
+			"y": 209.41,
+			"width": 11.18,
+			"height": 13.28,
+			"text": "6"
+		},
+		"b0ed287d-184d-45ef-89e7-edd4a370c2de": {
+			"type": "text",
+			"x": 652.7,
+			"y": 226.48,
+			"width": 10.68,
+			"height": 13.1,
+			"text": "7"
+		},
+		"ae36741e-a9ac-4d82-8e6a-08b2f9b6972f": {
+			"type": "text",
+			"x": 652.7,
+			"y": 243.2,
+			"width": 10.78,
+			"height": 13.2,
+			"text": "8"
+		},
+		"c42fb765-b4f3-4662-b16b-4b0395455934": {
+			"type": "text",
+			"x": 652.51,
+			"y": 260.36,
+			"width": 10.97,
+			"height": 13.3,
+			"text": "9"
+		},
+		"a77f1eb6-132e-405d-98d2-cb6036267af5": {
+			"type": "text",
+			"x": 645.71,
+			"y": 277.15,
+			"width": 17.91,
+			"height": 13.54,
+			"text": "10"
+		},
+		"c27df71a-e071-4e2a-8d49-8d3520ee0227": {
+			"type": "text",
+			"x": 686.47,
+			"y": 140.45,
+			"width": 257.47,
+			"height": 17.07,
+			"text": "const fabric = require('fabric')"
+		},
+		"cbac4d19-d88c-4498-9f65-fdd5661874bb": {
+			"type": "text",
+			"x": 686.68,
+			"y": 174.4,
+			"width": 257.9,
+			"height": 17.1,
+			"text": "const root = fs.readdirSync('.')"
+		},
+		"b05b21c3-fa7b-4c60-bc47-5150aefab6d7": {
+			"type": "text",
+			"x": 685.42,
+			"y": 208.33,
+			"width": 473.06,
+			"height": 15.91,
+			"text": "// This will print all files at the root-level of the disk,"
+		},
+		"2b7dee22-2338-4dde-ab62-39efc57b48f0": {
+			"type": "text",
+			"x": 685.23,
+			"y": 225.32,
+			"width": 187.61,
+			"height": 16.2,
+			"text": "// either '/' or 'C:\\'."
+		},
+		"86a1ae84-b901-437d-97b0-e654cc429527": {
+			"type": "text",
+			"x": 686.38,
+			"y": 242.22,
+			"width": 136.29,
+			"height": 17.5,
+			"text": "console.log(root)"
+		},
+		"e03612dd-ea6d-4bf0-928d-8d92cd524143": {
+			"type": "text",
+			"x": 686.41,
+			"y": 276.42,
+			"width": 152.31,
+			"height": 16.89,
+			"text": "console.log(fabric)"
+		},
+		"359794da-759e-4712-8c30-396dd78e0b4f": {
+			"type": "text",
+			"x": 623.82,
+			"y": 372.27,
+			"width": 42.91,
+			"height": 13.33,
+			"text": "Home"
+		},
+		"d1946f91-e15b-49e2-829e-8ba2d0bb9009": {
+			"type": "text",
+			"x": 696.33,
+			"y": 370.55,
+			"width": 37.48,
+			"height": 15.18,
+			"text": "work"
+		},
+		"ae5a96c4-8da5-4701-9476-ae20cd0096e1": {
+			"type": "text",
+			"x": 763.33,
+			"y": 371.32,
+			"width": 59.54,
+			"height": 14.4,
+			"text": "testo-nn"
+		},
+		"9c638e37-192a-4b4c-b154-84037dee3ce5": {
+			"type": "text",
+			"x": 852.15,
+			"y": 370.37,
+			"width": 55.7,
+			"height": 15.31,
+			"text": "dataset"
+		},
+		"526aa449-27c7-4e6a-87e7-e061a9d2de62": {
+			"type": "text",
+			"x": 937.18,
+			"y": 371.37,
+			"width": 31.48,
+			"height": 14.22,
+			"text": "text"
+		},
+		"69682f3d-a4bb-420a-aabc-5dc37c2a9b4d": {
+			"type": "text",
+			"x": 998.21,
+			"y": 372.1,
+			"width": 51.55,
+			"height": 13.7,
+			"text": "000000"
+		},
+		"a4de65d7-f409-4014-82ef-f20bddd2385b": {
+			"type": "text",
+			"x": 709.63,
+			"y": 405.34,
+			"width": 42.2,
+			"height": 13.41,
+			"text": "Name"
+		},
+		"0cf776f8-7cbf-47fa-9e80-e0966aff1e82": {
+			"type": "text",
+			"x": 1238.65,
+			"y": 404.51,
+			"width": 30.92,
+			"height": 14.4,
+			"text": "Size"
+		},
+		"30a809d8-c070-4c85-8c91-39856ef4fdc8": {
+			"type": "text",
+			"x": 1334.6,
+			"y": 403.34,
+			"width": 65.87,
+			"height": 15.66,
+			"text": "Modified"
+		},
+		"ed01026c-5f71-4e88-985f-c7ccbedd38ab": {
+			"type": "text",
+			"x": 975.43,
+			"y": 709.15,
+			"width": 159.21,
+			"height": 25.6,
+			"text": "Folder is Empty"
+		},
+		"c8006713-6814-4771-abac-2c05e0aa0191": {
+			"type": "text",
+			"x": 552.28,
+			"y": 414.78,
+			"width": 48.05,
+			"height": 13.78,
+			"text": "Recent"
+		},
+		"b448f22c-ed72-43f2-ab4c-9d60c890fbf2": {
+			"type": "text",
+			"x": 551.6,
+			"y": 451.62,
+			"width": 52.85,
+			"height": 14.94,
+			"text": "Starred"
+		},
+		"8e8d4e90-381c-498f-ab2b-d6187fe951e1": {
+			"type": "text",
+			"x": 551.73,
+			"y": 491.42,
+			"width": 42.78,
+			"height": 13.11,
+			"text": "Home"
+		},
+		"5e515d2e-1102-448e-877c-8134523abbc8": {
+			"type": "text",
+			"x": 552.66,
+			"y": 527.65,
+			"width": 59,
+			"height": 17.83,
+			"text": "Desktop"
+		},
+		"fa2bc9aa-2dc2-49e3-98b1-c51dc3a7e957": {
+			"type": "text",
+			"x": 552.41,
+			"y": 566.82,
+			"width": 78.12,
+			"height": 13.74,
+			"text": "Documents"
+		},
+		"e2dba664-7bfe-45fd-8ae9-d6936bc3fad4": {
+			"type": "text",
+			"x": 551.85,
+			"y": 603.61,
+			"width": 77.63,
+			"height": 14.8,
+			"text": "Downloads"
+		},
+		"853a02b5-a743-4d58-8698-9e03b998d4f6": {
+			"type": "text",
+			"x": 551.67,
+			"y": 642.53,
+			"width": 41.76,
+			"height": 13.98,
+			"text": "Music"
+		},
+		"eccc9564-2129-4d06-a35a-8e798ea3d65a": {
+			"type": "text",
+			"x": 552.07,
+			"y": 680.45,
+			"width": 57.51,
+			"height": 14.14,
+			"text": "Pictures"
+		},
+		"ceabb2b6-45a3-4478-bbec-39e0b8c4121e": {
+			"type": "text",
+			"x": 551.4,
+			"y": 717.46,
+			"width": 50.04,
+			"height": 15.14,
+			"text": "Videos"
+		},
+		"2d37a660-ec77-4718-a74b-f0b82d36bb21": {
+			"type": "text",
+			"x": 550.9,
+			"y": 755.75,
+			"width": 39.52,
+			"height": 14.69,
+			"text": "Trash"
+		},
+		"b6c39f43-46cc-4dbd-9506-2c527a35e599": {
+			"type": "text",
+			"x": 551.55,
+			"y": 802.6,
+			"width": 110.88,
+			"height": 14.83,
+			"text": "Other Locations"
+		},
+		"9f66ca0a-a25d-4a95-bfef-1ea923f09d31": {
+			"type": "text",
+			"x": 108.94,
+			"y": 1063.33,
+			"width": 98.41,
+			"height": 12.89,
+			"text": "Line 5, Column 1"
+		},
+		"6282d8cf-066f-4c6d-a5b6-1ba775f761a5": {
+			"type": "text",
+			"x": 1616.67,
+			"y": 1063.37,
+			"width": 42.84,
+			"height": 12.45,
+			"text": "master"
+		},
+		"e74d9690-aea8-4606-9c7d-09cb054bf159": {
+			"type": "text",
+			"x": 1706.46,
+			"y": 1063.3,
+			"width": 64.17,
+			"height": 12.17,
+			"text": "Tab Size: 4"
+		},
+		"be0f09b7-596a-4a59-b6bb-c5ad37808ba8": {
+			"type": "text",
+			"x": 1796.13,
+			"y": 1063.24,
+			"width": 107.57,
+			"height": 14.03,
+			"text": "JavaScript (Naomi)"
+		},
+		"c790010d-b547-46fd-a4ca-99ed0097d0bf": {
+			"type": "text",
+			"x": 1663.02,
+			"y": 1064.22,
+			"width": 7.05,
+			"height": 9.63,
+			"text": "2"
+		},
+		"575f685a-b7b0-4dfb-957e-6db4702a75fc": {
+			"type": "text",
+			"x": 530.19,
+			"y": 803.81,
+			"width": 14.28,
+			"height": 14.28,
+			"text": "+"
+		},
+		"45b27653-5bc0-49ba-bc38-691c1631e9a6": {
+			"type": "text",
+			"x": 123.24,
+			"y": 290.26,
+			"width": 14.56,
+			"height": 8.63,
+			"text": "<>"
+		},
+		"27e2c544-4355-4422-b4f3-b22246aff5dd": {
+			"type": "text",
+			"x": 123.12,
+			"y": 311.41,
+			"width": 14.68,
+			"height": 10.26,
+			"text": "/*"
+		},
+		"9755b70b-e3ac-4c30-b2e0-040c5b5c414b": {
+			"type": "text",
+			"x": 123.21,
+			"y": 334.36,
+			"width": 14.68,
+			"height": 10.26,
+			"text": "/*"
+		},
+		"0e3f5bbe-27fc-448f-ac0e-e8091b54502b": {
+			"type": "text",
+			"x": 123.1,
+			"y": 357.4,
+			"width": 14.68,
+			"height": 10.26,
+			"text": "/*"
+		},
+		"d18b7734-1dc6-4d0f-8a89-8dadfafa4ad4": {
+			"type": "text",
+			"x": 111.22,
+			"y": 382.11,
+			"width": 14.56,
+			"height": 8.63,
+			"text": "<>"
+		},
+		"ff776e45-da34-4393-89ae-52568acd3305": {
+			"type": "text",
+			"x": 532.03,
+			"y": 370.02,
+			"width": 7.07,
+			"height": 18.02,
+			"text": "<"
+		},
+		"28ddaff4-42de-4e83-bafa-e7485607255b": {
+			"type": "text",
+			"x": 561.96,
+			"y": 370.07,
+			"width": 6.98,
+			"height": 17.83,
+			"text": ">"
+		}
+	},
+	"verified": true
+}

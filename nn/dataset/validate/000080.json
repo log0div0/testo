@@ -1,0 +1,52 @@
+{
+	"objs": {
+		"22eb5abc-24ee-4f6b-8555-f8f37018148e": {
+			"type": "text",
+			"x": 239.01,
+			"y": 171.01,
+			"width": 394.07,
+			"height": 15.05,
+			"text": "Выберите операционную систему, которую вы хотите установить"
+		},
+		"77117b64-0c9a-4b6e-b949-242739527332": {
+			"type": "text",
+			"x": 246.65,
+			"y": 218.98,
+			"width": 132.79,
+			"height": 13.96,
+			"text": "Операционная система"
+		},
+		"1d9b6337-5cda-44db-b9f7-a476915852d1": {
+			"type": "text",
+			"x": 244.2,
+			"y": 237.63,
+			"width": 222.08,
+			"height": 11.95,
+			"text": "Windows Server 2016 Standard Evaluation"
+		},
+		"02f89449-d00e-4679-9339-be7a1d3e0e77": {
+			"type": "text",
+			"x": 244.9,
+			"y": 253.66,
+			"width": 328.14,
+			"height": 14.3,
+			"text": "Windows Server 2016 Standard Evaluation (возможности ра..."
+		},
+		"04e11af9-8d82-42c2-b59f-148c2a40d56b": {
+			"type": "text",
+			"x": 244.91,
+			"y": 269.49,
+			"width": 231.45,
+			"height": 11.95,
+			"text": "Windows Server 2016 Datacenter Evaluation"
+		},
+		"06705c9d-fb88-4666-b5a0-0f12aa03e4ab": {
+			"type": "text",
+			"x": 244.83,
+			"y": 285.51,
+			"width": 325.2,
+			"height": 13.53,
+			"text": "Windows Server 2016 Datacenter Evaluation (возможности ..."
+		}
+	}
+}

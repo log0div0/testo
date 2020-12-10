@@ -1,38 +1,47 @@
 
 #pragma once
 
+#include "TextLine.hpp"
 #include "OnnxRuntime.hpp"
-#include "OCR.hpp"
+#include <stb/Image.hpp>
 
 namespace nn {
 
 struct TextColorPicker {
 	static TextColorPicker& instance();
-	~TextColorPicker();
 
 	TextColorPicker(const TextColorPicker&) = delete;
 	TextColorPicker& operator=(const TextColorPicker&) = delete;
 
-	void run(const stb::Image* image, Char& char_);
+	bool run(const stb::Image<stb::RGB>* image, const TextLine& textline, const std::string& fg, const std::string& bg);
 
 private:
-	TextColorPicker();
+	TextColorPicker() = default;
 
-	void run_nn(const stb::Image* image, const Char& char_);
-	void run_postprocessing(Char& char_);
+	void run_nn(const stb::Image<stb::RGB>* image, const TextLine& textline);
+	bool run_postprocessing(const TextLine& textline, const std::string& fg, const std::string& bg);
+	bool match_color(const TextLine& textline, const std::string& color, int c_off);
 
 	int in_w = 0;
 	int in_c = 0;
 	int out_w = 0;
 	int out_c = 0;
-	std::vector<float> in;
-	std::vector<float> out;
 
-	std::unique_ptr<Ort::Session> session;
-	std::unique_ptr<Ort::Value> in_tensor;
-	std::unique_ptr<Ort::Value> out_tensor;
+	onnx::Model model = "TextColorPicker";
+	onnx::Image in = "input";
 
-	std::vector<uint8_t> char_img, char_img_resized;
+	struct Output: onnx::Value {
+		using onnx::Value::Value;
+
+		void resize(int w, int c) {
+			Value::resize({w, 1, c});
+		}
+		float* operator[](int x) {
+			return &_buf[x * _shape[2]];
+		}
+	};
+
+	Output out = "output";
 };
 
 }

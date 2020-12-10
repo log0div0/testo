@@ -8,8 +8,12 @@
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
-VisitorSemantic::VisitorSemantic(const nlohmann::json& config) {
-	prefix = config.at("prefix").get<std::string>();
+void VisitorSemanticConfig::validate() const {
+
+}
+
+VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
+	prefix = config.prefix;
 
 	keys.insert("ESC");
 	keys.insert("ONE");
@@ -634,6 +638,7 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
 		visit_select_img({p->selectable, stack});
+		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(mouse_selectable.ast_node->selectable)) {
 		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");
 	}
@@ -986,7 +991,7 @@ Tribool VisitorSemantic::visit_check(const IR::Check& check) {
 	visit_detect_expr(check.ast_node->select_expr);
 	current_test->cksum_input += check.timeout();
 	current_test->cksum_input += check.interval();
-	return {};
+	return Tribool::maybe;
 }
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {

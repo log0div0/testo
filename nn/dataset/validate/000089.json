@@ -1,0 +1,92 @@
+{
+	"objs": {
+		"5a453676-e2e3-48ba-85c9-ce750ca3cd1a": {
+			"type": "text",
+			"x": 13,
+			"y": 52.43,
+			"width": 46.38,
+			"height": 16.32,
+			"text": "Корзина"
+		},
+		"b1eabe96-02df-42b8-9924-ea61933e7d4d": {
+			"type": "text",
+			"x": 153.86,
+			"y": 72.95,
+			"width": 108.18,
+			"height": 13.38,
+			"text": "Testo Guest Additions"
+		},
+		"8d52746a-9d01-4497-ab97-9f19189c4765": {
+			"type": "text",
+			"x": 146.57,
+			"y": 102.46,
+			"width": 155.44,
+			"height": 17.46,
+			"text": "Installation Complete"
+		},
+		"94c6da54-3c75-4be2-8b17-329c1c676560": {
+			"type": "text",
+			"x": 145.04,
+			"y": 165.1,
+			"width": 232.33,
+			"height": 12.81,
+			"text": "Testo Guest Additions has been successfully installed."
+		},
+		"d79c2f91-441b-4efe-a46b-91b234bb5007": {
+			"type": "text",
+			"x": 144.51,
+			"y": 188.17,
+			"width": 90.39,
+			"height": 12.62,
+			"text": "Click \"Close\" to exit."
+		},
+		"29a82ec5-1a83-4762-986c-5c3068c5bf29": {
+			"type": "text",
+			"x": 346.08,
+			"y": 407.21,
+			"width": 33.06,
+			"height": 12.75,
+			"text": "< Back"
+		},
+		"a4de72e4-c499-4d1f-b2d6-b5e5646e6ec5": {
+			"type": "text",
+			"x": 435.12,
+			"y": 407.36,
+			"width": 26.66,
+			"height": 12.42,
+			"text": "Close"
+		},
+		"ecf27f5a-d26d-40a1-8913-00289e51031e": {
+			"type": "text",
+			"x": 518.07,
+			"y": 407.06,
+			"width": 32.92,
+			"height": 12.7,
+			"text": "Cancel"
+		},
+		"31c49d70-4636-4e64-96bc-0d1cb8be50fa": {
+			"type": "text",
+			"x": 547.35,
+			"y": 513.49,
+			"width": 17.95,
+			"height": 12.14,
+			"text": "RU"
+		},
+		"dce6e344-5d49-4826-a3e7-cecca5ba8e9f": {
+			"type": "text",
+			"x": 658.31,
+			"y": 509.25,
+			"width": 27.4,
+			"height": 12.6,
+			"text": "19:31"
+		},
+		"cf1dbe5b-6678-487b-8405-ad3c618f9f19": {
+			"type": "text",
+			"x": 646.64,
+			"y": 523.9,
+			"width": 51.24,
+			"height": 12.96,
+			"text": "02.12.2020"
+		}
+	}
+}

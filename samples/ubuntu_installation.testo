@@ -73,3 +73,36 @@ test check_copyfrom: install_guest_additions {
 	}
 }
 
+
+# Единичное нажатие клавиши для энтропии Валидата 5
+macro pk(key) {
+	if (check "Биологический ДСЧ") {
+		mouse click "Пожалуйста".right_bottom()
+		type "${key}"
+	}
+}
+
+macro random_press_only_keyboard() {
+	pk("1"); pk("a"); pk("b"); pk("c"); pk("d"); pk("e"); pk("f"); pk("g"); pk("h"); pk("i")
+	pk("2"); pk("j"); pk("k"); pk("q"); pk("r"); pk("1"); pk("2"); pk("5"); pk("6"); pk("9")
+	pk("3"); pk("s"); pk("t"); pk("u"); pk("v"); pk("w"); pk("x"); pk("y"); pk("z"); pk("a")
+	pk("1"); pk("q"); pk("a"); pk("z"); pk("w"); pk("s"); pk("e"); pk("d"); pk("c"); pk("r")
+	pk("3"); pk("s"); pk("d"); pk("t"); pk("k"); pk("l"); pk("k"); pk("v"); pk("i"); pk("m")
+	pk("e"); pk("f"); pk("g"); pk("h"); pk("i"); pk("l"); pk("m"); pk("n"); pk("o"); pk("0")
+}
+
+macro vd_config(vd_ver) {
+	sleep 5s
+	if (check "Language") {
+		# Случайные данные для набора энтропии
+		random_press_only_keyboard()
+		wait !"Language"
+	}
+}
+
+test some_shit {
+	VM1 {
+		start
+		vd_config("vd5")
+	}
+}

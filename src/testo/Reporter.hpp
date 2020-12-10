@@ -6,9 +6,18 @@
 #include <fstream>
 #include "IR/Test.hpp"
 
+struct ReporterConfig {
+	std::string report_folder;
+	bool report_logs = false;
+	bool report_screenshots = false;
+	bool html = false;
+
+	void validate() const;
+};
+
 struct Reporter {
 	Reporter() = default;
-	Reporter(const nlohmann::json& config);
+	Reporter(const ReporterConfig& config);
 
 	void init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,
 		const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests);
@@ -90,6 +99,7 @@ struct Reporter {
 	std::vector<std::shared_ptr<IR::Test>> failed_tests;
 	std::vector<std::shared_ptr<IR::Test>> up_to_date_tests;
 
+private:
 	std::shared_ptr<IR::Test> current_test;
 
 	float progress_step = 0;

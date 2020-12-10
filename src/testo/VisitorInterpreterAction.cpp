@@ -18,10 +18,6 @@ void VisitorInterpreterAction::visit_action_block(std::shared_ptr<AST::ActionBlo
 	}
 }
 
-void VisitorInterpreterAction::visit_abort(const IR::Abort& abort) {
-	throw AbortException(abort.ast_node, current_controller, abort.message());
-}
-
 void VisitorInterpreterAction::visit_print(const IR::Print& print) {
 	try {
 		reporter.print(current_controller, print.message());

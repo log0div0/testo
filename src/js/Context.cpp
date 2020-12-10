@@ -141,14 +141,14 @@ Value ContextRef::get_exception() {
 	return Value(JS_GetException(handle), handle);
 }
 
-stb::Image* ContextRef::image() const {
+stb::Image<stb::RGB>* ContextRef::image() const {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
 	}
-	return (stb::Image*)get_opaque();
+	return (stb::Image<stb::RGB>*)get_opaque();
 }
 
-Context::Context(stb::Image* image): ContextRef(JS_NewContext(Runtime::instance().handle)) {
+Context::Context(stb::Image<stb::RGB>* image): ContextRef(JS_NewContext(Runtime::instance().handle)) {
 	// image может быть нулевым, если мы просто хотим скомпилировать js
 	set_opaque(image);
 
@@ -186,10 +186,12 @@ Context& Context::operator=(Context&& other) {
 void Context::register_global_functions() {
 	register_global_function("print", 1, Func<print>);
 	register_global_function("find_text", 1, Func<find_text>);
+	register_global_function("find_img", 1, Func<find_img>);
 }
 
 void Context::register_classes() {
-	Tensor::register_class(*this);
+	TextTensor::register_class(*this);
+	ImgTensor::register_class(*this);
 	Point::register_class(*this);
 }
 

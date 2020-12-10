@@ -2,40 +2,48 @@
 #pragma once
 
 #include "OnnxRuntime.hpp"
-#include "OCR.hpp"
+#include "TextLine.hpp"
 
 namespace nn {
 
 struct TextRecognizer {
+	static const std::vector<std::u32string> symbols;
+
 	static TextRecognizer& instance();
-	~TextRecognizer();
 
 	TextRecognizer(const TextRecognizer&) = delete;
 	TextRecognizer& operator=(const TextRecognizer&) = delete;
 
-	std::vector<Char> recognize(const stb::Image* image, const Word& word);
+	std::vector<TextLine> recognize(const stb::Image<stb::RGB>* image, TextLine& textline, const std::string& query);
 
 private:
 	TextRecognizer();
 
-	void run_nn(const stb::Image* image, const Word& word);
-	std::vector<Char> run_postprocessing(const Word& word);
+	void run_nn(const stb::Image<stb::RGB>* image, TextLine& textline);
+	std::vector<TextLine> run_postprocessing(const TextLine& textline, const std::string& query);
 
-	std::vector<std::vector<std::string>> symbols;
 	std::vector<size_t> symbols_indexes;
 
 	int in_w = 0;
 	int in_c = 0;
 	int out_w = 0;
 	int out_c = 0;
-	std::vector<float> in;
-	std::vector<float> out;
 
-	std::unique_ptr<Ort::Session> session;
-	std::unique_ptr<Ort::Value> in_tensor;
-	std::unique_ptr<Ort::Value> out_tensor;
+	onnx::Model model = "TextRecognizer";
+	onnx::Image in = "input";
 
-	std::vector<uint8_t> word_img, word_img_resized;
+	struct Output: onnx::Value {
+		using onnx::Value::Value;
+
+		void resize(int w, int c) {
+			Value::resize({w, 1, c});
+		}
+		float* operator[](int x) {
+			return &_buf[x * _shape[2]];
+		}
+	};
+
+	Output out = "output";
 };
 
 }

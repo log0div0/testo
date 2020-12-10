@@ -17,15 +17,17 @@ std::string duration_to_str(Duration duration) {
 	return result;
 }
 
-Reporter::Reporter(const nlohmann::json& config) {
-	report_folder = config.at("report_folder").get<std::string>();
-	report_logs = config.at("report_logs").get<bool>();
-	report_screenshots = config.at("report_screenshots").get<bool>();
-	html = config.at("html").get<bool>();
-
+void ReporterConfig::validate() const {
 	if ((report_logs || report_screenshots) && report_folder.empty()) {
 		throw std::runtime_error("--report_logs and --report_screenshots arguments are valid only with specified --report_folder");
 	}
+}
+
+Reporter::Reporter(const ReporterConfig& config) {
+	report_folder = config.report_folder;
+	report_logs = config.report_logs;
+	report_screenshots = config.report_screenshots;
+	html = config.html;
 }
 
 void Reporter::init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,	const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
@@ -433,6 +435,9 @@ void Reporter::exec_command_output(const std::string& text) {
 }
 
 void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc) {
+	if (!report_screenshots) {
+		return;
+	}
 	auto screenshot = vmc->vm()->screenshot();
 	screenshot.write_png((report_folder / (current_test->name() + "_wait_failed.png")).generic_string());
 	report(fmt::format("{} Saved screenshot from vm ", progress()), blue);

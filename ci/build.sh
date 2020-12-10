@@ -5,6 +5,12 @@ source "$(dirname "$0")/vars.sh"
 mkdir -p "$OUT_DIR"
 mkdir -p "$TMP_DIR"
 
+if [[ $# -eq 0 ]] ; then
+	TEST_SPEC=""
+else
+	TEST_SPEC="--test_spec $1"
+fi
+
 sudo testo run "$SCRIPT_DIR/build_scripts" \
 	--stop_on_fail \
 	--prefix tb_ \
@@ -14,5 +20,5 @@ sudo testo run "$SCRIPT_DIR/build_scripts" \
 	--param TMP_DIR "$TMP_DIR" \
 	--param OUT_DIR "$OUT_DIR" \
 	--license "$LICENSE_PATH" \
-	--test_spec $1 \
+	${TEST_SPEC} \
 	--assume_yes

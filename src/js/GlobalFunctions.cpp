@@ -1,6 +1,5 @@
 
 #include "GlobalFunctions.hpp"
-#include "nn/OCR.hpp"
 #include "Tensor.hpp"
 #include <iostream>
 
@@ -19,12 +18,27 @@ Value print(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>
 
 
 Value find_text(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
-	if (args.size() > 0) {
+	if (args.size() > 1) {
 		throw std::runtime_error("Invalid arguments count in find_text");
 	}
 
-	nn::Tensor tensor = nn::find_text(ctx.image());
-	return Tensor(ctx, tensor);
+	nn::TextTensor tensor = nn::find_text(ctx.image());
+	if (args.size() == 1) {
+		std::string text = args.at(0);
+		tensor = tensor.match_text(ctx.image(), text);
+	}
+	return TextTensor(ctx, tensor);
+}
+
+Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
+	if (args.size() != 1) {
+		throw std::runtime_error("Invalid arguments count in find_img");
+	}
+
+	std::string img_path = args.at(0);
+
+	nn::ImgTensor tensor = nn::find_img(ctx.image(), img_path);
+	return ImgTensor(ctx, tensor);
 }
 
 }

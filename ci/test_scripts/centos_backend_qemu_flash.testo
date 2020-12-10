@@ -13,7 +13,7 @@ test centos_backend_qemu_plug_flash: centos_backend_qemu_install_ubuntu_server {
 
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
-		wait "Welcome to Ubuntu"
+		wait "Welcome to Ubuntu"; sleep 5s
 		type "sudo su"; press Enter
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
@@ -28,7 +28,7 @@ test centos_backend_qemu_rollback_after_plug_flash: centos_backend_qemu_plug_fla
 			set +o pipefail
 			testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec plug_flash | grep "stop here"
 		""" timeout 30m
-		wait "Welcome to Ubuntu"
+		wait "Welcome to Ubuntu"; sleep 5s
 	}
 }
 
@@ -59,7 +59,7 @@ test centos_backend_qemu_plug_flash_with_files: centos_backend_qemu_install_ubun
 
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
-		wait "Welcome to Ubuntu"
+		wait "Welcome to Ubuntu"; sleep 5s
 		type "sudo su"; press Enter
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
@@ -105,7 +105,7 @@ test centos_backend_qemu_flash_copyto: centos_backend_qemu_install_guest_additio
 
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
-		wait "Welcome to Ubuntu"
+		wait "Welcome to Ubuntu"; sleep 5s
 		type "sudo su"; press Enter
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
@@ -180,7 +180,7 @@ test centos_backend_qemu_flash_copyfrom: centos_backend_qemu_install_guest_addit
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_plug_flash_exceptions: centos_prepare_testo {
+test centos_backend_qemu_plug_flash_exceptions: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/install_ubuntu.testo" "/opt/scripts/install_ubuntu.testo"

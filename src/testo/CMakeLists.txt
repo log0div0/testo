@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 
+add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
+add_definitions(-DTESTO_RELEASE_DATE="${TESTO_RELEASE_DATE}")
+
 list(APPEND SRC_DIRS "*.cpp")
 
 list(APPEND SRC_DIRS "backends/*.cpp")
@@ -11,6 +14,11 @@ list(APPEND SRC_DIRS "backends/qemu/*.cpp")
 endif()
 
 list(APPEND SRC_DIRS "IR/*.cpp")
+
+if (USE_CUDA)
+enable_language(CUDA)
+list(APPEND SRC_DIRS "*.cu")
+endif()
 
 file(GLOB SRCS ${SRC_DIRS})
 

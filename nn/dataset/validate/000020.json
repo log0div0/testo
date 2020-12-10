@@ -1,0 +1,36 @@
+{
+	"objs": {
+		"3ff27482-056c-4a2e-a63e-80932e250638": {
+			"type": "text",
+			"x": 242.16,
+			"y": 224.77,
+			"width": 156.26,
+			"height": 12.65,
+			"text": "Install Ubuntu Server"
+		},
+		"d5bb17f3-b711-4825-9598-c15dae70fbad": {
+			"type": "text",
+			"x": 172.67,
+			"y": 245.04,
+			"width": 296.55,
+			"height": 13.27,
+			"text": "Install Ubuntu Server with the HWE kernel"
+		},
+		"57b82884-1a7b-4e8e-aeec-e1976c6b817d": {
+			"type": "text",
+			"x": 278.01,
+			"y": 329.94,
+			"width": 86.19,
+			"height": 14.04,
+			"text": "Test memory"
+		},
+		"99efd547-f7a7-4e02-9ddf-22251d11c762": {
+			"type": "text",
+			"x": 230.81,
+			"y": 350,
+			"width": 179.26,
+			"height": 13.43,
+			"text": "Boot from first hard disk"
+		}
+	}
+}

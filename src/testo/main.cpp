@@ -57,8 +57,14 @@ int do_main(int argc, char** argv) {
 
 	RunModeArgs run_args;
 
-	auto test_spec_filer = [&](const std::string& arg) { run_args.template_patterns.push_back({true, arg}); return true; };
-	auto exclude_filer = [&](const std::string& arg) { run_args.template_patterns.push_back({false, arg}); return true; };
+	auto test_spec_filer = [&](const std::string& arg) {
+		run_args.test_name_filters.push_back({IR::TestNameFilter::Type::test_spec, arg});
+		return true;
+	};
+	auto exclude_filer = [&](const std::string& arg) {
+		run_args.test_name_filters.push_back({IR::TestNameFilter::Type::exclude, arg});
+		return true;
+	};
 
 	auto params_defs_spec = repeatable(
 		option("--param") & value("param_name", run_args.params_names) & value("param_value", run_args.params_values)
@@ -87,7 +93,8 @@ int do_main(int argc, char** argv) {
 		(option("--report_screenshots").set(run_args.report_screenshots)) % "Save screenshots from failed wait actions in report folder",
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(run_args.html)) % "Format stdout as html",
-		(option("--license") & value("path", run_args.license)) % "Path to the license file (for GPU version only)",
+		(option("--use_cpu").set(run_args.use_cpu)) % "Use CPU instead of GPU (relevant for GPU version only)",
+		(option("--license") & value("path", run_args.license)) % "Path to the license file (relevant for GPU version only)",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
 		any_other(wrong)
 	);

@@ -1,0 +1,909 @@
+{
+	"objs": {
+		"1b29ecad-887c-4205-9a35-87e1731637b1": {
+			"type": "text",
+			"x": 108.67,
+			"y": 8.73,
+			"width": 136.58,
+			"height": 25.54,
+			"text": "GitKraken"
+		},
+		"5f01ada9-8253-4f52-8745-1b36de89b1a4": {
+			"type": "text",
+			"x": 283.62,
+			"y": 10.23,
+			"width": 43.85,
+			"height": 23.7,
+			"text": "File"
+		},
+		"9e43c7d3-8a1e-4a45-a8a6-7fd94828baef": {
+			"type": "text",
+			"x": 364.73,
+			"y": 10.1,
+			"width": 49.64,
+			"height": 23.82,
+			"text": "Edit"
+		},
+		"57d0e354-75d3-4128-bb31-4c1438e50c1e": {
+			"type": "text",
+			"x": 449.6,
+			"y": 10.1,
+			"width": 64.69,
+			"height": 23.69,
+			"text": "View"
+		},
+		"ac9f3647-be86-4b02-835b-0bd4150e58f5": {
+			"type": "text",
+			"x": 549.56,
+			"y": 9.34,
+			"width": 104.8,
+			"height": 25.11,
+			"text": "Window"
+		},
+		"0d7eaee1-4994-45bc-9456-05b26c844412": {
+			"type": "text",
+			"x": 690.68,
+			"y": 9.63,
+			"width": 59.71,
+			"height": 28.73,
+			"text": "Help"
+		},
+		"6fb0cd3a-dd87-4a65-873c-a52ce5dcf926": {
+			"type": "text",
+			"x": 2738.4,
+			"y": 11.44,
+			"width": 19.34,
+			"height": 21.31,
+			"text": "A"
+		},
+		"37c43810-b6d3-4378-a2ac-b2b44f0e4775": {
+			"type": "text",
+			"x": 2917.74,
+			"y": 10.9,
+			"width": 57.19,
+			"height": 21.65,
+			"text": "79 %"
+		},
+		"399bc7ce-b043-47dd-9cba-99fe09bc54d1": {
+			"type": "text",
+			"x": 3065.6,
+			"y": 10.12,
+			"width": 109.49,
+			"height": 24.51,
+			"text": "Пт 15:13"
+		},
+		"f2832158-3448-4abc-a52f-7482a0c82e39": {
+			"type": "text",
+			"x": 292.7,
+			"y": 89.75,
+			"width": 73.72,
+			"height": 22.59,
+			"text": "testo"
+		},
+		"164d0fa8-1284-4c25-82b2-a79f3b1d240e": {
+			"type": "text",
+			"x": 499.34,
+			"y": 86.62,
+			"width": 191.89,
+			"height": 25.79,
+			"text": "testo-website"
+		},
+		"86300cd3-39ee-4552-a44a-4efd4451e448": {
+			"type": "text",
+			"x": 823.56,
+			"y": 89.45,
+			"width": 119.04,
+			"height": 22.99,
+			"text": "testo-nn"
+		},
+		"25ac9044-e236-45d5-9cba-b93613766667": {
+			"type": "text",
+			"x": 38.6,
+			"y": 170.46,
+			"width": 78.95,
+			"height": 24.14,
+			"text": "testo"
+		},
+		"752a72dc-0614-4f38-a845-131ebc708b11": {
+			"type": "text",
+			"x": 286.31,
+			"y": 170.12,
+			"width": 99.37,
+			"height": 24.49,
+			"text": "master"
+		},
+		"383b9a5a-3c84-4559-b7b5-f03f96162c00": {
+			"type": "text",
+			"x": 72.36,
+			"y": 250.74,
+			"width": 168.2,
+			"height": 26.69,
+			"text": "Viewing 20/20"
+		},
+		"9f36f9a4-d530-4da8-80b3-ef5a4b9e4e7c": {
+			"type": "text",
+			"x": 31.99,
+			"y": 299.48,
+			"width": 239.82,
+			"height": 28.03,
+			"text": "Filter (⌘ + Option + f)"
+		},
+		"81a92b96-3372-4cfb-a901-e46b85fd3762": {
+			"type": "text",
+			"x": 437.6,
+			"y": 249.24,
+			"width": 96.04,
+			"height": 23.36,
+			"text": "Show All"
+		},
+		"2eb7b6f1-3c3f-42fd-a3c6-bc9bd0d50e0c": {
+			"type": "text",
+			"x": 598.42,
+			"y": 248.36,
+			"width": 80.2,
+			"height": 20.25,
+			"text": "master"
+		},
+		"16e3c865-c4b8-47b5-8ab0-b1a7f8238746": {
+			"type": "text",
+			"x": 75.55,
+			"y": 370.61,
+			"width": 76.48,
+			"height": 20.91,
+			"text": "LOCAL"
+		},
+		"8c9159b3-11e6-4215-9d63-916a6588c861": {
+			"type": "text",
+			"x": 100.87,
+			"y": 426.77,
+			"width": 79.73,
+			"height": 19.78,
+			"text": "master"
+		},
+		"53e0f25a-548b-4063-babb-7c07e59fc6d7": {
+			"type": "text",
+			"x": 75.6,
+			"y": 478.58,
+			"width": 96.82,
+			"height": 21.1,
+			"text": "REMOTE"
+		},
+		"defe0395-e826-4575-b5d8-bd8a9525d38d": {
+			"type": "text",
+			"x": 101.62,
+			"y": 532.85,
+			"width": 64.9,
+			"height": 26.63,
+			"text": "origin"
+		},
+		"d9062853-8dd5-4763-8da0-4fa0793e1624": {
+			"type": "text",
+			"x": 128.7,
+			"y": 579.73,
+			"width": 171.96,
+			"height": 27.72,
+			"text": "dynamic_demo"
+		},
+		"76d76b7a-327b-4355-b438-c975e96cec8c": {
+			"type": "text",
+			"x": 130.67,
+			"y": 627.72,
+			"width": 77.52,
+			"height": 27.6,
+			"text": "hyperv"
+		},
+		"587b88d8-5ab0-4650-80df-ffa1a0a534c2": {
+			"type": "text",
+			"x": 130.58,
+			"y": 678.68,
+			"width": 80.06,
+			"height": 19.97,
+			"text": "master"
+		},
+		"7d78c8cc-0c2d-467a-a7a6-36de9f001aab": {
+			"type": "text",
+			"x": 130.58,
+			"y": 726.24,
+			"width": 89.01,
+			"height": 23.17,
+			"text": "next_nn"
+		},
+		"cd04dfc0-e8ff-4827-aab4-727a07647005": {
+			"type": "text",
+			"x": 70.31,
+			"y": 777.83,
+			"width": 184.37,
+			"height": 25.65,
+			"text": "PULL REQUESTS"
+		},
+		"bdeee577-9494-4eeb-b88c-daeba0526123": {
+			"type": "text",
+			"x": 70.32,
+			"y": 838.36,
+			"width": 78.83,
+			"height": 21.95,
+			"text": "ISSUES"
+		},
+		"dc80a2c9-7886-4136-94bf-a2f9f4affea8": {
+			"type": "text",
+			"x": 484.2,
+			"y": 370.6,
+			"width": 40.51,
+			"height": 21.11,
+			"text": "1/1"
+		},
+		"99480714-c54a-4058-b95e-f3e10a38ba82": {
+			"type": "text",
+			"x": 489.95,
+			"y": 425.2,
+			"width": 13.26,
+			"height": 19.17,
+			"text": "3"
+		},
+		"c2062d27-037c-4711-bc9e-b4c44db2b4f6": {
+			"type": "text",
+			"x": 483.73,
+			"y": 478.98,
+			"width": 43.43,
+			"height": 20.47,
+			"text": "4/4"
+		},
+		"3c5558c3-8478-4b0c-8526-6f647409668c": {
+			"type": "text",
+			"x": 511.6,
+			"y": 778.88,
+			"width": 14.68,
+			"height": 21.02,
+			"text": "0"
+		},
+		"1167b3c2-1ccc-4726-9797-5eabe22b9df7": {
+			"type": "text",
+			"x": 44.16,
+			"y": 904.9,
+			"width": 458.3,
+			"height": 31.51,
+			"text": "Select an issue tracker for this repo"
+		},
+		"5a71f1c6-d5ee-46d3-9c3d-28632d37d495": {
+			"type": "text",
+			"x": 132.7,
+			"y": 967.44,
+			"width": 92.99,
+			"height": 24.88,
+			"text": "GitHub"
+		},
+		"b8fb0521-9efb-4783-a1c8-5befbb254c6b": {
+			"type": "text",
+			"x": 133.47,
+			"y": 1051.19,
+			"width": 234.06,
+			"height": 31.25,
+			"text": "GitHub Enterprise"
+		},
+		"5099a2e8-4d52-4a94-b5b6-7c8b1e3fdf14": {
+			"type": "text",
+			"x": 136.66,
+			"y": 1134.45,
+			"width": 230.6,
+			"height": 26.36,
+			"text": "GitKraken Boards"
+		},
+		"bd87717d-a674-4d46-b4ce-4505173bdccb": {
+			"type": "text",
+			"x": 132.7,
+			"y": 1218.69,
+			"width": 85,
+			"height": 25.7,
+			"text": "GitLab"
+		},
+		"8146af41-f7cf-418a-ba6f-98fc51130f5a": {
+			"type": "text",
+			"x": 132.78,
+			"y": 1302.53,
+			"width": 269.62,
+			"height": 31.75,
+			"text": "GitLab Self-Managed"
+		},
+		"5ceef970-7a46-4407-aa3c-90555928a1bd": {
+			"type": "text",
+			"x": 128.84,
+			"y": 1386.42,
+			"width": 128.65,
+			"height": 30.7,
+			"text": "Jira Cloud"
+		},
+		"238257ef-2861-426e-90e5-d72b61e43e9d": {
+			"type": "text",
+			"x": 129.03,
+			"y": 1471.55,
+			"width": 137.66,
+			"height": 30.03,
+			"text": "Jira Server"
+		},
+		"afa085bb-7b62-4e94-936d-451ef53e72ba": {
+			"type": "text",
+			"x": 127.64,
+			"y": 1554.44,
+			"width": 75.84,
+			"height": 26.7,
+			"text": "Trello"
+		},
+		"b6257f5c-11e5-4c30-a2b6-4e07312cd13f": {
+			"type": "text",
+			"x": 133.52,
+			"y": 1640.07,
+			"width": 70.88,
+			"height": 24.55,
+			"text": "None"
+		},
+		"999f7ee7-4f08-49cd-af1c-4380872a465f": {
+			"type": "text",
+			"x": 32.84,
+			"y": 2063.94,
+			"width": 374.24,
+			"height": 27.17,
+			"text": "Update Ready (Restart GitKraken)"
+		},
+		"01c4c04a-80ab-4a9b-9cbf-93af056921c5": {
+			"type": "text",
+			"x": 69.05,
+			"y": 1765.11,
+			"width": 61.82,
+			"height": 20.81,
+			"text": "TAGS"
+		},
+		"b917a191-24ca-4a56-9ed6-95798b236785": {
+			"type": "text",
+			"x": 100.05,
+			"y": 1817.65,
+			"width": 259.13,
+			"height": 27.7,
+			"text": "uderbaked_borodinsky"
+		},
+		"e1fd5d1f-981b-4bb5-bea5-dc0ab6ca6035": {
+			"type": "text",
+			"x": 98.88,
+			"y": 1866.62,
+			"width": 67.45,
+			"height": 21.76,
+			"text": "v2.1.0"
+		},
+		"6b858b03-c28e-4aba-992e-166925782d79": {
+			"type": "text",
+			"x": 98.99,
+			"y": 1914.49,
+			"width": 63.51,
+			"height": 21.76,
+			"text": "v2.0.1"
+		},
+		"74aac5ef-314c-4cdd-a541-e3a54b52931f": {
+			"type": "text",
+			"x": 98.85,
+			"y": 1962.59,
+			"width": 67.46,
+			"height": 21.58,
+			"text": "v2.0.0"
+		},
+		"11c3daa9-1e09-4cdb-b792-aa666b2589d4": {
+			"type": "text",
+			"x": 98.54,
+			"y": 2010.79,
+			"width": 68,
+			"height": 21.42,
+			"text": "v1.6.2"
+		},
+		"c372bd4f-c016-4762-a5de-b777c6d054db": {
+			"type": "text",
+			"x": 456.64,
+			"y": 1764.77,
+			"width": 69.75,
+			"height": 21.31,
+			"text": "15/15"
+		},
+		"fef62757-d4f7-493d-a264-ffa28b0bd267": {
+			"type": "text",
+			"x": 596.72,
+			"y": 1646.7,
+			"width": 67.56,
+			"height": 21.49,
+			"text": "v2.1.0"
+		},
+		"a4a5b39e-024b-41bd-82ad-07e433be315e": {
+			"type": "text",
+			"x": 3143.23,
+			"y": 155.68,
+			"width": 160.78,
+			"height": 22.94,
+			"text": "Default Profile"
+		},
+		"462d273b-390b-4256-8062-18ddaff5ea0c": {
+			"type": "text",
+			"x": 3143.78,
+			"y": 188.72,
+			"width": 192.72,
+			"height": 23.68,
+			"text": "log0div0@gmail.com"
+		},
+		"e6d62cb9-b6a4-4dc8-bc2b-07cdf4809c67": {
+			"type": "text",
+			"x": 2850.7,
+			"y": 256.02,
+			"width": 178.48,
+			"height": 22.21,
+			"text": "commit: a7f130"
+		},
+		"d5d9382e-6531-44e5-a0dd-6698bd25e251": {
+			"type": "text",
+			"x": 2604.42,
+			"y": 351.79,
+			"width": 239.76,
+			"height": 29.43,
+			"text": "more exit codes"
+		},
+		"264fe764-4063-4403-ae5d-eebed3955bcb": {
+			"type": "text",
+			"x": 2678.27,
+			"y": 462.84,
+			"width": 124.84,
+			"height": 25.16,
+			"text": "Unknown"
+		},
+		"cb95fb6d-cffc-43a4-abdd-c019244cda9d": {
+			"type": "text",
+			"x": 2677.78,
+			"y": 504.13,
+			"width": 332.98,
+			"height": 24.19,
+			"text": "authored 26.10.2020 @ 19:08"
+		},
+		"c4368f31-dc8e-4306-b2f4-ed45b3b2b27c": {
+			"type": "text",
+			"x": 3172.39,
+			"y": 459.58,
+			"width": 168.49,
+			"height": 27.9,
+			"text": "parent: 40f10e"
+		},
+		"9bc2b457-5693-454a-b50e-df665dd58a5d": {
+			"type": "text",
+			"x": 3192.52,
+			"y": 659.71,
+			"width": 138.02,
+			"height": 22.94,
+			"text": "View all files"
+		},
+		"49bae1d2-2bd6-440c-99c5-b1aafb2e7dbe": {
+			"type": "text",
+			"x": 3015.75,
+			"y": 664.65,
+			"width": 52.06,
+			"height": 21.86,
+			"text": "Tree"
+		},
+		"7e90e3ad-0283-4db1-b003-a99e9771656b": {
+			"type": "text",
+			"x": 2885.77,
+			"y": 664.32,
+			"width": 50.89,
+			"height": 22.03,
+			"text": "Path"
+		},
+		"a5941a05-49de-4ab2-a0c0-2f77110a0359": {
+			"type": "text",
+			"x": 2617.28,
+			"y": 601.86,
+			"width": 119.33,
+			"height": 22.8,
+			"text": "5 modified"
+		},
+		"e85cf0ac-a8e4-4110-b197-2285afe09002": {
+			"type": "text",
+			"x": 633.05,
+			"y": 417.06,
+			"width": 79.18,
+			"height": 19.11,
+			"text": "master"
+		},
+		"9ed03761-8cf3-488c-9092-cc55caadb79e": {
+			"type": "text",
+			"x": 598.67,
+			"y": 472.69,
+			"width": 88.38,
+			"height": 22.31,
+			"text": "next_nn"
+		},
+		"3bb64d3f-11c8-42f5-92c0-6603d2b6dd8d": {
+			"type": "text",
+			"x": 2639.53,
+			"y": 733.93,
+			"width": 477.53,
+			"height": 27.92,
+			"text": "ci/test_scripts/centos_semantic.testo"
+		},
+		"94128fa8-8e80-4a90-95f3-09a6ac8e241f": {
+			"type": "text",
+			"x": 2639.09,
+			"y": 797.97,
+			"width": 494.6,
+			"height": 27.09,
+			"text": "ci/test_scripts/centos_vm_create.testo"
+		},
+		"0a9ccf63-b41a-41a3-a743-367fb502bbf3": {
+			"type": "text",
+			"x": 2638.78,
+			"y": 860.7,
+			"width": 323.98,
+			"height": 31.92,
+			"text": "src/testo/Exceptions.hpp"
+		},
+		"09fc7e4b-fcdb-4a53-9c8f-62d8fd2e85d5": {
+			"type": "text",
+			"x": 2638.57,
+			"y": 925.69,
+			"width": 245.88,
+			"height": 30.9,
+			"text": "src/testo/main.cpp"
+		},
+		"1368b8a8-d0ab-4d01-8d6d-e77eb9d72bef": {
+			"type": "text",
+			"x": 2638.51,
+			"y": 989.6,
+			"width": 405.95,
+			"height": 31.03,
+			"text": "src/testo/VisitorInterpreter.cpp"
+		},
+		"0a193133-980e-4faf-9810-975d40deb151": {
+			"type": "text",
+			"x": 2772.14,
+			"y": 2064.38,
+			"width": 60.39,
+			"height": 21.66,
+			"text": "100%"
+		},
+		"4be08c5b-166e-4cf3-9901-63b1509b3b7a": {
+			"type": "text",
+			"x": 2885.93,
+			"y": 2063.83,
+			"width": 106.46,
+			"height": 21.84,
+			"text": "Feedback"
+		},
+		"43136a38-41d2-4db2-86bc-6b3627de3d9d": {
+			"type": "text",
+			"x": 3094.32,
+			"y": 2064.59,
+			"width": 132.7,
+			"height": 20.92,
+			"text": "INDIVIDUAL"
+		},
+		"40f5393a-6d74-4a54-85ef-dc6df1766a1d": {
+			"type": "text",
+			"x": 3275.78,
+			"y": 2064.72,
+			"width": 50.61,
+			"height": 21.24,
+			"text": "7.3.1"
+		},
+		"2b1f0ed8-c230-41ae-b505-8eab8823a202": {
+			"type": "text",
+			"x": 1244.25,
+			"y": 246.53,
+			"width": 315.76,
+			"height": 27.27,
+			"text": "windows AD russian sample"
+		},
+		"2815df7a-f4e3-4600-a768-316554694b3f": {
+			"type": "text",
+			"x": 1245.96,
+			"y": 301.08,
+			"width": 250.12,
+			"height": 28.03,
+			"text": "bump up linux version"
+		},
+		"9773423b-d6f4-47c4-a98d-a5f5c16dba03": {
+			"type": "text",
+			"x": 1246.46,
+			"y": 357.14,
+			"width": 236.1,
+			"height": 28.03,
+			"text": "bump up win version"
+		},
+		"f45a5fb2-bd92-418d-b5bf-22f3c241ab60": {
+			"type": "text",
+			"x": 1246.52,
+			"y": 413.68,
+			"width": 179.14,
+			"height": 23.21,
+			"text": "more exit codes"
+		},
+		"a90bbc0e-643a-405e-a69e-e697cf0b563b": {
+			"type": "text",
+			"x": 1245.95,
+			"y": 469.45,
+			"width": 322.97,
+			"height": 27.77,
+			"text": "update nn dataset generator"
+		},
+		"03f1e2b0-1b08-44d6-81a1-f7babf8b9ea3": {
+			"type": "text",
+			"x": 1246.36,
+			"y": 525.59,
+			"width": 219.06,
+			"height": 27.86,
+			"text": "nn tests refactoring"
+		},
+		"c46d4a2d-cc6c-4191-9333-c48ae812fedc": {
+			"type": "text",
+			"x": 1244.14,
+			"y": 581.92,
+			"width": 407.63,
+			"height": 27.26,
+			"text": "удалим лишний include_directories"
+		},
+		"265f8a8d-f86a-4ff7-a795-a48a4d4cdd41": {
+			"type": "text",
+			"x": 1246.73,
+			"y": 637.85,
+			"width": 627.25,
+			"height": 27.59,
+			"text": "Merge pull request #173 from log0div0/wait_img_syntax"
+		},
+		"d65a509b-d7d6-4bd9-9fe0-96092eb5a339": {
+			"type": "text",
+			"x": 1245.41,
+			"y": 693.9,
+			"width": 184.54,
+			"height": 27.7,
+			"text": "a couple of tests"
+		},
+		"2b1e1ed8-a474-4f8b-9e50-78f359cfcece": {
+			"type": "text",
+			"x": 1246.34,
+			"y": 749.5,
+			"width": 179.14,
+			"height": 28.21,
+			"text": "mouse click img"
+		},
+		"c50d3e76-93b0-4b44-ab37-b2027ea4f98b": {
+			"type": "text",
+			"x": 1245.33,
+			"y": 805.51,
+			"width": 213.73,
+			"height": 28.37,
+			"text": "syntax for wait img"
+		},
+		"fef5fa1d-3d8f-43cd-aa24-92bc71a15ae6": {
+			"type": "text",
+			"x": 1245.85,
+			"y": 861.15,
+			"width": 652.73,
+			"height": 28.54,
+			"text": "Merge pull request #170 from log0div0/macro_commands"
+		},
+		"50061cf6-dde8-4a66-82d6-7bece9265026": {
+			"type": "text",
+			"x": 1244.36,
+			"y": 917.73,
+			"width": 54.03,
+			"height": 22.94,
+			"text": "fixes"
+		},
+		"53304ae9-1d6c-4dbb-b095-281da23a1b16": {
+			"type": "text",
+			"x": 1245.85,
+			"y": 973.3,
+			"width": 656.62,
+			"height": 28.64,
+			"text": "Merge branch 'lazy_macro_parsing' into macro_commands"
+		},
+		"ef902dc3-9e7d-4090-9309-dcbe1fde9aae": {
+			"type": "text",
+			"x": 1245.11,
+			"y": 1029.63,
+			"width": 53.15,
+			"height": 22.69,
+			"text": "fixes"
+		},
+		"6026df17-081b-44c5-8021-bb8f42dcdd79": {
+			"type": "text",
+			"x": 1246.51,
+			"y": 1085.55,
+			"width": 344.14,
+			"height": 28.27,
+			"text": "proposal for lazy macro parser"
+		},
+		"4e9fe878-7366-4090-82a0-68fcf51fed6f": {
+			"type": "text",
+			"x": 1245.61,
+			"y": 1141,
+			"width": 234.17,
+			"height": 28.72,
+			"text": "unlazy lexer propolal"
+		},
+		"820586c4-efba-42dd-832b-d40e77bd183b": {
+			"type": "text",
+			"x": 1246.83,
+			"y": 1198.65,
+			"width": 415.83,
+			"height": 24.67,
+			"text": "LOOKAHEAD_BUFFER_SIZE constexpr"
+		},
+		"4230b3c4-7300-48f2-8a4d-4a949c3564fa": {
+			"type": "text",
+			"x": 2374.47,
+			"y": 409.65,
+			"width": 146.04,
+			"height": 28.06,
+			"text": "12 hours ago"
+		},
+		"d90aaa6b-a518-482a-9ef7-1e03b94433f0": {
+			"type": "text",
+			"x": 2394.66,
+			"y": 465.93,
+			"width": 125.66,
+			"height": 27.61,
+			"text": "a week ago"
+		},
+		"e5c0b2f8-362e-443b-b020-10f7a8a07654": {
+			"type": "text",
+			"x": 2382.64,
+			"y": 1081.74,
+			"width": 137.61,
+			"height": 27.7,
+			"text": "2 weeks ago"
+		},
+		"d2f9c55d-0aec-40b3-b891-18ea0ce86b24": {
+			"type": "text",
+			"x": 2382.53,
+			"y": 1641.31,
+			"width": 138.19,
+			"height": 28.37,
+			"text": "3 weeks ago"
+		},
+		"66ac0ac2-9988-439c-86b5-26e55dffd1ac": {
+			"type": "text",
+			"x": 1245.62,
+			"y": 1253.81,
+			"width": 107.66,
+			"height": 22.7,
+			"text": "seems ok"
+		},
+		"f1b87798-f2d0-4906-b527-d33e03ed366e": {
+			"type": "text",
+			"x": 1245.29,
+			"y": 1309.64,
+			"width": 296.88,
+			"height": 27.93,
+			"text": "command macro proposal"
+		},
+		"8353f3d5-78b4-4670-bbec-36a86fa2812d": {
+			"type": "text",
+			"x": 1246,
+			"y": 1365.92,
+			"width": 58.74,
+			"height": 22.35,
+			"text": "ICmd"
+		},
+		"eea0605b-3a37-46ee-aebf-0033fd6571dd": {
+			"type": "text",
+			"x": 1244.45,
+			"y": 1421.63,
+			"width": 189.06,
+			"height": 27.86,
+			"text": "work in progress"
+		},
+		"a096179c-0dc3-48ac-8352-f1bdb1d5d940": {
+			"type": "text",
+			"x": 1246.41,
+			"y": 1477.53,
+			"width": 332.94,
+			"height": 27.85,
+			"text": "MacroAction body refactoring"
+		},
+		"90e7fbae-bdbe-4461-80d7-3c366c73f63f": {
+			"type": "text",
+			"x": 1244.36,
+			"y": 1533.37,
+			"width": 613.22,
+			"height": 23.39,
+			"text": "vm names and flash names in commands are now STU"
+		},
+		"a1d81b80-9e98-449a-b829-f5e142114786": {
+			"type": "text",
+			"x": 1244.37,
+			"y": 1589.26,
+			"width": 259.16,
+			"height": 28.08,
+			"text": "flash macro call bug fix"
+		},
+		"05df89ba-46b7-48b3-a23e-2885c28cf519": {
+			"type": "text",
+			"x": 1244.13,
+			"y": 1645.31,
+			"width": 111.96,
+			"height": 28.37,
+			"text": "fix deploy"
+		},
+		"83994025-1270-429e-85e8-72ec30627ae0": {
+			"type": "text",
+			"x": 1244.35,
+			"y": 1701.3,
+			"width": 313.43,
+			"height": 28.17,
+			"text": "fix centos_mouse_specifiers"
+		},
+		"2093404c-dae1-4b70-b3e5-b2b673d62db3": {
+			"type": "text",
+			"x": 1244.62,
+			"y": 1757.47,
+			"width": 554.61,
+			"height": 27.87,
+			"text": "fix centos_backend_qemu_install_guest_additions"
+		},
+		"04e23c41-dc39-4863-8f0a-90d72d2b68eb": {
+			"type": "text",
+			"x": 1243.76,
+			"y": 1813.52,
+			"width": 168.05,
+			"height": 28.28,
+			"text": "fix win ga tests"
+		},
+		"bcc64b1c-ce4c-4419-a2cb-660ebd65516b": {
+			"type": "text",
+			"x": 1245.55,
+			"y": 1869.44,
+			"width": 309.45,
+			"height": 27.38,
+			"text": "собираемость под виндой"
+		},
+		"a9fd996d-2a07-4d56-9ef1-ba2b92c9b9e4": {
+			"type": "text",
+			"x": 1246.21,
+			"y": 1925.45,
+			"width": 205.58,
+			"height": 28.22,
+			"text": "bump up linux ver"
+		},
+		"0f026aa6-3a44-4c2e-8e1f-3885264391ad": {
+			"type": "text",
+			"x": 1246.6,
+			"y": 1981.46,
+			"width": 189.58,
+			"height": 27.86,
+			"text": "bump up win ver"
+		},
+		"c435c00b-fb3c-44d7-9aae-d39acc7b1673": {
+			"type": "text",
+			"x": 1246.98,
+			"y": 2038.08,
+			"width": 143.94,
+			"height": 11.31,
+			"text": ""
+		},
+		"97dba412-2f57-434a-9fae-c168def51135": {
+			"type": "text",
+			"x": 2623.14,
+			"y": 661.25,
+			"width": 13.58,
+			"height": 13.47,
+			"text": "A"
+		},
+		"582e5349-8821-48b1-9abd-21b96641dcd0": {
+			"type": "text",
+			"x": 2624.05,
+			"y": 677.3,
+			"width": 11.77,
+			"height": 13.44,
+			"text": "Z"
+		},
+		"e0b46f52-a493-4599-8061-abcabc1e0025": {
+			"type": "text",
+			"x": 1021.18,
+			"y": 88.15,
+			"width": 23.63,
+			"height": 23.73,
+			"text": "+"
+		}
+	},
+	"verified": true
+}

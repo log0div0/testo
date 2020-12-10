@@ -1,0 +1,52 @@
+{
+	"objs": {
+		"b9de104a-469d-4ba8-acde-68b5c0a1493a": {
+			"type": "text",
+			"x": 287.85,
+			"y": 18.83,
+			"width": 62.65,
+			"height": 12.51,
+			"text": "Welcome!"
+		},
+		"63cdcb3c-d312-47b6-85d4-fc730b608cb5": {
+			"type": "text",
+			"x": 358.7,
+			"y": 17.2,
+			"width": 135.27,
+			"height": 15.81,
+			"text": "Добро пожаловать!"
+		},
+		"09df6dca-7cae-4725-b4a9-21581f741aea": {
+			"type": "text",
+			"x": 103.69,
+			"y": 66.57,
+			"width": 302.34,
+			"height": 14.57,
+			"text": "Please choose your preferred language."
+		},
+		"c0273b94-eacf-4ea9-806a-11ed1a938e4f": {
+			"type": "text",
+			"x": 251.03,
+			"y": 98.18,
+			"width": 69.07,
+			"height": 14.77,
+			"text": "[ English"
+		},
+		"ba75cdcf-4d82-42f1-bc53-f31b1819f898": {
+			"type": "text",
+			"x": 250.93,
+			"y": 305.14,
+			"width": 69.18,
+			"height": 16.09,
+			"text": "[ Русский"
+		},
+		"76867f47-aec9-4414-98e6-87f6d3b8a093": {
+			"type": "text",
+			"x": 103.91,
+			"y": 754.82,
+			"width": 414.22,
+			"height": 13.77,
+			"text": "Use UP, DOWN and ENTER keys to select your language."
+		}
+	}
+}

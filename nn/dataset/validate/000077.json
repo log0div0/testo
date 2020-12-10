@@ -1,0 +1,92 @@
+{
+	"objs": {
+		"98f5f0b7-d51f-4278-ba64-7709209be33d": {
+			"type": "text",
+			"x": 161.96,
+			"y": 185.05,
+			"width": 334.3,
+			"height": 12.93,
+			"text": "The installer is ready to install Testo Guest Additions on your computer."
+		},
+		"c6344729-203e-44fb-9aec-9a5af084aa50": {
+			"type": "text",
+			"x": 161.33,
+			"y": 210.69,
+			"width": 168.86,
+			"height": 11.67,
+			"text": "Click \"Next\" to start the installation."
+		},
+		"1f5b702f-6dd8-4ab0-a4c2-e9c8ac1d90c9": {
+			"type": "text",
+			"x": 171.87,
+			"y": 82.87,
+			"width": 118.33,
+			"height": 11.3,
+			"text": "Testo Guest Additions"
+		},
+		"afb62100-410c-4cd0-a9ec-a618fcec4dbf": {
+			"type": "text",
+			"x": 161.71,
+			"y": 114.64,
+			"width": 158.48,
+			"height": 14.72,
+			"text": "Confirm Installation"
+		},
+		"fb74481a-63a1-4999-a3a2-2b8f78505a3e": {
+			"type": "text",
+			"x": 384.75,
+			"y": 453.89,
+			"width": 36.23,
+			"height": 11.62,
+			"text": "< Back"
+		},
+		"d6af1b4c-6c88-406d-9d12-1493d148ef7f": {
+			"type": "text",
+			"x": 482.15,
+			"y": 454.13,
+			"width": 32.9,
+			"height": 11.19,
+			"text": "Next >"
+		},
+		"6b779886-fd41-43a1-9e9c-07a39cef92ad": {
+			"type": "text",
+			"x": 576.9,
+			"y": 454.05,
+			"width": 35.23,
+			"height": 11.07,
+			"text": "Cancel"
+		},
+		"b5081b36-8ce2-42e4-afcf-337275ac7c3a": {
+			"type": "text",
+			"x": 735.53,
+			"y": 566.96,
+			"width": 23.76,
+			"height": 11.15,
+			"text": "9:06"
+		},
+		"93c42376-5029-4e27-8289-a18c5038b4cf": {
+			"type": "text",
+			"x": 718.7,
+			"y": 583.42,
+			"width": 56.53,
+			"height": 11.98,
+			"text": "09.11.2020"
+		},
+		"91689405-9f2a-4ab5-bfde-d7d7cc177c58": {
+			"type": "text",
+			"x": 586.11,
+			"y": 572.21,
+			"width": 16.97,
+			"height": 10.85,
+			"text": "RU"
+		},
+		"a23d3f5b-358d-46d1-b762-db876de57995": {
+			"type": "text",
+			"x": 16,
+			"y": 59.74,
+			"width": 48.86,
+			"height": 14.63,
+			"text": "Корзина"
+		}
+	}
+}

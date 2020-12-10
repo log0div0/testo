@@ -1,0 +1,317 @@
+{
+	"objs": {
+		"9a2fbd38-feec-4759-ae96-837fe2b73fab": {
+			"type": "text",
+			"x": 274.33,
+			"y": 5.77,
+			"width": 155.09,
+			"height": 12.57,
+			"text": "Untitled [modified] - KWrite"
+		},
+		"f9224756-d621-4da2-a464-ec5eae1ffc23": {
+			"type": "text",
+			"x": 9.66,
+			"y": 25.75,
+			"width": 21.6,
+			"height": 12.65,
+			"text": "File"
+		},
+		"8d73d0a0-bdf1-4e1c-a16a-244c205c087a": {
+			"type": "text",
+			"x": 45.42,
+			"y": 25.37,
+			"width": 25.91,
+			"height": 12.93,
+			"text": "Edit"
+		},
+		"66fd5c90-038c-49ba-962e-7615b82946fe": {
+			"type": "text",
+			"x": 84.5,
+			"y": 25.68,
+			"width": 31.92,
+			"height": 12.7,
+			"text": "View"
+		},
+		"7cb60d06-dfa2-4464-9070-d80a4508863e": {
+			"type": "text",
+			"x": 130.64,
+			"y": 25.71,
+			"width": 68.66,
+			"height": 12.67,
+			"text": "Bookmarks"
+		},
+		"43632098-95f3-4614-8c4c-02ecb34bf1f3": {
+			"type": "text",
+			"x": 212.68,
+			"y": 25.83,
+			"width": 32.61,
+			"height": 12.5,
+			"text": "Tools"
+		},
+		"b589fb23-6d6c-45d0-8768-0ae6c70058ea": {
+			"type": "text",
+			"x": 259.51,
+			"y": 25.62,
+			"width": 50.96,
+			"height": 15.72,
+			"text": "Settings"
+		},
+		"984350d3-f7fa-4198-8aaa-dc644818fc96": {
+			"type": "text",
+			"x": 325.6,
+			"y": 25.63,
+			"width": 28.89,
+			"height": 15.74,
+			"text": "Help"
+		},
+		"d85d309e-cc7d-4a06-8a7d-0ec604a75b1f": {
+			"type": "text",
+			"x": 31.51,
+			"y": 51.6,
+			"width": 25.98,
+			"height": 10.92,
+			"text": "New"
+		},
+		"3e873cd5-ff76-4002-b5f6-cc683ce8e365": {
+			"type": "text",
+			"x": 95.54,
+			"y": 51.7,
+			"width": 31.92,
+			"height": 12.6,
+			"text": "Open"
+		},
+		"1751f332-6587-41a4-9ce7-169e2594e1cb": {
+			"type": "text",
+			"x": 173.51,
+			"y": 51.67,
+			"width": 29.7,
+			"height": 10.68,
+			"text": "Save"
+		},
+		"2b0d4b08-141e-4696-8412-b3ecba974007": {
+			"type": "text",
+			"x": 241.62,
+			"y": 51.58,
+			"width": 46.08,
+			"height": 10.94,
+			"text": "Save As"
+		},
+		"12c8c839-f1c3-4288-953e-6baf3d2f2ed2": {
+			"type": "text",
+			"x": 333.56,
+			"y": 51.41,
+			"width": 32.74,
+			"height": 11,
+			"text": "Close"
+		},
+		"7ff26f67-bb13-4117-8810-063c15e1968d": {
+			"type": "text",
+			"x": 411.63,
+			"y": 51.65,
+			"width": 31.02,
+			"height": 11.08,
+			"text": "Undo"
+		},
+		"89dd0f0d-5e8d-4909-a327-fc3d01e188a5": {
+			"type": "text",
+			"x": 482.52,
+			"y": 51.67,
+			"width": 29.94,
+			"height": 10.78,
+			"text": "Redo"
+		},
+		"3e311638-fdcb-4a89-975f-e683168b4e6b": {
+			"type": "text",
+			"x": 16.64,
+			"y": 48.17,
+			"width": 10.43,
+			"height": 9.79,
+			"text": "+"
+		},
+		"1f0f7db9-7b4c-45f3-bb76-06ed6960f3e8": {
+			"type": "text",
+			"x": 5.02,
+			"y": 403.23,
+			"width": 9.05,
+			"height": 11.7,
+			"text": "<"
+		},
+		"64953718-8fe6-422e-b4a3-5508dfbf9bf7": {
+			"type": "text",
+			"x": 657.36,
+			"y": 403.24,
+			"width": 7.61,
+			"height": 11.56,
+			"text": "<"
+		},
+		"45e51a01-4ff9-4bd0-9c7e-6ff695f71fb5": {
+			"type": "text",
+			"x": 671.28,
+			"y": 403.2,
+			"width": 8.61,
+			"height": 11.64,
+			"text": ">"
+		},
+		"07276978-9ec9-431c-acb9-4f019f234740": {
+			"type": "text",
+			"x": 34.86,
+			"y": 428.89,
+			"width": 185.37,
+			"height": 15.34,
+			"text": "1 replacement has been made"
+		},
+		"950da0c2-64b1-4bc0-a745-878e02475b40": {
+			"type": "text",
+			"x": 29.68,
+			"y": 461.67,
+			"width": 29.79,
+			"height": 12.65,
+			"text": "Find:"
+		},
+		"ca0beb04-1b91-4a9c-9e08-85e710bb3ac1": {
+			"type": "text",
+			"x": 6.61,
+			"y": 485.59,
+			"width": 80.98,
+			"height": 12.72,
+			"text": "Line: 1 Col: 1"
+		},
+		"eaef5ba4-92e5-441e-9649-303cae6191f9": {
+			"type": "text",
+			"x": 152.67,
+			"y": 486.79,
+			"width": 21.66,
+			"height": 11.53,
+			"text": "INS"
+		},
+		"9780844d-7adc-4325-9dc0-f6320844aa13": {
+			"type": "text",
+			"x": 183.47,
+			"y": 486.59,
+			"width": 28.89,
+			"height": 11.75,
+			"text": "LINE"
+		},
+		"ccc2324e-6cb6-4721-9fa2-f208055e2172": {
+			"type": "text",
+			"x": 232.5,
+			"y": 485.61,
+			"width": 48.98,
+			"height": 12.89,
+			"text": "Untitled"
+		},
+		"1ca949be-4ff9-4843-9049-be658f7c927f": {
+			"type": "text",
+			"x": 269.59,
+			"y": 461.66,
+			"width": 30.8,
+			"height": 11.68,
+			"text": "Next"
+		},
+		"a7c40be0-0bc2-44c9-a395-30cec107a1f9": {
+			"type": "text",
+			"x": 350.56,
+			"y": 460.89,
+			"width": 52.8,
+			"height": 12.41,
+			"text": "Previous"
+		},
+		"13b3deef-d5ef-45a5-bc2f-a7759db0117d": {
+			"type": "text",
+			"x": 456.53,
+			"y": 460.65,
+			"width": 69.86,
+			"height": 12.74,
+			"text": "Match case"
+		},
+		"c120d822-394c-4202-a3ca-69e3aa401cd6": {
+			"type": "text",
+			"x": 505.63,
+			"y": 428.79,
+			"width": 105.88,
+			"height": 15.19,
+			"text": "Keep highlighting"
+		},
+		"541cdf6f-0256-4248-b084-c9f4a2c0af84": {
+			"type": "text",
+			"x": 646.64,
+			"y": 428.79,
+			"width": 34.79,
+			"height": 12.53,
+			"text": "Close"
+		},
+		"b08a76b2-03cb-48d1-9cd1-82c2ddc6e6d6": {
+			"type": "text",
+			"x": 1192.62,
+			"y": 5.63,
+			"width": 51.64,
+			"height": 16.17,
+			"text": "Desktop"
+		},
+		"c2faae7c-e11a-415d-8a1b-c4d5a696018f": {
+			"type": "text",
+			"x": 1027.52,
+			"y": 439.59,
+			"width": 108.06,
+			"height": 12.93,
+			"text": "Available Devices"
+		},
+		"87b98b9b-253c-4d1a-9abc-b2a4d11eb486": {
+			"type": "text",
+			"x": 943.55,
+			"y": 485.71,
+			"width": 97.98,
+			"height": 15.6,
+			"text": "Storage Volume"
+		},
+		"fa09caaf-6ed2-4abd-93ae-1aba4ba54311": {
+			"type": "text",
+			"x": 982.47,
+			"y": 512.57,
+			"width": 58.11,
+			"height": 12.14,
+			"text": "MICROSD"
+		},
+		"99e0cc5f-6e55-4f95-a4cf-c4f27b277bc7": {
+			"type": "text",
+			"x": 982.67,
+			"y": 558.65,
+			"width": 176.67,
+			"height": 15.71,
+			"text": "Huawei Incorporated Android"
+		},
+		"fd1484f5-0827-403e-9443-d15eed6d6e78": {
+			"type": "text",
+			"x": 981.61,
+			"y": 573.59,
+			"width": 50.78,
+			"height": 14.5,
+			"text": "Adapter"
+		},
+		"c02ebcac-9db0-4c00-b0ce-f8bdffbe37be": {
+			"type": "text",
+			"x": 1206.13,
+			"y": 778.55,
+			"width": 49.86,
+			"height": 17.79,
+			"text": "11:02"
+		},
+		"b40c6891-1fd6-46f8-908a-d6b1b5e3c9c9": {
+			"type": "text",
+			"x": 10.15,
+			"y": 779.39,
+			"width": 11.51,
+			"height": 13.07,
+			"text": "K"
+		},
+		"2c62fc11-5d2f-4a83-870f-8467e712d0eb": {
+			"type": "text",
+			"x": 147.15,
+			"y": 780.12,
+			"width": 167.92,
+			"height": 14.81,
+			"text": "Untitled [modified] - KWrite"
+		}
+	},
+	"verified": true
+}

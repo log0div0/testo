@@ -1,0 +1,388 @@
+{
+	"objs": {
+		"c409a5cf-33e2-46eb-8239-439c0440df72": {
+			"type": "text",
+			"x": 0.02,
+			"y": 737.97,
+			"width": 328.21,
+			"height": 14.99,
+			"text": "-----a--------e---- /tmp/testdir/del_fail"
+		},
+		"8b6b5ae4-87cd-4576-b5ca-8aab3fce5e76": {
+			"type": "text",
+			"x": -0.21,
+			"y": 402.04,
+			"width": 310.65,
+			"height": 15.03,
+			"text": "Astra Linux Directory сконфигурирована."
+		},
+		"60482b70-eaf6-4fa2-90b9-dc25e5a6f180": {
+			"type": "text",
+			"x": -0.5,
+			"y": 0.82,
+			"width": 822.84,
+			"height": 16.32,
+			"text": "Обработка шаблона конфигурационного файла '/etc/ald/config-templates/nslcd.conf' в '/etc/nslcd.conf'..."
+		},
+		"f2b46fa9-d914-4746-98f8-169fbe8126a5": {
+			"type": "text",
+			"x": -0.38,
+			"y": 17.08,
+			"width": 470.83,
+			"height": 16.16,
+			"text": "Переименование '/etc/nslcd.conf.tmp' в '/etc/nslcd.conf'..."
+		},
+		"e254750d-8d64-429a-98fe-3a7c64dc9502": {
+			"type": "text",
+			"x": -0.46,
+			"y": 33.12,
+			"width": 280.73,
+			"height": 15.96,
+			"text": "sh: ald_mac_pam: команда не найдена"
+		},
+		"4f0dd749-99db-4608-a9b8-a185500b2c13": {
+			"type": "text",
+			"x": -0.45,
+			"y": 49,
+			"width": 878.49,
+			"height": 15.95,
+			"text": "Обработка шаблона конфигурационного файла '/etc/ald/config-templates/mldap.conf' в '/etc/parsec/mldap.conf'..."
+		},
+		"f7f5c4d3-d9f3-42f9-91e7-3423d1750233": {
+			"type": "text",
+			"x": -0.33,
+			"y": 64.95,
+			"width": 582.69,
+			"height": 15.99,
+			"text": "Переименование '/etc/parsec/mldap.conf.tmp' в '/etc/parsec/mldap.conf'..."
+		},
+		"b15ac4ad-8dca-4d17-bd1e-2211b3a0a6cb": {
+			"type": "text",
+			"x": -0.2,
+			"y": 80.88,
+			"width": 502.35,
+			"height": 16.06,
+			"text": "Обработка конфигурационного файла '/etc/parsec/mswitch.conf'..."
+		},
+		"baae6b7b-4090-4fb1-9b7e-820c98bd84e7": {
+			"type": "text",
+			"x": -0.21,
+			"y": 97.13,
+			"width": 327.43,
+			"height": 15.92,
+			"text": "Включение ldap в /etc/parsec/mswitch.conf"
+		},
+		"8b792020-656f-4858-a3e7-2184a67096c6": {
+			"type": "text",
+			"x": -0.36,
+			"y": 113.04,
+			"width": 670.57,
+			"height": 15.74,
+			"text": "Переименование '/etc/parsec/mswitch.conf' в '/etc/parsec/mswitch.conf.before_ald'..."
+		},
+		"3cef65e2-25bc-4f10-8ccc-cb9433ef59bd": {
+			"type": "text",
+			"x": -0.34,
+			"y": 128.89,
+			"width": 614.7,
+			"height": 16.09,
+			"text": "Переименование '/etc/parsec/mswitch.conf.tmp' в '/etc/parsec/mswitch.conf'..."
+		},
+		"daea9d97-0c0a-480c-a308-76aeb60dee5f": {
+			"type": "text",
+			"x": -0.29,
+			"y": 144.9,
+			"width": 1024.57,
+			"height": 16.13,
+			"text": "Введите имя пользователя для авторизации. Пользователь должен обладать правом добавления компьютера(ов) в БД ALD. Или нажмите En"
+		},
+		"30b6b795-a47f-4933-abf8-987c47db0675": {
+			"type": "text",
+			"x": -0.42,
+			"y": 161.15,
+			"width": 310.44,
+			"height": 16.19,
+			"text": "ter, чтобы войти как администратор ALD."
+		},
+		"ad04b1ff-92a5-4282-9e01-2577a2898c62": {
+			"type": "text",
+			"x": -0.4,
+			"y": 178.93,
+			"width": 30.79,
+			"height": 12.28,
+			"text": "Имя:"
+		},
+		"9495868a-f579-427c-9eb8-9d61eb80d124": {
+			"type": "text",
+			"x": 0.05,
+			"y": 194.71,
+			"width": 289.08,
+			"height": 14.39,
+			"text": "Введите пароль администратора ALD: *"
+		},
+		"0e50f11f-7822-4c94-8cd6-e8c0cf755159": {
+			"type": "text",
+			"x": -0.15,
+			"y": 209.13,
+			"width": 358.27,
+			"height": 15.79,
+			"text": "Создание объекта компьютер 'suac.rtfm.rbt'..."
+		},
+		"29f27e46-bfd0-4a06-9416-22ef7b1b8a51": {
+			"type": "text",
+			"x": -0.1,
+			"y": 224.91,
+			"width": 790.35,
+			"height": 16.09,
+			"text": "Изменение объекта группа компьютеров 'Domain Computers': добавление члена группы 'suac.rtfm.rbt'..."
+		},
+		"6cbd31ab-13f6-4543-9def-1acbd56f9b10": {
+			"type": "text",
+			"x": -0.28,
+			"y": 240.8,
+			"width": 774.68,
+			"height": 15.41,
+			"text": "Создание ключей для принципала 'host/suac.rtfm.rbt@RTFM.RBT' в файле ключей '/etc/krb5.keytab'..."
+		},
+		"09e3edfe-7fad-4e9d-b032-54dbe8dc14cb": {
+			"type": "text",
+			"x": -0.51,
+			"y": 256.12,
+			"width": 374.47,
+			"height": 16.91,
+			"text": "Создание объекта сервис 'aldd/suac.rtfm.rbt'..."
+		},
+		"9b03612f-50b2-44c7-a8c5-64602c13c419": {
+			"type": "text",
+			"x": -0.46,
+			"y": 272.93,
+			"width": 838.44,
+			"height": 16.02,
+			"text": "Создание ключей для принципала 'aldd/suac.rtfm.rbt@RTFM.RBT' в файле ключей '/var/lib/ald/aldd.keytab'..."
+		},
+		"2544e2b6-4a6b-48a9-9ad9-70fb15c3ceec": {
+			"type": "text",
+			"x": -0.69,
+			"y": 289,
+			"width": 454.7,
+			"height": 16.04,
+			"text": "Смена владельца '/var/lib/ald/aldd.keytab' (aldd:aldd)..."
+		},
+		"e1b0cd06-7514-4f5a-8c15-73c8a735eb47": {
+			"type": "text",
+			"x": -0.66,
+			"y": 305.11,
+			"width": 199.33,
+			"height": 16.05,
+			"text": "Включение сервиса aldd..."
+		},
+		"fa608834-93ce-4828-b223-ee0065cab4ed": {
+			"type": "text",
+			"x": -0.61,
+			"y": 321.05,
+			"width": 591.2,
+			"height": 15.85,
+			"text": "aldd.service is not a native service, redirecting to systemd-sysv-install."
+		},
+		"b7301025-84bc-4df4-abc0-91cd843ce5bc": {
+			"type": "text",
+			"x": -0.39,
+			"y": 337.8,
+			"width": 448.57,
+			"height": 15.33,
+			"text": "Executing: /lib/systemd/systemd-sysv-install enable aldd"
+		},
+		"b8d982c2-b347-4c80-a0bf-73a127e8c46b": {
+			"type": "text",
+			"x": -0.26,
+			"y": 353.67,
+			"width": 206.47,
+			"height": 15.25,
+			"text": "Перезапуск сервиса aldd..."
+		},
+		"4af41837-720f-49e9-a0c8-dcb107f5e95a": {
+			"type": "text",
+			"x": -0.18,
+			"y": 368.93,
+			"width": 254.57,
+			"height": 15.01,
+			"text": "Создание каталога '/ald_home'..."
+		},
+		"9c203a4d-4dcc-4f61-ae89-0501ca840d72": {
+			"type": "text",
+			"x": -0.27,
+			"y": 418.79,
+			"width": 166.32,
+			"height": 14.18,
+			"text": "Сервер ALD неактивен."
+		},
+		"7a0227f4-f1b3-4734-8309-a8987c48ff75": {
+			"type": "text",
+			"x": -0.17,
+			"y": 434.79,
+			"width": 150.27,
+			"height": 12.37,
+			"text": "Клиент ALD включен."
+		},
+		"5772905e-a921-4bd9-a844-a28ced2887a3": {
+			"type": "text",
+			"x": -0.12,
+			"y": 449.17,
+			"width": 344.34,
+			"height": 16.02,
+			"text": "root@suac:/home/u# kernlog | grep open_fail"
+		},
+		"59484ee5-9e72-4ecc-888a-5ae6c1fc332c": {
+			"type": "text",
+			"x": 2.77,
+			"y": 465.14,
+			"width": 1021.55,
+			"height": 15.97,
+			"text": "[p] 'Tue Dec  8 10:34:54 2020' '/bin/cat' <1332,1314,2501,2501,2501> [f] open(\"/tmp/testdir/open_fail\",O_RDONLY) = -13 EACCES (O"
+		},
+		"eca059ab-836b-4b20-bd76-4c0ab87488c7": {
+			"type": "text",
+			"x": -0.04,
+			"y": 481.63,
+			"width": 142.52,
+			"height": 15.47,
+			"text": "тказано в доступе)"
+		},
+		"1948e2b0-41d9-4a6b-8aad-1d8a47d4f089": {
+			"type": "text",
+			"x": 0.01,
+			"y": 497.08,
+			"width": 504.01,
+			"height": 15.81,
+			"text": "root@suac:/home/u# bash -c \"echo > /var/log/parsec/kernel.mlog\""
+		},
+		"47e77d97-df3a-42f5-bdce-76dd643d40fe": {
+			"type": "text",
+			"x": 0.02,
+			"y": 513.7,
+			"width": 352.1,
+			"height": 15.2,
+			"text": "root@suac:/home/u# rm /tmp/testdir/open_fail"
+		},
+		"fa42c9f9-3c4f-4996-adcc-a589ddbcd2f7": {
+			"type": "text",
+			"x": -0.09,
+			"y": 528.93,
+			"width": 360.33,
+			"height": 16.08,
+			"text": "root@suac:/home/u# kernlog | grep create_fail"
+		},
+		"3d671271-8969-45d4-9c5a-645e062a2612": {
+			"type": "text",
+			"x": 2.68,
+			"y": 545,
+			"width": 1014.33,
+			"height": 15.95,
+			"text": "[p] 'Tue Dec  8 10:35:13 2020' '/bin/touch' <1378,1372,2501,2501,2501> [f] create(\"/tmp/testdir/create_fail\",O_WRONLY | O_CREAT"
+		},
+		"a085b0e3-d3f5-4f4a-a6fa-4a736d09f978": {
+			"type": "text",
+			"x": 2.56,
+			"y": 561.12,
+			"width": 547.59,
+			"height": 15.97,
+			"text": "| O_NOCTTY | O_NONBLOCK,-rw-rw-rw-) = -13 EACCES (Отказано в доступе)"
+		},
+		"632f2cfc-aa0a-4ad4-909b-ff68698f4731": {
+			"type": "text",
+			"x": 0.07,
+			"y": 577.18,
+			"width": 503.96,
+			"height": 15.83,
+			"text": "root@suac:/home/u# bash -c \"echo > /var/log/parsec/kernel.mlog\""
+		},
+		"9204c187-3b5f-4330-9cf9-cce9d37be5d5": {
+			"type": "text",
+			"x": -0.16,
+			"y": 592.93,
+			"width": 288.57,
+			"height": 14.62,
+			"text": "root@suac:/home/u# chmod o-x /bin/ls"
+		},
+		"19159c3a-d7cb-4834-9b35-26424dd3c796": {
+			"type": "text",
+			"x": 0.05,
+			"y": 608.98,
+			"width": 304.28,
+			"height": 16.1,
+			"text": "root@suac:/home/u# kernlog | grep exec"
+		},
+		"c578866b-498c-4c78-bfa9-a13de652102f": {
+			"type": "text",
+			"x": 2.76,
+			"y": 625.11,
+			"width": 979.53,
+			"height": 16.02,
+			"text": "[p] 'Tue Dec  8 10:35:26 2020' '/bin/bash' <1423,1422,2501,2501,2501> [f] exec(\"/bin/ls\") = -13 EACCES (Отказано в доступе)"
+		},
+		"0a09f527-9730-4e07-afea-642fcb496108": {
+			"type": "text",
+			"x": 2.65,
+			"y": 641.12,
+			"width": 979.53,
+			"height": 16.02,
+			"text": "[p] 'Tue Dec  8 10:35:29 2020' '/bin/bash' <1424,1419,2501,2501,2501> [f] exec(\"/bin/ls\") = -13 EACCES (Отказано в доступе)"
+		},
+		"8dc365bb-d976-4028-943b-6ac1c59fa408": {
+			"type": "text",
+			"x": 0.07,
+			"y": 657.19,
+			"width": 504.12,
+			"height": 16.18,
+			"text": "root@suac:/home/u# bash -c \"echo > /var/log/parsec/kernel.mlog\""
+		},
+		"b4370b47-9253-4149-98aa-59bbd4ec0636": {
+			"type": "text",
+			"x": -0.02,
+			"y": 673.3,
+			"width": 288.25,
+			"height": 14.41,
+			"text": "root@suac:/home/u# chmod o+x /bin/ls"
+		},
+		"3a9aba70-6bc9-40a8-90b1-b4d53a2c27f1": {
+			"type": "text",
+			"x": -0.02,
+			"y": 689.76,
+			"width": 368.2,
+			"height": 15.15,
+			"text": "root@suac:/home/u# touch /tmp/testdir/del_fail"
+		},
+		"31fec96d-fb7e-4a76-9ead-fa920fa3b5c4": {
+			"type": "text",
+			"x": 0.08,
+			"y": 705.96,
+			"width": 399.95,
+			"height": 14.96,
+			"text": "root@suac:/home/u# chattr +a /tmp/testdir/del_fail"
+		},
+		"fc251c7b-0c00-4c0a-bc19-d2d0a60d0b3e": {
+			"type": "text",
+			"x": -0.05,
+			"y": 720.82,
+			"width": 376.34,
+			"height": 17.2,
+			"text": "root@suac:/home/u# lsattr /tmp/testdir/del_fail"
+		},
+		"27a3b6a1-fb58-46eb-ac83-edd078652fa5": {
+			"type": "text",
+			"x": -0.04,
+			"y": 752.81,
+			"width": 144.43,
+			"height": 15.25,
+			"text": "root@suac:/home/u#"
+		},
+		"85ae3021-f036-4ea8-9db3-13c9f03e913e": {
+			"type": "text",
+			"x": 150.36,
+			"y": 752.91,
+			"width": 10.95,
+			"height": 15.67,
+			"text": ""
+		}
+	}
+}

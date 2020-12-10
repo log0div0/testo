@@ -7,7 +7,7 @@
 namespace nn {
 
 struct Rect {
-	int32_t left = 0, top = 0, right = 0, bottom = 0;
+	int32_t left = 0, top = 0, right = -1, bottom = -1;
 
 	float iou(const Rect& other) const {
 		return float((*this & other).area()) / (*this | other).area();

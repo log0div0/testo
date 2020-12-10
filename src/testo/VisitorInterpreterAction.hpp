@@ -16,9 +16,9 @@ struct VisitorInterpreterAction {
 	virtual void visit_action(std::shared_ptr<AST::IAction> action) = 0;
 	virtual void visit_copy(const IR::Copy& copy) = 0;
 	virtual bool visit_check(const IR::Check& check) = 0;
+	virtual void visit_abort(const IR::Abort& abort) = 0;
 
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
-	void visit_abort(const IR::Abort& abort);
 	void visit_print(const IR::Print& print);
 	void visit_sleep(const IR::Sleep& sleep);
 	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);

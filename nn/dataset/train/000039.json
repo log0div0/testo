@@ -1,0 +1,429 @@
+{
+	"objs": {
+		"a46cc69b-1d11-41b2-bdb7-9b407404b395": {
+			"type": "text",
+			"x": 47.12,
+			"y": 20.06,
+			"width": 96.88,
+			"height": 14.83,
+			"text": "Azure DevOps"
+		},
+		"e30315aa-64a5-4643-acdb-4dd0456fdcc5": {
+			"type": "text",
+			"x": 46.01,
+			"y": 66.84,
+			"width": 77.16,
+			"height": 13.42,
+			"text": "Continent4"
+		},
+		"9abd5926-232c-471a-b689-f1cc2e4abb4b": {
+			"type": "text",
+			"x": 45.95,
+			"y": 120,
+			"width": 63.07,
+			"height": 13.19,
+			"text": "Overview"
+		},
+		"9d5a8dba-31ba-4894-85f6-676735ef1671": {
+			"type": "text",
+			"x": 45.81,
+			"y": 166.87,
+			"width": 49.35,
+			"height": 14.41,
+			"text": "Boards"
+		},
+		"c10a6057-52fb-4c9f-809c-236854ab009e": {
+			"type": "text",
+			"x": 45.5,
+			"y": 210.85,
+			"width": 74.75,
+			"height": 14.33,
+			"text": "Work Items"
+		},
+		"8ecf9d66-6e15-468a-854e-02418e81f052": {
+			"type": "text",
+			"x": 46.77,
+			"y": 250.8,
+			"width": 45.6,
+			"height": 14.41,
+			"text": "Boards"
+		},
+		"976c05ba-bc10-41cc-8587-2870e47ab69b": {
+			"type": "text",
+			"x": 45.99,
+			"y": 290.96,
+			"width": 59.14,
+			"height": 17.21,
+			"text": "Backlogs"
+		},
+		"82c8eb6e-4757-416e-b3b7-3b6f3f6cb654": {
+			"type": "text",
+			"x": 45.71,
+			"y": 331.89,
+			"width": 50.51,
+			"height": 16.2,
+			"text": "Sprints"
+		},
+		"b8c10ec0-974a-4b35-8844-45c672600388": {
+			"type": "text",
+			"x": 45.75,
+			"y": 371.95,
+			"width": 52.4,
+			"height": 16.24,
+			"text": "Queries"
+		},
+		"0b73baa5-3818-4206-9918-5741243453a3": {
+			"type": "text",
+			"x": 45.55,
+			"y": 410.92,
+			"width": 106.79,
+			"height": 17.23,
+			"text": "Wiql Playground"
+		},
+		"26734052-76f1-4d6f-afbf-69a3fcdf49ce": {
+			"type": "text",
+			"x": 46.04,
+			"y": 456.9,
+			"width": 41.13,
+			"height": 15.13,
+			"text": "Repos"
+		},
+		"47a9e217-08e2-4389-9cc9-db4f5c0bc1ee": {
+			"type": "text",
+			"x": 45.76,
+			"y": 502.89,
+			"width": 60.49,
+			"height": 17.23,
+			"text": "Pipelines"
+		},
+		"efac0a77-25fa-4365-9dde-76331786440f": {
+			"type": "text",
+			"x": 45.68,
+			"y": 550.87,
+			"width": 66.58,
+			"height": 14.48,
+			"text": "Test Plans"
+		},
+		"711f2402-cffd-4a67-b18a-72de49bec8dc": {
+			"type": "text",
+			"x": 45.69,
+			"y": 599.77,
+			"width": 57.66,
+			"height": 13.55,
+			"text": "Artifacts"
+		},
+		"30ad8ec2-9950-4200-acb3-b6369dcfc653": {
+			"type": "text",
+			"x": 45.88,
+			"y": 1049.87,
+			"width": 102.54,
+			"height": 16.37,
+			"text": "Project settings"
+		},
+		"ca9f0760-9b4b-476c-9706-a2a54d03c79a": {
+			"type": "text",
+			"x": 269.87,
+			"y": 18.76,
+			"width": 66.34,
+			"height": 13.37,
+			"text": "Continent"
+		},
+		"bf75afb2-9c62-47d7-8549-4f7a4b8b7643": {
+			"type": "text",
+			"x": 348.61,
+			"y": 12.89,
+			"width": 9.99,
+			"height": 19.28,
+			"text": "/"
+		},
+		"4c479f47-4964-472f-91fc-2e40803bfa67": {
+			"type": "text",
+			"x": 455.95,
+			"y": 12.8,
+			"width": 9.99,
+			"height": 19.28,
+			"text": "/"
+		},
+		"a74f5949-a680-4665-a767-cc8c41b19362": {
+			"type": "text",
+			"x": 536.14,
+			"y": 12.83,
+			"width": 9.99,
+			"height": 19.28,
+			"text": "/"
+		},
+		"802b054d-4a26-4340-a2ef-77d386d89b67": {
+			"type": "text",
+			"x": 369.85,
+			"y": 18.92,
+			"width": 73.3,
+			"height": 13.18,
+			"text": "Continent4"
+		},
+		"f6e153b1-9f25-4793-bbc5-b81867ba4c59": {
+			"type": "text",
+			"x": 476.75,
+			"y": 17.95,
+			"width": 46.46,
+			"height": 14.21,
+			"text": "Boards"
+		},
+		"f5ad5654-a752-463b-9650-c476bd028cf1": {
+			"type": "text",
+			"x": 557.07,
+			"y": 19.01,
+			"width": 46.94,
+			"height": 15.92,
+			"text": "Sprints"
+		},
+		"a363bc5b-06e1-4533-8de3-6d7238f38601": {
+			"type": "text",
+			"x": 311.63,
+			"y": 68.79,
+			"width": 85.58,
+			"height": 17.46,
+			"text": "DataPlane"
+		},
+		"421c86a0-5f6b-442f-ae4b-bff1f94ef5ce": {
+			"type": "text",
+			"x": 279.84,
+			"y": 115.73,
+			"width": 68.53,
+			"height": 14.57,
+			"text": "Taskboard"
+		},
+		"0c4e267d-a2a2-403a-a953-039d6f93a602": {
+			"type": "text",
+			"x": 366.78,
+			"y": 115.71,
+			"width": 55.32,
+			"height": 17.45,
+			"text": "Backlog"
+		},
+		"a7d8b9be-674b-48bd-aad7-9421d522a079": {
+			"type": "text",
+			"x": 439.73,
+			"y": 116.82,
+			"width": 57.32,
+			"height": 16.25,
+			"text": "Capacity"
+		},
+		"f8ad32e8-ec5b-4b45-8c32-2f7be13937cd": {
+			"type": "text",
+			"x": 565.82,
+			"y": 116.01,
+			"width": 99.47,
+			"height": 14.18,
+			"text": "New Work Item"
+		},
+		"5e1eb85d-53af-4ca6-9645-c9682686c0b7": {
+			"type": "text",
+			"x": 711.55,
+			"y": 116.06,
+			"width": 104.92,
+			"height": 16.94,
+			"text": "Column Options"
+		},
+		"fe05b49e-ecb9-41d3-b0e9-542dc21e6371": {
+			"type": "text",
+			"x": 1599.61,
+			"y": 17.78,
+			"width": 44.66,
+			"height": 14.53,
+			"text": "Search"
+		},
+		"8d4f67fc-1876-4e8f-b427-6ac61000c443": {
+			"type": "text",
+			"x": 1558.7,
+			"y": 60.71,
+			"width": 182.61,
+			"height": 15.71,
+			"text": "October 26 - November 8"
+		},
+		"0ff70a3e-cba7-4947-a75f-3a655344b781": {
+			"type": "text",
+			"x": 1617.66,
+			"y": 78.74,
+			"width": 123.79,
+			"height": 15.53,
+			"text": "6 work days remaining"
+		},
+		"f885650a-7681-45e3-be75-e3a434e935f1": {
+			"type": "text",
+			"x": 1649.51,
+			"y": 117.47,
+			"width": 69.75,
+			"height": 15.75,
+			"text": "Спринт 22"
+		},
+		"c80c9f0e-ff16-4fa6-b989-a2ffcd533815": {
+			"type": "text",
+			"x": 343.72,
+			"y": 161.76,
+			"width": 35.5,
+			"height": 12.52,
+			"text": "Order"
+		},
+		"a3c8c465-e1f8-4394-9bfb-5adbf3bd6a05": {
+			"type": "text",
+			"x": 408.85,
+			"y": 160.79,
+			"width": 28.45,
+			"height": 13.43,
+			"text": "Title"
+		},
+		"e9922955-9e11-4bf2-a41b-469ae6fcb6f3": {
+			"type": "text",
+			"x": 344.65,
+			"y": 191.87,
+			"width": 7.62,
+			"height": 11.16,
+			"text": "1"
+		},
+		"aab24e3e-b6a2-4a00-98a3-d8ebf709466f": {
+			"type": "text",
+			"x": 343.83,
+			"y": 221.87,
+			"width": 9.38,
+			"height": 11.25,
+			"text": "2"
+		},
+		"682cc415-e12f-4ba2-9477-5cf3272cb598": {
+			"type": "text",
+			"x": 430.06,
+			"y": 189.9,
+			"width": 673.19,
+			"height": 15.17,
+			"text": "[4.1] Кластер. NF2. Ошибка перевода резервного узла в активный после нескольких штатных переключений"
+		},
+		"5b4e6e63-1884-4e1c-855c-82ff52c13e7f": {
+			"type": "text",
+			"x": 1212.59,
+			"y": 162.6,
+			"width": 31.83,
+			"height": 11.7,
+			"text": "State"
+		},
+		"518b9363-c48d-4fe4-922d-128c664874f4": {
+			"type": "text",
+			"x": 1312.68,
+			"y": 161.82,
+			"width": 67.65,
+			"height": 14.44,
+			"text": "Assigned To"
+		},
+		"99305508-f50b-4f43-98a8-0b75cc00d605": {
+			"type": "text",
+			"x": 1536.76,
+			"y": 160.67,
+			"width": 92.64,
+			"height": 15.69,
+			"text": "Remaining Work"
+		},
+		"60924d9d-e14d-42ce-a596-dab09a601c8c": {
+			"type": "text",
+			"x": 430.07,
+			"y": 219.73,
+			"width": 527.14,
+			"height": 15.31,
+			"text": "[4.1] NF2. Создается Broadcast шторм в сети, если у АРМ указана неправильная маска"
+		},
+		"dae0b59f-128b-4997-aa24-bb318693204d": {
+			"type": "text",
+			"x": 1225.78,
+			"y": 189.87,
+			"width": 55.57,
+			"height": 13.35,
+			"text": "Resolved"
+		},
+		"1e819666-8bb4-4670-a630-4b6f785c5e8c": {
+			"type": "text",
+			"x": 1225.63,
+			"y": 220.85,
+			"width": 39.62,
+			"height": 12.4,
+			"text": "Active"
+		},
+		"fab5f3b0-8042-4f0f-9639-8150fbe0cedf": {
+			"type": "text",
+			"x": 1312.64,
+			"y": 189.64,
+			"width": 84.73,
+			"height": 15.64,
+			"text": "Аббясов Гаяр"
+		},
+		"9a16e49d-de78-4826-b4bc-93aec91a9ab6": {
+			"type": "text",
+			"x": 1312.71,
+			"y": 219.67,
+			"width": 142.68,
+			"height": 15.69,
+			"text": "[Continent4]\\DataPlane"
+		},
+		"a8f1ed3c-1588-4c64-8087-c0bf6730e4a3": {
+			"type": "text",
+			"x": 1536.63,
+			"y": 191.69,
+			"width": 16.74,
+			"height": 11.58,
+			"text": "32"
+		},
+		"092a90f1-ae6b-4b27-a7f7-2a4ef96c4031": {
+			"type": "text",
+			"x": 1536.83,
+			"y": 221.83,
+			"width": 17.4,
+			"height": 11.47,
+			"text": "24"
+		},
+		"6dab641a-a222-4a8f-a5d0-fdbc5317e2a0": {
+			"type": "text",
+			"x": 540.73,
+			"y": 114.78,
+			"width": 18.47,
+			"height": 17.46,
+			"text": "+"
+		},
+		"d559a14a-b1d1-4d99-83fe-6cb9fe712e31": {
+			"type": "text",
+			"x": 303.94,
+			"y": 190.09,
+			"width": 16,
+			"height": 15.03,
+			"text": "+"
+		},
+		"5949c732-ad6e-4f93-b009-09bc3d9d5494": {
+			"type": "text",
+			"x": 398.81,
+			"y": 193.79,
+			"width": 7.17,
+			"height": 10.34,
+			"text": ">"
+		},
+		"6a8f40da-8443-44c2-9db8-5ae66ec52a45": {
+			"type": "text",
+			"x": 398.81,
+			"y": 223.84,
+			"width": 7.17,
+			"height": 10.34,
+			"text": ">"
+		},
+		"5ca28638-f4f7-4aae-a279-ea5aacfe460b": {
+			"type": "text",
+			"x": 225.86,
+			"y": 64.12,
+			"width": 19.18,
+			"height": 17.9,
+			"text": "+"
+		},
+		"44e669cf-b4d3-44ef-b3a6-912186d74b72": {
+			"type": "text",
+			"x": 831.18,
+			"y": 119.67,
+			"width": 26.17,
+			"height": 10.38,
+			"text": ""
+		}
+	},
+	"verified": true
+}

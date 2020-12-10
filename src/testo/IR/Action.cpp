@@ -108,7 +108,11 @@ std::string MouseSelectable::where_to_go() const {
 		result += "\"";
 		result += IR::SelectText(p->selectable, stack).text();
 		result += "\"";
-	} else {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(ast_node->selectable)) {
+		result += "image \"";
+		result += IR::SelectImg(p->selectable, stack).img_path().generic_string();
+		result += "\"";
+	}else {
 		throw std::runtime_error("Where to go is unapplicable");
 	}
 	return result;
@@ -148,7 +152,7 @@ fs::path SelectImg::img_path() const {
 std::string SelectText::text() const {
 	try {
 		return template_literals::Parser().resolve(ast_node->text(), stack);
-	} catch (const std::exception) {
+	} catch (const std::exception&) {
 		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
 	}
 }

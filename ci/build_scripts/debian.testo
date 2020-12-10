@@ -4,7 +4,7 @@ include "common.testo"
 machine debian {
 	cpus: 4
 	iso: "${ISO_DIR}/debian-9.12.0-amd64-xfce-CD-1.iso"
-	ram: 8Gb
+	ram: 4Gb
 	disk main: {
 		size: 32Gb
 	}
@@ -57,6 +57,7 @@ test debian_install_os {
 	}
 }
 
+[no_snapshots: true]
 test debian_install_guest_additions: debian_install_os {
 	debian {
 		wait "${host_name} login:"; type "root"; press Enter
@@ -108,19 +109,22 @@ test debian_download_onnxruntime: debian_install_packages {
 	}
 }
 
-[no_snapshots: true]
 test debian_build_onnxruntime_cpu: debian_download_onnxruntime {
 	debian {
 		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
 			cd /root/onnxruntime
 			${onnxruntime_patch_commands}
-			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests
-			mkdir /root/onnxruntime_dist
-			mkdir /root/onnxruntime_dist/include
-			mkdir /root/onnxruntime_dist/lib
-			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_dist/lib
-			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
+			mkdir -p /root/onnxruntime_build
+			cd /root/onnxruntime_build
+			cmake ../onnxruntime/cmake \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCMAKE_INSTALL_PREFIX=/root/onnxruntime_dist \
+				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
+				-Donnxruntime_BUILD_SHARED_LIB=ON \
+				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
+				-Donnxruntime_USE_CUDA=OFF
+			make install -j$(nproc)
 		""" timeout 2h
 		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_debian_cpu"
 	}
@@ -144,21 +148,24 @@ test debian_install_cuda: debian_download_onnxruntime {
 	}
 }
 
-[no_snapshots: true]
 test debian_build_onnxruntime_gpu: debian_install_cuda {
 	debian {
 		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 		exec bash """
+			export PATH="$PATH:/usr/local/cuda/bin"
 			cd /root/onnxruntime
 			${onnxruntime_patch_commands}
-			export PATH="$PATH:/usr/local/cuda/bin"
-			./build.sh --config Release --parallel --disable_contrib_ops --build_shared_lib --skip_tests --use_cuda --cuda_home /usr/local/cuda --cudnn_home /root/cuda
-			mkdir /root/onnxruntime_dist
-			mkdir /root/onnxruntime_dist/include
-			mkdir /root/onnxruntime_dist/lib
-			cp build/Linux/Release/libonnxruntime_testo.so* /root/onnxruntime_dist/lib
-			cp include/onnxruntime/core/session/* /root/onnxruntime_dist/include
-			cp include/onnxruntime/core/providers/cuda/cuda_provider_factory.h /root/onnxruntime_dist/include
+			mkdir -p /root/onnxruntime_build
+			cd /root/onnxruntime_build
+			cmake ../onnxruntime/cmake \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCMAKE_INSTALL_PREFIX=/root/onnxruntime_dist \
+				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
+				-Donnxruntime_BUILD_SHARED_LIB=ON \
+				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
+				-Donnxruntime_USE_CUDA=ON \
+				-Donnxruntime_CUDNN_HOME=/root/cuda
+			make install -j$(nproc)
 		""" timeout 2h
 		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_debian_gpu"
 	}
@@ -169,14 +176,15 @@ test debian_build_testo_guest_additions: debian_install_packages {
 	debian {
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
-		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
-		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
 			cd /root/
 			mkdir testo_build
 			cd testo_build
-			cmake -DCPACK_GENERATOR="DEB;RPM" -DCMAKE_BUILD_TYPE=Release ../testo
+			cmake ../testo \
+				-DCPACK_GENERATOR="DEB;RPM" \
+				-DCMAKE_BUILD_TYPE=Release
 			make testo-guest-additions-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
@@ -186,11 +194,10 @@ test debian_build_testo_guest_additions: debian_install_packages {
 }
 
 [no_snapshots: true]
-test debian_build_testo_cpu: debian_install_packages {
+test debian_build_testo_cpu: debian_build_onnxruntime_cpu {
 	debian {
-		copyto "${TMP_DIR}/onnxruntime_dist_debian_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
@@ -198,7 +205,11 @@ test debian_build_testo_cpu: debian_install_packages {
 			cd /root/
 			mkdir testo_build
 			cd testo_build
-			cmake -DONNX_RUNTIME_DIR=/root/onnxruntime_dist -DUSE_CUDA=off -DCPACK_GENERATOR=DEB -DCMAKE_BUILD_TYPE=Release ../testo
+			cmake ../testo \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCPACK_GENERATOR=DEB \
+				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
+				-DUSE_CUDA=off
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
@@ -207,19 +218,23 @@ test debian_build_testo_cpu: debian_install_packages {
 }
 
 [no_snapshots: true]
-test debian_build_testo_gpu: debian_install_packages {
+test debian_build_testo_gpu: debian_build_onnxruntime_gpu {
 	debian {
-		copyto "${TMP_DIR}/onnxruntime_dist_debian_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
+			export PATH="$PATH:/usr/local/cuda/bin"
 			cd /root/
 			mkdir testo_build
 			cd testo_build
-			cmake -DONNX_RUNTIME_DIR=/root/onnxruntime_dist -DUSE_CUDA=on -DCPACK_GENERATOR=DEB -DCMAKE_BUILD_TYPE=Release ../testo
+			cmake ../testo \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCPACK_GENERATOR=DEB \
+				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
+				-DUSE_CUDA=on
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
