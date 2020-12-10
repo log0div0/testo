@@ -170,6 +170,16 @@ void render_random_text(Example& example) {
 	example.meta.at("textlines").push_back(bbox);
 }
 
+bool all_codepoints_are_the_same(const std::u32string& str) {
+	char32_t first = str.at(0);
+	for (size_t i = 1; i < str.size(); ++i) {
+		if (first != str[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 Example random_crop(const Doc& src) {
 	Example dst;
 	dst.img = stb::Image<stb::RGB>(800, 400, random_RGB());
@@ -212,10 +222,11 @@ Example random_crop(const Doc& src) {
 		bbox.x -= crop.x;
 		bbox.y -= crop.y;
 		nlohmann::json textline = bbox;
-		std::string text = obj.at("text");
+		std::u32string text = to_utf32(obj.at("text"));
 
 		textline["ignore_while_training"] =
 			(text.size() < 2) ||
+			all_codepoints_are_the_same(text) ||
 			(bbox.w <= bbox.h) ||
 			(bbox.h != Rect(obj).h) ||
 			(bbox.h <= 10);

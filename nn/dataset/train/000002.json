@@ -647,6 +647,14 @@
 			"width": 10.9,
 			"height": 9.94,
 			"text": "W"
+		},
+		"31e7e797-feea-432e-849e-ef1cd7b1fa83": {
+			"type": "text",
+			"x": 1347.25,
+			"y": 933.43,
+			"width": 23.17,
+			"height": 11,
+			"text": ""
 		}
 	},
 	"verified": true

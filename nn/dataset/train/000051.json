@@ -599,6 +599,14 @@
 			"width": 292.81,
 			"height": 16.38,
 			"text": "Add the environment.yaml to create conda env"
+		},
+		"0fa27b90-41bd-48ba-b54a-12a6ac43e66d": {
+			"type": "text",
+			"x": 938.14,
+			"y": 147.35,
+			"width": 23.15,
+			"height": 9.95,
+			"text": ""
 		}
 	},
 	"verified": true

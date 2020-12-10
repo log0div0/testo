@@ -182,15 +182,26 @@ Textline random_textline(const std::unique_ptr<Font>& font, int max_text_bbox_wi
 	std::vector<Char> chars;
 
 	while (x < max_text_bbox_width) {
-		bool isspace = random_bool(1.0f / 5);
-		if (isspace && (chars.size() > 2)) {
-			if (chars.back().codepoint == space_codepoint()) {
-				continue;
+		char32_t codepoint = 0;
+		if (chars.size()) {
+			if (chars.back().codepoint == U'-') {
+				codepoint = random_bool(1.0f / 2) ? U'-' : random_codepoint();
+			} else if (chars.back().codepoint == U'.') {
+				codepoint = random_bool(1.0f / 2) ? U'.' : random_codepoint();
+			} else if (chars.back().codepoint == U' ') {
+				codepoint = random_codepoint();
+			} else if (chars.size() <= 2) {
+				codepoint = random_codepoint();
+			} else {
+				codepoint = random_bool(1.0f / 5) ? U' ' : random_codepoint();
 			}
+		} else {
+			codepoint = random_codepoint();
+		}
+		if (codepoint == space_codepoint()) {
 			chars.push_back(space_codepoint());
 			x += space_width;
 		} else {
-			char32_t codepoint = random_codepoint();
 			ScaledHMetrics hmetrics = font->codepointHMetrics(codepoint);
 			if (chars.size()) {
 				x += font->codepointKernAdvance(chars.back().codepoint, codepoint);
