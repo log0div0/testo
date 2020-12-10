@@ -121,7 +121,7 @@ std::vector<TextLine> TextRecognizer::recognize(const stb::Image<stb::RGB>* imag
 	return run_postprocessing(textline, query);
 }
 
-#define THRESHOLD -10.0
+#define THRESHOLD -11.0
 
 void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textline) {
 	if (textline.text_recognizer_cache.predictions.size()) {
