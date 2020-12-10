@@ -43,6 +43,12 @@
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
+        "Entry"
+        {
+        "MsmKey" = "8:_F06A840091A947F8B5F963AB8390A13B"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
     }
     "Configurations"
     {
@@ -226,6 +232,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F06A840091A947F8B5F963AB8390A13B"
+            {
+            "SourcePath" = "8:..\\..\\..\\src\\nn\\TextColorPicker.onnx"
+            "TargetName" = "8:TextColorPicker.onnx"
+            "Tag" = "8:"
+            "Folder" = "8:_27C4FF1EE59E48E89F29B4A0F7E1E2D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
         }
         "FileType"
         {
@@ -282,15 +308,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Testo"
-        "ProductCode" = "8:{40C9F5C6-571F-4202-8339-6F06FBD32DBE}"
-        "PackageCode" = "8:{45E91116-AEC4-4964-848F-FCDFE6EDEC49}"
+        "ProductCode" = "8:{8662B884-656A-44CA-8D89-983168D68220}"
+        "PackageCode" = "8:{3AF705E5-C902-437E-A7DA-4D869CCAEE6C}"
         "UpgradeCode" = "8:{D80951FA-43DF-4B00-87CC-43A2824620D6}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:2.2.2"
+        "ProductVersion" = "8:2.2.6"
         "Manufacturer" = "8:Testo Lang"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
