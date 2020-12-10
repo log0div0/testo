@@ -14,6 +14,7 @@ test centos_backend_qemu_plug_flash: centos_backend_qemu_install_ubuntu_server {
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
 		wait "Welcome to Ubuntu"; sleep 5s
+		type "clear"; press Enter
 		type "sudo su"; press Enter
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
@@ -60,6 +61,7 @@ test centos_backend_qemu_plug_flash_with_files: centos_backend_qemu_install_ubun
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
 		wait "Welcome to Ubuntu"; sleep 5s
+		type "clear"; press Enter
 		type "sudo su"; press Enter
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
@@ -106,6 +108,7 @@ test centos_backend_qemu_flash_copyto: centos_backend_qemu_install_guest_additio
 		wait "my_ubuntu_server" && "Running"
 		mouse dclick "my_ubuntu_server"
 		wait "Welcome to Ubuntu"; sleep 5s
+		type "clear"; press Enter
 		type "sudo su"; press Enter
 		wait "password for user"; type "1111"; press Enter
 		wait "root@ubuntu"
