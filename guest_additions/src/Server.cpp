@@ -18,7 +18,7 @@ void Server::run() {
 	while (!is_canceled) {
 		try {
 			auto command = channel.receive();
-			spdlog::info(command.dump(2));
+			// spdlog::info(command.dump(2));
 			handle_command(command);
 		} catch (const std::exception& error) {
 			spdlog::error("Error in Server::run loop");

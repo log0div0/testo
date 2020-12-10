@@ -18,7 +18,7 @@ nlohmann::json Channel::receive() {
 		}
 	}
 
-	spdlog::info("msg_size = {}", msg_size);
+	// spdlog::info("msg_size = {}", msg_size);
 
 	std::string json_str;
 	json_str.resize(msg_size);
@@ -33,7 +33,7 @@ nlohmann::json Channel::receive() {
 		already_read += n;
 	}
 
-	spdlog::info("json_str = {}", json_str);
+	// spdlog::info("json_str = {}", json_str);
 
 	nlohmann::json result = nlohmann::json::parse(json_str);
 	return result;
