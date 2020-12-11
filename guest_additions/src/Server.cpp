@@ -7,6 +7,39 @@
 
 #include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <regex>
+#include <fstream>
+
+VersionNumber::VersionNumber(const std::string& str) {
+	static std::regex regex(R"((\d+).(\d+).(\d+))");
+	std::smatch match;
+	if (!std::regex_match(str, match, regex)) {
+		throw std::runtime_error("Failed to parse VersionNumber");
+	}
+	MAJOR = stoi(match[1]);
+	MINOR = stoi(match[2]);
+	PATCH = stoi(match[3]);
+}
+
+bool VersionNumber::operator<(const VersionNumber& other) {
+	if (MAJOR < other.MAJOR) {
+		return true;
+	}else if (MAJOR == other.MAJOR) {
+		if (MINOR < other.MINOR) {
+			return true;
+		} else if (MINOR == other.MINOR) {
+			return PATCH < other.PATCH;
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+}
+
+std::string VersionNumber::to_string() const {
+	return std::to_string(MAJOR) + "." + std::to_string(MINOR) + "." + std::to_string(PATCH);
+}
 
 Server::Server(const std::string& fd_path_): channel(fd_path_) {
 	spdlog::info("Connected to " + fd_path_);
@@ -38,17 +71,25 @@ void Server::force_cancel() {
 void Server::handle_command(const nlohmann::json& command) {
 	std::string method_name = command.at("method").get<std::string>();
 
+	if (command.count("version")) {
+		ver = command.at("version").get<std::string>();
+	} else {
+		ver = VersionNumber();
+	}
+
+	spdlog::info("testo version = {}, testo guest additions version = {}", ver.to_string(), TESTO_VERSION);
+
 	try {
 		if (method_name == "check_avaliable") {
-			return handle_check_avaliable();
+			return handle_check_avaliable(command);
 		} else if (method_name == "get_tmp_dir") {
-			return handle_get_tmp_dir();
+			return handle_get_tmp_dir(command);
 		} else if (method_name == "copy_file") {
-			return handle_copy_file(command.at("args"));
+			return handle_copy_file(command);
 		} else if (method_name == "copy_files_out") {
-			return handle_copy_files_out(command.at("args"));
+			return handle_copy_files_out(command);
 		} else if (method_name == "execute") {
-			return handle_execute(command.at("args"));
+			return handle_execute(command);
 		} else {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
@@ -66,10 +107,10 @@ void Server::send_error(const std::string& error) {
 		{"error", error}
 	};
 
-	channel.send(response);
+	channel.send(std::move(response));
 }
 
-void Server::handle_check_avaliable() {
+void Server::handle_check_avaliable(const nlohmann::json& command) {
 	spdlog::info("Checking avaliability call");
 
 	nlohmann::json response = {
@@ -77,11 +118,11 @@ void Server::handle_check_avaliable() {
 		{"result", nlohmann::json::object()}
 	};
 
-	channel.send(response);
+	channel.send(std::move(response));
 	spdlog::info("Checking avaliability is OK");
 }
 
-void Server::handle_get_tmp_dir() {
+void Server::handle_get_tmp_dir(const nlohmann::json& command) {
 	spdlog::info("Getting tmp dir");
 
 	nlohmann::json response = {
@@ -91,14 +132,14 @@ void Server::handle_get_tmp_dir() {
 		}}
 	};
 
-	channel.send(response);
+	channel.send(std::move(response));
 	spdlog::info("Getting tmp dir is OK");
 }
 
-void Server::handle_copy_file(const nlohmann::json& args) {
+void Server::handle_copy_file(const nlohmann::json& command) {
+	const nlohmann::json& args = command.at("args");
+
 	for (auto file: args) {
-		auto content64 = file.at("content").get<std::string>();
-		auto content = base64_decode(content64);
 		fs::path dst = file.at("path").get<std::string>();
 		spdlog::info("Copying file to guest: " + dst.generic_string());
 
@@ -107,7 +148,26 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 		}
 
 		make_directories(dst.parent_path());
-		write_file(dst, content);
+
+		if (file.at("content").is_string()) {
+			auto content64 = file.at("content").get<std::string>();
+			auto content = base64_decode(content64);
+			write_file(dst, content);
+		} else {
+			std::ofstream file_stream(dst.generic_string(), std::ios::out | std::ios::binary);
+			uint64_t file_length = 0;
+			channel.receive_raw((uint8_t*)&file_length, sizeof(file_length));
+			uint64_t i = 0;
+			const uint64_t buf_size = 8 * 1024;
+			uint8_t buf[buf_size];
+			while (i < file_length) {
+				uint64_t chunk_size = std::min(buf_size, file_length - i);
+				channel.receive_raw(buf, chunk_size);
+				file_stream.write((const char*)buf, chunk_size);
+				i += chunk_size;
+			}
+		}
+
 		spdlog::info("File copied successfully to guest: " + dst.generic_string());
 	}
 
@@ -116,7 +176,7 @@ void Server::handle_copy_file(const nlohmann::json& args) {
 		{"result", nlohmann::json::object()}
 	};
 
-	channel.send(response);
+	channel.send(std::move(response));
 }
 
 nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
@@ -124,23 +184,18 @@ nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path&
 		throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
 	}
 
-	std::vector<uint8_t> fileContents = read_file(src);
-	std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
-
-	nlohmann::json request = {
-			{"method", "copy_file"},
-			{"args", {
-				{
-					{"path", dst.generic_string()},
-					{"content", encoded}
-				}
-			}}
-	};
-
 	nlohmann::json result = {
+		{"src", src.generic_string()},
 		{"path", dst.generic_string()},
-		{"content", encoded}
 	};
+
+	if (ver < VersionNumber(2,2,8)) {
+		std::vector<uint8_t> fileContents = read_file(src);
+		std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
+		result["content"] = std::move(encoded);
+	} else {
+		result["content"] = nullptr;
+	}
 
 	return result;
 }
@@ -166,7 +221,9 @@ nlohmann::json Server::copy_directory_out(const fs::path& dir, const fs::path& d
 	return files;
 }
 
-void Server::handle_copy_files_out(const nlohmann::json& args) {
+void Server::handle_copy_files_out(const nlohmann::json& command) {
+	const nlohmann::json& args = command.at("args");
+
 	nlohmann::json files = nlohmann::json::array();
 	fs::path src = args[0].get<std::string>();
 	fs::path dst = args[1].get<std::string>();
@@ -191,11 +248,41 @@ void Server::handle_copy_files_out(const nlohmann::json& args) {
 		{"result", files}
 	};
 
-	channel.send(result);
+	channel.send(std::move(result));
+
+	if (ver < VersionNumber(2,2,8)) {
+		// do nothing
+	} else {
+		for (auto& item: files) {
+			if (!item.count("content")) {
+				continue;
+			}
+			std::string path = item.at("src");
+			std::ifstream file(path, std::ios::binary);
+
+			file.seekg(0, std::ios::end);
+			uint64_t file_length = file.tellg();
+			file.seekg(0, std::ios::beg);
+
+			channel.send_raw((uint8_t*)&file_length, sizeof(file_length));
+			uint64_t i = 0;
+			const uint64_t buf_size = 8 * 1024;
+			uint8_t buf[buf_size];
+			while (i < file_length) {
+				uint64_t chunk_size = std::min(buf_size, file_length - i);
+				file.read((char*)buf, chunk_size);
+				channel.send_raw(buf, chunk_size);
+				i += chunk_size;
+			}
+		}
+	}
+
 	spdlog::info("Copied FROM guest: " + src.generic_string());
 }
 
-void Server::handle_execute(const nlohmann::json& args) {
+void Server::handle_execute(const nlohmann::json& command) {
+	const nlohmann::json& args = command.at("args");
+
 	auto cmd = args[0].get<std::string>();
 
 	spdlog::info("Executing command " + cmd);
@@ -216,7 +303,7 @@ void Server::handle_execute(const nlohmann::json& args) {
 					{"stdout", base64_encode((uint8_t*)output.data(), output.size() + 1)}
 				}}
 			};
-			channel.send(result);
+			channel.send(std::move(result));
 		}
 	}
 
@@ -230,7 +317,7 @@ void Server::handle_execute(const nlohmann::json& args) {
 		}}
 	};
 
-	channel.send(result);
+	channel.send(std::move(result));
 
 	spdlog::info("Command finished: " + cmd);
 	spdlog::info("Return code: " + std::to_string(rc));

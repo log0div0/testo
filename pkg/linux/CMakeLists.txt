@@ -14,7 +14,7 @@ install(PROGRAMS
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install(FILES
-	${ONNX_RUNTIME_DIR}/lib/libonnxruntime.so.1.3.0
+	${ONNX_RUNTIME_DIR}/lib/libonnxruntime.so.1.5.3
 	DESTINATION /usr/lib/testo
 	PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
@@ -54,8 +54,8 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 ")
 
 set(CPACK_RPM_PACKAGE_PROVIDES "\
-	libonnxruntime.so.1.3.0()(64bit), \
-	libonnxruntime.so.1.3.0(VERS_1.3.0)(64bit) \
+	libonnxruntime.so.1.5.3()(64bit), \
+	libonnxruntime.so.1.5.3(VERS_1.5.3)(64bit) \
 ")
 
 set(CPACK_RPM_PACKAGE_REQUIRES "\

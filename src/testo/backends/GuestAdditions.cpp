@@ -3,8 +3,41 @@
 #include <coro/Timeout.h>
 #include "base64.hpp"
 #include <fstream>
+#include <regex>
 
 using namespace std::literals::chrono_literals;
+
+
+VersionNumber::VersionNumber(const std::string& str) {
+	static std::regex regex(R"((\d+).(\d+).(\d+))");
+	std::smatch match;
+	if (!std::regex_match(str, match, regex)) {
+		throw std::runtime_error(__PRETTY_FUNCTION__);
+	}
+	MAJOR = stoi(match[1]);
+	MINOR = stoi(match[2]);
+	PATCH = stoi(match[3]);
+}
+
+bool VersionNumber::operator<(const VersionNumber& other) {
+	if (MAJOR < other.MAJOR) {
+		return true;
+	}else if (MAJOR == other.MAJOR) {
+		if (MINOR < other.MINOR) {
+			return true;
+		} else if (MINOR == other.MINOR) {
+			return PATCH < other.PATCH;
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+}
+
+std::string VersionNumber::to_string() const {
+	return std::to_string(MAJOR) + "." + std::to_string(MINOR) + "." + std::to_string(PATCH);
+}
 
 bool GuestAdditions::is_avaliable() {
 	try {
@@ -14,7 +47,7 @@ bool GuestAdditions::is_avaliable() {
 
 		coro::Timeout timeout(3s);
 
-		send(request);
+		send(std::move(request));
 
 		auto response = recv();
 		return response.at("success").get<bool>();
@@ -30,7 +63,7 @@ std::string GuestAdditions::get_tmp_dir() {
 
 	coro::Timeout timeout(3s);
 
-	send(request);
+	send(std::move(request));
 
 	auto response = recv();
 	if(!response.at("success").get<bool>()) {
@@ -40,7 +73,8 @@ std::string GuestAdditions::get_tmp_dir() {
 }
 
 void GuestAdditions::copy_to_guest(const fs::path& src, const fs::path& dst) {
-	//4) Now we're all set
+	is_avaliable();
+
 	if (fs::is_regular_file(src)) {
 		copy_file_to_guest(src, dst);
 	} else if (fs::is_directory(src)) {
@@ -59,7 +93,7 @@ void GuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	request["args"].push_back(src.generic_string());
 	request["args"].push_back(dst.generic_string());
 
-	send(request);
+	send(std::move(request));
 
 	auto response = recv();
 
@@ -74,11 +108,24 @@ void GuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst) {
 			continue;
 		}
 		fs::create_directories(dst.parent_path());
-		auto content_base64 = file.at("content").get<std::string>();
-		auto content = base64_decode(content_base64);
 		std::ofstream file_stream(dst.generic_string(), std::ios::out | std::ios::binary);
-		file_stream.write((const char*)&content[0], content.size());
-		file_stream.close();
+		if (file.at("content").is_string()) {
+			auto content_base64 = file.at("content").get<std::string>();
+			auto content = base64_decode(content_base64);
+			file_stream.write((const char*)&content[0], content.size());
+		} else {
+			uint64_t file_length = 0;
+			recv_raw((uint8_t*)&file_length, sizeof(file_length));
+			uint64_t i = 0;
+			const uint64_t buf_size = 8 * 1024;
+			uint8_t buf[buf_size];
+			while (i < file_length) {
+				uint64_t chunk_size = std::min(buf_size, file_length - i);
+				recv_raw(buf, chunk_size);
+				file_stream.write((const char*)buf, chunk_size);
+				i += chunk_size;
+			}
+		}
 	}
 }
 
@@ -104,7 +151,7 @@ int GuestAdditions::execute(const std::string& command,
 			}}
 	};
 
-	send(request);
+	send(std::move(request));
 
 	while (true) {
 		auto response = recv();
@@ -129,23 +176,41 @@ int GuestAdditions::execute(const std::string& command,
 
 void GuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
-		std::ifstream testFile(src.generic_string(), std::ios::binary);
-
-		std::noskipws(testFile);
-		std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(testFile), std::istream_iterator<uint8_t>()};
-		std::string encoded = base64_encode(fileContents.data(), fileContents.size());
-
 		nlohmann::json request = {
 				{"method", "copy_file"},
 				{"args", {
 					{
 						{"path", dst.generic_string()},
-						{"content", encoded}
 					}
 				}}
 		};
 
-		send(request);
+		std::ifstream file(src.generic_string(), std::ios::binary);
+		if (ver < VersionNumber(2,2,8)) {
+			std::noskipws(file);
+			std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(file), std::istream_iterator<uint8_t>()};
+			std::string encoded = base64_encode(fileContents.data(), fileContents.size());
+			request.at("args")[0]["content"] = encoded;
+			send(std::move(request));
+		} else {
+			request.at("args")[0]["content"] = nullptr;
+			send(std::move(request));
+
+			file.seekg(0, std::ios::end);
+			uint64_t file_length = file.tellg();
+			file.seekg(0, std::ios::beg);
+
+			send_raw((uint8_t*)&file_length, sizeof(file_length));
+			uint64_t i = 0;
+			const uint64_t buf_size = 8 * 1024;
+			uint8_t buf[buf_size];
+			while (i < file_length) {
+				uint64_t chunk_size = std::min(buf_size, file_length - i);
+				file.read((char*)buf, chunk_size);
+				send_raw(buf, chunk_size);
+				i += chunk_size;
+			}
+		}
 
 		auto response = recv();
 
@@ -157,30 +222,25 @@ void GuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst
 	}
 }
 
-void GuestAdditions::send(const nlohmann::json& command) {
+void GuestAdditions::send(nlohmann::json command) {
+	command["version"] = TESTO_VERSION;
 	auto command_str = command.dump();
 	uint32_t command_length = command_str.length();
-	size_t n = send_raw((uint8_t*)&command_length, sizeof(command_length));
-	if (n != sizeof(command_length)) {
-		throw std::runtime_error("Failed to send command_length");
-	}
-	n = send_raw((uint8_t*)command_str.data(), command_str.size());
-	if (n != command_str.size()) {
-		throw std::runtime_error("Failed to send command_str");
-	}
+	send_raw((uint8_t*)&command_length, sizeof(command_length));
+	send_raw((uint8_t*)command_str.data(), command_str.size());
 }
 
 nlohmann::json GuestAdditions::recv() {
 	uint32_t json_length = 0;
-	size_t n = recv_raw((uint8_t*)&json_length, sizeof(uint32_t));
-	if (n != sizeof(uint32_t)) {
-		throw std::runtime_error("Failed to read json_length");
-	}
+	recv_raw((uint8_t*)&json_length, sizeof(json_length));
 	std::string json_str;
 	json_str.resize(json_length);
-	n = recv_raw((uint8_t*)json_str.data(), json_str.size());
-	if (n != json_str.size()) {
-		throw std::runtime_error("Failed to read json_str");
+	recv_raw((uint8_t*)json_str.data(), json_str.size());
+	nlohmann::json response = nlohmann::json::parse(json_str);
+
+	if (response.count("version")) {
+		ver = response.at("version").get<std::string>();
 	}
-	return nlohmann::json::parse(json_str);
+
+	return response;
 }

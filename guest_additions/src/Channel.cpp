@@ -22,16 +22,7 @@ nlohmann::json Channel::receive() {
 
 	std::string json_str;
 	json_str.resize(msg_size);
-
-	size_t already_read = 0;
-
-	while (already_read < msg_size) {
-		size_t n = read((uint8_t*)&json_str[already_read], msg_size - already_read);
-		if (n == 0) {
-			throw std::runtime_error("EOF while reading");
-		}
-		already_read += n;
-	}
+	receive_raw((uint8_t*)json_str.data(), json_str.size());
 
 	// spdlog::info("json_str = {}", json_str);
 
@@ -39,19 +30,29 @@ nlohmann::json Channel::receive() {
 	return result;
 }
 
-void Channel::send(const nlohmann::json& response) {
+void Channel::send(nlohmann::json response) {
+	response["version"] = TESTO_VERSION;
 	auto response_str = response.dump();
-	std::vector<uint8_t> buffer;
-	uint32_t response_size = (uint32_t)response_str.length();
-	buffer.reserve(sizeof(uint32_t) + response_str.length());
-	std::copy((uint8_t*)&response_size, (uint8_t*)(&response_size) + sizeof(uint32_t), std::back_inserter(buffer));
+	uint32_t response_size = (uint32_t)response_str.size();
+	send_raw((uint8_t*)&response_size, sizeof(response_size));
+	send_raw((uint8_t*)response_str.data(), response_size);
+}
 
-	std::copy(response_str.begin(), response_str.end(), std::back_inserter(buffer));
+void Channel::receive_raw(uint8_t* data, size_t size) {
+	size_t already_read = 0;
+	while (already_read < size) {
+		size_t n = read(&data[already_read], size - already_read);
+		if (n == 0) {
+			throw std::runtime_error("EOF while reading");
+		}
+		already_read += n;
+	}
+}
 
+void Channel::send_raw(uint8_t* data, size_t size) {
 	size_t already_send = 0;
-
-	while (already_send < buffer.size()) {
-		size_t n = write(&buffer[already_send], buffer.size() - already_send);
+	while (already_send < size) {
+		size_t n = write(&data[already_send], size - already_send);
 		if (n == 0) {
 			throw std::runtime_error("EOF while writing");
 		}
