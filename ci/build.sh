@@ -19,6 +19,7 @@ sudo testo run "$SCRIPT_DIR/build_scripts" \
 	--param BUILD_ASSETS_DIR "$SCRIPT_DIR/build_assets" \
 	--param TMP_DIR "$TMP_DIR" \
 	--param OUT_DIR "$OUT_DIR" \
+	--param ONNXRUNTIME_SRC_DIR "$ONNXRUNTIME_SRC_DIR" \
 	--license "$LICENSE_PATH" \
 	${TEST_SPEC} \
 	--assume_yes

@@ -75,26 +75,11 @@ test centos_install_packages: centos_install_guest_additions {
 	}
 }
 
-test centos_download_onnxruntime: centos_install_packages {
+test centos_build_onnxruntime_cpu: centos_install_packages {
 	centos {
-		exec bash """
-			cd /root
-			git clone https://github.com/microsoft/onnxruntime.git
-			cd onnxruntime
-			git checkout ${onnxruntime_tagname}
-			git submodule sync --recursive
-			git submodule update --init --recursive
-		""" timeout 2h
-	}
-}
-
-test centos_build_onnxruntime_cpu: centos_download_onnxruntime {
-	centos {
-		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
+		linux_copy_and_patch_onnxruntime_src()
 		exec bash """
 			export PATH=$PATH:/usr/local/bin
-			cd /root/onnxruntime
-			${onnxruntime_patch_commands}
 			mkdir -p /root/onnxruntime_build
 			cd /root/onnxruntime_build
 			cmake ../onnxruntime/cmake \
@@ -111,7 +96,7 @@ test centos_build_onnxruntime_cpu: centos_download_onnxruntime {
 	}
 }
 
-test centos_install_cuda: centos_download_onnxruntime {
+test centos_install_cuda: centos_install_packages {
 	centos {
 		plug flash nvidia
 		sleep 5s
@@ -131,11 +116,9 @@ test centos_install_cuda: centos_download_onnxruntime {
 
 test centos_build_onnxruntime_gpu: centos_install_cuda {
 	centos {
-		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
+		linux_copy_and_patch_onnxruntime_src()
 		exec bash """
 			export PATH="$PATH:/usr/local/bin:/usr/local/cuda/bin"
-			cd /root/onnxruntime
-			${onnxruntime_patch_commands}
 			mkdir -p /root/onnxruntime_build
 			cd /root/onnxruntime_build
 			cmake ../onnxruntime/cmake \
@@ -154,8 +137,9 @@ test centos_build_onnxruntime_gpu: centos_install_cuda {
 }
 
 [no_snapshots: true]
-test centos_build_testo_cpu: centos_build_onnxruntime_cpu {
+test centos_build_testo_cpu: centos_install_packages {
 	centos {
+		copyto "${TMP_DIR}/onnxruntime_dist_centos_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
@@ -179,8 +163,9 @@ test centos_build_testo_cpu: centos_build_onnxruntime_cpu {
 }
 
 [no_snapshots: true]
-test centos_build_testo_gpu: centos_build_onnxruntime_gpu {
+test centos_build_testo_gpu: centos_install_cuda {
 	centos {
+		copyto "${TMP_DIR}/onnxruntime_dist_centos_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"

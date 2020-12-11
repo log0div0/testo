@@ -96,25 +96,10 @@ test debian_install_packages: debian_install_guest_additions {
 	}
 }
 
-test debian_download_onnxruntime: debian_install_packages {
+test debian_build_onnxruntime_cpu: debian_install_packages {
 	debian {
+		linux_copy_and_patch_onnxruntime_src()
 		exec bash """
-			cd /root
-			git clone https://github.com/microsoft/onnxruntime.git
-			cd onnxruntime
-			git checkout ${onnxruntime_tagname}
-			git submodule sync --recursive
-			git submodule update --init --recursive
-		""" timeout 2h
-	}
-}
-
-test debian_build_onnxruntime_cpu: debian_download_onnxruntime {
-	debian {
-		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
-		exec bash """
-			cd /root/onnxruntime
-			${onnxruntime_patch_commands}
 			mkdir -p /root/onnxruntime_build
 			cd /root/onnxruntime_build
 			cmake ../onnxruntime/cmake \
@@ -130,7 +115,7 @@ test debian_build_onnxruntime_cpu: debian_download_onnxruntime {
 	}
 }
 
-test debian_install_cuda: debian_download_onnxruntime {
+test debian_install_cuda: debian_install_packages {
 	debian {
 		plug flash nvidia
 		sleep 5s
@@ -150,11 +135,9 @@ test debian_install_cuda: debian_download_onnxruntime {
 
 test debian_build_onnxruntime_gpu: debian_install_cuda {
 	debian {
-		copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
+		linux_copy_and_patch_onnxruntime_src()
 		exec bash """
 			export PATH="$PATH:/usr/local/cuda/bin"
-			cd /root/onnxruntime
-			${onnxruntime_patch_commands}
 			mkdir -p /root/onnxruntime_build
 			cd /root/onnxruntime_build
 			cmake ../onnxruntime/cmake \
@@ -194,8 +177,9 @@ test debian_build_testo_guest_additions: debian_install_packages {
 }
 
 [no_snapshots: true]
-test debian_build_testo_cpu: debian_build_onnxruntime_cpu {
+test debian_build_testo_cpu: debian_install_packages {
 	debian {
+		copyto "${TMP_DIR}/onnxruntime_dist_debian_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
@@ -218,8 +202,9 @@ test debian_build_testo_cpu: debian_build_onnxruntime_cpu {
 }
 
 [no_snapshots: true]
-test debian_build_testo_gpu: debian_build_onnxruntime_gpu {
+test debian_build_testo_gpu: debian_install_cuda {
 	debian {
+		copyto "${TMP_DIR}/onnxruntime_dist_debian_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
