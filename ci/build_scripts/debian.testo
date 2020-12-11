@@ -98,7 +98,7 @@ test debian_install_packages: debian_install_guest_additions {
 
 test debian_build_onnxruntime_cpu: debian_install_packages {
 	debian {
-		linux_copy_and_patch_onnxruntime_src()
+		linux_copy_onnxruntime_srcs()
 		exec bash """
 			mkdir -p /root/onnxruntime_build
 			cd /root/onnxruntime_build
@@ -135,7 +135,7 @@ test debian_install_cuda: debian_install_packages {
 
 test debian_build_onnxruntime_gpu: debian_install_cuda {
 	debian {
-		linux_copy_and_patch_onnxruntime_src()
+		linux_copy_onnxruntime_srcs()
 		exec bash """
 			export PATH="$PATH:/usr/local/cuda/bin"
 			mkdir -p /root/onnxruntime_build

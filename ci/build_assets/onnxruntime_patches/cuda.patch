@@ -1,8 +1,8 @@
 diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
-index 5db7fbc4c..ebdc40869 100644
+index 853651ac5..5f98a3271 100644
 --- a/cmake/CMakeLists.txt
 +++ b/cmake/CMakeLists.txt
-@@ -783,22 +783,11 @@ configure_file(onnxruntime_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime_c
+@@ -1000,17 +1000,6 @@ configure_file(onnxruntime_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/onnxruntime_c
  
  if (onnxruntime_USE_CUDA)
    add_definitions(-DUSE_CUDA=1)
@@ -18,11 +18,34 @@ index 5db7fbc4c..ebdc40869 100644
 -    string(APPEND CMAKE_CUDA_FLAGS "-cudart shared")
 -  endif()
    enable_language(CUDA)
-   set(CMAKE_CUDA_STANDARD 11)
-   file(TO_CMAKE_PATH ${onnxruntime_CUDNN_HOME} onnxruntime_CUDNN_HOME)
+   message( STATUS "CMAKE_CUDA_COMPILER_VERSION: ${CMAKE_CUDA_COMPILER_VERSION}")
+   if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
+@@ -1022,9 +1011,9 @@ if (onnxruntime_USE_CUDA)
    set(ONNXRUNTIME_CUDA_LIBRARIES ${CUDA_LIBRARIES})
--  list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cublas cudnn curand cufft)
-+  list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cublas_static cudnn_static curand_static cufft_static culibos cublasLt_static)
-   if (WIN32)
-     link_directories(${onnxruntime_CUDNN_HOME}/lib/x64)
  
+   if (onnxruntime_ENABLE_NVTX_PROFILE)
+-    list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cublas cudnn curand cufft nvToolsExt)
++    list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cudnn_static curand_static cufft_static culibos cublas_static cublasLt_static nvToolsExt)
+   else()
+-    list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cublas cudnn curand cufft)
++    list(APPEND ONNXRUNTIME_CUDA_LIBRARIES cudnn_static curand_static cufft_static culibos cublas_static cublasLt_static)
+   endif()
+ 
+   if (WIN32)
+@@ -1054,15 +1043,13 @@ if (onnxruntime_USE_CUDA)
+       if (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11)
+         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_30,code=sm_30") # K series
+       endif()
+-      # 37, 50 still work in CUDA 11 but are marked deprecated and will be removed in future CUDA version.
+-      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_37,code=sm_37") # K80
+-      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_50,code=sm_50") # M series
+ 
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_52,code=sm_52") # M60
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_60,code=sm_60") # P series
+       set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_70,code=sm_70") # V series
+       if (CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
+         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_80,code=sm_80") # A series
++        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode=arch=compute_86,code=sm_86")
+       endif()
+     endif()
+   endif()

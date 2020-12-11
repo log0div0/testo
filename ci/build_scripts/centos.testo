@@ -77,7 +77,7 @@ test centos_install_packages: centos_install_guest_additions {
 
 test centos_build_onnxruntime_cpu: centos_install_packages {
 	centos {
-		linux_copy_and_patch_onnxruntime_src()
+		linux_copy_onnxruntime_srcs()
 		exec bash """
 			export PATH=$PATH:/usr/local/bin
 			mkdir -p /root/onnxruntime_build
@@ -116,7 +116,7 @@ test centos_install_cuda: centos_install_packages {
 
 test centos_build_onnxruntime_gpu: centos_install_cuda {
 	centos {
-		linux_copy_and_patch_onnxruntime_src()
+		linux_copy_onnxruntime_srcs()
 		exec bash """
 			export PATH="$PATH:/usr/local/bin:/usr/local/cuda/bin"
 			mkdir -p /root/onnxruntime_build

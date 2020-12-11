@@ -7,42 +7,29 @@ param host_name "builder"
 param login "user"
 param password "12345678"
 
-param cuda_linux_filename "cuda_10.1.243_418.87.00_linux.run"
-param cudnn_linux_filename "cudnn-10.1-linux-x64-v7.6.5.32.tgz"
-
-param onnxruntime_patch_commands """
-	git apply ../onnxruntime_patches/single_thread.patch
-	git apply ../onnxruntime_patches/cuda.patch
-"""
-
-macro linux_copy_and_patch_onnxruntime_src() {
+macro linux_copy_onnxruntime_srcs() {
 	copyto "${ONNXRUNTIME_SRC_DIR}/cmake" "/root/onnxruntime/cmake"
 	copyto "${ONNXRUNTIME_SRC_DIR}/include" "/root/onnxruntime/include"
 	copyto "${ONNXRUNTIME_SRC_DIR}/onnxruntime" "/root/onnxruntime/onnxruntime"
 	copyto "${ONNXRUNTIME_SRC_DIR}/tools" "/root/onnxruntime/tools"
 	copyto "${ONNXRUNTIME_SRC_DIR}/VERSION_NUMBER" "/root/onnxruntime/VERSION_NUMBER"
 	copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
-	exec bash """
-		cd /root/onnxruntime
-		${onnxruntime_patch_commands}
-	"""
 }
 
-macro win_copy_and_patch_onnxruntime_src() {
+macro win_copy_onnxruntime_srcs() {
 	copyto "${ONNXRUNTIME_SRC_DIR}/cmake" "C:\\work\\onnxruntime\\cmake"
 	copyto "${ONNXRUNTIME_SRC_DIR}/include" "C:\\work\\onnxruntime\\include"
 	copyto "${ONNXRUNTIME_SRC_DIR}/onnxruntime" "C:\\work\\onnxruntime\\onnxruntime"
 	copyto "${ONNXRUNTIME_SRC_DIR}/tools" "C:\\work\\onnxruntime\\tools"
 	copyto "${ONNXRUNTIME_SRC_DIR}/VERSION_NUMBER" "C:\\work\\onnxruntime\\VERSION_NUMBER"
 	copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "C:\\work\\onnxruntime_patches"
-	exec cmd """
-		cd C:\\work\\onnxruntime
-		${onnxruntime_patch_commands}
-	"""
 }
+
+param cuda_linux_filename "cuda_11.1.1_455.32.00_linux.run"
+param cudnn_linux_filename "cudnn-11.1-linux-x64-v8.0.5.39.tgz"
 
 flash nvidia {
 	fs: "fat"
 	size: 8Gb
-	folder: "${ISO_DIR}/nvidia-10.1"
+	folder: "${ISO_DIR}/nvidia-11.1"
 }
