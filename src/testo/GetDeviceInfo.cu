@@ -23,8 +23,9 @@ char hex_map[] = {
 
 DeviceInfo GetDeviceInfo(int device_id) {
 	cudaDeviceProp props = {};
-	if (cudaDeviceSynchronize() != cudaSuccess) {
-		throw std::runtime_error("cudaDeviceSynchronize failed");
+	cudaError_t error = cudaDeviceSynchronize();
+	if (error != cudaSuccess) {
+		throw std::runtime_error(std::string("cudaDeviceSynchronize failed: ") + cudaGetErrorString(error));
 	}
 	if (cudaGetDeviceProperties(&props, device_id) != cudaSuccess) {
 		throw std::runtime_error("cudaGetDeviceProperties failed");
