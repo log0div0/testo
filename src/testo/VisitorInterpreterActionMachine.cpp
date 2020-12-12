@@ -371,7 +371,9 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 }
 
 void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
-	reporter.save_screenshot(vmc, vmc->vm()->screenshot());
+	if (vmc->vm()->state() == VmState::Running) {
+		reporter.save_screenshot(vmc, vmc->vm()->screenshot());
+	}
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
