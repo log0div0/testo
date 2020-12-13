@@ -1,5 +1,6 @@
 
 #include "Bridge.hpp"
+#include <wmi/Call.hpp>
 
 namespace hyperv {
 

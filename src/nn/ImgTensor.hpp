@@ -4,9 +4,9 @@
 #include "Tensor.hpp"
 #include "Img.hpp"
 #include <stb/Image.hpp>
-#include <experimental/filesystem>
 
-namespace fs = std::experimental::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 namespace nn {
 

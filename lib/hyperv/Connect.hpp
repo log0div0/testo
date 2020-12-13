@@ -3,6 +3,7 @@
 
 #include "Machine.hpp"
 #include "Bridge.hpp"
+#include <wmi/WbemLocator.hpp>
 
 namespace hyperv {
 

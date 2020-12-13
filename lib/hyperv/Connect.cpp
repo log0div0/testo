@@ -1,5 +1,6 @@
 
 #include "Connect.hpp"
+#include <wmi/Call.hpp>
 
 namespace hyperv {
 

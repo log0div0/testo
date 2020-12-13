@@ -1,8 +1,8 @@
 
-#include "GuestAdditions.hpp"
 #include <coro/Timeout.h>
+#include "GuestAdditions.hpp"
+#include <os/File.hpp>
 #include "base64.hpp"
-#include <fstream>
 #include <regex>
 
 using namespace std::literals::chrono_literals;
@@ -108,11 +108,11 @@ void GuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst) {
 			continue;
 		}
 		fs::create_directories(dst.parent_path());
-		std::ofstream file_stream(dst.generic_string(), std::ios::out | std::ios::binary);
+		os::File f = os::File::open_for_write(dst);
 		if (file.at("content").is_string()) {
 			auto content_base64 = file.at("content").get<std::string>();
 			auto content = base64_decode(content_base64);
-			file_stream.write((const char*)&content[0], content.size());
+			f.write(content.data(), content.size());
 		} else {
 			uint64_t file_length = 0;
 			recv_raw((uint8_t*)&file_length, sizeof(file_length));
@@ -122,7 +122,7 @@ void GuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst) {
 			while (i < file_length) {
 				uint64_t chunk_size = std::min(buf_size, file_length - i);
 				recv_raw(buf, chunk_size);
-				file_stream.write((const char*)buf, chunk_size);
+				f.write(buf, chunk_size);
 				i += chunk_size;
 			}
 		}
@@ -185,10 +185,9 @@ void GuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst
 				}}
 		};
 
-		std::ifstream file(src.generic_string(), std::ios::binary);
+		os::File f = os::File::open_for_read(src);
 		if (ver < VersionNumber(2,2,8)) {
-			std::noskipws(file);
-			std::vector<uint8_t> fileContents = {std::istream_iterator<uint8_t>(file), std::istream_iterator<uint8_t>()};
+			std::vector<uint8_t> fileContents = f.read_all();
 			std::string encoded = base64_encode(fileContents.data(), fileContents.size());
 			request.at("args")[0]["content"] = encoded;
 			send(std::move(request));
@@ -196,17 +195,14 @@ void GuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst
 			request.at("args")[0]["content"] = nullptr;
 			send(std::move(request));
 
-			file.seekg(0, std::ios::end);
-			uint64_t file_length = file.tellg();
-			file.seekg(0, std::ios::beg);
-
+			uint64_t file_length = f.size();
 			send_raw((uint8_t*)&file_length, sizeof(file_length));
 			uint64_t i = 0;
 			const uint64_t buf_size = 8 * 1024;
 			uint8_t buf[buf_size];
 			while (i < file_length) {
 				uint64_t chunk_size = std::min(buf_size, file_length - i);
-				file.read((char*)buf, chunk_size);
+				f.read(buf, chunk_size);
 				send_raw(buf, chunk_size);
 				i += chunk_size;
 			}

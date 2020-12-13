@@ -2,9 +2,9 @@
 #pragma once
 
 #include "pugixml/pugixml.hpp"
-#include <experimental/filesystem>
 
-namespace fs = std::experimental::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 namespace vir {
 

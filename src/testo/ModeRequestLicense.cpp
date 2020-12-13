@@ -4,9 +4,9 @@
 #include <license/License.hpp>
 #include <nn/OnnxRuntime.hpp>
 #include <iostream>
-#include <experimental/filesystem>
 
-namespace fs = std::experimental::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 #ifdef USE_CUDA
 

@@ -1,6 +1,5 @@
 
 #include <iostream>
-#include <filesystem>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -10,8 +9,9 @@
 #include <initguid.h>
 #include <tchar.h>
 
-#include "winapi.hpp"
-#include "coro/Application.h"
+#include <winapi/UTF.hpp>
+#include <winapi/Functions.hpp>
+#include <coro/Application.h>
 
 #include "../Server.hpp"
 
@@ -153,7 +153,7 @@ void ServiceMain(int argc, char** argv) {
 }
 
 int _tmain (int argc, TCHAR *argv[]) {
-	fs::path path = winapi::get_module_file_name().replace_extension("txt");
+	fs::path path = fs::path(winapi::get_module_file_name()).replace_extension("txt");
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.generic_string());
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 	auto logger = std::make_shared<spdlog::logger>("basic_logger", spdlog::sinks_init_list{file_sink, console_sink});

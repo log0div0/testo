@@ -3,12 +3,11 @@
 #include "TextTensor.hpp"
 #include "SelfTestImg.hpp"
 #ifdef WIN32
-#include "winapi.hpp"
+#include "winapi/RegKey.hpp"
 #endif
 
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 namespace nn {
 namespace onnx {

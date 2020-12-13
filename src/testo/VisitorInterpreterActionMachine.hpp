@@ -1,11 +1,11 @@
 
 #pragma once
 
+#include <coro/Timer.h>
 #include "VisitorInterpreterAction.hpp"
 #include <nn/TextTensor.hpp>
 #include <nn/ImgTensor.hpp>
 #include "js/Context.hpp"
-#include "coro/Timer.h"
 
 struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	VisitorInterpreterActionMachine(std::shared_ptr<IR::Machine> vmc, std::shared_ptr<StackNode> stack, Reporter& reporter, std::shared_ptr<IR::Test> current_test);

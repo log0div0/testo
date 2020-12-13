@@ -1,5 +1,6 @@
 
 #include "Volume.hpp"
+#include <wmi/Call.hpp>
 
 namespace msft {
 

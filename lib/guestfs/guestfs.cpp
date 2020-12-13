@@ -1,12 +1,6 @@
 
 #include "guestfs.hpp"
-
-#ifdef WIN32
-#include "../winapi.hpp"
-#else
-#include "../linuxapi.hpp"
-#endif
-
+#include "posixapi/File.hpp"
 #include "coro/CheckPoint.h"
 
 namespace guestfs {
@@ -87,12 +81,7 @@ void Guestfs::mkdir_p(const fs::path& dir) {
 }
 
 void Guestfs::upload_file(const fs::path& from, const fs::path& to) {
-#ifdef WIN32
-	winapi::File source(from.generic_string(), GENERIC_READ, OPEN_EXISTING);
-#else
-	linuxapi::File source(from, O_RDONLY, 0);
-#endif
-
+	posixapi::File source(from, O_RDONLY, 0);
 	File dest(handle, to);
 	uint8_t buf[8192];
 	size_t size;
@@ -167,12 +156,7 @@ void Guestfs::download(const fs::path& from, const fs::path& to) {
 
 void Guestfs::download_file(const fs::path& from, const fs::path& to) {
 	File source(handle, from);
-#ifdef WIN32
-	winapi::File dest(to.generic_string(), GENERIC_WRITE, CREATE_ALWAYS);
-#else
-	linuxapi::File dest(to, O_WRONLY | O_CREAT, 0644);
-#endif
-
+	posixapi::File dest(to, O_WRONLY | O_CREAT, 0644);
 	uint8_t buf[8192];
 	size_t size;
 	while ((size = source.read(buf, sizeof(buf))) > 0) {

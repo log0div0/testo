@@ -1,5 +1,6 @@
 
 #include "Disk.hpp"
+#include <wmi/Call.hpp>
 #include <regex>
 
 namespace msft {

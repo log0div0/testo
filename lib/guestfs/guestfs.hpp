@@ -1,10 +1,10 @@
+
+#pragma once
+
 #include <iostream>
-#include <experimental/filesystem>
 #include <stdexcept>
 #include <guestfs.h>
 #include "file.hpp"
-
-namespace fs = std::experimental::filesystem;
 
 namespace guestfs {
 

@@ -1,7 +1,7 @@
 
+#include <coro/Timer.h>
 #include "Machine.hpp"
 #include "../backends/Environment.hpp"
-#include <coro/Timer.h>
 
 namespace IR {
 

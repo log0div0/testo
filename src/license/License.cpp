@@ -1,9 +1,6 @@
 
 #include "License.hpp"
 #include <base64.hpp>
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
 
 extern "C" {
 #include <tweetnacl/tweetnacl.h>

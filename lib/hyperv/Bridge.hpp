@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include "wmi.hpp"
+#include <wmi/WbemClassObject.hpp>
+#include <wmi/WbemServices.hpp>
 
 namespace hyperv {
 

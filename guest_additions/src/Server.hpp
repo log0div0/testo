@@ -3,8 +3,8 @@
 
 #include "Channel.hpp"
 
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 struct VersionNumber {
 	int MAJOR = 0;

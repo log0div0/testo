@@ -1,10 +1,9 @@
 
+#include <coro/Timer.h>
 #include "VisitorInterpreterAction.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
 #include "Parser.hpp"
-
-#include "coro/Timer.h"
 
 static void sleep(const std::string& interval) {
 	coro::Timer timer;

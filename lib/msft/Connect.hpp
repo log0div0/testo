@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Disk.hpp"
+#include <wmi/WbemLocator.hpp>
 
 namespace msft {
 

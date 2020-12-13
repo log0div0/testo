@@ -110,7 +110,7 @@ void Channel::close() {
 
 #ifdef WIN32
 
-#include "winapi.hpp"
+#include <winapi/UTF.hpp>
 #include "Channel_getInfo.hpp"
 
 Channel::Channel(const std::string& fd_path):

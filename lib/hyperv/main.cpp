@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include "Connect.hpp"
+#include <wmi/CoInitializer.hpp>
 
 void backtrace(std::ostream& stream, const std::exception& error, size_t n) {
 	stream << n << ". " << error.what();

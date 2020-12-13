@@ -1,10 +1,13 @@
-#include <experimental/filesystem>
+
+#pragma once
+
 #include <stdexcept>
 #include <cstring>
 
-namespace guestfs {
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
-namespace fs = std::experimental::filesystem;
+namespace guestfs {
 
 struct File {
 	File() = delete;
@@ -20,14 +23,8 @@ struct File {
 		}
 	}
 
-	File(File&& other): handle(other.handle) {
-		other.handle = 0;
-	}
-
-	File& operator=(File&& other) {
-		std::swap(handle, other.handle);
-		return *this;
-	}
+	File(File&& other) = delete;
+	File& operator=(File&& other) = delete;
 
 	size_t read(uint8_t* data, size_t size) {
 		size_t read_bytes = 0;

@@ -1,13 +1,10 @@
 
 #pragma once
 
-#include "../GuestAdditions.hpp"
-#include "qemu/Domain.hpp"
-#pragma GCC diagnostic ignored "-Wuninitialized"
-#pragma GCC diagnostic push
 #include <coro/StreamSocket.h>
 #include <coro/Timeout.h>
-#pragma GCC diagnostic pop
+#include "../GuestAdditions.hpp"
+#include "qemu/Domain.hpp"
 
 struct QemuGuestAdditions: GuestAdditions {
 	QemuGuestAdditions(vir::Domain& domain);

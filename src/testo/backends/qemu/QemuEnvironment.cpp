@@ -4,7 +4,6 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuNetwork.hpp"
 #include <fmt/format.h>
-#include <process/Process.hpp>
 
 QemuEnvironment::QemuEnvironment() {
 	setenv("QEMU", "1", false);

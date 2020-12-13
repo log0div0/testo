@@ -1,5 +1,6 @@
 
 #include "Machine.hpp"
+#include <wmi/Call.hpp>
 #include <iostream>
 
 namespace hyperv {

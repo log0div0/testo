@@ -1,15 +1,15 @@
 
-#include "pugixml/pugixml.hpp"
+#include <coro/Timer.h>
+#include <coro/Timeout.h>
+#include <os/Process.hpp>
+#include <pugixml/pugixml.hpp>
+#include <guestfs/guestfs.hpp>
 #include <fmt/format.h>
 #include "QemuFlashDrive.hpp"
 #include "QemuEnvironment.hpp"
-#include "coro/Timer.h"
-#include "coro/Timeout.h"
-#include "process/Process.hpp"
 #include <thread>
 #include <fstream>
 #include <regex>
-#include "guestfs/guestfs.hpp"
 
 using namespace std::chrono_literals;
 
@@ -155,7 +155,7 @@ void QemuFlashDrive::download(const fs::path& from, const fs::path& to) {
 bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
 	try {
 		std::string command = "qemu-img snapshot -l " + img_path().generic_string();
-		std::string output = Process::exec(command);
+		std::string output = os::Process::exec(command);
 		std::regex re("\\b" + snapshot + "\\b");
 		std::smatch match;
 		if (std::regex_search(output, match, re)) {
@@ -169,7 +169,7 @@ bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
 
 void QemuFlashDrive::make_snapshot(const std::string& snapshot) {
 	try {
-		Process::exec("qemu-img snapshot -c " + snapshot + " " + img_path().generic_string());
+		os::Process::exec("qemu-img snapshot -c " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive making snapshot"));
 	}
@@ -177,7 +177,7 @@ void QemuFlashDrive::make_snapshot(const std::string& snapshot) {
 
 void QemuFlashDrive::delete_snapshot(const std::string& snapshot) {
 	try {
-		Process::exec("qemu-img snapshot -d " + snapshot + " " + img_path().generic_string());
+		os::Process::exec("qemu-img snapshot -d " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive deleting snapshot"));
 	}
@@ -185,7 +185,7 @@ void QemuFlashDrive::delete_snapshot(const std::string& snapshot) {
 
 void QemuFlashDrive::rollback(const std::string& snapshot) {
 	try {
-		Process::exec("qemu-img snapshot -a " + snapshot + " " + img_path().generic_string());
+		os::Process::exec("qemu-img snapshot -a " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Flash drive rolling back"));
 	}

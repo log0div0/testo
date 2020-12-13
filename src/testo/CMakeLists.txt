@@ -23,7 +23,7 @@ endif()
 file(GLOB SRCS ${SRC_DIRS})
 
 add_executable(testo ${SRCS})
-target_link_libraries(testo coro js pugixml stb nn license process)
+target_link_libraries(testo coro js pugixml stb nn license os)
 
 if(WIN32)
 	target_link_libraries(testo hyperv msft virtdisk++)
@@ -34,5 +34,5 @@ if (UNIX AND NOT APPLE)
 endif()
 
 if(UNIX)
-	target_link_libraries(testo stdc++fs pthread)
+	target_link_libraries(testo pthread)
 endif()

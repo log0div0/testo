@@ -1,17 +1,19 @@
 cmake_minimum_required(VERSION 3.0)
 
-add_subdirectory(process)
-
 if (WIN32)
 add_subdirectory(virtdisk)
 add_subdirectory(msft)
+add_subdirectory(wmi)
 add_subdirectory(hyperv)
+add_subdirectory(winapi)
 endif()
 
 if (UNIX AND NOT APPLE)
 add_subdirectory(qemu)
 add_subdirectory(guestfs)
+add_subdirectory(posixapi)
 endif()
 
 add_subdirectory(stb)
 add_subdirectory(psf)
+add_subdirectory(os)

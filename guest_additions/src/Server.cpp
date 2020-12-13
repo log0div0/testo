@@ -1,7 +1,7 @@
 
 #include "Server.hpp"
-#include "process/Process.hpp"
-#include "File.hpp"
+#include <os/Process.hpp>
+#include <os/File.hpp>
 
 #include "base64.hpp"
 
@@ -147,14 +147,18 @@ void Server::handle_copy_file(const nlohmann::json& command) {
 			throw std::runtime_error("Destination path on vm must be absolute");
 		}
 
-		make_directories(dst.parent_path());
+		if (!fs::exists(dst.parent_path())) {
+			if (!fs::create_directories(dst.parent_path())) {
+				throw std::runtime_error("Can't create directory: " + dst.parent_path().generic_string());
+			}
+		}
 
+		os::File f = os::File::open_for_write(dst.generic_string());
 		if (file.at("content").is_string()) {
 			auto content64 = file.at("content").get<std::string>();
 			auto content = base64_decode(content64);
-			write_file(dst, content);
+			f.write(content.data(), content.size());
 		} else {
-			std::ofstream file_stream(dst.generic_string(), std::ios::out | std::ios::binary);
 			uint64_t file_length = 0;
 			channel.receive_raw((uint8_t*)&file_length, sizeof(file_length));
 			uint64_t i = 0;
@@ -163,7 +167,7 @@ void Server::handle_copy_file(const nlohmann::json& command) {
 			while (i < file_length) {
 				uint64_t chunk_size = std::min(buf_size, file_length - i);
 				channel.receive_raw(buf, chunk_size);
-				file_stream.write((const char*)buf, chunk_size);
+				f.write(buf, chunk_size);
 				i += chunk_size;
 			}
 		}
@@ -190,7 +194,8 @@ nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path&
 	};
 
 	if (ver < VersionNumber(2,2,8)) {
-		std::vector<uint8_t> fileContents = read_file(src);
+		os::File file = os::File::open_for_read(src.generic_string());
+		std::vector<uint8_t> fileContents = file.read_all();
 		std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
 		result["content"] = std::move(encoded);
 	} else {
@@ -258,19 +263,15 @@ void Server::handle_copy_files_out(const nlohmann::json& command) {
 				continue;
 			}
 			std::string path = item.at("src");
-			std::ifstream file(path, std::ios::binary);
-
-			file.seekg(0, std::ios::end);
-			uint64_t file_length = file.tellg();
-			file.seekg(0, std::ios::beg);
-
+			os::File file = os::File::open_for_read(path);
+			uint64_t file_length = file.size();
 			channel.send_raw((uint8_t*)&file_length, sizeof(file_length));
 			uint64_t i = 0;
 			const uint64_t buf_size = 8 * 1024;
 			uint8_t buf[buf_size];
 			while (i < file_length) {
 				uint64_t chunk_size = std::min(buf_size, file_length - i);
-				file.read((char*)buf, chunk_size);
+				file.read(buf, chunk_size);
 				channel.send_raw(buf, chunk_size);
 				i += chunk_size;
 			}
@@ -291,7 +292,7 @@ void Server::handle_execute(const nlohmann::json& command) {
 	cmd += " 2>&1";
 #endif
 
-	Process process(cmd);
+	os::Process process(cmd);
 
 	while (!process.eof()) {
 		std::string output = process.read();

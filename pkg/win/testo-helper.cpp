@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <filesystem>
 #include <chrono>
 
 using namespace std::chrono_literals;
@@ -15,9 +14,12 @@ using namespace std::chrono_literals;
 #include <tchar.h>
 #include <shellapi.h>
 
-#include "winapi.hpp"
+#include "winapi/Functions.hpp"
+#include "winapi/RegKey.hpp"
+#include "winapi/UTF.hpp"
 
-namespace fs = std::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 enum class Command {
 	Install,
@@ -57,7 +59,7 @@ void install() {
 	spdlog::info("Install ...");
 
 	{
-		fs::path testo_dir = winapi::get_module_file_name().parent_path();
+		fs::path testo_dir = fs::path(winapi::get_module_file_name()).parent_path();
 		spdlog::info("testo_dir is {}", testo_dir.string());
 
 		winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment");
@@ -86,7 +88,7 @@ void uninstall() {
 	spdlog::info("Uninstall ...");
 
 	{
-		fs::path testo_dir = winapi::get_module_file_name().parent_path();
+		fs::path testo_dir = fs::path(winapi::get_module_file_name()).parent_path();
 		spdlog::info("testo_dir is {}", testo_dir.string());
 
 		winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment");
@@ -113,7 +115,7 @@ void uninstall() {
 
 int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
-	fs::path log_path = winapi::get_module_file_name().replace_extension("txt");
+	fs::path log_path = fs::path(winapi::get_module_file_name()).replace_extension("txt");
 	auto logger = spdlog::basic_logger_mt("basic_logger", log_path.string());
 	logger->set_level(spdlog::level::info);
 	logger->flush_on(spdlog::level::info);

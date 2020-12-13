@@ -1,5 +1,6 @@
 
 #include "Partition.hpp"
+#include <wmi/Call.hpp>
 #include <regex>
 
 namespace msft {

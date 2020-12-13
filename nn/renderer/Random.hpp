@@ -5,7 +5,6 @@
 #include <codecvt>
 #include <locale>
 #include <Font.hpp>
-#include <experimental/filesystem>
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <mutex>
@@ -13,7 +12,8 @@
 #include <fstream>
 #include <climits>
 
-namespace fs = std::experimental::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 std::string in_dir;
 std::string out_dir;

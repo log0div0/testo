@@ -2,7 +2,6 @@
 #pragma once
 
 #include "Drive.hpp"
-#include "wmi.hpp"
 
 namespace hyperv {
 

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <clipp.h>
 #include <fstream>
+#include <codecvt>
 #include <set>
 #include <nlohmann/json.hpp>
 #include "TextTensor.hpp"

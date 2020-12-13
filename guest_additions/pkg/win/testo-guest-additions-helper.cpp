@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <filesystem>
 #include <chrono>
 #include <regex>
 
@@ -13,13 +12,16 @@ using namespace std::chrono_literals;
 
 #include <clipp.h>
 
-#include "process/Process.hpp"
-#include "winapi.hpp"
+#include <os/Process.hpp>
+#include <winapi/Functions.hpp>
+#include <winapi/SCManager.hpp>
+#include <winapi/UTF.hpp>
 
 #include <shellapi.h>
 #include <Lm.h>
 
-namespace fs = std::filesystem;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
 enum class Command {
 	Install,
@@ -65,7 +67,7 @@ void install_driver() {
 	std::string cmd = "pnputil -i -a \"" + path.generic_string() + "\"";
 	spdlog::info("Command to execute: " + cmd);
 
-	std::string output = Process::exec(cmd);
+	std::string output = os::Process::exec(cmd);
 	spdlog::info("Command output: " + output);
 }
 
@@ -77,7 +79,7 @@ void create_service() {
 	std::string cmd = "sc create \"Testo Guest Additions\" binPath= \"" + path.generic_string() + "\" start= auto";
 	spdlog::info("Command to execute: " + cmd);
 
-	std::string output = Process::exec(cmd);
+	std::string output = os::Process::exec(cmd);
 	spdlog::info("Command output: " + output);
 }
 
@@ -140,7 +142,7 @@ void delete_service() {
 	std::string cmd = "sc delete \"Testo Guest Additions\"";
 	spdlog::info("Command to execute: " + cmd);
 
-	std::string output = Process::exec(cmd);
+	std::string output = os::Process::exec(cmd);
 	spdlog::info("Command output: " + output);
 }
 
@@ -148,7 +150,7 @@ std::string get_driver_oem() {
 	std::string cmd = "pnputil /enum-drivers";
 	spdlog::info("Command to execute: " + cmd);
 
-	std::string output = Process::exec(cmd);
+	std::string output = os::Process::exec(cmd);
 	spdlog::info("Command output: " + output);
 
 	std::regex re(R"((oem\d+\.inf)\r\n.+vioser\.inf)");
@@ -166,7 +168,7 @@ void uninstall_driver() {
 	std::string cmd = "pnputil /delete-driver " + oem_inf + " /uninstall";
 	spdlog::info("Command to execute: " + cmd);
 
-	std::string output = Process::exec(cmd);
+	std::string output = os::Process::exec(cmd);
 	spdlog::info("Command output: " + output);
 }
 
@@ -180,7 +182,7 @@ void uninstall() {
 
 int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 
-	fs::path log_path = winapi::get_module_file_name().replace_extension("txt");
+	fs::path log_path = fs::path(winapi::get_module_file_name()).replace_extension("txt");
 	auto logger = spdlog::basic_logger_mt("basic_logger", log_path.string());
 	logger->set_level(spdlog::level::info);
 	logger->flush_on(spdlog::level::info);
@@ -227,7 +229,7 @@ int WinMain(HINSTANCE hinst, HINSTANCE hprev, LPSTR cmdline, int show) {
 				throw std::runtime_error("Unknown mode");
 		}
 	}
-	catch (const ProcessError& error) {
+	catch (const os::ProcessError& error) {
 		spdlog::error(error.what());
 		spdlog::info(error.output);
 		return error.exit_code;

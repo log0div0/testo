@@ -5,7 +5,7 @@
 
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
-#include <wmi.hpp>
+#include <wmi/CoInitializer.hpp>
 #elif __linux__
 #include "backends/qemu/QemuEnvironment.hpp"
 #endif
