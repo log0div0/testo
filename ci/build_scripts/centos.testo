@@ -58,13 +58,16 @@ test centos_install_guest_additions: centos_install_os {
 	}
 }
 
-[no_snapshots: true]
 test centos_install_packages: centos_install_guest_additions {
 	centos {
+		plug dvd "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
+		sleep 5s
 		exec bash """
-			nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep ens`
-			yum -y install git gcc gcc-c++ make openssl-devel python38-devel libvirt-devel tar wget vim rpm-build libguestfs-devel
+			mkdir /media/CentOS
+			mount /dev/cdrom /media/CentOS
+			yum --disablerepo=* --enablerepo=c8-media* -y install git gcc gcc-c++ make openssl-devel python3-devel libvirt-devel tar wget vim rpm-build libguestfs-devel
 			cd /root
+			nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep ens`
 			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
 			tar xf cmake.tar.gz
 			cd CMake-3.16.5
@@ -75,6 +78,7 @@ test centos_install_packages: centos_install_guest_additions {
 	}
 }
 
+[no_snapshots: true]
 test centos_build_onnxruntime_cpu: centos_install_packages {
 	centos {
 		linux_copy_onnxruntime_srcs()
@@ -114,6 +118,7 @@ test centos_install_cuda: centos_install_packages {
 	}
 }
 
+[no_snapshots: true]
 test centos_build_onnxruntime_gpu: centos_install_cuda {
 	centos {
 		linux_copy_onnxruntime_srcs()
