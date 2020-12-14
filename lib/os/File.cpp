@@ -15,7 +15,7 @@ File File::open_for_write(const std::string& path) {
 #ifdef WIN32
 	return File(path, GENERIC_WRITE, CREATE_ALWAYS);
 #else
-	return File(path, O_WRONLY | O_CREAT, 0644);
+	return File(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 #endif
 }
 

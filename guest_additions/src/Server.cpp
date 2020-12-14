@@ -265,6 +265,7 @@ void Server::handle_copy_files_out(const nlohmann::json& command) {
 			std::string path = item.at("src");
 			os::File file = os::File::open_for_read(path);
 			uint64_t file_length = file.size();
+			spdlog::info("Sending file {}, file size = {}", path, file_length);
 			channel.send_raw((uint8_t*)&file_length, sizeof(file_length));
 			uint64_t i = 0;
 			const uint64_t buf_size = 8 * 1024;
