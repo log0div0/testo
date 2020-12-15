@@ -1,5 +1,6 @@
 
 #include "StorageController.hpp"
+#include "ResourceTemplate.hpp"
 #include <regex>
 
 namespace hyperv {
@@ -23,10 +24,10 @@ Drive StorageController::addDVDDrive(size_t slot) {
 }
 
 Drive StorageController::addDrive(size_t slot, const std::string& subtype) {
-	auto driveTemplate = services.getResourceTemplate("Msvm_ResourceAllocationSettingData", subtype);
+	auto driveTemplate = ResourceTemplate(services, "Msvm_ResourceAllocationSettingData", subtype);
 	driveTemplate.put("Parent", resourceAllocationSettingData.path());
 	driveTemplate.put("AddressOnParent", std::to_string(slot));
-	auto drive = services.addResource(virtualSystemSettingData, driveTemplate);
+	auto drive = driveTemplate.addTo(virtualSystemSettingData);
 	return Drive(drive, virtualSystemSettingData, services);
 }
 

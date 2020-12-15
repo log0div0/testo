@@ -1,5 +1,6 @@
 
 #include "Machine.hpp"
+#include "ResourceTemplate.hpp"
 #include <wmi/Call.hpp>
 #include <iostream>
 
@@ -11,7 +12,7 @@ Machine::Machine(wmi::WbemClassObject computerSystem_,
 	services(std::move(services_))
 {
 	try {
-		virtualSystemSettingData = services.getObject("Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"");
+		virtualSystemSettingData = activeSettings();
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -79,11 +80,11 @@ void Machine::requestStateChange(State requestedState) {
 	}
 }
 
-void Machine::start() {
+void Machine::enable() {
 	requestStateChange(State::Enabled);
 }
 
-void Machine::stop() {
+void Machine::disable() {
 	requestStateChange(State::Disabled);
 }
 
@@ -120,13 +121,99 @@ Keyboard Machine::keyboard() const {
 	}
 }
 
+Processor Machine::processor() const {
+	try {
+		auto processor = services.execQuery(
+			"SELECT * FROM Msvm_ProcessorSettingData "
+			"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\""
+		).getOne();
+		return Processor(std::move(processor), virtualSystemSettingData, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+Memory Machine::memory() const {
+	try {
+		auto memory = services.execQuery(
+			"SELECT * FROM Msvm_MemorySettingData "
+			"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\""
+		).getOne();
+		return Memory(std::move(memory), virtualSystemSettingData, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 NIC Machine::addNIC(const std::string& name, bool legacy) {
-	auto nicTemplate = legacy ?
-		services.getResourceTemplate("Msvm_EmulatedEthernetPortSettingData", "Microsoft:Hyper-V:Emulated Ethernet Port") :
-		services.getResourceTemplate("Msvm_SyntheticEthernetPortSettingData", "Microsoft:Hyper-V:Synthetic Ethernet Port");
-	nicTemplate.put("ElementName", name);
-	auto nic = services.addResource(virtualSystemSettingData, nicTemplate);
-	return NIC(nic, virtualSystemSettingData, services);
+	try {
+		auto nicTemplate = legacy ?
+			ResourceTemplate(services, "Msvm_EmulatedEthernetPortSettingData", "Microsoft:Hyper-V:Emulated Ethernet Port") :
+			ResourceTemplate(services, "Msvm_SyntheticEthernetPortSettingData", "Microsoft:Hyper-V:Synthetic Ethernet Port");
+		nicTemplate.put("ElementName", name);
+		auto nic = nicTemplate.addTo(virtualSystemSettingData);
+		return NIC(nic, virtualSystemSettingData, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+Snapshot Machine::createSnapshot() {
+	try {
+		services.call("Msvm_VirtualSystemSnapshotService", "CreateSnapshot")
+			.with("AffectedSystem", computerSystem.path())
+			.with("SnapshotType", 2)
+			.exec();
+		virtualSystemSettingData = activeSettings();
+		auto snapshot = services.getObject(virtualSystemSettingData.get("Parent"));
+		return Snapshot(snapshot, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+Snapshot Machine::snapshot(const std::string& name) {
+	try {
+		auto snapshot = services.execQuery(
+			"SELECT * FROM Msvm_VirtualSystemSettingData "
+			"WHERE VirtualSystemIdentifier=\"" + computerSystem.get("Name").get<std::string>() + "\" AND "
+			"ElementName=\"" + name + "\" AND "
+			"Description=\"Checkpoint settings for the virtual machine.\""
+		).getOne();
+		return Snapshot(snapshot, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+std::vector<Snapshot> Machine::snapshots() {
+	try {
+		auto snapshots = services.execQuery(
+			"SELECT * FROM Msvm_VirtualSystemSettingData "
+			"WHERE VirtualSystemIdentifier=\"" + computerSystem.get("Name").get<std::string>() + "\" AND "
+			"Description=\"Checkpoint settings for the virtual machine.\""
+		).getAll();
+		std::vector<Snapshot> result;
+		for (auto& snapshot: snapshots) {
+			result.push_back(Snapshot(snapshot, services));
+		}
+		return result;
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+wmi::WbemClassObject Machine::activeSettings() {
+	try {
+		// return services.execQuery(
+		// 	"SELECT * FROM Msvm_VirtualSystemSettingData "
+		// 	"WHERE Description=\"Active settings for the virtual machine.\" AND "
+		// 	"ElementName=\"" + this->name() + "\""
+		// ).getOne();
+		return services.getObject("Msvm_VirtualSystemSettingData.InstanceID=\"Microsoft:" + computerSystem.get("Name").get<std::string>() + "\"");
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 }

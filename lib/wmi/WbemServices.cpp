@@ -77,41 +77,4 @@ Call WbemServices::call(const std::string& class_name, const std::string& method
 	return Call(*this, class_name, method_name);
 }
 
-wmi::WbemClassObject WbemServices::getResourceTemplate(const std::string& type, const std::string& subtype) {
-	try {
-		return execQuery(
-			"SELECT * FROM " + type + " "
-			"WHERE InstanceID LIKE \"%Default\" "
-			"AND ResourceSubType=\"" + subtype + "\""
-		).getOne().clone();
-	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
-}
-
-wmi::WbemClassObject WbemServices::addResource(const wmi::WbemClassObject& target, const wmi::WbemClassObject& resourceTemplate) {
-	try {
-		auto result = call("Msvm_VirtualSystemManagementService", "AddResourceSettings")
-				.with("AffectedConfiguration", target.path())
-				.with("ResourceSettings", std::vector<wmi::WbemClassObject>{resourceTemplate})
-				.exec();
-		std::vector<std::string> refs = result.get("ResultingResourceSettings");
-		return getObject(refs.at(0));
-	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
-}
-
-wmi::WbemClassObject WbemServices::modifyResource(const wmi::WbemClassObject& resource) {
-	try {
-		auto result = call("Msvm_VirtualSystemManagementService", "ModifyResourceSettings")
-				.with("ResourceSettings", std::vector<wmi::WbemClassObject>{resource})
-				.exec();
-		std::vector<std::string> refs = result.get("ResultingResourceSettings");
-		return getObject(refs.at(0));
-	} catch (const std::exception&) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
-}
-
 }

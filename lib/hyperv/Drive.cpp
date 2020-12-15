@@ -1,5 +1,6 @@
 
 #include "Drive.hpp"
+#include "ResourceTemplate.hpp"
 #include <regex>
 
 namespace hyperv {
@@ -25,10 +26,10 @@ Disk Drive::mountHDD(const std::string& path) {
 Disk Drive::mount(const std::string& path_, const std::string& subtype) {
 	try {
 		std::string path = std::regex_replace(path_, std::regex("/"), "\\\\");
-		auto isoTemplate = services.getResourceTemplate("Msvm_StorageAllocationSettingData", subtype);
+		ResourceTemplate isoTemplate(services, "Msvm_StorageAllocationSettingData", subtype);
 		isoTemplate.put("HostResource", std::vector<std::string>{path});
 		isoTemplate.put("Parent", resourceAllocationSettingData.path());
-		auto disk = services.addResource(virtualSystemSettingData, isoTemplate);
+		auto disk = isoTemplate.addTo(virtualSystemSettingData);
 		return Disk(std::move(disk), virtualSystemSettingData, services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));

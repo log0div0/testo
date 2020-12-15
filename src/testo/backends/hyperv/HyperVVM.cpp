@@ -107,7 +107,7 @@ void HyperVVM::install() {
 		for (auto& machine: connect.machines()) {
 			if (machine.name() == name()) {
 				if (machine.state() != hyperv::Machine::State::Disabled) {
-					machine.stop();
+					machine.disable();
 				}
 				machine.destroy();
 			}
@@ -120,6 +120,9 @@ void HyperVVM::install() {
 		}
 
 		auto machine = connect.defineMachine(name());
+
+		machine.processor().setVirtualQuantity(config.at("cpus"));
+		machine.memory().setVirtualQuantity(config.at("ram"));
 
 		auto controllers = machine.ideControllers();
 		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
@@ -154,7 +157,11 @@ void HyperVVM::install() {
 
 void HyperVVM::undefine() {
 	try {
-		connect.machine(name()).destroy();
+		auto machine = connect.machine(name());
+		if (machine.state() != hyperv::Machine::State::Disabled) {
+			machine.disable();
+		}
+		machine.destroy();
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -168,17 +175,55 @@ void HyperVVM::remove_disks() {
 	}
 }
 
-nlohmann::json HyperVVM::make_snapshot(const std::string& snapshot) {
+nlohmann::json HyperVVM::make_snapshot(const std::string& snapshot_name) {
 	try {
-		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+		connect.machine(name()).createSnapshot().setName(snapshot_name);
 		return nlohmann::json::object();
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
 
-void HyperVVM::rollback(const std::string& snapshot, const nlohmann::json& opaque) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+bool HyperVVM::has_snapshot(const std::string& snapshot_name) {
+	try {
+		auto machine = connect.machine(name());
+		for (auto& snapshot: machine.snapshots()) {
+			if (snapshot.name() == snapshot_name) {
+				return true;
+			}
+		}
+		return false;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+void HyperVVM::delete_snapshot(const std::string& snapshot_name) {
+	try {
+		connect.machine(name()).snapshot(snapshot_name).destroy();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+void HyperVVM::rollback(const std::string& snapshot_name, const nlohmann::json& opaque) {
+	try {
+		{
+			auto machine = connect.machine(name());
+			if (machine.state() != hyperv::Machine::State::Disabled) {
+				machine.disable();
+			}
+			machine.snapshot(snapshot_name).apply();
+		}
+		{
+			auto machine = connect.machine(name());
+			if (machine.state() == hyperv::Machine::State::Offline) {
+				machine.enable();
+			}
+		}
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 void HyperVVM::press(const std::vector<std::string>& buttons) {
@@ -190,11 +235,12 @@ void HyperVVM::press(const std::vector<std::string>& buttons) {
 				codes.push_back(code);
 			}
 		}
-		connect.machine(name()).keyboard().typeScancodes(codes);
+		auto keyboard = connect.machine(name()).keyboard();
+		keyboard.typeScancodes(codes);
 		for (auto& code: codes) {
 			code |= 0x80;
 		}
-		connect.machine(name()).keyboard().typeScancodes(codes);
+		keyboard.typeScancodes(codes);
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -272,7 +318,7 @@ void HyperVVM::unplug_dvd() {
 
 void HyperVVM::start() {
 	try {
-		connect.machine(name()).start();
+		connect.machine(name()).enable();
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -280,7 +326,7 @@ void HyperVVM::start() {
 
 void HyperVVM::stop() {
 	try {
-		connect.machine(name()).stop();
+		connect.machine(name()).disable();
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -295,7 +341,7 @@ void HyperVVM::suspend() {
 }
 void HyperVVM::resume() {
 	try {
-		connect.machine(name()).start();
+		connect.machine(name()).enable();
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -365,17 +411,6 @@ bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
-}
-bool HyperVVM::has_snapshot(const std::string& snapshot) {
-	try {
-		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
-		return false;
-	} catch (const std::exception& error) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
-}
-void HyperVVM::delete_snapshot(const std::string& snapshot) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
 bool HyperVVM::is_defined() const {

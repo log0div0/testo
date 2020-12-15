@@ -32,7 +32,7 @@ struct Object {
 			handle->Release();
 			handle = nullptr;
 		}
-		handle = other->handle;
+		handle = other.handle;
 		handle->AddRef();
 		return *this;
 	}
