@@ -164,6 +164,10 @@ void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textlin
 			throw std::runtime_error("end == symbols_indexes.begin()");
 		}
 
+		if ((end - symbols_indexes.begin()) > 5) {
+			end = symbols_indexes.begin() + 5;
+		}
+
 		for (auto it = symbols_indexes.begin(); it != end; ++it) {
 			const std::u32string& tmp = symbols.at(*it);
 			if (tmp.size()) {
