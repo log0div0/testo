@@ -20,6 +20,24 @@ test centos_backend_qemu_simple_test_spec: centos_install_testo_cpu {
 }
 
 [no_snapshots: true]
+test centos_backend_qemu_wildcard_test_spec: centos_install_testo_cpu {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/test_spec_exclude.testo --test_spec \\*test1*)
+			[[ $output == *"Running test test121"* ]]
+			[[ $output == *"Running test test141"* ]]
+			[[ $output != *"Running test test2"* ]]
+			[[ $output != *"Running test test22"* ]]
+			[[ $output != *"Running test test3"* ]]
+		""" timeout 30m
+	}
+}
+
+[no_snapshots: true]
 test centos_backend_qemu_multiple_test_spec: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/test_spec_exclude/test_spec_exclude.testo" "/opt/scripts/test_spec_exclude.testo"
