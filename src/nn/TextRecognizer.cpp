@@ -181,15 +181,8 @@ void TextRecognizer::run_nn(const stb::Image<stb::RGB>* image, TextLine& textlin
 
 static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 
-std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textline, const std::string& query) {
+std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textline, const std::string& _query) {
 	const TextRecognizerCache& cache = textline.text_recognizer_cache;
-
-	if (query.size() == 0) {
-		throw std::runtime_error("Empty query in TextRecognizer");
-	}
-	if (query.size() > cache.predictions.size()) {
-		return {};
-	}
 
 	// static int f = 0;
 	// std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " << (f++) << std::endl;
@@ -200,15 +193,23 @@ std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textlin
 
 	float ratio = float(textline.rect.width()) / cache.predictions.size();
 	std::u32string u32query;
-	for (char32_t ch: conv.from_bytes(query)) {
+	for (char32_t ch: conv.from_bytes(_query)) {
 		if (ch != U' ') {
 			u32query.push_back(ch);
 		}
 	}
 
+	if (u32query.size() == 0) {
+		throw std::runtime_error("Empty query in TextRecognizer");
+	}
+	if (u32query.size() > cache.predictions.size()) {
+		return {};
+	}
+
 	std::vector<TextLine> result;
-	for (size_t x = 0; x < (cache.predictions.size() - query.size()); ++x) {
-		while (x < (cache.predictions.size() - query.size())) {
+	for (size_t x = 0; (x + u32query.size()) <= cache.predictions.size(); ++x) {
+		size_t start_pos = x;
+		while ((x + u32query.size()) <= cache.predictions.size()) {
 			if (cache.predictions[x].codepoints.size()) {
 				break;
 			}
@@ -218,10 +219,22 @@ std::vector<TextLine> TextRecognizer::run_postprocessing(const TextLine& textlin
 		if (pos < 0) {
 			continue;
 		}
+		while (((size_t)pos + 1) < cache.predictions.size()) {
+			if (!cache.predictions[pos + 1].match(u32query.back())) {
+				break;
+			}
+			++pos;
+		}
+		while (((size_t)pos + 1) < cache.predictions.size()) {
+			if (cache.predictions[pos + 1].codepoints.size()) {
+				break;
+			}
+			++pos;
+		}
 		TextLine new_textline;
 		new_textline.rect.top = textline.rect.top;
 		new_textline.rect.bottom = textline.rect.bottom;
-		new_textline.rect.left = textline.rect.left + std::floor(x * ratio);
+		new_textline.rect.left = textline.rect.left + std::floor(start_pos * ratio);
 		new_textline.rect.right = textline.rect.left + std::ceil(pos * ratio);
 		result.push_back(new_textline);
 		x = pos;
