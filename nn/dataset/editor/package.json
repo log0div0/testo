@@ -3,12 +3,10 @@
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
-    "start_train": "electron . ../train",
-    "start_validate": "electron . ../validate",
+    "start": "electron .",
     "build": "babel src --out-dir dist",
     "watch": "babel src --out-dir dist --watch --skip-initial-build",
-    "train": "npm run build && run-p watch start_train",
-    "validate": "npm run build && run-p watch start_validate"
+    "dev": "npm run build && run-p watch \"start {1}\" --"
   },
   "dependencies": {
     "@babel/cli": "^7.10.5",
