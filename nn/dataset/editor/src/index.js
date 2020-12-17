@@ -39,6 +39,19 @@ window.DATASET_DIR = remote.process.argv[2]
 
 async function fsListener(event, filename) {
 	let parsed = path.parse(filename)
+	if (parsed.base == 'meta.json') {
+		let dataset_meta = {}
+		if (fs.existsSync(filename)) {
+			let data = await fs.promises.readFile(filename)
+			dataset_meta = JSON.parse(data)
+		}
+		store.dispatch({
+			type: "UPDATE_DATASET_META",
+			id: parsed.name,
+			dataset_meta
+		})
+		return
+	}
 	if ((parsed.ext.toLowerCase() != '.png') &&
 		(parsed.ext.toLowerCase() != '.json')) {
 		return
@@ -73,6 +86,13 @@ async function fsListener(event, filename) {
 }
 
 async function main() {
+	let dataset_meta_path = path.join(DATASET_DIR, 'meta.json')
+	let dataset_meta = {}
+	if (fs.existsSync(dataset_meta_path)) {
+		let data = await fs.promises.readFile(dataset_meta_path)
+		dataset_meta = JSON.parse(data)
+	}
+
 	let docs = {}
 	const files = await fs.promises.readdir(DATASET_DIR);
 	for (const file of files) {
@@ -92,6 +112,7 @@ async function main() {
 	}
 
 	let initialState = {
+		dataset_meta,
 		docs,
 		selected_doc: null,
 		filters: {

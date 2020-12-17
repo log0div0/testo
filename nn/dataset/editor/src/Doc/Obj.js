@@ -16,7 +16,11 @@ let TextObj = React.forwardRef(({obj, draggable, onDragMove, onClick, onTransfor
 		}
 	} else {
 		var stroke = '#880e0e'
-		var fill = '#880e0e33'
+		if (show_meta) {
+			var fill = '#880e0e'
+		} else {
+			var fill = '#880e0e33'
+		}
 	}
 
 	return (
@@ -46,6 +50,62 @@ let TextObj = React.forwardRef(({obj, draggable, onDragMove, onClick, onTransfor
 				fontFamily='mono'
 				fill='#555'
 				verticalAlign='middle'
+			/> : null }
+		</>
+	)
+})
+
+let TagObj = React.forwardRef(({obj, draggable, onDragMove, onClick, onTransform}, ref) => {
+
+	let show_meta = useSelector(state => state.show_meta)
+
+	if (obj.tag) {
+		var stroke = '#fcba03'
+		var fill = '#fcba0355'
+		if (show_meta) {
+			var fill = '#fae57f'
+		} else {
+			var fill = '#fcba0355'
+		}
+	} else {
+		var stroke = '#880e0e'
+		if (show_meta) {
+			var fill = '#880e0e'
+		} else {
+			var fill = '#880e0e33'
+		}
+	}
+
+	return (
+		<>
+			<Rect
+				x={obj.x}
+				y={obj.y}
+				fill={fill}
+				width={obj.width}
+				height={obj.height}
+				strokeWidth={1}
+				scale={{x: 1, y: 1}}
+				stroke={stroke}
+				draggable={draggable}
+				onDragMove={onDragMove}
+				onClick={onClick}
+				onTransform={onTransform}
+				name='obj'
+				ref={ref}
+			/>
+			{ show_meta ? <Text
+				x={obj.x + 1}
+				y={obj.y + 1}
+				height={obj.height - 2}
+				width={obj.width - 2}
+				text={obj.tag}
+				fontSize={obj.width / (obj.tag.length)}
+				fontFamily='mono'
+				fontStyle='bold'
+				fill='#555'
+				verticalAlign='middle'
+				align='center'
 			/> : null }
 		</>
 	)
@@ -101,6 +161,8 @@ function Obj({id}, ref) {
 
 	if (obj.type == 'text') {
 		return <TextObj obj={obj} draggable={!new_obj_tool} onDragMove={onDragMove} onClick={onClick} onTransform={onTransform} ref={ref}/>
+	} else if (obj.type == 'tag') {
+		return <TagObj obj={obj} draggable={!new_obj_tool} onDragMove={onDragMove} onClick={onClick} onTransform={onTransform} ref={ref}/>
 	} else {
 		throw "Invalid obj type"
 	}
