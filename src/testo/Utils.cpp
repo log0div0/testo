@@ -24,7 +24,7 @@ void fs_copy(const fs::path& from, const fs::path& to) {
 		throw std::runtime_error("Fs_copy error: \"from\" path " + from.generic_string() + " does not exist");
 	}
 
-	if (fs::equivalent(from, to)) {
+	if (fs::exists(to) && fs::equivalent(from, to)) {
 		throw std::runtime_error("Fs_copy error: \"from\" path " + from.generic_string() + " and \"to\" path " + to.generic_string() + " are equalent");
 	}
 
