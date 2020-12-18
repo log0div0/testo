@@ -102,7 +102,48 @@ void render_random_hero(Example& example) {
 	example.meta.at("objs").push_back(hero);
 }
 
-void render_random_town(Example& example);
+void render_random_town(Example& example) {
+	static std::vector<std::string> ids = {
+		"avccast0.dir",
+		"avccasx0.dir",
+		"avcdung0.dir",
+		"avcdunx0.dir",
+		"avcftrt0.dir",
+		"avcftrx0.dir",
+		"avchfor0.dir",
+		"avchforx.dir",
+		"avcinft0.dir",
+		"avcinfx0.dir",
+		"avcnecr0.dir",
+		"avcnecx0.dir",
+		"avcramp0.dir",
+		"avcramx0.dir",
+		"avcstro0.dir",
+		"avcstrx0.dir",
+		"avctowr0.dir",
+		"avctowx0.dir",
+	};
+	std::string id = ids.at(random_int(ids.size()));
+	stb::Image<stb::RGBA> town_img(fs::path(in_dir)
+		/ ".." / "assets" / "homm3" / "town"
+		/ id / "00_00.png"
+	);
+
+	Rect rect = random_empty_space(example, town_img.w, town_img.h);
+	if (!rect.area()) {
+		return;
+	}
+	blend(example.img, town_img, rect.x, rect.y);
+
+	Rect town_bbox = Rect::get_visible_bbox(town_img);
+	town_bbox.x += rect.x;
+	town_bbox.y += rect.y;
+
+	nlohmann::json town = town_bbox;
+	town["tag"] = "town";
+
+	example.meta.at("objs").push_back(town);
+}
 
 void render_random_object(Example& example) {
 	switch (random_int(2)) {
