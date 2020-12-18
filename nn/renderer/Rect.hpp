@@ -16,6 +16,10 @@ struct Rect {
 		h = img.h;
 	}
 
+	float iou(const Rect& other) const {
+		return float((*this & other).area()) / (*this | other).area();
+	}
+
 	int32_t area() const {
 		return w * h;
 	}

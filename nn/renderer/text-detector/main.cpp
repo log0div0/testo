@@ -11,14 +11,14 @@ struct Example {
 	stb::Image<uint8_t> nega_down;
 
 	void draw_rects() {
-		for (auto& textline: meta.at("textlines")) {
+		for (auto& obj: meta.at("objs")) {
 			stb::RGB rgb = {};
-			if (textline.value("ignore_while_training", false)) {
+			if (obj.value("ignore_while_training", false)) {
 				rgb.r = 255;
 			} else {
 				rgb.b = 255;
 			}
-			Rect bbox = Rect(textline) & Rect(img);
+			Rect bbox = Rect(obj) & Rect(img);
 			for (int y = bbox.y; y < bbox.end_y(); ++y) {
 				img.at(bbox.x, y) = rgb;
 				img.at(bbox.end_x() - 1, y) = rgb;
@@ -43,13 +43,13 @@ struct Example {
 		posi_down = stb::Image<uint8_t>(img.w, img.h, 0);
 		nega_up = stb::Image<uint8_t>(img.w, img.h, 255);
 		nega_down = stb::Image<uint8_t>(img.w, img.h, 255);
-		for (auto& textline: meta.at("textlines")) {
-			Rect rect = textline;
+		for (auto& obj: meta.at("objs")) {
+			Rect rect = obj;
 			Rect rect_up = rect;
 			Rect rect_down = rect;
 			rect_up.shrink_bottom(rect.h / 3 * 2);
 			rect_down.shrink_top(rect.h / 3 * 2);
-			if (!textline.value("ignore_while_training", false)) {
+			if (!obj.value("ignore_while_training", false)) {
 				fill_rect(posi_up, rect_up, 255);
 				fill_rect(posi_down, rect_down, 255);
 			}
@@ -59,16 +59,16 @@ struct Example {
 			rect_down = rect_down & Rect(img);
 			fill_rect(nega_up, rect_up, 0);
 			fill_rect(nega_down, rect_down, 0);
-			if (textline.value("ignore_while_training", false)) {
+			if (obj.value("ignore_while_training", false)) {
 				fill_rect(nega_up, rect_up | rect_down, 0);
 				fill_rect(nega_down, rect_up | rect_down, 0);
 			}
 		}
 	}
 
-	bool is_overlap_with_some_textline(const Rect& rect) const {
-		for (auto& textline: meta.at("textlines")) {
-			Rect bbox = textline;
+	bool is_overlap_with_some_obj(const Rect& rect) const {
+		for (auto& obj: meta.at("objs")) {
+			Rect bbox = obj;
 			if ((bbox & rect).area()) {
 				return true;
 			}
@@ -131,7 +131,7 @@ Rect random_empty_space_for_text(const Example& example, int font_height) {
 		rect.y += y_pad;
 		rect.w -= x_pad * 2;
 		rect.h -= y_pad * 2;
-		if (example.is_overlap_with_some_textline(rect)) {
+		if (example.is_overlap_with_some_obj(rect)) {
 			continue;
 		}
 		return rect;
@@ -167,7 +167,7 @@ void render_random_text(Example& example) {
 	bbox.w = 2 + textline.bitmap.w;
 	bbox.h = 2 + textline.bitmap.h;
 
-	example.meta.at("textlines").push_back(bbox);
+	example.meta.at("objs").push_back(bbox);
 }
 
 bool all_codepoints_are_the_same(const std::u32string& str) {
@@ -209,7 +209,7 @@ Example random_crop(const Doc& src) {
 	}
 
 	dst.meta = {
-		{"textlines", nlohmann::json::array()}
+		{"objs", nlohmann::json::array()}
 	};
 	for (auto& obj: src.meta.at("objs")) {
 		if (obj.at("type") != "text") {
@@ -221,17 +221,17 @@ Example random_crop(const Doc& src) {
 		}
 		bbox.x -= crop.x;
 		bbox.y -= crop.y;
-		nlohmann::json textline = bbox;
+		nlohmann::json new_obj = bbox;
 		std::u32string text = to_utf32(obj.at("text"));
 
-		textline["ignore_while_training"] =
+		new_obj["ignore_while_training"] =
 			(text.size() < 2) ||
 			all_codepoints_are_the_same(text) ||
 			(bbox.w <= bbox.h) ||
 			(bbox.h != Rect(obj).h) ||
 			(bbox.h <= 10);
 
-		dst.meta.at("textlines").push_back(textline);
+		dst.meta.at("objs").push_back(new_obj);
 	}
 
 	return dst;

@@ -327,6 +327,9 @@ void load_docs(bool verified_only) {
 				continue;
 			}
 			doc.meta = load_json(meta_path);
+			if (!doc.meta.count("verified")) {
+				continue;
+			}
 			if (doc.meta["verified"].get<bool>() == false) {
 				continue;
 			}
