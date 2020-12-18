@@ -9,11 +9,31 @@ struct Example {
 	bool is_overlap_with_some_obj(const Rect& rect) const {
 		for (auto& obj: meta.at("objs")) {
 			Rect bbox = obj;
-			if (bbox.iou(rect) > 0.2f) {
+			if ((bbox & rect).area()) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	void draw_rects() {
+		for (auto& obj: meta.at("objs")) {
+			stb::RGB rgb = {};
+			if (obj.value("ignore_while_training", false)) {
+				rgb.r = 255;
+			} else {
+				rgb.b = 255;
+			}
+			Rect bbox = Rect(obj) & Rect(img);
+			for (int y = bbox.y; y < bbox.end_y(); ++y) {
+				img.at(bbox.x, y) = rgb;
+				img.at(bbox.end_x() - 1, y) = rgb;
+			}
+			for (int x = bbox.x; x < bbox.end_x(); ++x) {
+				img.at(x, bbox.y) = rgb;
+				img.at(x, bbox.end_y() - 1) = rgb;
+			}
+		}
 	}
 };
 
@@ -71,6 +91,15 @@ void render_random_hero(Example& example) {
 	}
 	blend(example.img, hero_img, rect.x, rect.y);
 	blend(example.img, flag_img, rect.x, rect.y);
+
+	Rect hero_bbox = Rect::get_visible_bbox(hero_img);
+	hero_bbox.x += rect.x;
+	hero_bbox.y += rect.y;
+
+	nlohmann::json hero = hero_bbox;
+	hero["tag"] = "hero";
+
+	example.meta.at("objs").push_back(hero);
 }
 
 void render_random_object(Example& example) {
@@ -148,6 +177,7 @@ nlohmann::json generate_batch(int batch) {
 		}
 		// random_channels_shuffle(example.img);
 		// random_inverse(example.img);
+		example.draw_rects();
 		example.img.write_png(batch_dir / (std::to_string(i) + ".png"));
 		batch_meta["examples"].push_back({
 			{"img_path", std::to_string(batch) + "/" + std::to_string(i) + ".png"},

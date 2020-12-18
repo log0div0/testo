@@ -59,50 +59,9 @@ struct PSFFont: Font {
 		return 0;
 	}
 
-	static Rect get_bitmap_bbox(const stb::Image<uint8_t>& bitmap) {
-		Rect bbox = {};
-		for (int x = 0; x < bitmap.w; ++x) {
-			for (int y = 0; y < bitmap.h; ++y) {
-				if (bitmap.at(x, y) != 0) {
-					bbox.x = x;
-					goto right;
-				}
-			}
-		}
-	right:
-		for (int x = bitmap.w - 1; x >= 0; --x) {
-			for (int y = 0; y < bitmap.h; ++y) {
-				if (bitmap.at(x, y) != 0) {
-					bbox.w = x - bbox.x + 1;
-					goto top;
-				}
-			}
-		}
-	top:
-		for (int y = 0; y < bitmap.h; ++y) {
-			for (int x = 0; x < bitmap.w; ++x) {
-				if (bitmap.at(x, y) != 0) {
-					bbox.y = y;
-					goto bottom;
-				}
-			}
-		}
-	bottom:
-		for (int y = bitmap.h - 1; y >= 0; --y) {
-			for (int x = 0; x < bitmap.w; ++x) {
-				if (bitmap.at(x, y) != 0) {
-					bbox.h = y - bbox.y + 1;
-					goto exit;
-				}
-			}
-		}
-	exit:
-		return bbox;
-	}
-
 	virtual Char renderCodepoint(char32_t codepoint, float xpos) override {
 		stb::Image<uint8_t> bitmap = font.codepointBitmap(codepoint);
-		Rect bbox = get_bitmap_bbox(bitmap);
+		Rect bbox = Rect::get_bitmap_bbox(bitmap);
 		Char ch(codepoint);
 		ch.x = xpos + bbox.x;
 		ch.y = bbox.y;

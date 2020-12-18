@@ -100,25 +100,25 @@ Rect random_empty_space_for_text(const Example& example, int font_height) {
 		while (left || up || right || down) {
 			// left
 			if (left) {
-				left = rect.extend_left(img, color);
+				left = rect.extend_left(img, [&](auto& x) { return x.max_channel_diff(color) > 32; });
 			}
 			// up
 			if (rect.h == h) {
 				up = false;
 			}
 			if (up) {
-				up = rect.extend_top(img, color);
+				up = rect.extend_top(img, [&](auto& x) { return x.max_channel_diff(color) > 32; });
 			}
 			// right
 			if (right) {
-				right = rect.extend_right(img, color);
+				right = rect.extend_right(img, [&](auto& x) { return x.max_channel_diff(color) > 32; });
 			}
 			// down
 			if (rect.h == h) {
 				down = false;
 			}
 			if (down) {
-				down = rect.extend_bottom(img, color);
+				down = rect.extend_bottom(img, [&](auto& x) { return x.max_channel_diff(color) > 32; });
 			}
 		}
 		if (rect.w < w) {
