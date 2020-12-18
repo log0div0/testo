@@ -3,17 +3,17 @@
 		"08919dfa-d8a8-45d5-be77-bc08d9ec57ec": {
 			"type": "tag",
 			"x": 732.83,
-			"y": 364.85,
+			"y": 352.35,
 			"width": 44.5,
-			"height": 47.41,
+			"height": 59.91,
 			"tag": "hero"
 		},
 		"28b2142b-085b-41f8-86b2-7b2f9e0f28ff": {
 			"type": "tag",
 			"x": 637.29,
-			"y": 588.42,
+			"y": 576.38,
 			"width": 36.12,
-			"height": 48,
+			"height": 60.04,
 			"tag": "hero"
 		}
 	},

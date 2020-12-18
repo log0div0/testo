@@ -102,8 +102,19 @@ void render_random_hero(Example& example) {
 	example.meta.at("objs").push_back(hero);
 }
 
+void render_random_town(Example& example);
+
 void render_random_object(Example& example) {
-	render_random_hero(example);
+	switch (random_int(2)) {
+		case 0:
+			render_random_hero(example);
+			break;
+		case 1:
+			render_random_town(example);
+			break;
+		default:
+			throw std::runtime_error("Should not be there");
+	}
 }
 
 Example random_crop(const Doc& src) {

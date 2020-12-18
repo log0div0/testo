@@ -19,17 +19,17 @@
 		"8e49cc56-6ade-4951-bdd9-fe334abbf726": {
 			"type": "tag",
 			"x": 954.09,
-			"y": 651.01,
+			"y": 640.4,
 			"width": 42.58,
-			"height": 48.83,
+			"height": 59.44,
 			"tag": "hero"
 		},
 		"07654c8d-11bd-452e-a3f5-a6627edbd932": {
 			"type": "tag",
 			"x": 603.15,
-			"y": 459.22,
+			"y": 448.41,
 			"width": 46.36,
-			"height": 48.52,
+			"height": 59.33,
 			"tag": "hero"
 		}
 	},
