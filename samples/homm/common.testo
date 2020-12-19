@@ -6,12 +6,6 @@ network internet {
 	mode: "nat"
 }
 
-flash vcmi_data {
-	fs: "ntfs"
-	size: 512Mb
-	folder: "${VCMI_DIR}"
-}
-
 param lan_netmask "255.255.255.0"
 
 param ubuntu_ip "192.168.1.2"

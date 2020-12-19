@@ -10,7 +10,7 @@ macro install_ubuntu20_desktop(host_name, login, password) {
 		mouse click "Continue".from_right(0).center_bottom().move_down(5)
 	} else {
 		wait "Welcome" timeout 3m
-		mouse click "Install Ubuntu".from_right(0).center_bottom().move_down(5)
+		mouse click "Install Ubuntu".from_right(0).center_bottom()
 	}
 	wait "Keyboard layout"
 	mouse click "Continue".center_bottom()

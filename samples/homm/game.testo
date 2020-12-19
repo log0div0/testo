@@ -1,56 +1,9 @@
 include "ubuntu.testo"
 include "windows.testo"
 
-[no_snapshots: true]
-test install_homm: win7_configure, ubuntu_install_vcmi {
+test launch_game: win7_install_vcmi, ubuntu_install_vcmi {
 	ubuntu {
-		plug flash vcmi_data
-		sleep 3s
-		exec bash """
-			cp -r /media/ubuntu/*/VCMI_data/Data /home/ubuntu/.local/share/vcmi/
-			cp -r /media/ubuntu/*/VCMI_data/Maps /home/ubuntu/.local/share/vcmi/
-			cp -r /media/ubuntu/*/VCMI_data/Mp3 /home/ubuntu/.local/share/vcmi/
-			cp -r /media/ubuntu/*/VCMI_data/Mods/vcmi /home/ubuntu/.local/share/vcmi/Mods/
-			umount /media/ubuntu/*
-		"""
-		unplug flash vcmi_data
-
-		copyto "vcmi_settings.json" "/home/ubuntu/.config/vcmi/settings.json"
-	}
-
-	win7 {
-		plug flash vcmi_data
-
-		mouse click "Открыть папку для просмотра файлов"
-		mouse dclick "VCMI-branch-develop".from_bottom(0)
-		mouse move 0 0
-		wait "Разрешить внесение изменений"; press Left, Enter
-		wait "Ваc приветствует мастер"; mouse click "Далее".from_bottom(0).center_bottom()
-		mouse click "Принимаю".from_bottom(0).center_bottom()
-		wait "Выберите папку для установки"; mouse click "Далее".from_bottom(0).center_bottom()
-		wait "Папка в меню \"Пуск\""; mouse click "Установить".from_bottom(0).center_bottom()
-		wait "Завершение работы мастера"; mouse click "Готово".from_bottom(0).center_bottom()
-		wait !"Завершение работы мастера";
-
-		exec cmd "Xcopy /E /I E:\\VCMI_data\\Maps \"C:\\Program Files (x86)\\VCMI (branch develop)\\Maps\""
-		exec cmd "Xcopy /E /I E:\\VCMI_data\\Data \"C:\\Program Files (x86)\\VCMI (branch develop)\\Data\""
-		exec cmd "Xcopy /E /I E:\\VCMI_data\\Mp3 \"C:\\Program Files (x86)\\VCMI (branch develop)\\Mp3\""
-
-		mouse dclick "VCMI".from_left(0)
-		wait "Download failed"; press Enter;
-		press LeftAlt + F4
-
-		wait !"VCMI Launcher"
-		exec cmd "Xcopy /E /I E:\\VCMI_data\\Mods\\vcmi \"C:\\Users\\testo\\Documents\\My Games\\vcmi\\Mods\\vcmi\""
-
-		unplug flash vcmi_data
-
-		copyto "vcmi_settings.json" "C:\\Users\\testo\\Documents\\My Games\\vcmi\\config\\settings.json"
-	}
-}
-
-test launch_game: install_homm {
-	ubuntu {
+		copyto "${VCMI_DIR}/VCMI_data/Maps" "/home/ubuntu/.local/share/vcmi/Maps"
 		run_app_ubuntu20_desktop("vcmi launcher")
 		mouse click img "icons/ubuntu/VCMI_launch.png"
 
@@ -70,8 +23,9 @@ test launch_game: install_homm {
 	}
 
 	win7 {
+		copyto "${VCMI_DIR}/VCMI_data/Maps" "C:\\Program Files (x86)\\VCMI (branch develop)\\Maps"
 		mouse move 0 0
-		mouse dclick "VCMI".from_top(0)
+		mouse dclick "VCMI".from_bottom(0)
 		wait "Download failed"; press Enter
 		mouse click img "icons/VCMI_launch.png"
 

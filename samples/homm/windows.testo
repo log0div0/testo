@@ -14,7 +14,7 @@ machine win7 {
 	}
 }
 
-test win7_installation {
+test win7_install {
 	win7 {
 		start
 		wait "Choose an operating system"
@@ -50,7 +50,8 @@ test win7_installation {
 	}
 }
 
-test win7_install_ga: win7_installation {
+test win7_configure: win7_install {
+	#guest additions
 	win7 {
 		sleep 5s
 
@@ -67,9 +68,8 @@ test win7_install_ga: win7_installation {
 		wait !"Installation Complete"
 		exec cmd "echo hello world"
 	}
-}
 
-test win7_configure: win7_install_ga {
+	#network
 	win7 {
 		press LEFTMETA
 		mouse click "Панель управления"
@@ -97,5 +97,32 @@ test win7_configure: win7_install_ga {
 		mouse click "Сохранить изменения"
 		sleep 1s
 		wait "Корзина"
+	}
+}
+
+test win7_install_vcmi: win7_configure {
+	win7 {
+		copyto "${VCMI_DIR}/VCMI-branch-develop.exe" "C:\\Users\\testo\\Desktop\\VCMI-branch-develop.exe"
+
+		mouse dclick "VCMI"
+		mouse move 0 0
+		wait "Разрешить внесение изменений"; press Left, Enter
+		wait "Ваc приветствует мастер"; mouse click "Далее".from_bottom(0).center_bottom()
+		mouse click "Принимаю".from_bottom(0).center_bottom()
+		wait "Выберите папку для установки"; mouse click "Далее".from_bottom(0).center_bottom()
+		wait "Папка в меню \"Пуск\""; mouse click "Установить".from_bottom(0).center_bottom()
+		wait "Завершение работы мастера"; mouse click "Готово".from_bottom(0).center_bottom()
+		wait !"Завершение работы мастера";
+
+		copyto "${VCMI_DIR}/VCMI_data/Data" "C:\\Program Files (x86)\\VCMI (branch develop)\\Data"
+		copyto "${VCMI_DIR}/VCMI_data/Mp3" "C:\\Program Files (x86)\\VCMI (branch develop)\\Mp3"
+		copyto "${VCMI_DIR}/VCMI_data/Mods/vcmi" "C:\\Users\\testo\\Documents\\My Games\\vcmi\\Mods\\vcmi"
+		copyto "vcmi_settings.json" "C:\\Users\\testo\\Documents\\My Games\\vcmi\\config\\settings.json"
+
+		mouse dclick "VCMI".from_bottom(0)
+		wait "Download failed"; press Enter;
+		press LeftAlt + F4
+
+		wait !"VCMI Launcher"
 	}
 }
