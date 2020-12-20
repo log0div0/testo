@@ -1,11 +1,18 @@
 
-from dataset import data_loader
+from dataset import create_data_loader
+import argparse
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from torch import nn
 import traceback
 from model import Model, encode_colors, colors
 import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset_folder', required=True)
+args = parser.parse_args()
+
+data_loader = create_data_loader(args.dataset_folder)
 
 def adjust_learning_rate(optimizer, step):
 	lr = 1e-3 * (0.9 ** (step // 10000))

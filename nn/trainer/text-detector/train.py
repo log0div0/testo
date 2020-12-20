@@ -1,5 +1,6 @@
 
-from dataset import data_loader
+from dataset import create_data_loader
+import argparse
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from torch import nn
@@ -7,6 +8,12 @@ import torch.nn.functional as F
 import traceback
 from model import Model
 import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset_folder', required=True)
+args = parser.parse_args()
+
+data_loader = create_data_loader(args.dataset_folder)
 
 def focal_loss(inputs, targets, alpha=1, gamma=2):
 	BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
