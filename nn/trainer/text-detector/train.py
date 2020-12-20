@@ -1,5 +1,5 @@
 
-from dataset import create_data_loader
+from dataset import create_dataset_loader
 import argparse
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_folder', required=True)
 args = parser.parse_args()
 
-data_loader = create_data_loader(args.dataset_folder)
+data_loader = create_dataset_loader(args.dataset_folder)
 
 def focal_loss(inputs, targets, alpha=1, gamma=2):
 	BCE_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
@@ -63,15 +63,17 @@ try:
 			up_label = data["up_labels"].to(device)
 			down_label = data["down_labels"].to(device)
 
-			pred = net(image)
-
 			optimizer.zero_grad()
+
+			pred = net(image)
 			up_loss = criterion(pred[:, 0, :, :], up_label)
 			down_loss = criterion(pred[:, 1, :, :], down_label)
 			loss = up_loss + down_loss
-			writer.add_scalar("loss", loss * 100, step)
 			loss.backward()
+
 			optimizer.step()
+
+			writer.add_scalar("loss", loss * 100, step)
 
 			step += 1
 

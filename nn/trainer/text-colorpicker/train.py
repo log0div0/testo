@@ -1,5 +1,5 @@
 
-from dataset import create_data_loader
+from dataset import create_dataset_loader
 import argparse
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_folder', required=True)
 args = parser.parse_args()
 
-data_loader = create_data_loader(args.dataset_folder)
+data_loader = create_dataset_loader(args.dataset_folder)
 
 def adjust_learning_rate(optimizer, step):
 	lr = 1e-3 * (0.9 ** (step // 10000))
@@ -56,13 +56,14 @@ try:
 			fg = encode_colors(data["fg"]).to(device)
 			bg = encode_colors(data["bg"]).to(device)
 
-			pred = net(image)
-
 			optimizer.zero_grad()
+
+			pred = net(image)
 			loss_fg = criterion(pred[:,:,:len(colors)], fg)
 			loss_bg = criterion(pred[:,:,len(colors):], bg)
 			loss = loss_fg + loss_bg
 			loss.backward()
+
 			optimizer.step()
 
 			writer.add_scalar("loss", loss * 100, step)
