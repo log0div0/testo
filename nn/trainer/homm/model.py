@@ -160,7 +160,7 @@ if __name__ == '__main__':
 	model.eval()
 
 	print(model)
-	x = torch.randn(1, 3, 1024, 1024)
+	x = torch.randn(1, 3, 480, 640)
 	start_time = time.time()
 	output = model(x)
 	print("--- %s seconds ---" % (time.time() - start_time))

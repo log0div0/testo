@@ -200,7 +200,7 @@ Example random_crop(const Doc& src) {
 		bbox.x -= crop.x;
 		bbox.y -= crop.y;
 		nlohmann::json new_obj = bbox;
-		std::u32string tag = to_utf32(obj.at("tag"));
+		std::string tag = obj.at("tag");
 
 		new_obj["ignore_while_training"] =
 			(tag.size() == 0) ||
@@ -231,8 +231,10 @@ nlohmann::json generate_batch(int batch) {
 		// random_inverse(example.img);
 		example.draw_rects();
 		example.img.write_png(batch_dir / (std::to_string(i) + ".png"));
+		save_json(batch_dir / (std::to_string(i) + ".json"), example.meta);
 		batch_meta["examples"].push_back({
 			{"img_path", std::to_string(batch) + "/" + std::to_string(i) + ".png"},
+			{"meta_path", std::to_string(batch) + "/" + std::to_string(i) + ".json"}
 		});
 	}
 	return batch_meta;
