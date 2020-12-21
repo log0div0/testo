@@ -98,6 +98,7 @@ void render_random_hero(Example& example) {
 
 	nlohmann::json hero = hero_bbox;
 	hero["tag"] = "hero";
+	hero["ignore_while_training"] = false;
 
 	example.meta.at("objs").push_back(hero);
 }
@@ -141,6 +142,7 @@ void render_random_town(Example& example) {
 
 	nlohmann::json town = town_bbox;
 	town["tag"] = "town";
+	town["ignore_while_training"] = false;
 
 	example.meta.at("objs").push_back(town);
 }
@@ -160,7 +162,7 @@ void render_random_object(Example& example) {
 
 Example random_crop(const Doc& src) {
 	Example dst;
-	dst.img = stb::Image<stb::RGB>(800, 400, random_RGB());
+	dst.img = stb::Image<stb::RGB>(640, 480, random_RGB());
 	Rect crop(dst.img);
 	if (src.img.w > dst.img.w) {
 		crop.x = random_int(-(dst.img.w / 3), src.img.w - dst.img.w + (dst.img.w / 3));
@@ -214,6 +216,22 @@ Example random_crop(const Doc& src) {
 	return dst;
 }
 
+void random_flip(Example& example) {
+	if (random_bool()) {
+		return;
+	}
+	stb::Image<stb::RGB> new_img(example.img.w, example.img.h);
+	for (int y = 0; y < new_img.h; ++y) {
+		for (int x = 0; x < new_img.w; ++x) {
+			new_img.at(x, y) = example.img.at(example.img.w - x - 1, y);
+		}
+	}
+	example.img = std::move(new_img);
+	for (auto& obj: example.meta.at("objs")) {
+		obj.at("x") = new_img.w - obj.at("x").get<int>() - 1 - obj.at("width").get<int>();
+	}
+}
+
 nlohmann::json generate_batch(int batch) {
 	fs::path batch_dir = fs::path(out_dir) / std::to_string(batch);
 	if (!fs::exists(batch_dir)) {
@@ -227,9 +245,10 @@ nlohmann::json generate_batch(int batch) {
 		for (int i = 0; i < 10; ++i) {
 			render_random_object(example);
 		}
-		// random_channels_shuffle(example.img);
-		// random_inverse(example.img);
-		example.draw_rects();
+		random_channels_shuffle(example.img);
+		random_inverse(example.img);
+		random_flip(example);
+		// example.draw_rects();
 		example.img.write_png(batch_dir / (std::to_string(i) + ".png"));
 		save_json(batch_dir / (std::to_string(i) + ".json"), example.meta);
 		batch_meta["examples"].push_back({

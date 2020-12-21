@@ -46,18 +46,23 @@ class Dataset:
 			images.append(img)
 			meta = self.load_json(example["meta_path"])
 			for obj in meta["objs"]:
-				class_index = classes_names.index(obj["tag"])
-				x = (obj["x"] + (obj["width"] / 2)) / W
-				y = (obj["y"] + (obj["height"] / 2)) / H
-				w = obj["width"] / W
-				h = obj["height"] / H
+				if len(obj["tag"]):
+					class_index = classes_names.index(obj["tag"])
+				else:
+					class_index = -1
+				x = obj["x"] + (obj["width"] / 2)
+				y = obj["y"] + (obj["height"] / 2)
+				w = obj["width"]
+				h = obj["height"]
+				ignore_while_training = obj["ignore_while_training"]
 				labels.append(torch.FloatTensor([
 					example_index,
 					class_index,
 					x,
 					y,
 					w,
-					h
+					h,
+					not ignore_while_training
 				]))
 			example_index += 1
 		return {

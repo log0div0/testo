@@ -42,28 +42,36 @@ class Upsample(nn.Module):
 		return x
 
 num_classes = 2
-num_anchors = 3
 
 class Yolo(nn.Module):
 	def __init__(self, anchors):
 		super().__init__()
 		self.anchors = anchors
+		self.mse_loss = nn.MSELoss()
+		self.bce_loss = nn.BCELoss()
+		self.obj_scale = 1
+		self.noobj_scale = 100
 
-	def forward(self, x, img_w, img_h):
+	def bbox_wh_iou(self, w1, h1, w2, h2):
+		inter_area = torch.min(w1, w2) * torch.min(h1, h2)
+		union_area = w1 * h1 + w2 * h2 - inter_area
+		return inter_area / (union_area + 1e-16)
+
+	def forward(self, x, img_w, img_h, labels=None):
 		B, C, H, W = x.shape
 
-		prediction = x.view(B, num_anchors, num_classes + 5, H, W) \
+		prediction = x.view(B, len(self.anchors), num_classes + 5, H, W) \
 			.permute(0, 1, 3, 4, 2) \
 			.contiguous()
 
 		stride_x = img_w / W
 		stride_y = img_h / H
 
-		grid_x = torch.arange(W).repeat(H, 1).view([1, 1, H, W])
-		grid_y = torch.arange(H).repeat(W, 1).t().view([1, 1, H, W])
+		grid_x = torch.arange(W).repeat(H, 1).view([1, 1, H, W]).to(x.device)
+		grid_y = torch.arange(H).repeat(W, 1).t().view([1, 1, H, W]).to(x.device)
 
-		anchor_w = torch.FloatTensor([anchor[0] for anchor in self.anchors]).view((1, num_anchors, 1, 1))
-		anchor_h = torch.FloatTensor([anchor[1] for anchor in self.anchors]).view((1, num_anchors, 1, 1))
+		anchor_w = x.new_tensor([anchor[0] for anchor in self.anchors]).view((1, len(self.anchors), 1, 1))
+		anchor_h = x.new_tensor([anchor[1] for anchor in self.anchors]).view((1, len(self.anchors), 1, 1))
 
 		pred_x = (prediction[..., 0].sigmoid() + grid_x) * stride_x
 		pred_y = (prediction[..., 1].sigmoid() + grid_y) * stride_y
@@ -72,23 +80,65 @@ class Yolo(nn.Module):
 		pred_conf = prediction[..., 4].sigmoid()
 		pred_cls = prediction[..., 5:].sigmoid()
 
-		output = torch.cat(
-			(
-				pred_x.view(B, -1, 1),
-				pred_y.view(B, -1, 1),
-				pred_w.view(B, -1, 1),
-				pred_h.view(B, -1, 1),
-				pred_conf.view(B, -1, 1),
-				pred_cls.view(B, -1, num_classes),
-			),
-			-1,
-		)
+		if self.train:
+			lB, lCls, lX, lY, lW, lH, lIgnoreMask = labels.t()
+			lB = lB.long()
+			lCls = lCls.long()
+			lIgnoreMask = lIgnoreMask.bool()
+			gI = ((lX / img_w) * W).long()
+			gJ = ((lY / img_h) * H).long()
 
-		return output
+			anchors = x.new_tensor(self.anchors)
+			ious = torch.stack([self.bbox_wh_iou(anchor[0], anchor[1], lW, lH) for anchor in anchors])
+			_, best_anchor = ious.max(0)
+
+			obj_mask = x.new_zeros((B, len(self.anchors), H, W), dtype=torch.bool)
+			noobj_mask = x.new_ones((B, len(self.anchors), H, W), dtype=torch.bool)
+			target_x = x.new_zeros((B, len(self.anchors), H, W))
+			target_y = x.new_zeros((B, len(self.anchors), H, W))
+			target_w = x.new_zeros((B, len(self.anchors), H, W))
+			target_h = x.new_zeros((B, len(self.anchors), H, W))
+			target_cls = x.new_zeros((B, len(self.anchors), H, W, num_classes))
+
+			obj_mask[lB, best_anchor, gJ, gI] = 1
+			obj_mask[lB, best_anchor, gJ, gI] *= lIgnoreMask
+			noobj_mask[lB, :, gJ, gI] = 0
+			target_x[lB, best_anchor, gJ, gI] = lX
+			target_y[lB, best_anchor, gJ, gI] = lY
+			target_w[lB, best_anchor, gJ, gI] = lW
+			target_h[lB, best_anchor, gJ, gI] = lH
+			target_cls[lB, best_anchor, gJ, gI, lCls] = 1
+
+			target_conf = obj_mask.float()
+
+			loss_x = self.mse_loss(pred_x[obj_mask], target_x[obj_mask])
+			loss_y = self.mse_loss(pred_y[obj_mask], target_y[obj_mask])
+			loss_w = self.mse_loss(pred_w[obj_mask], target_w[obj_mask])
+			loss_h = self.mse_loss(pred_h[obj_mask], target_h[obj_mask])
+			loss_conf_obj = self.bce_loss(pred_conf[obj_mask], target_conf[obj_mask])
+			loss_conf_noobj = self.bce_loss(pred_conf[noobj_mask], target_conf[noobj_mask])
+			loss_conf = self.obj_scale * loss_conf_obj + self.noobj_scale * loss_conf_noobj
+			loss_cls = self.bce_loss(pred_cls[obj_mask], target_cls[obj_mask])
+
+			return loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls
+		else:
+			return torch.cat(
+				(
+					pred_x.view(B, -1, 1),
+					pred_y.view(B, -1, 1),
+					pred_w.view(B, -1, 1),
+					pred_h.view(B, -1, 1),
+					pred_conf.view(B, -1, 1),
+					pred_cls.view(B, -1, num_classes),
+				),
+				-1,
+			)
 
 class Model(nn.Module):
 	def __init__(self):
 		super().__init__()
+		anchors_1 = [(81,82), (135,169), (344,319)]
+		anchors_2 = [(10,14), (23,27), (37,58)]
 		self.module_list = nn.ModuleList([
 			Conv(3, 16, 3),
 			MaxPool(2, 2),
@@ -107,32 +157,44 @@ class Model(nn.Module):
 			Conv(1024, 256, 1),
 
 			Conv(256, 512, 3),
-			Conv(512, (num_classes + 5) * num_anchors, 1, activation='linear'),
-			Yolo([(81,82), (135,169), (344,319)]),
+			Conv(512, (num_classes + 5) * len(anchors_1), 1, activation='linear'),
+			Yolo(anchors_1),
 
 			Route([-4]),
 			Conv(256, 128, 1),
 			Upsample(2),
 			Route([-1, 8]),
 			Conv(128 + 256, 256, 3),
-			Conv(256, (num_classes + 5) * num_anchors, 1, activation='linear'),
-			Yolo([(10,14), (23,27), (37,58)])
+			Conv(256, (num_classes + 5) * len(anchors_2), 1, activation='linear'),
+			Yolo(anchors_2)
 		])
 
-	def forward(self, img):
+	def forward(self, img, labels=None):
 		layer_outputs = []
-		yolo_outputs = []
+
+		if self.train:
+			loss = 0
+		else:
+			yolo_outputs = []
+
 		x = img
 		for module in self.module_list:
 			if isinstance(module, Route):
 				x = torch.cat([layer_outputs[i] for i in module.layers_indexes], 1)
 			elif isinstance(module, Yolo):
-				x = module(x, img.shape[3], img.shape[2])
-				yolo_outputs.append(x)
+				x = module(x, img.shape[3], img.shape[2], labels)
+				if self.train:
+					loss += x
+				else:
+					yolo_outputs.append(x)
 			else:
 				x = module(x)
 			layer_outputs.append(x)
-		return torch.cat(yolo_outputs, 1)
+
+		if self.train:
+			return loss
+		else:
+			return torch.cat(yolo_outputs, 1)
 
 	def init_weights(self):
 		for m in self.modules():
