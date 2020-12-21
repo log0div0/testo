@@ -80,7 +80,7 @@ class Yolo(nn.Module):
 		pred_conf = prediction[..., 4].sigmoid()
 		pred_cls = prediction[..., 5:].sigmoid()
 
-		if self.train:
+		if labels is not None:
 			lB, lCls, lX, lY, lW, lH, lIgnoreMask = labels.t()
 			lB = lB.long()
 			lCls = lCls.long()
@@ -172,7 +172,7 @@ class Model(nn.Module):
 	def forward(self, img, labels=None):
 		layer_outputs = []
 
-		if self.train:
+		if labels is not None:
 			loss = 0
 		else:
 			yolo_outputs = []
@@ -183,7 +183,7 @@ class Model(nn.Module):
 				x = torch.cat([layer_outputs[i] for i in module.layers_indexes], 1)
 			elif isinstance(module, Yolo):
 				x = module(x, img.shape[3], img.shape[2], labels)
-				if self.train:
+				if labels is not None:
 					loss += x
 				else:
 					yolo_outputs.append(x)
@@ -191,7 +191,7 @@ class Model(nn.Module):
 				x = module(x)
 			layer_outputs.append(x)
 
-		if self.train:
+		if labels is not None:
 			return loss
 		else:
 			return torch.cat(yolo_outputs, 1)
