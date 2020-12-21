@@ -6,19 +6,12 @@ test launch_game: win7_install_vcmi, ubuntu_install_vcmi {
 		copyto "${VCMI_DIR}/VCMI_data/Maps" "/home/ubuntu/.local/share/vcmi/Maps"
 		run_app_ubuntu20_desktop("vcmi launcher")
 		mouse click img "icons/ubuntu/VCMI_launch.png"
-
 		mouse click img "icons/new_game.png"
 		mouse click img "icons/online_game.png"
-
 		mouse click img "icons/server.png"
 		wait "ЗА ОДНИМ КОМПЬЮТЕРОМ"
-
-		press Backspace*6; type "Ubuntu";
-
-		mouse click img "icons/OK.png"
-
+		press Backspace*6; type "Ubuntu"; press Enter
 		wait "НАЗВАНИЕ СЦЕНАРИЯ"
-
 		mouse click "Вилларибо и Вилладжо".from_left(0)
 	}
 
@@ -28,19 +21,14 @@ test launch_game: win7_install_vcmi, ubuntu_install_vcmi {
 		mouse dclick "VCMI".from_bottom(0)
 		wait "Download failed"; press Enter
 		mouse click img "icons/VCMI_launch.png"
-
 		mouse click img "icons/new_game.png"
 		mouse click img "icons/online_game.png"
 		mouse click img "icons/join_game.png"
-
 		wait "ЗА ОДНИМ КОМПЬЮТЕРОМ"
-		press Backspace*6; press LeftAlt + LeftShift; type "Windows";
-		mouse click img "icons/OK.png"
-
+		press Backspace*6; press LeftAlt + LeftShift; type "Windows"; press Enter
 		wait "Enter address"
 		press Backspace*20; type "${ubuntu_ip}"
-		mouse click img "icons/OK.png".from_top(0)
-
+		press Enter
 		wait "НАЗВАНИЕ СЦЕНАРИЯ"
 	}
 
