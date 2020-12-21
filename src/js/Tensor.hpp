@@ -4,6 +4,7 @@
 #include "Context.hpp"
 #include <nn/TextTensor.hpp>
 #include <nn/ImgTensor.hpp>
+#include <nn/Homm3Tensor.hpp>
 
 namespace js {
 
@@ -53,6 +54,12 @@ struct ImgTensor: Tensor<nn::ImgTensor> {
 	static void register_class(ContextRef ctx);
 
 	using Tensor<nn::ImgTensor>::Tensor;
+};
+
+struct Homm3Tensor: Tensor<nn::Homm3Tensor> {
+	static void register_class(ContextRef ctx);
+
+	using Tensor<nn::Homm3Tensor>::Tensor;
 };
 
 }

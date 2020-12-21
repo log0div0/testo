@@ -116,6 +116,7 @@ private:
 	std::shared_ptr<AST::ISelectable> selectable();
 	std::shared_ptr<AST::SelectJS> select_js();
 	std::shared_ptr<AST::SelectImg> select_img();
+	std::shared_ptr<AST::SelectHomm3> select_homm3();
 	std::shared_ptr<AST::SelectText> select_text();
 
 	std::shared_ptr<AST::String> string();

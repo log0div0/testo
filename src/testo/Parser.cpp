@@ -164,6 +164,7 @@ bool Parser::test_string(size_t index) const {
 bool Parser::test_selectable() const {
 	return (test_string() || (LA(1) == Token::category::js)  ||
 		(LA(1) == Token::category::img) ||
+		(LA(1) == Token::category::homm3) ||
 		(LA(1) == Token::category::exclamation_mark) ||
 		(LA(1) == Token::category::lparen));
 }
@@ -1221,6 +1222,8 @@ std::shared_ptr<ISelectable> Parser::selectable() {
 		return std::shared_ptr<Selectable<SelectJS>>(new Selectable<SelectJS>(not_token, select_js()));
 	} else if(LA(1) == Token::category::img) {
 		return std::shared_ptr<Selectable<SelectImg>>(new Selectable<SelectImg>(not_token, select_img()));
+	} else if(LA(1) == Token::category::homm3) {
+		return std::shared_ptr<Selectable<SelectHomm3>>(new Selectable<SelectHomm3>(not_token, select_homm3()));
 	} else if(LA(1) == Token::category::lparen) {
 		return std::shared_ptr<Selectable<SelectParentedExpr>>(new Selectable<SelectParentedExpr>(not_token, select_parented_expr()));
 	} else {
@@ -1240,6 +1243,13 @@ std::shared_ptr<SelectImg> Parser::select_img() {
 	match(Token::category::img);
 	auto img_path = string();
 	return std::shared_ptr<SelectImg>(new SelectImg(img, img_path));
+}
+
+std::shared_ptr<SelectHomm3> Parser::select_homm3() {
+	Token homm3 = LT(1);
+	match(Token::category::homm3);
+	auto id = string();
+	return std::shared_ptr<SelectHomm3>(new SelectHomm3(homm3, id));
 }
 
 std::shared_ptr<SelectText> Parser::select_text() {

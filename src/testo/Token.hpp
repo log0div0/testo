@@ -15,6 +15,7 @@ struct Token {
 		sleep,
 		js,
 		img,
+		homm3,
 		check,
 		press,
 		mouse,
@@ -171,6 +172,8 @@ struct Token {
 			return "JS";
 		case img:
 			return "IMG";
+		case homm3:
+			return "HOMM3";
 		case check:
 			return "CHECK";
 		case press:
