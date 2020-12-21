@@ -549,7 +549,7 @@ nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::Select
 
 nn::Homm3Tensor VisitorInterpreterActionMachine::visit_select_homm3(const IR::SelectHomm3& homm3, stb::Image<stb::RGB>& screenshot) {
 	auto parsed = homm3.id();
-	return nn::find_homm3(&screenshot, parsed);
+	return nn::find_homm3(&screenshot).match_class(&screenshot, parsed);
 }
 
 bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {

@@ -1,6 +1,6 @@
 
 #include "VisitorSemantic.hpp"
-#include <nn/Homm3Tensor.hpp>
+#include <nn/Homm3Object.hpp>
 #include "backends/Environment.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
@@ -617,7 +617,7 @@ void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
 void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
 	auto id = homm3.id();
 
-	if (!nn::check_homm3_id(id)) {
+	if (!nn::Homm3Object::check_class_id(id)) {
 		throw std::runtime_error(std::string(homm3.ast_node->begin()) + ": Error: specified Heroes of Might and Magic object does not exist " + id);
 	}
 

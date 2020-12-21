@@ -15,9 +15,9 @@ struct Homm3Tensor: Tensor<Homm3Object> {
 	Homm3Tensor from_right(size_t i) const { return nn::from_right(*this, i); }
 	Homm3Tensor from_bottom(size_t i) const { return nn::from_bottom(*this, i); }
 
+	Homm3Tensor match_class(const stb::Image<stb::RGB>* image, const std::string& class_id);
 };
 
-Homm3Tensor find_homm3(const stb::Image<stb::RGB>* image, const std::string& id);
-bool check_homm3_id(const std::string& id);
+Homm3Tensor find_homm3(const stb::Image<stb::RGB>* image);
 
 }

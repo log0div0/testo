@@ -13,7 +13,7 @@ struct Homm3Detector {
 	Homm3Detector(const Homm3Detector& root) = delete;
 	Homm3Detector& operator=(const Homm3Detector&) = delete;
 
-	std::vector<Homm3Object> detect(const stb::Image<stb::RGB>* image, const std::string& id);
+	std::vector<Homm3Object> detect(const stb::Image<stb::RGB>* image);
 
 private:
 	Homm3Detector() = default;

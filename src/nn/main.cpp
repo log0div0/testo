@@ -7,8 +7,9 @@
 #include <set>
 #include <nlohmann/json.hpp>
 #include "TextTensor.hpp"
-#include "ImgTensor.hpp"
 #include "TextRecognizer.hpp"
+#include "ImgTensor.hpp"
+#include "Homm3Tensor.hpp"
 #include "OnnxRuntime.hpp"
 
 void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
@@ -111,6 +112,28 @@ void img_mode(const ImgArgs& args)
 
 	for (auto& img: tensor.objects) {
 		draw_rect(image, img.rect, {200, 20, 50});
+	}
+
+	image.write_png("output.png");
+}
+
+struct Homm3Args {
+	std::string img_file;
+};
+
+void homm3_mode(const Homm3Args& args) {
+	stb::Image<stb::RGB> image(args.img_file);
+
+	auto start = std::chrono::high_resolution_clock::now();
+	nn::Homm3Tensor tensor = nn::find_homm3(&image);
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time = end - start;
+	std::cout << "Time: " << time.count() << " seconds" << std::endl;
+
+	std::cout << "Found: " << tensor.size() << std::endl;
+
+	for (auto& obj: tensor.objects) {
+		draw_rect(image, obj.rect, {200, 20, 50});
 	}
 
 	image.write_png("output.png");
@@ -241,6 +264,7 @@ struct DatasetMode {
 enum class mode {
 	text,
 	img,
+	homm3,
 	dataset
 };
 
@@ -267,13 +291,19 @@ int main(int argc, char **argv)
 			value("ref image", img_args.ref_img_file)
 		);
 
+		Homm3Args homm3_args;
+		auto homm3_spec = (
+			command("homm3").set(selected_mode, mode::homm3),
+			value("input image", homm3_args.img_file)
+		);
+
 		DatasetArgs dataset_args;
 		auto dataset_spec = (
 			command("dataset").set(selected_mode, mode::dataset),
 			value("dataset path", dataset_args.dataset_path)
 		);
 
-		auto cli = (text_spec | img_spec | dataset_spec);
+		auto cli = (text_spec | img_spec | homm3_spec | dataset_spec);
 
 		if (!parse(argc, argv, cli)) {
 			std::cout << make_man_page(cli, argv[0]) << std::endl;
@@ -287,6 +317,9 @@ int main(int argc, char **argv)
 				break;
 			case mode::img:
 				img_mode(img_args);
+				break;
+			case mode::homm3:
+				homm3_mode(homm3_args);
 				break;
 			case mode::dataset:
 				DatasetMode(dataset_args).run();
