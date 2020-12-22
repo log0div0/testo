@@ -15,6 +15,22 @@
 			"width": 135.1,
 			"height": 141.47,
 			"tag": "town"
+		},
+		"bf119347-6470-4997-9187-0c655c81821d": {
+			"type": "tag",
+			"x": 348.05,
+			"y": 743.83,
+			"width": 37.66,
+			"height": 54.17,
+			"tag": "sholar"
+		},
+		"b2f10ea8-f0d0-4bdf-9188-444746f257fd": {
+			"type": "tag",
+			"x": 607.56,
+			"y": 730.18,
+			"width": 35.67,
+			"height": 34.71,
+			"tag": "garden_of_revelation"
 		}
 	},
 	"verified": true

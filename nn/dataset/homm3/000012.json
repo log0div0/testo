@@ -15,6 +15,14 @@
 			"width": 39.03,
 			"height": 59.45,
 			"tag": "hero"
+		},
+		"bd950e5a-4fb0-4ed4-b336-9776d0b3dfe8": {
+			"type": "tag",
+			"x": 584.89,
+			"y": 568.23,
+			"width": 18.17,
+			"height": 33.18,
+			"tag": "sign"
 		}
 	},
 	"verified": true

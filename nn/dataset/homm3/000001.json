@@ -15,6 +15,14 @@
 			"width": 44.9,
 			"height": 59.9,
 			"tag": "hero"
+		},
+		"a3ce5c78-2d42-44c7-bff7-0d05a8a28c1d": {
+			"type": "tag",
+			"x": 800.99,
+			"y": 538.64,
+			"width": 32.65,
+			"height": 33.18,
+			"tag": "garden_of_revelation"
 		}
 	},
 	"verified": true

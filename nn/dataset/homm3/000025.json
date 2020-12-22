@@ -15,6 +15,22 @@
 			"width": 23.87,
 			"height": 59.8,
 			"tag": "hero"
+		},
+		"ecc5e9c5-a90a-48b9-b4a2-c101839513e4": {
+			"type": "tag",
+			"x": 59.51,
+			"y": 139.02,
+			"width": 37.95,
+			"height": 48.74,
+			"tag": "sholar"
+		},
+		"31e67266-f9c6-499a-8490-be7d4b874975": {
+			"type": "tag",
+			"x": 414.19,
+			"y": 465.32,
+			"width": 37.99,
+			"height": 41.75,
+			"tag": "star_axis"
 		}
 	},
 	"verified": true

@@ -23,6 +23,22 @@
 			"width": 46.2,
 			"height": 60.41,
 			"tag": "hero"
+		},
+		"d9a64ac8-45b8-4238-8ae1-6a0d79ab3efe": {
+			"type": "tag",
+			"x": 607.1,
+			"y": 122.47,
+			"width": 36.34,
+			"height": 35.91,
+			"tag": "garden_of_revelation"
+		},
+		"77c1a1ed-c787-4ca4-9d5f-895f3753c004": {
+			"type": "tag",
+			"x": 448.53,
+			"y": 186.74,
+			"width": 33.63,
+			"height": 97.93,
+			"tag": "redwood_observatory"
 		}
 	},
 	"verified": true

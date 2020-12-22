@@ -31,6 +31,38 @@
 			"width": 46.36,
 			"height": 59.33,
 			"tag": "hero"
+		},
+		"eeba3c14-8816-466d-8d79-11431a7f0c2c": {
+			"type": "tag",
+			"x": 1050.81,
+			"y": 425.78,
+			"width": 38.71,
+			"height": 49.77,
+			"tag": "sholar"
+		},
+		"4484cf52-f3ed-4c1b-8915-b49d2f470245": {
+			"type": "tag",
+			"x": 1027.84,
+			"y": 220.02,
+			"width": 30.47,
+			"height": 88.24,
+			"tag": "redwood_observatory"
+		},
+		"18716cea-25f5-412a-bb34-c2343e453aaa": {
+			"type": "tag",
+			"x": 609.79,
+			"y": 411.52,
+			"width": 30.47,
+			"height": 97.72,
+			"tag": "redwood_observatory"
+		},
+		"25ef0109-0bb9-4470-b151-870dafcb9f46": {
+			"type": "tag",
+			"x": 635.19,
+			"y": 267.15,
+			"width": 37.43,
+			"height": 49.19,
+			"tag": "sholar"
 		}
 	},
 	"verified": true

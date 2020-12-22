@@ -7,6 +7,14 @@
 			"width": 37.39,
 			"height": 59.97,
 			"tag": "hero"
+		},
+		"35b66c50-9e77-4d7a-90a0-38ff362005ac": {
+			"type": "tag",
+			"x": 890.39,
+			"y": 107,
+			"width": 39.73,
+			"height": 48.89,
+			"tag": "sholar"
 		}
 	},
 	"verified": true

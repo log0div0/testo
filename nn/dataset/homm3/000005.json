@@ -15,6 +15,30 @@
 			"width": 42.45,
 			"height": 60.64,
 			"tag": "hero"
+		},
+		"04c9b400-2eda-46ef-a973-7d6fe62a34c5": {
+			"type": "tag",
+			"x": 1059.6,
+			"y": 398.96,
+			"width": 27.52,
+			"height": 45.19,
+			"tag": "skeleton"
+		},
+		"8cb1c564-ed69-491d-898b-af16f2d5b9ab": {
+			"type": "tag",
+			"x": 64.11,
+			"y": 426.52,
+			"width": 33.19,
+			"height": 50.08,
+			"tag": "skeleton"
+		},
+		"ddb5a039-887a-49b6-bd4f-a547b80c7a6e": {
+			"type": "tag",
+			"x": 383.29,
+			"y": 347.13,
+			"width": 35.82,
+			"height": 99.59,
+			"tag": "redwood_observatory"
 		}
 	},
 	"verified": true

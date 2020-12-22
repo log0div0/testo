@@ -1,4 +1,29 @@
 {
-	"objs": {},
+	"objs": {
+		"b3907715-2ff2-40ec-bc46-0170dbeaf226": {
+			"type": "tag",
+			"x": 360.56,
+			"y": 41.23,
+			"width": 60.83,
+			"height": 65.57,
+			"tag": "skeleton"
+		},
+		"39bc2024-c79a-4a88-b928-48bf22228061": {
+			"type": "tag",
+			"x": 681.08,
+			"y": 41.59,
+			"width": 59.95,
+			"height": 65.09,
+			"tag": "skeleton"
+		},
+		"e855fe5e-265e-46c8-b596-b43fa8b03ad6": {
+			"type": "tag",
+			"x": 782.95,
+			"y": 384.14,
+			"width": 43.71,
+			"height": 80.22,
+			"tag": "skeleton"
+		}
+	},
 	"verified": true
 }

@@ -15,6 +15,22 @@
 			"width": 45.5,
 			"height": 59.54,
 			"tag": "hero"
+		},
+		"398c36d1-e38f-4fd0-8d6b-0173ef07f37d": {
+			"type": "tag",
+			"x": 672.9,
+			"y": 369.61,
+			"width": 33.51,
+			"height": 38.54,
+			"tag": "star_axis"
+		},
+		"42f0a59b-341b-4596-9a13-d475d77cc0cc": {
+			"type": "tag",
+			"x": 388.93,
+			"y": 295.37,
+			"width": 26.98,
+			"height": 47.48,
+			"tag": "peasant"
 		}
 	},
 	"verified": true

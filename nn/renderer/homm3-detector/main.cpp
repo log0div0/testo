@@ -195,8 +195,8 @@ Example random_crop(const Doc& src) {
 		if (obj.at("type") != "tag") {
 			continue;
 		}
-		Rect bbox = Rect(obj) & crop;
-		if (!bbox.area()) {
+		Rect bbox = Rect(obj);
+		if (!(bbox & crop).area()) {
 			continue;
 		}
 		bbox.x -= crop.x;
@@ -206,7 +206,7 @@ Example random_crop(const Doc& src) {
 
 		new_obj["ignore_while_training"] =
 			(tag.size() == 0) ||
-			((bbox.area() * 2) < Rect(obj).area());
+			(((bbox & crop).area() * 2) < bbox.area());
 
 		new_obj["tag"] = tag;
 
@@ -245,9 +245,9 @@ nlohmann::json generate_batch(int batch) {
 		for (int i = 0; i < 10; ++i) {
 			render_random_object(example);
 		}
-		random_channels_shuffle(example.img);
-		random_inverse(example.img);
-		random_flip(example);
+		// random_channels_shuffle(example.img);
+		// random_inverse(example.img);
+		// random_flip(example);
 		// example.draw_rects();
 		example.img.write_png(batch_dir / (std::to_string(i) + ".png"));
 		save_json(batch_dir / (std::to_string(i) + ".json"), example.meta);

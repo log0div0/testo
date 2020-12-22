@@ -15,6 +15,22 @@
 			"width": 32.91,
 			"height": 60.43,
 			"tag": "hero"
+		},
+		"32eec404-676e-4321-b23e-f1967c4818a6": {
+			"type": "tag",
+			"x": 957.74,
+			"y": 145.09,
+			"width": 28.92,
+			"height": 43.24,
+			"tag": "skeleton"
+		},
+		"7d04c3e8-a69c-4891-9443-095f77fce34e": {
+			"type": "tag",
+			"x": 133.6,
+			"y": 690.94,
+			"width": 26.12,
+			"height": 41.35,
+			"tag": "skeleton"
 		}
 	},
 	"verified": true

@@ -63,7 +63,7 @@ let TagObj = React.forwardRef(({obj, draggable, onDragMove, onClick, onTransform
 		var stroke = '#fcba03'
 		var fill = '#fcba0355'
 		if (show_meta) {
-			var fill = '#fae57f'
+			var fill = '#fae57faa'
 		} else {
 			var fill = '#fcba0355'
 		}
@@ -100,7 +100,7 @@ let TagObj = React.forwardRef(({obj, draggable, onDragMove, onClick, onTransform
 				height={obj.height - 2}
 				width={obj.width - 2}
 				text={obj.tag}
-				fontSize={obj.width / (obj.tag.length)}
+				fontSize={Math.max(obj.width / (obj.tag.length), 10)}
 				fontFamily='mono'
 				fontStyle='bold'
 				fill='#555'

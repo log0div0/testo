@@ -15,6 +15,38 @@
 			"width": 152.92,
 			"height": 194.57,
 			"tag": "town"
+		},
+		"7297fe02-edad-480f-a006-dabd1783dba1": {
+			"type": "tag",
+			"x": 256.83,
+			"y": 538.29,
+			"width": 34.09,
+			"height": 99.09,
+			"tag": "redwood_observatory"
+		},
+		"0c68e174-dae2-4572-92d1-70404b301ded": {
+			"type": "tag",
+			"x": 737.02,
+			"y": 282.2,
+			"width": 33.51,
+			"height": 104.9,
+			"tag": "redwood_observatory"
+		},
+		"6871914e-f501-4748-863b-0509b0d4efe6": {
+			"type": "tag",
+			"x": 794.42,
+			"y": 555.15,
+			"width": 38.66,
+			"height": 47.91,
+			"tag": "sholar"
+		},
+		"102820a4-e539-47fc-b7f3-6979d73ec5c9": {
+			"type": "tag",
+			"x": 261.1,
+			"y": 340.98,
+			"width": 23.74,
+			"height": 39.03,
+			"tag": "skeleton"
 		}
 	},
 	"verified": true

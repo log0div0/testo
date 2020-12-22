@@ -29,8 +29,32 @@
 			"x": 823.34,
 			"y": 735.83,
 			"width": 44.12,
-			"height": 38.08,
-			"tag": ""
+			"height": 57.89,
+			"tag": "hero"
+		},
+		"59e33889-513c-40a4-8602-213347af88b0": {
+			"type": "tag",
+			"x": 507.95,
+			"y": 714.39,
+			"width": 37.04,
+			"height": 49.55,
+			"tag": "sholar"
+		},
+		"3109eb74-8852-4835-b138-7f5f326aad1d": {
+			"type": "tag",
+			"x": 508.87,
+			"y": 426.14,
+			"width": 37.41,
+			"height": 50.18,
+			"tag": "sholar"
+		},
+		"de262f7e-2122-4074-8d1c-e5e9aa08e842": {
+			"type": "tag",
+			"x": 827.54,
+			"y": 458.05,
+			"width": 38.18,
+			"height": 52.43,
+			"tag": "sholar"
 		}
 	},
 	"verified": true

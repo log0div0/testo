@@ -90,6 +90,9 @@ function TagProps({obj_id, obj}) {
 			prop: "tag",
 			value: option ? option.value : ""
 		})
+		dispatch({
+			type: 'OBJ_UNSELECT'
+		})
 	}
 
 	return (

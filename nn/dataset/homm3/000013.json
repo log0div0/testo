@@ -15,6 +15,14 @@
 			"width": 36.9,
 			"height": 58.68,
 			"tag": "hero"
+		},
+		"2bea13cb-4e65-47ca-b43b-7edec00b9210": {
+			"type": "tag",
+			"x": 578.65,
+			"y": 345.75,
+			"width": 31.57,
+			"height": 97.33,
+			"tag": "redwood_observatory"
 		}
 	},
 	"verified": true

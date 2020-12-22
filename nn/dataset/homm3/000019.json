@@ -15,6 +15,46 @@
 			"width": 40.92,
 			"height": 59.73,
 			"tag": "hero"
+		},
+		"a40b85d0-dc7c-4f1f-89d2-4a86716d01e0": {
+			"type": "tag",
+			"x": 418.57,
+			"y": 251.59,
+			"width": 31.36,
+			"height": 95.28,
+			"tag": "redwood_observatory"
+		},
+		"0fbc6613-a673-4138-83a5-6b609410f87f": {
+			"type": "tag",
+			"x": 897.77,
+			"y": 273.59,
+			"width": 32.3,
+			"height": 38.67,
+			"tag": "star_axis"
+		},
+		"d2d61bbc-fb1b-4f4a-a13f-37d05086614d": {
+			"type": "tag",
+			"x": 1026.75,
+			"y": 506.56,
+			"width": 31.56,
+			"height": 103.37,
+			"tag": "redwood_observatory"
+		},
+		"631db7bc-b409-4b3f-908a-0d4bce02c45f": {
+			"type": "tag",
+			"x": 357.05,
+			"y": 84.12,
+			"width": 24.57,
+			"height": 42.14,
+			"tag": "skeleton"
+		},
+		"4f5ff421-d608-4f95-b80b-4dfa226409e2": {
+			"type": "tag",
+			"x": 100.07,
+			"y": 173.89,
+			"width": 27.47,
+			"height": 45.13,
+			"tag": "peasant"
 		}
 	},
 	"verified": true

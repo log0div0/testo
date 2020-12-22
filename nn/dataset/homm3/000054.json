@@ -1,4 +1,21 @@
 {
-	"objs": {},
+	"objs": {
+		"d923623c-6bd8-429e-88c8-d61d1590e7a3": {
+			"type": "tag",
+			"x": 131.21,
+			"y": 541.01,
+			"width": 37.65,
+			"height": 36.34,
+			"tag": "skeleton"
+		},
+		"b9090075-f16e-40ba-b602-ac7bd29c5bfa": {
+			"type": "tag",
+			"x": 415.78,
+			"y": 566.28,
+			"width": 60.54,
+			"height": 66.28,
+			"tag": "skeleton"
+		}
+	},
 	"verified": true
 }

@@ -20,9 +20,25 @@
 			"type": "tag",
 			"x": 1060.73,
 			"y": 149.98,
-			"width": 109.09,
+			"width": 162.09,
 			"height": 166.17,
-			"tag": ""
+			"tag": "town"
+		},
+		"1fb3120d-38d8-4e07-877a-ddc9f351adbc": {
+			"type": "tag",
+			"x": 232.62,
+			"y": 122.56,
+			"width": 18.71,
+			"height": 31.12,
+			"tag": "sign"
+		},
+		"797bd07b-b54a-4802-ae77-4791af2156e1": {
+			"type": "tag",
+			"x": 576.27,
+			"y": 346.42,
+			"width": 33.71,
+			"height": 91.9,
+			"tag": "redwood_observatory"
 		}
 	},
 	"verified": true

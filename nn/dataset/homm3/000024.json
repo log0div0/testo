@@ -15,6 +15,38 @@
 			"width": 35.44,
 			"height": 59.24,
 			"tag": "hero"
+		},
+		"b229432b-dd39-4d56-94d2-bfe425689243": {
+			"type": "tag",
+			"x": 763.26,
+			"y": 299.26,
+			"width": 38.57,
+			"height": 48.39,
+			"tag": "sholar"
+		},
+		"5db1746b-fa65-4399-8e36-3ab9cf233167": {
+			"type": "tag",
+			"x": 329.8,
+			"y": 730.04,
+			"width": 16.86,
+			"height": 31.6,
+			"tag": "sign"
+		},
+		"58f1ba54-b352-42fe-bf17-e15b6d8751bf": {
+			"type": "tag",
+			"x": 1120.16,
+			"y": 626.14,
+			"width": 35.01,
+			"height": 41.64,
+			"tag": "star_axis"
+		},
+		"c3eddefa-d3c4-47ce-b400-411b977cd91e": {
+			"type": "tag",
+			"x": 425.66,
+			"y": 602.02,
+			"width": 20.1,
+			"height": 30.26,
+			"tag": "sign"
 		}
 	},
 	"verified": true
