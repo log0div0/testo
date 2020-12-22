@@ -134,6 +134,12 @@ void homm3_mode(const Homm3Args& args) {
 
 	for (auto& obj: tensor.objects) {
 		draw_rect(image, obj.rect, {200, 20, 50});
+		std::cout << obj.class_name
+			<< " x=" << obj.rect.left
+			<< " y=" << obj.rect.top
+			<< " w=" << obj.rect.width()
+			<< " h=" << obj.rect.height()
+			<< std::endl;
 	}
 
 	image.write_png("output.png");

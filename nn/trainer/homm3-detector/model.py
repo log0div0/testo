@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
+from dataset import classes_names
 
 def Conv(in_ch, out_ch, kernel_size, activation='leaky'):
 	seq = nn.Sequential(
@@ -41,7 +42,7 @@ class Upsample(nn.Module):
 		x = F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode)
 		return x
 
-num_classes = 2
+num_classes = len(classes_names)
 
 class Yolo(nn.Module):
 	def __init__(self, anchors):
@@ -60,7 +61,9 @@ class Yolo(nn.Module):
 	def forward(self, x, img_w, img_h, labels=None):
 		B, C, H, W = x.shape
 
-		prediction = x.view(B, len(self.anchors), num_classes + 5, H, W) \
+		num_anchors = len(self.anchors)
+
+		prediction = x.view(B, num_anchors, num_classes + 5, H, W) \
 			.permute(0, 1, 3, 4, 2) \
 			.contiguous()
 
@@ -70,8 +73,8 @@ class Yolo(nn.Module):
 		grid_x = torch.arange(W).repeat(H, 1).view([1, 1, H, W]).to(x.device)
 		grid_y = torch.arange(H).repeat(W, 1).t().view([1, 1, H, W]).to(x.device)
 
-		anchor_w = x.new_tensor([anchor[0] for anchor in self.anchors]).view((1, len(self.anchors), 1, 1))
-		anchor_h = x.new_tensor([anchor[1] for anchor in self.anchors]).view((1, len(self.anchors), 1, 1))
+		anchor_w = x.new_tensor([anchor[0] for anchor in self.anchors]).view((1, num_anchors, 1, 1))
+		anchor_h = x.new_tensor([anchor[1] for anchor in self.anchors]).view((1, num_anchors, 1, 1))
 
 		pred_x = (prediction[..., 0].sigmoid() + grid_x) * stride_x
 		pred_y = (prediction[..., 1].sigmoid() + grid_y) * stride_y
@@ -92,13 +95,13 @@ class Yolo(nn.Module):
 			ious = torch.stack([self.bbox_wh_iou(anchor[0], anchor[1], lW, lH) for anchor in anchors])
 			_, best_anchor = ious.max(0)
 
-			obj_mask = x.new_zeros((B, len(self.anchors), H, W), dtype=torch.bool)
-			noobj_mask = x.new_ones((B, len(self.anchors), H, W), dtype=torch.bool)
-			target_x = x.new_zeros((B, len(self.anchors), H, W))
-			target_y = x.new_zeros((B, len(self.anchors), H, W))
-			target_w = x.new_zeros((B, len(self.anchors), H, W))
-			target_h = x.new_zeros((B, len(self.anchors), H, W))
-			target_cls = x.new_zeros((B, len(self.anchors), H, W, num_classes))
+			obj_mask = x.new_zeros((B, num_anchors, H, W), dtype=torch.bool)
+			noobj_mask = x.new_ones((B, num_anchors, H, W), dtype=torch.bool)
+			target_x = x.new_zeros((B, num_anchors, H, W))
+			target_y = x.new_zeros((B, num_anchors, H, W))
+			target_w = x.new_zeros((B, num_anchors, H, W))
+			target_h = x.new_zeros((B, num_anchors, H, W))
+			target_cls = x.new_zeros((B, num_anchors, H, W, num_classes))
 
 			obj_mask[lB, best_anchor, gJ, gI] = 1
 			obj_mask[lB, best_anchor, gJ, gI] *= lIgnoreMask

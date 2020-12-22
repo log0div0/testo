@@ -16,4 +16,14 @@ Homm3Tensor find_homm3(const stb::Image<stb::RGB>* image) {
 	return result;
 }
 
+Homm3Tensor Homm3Tensor::match_class(const stb::Image<stb::RGB>* image, const std::string& class_name) {
+	Homm3Tensor result;
+	for (auto& obj: objects) {
+		if (obj.class_name == class_name) {
+			result.objects.push_back(obj);
+		}
+	}
+	return result;
+}
+
 }
