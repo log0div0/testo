@@ -101,7 +101,7 @@ test day1: launch_game {
 		wait img "icons/new_day.png"
 		mouse dclick img "icons/tree2.png"
 		wait "Наблюдательная вышка"; mouse click img "icons/OK_2.png"
-		mouse dclick img "icons/castle_entry.png"
+		mouse dclick homm3 "town".center_bottom().move_up(10)
 		mouse click img "icons/castle_building.png"
 		mouse click "1 этаж гильдии магов"
 		mouse click img "icons/purchase.png"
@@ -250,7 +250,7 @@ test day4: day3 {
 [no_snapshots: true]
 test day5: day4 {
 	ubuntu {
-		mouse dclick img "icons/necro_entry.png"
+		mouse dclick homm3 "town".center_bottom().move_up(10)
 		wait img "icons/necro_building.png"
 		mouse click img "icons/skelet_machine_built.png"
 		wait "Поместите воинов в Машину"
@@ -310,7 +310,7 @@ test day6: day5 {
 		wait "Несколько глотков из волшебного источника"
 		press Enter #Something wrong with img detect!
 		#mouse click "OK_2.png"
-		mouse dclick img "icons/castle_entry.png"
+		mouse dclick homm3 "town".center_bottom().move_up(10)
 		mouse click img "icons/mage_level3_built.png"
 		wait img "icons/destroy_undead.png"
 
@@ -335,7 +335,7 @@ test day7: day6 {
 		mouse click img "icons/skeleton_warrior.png".from_left(0); sleep 100ms;
 		release
 		press Enter
-		mouse dclick img "icons/attack_target.png";
+		mouse dclick homm3 "hero".from_top(0)
 	}
 
 	win7 {

@@ -126,11 +126,13 @@ std::vector<Homm3Object> Homm3Detector::run_postprocessing() {
 		float y2 = pred.y2 * pred.conf;
 		float weights = pred.conf;
 		preds.pop_front();
-		for (auto it = preds.begin(); it != preds.end(); ++it) {
+		for (auto it = preds.begin(); it != preds.end();) {
 			if (it->class_index != pred.class_index) {
+				++it;
 				continue;
 			}
 			if (it->iou(pred) < NMS_THRES) {
+				++it;
 				continue;
 			}
 			x1 += it->x1 * it->conf;
