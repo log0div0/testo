@@ -164,7 +164,7 @@ std::vector<const TextObj*> random_text_obj_list(int ratio) {
 	for (auto& obj: original_list) {
 		result.push_back(&obj);
 	}
-	std::random_shuffle(result.begin(), result.end());
+	std::shuffle(result.begin(), result.end(), e1);
 	return result;
 }
 

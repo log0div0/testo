@@ -23,6 +23,8 @@ set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_BINARY_DIR}/out/pkg/")
 
 add_definitions(-DASIO_STANDALONE -DASIO_ENABLE_CANCELIO)
 
+set(CMAKE_CXX_STANDARD 17)
+
 if(WIN32)
 	add_definitions(
 		-D_WIN32_WINNT=0x0601
@@ -67,8 +69,6 @@ else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter")
 endif()
 
-set(CMAKE_CXX_STANDARD 17)
-
 include_directories(
 	${CMAKE_SOURCE_DIR}/lib
 	${CMAKE_SOURCE_DIR}/src
@@ -83,7 +83,5 @@ endmacro()
 add_subdirectory_if_exists(lib)
 add_subdirectory_if_exists(src)
 add_subdirectory_if_exists(nn)
-if (NOT APPLE)
-	add_subdirectory_if_exists(guest_additions)
-	add_subdirectory_if_exists(pkg)
-endif()
+add_subdirectory_if_exists(guest_additions)
+add_subdirectory_if_exists(pkg)

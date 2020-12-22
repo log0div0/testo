@@ -60,7 +60,7 @@ void Channel::send_raw(uint8_t* data, size_t size) {
 	}
 }
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 
 #include <unistd.h>
 #include <sys/stat.h>

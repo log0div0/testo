@@ -319,7 +319,7 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 
 void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cmd) {
 	current_test->cksum_input += regular_cmd.entity();
-	if (current_controller = IR::program->get_machine_or_null(regular_cmd.entity())) {
+	if ((current_controller = IR::program->get_machine_or_null(regular_cmd.entity()))) {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		visit_machine(vmc);
 
@@ -338,7 +338,7 @@ void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cm
 			}
 		}
 		visit_action_vm(regular_cmd.ast_node->action);
-	} else if (current_controller = IR::program->get_flash_drive_or_null(regular_cmd.entity())) {
+	} else if ((current_controller = IR::program->get_flash_drive_or_null(regular_cmd.entity()))) {
 		auto fdc = std::dynamic_pointer_cast<IR::FlashDrive>(current_controller);
 		visit_flash(fdc);
 		visit_action_fd(regular_cmd.ast_node->action);

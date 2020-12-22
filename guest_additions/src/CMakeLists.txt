@@ -7,7 +7,9 @@ set(SRCS
 	Channel.cpp)
 
 if (UNIX)
-	set(CMAKE_EXE_LINKER_FLAGS "-static")
+	if (NOT APPLE)
+		set(CMAKE_EXE_LINKER_FLAGS "-static")
+	endif()
 	list(APPEND SRCS linux/main.cpp)
 	add_executable(testo-guest-additions ${SRCS})
 	target_link_libraries(testo-guest-additions os pthread)

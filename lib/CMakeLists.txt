@@ -8,10 +8,13 @@ add_subdirectory(hyperv)
 add_subdirectory(winapi)
 endif()
 
+if (UNIX)
+add_subdirectory(posixapi)
+endif()
+
 if (UNIX AND NOT APPLE)
 add_subdirectory(qemu)
 add_subdirectory(guestfs)
-add_subdirectory(posixapi)
 endif()
 
 add_subdirectory(stb)

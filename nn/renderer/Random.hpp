@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <climits>
+#include <algorithm>
 
 #include <ghc/filesystem.hpp>
 namespace fs = ghc::filesystem;
@@ -100,7 +101,7 @@ stb::RGB random_RGB(const stb::RGB& other_color, int min_diff, int max_diff) {
 
 void random_channels_shuffle(stb::Image<stb::RGB>& img) {
 	std::array<uint8_t, 3> map = {0, 1, 2};
-	std::random_shuffle(map.begin(), map.end());
+	std::shuffle(map.begin(), map.end(), e1);
 	for (int y = 0; y < img.h; ++y) {
 		for (int x = 0; x < img.w; ++x) {
 			stb::RGB pixel;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
 	add_subdirectory(linux)
 endif()
 

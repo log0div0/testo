@@ -1,6 +1,7 @@
 
 #include "File.hpp"
 
+#include <errno.h>
 #include <stdexcept>
 #include <string.h>
 

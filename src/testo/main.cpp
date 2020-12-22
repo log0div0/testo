@@ -8,6 +8,8 @@
 #include <wmi/CoInitializer.hpp>
 #elif __linux__
 #include "backends/qemu/QemuEnvironment.hpp"
+#elif __APPLE__
+#include "backends/Environment.hpp"
 #endif
 
 #include <iostream>

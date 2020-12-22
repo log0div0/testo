@@ -356,8 +356,6 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 			}
 
 			auto end = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> time = end - start;
-			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (interval > end - start) {
 				timer.waitFor(interval - (end - start));
 			} else {
@@ -426,8 +424,6 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 			}
 
 			auto end = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> time = end - start;
-			//std::cout << "time = " << time.count() << " seconds" << std::endl;
 			if (interval > end - start) {
 				timer.waitFor(interval - (end - start));
 			} else {
