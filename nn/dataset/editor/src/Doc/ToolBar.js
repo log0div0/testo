@@ -100,6 +100,7 @@ function ToolBar() {
 			</section>
 			<section className="center">
 				<NewObjTool type="text"/>
+				<NewObjTool type="tag"/>
 			</section>
 			<section className="right">
 				<button onClick={prevDoc}>Go to prev</button>

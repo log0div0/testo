@@ -1,0 +1,21 @@
+{
+	"objs": {
+		"f17e8884-d969-4354-812a-ac0d5b2a6a3e": {
+			"type": "tag",
+			"x": 105.13,
+			"y": 89.83,
+			"width": 143.67,
+			"height": 162.79,
+			"tag": "town"
+		},
+		"425d8907-7505-43a9-be00-c27a1b60ec5d": {
+			"type": "tag",
+			"x": 541.87,
+			"y": 192.25,
+			"width": 35.34,
+			"height": 49.97,
+			"tag": "hero"
+		}
+	},
+	"verified": true
+}

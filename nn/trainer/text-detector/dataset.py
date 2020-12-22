@@ -7,10 +7,6 @@ import numpy as np
 from PIL import Image
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataset_folder', required=True)
-args = parser.parse_args()
-
 transformer = transforms.Compose([
 	transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
 	transforms.ToTensor(),
@@ -57,11 +53,17 @@ class Dataset:
 			"down_labels": torch.stack(down_labels)
 		}
 
-dataset = Dataset(args.dataset_folder)
-
-data_loader = torch.utils.data.DataLoader(dataset, num_workers=4, batch_size=None, shuffle=True)
+def create_dataset_loader(dataset_folder):
+	dataset = Dataset(dataset_folder)
+	return torch.utils.data.DataLoader(dataset, num_workers=4, batch_size=None, shuffle=True)
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--dataset_folder', required=True)
+	args = parser.parse_args()
+
+	data_loader = create_data_loader(args.dataset_folder)
+
 	for data in data_loader:
 		for key, value in data.items():
 			print(key, value.shape)

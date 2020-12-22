@@ -1,0 +1,37 @@
+{
+	"objs": {
+		"326df6c4-9704-4400-94ff-1a1365299746": {
+			"type": "tag",
+			"x": 212.14,
+			"y": 579.85,
+			"width": 128.09,
+			"height": 150.71,
+			"tag": "town"
+		},
+		"71cdd974-5488-4a22-b0b3-639ef4a48ffb": {
+			"type": "tag",
+			"x": 970.59,
+			"y": 489.12,
+			"width": 137.59,
+			"height": 114.13,
+			"tag": "town"
+		},
+		"8e49cc56-6ade-4951-bdd9-fe334abbf726": {
+			"type": "tag",
+			"x": 954.09,
+			"y": 640.4,
+			"width": 42.58,
+			"height": 59.44,
+			"tag": "hero"
+		},
+		"07654c8d-11bd-452e-a3f5-a6627edbd932": {
+			"type": "tag",
+			"x": 603.15,
+			"y": 448.41,
+			"width": 46.36,
+			"height": 59.33,
+			"tag": "hero"
+		}
+	},
+	"verified": true
+}

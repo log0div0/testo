@@ -90,6 +90,11 @@ struct SelectImg: Action<AST::SelectImg> {
 	fs::path img_path() const;
 };
 
+struct SelectHomm3: Action<AST::SelectHomm3> {
+	using Action<AST::SelectHomm3>::Action;
+	std::string id() const;
+};
+
 struct SelectText: Action<AST::SelectText> {
 	using Action<AST::SelectText>::Action;
 	std::string text() const;

@@ -41,4 +41,17 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 	return ImgTensor(ctx, tensor);
 }
 
+Value find_homme3(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
+	if (args.size() > 1) {
+		throw std::runtime_error("Invalid arguments count in find_homm3");
+	}
+
+	nn::Homm3Tensor tensor = nn::find_homm3(ctx.image());
+	if (args.size() == 1) {
+		std::string class_id = args.at(0);
+		tensor = tensor.match_class(ctx.image(), class_id);
+	}
+	return Homm3Tensor(ctx, tensor);
+}
+
 }

@@ -1,5 +1,6 @@
 
 #include "VisitorSemantic.hpp"
+#include <nn/Homm3Object.hpp>
 #include "backends/Environment.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
@@ -613,6 +614,17 @@ void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
 	current_test->cksum_input += file_signature(img_path);
 }
 
+void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
+	auto id = homm3.id();
+
+	if (!nn::Homm3Object::check_class_name(id)) {
+		throw std::runtime_error(std::string(homm3.ast_node->begin()) + ": Error: specified Heroes of Might and Magic object does not exist " + id);
+	}
+
+	current_test->cksum_input += "homm3 ";
+	current_test->cksum_input += id;
+}
+
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 	auto txt = text.text();
 	if (!txt.length()) {
@@ -638,6 +650,9 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
 		visit_select_img({p->selectable, stack});
+		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(mouse_selectable.ast_node->selectable)) {
+		visit_select_homm3({p->selectable, stack});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(mouse_selectable.ast_node->selectable)) {
 		throw std::runtime_error(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");

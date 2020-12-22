@@ -5,6 +5,7 @@
 #include "VisitorInterpreterAction.hpp"
 #include <nn/TextTensor.hpp>
 #include <nn/ImgTensor.hpp>
+#include <nn/Homm3Tensor.hpp>
 #include "js/Context.hpp"
 
 struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
@@ -30,6 +31,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	nn::Point visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const NNTensor& input);
 	nn::TextTensor visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot);
 	nn::ImgTensor visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot);
+	nn::Homm3Tensor visit_select_homm3(const IR::SelectHomm3& homm3, stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot);
 	nn::Point visit_select_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image<stb::RGB>& screenshot);

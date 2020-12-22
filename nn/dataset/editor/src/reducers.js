@@ -14,6 +14,7 @@ function toggleNewObjTool(state, new_obj_tool) {
 
 const newObjToolMap = {
 	Digit1: 'text',
+	Digit2: 'tag',
 }
 
 function keyboardReducer(state, action) {
@@ -88,6 +89,8 @@ function mouseReducer(state, action) {
 				}
 				if (state.new_obj_tool == 'text') {
 					new_obj.text = ""
+				} else if (state.new_obj_tool == 'tag') {
+					new_obj.tag = ""
 				}
 				let obj_id = uuidv4()
 				state.docs[state.selected_doc].objs[obj_id] = new_obj
@@ -232,6 +235,9 @@ function rootReducer(state, action) {
 		case 'CLOSE_DOC':
 			saveDoc(state)
 			closeDoc(state)
+			break
+		case 'UPDATE_DATASET_META':
+			state.dataset_meta = action.dataset_meta
 			break
 		case 'UPDATE_DOC':
 			state.docs[action.id] = action.metadata

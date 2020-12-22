@@ -547,6 +547,11 @@ nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::Select
 	return nn::find_img(&screenshot, parsed);
 }
 
+nn::Homm3Tensor VisitorInterpreterActionMachine::visit_select_homm3(const IR::SelectHomm3& homm3, stb::Image<stb::RGB>& screenshot) {
+	auto parsed = homm3.id();
+	return nn::find_homm3(&screenshot).match_class(&screenshot, parsed);
+}
+
 bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
@@ -600,6 +605,8 @@ bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AS
 		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
 		return is_negated ^ (bool)visit_select_img({p->selectable, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(selectable)) {
+		return is_negated ^ (bool)visit_select_homm3({p->selectable, stack}, screenshot).size();
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
 		return is_negated ^ visit_detect_expr(p->selectable->select_expr, screenshot);
 	}  else {
@@ -691,6 +698,10 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
 				auto tensor = visit_select_img({p->selectable, stack}, screenshot);
+				//each specifier can throw an exception if something goes wrong.
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
+			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(mouse_selectable.ast_node->selectable)) {
+				auto tensor = visit_select_homm3({p->selectable, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
 				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			}

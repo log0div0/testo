@@ -1,5 +1,6 @@
 
-from dataset import data_loader
+from dataset import create_dataset_loader
+import argparse
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from torch import nn
@@ -7,6 +8,12 @@ import traceback
 from model import Model
 from alphabet import alphabet
 import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset_folder', required=True)
+args = parser.parse_args()
+
+data_loader = create_dataset_loader(args.dataset_folder)
 
 def adjust_learning_rate(optimizer, step):
 	lr = 1e-3 * (0.9 ** (step // 10000))
@@ -47,12 +54,13 @@ try:
 			label = label.to(device)
 			label_size = label_size.to(device)
 
+			optimizer.zero_grad()
+
 			pred = net(image)
 			pred_size = torch.Tensor([pred.size(0)] * pred.size(1)).long()
-
-			optimizer.zero_grad()
 			loss = criterion(pred, label, pred_size, label_size)
 			loss.backward()
+
 			optimizer.step()
 
 			writer.add_scalar("loss", loss * 100, step)
