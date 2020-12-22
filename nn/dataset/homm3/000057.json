@@ -1,0 +1,21 @@
+{
+	"objs": {
+		"641ed3c8-a362-4143-be07-a274b9ebd4ba": {
+			"type": "tag",
+			"x": 618.58,
+			"y": 97.3,
+			"width": 40.19,
+			"height": 59.44,
+			"tag": "hero"
+		},
+		"2a47b8f2-7b92-4260-a808-4ceea88f5179": {
+			"type": "tag",
+			"x": 377.1,
+			"y": 3.54,
+			"width": 145.59,
+			"height": 118.39,
+			"tag": ""
+		}
+	},
+	"verified": true
+}
