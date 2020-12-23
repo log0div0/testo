@@ -149,14 +149,14 @@ test day2: day1 {
 
 	win7 {
 		wait img "icons/new_day.png"
-		mouse dclick img "icons/scholar.png".from_left(0)
+		mouse dclick homm3 "scholar".from_left(0)
 		wait img "icons/wisdom_base.png"; press Enter
-		mouse dclick img "icons/scholar.png".from_left(0)
+		mouse dclick homm3 "scholar".from_left(0)
 		wait img "icons/earth_base.png"; press Enter
 		mouse move img "icons/castle_logo.png"
-		mouse dclick img "icons/scholar.png".from_bottom(0)
+		mouse dclick homm3 "scholar".from_bottom(0)
 		wait img "icons/earth_improved.png"; press Enter
-		mouse dclick img "icons/scholar.png"
+		mouse dclick homm3 "scholar"
 		wait img "icons/earth_expert.png"; press Enter
 		mouse dclick homm3 "garden_of_revelation".from_top(0); collect_knowledge()
 		mouse dclick homm3 "star_axis".from_top(0); collect_spell()
