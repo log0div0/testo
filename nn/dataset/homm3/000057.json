@@ -15,6 +15,14 @@
 			"width": 161.59,
 			"height": 154.39,
 			"tag": "town"
+		},
+		"685bb5c7-e569-440b-a0b7-9cd35d0d59fb": {
+			"type": "tag",
+			"x": 479.4,
+			"y": 488.2,
+			"width": 65.51,
+			"height": 31.34,
+			"tag": "ok"
 		}
 	},
 	"verified": true

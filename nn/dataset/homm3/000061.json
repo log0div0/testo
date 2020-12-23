@@ -15,6 +15,14 @@
 			"width": 39.54,
 			"height": 59.9,
 			"tag": "hero"
+		},
+		"95cc805b-cec0-48c4-88e1-35980ce61f3d": {
+			"type": "tag",
+			"x": 478.82,
+			"y": 485.97,
+			"width": 65.46,
+			"height": 32.44,
+			"tag": "ok"
 		}
 	},
 	"verified": true

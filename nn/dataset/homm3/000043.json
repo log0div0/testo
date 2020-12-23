@@ -7,6 +7,14 @@
 			"width": 176,
 			"height": 197,
 			"tag": ""
+		},
+		"4f61f48e-b000-476c-84b1-4a8555186a08": {
+			"type": "tag",
+			"x": 478.12,
+			"y": 522.45,
+			"width": 67.15,
+			"height": 31.86,
+			"tag": "ok"
 		}
 	},
 	"verified": true

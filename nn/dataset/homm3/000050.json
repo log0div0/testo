@@ -1,4 +1,13 @@
 {
-	"objs": {},
+	"objs": {
+		"c7a3fbec-a36c-42ca-8987-0e81d9632b59": {
+			"type": "tag",
+			"x": 854.42,
+			"y": 627.62,
+			"width": 51.64,
+			"height": 30.86,
+			"tag": "ok"
+		}
+	},
 	"verified": true
 }

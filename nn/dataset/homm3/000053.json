@@ -1,4 +1,29 @@
 {
-	"objs": {},
+	"objs": {
+		"ddf942be-1bf4-479f-bd30-ad855a20df1b": {
+			"type": "tag",
+			"x": 144,
+			"y": 430.33,
+			"width": 153.17,
+			"height": 73.6,
+			"tag": "cursed_temple"
+		},
+		"0a6e1a7c-d661-48f6-9236-e5fbe63e889b": {
+			"type": "tag",
+			"x": 144.05,
+			"y": 118.59,
+			"width": 153.26,
+			"height": 74,
+			"tag": "hall"
+		},
+		"1112937d-3553-45ce-b7cb-ef3fe20bbebd": {
+			"type": "tag",
+			"x": 858.97,
+			"y": 638.91,
+			"width": 50.2,
+			"height": 42.02,
+			"tag": "ok"
+		}
+	},
 	"verified": true
 }

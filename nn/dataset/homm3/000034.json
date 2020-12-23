@@ -1,4 +1,29 @@
 {
-	"objs": {},
+	"objs": {
+		"0c27b271-6d10-4ed9-a316-811fafef6b7b": {
+			"type": "tag",
+			"x": 859.11,
+			"y": 638.62,
+			"width": 50.54,
+			"height": 42.99,
+			"tag": "ok"
+		},
+		"b47a6238-c11d-4e98-a208-e09d39ac9bc1": {
+			"type": "tag",
+			"x": 144.49,
+			"y": 119,
+			"width": 152.97,
+			"height": 73.01,
+			"tag": "hall"
+		},
+		"30bb64bb-a212-4147-b182-0bbbf007ee37": {
+			"type": "tag",
+			"x": 435.77,
+			"y": 223.32,
+			"width": 151.97,
+			"height": 73.25,
+			"tag": "mage_guild"
+		}
+	},
 	"verified": true
 }

@@ -1,4 +1,21 @@
 {
-	"objs": {},
+	"objs": {
+		"c5e80d2b-cf2f-4e83-937c-92d8508e9ee7": {
+			"type": "tag",
+			"x": 631.42,
+			"y": 526.99,
+			"width": 83.38,
+			"height": 63.65,
+			"tag": "spell_slow"
+		},
+		"684f6529-3520-421b-901f-96912fe1f7e0": {
+			"type": "tag",
+			"x": 858.96,
+			"y": 638.62,
+			"width": 50.48,
+			"height": 43.22,
+			"tag": "ok"
+		}
+	},
 	"verified": true
 }
