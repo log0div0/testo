@@ -148,20 +148,93 @@ struct SimpleGenerator: Generator {
 	std::vector<stb::Image<stb::RGBA>> imgs;
 };
 
+struct DiffAnimation {
+	DiffAnimation(const std::string& class_name_, const fs::path& root): class_name(class_name_) {
+		for (auto& entry: fs::directory_iterator(root)) {
+			if (entry.path().extension() == ".png") {
+				if (entry.path().stem() == "00_00") {
+					base_img = entry.path().generic_string();
+				} else {
+					diff_imgs.push_back(entry.path().generic_string());
+				}
+			}
+		}
+
+		if (!base_img.data) {
+			throw std::runtime_error("Failed to find imgs for class " + class_name);
+		}
+	}
+
+	void generate(Example& example) {
+		Rect rect = random_empty_space(example, base_img.w, base_img.h);
+		if (!rect.area()) {
+			return;
+		}
+		blend(example.img, base_img, rect.x, rect.y);
+
+		Rect bbox = Rect::get_visible_bbox(base_img);
+		bbox.x += rect.x;
+		bbox.y += rect.y;
+
+		nlohmann::json obj = bbox;
+		obj["tag"] = class_name;
+		obj["ignore_while_training"] = false;
+
+		example.meta.at("objs").push_back(obj);
+
+		if (diff_imgs.size() && random_bool()) {
+			auto& diff_img = diff_imgs.at(random_int(diff_imgs.size()));
+			blend(example.img, diff_img, rect.x, rect.y);
+		}
+	}
+
+	std::string class_name;
+	stb::Image<stb::RGBA> base_img;
+	std::vector<stb::Image<stb::RGBA>> diff_imgs;
+};
+
+struct DiffAnimatedGenerator: Generator {
+	DiffAnimatedGenerator(const std::string& class_name) {
+		fs::path root = fs::path(in_dir) / ".." / "assets" / "homm3" / class_name;
+		for (auto& entry: fs::directory_iterator(root)) {
+			if (entry.is_directory()) {
+				animations.push_back(DiffAnimation(class_name, entry.path()));
+			}
+		}
+		if (animations.size() == 0) {
+			throw std::runtime_error("Failed to find imgs for class " + class_name);
+		}
+	}
+
+	virtual void generate(Example& example) override {
+		auto& animation = animations.at(random_int(animations.size()));
+		animation.generate(example);
+	}
+
+	std::vector<DiffAnimation> animations;
+};
+
 std::vector<std::shared_ptr<Generator>> generators;
 
 void load_generators() {
 	std::cout << "loading generators ... ";
 	generators = {
+		std::make_shared<SimpleGenerator>("cancel"),
+		std::make_shared<SimpleGenerator>("cursed_temple"),
 		std::make_shared<SimpleGenerator>("garden_of_revelation"),
+		std::make_shared<DiffAnimatedGenerator>("hall"),
 		std::make_shared<HeroGenerator>(),
 		std::make_shared<SimpleGenerator>("hovel"),
+		std::make_shared<DiffAnimatedGenerator>("mage_guild"),
 		std::make_shared<SimpleGenerator>("magic_spring"),
+		std::make_shared<SimpleGenerator>("ok"),
 		std::make_shared<SimpleGenerator>("peasant"),
 		std::make_shared<SimpleGenerator>("redwood_observatory"),
 		std::make_shared<SimpleGenerator>("scholar"),
 		std::make_shared<SimpleGenerator>("sign"),
 		std::make_shared<SimpleGenerator>("skeleton"),
+		std::make_shared<SimpleGenerator>("spell_destroy_undead"),
+		std::make_shared<SimpleGenerator>("spell_slow"),
 		std::make_shared<SimpleGenerator>("star_axis"),
 		std::make_shared<SimpleGenerator>("town"),
 	};
