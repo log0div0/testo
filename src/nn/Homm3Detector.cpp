@@ -98,7 +98,7 @@ struct Homm3Prediction {
 	int class_index = 0;
 };
 
-#define CONF_THRES 0.6f
+#define CONF_THRES 0.7f
 #define NMS_THRES 0.4f
 
 std::vector<Homm3Object> Homm3Detector::run_postprocessing() {

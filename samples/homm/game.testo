@@ -57,22 +57,22 @@ test launch_game: win7_install_vcmi, ubuntu_install_vcmi {
 macro collect_peasants() {
 	mouse move 100 100
 	wait "Вы хотите нанять Крестьяне?"
-	mouse click img "icons/OK_2.png"
+	mouse click homm3 "ok"
 	wait "25 Крестьяне примкнули"
-	mouse click img "icons/OK_2.png"
+	mouse click homm3 "ok"
 }
 
 macro end_day_red() {
 	mouse click img "icons/end_turn_red.png"
 	if (check "еще могут перемещаться" timeout 2s) {
-		mouse click img "icons/OK_2.png"
+		mouse click homm3 "ok"
 	}
 }
 
 macro end_day_blue() {
 	mouse click img "icons/end_turn_blue.png"
 	if (check "еще могут перемещаться" timeout 2s) {
-		mouse click img "icons/OK_2.png"
+		mouse click homm3 "ok"
 	}
 }
 
@@ -81,17 +81,17 @@ test day1: launch_game {
 		mouse dclick img "icons/crossroad_1.png"; sleep 2s
 		mouse dclick homm3 "redwood_observatory";
 		sleep 500ms; mouse move 200 50
-		wait "Наблюдательная вышка"; mouse click img "icons/OK_2.png"
+		wait "Наблюдательная вышка"; mouse click homm3 "ok"
 		mouse dclick homm3 "sign".from_top(0)
-		wait "Виларибо"; mouse click img "icons/OK_2.png"
+		wait "Виларибо"; mouse click homm3 "ok"
 		mouse dclick homm3 "hovel".from_right(0); collect_peasants()
 
 		mouse dclick img "icons/necro_logo.png"
-		mouse click img "icons/necro_building.png"
+		mouse click homm3 "hall"
 		mouse click "Проклятый храм"
 		mouse click img "icons/purchase.png"
-		wait img "icons/cursed_temple_built.png";
-		mouse click img "icons/OK_3.png"
+		wait homm3 "cursed_temple"
+		mouse click homm3 "ok"
 
 		end_day_red()
 	}
@@ -99,17 +99,17 @@ test day1: launch_game {
 	win7 {
 		wait img "icons/new_day.png"
 		mouse dclick homm3 "redwood_observatory"
-		wait "Наблюдательная вышка"; mouse click img "icons/OK_2.png"
+		wait "Наблюдательная вышка"; mouse click homm3 "ok"
 		mouse dclick homm3 "town".center_bottom().move_up(10)
-		mouse click img "icons/castle_building.png"
+		mouse click homm3 "hall"
 		mouse click "1 этаж гильдии магов"
 		mouse click img "icons/purchase.png"
-		mouse click img "icons/mage_level1_built.png"
+		mouse click homm3 "mage_guild"
 		wait "волшебную книгу за 500 золотых"; press Enter
-		wait img "icons/slow.png"
-		mouse click img "icons/OK_4.png"
-		wait img "icons/mage_level1_built.png"
-		mouse click img "icons/OK_3.png"
+		wait homm3 "spell_slow"
+		mouse click homm3 "ok"
+		wait homm3 "mage_guild"
+		mouse click homm3 "ok"
 		end_day_blue()
 	}
 	ubuntu {
@@ -119,17 +119,17 @@ test day1: launch_game {
 
 macro collect_knowledge() {
 	wait "+1 Знания";
-	mouse click img "icons/OK_2.png"
+	mouse click homm3 "ok"
 }
 
 macro collect_spell() {
 	wait "+1 Сила магии";
-	mouse click img "icons/OK_5.png"
+	mouse click homm3 "ok"
 }
 
 test day2: day1 {
 	ubuntu {
-		mouse dclick homm3 "hovel".from_left(5); collect_peasants()
+		mouse dclick homm3 "hovel".from_left(4); collect_peasants()
 		mouse dclick homm3 "hovel".from_left(4); collect_peasants()
 		mouse dclick homm3 "hovel".from_left(3); collect_peasants()
 		mouse dclick homm3 "hovel".from_left(2); collect_peasants()
@@ -137,12 +137,12 @@ test day2: day1 {
 		mouse dclick homm3 "hovel".from_left(0); collect_peasants()
 
 		mouse dclick img "icons/necro_logo.png"
-		mouse click img "icons/necro_building.png"
+		mouse click homm3 "hall"
 
 		mouse click "Машина скелетов"
 		mouse click img "icons/purchase.png"
 		wait img "icons/skelet_machine_built.png";
-		mouse click img "icons/OK_3.png"
+		mouse click homm3 "ok"
 
 		end_day_red()
 	}
@@ -161,11 +161,11 @@ test day2: day1 {
 		mouse dclick homm3 "star_axis".from_top(0); collect_spell()
 
 		mouse dclick img "icons/castle_logo.png"
-		mouse click img "icons/castle_building.png"
+		mouse click homm3 "hall"
 		mouse click "2 этаж гильдии магов"
 		mouse click img "icons/purchase.png"
-		wait img "icons/mage_level2_built.png"
-		mouse click img "icons/OK_3.png"
+		wait homm3 "mage_guild"
+		mouse click homm3 "ok"
 
 		end_day_blue()
 	}
@@ -180,16 +180,16 @@ test day3: day2 {
 		mouse click img "icons/map_selection_2.png"
 
 		mouse dclick homm3 "sign".from_top(0);
-		wait "Вилабаджо"; mouse click img "icons/OK_2.png"
+		wait "Вилабаджо"; mouse click homm3 "ok"
 
 		mouse dclick homm3 "hovel".from_left(0); collect_peasants()
 		mouse dclick img "icons/necro_logo.png"
-		mouse click img "icons/necro_building.png"
+		mouse click homm3 "hall"
 
 		mouse click "Проклятый чертог"
 		mouse click img "icons/purchase.png"
-		wait img "icons/cursed_temple_upgraded_built.png"; sleep 500ms
-		mouse click img "icons/OK_3.png"
+		wait homm3 "cursed_temple"; sleep 500ms
+		mouse click homm3 "ok"
 
 		end_day_red()
 	}
@@ -201,11 +201,11 @@ test day3: day2 {
 		mouse dclick homm3 "garden_of_revelation".from_top(2); collect_knowledge()
 
 		mouse dclick img "icons/castle_logo.png"
-		mouse click img "icons/castle_building.png"
+		mouse click homm3 "hall"
 		mouse click "3 этаж гильдии магов"
 		mouse click img "icons/purchase.png"
-		wait img "icons/mage_level3_built.png"
-		mouse click img "icons/OK_3.png"
+		wait homm3 "mage_guild"
+		mouse click homm3 "ok"
 
 		end_day_blue()
 	}
@@ -244,12 +244,12 @@ test day4: day3 {
 test day5: day4 {
 	ubuntu {
 		mouse dclick homm3 "town".center_bottom().move_up(10)
-		wait img "icons/necro_building.png"
+		wait homm3 "hall"
 		mouse click img "icons/skelet_machine_built.png"
 		wait "Поместите воинов в Машину"
 		mouse click homm3 "peasant"
 		mouse click img "icons/convert_to_skeletons.png"
-		mouse click img "icons/cancel.png"
+		mouse click homm3 "cancel"
 
 		# объединим два отряда вместа
 		mouse click homm3 "skeleton".from_right(0);
@@ -264,13 +264,13 @@ test day5: day4 {
 		press Enter
 		wait !"повысить уровень своих войск"
 
-		mouse click img "icons/cursed_temple_upgraded_built.png"
+		mouse click homm3 "cursed_temple"
 		mouse click img "icons/purchase_2.png"
 
 		mouse click homm3 "skeleton".from_top(0)
 		mouse click homm3 "skeleton".from_bottom(0)
 
-		mouse click img "icons/OK_3.png"
+		mouse click homm3 "ok"
 
 		end_day_red()
 	}
@@ -305,15 +305,14 @@ test day6: day5 {
 		wait img "icons/new_day.png"
 		mouse click img "icons/ride_blue.png"
 		wait "Несколько глотков из волшебного источника"
-		press Enter #Something wrong with img detect!
-		#mouse click "OK_2.png"
+		press Enter
 		mouse dclick homm3 "town".center_bottom().move_up(10)
-		mouse click img "icons/mage_level3_built.png"
-		wait img "icons/destroy_undead.png"
+		mouse click homm3 "mage_guild"
+		wait homm3 "spell_destroy_undead"
 
-		mouse click img "icons/OK_4.png"
-		wait img "icons/castle_building.png"
-		mouse click img "icons/OK_3.png"
+		mouse click homm3 "ok"
+		wait homm3 "hall"
+		mouse click homm3 "ok"
 		end_day_blue()
 	}
 
@@ -344,10 +343,10 @@ macro blue_battle_routine() {
 	wait img "icons/wait_active.png" || "Потери в бою"
 	if (check img "icons/wait_active.png") {
 		mouse click img "icons/spell_book.png"
-		mouse click img "icons/destroy_undead_spellbook.png"
+		mouse click homm3 "spell_destroy_undead"
 		if (check "Это заклинание стоит 15 очков магии" timeout 2s) {
 			print "Oh no, we're out of mana!"
-			mouse click img "icons/OK_2.png"
+			mouse click homm3 "ok"
 			mouse click img "icons/close_spellbook.png"
 		}
 
@@ -362,10 +361,10 @@ macro cast_slow_routine() {
 	wait img "icons/wait_active.png" || "Потери в бою"
 	if (check img "icons/wait_active.png") {
 		mouse click img "icons/spell_book.png"
-		mouse click img "icons/slow_spellbook.png";
+		mouse click homm3 "spell_slow";
 		if (check "Это заклинание стоит 5 очков магии" timeout 2s) {
 			print "Oh no, we're out of mana!"
-			mouse click img "icons/OK_2.png"
+			mouse click homm3 "ok"
 			mouse click img "icons/close_spellbook.png"
 		}
 		wait img "icons/wait_active.png"
