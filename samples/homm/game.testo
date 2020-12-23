@@ -118,12 +118,12 @@ test day1: launch_game {
 }
 
 macro collect_knowledge() {
-	wait img "icons/knowledge.png";
+	wait "+1 Знания";
 	mouse click img "icons/OK_2.png"
 }
 
 macro collect_spell() {
-	wait img "icons/spell.png";
+	wait "+1 Сила магии";
 	mouse click img "icons/OK_5.png"
 }
 
@@ -150,14 +150,13 @@ test day2: day1 {
 	win7 {
 		wait img "icons/new_day.png"
 		mouse dclick homm3 "scholar".from_left(0)
-		wait img "icons/wisdom_base.png"; press Enter
+		wait "Мудрость"; press Enter; sleep 1s
 		mouse dclick homm3 "scholar".from_left(0)
-		wait img "icons/earth_base.png"; press Enter
-		mouse move img "icons/castle_logo.png"
+		wait "Магия Земли"; press Enter; sleep 1s
 		mouse dclick homm3 "scholar".from_bottom(0)
-		wait img "icons/earth_improved.png"; press Enter
+		wait "Магия Земли"; press Enter; sleep 1s
 		mouse dclick homm3 "scholar"
-		wait img "icons/earth_expert.png"; press Enter
+		wait "Магия Земли"; press Enter; sleep 1s
 		mouse dclick homm3 "garden_of_revelation".from_top(0); collect_knowledge()
 		mouse dclick homm3 "star_axis".from_top(0); collect_spell()
 
