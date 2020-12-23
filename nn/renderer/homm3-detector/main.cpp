@@ -66,98 +66,111 @@ std::string str(int i) {
 	return ss.str();
 }
 
-void render_random_hero(Example& example) {
-	int a = random_int(18);
-	int b = random_int(10);
-	int c = 0;
-	if (b >= 5) {
-		c = random_int(8);
+struct Generator {
+	virtual ~Generator() = default;
+
+	virtual void generate(Example& example) = 0;
+};
+
+struct HeroGenerator: Generator {
+	virtual void generate(Example& example) override {
+		int a = random_int(18);
+		int b = random_int(10);
+		int c = 0;
+		if (b >= 5) {
+			c = random_int(8);
+		}
+		stb::Image<stb::RGBA> hero_img(fs::path(in_dir)
+			/ ".." / "assets" / "homm3" / "hero"
+			/ ("ah" + str(a) + "_.dir")
+			/ (str(b) + "_" + str(c) + ".png")
+		);
+		int d = random_int(8);
+		int e = random_int(8);
+		stb::Image<stb::RGBA> flag_img(fs::path(in_dir)
+			/ ".." / "assets" / "homm3" / "flag"
+			/ ("af" + str(d) + ".dir")
+			/ (str(b) + "_" + str(e) + ".png")
+		);
+		Rect rect = random_empty_space(example, hero_img.w, hero_img.h);
+		if (!rect.area()) {
+			return;
+		}
+		blend(example.img, hero_img, rect.x, rect.y);
+		blend(example.img, flag_img, rect.x, rect.y);
+
+		Rect hero_bbox = Rect::get_visible_bbox(hero_img);
+		hero_bbox.x += rect.x;
+		hero_bbox.y += rect.y;
+
+		nlohmann::json hero = hero_bbox;
+		hero["tag"] = "hero";
+		hero["ignore_while_training"] = false;
+
+		example.meta.at("objs").push_back(hero);
 	}
-	stb::Image<stb::RGBA> hero_img(fs::path(in_dir)
-		/ ".." / "assets" / "homm3" / "hero"
-		/ ("ah" + str(a) + "_.dir")
-		/ (str(b) + "_" + str(c) + ".png")
-	);
-	int d = random_int(8);
-	int e = random_int(8);
-	stb::Image<stb::RGBA> flag_img(fs::path(in_dir)
-		/ ".." / "assets" / "homm3" / "flag"
-		/ ("af" + str(d) + ".dir")
-		/ (str(b) + "_" + str(e) + ".png")
-	);
-	Rect rect = random_empty_space(example, hero_img.w, hero_img.h);
-	if (!rect.area()) {
-		return;
+};
+
+struct SimpleGenerator: Generator {
+	SimpleGenerator(const std::string& class_name_): class_name(class_name_) {
+		fs::path root = fs::path(in_dir) / ".." / "assets" / "homm3" / class_name;
+		for (auto& entry: fs::recursive_directory_iterator(root)) {
+			if (entry.path().extension() == ".png") {
+				imgs.push_back(entry.path().generic_string());
+			}
+		}
+		if (imgs.size() == 0) {
+			throw std::runtime_error("Failed to find imgs for class " + class_name);
+		}
 	}
-	blend(example.img, hero_img, rect.x, rect.y);
-	blend(example.img, flag_img, rect.x, rect.y);
 
-	Rect hero_bbox = Rect::get_visible_bbox(hero_img);
-	hero_bbox.x += rect.x;
-	hero_bbox.y += rect.y;
+	virtual void generate(Example& example) override {
+		stb::Image<stb::RGBA> img = imgs.at(random_int(imgs.size()));
 
-	nlohmann::json hero = hero_bbox;
-	hero["tag"] = "hero";
-	hero["ignore_while_training"] = false;
+		Rect rect = random_empty_space(example, img.w, img.h);
+		if (!rect.area()) {
+			return;
+		}
+		blend(example.img, img, rect.x, rect.y);
 
-	example.meta.at("objs").push_back(hero);
-}
+		Rect bbox = Rect::get_visible_bbox(img);
+		bbox.x += rect.x;
+		bbox.y += rect.y;
 
-void render_random_town(Example& example) {
-	static std::vector<std::string> ids = {
-		"avccast0.dir",
-		"avccasx0.dir",
-		"avcdung0.dir",
-		"avcdunx0.dir",
-		"avcftrt0.dir",
-		"avcftrx0.dir",
-		"avchfor0.dir",
-		"avchforx.dir",
-		"avcinft0.dir",
-		"avcinfx0.dir",
-		"avcnecr0.dir",
-		"avcnecx0.dir",
-		"avcramp0.dir",
-		"avcramx0.dir",
-		"avcstro0.dir",
-		"avcstrx0.dir",
-		"avctowr0.dir",
-		"avctowx0.dir",
+		nlohmann::json obj = bbox;
+		obj["tag"] = class_name;
+		obj["ignore_while_training"] = false;
+
+		example.meta.at("objs").push_back(obj);
+	}
+
+	std::string class_name;
+	std::vector<stb::Image<stb::RGBA>> imgs;
+};
+
+std::vector<std::shared_ptr<Generator>> generators;
+
+void load_generators() {
+	std::cout << "loading generators ... ";
+	generators = {
+		std::make_shared<HeroGenerator>(),
+		std::make_shared<SimpleGenerator>("garden_of_revelation"),
+		std::make_shared<SimpleGenerator>("hovel"),
+		std::make_shared<SimpleGenerator>("magic_spring"),
+		std::make_shared<SimpleGenerator>("peasant"),
+		std::make_shared<SimpleGenerator>("redwood_observatory"),
+		std::make_shared<SimpleGenerator>("scholar"),
+		std::make_shared<SimpleGenerator>("sign"),
+		std::make_shared<SimpleGenerator>("skeleton"),
+		std::make_shared<SimpleGenerator>("star_axis"),
+		std::make_shared<SimpleGenerator>("town"),
 	};
-	std::string id = ids.at(random_int(ids.size()));
-	stb::Image<stb::RGBA> town_img(fs::path(in_dir)
-		/ ".." / "assets" / "homm3" / "town"
-		/ id / "00_00.png"
-	);
-
-	Rect rect = random_empty_space(example, town_img.w, town_img.h);
-	if (!rect.area()) {
-		return;
-	}
-	blend(example.img, town_img, rect.x, rect.y);
-
-	Rect town_bbox = Rect::get_visible_bbox(town_img);
-	town_bbox.x += rect.x;
-	town_bbox.y += rect.y;
-
-	nlohmann::json town = town_bbox;
-	town["tag"] = "town";
-	town["ignore_while_training"] = false;
-
-	example.meta.at("objs").push_back(town);
+	std::cout << "done" << std::endl;
 }
 
 void render_random_object(Example& example) {
-	switch (random_int(2)) {
-		case 0:
-			render_random_hero(example);
-			break;
-		case 1:
-			render_random_town(example);
-			break;
-		default:
-			throw std::runtime_error("Should not be there");
-	}
+	auto generator = generators.at(random_int(generators.size()));
+	generator->generate(example);
 }
 
 Example random_crop(const Doc& src) {
@@ -206,7 +219,7 @@ Example random_crop(const Doc& src) {
 
 		new_obj["ignore_while_training"] =
 			(tag.size() == 0) ||
-			(((bbox & crop).area() * 2) < bbox.area());
+			(((Rect(obj) & crop).area() * 2) < Rect(obj).area());
 
 		new_obj["tag"] = tag;
 
@@ -242,12 +255,12 @@ nlohmann::json generate_batch(int batch) {
 	};
 	for (int i = 0; i < batch_size; ++i) {
 		Example example = random_crop(random_doc());
-		for (int i = 0; i < 10; ++i) {
+		for (int i = 0; i < 20; ++i) {
 			render_random_object(example);
 		}
-		// random_channels_shuffle(example.img);
-		// random_inverse(example.img);
-		// random_flip(example);
+		random_channels_shuffle(example.img);
+		random_inverse(example.img);
+		random_flip(example);
 		// example.draw_rects();
 		example.img.write_png(batch_dir / (std::to_string(i) + ".png"));
 		save_json(batch_dir / (std::to_string(i) + ".json"), example.meta);
@@ -276,6 +289,7 @@ int main(int argc, char** argv) {
 		}
 
 		load_docs(true);
+		load_generators();
 		run_batch_generation(generate_batch);
 
 		return 0;
