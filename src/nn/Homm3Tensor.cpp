@@ -7,7 +7,17 @@ namespace nn {
 Homm3Tensor find_homm3(const stb::Image<stb::RGB>* image) {
 	Homm3Tensor result;
 
-	result.objects = Homm3Detector::instance().detect(image);
+	for (auto obj: Homm3Detector::instance().detect(image)) {
+		if (obj.class_name == "hovel") {
+			obj.rect.top += obj.rect.height() / 2;
+			obj.rect.left += obj.rect.width() / 2;
+		} else if (obj.class_name == "redwood_observatory") {
+			obj.rect.top += obj.rect.height() / 3 * 2;
+		} else if (obj.class_name == "magic_spring") {
+			obj.rect.top += obj.rect.height() / 2;
+		}
+		result.objects.push_back(obj);
+	}
 
 	std::sort(result.objects.begin(), result.objects.end(), [](const Homm3Object& a, const Homm3Object& b) {
 		return a.rect.top < b.rect.top;

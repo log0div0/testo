@@ -799,6 +799,8 @@ void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> 
 		visit_select_js({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
 		visit_select_img({p->selectable, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(selectable)) {
+		visit_select_homm3({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
 		visit_detect_parented(p->selectable);
 	} else {
