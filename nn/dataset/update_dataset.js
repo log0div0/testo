@@ -2,12 +2,15 @@
 const fs = require('fs')
 const path = require('path')
 
-let DATASET_DIR = './train'
+let DATASET_DIR = './homm3'
 
 async function main() {
 	const files = await fs.promises.readdir(DATASET_DIR);
 	for (const file of files) {
 		let parsed = path.parse(file)
+		if (parsed.base == 'meta.json') {
+			continue
+		}
 		if (parsed.ext.toLowerCase() != '.json') {
 			continue
 		}
@@ -18,8 +21,8 @@ async function main() {
 		let objs = {}
 		for (let obj_id in metadata.objs) {
 			let obj = metadata.objs[obj_id]
-			if (obj.type == 'icon') {
-				continue
+			if (obj.tag == 'sholar') {
+				obj.tag = 'scholar'
 			}
 			objs[obj_id] = obj
 		}

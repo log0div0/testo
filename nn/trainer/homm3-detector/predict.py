@@ -109,14 +109,23 @@ image = Image.open(args.img)
 draw = ImageDraw.Draw(image)
 font = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf", 16)
 
-colors = ['#f08080', '#6a5acd', '#20b2aa', '#db7093', '#156943', '#0BD055', '#ACD338']
+colors = ['#f08080', '#6a5acd', '#20b2aa', '#db7093', '#156943', '#32a852', '#3792b0', '#b09037']
 
 for i, pred in enumerate(y):
 	x1, y1, x2, y2, obj_conf, class_conf, class_indx = pred
+	if x1 < 0:
+		x1 = 0
+	if y1 < 0:
+		y1 = 0
+	if x2 >= image.width:
+		x2 = image.width - 1
+	if y2 >= image.height:
+		y2 = image.height - 1
 	class_name = classes_names[int(class_indx)]
+	title = class_name + (" %.2f" % obj_conf)
 	color = colors[i % len(colors)]
 	draw.rectangle(((x1, y1), (x2, y2)), outline=color, width=3)
-	draw.rectangle(((x1, y1 - 15), (x1 + len(class_name) * 10, y1)), fill=color, width=2)
-	draw.text((x1 + 3, y1 - 16), class_name, font=font, fill="white")
+	draw.rectangle(((x1, y1 - 15), (x1 + len(title) * 10, y1)), fill=color, width=2)
+	draw.text((x1 + 3, y1 - 16), title, font=font, fill="white")
 
 image.save("output.png")

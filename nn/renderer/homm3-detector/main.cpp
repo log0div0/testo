@@ -153,8 +153,8 @@ std::vector<std::shared_ptr<Generator>> generators;
 void load_generators() {
 	std::cout << "loading generators ... ";
 	generators = {
-		std::make_shared<HeroGenerator>(),
 		std::make_shared<SimpleGenerator>("garden_of_revelation"),
+		std::make_shared<HeroGenerator>(),
 		std::make_shared<SimpleGenerator>("hovel"),
 		std::make_shared<SimpleGenerator>("magic_spring"),
 		std::make_shared<SimpleGenerator>("peasant"),
@@ -208,8 +208,8 @@ Example random_crop(const Doc& src) {
 		if (obj.at("type") != "tag") {
 			continue;
 		}
-		Rect bbox = Rect(obj);
-		if (!(bbox & crop).area()) {
+		Rect bbox = Rect(obj) & crop;
+		if (!bbox.area()) {
 			continue;
 		}
 		bbox.x -= crop.x;
@@ -219,7 +219,7 @@ Example random_crop(const Doc& src) {
 
 		new_obj["ignore_while_training"] =
 			(tag.size() == 0) ||
-			(((Rect(obj) & crop).area() * 2) < Rect(obj).area());
+			((bbox.area() * 2) < Rect(obj).area());
 
 		new_obj["tag"] = tag;
 

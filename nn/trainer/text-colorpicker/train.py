@@ -10,6 +10,7 @@ import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_folder', required=True)
+parser.add_argument('--model')
 args = parser.parse_args()
 
 data_loader = create_dataset_loader(args.dataset_folder)
@@ -27,8 +28,8 @@ step_start = 0
 step = step_start
 
 net = Model()
-if step != 0:
-	net.load_state_dict(torch.load("checkpoints/" + str(step) + ".pt"))
+if args.model:
+	net.load_state_dict(torch.load(args.model))
 net.to(device)
 net.train()
 

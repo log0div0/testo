@@ -4,8 +4,17 @@
 namespace nn {
 
 const std::vector<std::string> Homm3Object::classes_names = {
+	"garden_of_revelation",
 	"hero",
-	"town"
+	"hovel",
+	"magic_spring",
+	"peasant",
+	"redwood_observatory",
+	"scholar",
+	"sign",
+	"skeleton",
+	"star_axis",
+	"town",
 };
 
 bool Homm3Object::check_class_name(const std::string& name) {

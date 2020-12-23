@@ -14,8 +14,17 @@ transformer = transforms.Compose([
 ])
 
 classes_names = [
+	"garden_of_revelation",
 	"hero",
-	"town"
+	"hovel",
+	"magic_spring",
+	"peasant",
+	"redwood_observatory",
+	"scholar",
+	"sign",
+	"skeleton",
+	"star_axis",
+	"town",
 ]
 
 class Dataset:
