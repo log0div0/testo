@@ -1,6 +1,7 @@
 include "ubuntu.testo"
 include "windows.testo"
 
+[no_snapshots: true]
 test launch_game: win7_install_vcmi, ubuntu_install_vcmi {
 	ubuntu {
 		copyto "${VCMI_DIR}/VCMI_data/Maps" "/home/ubuntu/.local/share/vcmi/Maps"
@@ -76,10 +77,11 @@ macro end_day_blue() {
 	}
 }
 
+[no_snapshots: true]
 test day1: launch_game {
 	ubuntu {
 		mouse dclick img "icons/crossroad_1.png"; sleep 2s
-		mouse dclick homm3 "redwood_observatory";
+		mouse dclick homm3 "redwood_observatory".from_left(0);
 		sleep 500ms; mouse move 200 50
 		wait "Наблюдательная вышка"; mouse click homm3 "ok"
 		mouse dclick homm3 "sign".from_top(0)
@@ -127,6 +129,7 @@ macro collect_spell() {
 	mouse click homm3 "ok"
 }
 
+[no_snapshots: true]
 test day2: day1 {
 	ubuntu {
 		mouse dclick homm3 "hovel".from_left(4); collect_peasants()
@@ -175,6 +178,7 @@ test day2: day1 {
 	}
 }
 
+[no_snapshots: true]
 test day3: day2 {
 	ubuntu {
 		mouse click img "icons/map_selection_2.png"
@@ -215,6 +219,7 @@ test day3: day2 {
 	}
 }
 
+[no_snapshots: true]
 test day4: day3 {
 	ubuntu {
 		mouse dclick homm3 "hovel".from_right(5); collect_peasants()
@@ -241,6 +246,7 @@ test day4: day3 {
 	}
 }
 
+[no_snapshots: true]
 test day5: day4 {
 	ubuntu {
 		mouse dclick homm3 "town".center_bottom().move_up(10)
@@ -293,6 +299,7 @@ test day5: day4 {
 	}
 }
 
+[no_snapshots: true]
 test day6: day5 {
 	ubuntu {
 		mouse click img "icons/map_selection_4.png".from_top(0)
@@ -401,7 +408,7 @@ test battle: day7 {
 		cast_slow_routine()
 		mouse click img "icons/fairies_battle_position_2.png"
 
-		for (i IN RANGE 6) {
+		for (i IN RANGE 8) {
 			blue_battle_routine()
 			if (check "Потери в бою" timeout 2s) {
 				if (check "Ваши войска потерпели горькое поражение") {
