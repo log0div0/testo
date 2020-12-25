@@ -195,6 +195,7 @@ test centos_backend_qemu_plug_flash_exceptions: centos_install_testo_cpu {
 			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_2 | grep "Another flash drive my_flash is already plugged into vm my_ubuntu_server. You should unplug it first"
 			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_3 | grep "Flash drive my_flash is already plugged into vm dummy_machine. You should unplug it first"
 			testo run /opt/scripts/action_flash.testo --test_spec plug_already_plugged_flash_4 | grep "Flash drive my_flash is already plugged into vm dummy_machine. You should unplug it first"
+			testo run /opt/scripts/action_flash.testo --test_spec finish_test_with_plugged_flash | grep "Please unplug the flash drive before the end of the test"
 		""" timeout 30m
 
 		exec bash """
