@@ -63,10 +63,10 @@ test plug_already_plugged_flash_4 {
 	}
 }
 
-[no_snapshots: true]
 test finish_test_with_plugged_flash {
 	dummy_machine {
 		plug flash my_flash
+		sleep 5s
 	}
 }
 
