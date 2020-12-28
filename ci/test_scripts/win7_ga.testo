@@ -25,10 +25,15 @@ test win7_copy: win7_guest_additions {
 		copyto "${TEST_ASSETS_DIR}/привет, мир!.txt" "C:\\папка 1\\папка 2\\привет, мир!.txt"
 		press LeftMeta
 		mouse click "Компьютер"
+		mouse move 0 0
 		mouse dclick "Локальный диск (C:)"
+		mouse move 0 0
 		mouse dclick "папка 1"
+		mouse move 0 0
 		mouse dclick "папка 2"
+		mouse move 0 0
 		mouse dclick "привет, мир!"
+		mouse move 0 0
 		wait "Здарова!"
 		wait "Как дела?"
 		copyto "${TEST_ASSETS_DIR}/привет, мир!.txt" "C:\\папка 1\\папка 2\\привет, мир!.txt"
