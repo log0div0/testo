@@ -1,6 +1,7 @@
 
 #include "GetDeviceInfo.hpp"
 #include <stdexcept>
+#include <cuda_runtime.h>
 
 char hex_map[] = {
 	'0',

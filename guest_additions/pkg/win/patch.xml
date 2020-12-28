@@ -1,0 +1,51 @@
+<CPackWiXPatch>
+	<CPackWiXFragment Id="#PRODUCT">
+		<DirectoryRef Id="INSTALL_ROOT">
+			<Component Id="TestoGuestAdditions" Guid="{a4446e4d-4a57-436b-b396-6190a0d0b350}">
+				<File Id='TestoGuestAdditionsEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo-guest-additions.exe' Vital='yes' />
+				<ServiceInstall
+					Id="ServiceInstaller"
+					Type="ownProcess"
+					Name="testo-guest-additions"
+					DisplayName="Testo Guest Additions"
+					Description="Provides interaction between the host and the guest system"
+					Start="auto"
+					Account="[SERVICEACCOUNT]"
+					Password="[SERVICEPASSWORD]"
+					ErrorControl="normal"
+					/>
+				<ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" Name="testo-guest-additions" Wait="yes" />
+			</Component>
+			<Component Id="VirtioWin7" Guid="{a4446e4d-4a57-436b-b396-6190a0d0b351}">
+				<Condition>VersionNT = 601</Condition>
+				<difx:Driver Legacy='yes' />
+				<File Id="w7.vioser.cat" Source="$(var.VIOSERIAL_DIR)/w7/$(var.VIOSERIAL_ARCH)/vioser.cat" Vital="yes" />
+				<File Id="w7.vioser.inf" Source="$(var.VIOSERIAL_DIR)/w7/$(var.VIOSERIAL_ARCH)/vioser.inf" Vital="yes" />
+				<File Id="w7.vioser.sys" Source="$(var.VIOSERIAL_DIR)/w7/$(var.VIOSERIAL_ARCH)/vioser.sys" Vital="yes" />
+				<File Id="w7.WdfCoInstaller01009.dll" Source="$(var.VIOSERIAL_DIR)/w7/$(var.VIOSERIAL_ARCH)/WdfCoInstaller01009.dll" Vital="yes" />
+			</Component>
+			<Component Id="VirtioWin8" Guid="{a4446e4d-4a57-436b-b396-6190a0d0b352}">
+				<Condition>VersionNT = 602</Condition>
+				<difx:Driver Legacy='yes' />
+				<File Id="w8.vioser.cat" Source="$(var.VIOSERIAL_DIR)/w8/$(var.VIOSERIAL_ARCH)/vioser.cat" Vital="yes" />
+				<File Id="w8.vioser.inf" Source="$(var.VIOSERIAL_DIR)/w8/$(var.VIOSERIAL_ARCH)/vioser.inf" Vital="yes" />
+				<File Id="w8.vioser.sys" Source="$(var.VIOSERIAL_DIR)/w8/$(var.VIOSERIAL_ARCH)/vioser.sys" Vital="yes" />
+				<File Id="w8.WdfCoInstaller01011.dll" Source="$(var.VIOSERIAL_DIR)/w8/$(var.VIOSERIAL_ARCH)/WdfCoInstaller01011.dll" Vital="yes" />
+			</Component>
+			<Component Id="VirtioWin8.1" Guid="{a4446e4d-4a57-436b-b396-6190a0d0b353}">
+				<Condition>VersionNT = 603</Condition>
+				<difx:Driver Legacy='yes' />
+				<File Id="w8.1.vioser.cat" Source="$(var.VIOSERIAL_DIR)/w8.1/$(var.VIOSERIAL_ARCH)/vioser.cat" Vital="yes" />
+				<File Id="w8.1.vioser.inf" Source="$(var.VIOSERIAL_DIR)/w8.1/$(var.VIOSERIAL_ARCH)/vioser.inf" Vital="yes" />
+				<File Id="w8.1.vioser.sys" Source="$(var.VIOSERIAL_DIR)/w8.1/$(var.VIOSERIAL_ARCH)/vioser.sys" Vital="yes" />
+				<File Id="w8.1.WdfCoInstaller01011.dll" Source="$(var.VIOSERIAL_DIR)/w8.1/$(var.VIOSERIAL_ARCH)/WdfCoInstaller01011.dll" Vital="yes" />
+			</Component>
+		</DirectoryRef>
+	</CPackWiXFragment>
+	<CPackWiXFragment Id="#PRODUCTFEATURE">
+		<ComponentRef Id="TestoGuestAdditions"/>
+		<ComponentRef Id="VirtioWin7"/>
+		<ComponentRef Id="VirtioWin8"/>
+		<ComponentRef Id="VirtioWin8.1"/>
+	</CPackWiXFragment>
+</CPackWiXPatch>

@@ -1,0 +1,13 @@
+<CPackWiXPatch>
+	<CPackWiXFragment Id="#PRODUCT">
+		<DirectoryRef Id="INSTALL_ROOT">
+			<Component Id="AddPath" Guid="{378465ad-e9f4-41b9-92b8-d133f6eac28b}">
+				<Environment Id="PATH" Name="PATH" Value="[INSTALL_ROOT]" Permanent="no" Part="last" Action="set" System="yes" />
+				<CreateFolder/>
+			</Component>
+		</DirectoryRef>
+	</CPackWiXFragment>
+	<CPackWiXFragment Id="#PRODUCTFEATURE">
+		<ComponentRef Id="AddPath"/>
+	</CPackWiXFragment>
+</CPackWiXPatch>

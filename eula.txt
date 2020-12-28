@@ -1,0 +1,65 @@
+End User License Agreement
+
+The following License Agreement ("License") is concluded between an individual or an entity ("User") and the sole proprietor "Lvov A.Y" ("Rights Holder"), which is the owner of the exclusive rights in the computer program known as "Testo" ("Program"). The Agreement sets forth the following terms and conditions.
+
+1.	General Provisions
+
+1.1.	The use of the Program is permitted only under the terms and conditions of this License. The use of the Program with violation (non-performance) of any of the terms and conditions of this License shall be prohibited.
+
+1.2.	By using the Program in any manner, the User expresses his/her full and unconditional agreement to all the License terms and conditions
+
+1.3.	If the User does not accept the terms and conditions of the License in full, the User shall not install, copy, use or interact in any manner with the Program.
+
+2.	Rights in the Program
+
+2.1.	The Rights Holder owns all exclusive rights in the Program.
+
+3.	Free-of-Charge License
+
+3.1.	The Rights Owner provides and distributes the Program as shareware.
+
+3.2.	The shareware version of the Program has the following functionality limitations:
+
+3.2.1.	Impossibility of accelerating calculation with Graphical Processing Unit ("GPU") during the running of the Program.
+
+3.3.	The Rights Holder provides the User with the non-transferable right to use the shareware version of the Program free of charge, under a simple (non-exclusive) license, in countries around the world. The User is entitled to use the shareware version of the Program with its direct functional purpose on an unlimited number of computers.
+
+4.	Commercial License
+
+4.1.	The User is entitled to purchase a License Certificate ("Certificate") from the Rights Owner for a fee. The Certificate gives the User the non-exclusive right to use the full version of the Program.
+
+4.2.	The full version of the Program requires the User's computer to have a GPU that falls under the minimal technical requirements of the Program.
+
+4.3.	The Certificate is an electronic document containing the following information:
+
+4.3.1.	The Duration of the Certificate (the time period between the Starting Date of the Certificate and the Expiration Date of the Certificate).
+
+4.3.2.	The unique identifier of the GPU installed in the User's computer.
+
+4.3.3.	The digital signature of the Rights Owner, ensuring the authenticity of the Certificate.
+
+4.4.	The Certificate gives the User the non-exclusive right to use the Program with the GPU to which the unique identifier is specified on the Certificate. To use the Program with another GPU (with a different identifier), the User must purchase a new Certificate.
+
+4.5.	When the Certificate expires, the User is entitled to purchase a new Certificate, or use the shareware version of the Program, or stop using the Program.
+
+4.6.	The Certificate is valid for all the updated versions of the Program released until before the Certificate is expired.
+
+4.7.	By purchasing the Certificate, the User agrees that he/she doesn't have any complaints against the quality or functionality of the Program.
+
+5.	Limitations
+
+5.1.	The User shall not modify, decompile, disassemble, decrypt or perform other actions with the object code of any Program, aimed at obtaining source codes of the Program and/or information on the implementation of the algorithms used in the Program, to create derivative works with the use of the Program, as well as to fulfill (to allow to conduct) other use of the Program, without the written consent from the Rights Holder.
+
+5.2.	 The User shall not, without the written consent from the Rights Holder, reproduce, distribute, or make available to the public any Program and/or all Programs in any form and by any means not directly stipulated for by this License, including within the collections of software products, with the offering of other programs, settings, or other products, regardless of the purposes of such use.
+
+5.3.	The User shall not, without the written consent from the Rights Holder, include or make use of the Program within any service or program, regardless of purposes of such use.
+
+6.	Limitation of Liability under the License
+
+6.1		The Program is provided on an "as is" basis. The Rights Holder shall provide no warranties regarding error-free and uninterrupted operation of Programs, meeting the specific goals and expectations of the User, and shall also provide no other warranties not directly stated in this License.
+
+6.2.	To the maximum extent permitted by the current law, the Rights Holder shall not be responsible for any direct or indirect consequences of any use of or inability to use Programs and/or damage inflicted upon the User and/or third parties as a result of any use or non-use of the Program, including possible errors or failures of the Program.
+
+7.	Changes to the Terms and Conditions of this License
+
+7.1.	This License Agreement may be changed unilaterally by the Rights Holder. The notification of the User on the changes in the terms and conditions of this License in the way and time suitable for the Rights Holder. These changes in the terms and conditions of the License Agreement shall be effective from the date of their publication, unless otherwise is specified in the relevant publication.
