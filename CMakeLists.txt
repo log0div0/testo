@@ -53,7 +53,7 @@ include_directories(
 add_subdirectory(3rd_party)
 
 macro(add_package NAME)
-	set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/eula.txt")
+	set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/docs/eula.txt")
 	set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")
 	set(CPACK_PACKAGE_CONTACT "support@testo-lang.ru")
 	set(CPACK_OUTPUT_CONFIG_FILE CPackConfig.cmake)

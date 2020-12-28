@@ -10,14 +10,16 @@ test win10_guest_additions: win10_installation_part_2 {
 		sleep 5s
 		mouse click "Выполнить autorun"
 		wait "Testo Guest Additions"; press Enter
-		wait "Select Installation Folder"; press Enter
-		wait "Confirm Installation"; press Enter
+		mouse click "I accept the terms";
+		mouse click "Next"
+		wait "Destination Folder"; press Enter
+		wait "Ready to install"; press Enter
 		wait "Разрешить этому приложению"
 		mouse click "Да".from_bottom(0)
 		wait "Установить программное обеспечение для данного устройства?";
 		mouse click "Установить".from_top(1)
-		wait "Installation Complete"; press Enter
-		wait !"Installation Complete"
+		wait "Click the Finish button"; press Enter
+		wait !"Click the Finish button"
 		exec cmd "echo hello world"
 		unplug dvd
 		sleep 5s

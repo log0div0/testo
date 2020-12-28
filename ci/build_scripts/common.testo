@@ -30,6 +30,6 @@ param cudnn_linux_filename "cudnn-11.1-linux-x64-v8.0.5.39.tgz"
 
 flash nvidia {
 	fs: "fat"
-	size: 8Gb
+	size: 16Gb
 	folder: "${ISO_DIR}/nvidia-11.1"
 }
