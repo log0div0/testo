@@ -1,7 +1,7 @@
 
 include "win7.testo"
 
-test win7_guest_additions: win7_installation {
+test win7_test_ga_install: win7_installation {
 	win7 {
 		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
@@ -20,7 +20,7 @@ test win7_guest_additions: win7_installation {
 }
 
 [no_snapshots: true]
-test win7_copy: win7_guest_additions {
+test win7_test_ga_copy: win7_test_ga_install {
 	win7 {
 		copyto "${TEST_ASSETS_DIR}/привет, мир!.txt" "C:\\папка 1\\папка 2\\привет, мир!.txt"
 		press LeftMeta
@@ -42,7 +42,7 @@ test win7_copy: win7_guest_additions {
 }
 
 [no_snapshots: true]
-test win7_exec_quotes: win7_guest_additions {
+test win7_test_ga_exec_quotes: win7_test_ga_install {
 	win7 {
 		exec cmd "netsh interface ip set address \
 		name=\"Подключение по локальной сети\" \

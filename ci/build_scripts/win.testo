@@ -24,19 +24,18 @@ test win_install_guest_additions: win_start {
 		mouse click "CD Drive"
 		sleep 5s
 		mouse click "Run autorun"
-		wait "Testo Guest Additions"
-		mouse click "Next".from_bottom(0).center_bottom()
-		wait "Select Installation Folder"
-		mouse click "Next".from_bottom(0).center_bottom()
-		wait "Confirm Installation"
-		mouse click "Next".from_bottom(0).center_bottom()
+		wait "Testo Guest Additions"; press Enter
+		mouse click "I accept the terms";
+		mouse click "Next"
+		wait "Destination Folder"; press Enter
+		wait "Ready to install"; press Enter
 		wait "Do you want to allow"
 		mouse click "Yes"
 		wait "Would you like to install"
 		mouse click "Would you like to install"; sleep 5s # focus
 		press Left,Enter
-		wait "Installation Complete"; press Enter
-		wait !"Installation Complete"
+		wait "Click the Finish button"; press Enter
+		wait !"Click the Finish button"
 		exec cmd "echo hello world"
 		unplug dvd
 		sleep 5s
@@ -58,7 +57,7 @@ test win_build_onnxruntime_cpu_x64: win_install_guest_additions {
 				-Donnxruntime_BUILD_SHARED_LIB=ON \
 				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
 				-Donnxruntime_USE_CUDA=OFF
-			cmake --build . --config Release --target INSTALL
+			cmake --build . --config Release --target INSTALL --parallel
 		""" timeout 2h
 		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x64"
 	}
@@ -79,7 +78,7 @@ test win_build_onnxruntime_cpu_x86: win_install_guest_additions {
 				-Donnxruntime_BUILD_SHARED_LIB=ON \
 				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
 				-Donnxruntime_USE_CUDA=OFF
-			cmake --build . --config Release --target INSTALL
+			cmake --build . --config Release --target INSTALL --parallel
 		""" timeout 2h
 		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x86"
 	}
@@ -100,7 +99,7 @@ test win_build_testo_guest_additions_x64: win_install_guest_additions {
 			cmake ..\\testo \
 				-DCMAKE_GENERATOR="Visual Studio 16 2019" \
 				-DCMAKE_GENERATOR_PLATFORM=x64
-			cmake --build . --target testo-guest-additions-package --config Release || exit /b 1
+			cmake --build . --target testo-guest-additions-package --config Release --parallel || exit /b 1
 		""" timeout 30m
 		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo Guest Additions.msi" "${TMP_DIR}/testo-guest-additions-x64.msi"
 	}
@@ -121,7 +120,7 @@ test win_build_testo_guest_additions_x86: win_install_guest_additions {
 			cmake ..\\testo \
 				-DCMAKE_GENERATOR="Visual Studio 16 2019" \
 				-DCMAKE_GENERATOR_PLATFORM=Win32
-			cmake --build . --target testo-guest-additions-package --config Release || exit /b 1
+			cmake --build . --target testo-guest-additions-package --config Release --parallel || exit /b 1
 		""" timeout 30m
 		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo Guest Additions.msi" "${TMP_DIR}/testo-guest-additions-x86.msi"
 	}
@@ -146,7 +145,7 @@ test win_build_testo_cpu_x64: win_install_guest_additions {
 				-DCMAKE_GENERATOR_PLATFORM=x64 \
 				-DONNX_RUNTIME_DIR=C:\\work\\onnxruntime_dist \
 				-DUSE_CUDA=off
-			cmake --build . --target testo-package --config Release || exit /b 1
+			cmake --build . --target testo-package --config Release --parallel || exit /b 1
 		""" timeout 30m
 		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo.msi" "${OUT_DIR}/testo-cpu-x64.msi"
 	}
@@ -171,7 +170,7 @@ test win_build_testo_cpu_x86: win_install_guest_additions {
 				-DCMAKE_GENERATOR_PLATFORM=Win32 \
 				-DONNX_RUNTIME_DIR=C:\\work\\onnxruntime_dist \
 				-DUSE_CUDA=off
-			cmake --build . --target testo-package --config Release || exit /b 1
+			cmake --build . --target testo-package --config Release --parallel || exit /b 1
 		""" timeout 30m
 		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo.msi" "${OUT_DIR}/testo-cpu-x86.msi"
 	}

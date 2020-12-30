@@ -7,14 +7,17 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY "Testo Lang/Testo")
 
 file(TO_CMAKE_PATH "${ONNX_RUNTIME_DIR}/bin/onnxruntime.dll" ONNX_RUNTIME_DLL)
 
-install(TARGETS testo DESTINATION .)
+install(TARGETS testo)
+install(PROGRAMS ${ONNX_RUNTIME_DLL} DESTINATION bin)
+
 install(FILES
 	${CMAKE_SOURCE_DIR}/src/nn/Homm3Detector.onnx
 	${CMAKE_SOURCE_DIR}/src/nn/TextColorPicker.onnx
 	${CMAKE_SOURCE_DIR}/src/nn/TextDetector.onnx
 	${CMAKE_SOURCE_DIR}/src/nn/TextRecognizer.onnx
-	${ONNX_RUNTIME_DLL}
-	DESTINATION .)
+	DESTINATION share)
+
+include(InstallRequiredSystemLibraries)
 
 set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 

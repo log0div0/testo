@@ -1,7 +1,7 @@
 
 include "win10.testo"
 
-test win10_guest_additions: win10_installation_part_2 {
+test win10_test_ga_install: win10_installation_part_2 {
 	win10 {
 		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
 		mouse click "Поиск видеодрайвера"
@@ -27,7 +27,7 @@ test win10_guest_additions: win10_installation_part_2 {
 }
 
 [no_snapshots: true]
-test win10_guest_additions_stop_service: win10_guest_additions {
+test win10_test_ga_stop_service: win10_test_ga_install {
 	win10 {
 		press LeftMeta+R
 		wait "Выполнить"
@@ -45,7 +45,7 @@ test win10_guest_additions_stop_service: win10_guest_additions {
 }
 
 [no_snapshots: true]
-test win10_guest_additions_uninstall: win10_guest_additions {
+test win10_test_ga_uninstall: win10_test_ga_install {
 	win10 {
 		press LeftMeta+X
 		sleep 5s
