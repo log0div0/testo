@@ -112,19 +112,18 @@ test debian_build_onnxruntime_cpu: debian_install_packages {
 
 test debian_install_cuda: debian_install_packages {
 	debian {
-		plug flash nvidia
-		sleep 5s
+		copyto "${cuda_linux_path}" "/root/cuda.run"
+		copyto "${cudnn_linux_path}" "/root/cudnn.tgz"
 		exec bash """
-			mount /dev/sdb1 /media
-			ls /media
-			/media/${cuda_linux_filename} --silent --toolkit --override
+			cd /root
+			chmod +x ./cuda.run
+			./cuda.run --silent --toolkit --override
 			/usr/local/cuda/bin/nvcc --version
-			tar xf /media/${cudnn_linux_filename} -C /root
+			tar xf ./cudnn.tgz
+			rm cuda.run
+			rm cudnn.tgz
 			ls /root
-			umount /media
 		""" timeout 10m
-		sleep 5s
-		unplug flash nvidia
 	}
 }
 

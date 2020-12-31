@@ -84,6 +84,57 @@ test win_build_onnxruntime_cpu_x86: win_install_guest_additions {
 	}
 }
 
+test win_install_cuda_x64: win_install_guest_additions {
+	win {
+		copyto "${cuda_win_path}" "C:\\Users\\user\\Desktop\\cuda.exe"
+		mouse dclick "cuda"
+		wait "Do you want to allow"
+		mouse click "Yes"
+		wait "Extraction path"; press Enter
+		wait "NVIDIA software license agreement" timeout 20m; press Enter
+		wait "Installation options"; press Enter
+		wait "Summary" timeout 20m; press Enter
+		wait "Installer has finished"; press Enter
+		wait !"Installer has finished"
+		mouse rclick "cuda"
+		mouse click "Delete"
+		wait !"cuda"
+		mouse rclick "Recycle Bin"
+		mouse click "Empty"
+		wait "Are you sure"
+		mouse click "Yes"
+
+		copyto "${cudnn_win_path}" "C:\\work\\cudnn.zip"
+		exec cmd """
+			cd C:\\work
+			tar -xf cudnn.zip
+			del cudnn.zip
+		"""
+	}
+}
+
+[no_snapshots: true]
+test win_build_onnxruntime_gpu_x64: win_install_cuda_x64 {
+	win {
+		win_copy_onnxruntime_srcs()
+		exec cmd """
+			mkdir C:\\work\\onnxruntime_build
+			cd C:\\work\\onnxruntime_build
+			cmake ..\\onnxruntime\\cmake \
+				-DCMAKE_GENERATOR="Visual Studio 16 2019" \
+				-DCMAKE_GENERATOR_PLATFORM=x64 \
+				-DCMAKE_INSTALL_PREFIX=C:\\work\\onnxruntime_dist \
+				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
+				-Donnxruntime_BUILD_SHARED_LIB=ON \
+				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
+				-Donnxruntime_USE_CUDA=ON \
+				-Donnxruntime_CUDNN_HOME=C:\\work\\cuda
+			cmake --build . --config Release --target INSTALL --parallel
+		""" timeout 2h
+		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_gpu_x64"
+	}
+}
+
 [no_snapshots: true]
 test win_build_testo_guest_additions_x64: win_install_guest_additions {
 	win {
