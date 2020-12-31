@@ -10,6 +10,21 @@
 #include <regex>
 #include <fstream>
 
+#ifdef WIN32
+#include <winapi/Functions.hpp>
+#include <winapi/RegKey.hpp>
+
+std::map<std::string, std::string> get_environment_from_registry() {
+	std::map<std::string, std::string> result;
+	winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment");
+	spdlog::info("ENUM VALUES SIZE = {}", regkey.enum_values().size());
+	for (const std::string& name: regkey.enum_values()) {
+		result[name] = regkey.get_str(name);
+	}
+	return result;
+}
+#endif
+
 VersionNumber::VersionNumber(const std::string& str) {
 	static std::regex regex(R"((\d+).(\d+).(\d+))");
 	std::smatch match;
@@ -293,7 +308,15 @@ void Server::handle_execute(const nlohmann::json& command) {
 	cmd += " 2>&1";
 #endif
 
+#if WIN32
+	std::map<std::string, std::string> env_vars = winapi::get_environment_strings();
+	for (auto& kv: get_environment_from_registry()) {
+		env_vars[kv.first] = kv.second;
+	}
+	os::Process process(cmd, &env_vars);
+#else
 	os::Process process(cmd);
+#endif
 
 	while (!process.eof()) {
 		std::string output = process.read();

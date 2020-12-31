@@ -43,11 +43,6 @@ test win10_install_testo_cpu: win10_install_guest_additions {
 		wait "Click the Finish button"; press Enter
 		wait !"Click the Finish button"
 
-		press LeftMeta+R
-		press LeftAlt+LeftShift
-		type "cmd"; press Enter
-		wait "C:\\Users"
-		type "testo version"; press Enter
-		wait "Testo framework version"
+		exec cmd "testo version"
 	}
 }
