@@ -19,6 +19,23 @@ install(FILES
 
 include(InstallRequiredSystemLibraries)
 
+if (USE_CUDA)
+	find_package(CUDAToolkit)
+	file(TO_CMAKE_PATH "${CUDAToolkit_BIN_DIR}/cublas64_11.dll" CUBLAS_DLL)
+	file(TO_CMAKE_PATH "${CUDAToolkit_BIN_DIR}/cublasLt64_11.dll" CUBLASLT_DLL)
+	file(TO_CMAKE_PATH "${CUDAToolkit_BIN_DIR}/curand64_10.dll" CURAND_DLL)
+	install(PROGRAMS
+		${CUBLAS_DLL}
+		${CUBLASLT_DLL}
+		${CURAND_DLL}
+		DESTINATION bin)
+
+	file(TO_CMAKE_PATH "${CUDNN_HOME}/bin/cudnn64_8.dll" CUDNN_DLL)
+	install(PROGRAMS
+		${CUDNN_DLL}
+		DESTINATION bin)
+endif()
+
 set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 
 add_package(testo-package)
