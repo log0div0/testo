@@ -3,11 +3,12 @@
 
 #include "Pipe.hpp"
 #include <string>
+#include <map>
 
 namespace winapi {
 
 struct Process {
-	Process(const std::string& cmd);
+	Process(const std::string& cmd, const std::map<std::string, std::string>* env_vars = nullptr);
 	~Process();
 
 	Process(Process&& other);

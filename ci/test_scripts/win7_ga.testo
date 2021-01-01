@@ -1,32 +1,39 @@
 
 include "win7.testo"
 
-test win7_guest_additions: win7_installation {
+test win7_test_ga_install: win7_installation {
 	win7 {
 		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
 		wait "Автозапуск"; press Enter
 		wait "Testo Guest Additions"; press Enter
-		wait "Select Installation Folder"; press Enter
-		wait "Confirm Installation"; press Enter
+		mouse click "I accept the terms";
+		mouse click "Next"
+		wait "Destination Folder"; press Enter
+		wait "Ready to install"; press Enter
 		wait "Разрешить внесение изменений"; press Left, Enter
 		wait "Установить программное обеспечение для данного устройства?";
 		mouse click "Установить".from_top(1)
-		wait "Installation Complete"; press Enter
-		wait !"Installation Complete"
+		wait "Click the Finish button"; press Enter
+		wait !"Click the Finish button"
 		exec cmd "echo hello world"
 	}
 }
 
 [no_snapshots: true]
-test win7_copy: win7_guest_additions {
+test win7_test_ga_copy: win7_test_ga_install {
 	win7 {
 		copyto "${TEST_ASSETS_DIR}/привет, мир!.txt" "C:\\папка 1\\папка 2\\привет, мир!.txt"
 		press LeftMeta
 		mouse click "Компьютер"
+		mouse move 0 0
 		mouse dclick "Локальный диск (C:)"
+		mouse move 0 0
 		mouse dclick "папка 1"
+		mouse move 0 0
 		mouse dclick "папка 2"
+		mouse move 0 0
 		mouse dclick "привет, мир!"
+		mouse move 0 0
 		wait "Здарова!"
 		wait "Как дела?"
 		copyto "${TEST_ASSETS_DIR}/привет, мир!.txt" "C:\\папка 1\\папка 2\\привет, мир!.txt"
@@ -35,7 +42,7 @@ test win7_copy: win7_guest_additions {
 }
 
 [no_snapshots: true]
-test win7_exec_quotes: win7_guest_additions {
+test win7_test_ga_exec_quotes: win7_test_ga_install {
 	win7 {
 		exec cmd "netsh interface ip set address \
 		name=\"Подключение по локальной сети\" \

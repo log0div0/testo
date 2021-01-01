@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 #include <string>
+#include <vector>
 
 namespace winapi {
 
@@ -13,8 +14,9 @@ struct RegKey {
 	RegKey(RegKey&&);
 	RegKey& operator=(RegKey&&);
 
-	std::string query_str(const std::string& name) const;
 	void set_expand_str(const std::string& name, const std::string& value);
+	std::vector<std::string> enum_values() const;
+	std::string get_str(const std::string& name) const;
 
 private:
 	HKEY handle = NULL;

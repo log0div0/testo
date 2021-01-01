@@ -1,4 +1,26 @@
 cmake_minimum_required(VERSION 3.0)
 
-add_executable(testo-guest-additions-helper WIN32 testo-guest-additions-helper.cpp)
-target_link_libraries(testo-guest-additions-helper os Netapi32)
+set(CPACK_PACKAGE_NAME "Testo Guest Additions")
+set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
+set(CPACK_WIX_UPGRADE_GUID "D80951FA-43DF-4B00-87CC-43A2824620D5")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Testo Lang/Testo Guest Additions")
+set(CPACK_WIX_EXTENSIONS "WixDifxAppExtension")
+
+list(APPEND CPACK_WIX_CANDLE_EXTRA_FLAGS "-dVIOSERIAL_DIR=${CMAKE_CURRENT_SOURCE_DIR}/vioserial")
+list(APPEND CPACK_WIX_CANDLE_EXTRA_FLAGS "-dCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+list(APPEND CPACK_WIX_CANDLE_EXTRA_FLAGS "-dCMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}")
+if(CMAKE_GENERATOR_PLATFORM STREQUAL "Win32")
+	set(CPACK_WIX_EXTRA_OBJECTS "C:/Program Files (x86)/WiX Toolset v3.11/bin/difxapp_x86.wixlib")
+	list(APPEND CPACK_WIX_CANDLE_EXTRA_FLAGS "-dVIOSERIAL_ARCH=x86")
+elseif(CMAKE_GENERATOR_PLATFORM STREQUAL "x64")
+	set(CPACK_WIX_EXTRA_OBJECTS "C:/Program Files (x86)/WiX Toolset v3.11/bin/difxapp_x64.wixlib")
+	list(APPEND CPACK_WIX_CANDLE_EXTRA_FLAGS "-dVIOSERIAL_ARCH=amd64")
+else()
+	message(FATAL_ERROR "Unknown CMAKE_GENERATOR_PLATFORM: ${CMAKE_GENERATOR_PLATFORM}")
+endif()
+
+set(CPACK_WIX_CUSTOM_XMLNS "difx=http://schemas.microsoft.com/wix/DifxAppExtension")
+set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
+
+add_package(testo-guest-additions-package)
+add_dependencies(testo-guest-additions-package testo-guest-additions)

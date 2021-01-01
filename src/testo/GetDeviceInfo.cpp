@@ -2,6 +2,10 @@
 #include "GetDeviceInfo.hpp"
 #include <stdexcept>
 
+#ifdef USE_CUDA
+
+#include <cuda_runtime.h>
+
 char hex_map[] = {
 	'0',
 	'1',
@@ -65,3 +69,5 @@ DeviceInfo GetDeviceInfo(int device_id) {
 	}
 	return info;
 }
+
+#endif

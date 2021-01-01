@@ -68,12 +68,10 @@ test centos_install_packages: centos_install_guest_additions {
 			yum --disablerepo=* --enablerepo=c8-media* -y install git gcc gcc-c++ make openssl-devel python3-devel libvirt-devel tar wget vim rpm-build libguestfs-devel
 			cd /root
 			nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep ens`
-			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
-			tar xf cmake.tar.gz
-			cd CMake-3.16.5
-			./configure
-			make -j$(nproc)
-			make install
+			wget https://github.com/Kitware/CMake/releases/download/v3.19.2/cmake-3.19.2-Linux-x86_64.sh -O cmake.sh
+			chmod +x cmake.sh
+			./cmake.sh --skip-license --prefix=/usr
+			cmake --version
 		""" timeout 30m
 	}
 }
@@ -102,19 +100,18 @@ test centos_build_onnxruntime_cpu: centos_install_packages {
 
 test centos_install_cuda: centos_install_packages {
 	centos {
-		plug flash nvidia
-		sleep 5s
+		copyto "${cuda_linux_path}" "/root/cuda.run"
+		copyto "${cudnn_linux_path}" "/root/cudnn.tgz"
 		exec bash """
-			mount /dev/sdb1 /media
-			ls /media
-			/media/${cuda_linux_filename} --silent --toolkit --override
+			cd /root
+			chmod +x ./cuda.run
+			./cuda.run --silent --toolkit --override
 			/usr/local/cuda/bin/nvcc --version
-			tar xf /media/${cudnn_linux_filename} -C /root
+			tar xf ./cudnn.tgz
+			rm cuda.run
+			rm cudnn.tgz
 			ls /root
-			umount /media
 		""" timeout 10m
-		sleep 5s
-		unplug flash nvidia
 	}
 }
 
@@ -146,6 +143,7 @@ test centos_build_testo_cpu: centos_install_packages {
 	centos {
 		copyto "${TMP_DIR}/onnxruntime_dist_centos_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
@@ -172,6 +170,7 @@ test centos_build_testo_gpu: centos_install_cuda {
 	centos {
 		copyto "${TMP_DIR}/onnxruntime_dist_centos_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"

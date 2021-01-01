@@ -13,7 +13,6 @@ macro linux_copy_onnxruntime_srcs() {
 	copyto "${ONNXRUNTIME_SRC_DIR}/onnxruntime" "/root/onnxruntime/onnxruntime"
 	copyto "${ONNXRUNTIME_SRC_DIR}/tools" "/root/onnxruntime/tools"
 	copyto "${ONNXRUNTIME_SRC_DIR}/VERSION_NUMBER" "/root/onnxruntime/VERSION_NUMBER"
-	copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "/root/onnxruntime_patches"
 }
 
 macro win_copy_onnxruntime_srcs() {
@@ -22,14 +21,10 @@ macro win_copy_onnxruntime_srcs() {
 	copyto "${ONNXRUNTIME_SRC_DIR}/onnxruntime" "C:\\work\\onnxruntime\\onnxruntime"
 	copyto "${ONNXRUNTIME_SRC_DIR}/tools" "C:\\work\\onnxruntime\\tools"
 	copyto "${ONNXRUNTIME_SRC_DIR}/VERSION_NUMBER" "C:\\work\\onnxruntime\\VERSION_NUMBER"
-	copyto "${BUILD_ASSETS_DIR}/onnxruntime_patches" "C:\\work\\onnxruntime_patches"
 }
 
-param cuda_linux_filename "cuda_11.1.1_455.32.00_linux.run"
-param cudnn_linux_filename "cudnn-11.1-linux-x64-v8.0.5.39.tgz"
-
-flash nvidia {
-	fs: "fat"
-	size: 8Gb
-	folder: "${ISO_DIR}/nvidia-11.1"
-}
+param nvidia_dir "${ISO_DIR}/nvidia-11.1"
+param cuda_linux_path "${nvidia_dir}/cuda_11.1.1_455.32.00_linux.run"
+param cudnn_linux_path "${nvidia_dir}/cudnn-11.1-linux-x64-v8.0.5.39.tgz"
+param cuda_win_path "${nvidia_dir}/cuda_11.1.1_456.81_win10.exe"
+param cudnn_win_path "${nvidia_dir}/cudnn-11.1-windows-x64-v8.0.5.39.zip"

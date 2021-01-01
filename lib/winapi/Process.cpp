@@ -2,11 +2,12 @@
 #include "Process.hpp"
 #include "UTF.hpp"
 #include <stdexcept>
+#include <vector>
 #include <system_error>
 
 namespace winapi {
 
-Process::Process(const std::string& cmd) {
+Process::Process(const std::string& cmd, const std::map<std::string, std::string>* env_vars) {
 	Pipe in_read;
 	Pipe out_write;
 	std::tie(in_read, in_write) = Pipe::create();
@@ -23,6 +24,19 @@ Process::Process(const std::string& cmd) {
 
 	PROCESS_INFORMATION info = {};
 
+	std::vector<wchar_t> environment;
+	if (env_vars) {
+		for (auto& kv: *env_vars) {
+			std::wstring key = winapi::utf8_to_utf16(kv.first);
+			std::wstring value = winapi::utf8_to_utf16(kv.second);
+			environment.insert(environment.end(), key.begin(), key.end());
+			environment.push_back(L'=');
+			environment.insert(environment.end(), value.begin(), value.end());
+			environment.push_back(L'\0');
+		}
+		environment.push_back(L'\0');
+	}
+
 	std::wstring wcmd = winapi::utf8_to_utf16(cmd);
 	bool success = CreateProcess(
 		NULL,
@@ -30,8 +44,8 @@ Process::Process(const std::string& cmd) {
 		NULL,
 		NULL,
 		TRUE,
-		CREATE_NO_WINDOW,
-		NULL,
+		CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT,
+		env_vars ? environment.data() : NULL,
 		NULL,
 		&siStartInfo,
 		&info);

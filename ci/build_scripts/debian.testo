@@ -64,9 +64,6 @@ test debian_install_guest_additions: debian_install_os {
 		wait "Password:"; type "${password}"; press Enter
 		wait "root@${host_name}:~#"
 
-		type "apt update"; press Enter
-		wait "Reading package lists... Done"
-
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounting read-only"; type "dpkg -i /media/testo-guest-additions.deb"; press Enter
@@ -85,12 +82,9 @@ test debian_install_packages: debian_install_guest_additions {
 			apt update
 			apt -y install git gcc g++ make libssl-dev python3-dev libvirt-dev libguestfs-dev rpm
 			cd /root
-			wget https://github.com/Kitware/CMake/archive/v3.16.5.tar.gz -O cmake.tar.gz
-			tar xf cmake.tar.gz
-			cd CMake-3.16.5
-			./configure
-			make -j$(nproc)
-			make install
+			wget https://github.com/Kitware/CMake/releases/download/v3.19.2/cmake-3.19.2-Linux-x86_64.sh -O cmake.sh
+			chmod +x cmake.sh
+			./cmake.sh --skip-license --prefix=/usr
 			cmake --version
 		""" timeout 30m
 	}
@@ -118,19 +112,18 @@ test debian_build_onnxruntime_cpu: debian_install_packages {
 
 test debian_install_cuda: debian_install_packages {
 	debian {
-		plug flash nvidia
-		sleep 5s
+		copyto "${cuda_linux_path}" "/root/cuda.run"
+		copyto "${cudnn_linux_path}" "/root/cudnn.tgz"
 		exec bash """
-			mount /dev/sdb1 /media
-			ls /media
-			/media/${cuda_linux_filename} --silent --toolkit --override
+			cd /root
+			chmod +x ./cuda.run
+			./cuda.run --silent --toolkit --override
 			/usr/local/cuda/bin/nvcc --version
-			tar xf /media/${cudnn_linux_filename} -C /root
+			tar xf ./cudnn.tgz
+			rm cuda.run
+			rm cudnn.tgz
 			ls /root
-			umount /media
 		""" timeout 10m
-		sleep 5s
-		unplug flash nvidia
 	}
 }
 
@@ -160,6 +153,7 @@ test debian_build_onnxruntime_gpu: debian_install_cuda {
 test debian_build_testo_guest_additions: debian_install_packages {
 	debian {
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
 		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
@@ -183,6 +177,7 @@ test debian_build_testo_cpu: debian_install_packages {
 	debian {
 		copyto "${TMP_DIR}/onnxruntime_dist_debian_cpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
@@ -208,6 +203,7 @@ test debian_build_testo_gpu: debian_install_cuda {
 	debian {
 		copyto "${TMP_DIR}/onnxruntime_dist_debian_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
 		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"

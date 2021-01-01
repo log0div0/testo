@@ -3,8 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 set(CPACK_PACKAGE_NAME "testo-guest-additions")
 set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 
-install(PROGRAMS
-	${CMAKE_BINARY_DIR}/out/sbin/testo-guest-additions
+install(TARGETS testo-guest-additions
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
