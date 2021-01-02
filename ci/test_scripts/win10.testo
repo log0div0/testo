@@ -104,3 +104,64 @@ test win10_installation_part_2: win10_installation_part_1 {
 		sleep 10s
 	}
 }
+
+[no_snapshots: true]
+test win10_prepare: win10_installation_part_2 {
+	win10 {
+		press LeftMeta+R
+		wait "Введите имя программы"
+		press LeftAlt+LeftShift; sleep 2s
+		type "netplwiz"; press Enter
+		mouse click "Учетные записи пользователей"
+		mouse click "Требовать ввод имени пользователя и пароля"
+		mouse click "Применить"
+		wait "Автоматический вход в систему"
+		type "1111"; press Tab
+		type "1111"; press Enter
+		wait !"Автоматический вход в систему"
+		press LeftAlt+F4
+		wait !"Учетные записи пользователей"
+	}
+}
+
+[no_snapshots: true]
+test win10_install_hyperv: win10_prepare {
+	win10 {
+		mouse click "Чтобы начать поиск, введите здесь"; sleep 2s
+		type "PowerShell"; sleep 2s
+		mouse click "Запуск от имени администратора"
+		wait "Разрешить этому приложению"
+		mouse click "Да".from_bottom(0)
+		wait "Администратор: Windows PowerShell"
+		type "Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All"
+		press Enter
+		wait "Вы хотите перезапустить компьютер сейчас"
+		press Enter
+		wait "Работа с обновлениями"
+		wait "Корзина" timeout 10m
+	}
+}
+
+test win10_install_guest_additions: win10_install_hyperv {
+	win10 {
+		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+		sleep 5s
+		mouse click "CD-дисковод"
+		sleep 5s
+		mouse click "Выполнить autorun"
+		wait "Testo Guest Additions"; press Enter
+		mouse click "I accept the terms";
+		mouse click "Next"
+		wait "Destination Folder"; press Enter
+		wait "Ready to install"; press Enter
+		wait "Разрешить этому приложению"
+		mouse click "Да".from_bottom(0)
+		wait "Установить программное обеспечение для данного устройства?";
+		mouse click "Установить".from_top(1)
+		wait "Click the Finish button"; press Enter
+		wait !"Click the Finish button"
+		exec cmd "echo hello world"
+		unplug dvd
+		sleep 5s
+	}
+}
