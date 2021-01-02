@@ -43,7 +43,7 @@ test win_install_guest_additions: win_start {
 }
 
 [no_snapshots: true]
-test win_build_onnxruntime_cpu_x64: win_install_guest_additions {
+test win_build_onnxruntime_cpu: win_install_guest_additions {
 	win {
 		win_copy_onnxruntime_srcs()
 		exec cmd """
@@ -59,32 +59,11 @@ test win_build_onnxruntime_cpu_x64: win_install_guest_additions {
 				-Donnxruntime_USE_CUDA=OFF
 			cmake --build . --config Release --target INSTALL --parallel
 		""" timeout 2h
-		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x64"
+		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu"
 	}
 }
 
-[no_snapshots: true]
-test win_build_onnxruntime_cpu_x86: win_install_guest_additions {
-	win {
-		win_copy_onnxruntime_srcs()
-		exec cmd """
-			mkdir C:\\work\\onnxruntime_build
-			cd C:\\work\\onnxruntime_build
-			cmake ..\\onnxruntime\\cmake \
-				-DCMAKE_GENERATOR="Visual Studio 16 2019" \
-				-DCMAKE_GENERATOR_PLATFORM=Win32 \
-				-DCMAKE_INSTALL_PREFIX=C:\\work\\onnxruntime_dist \
-				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
-				-Donnxruntime_BUILD_SHARED_LIB=ON \
-				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
-				-Donnxruntime_USE_CUDA=OFF
-			cmake --build . --config Release --target INSTALL --parallel
-		""" timeout 2h
-		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_cpu_x86"
-	}
-}
-
-test win_install_cuda_x64: win_install_guest_additions {
+test win_install_cuda: win_install_guest_additions {
 	win {
 		copyto "${cuda_win_path}" "C:\\Users\\user\\Desktop\\cuda.exe"
 		mouse dclick "cuda"
@@ -114,7 +93,7 @@ test win_install_cuda_x64: win_install_guest_additions {
 }
 
 [no_snapshots: true]
-test win_build_onnxruntime_gpu_x64: win_install_cuda_x64 {
+test win_build_onnxruntime_gpu: win_install_cuda {
 	win {
 		win_copy_onnxruntime_srcs()
 		exec cmd """
@@ -131,7 +110,7 @@ test win_build_onnxruntime_gpu_x64: win_install_cuda_x64 {
 				-Donnxruntime_CUDNN_HOME=C:\\work\\cuda
 			cmake --build . --config Release --target INSTALL --parallel
 		""" timeout 2h
-		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_gpu_x64"
+		copyfrom "C:\\work\\onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_win_gpu"
 	}
 }
 
@@ -178,9 +157,9 @@ test win_build_testo_guest_additions_x86: win_install_guest_additions {
 }
 
 [no_snapshots: true]
-test win_build_testo_cpu_x64: win_install_guest_additions {
+test win_build_testo_cpu: win_install_guest_additions {
 	win {
-		copyto "${TMP_DIR}/onnxruntime_dist_win_cpu_x64" "C:\\work\\onnxruntime_dist"
+		copyto "${TMP_DIR}/onnxruntime_dist_win_cpu" "C:\\work\\onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "C:\\work\\testo\\3rd_party"
 		copyto "${TESTO_SRC_DIR}/docs" "C:\\work\\testo\\docs"
 		copyto "${TESTO_SRC_DIR}/lib" "C:\\work\\testo\\lib"
@@ -198,39 +177,14 @@ test win_build_testo_cpu_x64: win_install_guest_additions {
 				-DUSE_CUDA=off
 			cmake --build . --target testo-package --config Release --parallel || exit /b 1
 		""" timeout 30m
-		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo.msi" "${OUT_DIR}/testo-cpu-x64.msi"
+		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo.msi" "${OUT_DIR}/testo-cpu.msi"
 	}
 }
 
 [no_snapshots: true]
-test win_build_testo_cpu_x86: win_install_guest_additions {
+test win_build_testo_gpu: win_install_cuda {
 	win {
-		copyto "${TMP_DIR}/onnxruntime_dist_win_cpu_x86" "C:\\work\\onnxruntime_dist"
-		copyto "${TESTO_SRC_DIR}/3rd_party" "C:\\work\\testo\\3rd_party"
-		copyto "${TESTO_SRC_DIR}/docs" "C:\\work\\testo\\docs"
-		copyto "${TESTO_SRC_DIR}/lib" "C:\\work\\testo\\lib"
-		copyto "${TESTO_SRC_DIR}/pkg" "C:\\work\\testo\\pkg"
-		copyto "${TESTO_SRC_DIR}/src" "C:\\work\\testo\\src"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:\\work\\testo\\CMakeLists.txt"
-		exec cmd """
-			cd C:\\work
-			mkdir testo_build
-			cd testo_build
-			cmake ..\\testo \
-				-DCMAKE_GENERATOR="Visual Studio 16 2019" \
-				-DCMAKE_GENERATOR_PLATFORM=Win32 \
-				-DONNX_RUNTIME_DIR=C:\\work\\onnxruntime_dist \
-				-DUSE_CUDA=off
-			cmake --build . --target testo-package --config Release --parallel || exit /b 1
-		""" timeout 30m
-		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo.msi" "${OUT_DIR}/testo-cpu-x86.msi"
-	}
-}
-
-[no_snapshots: true]
-test win_build_testo_gpu_x64: win_install_cuda_x64 {
-	win {
-		copyto "${TMP_DIR}/onnxruntime_dist_win_gpu_x64" "C:\\work\\onnxruntime_dist"
+		copyto "${TMP_DIR}/onnxruntime_dist_win_gpu" "C:\\work\\onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "C:\\work\\testo\\3rd_party"
 		copyto "${TESTO_SRC_DIR}/docs" "C:\\work\\testo\\docs"
 		copyto "${TESTO_SRC_DIR}/lib" "C:\\work\\testo\\lib"
@@ -249,6 +203,6 @@ test win_build_testo_gpu_x64: win_install_cuda_x64 {
 				-DCUDNN_HOME=C:\\work\\cuda
 			cmake --build . --target testo-package --config Release --parallel || exit /b 1
 		""" timeout 30m
-		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo.msi" "${OUT_DIR}/testo-gpu-x64.msi"
+		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo.msi" "${OUT_DIR}/testo-gpu.msi"
 	}
 }
