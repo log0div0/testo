@@ -31,8 +31,14 @@ if (USE_CUDA)
 		DESTINATION bin)
 
 	file(TO_CMAKE_PATH "${CUDNN_HOME}/bin/cudnn64_8.dll" CUDNN_DLL)
+	file(TO_CMAKE_PATH "${CUDNN_HOME}/bin/cudnn_adv_infer64_8.dll" CUDNN_ADV_INFER_DLL)
+	file(TO_CMAKE_PATH "${CUDNN_HOME}/bin/cudnn_cnn_infer64_8.dll" CUDNN_CNN_INFER_DLL)
+	file(TO_CMAKE_PATH "${CUDNN_HOME}/bin/cudnn_ops_infer64_8.dll" CUDNN_OPS_INFER_DLL)
 	install(PROGRAMS
 		${CUDNN_DLL}
+		${CUDNN_ADV_INFER_DLL}
+		${CUDNN_CNN_INFER_DLL}
+		${CUDNN_OPS_INFER_DLL}
 		DESTINATION bin)
 endif()
 

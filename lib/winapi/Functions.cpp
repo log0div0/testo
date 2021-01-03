@@ -2,8 +2,14 @@
 #include "Functions.hpp"
 #include <stdexcept>
 #include <vector>
+#include <system_error>
 
 namespace winapi {
+
+void throw_error(const std::string& ascii_desc, DWORD error_code) {
+	std::error_code ec(error_code, std::system_category());
+	throw std::system_error(ec, ascii_desc);
+}
 
 std::wstring multi_byte_to_wide_char(const std::string& multi_byte, UINT codepage) {
 	if (multi_byte.empty()) {

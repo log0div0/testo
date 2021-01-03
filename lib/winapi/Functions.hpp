@@ -7,6 +7,8 @@
 
 namespace winapi {
 
+void throw_error(const std::string& ascii_desc, DWORD error_code);
+
 std::wstring multi_byte_to_wide_char(const std::string& multi_byte, UINT codepage);
 std::string wide_char_to_multi_byte(const std::wstring& wide_char, UINT codepage);
 std::wstring utf8_to_utf16(const std::string& utf8);
