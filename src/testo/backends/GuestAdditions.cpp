@@ -66,9 +66,6 @@ std::string GuestAdditions::get_tmp_dir() {
 	send(std::move(request));
 
 	auto response = recv();
-	if(!response.at("success").get<bool>()) {
-		throw std::runtime_error(response.at("error").get<std::string>());
-	}
 	return response.at("result").at("path");
 }
 
@@ -96,10 +93,6 @@ void GuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	send(std::move(request));
 
 	auto response = recv();
-
-	if(!response.at("success").get<bool>()) {
-		throw std::runtime_error(response.at("error").get<std::string>());
-	}
 
 	for (auto& file: response.at("result")) {
 		fs::path dst = file.at("path").get<std::string>();
@@ -155,9 +148,6 @@ int GuestAdditions::execute(const std::string& command,
 
 	while (true) {
 		auto response = recv();
-		if (!response.at("success").get<bool>()) {
-			throw std::runtime_error(std::string("Negotiator inner error: ") + response.at("error").get<std::string>());
-		}
 
 		auto result = response.at("result");
 		if (result.count("stdout")) {
@@ -209,10 +199,6 @@ void GuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst
 		}
 
 		auto response = recv();
-
-		if(!response.at("success").get<bool>()) {
-			throw std::runtime_error(response.at("error").get<std::string>());
-		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Failed to copy host " + src.generic_string() + " to guest " + dst.generic_string()));
 	}
@@ -236,6 +222,20 @@ nlohmann::json GuestAdditions::recv() {
 
 	if (response.count("version")) {
 		ver = response.at("version").get<std::string>();
+	}
+
+	if (!response.at("success").get<bool>()) {
+		if (ver < VersionNumber(2,2,10)) {
+			std::string err = response.at("error");
+			throw std::runtime_error(err);
+		} else {
+			std::string err_base64 = response.at("error");
+			std::vector<uint8_t> err = base64_decode(err_base64);
+			if (err.back() != 0) {
+				throw std::runtime_error("Expect null-terminated string");
+			}
+			throw std::runtime_error((char*)err.data());
+		}
 	}
 
 	return response;

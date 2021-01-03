@@ -116,11 +116,15 @@ void Server::handle_command(const nlohmann::json& command) {
 }
 
 void Server::send_error(const std::string& error) {
-	spdlog::info("Sending error " + error);
 	nlohmann::json response = {
 		{"success", false},
-		{"error", error}
 	};
+
+	if (ver < VersionNumber(2,2,10)) {
+		response["error"] = error;
+	} else {
+		response["error"] = base64_encode((uint8_t*)error.data(), error.size() + 1);
+	}
 
 	channel.send(std::move(response));
 }
