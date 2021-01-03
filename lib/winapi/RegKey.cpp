@@ -3,7 +3,6 @@
 #include "Functions.hpp"
 #include <stdexcept>
 #include <system_error>
-#include "UTF.hpp"
 
 namespace winapi {
 

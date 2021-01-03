@@ -1,7 +1,7 @@
 
 #include "File.hpp"
 #include <stdexcept>
-#include "UTF.hpp"
+#include "Functions.hpp"
 
 namespace winapi {
 

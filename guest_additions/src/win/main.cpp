@@ -9,7 +9,6 @@
 #include <initguid.h>
 #include <tchar.h>
 
-#include <winapi/UTF.hpp>
 #include <winapi/Functions.hpp>
 #include <coro/Application.h>
 
