@@ -130,8 +130,8 @@ void HyperVVM::install() {
 			auto& disk = disks.at(i);
 			size_t disk_size = disk.at("size").get<uint32_t>();
 			disk_size = disk_size * 1024 * 1024;
-			connect.createHDD(hhd_path.generic_string(), disk_size);
-			controllers.at(1).addDiskDrive(i).mountHDD(hhd_path.generic_string());
+			connect.createHDD(hhd_path, disk_size);
+			controllers.at(1).addDiskDrive(i).mountHDD(hhd_path);
 		}
 
 		if (config.count("nic")) {
