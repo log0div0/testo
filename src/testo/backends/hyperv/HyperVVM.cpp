@@ -3,8 +3,6 @@
 #include <iostream>
 
 HyperVVM::HyperVVM(const nlohmann::json& config_): VM(config_) {
-	std::cout << "HyperVVM " << config.dump(4) << std::endl;
-
 	scancodes.insert({
 		{"ESC", {1}},
 		{"ONE", {2}},
@@ -126,10 +124,15 @@ void HyperVVM::install() {
 
 		auto controllers = machine.ideControllers();
 		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
-		size_t disk_size = config.at("disk_size").get<uint32_t>();
-		disk_size = disk_size * 1024 * 1024;
-		connect.createHDD(hhd_path.generic_string(), disk_size);
-		controllers.at(1).addDiskDrive(0).mountHDD(hhd_path.generic_string());
+
+		auto& disks = config.at("disk");
+		for (size_t i = 0; i < disks.size(); ++i) {
+			auto& disk = disks.at(i);
+			size_t disk_size = disk.at("size").get<uint32_t>();
+			disk_size = disk_size * 1024 * 1024;
+			connect.createHDD(hhd_path.generic_string(), disk_size);
+			controllers.at(1).addDiskDrive(i).mountHDD(hhd_path.generic_string());
+		}
 
 		if (config.count("nic")) {
 			for (auto& nic_cfg: config.at("nic")) {
@@ -148,8 +151,6 @@ void HyperVVM::install() {
 				nic.connect(bridge);
 			}
 		}
-
-		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
