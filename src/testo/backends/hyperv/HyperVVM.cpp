@@ -334,7 +334,7 @@ void HyperVVM::stop() {
 
 void HyperVVM::suspend() {
 	try {
-		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+		connect.machine(name()).requestStateChange(hyperv::Machine::State::Quiesce);
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -433,7 +433,7 @@ VmState HyperVVM::state() const {
 			return VmState::Stopped;
 		} else if (state == hyperv::Machine::State::Enabled) {
 			return VmState::Running;
-		} else if (state == hyperv::Machine::State::Paused) {
+		} else if (state == hyperv::Machine::State::Quiesce) {
 			return VmState::Suspended;
 		} else {
 			return VmState::Other;

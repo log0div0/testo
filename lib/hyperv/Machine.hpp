@@ -18,7 +18,7 @@ struct Machine {
 		Enabled = 2,
 		Disabled = 3,
 		Offline = 6,
-		Paused = 32768
+		Quiesce = 9
 	};
 
 	Machine(wmi::WbemClassObject computerSystem_, wmi::WbemServices services_);
