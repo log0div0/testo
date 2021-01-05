@@ -9,11 +9,16 @@ struct Environment {
 	virtual ~Environment() = default;
 
 	virtual fs::path testo_dir() const = 0;
-	virtual fs::path flash_drives_mount_dir() const = 0;
-	virtual fs::path flash_drives_img_dir() const = 0;
-	virtual fs::path vm_metadata_dir() const = 0;
-	virtual fs::path network_metadata_dir() const = 0;
-	virtual fs::path flash_drives_metadata_dir() const = 0;
+
+	fs::path vm_metadata_dir() const {
+		return testo_dir() / "vm_metadata";
+	}
+	fs::path network_metadata_dir() const {
+		return testo_dir() / "network_metadata";
+	}
+	fs::path flash_drives_metadata_dir() const {
+		return testo_dir() / "fd_metadata";
+	}
 
 	virtual void setup() = 0;
 	virtual void cleanup() = 0;

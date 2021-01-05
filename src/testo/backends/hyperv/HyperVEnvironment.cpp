@@ -2,26 +2,6 @@
 #include "HyperVEnvironment.hpp"
 
 fs::path HyperVEnvironment::testo_dir() const {
-	throw std::runtime_error("Implement me");
-}
-
-fs::path HyperVEnvironment::flash_drives_mount_dir() const {
-	throw std::runtime_error("Implement me");
-}
-
-fs::path HyperVEnvironment::flash_drives_img_dir() const {
-	throw std::runtime_error("Implement me");
-}
-
-fs::path HyperVEnvironment::vm_metadata_dir() const {
-	return ".";
-}
-
-fs::path HyperVEnvironment::network_metadata_dir() const {
-	return ".";
-}
-
-fs::path HyperVEnvironment::flash_drives_metadata_dir() const {
 	return ".";
 }
 

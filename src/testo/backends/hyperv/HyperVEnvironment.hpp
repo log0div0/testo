@@ -11,11 +11,6 @@ struct HyperVEnvironment: Environment {
 	~HyperVEnvironment() {}
 
 	fs::path testo_dir() const override;
-	fs::path flash_drives_mount_dir() const override;
-	fs::path flash_drives_img_dir() const override;
-	fs::path vm_metadata_dir() const override;
-	fs::path network_metadata_dir() const override;
-	fs::path flash_drives_metadata_dir() const override;
 
 	void setup() override;
 	void cleanup() override;
