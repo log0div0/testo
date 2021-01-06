@@ -6,9 +6,7 @@ fs::path HyperVEnvironment::testo_dir() const {
 }
 
 void HyperVEnvironment::setup() {
+	Environment::setup();
+
 	_putenv_s("HYPERV", "1");
-}
-
-void HyperVEnvironment::cleanup() {
-
 }

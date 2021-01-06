@@ -20,8 +20,7 @@ struct Environment {
 		return testo_dir() / "fd_metadata";
 	}
 
-	virtual void setup() = 0;
-	virtual void cleanup() = 0;
+	virtual void setup();
 
 	virtual std::shared_ptr<VM> create_vm(const nlohmann::json& config) = 0;
 	virtual std::shared_ptr<FlashDrive> create_flash_drive(const nlohmann::json& config) = 0;
