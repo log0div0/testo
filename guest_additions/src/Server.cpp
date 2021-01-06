@@ -108,18 +108,20 @@ void Server::handle_command(const nlohmann::json& command) {
 		} else {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
-#ifdef WIN32
-	} catch (const std::system_error& error) {
-		spdlog::error("Error in Server::handle_command method");
-		spdlog::error(error.what());
-		std::wstring utf16_err = winapi::acp_to_utf16(error.what());
-		std::string utf8_err = winapi::utf16_to_utf8(utf16_err);
-		send_error(utf8_err);
-#endif
 	} catch (const std::exception& error) {
 		spdlog::error("Error in Server::handle_command method");
 		spdlog::error(error.what());
+#ifdef WIN32
+		if (dynamic_cast<const std::system_error*>(&error) && !dynamic_cast<const fs::filesystem_error*>(&error)) {
+			std::wstring utf16_err = winapi::acp_to_utf16(error.what());
+			std::string utf8_err = winapi::utf16_to_utf8(utf16_err);
+			send_error(utf8_err);
+		} else {
+			send_error(error.what());
+		}
+#else
 		send_error(error.what());
+#endif
 	}
 }
 
