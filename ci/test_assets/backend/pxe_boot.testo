@@ -1,0 +1,12 @@
+
+include "common.testo"
+
+
+test pxe_boot {
+	my_ubuntu_server {
+		start
+		press Esc*30
+		wait "Select boot device"; press four
+		wait "iPXE 1.0.0+"
+	}
+} 

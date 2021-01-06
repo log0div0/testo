@@ -214,6 +214,21 @@ test centos_backend_qemu_wait: centos_install_testo_cpu {
 	}
 }
 
+
+[no_snapshots: true]
+test centos_backend_qemu_pxe_boot: centos_install_testo_cpu {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/pxe_boot.testo" "/opt/scripts/pxe_boot.testo"
+
+		exec bash """
+			set +o pipefail
+			testo run /opt/scripts/pxe_boot.testo --stop_on_fail --test_spec pxe_boot | grep "RUN SUCCESSFULLY: 1"
+		"""
+
+	}
+}
+
 test centos_backend_qemu_install_ubuntu_server: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"

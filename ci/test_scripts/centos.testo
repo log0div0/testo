@@ -11,6 +11,10 @@ machine centos {
 	nic nat: {
 		attached_to: "nat"
 	}
+
+	video main: {
+		qemu_mode: "virtio"
+	}
 }
 
 test centos_install_os {
@@ -27,7 +31,7 @@ test centos_install_os {
 		wait "ADD A NEW MOUNT POINT"
 		mouse click "Mount Point:".from_bottom(0).right_center().move_right(220)
 		mouse click "/boot"
-		mouse click "Desired Capacity:".right_center().move_right(50)
+		mouse click "Desired Capacity:".from_bottom(0).right_center().move_right(50)
 		type "1Gb"
 		mouse click "Add mount point"
 		wait !"ADD A NEW MOUNT POINT"
@@ -36,7 +40,7 @@ test centos_install_os {
 		wait "ADD A NEW MOUNT POINT"
 		mouse click "Mount Point:".from_bottom(0).right_center().move_right(220)
 		mouse click "swap"
-		mouse click "Desired Capacity:".right_center().move_right(50)
+		mouse click "Desired Capacity:".from_bottom(0).right_center().move_right(50)
 		type "2Gb"
 		mouse click "Add mount point"
 		wait !"ADD A NEW MOUNT POINT"
@@ -85,6 +89,12 @@ test centos_install_os {
 		mouse move 0 0
 		mouse click js "find_text('Next').match_color(null, 'blue').from_top(0)"
 		mouse click "Start Using CentOS Linux"
+		if (check "Not listed?" timeout 5s) {
+			mouse click "${login}"
+			wait "Password:"
+			sleep 1s
+			type "${password}"; press Enter
+		}
 		wait "GNOME Help" timeout 2m
 		mouse click "Help".from_top(0); mouse click "Quit"
 		wait !"GNOME Help"
@@ -154,7 +164,7 @@ test centos_prepare_1: centos_install_guest_additions {
 		type "Sett"; mouse click "Settings".from_top(0)
 		wait "Bluetooth"
 		mouse click "Wi-Fi".from_left(0); sleep 1s; press Down*11, Enter
-		wait "Power Saving"; mouse click "5 minutes"; sleep 1s; mouse click "5 minutes"; mouse click "Never"
+		wait "Power Saving"; mouse click "5 minutes"; sleep 1s; mouse click "15 minutes"; sleep 1s; mouse click "15 minutes";  mouse click "Never"
 		mouse click "Power".from_left(0); sleep 1s; press Down*2, Enter
 		wait "Displays"; mouse click "Resolution";
 		for (i IN RANGE "0" "100") {
@@ -166,7 +176,11 @@ test centos_prepare_1: centos_install_guest_additions {
 		} else {
 			abort "fail"
 		}
-		mouse click "Apply".from_right(0); mouse click "Keep Changes"; sleep 2s; press LeftAlt + F4;
+
+		if (check "Apply" timeout 3s) {
+			mouse click "Apply".from_right(0); mouse click "Keep Changes"; sleep 2s;
+		}
+		press LeftAlt + F4;
 		wait !"Displays"
 	}
 }
