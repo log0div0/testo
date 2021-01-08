@@ -129,6 +129,7 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 	vm_global_ctx.insert({"video", std::make_pair(true, Token::category::attr_block)});
 	vm_global_ctx.insert({"cpus", std::make_pair(false, Token::category::number)});
 	vm_global_ctx.insert({"qemu_spice_agent", std::make_pair(false, Token::category::binary)});
+	vm_global_ctx.insert({"qemu_enable_usb3", std::make_pair(false, Token::category::binary)});
 	vm_global_ctx.insert({"loader", std::make_pair(false, Token::category::quoted_string)});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});

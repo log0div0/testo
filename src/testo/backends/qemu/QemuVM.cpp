@@ -244,14 +244,6 @@ void QemuVM::install() {
 
 		string_config += R"(
 			<devices>
-				<controller type='usb' index='0' model='ich9-ehci1'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci1'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci2'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci3'>
-				</controller>
 				<controller type='ide' index='0'>
 				</controller>
 				<controller type='virtio-serial' index='0'>
@@ -285,6 +277,28 @@ void QemuVM::install() {
 				<memballoon model='virtio'>
 				</memballoon>
 		)";
+
+		if (!config.count("qemu_enable_usb3")) {
+			config["qemu_enable_usb3"] = true;
+		}
+
+		if (config.at("qemu_enable_usb3")) {
+			string_config += R"(
+				<controller type='usb' index='0' model='qemu-xhci' ports='15'>
+				</controller>
+			)";
+		} else {
+			string_config += R"(
+				<controller type='usb' index='0' model='ich9-ehci1'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci1'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci2'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci3'>
+				</controller>
+			)";
+		}
 
 		string_config += R"(
 			<video>
@@ -346,8 +360,11 @@ void QemuVM::install() {
 			)", disk_targets[i]);
 		}
 
+		if (!config.count("qemu_spice_agent")) {
+			config["qemu_spice_agent"] = false;
+		}
 
-		if (config.value("qemu_spice_agent", false)) {
+		if (config.at("qemu_spice_agent")) {
 			string_config += R"(
 			<channel type='spicevmc'>
 				<target type='virtio' name='com.redhat.spice.0'/>
