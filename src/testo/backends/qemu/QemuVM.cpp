@@ -256,6 +256,7 @@ void QemuVM::install() {
 					<type>hvm</type>
 					<boot dev='cdrom'/>
 					<boot dev='hd'/>
+					<bootmenu enable='yes' timeout='1000'/>
 				</os>
 				<features>
 					<acpi/>

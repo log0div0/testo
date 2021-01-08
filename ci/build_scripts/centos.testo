@@ -11,6 +11,10 @@ machine centos {
 	nic nat: {
 		attached_to: "nat"
 	}
+
+	video main: {
+		qemu_mode: "virtio"
+	}
 }
 
 test centos_install_os {
