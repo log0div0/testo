@@ -124,17 +124,21 @@ struct PlugNIC: Action<AST::PlugNIC> {
 	std::string name() const;
 };
 
-
 struct PlugLink: Action<AST::PlugLink> {
 	using Action<AST::PlugLink>::Action;
 	std::string name() const;
+};
+
+struct PlugHostDev: Action<AST::PlugHostDev> {
+	using Action<AST::PlugHostDev>::Action;
+	std::string type() const;
+	std::string id() const;
 };
 
 struct PlugDVD: Action<AST::PlugDVD> {
 	using Action<AST::PlugDVD>::Action;
 	fs::path path() const;
 };
-
 
 struct Start:Action<AST::Start> {
 	using Action<AST::Start>::Action;

@@ -1084,6 +1084,22 @@ void QemuVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	}
 }
 
+void QemuVM::plug_hostdev_usb(const std::string& id) {
+	try {
+	
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Plugging host dev usb device {}", id)));
+	}
+}
+
+void QemuVM::unplug_hostdev_usb(const std::string& id) {
+	try {
+	
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Plugging host dev usb device {}", id)));
+	}
+}
+
 void QemuVM::detach_flash_drive() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());

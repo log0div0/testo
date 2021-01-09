@@ -72,6 +72,7 @@ struct VisitorSemantic {
 	void visit_plug_dvd(const IR::PlugDVD& plug_dvd, bool is_on);
 	void visit_plug_nic(const IR::PlugNIC& plug_nic);
 	void visit_plug_link(const IR::PlugLink& plug_link);
+	void visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev);
 	void visit_start(const IR::Start& start);
 	void visit_stop(const IR::Stop& stop);
 	void visit_shutdown(const IR::Shutdown& shutdown);

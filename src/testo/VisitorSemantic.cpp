@@ -705,6 +705,8 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 		return visit_plug_nic({p->resource, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
 		return visit_plug_link({p->resource, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugHostDev>>(plug.ast_node->resource)) {
+		return visit_plug_hostdev({p->resource, stack});
 	} else {
 		throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
 			plug.ast_node->resource->t.value());
@@ -743,6 +745,12 @@ void VisitorSemantic::visit_plug_nic(const IR::PlugNIC& plug_nic) {
 void VisitorSemantic::visit_plug_link(const IR::PlugLink& plug_link) {
 	current_test->cksum_input += "link";
 	current_test->cksum_input += plug_link.name();
+}
+
+void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
+	current_test->cksum_input += "hostdev";
+	current_test->cksum_input += plug_hostdev.type();
+	current_test->cksum_input += plug_hostdev.id();
 }
 
 void VisitorSemantic::visit_start(const IR::Start& start) {

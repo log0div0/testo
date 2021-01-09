@@ -923,8 +923,9 @@ std::shared_ptr<AST::IPlugResource> Parser::plug_resource() {
 		result = plug_resource_flash();
 	} else if (LA(1) == Token::category::dvd) {
 		result = plug_resource_dvd();
-	}
-	else if (LT(1).value() == "nic") {
+	} else if (LA(1) == Token::category::hostdev) {
+		result = plug_resource_hostdev();
+	} else if (LT(1).value() == "nic") {
 		result = plug_resource_nic();
 	} else if (LT(1).value() == "link") {
 		result = plug_resource_link();
@@ -977,6 +978,23 @@ std::shared_ptr<AST::PlugResource<AST::PlugDVD>> Parser::plug_resource_dvd() {
 
 	auto resource = std::shared_ptr<AST::PlugDVD>(new AST::PlugDVD(dvd_token, path));
 	return std::shared_ptr<AST::PlugResource<AST::PlugDVD>>(new AST::PlugResource<AST::PlugDVD>(resource));
+}
+
+std::shared_ptr<AST::PlugResource<AST::PlugHostDev>> Parser::plug_resource_hostdev() {
+	Token hostdev_token = LT(1);
+	match(Token::category::hostdev);
+
+	if (LA(1) != Token::category::usb) {
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown usb device type for plug/unplug: " + LT(1).value());
+	}
+
+	Token type = LT(1);
+
+	match(Token::category::usb);
+	std::shared_ptr<AST::String> id = string();
+
+	auto resource = std::shared_ptr<AST::PlugHostDev>(new AST::PlugHostDev(hostdev_token, type, id));
+	return std::shared_ptr<AST::PlugResource<AST::PlugHostDev>>(new AST::PlugResource<AST::PlugHostDev>(resource));
 }
 
 std::shared_ptr<Action<Plug>> Parser::plug() {

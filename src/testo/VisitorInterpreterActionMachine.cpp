@@ -861,6 +861,12 @@ void VisitorInterpreterActionMachine::visit_plug(const IR::Plug& plug) {
 			} else {
 				return visit_unplug_dvd({p->resource, stack});
 			}
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugHostDev>>(plug.ast_node->resource)) {
+			if (plug.is_on()) {
+				return visit_plug_hostdev({p->resource, stack});
+			} else {
+				return visit_unplug_hostdev({p->resource, stack});
+			}
 		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugNIC>>(plug.ast_node->resource)) {
 			return visit_plug_nic({p->resource, stack}, plug.is_on());
 		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
@@ -998,6 +1004,16 @@ void VisitorInterpreterActionMachine::visit_unplug_flash(const IR::PlugFlash& pl
 	}
 
 	vmc->vm()->unplug_flash_drive(fdc->fd());
+}
+
+void VisitorInterpreterActionMachine::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
+	reporter.plug(vmc, "hostdev usb", plug_hostdev.id(), true);
+	vmc->vm()->plug_hostdev_usb(plug_hostdev.id());
+}
+
+void VisitorInterpreterActionMachine::visit_unplug_hostdev(const IR::PlugHostDev& plug_hostdev) {
+	reporter.plug(vmc, "hostdev usb", plug_hostdev.id(), false);
+	vmc->vm()->unplug_hostdev_usb(plug_hostdev.id());
 }
 
 void VisitorInterpreterActionMachine::visit_start(const IR::Start& start) {

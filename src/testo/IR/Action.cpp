@@ -181,27 +181,27 @@ bool Plug::is_on() const {
 }
 
 std::string PlugFlash::name() const {
-	if (ast_node->name) {
-		return StringTokenUnion(ast_node->name, stack).resolve();
-	}
-
-	throw std::runtime_error("name is not defined");
+	return StringTokenUnion(ast_node->name, stack).resolve();
 }
 
 std::string PlugNIC::name() const {
-	if (ast_node->name) {
-		return StringTokenUnion(ast_node->name, stack).resolve();
-	}
-
-	throw std::runtime_error("name is not defined");
+	return StringTokenUnion(ast_node->name, stack).resolve();
 }
 
 std::string PlugLink::name() const {
-	if (ast_node->name) {
-		return StringTokenUnion(ast_node->name, stack).resolve();
-	}
+	return StringTokenUnion(ast_node->name, stack).resolve();
+}
 
-	throw std::runtime_error("name is not defined");
+std::string PlugHostDev::type() const {
+	return ast_node->type.value();
+}
+
+std::string PlugHostDev::id() const {
+	try {
+		return template_literals::Parser().resolve(ast_node->id->text(), stack);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->id->begin(), ast_node->id->text()));
+	}
 }
 
 fs::path PlugDVD::path() const {

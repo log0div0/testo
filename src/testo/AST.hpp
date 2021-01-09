@@ -1016,6 +1016,27 @@ struct PlugDVD: public Node {
 	std::shared_ptr<String> path = nullptr;
 };
 
+struct PlugHostDev: public Node {
+	PlugHostDev(const Token& hostdev, const Token& type, std::shared_ptr<String> id):
+		Node(hostdev), type(type), id(id) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return id->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + type.value() + " " + std::string(*id);
+		return result;
+	}
+
+	Token type;
+	std::shared_ptr<String> id = nullptr;
+};
+
 //Also is used for unplug
 struct Plug: public Node {
 	Plug(const Token& plug, std::shared_ptr<IPlugResource> resource):

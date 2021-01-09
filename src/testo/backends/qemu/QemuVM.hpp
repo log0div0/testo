@@ -32,6 +32,8 @@ struct QemuVM: public VM {
 	void set_link(const std::string& nic, bool is_connected) override;
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
 	void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
+	void plug_hostdev_usb(const std::string& id) override;
+	void unplug_hostdev_usb(const std::string& id) override;
 	bool is_dvd_plugged() const override;
 	void plug_dvd(fs::path path) override;
 	void unplug_dvd() override;

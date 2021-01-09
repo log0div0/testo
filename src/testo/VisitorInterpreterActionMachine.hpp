@@ -53,8 +53,10 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	void visit_plug_link(const IR::PlugLink& plug_link, bool is_on);
 	void visit_plug_dvd(const IR::PlugDVD& plug_dvd);
 	void visit_unplug_dvd(const IR::PlugDVD& plug_dvd);
-	void visit_plug_flash(const IR::PlugFlash& plug);
-	void visit_unplug_flash(const IR::PlugFlash& plug);
+	void visit_plug_flash(const IR::PlugFlash& plug_flash);
+	void visit_unplug_flash(const IR::PlugFlash& plug_flash);
+	void visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev);
+	void visit_unplug_hostdev(const IR::PlugHostDev& plug_hostdev);
 	void visit_start(const IR::Start& start);
 	void visit_stop(const IR::Stop& stop);
 	void visit_shutdown(const IR::Shutdown& shutdown);
