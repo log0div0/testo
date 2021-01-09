@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../Network.hpp"
+#include <hyperv/Connect.hpp>
 
 struct HyperVNetwork: Network {
 	HyperVNetwork() = delete;
@@ -12,4 +13,7 @@ struct HyperVNetwork: Network {
 	bool is_defined() override;
 	void create() override;
 	void undefine() override;
+
+private:
+	hyperv::Connect connect;
 };

@@ -145,24 +145,6 @@ void HyperVVM::install() {
 			connect.createHDD(hhd_path, disk_size);
 			controllers.at(1).addDiskDrive(i).mountHDD(hhd_path);
 		}
-
-		if (config.count("nic")) {
-			for (auto& nic_cfg: config.at("nic")) {
-				auto bridges = connect.bridges();
-				auto it = std::find_if(bridges.begin(), bridges.end(), [&](auto bridge) {
-					return bridge.name() == nic_cfg.at("network");
-				});
-				if (it == bridges.end()) {
-					connect.defineBridge(nic_cfg.at("network"));
-				}
-				auto nic = machine.addNIC(nic_cfg.at("name"));
-				if (nic_cfg.count("mac")) {
-					nic.setMAC(nic_cfg.at("mac"));
-				}
-				auto bridge = connect.bridge(nic_cfg.at("network"));
-				nic.connect(bridge);
-			}
-		}
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -294,9 +276,28 @@ void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
 bool HyperVVM::is_nic_plugged(const std::string& pci_addr) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
-std::string HyperVVM::attach_nic(const std::string& nic) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+
+std::string HyperVVM::attach_nic(const std::string& nic_name) {
+	try {
+		for (auto& nic_json: config.at("nic")) {
+			if (nic_json.at("name") == nic_name) {
+				auto machine = connect.machine(name());
+				auto nic = machine.addNIC(nic_name);
+				if (nic_json.count("mac")) {
+					nic.setMAC(nic_json.at("mac"));
+				}
+				std::string net_name = prefix() + nic_json.at("attached_to").get<std::string>();
+				auto bridge = connect.bridge(net_name);
+				nic.connect(bridge);
+				return nic_name;
+			}
+		}
+		throw std::runtime_error("NIC " + nic_name + " not found");
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
+
 void HyperVVM::detach_nic(const std::string& pci_addr) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
