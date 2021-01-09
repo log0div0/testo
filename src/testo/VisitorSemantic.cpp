@@ -695,29 +695,54 @@ void VisitorSemantic::visit_mouse(const IR::Mouse& mouse) {
 void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 	current_test->cksum_input += "plug ";
 	current_test->cksum_input += std::to_string(plug.is_on());
-	current_test->cksum_input += plug.entity_type();
 
-	if (plug.entity_type() == "dvd" && plug.is_on()) {
-		auto dvd_path = plug.dvd_path();
+
+	if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugFlash>>(plug.ast_node->resource)) {
+		return visit_plug_flash({p->resource, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugDVD>>(plug.ast_node->resource)) {
+		return visit_plug_dvd({p->resource, stack}, plug.is_on());
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugNIC>>(plug.ast_node->resource)) {
+		return visit_plug_nic({p->resource, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
+		return visit_plug_link({p->resource, stack});
+	} else {
+		throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
+			plug.ast_node->resource->t.value());
+	}
+}
+
+void VisitorSemantic::visit_plug_flash(const IR::PlugFlash& plug_flash) {
+	current_test->cksum_input += "flash";
+	current_test->cksum_input += plug_flash.name();
+
+	auto flash_drive = IR::program->get_flash_drive_or_null(plug_flash.name());
+	if (!flash_drive) {
+		throw std::runtime_error(std::string(plug_flash.ast_node->begin()) + ": Error: unknown flash drive: " + plug_flash.name());
+	}
+	visit_flash(flash_drive);
+}
+
+void VisitorSemantic::visit_plug_dvd(const IR::PlugDVD& plug_dvd, bool is_on) {
+	current_test->cksum_input += "dvd";
+	
+	if (is_on) {
+		auto dvd_path = plug_dvd.path();
 		if (!fs::exists(dvd_path)) {
-			throw std::runtime_error(std::string(plug.ast_node->begin()) + ": Error: specified dvd image path does not exist: " + dvd_path.generic_string());
+			throw std::runtime_error(std::string(plug_dvd.ast_node->begin()) + ": Error: specified dvd image path does not exist: " + dvd_path.generic_string());
 		}
 		current_test->cksum_input += dvd_path.generic_string();
 		current_test->cksum_input += file_signature(dvd_path);
-		return;
 	}
+}
 
-	if (plug.entity_type() != "dvd") {
-		current_test->cksum_input += plug.entity_name();
-	}
+void VisitorSemantic::visit_plug_nic(const IR::PlugNIC& plug_nic) {
+	current_test->cksum_input += "nic";
+	current_test->cksum_input += plug_nic.name();
+}
 
-	if (plug.entity_type() == "flash") {
-		auto flash_drive = IR::program->get_flash_drive_or_null(plug.entity_name());
-		if (!flash_drive) {
-			throw std::runtime_error(std::string(plug.ast_node->begin()) + ": Error: unknown flash drive: " + plug.entity_name());
-		}
-		visit_flash(flash_drive);
-	}
+void VisitorSemantic::visit_plug_link(const IR::PlugLink& plug_link) {
+	current_test->cksum_input += "link";
+	current_test->cksum_input += plug_link.name();
 }
 
 void VisitorSemantic::visit_start(const IR::Start& start) {

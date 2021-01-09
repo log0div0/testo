@@ -849,33 +849,37 @@ void VisitorInterpreterActionMachine::visit_key_spec(std::shared_ptr<AST::KeySpe
 
 void VisitorInterpreterActionMachine::visit_plug(const IR::Plug& plug) {
 	try {
-		if (plug.entity_type() == "nic") {
-			return visit_plug_nic(plug);
-		} else if (plug.entity_type() == "link") {
-			return visit_plug_link(plug);
-		} else if (plug.entity_type() == "dvd") {
-			return visit_plug_dvd(plug);
-		} else if (plug.entity_type() == "flash") {
-			if(plug.is_on()) {
-				return visit_plug_flash(plug);
+		if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugFlash>>(plug.ast_node->resource)) {
+			if (plug.is_on()) {
+				return visit_plug_flash({p->resource, stack});
 			} else {
-				return visit_unplug_flash(plug);
+				return visit_unplug_flash({p->resource, stack});
 			}
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugDVD>>(plug.ast_node->resource)) {
+			if (plug.is_on()) {
+				return visit_plug_dvd({p->resource, stack});
+			} else {
+				return visit_unplug_dvd({p->resource, stack});
+			}
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugNIC>>(plug.ast_node->resource)) {
+			return visit_plug_nic({p->resource, stack}, plug.is_on());
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
+			return visit_plug_link({p->resource, stack}, plug.is_on());
 		} else {
 			throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
-				plug.entity_type());
+				plug.ast_node->resource->t.value());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(plug.ast_node, current_controller));
 	}
 }
 
-void VisitorInterpreterActionMachine::visit_plug_nic(const IR::Plug& plug) {
+void VisitorInterpreterActionMachine::visit_plug_nic(const IR::PlugNIC& plug_nic, bool is_on) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
-	auto nic = plug.entity_name();
+	auto nic = plug_nic.name();
 
-	reporter.plug(vmc, "nic", nic, plug.is_on());
+	reporter.plug(vmc, "nic", nic, is_on);
 
 	auto nics = vmc->vm()->nics();
 	if (nics.find(nic) == nics.end()) {
@@ -886,28 +890,28 @@ void VisitorInterpreterActionMachine::visit_plug_nic(const IR::Plug& plug) {
 		throw std::runtime_error(fmt::format("virtual machine is running, but must be stopped"));
 	}
 
-	if (vmc->is_nic_plugged(nic) == plug.is_on()) {
-		if (plug.is_on()) {
+	if (vmc->is_nic_plugged(nic) == is_on) {
+		if (is_on) {
 			throw std::runtime_error(fmt::format("specified nic {} is already plugged in this virtual machine", nic));
 		} else {
 			throw std::runtime_error(fmt::format("specified nic {} is not unplugged from this virtual machine", nic));
 		}
 	}
 
-	if (plug.is_on()) {
+	if (is_on) {
 		vmc->plug_nic(nic);
 	} else {
 		vmc->unplug_nic(nic);
 	}
 }
 
-void VisitorInterpreterActionMachine::visit_plug_link(const IR::Plug& plug) {
+void VisitorInterpreterActionMachine::visit_plug_link(const IR::PlugLink& plug_link, bool is_on) {
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 
-	auto nic = plug.entity_name();
+	auto nic = plug_link.name();
 
-	reporter.plug(vmc, "link", nic, plug.is_on());
+	reporter.plug(vmc, "link", nic, is_on);
 
 	auto nics = vmc->vm()->nics();
 	if (nics.find(nic) == nics.end()) {
@@ -918,54 +922,56 @@ void VisitorInterpreterActionMachine::visit_plug_link(const IR::Plug& plug) {
 		throw std::runtime_error(fmt::format("the nic for specified link {} is unplugged, you must to plug it first", nic));
 	}
 
-	if (plug.is_on() == vmc->is_link_plugged(nic)) {
-		if (plug.is_on()) {
+	if (is_on == vmc->is_link_plugged(nic)) {
+		if (is_on) {
 			throw std::runtime_error(fmt::format("specified link {} is already plugged in this virtual machine", nic));
 		} else {
 			throw std::runtime_error(fmt::format("specified link {} is already unplugged from this virtual machine", nic));
 		}
 	}
 
-	if (plug.is_on()) {
+	if (is_on) {
 		vmc->plug_link(nic);
 	} else {
 		vmc->unplug_link(nic);
 	}
 }
 
-void VisitorInterpreterActionMachine::visit_plug_dvd(const IR::Plug& plug) {
-	if (plug.is_on()) {
-		auto path = plug.dvd_path();
-		reporter.plug(vmc, "dvd", path.generic_string(), true);
+void VisitorInterpreterActionMachine::visit_plug_dvd(const IR::PlugDVD& plug_dvd) {
+	auto path = plug_dvd.path();
+	reporter.plug(vmc, "dvd", path.generic_string(), true);
 
-		if (vmc->vm()->is_dvd_plugged()) {
-			throw std::runtime_error(fmt::format("some dvd is already plugged"));
-		}
-		vmc->vm()->plug_dvd(path);
-	} else {
-		reporter.plug(vmc, "dvd", "", false);
-
-		if (!vmc->vm()->is_dvd_plugged()) {
-			std::cout << "DVD is already unplugged" << std::endl;
-			// не считаем ошибкой, потому что дисковод мог быть вынут программным образом
-			return;
-		}
-		vmc->vm()->unplug_dvd();
-
-		auto deadline = std::chrono::steady_clock::now() +  std::chrono::seconds(10);
-		while (std::chrono::steady_clock::now() < deadline) {
-			if (!vmc->vm()->is_dvd_plugged()) {
-				return;
-			}
-			timer.waitFor(std::chrono::milliseconds(300));
-		}
-
-		throw std::runtime_error(fmt::format("Timeout expired for unplugging dvd"));
+	if (vmc->vm()->is_dvd_plugged()) {
+		throw std::runtime_error(fmt::format("some dvd is already plugged"));
 	}
+	vmc->vm()->plug_dvd(path);
+	
 }
 
-void VisitorInterpreterActionMachine::visit_plug_flash(const IR::Plug& plug) {
-	auto fdc = IR::program->get_flash_drive_or_throw(plug.entity_name());
+void VisitorInterpreterActionMachine::visit_unplug_dvd(const IR::PlugDVD& plug_dvd) {
+	reporter.plug(vmc, "dvd", "", false);
+
+	if (!vmc->vm()->is_dvd_plugged()) {
+		std::cout << "DVD is already unplugged" << std::endl;
+		// не считаем ошибкой, потому что дисковод мог быть вынут программным образом
+		return;
+	}
+	vmc->vm()->unplug_dvd();
+
+	auto deadline = std::chrono::steady_clock::now() +  std::chrono::seconds(10);
+	while (std::chrono::steady_clock::now() < deadline) {
+		if (!vmc->vm()->is_dvd_plugged()) {
+			return;
+		}
+		timer.waitFor(std::chrono::milliseconds(300));
+	}
+
+	throw std::runtime_error(fmt::format("Timeout expired for unplugging dvd"));
+	
+}
+
+void VisitorInterpreterActionMachine::visit_plug_flash(const IR::PlugFlash& plug_flash) {
+	auto fdc = IR::program->get_flash_drive_or_throw(plug_flash.name());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
 	for (auto vmc: current_test->get_all_machines()) {
@@ -983,8 +989,8 @@ void VisitorInterpreterActionMachine::visit_plug_flash(const IR::Plug& plug) {
 	vmc->vm()->plug_flash_drive(fdc->fd());
 }
 
-void VisitorInterpreterActionMachine::visit_unplug_flash(const IR::Plug& plug) {
-	auto fdc = IR::program->get_flash_drive_or_throw(plug.entity_name());
+void VisitorInterpreterActionMachine::visit_unplug_flash(const IR::PlugFlash& plug_flash) {
+	auto fdc = IR::program->get_flash_drive_or_throw(plug_flash.name());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
 	if (!vmc->vm()->is_flash_plugged(fdc->fd())) {

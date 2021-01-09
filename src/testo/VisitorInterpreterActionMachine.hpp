@@ -49,11 +49,12 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	void visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mouse_wheel);
 	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval);
 	void visit_plug(const IR::Plug& plug);
-	void visit_plug_nic(const IR::Plug& plug);
-	void visit_plug_link(const IR::Plug& plug);
-	void visit_plug_dvd(const IR::Plug& plug);
-	void visit_plug_flash(const IR::Plug& plug);
-	void visit_unplug_flash(const IR::Plug& plug);
+	void visit_plug_nic(const IR::PlugNIC& plug_nic, bool is_on);
+	void visit_plug_link(const IR::PlugLink& plug_link, bool is_on);
+	void visit_plug_dvd(const IR::PlugDVD& plug_dvd);
+	void visit_unplug_dvd(const IR::PlugDVD& plug_dvd);
+	void visit_plug_flash(const IR::PlugFlash& plug);
+	void visit_unplug_flash(const IR::PlugFlash& plug);
 	void visit_start(const IR::Start& start);
 	void visit_stop(const IR::Stop& stop);
 	void visit_shutdown(const IR::Shutdown& shutdown);

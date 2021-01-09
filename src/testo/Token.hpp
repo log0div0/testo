@@ -49,6 +49,8 @@ struct Token {
 		param,
 		macro,
 		dvd,
+		hostdev,
+		usb,
 		if_,
 		else_,
 		IN_,
@@ -240,6 +242,10 @@ struct Token {
 			return "MACRO";
 		case dvd:
 			return "DVD";
+		case hostdev:
+			return "HOSTDEV";
+		case usb: 
+			return "USB";
 		case if_:
 			return "IF";
 		case else_:

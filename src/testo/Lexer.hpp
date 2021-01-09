@@ -165,6 +165,8 @@ private:
 	Token param();
 	Token macro();
 	Token dvd();
+	Token hostdev();
+	Token usb();
 	Token if_();
 	Token else_();
 	Token IN_();
