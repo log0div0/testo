@@ -940,7 +940,7 @@ std::shared_ptr<AST::PlugResource<AST::PlugFlash>> Parser::plug_resource_flash()
 	Token flash_token = LT(1);
 	match(Token::category::flash);
 
-	auto name = string_token_union(Token::category::flash);
+	auto name = string_token_union(Token::category::id);
 
 	auto resource = std::shared_ptr<AST::PlugFlash>(new AST::PlugFlash(flash_token, name));
 	return std::shared_ptr<AST::PlugResource<AST::PlugFlash>>(new AST::PlugResource<AST::PlugFlash>(resource));
@@ -991,9 +991,9 @@ std::shared_ptr<AST::PlugResource<AST::PlugHostDev>> Parser::plug_resource_hostd
 	Token type = LT(1);
 
 	match(Token::category::usb);
-	std::shared_ptr<AST::String> id = string();
+	std::shared_ptr<AST::String> addr = string();
 
-	auto resource = std::shared_ptr<AST::PlugHostDev>(new AST::PlugHostDev(hostdev_token, type, id));
+	auto resource = std::shared_ptr<AST::PlugHostDev>(new AST::PlugHostDev(hostdev_token, type, addr));
 	return std::shared_ptr<AST::PlugResource<AST::PlugHostDev>>(new AST::PlugResource<AST::PlugHostDev>(resource));
 }
 

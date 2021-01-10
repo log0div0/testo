@@ -1007,13 +1007,13 @@ void VisitorInterpreterActionMachine::visit_unplug_flash(const IR::PlugFlash& pl
 }
 
 void VisitorInterpreterActionMachine::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
-	reporter.plug(vmc, "hostdev usb", plug_hostdev.id(), true);
-	vmc->vm()->plug_hostdev_usb(plug_hostdev.id());
+	reporter.plug(vmc, "hostdev usb", plug_hostdev.addr(), true);
+	vmc->vm()->plug_hostdev_usb(plug_hostdev.addr());
 }
 
 void VisitorInterpreterActionMachine::visit_unplug_hostdev(const IR::PlugHostDev& plug_hostdev) {
-	reporter.plug(vmc, "hostdev usb", plug_hostdev.id(), false);
-	vmc->vm()->unplug_hostdev_usb(plug_hostdev.id());
+	reporter.plug(vmc, "hostdev usb", plug_hostdev.addr(), false);
+	vmc->vm()->unplug_hostdev_usb(plug_hostdev.addr());
 }
 
 void VisitorInterpreterActionMachine::visit_start(const IR::Start& start) {

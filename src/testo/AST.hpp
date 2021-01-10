@@ -1017,24 +1017,24 @@ struct PlugDVD: public Node {
 };
 
 struct PlugHostDev: public Node {
-	PlugHostDev(const Token& hostdev, const Token& type, std::shared_ptr<String> id):
-		Node(hostdev), type(type), id(id) {}
+	PlugHostDev(const Token& hostdev, const Token& type, std::shared_ptr<String> addr):
+		Node(hostdev), type(type), addr(addr) {}
 
 	Pos begin() const {
 		return t.begin();
 	}
 
 	Pos end() const {
-		return id->end();
+		return addr->end();
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + " " + type.value() + " " + std::string(*id);
+		std::string result = t.value() + " " + type.value() + " " + std::string(*addr);
 		return result;
 	}
 
 	Token type;
-	std::shared_ptr<String> id = nullptr;
+	std::shared_ptr<String> addr = nullptr;
 };
 
 //Also is used for unplug

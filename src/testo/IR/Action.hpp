@@ -132,7 +132,7 @@ struct PlugLink: Action<AST::PlugLink> {
 struct PlugHostDev: Action<AST::PlugHostDev> {
 	using Action<AST::PlugHostDev>::Action;
 	std::string type() const;
-	std::string id() const;
+	std::string addr() const;
 };
 
 struct PlugDVD: Action<AST::PlugDVD> {

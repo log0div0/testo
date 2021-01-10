@@ -46,8 +46,9 @@ struct VM {
 	virtual void set_link(const std::string& nic, bool is_connected) = 0;
 	virtual void plug_flash_drive(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) = 0;
-	virtual void plug_hostdev_usb(const std::string& id) = 0;
-	virtual void unplug_hostdev_usb(const std::string& id) = 0;
+	virtual bool is_hostdev_plugged() = 0;
+	virtual void plug_hostdev_usb(const std::string& addr) = 0;
+	virtual void unplug_hostdev_usb(const std::string& addr) = 0;
 	virtual bool is_dvd_plugged() const = 0;
 	virtual void plug_dvd(fs::path path) = 0;
 	virtual void unplug_dvd() = 0;

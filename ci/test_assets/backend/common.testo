@@ -21,6 +21,8 @@ machine my_ubuntu_server {
 	nic internal: {
 		attached_to: "internal"
 	}
+
+	qemu_enable_usb3: true
 }
 
 macro install_ubuntu_server(host_name, login, password) {
@@ -69,7 +71,17 @@ macro install_ubuntu_server(host_name, login, password) {
 	}
 	wait "Installation complete" timeout 10m; unplug dvd; press Enter
 	wait "tty1"
-	wait "ubuntu login:" timeout 2m; sleep 5s; type "${login}"; press Enter
-	wait "Password:"; sleep 5s; type "${password}"; press Enter
-	wait "Welcome to Ubuntu"
+
+	wait "ubuntu login:" timeout 2m;
+	sleep 5s;
+
+	for (i IN RANGE 10) {
+		type "${login}"; press Enter
+		wait "Password:"; sleep 5s; type "${password}"; press Enter
+		if (check "Welcome to Ubuntu" timeout 5s) {
+			break;
+		}
+	}
+
+	
 }

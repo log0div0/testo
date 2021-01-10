@@ -750,7 +750,14 @@ void VisitorSemantic::visit_plug_link(const IR::PlugLink& plug_link) {
 void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
 	current_test->cksum_input += "hostdev";
 	current_test->cksum_input += plug_hostdev.type();
-	current_test->cksum_input += plug_hostdev.id();
+	current_test->cksum_input += plug_hostdev.addr();
+
+
+	try {
+		auto parsed_addr = parse_usb_addr(plug_hostdev.addr());
+	} catch (const std::exception& error) {
+		throw std::runtime_error(std::string(plug_hostdev.ast_node->begin()) + ": Error: spicified usb addr is not valid: " + plug_hostdev.addr());
+	}
 }
 
 void VisitorSemantic::visit_start(const IR::Start& start) {

@@ -77,6 +77,12 @@ test centos_semantic: centos_install_testo_cpu {
 			testo run /misc.testo --test_spec img_doesnt_exist1 2>&1 > /dev/null | grep "Error: specified image path does not exist: /someshit"
 			testo run /misc.testo --test_spec img_doesnt_exist2 2>&1 > /dev/null | grep "Error: specified image path does not exist: /./someshit"
 			testo run /misc.testo --test_spec img_doesnt_lead_to_a_file 2>&1 > /dev/null | grep "Error: specified image path does not lead to a regular file: /usr/sbin"
+			testo run /misc.testo --test_spec invalid_hostdev_usb_addr1 2>&1 > /dev/null | grep "Error: spicified usb addr is not valid"
+			testo run /misc.testo --test_spec invalid_hostdev_usb_addr2 2>&1 > /dev/null | grep "Error: spicified usb addr is not valid"
+			testo run /misc.testo --test_spec invalid_hostdev_usb_addr3 2>&1 > /dev/null | grep "Error: spicified usb addr is not valid"
+			testo run /misc.testo --test_spec invalid_hostdev_usb_addr4 2>&1 > /dev/null | grep "Error: spicified usb addr is not valid"
+			testo run /misc.testo --test_spec invalid_hostdev_usb_addr5 2>&1 > /dev/null | grep "Error: spicified usb addr is not valid"
+			testo run /misc.testo --test_spec invalid_hostdev_usb_addr6 2>&1 > /dev/null | grep "Error: spicified usb addr is not valid"
 		"""
 
 		exec bash """

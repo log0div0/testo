@@ -196,11 +196,11 @@ std::string PlugHostDev::type() const {
 	return ast_node->type.value();
 }
 
-std::string PlugHostDev::id() const {
+std::string PlugHostDev::addr() const {
 	try {
-		return template_literals::Parser().resolve(ast_node->id->text(), stack);
+		return template_literals::Parser().resolve(ast_node->addr->text(), stack);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->id->begin(), ast_node->id->text()));
+		std::throw_with_nested(ResolveException(ast_node->addr->begin(), ast_node->addr->text()));
 	}
 }
 

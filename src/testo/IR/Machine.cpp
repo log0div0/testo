@@ -175,6 +175,10 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 			throw std::runtime_error("Can't take hypervisor snapshot with a flash drive plugged in. Please unplug the flash drive before the end of the test");
 		}
 
+		if (hypervisor_snapshot_needed && vm()->is_hostdev_plugged()) {
+			throw std::runtime_error("Can't take hypervisor snapshot with a hostdev plugged in. Please unplug all plugged hostdevs before the end of the test");
+		}
+
 		if (current_held_mouse_button != MouseButton::None) {
 			throw std::runtime_error("There is some mouse button held down. Please release it before the end of test");
 		}
