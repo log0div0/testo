@@ -5,14 +5,6 @@
 #include "QemuNetwork.hpp"
 #include <fmt/format.h>
 
-QemuEnvironment::QemuEnvironment() {
-	setenv("QEMU", "1", false);
-}
-
-QemuEnvironment::~QemuEnvironment() {
-	cleanup();
-}
-
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 	auto pool_dir = testo_dir() / pool_name;
 	if (!fs::exists(pool_dir)) {
@@ -58,37 +50,13 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 }
 
 void QemuEnvironment::setup() {
+	Environment::setup();
+
+	setenv("QEMU", "1", false);
+
 	qemu_connect = vir::connect_open("qemu:///system");
 	prepare_storage_pool("testo-storage-pool");
 	prepare_storage_pool("testo-flash-drives-pool");
-
-	if (!fs::exists(flash_drives_mount_dir())) {
-		if (!fs::create_directories(flash_drives_mount_dir())) {
-			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_mount_dir().generic_string());
-		}
-	}
-
-	if (!fs::exists(vm_metadata_dir())) {
-		if (!fs::create_directories(vm_metadata_dir())) {
-			throw std::runtime_error(std::string("Can't create directory: ") + vm_metadata_dir().generic_string());
-		}
-	}
-
-	if (!fs::exists(network_metadata_dir())) {
-		if (!fs::create_directories(network_metadata_dir())) {
-			throw std::runtime_error(std::string("Can't create directory: ") + network_metadata_dir().generic_string());
-		}
-	}
-
-	if (!fs::exists(flash_drives_metadata_dir())) {
-		if (!fs::create_directories(flash_drives_metadata_dir())) {
-			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_metadata_dir().generic_string());
-		}
-	}
-}
-
-void QemuEnvironment::cleanup() {
-
 }
 
 std::shared_ptr<VM> QemuEnvironment::create_vm(const nlohmann::json& config) {

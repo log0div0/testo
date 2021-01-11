@@ -78,23 +78,4 @@ struct ResolveException: public Exception {
 	}
 };
 
-static void backtrace(std::ostream& stream, const std::exception& error) {
-	stream << error.what();
-	try {
-		std::rethrow_if_nested(error);
-	} catch (const Exception& error) {
-		stream << "\n";
-		backtrace(stream, error);
-	} catch (const std::exception& error) {
-		stream << "\n\t-";
-		backtrace(stream, error);
-	} catch(...) {
-		stream << std::endl;
-		stream << "[Unknown exception type]";
-	}
-}
-
-inline std::ostream& operator<<(std::ostream& stream, const std::exception& error) {
-	backtrace(stream, error);
-	return stream;
-}
+std::ostream& operator<<(std::ostream& stream, const std::exception& error);

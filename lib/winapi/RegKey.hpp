@@ -8,7 +8,7 @@
 namespace winapi {
 
 struct RegKey {
-	RegKey(HKEY key, const std::string& path);
+	RegKey(HKEY key, const std::string& path, REGSAM sam_desired = KEY_ALL_ACCESS);
 	~RegKey();
 
 	RegKey(RegKey&&);

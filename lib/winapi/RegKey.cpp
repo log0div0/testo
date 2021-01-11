@@ -2,20 +2,19 @@
 #include "RegKey.hpp"
 #include "Functions.hpp"
 #include <stdexcept>
-#include <system_error>
 
 namespace winapi {
 
-RegKey::RegKey(HKEY key, const std::string& path) {
+RegKey::RegKey(HKEY key, const std::string& path, REGSAM sam_desired) {
 	LSTATUS status = RegOpenKeyEx(
 		key,
 		utf8_to_utf16(path).c_str(),
 		0,
-		KEY_ALL_ACCESS,
+		sam_desired,
 		&handle
 	);
 	if (status != ERROR_SUCCESS) {
-		throw std::runtime_error("RegOpenKeyEx failed");
+		throw_error("RegOpenKeyEx failed", status);
 	}
 }
 
@@ -36,7 +35,7 @@ void RegKey::set_expand_str(const std::string& name, const std::string& value) {
 		(DWORD)((wvalue.size() + 1) * sizeof(wchar_t))
 	);
 	if (status != ERROR_SUCCESS) {
-		throw std::runtime_error("RegSetValueEx failed");
+		throw_error("RegSetValueEx failed", status);
 	}
 }
 
@@ -60,14 +59,12 @@ std::vector<std::string> RegKey::enum_values() const {
 				&type,
 				NULL, NULL);
 			if (status != ERROR_SUCCESS) {
-				std::error_code ec(status, std::system_category());
-				throw std::system_error(ec, "RegEnumValueW failed (2)");
+				throw_error("RegEnumValueW failed (2)", status);
 			}
 		} else if (status == ERROR_NO_MORE_ITEMS) {
 			break;
 		} else if (status != ERROR_SUCCESS) {
-			std::error_code ec(status, std::system_category());
-			throw std::system_error(ec, "RegEnumValueW failed (1)");
+			throw_error("RegEnumValueW failed (1)", status);
 		}
 		result.push_back(utf16_to_utf8(name.data()));
 	}
@@ -94,12 +91,10 @@ std::string RegKey::get_str(const std::string& name) const {
 			value.data(),
 			&value_size);
 		if (status != ERROR_SUCCESS) {
-			std::error_code ec(status, std::system_category());
-			throw std::system_error(ec, "RegGetValueW failed (2)");
+			throw_error("RegGetValueW failed (2)", status);
 		}
 	} else if (status != ERROR_SUCCESS) {
-		std::error_code ec(status, std::system_category());
-		throw std::system_error(ec, "RegGetValueW failed (1)");
+		throw_error("RegGetValueW failed (1)", status);
 	}
 	if (!((type == REG_EXPAND_SZ) || (type == REG_SZ))) {
 		throw std::runtime_error("RegGetValueW: it's not a string");

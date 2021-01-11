@@ -2,17 +2,21 @@
 #include "HyperVNetwork.hpp"
 
 HyperVNetwork::HyperVNetwork(const nlohmann::json& config): Network(config) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
 bool HyperVNetwork::is_defined() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	auto bridges = connect.bridges();
+	auto it = std::find_if(bridges.begin(), bridges.end(), [&](auto bridge) {
+		return bridge.name() == id();
+	});
+	return it != bridges.end();
 }
 
 void HyperVNetwork::create() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	hyperv::Bridge bridge = connect.defineBridge(id());
 }
 
 void HyperVNetwork::undefine() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	hyperv::Bridge bridge = connect.bridge(id());
+	bridge.destroy();
 }

@@ -90,26 +90,19 @@ void Machine::undefine() {
 
 		vm()->remove_disks();
 
-		auto metadata_dir = get_metadata_dir();
-		if (!vm()->is_defined()) {
-			if (fs::exists(metadata_dir)) {
-				//The check would be valid only if we have the main file
-
-				if (!fs::remove_all(metadata_dir)) {
-					throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
-				}
+		if (vm()->is_defined()) {
+			if (Controller::has_snapshot("_init")) {
+				delete_snapshot_with_children("_init");
 			}
-			return;
+
+			vm()->undefine();
 		}
 
-		if (Controller::has_snapshot("_init")) {
-			delete_snapshot_with_children("_init");
-		}
-
-		vm()->undefine();
-
-		if (!fs::remove_all(metadata_dir)) {
-			throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+		auto metadata_dir = get_metadata_dir();
+		if (fs::exists(metadata_dir)) {
+			if (!fs::remove_all(metadata_dir)) {
+				throw std::runtime_error("Error deleting metadata dir " + metadata_dir.generic_string());
+			}
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("undefining vm controller"));

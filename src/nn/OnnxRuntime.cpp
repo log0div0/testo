@@ -45,8 +45,8 @@ fs::path GetModelDir() {
 #endif
 #ifdef WIN32
 fs::path GetModelDir() {
-	winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Testo Lang\\Testo");
-	return regkey.get_str("InstallDir");
+	winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Testo Lang\\Testo", KEY_QUERY_VALUE);
+	return fs::path(regkey.get_str("InstallDir")) / "share";
 }
 #endif
 #ifdef __APPLE__
