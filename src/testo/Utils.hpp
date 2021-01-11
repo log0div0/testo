@@ -29,6 +29,8 @@ nlohmann::json read_metadata_file(const fs::path& file);
 void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
 std::string get_metadata(const fs::path& file, const std::string& key);
 
+std::vector<std::string> parse_usb_addr(const std::string& addr);
+
 template <typename T>
 void concat_unique(std::list<T>& left, const std::list<T>& right) {
 

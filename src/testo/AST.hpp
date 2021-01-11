@@ -899,33 +899,160 @@ struct Mouse: public Node {
 	std::shared_ptr<IMouseEvent> event = nullptr;
 };
 
-//Also is used for unplug
-struct Plug: public Node {
-	Plug(const Token& plug, const Token& type, std::shared_ptr<StringTokenUnion> name, std::shared_ptr<String> path):
-		Node(plug),
-		type(type),
-		name(name),
-		path(path) {}
+
+struct IPlugResource: public Node {
+	using Node::Node;
+};
+
+//IfClause if also an action
+template <typename PlugResourceType>
+struct PlugResource: public IPlugResource {
+	PlugResource(std::shared_ptr<PlugResourceType> resource):
+		IPlugResource(resource->t),
+		resource(resource) {}
+
+	Pos begin() const {
+		return resource->begin();
+	}
+
+	Pos end() const {
+		return resource->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*resource);
+		return result;
+	}
+
+	std::shared_ptr<PlugResourceType> resource;
+};
+
+
+struct PlugNIC: public Node {
+	PlugNIC(const Token& nic, std::shared_ptr<StringTokenUnion> name):
+		Node(nic), name(name) {}
 
 	Pos begin() const {
 		return t.begin();
 	}
 
 	Pos end() const {
-		if (name) {
-			return name->end();
-		} else {
+		return name->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + std::string(*name);
+		return result;
+	}
+
+	std::shared_ptr<StringTokenUnion> name = nullptr;
+};
+
+struct PlugLink: public Node {
+	PlugLink(const Token& link, std::shared_ptr<StringTokenUnion> name):
+		Node(link), name(name) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return name->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + std::string(*name);
+		return result;
+	}
+
+	std::shared_ptr<StringTokenUnion> name = nullptr;
+};
+
+struct PlugFlash: public Node {
+	PlugFlash(const Token& flash, std::shared_ptr<StringTokenUnion> name):
+		Node(flash), name(name) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return name->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + std::string(*name);
+		return result;
+	}
+
+	std::shared_ptr<StringTokenUnion> name = nullptr;
+};
+
+struct PlugDVD: public Node {
+	PlugDVD(const Token& dvd, std::shared_ptr<String> path):
+		Node(dvd), path(path) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		if (path) {
 			return path->end();
+		} else {
+			return begin();
 		}
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + " " + type.value() + " ";
-		if (name) {
-			result += std::string(*name);
-		} else {
-			result += std::string(*path);
+		std::string result = t.value();
+
+		if (path) {
+			result += " " + std::string(*path);
 		}
+		return result;
+	}
+
+	std::shared_ptr<String> path = nullptr;
+};
+
+struct PlugHostDev: public Node {
+	PlugHostDev(const Token& hostdev, const Token& type, std::shared_ptr<String> addr):
+		Node(hostdev), type(type), addr(addr) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return addr->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + type.value() + " " + std::string(*addr);
+		return result;
+	}
+
+	Token type;
+	std::shared_ptr<String> addr = nullptr;
+};
+
+//Also is used for unplug
+struct Plug: public Node {
+	Plug(const Token& plug, std::shared_ptr<IPlugResource> resource):
+		Node(plug),
+		resource(resource) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return resource->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + std::string(*resource);
 		return result;
 	}
 
@@ -933,9 +1060,7 @@ struct Plug: public Node {
 		return (t.type() == Token::category::plug);
 	}
 
-	Token type; //nic or flash or dvd
-	std::shared_ptr<StringTokenUnion> name; //name of resource to be plugged/unplugged
-	std::shared_ptr<String> path; //used only for dvd
+	std::shared_ptr<IPlugResource> resource;
 };
 
 

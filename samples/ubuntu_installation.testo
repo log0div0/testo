@@ -100,9 +100,15 @@ macro vd_config(vd_ver) {
 	}
 }
 
-test some_shit {
+test some_shit: ubuntu_installation {
 	VM1 {
-		start
-		vd_config("vd5")
+		/*start
+		vd_config("vd5")*/
+
+		#unplug hostdev usb "1-3"
+		#plug hostdev usb "1-3"
+		plug hostdev usb "1-3"
+
+		#abort "stop here"
 	}
 }

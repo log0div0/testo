@@ -406,3 +406,59 @@ test create_basic_vm_qxl {
 		abort "stop here"
 	}
 }
+
+machine basic_machine_usb3_1 {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test create_basic_machine_usb3_1 {
+	basic_machine_usb3_1 {
+		start
+		wait "Language"
+		abort "stop here"
+	}
+}
+
+machine basic_machine_usb3_2 {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+
+	qemu_enable_usb3: true
+}
+
+test create_basic_machine_usb3_2 {
+	basic_machine_usb3_2 {
+		start
+		wait "Language"
+		abort "stop here"
+	}
+}
+
+machine basic_machine_usb2 {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+
+	qemu_enable_usb3: false
+}
+
+test create_basic_machine_usb2 {
+	basic_machine_usb2 {
+		start
+		wait "Language"
+		abort "stop here"
+	}
+}
+

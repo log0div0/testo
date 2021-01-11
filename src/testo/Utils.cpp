@@ -238,3 +238,28 @@ std::string get_metadata(const fs::path& file, const std::string& key) {
 	}
 	return metadata.at(key).get<std::string>();
 }
+
+std::vector<std::string> parse_usb_addr(const std::string& addr) {
+	std::stringstream ss(addr);
+	std::string segment;
+	std::vector<std::string> seglist;
+
+	while(std::getline(ss, segment, '-'))
+	{
+		seglist.push_back(segment);
+	}
+
+	if (seglist.size() != 2) {
+		throw std::runtime_error("Parsing usb addr error");
+	}
+
+	if (!is_number(seglist[0])) {
+		throw std::runtime_error("Parsing usb addr error");
+	}
+
+	if (!is_number(seglist[1])) {
+		throw std::runtime_error("Parsing usb addr error");
+	}
+
+	return seglist;
+}

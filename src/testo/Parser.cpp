@@ -917,6 +917,86 @@ std::shared_ptr<MouseMoveTarget<MouseCoordinates>> Parser::mouse_coordinates() {
 	return std::make_shared<MouseMoveTarget<MouseCoordinates>>(target);
 }
 
+std::shared_ptr<AST::IPlugResource> Parser::plug_resource() {
+	std::shared_ptr<IPlugResource> result = nullptr;
+	if (LA(1) == Token::category::flash) {
+		result = plug_resource_flash();
+	} else if (LA(1) == Token::category::dvd) {
+		result = plug_resource_dvd();
+	} else if (LA(1) == Token::category::hostdev) {
+		result = plug_resource_hostdev();
+	} else if (LT(1).value() == "nic") {
+		result = plug_resource_nic();
+	} else if (LT(1).value() == "link") {
+		result = plug_resource_link();
+	} else {
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown device type for plug/unplug: " + LT(1).value());
+	}
+
+	return result;
+}
+
+std::shared_ptr<AST::PlugResource<AST::PlugFlash>> Parser::plug_resource_flash() {
+	Token flash_token = LT(1);
+	match(Token::category::flash);
+
+	auto name = string_token_union(Token::category::id);
+
+	auto resource = std::shared_ptr<AST::PlugFlash>(new AST::PlugFlash(flash_token, name));
+	return std::shared_ptr<AST::PlugResource<AST::PlugFlash>>(new AST::PlugResource<AST::PlugFlash>(resource));
+}
+
+std::shared_ptr<AST::PlugResource<AST::PlugNIC>> Parser::plug_resource_nic() {
+	Token nic_token = LT(1);
+	match(Token::category::id);
+
+	auto name = string_token_union(Token::category::id);
+
+	auto resource = std::shared_ptr<AST::PlugNIC>(new AST::PlugNIC(nic_token, name));
+	return std::shared_ptr<AST::PlugResource<AST::PlugNIC>>(new AST::PlugResource<AST::PlugNIC>(resource));
+}
+
+std::shared_ptr<AST::PlugResource<AST::PlugLink>> Parser::plug_resource_link() {
+	Token link_token = LT(1);
+	match(Token::category::id);
+
+	auto name = string_token_union(Token::category::id);
+
+	auto resource = std::shared_ptr<AST::PlugLink>(new AST::PlugLink(link_token, name));
+	return std::shared_ptr<AST::PlugResource<AST::PlugLink>>(new AST::PlugResource<AST::PlugLink>(resource));
+}
+
+std::shared_ptr<AST::PlugResource<AST::PlugDVD>> Parser::plug_resource_dvd() {
+	Token dvd_token = LT(1);
+	match(Token::category::dvd);
+
+	std::shared_ptr<AST::String> path = nullptr;
+
+	if (test_string()) {
+		path = string();
+	}
+
+	auto resource = std::shared_ptr<AST::PlugDVD>(new AST::PlugDVD(dvd_token, path));
+	return std::shared_ptr<AST::PlugResource<AST::PlugDVD>>(new AST::PlugResource<AST::PlugDVD>(resource));
+}
+
+std::shared_ptr<AST::PlugResource<AST::PlugHostDev>> Parser::plug_resource_hostdev() {
+	Token hostdev_token = LT(1);
+	match(Token::category::hostdev);
+
+	if (LA(1) != Token::category::usb) {
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown usb device type for plug/unplug: " + LT(1).value());
+	}
+
+	Token type = LT(1);
+
+	match(Token::category::usb);
+	std::shared_ptr<AST::String> addr = string();
+
+	auto resource = std::shared_ptr<AST::PlugHostDev>(new AST::PlugHostDev(hostdev_token, type, addr));
+	return std::shared_ptr<AST::PlugResource<AST::PlugHostDev>>(new AST::PlugResource<AST::PlugHostDev>(resource));
+}
+
 std::shared_ptr<Action<Plug>> Parser::plug() {
 	Token plug_token = LT(1);
 
@@ -926,32 +1006,8 @@ std::shared_ptr<Action<Plug>> Parser::plug() {
 		match(Token::category::unplug);
 	}
 
-	Token type = LT(1);
-	if (LA(1) == Token::category::flash) {
-		match(Token::category::flash);
-	} else if (LA(1) == Token::category::dvd) {
-		match(Token::category::dvd);
-	}
-	else {
-		if (LT(1).value() != "nic" && LT(1).value() != "link") {
-			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown device type for plug/unplug");
-		}
-		match(Token::category::id);
-	}
-
-	std::shared_ptr<StringTokenUnion> name = nullptr;
-
-	std::shared_ptr<String> path(nullptr);
-
-	if (type.type() == Token::category::dvd) {
-		if (plug_token.type() == Token::category::plug) {
-			path = string();
-		} //else this should be the end of unplug commands
-	} else {
-		name = string_token_union(Token::category::id);
-	}
-
-	auto action = std::shared_ptr<Plug>(new Plug(plug_token, type, name, path));
+	auto resource = plug_resource();
+	auto action = std::shared_ptr<Plug>(new Plug(plug_token, resource));
 	return std::shared_ptr<Action<Plug>>(new Action<Plug>(action));
 }
 

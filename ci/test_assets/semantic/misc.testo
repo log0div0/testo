@@ -173,3 +173,38 @@ test img_doesnt_lead_to_a_file {
 	}
 }
 
+test invalid_hostdev_usb_addr1 {
+	my_ubuntu_server {
+		plug hostdev usb "this is just silly"
+	}
+}
+
+test invalid_hostdev_usb_addr2 {
+	my_ubuntu_server {
+		plug hostdev usb "12-34-56"
+	}
+}
+
+test invalid_hostdev_usb_addr3 {
+	my_ubuntu_server {
+		plug hostdev usb "12-34 -56"
+	}
+}
+
+test invalid_hostdev_usb_addr4 {
+	my_ubuntu_server {
+		plug hostdev usb "bad-123"
+	}
+}
+
+test invalid_hostdev_usb_addr5 {
+	my_ubuntu_server {
+		plug hostdev usb "123-bad"
+	}
+}
+
+test invalid_hostdev_usb_addr6 {
+	my_ubuntu_server {
+		plug hostdev usb "123- 123"
+	}
+}

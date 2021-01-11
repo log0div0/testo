@@ -265,6 +265,10 @@ Token Lexer::id() {
 		return macro();
 	} else if (value == "dvd") {
 		return dvd();
+	} else if (value == "hostdev") {
+		return hostdev();
+	} else if (value == "usb") {
+		return usb();
 	} else if (value == "if") {
 		return if_();
 	} else if (value == "else") {
@@ -587,6 +591,20 @@ Token Lexer::dvd() {
 	std::string value("dvd");
 	advance(value.length());
 	return Token(Token::category::dvd, value, tmp_pos, previous_pos);
+}
+
+Token Lexer::hostdev() {
+	Pos tmp_pos = current_pos;
+	std::string value("hostdev");
+	advance(value.length());
+	return Token(Token::category::hostdev, value, tmp_pos, previous_pos);
+}
+
+Token Lexer::usb() {
+	Pos tmp_pos = current_pos;
+	std::string value("usb");
+	advance(value.length());
+	return Token(Token::category::usb, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::if_() {

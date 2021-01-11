@@ -1,0 +1,57 @@
+
+include "install_guest_additions.testo"
+
+machine dummy_machine {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test plug_hostdev: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		plug hostdev usb "1-3"
+		sleep 2s;
+		exec bash "lsusb | grep \"Bus 001 Device 003\""
+		abort "stop here"
+	}
+}
+
+test plug_already_plugged_hostdev: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		plug hostdev usb "1-3"
+		plug hostdev usb "1-3"
+	}
+}
+
+
+test plug_already_plugged_hostdev_2: install_ubuntu_server_guest_additions {
+	dummy_machine {
+		start
+		plug hostdev usb "1-3"
+	}
+	my_ubuntu_server {
+		plug hostdev usb "1-3"
+	}
+}
+
+test finish_test_with_plugged_hostdev {
+	dummy_machine {
+		plug hostdev usb "1-3"
+	}
+}
+
+test unplug_already_unplugged_hostdev {
+	dummy_machine {
+		unplug hostdev usb "1-3"
+	}
+}
+
+test plug_unexisting_hostdev: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		plug hostdev usb "5-3"
+	}
+}
+

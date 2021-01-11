@@ -244,14 +244,6 @@ void QemuVM::install() {
 
 		string_config += R"(
 			<devices>
-				<controller type='usb' index='0' model='ich9-ehci1'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci1'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci2'>
-				</controller>
-				<controller type='usb' index='0' model='ich9-uhci3'>
-				</controller>
 				<controller type='ide' index='0'>
 				</controller>
 				<controller type='virtio-serial' index='0'>
@@ -285,6 +277,28 @@ void QemuVM::install() {
 				<memballoon model='virtio'>
 				</memballoon>
 		)";
+
+		if (!config.count("qemu_enable_usb3")) {
+			config["qemu_enable_usb3"] = true;
+		}
+
+		if (config.at("qemu_enable_usb3")) {
+			string_config += R"(
+				<controller type='usb' index='0' model='nec-xhci' ports='15'>
+				</controller>
+			)";
+		} else {
+			string_config += R"(
+				<controller type='usb' index='0' model='ich9-ehci1'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci1'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci2'>
+				</controller>
+				<controller type='usb' index='0' model='ich9-uhci3'>
+				</controller>
+			)";
+		}
 
 		string_config += R"(
 			<video>
@@ -346,8 +360,11 @@ void QemuVM::install() {
 			)", disk_targets[i]);
 		}
 
+		if (!config.count("qemu_spice_agent")) {
+			config["qemu_spice_agent"] = false;
+		}
 
-		if (config.value("qemu_spice_agent", false)) {
+		if (config.at("qemu_spice_agent")) {
 			string_config += R"(
 			<channel type='spicevmc'>
 				<target type='virtio' name='com.redhat.spice.0'/>
@@ -1064,6 +1081,93 @@ void QemuVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 		attach_flash_drive(fd->img_path());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Plugging flash drive {}", fd->name())));
+	}
+}
+
+bool QemuVM::is_hostdev_plugged() {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
+
+		for (auto hostdev = devices.child("hostdev"); hostdev; hostdev = hostdev.next_sibling("hostdev")) {
+			return true;
+		
+		}
+
+		return false;
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking for plugged hostdevs")));
+	}
+}
+
+void QemuVM::plug_hostdev_usb(const std::string& addr) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		auto parsed_addr = parse_usb_addr(addr);
+
+		std::string string_config = fmt::format(R"(
+			<hostdev mode='subsystem' type='usb'>
+				<source>
+					<address bus='{}' device='{}'/>
+				</source>
+			  </hostdev>
+			)", parsed_addr[0], parsed_addr[1]);
+
+		//we just need to create new device
+		//TODO: check if CURRENT is enough
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		pugi::xml_document disk_config;
+		disk_config.load_string(string_config.c_str());
+
+		domain.attach_device(disk_config, flags);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Plugging host dev usb device {}", addr)));
+	}
+}
+
+void QemuVM::unplug_hostdev_usb(const std::string& addr) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
+
+		//TODO: check if CURRENT is enough
+		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
+
+		if (domain.is_active()) {
+			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
+		}
+
+		auto parsed_addr = parse_usb_addr(addr);
+
+		bool found = false;
+
+		for (auto hostdev = devices.child("hostdev"); hostdev; hostdev = hostdev.next_sibling("hostdev")) {
+			auto hostdev_addr = hostdev.child("source").child("address");
+
+			if ((std::string(hostdev_addr.attribute("bus").value()) == parsed_addr[0])
+				&& (std::string(hostdev_addr.attribute("device").value()) == parsed_addr[1])) 
+			{
+				domain.detach_device(hostdev, flags);
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) {
+			throw std::runtime_error("Requested usb device is not plugged into the virtual machine");
+		}
+
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Unplugging host dev usb device {}", addr)));
 	}
 }
 

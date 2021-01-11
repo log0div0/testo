@@ -313,6 +313,12 @@ void HyperVVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 void HyperVVM::unplug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+void HyperVVM::plughostdev_usb(const std::string& addr) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+void HyperVVM::unplug_hostdev_usb(const std::string& addr) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
 bool HyperVVM::is_dvd_plugged() const {
 	try {
 		auto machine = connect.machine(id());

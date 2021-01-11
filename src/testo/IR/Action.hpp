@@ -111,11 +111,33 @@ struct MouseRelease:Action<AST::MouseRelease> {
 
 struct Plug: Action<AST::Plug> {
 	using Action<AST::Plug>::Action;
-
 	bool is_on() const;
-	std::string entity_type() const;
-	std::string entity_name() const;
-	fs::path dvd_path() const;
+};
+
+struct PlugFlash: Action<AST::PlugFlash> {
+	using Action<AST::PlugFlash>::Action;
+	std::string name() const;
+};
+
+struct PlugNIC: Action<AST::PlugNIC> {
+	using Action<AST::PlugNIC>::Action;
+	std::string name() const;
+};
+
+struct PlugLink: Action<AST::PlugLink> {
+	using Action<AST::PlugLink>::Action;
+	std::string name() const;
+};
+
+struct PlugHostDev: Action<AST::PlugHostDev> {
+	using Action<AST::PlugHostDev>::Action;
+	std::string type() const;
+	std::string addr() const;
+};
+
+struct PlugDVD: Action<AST::PlugDVD> {
+	using Action<AST::PlugDVD>::Action;
+	fs::path path() const;
 };
 
 struct Start:Action<AST::Start> {

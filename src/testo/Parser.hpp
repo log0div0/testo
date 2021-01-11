@@ -95,6 +95,12 @@ private:
 	std::shared_ptr<AST::MouseAdditionalSpecifier> mouse_additional_specifier();
 	std::shared_ptr<AST::MouseMoveTarget<AST::MouseSelectable>> mouse_selectable();
 	std::shared_ptr<AST::MouseMoveTarget<AST::MouseCoordinates>> mouse_coordinates();
+	std::shared_ptr<AST::IPlugResource> plug_resource();
+	std::shared_ptr<AST::PlugResource<AST::PlugNIC>> plug_resource_nic();
+	std::shared_ptr<AST::PlugResource<AST::PlugLink>> plug_resource_link();
+	std::shared_ptr<AST::PlugResource<AST::PlugFlash>> plug_resource_flash();
+	std::shared_ptr<AST::PlugResource<AST::PlugDVD>> plug_resource_dvd();
+	std::shared_ptr<AST::PlugResource<AST::PlugHostDev>> plug_resource_hostdev();
 	std::shared_ptr<AST::Action<AST::Plug>> plug();
 	std::shared_ptr<AST::Action<AST::Start>> start();
 	std::shared_ptr<AST::Action<AST::Stop>> stop();
