@@ -2,7 +2,7 @@
 #include "HyperVNetwork.hpp"
 
 HyperVNetwork::HyperVNetwork(const nlohmann::json& config): Network(config) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	std::cout << "HyperVNetwork " << config.dump(4) << std::endl;
 }
 
 bool HyperVNetwork::is_defined() {
@@ -10,9 +10,9 @@ bool HyperVNetwork::is_defined() {
 }
 
 void HyperVNetwork::create() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }
 
 void HyperVNetwork::undefine() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
 }

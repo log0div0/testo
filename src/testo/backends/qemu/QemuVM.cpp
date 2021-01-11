@@ -18,63 +18,19 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		"hdd"
 	};
 
-	if (!config.count("name")) {
-		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field \"name\" is not specified");
-	}
-
-	if (!config.count("ram")) {
-		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field \"ram\" is not specified");
-	}
-
-	if (!config.count("cpus")) {
-		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field \"cpu\" is not specified");
-	}
-
-	if (!config.count("disk")) {
-		throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: you must specify at least 1 disk");
-	}
-
 	if (config.count("disk")) {
 		auto disks = config.at("disk");
 
 		if (disks.size() > disk_targets.size() - 1) {
-			throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: too many disks specified, maximum amount: " + std::to_string(disk_targets.size() - 1));
-		}
-
-		for (auto& disk: disks) {
-			if (!(disk.count("size") ^ disk.count("source"))) {
-				throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: either field \"size\" or \"source\" must be specified for the disk \"" +
-					disk.at("name").get<std::string>() + "\"");
-			}
-		}
-
-		for (uint32_t i = 0; i < disks.size(); i++) {
-			for (uint32_t j = i + 1; j < disks.size(); j++) {
-				if (disks[i].at("name") == disks[j].at("name")) {
-					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: two identical disk names: \"" +
-						disks[i].at("name").get<std::string>() + "\"");
-				}
-			}
+			throw std::runtime_error("Constructing VM \"" + id() + "\" error: too many disks specified, maximum amount: " + std::to_string(disk_targets.size() - 1));
 		}
 	}
 
 	if (config.count("nic")) {
 		auto nics = config.at("nic");
+
 		for (auto& nic: nics) {
-			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: field attached_to is not specified for the nic \"" +
-					nic.at("name").get<std::string>() + "\"");
-			}
-
-			if (nic.count("mac")) {
-				std::string mac = nic.at("mac").get<std::string>();
-				if (!is_mac_correct(mac)) {
-					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: incorrect mac string: \"" + mac + "\"");
-				}
-			}
-
 			if (nic.count("adapter_type")) {
-				//ne2k_pci,i82551,i82557b,i82559er,rtl8139,e1000,pcnet,virtio,sungem
 				std::string driver = nic.at("adapter_type").get<std::string>();
 				if (driver != "ne2k_pci" &&
 					driver != "i82551" &&
@@ -86,17 +42,8 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 					driver != "virtio" &&
 					driver != "sungem")
 				{
-					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: nic \"" +
+					throw std::runtime_error("Constructing VM \"" + id() + "\" error: nic \"" +
 						nic.at("name").get<std::string>() + "\" has unsupported adapter type: \"" + driver + "\"");
-				}
-			}
-		}
-
-		for (uint32_t i = 0; i < nics.size(); i++) {
-			for (uint32_t j = i + 1; j < nics.size(); j++) {
-				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: two identical NIC names: \"" +
-						nics[i].at("name").get<std::string>() + "\"");
 				}
 			}
 		}
@@ -104,10 +51,6 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 
 	if (config.count("video")) {
 		auto videos = config.at("video");
-
-		if (videos.size() > 1) {
-			throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: multiple video devices are not supported at the moment");
-		}
 
 		for (auto& video: videos) {
 			auto video_model = video.value("qemu_mode", preferable_video_model());
@@ -119,7 +62,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 				(video_model != "qxl") &&
 				(video_model != "cirrus"))
 			{
-				throw std::runtime_error("Constructing QemuVM \"" + id() + "\" error: unsupported qemu_mode \"" + video_model + "\" for video " + video.at("name").get<std::string>());
+				throw std::runtime_error("Constructing VM \"" + id() + "\" error: unsupported qemu_mode \"" + video_model + "\" for video " + video.at("name").get<std::string>());
 			}
 		}
 	}
