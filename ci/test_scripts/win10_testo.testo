@@ -1,9 +1,10 @@
 
 include "win10.testo"
 
-[no_snapshots: true]
-test win10_test_testo_install_cpu: win10_install_guest_additions {
+test win10_test_testo_install_cpu: win10_prepare {
 	win10 {
+		start
+		wait "Корзина"
 		copyto "${OUT_DIR}/testo-cpu.msi" "C:\\Users\\user\\Desktop\\testo.msi"
 		mouse dclick "testo"
 		wait "Welcome to the Testo Setup"; press Enter
@@ -13,16 +14,19 @@ test win10_test_testo_install_cpu: win10_install_guest_additions {
 		wait "Ready to install"; press Enter
 		wait "Разрешить этому приложению"
 		mouse click "Да".from_bottom(0)
-		wait "Click the Finish button"; press Enter
+		wait "Click the Finish button"
+		mouse click "Finish".from_bottom(0)
 		wait !"Click the Finish button"
-
 		exec cmd "testo version"
+		shutdown
 	}
 }
 
 [no_snapshots: true]
-test win10_test_testo_install_gpu: win10_install_guest_additions {
+test win10_test_testo_install_gpu: win10_prepare {
 	win10 {
+		start
+		wait "Корзина"
 		copyto "${OUT_DIR}/testo-gpu.msi" "C:\\Users\\user\\Desktop\\testo.msi"
 		mouse dclick "testo"
 		wait "Welcome to the Testo Setup"; press Enter

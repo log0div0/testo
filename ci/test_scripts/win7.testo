@@ -14,7 +14,7 @@ machine win7 {
 	}
 }
 
-test win7_installation {
+test win7_install_os {
 	win7 {
 		start
 		wait "Choose an operating system"

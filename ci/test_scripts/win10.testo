@@ -15,7 +15,7 @@ machine win10 {
 }
 
 [no_snapshots: true]
-test win10_installation_part_1 {
+test win10_install_os_part_1 {
 	win10 {
 		start
 		mouse click "Мой язык - русский" timeout 20m
@@ -34,7 +34,7 @@ test win10_installation_part_1 {
 	}
 }
 
-test win10_installation_part_2: win10_installation_part_1 {
+test win10_install_os_part_2: win10_install_os_part_1 {
 	win10 {
 		wait "Продолжить на выбранном языке?"
 		mouse move 0 0; sleep 5s
@@ -63,7 +63,7 @@ test win10_installation_part_2: win10_installation_part_1 {
 		wait "Какое имя вы хотите использовать?"
 		mouse move 0 0; sleep 5s
 		mouse click "Имя".from_bottom(0)
-		press LeftAlt+LeftShift; type "user"; press Enter
+		press LeftAlt+LeftShift; sleep 5s; type "user"; press Enter
 
 		mouse move 0 0; sleep 5s
 		mouse click "Пароль".from_bottom(0)
@@ -106,7 +106,21 @@ test win10_installation_part_2: win10_installation_part_1 {
 }
 
 [no_snapshots: true]
-test win10_prepare: win10_installation_part_2 {
+test win10_activate: win10_install_os_part_2 {
+	win10 {
+		mouse move "Activator"
+		mouse click
+		mouse dclick
+		wait "Разрешить этому приложению"
+		mouse click "Да".from_bottom(0)
+		mouse click "Активировать Windows 10"
+		wait "Постоянная активация прошла успешно"
+		press LeftAlt+F4
+	}
+}
+
+[no_snapshots: true]
+test win10_enable_autologin: win10_activate {
 	win10 {
 		press LeftMeta+R
 		wait "Введите имя программы"
@@ -121,13 +135,17 @@ test win10_prepare: win10_installation_part_2 {
 		wait !"Автоматический вход в систему"
 		press LeftAlt+F4
 		wait !"Учетные записи пользователей"
+		shutdown
+		start
+		wait "Корзина"
 	}
 }
 
 [no_snapshots: true]
-test win10_install_hyperv: win10_prepare {
+test win10_install_hyperv: win10_enable_autologin {
 	win10 {
-		mouse click "Чтобы начать поиск, введите здесь"; sleep 2s
+		mouse click "поиск"; sleep 2s
+		press LeftAlt+LeftShift; sleep 2s
 		type "PowerShell"; sleep 2s
 		mouse click "Запуск от имени администратора"
 		wait "Разрешить этому приложению"
@@ -142,6 +160,7 @@ test win10_install_hyperv: win10_prepare {
 	}
 }
 
+[no_snapshots: true]
 test win10_install_guest_additions: win10_install_hyperv {
 	win10 {
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
@@ -163,5 +182,25 @@ test win10_install_guest_additions: win10_install_hyperv {
 		exec cmd "echo hello world"
 		unplug dvd
 		sleep 5s
+	}
+}
+
+[no_snapshots: true]
+test win10_install_python: win10_install_guest_additions {
+	win10 {
+		exec cmd """
+			curl https://www.python.org/ftp/python/3.8.7/python-3.8.7-amd64.exe -o C:\\Users\\user\\Downloads\\python.exe
+			C:\\Users\\user\\Downloads\\python.exe /quiet InstallAllUsers=1 PrependPath=1
+		"""
+		exec cmd """
+			pip install pytest
+		"""
+	}
+}
+
+test win10_prepare: win10_install_python {
+	win10 {
+		copyto "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso" "C:\\ubuntu-16.04.6-server-amd64.iso"
+		shutdown
 	}
 }

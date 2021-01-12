@@ -1,11 +1,9 @@
 
 include "win10.testo"
 
-test win10_test_ga_install: win10_installation_part_2 {
+test win10_test_ga_install: win10_install_os_part_2 {
 	win10 {
 		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
-		mouse click "Поиск видеодрайвера"
-		sleep 5s
 		mouse click "CD-дисковод"
 		sleep 5s
 		mouse click "Выполнить autorun"
