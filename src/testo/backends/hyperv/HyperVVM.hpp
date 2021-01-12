@@ -1,4 +1,4 @@
-addr
+
 #pragma once
 
 #include "../VM.hpp"
@@ -29,6 +29,7 @@ struct HyperVVM: VM {
 	void set_link(const std::string& nic, bool is_connected) override;
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
 	void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
+	bool is_hostdev_plugged() override;
 	void plug_hostdev_usb(const std::string& addr) override;
 	void unplug_hostdev_usb(const std::string& addr) override;
 	bool is_dvd_plugged() const override;
