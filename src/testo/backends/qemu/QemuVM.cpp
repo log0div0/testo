@@ -1092,7 +1092,6 @@ bool QemuVM::is_hostdev_plugged() {
 
 		for (auto hostdev = devices.child("hostdev"); hostdev; hostdev = hostdev.next_sibling("hostdev")) {
 			return true;
-		
 		}
 
 		return false;
@@ -1111,10 +1110,10 @@ void QemuVM::plug_hostdev_usb(const std::string& addr) {
 		std::string string_config = fmt::format(R"(
 			<hostdev mode='subsystem' type='usb'>
 				<source>
-					<address bus='{}' device='{}'/>
+					<address bus='{:#x}' device='{:#x}'/>
 				</source>
 			  </hostdev>
-			)", parsed_addr[0], parsed_addr[1]);
+			)", parsed_addr.first, parsed_addr.second);
 
 		//we just need to create new device
 		//TODO: check if CURRENT is enough
@@ -1153,8 +1152,11 @@ void QemuVM::unplug_hostdev_usb(const std::string& addr) {
 		for (auto hostdev = devices.child("hostdev"); hostdev; hostdev = hostdev.next_sibling("hostdev")) {
 			auto hostdev_addr = hostdev.child("source").child("address");
 
-			if ((std::string(hostdev_addr.attribute("bus").value()) == parsed_addr[0])
-				&& (std::string(hostdev_addr.attribute("device").value()) == parsed_addr[1])) 
+			int bus_id = std::stoi(hostdev_addr.attribute("bus").value(), 0, 0);
+			int dev_id = std::stoi(hostdev_addr.attribute("device").value(), 0, 0);
+
+			if ((bus_id == parsed_addr.first)
+				&& (dev_id == parsed_addr.second))
 			{
 				domain.detach_device(hostdev, flags);
 				found = true;
