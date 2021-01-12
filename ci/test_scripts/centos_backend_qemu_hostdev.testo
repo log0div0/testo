@@ -14,7 +14,9 @@ test centos_backend_qemu_plug_hostdev: centos_backend_qemu_install_guest_additio
 		copyto "${TEST_ASSETS_DIR}/backend/action_hostdev.testo" "/opt/scripts/action_hostdev.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/action_hostdev.testo --stop_on_fail --test_spec plug_hostdev | grep "stop here"
+			BUS_ID=$(lsusb -d 46f4: | awk '{print $2}')
+			DEV_ID=$(lsusb -d 46f4: | awk '{print substr($4, 1, length($4) - 1)}')
+			testo run /opt/scripts/action_hostdev.testo --param BUS_ID $BUS_ID --param DEV_ID $DEV_ID --stop_on_fail --test_spec plug_hostdev | grep "stop here"
 		""" timeout 30m
 	}
 }
@@ -27,11 +29,13 @@ test centos_backend_qemu_plug_hostdev_exceptions: centos_backend_qemu_install_gu
 		copyto "${TEST_ASSETS_DIR}/backend/action_hostdev.testo" "/opt/scripts/action_hostdev.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/action_hostdev.testo --stop_on_fail --test_spec plug_already_plugged_hostdev | grep "device is already in the domain configuration"
-			testo run /opt/scripts/action_hostdev.testo --stop_on_fail --test_spec plug_already_plugged_hostdev_2 | grep "USB device 001:003 is in use by driver QEMU, domain dummy_machine"
-			testo run /opt/scripts/action_hostdev.testo --stop_on_fail --test_spec finish_test_with_plugged_hostdev 2>&1 | grep "Please unplug all plugged hostdevs before the end of the test"
-			testo run /opt/scripts/action_hostdev.testo --stop_on_fail --test_spec unplug_already_unplugged_hostdev | grep "Requested usb device is not plugged into the virtual machine"
-			testo run /opt/scripts/action_hostdev.testo --stop_on_fail --test_spec plug_unexisting_hostdev | grep "Did not find USB device bus:5 device:3"
+			BUS_ID=$(lsusb -d 46f4: | awk '{print $2}')
+			DEV_ID=$(lsusb -d 46f4: | awk '{print substr($4, 1, length($4) - 1)}')
+			testo run /opt/scripts/action_hostdev.testo --param BUS_ID $BUS_ID --param DEV_ID $DEV_ID --stop_on_fail --test_spec plug_already_plugged_hostdev | grep "device is already in the domain configuration"
+			testo run /opt/scripts/action_hostdev.testo --param BUS_ID $BUS_ID --param DEV_ID $DEV_ID --stop_on_fail --test_spec plug_already_plugged_hostdev_2 | grep "USB device $BUS_ID:$DEV_ID is in use by driver QEMU, domain dummy_machine"
+			testo run /opt/scripts/action_hostdev.testo --param BUS_ID $BUS_ID --param DEV_ID $DEV_ID --stop_on_fail --test_spec finish_test_with_plugged_hostdev 2>&1 | grep "Please unplug all plugged hostdevs before the end of the test"
+			testo run /opt/scripts/action_hostdev.testo --param BUS_ID $BUS_ID --param DEV_ID $DEV_ID --stop_on_fail --test_spec unplug_already_unplugged_hostdev | grep "Requested usb device is not plugged into the virtual machine"
+			testo run /opt/scripts/action_hostdev.testo --param BUS_ID $BUS_ID --param DEV_ID $DEV_ID --stop_on_fail --test_spec plug_unexisting_hostdev | grep "Did not find USB device bus:5 device:3"
 
 		""" timeout 30m
 	}

@@ -12,17 +12,17 @@ machine dummy_machine {
 
 test plug_hostdev: install_ubuntu_server_guest_additions {
 	my_ubuntu_server {
-		plug hostdev usb "1-3"
+		plug hostdev usb "${BUS_ID}-${DEV_ID}"
 		sleep 2s;
-		exec bash "lsusb | grep \"Bus 001 Device 003\""
+		exec bash "lsusb | grep \"Bus ${BUS_ID} Device ${DEV_ID}\""
 		abort "stop here"
 	}
 }
 
 test plug_already_plugged_hostdev: install_ubuntu_server_guest_additions {
 	my_ubuntu_server {
-		plug hostdev usb "1-3"
-		plug hostdev usb "1-3"
+		plug hostdev usb "${BUS_ID}-${DEV_ID}"
+		plug hostdev usb "${BUS_ID}-${DEV_ID}"
 	}
 }
 
@@ -30,22 +30,22 @@ test plug_already_plugged_hostdev: install_ubuntu_server_guest_additions {
 test plug_already_plugged_hostdev_2: install_ubuntu_server_guest_additions {
 	dummy_machine {
 		start
-		plug hostdev usb "1-3"
+		plug hostdev usb "${BUS_ID}-${DEV_ID}"
 	}
 	my_ubuntu_server {
-		plug hostdev usb "1-3"
+		plug hostdev usb "${BUS_ID}-${DEV_ID}"
 	}
 }
 
 test finish_test_with_plugged_hostdev {
 	dummy_machine {
-		plug hostdev usb "1-3"
+		plug hostdev usb "${BUS_ID}-${DEV_ID}"
 	}
 }
 
 test unplug_already_unplugged_hostdev {
 	dummy_machine {
-		unplug hostdev usb "1-3"
+		unplug hostdev usb "${BUS_ID}-${DEV_ID}"
 	}
 }
 
