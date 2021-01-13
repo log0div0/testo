@@ -296,23 +296,19 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	Token test = LT(1);
 	match(Token::category::test);
 
-	Token name = LT(1);
+	std::shared_ptr<StringTokenUnion> name = string_token_union(Token::category::id);
 
-	match(Token::category::id);
-
-	std::vector<Token> parents;
+	std::vector<std::shared_ptr<StringTokenUnion>> parents;
 
 	if (LA(1) == Token::category::colon) {
  		match(Token::category::colon);
  		newline_list();
- 		parents.push_back(LT(1));
- 		match(Token::category::id);
+ 		parents.push_back(string_token_union(Token::category::id));
 
  		while (LA(1) == Token::category::comma) {
  			match(Token::category::comma);
  			newline_list();
- 			parents.push_back(LT(1));
- 			match(Token::category::id);
+ 			parents.push_back(string_token_union(Token::category::id));
  		}
 	}
 

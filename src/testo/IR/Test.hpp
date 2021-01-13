@@ -13,6 +13,9 @@ struct Test: Object<AST::Test> {
 	static std::list<std::shared_ptr<Test>> get_test_path(const std::shared_ptr<Test>& test);
 
 	static std::string type_name() { return "test"; }
+	std::string name() const;
+	std::vector<std::string> parent_names() const;
+
 	std::set<std::shared_ptr<Test>> parents;
 
 	std::set<std::shared_ptr<Controller>> get_all_controllers();

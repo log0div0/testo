@@ -199,7 +199,7 @@ void Program::validate_special_params() {
 
 void Program::setup_tests_parents() {
 	for (auto& test: ordered_tests) {
-		auto test_name = test->ast_node->name.value();
+		auto test_name = test->name();
 
 		if (config.validate_test_name(test_name)) {
 			setup_test_parents(test);
@@ -215,21 +215,24 @@ void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
 	}
 
 	all_selected_tests.push_back(test);
-	for (auto& parent_token: test->ast_node->parents_tokens) {
-		std::string parent_name = parent_token.value();
+
+	auto parent_names = test->parent_names();
+
+	for (size_t i = 0; i < parent_names.size(); i++) {
+		auto parent_name = parent_names[i];
 
 		if (parent_name == test->name()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_name);
+			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: can't specify test as a parent to itself " + parent_name);
 		}
 
 		auto parent = tests.find(parent_name);
 		if (parent == tests.end()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_name);
+			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: unknown test: " + parent_name);
 		}
 
 		auto result = test->parents.insert(parent->second);
 		if (!result.second) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_name);
+			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: this test was already specified in parent list " + parent_name);
 		}
 
 		setup_test_parents(parent->second);

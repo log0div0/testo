@@ -1630,13 +1630,13 @@ struct AttrBlock: public Node {
 
 struct Test: public Node {
 	Test(std::shared_ptr<AttrBlock> attrs,
-		const Token& test, const Token& name,
-		const std::vector<Token>& parents_tokens,
+		const Token& test, std::shared_ptr<StringTokenUnion> name,
+		const std::vector<std::shared_ptr<StringTokenUnion>>& parents,
 		std::shared_ptr<CmdBlock> cmd_block):
 		Node(test),
 		attrs(attrs),
 		name(name),
-		parents_tokens(parents_tokens),
+		parents(parents),
 		cmd_block(cmd_block) {}
 
 	Pos begin() const {
@@ -1652,13 +1652,13 @@ struct Test: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + " " + name.value();
+		std::string result = t.value() + " " + std::string(*name);
 		return result; //for now
 	}
 
 	std::shared_ptr<AttrBlock> attrs;
-	Token name;
-	std::vector<Token> parents_tokens;
+	std::shared_ptr<StringTokenUnion> name;
+	std::vector<std::shared_ptr<StringTokenUnion>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
 };
 

@@ -112,3 +112,25 @@ test some_shit: ubuntu_installation {
 		#abort "stop here"
 	}
 }
+
+
+param shit "SUPER_SHIT"
+param VM_NAME "VM1"
+
+test "some_${shit}_parent1" {
+	VM1 {
+		print "Hello ${shit} from parent 1"
+	}
+}
+
+test "some_${shit}_parent2" {
+	
+}
+
+test "some_${shit}_child": "some_${shit}_parent1", "some_${shit}_parent2" {
+	"${VM_NAME}" {
+		print "Hello ${shit} child!"
+	}
+}
+
+

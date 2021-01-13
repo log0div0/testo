@@ -773,7 +773,7 @@ void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
 	current_test->cksum_input << "hostdev " << plug_hostdev.type() << " \"" << plug_hostdev.addr() << "\"";
 
 	try {
-		auto parsed_addr = parse_usb_addr(plug_hostdev.addr());
+		parse_usb_addr(plug_hostdev.addr());
 	} catch (const std::exception& error) {
 		throw std::runtime_error(std::string(plug_hostdev.ast_node->begin()) + ": Error: spicified usb addr is not valid: " + plug_hostdev.addr());
 	}
