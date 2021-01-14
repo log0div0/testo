@@ -2,6 +2,10 @@
 #include "Program.hpp"
 #include "../backends/Environment.hpp"
 #include "nn/OnnxRuntime.hpp"
+#include <fmt/format.h>
+#include "../TemplateLiterals.hpp"
+#include "../Exceptions.hpp"
+#include "../Parser.hpp"
 #include <wildcards.hpp>
 
 namespace IR {
@@ -141,25 +145,37 @@ void Program::setup_stack() {
 
 void Program::collect_top_level_objects(const std::shared_ptr<AST::Program>& ast) {
 	for (auto stmt: ast->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-			collect_test(p->stmt);
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
-			collect_macro(p->stmt);
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
-			collect_param(p->stmt);
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
-			if (p->t.type() == Token::category::machine) {
-				collect_machine(p->stmt);
-			} else if (p->t.type() == Token::category::flash) {
-				collect_flash_drive(p->stmt);
-			} else if (p->t.type() == Token::category::network) {
-				collect_network(p->stmt);
-			} else {
-				throw std::runtime_error("Unknown controller type");
-			}
+		visit_stmt(stmt);
+	}
+}
+
+void Program::visit_stmt(const std::shared_ptr<AST::IStmt>& stmt) {
+	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
+		collect_test(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::MacroCall>>(stmt)) {
+		visit_macro_call(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
+		collect_macro(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
+		collect_param(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
+		if (p->t.type() == Token::category::machine) {
+			collect_machine(p->stmt);
+		} else if (p->t.type() == Token::category::flash) {
+			collect_flash_drive(p->stmt);
+		} else if (p->t.type() == Token::category::network) {
+			collect_network(p->stmt);
 		} else {
-			throw std::runtime_error("Unknown statement");
+			throw std::runtime_error("Unknown controller type");
 		}
+	} else {
+		throw std::runtime_error("Unknown statement");
+	}
+}
+
+void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block) {
+	for (auto stmt: stmt_block->stmts) {
+		visit_stmt(stmt);
 	}
 }
 
@@ -167,9 +183,108 @@ void Program::collect_test(const std::shared_ptr<AST::Test>& test) {
 	auto inserted = insert_object(test, tests);
 	ordered_tests.push_back(inserted);;
 }
+
+void Program::visit_macro(std::shared_ptr<IR::Macro> macro) {
+	auto result = visited_macros.insert(macro);
+	if (!result.second) {
+		return;
+	}
+
+	StackPusher<Program> new_ctx(this, macro->stack);
+
+	for (size_t i = 0; i < macro->ast_node->args.size(); ++i) {
+		for (size_t j = i + 1; j < macro->ast_node->args.size(); ++j) {
+			if (macro->ast_node->args[i]->name() == macro->ast_node->args[j]->name()) {
+				throw std::runtime_error(std::string(macro->ast_node->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->ast_node->args[j]->name());
+			}
+		}
+	}
+
+	bool has_default = false;
+	for (auto arg: macro->ast_node->args) {
+		if (arg->default_value) {
+			has_default = true;
+			continue;
+		}
+
+		if (has_default && !arg->default_value) {
+			throw std::runtime_error(std::string(arg->begin()) + ": Error: default value must be specified for macro arg " + arg->name());
+		}
+	}
+}
+
+void Program::visit_macro_call(const std::shared_ptr<AST::MacroCall>& macro_call) {
+	auto macro = get_macro_or_null(macro_call->name().value());
+	if (!macro) {
+		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
+	}
+
+	visit_macro(macro);
+
+	uint32_t args_with_default = 0;
+
+	for (auto arg: macro->ast_node->args) {
+		if (arg->default_value) {
+			args_with_default++;
+		}
+	}
+
+	if (macro_call->args.size() < macro->ast_node->args.size() - args_with_default) {
+		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_call->begin()),
+			macro->ast_node->args.size() - args_with_default, macro_call->args.size()));
+	}
+
+	if (macro_call->args.size() > macro->ast_node->args.size()) {
+		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_call->begin()),
+			macro->ast_node->args.size(), macro_call->args.size()));
+	}
+
+	std::map<std::string, std::string> vars;
+
+	for (size_t i = 0; i < macro_call->args.size(); ++i) {
+		try {
+			auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
+			vars[macro->ast_node->args[i]->name()] = value;
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(macro_call->args[i]->begin(), macro_call->args[i]->text()));
+		}
+	}
+
+	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
+		try {
+			auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
+			vars[macro->ast_node->args[i]->name()] = value;
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(macro->ast_node->args[i]->default_value->begin(), macro->ast_node->args[i]->default_value->text()));
+		}
+	}
+
+	StackPusher<Program> new_ctx(this, macro->new_stack(vars));
+
+	if (!macro->ast_node->body) {
+		Parser parser(macro->ast_node->body_tokens);
+
+		auto stmt_block = parser.stmt_block();
+		auto body = std::shared_ptr<AST::MacroBodyStmt>(new AST::MacroBodyStmt(stmt_block));
+		macro->ast_node->body = std::shared_ptr<AST::MacroBody<AST::MacroBodyStmt>>(new AST::MacroBody<AST::MacroBodyStmt>(body));
+	}
+
+	try {
+		auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyStmt>>(macro->ast_node->body);
+		if (p == nullptr) {
+			throw std::runtime_error(std::string(macro_call->begin()) + ": Error: the \"" + macro_call->name().value() + "\" macro does not contain statements, as expected");
+		}
+
+		visit_statement_block(p->macro_body->stmt_block);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(MacroException(macro_call));
+	}
+}
+
 void Program::collect_macro(const std::shared_ptr<AST::Macro>& macro) {
 	insert_object(macro, macros);
 }
+
 void Program::collect_param(const std::shared_ptr<AST::Param>& param_ast) {
 	auto param = insert_object(param_ast, params);
 	if (stack->vars.count(param->name())) {

@@ -75,11 +75,17 @@ public:
 	std::vector<std::shared_ptr<Test>> ordered_tests;
 	std::vector<std::shared_ptr<Test>> all_selected_tests;
 	std::shared_ptr<StackNode> stack;
+	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
+	template_literals::Parser template_parser;
 
 private:
 	void setup_stack();
 
 	void collect_top_level_objects(const std::shared_ptr<AST::Program>& ast);
+	void visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block);
+	void visit_stmt(const std::shared_ptr<AST::IStmt>& stmt);
+	void visit_macro(std::shared_ptr<IR::Macro> macro);
+	void visit_macro_call(const std::shared_ptr<AST::MacroCall>& ast);
 	void collect_test(const std::shared_ptr<AST::Test>& ast);
 	void collect_macro(const std::shared_ptr<AST::Macro>& ast);
 	void collect_param(const std::shared_ptr<AST::Param>& ast);

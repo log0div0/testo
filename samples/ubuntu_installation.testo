@@ -113,8 +113,18 @@ test some_shit: ubuntu_installation {
 	}
 }
 
+macro some_shitty_macro(vm_name, bits) {
+	test "install_shitty_os_${bits}" {
+		"${vm_name}" {
+			print "Hello from ${vm_name}"
+		}
+	}
+}
 
-param shit "SUPER_SHIT"
+some_shitty_macro("VM1", "32")
+some_shitty_macro("VM1", "64")
+
+/*param shit "SUPER_SHIT"
 param VM_NAME "VM1"
 
 test "some_${shit}_parent1" {
@@ -131,6 +141,6 @@ test "some_${shit}_child": "some_${shit}_parent1", "some_${shit}_parent2" {
 	"${VM_NAME}" {
 		print "Hello ${shit} child!"
 	}
-}
+}*/
 
 

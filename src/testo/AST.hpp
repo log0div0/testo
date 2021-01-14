@@ -1328,6 +1328,37 @@ struct Stmt: public IStmt {
 	std::shared_ptr<StmtType> stmt;
 };
 
+//Used only in macro-tests
+struct StmtBlock: public Node {
+	StmtBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<IStmt>> stmts):
+		Node(Token(Token::category::stmt_block, "stmt_block", Pos(), Pos())),
+		open_brace(open_brace),
+		close_brace(close_brace),
+		stmts(stmts) {}
+
+	Pos begin() const {
+		return open_brace.begin();
+	}
+
+	Pos end() const {
+		return close_brace.end();
+	}
+
+	operator std::string() const {
+		std::string result;
+
+		for (auto stmt: stmts) {
+			result += std::string(*stmt);
+
+		}
+		return result;
+	}
+
+	Token open_brace;
+	Token close_brace;
+	std::vector<std::shared_ptr<IStmt>> stmts;
+};
+
 struct MacroArg: public Node {
 	MacroArg(const Token& name, std::shared_ptr<String> default_value):
 		Node(name), default_value(default_value) {}
@@ -1385,6 +1416,27 @@ struct MacroBody: public IMacroBody {
 
 	std::shared_ptr<MacroBodyType> macro_body;
 };
+
+struct MacroBodyStmt: public Node {
+	MacroBodyStmt(std::shared_ptr<StmtBlock> stmt_block):
+		Node(stmt_block->t), stmt_block(stmt_block) {}
+
+	Pos begin() const {
+		return stmt_block->begin();
+	}
+
+	Pos end() const {
+		return stmt_block->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*stmt_block);
+		return result;
+	}
+
+	std::shared_ptr<AST::StmtBlock> stmt_block;
+};
+
 
 struct MacroBodyCommand: public Node {
 	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
