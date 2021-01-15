@@ -182,6 +182,7 @@ void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_
 void Program::collect_test(const std::shared_ptr<AST::Test>& test) {
 	auto inserted = insert_object(test, tests);
 	ordered_tests.push_back(inserted);;
+	inserted->macro_call_stack = current_macro_call_stack;
 }
 
 void Program::visit_macro(std::shared_ptr<IR::Macro> macro) {
@@ -260,6 +261,7 @@ void Program::visit_macro_call(const std::shared_ptr<AST::MacroCall>& macro_call
 	}
 
 	StackPusher<Program> new_ctx(this, macro->new_stack(vars));
+	current_macro_call_stack.push_back(macro_call);
 
 	if (!macro->ast_node->body) {
 		Parser parser(macro->ast_node->body_tokens);
@@ -276,6 +278,7 @@ void Program::visit_macro_call(const std::shared_ptr<AST::MacroCall>& macro_call
 		}
 
 		visit_statement_block(p->macro_body->stmt_block);
+		current_macro_call_stack.pop_back();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(MacroException(macro_call));
 	}

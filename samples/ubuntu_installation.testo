@@ -113,10 +113,25 @@ test some_shit: ubuntu_installation {
 	}
 }
 
+macro nested_macro_action() {
+	stop
+}
+
+macro macro_action() {
+	print "Hello world from macro action"
+	nested_macro_action()
+}
+
 macro some_shitty_macro(vm_name, bits) {
+	some_shitty_inner_macro("${vm_name}", "${bits}")
+}
+
+macro some_shitty_inner_macro(vm_name, bits) {
 	test "install_shitty_os_${bits}" {
 		"${vm_name}" {
 			print "Hello from ${vm_name}"
+			macro_action()
+			stop
 		}
 	}
 }

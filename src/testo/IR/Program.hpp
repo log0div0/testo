@@ -51,6 +51,8 @@ struct Program {
 	const ProgramConfig& config;
 
 private:
+	std::vector<std::shared_ptr<AST::MacroCall>> current_macro_call_stack;
+
 	std::unordered_map<std::string, std::shared_ptr<Test>> tests;
 	std::unordered_map<std::string, std::shared_ptr<Macro>> macros;
 	std::unordered_map<std::string, std::shared_ptr<Param>> params;

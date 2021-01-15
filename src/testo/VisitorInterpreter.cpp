@@ -432,6 +432,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 
 	} catch (const Exception& error) {
 		std::stringstream ss;
+		for (auto macro_call: test->macro_call_stack) {
+			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+		}
+
 		ss << error << std::endl;
 		reporter.test_failed(ss.str());
 
