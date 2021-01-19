@@ -153,7 +153,7 @@ void Program::visit_stmt(const std::shared_ptr<AST::IStmt>& stmt) {
 	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
 		collect_test(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::MacroCall>>(stmt)) {
-		visit_macro_call(p->stmt);
+		visit_macro_call({p->stmt, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
 		collect_macro(p->stmt);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
@@ -181,7 +181,7 @@ void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_
 
 void Program::collect_test(const std::shared_ptr<AST::Test>& test) {
 	auto inserted = insert_object(test, tests);
-	ordered_tests.push_back(inserted);;
+	ordered_tests.push_back(inserted);
 	inserted->macro_call_stack = current_macro_call_stack;
 }
 
@@ -191,97 +191,17 @@ void Program::visit_macro(std::shared_ptr<IR::Macro> macro) {
 		return;
 	}
 
-	StackPusher<Program> new_ctx(this, macro->stack);
-
-	for (size_t i = 0; i < macro->ast_node->args.size(); ++i) {
-		for (size_t j = i + 1; j < macro->ast_node->args.size(); ++j) {
-			if (macro->ast_node->args[i]->name() == macro->ast_node->args[j]->name()) {
-				throw std::runtime_error(std::string(macro->ast_node->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->ast_node->args[j]->name());
-			}
-		}
-	}
-
-	bool has_default = false;
-	for (auto arg: macro->ast_node->args) {
-		if (arg->default_value) {
-			has_default = true;
-			continue;
-		}
-
-		if (has_default && !arg->default_value) {
-			throw std::runtime_error(std::string(arg->begin()) + ": Error: default value must be specified for macro arg " + arg->name());
-		}
-	}
+	macro->validate();
 }
 
-void Program::visit_macro_call(const std::shared_ptr<AST::MacroCall>& macro_call) {
-	auto macro = get_macro_or_null(macro_call->name().value());
-	if (!macro) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
-	}
+void Program::visit_macro_call(const IR::MacroCall& macro_call) {
+	current_macro_call_stack.push_back(macro_call.ast_node);
+	macro_call.visit_semantic<AST::MacroBodyStmt>(this);
+	current_macro_call_stack.pop_back();
+}
 
-	visit_macro(macro);
-
-	uint32_t args_with_default = 0;
-
-	for (auto arg: macro->ast_node->args) {
-		if (arg->default_value) {
-			args_with_default++;
-		}
-	}
-
-	if (macro_call->args.size() < macro->ast_node->args.size() - args_with_default) {
-		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_call->begin()),
-			macro->ast_node->args.size() - args_with_default, macro_call->args.size()));
-	}
-
-	if (macro_call->args.size() > macro->ast_node->args.size()) {
-		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_call->begin()),
-			macro->ast_node->args.size(), macro_call->args.size()));
-	}
-
-	std::map<std::string, std::string> vars;
-
-	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		try {
-			auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
-			vars[macro->ast_node->args[i]->name()] = value;
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(macro_call->args[i]->begin(), macro_call->args[i]->text()));
-		}
-	}
-
-	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
-		try {
-			auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
-			vars[macro->ast_node->args[i]->name()] = value;
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(macro->ast_node->args[i]->default_value->begin(), macro->ast_node->args[i]->default_value->text()));
-		}
-	}
-
-	StackPusher<Program> new_ctx(this, macro->new_stack(vars));
-	current_macro_call_stack.push_back(macro_call);
-
-	if (!macro->ast_node->body) {
-		Parser parser(macro->ast_node->body_tokens);
-
-		auto stmt_block = parser.stmt_block();
-		auto body = std::shared_ptr<AST::MacroBodyStmt>(new AST::MacroBodyStmt(stmt_block));
-		macro->ast_node->body = std::shared_ptr<AST::MacroBody<AST::MacroBodyStmt>>(new AST::MacroBody<AST::MacroBodyStmt>(body));
-	}
-
-	try {
-		auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyStmt>>(macro->ast_node->body);
-		if (p == nullptr) {
-			throw std::runtime_error(std::string(macro_call->begin()) + ": Error: the \"" + macro_call->name().value() + "\" macro does not contain statements, as expected");
-		}
-
-		visit_statement_block(p->macro_body->stmt_block);
-		current_macro_call_stack.pop_back();
-	} catch (const std::exception& error) {
-		std::throw_with_nested(MacroException(macro_call));
-	}
+void Program::visit_macro_body(const std::shared_ptr<AST::MacroBodyStmt>& macro_body) {
+	visit_statement_block(macro_body->stmt_block);
 }
 
 void Program::collect_macro(const std::shared_ptr<AST::Macro>& macro) {

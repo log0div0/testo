@@ -80,7 +80,10 @@ struct VisitorSemantic {
 	void visit_copy(const IR::Copy& copy);
 	void visit_wait(const IR::Wait& wait);
 	void visit_sleep(const IR::Sleep& sleep);
-	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call, bool is_command_macro);
+	void visit_cmd_macro_call(const IR::MacroCall& macro_call);
+	void visit_action_macro_call(const IR::MacroCall& macro_call);
+	void visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body);
+	void visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	std::vector<std::string> visit_range(const IR::Range& range);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);

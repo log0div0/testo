@@ -21,7 +21,8 @@ struct VisitorInterpreterAction {
 	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
 	void visit_print(const IR::Print& print);
 	void visit_sleep(const IR::Sleep& sleep);
-	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
+	void visit_macro_call(const IR::MacroCall& macro_call);
+	void visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
 	std::vector<std::string> visit_range(const IR::Range& range);

@@ -81,13 +81,16 @@ public:
 	template_literals::Parser template_parser;
 
 private:
+	friend struct IR::MacroCall;
+
 	void setup_stack();
 
 	void collect_top_level_objects(const std::shared_ptr<AST::Program>& ast);
 	void visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block);
 	void visit_stmt(const std::shared_ptr<AST::IStmt>& stmt);
 	void visit_macro(std::shared_ptr<IR::Macro> macro);
-	void visit_macro_call(const std::shared_ptr<AST::MacroCall>& ast);
+	void visit_macro_call(const IR::MacroCall& macro_call);
+	void visit_macro_body(const std::shared_ptr<AST::MacroBodyStmt>& macro_body);
 	void collect_test(const std::shared_ptr<AST::Test>& ast);
 	void collect_macro(const std::shared_ptr<AST::Macro>& ast);
 	void collect_param(const std::shared_ptr<AST::Param>& ast);

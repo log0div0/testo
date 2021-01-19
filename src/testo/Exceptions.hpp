@@ -1,16 +1,12 @@
 
+#pragma once
+
 #include "AST.hpp"
 #include "IR/Machine.hpp"
 #include <stdexcept>
 #include <string>
 
 struct Exception: public std::exception {
-	explicit Exception():
-		std::exception()
-	{
-		msg = "";
-	}
-
 	const char* what() const noexcept override {
 		return msg.c_str();
 	}
@@ -19,16 +15,14 @@ protected:
 };
 
 struct TestFailedException: public Exception {
-	explicit TestFailedException():
-		Exception()
+	TestFailedException()
 	{
 		msg = "At least one of the tests failed";
 	}
 };
 
 struct ActionException: public Exception {
-	explicit ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller):
-		Exception()
+	ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller)
 	{
 		msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node);
 		if (controller) {
@@ -38,16 +32,14 @@ struct ActionException: public Exception {
 };
 
 struct MacroException: public Exception {
-	explicit MacroException(std::shared_ptr<AST::MacroCall> macro_call):
-		Exception()
+	MacroException(std::shared_ptr<AST::MacroCall> macro_call)
 	{
 		msg = std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->name().value();
 	}
 };
 
 struct AbortException: public Exception {
-	explicit AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Controller> controller, const std::string& message):
-		Exception()
+	AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Controller> controller, const std::string& message)
 	{
 		msg = std::string(node->begin()) + ": Caught abort action ";
 		if (controller) {
@@ -61,8 +53,7 @@ struct AbortException: public Exception {
 
 
 struct CycleControlException: public Exception {
-	explicit CycleControlException(const Token& token):
-		Exception(), token(token)
+	CycleControlException(const Token& token): token(token)
 	{
 		msg = std::string(token.begin()) + " error: cycle control action has not a correcponding cycle";
 	}
@@ -71,8 +62,7 @@ struct CycleControlException: public Exception {
 };
 
 struct ResolveException: public Exception {
-	explicit ResolveException(const Pos& pos, const std::string& string):
-		Exception()
+	ResolveException(const Pos& pos, const std::string& string)
 	{
 		msg = std::string(pos) + ": Error while resolving \"" + string + "\"";
 	}

@@ -252,27 +252,7 @@ void VisitorSemantic::visit_macro(std::shared_ptr<IR::Macro> macro) {
 		return;
 	}
 
-	StackPusher<VisitorSemantic> new_ctx(this, macro->stack);
-
-	for (size_t i = 0; i < macro->ast_node->args.size(); ++i) {
-		for (size_t j = i + 1; j < macro->ast_node->args.size(); ++j) {
-			if (macro->ast_node->args[i]->name() == macro->ast_node->args[j]->name()) {
-				throw std::runtime_error(std::string(macro->ast_node->args[j]->begin()) + ": Error: duplicate macro arg: " + macro->ast_node->args[j]->name());
-			}
-		}
-	}
-
-	bool has_default = false;
-	for (auto arg: macro->ast_node->args) {
-		if (arg->default_value) {
-			has_default = true;
-			continue;
-		}
-
-		if (has_default && !arg->default_value) {
-			throw std::runtime_error(std::string(arg->begin()) + ": Error: default value must be specified for macro arg " + arg->name());
-		}
-	}
+	macro->validate();
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
@@ -317,7 +297,7 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
 		visit_regular_command({p->cmd, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
-		visit_macro_call(p->cmd, true);
+		visit_cmd_macro_call({p->cmd, stack});
 	} else {
 		throw std::runtime_error("Should never happen");
 	}
@@ -886,88 +866,22 @@ void VisitorSemantic::visit_sleep(const IR::Sleep& sleep) {
 	current_test->cksum_input << "sleep timeout " << sleep.timeout() << std::endl;
 }
 
-void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call, bool is_command_macro) {
-	auto macro = IR::program->get_macro_or_null(macro_call->name().value());
-	if (!macro) {
-		throw std::runtime_error(std::string(macro_call->begin()) + ": Error: unknown macro: " + macro_call->name().value());
-	}
-
-	visit_macro(macro);
-
-	uint32_t args_with_default = 0;
-
-	for (auto arg: macro->ast_node->args) {
-		if (arg->default_value) {
-			args_with_default++;
-		}
-	}
-
-	if (macro_call->args.size() < macro->ast_node->args.size() - args_with_default) {
-		throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(macro_call->begin()),
-			macro->ast_node->args.size() - args_with_default, macro_call->args.size()));
-	}
-
-	if (macro_call->args.size() > macro->ast_node->args.size()) {
-		throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(macro_call->begin()),
-			macro->ast_node->args.size(), macro_call->args.size()));
-	}
-
-	std::map<std::string, std::string> vars;
-
-	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		try {
-			auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
-			vars[macro->ast_node->args[i]->name()] = value;
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(macro_call->args[i]->begin(), macro_call->args[i]->text()));
-		}
-	}
-
-	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
-		try {
-			auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
-			vars[macro->ast_node->args[i]->name()] = value;
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(macro->ast_node->args[i]->default_value->begin(), macro->ast_node->args[i]->default_value->text()));
-		}
-	}
-
-	StackPusher<VisitorSemantic> new_ctx(this, macro->new_stack(vars));
-
-	if (!macro->ast_node->body) {
-		Parser parser(macro->ast_node->body_tokens);
-		if (is_command_macro) {
-			auto cmd_block = parser.command_block();
-			auto body = std::shared_ptr<AST::MacroBodyCommand>(new AST::MacroBodyCommand(cmd_block));
-			macro->ast_node->body = std::shared_ptr<AST::MacroBody<AST::MacroBodyCommand>>(new AST::MacroBody<AST::MacroBodyCommand>(body));
-		} else {
-			//So it' supposed to be an action macro.
-			auto action_block = parser.action_block();
-			auto body = std::shared_ptr<AST::MacroBodyAction>(new AST::MacroBodyAction(action_block));
-			macro->ast_node->body = std::shared_ptr<AST::MacroBody<AST::MacroBodyAction>>(new AST::MacroBody<AST::MacroBodyAction>(body));
-		}
-	}
-
-	try {
-		if (is_command_macro) {
-			auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body);
-			if (p == nullptr) {
-				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: the \"" + macro_call->name().value() + "\" macro does not contain commands, as expected");
-			}
-
-			visit_command_block(p->macro_body->cmd_block);
-		} else {
-			auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body);
-			if (p == nullptr) {
-				throw std::runtime_error(std::string(macro_call->begin()) + ": Error: the \"" + macro_call->name().value() + "\" macro does not contain actions, as expected");
-			}
-
-			visit_action_block(p->macro_body->action_block->action);
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(MacroException(macro_call));
-	}
+void VisitorSemantic::visit_cmd_macro_call(const IR::MacroCall& macro_call) {
+	macro_call.visit_semantic<AST::MacroBodyCommand>(this);
 }
+
+void VisitorSemantic::visit_action_macro_call(const IR::MacroCall& macro_call) {
+	macro_call.visit_semantic<AST::MacroBodyAction>(this);
+}
+
+void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body) {
+	visit_command_block(macro_body->cmd_block);
+}
+
+void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body) {
+	visit_action_block(macro_body->action_block->action);
+}
+
 
 Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {

@@ -1418,6 +1418,9 @@ struct MacroBody: public IMacroBody {
 };
 
 struct MacroBodyStmt: public Node {
+	static const std::string desc() { return "statements"; }
+	using BlockType = AST::StmtBlock;
+
 	MacroBodyStmt(std::shared_ptr<StmtBlock> stmt_block):
 		Node(stmt_block->t), stmt_block(stmt_block) {}
 
@@ -1439,6 +1442,9 @@ struct MacroBodyStmt: public Node {
 
 
 struct MacroBodyCommand: public Node {
+	static const std::string desc() { return "commands"; }
+	using BlockType = AST::CmdBlock;
+
 	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
 		Node(cmd_block->t), cmd_block(cmd_block) {}
 
@@ -1459,6 +1465,9 @@ struct MacroBodyCommand: public Node {
 };
 
 struct MacroBodyAction: public Node {
+	static const std::string desc() { return "actions"; }
+	using BlockType = Action<AST::ActionBlock>;
+
 	MacroBodyAction(std::shared_ptr<Action<ActionBlock>> action_block):
 		Node(action_block->t), action_block(action_block) {}
 
