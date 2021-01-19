@@ -115,6 +115,7 @@ test some_shit: ubuntu_installation {
 
 macro nested_macro_action() {
 	stop
+	lala()
 }
 
 macro macro_action() {

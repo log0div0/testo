@@ -256,11 +256,12 @@ void VisitorSemantic::visit_macro(std::shared_ptr<IR::Macro> macro) {
 }
 
 void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
-	if (test->ast_node->attrs) {
-		test->attrs = visit_attr_block(test->ast_node->attrs, "test_global");
-	}
+	try {
+		if (test->ast_node->attrs) {
+			test->attrs = visit_attr_block(test->ast_node->attrs, "test_global");
+		}
 
-	current_test = test;
+		current_test = test;
 
 	current_test->cksum_input << "TEST NAME = " << test->name() << std::endl;
 	current_test->cksum_input << "PARENTS IN ALPHABETICAL ORDER = ";
@@ -278,13 +279,25 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	current_test->cksum_input << std::endl;
 	current_test->cksum_input << "SNAPSHOT NEEDED = " << test->snapshots_needed() << std::endl;
 
-	StackPusher<VisitorSemantic> new_ctx(this, test->stack);
-	visit_command_block(test->ast_node->cmd_block);
+		StackPusher<VisitorSemantic> new_ctx(this, test->stack);
+		visit_command_block(test->ast_node->cmd_block);
 
 	std::hash<std::string> h;
 	current_test->cksum = std::to_string(h(current_test->cksum_input.str()));
 
-	current_test = nullptr;
+		current_test = nullptr;
+	} catch (const Exception& error) {
+		std::stringstream ss;
+		for (auto macro_call: test->macro_call_stack) {
+			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+		}
+
+		std::string msg = ss.str();
+
+		std::throw_with_nested(std::runtime_error(msg.substr(0, msg.length() - 1)));
+	}
+
+	
 }
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
