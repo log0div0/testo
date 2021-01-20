@@ -296,8 +296,6 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 
 		std::throw_with_nested(std::runtime_error(msg.substr(0, msg.length() - 1)));
 	}
-
-	
 }
 
 void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {

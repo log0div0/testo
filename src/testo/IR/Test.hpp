@@ -29,8 +29,6 @@ struct Test: Object<AST::Test> {
 	std::stringstream cksum_input;
 	std::string cksum;
 
-	std::vector<std::shared_ptr<AST::MacroCall>> macro_call_stack;
-
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point stop_timestamp;
 	std::ofstream output_file;

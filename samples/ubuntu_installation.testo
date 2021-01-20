@@ -140,6 +140,7 @@ macro some_shitty_inner_macro(vm_name, bits) {
 some_shitty_macro("VM1", "32")
 some_shitty_macro("VM1", "64")
 
+
 /*param shit "SUPER_SHIT"
 param VM_NAME "VM1"
 
