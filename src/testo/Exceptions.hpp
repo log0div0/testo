@@ -7,6 +7,10 @@
 #include <string>
 
 struct Exception: public std::exception {
+	Exception() = default;
+	Exception(const std::string& what) {
+		msg = what;
+	}
 	const char* what() const noexcept override {
 		return msg.c_str();
 	}
@@ -18,6 +22,12 @@ struct TestFailedException: public Exception {
 	TestFailedException()
 	{
 		msg = "At least one of the tests failed";
+	}
+};
+
+struct ControllerCreatonException: public Exception {
+	ControllerCreatonException(const std::string& what) {
+		msg = what;
 	}
 };
 

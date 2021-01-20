@@ -188,7 +188,6 @@ void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_
 void Program::collect_test(const std::shared_ptr<AST::Test>& test) {
 	auto inserted = insert_object(test, tests);
 	ordered_tests.push_back(inserted);
-	inserted->macro_call_stack = current_macro_call_stack;
 }
 
 void Program::visit_macro(std::shared_ptr<IR::Macro> macro) {

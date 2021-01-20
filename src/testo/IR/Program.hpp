@@ -110,10 +110,19 @@ private:
 		auto t = std::make_shared<T>();
 		t->ast_node = ast_node;
 		t->stack = stack;
+		t->macro_call_stack = current_macro_call_stack;
 		auto inserted = map.insert({t->name(), t});
 		if (!inserted.second) {
-			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: " + T::type_name() + " \"" + t->name() + "\" is already defined here: " +
-				std::string(inserted.first->second->ast_node->begin()));
+			std::stringstream ss;
+			ss << std::string(ast_node->begin()) + ": Error: " + T::type_name() + " \"" + t->name() + "\" is already defined" << std::endl << std::endl;
+
+			for (auto macro_call: inserted.first->second->macro_call_stack) {
+				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->name().value() << std::endl;
+			}
+
+			ss << std::string(inserted.first->second->ast_node->begin()) << ": note: previous declaration was here";
+
+			throw Exception(ss.str());
 		}
 		return t;
 	}
@@ -127,6 +136,7 @@ private:
 			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: " + inserted.first->second->type() + " \"" + controller->name() + "\" is already defined here: " +
 				std::string(inserted.first->second->ast_node->begin()));
 		}
+
 		return controller;
 	}
 

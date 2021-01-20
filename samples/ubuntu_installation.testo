@@ -41,6 +41,7 @@ test ubuntu_installation {
 
 test check_copyto: ubuntu_installation {
 	VM1 {
+		mouse click "lala".from_top().from_top()
 		plug flash my_flash
 		unplug flash my_flash
 	}
@@ -109,12 +110,14 @@ test some_shit: ubuntu_installation {
 		#plug hostdev usb "1-3"
 		plug hostdev usb "1-3"
 
+
 		#abort "stop here"
 	}
 }
 
 macro nested_macro_action(flash_name) {
 	plug flash "${flash_name}"
+	mouse click "hello".from_top(0).from_bottom(0)
 	#lala()
 }
 
@@ -193,4 +196,43 @@ test "some_${shit}_child": "some_${shit}_parent1", "some_${shit}_parent2" {
 	}
 }*/
 
+
+macro generate_machine_inner(vm_name) {
+	flash super_flash {
+		fs: "ext4"
+		size: 8Mb
+	}
+
+	machine "${vm_name}" {
+		cpus: 1
+		ram: 1024Mb
+		iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+		disk main: {
+			size: 4Gb
+		}
+
+		nic internet: {
+			attached_to: "int2"
+			adapter_type: 4Gb
+		}
+	}
+}
+
+macro generate_machine(vm_name) {
+	generate_machine_inner("${vm_name}")
+}
+
+macro another_shitty_macro(vm_name) {
+	test "install_shitty_os_32" {
+		"${vm_name}" {
+			print "Hello from ${vm_name}"
+		}
+	}
+}
+
+generate_machine("VM5")
+generate_machine("VM7")
+
+another_shitty_macro("VM5")
+another_shitty_macro("VM7")
 
