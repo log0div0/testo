@@ -113,32 +113,65 @@ test some_shit: ubuntu_installation {
 	}
 }
 
-macro nested_macro_action() {
-	stop
-	lala()
+macro nested_macro_action(flash_name) {
+	plug flash "${flash_name}"
+	#lala()
 }
 
-macro macro_action() {
+macro macro_action(flash_name) {
 	print "Hello world from macro action"
-	nested_macro_action()
+	nested_macro_action("${flash_name}")
 }
 
-macro some_shitty_macro(vm_name, bits) {
-	some_shitty_inner_macro("${vm_name}", "${bits}")
+macro some_shitty_macro(vm_name, bits, net_name, flash_name) {
+	some_shitty_inner_macro("${vm_name}", "${bits}", "${net_name}", "${flash_name}")
 }
 
-macro some_shitty_inner_macro(vm_name, bits) {
+macro some_shitty_inner_macro(vm_name, bits, net_name, flash_name) {
+
+	network "${net_name}" {
+		mode: "internal"
+	}
+
+	machine "${vm_name}" {
+		cpus: 1
+		ram: 1024Mb
+		iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+		disk main: {
+			size: 4Gb
+		}
+
+		nic internet: {
+			attached_to: "${net_name}"
+			adapter_type: "e1000"
+		}
+
+		nic internet2: {
+			attached_to: "${net_name}"
+			adapter_type: "e1000"
+		}
+
+		nic internet3: {
+			attached_to: "${net_name}"
+			adapter_type: "e1000"
+		}
+	}
+
+	flash "${flash_name}" {
+		fs: "ext4"
+		size: 32Mb
+	}
+
 	test "install_shitty_os_${bits}" {
 		"${vm_name}" {
 			print "Hello from ${vm_name}"
-			macro_action()
-			stop
+			macro_action("${flash_name}")
 		}
 	}
 }
 
-some_shitty_macro("VM1", "32")
-some_shitty_macro("VM1", "64")
+some_shitty_macro("VM2", "32", "int5", "my_super_flash")
+#some_shitty_macro("VM1", "64")
 
 
 /*param shit "SUPER_SHIT"

@@ -1724,7 +1724,7 @@ struct Test: public Node {
 };
 
 struct Controller: public Node {
-	Controller(const Token& controller, const Token& name, std::shared_ptr<AttrBlock> attr_block):
+	Controller(const Token& controller, std::shared_ptr<StringTokenUnion> name, std::shared_ptr<AttrBlock> attr_block):
 		Node(controller),
 		name(name),
 		attr_block(attr_block) {}
@@ -1738,10 +1738,10 @@ struct Controller: public Node {
 	}
 
 	operator std::string() const {
-		return t.value() + " " + name.value() + " " + std::string(*attr_block);
+		return t.value() + " " + std::string(*name) + " " + std::string(*attr_block);
 	}
 
-	Token name;
+	std::shared_ptr<StringTokenUnion> name;
 	std::shared_ptr<AttrBlock> attr_block;
 };
 

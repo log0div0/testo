@@ -1096,7 +1096,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 	machine->config = visit_attr_block(machine->ast_node->attr_block, "vm_global");
 	machine->config["prefix"] = prefix;
 	machine->config["name"] = machine->name();
-	machine->config["src_file"] = machine->ast_node->name.begin().file.generic_string();
+	machine->config["src_file"] = machine->ast_node->name->begin().file.generic_string();
 
 	if (machine->config.count("iso")) {
 		fs::path iso_file = machine->config.at("iso").get<std::string>();
@@ -1167,7 +1167,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
 	flash->config = visit_attr_block(flash->ast_node->attr_block, "fd_global");
 	flash->config["prefix"] = prefix;
 	flash->config["name"] = flash->name();
-	flash->config["src_file"] = flash->ast_node->name.begin().file.generic_string();
+	flash->config["src_file"] = flash->ast_node->name->begin().file.generic_string();
 
 	if (flash->has_folder()) {
 		flash->validate_folder();
@@ -1187,7 +1187,7 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 	network->config = visit_attr_block(network->ast_node->attr_block, "network_global");
 	network->config["prefix"] = prefix;
 	network->config["name"] = network->name();
-	network->config["src_file"] = network->ast_node->name.begin().file.generic_string();
+	network->config["src_file"] = network->ast_node->name->begin().file.generic_string();
 }
 
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {

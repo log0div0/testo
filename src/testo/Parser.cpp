@@ -512,8 +512,7 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 
 	match ({Token::category::machine, Token::category::flash, Token::category::network});
 
-	Token name = LT(1);
-	match(Token::category::id);
+	auto name = string_token_union(Token::category::id);
 
 	newline_list();
 	if (LA(1) != Token::category::lbrace) {

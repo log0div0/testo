@@ -1,8 +1,13 @@
 
 #include "Controller.hpp"
+#include "Action.hpp"
 #include <fmt/format.h>
 
 namespace IR {
+
+std::string Controller::name() const {
+	return StringTokenUnion(ast_node->name, stack).resolve();
+}
 
 bool Controller::is_defined() const {
 	return fs::exists(main_file());
