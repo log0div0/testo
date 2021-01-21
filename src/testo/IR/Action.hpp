@@ -72,6 +72,9 @@ struct MouseCoordinates: Action<AST::MouseCoordinates> {
 
 	std::string x() const;
 	std::string y() const;
+
+	bool x_is_relative() const;
+	bool y_is_relative() const;
 };
 
 struct MouseSelectable: Action<AST::MouseSelectable> {

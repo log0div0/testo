@@ -576,6 +576,10 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 }
 
 void VisitorSemantic::visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates) {
+	if (coordinates.x_is_relative() ^ coordinates.y_is_relative()) {
+		throw std::runtime_error(std::string(coordinates.ast_node->begin()) + ": Error: mouse coordinates must be either both absolute either both relative");
+	}
+
 	current_test->cksum_input += "coordinates x:";
 	current_test->cksum_input += coordinates.x();
 	current_test->cksum_input += " y:";
@@ -726,7 +730,7 @@ void VisitorSemantic::visit_plug_flash(const IR::PlugFlash& plug_flash) {
 
 void VisitorSemantic::visit_plug_dvd(const IR::PlugDVD& plug_dvd, bool is_on) {
 	current_test->cksum_input += "dvd";
-	
+
 	if (is_on) {
 		auto dvd_path = plug_dvd.path();
 		if (!fs::exists(dvd_path)) {

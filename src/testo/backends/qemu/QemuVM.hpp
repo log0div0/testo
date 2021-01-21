@@ -20,9 +20,7 @@ struct QemuVM: public VM {
 	void hold(const std::vector<std::string>& buttons) override;
 	void release(const std::vector<std::string>& buttons) override;
 	void mouse_move_abs(uint32_t x, uint32_t y) override;
-	void mouse_move_abs(const std::string& axis, uint32_t value) override;
 	void mouse_move_rel(int x, int y) override;
-	void mouse_move_rel(const std::string& axis, int value) override;
 	void mouse_hold(const std::vector<MouseButton>& buttons) override;
 	void mouse_release(const std::vector<MouseButton>& buttons) override;
 	bool is_nic_plugged(const std::string& pci_addr) const override;

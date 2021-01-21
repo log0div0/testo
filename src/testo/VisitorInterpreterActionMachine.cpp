@@ -775,19 +775,15 @@ void VisitorInterpreterActionMachine::visit_mouse_move_click(const IR::MouseMove
 }
 
 void VisitorInterpreterActionMachine::visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates) {
-	auto dx = coordinates.x();
-	auto dy = coordinates.y();
-	reporter.mouse_move_click_coordinates(vmc, dx, dy);
-	if ((dx[0] == '+') || (dx[0] == '-')) {
-		vmc->vm()->mouse_move_rel("x", std::stoi(dx));
+	auto x = coordinates.x();
+	auto y = coordinates.y();
+	reporter.mouse_move_click_coordinates(vmc, x, y);
+	if (coordinates.x_is_relative() && coordinates.y_is_relative()) {
+		vmc->vm()->mouse_move_rel(std::stoi(x), std::stoi(y));
+	} else if (!coordinates.x_is_relative() && !coordinates.y_is_relative()) {
+		vmc->vm()->mouse_move_abs(std::stoul(x), std::stoul(y));
 	} else {
-		vmc->vm()->mouse_move_abs("x", std::stoul(dx));
-	}
-
-	if ((dy[0] == '+') || (dy[0] == '-')) {
-		vmc->vm()->mouse_move_rel("y", std::stoi(dy));
-	} else {
-		vmc->vm()->mouse_move_abs("y", std::stoul(dy));
+		throw std::runtime_error("Should not be there");
 	}
 }
 
@@ -951,7 +947,7 @@ void VisitorInterpreterActionMachine::visit_plug_dvd(const IR::PlugDVD& plug_dvd
 		throw std::runtime_error(fmt::format("some dvd is already plugged"));
 	}
 	vmc->vm()->plug_dvd(path);
-	
+
 }
 
 void VisitorInterpreterActionMachine::visit_unplug_dvd(const IR::PlugDVD& plug_dvd) {
@@ -973,7 +969,7 @@ void VisitorInterpreterActionMachine::visit_unplug_dvd(const IR::PlugDVD& plug_d
 	}
 
 	throw std::runtime_error(fmt::format("Timeout expired for unplugging dvd"));
-	
+
 }
 
 void VisitorInterpreterActionMachine::visit_plug_flash(const IR::PlugFlash& plug_flash) {

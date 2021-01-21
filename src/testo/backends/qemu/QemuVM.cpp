@@ -594,53 +594,6 @@ void QemuVM::mouse_move_abs(uint32_t x, uint32_t y) {
 	}
 }
 
-void QemuVM::mouse_move_abs(const std::string& axis, uint32_t value) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		auto tmp_screen = screenshot();
-
-		double pos;
-
-		if (axis == "x") {
-			pos = double(32768) / double(tmp_screen.w) * double(value);
-		} else if (axis == "y") {
-			pos = double(32768) / double(tmp_screen.h) * double(value);
-		} else {
-			throw std::runtime_error("Unknown axis: " + axis);
-		}
-
-		if ((int)pos == 0) {
-			pos = 1;
-		}
-
-		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
-			{{
-				"execute": "input-send-event",
-				"arguments": {{
-					"events": [
-						{{
-							"type": "abs",
-							"data": {{
-								"axis": "{}",
-								"value": {}
-							}}
-						}}
-					]
-				}}
-			}}
-		)", axis, (int)pos));
-
-		auto result = domain.monitor_command(json_command.dump());
-
-		if (result.count("error")) {
-			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
-		}
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Mouse move error"));
-	}
-}
-
 void QemuVM::mouse_move_rel(int x, int y) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
@@ -668,42 +621,6 @@ void QemuVM::mouse_move_rel(int x, int y) {
 				}}
 			}}
 		)", x, y));
-
-		auto result = domain.monitor_command(json_command.dump());
-
-		if (result.count("error")) {
-			throw std::runtime_error(result.at("error").at("desc").get<std::string>());
-		}
-	}
-	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Mouse move error"));
-	}
-}
-
-void QemuVM::mouse_move_rel(const std::string& axis, int value) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-
-		if (axis != "x" && axis != "y") {
-			throw std::runtime_error("Unknown axis: " + axis);
-		}
-
-		nlohmann::json json_command = nlohmann::json::parse(fmt::format(R"(
-			{{
-				"execute": "input-send-event",
-				"arguments": {{
-					"events": [
-						{{
-							"type": "rel",
-							"data": {{
-								"axis": "{}",
-								"value": {}
-							}}
-						}}
-					]
-				}}
-			}}
-		)", axis, value));
 
 		auto result = domain.monitor_command(json_command.dump());
 

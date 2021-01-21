@@ -98,6 +98,14 @@ std::string MouseCoordinates::y() const {
 	return ast_node->dy.value();
 }
 
+bool MouseCoordinates::x_is_relative() const {
+	return x().at(0) == '+' || x().at(0) == '-';
+}
+
+bool MouseCoordinates::y_is_relative() const {
+	return y().at(0) == '+' || y().at(0) == '-';
+}
+
 std::string MouseSelectable::where_to_go() const {
 	std::string result;
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(ast_node->selectable)) {
