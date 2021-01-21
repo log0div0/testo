@@ -389,10 +389,20 @@ stb::Image<stb::RGB> HyperVVM::screenshot() {
 		if (machine.state() != hyperv::Machine::State::Enabled) {
 			return {};
 		}
+
 		auto display = machine.display();
+
+		if (display.state() != hyperv::Display::State::Enabled) {
+			return {};
+		}
 
 		size_t height = display.height();
 		size_t width = display.width();
+
+		if (!width || !height) {
+			return {};
+		}
+
 		std::vector<uint8_t> screenshot = display.screenshot();
 
 		stb::Image<stb::RGB> result(width, height);

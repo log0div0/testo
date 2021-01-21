@@ -30,4 +30,12 @@ size_t Display::height() const {
 	return videoHead.get("CurrentVerticalResolution").get<int32_t>();
 }
 
+Display::State Display::state() const {
+	try {
+		return (State)videoHead.get("EnabledState").get<int32_t>();
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 }
