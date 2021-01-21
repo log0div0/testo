@@ -4,6 +4,7 @@
 #include "Display.hpp"
 #include "StorageController.hpp"
 #include "Keyboard.hpp"
+#include "SyntheticMouse.hpp"
 #include "NIC.hpp"
 #include "Snapshot.hpp"
 #include "Processor.hpp"
@@ -38,6 +39,7 @@ struct Machine {
 	std::vector<StorageController> ideControllers() const;
 	std::vector<StorageController> controllers(const std::string& subtype) const;
 	Keyboard keyboard() const;
+	SyntheticMouse synthetic_mouse() const;
 	Processor processor() const;
 	Memory memory() const;
 

@@ -250,7 +250,12 @@ void HyperVVM::release(const std::vector<std::string>& buttons) {
 }
 
 void HyperVVM::mouse_move_abs(uint32_t x, uint32_t y) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto mouse = connect.machine(id()).synthetic_mouse();
+		mouse.set_absolute_position(x, y);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 void HyperVVM::mouse_move_rel(int x, int y) {

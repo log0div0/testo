@@ -121,6 +121,18 @@ Keyboard Machine::keyboard() const {
 	}
 }
 
+SyntheticMouse Machine::synthetic_mouse() const {
+	try {
+		auto synthetic_mouse = services.execQuery(
+			"SELECT * FROM Msvm_SyntheticMouse "
+			"WHERE SystemName=\"" + computerSystem.get("Name").get<std::string>() + "\""
+		).getOne();
+		return SyntheticMouse(std::move(synthetic_mouse), virtualSystemSettingData, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 Processor Machine::processor() const {
 	try {
 		auto processor = services.execQuery(
