@@ -26,8 +26,14 @@ struct TestFailedException: public Exception {
 };
 
 struct ControllerCreatonException: public Exception {
-	ControllerCreatonException(const std::string& what) {
-		msg = what;
+	ControllerCreatonException(std::shared_ptr<IR::Controller> controller) {
+		std::stringstream ss;
+		for (auto macro_call: controller->macro_call_stack) {
+			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+		}
+
+		ss << std::string(controller->ast_node->begin()) << ": In the " << controller->type() << " \"" << controller->name() << "\" declaration" << std::endl;
+		msg = ss.str();
 	}
 };
 

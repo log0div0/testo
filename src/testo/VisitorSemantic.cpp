@@ -1157,16 +1157,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 			}
 		}
 	} catch (const std::exception& error) {
-		std::stringstream ss;
-		for (auto macro_call: machine->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
-		}
-
-		ss << std::string(machine->ast_node->begin()) << ": In the machine \"" << machine->name() << "\" declaration" << std::endl;
-		ss << error;
-		std::string msg = ss.str();
-
-		std::throw_with_nested(ControllerCreatonException(msg.substr(0, msg.length() - 1)));
+		std::throw_with_nested(ControllerCreatonException(machine));
 	}
 }
 
@@ -1192,16 +1183,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
 			flash->validate_folder();
 		}
 	} catch (const std::exception& error) {
-		std::stringstream ss;
-		for (auto macro_call: flash->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
-		}
-
-		ss << std::string(flash->ast_node->begin()) << ": In the flash drive \"" << flash->name() << "\" declaration" << std::endl;
-		ss << error;
-		std::string msg = ss.str();
-
-		std::throw_with_nested(ControllerCreatonException(msg.substr(0, msg.length() - 1)));
+		std::throw_with_nested(ControllerCreatonException(flash));
 	}
 }
 
@@ -1221,16 +1203,7 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 		network->config["name"] = network->name();
 		network->config["src_file"] = network->ast_node->name->begin().file.generic_string();
 	} catch (const std::exception& error) {
-		std::stringstream ss;
-		for (auto macro_call: network->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
-		}
-
-		ss << std::string(network->ast_node->begin()) << ": In the network \"" << network->name() << "\" declaration" << std::endl;
-		ss << error;
-		std::string msg = ss.str();
-
-		std::throw_with_nested(ControllerCreatonException(msg.substr(0, msg.length() - 1)));
+		std::throw_with_nested(ControllerCreatonException(network));
 	}
 }
 

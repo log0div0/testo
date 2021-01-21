@@ -6,7 +6,7 @@ network int2 {
 }
 
 machine VM1 {
-	cpus: 1
+	cpus: "1"
 	ram: 1024Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk main: {
@@ -173,7 +173,7 @@ macro some_shitty_inner_macro(vm_name, bits, net_name, flash_name) {
 	}
 }
 
-some_shitty_macro("VM2", "32", "int5", "my_super_flash")
+#some_shitty_macro("VM2", "32", "int5", "my_super_flash")
 #some_shitty_macro("VM1", "64")
 
 
@@ -198,13 +198,8 @@ test "some_${shit}_child": "some_${shit}_parent1", "some_${shit}_parent2" {
 
 
 macro generate_machine_inner(vm_name) {
-	flash super_flash {
-		fs: "ext4"
-		size: 8Mb
-	}
-
 	machine "${vm_name}" {
-		cpus: 1
+		cpus: "lala"
 		ram: 1024Mb
 		iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 		disk main: {
@@ -223,7 +218,7 @@ macro generate_machine(vm_name) {
 }
 
 macro another_shitty_macro(vm_name) {
-	test "install_shitty_os_32" {
+	test "install_shitty_os_78" {
 		"${vm_name}" {
 			print "Hello from ${vm_name}"
 		}
@@ -231,8 +226,8 @@ macro another_shitty_macro(vm_name) {
 }
 
 generate_machine("VM5")
-generate_machine("VM7")
+#generate_machine("VM7")
 
 another_shitty_macro("VM5")
-another_shitty_macro("VM7")
+#another_shitty_macro("VM7")
 
