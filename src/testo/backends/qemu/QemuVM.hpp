@@ -16,7 +16,6 @@ struct QemuVM: public VM {
 	void remove_disks() override;
 	nlohmann::json make_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot, const nlohmann::json& opaque) override;
-	void press(const std::vector<std::string>& buttons) override;
 	void hold(const std::vector<std::string>& buttons) override;
 	void release(const std::vector<std::string>& buttons) override;
 	void mouse_move_abs(uint32_t x, uint32_t y) override;

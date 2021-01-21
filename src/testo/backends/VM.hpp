@@ -30,7 +30,6 @@ struct VM {
 	virtual void remove_disks() = 0;
 	virtual nlohmann::json make_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot, const nlohmann::json& opaque) = 0;
-	virtual void press(const std::vector<std::string>& buttons) = 0;
 	virtual void hold(const std::vector<std::string>& buttons) = 0;
 	virtual void release(const std::vector<std::string>& buttons) = 0;
 	virtual void mouse_move_abs(uint32_t x, uint32_t y) = 0;

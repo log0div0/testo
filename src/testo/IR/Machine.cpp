@@ -379,7 +379,8 @@ void Machine::press(const std::vector<std::string>& buttons) {
 		}
 	}
 
-	vm()->press(buttons);
+	vm()->hold(buttons);
+	vm()->release(buttons);
 }
 
 void Machine::hold(const std::vector<std::string>& buttons) {

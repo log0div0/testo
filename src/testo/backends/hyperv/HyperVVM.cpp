@@ -221,7 +221,7 @@ void HyperVVM::rollback(const std::string& snapshot_name, const nlohmann::json& 
 	}
 }
 
-void HyperVVM::press(const std::vector<std::string>& buttons) {
+void HyperVVM::hold(const std::vector<std::string>& buttons) {
 	try {
 		std::vector<uint8_t> codes;
 		for (auto button: buttons) {
@@ -232,21 +232,25 @@ void HyperVVM::press(const std::vector<std::string>& buttons) {
 		}
 		auto keyboard = connect.machine(id()).keyboard();
 		keyboard.typeScancodes(codes);
-		for (auto& code: codes) {
-			code |= 0x80;
-		}
-		keyboard.typeScancodes(codes);
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
 
-void HyperVVM::hold(const std::vector<std::string>& buttons) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
-}
-
 void HyperVVM::release(const std::vector<std::string>& buttons) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		std::vector<uint8_t> codes;
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+			for (auto code: scancodes.at(button)) {
+				codes.push_back(code | 0x80);
+			}
+		}
+		auto keyboard = connect.machine(id()).keyboard();
+		keyboard.typeScancodes(codes);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 void HyperVVM::mouse_move_abs(uint32_t x, uint32_t y) {
