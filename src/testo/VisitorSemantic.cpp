@@ -287,7 +287,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 
 		current_test = nullptr;
 	} catch (const ControllerCreatonException& error) {
-		throw error;
+		throw;
 	} catch (const Exception& error) {
 		if (test->macro_call_stack.size()) {
 			std::stringstream ss;
@@ -298,7 +298,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 			std::string msg = ss.str();
 			std::throw_with_nested(Exception(msg.substr(0, msg.length() - 1)));
 		} else {
-			throw error;
+			throw;
 		}
 	}
 }
