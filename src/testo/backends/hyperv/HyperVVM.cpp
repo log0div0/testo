@@ -221,6 +221,26 @@ void HyperVVM::rollback(const std::string& snapshot_name, const nlohmann::json& 
 	}
 }
 
+void HyperVVM::press(const std::vector<std::string>& buttons) {
+	try {
+		std::vector<uint8_t> codes;
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+			for (auto code: scancodes.at(button)) {
+				codes.push_back(code);
+			}
+		}
+		auto keyboard = connect.machine(id()).keyboard();
+		keyboard.typeScancodes(codes);
+		for (auto& code: codes) {
+			code |= 0x80;
+		}
+		keyboard.typeScancodes(codes);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 void HyperVVM::hold(const std::vector<std::string>& buttons) {
 	try {
 		std::vector<uint8_t> codes;

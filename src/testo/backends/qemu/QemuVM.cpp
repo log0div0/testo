@@ -443,6 +443,20 @@ void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque)
 	}
 }
 
+void QemuVM::press(const std::vector<std::string>& buttons) {
+	try {
+		std::vector<uint32_t> keycodes;
+		for (auto button: buttons) {
+			std::transform(button.begin(), button.end(), button.begin(), toupper);
+			keycodes.push_back(scancodes[button]);
+		}
+		qemu_connect.domain_lookup_by_name(id()).send_keys(VIR_KEYCODE_SET_LINUX, 0, keycodes);
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Pressing buttons error"));
+	}
+}
+
 void QemuVM::hold(const std::vector<std::string>& buttons) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
