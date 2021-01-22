@@ -267,11 +267,25 @@ void HyperVVM::mouse_move_rel(int x, int y) {
 }
 
 void HyperVVM::mouse_hold(const std::vector<MouseButton>& buttons) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto mouse = connect.machine(id()).synthetic_mouse();
+		for (auto button: buttons) {
+			mouse.set_button_state((uint32_t)button, true);
+		}
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto mouse = connect.machine(id()).synthetic_mouse();
+		for (auto button: buttons) {
+			mouse.set_button_state((uint32_t)button, false);
+		}
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 bool HyperVVM::is_nic_plugged(const std::string& pci_addr) const {

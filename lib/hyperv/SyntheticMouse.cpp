@@ -20,4 +20,15 @@ void SyntheticMouse::set_absolute_position(int32_t x, int32_t y) {
 	}
 }
 
+void SyntheticMouse::set_button_state(int32_t buttonIndex, bool isDown) {
+	try {
+		services.call("Msvm_SyntheticMouse", "SetButtonState")
+			.with("buttonIndex", buttonIndex)
+			.with("isDown", isDown)
+			.exec(mouse);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 }
