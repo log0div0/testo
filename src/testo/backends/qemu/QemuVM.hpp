@@ -41,20 +41,14 @@ struct QemuVM: public VM {
 	void suspend() override;
 	void resume() override;
 	stb::Image<stb::RGB> screenshot() override;
-	int run(const fs::path& exe, std::vector<std::string> args,
-		const std::function<void(const std::string&)>& callback) override;
 
 	bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
 	void delete_snapshot(const std::string& snapshot) override;
 	bool is_defined() const override;
 	VmState state() const override;
-	bool is_additions_installed() override;
 
-	void copy_to_guest(const fs::path& src, const fs::path& dst) override;
-	void copy_from_guest(const fs::path& src, const fs::path& dst) override;
-	void remove_from_guest(const fs::path& obj) override;
-	std::string get_tmp_dir() override;
+	std::shared_ptr<GuestAdditions> guest_additions() override;
 
 private:
 	void import_disk(const std::string& name, const fs::path& source);

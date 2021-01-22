@@ -322,14 +322,16 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
 		}
 
-		if (!vmc->vm()->is_additions_installed()) {
+		auto ga = vmc->vm()->guest_additions();
+
+		if (!ga->is_avaliable()) {
 			throw std::runtime_error(fmt::format("guest additions are not installed"));
 		}
 
 		if(copy.ast_node->is_to_guest()) {
-			vmc->vm()->copy_to_guest(from, to);
+			ga->copy_to_guest(from, to);
 		} else {
-			vmc->vm()->copy_from_guest(from, to);;
+			ga->copy_from_guest(from, to);;
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(copy.ast_node, current_controller));
@@ -1065,34 +1067,34 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
 		}
 
-		if (!vmc->vm()->is_additions_installed()) {
-			throw std::runtime_error(fmt::format("guest additions is not installed"));
+		auto ga = vmc->vm()->guest_additions();
+
+		if (!ga->is_avaliable()) {
+			throw std::runtime_error(fmt::format("guest additions are not installed"));
 		}
 
-		std::string script, extension, interpreter;
-		std::vector<std::string> args;
+		std::string script, extension, command;
 
 		if (exec.interpreter() == "bash") {
 			script = build_shell_script(exec.script());
 			extension = ".sh";
-			interpreter = "bash";
+			command = "bash";
 		} else if (exec.interpreter() == "cmd") {
 			script = build_batch_script(exec.script());
 			extension = ".bat";
-			interpreter = "cmd";
-			args.push_back("/c");
+			command = "cmd /c";
 		} else if (exec.interpreter() == "python") {
 			script = build_python_script(exec.script());
 			extension = ".py";
-			interpreter = "python";
+			command = "python";
 		} else if (exec.interpreter() == "python2") {
 			script = build_python_script(exec.script());
 			extension = ".py";
-			interpreter = "python2";
+			command = "python2";
 		} else {
 			script = build_python_script(exec.script());
 			extension = ".py";
-			interpreter = "python3";
+			command = "python3";
 		}
 
 		//copy the script to tmp folder
@@ -1101,7 +1103,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 		std::string hash = std::to_string(h(script));
 
 		fs::path host_script_dir = fs::temp_directory_path();
-		fs::path guest_script_dir = vmc->vm()->get_tmp_dir();
+		fs::path guest_script_dir = ga->get_tmp_dir();
 
 		fs::path host_script_file = host_script_dir / std::string(hash + extension);
 		fs::path guest_script_file = guest_script_dir / std::string(hash + extension);
@@ -1113,21 +1115,21 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 		script_stream << script;
 		script_stream.close();
 
-		vmc->vm()->copy_to_guest(host_script_file, guest_script_file); //5 seconds should be enough to pass any script
+		ga->copy_to_guest(host_script_file, guest_script_file); //5 seconds should be enough to pass any script
 
 		fs::remove(host_script_file.generic_string());
 
-		args.push_back(guest_script_file.generic_string());
+		command += " " + guest_script_file.generic_string();
 
 		coro::Timeout timeout(std::chrono::milliseconds(time_to_milliseconds(exec.timeout())));
 
-		auto result = vmc->vm()->run(interpreter, args, [&](const std::string& output) {
+		auto result = ga->execute(command, [&](const std::string& output) {
 			reporter.exec_command_output(output);
 		});
 		if (result != 0) {
-			throw std::runtime_error(interpreter + " command failed");
+			throw std::runtime_error(exec.interpreter() + " command failed");
 		}
-		vmc->vm()->remove_from_guest(guest_script_file);
+		ga->remove_from_guest(guest_script_file);
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(exec.ast_node, current_controller));

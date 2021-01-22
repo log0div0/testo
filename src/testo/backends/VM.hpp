@@ -2,6 +2,7 @@
 #pragma once
 
 #include "FlashDrive.hpp"
+#include "GuestAdditions.hpp"
 #include <stb/Image.hpp>
 #include <nlohmann/json.hpp>
 
@@ -55,23 +56,17 @@ struct VM {
 	virtual void suspend() = 0;
 	virtual void resume() = 0;
 	virtual stb::Image<stb::RGB> screenshot() = 0;
-	virtual int run(const fs::path& exe, std::vector<std::string> args,
-		const std::function<void(const std::string&)>& callback) = 0;
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot(const std::string& snapshot) = 0;
 	virtual bool is_defined() const = 0;
 	virtual VmState state() const = 0;
-	virtual bool is_additions_installed() = 0;
-
-	virtual void copy_to_guest(const fs::path& src, const fs::path& dst) = 0;
-	virtual void copy_from_guest(const fs::path& src, const fs::path& dst) = 0;
-	virtual void remove_from_guest(const fs::path& obj) = 0;
-	virtual std::string get_tmp_dir() = 0;
 
 	std::set<std::string> nics() const;
 	std::set<std::string> networks() const;
+
+	virtual std::shared_ptr<GuestAdditions> guest_additions() = 0;
 
 	std::string id() const;
 	std::string name() const;

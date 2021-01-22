@@ -1275,24 +1275,6 @@ stb::Image<stb::RGB> QemuVM::screenshot() {
 	return screenshot;
 }
 
-int QemuVM::run(const fs::path& exe, std::vector<std::string> args,
-	const std::function<void(const std::string&)>& callback) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		QemuGuestAdditions helper(domain);
-
-		std::string command = exe.generic_string();
-		for (auto& arg: args) {
-			command += " ";
-			command += arg;
-		}
-
-		return helper.execute(command, callback);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Run guest process"));
-	}
-}
-
 bool QemuVM::has_snapshot(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
@@ -1347,56 +1329,14 @@ VmState QemuVM::state() const {
 	}
 }
 
-bool QemuVM::is_additions_installed() {
+std::shared_ptr<GuestAdditions> QemuVM::guest_additions() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-		QemuGuestAdditions helper(domain);
-		return helper.is_avaliable();
-	} catch (const std::exception& error) {
-		return false;
-	}
-}
-
-std::string QemuVM::get_tmp_dir() {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		QemuGuestAdditions helper(domain);
-		return helper.get_tmp_dir();
+		return std::make_shared<QemuGuestAdditions>(domain);
 	}
 	catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Getting tmp directory path on guest"));
+		std::throw_with_nested(std::runtime_error("Connecting to guest additions channel"));
 	}
-}
-
-void QemuVM::copy_to_guest(const fs::path& src, const fs::path& dst) {
-	try {
-		//1) if there's no src on host - fuck you
-		if (!fs::exists(src)) {
-			throw std::runtime_error("Source file/folder does not exist on host: " + src.generic_string());
-		}
-
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		QemuGuestAdditions helper(domain);
-
-		helper.copy_to_guest(src, dst);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Copying file(s) to the guest"));
-	}
-}
-
-void QemuVM::copy_from_guest(const fs::path& src, const fs::path& dst) {
-	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		QemuGuestAdditions helper(domain);
-
-		helper.copy_from_guest(src, dst);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Copying file(s) from the guest"));
-	}
-}
-
-void QemuVM::remove_from_guest(const fs::path& obj) {
-	//TODO!!
 }
 
 void QemuVM::remove_disks() {

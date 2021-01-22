@@ -27,6 +27,7 @@ struct GuestAdditions {
 	bool is_avaliable();
 	void copy_to_guest(const fs::path& src, const fs::path& dst);
 	void copy_from_guest(const fs::path& src, const fs::path& dst);
+	void remove_from_guest(const fs::path& path);
 	int execute(const std::string& command,
 		const std::function<void(const std::string&)>& callback);
 	std::string get_tmp_dir();

@@ -122,6 +122,10 @@ void GuestAdditions::copy_from_guest(const fs::path& src, const fs::path& dst) {
 	}
 }
 
+void GuestAdditions::remove_from_guest(const fs::path& path) {
+	// TODO
+}
+
 void GuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& dst) {
 	for (auto& file: fs::directory_iterator(src)) {
 		if (fs::is_regular_file(file)) {
