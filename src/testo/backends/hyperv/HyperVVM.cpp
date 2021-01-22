@@ -348,10 +348,24 @@ bool HyperVVM::is_dvd_plugged() const {
 	}
 }
 void HyperVVM::plug_dvd(fs::path path) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto machine = connect.machine(id());
+		auto controller = machine.ideControllers().at(0);
+		auto drive = controller.drives().at(0);
+		drive.mountISO(path);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 void HyperVVM::unplug_dvd() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto machine = connect.machine(id());
+		auto controller = machine.ideControllers().at(0);
+		auto drive = controller.drives().at(0);
+		drive.disks().at(0).umount();
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 void HyperVVM::start() {

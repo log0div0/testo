@@ -1,5 +1,6 @@
 
 #include "Disk.hpp"
+#include <wmi/Call.hpp>
 
 namespace hyperv {
 
@@ -13,10 +14,11 @@ Disk::Disk(wmi::WbemClassObject storageAllocationSettingData_,
 
 }
 
-std::string Disk::hostResource() const {
+void Disk::umount() {
 	try {
-		std::vector<std::string> resource = storageAllocationSettingData.get("HostResource");
-		return resource.at(0);
+		auto result = services.call("Msvm_VirtualSystemManagementService", "RemoveResourceSettings")
+			.with("ResourceSettings", std::vector<std::string>{storageAllocationSettingData.path()})
+			.exec();
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}

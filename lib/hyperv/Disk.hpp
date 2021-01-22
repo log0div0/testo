@@ -11,7 +11,7 @@ struct Disk {
 		wmi::WbemClassObject virtualSystemSettingData_,
 		wmi::WbemServices services_);
 
-	std::string hostResource() const;
+	void umount();
 
 	wmi::WbemClassObject storageAllocationSettingData;
 	wmi::WbemClassObject virtualSystemSettingData;
