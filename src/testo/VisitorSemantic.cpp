@@ -282,22 +282,27 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 
 	current_test = test;
 
-	current_test->cksum_input = test->name();
+	current_test->cksum_input << "TEST NAME = " << test->name() << std::endl;
+	current_test->cksum_input << "PARENTS IN ALPHABETICAL ORDER = ";
 	std::vector<std::string> parents_names;
 	for (auto parent: test->parents) {
 		parents_names.push_back(parent->name());
 	}
 	std::sort(parents_names.begin(), parents_names.end());
-	for (auto name: parents_names) {
-		current_test->cksum_input += name;
+	for (size_t i = 0; i < parents_names.size(); ++i) {
+		if (i) {
+			current_test->cksum_input << " ";
+		}
+		current_test->cksum_input << parents_names.at(i);
 	}
-	current_test->cksum_input += test->snapshots_needed();
+	current_test->cksum_input << std::endl;
+	current_test->cksum_input << "SNAPSHOT NEEDED = " << test->snapshots_needed() << std::endl;
 
 	StackPusher<VisitorSemantic> new_ctx(this, test->stack);
 	visit_command_block(test->ast_node->cmd_block);
 
 	std::hash<std::string> h;
-	current_test->cksum = std::to_string(h(current_test->cksum_input));
+	current_test->cksum = std::to_string(h(current_test->cksum_input.str()));
 
 	current_test = nullptr;
 }
@@ -319,7 +324,7 @@ void VisitorSemantic::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 }
 
 void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cmd) {
-	current_test->cksum_input += regular_cmd.entity();
+	current_test->cksum_input << regular_cmd.entity() << " {" << std::endl;
 	if ((current_controller = IR::program->get_machine_or_null(regular_cmd.entity()))) {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
 		visit_machine(vmc);
@@ -346,6 +351,7 @@ void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cm
 	} else {
 		throw std::runtime_error(std::string(regular_cmd.ast_node->entity->begin()) + ": Error: unknown virtual entity: " + regular_cmd.entity());
 	}
+	current_test->cksum_input << "}" << std::endl;
 
 	current_controller = nullptr;
 }
@@ -366,47 +372,47 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 
 void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		return visit_abort({p->action, stack});
+		visit_abort({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		return visit_print({p->action, stack});
+		visit_print({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		return visit_type({p->action, stack});
+		visit_type({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		return visit_press({p->action, stack});
+		visit_press({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
-		return visit_hold({p->action, stack});
+		visit_hold({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
-		return visit_release({p->action, stack});
+		visit_release({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		return visit_action_block(p->action);
+		visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		return visit_mouse({p->action, stack});
+		visit_mouse({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		return visit_plug({p->action, stack});
+		visit_plug({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		return visit_start({p->action, stack});
+		visit_start({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		return visit_stop({p->action, stack});
+		visit_stop({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		return visit_shutdown({p->action, stack});
+		visit_shutdown({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		return visit_exec({p->action, stack});
+		visit_exec({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		return visit_copy({p->action, stack});
+		visit_copy({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		return visit_wait({p->action, stack});
+		visit_wait({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		return visit_sleep({p->action, stack});
+		visit_sleep({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(p->action, false);
+		visit_macro_call(p->action, false);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		return visit_if_clause(p->action);
+		visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		return visit_for_clause(p->action);
+		visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		return visit_cycle_control({p->action, stack});
+		visit_cycle_control({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
-		;
+		// do nothing
 	} else {
 		throw std::runtime_error(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a virtual machine");
 	}
@@ -414,53 +420,56 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::IAction> action) {
 
 void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		return visit_abort({p->action, stack});
+		visit_abort({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		return visit_print({p->action, stack});
+		visit_print({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		return visit_copy({p->action, stack});
+		visit_copy({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		return visit_sleep({p->action, stack});
+		visit_sleep({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		return visit_action_block(p->action);
+		visit_action_block(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
-		;
+		// do nothing
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		return visit_macro_call(p->action, false);
+		visit_macro_call(p->action, false);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		return visit_if_clause(p->action);
+		visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		return visit_for_clause(p->action);
+		visit_for_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		return visit_cycle_control({p->action, stack});
+		visit_cycle_control({p->action, stack});
 	} else {
 		throw std::runtime_error(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a flash drive");
 	}
 }
 
 void VisitorSemantic::visit_abort(const IR::Abort& abort) {
-	current_test->cksum_input += "abort ";
-	current_test->cksum_input += abort.message();
+	current_test->cksum_input << "abort " << abort.message() << std::endl;
 }
 
 void VisitorSemantic::visit_print(const IR::Print& print) {
-	current_test->cksum_input += "print ";
-	current_test->cksum_input += print.message();
+	current_test->cksum_input << "print " << print.message() << std::endl;
 }
 
 void VisitorSemantic::visit_type(const IR::Type& type) {
-	current_test->cksum_input += "type ";
-	current_test->cksum_input += type.text();
-	current_test->cksum_input += type.interval();
+	current_test->cksum_input << "type "
+		<< type.text()
+		<< " interval " << type.interval() << std::endl;
 }
 
 void VisitorSemantic::visit_press(const IR::Press& press) {
+	current_test->cksum_input << "press ";
+
+	int i = 0;
 	for (auto key_spec: press.ast_node->keys) {
 		visit_key_spec(key_spec);
+		if (i++) {
+			current_test->cksum_input << ",";
+		}
 	}
 
-	current_test->cksum_input += std::string(*press.ast_node);
-	current_test->cksum_input += press.interval();
+	current_test->cksum_input << " interval " << press.interval() << std::endl;
 }
 
 void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination> combination) {
@@ -477,6 +486,13 @@ void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination>
 					" :Error: duplicate key: " + button.value());
 			}
 		}
+
+		if (i) {
+			current_test->cksum_input << "+";
+		}
+		std::string button_str = button.value();
+		std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
+		current_test->cksum_input << button_str;
 	}
 }
 
@@ -488,19 +504,23 @@ void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
 			throw std::runtime_error(std::string(key_spec->times.begin()) +
 					" :Error: can't press a button less than 1 time: " + key_spec->times.value());
 		}
+		current_test->cksum_input << "*" << key_spec->times.value();
 	}
 }
 
 void VisitorSemantic::visit_hold(const IR::Hold& hold) {
-	current_test->cksum_input += std::string(*hold.ast_node);
+	current_test->cksum_input << "hold ";
 	visit_key_combination(hold.ast_node->combination);
+	current_test->cksum_input << std::endl;
 }
 
 void VisitorSemantic::visit_release(const IR::Release& release) {
-	current_test->cksum_input += std::string(*release.ast_node);
+	current_test->cksum_input << "release";
 	if (release.ast_node->combination) {
+		current_test->cksum_input << " ";
 		visit_key_combination(release.ast_node->combination);
 	}
+	current_test->cksum_input << std::endl;
 }
 
 void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers)
@@ -523,7 +543,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 	for (auto specifier: specifiers) {
 		auto arg = specifier->arg;
 
-		current_test->cksum_input += std::string(*specifier);
+		current_test->cksum_input << std::string(*specifier);
 		if (specifier->is_from()) {
 			if (!arg) {
 				throw std::runtime_error(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
@@ -580,10 +600,9 @@ void VisitorSemantic::visit_mouse_move_coordinates(const IR::MouseCoordinates& c
 		throw std::runtime_error(std::string(coordinates.ast_node->begin()) + ": Error: mouse coordinates must be either both absolute either both relative");
 	}
 
-	current_test->cksum_input += "coordinates x:";
-	current_test->cksum_input += coordinates.x();
-	current_test->cksum_input += " y:";
-	current_test->cksum_input += coordinates.y();
+	current_test->cksum_input
+		 << "x: " << coordinates.x()
+		 << " y: " << coordinates.y();
 }
 
 void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
@@ -599,8 +618,7 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
 	}
 
-	current_test->cksum_input += "js ";
-	current_test->cksum_input += script;
+	current_test->cksum_input << "js " << script;
 }
 
 void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
@@ -614,9 +632,9 @@ void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
 		throw std::runtime_error(std::string(img.ast_node->begin()) + ": Error: specified image path does not lead to a regular file: " + img_path.generic_string());
 	}
 
-	current_test->cksum_input += "img ";
-	current_test->cksum_input += img_path.generic_string();
-	current_test->cksum_input += file_signature(img_path);
+	current_test->cksum_input
+		<< "img " << img_path.generic_string()
+		<< " (file signature = " << file_signature(img_path) << ")";
 }
 
 void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
@@ -626,8 +644,7 @@ void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
 		throw std::runtime_error(std::string(homm3.ast_node->begin()) + ": Error: specified Heroes of Might and Magic object does not exist " + id);
 	}
 
-	current_test->cksum_input += "homm3 ";
-	current_test->cksum_input += id;
+	current_test->cksum_input << "homm3 " << id;
 }
 
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
@@ -636,8 +653,7 @@ void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 		throw std::runtime_error(std::string(text.ast_node->begin()) + ": Error: empty string in text selection");
 	}
 
-	current_test->cksum_input += "text ";
-	current_test->cksum_input += txt;
+	current_test->cksum_input << "text " << txt;
 }
 
 void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
@@ -665,8 +681,9 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 }
 
 void VisitorSemantic::visit_mouse_move_click(const IR::MouseMoveClick& mouse_move_click) {
-	current_test->cksum_input += mouse_move_click.event_type() + " ";
+	current_test->cksum_input << mouse_move_click.event_type();
 	if (mouse_move_click.ast_node->object) {
+		current_test->cksum_input << " ";
 		if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click.ast_node->object)) {
 			visit_mouse_move_coordinates({p->target, stack});
 		} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click.ast_node->object)) {
@@ -676,86 +693,86 @@ void VisitorSemantic::visit_mouse_move_click(const IR::MouseMoveClick& mouse_mov
 }
 
 void VisitorSemantic::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
-	current_test->cksum_input += "hold ";
-	current_test->cksum_input += mouse_hold.button();
+	current_test->cksum_input << "hold " << mouse_hold.button() << std::endl;
 }
 
 void VisitorSemantic::visit_mouse_release(const IR::MouseRelease& mouse_release) {
-	current_test->cksum_input += "release";
+	current_test->cksum_input << "release" << std::endl;
 }
 
 void VisitorSemantic::visit_mouse(const IR::Mouse& mouse) {
-	current_test->cksum_input += "mouse ";
+	current_test->cksum_input << "mouse ";
 
 	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse.ast_node->event)) {
-		return visit_mouse_move_click({p->event, stack});
+		visit_mouse_move_click({p->event, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse.ast_node->event)) {
-		return visit_mouse_hold({p->event, stack});
+		visit_mouse_hold({p->event, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse.ast_node->event)) {
-		return visit_mouse_release({p->event, stack});
+		visit_mouse_release({p->event, stack});
 	}
+
+	current_test->cksum_input << std::endl;
 }
 
 void VisitorSemantic::visit_plug(const IR::Plug& plug) {
-	current_test->cksum_input += "plug ";
-	current_test->cksum_input += std::to_string(plug.is_on());
-
+	if (plug.is_on()) {
+		current_test->cksum_input << "plug ";
+	} else {
+		current_test->cksum_input << "unplug ";
+	}
 
 	if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugFlash>>(plug.ast_node->resource)) {
-		return visit_plug_flash({p->resource, stack});
+		visit_plug_flash({p->resource, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugDVD>>(plug.ast_node->resource)) {
-		return visit_plug_dvd({p->resource, stack}, plug.is_on());
+		visit_plug_dvd({p->resource, stack}, plug.is_on());
 	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugNIC>>(plug.ast_node->resource)) {
-		return visit_plug_nic({p->resource, stack});
+		visit_plug_nic({p->resource, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
-		return visit_plug_link({p->resource, stack});
+		visit_plug_link({p->resource, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugHostDev>>(plug.ast_node->resource)) {
-		return visit_plug_hostdev({p->resource, stack});
+		visit_plug_hostdev({p->resource, stack});
 	} else {
 		throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
 			plug.ast_node->resource->t.value());
 	}
+
+	current_test->cksum_input << std::endl;
 }
 
 void VisitorSemantic::visit_plug_flash(const IR::PlugFlash& plug_flash) {
-	current_test->cksum_input += "flash";
-	current_test->cksum_input += plug_flash.name();
+	current_test->cksum_input << "flash " << plug_flash.name();
 
 	auto flash_drive = IR::program->get_flash_drive_or_null(plug_flash.name());
 	if (!flash_drive) {
 		throw std::runtime_error(std::string(plug_flash.ast_node->begin()) + ": Error: unknown flash drive: " + plug_flash.name());
 	}
 	visit_flash(flash_drive);
+
 }
 
 void VisitorSemantic::visit_plug_dvd(const IR::PlugDVD& plug_dvd, bool is_on) {
-	current_test->cksum_input += "dvd";
+	current_test->cksum_input << "dvd";
 
 	if (is_on) {
 		auto dvd_path = plug_dvd.path();
 		if (!fs::exists(dvd_path)) {
 			throw std::runtime_error(std::string(plug_dvd.ast_node->begin()) + ": Error: specified dvd image path does not exist: " + dvd_path.generic_string());
 		}
-		current_test->cksum_input += dvd_path.generic_string();
-		current_test->cksum_input += file_signature(dvd_path);
+		current_test->cksum_input << " " << dvd_path.generic_string()
+			<< "(file signature = " << file_signature(dvd_path) << ")";
 	}
 }
 
 void VisitorSemantic::visit_plug_nic(const IR::PlugNIC& plug_nic) {
-	current_test->cksum_input += "nic";
-	current_test->cksum_input += plug_nic.name();
+	current_test->cksum_input << "nic " << plug_nic.name();
 }
 
 void VisitorSemantic::visit_plug_link(const IR::PlugLink& plug_link) {
-	current_test->cksum_input += "link";
-	current_test->cksum_input += plug_link.name();
+	current_test->cksum_input << "link " << plug_link.name();
 }
 
 void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
-	current_test->cksum_input += "hostdev";
-	current_test->cksum_input += plug_hostdev.type();
-	current_test->cksum_input += plug_hostdev.addr();
-
+	current_test->cksum_input << "hostdev " << plug_hostdev.type() << " " << plug_hostdev.addr();
 
 	try {
 		auto parsed_addr = parse_usb_addr(plug_hostdev.addr());
@@ -765,16 +782,15 @@ void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
 }
 
 void VisitorSemantic::visit_start(const IR::Start& start) {
-	current_test->cksum_input += "start";
+	current_test->cksum_input << "start" << std::endl;
 }
 
 void VisitorSemantic::visit_stop(const IR::Stop& stop) {
-	current_test->cksum_input += "stop";
+	current_test->cksum_input << "stop" << std::endl;
 }
 
 void VisitorSemantic::visit_shutdown(const IR::Shutdown& shutdown) {
-	current_test->cksum_input += "shutdown ";
-	current_test->cksum_input += shutdown.timeout();
+	current_test->cksum_input << "shutdown timeout " << shutdown.timeout() << std::endl;
 }
 
 void VisitorSemantic::visit_exec(const IR::Exec& exec) {
@@ -787,15 +803,18 @@ void VisitorSemantic::visit_exec(const IR::Exec& exec) {
 		throw std::runtime_error(std::string(exec.ast_node->begin()) + ": Error: unknown process name: " + exec.interpreter());
 	}
 
-	current_test->cksum_input += "exec ";
-	current_test->cksum_input += exec.interpreter();
-	current_test->cksum_input += exec.script();
-	current_test->cksum_input += exec.timeout();
+	current_test->cksum_input << "exec "
+		<< exec.interpreter() << " " << exec.script()
+		<< " timeout " << exec.timeout()
+		<< std::endl;
 }
 
 void VisitorSemantic::visit_copy(const IR::Copy& copy) {
-	current_test->cksum_input += "copy ";
-	current_test->cksum_input += copy.ast_node->is_to_guest();
+	if (copy.ast_node->is_to_guest()) {
+		current_test->cksum_input << "copyto ";
+	} else {
+		current_test->cksum_input << "copyfrom ";
+	}
 
 	auto from = copy.from();
 
@@ -805,18 +824,19 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 		}
 
 		if (fs::is_regular_file(from)) {
-			current_test->cksum_input += file_signature(from);
+			current_test->cksum_input << file_signature(from);
 		} else if (fs::is_directory(from)) {
-			current_test->cksum_input += directory_signature(from);
+			current_test->cksum_input << directory_signature(from);
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
 		}
-
-		current_test->cksum_input += from;
+	} else {
+		current_test->cksum_input << from;
 	}
 
-	current_test->cksum_input += copy.to();
-	current_test->cksum_input += copy.timeout();
+	current_test->cksum_input << " " << copy.to()
+		<< " timeout " << copy.timeout()
+		<< std::endl;
 }
 
 void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
@@ -836,7 +856,9 @@ void VisitorSemantic::validate_js(const std::string& script) {
 
 void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
 	bool is_negated = selectable->is_negated();
-	current_test->cksum_input += std::to_string(is_negated);
+	if (is_negated) {
+		current_test->cksum_input << "!";
+	}
 
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
 		visit_select_text({p->selectable, stack});
@@ -854,28 +876,28 @@ void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> 
 }
 
 void VisitorSemantic::visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented) {
-	current_test->cksum_input += "(";
+	current_test->cksum_input << "(";
 	visit_detect_expr(parented->select_expr);
-	current_test->cksum_input += ")";
+	current_test->cksum_input << ")";
 
 }
 
 void VisitorSemantic::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop) {
 	visit_detect_expr(binop->left);
-	current_test->cksum_input += binop->t.value();
+	current_test->cksum_input << binop->t.value();
 	visit_detect_expr(binop->right);
 }
 
 void VisitorSemantic::visit_wait(const IR::Wait& wait) {
-	current_test->cksum_input += "wait ";
+	current_test->cksum_input << "wait ";
 	visit_detect_expr(wait.ast_node->select_expr);
-	current_test->cksum_input += wait.timeout();
-	current_test->cksum_input += wait.interval();
+	current_test->cksum_input << " timeout " << wait.timeout()
+		<< " interval " << wait.interval()
+		<< std::endl;
 }
 
 void VisitorSemantic::visit_sleep(const IR::Sleep& sleep) {
-	current_test->cksum_input += "sleep ";
-	current_test->cksum_input += sleep.timeout();
+	current_test->cksum_input << "sleep timeout " << sleep.timeout() << std::endl;
 }
 
 void VisitorSemantic::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call, bool is_command_macro) {
@@ -974,7 +996,7 @@ Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 
 Tribool VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	auto left = visit_expr(binop->left);
-	current_test->cksum_input += binop->op().value();
+	current_test->cksum_input << binop->op().value();
 
 	if (binop->op().value() == "AND") {
 		if (left == Tribool::no) {
@@ -994,25 +1016,26 @@ Tribool VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 }
 
 Tribool VisitorSemantic::visit_defined(const IR::Defined& defined) {
-	current_test->cksum_input += "DEFINED ";
-	current_test->cksum_input += defined.var();
 	bool is_defined = defined.is_defined();
-	current_test->cksum_input += is_defined;
+
+	current_test->cksum_input
+		<< "DEFINED " << defined.var()
+		<< " (" << is_defined << ")";
 
 	return is_defined ? Tribool::yes : Tribool::no;
 }
 
 Tribool VisitorSemantic::visit_comparison(const IR::Comparison& comparison) {
-	current_test->cksum_input += comparison.left();
-	current_test->cksum_input += comparison.op();
-	current_test->cksum_input += comparison.right();
+	current_test->cksum_input << comparison.left() << comparison.op() << comparison.right();
 
 	return comparison.calculate() ? Tribool::yes : Tribool::no;
 }
 
 Tribool VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	bool is_negated = factor->is_negated();
-	current_test->cksum_input += std::to_string(is_negated);
+	if (is_negated) {
+		current_test->cksum_input << "NOT ";
+	}
 
 	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
 		return visit_check({p->factor, stack});
@@ -1027,7 +1050,7 @@ Tribool VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
 		try {
 			auto text = template_parser.resolve(p->factor->text(), stack);
-			current_test->cksum_input += text;
+			current_test->cksum_input << text;
 			return is_negated ^ (text.length() ? Tribool::yes : Tribool::no);
 		} catch (const std::exception& error) {
 			std::throw_with_nested(ResolveException(p->factor->begin(), p->factor->text()));
@@ -1038,9 +1061,9 @@ Tribool VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 }
 
 Tribool VisitorSemantic::visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented) {
-	current_test->cksum_input += "(";
+	current_test->cksum_input << "(";
 	auto result = visit_expr(parented->expr);
-	current_test->cksum_input += ")";
+	current_test->cksum_input << ")";
 	return result;
 }
 
@@ -1049,17 +1072,21 @@ Tribool VisitorSemantic::visit_check(const IR::Check& check) {
 		throw std::runtime_error(std::string(check.ast_node->begin()) + ": Error: The \"check\" expression is not applicable to a flash drive");
 	}
 
-	current_test->cksum_input += "check ";
+	current_test->cksum_input << "check ";
 	visit_detect_expr(check.ast_node->select_expr);
-	current_test->cksum_input += check.timeout();
-	current_test->cksum_input += check.interval();
+	current_test->cksum_input
+		<< " timeout " << check.timeout()
+		<< " interval " << check.interval()
+		<< std::endl;
 	return Tribool::maybe;
 }
 
 void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
-	current_test->cksum_input += "if";
+	current_test->cksum_input << "if (";
 
 	auto expr_value = visit_expr(if_clause->expr);
+
+	current_test->cksum_input << ") {" << std::endl;
 
 	switch (expr_value) {
 		case Tribool::yes:
@@ -1067,17 +1094,20 @@ void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) 
 			break;
 		case Tribool::no:
 			if (if_clause->has_else()) {
+				current_test->cksum_input << "} else {" << std::endl;
 				visit_action(if_clause->else_action);
 			}
 			break;
 		default:
 			visit_action(if_clause->if_action);
 			if (if_clause->has_else()) {
-				current_test->cksum_input += "else";
+				current_test->cksum_input << "} else {" << std::endl;
 				visit_action(if_clause->else_action);
 			}
 			break;
 	}
+
+	current_test->cksum_input << "}" << std::endl;
 }
 
 std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
@@ -1109,21 +1139,20 @@ std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
 			r1 + " is greater or equal to finish " + r2);
 	}
 
-	current_test->cksum_input += "RANGE ";
-	current_test->cksum_input += r1;
-	current_test->cksum_input += r2;
+	current_test->cksum_input << "RANGE " << r1 << " " << r2;
 
 	return range.values();
 }
 
 void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
-	current_test->cksum_input += "for ";
+	current_test->cksum_input << "for (";
 	std::vector<std::string> values;
 	if (auto p = std::dynamic_pointer_cast<AST::CounterList<AST::Range>>(for_clause->counter_list)) {
 		values = visit_range({p->counter_list, stack});
 	} else {
 		throw std::runtime_error("Unknown counter list type");
 	}
+	current_test->cksum_input << ") {" << std::endl;
 
 	std::map<std::string, std::string> vars;
 	for (auto i: values) {
@@ -1136,13 +1165,15 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 	}
 
 	if (for_clause->else_token) {
-		current_test->cksum_input += "else ";
+		current_test->cksum_input << "} else {" << std::endl;
 		visit_action(for_clause->else_action);
 	}
+
+	current_test->cksum_input << "}" << std::endl;
 }
 
 void VisitorSemantic::visit_cycle_control(const IR::CycleControl& cycle_control) {
-	current_test->cksum_input += cycle_control.type();
+	current_test->cksum_input << cycle_control.type() << std::endl;
 }
 
 void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {

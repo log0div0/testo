@@ -16,7 +16,7 @@ uint32_t time_to_milliseconds(const std::string& time);
 
 extern uint64_t content_cksum_maxsize;
 std::string file_signature(const fs::path& file);
-std::string directory_signature(const fs::path& dir);
+std::string directory_signature(const fs::path& dir, size_t depth = 0);
 
 bool is_number(const std::string& s);
 

@@ -117,14 +117,26 @@ uint32_t time_to_milliseconds(const std::string& time) {
 
 uint64_t content_cksum_maxsize = 1;
 
+template <typename T>
+std::string to_hex(T i) {
+	std::stringstream stream;
+	stream << "0x"
+		<< std::setfill ('0') << std::setw(sizeof(T)*2)
+		<< std::hex << i;
+	return stream.str();
+}
+
 std::string file_signature(const fs::path& file) {
 	if (!fs::exists(file)) {
 		return file.filename().generic_string() + "not exists";
 	}
 
-	if(fs::file_size(file) > content_cksum_maxsize) {
-		auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(file));
-		return file.filename().generic_string() + std::to_string(last_modify_time);
+	if(fs::file_size(file) > (content_cksum_maxsize * 1024 * 1024)) {
+		auto time = fs::last_write_time(file);
+		auto last_modify_time = decltype(time)::clock::to_time_t(time);
+		char buf[32] = {};
+		std::strftime(buf, 32, "%Y.%m.%d %H:%m:%S ", std::localtime(&last_modify_time));
+		return buf + file.filename().generic_string();
 	} else {
 		std::ifstream f(file.generic_string());
 		if (!f) {
@@ -132,25 +144,38 @@ std::string file_signature(const fs::path& file) {
 		}
 		std::string str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 		std::hash<std::string> h;
-		return file.filename().generic_string() + std::to_string(h(str));
+		return to_hex(h(str)) + " " + file.filename().generic_string();
 	}
 
 }
 
-std::string directory_signature(const fs::path& dir) {
-	std::string result("");
+std::string directory_signature(const fs::path& dir, size_t depth) {
+	std::string result;
+	for (size_t i = 0; i < depth; ++i) {
+		result.push_back('\t');
+	}
+	result += dir.filename().generic_string() + " {\n";
+	std::vector<fs::path> paths;
 	for (auto& file: fs::directory_iterator(dir)) {
+		paths.push_back(file);
+	}
+	std::sort(paths.begin(), paths.end());
+	for (auto& file: paths) {
 		if (fs::is_regular_file(file)) {
-			result += file_signature(file);
+			for (size_t i = 0; i < (depth + 1); ++i) {
+				result.push_back('\t');
+			}
+			result += file_signature(file) + "\n";
 		} else if (fs::is_directory(file)) {
-			result += directory_signature(file);
+			result += directory_signature(file, depth + 1) + "\n";
 		} else {
 			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
 		}
 	}
-
-	auto last_modify_time = std::chrono::system_clock::to_time_t(fs::last_write_time(dir));
-	result += std::to_string(last_modify_time);
+	for (size_t i = 0; i < depth; ++i) {
+		result.push_back('\t');
+	}
+	result += "}";
 	return result;
 }
 

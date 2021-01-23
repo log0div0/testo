@@ -5,6 +5,7 @@
 #include "FlashDrive.hpp"
 #include "Network.hpp"
 #include <fstream>
+#include <sstream>
 
 namespace IR {
 
@@ -22,7 +23,7 @@ struct Test: Object<AST::Test> {
 	std::string description() const;
 	bool snapshots_needed() const;
 
-	std::string cksum_input;
+	std::stringstream cksum_input;
 	std::string cksum;
 
 	std::chrono::system_clock::time_point start_timestamp;
