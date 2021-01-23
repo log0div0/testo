@@ -445,16 +445,16 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
 }
 
 void VisitorSemantic::visit_abort(const IR::Abort& abort) {
-	current_test->cksum_input << "abort " << abort.message() << std::endl;
+	current_test->cksum_input << "abort \"" << abort.message() << "\"" << std::endl;
 }
 
 void VisitorSemantic::visit_print(const IR::Print& print) {
-	current_test->cksum_input << "print " << print.message() << std::endl;
+	current_test->cksum_input << "print \"" << print.message() << "\"" << std::endl;
 }
 
 void VisitorSemantic::visit_type(const IR::Type& type) {
 	current_test->cksum_input << "type "
-		<< type.text()
+		<< "\"" << type.text() << "\""
 		<< " interval " << type.interval() << std::endl;
 }
 
@@ -463,10 +463,10 @@ void VisitorSemantic::visit_press(const IR::Press& press) {
 
 	int i = 0;
 	for (auto key_spec: press.ast_node->keys) {
-		visit_key_spec(key_spec);
 		if (i++) {
 			current_test->cksum_input << ",";
 		}
+		visit_key_spec(key_spec);
 	}
 
 	current_test->cksum_input << " interval " << press.interval() << std::endl;
@@ -600,9 +600,7 @@ void VisitorSemantic::visit_mouse_move_coordinates(const IR::MouseCoordinates& c
 		throw std::runtime_error(std::string(coordinates.ast_node->begin()) + ": Error: mouse coordinates must be either both absolute either both relative");
 	}
 
-	current_test->cksum_input
-		 << "x: " << coordinates.x()
-		 << " y: " << coordinates.y();
+	current_test->cksum_input << coordinates.x() << " " << coordinates.y();
 }
 
 void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
@@ -618,7 +616,7 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
 	}
 
-	current_test->cksum_input << "js " << script;
+	current_test->cksum_input << "js \"" << script << "\"";
 }
 
 void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
@@ -633,7 +631,7 @@ void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
 	}
 
 	current_test->cksum_input
-		<< "img " << img_path.generic_string()
+		<< "img \"" << img_path.generic_string() << "\""
 		<< " (file signature = " << file_signature(img_path) << ")";
 }
 
@@ -644,7 +642,7 @@ void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
 		throw std::runtime_error(std::string(homm3.ast_node->begin()) + ": Error: specified Heroes of Might and Magic object does not exist " + id);
 	}
 
-	current_test->cksum_input << "homm3 " << id;
+	current_test->cksum_input << "homm3 \"" << id << "\"";
 }
 
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
@@ -653,7 +651,7 @@ void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 		throw std::runtime_error(std::string(text.ast_node->begin()) + ": Error: empty string in text selection");
 	}
 
-	current_test->cksum_input << "text " << txt;
+	current_test->cksum_input << "text \"" << txt << "\"";
 }
 
 void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
@@ -759,7 +757,7 @@ void VisitorSemantic::visit_plug_dvd(const IR::PlugDVD& plug_dvd, bool is_on) {
 			throw std::runtime_error(std::string(plug_dvd.ast_node->begin()) + ": Error: specified dvd image path does not exist: " + dvd_path.generic_string());
 		}
 		current_test->cksum_input << " " << dvd_path.generic_string()
-			<< "(file signature = " << file_signature(dvd_path) << ")";
+			<< " (file signature = " << file_signature(dvd_path) << ")";
 	}
 }
 
@@ -772,7 +770,7 @@ void VisitorSemantic::visit_plug_link(const IR::PlugLink& plug_link) {
 }
 
 void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
-	current_test->cksum_input << "hostdev " << plug_hostdev.type() << " " << plug_hostdev.addr();
+	current_test->cksum_input << "hostdev " << plug_hostdev.type() << " \"" << plug_hostdev.addr() << "\"";
 
 	try {
 		auto parsed_addr = parse_usb_addr(plug_hostdev.addr());
@@ -804,7 +802,7 @@ void VisitorSemantic::visit_exec(const IR::Exec& exec) {
 	}
 
 	current_test->cksum_input << "exec "
-		<< exec.interpreter() << " " << exec.script()
+		<< exec.interpreter() << " \"\"\"" << exec.script() << "\"\"\""
 		<< " timeout " << exec.timeout()
 		<< std::endl;
 }
@@ -816,27 +814,15 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 		current_test->cksum_input << "copyfrom ";
 	}
 
-	auto from = copy.from();
+	current_test->cksum_input << copy.from()<< " " << copy.to() << " timeout " << copy.timeout() << std::endl;
 
+	auto from = copy.from();
 	if (copy.ast_node->is_to_guest()) {
 		if (!fs::exists(from)) {
 			throw std::runtime_error(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from);
 		}
-
-		if (fs::is_regular_file(from)) {
-			current_test->cksum_input << file_signature(from);
-		} else if (fs::is_directory(from)) {
-			current_test->cksum_input << directory_signature(from);
-		} else {
-			throw std::runtime_error("Unknown type of file: " + fs::path(from).generic_string());
-		}
-	} else {
-		current_test->cksum_input << from;
+		current_test->cksum_input << pretty_files_signature(from) << std::endl;
 	}
-
-	current_test->cksum_input << " " << copy.to()
-		<< " timeout " << copy.timeout()
-		<< std::endl;
 }
 
 void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
@@ -996,7 +982,7 @@ Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
 
 Tribool VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	auto left = visit_expr(binop->left);
-	current_test->cksum_input << binop->op().value();
+	current_test->cksum_input << " " << binop->op().value() << " ";
 
 	if (binop->op().value() == "AND") {
 		if (left == Tribool::no) {
@@ -1019,8 +1005,7 @@ Tribool VisitorSemantic::visit_defined(const IR::Defined& defined) {
 	bool is_defined = defined.is_defined();
 
 	current_test->cksum_input
-		<< "DEFINED " << defined.var()
-		<< " (" << is_defined << ")";
+		<< "DEFINED " << defined.var();
 
 	return is_defined ? Tribool::yes : Tribool::no;
 }
@@ -1050,7 +1035,7 @@ Tribool VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
 		try {
 			auto text = template_parser.resolve(p->factor->text(), stack);
-			current_test->cksum_input << text;
+			current_test->cksum_input << "\"" << text << "\"";
 			return is_negated ^ (text.length() ? Tribool::yes : Tribool::no);
 		} catch (const std::exception& error) {
 			std::throw_with_nested(ResolveException(p->factor->begin(), p->factor->text()));
@@ -1076,8 +1061,7 @@ Tribool VisitorSemantic::visit_check(const IR::Check& check) {
 	visit_detect_expr(check.ast_node->select_expr);
 	current_test->cksum_input
 		<< " timeout " << check.timeout()
-		<< " interval " << check.interval()
-		<< std::endl;
+		<< " interval " << check.interval();
 	return Tribool::maybe;
 }
 
@@ -1138,8 +1122,6 @@ std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
 		throw std::runtime_error(std::string(range.ast_node->begin()) + ": Error: start of the range " +
 			r1 + " is greater or equal to finish " + r2);
 	}
-
-	current_test->cksum_input << "RANGE " << r1 << " " << r2;
 
 	return range.values();
 }

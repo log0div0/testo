@@ -50,7 +50,7 @@ void FlashDrive::create() {
 				folder = src_file.parent_path() / folder;
 			}
 			folder = fs::canonical(folder);
-			cksum_input += directory_signature(folder);
+			cksum_input += pretty_files_signature(folder);
 
 			fd()->upload(folder, "/");
 		}
@@ -213,7 +213,7 @@ bool FlashDrive::check_config_relevance() {
 			folder = src_file.parent_path() / folder;
 		}
 		folder = fs::canonical(folder);
-		cksum_input += directory_signature(folder);
+		cksum_input += pretty_files_signature(folder);
 	}
 
 	std::hash<std::string> h;

@@ -128,54 +128,51 @@ std::string to_hex(T i) {
 
 std::string file_signature(const fs::path& file) {
 	if (!fs::exists(file)) {
-		return file.filename().generic_string() + "not exists";
+		return "NOT_EXISTS";
 	}
 
 	if(fs::file_size(file) > (content_cksum_maxsize * 1024 * 1024)) {
 		auto time = fs::last_write_time(file);
 		auto last_modify_time = decltype(time)::clock::to_time_t(time);
 		char buf[32] = {};
-		std::strftime(buf, 32, "%Y.%m.%d %H:%m:%S ", std::localtime(&last_modify_time));
-		return buf + file.filename().generic_string();
+		std::strftime(buf, 32, "%Y.%m.%d %H:%m:%S", std::localtime(&last_modify_time));
+		return buf;
 	} else {
 		std::ifstream f(file.generic_string());
 		if (!f) {
-			return file.filename().generic_string() + "Can't open";
+			return "FAILED_TO_OPEN";
 		}
 		std::string str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 		std::hash<std::string> h;
-		return to_hex(h(str)) + " " + file.filename().generic_string();
+		return to_hex(h(str));
 	}
 
 }
 
-std::string directory_signature(const fs::path& dir, size_t depth) {
+std::string pretty_files_signature(const fs::path& path, size_t depth) {
 	std::string result;
 	for (size_t i = 0; i < depth; ++i) {
 		result.push_back('\t');
 	}
-	result += dir.filename().generic_string() + " {\n";
-	std::vector<fs::path> paths;
-	for (auto& file: fs::directory_iterator(dir)) {
-		paths.push_back(file);
-	}
-	std::sort(paths.begin(), paths.end());
-	for (auto& file: paths) {
-		if (fs::is_regular_file(file)) {
-			for (size_t i = 0; i < (depth + 1); ++i) {
-				result.push_back('\t');
-			}
-			result += file_signature(file) + "\n";
-		} else if (fs::is_directory(file)) {
-			result += directory_signature(file, depth + 1) + "\n";
-		} else {
-			throw std::runtime_error("Unknown type of file: " + fs::path(file).generic_string());
+	if (fs::is_regular_file(path)) {
+		result += file_signature(path) + " " + path.filename().generic_string();
+	} else if (fs::is_directory(path)) {
+		result += path.filename().generic_string() + " {\n";
+		std::vector<fs::path> paths;
+		for (auto& file: fs::directory_iterator(path)) {
+			paths.push_back(file);
 		}
+		std::sort(paths.begin(), paths.end());
+		for (auto& file: paths) {
+			result += pretty_files_signature(file, depth + 1) + "\n";
+		}
+		for (size_t i = 0; i < depth; ++i) {
+			result.push_back('\t');
+		}
+		result += "}";
+	} else {
+		throw std::runtime_error("Unknown type of file: " + fs::path(path).generic_string());
 	}
-	for (size_t i = 0; i < depth; ++i) {
-		result.push_back('\t');
-	}
-	result += "}";
 	return result;
 }
 
