@@ -154,9 +154,9 @@ test centos_prepare_1: centos_install_guest_additions {
 		wait "Bluetooth"
 		mouse click "Wi-Fi".from_left(0); sleep 1s; press Down*11, Enter
 		wait "Power Saving"
-		mouse click "5 minutes"
+		mouse click "5 minutes".from_top(0)
 		sleep 1s
-		mouse click "5 minutes"
+		mouse click "5 minutes".from_top(0)
 		mouse click "15 minutes"
 		sleep 1s
 		mouse click "15 minutes"
