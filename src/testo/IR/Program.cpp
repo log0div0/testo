@@ -176,9 +176,9 @@ void Program::visit_stmt(const std::shared_ptr<AST::IStmt>& stmt) {
 void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block) {
 	for (auto stmt: stmt_block->stmts) {
 		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
-			throw std::runtime_error(std::string(stmt->begin()) + ": Error: nested macro declarations are not supported");
+			throw Exception(std::string(stmt->begin()) + ": Error: nested macro declarations are not supported");
 		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
-			throw std::runtime_error(std::string(stmt->begin()) + ": Error: param declaration inside macros is not supported");
+			throw Exception(std::string(stmt->begin()) + ": Error: param declaration inside macros is not supported");
 		}
 
 		visit_stmt(stmt);

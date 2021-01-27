@@ -1,0 +1,16 @@
+
+macro A(test_name) {
+	test "${test_name}" {
+
+	}
+}
+
+macro B(test_name) {
+	[no_snapshots: true]
+	test "${test_name}" {
+		
+	}
+}
+
+A("VM1")
+B("VM1")

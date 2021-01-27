@@ -1,0 +1,15 @@
+
+macro A(net_name) {
+	network "${net_name}" {
+
+	}
+}
+
+macro B(net_name) {
+	network "${net_name}" {
+		
+	}
+}
+
+A("VM1")
+B("VM1")

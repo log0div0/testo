@@ -1,0 +1,5 @@
+macro A() {
+	param B "B"
+}
+
+A()

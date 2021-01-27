@@ -1,0 +1,9 @@
+macro test_macro() {
+	test my_test {}
+}
+
+test_macro()
+
+test some_test {
+	test_macro()
+}
