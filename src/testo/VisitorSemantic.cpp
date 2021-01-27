@@ -400,7 +400,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::IAction> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
 		visit_sleep({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call(p->action, false);
+		visit_action_macro_call({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -428,7 +428,7 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
 		// do nothing
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call(p->action, false);
+		visit_action_macro_call({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
