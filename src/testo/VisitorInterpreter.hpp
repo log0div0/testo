@@ -60,6 +60,7 @@ private:
 
 	void stop_all_vms(std::shared_ptr<IR::Test> test);
 
+	std::shared_ptr<IR::Controller> current_controller;
 	std::shared_ptr<IR::Test> current_test;
 	template_literals::Parser template_parser;
 	Reporter reporter;

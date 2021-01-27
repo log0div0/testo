@@ -116,9 +116,8 @@ test some_shit: ubuntu_installation {
 }
 
 macro nested_macro_action(flash_name) {
+	stop
 	plug flash "${flash_name}"
-	mouse click "hello".from_top(0).from_bottom(0)
-	#lala()
 }
 
 macro macro_action(flash_name) {
@@ -131,7 +130,6 @@ macro some_shitty_macro(vm_name, bits, net_name, flash_name) {
 }
 
 macro some_shitty_inner_macro(vm_name, bits, net_name, flash_name) {
-
 	network "${net_name}" {
 		mode: "internal"
 	}
@@ -173,7 +171,7 @@ macro some_shitty_inner_macro(vm_name, bits, net_name, flash_name) {
 	}
 }
 
-#some_shitty_macro("VM2", "32", "int5", "my_super_flash")
+some_shitty_macro("VM2", "32", "int5", "my_super_flash")
 #some_shitty_macro("VM1", "64")
 
 
@@ -199,7 +197,7 @@ test "some_${shit}_child": "some_${shit}_parent1", "some_${shit}_parent2" {
 
 macro generate_machine_inner(vm_name) {
 	machine "${vm_name}" {
-		cpus: "lala"
+		cpus: 1
 		ram: 1024Mb
 		iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 		disk main: {
@@ -208,7 +206,7 @@ macro generate_machine_inner(vm_name) {
 
 		nic internet: {
 			attached_to: "int2"
-			adapter_type: 4Gb
+			adapter_type: "e1000"
 		}
 	}
 }
@@ -221,6 +219,7 @@ macro another_shitty_macro(vm_name) {
 	test "install_shitty_os_78" {
 		"${vm_name}" {
 			print "Hello from ${vm_name}"
+			stop
 		}
 	}
 }

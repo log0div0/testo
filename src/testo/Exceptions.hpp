@@ -32,19 +32,21 @@ struct ControllerCreatonException: public Exception {
 			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
 		}
 
-		ss << std::string(controller->ast_node->begin()) << ": In the " << controller->type() << " \"" << controller->name() << "\" declaration" << std::endl;
+		ss << std::string(controller->ast_node->begin()) << ": In the " << controller->type() << " \"" << controller->name() << "\" declaration";
 		msg = ss.str();
 	}
 };
 
 struct ActionException: public Exception {
-	ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller)
+	ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller): controller(controller)
 	{
 		msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node);
 		if (controller) {
 			msg += " on " + controller->type() + " " + controller->name();
 		}
 	}
+
+	std::shared_ptr<IR::Controller> controller;
 };
 
 struct MacroException: public Exception {

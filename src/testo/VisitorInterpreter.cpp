@@ -352,7 +352,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 				} else {
 					reporter.create_controller(controller);
 					controller->create();
-
 					reporter.take_snapshot(controller, "initial");
 					controller->create_snapshot("_init", "", true);
 					controller->current_state = "_init";
@@ -430,6 +429,16 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		}
 		reporter.test_passed();
 
+	} catch (const ControllerCreatonException& error) {
+		std::stringstream ss;
+		ss << error << std::endl;
+		reporter.test_failed(ss.str());
+
+		if (stop_on_fail) {
+			throw std::runtime_error("");
+		}
+
+		stop_all_vms(test);
 	} catch (const Exception& error) {
 		std::stringstream ss;
 		for (auto macro_call: test->macro_call_stack) {
@@ -437,6 +446,15 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		}
 
 		ss << error << std::endl;
+
+		if (current_controller) {
+			ss << std::endl;
+			for (auto macro_call: current_controller->macro_call_stack) {
+				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+			}
+			ss << std::string(current_controller->ast_node->begin()) << ": note: the " << current_controller->type() << " " << current_controller->name() << " was declared here\n\n";
+		}
+		
 		reporter.test_failed(ss.str());
 
 		if (stop_on_fail) {
@@ -465,9 +483,13 @@ void VisitorInterpreter::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 
 void VisitorInterpreter::visit_regular_command(const IR::RegularCommand& regular_command) {
 	if (auto current_controller = IR::program->get_machine_or_null(regular_command.entity())) {
+		this->current_controller = current_controller;
 		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+		this->current_controller = nullptr;
 	} else if (auto current_controller = IR::program->get_flash_drive_or_null(regular_command.entity())) {
+		this->current_controller = current_controller;
 		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+		this->current_controller = nullptr;
 	} else {
 		throw std::runtime_error("Should never happen");
 	}
