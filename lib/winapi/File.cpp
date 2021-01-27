@@ -1,6 +1,7 @@
 
 #include "File.hpp"
 #include <stdexcept>
+#include <system_error>
 #include "Functions.hpp"
 
 namespace winapi {
@@ -15,7 +16,8 @@ File::File(const std::string& path, DWORD dwDesiredAccess, DWORD dwCreationDispo
 		NULL);
 
 	if (handle == INVALID_HANDLE_VALUE) {
-		throw std::runtime_error("CreateFile failed");
+		std::error_code ec(GetLastError(), std::system_category());
+		throw std::system_error(ec, "CreateFile failed");
 	}
 }
 
@@ -38,7 +40,8 @@ size_t File::read(uint8_t* data, size_t size) {
 	DWORD result = 0;
 	bool success = ReadFile(handle, data, (DWORD)size, &result, NULL);
 	if (!success) {
-		throw std::runtime_error("ReadFile failed");
+		std::error_code ec(GetLastError(), std::system_category());
+		throw std::system_error(ec, "ReadFile failed");
 	}
 	return result;
 }
@@ -47,7 +50,8 @@ size_t File::write(const uint8_t* data, size_t size) {
 	DWORD result = 0;
 	bool success = WriteFile(handle, data, (DWORD)size, &result, NULL);
 	if (!success) {
-		throw std::runtime_error("WriteFile failed");
+		std::error_code ec(GetLastError(), std::system_category());
+		throw std::system_error(ec, "WriteFile failed");
 	}
 	return result;
 }
@@ -56,7 +60,8 @@ uint64_t File::size() const {
 	DWORD high = 0;
 	DWORD low = GetFileSize(handle, &high);
 	if (low == INVALID_FILE_SIZE) {
-		throw std::runtime_error("GetFileSize failed");
+		std::error_code ec(GetLastError(), std::system_category());
+		throw std::system_error(ec, "GetFileSize failed");
 	}
 	return (uint64_t(high) << 32) | low;
 }

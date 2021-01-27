@@ -17,7 +17,6 @@
 std::map<std::string, std::string> get_environment_from_registry() {
 	std::map<std::string, std::string> result;
 	winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment");
-	spdlog::info("ENUM VALUES SIZE = {}", regkey.enum_values().size());
 	for (const std::string& name: regkey.enum_values()) {
 		result[name] = regkey.get_str(name);
 	}
@@ -69,10 +68,8 @@ void Server::run() {
 			// spdlog::info(command.dump(2));
 			handle_command(command);
 		} catch (const std::exception& error) {
-			spdlog::error("Error in Server::run loop");
-			spdlog::error(error.what());
+			spdlog::error("Error in Server::run: {}", error.what());
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			spdlog::info("Continue handle commands ...");
 		}
 	}
 }
@@ -109,8 +106,7 @@ void Server::handle_command(const nlohmann::json& command) {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
 	} catch (const std::exception& error) {
-		spdlog::error("Error in Server::handle_command method");
-		spdlog::error(error.what());
+		spdlog::error("Error in Server::handle_command: {}", error.what());
 #ifdef WIN32
 		if (dynamic_cast<const std::system_error*>(&error) && !dynamic_cast<const fs::filesystem_error*>(&error)) {
 			std::wstring utf16_err = winapi::acp_to_utf16(error.what());
@@ -222,13 +218,14 @@ nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path&
 		{"path", dst.generic_string()},
 	};
 
+	os::File file = os::File::open_for_read(src.generic_string());
 	if (ver < VersionNumber(2,2,8)) {
-		os::File file = os::File::open_for_read(src.generic_string());
 		std::vector<uint8_t> fileContents = file.read_all();
 		std::string encoded = base64_encode(fileContents.data(), (uint32_t)fileContents.size());
 		result["content"] = std::move(encoded);
 	} else {
 		result["content"] = nullptr;
+		result["content_size"] = file.size();
 	}
 
 	return result;

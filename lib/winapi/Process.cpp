@@ -51,8 +51,7 @@ Process::Process(const std::string& cmd, const std::map<std::string, std::string
 		&info);
 
 	if (!success) {
-		DWORD dwErrVal = GetLastError();
-		std::error_code ec(dwErrVal, std::system_category());
+		std::error_code ec(GetLastError(), std::system_category());
 		throw std::system_error(ec, "CreateProcess failed");
 	}
 
@@ -70,14 +69,16 @@ Process::~Process() {
 
 void Process::wait() {
 	if (WaitForSingleObject(process, INFINITE) == WAIT_FAILED) {
-		throw std::runtime_error("WaitForSingleObject failed");
+		std::error_code ec(GetLastError(), std::system_category());
+		throw std::system_error(ec, "WaitForSingleObject failed");
 	}
 }
 
 int Process::get_exit_code() {
 	DWORD exit_code;
 	if (!GetExitCodeProcess(process, &exit_code)) {
-		throw std::runtime_error("GetExitCodeProcess failed");
+		std::error_code ec(GetLastError(), std::system_category());
+		throw std::system_error(ec, "GetExitCodeProcess failed");
 	}
 	return exit_code;
 }
@@ -86,9 +87,10 @@ size_t Process::read(uint8_t* data, size_t size) {
 	DWORD bytes_read = 0;
 	bool success = ReadFile(out_read.handle, data, size, &bytes_read, NULL);
 	if (!success) {
-		auto error_code = GetLastError();
-		if (error_code != ERROR_BROKEN_PIPE) {
-			throw std::runtime_error("ReadFile (Process::read) failed:" + std::to_string(error_code));
+		auto last_error = GetLastError();
+		if (last_error != ERROR_BROKEN_PIPE) {
+			std::error_code ec(last_error, std::system_category());
+			throw std::system_error(ec, "ReadFile (from process) failed");
 		}
 	}
 	return bytes_read;
