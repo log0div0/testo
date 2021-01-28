@@ -279,7 +279,7 @@ void QemuVM::install() {
 		)";
 
 		if (!config.count("qemu_enable_usb3")) {
-			config["qemu_enable_usb3"] = true;
+			config["qemu_enable_usb3"] = false;
 		}
 
 		if (config.at("qemu_enable_usb3")) {
