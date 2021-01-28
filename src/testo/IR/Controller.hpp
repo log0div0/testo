@@ -10,6 +10,8 @@ struct Controller: Object<AST::Controller> {
 
 	virtual std::string type() const = 0;
 
+	std::string name() const;
+
 	std::string get_snapshot_cksum(const std::string& snapshot);
 	bool has_snapshot(const std::string& snapshot);
 	bool check_metadata_version();

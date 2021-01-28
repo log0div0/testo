@@ -51,6 +51,8 @@ struct Program {
 	const ProgramConfig& config;
 
 private:
+	std::vector<std::shared_ptr<AST::MacroCall>> current_macro_call_stack;
+
 	std::unordered_map<std::string, std::shared_ptr<Test>> tests;
 	std::unordered_map<std::string, std::shared_ptr<Macro>> macros;
 	std::unordered_map<std::string, std::shared_ptr<Param>> params;
@@ -75,11 +77,20 @@ public:
 	std::vector<std::shared_ptr<Test>> ordered_tests;
 	std::vector<std::shared_ptr<Test>> all_selected_tests;
 	std::shared_ptr<StackNode> stack;
+	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
+	template_literals::Parser template_parser;
 
 private:
+	friend struct IR::MacroCall;
+
 	void setup_stack();
 
 	void collect_top_level_objects(const std::shared_ptr<AST::Program>& ast);
+	void visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block);
+	void visit_stmt(const std::shared_ptr<AST::IStmt>& stmt);
+	void visit_macro(std::shared_ptr<IR::Macro> macro);
+	void visit_macro_call(const IR::MacroCall& macro_call);
+	void visit_macro_body(const std::shared_ptr<AST::MacroBodyStmt>& macro_body);
 	void collect_test(const std::shared_ptr<AST::Test>& ast);
 	void collect_macro(const std::shared_ptr<AST::Macro>& ast);
 	void collect_param(const std::shared_ptr<AST::Param>& ast);
@@ -99,10 +110,19 @@ private:
 		auto t = std::make_shared<T>();
 		t->ast_node = ast_node;
 		t->stack = stack;
+		t->macro_call_stack = current_macro_call_stack;
 		auto inserted = map.insert({t->name(), t});
 		if (!inserted.second) {
-			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: " + T::type_name() + " \"" + t->name() + "\" is already defined here: " +
-				std::string(inserted.first->second->ast_node->begin()));
+			std::stringstream ss;
+			ss << std::string(ast_node->begin()) + ": Error: " + T::type_name() + " \"" + t->name() + "\" is already defined" << std::endl << std::endl;
+
+			for (auto macro_call: inserted.first->second->macro_call_stack) {
+				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->name().value() << std::endl;
+			}
+
+			ss << std::string(inserted.first->second->ast_node->begin()) << ": note: previous declaration was here";
+
+			throw Exception(ss.str());
 		}
 		return t;
 	}
@@ -116,6 +136,7 @@ private:
 			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: " + inserted.first->second->type() + " \"" + controller->name() + "\" is already defined here: " +
 				std::string(inserted.first->second->ast_node->begin()));
 		}
+
 		return controller;
 	}
 

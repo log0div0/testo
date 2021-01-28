@@ -290,7 +290,7 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::IAction>
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
 		visit_copy({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call(p->action);
+		visit_macro_call({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
 		visit_if_clause(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
@@ -1141,7 +1141,7 @@ js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, st
 		js_current_ctx.reset(new js::Context(&screenshot));
 		return js_current_ctx->eval(script);
 	} catch (const nn::ContinueError& error) {
-		throw error;
+		throw;
 	}
 	catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));

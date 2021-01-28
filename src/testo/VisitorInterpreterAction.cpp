@@ -30,36 +30,13 @@ void VisitorInterpreterAction::visit_sleep(const IR::Sleep& sleep) {
 	::sleep(sleep.timeout());
 }
 
-void VisitorInterpreterAction::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
-	std::vector<std::pair<std::string, std::string>> args;
-	std::map<std::string, std::string> vars;
-	auto macro = IR::program->get_macro_or_throw(macro_call->name().value());
+void VisitorInterpreterAction::visit_macro_call(const IR::MacroCall& macro_call) {
+	reporter.macro_action_call(current_controller, macro_call.ast_node->name(), macro_call.args());
+	macro_call.visit_interpreter<AST::MacroBodyAction>(this);
+}
 
-	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
-		vars[macro->ast_node->args[i]->name()] = value;
-		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
-	}
-
-	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
-		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
-		vars[macro->ast_node->args[i]->name()] = value;
-		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
-	}
-
-	reporter.macro_action_call(current_controller, macro_call->name(), args);
-
-	StackPusher<VisitorInterpreterAction> new_ctx(this, macro->new_stack(vars));
-
-	try {
-		auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyAction>>(macro->ast_node->body);
-		if (p == nullptr) {
-			throw std::runtime_error("Should never happen");
-		}
-		visit_action_block(p->macro_body->action_block->action);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(MacroException(macro_call));
-	}
+void VisitorInterpreterAction::visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body) {
+	visit_action_block(macro_body->action_block->action);
 }
 
 void VisitorInterpreterAction::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {

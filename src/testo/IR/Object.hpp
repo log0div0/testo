@@ -11,6 +11,8 @@ struct Object {
 	using ASTType = T;
 	std::shared_ptr<ASTType> ast_node;
 	std::shared_ptr<StackNode> stack;
+	std::vector<std::shared_ptr<AST::MacroCall>> macro_call_stack;
+	
 	std::string name() const {
 		return ast_node->name.value();
 	}

@@ -32,3 +32,39 @@ test stop_offline_machine {
 		stop;
 	}
 }
+
+macro generate_vm() {
+	machine my_ubuntu_server2 {
+		cpus: 1
+		ram: 512Mb
+		iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+		disk main: {
+			size: 4Gb
+		}
+
+		nic nat: {
+			attached_to: "internet"
+		}
+
+		nic internal: {
+			attached_to: "internal"
+		}
+
+		qemu_enable_usb3: true
+	}
+
+}
+
+generate_vm()
+
+macro my_macro() {
+	[no_snapshots: true]
+	test stop_offline_machine_nested {
+		my_ubuntu_server2 {
+			stop;
+		}
+	}
+
+}
+
+my_macro()

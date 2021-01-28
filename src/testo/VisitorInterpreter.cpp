@@ -352,7 +352,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 				} else {
 					reporter.create_controller(controller);
 					controller->create();
-
 					reporter.take_snapshot(controller, "initial");
 					controller->create_snapshot("_init", "", true);
 					controller->current_state = "_init";
@@ -430,9 +429,32 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		}
 		reporter.test_passed();
 
-	} catch (const Exception& error) {
+	} catch (const ControllerCreatonException& error) {
 		std::stringstream ss;
 		ss << error << std::endl;
+		reporter.test_failed(ss.str());
+
+		if (stop_on_fail) {
+			throw std::runtime_error("");
+		}
+
+		stop_all_vms(test);
+	} catch (const Exception& error) {
+		std::stringstream ss;
+		for (auto macro_call: test->macro_call_stack) {
+			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+		}
+
+		ss << error << std::endl;
+
+		if (current_controller) {
+			ss << std::endl;
+			for (auto macro_call: current_controller->macro_call_stack) {
+				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+			}
+			ss << std::string(current_controller->ast_node->begin()) << ": note: the " << current_controller->type() << " " << current_controller->name() << " was declared here\n\n";
+		}
+		
 		reporter.test_failed(ss.str());
 
 		if (stop_on_fail) {
@@ -453,7 +475,7 @@ void VisitorInterpreter::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
 		visit_regular_command({p->cmd, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
-		visit_macro_call(p->cmd);
+		visit_macro_call({p->cmd, stack});
 	} else {
 		throw std::runtime_error("Should never happen");
 	}
@@ -461,44 +483,25 @@ void VisitorInterpreter::visit_command(std::shared_ptr<AST::ICmd> cmd) {
 
 void VisitorInterpreter::visit_regular_command(const IR::RegularCommand& regular_command) {
 	if (auto current_controller = IR::program->get_machine_or_null(regular_command.entity())) {
+		this->current_controller = current_controller;
 		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+		this->current_controller = nullptr;
 	} else if (auto current_controller = IR::program->get_flash_drive_or_null(regular_command.entity())) {
+		this->current_controller = current_controller;
 		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+		this->current_controller = nullptr;
 	} else {
 		throw std::runtime_error("Should never happen");
 	}
 }
 
-void VisitorInterpreter::visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call) {
-	std::vector<std::pair<std::string, std::string>> args;
-	std::map<std::string, std::string> vars;
-	auto macro = IR::program->get_macro_or_throw(macro_call->name().value());
+void VisitorInterpreter::visit_macro_call(const IR::MacroCall& macro_call) {
+	reporter.macro_command_call(macro_call.ast_node->name(), macro_call.args());
+	macro_call.visit_interpreter<AST::MacroBodyCommand>(this);
+}
 
-	for (size_t i = 0; i < macro_call->args.size(); ++i) {
-		auto value = template_parser.resolve(macro_call->args[i]->text(), stack);
-		vars[macro->ast_node->args[i]->name()] = value;
-		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
-	}
-
-	for (size_t i = macro_call->args.size(); i < macro->ast_node->args.size(); ++i) {
-		auto value = template_parser.resolve(macro->ast_node->args[i]->default_value->text(), stack);
-		vars[macro->ast_node->args[i]->name()] = value;
-		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
-	}
-
-	reporter.macro_command_call(macro_call->name(), args);
-
-	StackPusher<VisitorInterpreter> new_ctx(this, macro->new_stack(vars));
-
-	try {
-		auto p = std::dynamic_pointer_cast<AST::MacroBody<AST::MacroBodyCommand>>(macro->ast_node->body);
-		if (p == nullptr) {
-			throw std::runtime_error("Should never happen");
-		}
-		visit_command_block(p->macro_body->cmd_block);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(MacroException(macro_call));
-	}
+void VisitorInterpreter::visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body) {
+	visit_command_block(macro_body->cmd_block);
 }
 
 void VisitorInterpreter::stop_all_vms(std::shared_ptr<IR::Test> test) {

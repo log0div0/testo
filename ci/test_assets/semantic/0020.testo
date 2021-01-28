@@ -1,0 +1,3 @@
+macro A(arg1, arg2, arg1) {}
+
+A()

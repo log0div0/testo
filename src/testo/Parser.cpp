@@ -102,7 +102,12 @@ bool Parser::test_stmt() const {
 	return ((LA(1) == Token::category::macro) ||
 		(LA(1) == Token::category::param) ||
 		test_controller() ||
-		test_test());
+		test_test() ||
+		test_macro_call());
+}
+
+bool Parser::test_macro_call() const {
+	return (LA(1) == Token::category::id && LA(2) == Token::category::lparen);
 }
 
 bool Parser::test_include() const {
@@ -278,10 +283,33 @@ std::shared_ptr<IStmt> Parser::stmt() {
 		return param();
 	} else if (test_controller()) {
 		return controller();
+	} else if (test_macro_call()) {
+		auto call = macro_call();
+		return std::shared_ptr<AST::Stmt<AST::MacroCall>>(new AST::Stmt<AST::MacroCall>(call));
 	} else {
 		throw std::runtime_error(std::string(LT(1).begin())
 			+ ": Error: unsupported statement: " + LT(1).value());
 	}
+}
+
+std::shared_ptr<AST::StmtBlock> Parser::stmt_block() {
+	Token lbrace = LT(1);
+	match(Token::category::lbrace);
+
+	newline_list();
+	std::vector<std::shared_ptr<IStmt>> stmts;
+
+	while (test_stmt()) {
+		auto st = stmt();
+		stmts.push_back(st);
+		newline_list();
+	}
+
+	Token rbrace = LT(1);
+	match(Token::category::rbrace);
+
+	auto statement = std::shared_ptr<StmtBlock>(new StmtBlock(lbrace, rbrace,  stmts));
+	return statement;
 }
 
 std::shared_ptr<Stmt<Test>> Parser::test() {
@@ -296,23 +324,19 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	Token test = LT(1);
 	match(Token::category::test);
 
-	Token name = LT(1);
+	std::shared_ptr<StringTokenUnion> name = string_token_union(Token::category::id);
 
-	match(Token::category::id);
-
-	std::vector<Token> parents;
+	std::vector<std::shared_ptr<StringTokenUnion>> parents;
 
 	if (LA(1) == Token::category::colon) {
  		match(Token::category::colon);
  		newline_list();
- 		parents.push_back(LT(1));
- 		match(Token::category::id);
+ 		parents.push_back(string_token_union(Token::category::id));
 
  		while (LA(1) == Token::category::comma) {
  			match(Token::category::comma);
  			newline_list();
- 			parents.push_back(LT(1));
- 			match(Token::category::id);
+ 			parents.push_back(string_token_union(Token::category::id));
  		}
 	}
 
@@ -488,8 +512,7 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 
 	match ({Token::category::machine, Token::category::flash, Token::category::network});
 
-	Token name = LT(1);
-	match(Token::category::id);
+	auto name = string_token_union(Token::category::id);
 
 	newline_list();
 	if (LA(1) != Token::category::lbrace) {
@@ -501,7 +524,7 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 }
 
 std::shared_ptr<ICmd> Parser::command() {
-	if (LA(1) == Token::category::id && LA(2) == Token::category::lparen) {
+	if (test_macro_call()) {
 		auto call = macro_call();
 		return std::shared_ptr<AST::Cmd<AST::MacroCall>>(new AST::Cmd<AST::MacroCall>(call));
 	} else {
@@ -600,7 +623,7 @@ std::shared_ptr<IAction> Parser::action() {
 		action = cycle_control();
 	} else if (LA(1) == Token::category::semi || LA(1) == Token::category::newline) {
 		return empty_action();
-	} else if (LA(1) == Token::category::id) {
+	} else if (test_macro_call()) {
 		auto call = macro_call();
 		action = std::shared_ptr<Action<MacroCall>>(new Action<MacroCall>(call));
 	} else {

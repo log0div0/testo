@@ -1,0 +1,15 @@
+
+macro A(vm_name) {
+	machine "${vm_name}" {
+
+	}
+}
+
+macro B(vm_name) {
+	machine "${vm_name}" {
+		
+	}
+}
+
+A("VM1")
+B("VM1")

@@ -22,6 +22,7 @@ struct Parser {
 	std::shared_ptr<AST::Program> parse();
 	std::shared_ptr<AST::CmdBlock> command_block();
 	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
+	std::shared_ptr<AST::StmtBlock> stmt_block();
 private:
 
 	struct Ctx {
@@ -49,6 +50,7 @@ private:
 	Token::category LA(size_t i) const;
 
 	bool test_stmt() const;
+	bool test_macro_call() const;
 	bool test_controller() const;
 	bool test_test() const;
 	bool test_command(size_t index = 1) const;

@@ -2,6 +2,10 @@
 #include "Program.hpp"
 #include "../backends/Environment.hpp"
 #include "nn/OnnxRuntime.hpp"
+#include <fmt/format.h>
+#include "../TemplateLiterals.hpp"
+#include "../Exceptions.hpp"
+#include "../Parser.hpp"
 #include <wildcards.hpp>
 
 namespace IR {
@@ -141,35 +145,74 @@ void Program::setup_stack() {
 
 void Program::collect_top_level_objects(const std::shared_ptr<AST::Program>& ast) {
 	for (auto stmt: ast->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-			collect_test(p->stmt);
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
-			collect_macro(p->stmt);
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
-			collect_param(p->stmt);
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
-			if (p->t.type() == Token::category::machine) {
-				collect_machine(p->stmt);
-			} else if (p->t.type() == Token::category::flash) {
-				collect_flash_drive(p->stmt);
-			} else if (p->t.type() == Token::category::network) {
-				collect_network(p->stmt);
-			} else {
-				throw std::runtime_error("Unknown controller type");
-			}
+		visit_stmt(stmt);
+	}
+}
+
+void Program::visit_stmt(const std::shared_ptr<AST::IStmt>& stmt) {
+	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
+		collect_test(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::MacroCall>>(stmt)) {
+		visit_macro_call({p->stmt, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
+		collect_macro(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
+		collect_param(p->stmt);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
+		if (p->t.type() == Token::category::machine) {
+			collect_machine(p->stmt);
+		} else if (p->t.type() == Token::category::flash) {
+			collect_flash_drive(p->stmt);
+		} else if (p->t.type() == Token::category::network) {
+			collect_network(p->stmt);
 		} else {
-			throw std::runtime_error("Unknown statement");
+			throw std::runtime_error("Unknown controller type");
 		}
+	} else {
+		throw std::runtime_error("Unknown statement");
+	}
+}
+
+void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block) {
+	for (auto stmt: stmt_block->stmts) {
+		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
+			throw Exception(std::string(stmt->begin()) + ": Error: nested macro declarations are not supported");
+		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
+			throw Exception(std::string(stmt->begin()) + ": Error: param declaration inside macros is not supported");
+		}
+
+		visit_stmt(stmt);
 	}
 }
 
 void Program::collect_test(const std::shared_ptr<AST::Test>& test) {
 	auto inserted = insert_object(test, tests);
-	ordered_tests.push_back(inserted);;
+	ordered_tests.push_back(inserted);
 }
+
+void Program::visit_macro(std::shared_ptr<IR::Macro> macro) {
+	auto result = visited_macros.insert(macro);
+	if (!result.second) {
+		return;
+	}
+
+	macro->validate();
+}
+
+void Program::visit_macro_call(const IR::MacroCall& macro_call) {
+	current_macro_call_stack.push_back(macro_call.ast_node);
+	macro_call.visit_semantic<AST::MacroBodyStmt>(this);
+	current_macro_call_stack.pop_back();
+}
+
+void Program::visit_macro_body(const std::shared_ptr<AST::MacroBodyStmt>& macro_body) {
+	visit_statement_block(macro_body->stmt_block);
+}
+
 void Program::collect_macro(const std::shared_ptr<AST::Macro>& macro) {
 	insert_object(macro, macros);
 }
+
 void Program::collect_param(const std::shared_ptr<AST::Param>& param_ast) {
 	auto param = insert_object(param_ast, params);
 	if (stack->vars.count(param->name())) {
@@ -199,7 +242,7 @@ void Program::validate_special_params() {
 
 void Program::setup_tests_parents() {
 	for (auto& test: ordered_tests) {
-		auto test_name = test->ast_node->name.value();
+		auto test_name = test->name();
 
 		if (config.validate_test_name(test_name)) {
 			setup_test_parents(test);
@@ -215,21 +258,24 @@ void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
 	}
 
 	all_selected_tests.push_back(test);
-	for (auto& parent_token: test->ast_node->parents_tokens) {
-		std::string parent_name = parent_token.value();
+
+	auto parent_names = test->parent_names();
+
+	for (size_t i = 0; i < parent_names.size(); i++) {
+		auto parent_name = parent_names[i];
 
 		if (parent_name == test->name()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: can't specify test as a parent to itself " + parent_name);
+			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: can't specify test as a parent to itself " + parent_name);
 		}
 
 		auto parent = tests.find(parent_name);
 		if (parent == tests.end()) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: unknown test: " + parent_name);
+			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: unknown test: " + parent_name);
 		}
 
 		auto result = test->parents.insert(parent->second);
 		if (!result.second) {
-			throw std::runtime_error(std::string(parent_token.begin()) + ": Error: this test was already specified in parent list " + parent_name);
+			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: this test was already specified in parent list " + parent_name);
 		}
 
 		setup_test_parents(parent->second);

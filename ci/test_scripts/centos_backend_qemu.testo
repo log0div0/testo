@@ -56,6 +56,27 @@ test centos_backend_qemu_stop_offline_machine: centos_install_testo_cpu {
 }
 
 [no_snapshots: true]
+test centos_backend_qemu_stop_offline_machine_nested: centos_install_testo_cpu {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_start_stop.testo --stop_on_fail --test_spec stop_offline_machine_nested)
+
+			[[ $output == *"In a macro call my_macro"* ]]
+			[[ $output == *"Error while performing action stop on virtual machine my_ubuntu_server2"* ]]
+			[[ $output == *"Requested operation is not valid: domain is not running"* ]]
+			[[ $output == *"In a macro call generate_vm"* ]]
+			[[ $output == *"note: the virtual machine my_ubuntu_server2 was declared here"* ]]
+		"""
+	}
+}
+
+
+[no_snapshots: true]
 test centos_backend_qemu_unplug_plug_nic: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"

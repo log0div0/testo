@@ -1,8 +1,6 @@
 
 #include "Action.hpp"
 #include "Program.hpp"
-#include "../TemplateLiterals.hpp"
-#include "../Exceptions.hpp"
 #include "../Lexer.hpp"
 
 namespace IR {
@@ -342,6 +340,49 @@ std::string StringTokenUnion::resolve() const {
 	}
 
 	return result;
+}
+
+const std::shared_ptr<IR::Macro> MacroCall::get_macro() const {
+	auto macro = program->get_macro_or_null(ast_node->name().value());
+	if (!macro) {
+		throw std::runtime_error(std::string(ast_node->begin()) + ": Error: unknown macro: " + ast_node->name().value());
+	}
+	return macro;
+}
+
+std::vector<std::pair<std::string, std::string>> MacroCall::args() const {
+	std::vector<std::pair<std::string, std::string>> args;
+	const std::shared_ptr<IR::Macro> macro = get_macro();
+
+	for (size_t i = 0; i < ast_node->args.size(); ++i) {
+		try {
+			auto value = template_literals::Parser().resolve(ast_node->args[i]->text(), stack);
+			args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(ast_node->args[i]->begin(), ast_node->args[i]->text()));
+		}
+	}
+
+	for (size_t i = ast_node->args.size(); i < macro->ast_node->args.size(); ++i) {
+		try {
+			auto value = template_literals::Parser().resolve(macro->ast_node->args[i]->default_value->text(), stack);
+			args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ResolveException(macro->ast_node->args[i]->default_value->begin(), macro->ast_node->args[i]->default_value->text()));
+		}
+	}
+
+	return args;
+}
+
+std::map<std::string, std::string> MacroCall::vars() const {
+	std::map<std::string, std::string> vars;
+
+	for (auto& kv: args()) {
+		vars[kv.first] = kv.second;
+	}
+
+	return vars;
 }
 
 }

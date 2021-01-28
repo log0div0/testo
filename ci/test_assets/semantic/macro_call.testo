@@ -218,3 +218,11 @@ test call_macro_inside_if_check2 {
 	}
 }
 
+macro test_macro() {
+	test my_test {}
+}
+
+test call_macro_test_outside_test1 {
+	test_macro()
+}
+

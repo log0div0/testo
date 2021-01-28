@@ -1,7 +1,22 @@
 
 #include "Test.hpp"
+#include "Action.hpp"
 
 namespace IR {
+
+std::string Test::name() const {
+	return StringTokenUnion(ast_node->name, stack).resolve();
+}
+
+std::vector<std::string> Test::parent_names() const {
+	std::vector<std::string> result;
+
+	for (auto parent: ast_node->parents) {
+		result.push_back(StringTokenUnion(parent, stack).resolve());
+	}
+
+	return result;
+}
 
 std::list<std::shared_ptr<IR::Test>> Test::get_test_path(const std::shared_ptr<IR::Test>& test) {
 	std::list<std::shared_ptr<IR::Test>> result;

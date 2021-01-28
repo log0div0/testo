@@ -1328,6 +1328,37 @@ struct Stmt: public IStmt {
 	std::shared_ptr<StmtType> stmt;
 };
 
+//Used only in macro-tests
+struct StmtBlock: public Node {
+	StmtBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<IStmt>> stmts):
+		Node(Token(Token::category::stmt_block, "stmt_block", Pos(), Pos())),
+		open_brace(open_brace),
+		close_brace(close_brace),
+		stmts(stmts) {}
+
+	Pos begin() const {
+		return open_brace.begin();
+	}
+
+	Pos end() const {
+		return close_brace.end();
+	}
+
+	operator std::string() const {
+		std::string result;
+
+		for (auto stmt: stmts) {
+			result += std::string(*stmt);
+
+		}
+		return result;
+	}
+
+	Token open_brace;
+	Token close_brace;
+	std::vector<std::shared_ptr<IStmt>> stmts;
+};
+
 struct MacroArg: public Node {
 	MacroArg(const Token& name, std::shared_ptr<String> default_value):
 		Node(name), default_value(default_value) {}
@@ -1386,7 +1417,34 @@ struct MacroBody: public IMacroBody {
 	std::shared_ptr<MacroBodyType> macro_body;
 };
 
+struct MacroBodyStmt: public Node {
+	static const std::string desc() { return "statements"; }
+	using BlockType = AST::StmtBlock;
+
+	MacroBodyStmt(std::shared_ptr<StmtBlock> stmt_block):
+		Node(stmt_block->t), stmt_block(stmt_block) {}
+
+	Pos begin() const {
+		return stmt_block->begin();
+	}
+
+	Pos end() const {
+		return stmt_block->end();
+	}
+
+	operator std::string() const {
+		std::string result = std::string(*stmt_block);
+		return result;
+	}
+
+	std::shared_ptr<AST::StmtBlock> stmt_block;
+};
+
+
 struct MacroBodyCommand: public Node {
+	static const std::string desc() { return "commands"; }
+	using BlockType = AST::CmdBlock;
+
 	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
 		Node(cmd_block->t), cmd_block(cmd_block) {}
 
@@ -1407,6 +1465,9 @@ struct MacroBodyCommand: public Node {
 };
 
 struct MacroBodyAction: public Node {
+	static const std::string desc() { return "actions"; }
+	using BlockType = Action<AST::ActionBlock>;
+
 	MacroBodyAction(std::shared_ptr<Action<ActionBlock>> action_block):
 		Node(action_block->t), action_block(action_block) {}
 
@@ -1630,13 +1691,13 @@ struct AttrBlock: public Node {
 
 struct Test: public Node {
 	Test(std::shared_ptr<AttrBlock> attrs,
-		const Token& test, const Token& name,
-		const std::vector<Token>& parents_tokens,
+		const Token& test, std::shared_ptr<StringTokenUnion> name,
+		const std::vector<std::shared_ptr<StringTokenUnion>>& parents,
 		std::shared_ptr<CmdBlock> cmd_block):
 		Node(test),
 		attrs(attrs),
 		name(name),
-		parents_tokens(parents_tokens),
+		parents(parents),
 		cmd_block(cmd_block) {}
 
 	Pos begin() const {
@@ -1652,18 +1713,18 @@ struct Test: public Node {
 	}
 
 	operator std::string() const {
-		std::string result = t.value() + " " + name.value();
+		std::string result = t.value() + " " + std::string(*name);
 		return result; //for now
 	}
 
 	std::shared_ptr<AttrBlock> attrs;
-	Token name;
-	std::vector<Token> parents_tokens;
+	std::shared_ptr<StringTokenUnion> name;
+	std::vector<std::shared_ptr<StringTokenUnion>> parents;
 	std::shared_ptr<CmdBlock> cmd_block;
 };
 
 struct Controller: public Node {
-	Controller(const Token& controller, const Token& name, std::shared_ptr<AttrBlock> attr_block):
+	Controller(const Token& controller, std::shared_ptr<StringTokenUnion> name, std::shared_ptr<AttrBlock> attr_block):
 		Node(controller),
 		name(name),
 		attr_block(attr_block) {}
@@ -1677,10 +1738,10 @@ struct Controller: public Node {
 	}
 
 	operator std::string() const {
-		return t.value() + " " + name.value() + " " + std::string(*attr_block);
+		return t.value() + " " + std::string(*name) + " " + std::string(*attr_block);
 	}
 
-	Token name;
+	std::shared_ptr<StringTokenUnion> name;
 	std::shared_ptr<AttrBlock> attr_block;
 };
 

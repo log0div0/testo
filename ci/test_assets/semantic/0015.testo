@@ -1,0 +1,15 @@
+
+macro A(fd_name) {
+	flash "${fd_name}" {
+
+	}
+}
+
+macro B(fd_name) {
+	flash "${fd_name}" {
+		
+	}
+}
+
+A("VM1")
+B("VM1")

@@ -22,12 +22,15 @@ struct VisitorInterpreter {
 	void visit_test(std::shared_ptr<IR::Test> test);
 	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
 	void visit_command(std::shared_ptr<AST::ICmd> cmd);
-	void visit_macro_call(std::shared_ptr<AST::MacroCall> macro_call);
+	void visit_macro_call(const IR::MacroCall& macro_call);
+	void visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body);
 	void visit_regular_command(const IR::RegularCommand& regular_cmd);
 
 	std::shared_ptr<StackNode> stack;
 
 private:
+	friend struct IR::MacroCall;
+
 	//settings
 	bool stop_on_fail;
 	bool assume_yes;
@@ -57,6 +60,7 @@ private:
 
 	void stop_all_vms(std::shared_ptr<IR::Test> test);
 
+	std::shared_ptr<IR::Controller> current_controller;
 	std::shared_ptr<IR::Test> current_test;
 	template_literals::Parser template_parser;
 	Reporter reporter;

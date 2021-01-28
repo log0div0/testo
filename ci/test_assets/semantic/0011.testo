@@ -1,0 +1,7 @@
+macro A() {
+	macro B() {
+		
+	}
+}
+
+A()

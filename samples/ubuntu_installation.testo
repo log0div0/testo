@@ -6,7 +6,7 @@ network int2 {
 }
 
 machine VM1 {
-	cpus: 1
+	cpus: "1"
 	ram: 1024Mb
 	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
 	disk main: {
@@ -41,6 +41,7 @@ test ubuntu_installation {
 
 test check_copyto: ubuntu_installation {
 	VM1 {
+		mouse click "lala".from_top().from_top()
 		plug flash my_flash
 		unplug flash my_flash
 	}
@@ -109,6 +110,123 @@ test some_shit: ubuntu_installation {
 		#plug hostdev usb "1-3"
 		plug hostdev usb "1-3"
 
+
 		#abort "stop here"
 	}
 }
+
+macro nested_macro_action(flash_name) {
+	stop
+	plug flash "${flash_name}"
+}
+
+macro macro_action(flash_name) {
+	print "Hello world from macro action"
+	nested_macro_action("${flash_name}")
+}
+
+macro some_shitty_macro(vm_name, bits, net_name, flash_name) {
+	some_shitty_inner_macro("${vm_name}", "${bits}", "${net_name}", "${flash_name}")
+}
+
+macro some_shitty_inner_macro(vm_name, bits, net_name, flash_name) {
+	network "${net_name}" {
+		mode: "internal"
+	}
+
+	machine "${vm_name}" {
+		cpus: 1
+		ram: 1024Mb
+		iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+		disk main: {
+			size: 4Gb
+		}
+
+		nic internet: {
+			attached_to: "${net_name}"
+			adapter_type: "e1000"
+		}
+
+		nic internet2: {
+			attached_to: "${net_name}"
+			adapter_type: "e1000"
+		}
+
+		nic internet3: {
+			attached_to: "${net_name}"
+			adapter_type: "e1000"
+		}
+	}
+
+	flash "${flash_name}" {
+		fs: "ext4"
+		size: 32Mb
+	}
+
+	test "install_shitty_os_${bits}" {
+		"${vm_name}" {
+			print "Hello from ${vm_name}"
+			macro_action("${flash_name}")
+		}
+	}
+}
+
+some_shitty_macro("VM2", "32", "int5", "my_super_flash")
+#some_shitty_macro("VM1", "64")
+
+
+/*param shit "SUPER_SHIT"
+param VM_NAME "VM1"
+
+test "some_${shit}_parent1" {
+	VM1 {
+		print "Hello ${shit} from parent 1"
+	}
+}
+
+test "some_${shit}_parent2" {
+	
+}
+
+test "some_${shit}_child": "some_${shit}_parent1", "some_${shit}_parent2" {
+	"${VM_NAME}" {
+		print "Hello ${shit} child!"
+	}
+}*/
+
+
+macro generate_machine_inner(vm_name) {
+	machine "${vm_name}" {
+		cpus: 1
+		ram: 1024Mb
+		iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+		disk main: {
+			size: 4Gb
+		}
+
+		nic internet: {
+			attached_to: "int2"
+			adapter_type: "e1000"
+		}
+	}
+}
+
+macro generate_machine(vm_name) {
+	generate_machine_inner("${vm_name}")
+}
+
+macro another_shitty_macro(vm_name) {
+	test "install_shitty_os_78" {
+		"${vm_name}" {
+			print "Hello from ${vm_name}"
+			stop
+		}
+	}
+}
+
+generate_machine("VM5")
+#generate_machine("VM7")
+
+another_shitty_macro("VM5")
+#another_shitty_macro("VM7")
+

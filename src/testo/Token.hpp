@@ -115,7 +115,8 @@ struct Token {
 		attr_block,
 		regular_cmd,
 		macro_body_empty,
-		cmd_block
+		cmd_block,
+		stmt_block
 	};
 
 	Token() {
@@ -346,6 +347,8 @@ struct Token {
 			return "MACRO BODY EMPTY";
 		case cmd_block:
 			return "COMMAND BLOCK";
+		case stmt_block:
+			return "STMT BLOCK";
 		case true_:
 			return "TRUE";
 		case false_:
