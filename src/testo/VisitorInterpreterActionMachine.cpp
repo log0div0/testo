@@ -637,7 +637,7 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 		auto press_interval = time_to_milliseconds(interval);
 
 		for (auto key_spec: press.ast_node->keys) {
-			visit_key_spec(key_spec, press_interval);
+			visit_key_spec({key_spec, stack}, press_interval);
 			timer.waitFor(std::chrono::milliseconds(press_interval));
 		}
 	} catch (const std::exception& error) {
@@ -834,13 +834,13 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 	}
 }
 
-void VisitorInterpreterActionMachine::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec, uint32_t interval) {
-	uint32_t times = key_spec->get_times();
+void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, uint32_t interval) {
+	uint32_t times = key_spec.times();
 
-	reporter.press_key(vmc, *key_spec->combination, times);
+	reporter.press_key(vmc, *(key_spec.ast_node->combination), times);
 
 	for (uint32_t i = 0; i < times; i++) {
-		vmc->press(key_spec->combination->get_buttons());
+		vmc->press(key_spec.ast_node->combination->get_buttons());
 		timer.waitFor(std::chrono::milliseconds(interval));
 	}
 }

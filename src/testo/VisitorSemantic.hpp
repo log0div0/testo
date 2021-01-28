@@ -64,7 +64,7 @@ struct VisitorSemantic {
 	void visit_type(const IR::Type& type);
 	void visit_press(const IR::Press& press);
 	void visit_key_combination(std::shared_ptr<AST::KeyCombination> combination);
-	void visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec);
+	void visit_key_spec(const IR::KeySpec& key_spec);
 	void visit_hold(const IR::Hold& hold);
 	void visit_release(const IR::Release& release);
 	void visit_plug(const IR::Plug& plug);

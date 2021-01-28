@@ -33,6 +33,11 @@ struct Press: Action<AST::Press> {
 	std::string interval() const;
 };
 
+struct KeySpec: Action<AST::KeySpec> {
+	using Action<AST::KeySpec>::Action;
+	int32_t times() const;
+};
+
 struct Hold: Action<AST::Hold> {
 	using Action<AST::Hold>::Action;
 	std::vector<std::string> buttons() const;

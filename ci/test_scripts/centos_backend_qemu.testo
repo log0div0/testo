@@ -292,3 +292,17 @@ test centos_backend_qemu_cache_miss: centos_install_testo_cpu {
 		wait js "find_text().match('child3').size() == 1"
 	}
 }
+
+[no_snapshots: true]
+test centos_backed_qemu_press_like_string: centos_install_testo_cpu {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_press.testo" "/opt/scripts/action_press.testo"
+
+		exec bash """
+			output=$(testo run /opt/scripts/action_press.testo)
+			[[ $output == *"Pressing key UP 10 times in virtual machine my_ubuntu_server"* ]]
+			[[ $output == *"Pressing key UP 20 times in virtual machine my_ubuntu_server"* ]]
+		""" timeout 30m
+	}
+}

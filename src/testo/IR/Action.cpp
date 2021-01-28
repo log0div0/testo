@@ -29,6 +29,14 @@ std::string Press::interval() const {
 	}
 }
 
+int32_t KeySpec::times() const {
+	if (ast_node->times) {
+		return std::stoi(StringTokenUnion(ast_node->times, stack).resolve());
+	} else {
+		return 1;
+	}
+}
+
 std::vector<std::string> Hold::buttons() const {
 	return ast_node->combination->get_buttons();
 }

@@ -569,13 +569,13 @@ std::shared_ptr<KeyCombination> Parser::key_combination() {
 }
 
 std::shared_ptr<KeySpec> Parser::key_spec() {
-	Token times = Token();
 	auto combination = key_combination();
+
+	std::shared_ptr<StringTokenUnion> times = nullptr;
 
 	if (LA(1) == Token::category::asterisk) {
 		match(Token::category::asterisk);
-		times = LT(1);
-		match(Token::category::number);
+		times = string_token_union(Token::category::number);
 	}
 
 	return std::shared_ptr<KeySpec>(new KeySpec(combination, times));

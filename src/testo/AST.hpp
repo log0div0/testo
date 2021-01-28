@@ -267,7 +267,7 @@ struct KeyCombination: public Node {
 };
 
 struct KeySpec: public Node {
-	KeySpec(std::shared_ptr<KeyCombination> combination, const Token& times):
+	KeySpec(std::shared_ptr<KeyCombination> combination, std::shared_ptr<StringTokenUnion> times):
 		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
 		combination(combination),
 		times(times) {}
@@ -278,7 +278,7 @@ struct KeySpec: public Node {
 
 	Pos end() const {
 		if (times) {
-			return times.end();
+			return times->end();
 		} else {
 			return combination->end();
 		}
@@ -287,21 +287,13 @@ struct KeySpec: public Node {
 	operator std::string() const {
 		std::string result = std::string(*combination);
 		if (times) {
-			result += "*" + times.value();
+			result += "*" + std::string(*times);
 		}
 		return result;
 	}
 
-	uint32_t get_times() const {
-		if (times) {
-			return std::stoul(times.value());
-		} else {
-			return 1;
-		}
-	}
-
 	std::shared_ptr<KeyCombination> combination;
-	Token times;
+	std::shared_ptr<StringTokenUnion> times;
 };
 
 struct IAction: public Node {

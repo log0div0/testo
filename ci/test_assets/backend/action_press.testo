@@ -1,0 +1,15 @@
+
+include "common.testo"
+
+macro press_macro(times) {
+	press * "${times}"
+}
+
+[no_snapshots: true]
+test press_like_string {
+	my_ubuntu_server {
+		start
+		press Up * "10"
+		press Up * "20"
+	}
+}

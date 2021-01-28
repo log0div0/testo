@@ -462,7 +462,7 @@ void VisitorSemantic::visit_press(const IR::Press& press) {
 		if (i++) {
 			current_test->cksum_input << ",";
 		}
-		visit_key_spec(key_spec);
+		visit_key_spec({key_spec, stack});
 	}
 
 	current_test->cksum_input << " interval " << press.interval() << std::endl;
@@ -492,16 +492,17 @@ void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination>
 	}
 }
 
-void VisitorSemantic::visit_key_spec(std::shared_ptr<AST::KeySpec> key_spec) {
-	visit_key_combination(key_spec->combination);
+void VisitorSemantic::visit_key_spec(const IR::KeySpec& key_spec) {
+	visit_key_combination(key_spec.ast_node->combination);
 
-	if (key_spec->times.value().length()) {
-		if (std::stoi(key_spec->times.value()) < 1) {
-			throw Exception(std::string(key_spec->times.begin()) +
-					" :Error: can't press a button less than 1 time: " + key_spec->times.value());
-		}
-		current_test->cksum_input << "*" << key_spec->times.value();
+	auto times = key_spec.times();
+
+	if (times < 1) {
+		throw Exception(std::string(key_spec.ast_node->times->begin()) +
+			" :Error: can't press a button less than 1 time: " + std::to_string(times));
 	}
+
+	current_test->cksum_input << "*" << times;
 }
 
 void VisitorSemantic::visit_hold(const IR::Hold& hold) {

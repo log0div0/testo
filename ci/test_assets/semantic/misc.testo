@@ -79,6 +79,12 @@ test invalid_press_times_1 {
 	}
 }
 
+test invalid_press_times_2 {
+	my_ubuntu_server {
+		press LeftShift*"-1"
+	}
+}
+
 test invalid_exec_interpreter {
 	my_ubuntu_server {
 		exec some_interpreter "lalala"

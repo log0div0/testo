@@ -125,6 +125,7 @@ test centos_semantic: centos_install_testo_cpu {
 			testo run /misc.testo --test_spec invalid_key_1 2>&1 > /dev/null | grep "Error: duplicate key: LeftShift"
 			testo run /misc.testo --test_spec invalid_press_times_0 2>&1 > /dev/null | grep "Error: can't press a button less than 1 time: 0"
 			testo run /misc.testo --test_spec invalid_press_times_1 2>&1 > /dev/null | grep "Error: can't press a button less than 1 time: -1"
+			testo run /misc.testo --test_spec invalid_press_times_2 2>&1 > /dev/null | grep "Error: can't press a button less than 1 time: -1"
 			testo run /misc.testo --test_spec unknown_flash_0 2>&1 > /dev/null | grep "Error: unknown flash drive: unexisting_flash"
 			testo run /misc.testo --test_spec unknown_flash_1 2>&1 > /dev/null | grep "Error: unknown flash drive: unexisting_flash"
 			testo run /misc.testo --test_spec unknown_vm 2>&1 > /dev/null | grep "Error: unknown virtual entity: some_vm"
