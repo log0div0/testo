@@ -1547,6 +1547,8 @@ struct MacroCall: public Node {
 
 struct IAttrValue: public Node {
 	using Node::Node;
+
+	virtual Token::category type() const = 0;
 };
 
 template <typename AttrType>
@@ -1567,24 +1569,34 @@ struct AttrValue: public IAttrValue {
 		return std::string(*attr_value);
 	}
 
+	Token::category type() const {
+		return attr_value->type();
+	}
+
 	std::shared_ptr<AttrType> attr_value;
 };
 
 struct SimpleAttr: public Node {
-	SimpleAttr(const Token& value):
-		Node(value) {}
+	SimpleAttr(std::shared_ptr<StringTokenUnion> _value):
+		Node(Token(Token::category::simple_attr, "", _value->begin(), _value->end())), value(_value) {}
 
 	Pos begin() const {
-		return t.begin();
+		return value->begin();
 	}
 
 	Pos end() const {
-		return t.end();
+		return value->end();
 	}
 
 	operator std::string() const {
-		return t.value();
+		return std::string(*value);
 	}
+
+	Token::category type() const {
+		return value->expected_token_type;
+	}
+
+	std::shared_ptr<StringTokenUnion> value;
 };
 
 struct BinaryAttr: public Node {
@@ -1604,27 +1616,11 @@ struct BinaryAttr: public Node {
 		return value.value();
 	}
 
+	Token::category type() const {
+		return t.type();
+	}
+
 	Token value;
-};
-
-struct StringAttr: public Node {
-	StringAttr(std::shared_ptr<String> value):
-		Node(value->t),
-		value(value) {}
-
-	Pos begin() const {
-		return value->begin();
-	}
-
-	Pos end() const {
-		return value->end();
-	}
-
-	operator std::string() const {
-		return std::string(*value);
-	}
-
-	std::shared_ptr<String> value;
 };
 
 struct Attr: public Node {
@@ -1674,6 +1670,10 @@ struct AttrBlock: public Node {
 
 		}
 		return result;
+	}
+
+	Token::category type() const {
+		return t.type();
 	}
 
 	Token open_brace;

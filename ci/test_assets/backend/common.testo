@@ -78,10 +78,16 @@ macro install_ubuntu_server(host_name, login, password) {
 	for (i IN RANGE 10) {
 		type "${login}"; press Enter
 		wait "Password:"; sleep 5s; type "${password}"; press Enter
-		if (check "Welcome to Ubuntu" timeout 5s) {
+
+		if (check "Login incorrect" timeout 10s) {
+			press LeftCtrl+C
+			sleep 5s
+		} else {
 			break;
 		}
 	}
+
+	wait "Welcome to Ubuntu"
 
 	
 }

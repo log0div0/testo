@@ -104,6 +104,7 @@ struct Token {
 		binary, //true or false
 		program,
 		string_token_union,
+		simple_attr,
 		mouse_coordinates,
 		mouse_selectable,
 		mouse_additional_specifier,
@@ -323,6 +324,8 @@ struct Token {
 			return "PROGRAM";
 		case string_token_union:
 			return "STRING_TOKEN_UNION";
+		case simple_attr:
+			return "SIMPLE ATTRIBUTE";
 		case mouse_selectable:
 			return "MOUSE SELECTABLE";
 		case mouse_additional_specifier:

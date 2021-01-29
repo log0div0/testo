@@ -116,9 +116,6 @@ struct VisitorSemantic {
 
 	std::string prefix;
 
-	//bool is for "requires a name"
-	using attr_ctx = std::unordered_map<std::string, std::pair<bool, Token::category>>;
-	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 	template_literals::Parser template_parser;
 	std::shared_ptr<StackNode> stack;
 
@@ -128,6 +125,9 @@ struct VisitorSemantic {
 	std::unordered_set<std::shared_ptr<IR::Machine>> visited_machines;
 	std::unordered_set<std::shared_ptr<IR::FlashDrive>> visited_flash_drives;
 	std::unordered_set<std::shared_ptr<IR::Network>> visited_networks;
+
+	using attr_ctx = std::unordered_map<std::string, std::pair<bool, std::vector<Token::category>>>;
+	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 
 	std::shared_ptr<IR::Test> current_test;
 };

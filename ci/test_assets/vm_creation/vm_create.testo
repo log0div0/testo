@@ -11,6 +11,24 @@ test create_basic_vm {
 	basic_machine {}
 }
 
+macro generate_machine(vm_name, size) {
+
+	machine "${vm_name}" {
+		cpus: 1
+		ram: 512Mb
+		iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+		disk main: {
+			size: "${size}"
+		}
+	}
+}
+
+generate_machine("basic_machine_2", "4Gb")
+
+test create_basic_vm_2 {
+	basic_machine_2 {}
+}
+
 machine basic_machine_uefi {
 	cpus: 1
 	ram: 512Mb
@@ -323,12 +341,25 @@ machine vm_attr_type_mismatch {
 	ram: 512Mb
 	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
 	disk main: {
-		size: "4Gb"
+		size: 4
 	}
 }
 
 test create_vm_attr_type_mismatch {
 	vm_attr_type_mismatch {}
+}
+
+machine vm_attr_type_cant_convert {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: "4"
+	}
+}
+
+test vm_attr_type_cant_convert {
+	vm_attr_type_cant_convert {}
 }
 
 machine vm_attr_diplucates {
@@ -357,6 +388,20 @@ machine vm_negative_attribute {
 test create_vm_negative_attribute {
 	vm_negative_attribute {}
 }
+
+machine vm_negative_attribute_2 {
+	cpus: "-7"
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test create_vm_negative_attribute_2 {
+	vm_negative_attribute_2 {}
+}
+
 
 machine vm_unknown_video_mode {
 	cpus: 1
@@ -407,7 +452,7 @@ test create_basic_vm_qxl {
 	}
 }
 
-machine basic_machine_usb3_1 {
+machine basic_machine_usb2_1 {
 	cpus: 1
 	ram: 512Mb
 	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
@@ -416,15 +461,15 @@ machine basic_machine_usb3_1 {
 	}
 }
 
-test create_basic_machine_usb3_1 {
-	basic_machine_usb3_1 {
+test create_basic_machine_usb2_1 {
+	basic_machine_usb2_1 {
 		start
 		wait "Language"
 		abort "stop here"
 	}
 }
 
-machine basic_machine_usb3_2 {
+machine basic_machine_usb3 {
 	cpus: 1
 	ram: 512Mb
 	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
@@ -435,15 +480,15 @@ machine basic_machine_usb3_2 {
 	qemu_enable_usb3: true
 }
 
-test create_basic_machine_usb3_2 {
-	basic_machine_usb3_2 {
+test create_basic_machine_usb3 {
+	basic_machine_usb3 {
 		start
 		wait "Language"
 		abort "stop here"
 	}
 }
 
-machine basic_machine_usb2 {
+machine basic_machine_usb2_2 {
 	cpus: 1
 	ram: 512Mb
 	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
@@ -454,11 +499,10 @@ machine basic_machine_usb2 {
 	qemu_enable_usb3: false
 }
 
-test create_basic_machine_usb2 {
-	basic_machine_usb2 {
+test create_basic_machine_usb2_2 {
+	basic_machine_usb2_2 {
 		start
 		wait "Language"
 		abort "stop here"
 	}
 }
-
