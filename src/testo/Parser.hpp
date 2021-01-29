@@ -73,8 +73,8 @@ private:
 	std::vector<Token> macro_body(const std::string& name);
 	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
 	std::shared_ptr<AST::Stmt<AST::Param>> param();
-	std::shared_ptr<AST::Attr> attr();
-	std::shared_ptr<AST::AttrBlock> attr_block();
+	std::shared_ptr<AST::Attr> attr(const std::string& ctx_name);
+	std::shared_ptr<AST::AttrBlock> attr_block(const std::string& ctx_name);
 	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
 	std::shared_ptr<AST::ICmd> command();
 	std::shared_ptr<AST::KeyCombination> key_combination();

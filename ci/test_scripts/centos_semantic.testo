@@ -183,6 +183,12 @@ test centos_semantic: centos_install_testo_cpu {
 			testo run /for.testo --test_spec wrong_start_finish_1 2>&1 > /dev/null | grep "Error: start of the range 0 is greater or equal to finish 0"
 		"""
 
+		#multiline attributes
+		exec bash """
+			set +o pipefail
+			testo run /0025.testo 2>&1 > /dev/null | grep "Can't accept multiline as an attr value"
+		"""
+
 		# check exit code
 		exec bash """
 			set +e

@@ -1,0 +1,5 @@
+
+machine some_machine {
+	cpus: 1
+	iso: """This is multiline string"""
+}

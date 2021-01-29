@@ -317,7 +317,7 @@ std::shared_ptr<Stmt<Test>> Parser::test() {
 	//To be honest, we should place attr list in a separate Node. And we will do that
 	//just when it could be used somewhere else
 	if (LA(1) == Token::category::lbracket) {
-		attrs = attr_block();
+		attrs = attr_block("test_global");
 		newline_list();
 	}
 
@@ -432,7 +432,7 @@ std::shared_ptr<Stmt<Param>> Parser::param() {
 	return std::shared_ptr<Stmt<Param>>(new Stmt<Param>(stmt));
 }
 
-std::shared_ptr<Attr> Parser::attr() {
+std::shared_ptr<Attr> Parser::attr(const std::string& ctx_name) {
 	Token name = LT(1);
 
 	match(Token::category::id);
@@ -449,37 +449,37 @@ std::shared_ptr<Attr> Parser::attr() {
 
 	std::shared_ptr<IAttrValue> value;
 	if (LA(1) == Token::category::lbrace) {
-		auto block = attr_block();
+		auto block = attr_block(name.value());
 		value = std::shared_ptr<AttrValue<AttrBlock>>(new AttrValue<AttrBlock>(block));
-	} else if (test_string()) {
-		auto str = string();
-		if (str->t.type() == Token::category::triple_quoted_string) {
-			throw std::runtime_error(std::string(str->begin()) + ": Can't accept multiline as an attr value: " + std::string(*str));
-		}
-		auto string_value = std::shared_ptr<StringAttr>(new StringAttr(str));
-		value = std::shared_ptr<AttrValue<StringAttr>>(new AttrValue<StringAttr>(string_value));
 	} else if (test_binary()) {
 		auto binary_value = std::shared_ptr<BinaryAttr>(new BinaryAttr(LT(1)));
 		value = std::shared_ptr<AttrValue<BinaryAttr>>(new AttrValue<BinaryAttr>(binary_value));
 
 		match({Token::category::true_, Token::category::false_});
 	} else {
-		auto simple_value = std::shared_ptr<SimpleAttr>(new SimpleAttr(LT(1)));
-		value = std::shared_ptr<AttrValue<SimpleAttr>>(new AttrValue<SimpleAttr>(simple_value));
+		//string token union
+		//Let's check it's either string or number or size
 
-		if (LA(1) == Token::category::number) {
-			match(Token::category::number);
-		} else if (LA(1) == Token::category::size) {
-			match(Token::category::size);
-		} else {
+		if (!test_string() &&
+			(LA(1) != Token::category::number) &&
+			(LA(1) != Token::category::size))
+		{
 			throw std::runtime_error(std::string(LT(1).begin()) + ": Unknown attr type: " + LT(1).value());
 		}
+
+		if (LA(1) == Token::category::triple_quoted_string) {
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Can't accept multiline as an attr value: " + LT(1).value());
+		}
+
+		auto simple_value = string_token_union(LA(1));
+		auto simple_attr = std::shared_ptr<SimpleAttr>(new SimpleAttr(simple_value));
+		value = std::shared_ptr<AttrValue<SimpleAttr>>(new AttrValue<SimpleAttr>(simple_attr));
 	}
 
 	return std::shared_ptr<Attr>(new Attr(name, id, value));
 }
 
-std::shared_ptr<AttrBlock> Parser::attr_block() {
+std::shared_ptr<AttrBlock> Parser::attr_block(const std::string& ctx_name) {
 	Token lbrace = LT(1);
 
 	match({Token::category::lbrace, Token::category::lbracket});
@@ -488,7 +488,7 @@ std::shared_ptr<AttrBlock> Parser::attr_block() {
 	std::vector<std::shared_ptr<Attr>> attrs;
 
 	while (LA(1) == Token::category::id) {
-		attrs.push_back(attr());
+		attrs.push_back(attr(ctx_name));
 		if ((LA(1) == Token::category::rbrace) || (LA(1) == Token::category::rbracket)) {
 			break;
 		}
@@ -518,7 +518,18 @@ std::shared_ptr<AST::Stmt<AST::Controller>> Parser::controller() {
 	if (LA(1) != Token::category::lbrace) {
 		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: expected attribute block");
 	}
-	auto block = attr_block();
+
+	std::string ctx_name;
+	if (controller.type() == Token::category::machine) {
+		ctx_name = "vm_global";
+	} else if (controller.type() == Token::category::flash) {
+		ctx_name = "fd_global";
+	} else if (controller.type() == Token::category::network) {
+		ctx_name = "network_global";
+	} else {
+		throw std::runtime_error("Should never happen");
+	}
+	auto block = attr_block(ctx_name);
 	auto stmt = std::shared_ptr<AST::Controller>(new AST::Controller(controller, name, block));
 	return std::shared_ptr<AST::Stmt<AST::Controller>>(new AST::Stmt<AST::Controller>(stmt));
 }
@@ -1358,7 +1369,7 @@ std::shared_ptr<String> Parser::string() {
 
 std::shared_ptr<AST::StringTokenUnion> Parser::string_token_union(Token::category expected_token_type) {
 	if (!test_string() && LA(1) != expected_token_type) {
-		throw std::runtime_error(std::string(LT(1)) + ": Error: expected a string or " + Token::type_to_string(expected_token_type) + ", but got " +
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected a string or " + Token::type_to_string(expected_token_type) + ", but got " +
 			Token::type_to_string(LA(1)) + " " + LT(1).value());
 	}
 
