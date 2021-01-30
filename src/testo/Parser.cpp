@@ -1103,6 +1103,13 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 	auto from = string();
 	auto to = string();
 
+	Token nocheck = Token();
+
+	if (LT(1).value() == "nocheck") {
+		nocheck = LT(1);
+		match(Token::category::id);
+	}
+
 	std::shared_ptr<StringTokenUnion> timeout = nullptr;
 
 	if (LA(1) == Token::category::timeout) {
@@ -1110,7 +1117,7 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 		timeout = string_token_union(Token::category::time_interval);
 	}
 
-	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, timeout));
+	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, nocheck, timeout));
 	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
 }
 

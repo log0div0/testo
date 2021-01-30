@@ -306,3 +306,4 @@ test centos_backed_qemu_press_like_string: centos_install_testo_cpu {
 		""" timeout 30m
 	}
 }
+

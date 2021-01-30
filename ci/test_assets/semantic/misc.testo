@@ -155,8 +155,20 @@ test common_flash_child: common_flash_parent1, common_flash_parent2 {
 	}
 }
 
+test copyfrom_nocheck {
+	my_ubuntu_server {
+		copyfrom "/some/shit" "/somewhere" nocheck
+	}
+}
+
 test copyto_from_not_exist {
 	my_ubuntu_server {
+		copyto "/some/unexisting_shit" "/opt"
+	}
+}
+
+test flash_copyto_from_not_exist {
+	my_flash {
 		copyto "/some/unexisting_shit" "/opt"
 	}
 }

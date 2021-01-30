@@ -1150,10 +1150,10 @@ struct Exec: public Node {
 //Now this node holds actions copyto and copyfrom
 //Cause they're really similar
 struct Copy: public Node {
-	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, std::shared_ptr<StringTokenUnion> timeout):
+	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, const Token& nocheck, std::shared_ptr<StringTokenUnion> timeout):
 		Node(copy),
 		from(from),
-		to(to), timeout(timeout) {}
+		to(to), nocheck(nocheck), timeout(timeout) {}
 
 	Pos begin() const {
 		return t.begin();
@@ -1182,6 +1182,7 @@ struct Copy: public Node {
 
 	std::shared_ptr<String> from;
 	std::shared_ptr<String> to;
+	Token nocheck;
 	std::shared_ptr<StringTokenUnion> timeout;
 };
 

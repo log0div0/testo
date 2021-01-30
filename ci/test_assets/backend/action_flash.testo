@@ -110,6 +110,41 @@ test flash_copyto: install_ubuntu_server {
 	}
 }
 
+test flash_copyto_from_doesnt_exist_runtime: install_ubuntu_server {
+	my_flash_empty {
+		copyto "/tmp/lala.log" "/home/" nocheck
+	}
+}
+
+[no_snapshots: true]
+test flash_copyto_nocheck: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		plug flash my_flash_empty
+		sleep 3s
+		exec bash "mount /dev/sdb1 /media"
+		exec bash "echo 'Hello world' > /media/something"
+		exec bash "umount /media"
+		sleep 2s
+		unplug flash my_flash_empty
+	}
+
+	my_flash_empty {
+		copyfrom "/something" "/tmp/something"
+		copyto "/tmp/something" "/something2" nocheck
+	}
+
+	my_ubuntu_server {
+		plug flash my_flash_empty
+		sleep 3s
+		exec bash "mount /dev/sdb1 /media"
+		exec bash "cat /media/something2 | grep 'Hello world'"
+		exec bash "umount /media"
+		sleep 2s
+		unplug flash my_flash_empty
+	}
+}
+
+
 test flash_copyto_timeout: install_ubuntu_server {
 	my_flash_empty {
 		copyto "/opt/flash_folder" "/some/inner/shit/" timeout 10s

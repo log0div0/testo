@@ -814,10 +814,21 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 
 	auto from = copy.from();
 	if (copy.ast_node->is_to_guest()) {
-		if (!fs::exists(from)) {
-			throw Exception(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from);
+
+		if (!copy.ast_node->nocheck) {
+			if (!fs::exists(from)) {
+				throw Exception(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from);
+			}
+
+			current_test->cksum_input << pretty_files_signature(from) << std::endl;
+		} else {
+			current_test->cksum_input << " nocheck" << std::endl;
 		}
-		current_test->cksum_input << pretty_files_signature(from) << std::endl;
+
+	} else {
+		if (copy.ast_node->nocheck) {
+			throw Exception(std::string(copy.ast_node->nocheck.begin()) + ": Error: \"nocheck\" specifier is not applicable to copyfrom action");
+		}
 	}
 }
 

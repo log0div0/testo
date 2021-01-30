@@ -129,6 +129,33 @@ test centos_backend_qemu_flash_copyto: centos_backend_qemu_install_guest_additio
 }
 
 [no_snapshots: true]
+test centos_backend_qemu_flash_copyto_from_not_exist_runtime: centos_backend_qemu_install_guest_additions {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_flash.testo --test_spec flash_copyto_from_doesnt_exist_runtime)
+			[[ $output == *"Preparing the environment for test flash_copyto_from_doesnt_exist_runtime"* ]]
+			[[ $output == *"Error: specified path doesn't exist: /tmp/lala.log"* ]]
+		"""
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_flash_copyto_nocheck: centos_backend_qemu_install_guest_additions {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
+
+		exec bash """
+			testo run /opt/scripts/action_flash.testo --test_spec flash_copyto_nocheck
+		""" timeout 30m
+	}
+}
+
+
+[no_snapshots: true]
 test centos_backend_qemu_flash_copyto_timeout: centos_backend_qemu_install_guest_additions {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
@@ -203,20 +230,3 @@ test centos_backend_qemu_plug_flash_exceptions: centos_install_testo_cpu {
 		""" timeout 30m
 	}
 }
-
-[no_snapshots: true]
-test centos_backend_qemu_exec_timeout: centos_backend_qemu_install_guest_additions {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/backend/action_ga.testo" "/opt/scripts/action_ga.testo"
-
-		exec bash """
-			set +o pipefail
-			set +e
-			output=$(testo run /opt/scripts/action_ga.testo --stop_on_fail --test_spec exec_timeout)
-			[[ $output == *"Error while performing action exec bash"* ]]
-			[[ $output == *"Timeout was triggered"* ]]
-		""" timeout 30m
-
-	}
-}
-

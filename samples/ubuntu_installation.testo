@@ -42,6 +42,12 @@ test ubuntu_installation {
 	}
 }
 
+test labada {
+	my_flash {
+		copyto "/opt/some_shit" "/home" nocheck
+	}
+}
+
 test check_copyto: ubuntu_installation {
 	VM1 {
 		mouse click "lala".from_top().from_top()

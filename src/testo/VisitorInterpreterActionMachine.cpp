@@ -329,6 +329,10 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 		}
 
 		if(copy.ast_node->is_to_guest()) {
+			//Additional check since now we can't be sure the "from" actually exists
+			if (!fs::exists(from)) {
+				throw std::runtime_error(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from.generic_string());
+			}
 			ga->copy_to_guest(from, to);
 		} else {
 			ga->copy_from_guest(from, to);;
