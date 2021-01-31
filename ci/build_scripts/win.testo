@@ -114,47 +114,31 @@ test win_build_onnxruntime_gpu: win_install_cuda {
 	}
 }
 
-[no_snapshots: true]
-test win_build_testo_guest_additions_x64: win_install_guest_additions {
-	win {
-		copyto "${TESTO_SRC_DIR}/3rd_party" "C:\\work\\testo\\3rd_party"
-		copyto "${TESTO_SRC_DIR}/docs" "C:\\work\\testo\\docs"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "C:\\work\\testo\\guest_additions"
-		copyto "${TESTO_SRC_DIR}/lib" "C:\\work\\testo\\lib"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:\\work\\testo\\CMakeLists.txt"
-		exec cmd """
-			cd C:\\work
-			mkdir testo_build
-			cd testo_build
-			cmake ..\\testo \
-				-DCMAKE_GENERATOR="Visual Studio 16 2019" \
-				-DCMAKE_GENERATOR_PLATFORM=x64
-			cmake --build . --target testo-guest-additions-package --config Release --parallel || exit /b 1
-		""" timeout 30m
-		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo Guest Additions.msi" "${TMP_DIR}/testo-guest-additions-x64.msi"
+macro win_build_testo_guest_additions(NAME, CMAKE_GENERATOR_PLATFORM) {
+	[no_snapshots: true]
+	test "win_build_testo_guest_additions_${NAME}": win_install_guest_additions {
+		win {
+			copyto "${TESTO_SRC_DIR}/3rd_party" "C:\\work\\testo\\3rd_party"
+			copyto "${TESTO_SRC_DIR}/docs" "C:\\work\\testo\\docs"
+			copyto "${TESTO_SRC_DIR}/guest_additions" "C:\\work\\testo\\guest_additions"
+			copyto "${TESTO_SRC_DIR}/lib" "C:\\work\\testo\\lib"
+			copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:\\work\\testo\\CMakeLists.txt"
+			exec cmd """
+				cd C:\\work
+				mkdir testo_build
+				cd testo_build
+				cmake ..\\testo \
+					-DCMAKE_GENERATOR="Visual Studio 16 2019" \
+					-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+				cmake --build . --target testo-guest-additions-package --config Release --parallel || exit /b 1
+			""" timeout 30m
+			copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo Guest Additions.msi" "${TMP_DIR}/testo-guest-additions-${NAME}.msi"
+		}
 	}
 }
 
-[no_snapshots: true]
-test win_build_testo_guest_additions_x86: win_install_guest_additions {
-	win {
-		copyto "${TESTO_SRC_DIR}/3rd_party" "C:\\work\\testo\\3rd_party"
-		copyto "${TESTO_SRC_DIR}/docs" "C:\\work\\testo\\docs"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "C:\\work\\testo\\guest_additions"
-		copyto "${TESTO_SRC_DIR}/lib" "C:\\work\\testo\\lib"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "C:\\work\\testo\\CMakeLists.txt"
-		exec cmd """
-			cd C:\\work
-			mkdir testo_build
-			cd testo_build
-			cmake ..\\testo \
-				-DCMAKE_GENERATOR="Visual Studio 16 2019" \
-				-DCMAKE_GENERATOR_PLATFORM=Win32
-			cmake --build . --target testo-guest-additions-package --config Release --parallel || exit /b 1
-		""" timeout 30m
-		copyfrom "C:\\work\\testo_build\\out\\pkg\\Testo Guest Additions.msi" "${TMP_DIR}/testo-guest-additions-x86.msi"
-	}
-}
+win_build_testo_guest_additions("x64", "x64")
+win_build_testo_guest_additions("x86", "Win32")
 
 [no_snapshots: true]
 test win_build_testo_cpu: win_install_guest_additions {
