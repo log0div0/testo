@@ -10,6 +10,7 @@ flash hostdev_imitation {
 test centos_backend_qemu_plug_hostdev: centos_backend_qemu_install_guest_additions {
 	centos {
 		plug flash hostdev_imitation
+		sleep 5s
 		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_hostdev.testo" "/opt/scripts/action_hostdev.testo"
 		exec bash """
@@ -25,6 +26,7 @@ test centos_backend_qemu_plug_hostdev: centos_backend_qemu_install_guest_additio
 test centos_backend_qemu_plug_hostdev_exceptions: centos_backend_qemu_install_guest_additions {
 	centos {
 		plug flash hostdev_imitation
+		sleep 5s
 		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_hostdev.testo" "/opt/scripts/action_hostdev.testo"
 		exec bash """
