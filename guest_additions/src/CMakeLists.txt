@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
+add_definitions(-DTESTO_GUEST_ADDITIONS_HYPERVISOR="${TESTO_GUEST_ADDITIONS_HYPERVISOR}")
 
 set(SRCS
 	Server.cpp

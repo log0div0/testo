@@ -1,3 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
 
-add_subdirectory(renderer)
+if (NOT WIN32)
+	add_subdirectory(renderer)
+endif()

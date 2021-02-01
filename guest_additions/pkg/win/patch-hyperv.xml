@@ -1,0 +1,22 @@
+<CPackWiXPatch>
+	<CPackWiXFragment Id="#PRODUCT">
+		<DirectoryRef Id="INSTALL_ROOT">
+			<Component Id="TestoGuestAdditions" Guid="{a4446e4d-4a57-436b-b396-6190a0d0b350}">
+				<File Id='TestoGuestAdditionsEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo-guest-additions.exe' Vital='yes' />
+				<ServiceInstall
+					Id="TestoGuestAdditionsServiceInstall"
+					Type="ownProcess"
+					Name="testo-guest-additions"
+					DisplayName="Testo Guest Additions"
+					Description="Provides interaction between the host and the guest system"
+					Start="auto"
+					ErrorControl="normal"
+					/>
+				<ServiceControl Id="TestoGuestAdditionsServiceControl" Start="install" Stop="both" Remove="uninstall" Name="testo-guest-additions" Wait="yes" />
+			</Component>
+		</DirectoryRef>
+	</CPackWiXFragment>
+	<CPackWiXFragment Id="#PRODUCTFEATURE">
+		<ComponentRef Id="TestoGuestAdditions"/>
+	</CPackWiXFragment>
+</CPackWiXPatch>
