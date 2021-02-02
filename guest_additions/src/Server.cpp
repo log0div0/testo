@@ -38,7 +38,7 @@ VersionNumber::VersionNumber(const std::string& str) {
 bool VersionNumber::operator<(const VersionNumber& other) {
 	if (MAJOR < other.MAJOR) {
 		return true;
-	}else if (MAJOR == other.MAJOR) {
+	} else if (MAJOR == other.MAJOR) {
 		if (MINOR < other.MINOR) {
 			return true;
 		} else if (MINOR == other.MINOR) {
@@ -55,16 +55,12 @@ std::string VersionNumber::to_string() const {
 	return std::to_string(MAJOR) + "." + std::to_string(MINOR) + "." + std::to_string(PATCH);
 }
 
-Server::Server(const std::string& fd_path_): channel(fd_path_) {
-	spdlog::info("Connected to " + fd_path_);
-}
-
 void Server::run() {
 	spdlog::info("Waiting for commands");
 
 	while (!is_canceled) {
 		try {
-			auto command = channel.receive();
+			auto command = receive();
 			// spdlog::info(command.dump(2));
 			handle_command(command);
 		} catch (const std::exception& error) {
@@ -132,7 +128,7 @@ void Server::send_error(const std::string& error) {
 		response["error"] = base64_encode((uint8_t*)error.data(), error.size() + 1);
 	}
 
-	channel.send(std::move(response));
+	send(std::move(response));
 }
 
 void Server::handle_check_avaliable(const nlohmann::json& command) {
@@ -143,7 +139,7 @@ void Server::handle_check_avaliable(const nlohmann::json& command) {
 		{"result", nlohmann::json::object()}
 	};
 
-	channel.send(std::move(response));
+	send(std::move(response));
 	spdlog::info("Checking avaliability is OK");
 }
 
@@ -157,7 +153,7 @@ void Server::handle_get_tmp_dir(const nlohmann::json& command) {
 		}}
 	};
 
-	channel.send(std::move(response));
+	send(std::move(response));
 	spdlog::info("Getting tmp dir is OK");
 }
 
@@ -185,13 +181,13 @@ void Server::handle_copy_file(const nlohmann::json& command) {
 			f.write(content.data(), content.size());
 		} else {
 			uint64_t file_length = 0;
-			channel.receive_raw((uint8_t*)&file_length, sizeof(file_length));
+			receive_raw((uint8_t*)&file_length, sizeof(file_length));
 			uint64_t i = 0;
 			const uint64_t buf_size = 8 * 1024;
 			uint8_t buf[buf_size];
 			while (i < file_length) {
 				uint64_t chunk_size = std::min(buf_size, file_length - i);
-				channel.receive_raw(buf, chunk_size);
+				receive_raw(buf, chunk_size);
 				f.write(buf, chunk_size);
 				i += chunk_size;
 			}
@@ -205,7 +201,7 @@ void Server::handle_copy_file(const nlohmann::json& command) {
 		{"result", nlohmann::json::object()}
 	};
 
-	channel.send(std::move(response));
+	send(std::move(response));
 }
 
 nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
@@ -279,7 +275,7 @@ void Server::handle_copy_files_out(const nlohmann::json& command) {
 		{"result", files}
 	};
 
-	channel.send(std::move(result));
+	send(std::move(result));
 
 	if (ver < VersionNumber(2,2,8)) {
 		// do nothing
@@ -292,14 +288,14 @@ void Server::handle_copy_files_out(const nlohmann::json& command) {
 			os::File file = os::File::open_for_read(path);
 			uint64_t file_length = file.size();
 			spdlog::info("Sending file {}, file size = {}", path, file_length);
-			channel.send_raw((uint8_t*)&file_length, sizeof(file_length));
+			send_raw((uint8_t*)&file_length, sizeof(file_length));
 			uint64_t i = 0;
 			const uint64_t buf_size = 8 * 1024;
 			uint8_t buf[buf_size];
 			while (i < file_length) {
 				uint64_t chunk_size = std::min(buf_size, file_length - i);
 				file.read(buf, chunk_size);
-				channel.send_raw(buf, chunk_size);
+				send_raw(buf, chunk_size);
 				i += chunk_size;
 			}
 		}
@@ -339,7 +335,7 @@ void Server::handle_execute(const nlohmann::json& command) {
 					{"stdout", base64_encode((uint8_t*)output.data(), output.size() + 1)}
 				}}
 			};
-			channel.send(std::move(result));
+			send(std::move(result));
 		}
 	}
 
@@ -353,8 +349,64 @@ void Server::handle_execute(const nlohmann::json& command) {
 		}}
 	};
 
-	channel.send(std::move(result));
+	send(std::move(result));
 
 	spdlog::info("Command finished: " + cmd);
 	spdlog::info("Return code: " + std::to_string(rc));
+}
+
+nlohmann::json Server::receive() {
+	uint32_t msg_size;
+	while (true) {
+		size_t bytes_read = channel.read((uint8_t*)&msg_size, 4);
+		if (bytes_read == 0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			continue;
+		} else if (bytes_read != 4) {
+			throw std::runtime_error("Can't read msg size");
+		} else {
+			break;
+		}
+	}
+
+	// spdlog::info("msg_size = {}", msg_size);
+
+	std::string json_str;
+	json_str.resize(msg_size);
+	receive_raw((uint8_t*)json_str.data(), json_str.size());
+
+	// spdlog::info("json_str = {}", json_str);
+
+	nlohmann::json result = nlohmann::json::parse(json_str);
+	return result;
+}
+
+void Server::send(nlohmann::json response) {
+	response["version"] = TESTO_VERSION;
+	auto response_str = response.dump();
+	uint32_t response_size = (uint32_t)response_str.size();
+	send_raw((uint8_t*)&response_size, sizeof(response_size));
+	send_raw((uint8_t*)response_str.data(), response_size);
+}
+
+void Server::receive_raw(uint8_t* data, size_t size) {
+	size_t already_read = 0;
+	while (already_read < size) {
+		size_t n = channel.read(&data[already_read], size - already_read);
+		if (n == 0) {
+			throw std::runtime_error("EOF while reading");
+		}
+		already_read += n;
+	}
+}
+
+void Server::send_raw(uint8_t* data, size_t size) {
+	size_t already_send = 0;
+	while (already_send < size) {
+		size_t n = channel.write(&data[already_send], size - already_send);
+		if (n == 0) {
+			throw std::runtime_error("EOF while writing");
+		}
+		already_send += n;
+	}
 }

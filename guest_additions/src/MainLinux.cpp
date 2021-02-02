@@ -11,7 +11,7 @@
 
 #include <clipp.h>
 
-#include "../Server.hpp"
+#include "Server.hpp"
 
 #define APP_NAME "testo-guest-additions"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
@@ -70,7 +70,7 @@ void start() {
 	if (daemon(1, 0) < 0) {
 		throw std::system_error(errno, std::system_category());
 	}
-	Server commands_handler("/dev/virtio-ports/negotiator.0");
+	Server commands_handler;
 	commands_handler.run();
 }
 
