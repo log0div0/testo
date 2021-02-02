@@ -168,13 +168,13 @@ int do_main(int argc, char** argv) {
 
 	if (hypervisor == "qemu") {
 #ifndef __linux__
-		throw std::runtime_error("Can't use qemu hypervisor not in Linux");
+		throw std::runtime_error("Qemu is only supported on Linux");
 #else
 		env = std::make_shared<QemuEnvironment>();
 #endif
 	} else if (hypervisor == "hyperv") {
 #ifndef WIN32
-		throw std::runtime_error("Can't use hyperv not in Windows");
+		throw std::runtime_error("HyperV is only supported on Windows");
 #else
 		env = std::make_shared<HyperVEnvironment>();
 #endif
@@ -192,6 +192,8 @@ int do_main(int argc, char** argv) {
 	if (selected_mode == mode::clean) {
 		return clean_mode(clean_args);
 	} else if (selected_mode == mode::run) {
+		run_args.params_names.push_back("TESTO_HYPERVISOR");
+		run_args.params_values.push_back(hypervisor);
 		return run_mode(run_args);
 	} else {
 		throw std::runtime_error("Unknown mode");

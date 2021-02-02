@@ -52,8 +52,6 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 void QemuEnvironment::setup() {
 	Environment::setup();
 
-	setenv("QEMU", "1", false);
-
 	qemu_connect = vir::connect_open("qemu:///system");
 	prepare_storage_pool("testo-storage-pool");
 	prepare_storage_pool("testo-flash-drives-pool");
