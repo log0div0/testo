@@ -149,28 +149,34 @@ test debian_build_onnxruntime_gpu: debian_install_cuda {
 	}
 }
 
-[no_snapshots: true]
-test debian_build_testo_guest_additions: debian_install_packages {
-	debian {
-		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
-		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
-		exec bash """
-			cd /root/
-			mkdir testo_build
-			cd testo_build
-			cmake ../testo \
-				-DCPACK_GENERATOR="DEB;RPM" \
-				-DCMAKE_BUILD_TYPE=Release
-			make testo-guest-additions-package -j$(nproc)
-			ls out/pkg
-		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo-guest-additions.deb" "${TMP_DIR}/testo-guest-additions.deb"
-		copyfrom "/root/testo_build/out/pkg/testo-guest-additions.rpm" "${TMP_DIR}/testo-guest-additions.rpm"
+macro debian_build_testo_guest_additions(TESTO_GUEST_ADDITIONS_HYPERVISOR) {
+	[no_snapshots: true]
+	test "debian_build_testo_guest_additions_${TESTO_GUEST_ADDITIONS_HYPERVISOR}": debian_install_packages {
+		debian {
+			copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+			copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
+			copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+			copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
+			copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
+			exec bash """
+				cd /root/
+				mkdir testo_build
+				cd testo_build
+				cmake ../testo \
+					-DTESTO_GUEST_ADDITIONS_HYPERVISOR=${TESTO_GUEST_ADDITIONS_HYPERVISOR} \
+					-DCPACK_GENERATOR="DEB;RPM" \
+					-DCMAKE_BUILD_TYPE=Release
+				make testo-guest-additions-package -j$(nproc)
+				ls out/pkg
+			""" timeout 30m
+			copyfrom "/root/testo_build/out/pkg/testo-guest-additions.deb" "${TMP_DIR}/${TESTO_GUEST_ADDITIONS_HYPERVISOR}/testo-guest-additions.deb"
+			copyfrom "/root/testo_build/out/pkg/testo-guest-additions.rpm" "${TMP_DIR}/${TESTO_GUEST_ADDITIONS_HYPERVISOR}/testo-guest-additions.rpm"
+		}
 	}
 }
+
+debian_build_testo_guest_additions("qemu")
+debian_build_testo_guest_additions("hyperv")
 
 [no_snapshots: true]
 test debian_build_testo_cpu: debian_install_packages {
