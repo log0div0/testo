@@ -1,4 +1,5 @@
 
+#include "HyperVGuestAdditions.hpp"
 #include "HyperVVM.hpp"
 #include <iostream>
 
@@ -524,5 +525,11 @@ VmState HyperVVM::state() const {
 }
 
 std::shared_ptr<GuestAdditions> HyperVVM::guest_additions() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto machine = connect.machine(id());
+		return std::make_shared<HyperVGuestAdditions>(machine);
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Connecting to guest additions channel"));
+	}
 }

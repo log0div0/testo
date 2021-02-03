@@ -54,6 +54,7 @@ test centos_install_guest_additions: centos_install_os {
 		wait "root@localhost"
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
+		type "setenforce 0"; press Enter
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm && echo result is $?"; press Enter
 		wait "result is 0"

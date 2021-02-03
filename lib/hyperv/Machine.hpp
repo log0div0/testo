@@ -26,6 +26,7 @@ struct Machine {
 	Machine(wmi::WbemClassObject computerSystem_, wmi::WbemServices services_);
 
 	std::string name() const;
+	std::string guid() const;
 	State state() const;
 	Display display() const;
 	void destroy();
@@ -44,7 +45,7 @@ struct Machine {
 	Processor processor() const;
 	Memory memory() const;
 
-	NIC addNIC(const std::string& name, bool legacy = true);
+	NIC addNIC(const std::string& name, bool legacy = false);
 
 	Snapshot createSnapshot();
 	std::vector<Snapshot> snapshots();

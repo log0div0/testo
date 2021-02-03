@@ -9,6 +9,8 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include <coro/Application.h>
+
 #include <clipp.h>
 
 #include "Server.hpp"
@@ -70,8 +72,20 @@ void start() {
 	if (daemon(1, 0) < 0) {
 		throw std::system_error(errno, std::system_category());
 	}
-	Server commands_handler;
-	commands_handler.run();
+	spdlog::info("Starting ...");
+	coro::Application([] {
+		try {
+			Server commands_handler;
+			commands_handler.run();
+		} catch (const std::exception& err) {
+			spdlog::error("app_main std error: {}", err.what());
+		} catch (const coro::CancelError&) {
+			spdlog::error("app_main CancelError");
+		} catch (...) {
+			spdlog::error("app_main unknown error");
+		}
+	}).run();
+	spdlog::info("Stopped");
 }
 
 void stop() {

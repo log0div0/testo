@@ -26,6 +26,14 @@ std::string Machine::name() const {
 	}
 }
 
+std::string Machine::guid() const {
+	try {
+		return computerSystem.get("Name");
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 Machine::State Machine::state() const {
 	try {
 		return (State)computerSystem.get("EnabledState").get<int32_t>();
