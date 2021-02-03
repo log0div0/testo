@@ -38,8 +38,10 @@ test centos_install_os {
 		mouse move 200 200
 		mouse click "Done".from_top(0)
 		wait "CentOS Linux is now successfully installed" timeout 20m
+		sleep 5s
+		shutdown
 		unplug dvd
-		mouse click "Reboot".from_bottom(0)
+		start
 		wait "localhost login"
 	}
 }

@@ -18,6 +18,7 @@ struct Machine {
 		Other = 1,
 		Enabled = 2,
 		Disabled = 3,
+		ShutDown = 4,
 		Offline = 6,
 		Quiesce = 9
 	};

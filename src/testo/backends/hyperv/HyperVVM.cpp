@@ -420,7 +420,11 @@ void HyperVVM::resume() {
 }
 
 void HyperVVM::power_button() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		connect.machine(id()).requestStateChange(hyperv::Machine::State::ShutDown);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 uint8_t Table5[1 << 5] = {0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132,
