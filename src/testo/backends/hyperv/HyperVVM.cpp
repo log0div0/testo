@@ -322,7 +322,12 @@ std::string HyperVVM::attach_nic(const std::string& nic_name) {
 				if (nic_json.count("mac")) {
 					nic.setMAC(nic_json.at("mac"));
 				}
-				std::string net_name = prefix() + nic_json.at("attached_to").get<std::string>();
+				std::string net_name;
+				if (nic_json.at("network_mode") == "nat") {
+					net_name = "Default Switch";
+				} else {
+					net_name = prefix() + nic_json.at("attached_to").get<std::string>();
+				}
 				auto bridge = connect.bridge(net_name);
 				nic.connect(bridge);
 				return nic_name;

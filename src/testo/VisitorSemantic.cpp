@@ -325,7 +325,7 @@ void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cm
 		visit_machine(vmc);
 
 		if (vmc->config.count("nic")) {
-			auto nics = vmc->config.at("nic");
+			auto& nics = vmc->config.at("nic");
 			for (auto& nic: nics) {
 				if (nic.count("attached_to")) {
 					std::string network_name = nic.at("attached_to");
@@ -335,6 +335,7 @@ void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cm
 							vmc->config.at("name").get<std::string>(), nic.at("name").get<std::string>(), network_name));
 					}
 					visit_network(network);
+					nic["network_mode"] = network->config.at("mode");
 				}
 			}
 		}
@@ -1272,7 +1273,7 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 			Token::type_to_string(attr->value->type()) + "\" for attribute \"" + attr->name.value() + "\", expected " +
 			expected_types);
 	}
-	
+
 
 	if (config.count(attr->name.value())) {
 		if (!config.at(attr->name.value()).is_array()) {
