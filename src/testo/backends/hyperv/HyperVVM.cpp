@@ -2,6 +2,9 @@
 #include "HyperVGuestAdditions.hpp"
 #include "HyperVVM.hpp"
 #include <iostream>
+#include <coro/Timer.h>
+
+using namespace std::chrono_literals;
 
 HyperVVM::HyperVVM(const nlohmann::json& config_): VM(config_) {
 	if (config.count("nic")) {
@@ -124,12 +127,6 @@ void HyperVVM::install() {
 			}
 		}
 
-		fs::path hhd_dir = connect.defaultVirtualHardDiskPath();
-		fs::path hhd_path = hhd_dir / (id() + ".vhd");
-		if (fs::exists(hhd_path)) {
-			fs::remove(hhd_path);
-		}
-
 		auto machine = connect.defineMachine(id());
 
 		machine.processor().setVirtualQuantity(config.at("cpus"));
@@ -141,8 +138,11 @@ void HyperVVM::install() {
 		auto& disks = config.at("disk");
 		for (size_t i = 0; i < disks.size(); ++i) {
 			auto& disk = disks.at(i);
-			size_t disk_size = disk.at("size").get<uint32_t>();
+			size_t disk_size = disk.at("size");
 			disk_size = disk_size * 1024 * 1024;
+			fs::path hhd_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+			std::string disk_name = disk.at("name");
+			fs::path hhd_path = hhd_dir / (disk_name + ".vhd");
 			connect.createHDD(hhd_path, disk_size);
 			controllers.at(1).addDiskDrive(i).mountHDD(hhd_path);
 		}
@@ -165,7 +165,23 @@ void HyperVVM::undefine() {
 
 void HyperVVM::remove_disks() {
 	try {
-		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+		fs::path hhd_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+		for (size_t i = 0; i < 30; ++i) {
+			try {
+				if (fs::exists(hhd_dir)) {
+					fs::remove_all(hhd_dir);
+				}
+				return;
+			} catch (const std::system_error& error) {
+				if (error.code() == std::error_code(ERROR_SHARING_VIOLATION, std::system_category())) {
+					coro::Timer timer;
+					timer.waitFor(1s);
+					continue;
+				} else {
+					throw;
+				}
+			}
+		}
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -182,6 +198,10 @@ nlohmann::json HyperVVM::make_snapshot(const std::string& snapshot_name) {
 
 bool HyperVVM::has_snapshot(const std::string& snapshot_name) {
 	try {
+		fs::path hhd_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+		if (!fs::exists(hhd_dir)) {
+			return false;
+		}
 		auto machine = connect.machine(id());
 		for (auto& snapshot: machine.snapshots()) {
 			if (snapshot.name() == snapshot_name) {
@@ -492,7 +512,6 @@ stb::Image<stb::RGB> HyperVVM::screenshot() {
 
 bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	try {
-		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 		return false;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));

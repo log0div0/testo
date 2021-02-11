@@ -84,7 +84,7 @@ void FlashDrive::undefine() {
 			return;
 		}
 
-		if (Controller::has_snapshot("_init")) {
+		if (has_snapshot("_init")) {
 			delete_snapshot_with_children("_init");
 		}
 
