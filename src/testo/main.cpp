@@ -140,13 +140,13 @@ int do_main(int argc, char** argv) {
 		for (const std::string& arg: wrong) {
 			std::cerr << "Error: '" << arg << "' is not a valid argument" << std::endl;
 		}
-		std::cout << "Usage:" << std::endl << usage_lines(cli, argv[0]) << std::endl;
+		std::cout << "Usage:" << std::endl << usage_lines(cli, "testo") << std::endl;
 		return -1;
 	}
 
 	if (!res) {
 		std::cerr << "Error: invalid command line arguments" << std::endl;
-		std::cout << "Usage:" << std::endl << usage_lines(cli, argv[0]) << std::endl;
+		std::cout << "Usage:" << std::endl << usage_lines(cli, "testo") << std::endl;
 		return -1;
 	}
 
