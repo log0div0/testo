@@ -96,8 +96,20 @@ void Machine::disable() {
 	requestStateChange(State::Disabled);
 }
 
+std::vector<StorageController> Machine::scsiControllers() const {
+	return controllers("Microsoft:Hyper-V:Synthetic SCSI Controller");
+}
+
 std::vector<StorageController> Machine::ideControllers() const {
 	return controllers("Microsoft:Hyper-V:Emulated IDE Controller");
+}
+
+StorageController Machine::addSCSIController() const {
+	return addController("Microsoft:Hyper-V:Synthetic SCSI Controller");
+}
+
+StorageController Machine::addIDEController() const {
+	return addController("Microsoft:Hyper-V:Emulated IDE Controller");
 }
 
 std::vector<StorageController> Machine::controllers(const std::string& subtype) const {
@@ -112,6 +124,16 @@ std::vector<StorageController> Machine::controllers(const std::string& subtype) 
 			result.push_back(StorageController(std::move(object), virtualSystemSettingData, services));
 		}
 		return result;
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+StorageController Machine::addController(const std::string& subtype) const {
+	try {
+		auto controllerTemplate = ResourceTemplate(services, "Msvm_ResourceAllocationSettingData", subtype);
+		auto controller = controllerTemplate.addTo(virtualSystemSettingData);
+		return StorageController(controller, virtualSystemSettingData, services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}

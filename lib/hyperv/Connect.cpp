@@ -39,7 +39,7 @@ Machine Connect::defineMachine(const std::string& name) {
 	try {
 		auto virtualSystemSettingData = services.getObject("Msvm_VirtualSystemSettingData").spawnInstance()
 			.put("ElementName", name)
-			// .put("VirtualSystemSubType", "Microsoft:Hyper-V:SubType:2")
+			.put("VirtualSystemSubType", "Microsoft:Hyper-V:SubType:2")
 			.put("SecureBootEnabled", false);
 		auto result = services.call("Msvm_VirtualSystemManagementService", "DefineSystem")
 			.with("SystemSettings", virtualSystemSettingData)

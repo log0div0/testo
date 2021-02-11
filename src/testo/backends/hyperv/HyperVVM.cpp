@@ -132,8 +132,8 @@ void HyperVVM::install() {
 		machine.processor().setVirtualQuantity(config.at("cpus"));
 		machine.memory().setVirtualQuantity(config.at("ram"));
 
-		auto controllers = machine.ideControllers();
-		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
+		auto controller = machine.addSCSIController();
+		controller.addDVDDrive(0).mountISO(config.at("iso"));
 
 		auto& disks = config.at("disk");
 		for (size_t i = 0; i < disks.size(); ++i) {
@@ -144,7 +144,7 @@ void HyperVVM::install() {
 			std::string disk_name = disk.at("name");
 			fs::path hhd_path = hhd_dir / (disk_name + ".vhd");
 			connect.createHDD(hhd_path, disk_size);
-			controllers.at(1).addDiskDrive(i).mountHDD(hhd_path);
+			controller.addDiskDrive(i + 1).mountHDD(hhd_path);
 		}
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -386,7 +386,7 @@ void HyperVVM::unplug_hostdev_usb(const std::string& addr) {
 bool HyperVVM::is_dvd_plugged() const {
 	try {
 		auto machine = connect.machine(id());
-		auto controller = machine.ideControllers().at(0);
+		auto controller = machine.scsiControllers().at(0);
 		auto drive = controller.drives().at(0);
 		return drive.disks().size();
 	} catch (const std::exception& error) {
@@ -396,7 +396,7 @@ bool HyperVVM::is_dvd_plugged() const {
 void HyperVVM::plug_dvd(fs::path path) {
 	try {
 		auto machine = connect.machine(id());
-		auto controller = machine.ideControllers().at(0);
+		auto controller = machine.scsiControllers().at(0);
 		auto drive = controller.drives().at(0);
 		drive.mountISO(path);
 	} catch (const std::exception& error) {
@@ -406,7 +406,7 @@ void HyperVVM::plug_dvd(fs::path path) {
 void HyperVVM::unplug_dvd() {
 	try {
 		auto machine = connect.machine(id());
-		auto controller = machine.ideControllers().at(0);
+		auto controller = machine.scsiControllers().at(0);
 		auto drive = controller.drives().at(0);
 		drive.disks().at(0).umount();
 	} catch (const std::exception& error) {

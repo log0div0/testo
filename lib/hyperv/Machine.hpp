@@ -38,8 +38,12 @@ struct Machine {
 	void enable();
 	void disable();
 
+	std::vector<StorageController> scsiControllers() const;
 	std::vector<StorageController> ideControllers() const;
+	StorageController addSCSIController() const;
+	StorageController addIDEController() const;
 	std::vector<StorageController> controllers(const std::string& subtype) const;
+	StorageController addController(const std::string& subtype) const;
 	Keyboard keyboard() const;
 	SyntheticMouse synthetic_mouse() const;
 	Processor processor() const;
