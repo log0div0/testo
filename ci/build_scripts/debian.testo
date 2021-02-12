@@ -16,7 +16,13 @@ machine debian {
 test debian_install_os {
 	debian {
 		start
-		wait "installer boot menu"; press Enter
+
+		if ("${TESTO_HYPERVISOR}" STREQUAL "hyperv") {
+			wait "Graphical install"; press Enter
+		} else {
+			wait "installer boot menu"; press Enter
+		}
+
 		wait "Select a language"; press Enter
 		wait "Select your location"; press Enter
 		wait "Configure the keyboard"; press Enter
@@ -50,8 +56,14 @@ test debian_install_os {
 		mouse click "Debian desktop environment".left_center().move_left(15)
 		mouse click "... Xfce".left_center().move_left(15)
 		mouse click "Continue"
-		wait "It seems that this new installation" timeout 30m; press Enter
-		wait "You need to make the"; press Down, Enter
+
+		if ("${TESTO_HYPERVISOR}" STREQUAL "hyperv") {
+			wait "Installation is complete" timeout 1h;
+		} else {
+			wait "It seems that this new installation" timeout 30m; press Enter
+			wait "You need to make the"; press Down, Enter
+		}
+
 		wait "Installation is complete"; unplug dvd; press Enter
 		wait "${host_name} login"
 	}
@@ -63,6 +75,17 @@ test debian_install_guest_additions: debian_install_os {
 		wait "${host_name} login:"; type "root"; press Enter
 		wait "Password:"; type "${password}"; press Enter
 		wait "root@${host_name}:~#"
+
+		if ("${TESTO_HYPERVISOR}" STREQUAL "hyperv") {
+			type "sed -i '/cdrom/d' /etc/apt/sources.list"; press Enter
+			type "echo 'deb http://deb.debian.org/debian buster-backports main contrib non-free' >> /etc/apt/sources.list"; press Enter
+			type "apt update && apt install -y linux-image-4.19-amd64 && echo result is $?"; press Enter
+			wait "result is 0" timeout 10m
+			type "reboot"; press Enter
+			wait "${host_name} login:"; type "root"; press Enter
+			wait "Password:"; type "${password}"; press Enter
+			wait "root@${host_name}:~#"
+		}
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 		type "mount /dev/cdrom /media"; press Enter
