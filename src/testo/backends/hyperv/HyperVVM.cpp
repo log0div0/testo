@@ -133,18 +133,39 @@ void HyperVVM::install() {
 		machine.memory().setVirtualQuantity(config.at("ram"));
 
 		auto controller = machine.addSCSIController();
-		controller.addDVDDrive(0).mountISO(config.at("iso"));
+		auto dvd = controller.addDVDDrive(0);
+		if (config.count("iso")) {
+			dvd.mountISO(config.at("iso"));
+		}
 
 		auto& disks = config.at("disk");
 		for (size_t i = 0; i < disks.size(); ++i) {
 			auto& disk = disks.at(i);
-			size_t disk_size = disk.at("size");
-			disk_size = disk_size * 1024 * 1024;
-			fs::path hhd_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+			fs::path disk_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
 			std::string disk_name = disk.at("name");
-			fs::path hhd_path = hhd_dir / (disk_name + ".vhd");
-			connect.createHDD(hhd_path, disk_size);
-			controller.addDiskDrive(i + 1).mountHDD(hhd_path);
+			fs::path disk_path;
+			if (disk.count("size")) {
+				disk_path = disk_dir / (disk_name + ".vhdx");
+				size_t disk_size = disk.at("size");
+				disk_size = disk_size * 1024 * 1024;
+				connect.createDynamicHardDisk(disk_path, disk_size, hyperv::HardDiskFormat::VHDX);
+			} else if (disk.count("source")) {
+				fs::path source = disk.at("source").get<std::string>();
+				hyperv::HardDiskFormat format;
+				if (source.extension() == ".vhd") {
+					format = hyperv::HardDiskFormat::VHD;
+					disk_path = disk_dir / (disk_name + ".vhd");
+				} else if (source.extension() == ".vhdx") {
+					format = hyperv::HardDiskFormat::VHDX;
+					disk_path = disk_dir / (disk_name + ".vhdx");
+				} else {
+					throw std::runtime_error("Unsupported disk format: " + source.extension().string());
+				}
+				connect.createDifferencingHardDisk(disk_path, disk.at("source"), format);
+			} else {
+				throw std::runtime_error("Shoud not be there");
+			}
+			controller.addDiskDrive(i + 1).mountHDD(disk_path);
 		}
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -165,11 +186,11 @@ void HyperVVM::undefine() {
 
 void HyperVVM::remove_disks() {
 	try {
-		fs::path hhd_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+		fs::path disk_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
 		for (size_t i = 0; i < 30; ++i) {
 			try {
-				if (fs::exists(hhd_dir)) {
-					fs::remove_all(hhd_dir);
+				if (fs::exists(disk_dir)) {
+					fs::remove_all(disk_dir);
 				}
 				return;
 			} catch (const std::system_error& error) {
@@ -198,8 +219,8 @@ nlohmann::json HyperVVM::make_snapshot(const std::string& snapshot_name) {
 
 bool HyperVVM::has_snapshot(const std::string& snapshot_name) {
 	try {
-		fs::path hhd_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
-		if (!fs::exists(hhd_dir)) {
+		fs::path disk_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+		if (!fs::exists(disk_dir)) {
 			return false;
 		}
 		auto machine = connect.machine(id());

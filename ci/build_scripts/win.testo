@@ -5,7 +5,7 @@ machine win {
 	cpus: 4
 	ram: 4Gb
 	disk main: {
-		source: "/var/lib/libvirt/images/testo-builder-win10-template.qcow2"
+		source: "${WIN10_TEMPLATE_PATH}"
 	}
 }
 
@@ -21,7 +21,7 @@ test win_start {
 test win_install_guest_additions: win_start {
 	win {
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		mouse click "CD Drive"
+		mouse click "Drive"
 		sleep 5s
 		mouse click "Run autorun"
 		wait "Testo Guest Additions"; press Enter
@@ -31,9 +31,11 @@ test win_install_guest_additions: win_start {
 		wait "Ready to install"; press Enter
 		wait "Do you want to allow"
 		mouse click "Yes"
-		wait "Would you like to install"
-		mouse click "Would you like to install"; sleep 5s # focus
-		press Left,Enter
+		if ("${TESTO_HYPERVISOR}" STREQUAL "qemu") {
+			wait "Would you like to install"
+			mouse click "Would you like to install"; sleep 5s # focus
+			press Left,Enter
+		}
 		wait "Click the Finish button"; press Enter
 		wait !"Click the Finish button"
 		exec cmd "echo hello world"

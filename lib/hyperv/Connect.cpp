@@ -94,13 +94,28 @@ std::string Connect::defaultVirtualHardDiskPath() const {
 	}
 }
 
-void Connect::createHDD(const std::string& path, size_t size) {
+void Connect::createDynamicHardDisk(const std::string& path, size_t size, HardDiskFormat format) {
 	try {
 		auto virtualHardDiskSettingData = services.getObject("Msvm_VirtualHardDiskSettingData").spawnInstance()
 			.put("Path", path)
-			.put("Type", (int32_t)3)
-			.put("Format", (int32_t)2)
+			.put("Type", (int32_t)HardDiskType::Dynamic)
+			.put("Format", (int32_t)format)
 			.put("MaxInternalSize", std::to_string(size));
+		auto result = services.call("Msvm_ImageManagementService", "CreateVirtualHardDisk")
+			.with("VirtualDiskSettingData", virtualHardDiskSettingData)
+			.exec();
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+void Connect::createDifferencingHardDisk(const std::string& path, const std::string& parent, HardDiskFormat format) {
+	try {
+		auto virtualHardDiskSettingData = services.getObject("Msvm_VirtualHardDiskSettingData").spawnInstance()
+			.put("Path", path)
+			.put("Type", (int32_t)HardDiskType::Differencing)
+			.put("Format", (int32_t)format)
+			.put("ParentPath", parent);
 		auto result = services.call("Msvm_ImageManagementService", "CreateVirtualHardDisk")
 			.with("VirtualDiskSettingData", virtualHardDiskSettingData)
 			.exec();

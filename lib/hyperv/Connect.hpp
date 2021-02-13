@@ -7,6 +7,18 @@
 
 namespace hyperv {
 
+enum class HardDiskType: uint16_t {
+	Fixed = 2,
+	Dynamic = 3,
+	Differencing = 4
+};
+
+enum class HardDiskFormat: uint16_t {
+	VHD = 2,
+	VHDX = 3,
+	VHDSet = 4
+};
+
 struct Connect {
 	Connect();
 
@@ -17,7 +29,8 @@ struct Connect {
 	Bridge bridge(const std::string& name) const;
 	Bridge defineBridge(const std::string& name);
 	std::string defaultVirtualHardDiskPath() const;
-	void createHDD(const std::string& path, size_t size);
+	void createDynamicHardDisk(const std::string& path, size_t size, HardDiskFormat format);
+	void createDifferencingHardDisk(const std::string& path, const std::string& parent, HardDiskFormat format);
 
 	wmi::WbemLocator locator;
 	wmi::WbemServices services;
