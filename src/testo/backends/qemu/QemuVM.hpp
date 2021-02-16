@@ -23,10 +23,10 @@ struct QemuVM: public VM {
 	void mouse_move_rel(int x, int y) override;
 	void mouse_hold(const std::vector<MouseButton>& buttons) override;
 	void mouse_release(const std::vector<MouseButton>& buttons) override;
-	bool is_nic_plugged(const std::string& pci_addr) const override;
-	std::string attach_nic(const std::string& nic) override;
-	void detach_nic(const std::string& pci_addr) override;
-	bool is_link_plugged(const std::string& pci_addr) const override;
+	bool is_nic_plugged(const std::string& nic) const override;
+	void plug_nic(const std::string& nic) override;
+	void unplug_nic(const std::string& nic) override;
+	bool is_link_plugged(const std::string& nic) const override;
 	void set_link(const std::string& nic, bool is_connected) override;
 	void plug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
 	void unplug_flash_drive(std::shared_ptr<FlashDrive> fd) override;
@@ -64,6 +64,7 @@ private:
 	std::set<std::string> plugged_nics() const;
 
 	vir::Connect qemu_connect;
+	std::unordered_map<std::string, std::string> nic_pci_map;
 	std::unordered_map<std::string, uint32_t> scancodes;
 	std::vector<std::string> disk_targets; //10 + a cdrom
 	std::vector<uint8_t> screenshot_buffer;

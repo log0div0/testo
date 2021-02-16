@@ -376,6 +376,13 @@ void QemuVM::install() {
 		pugi::xml_document xml_config;
 		xml_config.load_string(string_config.c_str());
 		qemu_connect.domain_define_xml(xml_config);
+
+		if (config.count("nic")) {
+			auto nics = config.at("nic");
+			for (auto& nic: nics) {
+				plug_nic(nic.at("name").get<std::string>());
+			}
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Performing install")));
 	}
@@ -414,6 +421,7 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 		new_config.save(ss,"  ");
 		auto result = nlohmann::json::object();
 		result["config"] = base64_encode((uint8_t*)ss.str().c_str(), ss.str().length());
+		result["nics"] = nic_pci_map;
 		return result;
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot {}", snapshot)));
@@ -423,7 +431,14 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 
 void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque) {
 	try {
-		auto config_str = opaque["config"].get<std::string>();
+		nic_pci_map.clear();
+
+		auto& nics = opaque.at("nics");
+		for (auto it = nics.begin(); it != nics.end(); ++it) {
+			nic_pci_map[it.key()] = it.value().get<std::string>();
+		}
+
+		std::string config_str = opaque.at("config");
 		auto config = base64_decode(config_str);
 		std::stringstream ss;
 		ss.write((const char*)&config[0], config.size());
@@ -704,10 +719,11 @@ void QemuVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	}
 }
 
-bool QemuVM::is_nic_plugged(const std::string& pci_addr) const {
+bool QemuVM::is_nic_plugged(const std::string& nic) const {
 	try {
 		auto config = qemu_connect.domain_lookup_by_name(id()).dump_xml();
 		auto devices = config.first_child().child("devices");
+		std::string pci_addr = nic_pci_map.at(nic);
 
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
 			if (std::string(nic_node.attribute("type").value()) != "network") {
@@ -725,7 +741,7 @@ bool QemuVM::is_nic_plugged(const std::string& pci_addr) const {
 		}
 		return false;
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged", pci_addr)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking if nic {} is plugged", nic)));
 	}
 }
 
@@ -753,7 +769,7 @@ std::set<std::string> QemuVM::plugged_nics() const {
 	return result;
 }
 
-std::string QemuVM::attach_nic(const std::string& nic) {
+void QemuVM::plug_nic(const std::string& nic) {
 	try {
 		std::string string_config;
 
@@ -807,17 +823,19 @@ std::string QemuVM::attach_nic(const std::string& nic) {
 		std::set_difference(new_plugged_nics.begin(), new_plugged_nics.end(), already_plugged_nics.begin(), already_plugged_nics.end(),
 			std::inserter(diff, diff.begin()));
 
-		return *diff.begin();
+		std::string pci_addr = *diff.begin();
+		nic_pci_map[nic] = pci_addr;
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Attaching nic {}", nic)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Plugging nic {}", nic)));
 	}
 }
 
-void QemuVM::detach_nic(const std::string& pci_addr) {
+void QemuVM::unplug_nic(const std::string& nic) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
+		std::string pci_addr = nic_pci_map.at(nic);
 
 		//TODO: check if CURRENT is enough
 		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_CONFIG};
@@ -838,20 +856,22 @@ void QemuVM::detach_nic(const std::string& pci_addr) {
 
 			if (pci_address == pci_addr) {
 				domain.detach_device(nic_node, flags);
+				nic_pci_map[nic] = "";
 				return;
 			}
 		}
 
 		throw std::runtime_error("Nic with address " + pci_addr + " not found");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Detaching nic {}", pci_addr)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Unplugging nic {}", nic)));
 	}
 }
 
-bool QemuVM::is_link_plugged(const std::string& pci_addr) const {
+bool QemuVM::is_link_plugged(const std::string& nic) const {
 	try {
 		auto config = qemu_connect.domain_lookup_by_name(id()).dump_xml();
 		auto devices = config.first_child().child("devices");
+		std::string pci_addr = nic_pci_map.at(nic);
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
 			if (std::string(nic_node.attribute("type").value()) != "network") {
 				continue;
@@ -879,15 +899,16 @@ bool QemuVM::is_link_plugged(const std::string& pci_addr) const {
 		}
 		throw std::runtime_error("Nic with address " + pci_addr + " not found");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Checking link status on nic {}", pci_addr)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Checking link status on nic {}", nic)));
 	}
 }
 
-void QemuVM::set_link(const std::string& pci_addr, bool is_connected) {
+void QemuVM::set_link(const std::string& nic, bool is_connected) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
+		std::string pci_addr = nic_pci_map.at(nic);
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
 			if (std::string(nic_node.attribute("type").value()) != "network") {
 				continue;
@@ -926,7 +947,7 @@ void QemuVM::set_link(const std::string& pci_addr, bool is_connected) {
 		}
 		throw std::runtime_error("Nic with address " + pci_addr + " not found");
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(fmt::format("Setting link status on nic {}", pci_addr)));
+		std::throw_with_nested(std::runtime_error(fmt::format("Setting link status on nic {}", nic)));
 	}
 }
 

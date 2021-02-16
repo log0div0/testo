@@ -49,7 +49,6 @@ private:
 
 	mutable std::shared_ptr<::VM> _vm;
 
-	std::unordered_map<std::string, std::string> nic_pci_map;
 	MouseButton current_held_mouse_button = MouseButton::None;
 	std::set<std::string> current_held_keyboard_buttons;
 };

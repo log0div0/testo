@@ -350,11 +350,11 @@ void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	}
 }
 
-bool HyperVVM::is_nic_plugged(const std::string& pci_addr) const {
+bool HyperVVM::is_nic_plugged(const std::string& nic) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-std::string HyperVVM::attach_nic(const std::string& nic_name) {
+void HyperVVM::plug_nic(const std::string& nic_name) {
 	try {
 		for (auto& nic_json: config.at("nic")) {
 			if (nic_json.at("name") == nic_name) {
@@ -371,7 +371,6 @@ std::string HyperVVM::attach_nic(const std::string& nic_name) {
 				}
 				auto bridge = connect.bridge(net_name);
 				nic.connect(bridge);
-				return nic_name;
 			}
 		}
 		throw std::runtime_error("NIC " + nic_name + " not found");
@@ -380,7 +379,7 @@ std::string HyperVVM::attach_nic(const std::string& nic_name) {
 	}
 }
 
-void HyperVVM::detach_nic(const std::string& pci_addr) {
+void HyperVVM::unplug_nic(const std::string& nic) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 bool HyperVVM::is_link_plugged(const std::string& nic) const {

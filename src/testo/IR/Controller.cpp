@@ -32,7 +32,11 @@ bool Controller::check_metadata_version() {
 			return false;
 		}
 
-		return metadata.at("metadata_version").get<std::string>() == "2";
+		if (!metadata.at("metadata_version").is_number()) {
+			return false;
+		}
+
+		return metadata.at("metadata_version").get<int>() == TESTO_CURRENT_METADATA_VERSION;
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("getting snapshot cksum error"));

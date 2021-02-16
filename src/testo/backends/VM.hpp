@@ -39,8 +39,8 @@ struct VM {
 	virtual void mouse_hold(const std::vector<MouseButton>& buttons) = 0;
 	virtual void mouse_release(const std::vector<MouseButton>& buttons) = 0;
 	virtual bool is_nic_plugged(const std::string& pci_addr) const = 0;
-	virtual std::string attach_nic(const std::string& nic) = 0;
-	virtual void detach_nic(const std::string& pci_addr) = 0;
+	virtual void plug_nic(const std::string& nic) = 0;
+	virtual void unplug_nic(const std::string& pci_addr) = 0;
 	virtual bool is_link_plugged(const std::string& nic) const = 0;
 	virtual void set_link(const std::string& nic, bool is_connected) = 0;
 	virtual void plug_flash_drive(std::shared_ptr<FlashDrive> fd) = 0;
