@@ -24,7 +24,7 @@ void backtrace(std::ostream& stream, const std::exception& error) {
 		stream << "\n";
 		backtrace(stream, error);
 	} catch (const std::exception& error) {
-		stream << "\n\t-";
+		stream << "\n\t- ";
 		backtrace(stream, error);
 	} catch(...) {
 		stream << std::endl;

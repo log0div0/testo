@@ -47,7 +47,7 @@ Display Machine::display() const {
 		auto videoHead = services.execQuery(
 			"SELECT * FROM Msvm_VideoHead WHERE SystemName=\"" +
 			computerSystem.get("Name").get<std::string>() +
-			"\" AND EnabledState=2").getOne();
+			"\"").getOne();
 		return Display(std::move(videoHead), virtualSystemSettingData, services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
