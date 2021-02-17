@@ -1,6 +1,10 @@
 
+#include "HyperVGuestAdditions.hpp"
 #include "HyperVVM.hpp"
 #include <iostream>
+#include <coro/Timer.h>
+
+using namespace std::chrono_literals;
 
 HyperVVM::HyperVVM(const nlohmann::json& config_): VM(config_) {
 	if (config.count("nic")) {
@@ -123,27 +127,52 @@ void HyperVVM::install() {
 			}
 		}
 
-		fs::path hhd_dir = connect.defaultVirtualHardDiskPath();
-		fs::path hhd_path = hhd_dir / (id() + ".vhd");
-		if (fs::exists(hhd_path)) {
-			fs::remove(hhd_path);
-		}
-
 		auto machine = connect.defineMachine(id());
 
 		machine.processor().setVirtualQuantity(config.at("cpus"));
 		machine.memory().setVirtualQuantity(config.at("ram"));
 
-		auto controllers = machine.ideControllers();
-		controllers.at(0).addDVDDrive(0).mountISO(config.at("iso"));
+		auto controller = machine.addSCSIController();
+		auto dvd = controller.addDVDDrive(0);
+		if (config.count("iso")) {
+			dvd.mountISO(config.at("iso"));
+		}
 
 		auto& disks = config.at("disk");
 		for (size_t i = 0; i < disks.size(); ++i) {
 			auto& disk = disks.at(i);
-			size_t disk_size = disk.at("size").get<uint32_t>();
-			disk_size = disk_size * 1024 * 1024;
-			connect.createHDD(hhd_path, disk_size);
-			controllers.at(1).addDiskDrive(i).mountHDD(hhd_path);
+			fs::path disk_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+			std::string disk_name = disk.at("name");
+			fs::path disk_path;
+			if (disk.count("size")) {
+				disk_path = disk_dir / (disk_name + ".vhdx");
+				size_t disk_size = disk.at("size");
+				disk_size = disk_size * 1024 * 1024;
+				connect.createDynamicHardDisk(disk_path, disk_size, hyperv::HardDiskFormat::VHDX);
+			} else if (disk.count("source")) {
+				fs::path source = disk.at("source").get<std::string>();
+				hyperv::HardDiskFormat format;
+				if (source.extension() == ".vhd") {
+					format = hyperv::HardDiskFormat::VHD;
+					disk_path = disk_dir / (disk_name + ".vhd");
+				} else if (source.extension() == ".vhdx") {
+					format = hyperv::HardDiskFormat::VHDX;
+					disk_path = disk_dir / (disk_name + ".vhdx");
+				} else {
+					throw std::runtime_error("Unsupported disk format: " + source.extension().string());
+				}
+				connect.createDifferencingHardDisk(disk_path, disk.at("source"), format);
+			} else {
+				throw std::runtime_error("Shoud not be there");
+			}
+			controller.addDiskDrive(i + 1).mountHDD(disk_path);
+		}
+
+		if (config.count("nic")) {
+			auto nics = config.at("nic");
+			for (auto& nic: nics) {
+				plug_nic(nic.at("name").get<std::string>());
+			}
 		}
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -164,7 +193,23 @@ void HyperVVM::undefine() {
 
 void HyperVVM::remove_disks() {
 	try {
-		std::cout << "TODO: " << __PRETTY_FUNCTION__ << std::endl;
+		fs::path disk_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+		for (size_t i = 0; i < 30; ++i) {
+			try {
+				if (fs::exists(disk_dir)) {
+					fs::remove_all(disk_dir);
+				}
+				return;
+			} catch (const std::system_error& error) {
+				if (error.code() == std::error_code(ERROR_SHARING_VIOLATION, std::system_category())) {
+					coro::Timer timer;
+					timer.waitFor(1s);
+					continue;
+				} else {
+					throw;
+				}
+			}
+		}
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -181,6 +226,10 @@ nlohmann::json HyperVVM::make_snapshot(const std::string& snapshot_name) {
 
 bool HyperVVM::has_snapshot(const std::string& snapshot_name) {
 	try {
+		fs::path disk_dir = fs::path(connect.defaultVirtualHardDiskPath()) / id();
+		if (!fs::exists(disk_dir)) {
+			return false;
+		}
 		auto machine = connect.machine(id());
 		for (auto& snapshot: machine.snapshots()) {
 			if (snapshot.name() == snapshot_name) {
@@ -308,11 +357,21 @@ void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	}
 }
 
-bool HyperVVM::is_nic_plugged(const std::string& pci_addr) const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+bool HyperVVM::is_nic_plugged(const std::string& nic_name) const {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				return true;
+			}
+		}
+		return false;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
-std::string HyperVVM::attach_nic(const std::string& nic_name) {
+void HyperVVM::plug_nic(const std::string& nic_name) {
 	try {
 		for (auto& nic_json: config.at("nic")) {
 			if (nic_json.at("name") == nic_name) {
@@ -321,10 +380,15 @@ std::string HyperVVM::attach_nic(const std::string& nic_name) {
 				if (nic_json.count("mac")) {
 					nic.setMAC(nic_json.at("mac"));
 				}
-				std::string net_name = prefix() + nic_json.at("attached_to").get<std::string>();
+				std::string net_name;
+				if (nic_json.at("network_mode") == "nat") {
+					net_name = "Default Switch";
+				} else {
+					net_name = prefix() + nic_json.at("attached_to").get<std::string>();
+				}
 				auto bridge = connect.bridge(net_name);
 				nic.connect(bridge);
-				return nic_name;
+				return;
 			}
 		}
 		throw std::runtime_error("NIC " + nic_name + " not found");
@@ -333,15 +397,66 @@ std::string HyperVVM::attach_nic(const std::string& nic_name) {
 	}
 }
 
-void HyperVVM::detach_nic(const std::string& pci_addr) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+void HyperVVM::unplug_nic(const std::string& nic_name) {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				nic.destroy();
+				return;
+			}
+		}
+		throw std::runtime_error("NIC " + nic_name + " not found");
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
-bool HyperVVM::is_link_plugged(const std::string& nic) const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+
+bool HyperVVM::is_link_plugged(const std::string& nic_name) const {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				return nic.is_connected();
+			}
+		}
+		throw std::runtime_error("NIC " + nic_name + " not found");
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
-void HyperVVM::set_link(const std::string& nic, bool is_connected) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+
+void HyperVVM::set_link(const std::string& nic_name, bool is_connected) {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				if (is_connected) {
+					for (auto& nic_json: config.at("nic")) {
+						if (nic_json.at("name") == nic_name) {
+							std::string net_name;
+							if (nic_json.at("network_mode") == "nat") {
+								net_name = "Default Switch";
+							} else {
+								net_name = prefix() + nic_json.at("attached_to").get<std::string>();
+							}
+							auto bridge = connect.bridge(net_name);
+							nic.connect(bridge);
+							return;
+						}
+					}
+				} else {
+					nic.disconnect();
+					return;
+				}
+			}
+		}
+		throw std::runtime_error("NIC " + nic_name + " not found");
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
+
 void HyperVVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -357,30 +472,33 @@ void HyperVVM::plug_hostdev_usb(const std::string& addr) {
 void HyperVVM::unplug_hostdev_usb(const std::string& addr) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
 bool HyperVVM::is_dvd_plugged() const {
 	try {
 		auto machine = connect.machine(id());
-		auto controller = machine.ideControllers().at(0);
+		auto controller = machine.scsiControllers().at(0);
 		auto drive = controller.drives().at(0);
 		return drive.disks().size();
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVM::plug_dvd(fs::path path) {
 	try {
 		auto machine = connect.machine(id());
-		auto controller = machine.ideControllers().at(0);
+		auto controller = machine.scsiControllers().at(0);
 		auto drive = controller.drives().at(0);
 		drive.mountISO(path);
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVM::unplug_dvd() {
 	try {
 		auto machine = connect.machine(id());
-		auto controller = machine.ideControllers().at(0);
+		auto controller = machine.scsiControllers().at(0);
 		auto drive = controller.drives().at(0);
 		drive.disks().at(0).umount();
 	} catch (const std::exception& error) {
@@ -411,6 +529,7 @@ void HyperVVM::suspend() {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVM::resume() {
 	try {
 		connect.machine(id()).enable();
@@ -420,7 +539,11 @@ void HyperVVM::resume() {
 }
 
 void HyperVVM::power_button() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		connect.machine(id()).requestStateChange(hyperv::Machine::State::ShutDown);
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 uint8_t Table5[1 << 5] = {0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132,
@@ -482,7 +605,6 @@ stb::Image<stb::RGB> HyperVVM::screenshot() {
 
 bool HyperVVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 	try {
-		std::cout << "TODO: " << __FUNCSIG__ << std::endl;
 		return false;
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -520,5 +642,11 @@ VmState HyperVVM::state() const {
 }
 
 std::shared_ptr<GuestAdditions> HyperVVM::guest_additions() {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+	try {
+		auto machine = connect.machine(id());
+		return std::make_shared<HyperVGuestAdditions>(machine);
+	}
+	catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Connecting to guest additions channel"));
+	}
 }

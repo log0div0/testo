@@ -3,6 +3,8 @@
 
 #include "Object.hpp"
 
+#define TESTO_CURRENT_METADATA_VERSION 3
+
 namespace IR {
 
 struct Controller: Object<AST::Controller> {

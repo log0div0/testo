@@ -38,8 +38,10 @@ test centos_install_os {
 		mouse move 200 200
 		mouse click "Done".from_top(0)
 		wait "CentOS Linux is now successfully installed" timeout 20m
+		sleep 5s
+		shutdown
 		unplug dvd
-		mouse click "Reboot".from_bottom(0)
+		start
 		wait "localhost login"
 	}
 }
@@ -52,6 +54,7 @@ test centos_install_guest_additions: centos_install_os {
 		wait "root@localhost"
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
+		type "setenforce 0"; press Enter
 		type "mount /dev/cdrom /media"; press Enter
 		wait "mounted read-only"; type "rpm -i /media/testo-guest-additions.rpm && echo result is $?"; press Enter
 		wait "result is 0"
@@ -67,11 +70,11 @@ test centos_install_packages: centos_install_guest_additions {
 		plug dvd "${ISO_DIR}/CentOS-8-x86_64-1905-dvd1.iso"
 		sleep 5s
 		exec bash """
+			nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep "ens\\|eth"`
 			mkdir /media/CentOS
 			mount /dev/cdrom /media/CentOS
 			yum --disablerepo=* --enablerepo=c8-media* -y install git gcc gcc-c++ make openssl-devel python3-devel libvirt-devel tar wget vim rpm-build libguestfs-devel
 			cd /root
-			nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep ens`
 			wget https://github.com/Kitware/CMake/releases/download/v3.19.2/cmake-3.19.2-Linux-x86_64.sh -O cmake.sh
 			chmod +x cmake.sh
 			./cmake.sh --skip-license --prefix=/usr

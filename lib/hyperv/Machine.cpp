@@ -26,6 +26,14 @@ std::string Machine::name() const {
 	}
 }
 
+std::string Machine::guid() const {
+	try {
+		return computerSystem.get("Name");
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 Machine::State Machine::state() const {
 	try {
 		return (State)computerSystem.get("EnabledState").get<int32_t>();
@@ -39,7 +47,7 @@ Display Machine::display() const {
 		auto videoHead = services.execQuery(
 			"SELECT * FROM Msvm_VideoHead WHERE SystemName=\"" +
 			computerSystem.get("Name").get<std::string>() +
-			"\" AND EnabledState=2").getOne();
+			"\"").getOne();
 		return Display(std::move(videoHead), virtualSystemSettingData, services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
@@ -88,8 +96,20 @@ void Machine::disable() {
 	requestStateChange(State::Disabled);
 }
 
+std::vector<StorageController> Machine::scsiControllers() const {
+	return controllers("Microsoft:Hyper-V:Synthetic SCSI Controller");
+}
+
 std::vector<StorageController> Machine::ideControllers() const {
 	return controllers("Microsoft:Hyper-V:Emulated IDE Controller");
+}
+
+StorageController Machine::addSCSIController() const {
+	return addController("Microsoft:Hyper-V:Synthetic SCSI Controller");
+}
+
+StorageController Machine::addIDEController() const {
+	return addController("Microsoft:Hyper-V:Emulated IDE Controller");
 }
 
 std::vector<StorageController> Machine::controllers(const std::string& subtype) const {
@@ -104,6 +124,16 @@ std::vector<StorageController> Machine::controllers(const std::string& subtype) 
 			result.push_back(StorageController(std::move(object), virtualSystemSettingData, services));
 		}
 		return result;
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+StorageController Machine::addController(const std::string& subtype) const {
+	try {
+		auto controllerTemplate = ResourceTemplate(services, "Msvm_ResourceAllocationSettingData", subtype);
+		auto controller = controllerTemplate.addTo(virtualSystemSettingData);
+		return StorageController(controller, virtualSystemSettingData, services);
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -152,6 +182,25 @@ Memory Machine::memory() const {
 			"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\""
 		).getOne();
 		return Memory(std::move(memory), virtualSystemSettingData, services);
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
+std::vector<NIC> Machine::nics(bool legacy) {
+	try {
+		std::string table = legacy ?
+			"Msvm_EmulatedEthernetPortSettingData" :
+			"Msvm_SyntheticEthernetPortSettingData";
+		std::vector<NIC> result;
+		auto objects = services.execQuery(
+				"SELECT * FROM " + table + " "
+				"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\""
+			).getAll();
+		for (auto& object: objects) {
+			result.push_back(NIC(std::move(object), virtualSystemSettingData, services));
+		}
+		return result;
 	} catch (const std::exception&) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}

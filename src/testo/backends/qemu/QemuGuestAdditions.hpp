@@ -2,9 +2,8 @@
 #pragma once
 
 #include <coro/StreamSocket.h>
-#include <coro/Timeout.h>
 #include "../GuestAdditions.hpp"
-#include "qemu/Domain.hpp"
+#include <qemu/Domain.hpp>
 
 struct QemuGuestAdditions: GuestAdditions {
 	QemuGuestAdditions(vir::Domain& domain);

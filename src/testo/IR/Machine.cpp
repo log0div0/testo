@@ -69,14 +69,6 @@ void Machine::create() {
 		}
 
 		write_metadata_file(main_file(), metadata);
-
-		if (config.count("nic")) {
-			auto nics = config.at("nic");
-			for (auto& nic: nics) {
-				plug_nic(nic.at("name").get<std::string>());
-			}
-		}
-
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("creating vm"));
 	}
@@ -91,7 +83,7 @@ void Machine::undefine() {
 		vm()->remove_disks();
 
 		if (vm()->is_defined()) {
-			if (Controller::has_snapshot("_init")) {
+			if (has_snapshot("_init")) {
 				delete_snapshot_with_children("_init");
 			}
 
@@ -110,34 +102,31 @@ void Machine::undefine() {
 }
 
 bool Machine::is_nic_plugged(const std::string& nic) {
-	return nic_pci_map[nic].length();
+	return vm()->is_nic_plugged(nic);
 }
 
 void Machine::plug_nic(const std::string& nic) {
 	try {
-		std::string pci_addr = vm()->attach_nic(nic);
-		nic_pci_map[nic] = pci_addr;
+		vm()->plug_nic(nic);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("attaching nic " + nic));
+		std::throw_with_nested(std::runtime_error("plugging nic " + nic));
 	}
 }
 
 void Machine::unplug_nic(const std::string& nic) {
 	try {
-		vm()->detach_nic(nic_pci_map[nic]);
-		nic_pci_map[nic] = "";
+		vm()->unplug_nic(nic);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("detaching nic " + nic));
+		std::throw_with_nested(std::runtime_error("unplugging nic " + nic));
 	}
 }
 
 bool Machine::is_link_plugged(const std::string& nic) {
 	try {
-		auto pci_addr = nic_pci_map[nic];
-		if (!pci_addr.length()) {
+		if (!vm()->is_nic_plugged(nic)) {
 			throw std::runtime_error("Internal error: nic " + nic + " is not plugged");
 		}
-		return vm()->is_link_plugged(pci_addr);
+		return vm()->is_link_plugged(nic);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("checking link is plugged: " + nic));
 	}
@@ -146,11 +135,10 @@ bool Machine::is_link_plugged(const std::string& nic) {
 
 void Machine::plug_link(const std::string& nic) {
 	try {
-		auto pci_addr = nic_pci_map[nic];
-		if (!pci_addr.length()) {
+		if (!vm()->is_nic_plugged(nic)) {
 			throw std::runtime_error("Internal error: nic " + nic + " is not plugged");
 		}
-		vm()->set_link(pci_addr, true);
+		vm()->set_link(nic, true);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Plugging link: " + nic));
 	}
@@ -158,11 +146,10 @@ void Machine::plug_link(const std::string& nic) {
 
 void Machine::unplug_link(const std::string& nic) {
 	try {
-		auto pci_addr = nic_pci_map[nic];
-		if (!pci_addr.length()) {
+		if (!vm()->is_nic_plugged(nic)) {
 			throw std::runtime_error("Internal error: nic " + nic + " is not plugged");
 		}
-		return vm()->set_link(pci_addr, false);
+		vm()->set_link(nic, false);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Plugging link: " + nic));
 	}
@@ -207,13 +194,7 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 		metadata["children"] = nlohmann::json::array();
 		metadata["parent"] = current_state;
 		metadata["opaque"] = opaque;
-		metadata["metadata_version"] = "2";
-
-		//nics
-		metadata["nics"] = nlohmann::json::object();
-		for (auto& nic: nic_pci_map) {
-			metadata["nics"][nic.first] = nic.second;
-		}
+		metadata["metadata_version"] = TESTO_CURRENT_METADATA_VERSION;
 
 		write_metadata_file(metadata_file, metadata);
 
@@ -231,16 +212,10 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 }
 
 void Machine::restore_snapshot(const std::string& snapshot) {
-	nic_pci_map.clear();
-
 	fs::path metadata_file = get_metadata_dir();
 	metadata_file /= vm()->id() + "_" + snapshot;
 
 	auto metadata = read_metadata_file(metadata_file);
-	auto& nics = metadata.at("nics");
-	for (auto it = nics.begin(); it != nics.end(); ++it) {
-		nic_pci_map[it.key()] = it.value().get<std::string>();
-	}
 
 	vm()->rollback(snapshot, metadata.at("opaque"));
 	current_state = snapshot;

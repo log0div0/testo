@@ -1,8 +1,9 @@
 
 #pragma once
 
-#include "Channel.hpp"
+#include CHANNEL_CLASS_HEADER
 
+#include <nlohmann/json.hpp>
 #include <ghc/filesystem.hpp>
 namespace fs = ghc::filesystem;
 
@@ -24,7 +25,9 @@ struct VersionNumber {
 };
 
 struct Server {
-	Server(const std::string& fd_path);
+	Server() = default;
+	~Server() = default;
+
 	Server(const Server&) = delete;
 	Server& operator=(const Server&) = delete;
 
@@ -46,7 +49,14 @@ private:
 	void handle_execute(const nlohmann::json& command);
 
 	void send_error(const std::string& error);
-	Channel channel;
+
+	nlohmann::json receive();
+	void send(nlohmann::json response);
+
+	void receive_raw(uint8_t* data, size_t size);
+	void send_raw(uint8_t* data, size_t size);
+
+	CHANNEL_CLASS_NAME channel;
 
 	VersionNumber ver;
 };

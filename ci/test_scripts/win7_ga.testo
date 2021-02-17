@@ -3,7 +3,7 @@ include "win7.testo"
 
 test win7_test_ga_install: win7_install_os {
 	win7 {
-		plug dvd "${OUT_DIR}/testo-guest-additions.iso"
+		plug dvd "${OUT_DIR}/testo-guest-additions-${TESTO_HYPERVISOR}.iso"
 		wait "Автозапуск"; press Enter
 		wait "Testo Guest Additions"; press Enter
 		mouse click "I accept the terms";

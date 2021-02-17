@@ -35,7 +35,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 if(WIN32)
 	add_definitions(
-		-D_WIN32_WINNT=0x0601
+		-D_WIN32_WINNT=0x0A00
 		-D_SCL_SECURE_NO_WARNINGS
 		-D_WINSOCK_DEPRECATED_NO_WARNINGS
 		-D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
@@ -89,8 +89,8 @@ endmacro()
 
 add_subdirectory_if_exists(lib)
 add_subdirectory_if_exists(src)
-if (NOT WIN32)
-	add_subdirectory_if_exists(nn)
+add_subdirectory_if_exists(nn)
+if (TESTO_GUEST_ADDITIONS_HYPERVISOR)
+	add_subdirectory_if_exists(guest_additions)
 endif()
-add_subdirectory_if_exists(guest_additions)
 add_subdirectory_if_exists(pkg)

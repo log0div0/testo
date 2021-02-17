@@ -16,7 +16,13 @@ machine debian {
 test debian_install_os {
 	debian {
 		start
-		wait "installer boot menu"; press Enter
+
+		if ("${TESTO_HYPERVISOR}" STREQUAL "hyperv") {
+			wait "Graphical install"; press Enter
+		} else {
+			wait "installer boot menu"; press Enter
+		}
+
 		wait "Select a language"; press Enter
 		wait "Select your location"; press Enter
 		wait "Configure the keyboard"; press Enter
@@ -50,8 +56,14 @@ test debian_install_os {
 		mouse click "Debian desktop environment".left_center().move_left(15)
 		mouse click "... Xfce".left_center().move_left(15)
 		mouse click "Continue"
-		wait "It seems that this new installation" timeout 30m; press Enter
-		wait "You need to make the"; press Down, Enter
+
+		if ("${TESTO_HYPERVISOR}" STREQUAL "hyperv") {
+			wait "Installation is complete" timeout 1h;
+		} else {
+			wait "It seems that this new installation" timeout 30m; press Enter
+			wait "You need to make the"; press Down, Enter
+		}
+
 		wait "Installation is complete"; unplug dvd; press Enter
 		wait "${host_name} login"
 	}
@@ -63,6 +75,17 @@ test debian_install_guest_additions: debian_install_os {
 		wait "${host_name} login:"; type "root"; press Enter
 		wait "Password:"; type "${password}"; press Enter
 		wait "root@${host_name}:~#"
+
+		if ("${TESTO_HYPERVISOR}" STREQUAL "hyperv") {
+			type "sed -i '/cdrom/d' /etc/apt/sources.list"; press Enter
+			type "echo 'deb http://deb.debian.org/debian buster-backports main contrib non-free' >> /etc/apt/sources.list"; press Enter
+			type "apt update && apt install -y linux-image-4.19-amd64 && echo result is $?"; press Enter
+			wait "result is 0" timeout 10m
+			type "reboot"; press Enter
+			wait "${host_name} login:"; type "root"; press Enter
+			wait "Password:"; type "${password}"; press Enter
+			wait "root@${host_name}:~#"
+		}
 
 		plug dvd "${ISO_DIR}/testo-guest-additions.iso"; sleep 5s
 		type "mount /dev/cdrom /media"; press Enter
@@ -149,28 +172,34 @@ test debian_build_onnxruntime_gpu: debian_install_cuda {
 	}
 }
 
-[no_snapshots: true]
-test debian_build_testo_guest_additions: debian_install_packages {
-	debian {
-		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
-		copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
-		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
-		exec bash """
-			cd /root/
-			mkdir testo_build
-			cd testo_build
-			cmake ../testo \
-				-DCPACK_GENERATOR="DEB;RPM" \
-				-DCMAKE_BUILD_TYPE=Release
-			make testo-guest-additions-package -j$(nproc)
-			ls out/pkg
-		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo-guest-additions.deb" "${TMP_DIR}/testo-guest-additions.deb"
-		copyfrom "/root/testo_build/out/pkg/testo-guest-additions.rpm" "${TMP_DIR}/testo-guest-additions.rpm"
+macro debian_build_testo_guest_additions(TESTO_GUEST_ADDITIONS_HYPERVISOR) {
+	[no_snapshots: true]
+	test "debian_build_testo_guest_additions_${TESTO_GUEST_ADDITIONS_HYPERVISOR}": debian_install_packages {
+		debian {
+			copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+			copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
+			copyto "${TESTO_SRC_DIR}/guest_additions" "/root/testo/guest_additions"
+			copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
+			copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
+			exec bash """
+				cd /root/
+				mkdir testo_build
+				cd testo_build
+				cmake ../testo \
+					-DTESTO_GUEST_ADDITIONS_HYPERVISOR=${TESTO_GUEST_ADDITIONS_HYPERVISOR} \
+					-DCPACK_GENERATOR="DEB;RPM" \
+					-DCMAKE_BUILD_TYPE=Release
+				make testo-guest-additions-package -j$(nproc)
+				ls out/pkg
+			""" timeout 30m
+			copyfrom "/root/testo_build/out/pkg/testo-guest-additions.deb" "${TMP_DIR}/${TESTO_GUEST_ADDITIONS_HYPERVISOR}/testo-guest-additions.deb"
+			copyfrom "/root/testo_build/out/pkg/testo-guest-additions.rpm" "${TMP_DIR}/${TESTO_GUEST_ADDITIONS_HYPERVISOR}/testo-guest-additions.rpm"
+		}
 	}
 }
+
+debian_build_testo_guest_additions("qemu")
+debian_build_testo_guest_additions("hyperv")
 
 [no_snapshots: true]
 test debian_build_testo_cpu: debian_install_packages {

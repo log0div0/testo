@@ -16,6 +16,7 @@ testo run %SCRIPT_DIR%\build_scripts ^
 	--param TMP_DIR %TMP_DIR% ^
 	--param OUT_DIR %OUT_DIR% ^
 	--param ONNXRUNTIME_SRC_DIR %ONNXRUNTIME_SRC_DIR% ^
+	--param WIN10_TEMPLATE_PATH "D:\HyperV Disks\testo-builder-win10-template.vhdx" ^
 	--license %LICENSE_PATH% ^
 	%TEST_SPEC% ^
 	--assume_yes

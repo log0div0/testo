@@ -20,6 +20,7 @@ sudo testo run "$SCRIPT_DIR/build_scripts" \
 	--param TMP_DIR "$TMP_DIR" \
 	--param OUT_DIR "$OUT_DIR" \
 	--param ONNXRUNTIME_SRC_DIR "$ONNXRUNTIME_SRC_DIR" \
+	--param WIN10_TEMPLATE_PATH "/var/lib/libvirt/images/testo-builder-win10-template.qcow2" \
 	--license "$LICENSE_PATH" \
 	${TEST_SPEC} \
 	--assume_yes
