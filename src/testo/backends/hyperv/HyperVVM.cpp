@@ -412,12 +412,51 @@ void HyperVVM::unplug_nic(const std::string& nic_name) {
 	}
 }
 
-bool HyperVVM::is_link_plugged(const std::string& nic) const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+bool HyperVVM::is_link_plugged(const std::string& nic_name) const {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				return nic.is_connected();
+			}
+		}
+		throw std::runtime_error("NIC " + nic_name + " not found");
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
-void HyperVVM::set_link(const std::string& nic, bool is_connected) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+
+void HyperVVM::set_link(const std::string& nic_name, bool is_connected) {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				if (is_connected) {
+					for (auto& nic_json: config.at("nic")) {
+						if (nic_json.at("name") == nic_name) {
+							std::string net_name;
+							if (nic_json.at("network_mode") == "nat") {
+								net_name = "Default Switch";
+							} else {
+								net_name = prefix() + nic_json.at("attached_to").get<std::string>();
+							}
+							auto bridge = connect.bridge(net_name);
+							nic.connect(bridge);
+							return;
+						}
+					}
+				} else {
+					nic.disconnect();
+					return;
+				}
+			}
+		}
+		throw std::runtime_error("NIC " + nic_name + " not found");
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
+
 void HyperVVM::plug_flash_drive(std::shared_ptr<FlashDrive> fd) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }

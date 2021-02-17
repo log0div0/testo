@@ -17,6 +17,8 @@ struct NIC {
 	std::string name() const;
 	void setMAC(std::string mac);
 	Link connect(const Bridge& bridge);
+	bool is_connected() const;
+	void disconnect();
 	void destroy();
 
 	wmi::WbemClassObject ethernetPortSettingData;
