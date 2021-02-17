@@ -49,6 +49,7 @@ struct Machine {
 	Processor processor() const;
 	Memory memory() const;
 
+	std::vector<NIC> nics(bool legacy = false);
 	NIC addNIC(const std::string& name, bool legacy = false);
 
 	Snapshot createSnapshot();

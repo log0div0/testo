@@ -187,6 +187,25 @@ Memory Machine::memory() const {
 	}
 }
 
+std::vector<NIC> Machine::nics(bool legacy) {
+	try {
+		std::string table = legacy ?
+			"Msvm_EmulatedEthernetPortSettingData" :
+			"Msvm_SyntheticEthernetPortSettingData";
+		std::vector<NIC> result;
+		auto objects = services.execQuery(
+				"SELECT * FROM " + table + " "
+				"WHERE InstanceID LIKE \"" + virtualSystemSettingData.get("InstanceID").get<std::string>() + "%\""
+			).getAll();
+		for (auto& object: objects) {
+			result.push_back(NIC(std::move(object), virtualSystemSettingData, services));
+		}
+		return result;
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 NIC Machine::addNIC(const std::string& name, bool legacy) {
 	try {
 		auto nicTemplate = legacy ?

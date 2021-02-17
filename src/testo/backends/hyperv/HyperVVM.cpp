@@ -167,6 +167,13 @@ void HyperVVM::install() {
 			}
 			controller.addDiskDrive(i + 1).mountHDD(disk_path);
 		}
+
+		if (config.count("nic")) {
+			auto nics = config.at("nic");
+			for (auto& nic: nics) {
+				plug_nic(nic.at("name").get<std::string>());
+			}
+		}
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
@@ -350,8 +357,18 @@ void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
 	}
 }
 
-bool HyperVVM::is_nic_plugged(const std::string& nic) const {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+bool HyperVVM::is_nic_plugged(const std::string& nic_name) const {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				return true;
+			}
+		}
+		return false;
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 void HyperVVM::plug_nic(const std::string& nic_name) {
@@ -371,6 +388,7 @@ void HyperVVM::plug_nic(const std::string& nic_name) {
 				}
 				auto bridge = connect.bridge(net_name);
 				nic.connect(bridge);
+				return;
 			}
 		}
 		throw std::runtime_error("NIC " + nic_name + " not found");
@@ -379,9 +397,21 @@ void HyperVVM::plug_nic(const std::string& nic_name) {
 	}
 }
 
-void HyperVVM::unplug_nic(const std::string& nic) {
-	throw std::runtime_error(__PRETTY_FUNCTION__);
+void HyperVVM::unplug_nic(const std::string& nic_name) {
+	try {
+		auto machine = connect.machine(id());
+		for (auto& nic: machine.nics()) {
+			if (nic.name() == nic_name) {
+				nic.destroy();
+				return;
+			}
+		}
+		throw std::runtime_error("NIC " + nic_name + " not found");
+	} catch (const std::exception& error) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
+
 bool HyperVVM::is_link_plugged(const std::string& nic) const {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
@@ -403,6 +433,7 @@ void HyperVVM::plug_hostdev_usb(const std::string& addr) {
 void HyperVVM::unplug_hostdev_usb(const std::string& addr) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
 bool HyperVVM::is_dvd_plugged() const {
 	try {
 		auto machine = connect.machine(id());
@@ -413,6 +444,7 @@ bool HyperVVM::is_dvd_plugged() const {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVM::plug_dvd(fs::path path) {
 	try {
 		auto machine = connect.machine(id());
@@ -423,6 +455,7 @@ void HyperVVM::plug_dvd(fs::path path) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVM::unplug_dvd() {
 	try {
 		auto machine = connect.machine(id());
@@ -457,6 +490,7 @@ void HyperVVM::suspend() {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
+
 void HyperVVM::resume() {
 	try {
 		connect.machine(id()).enable();

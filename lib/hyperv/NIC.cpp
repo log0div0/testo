@@ -16,6 +16,14 @@ NIC::NIC(wmi::WbemClassObject ethernetPortSettingData_,
 
 }
 
+std::string NIC::name() const {
+	try {
+		return ethernetPortSettingData.get("ElementName");
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
+}
+
 void NIC::setMAC(std::string mac) {
 	try {
 		mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
@@ -35,6 +43,16 @@ Link NIC::connect(const Bridge& bridge) {
 	linkTemplate.put("Parent", ethernetPortSettingData.path());
 	linkTemplate.addTo(virtualSystemSettingData);
 	return {};
+}
+
+void NIC::destroy() {
+	try {
+		auto result = services.call("Msvm_VirtualSystemManagementService", "RemoveResourceSettings")
+			.with("ResourceSettings", std::vector<std::string>{ethernetPortSettingData.path()})
+			.exec();
+	} catch (const std::exception&) {
+		throw_with_nested(std::runtime_error(__FUNCSIG__));
+	}
 }
 
 }
