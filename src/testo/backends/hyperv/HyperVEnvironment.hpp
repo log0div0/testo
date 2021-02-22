@@ -12,6 +12,10 @@ struct HyperVEnvironment: Environment {
 
 	void setup() override;
 
+	std::string hypervisor() const override {
+		return "hyperv";
+	}
+
 	std::shared_ptr<VM> create_vm(const nlohmann::json& config) override {
 		return std::shared_ptr<VM>(new HyperVVM(config));
 	}

@@ -21,6 +21,7 @@ struct Environment {
 	}
 
 	virtual void setup();
+	virtual std::string hypervisor() const = 0;
 
 	virtual std::shared_ptr<VM> create_vm(const nlohmann::json& config) = 0;
 	virtual std::shared_ptr<FlashDrive> create_flash_drive(const nlohmann::json& config) = 0;

@@ -12,6 +12,10 @@ struct QemuEnvironment : public Environment {
 
 	void setup() override;
 
+	std::string hypervisor() const override {
+		return "qemu";
+	}
+
 	std::shared_ptr<VM> create_vm(const nlohmann::json& config) override;
 	std::shared_ptr<FlashDrive> create_flash_drive(const nlohmann::json& config) override;
 	std::shared_ptr<Network> create_network(const nlohmann::json& config) override;

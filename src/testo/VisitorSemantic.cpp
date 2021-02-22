@@ -769,6 +769,10 @@ void VisitorSemantic::visit_plug_link(const IR::PlugLink& plug_link) {
 void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
 	current_test->cksum_input << "hostdev " << plug_hostdev.type() << " \"" << plug_hostdev.addr() << "\"";
 
+	if (env->hypervisor() == "hyperv") {
+		throw std::runtime_error(std::string(plug_hostdev.ast_node->begin()) + ": Sorry, Hyper-V does not support this command");
+	}
+
 	try {
 		parse_usb_addr(plug_hostdev.addr());
 	} catch (const std::exception& error) {
@@ -1175,6 +1179,9 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 
 void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
 	try {
+		if (env->hypervisor() == "hyperv") {
+			throw std::runtime_error("Sorry, virtual flash drives are not implemented for Hyper-V yet");
+		}
 		current_test->mentioned_flash_drives.insert(flash);
 
 		auto result = visited_flash_drives.insert(flash);
