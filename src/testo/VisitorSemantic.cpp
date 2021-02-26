@@ -121,54 +121,54 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 	keys.insert("RIGHTMETA");
 
 	attr_ctx vm_global_ctx;
-	vm_global_ctx.insert({"ram", std::make_pair(false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string}))});
-	vm_global_ctx.insert({"iso", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
-	vm_global_ctx.insert({"nic", std::make_pair(true, std::vector<Token::category>({Token::category::attr_block}))});
-	vm_global_ctx.insert({"disk", std::make_pair(true, std::vector<Token::category>({Token::category::attr_block}))});
-	vm_global_ctx.insert({"video", std::make_pair(true, std::vector<Token::category>({Token::category::attr_block}))});
-	vm_global_ctx.insert({"cpus", std::make_pair(false, std::vector<Token::category>({Token::category::number, Token::category::quoted_string}))});
-	vm_global_ctx.insert({"qemu_spice_agent", std::make_pair(false, std::vector<Token::category>({Token::category::binary}))});
-	vm_global_ctx.insert({"qemu_enable_usb3", std::make_pair(false, std::vector<Token::category>({Token::category::binary}))});
-	vm_global_ctx.insert({"loader", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
+	vm_global_ctx.insert({"ram", {false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string})}});
+	vm_global_ctx.insert({"iso", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	vm_global_ctx.insert({"nic", {true, std::vector<Token::category>({Token::category::attr_block})}});
+	vm_global_ctx.insert({"disk", {true, std::vector<Token::category>({Token::category::attr_block})}});
+	vm_global_ctx.insert({"video", {true, std::vector<Token::category>({Token::category::attr_block})}});
+	vm_global_ctx.insert({"cpus", {false, std::vector<Token::category>({Token::category::number, Token::category::quoted_string})}});
+	vm_global_ctx.insert({"qemu_spice_agent", {false, std::vector<Token::category>({Token::category::binary})}});
+	vm_global_ctx.insert({"qemu_enable_usb3", {false, std::vector<Token::category>({Token::category::binary})}});
+	vm_global_ctx.insert({"loader", {false, std::vector<Token::category>({Token::category::quoted_string})}});
 
 	attr_ctxs.insert({"vm_global", vm_global_ctx});
 
 	attr_ctx disk_ctx;
-	disk_ctx.insert({"size", std::make_pair(false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string}))});
-	disk_ctx.insert({"source", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
+	disk_ctx.insert({"size", {false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string})}});
+	disk_ctx.insert({"source", {false, std::vector<Token::category>({Token::category::quoted_string})}});
 
 	attr_ctxs.insert({"disk", disk_ctx});
 
 	attr_ctx vm_network_ctx;
-	vm_network_ctx.insert({"slot", std::make_pair(false, std::vector<Token::category>({Token::category::number, Token::category::quoted_string}))});
-	vm_network_ctx.insert({"attached_to", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
-	vm_network_ctx.insert({"mac", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
-	vm_network_ctx.insert({"adapter_type", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
+	vm_network_ctx.insert({"slot", {false, std::vector<Token::category>({Token::category::number, Token::category::quoted_string})}});
+	vm_network_ctx.insert({"attached_to", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	vm_network_ctx.insert({"mac", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	vm_network_ctx.insert({"adapter_type", {false, std::vector<Token::category>({Token::category::quoted_string})}});
 
 	attr_ctxs.insert({"nic", vm_network_ctx});
 
 	attr_ctx video_ctx;
-	video_ctx.insert({"qemu_mode", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
+	video_ctx.insert({"qemu_mode", {false, std::vector<Token::category>({Token::category::quoted_string})}});
 
 	attr_ctxs.insert({"video", video_ctx});
 
 	attr_ctx fd_global_ctx;
-	fd_global_ctx.insert({"fs", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
-	fd_global_ctx.insert({"size", std::make_pair(false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string}))});
-	fd_global_ctx.insert({"folder", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
+	fd_global_ctx.insert({"fs", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	fd_global_ctx.insert({"size", {false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string})}});
+	fd_global_ctx.insert({"folder", {false, std::vector<Token::category>({Token::category::quoted_string})}});
 
 	attr_ctxs.insert({"fd_global", fd_global_ctx});
 
 	attr_ctx network_global_ctx;
-	network_global_ctx.insert({"mode", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
-	network_global_ctx.insert({"persistent", std::make_pair(false, std::vector<Token::category>({Token::category::binary}))});
-	network_global_ctx.insert({"autostart", std::make_pair(false, std::vector<Token::category>({Token::category::binary}))});
+	network_global_ctx.insert({"mode", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	network_global_ctx.insert({"persistent", {false, std::vector<Token::category>({Token::category::binary})}});
+	network_global_ctx.insert({"autostart", {false, std::vector<Token::category>({Token::category::binary})}});
 
 	attr_ctxs.insert({"network_global", network_global_ctx});
 
 	attr_ctx test_global_ctx;
-	test_global_ctx.insert({"no_snapshots", std::make_pair(false, std::vector<Token::category>({Token::category::binary}))});
-	test_global_ctx.insert({"description", std::make_pair(false, std::vector<Token::category>({Token::category::quoted_string}))});
+	test_global_ctx.insert({"no_snapshots", {false, std::vector<Token::category>({Token::category::binary})}});
+	test_global_ctx.insert({"description", {false, std::vector<Token::category>({Token::category::quoted_string})}});
 	attr_ctxs.insert({"test_global", test_global_ctx});
 }
 
@@ -1229,12 +1229,23 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {
 	nlohmann::json config;
 	for (auto attr: attr_block->attrs) {
-		visit_attr(attr, config, ctx_name);
+		if (config.count(attr->name.value())) {
+			if (!config.at(attr->name.value()).is_array()) {
+				throw Exception(std::string(attr->begin()) + ": Error: duplicate attribute: \"" + attr->name.value() + "\"");
+			}
+		}
+		nlohmann::json j = visit_attr(attr, ctx_name);
+		if (attr->id) {
+			j["name"] = attr->id.value();
+			config[attr->name.value()].push_back(j);
+		}  else {
+			config[attr->name.value()] = j;
+		}
 	}
 	return config;
 }
 
-void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx_name) {
+nlohmann::json VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, const std::string& ctx_name) {
 	auto ctx = attr_ctxs.find(ctx_name);
 	if (ctx == attr_ctxs.end()) {
 		throw Exception("Unknown ctx"); //should never happen
@@ -1246,9 +1257,9 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 		throw Exception(std::string(attr->begin()) + ": Error: unknown attribute name: \"" + attr->name.value() + "\"");
 	}
 
-	auto match = found->second;
-	if (attr->id != match.first) {
-		if (match.first) {
+	auto attr_meta = found->second;
+	if (attr->id != attr_meta.name_is_required) {
+		if (attr_meta.name_is_required) {
 			throw Exception(std::string(attr->end()) + ": Error: attribute \"" + attr->name.value() +
 				"\" requires a name");
 		} else {
@@ -1260,7 +1271,7 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 	//Now let's be careful
 
 	bool found_type_match = false;
-	for (auto expected_type: match.second) {
+	for (auto expected_type: attr_meta.types) {
 		if (attr->value->type() == expected_type) {
 			found_type_match = true;
 			break;
@@ -1269,11 +1280,11 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 
 	if (!found_type_match) {
 		//well, maybe we have
-		std::string expected_types = "\"" + Token::type_to_string(match.second[0]) + "\"";
+		std::string expected_types = "\"" + Token::type_to_string(attr_meta.types[0]) + "\"";
 
-		for (size_t i = 1; i < match.second.size(); ++i) {
+		for (size_t i = 1; i < attr_meta.types.size(); ++i) {
 			expected_types += " OR ";
-			expected_types += "\"" + Token::type_to_string(match.second[i]) + "\"";
+			expected_types += "\"" + Token::type_to_string(attr_meta.types[i]) + "\"";
 		}
 
 		throw Exception(std::string(attr->end()) + ": Error: unexpected value type \"" +
@@ -1281,19 +1292,12 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 			expected_types);
 	}
 
-
-	if (config.count(attr->name.value())) {
-		if (!config.at(attr->name.value()).is_array()) {
-			throw Exception(std::string(attr->begin()) + ": Error: duplicate attribute: \"" + attr->name.value() + "\"");
-		}
-	}
-
 	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
 		auto value = p->attr_value->value;
 		if (value.type() == Token::category::true_) {
-			config[attr->name.value()] = true;
+			return true;
 		} else if (value.type() == Token::category::false_) {
-			config[attr->name.value()] = false;
+			return false;
 		} else {
 			throw Exception(std::string(attr->begin()) + ": Error: unsupported binary attr: " + value.value());
 		}
@@ -1301,44 +1305,36 @@ void VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json
 		//strings are here too, we treat them separately
 
 		//1) If we expect string -> check that it's string
-		if (match.second[0] == Token::category::quoted_string) {
+		if (attr_meta.types[0] == Token::category::quoted_string) {
 			try {
-				auto value = template_parser.resolve(p->attr_value->value->text(), stack);
-				config[attr->name.value()] = value;
+				return template_parser.resolve(p->attr_value->value->text(), stack);
 			} catch (const std::exception& error) {
 				std::throw_with_nested(ResolveException(p->attr_value->value->begin(), p->attr_value->value->text()));
 			}
 		} else {
-			p->attr_value->value->expected_token_type = match.second[0];
+			p->attr_value->value->expected_token_type = attr_meta.types[0];
 			std::string value;
 			try {
 				value = IR::StringTokenUnion(p->attr_value->value, stack).resolve();
 			} catch (const std::exception& error) {
 				throw Exception(std::string(attr->end()) + ": Error: can't convert value string \"" +
 					p->attr_value->value->text() + "\" for attribute \"" + attr->name.value() + "\" into expected \"" +
-					Token::type_to_string(match.second[0]) + "\"");
+					Token::type_to_string(attr_meta.types[0]) + "\"");
 			}
 
 			if (p->attr_value->type() == Token::category::number) {
 				if (std::stoi(value) < 0) {
 					throw Exception(std::string(attr->begin()) + ": Error: numeric attr can't be negative: " + value);
 				}
-				config[attr->name.value()] = std::stoul(value);
+				return std::stoul(value);
 			} else if (p->attr_value->type() == Token::category::size) {
-				config[attr->name.value()] = size_to_mb(value);
+				return size_to_mb(value);
 			} else {
 				throw Exception(std::string(attr->begin()) + ": Error: unsupported attr: " + value);
 			}
 		}
 	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::AttrBlock>>(attr->value)) {
-		//we assume for now that named attrs could be only in attr_blocks
-		auto j = visit_attr_block(p->attr_value, attr->name);
-		if (attr->id) {
-			j["name"] = attr->id.value();
-			config[attr->name.value()].push_back(j);
-		}  else {
-			config[attr->name.value()] = visit_attr_block(p->attr_value, attr->name);
-		}
+		return visit_attr_block(p->attr_value, attr->name);
 	} else {
 		throw Exception("Unknown attr category");
 	}

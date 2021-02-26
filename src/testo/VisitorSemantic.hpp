@@ -106,7 +106,7 @@ struct VisitorSemantic {
 	void visit_flash(std::shared_ptr<IR::FlashDrive> flash); //flash drive
 	void visit_network(std::shared_ptr<IR::Network> network); //flash drive
 	nlohmann::json visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx);
-	void visit_attr(std::shared_ptr<AST::Attr> attr, nlohmann::json& config, const std::string& ctx);
+	nlohmann::json visit_attr(std::shared_ptr<AST::Attr> attr, const std::string& ctx);
 
 	void validate_js(const std::string& script);
 
@@ -126,7 +126,13 @@ struct VisitorSemantic {
 	std::unordered_set<std::shared_ptr<IR::FlashDrive>> visited_flash_drives;
 	std::unordered_set<std::shared_ptr<IR::Network>> visited_networks;
 
-	using attr_ctx = std::unordered_map<std::string, std::pair<bool, std::vector<Token::category>>>;
+	struct AttrMeta {
+		bool name_is_required;
+		std::vector<Token::category> types;
+	};
+
+	using attr_ctx = std::unordered_map<std::string, AttrMeta>;
+
 	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 
 	std::shared_ptr<IR::Test> current_test;
