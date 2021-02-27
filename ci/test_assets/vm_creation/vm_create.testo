@@ -38,7 +38,7 @@ machine basic_machine_uefi {
 	loader: "/usr/share/OVMF/OVMF_CODE.fd"
 
 	video main: {
-		qemu_mode: "qxl"
+		adapter_type: "qxl"
 	}
 }
 
@@ -403,7 +403,7 @@ test create_vm_negative_attribute_2 {
 }
 
 
-machine vm_unknown_video_mode {
+machine vm_unknown_video_adapter_type {
 	cpus: 1
 	ram: 512Mb
 	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
@@ -411,12 +411,12 @@ machine vm_unknown_video_mode {
 		size: 4Gb
 	}
 	video main_video: {
-		qemu_mode: "some_video_mode"
+		adapter_type: "some_video_adapter_type"
 	}
 }
 
-test create_vm_unknown_video_mode {
-	vm_unknown_video_mode {}
+test create_vm_unknown_video_adapter_type {
+	vm_unknown_video_adapter_type {}
 }
 
 

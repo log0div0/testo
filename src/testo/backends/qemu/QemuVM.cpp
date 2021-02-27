@@ -53,7 +53,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 		auto videos = config.at("video");
 
 		for (auto& video: videos) {
-			auto video_model = video.value("qemu_mode", preferable_video_model());
+			auto video_model = video.value("adapter_type", video.value("qemu_mode", preferable_video_model()));
 
 			if ((video_model != "vmvga") &&
 				(video_model != "vga") &&
@@ -62,7 +62,7 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 				(video_model != "qxl") &&
 				(video_model != "cirrus"))
 			{
-				throw std::runtime_error("Constructing VM \"" + id() + "\" error: unsupported qemu_mode \"" + video_model + "\" for video " + video.at("name").get<std::string>());
+				throw std::runtime_error("Constructing VM \"" + id() + "\" error: unsupported adapter_type \"" + video_model + "\" for video " + video.at("name").get<std::string>());
 			}
 		}
 	}
@@ -307,7 +307,7 @@ void QemuVM::install() {
 		if (config.count("video")) {
 			auto videos = config.at("video");
 			for (auto& video: videos) {
-				auto video_model = video.value("qemu_mode", preferable_video_model());
+				auto video_model = video.value("adapter_type", video.value("qemu_mode", preferable_video_model()));
 
 				string_config += fmt::format(R"(
 					<model type='{}' heads='1' primary='yes'/>

@@ -146,7 +146,8 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 	}});
 
 	attr_ctxs.insert({"video", {
-		{"qemu_mode", {false, Token::category::quoted_string}},
+		{"qemu_mode", {false, Token::category::quoted_string}}, // deprecated
+		{"adapter_type", {false, Token::category::quoted_string}},
 	}});
 
 	attr_ctxs.insert({"fd_global", {

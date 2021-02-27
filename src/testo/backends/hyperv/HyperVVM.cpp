@@ -19,6 +19,18 @@ HyperVVM::HyperVVM(const nlohmann::json& config_): VM(config_) {
 		}
 	}
 
+	if (config.count("video")) {
+		auto videos = config.at("video");
+
+		for (auto& video: videos) {
+			if (video.count("adapter_type")) {
+				std::string driver = video.at("adapter_type").get<std::string>();
+				throw std::runtime_error("Constructing VM \"" + id() + "\" error: video \"" +
+					video.at("name").get<std::string>() + "\" has unsupported adapter type: \"" + driver + "\"");
+			}
+		}
+	}
+
 	scancodes.insert({
 		{"ESC", {1}},
 		{"ONE", {2}},

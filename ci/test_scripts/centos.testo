@@ -13,7 +13,7 @@ machine centos {
 	}
 
 	video main: {
-		qemu_mode: "qxl"
+		adapter_type: "qxl"
 	}
 }
 

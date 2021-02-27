@@ -30,7 +30,7 @@ test centos_vm_create: centos_install_testo_cpu {
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_attr_diplucates 2>&1 > /dev/null | grep "Error: duplicate attribute: \\\"cpus\\\""
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_negative_attribute 2>&1 > /dev/null | grep "Error: numeric attr can't be negative: -7"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_negative_attribute_2 2>&1 > /dev/null | grep "Error: numeric attr can't be negative: -7"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_video_mode 2>&1 > /dev/null | grep "Constructing VM \\\"vm_unknown_video_mode\\\" error: unsupported qemu_mode \\\"some_video_mode\\\" for video main_video"
+			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_video_adapter_type 2>&1 > /dev/null | grep "Constructing VM \\\"vm_unknown_video_mode\\\" error: unsupported adapter_type \\\"some_video_mode\\\" for video main_video"
 			testo run /opt/scripts/vm_create.testo --test_spec create_vm_multiple_videos 2>&1 > /dev/null | grep "Constructing VM \\\"vm_multiple_videos\\\" error: multiple video devices are not supported at the moment"
 		""" timeout 30m
 	}
