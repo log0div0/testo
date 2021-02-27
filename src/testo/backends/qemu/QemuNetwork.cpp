@@ -99,9 +99,7 @@ void QemuNetwork::create() {
 		xml_config.load_string(string_config.c_str());
 		auto network = qemu_connect.network_define_xml(xml_config);
 
-		bool autostart = config.value("autostart", true);
-
-		network.set_autostart(autostart);
+		network.set_autostart(true);
 		network.start();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Creating network"));

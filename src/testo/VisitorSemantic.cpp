@@ -158,8 +158,6 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 
 	attr_ctxs.insert({"network_global", {
 		{"mode", {false, Token::category::quoted_string}},
-		{"persistent", {false, Token::category::boolean}},
-		{"autostart", {false, Token::category::boolean}},
 	}});
 
 	attr_ctxs.insert({"test_global", {
