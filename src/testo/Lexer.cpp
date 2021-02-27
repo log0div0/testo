@@ -284,9 +284,9 @@ Token Lexer::id() {
 	} else if (value == "include") {
 		return include();
 	} else if (value == "true") {
-		return true_();
+		return boolean("true");
 	} else if (value == "false") {
-		return false_();
+		return boolean("false");
 	} else if (value == "DEFINED") {
 		return DEFINED();
 	} else if (value == "LESS") {
@@ -656,18 +656,10 @@ Token Lexer::include() {
 	return Token(Token::category::include, value, tmp_pos, previous_pos);
 }
 
-Token Lexer::true_() {
+Token Lexer::boolean(const std::string& value) {
 	Pos tmp_pos = current_pos;
-	std::string value("true");
 	advance(value.length());
-	return Token(Token::category::true_, value, tmp_pos, previous_pos);
-}
-
-Token Lexer::false_() {
-	Pos tmp_pos = current_pos;
-	std::string value("false");
-	advance(value.length());
-	return Token(Token::category::false_, value, tmp_pos, previous_pos);
+	return Token(Token::category::boolean, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::DEFINED() {

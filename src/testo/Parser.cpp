@@ -174,12 +174,6 @@ bool Parser::test_selectable() const {
 		(LA(1) == Token::category::lparen));
 }
 
-bool Parser::test_binary() const {
-	return ((LA(1) == Token::category::true_) ||
-		(LA(1) == Token::category::false_));
-}
-
-
 bool Parser::test_comparison() const {
 	if (test_string()) {
 		if ((LA(2) == Token::category::LESS) ||
@@ -450,19 +444,15 @@ std::shared_ptr<Attr> Parser::attr(const std::string& ctx_name) {
 	std::shared_ptr<IAttrValue> value;
 	if (LA(1) == Token::category::lbrace) {
 		auto block = attr_block(name.value());
-		value = std::shared_ptr<AttrValue<AttrBlock>>(new AttrValue<AttrBlock>(block));
-	} else if (test_binary()) {
-		auto binary_value = std::shared_ptr<BinaryAttr>(new BinaryAttr(LT(1)));
-		value = std::shared_ptr<AttrValue<BinaryAttr>>(new AttrValue<BinaryAttr>(binary_value));
-
-		match({Token::category::true_, Token::category::false_});
+		value = std::make_shared<AttrValue<AttrBlock>>(block);
 	} else {
 		//string token union
-		//Let's check it's either string or number or size
+		//Let's check it's either string or number or size or boolean
 
 		if (!test_string() &&
 			(LA(1) != Token::category::number) &&
-			(LA(1) != Token::category::size))
+			(LA(1) != Token::category::size) &&
+			(LA(1) != Token::category::boolean))
 		{
 			throw std::runtime_error(std::string(LT(1).begin()) + ": Unknown attr type: " + LT(1).value());
 		}
@@ -472,11 +462,11 @@ std::shared_ptr<Attr> Parser::attr(const std::string& ctx_name) {
 		}
 
 		auto simple_value = string_token_union(LA(1));
-		auto simple_attr = std::shared_ptr<SimpleAttr>(new SimpleAttr(simple_value));
-		value = std::shared_ptr<AttrValue<SimpleAttr>>(new AttrValue<SimpleAttr>(simple_attr));
+		auto simple_attr = std::make_shared<SimpleAttr>(simple_value);
+		value = std::make_shared<AttrValue<SimpleAttr>>(simple_attr);
 	}
 
-	return std::shared_ptr<Attr>(new Attr(name, id, value));
+	return std::make_shared<Attr>(name, id, value);
 }
 
 std::shared_ptr<AttrBlock> Parser::attr_block(const std::string& ctx_name) {

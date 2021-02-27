@@ -59,7 +59,6 @@ private:
 	bool test_include() const;
 	bool test_string(size_t index = 1) const;
 	bool test_selectable() const;
-	bool test_binary() const;
 	bool test_comparison() const;
 	bool test_defined() const;
 	bool is_button(const Token& t) const;

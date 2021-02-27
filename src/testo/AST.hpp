@@ -1600,30 +1600,6 @@ struct SimpleAttr: public Node {
 	std::shared_ptr<StringTokenUnion> value;
 };
 
-struct BinaryAttr: public Node {
-	BinaryAttr(const Token& _value):
-		Node(Token(Token::category::binary, _value.value(), _value.begin(), _value.end())),
-		value(_value) {}
-
-	Pos begin() const {
-		return value.begin();
-	}
-
-	Pos end() const {
-		return value.end();
-	}
-
-	operator std::string() const {
-		return value.value();
-	}
-
-	Token::category type() const {
-		return t.type();
-	}
-
-	Token value;
-};
-
 struct Attr: public Node {
 	Attr(const Token& name, const Token& id, std::shared_ptr<IAttrValue> value):
 		Node(Token(Token::category::attr, "", Pos(), Pos())),

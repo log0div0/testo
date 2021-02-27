@@ -121,8 +121,7 @@ private:
 	Token number();
 	Token time_interval(std::string time_number, const Pos& time_number_pos);
 	Token size(std::string size_number, const Pos& size_number_pos);
-	Token true_();
-	Token false_();
+	Token boolean(const std::string& value);
 	Token id();
 	Token var_ref();
 	Token abort();

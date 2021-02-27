@@ -128,7 +128,7 @@ struct VisitorSemantic {
 
 	struct AttrMeta {
 		bool name_is_required;
-		std::vector<Token::category> types;
+		Token::category type;
 	};
 
 	using attr_ctx = std::unordered_map<std::string, AttrMeta>;

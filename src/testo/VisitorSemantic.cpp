@@ -123,47 +123,47 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 	};
 
 	attr_ctxs.insert({"vm_global", {
-		{"ram", {false, {Token::category::size, Token::category::quoted_string}}},
-		{"iso", {false, {Token::category::quoted_string}}},
-		{"nic", {true, {Token::category::attr_block}}},
-		{"disk", {true, {Token::category::attr_block}}},
-		{"video", {true, {Token::category::attr_block}}},
-		{"cpus", {false, {Token::category::number, Token::category::quoted_string}}},
-		{"qemu_spice_agent", {false, {Token::category::binary}}},
-		{"qemu_enable_usb3", {false, {Token::category::binary}}},
-		{"loader", {false, {Token::category::quoted_string}}},
+		{"ram", {false, Token::category::size}},
+		{"iso", {false, Token::category::quoted_string}},
+		{"nic", {true, Token::category::attr_block}},
+		{"disk", {true, Token::category::attr_block}},
+		{"video", {true, Token::category::attr_block}},
+		{"cpus", {false, Token::category::number}},
+		{"qemu_spice_agent", {false, Token::category::boolean}},
+		{"qemu_enable_usb3", {false, Token::category::boolean}},
+		{"loader", {false, Token::category::quoted_string}},
 	}});
 
 	attr_ctxs.insert({"disk", {
-		{"size", {false, {Token::category::size, Token::category::quoted_string}}},
-		{"source", {false, {Token::category::quoted_string}}},
+		{"size", {false, Token::category::size}},
+		{"source", {false, Token::category::quoted_string}},
 	}});
 
 	attr_ctxs.insert({"nic", {
-		{"attached_to", {false, {Token::category::quoted_string}}},
-		{"mac", {false, {Token::category::quoted_string}}},
-		{"adapter_type", {false, {Token::category::quoted_string}}},
+		{"attached_to", {false, Token::category::quoted_string}},
+		{"mac", {false, Token::category::quoted_string}},
+		{"adapter_type", {false, Token::category::quoted_string}},
 	}});
 
 	attr_ctxs.insert({"video", {
-		{"qemu_mode", {false, {Token::category::quoted_string}}},
+		{"qemu_mode", {false, Token::category::quoted_string}},
 	}});
 
 	attr_ctxs.insert({"fd_global", {
-		{"fs", {false, {Token::category::quoted_string}}},
-		{"size", {false, {Token::category::size, Token::category::quoted_string}}},
-		{"folder", {false, {Token::category::quoted_string}}},
+		{"fs", {false, Token::category::quoted_string}},
+		{"size", {false, Token::category::size}},
+		{"folder", {false, Token::category::quoted_string}},
 	}});
 
 	attr_ctxs.insert({"network_global", {
-		{"mode", {false, {Token::category::quoted_string}}},
-		{"persistent", {false, {Token::category::binary}}},
-		{"autostart", {false, {Token::category::binary}}},
+		{"mode", {false, Token::category::quoted_string}},
+		{"persistent", {false, Token::category::boolean}},
+		{"autostart", {false, Token::category::boolean}},
 	}});
 
 	attr_ctxs.insert({"test_global", {
-		{"no_snapshots", {false, {Token::category::binary}}},
-		{"description", {false, {Token::category::quoted_string}}},
+		{"no_snapshots", {false, Token::category::boolean}},
+		{"description", {false, Token::category::quoted_string}},
 	}});
 }
 
@@ -178,6 +178,16 @@ static uint32_t size_to_mb(const std::string& size) {
 	}
 
 	return result;
+}
+
+static bool str_to_bool(const std::string& str) {
+	if (str == "true") {
+		return true;
+	} else if (str == "false") {
+		return false;
+	} else {
+		throw std::runtime_error("Can't convert \"" + str + "\" to boolean");
+	}
 }
 
 void VisitorSemantic::visit() {
@@ -251,33 +261,34 @@ void VisitorSemantic::visit_macro(std::shared_ptr<IR::Macro> macro) {
 
 void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	try {
+		StackPusher<VisitorSemantic> new_ctx(this, test->stack);
+
 		if (test->ast_node->attrs) {
 			test->attrs = visit_attr_block(test->ast_node->attrs, "test_global");
 		}
 
 		current_test = test;
 
-	current_test->cksum_input << "TEST NAME = " << test->name() << std::endl;
-	current_test->cksum_input << "PARENTS IN ALPHABETICAL ORDER = ";
-	std::vector<std::string> parents_names;
-	for (auto parent: test->parents) {
-		parents_names.push_back(parent->name());
-	}
-	std::sort(parents_names.begin(), parents_names.end());
-	for (size_t i = 0; i < parents_names.size(); ++i) {
-		if (i) {
-			current_test->cksum_input << " ";
+		current_test->cksum_input << "TEST NAME = " << test->name() << std::endl;
+		current_test->cksum_input << "PARENTS IN ALPHABETICAL ORDER = ";
+		std::vector<std::string> parents_names;
+		for (auto parent: test->parents) {
+			parents_names.push_back(parent->name());
 		}
-		current_test->cksum_input << parents_names.at(i);
-	}
-	current_test->cksum_input << std::endl;
-	current_test->cksum_input << "SNAPSHOT NEEDED = " << test->snapshots_needed() << std::endl;
+		std::sort(parents_names.begin(), parents_names.end());
+		for (size_t i = 0; i < parents_names.size(); ++i) {
+			if (i) {
+				current_test->cksum_input << " ";
+			}
+			current_test->cksum_input << parents_names.at(i);
+		}
+		current_test->cksum_input << std::endl;
+		current_test->cksum_input << "SNAPSHOT NEEDED = " << test->snapshots_needed() << std::endl;
 
-		StackPusher<VisitorSemantic> new_ctx(this, test->stack);
 		visit_command_block(test->ast_node->cmd_block);
 
-	std::hash<std::string> h;
-	current_test->cksum = std::to_string(h(current_test->cksum_input.str()));
+		std::hash<std::string> h;
+		current_test->cksum = std::to_string(h(current_test->cksum_input.str()));
 
 		current_test = nullptr;
 	} catch (const ControllerCreatonException& error) {
@@ -1263,58 +1274,40 @@ nlohmann::json VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, cons
 		}
 	}
 
-	//Now let's be careful
+	if ((attr->value->type() != attr_meta.type)) {
+		if (attr_meta.type == Token::category::attr_block) {
+			throw Exception(std::string(attr->end()) + ": Error: unexpected value type \"" +
+				Token::type_to_string(attr->value->type()) + "\" for attribute \"" + attr->name.value() +
+				"\", expected \"" + Token::type_to_string(attr_meta.type) + "\"");
+		}
 
-	bool found_type_match = false;
-	for (auto expected_type: attr_meta.types) {
-		if (attr->value->type() == expected_type) {
-			found_type_match = true;
-			break;
+		if (attr->value->type() != Token::category::quoted_string) {
+			throw Exception(std::string(attr->end()) + ": Error: unexpected value type \"" +
+				Token::type_to_string(attr->value->type()) + "\" for attribute \"" + attr->name.value() +
+				"\", expected \"" + Token::type_to_string(attr_meta.type) + "\" OR \"" +
+				Token::type_to_string(Token::category::quoted_string) + "\"");
 		}
 	}
 
-	if (!found_type_match) {
-		//well, maybe we have
-		std::string expected_types = "\"" + Token::type_to_string(attr_meta.types[0]) + "\"";
-
-		for (size_t i = 1; i < attr_meta.types.size(); ++i) {
-			expected_types += " OR ";
-			expected_types += "\"" + Token::type_to_string(attr_meta.types[i]) + "\"";
-		}
-
-		throw Exception(std::string(attr->end()) + ": Error: unexpected value type \"" +
-			Token::type_to_string(attr->value->type()) + "\" for attribute \"" + attr->name.value() + "\", expected " +
-			expected_types);
-	}
-
-	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::BinaryAttr>>(attr->value)) {
-		auto value = p->attr_value->value;
-		if (value.type() == Token::category::true_) {
-			return true;
-		} else if (value.type() == Token::category::false_) {
-			return false;
-		} else {
-			throw Exception(std::string(attr->begin()) + ": Error: unsupported binary attr: " + value.value());
-		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::SimpleAttr>>(attr->value)) {
+	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::SimpleAttr>>(attr->value)) {
 		//strings are here too, we treat them separately
 
 		//1) If we expect string -> check that it's string
-		if (attr_meta.types[0] == Token::category::quoted_string) {
+		if (attr_meta.type == Token::category::quoted_string) {
 			try {
 				return template_parser.resolve(p->attr_value->value->text(), stack);
 			} catch (const std::exception& error) {
 				std::throw_with_nested(ResolveException(p->attr_value->value->begin(), p->attr_value->value->text()));
 			}
 		} else {
-			p->attr_value->value->expected_token_type = attr_meta.types[0];
+			p->attr_value->value->expected_token_type = attr_meta.type;
 			std::string value;
 			try {
 				value = IR::StringTokenUnion(p->attr_value->value, stack).resolve();
 			} catch (const std::exception& error) {
 				throw Exception(std::string(attr->end()) + ": Error: can't convert value string \"" +
 					p->attr_value->value->text() + "\" for attribute \"" + attr->name.value() + "\" into expected \"" +
-					Token::type_to_string(attr_meta.types[0]) + "\"");
+					Token::type_to_string(attr_meta.type) + "\"");
 			}
 
 			if (p->attr_value->type() == Token::category::number) {
@@ -1324,6 +1317,8 @@ nlohmann::json VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, cons
 				return std::stoul(value);
 			} else if (p->attr_value->type() == Token::category::size) {
 				return size_to_mb(value);
+			} else if (p->attr_value->type() == Token::category::boolean) {
+				return str_to_bool(value);
 			} else {
 				throw Exception(std::string(attr->begin()) + ": Error: unsupported attr: " + value);
 			}

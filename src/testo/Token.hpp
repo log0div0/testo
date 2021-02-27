@@ -57,8 +57,6 @@ struct Token {
 		RANGE,
 		break_,
 		continue_,
-		true_,
-		false_,
 		number,
 		time_interval,
 		size,
@@ -101,7 +99,7 @@ struct Token {
 
 		//fake categories
 		none, //not initialized
-		binary, //true or false
+		boolean, //true or false
 		program,
 		string_token_union,
 		simple_attr,
@@ -246,7 +244,7 @@ struct Token {
 			return "DVD";
 		case hostdev:
 			return "HOSTDEV";
-		case usb: 
+		case usb:
 			return "USB";
 		case if_:
 			return "IF";
@@ -352,12 +350,8 @@ struct Token {
 			return "COMMAND BLOCK";
 		case stmt_block:
 			return "STMT BLOCK";
-		case true_:
-			return "TRUE";
-		case false_:
-			return "FALSE";
-		case binary:
-			return "BINARY CONSTANT";
+		case boolean:
+			return "BOOLEAN CONSTANT";
 		default:
 			return "UNKNOWN TYPE";
 		}
