@@ -16,160 +16,155 @@ void VisitorSemanticConfig::validate() const {
 VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 	prefix = config.prefix;
 
-	keys.insert("ESC");
-	keys.insert("ONE");
-	keys.insert("TWO");
-	keys.insert("THREE");
-	keys.insert("FOUR");
-	keys.insert("FIVE");
-	keys.insert("SIX");
-	keys.insert("SEVEN");
-	keys.insert("EIGHT");
-	keys.insert("NINE");
-	keys.insert("ZERO");
-	keys.insert("MINUS");
-	keys.insert("EQUALSIGN");
-	keys.insert("BACKSPACE");
-	keys.insert("TAB");
-	keys.insert("Q");
-	keys.insert("W");
-	keys.insert("E");
-	keys.insert("R");
-	keys.insert("T");
-	keys.insert("Y");
-	keys.insert("U");
-	keys.insert("I");
-	keys.insert("O");
-	keys.insert("P");
-	keys.insert("LEFTBRACE");
-	keys.insert("RIGHTBRACE");
-	keys.insert("ENTER");
-	keys.insert("LEFTCTRL");
-	keys.insert("A");
-	keys.insert("S");
-	keys.insert("D");
-	keys.insert("F");
-	keys.insert("G");
-	keys.insert("H");
-	keys.insert("J");
-	keys.insert("K");
-	keys.insert("L");
-	keys.insert("SEMICOLON");
-	keys.insert("APOSTROPHE");
-	keys.insert("GRAVE");
-	keys.insert("LEFTSHIFT");
-	keys.insert("BACKSLASH");
-	keys.insert("Z");
-	keys.insert("X");
-	keys.insert("C");
-	keys.insert("V");
-	keys.insert("B");
-	keys.insert("N");
-	keys.insert("M");
-	keys.insert("COMMA");
-	keys.insert("DOT");
-	keys.insert("SLASH");
-	keys.insert("RIGHTSHIFT");
-	keys.insert("LEFTALT");
-	keys.insert("SPACE");
-	keys.insert("CAPSLOCK");
-	keys.insert("F1"),
-	keys.insert("F2"),
-	keys.insert("F3"),
-	keys.insert("F4"),
-	keys.insert("F5"),
-	keys.insert("F6"),
-	keys.insert("F7"),
-	keys.insert("F8"),
-	keys.insert("F9"),
-	keys.insert("F10"),
-	keys.insert("F11"),
-	keys.insert("F12"),
-	keys.insert("NUMLOCK");
-	keys.insert("KP_0");
-	keys.insert("KP_1");
-	keys.insert("KP_2");
-	keys.insert("KP_3");
-	keys.insert("KP_4");
-	keys.insert("KP_5");
-	keys.insert("KP_6");
-	keys.insert("KP_7");
-	keys.insert("KP_8");
-	keys.insert("KP_9");
-	keys.insert("KP_PLUS");
-	keys.insert("KP_MINUS");
-	keys.insert("KP_SLASH");
-	keys.insert("KP_ASTERISK");
-	keys.insert("KP_ENTER");
-	keys.insert("KP_DOT");
-	keys.insert("SCROLLLOCK");
-	keys.insert("RIGHTCTRL");
-	keys.insert("RIGHTALT");
-	keys.insert("HOME");
-	keys.insert("UP");
-	keys.insert("PAGEUP");
-	keys.insert("LEFT");
-	keys.insert("RIGHT");
-	keys.insert("END");
-	keys.insert("DOWN");
-	keys.insert("PAGEDOWN");
-	keys.insert("INSERT");
-	keys.insert("DELETE");
-	keys.insert("SCROLLUP");
-	keys.insert("SCROLLDOWN");
-	keys.insert("LEFTMETA");
-	keys.insert("RIGHTMETA");
+	keys = {
+		"ESC",
+		"ONE",
+		"TWO",
+		"THREE",
+		"FOUR",
+		"FIVE",
+		"SIX",
+		"SEVEN",
+		"EIGHT",
+		"NINE",
+		"ZERO",
+		"MINUS",
+		"EQUALSIGN",
+		"BACKSPACE",
+		"TAB",
+		"Q",
+		"W",
+		"E",
+		"R",
+		"T",
+		"Y",
+		"U",
+		"I",
+		"O",
+		"P",
+		"LEFTBRACE",
+		"RIGHTBRACE",
+		"ENTER",
+		"LEFTCTRL",
+		"A",
+		"S",
+		"D",
+		"F",
+		"G",
+		"H",
+		"J",
+		"K",
+		"L",
+		"SEMICOLON",
+		"APOSTROPHE",
+		"GRAVE",
+		"LEFTSHIFT",
+		"BACKSLASH",
+		"Z",
+		"X",
+		"C",
+		"V",
+		"B",
+		"N",
+		"M",
+		"COMMA",
+		"DOT",
+		"SLASH",
+		"RIGHTSHIFT",
+		"LEFTALT",
+		"SPACE",
+		"CAPSLOCK",
+		"F1",
+		"F2",
+		"F3",
+		"F4",
+		"F5",
+		"F6",
+		"F7",
+		"F8",
+		"F9",
+		"F10",
+		"F11",
+		"F12",
+		"NUMLOCK",
+		"KP_0",
+		"KP_1",
+		"KP_2",
+		"KP_3",
+		"KP_4",
+		"KP_5",
+		"KP_6",
+		"KP_7",
+		"KP_8",
+		"KP_9",
+		"KP_PLUS",
+		"KP_MINUS",
+		"KP_SLASH",
+		"KP_ASTERISK",
+		"KP_ENTER",
+		"KP_DOT",
+		"SCROLLLOCK",
+		"RIGHTCTRL",
+		"RIGHTALT",
+		"HOME",
+		"UP",
+		"PAGEUP",
+		"LEFT",
+		"RIGHT",
+		"END",
+		"DOWN",
+		"PAGEDOWN",
+		"INSERT",
+		"DELETE",
+		"SCROLLUP",
+		"SCROLLDOWN",
+		"LEFTMETA",
+		"RIGHTMETA",
+	};
 
-	attr_ctx vm_global_ctx;
-	vm_global_ctx.insert({"ram", {false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string})}});
-	vm_global_ctx.insert({"iso", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-	vm_global_ctx.insert({"nic", {true, std::vector<Token::category>({Token::category::attr_block})}});
-	vm_global_ctx.insert({"disk", {true, std::vector<Token::category>({Token::category::attr_block})}});
-	vm_global_ctx.insert({"video", {true, std::vector<Token::category>({Token::category::attr_block})}});
-	vm_global_ctx.insert({"cpus", {false, std::vector<Token::category>({Token::category::number, Token::category::quoted_string})}});
-	vm_global_ctx.insert({"qemu_spice_agent", {false, std::vector<Token::category>({Token::category::binary})}});
-	vm_global_ctx.insert({"qemu_enable_usb3", {false, std::vector<Token::category>({Token::category::binary})}});
-	vm_global_ctx.insert({"loader", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	attr_ctxs.insert({"vm_global", {
+		{"ram", {false, {Token::category::size, Token::category::quoted_string}}},
+		{"iso", {false, {Token::category::quoted_string}}},
+		{"nic", {true, {Token::category::attr_block}}},
+		{"disk", {true, {Token::category::attr_block}}},
+		{"video", {true, {Token::category::attr_block}}},
+		{"cpus", {false, {Token::category::number, Token::category::quoted_string}}},
+		{"qemu_spice_agent", {false, {Token::category::binary}}},
+		{"qemu_enable_usb3", {false, {Token::category::binary}}},
+		{"loader", {false, {Token::category::quoted_string}}},
+	}});
 
-	attr_ctxs.insert({"vm_global", vm_global_ctx});
+	attr_ctxs.insert({"disk", {
+		{"size", {false, {Token::category::size, Token::category::quoted_string}}},
+		{"source", {false, {Token::category::quoted_string}}},
+	}});
 
-	attr_ctx disk_ctx;
-	disk_ctx.insert({"size", {false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string})}});
-	disk_ctx.insert({"source", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	attr_ctxs.insert({"nic", {
+		{"attached_to", {false, {Token::category::quoted_string}}},
+		{"mac", {false, {Token::category::quoted_string}}},
+		{"adapter_type", {false, {Token::category::quoted_string}}},
+	}});
 
-	attr_ctxs.insert({"disk", disk_ctx});
+	attr_ctxs.insert({"video", {
+		{"qemu_mode", {false, {Token::category::quoted_string}}},
+	}});
 
-	attr_ctx vm_network_ctx;
-	vm_network_ctx.insert({"slot", {false, std::vector<Token::category>({Token::category::number, Token::category::quoted_string})}});
-	vm_network_ctx.insert({"attached_to", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-	vm_network_ctx.insert({"mac", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-	vm_network_ctx.insert({"adapter_type", {false, std::vector<Token::category>({Token::category::quoted_string})}});
+	attr_ctxs.insert({"fd_global", {
+		{"fs", {false, {Token::category::quoted_string}}},
+		{"size", {false, {Token::category::size, Token::category::quoted_string}}},
+		{"folder", {false, {Token::category::quoted_string}}},
+	}});
 
-	attr_ctxs.insert({"nic", vm_network_ctx});
+	attr_ctxs.insert({"network_global", {
+		{"mode", {false, {Token::category::quoted_string}}},
+		{"persistent", {false, {Token::category::binary}}},
+		{"autostart", {false, {Token::category::binary}}},
+	}});
 
-	attr_ctx video_ctx;
-	video_ctx.insert({"qemu_mode", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-
-	attr_ctxs.insert({"video", video_ctx});
-
-	attr_ctx fd_global_ctx;
-	fd_global_ctx.insert({"fs", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-	fd_global_ctx.insert({"size", {false, std::vector<Token::category>({Token::category::size, Token::category::quoted_string})}});
-	fd_global_ctx.insert({"folder", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-
-	attr_ctxs.insert({"fd_global", fd_global_ctx});
-
-	attr_ctx network_global_ctx;
-	network_global_ctx.insert({"mode", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-	network_global_ctx.insert({"persistent", {false, std::vector<Token::category>({Token::category::binary})}});
-	network_global_ctx.insert({"autostart", {false, std::vector<Token::category>({Token::category::binary})}});
-
-	attr_ctxs.insert({"network_global", network_global_ctx});
-
-	attr_ctx test_global_ctx;
-	test_global_ctx.insert({"no_snapshots", {false, std::vector<Token::category>({Token::category::binary})}});
-	test_global_ctx.insert({"description", {false, std::vector<Token::category>({Token::category::quoted_string})}});
-	attr_ctxs.insert({"test_global", test_global_ctx});
+	attr_ctxs.insert({"test_global", {
+		{"no_snapshots", {false, {Token::category::binary}}},
+		{"description", {false, {Token::category::quoted_string}}},
+	}});
 }
 
 static uint32_t size_to_mb(const std::string& size) {
