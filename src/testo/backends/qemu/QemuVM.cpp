@@ -5,6 +5,7 @@
 #include "QemuEnvironment.hpp"
 #include <base64.hpp>
 
+#include <os/Process.hpp>
 #include <fmt/format.h>
 #include <thread>
 
@@ -1428,7 +1429,7 @@ void QemuVM::create_new_disk(const std::string& name, uint32_t size) {
 void QemuVM::import_disk(const std::string& name, const fs::path& source) {
 	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 	fs::path disk_path = pool.path() / (name + ".img");
-	fs_copy(source, disk_path);
+	os::Process::exec(fmt::format("qemu-img create -b \"{}\" -f qcow2 \"{}\"", source.generic_string(), disk_path.generic_string()));
 
 	pool.refresh();
 }
