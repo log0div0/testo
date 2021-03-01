@@ -370,7 +370,9 @@ QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 }
 
 QemuVM::~QemuVM() {
-
+	if (!is_defined()) {
+		remove_disks();
+	}
 }
 
 void QemuVM::install() {
