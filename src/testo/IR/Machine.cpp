@@ -1,7 +1,9 @@
 
 #include <coro/Timer.h>
 #include "Machine.hpp"
+#include "../Exceptions.hpp"
 #include "../backends/Environment.hpp"
+#include <fmt/format.h>
 
 namespace IR {
 
@@ -45,7 +47,6 @@ void Machine::create() {
 		}
 
 		vm_config.erase("src_file");
-		vm_config.erase("metadata");
 
 		metadata["vm_config"] = vm_config.dump();
 
@@ -433,5 +434,133 @@ void Machine::mouse_release() {
 	current_held_mouse_button = MouseButton::None;
 }
 
+void Machine::validate_config() {
+	// TODO: этот метод должен быть константным
+	// сейчас мешает то, что конфиг IR::Machine и конфиг VM - это
+	// одно и то же. Наверное, стоит разделить эти понятия
+
+	if (config.count("iso")) {
+		fs::path iso_file = config.at("iso").get<std::string>();
+		if (iso_file.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			iso_file = src_file.parent_path() / iso_file;
+		}
+
+		if (!fs::exists(iso_file)) {
+			throw Exception(fmt::format("Can't construct VmController for vm \"{}\": target iso file \"{}\" does not exist", name(), iso_file.generic_string()));
+		}
+
+		iso_file = fs::canonical(iso_file);
+
+		config["iso"] = iso_file.generic_string();
+	}
+
+	if (config.count("loader")) {
+		fs::path loader_file = config.at("loader").get<std::string>();
+		if (loader_file.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			loader_file = src_file.parent_path() / loader_file;
+		}
+
+		if (!fs::exists(loader_file)) {
+			throw Exception(fmt::format("Can't construct VmController for vm \"{}\": target loader file \"{}\" does not exist", name(), loader_file.generic_string()));
+		}
+
+		loader_file = fs::canonical(loader_file);
+
+		config["loader"] = loader_file.generic_string();
+	}
+
+	if (config.count("disk")) {
+		auto& disks = config.at("disk");
+
+		for (auto& disk: disks) {
+			if (disk.count("source")) {
+				fs::path source_file = disk.at("source").get<std::string>();
+				if (source_file.is_relative()) {
+					fs::path src_file(config.at("src_file").get<std::string>());
+					source_file = src_file.parent_path() / source_file;
+				}
+
+				if (!fs::exists(source_file)) {
+					throw Exception(fmt::format("Can't construct VmController for vm \"{}\": source disk image \"{}\" does not exist", name(), source_file.generic_string()));
+				}
+
+				source_file = fs::canonical(source_file);
+				disk["source"] = source_file;
+			}
+		}
+	}
+
+	if (!config.count("name")) {
+		throw std::runtime_error("Constructing VM \"" + id() + "\" error: field \"name\" is not specified");
+	}
+
+	if (!config.count("ram")) {
+		throw std::runtime_error("Constructing VM \"" + id() + "\" error: field \"ram\" is not specified");
+	}
+
+	if (!config.count("cpus")) {
+		throw std::runtime_error("Constructing VM \"" + id() + "\" error: field \"cpu\" is not specified");
+	}
+
+	if (!config.count("disk")) {
+		throw std::runtime_error("Constructing VM \"" + id() + "\" error: you must specify at least 1 disk");
+	}
+
+	if (config.count("disk")) {
+		auto disks = config.at("disk");
+
+		for (auto& disk: disks) {
+			if (!(disk.count("size") ^ disk.count("source"))) {
+				throw std::runtime_error("Constructing VM \"" + id() + "\" error: either field \"size\" or \"source\" must be specified for the disk \"" +
+					disk.at("name").get<std::string>() + "\"");
+			}
+		}
+
+		for (uint32_t i = 0; i < disks.size(); i++) {
+			for (uint32_t j = i + 1; j < disks.size(); j++) {
+				if (disks[i].at("name") == disks[j].at("name")) {
+					throw std::runtime_error("Constructing VM \"" + id() + "\" error: two identical disk names: \"" +
+						disks[i].at("name").get<std::string>() + "\"");
+				}
+			}
+		}
+	}
+
+	if (config.count("nic")) {
+		auto nics = config.at("nic");
+		for (auto& nic: nics) {
+			if (!nic.count("attached_to")) {
+				throw std::runtime_error("Constructing VM \"" + id() + "\" error: field attached_to is not specified for the nic \"" +
+					nic.at("name").get<std::string>() + "\"");
+			}
+
+			if (nic.count("mac")) {
+				std::string mac = nic.at("mac").get<std::string>();
+				if (!is_mac_correct(mac)) {
+					throw std::runtime_error("Constructing VM \"" + id() + "\" error: incorrect mac string: \"" + mac + "\"");
+				}
+			}
+		}
+
+		for (uint32_t i = 0; i < nics.size(); i++) {
+			for (uint32_t j = i + 1; j < nics.size(); j++) {
+				if (nics[i].at("name") == nics[j].at("name")) {
+					throw std::runtime_error("Constructing VM \"" + id() + "\" error: two identical NIC names: \"" +
+						nics[i].at("name").get<std::string>() + "\"");
+				}
+			}
+		}
+	}
+
+	if (config.count("video")) {
+		auto videos = config.at("video");
+
+		if (videos.size() > 1) {
+			throw std::runtime_error("Constructing VM \"" + id() + "\" error: multiple video devices are not supported at the moment");
+		}
+	}
+}
 
 }

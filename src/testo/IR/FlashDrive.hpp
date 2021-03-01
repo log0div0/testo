@@ -9,9 +9,6 @@ namespace IR {
 struct FlashDrive: Controller {
 	static std::string type_name() { return "flash drive"; }
 
-	bool has_folder() const;
-	void validate_folder() const;
-
 	virtual std::string type() const override;
 
 	virtual void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) override;
@@ -23,6 +20,8 @@ struct FlashDrive: Controller {
 	virtual bool is_defined() const override;
 	virtual void create() override;
 	virtual void undefine() override;
+
+	void validate_config();
 
 	std::shared_ptr<::FlashDrive> fd() const;
 

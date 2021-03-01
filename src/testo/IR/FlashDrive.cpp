@@ -43,7 +43,7 @@ void FlashDrive::create() {
 		}
 
 		std::string cksum_input = "";
-		if (has_folder()) {
+		if (fd_config.count("folder")) {
 			fs::path folder(fd_config.at("folder").get<std::string>());
 			if (folder.is_relative()) {
 				fs::path src_file(fd_config.at("src_file").get<std::string>());
@@ -206,7 +206,7 @@ bool FlashDrive::check_config_relevance() {
 	new_config = config;
 
 	std::string cksum_input = "";
-	if (has_folder()) {
+	if (new_config.count("folder")) {
 		fs::path folder(new_config.at("folder").get<std::string>());
 		if (folder.is_relative()) {
 			fs::path src_file(new_config.at("src_file").get<std::string>());
@@ -226,12 +226,8 @@ fs::path FlashDrive::get_metadata_dir() const{
 	return env->flash_drives_metadata_dir() / id();
 }
 
-bool FlashDrive::has_folder() const {
-	return config.count("folder");
-}
-
-void FlashDrive::validate_folder() const {
-	try {
+void FlashDrive::validate_config() {
+	if (config.count("folder")) {
 		fs::path folder(config.at("folder").get<std::string>());
 		if (folder.is_relative()) {
 			fs::path src_file(config.at("src_file").get<std::string>());
@@ -248,10 +244,27 @@ void FlashDrive::validate_folder() const {
 			throw std::runtime_error(fmt::format("Constructing FlashDrive \"{}\" Error: specified folder {} is not a folder",
 				name(), folder.generic_string()));
 		}
-	} catch (const std::runtime_error& error) {
-		std::throw_with_nested(std::runtime_error("Validating host folder failed"));
 	}
 
+	if (!config.count("name")) {
+		throw std::runtime_error("Constructing FlashDriveController error: field NAME is not specified");
+	}
+
+	if (!config.count("size")) {
+		throw std::runtime_error("Constructing FlashDriveController error: field SIZE is not specified");
+	}
+
+	//TODO: check for fs types
+	if (!config.count("fs")) {
+		throw std::runtime_error("Constructing FlashDriveController error: field FS is not specified");
+	}
+
+	// auto fs = config.at("fs").get<std::string>();
+	// if (fs != "ntfs" &&
+	// 	fs != "vfat")
+	// {
+	// 	throw std::runtime_error(std::string("Constructing FlashDriveController error: unsupported filesystem: ") + fs);
+	// }
 }
 
 }

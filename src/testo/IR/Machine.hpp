@@ -43,6 +43,8 @@ struct Machine: Controller {
 	void mouse_hold(const std::vector<MouseButton>& buttons);
 	void mouse_release();
 
+	void validate_config();
+
 private:
 	virtual std::string id() const override;
 	virtual fs::path get_metadata_dir() const override;

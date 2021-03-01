@@ -1125,58 +1125,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 		machine->config["name"] = machine->name();
 		machine->config["src_file"] = machine->ast_node->name->begin().file.generic_string();
 
-		if (machine->config.count("iso")) {
-			fs::path iso_file = machine->config.at("iso").get<std::string>();
-			if (iso_file.is_relative()) {
-				fs::path src_file(machine->config.at("src_file").get<std::string>());
-				iso_file = src_file.parent_path() / iso_file;
-			}
-
-			if (!fs::exists(iso_file)) {
-				throw Exception(fmt::format("Can't construct VmController for vm \"{}\": target iso file \"{}\" does not exist", machine->name(), iso_file.generic_string()));
-			}
-
-			iso_file = fs::canonical(iso_file);
-
-			machine->config["iso"] = iso_file.generic_string();
-		}
-
-		if (machine->config.count("loader")) {
-			fs::path loader_file = machine->config.at("loader").get<std::string>();
-			if (loader_file.is_relative()) {
-				fs::path src_file(machine->config.at("src_file").get<std::string>());
-				loader_file = src_file.parent_path() / loader_file;
-			}
-
-			if (!fs::exists(loader_file)) {
-				throw Exception(fmt::format("Can't construct VmController for vm \"{}\": target loader file \"{}\" does not exist", machine->name(), loader_file.generic_string()));
-			}
-
-			loader_file = fs::canonical(loader_file);
-
-			machine->config["loader"] = loader_file.generic_string();
-		}
-
-		if (machine->config.count("disk")) {
-			auto& disks = machine->config.at("disk");
-
-			for (auto& disk: disks) {
-				if (disk.count("source")) {
-					fs::path source_file = disk.at("source").get<std::string>();
-					if (source_file.is_relative()) {
-						fs::path src_file(machine->config.at("src_file").get<std::string>());
-						source_file = src_file.parent_path() / source_file;
-					}
-
-					if (!fs::exists(source_file)) {
-						throw Exception(fmt::format("Can't construct VmController for vm \"{}\": source disk image \"{}\" does not exist", machine->name(), source_file.generic_string()));
-					}
-
-					source_file = fs::canonical(source_file);
-					disk["source"] = source_file;
-				}
-			}
-		}
+		machine->validate_config();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ControllerCreatonException(machine));
 	}
@@ -1203,9 +1152,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
 		flash->config["name"] = flash->name();
 		flash->config["src_file"] = flash->ast_node->name->begin().file.generic_string();
 
-		if (flash->has_folder()) {
-			flash->validate_folder();
-		}
+		flash->validate_config();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ControllerCreatonException(flash));
 	}
@@ -1226,6 +1173,8 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 		network->config["prefix"] = prefix;
 		network->config["name"] = network->name();
 		network->config["src_file"] = network->ast_node->name->begin().file.generic_string();
+
+		network->validate_config();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ControllerCreatonException(network));
 	}

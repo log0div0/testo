@@ -23,6 +23,8 @@ struct Network: Controller {
 	virtual void create() override;
 	virtual void undefine() override;
 
+	void validate_config();
+
 private:
 	virtual std::string id() const override;
 	virtual fs::path get_metadata_dir() const override;
