@@ -26,6 +26,10 @@ struct Environment {
 	virtual std::shared_ptr<VM> create_vm(const nlohmann::json& config) = 0;
 	virtual std::shared_ptr<FlashDrive> create_flash_drive(const nlohmann::json& config) = 0;
 	virtual std::shared_ptr<Network> create_network(const nlohmann::json& config) = 0;
+
+	virtual void validate_vm_config(const nlohmann::json& config) = 0;
+	virtual void validate_flash_drive_config(const nlohmann::json& config) = 0;
+	virtual void validate_network_config(const nlohmann::json& config) = 0;
 };
 
 extern std::shared_ptr<Environment> env;

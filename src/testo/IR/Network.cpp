@@ -105,7 +105,7 @@ fs::path Network::get_metadata_dir() const {
 
 void Network::validate_config() {
 	if (!config.count("mode")) {
-		throw std::runtime_error("Constructing NetworkController error: field MODE is not specified");
+		throw std::runtime_error("Field MODE is not specified");
 	}
 
 	auto mode = config.at("mode").get<std::string>();
@@ -113,8 +113,10 @@ void Network::validate_config() {
 	if ((mode != "nat") &&
 		(mode != "internal"))
 	{
-		throw std::runtime_error(std::string("Constructing NetworkController error: Unsupported MODE: ") + mode);
+		throw std::runtime_error("Unsupported MODE: " + mode);
 	}
+
+	env->validate_network_config(config);
 }
 
 }

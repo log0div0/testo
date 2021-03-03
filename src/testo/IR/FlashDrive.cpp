@@ -235,36 +235,38 @@ void FlashDrive::validate_config() {
 		}
 
 		if (!fs::exists(folder)) {
-			throw std::runtime_error(fmt::format("Constructing FlashDrive \"{}\" Error: target folder {} doesn't exist", name(), folder.generic_string()));
+			throw std::runtime_error(fmt::format("Target folder {} doesn't exist", folder.generic_string()));
 		}
 
 		folder = fs::canonical(folder);
 
 		if (!fs::is_directory(folder)) {
-			throw std::runtime_error(fmt::format("Constructing FlashDrive \"{}\" Error: specified folder {} is not a folder",
-				name(), folder.generic_string()));
+			throw std::runtime_error(fmt::format("Specified folder {} is not a folder",
+				folder.generic_string()));
 		}
 	}
 
 	if (!config.count("name")) {
-		throw std::runtime_error("Constructing FlashDriveController error: field NAME is not specified");
+		throw std::runtime_error("Field NAME is not specified");
 	}
 
 	if (!config.count("size")) {
-		throw std::runtime_error("Constructing FlashDriveController error: field SIZE is not specified");
+		throw std::runtime_error("Field SIZE is not specified");
 	}
 
 	//TODO: check for fs types
 	if (!config.count("fs")) {
-		throw std::runtime_error("Constructing FlashDriveController error: field FS is not specified");
+		throw std::runtime_error("Field FS is not specified");
 	}
 
 	// auto fs = config.at("fs").get<std::string>();
 	// if (fs != "ntfs" &&
 	// 	fs != "vfat")
 	// {
-	// 	throw std::runtime_error(std::string("Constructing FlashDriveController error: unsupported filesystem: ") + fs);
+	// 	throw std::runtime_error("Unsupported filesystem: " + fs);
 	// }
+
+	env->validate_flash_drive_config(config);
 }
 
 }

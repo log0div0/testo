@@ -6,8 +6,8 @@ test centos_flash_create: centos_install_testo_cpu {
 		copyto "${TEST_ASSETS_DIR}/flash_creation/flash_create.testo" "/opt/scripts/flash_create.testo"
 		exec bash """
 			set +o pipefail
-			testo run /opt/scripts/flash_create.testo --test_spec flash_unexisting_folder 2>&1 > /dev/null | grep "Constructing FlashDrive \\\"unexisting_folder\\\" Error: target folder /some/unexisting_folder doesn't exist"
-			testo run /opt/scripts/flash_create.testo --test_spec flash_not_a_folder 2>&1 > /dev/null | grep "Constructing FlashDrive \\\"not_a_folder\\\" Error: specified folder /opt/ubuntu-16.04.6-server-amd64.iso is not a folder"
+			testo run /opt/scripts/flash_create.testo --test_spec flash_unexisting_folder 2>&1 > /dev/null | grep "Target folder /some/unexisting_folder doesn't exist"
+			testo run /opt/scripts/flash_create.testo --test_spec flash_not_a_folder 2>&1 > /dev/null | grep "Specified folder /opt/ubuntu-16.04.6-server-amd64.iso is not a folder"
 		""" timeout 30m
 	}
 }

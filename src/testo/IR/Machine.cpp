@@ -447,7 +447,7 @@ void Machine::validate_config() {
 		}
 
 		if (!fs::exists(iso_file)) {
-			throw Exception(fmt::format("Can't construct VmController for vm \"{}\": target iso file \"{}\" does not exist", name(), iso_file.generic_string()));
+			throw std::runtime_error(fmt::format("Target iso file \"{}\" does not exist", iso_file.generic_string()));
 		}
 
 		iso_file = fs::canonical(iso_file);
@@ -463,7 +463,7 @@ void Machine::validate_config() {
 		}
 
 		if (!fs::exists(loader_file)) {
-			throw Exception(fmt::format("Can't construct VmController for vm \"{}\": target loader file \"{}\" does not exist", name(), loader_file.generic_string()));
+			throw std::runtime_error(fmt::format("Target loader file \"{}\" does not exist", loader_file.generic_string()));
 		}
 
 		loader_file = fs::canonical(loader_file);
@@ -483,7 +483,7 @@ void Machine::validate_config() {
 				}
 
 				if (!fs::exists(source_file)) {
-					throw Exception(fmt::format("Can't construct VmController for vm \"{}\": source disk image \"{}\" does not exist", name(), source_file.generic_string()));
+					throw std::runtime_error(fmt::format("Source disk image \"{}\" does not exist", source_file.generic_string()));
 				}
 
 				source_file = fs::canonical(source_file);
@@ -493,19 +493,19 @@ void Machine::validate_config() {
 	}
 
 	if (!config.count("name")) {
-		throw std::runtime_error("Constructing VM \"" + id() + "\" error: field \"name\" is not specified");
+		throw std::runtime_error("Field \"name\" is not specified");
 	}
 
 	if (!config.count("ram")) {
-		throw std::runtime_error("Constructing VM \"" + id() + "\" error: field \"ram\" is not specified");
+		throw std::runtime_error("Field \"ram\" is not specified");
 	}
 
 	if (!config.count("cpus")) {
-		throw std::runtime_error("Constructing VM \"" + id() + "\" error: field \"cpu\" is not specified");
+		throw std::runtime_error("Field \"cpu\" is not specified");
 	}
 
 	if (!config.count("disk")) {
-		throw std::runtime_error("Constructing VM \"" + id() + "\" error: you must specify at least 1 disk");
+		throw std::runtime_error("You must specify at least 1 disk");
 	}
 
 	if (config.count("disk")) {
@@ -513,17 +513,48 @@ void Machine::validate_config() {
 
 		for (auto& disk: disks) {
 			if (!(disk.count("size") ^ disk.count("source"))) {
-				throw std::runtime_error("Constructing VM \"" + id() + "\" error: either field \"size\" or \"source\" must be specified for the disk \"" +
-					disk.at("name").get<std::string>() + "\"");
+				throw std::runtime_error(fmt::format("Either field \"size\" or \"source\" must be specified for the disk \"{}\"",
+					disk.at("name").get<std::string>()));
 			}
 		}
 
 		for (uint32_t i = 0; i < disks.size(); i++) {
 			for (uint32_t j = i + 1; j < disks.size(); j++) {
 				if (disks[i].at("name") == disks[j].at("name")) {
-					throw std::runtime_error("Constructing VM \"" + id() + "\" error: two identical disk names: \"" +
-						disks[i].at("name").get<std::string>() + "\"");
+					throw std::runtime_error(fmt::format("Two disks have the identical name: \"{}\"",
+						disks[i].at("name").get<std::string>()));
 				}
+			}
+		}
+	}
+
+	if (config.count("shared_folder")) {
+		auto shared_folders = config.at("shared_folder");
+		for (uint32_t i = 0; i < shared_folders.size(); i++) {
+			for (uint32_t j = i + 1; j < shared_folders.size(); j++) {
+				if (shared_folders[i].at("name") == shared_folders[j].at("name")) {
+					throw std::runtime_error(fmt::format("Two shared folders have the identical name: \"{}\"",
+						shared_folders[i].at("name").get<std::string>()));
+				}
+			}
+		}
+		for (auto& shared_folder: shared_folders) {
+			if (!shared_folder.count("host_path")) {
+				throw std::runtime_error(fmt::format("Shared folder {} error: field \"host_path\" is not specified",
+					shared_folder.at("name").get<std::string>()));
+			}
+			fs::path host_path = shared_folder.at("host_path").get<std::string>();
+			if (host_path.is_relative()) {
+				fs::path src_file(config.at("src_file").get<std::string>());
+				host_path = src_file.parent_path() / host_path;
+			}
+			if (!fs::exists(host_path)) {
+				throw std::runtime_error(fmt::format("Shared folder {} error: path \"{}\" does not exist on the host",
+					shared_folder.at("name").get<std::string>(), host_path.generic_string()));
+			}
+			if (!fs::is_directory(host_path)) {
+				throw std::runtime_error(fmt::format("Shared folder {} error: path \"{}\" is not a folder",
+					shared_folder.at("name").get<std::string>(), host_path.generic_string()));
 			}
 		}
 	}
@@ -532,14 +563,14 @@ void Machine::validate_config() {
 		auto nics = config.at("nic");
 		for (auto& nic: nics) {
 			if (!nic.count("attached_to")) {
-				throw std::runtime_error("Constructing VM \"" + id() + "\" error: field attached_to is not specified for the nic \"" +
-					nic.at("name").get<std::string>() + "\"");
+				throw std::runtime_error(fmt::format("Field attached_to is not specified for the nic \"{}\"",
+					nic.at("name").get<std::string>()));
 			}
 
 			if (nic.count("mac")) {
 				std::string mac = nic.at("mac").get<std::string>();
 				if (!is_mac_correct(mac)) {
-					throw std::runtime_error("Constructing VM \"" + id() + "\" error: incorrect mac string: \"" + mac + "\"");
+					throw std::runtime_error(fmt::format("Incorrect mac address: \"{}\"", mac));
 				}
 			}
 		}
@@ -547,8 +578,8 @@ void Machine::validate_config() {
 		for (uint32_t i = 0; i < nics.size(); i++) {
 			for (uint32_t j = i + 1; j < nics.size(); j++) {
 				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error("Constructing VM \"" + id() + "\" error: two identical NIC names: \"" +
-						nics[i].at("name").get<std::string>() + "\"");
+					throw std::runtime_error(fmt::format("Two NICs have the identical name: \"{}\"",
+						nics[i].at("name").get<std::string>()));
 				}
 			}
 		}
@@ -558,9 +589,11 @@ void Machine::validate_config() {
 		auto videos = config.at("video");
 
 		if (videos.size() > 1) {
-			throw std::runtime_error("Constructing VM \"" + id() + "\" error: multiple video devices are not supported at the moment");
+			throw std::runtime_error("Multiple video devices are not supported at the moment");
 		}
 	}
+
+	env->validate_vm_config(config);
 }
 
 }

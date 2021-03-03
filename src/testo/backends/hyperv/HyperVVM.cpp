@@ -7,29 +7,6 @@
 using namespace std::chrono_literals;
 
 HyperVVM::HyperVVM(const nlohmann::json& config_): VM(config_) {
-	if (config.count("nic")) {
-		auto nics = config.at("nic");
-
-		for (auto& nic: nics) {
-			if (nic.count("adapter_type")) {
-				std::string driver = nic.at("adapter_type").get<std::string>();
-				throw std::runtime_error("Constructing VM \"" + id() + "\" error: nic \"" +
-					nic.at("name").get<std::string>() + "\" has unsupported adapter type: \"" + driver + "\"");
-			}
-		}
-	}
-
-	if (config.count("video")) {
-		auto videos = config.at("video");
-
-		for (auto& video: videos) {
-			if (video.count("adapter_type")) {
-				std::string driver = video.at("adapter_type").get<std::string>();
-				throw std::runtime_error("Constructing VM \"" + id() + "\" error: video \"" +
-					video.at("name").get<std::string>() + "\" has unsupported adapter type: \"" + driver + "\"");
-			}
-		}
-	}
 
 	scancodes.insert({
 		{"ESC", {1}},

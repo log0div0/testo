@@ -454,7 +454,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 			}
 			ss << std::string(current_controller->ast_node->begin()) << ": note: the " << current_controller->type() << " " << current_controller->name() << " was declared here\n\n";
 		}
-		
+
 		reporter.test_failed(ss.str());
 
 		if (stop_on_fail) {

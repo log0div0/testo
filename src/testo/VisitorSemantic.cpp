@@ -128,6 +128,7 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 		{"nic", {true, Token::category::attr_block}},
 		{"disk", {true, Token::category::attr_block}},
 		{"video", {true, Token::category::attr_block}},
+		{"shared_folder", {true, Token::category::attr_block}},
 		{"cpus", {false, Token::category::number}},
 		{"qemu_spice_agent", {false, Token::category::boolean}},
 		{"qemu_enable_usb3", {false, Token::category::boolean}},
@@ -148,6 +149,11 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 	attr_ctxs.insert({"video", {
 		{"qemu_mode", {false, Token::category::quoted_string}}, // deprecated
 		{"adapter_type", {false, Token::category::quoted_string}},
+	}});
+
+	attr_ctxs.insert({"shared_folder", {
+		{"host_path", {false, Token::category::quoted_string}},
+		{"readonly", {false, Token::category::boolean}},
 	}});
 
 	attr_ctxs.insert({"fd_global", {
@@ -336,14 +342,19 @@ void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cm
 					std::string network_name = nic.at("attached_to");
 					auto network = IR::program->get_network_or_null(network_name);
 					if (!network) {
-						throw Exception(fmt::format("Can't construct VmController for vm \"{}\": nic \"{}\" is attached to an unknown network: \"{}\"",
-							vmc->config.at("name").get<std::string>(), nic.at("name").get<std::string>(), network_name));
+						try {
+							throw std::runtime_error(fmt::format("NIC \"{}\" is attached to an unknown network: \"{}\"",
+								nic.at("name").get<std::string>(), network_name));
+						} catch (const std::exception& error) {
+							std::throw_with_nested(ControllerCreatonException(vmc));
+						}
 					}
 					visit_network(network);
 					nic["network_mode"] = network->config.at("mode");
 				}
 			}
 		}
+
 		visit_action_vm(regular_cmd.ast_node->action);
 	} else if ((current_controller = IR::program->get_flash_drive_or_null(regular_cmd.entity()))) {
 		auto fdc = std::dynamic_pointer_cast<IR::FlashDrive>(current_controller);
@@ -1133,9 +1144,6 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 
 void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
 	try {
-		if (env->hypervisor() == "hyperv") {
-			throw std::runtime_error("Sorry, virtual flash drives are not implemented for Hyper-V yet");
-		}
 		current_test->mentioned_flash_drives.insert(flash);
 
 		auto result = visited_flash_drives.insert(flash);

@@ -6,10 +6,6 @@
 
 QemuNetwork::QemuNetwork(const nlohmann::json& config): Network(config), qemu_connect(vir::connect_open("qemu:///system"))
 {
-	if (id().length() > 15) {
-		throw std::runtime_error("Too long name for a network: " + id() + ", please specifify 15 characters or less");
-	}
-
 	if (!is_defined()) {
 		return;
 	}

@@ -51,6 +51,10 @@ struct QemuVM: public VM {
 
 	std::shared_ptr<GuestAdditions> guest_additions() override;
 
+	static const std::unordered_map<std::string, uint32_t> scancodes;
+	static const std::vector<std::string> disk_targets; //10 + a cdrom
+	static std::string preferable_video_model(vir::Connect& qemu_connect);
+
 private:
 	void import_disk(const std::string& name, const fs::path& source);
 	void create_new_disk(const std::string& name, uint32_t size);
@@ -58,15 +62,12 @@ private:
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 
-	std::string preferable_video_model();
 	std::string mouse_button_to_str(MouseButton btn);
 
 	std::set<std::string> plugged_nics() const;
 
 	vir::Connect qemu_connect;
 	std::unordered_map<std::string, std::string> nic_pci_map;
-	std::unordered_map<std::string, uint32_t> scancodes;
-	std::vector<std::string> disk_targets; //10 + a cdrom
 	std::vector<uint8_t> screenshot_buffer;
 
 };

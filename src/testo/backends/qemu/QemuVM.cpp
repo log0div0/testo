@@ -9,170 +9,123 @@
 #include <fmt/format.h>
 #include <thread>
 
+const std::vector<std::string> QemuVM::disk_targets = {
+	"hda",
+	"hdb",
+	"hdc",
+	"hdd"
+};
+
+const std::unordered_map<std::string, uint32_t> QemuVM::scancodes = {
+	{"ESC", 1},
+	{"ONE", 2},
+	{"TWO", 3},
+	{"THREE", 4},
+	{"FOUR", 5},
+	{"FIVE", 6},
+	{"SIX", 7},
+	{"SEVEN", 8},
+	{"EIGHT", 9},
+	{"NINE", 10},
+	{"ZERO", 11},
+	{"MINUS", 12},
+	{"EQUALSIGN", 13},
+	{"BACKSPACE", 14},
+	{"TAB", 15},
+	{"Q", 16},
+	{"W", 17},
+	{"E", 18},
+	{"R", 19},
+	{"T", 20},
+	{"Y", 21},
+	{"U", 22},
+	{"I", 23},
+	{"O", 24},
+	{"P", 25},
+	{"LEFTBRACE", 26},
+	{"RIGHTBRACE", 27},
+	{"ENTER", 28},
+	{"LEFTCTRL", 29},
+	{"A", 30},
+	{"S", 31},
+	{"D", 32},
+	{"F", 33},
+	{"G", 34},
+	{"H", 35},
+	{"J", 36},
+	{"K", 37},
+	{"L", 38},
+	{"SEMICOLON", 39},
+	{"APOSTROPHE", 40},
+	{"GRAVE", 41},
+	{"LEFTSHIFT", 42},
+	{"BACKSLASH", 43},
+	{"Z", 44},
+	{"X", 45},
+	{"C", 46},
+	{"V", 47},
+	{"B", 48},
+	{"N", 49},
+	{"M", 50},
+	{"COMMA", 51},
+	{"DOT", 52},
+	{"SLASH", 53},
+	{"RIGHTSHIFT", 54},
+	{"LEFTALT", 56},
+	{"SPACE", 57},
+	{"CAPSLOCK", 58},
+	{"F1", 59},
+	{"F2", 60},
+	{"F3", 61},
+	{"F4", 62},
+	{"F5", 63},
+	{"F6", 64},
+	{"F7", 65},
+	{"F8", 66},
+	{"F9", 67},
+	{"F10", 68},
+	{"F11", 87},
+	{"F12", 88},
+	{"NUMLOCK", 69},
+	{"KP_0", 82},
+	{"KP_1", 79},
+	{"KP_2", 80},
+	{"KP_3", 81},
+	{"KP_4", 75},
+	{"KP_5", 76},
+	{"KP_6", 77},
+	{"KP_7", 71},
+	{"KP_8", 72},
+	{"KP_9", 73},
+	{"KP_PLUS", 78},
+	{"KP_MINUS", 74},
+	{"KP_SLASH", 98},
+	{"KP_ASTERISK", 55},
+	{"KP_ENTER", 96},
+	{"KP_DOT", 83},
+	{"SCROLLLOCK", 70},
+	{"RIGHTCTRL", 97},
+	{"RIGHTALT", 100},
+	{"HOME", 102},
+	{"UP", 103},
+	{"PAGEUP", 104},
+	{"LEFT", 105},
+	{"RIGHT", 106},
+	{"END", 107},
+	{"DOWN", 108},
+	{"PAGEDOWN", 109},
+	{"INSERT", 110},
+	{"DELETE", 111},
+	{"LEFTMETA", 125},
+	{"RIGHTMETA", 126},
+	{"SCROLLUP", 177},
+	{"SCROLLDOWN", 178},
+};
+
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
 	qemu_connect(vir::connect_open("qemu:///system"))
 {
-	disk_targets = {
-		"hda",
-		"hdb",
-		"hdc",
-		"hdd"
-	};
 
-	if (config.count("disk")) {
-		auto disks = config.at("disk");
-
-		if (disks.size() > disk_targets.size() - 1) {
-			throw std::runtime_error("Constructing VM \"" + id() + "\" error: too many disks specified, maximum amount: " + std::to_string(disk_targets.size() - 1));
-		}
-	}
-
-	if (config.count("nic")) {
-		auto nics = config.at("nic");
-
-		for (auto& nic: nics) {
-			if (nic.count("adapter_type")) {
-				std::string driver = nic.at("adapter_type").get<std::string>();
-				if (driver != "ne2k_pci" &&
-					driver != "i82551" &&
-					driver != "i82557b" &&
-					driver != "i82559er" &&
-					driver != "rtl8139" &&
-					driver != "e1000" &&
-					driver != "pcnet" &&
-					driver != "virtio" &&
-					driver != "sungem")
-				{
-					throw std::runtime_error("Constructing VM \"" + id() + "\" error: nic \"" +
-						nic.at("name").get<std::string>() + "\" has unsupported adapter type: \"" + driver + "\"");
-				}
-			}
-		}
-	}
-
-	if (config.count("video")) {
-		auto videos = config.at("video");
-
-		for (auto& video: videos) {
-			auto video_model = video.value("adapter_type", video.value("qemu_mode", preferable_video_model()));
-
-			if ((video_model != "vmvga") &&
-				(video_model != "vga") &&
-				(video_model != "xen") &&
-				(video_model != "virtio") &&
-				(video_model != "qxl") &&
-				(video_model != "cirrus"))
-			{
-				throw std::runtime_error("Constructing VM \"" + id() + "\" error: unsupported adapter_type \"" + video_model + "\" for video " + video.at("name").get<std::string>());
-			}
-		}
-	}
-
-	scancodes.insert({
-		{"ESC", 1},
-		{"ONE", 2},
-		{"TWO", 3},
-		{"THREE", 4},
-		{"FOUR", 5},
-		{"FIVE", 6},
-		{"SIX", 7},
-		{"SEVEN", 8},
-		{"EIGHT", 9},
-		{"NINE", 10},
-		{"ZERO", 11},
-		{"MINUS", 12},
-		{"EQUALSIGN", 13},
-		{"BACKSPACE", 14},
-		{"TAB", 15},
-		{"Q", 16},
-		{"W", 17},
-		{"E", 18},
-		{"R", 19},
-		{"T", 20},
-		{"Y", 21},
-		{"U", 22},
-		{"I", 23},
-		{"O", 24},
-		{"P", 25},
-		{"LEFTBRACE", 26},
-		{"RIGHTBRACE", 27},
-		{"ENTER", 28},
-		{"LEFTCTRL", 29},
-		{"A", 30},
-		{"S", 31},
-		{"D", 32},
-		{"F", 33},
-		{"G", 34},
-		{"H", 35},
-		{"J", 36},
-		{"K", 37},
-		{"L", 38},
-		{"SEMICOLON", 39},
-		{"APOSTROPHE", 40},
-		{"GRAVE", 41},
-		{"LEFTSHIFT", 42},
-		{"BACKSLASH", 43},
-		{"Z", 44},
-		{"X", 45},
-		{"C", 46},
-		{"V", 47},
-		{"B", 48},
-		{"N", 49},
-		{"M", 50},
-		{"COMMA", 51},
-		{"DOT", 52},
-		{"SLASH", 53},
-		{"RIGHTSHIFT", 54},
-		{"LEFTALT", 56},
-		{"SPACE", 57},
-		{"CAPSLOCK", 58},
-		{"F1", 59},
-		{"F2", 60},
-		{"F3", 61},
-		{"F4", 62},
-		{"F5", 63},
-		{"F6", 64},
-		{"F7", 65},
-		{"F8", 66},
-		{"F9", 67},
-		{"F10", 68},
-		{"F11", 87},
-		{"F12", 88},
-		{"NUMLOCK", 69},
-		{"KP_0", 82},
-		{"KP_1", 79},
-		{"KP_2", 80},
-		{"KP_3", 81},
-		{"KP_4", 75},
-		{"KP_5", 76},
-		{"KP_6", 77},
-		{"KP_7", 71},
-		{"KP_8", 72},
-		{"KP_9", 73},
-		{"KP_PLUS", 78},
-		{"KP_MINUS", 74},
-		{"KP_SLASH", 98},
-		{"KP_ASTERISK", 55},
-		{"KP_ENTER", 96},
-		{"KP_DOT", 83},
-		{"SCROLLLOCK", 70},
-		{"RIGHTCTRL", 97},
-		{"RIGHTALT", 100},
-		{"HOME", 102},
-		{"UP", 103},
-		{"PAGEUP", 104},
-		{"LEFT", 105},
-		{"RIGHT", 106},
-		{"END", 107},
-		{"DOWN", 108},
-		{"PAGEDOWN", 109},
-		{"INSERT", 110},
-		{"DELETE", 111},
-		{"LEFTMETA", 125},
-		{"RIGHTMETA", 126},
-		{"SCROLLUP", 177},
-		{"SCROLLDOWN", 178},
-	});
 }
 
 QemuVM::~QemuVM() {
@@ -277,6 +230,24 @@ void QemuVM::install() {
 				</memballoon>
 		)";
 
+		if (config.count("shared_folder")) {
+			for (auto& shared_folder: config.at("shared_folder")) {
+				std::string shared_folder_cfg = fmt::format(R"(
+					<filesystem type='mount' accessmode='mapped'>
+						<driver type='path' wrpolicy='immediate'/>
+						<source dir='{}'/>
+						<target dir='{}'/>
+				)", shared_folder.at("host_path").get<std::string>(),
+					shared_folder.at("name").get<std::string>()
+				);
+				if (shared_folder.value("readonly", false)) {
+					shared_folder_cfg += "<readonly/>";
+				}
+				shared_folder_cfg += "</filesystem>";
+				string_config += shared_folder_cfg;
+			}
+		}
+
 		if (!config.count("qemu_enable_usb3")) {
 			config["qemu_enable_usb3"] = false;
 		}
@@ -306,7 +277,7 @@ void QemuVM::install() {
 		if (config.count("video")) {
 			auto videos = config.at("video");
 			for (auto& video: videos) {
-				auto video_model = video.value("adapter_type", video.value("qemu_mode", preferable_video_model()));
+				auto video_model = video.value("adapter_type", video.value("qemu_mode", preferable_video_model(qemu_connect)));
 
 				string_config += fmt::format(R"(
 					<model type='{}' heads='1' primary='yes'/>
@@ -315,7 +286,7 @@ void QemuVM::install() {
 		} else {
 			string_config += fmt::format(R"(
 				<model type='{}' heads='1' primary='yes'/>
-			)", preferable_video_model());
+			)", preferable_video_model(qemu_connect));
 		}
 
 		string_config += R"(
@@ -462,7 +433,7 @@ void QemuVM::press(const std::vector<std::string>& buttons) {
 		std::vector<uint32_t> keycodes;
 		for (auto button: buttons) {
 			std::transform(button.begin(), button.end(), button.begin(), toupper);
-			keycodes.push_back(scancodes[button]);
+			keycodes.push_back(scancodes.at(button));
 		}
 		qemu_connect.domain_lookup_by_name(id()).send_keys(VIR_KEYCODE_SET_LINUX, 0, keycodes);
 	}
@@ -485,7 +456,7 @@ void QemuVM::hold(const std::vector<std::string>& buttons) {
 		for (auto button: buttons) {
 			std::transform(button.begin(), button.end(), button.begin(), toupper);
 
-			uint32_t scancode = scancodes[button];
+			uint32_t scancode = scancodes.at(button);
 			nlohmann::json button_spec = nlohmann::json::parse(fmt::format(R"(
 				{{
 					"type": "key",
@@ -528,7 +499,7 @@ void QemuVM::release(const std::vector<std::string>& buttons) {
 		for (auto button: buttons) {
 			std::transform(button.begin(), button.end(), button.begin(), toupper);
 
-			uint32_t scancode = scancodes[button];
+			uint32_t scancode = scancodes.at(button);
 			nlohmann::json button_spec = nlohmann::json::parse(fmt::format(R"(
 				{{
 					"type": "key",
@@ -1454,7 +1425,7 @@ void QemuVM::create_disks() {
 	}
 }
 
-std::string QemuVM::preferable_video_model() {
+std::string QemuVM::preferable_video_model(vir::Connect& qemu_connect) {
 	auto dom_caps = qemu_connect.get_domain_capabilities();
 	auto models_node = dom_caps.first_child().child("devices").child("video").child("enum");
 
