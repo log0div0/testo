@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
 
-set(SRCS MessageHandler.cpp)
+set(SRCS MessageHandler.cpp Channel.cpp)
 
 if (UNIX AND NOT APPLE)
 	list(APPEND SRCS MainLinux.cpp)

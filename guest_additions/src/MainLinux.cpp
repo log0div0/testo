@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <chrono>
 
 #include <signal.h>
 
@@ -10,6 +11,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <coro/Application.h>
+#include <coro/CoroPool.h>
+#include <coro/Timer.h>
 
 #include <clipp.h>
 
@@ -22,6 +25,7 @@
 #error "Unknown hypervisor"
 #endif
 
+using namespace std::chrono_literals;
 
 #define APP_NAME "testo-guest-additions"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
@@ -76,39 +80,60 @@ inline std::ostream& operator<<(std::ostream& stream, const cmdline& cmdline) {
 	return stream;
 }
 
+void remove_handler() {
+#ifdef __QEMU__
+	std::shared_ptr<Channel> channel(new QemuLinuxChannel);
+	coro::Timer timer;
+	while (true) {
+		try {
+			MessageHandler message_handler(channel);
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside QemuLinuxChannel loop: {}", error.what());
+			timer.waitFor(100ms);
+		}
+	}
+#elif __HYPERV__
+	coro::Acceptor<hyperv::VSocketProtocol> acceptor(hyperv::VSocketEndpoint(HYPERV_PORT));
+	acceptor.run([](coro::StreamSocket<hyperv::VSocketProtocol> socket) {
+		try {
+			std::shared_ptr<Channel> channel(new HyperVChannel(std::move(socket)));
+			MessageHandler message_handler(std::move(channel));
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside acceptor loop: {}", error.what());
+		}
+	});
+#else
+#error "Unknown hypervisor"
+#endif
+}
+
+void local_handler() {
+
+}
+
+void app_main() {
+	try {
+		coro::CoroPool pool;
+		pool.exec(remove_handler);
+		pool.exec(local_handler);
+		pool.waitAll();
+	} catch (const std::exception& err) {
+		spdlog::error("app_main std error: {}", err.what());
+	} catch (const coro::CancelError&) {
+		spdlog::error("app_main CancelError");
+	} catch (...) {
+		spdlog::error("app_main unknown error");
+	}
+}
+
 void start() {
 	if (daemon(1, 0) < 0) {
 		throw std::system_error(errno, std::system_category());
 	}
 	spdlog::info("Starting ...");
-	coro::Application([] {
-		try {
-#ifdef __QEMU__
-			std::unique_ptr<Channel> channel(new QemuLinuxChannel);
-			MessageHandler message_handler(std::move(channel));
-			message_handler.run();
-#elif __HYPERV__
-			coro::Acceptor<hyperv::VSocketProtocol> acceptor(hyperv::VSocketEndpoint(HYPERV_PORT));
-			acceptor.run([](coro::StreamSocket<hyperv::VSocketProtocol> socket) {
-				try {
-					std::unique_ptr<Channel> channel(new HyperVChannel(std::move(socket)));
-					MessageHandler message_handler(std::move(channel));
-					message_handler.run();
-				} catch (const std::exception& error) {
-					spdlog::error("Error inside acceptor loop: ", error.what());
-				}
-			});
-#else
-#error "Unknown hypervisor"
-#endif
-		} catch (const std::exception& err) {
-			spdlog::error("app_main std error: {}", err.what());
-		} catch (const coro::CancelError&) {
-			spdlog::error("app_main CancelError");
-		} catch (...) {
-			spdlog::error("app_main unknown error");
-		}
-	}).run();
+	coro::Application(app_main).run();
 	spdlog::info("Stopped");
 }
 

@@ -21,7 +21,3 @@ size_t HyperVChannel::read(uint8_t* data, size_t size) {
 size_t HyperVChannel::write(uint8_t* data, size_t size) {
 	return socket.writeSome(data, size);
 }
-
-void HyperVChannel::close() {
-
-}

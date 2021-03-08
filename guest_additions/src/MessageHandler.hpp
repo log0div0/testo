@@ -25,18 +25,15 @@ struct VersionNumber {
 };
 
 struct MessageHandler {
-	MessageHandler(std::unique_ptr<Channel> channel_): channel(std::move(channel_)) {};
+	MessageHandler(std::shared_ptr<Channel> channel_): channel(std::move(channel_)) {};
 	~MessageHandler() = default;
 
 	MessageHandler(const MessageHandler&) = delete;
 	MessageHandler& operator=(const MessageHandler&) = delete;
 
 	void run();
-	void force_cancel();
 
 private:
-	bool is_canceled = false;
-
 	void handle_message(const nlohmann::json& command);
 	void handle_check_avaliable(const nlohmann::json& command);
 	void handle_get_tmp_dir(const nlohmann::json& command);
@@ -50,13 +47,7 @@ private:
 
 	void send_error(const std::string& error);
 
-	nlohmann::json receive();
-	void send(nlohmann::json response);
-
-	void receive_raw(uint8_t* data, size_t size);
-	void send_raw(uint8_t* data, size_t size);
-
-	std::unique_ptr<Channel> channel;
+	std::shared_ptr<Channel> channel;
 
 	VersionNumber ver;
 };

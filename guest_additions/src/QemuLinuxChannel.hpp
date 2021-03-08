@@ -12,7 +12,6 @@ struct QemuLinuxChannel: Channel {
 
 	size_t read(uint8_t* data, size_t size) override;
 	size_t write(uint8_t* data, size_t size) override;
-	void close() override;
 
 	int fd = -1;
 };

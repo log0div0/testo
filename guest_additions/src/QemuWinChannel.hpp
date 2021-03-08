@@ -13,7 +13,8 @@ struct QemuWinChannel: Channel {
 
 	size_t read(uint8_t* data, size_t size) override;
 	size_t write(uint8_t* data, size_t size) override;
-	void close() override;
+
+	void close();
 
 	std::vector<uint8_t> info_buf;
 	coro::Stream<asio::windows::stream_handle> stream;
