@@ -14,9 +14,18 @@
 					/>
 				<ServiceControl Id="TestoGuestAdditionsServiceControl" Start="install" Stop="both" Remove="uninstall" Name="testo-guest-additions" Wait="yes" />
 			</Component>
+			<Component Id="TestoGuestAdditionsCli" Guid="{3692ef99-f5bf-47e5-9f77-bacc5bb85391}">
+				<File Id='TestoGuestAdditionsCliEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo-guest-additions-cli.exe' Vital='yes' />
+			</Component>
+			<Component Id="EnvironmentVariables" Guid="{5d978894-0c5e-4efb-b98e-1c7a5938c748}">
+				<Environment Id="PATH" Name="PATH" Value="[INSTALL_ROOT]" Permanent="no" Part="last" Action="set" System="yes" />
+				<CreateFolder/>
+			</Component>
 		</DirectoryRef>
 	</CPackWiXFragment>
 	<CPackWiXFragment Id="#PRODUCTFEATURE">
 		<ComponentRef Id="TestoGuestAdditions"/>
+		<ComponentRef Id="TestoGuestAdditionsCli"/>
+		<ComponentRef Id="EnvironmentVariables"/>
 	</CPackWiXFragment>
 </CPackWiXPatch>

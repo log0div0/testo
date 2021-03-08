@@ -34,8 +34,12 @@ add_definitions(-DCHANNEL_CLASS_HEADER="${CHANNEL_CLASS_NAME}.hpp")
 add_executable(testo-guest-additions ${SRCS})
 target_link_libraries(testo-guest-additions os coro)
 
+add_executable(testo-guest-additions-cli CLI.cpp)
+target_link_libraries(testo-guest-additions-cli os coro)
+
 if (UNIX)
 	target_link_libraries(testo-guest-additions pthread)
+	target_link_libraries(testo-guest-additions-cli pthread)
 endif()
 
 if (WIN32)

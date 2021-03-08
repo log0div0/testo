@@ -14,6 +14,13 @@
 					/>
 				<ServiceControl Id="TestoGuestAdditionsServiceControl" Start="install" Stop="both" Remove="uninstall" Name="testo-guest-additions" Wait="yes" />
 			</Component>
+			<Component Id="TestoGuestAdditionsCli" Guid="{3692ef99-f5bf-47e5-9f77-bacc5bb85391}">
+				<File Id='TestoGuestAdditionsCliEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo-guest-additions-cli.exe' Vital='yes' />
+			</Component>
+			<Component Id="EnvironmentVariables" Guid="{5d978894-0c5e-4efb-b98e-1c7a5938c748}">
+				<Environment Id="PATH" Name="PATH" Value="[INSTALL_ROOT]" Permanent="no" Part="last" Action="set" System="yes" />
+				<CreateFolder/>
+			</Component>
 			<Component Id="VirtioWin7" Guid="{a4446e4d-4a57-436b-b396-6190a0d0b351}">
 				<Condition>VersionNT = 601</Condition>
 				<difx:Driver Legacy='yes' />
@@ -42,6 +49,8 @@
 	</CPackWiXFragment>
 	<CPackWiXFragment Id="#PRODUCTFEATURE">
 		<ComponentRef Id="TestoGuestAdditions"/>
+		<ComponentRef Id="TestoGuestAdditionsCli"/>
+		<ComponentRef Id="EnvironmentVariables"/>
 		<ComponentRef Id="VirtioWin7"/>
 		<ComponentRef Id="VirtioWin8"/>
 		<ComponentRef Id="VirtioWin8.1"/>
