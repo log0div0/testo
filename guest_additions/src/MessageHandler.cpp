@@ -1,5 +1,5 @@
 
-#include "Server.hpp"
+#include "MessageHandler.hpp"
 #include <os/Process.hpp>
 #include <os/File.hpp>
 
@@ -55,28 +55,28 @@ std::string VersionNumber::to_string() const {
 	return std::to_string(MAJOR) + "." + std::to_string(MINOR) + "." + std::to_string(PATCH);
 }
 
-void Server::run() {
+void MessageHandler::run() {
 	spdlog::info("Waiting for commands");
 
 	while (!is_canceled) {
 		try {
 			auto command = receive();
 			// spdlog::info(command.dump(2));
-			handle_command(command);
+			handle_message(command);
 		} catch (const std::exception& error) {
-			spdlog::error("Error in Server::run: {}", error.what());
+			spdlog::error("Error in MessageHandler::run: {}", error.what());
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 	}
 }
 
-void Server::force_cancel() {
+void MessageHandler::force_cancel() {
 	spdlog::info("Force cancel");
 	is_canceled = true;
 	channel.close();
 }
 
-void Server::handle_command(const nlohmann::json& command) {
+void MessageHandler::handle_message(const nlohmann::json& command) {
 	std::string method_name = command.at("method").get<std::string>();
 
 	if (command.count("version")) {
@@ -102,7 +102,7 @@ void Server::handle_command(const nlohmann::json& command) {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
 	} catch (const std::exception& error) {
-		spdlog::error("Error in Server::handle_command: {}", error.what());
+		spdlog::error("Error in MessageHandler::handle_message: {}", error.what());
 #ifdef WIN32
 		if (dynamic_cast<const std::system_error*>(&error) && !dynamic_cast<const fs::filesystem_error*>(&error)) {
 			std::wstring utf16_err = winapi::acp_to_utf16(error.what());
@@ -117,7 +117,7 @@ void Server::handle_command(const nlohmann::json& command) {
 	}
 }
 
-void Server::send_error(const std::string& error) {
+void MessageHandler::send_error(const std::string& error) {
 	nlohmann::json response = {
 		{"success", false},
 	};
@@ -131,7 +131,7 @@ void Server::send_error(const std::string& error) {
 	send(std::move(response));
 }
 
-void Server::handle_check_avaliable(const nlohmann::json& command) {
+void MessageHandler::handle_check_avaliable(const nlohmann::json& command) {
 	spdlog::info("Checking avaliability call");
 
 	nlohmann::json response = {
@@ -143,7 +143,7 @@ void Server::handle_check_avaliable(const nlohmann::json& command) {
 	spdlog::info("Checking avaliability is OK");
 }
 
-void Server::handle_get_tmp_dir(const nlohmann::json& command) {
+void MessageHandler::handle_get_tmp_dir(const nlohmann::json& command) {
 	spdlog::info("Getting tmp dir");
 
 	nlohmann::json response = {
@@ -157,7 +157,7 @@ void Server::handle_get_tmp_dir(const nlohmann::json& command) {
 	spdlog::info("Getting tmp dir is OK");
 }
 
-void Server::handle_copy_file(const nlohmann::json& command) {
+void MessageHandler::handle_copy_file(const nlohmann::json& command) {
 	const nlohmann::json& args = command.at("args");
 
 	for (auto file: args) {
@@ -204,7 +204,7 @@ void Server::handle_copy_file(const nlohmann::json& command) {
 	send(std::move(response));
 }
 
-nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path& dst) {
+nlohmann::json MessageHandler::copy_single_file_out(const fs::path& src, const fs::path& dst) {
 	if (src.is_relative()) {
 		throw std::runtime_error(fmt::format("Source path on vm must be absolute"));
 	}
@@ -227,7 +227,7 @@ nlohmann::json Server::copy_single_file_out(const fs::path& src, const fs::path&
 	return result;
 }
 
-nlohmann::json Server::copy_directory_out(const fs::path& dir, const fs::path& dst) {
+nlohmann::json MessageHandler::copy_directory_out(const fs::path& dir, const fs::path& dst) {
 	nlohmann::json files = nlohmann::json::array();
 
 	files.push_back({
@@ -248,7 +248,7 @@ nlohmann::json Server::copy_directory_out(const fs::path& dir, const fs::path& d
 	return files;
 }
 
-void Server::handle_copy_files_out(const nlohmann::json& command) {
+void MessageHandler::handle_copy_files_out(const nlohmann::json& command) {
 	const nlohmann::json& args = command.at("args");
 
 	nlohmann::json files = nlohmann::json::array();
@@ -304,7 +304,7 @@ void Server::handle_copy_files_out(const nlohmann::json& command) {
 	spdlog::info("Copied FROM guest: " + src.generic_string());
 }
 
-void Server::handle_execute(const nlohmann::json& command) {
+void MessageHandler::handle_execute(const nlohmann::json& command) {
 	const nlohmann::json& args = command.at("args");
 
 	auto cmd = args[0].get<std::string>();
@@ -355,7 +355,7 @@ void Server::handle_execute(const nlohmann::json& command) {
 	spdlog::info("Return code: " + std::to_string(rc));
 }
 
-nlohmann::json Server::receive() {
+nlohmann::json MessageHandler::receive() {
 	uint32_t msg_size;
 	while (true) {
 		size_t bytes_read = channel.read((uint8_t*)&msg_size, 4);
@@ -381,7 +381,7 @@ nlohmann::json Server::receive() {
 	return result;
 }
 
-void Server::send(nlohmann::json response) {
+void MessageHandler::send(nlohmann::json response) {
 	response["version"] = TESTO_VERSION;
 	auto response_str = response.dump();
 	uint32_t response_size = (uint32_t)response_str.size();
@@ -389,7 +389,7 @@ void Server::send(nlohmann::json response) {
 	send_raw((uint8_t*)response_str.data(), response_size);
 }
 
-void Server::receive_raw(uint8_t* data, size_t size) {
+void MessageHandler::receive_raw(uint8_t* data, size_t size) {
 	size_t already_read = 0;
 	while (already_read < size) {
 		size_t n = channel.read(&data[already_read], size - already_read);
@@ -400,7 +400,7 @@ void Server::receive_raw(uint8_t* data, size_t size) {
 	}
 }
 
-void Server::send_raw(uint8_t* data, size_t size) {
+void MessageHandler::send_raw(uint8_t* data, size_t size) {
 	size_t already_send = 0;
 	while (already_send < size) {
 		size_t n = channel.write(&data[already_send], size - already_send);

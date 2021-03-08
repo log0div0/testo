@@ -24,12 +24,12 @@ struct VersionNumber {
 	std::string to_string() const;
 };
 
-struct Server {
-	Server() = default;
-	~Server() = default;
+struct MessageHandler {
+	MessageHandler() = default;
+	~MessageHandler() = default;
 
-	Server(const Server&) = delete;
-	Server& operator=(const Server&) = delete;
+	MessageHandler(const MessageHandler&) = delete;
+	MessageHandler& operator=(const MessageHandler&) = delete;
 
 	void run();
 	void force_cancel();
@@ -37,7 +37,7 @@ struct Server {
 private:
 	bool is_canceled = false;
 
-	void handle_command(const nlohmann::json& command);
+	void handle_message(const nlohmann::json& command);
 	void handle_check_avaliable(const nlohmann::json& command);
 	void handle_get_tmp_dir(const nlohmann::json& command);
 	void handle_copy_file(const nlohmann::json& command);

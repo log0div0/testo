@@ -10,15 +10,15 @@
 #include <winapi/Functions.hpp>
 #include <coro/Application.h>
 
-#include "Server.hpp"
+#include "MessageHandler.hpp"
 
-Server* g_server = nullptr;
+MessageHandler* g_message_handler = nullptr;
 
 std::function app_main = [&]() {
 	try {
-		Server server;
-		g_server = &server;
-		server.run();
+		MessageHandler message_handler;
+		g_message_handler = &message_handler;
+		message_handler.run();
 	} catch (const std::exception& err) {
 		spdlog::error("app_main std error: {}", err.what());
 	} catch (const coro::CancelError&) {
@@ -37,12 +37,12 @@ void ControlHandler(DWORD request) {
 	{
 	case SERVICE_CONTROL_STOP:
 		spdlog::info("SERVICE_CONTROL_STOP BEGIN");
-		g_server->force_cancel();
+		g_message_handler->force_cancel();
 		spdlog::info("SERVICE_CONTROL_STOP END");
 		break;
 	case SERVICE_CONTROL_SHUTDOWN:
 		spdlog::info("SERVICE_CONTROL_SHUTDOWN BEGIN");
-		g_server->force_cancel();
+		g_message_handler->force_cancel();
 		spdlog::info("SERVICE_CONTROL_SHUTDOWN END");
 		break;
 	default:

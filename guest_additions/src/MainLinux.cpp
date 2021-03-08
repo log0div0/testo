@@ -13,7 +13,7 @@
 
 #include <clipp.h>
 
-#include "Server.hpp"
+#include "MessageHandler.hpp"
 
 #define APP_NAME "testo-guest-additions"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
@@ -75,8 +75,8 @@ void start() {
 	spdlog::info("Starting ...");
 	coro::Application([] {
 		try {
-			Server commands_handler;
-			commands_handler.run();
+			MessageHandler message_handler;
+			message_handler.run();
 		} catch (const std::exception& err) {
 			spdlog::error("app_main std error: {}", err.what());
 		} catch (const coro::CancelError&) {
