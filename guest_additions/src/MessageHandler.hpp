@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include CHANNEL_CLASS_HEADER
+#include "Channel.hpp"
 
 #include <nlohmann/json.hpp>
 #include <ghc/filesystem.hpp>
@@ -25,7 +25,7 @@ struct VersionNumber {
 };
 
 struct MessageHandler {
-	MessageHandler() = default;
+	MessageHandler(std::unique_ptr<Channel> channel_): channel(std::move(channel_)) {};
 	~MessageHandler() = default;
 
 	MessageHandler(const MessageHandler&) = delete;
@@ -56,7 +56,7 @@ private:
 	void receive_raw(uint8_t* data, size_t size);
 	void send_raw(uint8_t* data, size_t size);
 
-	CHANNEL_CLASS_NAME channel;
+	std::unique_ptr<Channel> channel;
 
 	VersionNumber ver;
 };

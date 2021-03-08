@@ -73,7 +73,7 @@ void MessageHandler::run() {
 void MessageHandler::force_cancel() {
 	spdlog::info("Force cancel");
 	is_canceled = true;
-	channel.close();
+	channel->close();
 }
 
 void MessageHandler::handle_message(const nlohmann::json& command) {
@@ -358,7 +358,7 @@ void MessageHandler::handle_execute(const nlohmann::json& command) {
 nlohmann::json MessageHandler::receive() {
 	uint32_t msg_size;
 	while (true) {
-		size_t bytes_read = channel.read((uint8_t*)&msg_size, 4);
+		size_t bytes_read = channel->read((uint8_t*)&msg_size, 4);
 		if (bytes_read == 0) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
@@ -392,7 +392,7 @@ void MessageHandler::send(nlohmann::json response) {
 void MessageHandler::receive_raw(uint8_t* data, size_t size) {
 	size_t already_read = 0;
 	while (already_read < size) {
-		size_t n = channel.read(&data[already_read], size - already_read);
+		size_t n = channel->read(&data[already_read], size - already_read);
 		if (n == 0) {
 			throw std::runtime_error("EOF while reading");
 		}
@@ -403,7 +403,7 @@ void MessageHandler::receive_raw(uint8_t* data, size_t size) {
 void MessageHandler::send_raw(uint8_t* data, size_t size) {
 	size_t already_send = 0;
 	while (already_send < size) {
-		size_t n = channel.write(&data[already_send], size - already_send);
+		size_t n = channel->write(&data[already_send], size - already_send);
 		if (n == 0) {
 			throw std::runtime_error("EOF while writing");
 		}

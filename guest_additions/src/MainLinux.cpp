@@ -14,6 +14,14 @@
 #include <clipp.h>
 
 #include "MessageHandler.hpp"
+#ifdef __HYPERV__
+#include "HyperVChannel.hpp"
+#elif __QEMU__
+#include "QemuLinuxChannel.hpp"
+#else
+#error "Unknown hypervisor"
+#endif
+
 
 #define APP_NAME "testo-guest-additions"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
@@ -75,8 +83,24 @@ void start() {
 	spdlog::info("Starting ...");
 	coro::Application([] {
 		try {
-			MessageHandler message_handler;
+#ifdef __QEMU__
+			std::unique_ptr<Channel> channel(new QemuLinuxChannel);
+			MessageHandler message_handler(std::move(channel));
 			message_handler.run();
+#elif __HYPERV__
+			coro::Acceptor<hyperv::VSocketProtocol> acceptor(hyperv::VSocketEndpoint(HYPERV_PORT));
+			acceptor.run([](coro::StreamSocket<hyperv::VSocketProtocol> socket) {
+				try {
+					std::unique_ptr<Channel> channel(new HyperVChannel(std::move(socket)));
+					MessageHandler message_handler(std::move(channel));
+					message_handler.run();
+				} catch (const std::exception& error) {
+					spdlog::error("Error inside acceptor loop: ", error.what());
+				}
+			});
+#else
+#error "Unknown hypervisor"
+#endif
 		} catch (const std::exception& err) {
 			spdlog::error("app_main std error: {}", err.what());
 		} catch (const coro::CancelError&) {
