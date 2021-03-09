@@ -18,5 +18,6 @@ add_subdirectory(guestfs)
 add_subdirectory(psf)
 endif()
 
+add_subdirectory(guest_additions_common_stuff)
 add_subdirectory(stb)
 add_subdirectory(os)

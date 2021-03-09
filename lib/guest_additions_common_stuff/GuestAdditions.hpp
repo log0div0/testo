@@ -2,24 +2,11 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include "../Utils.hpp"
 
-struct VersionNumber {
-	int MAJOR = 0;
-	int MINOR = 0;
-	int PATCH = 0;
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
 
-	VersionNumber() = default;
-	VersionNumber(int a, int b, int c):
-		MAJOR(a),
-		MINOR(b),
-		PATCH(c) {}
-	VersionNumber(const std::string& str);
-
-	bool operator<(const VersionNumber& other);
-
-	std::string to_string() const;
-};
+#include "VersionNumber.hpp"
 
 struct GuestAdditions {
 	virtual ~GuestAdditions() = default;
@@ -31,6 +18,8 @@ struct GuestAdditions {
 	int execute(const std::string& command,
 		const std::function<void(const std::string&)>& callback);
 	std::string get_tmp_dir();
+	void mount(const std::string& folder_name, const fs::path& guest_path, bool permanent);
+	void umount(const std::string& folder_name, bool permanent);
 
 private:
 	void copy_file_to_guest(const fs::path& src, const fs::path& dst);

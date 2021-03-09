@@ -13,6 +13,8 @@
 #include <coro/Application.h>
 #include <coro/CoroPool.h>
 #include <coro/Timer.h>
+#include <coro/StreamSocket.h>
+#include <coro/Acceptor.h>
 
 #include <clipp.h>
 
@@ -101,7 +103,7 @@ void remove_handler() {
 			MessageHandler message_handler(std::move(channel));
 			message_handler.run();
 		} catch (const std::exception& error) {
-			spdlog::error("Error inside acceptor loop: {}", error.what());
+			spdlog::error("Error inside remote acceptor loop: {}", error.what());
 		}
 	});
 #else
@@ -109,16 +111,46 @@ void remove_handler() {
 #endif
 }
 
-void local_handler() {
+struct LocalChannel: Channel {
+	using Socket = coro::StreamSocket<asio::local::stream_protocol>;
 
+	LocalChannel(Socket socket_): socket(std::move(socket_)) {}
+	~LocalChannel() = default;
+
+	LocalChannel(LocalChannel&& other);
+	LocalChannel& operator=(LocalChannel&& other);
+
+	size_t read(uint8_t* data, size_t size) override {
+		return socket.readSome(data, size);
+	}
+
+	size_t write(uint8_t* data, size_t size) override {
+		return socket.writeSome(data, size);
+	}
+
+private:
+	Socket socket;
+};
+
+void local_handler() {
+	coro::Acceptor<asio::local::stream_protocol> acceptor("/var/run/testo-guest-additions.sock");
+	acceptor.run([](coro::StreamSocket<asio::local::stream_protocol> socket) {
+		try {
+			std::shared_ptr<Channel> channel(new LocalChannel(std::move(socket)));
+			MessageHandler message_handler(std::move(channel));
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside local acceptor loop: {}", error.what());
+		}
+	});
 }
 
 void app_main() {
 	try {
-		coro::CoroPool pool;
-		pool.exec(remove_handler);
-		pool.exec(local_handler);
-		pool.waitAll();
+		std::thread t1([]() {coro::Application(remove_handler).run();});
+		std::thread t2([]() {coro::Application(local_handler).run();});
+		t1.join();
+		t2.join();
 	} catch (const std::exception& err) {
 		spdlog::error("app_main std error: {}", err.what());
 	} catch (const coro::CancelError&) {
@@ -133,7 +165,7 @@ void start() {
 		throw std::system_error(errno, std::system_category());
 	}
 	spdlog::info("Starting ...");
-	coro::Application(app_main).run();
+	app_main();
 	spdlog::info("Stopped");
 }
 

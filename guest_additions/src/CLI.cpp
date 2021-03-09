@@ -1,18 +1,60 @@
 
 #include <coro/Application.h>
+#include <coro/StreamSocket.h>
 #include <clipp.h>
 #include <iostream>
+#include <guest_additions_common_stuff/GuestAdditions.hpp>
+
+#ifdef __linux__
+struct GA: GuestAdditions {
+	GA() {
+		socket.connect("/var/run/testo-guest-additions.sock");
+	}
+
+private:
+	void send_raw(const uint8_t* data, size_t size) override {
+		size_t n = socket.write(data, size);
+		if (n != size) {
+			throw std::runtime_error(__PRETTY_FUNCTION__);
+		}
+	}
+	void recv_raw(uint8_t* data, size_t size) override {
+		size_t n = socket.read(data, size);
+		if (n != size) {
+			throw std::runtime_error(__PRETTY_FUNCTION__);
+		}
+	}
+
+	coro::StreamSocket<asio::local::stream_protocol> socket;
+};
+#endif
 
 struct MountArgs {
 	std::string folder_name;
 	std::string guest_path;
-	bool permanent;
+	bool permanent = false;
 };
 
 struct UmountArgs {
 	std::string folder_name;
-	bool permanent;
+	bool permanent = false;
 };
+
+void mount_mode(const MountArgs& args) {
+#if defined (__QEMU__) && defined(__linux__)
+	GA().mount(args.folder_name, fs::absolute(args.guest_path), args.permanent);
+#else
+	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
+#endif
+}
+
+void umount_mode(const UmountArgs& args) {
+#if defined (__QEMU__) && defined(__linux__)
+	GA().umount(args.folder_name, args.permanent);
+#else
+	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
+#endif
+}
 
 enum class mode {
 	mount,
@@ -47,6 +89,17 @@ int do_main(int argc, char** argv) {
 	if (!parse(argc, argv, cli)) {
 		std::cout << make_man_page(cli, argv[0]) << std::endl;
 		return 1;
+	}
+
+	switch (selected_mode) {
+		case mode::mount:
+			mount_mode(mount_args);
+			break;
+		case mode::umount:
+			umount_mode(umount_args);
+			break;
+		default:
+			throw std::runtime_error("Invalid mode");
 	}
 
 	return 0;
