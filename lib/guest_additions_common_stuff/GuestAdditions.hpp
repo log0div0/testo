@@ -11,15 +11,16 @@ namespace fs = ghc::filesystem;
 struct GuestAdditions {
 	virtual ~GuestAdditions() = default;
 
-	bool is_avaliable();
+	bool is_avaliable(std::chrono::milliseconds timeout = std::chrono::seconds(3));
 	void copy_to_guest(const fs::path& src, const fs::path& dst);
 	void copy_from_guest(const fs::path& src, const fs::path& dst);
 	void remove_from_guest(const fs::path& path);
 	int execute(const std::string& command,
 		const std::function<void(const std::string&)>& callback);
 	std::string get_tmp_dir();
-	void mount(const std::string& folder_name, const fs::path& guest_path, bool permanent);
-	void umount(const std::string& folder_name, bool permanent);
+	bool mount(const std::string& folder_name, const fs::path& guest_path, bool permanent);
+	nlohmann::json get_shared_folder_status(const std::string& folder_name);
+	bool umount(const std::string& folder_name, bool permanent);
 
 private:
 	void copy_file_to_guest(const fs::path& src, const fs::path& dst);

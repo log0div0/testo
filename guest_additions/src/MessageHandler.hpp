@@ -30,6 +30,10 @@ private:
 	void handle_copy_files_out(const nlohmann::json& command);
 	void handle_execute(const nlohmann::json& command);
 
+	void handle_mount(const nlohmann::json& command);
+	void handle_get_shared_folder_status(const nlohmann::json& command);
+	void handle_umount(const nlohmann::json& command);
+
 	void send_error(const std::string& error);
 
 	std::shared_ptr<Channel> channel;

@@ -42,7 +42,10 @@ struct UmountArgs {
 
 void mount_mode(const MountArgs& args) {
 #if defined (__QEMU__) && defined(__linux__)
-	GA().mount(args.folder_name, fs::absolute(args.guest_path), args.permanent);
+	bool was_indeed_mounted = GA().mount(args.folder_name, fs::absolute(args.guest_path), args.permanent);
+	if (!was_indeed_mounted) {
+		std::cout << "The shared folder is already mounted" << std::endl;
+	}
 #else
 	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
 #endif
@@ -50,7 +53,10 @@ void mount_mode(const MountArgs& args) {
 
 void umount_mode(const UmountArgs& args) {
 #if defined (__QEMU__) && defined(__linux__)
-	GA().umount(args.folder_name, args.permanent);
+	bool was_indeed_umounted = GA().umount(args.folder_name, args.permanent);
+	if (!was_indeed_umounted) {
+		std::cout << "The shared folder is already umounted" << std::endl;
+	}
 #else
 	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
 #endif

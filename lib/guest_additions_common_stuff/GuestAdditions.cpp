@@ -7,13 +7,13 @@
 
 using namespace std::literals::chrono_literals;
 
-bool GuestAdditions::is_avaliable() {
+bool GuestAdditions::is_avaliable(std::chrono::milliseconds time_to_wait) {
 	try {
 		nlohmann::json request = {
 			{"method", "check_avaliable"}
 		};
 
-		coro::Timeout timeout(3s);
+		coro::Timeout timeout(time_to_wait);
 
 		send(std::move(request));
 
@@ -176,33 +176,43 @@ void GuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst
 	}
 }
 
-void GuestAdditions::mount(const std::string& folder_name, const fs::path& guest_path, bool permanent) {
+bool GuestAdditions::mount(const std::string& folder_name, const fs::path& guest_path, bool permanent) {
 	nlohmann::json request = {
 		{"method", "mount"},
 		{"args", {
-			{
-				{"folder_name", folder_name},
-				{"guest_path", guest_path.generic_string()},
-				{"permanent", permanent},
-			}
+			{"folder_name", folder_name},
+			{"guest_path", guest_path.generic_string()},
+			{"permanent", permanent},
 		}}
 	};
 	send(std::move(request));
 	auto response = recv();
+	return response.at("was_indeed_mounted");
 }
 
-void GuestAdditions::umount(const std::string& folder_name, bool permanent) {
+nlohmann::json GuestAdditions::get_shared_folder_status(const std::string& folder_name) {
+	nlohmann::json request = {
+		{"method", "get_shared_folder_status"},
+		{"args", {
+			{"folder_name", folder_name}
+		}}
+	};
+	send(std::move(request));
+	auto response = recv();
+	return response.at("result");
+}
+
+bool GuestAdditions::umount(const std::string& folder_name, bool permanent) {
 	nlohmann::json request = {
 		{"method", "umount"},
 		{"args", {
-			{
-				{"folder_name", folder_name},
-				{"permanent", permanent},
-			}
+			{"folder_name", folder_name},
+			{"permanent", permanent},
 		}}
 	};
 	send(std::move(request));
 	auto response = recv();
+	return response.at("was_indeed_umounted");
 }
 
 void GuestAdditions::send(nlohmann::json command) {

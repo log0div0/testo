@@ -54,6 +54,12 @@ void MessageHandler::handle_message(const nlohmann::json& command) {
 			return handle_copy_files_out(command);
 		} else if (method_name == "execute") {
 			return handle_execute(command);
+		} else if (method_name == "mount") {
+			return handle_mount(command);
+		} else if (method_name == "get_shared_folder_status") {
+			return handle_get_shared_folder_status(command);
+		} else if (method_name == "umount") {
+			return handle_umount(command);
 		} else {
 			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 		}
@@ -309,4 +315,123 @@ void MessageHandler::handle_execute(const nlohmann::json& command) {
 
 	spdlog::info("Command finished: " + cmd);
 	spdlog::info("Return code: " + std::to_string(rc));
+}
+
+std::vector<std::string> split_string_by_newline(const std::string& str)
+{
+	auto result = std::vector<std::string>{};
+	auto ss = std::stringstream{str};
+
+	for (std::string line; std::getline(ss, line, '\n');)
+		result.push_back(line);
+
+	return result;
+}
+
+nlohmann::json get_shared_folder_status(const std::string& folder_name) {
+	nlohmann::json result = {
+		{"name", folder_name},
+		{"is_mounted", false}
+	};
+#if defined(__QEMU__) && defined(__linux__)
+	std::regex re(folder_name + " (.+?) 9p .+");
+	std::smatch match;
+	std::string output = os::Process::exec("cat /proc/mounts");
+	for (auto& line: split_string_by_newline(output)) {
+		if (std::regex_match(line, match, re)) {
+			result["is_mounted"] = true;
+			result["guest_path"] = match[1];
+			break;
+		}
+	}
+#else
+	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
+#endif
+	return result;
+}
+
+void MessageHandler::handle_mount(const nlohmann::json& command) {
+	const nlohmann::json& args = command.at("args");
+	std::string folder_name = args.at("folder_name");
+	fs::path guest_path = args.at("guest_path").get<std::string>();
+	bool permanent = args.at("permanent");
+
+	spdlog::info("Mounting shared folder {} to {}", folder_name, guest_path.generic_string());
+
+	if (guest_path.is_relative()) {
+		throw std::runtime_error("Guest path must be absolute");
+	}
+
+	if (fs::exists(guest_path)) {
+		if (!fs::is_directory(guest_path)) {
+			throw std::runtime_error("Path " + guest_path.generic_string() + " is not a directory");
+		}
+	} else {
+		fs::create_directories(guest_path);
+	}
+
+	auto status = get_shared_folder_status(folder_name);
+	if (!status.at("is_mounted")) {
+#if defined(__QEMU__) && defined(__linux__)
+		os::Process::exec("modprobe 9p");
+		os::Process::exec("modprobe virtio");
+		os::Process::exec("modprobe 9pnet");
+		os::Process::exec("modprobe 9pnet_virtio");
+		os::Process::exec("mount " + folder_name + " \"" + guest_path.generic_string() + "\" -t 9p -o trans=virtio");
+#else
+		throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
+#endif
+	}
+
+	nlohmann::json result = {
+		{"success", true},
+		{"was_indeed_mounted", !status.at("is_mounted")}
+	};
+
+	channel->send(std::move(result));
+
+	spdlog::info("Mounting is OK");
+}
+
+void MessageHandler::handle_get_shared_folder_status(const nlohmann::json& command) {
+	const nlohmann::json& args = command.at("args");
+	std::string folder_name = args.at("folder_name");
+
+	spdlog::info("Getting shared folder {} status", folder_name);
+
+	nlohmann::json status = get_shared_folder_status(folder_name);
+
+	nlohmann::json result = {
+		{"success", true},
+		{"result", status}
+	};
+
+	channel->send(std::move(result));
+
+	spdlog::info("Getting status is OK");
+}
+
+void MessageHandler::handle_umount(const nlohmann::json& command) {
+	const nlohmann::json& args = command.at("args");
+	std::string folder_name = args.at("folder_name");
+	bool permanent = args.at("permanent");
+
+	spdlog::info("Umounting shared folder {}", folder_name);
+
+	auto status = get_shared_folder_status(folder_name);
+	if (status.at("is_mounted"))
+#if defined(__QEMU__) && defined(__linux__)
+		os::Process::exec("umount " + folder_name);
+#else
+		throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
+#endif
+
+	nlohmann::json result = {
+		{"success", true},
+		{"was_indeed_umounted", status.at("is_mounted")}
+	};
+
+	channel->send(std::move(result));
+
+	spdlog::info("Umounting is OK");
 }

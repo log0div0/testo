@@ -9,6 +9,8 @@
 #include <fmt/format.h>
 #include <thread>
 
+using namespace std::chrono_literals;
+
 const std::vector<std::string> QemuVM::disk_targets = {
 	"hda",
 	"hdb",
@@ -371,6 +373,22 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
+		nlohmann::json umounted_folders = nlohmann::json::array();
+		if (config.count("shared_folder") && config.at("shared_folder").size() && (state() == VmState::Suspended)) {
+			resume();
+			QemuGuestAdditions ga(domain);
+			if (ga.is_avaliable(1500ms)) {
+				for (auto& shared_folder: config.at("shared_folder")) {
+					auto folder_status = ga.get_shared_folder_status(shared_folder.at("name"));
+					if (folder_status.at("is_mounted")) {
+						ga.umount(folder_status.at("name"), false);
+						umounted_folders.push_back(folder_status);
+					}
+				}
+			}
+			suspend();
+		}
+
 		pugi::xml_document xml_config;
 		xml_config.load_string(fmt::format(R"(
 			<domainsnapshot>
@@ -386,12 +404,22 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 			snap = domain.snapshot_create_xml(xml_config);
 		}
 
+		if (umounted_folders.size()) {
+			resume();
+			QemuGuestAdditions ga(domain);
+			for (auto& folder_status: umounted_folders) {
+				ga.mount(folder_status.at("name"), folder_status.at("guest_path").get<std::string>(), false);
+			}
+			suspend();
+		}
+
 		auto new_config = domain.dump_xml();
 		std::stringstream ss;
 		new_config.save(ss,"  ");
 		auto result = nlohmann::json::object();
 		result["config"] = base64_encode((uint8_t*)ss.str().c_str(), ss.str().length());
 		result["nics"] = nic_pci_map;
+		result["automaticaly_umounted_shared_folders"] = umounted_folders;
 		return result;
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Taking snapshot {}", snapshot)));
@@ -423,6 +451,15 @@ void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque)
 			domain.stop();
 		}
 		domain.revert_to_snapshot(snap);
+
+		if (opaque.count("automaticaly_umounted_shared_folders") && opaque.at("automaticaly_umounted_shared_folders").size() && (state() == VmState::Suspended)) {
+			resume();
+			QemuGuestAdditions ga(domain);
+			for (auto& folder_status: opaque.at("automaticaly_umounted_shared_folders")) {
+				ga.mount(folder_status.at("name"), folder_status.at("guest_path").get<std::string>(), false);
+			}
+			suspend();
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Performing rollback error"));
 	}
