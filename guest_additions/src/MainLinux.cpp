@@ -147,6 +147,7 @@ void local_handler() {
 
 void app_main() {
 	try {
+		mount_permanent_shared_folders();
 		std::thread t1([]() {coro::Application(remove_handler).run();});
 		std::thread t2([]() {coro::Application(local_handler).run();});
 		t1.join();

@@ -7,7 +7,6 @@
 
 #include <spdlog/spdlog.h>
 #include <stdexcept>
-#include <regex>
 #include <fstream>
 
 #ifdef WIN32
@@ -317,39 +316,6 @@ void MessageHandler::handle_execute(const nlohmann::json& command) {
 	spdlog::info("Return code: " + std::to_string(rc));
 }
 
-std::vector<std::string> split_string_by_newline(const std::string& str)
-{
-	auto result = std::vector<std::string>{};
-	auto ss = std::stringstream{str};
-
-	for (std::string line; std::getline(ss, line, '\n');)
-		result.push_back(line);
-
-	return result;
-}
-
-nlohmann::json get_shared_folder_status(const std::string& folder_name) {
-	nlohmann::json result = {
-		{"name", folder_name},
-		{"is_mounted", false}
-	};
-#if defined(__QEMU__) && defined(__linux__)
-	std::regex re(folder_name + " (.+?) 9p .+");
-	std::smatch match;
-	std::string output = os::Process::exec("cat /proc/mounts");
-	for (auto& line: split_string_by_newline(output)) {
-		if (std::regex_match(line, match, re)) {
-			result["is_mounted"] = true;
-			result["guest_path"] = match[1];
-			break;
-		}
-	}
-#else
-	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
-#endif
-	return result;
-}
-
 void MessageHandler::handle_mount(const nlohmann::json& command) {
 	const nlohmann::json& args = command.at("args");
 	std::string folder_name = args.at("folder_name");
@@ -358,34 +324,15 @@ void MessageHandler::handle_mount(const nlohmann::json& command) {
 
 	spdlog::info("Mounting shared folder {} to {}", folder_name, guest_path.generic_string());
 
-	if (guest_path.is_relative()) {
-		throw std::runtime_error("Guest path must be absolute");
-	}
+	bool was_indeed_mounted = mount_shared_folder(folder_name, guest_path);
 
-	if (fs::exists(guest_path)) {
-		if (!fs::is_directory(guest_path)) {
-			throw std::runtime_error("Path " + guest_path.generic_string() + " is not a directory");
-		}
-	} else {
-		fs::create_directories(guest_path);
-	}
-
-	auto status = get_shared_folder_status(folder_name);
-	if (!status.at("is_mounted")) {
-#if defined(__QEMU__) && defined(__linux__)
-		os::Process::exec("modprobe 9p");
-		os::Process::exec("modprobe virtio");
-		os::Process::exec("modprobe 9pnet");
-		os::Process::exec("modprobe 9pnet_virtio");
-		os::Process::exec("mount " + folder_name + " \"" + guest_path.generic_string() + "\" -t 9p -o trans=virtio");
-#else
-		throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
-#endif
+	if (permanent) {
+		register_shared_folder(folder_name, guest_path);
 	}
 
 	nlohmann::json result = {
 		{"success", true},
-		{"was_indeed_mounted", !status.at("is_mounted")}
+		{"was_indeed_mounted", was_indeed_mounted}
 	};
 
 	channel->send(std::move(result));
@@ -418,17 +365,15 @@ void MessageHandler::handle_umount(const nlohmann::json& command) {
 
 	spdlog::info("Umounting shared folder {}", folder_name);
 
-	auto status = get_shared_folder_status(folder_name);
-	if (status.at("is_mounted"))
-#if defined(__QEMU__) && defined(__linux__)
-		os::Process::exec("umount " + folder_name);
-#else
-		throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
-#endif
+	bool was_indeed_umounted = umount_shared_folder(folder_name);
+
+	if (permanent) {
+		unregister_shared_folder(folder_name);
+	}
 
 	nlohmann::json result = {
 		{"success", true},
-		{"was_indeed_umounted", status.at("is_mounted")}
+		{"was_indeed_umounted", was_indeed_umounted}
 	};
 
 	channel->send(std::move(result));

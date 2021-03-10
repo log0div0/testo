@@ -2,11 +2,7 @@
 #pragma once
 
 #include "Channel.hpp"
-
-#include <nlohmann/json.hpp>
-#include <ghc/filesystem.hpp>
-namespace fs = ghc::filesystem;
-
+#include "SharedFolder.hpp"
 #include <guest_additions_common_stuff/VersionNumber.hpp>
 
 struct MessageHandler {

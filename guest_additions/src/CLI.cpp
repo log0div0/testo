@@ -87,7 +87,7 @@ int do_main(int argc, char** argv) {
 	auto umount_spec = "umount options:" % (
 		command("umount").set(selected_mode, mode::umount),
 		value("folder_name", umount_args.folder_name) % "Shared folder name",
-		option("--permanent").set(mount_args.permanent) % "Stop mounting this folder automatically after system reboot"
+		option("--permanent").set(umount_args.permanent) % "Stop mounting this folder automatically after system reboot"
 	);
 
 	auto cli = (mount_spec | umount_spec);
