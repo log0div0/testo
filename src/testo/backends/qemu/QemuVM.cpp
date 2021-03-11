@@ -363,7 +363,7 @@ void QemuVM::install() {
 void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-		for (auto& snapshot: domain.snapshots()) {
+		for (auto& snapshot: domain.snapshots({VIR_DOMAIN_SNAPSHOT_LIST_ROOTS})) {
 			snapshot.destroy({VIR_DOMAIN_SNAPSHOT_DELETE_CHILDREN});
 		}
 		domain.undefine();

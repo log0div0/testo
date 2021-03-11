@@ -115,8 +115,11 @@ test win10_activate: win10_install_os_part_2 {
 		mouse dclick
 		wait "Разрешить этому приложению"
 		mouse click "Да".from_bottom(0)
+		mouse click "HWID"
+		sleep 5s
+		mouse click "KMS38"
 		mouse click "Активировать Windows 10"
-		wait "Постоянная активация прошла успешно"
+		wait "Срок активации"
 		press LeftAlt+F4
 	}
 }
