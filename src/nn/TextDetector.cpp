@@ -2,6 +2,7 @@
 #include "TextDetector.hpp"
 #include <iostream>
 #include <algorithm>
+#include <math.h>
 
 namespace nn {
 
@@ -111,6 +112,33 @@ std::vector<Rect> TextDetector::find_rects(int c) {
 		}
 	}
 	std::vector<Rect> rects = labeling_wu[c].run();
+	for (size_t i = 0; i < rects.size(); ++i) {
+		auto& rect = rects[i];
+		double sum_top = 0;
+		double sum_bottom = 0;
+		for (int x = rect.left; x <= rect.right; ++x) {
+			for (int y = rect.top; y <= rect.bottom; ++y) {
+				if (labeling_wu[c].L[y*out_w + x] == (i+1)) {
+					sum_top += y;
+					break;
+				}
+			}
+			for (int y = rect.bottom; y >= rect.top; --y) {
+				if (labeling_wu[c].L[y*out_w + x] == (i+1)) {
+					sum_bottom += y;
+					break;
+				}
+			}
+		}
+		rect.top = ceil(sum_top / rect.width()) - 1;
+		if (rect.top < 0) {
+			rect.top = 0;
+		}
+		rect.bottom = floor(sum_bottom / rect.width()) + 1;
+		if (rect.bottom > (in_h - 1)) {
+			rect.bottom = (in_h - 1);
+		}
+	}
 	return rects;
 }
 
