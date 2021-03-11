@@ -1190,17 +1190,10 @@ void QemuVM::plug_dvd(fs::path path) {
 			throw std::runtime_error("Some dvd is already plugged in");
 		}
 
-		std::string string_config = fmt::format(R"(
-			<disk type='file' device='cdrom'>
-				<driver name='qemu' type='raw'/>
-				<source file='{}'/>
-				<backingStore/>
-				<target dev='hdb' bus='ide'/>
-				<readonly/>
-				<alias name='ide0-0-1'/>
-				<address type='drive' controller='0' bus='0' target='0' unit='1'/>
-			</disk>
-		)", path.generic_string().c_str());
+		auto config = domain.dump_xml();
+		auto cdrom = config.first_child().child("devices").find_child_by_attribute("device", "cdrom");
+		cdrom.remove_child("source");
+		cdrom.append_child("source").append_attribute("file").set_value(path.generic_string().c_str());
 
 		std::vector<virDomainDeviceModifyFlags> flags = {VIR_DOMAIN_DEVICE_MODIFY_CONFIG, VIR_DOMAIN_DEVICE_MODIFY_CURRENT, VIR_DOMAIN_DEVICE_MODIFY_FORCE};
 
@@ -1208,10 +1201,7 @@ void QemuVM::plug_dvd(fs::path path) {
 			flags.push_back(VIR_DOMAIN_DEVICE_MODIFY_LIVE);
 		}
 
-		pugi::xml_document dvd_config;
-		dvd_config.load_string(string_config.c_str());
-
-		domain.update_device(dvd_config, flags);
+		domain.update_device(cdrom, flags);
 	} catch (const std::string& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("plugging dvd {}", path.generic_string())));
 	}
