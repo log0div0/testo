@@ -1,0 +1,44 @@
+{
+	"objs": {
+		"2d5bb190-6083-48bf-bfd5-f93ab6cce2ae": {
+			"type": "text",
+			"x": 654.85,
+			"y": 432.94,
+			"width": 313.1,
+			"height": 15.12,
+			"text": "Someone is standing on the ethernet cab"
+		},
+		"3af3db53-d013-4570-be79-ab9545183084": {
+			"type": "text",
+			"x": 654.94,
+			"y": 448.33,
+			"width": 312.9,
+			"height": 15.41,
+			"text": "Communist revolutionaries taking over t"
+		},
+		"fe72d6e7-4e66-4109-9a26-557665cc4474": {
+			"type": "text",
+			"x": 655.04,
+			"y": 368.44,
+			"width": 312.9,
+			"height": 15.41,
+			"text": "Communist revolutionaries taking over t"
+		},
+		"25ad4ecb-1ff5-461d-a56c-c07b7462de96": {
+			"type": "text",
+			"x": 654.88,
+			"y": 608.61,
+			"width": 313.1,
+			"height": 15.12,
+			"text": "Someone is standing on the ethernet cab"
+		},
+		"5e6ee14d-3ea9-4f05-a580-cc0b896cddc0": {
+			"type": "text",
+			"x": 655.12,
+			"y": 240.42,
+			"width": 312.9,
+			"height": 15.41,
+			"text": "Communist revolutionaries taking over t"
+		}
+	}
+}
