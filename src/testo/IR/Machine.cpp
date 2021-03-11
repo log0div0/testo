@@ -84,10 +84,6 @@ void Machine::undefine() {
 		vm()->remove_disks();
 
 		if (vm()->is_defined()) {
-			if (has_snapshot("_init")) {
-				delete_snapshot_with_children("_init");
-			}
-
 			vm()->undefine();
 		}
 

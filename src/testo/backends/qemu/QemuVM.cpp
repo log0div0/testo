@@ -363,6 +363,9 @@ void QemuVM::install() {
 void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
+		for (auto& snapshot: domain.snapshots()) {
+			snapshot.destroy({VIR_DOMAIN_SNAPSHOT_DELETE_CHILDREN});
+		}
 		domain.undefine();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Undefining vm {}", id())));
