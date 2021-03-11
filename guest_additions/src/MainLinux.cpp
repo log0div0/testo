@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <chrono>
 
 #include <signal.h>
 
@@ -10,10 +11,23 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <coro/Application.h>
+#include <coro/CoroPool.h>
+#include <coro/Timer.h>
+#include <coro/StreamSocket.h>
+#include <coro/Acceptor.h>
 
 #include <clipp.h>
 
-#include "Server.hpp"
+#include "MessageHandler.hpp"
+#ifdef __HYPERV__
+#include "HyperVChannel.hpp"
+#elif __QEMU__
+#include "QemuLinuxChannel.hpp"
+#else
+#error "Unknown hypervisor"
+#endif
+
+using namespace std::chrono_literals;
 
 #define APP_NAME "testo-guest-additions"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
@@ -68,23 +82,91 @@ inline std::ostream& operator<<(std::ostream& stream, const cmdline& cmdline) {
 	return stream;
 }
 
+void remove_handler() {
+#ifdef __QEMU__
+	std::shared_ptr<Channel> channel(new QemuLinuxChannel);
+	coro::Timer timer;
+	while (true) {
+		try {
+			MessageHandler message_handler(channel);
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside QemuLinuxChannel loop: {}", error.what());
+			timer.waitFor(100ms);
+		}
+	}
+#elif __HYPERV__
+	coro::Acceptor<hyperv::VSocketProtocol> acceptor(hyperv::VSocketEndpoint(HYPERV_PORT));
+	acceptor.run([](coro::StreamSocket<hyperv::VSocketProtocol> socket) {
+		try {
+			std::shared_ptr<Channel> channel(new HyperVChannel(std::move(socket)));
+			MessageHandler message_handler(std::move(channel));
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside remote acceptor loop: {}", error.what());
+		}
+	});
+#else
+#error "Unknown hypervisor"
+#endif
+}
+
+struct LocalChannel: Channel {
+	using Socket = coro::StreamSocket<asio::local::stream_protocol>;
+
+	LocalChannel(Socket socket_): socket(std::move(socket_)) {}
+	~LocalChannel() = default;
+
+	LocalChannel(LocalChannel&& other);
+	LocalChannel& operator=(LocalChannel&& other);
+
+	size_t read(uint8_t* data, size_t size) override {
+		return socket.readSome(data, size);
+	}
+
+	size_t write(uint8_t* data, size_t size) override {
+		return socket.writeSome(data, size);
+	}
+
+private:
+	Socket socket;
+};
+
+void local_handler() {
+	coro::Acceptor<asio::local::stream_protocol> acceptor("/var/run/testo-guest-additions.sock");
+	acceptor.run([](coro::StreamSocket<asio::local::stream_protocol> socket) {
+		try {
+			std::shared_ptr<Channel> channel(new LocalChannel(std::move(socket)));
+			MessageHandler message_handler(std::move(channel));
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside local acceptor loop: {}", error.what());
+		}
+	});
+}
+
+void app_main() {
+	try {
+		mount_permanent_shared_folders();
+		std::thread t1([]() {coro::Application(remove_handler).run();});
+		std::thread t2([]() {coro::Application(local_handler).run();});
+		t1.join();
+		t2.join();
+	} catch (const std::exception& err) {
+		spdlog::error("app_main std error: {}", err.what());
+	} catch (const coro::CancelError&) {
+		spdlog::error("app_main CancelError");
+	} catch (...) {
+		spdlog::error("app_main unknown error");
+	}
+}
+
 void start() {
 	if (daemon(1, 0) < 0) {
 		throw std::system_error(errno, std::system_category());
 	}
 	spdlog::info("Starting ...");
-	coro::Application([] {
-		try {
-			Server commands_handler;
-			commands_handler.run();
-		} catch (const std::exception& err) {
-			spdlog::error("app_main std error: {}", err.what());
-		} catch (const coro::CancelError&) {
-			spdlog::error("app_main CancelError");
-		} catch (...) {
-			spdlog::error("app_main unknown error");
-		}
-	}).run();
+	app_main();
 	spdlog::info("Stopped");
 }
 

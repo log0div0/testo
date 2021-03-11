@@ -2,7 +2,7 @@
 #pragma once
 
 #include "FlashDrive.hpp"
-#include "GuestAdditions.hpp"
+#include <guest_additions_common_stuff/GuestAdditions.hpp>
 #include <stb/Image.hpp>
 #include <nlohmann/json.hpp>
 

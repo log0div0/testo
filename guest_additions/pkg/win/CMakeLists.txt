@@ -32,4 +32,4 @@ endif()
 
 
 add_package(testo-guest-additions-package)
-add_dependencies(testo-guest-additions-package testo-guest-additions)
+add_dependencies(testo-guest-additions-package testo-guest-additions testo-guest-additions-cli)

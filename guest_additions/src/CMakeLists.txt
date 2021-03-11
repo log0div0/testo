@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
 
-set(SRCS Server.cpp)
+set(SRCS MessageHandler.cpp Channel.cpp SharedFolder.cpp)
 
 if (UNIX AND NOT APPLE)
 	list(APPEND SRCS MainLinux.cpp)
@@ -13,29 +13,29 @@ if (WIN32)
 endif()
 
 if (TESTO_GUEST_ADDITIONS_HYPERVISOR STREQUAL "QEMU")
+	add_definitions(-D__QEMU__)
 	if (UNIX AND NOT APPLE)
-		set(CHANNEL_CLASS_NAME "QemuLinuxChannel")
 		list(APPEND SRCS QemuLinuxChannel.cpp)
 	endif()
 	if (WIN32)
-		set(CHANNEL_CLASS_NAME "QemuWinChannel")
 		list(APPEND SRCS QemuWinChannel.cpp QemuWinChannelExtra.cpp)
 	endif()
 elseif(TESTO_GUEST_ADDITIONS_HYPERVISOR STREQUAL "HYPERV")
-	set(CHANNEL_CLASS_NAME "HyperVChannel")
+	add_definitions(-D__HYPERV__)
 	list(APPEND SRCS HyperVChannel.cpp)
 else()
 	message(FATAL_ERROR "Unknown TESTO_GUEST_ADDITIONS_HYPERVISOR: ${TESTO_GUEST_ADDITIONS_HYPERVISOR}")
 endif()
 
-add_definitions(-DCHANNEL_CLASS_NAME=${CHANNEL_CLASS_NAME})
-add_definitions(-DCHANNEL_CLASS_HEADER="${CHANNEL_CLASS_NAME}.hpp")
-
 add_executable(testo-guest-additions ${SRCS})
-target_link_libraries(testo-guest-additions os coro)
+target_link_libraries(testo-guest-additions os coro guest_additions_common_stuff)
+
+add_executable(testo-guest-additions-cli CLI.cpp)
+target_link_libraries(testo-guest-additions-cli os coro guest_additions_common_stuff)
 
 if (UNIX)
 	target_link_libraries(testo-guest-additions pthread)
+	target_link_libraries(testo-guest-additions-cli pthread)
 endif()
 
 if (WIN32)

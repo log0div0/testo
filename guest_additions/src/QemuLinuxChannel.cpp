@@ -43,7 +43,3 @@ size_t QemuLinuxChannel::write(uint8_t* data, size_t size) {
 	}
 	return n;
 }
-
-void QemuLinuxChannel::close() {
-	::close(fd);
-}

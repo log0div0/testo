@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <chrono>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -8,17 +9,56 @@
 #include <tchar.h>
 
 #include <winapi/Functions.hpp>
+
 #include <coro/Application.h>
+#include <coro/Timer.h>
 
-#include "Server.hpp"
+#include "MessageHandler.hpp"
+#ifdef __HYPERV__
+#include "HyperVChannel.hpp"
+DEFINE_GUID(service_id, HYPERV_PORT, 0xfacb, 0x11e6, 0xbd, 0x58, 0x64, 0x00, 0x6a, 0x79, 0x86, 0xd3);
+#elif __QEMU__
+#include "QemuWinChannel.hpp"
+std::shared_ptr<QemuWinChannel> g_qemu_win_channel;
+#else
+#error "Unknown hypervisor"
+#endif
 
-Server* g_server = nullptr;
+using namespace std::chrono_literals;
 
-std::function app_main = [&]() {
+void remove_handler() {
+#ifdef __QEMU__
+	g_qemu_win_channel.reset(new QemuWinChannel);
+	coro::Timer timer;
+	while (true) {
+		try {
+			MessageHandler message_handler(g_qemu_win_channel);
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside QemuWinChannel loop: {}", error.what());
+			timer.waitFor(100ms);
+		}
+	}
+#elif __HYPERV__
+	hyperv::VSocketEndpoint endpoint(service_id);
+	coro::Acceptor<hyperv::VSocketProtocol> acceptor(endpoint);
+	acceptor.run([](coro::StreamSocket<hyperv::VSocketProtocol> socket) {
+		try {
+			std::shared_ptr<Channel> channel(new HyperVChannel(std::move(socket)));
+			MessageHandler message_handler(std::move(channel));
+			message_handler.run();
+		} catch (const std::exception& error) {
+			spdlog::error("Error inside acceptor loop: {}", error.what());
+		}
+	});
+#else
+#error "Unknown hypervisor"
+#endif
+}
+
+void app_main() {
 	try {
-		Server server;
-		g_server = &server;
-		server.run();
+		remove_handler();
 	} catch (const std::exception& err) {
 		spdlog::error("app_main std error: {}", err.what());
 	} catch (const coro::CancelError&) {
@@ -30,6 +70,13 @@ std::function app_main = [&]() {
 
 coro::Application app(app_main);
 
+void StopApp() {
+#ifdef __QEMU__
+	g_qemu_win_channel->close();
+#endif
+	app.cancel();
+}
+
 #define SERVICE_NAME _T("Testo Guest Additions")
 
 void ControlHandler(DWORD request) {
@@ -37,12 +84,12 @@ void ControlHandler(DWORD request) {
 	{
 	case SERVICE_CONTROL_STOP:
 		spdlog::info("SERVICE_CONTROL_STOP BEGIN");
-		g_server->force_cancel();
+		StopApp();
 		spdlog::info("SERVICE_CONTROL_STOP END");
 		break;
 	case SERVICE_CONTROL_SHUTDOWN:
 		spdlog::info("SERVICE_CONTROL_SHUTDOWN BEGIN");
-		g_server->force_cancel();
+		StopApp();
 		spdlog::info("SERVICE_CONTROL_SHUTDOWN END");
 		break;
 	default:
@@ -74,7 +121,7 @@ void ServiceMain(int argc, char** argv) {
 	SetServiceStatus(serviceStatusHandle, &serviceStatus);
 }
 
-int _tmain (int argc, TCHAR *argv[]) {
+int _tmain(int argc, TCHAR *argv[]) {
 	fs::path path = fs::path(winapi::get_module_file_name()).replace_extension("txt");
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.generic_string());
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
