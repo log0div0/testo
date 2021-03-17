@@ -16,7 +16,7 @@ std::pair<std::string, int> Process::exec_no_throw(const std::string& cmd) {
 std::string Process::exec(const std::string& cmd) {
 	auto pair = exec_no_throw(cmd);
 	if (pair.second) {
-		ProcessError error("Command " + cmd + " exits with code " + std::to_string(pair.second));
+		ProcessError error("Command " + cmd + " exits with code " + std::to_string(pair.second) + ". Command output: " + pair.first);
 		error.exit_code = pair.second;
 		error.output = pair.first;
 		throw error;

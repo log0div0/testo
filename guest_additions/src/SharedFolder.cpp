@@ -4,7 +4,11 @@
 #include <os/Process.hpp>
 #include <os/File.hpp>
 
+#include <coro/Timer.h>
+
 #include <regex>
+
+using namespace std::chrono_literals;
 
 fs::path get_config_path() {
 #ifdef __linux__
@@ -115,7 +119,7 @@ bool mount_shared_folder(const std::string& folder_name, const fs::path& guest_p
 		os::Process::exec("modprobe virtio");
 		os::Process::exec("modprobe 9pnet");
 		os::Process::exec("modprobe 9pnet_virtio");
-		os::Process::exec("mount " + folder_name + " \"" + guest_path.string() + "\" -t 9p -o trans=virtio");
+		os::Process::exec("mount " + folder_name + " \"" + guest_path.string() + "\" -t 9p -o trans=virtio 2>&1");
 #else
 		throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
 #endif
@@ -129,7 +133,20 @@ bool umount_shared_folder(const std::string& folder_name) {
 	auto status = get_shared_folder_status(folder_name);
 	if (status.at("is_mounted")) {
 #if defined(__QEMU__) && defined(__linux__)
-		os::Process::exec("umount " + folder_name);
+		for (size_t i = 0; ; ++i) {
+			try {
+				os::Process::exec("umount " + folder_name + " 2>&1");
+				return true;
+			} catch (const os::ProcessError& error) {
+				if (error.output.find("target is busy") == std::string::npos) {
+					throw;
+				}
+				if (i == 20) {
+					throw;
+				}
+				coro::Timer().waitFor(1s);
+			}
+		}
 #else
 		throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
 #endif
