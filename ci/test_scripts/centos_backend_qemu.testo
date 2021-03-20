@@ -307,3 +307,16 @@ test centos_backed_qemu_press_like_string: centos_install_testo_cpu {
 	}
 }
 
+
+[no_snapshots: true]
+test centos_backed_qemu_type: centos_backend_qemu_install_guest_additions {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_type.testo" "/opt/scripts/action_type.testo"
+
+		exec bash """
+			testo run /opt/scripts/action_type.testo --stop_on_fail
+		""" timeout 30m
+	}
+}
+

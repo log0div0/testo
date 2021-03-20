@@ -1,0 +1,25 @@
+
+include "install_guest_additions.testo"
+
+test type_upper_case: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		type "echo hello world > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"hello world\""
+		type "echo HELLO WORLD > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"HELLO WORLD\""
+		type "echo Hello World > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"Hello World\""
+		type "echo HELLOworld > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"HELLOworld\""
+		type "echo helloWORLD > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"helloWORLD\""
+		type "echo HeLlO wOrLd > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"HeLlO wOrLd\""
+		type "echo heLLO WOrld > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"heLLO WOrld\""
+		type "echo HElloworLD > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"HElloworLD\""
+		type "echo HELLO"; type "world > /root/file.txt"; press Enter
+		exec bash "cat /root/file.txt | grep \"HELLOworld\""
+	}
+}
