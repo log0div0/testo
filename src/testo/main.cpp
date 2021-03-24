@@ -157,6 +157,12 @@ int do_main(int argc, char** argv) {
 
 	if (selected_mode == mode::version) {
 		std::cout << "Testo framework version " << TESTO_VERSION << std::endl;
+		std::cout << "CPU support: YES" << std::endl;
+#ifdef USE_CUDA
+		std::cout << "GPU support: YES" << std::endl;
+#else
+		std::cout << "GPU support: NO" << std::endl;
+#endif
 		return 0;
 	}
 
