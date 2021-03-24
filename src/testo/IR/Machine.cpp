@@ -345,41 +345,29 @@ fs::path Machine::get_metadata_dir() const {
 }
 
 void Machine::press(const std::vector<std::string>& buttons) {
-	for (auto& button: buttons) {
-		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
-			throw std::runtime_error("You can't press an already held button: " + button);
-		}
-	}
-
-	vm()->press(buttons);
+	hold(buttons);
+	release({buttons.rbegin(), buttons.rend()});
 }
 
 void Machine::hold(const std::vector<std::string>& buttons) {
 	for (auto& button: buttons) {
-		if (current_held_keyboard_buttons.find(button) != current_held_keyboard_buttons.end()) {
+		auto it = std::find(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end(), button);
+		if (it != current_held_keyboard_buttons.end()) {
 			throw std::runtime_error("You can't hold an already held button: " + button);
 		}
+		vm()->hold(button);
+		current_held_keyboard_buttons.push_back(button);
 	}
-
-	vm()->hold(buttons);
-	std::copy(buttons.begin(), buttons.end(), std::inserter(current_held_keyboard_buttons, current_held_keyboard_buttons.end()));
 }
 
 void Machine::release(const std::vector<std::string>& buttons) {
-	if (!current_held_keyboard_buttons.size()) {
-		throw std::runtime_error("There is no held buttons to release");
-	}
-
 	for (auto& button: buttons) {
-		if (current_held_keyboard_buttons.find(button) == current_held_keyboard_buttons.end()) {
+		auto it = std::find(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end(), button);
+		if (it == current_held_keyboard_buttons.end()) {
 			throw std::runtime_error("You can't release a button that's not held: " + button);
 		}
-	}
-
-	vm()->release(buttons);
-
-	for (auto& button: buttons) {
-		current_held_keyboard_buttons.erase(button);
+		vm()->release(button);
+		current_held_keyboard_buttons.erase(it);
 	}
 }
 
@@ -387,10 +375,7 @@ void Machine::release() {
 	if (!current_held_keyboard_buttons.size()) {
 		throw std::runtime_error("There is no held buttons to release");
 	}
-
-	std::vector<std::string> buttons_to_release(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end());
-	vm()->release(buttons_to_release);
-	current_held_keyboard_buttons.clear();
+	release({current_held_keyboard_buttons.rbegin(), current_held_keyboard_buttons.rend()});
 }
 
 void Machine::mouse_press(const std::vector<MouseButton>& buttons) {
@@ -402,10 +387,10 @@ void Machine::mouse_press(const std::vector<MouseButton>& buttons) {
 		throw std::runtime_error("Can't press a mouse button with any already held mouse buttons");
 	}
 
-	vm()->mouse_hold(buttons);
+	vm()->mouse_hold(buttons[0]);
 	coro::Timer timer;
 	timer.waitFor(std::chrono::milliseconds(60));
-	vm()->mouse_release(buttons);
+	vm()->mouse_release(buttons[0]);
 }
 
 void Machine::mouse_hold(const std::vector<MouseButton>& buttons) {
@@ -417,7 +402,7 @@ void Machine::mouse_hold(const std::vector<MouseButton>& buttons) {
 		throw std::runtime_error("Can't hold a mouse button: there is an already held mouse button");
 	}
 
-	vm()->mouse_hold(buttons);
+	vm()->mouse_hold(buttons[0]);
 	current_held_mouse_button = buttons[0];
 }
 
@@ -426,7 +411,7 @@ void Machine::mouse_release() {
 		throw std::runtime_error("Can't release any mouse button: there is no held mouse buttons");
 	}
 
-	vm()->mouse_release({current_held_mouse_button});
+	vm()->mouse_release(current_held_mouse_button);
 	current_held_mouse_button = MouseButton::None;
 }
 

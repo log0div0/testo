@@ -259,50 +259,24 @@ void HyperVVM::rollback(const std::string& snapshot_name, const nlohmann::json& 
 	}
 }
 
-void HyperVVM::press(const std::vector<std::string>& buttons) {
+void HyperVVM::hold(const std::string& button_) {
 	try {
-		std::vector<uint8_t> codes;
-		for (auto button: buttons) {
-			std::transform(button.begin(), button.end(), button.begin(), toupper);
-			for (auto code: scancodes.at(button)) {
-				codes.push_back(code);
-			}
-		}
+		std::string button = button_;
+		std::transform(button.begin(), button.end(), button.begin(), toupper);
 		auto keyboard = connect.machine(id()).keyboard();
-		keyboard.typeScancodes(codes);
-		for (auto& code: codes) {
-			code |= 0x80;
-		}
-		keyboard.typeScancodes(codes);
+		keyboard.typeScancodes(scancodes.at(button));
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
 
-void HyperVVM::hold(const std::vector<std::string>& buttons) {
+void HyperVVM::release(const std::string& button_) {
 	try {
+		std::string button = button_;
+		std::transform(button.begin(), button.end(), button.begin(), toupper);
 		std::vector<uint8_t> codes;
-		for (auto button: buttons) {
-			std::transform(button.begin(), button.end(), button.begin(), toupper);
-			for (auto code: scancodes.at(button)) {
-				codes.push_back(code);
-			}
-		}
-		auto keyboard = connect.machine(id()).keyboard();
-		keyboard.typeScancodes(codes);
-	} catch (const std::exception& error) {
-		throw_with_nested(std::runtime_error(__FUNCSIG__));
-	}
-}
-
-void HyperVVM::release(const std::vector<std::string>& buttons) {
-	try {
-		std::vector<uint8_t> codes;
-		for (auto button: buttons) {
-			std::transform(button.begin(), button.end(), button.begin(), toupper);
-			for (auto code: scancodes.at(button)) {
-				codes.push_back(code | 0x80);
-			}
+		for (auto code: scancodes.at(button)) {
+			codes.push_back(code | 0x80);
 		}
 		auto keyboard = connect.machine(id()).keyboard();
 		keyboard.typeScancodes(codes);
@@ -324,23 +298,19 @@ void HyperVVM::mouse_move_rel(int x, int y) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-void HyperVVM::mouse_hold(const std::vector<MouseButton>& buttons) {
+void HyperVVM::mouse_hold(const MouseButton& button) {
 	try {
 		auto mouse = connect.machine(id()).synthetic_mouse();
-		for (auto button: buttons) {
-			mouse.set_button_state((uint32_t)button, true);
-		}
+		mouse.set_button_state((uint32_t)button, true);
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}
 }
 
-void HyperVVM::mouse_release(const std::vector<MouseButton>& buttons) {
+void HyperVVM::mouse_release(const MouseButton& button) {
 	try {
 		auto mouse = connect.machine(id()).synthetic_mouse();
-		for (auto button: buttons) {
-			mouse.set_button_state((uint32_t)button, false);
-		}
+		mouse.set_button_state((uint32_t)button, false);
 	} catch (const std::exception& error) {
 		throw_with_nested(std::runtime_error(__FUNCSIG__));
 	}

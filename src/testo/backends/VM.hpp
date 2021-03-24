@@ -31,13 +31,12 @@ struct VM {
 	virtual void remove_disks() = 0;
 	virtual nlohmann::json make_snapshot(const std::string& snapshot) = 0;
 	virtual void rollback(const std::string& snapshot, const nlohmann::json& opaque) = 0;
-	virtual void press(const std::vector<std::string>& buttons) = 0;
-	virtual void hold(const std::vector<std::string>& buttons) = 0;
-	virtual void release(const std::vector<std::string>& buttons) = 0;
+	virtual void hold(const std::string& button) = 0;
+	virtual void release(const std::string& button) = 0;
 	virtual void mouse_move_abs(uint32_t x, uint32_t y) = 0;
 	virtual void mouse_move_rel(int x, int y) = 0;
-	virtual void mouse_hold(const std::vector<MouseButton>& buttons) = 0;
-	virtual void mouse_release(const std::vector<MouseButton>& buttons) = 0;
+	virtual void mouse_hold(const MouseButton& button) = 0;
+	virtual void mouse_release(const MouseButton& button) = 0;
 	virtual bool is_nic_plugged(const std::string& pci_addr) const = 0;
 	virtual void plug_nic(const std::string& nic) = 0;
 	virtual void unplug_nic(const std::string& pci_addr) = 0;

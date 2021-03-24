@@ -52,7 +52,7 @@ private:
 	mutable std::shared_ptr<::VM> _vm;
 
 	MouseButton current_held_mouse_button = MouseButton::None;
-	std::set<std::string> current_held_keyboard_buttons;
+	std::vector<std::string> current_held_keyboard_buttons;
 };
 
 }

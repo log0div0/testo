@@ -36,7 +36,10 @@ test win10_test_testo_install_gpu: win10_prepare {
 		wait "Ready to install"; press Enter
 		wait "Разрешить этому приложению"
 		mouse click "Да".from_bottom(0)
-		wait "Click the Finish button"; press Enter
+		wait "Click the Finish button"
+		sleep 2s
+		mouse click "Click the Finish button"
+		press Enter
 		wait !"Click the Finish button"
 
 		exec cmd "testo version"

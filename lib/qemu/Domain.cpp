@@ -213,12 +213,6 @@ void Domain::set_metadata(virDomainMetadataType type,
 	}
 }
 
-void Domain::send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes) {
-	if (virDomainSendKey(handle, code_set, holdtime, keycodes.data(), keycodes.size(), 0) < 0) {
-		throw std::runtime_error(virGetLastErrorMessage());
-	}
-}
-
 nlohmann::json Domain::monitor_command(const std::string& cmd, std::initializer_list<virDomainQemuMonitorCommandFlags> flags) {
 	uint32_t flag_bitmask = 0;
 

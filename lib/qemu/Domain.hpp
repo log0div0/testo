@@ -55,7 +55,6 @@ struct Domain {
 		return handle != nullptr;
 	}
 
-	void send_keys(virKeycodeSet code_set, uint32_t holdtime, std::vector<uint32_t> keycodes);
 	nlohmann::json monitor_command(const std::string& cmd, std::initializer_list<virDomainQemuMonitorCommandFlags> = {});
 
 	void attach_device(const pugi::xml_document& xml, const std::vector<virDomainDeviceModifyFlags>& flags = {});
