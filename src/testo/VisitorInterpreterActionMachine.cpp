@@ -1128,14 +1128,23 @@ js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, co
 template <typename Func>
 bool VisitorInterpreterActionMachine::screenshot_loop(Func&& func, std::chrono::milliseconds timeout, std::chrono::milliseconds interval) {
 	auto deadline = std::chrono::steady_clock::now() + timeout;
+	uint64_t empty_screenshots_counter = 0;
 
 	do {
 		auto start = std::chrono::high_resolution_clock::now();
 		auto& screenshot = vmc->make_new_screenshot();
 
-		bool screenshot_found = func(screenshot);
-		if (screenshot_found) {
-			return true;
+		if (screenshot.data) {
+			empty_screenshots_counter = 0;
+			bool screenshot_found = func(screenshot);
+			if (screenshot_found) {
+				return true;
+			}
+		} else {
+			++empty_screenshots_counter;
+			if (empty_screenshots_counter > 10) {
+				throw std::runtime_error("Can't get a screenshot of the virtual machine because it's turned off");
+			}
 		}
 
 		auto end = std::chrono::high_resolution_clock::now();
