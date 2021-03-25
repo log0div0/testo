@@ -316,7 +316,7 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 		std::string wait_for = copy.timeout();
 		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
 
-		coro::Timeout timeout(std::chrono::milliseconds(time_to_milliseconds(wait_for)));
+		coro::Timeout timeout(time_to_milliseconds(wait_for));
 
 		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -346,12 +346,12 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	try {
 		std::string check_for = check.timeout();
 		std::string interval_str = check.interval();
-		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
+		auto interval = time_to_milliseconds(interval_str);
 		auto text = template_parser.resolve(std::string(*check.ast_node->select_expr), check.stack);
 
 		reporter.check(vmc, text, check_for, interval_str);
 
-		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(check_for));
+		auto deadline = std::chrono::steady_clock::now() + time_to_milliseconds(check_for);
 
 		do {
 			auto start = std::chrono::high_resolution_clock::now();
@@ -412,7 +412,7 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 				shift_holded = false;
 			}
 			vmc->press({comb.key});
-			timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
+			timer.waitFor(time_to_milliseconds(interval));
 		}
 
 		if (shift_holded) {
@@ -427,12 +427,12 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 	try {
 		std::string wait_for = wait.timeout();
 		std::string interval_str = wait.interval();
-		auto interval = std::chrono::milliseconds(time_to_milliseconds(interval_str));
+		auto interval = time_to_milliseconds(interval_str);
 		auto text = wait.select_expr();
 
 		reporter.wait(vmc, text, wait_for, interval_str);
 
-		auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(wait_for));
+		auto deadline = std::chrono::steady_clock::now() + time_to_milliseconds(wait_for);
 		stb::Image<stb::RGB> screenshot;
 
 		do {
@@ -656,7 +656,7 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 
 		for (auto key_spec: press.ast_node->keys) {
 			visit_key_spec({key_spec, stack}, press_interval);
-			timer.waitFor(std::chrono::milliseconds(press_interval));
+			timer.waitFor(press_interval);
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press.ast_node, current_controller));
@@ -698,7 +698,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
-	auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(time_to_milliseconds(timeout));
+	auto deadline = std::chrono::steady_clock::now() + time_to_milliseconds(timeout);
 	stb::Image<stb::RGB> screenshot;
 
 	do {
@@ -852,14 +852,14 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 	}
 }
 
-void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, uint32_t interval) {
+void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval) {
 	uint32_t times = key_spec.times();
 
 	reporter.press_key(vmc, *(key_spec.ast_node->combination), times);
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->press(key_spec.ast_node->combination->get_buttons());
-		timer.waitFor(std::chrono::milliseconds(interval));
+		timer.waitFor(interval);
 	}
 }
 
@@ -1064,7 +1064,7 @@ void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdow
 		std::string wait_for = shutdown.timeout();
 		reporter.shutdown(vmc, wait_for);
 		vmc->vm()->power_button();
-		auto deadline = std::chrono::steady_clock::now() +  std::chrono::milliseconds(time_to_milliseconds(wait_for));
+		auto deadline = std::chrono::steady_clock::now() +  time_to_milliseconds(wait_for);
 		while (std::chrono::steady_clock::now() < deadline) {
 			if (vmc->vm()->state() == VmState::Stopped) {
 				return;
@@ -1139,7 +1139,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 
 		command += " " + guest_script_file.generic_string();
 
-		coro::Timeout timeout(std::chrono::milliseconds(time_to_milliseconds(exec.timeout())));
+		coro::Timeout timeout(time_to_milliseconds(exec.timeout()));
 
 		auto result = ga->execute(command, [&](const std::string& output) {
 			reporter.exec_command_output(output);

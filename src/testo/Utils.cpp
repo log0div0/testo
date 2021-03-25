@@ -95,7 +95,7 @@ bool check_if_time_interval(const std::string& time) {
 
 }
 
-uint32_t time_to_milliseconds(const std::string& time) {
+std::chrono::milliseconds time_to_milliseconds(const std::string& time) {
 	uint32_t milliseconds;
 	if (time[time.length() - 2] == 'm') {
 		milliseconds = std::stoul(time.substr(0, time.length() - 2));
@@ -112,7 +112,7 @@ uint32_t time_to_milliseconds(const std::string& time) {
 		throw std::runtime_error("Unknown time specifier"); //should not happen ever
 	}
 
-	return milliseconds;
+	return std::chrono::milliseconds(milliseconds);
 }
 
 uint64_t content_cksum_maxsize = 1;

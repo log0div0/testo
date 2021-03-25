@@ -12,7 +12,7 @@ namespace fs = ghc::filesystem;
 void fs_copy(const fs::path& from, const fs::path& to);
 
 bool check_if_time_interval(const std::string& time);
-uint32_t time_to_milliseconds(const std::string& time);
+std::chrono::milliseconds time_to_milliseconds(const std::string& time);
 
 extern uint64_t content_cksum_maxsize;
 std::string file_signature(const fs::path& file);

@@ -41,7 +41,7 @@ void VisitorInterpreterActionFlashDrive::visit_copy(const IR::Copy& copy) {
 		std::string wait_for = copy.timeout();
 		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
 
-		coro::Timeout timeout(std::chrono::milliseconds(time_to_milliseconds(wait_for)));
+		coro::Timeout timeout(time_to_milliseconds(wait_for));
 
 		for (auto vmc: current_test->get_all_machines()) {
 			if (vmc->vm()->is_flash_plugged(fdc->fd())) {

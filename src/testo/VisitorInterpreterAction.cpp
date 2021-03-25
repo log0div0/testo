@@ -7,7 +7,7 @@
 
 static void sleep(const std::string& interval) {
 	coro::Timer timer;
-	timer.waitFor(std::chrono::milliseconds(time_to_milliseconds(interval)));
+	timer.waitFor(time_to_milliseconds(interval));
 }
 
 
