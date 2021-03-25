@@ -346,30 +346,14 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	try {
 		std::string check_for = check.timeout();
 		std::string interval_str = check.interval();
-		auto interval = time_to_milliseconds(interval_str);
 		auto text = template_parser.resolve(std::string(*check.ast_node->select_expr), check.stack);
 
 		reporter.check(vmc, text, check_for, interval_str);
 
-		auto deadline = std::chrono::steady_clock::now() + time_to_milliseconds(check_for);
+		return screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
+			return visit_detect_expr(check.ast_node->select_expr, screenshot);
+		}, time_to_milliseconds(check_for), time_to_milliseconds(interval_str));
 
-		do {
-			auto start = std::chrono::high_resolution_clock::now();
-			auto screenshot = vmc->vm()->screenshot();
-
-			if (visit_detect_expr(check.ast_node->select_expr, screenshot)) {
-				return true;
-			}
-
-			auto end = std::chrono::high_resolution_clock::now();
-			if (interval > end - start) {
-				timer.waitFor(interval - (end - start));
-			} else {
-				coro::CheckPoint();
-			}
-		} while (std::chrono::steady_clock::now() < deadline);
-
-		return false;
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check.ast_node, current_controller));
 	}
@@ -377,7 +361,7 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 
 void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
 	if (vmc->vm()->state() == VmState::Running) {
-		reporter.save_screenshot(vmc, vmc->vm()->screenshot());
+		reporter.save_screenshot(vmc, vmc->make_new_screenshot());
 	}
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
@@ -427,33 +411,18 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 	try {
 		std::string wait_for = wait.timeout();
 		std::string interval_str = wait.interval();
-		auto interval = time_to_milliseconds(interval_str);
 		auto text = wait.select_expr();
 
 		reporter.wait(vmc, text, wait_for, interval_str);
 
-		auto deadline = std::chrono::steady_clock::now() + time_to_milliseconds(wait_for);
-		stb::Image<stb::RGB> screenshot;
+		bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
+			return visit_detect_expr(wait.ast_node->select_expr, screenshot);
+		}, time_to_milliseconds(wait_for), time_to_milliseconds(interval_str));
 
-		do {
-			auto start = std::chrono::high_resolution_clock::now();
-			screenshot = vmc->vm()->screenshot();
-
-			if (visit_detect_expr(wait.ast_node->select_expr, screenshot)) {
-				return;
-			}
-
-			auto end = std::chrono::high_resolution_clock::now();
-			if (interval > end - start) {
-				timer.waitFor(interval - (end - start));
-			} else {
-				coro::CheckPoint();
-			}
-		} while (std::chrono::steady_clock::now() < deadline);
-
-		reporter.save_screenshot(vmc, screenshot);
-		throw std::runtime_error("Timeout");
-
+		if (!early_exit) {
+			reporter.save_screenshot(vmc, vmc->get_last_screenshot());
+			throw std::runtime_error("Timeout");
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(wait.ast_node, current_controller));
 	}
@@ -553,22 +522,22 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(con
 	return result;
 }
 
-nn::TextTensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, stb::Image<stb::RGB>& screenshot) {
+nn::TextTensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, const stb::Image<stb::RGB>& screenshot) {
 	auto parsed = text.text();
 	return nn::find_text(&screenshot).match_text(&screenshot, parsed);
 }
 
-nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, stb::Image<stb::RGB>& screenshot) {
+nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, const stb::Image<stb::RGB>& screenshot) {
 	auto parsed = img.img_path();
 	return nn::find_img(&screenshot, parsed);
 }
 
-nn::Homm3Tensor VisitorInterpreterActionMachine::visit_select_homm3(const IR::SelectHomm3& homm3, stb::Image<stb::RGB>& screenshot) {
+nn::Homm3Tensor VisitorInterpreterActionMachine::visit_select_homm3(const IR::SelectHomm3& homm3, const stb::Image<stb::RGB>& screenshot) {
 	auto parsed = homm3.id();
 	return nn::find_homm3(&screenshot).match_class(&screenshot, parsed);
 }
 
-bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_bool()) {
@@ -578,7 +547,7 @@ bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, st
 	}
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, stb::Image<stb::RGB>& screenshot) {
+nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_object() && !value.is_array()) {
@@ -601,7 +570,7 @@ nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& j
 	}
 }
 
-bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, stb::Image<stb::RGB>& screenshot)  {
+bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot)  {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
 		return visit_detect_selectable(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
@@ -612,7 +581,7 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 }
 
 
-bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, stb::Image<stb::RGB>& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, const stb::Image<stb::RGB>& screenshot) {
 	bool is_negated = selectable->is_negated();
 
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
@@ -630,7 +599,7 @@ bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AS
 	}
 }
 
-bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, stb::Image<stb::RGB>& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, const stb::Image<stb::RGB>& screenshot) {
 	auto left_value = visit_detect_expr(binop->left, screenshot);
 	if (binop->t.type() == Token::category::double_ampersand) {
 		if (!left_value) {
@@ -698,12 +667,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
-	auto deadline = std::chrono::steady_clock::now() + time_to_milliseconds(timeout);
-	stb::Image<stb::RGB> screenshot;
-
-	do {
-		auto start = std::chrono::high_resolution_clock::now();
-		screenshot = vmc->vm()->screenshot();
+	bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 		try {
 			nn::Point point;
 			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
@@ -722,24 +686,19 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			}
 			vmc->vm()->mouse_move_abs(point.x, point.y);
-			return;
+			return true;
 		} catch (const nn::LogicError&) {
 			reporter.save_screenshot(vmc, screenshot);
 			throw;
 		} catch (const nn::ContinueError&) {
-			auto end = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> time = end - start;
-			if (time < 1s) {
-				timer.waitFor(std::chrono::duration_cast<std::chrono::milliseconds>(1s - time));
-			} else {
-				coro::CheckPoint();
-			}
-			continue;
+			return false;
 		}
-	} while (std::chrono::steady_clock::now() < deadline);
+	}, time_to_milliseconds(timeout), 1s);
 
-	reporter.save_screenshot(vmc, screenshot);
-	throw std::runtime_error("Timeout");
+	if (!early_exit) {
+		reporter.save_screenshot(vmc, vmc->get_last_screenshot());
+		throw std::runtime_error("Timeout");
+	}
 }
 
 void VisitorInterpreterActionMachine::visit_mouse(const IR::Mouse& mouse) {
@@ -1154,7 +1113,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 	}
 }
 
-js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, stb::Image<stb::RGB>& screenshot) {
+js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, const stb::Image<stb::RGB>& screenshot) {
 	try {
 		js_current_ctx.reset(new js::Context(&screenshot));
 		return js_current_ctx->eval(script);
@@ -1164,4 +1123,28 @@ js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, st
 	catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
+}
+
+template <typename Func>
+bool VisitorInterpreterActionMachine::screenshot_loop(Func&& func, std::chrono::milliseconds timeout, std::chrono::milliseconds interval) {
+	auto deadline = std::chrono::steady_clock::now() + timeout;
+
+	do {
+		auto start = std::chrono::high_resolution_clock::now();
+		auto& screenshot = vmc->make_new_screenshot();
+
+		bool screenshot_found = func(screenshot);
+		if (screenshot_found) {
+			return true;
+		}
+
+		auto end = std::chrono::high_resolution_clock::now();
+		if (interval > end - start) {
+			timer.waitFor(interval - (end - start));
+		} else {
+			coro::CheckPoint();
+		}
+	} while (std::chrono::steady_clock::now() < deadline);
+
+	return false;
 }

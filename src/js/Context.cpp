@@ -141,16 +141,16 @@ Value ContextRef::get_exception() {
 	return Value(JS_GetException(handle), handle);
 }
 
-stb::Image<stb::RGB>* ContextRef::image() const {
+const stb::Image<stb::RGB>* ContextRef::image() const {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
 	}
-	return (stb::Image<stb::RGB>*)get_opaque();
+	return (const stb::Image<stb::RGB>*)get_opaque();
 }
 
-Context::Context(stb::Image<stb::RGB>* image): ContextRef(JS_NewContext(Runtime::instance().handle)) {
+Context::Context(const stb::Image<stb::RGB>* image): ContextRef(JS_NewContext(Runtime::instance().handle)) {
 	// image может быть нулевым, если мы просто хотим скомпилировать js
-	set_opaque(image);
+	set_opaque((void*)image);
 
 	register_global_functions();
 	register_classes();

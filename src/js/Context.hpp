@@ -32,7 +32,7 @@ struct ContextRef {
 
 	::JSContext* handle = nullptr;
 
-	stb::Image<stb::RGB>* image() const;
+	const stb::Image<stb::RGB>* image() const;
 
 protected:
 	void set_opaque(void* opaque);
@@ -43,7 +43,7 @@ protected:
 
 struct Context: ContextRef {
 	Context() = delete;
-	Context(stb::Image<stb::RGB>* image);
+	Context(const stb::Image<stb::RGB>* image);
 	~Context();
 
 	Context(const Context& other) = delete;

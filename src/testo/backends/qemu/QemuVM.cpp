@@ -1513,6 +1513,11 @@ void QemuVM::resume() {
 
 stb::Image<stb::RGB> QemuVM::screenshot() {
 	auto domain = qemu_connect.domain_lookup_by_name(id());
+
+	if (domain.state() != VIR_DOMAIN_RUNNING) {
+		return {};
+	}
+
 	auto stream = qemu_connect.new_stream();
 	auto mime = domain.screenshot(stream);
 

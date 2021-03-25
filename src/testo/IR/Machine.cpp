@@ -577,4 +577,13 @@ void Machine::validate_config() {
 	env->validate_vm_config(config);
 }
 
+const stb::Image<stb::RGB>& Machine::make_new_screenshot() {
+	_last_screenshot = vm()->screenshot();
+	return _last_screenshot;
+}
+
+const stb::Image<stb::RGB>& Machine::get_last_screenshot() const {
+	return _last_screenshot;
+}
+
 }

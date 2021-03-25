@@ -45,7 +45,13 @@ struct Machine: Controller {
 
 	void validate_config();
 
+	const stb::Image<stb::RGB>& make_new_screenshot();
+	const stb::Image<stb::RGB>& get_last_screenshot() const;
+
+
 private:
+	stb::Image<stb::RGB> _last_screenshot;
+
 	virtual std::string id() const override;
 	virtual fs::path get_metadata_dir() const override;
 
