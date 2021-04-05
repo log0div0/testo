@@ -148,6 +148,7 @@ bool Parser::test_action(size_t index) const {
 		(LA(index) == Token::category::exec) ||
 		(LA(index) == Token::category::copyto) ||
 		(LA(index) == Token::category::copyfrom) ||
+		(LA(index) == Token::category::screenshot) ||
 		(LA(index) == Token::category::lbrace) ||
 		(LA(index) == Token::category::if_) ||
 		(LA(index) == Token::category::for_) ||
@@ -614,6 +615,8 @@ std::shared_ptr<IAction> Parser::action() {
 		action = exec();
 	} else if ((LA(1) == Token::category::copyto) || (LA(1) == Token::category::copyfrom)) {
 		action = copy();
+	} else if (LA(1) == Token::category::screenshot) {
+		action = screenshot();
 	} else if (LA(1) == Token::category::lbrace) {
 		action = action_block();
 	} else if (LA(1) == Token::category::if_) {
@@ -1109,6 +1112,16 @@ std::shared_ptr<Action<Copy>> Parser::copy() {
 
 	auto action = std::shared_ptr<Copy>(new Copy(copy_token, from, to, nocheck, timeout));
 	return std::shared_ptr<Action<Copy>>(new Action<Copy>(action));
+}
+
+std::shared_ptr<Action<Screenshot>> Parser::screenshot() {
+	Token screenshot_token = LT(1);
+	match (Token::category::screenshot);
+
+	auto destination = string();
+
+	auto action = std::shared_ptr<Screenshot>(new Screenshot(screenshot_token, destination));
+	return std::shared_ptr<Action<Screenshot>>(new Action<Screenshot>(action));
 }
 
 std::shared_ptr<Action<ActionBlock>> Parser::action_block() {

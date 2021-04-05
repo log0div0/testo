@@ -411,6 +411,8 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::IAction> action) {
 		visit_exec({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
 		visit_copy({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Screenshot>>(action)) {
+		visit_screenshot({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
 		visit_wait({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
@@ -851,6 +853,13 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 			throw Exception(std::string(copy.ast_node->nocheck.begin()) + ": Error: \"nocheck\" specifier is not applicable to copyfrom action");
 		}
 	}
+}
+
+void VisitorSemantic::visit_screenshot(const IR::Screenshot& screenshot) {
+	auto destination = screenshot.destination();
+	current_test->cksum_input << "screenshot" << " " << destination << std::endl;
+
+	//No additional checks needed
 }
 
 void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {

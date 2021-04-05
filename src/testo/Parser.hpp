@@ -108,6 +108,7 @@ private:
 	std::shared_ptr<AST::Action<AST::Shutdown>> shutdown();
 	std::shared_ptr<AST::Action<AST::Exec>> exec();
 	std::shared_ptr<AST::Action<AST::Copy>> copy();
+	std::shared_ptr<AST::Action<AST::Screenshot>> screenshot();
 	std::shared_ptr<AST::MacroCall> macro_call();
 	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
 	std::shared_ptr<AST::ICounterList> counter_list();

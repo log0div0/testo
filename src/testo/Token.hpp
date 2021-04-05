@@ -30,6 +30,7 @@ struct Token {
 		lbtn,
 		rbtn,
 		mbtn,
+		screenshot,
 		wheel,
 		plug,
 		unplug,
@@ -208,6 +209,8 @@ struct Token {
 			return "RBTN";
 		case mbtn:
 			return "MBTN";
+		case screenshot:
+			return "SCREENSHOT";
 		case wheel:
 			return "WHEEL";
 		case plug:

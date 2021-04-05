@@ -289,6 +289,8 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::IAction>
 		visit_exec({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
 		visit_copy({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Screenshot>>(action)) {
+		visit_screenshot({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
 		visit_macro_call({p->action, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
@@ -339,6 +341,29 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(copy.ast_node, current_controller));
+	}
+}
+
+void VisitorInterpreterActionMachine::visit_screenshot(const IR::Screenshot& screenshot) {
+	try {
+		fs::path destination = screenshot.destination();
+		reporter.screenshot(vmc, destination);
+
+		if (vmc->vm()->state() != VmState::Running) {
+			throw std::runtime_error(fmt::format("virtual machine is not running"));
+		}
+
+		auto& screenshot = vmc->make_new_screenshot();
+
+		if (!fs::exists(destination.parent_path())) {
+			if (!fs::create_directories(destination.parent_path())) {
+				throw std::runtime_error(std::string("Can't create directory: ") + destination.parent_path().generic_string());
+			}
+		}
+
+		screenshot.write_png(destination.generic_string());
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(screenshot.ast_node, current_controller));
 	}
 }
 

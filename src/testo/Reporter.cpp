@@ -363,6 +363,13 @@ void Reporter::copy(std::shared_ptr<IR::Controller> controller, const std::strin
 	report(fmt::format("with timeout {}\n", timeout), blue);
 }
 
+void Reporter::screenshot(std::shared_ptr<IR::Machine> controller, const std::string& destination) {
+	report(fmt::format("{} Saving screenshot ", progress()), blue);
+	report(fmt::format("from virtual machine {} ", controller->name()), yellow);
+	report(fmt::format("to destination "), blue);
+	report(fmt::format("{}", destination), yellow);
+}
+
 void Reporter::mouse_move_click_coordinates(std::shared_ptr<IR::Machine> vmc, const std::string& x, const std::string& y) {
 	report("on coordinates ", blue);
 	report(fmt::format("{} {} ", x, y), yellow);

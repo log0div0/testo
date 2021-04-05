@@ -278,6 +278,20 @@ std::string Copy::from() const {
 	return from.generic_string();
 }
 
+std::string Screenshot::destination() const {
+	fs::path dest;
+	try {
+		dest = template_literals::Parser().resolve(ast_node->destination->text(), stack);
+		if (dest.is_relative()) {
+			dest = ast_node->t.begin().file.parent_path() / dest;
+		}
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ResolveException(ast_node->destination->begin(), ast_node->destination->text()));
+	}
+
+	return dest.generic_string();
+}
+
 std::string Copy::to() const {
 	fs::path to;
 	try {

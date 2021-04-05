@@ -145,6 +145,7 @@ private:
 	Token lbtn();
 	Token rbtn();
 	Token mbtn();
+	Token screenshot();
 	Token wheel();
 	Token plug();
 	Token unplug();

@@ -180,6 +180,11 @@ struct Copy: Action<AST::Copy> {
 	std::string to() const;
 };
 
+struct Screenshot: Action<AST::Screenshot> {
+	using Action<AST::Screenshot>::Action;
+	std::string destination() const;
+};
+
 struct Check: Action<AST::Check> {
 	using Action<AST::Check>::Action;
 	std::string timeout() const;

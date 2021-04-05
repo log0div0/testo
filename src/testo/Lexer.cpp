@@ -227,6 +227,8 @@ Token Lexer::id() {
 		return rbtn();
 	} else if (value == "mbtn") {
 		return mbtn();
+	} else if (value == "screenshot") {
+		return screenshot();
 	} else if (value == "wheel") {
 		return wheel();
 	} else if (value == "plug") {
@@ -458,6 +460,13 @@ Token Lexer::mbtn() {
 	std::string value("mbtn");
 	advance(value.length());
 	return Token(Token::category::mbtn, value, tmp_pos, previous_pos);
+}
+
+Token Lexer::screenshot() {
+	Pos tmp_pos = current_pos;
+	std::string value("screenshot");
+	advance(value.length());
+	return Token(Token::category::screenshot, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::wheel() {

@@ -78,6 +78,7 @@ struct VisitorSemantic {
 	void visit_shutdown(const IR::Shutdown& shutdown);
 	void visit_exec(const IR::Exec& exec);
 	void visit_copy(const IR::Copy& copy);
+	void visit_screenshot(const IR::Screenshot& screenshot);
 	void visit_wait(const IR::Wait& wait);
 	void visit_sleep(const IR::Sleep& sleep);
 	void visit_cmd_macro_call(const IR::MacroCall& macro_call);

@@ -48,6 +48,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	void visit_mouse_release(const IR::MouseRelease& mouse_release);
 	void visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mouse_wheel);
 	void visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval);
+	void visit_screenshot(const IR::Screenshot& screenshot);
 	void visit_plug(const IR::Plug& plug);
 	void visit_plug_nic(const IR::PlugNIC& plug_nic, bool is_on);
 	void visit_plug_link(const IR::PlugLink& plug_link, bool is_on);

@@ -1186,6 +1186,26 @@ struct Copy: public Node {
 	std::shared_ptr<StringTokenUnion> timeout;
 };
 
+struct Screenshot: public Node {
+	Screenshot(const Token& screenshot, std::shared_ptr<String> destination): 
+		Node(screenshot), destination(destination) {}
+
+	Pos begin() const {
+		return t.begin();
+	}
+
+	Pos end() const {
+		return destination->end();
+	}
+
+	operator std::string() const {
+		std::string result = t.value() + " " + std::string(*destination);
+		return result;
+	}
+
+	std::shared_ptr<String> destination = nullptr;
+};
+
 struct ActionBlock: public Node {
 	ActionBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<IAction>> actions):
 		Node(Token(Token::category::action_block, "action_block", Pos(), Pos())),
