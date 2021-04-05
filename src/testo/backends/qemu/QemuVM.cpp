@@ -1117,7 +1117,6 @@ bool QemuVM::is_link_plugged(const std::string& nic) const {
 
 				std::string state = nic_node.child("link").attribute("state").value();
 
-				std::cout << "The state is: " << state << std::endl;
 				if (state == "up") {
 					return true;
 				} else if (state == "down") {
