@@ -153,6 +153,27 @@ test create_vm_nic_no_attached_to {
 	vm_nic_no_attached_to {}
 }
 
+network net1 {
+	mode: "internal"
+}
+
+machine vm_nic_both_attached_to {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	nic my_nic: {
+		attached_to: "net1"
+		attached_to_dev: "eth0"
+	}
+}
+
+test create_vm_nic_both_attached_to {
+	vm_nic_both_attached_to {}
+}
+
 network my_network {
 	mode: "internal"
 }

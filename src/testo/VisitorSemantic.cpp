@@ -142,6 +142,7 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 
 	attr_ctxs.insert({"nic", {
 		{"attached_to", {false, Token::category::quoted_string}},
+		{"attached_to_dev", {false, Token::category::quoted_string}},
 		{"mac", {false, Token::category::quoted_string}},
 		{"adapter_type", {false, Token::category::quoted_string}},
 	}});

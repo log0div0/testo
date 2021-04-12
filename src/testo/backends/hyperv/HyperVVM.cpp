@@ -333,6 +333,10 @@ bool HyperVVM::is_nic_plugged(const std::string& nic_name) const {
 void HyperVVM::plug_nic(const std::string& nic_name) {
 	try {
 		for (auto& nic_json: config.at("nic")) {
+			if (nic_json.count("attached_to_dev")) {
+				throw std::runtime_error("attached_to_dev mode is not implemented yet");
+			}
+
 			if (nic_json.at("name") == nic_name) {
 				auto machine = connect.machine(id());
 				auto nic = machine.addNIC(nic_name);

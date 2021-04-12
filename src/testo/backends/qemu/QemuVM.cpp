@@ -982,7 +982,9 @@ std::set<std::string> QemuVM::plugged_nics() const {
 	std::set<std::string> result;
 
 	for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-		if (std::string(nic_node.attribute("type").value()) != "network") {
+		std::string type = std::string(nic_node.attribute("type").value());
+
+		if (type != "network" && type != "direct") {
 			continue;
 		}
 
@@ -1003,13 +1005,23 @@ void QemuVM::plug_nic(const std::string& nic) {
 
 		for (auto& nic_json: config.at("nic")) {
 			if (nic_json.at("name") == nic) {
-				std::string source_network = config.at("prefix").get<std::string>();
-				source_network += nic_json.at("attached_to").get<std::string>();
+				if (nic_json.count("attached_to")) {
+					std::string source_network = config.at("prefix").get<std::string>();
+					source_network += nic_json.at("attached_to").get<std::string>();
 
-				string_config += fmt::format(R"(
-					<interface type='network'>
-						<source network='{}'/>
-				)", source_network);
+					string_config += fmt::format(R"(
+						<interface type='network'>
+							<source network='{}'/>
+					)", source_network);
+				} else if (nic_json.count("attached_to_dev")) {
+					std::string dev = nic_json.at("attached_to_dev").get<std::string>();
+					string_config += fmt::format(R"(
+						<interface type='direct'>
+							<source dev='{}' mode='bridge'/>
+					)", dev);
+				} else {
+					throw std::runtime_error("Should never happen");
+				}
 
 				if (nic_json.count("mac")) {
 					string_config += fmt::format("\n<mac address='{}'/>", nic_json.at("mac").get<std::string>());
