@@ -1,0 +1,31 @@
+
+include "0.testo"
+
+flash bar {
+	size: 2Mb
+	fs: "ntfs"
+}
+
+test test_a {
+	foo {
+		print "test_a"
+	}
+}
+
+test test_b: test_a {
+	foo {
+		print "test_b"
+	}
+}
+
+test test_c {
+	bar {
+		print "test_c"
+	}
+}
+
+test test_d: test_b, test_c {
+	bar {
+		print "test_d"
+	}
+}

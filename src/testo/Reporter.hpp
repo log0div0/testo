@@ -94,6 +94,12 @@ struct Reporter {
 	};
 
 	void report(const std::string& message, style color, bool is_bold = false);
+	void report_prefix(style color, bool is_bold = false);
+
+	void print_stdout(const std::string& message, style color, bool is_bold);
+	void print_stdout_html(const std::string& message, style color, bool is_bold);
+	void print_stdout_terminal(const std::string& message, style color, bool is_bold);
+	void print_file(const std::string& message);
 
 	std::list<std::shared_ptr<IR::Test>> tests_to_run;
 	std::vector<std::shared_ptr<IR::Test>> passed_tests;

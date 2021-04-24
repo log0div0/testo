@@ -1,0 +1,11 @@
+
+flash foo {
+	size: 2Mb
+	fs: "ntfs"
+}
+
+test test_base {
+	foo {
+		print "test_base"
+	}
+}
