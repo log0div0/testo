@@ -18,15 +18,10 @@ std::string duration_to_str(Duration duration) {
 }
 
 void ReporterConfig::validate() const {
-	if ((report_logs || report_screenshots) && report_folder.empty()) {
-		throw std::runtime_error("--report_logs and --report_screenshots arguments are valid only with specified --report_folder");
-	}
 }
 
 Reporter::Reporter(const ReporterConfig& config) {
 	report_folder = config.report_folder;
-	report_logs = config.report_logs;
-	report_screenshots = config.report_screenshots;
 	html = config.html;
 }
 
@@ -42,17 +37,15 @@ void Reporter::init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,	c
 			if (!fs::is_empty(report_folder)) {
 				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not empty");
 			}
-		} else {
-			fs::create_directories(report_folder);
 		}
-		if (report_logs) {
-			summary_output_file = std::ofstream(report_folder / "summary.txt");
-		}
+		fs::create_directories(report_folder);
+		output_file = std::ofstream(report_folder / "log.txt");
 	}
 
 	for (auto test: _tests_to_run) {
-		if (report_logs) {
-			test->output_file = std::ofstream(report_folder / test->name());
+		if (!report_folder.empty()) {
+			fs::create_directories(report_folder / test->name());
+			test->output_file = std::ofstream(report_folder / test->name() / "log.txt");
 		}
 		tests_to_run.push_back(test);
 	}
@@ -471,10 +464,10 @@ void Reporter::exec_command_output(const std::string& text) {
 }
 
 void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
-	if (!report_screenshots) {
+	if (report_folder.empty()) {
 		return;
 	}
-	screenshot.write_png((report_folder / (current_test->name() + "_wait_failed.png")).generic_string());
+	screenshot.write_png((report_folder / current_test->name() / "screenshot.png").generic_string());
 	report_prefix(blue);
 	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
@@ -640,11 +633,11 @@ void Reporter::print_stdout_terminal(const std::string& message, style color, bo
 }
 
 void Reporter::print_file(const std::string& message) {
-	if (report_logs) {
+	if (!report_folder.empty()) {
 		if (current_test) {
 			current_test->output_file << message;
 		} else {
-			summary_output_file << message;
+			output_file << message;
 		}
 	}
 }

@@ -8,8 +8,6 @@
 
 struct ReporterConfig {
 	std::string report_folder;
-	bool report_logs = false;
-	bool report_screenshots = false;
 	bool html = false;
 
 	void validate() const;
@@ -115,10 +113,8 @@ private:
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point finish_timestamp;
 
-	bool report_logs;
-	bool report_screenshots;
 	bool html;
 
 	fs::path report_folder;
-	std::ofstream summary_output_file;
+	std::ofstream output_file;
 };
