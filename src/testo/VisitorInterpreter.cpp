@@ -90,100 +90,15 @@ void VisitorInterpreter::build_test_plan(std::shared_ptr<IR::Test> test,
 	test_plan.push_back(test);
 }
 
-bool VisitorInterpreter::is_cached(std::shared_ptr<IR::Test> test) const {
-	for (auto parent: test->parents) {
-		bool parent_cached = false;
-		for (auto cached: up_to_date_tests) {
-			if (parent->name() == cached->name()) {
-				parent_cached = true;
-				break;
-			}
-		}
-		if (!parent_cached) {
-			return false;
-		}
-	}
-
-	//check networks aditionally
-	for (auto network: test->get_all_networks()) {
-		if (network->is_defined() &&
-			network->check_config_relevance())
-		{
-			continue;
-		}
-		return false;
-	}
-
-	for (auto controller: test->get_all_controllers()) {
-		if (controller->is_defined() &&
-			controller->has_snapshot("_init") &&
-			controller->check_metadata_version() &&
-			controller->check_config_relevance() &&
-			controller->has_snapshot(test->name()) &&
-			(controller->get_snapshot_cksum(test->name()) == test->cksum))
-		{
-			continue;
-		}
-		return false;
-	}
-	return true;
-}
-
-bool VisitorInterpreter::is_cache_miss(std::shared_ptr<IR::Test> test) const {
-	auto all_parents = IR::Test::get_test_path(test);
-
-	for (auto parent: all_parents) {
-		for (auto cache_missed_test: cache_missed_tests) {
-			if (parent == cache_missed_test) {
-				return true;
-			}
-		}
-	}
-
-	//check networks aditionally
-	for (auto netc: test->get_all_networks()) {
-		if (netc->is_defined()) {
-			if (!netc->check_config_relevance()) {
-				return true;
-			}
-		}
-	}
-
-	for (auto controller: test->get_all_controllers()) {
-		if (controller->is_defined()) {
-			if (controller->has_snapshot(test->name())) {
-				if (controller->get_snapshot_cksum(test->name()) != test->cksum) {
-					return true;
-				}
-				if (!controller->check_config_relevance()) {
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;
-}
-
 void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<IR::Test>>& tests_queue) {
 	//Check every test
 	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
-		if (is_cached(*test_it)) {
+		if ((*test_it)->cache_status() == IR::Test::CacheStatus::OK) {
 			up_to_date_tests.push_back(*test_it);
 			tests_queue.erase(test_it++);
 		} else {
-			if (is_cache_miss(*test_it)) {
-				bool is_already_pushed = false;
-
-				for (auto test: cache_missed_tests) {
-					if (test == *test_it) {
-						is_already_pushed = true;
-						break;
-					}
-				}
-				if (!is_already_pushed) {
-					cache_missed_tests.push_back(*test_it);
-				}
+			if ((*test_it)->cache_status() == IR::Test::CacheStatus::Miss) {
+				cache_missed_tests.push_back(*test_it);
 			}
 			test_it++;
 		}

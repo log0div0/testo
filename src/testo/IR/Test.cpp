@@ -49,7 +49,7 @@ bool Test::snapshots_needed() const {
 	return !attrs.value("no_snapshots", false);
 }
 
-std::set<std::shared_ptr<Controller>> Test::get_all_controllers() {
+std::set<std::shared_ptr<Controller>> Test::get_all_controllers() const {
 	std::set<std::shared_ptr<Controller>> all_controllers;
 	for (auto& machine: get_all_machines()) {
 		all_controllers.insert(machine);
@@ -60,7 +60,7 @@ std::set<std::shared_ptr<Controller>> Test::get_all_controllers() {
 	return all_controllers;
 }
 
-std::set<std::shared_ptr<Machine>> Test::get_all_machines() {
+std::set<std::shared_ptr<Machine>> Test::get_all_machines() const {
 	std::set<std::shared_ptr<Machine>> result;
 	for (auto& parent: parents) {
 		for (auto& vm: parent->get_all_machines()) {
@@ -75,7 +75,7 @@ std::set<std::shared_ptr<Machine>> Test::get_all_machines() {
 	return result;
 }
 
-std::set<std::shared_ptr<Network>> Test::get_all_networks() {
+std::set<std::shared_ptr<Network>> Test::get_all_networks() const {
 	std::set<std::shared_ptr<Network>> result;
 	for (auto& parent: parents) {
 		for (auto& nw: parent->get_all_networks()) {
@@ -90,7 +90,7 @@ std::set<std::shared_ptr<Network>> Test::get_all_networks() {
 	return result;
 }
 
-std::set<std::shared_ptr<FlashDrive>> Test::get_all_flash_drives() {
+std::set<std::shared_ptr<FlashDrive>> Test::get_all_flash_drives() const {
 	std::set<std::shared_ptr<FlashDrive>> result;
 	for (auto& parent: parents) {
 		for (auto& fd: parent->get_all_flash_drives()) {
@@ -103,6 +103,83 @@ std::set<std::shared_ptr<FlashDrive>> Test::get_all_flash_drives() {
 	}
 
 	return result;
+}
+
+Test::CacheStatus Test::cache_status() {
+	if (_cache_status == CacheStatus::Unknown) {
+		if (is_cache_ok()) {
+			_cache_status = CacheStatus::OK;
+		} else if (is_cache_miss()) {
+			_cache_status = CacheStatus::Miss;
+		} else {
+			_cache_status = CacheStatus::Empty;
+		}
+	}
+	return _cache_status;
+}
+
+bool Test::is_cache_ok() const {
+	for (auto parent: parents) {
+		if (parent->cache_status() != CacheStatus::OK) {
+			return false;
+		}
+	}
+
+	//check networks aditionally
+	for (auto network: get_all_networks()) {
+		if (network->is_defined() &&
+			network->check_config_relevance())
+		{
+			continue;
+		}
+		return false;
+	}
+
+	for (auto controller: get_all_controllers()) {
+		if (controller->is_defined() &&
+			controller->has_snapshot("_init") &&
+			controller->check_metadata_version() &&
+			controller->check_config_relevance() &&
+			controller->has_snapshot(name()) &&
+			(controller->get_snapshot_cksum(name()) == cksum))
+		{
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
+bool Test::is_cache_miss() const {
+	for (auto parent: parents) {
+		if (parent->cache_status() == CacheStatus::Miss) {
+			return true;
+		}
+	}
+
+	//check networks aditionally
+	for (auto netc: get_all_networks()) {
+		if (netc->is_defined()) {
+			if (!netc->check_config_relevance()) {
+				return true;
+			}
+		}
+	}
+
+	for (auto controller: get_all_controllers()) {
+		if (controller->is_defined()) {
+			if (controller->has_snapshot(name())) {
+				if (controller->get_snapshot_cksum(name()) != cksum) {
+					return true;
+				}
+				if (!controller->check_config_relevance()) {
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
 }
 
 }

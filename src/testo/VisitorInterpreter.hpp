@@ -52,8 +52,6 @@ private:
 		std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
 		std::list<std::shared_ptr<IR::Test>>::reverse_iterator end);
 
-	bool is_cached(std::shared_ptr<IR::Test> test) const;
-	bool is_cache_miss(std::shared_ptr<IR::Test> test) const;
 	void check_up_to_date_tests(std::list<std::shared_ptr<IR::Test>>& tests_queue);
 	void resolve_tests(const std::list<std::shared_ptr<IR::Test>>& tests_queue);
 	void update_progress();

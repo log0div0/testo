@@ -39,6 +39,7 @@ void concat_unique(std::list<T>& left, const std::list<T>& right) {
 		for (auto it_left: left) {
 			if (it_left == it_right) {
 				already_included = true;
+				break;
 			}
 		}
 		if (!already_included) {
