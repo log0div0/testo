@@ -17,20 +17,19 @@ struct Reporter {
 	Reporter() = default;
 	Reporter(const ReporterConfig& config);
 
-	void init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,
+	void init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs,
 		const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests);
 
 	void finish();
 
 	//test stuff
+	void skip_test();
 	void prepare_environment();
 	void run_test();
-	void skip_failed_test(const std::string& failed_parent);
 	void test_passed();
 	void test_failed(const std::string& error_message);
 
 	void print_statistics();
-	nlohmann::json create_json_report() const;
 
 	//Controller stuff
 	void create_controller(std::shared_ptr<IR::Controller> controller);
@@ -75,7 +74,7 @@ struct Reporter {
 		std::stringstream ss;
 		ss << "[";
 		ss << std::setw(3);
-		ss << std::round(current_progress);
+		ss << std::round(current_progress());
 		ss << std::setw(0);
 		ss << '%' << "]";
 		return ss.str();
@@ -99,19 +98,18 @@ struct Reporter {
 	void print_stdout_terminal(const std::string& message, style color, bool is_bold);
 	void print_file(const std::string& message);
 
-	std::list<std::shared_ptr<IR::Test>> tests_to_run;
-	std::vector<std::shared_ptr<IR::Test>> passed_tests;
-	std::vector<std::shared_ptr<IR::Test>> failed_tests;
+	std::vector<std::shared_ptr<IR::TestRun>> tests_runs;
 	std::vector<std::shared_ptr<IR::Test>> up_to_date_tests;
 
-private:
-	std::shared_ptr<IR::Test> current_test;
+	std::map<std::string, size_t> get_stats(IR::TestRun::ExecStatus status) const;
 
-	float progress_step = 0;
-	float current_progress = 0;
+private:
+	std::shared_ptr<IR::TestRun> current_test_run;
+	size_t current_test_run_index = 0;
+
+	float current_progress() const;
 
 	std::chrono::system_clock::time_point start_timestamp;
-	std::chrono::system_clock::time_point finish_timestamp;
 
 	bool html;
 

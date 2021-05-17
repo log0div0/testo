@@ -36,26 +36,15 @@ private:
 	bool assume_yes;
 	std::string invalidate;
 
-	std::list<std::shared_ptr<IR::Test>> tests_to_run;
+	std::vector<std::shared_ptr<IR::TestRun>> tests_runs;
 	std::vector<std::shared_ptr<IR::Test>> up_to_date_tests;
-	std::vector<std::shared_ptr<IR::Test>> cache_missed_tests;
 
-	void setup_vars();
-	void reset_cache();
-
-	bool parent_is_ok(std::shared_ptr<IR::Test> test, std::shared_ptr<IR::Test> parent,
-		std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
-		std::list<std::shared_ptr<IR::Test>>::reverse_iterator end);
-
-	void build_test_plan(std::shared_ptr<IR::Test> test,
-		std::list<std::shared_ptr<IR::Test>>& test_plan,
-		std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
-		std::list<std::shared_ptr<IR::Test>>::reverse_iterator end);
-
-	void check_up_to_date_tests(std::list<std::shared_ptr<IR::Test>>& tests_queue);
-	void resolve_tests(const std::list<std::shared_ptr<IR::Test>>& tests_queue);
-	void update_progress();
-
+	void invalidate_tests();
+	void check_cache_missed_tests();
+	void get_up_to_date_tests();
+	std::shared_ptr<IR::TestRun> add_test_to_plan(std::shared_ptr<IR::Test> test);
+	void build_test_plan();
+	void init();
 	void stop_all_vms(std::shared_ptr<IR::Test> test);
 
 	std::shared_ptr<IR::Controller> current_controller;

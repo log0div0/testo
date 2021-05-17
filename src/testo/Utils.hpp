@@ -47,3 +47,5 @@ void concat_unique(std::list<T>& left, const std::list<T>& right) {
 		}
 	}
 }
+
+std::string generate_uuid_v4();

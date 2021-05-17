@@ -25,7 +25,9 @@ Reporter::Reporter(const ReporterConfig& config) {
 	html = config.html;
 }
 
-void Reporter::init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,	const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
+const std::string tag_file = ".testo_report_folder";
+
+void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs, const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
 {
 	start_timestamp = std::chrono::system_clock::now();
 
@@ -35,159 +37,154 @@ void Reporter::init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,	c
 				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a folder");
 			}
 			if (!fs::is_empty(report_folder)) {
-				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not empty");
+				if (!fs::exists(report_folder / tag_file)) {
+					throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a report folder");
+				}
 			}
 		}
 		fs::create_directories(report_folder);
-		output_file = std::ofstream(report_folder / "log.txt");
+		std::ofstream(report_folder / tag_file);
+		const std::time_t t_c = std::chrono::system_clock::to_time_t(start_timestamp);
+		output_file = std::ofstream(report_folder / "log.txt", std::ios_base::app);
+		output_file
+			<< "================="
+			<< std::put_time(std::localtime(&t_c), " %F %T ")
+			<< "================="
+			<< std::endl;
 	}
 
-	for (auto test: _tests_to_run) {
-		if (!report_folder.empty()) {
-			fs::create_directories(report_folder / test->name());
-			test->output_file = std::ofstream(report_folder / test->name() / "log.txt");
-		}
-		tests_to_run.push_back(test);
+	for (auto test_run: _tests_runs) {
+		test_run->test->report(report_folder / "tests");
+		tests_runs.push_back(test_run);
 	}
 	for (auto test: _up_to_date_tests) {
+		test->report(report_folder / "tests");
 		up_to_date_tests.push_back(test);
-	}
-
-	auto tests_num = tests_to_run.size() + up_to_date_tests.size();
-	if (tests_num != 0) {
-		progress_step = (float)100 / tests_num;
-	} else {
-		progress_step = 100;
 	}
 
 	if (up_to_date_tests.size()) {
 		report("UP-TO-DATE TESTS:\n", blue, true);
 		for (auto test: up_to_date_tests) {
-			current_progress += progress_step;
 			report(fmt::format("{}\n", test->name()), magenta);
 		}
 	}
 
-	if (tests_to_run.size()) {
+	if (tests_runs.size()) {
 		report("TESTS TO RUN:\n", style::blue, true);
-		for (auto test: tests_to_run) {
-			report(fmt::format("{}\n", test->name()), magenta);
+		for (auto test_run: tests_runs) {
+			report(fmt::format("{}\n", test_run->test->name()), magenta);
 		}
 	}
 }
 
 void Reporter::finish() {
-	finish_timestamp = std::chrono::system_clock::now();
-
 	print_statistics();
-	if (!report_folder.empty()) {
-		auto json_report_file = report_folder / "report.json";
-
-		auto path = fs::absolute(json_report_file);
-		auto report = create_json_report();
-		fs::create_directories(path.parent_path());
-		std::ofstream file(path);
-		file << report.dump(2);
-	}
 }
 
 void Reporter::prepare_environment() {
-	current_test = tests_to_run.front();
-	tests_to_run.pop_front();
+	current_test_run = tests_runs.at(current_test_run_index);
 
 	report_prefix(blue);
 	report(fmt::format("Preparing the environment for test "), blue);
-	report(fmt::format("{}\n", current_test->name()), yellow);
+	report(fmt::format("{}\n", current_test_run->test->name()), yellow);
 
-	current_test->start_timestamp = std::chrono::system_clock::now();
+	current_test_run->report_begin(report_folder / "tests_runs");
 }
 
 void Reporter::run_test() {
 	report_prefix(blue);
 	report(fmt::format("Running test "), blue);
-	report(fmt::format("{}\n", current_test->name()), yellow);
+	report(fmt::format("{}\n", current_test_run->test->name()), yellow);
 }
 
-void Reporter::skip_failed_test(const std::string& failed_parent) {
-	current_progress += progress_step;
-	current_test->stop_timestamp = std::chrono::system_clock::now();
+std::string join(const std::set<std::string>& set, const std::string& delimiter) {
+	size_t i = 0;
+	std::string result;
+	for (auto& str: set) {
+		if (i == 0) {
+			result += delimiter;
+		}
+		result += str;
+		++i;
+	}
+	return result;
+}
+
+void Reporter::skip_test() {
+	current_test_run = tests_runs.at(current_test_run_index);
+	current_test_run->exec_status = IR::TestRun::ExecStatus::Skipped;
+
+	std::set<std::string> unsuccessful_parents_names = current_test_run->get_unsuccessful_parents_names();
 
 	report_prefix(red, true);
 	report(fmt::format("Skipping test "), red, true);
-	report(current_test->name(), yellow, true);
-	report(" because his parent ", red, true);
-	report(failed_parent, yellow, true);
-	report(" failed\n", red, true);
+	report(current_test_run->test->name(), yellow, true);
+	if (unsuccessful_parents_names.size() > 1) {
+		report(" because his parents ", red, true);
+	} else {
+		report(" because his parent ", red, true);
+	}
+	report(join(unsuccessful_parents_names, ", "), yellow, true);
+	report(" failed or skipped\n", red, true);
 
-	failed_tests.push_back(current_test);
-	current_test = nullptr;
+	current_test_run = nullptr;
+	++current_test_run_index;
 }
 
 void Reporter::test_passed() {
-	current_progress += progress_step;
-	current_test->stop_timestamp = std::chrono::system_clock::now();
-	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
+	current_test_run->report_end(IR::TestRun::ExecStatus::Passed);
 
 	report_prefix(green, true);
 	report(fmt::format("Test "), green, true);
-	report(current_test->name(), yellow, true);
-	report(fmt::format(" PASSED in {}\n", duration), green, true);
+	report(current_test_run->test->name(), yellow, true);
+	report(fmt::format(" PASSED in {}\n", duration_to_str(current_test_run->duration())), green, true);
 
-	for (auto it: up_to_date_tests) {
-		if (it->name() == current_test->name()) {
-			//already have that one
-			return;
-		}
-	}
-
-	for (auto it: passed_tests) {
-		if (it->name() == current_test->name()) {
-			//already have that one
-			return;
-		}
-	}
-
-	passed_tests.push_back(current_test);
-	current_test = nullptr;
+	current_test_run = nullptr;
+	++current_test_run_index;
 }
 
 void Reporter::test_failed(const std::string& error_message) {
 	report(fmt::format("{}", error_message), red, true);
 
-	current_progress += progress_step;
-	current_test->stop_timestamp = std::chrono::system_clock::now();
-	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
+	current_test_run->report_end(IR::TestRun::ExecStatus::Failed);
 
 	report_prefix(red, true);
 	report(fmt::format("Test "), red, true);
-	report(current_test->name(), yellow, true);
-	report(fmt::format(" FAILED in {}\n", duration), red, true);
+	report(current_test_run->test->name(), yellow, true);
+	report(fmt::format(" FAILED in {}\n", duration_to_str(current_test_run->duration())), red, true);
 
-	bool already_failed = false;
-	for (auto it: failed_tests) {
-		if (it->name() == current_test->name()) {
-			already_failed = true;
-		}
-	}
-
-	if (!already_failed) {
-		failed_tests.push_back(current_test);
-	}
-	current_test = nullptr;
+	current_test_run = nullptr;
+	++current_test_run_index;
 }
 
 void Reporter::print_statistics()
 {
+	auto passed_tests = get_stats(IR::TestRun::ExecStatus::Passed);
+	auto failed_tests = get_stats(IR::TestRun::ExecStatus::Failed);
+	auto skipped_tests = get_stats(IR::TestRun::ExecStatus::Skipped);
+
 	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
-	auto total_tests = passed_tests.size() + failed_tests.size() + up_to_date_tests.size();
+	auto total_tests = tests_runs.size() + up_to_date_tests.size();
 
 	report(fmt::format("PROCESSED TOTAL {} TESTS IN {}\n", total_tests, tests_durantion), blue, true);
 	report(fmt::format("UP-TO-DATE: {}\n", up_to_date_tests.size()), blue, true);
 
 	report(fmt::format("RUN SUCCESSFULLY: {}\n", passed_tests.size()), green, true);
 	report(fmt::format("FAILED: {}\n", failed_tests.size()), red, true);
-	for (auto fail: failed_tests) {
-		report(fmt::format("\t -{}\n", fail->name()), red);
+	for (auto kv: failed_tests) {
+		if (kv.second) {
+			report(fmt::format("\t - {} ({} times)\n", kv.first, kv.second), red);
+		} else {
+			report(fmt::format("\t - {}\n", kv.first), red);
+		}
+	}
+	report(fmt::format("SKIPPED: {}\n", skipped_tests.size()), magenta, true);
+	for (auto kv: skipped_tests) {
+		if (kv.second) {
+			report(fmt::format("\t - {} ({} times)\n", kv.first, kv.second), magenta);
+		} else {
+			report(fmt::format("\t - {}\n", kv.first), magenta);
+		}
 	}
 }
 
@@ -467,69 +464,10 @@ void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Imag
 	if (report_folder.empty()) {
 		return;
 	}
-	screenshot.write_png((report_folder / current_test->name() / "screenshot.png").generic_string());
+	current_test_run->report_screenshot(screenshot);
 	report_prefix(blue);
 	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
-}
-
-nlohmann::json Reporter::create_json_report() const {
-	nlohmann::json report = nlohmann::json::object();
-	report["tests"] = nlohmann::json::array();
-
-	for (auto test: passed_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name()},
-			{"description", test->description()},
-			{"status", "success"},
-			{"is_cached", false},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	for (auto test: failed_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name()},
-			{"description", test->description()},
-			{"status", "fail"},
-			{"is_cached", false},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	for (auto test: up_to_date_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name()},
-			{"description", test->description()},
-			{"status", "success"},
-			{"is_cached", true},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
-
-	std::stringstream ss1;
-	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
-	report["start_timestamp"] = ss1.str();
-
-	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	std::stringstream ss2;
-	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
-
-	report["stop_timestamp"] = ss2.str();
-
-	return report;
 }
 
 std::string newline_to_br(const std::string& str) {
@@ -555,8 +493,8 @@ void Reporter::report(const std::string& message, style color, bool is_bold) {
 
 void Reporter::report_prefix(style color, bool is_bold) {
 	print_stdout(fmt::format("{} ", progress()), color, is_bold);
-	if (current_test) {
-		print_file(fmt::format("[{}] ", current_test->name()));
+	if (current_test_run) {
+		print_file(fmt::format("[{}] ", current_test_run->test->name()));
 	} else {
 		print_file(fmt::format("[???] "));
 	}
@@ -634,10 +572,28 @@ void Reporter::print_stdout_terminal(const std::string& message, style color, bo
 
 void Reporter::print_file(const std::string& message) {
 	if (!report_folder.empty()) {
-		if (current_test) {
-			current_test->output_file << message;
+		if (current_test_run) {
+			current_test_run->output_file << message;
 		} else {
 			output_file << message;
 		}
 	}
+}
+
+float Reporter::current_progress() const {
+	size_t total_tests_count = tests_runs.size() + up_to_date_tests.size();
+	if (total_tests_count == 0) {
+		return 100.0f;
+	}
+	return float(current_test_run_index + up_to_date_tests.size()) / total_tests_count * 100;
+}
+
+std::map<std::string, size_t> Reporter::get_stats(IR::TestRun::ExecStatus status) const {
+	std::map<std::string, size_t> result;
+	for (auto& test_run: tests_runs) {
+		if (test_run->exec_status == status) {
+			++result[test_run->test->name()];
+		}
+	}
+	return result;
 }
