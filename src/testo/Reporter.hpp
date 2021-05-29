@@ -108,11 +108,13 @@ private:
 	size_t current_test_run_index = 0;
 
 	float current_progress() const;
+	nlohmann::json create_json_report() const;
 
 	std::chrono::system_clock::time_point start_timestamp;
 
 	bool html;
 
 	fs::path report_folder;
+	std::string launch_id = generate_uuid_v4();
 	std::ofstream output_file;
 };

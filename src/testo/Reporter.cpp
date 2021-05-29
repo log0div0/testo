@@ -42,15 +42,9 @@ void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs
 				}
 			}
 		}
-		fs::create_directories(report_folder);
+		fs::create_directories(report_folder / "launches" / launch_id);
 		std::ofstream(report_folder / tag_file);
-		const std::time_t t_c = std::chrono::system_clock::to_time_t(start_timestamp);
-		output_file = std::ofstream(report_folder / "log.txt", std::ios_base::app);
-		output_file
-			<< "================="
-			<< std::put_time(std::localtime(&t_c), " %F %T ")
-			<< "================="
-			<< std::endl;
+		output_file = std::ofstream(report_folder / "launches" / launch_id / "log.txt", std::ios_base::app);
 	}
 
 	for (auto test_run: _tests_runs) {
@@ -79,6 +73,12 @@ void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs
 
 void Reporter::finish() {
 	print_statistics();
+	if (!report_folder.empty()) {
+		auto path = fs::absolute(report_folder / "launches" / launch_id / "meta.json");
+		auto report = create_json_report();
+		std::ofstream file(path);
+		file << report.dump(2);
+	}
 }
 
 void Reporter::prepare_environment() {
@@ -596,4 +596,33 @@ std::map<std::string, size_t> Reporter::get_stats(IR::TestRun::ExecStatus status
 		}
 	}
 	return result;
+}
+
+nlohmann::json Reporter::create_json_report() const {
+	nlohmann::json report = nlohmann::json::object();
+	report["tests_runs"] = nlohmann::json::array();
+	report["up_to_date_tests"] = nlohmann::json::array();
+
+	for (auto test_run: tests_runs) {
+		report["tests_runs"].push_back(test_run->name);
+	}
+
+	for (auto test: up_to_date_tests) {
+		report["up_to_date_tests"].push_back(test->name());
+	}
+
+	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
+
+	std::stringstream ss1;
+	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
+	report["start_timestamp"] = ss1.str();
+
+	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	std::stringstream ss2;
+	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
+
+	report["stop_timestamp"] = ss2.str();
+
+	return report;
 }

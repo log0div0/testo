@@ -159,7 +159,7 @@ void Test::report(const fs::path& report_folder_) {
 		nlohmann::json j;
 		file >> j;
 		if (j.at("cksum") != cksum) {
-			throw std::runtime_error("Can't write the report to disk because \"" + name() + "\" test checksum has changed");
+			throw std::runtime_error("Can't write the report into an existing report folder because \"" + name() + "\" test's checksum has been changed");
 		}
 	} else {
 		fs::create_directories(report_folder);
