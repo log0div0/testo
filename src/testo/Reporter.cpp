@@ -21,7 +21,9 @@ void ReporterConfig::validate() const {
 }
 
 void ReporterConfig::dump(nlohmann::json& j) const {
-	j["report_folder"] = fs::canonical(report_folder);
+	if (!report_folder.empty()) {
+		j["report_folder"] = fs::canonical(report_folder);
+	}
 	j["html"] = html;
 }
 
