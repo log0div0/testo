@@ -22,6 +22,8 @@ struct TestNameFilter {
 	bool validate_test_name(const std::string& name) const;
 };
 
+void to_json(nlohmann::json& j, const TestNameFilter& filter);
+
 struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig {
 	std::string target;
 
@@ -34,6 +36,8 @@ struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig {
 
 	bool validate_test_name(const std::string& name) const;
 	void validate() const;
+
+	virtual void dump(nlohmann::json& j) const;
 };
 
 struct Program {

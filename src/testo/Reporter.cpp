@@ -18,19 +18,22 @@ std::string duration_to_str(Duration duration) {
 }
 
 void ReporterConfig::validate() const {
-	if ((report_logs || report_screenshots) && report_folder.empty()) {
-		throw std::runtime_error("--report_logs and --report_screenshots arguments are valid only with specified --report_folder");
-	}
+}
+
+void ReporterConfig::dump(nlohmann::json& j) const {
+	j["report_folder"] = fs::canonical(report_folder);
+	j["html"] = html;
 }
 
 Reporter::Reporter(const ReporterConfig& config) {
 	report_folder = config.report_folder;
-	report_logs = config.report_logs;
-	report_screenshots = config.report_screenshots;
 	html = config.html;
+	config.dump(this->config);
 }
 
-void Reporter::init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,	const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
+const std::string tag_file = ".testo_report_folder";
+
+void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs, const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
 {
 	start_timestamp = std::chrono::system_clock::now();
 
@@ -40,202 +43,207 @@ void Reporter::init(const std::list<std::shared_ptr<IR::Test>>& _tests_to_run,	c
 				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a folder");
 			}
 			if (!fs::is_empty(report_folder)) {
-				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not empty");
+				if (!fs::exists(report_folder / tag_file)) {
+					throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a report folder");
+				}
 			}
-		} else {
-			fs::create_directories(report_folder);
 		}
-		if (report_logs) {
-			summary_output_file = std::ofstream(report_folder / "summary.txt");
-		}
+		fs::create_directories(report_folder / "launches" / launch_id);
+		std::ofstream(report_folder / tag_file);
+		output_file = std::ofstream(report_folder / "launches" / launch_id / "log.txt", std::ios_base::app);
 	}
 
-	for (auto test: _tests_to_run) {
-		if (report_logs) {
-			test->output_file = std::ofstream(report_folder / test->name());
-		}
-		tests_to_run.push_back(test);
+	for (auto test_run: _tests_runs) {
+		test_run->test->report(report_folder / "tests");
+		tests_runs.push_back(test_run);
 	}
 	for (auto test: _up_to_date_tests) {
+		test->report(report_folder / "tests");
 		up_to_date_tests.push_back(test);
-	}
-
-	auto tests_num = tests_to_run.size() + up_to_date_tests.size();
-	if (tests_num != 0) {
-		progress_step = (float)100 / tests_num;
-	} else {
-		progress_step = 100;
 	}
 
 	if (up_to_date_tests.size()) {
 		report("UP-TO-DATE TESTS:\n", blue, true);
 		for (auto test: up_to_date_tests) {
-			current_progress += progress_step;
 			report(fmt::format("{}\n", test->name()), magenta);
 		}
 	}
 
-	if (tests_to_run.size()) {
+	if (tests_runs.size()) {
 		report("TESTS TO RUN:\n", style::blue, true);
-		for (auto test: tests_to_run) {
-			report(fmt::format("{}\n", test->name()), magenta);
+		for (auto test_run: tests_runs) {
+			report(fmt::format("{}\n", test_run->test->name()), magenta);
 		}
 	}
 }
 
 void Reporter::finish() {
-	finish_timestamp = std::chrono::system_clock::now();
-
 	print_statistics();
 	if (!report_folder.empty()) {
-		auto json_report_file = report_folder / "report.json";
-
-		auto path = fs::absolute(json_report_file);
+		auto path = fs::absolute(report_folder / "launches" / launch_id / "meta.json");
 		auto report = create_json_report();
-		fs::create_directories(path.parent_path());
 		std::ofstream file(path);
 		file << report.dump(2);
 	}
 }
 
 void Reporter::prepare_environment() {
-	current_test = tests_to_run.front();
-	tests_to_run.pop_front();
+	current_test_run = tests_runs.at(current_test_run_index);
 
-	report(fmt::format("{} Preparing the environment for test ", progress()), blue);
-	report(fmt::format("{}\n", current_test->name()), yellow);
+	report_prefix(blue);
+	report(fmt::format("Preparing the environment for test "), blue);
+	report(fmt::format("{}\n", current_test_run->test->name()), yellow);
 
-	current_test->start_timestamp = std::chrono::system_clock::now();
+	current_test_run->report_begin(report_folder / "tests_runs");
 }
 
 void Reporter::run_test() {
-	report(fmt::format("{} Running test ", progress()), blue);
-	report(fmt::format("{}\n", current_test->name()), yellow);
+	report_prefix(blue);
+	report(fmt::format("Running test "), blue);
+	report(fmt::format("{}\n", current_test_run->test->name()), yellow);
 }
 
-void Reporter::skip_failed_test(const std::string& failed_parent) {
-	current_progress += progress_step;
-	current_test->stop_timestamp = std::chrono::system_clock::now();
+std::string join(const std::set<std::string>& set, const std::string& delimiter) {
+	size_t i = 0;
+	std::string result;
+	for (auto& str: set) {
+		if (i == 0) {
+			result += delimiter;
+		}
+		result += str;
+		++i;
+	}
+	return result;
+}
 
-	report(fmt::format("{} Skipping test ", progress()), red, true);
-	report(current_test->name(), yellow, true);
-	report(" because his parent ", red, true);
-	report(failed_parent, yellow, true);
-	report(" failed\n", red, true);
+void Reporter::skip_test() {
+	current_test_run = tests_runs.at(current_test_run_index);
+	current_test_run->exec_status = IR::TestRun::ExecStatus::Skipped;
 
-	failed_tests.push_back(current_test);
-	current_test = nullptr;
+	std::set<std::string> unsuccessful_parents_names = current_test_run->get_unsuccessful_parents_names();
+
+	report_prefix(red, true);
+	report(fmt::format("Skipping test "), red, true);
+	report(current_test_run->test->name(), yellow, true);
+	if (unsuccessful_parents_names.size() > 1) {
+		report(" because his parents ", red, true);
+	} else {
+		report(" because his parent ", red, true);
+	}
+	report(join(unsuccessful_parents_names, ", "), yellow, true);
+	report(" failed or skipped\n", red, true);
+
+	current_test_run = nullptr;
+	++current_test_run_index;
 }
 
 void Reporter::test_passed() {
-	current_progress += progress_step;
-	current_test->stop_timestamp = std::chrono::system_clock::now();
-	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
+	current_test_run->report_end(IR::TestRun::ExecStatus::Passed);
 
-	report(fmt::format("{} Test ", progress()), green, true);
-	report(current_test->name(), yellow, true);
-	report(fmt::format(" PASSED in {}\n", duration), green, true);
+	report_prefix(green, true);
+	report(fmt::format("Test "), green, true);
+	report(current_test_run->test->name(), yellow, true);
+	report(fmt::format(" PASSED in {}\n", duration_to_str(current_test_run->duration())), green, true);
 
-	for (auto it: up_to_date_tests) {
-		if (it->name() == current_test->name()) {
-			//already have that one
-			return;
-		}
-	}
-
-	for (auto it: passed_tests) {
-		if (it->name() == current_test->name()) {
-			//already have that one
-			return;
-		}
-	}
-
-	passed_tests.push_back(current_test);
-	current_test = nullptr;
+	current_test_run = nullptr;
+	++current_test_run_index;
 }
 
 void Reporter::test_failed(const std::string& error_message) {
 	report(fmt::format("{}", error_message), red, true);
 
-	current_progress += progress_step;
-	current_test->stop_timestamp = std::chrono::system_clock::now();
-	auto duration = duration_to_str(current_test->stop_timestamp - current_test->start_timestamp);
+	current_test_run->report_end(IR::TestRun::ExecStatus::Failed);
 
-	report(fmt::format("{} Test ", progress()), red, true);
-	report(current_test->name(), yellow, true);
-	report(fmt::format(" FAILED in {}\n", duration), red, true);
+	report_prefix(red, true);
+	report(fmt::format("Test "), red, true);
+	report(current_test_run->test->name(), yellow, true);
+	report(fmt::format(" FAILED in {}\n", duration_to_str(current_test_run->duration())), red, true);
 
-	bool already_failed = false;
-	for (auto it: failed_tests) {
-		if (it->name() == current_test->name()) {
-			already_failed = true;
-		}
-	}
-
-	if (!already_failed) {
-		failed_tests.push_back(current_test);
-	}
-	current_test = nullptr;
+	current_test_run = nullptr;
+	++current_test_run_index;
 }
 
 void Reporter::print_statistics()
 {
+	auto passed_tests = get_stats(IR::TestRun::ExecStatus::Passed);
+	auto failed_tests = get_stats(IR::TestRun::ExecStatus::Failed);
+	auto skipped_tests = get_stats(IR::TestRun::ExecStatus::Skipped);
+
 	auto tests_durantion = duration_to_str(std::chrono::system_clock::now() - start_timestamp);
-	auto total_tests = passed_tests.size() + failed_tests.size() + up_to_date_tests.size();
+	auto total_tests = tests_runs.size() + up_to_date_tests.size();
 
 	report(fmt::format("PROCESSED TOTAL {} TESTS IN {}\n", total_tests, tests_durantion), blue, true);
 	report(fmt::format("UP-TO-DATE: {}\n", up_to_date_tests.size()), blue, true);
 
 	report(fmt::format("RUN SUCCESSFULLY: {}\n", passed_tests.size()), green, true);
 	report(fmt::format("FAILED: {}\n", failed_tests.size()), red, true);
-	for (auto fail: failed_tests) {
-		report(fmt::format("\t -{}\n", fail->name()), red);
+	for (auto kv: failed_tests) {
+		if (kv.second) {
+			report(fmt::format("\t - {} ({} times)\n", kv.first, kv.second), red);
+		} else {
+			report(fmt::format("\t - {}\n", kv.first), red);
+		}
+	}
+	report(fmt::format("SKIPPED: {}\n", skipped_tests.size()), magenta, true);
+	for (auto kv: skipped_tests) {
+		if (kv.second) {
+			report(fmt::format("\t - {} ({} times)\n", kv.first, kv.second), magenta);
+		} else {
+			report(fmt::format("\t - {}\n", kv.first), magenta);
+		}
 	}
 }
 
 void Reporter::create_controller(std::shared_ptr<IR::Controller> controller) {
-	report(fmt::format("{} Creating {} ", progress(), controller->type()), blue);
+	report_prefix(blue);
+	report(fmt::format("Creating {} ", controller->type()), blue);
 	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
 void Reporter::take_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot) {
-	report(fmt::format("{} Taking snapshot ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Taking snapshot "), blue);
 	report(snapshot, yellow);
 	report(fmt::format(" for {} ", controller->type()), blue);
 	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
 void Reporter::restore_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot) {
-	report(fmt::format("{} Restoring snapshot ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Restoring snapshot "), blue);
 	report(snapshot, yellow);
 	report(fmt::format(" for {} ", controller->type()), blue);
 	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
 void Reporter::print(std::shared_ptr<IR::Controller> controller, const std::string& message) {
-	report(progress() + " ", blue);
+	report_prefix(blue);
 	report(controller->name(), yellow);
 	report(fmt::format(": {}\n", message), blue);
 }
 
 void Reporter::start(std::shared_ptr<IR::Machine> vmc) {
-	report(fmt::format("{} Starting virtual machine ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Starting virtual machine "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
 void Reporter::stop(std::shared_ptr<IR::Machine> vmc) {
-	report(fmt::format("{} Stopping virtual machine ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Stopping virtual machine "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
 void Reporter::shutdown(std::shared_ptr<IR::Machine> vmc, const std::string& timeout) {
-	report(fmt::format("{} Shutting down virtual machine ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Shutting down virtual machine "), blue);
 	report(fmt::format("{}", vmc->name()), yellow);
 	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
 
 void Reporter::press_key(std::shared_ptr<IR::Machine> vmc, const std::string& key, uint32_t times) {
-	report(fmt::format("{} Pressing key ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Pressing key "), blue);
 	report(fmt::format("{} ", key), yellow);
 
 	if (times > 1) {
@@ -247,7 +255,8 @@ void Reporter::press_key(std::shared_ptr<IR::Machine> vmc, const std::string& ke
 }
 
 void Reporter::hold_key(std::shared_ptr<IR::Machine> vmc, const std::string& key) {
-	report(fmt::format("{} Holding key ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Holding key "), blue);
 	report(fmt::format("{} ", key), yellow);
 
 	report("in virtual machine ", blue);
@@ -255,7 +264,8 @@ void Reporter::hold_key(std::shared_ptr<IR::Machine> vmc, const std::string& key
 }
 
 void Reporter::release_key(std::shared_ptr<IR::Machine> vmc, const std::string& keys) {
-	report(fmt::format("{} Releasing key ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Releasing key "), blue);
 	report(fmt::format("{} ", keys), yellow);
 
 	report("in virtual machine ", blue);
@@ -263,7 +273,8 @@ void Reporter::release_key(std::shared_ptr<IR::Machine> vmc, const std::string& 
 }
 
 void Reporter::release_key(std::shared_ptr<IR::Machine> vmc) {
-	report(fmt::format("{} Releasing ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Releasing "), blue);
 	report("all held ", yellow);
 
 	report("keys in virtual machine ", blue);
@@ -271,7 +282,8 @@ void Reporter::release_key(std::shared_ptr<IR::Machine> vmc) {
 }
 
 void Reporter::type(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& interval) {
-	report(fmt::format("{} Typing ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Typing "), blue);
 	report(fmt::format("\"{}\" ", text), yellow);
 	report(fmt::format("with interval {} in virtual machine ", interval), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
@@ -279,13 +291,15 @@ void Reporter::type(std::shared_ptr<IR::Machine> vmc, const std::string& text, c
 }
 
 void Reporter::sleep(std::shared_ptr<IR::Controller> controller, const std::string& timeout) {
-	report(fmt::format("{} Sleeping in {} ", progress(), controller->type()), blue);
+	report_prefix(blue);
+	report(fmt::format("Sleeping in {} ", controller->type()), blue);
 	report(fmt::format("{}", controller->name()), yellow);
 	report(fmt::format(" for {}\n", timeout), blue);
 }
 
 void Reporter::macro_action_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
-	report(fmt::format("{} Calling macro ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Calling macro "), blue);
 	report(fmt::format("{}(", macro_name), yellow);
 
 	for (auto it = params.begin(); it != params.end(); ++it) {
@@ -302,7 +316,8 @@ void Reporter::macro_action_call(std::shared_ptr<IR::Controller> controller, con
 }
 
 void Reporter::macro_command_call(const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
-	report(fmt::format("{} Calling command macro ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Calling command macro "), blue);
 	report(fmt::format("{}(", macro_name), yellow);
 
 	for (auto it = params.begin(); it != params.end(); ++it) {
@@ -317,14 +332,16 @@ void Reporter::macro_command_call(const std::string& macro_name, const std::vect
 }
 
 void Reporter::wait(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
-	report(fmt::format("{} Waiting ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Waiting "), blue);
 	report(fmt::format("{} ", text), yellow);
 	report(fmt::format("for {} with interval {} in virtual machine ", timeout, interval), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
 void Reporter::check(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
-	report(fmt::format("{} Checking ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Checking "), blue);
 	report(fmt::format("{}", text), yellow);
 	if (timeout != "1ms") {
 		report(fmt::format(" for {}", timeout), blue);
@@ -339,14 +356,16 @@ void Reporter::check(std::shared_ptr<IR::Machine> vmc, const std::string& text, 
 void Reporter::plug(std::shared_ptr<IR::Machine> vmc, const std::string& device, const std::string& device_name, bool is_on) {
 	std::string plug_or_unplug = is_on ? "Plugging" : "Unplugging";
 	std::string into_or_from = is_on ? "into" : "from";
-	report(fmt::format("{} {} {} ", progress(), plug_or_unplug, device), blue);
+	report_prefix(blue);
+	report(fmt::format("{} {} ", plug_or_unplug, device), blue);
 	report(fmt::format("{} ", device_name), yellow);
 	report(fmt::format("{} virtual machine ", into_or_from), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
 void Reporter::exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpreter, const std::string& timeout) {
-	report(fmt::format("{} Executing {} command in virtual machine ", progress(), interpreter), blue);
+	report_prefix(blue);
+	report(fmt::format("Executing {} command in virtual machine ", interpreter), blue);
 	report(fmt::format("{}", vmc->name()), yellow);
 	report(fmt::format(" with timeout {}\n", timeout), blue);
 }
@@ -354,7 +373,8 @@ void Reporter::exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpr
 void Reporter::copy(std::shared_ptr<IR::Controller> controller, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) {
 	std::string from_to = is_to_guest ? "to" : "from";
 
-	report(fmt::format("{} Copying ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Copying "), blue);
 	report(fmt::format("{} ", from), yellow);
 	report(fmt::format("{} {} ", from_to, controller->type()), blue);
 	report(fmt::format("{} ", controller->name()), yellow);
@@ -364,7 +384,8 @@ void Reporter::copy(std::shared_ptr<IR::Controller> controller, const std::strin
 }
 
 void Reporter::screenshot(std::shared_ptr<IR::Machine> controller, const std::string& destination) {
-	report(fmt::format("{} Saving screenshot ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Saving screenshot "), blue);
 	report(fmt::format("from virtual machine {} ", controller->name()), yellow);
 	report(fmt::format("to destination "), blue);
 	report(fmt::format("{}", destination), yellow);
@@ -399,7 +420,8 @@ void Reporter::mouse_move_click(std::shared_ptr<IR::Machine> vmc, std::string ev
 		event = "double-clicking";
 	}
 
-	report(fmt::format("{} Mouse {} ", progress(), event), blue);
+	report_prefix(blue);
+	report(fmt::format("Mouse {} ", event), blue);
 }
 
 void Reporter::mouse_no_object() {
@@ -415,7 +437,8 @@ void Reporter::mouse_hold(std::shared_ptr<IR::Machine> vmc, std::string button) 
 		button = "middle button";
 	}
 
-	report(fmt::format("{} Mouse hold the ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Mouse hold the "), blue);
 	report(fmt::format("{} ", button), yellow);
 
 	report("in virtual machine ", blue);
@@ -423,14 +446,16 @@ void Reporter::mouse_hold(std::shared_ptr<IR::Machine> vmc, std::string button) 
 }
 
 void Reporter::mouse_release(std::shared_ptr<IR::Machine> vmc) {
-	report(fmt::format("{} Mouse release buttons ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Mouse release buttons "), blue);
 
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
 void Reporter::mouse_wheel(std::shared_ptr<IR::Machine> vmc, const std::string& direction) {
-	report(fmt::format("{} Mouse wheel ", progress()), blue);
+	report_prefix(blue);
+	report(fmt::format("Mouse wheel "), blue);
 	report(fmt::format("{} ", direction), yellow);
 
 	report("in virtual machine ", blue);
@@ -442,71 +467,13 @@ void Reporter::exec_command_output(const std::string& text) {
 }
 
 void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
-	if (!report_screenshots) {
+	if (report_folder.empty()) {
 		return;
 	}
-	screenshot.write_png((report_folder / (current_test->name() + "_wait_failed.png")).generic_string());
-	report(fmt::format("{} Saved screenshot from vm ", progress()), blue);
+	current_test_run->report_screenshot(screenshot);
+	report_prefix(blue);
+	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
-}
-
-nlohmann::json Reporter::create_json_report() const {
-	nlohmann::json report = nlohmann::json::object();
-	report["tests"] = nlohmann::json::array();
-
-	for (auto test: passed_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name()},
-			{"description", test->description()},
-			{"status", "success"},
-			{"is_cached", false},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	for (auto test: failed_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name()},
-			{"description", test->description()},
-			{"status", "fail"},
-			{"is_cached", false},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	for (auto test: up_to_date_tests) {
-		auto duration = test->stop_timestamp - test->start_timestamp;
-		nlohmann::json test_json = {
-			{"name", test->name()},
-			{"description", test->description()},
-			{"status", "success"},
-			{"is_cached", true},
-			{"duration", std::chrono::duration_cast<std::chrono::seconds>(duration).count()}
-		};
-
-		report["tests"].push_back(test_json);
-	}
-
-	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
-
-	std::stringstream ss1;
-	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
-	report["start_timestamp"] = ss1.str();
-
-	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	std::stringstream ss2;
-	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
-
-	report["stop_timestamp"] = ss2.str();
-
-	return report;
 }
 
 std::string newline_to_br(const std::string& str) {
@@ -526,37 +493,58 @@ std::string newline_to_br(const std::string& str) {
 }
 
 void Reporter::report(const std::string& message, style color, bool is_bold) {
-	if (html) {
-		std::cout << "<span className=\"";
-		switch (color) {
-			case regular:
-				break;
-			case blue:
-				std::cout << "blue";
-				break;
-			case magenta:
-				std::cout << "magenta";
-				break;
-			case yellow:
-				std::cout << "yellow";
-				break;
-			case green:
-				std::cout << "green";
-				break;
-			case red:
-				std::cout << "red";
-				break;
-		}
-		std::cout << " ";
-		if (is_bold) {
-			std::cout << "bold";
-		}
-		std::cout << "\">";
-		std::cout << newline_to_br(message);
-		std::cout << "</span>" << std::endl;
-		return;
-	}
+	print_stdout(message, color, is_bold);
+	print_file(message);
+}
 
+void Reporter::report_prefix(style color, bool is_bold) {
+	print_stdout(fmt::format("{} ", progress()), color, is_bold);
+	if (current_test_run) {
+		print_file(fmt::format("[{}] ", current_test_run->test->name()));
+	} else {
+		print_file(fmt::format("[???] "));
+	}
+}
+
+void Reporter::print_stdout_html(const std::string& message, style color, bool is_bold) {
+	std::cout << "<span className=\"";
+	switch (color) {
+		case regular:
+			break;
+		case blue:
+			std::cout << "blue";
+			break;
+		case magenta:
+			std::cout << "magenta";
+			break;
+		case yellow:
+			std::cout << "yellow";
+			break;
+		case green:
+			std::cout << "green";
+			break;
+		case red:
+			std::cout << "red";
+			break;
+	}
+	std::cout << " ";
+	if (is_bold) {
+		std::cout << "bold";
+	}
+	std::cout << "\">";
+	std::cout << newline_to_br(message);
+	std::cout << "</span>" << std::endl;
+}
+
+void Reporter::print_stdout(const std::string& message, style color, bool is_bold) {
+	if (html) {
+		print_stdout_html(message, color, is_bold);
+	} else {
+		print_stdout_terminal(message, color, is_bold);
+	}
+}
+
+void Reporter::print_stdout_terminal(const std::string& message, style color, bool is_bold) {
 	std::cout << rang::style::reset;
 
 	switch (color) {
@@ -585,13 +573,64 @@ void Reporter::report(const std::string& message, style color, bool is_bold) {
 
 	std::cout << message;
 
-	if (report_logs) {
-		if (current_test) {
-			current_test->output_file << message;
+	std::cout << rang::style::reset;
+}
+
+void Reporter::print_file(const std::string& message) {
+	if (!report_folder.empty()) {
+		if (current_test_run) {
+			current_test_run->output_file << message;
 		} else {
-			summary_output_file << message;
+			output_file << message;
 		}
 	}
+}
 
-	std::cout << rang::style::reset;
+float Reporter::current_progress() const {
+	size_t total_tests_count = tests_runs.size() + up_to_date_tests.size();
+	if (total_tests_count == 0) {
+		return 100.0f;
+	}
+	return float(current_test_run_index + up_to_date_tests.size()) / total_tests_count * 100;
+}
+
+std::map<std::string, size_t> Reporter::get_stats(IR::TestRun::ExecStatus status) const {
+	std::map<std::string, size_t> result;
+	for (auto& test_run: tests_runs) {
+		if (test_run->exec_status == status) {
+			++result[test_run->test->name()];
+		}
+	}
+	return result;
+}
+
+nlohmann::json Reporter::create_json_report() const {
+	nlohmann::json report = nlohmann::json::object();
+	report["tests_runs"] = nlohmann::json::array();
+	report["up_to_date_tests"] = nlohmann::json::array();
+
+	for (auto test_run: tests_runs) {
+		report["tests_runs"].push_back(test_run->name);
+	}
+
+	for (auto test: up_to_date_tests) {
+		report["up_to_date_tests"].push_back(test->name());
+	}
+
+	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
+
+	std::stringstream ss1;
+	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
+	report["start_timestamp"] = ss1.str();
+
+	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	std::stringstream ss2;
+	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
+
+	report["stop_timestamp"] = ss2.str();
+	report["config"] = config;
+	report["working_dir"] = fs::current_path();
+
+	return report;
 }

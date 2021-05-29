@@ -15,6 +15,13 @@ void VisitorInterpreterConfig::validate() const {
 	ReporterConfig::validate();
 }
 
+void VisitorInterpreterConfig::dump(nlohmann::json& j) const {
+	ReporterConfig::dump(j);
+	j["stop_on_fail"] = stop_on_fail;
+	j["assume_yes"] = assume_yes;
+	j["invalidate"] = invalidate;
+}
+
 VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
 	reporter = Reporter(config);
 
@@ -23,262 +30,177 @@ VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
 	invalidate = config.invalidate;
 }
 
-bool VisitorInterpreter::parent_is_ok(std::shared_ptr<IR::Test> test, std::shared_ptr<IR::Test> parent,
-	std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
-	std::list<std::shared_ptr<IR::Test>>::reverse_iterator end)
-{
-	auto controllers = test->get_all_controllers();
-	auto all_parents = IR::Test::get_test_path(test);
-
-	bool result = false;
-
-	for (auto rit = tests_to_run.rbegin(); rit != tests_to_run.rend(); ++rit) {
-		if ((*rit)->name() == parent->name()) {
-			//This parent is good
-			result = true;
-			break;
-		}
-
-		//If it's just another parent - we don't care
-		bool another_parent = false;
-		for (auto test_it: all_parents) {
-			if (test_it->name() == (*rit)->name()) {
-				another_parent = true;
-				break;
-			}
-		}
-
-		if (another_parent) {
-			continue;
-		}
-
-		auto other_controllers = (*rit)->get_all_controllers();
-		if (std::find_first_of (controllers.begin(), controllers.end(), other_controllers.begin(), other_controllers.end()) != controllers.end()) {
-			break;
-		}
+void VisitorInterpreter::invalidate_tests() {
+	if (!invalidate.length()) {
+		return;
 	}
-
-	return result;
-}
-
-void VisitorInterpreter::build_test_plan(std::shared_ptr<IR::Test> test,
-	std::list<std::shared_ptr<IR::Test>>& test_plan,
-	std::list<std::shared_ptr<IR::Test>>::reverse_iterator begin,
-	std::list<std::shared_ptr<IR::Test>>::reverse_iterator end)
-{
-	//we need to check could we start right away?
-
-	for (auto parent: test->parents) {
-		//for every parent we need to check, maybe we are already in the perfect position?
-		//so starting from the end of tests_to_run, we move backwards
-		//and we try to find the parent test
-
-		if (!parent_is_ok(test, parent, begin, end) && !parent->snapshots_needed()) {
-			//New tests to run should be JUST before the parent
-			std::list<std::shared_ptr<IR::Test>> new_tests_to_run;
-
-			for (auto rit = begin; rit != end; ++rit) {
-				if ((*rit)->name() == parent->name()) {
-					begin = ++rit;
-					break;
-				}
-			}
-
-			build_test_plan(parent, test_plan, begin, end);
-		}
-	}
-	test_plan.push_back(test);
-}
-
-bool VisitorInterpreter::is_cached(std::shared_ptr<IR::Test> test) const {
-	for (auto parent: test->parents) {
-		bool parent_cached = false;
-		for (auto cached: up_to_date_tests) {
-			if (parent->name() == cached->name()) {
-				parent_cached = true;
-				break;
-			}
-		}
-		if (!parent_cached) {
-			return false;
-		}
-	}
-
-	//check networks aditionally
-	for (auto network: test->get_all_networks()) {
-		if (network->is_defined() &&
-			network->check_config_relevance())
-		{
-			continue;
-		}
-		return false;
-	}
-
-	for (auto controller: test->get_all_controllers()) {
-		if (controller->is_defined() &&
-			controller->has_snapshot("_init") &&
-			controller->check_metadata_version() &&
-			controller->check_config_relevance() &&
-			controller->has_snapshot(test->name()) &&
-			(controller->get_snapshot_cksum(test->name()) == test->cksum))
-		{
-			continue;
-		}
-		return false;
-	}
-	return true;
-}
-
-bool VisitorInterpreter::is_cache_miss(std::shared_ptr<IR::Test> test) const {
-	auto all_parents = IR::Test::get_test_path(test);
-
-	for (auto parent: all_parents) {
-		for (auto cache_missed_test: cache_missed_tests) {
-			if (parent == cache_missed_test) {
-				return true;
-			}
-		}
-	}
-
-	//check networks aditionally
-	for (auto netc: test->get_all_networks()) {
-		if (netc->is_defined()) {
-			if (!netc->check_config_relevance()) {
-				return true;
-			}
-		}
-	}
-
-	for (auto controller: test->get_all_controllers()) {
-		if (controller->is_defined()) {
-			if (controller->has_snapshot(test->name())) {
-				if (controller->get_snapshot_cksum(test->name()) != test->cksum) {
-					return true;
-				}
-				if (!controller->check_config_relevance()) {
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;
-}
-
-void VisitorInterpreter::check_up_to_date_tests(std::list<std::shared_ptr<IR::Test>>& tests_queue) {
-	//Check every test
-	for (auto test_it = tests_queue.begin(); test_it != tests_queue.end();) {
-		if (is_cached(*test_it)) {
-			up_to_date_tests.push_back(*test_it);
-			tests_queue.erase(test_it++);
-		} else {
-			if (is_cache_miss(*test_it)) {
-				bool is_already_pushed = false;
-
-				for (auto test: cache_missed_tests) {
-					if (test == *test_it) {
-						is_already_pushed = true;
-						break;
-					}
-				}
-				if (!is_already_pushed) {
-					cache_missed_tests.push_back(*test_it);
-				}
-			}
-			test_it++;
-		}
-	}
-}
-
-void VisitorInterpreter::resolve_tests(const std::list<std::shared_ptr<IR::Test>>& tests_queue) {
-	for (auto test: tests_queue) {
-		for (auto controller: test->get_all_controllers()) {
-			if (controller->is_defined() && controller->has_snapshot(test->name())) {
-				controller->delete_snapshot_with_children(test->name());
-			}
-		}
-
-		//Now the interesting part
-		//We already have the logic involving current_state, so all we need to do...
-		//is to fill up the test queue with intermediate tests
-		std::list<std::shared_ptr<IR::Test>> test_plan;
-
-		build_test_plan(test, test_plan, tests_to_run.rbegin(), tests_to_run.rend());
-
-		//TODO: insert before last
-		tests_to_run.insert(tests_to_run.end(), test_plan.begin(), test_plan.end());
-	}
-}
-
-void VisitorInterpreter::setup_vars() {
-	std::list<std::shared_ptr<IR::Test>> tests_queue; //temporary, only needed for general execution plan
-
-	//Need to check that we don't have duplicates
-	//And we can't use std::set because we need to
-	//keep the order of the tests
-
 	for (auto& test: IR::program->all_selected_tests) {
-
-		//invalidate tests at request
-
-		if (invalidate.length() && wildcards::match(test->name(), invalidate)) {
-			for (auto controller: test->get_all_controllers()) {
+		if (wildcards::match(test->name(), invalidate)) {
+			for (auto& controller: test->get_all_controllers()) {
 				if (controller->is_defined() && controller->has_snapshot(test->name())) {
 					controller->delete_snapshot_with_children(test->name());
 				}
 			}
 		}
-
-		concat_unique(tests_queue, IR::Test::get_test_path(test));
 	}
-
-	check_up_to_date_tests(tests_queue);
-
-	if (!assume_yes && cache_missed_tests.size()) {
-		std::cout << "Because of the cache loss, Testo is scheduled to run the following tests:" << std::endl;
-
-		for (auto cache_missed: cache_missed_tests) {
-			std::cout << "\t- " << cache_missed->name() << std::endl;
-		}
-
-		std::cout << "Do you confirm running them? [y/N]: ";
-		std::string choice;
-		std::getline(std::cin, choice);
-
-		std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
-
-		if (choice != "Y" && choice != "YES") {
-			throw std::runtime_error("Aborted");
-		}
-	}
-
-	resolve_tests(tests_queue);
-	reset_cache();
 }
 
-void VisitorInterpreter::reset_cache() {
-	for (auto test: tests_to_run) {
-		for (auto controller: test->get_all_controllers()) {
-			if (controller->is_defined()) {
-				controller->current_state = "";
+void VisitorInterpreter::check_cache_missed_tests() {
+	if (assume_yes) {
+		return;
+	}
+
+	std::vector<std::shared_ptr<IR::Test>> cache_missed_tests;
+
+	for (auto& test: IR::program->all_selected_tests) {
+		if (test->cache_status() == IR::Test::CacheStatus::Miss) {
+			cache_missed_tests.push_back(test);
+		}
+	}
+
+	if (!cache_missed_tests.size()) {
+		return;
+	}
+
+	std::cout << "Because of the cache loss, Testo is scheduled to run the following tests:" << std::endl;
+
+	for (auto cache_missed: cache_missed_tests) {
+		std::cout << "\t- " << cache_missed->name() << std::endl;
+	}
+
+	std::cout << "Do you confirm running them? [y/N]: ";
+	std::string choice;
+	std::getline(std::cin, choice);
+
+	std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
+
+	if (choice != "Y" && choice != "YES") {
+		throw std::runtime_error("Aborted");
+	}
+}
+
+void VisitorInterpreter::get_up_to_date_tests() {
+	for (auto& test: IR::program->all_selected_tests) {
+		if (test->cache_status() == IR::Test::CacheStatus::OK) {
+			up_to_date_tests.push_back(test);
+		}
+	}
+}
+
+std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(std::shared_ptr<IR::Test> test) {
+	// если тест up-to-date и есть снепшот - то запускать его точно не надо
+	if ((test->cache_status() == IR::Test::CacheStatus::OK) && (test->snapshots_needed())) {
+		return nullptr;
+	}
+	// попробуем определить, может быть тест недавно выполнялся
+	// и все контроллеры уже в нужном состоянии
+	auto it = tests_runs.rbegin();
+	auto controllers = test->get_all_controllers();
+	for (; it != tests_runs.rend(); ++it) {
+		auto test_run = *it;
+		if (test_run->test == test) {
+			return test_run;
+		}
+		auto other_controllers = test_run->test->get_all_controllers();
+		if (std::find_first_of(
+				controllers.begin(), controllers.end(),
+				other_controllers.begin(), other_controllers.end()
+			) != controllers.end()
+		) {
+			break;
+		}
+	}
+	// контроллеры точно не в нужном состоянии, но
+	// если тест уже был запланирован, и тест создаст снепшоты,
+	// то мы сможем восстановить состояние контроллеров
+	if (test->snapshots_needed()) {
+		for (; it != tests_runs.rend(); ++it) {
+			auto test_run = *it;
+			if (test_run->test == test) {
+				return nullptr;
 			}
 		}
 	}
+	// всё-таки придётся запланировать тест
+	auto test_run = std::make_shared<IR::TestRun>();
+	test_run->test = test;
+	for (auto& parent_test: test->parents) {
+		auto parent_test_run = add_test_to_plan(parent_test);
+		if (parent_test_run) {
+			test_run->parents.insert(parent_test_run);
+		}
+	}
+	tests_runs.push_back(test_run);
+	return test_run;
+}
+
+void VisitorInterpreter::build_test_plan() {
+	for (auto& test: IR::program->all_selected_tests) {
+		if (test->cache_status() == IR::Test::CacheStatus::OK) {
+			continue;
+		}
+		for (auto controller: test->get_all_controllers()) {
+			if (controller->is_defined() && controller->has_snapshot(test->name())) {
+				controller->delete_snapshot_with_children(test->name());
+			}
+		}
+		add_test_to_plan(test);
+	}
+}
+
+void VisitorInterpreter::init() {
+	invalidate_tests();
+	check_cache_missed_tests();
+	get_up_to_date_tests();
+	build_test_plan();
 }
 
 void VisitorInterpreter::visit() {
-	setup_vars();
+	init();
 
-	reporter.init(tests_to_run, up_to_date_tests);
+	reporter.init(tests_runs, up_to_date_tests);
 
-	while (!tests_to_run.empty()) {
-		auto front = tests_to_run.front();
-		tests_to_run.pop_front();
-		visit_test(front);
+	for (size_t current_test_run_index = 0; current_test_run_index < tests_runs.size(); ++current_test_run_index) {
+		auto test_run = tests_runs.at(current_test_run_index);
+
+		//Check if one of the parents failed. If it did, just fail
+		for (auto parent: test_run->parents) {
+			if (parent->exec_status != IR::TestRun::ExecStatus::Passed) {
+				reporter.skip_test();
+				continue;
+			}
+		}
+
+		visit_test(test_run->test);
+
+		//We need to check if we need to stop all the vms
+		//VMS should be stopped if we don't need them anymore
+		//and this could happen only if there's no children tests
+		//ahead
+
+		bool need_to_stop = true;
+
+		if (test_run->exec_status == IR::TestRun::ExecStatus::Passed) {
+			for (size_t i = current_test_run_index; i < tests_runs.size(); ++i) {
+				for (auto parent: tests_runs.at(i)->parents) {
+					if (parent == test_run) {
+						need_to_stop = false;
+						break;
+					}
+				}
+				if (!need_to_stop) {
+					break;
+				}
+			}
+		}
+
+		if (need_to_stop) {
+			stop_all_vms(test_run->test);
+		}
 	}
 
 	reporter.finish();
-	if (reporter.failed_tests.size()) {
+	if (reporter.get_stats(IR::TestRun::ExecStatus::Failed).size()) {
 		throw TestFailedException();
 	}
 }
@@ -288,15 +210,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		current_test = nullptr;
 		//Ok, we're not cached and we need to run the test
 		reporter.prepare_environment();
-		//Check if one of the parents failed. If it did, just fail
-		for (auto parent: test->parents) {
-			for (auto failed: reporter.failed_tests) {
-				if (parent->name() == failed->name()) {
-					reporter.skip_failed_test(parent->name());
-					return;
-				}
-			}
-		}
 
 		//we need to get all the vms in the correct state
 		//vms from parents - rollback them to parents if we need to
@@ -405,28 +318,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 			controller->current_state = test->name();
 		}
 
-		//We need to check if we need to stop all the vms
-		//VMS should be stopped if we don't need them anymore
-		//and this could happen only if there's no children tests
-		//ahead
-
-		bool need_to_stop = true;
-
-		for (auto it: tests_to_run) {
-			for (auto parent: it->parents) {
-				if (parent->name() == test->name()) {
-					need_to_stop = false;
-					break;
-				}
-			}
-			if (!need_to_stop) {
-				break;
-			}
-		}
-
-		if (need_to_stop) {
-			stop_all_vms(test);
-		}
 		reporter.test_passed();
 
 	} catch (const ControllerCreatonException& error) {
@@ -437,8 +328,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		if (stop_on_fail) {
 			throw std::runtime_error("");
 		}
-
-		stop_all_vms(test);
 	} catch (const Exception& error) {
 		std::stringstream ss;
 		for (auto macro_call: test->macro_call_stack) {
@@ -460,8 +349,6 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		if (stop_on_fail) {
 			throw std::runtime_error("");
 		}
-
-		stop_all_vms(test);
 	}
 }
 

@@ -33,6 +33,8 @@ struct VisitorSemanticConfig {
 	std::string prefix;
 
 	void validate() const;
+
+	virtual void dump(nlohmann::json& j) const;
 };
 
 struct VisitorSemantic {
