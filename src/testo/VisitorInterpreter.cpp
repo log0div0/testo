@@ -15,6 +15,13 @@ void VisitorInterpreterConfig::validate() const {
 	ReporterConfig::validate();
 }
 
+void VisitorInterpreterConfig::dump(nlohmann::json& j) const {
+	ReporterConfig::dump(j);
+	j["stop_on_fail"] = stop_on_fail;
+	j["assume_yes"] = assume_yes;
+	j["invalidate"] = invalidate;
+}
+
 VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
 	reporter = Reporter(config);
 

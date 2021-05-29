@@ -21,6 +21,20 @@ bool TestNameFilter::validate_test_name(const std::string& name) const {
 	}
 }
 
+void to_json(nlohmann::json& j, const TestNameFilter& filter) {
+	switch (filter.type) {
+		case TestNameFilter::Type::test_spec:
+			j["type"] = "test_spec";
+			break;
+		case TestNameFilter::Type::exclude:
+			j["type"] = "exclude";
+			break;
+		default:
+			throw std::runtime_error("Should not be there");
+	}
+	j["pattern"] = filter.pattern;
+}
+
 bool ProgramConfig::validate_test_name(const std::string& name) const {
 	for (auto& filter: test_name_filters) {
 		if (!filter.validate_test_name(name)) {
@@ -46,6 +60,20 @@ void ProgramConfig::validate() const {
 
 	VisitorSemanticConfig::validate();
 	VisitorInterpreterConfig::validate();
+}
+
+void ProgramConfig::dump(nlohmann::json& j) const {
+	VisitorSemanticConfig::dump(j);
+	VisitorInterpreterConfig::dump(j);
+
+	j["target"] = fs::canonical(target);
+	j["test_name_filters"] = test_name_filters;
+	auto params = nlohmann::json::object();
+	for (size_t i = 0; i < params_names.size(); ++i) {
+		params[params_names.at(i)] = params_values.at(i);
+	}
+	j["params"] = params;
+	j["use_cpu"] = use_cpu;
 }
 
 Program::Program(const std::shared_ptr<AST::Program>& ast, const ProgramConfig& config_): config(config_) {

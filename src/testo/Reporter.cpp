@@ -20,9 +20,15 @@ std::string duration_to_str(Duration duration) {
 void ReporterConfig::validate() const {
 }
 
+void ReporterConfig::dump(nlohmann::json& j) const {
+	j["report_folder"] = fs::canonical(report_folder);
+	j["html"] = html;
+}
+
 Reporter::Reporter(const ReporterConfig& config) {
 	report_folder = config.report_folder;
 	html = config.html;
+	config.dump(this->config);
 }
 
 const std::string tag_file = ".testo_report_folder";
@@ -623,6 +629,8 @@ nlohmann::json Reporter::create_json_report() const {
 	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
 
 	report["stop_timestamp"] = ss2.str();
+	report["config"] = config;
+	report["working_dir"] = fs::current_path();
 
 	return report;
 }

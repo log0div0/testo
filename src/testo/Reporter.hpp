@@ -11,6 +11,8 @@ struct ReporterConfig {
 	bool html = false;
 
 	void validate() const;
+
+	virtual void dump(nlohmann::json& j) const;
 };
 
 struct Reporter {
@@ -117,4 +119,5 @@ private:
 	fs::path report_folder;
 	std::string launch_id = generate_uuid_v4();
 	std::ofstream output_file;
+	nlohmann::json config = nlohmann::json::object();
 };

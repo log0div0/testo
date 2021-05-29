@@ -13,6 +13,8 @@ struct VisitorInterpreterConfig: ReporterConfig {
 	std::string invalidate;
 
 	void validate() const;
+
+	virtual void dump(nlohmann::json& j) const;
 };
 
 struct VisitorInterpreter {
