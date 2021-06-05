@@ -12,7 +12,7 @@ ImgDetector& ImgDetector::instance() {
 
 bool is_sub_image_match(const stb::Image<stb::RGB>& img, const stb::Image<stb::RGB>& sub, int off_x, int off_y) {
 	int different_pixels_count = 0;
-	int max_different_pixels_count = sub.h + sub.w;
+	int max_different_pixels_count = (sub.h * sub.w) * 0.05f;
 	for (int y = 0; y < sub.h; ++y) {
 		for (int x = 0; x < sub.w; ++x) {
 			if (img.at(off_x + x, off_y + y).max_channel_diff(sub.at(x, y)) > 8) {
