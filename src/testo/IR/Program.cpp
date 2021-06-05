@@ -66,7 +66,7 @@ void ProgramConfig::dump(nlohmann::json& j) const {
 	VisitorSemanticConfig::dump(j);
 	VisitorInterpreterConfig::dump(j);
 
-	j["target"] = fs::canonical(target);
+	j["target"] = target;
 	j["test_name_filters"] = test_name_filters;
 	auto params = nlohmann::json::object();
 	for (size_t i = 0; i < params_names.size(); ++i) {

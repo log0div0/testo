@@ -21,9 +21,7 @@ void ReporterConfig::validate() const {
 }
 
 void ReporterConfig::dump(nlohmann::json& j) const {
-	if (!report_folder.empty()) {
-		j["report_folder"] = fs::canonical(report_folder);
-	}
+	j["report_folder"] = report_folder;
 	j["html"] = html;
 }
 
@@ -56,11 +54,15 @@ void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs
 	}
 
 	for (auto test_run: _tests_runs) {
-		test_run->test->report(report_folder / "tests");
+		if (!report_folder.empty()) {
+			test_run->test->report(report_folder / "tests");
+		}
 		tests_runs.push_back(test_run);
 	}
 	for (auto test: _up_to_date_tests) {
-		test->report(report_folder / "tests");
+		if (!report_folder.empty()) {
+			test->report(report_folder / "tests");
+		}
 		up_to_date_tests.push_back(test);
 	}
 
