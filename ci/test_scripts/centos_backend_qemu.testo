@@ -294,6 +294,23 @@ test centos_backend_qemu_cache_miss: centos_install_testo_cpu {
 }
 
 [no_snapshots: true]
+test centos_backend_qemu_skip_failed: centos_install_testo_cpu {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/skip_failed/skip_failed.testo" "/opt/scripts/script.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/script.testo)
+			[[ $output == *"Test test_parent PASSED"* ]]
+			[[ $output == *"Test test_child1 FAILED"* ]]
+			[[ $output == *"Skipping test test_child2 because his parent, test_child1 failed or skipped"* ]]
+			[[ $output == *"Test test_parent2 PASSED"* ]]
+		"""
+	}
+}
+
+[no_snapshots: true]
 test centos_backed_qemu_press_like_string: centos_install_testo_cpu {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"

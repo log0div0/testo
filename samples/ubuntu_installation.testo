@@ -20,13 +20,31 @@ machine VM1 {
 }
 
 test ubuntu_installation {
-	VM1 install_ubuntu_server("VM1", "user", "1111")
+	#VM1 install_ubuntu_server("VM1", "user", "1111")
 	VM1 {
 		print "Hello world"
 	}
 }
 
-test install_guest_additions: ubuntu_installation {
+test test2: ubuntu_installation {
+	VM1 {
+		abort "stop here"
+	}
+}
+
+test test3: test2 {
+	VM1 {
+		print "Hello world"
+	}
+}
+
+test test4 {
+	VM1 {
+		print "Hello world"
+	}
+}
+
+/*test install_guest_additions: ubuntu_installation {
 	VM1 install_guest_additions_ubuntu_server("VM1", "user", "1111")
 }
 
@@ -35,4 +53,4 @@ test debug: install_guest_additions {
 	VM1 {
 		print "do it here"
 	}
-}
+}*/

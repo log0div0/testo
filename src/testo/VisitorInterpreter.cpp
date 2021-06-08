@@ -164,11 +164,18 @@ void VisitorInterpreter::visit() {
 		auto test_run = tests_runs.at(current_test_run_index);
 
 		//Check if one of the parents failed. If it did, just fail
+		bool skip_test = false;
+
 		for (auto parent: test_run->parents) {
 			if (parent->exec_status != IR::TestRun::ExecStatus::Passed) {
 				reporter.skip_test();
-				continue;
+				skip_test = true;
+				break;
 			}
+		}
+
+		if (skip_test) {
+			continue;
 		}
 
 		visit_test(test_run->test);

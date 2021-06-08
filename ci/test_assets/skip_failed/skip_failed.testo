@@ -1,0 +1,35 @@
+
+
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+[no_snapshots: true]
+test test_parent {
+	my_ubuntu_server {
+		print "Hello parent"
+	}
+}
+
+test test_child1: test_parent {
+	my_ubuntu_server {
+		abort "test_child1 abort"
+	}
+}
+
+test test_child2: test_child1 {
+	my_ubuntu_server {
+		print "Hello child2"
+	}
+}
+
+test test_parent2 {
+	my_ubuntu_server {
+		print "Hello parent2"
+	}
+}
