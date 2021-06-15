@@ -145,10 +145,6 @@ nlohmann::json Test::meta() {
 }
 
 void Test::report(const fs::path& report_folder_) {
-	if (report_folder_.empty()) {
-		return;
-	}
-
 	fs::path report_folder = report_folder_ / name();
 	fs::path meta_file = report_folder / "meta.json";
 	if (fs::exists(meta_file)) {
@@ -275,36 +271,18 @@ nlohmann::json TestRun::meta() {
 	};
 }
 
-void TestRun::report_begin(const fs::path& report_folder_) {
-	start_timestamp = std::chrono::system_clock::now();
-
-	if (report_folder_.empty()) {
-		return;
-	}
-
-	report_folder = report_folder_ / name;
-
-	fs::create_directories(report_folder);
-	output_file = std::ofstream(report_folder / "log.txt");
+void TestRun::report_begin(const fs::path& report_folder) {
+	fs::create_directories(report_folder / name);
+	output_file = std::ofstream(report_folder / name / "log.txt");
 }
 
-void TestRun::report_screenshot(const stb::Image<stb::RGB>& screenshot) {
-	if (report_folder.empty()) {
-		return;
-	}
-	screenshot.write_png((report_folder / "screenshot.png").generic_string());
+void TestRun::report_screenshot(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot) {
+	screenshot.write_png((report_folder / name / "screenshot.png").generic_string());
 }
 
-void TestRun::report_end(ExecStatus status) {
-	exec_status = status;
-	stop_timestamp = std::chrono::system_clock::now();
-
-	if (report_folder.empty()) {
-		return;
-	}
-
+void TestRun::report_end(const fs::path& report_folder) {
 	output_file.close();
-	std::ofstream file(report_folder / "meta.json");
+	std::ofstream file(report_folder / name / "meta.json");
 	file << meta().dump(2);
 }
 

@@ -72,18 +72,16 @@ struct TestRun {
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point stop_timestamp;
 	auto duration() const {
-		return start_timestamp - stop_timestamp;
+		return stop_timestamp - start_timestamp;
 	}
 
 	std::ofstream output_file;
 
 	nlohmann::json meta();
 
-	void report_begin(const fs::path& report_folder_);
-	void report_screenshot(const stb::Image<stb::RGB>& screenshot);
-	void report_end(ExecStatus status);
-
-	fs::path report_folder;
+	void report_begin(const fs::path& report_folder);
+	void report_screenshot(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot);
+	void report_end(const fs::path& report_folder);
 
 	std::string name = generate_uuid_v4();
 };

@@ -98,7 +98,11 @@ void Reporter::prepare_environment() {
 	report(fmt::format("Preparing the environment for test "), blue);
 	report(fmt::format("{}\n", current_test_run->test->name()), yellow);
 
-	current_test_run->report_begin(report_folder / "tests_runs");
+	current_test_run->start_timestamp = std::chrono::system_clock::now();
+
+	if (!report_folder.empty()) {
+		current_test_run->report_begin(report_folder / "tests_runs");
+	}
 }
 
 void Reporter::run_test() {
@@ -142,7 +146,12 @@ void Reporter::skip_test() {
 }
 
 void Reporter::test_passed() {
-	current_test_run->report_end(IR::TestRun::ExecStatus::Passed);
+	current_test_run->stop_timestamp = std::chrono::system_clock::now();
+	current_test_run->exec_status = IR::TestRun::ExecStatus::Passed;
+
+	if (!report_folder.empty()) {
+		current_test_run->report_end(report_folder / "tests_runs");
+	}
 
 	report_prefix(green, true);
 	report(fmt::format("Test "), green, true);
@@ -156,7 +165,12 @@ void Reporter::test_passed() {
 void Reporter::test_failed(const std::string& error_message) {
 	report(fmt::format("{}", error_message), red, true);
 
-	current_test_run->report_end(IR::TestRun::ExecStatus::Failed);
+	current_test_run->stop_timestamp = std::chrono::system_clock::now();
+	current_test_run->exec_status = IR::TestRun::ExecStatus::Failed;
+
+	if (!report_folder.empty()) {
+		current_test_run->report_end(report_folder / "tests_runs");
+	}
 
 	report_prefix(red, true);
 	report(fmt::format("Test "), red, true);
@@ -474,7 +488,7 @@ void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Imag
 	if (report_folder.empty()) {
 		return;
 	}
-	current_test_run->report_screenshot(screenshot);
+	current_test_run->report_screenshot(report_folder / "tests_runs", screenshot);
 	report_prefix(blue);
 	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
