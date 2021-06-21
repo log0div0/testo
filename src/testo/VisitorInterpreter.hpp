@@ -11,6 +11,7 @@ struct VisitorInterpreterConfig: ReporterConfig {
 	bool stop_on_fail = false;
 	bool assume_yes = false;
 	std::string invalidate;
+	bool dry = false;
 
 	void validate() const;
 
@@ -37,6 +38,7 @@ private:
 	bool stop_on_fail;
 	bool assume_yes;
 	std::string invalidate;
+	bool dry;
 
 	std::vector<std::shared_ptr<IR::TestRun>> tests_runs;
 	std::vector<std::shared_ptr<IR::Test>> up_to_date_tests;

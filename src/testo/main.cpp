@@ -101,6 +101,7 @@ int do_main(int argc, char** argv) {
 		(option("--use_cpu").set(run_args.use_cpu)) % "Use CPU instead of GPU (relevant for GPU version only)",
 		(option("--license") & value("path", run_args.license)) % "Path to the license file (relevant for GPU version only)",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
+		(option("--dry").set(run_args.dry)) % "Do only semantic checks, do not actually run any tests",
 		any_other(wrong)
 	);
 

@@ -20,6 +20,7 @@ void VisitorInterpreterConfig::dump(nlohmann::json& j) const {
 	j["stop_on_fail"] = stop_on_fail;
 	j["assume_yes"] = assume_yes;
 	j["invalidate"] = invalidate;
+	j["dry"] = dry;
 }
 
 VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
@@ -28,6 +29,7 @@ VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
 	stop_on_fail = config.stop_on_fail;
 	assume_yes = config.assume_yes;
 	invalidate = config.invalidate;
+	dry = config.dry;
 }
 
 void VisitorInterpreter::invalidate_tests() {
@@ -157,6 +159,10 @@ void VisitorInterpreter::init() {
 
 void VisitorInterpreter::visit() {
 	init();
+
+	if (dry) {
+		return;
+	}
 
 	reporter.init(tests_runs, up_to_date_tests);
 
