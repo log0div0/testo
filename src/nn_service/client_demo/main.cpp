@@ -19,7 +19,7 @@ void local_handler() {
 
 		std::shared_ptr<Channel> channel(new TCPChannel(std::move(socket)));
 
-		Request msg(stb::Image<stb::RGB>("tmp.png"), std::string("Hello"));
+		TextRequest msg(stb::Image<stb::RGB>("tmp.png"), "Hello");
 		channel->send_request(msg);
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;

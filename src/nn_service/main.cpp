@@ -9,6 +9,9 @@
 
 #include "Channel.hpp"
 
+#include "../nn/OnnxRuntime.hpp"
+#include "../nn/TextTensor.hpp"
+
 using namespace std::chrono_literals;
 
 void local_handler() {
@@ -21,8 +24,14 @@ void local_handler() {
 			std::shared_ptr<Channel> channel(new TCPChannel(std::move(socket)));
 			while (true) {
 				auto message = channel->receive_request();
-				std::cout << "Received message\n";
-				message.screenshot.write_png("suchka.png");
+
+				if (auto p = dynamic_cast<TextRequest*>(message.get())) {
+					std::cout << "Received text request\n";
+					nn::TextTensor tensor = nn::find_text(&p->screenshot);
+					if (p->has_text()) {
+						tensor = tensor.match_text(&p->screenshot, p->text());
+					}		
+				}
 			}
 			//MessageHandler message_handler(std::move(channel));
 			//message_handler.run();
@@ -34,6 +43,7 @@ void local_handler() {
 
 int main(int argc, char** argv) {
 	try {
+		nn::onnx::Runtime onnx_runtime;
 		std::thread t1([]() {coro::Application(local_handler).run();});
 		t1.join();
 	} catch (const std::exception& error) {
