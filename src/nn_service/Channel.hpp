@@ -2,6 +2,7 @@
 #pragma once
 #include "Messages.hpp"
 
+#include "coro/StreamSocket.h"
 #include <thread>
 #include <chrono>
 
@@ -44,7 +45,7 @@ private:
 	Socket socket;
 };
 
-std::unique_ptr<Request> Channel::receive_request() {	
+inline std::unique_ptr<Request> Channel::receive_request() {	
 	uint32_t header_size;
 	while (true) {
 		size_t bytes_read = read((uint8_t*)&header_size, 4);
@@ -108,7 +109,7 @@ std::unique_ptr<Request> Channel::receive_request() {
 	return result;
 }
 
-void Channel::send_request(const Request& msg) {
+inline void Channel::send_request(const Request& msg) {
 	auto header_str = msg.header.dump();
 
 	uint32_t header_size = (uint32_t)header_str.size();
@@ -119,11 +120,11 @@ void Channel::send_request(const Request& msg) {
 	send_raw(msg.screenshot.data, pic_size);
 }
 
-void Channel::send_request(const TextRequest& msg) {
+inline void Channel::send_request(const TextRequest& msg) {
 	return send_request(static_cast<Request>(msg));
 }
 
-void Channel::send_request(const ImgRequest& msg) {	
+inline void Channel::send_request(const ImgRequest& msg) {	
 	send_request(static_cast<Request>(msg));
 
 	size_t pattern_size = msg.pattern.w * msg.pattern.h * msg.pattern.c;
@@ -131,7 +132,7 @@ void Channel::send_request(const ImgRequest& msg) {
 }
 
 
-void Channel::receive_raw(uint8_t* data, size_t size) {
+inline void Channel::receive_raw(uint8_t* data, size_t size) {
 	size_t already_read = 0;
 	while (already_read < size) {
 		size_t n = read(&data[already_read], size - already_read);
@@ -142,7 +143,7 @@ void Channel::receive_raw(uint8_t* data, size_t size) {
 	}
 }
 
-void Channel::send_raw(uint8_t* data, size_t size) {
+inline void Channel::send_raw(uint8_t* data, size_t size) {
 	size_t already_send = 0;
 	while (already_send < size) {
 		size_t n = write(&data[already_send], size - already_send);

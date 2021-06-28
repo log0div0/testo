@@ -1,3 +1,5 @@
+#pragma once
+
 #include <nlohmann/json.hpp>
 #include <stb/Image.hpp>
 
@@ -17,7 +19,7 @@ protected:
 	void update_header(const std::string& field, const stb::Image<stb::RGB>& pic);
 };
 
-void Request::update_header(const std::string& field, const stb::Image<stb::RGB>& pic) {
+inline void Request::update_header(const std::string& field, const stb::Image<stb::RGB>& pic) {
 	header[field] = nlohmann::json::object();
 
 	header[field]["w"] = pic.w;
@@ -52,7 +54,23 @@ struct TextRequest: Request {
 	}
 
 	std::string text() const {
-		return header.at("text_to_find").get<std::string>();
+		return header.value("text_to_find", std::string());
+	}
+
+	bool has_fg() const {
+		return header.count("color_fg");
+	}
+
+	std::string color_fg() const {
+		return header.value("color_fg", std::string());
+	}
+
+	bool has_bg() const {
+		return header.count("color_bg");
+	}
+
+	std::string color_bg() const {
+		return header.value("color_bg", std::string());
 	}
 
 };
