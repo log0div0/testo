@@ -15,8 +15,8 @@ struct MessageHandler {
 private:
 	void handle_request(std::unique_ptr<Request> request);
 
-	void handle_text_request(TextRequest* request);
-	void handle_img_request(ImgRequest* request);
+	nlohmann::json handle_text_request(TextRequest* request);
+	nlohmann::json handle_img_request(ImgRequest* request);
 
 	std::shared_ptr<Channel> channel;
 };

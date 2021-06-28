@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "nlohmann/json.hpp"
+
 #include "Point.hpp"
 #include <algorithm>
 
@@ -106,5 +108,19 @@ struct Rect {
 		return {right, center_y()};
 	}
 };
+
+inline void to_json(nlohmann::json& j, const nn::Rect& rect) {
+	j["left"] = rect.left;
+	j["top"] = rect.top;
+	j["right"] = rect.right;
+	j["bottom"] = rect.bottom;
+}
+
+inline void from_json(const nlohmann::json& j, nn::Rect& rect) {
+	rect.left = j.at("left");
+	rect.top = j.at("top");
+	rect.right = j.at("right");
+	rect.bottom = j.at("bottom");
+}
 
 }

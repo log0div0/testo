@@ -10,14 +10,17 @@ void MessageHandler::run() {
 }
 
 void MessageHandler::handle_request(std::unique_ptr<Request> request) {
+	nlohmann::json response;
 	if (auto p = dynamic_cast<TextRequest*>(request.get())) {
-		handle_text_request(p);
+		response = handle_text_request(p);
 	} else if (auto p = dynamic_cast<ImgRequest*>(request.get())) {
-		handle_img_request(p);
+		response = handle_img_request(p);
 	}
+
+	channel->send_response(response);
 }
 
-void MessageHandler::handle_text_request(TextRequest* request) {
+nlohmann::json MessageHandler::handle_text_request(TextRequest* request) {
 	std::cout << "Received text request\n";
 	nn::TextTensor tensor = nn::find_text(&request->screenshot);
 	if (request->has_text()) {
@@ -27,8 +30,11 @@ void MessageHandler::handle_text_request(TextRequest* request) {
 	if (request->has_fg() || request->has_bg()) {
 		tensor = tensor.match_color(&request->screenshot, request->color_fg(), request->color_bg());
 	}
+	return tensor;
 }
 
-void MessageHandler::handle_img_request(ImgRequest* request) {
+nlohmann::json MessageHandler::handle_img_request(ImgRequest* request) {
 	std::cout << "Received img request\n";
+
+	return {};
 }

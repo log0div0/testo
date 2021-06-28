@@ -7,8 +7,20 @@
 #include <coro/StreamSocket.h>
 
 #include "../Channel.hpp"
+#include "../../nn/TextTensor.hpp"
 
 using namespace std::chrono_literals;
+
+void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
+	for (int y = bbox.top; y <= bbox.bottom; ++y) {
+		img.at(bbox.left, y) = color;
+		img.at(bbox.right, y) = color;
+	}
+	for (int x = bbox.left; x < bbox.right; ++x) {
+		img.at(x, bbox.top) = color;
+		img.at(x, bbox.bottom) = color;
+	}
+}
 
 void local_handler() {
 	try {
@@ -19,8 +31,19 @@ void local_handler() {
 
 		std::shared_ptr<Channel> channel(new TCPChannel(std::move(socket)));
 
-		TextRequest msg(stb::Image<stb::RGB>("tmp.png"), "Hello");
+		auto image = stb::Image<stb::RGB>("temp2.png");
+		TextRequest msg(image, "definition");
 		channel->send_request(msg);
+		auto response = channel->receive_response();
+		std::cout << "Response: " << std::endl;
+		std::cout << response.dump(4);
+		auto tensor = response.get<nn::TextTensor>();
+
+		for (auto& textline: tensor.objects) {
+			draw_rect(image, textline.rect, {200, 20, 50});
+		}
+
+		image.write_png("outputlala.png");
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
 	}
