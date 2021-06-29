@@ -5,28 +5,38 @@
 
 #include <string>
 
+struct ImageSize {
+	int w, h, c;
+
+	int total_size() const {
+		return w * h * c;
+	}
+};
+
+inline void to_json(nlohmann::json& j, const ImageSize& img_size) {
+	j["w"] = img_size.w;
+	j["h"] = img_size.h;
+	j["c"] = img_size.c;
+}
+
+inline void from_json(const nlohmann::json& j, ImageSize& img_size) {
+	img_size.w = j["w"];
+	img_size.h = j["h"];
+	img_size.c = j["c"];
+}
+
 struct Request {
 	Request() = default;
 	virtual ~Request() = default;
 	Request(const stb::Image<stb::RGB>& screenshot): screenshot(screenshot) {
 		header["version"] = NN_SERVICE_PROCOTOL_VERSION;
-		update_header("screenshot", screenshot);
+		ImageSize img_size = {screenshot.w, screenshot.h, screenshot.c};
+		header["screenshot"] = img_size;
 	}
 
 	nlohmann::json header;
 	stb::Image<stb::RGB> screenshot;
-protected:
-	void update_header(const std::string& field, const stb::Image<stb::RGB>& pic);
 };
-
-inline void Request::update_header(const std::string& field, const stb::Image<stb::RGB>& pic) {
-	header[field] = nlohmann::json::object();
-
-	header[field]["w"] = pic.w;
-	header[field]["h"] = pic.h;
-	header[field]["c"] = pic.c;
-}
-
 
 struct TextRequest: Request {
 	TextRequest() = default;
@@ -80,7 +90,8 @@ struct ImgRequest: Request {
 	ImgRequest(const stb::Image<stb::RGB>& screenshot, const stb::Image<stb::RGB>& pattern): Request(screenshot), pattern(pattern)
 	{
 		header["type"] = "img";
-		update_header("pattern", pattern);
+		ImageSize pattern_size = {pattern.w, pattern.h, pattern.c};
+		header["pattern"] = pattern_size;
 	}
 
 	stb::Image<stb::RGB> pattern;

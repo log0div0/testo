@@ -8,7 +8,14 @@
 
 #include <memory>
 
+using Socket = coro::StreamSocket<asio::ip::tcp>;
+using Endpoint = asio::ip::tcp::endpoint;
+
+
 struct Channel {
+	Channel(Socket _socket): socket(std::move(_socket)) {}
+	~Channel() = default;
+
 	std::unique_ptr<Request> receive_request();
 	void send_request(const TextRequest& msg);
 	void send_request(const ImgRequest& msg);
@@ -16,68 +23,31 @@ struct Channel {
 	void send_response(const nlohmann::json& response);
 	nlohmann::json receive_response();
 
-	void receive_raw(uint8_t* data, size_t size);
-	void send_raw(uint8_t* data, size_t size);
-
-	virtual size_t read(uint8_t* data, size_t size) = 0;
-	virtual size_t write(uint8_t* data, size_t size) = 0;
-
 private:
 	void send_request(const Request& msg);
-};
-
-using Socket = coro::StreamSocket<asio::ip::tcp>;
-using Endpoint = asio::ip::tcp::endpoint;
-
-struct TCPChannel: Channel {
-	TCPChannel(Socket socket_): socket(std::move(socket_)) {}
-	~TCPChannel() = default;
-
-	TCPChannel(TCPChannel&& other);
-	TCPChannel& operator=(TCPChannel&& other);
-
-	size_t read(uint8_t* data, size_t size) override {
-		return socket.readSome(data, size);
-	}
-
-	size_t write(uint8_t* data, size_t size) override {
-		return socket.writeSome(data, size);
-	}
-
-private:
+	void send_json(const nlohmann::json& json);
 	Socket socket;
 };
 
 inline std::unique_ptr<Request> Channel::receive_request() {	
 	uint32_t header_size;
-	while (true) {
-		size_t bytes_read = read((uint8_t*)&header_size, 4);
-		if (bytes_read == 0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			continue;
-		} else if (bytes_read != 4) {
-			throw std::runtime_error("Can't read msg size");
-		} else {
-			break;
-		}
-	}
+
+	socket.read((uint8_t*)&header_size, 4);
 
 	std::cout << "Header size: " << header_size << std::endl;
 
 	std::string json_str;
 	json_str.resize(header_size);
-	receive_raw((uint8_t*)json_str.data(), json_str.size());
+	socket.read((uint8_t*)json_str.data(), json_str.size());
 
 	auto header = nlohmann::json::parse(json_str);
 
 	std::cout << "Header: " << std::endl;
 	std::cout << header.dump(4) << std::endl;
 
-	int w = header["screenshot"]["w"].get<int>();
-	int h = header["screenshot"]["h"].get<int>();
-	int c = header["screenshot"]["c"].get<int>();
+	ImageSize screenshot_size = header["screenshot"].get<ImageSize>();
 
-	if (c != 3) {
+	if (screenshot_size.c != 3) {
 		throw std::runtime_error("Unsupported channel number");
 	}
 
@@ -90,37 +60,36 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 	}
 
 	result->header = header;
-	result->screenshot = stb::Image<stb::RGB>(w, h);
+	result->screenshot = stb::Image<stb::RGB>(screenshot_size.w, screenshot_size.h);
 
-	int screenshot_size = w * h * c;
-	receive_raw(result->screenshot.data, screenshot_size);
+	socket.read(result->screenshot.data, screenshot_size.total_size());
 
 	if (auto p = dynamic_cast<ImgRequest*>(result.get())) {
+		ImageSize pattern_size = header["pattern"].get<ImageSize>();
 
-		w = header["pattern"]["w"].get<int>();
-		h = header["pattern"]["h"].get<int>();
-		c = header["pattern"]["c"].get<int>();
-
-		if (c != 3) {
+		if (pattern_size.c != 3) {
 			throw std::runtime_error("Unsupported channel number");
 		}
 
-		int pattern_size = w * h * c;
-		receive_raw(p->pattern.data, pattern_size);
+		socket.read(p->pattern.data, pattern_size.total_size());
 	}
 
 	return result;
 }
 
 inline void Channel::send_request(const Request& msg) {
-	auto header_str = msg.header.dump();
-
-	uint32_t header_size = (uint32_t)header_str.size();
-	send_raw((uint8_t*)&header_size, sizeof(header_size));
-	send_raw((uint8_t*)header_str.data(), header_size);
+	send_json(msg.header);
 
 	size_t pic_size = msg.screenshot.w * msg.screenshot.h * msg.screenshot.c;
-	send_raw(msg.screenshot.data, pic_size);
+	socket.write(msg.screenshot.data, pic_size);
+}
+
+inline void Channel::send_json(const nlohmann::json& json) {
+	auto json_str = json.dump();
+
+	uint32_t json_size = (uint32_t)json_str.size();
+	socket.write((uint8_t*)&json_size, sizeof(json_size));
+	socket.write((uint8_t*)json_str.data(), json_size);
 }
 
 inline void Channel::send_request(const TextRequest& msg) {
@@ -131,60 +100,24 @@ inline void Channel::send_request(const ImgRequest& msg) {
 	send_request(static_cast<Request>(msg));
 
 	size_t pattern_size = msg.pattern.w * msg.pattern.h * msg.pattern.c;
-	send_raw(msg.pattern.data, pattern_size);
+	socket.write(msg.pattern.data, pattern_size);
 }
 
 inline void Channel::send_response(const nlohmann::json& response) {
-	auto response_str = response.dump();
-
-	uint32_t response_size = (uint32_t)response_str.size();
-	send_raw((uint8_t*)&response_size, sizeof(response_size));
-	send_raw((uint8_t*)response_str.data(), response_size);
+	return send_json(response);
 }
 
 inline nlohmann::json Channel::receive_response() {
 	uint32_t response_size;
-	while (true) {
-		size_t bytes_read = read((uint8_t*)&response_size, 4);
-		if (bytes_read == 0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			continue;
-		} else if (bytes_read != 4) {
-			throw std::runtime_error("Can't read msg size");
-		} else {
-			break;
-		}
-	}
+	socket.read((uint8_t*)&response_size, 4);
 
 	std::cout << "Response size: " << response_size << std::endl;
 
 	std::string json_str;
 	json_str.resize(response_size);
-	receive_raw((uint8_t*)json_str.data(), json_str.size());
+	socket.read((uint8_t*)json_str.data(), json_str.size());
 
 	auto result = nlohmann::json::parse(json_str);
 	return result;
-}
-
-inline void Channel::receive_raw(uint8_t* data, size_t size) {
-	size_t already_read = 0;
-	while (already_read < size) {
-		size_t n = read(&data[already_read], size - already_read);
-		if (n == 0) {
-			throw std::runtime_error("EOF while reading");
-		}
-		already_read += n;
-	}
-}
-
-inline void Channel::send_raw(uint8_t* data, size_t size) {
-	size_t already_send = 0;
-	while (already_send < size) {
-		size_t n = write(&data[already_send], size - already_send);
-		if (n == 0) {
-			throw std::runtime_error("EOF while writing");
-		}
-		already_send += n;
-	}
 }
 

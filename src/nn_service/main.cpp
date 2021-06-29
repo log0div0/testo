@@ -19,7 +19,7 @@ void local_handler() {
 		try {
 			std::cout << "Accepted\n";
 
-			std::shared_ptr<Channel> channel(new TCPChannel(std::move(socket)));
+			std::shared_ptr<Channel> channel(new Channel(std::move(socket)));
 
 			MessageHandler message_handler(std::move(channel));
 			message_handler.run();

@@ -3,6 +3,7 @@
 
 #include "Tensor.hpp"
 #include "Img.hpp"
+#include "ImgDetector.hpp"
 #include <stb/Image.hpp>
 
 #include <ghc/filesystem.hpp>
@@ -18,6 +19,17 @@ struct ImgTensor: Tensor<Img> {
 
 };
 
-ImgTensor find_img(const stb::Image<stb::RGB>* image, const fs::path& path_to_img);
+template <typename RefType>
+ImgTensor find_img(const stb::Image<stb::RGB>* image, RefType ref) {
+	ImgTensor result;
+
+	result.objects = ImgDetector::instance().detect(image, ref);
+
+	std::sort(result.objects.begin(), result.objects.end(), [](const Img& a, const Img& b) {
+		return a.rect.top < b.rect.top;
+	});
+
+	return result;
+}
 
 }

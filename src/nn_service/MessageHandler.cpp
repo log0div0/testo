@@ -2,6 +2,7 @@
 #include "MessageHandler.hpp"
 
 #include "../nn/TextTensor.hpp"
+#include "../nn/ImgTensor.hpp"
 
 void MessageHandler::run() {
 	while (true) {
@@ -36,5 +37,7 @@ nlohmann::json MessageHandler::handle_text_request(TextRequest* request) {
 nlohmann::json MessageHandler::handle_img_request(ImgRequest* request) {
 	std::cout << "Received img request\n";
 
-	return {};
+	nn::ImgTensor tensor = nn::find_img(&request->screenshot, &request->pattern);
+	
+	return tensor;
 }
