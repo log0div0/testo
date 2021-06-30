@@ -32,8 +32,7 @@ void local_handler() {
 int main(int argc, char** argv) {
 	try {
 		nn::onnx::Runtime onnx_runtime;
-		std::thread t1([]() {coro::Application(local_handler).run();});
-		t1.join();
+		coro::Application(local_handler).run();
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
 	}

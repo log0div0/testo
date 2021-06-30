@@ -38,6 +38,5 @@ nlohmann::json MessageHandler::handle_img_request(ImgRequest* request) {
 	std::cout << "Received img request\n";
 
 	nn::ImgTensor tensor = nn::find_img(&request->screenshot, &request->pattern);
-	
-	return tensor;
+	return tensor;	
 }

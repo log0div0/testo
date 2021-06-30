@@ -66,6 +66,7 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 
 	if (auto p = dynamic_cast<ImgRequest*>(result.get())) {
 		ImageSize pattern_size = header["pattern"].get<ImageSize>();
+		p->pattern = stb::Image<stb::RGB>(pattern_size.w, pattern_size.h);
 
 		if (pattern_size.c != 3) {
 			throw std::runtime_error("Unsupported channel number");
