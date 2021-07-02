@@ -23,10 +23,10 @@ struct Channel {
 	void send_response(const nlohmann::json& response);
 	nlohmann::json receive_response();
 
+	Socket socket;
 private:
 	void send_request(const Request& msg);
 	void send_json(const nlohmann::json& json);
-	Socket socket;
 };
 
 inline std::unique_ptr<Request> Channel::receive_request() {	

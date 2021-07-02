@@ -19,4 +19,6 @@ void Environment::setup() {
 			throw std::runtime_error(std::string("Can't create directory: ") + flash_drives_metadata_dir().generic_string());
 		}
 	}
+
+	nn_client = NNServiceClient("127.0.0.1", "8888");
 }

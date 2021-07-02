@@ -23,6 +23,8 @@ endif()
 
 link_directories(${ONNX_RUNTIME_DIR}/lib/)
 
+add_definitions(-DNN_SERVICE_PROCOTOL_VERSION="1.0")
+
 add_subdirectory(license)
 add_subdirectory(js)
 add_subdirectory(nn)

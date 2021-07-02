@@ -4,6 +4,7 @@
 #include "VM.hpp"
 #include "FlashDrive.hpp"
 #include "Network.hpp"
+#include "../NNServiceClient.hpp"
 
 struct Environment {
 	virtual ~Environment() = default;
@@ -30,6 +31,8 @@ struct Environment {
 	virtual void validate_vm_config(const nlohmann::json& config) = 0;
 	virtual void validate_flash_drive_config(const nlohmann::json& config) = 0;
 	virtual void validate_network_config(const nlohmann::json& config) = 0;
+
+	NNServiceClient nn_client;
 };
 
 extern std::shared_ptr<Environment> env;

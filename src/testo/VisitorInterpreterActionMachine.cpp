@@ -3,6 +3,7 @@
 #include <coro/Timeout.h>
 #include "VisitorInterpreterActionMachine.hpp"
 #include "Exceptions.hpp"
+#include "backends/Environment.hpp"
 #include "IR/Program.hpp"
 #include <fmt/format.h>
 #include <codecvt>
@@ -549,12 +550,13 @@ nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(con
 
 nn::TextTensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, const stb::Image<stb::RGB>& screenshot) {
 	auto parsed = text.text();
-	return nn::find_text(&screenshot).match_text(&screenshot, parsed);
+	return env->nn_client.find_text(screenshot, parsed);
 }
 
 nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, const stb::Image<stb::RGB>& screenshot) {
 	auto parsed = img.img_path();
-	return nn::find_img(&screenshot, parsed);
+	auto ref = stb::Image<stb::RGB>(parsed);
+	return env->nn_client.find_img(screenshot, ref);
 }
 
 nn::Homm3Tensor VisitorInterpreterActionMachine::visit_select_homm3(const IR::SelectHomm3& homm3, const stb::Image<stb::RGB>& screenshot) {
