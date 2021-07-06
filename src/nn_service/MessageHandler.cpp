@@ -1,4 +1,6 @@
 
+#include <spdlog/spdlog.h>
+
 #include "MessageHandler.hpp"
 
 #include "../nn/TextTensor.hpp"
@@ -11,6 +13,7 @@ void MessageHandler::run() {
 }
 
 void MessageHandler::handle_request(std::unique_ptr<Request> request) {
+	spdlog::trace(fmt::format("Got the request {}", request->to_string()));
 	nlohmann::json response;
 	if (auto p = dynamic_cast<TextRequest*>(request.get())) {
 		response = handle_text_request(p);
@@ -18,6 +21,7 @@ void MessageHandler::handle_request(std::unique_ptr<Request> request) {
 		response = handle_img_request(p);
 	}
 
+	spdlog::trace(fmt::format("The response is {}", response.dump(4)));
 	channel->send_response(response);
 }
 

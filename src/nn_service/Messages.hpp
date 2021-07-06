@@ -34,6 +34,10 @@ struct Request {
 		header["screenshot"] = img_size;
 	}
 
+	std::string to_string() const {
+		return header.dump(4);
+	}
+
 	nlohmann::json header;
 	stb::Image<stb::RGB> screenshot;
 };

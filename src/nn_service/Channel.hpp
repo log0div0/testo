@@ -34,16 +34,11 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 
 	socket.read((uint8_t*)&header_size, 4);
 
-	std::cout << "Header size: " << header_size << std::endl;
-
 	std::string json_str;
 	json_str.resize(header_size);
 	socket.read((uint8_t*)json_str.data(), json_str.size());
 
 	auto header = nlohmann::json::parse(json_str);
-
-	std::cout << "Header: " << std::endl;
-	std::cout << header.dump(4) << std::endl;
 
 	ImageSize screenshot_size = header["screenshot"].get<ImageSize>();
 

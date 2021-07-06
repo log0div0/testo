@@ -103,10 +103,10 @@ void handler(const Args& args) {
 
 		try {
 			const TextArgs& text_args = dynamic_cast<const TextArgs&>(args);
-			return text_mode(text_args, channel);
+			text_mode(text_args, channel);
 		} catch (const std::bad_cast& e) {
 			const ImgArgs& img_args = dynamic_cast<const ImgArgs&>(args);
-			return img_mode(img_args, channel);
+			img_mode(img_args, channel);
 		}
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
