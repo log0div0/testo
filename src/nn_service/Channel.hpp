@@ -112,8 +112,6 @@ inline nlohmann::json Channel::receive_response() {
 	uint32_t response_size;
 	socket.read((uint8_t*)&response_size, 4);
 
-	std::cout << "Response size: " << response_size << std::endl;
-
 	std::string json_str;
 	json_str.resize(response_size);
 	socket.read((uint8_t*)json_str.data(), json_str.size());

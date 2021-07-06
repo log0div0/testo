@@ -22,7 +22,6 @@ void MessageHandler::handle_request(std::unique_ptr<Request> request) {
 }
 
 nlohmann::json MessageHandler::handle_text_request(TextRequest* request) {
-	std::cout << "Received text request\n";
 	nn::TextTensor tensor = nn::find_text(&request->screenshot);
 	if (request->has_text()) {
 		tensor = tensor.match_text(&request->screenshot, request->text());
@@ -35,8 +34,6 @@ nlohmann::json MessageHandler::handle_text_request(TextRequest* request) {
 }
 
 nlohmann::json MessageHandler::handle_img_request(ImgRequest* request) {
-	std::cout << "Received img request\n";
-
 	nn::ImgTensor tensor = nn::find_img(&request->screenshot, &request->pattern);
 	return tensor;	
 }

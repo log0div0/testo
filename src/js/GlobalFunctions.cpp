@@ -1,6 +1,7 @@
 
 #include "GlobalFunctions.hpp"
 #include "Tensor.hpp"
+#include "../testo/backends/Environment.hpp"
 #include <iostream>
 
 namespace js {
@@ -22,11 +23,12 @@ Value find_text(ContextRef ctx, const ValueRef this_val, const std::vector<Value
 		throw std::runtime_error("Invalid arguments count in find_text");
 	}
 
-	nn::TextTensor tensor = nn::find_text(ctx.image());
+	std::string text = "";
 	if (args.size() == 1) {
-		std::string text = args.at(0);
-		tensor = tensor.match_text(ctx.image(), text);
+		text = std::string(args.at(0));
 	}
+
+	nn::TextTensor tensor = env->nn_client.find_text(ctx.image(), text);
 	return TextTensor(ctx, tensor);
 }
 
@@ -36,8 +38,9 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 	}
 
 	std::string img_path = args.at(0);
+	stb::Image<stb::RGB> ref(img_path);
 
-	nn::ImgTensor tensor = nn::find_img(ctx.image(), img_path);
+	nn::ImgTensor tensor = env->nn_client.find_img(ctx.image(), &ref);
 	return ImgTensor(ctx, tensor);
 }
 
