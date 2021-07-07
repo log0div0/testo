@@ -34,7 +34,7 @@ struct Request {
 		header["screenshot"] = img_size;
 	}
 
-	std::string to_string() const {
+	virtual std::string to_string() const {
 		return header.dump(4);
 	}
 
@@ -99,4 +99,22 @@ struct ImgRequest: Request {
 	}
 
 	stb::Image<stb::RGB> pattern;
+};
+
+struct JSRequest: Request {
+	JSRequest() = default;
+	JSRequest(const stb::Image<stb::RGB>& screenshot, const std::string& script): Request(screenshot), script(script)
+	{
+		header["type"] = "js";
+		header["js_size"] = script.length();
+	}
+
+	std::string to_string() const override {
+		std::string result = header.dump(4);
+		result += "\n";
+		result += script;
+		return result;
+	}
+
+	std::string script;
 };

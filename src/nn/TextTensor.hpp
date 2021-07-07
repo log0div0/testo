@@ -19,4 +19,19 @@ struct TextTensor: Tensor<TextLine> {
 
 TextTensor find_text(const stb::Image<stb::RGB>* image);
 
+inline void to_json(nlohmann::json& j, const nn::TextTensor& tensor) {
+	j["type"] = "TextTensor";
+	j["objects"] = nlohmann::json::array();
+
+	for (auto& obj: tensor.objects) {
+		j.push_back(obj);
+	}
+}
+
+inline void from_json(const nlohmann::json& j, nn::TextTensor& tensor) {
+	for (auto& i: j) {
+		tensor.objects.push_back(i.get<TextLine>());
+	}
+}
+
 }

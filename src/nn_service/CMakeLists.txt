@@ -4,7 +4,7 @@ file(GLOB SRCS *.cpp)
 
 add_executable(nn_service ${SRCS})
 
-target_link_libraries(nn_service coro stb nn)
+target_link_libraries(nn_service coro stb js nn)
 
 if (UNIX)
 	target_link_libraries(nn_service pthread)

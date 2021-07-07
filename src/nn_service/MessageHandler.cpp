@@ -3,6 +3,9 @@
 
 #include "MessageHandler.hpp"
 
+#include "../js/Runtime.hpp"
+#include "../js/Tensor.hpp"
+
 #include "../nn/TextTensor.hpp"
 #include "../nn/ImgTensor.hpp"
 
@@ -13,12 +16,14 @@ void MessageHandler::run() {
 }
 
 void MessageHandler::handle_request(std::unique_ptr<Request> request) {
-	spdlog::trace(fmt::format("Got the request {}", request->to_string()));
+	spdlog::trace(fmt::format("Got the request \n{}", request->to_string()));
 	nlohmann::json response;
 	if (auto p = dynamic_cast<TextRequest*>(request.get())) {
 		response = handle_text_request(p);
 	} else if (auto p = dynamic_cast<ImgRequest*>(request.get())) {
 		response = handle_img_request(p);
+	} else if (auto p = dynamic_cast<JSRequest*>(request.get())) {
+		response = handle_js_request(p);
 	}
 
 	spdlog::trace(fmt::format("The response is {}", response.dump(4)));
@@ -40,4 +45,12 @@ nlohmann::json MessageHandler::handle_text_request(TextRequest* request) {
 nlohmann::json MessageHandler::handle_img_request(ImgRequest* request) {
 	nn::ImgTensor tensor = nn::find_img(&request->screenshot, &request->pattern);
 	return tensor;	
+}
+
+nlohmann::json MessageHandler::handle_js_request(JSRequest* request) {
+	js::Context js_ctx(&request->screenshot);
+
+	auto val = js_ctx.eval(request->script);
+
+	return {};
 }

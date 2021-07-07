@@ -17,6 +17,7 @@ private:
 
 	nlohmann::json handle_text_request(TextRequest* request);
 	nlohmann::json handle_img_request(ImgRequest* request);
+	nlohmann::json handle_js_request(JSRequest* request);
 
 	std::shared_ptr<Channel> channel;
 };

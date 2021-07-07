@@ -15,6 +15,8 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include "../js/Runtime.hpp"
+
 #include "MessageHandler.hpp"
 
 #include "../nn/OnnxRuntime.hpp"
@@ -92,8 +94,8 @@ int main(int argc, char** argv) {
 
 		setup_logs();
 
-
 		nn::onnx::Runtime onnx_runtime;
+
 		coro::Application(local_handler).run();
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;

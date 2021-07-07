@@ -23,12 +23,13 @@ Value find_text(ContextRef ctx, const ValueRef this_val, const std::vector<Value
 		throw std::runtime_error("Invalid arguments count in find_text");
 	}
 
-	std::string text = "";
+	//nn::TextTensor tensor = env->nn_client.find_text(ctx.image(), text);
+	nn::TextTensor tensor = nn::find_text(ctx.image());
 	if (args.size() == 1) {
-		text = std::string(args.at(0));
+		std::string text = std::string(args.at(0));
+		tensor = tensor.match_text(ctx.image(), text);
 	}
-
-	nn::TextTensor tensor = env->nn_client.find_text(ctx.image(), text);
+	
 	return TextTensor(ctx, tensor);
 }
 
@@ -40,7 +41,8 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 	std::string img_path = args.at(0);
 	stb::Image<stb::RGB> ref(img_path);
 
-	nn::ImgTensor tensor = env->nn_client.find_img(ctx.image(), &ref);
+	//nn::ImgTensor tensor = env->nn_client.find_img(ctx.image(), &ref);
+	nn::ImgTensor tensor = nn::find_img(ctx.image(), img_path);
 	return ImgTensor(ctx, tensor);
 }
 

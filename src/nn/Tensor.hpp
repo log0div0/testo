@@ -229,20 +229,4 @@ TensorType from_right(const TensorType& tensor, size_t i) {
 	return result;
 }
 
-template <typename Object>
-void to_json(nlohmann::json& j, const nn::Tensor<Object>& tensor) {
-	j = nlohmann::json::array();
-
-	for (auto& obj: tensor.objects) {
-		j.push_back(obj);
-	}
-}
-
-template <typename Object>
-void from_json(const nlohmann::json& j, nn::Tensor<Object>& tensor) {
-	for (auto& i: j) {
-		tensor.objects.push_back(i.get<Object>());
-	}
-}
-
 }

@@ -41,9 +41,14 @@ struct ImgArgs: Args {
 	std::string ref_file;
 };
 
+struct JSArgs: Args {
+	std::string script_file;
+};
+
 enum class mode {
 	text,
-	img
+	img,
+	js
 };
 
 void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
@@ -85,6 +90,34 @@ void img_mode(const ImgArgs& args, std::shared_ptr<Channel> channel) {
 	image.write_png("output.png");
 }
 
+void js_mode(const JSArgs& args, std::shared_ptr<Channel> channel) {
+	auto image = stb::Image<stb::RGB>(args.img_file);
+
+	std::ifstream script_file(args.script_file);
+	if (!script_file.is_open()) {
+		throw std::runtime_error("Failed to open script file");
+	}
+	std::string script = {
+		std::istreambuf_iterator<char>(script_file),
+		std::istreambuf_iterator<char>()
+	};
+
+	JSRequest msg(image, script);
+
+	channel->send_request(msg);
+	auto response = channel->receive_response();
+
+	/*std::cout << "Response: " << std::endl;
+	std::cout << response.dump(4);
+	auto tensor = response.get<nn::ImgTensor>();
+
+	for (auto& img: tensor.objects) {
+		draw_rect(image, img.rect, {200, 20, 50});
+	}
+
+	image.write_png("output.png");*/
+}
+
 void handler(const Args& args) {
 	try {
 		auto semicolon_pos = args.ip_port.find(":");
@@ -105,9 +138,14 @@ void handler(const Args& args) {
 			const TextArgs& text_args = dynamic_cast<const TextArgs&>(args);
 			text_mode(text_args, channel);
 		} catch (const std::bad_cast& e) {
-			const ImgArgs& img_args = dynamic_cast<const ImgArgs&>(args);
-			img_mode(img_args, channel);
-		}
+			try {
+				const ImgArgs& img_args = dynamic_cast<const ImgArgs&>(args);
+				img_mode(img_args, channel);
+			} catch (const std::bad_cast& e) {
+				const JSArgs& js_args = dynamic_cast<const JSArgs&>(args);
+				js_mode(js_args, channel);
+			}	
+		} 
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
 	}
@@ -137,7 +175,15 @@ int main(int argc, char** argv) {
 			required("--nn_service") & value("ip:port of the nn_service", img_args.ip_port)
 		);
 
-		auto cli = (text_spec | img_spec);
+		JSArgs js_args;
+		auto js_spec = (
+			command("js").set(selected_mode, mode::js),
+			value("search image", js_args.img_file),
+			value("script", js_args.script_file),
+			required("--nn_service") & value("ip:port of the nn_service", js_args.ip_port)
+		);
+
+		auto cli = (text_spec | img_spec | js_spec);
 
 		if (!parse(argc, argv, cli)) {
 			std::cout << make_man_page(cli, argv[0]) << std::endl;
@@ -149,7 +195,9 @@ int main(int argc, char** argv) {
 			coro::Application([&](){return handler(text_args);}).run();
 		} else if (selected_mode == mode::img) {
 			coro::Application([&](){return handler(img_args);}).run();
-		}
+		} else if (selected_mode == mode::js) {
+			coro::Application([&](){return handler(js_args);}).run();
+		} 
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
 	}

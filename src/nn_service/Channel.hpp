@@ -19,6 +19,7 @@ struct Channel {
 	std::unique_ptr<Request> receive_request();
 	void send_request(const TextRequest& msg);
 	void send_request(const ImgRequest& msg);
+	void send_request(const JSRequest& msg);
 
 	void send_response(const nlohmann::json& response);
 	nlohmann::json receive_response();
@@ -48,10 +49,20 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 
 	std::unique_ptr<Request> result;
 
-	if (header["type"].get<std::string>() == "text") {
+	if (!header.count("type")) {
+		throw std::runtime_error("The request doesn't have the \"type\" field");
+	}
+
+	auto type = header["type"].get<std::string>();
+
+	if (type == "text") {
 		result.reset(new TextRequest());
-	} else if (header["type"].get<std::string>() == "img") {
+	} else if (type == "img") {
 		result.reset(new ImgRequest());
+	} else if (type == "js") {
+		result.reset(new JSRequest());
+	} else {
+		throw std::runtime_error("Uknown request type: " + type);
 	}
 
 	result->header = header;
@@ -68,6 +79,10 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 		}
 
 		socket.read(p->pattern.data, pattern_size.total_size());
+	} else if (auto p = dynamic_cast<JSRequest*>(result.get())) {
+		auto script_size = header.at("js_size").get<uint32_t>();
+		p->script.resize(script_size);
+		socket.read((uint8_t*)p->script.data(), script_size);
 	}
 
 	return result;
@@ -97,6 +112,12 @@ inline void Channel::send_request(const ImgRequest& msg) {
 
 	size_t pattern_size = msg.pattern.w * msg.pattern.h * msg.pattern.c;
 	socket.write(msg.pattern.data, pattern_size);
+}
+
+inline void Channel::send_request(const JSRequest& msg) {	
+	send_request(static_cast<Request>(msg));
+
+	socket.write(msg.script.data(), msg.script.length());
 }
 
 inline void Channel::send_response(const nlohmann::json& response) {
