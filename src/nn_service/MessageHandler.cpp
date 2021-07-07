@@ -5,6 +5,7 @@
 
 #include "../js/Runtime.hpp"
 #include "../js/Tensor.hpp"
+#include "../js/Point.hpp"
 
 #include "../nn/TextTensor.hpp"
 #include "../nn/ImgTensor.hpp"
@@ -51,6 +52,27 @@ nlohmann::json MessageHandler::handle_js_request(JSRequest* request) {
 	js::Context js_ctx(&request->screenshot);
 
 	auto val = js_ctx.eval(request->script);
+	if (!val.is_object()) {
+		//send error
+		return {};
+	}
 
-	return {};
+	if (val.is_array()) {
+		//send error_message
+		return {};
+	}
+
+	if (val.is_instance_of(js_ctx.get_global_object().get_property_str("TextTensor"))) {
+		nn::TextTensor* tensor = (nn::TextTensor*)val.get_opaque(js::TextTensor::class_id);
+		return *tensor;
+	} else if (val.is_instance_of(js_ctx.get_global_object().get_property_str("ImgTensor"))) {
+		nn::ImgTensor* tensor = (nn::ImgTensor*)val.get_opaque(js::ImgTensor::class_id);
+		return *tensor;
+	} else if (val.is_instance_of(js_ctx.get_global_object().get_property_str("Point"))) {
+		nn::Point* point = (nn::Point*)val.get_opaque(js::Point::class_id);
+		return *point;
+	} else {
+		//send error_message
+		return {};
+	}
 }
