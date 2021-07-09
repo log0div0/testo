@@ -37,12 +37,12 @@ inline void to_json(nlohmann::json& j, const ImgTensor& tensor) {
 	j["objects"] = nlohmann::json::array();
 
 	for (auto& obj: tensor.objects) {
-		j.push_back(obj);
+		j["objects"].push_back(obj);
 	}
 }
 
 inline void from_json(const nlohmann::json& j, ImgTensor& tensor) {
-	for (auto& i: j) {
+	for (auto& i: j.at("objects")) {
 		tensor.objects.push_back(i.get<Img>());
 	}
 }

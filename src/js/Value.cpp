@@ -85,7 +85,11 @@ bool ValueRef::is_constructor() const {
 }
 
 bool ValueRef::is_instance_of(ValueRef obj) const {
-	return JS_IsInstanceOf(context, handle, obj.handle);
+	int res = JS_IsInstanceOf(context, handle, obj.handle);
+	if (res == -1) {
+		throw std::runtime_error("invalid 'instanceof' right operand");
+	}
+	return res;
 }
 
 Value ValueRef::get_property_str(const std::string& name) const {

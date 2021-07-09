@@ -107,15 +107,28 @@ void js_mode(const JSArgs& args, std::shared_ptr<Channel> channel) {
 	channel->send_request(msg);
 	auto response = channel->receive_response();
 
-	/*std::cout << "Response: " << std::endl;
+	std::cout << "Response: " << std::endl;
 	std::cout << response.dump(4);
-	auto tensor = response.get<nn::ImgTensor>();
 
-	for (auto& img: tensor.objects) {
-		draw_rect(image, img.rect, {200, 20, 50});
+	auto type = response.at("type").get<std::string>();
+	if (type == "TextTensor") {
+		auto tensor = response.get<nn::TextTensor>();
+		for (auto& img: tensor.objects) {
+			draw_rect(image, img.rect, {200, 20, 50});
+		}
+		image.write_png("output.png");
+	} else if (type == "ImgTensor") {
+		auto tensor = response.get<nn::ImgTensor>();
+		for (auto& img: tensor.objects) {
+			draw_rect(image, img.rect, {200, 20, 50});
+		}
+		image.write_png("output.png");
+	} else if (type == "Point") {
+		auto point = response.get<nn::Point>();
+		std::cout << "Point: {" << point.x << ", " << point.y << "}\n"; 
+	} else if (type == "Error") {
+		std::cout << "Error: " << response.at("message").get<std::string>() << std::endl;
 	}
-
-	image.write_png("output.png");*/
 }
 
 void handler(const Args& args) {

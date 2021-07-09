@@ -20,4 +20,6 @@ private:
 	nlohmann::json handle_js_request(JSRequest* request);
 
 	std::shared_ptr<Channel> channel;
+
+	nlohmann::json create_error_msg(const std::string& message);
 };

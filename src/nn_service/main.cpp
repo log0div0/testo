@@ -45,7 +45,7 @@ void local_handler() {
 				spdlog::info(fmt::format("Connection broken: {}", new_connection));
 			}
 		} catch (const std::exception& error) {
-			std::cout << "Error inside local acceptor loop: " << error.what();
+			std::cout << "Error inside local acceptor loop: " << error.what() << std::endl;
 		}
 	});
 }

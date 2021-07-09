@@ -27,6 +27,7 @@ struct Point {
 };
 
 inline void to_json(nlohmann::json& j, const nn::Point& point) {
+	j["type"] = "Point";
 	j["x"] = point.x;
 	j["y"] = point.y;
 }
