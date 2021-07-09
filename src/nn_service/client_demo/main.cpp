@@ -126,6 +126,21 @@ void js_mode(const JSArgs& args, std::shared_ptr<Channel> channel) {
 	} else if (type == "Point") {
 		auto point = response.get<nn::Point>();
 		std::cout << "Point: {" << point.x << ", " << point.y << "}\n"; 
+	} else if (type == "RefImageRequest") {
+		stb::Image<stb::RGB> img;
+		try {
+			img = stb::Image<stb::RGB>(response.at("path").get<std::string>());
+		} catch (const std::exception& error) {}
+		RefImage request(img);
+		channel->send_request(request);
+
+		response = channel->receive_response();
+
+		auto tensor = response.get<nn::ImgTensor>();
+		for (auto& img: tensor.objects) {
+			draw_rect(image, img.rect, {200, 20, 50});
+		}
+		image.write_png("output33.png");
 	} else if (type == "Error") {
 		std::cout << "Error: " << response.at("message").get<std::string>() << std::endl;
 	}

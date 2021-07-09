@@ -11,26 +11,26 @@
 using Socket = coro::StreamSocket<asio::ip::tcp>;
 using Endpoint = asio::ip::tcp::endpoint;
 
-
 struct Channel {
 	Channel(Socket _socket): socket(std::move(_socket)) {}
 	~Channel() = default;
 
-	std::unique_ptr<Request> receive_request();
+	std::unique_ptr<Message> receive_message();
 	void send_request(const TextRequest& msg);
 	void send_request(const ImgRequest& msg);
 	void send_request(const JSRequest& msg);
+	void send_request(const RefImage& msg);
 
 	void send_response(const nlohmann::json& response);
 	nlohmann::json receive_response();
 
 	Socket socket;
 private:
-	void send_request(const Request& msg);
+	void send_request(const Message& msg);
 	void send_json(const nlohmann::json& json);
 };
 
-inline std::unique_ptr<Request> Channel::receive_request() {	
+inline std::unique_ptr<Message> Channel::receive_message() {	
 	uint32_t header_size;
 
 	socket.read((uint8_t*)&header_size, 4);
@@ -47,7 +47,7 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 		throw std::runtime_error("Unsupported channel number");
 	}
 
-	std::unique_ptr<Request> result;
+	std::unique_ptr<Message> result;
 
 	if (!header.count("type")) {
 		throw std::runtime_error("The request doesn't have the \"type\" field");
@@ -61,11 +61,14 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 		result.reset(new ImgRequest());
 	} else if (type == "js") {
 		result.reset(new JSRequest());
+	} else if (type == "ref_image") {
+		result.reset(new RefImage());
 	} else {
 		throw std::runtime_error("Uknown request type: " + type);
 	}
 
 	result->header = header;
+
 	result->screenshot = stb::Image<stb::RGB>(screenshot_size.w, screenshot_size.h);
 
 	socket.read(result->screenshot.data, screenshot_size.total_size());
@@ -88,7 +91,7 @@ inline std::unique_ptr<Request> Channel::receive_request() {
 	return result;
 }
 
-inline void Channel::send_request(const Request& msg) {
+inline void Channel::send_request(const Message& msg) {
 	send_json(msg.header);
 
 	size_t pic_size = msg.screenshot.w * msg.screenshot.h * msg.screenshot.c;
@@ -104,21 +107,26 @@ inline void Channel::send_json(const nlohmann::json& json) {
 }
 
 inline void Channel::send_request(const TextRequest& msg) {
-	return send_request(static_cast<Request>(msg));
+	return send_request(static_cast<Message>(msg));
 }
 
 inline void Channel::send_request(const ImgRequest& msg) {	
-	send_request(static_cast<Request>(msg));
+	send_request(static_cast<Message>(msg));
 
 	size_t pattern_size = msg.pattern.w * msg.pattern.h * msg.pattern.c;
 	socket.write(msg.pattern.data, pattern_size);
 }
 
 inline void Channel::send_request(const JSRequest& msg) {	
-	send_request(static_cast<Request>(msg));
+	send_request(static_cast<Message>(msg));
 
 	socket.write(msg.script.data(), msg.script.length());
 }
+
+inline void Channel::send_request(const RefImage& msg) {	
+	send_request(static_cast<Message>(msg));
+}
+
 
 inline void Channel::send_response(const nlohmann::json& response) {
 	return send_json(response);

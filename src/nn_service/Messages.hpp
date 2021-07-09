@@ -25,10 +25,10 @@ inline void from_json(const nlohmann::json& j, ImageSize& img_size) {
 	img_size.c = j["c"];
 }
 
-struct Request {
-	Request() = default;
-	virtual ~Request() = default;
-	Request(const stb::Image<stb::RGB>& screenshot): screenshot(screenshot) {
+struct Message {
+	Message() = default;
+	virtual ~Message() = default;
+	Message(const stb::Image<stb::RGB>& screenshot): screenshot(screenshot) {
 		header["version"] = NN_SERVICE_PROCOTOL_VERSION;
 		ImageSize img_size = {screenshot.w, screenshot.h, screenshot.c};
 		header["screenshot"] = img_size;
@@ -42,12 +42,12 @@ struct Request {
 	stb::Image<stb::RGB> screenshot;
 };
 
-struct TextRequest: Request {
+struct TextRequest: Message {
 	TextRequest() = default;
 	TextRequest(const stb::Image<stb::RGB>& screenshot,
 			std::string text_to_find = "",
 			std::string color_fg = "",
-			std::string color_bg = ""): Request(screenshot)
+			std::string color_bg = ""): Message(screenshot)
 	{
 		header["type"] = "text";
 		if (text_to_find.length()) {
@@ -89,9 +89,9 @@ struct TextRequest: Request {
 
 };
 
-struct ImgRequest: Request {
+struct ImgRequest: Message {
 	ImgRequest() = default;
-	ImgRequest(const stb::Image<stb::RGB>& screenshot, const stb::Image<stb::RGB>& pattern): Request(screenshot), pattern(pattern)
+	ImgRequest(const stb::Image<stb::RGB>& screenshot, const stb::Image<stb::RGB>& pattern): Message(screenshot), pattern(pattern)
 	{
 		header["type"] = "img";
 		ImageSize pattern_size = {pattern.w, pattern.h, pattern.c};
@@ -101,9 +101,9 @@ struct ImgRequest: Request {
 	stb::Image<stb::RGB> pattern;
 };
 
-struct JSRequest: Request {
+struct JSRequest: Message {
 	JSRequest() = default;
-	JSRequest(const stb::Image<stb::RGB>& screenshot, const std::string& script): Request(screenshot), script(script)
+	JSRequest(const stb::Image<stb::RGB>& screenshot, const std::string& script): Message(screenshot), script(script)
 	{
 		header["type"] = "js";
 		header["js_size"] = script.length();
@@ -118,3 +118,12 @@ struct JSRequest: Request {
 
 	std::string script;
 };
+
+struct RefImage: Message {
+	RefImage() = default;
+	RefImage(const stb::Image<stb::RGB>& ref_image): Message(ref_image)
+	{
+		header["type"] = "ref_image";
+	}
+};
+

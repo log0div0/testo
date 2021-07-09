@@ -25,11 +25,11 @@ std::string duration_to_str(Duration duration) {
 
 void MessageHandler::run() {
 	while (true) {
-		handle_request(channel->receive_request());
+		handle_request(channel->receive_message());
 	}
 }
 
-void MessageHandler::handle_request(std::unique_ptr<Request> request) {
+void MessageHandler::handle_request(std::unique_ptr<Message> request) {
 	spdlog::trace(fmt::format("Got the request \n{}", request->to_string()));
 	auto start_timestamp = std::chrono::system_clock::now();
 	nlohmann::json response;
@@ -39,6 +39,8 @@ void MessageHandler::handle_request(std::unique_ptr<Request> request) {
 		response = handle_img_request(p);
 	} else if (auto p = dynamic_cast<JSRequest*>(request.get())) {
 		response = handle_js_request(p);
+	} else if (dynamic_cast<RefImage*>(request.get())) {
+		//ignore that shit here
 	}
 	auto duration = std::chrono::system_clock::now() - start_timestamp;
 	spdlog::trace(fmt::format("Got the response in {}: \n{}", duration_to_str(duration), response.dump(4)));
@@ -63,7 +65,7 @@ nlohmann::json MessageHandler::handle_img_request(ImgRequest* request) {
 }
 
 nlohmann::json MessageHandler::handle_js_request(JSRequest* request) {
-	js::Context js_ctx(&request->screenshot);
+	js::Context js_ctx(&request->screenshot, channel);
 
 	try {
 		auto val = js_ctx.eval(request->script);

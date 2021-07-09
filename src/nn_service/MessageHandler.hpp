@@ -13,7 +13,7 @@ struct MessageHandler {
 	void run();
 
 private:
-	void handle_request(std::unique_ptr<Request> request);
+	void handle_request(std::unique_ptr<Message> request);
 
 	nlohmann::json handle_text_request(TextRequest* request);
 	nlohmann::json handle_img_request(ImgRequest* request);

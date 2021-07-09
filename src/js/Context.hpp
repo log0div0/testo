@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "../nn_service/Channel.hpp"
 #include "Value.hpp"
 #include <stb/Image.hpp>
 #include <vector>
@@ -8,6 +9,11 @@
 namespace js {
 
 struct ContextRef {
+	struct Opaque {
+		const stb::Image<stb::RGB>* image;
+		std::shared_ptr<Channel> channel;
+	};
+
 	ContextRef(JSContext* handle);
 
 	Value eval(const std::string& script, bool compile_only = false);
@@ -33,17 +39,20 @@ struct ContextRef {
 	::JSContext* handle = nullptr;
 
 	const stb::Image<stb::RGB>* image() const;
+	std::shared_ptr<Channel> channel() const;
 
 protected:
 	void set_opaque(void* opaque);
 	void* get_opaque() const;
+
+	Opaque opaque;
 
 	void register_global_function(const std::string& name, size_t length, JSCFunction* f);
 };
 
 struct Context: ContextRef {
 	Context() = delete;
-	Context(const stb::Image<stb::RGB>* image);
+	Context(const stb::Image<stb::RGB>* image, std::shared_ptr<Channel> channel = nullptr);
 	~Context();
 
 	Context(const Context& other) = delete;

@@ -39,11 +39,30 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 	}
 
 	std::string img_path = args.at(0);
-	stb::Image<stb::RGB> ref(img_path);
 
-	//nn::ImgTensor tensor = env->nn_client.find_img(ctx.image(), &ref);
-	nn::ImgTensor tensor = nn::find_img(ctx.image(), img_path);
-	return ImgTensor(ctx, tensor);
+	nlohmann::json request = {
+		{"type", "RefImageRequest"},
+		{"path", img_path}
+	};
+
+	ctx.channel()->send_response(request);
+	std::unique_ptr<Message> ref_image;
+	try {
+		ref_image = ctx.channel()->receive_message();
+	} catch (const std::exception& error) {
+		throw std::runtime_error("Couldn't get get the ref image: " + std::string(error.what()));
+	}
+
+	if (ref_image->header["screenshot"].get<ImageSize>().total_size() == 0) {
+		throw std::runtime_error("RefImage is empty");
+	}
+
+	if (auto p = dynamic_cast<RefImage*>(ref_image.get())) {
+		nn::ImgTensor tensor = nn::find_img(ctx.image(), &p->screenshot);
+		return ImgTensor(ctx, tensor);
+	} else {
+		throw std::runtime_error("Got the wrong type of message instead of RefImage");
+	}
 }
 
 Value find_homme3(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
