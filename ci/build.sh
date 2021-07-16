@@ -23,4 +23,5 @@ sudo testo run "$SCRIPT_DIR/build_scripts" \
 	--param WIN10_TEMPLATE_PATH "/var/lib/libvirt/images/testo-builder-win10-template.qcow2" \
 	--license "$LICENSE_PATH" \
 	${TEST_SPEC} \
+	--exclude *win* \
 	--assume_yes

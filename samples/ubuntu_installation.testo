@@ -19,14 +19,40 @@ machine VM1 {
 	}
 }
 
-test ubuntu_installation {
-	#VM1 install_ubuntu_server("VM1", "user", "1111")
-	VM1 {
-		print "Hello world"
+machine VM2 {
+	cpus: 1
+	ram: 1024Mb
+	iso: "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+
+	nic internet: {
+		attached_to: "int2"
+		adapter_type: "e1000"
 	}
 }
 
-test test2: ubuntu_installation {
+test ubuntu_installation {
+	VM1 abort "stop here"
+}
+
+test temp1: ubuntu_installation {
+	VM1 print "lala"
+}
+
+test temp2: ubuntu_installation {
+	VM1 print "lala2"
+}
+
+#test ubuntu_installation2 {
+	#VM2 install_ubuntu_server("VM2", "user", "1111")
+	/*VM1 {
+		print "Hello world"
+	}*/
+#}
+
+/*test test2: ubuntu_installation {
 	VM1 {
 		abort "stop here"
 	}
@@ -43,7 +69,7 @@ test test4 {
 		print "Hello world"
 	}
 }
-
+*/
 /*test install_guest_additions: ubuntu_installation {
 	VM1 install_guest_additions_ubuntu_server("VM1", "user", "1111")
 }
