@@ -89,6 +89,22 @@ void VisitorInterpreter::get_up_to_date_tests() {
 	}
 }
 
+void VisitorInterpreter::setup_test_run_parents(std::shared_ptr<IR::TestRun> test_run) {
+
+	auto parents = test_run->test->parents;
+
+	auto it = tests_runs.rbegin();
+	for (; it != tests_runs.rend() && !parents.empty(); ++it) {
+		auto t_run = *it;
+		auto found = parents.find(t_run->test);
+
+		if (found != parents.end()) {
+			test_run->parents.insert(t_run);
+			parents.erase(found);
+		}
+	}
+}
+
 std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(std::shared_ptr<IR::Test> test) {
 	// если тест up-to-date и есть снепшот - то запускать его точно не надо
 	if ((test->cache_status() == IR::Test::CacheStatus::OK) && (test->snapshots_needed())) {
@@ -100,6 +116,7 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(std::shared_pt
 	auto controllers = test->get_all_controllers();
 	for (; it != tests_runs.rend(); ++it) {
 		auto test_run = *it;
+
 		if (test_run->test == test) {
 			return test_run;
 		}
@@ -127,11 +144,10 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(std::shared_pt
 	auto test_run = std::make_shared<IR::TestRun>();
 	test_run->test = test;
 	for (auto& parent_test: test->parents) {
-		auto parent_test_run = add_test_to_plan(parent_test);
-		if (parent_test_run) {
-			test_run->parents.insert(parent_test_run);
-		}
+		add_test_to_plan(parent_test);
 	}
+
+	setup_test_run_parents(test_run);
 	tests_runs.push_back(test_run);
 	return test_run;
 }
