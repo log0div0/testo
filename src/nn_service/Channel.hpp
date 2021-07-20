@@ -16,8 +16,6 @@ struct Channel {
 	~Channel() = default;
 
 	std::unique_ptr<Message> receive_message();
-	void send_request(const TextRequest& msg);
-	void send_request(const ImgRequest& msg);
 	void send_request(const JSRequest& msg);
 	void send_request(const RefImage& msg);
 
@@ -55,11 +53,7 @@ inline std::unique_ptr<Message> Channel::receive_message() {
 
 	auto type = header["type"].get<std::string>();
 
-	if (type == "text") {
-		result.reset(new TextRequest());
-	} else if (type == "img") {
-		result.reset(new ImgRequest());
-	} else if (type == "js") {
+	if (type == "js") {
 		result.reset(new JSRequest());
 	} else if (type == "ref_image") {
 		result.reset(new RefImage());
@@ -73,16 +67,7 @@ inline std::unique_ptr<Message> Channel::receive_message() {
 
 	socket.read(result->screenshot.data, screenshot_size.total_size());
 
-	if (auto p = dynamic_cast<ImgRequest*>(result.get())) {
-		ImageSize pattern_size = header["pattern"].get<ImageSize>();
-		p->pattern = stb::Image<stb::RGB>(pattern_size.w, pattern_size.h);
-
-		if (pattern_size.c != 3) {
-			throw std::runtime_error("Unsupported channel number");
-		}
-
-		socket.read(p->pattern.data, pattern_size.total_size());
-	} else if (auto p = dynamic_cast<JSRequest*>(result.get())) {
+	if (auto p = dynamic_cast<JSRequest*>(result.get())) {
 		auto script_size = header.at("js_size").get<uint32_t>();
 		p->script.resize(script_size);
 		socket.read((uint8_t*)p->script.data(), script_size);
@@ -104,17 +89,6 @@ inline void Channel::send_json(const nlohmann::json& json) {
 	uint32_t json_size = (uint32_t)json_str.size();
 	socket.write((uint8_t*)&json_size, sizeof(json_size));
 	socket.write((uint8_t*)json_str.data(), json_size);
-}
-
-inline void Channel::send_request(const TextRequest& msg) {
-	return send_request(static_cast<Message>(msg));
-}
-
-inline void Channel::send_request(const ImgRequest& msg) {	
-	send_request(static_cast<Message>(msg));
-
-	size_t pattern_size = msg.pattern.w * msg.pattern.h * msg.pattern.c;
-	socket.write(msg.pattern.data, pattern_size);
 }
 
 inline void Channel::send_request(const JSRequest& msg) {	

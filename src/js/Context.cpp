@@ -78,6 +78,17 @@ Value ContextRef::call_constructor(Value constuctor, const std::vector<Value>& a
 	return {result, handle};
 }
 
+Value ContextRef::call(Value func, const ValueRef object, std::vector<Value>& args) {
+
+	std::vector<JSValueConst> argv;
+	for (auto& arg: args) {
+		argv.push_back(arg.handle);
+	}
+
+	JSValue result = JS_Call(handle, func.handle, object.handle, argv.size(), argv.data());
+	return {result, handle};
+}
+
 Value ContextRef::new_bool(bool val) {
 	return Value(JS_NewBool(handle, val), handle);
 }

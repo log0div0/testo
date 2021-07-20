@@ -42,65 +42,6 @@ struct Message {
 	stb::Image<stb::RGB> screenshot;
 };
 
-struct TextRequest: Message {
-	TextRequest() = default;
-	TextRequest(const stb::Image<stb::RGB>& screenshot,
-			std::string text_to_find = "",
-			std::string color_fg = "",
-			std::string color_bg = ""): Message(screenshot)
-	{
-		header["type"] = "text";
-		if (text_to_find.length()) {
-			header["text_to_find"] = text_to_find;
-		}
-
-		if (color_fg.length()) {
-			header["color_fg"] = color_fg;
-		}
-
-		if (color_bg.length()) {
-			header["color_bg"] = color_bg;
-		}
-	}
-	
-	bool has_text() const {
-		return header.count("text_to_find");
-	}
-
-	std::string text() const {
-		return header.value("text_to_find", std::string());
-	}
-
-	bool has_fg() const {
-		return header.count("color_fg");
-	}
-
-	std::string color_fg() const {
-		return header.value("color_fg", std::string());
-	}
-
-	bool has_bg() const {
-		return header.count("color_bg");
-	}
-
-	std::string color_bg() const {
-		return header.value("color_bg", std::string());
-	}
-
-};
-
-struct ImgRequest: Message {
-	ImgRequest() = default;
-	ImgRequest(const stb::Image<stb::RGB>& screenshot, const stb::Image<stb::RGB>& pattern): Message(screenshot), pattern(pattern)
-	{
-		header["type"] = "img";
-		ImageSize pattern_size = {pattern.w, pattern.h, pattern.c};
-		header["pattern"] = pattern_size;
-	}
-
-	stb::Image<stb::RGB> pattern;
-};
-
 struct JSRequest: Message {
 	JSRequest() = default;
 	JSRequest(const stb::Image<stb::RGB>& screenshot, const std::string& script): Message(screenshot), script(script)

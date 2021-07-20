@@ -1,7 +1,6 @@
 
 #include "GlobalFunctions.hpp"
 #include "Tensor.hpp"
-#include "../testo/backends/Environment.hpp"
 #include <iostream>
 
 namespace js {
@@ -23,7 +22,6 @@ Value find_text(ContextRef ctx, const ValueRef this_val, const std::vector<Value
 		throw std::runtime_error("Invalid arguments count in find_text");
 	}
 
-	//nn::TextTensor tensor = env->nn_client.find_text(ctx.image(), text);
 	nn::TextTensor tensor = nn::find_text(ctx.image());
 	if (args.size() == 1) {
 		std::string text = std::string(args.at(0));
@@ -41,8 +39,8 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 	std::string img_path = args.at(0);
 
 	nlohmann::json request = {
-		{"type", "RefImageRequest"},
-		{"path", img_path}
+		{"type", "ref_image_request"},
+		{"data", img_path}
 	};
 
 	ctx.channel()->send_response(request);
@@ -50,7 +48,7 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 	try {
 		ref_image = ctx.channel()->receive_message();
 	} catch (const std::exception& error) {
-		throw std::runtime_error("Couldn't get get the ref image: " + std::string(error.what()));
+		throw std::runtime_error("Couldn't get the ref image: " + std::string(error.what()));
 	}
 
 	if (ref_image->header["screenshot"].get<ImageSize>().total_size() == 0) {

@@ -33,11 +33,7 @@ void MessageHandler::handle_request(std::unique_ptr<Message> request) {
 	spdlog::trace(fmt::format("Got the request \n{}", request->to_string()));
 	auto start_timestamp = std::chrono::system_clock::now();
 	nlohmann::json response;
-	if (auto p = dynamic_cast<TextRequest*>(request.get())) {
-		response = handle_text_request(p);
-	} else if (auto p = dynamic_cast<ImgRequest*>(request.get())) {
-		response = handle_img_request(p);
-	} else if (auto p = dynamic_cast<JSRequest*>(request.get())) {
+	if (auto p = dynamic_cast<JSRequest*>(request.get())) {
 		response = handle_js_request(p);
 	} else if (dynamic_cast<RefImage*>(request.get())) {
 		//ignore that shit here
@@ -47,67 +43,39 @@ void MessageHandler::handle_request(std::unique_ptr<Message> request) {
 	channel->send_response(response);
 }
 
-nlohmann::json MessageHandler::handle_text_request(TextRequest* request) {
-	nn::TextTensor tensor = nn::find_text(&request->screenshot);
-	if (request->has_text()) {
-		tensor = tensor.match_text(&request->screenshot, request->text());
-	}
-
-	if (request->has_fg() || request->has_bg()) {
-		tensor = tensor.match_color(&request->screenshot, request->color_fg(), request->color_bg());
-	}
-	return tensor;
-}
-
-nlohmann::json MessageHandler::handle_img_request(ImgRequest* request) {
-	nn::ImgTensor tensor = nn::find_img(&request->screenshot, &request->pattern);
-	return tensor;	
-}
-
 nlohmann::json MessageHandler::handle_js_request(JSRequest* request) {
 	js::Context js_ctx(&request->screenshot, channel);
 
+	auto script = fmt::format("function __testo__() {{\n{}\n}}\nlet result = __testo__()\nJSON.stringify(result)", request->script);
+
+	spdlog::trace("Executing script \n{}", script);
+
+	nlohmann::json result;
 	try {
-		auto val = js_ctx.eval(request->script);
-		if (val.is_bool()) {
+		auto val = js_ctx.eval(script);
+		result["type"] = "eval_result";
+		if (val.is_string()) {
 			return nlohmann::json({
-				{"type", "Boolean"},
-				{"value", (bool)val}
+				{"data", nlohmann::json::parse(std::string(val))}
 			});
 		}
 		if (val.is_undefined()) {
-			return create_error_msg("JS script returned undefined value");
+			return create_error_msg("JS script returned an undefined value");
 		}
-		if (!val.is_object()) {
-			return create_error_msg("JS script returned a non-object");
-		}
-
-		if (val.is_array()) {
-			return create_error_msg("JS script returned an array");
-		}
-
-		if (auto tensor = (nn::TextTensor*)val.get_opaque(js::TextTensor::class_id)) {
-			return *tensor;
-		} else if (auto tensor = (nn::ImgTensor*)val.get_opaque(js::ImgTensor::class_id)) {
-			return *tensor;
-		} else if (auto point = (nn::Point*)val.get_opaque(js::Point::class_id)) {
-			return *point;
-		} else {
-			return create_error_msg("JS returned a not-supported type");
-		}
-
 	} catch (const nn::ContinueError& continue_error) {
 		return nlohmann::json({
-			{"type", "ContinueError"}
+			{"type", "continue_error"}
 		});
 	} catch (const std::exception& err) {
 		return create_error_msg(err.what());
 	}
+
+	return result;
 }
 
 nlohmann::json MessageHandler::create_error_msg(const std::string& message) {
 	nlohmann::json error;
-	error["type"] = "Error";
-	error["message"] = message;
+	error["type"] = "error";
+	error["data"] = message;
 	return error;
 }

@@ -12,6 +12,8 @@
 #include "../../nn/TextTensor.hpp"
 #include "../../nn/ImgTensor.hpp"
 
+#include <fmt/format.h>
+
 using namespace std::chrono_literals;
 
 void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {
@@ -51,20 +53,52 @@ enum class mode {
 	js
 };
 
+std::string build_js_script_text(std::string query = "", std::string fg = "", std::string bg = "") {
+	std::string result = "return ";
+	result += query.length() ? fmt::format("find_text('{}')", query) : "find_text()";
+
+	if (fg.length() || bg.length()) {
+		result += "match_color(";
+		result += fg.length() ? fg : "null";
+		result += ", ";
+		result += bg.length() ? bg : "null";
+		result += ")";
+	}
+
+	return result;
+}
+
+std::string build_js_script_img(std::string ref_image) {
+	std::string result = fmt::format("return find_img('{}')", ref_image);
+
+	return result;
+}
+
 void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
 	auto image = stb::Image<stb::RGB>(args.img_file);
+	auto js_script = build_js_script_text(args.query, args.fg, args.bg);
 
-	TextRequest msg(image, args.query, args.fg, args.bg);
+	std::cout << "Script: " << js_script << std::endl;
+
+	JSRequest msg(image, js_script);
 
 	channel->send_request(msg);
 	auto response = channel->receive_response();
 
 	std::cout << "Response: " << std::endl;
-	std::cout << response.dump(4);
-	auto tensor = response.get<nn::TextTensor>();
+	std::cout << response.dump(4) << std::endl << std::endl;
 
-	for (auto& textline: tensor.objects) {
-		draw_rect(image, textline.rect, {200, 20, 50});
+	auto data = response.at("data");
+	for (auto& textline: data) {
+		nn::Rect bbox{
+			textline.at("left").get<int32_t>(),
+			textline.at("top").get<int32_t>(),
+			textline.at("right").get<int32_t>(),
+			textline.at("bottom").get<int32_t>()
+		};
+		draw_rect(image, bbox, {200, 20, 50});
+
+		//std::cout << textline.dump(4) << std::endl;
 	}
 
 	image.write_png("output.png");
@@ -72,19 +106,34 @@ void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
 
 void img_mode(const ImgArgs& args, std::shared_ptr<Channel> channel) {
 	auto image = stb::Image<stb::RGB>(args.img_file);
-	auto ref = stb::Image<stb::RGB>(args.ref_file);
+	auto js_script = build_js_script_img(args.ref_file);;
 
-	ImgRequest msg(image, ref);
+	std::cout << "Script: " << js_script << std::endl;
+
+	JSRequest msg(image, js_script);
 
 	channel->send_request(msg);
 	auto response = channel->receive_response();
 
-	std::cout << "Response: " << std::endl;
-	std::cout << response.dump(4);
-	auto tensor = response.get<nn::ImgTensor>();
+	auto ref_image = stb::Image<stb::RGB>(response.at("data").get<std::string>());
+	RefImage ref_msg(ref_image);
+	channel->send_request(ref_msg);
 
-	for (auto& img: tensor.objects) {
-		draw_rect(image, img.rect, {200, 20, 50});
+	response = channel->receive_response();
+	std::cout << "Response: " << std::endl;
+	std::cout << response.dump(4) << std::endl << std::endl;
+
+	auto data = response.at("data");
+	for (auto& textline: data) {
+		nn::Rect bbox{
+			textline.at("left").get<int32_t>(),
+			textline.at("top").get<int32_t>(),
+			textline.at("right").get<int32_t>(),
+			textline.at("bottom").get<int32_t>()
+		};
+		draw_rect(image, bbox, {200, 20, 50});
+
+		//std::cout << textline.dump(4) << std::endl;
 	}
 
 	image.write_png("output.png");

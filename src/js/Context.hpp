@@ -19,6 +19,13 @@ struct ContextRef {
 	Value eval(const std::string& script, bool compile_only = false);
 	Value call_constructor(Value constuctor, const std::vector<Value>& args);
 
+	/*
+	JSValue JS_Call(JSContext *ctx, JSValueConst func_obj, JSValueConst this_obj,
+                int argc, JSValueConst *argv);
+	*/
+
+	Value call(Value func, const ValueRef object, std::vector<Value>& args);
+
 	Value get_global_object();
 	Value get_exception();
 
