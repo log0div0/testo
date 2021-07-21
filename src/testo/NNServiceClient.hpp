@@ -15,12 +15,7 @@ struct NNServiceClient {
 		establish_connection();
 	}
 
-	nn::TextTensor find_text(const stb::Image<stb::RGB>* image,
-		std::string text_to_find = "",
-		std::string fg = "",
-		std::string bg = "");
-
-	nn::ImgTensor find_img(const stb::Image<stb::RGB>* image, const stb::Image<stb::RGB>* ref);
+	nlohmann::json eval_js(const stb::Image<stb::RGB>* image, const std::string& script);
 
 
 private:

@@ -40,36 +40,23 @@ void NNServiceClient::establish_connection() {
 	throw std::runtime_error("Can't connect to the nn_service");
 }
 
-nn::TextTensor NNServiceClient::find_text(const stb::Image<stb::RGB>* image,
-	std::string text_to_find,
-	std::string fg,
-	std::string bg)
+nlohmann::json NNServiceClient::eval_js(const stb::Image<stb::RGB>* image, const std::string& script)
 {
 	for (size_t i = 0; i < tries; ++i) {
 		try {
-			channel->send_request(TextRequest(*image, text_to_find, fg, bg));
-			auto response = channel->receive_response();
-			return response.get<nn::TextTensor>();
-		} catch (const std::system_error& error) {
-			if (check_system_code(error.code())) {
-				std::cout << "Lost the connection to the nn_service, reconnecting...\n";
-				establish_connection();
-			} else {
-				throw;
-			}
-		}
-	}
-	throw std::runtime_error("Can't request the nn_service to find the text");
-}
+			channel->send_request(JSRequest(*image, script));
 
-nn::ImgTensor NNServiceClient::find_img(const stb::Image<stb::RGB>* image,
-	const stb::Image<stb::RGB>* ref)
-{
-	for (size_t i = 0; i < tries; ++i) {
-		try {
-			channel->send_request(ImgRequest(*image, *ref));
-			auto response = channel->receive_response();
-			return response.get<nn::ImgTensor>();
+			while (true) {
+				auto response = channel->receive_response();
+				auto type = response.at("type").get<std::string>();
+				if (type == "ref_image_request") {
+					//handle this
+				}
+
+				return response;
+			}
+
+			return {};
 		} catch (const std::system_error& error) {
 			if (check_system_code(error.code())) {
 				std::cout << "Lost the connection to the nn_service, reconnecting...\n";

@@ -4,7 +4,7 @@
 #include "VM.hpp"
 #include "FlashDrive.hpp"
 #include "Network.hpp"
-#include "../../nn/NNServiceClient.hpp"
+#include "../NNServiceClient.hpp"
 
 struct Environment {
 	virtual ~Environment() = default;

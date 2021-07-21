@@ -53,18 +53,21 @@ nlohmann::json MessageHandler::handle_js_request(JSRequest* request) {
 	nlohmann::json result;
 	try {
 		auto val = js_ctx.eval(script);
-		result["type"] = "eval_result";
 		if (val.is_string()) {
 			return nlohmann::json({
+				{"type", "eval_result"},
 				{"data", nlohmann::json::parse(std::string(val))}
+				
 			});
 		}
 		if (val.is_undefined()) {
 			return create_error_msg("JS script returned an undefined value");
 		}
 	} catch (const nn::ContinueError& continue_error) {
+		auto msg = continue_error.what();
 		return nlohmann::json({
-			{"type", "continue_error"}
+			{"type", "continue_error"},
+			{"data", msg}
 		});
 	} catch (const std::exception& err) {
 		return create_error_msg(err.what());

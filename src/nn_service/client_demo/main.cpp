@@ -119,7 +119,7 @@ void img_mode(const ImgArgs& args, std::shared_ptr<Channel> channel) {
 	RefImage ref_msg(ref_image);
 	channel->send_request(ref_msg);
 
-	response = channel->receive_response();
+	response = channel->receive_response();	
 	std::cout << "Response: " << std::endl;
 	std::cout << response.dump(4) << std::endl << std::endl;
 
