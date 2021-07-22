@@ -544,7 +544,19 @@ std::string VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(c
 
 
 std::string VisitorInterpreterActionMachine::build_select_text_script(const IR::SelectText& text) {
-	std::string result = fmt::format("return find_text('{}')", text.text());
+	auto text_to_find = text.text();
+
+	std::string final_text;
+
+	for (auto i: text_to_find) {
+		if (i == '"') {
+			final_text += '\\';
+		}
+
+		final_text += i;
+	}
+
+	std::string result = fmt::format("return find_text(\"{}\")", final_text);
 	return result;
 }
 
@@ -704,13 +716,13 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 				script = IR::SelectJS({p->selectable, stack}).script();
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
 				script = build_select_text_script({p->selectable, stack});
+				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
 				script = build_select_img_script({p->selectable, stack});
+				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(mouse_selectable.ast_node->selectable)) {
 				throw "Not supported\n";
 			}
-
-			script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 
 			auto js_result = eval_js(script, screenshot);
 
@@ -1178,6 +1190,8 @@ nlohmann::json VisitorInterpreterActionMachine::eval_js(const std::string& scrip
 		} else {
 			throw std::runtime_error(std::string("Unknown message type: ") + type);
 		}
+	} catch(const ContinueError& error) {
+		throw;
 	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}

@@ -630,11 +630,11 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 		throw Exception(std::string(js.ast_node->begin()) + ": Error: empty script in js selection");
 	}
 
-	try {
+	/*try {
 		validate_js(script);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
-	}
+	}*/
 
 	current_test->cksum_input << "js \"" << script << "\"";
 }

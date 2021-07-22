@@ -51,6 +51,10 @@ nlohmann::json NNServiceClient::eval_js(const stb::Image<stb::RGB>* image, const
 				auto type = response.at("type").get<std::string>();
 				if (type == "ref_image_request") {
 					//handle this
+					std::string ref_file_path = response.at("data").get<std::string>();
+					stb::Image<stb::RGB> ref_image(ref_file_path);
+					channel->send_request(RefImage(ref_image));
+					continue;
 				}
 
 				return response;
