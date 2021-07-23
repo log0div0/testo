@@ -6,7 +6,6 @@
 #include <nn/TextTensor.hpp>
 #include <nn/ImgTensor.hpp>
 #include <nn/Homm3Tensor.hpp>
-#include "js/Context.hpp"
 
 struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 
@@ -71,7 +70,6 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 		bool hold_shift = false;
 	};
 	std::unordered_map<char32_t, KeyCombination> charmap;
-	std::shared_ptr<js::Context> js_current_ctx;
 
 private:
 	template <typename Func>

@@ -23,7 +23,7 @@ endif()
 file(GLOB SRCS ${SRC_DIRS})
 
 add_executable(testo ${SRCS})
-target_link_libraries(testo coro js pugixml stb nn license os guest_additions_common_stuff)
+target_link_libraries(testo coro pugixml stb nn license os guest_additions_common_stuff)
 
 if (USE_CUDA)
 	target_link_libraries(testo CUDA::cudart_static)

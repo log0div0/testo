@@ -5,7 +5,6 @@
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
 #include "Parser.hpp"
-#include "js/Context.hpp"
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
@@ -875,11 +874,6 @@ void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select
 	} else {
 		throw Exception("Unknown detect expr type");
 	}
-}
-
-void VisitorSemantic::validate_js(const std::string& script) {
-	js::Context js_ctx(nullptr);
-	js_ctx.eval(script, true);
 }
 
 void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
