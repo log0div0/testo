@@ -10,18 +10,58 @@
 
 #include <clipp.h>
 #include <nlohmann/json.hpp>
+#include <ghc/filesystem.hpp>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include "../js/Runtime.hpp"
+#include "../nn/OnnxRuntime.hpp"
 
 #include "MessageHandler.hpp"
 
-#include "../nn/OnnxRuntime.hpp"
-
+namespace fs = ghc::filesystem;
 using namespace std::chrono_literals;
+
+#ifdef USE_CUDA
+#include "GetDeviceInfo.hpp"
+#include <license/License.hpp>
+
+void verify_license(const std::string& path_to_license) {
+	if (!fs::exists(path_to_license)) {
+		throw std::runtime_error("File " + path_to_license + " does not exists");
+	}
+
+	std::string container = license::read_file(path_to_license);
+	nlohmann::json license = license::unpack(container, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
+
+	license::Date not_before(license.at("not_before").get<std::string>());
+	license::Date not_after(license.at("not_after").get<std::string>());
+	license::Date now(std::chrono::system_clock::now());
+	license::Date release_date(TESTO_RELEASE_DATE);
+
+	if (now < release_date) {
+		throw std::runtime_error("System time is incorrect");
+	}
+
+	if (now < not_before) {
+		throw std::runtime_error("The license period has not yet come");
+	}
+
+	if (now > not_after) {
+		throw std::runtime_error("The license period has already ended");
+	}
+
+	auto info = GetDeviceInfo(0);
+
+	std::string device_uuid = license.at("device_uuid");
+	if (info.uuid_str != device_uuid) {
+		throw std::runtime_error("The graphics accelerator does not match the one specified in the license");
+	}
+}
+#endif
+
 
 nlohmann::json settings;
 
@@ -94,7 +134,20 @@ int main(int argc, char** argv) {
 
 		setup_logs();
 
-		nn::onnx::Runtime onnx_runtime;
+		bool use_cpu = settings.value("use_cpu", false);
+
+		#ifdef USE_CUDA
+			if (!use_cpu) {
+				if (!settings.count("license_path")) {
+					throw std::runtime_error("To start the program you must specify the path to the license file (license_path in the settings file)");
+				}
+				verify_license(settings.at("license_path").get<std::string>());
+			}
+
+			nn::onnx::Runtime onnx_runtime(use_cpu);
+		#else
+			nn::onnx::Runtime onnx_runtime;
+		#endif
 
 		coro::Application(local_handler).run();
 	} catch (const std::exception& error) {

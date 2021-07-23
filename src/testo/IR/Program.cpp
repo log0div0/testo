@@ -98,11 +98,6 @@ void Program::validate() {
 
 void Program::run() {
 	env->setup();
-/*#ifdef USE_CUDA
-	nn::onnx::Runtime onnx_runtime(config.use_cpu);
-#else
-	nn::onnx::Runtime onnx_runtime;
-#endif*/
 	VisitorInterpreter runner(config);
 	runner.visit();
 }
