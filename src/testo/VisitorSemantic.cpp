@@ -1,6 +1,5 @@
 
 #include "VisitorSemantic.hpp"
-#include <nn/Homm3Object.hpp>
 #include "backends/Environment.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
@@ -655,13 +654,7 @@ void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
 }
 
 void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
-	auto id = homm3.id();
-
-	if (!nn::Homm3Object::check_class_name(id)) {
-		throw Exception(std::string(homm3.ast_node->begin()) + ": Error: specified Heroes of Might and Magic object does not exist " + id);
-	}
-
-	current_test->cksum_input << "homm3 \"" << id << "\"";
+	throw std::runtime_error("HOMM3 is not supported anymore");
 }
 
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {

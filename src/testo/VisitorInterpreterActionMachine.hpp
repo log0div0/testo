@@ -3,11 +3,12 @@
 
 #include <coro/Timer.h>
 #include "VisitorInterpreterAction.hpp"
-#include <nn/TextTensor.hpp>
-#include <nn/ImgTensor.hpp>
-#include <nn/Homm3Tensor.hpp>
 
 struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
+
+	struct Point {
+		int32_t x, y;
+	};
 
 	VisitorInterpreterActionMachine(std::shared_ptr<IR::Machine> vmc, std::shared_ptr<StackNode> stack, Reporter& reporter, std::shared_ptr<IR::Test> current_test);
 
@@ -30,7 +31,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	std::string build_select_img_script(const IR::SelectImg& img);
 
 	bool visit_detect_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
-	nn::Point visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
+	Point visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, const stb::Image<stb::RGB>& screenshot);

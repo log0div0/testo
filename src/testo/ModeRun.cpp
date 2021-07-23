@@ -7,10 +7,9 @@
 
 #ifdef USE_CUDA
 #include <license/License.hpp>
-#include <nn/OnnxRuntime.hpp>
 
 void verify_license(const std::string& path_to_license) {
-	if (!fs::exists(path_to_license)) {
+	/*if (!fs::exists(path_to_license)) {
 		throw std::runtime_error("File " + path_to_license + " does not exists");
 	}
 
@@ -39,7 +38,7 @@ void verify_license(const std::string& path_to_license) {
 	std::string device_uuid = license.at("device_uuid");
 	if (info.uuid_str != device_uuid) {
 		throw std::runtime_error("The graphics accelerator does not match the one specified in the license");
-	}
+	}*/
 }
 #endif
 

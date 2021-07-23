@@ -576,7 +576,7 @@ bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, co
 	}
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
+VisitorInterpreterActionMachine::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_object() && !value.is_array()) {
@@ -591,10 +591,7 @@ nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& j
 		auto x = value.at("x").get<int32_t>();
 		auto y = value.at("y").get<int32_t>();
 	
-		nn::Point point;
-		point.x = x;
-		point.y = y;
-		return point;
+		return {x, y};
 	} else {
 		throw std::runtime_error("Can't process return value type. We expect a single object");
 	}
@@ -709,8 +706,8 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
 	bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
+		Point point;
 		try {
-			nn::Point point;
 			std::string script;
 			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
 				script = IR::SelectJS({p->selectable, stack}).script();
@@ -747,9 +744,6 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return true;
-		} catch (const nn::LogicError&) {
-			reporter.save_screenshot(vmc, screenshot);
-			throw;
 		} catch (const ContinueError&) {
 			return false;
 		}

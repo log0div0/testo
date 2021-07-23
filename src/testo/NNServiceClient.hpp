@@ -2,8 +2,6 @@
 #pragma once
 
 #include "../nn_service/Channel.hpp"
-#include "../nn/TextTensor.hpp"
-#include "../nn/ImgTensor.hpp"
 
 struct NNServiceClient {
 	NNServiceClient() = default;
