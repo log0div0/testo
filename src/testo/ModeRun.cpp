@@ -1,6 +1,6 @@
 
 #include "ModeRun.hpp"
-#include "GetDeviceInfo.hpp"
+#include "../license/GetDeviceInfo.hpp"
 #include "IR/Program.hpp"
 #include "Parser.hpp"
 #include "Utils.hpp"

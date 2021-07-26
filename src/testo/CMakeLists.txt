@@ -18,7 +18,7 @@ list(APPEND SRC_DIRS "IR/*.cpp")
 file(GLOB SRCS ${SRC_DIRS})
 
 add_executable(testo ${SRCS})
-target_link_libraries(testo coro pugixml stb license os guest_additions_common_stuff)
+target_link_libraries(testo coro pugixml stb os guest_additions_common_stuff)
 
 if(WIN32)
 	target_link_libraries(testo hyperv msft virtdisk++)

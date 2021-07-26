@@ -16,7 +16,6 @@
 
 #include "ModeClean.hpp"
 #include "ModeRun.hpp"
-#include "ModeRequestLicense.hpp"
 
 #include "Exceptions.hpp"
 
@@ -115,25 +114,12 @@ int do_main(int argc, char** argv) {
 		any_other(wrong)
 	);
 
-#ifdef USE_CUDA
-	RequestLicenseModeArgs request_license_args;
-
-	auto request_license_spec = "request_license options" % (
-		command("request_license").set(selected_mode, mode::request_license),
-		(option("--out") & value("path", request_license_args.out)) % "The path where you want to save the request"
-	);
-
-#endif
-
 	auto help_spec = command("help").set(selected_mode, mode::help);
 	auto version_spec = command("version").set(selected_mode, mode::version);
 
 	auto cli = (
 		run_spec |
 		clean_spec |
-#ifdef USE_CUDA
-		request_license_spec |
-#endif
 		help_spec |
 		version_spec
 	);
@@ -169,12 +155,6 @@ int do_main(int argc, char** argv) {
 #endif
 		return 0;
 	}
-
-#ifdef USE_CUDA
-	if (selected_mode == mode::request_license) {
-		return request_license_mode(request_license_args);
-	}
-#endif
 
 	if (hypervisor == "qemu") {
 #ifndef __linux__
