@@ -25,7 +25,7 @@ namespace fs = ghc::filesystem;
 using namespace std::chrono_literals;
 
 #ifdef USE_CUDA
-#include "GetDeviceInfo.hpp"
+#include "../license/GetDeviceInfo.hpp"
 #include <license/License.hpp>
 
 void verify_license(const std::string& path_to_license) {
@@ -62,6 +62,83 @@ void verify_license(const std::string& path_to_license) {
 }
 #endif
 
+#define APP_NAME "testo_nn_service"
+#define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
+#define LOG_FILE_PATH ("/var/log/" APP_NAME ".log")
+
+struct pid_file_t {
+	pid_file_t(pid_t pid) {
+		std::ofstream stream(PID_FILE_PATH);
+		if (!stream) {
+			throw std::runtime_error("Creating pid file failure");
+		}
+		stream << pid << std::endl;
+		stream.flush();
+	}
+	~pid_file_t() {
+		unlink(PID_FILE_PATH);
+	}
+};
+
+pid_t get_pid() {
+	std::ifstream stream(PID_FILE_PATH);
+
+	if (!stream) {
+		return 0;
+	}
+
+	pid_t pid;
+	stream >> pid;
+	return pid;
+}
+
+struct cmdline: std::vector<std::string> {
+	cmdline(pid_t pid) {
+		std::string filename = "/proc/" + std::to_string(pid) + "/cmdline";
+		std::ifstream stream(filename);
+		if (!stream) {
+			return;
+		}
+		for (std::string arg; std::getline(stream, arg, '\0'); ) {
+			push_back(arg);
+		}
+	}
+};
+
+inline std::ostream& operator<<(std::ostream& stream, const cmdline& cmdline) {
+	for (size_t i = 0; i < cmdline.size(); ++i) {
+		if (i) {
+			stream << " ";
+		}
+		stream << cmdline[i];
+	}
+	return stream;
+}
+
+bool is_running() {
+	auto pid = get_pid();
+
+	if (!pid) {
+		return false;
+	}
+
+	if (kill(pid, 0) < 0) {
+		return false;
+	}
+	else {
+		cmdline cmd(pid);
+		try {
+			if (cmd.at(0).find(APP_NAME) != std::string::npos) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		catch (const std::out_of_range& error) {
+			return false;
+		}
+	}
+}
 
 nlohmann::json settings;
 
@@ -91,7 +168,7 @@ void local_handler() {
 }
 
 void setup_logs() {
-	auto log_file_path = settings.value("log_file", "/var/log/testo_nn_service.log");
+	auto log_file_path = settings.value("log_file", LOG_FILE_PATH);
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file_path);
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 	auto logger = std::make_shared<spdlog::logger>("basic_logger", spdlog::sinks_init_list{file_sink, console_sink});
@@ -109,14 +186,101 @@ void setup_logs() {
 	spdlog::set_default_logger(logger);
 }
 
+enum class mode {
+	start,
+	stop,
+	status,
+	help
+};
+
+struct StartArgs {
+	std::string settings_path = "/etc/testo/nn_service.json";
+	bool foreground_mode = false; 
+};
+
+void app_main(const std::string& settings_path) {
+	try {
+		std::ifstream is(settings_path);
+		if (!is) {
+			throw std::runtime_error(std::string("Can't open settings file: ") + settings_path);
+		}
+		is >> settings;
+		setup_logs();
+	} catch (const std::exception& error) {
+		std::cout << error.what() << std::endl;
+	}
+
+	try {
+		bool use_cpu = settings.value("use_cpu", false);
+
+#ifdef USE_CUDA
+		if (!use_cpu) {
+			if (!settings.count("license_path")) {
+				throw std::runtime_error("To start the program you must specify the path to the license file (license_path in the settings file)");
+			}
+			verify_license(settings.at("license_path").get<std::string>());
+		}
+
+		nn::onnx::Runtime onnx_runtime(use_cpu);
+#else
+		if (!use_cpu) {
+			throw std::runtime_error("use_cpu setting must be false because this is CPU-version of Testo");
+		}
+		nn::onnx::Runtime onnx_runtime;
+#endif
+
+		spdlog::info("Starting testo nn service");
+		spdlog::info("Testo framework version: {}", TESTO_VERSION);
+#ifdef USE_CUDA
+		spdlog::info("GPU mode available: YES");
+#else
+		spdlog::info("GPU mode available: NO");
+#endif
+		spdlog::info("GPU mode enabled: {}", use_cpu);
+		coro::Application(local_handler).run();
+	} catch (const std::exception& error) {
+		spdlog::error(error.what());
+	}
+}
+
+void start(const StartArgs& args) {
+	if (!args.foreground_mode) {
+		if (daemon(1, 0) < 0) {
+			throw std::system_error(errno, std::system_category());
+		}
+	}
+
+	app_main(args.settings_path);
+}
+
+void stop() {
+	auto pid = get_pid();
+	if (!pid) {
+		return;
+	}
+	if (kill(pid, SIGTERM) < 0) {
+		throw std::system_error(errno, std::system_category());
+	}
+}
+
 int main(int argc, char** argv) {
 	try {
 		using namespace clipp;
 
-		std::string settings_path;
+		StartArgs start_args;
+		mode selected_mode;
 
-		auto cli = clipp::group(
-			value("path to settings", settings_path)
+		auto start_spec = (
+			command("start").set(selected_mode, mode::start),
+			(option("--settings_file") & value("path to file", start_args.settings_path)) % "Path to settings file (default is /etc/testo/nn_service.json",
+			(option("--foreground").set(start_args.foreground_mode)) % "Run in foreground"
+		);
+
+		auto cli = (
+			start_spec |
+			command("stop").set(selected_mode, mode::stop) |
+			command("status").set(selected_mode, mode::status) |
+			command("help").set(selected_mode, mode::help)
 		);
 
 		if (!parse(argc, argv, cli)) {
@@ -124,34 +288,29 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 
-		{
-			std::ifstream is(settings_path);
-			if (!is) {
-				throw std::runtime_error(std::string("Can't open settings file: ") + settings_path);
-			}
-			is >> settings;
-		}
-
-		setup_logs();
-
-		bool use_cpu = settings.value("use_cpu", false);
-
-		#ifdef USE_CUDA
-			if (!use_cpu) {
-				if (!settings.count("license_path")) {
-					throw std::runtime_error("To start the program you must specify the path to the license file (license_path in the settings file)");
+		switch (selected_mode) {
+			case mode::start:
+				start(start_args);
+				return 0;
+			case mode::stop:
+				stop();
+				return 0;
+			case mode::status:
+				if (is_running()) {
+					std::cout << "RUNNING" << std::endl;
+					return 1;
+				} else {
+					std::cout << "STOPPED" << std::endl;
+					return 0;
 				}
-				verify_license(settings.at("license_path").get<std::string>());
-			}
-
-			nn::onnx::Runtime onnx_runtime(use_cpu);
-		#else
-			nn::onnx::Runtime onnx_runtime;
-		#endif
-
-		coro::Application(local_handler).run();
+				return 0;
+			case mode::help:
+				std::cout << make_man_page(cli, APP_NAME) << std::endl;
+				return 0;
+			default:
+				throw std::runtime_error("Unknown mode");
+		}
 	} catch (const std::exception& error) {
-		std::cout << error.what() << std::endl;
+		std::cerr << error.what() << std::endl;
 	}
-	return 0;
 }
