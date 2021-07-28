@@ -6,6 +6,7 @@
 #include "Param.hpp"
 #include "../VisitorSemantic.hpp"
 #include "../VisitorInterpreter.hpp"
+#include "../backends/Environment.hpp"
 #include <unordered_set>
 #include <unordered_map>
 
@@ -24,7 +25,7 @@ struct TestNameFilter {
 
 void to_json(nlohmann::json& j, const TestNameFilter& filter);
 
-struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig {
+struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig, EnvironmentConfig {
 	std::string target;
 
 	std::vector<TestNameFilter> test_name_filters;

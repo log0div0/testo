@@ -7,8 +7,8 @@ fs::path HyperVEnvironment::testo_dir() const {
 	return fs::path(regkey.get_str("InstallDir")) / "metadata";
 }
 
-void HyperVEnvironment::setup() {
-	Environment::setup();
+void HyperVEnvironment::setup(const EnvironmentConfig& config) {
+	Environment::setup(config);
 }
 
 void HyperVEnvironment::validate_vm_config(const nlohmann::json& config) {

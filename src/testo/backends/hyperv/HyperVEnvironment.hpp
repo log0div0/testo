@@ -10,7 +10,7 @@ struct HyperVEnvironment: Environment {
 
 	fs::path testo_dir() const override;
 
-	void setup() override;
+	void setup(const EnvironmentConfig& config) override;
 
 	std::string hypervisor() const override {
 		return "hyperv";

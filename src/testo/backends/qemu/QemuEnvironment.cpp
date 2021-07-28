@@ -52,8 +52,8 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 	}
 }
 
-void QemuEnvironment::setup() {
-	Environment::setup();
+void QemuEnvironment::setup(const EnvironmentConfig& config) {
+	Environment::setup(config);
 
 	prepare_storage_pool("testo-storage-pool");
 	prepare_storage_pool("testo-flash-drives-pool");

@@ -1,6 +1,5 @@
 
 #include "Program.hpp"
-#include "../backends/Environment.hpp"
 #include <fmt/format.h>
 #include "../TemplateLiterals.hpp"
 #include "../Exceptions.hpp"
@@ -59,11 +58,13 @@ void ProgramConfig::validate() const {
 
 	VisitorSemanticConfig::validate();
 	VisitorInterpreterConfig::validate();
+	EnvironmentConfig::validate();
 }
 
 void ProgramConfig::dump(nlohmann::json& j) const {
 	VisitorSemanticConfig::dump(j);
 	VisitorInterpreterConfig::dump(j);
+	EnvironmentConfig::dump(j);
 
 	j["target"] = target;
 	j["test_name_filters"] = test_name_filters;
@@ -97,7 +98,7 @@ void Program::validate() {
 }
 
 void Program::run() {
-	env->setup();
+	env->setup(config);
 	VisitorInterpreter runner(config);
 	runner.visit();
 }

@@ -6,6 +6,17 @@
 #include "Network.hpp"
 #include "../NNServiceClient.hpp"
 
+struct EnvironmentConfig {
+	
+	std::string nn_service_ip() const;
+	std::string nn_service_port() const;
+
+	void validate() const;
+	virtual void dump(nlohmann::json& j) const;
+
+	std::string nn_service_endpoint = "127.0.0.1:8156";
+};
+
 struct Environment {
 	virtual ~Environment() = default;
 
@@ -21,7 +32,7 @@ struct Environment {
 		return testo_dir() / "fd_metadata";
 	}
 
-	virtual void setup();
+	virtual void setup(const EnvironmentConfig& config);
 	virtual std::string hypervisor() const = 0;
 
 	virtual std::shared_ptr<VM> create_vm(const nlohmann::json& config) = 0;
