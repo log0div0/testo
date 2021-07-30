@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+ldconfig
+
+if [ -x "$(command -v update-rc.d)" ]; then
+	update-rc.d testo-nn-service defaults
+fi
+
+if [ -x "$(command -v chkconfig)" ]; then
+	chkconfig testo-nn-service on
+fi
+
+service testo-nn-service start

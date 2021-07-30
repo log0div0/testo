@@ -220,10 +220,12 @@ test debian_build_testo_cpu: debian_install_packages {
 				-DCPACK_GENERATOR=DEB \
 				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
 				-DUSE_CUDA=off
+			make nn-service-package -j$(nproc)
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo-cpu.deb"
+		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo.deb"
+		copyfrom "/root/testo_build/out/pkg/testo-nn-service.deb" "${OUT_DIR}/testo-nn-service-cpu.deb"
 	}
 }
 

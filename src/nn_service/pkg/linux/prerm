@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+service testo-nn-service stop
+
+if [ -x "$(command -v update-rc.d)" ]; then
+	update-rc.d testo-nn-service remove
+fi
+
+if [ -x "$(command -v chkconfig)" ]; then
+	chkconfig testo-nn-service off
+fi

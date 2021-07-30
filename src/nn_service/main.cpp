@@ -24,7 +24,6 @@
 namespace fs = ghc::filesystem;
 using namespace std::chrono_literals;
 
-#ifdef USE_CUDA
 #include "../license/GetDeviceInfo.hpp"
 #include <license/License.hpp>
 
@@ -60,7 +59,6 @@ void verify_license(const std::string& path_to_license) {
 		throw std::runtime_error("The graphics accelerator does not match the one specified in the license");
 	}
 }
-#endif
 
 #define APP_NAME "testo_nn_service"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
@@ -211,32 +209,20 @@ void app_main(const std::string& settings_path) {
 	}
 
 	try {
-		bool use_cpu = settings.value("use_cpu", false);
+		bool use_gpu = settings.value("use_gpu", false);
 
-#ifdef USE_CUDA
-		if (!use_cpu) {
+		if (use_gpu) {
 			if (!settings.count("license_path")) {
-				throw std::runtime_error("To start the program you must specify the path to the license file (license_path in the settings file)");
+				throw std::runtime_error("To start the program in GPU mode you must specify the path to the license file (license_path in the settings file)");
 			}
 			verify_license(settings.at("license_path").get<std::string>());
 		}
 
-		nn::onnx::Runtime onnx_runtime(use_cpu);
-#else
-		if (!use_cpu) {
-			throw std::runtime_error("use_cpu setting must be false because this is CPU-version of Testo");
-		}
-		nn::onnx::Runtime onnx_runtime;
-#endif
+		nn::onnx::Runtime onnx_runtime(!use_gpu);
 
 		spdlog::info("Starting testo nn service");
 		spdlog::info("Testo framework version: {}", TESTO_VERSION);
-#ifdef USE_CUDA
-		spdlog::info("GPU mode available: YES");
-#else
-		spdlog::info("GPU mode available: NO");
-#endif
-		spdlog::info("GPU mode enabled: {}", use_cpu);
+		spdlog::info("GPU mode enabled: {}", use_gpu);
 		coro::Application(local_handler).run();
 	} catch (const std::exception& error) {
 		spdlog::error(error.what());

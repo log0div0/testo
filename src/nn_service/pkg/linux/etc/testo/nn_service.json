@@ -1,0 +1,7 @@
+{
+	"port": 8156,
+	"log_level": "info",
+	"log_file": "/var/log/testo-nn-service.log",
+	"license_path": "/opt/testo_license.lic",
+	"use_gpu": false
+}

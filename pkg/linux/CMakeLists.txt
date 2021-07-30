@@ -8,29 +8,9 @@ install(PROGRAMS
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-install(TARGETS testo
-	DESTINATION /usr/libexec
-	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-
-install(FILES
-	${ONNX_RUNTIME_DIR}/lib/libonnxruntime.so.1.5.3
-	DESTINATION /usr/lib/testo
-	PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-
-install(FILES
-	${CMAKE_SOURCE_DIR}/src/nn/Homm3Detector.onnx
-	${CMAKE_SOURCE_DIR}/src/nn/TextColorPicker.onnx
-	${CMAKE_SOURCE_DIR}/src/nn/TextDetector.onnx
-	${CMAKE_SOURCE_DIR}/src/nn/TextRecognizer.onnx
-	DESTINATION /usr/share/testo
-	PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST
 	/usr
 	/usr/sbin
-	/usr/lib
-	/usr/libexec
-	/usr/share
 )
 
 set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/preinst)
@@ -51,11 +31,6 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	ebtables, \
 	dnsmasq-base, \
 	libguestfs0 (>= 1.34.6) \
-")
-
-set(CPACK_RPM_PACKAGE_PROVIDES "\
-	libonnxruntime.so.1.5.3()(64bit), \
-	libonnxruntime.so.1.5.3(VERS_1.5.3)(64bit) \
 ")
 
 set(CPACK_RPM_PACKAGE_REQUIRES "\

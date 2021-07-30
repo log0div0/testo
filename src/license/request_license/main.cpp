@@ -33,12 +33,6 @@ int request_license_mode(const std::string& output_path) {
 
 int main(int argc, char** argv) {
 	try {
-
-#ifndef USE_CUDA
-		std::cout << "Request license is only applicable to the commercial GPU-version of testo. Please install appropriate distribution first\n";
-		return 0;
-#endif
-
 		std::string output_path;
 		auto cli = clipp::group(
 			clipp::option("--out") & clipp::value("The output file for the license request", output_path)
