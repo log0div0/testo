@@ -82,6 +82,9 @@ void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
 
 	JSRequest msg(image, js_script);
 
+	std::cout << msg.header.dump(4) << std::endl;
+	std::cout << msg.script << std::endl;
+
 	channel->send_request(msg);
 	auto response = channel->receive_response();
 

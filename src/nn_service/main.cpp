@@ -235,6 +235,8 @@ void start(const StartArgs& args) {
 			throw std::system_error(errno, std::system_category());
 		}
 	}
+	auto pid  = getpid();
+	pid_file_t pid_t(pid); 
 
 	app_main(args.settings_path);
 }
@@ -244,6 +246,7 @@ void stop() {
 	if (!pid) {
 		return;
 	}
+
 	if (kill(pid, SIGTERM) < 0) {
 		throw std::system_error(errno, std::system_category());
 	}
