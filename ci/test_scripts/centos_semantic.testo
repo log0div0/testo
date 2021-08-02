@@ -2,7 +2,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_semantic: centos_install_testo_cpu {
+test centos_semantic: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/semantic" "/opt/scripts/semantic"
 
@@ -117,8 +117,6 @@ test centos_semantic: centos_install_testo_cpu {
 			testo run /misc.testo --test_spec empty_mouse_move_text 2>&1 > /dev/null | grep "Error: empty string in text selection"
 			testo run /misc.testo --test_spec empty_wait_js 2>&1 > /dev/null | grep "Error: empty script in js selection"
 			testo run /misc.testo --test_spec empty_mouse_move_js 2>&1 > /dev/null | grep "Error: empty script in js selection"
-			testo run /misc.testo --test_spec invalid_wait_js 2>&1 > /dev/null | grep "Error while validating js selection"
-			testo run /misc.testo --test_spec invalid_mouse_move_js 2>&1 > /dev/null | grep "Error while validating js selection"
 			testo run /misc.testo --test_spec invalid_mouse_parented_expr_0 2>&1 > /dev/null | grep "Error: select expressions are not supported for mouse move/click actions"
 			testo run /misc.testo --test_spec invalid_mouse_parented_expr_1 2>&1 > /dev/null | grep "Error: negation is not supported for mouse move/click actions"
 			testo run /misc.testo --test_spec invalid_key_0 2>&1 > /dev/null | grep "Error: unknown key: SomeButton"
@@ -204,7 +202,7 @@ test centos_semantic: centos_install_testo_cpu {
 }
 
 [no_snapshots: true]
-test centos_semantic_macro_tests: centos_install_testo_cpu {
+test centos_semantic_macro_tests: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/semantic" "/opt/scripts/semantic"
 

@@ -210,7 +210,7 @@ test centos_backend_qemu_flash_copyfrom: centos_backend_qemu_install_guest_addit
 }
 
 [no_snapshots: true]
-test centos_backend_qemu_plug_flash_exceptions: centos_install_testo_cpu {
+test centos_backend_qemu_plug_flash_exceptions: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/install_ubuntu.testo" "/opt/scripts/install_ubuntu.testo"

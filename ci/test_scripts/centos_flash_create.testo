@@ -1,7 +1,7 @@
 include "centos.testo"
 
 [no_snapshots: true]
-test centos_flash_create: centos_install_testo_cpu {
+test centos_flash_create: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/flash_creation/flash_create.testo" "/opt/scripts/flash_create.testo"
 		exec bash """
@@ -12,7 +12,7 @@ test centos_flash_create: centos_install_testo_cpu {
 	}
 }
 
-test centos_backend_qemu_create_simple_flash: centos_install_testo_cpu {
+test centos_backend_qemu_create_simple_flash: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/flash_creation/flash_create.testo" "/opt/scripts/flash_create.testo"
 		exec bash """

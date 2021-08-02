@@ -83,28 +83,6 @@ test centos_install_packages: centos_install_guest_additions {
 	}
 }
 
-[no_snapshots: true]
-test centos_build_onnxruntime_cpu: centos_install_packages {
-	centos {
-		linux_copy_onnxruntime_srcs()
-		exec bash """
-			export PATH=$PATH:/usr/local/bin
-			mkdir -p /root/onnxruntime_build
-			cd /root/onnxruntime_build
-			cmake ../onnxruntime/cmake \
-				-DCMAKE_BUILD_TYPE=Release \
-				-DCMAKE_INSTALL_PREFIX=/root/onnxruntime_dist \
-				-DCMAKE_INSTALL_LIBDIR=lib \
-				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
-				-Donnxruntime_BUILD_SHARED_LIB=ON \
-				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
-				-Donnxruntime_USE_CUDA=OFF
-			make install -j$(nproc)
-		""" timeout 2h
-		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_centos_cpu"
-	}
-}
-
 test centos_install_cuda: centos_install_packages {
 	centos {
 		copyto "${cuda_linux_path}" "/root/cuda.run"
@@ -145,35 +123,9 @@ test centos_build_onnxruntime_gpu: centos_install_cuda {
 	}
 }
 
-[no_snapshots: true]
-test centos_build_testo_cpu: centos_install_packages {
-	centos {
-		copyto "${TMP_DIR}/onnxruntime_dist_centos_cpu" "/root/onnxruntime_dist"
-		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
-		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
-		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
-		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
-		exec bash """
-			export PATH=$PATH:/usr/local/bin
-			cd /root/
-			mkdir testo_build
-			cd testo_build
-			cmake ../testo \
-				-DCMAKE_BUILD_TYPE=Release \
-				-DCPACK_GENERATOR=RPM \
-				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
-				-DUSE_CUDA=off
-			make testo-package -j$(nproc)
-			ls out/pkg
-		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo-cpu.rpm"
-	}
-}
 
 [no_snapshots: true]
-test centos_build_testo_gpu: centos_install_cuda {
+test centos_build_testo: centos_install_cuda {
 	centos {
 		copyto "${TMP_DIR}/onnxruntime_dist_centos_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
@@ -192,9 +144,11 @@ test centos_build_testo_gpu: centos_install_cuda {
 				-DCPACK_GENERATOR=RPM \
 				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
 				-DUSE_CUDA=on
+			make nn-service-package -j$(nproc)
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo-gpu.rpm"
+		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo.rpm"
+		copyfrom "/root/testo_build/out/pkg/testo-nn-service.rpm" "${OUT_DIR}/testo-nn-service.rpm"
 	}
 }

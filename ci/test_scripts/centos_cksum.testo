@@ -49,7 +49,7 @@ test centos_copyto_cksum_folder: centos_backend_qemu_install_guest_additions {
 }
 
 [no_snapshots: true]
-test centos_flash_cksum_folder: centos_install_testo_cpu {
+test centos_flash_cksum_folder: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/cksum/flash.testo" "/opt/scripts/flash.testo"
 
@@ -77,7 +77,7 @@ test centos_flash_cksum_folder: centos_install_testo_cpu {
 }
 
 [no_snapshots: true]
-test centos_mouse_specifiers: centos_install_testo_cpu {
+test centos_mouse_specifiers: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/cksum/actions_original.testo" "/opt/scripts/actions.testo"
 
