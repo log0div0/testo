@@ -2,7 +2,7 @@
 include "debian.testo"
 
 [no_snapshots: true]
-test debian_backend_qemu_unplug_plug_nic: debian_install_testo_gpu {
+test debian_backend_qemu_unplug_plug_nic: debian_install_testo {
 	debian {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
 		copyto "${TEST_ASSETS_DIR}/backend/action_nic.testo" "/opt/scripts/action_nic.testo"
@@ -25,7 +25,7 @@ test debian_backend_qemu_unplug_plug_nic: debian_install_testo_gpu {
 }
 
 [no_snapshots: true]
-test debian_backend_create_vm_uefi: debian_install_testo_cpu {
+test debian_backend_create_vm_uefi: debian_install_testo {
 	debian {
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
 		exec bash """

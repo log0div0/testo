@@ -113,26 +113,6 @@ test debian_install_packages: debian_install_guest_additions {
 	}
 }
 
-[no_snapshots: true]
-test debian_build_onnxruntime_cpu: debian_install_packages {
-	debian {
-		linux_copy_onnxruntime_srcs()
-		exec bash """
-			mkdir -p /root/onnxruntime_build
-			cd /root/onnxruntime_build
-			cmake ../onnxruntime/cmake \
-				-DCMAKE_BUILD_TYPE=Release \
-				-DCMAKE_INSTALL_PREFIX=/root/onnxruntime_dist \
-				-Donnxruntime_DISABLE_CONTRIB_OPS=ON \
-				-Donnxruntime_BUILD_SHARED_LIB=ON \
-				-Donnxruntime_BUILD_UNIT_TESTS=OFF \
-				-Donnxruntime_USE_CUDA=OFF
-			make install -j$(nproc)
-		""" timeout 2h
-		copyfrom "/root/onnxruntime_dist" "${TMP_DIR}/onnxruntime_dist_debian_cpu"
-	}
-}
-
 test debian_install_cuda: debian_install_packages {
 	debian {
 		copyto "${cuda_linux_path}" "/root/cuda.run"
@@ -201,36 +181,9 @@ macro debian_build_testo_guest_additions(TESTO_GUEST_ADDITIONS_HYPERVISOR) {
 debian_build_testo_guest_additions("qemu")
 debian_build_testo_guest_additions("hyperv")
 
-[no_snapshots: true]
-test debian_build_testo_cpu: debian_install_packages {
-	debian {
-		copyto "${TMP_DIR}/onnxruntime_dist_debian_cpu" "/root/onnxruntime_dist"
-		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
-		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
-		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
-		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
-		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
-		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
-		exec bash """
-			cd /root/
-			mkdir testo_build
-			cd testo_build
-			cmake ../testo \
-				-DCMAKE_BUILD_TYPE=Release \
-				-DCPACK_GENERATOR=DEB \
-				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
-				-DUSE_CUDA=off
-			make nn-service-package -j$(nproc)
-			make testo-package -j$(nproc)
-			ls out/pkg
-		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo.deb"
-		copyfrom "/root/testo_build/out/pkg/testo-nn-service.deb" "${OUT_DIR}/testo-nn-service-cpu.deb"
-	}
-}
 
 [no_snapshots: true]
-test debian_build_testo_gpu: debian_install_cuda {
+test debian_build_testo: debian_install_cuda {
 	debian {
 		copyto "${TMP_DIR}/onnxruntime_dist_debian_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
