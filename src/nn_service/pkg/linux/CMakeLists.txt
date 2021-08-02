@@ -5,11 +5,15 @@ set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 
 install(PROGRAMS
 	${CMAKE_CURRENT_SOURCE_DIR}/usr/sbin/testo-nn-service
+	${CMAKE_CURRENT_SOURCE_DIR}/usr/sbin/testo-request-license
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-
 install(TARGETS nn_service
+	DESTINATION /usr/libexec
+	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+install(TARGETS testo_request_license
 	DESTINATION /usr/libexec
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
@@ -62,4 +66,4 @@ set(CPACK_RPM_PACKAGE_PROVIDES "\
 ")
 
 add_package(nn-service-package)
-add_dependencies(nn-service-package nn_service)
+add_dependencies(nn-service-package nn_service testo_request_license)

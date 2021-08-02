@@ -142,8 +142,7 @@ test centos_build_testo: centos_install_cuda {
 			cmake ../testo \
 				-DCMAKE_BUILD_TYPE=Release \
 				-DCPACK_GENERATOR=RPM \
-				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
-				-DUSE_CUDA=on
+				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist
 			make nn-service-package -j$(nproc)
 			make testo-package -j$(nproc)
 			ls out/pkg
