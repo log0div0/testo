@@ -201,7 +201,7 @@ test debian_build_testo: debian_install_cuda {
 				-DCMAKE_BUILD_TYPE=Release \
 				-DCPACK_GENERATOR=DEB \
 				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist
-			make nn-service-package -j$(nproc)
+			make testo-nn-service-package -j$(nproc)
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m

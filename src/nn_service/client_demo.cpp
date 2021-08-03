@@ -8,9 +8,9 @@
 #include <coro/Application.h>
 #include <coro/StreamSocket.h>
 
-#include "../Channel.hpp"
-#include "../../nn/TextTensor.hpp"
-#include "../../nn/ImgTensor.hpp"
+#include "Channel.hpp"
+#include "../nn/TextTensor.hpp"
+#include "../nn/ImgTensor.hpp"
 
 #include <fmt/format.h>
 
@@ -198,7 +198,7 @@ void js_mode(const JSArgs& args, std::shared_ptr<Channel> channel) {
 	}
 }
 
-void handler(const Args& args) {
+int handler(const Args& args) {
 	try {
 		auto semicolon_pos = args.ip_port.find(":");
 		if (semicolon_pos == std::string::npos) {
@@ -229,57 +229,64 @@ void handler(const Args& args) {
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
 	}
+
+	return 0;
 }
 
 int main(int argc, char** argv) {
-	try {
-		using namespace clipp;
+	coro::Application([&]{
+		try {
+			using namespace clipp;
 
-		mode selected_mode;
+			mode selected_mode;
 
-		TextArgs text_args;
-		auto text_spec = (
-			command("text").set(selected_mode, mode::text),
-			value("input image", text_args.img_file),
-			required("--nn_service") & value("ip:port of the nn_service", text_args.ip_port),
-			option("--query") & value("the text to search for", text_args.query),
-			option("--fg") & value("foreground color", text_args.fg),
-			option("--bg") & value("background color", text_args.bg)
-		);
+			TextArgs text_args;
+			auto text_spec = (
+				command("text").set(selected_mode, mode::text),
+				value("input image", text_args.img_file),
+				required("--nn_service") & value("ip:port of the nn_service", text_args.ip_port),
+				option("--query") & value("the text to search for", text_args.query),
+				option("--fg") & value("foreground color", text_args.fg),
+				option("--bg") & value("background color", text_args.bg)
+			);
 
-		ImgArgs img_args;
-		auto img_spec = (
-			command("img").set(selected_mode, mode::img),
-			value("search image", img_args.img_file),
-			value("ref image", img_args.ref_file),
-			required("--nn_service") & value("ip:port of the nn_service", img_args.ip_port)
-		);
+			ImgArgs img_args;
+			auto img_spec = (
+				command("img").set(selected_mode, mode::img),
+				value("search image", img_args.img_file),
+				value("ref image", img_args.ref_file),
+				required("--nn_service") & value("ip:port of the nn_service", img_args.ip_port)
+			);
 
-		JSArgs js_args;
-		auto js_spec = (
-			command("js").set(selected_mode, mode::js),
-			value("search image", js_args.img_file),
-			value("script", js_args.script_file),
-			required("--nn_service") & value("ip:port of the nn_service", js_args.ip_port)
-		);
+			JSArgs js_args;
+			auto js_spec = (
+				command("js").set(selected_mode, mode::js),
+				value("search image", js_args.img_file),
+				value("script", js_args.script_file),
+				required("--nn_service") & value("ip:port of the nn_service", js_args.ip_port)
+			);
 
-		auto cli = (text_spec | img_spec | js_spec);
+			auto cli = (text_spec | img_spec | js_spec);
 
-		if (!parse(argc, argv, cli)) {
-			std::cout << make_man_page(cli, argv[0]) << std::endl;
-			return 1;
+			if (!parse(argc, argv, cli)) {
+				std::cout << make_man_page(cli, argv[0]) << std::endl;
+				return 1;
+			}
+
+			if (selected_mode == mode::text) {
+				return handler(text_args);
+			} else if (selected_mode == mode::img) {
+				return handler(img_args);
+			} else if (selected_mode == mode::js) {
+				return handler(js_args);
+			} else {
+				throw;
+			} 
+		} catch (const std::exception& error) {
+			std::cout << error.what() << std::endl;
+			return 0;
 		}
-
-
-		if (selected_mode == mode::text) {
-			coro::Application([&](){return handler(text_args);}).run();
-		} else if (selected_mode == mode::img) {
-			coro::Application([&](){return handler(img_args);}).run();
-		} else if (selected_mode == mode::js) {
-			coro::Application([&](){return handler(js_args);}).run();
-		} 
-	} catch (const std::exception& error) {
-		std::cout << error.what() << std::endl;
-	}
+	}).run();
+	
 	return 0;
 }

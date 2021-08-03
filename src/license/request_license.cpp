@@ -4,9 +4,9 @@
 
 #include <ghc/filesystem.hpp>
 
-#include "../GetDeviceInfo.hpp"
-#include "../License.hpp"
-#include "../../nn/OnnxRuntime.hpp"
+#include "GetDeviceInfo.hpp"
+#include "License.hpp"
+#include "../nn/OnnxRuntime.hpp"
 
 namespace fs = ghc::filesystem;
 

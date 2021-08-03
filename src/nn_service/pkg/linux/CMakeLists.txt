@@ -9,7 +9,7 @@ install(PROGRAMS
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-install(TARGETS nn_service
+install(TARGETS testo_nn_service
 	DESTINATION /usr/libexec
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
@@ -65,5 +65,5 @@ set(CPACK_RPM_PACKAGE_PROVIDES "\
 	libonnxruntime.so.1.5.3(VERS_1.5.3)(64bit) \
 ")
 
-add_package(nn-service-package)
-add_dependencies(nn-service-package nn_service testo_request_license)
+add_package(testo-nn-service-package)
+add_dependencies(testo-nn-service-package testo_nn_service testo_request_license)

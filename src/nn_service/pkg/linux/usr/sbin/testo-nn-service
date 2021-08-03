@@ -2,4 +2,4 @@
 
 export LD_LIBRARY_PATH="/usr/lib/testo:${LD_LIBRARY_PATH}"
 
-/usr/libexec/nn_service "$@"
+/usr/libexec/testo_nn_service "$@"

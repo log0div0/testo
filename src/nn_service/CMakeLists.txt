@@ -8,14 +8,17 @@ include_directories(${CUDAToolkit_INCLUDE_DIRS})
 
 file(GLOB SRCS *.cpp)
 
-add_executable(nn_service ${SRCS})
+add_executable(testo_nn_service ${SRCS})
 
-target_link_libraries(nn_service coro stb js nn license)
-target_link_libraries(nn_service CUDA::cudart_static)
+target_link_libraries(testo_nn_service coro stb js nn license)
+target_link_libraries(testo_nn_service CUDA::cudart_static)
+
+add_executable(testo_nn_service_client_demo client_demo)
+target_link_libraries(testo_nn_service_client_demo coro stb)
 
 if (UNIX)
-	target_link_libraries(nn_service pthread)
+	target_link_libraries(testo_nn_service pthread)
+	target_link_libraries(testo_nn_service_client_demo pthread)
 endif()
 
 add_subdirectory(pkg)
-add_subdirectory(client_demo)
