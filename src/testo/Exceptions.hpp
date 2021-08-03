@@ -5,6 +5,7 @@
 #include "IR/Machine.hpp"
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 struct Exception: public std::exception {
 	Exception() = default;

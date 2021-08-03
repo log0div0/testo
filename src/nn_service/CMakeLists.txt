@@ -7,13 +7,14 @@ find_package(CUDAToolkit)
 include_directories(${CUDAToolkit_INCLUDE_DIRS})
 
 file(GLOB SRCS *.cpp)
+list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/client_demo.cpp)
 
 add_executable(testo_nn_service ${SRCS})
 
 target_link_libraries(testo_nn_service coro stb js nn license)
 target_link_libraries(testo_nn_service CUDA::cudart_static)
 
-add_executable(testo_nn_service_client_demo client_demo)
+add_executable(testo_nn_service_client_demo client_demo.cpp)
 target_link_libraries(testo_nn_service_client_demo coro stb)
 
 if (UNIX)

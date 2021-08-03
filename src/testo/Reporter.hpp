@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 #include "IR/Test.hpp"
 
 struct ReporterConfig {

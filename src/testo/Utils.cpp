@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <fstream>
 #include <random>
+#include <sstream>
+#include <iomanip>
 #include <os/File.hpp>
 
 void fs_copy_file(const fs::path& from, const fs::path& to) {

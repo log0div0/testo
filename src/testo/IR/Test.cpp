@@ -2,6 +2,8 @@
 #include "Test.hpp"
 #include "Action.hpp"
 
+#include <iomanip>
+
 namespace IR {
 
 std::string Test::name() const {
