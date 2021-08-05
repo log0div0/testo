@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <memory>
+#include <iostream>
 
 #include "Messages.hpp"
 #include <nlohmann/json.hpp>
@@ -33,42 +34,6 @@ inline nlohmann::json Channel::recv() {
 	socket.read((uint8_t*)json_data.data(), json_data.size());
 
 	return nlohmann::json::from_cbor(json_data);
-
-	/*ImageSize screenshot_size = header["screenshot"].get<ImageSize>();
-
-	if (screenshot_size.c != 3) {
-		throw std::runtime_error("Unsupported channel number");
-	}
-
-	std::unique_ptr<Message> result;
-
-	if (!header.count("type")) {
-		throw std::runtime_error("The request doesn't have the \"type\" field");
-	}
-
-	auto type = header["type"].get<std::string>();
-
-	if (type == "js") {
-		result.reset(new JSRequest());
-	} else if (type == "ref_image") {
-		result.reset(new RefImage());
-	} else {
-		throw std::runtime_error("Uknown request type: " + type);
-	}
-
-	result->header = header;
-
-	result->screenshot = stb::Image<stb::RGB>(screenshot_size.w, screenshot_size.h);
-
-	socket.read(result->screenshot.data, screenshot_size.total_size());
-
-	if (auto p = dynamic_cast<JSRequest*>(result.get())) {
-		auto script_size = header.at("js_size").get<uint32_t>();
-		p->script.resize(script_size);
-		socket.read((uint8_t*)p->script.data(), script_size);
-	}
-
-	return result;*/
 }
 
 inline void Channel::send(const nlohmann::json& json) {

@@ -31,20 +31,25 @@ void MessageHandler::run() {
 			request = channel->recv();
 			handle_request(request);
 		} catch (const nn::ContinueError& continue_error) {
-			channel->send(create_continue_error_message(continue_error.what()));
+			try {
+				channel->send(create_continue_error_message(continue_error.what()));
+			} catch (...) {}
+		} catch (const std::system_error& error) {
+			throw;
 		} catch (const std::exception& error) {
 			if (request.count("image")) {
 				request["image"] = "omitted";
 			}
-			spdlog::error("Error while processing request \n{}:\n", request.dump(4), error.what());
-			channel->send(create_error_message(error.what()));
+			spdlog::error("Error while processing request \n{}:\n{}", request.dump(4), error.what());
+			try {
+				channel->send(create_error_message(error.what()));
+			} catch (...) {}
 		}
 	}
 }
 
 void MessageHandler::handle_request(nlohmann::json& request) {
 
-	//spdlog::trace(fmt::format("Got the request \n{}\n", request.dump(4)));
 	auto start_timestamp = std::chrono::system_clock::now();
 	nlohmann::json response;
 

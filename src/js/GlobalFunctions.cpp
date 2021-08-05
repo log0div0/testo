@@ -46,17 +46,16 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 	} catch (const std::exception& error) {
 		throw std::runtime_error("Couldn't get the ref image: " + std::string(error.what()));
 	}
-
+	
 	check_for_error(response);
 
-	stb::Image<stb::RGB> ref_image;
-	try {
-		ref_image = get_image(response);
-	} catch (const std::exception& error) {
-		ctx.channel()->send(create_error_message(std::string(error.what())));
-		std::throw_with_nested("Can't process ref_image message");
+	auto type = response.at("type").get<std::string>();
+	if (type != "ref_image") {
+		throw std::runtime_error("Unexpected message type instead of \"ref_image\": " + type);
 	}
 
+	stb::Image<stb::RGB> ref_image;
+	ref_image = get_image(response);
 	
 	nn::ImgTensor tensor = nn::find_img(ctx.image(), &ref_image);
 	return ImgTensor(ctx, tensor);

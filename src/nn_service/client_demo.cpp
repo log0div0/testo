@@ -89,7 +89,7 @@ void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
 	std::cout << "Response: " << std::endl;
 	std::cout << response.dump(4) << std::endl << std::endl;
 
-	/*auto data = response.at("data");
+	auto data = response.at("data");
 	for (auto& textline: data) {
 		nn::Rect bbox{
 			textline.at("left").get<int32_t>(),
@@ -102,25 +102,32 @@ void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
 		//std::cout << textline.dump(4) << std::endl;
 	}
 
-	image.write_png("output.png");*/
+	image.write_png("output.png");
 }
 
 void img_mode(const ImgArgs& args, std::shared_ptr<Channel> channel) {
-	/*auto image = stb::Image<stb::RGB>(args.img_file);
+	auto image = stb::Image<stb::RGB>(args.img_file);
 	auto js_script = build_js_script_img(args.ref_file);;
 
 	std::cout << "Script: " << js_script << std::endl;
+	auto request = create_js_eval_request(image, js_script);
+	channel->send(request);
+	request["image"] = "omitted";
+	std::cout << request.dump(4) << std::endl;
+	auto response = channel->recv();
 
-	JSRequest msg(image, js_script);
+	stb::Image<stb::RGB> ref_image;
+	try {
+		ref_image = stb::Image<stb::RGB>(response.at("data").get<std::string>());
+	} catch (const std::exception& error) {
+		channel->send(create_error_message(error.what()));
+		std::cout << error.what();
+		return;
+	}
 
-	channel->send_request(msg);
-	auto response = channel->receive_response();
+	channel->send(create_ref_image_message(ref_image));
 
-	auto ref_image = stb::Image<stb::RGB>(response.at("data").get<std::string>());
-	RefImage ref_msg(ref_image);
-	channel->send_request(ref_msg);
-
-	response = channel->receive_response();	
+	response = channel->recv();	
 	std::cout << "Response: " << std::endl;
 	std::cout << response.dump(4) << std::endl << std::endl;
 
@@ -137,7 +144,7 @@ void img_mode(const ImgArgs& args, std::shared_ptr<Channel> channel) {
 		//std::cout << textline.dump(4) << std::endl;
 	}
 
-	image.write_png("output.png");*/
+	image.write_png("output.png");
 }
 
 void js_mode(const JSArgs& args, std::shared_ptr<Channel> channel) {
