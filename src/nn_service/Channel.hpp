@@ -1,12 +1,13 @@
 
 #pragma once
-#include "Messages.hpp"
 
 #include "coro/StreamSocket.h"
 #include <thread>
 #include <chrono>
-
 #include <memory>
+
+#include "Messages.hpp"
+#include <nlohmann/json.hpp>
 
 using Socket = coro::StreamSocket<asio::ip::tcp>;
 using Endpoint = asio::ip::tcp::endpoint;
@@ -15,31 +16,25 @@ struct Channel {
 	Channel(Socket _socket): socket(std::move(_socket)) {}
 	~Channel() = default;
 
-	std::unique_ptr<Message> receive_message();
-	void send_request(const JSRequest& msg);
-	void send_request(const RefImage& msg);
-
-	void send_response(const nlohmann::json& response);
-	nlohmann::json receive_response();
+	nlohmann::json recv();
+	void send(const nlohmann::json& message);
 
 	Socket socket;
-private:
-	void send_request(const Message& msg);
-	void send_json(const nlohmann::json& json);
 };
 
-inline std::unique_ptr<Message> Channel::receive_message() {	
-	uint32_t header_size;
 
-	socket.read((uint8_t*)&header_size, 4);
+inline nlohmann::json Channel::recv() {	
+	uint32_t msg_size;
 
-	std::string json_str;
-	json_str.resize(header_size);
-	socket.read((uint8_t*)json_str.data(), json_str.size());
+	socket.read((uint8_t*)&msg_size, 4);
 
-	auto header = nlohmann::json::parse(json_str);
+	std::vector<uint8_t> json_data;
+	json_data.resize(msg_size);
+	socket.read((uint8_t*)json_data.data(), json_data.size());
 
-	ImageSize screenshot_size = header["screenshot"].get<ImageSize>();
+	return nlohmann::json::from_cbor(json_data);
+
+	/*ImageSize screenshot_size = header["screenshot"].get<ImageSize>();
 
 	if (screenshot_size.c != 3) {
 		throw std::runtime_error("Unsupported channel number");
@@ -73,48 +68,12 @@ inline std::unique_ptr<Message> Channel::receive_message() {
 		socket.read((uint8_t*)p->script.data(), script_size);
 	}
 
-	return result;
+	return result;*/
 }
 
-inline void Channel::send_request(const Message& msg) {
-	send_json(msg.header);
-
-	size_t pic_size = msg.screenshot.w * msg.screenshot.h * msg.screenshot.c;
-	socket.write(msg.screenshot.data, pic_size);
-}
-
-inline void Channel::send_json(const nlohmann::json& json) {
-	auto json_str = json.dump();
-
-	uint32_t json_size = (uint32_t)json_str.size();
+inline void Channel::send(const nlohmann::json& json) {
+	std::vector<uint8_t> json_data = nlohmann::json::to_cbor(json);
+	uint32_t json_size = (uint32_t)json_data.size();
 	socket.write((uint8_t*)&json_size, sizeof(json_size));
-	socket.write((uint8_t*)json_str.data(), json_size);
+	socket.write((uint8_t*)json_data.data(), json_size);
 }
-
-inline void Channel::send_request(const JSRequest& msg) {	
-	send_request(static_cast<Message>(msg));
-
-	socket.write(msg.script.data(), msg.script.length());
-}
-
-inline void Channel::send_request(const RefImage& msg) {	
-	send_request(static_cast<Message>(msg));
-}
-
-
-inline void Channel::send_response(const nlohmann::json& response) {
-	return send_json(response);
-}
-
-inline nlohmann::json Channel::receive_response() {
-	uint32_t response_size;
-	socket.read((uint8_t*)&response_size, 4);
-
-	std::string json_str;
-	json_str.resize(response_size);
-	socket.read((uint8_t*)json_str.data(), json_str.size());
-
-	auto result = nlohmann::json::parse(json_str);
-	return result;
-}
-

@@ -13,10 +13,8 @@ struct MessageHandler {
 	void run();
 
 private:
-	void handle_request(std::unique_ptr<Message> request);
+	void handle_request(nlohmann::json& request);
 
-	nlohmann::json handle_js_request(JSRequest* request);
+	nlohmann::json handle_js_eval_request(nlohmann::json& request);
 	std::shared_ptr<Channel> channel;
-
-	nlohmann::json create_error_msg(const std::string& message);
 };

@@ -8,6 +8,10 @@
 #include <stb_image_write.h>
 #include <stb_image_resize.h>
 #include <string.h>
+#include <cstring>
+
+unsigned char *stbi_write_png_to_mem_wrapper(const unsigned char *pixels, int stride_bytes, int x, int y, int n, int *out_len);
+void stbiw_free_wrapper(void* p);
 
 namespace stb {
 
@@ -197,6 +201,18 @@ struct Image {
 		if (!stbi_write_png(path.c_str(), w, h, c, data, w*c)) {
 			throw std::runtime_error("Cannot save image " + path + " because " + stbi_failure_reason());
 		}
+	}
+	
+	std::vector<uint8_t> write_png_mem() const {
+		int len;
+		unsigned char *png = stbi_write_png_to_mem_wrapper(data, stride(), w, h, c, &len);
+
+		std::vector<uint8_t> result;
+		result.resize(len);
+		std::memcpy(result.data(), png, len);
+
+		stbiw_free_wrapper(png);
+		return result;
 	}
 
 	void write_jpg(const std::string& path, int quality) const {

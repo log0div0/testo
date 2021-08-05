@@ -9,6 +9,7 @@
 #include <coro/StreamSocket.h>
 
 #include "Channel.hpp"
+#include "Messages.hpp"
 #include "../nn/TextTensor.hpp"
 #include "../nn/ImgTensor.hpp"
 
@@ -79,19 +80,16 @@ void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
 	auto js_script = build_js_script_text(args.query, args.fg, args.bg);
 
 	std::cout << "Script: " << js_script << std::endl;
-
-	JSRequest msg(image, js_script);
-
-	std::cout << msg.header.dump(4) << std::endl;
-	std::cout << msg.script << std::endl;
-
-	channel->send_request(msg);
-	auto response = channel->receive_response();
+	auto request = create_js_eval_request(image, js_script);
+	channel->send(request);
+	request["image"] = "omitted";
+	std::cout << request.dump(4) << std::endl;
+	auto response = channel->recv();
 
 	std::cout << "Response: " << std::endl;
 	std::cout << response.dump(4) << std::endl << std::endl;
 
-	auto data = response.at("data");
+	/*auto data = response.at("data");
 	for (auto& textline: data) {
 		nn::Rect bbox{
 			textline.at("left").get<int32_t>(),
@@ -104,11 +102,11 @@ void text_mode(const TextArgs& args, std::shared_ptr<Channel> channel) {
 		//std::cout << textline.dump(4) << std::endl;
 	}
 
-	image.write_png("output.png");
+	image.write_png("output.png");*/
 }
 
 void img_mode(const ImgArgs& args, std::shared_ptr<Channel> channel) {
-	auto image = stb::Image<stb::RGB>(args.img_file);
+	/*auto image = stb::Image<stb::RGB>(args.img_file);
 	auto js_script = build_js_script_img(args.ref_file);;
 
 	std::cout << "Script: " << js_script << std::endl;
@@ -139,11 +137,11 @@ void img_mode(const ImgArgs& args, std::shared_ptr<Channel> channel) {
 		//std::cout << textline.dump(4) << std::endl;
 	}
 
-	image.write_png("output.png");
+	image.write_png("output.png");*/
 }
 
 void js_mode(const JSArgs& args, std::shared_ptr<Channel> channel) {
-	auto image = stb::Image<stb::RGB>(args.img_file);
+	/*auto image = stb::Image<stb::RGB>(args.img_file);
 
 	std::ifstream script_file(args.script_file);
 	if (!script_file.is_open()) {
@@ -195,7 +193,7 @@ void js_mode(const JSArgs& args, std::shared_ptr<Channel> channel) {
 		image.write_png("output33.png");
 	} else if (type == "Error") {
 		std::cout << "Error: " << response.at("message").get<std::string>() << std::endl;
-	}
+	}*/
 }
 
 int handler(const Args& args) {

@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 
 #include "MessageHandler.hpp"
+#include "Messages.hpp"
 
 #include "../js/Runtime.hpp"
 #include "../js/Tensor.hpp"
@@ -24,61 +25,67 @@ std::string duration_to_str(Duration duration) {
 }
 
 void MessageHandler::run() {
+	nlohmann::json request;
 	while (true) {
-		handle_request(channel->receive_message());
+		try {
+			request = channel->recv();
+			handle_request(request);
+		} catch (const nn::ContinueError& continue_error) {
+			channel->send(create_continue_error_message(continue_error.what()));
+		} catch (const std::exception& error) {
+			if (request.count("image")) {
+				request["image"] = "omitted";
+			}
+			spdlog::error("Error while processing request \n{}:\n", request.dump(4), error.what());
+			channel->send(create_error_message(error.what()));
+		}
 	}
 }
 
-void MessageHandler::handle_request(std::unique_ptr<Message> request) {
-	spdlog::trace(fmt::format("Got the request \n{}", request->to_string()));
+void MessageHandler::handle_request(nlohmann::json& request) {
+
+	//spdlog::trace(fmt::format("Got the request \n{}\n", request.dump(4)));
 	auto start_timestamp = std::chrono::system_clock::now();
 	nlohmann::json response;
-	if (auto p = dynamic_cast<JSRequest*>(request.get())) {
-		response = handle_js_request(p);
-	} else if (dynamic_cast<RefImage*>(request.get())) {
-		//ignore that shit here
+
+	auto type = request.at("type").get<std::string>();
+	// We can get errors
+	if (type == "error") {
+		//Do nothing
+		return;
+	} else if (type == "js_eval") {
+		response = handle_js_eval_request(request);
+	} else {
+		throw std::runtime_error("Unexpected request type: " + type);
 	}
+
 	auto duration = std::chrono::system_clock::now() - start_timestamp;
 	spdlog::trace(fmt::format("Got the response in {}: \n{}", duration_to_str(duration), response.dump(4)));
-	channel->send_response(response);
+	channel->send(response);
 }
 
-nlohmann::json MessageHandler::handle_js_request(JSRequest* request) {
-	js::Context js_ctx(&request->screenshot, channel);
+nlohmann::json MessageHandler::handle_js_eval_request(nlohmann::json& request) {
+	stb::Image<stb::RGB> screenshot = get_image(request);
+	request["image"] = "omitted";
 
-	auto script = fmt::format("function __testo__() {{\n{}\n}}\nlet result = __testo__()\nJSON.stringify(result)", request->script);
-
+	spdlog::trace(fmt::format("Got a js_eval request \n{}\n", request.dump(4)));
+	js::Context js_ctx(&screenshot, channel);
+	auto script = fmt::format("function __testo__() {{\n{}\n}}\nlet result = __testo__()\nJSON.stringify(result)", request.at("js_script").get<std::string>());
 	spdlog::trace("Executing script \n{}", script);
 
 	nlohmann::json result;
-	try {
-		auto val = js_ctx.eval(script);
-		if (val.is_string()) {
-			return nlohmann::json({
-				{"type", "eval_result"},
-				{"data", nlohmann::json::parse(std::string(val))}
-				
-			});
-		}
-		if (val.is_undefined()) {
-			return create_error_msg("JS script returned an undefined value");
-		}
-	} catch (const nn::ContinueError& continue_error) {
-		auto msg = continue_error.what();
+	
+	auto val = js_ctx.eval(script);
+	if (val.is_string()) {
 		return nlohmann::json({
-			{"type", "continue_error"},
-			{"data", msg}
+			{"type", "eval_result"},
+			{"data", nlohmann::json::parse(std::string(val))}
+			
 		});
-	} catch (const std::exception& err) {
-		return create_error_msg(err.what());
 	}
-
+	if (val.is_undefined()) {
+		throw std::runtime_error("JS script returned an undefined value");
+	}
+	
 	return result;
-}
-
-nlohmann::json MessageHandler::create_error_msg(const std::string& message) {
-	nlohmann::json error;
-	error["type"] = "error";
-	error["data"] = message;
-	return error;
 }

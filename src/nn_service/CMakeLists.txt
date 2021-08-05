@@ -15,7 +15,7 @@ target_link_libraries(testo_nn_service coro stb js nn license)
 target_link_libraries(testo_nn_service CUDA::cudart_static)
 
 add_executable(testo_nn_service_client_demo client_demo.cpp)
-target_link_libraries(testo_nn_service_client_demo coro stb)
+target_link_libraries(testo_nn_service_client_demo stb coro)
 
 if (UNIX)
 	target_link_libraries(testo_nn_service pthread)

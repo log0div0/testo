@@ -1,6 +1,7 @@
 
 #include "GlobalFunctions.hpp"
 #include "Tensor.hpp"
+#include "../nn_service/Messages.hpp"
 #include <iostream>
 
 namespace js {
@@ -38,29 +39,27 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 
 	std::string img_path = args.at(0);
 
-	nlohmann::json request = {
-		{"type", "ref_image_request"},
-		{"data", img_path}
-	};
-
-	ctx.channel()->send_response(request);
-	std::unique_ptr<Message> ref_image;
+	ctx.channel()->send(create_ref_image_request(img_path));
+	nlohmann::json response;
 	try {
-		ref_image = ctx.channel()->receive_message();
+		response = ctx.channel()->recv();
 	} catch (const std::exception& error) {
 		throw std::runtime_error("Couldn't get the ref image: " + std::string(error.what()));
 	}
 
-	if (ref_image->header["screenshot"].get<ImageSize>().total_size() == 0) {
-		throw std::runtime_error("RefImage is empty");
+	check_for_error(response);
+
+	stb::Image<stb::RGB> ref_image;
+	try {
+		ref_image = get_image(response);
+	} catch (const std::exception& error) {
+		ctx.channel()->send(create_error_message(std::string(error.what())));
+		std::throw_with_nested("Can't process ref_image message");
 	}
 
-	if (auto p = dynamic_cast<RefImage*>(ref_image.get())) {
-		nn::ImgTensor tensor = nn::find_img(ctx.image(), &p->screenshot);
-		return ImgTensor(ctx, tensor);
-	} else {
-		throw std::runtime_error("Got the wrong type of message instead of RefImage");
-	}
+	
+	nn::ImgTensor tensor = nn::find_img(ctx.image(), &ref_image);
+	return ImgTensor(ctx, tensor);
 }
 
 Value find_homme3(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
