@@ -27,6 +27,7 @@ using namespace std::chrono_literals;
 #include "../license/GetDeviceInfo.hpp"
 #include <license/License.hpp>
 
+#ifdef USE_CUDA
 void verify_license(const std::string& path_to_license) {
 	if (!fs::exists(path_to_license)) {
 		throw std::runtime_error("File " + path_to_license + " does not exists");
@@ -59,6 +60,7 @@ void verify_license(const std::string& path_to_license) {
 		throw std::runtime_error("The graphics accelerator does not match the one specified in the license");
 	}
 }
+#endif
 
 #define APP_NAME "testo_nn_service"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
@@ -215,7 +217,9 @@ void app_main(const std::string& settings_path) {
 			if (!settings.count("license_path")) {
 				throw std::runtime_error("To start the program in GPU mode you must specify the path to the license file (license_path in the settings file)");
 			}
+#ifdef USE_CUDA
 			verify_license(settings.at("license_path").get<std::string>());
+#endif
 		}
 
 		nn::onnx::Runtime onnx_runtime(!use_gpu);

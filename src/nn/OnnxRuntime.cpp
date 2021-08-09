@@ -58,9 +58,11 @@ Model::Model(const char* name) {
 	session_options.SetIntraOpNumThreads(1);
 	session_options.SetInterOpNumThreads(1);
 	session_options.SetExecutionMode(ORT_SEQUENTIAL);
+#ifdef USE_CUDA
 	if (!use_cpu) {
 		Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0));
 	}
+#endif
 	fs::path model_path = GetModelDir() / (std::string(name) + ".onnx");
 	session = std::make_unique<Ort::Session>(*env,
 #ifdef WIN32

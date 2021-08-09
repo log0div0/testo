@@ -10,7 +10,9 @@
 #pragma GCC diagnostic pop
 #endif
 
+#ifdef USE_CUDA
 #include <cuda_provider_factory.h>
+#endif
 
 #include <stb/Image.hpp>
 
