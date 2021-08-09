@@ -36,7 +36,7 @@ void VisitorInterpreterAction::visit_macro_call(const IR::MacroCall& macro_call)
 }
 
 void VisitorInterpreterAction::visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body) {
-	visit_action_block(macro_body->action_block->action);
+	visit_action_block(macro_body->action_block);
 }
 
 void VisitorInterpreterAction::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
@@ -59,8 +59,8 @@ void VisitorInterpreterAction::visit_for_clause(std::shared_ptr<AST::ForClause> 
 
 	std::vector<std::string> values;
 
-	if (auto p = std::dynamic_pointer_cast<AST::CounterList<AST::Range>>(for_clause->counter_list)) {
-		values = visit_range({p->counter_list, stack});
+	if (auto p = std::dynamic_pointer_cast<AST::Range>(for_clause->counter_list)) {
+		values = visit_range({p, stack});
 	} else {
 		throw std::runtime_error("Unknown counter list type");
 	}
@@ -97,11 +97,23 @@ std::vector<std::string> VisitorInterpreterAction::visit_range(const IR::Range& 
 }
 
 
-bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::IExpr> expr) {
-	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
-		return visit_binop(p->expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
-		return visit_factor(p->expr);
+bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::Expr> expr) {
+	if (auto p = std::dynamic_pointer_cast<AST::BinOp>(expr)) {
+		return visit_binop(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::StringExpr>(expr)) {
+		return (bool)template_parser.resolve(p->str->text(), stack).length();
+	} else if (auto p = std::dynamic_pointer_cast<AST::Negation>(expr)) {
+		return !visit_expr(p->expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Comparison>(expr)) {
+		return visit_comparison({ p, stack });
+	} else if (auto p = std::dynamic_pointer_cast<AST::Defined>(expr)) {
+		return visit_defined({ p, stack });
+	} else if (auto p = std::dynamic_pointer_cast<AST::Check>(expr)) {
+		return visit_check({ p, stack });
+	} else if (auto p = std::dynamic_pointer_cast<AST::ParentedExpr>(expr)) {
+		return visit_expr(p->expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Expr>(expr)) {
+		return visit_expr(p);
 	} else {
 		throw std::runtime_error("Unknown expr type");
 	}
@@ -124,26 +136,6 @@ bool VisitorInterpreterAction::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 		}
 	} else {
 		throw std::runtime_error("Unknown binop operation");
-	}
-}
-
-bool VisitorInterpreterAction::visit_factor(std::shared_ptr<AST::IFactor> factor) {
-	bool is_negated = factor->is_negated();
-
-	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
-		return is_negated ^ (bool)template_parser.resolve(p->factor->text(), stack).length();
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
-		return is_negated ^ visit_comparison({p->factor, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Defined>>(factor)) {
-		return is_negated ^ visit_defined({p->factor, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
-		return is_negated ^ visit_check({p->factor, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::ParentedExpr>>(factor)) {
-		return is_negated ^ visit_expr(p->factor->expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
-		return is_negated ^ visit_expr(p->factor);
-	} else {
-		throw std::runtime_error("Unknown factor type");
 	}
 }
 

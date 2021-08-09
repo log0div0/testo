@@ -21,7 +21,7 @@ struct Parser {
 
 	std::shared_ptr<AST::Program> parse();
 	std::shared_ptr<AST::CmdBlock> command_block();
-	std::shared_ptr<AST::Action<AST::ActionBlock>> action_block();
+	std::shared_ptr<AST::ActionBlock> action_block();
 	std::shared_ptr<AST::StmtBlock> stmt_block();
 private:
 
@@ -66,62 +66,63 @@ private:
 	void newline_list();
 
 	void handle_include();
-	std::shared_ptr<AST::IStmt> stmt();
-	std::shared_ptr<AST::Stmt<AST::Test>> test();
+	std::shared_ptr<AST::Stmt> stmt();
+	std::shared_ptr<AST::Test> test();
 	std::shared_ptr<AST::MacroArg> macro_arg();
 	std::vector<Token> macro_body(const std::string& name);
-	std::shared_ptr<AST::Stmt<AST::Macro>> macro();
-	std::shared_ptr<AST::Stmt<AST::Param>> param();
+	std::shared_ptr<AST::Macro> macro();
+	std::shared_ptr<AST::Param> param();
 	std::shared_ptr<AST::Attr> attr(const std::string& ctx_name);
 	std::shared_ptr<AST::AttrBlock> attr_block(const std::string& ctx_name);
-	std::shared_ptr<AST::Stmt<AST::Controller>> controller();
-	std::shared_ptr<AST::ICmd> command();
+	std::shared_ptr<AST::Controller> controller();
+	std::shared_ptr<AST::Cmd> command();
 	std::shared_ptr<AST::KeyCombination> key_combination();
 	std::shared_ptr<AST::KeySpec> key_spec();
-	std::shared_ptr<AST::IAction> action();
-	std::shared_ptr<AST::Action<AST::Empty>> empty_action();
-	std::shared_ptr<AST::Action<AST::Abort>> abort();
-	std::shared_ptr<AST::Action<AST::Print>> print();
-	std::shared_ptr<AST::Action<AST::Type>> type();
-	std::shared_ptr<AST::Action<AST::Wait>> wait();
-	std::shared_ptr<AST::Action<AST::Sleep>> sleep();
-	std::shared_ptr<AST::Action<AST::Press>> press();
-	std::shared_ptr<AST::Action<AST::Hold>> hold();
-	std::shared_ptr<AST::Action<AST::Release>> release();
-	std::shared_ptr<AST::Action<AST::Mouse>> mouse();
-	std::shared_ptr<AST::MouseEvent<AST::MouseMoveClick>> mouse_move_click();
-	std::shared_ptr<AST::MouseEvent<AST::MouseHold>> mouse_hold();
-	std::shared_ptr<AST::MouseEvent<AST::MouseRelease>> mouse_release();
-	std::shared_ptr<AST::MouseEvent<AST::MouseWheel>> mouse_wheel();
+	std::shared_ptr<AST::Action> action();
+	std::shared_ptr<AST::Empty> empty_action();
+	std::shared_ptr<AST::Abort> abort();
+	std::shared_ptr<AST::Print> print();
+	std::shared_ptr<AST::Type> type();
+	std::shared_ptr<AST::Wait> wait();
+	std::shared_ptr<AST::Sleep> sleep();
+	std::shared_ptr<AST::Press> press();
+	std::shared_ptr<AST::Hold> hold();
+	std::shared_ptr<AST::Release> release();
+	std::shared_ptr<AST::Mouse> mouse();
+	std::shared_ptr<AST::MouseMoveClick> mouse_move_click();
+	std::shared_ptr<AST::MouseHold> mouse_hold();
+	std::shared_ptr<AST::MouseRelease> mouse_release();
+	std::shared_ptr<AST::MouseWheel> mouse_wheel();
 	std::shared_ptr<AST::MouseAdditionalSpecifier> mouse_additional_specifier();
-	std::shared_ptr<AST::MouseMoveTarget<AST::MouseSelectable>> mouse_selectable();
-	std::shared_ptr<AST::MouseMoveTarget<AST::MouseCoordinates>> mouse_coordinates();
-	std::shared_ptr<AST::IPlugResource> plug_resource();
-	std::shared_ptr<AST::PlugResource<AST::PlugNIC>> plug_resource_nic();
-	std::shared_ptr<AST::PlugResource<AST::PlugLink>> plug_resource_link();
-	std::shared_ptr<AST::PlugResource<AST::PlugFlash>> plug_resource_flash();
-	std::shared_ptr<AST::PlugResource<AST::PlugDVD>> plug_resource_dvd();
-	std::shared_ptr<AST::PlugResource<AST::PlugHostDev>> plug_resource_hostdev();
-	std::shared_ptr<AST::Action<AST::Plug>> plug();
-	std::shared_ptr<AST::Action<AST::Start>> start();
-	std::shared_ptr<AST::Action<AST::Stop>> stop();
-	std::shared_ptr<AST::Action<AST::Shutdown>> shutdown();
-	std::shared_ptr<AST::Action<AST::Exec>> exec();
-	std::shared_ptr<AST::Action<AST::Copy>> copy();
-	std::shared_ptr<AST::Action<AST::Screenshot>> screenshot();
-	std::shared_ptr<AST::MacroCall> macro_call();
-	std::shared_ptr<AST::Action<AST::IfClause>> if_clause();
-	std::shared_ptr<AST::ICounterList> counter_list();
-	std::shared_ptr<AST::CounterList<AST::Range>> range();
-	std::shared_ptr<AST::Action<AST::ForClause>> for_clause();
-	std::shared_ptr<AST::Action<AST::CycleControl>> cycle_control();
+	std::shared_ptr<AST::MouseSelectable> mouse_selectable();
+	std::shared_ptr<AST::MouseCoordinates> mouse_coordinates();
+	std::shared_ptr<AST::PlugResource> plug_resource();
+	std::shared_ptr<AST::PlugNIC> plug_resource_nic();
+	std::shared_ptr<AST::PlugLink> plug_resource_link();
+	std::shared_ptr<AST::PlugFlash> plug_resource_flash();
+	std::shared_ptr<AST::PlugDVD> plug_resource_dvd();
+	std::shared_ptr<AST::PlugHostDev> plug_resource_hostdev();
+	std::shared_ptr<AST::Plug> plug();
+	std::shared_ptr<AST::Start> start();
+	std::shared_ptr<AST::Stop> stop();
+	std::shared_ptr<AST::Shutdown> shutdown();
+	std::shared_ptr<AST::Exec> exec();
+	std::shared_ptr<AST::Copy> copy();
+	std::shared_ptr<AST::Screenshot> screenshot();
+	template <typename BaseType>
+	std::shared_ptr<AST::MacroCall<BaseType>> macro_call();
+	std::shared_ptr<AST::IfClause> if_clause();
+	std::shared_ptr<AST::CounterList> counter_list();
+	std::shared_ptr<AST::Range> range();
+	std::shared_ptr<AST::ForClause> for_clause();
+	std::shared_ptr<AST::CycleControl> cycle_control();
 
 	//expressions
-	std::shared_ptr<AST::ISelectExpr> select_expr();
+	std::shared_ptr<AST::SelectExpr> select_expr();
 	std::shared_ptr<AST::SelectParentedExpr> select_parented_expr();
-	std::shared_ptr<AST::SelectExpr<AST::SelectBinOp>> select_binop(std::shared_ptr<AST::ISelectExpr> left);
+	std::shared_ptr<AST::SelectBinOp> select_binop(std::shared_ptr<AST::SelectExpr> left);
 
-	std::shared_ptr<AST::ISelectable> selectable();
+	std::shared_ptr<AST::Selectable> selectable();
 	std::shared_ptr<AST::SelectJS> select_js();
 	std::shared_ptr<AST::SelectImg> select_img();
 	std::shared_ptr<AST::SelectHomm3> select_homm3();
@@ -130,13 +131,13 @@ private:
 	std::shared_ptr<AST::String> string();
 	std::shared_ptr<AST::StringTokenUnion> string_token_union(Token::category expected_token_type);
 
-	std::shared_ptr<AST::IFactor> factor();
 	std::shared_ptr<AST::Check> check();
 	std::shared_ptr<AST::Comparison> comparison();
 	std::shared_ptr<AST::Defined> defined();
-	std::shared_ptr<AST::Expr<AST::BinOp>> binop(std::shared_ptr<AST::IExpr> left);
-	std::shared_ptr<AST::IExpr> expr();
+	std::shared_ptr<AST::BinOp> binop(std::shared_ptr<AST::Expr> left);
+	std::shared_ptr<AST::Expr> expr();
 	std::shared_ptr<AST::ParentedExpr> parented_expr();
+	std::shared_ptr<AST::Negation> negation();
 
 	std::vector<Ctx> lexers;
 

@@ -4,6 +4,8 @@
 #include "IR/Action.hpp"
 #include "IR/Expr.hpp"
 #include "IR/Controller.hpp"
+#include "IR/Macro.hpp"
+#include "IR/Expr.hpp"
 #include "Reporter.hpp"
 #include "TemplateLiterals.hpp"
 
@@ -13,7 +15,7 @@ struct VisitorInterpreterAction {
 
 	virtual ~VisitorInterpreterAction() {}
 
-	virtual void visit_action(std::shared_ptr<AST::IAction> action) = 0;
+	virtual void visit_action(std::shared_ptr<AST::Action> action) = 0;
 	virtual void visit_copy(const IR::Copy& copy) = 0;
 	virtual bool visit_check(const IR::Check& check) = 0;
 	virtual void visit_abort(const IR::Abort& abort) = 0;
@@ -27,9 +29,8 @@ struct VisitorInterpreterAction {
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
 	std::vector<std::string> visit_range(const IR::Range& range);
 
-	bool visit_expr(std::shared_ptr<AST::IExpr> expr);
+	bool visit_expr(std::shared_ptr<AST::Expr> expr);
 	bool visit_binop(std::shared_ptr<AST::BinOp> binop);
-	bool visit_factor(std::shared_ptr<AST::IFactor> factor);
 	bool visit_comparison(const IR::Comparison& comparison);
 	bool visit_defined(const IR::Defined& defined);
 

@@ -73,6 +73,22 @@ bool Comparison::calculate() const {
 	}
 }
 
+std::string Check::timeout() const {
+	if (ast_node->timeout) {
+		return StringTokenUnion(ast_node->timeout, stack).resolve();
+	} else {
+		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_TIMEOUT");
+	}
+}
+
+std::string Check::interval() const {
+	if (ast_node->interval) {
+		return StringTokenUnion(ast_node->interval, stack).resolve();
+	} else {
+		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_INTERVAL");
+	}
+}
+
 std::vector<std::string> Range::values() const {
 	std::vector<std::string> result;
 

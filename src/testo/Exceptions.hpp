@@ -50,7 +50,7 @@ struct ActionException: public Exception {
 };
 
 struct MacroException: public Exception {
-	MacroException(std::shared_ptr<AST::MacroCall> macro_call)
+	MacroException(std::shared_ptr<AST::IMacroCall> macro_call)
 	{
 		msg = std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->name().value();
 	}

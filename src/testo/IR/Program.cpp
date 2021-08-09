@@ -177,22 +177,22 @@ void Program::collect_top_level_objects(const std::shared_ptr<AST::Program>& ast
 	}
 }
 
-void Program::visit_stmt(const std::shared_ptr<AST::IStmt>& stmt) {
-	if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Test>>(stmt)) {
-		collect_test(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::MacroCall>>(stmt)) {
-		visit_macro_call({p->stmt, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
-		collect_macro(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
-		collect_param(p->stmt);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Controller>>(stmt)) {
+void Program::visit_stmt(const std::shared_ptr<AST::Stmt>& stmt) {
+	if (auto p = std::dynamic_pointer_cast<AST::Test>(stmt)) {
+		collect_test(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Stmt>>(stmt)) {
+		visit_macro_call({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Macro>(stmt)) {
+		collect_macro(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Param>(stmt)) {
+		collect_param(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Controller>(stmt)) {
 		if (p->t.type() == Token::category::machine) {
-			collect_machine(p->stmt);
+			collect_machine(p);
 		} else if (p->t.type() == Token::category::flash) {
-			collect_flash_drive(p->stmt);
+			collect_flash_drive(p);
 		} else if (p->t.type() == Token::category::network) {
-			collect_network(p->stmt);
+			collect_network(p);
 		} else {
 			throw std::runtime_error("Unknown controller type");
 		}
@@ -203,9 +203,9 @@ void Program::visit_stmt(const std::shared_ptr<AST::IStmt>& stmt) {
 
 void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block) {
 	for (auto stmt: stmt_block->stmts) {
-		if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Macro>>(stmt)) {
+		if (auto p = std::dynamic_pointer_cast<AST::Macro>(stmt)) {
 			throw Exception(std::string(stmt->begin()) + ": Error: nested macro declarations are not supported");
-		} else if (auto p = std::dynamic_pointer_cast<AST::Stmt<AST::Param>>(stmt)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::Param>(stmt)) {
 			throw Exception(std::string(stmt->begin()) + ": Error: param declaration inside macros is not supported");
 		}
 

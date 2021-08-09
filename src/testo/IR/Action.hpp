@@ -1,21 +1,16 @@
 
 #pragma once
 
-#include "../AST.hpp"
-#include "../Stack.hpp"
 #include "../TemplateLiterals.hpp"
 #include "../Exceptions.hpp"
-#include "Macro.hpp"
+#include "Object.hpp"
 #include <fmt/format.h>
 
 namespace IR {
 
 template <typename ASTType>
-struct Action {
-	Action(std::shared_ptr<ASTType> ast_node_, std::shared_ptr<StackNode> stack_):
-		ast_node(std::move(ast_node_)), stack(std::move(stack_)) {}
-	std::shared_ptr<ASTType> ast_node;
-	std::shared_ptr<StackNode> stack;
+struct Action: Node<ASTType> {
+	using Node<ASTType>::Node;
 };
 
 struct Abort: Action<AST::Abort> {
@@ -185,12 +180,6 @@ struct Screenshot: Action<AST::Screenshot> {
 	std::string destination() const;
 };
 
-struct Check: Action<AST::Check> {
-	using Action<AST::Check>::Action;
-	std::string timeout() const;
-	std::string interval() const;
-};
-
 struct CycleControl: Action<AST::CycleControl> {
 	using Action<AST::CycleControl>::Action;
 	std::string type() const;
@@ -199,70 +188,6 @@ struct CycleControl: Action<AST::CycleControl> {
 struct StringTokenUnion: Action<AST::StringTokenUnion> {
 	using Action<AST::StringTokenUnion>::Action;
 	std::string resolve() const;
-};
-
-struct MacroCall: Action<AST::MacroCall> {
-	using Action<AST::MacroCall>::Action;
-
-	const std::shared_ptr<IR::Macro> get_macro() const;
-	std::vector<std::pair<std::string, std::string>> args() const;
-	std::map<std::string, std::string> vars() const;
-
-	template <typename MacroBodyType, typename Visitor>
-	void visit_semantic(Visitor* visitor) const {
-		const std::shared_ptr<IR::Macro> macro = get_macro();
-
-		visitor->visit_macro(macro);
-
-		uint32_t args_with_default = 0;
-
-		for (auto arg: macro->ast_node->args) {
-			if (arg->default_value) {
-				args_with_default++;
-			}
-		}
-
-		if (ast_node->args.size() < macro->ast_node->args.size() - args_with_default) {
-			throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(ast_node->begin()),
-				macro->ast_node->args.size() - args_with_default, ast_node->args.size()));
-		}
-
-		if (ast_node->args.size() > macro->ast_node->args.size()) {
-			throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(ast_node->begin()),
-				macro->ast_node->args.size(), ast_node->args.size()));
-		}
-
-		StackPusher<Visitor> new_ctx(visitor, macro->new_stack(vars()));
-
-		std::shared_ptr<AST::MacroBody<MacroBodyType>> p = macro->get_body<MacroBodyType>();
-		if (p == nullptr) {
-			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: the \"" + ast_node->name().value() + "\" macro does not contain " + MacroBodyType::desc() + ", as expected");
-		}
-
-		try {
-			visitor->visit_macro_body(p->macro_body);
-		} catch (const std::exception& error) {
-			std::throw_with_nested(MacroException(ast_node));
-		}
-	}
-
-	template <typename MacroBodyType, typename Visitor>
-	void visit_interpreter(Visitor* visitor) const {
-		const std::shared_ptr<IR::Macro> macro = get_macro();
-
-		StackPusher<Visitor> new_ctx(visitor, macro->new_stack(vars()));
-
-		std::shared_ptr<AST::MacroBody<MacroBodyType>> p = macro->get_body<MacroBodyType>();
-		if (p == nullptr) {
-			throw std::runtime_error("Should never happen");
-		}
-
-		try {
-			visitor->visit_macro_body(p->macro_body);
-		} catch (const std::exception& error) {
-			std::throw_with_nested(MacroException(ast_node));
-		}
-	}
 };
 
 }

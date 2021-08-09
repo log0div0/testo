@@ -387,11 +387,11 @@ void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> bloc
 	}
 }
 
-void VisitorInterpreter::visit_command(std::shared_ptr<AST::ICmd> cmd) {
-	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
-		visit_regular_command({p->cmd, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
-		visit_macro_call({p->cmd, stack});
+void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
+	if (auto p = std::dynamic_pointer_cast<AST::RegularCmd>(cmd)) {
+		visit_regular_command({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Cmd>>(cmd)) {
+		visit_macro_call({p, stack});
 	} else {
 		throw std::runtime_error("Should never happen");
 	}

@@ -258,50 +258,50 @@ VisitorInterpreterActionMachine::VisitorInterpreterActionMachine(std::shared_ptr
 	});
 }
 
-void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		visit_type({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		visit_wait({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		visit_sleep({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		visit_press({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
-		visit_hold({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
-		visit_release({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		visit_mouse({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		visit_plug({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		visit_start({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		visit_stop({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		visit_shutdown({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		visit_exec({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		visit_copy({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Screenshot>>(action)) {
-		visit_screenshot({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		visit_if_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		visit_for_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		throw CycleControlException(p->action->t);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		visit_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
+		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
+		visit_print({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
+		visit_type({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Wait>(action)) {
+		visit_wait({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
+		visit_sleep({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Press>(action)) {
+		visit_press({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Hold>(action)) {
+		visit_hold({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Release>(action)) {
+		visit_release({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Mouse>(action)) {
+		visit_mouse({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Plug>(action)) {
+		visit_plug({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Start>(action)) {
+		visit_start({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stop>(action)) {
+		visit_stop({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Shutdown>(action)) {
+		visit_shutdown({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Exec>(action)) {
+		visit_exec({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
+		visit_copy({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Screenshot>(action)) {
+		visit_screenshot({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Action>>(action)) {
+		visit_macro_call({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::IfClause>(action)) {
+		visit_if_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::ForClause>(action)) {
+		visit_for_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
+		throw CycleControlException(p->t);
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+		visit_action_block(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		;
 	} else {
 		throw std::runtime_error("Should never happen");
@@ -595,30 +595,30 @@ nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& j
 	}
 }
 
-bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot)  {
-	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
-		return visit_detect_selectable(p->select_expr, screenshot);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
-		return visit_detect_binop(p->select_expr, screenshot);
+bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot)  {
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable>(select_expr)) {
+		return visit_detect_selectable(p, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
+		return visit_detect_binop(p, screenshot);
 	} else {
 		throw std::runtime_error("Unknown select expression type");
 	}
 }
 
 
-bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, const stb::Image<stb::RGB>& screenshot) {
+bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::Selectable> selectable, const stb::Image<stb::RGB>& screenshot) {
 	bool is_negated = selectable->is_negated();
 
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
-		return is_negated ^ (bool)visit_select_text({p->selectable, stack}, screenshot).size();
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
-		return is_negated ^ (bool)visit_select_img({p->selectable, stack}, screenshot).size();
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(selectable)) {
-		return is_negated ^ (bool)visit_select_homm3({p->selectable, stack}, screenshot).size();
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
-		return is_negated ^ visit_detect_expr(p->selectable->select_expr, screenshot);
+	if (auto p = std::dynamic_pointer_cast<AST::SelectText>(selectable)) {
+		return is_negated ^ (bool)visit_select_text({p, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(selectable)) {
+		return is_negated ^ visit_detect_js({p, stack}, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(selectable)) {
+		return is_negated ^ (bool)visit_select_img({p, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(selectable)) {
+		return is_negated ^ (bool)visit_select_homm3({p, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(selectable)) {
+		return is_negated ^ visit_detect_expr(p->select_expr, screenshot);
 	}  else {
 		throw std::runtime_error("Unknown selectable type");
 	}
@@ -695,18 +695,18 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 	bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 		try {
 			nn::Point point;
-			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
-				point = visit_select_js({p->selectable, stack}, screenshot);
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
-				auto tensor = visit_select_text({p->selectable, stack}, screenshot);
+			if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->selectable)) {
+				point = visit_select_js({p, stack}, screenshot);
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->selectable)) {
+				auto tensor = visit_select_text({p, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
 				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
-				auto tensor = visit_select_img({p->selectable, stack}, screenshot);
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->selectable)) {
+				auto tensor = visit_select_img({p, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
 				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(mouse_selectable.ast_node->selectable)) {
-				auto tensor = visit_select_homm3({p->selectable, stack}, screenshot);
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->selectable)) {
+				auto tensor = visit_select_homm3({p, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
 				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
 			}
@@ -727,13 +727,13 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 }
 
 void VisitorInterpreterActionMachine::visit_mouse(const IR::Mouse& mouse) {
-	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse.ast_node->event)) {
-		return visit_mouse_move_click({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse.ast_node->event)) {
-		return visit_mouse_hold({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse.ast_node->event)) {
-		return visit_mouse_release({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseWheel>>(mouse.ast_node->event)) {
+	if (auto p = std::dynamic_pointer_cast<AST::MouseMoveClick>(mouse.ast_node->event)) {
+		return visit_mouse_move_click({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseHold>(mouse.ast_node->event)) {
+		return visit_mouse_hold({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseRelease>(mouse.ast_node->event)) {
+		return visit_mouse_release({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseWheel>(mouse.ast_node->event)) {
 		throw std::runtime_error("Not implemented yet");
 	} else {
 		throw std::runtime_error("Unknown mouse actions");
@@ -745,10 +745,10 @@ void VisitorInterpreterActionMachine::visit_mouse_move_click(const IR::MouseMove
 		reporter.mouse_move_click(vmc, mouse_move_click.event_type());
 
 		if (mouse_move_click.ast_node->object) {
-			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click.ast_node->object)) {
-				visit_mouse_move_coordinates({p->target, stack});
-			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click.ast_node->object)) {
-				visit_mouse_move_selectable({p->target, stack});
+			if (auto p = std::dynamic_pointer_cast<AST::MouseCoordinates>(mouse_move_click.ast_node->object)) {
+				visit_mouse_move_coordinates({p, stack});
+			} else if (auto p = std::dynamic_pointer_cast<AST::MouseSelectable>(mouse_move_click.ast_node->object)) {
+				visit_mouse_move_selectable({p, stack});
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
@@ -849,28 +849,28 @@ void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec
 
 void VisitorInterpreterActionMachine::visit_plug(const IR::Plug& plug) {
 	try {
-		if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugFlash>>(plug.ast_node->resource)) {
+		if (auto p = std::dynamic_pointer_cast<AST::PlugFlash>(plug.ast_node->resource)) {
 			if (plug.is_on()) {
-				return visit_plug_flash({p->resource, stack});
+				return visit_plug_flash({p, stack});
 			} else {
-				return visit_unplug_flash({p->resource, stack});
+				return visit_unplug_flash({p, stack});
 			}
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugDVD>>(plug.ast_node->resource)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugDVD>(plug.ast_node->resource)) {
 			if (plug.is_on()) {
-				return visit_plug_dvd({p->resource, stack});
+				return visit_plug_dvd({p, stack});
 			} else {
-				return visit_unplug_dvd({p->resource, stack});
+				return visit_unplug_dvd({p, stack});
 			}
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugHostDev>>(plug.ast_node->resource)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugHostDev>(plug.ast_node->resource)) {
 			if (plug.is_on()) {
-				return visit_plug_hostdev({p->resource, stack});
+				return visit_plug_hostdev({p, stack});
 			} else {
-				return visit_unplug_hostdev({p->resource, stack});
+				return visit_unplug_hostdev({p, stack});
 			}
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugNIC>>(plug.ast_node->resource)) {
-			return visit_plug_nic({p->resource, stack}, plug.is_on());
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
-			return visit_plug_link({p->resource, stack}, plug.is_on());
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugNIC>(plug.ast_node->resource)) {
+			return visit_plug_nic({p, stack}, plug.is_on());
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugLink>(plug.ast_node->resource)) {
+			return visit_plug_link({p, stack}, plug.is_on());
 		} else {
 			throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
 				plug.ast_node->resource->t.value());

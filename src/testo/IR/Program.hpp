@@ -55,7 +55,7 @@ struct Program {
 	const ProgramConfig& config;
 
 private:
-	std::vector<std::shared_ptr<AST::MacroCall>> current_macro_call_stack;
+	std::vector<std::shared_ptr<AST::IMacroCall>> current_macro_call_stack;
 
 	std::unordered_map<std::string, std::shared_ptr<Test>> tests;
 	std::unordered_map<std::string, std::shared_ptr<Macro>> macros;
@@ -91,7 +91,7 @@ private:
 
 	void collect_top_level_objects(const std::shared_ptr<AST::Program>& ast);
 	void visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block);
-	void visit_stmt(const std::shared_ptr<AST::IStmt>& stmt);
+	void visit_stmt(const std::shared_ptr<AST::Stmt>& stmt);
 	void visit_macro(std::shared_ptr<IR::Macro> macro);
 	void visit_macro_call(const IR::MacroCall& macro_call);
 	void visit_macro_body(const std::shared_ptr<AST::MacroBodyStmt>& macro_body);

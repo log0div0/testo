@@ -13,7 +13,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 
 	~VisitorInterpreterActionMachine() {}
 
-	void visit_action(std::shared_ptr<AST::IAction> action) override;
+	void visit_action(std::shared_ptr<AST::Action> action) override;
 	void visit_copy(const IR::Copy& copy) override;
 	bool visit_check(const IR::Check& check) override;
 	void visit_abort(const IR::Abort& abort) override;
@@ -34,8 +34,8 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	nn::Homm3Tensor visit_select_homm3(const IR::SelectHomm3& homm3, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
 	nn::Point visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
-	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot);
-	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, const stb::Image<stb::RGB>& screenshot);
+	bool visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot);
+	bool visit_detect_selectable(std::shared_ptr<AST::Selectable> selectable, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, const stb::Image<stb::RGB>& screenshot);
 	void visit_press(const IR::Press& press);
 	void visit_hold(const IR::Hold& hold);

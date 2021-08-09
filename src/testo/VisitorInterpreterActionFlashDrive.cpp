@@ -5,27 +5,27 @@
 #include "Exceptions.hpp"
 #include <fmt/format.h>
 
-void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		visit_sleep({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		visit_copy({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		visit_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::Action> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
+		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
+		visit_print({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
+		visit_sleep({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
+		visit_copy({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+		visit_action_block(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		;
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		visit_if_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		visit_for_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		throw CycleControlException(p->action->t);
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Action>>(action)) {
+		visit_macro_call({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::IfClause>(action)) {
+		visit_if_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::ForClause>(action)) {
+		visit_for_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
+		throw CycleControlException(p->t);
 	}  else {
 		throw std::runtime_error("Should never happen");
 	}

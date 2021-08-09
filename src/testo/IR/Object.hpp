@@ -6,12 +6,19 @@
 
 namespace IR {
 
-template <typename T>
-struct Object {
-	using ASTType = T;
+template <typename ASTType>
+struct Node {
+	Node() = default;
+	Node(std::shared_ptr<ASTType> ast_node_, std::shared_ptr<StackNode> stack_):
+		ast_node(std::move(ast_node_)), stack(std::move(stack_)) {}
 	std::shared_ptr<ASTType> ast_node;
 	std::shared_ptr<StackNode> stack;
-	std::vector<std::shared_ptr<AST::MacroCall>> macro_call_stack;
+};
+
+template <typename T>
+struct Object: Node<T> {
+	using ASTType = T;
+	std::vector<std::shared_ptr<AST::IMacroCall>> macro_call_stack;
 	
 	std::string name() const {
 		return ast_node->name.value();

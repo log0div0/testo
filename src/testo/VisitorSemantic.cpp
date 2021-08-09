@@ -324,11 +324,11 @@ void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) 
 	}
 }
 
-void VisitorSemantic::visit_command(std::shared_ptr<AST::ICmd> cmd) {
-	if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::RegularCmd>>(cmd)) {
-		visit_regular_command({p->cmd, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Cmd<AST::MacroCall>>(cmd)) {
-		visit_cmd_macro_call({p->cmd, stack});
+void VisitorSemantic::visit_command(std::shared_ptr<AST::Cmd> cmd) {
+	if (auto p = std::dynamic_pointer_cast<AST::RegularCmd>(cmd)) {
+		visit_regular_command({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Cmd>>(cmd)) {
+		visit_cmd_macro_call({p, stack});
 	} else {
 		throw Exception("Should never happen");
 	}
@@ -379,7 +379,7 @@ void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> actio
 	}
 }
 
-void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
+void VisitorSemantic::visit_action(std::shared_ptr<AST::Action> action) {
 	if (std::dynamic_pointer_cast<IR::Machine>(current_controller)) {
 		visit_action_vm(action);
 	} else {
@@ -387,77 +387,77 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::IAction> action) {
 	}
 }
 
-void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		visit_type({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		visit_press({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
-		visit_hold({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
-		visit_release({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		visit_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		visit_mouse({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		visit_plug({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		visit_start({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		visit_stop({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		visit_shutdown({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		visit_exec({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		visit_copy({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Screenshot>>(action)) {
-		visit_screenshot({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		visit_wait({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		visit_sleep({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_action_macro_call({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		visit_if_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		visit_for_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		visit_cycle_control({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
+		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
+		visit_print({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
+		visit_type({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Press>(action)) {
+		visit_press({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Hold>(action)) {
+		visit_hold({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Release>(action)) {
+		visit_release({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+		visit_action_block(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Mouse>(action)) {
+		visit_mouse({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Plug>(action)) {
+		visit_plug({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Start>(action)) {
+		visit_start({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stop>(action)) {
+		visit_stop({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Shutdown>(action)) {
+		visit_shutdown({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Exec>(action)) {
+		visit_exec({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
+		visit_copy({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Screenshot>(action)) {
+		visit_screenshot({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Wait>(action)) {
+		visit_wait({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
+		visit_sleep({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Action>>(action)) {
+		visit_action_macro_call({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::IfClause>(action)) {
+		visit_if_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::ForClause>(action)) {
+		visit_for_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
+		visit_cycle_control({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		// do nothing
 	} else {
 		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a virtual machine");
 	}
 }
 
-void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		visit_copy({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		visit_sleep({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		visit_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::Action> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
+		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
+		visit_print({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
+		visit_copy({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
+		visit_sleep({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+		visit_action_block(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		// do nothing
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_action_macro_call({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		visit_if_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		visit_for_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		visit_cycle_control({p->action, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Action>>(action)) {
+		visit_action_macro_call({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::IfClause>(action)) {
+		visit_if_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::ForClause>(action)) {
+		visit_for_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
+		visit_cycle_control({p, stack});
 	} else {
 		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a flash drive");
 	}
@@ -679,21 +679,21 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 		throw Exception(std::string(mouse_selectable.ast_node->begin()) + ": Error: negation is not supported for mouse move/click actions");
 	}
 
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
+	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->selectable)) {
 		if (mouse_selectable.ast_node->specifiers.size()) {
 			throw Exception(std::string(mouse_selectable.ast_node->specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
 		}
-		visit_select_js({p->selectable, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
-		visit_select_text({p->selectable, stack});
+		visit_select_js({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->selectable)) {
+		visit_select_text({p, stack});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
-		visit_select_img({p->selectable, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->selectable)) {
+		visit_select_img({p, stack});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(mouse_selectable.ast_node->selectable)) {
-		visit_select_homm3({p->selectable, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->selectable)) {
+		visit_select_homm3({p, stack});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(mouse_selectable.ast_node->selectable)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(mouse_selectable.ast_node->selectable)) {
 		throw Exception(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");
 	}
 }
@@ -702,10 +702,10 @@ void VisitorSemantic::visit_mouse_move_click(const IR::MouseMoveClick& mouse_mov
 	current_test->cksum_input << mouse_move_click.event_type();
 	if (mouse_move_click.ast_node->object) {
 		current_test->cksum_input << " ";
-		if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click.ast_node->object)) {
-			visit_mouse_move_coordinates({p->target, stack});
-		} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click.ast_node->object)) {
-			visit_mouse_move_selectable({p->target, stack});
+		if (auto p = std::dynamic_pointer_cast<AST::MouseCoordinates>(mouse_move_click.ast_node->object)) {
+			visit_mouse_move_coordinates({p, stack});
+		} else if (auto p = std::dynamic_pointer_cast<AST::MouseSelectable>(mouse_move_click.ast_node->object)) {
+			visit_mouse_move_selectable({p, stack});
 		}
 	}
 }
@@ -721,12 +721,12 @@ void VisitorSemantic::visit_mouse_release(const IR::MouseRelease& mouse_release)
 void VisitorSemantic::visit_mouse(const IR::Mouse& mouse) {
 	current_test->cksum_input << "mouse ";
 
-	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse.ast_node->event)) {
-		visit_mouse_move_click({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse.ast_node->event)) {
-		visit_mouse_hold({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse.ast_node->event)) {
-		visit_mouse_release({p->event, stack});
+	if (auto p = std::dynamic_pointer_cast<AST::MouseMoveClick>(mouse.ast_node->event)) {
+		visit_mouse_move_click({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseHold>(mouse.ast_node->event)) {
+		visit_mouse_hold({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseRelease>(mouse.ast_node->event)) {
+		visit_mouse_release({p, stack});
 	}
 
 	current_test->cksum_input << std::endl;
@@ -739,16 +739,16 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 		current_test->cksum_input << "unplug ";
 	}
 
-	if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugFlash>>(plug.ast_node->resource)) {
-		visit_plug_flash({p->resource, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugDVD>>(plug.ast_node->resource)) {
-		visit_plug_dvd({p->resource, stack}, plug.is_on());
-	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugNIC>>(plug.ast_node->resource)) {
-		visit_plug_nic({p->resource, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
-		visit_plug_link({p->resource, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugHostDev>>(plug.ast_node->resource)) {
-		visit_plug_hostdev({p->resource, stack});
+	if (auto p = std::dynamic_pointer_cast<AST::PlugFlash>(plug.ast_node->resource)) {
+		visit_plug_flash({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugDVD>(plug.ast_node->resource)) {
+		visit_plug_dvd({p, stack}, plug.is_on());
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugNIC>(plug.ast_node->resource)) {
+		visit_plug_nic({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugLink>(plug.ast_node->resource)) {
+		visit_plug_link({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::PlugHostDev>(plug.ast_node->resource)) {
+		visit_plug_hostdev({p, stack});
 	} else {
 		throw Exception(std::string("unknown hardware type to plug/unplug: ") +
 			plug.ast_node->resource->t.value());
@@ -867,11 +867,11 @@ void VisitorSemantic::visit_screenshot(const IR::Screenshot& screenshot) {
 	//No additional checks needed
 }
 
-void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr) {
-	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
-		return visit_detect_selectable(p->select_expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
-		return visit_detect_binop(p->select_expr);
+void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr) {
+	if (auto p = std::dynamic_pointer_cast<AST::Selectable>(select_expr)) {
+		return visit_detect_selectable(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
+		return visit_detect_binop(p);
 	} else {
 		throw Exception("Unknown detect expr type");
 	}
@@ -882,22 +882,22 @@ void VisitorSemantic::validate_js(const std::string& script) {
 	js_ctx.eval(script, true);
 }
 
-void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {
+void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::Selectable> selectable) {
 	bool is_negated = selectable->is_negated();
 	if (is_negated) {
 		current_test->cksum_input << "!";
 	}
 
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
-		visit_select_text({p->selectable, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		visit_select_js({p->selectable, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
-		visit_select_img({p->selectable, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(selectable)) {
-		visit_select_homm3({p->selectable, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
-		visit_detect_parented(p->selectable);
+	if (auto p = std::dynamic_pointer_cast<AST::SelectText>(selectable)) {
+		visit_select_text({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(selectable)) {
+		visit_select_js({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(selectable)) {
+		visit_select_img({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(selectable)) {
+		visit_select_homm3({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(selectable)) {
+		visit_detect_parented(p);
 	} else {
 		throw Exception("Unknown selectable type");
 	}
@@ -941,15 +941,35 @@ void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::MacroBodyComma
 }
 
 void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body) {
-	visit_action_block(macro_body->action_block->action);
+	visit_action_block(macro_body->action_block);
 }
 
 
-Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::IExpr> expr) {
-	if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::BinOp>>(expr)) {
-		return visit_binop(p->expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Expr<AST::IFactor>>(expr)) {
-		return visit_factor(p->expr);
+Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::Expr> expr) {
+	if (auto p = std::dynamic_pointer_cast<AST::BinOp>(expr)) {
+		return visit_binop(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Negation>(expr)) {
+		current_test->cksum_input << "NOT ";
+		return !visit_expr(p->expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Check>(expr)) {
+		return visit_check({ p, stack });
+	} else if (auto p = std::dynamic_pointer_cast<AST::Expr>(expr)) {
+		return visit_expr(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Defined>(expr)) {
+		return visit_defined({ p, stack });
+	} else if (auto p = std::dynamic_pointer_cast<AST::Comparison>(expr)) {
+		return visit_comparison({ p, stack });
+	} else if (auto p = std::dynamic_pointer_cast<AST::ParentedExpr>(expr)) {
+		return visit_parented_expr(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::StringExpr>(expr)) {
+		try {
+			auto text = template_parser.resolve(p->str->text(), stack);
+			current_test->cksum_input << "\"" << text << "\"";
+			return text.length() ? Tribool::yes : Tribool::no;
+		}
+		catch (const std::exception & error) {
+			std::throw_with_nested(ResolveException(p->begin(), p->str->text()));
+		}
 	} else {
 		throw Exception("Unknown expr type");
 	}
@@ -990,35 +1010,6 @@ Tribool VisitorSemantic::visit_comparison(const IR::Comparison& comparison) {
 	current_test->cksum_input << comparison.left() << comparison.op() << comparison.right();
 
 	return comparison.calculate() ? Tribool::yes : Tribool::no;
-}
-
-Tribool VisitorSemantic::visit_factor(std::shared_ptr<AST::IFactor> factor) {
-	bool is_negated = factor->is_negated();
-	if (is_negated) {
-		current_test->cksum_input << "NOT ";
-	}
-
-	if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Check>>(factor)) {
-		return visit_check({p->factor, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::IExpr>>(factor)) {
-		return is_negated ^ visit_expr(p->factor);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Defined>>(factor)) {
-		return is_negated ^ visit_defined({p->factor, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::Comparison>>(factor)) {
-		return is_negated ^ visit_comparison({p->factor, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::ParentedExpr>>(factor)) {
-		return is_negated ^ visit_parented_expr(p->factor);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Factor<AST::String>>(factor)) {
-		try {
-			auto text = template_parser.resolve(p->factor->text(), stack);
-			current_test->cksum_input << "\"" << text << "\"";
-			return is_negated ^ (text.length() ? Tribool::yes : Tribool::no);
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(p->factor->begin(), p->factor->text()));
-		}
-	} else {
-		throw Exception("Unknown factor type");
-	}
 }
 
 Tribool VisitorSemantic::visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented) {
@@ -1105,8 +1096,8 @@ std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
 void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
 	current_test->cksum_input << "for (";
 	std::vector<std::string> values;
-	if (auto p = std::dynamic_pointer_cast<AST::CounterList<AST::Range>>(for_clause->counter_list)) {
-		values = visit_range({p->counter_list, stack});
+	if (auto p = std::dynamic_pointer_cast<AST::Range>(for_clause->counter_list)) {
+		values = visit_range({p, stack});
 	} else {
 		throw Exception("Unknown counter list type");
 	}
