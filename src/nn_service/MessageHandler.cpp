@@ -25,30 +25,29 @@ std::string duration_to_str(Duration duration) {
 }
 
 void MessageHandler::run() {
-	nlohmann::json request;
+	nlohmann::json request, response;
 	while (true) {
+		request = channel->recv();
 		try {
-			request = channel->recv();
-			handle_request(request);
-		} catch (const nn::ContinueError& continue_error) {
-			try {
-				channel->send(create_continue_error_message(continue_error.what()));
-			} catch (...) {}
+			response = handle_request(request);
 		} catch (const std::system_error& error) {
 			throw;
+		} catch (const nn::ContinueError& continue_error) {
+			response = create_continue_error_message(continue_error.what());
 		} catch (const std::exception& error) {
 			if (request.count("image")) {
 				request["image"] = "omitted";
 			}
 			spdlog::error("Error while processing request \n{}:\n{}", request.dump(4), error.what());
-			try {
-				channel->send(create_error_message(error.what()));
-			} catch (...) {}
+			response = create_error_message(error.what());
+		}
+		if (!response.empty()) {
+			channel->send(response);
 		}
 	}
 }
 
-void MessageHandler::handle_request(nlohmann::json& request) {
+nlohmann::json MessageHandler::handle_request(nlohmann::json& request) {
 
 	auto start_timestamp = std::chrono::system_clock::now();
 	nlohmann::json response;
@@ -56,17 +55,19 @@ void MessageHandler::handle_request(nlohmann::json& request) {
 	auto type = request.at("type").get<std::string>();
 	// We can get errors
 	if (type == "error") {
-		//Do nothing
-		return;
+		spdlog::error("Got unexpected error message in handle_request");
+		return {};
 	} else if (type == "js_eval") {
 		response = handle_js_eval_request(request);
+	} else if (type == "js_validate") {
+		response = handle_js_validate_request(request);
 	} else {
 		throw std::runtime_error("Unexpected request type: " + type);
 	}
 
 	auto duration = std::chrono::system_clock::now() - start_timestamp;
 	spdlog::trace(fmt::format("Got the response in {}: \n{}", duration_to_str(duration), response.dump(4)));
-	channel->send(response);
+	return response;
 }
 
 nlohmann::json MessageHandler::handle_js_eval_request(nlohmann::json& request) {
@@ -85,12 +86,37 @@ nlohmann::json MessageHandler::handle_js_eval_request(nlohmann::json& request) {
 		return nlohmann::json({
 			{"type", "eval_result"},
 			{"data", nlohmann::json::parse(std::string(val))}
-			
 		});
 	}
 	if (val.is_undefined()) {
 		throw std::runtime_error("JS script returned an undefined value");
 	}
 	
+	return result;
+}
+
+
+nlohmann::json MessageHandler::handle_js_validate_request(nlohmann::json& request) {
+	spdlog::trace(fmt::format("Got a js_validate request \n{}\n", request.dump(4)));
+	js::Context js_ctx(nullptr, channel);
+	auto script = fmt::format("function __testo__() {{\n{}\n}}\nlet result = __testo__()\nJSON.stringify(result)", request.at("js_script").get<std::string>());
+	spdlog::trace("Validating script \n{}", script);
+
+	nlohmann::json result;
+	
+	try {
+		auto val = js_ctx.eval(script, true);
+		result = nlohmann::json({
+			{"type", "validation_result"},
+			{"result", true}
+		});
+	} catch (const std::exception& error) {
+		result = nlohmann::json({
+			{"type", "validation_result"},
+			{"result", false},
+			{"data", error.what()},
+		});
+	}
+
 	return result;
 }

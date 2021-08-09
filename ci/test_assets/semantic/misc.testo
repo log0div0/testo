@@ -31,6 +31,18 @@ test empty_mouse_move_js {
 	}
 }
 
+test invalid_wait_js {
+	my_ubuntu_server {
+		wait "something" && js "bim bada bum"
+	}
+}
+
+test invalid_mouse_move {
+	my_ubuntu_server {
+		mouse move js "bim bada bum"
+	}
+}
+
 test invalid_mouse_parented_expr_0 {
 	my_ubuntu_server {
 		mouse move ("lala" && !js "another lala")

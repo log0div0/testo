@@ -628,11 +628,21 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 		throw Exception(std::string(js.ast_node->begin()) + ": Error: empty script in js selection");
 	}
 
-	/*try {
-		validate_js(script);
+	try {
+		auto validate_result = env->nn_client.validate_js(script);
+		auto type = validate_result.at("type").get<std::string>();
+		if (type == "error") {
+			throw std::runtime_error(validate_result.at("data").get<std::string>());
+		} else if (type == "validation_result") {
+			if (!validate_result.at("result").get<bool>()) {
+				throw std::runtime_error(validate_result.at("data").get<std::string>());
+			}
+		} else {
+			throw std::runtime_error(std::string("Unexpected message type: ") + type);
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
-	}*/
+	}
 
 	current_test->cksum_input << "js \"" << script << "\"";
 }

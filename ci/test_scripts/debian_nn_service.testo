@@ -1,0 +1,37 @@
+
+include "debian.testo"
+
+test debian_nn_service_checks: debian_install_testo {
+	debian {
+		exec bash """
+			service testo-nn-service status
+		"""
+
+		exec bash """
+			service testo-nn-service stop
+			!(service testo-nn-service status)
+		"""
+
+		exec bash """
+			service testo-nn-service start
+			service testo-nn-service status
+		"""
+
+		exec bash """
+			service testo-nn-service restart
+			service testo-nn-service status
+		"""
+
+		stop; start
+
+		wait "Log In"
+
+		type "root"; press Tab; sleep 1s
+		type "${password}"; press Enter
+		sleep 3s
+
+		exec bash """
+			service testo-nn-service status
+		"""
+	}
+}

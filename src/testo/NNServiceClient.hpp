@@ -14,6 +14,7 @@ struct NNServiceClient {
 	}
 
 	nlohmann::json eval_js(const stb::Image<stb::RGB>* image, const std::string& script);
+	nlohmann::json validate_js(const std::string& script);
 
 
 private:

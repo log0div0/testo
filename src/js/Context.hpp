@@ -19,11 +19,6 @@ struct ContextRef {
 	Value eval(const std::string& script, bool compile_only = false);
 	Value call_constructor(Value constuctor, const std::vector<Value>& args);
 
-	/*
-	JSValue JS_Call(JSContext *ctx, JSValueConst func_obj, JSValueConst this_obj,
-                int argc, JSValueConst *argv);
-	*/
-
 	Value call(Value func, const ValueRef object, std::vector<Value>& args);
 
 	Value get_global_object();
@@ -52,7 +47,6 @@ protected:
 	void set_opaque(void* opaque);
 	void* get_opaque() const;
 
-	Opaque opaque;
 
 	void register_global_function(const std::string& name, size_t length, JSCFunction* f);
 };
@@ -69,6 +63,7 @@ struct Context: ContextRef {
 	Context& operator=(Context&& other);
 
 private:
+	Opaque opaque;
 	void register_global_functions();
 	void register_classes();
 };

@@ -46,16 +46,29 @@ nlohmann::json NNServiceClient::eval_js(const stb::Image<stb::RGB>* image, const
 {
 	for (size_t i = 0; i < tries; ++i) {
 		try {
-			channel->send_request(JSRequest(*image, script));
+			channel->send(create_js_eval_request(*image, script));
 
 			while (true) {
-				auto response = channel->receive_response();
+				auto response = channel->recv();
 				auto type = response.at("type").get<std::string>();
+				if (type == "error") {
+					throw std::runtime_error(response.at("data").get<std::string>());
+				}
 				if (type == "ref_image_request") {
 					//handle this
 					std::string ref_file_path = response.at("data").get<std::string>();
-					stb::Image<stb::RGB> ref_image(ref_file_path);
-					channel->send_request(RefImage(ref_image));
+
+					stb::Image<stb::RGB> ref_image;
+					try {
+						ref_image = stb::Image<stb::RGB>(ref_file_path);
+					} catch (const std::exception& error) {
+						try {
+							channel->send(create_error_message(error.what()));
+						} catch (...) {}
+						throw;
+					}
+
+					channel->send(create_ref_image_message(ref_image));
 					continue;
 				}
 
@@ -63,6 +76,25 @@ nlohmann::json NNServiceClient::eval_js(const stb::Image<stb::RGB>* image, const
 			}
 
 			return {};
+		} catch (const std::system_error& error) {
+			if (check_system_code(error.code())) {
+				std::cout << "Lost the connection to the nn_service, reconnecting...\n";
+				establish_connection();
+			} else {
+				throw;
+			}
+		}
+	}
+	throw std::runtime_error("Can't request the nn_service to find the text");
+}
+
+nlohmann::json NNServiceClient::validate_js(const std::string& script)
+{
+	for (size_t i = 0; i < tries; ++i) {
+		try {
+			channel->send(create_js_validate_request(script));
+			auto response = channel->recv();
+			return response;
 		} catch (const std::system_error& error) {
 			if (check_system_code(error.code())) {
 				std::cout << "Lost the connection to the nn_service, reconnecting...\n";

@@ -93,12 +93,12 @@ Program::~Program() {
 }
 
 void Program::validate() {
+	env->setup(config);
 	VisitorSemantic semantic(config);
 	semantic.visit();
 }
 
 void Program::run() {
-	env->setup(config);
 	VisitorInterpreter runner(config);
 	runner.visit();
 }

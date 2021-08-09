@@ -36,6 +36,14 @@ inline nlohmann::json create_js_eval_request(const stb::Image<stb::RGB>& screens
 	};
 }
 
+inline nlohmann::json create_js_validate_request(const std::string& script) {
+	return {
+		{"version", NN_SERVICE_PROCOTOL_VERSION},
+		{"type", "js_validate"},
+		{"js_script", script}
+	};
+}
+
 inline nlohmann::json create_error_message(const std::string& message) {
 	return {
 		{"version", NN_SERVICE_PROCOTOL_VERSION},
