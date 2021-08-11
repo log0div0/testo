@@ -9,7 +9,15 @@ if (USE_CUDA)
 endif()
 
 file(GLOB SRCS *.cpp)
+
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/client_demo.cpp)
+
+if (UNIX)
+	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MainWin.cpp)
+endif()
+if (WIN32)
+	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MainLinux.cpp)
+endif()
 
 add_executable(testo_nn_service ${SRCS})
 

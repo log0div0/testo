@@ -208,6 +208,7 @@ void app_main(const std::string& settings_path) {
 		setup_logs();
 	} catch (const std::exception& error) {
 		std::cout << error.what() << std::endl;
+		return -1;
 	}
 
 	try {
