@@ -1,10 +1,11 @@
 
 #pragma once
 
+#include "../NNServiceClient.hpp"
+
 #include "VM.hpp"
 #include "FlashDrive.hpp"
 #include "Network.hpp"
-#include "../NNServiceClient.hpp"
 
 struct EnvironmentConfig {
 	

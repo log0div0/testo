@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "coro/StreamSocket.h"
 #include <thread>
 #include <chrono>
 #include <memory>
@@ -9,6 +8,8 @@
 
 #include "Messages.hpp"
 #include <nlohmann/json.hpp>
+
+#include <coro/StreamSocket.h>
 
 using Socket = coro::StreamSocket<asio::ip::tcp>;
 using Endpoint = asio::ip::tcp::endpoint;

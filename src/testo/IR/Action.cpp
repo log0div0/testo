@@ -1,6 +1,6 @@
 
-#include "Action.hpp"
 #include "Program.hpp"
+#include "Action.hpp"
 #include "../Lexer.hpp"
 
 namespace IR {

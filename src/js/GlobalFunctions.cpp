@@ -1,7 +1,7 @@
 
+#include "../nn_service/Messages.hpp"
 #include "GlobalFunctions.hpp"
 #include "Tensor.hpp"
-#include "../nn_service/Messages.hpp"
 #include <iostream>
 
 namespace js {

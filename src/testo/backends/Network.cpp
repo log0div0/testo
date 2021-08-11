@@ -1,6 +1,6 @@
 
-#include "Network.hpp"
 #include "Environment.hpp"
+#include "Network.hpp"
 #include <fmt/format.h>
 
 Network::Network(const nlohmann::json& config_): config(config_) {

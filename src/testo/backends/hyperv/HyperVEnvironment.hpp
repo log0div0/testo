@@ -1,10 +1,10 @@
 
 #pragma once
 
+#include "../Environment.hpp"
 #include "HyperVVM.hpp"
 #include "HyperVFlashDrive.hpp"
 #include "HyperVNetwork.hpp"
-#include "../Environment.hpp"
 
 struct HyperVEnvironment: Environment {
 

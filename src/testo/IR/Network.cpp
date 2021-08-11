@@ -1,7 +1,7 @@
 
+#include "../backends/Environment.hpp"
 #include "Network.hpp"
 #include <fmt/format.h>
-#include "../backends/Environment.hpp"
 
 namespace IR {
 

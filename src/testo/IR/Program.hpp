@@ -1,12 +1,12 @@
 
 #pragma once
 
+#include "../backends/Environment.hpp"
 #include "Test.hpp"
 #include "Macro.hpp"
 #include "Param.hpp"
 #include "../VisitorSemantic.hpp"
 #include "../VisitorInterpreter.hpp"
-#include "../backends/Environment.hpp"
 #include <unordered_set>
 #include <unordered_map>
 

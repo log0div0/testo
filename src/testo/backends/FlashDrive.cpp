@@ -1,6 +1,6 @@
 
-#include "FlashDrive.hpp"
 #include "Environment.hpp"
+#include "FlashDrive.hpp"
 #include <fmt/format.h>
 
 #ifdef __linux__

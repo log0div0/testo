@@ -1,7 +1,7 @@
 
+#include "backends/Environment.hpp"
 #include "ModeClean.hpp"
 #include "Utils.hpp"
-#include "backends/Environment.hpp"
 #include "IR/Network.hpp"
 #include "IR/FlashDrive.hpp"
 #include "IR/Machine.hpp"

@@ -1,8 +1,8 @@
 
+#include <coro/Timer.h>
 #include "HyperVGuestAdditions.hpp"
 #include "HyperVVM.hpp"
 #include <iostream>
-#include <coro/Timer.h>
 
 using namespace std::chrono_literals;
 

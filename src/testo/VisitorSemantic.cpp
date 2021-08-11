@@ -1,6 +1,6 @@
 
-#include "VisitorSemantic.hpp"
 #include "backends/Environment.hpp"
+#include "VisitorSemantic.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
 #include "Parser.hpp"
