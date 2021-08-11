@@ -42,9 +42,8 @@ private:
 	};
 
 	//inner helpers
-	void match(Token::category type);
-	void match(std::vector<Token::category> types);
-	void consume();
+	Token eat(Token::category type);
+	Token eat(std::vector<Token::category> types);
 
 	Token LT(size_t i) const;
 	Token::category LA(size_t i) const;
