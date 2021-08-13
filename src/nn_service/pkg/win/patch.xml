@@ -1,6 +1,13 @@
 <CPackWiXPatch>
 	<CPackWiXFragment Id="#PRODUCT">
 		<DirectoryRef Id="INSTALL_ROOT">
+			<Component Id="RegistryEntries" Guid="{2e000d7a-2cc0-4144-ac40-9159c9721207}">
+				<RegistryKey Root="HKLM"
+							 Key="SOFTWARE\Testo Lang\Testo NN Service"
+							 Action="createAndRemoveOnUninstall">
+					<RegistryValue Name="InstallDir" Type="string" Value="[INSTALL_ROOT]"/>
+				</RegistryKey>
+			</Component>
 			<Directory Id="bin" Name="bin">
 				<Component Id="TestoNNService" Guid="{548b8f20-cbf3-4745-8c11-7f6a1088e3cc}">
 					<File Id='TestoNNServiceEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo_nn_service.exe' Vital='yes' />
@@ -19,6 +26,7 @@
 		</DirectoryRef>
 	</CPackWiXFragment>
 	<CPackWiXFragment Id="#PRODUCTFEATURE">
+		<ComponentRef Id="RegistryEntries"/>
 		<ComponentRef Id="TestoNNService"/>
 	</CPackWiXFragment>
 </CPackWiXPatch>
