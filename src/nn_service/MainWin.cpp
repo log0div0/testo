@@ -187,9 +187,9 @@ void setup_logs(const fs::path& log_file_path) {
 }
 
 int _tmain(int argc, TCHAR *argv[]) {
-	fs::path current_folder = fs::path(winapi::get_module_file_name()).parent_path();
-	fs::path settings_path = current_folder / "nn_service.json";
-	fs::path logs_path = current_folder / "nn_service_logs.txt";
+	fs::path parent_folder = fs::path(winapi::get_module_file_name()).parent_path().parent_path();
+	fs::path settings_path = parent_folder / "nn_service.json";
+	fs::path logs_path = parent_folder / "nn_service_logs.txt";
 
 	try {
 		std::ifstream is(settings_path.generic_string());

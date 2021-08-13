@@ -1,0 +1,24 @@
+<CPackWiXPatch>
+	<CPackWiXFragment Id="#PRODUCT">
+		<DirectoryRef Id="INSTALL_ROOT">
+			<Directory Id="bin" Name="bin">
+				<Component Id="TestoNNService" Guid="{548b8f20-cbf3-4745-8c11-7f6a1088e3cc}">
+					<File Id='TestoNNServiceEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo_nn_service.exe' Vital='yes' />
+					<ServiceInstall
+						Id="TestoNNerviceInstall"
+						Type="ownProcess"
+						Name="testo_nn_service"
+						DisplayName="Testo NN Service"
+						Description="Detects text and images on screenshots"
+						Start="auto"
+						ErrorControl="normal"
+						/>
+					<ServiceControl Id="TestoNNServiceControl" Start="install" Stop="both" Remove="uninstall" Name="testo_nn_service" Wait="yes" />
+				</Component>
+			</Directory>
+		</DirectoryRef>
+	</CPackWiXFragment>
+	<CPackWiXFragment Id="#PRODUCTFEATURE">
+		<ComponentRef Id="TestoNNService"/>
+	</CPackWiXFragment>
+</CPackWiXPatch>

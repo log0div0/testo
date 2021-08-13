@@ -35,6 +35,7 @@ if (UNIX)
 	target_link_libraries(testo_nn_service_client_demo pthread)
 endif()
 
-if (USE_CUDA)
+add_subdirectory(pkg)
+#[[if (USE_CUDA)
 	add_subdirectory(pkg)
-endif()
+endif()]]
