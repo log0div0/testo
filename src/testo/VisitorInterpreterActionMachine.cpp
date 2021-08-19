@@ -553,6 +553,10 @@ std::string VisitorInterpreterActionMachine::build_select_text_script(const IR::
 			final_text += '\\';
 		}
 
+		if (i == '\\') {
+			final_text += '\\';
+		}
+
 		final_text += i;
 	}
 
