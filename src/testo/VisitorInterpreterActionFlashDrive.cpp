@@ -14,8 +14,10 @@ void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::Actio
 		visit_sleep({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
 		visit_copy({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Block<AST::Action>>(action)) {
 		visit_action_block(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionWithDelim>(action)) {
+		visit_action(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		;
 	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Action>>(action)) {
@@ -25,7 +27,7 @@ void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::Actio
 	} else if (auto p = std::dynamic_pointer_cast<AST::ForClause>(action)) {
 		visit_for_clause(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
-		throw CycleControlException(p->t);
+		throw CycleControlException(p->token);
 	}  else {
 		throw std::runtime_error("Should never happen");
 	}

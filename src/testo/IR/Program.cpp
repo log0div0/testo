@@ -159,6 +159,7 @@ std::map<std::string, std::string> testo_timeout_params = {
 	{"TESTO_TYPE_DEFAULT_INTERVAL", "30ms"},
 	{"TESTO_EXEC_DEFAULT_TIMEOUT", "10m"},
 	{"TESTO_COPY_DEFAULT_TIMEOUT", "10m"},
+	{"TESTO_SHUTDOWN_DEFAULT_TIMEOUT", "1m"},
 };
 
 void Program::setup_stack() {
@@ -187,11 +188,11 @@ void Program::visit_stmt(const std::shared_ptr<AST::Stmt>& stmt) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Param>(stmt)) {
 		collect_param(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Controller>(stmt)) {
-		if (p->t.type() == Token::category::machine) {
+		if (p->controller.type() == Token::category::machine) {
 			collect_machine(p);
-		} else if (p->t.type() == Token::category::flash) {
+		} else if (p->controller.type() == Token::category::flash) {
 			collect_flash_drive(p);
-		} else if (p->t.type() == Token::category::network) {
+		} else if (p->controller.type() == Token::category::network) {
 			collect_network(p);
 		} else {
 			throw std::runtime_error("Unknown controller type");
@@ -201,8 +202,8 @@ void Program::visit_stmt(const std::shared_ptr<AST::Stmt>& stmt) {
 	}
 }
 
-void Program::visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block) {
-	for (auto stmt: stmt_block->stmts) {
+void Program::visit_statement_block(const std::shared_ptr<AST::Block<AST::Stmt>>& stmt_block) {
+	for (auto stmt: stmt_block->items) {
 		if (auto p = std::dynamic_pointer_cast<AST::Macro>(stmt)) {
 			throw Exception(std::string(stmt->begin()) + ": Error: nested macro declarations are not supported");
 		} else if (auto p = std::dynamic_pointer_cast<AST::Param>(stmt)) {
@@ -229,12 +230,12 @@ void Program::visit_macro(std::shared_ptr<IR::Macro> macro) {
 
 void Program::visit_macro_call(const IR::MacroCall& macro_call) {
 	current_macro_call_stack.push_back(macro_call.ast_node);
-	macro_call.visit_semantic<AST::MacroBodyStmt>(this);
+	macro_call.visit_semantic<AST::Stmt>(this);
 	current_macro_call_stack.pop_back();
 }
 
-void Program::visit_macro_body(const std::shared_ptr<AST::MacroBodyStmt>& macro_body) {
-	visit_statement_block(macro_body->stmt_block);
+void Program::visit_macro_body(const std::shared_ptr<AST::Block<AST::Stmt>>& macro_body) {
+	visit_statement_block(macro_body);
 }
 
 void Program::collect_macro(const std::shared_ptr<AST::Macro>& macro) {

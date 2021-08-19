@@ -90,11 +90,11 @@ private:
 	void setup_stack();
 
 	void collect_top_level_objects(const std::shared_ptr<AST::Program>& ast);
-	void visit_statement_block(const std::shared_ptr<AST::StmtBlock>& stmt_block);
+	void visit_statement_block(const std::shared_ptr<AST::Block<AST::Stmt>>& stmt_block);
 	void visit_stmt(const std::shared_ptr<AST::Stmt>& stmt);
 	void visit_macro(std::shared_ptr<IR::Macro> macro);
 	void visit_macro_call(const IR::MacroCall& macro_call);
-	void visit_macro_body(const std::shared_ptr<AST::MacroBodyStmt>& macro_body);
+	void visit_macro_body(const std::shared_ptr<AST::Block<AST::Stmt>>& macro_body);
 	void collect_test(const std::shared_ptr<AST::Test>& ast);
 	void collect_macro(const std::shared_ptr<AST::Macro>& ast);
 	void collect_param(const std::shared_ptr<AST::Param>& ast);
@@ -121,7 +121,7 @@ private:
 			ss << std::string(ast_node->begin()) + ": Error: " + T::type_name() + " \"" + t->name() + "\" is already defined" << std::endl << std::endl;
 
 			for (auto macro_call: inserted.first->second->macro_call_stack) {
-				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->name().value() << std::endl;
+				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->to_string() << std::endl;
 			}
 
 			ss << std::string(inserted.first->second->ast_node->begin()) << ": note: previous declaration was here";

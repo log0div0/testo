@@ -1,10 +1,7 @@
 
 #pragma once
 
-#include "../TemplateLiterals.hpp"
-#include "../Exceptions.hpp"
-#include "Object.hpp"
-#include <fmt/format.h>
+#include "Base.hpp"
 
 namespace IR {
 
@@ -173,6 +170,7 @@ struct Copy: Action<AST::Copy> {
 	std::string timeout() const;
 	std::string from() const;
 	std::string to() const;
+	bool nocheck() const;
 };
 
 struct Screenshot: Action<AST::Screenshot> {
@@ -183,11 +181,6 @@ struct Screenshot: Action<AST::Screenshot> {
 struct CycleControl: Action<AST::CycleControl> {
 	using Action<AST::CycleControl>::Action;
 	std::string type() const;
-};
-
-struct StringTokenUnion: Action<AST::StringTokenUnion> {
-	using Action<AST::StringTokenUnion>::Action;
-	std::string resolve() const;
 };
 
 }

@@ -271,6 +271,26 @@ std::shared_ptr<Program> Parser::parse() {
 	return std::shared_ptr<Program>(new Program(stmts));
 }
 
+std::shared_ptr<AST::OptionSeq> Parser::option_seq(const OptionSeqSchema& schema) {
+	auto seq = std::make_shared<AST::OptionSeq>();
+	while (true) {
+		Token next_token = LT(1);
+		if (next_token.type() != Token::category::id) {
+			break;
+		}
+		auto it = schema.find(next_token.value());
+		if (it == schema.end()) {
+			break;
+		}
+		auto option = std::make_shared<AST::Option>(eat(Token::category::id));
+		if (it->second != Token::category::none) {
+			option->value = string_token_union(it->second);
+		}
+		seq->options.push_back(std::move(option));
+	}
+	return seq;
+}
+
 std::shared_ptr<Stmt> Parser::stmt() {
 	if (test_test()) {
 		return test();
@@ -288,7 +308,7 @@ std::shared_ptr<Stmt> Parser::stmt() {
 	}
 }
 
-std::shared_ptr<AST::StmtBlock> Parser::stmt_block() {
+std::shared_ptr<AST::Block<AST::Stmt>> Parser::stmt_block() {
 	Token lbrace = eat(Token::category::lbrace);
 
 	newline_list();
@@ -302,8 +322,7 @@ std::shared_ptr<AST::StmtBlock> Parser::stmt_block() {
 
 	Token rbrace = eat(Token::category::rbrace);
 
-	auto statement = std::shared_ptr<StmtBlock>(new StmtBlock(lbrace, rbrace,  stmts));
-	return statement;
+	return std::make_shared<Block<Stmt>>(lbrace, rbrace,  stmts);
 }
 
 std::shared_ptr<Test> Parser::test() {
@@ -311,7 +330,7 @@ std::shared_ptr<Test> Parser::test() {
 	//To be honest, we should place attr list in a separate Node. And we will do that
 	//just when it could be used somewhere else
 	if (LA(1) == Token::category::lbracket) {
-		attrs = attr_block("test_global");
+		attrs = attr_block();
 		newline_list();
 	}
 
@@ -411,7 +430,7 @@ std::shared_ptr<Param> Parser::param() {
 	return std::make_shared<Param>(param_token, name, value);
 }
 
-std::shared_ptr<Attr> Parser::attr(const std::string& ctx_name) {
+std::shared_ptr<Attr> Parser::attr() {
 	Token name = eat(Token::category::id);
 	Token id = Token();
 
@@ -424,8 +443,7 @@ std::shared_ptr<Attr> Parser::attr(const std::string& ctx_name) {
 
 	std::shared_ptr<IAttrValue> value;
 	if (LA(1) == Token::category::lbrace) {
-		auto block = attr_block(name.value());
-		value = std::make_shared<AttrValue<AttrBlock>>(block);
+		value = attr_block();
 	} else {
 		//string token union
 		//Let's check it's either string or number or size or boolean
@@ -443,21 +461,20 @@ std::shared_ptr<Attr> Parser::attr(const std::string& ctx_name) {
 		}
 
 		auto simple_value = string_token_union(LA(1));
-		auto simple_attr = std::make_shared<SimpleAttr>(simple_value);
-		value = std::make_shared<AttrValue<SimpleAttr>>(simple_attr);
+		value = std::make_shared<AttrSimpleValue>(simple_value);
 	}
 
 	return std::make_shared<Attr>(name, id, value);
 }
 
-std::shared_ptr<AttrBlock> Parser::attr_block(const std::string& ctx_name) {
+std::shared_ptr<AttrBlock> Parser::attr_block() {
 	Token lbrace = eat({Token::category::lbrace, Token::category::lbracket});
 
 	newline_list();
 	std::vector<std::shared_ptr<Attr>> attrs;
 
 	while (LA(1) == Token::category::id) {
-		attrs.push_back(attr(ctx_name));
+		attrs.push_back(attr());
 		if ((LA(1) == Token::category::rbrace) || (LA(1) == Token::category::rbracket)) {
 			break;
 		}
@@ -473,7 +490,7 @@ std::shared_ptr<AttrBlock> Parser::attr_block(const std::string& ctx_name) {
 		eat(Token::category::rbracket);
 	}
 
-	return std::shared_ptr<AttrBlock>(new AttrBlock(lbrace, rbrace, attrs));
+	return std::make_shared<AttrBlock>(lbrace, rbrace, attrs);
 }
 
 std::shared_ptr<AST::Controller> Parser::controller() {
@@ -486,17 +503,7 @@ std::shared_ptr<AST::Controller> Parser::controller() {
 		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: expected attribute block");
 	}
 
-	std::string ctx_name;
-	if (controller.type() == Token::category::machine) {
-		ctx_name = "vm_global";
-	} else if (controller.type() == Token::category::flash) {
-		ctx_name = "fd_global";
-	} else if (controller.type() == Token::category::network) {
-		ctx_name = "network_global";
-	} else {
-		throw std::runtime_error("Should never happen");
-	}
-	auto block = attr_block(ctx_name);
+	auto block = attr_block();
 	return std::make_shared<AST::Controller>(controller, name, block);
 }
 
@@ -510,7 +517,7 @@ std::shared_ptr<Cmd> Parser::command() {
 	}
 }
 
-std::shared_ptr<CmdBlock> Parser::command_block() {
+std::shared_ptr<Block<Cmd>> Parser::command_block() {
 	Token lbrace = eat(Token::category::lbrace);
 
 	newline_list();
@@ -523,7 +530,7 @@ std::shared_ptr<CmdBlock> Parser::command_block() {
 
 	Token rbrace = eat(Token::category::rbrace);
 
-	return std::shared_ptr<CmdBlock>(new CmdBlock(lbrace, rbrace, commands));
+	return std::make_shared<Block<Cmd>>(lbrace, rbrace, commands);
 }
 
 std::shared_ptr<KeyCombination> Parser::key_combination() {
@@ -554,6 +561,7 @@ std::shared_ptr<KeySpec> Parser::key_spec() {
 }
 
 std::shared_ptr<Action> Parser::action() {
+	bool delim_required = true;
 	std::shared_ptr<Action> action;
 	if (LA(1) == Token::category::abort) {
 		action = abort();
@@ -588,10 +596,13 @@ std::shared_ptr<Action> Parser::action() {
 	} else if (LA(1) == Token::category::screenshot) {
 		action = screenshot();
 	} else if (LA(1) == Token::category::lbrace) {
+		delim_required = false;
 		action = action_block();
 	} else if (LA(1) == Token::category::if_) {
+		delim_required = false;
 		action = if_clause();
 	} else if (LA(1) == Token::category::for_) {
+		delim_required = false;
 		action = for_clause();
 	} else if ((LA(1) == Token::category::break_) || (LA(1) == Token::category::continue_)) {
 		action = cycle_control();
@@ -603,10 +614,7 @@ std::shared_ptr<Action> Parser::action() {
 		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown action: " + LT(1).value());
 	}
 
-	if (action->t.type() != Token::category::action_block &&
-		action->t.type() != Token::category::if_ &&
-		action->t.type() != Token::category::for_)
-	{
+	if (delim_required) {
 		Token delim;
 		if (LA(1) == Token::category::newline) {
 			delim = eat(Token::category::newline);
@@ -616,7 +624,7 @@ std::shared_ptr<Action> Parser::action() {
 			throw std::runtime_error(std::string(LT(1).begin()) +
 				": Expected new line or ';'");
 		}
-		action->delim = delim;
+		action = std::make_shared<ActionWithDelim>(action, delim);
 	}
 
 	return action;
@@ -647,48 +655,28 @@ std::shared_ptr<Type> Parser::type() {
 	Token type_token = eat(Token::category::type_);
 
 	auto text = string();
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"interval", Token::category::time_interval}
+	});
 
-	std::shared_ptr<StringTokenUnion> interval = nullptr;
-
-	if (test_string() || LA(1) == Token::category::interval) {
-		eat(Token::category::interval);
-		interval = string_token_union(Token::category::time_interval);
-	}
-	return std::make_shared<Type>(type_token, text, interval);
+	return std::make_shared<Type>(type_token, text, options);
 }
 
 std::shared_ptr<Wait> Parser::wait() {
 	Token wait_token = eat(Token::category::wait);
 
-	std::shared_ptr<SelectExpr> select_expression(nullptr);
-	std::shared_ptr<StringTokenUnion> timeout = nullptr;
-	std::shared_ptr<StringTokenUnion> interval = nullptr;
-
 	if (!test_selectable()) {
 		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to wait");
 	}
 
-	select_expression = select_expr();
+	std::shared_ptr<SelectExpr> select_expression = select_expr();
 
-	//special check for multiline strings. We don't support them yet.
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"timeout", Token::category::time_interval},
+		{"interval", Token::category::time_interval}
+	});
 
-	//ToDo: Thiple check this part
-	if (select_expression->t.type() == Token::category::triple_quoted_string) {
-		throw std::runtime_error(std::string(select_expression->begin()) +
-			": Error: multiline strings are not supported in wait action");
-	}
-
-	if (LA(1) == Token::category::timeout) {
-		eat(Token::category::timeout);
-		timeout = string_token_union(Token::category::time_interval);
-	}
-
-	if (LA(1) == Token::category::interval) {
-		eat(Token::category::interval);
-		interval = string_token_union(Token::category::time_interval);
-	}
-
-	return std::make_shared<Wait>(wait_token, select_expression, timeout, interval);
+	return std::make_shared<Wait>(wait_token, select_expression, options);
 }
 
 std::shared_ptr<AST::Sleep> Parser::sleep() {
@@ -710,14 +698,11 @@ std::shared_ptr<Press> Parser::press() {
 		keys.push_back(key_spec());
 	}
 
-	std::shared_ptr<StringTokenUnion> interval = nullptr;
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"interval", Token::category::time_interval}
+	});
 
-	if (LA(1) == Token::category::interval) {
-		eat(Token::category::interval);
-		interval = string_token_union(Token::category::time_interval);
-	}
-
-	return std::make_shared<Press>(press_token, keys, interval);
+	return std::make_shared<Press>(press_token, keys, options);
 }
 
 std::shared_ptr<Hold> Parser::hold() {
@@ -789,11 +774,9 @@ std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
 }
 
 std::shared_ptr<MouseSelectable> Parser::mouse_selectable() {
-	auto select = selectable();
+	auto select = basic_select_expr();
 
 	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
-
-	auto select_end = select->end();
 
 	for (Pos it = select->end(); LA(1) == Token::category::dot && Pos::is_adjacent(it, LT(1).begin());) {
 		auto specifier = mouse_additional_specifier();
@@ -801,14 +784,11 @@ std::shared_ptr<MouseSelectable> Parser::mouse_selectable() {
 		it = specifier->end();
 	}
 
-	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"timeout", Token::category::time_interval}
+	});
 
-	if (LA(1) == Token::category::timeout) {
-		eat(Token::category::timeout);
-		timeout = string_token_union(Token::category::time_interval);
-	}
-
-	return std::make_shared<MouseSelectable>(select, specifiers, timeout);
+	return std::make_shared<MouseSelectable>(select, specifiers, options);
 }
 
 std::shared_ptr<AST::MouseMoveClick> Parser::mouse_move_click() {
@@ -944,14 +924,11 @@ std::shared_ptr<Stop> Parser::stop() {
 std::shared_ptr<Shutdown> Parser::shutdown() {
 	Token shutdown_token = eat(Token::category::shutdown);
 
-	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"timeout", Token::category::time_interval}
+	});
 
-	if (LA(1) == Token::category::timeout) {
-		eat(Token::category::timeout);
-		timeout = string_token_union(Token::category::time_interval);
-	}
-
-	return std::make_shared<Shutdown>(shutdown_token, timeout);
+	return std::make_shared<Shutdown>(shutdown_token, options);
 }
 
 std::shared_ptr<Exec> Parser::exec() {
@@ -960,14 +937,11 @@ std::shared_ptr<Exec> Parser::exec() {
 
 	auto commands = string();
 
-	std::shared_ptr<StringTokenUnion> timeout = nullptr;
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"timeout", Token::category::time_interval}
+	});
 
-	if (LA(1) == Token::category::timeout) {
-		eat(Token::category::timeout);
-		timeout = string_token_union(Token::category::time_interval);
-	}
-
-	return std::make_shared<Exec>(exec_token, process_token, commands, timeout);
+	return std::make_shared<Exec>(exec_token, process_token, commands, options);
 }
 
 std::shared_ptr<Copy> Parser::copy() {
@@ -976,20 +950,12 @@ std::shared_ptr<Copy> Parser::copy() {
 	auto from = string();
 	auto to = string();
 
-	Token nocheck = Token();
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"timeout", Token::category::time_interval},
+		{"nocheck", Token::category::none}
+	});
 
-	if (LT(1).value() == "nocheck") {
-		nocheck = eat(Token::category::id);
-	}
-
-	std::shared_ptr<StringTokenUnion> timeout = nullptr;
-
-	if (LA(1) == Token::category::timeout) {
-		eat(Token::category::timeout);
-		timeout = string_token_union(Token::category::time_interval);
-	}
-
-	return std::make_shared<Copy>(copy_token, from, to, nocheck, timeout);
+	return std::make_shared<Copy>(copy_token, from, to, options);
 }
 
 std::shared_ptr<Screenshot> Parser::screenshot() {
@@ -998,7 +964,7 @@ std::shared_ptr<Screenshot> Parser::screenshot() {
 	return std::make_shared<Screenshot>(screenshot_token, destination);
 }
 
-std::shared_ptr<ActionBlock> Parser::action_block() {
+std::shared_ptr<Block<Action>> Parser::action_block() {
 	Token lbrace = eat(Token::category::lbrace);
 
 	newline_list();
@@ -1012,14 +978,14 @@ std::shared_ptr<ActionBlock> Parser::action_block() {
 
 	Token rbrace = eat(Token::category::rbrace);
 
-	return std::make_shared<ActionBlock>(lbrace, rbrace,  actions);
+	return std::make_shared<Block<Action>>(lbrace, rbrace,  actions);
 }
 
 template <typename BaseType>
 std::shared_ptr<MacroCall<BaseType>> Parser::macro_call() {
 	Token macro_name = eat(Token::category::id);
 
-	eat(Token::category::lparen);
+	auto lparen = eat(Token::category::lparen);
 
 	std::vector<std::shared_ptr<String>> params;
 
@@ -1035,8 +1001,8 @@ std::shared_ptr<MacroCall<BaseType>> Parser::macro_call() {
 		params.push_back(string());
 	}
 
-	eat(Token::category::rparen);
-	return std::make_shared<MacroCall<BaseType>>(macro_name, params);
+	auto rparen = eat(Token::category::rparen);
+	return std::make_shared<MacroCall<BaseType>>(macro_name, lparen, params, rparen);
 }
 
 std::shared_ptr<IfClause> Parser::if_clause() {
@@ -1128,12 +1094,38 @@ std::shared_ptr<CycleControl> Parser::cycle_control() {
 }
 
 std::shared_ptr<SelectExpr> Parser::select_expr() {
-	auto left = selectable();
+	std::shared_ptr<SelectExpr> left = select_simple_expr();
+
 	if ((LA(1) == Token::category::double_ampersand) ||
 		(LA(1) == Token::category::double_vertical_bar)) {
 		return select_binop(left);
 	} else {
 		return left;
+	}
+}
+
+std::shared_ptr<SelectSimpleExpr> Parser::select_simple_expr() {
+	if (LA(1) == Token::category::exclamation_mark) {
+		Token not_token = eat(Token::category::exclamation_mark);
+		return std::make_shared<SelectNegationExpr>(not_token, select_simple_expr());
+	} else if(LA(1) == Token::category::lparen) {
+		return select_parented_expr();
+	} else {
+		return basic_select_expr();
+	}
+}
+
+std::shared_ptr<AST::BasicSelectExpr> Parser::basic_select_expr() {
+	if (test_string()) {
+		return select_text();
+	} else if(LA(1) == Token::category::js) {
+		return select_js();
+	} else if(LA(1) == Token::category::img) {
+		return select_img();
+	} else if(LA(1) == Token::category::homm3) {
+		return select_homm3();
+	} else {
+		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: Unknown selective object type: " + LT(1).value());
 	}
 }
 
@@ -1149,32 +1141,6 @@ std::shared_ptr<SelectBinOp> Parser::select_binop(std::shared_ptr<SelectExpr> le
 	newline_list();
 	auto right = select_expr();
 	return std::make_shared<AST::SelectBinOp>(left, op, right);
-}
-
-std::shared_ptr<Selectable> Parser::selectable() {
-	auto not_token = Token();
-	if (LA(1) == Token::category::exclamation_mark) {
-		not_token = eat(Token::category::exclamation_mark);
-	}
-
-	std::shared_ptr<Selectable> selectable = nullptr;
-
-	if (test_string()) {
-		selectable = select_text();
-	} else if(LA(1) == Token::category::js) {
-		selectable = select_js();
-	} else if(LA(1) == Token::category::img) {
-		selectable = select_img();
-	} else if(LA(1) == Token::category::homm3) {
-		selectable = select_homm3();
-	} else if(LA(1) == Token::category::lparen) {
-		selectable = select_parented_expr();
-	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: Unknown selective object type: " + LT(1).value());
-	}
-
-	selectable->excl_mark = not_token;
-	return selectable;
 }
 
 std::shared_ptr<SelectJS> Parser::select_js() {
@@ -1197,7 +1163,7 @@ std::shared_ptr<SelectHomm3> Parser::select_homm3() {
 
 std::shared_ptr<SelectText> Parser::select_text() {
 	auto text = string();
-	return std::shared_ptr<SelectText>(new SelectText(text));
+	return std::shared_ptr<SelectText>(new SelectText({}, text));
 }
 
 std::shared_ptr<String> Parser::string() {
@@ -1225,16 +1191,9 @@ std::shared_ptr<AST::StringTokenUnion> Parser::string_token_union(Token::categor
 			Token::type_to_string(LA(1)) + " " + LT(1).value());
 	}
 
-	Token token;
-	std::shared_ptr<String> str = nullptr;
+	Token token = eat({expected_token_type, Token::category::quoted_string, Token::category::triple_quoted_string});
 
-	if (test_string()) {
-		str = string();
-	} else {
-		token = eat(expected_token_type);
-	}
-
-	return std::shared_ptr<StringTokenUnion>(new StringTokenUnion(token, str, expected_token_type));
+	return std::shared_ptr<StringTokenUnion>(new StringTokenUnion(token, expected_token_type));
 }
 
 std::shared_ptr<ParentedExpr> Parser::parented_expr() {
@@ -1278,20 +1237,12 @@ std::shared_ptr<Check> Parser::check() {
 
 	select_expression = select_expr();
 
-	std::shared_ptr<StringTokenUnion> timeout = nullptr;
-	std::shared_ptr<StringTokenUnion> interval = nullptr;
+	std::shared_ptr<OptionSeq> options = option_seq({
+		{"interval", Token::category::time_interval},
+		{"timeout", Token::category::time_interval}
+	});
 
-	if (LA(1) == Token::category::timeout) {
-		eat(Token::category::timeout);
-		timeout = string_token_union(Token::category::time_interval);
-	}
-
-	if (LA(1) == Token::category::interval) {
-		eat(Token::category::interval);
-		interval = string_token_union(Token::category::time_interval);
-	}
-
-	return std::make_shared<Check>(check_token, select_expression, timeout, interval);
+	return std::make_shared<Check>(check_token, select_expression, options);
 }
 
 std::shared_ptr<BinOp> Parser::binop(std::shared_ptr<Expr> left) {
@@ -1303,26 +1254,32 @@ std::shared_ptr<BinOp> Parser::binop(std::shared_ptr<Expr> left) {
 
 std::shared_ptr<Negation> Parser::negation() {
 	auto not_token = eat(Token::category::NOT);
-	return std::make_shared<Negation>(not_token, expr());
+	return std::make_shared<Negation>(not_token, simple_expr());
+}
+
+std::shared_ptr<SimpleExpr> Parser::simple_expr() {
+	if (LA(1) == Token::category::NOT) {
+		return negation();
+	} else if (LA(1) == Token::category::check) {
+		return check();
+	} else if(test_defined()) {
+		return defined();
+	} else if (LA(1) == Token::category::lparen) {
+		return parented_expr();
+	} else if (test_string()) {
+		return std::make_shared<StringExpr>(string());
+	} else {
+		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown expression: " + LT(1).value());
+	}
 }
 
 std::shared_ptr<Expr> Parser::expr() {
 	std::shared_ptr<Expr> left = nullptr;
 
-	if (LA(1) == Token::category::NOT) {
-		left = negation();
-	} else if (LA(1) == Token::category::check) {
-		left = check();
-	} else if(test_comparison()) {
+	if (test_comparison()) {
 		left = comparison();
-	} else if(test_defined()) {
-		left = defined();
-	} else if (LA(1) == Token::category::lparen) {
-		left = parented_expr();
-	} else if (test_string()) {
-		left = std::make_shared<StringExpr>(string());
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown expression: " + LT(1).value());
+		left = simple_expr();
 	}
 
 	if ((LA(1) == Token::category::AND) ||

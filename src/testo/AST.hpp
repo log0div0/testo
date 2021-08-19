@@ -11,205 +11,196 @@
 namespace AST {
 
 struct Node {
-	Node(const Token& t): t(t) {}
 	virtual ~Node() {}
-	virtual Pos begin() const {
-		return t.begin();
-	}
-	virtual Pos end() const {
-		return t.end();
-	}
-	virtual operator std::string() const {
-		return t.value();
-	}
-
-	Token t;
+	virtual Pos begin() const = 0;
+	virtual Pos end() const = 0;
+	virtual std::string to_string() const = 0;
 };
 
-//basic unit of expressions - could be double quoted string or a var_ref (variable)
 struct String: public Node {
-	using Node::Node;
-
-	std::string text() const {
-		if (t.type() == Token::category::quoted_string) {
-			return t.value().substr(1, t.value().length() - 2);
-		} else {
-			return t.value().substr(3, t.value().length() - 6);
-		}
-	}
-};
-
-/*
-This is a special Node
-It incapsulates the case when
-Parser expects either String either regular Token.
-Semantic later should convert the String to a specific Token if
-needed.
-*/
-struct StringTokenUnion: public Node {
-	StringTokenUnion(const Token& token, std::shared_ptr<String> string, Token::category expected_token_type):
-		Node(Token(Token::category::string_token_union, "string_token_union", Pos(), Pos())),
-		token(token), string(string), expected_token_type(expected_token_type) {}
+	String(Token token_): token(std::move(token_)) {}
 
 	Pos begin() const override {
-		if (string) {
-			return string->begin();
-		} else {
-			return token.begin();
-		}
+		return token.begin();
 	}
-
 	Pos end() const override {
-		if (string) {
-			return string->end();
-		} else {
-			return token.end();
-		}
+		return token.end();
 	}
-
-	operator std::string() const override {
-		if (string) {
-			return std::string(*string);
-		} else {
-			return token.value();
-		}
+	std::string to_string() const override {
+		return token.value();
 	}
 
 	std::string text() const {
-		if (string) {
-			return string->text();
+		if (token.type() == Token::category::quoted_string) {
+			return token.value().substr(1, token.value().length() - 2);
 		} else {
-			return token.value();
+			return token.value().substr(3, token.value().length() - 6);
 		}
 	}
 
 	Token token;
-	std::shared_ptr<String> string;
+};
+
+struct StringTokenUnion: public Node {
+	StringTokenUnion(Token token_, Token::category expected_token_type_):
+		token(std::move(token_)), expected_token_type(expected_token_type_) {}
+
+	Pos begin() const override {
+		return token.begin();
+	}
+	Pos end() const override {
+		return token.end();
+	}
+	std::string to_string() const override {
+		return token.value();
+	}
+
+	std::string text() const {
+		if (token.type() == Token::category::quoted_string) {
+			return token.value().substr(1, token.value().length() - 2);
+		} else if (token.type() == Token::category::triple_quoted_string) {
+			return token.value().substr(3, token.value().length() - 6);
+		} else {
+			return token.value();
+		}
+	}
+
+	bool is_string() const {
+		return (token.type() == Token::category::quoted_string) ||
+			(token.type() == Token::category::triple_quoted_string);
+	}
+
+	Token token;
 	Token::category expected_token_type;
 };
 
 struct SelectExpr: public Node {
-	using Node::Node;
 };
 
-//String or SelectQuery. Used only in
-//Wait, Check and Click (in future)
-struct Selectable: public SelectExpr {
-	using SelectExpr::SelectExpr;
+struct SelectSimpleExpr: public SelectExpr {
+};
 
-	virtual std::string to_string() const = 0;
+struct SelectNegationExpr: public SelectSimpleExpr {
+	SelectNegationExpr(Token excl_mark_, std::shared_ptr<SelectSimpleExpr> expr_):
+		excl_mark(std::move(excl_mark_)), expr(std::move(expr_)) {}
 
-	operator std::string() const final {
-		std::string result;
-		if (is_negated()) {
-			result += "!";
-		}
-		result += to_string();
-		return result;
+	Pos begin() const override {
+		return excl_mark.begin();
 	}
 
-	bool is_negated() const {
-		return excl_mark.type() == Token::category::exclamation_mark;
+	Pos end() const override {
+		return expr->end();
+	}
+
+	std::string to_string() const override {
+		return excl_mark.value() + expr->to_string();
 	}
 
 	Token excl_mark;
+	std::shared_ptr<SelectSimpleExpr> expr;
 };
 
-//basic unit of expressions - could be double quoted string or a var_ref (variable)
-struct SelectJS: public Selectable {
-	SelectJS(const Token& js, std::shared_ptr<String> script):
-		Selectable(js), script(script) {}
-
-	Pos end() const override {
-		return script->end();
-	}
-
-	std::string to_string() const override {
-		return std::string(*script);
-	}
-
-	std::string text() const {
-		return script->text();
-	}
-
-	std::shared_ptr<String> script;
-};
-
-struct SelectText: public Selectable {
-	SelectText(std::shared_ptr<String> text):
-		Selectable(Token(Token::category::select_text, "select_text", Pos(), Pos())), _text(text) {}
+struct BasicSelectExpr: public SelectSimpleExpr {
+	BasicSelectExpr(Token token_, std::shared_ptr<String> str_):
+		token(std::move(token_)), str(std::move(str_)) {}
 
 	Pos begin() const override {
-		return _text->begin();
+		if (token) {
+			return token.begin();
+		}
+		return str->begin();
 	}
 
 	Pos end() const override {
-		return _text->end();
+		return str->end();
 	}
 
 	std::string to_string() const override {
-		return std::string(*_text);
+		if (token) {
+			return token.value() + " " + str->to_string();
+		}
+		return str->to_string();
 	}
 
 	std::string text() const {
-		return _text->text();
+		return str->text();
 	}
 
-	std::shared_ptr<String> _text;
+	Token token;
+	std::shared_ptr<String> str;
 };
 
-struct SelectImg: public Selectable {
-	SelectImg(const Token& img, std::shared_ptr<String> img_path):
-		Selectable(img), img_path(img_path) {}
-
-	Pos end() const override {
-		return img_path->end();
-	}
-
-	std::string to_string() const override {
-		return std::string(*img_path);
-	}
-
-	std::string text() const {
-		return img_path->text();
-	}
-
-	std::shared_ptr<String> img_path;
+struct SelectJS: public BasicSelectExpr {
+	using BasicSelectExpr::BasicSelectExpr;
 };
 
-struct SelectHomm3: public Selectable {
-	SelectHomm3(const Token& homm3, std::shared_ptr<String> id):
-		Selectable(homm3), id(id) {}
+struct SelectText: public BasicSelectExpr {
+	using BasicSelectExpr::BasicSelectExpr;
+};
+
+struct SelectImg: public BasicSelectExpr {
+	using BasicSelectExpr::BasicSelectExpr;
+};
+
+struct SelectHomm3: public BasicSelectExpr {
+	using BasicSelectExpr::BasicSelectExpr;
+};
+
+struct SelectBinOp: public SelectExpr {
+	SelectBinOp(std::shared_ptr<SelectExpr> left_, Token op_, std::shared_ptr<SelectExpr> right_):
+		left(std::move(left_)), op(std::move(op_)), right(std::move(right_)) {}
+
+	Pos begin() const override {
+		return left->begin();
+	}
 
 	Pos end() const override {
-		return id->end();
+		return right->end();
 	}
 
 	std::string to_string() const override {
-		return std::string(*id);
+		return left->to_string() + " " + op.value() + " " + right->to_string();
 	}
 
-	std::string text() const {
-		return id->text();
+	std::shared_ptr<SelectExpr> left;
+	Token op;
+	std::shared_ptr<SelectExpr> right;
+};
+
+struct SelectParentedExpr: public SelectSimpleExpr {
+	SelectParentedExpr(Token lparen_, std::shared_ptr<SelectExpr> select_expr_, Token rparen_):
+		lparen(std::move(lparen_)), select_expr(std::move(select_expr_)), rparen(std::move(rparen_)) {}
+
+	Pos begin() const override {
+		return lparen.begin();
 	}
 
-	std::shared_ptr<String> id;
+	Pos end() const override {
+		return rparen.end();
+	}
+
+	std::string to_string() const override {
+		return lparen.value() + select_expr->to_string() + rparen.value();
+	}
+
+	Token lparen;
+	std::shared_ptr<SelectExpr> select_expr;
+	Token rparen;
 };
 
 struct KeyCombination: public Node {
-	KeyCombination(const std::vector<Token>& buttons):
-		Node(Token(Token::category::key_combination, "key_combination", Pos(), Pos())),
-		buttons(buttons) {}
+	KeyCombination(std::vector<Token> buttons_):
+		buttons(std::move(buttons_)) {}
 
-	Pos begin() const {
-		return buttons[0].begin();
+	Pos begin() const override {
+		return buttons.front().begin();
 	}
 
-	Pos end() const {
+	Pos end() const override {
 		return buttons.back().end();
 	}
 
-	operator std::string() const {
+	std::string to_string() const override {
 		auto btns = get_buttons();
 		std::string result = btns[0];
 		for (size_t i = 1; i < btns.size(); i++) {
@@ -235,16 +226,15 @@ struct KeyCombination: public Node {
 };
 
 struct KeySpec: public Node {
-	KeySpec(std::shared_ptr<KeyCombination> combination, std::shared_ptr<StringTokenUnion> times):
-		Node(Token(Token::category::key_spec, "key_spec", Pos(), Pos())),
-		combination(combination),
-		times(times) {}
+	KeySpec(std::shared_ptr<KeyCombination> combination_, std::shared_ptr<StringTokenUnion> times_):
+		combination(std::move(combination_)),
+		times(std::move(times_)) {}
 
-	Pos begin() const {
+	Pos begin() const override {
 		return combination->begin();
 	}
 
-	Pos end() const {
+	Pos end() const override {
 		if (times) {
 			return times->end();
 		} else {
@@ -252,10 +242,10 @@ struct KeySpec: public Node {
 		}
 	}
 
-	operator std::string() const {
-		std::string result = std::string(*combination);
+	std::string to_string() const override {
+		std::string result = combination->to_string();
 		if (times) {
-			result += "*" + std::string(*times);
+			result += "*" + times->to_string();
 		}
 		return result;
 	}
@@ -264,254 +254,320 @@ struct KeySpec: public Node {
 	std::shared_ptr<StringTokenUnion> times;
 };
 
+struct Option: public Node {
+	Option(Token name_): name(std::move(name_)) {}
+
+	Pos begin() const override {
+		return name.begin();
+	}
+
+	Pos end() const override {
+		if (value) {
+			return value->end();
+		}
+		return name.end();
+	}
+
+	std::string to_string() const override {
+		if (value) {
+			return name.value() + " " + value->to_string();
+		}
+		return name.value();
+	}
+
+	Token name;
+	std::shared_ptr<StringTokenUnion> value;
+};
+
+struct OptionSeq: public Node {
+	Pos begin() const override {
+		if (options.size()) {
+			return options.front()->begin();
+		}
+		return {};
+	}
+
+	Pos end() const override {
+		if (options.size()) {
+			return options.back()->end();
+		}
+		return {};
+	}
+
+	std::string to_string() const override {
+		std::string res;
+		for (size_t i = 0; i < options.size(); ++i) {
+			if (i) {
+				res += " ";
+			}
+			res += options[i]->to_string();
+		}
+		return res;
+	}
+
+	size_t size() const {
+		return options.size();
+	}
+
+	std::shared_ptr<Option> get(const std::string& option_name) const {
+		for (auto& option: options) {
+			if (option->name.value() == option_name) {
+				return option;
+			}
+		}
+		return nullptr;
+	}
+
+	std::vector<std::shared_ptr<Option>> options;
+};
+
 struct Action: public Node {
-	using Node::Node;
+	static const std::string desc() { return "actions"; }
+};
+
+struct ActionWithDelim: public Action {
+	ActionWithDelim(std::shared_ptr<Action> action_, Token delim_):
+		action(std::move(action_)), delim(std::move(delim_)) {}
+
+	Pos begin() const override {
+		return action->begin();
+	}
 
 	Pos end() const override {
 		return delim.end();
 	}
 
-	virtual std::string to_string() const {
-		return t.value();
-	}
-
-	operator std::string() const final {
-		std::string result = to_string();
+	std::string to_string() const override {
+		std::string result = action->to_string();
 		if (delim.type() == Token::category::semi) {
 			result += delim.value();
 		}
 		return result;
 	}
 
+	std::shared_ptr<Action> action;
 	Token delim;
 };
 
 struct Empty: public Action {
-	Empty(): Action(Token()) {}
-
+	Pos begin() const override {
+		return {};
+	}
+	Pos end() const override {
+		return {};
+	}
 	std::string to_string() const override {
-		return "";
+		return {};
 	}
 };
 
 struct Abort: public Action {
-	Abort(const Token& abort, std::shared_ptr<String> message):
-		Action(abort), message(message) {}
+	Abort(Token abort_, std::shared_ptr<String> message_):
+		abort(std::move(abort_)), message(std::move(message_)) {}
+
+	Pos begin() const override {
+		return abort.begin();
+	}
 
 	Pos end() const override {
 		return message->end();
 	}
 
 	std::string to_string() const override {
-		return t.value() + " " + std::string(*message);
+		return abort.value() + " " + message->to_string();
 	}
 
+	Token abort;
 	std::shared_ptr<String> message;
 };
 
 struct Print: public Action {
-	Print(const Token& print, std::shared_ptr<String> message):
-		Action(print), message(message) {}
+	Print(Token print_, std::shared_ptr<String> message_):
+		print(std::move(print_)), message(std::move(message_)) {}
+
+	Pos begin() const override {
+		return print.begin();
+	}
 
 	Pos end() const override {
 		return message->end();
 	}
 
 	std::string to_string() const override {
-		return t.value() + " " + std::string(*message);
+		return print.value() + " " + message->to_string();
 	}
 
+	Token print;
 	std::shared_ptr<String> message;
 };
 
 struct Type: public Action {
-	Type(const Token& type, std::shared_ptr<String> text, std::shared_ptr<StringTokenUnion> interval):
-		Action(type), text(text), interval(interval) {}
+	Type(Token type_, std::shared_ptr<String> text_, std::shared_ptr<OptionSeq> option_seq_):
+		type(std::move(type_)), text(std::move(text_)), option_seq(std::move(option_seq_)) {}
+
+	Pos begin() const override {
+		return type.begin();
+	}
 
 	Pos end() const override {
-		if (interval) {
-			return interval->end();
+		if (option_seq->size()) {
+			return option_seq->end();
 		} else {
 			return text->end();
 		}
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + std::string(*text);
-
-		if (interval) {
-			result += std::string(*interval);
+		std::string result = type.value() + " " + text->to_string();
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
 		}
-
 		return result;
 	}
 
+	Token type;
 	std::shared_ptr<String> text;
-	std::shared_ptr<StringTokenUnion> interval;
-};
-
-struct SelectBinOp: public SelectExpr {
-	SelectBinOp(std::shared_ptr<SelectExpr> left, const Token& op, std::shared_ptr<SelectExpr> right):
-		SelectExpr(op), left(left), right(right) {}
-
-	Pos begin() const override {
-		return left->begin();
-	}
-
-	Pos end() const override {
-		return right->end();
-	}
-
-	operator std::string() const override {
-		return std::string(*left) + " " + t.value() + " " + std::string(*right);
-	}
-
-	std::shared_ptr<SelectExpr> left;
-	std::shared_ptr<SelectExpr> right;
-};
-
-struct SelectParentedExpr: public Selectable {
-	SelectParentedExpr(const Token& lparen, std::shared_ptr<SelectExpr> select_expr, const Token& rparen):
-		Selectable(lparen), select_expr(select_expr), rparen(rparen) {}
-
-	Pos end() const override {
-		return rparen.end();
-	}
-
-	std::string to_string() const override {
-		return t.value() + std::string(*select_expr) + rparen.value();
-	}
-
-	std::shared_ptr<SelectExpr> select_expr;
-	Token rparen;
+	std::shared_ptr<OptionSeq> option_seq;
 };
 
 struct Wait: public Action {
-	Wait(const Token& wait, std::shared_ptr<SelectExpr> select_expr, std::shared_ptr<StringTokenUnion> timeout, std::shared_ptr<StringTokenUnion> interval):
-		Action(wait), select_expr(select_expr), timeout(timeout), interval(interval) {}
+	Wait(Token wait_, std::shared_ptr<SelectExpr> select_expr_, std::shared_ptr<OptionSeq> option_seq_):
+		wait(std::move(wait_)), select_expr(std::move(select_expr_)), option_seq(std::move(option_seq_)) {}
+
+	Pos begin() const override {
+		return wait.begin();
+	}
 
 	Pos end() const override {
-		if (interval) {
-			return interval->end();
-		} else if (timeout) {
-			return timeout->end();
+		if (option_seq->size()) {
+			return option_seq->end();
 		} else {
 			return select_expr->end();
 		}
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value();
-		result += " " + std::string(*select_expr);
-
-		if (timeout) {
-			result += " timeout "  + std::string(*timeout);
+		std::string result = wait.value() + " " + select_expr->to_string();
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
 		}
-
-		if (interval) {
-			result += " interval "  + std::string(*interval);
-		}
-
 		return result;
 	}
 
+	Token wait;
 	std::shared_ptr<SelectExpr> select_expr;
-	std::shared_ptr<StringTokenUnion> timeout;
-	std::shared_ptr<StringTokenUnion> interval;
+	std::shared_ptr<OptionSeq> option_seq;
 };
 
 struct Sleep: public Action {
-	Sleep(const Token& sleep, std::shared_ptr<StringTokenUnion> timeout):
-		Action(sleep),  timeout(timeout) {}
+	Sleep(Token sleep_, std::shared_ptr<StringTokenUnion> timeout_):
+		sleep(std::move(sleep_)), timeout(std::move(timeout_)) {}
+
+	Pos begin() const override {
+		return sleep.begin();
+	}
 
 	Pos end() const override {
 		return timeout->end();
 	}
 
 	std::string to_string() const override {
-		return t.value() + " for " + std::string(*timeout);
+		return sleep.value() + " for " + timeout->to_string();
 	}
 
-
+	Token sleep;
 	std::shared_ptr<StringTokenUnion> timeout;
 };
 
 struct Press: public Action {
-	Press(const Token& press, const std::vector<std::shared_ptr<KeySpec>> keys, std::shared_ptr<StringTokenUnion> interval):
-		Action(press), keys(keys), interval(interval) {}
+	Press(Token press_, std::vector<std::shared_ptr<KeySpec>> keys_, std::shared_ptr<OptionSeq> option_seq_):
+		press(std::move(press_)), keys(std::move(keys_)), option_seq(std::move(option_seq_)) {}
+
+	Pos begin() const override {
+		return press.begin();
+	}
 
 	Pos end() const override {
-		if (interval) {
-			return interval->end();
+		if (option_seq->size()) {
+			return option_seq->end();
 		} else {
 			return keys[keys.size() - 1]->end();
 		}
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + std::string(*keys[0]);
+		std::string result = press.value() + " " + keys[0]->to_string();
 
 		for (size_t i = 1; i < keys.size(); i++) {
-			result += ", " + std::string(*keys[i]);
+			result += ", " + keys[i]->to_string();
 		}
 
-		if (interval) {
-			result += " interval " + std::string(*interval);
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
 		}
 
 		return result;
 	}
 
+	Token press;
 	std::vector<std::shared_ptr<KeySpec>> keys;
-	std::shared_ptr<StringTokenUnion> interval;
+	std::shared_ptr<OptionSeq> option_seq;
 };
 
 struct Hold: public Action {
-	Hold(const Token& hold, std::shared_ptr<KeyCombination> combination):
-		Action(hold), combination(combination) {}
+	Hold(Token hold_, std::shared_ptr<KeyCombination> combination_):
+		hold(std::move(hold_)), combination(std::move(combination_)) {}
+
+	Pos begin() const override {
+		return hold.begin();
+	}
 
 	Pos end() const override {
 		return combination->end();
 	}
 
 	std::string to_string() const override {
-		return t.value() + " " + std::string(*combination);
+		return hold.value() + " " + combination->to_string();
 	}
 
+	Token hold;
 	std::shared_ptr<KeyCombination> combination;
 };
 
 struct Release: public Action {
-	Release(const Token& release, std::shared_ptr<KeyCombination> combination):
-		Action(release), combination(combination) {}
+	Release(Token release_, std::shared_ptr<KeyCombination> combination_):
+		release(std::move(release_)), combination(std::move(combination_)) {}
+
+	Pos begin() const override {
+		return release.begin();
+	}
 
 	Pos end() const override {
 		if (combination) {
 			return combination->end();
 		} else {
-			return t.end();
+			return release.end();
 		}
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value();
+		std::string result = release.value();
 		if (combination) {
-			result += " " + std::string(*combination);
+			result += " " + combination->to_string();
 		}
-
 		return result;
 	}
 
-	std::shared_ptr<KeyCombination> combination = nullptr;
+	Token release;
+	std::shared_ptr<KeyCombination> combination;
 };
 
 struct MouseMoveTarget: public Node {
-	using Node::Node;
 };
 
 struct MouseAdditionalSpecifier: public Node {
-	MouseAdditionalSpecifier(const Token& name, const Token& lparen, const Token& arg, const Token& rparen):
-		Node(Token(Token::category::mouse_additional_specifier, "mouse_additional_specifier", Pos(), Pos())), name(name), lparen(lparen), arg(arg), rparen(rparen) {}
+	MouseAdditionalSpecifier(Token name_, Token lparen_, Token arg_, Token rparen_):
+		name(std::move(name_)), lparen(std::move(lparen_)), arg(std::move(arg_)), rparen(std::move(rparen_)) {}
 
 	Pos begin() const override {
 		return name.begin();
@@ -521,12 +577,12 @@ struct MouseAdditionalSpecifier: public Node {
 		return rparen.end();
 	}
 
-	operator std::string() const override {
-		std::string result = "." + name.value() + "(";
+	std::string to_string() const override {
+		std::string result = "." + name.value() + lparen.value();
 		if (arg) {
 			result += arg.value();
 		}
-		result += ")";
+		result += rparen.value();
 		return result;
 	}
 
@@ -563,48 +619,51 @@ struct MouseAdditionalSpecifier: public Node {
 };
 
 struct MouseSelectable: public MouseMoveTarget {
-	MouseSelectable(std::shared_ptr<Selectable> selectable,
-		const std::vector<std::shared_ptr<MouseAdditionalSpecifier>>& specifiers,
-		std::shared_ptr<StringTokenUnion> timeout):
-		MouseMoveTarget(Token(Token::category::mouse_selectable, "mouse_selectable", Pos(), Pos())),
-		selectable(selectable), specifiers(specifiers), timeout(timeout) {}
+	MouseSelectable(
+		std::shared_ptr<BasicSelectExpr> basic_select_expr_,
+		std::vector<std::shared_ptr<MouseAdditionalSpecifier>> mouse_additional_specifiers_,
+		std::shared_ptr<OptionSeq> option_seq_
+	):
+		basic_select_expr(std::move(basic_select_expr_)),
+		mouse_additional_specifiers(std::move(mouse_additional_specifiers_)),
+		option_seq(std::move(option_seq_))
+	{}
 
 	Pos begin() const override {
-		return selectable->begin();
+		return basic_select_expr->begin();
 	}
 
 	Pos end() const override {
-		if (timeout) {
-			return timeout->end();
-		} else if (specifiers.size()) {
-			return specifiers[specifiers.size() - 1]->end();
+		if (option_seq->size()) {
+			return option_seq->end();
+		} else if (mouse_additional_specifiers.size()) {
+			return mouse_additional_specifiers[mouse_additional_specifiers.size() - 1]->end();
 		} else {
-			return selectable->end();
+			return basic_select_expr->end();
 		}
 	}
 
-	operator std::string() const override {
-		std::string result = std::string(*selectable);
+	std::string to_string() const override {
+		std::string result = basic_select_expr->to_string();
 
-		for (auto specifier: specifiers) {
-			result += std::string(*specifier);
+		for (auto mouse_additional_specifier: mouse_additional_specifiers) {
+			result += mouse_additional_specifier->to_string();
 		}
 
-		if (timeout) {
-			result += " timeout " + std::string(*timeout);
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
 		}
 
 		return result;
 	}
 
-	std::shared_ptr<Selectable> selectable = nullptr;
-	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> specifiers;
-	std::shared_ptr<StringTokenUnion> timeout;
+	std::shared_ptr<BasicSelectExpr> basic_select_expr;
+	std::vector<std::shared_ptr<MouseAdditionalSpecifier>> mouse_additional_specifiers;
+	std::shared_ptr<OptionSeq> option_seq;
 };
 
 struct MouseCoordinates: public MouseMoveTarget {
-	MouseCoordinates(const Token& dx, const Token& dy):
-		MouseMoveTarget(Token(Token::category::mouse_coordinates, "mouse_coordinates", Pos(), Pos())), dx(dx), dy(dy) {}
+	MouseCoordinates(Token dx_, Token dy_): dx(std::move(dx_)), dy(std::move(dy_)) {}
 
 	Pos begin() const override {
 		return dx.begin();
@@ -614,12 +673,12 @@ struct MouseCoordinates: public MouseMoveTarget {
 		return dy.end();
 	}
 
-	operator std::string() const override {
-		return dx.value() + " " + dy.value();;
+	std::string to_string() const override {
+		return text();
 	}
 
 	std::string text() const {
-		return std::string(*this);
+		return dx.value() + " " + dy.value();;
 	}
 
 	Token dx;
@@ -627,137 +686,158 @@ struct MouseCoordinates: public MouseMoveTarget {
 };
 
 struct MouseEvent: public Node {
-	using Node::Node;
 };
 
 struct MouseMoveClick: public MouseEvent {
-	MouseMoveClick(const Token& event, std::shared_ptr<MouseMoveTarget> object):
-		MouseEvent(event), object(object) {}
+	MouseMoveClick(Token event_, std::shared_ptr<MouseMoveTarget> object_):
+		event(std::move(event_)), object(std::move(object_)) {}
+
+	Pos begin() const override {
+		return event.begin();
+	}
 
 	Pos end() const override {
 		if (object) {
 			return object->end();
 		} else {
-			return t.end();
+			return event.end();
 		}
 	}
 
-	operator std::string() const override {
-		std::string result = t.value();
+	std::string to_string() const override {
+		std::string result = event.value();
 		if (object) {
-			result += " " + std::string(*object);
+			result += " " + object->to_string();
 		}
 		return result;
 	}
 
-	std::shared_ptr<MouseMoveTarget> object = nullptr;
+	Token event;
+	std::shared_ptr<MouseMoveTarget> object;
 };
 
 struct MouseHold: public MouseEvent {
-	MouseHold(const Token& hold, const Token& button):
-		MouseEvent(hold), button(button) {}
+	MouseHold(Token hold_, Token button_):
+		hold(std::move(hold_)), button(std::move(button_)) {}
+
+	Pos begin() const override {
+		return hold.begin();
+	}
 
 	Pos end() const override {
 		return button.end();
 	}
 
-	operator std::string() const override {
-		return t.value() + " " + button.value();
+	std::string to_string() const override {
+		return hold.value() + " " + button.value();
 	}
 
+	Token hold;
 	Token button;
 };
 
 struct MouseRelease: public MouseEvent {
-	using MouseEvent::MouseEvent;
+	MouseRelease(Token release_):
+		release(std::move(release_)){}
+
+	Pos begin() const override {
+		return release.begin();
+	}
+
+	Pos end() const override {
+		return release.end();
+	}
+
+	std::string to_string() const override {
+		return release.value();
+	}
+
+	Token release;
 };
 
 struct MouseWheel: public MouseEvent {
-	MouseWheel(const Token& wheel, const Token& direction):
-		MouseEvent(wheel), direction(direction) {}
+	MouseWheel(Token wheel_, Token direction_):
+		wheel(std::move(wheel_)), direction(std::move(direction_)) {}
+
+	Pos begin() const override {
+		return wheel.begin();
+	}
 
 	Pos end() const override {
 		return direction.end();
 	}
 
-	operator std::string() const override {
-		return t.value() + " " + direction.value();
+	std::string to_string() const override {
+		return wheel.value() + " " + direction.value();
 	}
 
+	Token wheel;
 	Token direction;
 };
 
 struct Mouse: public Action {
-	Mouse(const Token& mouse, std::shared_ptr<MouseEvent> event):
-		Action(mouse), event(event) {}
+	Mouse(Token mouse_, std::shared_ptr<MouseEvent> event_):
+		mouse(std::move(mouse_)), event(std::move(event_)) {}
+
+	Pos begin() const override {
+		return mouse.begin();
+	}
 
 	Pos end() const override {
 		return event->end();
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + std::string(*event);
-		return result;
+		return mouse.value() + " " + event->to_string();
 	}
 
-	std::shared_ptr<MouseEvent> event = nullptr;
+	Token mouse;
+	std::shared_ptr<MouseEvent> event;
 };
 
 struct PlugResource: public Node {
 	using Node::Node;
 };
 
-struct PlugNIC: public PlugResource {
-	PlugNIC(const Token& nic, std::shared_ptr<StringTokenUnion> name):
-		PlugResource(nic), name(name) {}
+struct PlugResourceWithName: PlugResource {
+	PlugResourceWithName(Token type_, std::shared_ptr<StringTokenUnion> name_):
+		type(std::move(type_)), name(std::move(name_)) {}
+
+	Pos begin() const override {
+		return type.begin();
+	}
 
 	Pos end() const override {
 		return name->end();
 	}
 
-	operator std::string() const override {
-		std::string result = t.value() + " " + std::string(*name);
-		return result;
+	std::string to_string() const override {
+		return type.value() + " " + name->to_string();
 	}
 
-	std::shared_ptr<StringTokenUnion> name = nullptr;
+	Token type;
+	std::shared_ptr<StringTokenUnion> name;
 };
 
-struct PlugLink: public PlugResource {
-	PlugLink(const Token& link, std::shared_ptr<StringTokenUnion> name):
-		PlugResource(link), name(name) {}
-
-	Pos end() const override {
-		return name->end();
-	}
-
-	operator std::string() const override {
-		std::string result = t.value() + " " + std::string(*name);
-		return result;
-	}
-
-	std::shared_ptr<StringTokenUnion> name = nullptr;
+struct PlugNIC: public PlugResourceWithName {
+	using PlugResourceWithName::PlugResourceWithName;
 };
 
-struct PlugFlash: public PlugResource {
-	PlugFlash(const Token& flash, std::shared_ptr<StringTokenUnion> name):
-		PlugResource(flash), name(name) {}
+struct PlugLink: public PlugResourceWithName {
+	using PlugResourceWithName::PlugResourceWithName;
+};
 
-	Pos end() const override {
-		return name->end();
-	}
-
-	operator std::string() const override {
-		std::string result = t.value() + " " + std::string(*name);
-		return result;
-	}
-
-	std::shared_ptr<StringTokenUnion> name = nullptr;
+struct PlugFlash: public PlugResourceWithName {
+	using PlugResourceWithName::PlugResourceWithName;
 };
 
 struct PlugDVD: public PlugResource {
-	PlugDVD(const Token& dvd, std::shared_ptr<String> path):
-		PlugResource(dvd), path(path) {}
+	PlugDVD(Token dvd_, std::shared_ptr<String> path_):
+		dvd(std::move(dvd_)), path(std::move(path_)) {}
+
+	Pos begin() const override {
+		return dvd.begin();
+	}
 
 	Pos end() const override {
 		if (path) {
@@ -767,134 +847,179 @@ struct PlugDVD: public PlugResource {
 		}
 	}
 
-	operator std::string() const override {
-		std::string result = t.value();
-
+	std::string to_string() const override {
+		std::string result = dvd.value();
 		if (path) {
-			result += " " + std::string(*path);
+			result += " " + path->to_string();
 		}
 		return result;
 	}
 
-	std::shared_ptr<String> path = nullptr;
+	Token dvd;
+	std::shared_ptr<String> path;
 };
 
 struct PlugHostDev: public PlugResource {
-	PlugHostDev(const Token& hostdev, const Token& type, std::shared_ptr<String> addr):
-		PlugResource(hostdev), type(type), addr(addr) {}
+	PlugHostDev(Token hostdev_, Token type_, std::shared_ptr<String> addr_):
+		hostdev(std::move(hostdev_)), type(std::move(type_)), addr(std::move(addr_)) {}
+
+	Pos begin() const override {
+		return hostdev.begin();
+	}
 
 	Pos end() const override {
 		return addr->end();
 	}
 
-	operator std::string() const override {
-		std::string result = t.value() + " " + type.value() + " " + std::string(*addr);
-		return result;
+	std::string to_string() const override {
+		return hostdev.value() + " " + type.value() + " " + addr->to_string();
 	}
 
+	Token hostdev;
 	Token type;
-	std::shared_ptr<String> addr = nullptr;
+	std::shared_ptr<String> addr;
 };
 
 //Also is used for unplug
 struct Plug: public Action {
-	Plug(const Token& plug, std::shared_ptr<PlugResource> resource):
-		Action(plug),
-		resource(resource) {}
+	Plug(Token plug_, std::shared_ptr<PlugResource> resource_):
+		plug(std::move(plug_)), resource(std::move(resource_)) {}
+
+	Pos begin() const override {
+		return plug.begin();
+	}
 
 	Pos end() const override {
 		return resource->end();
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + std::string(*resource);
-		return result;
+		return plug.value() + " " + resource->to_string();
 	}
 
 	bool is_on() const {
-		return (t.type() == Token::category::plug);
+		return plug.type() == Token::category::plug;
 	}
 
+	Token plug;
 	std::shared_ptr<PlugResource> resource;
 };
 
+struct ElementaryAction: Action {
+	ElementaryAction(Token token_):
+		token(std::move(token_)){}
 
-struct Start: public Action {
-	using Action::Action;
+	Pos begin() const override {
+		return token.begin();
+	}
+
+	Pos end() const override {
+		return token.end();
+	}
+
+	std::string to_string() const override {
+		return token.value();
+	}
+
+	Token token;
 };
 
-struct Stop: public Action {
-	using Action::Action;
+struct Start: public ElementaryAction {
+	using ElementaryAction::ElementaryAction;
+};
+
+struct Stop: public ElementaryAction {
+	using ElementaryAction::ElementaryAction;
+};
+
+struct CycleControl: public ElementaryAction {
+	using ElementaryAction::ElementaryAction;
 };
 
 struct Shutdown: public Action {
-	Shutdown(const Token& shutdown, std::shared_ptr<StringTokenUnion> timeout):
-		Action(shutdown), timeout(timeout) {}
+	Shutdown(Token shutdown_, std::shared_ptr<OptionSeq> option_seq_):
+		shutdown(std::move(shutdown_)), option_seq(std::move(option_seq_)) {}
+
+	Pos begin() const override {
+		return shutdown.begin();
+	}
 
 	Pos end() const override {
-		if (timeout) {
-			return timeout->end();
+		if (option_seq->size()) {
+			return option_seq->end();
 		} else {
-			return t.end();
+			return shutdown.end();
 		}
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value();
-		if (timeout) {
-			result += " timeout " + std::string(*timeout);
+		std::string result = shutdown.value();
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
 		}
 		return result;
 	}
 
-	std::shared_ptr<StringTokenUnion> timeout;
+	Token shutdown;
+	std::shared_ptr<OptionSeq> option_seq;
 };
 
 struct Exec: public Action {
-	Exec(const Token& exec, const Token& process, std::shared_ptr<String> commands, std::shared_ptr<StringTokenUnion> timeout):
-		Action(exec),
-		process_token(process),
-		commands(commands), timeout(timeout) {}
+	Exec(Token exec_, Token process_, std::shared_ptr<String> commands_, std::shared_ptr<OptionSeq> option_seq_):
+		exec(std::move(exec_)),
+		process(std::move(process_)),
+		commands(std::move(commands_)),
+		option_seq(std::move(option_seq_)) {}
+
+	Pos begin() const override {
+		return exec.begin();
+	}
 
 	Pos end() const override {
-		if (timeout) {
-			return timeout->end();
+		if (option_seq->size()) {
+			return option_seq->end();
 		}
 		return commands->end();
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + process_token.value() + " " + std::string(*commands);
-		if (timeout) {
-			result += " timeout " + std::string(*timeout);
+		std::string result = exec.value() + " " + process.value() + " " + commands->to_string();
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
 		}
 		return result;
 	}
 
-	Token process_token;
+	Token exec;
+	Token process;
 	std::shared_ptr<String> commands;
-	std::shared_ptr<StringTokenUnion> timeout;
+	std::shared_ptr<OptionSeq> option_seq;
 };
 
 //Now this node holds actions copyto and copyfrom
 //Cause they're really similar
 struct Copy: public Action {
-	Copy(const Token& copy, std::shared_ptr<String> from, std::shared_ptr<String> to, const Token& nocheck, std::shared_ptr<StringTokenUnion> timeout):
-		Action(copy),
-		from(from),
-		to(to), nocheck(nocheck), timeout(timeout) {}
+	Copy(Token copy_, std::shared_ptr<String> from_, std::shared_ptr<String> to_, std::shared_ptr<OptionSeq> option_seq_):
+		copy(std::move(copy_)),
+		from(std::move(from_)),
+		to(std::move(to_)),
+		option_seq(std::move(option_seq_)) {}
+
+	Pos begin() const override {
+		return copy.begin();
+	}
 
 	Pos end() const override {
-		if (timeout) {
-			return timeout->end();
+		if (option_seq->size()) {
+			return option_seq->end();
 		}
 		return to->end();
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + std::string(*from) + " " + std::string(*to);
-		if (timeout) {
-			result += " timeout " + std::string(*timeout);
+		std::string result = copy.value() + " " + from->to_string() + " " + to->to_string();
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
 		}
 		return result;
 	}
@@ -902,37 +1027,45 @@ struct Copy: public Action {
 	//return true if we copy to guest,
 	//false if from guest to host
 	bool is_to_guest() const {
-		return t.type() == Token::category::copyto;
+		return copy.type() == Token::category::copyto;
 	}
 
+	Token copy;
 	std::shared_ptr<String> from;
 	std::shared_ptr<String> to;
-	Token nocheck;
-	std::shared_ptr<StringTokenUnion> timeout;
+	std::shared_ptr<OptionSeq> option_seq;
 };
 
 struct Screenshot: public Action {
-	Screenshot(const Token& screenshot, std::shared_ptr<String> destination):
-		Action(screenshot), destination(destination) {}
+	Screenshot(Token screenshot_, std::shared_ptr<String> destination_):
+		screenshot(std::move(screenshot_)), destination(std::move(destination_)) {}
+
+	Pos begin() const override {
+		return screenshot.begin();
+	}
 
 	Pos end() const override {
 		return destination->end();
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + std::string(*destination);
-		return result;
+		return screenshot.value() + " " + destination->to_string();
 	}
 
-	std::shared_ptr<String> destination = nullptr;
+	Token screenshot;
+	std::shared_ptr<String> destination;
 };
 
-struct ActionBlock: public Action {
-	ActionBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Action>> actions):
-		Action(Token(Token::category::action_block, "action_block", Pos(), Pos())),
-		open_brace(open_brace),
-		close_brace(close_brace),
-		actions(actions) {}
+struct IBlock {
+	virtual ~IBlock() {}
+};
+
+template <typename Item>
+struct Block: public Item, public IBlock {
+	Block(Token open_brace_, Token close_brace_, std::vector<std::shared_ptr<Item>> items_):
+		open_brace(std::move(open_brace_)),
+		close_brace(std::move(close_brace_)),
+		items(std::move(items_)) {}
 
 	Pos begin() const override {
 		return open_brace.begin();
@@ -943,33 +1076,30 @@ struct ActionBlock: public Action {
 	}
 
 	std::string to_string() const override {
-		std::string result;
+		std::string result = "{ ";
 
-		for (auto action: actions) {
-			result += std::string(*action);
+		for (auto action: items) {
+			result += action->to_string();
 
 		}
+
+		result += " }";
 		return result;
 	}
 
 	Token open_brace;
 	Token close_brace;
-	std::vector<std::shared_ptr<Action>> actions;
+	std::vector<std::shared_ptr<Item>> items;
 };
 
 struct Cmd: public Node {
-	using Node::Node;
-	operator std::string() const final {
-		return to_string();
-	}
-	virtual std::string to_string() const = 0;
+	static const std::string desc() { return "commands"; }
 };
 
 struct RegularCmd: public Cmd {
-	RegularCmd(std::shared_ptr<StringTokenUnion> entity, std::shared_ptr<Action> action):
-		Cmd(Token(Token::category::regular_cmd, "regular_cmd", Pos(), Pos())),
-		entity(entity),
-		action(action) {}
+	RegularCmd(std::shared_ptr<StringTokenUnion> entity_, std::shared_ptr<Action> action_):
+		entity(std::move(entity_)),
+		action(std::move(action_)) {}
 
 	Pos begin() const override {
 		return entity->begin();
@@ -980,384 +1110,208 @@ struct RegularCmd: public Cmd {
 	}
 
 	std::string to_string() const override {
-		return std::string(*entity) + " " + std::string(*action);
+		return entity->to_string() + " " + action->to_string();
 	}
 
 	std::shared_ptr<StringTokenUnion> entity;
 	std::shared_ptr<Action> action;
 };
 
-struct CmdBlock: public Cmd {
-	CmdBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Cmd>> commands):
-		Cmd(Token(Token::category::cmd_block, "cmd_block", Pos(),Pos())),
-		open_brace(open_brace),
-		close_brace(close_brace),
-		commands(commands) {}
-
-	Pos begin() const override {
-		return open_brace.begin();
-	}
-
-	Pos end() const override {
-		return close_brace.end();
-	}
-
-	std::string to_string() const override {
-		std::string result;
-
-		for (auto command: commands) {
-			result += std::string(*command);
-
-		}
-		return result;
-	}
-
-	Token open_brace;
-	Token close_brace;
-	std::vector<std::shared_ptr<Cmd>> commands;
-};
-
 //High-level constructions
 //may be machine, flash, macro or test declaration
 struct Stmt: public Node {
-	using Node::Node;
-	operator std::string() const final {
-		return to_string();
-	}
-	virtual std::string to_string() const = 0;
-};
-
-//Used only in macro-tests
-struct StmtBlock: public Stmt {
-	StmtBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Stmt>> stmts):
-		Stmt(Token(Token::category::stmt_block, "stmt_block", Pos(), Pos())),
-		open_brace(open_brace),
-		close_brace(close_brace),
-		stmts(stmts) {}
-
-	Pos begin() const override {
-		return open_brace.begin();
-	}
-
-	Pos end() const override {
-		return close_brace.end();
-	}
-
-	std::string to_string() const override {
-		std::string result;
-
-		for (auto stmt: stmts) {
-			result += std::string(*stmt);
-
-		}
-		return result;
-	}
-
-	Token open_brace;
-	Token close_brace;
-	std::vector<std::shared_ptr<Stmt>> stmts;
+	static const std::string desc() { return "statements"; }
 };
 
 struct MacroArg: public Node {
-	MacroArg(const Token& name, std::shared_ptr<String> default_value):
-		Node(name), default_value(default_value) {}
+	MacroArg(Token name_token_, std::shared_ptr<String> default_value_):
+		name_token(std::move(name_token_)), default_value(std::move(default_value_)) {}
+
+	Pos begin() const override {
+		return name_token.begin();
+	}
 
 	Pos end() const override {
 		if (default_value) {
 			return default_value->end();
 		} else {
-			return t.end();
+			return name_token.end();
 		}
 	}
 
-	operator std::string() const override {
-		std::string result = t.value();
+	std::string to_string() const override {
+		std::string result = name_token.value();
 		if (default_value) {
-			result += "=" + std::string(*default_value);
+			result += "=" + default_value->to_string();
 		}
 		return result;
 	}
 
 	std::string name() const {
-		return t.value();
+		return name_token.value();
 	}
 
-	std::shared_ptr<String> default_value = nullptr;
-};
-
-struct IMacroBody: public Node {
-	using Node::Node;
-};
-
-//IfClause if also an action
-template <typename MacroBodyType>
-struct MacroBody: public IMacroBody {
-	MacroBody(std::shared_ptr<MacroBodyType> macro_body):
-		IMacroBody(macro_body->t),
-		macro_body(macro_body) {}
-
-	Pos begin() const {
-		return macro_body->begin();
-	}
-
-	Pos end() const {
-		return macro_body->end();
-	}
-
-	operator std::string() const {
-		std::string result = std::string(*macro_body);
-		return result;
-	}
-
-	std::shared_ptr<MacroBodyType> macro_body;
-};
-
-struct MacroBodyStmt: public Node {
-	static const std::string desc() { return "statements"; }
-	using BlockType = AST::StmtBlock;
-
-	MacroBodyStmt(std::shared_ptr<StmtBlock> stmt_block):
-		Node(stmt_block->t), stmt_block(stmt_block) {}
-
-	Pos begin() const {
-		return stmt_block->begin();
-	}
-
-	Pos end() const {
-		return stmt_block->end();
-	}
-
-	operator std::string() const {
-		std::string result = std::string(*stmt_block);
-		return result;
-	}
-
-	std::shared_ptr<AST::StmtBlock> stmt_block;
-};
-
-
-struct MacroBodyCommand: public Node {
-	static const std::string desc() { return "commands"; }
-	using BlockType = AST::CmdBlock;
-
-	MacroBodyCommand(std::shared_ptr<CmdBlock> cmd_block):
-		Node(cmd_block->t), cmd_block(cmd_block) {}
-
-	Pos begin() const {
-		return cmd_block->begin();
-	}
-
-	Pos end() const {
-		return cmd_block->end();
-	}
-
-	operator std::string() const {
-		std::string result = std::string(*cmd_block);
-		return result;
-	}
-
-	std::shared_ptr<CmdBlock> cmd_block;
-};
-
-struct MacroBodyAction: public Node {
-	static const std::string desc() { return "actions"; }
-	using BlockType = AST::ActionBlock;
-
-	MacroBodyAction(std::shared_ptr<ActionBlock> action_block):
-		Node(action_block->t), action_block(action_block) {}
-
-	Pos begin() const {
-		return action_block->begin();
-	}
-
-	Pos end() const {
-		return action_block->end();
-	}
-
-	operator std::string() const {
-		std::string result = std::string(*action_block);
-		return result;
-	}
-
-	std::shared_ptr<ActionBlock> action_block;
+	Token name_token;
+	std::shared_ptr<String> default_value;
 };
 
 struct Macro: public Stmt {
-	Macro(const Token& macro,
-		const Token& name,
-		const std::vector<std::shared_ptr<MacroArg>>& args,
-		const std::vector<Token>& body_tokens):
-			Stmt(macro), name(name), args(args),
-			body_tokens(body_tokens) {}
+	Macro(Token macro_,
+		Token name_,
+		std::vector<std::shared_ptr<MacroArg>> args_,
+		std::vector<Token> body_tokens_):
+			macro(std::move(macro_)), name(std::move(name_)), args(std::move(args_)),
+			body_tokens(std::move(body_tokens_)) {}
+
+	Pos begin() const override {
+		return macro.begin();
+	}
 
 	Pos end() const override {
 		return body_tokens.back().end();
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + name.value() + "(";
+		std::string result = macro.value() + " " + name.value() + "(";
 		for (auto arg: args) {
-			result += std::string(*arg) + " ,";
+			result += arg->to_string() + " ,";
 		}
 		result += ")";
 
-		for (auto t: body_tokens) {
+		for (auto body_token: body_tokens) {
 			result += " ";
-			result += t.value();
+			result += body_token.value();
 		}
 
 		return result;
 	}
 
+	Token macro;
 	Token name;
 	std::vector<std::shared_ptr<MacroArg>> args;
-	std::shared_ptr<IMacroBody> body = nullptr;
 	std::vector<Token> body_tokens;
+
+	std::shared_ptr<IBlock> block;
 };
 
 struct IMacroCall {
-	IMacroCall(const std::vector<std::shared_ptr<String>>& args_): args(args_) {}
+	IMacroCall(Token name_, Token lparen_, std::vector<std::shared_ptr<String>> args_, Token rparen_):
+		name(std::move(name_)), lparen(std::move(lparen_)), args(std::move(args_)), rparen(std::move(rparen_)) {}
 	virtual ~IMacroCall() {}
-
-	virtual Token name() const = 0;
-	virtual Pos begin() const = 0;
-	virtual Pos end() const = 0;
-
-	std::vector<std::shared_ptr<String>> args;
-};
-
-template <typename BaseType>
-struct MacroCall: public BaseType, IMacroCall {
-	MacroCall(const Token& macro_name, const std::vector<std::shared_ptr<String>>& args):
-		BaseType(macro_name), IMacroCall(args) {}
-
-	std::string to_string() const override {
-		std::string result = t.value() + ("(");
-		for (auto arg: args) {
-			result += std::string(*arg) + " ,";
-		}
-		result += ")";
-		return result;
-	}
-
-	Token name() const override {
-		return t;
-	}
-
-	Pos IMacroCall::begin() const override {
-		return BaseType::begin();
-	}
-
-	Pos IMacroCall::end() const override {
-		return BaseType::end();
-	}
-};
-
-struct IAttrValue: public Node {
-	using Node::Node;
-
-	virtual Token::category type() const = 0;
-};
-
-template <typename AttrType>
-struct AttrValue: public IAttrValue {
-	AttrValue(std::shared_ptr<AttrType> attr_value):
-		IAttrValue(attr_value->t),
-		attr_value(attr_value) {}
-
-	Pos begin() const {
-		return attr_value->begin();
-	}
-
-	Pos end() const {
-		return attr_value->end();
-	}
-
-	operator std::string() const {
-		return std::string(*attr_value);
-	}
-
-	Token::category type() const {
-		return attr_value->type();
-	}
-
-	std::shared_ptr<AttrType> attr_value;
-};
-
-struct SimpleAttr: public Node {
-	SimpleAttr(std::shared_ptr<StringTokenUnion> _value):
-		Node(Token(Token::category::simple_attr, "", _value->begin(), _value->end())), value(_value) {}
-
-	Pos begin() const {
-		return value->begin();
-	}
-
-	Pos end() const {
-		return value->end();
-	}
-
-	operator std::string() const {
-		return std::string(*value);
-	}
-
-	Token::category type() const {
-		return value->expected_token_type;
-	}
-
-	std::shared_ptr<StringTokenUnion> value;
-};
-
-struct Attr: public Node {
-	Attr(const Token& name, const Token& id, std::shared_ptr<IAttrValue> value):
-		Node(Token(Token::category::attr, "", Pos(), Pos())),
-		name(name),
-		id(id),
-		value(value) {}
 
 	Pos begin() const {
 		return name.begin();
 	}
 
 	Pos end() const {
-		return value->end();
+		return rparen.end();
 	}
 
-	operator std::string() const {
-		return name.value() + ": " + std::string(*value);
+	std::string to_string() const {
+		std::string result = name.value() + ("(");
+		for (size_t i = 0; i < args.size(); ++i) {
+			if (i) {
+				result += ", ";
+			}
+			result += args[i]->to_string();
+		}
+		result += ")";
+		return result;
 	}
 
 	Token name;
+	Token lparen;
+	std::vector<std::shared_ptr<String>> args;
+	Token rparen;
+};
+
+template <typename BaseType>
+struct MacroCall: public BaseType, IMacroCall {
+	MacroCall(Token name, Token lparen, std::vector<std::shared_ptr<String>> args, Token rparen):
+		IMacroCall(std::move(name), std::move(lparen), std::move(args), std::move(rparen)) {}
+
+	Pos begin() const override {
+		return IMacroCall::begin();
+	}
+
+	Pos end() const override {
+		return IMacroCall::end();
+	}
+
+	std::string to_string() const override {
+		return IMacroCall::to_string();
+	}
+};
+
+struct IAttrValue: public Node {
+};
+
+struct AttrSimpleValue: public IAttrValue {
+	AttrSimpleValue(std::shared_ptr<StringTokenUnion> value_): value(std::move(value_)) {}
+
+	Pos begin() const override {
+		return value->begin();
+	}
+
+	Pos end() const override {
+		return value->end();
+	}
+
+	std::string to_string() const override {
+		return value->to_string();
+	}
+
+	std::shared_ptr<StringTokenUnion> value;
+};
+
+struct Attr: public Node {
+	Attr(Token name_token_, Token id_, std::shared_ptr<IAttrValue> value_):
+		name_token(std::move(name_token_)),
+		id(std::move(id_)),
+		value(std::move(value_)) {}
+
+	Pos begin() const override {
+		return name_token.begin();
+	}
+
+	Pos end() const override {
+		return value->end();
+	}
+
+	std::string to_string() const override {
+		return name_token.value() + ": " + value->to_string();
+	}
+
+	std::string name() const {
+		return name_token.value();
+	}
+
+	Token name_token;
 	Token id;
 	std::shared_ptr<IAttrValue> value;
 };
 
-struct AttrBlock: public Node {
-	AttrBlock(const Token& open_brace, const Token& close_brace, std::vector<std::shared_ptr<Attr>> attrs):
-		Node(Token(Token::category::attr_block, "", Pos(),Pos())),
-		open_brace(open_brace),
-		close_brace(close_brace),
-		attrs(attrs) {}
+struct AttrBlock: public IAttrValue {
+	AttrBlock(Token open_brace_, Token close_brace_, std::vector<std::shared_ptr<Attr>> attrs_):
+		open_brace(std::move(open_brace_)),
+		close_brace(std::move(close_brace_)),
+		attrs(std::move(attrs_)) {}
 
-	Pos begin() const {
+	Pos begin() const override {
 		return open_brace.begin();
 	}
 
-	Pos end() const {
+	Pos end() const override {
 		return close_brace.end();
 	}
 
-	operator std::string() const {
+	std::string to_string() const override {
 		std::string result;
-
 		for (auto attr: attrs) {
-			result += std::string(*attr);
+			result += attr->to_string();
 
 		}
 		return result;
-	}
-
-	Token::category type() const {
-		return t.type();
 	}
 
 	Token open_brace;
@@ -1366,21 +1320,23 @@ struct AttrBlock: public Node {
 };
 
 struct Test: public Stmt {
-	Test(std::shared_ptr<AttrBlock> attrs,
-		const Token& test, std::shared_ptr<StringTokenUnion> name,
-		const std::vector<std::shared_ptr<StringTokenUnion>>& parents,
-		std::shared_ptr<CmdBlock> cmd_block):
-		Stmt(test),
-		attrs(attrs),
-		name(name),
-		parents(parents),
-		cmd_block(cmd_block) {}
+	Test(std::shared_ptr<AttrBlock> attrs_,
+		Token test_,
+		std::shared_ptr<StringTokenUnion> name_,
+		std::vector<std::shared_ptr<StringTokenUnion>> parents_,
+		std::shared_ptr<AST::Block<AST::Cmd>> cmd_block_
+	):
+		attrs(std::move(attrs_)),
+		test(std::move(test_)),
+		name(std::move(name_)),
+		parents(std::move(parents_)),
+		cmd_block(std::move(cmd_block_)) {}
 
 	Pos begin() const override {
 		if (attrs) {
 			return attrs->begin();
 		} else {
-			return t.begin();
+			return test.begin();
 		}
 	}
 
@@ -1389,55 +1345,63 @@ struct Test: public Stmt {
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + std::string(*name);
-		return result; //for now
+		return test.value() + " " + name->to_string();
 	}
 
 	std::shared_ptr<AttrBlock> attrs;
+	Token test;
 	std::shared_ptr<StringTokenUnion> name;
 	std::vector<std::shared_ptr<StringTokenUnion>> parents;
-	std::shared_ptr<CmdBlock> cmd_block;
+	std::shared_ptr<AST::Block<AST::Cmd>> cmd_block;
 };
 
 struct Controller: public Stmt {
-	Controller(const Token& controller, std::shared_ptr<StringTokenUnion> name, std::shared_ptr<AttrBlock> attr_block):
-		Stmt(controller),
-		name(name),
-		attr_block(attr_block) {}
+	Controller(Token controller_, std::shared_ptr<StringTokenUnion> name_, std::shared_ptr<AttrBlock> attr_block_):
+		controller(std::move(controller_)),
+		name(std::move(name_)),
+		attr_block(std::move(attr_block_)) {}
+
+	Pos begin() const override {
+		return controller.begin();
+	}
 
 	Pos end() const override {
 		return attr_block->end();
 	}
 
 	std::string to_string() const override {
-		return t.value() + " " + std::string(*name) + " " + std::string(*attr_block);
+		return controller.value() + " " + name->to_string() + " " + attr_block->to_string();
 	}
 
+	Token controller;
 	std::shared_ptr<StringTokenUnion> name;
 	std::shared_ptr<AttrBlock> attr_block;
 };
 
 struct Param: public Stmt {
-	Param(const Token& param_token, const Token& name, std::shared_ptr<String> value):
-		Stmt(param_token), name(name), value(value) {}
+	Param(Token param_token_, Token name_, std::shared_ptr<String> value_):
+		param_token(std::move(param_token_)), name(std::move(name_)), value(std::move(value_)) {}
+
+	Pos begin() const override {
+		return param_token.begin();
+	}
 
 	Pos end() const override {
 		return value->end();
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + " " + name.value() + " " + std::string(*value);
-		return result;
+		return param_token.value() + " " + name.value() + " " + value->to_string();
 	}
 
+	Token param_token;
 	Token name;
 	std::shared_ptr<String> value;
 };
 
 struct Program: public Node {
-	Program (const std::vector<std::shared_ptr<Stmt>> stmts):
-		Node(Token(Token::category::program, "program", Pos(),Pos())),
-		stmts(stmts) {}
+	Program(std::vector<std::shared_ptr<Stmt>> stmts_):
+		stmts(std::move(stmts_)) {}
 
 	Pos begin() const override {
 		return stmts[0]->begin();
@@ -1447,12 +1411,11 @@ struct Program: public Node {
 		return stmts[stmts.size() - 1]->end();
 	}
 
-	operator std::string() const override {
+	std::string to_string() const override {
 		std::string result;
 
 		for (auto stmt: stmts) {
-			result += std::string(*stmt);
-
+			result += stmt->to_string();
 		}
 
 		return result;
@@ -1462,47 +1425,72 @@ struct Program: public Node {
 };
 
 struct Expr: public Node {
-	using Node::Node;
 };
 
-struct StringExpr: public Expr {
-	StringExpr(const std::shared_ptr<String> str_): Expr(str_->t), str(str_) {}
+struct SimpleExpr: public Expr {
+};
 
-	operator std::string() const override {
-		return *str;
+struct StringExpr: public SimpleExpr {
+	StringExpr(std::shared_ptr<String> str_): str(std::move(str_)) {}
+
+	Pos begin() const override {
+		return str->begin();
+	}
+
+	Pos end() const override {
+		return str->end();
+	}
+
+	std::string to_string() const override {
+		return str->to_string();
 	}
 
 	std::shared_ptr<String> str;
 };
 
-struct Negation: public Expr {
-	Negation(const Token& not_token, std::shared_ptr<Expr> expr_): Expr(not_token), expr(expr_) {}
+struct Negation: public SimpleExpr {
+	Negation(Token not_token_, std::shared_ptr<SimpleExpr> expr_):
+		not_token(std::move(not_token_)), expr(std::move(expr_)) {}
 
-	operator std::string() const override {
-		return "NOT " + (std::string)(*expr);
+	Pos begin() const override {
+		return not_token.begin();
 	}
 
-	std::shared_ptr<Expr> expr;
+	Pos end() const override {
+		return expr->end();
+	}
+
+	std::string to_string() const override {
+		return not_token.value() + expr->to_string();
+	}
+
+	Token not_token;
+	std::shared_ptr<SimpleExpr> expr;
 };
 
-struct Defined: public Expr {
-	Defined(const Token& defined, const Token& var):
-		Expr(defined), var(var) {}
+struct Defined: public SimpleExpr {
+	Defined(Token defined_, Token var_):
+		defined(std::move(defined_)), var(std::move(var_)) {}
+
+	Pos begin() const override {
+		return defined.begin();
+	}
 
 	Pos end() const override {
 		return var.end();
 	}
 
-	operator std::string() const override {
-		return t.value() + " " + var.value();
+	std::string to_string() const override {
+		return defined.value() + " " + var.value();
 	}
 
+	Token defined;
 	Token var;
 };
 
 struct Comparison: public Expr {
-	Comparison(const Token& op, std::shared_ptr<String> left, std::shared_ptr<String> right):
-		Expr(op), left(left), right(right) {}
+	Comparison(Token op_, std::shared_ptr<String> left_, std::shared_ptr<String> right_):
+		op(std::move(op_)), left(std::move(left_)), right(std::move(right_)) {}
 
 	Pos begin() const override {
 		return left->begin();
@@ -1512,105 +1500,103 @@ struct Comparison: public Expr {
 		return right->end();
 	}
 
-	operator std::string() const override {
-		return std::string(*left) + " " + t.value() + " " + std::string(*right);
+	std::string to_string() const override {
+		return left->to_string() + " " + op.value() + " " + right->to_string();
 	}
 
-	Token op() const {
-		return t;
-	}
-
+	Token op;
 	std::shared_ptr<String> left;
 	std::shared_ptr<String> right;
 };
 
-struct Check: public Expr {
-	Check(const Token& check, std::shared_ptr<SelectExpr> select_expr, std::shared_ptr<StringTokenUnion> timeout, std::shared_ptr<StringTokenUnion> interval):
-		Expr(check), select_expr(select_expr), timeout(timeout), interval(interval) {}
-
-	Pos end() const override {
-		if (interval) {
-			return interval->end();
-		} else if (timeout) {
-			return timeout->end();
-		} else {
-			return select_expr->end();
-		}
-	}
-
-	operator std::string() const override {
-		std::string result = t.value();
-		result += " " + std::string(*select_expr);
-
-		if (timeout) {
-			result += " timeout " + std::string(*timeout);
-		}
-
-		if (interval) {
-			result += " interval " + std::string(*interval);
-		}
-
-		return result;
-	}
-
-	std::shared_ptr<SelectExpr> select_expr;
-
-	std::shared_ptr<StringTokenUnion> timeout;
-	std::shared_ptr<StringTokenUnion> interval;
-};
-
-struct ParentedExpr: public Expr {
-	ParentedExpr(const Token& lparen, std::shared_ptr<Expr> expr, const Token& rparen):
-		Expr(lparen), expr(expr), rparen(rparen) {}
-
-	Pos end() const override {
-		return rparen.end();
-	}
-
-	operator std::string() const override {
-		return t.value() + std::string(*expr) + rparen.value();
-	}
-
-	std::shared_ptr<Expr> expr;
-	Token rparen;
-};
-
 struct BinOp: public Expr {
-	BinOp(const Token& op, std::shared_ptr<Expr> left, std::shared_ptr<Expr> right):
-		Expr(op), left(left), right(right) {}
+	BinOp(Token op_, std::shared_ptr<Expr> left_, std::shared_ptr<Expr> right_):
+		op(std::move(op_)), left(std::move(left_)), right(std::move(right_)) {}
 
 	Pos begin() const override {
 		return left->begin();
 	}
 
-	Pos end() const override {
+	Pos end() const override{
 		return right->end();
 	}
 
-	operator std::string() const override {
-		return std::string("BINOP: ") + std::string(*left) + " " + t.value() + " " + std::string(*right);
+	std::string to_string() const override {
+		return left->to_string() + " " + op.value() + " " + right->to_string();
 	}
 
-	Token op() const {
-		return t;
-	}
-
+	Token op;
 	std::shared_ptr<Expr> left;
 	std::shared_ptr<Expr> right;
 };
 
+struct Check: public SimpleExpr {
+	Check(Token check_, std::shared_ptr<SelectExpr> select_expr_, std::shared_ptr<OptionSeq> option_seq_):
+		check(std::move(check_)), select_expr(std::move(select_expr_)), option_seq(std::move(option_seq_)) {}
+
+	Pos begin() const override {
+		return check.begin();
+	}
+
+	Pos end() const override {
+		if (option_seq->size()) {
+			return option_seq->end();
+		} else {
+			return select_expr->end();
+		}
+	}
+
+	std::string to_string() const override {
+		std::string result = check.value();
+		result += " " + select_expr->to_string();
+
+		if (option_seq->size()) {
+			result += " " + option_seq->to_string();
+		}
+
+		return result;
+	}
+
+	Token check;
+	std::shared_ptr<SelectExpr> select_expr;
+	std::shared_ptr<OptionSeq> option_seq;
+};
+
+struct ParentedExpr: public SimpleExpr {
+	ParentedExpr(Token lparen_, std::shared_ptr<Expr> expr_, Token rparen_):
+		lparen(std::move(lparen_)), expr(std::move(expr_)), rparen(std::move(rparen_)) {}
+
+	Pos begin() const override {
+		return lparen.begin();
+	}
+
+	Pos end() const override {
+		return rparen.end();
+	}
+
+	std::string to_string() const override {
+		return lparen.value() + expr->to_string() + rparen.value();
+	}
+
+	Token lparen;
+	std::shared_ptr<Expr> expr;
+	Token rparen;
+};
+
 struct IfClause: public Action {
-	IfClause(const Token& if_token, const Token& open_paren, std::shared_ptr<Expr> expr,
-		const Token& close_paren, std::shared_ptr<Action> if_action, const Token& else_token,
-		std::shared_ptr<Action> else_action):
-		Action(if_token),
-		open_paren(open_paren),
-		expr(expr),
-		close_paren(close_paren),
-		if_action(if_action),
-		else_token(else_token),
-		else_action(else_action)
+	IfClause(Token if_token_, Token open_paren_, std::shared_ptr<Expr> expr_, Token close_paren_,
+		std::shared_ptr<Action> if_action_,
+		Token else_token_,
+		std::shared_ptr<Action> else_action_):
+		if_token(std::move(if_token_)), open_paren(std::move(open_paren_)), expr(std::move(expr_)), close_paren(std::move(close_paren_)),
+		if_action(std::move(if_action_)),
+		else_token(std::move(else_token_)),
+		else_action(std::move(else_action_))
 	{}
+
+	Pos begin() const override {
+		return if_token.begin();
+	}
 
 	Pos end() const override {
 		if (has_else()) {
@@ -1623,12 +1609,12 @@ struct IfClause: public Action {
 	std::string to_string() const override {
 		std::string result;
 
-		result += t.value() + " " +
-			open_paren.value() + std::string(*expr) +
-			close_paren.value() + " " + std::string(*if_action);
+		result += if_token.value() + " " +
+			open_paren.value() + expr->to_string() +
+			close_paren.value() + " " + if_action->to_string();
 
 		if (has_else()) {
-			result += std::string("\n") + else_token.value() + " " +  std::string(*else_action);
+			result += std::string("\n") + else_token.value() + " " +  else_action->to_string();
 		}
 
 		return result;
@@ -1638,6 +1624,7 @@ struct IfClause: public Action {
 		return else_token;
 	}
 
+	Token if_token;
 	Token open_paren;
 	std::shared_ptr<Expr> expr;
 	Token close_paren;
@@ -1647,15 +1634,14 @@ struct IfClause: public Action {
 };
 
 struct CounterList: public Node {
-	using Node::Node;
 };
 
 struct Range: public CounterList {
-	Range(const Token& range, std::shared_ptr<StringTokenUnion> r1, std::shared_ptr<StringTokenUnion> r2):
-		CounterList(range), r1(r1), r2(r2) {}
+	Range(Token range_, std::shared_ptr<StringTokenUnion> r1_, std::shared_ptr<StringTokenUnion> r2_):
+		range(std::move(range_)), r1(std::move(r1_)), r2(std::move(r2_)) {}
 
 	Pos begin() const override {
-		return r1->begin();
+		return range.begin();
 	}
 
 	Pos end() const override {
@@ -1666,28 +1652,32 @@ struct Range: public CounterList {
 		}
 	}
 
-	operator std::string() const override {
-		std::string result = t.value() + " " + std::string(*r1);
+	std::string to_string() const override {
+		std::string result = range.value() + " " + r1->to_string();
 		if (r2) {
-			result += " " + std::string(*r2);
+			result += " " + r2->to_string();
 		}
 		return result;
 	}
 
-	std::shared_ptr<StringTokenUnion> r1 = nullptr;
-	std::shared_ptr<StringTokenUnion> r2 = nullptr;
+	Token range;
+	std::shared_ptr<StringTokenUnion> r1;
+	std::shared_ptr<StringTokenUnion> r2;
 };
 
 struct ForClause: public Action {
-	ForClause(const Token& for_token, const Token& counter,	std::shared_ptr<CounterList> counter_list,
-		std::shared_ptr<Action> cycle_body, const Token& else_token,
-		std::shared_ptr<Action> else_action):
-		Action(for_token),
-		counter(counter),
-		counter_list(counter_list),
-		cycle_body(cycle_body),
-		else_token(else_token),
-		else_action(else_action) {}
+	ForClause(Token for_token_, Token counter_, std::shared_ptr<CounterList> counter_list_,
+		std::shared_ptr<Action> cycle_body_,
+		Token else_token_,
+		std::shared_ptr<Action> else_action_):
+		for_token(std::move(for_token_)), counter(std::move(counter_)), counter_list(std::move(counter_list_)),
+		cycle_body(std::move(cycle_body_)),
+		else_token(std::move(else_token_)),
+		else_action(std::move(else_action_)) {}
+
+	Pos begin() const override {
+		return for_token.begin();
+	}
 
 	Pos end() const override {
 		if (else_token) {
@@ -1698,25 +1688,21 @@ struct ForClause: public Action {
 	}
 
 	std::string to_string() const override {
-		std::string result = t.value() + "(" + counter.value() + " IN " + std::string(*counter_list) + ")";
+		std::string result = for_token.value() + "(" + counter.value() + " IN " + counter_list->to_string() + ")";
 
-		result += std::string(*cycle_body);
+		result += cycle_body->to_string();
 		if (else_action) {
-			result += std::string(*else_action);
+			result += else_action->to_string();
 		}
 		return result;
 	}
 
+	Token for_token;
 	Token counter;
-	std::shared_ptr<CounterList> counter_list = nullptr;
+	std::shared_ptr<CounterList> counter_list;
 	std::shared_ptr<Action> cycle_body;
-
 	Token else_token;
 	std::shared_ptr<Action> else_action;
-};
-
-struct CycleControl: public Action {
-	using Action::Action;
 };
 
 }

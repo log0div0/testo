@@ -261,6 +261,8 @@ VisitorInterpreterActionMachine::VisitorInterpreterActionMachine(std::shared_ptr
 void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
 		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionWithDelim>(action)) {
+		visit_action(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
@@ -298,8 +300,8 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> 
 	} else if (auto p = std::dynamic_pointer_cast<AST::ForClause>(action)) {
 		visit_for_clause(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
-		throw CycleControlException(p->t);
-	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+		throw CycleControlException(p->token);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Block<AST::Action>>(action)) {
 		visit_action_block(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		;
@@ -371,7 +373,7 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	try {
 		std::string check_for = check.timeout();
 		std::string interval_str = check.interval();
-		auto text = template_parser.resolve(std::string(*check.ast_node->select_expr), check.stack);
+		auto text = template_parser.resolve(check.ast_node->select_expr->to_string(), check.stack);
 
 		reporter.check(vmc, text, check_for, interval_str);
 
@@ -596,8 +598,18 @@ nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& j
 }
 
 bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot)  {
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable>(select_expr)) {
-		return visit_detect_selectable(p, screenshot);
+	if (auto p = std::dynamic_pointer_cast<AST::SelectNegationExpr>(select_expr)) {
+		return !visit_detect_expr(p->expr, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(select_expr)) {
+		return (bool)visit_select_text({p, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(select_expr)) {
+		return visit_detect_js({p, stack}, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(select_expr)) {
+		return (bool)visit_select_img({p, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(select_expr)) {
+		return (bool)visit_select_homm3({p, stack}, screenshot).size();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(select_expr)) {
+		return visit_detect_expr(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
 		return visit_detect_binop(p, screenshot);
 	} else {
@@ -605,34 +617,15 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 	}
 }
 
-
-bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::Selectable> selectable, const stb::Image<stb::RGB>& screenshot) {
-	bool is_negated = selectable->is_negated();
-
-	if (auto p = std::dynamic_pointer_cast<AST::SelectText>(selectable)) {
-		return is_negated ^ (bool)visit_select_text({p, stack}, screenshot).size();
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(selectable)) {
-		return is_negated ^ visit_detect_js({p, stack}, screenshot);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(selectable)) {
-		return is_negated ^ (bool)visit_select_img({p, stack}, screenshot).size();
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(selectable)) {
-		return is_negated ^ (bool)visit_select_homm3({p, stack}, screenshot).size();
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(selectable)) {
-		return is_negated ^ visit_detect_expr(p->select_expr, screenshot);
-	}  else {
-		throw std::runtime_error("Unknown selectable type");
-	}
-}
-
 bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, const stb::Image<stb::RGB>& screenshot) {
 	auto left_value = visit_detect_expr(binop->left, screenshot);
-	if (binop->t.type() == Token::category::double_ampersand) {
+	if (binop->op.type() == Token::category::double_ampersand) {
 		if (!left_value) {
 			return false;
 		} else {
 			return left_value && visit_detect_expr(binop->right, screenshot);
 		}
-	} else if (binop->t.type() == Token::category::double_vertical_bar) {
+	} else if (binop->op.type() == Token::category::double_vertical_bar) {
 		if (left_value) {
 			return true;
 		} else {
@@ -659,7 +652,7 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 
 void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
 	try {
-		reporter.hold_key(vmc, std::string(*hold.ast_node->combination));
+		reporter.hold_key(vmc, hold.ast_node->combination->to_string());
 		vmc->hold(hold.buttons());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(hold.ast_node, current_controller));
@@ -671,7 +664,7 @@ void VisitorInterpreterActionMachine::visit_release(const IR::Release& release) 
 		auto buttons = release.buttons();
 
 		if (buttons.size()) {
-			reporter.release_key(vmc, std::string(*release.ast_node->combination));
+			reporter.release_key(vmc, release.ast_node->combination->to_string());
 			vmc->release(release.buttons());
 		} else {
 			reporter.release_key(vmc);
@@ -686,8 +679,8 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 	std::string timeout = mouse_selectable.timeout();
 	std::string where_to_go = mouse_selectable.where_to_go();
 
-	for (auto specifier: mouse_selectable.ast_node->specifiers) {
-		where_to_go += std::string(*specifier);
+	for (auto specifier: mouse_selectable.ast_node->mouse_additional_specifiers) {
+		where_to_go += specifier->to_string();
 	}
 
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
@@ -695,20 +688,20 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 	bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 		try {
 			nn::Point point;
-			if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->selectable)) {
+			if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->basic_select_expr)) {
 				point = visit_select_js({p, stack}, screenshot);
-			} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->selectable)) {
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->basic_select_expr)) {
 				auto tensor = visit_select_text({p, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
-			} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->selectable)) {
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers, tensor);
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->basic_select_expr)) {
 				auto tensor = visit_select_img({p, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
-			} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->selectable)) {
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers, tensor);
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->basic_select_expr)) {
 				auto tensor = visit_select_homm3({p, stack}, screenshot);
 				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
+				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers, tensor);
 			}
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return true;
@@ -839,7 +832,7 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval) {
 	uint32_t times = key_spec.times();
 
-	reporter.press_key(vmc, *(key_spec.ast_node->combination), times);
+	reporter.press_key(vmc, key_spec.ast_node->combination->to_string(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
 		vmc->press(key_spec.ast_node->combination->get_buttons());
@@ -872,8 +865,8 @@ void VisitorInterpreterActionMachine::visit_plug(const IR::Plug& plug) {
 		} else if (auto p = std::dynamic_pointer_cast<AST::PlugLink>(plug.ast_node->resource)) {
 			return visit_plug_link({p, stack}, plug.is_on());
 		} else {
-			throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
-				plug.ast_node->resource->t.value());
+			throw std::runtime_error(std::string("unknown hardware to plug/unplug: ") +
+				plug.ast_node->resource->to_string());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(plug.ast_node, current_controller));

@@ -1,19 +1,9 @@
 
 #pragma once
 
-#include "../AST.hpp"
-#include "../Stack.hpp"
+#include "Base.hpp"
 
 namespace IR {
-
-template <typename ASTType>
-struct Node {
-	Node() = default;
-	Node(std::shared_ptr<ASTType> ast_node_, std::shared_ptr<StackNode> stack_):
-		ast_node(std::move(ast_node_)), stack(std::move(stack_)) {}
-	std::shared_ptr<ASTType> ast_node;
-	std::shared_ptr<StackNode> stack;
-};
 
 template <typename T>
 struct Object: Node<T> {

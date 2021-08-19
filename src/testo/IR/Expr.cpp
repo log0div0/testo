@@ -18,7 +18,7 @@ std::string Defined::var() const {
 
 
 std::string Comparison::op() const {
-	return ast_node->t.value();
+	return ast_node->op.value();
 }
 
 std::string Comparison::left() const {
@@ -74,19 +74,11 @@ bool Comparison::calculate() const {
 }
 
 std::string Check::timeout() const {
-	if (ast_node->timeout) {
-		return StringTokenUnion(ast_node->timeout, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_TIMEOUT");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_CHECK_DEFAULT_TIMEOUT");
 }
 
 std::string Check::interval() const {
-	if (ast_node->interval) {
-		return StringTokenUnion(ast_node->interval, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_CHECK_DEFAULT_INTERVAL");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_CHECK_DEFAULT_INTERVAL");
 }
 
 std::vector<std::string> Range::values() const {

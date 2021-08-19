@@ -5,6 +5,8 @@
 
 struct Token {
 	enum category {
+		none, //not initialized
+
 		eof,
 		newline,
 		id,
@@ -40,8 +42,6 @@ struct Token {
 		exec,
 		copyto,
 		copyfrom,
-		timeout,
-		interval,
 		for_,
 		test,
 		machine,
@@ -82,7 +82,6 @@ struct Token {
 		include,
 
 		//expressions
-
 		DEFINED,
 
 		//comparisons
@@ -98,25 +97,7 @@ struct Token {
 		AND,
 		OR,
 
-		//fake categories
-		none, //not initialized
 		boolean, //true or false
-		program,
-		string_token_union,
-		simple_attr,
-		mouse_coordinates,
-		mouse_selectable,
-		mouse_additional_specifier,
-		select_text,
-		key_combination,
-		key_spec,
-		action_block,
-		attr,
-		attr_block,
-		regular_cmd,
-		macro_body_empty,
-		cmd_block,
-		stmt_block
 	};
 
 	Token() {
@@ -181,10 +162,6 @@ struct Token {
 			return "CHECK";
 		case press:
 			return "ACTION PRESS";
-		case timeout:
-			return "TIMEOUT";
-		case interval:
-			return "INTERVAL";
 		case mouse:
 			return "MOUSE EVENT";
 		case move:
@@ -321,38 +298,6 @@ struct Token {
 			return "OR";
 		case none:
 			return "NONE";
-		case program:
-			return "PROGRAM";
-		case string_token_union:
-			return "STRING_TOKEN_UNION";
-		case simple_attr:
-			return "SIMPLE ATTRIBUTE";
-		case mouse_selectable:
-			return "MOUSE SELECTABLE";
-		case mouse_additional_specifier:
-			return "MOUSE ADDITIONAL SPECIFIER";
-		case select_text:
-			return "SELECT TEXT";
-		case mouse_coordinates:
-			return "MOUSE COORDINATES";
-		case key_combination:
-			return "KEY COMBINATION";
-		case key_spec:
-			return "KEY SPECIFICATION";
-		case action_block:
-			return "ACTION BLOCK";
-		case attr:
-			return "MACHINE ATTRIBUTE";
-		case attr_block:
-			return "MACHINE ATTRIBUTE BLOCK";
-		case regular_cmd:
-			return "COMMAND";
-		case macro_body_empty:
-			return "MACRO BODY EMPTY";
-		case cmd_block:
-			return "COMMAND BLOCK";
-		case stmt_block:
-			return "STMT BLOCK";
 		case boolean:
 			return "BOOLEAN CONSTANT";
 		default:

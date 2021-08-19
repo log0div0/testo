@@ -247,10 +247,6 @@ Token Lexer::id() {
 		return copyto();
 	} else if (value == "copyfrom") {
 		return copyfrom();
-	} else if (value == "timeout") {
-		return timeout();
-	} else if (value == "interval") {
-		return interval();
 	} else if (value == "for") {
 		return for_();
 	} else if (value == "test") {
@@ -530,20 +526,6 @@ Token Lexer::copyfrom() {
 	std::string value("copyfrom");
 	advance(value.length());
 	return Token(Token::category::copyfrom, value, tmp_pos, previous_pos);
-}
-
-Token Lexer::timeout() {
-	Pos tmp_pos = current_pos;
-	std::string value("timeout");
-	advance(value.length());
-	return Token(Token::category::timeout, value, tmp_pos, previous_pos);
-}
-
-Token Lexer::interval() {
-	Pos tmp_pos = current_pos;
-	std::string value("interval");
-	advance(value.length());
-	return Token(Token::category::interval, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::for_() {

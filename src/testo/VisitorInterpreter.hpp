@@ -24,10 +24,10 @@ struct VisitorInterpreter {
 
 	void visit();
 	void visit_test(std::shared_ptr<IR::Test> test);
-	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
+	void visit_command_block(std::shared_ptr<AST::Block<AST::Cmd>> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_macro_call(const IR::MacroCall& macro_call);
-	void visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body);
+	void visit_macro_body(const std::shared_ptr<AST::Block<AST::Cmd>>& macro_body);
 	void visit_regular_command(const IR::RegularCommand& regular_cmd);
 
 	std::shared_ptr<StackNode> stack;

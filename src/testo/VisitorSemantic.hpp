@@ -1,16 +1,17 @@
 
 #pragma once
 
+#include "VisitorAttr.hpp"
+#include "TemplateLiterals.hpp"
+
 #include "IR/Test.hpp"
 #include "IR/Macro.hpp"
 #include "IR/Action.hpp"
 #include "IR/Command.hpp"
 #include "IR/Expr.hpp"
-#include "TemplateLiterals.hpp"
 
 #include <set>
 #include <unordered_set>
-#include <unordered_map>
 
 enum class Tribool: uint8_t { no, yes, maybe };
 
@@ -39,10 +40,10 @@ struct VisitorSemantic {
 	void visit();
 	void visit_macro(std::shared_ptr<IR::Macro> macro);
 	void visit_test(std::shared_ptr<IR::Test> test);
-	void visit_command_block(std::shared_ptr<AST::CmdBlock> block);
+	void visit_command_block(std::shared_ptr<AST::Block<AST::Cmd>> block);
 	void visit_command(std::shared_ptr<AST::Cmd> cmd);
 	void visit_regular_command(const IR::RegularCommand& regular_cmd);
-	void visit_action_block(std::shared_ptr<AST::ActionBlock> action_block);
+	void visit_action_block(std::shared_ptr<AST::Block<AST::Action>> action_block);
 	void visit_action(std::shared_ptr<AST::Action> action);
 	void visit_action_vm(std::shared_ptr<AST::Action> action);
 	void visit_action_fd(std::shared_ptr<AST::Action> action);
@@ -81,15 +82,14 @@ struct VisitorSemantic {
 	void visit_sleep(const IR::Sleep& sleep);
 	void visit_cmd_macro_call(const IR::MacroCall& macro_call);
 	void visit_action_macro_call(const IR::MacroCall& macro_call);
-	void visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body);
-	void visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body);
+	void visit_macro_body(const std::shared_ptr<AST::Block<AST::Cmd>>& macro_body);
+	void visit_macro_body(const std::shared_ptr<AST::Block<AST::Action>>& macro_body);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	std::vector<std::string> visit_range(const IR::Range& range);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
 	void visit_cycle_control(const IR::CycleControl& cycle_control);
 
 	void visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr);
-	void visit_detect_selectable(std::shared_ptr<AST::Selectable> selectable);
 	void visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented);
 	void visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop);
 
@@ -103,8 +103,6 @@ struct VisitorSemantic {
 	void visit_machine(std::shared_ptr<IR::Machine> machine);
 	void visit_flash(std::shared_ptr<IR::FlashDrive> flash); //flash drive
 	void visit_network(std::shared_ptr<IR::Network> network); //flash drive
-	nlohmann::json visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx);
-	nlohmann::json visit_attr(std::shared_ptr<AST::Attr> attr, const std::string& ctx);
 
 	void validate_js(const std::string& script);
 
@@ -123,15 +121,6 @@ struct VisitorSemantic {
 	std::unordered_set<std::shared_ptr<IR::Machine>> visited_machines;
 	std::unordered_set<std::shared_ptr<IR::FlashDrive>> visited_flash_drives;
 	std::unordered_set<std::shared_ptr<IR::Network>> visited_networks;
-
-	struct AttrMeta {
-		bool name_is_required;
-		Token::category type;
-	};
-
-	using attr_ctx = std::unordered_map<std::string, AttrMeta>;
-
-	std::unordered_map<std::string, attr_ctx> attr_ctxs;
 
 	std::shared_ptr<IR::Test> current_test;
 };

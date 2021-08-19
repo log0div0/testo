@@ -1,7 +1,8 @@
 
 #include "Action.hpp"
 #include "Program.hpp"
-#include "../Lexer.hpp"
+#include "../TemplateLiterals.hpp"
+#include "../Exceptions.hpp"
 
 namespace IR {
 
@@ -22,11 +23,7 @@ std::string Print::message() const {
 }
 
 std::string Press::interval() const {
-	if (ast_node->interval) {
-		return StringTokenUnion(ast_node->interval, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_PRESS_DEFAULT_INTERVAL");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_PRESS_DEFAULT_INTERVAL");
 }
 
 int32_t KeySpec::times() const {
@@ -57,35 +54,23 @@ std::string Type::text() const {
 }
 
 std::string Type::interval() const {
-	if (ast_node->interval) {
-		return StringTokenUnion(ast_node->interval, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_TYPE_DEFAULT_INTERVAL");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_TYPE_DEFAULT_INTERVAL");
 }
 
 std::string Wait::select_expr() const {
 	try {
-		return template_literals::Parser().resolve(std::string(*ast_node->select_expr), stack);
+		return template_literals::Parser().resolve(ast_node->select_expr->to_string(), stack);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->select_expr->begin(), std::string(*ast_node->select_expr)));
+		std::throw_with_nested(ResolveException(ast_node->select_expr->begin(), ast_node->select_expr->to_string()));
 	}
 }
 
 std::string Wait::timeout() const {
-	if (ast_node->timeout) {
-		return StringTokenUnion(ast_node->timeout, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_WAIT_DEFAULT_TIMEOUT");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_WAIT_DEFAULT_TIMEOUT");
 }
 
 std::string Wait::interval() const {
-	if (ast_node->interval) {
-		return StringTokenUnion(ast_node->interval, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_WAIT_DEFAULT_INTERVAL");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_WAIT_DEFAULT_INTERVAL");
 }
 
 std::string Sleep::timeout() const {
@@ -93,7 +78,7 @@ std::string Sleep::timeout() const {
 }
 
 std::string MouseMoveClick::event_type() const {
-	return ast_node->t.value();
+	return ast_node->event.value();
 }
 
 std::string MouseCoordinates::x() const {
@@ -114,19 +99,19 @@ bool MouseCoordinates::y_is_relative() const {
 
 std::string MouseSelectable::where_to_go() const {
 	std::string result;
-	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(ast_node->selectable)) {
+	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(ast_node->basic_select_expr)) {
 		result += "js selection \"";
 		result += IR::SelectJS(p, stack).script();
 		result += "\"";
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(ast_node->selectable)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(ast_node->basic_select_expr)) {
 		result += "\"";
 		result += IR::SelectText(p, stack).text();
 		result += "\"";
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(ast_node->selectable)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(ast_node->basic_select_expr)) {
 		result += "image \"";
 		result += IR::SelectImg(p, stack).img_path().generic_string();
 		result += "\"";
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(ast_node->selectable)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(ast_node->basic_select_expr)) {
 		result += "HOMM3 object \"";
 		result += IR::SelectHomm3(p, stack).id();
 		result += "\"";
@@ -137,11 +122,7 @@ std::string MouseSelectable::where_to_go() const {
 }
 
 std::string MouseSelectable::timeout() const {
-	if (ast_node->timeout) {
-		return StringTokenUnion(ast_node->timeout, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 }
 
 std::string SelectJS::script() const {
@@ -160,7 +141,7 @@ fs::path SelectImg::img_path() const {
 		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
 	}
 	if (path.is_relative()) {
-		path = ast_node->t.begin().file.parent_path() / path;
+		path = ast_node->begin().file.parent_path() / path;
 	}
 
 	return path;
@@ -226,31 +207,22 @@ fs::path PlugDVD::path() const {
 		std::throw_with_nested(ResolveException(ast_node->path->begin(), ast_node->path->text()));
 	}
 	if (path.is_relative()) {
-		path = ast_node->t.begin().file.parent_path() / path;
+		path = ast_node->path->begin().file.parent_path() / path;
 	}
 
 	return path;
 }
 
 std::string Shutdown::timeout() const {
-	if (ast_node->timeout) {
-		return StringTokenUnion(ast_node->timeout, stack).resolve();
-	} else {
-		return "1m";
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_SHUTDOWN_DEFAULT_TIMEOUT");
 }
 
 std::string Exec::interpreter() const {
-	return ast_node->process_token.value();
-
+	return ast_node->process.value();
 }
 
 std::string Exec::timeout() const {
-	if (ast_node->timeout) {
-		return StringTokenUnion(ast_node->timeout, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_EXEC_DEFAULT_TIMEOUT");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_EXEC_DEFAULT_TIMEOUT");
 }
 
 std::string Exec::script() const {
@@ -271,7 +243,7 @@ std::string Copy::from() const {
 
 	if (ast_node->is_to_guest()) {
 		if (from.is_relative()) {
-			from = ast_node->t.begin().file.parent_path() / from;
+			from = ast_node->from->begin().file.parent_path() / from;
 		}
 	}
 
@@ -283,7 +255,7 @@ std::string Screenshot::destination() const {
 	try {
 		dest = template_literals::Parser().resolve(ast_node->destination->text(), stack);
 		if (dest.is_relative()) {
-			dest = ast_node->t.begin().file.parent_path() / dest;
+			dest = ast_node->destination->begin().file.parent_path() / dest;
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ResolveException(ast_node->destination->begin(), ast_node->destination->text()));
@@ -302,7 +274,7 @@ std::string Copy::to() const {
 
 	if (!ast_node->is_to_guest()) {
 		if (to.is_relative()) {
-			to = ast_node->t.begin().file.parent_path() / to;
+			to = ast_node->to->begin().file.parent_path() / to;
 		}
 	}
 
@@ -310,42 +282,15 @@ std::string Copy::to() const {
 }
 
 std::string Copy::timeout() const {
-	if (ast_node->timeout) {
-		return StringTokenUnion(ast_node->timeout, stack).resolve();
-	} else {
-		return program->stack->resolve_var("TESTO_COPY_DEFAULT_TIMEOUT");
-	}
+	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_COPY_DEFAULT_TIMEOUT");
+}
+
+bool Copy::nocheck() const {
+	return ast_node->option_seq->get("nocheck") != nullptr;
 }
 
 std::string CycleControl::type() const {
-	return ast_node->t.value();
-}
-
-std::string StringTokenUnion::resolve() const {
-	std::string result;
-
-	if (ast_node->string) {
-		try {
-			result = template_literals::Parser().resolve(ast_node->string->text(), stack);
-			Lexer lex(".", result);
-
-			try {
-				if (lex.get_next_token().type() != ast_node->expected_token_type) {
-					throw std::runtime_error("");
-				}
-			} catch(const std::exception& error) {
-				throw std::runtime_error("Can't convert string value \"" + result +
-					"\" to " + Token::type_to_string(ast_node->expected_token_type));
-			}
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(ast_node->string->begin(), ast_node->string->text()));
-		}
-
-	} else {
-		result = ast_node->token.value();
-	}
-
-	return result;
+	return ast_node->token.value();
 }
 
 }

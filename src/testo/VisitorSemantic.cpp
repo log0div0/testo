@@ -125,79 +125,6 @@ VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 		"LEFTMETA",
 		"RIGHTMETA",
 	};
-
-	attr_ctxs.insert({"vm_global", {
-		{"ram", {false, Token::category::size}},
-		{"iso", {false, Token::category::quoted_string}},
-		{"nic", {true, Token::category::attr_block}},
-		{"disk", {true, Token::category::attr_block}},
-		{"video", {true, Token::category::attr_block}},
-		{"shared_folder", {true, Token::category::attr_block}},
-		{"cpus", {false, Token::category::number}},
-		{"qemu_spice_agent", {false, Token::category::boolean}},
-		{"qemu_enable_usb3", {false, Token::category::boolean}},
-		{"loader", {false, Token::category::quoted_string}},
-	}});
-
-	attr_ctxs.insert({"disk", {
-		{"size", {false, Token::category::size}},
-		{"source", {false, Token::category::quoted_string}},
-	}});
-
-	attr_ctxs.insert({"nic", {
-		{"attached_to", {false, Token::category::quoted_string}},
-		{"attached_to_dev", {false, Token::category::quoted_string}},
-		{"mac", {false, Token::category::quoted_string}},
-		{"adapter_type", {false, Token::category::quoted_string}},
-	}});
-
-	attr_ctxs.insert({"video", {
-		{"qemu_mode", {false, Token::category::quoted_string}}, // deprecated
-		{"adapter_type", {false, Token::category::quoted_string}},
-	}});
-
-	attr_ctxs.insert({"shared_folder", {
-		{"host_path", {false, Token::category::quoted_string}},
-		{"readonly", {false, Token::category::boolean}},
-	}});
-
-	attr_ctxs.insert({"fd_global", {
-		{"fs", {false, Token::category::quoted_string}},
-		{"size", {false, Token::category::size}},
-		{"folder", {false, Token::category::quoted_string}},
-	}});
-
-	attr_ctxs.insert({"network_global", {
-		{"mode", {false, Token::category::quoted_string}},
-	}});
-
-	attr_ctxs.insert({"test_global", {
-		{"no_snapshots", {false, Token::category::boolean}},
-		{"description", {false, Token::category::quoted_string}},
-	}});
-}
-
-static uint32_t size_to_mb(const std::string& size) {
-	uint32_t result = std::stoul(size.substr(0, size.length() - 2));
-	if (size[size.length() - 2] == 'M') {
-		result = result * 1;
-	} else if (size[size.length() - 2] == 'G') {
-		result = result * 1024;
-	} else {
-		throw Exception("Unknown size specifier"); //should not happen ever
-	}
-
-	return result;
-}
-
-static bool str_to_bool(const std::string& str) {
-	if (str == "true") {
-		return true;
-	} else if (str == "false") {
-		return false;
-	} else {
-		throw std::runtime_error("Can't convert \"" + str + "\" to boolean");
-	}
 }
 
 void VisitorSemantic::visit() {
@@ -274,7 +201,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 		StackPusher<VisitorSemantic> new_ctx(this, test->stack);
 
 		if (test->ast_node->attrs) {
-			test->attrs = visit_attr_block(test->ast_node->attrs, "test_global");
+			test->attrs = VisitorAttrTest(stack).visit(test->ast_node->attrs);
 		}
 
 		current_test = test;
@@ -307,7 +234,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 		if (test->macro_call_stack.size()) {
 			std::stringstream ss;
 			for (auto macro_call: test->macro_call_stack) {
-				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+				ss << std::string(macro_call->name.begin()) + std::string(": In a macro call ") << macro_call->name.value() << std::endl;
 			}
 
 			std::string msg = ss.str();
@@ -318,8 +245,8 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	}
 }
 
-void VisitorSemantic::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
-	for (auto command: block->commands) {
+void VisitorSemantic::visit_command_block(std::shared_ptr<AST::Block<AST::Cmd>> block) {
+	for (auto command: block->items) {
 		visit_command(command);
 	}
 }
@@ -373,8 +300,8 @@ void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cm
 	current_controller = nullptr;
 }
 
-void VisitorSemantic::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
-	for (auto action: action_block->actions) {
+void VisitorSemantic::visit_action_block(std::shared_ptr<AST::Block<AST::Action>> action_block) {
+	for (auto action: action_block->items) {
 		visit_action(action);
 	}
 }
@@ -390,6 +317,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::Action> action) {
 void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
 		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionWithDelim>(action)) {
+		visit_action_vm(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
@@ -400,7 +329,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 		visit_hold({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Release>(action)) {
 		visit_release({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Block<AST::Action>>(action)) {
 		visit_action_block(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Mouse>(action)) {
 		visit_mouse({p, stack});
@@ -433,20 +362,22 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		// do nothing
 	} else {
-		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a virtual machine");
+		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->to_string() + "\" is not applicable to a virtual machine");
 	}
 }
 
 void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::Action> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
 		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionWithDelim>(action)) {
+		visit_action_fd(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
 		visit_copy({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
 		visit_sleep({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::ActionBlock>(action)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::Block<AST::Action>>(action)) {
 		visit_action_block(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		// do nothing
@@ -459,7 +390,7 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
 		visit_cycle_control({p, stack});
 	} else {
-		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->t.value() + "\" is not applicable to a flash drive");
+		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->to_string() + "\" is not applicable to a flash drive");
 	}
 }
 
@@ -563,7 +494,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 	for (auto specifier: specifiers) {
 		auto arg = specifier->arg;
 
-		current_test->cksum_input << std::string(*specifier);
+		current_test->cksum_input << specifier->to_string();
 		if (specifier->is_from()) {
 			if (!arg) {
 				throw Exception(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
@@ -670,31 +601,28 @@ void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 	if (!txt.length()) {
 		throw Exception(std::string(text.ast_node->begin()) + ": Error: empty string in text selection");
 	}
+	if (std::find(txt.begin(), txt.end(), '\n') != txt.end()) {
+		throw Exception(std::string(text.ast_node->begin()) + ": Error: multiline strings are not supported in wait action");
+	}
 
 	current_test->cksum_input << "text \"" << txt << "\"";
 }
 
 void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
-	if (mouse_selectable.ast_node->selectable->is_negated()) {
-		throw Exception(std::string(mouse_selectable.ast_node->begin()) + ": Error: negation is not supported for mouse move/click actions");
-	}
-
-	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->selectable)) {
-		if (mouse_selectable.ast_node->specifiers.size()) {
-			throw Exception(std::string(mouse_selectable.ast_node->specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
+	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->basic_select_expr)) {
+		if (mouse_selectable.ast_node->mouse_additional_specifiers.size()) {
+			throw Exception(std::string(mouse_selectable.ast_node->mouse_additional_specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
 		}
 		visit_select_js({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->selectable)) {
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->basic_select_expr)) {
 		visit_select_text({p, stack});
-		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->selectable)) {
+		visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->basic_select_expr)) {
 		visit_select_img({p, stack});
-		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->selectable)) {
+		visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->basic_select_expr)) {
 		visit_select_homm3({p, stack});
-		visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(mouse_selectable.ast_node->selectable)) {
-		throw Exception(std::string(mouse_selectable.ast_node->begin()) + ": Error: select expressions are not supported for mouse move/click actions");
+		visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
 	}
 }
 
@@ -750,8 +678,8 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::PlugHostDev>(plug.ast_node->resource)) {
 		visit_plug_hostdev({p, stack});
 	} else {
-		throw Exception(std::string("unknown hardware type to plug/unplug: ") +
-			plug.ast_node->resource->t.value());
+		throw Exception(std::string("unknown hardware to plug/unplug: ") +
+			plug.ast_node->resource->to_string());
 	}
 
 	current_test->cksum_input << std::endl;
@@ -843,7 +771,7 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 	auto from = copy.from();
 	if (copy.ast_node->is_to_guest()) {
 
-		if (!copy.ast_node->nocheck) {
+		if (!copy.nocheck()) {
 			if (!fs::exists(from)) {
 				throw Exception(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from);
 			}
@@ -854,8 +782,8 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 		}
 
 	} else {
-		if (copy.ast_node->nocheck) {
-			throw Exception(std::string(copy.ast_node->nocheck.begin()) + ": Error: \"nocheck\" specifier is not applicable to copyfrom action");
+		if (copy.nocheck()) {
+			throw Exception(std::string(copy.ast_node->begin()) + ": Error: \"nocheck\" specifier is not applicable to copyfrom action");
 		}
 	}
 }
@@ -868,10 +796,21 @@ void VisitorSemantic::visit_screenshot(const IR::Screenshot& screenshot) {
 }
 
 void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr) {
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable>(select_expr)) {
-		return visit_detect_selectable(p);
+	if (auto p = std::dynamic_pointer_cast<AST::SelectNegationExpr>(select_expr)) {
+		current_test->cksum_input << "!";
+		visit_detect_expr(p->expr);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(select_expr)) {
+		visit_select_text({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(select_expr)) {
+		visit_select_js({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(select_expr)) {
+		visit_select_img({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(select_expr)) {
+		visit_select_homm3({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(select_expr)) {
+		visit_detect_parented(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
-		return visit_detect_binop(p);
+		visit_detect_binop(p);
 	} else {
 		throw Exception("Unknown detect expr type");
 	}
@@ -880,27 +819,6 @@ void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_
 void VisitorSemantic::validate_js(const std::string& script) {
 	js::Context js_ctx(nullptr);
 	js_ctx.eval(script, true);
-}
-
-void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::Selectable> selectable) {
-	bool is_negated = selectable->is_negated();
-	if (is_negated) {
-		current_test->cksum_input << "!";
-	}
-
-	if (auto p = std::dynamic_pointer_cast<AST::SelectText>(selectable)) {
-		visit_select_text({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(selectable)) {
-		visit_select_js({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(selectable)) {
-		visit_select_img({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(selectable)) {
-		visit_select_homm3({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(selectable)) {
-		visit_detect_parented(p);
-	} else {
-		throw Exception("Unknown selectable type");
-	}
 }
 
 void VisitorSemantic::visit_detect_parented(std::shared_ptr<AST::SelectParentedExpr> parented) {
@@ -912,7 +830,7 @@ void VisitorSemantic::visit_detect_parented(std::shared_ptr<AST::SelectParentedE
 
 void VisitorSemantic::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop) {
 	visit_detect_expr(binop->left);
-	current_test->cksum_input << binop->t.value();
+	current_test->cksum_input << binop->op.value();
 	visit_detect_expr(binop->right);
 }
 
@@ -929,19 +847,19 @@ void VisitorSemantic::visit_sleep(const IR::Sleep& sleep) {
 }
 
 void VisitorSemantic::visit_cmd_macro_call(const IR::MacroCall& macro_call) {
-	macro_call.visit_semantic<AST::MacroBodyCommand>(this);
+	macro_call.visit_semantic<AST::Cmd>(this);
 }
 
 void VisitorSemantic::visit_action_macro_call(const IR::MacroCall& macro_call) {
-	macro_call.visit_semantic<AST::MacroBodyAction>(this);
+	macro_call.visit_semantic<AST::Action>(this);
 }
 
-void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body) {
-	visit_command_block(macro_body->cmd_block);
+void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::Block<AST::Cmd>>& macro_body) {
+	visit_command_block(macro_body);
 }
 
-void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body) {
-	visit_action_block(macro_body->action_block);
+void VisitorSemantic::visit_macro_body(const std::shared_ptr<AST::Block<AST::Action>>& macro_body) {
+	visit_action_block(macro_body);
 }
 
 
@@ -978,15 +896,15 @@ Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::Expr> expr) {
 
 Tribool VisitorSemantic::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	auto left = visit_expr(binop->left);
-	current_test->cksum_input << " " << binop->op().value() << " ";
+	current_test->cksum_input << " " << binop->op.value() << " ";
 
-	if (binop->op().value() == "AND") {
+	if (binop->op.value() == "AND") {
 		if (left == Tribool::no) {
 			return left;
 		} else {
 			return visit_expr(binop->right);
 		}
-	} else if (binop->op().value() == "OR") {
+	} else if (binop->op.value() == "OR") {
 		if (left == Tribool::yes) {
 			return left;
 		} else {
@@ -1136,7 +1054,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 
 		StackPusher<VisitorSemantic> new_ctx(this, machine->stack);
 
-		machine->config = visit_attr_block(machine->ast_node->attr_block, "vm_global");
+		machine->config = VisitorAttrMachine(stack).visit(machine->ast_node->attr_block);
 		machine->config["prefix"] = prefix;
 		machine->config["name"] = machine->name();
 		machine->config["src_file"] = machine->ast_node->name->begin().file.generic_string();
@@ -1160,7 +1078,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
 
 		//no need to check for duplicates
 		//It's already done in Parser while registering Controller
-		flash->config = visit_attr_block(flash->ast_node->attr_block, "fd_global");
+		flash->config = VisitorAttrFlashDrive(stack).visit(flash->ast_node->attr_block);
 		flash->config["prefix"] = prefix;
 		flash->config["name"] = flash->name();
 		flash->config["src_file"] = flash->ast_node->name->begin().file.generic_string();
@@ -1182,7 +1100,7 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 
 		StackPusher<VisitorSemantic> new_ctx(this, network->stack);
 
-		network->config = visit_attr_block(network->ast_node->attr_block, "network_global");
+		network->config = VisitorAttrNetwork(stack).visit(network->ast_node->attr_block);
 		network->config["prefix"] = prefix;
 		network->config["name"] = network->name();
 		network->config["src_file"] = network->ast_node->name->begin().file.generic_string();
@@ -1190,104 +1108,6 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 		network->validate_config();
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ControllerCreatonException(network));
-	}
-}
-
-nlohmann::json VisitorSemantic::visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx_name) {
-	nlohmann::json config;
-	for (auto attr: attr_block->attrs) {
-		if (config.count(attr->name.value())) {
-			if (!config.at(attr->name.value()).is_array()) {
-				throw Exception(std::string(attr->begin()) + ": Error: duplicate attribute: \"" + attr->name.value() + "\"");
-			}
-		}
-		nlohmann::json j = visit_attr(attr, ctx_name);
-		if (attr->id) {
-			j["name"] = attr->id.value();
-			config[attr->name.value()].push_back(j);
-		}  else {
-			config[attr->name.value()] = j;
-		}
-	}
-	return config;
-}
-
-nlohmann::json VisitorSemantic::visit_attr(std::shared_ptr<AST::Attr> attr, const std::string& ctx_name) {
-	auto ctx = attr_ctxs.find(ctx_name);
-	if (ctx == attr_ctxs.end()) {
-		throw Exception("Unknown ctx"); //should never happen
-	}
-
-	auto found = ctx->second.find(attr->name);
-
-	if (found == ctx->second.end()) {
-		throw Exception(std::string(attr->begin()) + ": Error: unknown attribute name: \"" + attr->name.value() + "\"");
-	}
-
-	auto attr_meta = found->second;
-	if (attr->id != attr_meta.name_is_required) {
-		if (attr_meta.name_is_required) {
-			throw Exception(std::string(attr->end()) + ": Error: attribute \"" + attr->name.value() +
-				"\" requires a name");
-		} else {
-			throw Exception(std::string(attr->end()) + ": Error: attribute \"" + attr->name.value() +
-				"\" must have no name");
-		}
-	}
-
-	if ((attr->value->type() != attr_meta.type)) {
-		if (attr_meta.type == Token::category::attr_block) {
-			throw Exception(std::string(attr->end()) + ": Error: unexpected value type \"" +
-				Token::type_to_string(attr->value->type()) + "\" for attribute \"" + attr->name.value() +
-				"\", expected \"" + Token::type_to_string(attr_meta.type) + "\"");
-		}
-
-		if (attr->value->type() != Token::category::quoted_string) {
-			throw Exception(std::string(attr->end()) + ": Error: unexpected value type \"" +
-				Token::type_to_string(attr->value->type()) + "\" for attribute \"" + attr->name.value() +
-				"\", expected \"" + Token::type_to_string(attr_meta.type) + "\" OR \"" +
-				Token::type_to_string(Token::category::quoted_string) + "\"");
-		}
-	}
-
-	if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::SimpleAttr>>(attr->value)) {
-		//strings are here too, we treat them separately
-
-		//1) If we expect string -> check that it's string
-		if (attr_meta.type == Token::category::quoted_string) {
-			try {
-				return template_parser.resolve(p->attr_value->value->text(), stack);
-			} catch (const std::exception& error) {
-				std::throw_with_nested(ResolveException(p->attr_value->value->begin(), p->attr_value->value->text()));
-			}
-		} else {
-			p->attr_value->value->expected_token_type = attr_meta.type;
-			std::string value;
-			try {
-				value = IR::StringTokenUnion(p->attr_value->value, stack).resolve();
-			} catch (const std::exception& error) {
-				throw Exception(std::string(attr->end()) + ": Error: can't convert value string \"" +
-					p->attr_value->value->text() + "\" for attribute \"" + attr->name.value() + "\" into expected \"" +
-					Token::type_to_string(attr_meta.type) + "\"");
-			}
-
-			if (p->attr_value->type() == Token::category::number) {
-				if (std::stoi(value) < 0) {
-					throw Exception(std::string(attr->begin()) + ": Error: numeric attr can't be negative: " + value);
-				}
-				return std::stoul(value);
-			} else if (p->attr_value->type() == Token::category::size) {
-				return size_to_mb(value);
-			} else if (p->attr_value->type() == Token::category::boolean) {
-				return str_to_bool(value);
-			} else {
-				throw Exception(std::string(attr->begin()) + ": Error: unsupported attr: " + value);
-			}
-		}
-	} else if (auto p = std::dynamic_pointer_cast<AST::AttrValue<AST::AttrBlock>>(attr->value)) {
-		return visit_attr_block(p->attr_value, attr->name);
-	} else {
-		throw Exception("Unknown attr category");
 	}
 }
 

@@ -20,9 +20,9 @@ struct Parser {
 	Parser(const std::vector<Token>& tokens);
 
 	std::shared_ptr<AST::Program> parse();
-	std::shared_ptr<AST::CmdBlock> command_block();
-	std::shared_ptr<AST::ActionBlock> action_block();
-	std::shared_ptr<AST::StmtBlock> stmt_block();
+	std::shared_ptr<AST::Block<AST::Cmd>> command_block();
+	std::shared_ptr<AST::Block<AST::Action>> action_block();
+	std::shared_ptr<AST::Block<AST::Stmt>> stmt_block();
 private:
 
 	struct Ctx {
@@ -64,6 +64,11 @@ private:
 
 	void newline_list();
 
+	using OptionName = std::string;
+	using OptionValue = Token::category;
+	using OptionSeqSchema = std::map<OptionName, OptionValue>;
+	std::shared_ptr<AST::OptionSeq> option_seq(const OptionSeqSchema& schema);
+
 	void handle_include();
 	std::shared_ptr<AST::Stmt> stmt();
 	std::shared_ptr<AST::Test> test();
@@ -71,8 +76,8 @@ private:
 	std::vector<Token> macro_body(const std::string& name);
 	std::shared_ptr<AST::Macro> macro();
 	std::shared_ptr<AST::Param> param();
-	std::shared_ptr<AST::Attr> attr(const std::string& ctx_name);
-	std::shared_ptr<AST::AttrBlock> attr_block(const std::string& ctx_name);
+	std::shared_ptr<AST::Attr> attr();
+	std::shared_ptr<AST::AttrBlock> attr_block();
 	std::shared_ptr<AST::Controller> controller();
 	std::shared_ptr<AST::Cmd> command();
 	std::shared_ptr<AST::KeyCombination> key_combination();
@@ -118,10 +123,11 @@ private:
 
 	//expressions
 	std::shared_ptr<AST::SelectExpr> select_expr();
+	std::shared_ptr<AST::BasicSelectExpr> basic_select_expr();
+	std::shared_ptr<AST::SelectSimpleExpr> select_simple_expr();
 	std::shared_ptr<AST::SelectParentedExpr> select_parented_expr();
 	std::shared_ptr<AST::SelectBinOp> select_binop(std::shared_ptr<AST::SelectExpr> left);
 
-	std::shared_ptr<AST::Selectable> selectable();
 	std::shared_ptr<AST::SelectJS> select_js();
 	std::shared_ptr<AST::SelectImg> select_img();
 	std::shared_ptr<AST::SelectHomm3> select_homm3();
@@ -135,6 +141,7 @@ private:
 	std::shared_ptr<AST::Defined> defined();
 	std::shared_ptr<AST::BinOp> binop(std::shared_ptr<AST::Expr> left);
 	std::shared_ptr<AST::Expr> expr();
+	std::shared_ptr<AST::SimpleExpr> simple_expr();
 	std::shared_ptr<AST::ParentedExpr> parented_expr();
 	std::shared_ptr<AST::Negation> negation();
 

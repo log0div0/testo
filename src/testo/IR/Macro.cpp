@@ -2,21 +2,22 @@
 #include "Macro.hpp"
 #include "Program.hpp"
 #include "../Parser.hpp"
+#include "../Exceptions.hpp"
 
 namespace IR {
 
 template <>
-std::shared_ptr<AST::StmtBlock> parse_block(const std::vector<Token>& tokens) {
+std::shared_ptr<AST::Block<AST::Stmt>> parse_block(const std::vector<Token>& tokens) {
 	return Parser(tokens).stmt_block();
 }
 
 template <>
-std::shared_ptr<AST::CmdBlock> parse_block(const std::vector<Token>& tokens) {
+std::shared_ptr<AST::Block<AST::Cmd>> parse_block(const std::vector<Token>& tokens) {
 	return Parser(tokens).command_block();
 }
 
 template <>
-std::shared_ptr<AST::ActionBlock> parse_block(const std::vector<Token>& tokens) {
+std::shared_ptr<AST::Block<AST::Action>> parse_block(const std::vector<Token>& tokens) {
 	return Parser(tokens).action_block();
 }
 
@@ -43,9 +44,9 @@ void Macro::validate() {
 }
 
 const std::shared_ptr<IR::Macro> MacroCall::get_macro() const {
-	auto macro = program->get_macro_or_null(ast_node->name().value());
+	auto macro = program->get_macro_or_null(ast_node->name.value());
 	if (!macro) {
-		throw std::runtime_error(std::string(ast_node->begin()) + ": Error: unknown macro: " + ast_node->name().value());
+		throw std::runtime_error(std::string(ast_node->name.begin()) + ": Error: unknown macro: " + ast_node->name.value());
 	}
 	return macro;
 }

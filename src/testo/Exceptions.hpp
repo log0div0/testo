@@ -29,7 +29,7 @@ struct ControllerCreatonException: public Exception {
 	ControllerCreatonException(std::shared_ptr<IR::Controller> controller) {
 		std::stringstream ss;
 		for (auto macro_call: controller->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
 		}
 
 		ss << std::string(controller->ast_node->begin()) << ": In the " << controller->type() << " \"" << controller->name() << "\" declaration";
@@ -40,7 +40,7 @@ struct ControllerCreatonException: public Exception {
 struct ActionException: public Exception {
 	ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller): controller(controller)
 	{
-		msg = std::string(node->begin()) + ": Error while performing action " + std::string(*node);
+		msg = std::string(node->begin()) + ": Error while performing action " + node->to_string();
 		if (controller) {
 			msg += " on " + controller->type() + " " + controller->name();
 		}
@@ -52,7 +52,7 @@ struct ActionException: public Exception {
 struct MacroException: public Exception {
 	MacroException(std::shared_ptr<AST::IMacroCall> macro_call)
 	{
-		msg = std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->name().value();
+		msg = std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->to_string();
 	}
 };
 

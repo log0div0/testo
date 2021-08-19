@@ -11,8 +11,8 @@ static void sleep(const std::string& interval) {
 }
 
 
-void VisitorInterpreterAction::visit_action_block(std::shared_ptr<AST::ActionBlock> action_block) {
-	for (auto action: action_block->actions) {
+void VisitorInterpreterAction::visit_action_block(std::shared_ptr<AST::Block<AST::Action>> action_block) {
+	for (auto action: action_block->items) {
 		visit_action(action);
 	}
 }
@@ -31,12 +31,12 @@ void VisitorInterpreterAction::visit_sleep(const IR::Sleep& sleep) {
 }
 
 void VisitorInterpreterAction::visit_macro_call(const IR::MacroCall& macro_call) {
-	reporter.macro_action_call(current_controller, macro_call.ast_node->name(), macro_call.args());
-	macro_call.visit_interpreter<AST::MacroBodyAction>(this);
+	reporter.macro_action_call(current_controller, macro_call.ast_node->name, macro_call.args());
+	macro_call.visit_interpreter<AST::Action>(this);
 }
 
-void VisitorInterpreterAction::visit_macro_body(const std::shared_ptr<AST::MacroBodyAction>& macro_body) {
-	visit_action_block(macro_body->action_block);
+void VisitorInterpreterAction::visit_macro_body(const std::shared_ptr<AST::Block<AST::Action>>& macro_body) {
+	visit_action_block(macro_body);
 }
 
 void VisitorInterpreterAction::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
@@ -122,13 +122,13 @@ bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::Expr> expr) {
 bool VisitorInterpreterAction::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	auto left = visit_expr(binop->left);
 
-	if (binop->op().value() == "AND") {
+	if (binop->op.value() == "AND") {
 		if (!left) {
 			return left;
 		} else {
 			return visit_expr(binop->right);
 		}
-	} else if (binop->op().value() == "OR") {
+	} else if (binop->op.value() == "OR") {
 		if (left) {
 			return left;
 		} else {

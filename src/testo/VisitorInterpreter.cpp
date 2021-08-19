@@ -360,7 +360,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 	} catch (const Exception& error) {
 		std::stringstream ss;
 		for (auto macro_call: test->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
 		}
 
 		ss << error << std::endl;
@@ -368,7 +368,7 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 		if (current_controller) {
 			ss << std::endl;
 			for (auto macro_call: current_controller->macro_call_stack) {
-				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->name().value() << std::endl;
+				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
 			}
 			ss << std::string(current_controller->ast_node->begin()) << ": note: the " << current_controller->type() << " " << current_controller->name() << " was declared here\n\n";
 		}
@@ -381,8 +381,8 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 	}
 }
 
-void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::CmdBlock> block) {
-	for (auto command: block->commands) {
+void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::Block<AST::Cmd>> block) {
+	for (auto command: block->items) {
 		visit_command(command);
 	}
 }
@@ -412,12 +412,12 @@ void VisitorInterpreter::visit_regular_command(const IR::RegularCommand& regular
 }
 
 void VisitorInterpreter::visit_macro_call(const IR::MacroCall& macro_call) {
-	reporter.macro_command_call(macro_call.ast_node->name(), macro_call.args());
-	macro_call.visit_interpreter<AST::MacroBodyCommand>(this);
+	reporter.macro_command_call(macro_call.ast_node->name, macro_call.args());
+	macro_call.visit_interpreter<AST::Cmd>(this);
 }
 
-void VisitorInterpreter::visit_macro_body(const std::shared_ptr<AST::MacroBodyCommand>& macro_body) {
-	visit_command_block(macro_body->cmd_block);
+void VisitorInterpreter::visit_macro_body(const std::shared_ptr<AST::Block<AST::Cmd>>& macro_body) {
+	visit_command_block(macro_body);
 }
 
 void VisitorInterpreter::stop_all_vms(std::shared_ptr<IR::Test> test) {

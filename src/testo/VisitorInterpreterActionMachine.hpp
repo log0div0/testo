@@ -35,7 +35,6 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	bool visit_detect_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
 	nn::Point visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot);
-	bool visit_detect_selectable(std::shared_ptr<AST::Selectable> selectable, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, const stb::Image<stb::RGB>& screenshot);
 	void visit_press(const IR::Press& press);
 	void visit_hold(const IR::Hold& hold);
