@@ -2,6 +2,8 @@
 #pragma once
 
 #include "Base.hpp"
+#include "../Mouse.hpp"
+#include "../Keyboard.hpp"
 
 namespace IR {
 
@@ -27,17 +29,18 @@ struct Press: Action<AST::Press> {
 
 struct KeySpec: Action<AST::KeySpec> {
 	using Action<AST::KeySpec>::Action;
+	std::vector<KeyboardButton> buttons() const;
 	int32_t times() const;
 };
 
 struct Hold: Action<AST::Hold> {
 	using Action<AST::Hold>::Action;
-	std::vector<std::string> buttons() const;
+	std::vector<KeyboardButton> buttons() const;
 };
 
 struct Release: Action<AST::Release> {
 	using Action<AST::Release>::Action;
-	std::vector<std::string> buttons() const;
+	std::vector<KeyboardButton> buttons() const;
 };
 
 struct Type: Action<AST::Type> {
@@ -106,7 +109,7 @@ struct SelectText: Action<AST::SelectText> {
 
 struct MouseHold: Action<AST::MouseHold> {
 	using Action<AST::MouseHold>::Action;
-	std::string button() const;
+	MouseButton button() const;
 };
 
 struct MouseRelease:Action<AST::MouseRelease> {

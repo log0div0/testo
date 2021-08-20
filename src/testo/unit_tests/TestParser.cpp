@@ -1,15 +1,6 @@
 
-#define CATCH_CONFIG_RUNNER
 #include <catch.hpp>
-#include "Parser.hpp"
-
-int main( int argc, char* argv[] ) {
-#ifdef WIN32
-	SetConsoleOutputCP(CP_UTF8);
-#endif
-	int result = Catch::Session().run( argc, argv );
-	return result;
-}
+#include "../Parser.hpp"
 
 void TestParseStringifyActions(const std::string& str) {
 	auto block = Parser(".", str).action_block();

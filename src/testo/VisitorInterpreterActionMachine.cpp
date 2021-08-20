@@ -5,7 +5,6 @@
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
 #include <fmt/format.h>
-#include <codecvt>
 
 using namespace std::chrono_literals;
 
@@ -88,174 +87,7 @@ static std::string build_python_script(const std::string& body) {
 VisitorInterpreterActionMachine::VisitorInterpreterActionMachine(std::shared_ptr<IR::Machine> vmc, std::shared_ptr<StackNode> stack, Reporter& reporter, std::shared_ptr<IR::Test> current_test):
 	VisitorInterpreterAction(vmc, stack, reporter), vmc(vmc), current_test(current_test)
 {
-	charmap.insert({
-		{U'0', {"ZERO"}},
-		{U'1', {"ONE"}},
-		{U'2', {"TWO"}},
-		{U'3', {"THREE"}},
-		{U'4', {"FOUR"}},
-		{U'5', {"FIVE"}},
-		{U'6', {"SIX"}},
-		{U'7', {"SEVEN"}},
-		{U'8', {"EIGHT"}},
-		{U'9', {"NINE"}},
-		{U')', {"ZERO", true}},
-		{U'!', {"ONE", true}},
-		{U'@', {"TWO", true}},
-		{U'#', {"THREE", true}},
-		{U'$', {"FOUR", true}},
-		{U'%', {"FIVE", true}},
-		{U'^', {"SIX", true}},
-		{U'&', {"SEVEN", true}},
-		{U'*', {"EIGHT", true}},
-		{U'(', {"NINE", true}},
-		{U'a', {"A"}},
-		{U'b', {"B"}},
-		{U'c', {"C"}},
-		{U'd', {"D"}},
-		{U'e', {"E"}},
-		{U'f', {"F"}},
-		{U'g', {"G"}},
-		{U'h', {"H"}},
-		{U'i', {"I"}},
-		{U'j', {"J"}},
-		{U'k', {"K"}},
-		{U'l', {"L"}},
-		{U'm', {"M"}},
-		{U'n', {"N"}},
-		{U'o', {"O"}},
-		{U'p', {"P"}},
-		{U'q', {"Q"}},
-		{U'r', {"R"}},
-		{U's', {"S"}},
-		{U't', {"T"}},
-		{U'u', {"U"}},
-		{U'v', {"V"}},
-		{U'w', {"W"}},
-		{U'x', {"X"}},
-		{U'y', {"Y"}},
-		{U'z', {"Z"}},
-		{U'A', {"A", true}},
-		{U'B', {"B", true}},
-		{U'C', {"C", true}},
-		{U'D', {"D", true}},
-		{U'E', {"E", true}},
-		{U'F', {"F", true}},
-		{U'G', {"G", true}},
-		{U'H', {"H", true}},
-		{U'I', {"I", true}},
-		{U'J', {"J", true}},
-		{U'K', {"K", true}},
-		{U'L', {"L", true}},
-		{U'M', {"M", true}},
-		{U'N', {"N", true}},
-		{U'O', {"O", true}},
-		{U'P', {"P", true}},
-		{U'Q', {"Q", true}},
-		{U'R', {"R", true}},
-		{U'S', {"S", true}},
-		{U'T', {"T", true}},
-		{U'U', {"U", true}},
-		{U'V', {"V", true}},
-		{U'W', {"W", true}},
-		{U'X', {"X", true}},
-		{U'Y', {"Y", true}},
-		{U'Z', {"Z", true}},
 
-		{U'а', {"F"}},
-		{U'б', {"COMMA"}},
-		{U'в', {"D"}},
-		{U'г', {"U"}},
-		{U'д', {"L"}},
-		{U'е', {"T"}},
-		{U'ё', {"GRAVE"}},
-		{U'ж', {"SEMICOLON"}},
-		{U'з', {"P"}},
-		{U'и', {"B"}},
-		{U'й', {"Q"}},
-		{U'к', {"R"}},
-		{U'л', {"K"}},
-		{U'м', {"V"}},
-		{U'н', {"Y"}},
-		{U'о', {"J"}},
-		{U'п', {"G"}},
-		{U'р', {"H"}},
-		{U'с', {"C"}},
-		{U'т', {"N"}},
-		{U'у', {"E"}},
-		{U'ф', {"A"}},
-		{U'х', {"LEFTBRACE"}},
-		{U'ц', {"W"}},
-		{U'ч', {"X"}},
-		{U'ш', {"I"}},
-		{U'щ', {"O"}},
-		{U'ъ', {"RIGHTBRACE"}},
-		{U'ы', {"S"}},
-		{U'ь', {"M"}},
-		{U'э', {"APOSTROPHE"}},
-		{U'ю', {"DOT"}},
-		{U'я', {"Z"}},
-
-		{U'А', {"F", true}},
-		{U'Б', {"COMMA", true}},
-		{U'В', {"D", true}},
-		{U'Г', {"U", true}},
-		{U'Д', {"L", true}},
-		{U'Е', {"T", true}},
-		{U'Ё', {"GRAVE", true}},
-		{U'Ж', {"SEMICOLON", true}},
-		{U'З', {"P", true}},
-		{U'И', {"B", true}},
-		{U'Й', {"Q", true}},
-		{U'К', {"R", true}},
-		{U'Л', {"K", true}},
-		{U'М', {"V", true}},
-		{U'Н', {"Y", true}},
-		{U'О', {"J", true}},
-		{U'П', {"G", true}},
-		{U'Р', {"H", true}},
-		{U'С', {"C", true}},
-		{U'Т', {"N", true}},
-		{U'У', {"E", true}},
-		{U'Ф', {"A", true}},
-		{U'Х', {"LEFTBRACE", true}},
-		{U'Ц', {"W", true}},
-		{U'Ч', {"X", true}},
-		{U'Ш', {"I", true}},
-		{U'Щ', {"O", true}},
-		{U'Ъ', {"RIGHTBRACE", true}},
-		{U'Ы', {"S", true}},
-		{U'Ь', {"M", true}},
-		{U'Э', {"APOSTROPHE", true}},
-		{U'Ю', {"DOT", true}},
-		{U'Я', {"Z", true}},
-
-		{U'-', {"MINUS"}},
-		{U'_', {"MINUS", true}},
-		{U'=', {"EQUALSIGN"}},
-		{U'+', {"EQUALSIGN", true}},
-		{U'\'', {"APOSTROPHE"}},
-		{U'\"', {"APOSTROPHE", true}},
-		{U'\\', {"BACKSLASH"}},
-		{U'\n', {"ENTER"}},
-		{U'\t', {"TAB"}},
-		{U'|', {"BACKSLASH", true}},
-		{U',', {"COMMA"}},
-		{U'<', {"COMMA", true}},
-		{U'.', {"DOT"}},
-		{U'>', {"DOT", true}},
-		{U'/', {"SLASH"}},
-		{U'?', {"SLASH", true}},
-		{U';', {"SEMICOLON"}},
-		{U':', {"SEMICOLON", true}},
-		{U'[', {"LEFTBRACE"}},
-		{U'{', {"LEFTBRACE", true}},
-		{U']', {"RIGHTBRACE"}},
-		{U'}', {"RIGHTBRACE", true}},
-		{U'`', {"GRAVE"}},
-		{U'~', {"GRAVE", true}},
-		{U' ', {"SPACE"}}
-	});
 }
 
 void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> action) {
@@ -393,8 +225,6 @@ void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
-static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 	try {
 		std::string text = type.text();
@@ -406,28 +236,26 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 
 		reporter.type(vmc, text, interval);
 
-		bool shift_holded = false;
+		std::vector<KeyboardCommand> commands = KeyboardManager().type(text);
 
-		for (char32_t c: conv.from_bytes(text)) {
-			auto it = charmap.find(c);
-			if (it == charmap.end()) {
-				throw std::runtime_error("Unknown character to type");
+		for (size_t i = 0; i < commands.size(); ++i) {
+			if (i) {
+				if ((commands[i-1].action == KeyboardAction::Release) &&
+					(commands[i].action == KeyboardAction::Hold))
+				{
+					timer.waitFor(time_to_milliseconds(interval));
+				}
 			}
-			const KeyCombination& comb = it->second;
-			if (comb.hold_shift && !shift_holded) {
-				vmc->hold({"LEFTSHIFT"});
-				shift_holded = true;
+			switch (commands[i].action) {
+				case KeyboardAction::Hold:
+					vmc->hold(commands[i].button);
+					break;
+				case KeyboardAction::Release:
+					vmc->release(commands[i].button);
+					break;
+				default:
+					throw std::runtime_error("Should not be there");
 			}
-			if (!comb.hold_shift && shift_holded) {
-				vmc->release({"LEFTSHIFT"});
-				shift_holded = false;
-			}
-			vmc->press({comb.key});
-			timer.waitFor(time_to_milliseconds(interval));
-		}
-
-		if (shift_holded) {
-			vmc->release({"LEFTSHIFT"});
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(type.ast_node, current_controller));
@@ -652,8 +480,12 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 
 void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
 	try {
+		auto buttons = hold.buttons();
+
 		reporter.hold_key(vmc, hold.ast_node->combination->to_string());
-		vmc->hold(hold.buttons());
+		for (KeyboardButton button: buttons) {
+			vmc->hold(button);
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(hold.ast_node, current_controller));
 	}
@@ -665,7 +497,9 @@ void VisitorInterpreterActionMachine::visit_release(const IR::Release& release) 
 
 		if (buttons.size()) {
 			reporter.release_key(vmc, release.ast_node->combination->to_string());
-			vmc->release(release.buttons());
+			for (KeyboardButton button: buttons) {
+				vmc->release(button);
+			}
 		} else {
 			reporter.release_key(vmc);
 			vmc->release();
@@ -753,16 +587,22 @@ void VisitorInterpreterActionMachine::visit_mouse_move_click(const IR::MouseMove
 			return;
 		}
 
-		if (mouse_move_click.event_type() == "click" || mouse_move_click.event_type() == "lclick") {
-			vmc->mouse_press({MouseButton::Left});
-		} else if (mouse_move_click.event_type() == "rclick") {
-			vmc->mouse_press({MouseButton::Right});
-		} else if (mouse_move_click.event_type() == "mclick") {
-			vmc->mouse_press({MouseButton::Middle});
-		} else if (mouse_move_click.event_type() == "dclick") {
-			vmc->mouse_press({MouseButton::Left});
+		auto mouse_press = [&](MouseButton button) {
+			vmc->mouse_hold(button);
 			timer.waitFor(std::chrono::milliseconds(60));
-			vmc->mouse_press({MouseButton::Left});
+			vmc->mouse_release();
+		};
+
+		if (mouse_move_click.event_type() == "click" || mouse_move_click.event_type() == "lclick") {
+			mouse_press(MouseButton::Left);
+		} else if (mouse_move_click.event_type() == "rclick") {
+			mouse_press(MouseButton::Right);
+		} else if (mouse_move_click.event_type() == "mclick") {
+			mouse_press(MouseButton::Middle);
+		} else if (mouse_move_click.event_type() == "dclick") {
+			mouse_press(MouseButton::Left);
+			timer.waitFor(std::chrono::milliseconds(60));
+			mouse_press(MouseButton::Left);
 		} else {
 			throw std::runtime_error("Unsupported click type");
 		}
@@ -787,16 +627,8 @@ void VisitorInterpreterActionMachine::visit_mouse_move_coordinates(const IR::Mou
 void VisitorInterpreterActionMachine::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
 	try {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
-		reporter.mouse_hold(vmc, mouse_hold.button());
-		if (mouse_hold.button() == "lbtn") {
-			vmc->mouse_hold({MouseButton::Left});
-		} else if (mouse_hold.button() == "rbtn") {
-			vmc->mouse_hold({MouseButton::Right});
-		} else if (mouse_hold.button() == "mbtn") {
-			vmc->mouse_hold({MouseButton::Middle});
-		} else {
-			throw std::runtime_error("Unknown mouse button: " + mouse_hold.button());
-		}
+		reporter.mouse_hold(vmc, mouse_hold.ast_node->button.value());
+		vmc->mouse_hold(mouse_hold.button());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(mouse_hold.ast_node, current_controller));
 	}
@@ -816,10 +648,16 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 	try {
 		reporter.mouse_wheel(vmc, mouse_wheel->direction.value());
 
+		auto mouse_press = [&](MouseButton button) {
+			vmc->mouse_hold(button);
+			timer.waitFor(std::chrono::milliseconds(60));
+			vmc->mouse_release();
+		};
+
 		if (mouse_wheel->direction.value() == "up") {
-			vmc->mouse_press({MouseButton::WheelUp});
+			mouse_press(MouseButton::WheelUp);
 		} else if (mouse_wheel->direction.value() == "down") {
-			vmc->mouse_press({MouseButton::WheelDown});
+			mouse_press(MouseButton::WheelDown);
 		} else {
 			throw std::runtime_error("Unknown wheel direction");
 		}
@@ -830,12 +668,18 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 }
 
 void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval) {
+	std::vector<KeyboardButton> buttons = key_spec.buttons();
 	uint32_t times = key_spec.times();
 
 	reporter.press_key(vmc, key_spec.ast_node->combination->to_string(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
-		vmc->press(key_spec.ast_node->combination->get_buttons());
+		for (auto it = buttons.begin(); it != buttons.end(); ++it) {
+			vmc->hold(*it);
+		}
+		for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
+			vmc->release(*it);
+		}
 		timer.waitFor(interval);
 	}
 }

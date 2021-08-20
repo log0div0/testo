@@ -26,6 +26,14 @@ std::string Press::interval() const {
 	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_PRESS_DEFAULT_INTERVAL");
 }
 
+std::vector<KeyboardButton> KeySpec::buttons() const {
+	std::vector<KeyboardButton> result;
+	for (auto& button: ast_node->combination->get_buttons()) {
+		result.push_back(ToKeyboardButton(button));
+	}
+	return result;
+}
+
 int32_t KeySpec::times() const {
 	if (ast_node->times) {
 		return std::stoi(StringTokenUnion(ast_node->times, stack).resolve());
@@ -34,13 +42,21 @@ int32_t KeySpec::times() const {
 	}
 }
 
-std::vector<std::string> Hold::buttons() const {
-	return ast_node->combination->get_buttons();
+std::vector<KeyboardButton> Hold::buttons() const {
+	std::vector<KeyboardButton> result;
+	for (auto& button: ast_node->combination->get_buttons()) {
+		result.push_back(ToKeyboardButton(button));
+	}
+	return result;
 }
 
-std::vector<std::string> Release::buttons() const {
+std::vector<KeyboardButton> Release::buttons() const {
 	if (ast_node->combination) {
-		return ast_node->combination->get_buttons();
+		std::vector<KeyboardButton> result;
+		for (auto& button: ast_node->combination->get_buttons()) {
+			result.push_back(ToKeyboardButton(button));
+		}
+		return result;
 	}
 	return {};
 }
@@ -167,8 +183,8 @@ std::string SelectText::text() const {
 	}
 }
 
-std::string MouseHold::button() const {
-	return ast_node->button.value();
+MouseButton MouseHold::button() const {
+	return ToMouseButton(ast_node->button.value());
 }
 
 bool Plug::is_on() const {

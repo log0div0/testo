@@ -34,13 +34,11 @@ struct Machine: Controller {
 	void plug_link(const std::string& nic);
 	void unplug_link(const std::string& nic);
 
-	void press(const std::vector<std::string>& buttons);
-	void hold(const std::vector<std::string>& buttons);
+	void hold(KeyboardButton button);
 	void release();
-	void release(const std::vector<std::string>& buttons);
+	void release(KeyboardButton button);
 
-	void mouse_press(const std::vector<MouseButton>& buttons);
-	void mouse_hold(const std::vector<MouseButton>& buttons);
+	void mouse_hold(MouseButton button);
 	void mouse_release();
 
 	void validate_config();
@@ -58,7 +56,7 @@ private:
 	mutable std::shared_ptr<::VM> _vm;
 
 	MouseButton current_held_mouse_button = MouseButton::None;
-	std::vector<std::string> current_held_keyboard_buttons;
+	std::vector<KeyboardButton> current_held_keyboard_buttons;
 };
 
 }

@@ -22,29 +22,29 @@ endif()
 
 file(GLOB SRCS ${SRC_DIRS})
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.cpp)
 
-add_library(testo_stuff ${SRCS})
-target_link_libraries(testo_stuff coro js pugixml stb nn license os guest_additions_common_stuff)
+add_library(testo_core ${SRCS})
+target_link_libraries(testo_core coro js pugixml stb nn license os guest_additions_common_stuff)
 
 if (USE_CUDA)
-	target_link_libraries(testo_stuff CUDA::cudart_static)
+	target_link_libraries(testo_core CUDA::cudart_static)
 endif()
 
 if(WIN32)
-	target_link_libraries(testo_stuff hyperv msft virtdisk++)
+	target_link_libraries(testo_core hyperv msft virtdisk++)
 endif()
 
 if (UNIX AND NOT APPLE)
-	target_link_libraries(testo_stuff qemu guestfs++)
+	target_link_libraries(testo_core qemu guestfs++)
 endif()
 
 if(UNIX)
-	target_link_libraries(testo_stuff pthread)
+	target_link_libraries(testo_core pthread)
 endif()
 
 add_executable(testo ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-target_link_libraries(testo testo_stuff)
+target_link_libraries(testo testo_core)
 
-add_executable(testo_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests.cpp)
-target_link_libraries(testo_unit_tests testo_stuff)
+file(GLOB UNIT_TESTS_SRCS "unit_tests/*.cpp")
+add_executable(testo_unit_tests ${UNIT_TESTS_SRCS})
+target_link_libraries(testo_unit_tests testo_core)

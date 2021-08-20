@@ -67,11 +67,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	std::shared_ptr<IR::Machine> vmc;
 	std::shared_ptr<IR::Test> current_test;
 	coro::Timer timer;
-	struct KeyCombination {
-		std::string key;
-		bool hold_shift = false;
-	};
-	std::unordered_map<char32_t, KeyCombination> charmap;
+
 	std::shared_ptr<js::Context> js_current_ctx;
 
 private:

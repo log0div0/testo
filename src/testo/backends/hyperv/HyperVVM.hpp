@@ -13,12 +13,12 @@ struct HyperVVM: VM {
 	void remove_disks() override;
 	nlohmann::json make_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot, const nlohmann::json& opaque) override;
-	void hold(const std::string& button) override;
-	void release(const std::string& button) override;
+	void hold(KeyboardButton button) override;
+	void release(KeyboardButton button) override;
 	void mouse_move_abs(uint32_t x, uint32_t y) override;
 	void mouse_move_rel(int x, int y) override;
-	void mouse_hold(const MouseButton& button) override;
-	void mouse_release(const MouseButton& button) override;
+	void mouse_hold(MouseButton button) override;
+	void mouse_release(MouseButton button) override;
 	bool is_nic_plugged(const std::string& nic) const override;
 	void plug_nic(const std::string& nic) override;
 	void unplug_nic(const std::string& nic) override;
@@ -49,5 +49,5 @@ struct HyperVVM: VM {
 
 private:
 	hyperv::Connect connect;
-	std::unordered_map<std::string, std::vector<uint8_t>> scancodes;
+	std::unordered_map<KeyboardButton, std::vector<uint8_t>> scancodes;
 };
