@@ -2,6 +2,8 @@
 #pragma once
 
 #include "Object.hpp"
+#include "../Exceptions.hpp"
+#include <fmt/format.h>
 
 namespace IR {
 

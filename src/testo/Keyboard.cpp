@@ -1,6 +1,7 @@
 
 #include "Keyboard.hpp"
 #include <map>
+#include <locale>
 #include <codecvt>
 
 const std::vector<std::string> kb_to_str = {

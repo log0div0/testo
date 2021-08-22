@@ -875,7 +875,7 @@ void QemuVM::mouse_move_rel(int x, int y) {
 	}
 }
 
-void QemuVM::mouse_hold(const MouseButton& button) {
+void QemuVM::mouse_hold(MouseButton button) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
@@ -908,7 +908,7 @@ void QemuVM::mouse_hold(const MouseButton& button) {
 }
 
 
-void QemuVM::mouse_release(const MouseButton& button) {
+void QemuVM::mouse_release(MouseButton button) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
