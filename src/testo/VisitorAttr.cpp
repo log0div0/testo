@@ -73,7 +73,7 @@ nlohmann::json VisitorAttr::visit_attr_simple_value(std::shared_ptr<AST::Attr> a
 	if (!p) {
 		throw Exception(std::string(attr->begin()) + ": Error: attribute \"" + attr->name() + "\" is expected to be a simple attibute");
 	}
-	return visit_attr_simple_value(p, category);
+	return this->visit_attr_simple_value(p, category);
 }
 
 nlohmann::json VisitorAttr::visit_attr_simple_value(std::shared_ptr<AST::AttrSimpleValue> p, Token::category category) {
@@ -109,27 +109,27 @@ nlohmann::json VisitorAttr::visit_attr_simple_value(std::shared_ptr<AST::AttrSim
 }
 
 nlohmann::json VisitorAttrMachine::visit(std::shared_ptr<AST::AttrBlock> attr_block) {
-	return visit_attr_block(attr_block, [&](auto attr) {
+	return visit_attr_block(attr_block, [this](auto attr) {
 		if (attr->name() == "ram") {
-			return visit_attr_simple_value(attr, Token::category::size);
+			return this->visit_attr_simple_value(attr, Token::category::size);
 		} else if (attr->name() == "iso") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else if (attr->name() == "nic") {
-			return visit_nic(attr);
+			return this->visit_nic(attr);
 		} else if (attr->name() == "disk") {
-			return visit_disk(attr);
+			return this->visit_disk(attr);
 		} else if (attr->name() == "video") {
-			return visit_video(attr);
+			return this->visit_video(attr);
 		} else if (attr->name() == "shared_folder") {
-			return visit_shared_folder(attr);
+			return this->visit_shared_folder(attr);
 		} else if (attr->name() == "cpus") {
-			return visit_attr_simple_value(attr, Token::category::number);
+			return this->visit_attr_simple_value(attr, Token::category::number);
 		} else if (attr->name() == "qemu_spice_agent") {
-			return visit_attr_simple_value(attr, Token::category::boolean);
+			return this->visit_attr_simple_value(attr, Token::category::boolean);
 		} else if (attr->name() == "qemu_enable_usb3") {
-			return visit_attr_simple_value(attr, Token::category::boolean);
+			return this->visit_attr_simple_value(attr, Token::category::boolean);
 		} else if (attr->name() == "loader") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else {
 			throw UnknownAttributeError(attr);
 		}
@@ -137,11 +137,11 @@ nlohmann::json VisitorAttrMachine::visit(std::shared_ptr<AST::AttrBlock> attr_bl
 }
 
 nlohmann::json VisitorAttrMachine::visit_disk(std::shared_ptr<AST::Attr> attr) {
-	return visit_attr_block(attr, [&](auto attr) {
+	return visit_attr_block(attr, [this](auto attr) {
 		if (attr->name() == "size") {
-			return visit_attr_simple_value(attr, Token::category::size);
+			return this->visit_attr_simple_value(attr, Token::category::size);
 		} else if (attr->name() == "source") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else {
 			throw UnknownAttributeError(attr);
 		}
@@ -149,15 +149,15 @@ nlohmann::json VisitorAttrMachine::visit_disk(std::shared_ptr<AST::Attr> attr) {
 }
 
 nlohmann::json VisitorAttrMachine::visit_nic(std::shared_ptr<AST::Attr> attr) {
-	return visit_attr_block(attr, [&](auto attr) {
+	return visit_attr_block(attr, [this](auto attr) {
 		if (attr->name() == "attached_to") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else if (attr->name() == "attached_to_dev") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else if (attr->name() == "mac") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else if (attr->name() == "adapter_type") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else {
 			throw UnknownAttributeError(attr);
 		}
@@ -165,11 +165,11 @@ nlohmann::json VisitorAttrMachine::visit_nic(std::shared_ptr<AST::Attr> attr) {
 }
 
 nlohmann::json VisitorAttrMachine::visit_video(std::shared_ptr<AST::Attr> attr) {
-	return visit_attr_block(attr, [&](auto attr) {
+	return visit_attr_block(attr, [this](auto attr) {
 		if (attr->name() == "qemu_mode") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string); // deprecated
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string); // deprecated
 		} else if (attr->name() == "adapter_type") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else {
 			throw UnknownAttributeError(attr);
 		}
@@ -177,11 +177,11 @@ nlohmann::json VisitorAttrMachine::visit_video(std::shared_ptr<AST::Attr> attr) 
 }
 
 nlohmann::json VisitorAttrMachine::visit_shared_folder(std::shared_ptr<AST::Attr> attr) {
-	return visit_attr_block(attr, [&](auto attr) {
+	return visit_attr_block(attr, [this](auto attr) {
 		if (attr->name() == "host_path") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else if (attr->name() == "readonly") {
-			return visit_attr_simple_value(attr, Token::category::boolean);
+			return this->visit_attr_simple_value(attr, Token::category::boolean);
 		} else {
 			throw UnknownAttributeError(attr);
 		}
@@ -189,13 +189,13 @@ nlohmann::json VisitorAttrMachine::visit_shared_folder(std::shared_ptr<AST::Attr
 }
 
 nlohmann::json VisitorAttrFlashDrive::visit(std::shared_ptr<AST::AttrBlock> attr_block) {
-	return visit_attr_block(attr_block, [&](auto attr) {
+	return visit_attr_block(attr_block, [this](auto attr) {
 		if (attr->name() == "fs") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} if (attr->name() == "size") {
-			return visit_attr_simple_value(attr, Token::category::size);
+			return this->visit_attr_simple_value(attr, Token::category::size);
 		} if (attr->name() == "folder") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else {
 			throw UnknownAttributeError(attr);
 		}
@@ -203,9 +203,9 @@ nlohmann::json VisitorAttrFlashDrive::visit(std::shared_ptr<AST::AttrBlock> attr
 }
 
 nlohmann::json VisitorAttrNetwork::visit(std::shared_ptr<AST::AttrBlock> attr_block) {
-	return visit_attr_block(attr_block, [&](auto attr) {
+	return visit_attr_block(attr_block, [this](auto attr) {
 		if (attr->name() == "mode") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else {
 			throw UnknownAttributeError(attr);
 		}
@@ -213,11 +213,11 @@ nlohmann::json VisitorAttrNetwork::visit(std::shared_ptr<AST::AttrBlock> attr_bl
 }
 
 nlohmann::json VisitorAttrTest::visit(std::shared_ptr<AST::AttrBlock> attr_block) {
-	return visit_attr_block(attr_block, [&](auto attr) {
+	return visit_attr_block(attr_block, [this](auto attr) {
 		if (attr->name() == "no_snapshots") {
-			return visit_attr_simple_value(attr, Token::category::boolean);
+			return this->visit_attr_simple_value(attr, Token::category::boolean);
 		} if (attr->name() == "description") {
-			return visit_attr_simple_value(attr, Token::category::quoted_string);
+			return this->visit_attr_simple_value(attr, Token::category::quoted_string);
 		} else {
 			throw UnknownAttributeError(attr);
 		}

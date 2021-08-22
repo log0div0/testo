@@ -112,8 +112,6 @@ bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::Expr> expr) {
 		return visit_check({ p, stack });
 	} else if (auto p = std::dynamic_pointer_cast<AST::ParentedExpr>(expr)) {
 		return visit_expr(p->expr);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Expr>(expr)) {
-		return visit_expr(p);
 	} else {
 		throw std::runtime_error("Unknown expr type");
 	}

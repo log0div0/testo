@@ -871,8 +871,6 @@ Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::Expr> expr) {
 		return !visit_expr(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Check>(expr)) {
 		return visit_check({ p, stack });
-	} else if (auto p = std::dynamic_pointer_cast<AST::Expr>(expr)) {
-		return visit_expr(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Defined>(expr)) {
 		return visit_defined({ p, stack });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Comparison>(expr)) {
