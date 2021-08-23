@@ -69,6 +69,23 @@ std::string build_js_script_text(std::string query = "", std::string fg = "", st
 	return result;
 }
 
+/*
+std::string build_js_script_text(std::string query = "", std::string fg = "", std::string bg = "") {
+	std::string result = "print('Hello world!');\n";
+	result += "return ";
+	result += query.length() ? fmt::format("find_text('{}')", query) : "find_text()";
+
+	if (fg.length() || bg.length()) {
+		result += "match_color(";
+		result += fg.length() ? fg : "null";
+		result += ", ";
+		result += bg.length() ? bg : "null";
+		result += ")";
+	}
+
+	return result;
+}
+*/
 std::string build_js_script_img(std::string ref_image) {
 	std::string result = fmt::format("return find_img('{}')", ref_image);
 

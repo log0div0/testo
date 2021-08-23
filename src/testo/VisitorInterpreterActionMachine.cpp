@@ -1184,6 +1184,10 @@ nlohmann::json VisitorInterpreterActionMachine::eval_js(const std::string& scrip
 			std::string message = eval_result.at("data").get<std::string>();
 			throw ContinueError(message);
 		} else if (type == "eval_result") {
+			std::string stdout = eval_result.value("stdout", "");
+			if (stdout.length()) {
+				reporter.js_stdout(stdout);
+			}
 			return eval_result.at("data");
 		} else {
 			throw std::runtime_error(std::string("Unknown message type: ") + type);

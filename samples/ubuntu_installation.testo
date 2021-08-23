@@ -35,7 +35,8 @@ machine VM2 {
 
 test invalid_wait_js {
 	VM1 {
-		wait "something" && js "bim bada bum"
+		start
+		mouse move js """print("Hello world!"); return {x: 0, y: 0}"""
 	}
 }
 

@@ -232,6 +232,28 @@ test centos_backend_qemu_wait: centos_install_testo {
 			[[ $output == *"Error while performing action wait !\\\"Lala\\\""* ]]
 			[[ $output == *"Timeout"* ]]
 		"""
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_js_print)
+			[[ $output == *"Hello world!"* ]]
+		"""
+	}
+}
+
+[no_snapshots: true]
+test centos_backend_qemu_mouse: centos_install_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
+		copyto "${TEST_ASSETS_DIR}/backend/action_mouse.testo" "/opt/scripts/action_mouse.testo"
+
+		exec bash """
+			set +o pipefail
+			set +e
+			output=$(testo run /opt/scripts/action_mouse.testo --stop_on_fail --test_spec mouse_js_print)
+			[[ $output == *"Hello world!"* ]]
+		"""
 	}
 }
 

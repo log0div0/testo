@@ -484,6 +484,12 @@ void Reporter::exec_command_output(const std::string& text) {
 	report(text, regular);
 }
 
+void Reporter::js_stdout(const std::string& stdout) {
+	report_prefix(blue);
+	report("JavaScript snippet stdout: \n", blue);
+	report(fmt::format("{}\n", stdout), yellow);
+}
+
 void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
 	if (report_folder.empty()) {
 		return;

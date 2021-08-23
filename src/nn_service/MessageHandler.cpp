@@ -82,12 +82,15 @@ nlohmann::json MessageHandler::handle_js_eval_request(nlohmann::json& request) {
 	nlohmann::json result;
 	
 	auto val = js_ctx.eval(script);
+
 	if (val.is_string()) {
 		return nlohmann::json({
 			{"type", "eval_result"},
-			{"data", nlohmann::json::parse(std::string(val))}
+			{"data", nlohmann::json::parse(std::string(val))},
+			{"stdout", js_ctx.stdout().str()}
 		});
 	}
+	
 	if (val.is_undefined()) {
 		throw std::runtime_error("JS script returned an undefined value");
 	}

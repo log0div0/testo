@@ -5,12 +5,14 @@
 #include "Value.hpp"
 #include <stb/Image.hpp>
 #include <vector>
+#include <sstream>
 
 namespace js {
 
 struct ContextRef {
 	struct Opaque {
 		const stb::Image<stb::RGB>* image;
+		std::stringstream stdout;
 		std::shared_ptr<Channel> channel;
 	};
 
@@ -41,6 +43,7 @@ struct ContextRef {
 	::JSContext* handle = nullptr;
 
 	const stb::Image<stb::RGB>* image() const;
+	std::stringstream& stdout();
 	std::shared_ptr<Channel> channel() const;
 
 protected:
