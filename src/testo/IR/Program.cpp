@@ -149,7 +149,7 @@ std::shared_ptr<Network> Program::get_network_or_null(const std::string& name) {
 	return get_or_null(name, networks);
 }
 
-std::map<std::string, std::string> testo_timeout_params = {
+std::map<std::string, std::string> testo_default_params = {
 	{"TESTO_WAIT_DEFAULT_TIMEOUT", "1m"},
 	{"TESTO_WAIT_DEFAULT_INTERVAL", "1s"},
 	{"TESTO_CHECK_DEFAULT_TIMEOUT", "1ms"},
@@ -157,14 +157,28 @@ std::map<std::string, std::string> testo_timeout_params = {
 	{"TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT", "1m"},
 	{"TESTO_PRESS_DEFAULT_INTERVAL", "30ms"},
 	{"TESTO_TYPE_DEFAULT_INTERVAL", "30ms"},
+	{"TESTO_TYPE_DEFAULT_AUTOSWITCH", "LEFTALT+LEFTSHIFT"},
 	{"TESTO_EXEC_DEFAULT_TIMEOUT", "10m"},
 	{"TESTO_COPY_DEFAULT_TIMEOUT", "10m"},
 	{"TESTO_SHUTDOWN_DEFAULT_TIMEOUT", "1m"},
 };
 
+std::vector<std::string> testo_timeout_params = {
+	"TESTO_WAIT_DEFAULT_TIMEOUT",
+	"TESTO_WAIT_DEFAULT_INTERVAL",
+	"TESTO_CHECK_DEFAULT_TIMEOUT",
+	"TESTO_CHECK_DEFAULT_INTERVAL",
+	"TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT",
+	"TESTO_PRESS_DEFAULT_INTERVAL",
+	"TESTO_TYPE_DEFAULT_INTERVAL",
+	"TESTO_EXEC_DEFAULT_TIMEOUT",
+	"TESTO_COPY_DEFAULT_TIMEOUT",
+	"TESTO_SHUTDOWN_DEFAULT_TIMEOUT",
+};
+
 void Program::setup_stack() {
 	auto predefined = std::make_shared<StackNode>();
-	predefined->vars = testo_timeout_params;
+	predefined->vars = testo_default_params;
 	stack = std::make_shared<StackNode>();
 	stack->parent = predefined;
 	for (size_t i = 0; i < config.params_names.size(); ++i) {
@@ -297,10 +311,10 @@ bool check_if_time_interval(const std::string& time) {
 }
 
 void Program::validate_special_params() {
-	for (auto& kv: testo_timeout_params) {
-		std::string value = stack->find_and_resolve_var(kv.first);
+	for (auto& param: testo_timeout_params) {
+		std::string value = stack->find_and_resolve_var(param);
 		if (!check_if_time_interval(value)) {
-			throw std::runtime_error("Can't convert parameter " + kv.first + " value \"" + value + "\" to time interval");
+			throw std::runtime_error("Can't convert parameter " + param + " value \"" + value + "\" to time interval");
 		}
 	}
 }

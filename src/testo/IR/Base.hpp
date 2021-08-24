@@ -26,27 +26,26 @@ struct String: Node<AST::String> {
 	nlohmann::json to_json() const;
 };
 
-template <typename IASTType, typename ASTType>
-struct MaybeUnparsed: Node<IASTType> {
+template <typename ASTType, typename ParsedASTType>
+struct MaybeUnparsed: Node<ASTType> {
 	using Node::Node;
 
-protected:
-	std::shared_ptr<ASTType> get_parsed() const {
+	std::shared_ptr<ParsedASTType> get_parsed() const {
 		if (_parsed) {
 			return _parsed;
 		}
-		_parsed = std::dynamic_pointer_cast<ASTType>(ast_node);
+		_parsed = std::dynamic_pointer_cast<ParsedASTType>(ast_node);
 		if (_parsed) {
 			return _parsed;
 		}
-		auto unparsed = std::dynamic_pointer_cast<AST::Unparsed<IASTType>>(ast_node);
+		auto unparsed = std::dynamic_pointer_cast<AST::Unparsed<ASTType>>(ast_node);
 		if (!unparsed) {
 			throw std::runtime_error("Failed to cast AST node to any derived class");
 		}
 		std::string str = unparsed->string->text();
 		str = template_literals::Parser().resolve(str, stack);
-		std::shared_ptr<IASTType> p = IASTType::from_string(str);
-		_parsed = std::dynamic_pointer_cast<ASTType>(p);
+		std::shared_ptr<ASTType> p = ASTType::from_string(str);
+		_parsed = std::dynamic_pointer_cast<ParsedASTType>(p);
 		if (!_parsed) {
 			throw std::runtime_error("Failed to cast AST node to the parsed derived class");
 		}
@@ -54,7 +53,7 @@ protected:
 	}
 
 private:
-	mutable std::shared_ptr<ASTType> _parsed;
+	mutable std::shared_ptr<ParsedASTType> _parsed;
 };
 
 template <Token::category category>

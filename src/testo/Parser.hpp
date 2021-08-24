@@ -86,7 +86,7 @@ struct Parser {
 
 	std::shared_ptr<AST::Controller> controller();
 	std::shared_ptr<AST::Cmd> command();
-	std::shared_ptr<AST::KeyCombination> key_combination();
+	std::shared_ptr<AST::IKeyCombination> key_combination();
 	std::shared_ptr<AST::KeySpec> key_spec();
 	std::shared_ptr<AST::Action> action();
 	std::shared_ptr<AST::Empty> empty_action();
@@ -179,6 +179,10 @@ namespace AST {
 template <Token::category category>
 std::shared_ptr<ISingleToken<category>> ISingleToken<category>::from_string(const std::string& str) {
 	return Parser(".", str).single_token<category>();
+}
+
+inline std::shared_ptr<IKeyCombination> IKeyCombination::from_string(const std::string& str) {
+	return Parser(".", str).key_combination();
 }
 
 }

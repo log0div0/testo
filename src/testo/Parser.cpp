@@ -575,7 +575,11 @@ std::shared_ptr<Block<Cmd>> Parser::command_block() {
 	return std::make_shared<Block<Cmd>>(lbrace, rbrace, commands);
 }
 
-std::shared_ptr<KeyCombination> Parser::key_combination() {
+std::shared_ptr<IKeyCombination> Parser::key_combination() {
+	if (test_string()) {
+		return std::make_shared<AST::Unparsed<IKeyCombination>>(string());
+	}
+
 	std::vector<Token> buttons;
 
 	do {
@@ -586,7 +590,7 @@ std::shared_ptr<KeyCombination> Parser::key_combination() {
 		}
 	} while (LA(1) == Token::category::id);
 
-	return std::shared_ptr<KeyCombination>(new KeyCombination(buttons));
+	return std::make_shared<KeyCombination>(buttons);
 }
 
 std::shared_ptr<KeySpec> Parser::key_spec() {
@@ -699,6 +703,7 @@ std::shared_ptr<Type> Parser::type() {
 	auto text = string();
 	std::shared_ptr<OptionSeq> options = option_seq({
 		{"interval", [&]{ return time_interval(); }},
+		{"autoswitch", [&]{ return key_combination(); }},
 	});
 
 	return std::make_shared<Type>(type_token, text, options);
@@ -758,7 +763,7 @@ std::shared_ptr<Hold> Parser::hold() {
 std::shared_ptr<Release> Parser::release() {
 	Token release_token = eat(Token::category::release);
 
-	std::shared_ptr<AST::KeyCombination> combination = nullptr;
+	std::shared_ptr<AST::IKeyCombination> combination = nullptr;
 	if (LA(1) == Token::category::id) {
 		combination = key_combination();
 	}

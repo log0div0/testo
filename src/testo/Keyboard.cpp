@@ -3,6 +3,7 @@
 #include <map>
 #include <locale>
 #include <codecvt>
+#include <algorithm>
 
 const std::vector<std::string> kb_to_str = {
 	"ESC",
@@ -221,7 +222,9 @@ std::string ToString(KeyboardButton button) {
 }
 
 KeyboardButton ToKeyboardButton(const std::string& button) {
-	return str_to_kb.at(button);
+	std::string button_str = button;
+	std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
+	return str_to_kb.at(button_str);
 }
 
 const CharMap US = {

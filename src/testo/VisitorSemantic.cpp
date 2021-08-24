@@ -405,7 +405,10 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 void VisitorSemantic::visit_type(const IR::Type& type) {
 	current_test->cksum_input << "type "
 		<< "\"" << type.text() << "\""
-		<< " interval " << type.interval().value().count() << std::endl;
+		<< " interval " << type.interval().value().count()
+		<< " autoswitch ";
+	visit_key_combination(type.autoswitch());
+	current_test->cksum_input << std::endl;
 }
 
 void VisitorSemantic::visit_press(const IR::Press& press) {
@@ -422,32 +425,27 @@ void VisitorSemantic::visit_press(const IR::Press& press) {
 	current_test->cksum_input << " interval " << press.interval().value().count() << std::endl;
 }
 
-void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination> combination) {
-	for (size_t i = 0; i < combination->buttons.size(); ++i) {
-		auto button = combination->buttons[i];
-		if (!is_button(button)) {
-			throw Exception(std::string(button.begin()) +
-				" :Error: unknown key: " + button.value());
-		}
+void VisitorSemantic::visit_key_combination(const IR::KeyCombination& combination) {
+	auto buttons = combination.buttons();
+	for (size_t i = 0; i < buttons.size(); ++i) {
+		auto button = buttons[i];
 
-		for (size_t j = i + 1; j < combination->buttons.size(); ++j) {
-			if (button.value() == combination->buttons[j].value()) {
-				throw Exception(std::string(combination->buttons[j].begin()) +
-					" :Error: duplicate key: " + button.value());
+		for (size_t j = i + 1; j < buttons.size(); ++j) {
+			if (button == buttons[j]) {
+				throw Exception(std::string(combination.get_parsed()->buttons[j].begin()) +
+					" :Error: duplicate key: " + ToString(button));
 			}
 		}
 
 		if (i) {
 			current_test->cksum_input << "+";
 		}
-		std::string button_str = button.value();
-		std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
-		current_test->cksum_input << button_str;
+		current_test->cksum_input << ToString(button);
 	}
 }
 
 void VisitorSemantic::visit_key_spec(const IR::KeySpec& key_spec) {
-	visit_key_combination(key_spec.ast_node->combination);
+	visit_key_combination(key_spec.combination());
 
 	auto times = key_spec.times();
 
@@ -461,7 +459,7 @@ void VisitorSemantic::visit_key_spec(const IR::KeySpec& key_spec) {
 
 void VisitorSemantic::visit_hold(const IR::Hold& hold) {
 	current_test->cksum_input << "hold ";
-	visit_key_combination(hold.ast_node->combination);
+	visit_key_combination(hold.combination());
 	current_test->cksum_input << std::endl;
 }
 
@@ -469,7 +467,7 @@ void VisitorSemantic::visit_release(const IR::Release& release) {
 	current_test->cksum_input << "release";
 	if (release.ast_node->combination) {
 		current_test->cksum_input << " ";
-		visit_key_combination(release.ast_node->combination);
+		visit_key_combination(release.combination());
 	}
 	current_test->cksum_input << std::endl;
 }

@@ -478,7 +478,7 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 
 void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
 	try {
-		auto buttons = hold.buttons();
+		auto buttons = hold.combination().buttons();
 
 		reporter.hold_key(vmc, hold.ast_node->combination->to_string());
 		for (KeyboardButton button: buttons) {
@@ -491,7 +491,7 @@ void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
 
 void VisitorInterpreterActionMachine::visit_release(const IR::Release& release) {
 	try {
-		auto buttons = release.buttons();
+		auto buttons = release.combination().buttons();
 
 		if (buttons.size()) {
 			reporter.release_key(vmc, release.ast_node->combination->to_string());
@@ -666,7 +666,7 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 }
 
 void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval) {
-	std::vector<KeyboardButton> buttons = key_spec.buttons();
+	std::vector<KeyboardButton> buttons = key_spec.combination().buttons();
 	uint32_t times = key_spec.times();
 
 	reporter.press_key(vmc, key_spec.ast_node->combination->to_string(), times);

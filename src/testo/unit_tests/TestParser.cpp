@@ -17,6 +17,12 @@ TEST_CASE("parse action wait") {
 	TestParseStringifyActions("{ wait \"hello world\" timeout \"${SOME_PARAM}\" interval \"some_prefix_${SOME_OTHER_PARAM}\"; }");
 }
 
+TEST_CASE("parse action type") {
+	TestParseStringifyActions("{ type \"hello world\" interval 32s; }");
+	TestParseStringifyActions("{ type \"hello world\" interval 32s autoswitch LEFTALT+LEFTSHIFT; }");
+	TestParseStringifyActions("{ type \"hello world\" interval \"1ms\" autoswitch \"LEFTALT+SPACE\"; }");
+}
+
 TEST_CASE("parse action macro call") {
 	TestParseStringifyActions("{ some_macro(); }");
 	TestParseStringifyActions("{ some_macro(\"10\", \"hello world\"); }");

@@ -6,6 +6,17 @@
 
 namespace IR {
 
+std::vector<KeyboardButton> KeyCombination::buttons() const {
+	if (!ast_node) {
+		return {};
+	}
+	std::vector<KeyboardButton> result;
+	for (auto& button: get_parsed()->get_buttons()) {
+		result.push_back(ToKeyboardButton(button));
+	}
+	return result;
+}
+
 std::string Abort::message() const {
 	return String(ast_node->message, stack).text();
 }
@@ -18,12 +29,8 @@ TimeInterval Press::interval() const {
 	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("interval", "TESTO_PRESS_DEFAULT_INTERVAL");
 }
 
-std::vector<KeyboardButton> KeySpec::buttons() const {
-	std::vector<KeyboardButton> result;
-	for (auto& button: ast_node->combination->get_buttons()) {
-		result.push_back(ToKeyboardButton(button));
-	}
-	return result;
+KeyCombination KeySpec::combination() const {
+	return {ast_node->combination, stack};
 }
 
 int32_t KeySpec::times() const {
@@ -34,23 +41,12 @@ int32_t KeySpec::times() const {
 	}
 }
 
-std::vector<KeyboardButton> Hold::buttons() const {
-	std::vector<KeyboardButton> result;
-	for (auto& button: ast_node->combination->get_buttons()) {
-		result.push_back(ToKeyboardButton(button));
-	}
-	return result;
+KeyCombination Hold::combination() const {
+	return {ast_node->combination, stack};
 }
 
-std::vector<KeyboardButton> Release::buttons() const {
-	if (ast_node->combination) {
-		std::vector<KeyboardButton> result;
-		for (auto& button: ast_node->combination->get_buttons()) {
-			result.push_back(ToKeyboardButton(button));
-		}
-		return result;
-	}
-	return {};
+KeyCombination Release::combination() const {
+	return {ast_node->combination, stack};
 }
 
 std::string Type::text() const {
@@ -59,6 +55,10 @@ std::string Type::text() const {
 
 TimeInterval Type::interval() const {
 	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("interval", "TESTO_TYPE_DEFAULT_INTERVAL");
+}
+
+KeyCombination Type::autoswitch() const {
+	return OptionSeq(ast_node->option_seq, stack).get<KeyCombination>("autoswitch", "TESTO_TYPE_DEFAULT_AUTOSWITCH");
 }
 
 TimeInterval Wait::timeout() const {

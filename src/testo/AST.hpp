@@ -201,7 +201,11 @@ struct SelectParentedExpr: public SelectSimpleExpr {
 	Token rparen;
 };
 
-struct KeyCombination: public Node {
+struct IKeyCombination: public Node {
+	static std::shared_ptr<IKeyCombination> from_string(const std::string& str);
+};
+
+struct KeyCombination: public IKeyCombination {
 	KeyCombination(std::vector<Token> buttons_):
 		buttons(std::move(buttons_)) {}
 
@@ -239,7 +243,7 @@ struct KeyCombination: public Node {
 };
 
 struct KeySpec: public Node {
-	KeySpec(std::shared_ptr<KeyCombination> combination_, std::shared_ptr<Number> times_):
+	KeySpec(std::shared_ptr<IKeyCombination> combination_, std::shared_ptr<Number> times_):
 		combination(std::move(combination_)),
 		times(std::move(times_)) {}
 
@@ -263,7 +267,7 @@ struct KeySpec: public Node {
 		return result;
 	}
 
-	std::shared_ptr<KeyCombination> combination;
+	std::shared_ptr<IKeyCombination> combination;
 	std::shared_ptr<Number> times;
 };
 
@@ -528,7 +532,7 @@ struct Press: public Action {
 };
 
 struct Hold: public Action {
-	Hold(Token hold_, std::shared_ptr<KeyCombination> combination_):
+	Hold(Token hold_, std::shared_ptr<IKeyCombination> combination_):
 		hold(std::move(hold_)), combination(std::move(combination_)) {}
 
 	Pos begin() const override {
@@ -544,11 +548,11 @@ struct Hold: public Action {
 	}
 
 	Token hold;
-	std::shared_ptr<KeyCombination> combination;
+	std::shared_ptr<IKeyCombination> combination;
 };
 
 struct Release: public Action {
-	Release(Token release_, std::shared_ptr<KeyCombination> combination_):
+	Release(Token release_, std::shared_ptr<IKeyCombination> combination_):
 		release(std::move(release_)), combination(std::move(combination_)) {}
 
 	Pos begin() const override {
@@ -572,7 +576,7 @@ struct Release: public Action {
 	}
 
 	Token release;
-	std::shared_ptr<KeyCombination> combination;
+	std::shared_ptr<IKeyCombination> combination;
 };
 
 struct MouseMoveTarget: public Node {

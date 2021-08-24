@@ -7,6 +7,11 @@
 
 namespace IR {
 
+struct KeyCombination: MaybeUnparsed<AST::IKeyCombination, AST::KeyCombination> {
+	using MaybeUnparsed::MaybeUnparsed;
+	std::vector<KeyboardButton> buttons() const;
+};
+
 template <typename ASTType>
 struct Action: Node<ASTType> {
 	using Node<ASTType>::Node;
@@ -29,24 +34,25 @@ struct Press: Action<AST::Press> {
 
 struct KeySpec: Action<AST::KeySpec> {
 	using Action<AST::KeySpec>::Action;
-	std::vector<KeyboardButton> buttons() const;
+	KeyCombination combination() const;
 	int32_t times() const;
 };
 
 struct Hold: Action<AST::Hold> {
 	using Action<AST::Hold>::Action;
-	std::vector<KeyboardButton> buttons() const;
+	KeyCombination combination() const;
 };
 
 struct Release: Action<AST::Release> {
 	using Action<AST::Release>::Action;
-	std::vector<KeyboardButton> buttons() const;
+	KeyCombination combination() const;
 };
 
 struct Type: Action<AST::Type> {
 	using Action<AST::Type>::Action;
 	std::string text() const;
 	TimeInterval interval() const;
+	KeyCombination autoswitch() const;
 };
 
 struct Wait: Action<AST::Wait> {
