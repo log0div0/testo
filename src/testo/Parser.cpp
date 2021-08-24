@@ -1,11 +1,20 @@
 
 #include "Parser.hpp"
 #include "Utils.hpp"
+#include "Exceptions.hpp"
 #include "TemplateLiterals.hpp"
 #include <fstream>
 #include <fmt/format.h>
 
 using namespace AST;
+
+struct UnknownOption: Exception {
+	UnknownOption(const Token& name): Exception(std::string(name.begin()) + ": Error: Unknown option: " + name.value()) {}
+};
+
+struct UnknownAttr: Exception {
+	UnknownAttr(const Token& name): Exception(std::string(name.begin()) + ": Error: Unknown attribute: " + name.value()) {}
+};
 
 std::string generate_script(const fs::path& folder, const fs::path& current_prefix = ".") {
 	std::string result("");
@@ -283,9 +292,7 @@ std::shared_ptr<AST::OptionSeq> Parser::option_seq(const OptionSeqSchema& schema
 			break;
 		}
 		auto option = std::make_shared<AST::Option>(eat(Token::category::id));
-		if (it->second != Token::category::none) {
-			option->value = string_token_union(it->second);
-		}
+		option->value = it->second();
 		seq->options.push_back(std::move(option));
 	}
 	return seq;
@@ -330,25 +337,28 @@ std::shared_ptr<Test> Parser::test() {
 	//To be honest, we should place attr list in a separate Node. And we will do that
 	//just when it could be used somewhere else
 	if (LA(1) == Token::category::lbracket) {
-		attrs = attr_block();
+		attrs = attr_block({
+			{"no_snapshots", {false, [&]{ return boolean(); }}},
+			{"description", {false, [&]{ return string(); }}},
+		});
 		newline_list();
 	}
 
 	Token test = eat(Token::category::test);
 
-	std::shared_ptr<StringTokenUnion> name = string_token_union(Token::category::id);
+	std::shared_ptr<Id> name = id();
 
-	std::vector<std::shared_ptr<StringTokenUnion>> parents;
+	std::vector<std::shared_ptr<Id>> parents;
 
 	if (LA(1) == Token::category::colon) {
  		eat(Token::category::colon);
  		newline_list();
- 		parents.push_back(string_token_union(Token::category::id));
+ 		parents.push_back(id());
 
  		while (LA(1) == Token::category::comma) {
  			eat(Token::category::comma);
  			newline_list();
- 			parents.push_back(string_token_union(Token::category::id));
+ 			parents.push_back(id());
  		}
 	}
 
@@ -430,51 +440,43 @@ std::shared_ptr<Param> Parser::param() {
 	return std::make_shared<Param>(param_token, name, value);
 }
 
-std::shared_ptr<Attr> Parser::attr() {
+std::shared_ptr<Attr> Parser::attr(const AttrBlockSchema& schema) {
 	Token name = eat(Token::category::id);
+
+	auto it = schema.find(name.value());
+	if (it == schema.end()) {
+		throw UnknownAttr(name);
+	}
+	const AttrDesc& desc = it->second;
+
 	Token id = Token();
 
-	if (LA(1) == Token::category::id) {
+	if (desc.id_required) {
 		id = eat(Token::category::id);
 	}
 
 	eat(Token::category::colon);
 	newline_list();
 
-	std::shared_ptr<IAttrValue> value;
-	if (LA(1) == Token::category::lbrace) {
-		value = attr_block();
-	} else {
-		//string token union
-		//Let's check it's either string or number or size or boolean
-
-		if (!test_string() &&
-			(LA(1) != Token::category::number) &&
-			(LA(1) != Token::category::size) &&
-			(LA(1) != Token::category::boolean))
-		{
-			throw std::runtime_error(std::string(LT(1).begin()) + ": Unknown attr type: " + LT(1).value());
-		}
-
-		if (LA(1) == Token::category::triple_quoted_string) {
-			throw std::runtime_error(std::string(LT(1).begin()) + ": Can't accept multiline as an attr value: " + LT(1).value());
-		}
-
-		auto simple_value = string_token_union(LA(1));
-		value = std::make_shared<AttrSimpleValue>(simple_value);
-	}
+	std::shared_ptr<AST::Node> value = desc.cb();
 
 	return std::make_shared<Attr>(name, id, value);
 }
 
-std::shared_ptr<AttrBlock> Parser::attr_block() {
+std::shared_ptr<AttrBlock> Parser::attr_block(const AttrBlockSchema& schema) {
 	Token lbrace = eat({Token::category::lbrace, Token::category::lbracket});
 
 	newline_list();
 	std::vector<std::shared_ptr<Attr>> attrs;
 
 	while (LA(1) == Token::category::id) {
-		attrs.push_back(attr());
+		std::shared_ptr<AST::Attr> new_attr = attr(schema);
+		for (auto& x: attrs) {
+			if (x->name() == new_attr->name()) {
+				throw Exception(std::string(new_attr->begin()) + ": Error: duplicate attribute: \"" + new_attr->name() + "\"");
+			}
+		}
+		attrs.push_back(new_attr);
 		if ((LA(1) == Token::category::rbrace) || (LA(1) == Token::category::rbracket)) {
 			break;
 		}
@@ -496,14 +498,54 @@ std::shared_ptr<AttrBlock> Parser::attr_block() {
 std::shared_ptr<AST::Controller> Parser::controller() {
 	Token controller = eat({Token::category::machine, Token::category::flash, Token::category::network});
 
-	auto name = string_token_union(Token::category::id);
+	auto name = id();
 
 	newline_list();
 	if (LA(1) != Token::category::lbrace) {
 		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: expected attribute block");
 	}
 
-	auto block = attr_block();
+	std::shared_ptr<AST::AttrBlock> block = nullptr;
+
+	if (controller.type() == Token::category::machine) {
+		block = attr_block({
+			{"ram", {false, [&]{ return size(); }}},
+			{"iso", {false, [&]{ return string(); }}},
+			{"cpus", {false, [&]{ return number(); }}},
+			{"qemu_spice_agent", {false, [&]{ return boolean(); }}},
+			{"qemu_enable_usb3", {false, [&]{ return boolean(); }}},
+			{"loader", {false, [&]{ return string(); }}},
+			{"nic", {false, [&]{ return attr_block({
+				{"attached_to", {false, [&]{ return id(); }}},
+				{"attached_to_dev", {false, [&]{ return string(); }}},
+				{"mac", {false, [&]{ return string(); }}},
+				{"adapter_type", {false, [&]{ return string(); }}},
+			}); }}},
+			{"disk", {false, [&]{ return attr_block({
+				{"size", {false, [&]{ return size(); }}},
+				{"source", {false, [&]{ return string(); }}},
+			}); }}},
+			{"video", {false, [&]{ return attr_block({
+				{"qemu_mode", {false, [&]{ return string(); }}}, // deprecated
+				{"adapter_type", {false, [&]{ return string(); }}},
+			}); }}},
+			{"shared_folder", {false, [&]{ return attr_block({
+				{"host_path", {false, [&]{ return string(); }}},
+				{"readonly", {false, [&]{ return boolean(); }}},
+			}); }}},
+		});
+	} else if (controller.type() == Token::category::flash) {
+		block = attr_block({
+			{"fs", {false, [&]{ return string(); }}},
+			{"size", {false, [&]{ return size(); }}},
+			{"folder", {false, [&]{ return string(); }}},
+		});
+	} else if (controller.type() == Token::category::network) {
+		block = attr_block({
+			{"mode", {false, [&]{ return string(); }}},
+		});
+	}
+
 	return std::make_shared<AST::Controller>(controller, name, block);
 }
 
@@ -511,7 +553,7 @@ std::shared_ptr<Cmd> Parser::command() {
 	if (test_macro_call()) {
 		return macro_call<AST::Cmd>();
 	} else {
-		auto entity = string_token_union(Token::category::id);
+		auto entity = id();
 		std::shared_ptr<Action> act = action();
 		return std::make_shared<AST::RegularCmd>(entity, act);
 	}
@@ -550,11 +592,11 @@ std::shared_ptr<KeyCombination> Parser::key_combination() {
 std::shared_ptr<KeySpec> Parser::key_spec() {
 	auto combination = key_combination();
 
-	std::shared_ptr<StringTokenUnion> times = nullptr;
+	std::shared_ptr<Number> times = nullptr;
 
 	if (LA(1) == Token::category::asterisk) {
 		eat(Token::category::asterisk);
-		times = string_token_union(Token::category::number);
+		times = number();
 	}
 
 	return std::shared_ptr<KeySpec>(new KeySpec(combination, times));
@@ -656,7 +698,7 @@ std::shared_ptr<Type> Parser::type() {
 
 	auto text = string();
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"interval", Token::category::time_interval}
+		{"interval", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<Type>(type_token, text, options);
@@ -672,8 +714,8 @@ std::shared_ptr<Wait> Parser::wait() {
 	std::shared_ptr<SelectExpr> select_expression = select_expr();
 
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"timeout", Token::category::time_interval},
-		{"interval", Token::category::time_interval}
+		{"interval", [&]{ return time_interval(); }},
+		{"timeout", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<Wait>(wait_token, select_expression, options);
@@ -682,7 +724,7 @@ std::shared_ptr<Wait> Parser::wait() {
 std::shared_ptr<AST::Sleep> Parser::sleep() {
 	Token sleep_token = eat(Token::category::sleep);
 
-	auto timeout = string_token_union(Token::category::time_interval);
+	auto timeout = time_interval();
 
 	return std::make_shared<AST::Sleep>(sleep_token, timeout);
 }
@@ -699,7 +741,7 @@ std::shared_ptr<Press> Parser::press() {
 	}
 
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"interval", Token::category::time_interval}
+		{"interval", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<Press>(press_token, keys, options);
@@ -785,7 +827,7 @@ std::shared_ptr<MouseSelectable> Parser::mouse_selectable() {
 	}
 
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"timeout", Token::category::time_interval}
+		{"timeout", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<MouseSelectable>(select, specifiers, options);
@@ -864,19 +906,19 @@ std::shared_ptr<AST::PlugResource> Parser::plug_resource() {
 
 std::shared_ptr<AST::PlugFlash> Parser::plug_resource_flash() {
 	Token flash_token = eat(Token::category::flash);
-	auto name = string_token_union(Token::category::id);
+	auto name = id();
 	return std::make_shared<AST::PlugFlash>(flash_token, name);
 }
 
 std::shared_ptr<AST::PlugNIC> Parser::plug_resource_nic() {
 	Token nic_token = eat(Token::category::id);
-	auto name = string_token_union(Token::category::id);
+	auto name = id();
 	return std::make_shared<AST::PlugNIC>(nic_token, name);
 }
 
 std::shared_ptr<AST::PlugLink> Parser::plug_resource_link() {
 	Token link_token = eat(Token::category::id);
-	auto name = string_token_union(Token::category::id);
+	auto name = id();
 	return std::make_shared<AST::PlugLink>(link_token, name);
 }
 
@@ -925,7 +967,7 @@ std::shared_ptr<Shutdown> Parser::shutdown() {
 	Token shutdown_token = eat(Token::category::shutdown);
 
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"timeout", Token::category::time_interval}
+		{"timeout", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<Shutdown>(shutdown_token, options);
@@ -938,7 +980,7 @@ std::shared_ptr<Exec> Parser::exec() {
 	auto commands = string();
 
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"timeout", Token::category::time_interval}
+		{"timeout", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<Exec>(exec_token, process_token, commands, options);
@@ -951,8 +993,8 @@ std::shared_ptr<Copy> Parser::copy() {
 	auto to = string();
 
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"timeout", Token::category::time_interval},
-		{"nocheck", Token::category::none}
+		{"nocheck", [&]{ return nullptr; }},
+		{"timeout", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<Copy>(copy_token, from, to, options);
@@ -1036,10 +1078,10 @@ std::shared_ptr<IfClause> Parser::if_clause() {
 std::shared_ptr<Range> Parser::range() {
 	Token range_token = eat(Token::category::RANGE);
 
-	std::shared_ptr<StringTokenUnion> r1 = string_token_union(Token::category::number);
-	std::shared_ptr<StringTokenUnion> r2 = nullptr;
+	std::shared_ptr<Number> r1 = number();
+	std::shared_ptr<Number> r2 = nullptr;
 	if (test_string() || LA(1) == Token::category::number) {
-		r2 = string_token_union(Token::category::number);
+		r2 = number();
 	}
 
 	return std::make_shared<Range>(range_token, r1, r2);
@@ -1185,17 +1227,6 @@ std::shared_ptr<String> Parser::string() {
 	return new_node;
 }
 
-std::shared_ptr<AST::StringTokenUnion> Parser::string_token_union(Token::category expected_token_type) {
-	if (!test_string() && LA(1) != expected_token_type) {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected a string or " + Token::type_to_string(expected_token_type) + ", but got " +
-			Token::type_to_string(LA(1)) + " " + LT(1).value());
-	}
-
-	Token token = eat({expected_token_type, Token::category::quoted_string, Token::category::triple_quoted_string});
-
-	return std::shared_ptr<StringTokenUnion>(new StringTokenUnion(token, expected_token_type));
-}
-
 std::shared_ptr<ParentedExpr> Parser::parented_expr() {
 	auto lparen = eat(Token::category::lparen);
 	auto expression = expr();
@@ -1238,8 +1269,8 @@ std::shared_ptr<Check> Parser::check() {
 	select_expression = select_expr();
 
 	std::shared_ptr<OptionSeq> options = option_seq({
-		{"interval", Token::category::time_interval},
-		{"timeout", Token::category::time_interval}
+		{"interval", [&]{ return time_interval(); }},
+		{"timeout", [&]{ return time_interval(); }},
 	});
 
 	return std::make_shared<Check>(check_token, select_expression, options);
@@ -1288,4 +1319,24 @@ std::shared_ptr<Expr> Parser::expr() {
 	} else {
 		return left;
 	}
+}
+
+std::shared_ptr<AST::Number> Parser::number() {
+	return single_token<Token::category::number>();
+}
+
+std::shared_ptr<AST::Id> Parser::id() {
+	return single_token<Token::category::id>();
+}
+
+std::shared_ptr<AST::TimeInterval> Parser::time_interval() {
+	return single_token<Token::category::time_interval>();
+}
+
+std::shared_ptr<AST::Size> Parser::size() {
+	return single_token<Token::category::size>();
+}
+
+std::shared_ptr<AST::Boolean> Parser::boolean() {
+	return single_token<Token::category::boolean>();
 }

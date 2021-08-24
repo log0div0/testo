@@ -104,7 +104,7 @@ private:
 struct Parser {
 	Parser() = default;
 
-	std::string resolve(const std::string& input, const std::shared_ptr<StackNode>& stack);
+	std::string resolve(const std::string& input, const std::shared_ptr<const StackNode>& stack);
 
 	void validate_sanity(const std::string& input);
 

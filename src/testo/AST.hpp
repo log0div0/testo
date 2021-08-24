@@ -41,9 +41,14 @@ struct String: public Node {
 	Token token;
 };
 
-struct StringTokenUnion: public Node {
-	StringTokenUnion(Token token_, Token::category expected_token_type_):
-		token(std::move(token_)), expected_token_type(expected_token_type_) {}
+template <Token::category category>
+struct ISingleToken: public Node {
+	static std::shared_ptr<ISingleToken> from_string(const std::string& str);
+};
+
+template <Token::category category>
+struct SingleToken: public ISingleToken<category> {
+	SingleToken(Token token_): token(std::move(token_)) {}
 
 	Pos begin() const override {
 		return token.begin();
@@ -55,24 +60,32 @@ struct StringTokenUnion: public Node {
 		return token.value();
 	}
 
-	std::string text() const {
-		if (token.type() == Token::category::quoted_string) {
-			return token.value().substr(1, token.value().length() - 2);
-		} else if (token.type() == Token::category::triple_quoted_string) {
-			return token.value().substr(3, token.value().length() - 6);
-		} else {
-			return token.value();
-		}
-	}
-
-	bool is_string() const {
-		return (token.type() == Token::category::quoted_string) ||
-			(token.type() == Token::category::triple_quoted_string);
-	}
-
 	Token token;
-	Token::category expected_token_type;
 };
+
+template <typename T>
+struct Unparsed: public T {
+	Unparsed(std::shared_ptr<String> string_): string(std::move(string_)) {}
+
+	Pos begin() const override {
+		return string->begin();
+	}
+	Pos end() const override {
+		return string->end();
+	}
+	std::string to_string() const override {
+		return string->to_string();
+	}
+
+	std::shared_ptr<String> string;
+};
+
+using Number = ISingleToken<Token::category::number>;
+using TimeInterval = ISingleToken<Token::category::time_interval>;
+using Id = ISingleToken<Token::category::id>;
+using QuotedString = ISingleToken<Token::category::quoted_string>;
+using Boolean = ISingleToken<Token::category::boolean>;
+using Size = ISingleToken<Token::category::size>;
 
 struct SelectExpr: public Node {
 };
@@ -226,7 +239,7 @@ struct KeyCombination: public Node {
 };
 
 struct KeySpec: public Node {
-	KeySpec(std::shared_ptr<KeyCombination> combination_, std::shared_ptr<StringTokenUnion> times_):
+	KeySpec(std::shared_ptr<KeyCombination> combination_, std::shared_ptr<Number> times_):
 		combination(std::move(combination_)),
 		times(std::move(times_)) {}
 
@@ -251,7 +264,7 @@ struct KeySpec: public Node {
 	}
 
 	std::shared_ptr<KeyCombination> combination;
-	std::shared_ptr<StringTokenUnion> times;
+	std::shared_ptr<Number> times;
 };
 
 struct Option: public Node {
@@ -276,7 +289,7 @@ struct Option: public Node {
 	}
 
 	Token name;
-	std::shared_ptr<StringTokenUnion> value;
+	std::shared_ptr<Node> value;
 };
 
 struct OptionSeq: public Node {
@@ -460,7 +473,7 @@ struct Wait: public Action {
 };
 
 struct Sleep: public Action {
-	Sleep(Token sleep_, std::shared_ptr<StringTokenUnion> timeout_):
+	Sleep(Token sleep_, std::shared_ptr<TimeInterval> timeout_):
 		sleep(std::move(sleep_)), timeout(std::move(timeout_)) {}
 
 	Pos begin() const override {
@@ -476,7 +489,7 @@ struct Sleep: public Action {
 	}
 
 	Token sleep;
-	std::shared_ptr<StringTokenUnion> timeout;
+	std::shared_ptr<TimeInterval> timeout;
 };
 
 struct Press: public Action {
@@ -800,7 +813,7 @@ struct PlugResource: public Node {
 };
 
 struct PlugResourceWithName: PlugResource {
-	PlugResourceWithName(Token type_, std::shared_ptr<StringTokenUnion> name_):
+	PlugResourceWithName(Token type_, std::shared_ptr<Id> name_):
 		type(std::move(type_)), name(std::move(name_)) {}
 
 	Pos begin() const override {
@@ -816,7 +829,7 @@ struct PlugResourceWithName: PlugResource {
 	}
 
 	Token type;
-	std::shared_ptr<StringTokenUnion> name;
+	std::shared_ptr<Id> name;
 };
 
 struct PlugNIC: public PlugResourceWithName {
@@ -1097,7 +1110,7 @@ struct Cmd: public Node {
 };
 
 struct RegularCmd: public Cmd {
-	RegularCmd(std::shared_ptr<StringTokenUnion> entity_, std::shared_ptr<Action> action_):
+	RegularCmd(std::shared_ptr<Id> entity_, std::shared_ptr<Action> action_):
 		entity(std::move(entity_)),
 		action(std::move(action_)) {}
 
@@ -1113,7 +1126,7 @@ struct RegularCmd: public Cmd {
 		return entity->to_string() + " " + action->to_string();
 	}
 
-	std::shared_ptr<StringTokenUnion> entity;
+	std::shared_ptr<Id> entity;
 	std::shared_ptr<Action> action;
 };
 
@@ -1243,29 +1256,8 @@ struct MacroCall: public BaseType, IMacroCall {
 	}
 };
 
-struct IAttrValue: public Node {
-};
-
-struct AttrSimpleValue: public IAttrValue {
-	AttrSimpleValue(std::shared_ptr<StringTokenUnion> value_): value(std::move(value_)) {}
-
-	Pos begin() const override {
-		return value->begin();
-	}
-
-	Pos end() const override {
-		return value->end();
-	}
-
-	std::string to_string() const override {
-		return value->to_string();
-	}
-
-	std::shared_ptr<StringTokenUnion> value;
-};
-
 struct Attr: public Node {
-	Attr(Token name_token_, Token id_, std::shared_ptr<IAttrValue> value_):
+	Attr(Token name_token_, Token id_, std::shared_ptr<Node> value_):
 		name_token(std::move(name_token_)),
 		id(std::move(id_)),
 		value(std::move(value_)) {}
@@ -1288,10 +1280,10 @@ struct Attr: public Node {
 
 	Token name_token;
 	Token id;
-	std::shared_ptr<IAttrValue> value;
+	std::shared_ptr<Node> value;
 };
 
-struct AttrBlock: public IAttrValue {
+struct AttrBlock: public Node {
 	AttrBlock(Token open_brace_, Token close_brace_, std::vector<std::shared_ptr<Attr>> attrs_):
 		open_brace(std::move(open_brace_)),
 		close_brace(std::move(close_brace_)),
@@ -1322,8 +1314,8 @@ struct AttrBlock: public IAttrValue {
 struct Test: public Stmt {
 	Test(std::shared_ptr<AttrBlock> attrs_,
 		Token test_,
-		std::shared_ptr<StringTokenUnion> name_,
-		std::vector<std::shared_ptr<StringTokenUnion>> parents_,
+		std::shared_ptr<Id> name_,
+		std::vector<std::shared_ptr<Id>> parents_,
 		std::shared_ptr<AST::Block<AST::Cmd>> cmd_block_
 	):
 		attrs(std::move(attrs_)),
@@ -1350,13 +1342,13 @@ struct Test: public Stmt {
 
 	std::shared_ptr<AttrBlock> attrs;
 	Token test;
-	std::shared_ptr<StringTokenUnion> name;
-	std::vector<std::shared_ptr<StringTokenUnion>> parents;
+	std::shared_ptr<Id> name;
+	std::vector<std::shared_ptr<Id>> parents;
 	std::shared_ptr<AST::Block<AST::Cmd>> cmd_block;
 };
 
 struct Controller: public Stmt {
-	Controller(Token controller_, std::shared_ptr<StringTokenUnion> name_, std::shared_ptr<AttrBlock> attr_block_):
+	Controller(Token controller_, std::shared_ptr<Id> name_, std::shared_ptr<AttrBlock> attr_block_):
 		controller(std::move(controller_)),
 		name(std::move(name_)),
 		attr_block(std::move(attr_block_)) {}
@@ -1374,7 +1366,7 @@ struct Controller: public Stmt {
 	}
 
 	Token controller;
-	std::shared_ptr<StringTokenUnion> name;
+	std::shared_ptr<Id> name;
 	std::shared_ptr<AttrBlock> attr_block;
 };
 
@@ -1637,7 +1629,7 @@ struct CounterList: public Node {
 };
 
 struct Range: public CounterList {
-	Range(Token range_, std::shared_ptr<StringTokenUnion> r1_, std::shared_ptr<StringTokenUnion> r2_):
+	Range(Token range_, std::shared_ptr<Number> r1_, std::shared_ptr<Number> r2_):
 		range(std::move(range_)), r1(std::move(r1_)), r2(std::move(r2_)) {}
 
 	Pos begin() const override {
@@ -1661,8 +1653,8 @@ struct Range: public CounterList {
 	}
 
 	Token range;
-	std::shared_ptr<StringTokenUnion> r1;
-	std::shared_ptr<StringTokenUnion> r2;
+	std::shared_ptr<Number> r1;
+	std::shared_ptr<Number> r2;
 };
 
 struct ForClause: public Action {

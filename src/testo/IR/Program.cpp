@@ -260,9 +260,45 @@ void Program::collect_network(const std::shared_ptr<AST::Controller>& network) {
 	insert_controller(network, networks);
 }
 
+bool check_if_time_interval(const std::string& time) {
+	std::string number;
+
+	size_t i = 0;
+
+	for (; i < time.length(); ++i) {
+		if (isdigit(time[i])) {
+			number += time[i];
+		} else {
+			break;
+		}
+	}
+
+	if (!number.length()) {
+		return false;
+	}
+
+	if (time[i] == 's' || time[i] == 'h') {
+		return (i == time.length() - 1);
+	}
+
+	if (time[i] == 'm') {
+		if (i == time.length() - 1) {
+			return true;
+		}
+
+		if (time.length() > i + 2) {
+			return false;
+		}
+		return time[i + 1] == 's';
+	}
+
+	return false;
+
+}
+
 void Program::validate_special_params() {
 	for (auto& kv: testo_timeout_params) {
-		std::string value = stack->resolve_var(kv.first);
+		std::string value = stack->find_and_resolve_var(kv.first);
 		if (!check_if_time_interval(value)) {
 			throw std::runtime_error("Can't convert parameter " + kv.first + " value \"" + value + "\" to time interval");
 		}

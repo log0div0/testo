@@ -6,7 +6,7 @@
 namespace IR {
 
 std::string Controller::name() const {
-	return StringTokenUnion(ast_node->name, stack).resolve();
+	return Id(ast_node->name, stack).value();
 }
 
 bool Controller::is_defined() const {

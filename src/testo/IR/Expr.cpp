@@ -73,19 +73,19 @@ bool Comparison::calculate() const {
 	}
 }
 
-std::string Check::timeout() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_CHECK_DEFAULT_TIMEOUT");
+TimeInterval Check::timeout() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_CHECK_DEFAULT_TIMEOUT");
 }
 
-std::string Check::interval() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_CHECK_DEFAULT_INTERVAL");
+TimeInterval Check::interval() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("interval", "TESTO_CHECK_DEFAULT_INTERVAL");
 }
 
 std::vector<std::string> Range::values() const {
 	std::vector<std::string> result;
 
-	auto r1_num = std::stoi(r1());
-	auto r2_num = std::stoi(r2());
+	auto r1_num = r1();
+	auto r2_num = r2();
 
 	for (int32_t i = r1_num; i < r2_num; ++i) {
 		result.push_back(std::to_string(i));
@@ -94,19 +94,19 @@ std::vector<std::string> Range::values() const {
 	return result;
 }
 
-std::string Range::r1() const {
+int32_t Range::r1() const {
 	if (ast_node->r2) {
-		return StringTokenUnion(ast_node->r1, stack).resolve();
+		return Number(ast_node->r1, stack).value();
 	} else {
-		return "0";
+		return 0;
 	}
 }
 
-std::string Range::r2() const {
+int32_t Range::r2() const {
 	if (ast_node->r2) {
-		return StringTokenUnion(ast_node->r2, stack).resolve();
+		return Number(ast_node->r2, stack).value();
 	} else {
-		return StringTokenUnion(ast_node->r1, stack).resolve();
+		return Number(ast_node->r1, stack).value();
 	}
 }
 

@@ -56,21 +56,13 @@ std::vector<std::pair<std::string, std::string>> MacroCall::args() const {
 	const std::shared_ptr<IR::Macro> macro = get_macro();
 
 	for (size_t i = 0; i < ast_node->args.size(); ++i) {
-		try {
-			auto value = template_literals::Parser().resolve(ast_node->args[i]->text(), stack);
-			args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(ast_node->args[i]->begin(), ast_node->args[i]->text()));
-		}
+		auto value = String(ast_node->args[i], stack).text();
+		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
 	}
 
 	for (size_t i = ast_node->args.size(); i < macro->ast_node->args.size(); ++i) {
-		try {
-			auto value = template_literals::Parser().resolve(macro->ast_node->args[i]->default_value->text(), stack);
-			args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
-		} catch (const std::exception& error) {
-			std::throw_with_nested(ResolveException(macro->ast_node->args[i]->default_value->begin(), macro->ast_node->args[i]->default_value->text()));
-		}
+		auto value = String(macro->ast_node->args[i]->default_value, stack).text();
+		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
 	}
 
 	return args;

@@ -149,10 +149,10 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 		fs::path from = copy.from();
 		fs::path to = copy.to();
 
-		std::string wait_for = copy.timeout();
-		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
+		IR::TimeInterval wait_for = copy.timeout();
+		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for.str());
 
-		coro::Timeout timeout(time_to_milliseconds(wait_for));
+		coro::Timeout timeout(wait_for.value());
 
 		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -203,15 +203,15 @@ void VisitorInterpreterActionMachine::visit_screenshot(const IR::Screenshot& scr
 
 bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	try {
-		std::string check_for = check.timeout();
-		std::string interval_str = check.interval();
+		IR::TimeInterval check_for = check.timeout();
+		IR::TimeInterval interval = check.interval();
 		auto text = template_parser.resolve(check.ast_node->select_expr->to_string(), check.stack);
 
-		reporter.check(vmc, text, check_for, interval_str);
+		reporter.check(vmc, text, check_for.str(), interval.str());
 
 		return screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 			return visit_detect_expr(check.ast_node->select_expr, screenshot);
-		}, time_to_milliseconds(check_for), time_to_milliseconds(interval_str));
+		}, check_for.value(), interval.value());
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check.ast_node, current_controller));
@@ -232,9 +232,9 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 			return;
 		}
 
-		std::string interval = type.interval();
+		IR::TimeInterval interval = type.interval();
 
-		reporter.type(vmc, text, interval);
+		reporter.type(vmc, text, interval.str());
 
 		std::vector<KeyboardCommand> commands = KeyboardManager().type(text);
 
@@ -243,7 +243,7 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 				if ((commands[i-1].action == KeyboardAction::Release) &&
 					(commands[i].action == KeyboardAction::Hold))
 				{
-					timer.waitFor(time_to_milliseconds(interval));
+					timer.waitFor(interval.value());
 				}
 			}
 			switch (commands[i].action) {
@@ -264,15 +264,14 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 
 void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 	try {
-		std::string wait_for = wait.timeout();
-		std::string interval_str = wait.interval();
-		auto text = wait.select_expr();
+		IR::TimeInterval wait_for = wait.timeout();
+		IR::TimeInterval interval = wait.interval();
 
-		reporter.wait(vmc, text, wait_for, interval_str);
+		reporter.wait(vmc, wait.ast_node->select_expr->to_string(), wait_for.str(), interval.str());
 
 		bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 			return visit_detect_expr(wait.ast_node->select_expr, screenshot);
-		}, time_to_milliseconds(wait_for), time_to_milliseconds(interval_str));
+		}, wait_for.value(), interval.value());
 
 		if (!early_exit) {
 			reporter.save_screenshot(vmc, vmc->get_last_screenshot());
@@ -466,12 +465,11 @@ bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::Se
 
 void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 	try {
-		std::string interval = press.interval();
-		auto press_interval = time_to_milliseconds(interval);
+		IR::TimeInterval interval = press.interval();
 
 		for (auto key_spec: press.ast_node->keys) {
-			visit_key_spec({key_spec, stack}, press_interval);
-			timer.waitFor(press_interval);
+			visit_key_spec({key_spec, stack}, interval.value());
+			timer.waitFor(interval.value());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press.ast_node, current_controller));
@@ -510,14 +508,14 @@ void VisitorInterpreterActionMachine::visit_release(const IR::Release& release) 
 }
 
 void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
-	std::string timeout = mouse_selectable.timeout();
+	IR::TimeInterval timeout = mouse_selectable.timeout();
 	std::string where_to_go = mouse_selectable.where_to_go();
 
 	for (auto specifier: mouse_selectable.ast_node->mouse_additional_specifiers) {
 		where_to_go += specifier->to_string();
 	}
 
-	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
+	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout.str());
 
 	bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 		try {
@@ -545,7 +543,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 		} catch (const nn::ContinueError&) {
 			return false;
 		}
-	}, time_to_milliseconds(timeout), 1s);
+	}, timeout.value(), 1s);
 
 	if (!early_exit) {
 		reporter.save_screenshot(vmc, vmc->get_last_screenshot());
@@ -882,10 +880,10 @@ void VisitorInterpreterActionMachine::visit_stop(const IR::Stop& stop) {
 void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdown) {
 	try {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
-		std::string wait_for = shutdown.timeout();
-		reporter.shutdown(vmc, wait_for);
+		IR::TimeInterval wait_for = shutdown.timeout();
+		reporter.shutdown(vmc, wait_for.str());
 		vmc->vm()->power_button();
-		auto deadline = std::chrono::steady_clock::now() +  time_to_milliseconds(wait_for);
+		auto deadline = std::chrono::steady_clock::now() +  wait_for.value();
 		while (std::chrono::steady_clock::now() < deadline) {
 			if (vmc->vm()->state() == VmState::Stopped) {
 				return;
@@ -900,7 +898,7 @@ void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdow
 
 void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 	try {
-		reporter.exec(vmc, exec.interpreter(), exec.timeout());
+		reporter.exec(vmc, exec.interpreter(), exec.timeout().str());
 
 		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -960,7 +958,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 
 		command += " " + guest_script_file.generic_string();
 
-		coro::Timeout timeout(time_to_milliseconds(exec.timeout()));
+		coro::Timeout timeout(exec.timeout().value());
 
 		auto result = ga->execute(command, [&](const std::string& output) {
 			reporter.exec_command_output(output);

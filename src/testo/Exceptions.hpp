@@ -79,11 +79,4 @@ struct CycleControlException: public Exception {
 	Token token;
 };
 
-struct ResolveException: public Exception {
-	ResolveException(const Pos& pos, const std::string& string)
-	{
-		msg = std::string(pos) + ": Error while resolving \"" + string + "\"";
-	}
-};
-
 std::ostream& operator<<(std::ostream& stream, const std::exception& error);

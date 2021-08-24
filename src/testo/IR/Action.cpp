@@ -7,23 +7,15 @@
 namespace IR {
 
 std::string Abort::message() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->message->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->message->begin(), ast_node->message->text()));
-	}
+	return String(ast_node->message, stack).text();
 }
 
 std::string Print::message() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->message->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->message->begin(), ast_node->message->text()));
-	}
+	return String(ast_node->message, stack).text();
 }
 
-std::string Press::interval() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_PRESS_DEFAULT_INTERVAL");
+TimeInterval Press::interval() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("interval", "TESTO_PRESS_DEFAULT_INTERVAL");
 }
 
 std::vector<KeyboardButton> KeySpec::buttons() const {
@@ -36,7 +28,7 @@ std::vector<KeyboardButton> KeySpec::buttons() const {
 
 int32_t KeySpec::times() const {
 	if (ast_node->times) {
-		return std::stoi(StringTokenUnion(ast_node->times, stack).resolve());
+		return Number(ast_node->times, stack).value();
 	} else {
 		return 1;
 	}
@@ -62,35 +54,23 @@ std::vector<KeyboardButton> Release::buttons() const {
 }
 
 std::string Type::text() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->text->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->text->begin(), ast_node->text->text()));
-	}
+	return String(ast_node->text, stack).text();
 }
 
-std::string Type::interval() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_TYPE_DEFAULT_INTERVAL");
+TimeInterval Type::interval() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("interval", "TESTO_TYPE_DEFAULT_INTERVAL");
 }
 
-std::string Wait::select_expr() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->select_expr->to_string(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->select_expr->begin(), ast_node->select_expr->to_string()));
-	}
+TimeInterval Wait::timeout() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_WAIT_DEFAULT_TIMEOUT");
 }
 
-std::string Wait::timeout() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_WAIT_DEFAULT_TIMEOUT");
+TimeInterval Wait::interval() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("interval", "TESTO_WAIT_DEFAULT_INTERVAL");
 }
 
-std::string Wait::interval() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("interval", "TESTO_WAIT_DEFAULT_INTERVAL");
-}
-
-std::string Sleep::timeout() const {
-	return StringTokenUnion(ast_node->timeout, stack).resolve();
+TimeInterval Sleep::timeout() const {
+	return {ast_node->timeout, stack};
 }
 
 std::string MouseMoveClick::event_type() const {
@@ -137,25 +117,17 @@ std::string MouseSelectable::where_to_go() const {
 	return result;
 }
 
-std::string MouseSelectable::timeout() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+TimeInterval MouseSelectable::timeout() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
 }
 
 std::string SelectJS::script() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
-	}
+	return String(ast_node->str, stack).text();
 }
 
 fs::path SelectImg::img_path() const {
-	fs::path path;
-	try {
-		path = template_literals::Parser().resolve(ast_node->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
-	}
+	fs::path path = String(ast_node->str, stack).text();
+
 	if (path.is_relative()) {
 		path = ast_node->begin().file.parent_path() / path;
 	}
@@ -164,23 +136,11 @@ fs::path SelectImg::img_path() const {
 }
 
 std::string SelectHomm3::id() const {
-	std::string id;
-	try {
-		id = template_literals::Parser().resolve(ast_node->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
-	}
-
-	return id;
+	return String(ast_node->str, stack).text();
 }
 
-
 std::string SelectText::text() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->text(), stack);
-	} catch (const std::exception&) {
-		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
-	}
+	return String(ast_node->str, stack).text();
 }
 
 MouseButton MouseHold::button() const {
@@ -192,15 +152,15 @@ bool Plug::is_on() const {
 }
 
 std::string PlugFlash::name() const {
-	return StringTokenUnion(ast_node->name, stack).resolve();
+	return Id(ast_node->name, stack).value();
 }
 
 std::string PlugNIC::name() const {
-	return StringTokenUnion(ast_node->name, stack).resolve();
+	return Id(ast_node->name, stack).value();
 }
 
 std::string PlugLink::name() const {
-	return StringTokenUnion(ast_node->name, stack).resolve();
+	return Id(ast_node->name, stack).value();
 }
 
 std::string PlugHostDev::type() const {
@@ -208,20 +168,12 @@ std::string PlugHostDev::type() const {
 }
 
 std::string PlugHostDev::addr() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->addr->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->addr->begin(), ast_node->addr->text()));
-	}
+	return String(ast_node->addr, stack).text();
 }
 
 fs::path PlugDVD::path() const {
-	fs::path path;
-	try {
-		path = template_literals::Parser().resolve(ast_node->path->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->path->begin(), ast_node->path->text()));
-	}
+	fs::path path = String(ast_node->path, stack).text();
+
 	if (path.is_relative()) {
 		path = ast_node->path->begin().file.parent_path() / path;
 	}
@@ -229,33 +181,24 @@ fs::path PlugDVD::path() const {
 	return path;
 }
 
-std::string Shutdown::timeout() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_SHUTDOWN_DEFAULT_TIMEOUT");
+IR::TimeInterval Shutdown::timeout() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_SHUTDOWN_DEFAULT_TIMEOUT");
 }
 
 std::string Exec::interpreter() const {
 	return ast_node->process.value();
 }
 
-std::string Exec::timeout() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_EXEC_DEFAULT_TIMEOUT");
+IR::TimeInterval Exec::timeout() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_EXEC_DEFAULT_TIMEOUT");
 }
 
 std::string Exec::script() const {
-	try {
-		return template_literals::Parser().resolve(ast_node->commands->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->commands->begin(), ast_node->commands->text()));
-	}
+	return String(ast_node->commands, stack).text();
 }
 
 std::string Copy::from() const {
-	fs::path from;
-	try {
-		from = template_literals::Parser().resolve(ast_node->from->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->from->begin(), ast_node->from->text()));
-	}
+	fs::path from = String(ast_node->from, stack).text();
 
 	if (ast_node->is_to_guest()) {
 		if (from.is_relative()) {
@@ -267,26 +210,17 @@ std::string Copy::from() const {
 }
 
 std::string Screenshot::destination() const {
-	fs::path dest;
-	try {
-		dest = template_literals::Parser().resolve(ast_node->destination->text(), stack);
-		if (dest.is_relative()) {
-			dest = ast_node->destination->begin().file.parent_path() / dest;
-		}
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->destination->begin(), ast_node->destination->text()));
+	fs::path dest = String(ast_node->destination, stack).text();
+
+	if (dest.is_relative()) {
+		dest = ast_node->destination->begin().file.parent_path() / dest;
 	}
 
 	return dest.generic_string();
 }
 
 std::string Copy::to() const {
-	fs::path to;
-	try {
-		to = template_literals::Parser().resolve(ast_node->to->text(), stack);
-	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->to->begin(), ast_node->to->text()));
-	}
+	fs::path to = String(ast_node->to, stack).text();
 
 	if (!ast_node->is_to_guest()) {
 		if (to.is_relative()) {
@@ -297,12 +231,12 @@ std::string Copy::to() const {
 	return to.generic_string();
 }
 
-std::string Copy::timeout() const {
-	return OptionSeq(ast_node->option_seq, stack).resolve("timeout", "TESTO_COPY_DEFAULT_TIMEOUT");
+TimeInterval Copy::timeout() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_COPY_DEFAULT_TIMEOUT");
 }
 
 bool Copy::nocheck() const {
-	return ast_node->option_seq->get("nocheck") != nullptr;
+	return OptionSeq(ast_node->option_seq, stack).has("nocheck");
 }
 
 std::string CycleControl::type() const {

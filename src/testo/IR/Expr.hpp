@@ -25,8 +25,8 @@ struct Comparison: Expr<AST::Comparison> {
 
 struct Check: Expr<AST::Check> {
 	using Expr<AST::Check>::Expr;
-	std::string timeout() const;
-	std::string interval() const;
+	TimeInterval timeout() const;
+	TimeInterval interval() const;
 };
 
 template <typename ASTType>
@@ -37,8 +37,8 @@ struct CounterList: Node<ASTType> {
 struct Range: CounterList<AST::Range> {
 	using CounterList<AST::Range>::CounterList;
 	std::vector<std::string> values() const;
-	std::string r1() const;
-	std::string r2() const;
+	int32_t r1() const;
+	int32_t r2() const;
 };
 
 }

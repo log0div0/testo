@@ -27,7 +27,6 @@ struct VisitorInterpreterAction {
 	void visit_macro_body(const std::shared_ptr<AST::Block<AST::Action>>& macro_body);
 	void visit_if_clause(std::shared_ptr<AST::IfClause> if_clause);
 	void visit_for_clause(std::shared_ptr<AST::ForClause> for_clause);
-	std::vector<std::string> visit_range(const IR::Range& range);
 
 	bool visit_expr(std::shared_ptr<AST::Expr> expr);
 	bool visit_binop(std::shared_ptr<AST::BinOp> binop);

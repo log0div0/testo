@@ -5,14 +5,14 @@
 namespace IR {
 
 std::string Test::name() const {
-	return StringTokenUnion(ast_node->name, stack).resolve();
+	return Id(ast_node->name, stack).value();
 }
 
 std::vector<std::string> Test::parent_names() const {
 	std::vector<std::string> result;
 
 	for (auto parent: ast_node->parents) {
-		result.push_back(StringTokenUnion(parent, stack).resolve());
+		result.push_back(Id(parent, stack).value());
 	}
 
 	return result;

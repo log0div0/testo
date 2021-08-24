@@ -201,7 +201,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 		StackPusher<VisitorSemantic> new_ctx(this, test->stack);
 
 		if (test->ast_node->attrs) {
-			test->attrs = VisitorAttrTest(stack).visit(test->ast_node->attrs);
+			test->attrs = IR::AttrBlock(test->ast_node->attrs, stack).to_json();
 		}
 
 		current_test = test;
@@ -405,7 +405,7 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 void VisitorSemantic::visit_type(const IR::Type& type) {
 	current_test->cksum_input << "type "
 		<< "\"" << type.text() << "\""
-		<< " interval " << type.interval() << std::endl;
+		<< " interval " << type.interval().value().count() << std::endl;
 }
 
 void VisitorSemantic::visit_press(const IR::Press& press) {
@@ -419,7 +419,7 @@ void VisitorSemantic::visit_press(const IR::Press& press) {
 		visit_key_spec({key_spec, stack});
 	}
 
-	current_test->cksum_input << " interval " << press.interval() << std::endl;
+	current_test->cksum_input << " interval " << press.interval().value().count() << std::endl;
 }
 
 void VisitorSemantic::visit_key_combination(std::shared_ptr<AST::KeyCombination> combination) {
@@ -740,7 +740,7 @@ void VisitorSemantic::visit_stop(const IR::Stop& stop) {
 }
 
 void VisitorSemantic::visit_shutdown(const IR::Shutdown& shutdown) {
-	current_test->cksum_input << "shutdown timeout " << shutdown.timeout() << std::endl;
+	current_test->cksum_input << "shutdown timeout " << shutdown.timeout().value().count() << std::endl;
 }
 
 void VisitorSemantic::visit_exec(const IR::Exec& exec) {
@@ -755,7 +755,7 @@ void VisitorSemantic::visit_exec(const IR::Exec& exec) {
 
 	current_test->cksum_input << "exec "
 		<< exec.interpreter() << " \"\"\"" << exec.script() << "\"\"\""
-		<< " timeout " << exec.timeout()
+		<< " timeout " << exec.timeout().value().count()
 		<< std::endl;
 }
 
@@ -766,7 +766,7 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 		current_test->cksum_input << "copyfrom ";
 	}
 
-	current_test->cksum_input << copy.from()<< " " << copy.to() << " timeout " << copy.timeout() << std::endl;
+	current_test->cksum_input << copy.from()<< " " << copy.to() << " timeout " << copy.timeout().value().count() << std::endl;
 
 	auto from = copy.from();
 	if (copy.ast_node->is_to_guest()) {
@@ -837,13 +837,13 @@ void VisitorSemantic::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop
 void VisitorSemantic::visit_wait(const IR::Wait& wait) {
 	current_test->cksum_input << "wait ";
 	visit_detect_expr(wait.ast_node->select_expr);
-	current_test->cksum_input << " timeout " << wait.timeout()
-		<< " interval " << wait.interval()
+	current_test->cksum_input << " timeout " << wait.timeout().value().count()
+		<< " interval " << wait.interval().value().count()
 		<< std::endl;
 }
 
 void VisitorSemantic::visit_sleep(const IR::Sleep& sleep) {
-	current_test->cksum_input << "sleep timeout " << sleep.timeout() << std::endl;
+	current_test->cksum_input << "sleep timeout " << sleep.timeout().value().count() << std::endl;
 }
 
 void VisitorSemantic::visit_cmd_macro_call(const IR::MacroCall& macro_call) {
@@ -878,14 +878,9 @@ Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::Expr> expr) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::ParentedExpr>(expr)) {
 		return visit_parented_expr(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::StringExpr>(expr)) {
-		try {
-			auto text = template_parser.resolve(p->str->text(), stack);
-			current_test->cksum_input << "\"" << text << "\"";
-			return text.length() ? Tribool::yes : Tribool::no;
-		}
-		catch (const std::exception & error) {
-			std::throw_with_nested(ResolveException(p->begin(), p->str->text()));
-		}
+		auto text = IR::String(p->str, stack).text();
+		current_test->cksum_input << "\"" << text << "\"";
+		return text.length() ? Tribool::yes : Tribool::no;
 	} else {
 		throw Exception("Unknown expr type");
 	}
@@ -943,8 +938,8 @@ Tribool VisitorSemantic::visit_check(const IR::Check& check) {
 	current_test->cksum_input << "check ";
 	visit_detect_expr(check.ast_node->select_expr);
 	current_test->cksum_input
-		<< " timeout " << check.timeout()
-		<< " interval " << check.interval();
+		<< " timeout " << check.timeout().value().count()
+		<< " interval " << check.interval().value().count();
 	return Tribool::maybe;
 }
 
@@ -978,32 +973,20 @@ void VisitorSemantic::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) 
 }
 
 std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
-	std::string r1 = range.r1();
-	std::string r2 = range.r2();
+	int32_t r1 = range.r1();
+	int32_t r2 = range.r2();
 
-	if (!is_number(r1)) {
-		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + r1 + " to a non-negative number");
+	if (r1 < 0) {
+		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + std::to_string(r1) + " to a non-negative number");
 	}
 
-	auto r1_num = std::stoi(r1);
-
-	if (r1_num < 0) {
-		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + r1 + " to a non-negative number");
+	if (r2 < 0) {
+		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + std::to_string(r2) + " to a non-negative number");
 	}
 
-	if (!is_number(r2)) {
-		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + r2 + " to a non-negative number");
-	}
-
-	auto r2_num = std::stoi(r2);
-
-	if (r2_num < 0) {
-		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + r2 + " to a non-negative number");
-	}
-
-	if (r1_num >= r2_num) {
+	if (r1 >= r2) {
 		throw Exception(std::string(range.ast_node->begin()) + ": Error: start of the range " +
-			r1 + " is greater or equal to finish " + r2);
+			std::to_string(r1) + " is greater or equal to finish " + std::to_string(r2));
 	}
 
 	return range.values();
@@ -1052,7 +1035,7 @@ void VisitorSemantic::visit_machine(std::shared_ptr<IR::Machine> machine) {
 
 		StackPusher<VisitorSemantic> new_ctx(this, machine->stack);
 
-		machine->config = VisitorAttrMachine(stack).visit(machine->ast_node->attr_block);
+		machine->config = IR::AttrBlock(machine->ast_node->attr_block, stack).to_json();
 		machine->config["prefix"] = prefix;
 		machine->config["name"] = machine->name();
 		machine->config["src_file"] = machine->ast_node->name->begin().file.generic_string();
@@ -1076,7 +1059,7 @@ void VisitorSemantic::visit_flash(std::shared_ptr<IR::FlashDrive> flash) {
 
 		//no need to check for duplicates
 		//It's already done in Parser while registering Controller
-		flash->config = VisitorAttrFlashDrive(stack).visit(flash->ast_node->attr_block);
+		flash->config = IR::AttrBlock(flash->ast_node->attr_block, stack).to_json();
 		flash->config["prefix"] = prefix;
 		flash->config["name"] = flash->name();
 		flash->config["src_file"] = flash->ast_node->name->begin().file.generic_string();
@@ -1098,7 +1081,7 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 
 		StackPusher<VisitorSemantic> new_ctx(this, network->stack);
 
-		network->config = VisitorAttrNetwork(stack).visit(network->ast_node->attr_block);
+		network->config = IR::AttrBlock(network->ast_node->attr_block, stack).to_json();
 		network->config["prefix"] = prefix;
 		network->config["name"] = network->name();
 		network->config["src_file"] = network->ast_node->name->begin().file.generic_string();

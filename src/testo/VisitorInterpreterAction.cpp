@@ -5,12 +5,6 @@
 #include "IR/Program.hpp"
 #include "Parser.hpp"
 
-static void sleep(const std::string& interval) {
-	coro::Timer timer;
-	timer.waitFor(time_to_milliseconds(interval));
-}
-
-
 void VisitorInterpreterAction::visit_action_block(std::shared_ptr<AST::Block<AST::Action>> action_block) {
 	for (auto action: action_block->items) {
 		visit_action(action);
@@ -26,8 +20,9 @@ void VisitorInterpreterAction::visit_print(const IR::Print& print) {
 }
 
 void VisitorInterpreterAction::visit_sleep(const IR::Sleep& sleep) {
-	reporter.sleep(current_controller, sleep.timeout());
-	::sleep(sleep.timeout());
+	reporter.sleep(current_controller, sleep.timeout().str());
+	coro::Timer timer;
+	timer.waitFor(sleep.timeout().value());
 }
 
 void VisitorInterpreterAction::visit_macro_call(const IR::MacroCall& macro_call) {
@@ -60,7 +55,7 @@ void VisitorInterpreterAction::visit_for_clause(std::shared_ptr<AST::ForClause> 
 	std::vector<std::string> values;
 
 	if (auto p = std::dynamic_pointer_cast<AST::Range>(for_clause->counter_list)) {
-		values = visit_range({p, stack});
+		values = IR::Range({p, stack}).values();
 	} else {
 		throw std::runtime_error("Unknown counter list type");
 	}
@@ -91,11 +86,6 @@ void VisitorInterpreterAction::visit_for_clause(std::shared_ptr<AST::ForClause> 
 		visit_action(for_clause->else_action);
 	}
 }
-
-std::vector<std::string> VisitorInterpreterAction::visit_range(const IR::Range& range) {
-	return range.values();
-}
-
 
 bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::Expr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::BinOp>(expr)) {

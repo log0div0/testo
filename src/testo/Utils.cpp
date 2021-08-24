@@ -60,62 +60,6 @@ void fs_copy(const fs::path& from, const fs::path& to) {
 	}
 }
 
-bool check_if_time_interval(const std::string& time) {
-	std::string number;
-
-	size_t i = 0;
-
-	for (; i < time.length(); ++i) {
-		if (isdigit(time[i])) {
-			number += time[i];
-		} else {
-			break;
-		}
-	}
-
-	if (!number.length()) {
-		return false;
-	}
-
-	if (time[i] == 's' || time[i] == 'h') {
-		return (i == time.length() - 1);
-	}
-
-	if (time[i] == 'm') {
-		if (i == time.length() - 1) {
-			return true;
-		}
-
-		if (time.length() > i + 2) {
-			return false;
-		}
-		return time[i + 1] == 's';
-	}
-
-	return false;
-
-}
-
-std::chrono::milliseconds time_to_milliseconds(const std::string& time) {
-	uint32_t milliseconds;
-	if (time[time.length() - 2] == 'm') {
-		milliseconds = std::stoul(time.substr(0, time.length() - 2));
-	} else if (time[time.length() - 1] == 's') {
-		milliseconds = std::stoul(time.substr(0, time.length() - 1));
-		milliseconds = milliseconds * 1000;
-	} else if (time[time.length() - 1] == 'm') {
-		milliseconds = std::stoul(time.substr(0, time.length() - 1));
-		milliseconds = milliseconds * 1000 * 60;
-	} else if (time[time.length() - 1] == 'h') {
-		milliseconds = std::stoul(time.substr(0, time.length() - 1));
-		milliseconds = milliseconds * 1000 * 60 * 60;
-	} else {
-		throw std::runtime_error("Unknown time specifier"); //should not happen ever
-	}
-
-	return std::chrono::milliseconds(milliseconds);
-}
-
 uint64_t content_cksum_maxsize = 1;
 
 template <typename T>

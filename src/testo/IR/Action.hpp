@@ -24,7 +24,7 @@ struct Print: Action<AST::Print> {
 
 struct Press: Action<AST::Press> {
 	using Action<AST::Press>::Action;
-	std::string interval() const;
+	TimeInterval interval() const;
 };
 
 struct KeySpec: Action<AST::KeySpec> {
@@ -46,19 +46,18 @@ struct Release: Action<AST::Release> {
 struct Type: Action<AST::Type> {
 	using Action<AST::Type>::Action;
 	std::string text() const;
-	std::string interval() const;
+	TimeInterval interval() const;
 };
 
 struct Wait: Action<AST::Wait> {
 	using Action<AST::Wait>::Action;
-	std::string select_expr() const;
-	std::string timeout() const;
-	std::string interval() const;
+	TimeInterval timeout() const;
+	TimeInterval interval() const;
 };
 
 struct Sleep: Action<AST::Sleep> {
 	using Action<AST::Sleep>::Action;
-	std::string timeout() const;
+	TimeInterval timeout() const;
 };
 
 struct Mouse: Action<AST::Mouse> {
@@ -84,7 +83,7 @@ struct MouseCoordinates: Action<AST::MouseCoordinates> {
 struct MouseSelectable: Action<AST::MouseSelectable> {
 	using Action<AST::MouseSelectable>::Action;
 	std::string where_to_go() const;
-	std::string timeout() const;
+	TimeInterval timeout() const;
 };
 
 struct SelectJS: Action<AST::SelectJS> {
@@ -158,19 +157,19 @@ struct Stop:Action<AST::Stop> {
 struct Shutdown:Action<AST::Shutdown> {
 	using Action<AST::Shutdown>::Action;
 
-	std::string timeout() const;
+	TimeInterval timeout() const;
 };
 
 struct Exec: Action<AST::Exec> {
 	using Action<AST::Exec>::Action;
 	std::string interpreter() const;
-	std::string timeout() const;
+	TimeInterval timeout() const;
 	std::string script() const;
 };
 
 struct Copy: Action<AST::Copy> {
 	using Action<AST::Copy>::Action;
-	std::string timeout() const;
+	TimeInterval timeout() const;
 	std::string from() const;
 	std::string to() const;
 	bool nocheck() const;

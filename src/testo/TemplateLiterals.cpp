@@ -4,7 +4,7 @@
 
 namespace template_literals {
 
-std::string Parser::resolve(const std::string& input, const std::shared_ptr<StackNode>& stack) {
+std::string Parser::resolve(const std::string& input, const std::shared_ptr<const StackNode>& stack) {
 	this->input = input;
 	current_pos = Pos(input);
 
@@ -14,7 +14,7 @@ std::string Parser::resolve(const std::string& input, const std::shared_ptr<Stac
 
 	for (auto token: tokens) {
 		if (token.type() == Token::category::var_ref) {
-			result += stack->resolve_var(token.value().substr(2, token.value().length() - 3));
+			result += stack->find_and_resolve_var(token.value().substr(2, token.value().length() - 3));
 		} else if (token.type() == Token::category::regular_string) {
 			result += token.value();
 		} else {

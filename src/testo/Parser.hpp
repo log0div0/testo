@@ -8,8 +8,6 @@
 #include <set>
 #include <array>
 
-constexpr static size_t LOOKAHEAD_BUFFER_SIZE = 2;
-
 struct Parser {
 	static Parser load_dir(const fs::path& dir);
 	static Parser load_file(const fs::path& file);
@@ -23,7 +21,6 @@ struct Parser {
 	std::shared_ptr<AST::Block<AST::Cmd>> command_block();
 	std::shared_ptr<AST::Block<AST::Action>> action_block();
 	std::shared_ptr<AST::Block<AST::Stmt>> stmt_block();
-private:
 
 	struct Ctx {
 		Ctx(const fs::path& file, const std::string& input) {
@@ -65,8 +62,8 @@ private:
 	void newline_list();
 
 	using OptionName = std::string;
-	using OptionValue = Token::category;
-	using OptionSeqSchema = std::map<OptionName, OptionValue>;
+	using OptionValue = std::shared_ptr<AST::Node>;
+	using OptionSeqSchema = std::map<OptionName, std::function<OptionValue()>>;
 	std::shared_ptr<AST::OptionSeq> option_seq(const OptionSeqSchema& schema);
 
 	void handle_include();
@@ -76,8 +73,17 @@ private:
 	std::vector<Token> macro_body(const std::string& name);
 	std::shared_ptr<AST::Macro> macro();
 	std::shared_ptr<AST::Param> param();
-	std::shared_ptr<AST::Attr> attr();
-	std::shared_ptr<AST::AttrBlock> attr_block();
+
+	using AttrName = std::string;
+	using AttrValue = std::shared_ptr<AST::Node>;
+	struct AttrDesc {
+		bool id_required;
+		std::function<AttrValue()> cb;
+	};
+	using AttrBlockSchema = std::map<AttrName, AttrDesc>;
+	std::shared_ptr<AST::Attr> attr(const AttrBlockSchema& schema);
+	std::shared_ptr<AST::AttrBlock> attr_block(const AttrBlockSchema& schema);
+
 	std::shared_ptr<AST::Controller> controller();
 	std::shared_ptr<AST::Cmd> command();
 	std::shared_ptr<AST::KeyCombination> key_combination();
@@ -134,7 +140,25 @@ private:
 	std::shared_ptr<AST::SelectText> select_text();
 
 	std::shared_ptr<AST::String> string();
-	std::shared_ptr<AST::StringTokenUnion> string_token_union(Token::category expected_token_type);
+	template <Token::category category>
+	std::shared_ptr<AST::ISingleToken<category>> single_token() {
+		if (!test_string() && LA(1) != category) {
+			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected a string or " + Token::type_to_string(category) + ", but got " +
+				Token::type_to_string(LA(1)) + " " + LT(1).value());
+		}
+
+		if (LA(1) == category) {
+			return std::make_shared<AST::SingleToken<category>>(eat(category));
+		}
+
+		return std::make_shared<AST::Unparsed<AST::ISingleToken<category>>>(string());
+	}
+
+	std::shared_ptr<AST::Number> number();
+	std::shared_ptr<AST::Id> id();
+	std::shared_ptr<AST::TimeInterval> time_interval();
+	std::shared_ptr<AST::Size> size();
+	std::shared_ptr<AST::Boolean> boolean();
 
 	std::shared_ptr<AST::Check> check();
 	std::shared_ptr<AST::Comparison> comparison();
@@ -149,3 +173,12 @@ private:
 
 	std::vector<fs::path> already_included;
 };
+
+namespace AST {
+
+template <Token::category category>
+std::shared_ptr<ISingleToken<category>> ISingleToken<category>::from_string(const std::string& str) {
+	return Parser(".", str).single_token<category>();
+}
+
+}
