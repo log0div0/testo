@@ -484,10 +484,10 @@ void Reporter::exec_command_output(const std::string& text) {
 	report(text, regular);
 }
 
-void Reporter::js_stdout(const std::string& stdout) {
+void Reporter::js_stdout(const std::string& _stdout) {
 	report_prefix(blue);
 	report("JavaScript snippet stdout: \n", blue);
-	report(fmt::format("{}\n", stdout), yellow);
+	report(fmt::format("{}\n", _stdout), yellow);
 }
 
 void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {

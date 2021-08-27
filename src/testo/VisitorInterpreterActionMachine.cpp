@@ -1184,9 +1184,9 @@ nlohmann::json VisitorInterpreterActionMachine::eval_js(const std::string& scrip
 			std::string message = eval_result.at("data").get<std::string>();
 			throw ContinueError(message);
 		} else if (type == "eval_result") {
-			std::string stdout = eval_result.value("stdout", "");
-			if (stdout.length()) {
-				reporter.js_stdout(stdout);
+			std::string output = eval_result.value("stdout", "");
+			if (output.length()) {
+				reporter.js_stdout(output);
 			}
 			return eval_result.at("data");
 		} else {

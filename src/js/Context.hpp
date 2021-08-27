@@ -12,7 +12,7 @@ namespace js {
 struct ContextRef {
 	struct Opaque {
 		const stb::Image<stb::RGB>* image;
-		std::stringstream stdout;
+		std::stringstream _stdout;
 		std::shared_ptr<Channel> channel;
 	};
 
@@ -43,7 +43,7 @@ struct ContextRef {
 	::JSContext* handle = nullptr;
 
 	const stb::Image<stb::RGB>* image() const;
-	std::stringstream& stdout();
+	std::stringstream& get_stdout();
 	std::shared_ptr<Channel> channel() const;
 
 protected:

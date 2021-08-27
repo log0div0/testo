@@ -8,6 +8,8 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY "Testo Lang/Testo NN Service")
 file(TO_CMAKE_PATH "${ONNX_RUNTIME_DIR}/bin/onnxruntime.dll" ONNX_RUNTIME_DLL)
 install(PROGRAMS ${ONNX_RUNTIME_DLL} DESTINATION bin)
 
+install(TARGETS testo_request_license)
+
 install(FILES
 	${CMAKE_SOURCE_DIR}/src/nn/Homm3Detector.onnx
 	${CMAKE_SOURCE_DIR}/src/nn/TextColorPicker.onnx
@@ -53,4 +55,4 @@ set(CPACK_WIX_CUSTOM_XMLNS "difx=http://schemas.microsoft.com/wix/DifxAppExtensi
 set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 
 add_package(testo-nn-service-package)
-add_dependencies(testo-nn-service-package testo_nn_service)
+add_dependencies(testo-nn-service-package testo_nn_service testo_request_license)

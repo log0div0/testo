@@ -7,14 +7,14 @@
 namespace js {
 
 Value print(ContextRef ctx, const ValueRef this_val, const std::vector<ValueRef>& args) {
-	auto& stdout = ctx.stdout();
+	auto& output = ctx.get_stdout();
 	for (size_t i = 0; i < args.size(); i++) {
 		if (i != 0) {
 			std::cout << ' ';
 		}
-		stdout << args[i];
+		output << args[i];
 	}
-	stdout << std::endl;
+	output << std::endl;
 	return ctx.new_undefined();
 }
 

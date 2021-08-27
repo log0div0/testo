@@ -87,7 +87,7 @@ nlohmann::json MessageHandler::handle_js_eval_request(nlohmann::json& request) {
 		return nlohmann::json({
 			{"type", "eval_result"},
 			{"data", nlohmann::json::parse(std::string(val))},
-			{"stdout", js_ctx.stdout().str()}
+			{"stdout", js_ctx.get_stdout().str()}
 		});
 	}
 	

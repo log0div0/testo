@@ -8,9 +8,15 @@
 					<RegistryValue Name="InstallDir" Type="string" Value="[INSTALL_ROOT]"/>
 				</RegistryKey>
 			</Component>
+			<Component Id="EnvironmentVariables" Guid="{378465ad-e9f4-41b9-92b8-d133f6eac28b}">
+				<Environment Id="PATH" Name="PATH" Value="[INSTALL_ROOT]/bin" Permanent="no" Part="last" Action="set" System="yes" />
+				<CreateFolder/>
+			</Component>
 			<Directory Id="bin" Name="bin">
 				<Component Id="TestoNNService" Guid="{548b8f20-cbf3-4745-8c11-7f6a1088e3cc}">
-					<File Id='TestoNNServiceEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo_nn_service.exe' Vital='yes' />
+					<File Id='TestoNNServiceEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo_nn_service.exe' Vital='yes' >
+						<Permission ReadPermission="yes" Write="yes" TakeOwnership="yes" User="Everyone"/>
+					</File>
 					<ServiceInstall
 						Id="TestoNNerviceInstall"
 						Type="ownProcess"
@@ -27,6 +33,7 @@
 	</CPackWiXFragment>
 	<CPackWiXFragment Id="#PRODUCTFEATURE">
 		<ComponentRef Id="RegistryEntries"/>
+		<ComponentRef Id="EnvironmentVariables"/>
 		<ComponentRef Id="TestoNNService"/>
 	</CPackWiXFragment>
 </CPackWiXPatch>

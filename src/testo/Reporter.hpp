@@ -72,7 +72,7 @@ struct Reporter {
 	void exec_command_output(const std::string& text);
 
 	//js
-	void js_stdout(const std::string& stdout);
+	void js_stdout(const std::string& _stdout);
 
 	void save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot);
 

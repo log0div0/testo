@@ -44,21 +44,21 @@ inline nlohmann::json create_js_validate_request(const std::string& script) {
 	};
 }
 
-inline nlohmann::json create_error_message(const std::string& message, std::string stdout = "") {
+inline nlohmann::json create_error_message(const std::string& message, std::string _stdout = "") {
 	return {
 		{"version", NN_SERVICE_PROCOTOL_VERSION},
 		{"type", "error"},
 		{"data", message},
-		{"stdout", stdout}
+		{"stdout", _stdout}
 	};
 }
 
-inline nlohmann::json create_continue_error_message(const std::string& message, std::string stdout = "") {
+inline nlohmann::json create_continue_error_message(const std::string& message, std::string _stdout = "") {
 	return {
 		{"version", NN_SERVICE_PROCOTOL_VERSION},
 		{"type", "continue_error"},
 		{"data", message},
-		{"stdout", stdout}
+		{"stdout", _stdout}
 	};
 }
 

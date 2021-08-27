@@ -159,11 +159,11 @@ const stb::Image<stb::RGB>* ContextRef::image() const {
 	return ((Opaque*)get_opaque())->image;
 }
 
-std::stringstream& ContextRef::stdout() {
+std::stringstream& ContextRef::get_stdout() {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
 	}
-	return ((Opaque*)get_opaque())->stdout;
+	return ((Opaque*)get_opaque())->_stdout;
 }
 
 std::shared_ptr<Channel> ContextRef::channel() const {
