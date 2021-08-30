@@ -28,46 +28,36 @@ namespace fs = ghc::filesystem;
 
 #ifdef USE_CUDA
 void verify_license(const std::string& path_to_license) {
-	spdlog::info("Starting verifying");
 	if (!fs::exists(path_to_license)) {
-		throw std::runtime_error("File " + path_to_license + " does not exists");
+		throw std::runtime_error("File " + path_to_license + " does not exist");
 	}
 
-	spdlog::info("Path is ok");
 	std::string container = license::read_file(path_to_license);
-	spdlog::info("Read file ok");
 	nlohmann::json license = license::unpack(container, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
-	spdlog::info("Unpack ok");
 
 	license::Date not_before(license.at("not_before").get<std::string>());
 	license::Date not_after(license.at("not_after").get<std::string>());
 	license::Date now(std::chrono::system_clock::now());
 	license::Date release_date(TESTO_RELEASE_DATE);
 
-	spdlog::info("Before release date");
 	if (now < release_date) {
 		throw std::runtime_error("System time is incorrect");
 	}
 
-	spdlog::info("Release date ok");
 	if (now < not_before) {
 		throw std::runtime_error("The license period has not yet come");
 	}
 
-	spdlog::info("License period ok");
 	if (now > not_after) {
 		throw std::runtime_error("The license period has already ended");
 	}
 
-	spdlog::info("Getting device info");
 	auto info = GetDeviceInfo(0);
-	spdlog::info("Getting device info ok");
 
 	std::string device_uuid = license.at("device_uuid");
 	if (info.uuid_str != device_uuid) {
 		throw std::runtime_error("The graphics accelerator does not match the one specified in the license");
 	}
-	spdlog::info("Everything ok");
 }
 #endif
 
@@ -99,29 +89,26 @@ void local_handler() {
 }
 
 void app_main() {
-	spdlog::info("Running app_main");
-	bool use_gpu = settings.value("use_gpu", false);
-
-	if (use_gpu) {
-		spdlog::info("use_gpu true");
-		if (!settings.count("license_path")) {
-			spdlog::info("First error");
-			throw std::runtime_error("To start the program in GPU mode you must specify the path to the license file (license_path in the settings file)");
-		}
-#ifdef USE_CUDA
-		spdlog::info("Verifying license");
-		verify_license(settings.at("license_path").get<std::string>());
-		spdlog::info("License is verified");
-#endif
-	}
-
-	nn::onnx::Runtime onnx_runtime(!use_gpu);
-
-	spdlog::info("Starting testo nn service");
-	spdlog::info("Testo framework version: {}", TESTO_VERSION);
-	spdlog::info("GPU mode enabled: {}", use_gpu);
-
 	try {
+		bool use_gpu = settings.value("use_gpu", false);
+
+		if (use_gpu) {
+			if (!settings.count("license_path")) {
+				throw std::runtime_error("To start the program in GPU mode you must specify the path to the license file (license_path in the settings file)");
+			}
+#ifdef USE_CUDA
+			spdlog::info("Verifying license...");
+			verify_license(settings.at("license_path").get<std::string>());
+			spdlog::info("License is OK");
+#endif
+		}
+
+		nn::onnx::Runtime onnx_runtime(!use_gpu);
+
+		spdlog::info("Starting testo nn service");
+		spdlog::info("Testo framework version: {}", TESTO_VERSION);
+		spdlog::info("GPU mode enabled: {}", use_gpu);
+
 		local_handler();
 	} catch (const std::exception& err) {
 		spdlog::error("app_main std error: {}", err.what());
@@ -175,15 +162,11 @@ void ServiceMain(int argc, char** argv) {
 	}
 
 	spdlog::info("NN service start");
-	spdlog::info("Something");
 	serviceStatus.dwCurrentState = SERVICE_RUNNING;
 	SetServiceStatus(serviceStatusHandle, &serviceStatus);
-	try {
-		app.run();
-	} catch (const std::exception& error) {
-		spdlog::info("Catched something");
-		spdlog::error(error.what());
-	}
+	
+	app.run();
+	
 	spdlog::info("NN service stop");
 	serviceStatus.dwCurrentState = SERVICE_STOPPED;
 	SetServiceStatus(serviceStatusHandle, &serviceStatus);
