@@ -1282,6 +1282,13 @@ struct Attr: public Node {
 		return name_token.value();
 	}
 
+	std::string desc() const {
+		if (id) {
+			return name_token.value() + " " + id.value();
+		}
+		return name_token.value();
+	}
+
 	Token name_token;
 	Token id;
 	std::shared_ptr<Node> value;

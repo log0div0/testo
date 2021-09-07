@@ -111,18 +111,18 @@ nlohmann::json AttrBlock::to_json() const {
 		nlohmann::json j;
 		if (auto p = std::dynamic_pointer_cast<AST::Number>(attr->value)) {
 			j = Number(p, stack).to_json();
-		} if (auto p = std::dynamic_pointer_cast<AST::Size>(attr->value)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::Size>(attr->value)) {
 			j = Size(p, stack).to_json();
-		} if (auto p = std::dynamic_pointer_cast<AST::Boolean>(attr->value)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::Boolean>(attr->value)) {
 			j = Boolean(p, stack).to_json();
-		} if (auto p = std::dynamic_pointer_cast<AST::Id>(attr->value)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::Id>(attr->value)) {
 			j = Id(p, stack).to_json();
-		} if (auto p = std::dynamic_pointer_cast<AST::String>(attr->value)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::String>(attr->value)) {
 			j = String(p, stack).to_json();
-		} if (auto p = std::dynamic_pointer_cast<AST::AttrBlock>(attr->value)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::AttrBlock>(attr->value)) {
 			j = AttrBlock(p, stack).to_json();
 		} else {
-			throw std::runtime_error("Unsupported type of attr");
+			throw std::runtime_error(std::string(attr->begin()) + ": Error: Unsupported type of attr \"" + attr->name() + "\"");
 		}
 		if (attr->id) {
 			j["name"] = attr->id.value();

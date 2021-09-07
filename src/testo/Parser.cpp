@@ -471,9 +471,11 @@ std::shared_ptr<AttrBlock> Parser::attr_block(const AttrBlockSchema& schema) {
 
 	while (LA(1) == Token::category::id) {
 		std::shared_ptr<AST::Attr> new_attr = attr(schema);
-		for (auto& x: attrs) {
-			if (x->name() == new_attr->name()) {
-				throw Exception(std::string(new_attr->begin()) + ": Error: duplicate attribute: \"" + new_attr->name() + "\"");
+		if (new_attr->id) {
+			for (auto& x: attrs) {
+				if (x->desc() == new_attr->desc()) {
+					throw Exception(std::string(new_attr->begin()) + ": Error: duplicate attribute: \"" + new_attr->desc() + "\"");
+				}
 			}
 		}
 		attrs.push_back(new_attr);
@@ -515,21 +517,21 @@ std::shared_ptr<AST::Controller> Parser::controller() {
 			{"qemu_spice_agent", {false, [&]{ return boolean(); }}},
 			{"qemu_enable_usb3", {false, [&]{ return boolean(); }}},
 			{"loader", {false, [&]{ return string(); }}},
-			{"nic", {false, [&]{ return attr_block({
+			{"nic", {true, [&]{ return attr_block({
 				{"attached_to", {false, [&]{ return id(); }}},
 				{"attached_to_dev", {false, [&]{ return string(); }}},
 				{"mac", {false, [&]{ return string(); }}},
 				{"adapter_type", {false, [&]{ return string(); }}},
 			}); }}},
-			{"disk", {false, [&]{ return attr_block({
+			{"disk", {true, [&]{ return attr_block({
 				{"size", {false, [&]{ return size(); }}},
 				{"source", {false, [&]{ return string(); }}},
 			}); }}},
-			{"video", {false, [&]{ return attr_block({
+			{"video", {true, [&]{ return attr_block({
 				{"qemu_mode", {false, [&]{ return string(); }}}, // deprecated
 				{"adapter_type", {false, [&]{ return string(); }}},
 			}); }}},
-			{"shared_folder", {false, [&]{ return attr_block({
+			{"shared_folder", {true, [&]{ return attr_block({
 				{"host_path", {false, [&]{ return string(); }}},
 				{"readonly", {false, [&]{ return boolean(); }}},
 			}); }}},

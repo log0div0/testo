@@ -20,7 +20,7 @@ struct Node {
 };
 
 struct String: Node<AST::String> {
-	using Node::Node;
+	using Node<AST::String>::Node;
 
 	std::string text() const;
 	nlohmann::json to_json() const;
@@ -28,22 +28,22 @@ struct String: Node<AST::String> {
 
 template <typename ASTType, typename ParsedASTType>
 struct MaybeUnparsed: Node<ASTType> {
-	using Node::Node;
+	using Node<ASTType>::Node;
 
 	std::shared_ptr<ParsedASTType> get_parsed() const {
 		if (_parsed) {
 			return _parsed;
 		}
-		_parsed = std::dynamic_pointer_cast<ParsedASTType>(ast_node);
+		_parsed = std::dynamic_pointer_cast<ParsedASTType>(this->ast_node);
 		if (_parsed) {
 			return _parsed;
 		}
-		auto unparsed = std::dynamic_pointer_cast<AST::Unparsed<ASTType>>(ast_node);
+		auto unparsed = std::dynamic_pointer_cast<AST::Unparsed<ASTType>>(this->ast_node);
 		if (!unparsed) {
 			throw std::runtime_error("Failed to cast AST node to any derived class");
 		}
 		std::string str = unparsed->string->text();
-		str = template_literals::Parser().resolve(str, stack);
+		str = template_literals::Parser().resolve(str, this->stack);
 		std::shared_ptr<ASTType> p = ASTType::from_string(str);
 		_parsed = std::dynamic_pointer_cast<ParsedASTType>(p);
 		if (!_parsed) {
@@ -58,10 +58,10 @@ private:
 
 template <Token::category category>
 struct SingleToken: MaybeUnparsed<AST::ISingleToken<category>, AST::SingleToken<category>> {
-	using MaybeUnparsed::MaybeUnparsed;
+	using MaybeUnparsed<AST::ISingleToken<category>, AST::SingleToken<category>>::MaybeUnparsed;
 
 	std::string str() const {
-		return get_parsed()->to_string();
+		return this->get_parsed()->to_string();
 	}
 };
 
