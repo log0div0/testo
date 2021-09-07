@@ -131,7 +131,6 @@ test centos_build_testo: centos_install_cuda {
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
-		copyto "${TESTO_SRC_DIR}/pkg" "/root/testo/pkg"
 		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """

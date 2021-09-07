@@ -31,3 +31,5 @@ endif()
 if(UNIX)
 	target_link_libraries(testo pthread)
 endif()
+
+add_subdirectory_if_exists(pkg)

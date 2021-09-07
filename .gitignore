@@ -5,3 +5,4 @@ package-lock.json
 tmp
 ci/test_runs/
 __pycache__
+.directory
