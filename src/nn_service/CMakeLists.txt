@@ -36,6 +36,3 @@ if (UNIX)
 endif()
 
 add_subdirectory(pkg)
-#[[if (USE_CUDA)
-	add_subdirectory(pkg)
-endif()]]

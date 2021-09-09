@@ -15,9 +15,15 @@ namespace onnx {
 std::unique_ptr<Ort::Env> env;
 bool use_cpu = false;
 
-Runtime::Runtime(bool use_cpu_) {
+Runtime::Runtime(
+#ifdef USE_CUDA
+	bool use_cpu_
+#endif
+) {
 	env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_ERROR, "testo");
+#ifdef USE_CUDA
 	use_cpu = use_cpu_;
+#endif
 }
 
 Runtime::~Runtime() {
