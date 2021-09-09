@@ -46,7 +46,6 @@ private:
 	void invalidate_tests();
 	void check_cache_missed_tests();
 	void get_up_to_date_tests();
-	void setup_test_run_parents(std::shared_ptr<IR::TestRun> test_run);
 	std::shared_ptr<IR::TestRun> add_test_to_plan(std::shared_ptr<IR::Test> test);
 	void build_test_plan();
 	void init();
