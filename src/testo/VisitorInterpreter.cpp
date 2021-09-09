@@ -119,7 +119,7 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(std::shared_pt
 		for (; it != tests_runs.rend(); ++it) {
 			auto test_run = *it;
 			if (test_run->test == test) {
-				return nullptr;
+				return test_run;
 			}
 		}
 	}
@@ -146,7 +146,21 @@ void VisitorInterpreter::build_test_plan() {
 				controller->delete_snapshot_with_children(test->name());
 			}
 		}
-		add_test_to_plan(test);
+		bool is_leaf = true;
+		for (auto& other_test: IR::program->all_selected_tests) {
+			if (test == other_test) {
+				continue;
+			}
+			for (auto& other_parent: other_test->parents) {
+				if (other_parent == test) {
+					is_leaf = false;
+					break;
+				}
+			}
+		}
+		if (is_leaf) {
+			add_test_to_plan(test);
+		}
 	}
 }
 
