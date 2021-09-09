@@ -1,11 +1,9 @@
 
-#include "VisitorSemantic.hpp"
-#include <nn/Homm3Object.hpp>
 #include "backends/Environment.hpp"
+#include "VisitorSemantic.hpp"
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
 #include "Parser.hpp"
-#include "js/Context.hpp"
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
@@ -631,7 +629,17 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	}
 
 	try {
-		validate_js(script);
+		auto validate_result = env->nn_client.validate_js(script);
+		auto type = validate_result.at("type").get<std::string>();
+		if (type == "error") {
+			throw std::runtime_error(validate_result.at("data").get<std::string>());
+		} else if (type == "validation_result") {
+			if (!validate_result.at("result").get<bool>()) {
+				throw std::runtime_error(validate_result.at("data").get<std::string>());
+			}
+		} else {
+			throw std::runtime_error(std::string("Unexpected message type: ") + type);
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
 	}
@@ -656,13 +664,7 @@ void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
 }
 
 void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
-	auto id = homm3.id();
-
-	if (!nn::Homm3Object::check_class_name(id)) {
-		throw Exception(std::string(homm3.ast_node->begin()) + ": Error: specified Heroes of Might and Magic object does not exist " + id);
-	}
-
-	current_test->cksum_input << "homm3 \"" << id << "\"";
+	throw std::runtime_error("HOMM3 is not supported anymore");
 }
 
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
@@ -875,11 +877,6 @@ void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select
 	} else {
 		throw Exception("Unknown detect expr type");
 	}
-}
-
-void VisitorSemantic::validate_js(const std::string& script) {
-	js::Context js_ctx(nullptr);
-	js_ctx.eval(script, true);
 }
 
 void VisitorSemantic::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable) {

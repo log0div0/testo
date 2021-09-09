@@ -1,0 +1,10 @@
+
+include "common.testo"
+
+test mouse_js_print {
+	my_ubuntu_server {
+		start
+		mouse move js "print('Hello world!'); return {x: 0, y: 0}"
+	}
+}
+

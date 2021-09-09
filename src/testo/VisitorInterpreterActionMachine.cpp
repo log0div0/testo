@@ -3,6 +3,7 @@
 #include <coro/Timeout.h>
 #include "VisitorInterpreterActionMachine.hpp"
 #include "Exceptions.hpp"
+#include "backends/Environment.hpp"
 #include "IR/Program.hpp"
 #include <fmt/format.h>
 #include <codecvt>
@@ -453,143 +454,148 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 	}
 }
 
-template <typename NNTensor>
-NNTensor VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input) {
+std::string VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier) {
 	auto name = specifier->name.value();
 	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
 
 	if (name == "from_top") {
-		return input.from_top(arg);
+		return fmt::format(".from_top({})", arg);
 	} else if (name == "from_bottom") {
-		return input.from_bottom(arg);
+		return fmt::format(".from_bottom({})", arg);
 	} else if (name == "from_left") {
-		return input.from_left(arg);
+		return fmt::format(".from_left({})", arg);
 	} else if (name == "from_right") {
-		return input.from_right(arg);
+		return fmt::format(".from_right({})", arg);
 	}
 
 	throw std::runtime_error("Should not be there");
 }
 
-template <typename NNTensor>
-nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const NNTensor& input) {
+std::string VisitorInterpreterActionMachine::visit_mouse_specifier_centering(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier) {
 	auto name = specifier->name.value();
 
 	if (name == "left_bottom") {
-		return input.left_bottom();
+		return ".left_bottom()";
 	} else if (name == "left_center") {
-		return input.left_center();
+		return ".left_center()";
 	} else if (name == "left_top") {
-		return input.left_top();
+		return ".left_top()";
 	} else if (name == "center_bottom") {
-		return input.center_bottom();
+		return ".center_bottom()";
 	} else if (name == "center") {
-		return input.center();
+		return ".center()";
 	} else if (name == "center_top") {
-		return input.center_top();
+		return ".center_top()";
 	} else if (name == "right_bottom") {
-		return input.right_bottom();
+		return ".right_bottom()";
 	} else if (name == "right_center") {
-		return input.right_center();
+		return ".right_center()";
 	} else if (name == "right_top") {
-		return input.right_top();
+		return ".right_top()";
 	}
 
 	throw std::runtime_error("Uknown center specifier");
 }
 
-template <typename NNTensor>
-nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_default_centering(const NNTensor& input) {
-	return input.center();
+std::string VisitorInterpreterActionMachine::visit_mouse_specifier_default_centering() {
+	return ".center()";
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier, const nn::Point& input) {
+std::string VisitorInterpreterActionMachine::visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier) {
 	auto name = specifier->name.value();
 	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
 
 	if (name == "move_left") {
-		return input.move_left(arg);
+		return fmt::format(".move_left({})", arg);
 	} else if (name == "move_right") {
-		return input.move_right(arg);
+		return fmt::format(".move_right({})", arg);
 	} else if (name == "move_up") {
-		return input.move_up(arg);
+		return fmt::format(".move_up({})", arg);
 	} else if (name == "move_down") {
-		return input.move_down(arg);
+		return fmt::format(".move_down({})", arg);
 	}
 
 	throw std::runtime_error("Should not be there");
 }
 
-template <typename NNTensor>
-nn::Point VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers, const NNTensor& input_) {
+std::string VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(const std::vector<std::shared_ptr<AST::MouseAdditionalSpecifier>>& specifiers) {
 	size_t index = 0;
 
-	NNTensor input = input_;
+	std::string result;
 
 	if ((specifiers.size() > index) && specifiers[index]->is_from()) {
-		input = visit_mouse_specifier_from(specifiers[index], input);
+		result += visit_mouse_specifier_from(specifiers[index]);
 		index++;
 	}
 
-	nn::Point result;
-
 	if (specifiers.size() > index && specifiers[index]->is_centering()) {
-		result = visit_mouse_specifier_centering(specifiers[index], input);
+		result += visit_mouse_specifier_centering(specifiers[index]);
 		index++;
 	} else {
-		result = visit_mouse_specifier_default_centering(input);
+		result += visit_mouse_specifier_default_centering();
 	}
 
 	for (size_t i = index; i < specifiers.size(); ++i) {
-		result = visit_mouse_specifier_moving(specifiers[i], result);
+		result += visit_mouse_specifier_moving(specifiers[i]);
 	}
 
 	return result;
 }
 
-nn::TextTensor VisitorInterpreterActionMachine::visit_select_text(const IR::SelectText& text, const stb::Image<stb::RGB>& screenshot) {
-	auto parsed = text.text();
-	return nn::find_text(&screenshot).match_text(&screenshot, parsed);
+
+std::string VisitorInterpreterActionMachine::build_select_text_script(const IR::SelectText& text) {
+	auto text_to_find = text.text();
+
+	std::string final_text;
+
+	for (auto i: text_to_find) {
+		if (i == '"') {
+			final_text += '\\';
+		}
+
+		if (i == '\\') {
+			final_text += '\\';
+		}
+
+		final_text += i;
+	}
+
+	std::string result = fmt::format("return find_text(\"{}\")", final_text);
+	return result;
 }
 
-nn::ImgTensor VisitorInterpreterActionMachine::visit_select_img(const IR::SelectImg& img, const stb::Image<stb::RGB>& screenshot) {
-	auto parsed = img.img_path();
-	return nn::find_img(&screenshot, parsed);
+std::string VisitorInterpreterActionMachine::build_select_img_script(const IR::SelectImg& img) {
+	std::string result = fmt::format("return find_img('{}')", img.img_path().generic_string());
+	return result;
 }
 
-nn::Homm3Tensor VisitorInterpreterActionMachine::visit_select_homm3(const IR::SelectHomm3& homm3, const stb::Image<stb::RGB>& screenshot) {
-	auto parsed = homm3.id();
-	return nn::find_homm3(&screenshot).match_class(&screenshot, parsed);
-}
 
 bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
-	if (value.is_bool()) {
+	if (value.is_boolean()) {
 		return (bool)value;
 	} else {
 	 	throw std::runtime_error("Can't process return value type. We expect a single boolean");
 	}
 }
 
-nn::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
+VisitorInterpreterActionMachine::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
 	if (value.is_object() && !value.is_array()) {
-		auto x_prop = value.get_property_str("x");
-		if (x_prop.is_undefined()) {
+		if (!value.count("x")) {
 			throw std::runtime_error("Object doesn't have the x propery");
 		}
 
-		auto y_prop = value.get_property_str("y");
-		if (y_prop.is_undefined()) {
+		if (!value.count("y")) {
 			throw std::runtime_error("Object doesn't have the y propery");
 		}
 
-		nn::Point point;
-		point.x = x_prop;
-		point.y = y_prop;
-		return point;
+		auto x = value.at("x").get<int32_t>();
+		auto y = value.at("y").get<int32_t>();
+	
+		return {x, y};
 	} else {
 		throw std::runtime_error("Can't process return value type. We expect a single object");
 	}
@@ -609,18 +615,29 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, const stb::Image<stb::RGB>& screenshot) {
 	bool is_negated = selectable->is_negated();
 
+	std::string script;
+
 	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
-		return is_negated ^ (bool)visit_select_text({p->selectable, stack}, screenshot).size();
+		script = build_select_text_script({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
 		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
-		return is_negated ^ (bool)visit_select_img({p->selectable, stack}, screenshot).size();
+		script = build_select_img_script({p->selectable, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(selectable)) {
-		return is_negated ^ (bool)visit_select_homm3({p->selectable, stack}, screenshot).size();
+		throw std::runtime_error("Homm3 is not supported anymore");
 	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
 		return is_negated ^ visit_detect_expr(p->selectable->select_expr, screenshot);
 	}  else {
 		throw std::runtime_error("Unknown selectable type");
+	}
+
+	auto eval_result = eval_js(script, screenshot);
+	if (eval_result.is_array()) {
+		return is_negated ^ (bool)eval_result.size();
+	} else if (eval_result.is_boolean()) {
+		return is_negated ^ (bool)eval_result;
+	} else {
+		throw std::runtime_error("Uknown js return type: we expect array or boolean");
 	}
 }
 
@@ -693,29 +710,45 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
 
 	bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
+		Point point;
 		try {
-			nn::Point point;
+			std::string script;
 			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
-				point = visit_select_js({p->selectable, stack}, screenshot);
+				script = IR::SelectJS({p->selectable, stack}).script();
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
-				auto tensor = visit_select_text({p->selectable, stack}, screenshot);
-				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
+				script = build_select_text_script({p->selectable, stack});
+				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
-				auto tensor = visit_select_img({p->selectable, stack}, screenshot);
-				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
+				script = build_select_img_script({p->selectable, stack});
+				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
 			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(mouse_selectable.ast_node->selectable)) {
-				auto tensor = visit_select_homm3({p->selectable, stack}, screenshot);
-				//each specifier can throw an exception if something goes wrong.
-				point = visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers, tensor);
+				throw "Not supported\n";
 			}
+
+			auto js_result = eval_js(script, screenshot);
+
+			if (js_result.is_object() && !js_result.is_array()) {
+				if (!js_result.count("x")) {
+					throw std::runtime_error("Object doesn't have the x propery");
+				}
+
+				if (!js_result.count("y")) {
+					throw std::runtime_error("Object doesn't have the y propery");
+				}
+
+				auto x = js_result.at("x").get<int32_t>();
+				auto y = js_result.at("y").get<int32_t>();
+			
+				point.x = x;
+				point.y = y;
+				
+			} else {
+				throw std::runtime_error("Can't process return value type. We expect a single object");
+			}
+
 			vmc->vm()->mouse_move_abs(point.x, point.y);
 			return true;
-		} catch (const nn::LogicError&) {
-			reporter.save_screenshot(vmc, screenshot);
-			throw;
-		} catch (const nn::ContinueError&) {
+		} catch (const ContinueError&) {
 			return false;
 		}
 	}, time_to_milliseconds(timeout), 1s);
@@ -1138,14 +1171,30 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 	}
 }
 
-js::Value VisitorInterpreterActionMachine::eval_js(const std::string& script, const stb::Image<stb::RGB>& screenshot) {
+nlohmann::json VisitorInterpreterActionMachine::eval_js(const std::string& script, const stb::Image<stb::RGB>& screenshot) {
 	try {
-		js_current_ctx.reset(new js::Context(&screenshot));
-		return js_current_ctx->eval(script);
-	} catch (const nn::ContinueError& error) {
+		auto eval_result = env->nn_client.eval_js(&screenshot, script);
+
+		auto type = eval_result.at("type").get<std::string>();
+
+		if (type == "error") {
+			std::string message = eval_result.at("data").get<std::string>();
+			throw std::runtime_error(message);
+		} else if (type == "continue_error") {
+			std::string message = eval_result.at("data").get<std::string>();
+			throw ContinueError(message);
+		} else if (type == "eval_result") {
+			std::string output = eval_result.value("stdout", "");
+			if (output.length()) {
+				reporter.js_stdout(output);
+			}
+			return eval_result.at("data");
+		} else {
+			throw std::runtime_error(std::string("Unknown message type: ") + type);
+		}
+	} catch(const ContinueError& error) {
 		throw;
-	}
-	catch(const std::exception& error) {
+	} catch(const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Error while executing javascript selection"));
 	}
 }

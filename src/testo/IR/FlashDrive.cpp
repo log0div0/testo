@@ -1,7 +1,7 @@
 
+#include "../backends/Environment.hpp"
 #include "FlashDrive.hpp"
 #include <fmt/format.h>
-#include "../backends/Environment.hpp"
 
 namespace IR {
 

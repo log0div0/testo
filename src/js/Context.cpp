@@ -78,6 +78,17 @@ Value ContextRef::call_constructor(Value constuctor, const std::vector<Value>& a
 	return {result, handle};
 }
 
+Value ContextRef::call(Value func, const ValueRef object, std::vector<Value>& args) {
+
+	std::vector<JSValueConst> argv;
+	for (auto& arg: args) {
+		argv.push_back(arg.handle);
+	}
+
+	JSValue result = JS_Call(handle, func.handle, object.handle, argv.size(), argv.data());
+	return {result, handle};
+}
+
 Value ContextRef::new_bool(bool val) {
 	return Value(JS_NewBool(handle, val), handle);
 }
@@ -145,12 +156,28 @@ const stb::Image<stb::RGB>* ContextRef::image() const {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
 	}
-	return (const stb::Image<stb::RGB>*)get_opaque();
+	return ((Opaque*)get_opaque())->image;
 }
 
-Context::Context(const stb::Image<stb::RGB>* image): ContextRef(JS_NewContext(Runtime::instance().handle)) {
+std::stringstream& ContextRef::get_stdout() {
+	if (!get_opaque()) {
+		throw std::runtime_error("Context opaque is nullptr");
+	}
+	return ((Opaque*)get_opaque())->_stdout;
+}
+
+std::shared_ptr<Channel> ContextRef::channel() const {
+	if (!get_opaque()) {
+		throw std::runtime_error("Context opaque is nullptr");
+	}
+	return ((Opaque*)get_opaque())->channel;
+}
+
+Context::Context(const stb::Image<stb::RGB>* image, std::shared_ptr<Channel> channel): ContextRef(JS_NewContext(Runtime::instance().handle)) {
 	// image может быть нулевым, если мы просто хотим скомпилировать js
-	set_opaque((void*)image);
+	opaque.image = image;
+	opaque.channel = channel;
+	set_opaque((void*)&opaque);
 
 	register_global_functions();
 	register_classes();

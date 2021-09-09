@@ -16,7 +16,6 @@
 
 #include "ModeClean.hpp"
 #include "ModeRun.hpp"
-#include "ModeRequestLicense.hpp"
 
 #include "Exceptions.hpp"
 
@@ -29,9 +28,6 @@ struct Interruption {};
 enum class mode {
 	run,
 	clean,
-#ifdef USE_CUDA
-	request_license,
-#endif
 	help,
 	version
 };
@@ -98,8 +94,8 @@ int do_main(int argc, char** argv) {
 		(option("--report_screenshots").set(report_screenshots)) % "DEPRECATED",
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(run_args.html)) % "Format stdout as html",
-		(option("--use_cpu").set(run_args.use_cpu)) % "Use CPU instead of GPU (relevant for GPU version only)",
 		(option("--license") & value("path", run_args.license)) % "Path to the license file (relevant for GPU version only)",
+		(option("--nn_service") & value("ip:port", run_args.nn_service_endpoint)) % "ip:port of the nn_service (defualt is 127.0.0.1:8156)",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
 		(option("--dry").set(run_args.dry)) % "Do only semantic checks, do not actually run any tests",
 		any_other(wrong)
@@ -115,25 +111,12 @@ int do_main(int argc, char** argv) {
 		any_other(wrong)
 	);
 
-#ifdef USE_CUDA
-	RequestLicenseModeArgs request_license_args;
-
-	auto request_license_spec = "request_license options" % (
-		command("request_license").set(selected_mode, mode::request_license),
-		(option("--out") & value("path", request_license_args.out)) % "The path where you want to save the request"
-	);
-
-#endif
-
 	auto help_spec = command("help").set(selected_mode, mode::help);
 	auto version_spec = command("version").set(selected_mode, mode::version);
 
 	auto cli = (
 		run_spec |
 		clean_spec |
-#ifdef USE_CUDA
-		request_license_spec |
-#endif
 		help_spec |
 		version_spec
 	);
@@ -161,20 +144,8 @@ int do_main(int argc, char** argv) {
 
 	if (selected_mode == mode::version) {
 		std::cout << "Testo framework version " << TESTO_VERSION << std::endl;
-		std::cout << "CPU support: YES" << std::endl;
-#ifdef USE_CUDA
-		std::cout << "GPU support: YES" << std::endl;
-#else
-		std::cout << "GPU support: NO" << std::endl;
-#endif
 		return 0;
 	}
-
-#ifdef USE_CUDA
-	if (selected_mode == mode::request_license) {
-		return request_license_mode(request_license_args);
-	}
-#endif
 
 	if (hypervisor == "qemu") {
 #ifndef __linux__

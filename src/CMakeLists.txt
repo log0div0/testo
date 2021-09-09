@@ -11,8 +11,8 @@ if (USE_CUDA)
 endif()
 
 if (APPLE)
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
+	include_directories(/usr/local/include)
+	link_directories(/usr/local/lib)
 endif()
 
 include_directories(${ONNX_RUNTIME_DIR}/include/onnxruntime/core/session/)
@@ -23,7 +23,10 @@ endif()
 
 link_directories(${ONNX_RUNTIME_DIR}/lib/)
 
+add_definitions(-DNN_SERVICE_PROCOTOL_VERSION="1.0")
+
 add_subdirectory(license)
 add_subdirectory(js)
 add_subdirectory(nn)
+add_subdirectory(nn_service)
 add_subdirectory(testo)

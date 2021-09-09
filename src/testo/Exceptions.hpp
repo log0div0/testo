@@ -5,6 +5,7 @@
 #include "IR/Machine.hpp"
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 struct Exception: public std::exception {
 	Exception() = default;
@@ -84,6 +85,10 @@ struct ResolveException: public Exception {
 	{
 		msg = std::string(pos) + ": Error while resolving \"" + string + "\"";
 	}
+};
+
+struct ContinueError: std::runtime_error {
+	using std::runtime_error::runtime_error;
 };
 
 std::ostream& operator<<(std::ostream& stream, const std::exception& error);

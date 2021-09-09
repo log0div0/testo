@@ -33,8 +33,15 @@ machine VM2 {
 	}
 }
 
+test invalid_wait_js {
+	VM1 {
+		start
+		mouse move js """print("Hello world!"); return {x: 0, y: 0}"""
+	}
+}
+
 test ubuntu_installation {
-	VM1 abort "stop here"
+	VM1 install_ubuntu_server("VM1", "user", "1111")
 }
 
 test temp1: ubuntu_installation {

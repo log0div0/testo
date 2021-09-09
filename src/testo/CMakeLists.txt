@@ -15,19 +15,10 @@ endif()
 
 list(APPEND SRC_DIRS "IR/*.cpp")
 
-if (USE_CUDA)
-	find_package(CUDAToolkit)
-	include_directories(${CUDAToolkit_INCLUDE_DIRS})
-endif()
-
 file(GLOB SRCS ${SRC_DIRS})
 
 add_executable(testo ${SRCS})
-target_link_libraries(testo coro js pugixml stb nn license os guest_additions_common_stuff)
-
-if (USE_CUDA)
-	target_link_libraries(testo CUDA::cudart_static)
-endif()
+target_link_libraries(testo coro pugixml stb os guest_additions_common_stuff)
 
 if(WIN32)
 	target_link_libraries(testo hyperv msft virtdisk++)
@@ -40,3 +31,5 @@ endif()
 if(UNIX)
 	target_link_libraries(testo pthread)
 endif()
+
+add_subdirectory_if_exists(pkg)

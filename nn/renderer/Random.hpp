@@ -12,6 +12,7 @@
 #include <fstream>
 #include <climits>
 #include <algorithm>
+#include <iomanip>
 
 #include <ghc/filesystem.hpp>
 namespace fs = ghc::filesystem;

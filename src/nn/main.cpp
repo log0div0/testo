@@ -4,6 +4,7 @@
 #include <clipp.h>
 #include <fstream>
 #include <codecvt>
+#include <locale>
 #include <set>
 #include <nlohmann/json.hpp>
 #include "TextTensor.hpp"

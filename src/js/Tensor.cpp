@@ -202,6 +202,29 @@ Value match_color(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>
 	return JSTensor(ctx, tensor->match_color(ctx.image(), fg, bg));
 }
 
+
+template <typename JSTensor>
+Value to_json(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
+	typename JSTensor::Opaque* tensor = (typename JSTensor::Opaque*)this_val.get_opaque(JSTensor::class_id);
+
+	auto res = ctx.new_array(tensor->size());
+
+	auto prop = res.get_property_str("push");
+
+	for (size_t i = 0; i < tensor->size(); ++i) {
+		auto new_object = ctx.new_object();
+		auto& rect = tensor->objects[i].rect;
+		new_object.set_property_str("left", ctx.new_int32(rect.left));
+		new_object.set_property_str("right", ctx.new_int32(rect.right));
+		new_object.set_property_str("top", ctx.new_int32(rect.top));
+		new_object.set_property_str("bottom", ctx.new_int32(rect.bottom));
+		std::vector<Value> vec({new_object});
+		ctx.call(prop, res, vec);
+	}
+
+	return res;
+}
+
 void TextTensor::register_class(ContextRef ctx) {
 
 	static const std::vector<JSCFunctionListEntry> proto_funcs = {
@@ -222,6 +245,8 @@ void TextTensor::register_class(ContextRef ctx) {
 		Method<from_bottom<TextTensor>>("from_bottom"),
 		Method<from_left<TextTensor>>("from_left"),
 		Method<from_right<TextTensor>>("from_right"),
+		Method<to_json<TextTensor>>("toJSON"),
+
 		// specific
 
 		Method<match<TextTensor>>("match"), //< deprecated
@@ -230,6 +255,7 @@ void TextTensor::register_class(ContextRef ctx) {
 
 		Method<match_text<TextTensor>>("match_text"),
 		Method<match_color<TextTensor>>("match_color"),
+
 	};
 
 	Tensor::register_class(ctx, "TextTensor", proto_funcs);
@@ -255,6 +281,8 @@ void ImgTensor::register_class(ContextRef ctx) {
 		Method<from_bottom<ImgTensor>>("from_bottom"),
 		Method<from_left<ImgTensor>>("from_left"),
 		Method<from_right<ImgTensor>>("from_right"),
+		Method<to_json<ImgTensor>>("toJSON"),
+
 	};
 
 	Tensor::register_class(ctx, "ImgTensor", proto_funcs);

@@ -37,7 +37,7 @@ test invalid_wait_js {
 	}
 }
 
-test invalid_mouse_move_js {
+test invalid_mouse_move {
 	my_ubuntu_server {
 		mouse move js "bim bada bum"
 	}

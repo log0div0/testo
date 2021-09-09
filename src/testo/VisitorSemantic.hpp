@@ -111,8 +111,6 @@ struct VisitorSemantic {
 	nlohmann::json visit_attr_block(std::shared_ptr<AST::AttrBlock> attr_block, const std::string& ctx);
 	nlohmann::json visit_attr(std::shared_ptr<AST::Attr> attr, const std::string& ctx);
 
-	void validate_js(const std::string& script);
-
 	bool is_button(const Token& t) const;
 
 	std::set<std::string> keys;

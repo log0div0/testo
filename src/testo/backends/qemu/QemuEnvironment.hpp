@@ -12,7 +12,7 @@ struct QemuEnvironment : public Environment {
 		return "/var/lib/libvirt/testo";
 	}
 
-	void setup() override;
+	void setup(const EnvironmentConfig& config) override;
 
 	std::string hypervisor() const override {
 		return "qemu";

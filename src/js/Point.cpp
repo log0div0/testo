@@ -5,16 +5,16 @@
 
 namespace js {
 
-static JSClassID class_id = 0;
-static JSClassDef class_def = {};
+JSClassID Point::class_id = 0;
+JSClassDef Point::class_def = {};
 
 static void finalizer(JSRuntime* rt, JSValue val) {
-	nn::Point* point = (nn::Point*)JS_GetOpaque(val, class_id);
+	nn::Point* point = (nn::Point*)JS_GetOpaque(val, Point::class_id);
 	delete point;
 }
 
 static Value toJSON(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	Value result = ctx.new_object();
 	result.set_property_str("x", ctx.new_int32(point->x));
 	result.set_property_str("y", ctx.new_int32(point->y));
@@ -22,27 +22,27 @@ static Value toJSON(ContextRef ctx, ValueRef this_val, const std::vector<ValueRe
 }
 
 static Value x(ContextRef ctx, ValueRef this_val) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	return ctx.new_int32(point->x);
 }
 
 static Value x(ContextRef ctx, ValueRef this_val, ValueRef val) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	return ctx.new_int32(point->x = val);
 }
 
 static Value y(ContextRef ctx, ValueRef this_val) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	return ctx.new_int32(point->y);
 }
 
 static Value y(ContextRef ctx, ValueRef this_val, ValueRef val) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	return ctx.new_int32(point->y = val);
 }
 
 static Value move_up(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	if (args.size() != 1) {
 		throw std::runtime_error("Invalid arguments count in Point::move_up");
 	}
@@ -51,7 +51,7 @@ static Value move_up(ContextRef ctx, ValueRef this_val, const std::vector<ValueR
 }
 
 static Value move_down(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	if (args.size() != 1) {
 		throw std::runtime_error("Invalid arguments count in Point::move_down");
 	}
@@ -60,7 +60,7 @@ static Value move_down(ContextRef ctx, ValueRef this_val, const std::vector<Valu
 }
 
 static Value move_left(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	if (args.size() != 1) {
 		throw std::runtime_error("Invalid arguments count in Point::move_left");
 	}
@@ -69,7 +69,7 @@ static Value move_left(ContextRef ctx, ValueRef this_val, const std::vector<Valu
 }
 
 static Value move_right(ContextRef ctx, ValueRef this_val, const std::vector<ValueRef>& args) {
-	nn::Point* point = (nn::Point*)this_val.get_opaque(class_id);
+	nn::Point* point = (nn::Point*)this_val.get_opaque(Point::class_id);
 	if (args.size() != 1) {
 		throw std::runtime_error("Invalid arguments count in Point::move_right");
 	}

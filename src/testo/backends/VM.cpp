@@ -1,6 +1,6 @@
 
-#include "VM.hpp"
 #include "Environment.hpp"
+#include "VM.hpp"
 #include <fmt/format.h>
 
 VM::VM(const nlohmann::json& config_): config(config_) {

@@ -1,17 +1,17 @@
 
-#include "ModeRequestLicense.hpp"
-#include "GetDeviceInfo.hpp"
-#include <license/License.hpp>
-#include <nn/OnnxRuntime.hpp>
 #include <iostream>
+#include <clipp.h>
 
 #include <ghc/filesystem.hpp>
+
+#include "GetDeviceInfo.hpp"
+#include "License.hpp"
+#include "../nn/OnnxRuntime.hpp"
+
 namespace fs = ghc::filesystem;
 
-#ifdef USE_CUDA
-
-int request_license_mode(const RequestLicenseModeArgs& args) {
-	auto path_to_save = fs::absolute(args.out).generic_string();
+int request_license_mode(const std::string& output_path) {
+	auto path_to_save = fs::absolute(output_path).generic_string();
 	if (fs::exists(path_to_save)) {
 		throw std::runtime_error("Error: The file \"" + path_to_save + "\" already exists");
 	}
@@ -31,4 +31,28 @@ int request_license_mode(const RequestLicenseModeArgs& args) {
 	return 0;
 }
 
-#endif
+int main(int argc, char** argv) {
+	try {
+		std::string output_path;
+		auto cli = clipp::group(
+			clipp::option("--out") & clipp::value("The output file for the license request", output_path)
+		);
+
+		if (!parse(argc, argv, cli)) {
+			std::cout << make_man_page(cli, argv[0]) << std::endl;
+			return 1;
+		}
+
+		if (!output_path.length()) {
+			output_path = "testo_license_request";
+		}
+
+		return request_license_mode(output_path);
+
+	} catch (const std::exception& error) {
+		std::cerr << error.what() << std::endl;
+		return 1;
+	}
+
+	return 0;
+}

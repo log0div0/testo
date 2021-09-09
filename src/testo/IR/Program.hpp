@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "../backends/Environment.hpp"
 #include "Test.hpp"
 #include "Macro.hpp"
 #include "Param.hpp"
@@ -24,7 +25,7 @@ struct TestNameFilter {
 
 void to_json(nlohmann::json& j, const TestNameFilter& filter);
 
-struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig {
+struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig, EnvironmentConfig {
 	std::string target;
 
 	std::vector<TestNameFilter> test_name_filters;

@@ -1,7 +1,5 @@
 
 #include "Program.hpp"
-#include "../backends/Environment.hpp"
-#include "nn/OnnxRuntime.hpp"
 #include <fmt/format.h>
 #include "../TemplateLiterals.hpp"
 #include "../Exceptions.hpp"
@@ -60,11 +58,13 @@ void ProgramConfig::validate() const {
 
 	VisitorSemanticConfig::validate();
 	VisitorInterpreterConfig::validate();
+	EnvironmentConfig::validate();
 }
 
 void ProgramConfig::dump(nlohmann::json& j) const {
 	VisitorSemanticConfig::dump(j);
 	VisitorInterpreterConfig::dump(j);
+	EnvironmentConfig::dump(j);
 
 	j["target"] = target;
 	j["test_name_filters"] = test_name_filters;
@@ -93,17 +93,12 @@ Program::~Program() {
 }
 
 void Program::validate() {
+	env->setup(config);
 	VisitorSemantic semantic(config);
 	semantic.visit();
 }
 
 void Program::run() {
-	env->setup();
-#ifdef USE_CUDA
-	nn::onnx::Runtime onnx_runtime(config.use_cpu);
-#else
-	nn::onnx::Runtime onnx_runtime;
-#endif
 	VisitorInterpreter runner(config);
 	runner.visit();
 }

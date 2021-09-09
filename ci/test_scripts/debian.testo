@@ -136,22 +136,13 @@ test debian_prepare_2: debian_prepare_1 {
 	}
 }
 
-test debian_install_testo_cpu: debian_prepare_2 {
+test debian_install_testo: debian_prepare_2 {
 	debian {
-		copyto "${OUT_DIR}/testo-cpu.deb" "/home/${login}/testo-cpu.deb"
+		copyto "${OUT_DIR}/testo.deb" "/home/${login}/testo.deb"
+		copyto "${OUT_DIR}/testo-nn-service.deb" "/home/${login}/testo-nn-service.deb"
 		exec bash """
-			dpkg -i /home/${login}/testo-cpu.deb
-			testo version
-		"""
-	}
-}
-
-[no_snapshots: true]
-test debian_install_testo_gpu: debian_prepare_2 {
-	debian {
-		copyto "${OUT_DIR}/testo-gpu.deb" "/home/${login}/testo-gpu.deb"
-		exec bash """
-			dpkg -i /home/${login}/testo-gpu.deb
+			dpkg -i /home/${login}/testo.deb
+			dpkg -i /home/${login}/testo-nn-service.deb
 			testo version
 		"""
 	}

@@ -28,7 +28,7 @@ bool QemuNetwork::is_defined() {
 
 
 std::string QemuNetwork::find_free_nat() const {
-	for (int i = 156; i < 254; i++) {
+	for (int i = 179; i < 254; i++) {
 		std::string network_to_look("192.168.");
 		network_to_look += std::to_string(i);
 		network_to_look += ".1";

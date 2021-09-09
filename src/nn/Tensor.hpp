@@ -4,7 +4,11 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
+
+#include "nlohmann/json.hpp"
+
 #include "Point.hpp"
+
 
 namespace nn {
 
