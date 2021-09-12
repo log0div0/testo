@@ -1398,13 +1398,11 @@ bool QemuVM::is_dvd_plugged() const {
 void QemuVM::plug_dvd(fs::path path) {
 	try {
 		if (!fs::exists(path)) {
-			throw std::runtime_error(std::string("specified iso file does not exist: ")
-				+ path.generic_string());
+			throw std::runtime_error("specified iso file does not exist: " + path.generic_string());
 		}
 
 		if (!fs::is_regular_file(path)) {
-			throw std::runtime_error(std::string("specified iso is not a regular file: ")
-				+ path.generic_string());
+			throw std::runtime_error("specified iso is not a regular file: " + path.generic_string());
 		}
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 

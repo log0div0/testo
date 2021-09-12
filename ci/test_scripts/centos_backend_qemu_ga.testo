@@ -26,7 +26,7 @@ test centos_backend_qemu_copyto_from_doesnt_exist_runtime: centos_backend_qemu_i
 			set +e
 			output=$(testo run /opt/scripts/action_ga.testo --stop_on_fail --test_spec copyto_from_unexisting_runtime)
 			[[ $output == *"Preparing the environment for test copyto_from_unexisting_runtime"* ]]
-			[[ $output == *"Error: specified path doesn't exist: /some/unexisting_shit"* ]]
+			[[ $output == *"Specified path doesn't exist: /some/unexisting_shit"* ]]
 		""" timeout 30m
 	}
 }

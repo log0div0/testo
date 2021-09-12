@@ -137,7 +137,7 @@ private:
 
 		auto inserted = controllers.insert({controller->name(), controller});
 		if (!inserted.second) {
-			throw std::runtime_error(std::string(ast_node->begin()) + ": Error: " + inserted.first->second->type() + " \"" + controller->name() + "\" is already defined here: " +
+			throw ExceptionWithPos(ast_node->begin(), "Error: " + inserted.first->second->type() + " \"" + controller->name() + "\" is already defined here: " +
 				std::string(inserted.first->second->ast_node->begin()));
 		}
 

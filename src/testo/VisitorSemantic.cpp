@@ -9,6 +9,18 @@
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
+struct ControllerCreatonException: public Exception {
+	ControllerCreatonException(std::shared_ptr<IR::Controller> controller): Exception({}) {
+		std::stringstream ss;
+		for (auto macro_call: controller->macro_call_stack) {
+			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
+		}
+
+		ss << std::string(controller->ast_node->begin()) << ": In the " << controller->type() << " \"" << controller->name() << "\" declaration";
+		msg = ss.str();
+	}
+};
+
 void VisitorSemanticConfig::validate() const {
 
 }
@@ -160,7 +172,7 @@ void VisitorSemantic::visit() {
 					std::back_inserter(intersection));
 
 				if (intersection.size() != 0) {
-					throw Exception(std::string(test->ast_node->begin()) + ": Error: some parents have common virtual machines");
+					throw ExceptionWithPos(test->ast_node->begin(), "Error: some parents have common virtual machines");
 				}
 			}
 		}
@@ -180,7 +192,7 @@ void VisitorSemantic::visit() {
 					std::back_inserter(intersection));
 
 				if (intersection.size() != 0) {
-					throw Exception(std::string(test->ast_node->begin()) + ": Error: some parents have common flash drives");
+					throw ExceptionWithPos(test->ast_node->begin(), "Error: some parents have common flash drives");
 				}
 			}
 		}
@@ -293,7 +305,7 @@ void VisitorSemantic::visit_regular_command(const IR::RegularCommand& regular_cm
 		visit_flash(fdc);
 		visit_action_fd(regular_cmd.ast_node->action);
 	} else {
-		throw Exception(std::string(regular_cmd.ast_node->entity->begin()) + ": Error: unknown virtual entity: " + regular_cmd.entity());
+		throw ExceptionWithPos(regular_cmd.ast_node->entity->begin(), "Error: unknown virtual entity: " + regular_cmd.entity());
 	}
 	current_test->cksum_input << "}" << std::endl;
 
@@ -362,7 +374,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		// do nothing
 	} else {
-		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->to_string() + "\" is not applicable to a virtual machine");
+		throw ExceptionWithPos(action->begin(), "Error: The action \"" + action->to_string() + "\" is not applicable to a virtual machine");
 	}
 }
 
@@ -390,7 +402,7 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
 		visit_cycle_control({p, stack});
 	} else {
-		throw Exception(std::string(action->begin()) + ": Error: The action \"" + action->to_string() + "\" is not applicable to a flash drive");
+		throw ExceptionWithPos(action->begin(), "Error: The action \"" + action->to_string() + "\" is not applicable to a flash drive");
 	}
 }
 
@@ -432,8 +444,8 @@ void VisitorSemantic::visit_key_combination(const IR::KeyCombination& combinatio
 
 		for (size_t j = i + 1; j < buttons.size(); ++j) {
 			if (button == buttons[j]) {
-				throw Exception(std::string(combination.get_parsed()->buttons[j].begin()) +
-					" :Error: duplicate key: " + ToString(button));
+				throw ExceptionWithPos(combination.get_parsed()->buttons[j].begin(),
+					"Error: duplicate key: " + combination.get_parsed()->buttons[j].value());
 			}
 		}
 
@@ -450,8 +462,8 @@ void VisitorSemantic::visit_key_spec(const IR::KeySpec& key_spec) {
 	auto times = key_spec.times();
 
 	if (times < 1) {
-		throw Exception(std::string(key_spec.ast_node->times->begin()) +
-			" :Error: can't press a button less than 1 time: " + std::to_string(times));
+		throw ExceptionWithPos(key_spec.ast_node->times->begin(),
+			"Error: can't press a button less than 1 time: " + std::to_string(times));
 	}
 
 	current_test->cksum_input << "*" << times;
@@ -495,50 +507,50 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 		current_test->cksum_input << specifier->to_string();
 		if (specifier->is_from()) {
 			if (!arg) {
-				throw Exception(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
+				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
 			auto i = std::stoi(arg.value());
 			if (i < 0) {
-				throw Exception(std::string(arg.begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
+				throw ExceptionWithPos(arg.begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
 			if (has_from) {
-				throw Exception(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after another \"from\" specifier");
+				throw ExceptionWithPos(specifier->begin(), "Error: you can't use specifier " + specifier->name.value() + " after another \"from\" specifier");
 			}
 			if (has_center) {
-				throw Exception(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"precision\" specifier");
+				throw ExceptionWithPos(specifier->begin(), "Error: you can't use specifier " + specifier->name.value() + " after a \"precision\" specifier");
 			}
 			if (has_move) {
-				throw Exception(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
+				throw ExceptionWithPos(specifier->begin(), "Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
 			}
 			has_from = true;
 			continue;
 		} if (specifier->is_centering()) {
 			if (arg) {
-				throw Exception(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " must not have an argument");
+				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " must not have an argument");
 			}
 			if (has_center) {
-				throw Exception(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after another \"precision\" specifier");
+				throw ExceptionWithPos(specifier->begin(), "Error: you can't use specifier " + specifier->name.value() + " after another \"precision\" specifier");
 			}
 			if (has_move) {
-				throw Exception(std::string(specifier->begin()) + ": Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
+				throw ExceptionWithPos(specifier->begin(), "Error: you can't use specifier " + specifier->name.value() + " after a \"move\" specifier");
 			}
 			has_center = true;
 			continue;
 		} else if (specifier->is_moving()) {
 			if (!arg) {
-				throw Exception(std::string(specifier->begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
+				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
 			auto i = std::stoi(arg.value());
 			if (i < 0) {
-				throw Exception(std::string(arg.begin()) + ": Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
+				throw ExceptionWithPos(arg.begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 			has_move = true;
 			continue;
 		} else {
-			throw Exception(std::string(specifier->begin()) + ": Error: unknown specifier: " + specifier->name.value());
+			throw ExceptionWithPos(specifier->begin(), "Error: unknown specifier: " + specifier->name.value());
 		}
 
 	}
@@ -546,7 +558,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 
 void VisitorSemantic::visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates) {
 	if (coordinates.x_is_relative() ^ coordinates.y_is_relative()) {
-		throw std::runtime_error(std::string(coordinates.ast_node->begin()) + ": Error: mouse coordinates must be either both absolute either both relative");
+		throw ExceptionWithPos(coordinates.ast_node->begin(), "Error: mouse coordinates must be either both absolute either both relative");
 	}
 
 	current_test->cksum_input << coordinates.x() << " " << coordinates.y();
@@ -556,13 +568,13 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	auto script = js.script();
 
 	if (!script.length()) {
-		throw Exception(std::string(js.ast_node->begin()) + ": Error: empty script in js selection");
+		throw ExceptionWithPos(js.ast_node->begin(), "Error: empty script in js selection");
 	}
 
 	try {
 		validate_js(script);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error(std::string(js.ast_node->begin()) + ": Error while validating js selection"));
+		std::throw_with_nested(ExceptionWithPos(js.ast_node->begin(), "Error while validating js selection"));
 	}
 
 	current_test->cksum_input << "js \"" << script << "\"";
@@ -572,11 +584,11 @@ void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
 	auto img_path = img.img_path();
 
 	if (!fs::exists(img_path)) {
-		throw Exception(std::string(img.ast_node->begin()) + ": Error: specified image path does not exist: " + img_path.generic_string());
+		throw ExceptionWithPos(img.ast_node->begin(), "Error: specified image path does not exist: " + img_path.generic_string());
 	}
 
 	if (!fs::is_regular_file(img_path)) {
-		throw Exception(std::string(img.ast_node->begin()) + ": Error: specified image path does not lead to a regular file: " + img_path.generic_string());
+		throw ExceptionWithPos(img.ast_node->begin(), "Error: specified image path does not lead to a regular file: " + img_path.generic_string());
 	}
 
 	current_test->cksum_input
@@ -588,7 +600,7 @@ void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
 	auto id = homm3.id();
 
 	if (!nn::Homm3Object::check_class_name(id)) {
-		throw Exception(std::string(homm3.ast_node->begin()) + ": Error: specified Heroes of Might and Magic object does not exist " + id);
+		throw ExceptionWithPos(homm3.ast_node->begin(), "Error: specified Heroes of Might and Magic object does not exist " + id);
 	}
 
 	current_test->cksum_input << "homm3 \"" << id << "\"";
@@ -597,10 +609,10 @@ void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 	auto txt = text.text();
 	if (!txt.length()) {
-		throw Exception(std::string(text.ast_node->begin()) + ": Error: empty string in text selection");
+		throw ExceptionWithPos(text.ast_node->begin(), "Error: empty string in text selection");
 	}
 	if (std::find(txt.begin(), txt.end(), '\n') != txt.end()) {
-		throw Exception(std::string(text.ast_node->begin()) + ": Error: multiline strings are not supported in wait action");
+		throw ExceptionWithPos(text.ast_node->begin(), "Error: multiline strings are not supported in wait action");
 	}
 
 	current_test->cksum_input << "text \"" << txt << "\"";
@@ -609,7 +621,7 @@ void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
 void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->basic_select_expr)) {
 		if (mouse_selectable.ast_node->mouse_additional_specifiers.size()) {
-			throw Exception(std::string(mouse_selectable.ast_node->mouse_additional_specifiers[0]->begin()) + ": Error: mouse specifiers are not supported for js selections");
+			throw ExceptionWithPos(mouse_selectable.ast_node->mouse_additional_specifiers[0]->begin(), "Error: mouse specifiers are not supported for js selections");
 		}
 		visit_select_js({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->basic_select_expr)) {
@@ -676,7 +688,7 @@ void VisitorSemantic::visit_plug(const IR::Plug& plug) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::PlugHostDev>(plug.ast_node->resource)) {
 		visit_plug_hostdev({p, stack});
 	} else {
-		throw Exception(std::string("unknown hardware to plug/unplug: ") +
+		throw Exception("unknown hardware to plug/unplug: " +
 			plug.ast_node->resource->to_string());
 	}
 
@@ -688,7 +700,7 @@ void VisitorSemantic::visit_plug_flash(const IR::PlugFlash& plug_flash) {
 
 	auto flash_drive = IR::program->get_flash_drive_or_null(plug_flash.name());
 	if (!flash_drive) {
-		throw Exception(std::string(plug_flash.ast_node->begin()) + ": Error: unknown flash drive: " + plug_flash.name());
+		throw ExceptionWithPos(plug_flash.ast_node->begin(), "Error: unknown flash drive: " + plug_flash.name());
 	}
 	visit_flash(flash_drive);
 
@@ -700,7 +712,7 @@ void VisitorSemantic::visit_plug_dvd(const IR::PlugDVD& plug_dvd, bool is_on) {
 	if (is_on) {
 		auto dvd_path = plug_dvd.path();
 		if (!fs::exists(dvd_path)) {
-			throw Exception(std::string(plug_dvd.ast_node->begin()) + ": Error: specified dvd image path does not exist: " + dvd_path.generic_string());
+			throw ExceptionWithPos(plug_dvd.ast_node->begin(), "Error: specified dvd image path does not exist: " + dvd_path.generic_string());
 		}
 		current_test->cksum_input << " " << dvd_path.generic_string()
 			<< " (file signature = " << file_signature(dvd_path) << ")";
@@ -719,13 +731,13 @@ void VisitorSemantic::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
 	current_test->cksum_input << "hostdev " << plug_hostdev.type() << " \"" << plug_hostdev.addr() << "\"";
 
 	if (env->hypervisor() == "hyperv") {
-		throw std::runtime_error(std::string(plug_hostdev.ast_node->begin()) + ": Sorry, Hyper-V does not support this command");
+		throw ExceptionWithPos(plug_hostdev.ast_node->begin(), "Sorry, Hyper-V does not support this command");
 	}
 
 	try {
 		parse_usb_addr(plug_hostdev.addr());
 	} catch (const std::exception& error) {
-		throw Exception(std::string(plug_hostdev.ast_node->begin()) + ": Error: spicified usb addr is not valid: " + plug_hostdev.addr());
+		throw ExceptionWithPos(plug_hostdev.ast_node->begin(), "Error: spicified usb addr is not valid: " + plug_hostdev.addr());
 	}
 }
 
@@ -748,7 +760,7 @@ void VisitorSemantic::visit_exec(const IR::Exec& exec) {
 		(exec.interpreter() != "python2") &&
 		(exec.interpreter() != "python3"))
 	{
-		throw Exception(std::string(exec.ast_node->begin()) + ": Error: unknown process name: " + exec.interpreter());
+		throw ExceptionWithPos(exec.ast_node->begin(), "Error: unknown process name: " + exec.interpreter());
 	}
 
 	current_test->cksum_input << "exec "
@@ -771,7 +783,7 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 
 		if (!copy.nocheck()) {
 			if (!fs::exists(from)) {
-				throw Exception(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from);
+				throw ExceptionWithPos(copy.ast_node->begin(), "Error: specified path doesn't exist: " + from);
 			}
 
 			current_test->cksum_input << pretty_files_signature(from) << std::endl;
@@ -781,7 +793,7 @@ void VisitorSemantic::visit_copy(const IR::Copy& copy) {
 
 	} else {
 		if (copy.nocheck()) {
-			throw Exception(std::string(copy.ast_node->begin()) + ": Error: \"nocheck\" specifier is not applicable to copyfrom action");
+			throw ExceptionWithPos(copy.ast_node->begin(), "Error: \"nocheck\" specifier is not applicable to copyfrom action");
 		}
 	}
 }
@@ -930,7 +942,7 @@ Tribool VisitorSemantic::visit_parented_expr(std::shared_ptr<AST::ParentedExpr> 
 
 Tribool VisitorSemantic::visit_check(const IR::Check& check) {
 	if (std::dynamic_pointer_cast<IR::FlashDrive>(current_controller)) {
-		throw Exception(std::string(check.ast_node->begin()) + ": Error: The \"check\" expression is not applicable to a flash drive");
+		throw ExceptionWithPos(check.ast_node->begin(), "Error: The \"check\" expression is not applicable to a flash drive");
 	}
 
 	current_test->cksum_input << "check ";
@@ -975,15 +987,15 @@ std::vector<std::string> VisitorSemantic::visit_range(const IR::Range& range) {
 	int32_t r2 = range.r2();
 
 	if (r1 < 0) {
-		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range start " + std::to_string(r1) + " to a non-negative number");
+		throw ExceptionWithPos(range.ast_node->begin(), "Error: Can't convert range start " + std::to_string(r1) + " to a non-negative number");
 	}
 
 	if (r2 < 0) {
-		throw Exception(std::string(range.ast_node->begin()) + ": Error: Can't convert range finish " + std::to_string(r2) + " to a non-negative number");
+		throw ExceptionWithPos(range.ast_node->begin(), "Error: Can't convert range finish " + std::to_string(r2) + " to a non-negative number");
 	}
 
 	if (r1 >= r2) {
-		throw Exception(std::string(range.ast_node->begin()) + ": Error: start of the range " +
+		throw ExceptionWithPos(range.ast_node->begin(), "Error: start of the range " +
 			std::to_string(r1) + " is greater or equal to finish " + std::to_string(r2));
 	}
 
@@ -1088,10 +1100,4 @@ void VisitorSemantic::visit_network(std::shared_ptr<IR::Network> network) {
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ControllerCreatonException(network));
 	}
-}
-
-bool VisitorSemantic::is_button(const Token& t) const {
-	std::string button = t.value();
-	std::transform(button.begin(), button.end(), button.begin(), ::toupper);
-	return (keys.find(button) != keys.end());
 }

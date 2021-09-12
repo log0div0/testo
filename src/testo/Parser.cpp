@@ -1,19 +1,18 @@
 
 #include "Parser.hpp"
 #include "Utils.hpp"
-#include "Exceptions.hpp"
 #include "TemplateLiterals.hpp"
 #include <fstream>
 #include <fmt/format.h>
 
 using namespace AST;
 
-struct UnknownOption: Exception {
-	UnknownOption(const Token& name): Exception(std::string(name.begin()) + ": Error: Unknown option: " + name.value()) {}
+struct UnknownOption: ExceptionWithPos {
+	UnknownOption(const Token& name): ExceptionWithPos(name.begin(), "Error: Unknown option: " + name.value()) {}
 };
 
-struct UnknownAttr: Exception {
-	UnknownAttr(const Token& name): Exception(std::string(name.begin()) + ": Error: Unknown attribute: " + name.value()) {}
+struct UnknownAttr: ExceptionWithPos {
+	UnknownAttr(const Token& name): ExceptionWithPos(name.begin(), "Error: Unknown attribute: " + name.value()) {}
 };
 
 std::string generate_script(const fs::path& folder, const fs::path& current_prefix = ".") {
@@ -55,18 +54,19 @@ Parser Parser::load(const fs::path& path) {
 	} else if (fs::is_directory(path)) {
 		return load_dir(path);
 	} else {
-		throw std::runtime_error(std::string("Fatal error: unknown target type: ") + path.generic_string());
+		throw std::runtime_error("Error: unknown target type: " + path.generic_string());
 	}
 
 }
 
-Parser::Parser(const fs::path& file, const std::string& input)
+Parser::Parser(const fs::path& file, const std::string& input, bool allow_unparsed_nodes_): allow_unparsed_nodes(allow_unparsed_nodes_)
 {
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
 }
 
-Parser::Parser(const std::vector<Token>& tokens) {
+Parser::Parser(const std::vector<Token>& tokens, bool allow_unparsed_nodes_): allow_unparsed_nodes(allow_unparsed_nodes_)
+{
 	Ctx ctx(tokens);
 	lexers.push_back(ctx);
 }
@@ -84,8 +84,7 @@ Token Parser::eat(const std::vector<Token::category> types) {
 		}
 	}
 
-	std::string error_msg = std::string(LT(1).begin()) +
-		": Error: unexpected token \"" +
+	std::string error_msg = "Error: unexpected token \"" +
 		LT(1).value() + "\", expected";
 
 	if (types.size() == 1) {
@@ -100,7 +99,7 @@ Token Parser::eat(const std::vector<Token::category> types) {
 		}
 	}
 
-	throw std::runtime_error(error_msg);
+	throw ExceptionWithPos(LT(1).begin(), error_msg);
 }
 
 Token Parser::LT(size_t i) const {
@@ -229,11 +228,11 @@ void Parser::handle_include() {
 		} else if (fs::is_directory(current_path)) {
 			combined = current_path / dest_file;
 		} else {
-			throw std::runtime_error("Handle include error");
+			throw ExceptionWithPos(dest_file_token.begin(), "Handle include error");
 		}
 
 		if (!fs::exists(combined)) {
-			throw std::runtime_error(std::string(dest_file_token.begin()) + ": fatal error: no such file: " + dest_file.generic_string());
+			throw ExceptionWithPos(dest_file_token.begin(), "Error: no such file: " + dest_file.generic_string());
 		}
 		dest_file = fs::canonical(combined);
 	}
@@ -249,7 +248,7 @@ void Parser::handle_include() {
 	std::ifstream input_stream(dest_file);
 
 	if (!input_stream) {
-		throw std::runtime_error("Can't open file: " + dest_file.generic_string());
+		throw ExceptionWithPos(dest_file_token.begin(), "Can't open file: " + dest_file.generic_string());
 	}
 
 	auto input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
@@ -273,7 +272,7 @@ std::shared_ptr<Program> Parser::parse() {
 		} else if (test_include()) {
 			handle_include();
 		} else {
-			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected declaration or include");
+			throw ExceptionWithPos(LT(1).begin(), "Error: expected declaration or include");
 		}
 	}
 
@@ -310,8 +309,7 @@ std::shared_ptr<Stmt> Parser::stmt() {
 	} else if (test_macro_call()) {
 		return macro_call<AST::Stmt>();
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin())
-			+ ": Error: unsupported statement: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: unsupported statement: " + LT(1).value());
 	}
 }
 
@@ -394,7 +392,7 @@ std::vector<Token> Parser::macro_body(const std::string& name) {
 		} else if (LA(1) == Token::category::rbrace) {
 			braces_count--;
 		} else if (LA(1) == Token::category::eof) {
-			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: macro \"" + name + "\" body reached the end of file without closing \"}\"");
+			throw ExceptionWithPos(LT(1).begin(), "Error: macro \"" + name + "\" body reached the end of file without closing \"}\"");
 		}
 
 		result.push_back(eat(LA(1)));
@@ -471,11 +469,9 @@ std::shared_ptr<AttrBlock> Parser::attr_block(const AttrBlockSchema& schema) {
 
 	while (LA(1) == Token::category::id) {
 		std::shared_ptr<AST::Attr> new_attr = attr(schema);
-		if (new_attr->id) {
-			for (auto& x: attrs) {
-				if (x->desc() == new_attr->desc()) {
-					throw Exception(std::string(new_attr->begin()) + ": Error: duplicate attribute: \"" + new_attr->desc() + "\"");
-				}
+		for (auto& x: attrs) {
+			if (x->desc() == new_attr->desc()) {
+				throw ExceptionWithPos(new_attr->begin(), "Error: duplicate attribute: \"" + new_attr->desc() + "\"");
 			}
 		}
 		attrs.push_back(new_attr);
@@ -504,7 +500,7 @@ std::shared_ptr<AST::Controller> Parser::controller() {
 
 	newline_list();
 	if (LA(1) != Token::category::lbrace) {
-		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: expected attribute block");
+		throw ExceptionWithPos(LT(1).begin(), "Error: expected attribute block");
 	}
 
 	std::shared_ptr<AST::AttrBlock> block = nullptr;
@@ -578,8 +574,10 @@ std::shared_ptr<Block<Cmd>> Parser::command_block() {
 }
 
 std::shared_ptr<IKeyCombination> Parser::key_combination() {
-	if (test_string()) {
-		return std::make_shared<AST::Unparsed<IKeyCombination>>(string());
+	if (allow_unparsed_nodes) {
+		if (test_string()) {
+			return std::make_shared<AST::Unparsed<IKeyCombination>>(string());
+		}
 	}
 
 	std::vector<Token> buttons;
@@ -659,7 +657,7 @@ std::shared_ptr<Action> Parser::action() {
 	} else if (test_macro_call()) {
 		action = macro_call<AST::Action>();
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown action: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown action: " + LT(1).value());
 	}
 
 	if (delim_required) {
@@ -669,8 +667,7 @@ std::shared_ptr<Action> Parser::action() {
 		} else if (LA(1) == Token::category::semi) {
 			delim = eat(Token::category::semi);
 		} else {
-			throw std::runtime_error(std::string(LT(1).begin()) +
-				": Expected new line or ';'");
+			throw ExceptionWithPos(LT(1).begin(), "Error: Expected new line or ';'");
 		}
 		action = std::make_shared<ActionWithDelim>(action, delim);
 	}
@@ -715,7 +712,7 @@ std::shared_ptr<Wait> Parser::wait() {
 	Token wait_token = eat(Token::category::wait);
 
 	if (!test_selectable()) {
-		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to wait");
+		throw ExceptionWithPos(LT(1).begin(), "Error: expexted an object to wait");
 	}
 
 	std::shared_ptr<SelectExpr> select_expression = select_expr();
@@ -793,7 +790,7 @@ std::shared_ptr<AST::Mouse> Parser::mouse() {
 	} else if (LA(1) == Token::category::wheel) {
 		event = mouse_wheel();
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: unknown mouse action: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: unknown mouse action: " + LT(1).value());
 	}
 
 	return std::make_shared<Mouse>(mouse_token, event);
@@ -803,14 +800,14 @@ std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
 	Token tmp = eat(Token::category::dot);
 	Token name = LT(1);
 	if (!Pos::is_adjacent(tmp.end(), name.begin())) {
-		throw std::runtime_error(std::string(tmp.end()) + ": Error: expected a mouse specifier name");
+		throw ExceptionWithPos(tmp.end(), "Error: expected a mouse specifier name");
 	}
 	eat(Token::category::id);
 	Token lparen = eat(Token::category::lparen);
 
 	Token arg;
 	if (LA(1) != Token::category::rparen && LA(1) != Token::category::number) {
-		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: you can use only numbers as arguments in cursor specifiers");
+		throw ExceptionWithPos(LT(1).begin(), "Error: you can use only numbers as arguments in cursor specifiers");
 	}
 
 	if (LA(1) == Token::category::number) {
@@ -857,7 +854,7 @@ std::shared_ptr<AST::MouseMoveClick> Parser::mouse_move_click() {
 	}
 
 	if (event_token.type() == Token::category::move && !target) {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: you must specify a target to move the mouse cursor");
+		throw ExceptionWithPos(LT(1).begin(), "Error: you must specify a target to move the mouse cursor");
 	}
 
 	return std::make_shared<MouseMoveClick>(event_token, target);
@@ -879,7 +876,7 @@ std::shared_ptr<AST::MouseWheel> Parser::mouse_wheel() {
 
 	Token direction = LT(1);
 	if (direction.value() != "up" && direction.value() != "down") {
-		throw std::runtime_error(std::string(direction.begin()) + " : Error: unknown wheel direction: " + direction.value());
+		throw ExceptionWithPos(direction.begin(), "Error: unknown wheel direction: " + direction.value());
 	}
 	eat(Token::category::id);
 
@@ -905,7 +902,7 @@ std::shared_ptr<AST::PlugResource> Parser::plug_resource() {
 	} else if (LT(1).value() == "link") {
 		result = plug_resource_link();
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown device type for plug/unplug: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown device type for plug/unplug: " + LT(1).value());
 	}
 
 	return result;
@@ -945,7 +942,7 @@ std::shared_ptr<AST::PlugHostDev> Parser::plug_resource_hostdev() {
 	Token hostdev_token = eat(Token::category::hostdev);
 
 	if (LA(1) != Token::category::usb) {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown usb device type for plug/unplug: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown usb device type for plug/unplug: " + LT(1).value());
 	}
 
 	Token type = eat(Token::category::usb);
@@ -1098,7 +1095,7 @@ std::shared_ptr<CounterList> Parser::counter_list() {
 	if (LA(1) == Token::category::RANGE) {
 		return range();
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown counter_list specifier: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown counter_list specifier: " + LT(1).value());
 	}
 }
 
@@ -1109,7 +1106,7 @@ std::shared_ptr<ForClause> Parser::for_clause() {
 	eat(Token::category::IN_);
 
 	if (!test_counter_list()) {
-		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted a RANGE");
+		throw ExceptionWithPos(LT(1).begin(), "Error: expexted a RANGE");
 	}
 
 	std::shared_ptr<CounterList> list = counter_list();
@@ -1174,7 +1171,7 @@ std::shared_ptr<AST::BasicSelectExpr> Parser::basic_select_expr() {
 	} else if(LA(1) == Token::category::homm3) {
 		return select_homm3();
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + ":Error: Unknown selective object type: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown selective object type: " + LT(1).value());
 	}
 }
 
@@ -1217,7 +1214,7 @@ std::shared_ptr<SelectText> Parser::select_text() {
 
 std::shared_ptr<String> Parser::string() {
 	if (!test_string()) {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected string");
+		throw ExceptionWithPos(LT(1).begin(), "Error: expected string");
 	}
 
 	Token str = eat({Token::category::quoted_string, Token::category::triple_quoted_string});
@@ -1228,7 +1225,7 @@ std::shared_ptr<String> Parser::string() {
 		template_literals::Parser templ_parser;
 		templ_parser.validate_sanity(new_node->text());
 	} catch (const std::runtime_error& error) {
-		std::throw_with_nested(std::runtime_error(std::string(new_node->begin()) + ": Error parsing string: \"" + new_node->text() + "\""));
+		std::throw_with_nested(ExceptionWithPos(new_node->begin(), "Error parsing string: \"" + new_node->text() + "\""));
 	}
 
 	return new_node;
@@ -1270,7 +1267,7 @@ std::shared_ptr<Check> Parser::check() {
 	std::shared_ptr<SelectExpr> select_expression(nullptr);
 
 	if (!test_selectable()) {
-		throw std::runtime_error(std::string(LT(1).begin()) + " : Error: expexted an object to check");
+		throw ExceptionWithPos(LT(1).begin(), "Error: expexted an object to check");
 	}
 
 	select_expression = select_expr();
@@ -1307,7 +1304,7 @@ std::shared_ptr<SimpleExpr> Parser::simple_expr() {
 	} else if (test_string()) {
 		return std::make_shared<StringExpr>(string());
 	} else {
-		throw std::runtime_error(std::string(LT(1).begin()) + ": Error: Unknown expression: " + LT(1).value());
+		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown expression: " + LT(1).value());
 	}
 }
 

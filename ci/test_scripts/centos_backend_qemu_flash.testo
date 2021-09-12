@@ -138,7 +138,7 @@ test centos_backend_qemu_flash_copyto_from_not_exist_runtime: centos_backend_qem
 			set +e
 			output=$(testo run /opt/scripts/action_flash.testo --test_spec flash_copyto_from_doesnt_exist_runtime)
 			[[ $output == *"Preparing the environment for test flash_copyto_from_doesnt_exist_runtime"* ]]
-			[[ $output == *"Error: specified path doesn't exist: /tmp/lala.log"* ]]
+			[[ $output == *"Specified path doesn't exist: /tmp/lala.log"* ]]
 		"""
 	}
 }

@@ -3,8 +3,8 @@
 
 #include "../AST.hpp"
 #include "../Stack.hpp"
-#include "../TemplateLiterals.hpp"
 #include "../Parser.hpp"
+#include "../Exceptions.hpp"
 
 namespace IR {
 
@@ -19,10 +19,17 @@ struct Node {
 	std::shared_ptr<StackNode> stack;
 };
 
+struct SelectExpr: Node<AST::SelectExpr> {
+	using Node<AST::SelectExpr>::Node;
+
+	std::string to_string() const;
+};
+
 struct String: Node<AST::String> {
 	using Node<AST::String>::Node;
 
 	std::string text() const;
+	std::string quoted_text() const;
 	nlohmann::json to_json() const;
 };
 
@@ -42,9 +49,8 @@ struct MaybeUnparsed: Node<ASTType> {
 		if (!unparsed) {
 			throw std::runtime_error("Failed to cast AST node to any derived class");
 		}
-		std::string str = unparsed->string->text();
-		str = template_literals::Parser().resolve(str, this->stack);
-		std::shared_ptr<ASTType> p = ASTType::from_string(str);
+		String str(unparsed->string, this->stack);
+		std::shared_ptr<ASTType> p = parse(str);
 		_parsed = std::dynamic_pointer_cast<ParsedASTType>(p);
 		if (!_parsed) {
 			throw std::runtime_error("Failed to cast AST node to the parsed derived class");
@@ -53,6 +59,20 @@ struct MaybeUnparsed: Node<ASTType> {
 	}
 
 private:
+	std::shared_ptr<ASTType> parse(const String& str) const {
+		try {
+			try {
+				return ASTType::from_string(str.text());
+			} catch (const ExceptionWithPos& error) {
+				// trim information about the position, because it's totaly useless
+				// when we parse a string literal
+				throw std::runtime_error(error.original_msg);
+			}
+		} catch (const std::exception& error) {
+			std::throw_with_nested(ExceptionWithPos(str.ast_node->begin(), "Error while parsing " + str.quoted_text()));
+		}
+	}
+
 	mutable std::shared_ptr<ParsedASTType> _parsed;
 };
 

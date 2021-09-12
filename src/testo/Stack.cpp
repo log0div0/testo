@@ -8,7 +8,7 @@ std::string StackNode::find_and_resolve_var(const std::string& name) const {
 		return template_literals::Parser().resolve(it->second, shared_from_this());
 	}
 	if (!parent) {
-		throw std::runtime_error(std::string("param \"") + name + "\" is not defined");
+		throw std::runtime_error("param \"" + name + "\" is not defined");
 	}
 	return parent->find_and_resolve_var(name);
 }

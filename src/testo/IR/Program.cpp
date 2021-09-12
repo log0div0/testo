@@ -46,7 +46,7 @@ bool ProgramConfig::validate_test_name(const std::string& name) const {
 
 void ProgramConfig::validate() const {
 	if (!fs::exists(target)) {
-		throw std::runtime_error(std::string("Fatal error: target doesn't exist: ") + target);
+		throw std::runtime_error("Error: target doesn't exist: " + target);
 	}
 
 	std::set<std::string> unique_param_names;
@@ -219,9 +219,9 @@ void Program::visit_stmt(const std::shared_ptr<AST::Stmt>& stmt) {
 void Program::visit_statement_block(const std::shared_ptr<AST::Block<AST::Stmt>>& stmt_block) {
 	for (auto stmt: stmt_block->items) {
 		if (auto p = std::dynamic_pointer_cast<AST::Macro>(stmt)) {
-			throw Exception(std::string(stmt->begin()) + ": Error: nested macro declarations are not supported");
+			throw ExceptionWithPos(stmt->begin(), "Error: nested macro declarations are not supported");
 		} else if (auto p = std::dynamic_pointer_cast<AST::Param>(stmt)) {
-			throw Exception(std::string(stmt->begin()) + ": Error: param declaration inside macros is not supported");
+			throw ExceptionWithPos(stmt->begin(), "Error: param declaration inside macros is not supported");
 		}
 
 		visit_stmt(stmt);
@@ -259,7 +259,7 @@ void Program::collect_macro(const std::shared_ptr<AST::Macro>& macro) {
 void Program::collect_param(const std::shared_ptr<AST::Param>& param_ast) {
 	auto param = insert_object(param_ast, params);
 	if (stack->vars.count(param->name())) {
-		throw std::runtime_error(std::string(param_ast->begin()) + ": Error: param \"" + param->name()
+		throw ExceptionWithPos(param_ast->begin(), "Error: param \"" + param->name()
 			+ "\" is already defined as a command line argument");
 	}
 	stack->vars[param->name()] = param->value();
@@ -344,17 +344,17 @@ void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
 		auto parent_name = parent_names[i];
 
 		if (parent_name == test->name()) {
-			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: can't specify test as a parent to itself " + parent_name);
+			throw ExceptionWithPos(test->ast_node->parents[i]->begin(), "Error: can't specify test as a parent to itself " + parent_name);
 		}
 
 		auto parent = tests.find(parent_name);
 		if (parent == tests.end()) {
-			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: unknown test: " + parent_name);
+			throw ExceptionWithPos(test->ast_node->parents[i]->begin(), "Error: unknown test: " + parent_name);
 		}
 
 		auto result = test->parents.insert(parent->second);
 		if (!result.second) {
-			throw std::runtime_error(std::string(test->ast_node->parents[i]->begin()) + ": Error: this test was already specified in parent list " + parent_name);
+			throw ExceptionWithPos(test->ast_node->parents[i]->begin(), "Error: this test was already specified in parent list " + parent_name);
 		}
 
 		setup_test_parents(parent->second);

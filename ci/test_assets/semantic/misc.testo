@@ -43,18 +43,6 @@ test invalid_mouse_move_js {
 	}
 }
 
-test invalid_mouse_parented_expr_0 {
-	my_ubuntu_server {
-		mouse move ("lala" && !js "another lala")
-	}
-}
-
-test invalid_mouse_parented_expr_1 {
-	my_ubuntu_server {
-		mouse move ! js "lala"
-	}
-}
-
 test invalid_key_0 {
 	my_ubuntu_server {
 		hold SomeButton

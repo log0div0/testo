@@ -224,7 +224,11 @@ std::string ToString(KeyboardButton button) {
 KeyboardButton ToKeyboardButton(const std::string& button) {
 	std::string button_str = button;
 	std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
-	return str_to_kb.at(button_str);
+	auto it = str_to_kb.find(button_str);
+	if (it == str_to_kb.end()) {
+		throw std::runtime_error("Error: unknown key: " + button);
+	}
+	return it->second;
 }
 
 const CharMap US = {

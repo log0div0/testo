@@ -5,21 +5,51 @@
 #include "../Exceptions.hpp"
 #include "../Lexer.hpp"
 
-struct ResolveException: public Exception {
-	ResolveException(const Pos& pos, const std::string& string)
-	{
-		msg = std::string(pos) + ": Error while resolving \"" + string + "\"";
-	}
-};
-
 namespace IR {
+
+std::string SelectExpr::to_string() const {
+	if (auto p = std::dynamic_pointer_cast<AST::SelectNegationExpr>(ast_node)) {
+		return "!" + SelectExpr(p->expr, stack).to_string();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(ast_node)) {
+		return String(p->str, stack).quoted_text();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(ast_node)) {
+		return p->token.value() + String(p->str, stack).quoted_text();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(ast_node)) {
+		return p->token.value() + String(p->str, stack).quoted_text();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(ast_node)) {
+		return p->token.value() + String(p->str, stack).quoted_text();
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(ast_node)) {
+		return "(" + SelectExpr(p->select_expr, stack).to_string() + ")";
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(ast_node)) {
+		return SelectExpr(p->left, stack).to_string() + " " + p->op.value() + " " + SelectExpr(p->right, stack).to_string();
+	} else {
+		throw std::runtime_error("Unknown select expression type");
+	}
+}
 
 std::string String::text() const {
 	try {
 		return template_literals::Parser().resolve(ast_node->text(), stack);
 	} catch (const std::exception& error) {
-		std::throw_with_nested(ResolveException(ast_node->begin(), ast_node->text()));
+		std::throw_with_nested(ExceptionWithPos(ast_node->begin(), "Error while resolving \"" + ast_node->text() + "\""));
 	}
+}
+
+std::string String::quoted_text() const {
+	std::string str = text();
+	{
+		auto it = std::find(str.begin(), str.end(), '\n');
+		if (it != str.end()) {
+			return "\"\"\"" + str + "\"\"\"";
+		}
+	}
+	{
+		auto it = std::find(str.begin(), str.end(), '"');
+		if (it != str.end()) {
+			return "\"\"\"" + str + "\"\"\"";
+		}
+	}
+	return "\"" + str + "\"";
 }
 
 nlohmann::json String::to_json() const {
@@ -122,7 +152,7 @@ nlohmann::json AttrBlock::to_json() const {
 		} else if (auto p = std::dynamic_pointer_cast<AST::AttrBlock>(attr->value)) {
 			j = AttrBlock(p, stack).to_json();
 		} else {
-			throw std::runtime_error(std::string(attr->begin()) + ": Error: Unsupported type of attr \"" + attr->name() + "\"");
+			throw ExceptionWithPos(attr->begin(), "Error: Unsupported type of attr \"" + attr->name() + "\"");
 		}
 		if (attr->id) {
 			j["name"] = attr->id.value();

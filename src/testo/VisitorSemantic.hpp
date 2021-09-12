@@ -105,8 +105,6 @@ struct VisitorSemantic {
 
 	void validate_js(const std::string& script);
 
-	bool is_button(const Token& t) const;
-
 	std::set<std::string> keys;
 
 	std::string prefix;

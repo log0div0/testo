@@ -9,6 +9,38 @@
 #include "Reporter.hpp"
 #include "TemplateLiterals.hpp"
 
+struct ActionException: ExceptionWithPos {
+	ActionException(const std::shared_ptr<AST::Node>& node, const std::shared_ptr<IR::Controller>& controller):
+		ExceptionWithPos(node->begin(), {})
+	{
+		msg = "Error while performing action " + node->to_string();
+		if (controller) {
+			msg += " on " + controller->type() + " " + controller->name();
+		}
+	}
+};
+
+struct AbortException: ExceptionWithPos {
+	AbortException(const std::shared_ptr<AST::Abort>& node, const std::shared_ptr<IR::Controller>& controller, const std::string& message):
+		ExceptionWithPos(node->begin(), {})
+	{
+		msg = "Caught abort action ";
+		if (controller) {
+			msg += "on " + controller->type() + " " +  controller->name();
+		}
+		msg += " with message: ";
+		msg += message;
+	}
+};
+
+struct CycleControlException: std::exception {
+	CycleControlException(Token token_): token(std::move(token_))
+	{
+	}
+
+	Token token;
+};
+
 struct VisitorInterpreterAction {
 	VisitorInterpreterAction(std::shared_ptr<IR::Controller> controller, std::shared_ptr<StackNode> stack, Reporter& reporter):
 		current_controller(controller), stack(stack), reporter(reporter) {}

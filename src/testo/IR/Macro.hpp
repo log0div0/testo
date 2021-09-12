@@ -55,12 +55,12 @@ struct MacroCall: Node<AST::IMacroCall> {
 		}
 
 		if (ast_node->args.size() < macro->ast_node->args.size() - args_with_default) {
-			throw std::runtime_error(fmt::format("{}: Error: expected at least {} args, {} provided", std::string(ast_node->name.begin()),
+			throw ExceptionWithPos(ast_node->name.begin(), fmt::format("Error: expected at least {} args, {} provided",
 				macro->ast_node->args.size() - args_with_default, ast_node->args.size()));
 		}
 
 		if (ast_node->args.size() > macro->ast_node->args.size()) {
-			throw std::runtime_error(fmt::format("{}: Error: expected at most {} args, {} provided", std::string(ast_node->name.begin()),
+			throw ExceptionWithPos(ast_node->name.begin(), fmt::format("Error: expected at most {} args, {} provided",
 				macro->ast_node->args.size(), ast_node->args.size()));
 		}
 
@@ -68,13 +68,13 @@ struct MacroCall: Node<AST::IMacroCall> {
 
 		std::shared_ptr<AST::Block<Item>> p = macro->get_body<Item>();
 		if (p == nullptr) {
-			throw std::runtime_error(std::string(ast_node->name.begin()) + ": Error: the \"" + ast_node->name.value() + "\" macro does not contain " + Item::desc() + ", as expected");
+			throw ExceptionWithPos(ast_node->name.begin(), "Error: the \"" + ast_node->name.value() + "\" macro does not contain " + Item::desc() + ", as expected");
 		}
 
 		try {
 			visitor->visit_macro_body(p);
 		} catch (const std::exception& error) {
-			std::throw_with_nested(MacroException(ast_node));
+			std::throw_with_nested(ExceptionWithPos(ast_node->begin(), "In a macro call " + ast_node->to_string()));
 		}
 	}
 
@@ -92,7 +92,7 @@ struct MacroCall: Node<AST::IMacroCall> {
 		try {
 			visitor->visit_macro_body(p);
 		} catch (const std::exception& error) {
-			std::throw_with_nested(MacroException(ast_node));
+			std::throw_with_nested(ExceptionWithPos(ast_node->begin(), "In a macro call " + ast_node->to_string()));
 		}
 	}
 };

@@ -1,0 +1,9 @@
+
+machine vm_unknown_attr {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		some_attr: 4Gb
+	}
+}

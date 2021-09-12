@@ -28,7 +28,7 @@ bool QemuNetwork::is_defined() {
 
 
 std::string QemuNetwork::find_free_nat() const {
-	for (int i = 156; i < 254; i++) {
+	for (int i = 179; i < 254; i++) {
 		std::string network_to_look("192.168.");
 		network_to_look += std::to_string(i);
 		network_to_look += ".1";
@@ -57,7 +57,7 @@ std::string QemuNetwork::find_free_nat() const {
 			return std::to_string(i);
 		}
 	}
-	throw std::runtime_error(std::string("Can't find a free nat to create network ") + id());
+	throw std::runtime_error("Can't find a free nat to create network " + id());
 }
 
 void QemuNetwork::create() {

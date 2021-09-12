@@ -5,6 +5,7 @@
 #include "AST.hpp"
 #include "Utils.hpp"
 #include "Token.hpp"
+#include "Exceptions.hpp"
 #include <set>
 #include <array>
 
@@ -13,9 +14,8 @@ struct Parser {
 	static Parser load_file(const fs::path& file);
 	static Parser load(const fs::path& path);
 
-	Parser() = default;
-	Parser(const fs::path& file, const std::string& input);
-	Parser(const std::vector<Token>& tokens);
+	Parser(const fs::path& file, const std::string& input, bool allow_unparsed_nodes = true);
+	Parser(const std::vector<Token>& tokens, bool allow_unparsed_nodes = true);
 
 	std::shared_ptr<AST::Program> parse();
 	std::shared_ptr<AST::Block<AST::Cmd>> command_block();
@@ -142,9 +142,16 @@ struct Parser {
 	std::shared_ptr<AST::String> string();
 	template <Token::category category>
 	std::shared_ptr<AST::ISingleToken<category>> single_token() {
-		if (!test_string() && LA(1) != category) {
-			throw std::runtime_error(std::string(LT(1).begin()) + ": Error: expected a string or " + Token::type_to_string(category) + ", but got " +
-				Token::type_to_string(LA(1)) + " " + LT(1).value());
+		if (allow_unparsed_nodes) {
+			if (!test_string() && LA(1) != category) {
+				throw ExceptionWithPos(LT(1).begin(), "Error: expected STRING or " + Token::type_to_string(category) + ", but got " +
+					Token::type_to_string(LA(1)) + " \"" + LT(1).value() + "\"");
+			}
+		} else {
+			if (LA(1) != category) {
+				throw ExceptionWithPos(LT(1).begin(), "Error: expected " + Token::type_to_string(category) + ", but got " +
+					Token::type_to_string(LA(1)) + " \"" + LT(1).value() + "\"");
+			}
 		}
 
 		if (LA(1) == category) {
@@ -172,17 +179,19 @@ struct Parser {
 	std::vector<Ctx> lexers;
 
 	std::vector<fs::path> already_included;
+
+	bool allow_unparsed_nodes;
 };
 
 namespace AST {
 
 template <Token::category category>
 std::shared_ptr<ISingleToken<category>> ISingleToken<category>::from_string(const std::string& str) {
-	return Parser(".", str).single_token<category>();
+	return Parser(".", str, false).single_token<category>();
 }
 
 inline std::shared_ptr<IKeyCombination> IKeyCombination::from_string(const std::string& str) {
-	return Parser(".", str).key_combination();
+	return Parser(".", str, false).key_combination();
 }
 
 }

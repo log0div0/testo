@@ -25,6 +25,7 @@ struct Comparison: Expr<AST::Comparison> {
 
 struct Check: Expr<AST::Check> {
 	using Expr<AST::Check>::Expr;
+	SelectExpr select_expr() const;
 	TimeInterval timeout() const;
 	TimeInterval interval() const;
 };

@@ -231,9 +231,7 @@ struct KeyCombination: public IKeyCombination {
 		std::vector<std::string> result;
 
 		for (auto& button: buttons) {
-			std::string button_str = button.value();
-			std::transform(button_str.begin(), button_str.end(), button_str.begin(), ::toupper);
-			result.push_back(button_str);
+			result.push_back(button.value());
 		}
 
 		return result;

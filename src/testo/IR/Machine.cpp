@@ -459,6 +459,13 @@ void Machine::validate_config() {
 		throw std::runtime_error("Field \"cpu\" is not specified");
 	}
 
+	{
+		int cpus = config.at("cpus");
+		if (cpus <= 0) {
+			throw std::runtime_error("CPUs number must be a positive interger");
+		}
+	}
+
 	if (!config.count("disk")) {
 		throw std::runtime_error("You must specify at least 1 disk");
 	}
@@ -472,27 +479,11 @@ void Machine::validate_config() {
 					disk.at("name").get<std::string>()));
 			}
 		}
-
-		for (uint32_t i = 0; i < disks.size(); i++) {
-			for (uint32_t j = i + 1; j < disks.size(); j++) {
-				if (disks[i].at("name") == disks[j].at("name")) {
-					throw std::runtime_error(fmt::format("Two disks have the identical name: \"{}\"",
-						disks[i].at("name").get<std::string>()));
-				}
-			}
-		}
 	}
 
 	if (config.count("shared_folder")) {
 		auto shared_folders = config.at("shared_folder");
-		for (uint32_t i = 0; i < shared_folders.size(); i++) {
-			for (uint32_t j = i + 1; j < shared_folders.size(); j++) {
-				if (shared_folders[i].at("name") == shared_folders[j].at("name")) {
-					throw std::runtime_error(fmt::format("Two shared folders have the identical name: \"{}\"",
-						shared_folders[i].at("name").get<std::string>()));
-				}
-			}
-		}
+
 		for (auto& shared_folder: shared_folders) {
 			if (!shared_folder.count("host_path")) {
 				throw std::runtime_error(fmt::format("Shared folder {} error: field \"host_path\" is not specified",
@@ -531,15 +522,6 @@ void Machine::validate_config() {
 				std::string mac = nic.at("mac").get<std::string>();
 				if (!is_mac_correct(mac)) {
 					throw std::runtime_error(fmt::format("Incorrect mac address: \"{}\"", mac));
-				}
-			}
-		}
-
-		for (uint32_t i = 0; i < nics.size(); i++) {
-			for (uint32_t j = i + 1; j < nics.size(); j++) {
-				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error(fmt::format("Two NICs have the identical name: \"{}\"",
-						nics[i].at("name").get<std::string>()));
 				}
 			}
 		}

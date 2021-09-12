@@ -167,7 +167,7 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 		if(copy.ast_node->is_to_guest()) {
 			//Additional check since now we can't be sure the "from" actually exists
 			if (!fs::exists(from)) {
-				throw std::runtime_error(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from.generic_string());
+				throw std::runtime_error("Specified path doesn't exist: " + from.generic_string());
 			}
 			ga->copy_to_guest(from, to);
 		} else {
@@ -191,7 +191,7 @@ void VisitorInterpreterActionMachine::visit_screenshot(const IR::Screenshot& scr
 
 		if (!fs::exists(destination.parent_path())) {
 			if (!fs::create_directories(destination.parent_path())) {
-				throw std::runtime_error(std::string("Can't create directory: ") + destination.parent_path().generic_string());
+				throw std::runtime_error("Can't create directory: " + destination.parent_path().generic_string());
 			}
 		}
 
@@ -205,9 +205,8 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	try {
 		IR::TimeInterval check_for = check.timeout();
 		IR::TimeInterval interval = check.interval();
-		auto text = template_parser.resolve(check.ast_node->select_expr->to_string(), check.stack);
 
-		reporter.check(vmc, text, check_for.str(), interval.str());
+		reporter.check(vmc, check.select_expr().to_string(), check_for.str(), interval.str());
 
 		return screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 			return visit_detect_expr(check.ast_node->select_expr, screenshot);
@@ -267,7 +266,7 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 		IR::TimeInterval wait_for = wait.timeout();
 		IR::TimeInterval interval = wait.interval();
 
-		reporter.wait(vmc, wait.ast_node->select_expr->to_string(), wait_for.str(), interval.str());
+		reporter.wait(vmc, wait.select_expr().to_string(), wait_for.str(), interval.str());
 
 		bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 			return visit_detect_expr(wait.ast_node->select_expr, screenshot);
@@ -669,7 +668,7 @@ void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec
 	std::vector<KeyboardButton> buttons = key_spec.combination().buttons();
 	uint32_t times = key_spec.times();
 
-	reporter.press_key(vmc, key_spec.ast_node->combination->to_string(), times);
+	reporter.press_key(vmc, key_spec.combination().to_string(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
 		for (auto it = buttons.begin(); it != buttons.end(); ++it) {
@@ -707,7 +706,7 @@ void VisitorInterpreterActionMachine::visit_plug(const IR::Plug& plug) {
 		} else if (auto p = std::dynamic_pointer_cast<AST::PlugLink>(plug.ast_node->resource)) {
 			return visit_plug_link({p, stack}, plug.is_on());
 		} else {
-			throw std::runtime_error(std::string("unknown hardware to plug/unplug: ") +
+			throw std::runtime_error("unknown hardware to plug/unplug: " +
 				plug.ast_node->resource->to_string());
 		}
 	} catch (const std::exception& error) {

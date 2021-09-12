@@ -189,7 +189,7 @@ int do_main(int argc, char** argv) {
 		env = std::make_shared<HyperVEnvironment>();
 #endif
 	} else {
-		throw std::runtime_error(std::string("Unknown hypervisor: ") + hypervisor);
+		throw std::runtime_error("Unknown hypervisor: " + hypervisor);
 	}
 
 	coro::CoroPool pool;

@@ -25,7 +25,7 @@ void Macro::validate() {
 	for (size_t i = 0; i < ast_node->args.size(); ++i) {
 		for (size_t j = i + 1; j < ast_node->args.size(); ++j) {
 			if (ast_node->args[i]->name() == ast_node->args[j]->name()) {
-				throw std::runtime_error(std::string(ast_node->args[j]->begin()) + ": Error: duplicate macro arg: " + ast_node->args[j]->name());
+				throw ExceptionWithPos(ast_node->args[j]->begin(), "Error: duplicate macro arg: " + ast_node->args[j]->name());
 			}
 		}
 	}
@@ -38,7 +38,7 @@ void Macro::validate() {
 		}
 
 		if (has_default && !arg->default_value) {
-			throw std::runtime_error(std::string(arg->begin()) + ": Error: default value must be specified for macro arg " + arg->name());
+			throw ExceptionWithPos(arg->begin(), "Error: default value must be specified for macro arg " + arg->name());
 		}
 	}
 }
@@ -46,7 +46,7 @@ void Macro::validate() {
 const std::shared_ptr<IR::Macro> MacroCall::get_macro() const {
 	auto macro = program->get_macro_or_null(ast_node->name.value());
 	if (!macro) {
-		throw std::runtime_error(std::string(ast_node->name.begin()) + ": Error: unknown macro: " + ast_node->name.value());
+		throw ExceptionWithPos(ast_node->name.begin(), "Error: unknown macro: " + ast_node->name.value());
 	}
 	return macro;
 }

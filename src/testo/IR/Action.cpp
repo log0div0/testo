@@ -17,6 +17,18 @@ std::vector<KeyboardButton> KeyCombination::buttons() const {
 	return result;
 }
 
+std::string KeyCombination::to_string() const {
+	std::string result;
+	auto buttons_ = buttons();
+	for (size_t i = 0; i != buttons_.size(); ++i) {
+		if (i) {
+			result += "+";
+		}
+		result += ToString(buttons_[i]);
+	}
+	return result;
+}
+
 std::string Abort::message() const {
 	return String(ast_node->message, stack).text();
 }
@@ -59,6 +71,10 @@ TimeInterval Type::interval() const {
 
 KeyCombination Type::autoswitch() const {
 	return OptionSeq(ast_node->option_seq, stack).get<KeyCombination>("autoswitch", "TESTO_TYPE_DEFAULT_AUTOSWITCH");
+}
+
+SelectExpr Wait::select_expr() const {
+	return SelectExpr(ast_node->select_expr, stack);
 }
 
 TimeInterval Wait::timeout() const {

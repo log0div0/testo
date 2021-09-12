@@ -10,6 +10,7 @@ namespace IR {
 struct KeyCombination: MaybeUnparsed<AST::IKeyCombination, AST::KeyCombination> {
 	using MaybeUnparsed::MaybeUnparsed;
 	std::vector<KeyboardButton> buttons() const;
+	std::string to_string() const;
 };
 
 template <typename ASTType>
@@ -57,6 +58,7 @@ struct Type: Action<AST::Type> {
 
 struct Wait: Action<AST::Wait> {
 	using Action<AST::Wait>::Action;
+	SelectExpr select_expr() const;
 	TimeInterval timeout() const;
 	TimeInterval interval() const;
 };

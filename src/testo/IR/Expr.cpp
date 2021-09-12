@@ -34,30 +34,30 @@ bool Comparison::calculate() const {
 	auto r = right();
 	if (op() == "GREATER") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->left->begin(), "Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->right->begin(), "Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) > std::stoul(r);
 
 	} else if (op() == "LESS") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->left->begin(), "Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->right->begin(), "Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) < std::stoul(r);
 
 	} else if (op() == "EQUAL") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->left->begin(), "Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->right->begin(), "Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) == std::stoul(r);
@@ -71,6 +71,10 @@ bool Comparison::calculate() const {
 	} else {
 		throw std::runtime_error("Unknown comparison op");
 	}
+}
+
+SelectExpr Check::select_expr() const {
+	return SelectExpr(ast_node->select_expr, stack);
 }
 
 TimeInterval Check::timeout() const {

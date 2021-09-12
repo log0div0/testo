@@ -77,7 +77,7 @@ void VisitorInterpreterAction::visit_for_clause(std::shared_ptr<AST::ForClause> 
 			} else if (cycle_control.token.type() == Token::category::continue_) {
 				continue;
 			} else {
-				throw std::runtime_error(std::string("Unknown cycle control command: ") + cycle_control.token.value());
+				throw std::runtime_error("Unknown cycle control command: " + cycle_control.token.value());
 			}
 		}
 	}

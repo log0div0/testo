@@ -55,7 +55,7 @@ void VisitorInterpreterActionFlashDrive::visit_copy(const IR::Copy& copy) {
 		if(copy.ast_node->is_to_guest()) {
 			//Additional check since now we can't be sure the "from" actually exists
 			if (!fs::exists(from)) {
-				throw std::runtime_error(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from.generic_string());
+				throw std::runtime_error("Specified path doesn't exist: " + from.generic_string());
 			}
 			fdc->fd()->upload(from, to);
 		} else {

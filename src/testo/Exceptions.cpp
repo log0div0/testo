@@ -2,6 +2,9 @@
 #include "Exceptions.hpp"
 #include <system_error>
 
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
+
 #ifdef WIN32
 #include <winapi/Functions.hpp>
 #endif

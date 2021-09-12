@@ -1,82 +1,35 @@
 
 #pragma once
 
-#include "AST.hpp"
-#include "IR/Machine.hpp"
 #include <stdexcept>
 #include <string>
+#include <memory>
+#include <ostream>
 
-struct Exception: public std::exception {
-	Exception() = default;
-	Exception(const std::string& what) {
-		msg = what;
-	}
+struct Exception: std::exception {
+	Exception(std::string what): msg(std::move(what)) {}
+
 	const char* what() const noexcept override {
 		return msg.c_str();
 	}
+
 protected:
 	std::string msg;
 };
 
-struct TestFailedException: public Exception {
-	TestFailedException()
+struct ExceptionWithPos: Exception {
+	template <typename Pos>
+	ExceptionWithPos(const Pos& pos, const std::string original_msg_):
+		Exception(std::string(pos) + ": " + original_msg_),
+		original_msg(std::move(original_msg_))
 	{
-		msg = "At least one of the tests failed";
 	}
+
+	std::string original_msg;
 };
 
-struct ControllerCreatonException: public Exception {
-	ControllerCreatonException(std::shared_ptr<IR::Controller> controller) {
-		std::stringstream ss;
-		for (auto macro_call: controller->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
-		}
-
-		ss << std::string(controller->ast_node->begin()) << ": In the " << controller->type() << " \"" << controller->name() << "\" declaration";
-		msg = ss.str();
-	}
-};
-
-struct ActionException: public Exception {
-	ActionException(std::shared_ptr<AST::Node> node, std::shared_ptr<IR::Controller> controller): controller(controller)
-	{
-		msg = std::string(node->begin()) + ": Error while performing action " + node->to_string();
-		if (controller) {
-			msg += " on " + controller->type() + " " + controller->name();
-		}
-	}
-
-	std::shared_ptr<IR::Controller> controller;
-};
-
-struct MacroException: public Exception {
-	MacroException(std::shared_ptr<AST::IMacroCall> macro_call)
-	{
-		msg = std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->to_string();
-	}
-};
-
-struct AbortException: public Exception {
-	AbortException(std::shared_ptr<AST::Abort> node, std::shared_ptr<IR::Controller> controller, const std::string& message)
-	{
-		msg = std::string(node->begin()) + ": Caught abort action ";
-		if (controller) {
-			msg += "on " + controller->type() + " " +  controller->name();
-		}
-
-		msg += " with message: ";
-		msg += message;
-	}
-};
-
-
-struct CycleControlException: public Exception {
-	CycleControlException(const Token& token): token(token)
-	{
-		msg = std::string(token.begin()) + " error: cycle control action has not a correcponding cycle";
-	}
-
-	Token token;
+struct TestFailedException: Exception {
+	TestFailedException(): Exception("At least one of the tests failed") {}
 };
 
 std::ostream& operator<<(std::ostream& stream, const std::exception& error);

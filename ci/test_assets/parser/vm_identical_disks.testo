@@ -1,0 +1,15 @@
+
+machine vm_identical_disks {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	disk second: {
+		size: 4Gb
+	}
+	disk first: {
+		size: 4Gb
+	}
+}
