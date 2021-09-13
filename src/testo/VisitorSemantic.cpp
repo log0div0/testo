@@ -1,4 +1,5 @@
 
+#include "NNServiceClient.hpp"
 #include "backends/Environment.hpp"
 #include "VisitorSemantic.hpp"
 #include "Exceptions.hpp"
@@ -464,7 +465,7 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	}
 
 	try {
-		auto validate_result = env->nn_client.validate_js(script);
+		auto validate_result = env->nn_client->validate_js(script);
 		auto type = validate_result.at("type").get<std::string>();
 		if (type == "error") {
 			throw std::runtime_error(validate_result.at("data").get<std::string>());

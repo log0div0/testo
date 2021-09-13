@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "../NNServiceClient.hpp"
-
 #include "VM.hpp"
 #include "FlashDrive.hpp"
 #include "Network.hpp"
@@ -18,8 +16,14 @@ struct EnvironmentConfig {
 	std::string nn_service_endpoint = "127.0.0.1:8156";
 };
 
+struct NNServiceClient;
+
 struct Environment {
-	virtual ~Environment() = default;
+	Environment();
+	virtual ~Environment();
+
+	Environment(const Environment&) = delete;
+	Environment& operator=(const Environment&) = delete;
 
 	virtual fs::path testo_dir() const = 0;
 
@@ -44,7 +48,7 @@ struct Environment {
 	virtual void validate_flash_drive_config(const nlohmann::json& config) = 0;
 	virtual void validate_network_config(const nlohmann::json& config) = 0;
 
-	NNServiceClient nn_client;
+	std::unique_ptr<NNServiceClient> nn_client;
 };
 
 extern std::shared_ptr<Environment> env;

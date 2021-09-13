@@ -2,6 +2,7 @@
 #include <coro/CheckPoint.h>
 #include <coro/Timeout.h>
 #include "VisitorInterpreterActionMachine.hpp"
+#include "NNServiceClient.hpp"
 #include "Exceptions.hpp"
 #include "backends/Environment.hpp"
 #include "IR/Program.hpp"
@@ -986,7 +987,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 
 nlohmann::json VisitorInterpreterActionMachine::eval_js(const std::string& script, const stb::Image<stb::RGB>& screenshot) {
 	try {
-		auto eval_result = env->nn_client.eval_js(&screenshot, script);
+		auto eval_result = env->nn_client->eval_js(&screenshot, script);
 
 		auto type = eval_result.at("type").get<std::string>();
 

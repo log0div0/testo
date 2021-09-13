@@ -1,4 +1,5 @@
 
+#include "../NNServiceClient.hpp"
 #include "Environment.hpp"
 
 std::string EnvironmentConfig::nn_service_ip() const {
@@ -53,5 +54,13 @@ void Environment::setup(const EnvironmentConfig& config) {
 		}
 	}
 
-	nn_client = NNServiceClient(config.nn_service_ip(), config.nn_service_port());
+	nn_client = std::make_unique<NNServiceClient>(config.nn_service_ip(), config.nn_service_port());
+}
+
+Environment::Environment() {
+
+}
+
+Environment::~Environment() {
+
 }
