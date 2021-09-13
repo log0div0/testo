@@ -60,7 +60,7 @@ test centos_install_os {
 		mouse click "Workstation".from_top(0)
 		mouse click "Done".from_top(0)
 		sleep 5s
-		mouse click js "find_text('Begin Installation').match_color(null, 'blue').from_top(0)"
+		mouse click js "return find_text('Begin Installation').match_color(null, 'blue').from_top(0)"
 		sleep 2s
 		mouse click "Root Password".from_top(0);
 		wait "Enter a password"; type "${password}"
@@ -83,11 +83,11 @@ test centos_install_os {
 		wait "Online Accounts"; mouse click "Skip";
 		wait "About You"; mouse click "Full Name".right_center().move_right(30);
 		type "${login}"
-		mouse click js "find_text('Next').match_color(null, 'blue').from_top(0)"
+		mouse click js "return find_text('Next').match_color(null, 'blue').from_top(0)"
 		wait "Set a Password";
 		type "${password}"; press Tab; type "${password}";
 		mouse move 0 0
-		mouse click js "find_text('Next').match_color(null, 'blue').from_top(0)"
+		mouse click js "return find_text('Next').match_color(null, 'blue').from_top(0)"
 		mouse click "Start Using CentOS Linux"
 		if (check "Not listed?" timeout 5s) {
 			mouse click "${login}"

@@ -6,7 +6,6 @@
 #include "IR/Program.hpp"
 
 struct RunModeArgs: IR::ProgramConfig {
-	std::string license;
 	void validate() const;
 };
 

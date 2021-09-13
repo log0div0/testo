@@ -14,6 +14,5 @@ sudo testo run "$SCRIPT_DIR/test_scripts" \
 	--param ISO_DIR "$ISO_DIR" \
 	--param OUT_DIR "$OUT_DIR" \
 	--param TEST_ASSETS_DIR "$SCRIPT_DIR/test_assets" \
-	--license "$LICENSE_PATH" \
 	${TEST_SPEC} \
 	--assume_yes

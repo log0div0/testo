@@ -30,7 +30,7 @@ test centos_install_os {
 		mouse click "Minimal Install"
 		mouse click "Done".from_top(0)
 		sleep 5s
-		mouse click js "find_text('Begin Installation').match_color(null, 'blue').from_top(0)"
+		mouse click js "return find_text('Begin Installation').match_color(null, 'blue').from_top(0)"
 		mouse click "Root Password".from_top(0);
 		wait "Enter a password"; type "${password}"
 		press Tab; type "${password}"
