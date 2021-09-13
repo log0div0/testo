@@ -25,13 +25,11 @@ bool check_system_code(const std::error_code& code) {
 void NNServiceClient::establish_connection() {
 	for (size_t i = 1; i <= tries; ++i) {
 		try {
-			std::cout << "Attempt #" << i << " connecting to the nn_service..." << std::endl;
 			channel->socket = Socket();
 			channel->socket.connect(endpoint);
-			std::cout << "Connected!\n";
 			return;
 		} catch (const std::exception& error) {
-			std::cout << error.what() << std::endl;
+			std::cerr << error.what() << std::endl;
 			coro::Timer timer;
 			timer.waitFor(2s);
 		}
@@ -77,7 +75,7 @@ nlohmann::json NNServiceClient::eval_js(const stb::Image<stb::RGB>* image, const
 			return {};
 		} catch (const std::system_error& error) {
 			if (check_system_code(error.code())) {
-				std::cout << "Lost the connection to the nn_service, reconnecting...\n";
+				std::cerr << "Lost the connection to the nn_service, reconnecting...\n";
 				establish_connection();
 			} else {
 				throw;
@@ -96,7 +94,7 @@ nlohmann::json NNServiceClient::validate_js(const std::string& script)
 			return response;
 		} catch (const std::system_error& error) {
 			if (check_system_code(error.code())) {
-				std::cout << "Lost the connection to the nn_service, reconnecting...\n";
+				std::cerr << "Lost the connection to the nn_service, reconnecting...\n";
 				establish_connection();
 			} else {
 				throw;
