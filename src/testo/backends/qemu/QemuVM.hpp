@@ -16,12 +16,12 @@ struct QemuVM: public VM {
 	void remove_disks() override;
 	nlohmann::json make_snapshot(const std::string& snapshot) override;
 	void rollback(const std::string& snapshot, const nlohmann::json& opaque) override;
-	void hold(const std::string& button) override;
-	void release(const std::string& button) override;
+	void hold(KeyboardButton button) override;
+	void release(KeyboardButton button) override;
 	void mouse_move_abs(uint32_t x, uint32_t y) override;
 	void mouse_move_rel(int x, int y) override;
-	void mouse_hold(const MouseButton& buttons) override;
-	void mouse_release(const MouseButton& buttons) override;
+	void mouse_hold(MouseButton buttons) override;
+	void mouse_release(MouseButton buttons) override;
 	bool is_nic_plugged(const std::string& nic) const override;
 	void plug_nic(const std::string& nic) override;
 	void unplug_nic(const std::string& nic) override;

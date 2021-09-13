@@ -57,7 +57,7 @@ std::string QemuNetwork::find_free_nat() const {
 			return std::to_string(i);
 		}
 	}
-	throw std::runtime_error(std::string("Can't find a free nat to create network ") + id());
+	throw std::runtime_error("Can't find a free nat to create network " + id());
 }
 
 void QemuNetwork::create() {

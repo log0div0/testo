@@ -18,7 +18,7 @@ std::string Defined::var() const {
 
 
 std::string Comparison::op() const {
-	return ast_node->t.value();
+	return ast_node->op.value();
 }
 
 std::string Comparison::left() const {
@@ -34,30 +34,30 @@ bool Comparison::calculate() const {
 	auto r = right();
 	if (op() == "GREATER") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->left->begin(), "Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->right->begin(), "Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) > std::stoul(r);
 
 	} else if (op() == "LESS") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->left->begin(), "Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->right->begin(), "Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) < std::stoul(r);
 
 	} else if (op() == "EQUAL") {
 		if (!is_number(l)) {
-			throw std::runtime_error(std::string(ast_node->left->begin()) + ": Error: \"" + l + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->left->begin(), "Error: \"" + l + "\" is not an integer number");
 		}
 		if (!is_number(r)) {
-			throw std::runtime_error(std::string(ast_node->right->begin()) + ": Error: \"" + r + "\" is not an integer number");
+			throw ExceptionWithPos(ast_node->right->begin(), "Error: \"" + r + "\" is not an integer number");
 		}
 
 		return std::stoul(l) == std::stoul(r);
@@ -73,11 +73,23 @@ bool Comparison::calculate() const {
 	}
 }
 
+SelectExpr Check::select_expr() const {
+	return SelectExpr(ast_node->select_expr, stack);
+}
+
+TimeInterval Check::timeout() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_CHECK_DEFAULT_TIMEOUT");
+}
+
+TimeInterval Check::interval() const {
+	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("interval", "TESTO_CHECK_DEFAULT_INTERVAL");
+}
+
 std::vector<std::string> Range::values() const {
 	std::vector<std::string> result;
 
-	auto r1_num = std::stoi(r1());
-	auto r2_num = std::stoi(r2());
+	auto r1_num = r1();
+	auto r2_num = r2();
 
 	for (int32_t i = r1_num; i < r2_num; ++i) {
 		result.push_back(std::to_string(i));
@@ -86,19 +98,19 @@ std::vector<std::string> Range::values() const {
 	return result;
 }
 
-std::string Range::r1() const {
+int32_t Range::r1() const {
 	if (ast_node->r2) {
-		return StringTokenUnion(ast_node->r1, stack).resolve();
+		return Number(ast_node->r1, stack).value();
 	} else {
-		return "0";
+		return 0;
 	}
 }
 
-std::string Range::r2() const {
+int32_t Range::r2() const {
 	if (ast_node->r2) {
-		return StringTokenUnion(ast_node->r2, stack).resolve();
+		return Number(ast_node->r2, stack).value();
 	} else {
-		return StringTokenUnion(ast_node->r1, stack).resolve();
+		return Number(ast_node->r1, stack).value();
 	}
 }
 

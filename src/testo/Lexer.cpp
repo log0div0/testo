@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string.h>
+#include "Exceptions.hpp"
 
 Lexer::Lexer(const fs::path& file, const std::string& input): input(new std::string(input)) {
 	current_pos = Pos(file, this->input);
@@ -30,11 +31,11 @@ void Lexer::skip_multiline_comments() {
 	while(!test_end_multiline_comments()) {
 		advance();
 		if (test_eof()) {
-			throw std::runtime_error(std::string(current_pos) + ": Error: can't find end of multiline comments");
+			throw ExceptionWithPos(current_pos, "Error: can't find end of multiline comments");
 		}
 
 		if (test_begin_multiline_comments()) {
-			throw std::runtime_error(std::string(current_pos) + ": Error: nested multiline comments are not allowed");
+			throw ExceptionWithPos(current_pos, "Error: nested multiline comments are not allowed");
 		}
 	}
 
@@ -97,7 +98,7 @@ char Lexer::escaped_character() {
 	}
 
 	if (test_eof()) {
-		throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unexpected eof");
+		throw ExceptionWithPos(current_pos, "Error: Unexpected eof");
 	}
 
 	char res = (*input)[current_pos];
@@ -139,16 +140,16 @@ Token Lexer::number() {
 
 	if (test_size_specifier()) {
 		if (is_signed) {
-			throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: size specifier can't be signed");
+			throw ExceptionWithPos(tmp_pos, "Error: size specifier can't be signed");
 		}
 		return size(value, current_pos);
 	} else if (test_time_specifier()) {
 		if (is_signed) {
-			throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: time specifier can't be signed");
+			throw ExceptionWithPos(tmp_pos, "Error: time specifier can't be signed");
 		}
 		return time_interval(value, current_pos);
 	} else if (test_id()) {
-		throw std::runtime_error(std::string(tmp_pos) + " -> ERROR: ID can't start with a number");
+		throw ExceptionWithPos(tmp_pos, "Error: ID can't start with a number");
 	} else {
 		return Token(Token::category::number, value, tmp_pos, previous_pos);
 	}
@@ -247,10 +248,6 @@ Token Lexer::id() {
 		return copyto();
 	} else if (value == "copyfrom") {
 		return copyfrom();
-	} else if (value == "timeout") {
-		return timeout();
-	} else if (value == "interval") {
-		return interval();
 	} else if (value == "for") {
 		return for_();
 	} else if (value == "test") {
@@ -532,20 +529,6 @@ Token Lexer::copyfrom() {
 	return Token(Token::category::copyfrom, value, tmp_pos, previous_pos);
 }
 
-Token Lexer::timeout() {
-	Pos tmp_pos = current_pos;
-	std::string value("timeout");
-	advance(value.length());
-	return Token(Token::category::timeout, value, tmp_pos, previous_pos);
-}
-
-Token Lexer::interval() {
-	Pos tmp_pos = current_pos;
-	std::string value("interval");
-	advance(value.length());
-	return Token(Token::category::interval, value, tmp_pos, previous_pos);
-}
-
 Token Lexer::for_() {
 	Pos tmp_pos = current_pos;
 	std::string value("for");
@@ -757,7 +740,7 @@ Token Lexer::triple_quoted_string() {
 
 	do {
 		if (test_eof()) {
-			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing triple quote");
+			throw ExceptionWithPos(current_pos, "Error: expected closing triple quote");
 		}
 
 		if (test_escaped_character()) {
@@ -791,7 +774,7 @@ Token Lexer::quoted_string() {
 	std::string value;
 	do {
 		if (test_eof() || test_newline()) {
-			throw std::runtime_error(std::string(current_pos) + " -> ERROR: expected closing double quote");
+			throw ExceptionWithPos(current_pos, "Error: expected closing double quote");
 		}
 
 		if (test_escaped_character()) {
@@ -959,7 +942,7 @@ Token Lexer::get_next_token() {
 			skip_multiline_comments();
 			continue;
 		} else {
-			throw std::runtime_error(std::string(current_pos) + " -> ERROR: Unknown lexem: " + (*input)[current_pos]);
+			throw ExceptionWithPos(current_pos, "Error: Unknown lexem: " + (*input)[current_pos]);
 		}
 	}
 

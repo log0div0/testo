@@ -257,110 +257,110 @@ const std::vector<std::string> QemuVM::disk_targets = {
 	"hdd"
 };
 
-const std::unordered_map<std::string, uint16_t> scancodes = {
-	{"ESC", 1},
-	{"ONE", 2},
-	{"TWO", 3},
-	{"THREE", 4},
-	{"FOUR", 5},
-	{"FIVE", 6},
-	{"SIX", 7},
-	{"SEVEN", 8},
-	{"EIGHT", 9},
-	{"NINE", 10},
-	{"ZERO", 11},
-	{"MINUS", 12},
-	{"EQUALSIGN", 13},
-	{"BACKSPACE", 14},
-	{"TAB", 15},
-	{"Q", 16},
-	{"W", 17},
-	{"E", 18},
-	{"R", 19},
-	{"T", 20},
-	{"Y", 21},
-	{"U", 22},
-	{"I", 23},
-	{"O", 24},
-	{"P", 25},
-	{"LEFTBRACE", 26},
-	{"RIGHTBRACE", 27},
-	{"ENTER", 28},
-	{"LEFTCTRL", 29},
-	{"A", 30},
-	{"S", 31},
-	{"D", 32},
-	{"F", 33},
-	{"G", 34},
-	{"H", 35},
-	{"J", 36},
-	{"K", 37},
-	{"L", 38},
-	{"SEMICOLON", 39},
-	{"APOSTROPHE", 40},
-	{"GRAVE", 41},
-	{"LEFTSHIFT", 42},
-	{"BACKSLASH", 43},
-	{"Z", 44},
-	{"X", 45},
-	{"C", 46},
-	{"V", 47},
-	{"B", 48},
-	{"N", 49},
-	{"M", 50},
-	{"COMMA", 51},
-	{"DOT", 52},
-	{"SLASH", 53},
-	{"RIGHTSHIFT", 54},
-	{"LEFTALT", 56},
-	{"SPACE", 57},
-	{"CAPSLOCK", 58},
-	{"F1", 59},
-	{"F2", 60},
-	{"F3", 61},
-	{"F4", 62},
-	{"F5", 63},
-	{"F6", 64},
-	{"F7", 65},
-	{"F8", 66},
-	{"F9", 67},
-	{"F10", 68},
-	{"F11", 87},
-	{"F12", 88},
-	{"NUMLOCK", 69},
-	{"KP_0", 82},
-	{"KP_1", 79},
-	{"KP_2", 80},
-	{"KP_3", 81},
-	{"KP_4", 75},
-	{"KP_5", 76},
-	{"KP_6", 77},
-	{"KP_7", 71},
-	{"KP_8", 72},
-	{"KP_9", 73},
-	{"KP_PLUS", 78},
-	{"KP_MINUS", 74},
-	{"KP_SLASH", 98},
-	{"KP_ASTERISK", 55},
-	{"KP_ENTER", 96},
-	{"KP_DOT", 83},
-	{"SCROLLLOCK", 70},
-	{"RIGHTCTRL", 97},
-	{"RIGHTALT", 100},
-	{"HOME", 102},
-	{"UP", 103},
-	{"PAGEUP", 104},
-	{"LEFT", 105},
-	{"RIGHT", 106},
-	{"END", 107},
-	{"DOWN", 108},
-	{"PAGEDOWN", 109},
-	{"INSERT", 110},
-	{"DELETE", 111},
-	{"LEFTMETA", 125},
-	{"RIGHTMETA", 126},
-	{"SCROLLUP", 177},
-	{"SCROLLDOWN", 178},
+const std::unordered_map<KeyboardButton, uint16_t> scancodes = {
+	{KeyboardButton::ESC, 1},
+	{KeyboardButton::ONE, 2},
+	{KeyboardButton::TWO, 3},
+	{KeyboardButton::THREE, 4},
+	{KeyboardButton::FOUR, 5},
+	{KeyboardButton::FIVE, 6},
+	{KeyboardButton::SIX, 7},
+	{KeyboardButton::SEVEN, 8},
+	{KeyboardButton::EIGHT, 9},
+	{KeyboardButton::NINE, 10},
+	{KeyboardButton::ZERO, 11},
+	{KeyboardButton::MINUS, 12},
+	{KeyboardButton::EQUALSIGN, 13},
+	{KeyboardButton::BACKSPACE, 14},
+	{KeyboardButton::TAB, 15},
+	{KeyboardButton::Q, 16},
+	{KeyboardButton::W, 17},
+	{KeyboardButton::E, 18},
+	{KeyboardButton::R, 19},
+	{KeyboardButton::T, 20},
+	{KeyboardButton::Y, 21},
+	{KeyboardButton::U, 22},
+	{KeyboardButton::I, 23},
+	{KeyboardButton::O, 24},
+	{KeyboardButton::P, 25},
+	{KeyboardButton::LEFTBRACE, 26},
+	{KeyboardButton::RIGHTBRACE, 27},
+	{KeyboardButton::ENTER, 28},
+	{KeyboardButton::LEFTCTRL, 29},
+	{KeyboardButton::A, 30},
+	{KeyboardButton::S, 31},
+	{KeyboardButton::D, 32},
+	{KeyboardButton::F, 33},
+	{KeyboardButton::G, 34},
+	{KeyboardButton::H, 35},
+	{KeyboardButton::J, 36},
+	{KeyboardButton::K, 37},
+	{KeyboardButton::L, 38},
+	{KeyboardButton::SEMICOLON, 39},
+	{KeyboardButton::APOSTROPHE, 40},
+	{KeyboardButton::GRAVE, 41},
+	{KeyboardButton::LEFTSHIFT, 42},
+	{KeyboardButton::BACKSLASH, 43},
+	{KeyboardButton::Z, 44},
+	{KeyboardButton::X, 45},
+	{KeyboardButton::C, 46},
+	{KeyboardButton::V, 47},
+	{KeyboardButton::B, 48},
+	{KeyboardButton::N, 49},
+	{KeyboardButton::M, 50},
+	{KeyboardButton::COMMA, 51},
+	{KeyboardButton::DOT, 52},
+	{KeyboardButton::SLASH, 53},
+	{KeyboardButton::RIGHTSHIFT, 54},
+	{KeyboardButton::LEFTALT, 56},
+	{KeyboardButton::SPACE, 57},
+	{KeyboardButton::CAPSLOCK, 58},
+	{KeyboardButton::F1, 59},
+	{KeyboardButton::F2, 60},
+	{KeyboardButton::F3, 61},
+	{KeyboardButton::F4, 62},
+	{KeyboardButton::F5, 63},
+	{KeyboardButton::F6, 64},
+	{KeyboardButton::F7, 65},
+	{KeyboardButton::F8, 66},
+	{KeyboardButton::F9, 67},
+	{KeyboardButton::F10, 68},
+	{KeyboardButton::F11, 87},
+	{KeyboardButton::F12, 88},
+	{KeyboardButton::NUMLOCK, 69},
+	{KeyboardButton::KP_0, 82},
+	{KeyboardButton::KP_1, 79},
+	{KeyboardButton::KP_2, 80},
+	{KeyboardButton::KP_3, 81},
+	{KeyboardButton::KP_4, 75},
+	{KeyboardButton::KP_5, 76},
+	{KeyboardButton::KP_6, 77},
+	{KeyboardButton::KP_7, 71},
+	{KeyboardButton::KP_8, 72},
+	{KeyboardButton::KP_9, 73},
+	{KeyboardButton::KP_PLUS, 78},
+	{KeyboardButton::KP_MINUS, 74},
+	{KeyboardButton::KP_SLASH, 98},
+	{KeyboardButton::KP_ASTERISK, 55},
+	{KeyboardButton::KP_ENTER, 96},
+	{KeyboardButton::KP_DOT, 83},
+	{KeyboardButton::SCROLLLOCK, 70},
+	{KeyboardButton::RIGHTCTRL, 97},
+	{KeyboardButton::RIGHTALT, 100},
+	{KeyboardButton::HOME, 102},
+	{KeyboardButton::UP, 103},
+	{KeyboardButton::PAGEUP, 104},
+	{KeyboardButton::LEFT, 105},
+	{KeyboardButton::RIGHT, 106},
+	{KeyboardButton::END, 107},
+	{KeyboardButton::DOWN, 108},
+	{KeyboardButton::PAGEDOWN, 109},
+	{KeyboardButton::INSERT, 110},
+	{KeyboardButton::DELETE, 111},
+	{KeyboardButton::LEFTMETA, 125},
+	{KeyboardButton::RIGHTMETA, 126},
+	{KeyboardButton::SCROLLUP, 177},
+	{KeyboardButton::SCROLLDOWN, 178},
 };
 
 QemuVM::QemuVM(const nlohmann::json& config_): VM(config_),
@@ -709,13 +709,9 @@ void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque)
 	}
 }
 
-void QemuVM::hold(const std::string& button_) {
+void QemuVM::hold(KeyboardButton button) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-
-		std::string button = button_;
-
-		std::transform(button.begin(), button.end(), button.begin(), toupper);
 
 		uint32_t scancode = virKeyCodeTable_rfb.at(scancodes.at(button));
 
@@ -751,13 +747,9 @@ void QemuVM::hold(const std::string& button_) {
 }
 
 
-void QemuVM::release(const std::string& button_) {
+void QemuVM::release(KeyboardButton button) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-
-		std::string button = button_;
-
-		std::transform(button.begin(), button.end(), button.begin(), toupper);
 
 		uint32_t scancode = virKeyCodeTable_rfb.at(scancodes.at(button));
 
@@ -883,7 +875,7 @@ void QemuVM::mouse_move_rel(int x, int y) {
 	}
 }
 
-void QemuVM::mouse_hold(const MouseButton& button) {
+void QemuVM::mouse_hold(MouseButton button) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
@@ -916,7 +908,7 @@ void QemuVM::mouse_hold(const MouseButton& button) {
 }
 
 
-void QemuVM::mouse_release(const MouseButton& button) {
+void QemuVM::mouse_release(MouseButton button) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
@@ -1406,13 +1398,11 @@ bool QemuVM::is_dvd_plugged() const {
 void QemuVM::plug_dvd(fs::path path) {
 	try {
 		if (!fs::exists(path)) {
-			throw std::runtime_error(std::string("specified iso file does not exist: ")
-				+ path.generic_string());
+			throw std::runtime_error("specified iso file does not exist: " + path.generic_string());
 		}
 
 		if (!fs::is_regular_file(path)) {
-			throw std::runtime_error(std::string("specified iso is not a regular file: ")
-				+ path.generic_string());
+			throw std::runtime_error("specified iso is not a regular file: " + path.generic_string());
 		}
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 

@@ -100,32 +100,32 @@ test centos_actions_param: centos_install_testo {
 			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/actions.testo --test_spec check_sleep_param_invalid 2>&1)
-			[[ $output == *"/opt/scripts/actions.testo:30:9: Error while resolving \\\"-7\\\""* ]]
-			[[ $output == *"Can't convert string value \\\"-7\\\" to TIME INTERVAL"* ]]
+			[[ $output == *"/opt/scripts/actions.testo:30:9: Error while parsing \\\"-7\\\""* ]]
+			[[ $output == *"Error: expected TIME INTERVAL, but got NUMBER \\\"-7\\\""* ]]
 		"""
 
 		exec bash """
 			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/actions.testo --test_spec check_type_param_invalid 2>&1)
-			[[ $output == *"/opt/scripts/actions.testo:53:39: Error while resolving \\\"interval\\\""* ]]
-			[[ $output == *"Can't convert string value \\\"interval\\\" to TIME INTERVAL"* ]]
+			[[ $output == *"/opt/scripts/actions.testo:53:39: Error while parsing \\\"interval\\\""* ]]
+			[[ $output == *"Error: expected TIME INTERVAL, but got IDENTIFIER \\\"interval\\\""* ]]
 		"""
 
 		exec bash """
 			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/actions.testo --test_spec check_wait_param_invalid 2>&1)
-			[[ $output == *"/opt/scripts/actions.testo:77:39: Error while resolving \\\"interval\\\""* ]]
-			[[ $output == *"Can't convert string value \\\"interval\\\" to TIME INTERVAL"* ]]
+			[[ $output == *"/opt/scripts/actions.testo:77:39: Error while parsing \\\"interval\\\""* ]]
+			[[ $output == *"Error: expected TIME INTERVAL, but got IDENTIFIER \\\"interval\\\""* ]]
 		"""
 
 		exec bash """
 			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/actions.testo --test_spec check_shutdown_param_invalid 2>&1)
-			[[ $output == *"/opt/scripts/actions.testo:100:20: Error while resolving \\\"\\\""* ]]
-			[[ $output == *"Can't convert string value \\\"\\\" to TIME INTERVAL"* ]]
+			[[ $output == *"/opt/scripts/actions.testo:100:20: Error while parsing \\\"\\\""* ]]
+			[[ $output == *"Error: expected TIME INTERVAL, but got EOF"* ]]
 		"""
 
 	}

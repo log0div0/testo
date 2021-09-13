@@ -1,0 +1,6 @@
+
+test invalid_mouse_parented_expr_0 {
+	my_ubuntu_server {
+		mouse move ("lala" && !js "another lala")
+	}
+}

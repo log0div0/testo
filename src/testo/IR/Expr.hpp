@@ -1,45 +1,45 @@
 #pragma once
 
-#include "../AST.hpp"
-#include "../Stack.hpp"
+#include "Base.hpp"
 
 namespace IR {
 
 template <typename ASTType>
-struct Factor {
-	Factor(std::shared_ptr<ASTType> ast_node_, std::shared_ptr<StackNode> stack_):
-		ast_node(std::move(ast_node_)), stack(std::move(stack_)) {}
-	std::shared_ptr<ASTType> ast_node;
-	std::shared_ptr<StackNode> stack;
+struct Expr: Node<ASTType> {
+	using Node<ASTType>::Node;
 };
 
-struct Defined: Factor<AST::Defined> {
-	using Factor<AST::Defined>::Factor;
+struct Defined: Expr<AST::Defined> {
+	using Expr<AST::Defined>::Expr;
 	bool is_defined() const;
 	std::string var() const;
 };
 
-struct Comparison: Factor<AST::Comparison> {
-	using Factor<AST::Comparison>::Factor;
+struct Comparison: Expr<AST::Comparison> {
+	using Expr<AST::Comparison>::Expr;
 	std::string op() const;
 	std::string left() const;
 	std::string right() const;
 	bool calculate() const;
 };
 
+struct Check: Expr<AST::Check> {
+	using Expr<AST::Check>::Expr;
+	SelectExpr select_expr() const;
+	TimeInterval timeout() const;
+	TimeInterval interval() const;
+};
+
 template <typename ASTType>
-struct CounterList {
-	CounterList(std::shared_ptr<ASTType> ast_node_, std::shared_ptr<StackNode> stack_):
-		ast_node(std::move(ast_node_)), stack(std::move(stack_)) {}
-	std::shared_ptr<ASTType> ast_node;
-	std::shared_ptr<StackNode> stack;
+struct CounterList: Node<ASTType> {
+	using Node<ASTType>::Node;
 };
 
 struct Range: CounterList<AST::Range> {
 	using CounterList<AST::Range>::CounterList;
 	std::vector<std::string> values() const;
-	std::string r1() const;
-	std::string r2() const;
+	int32_t r1() const;
+	int32_t r2() const;
 };
 
 }

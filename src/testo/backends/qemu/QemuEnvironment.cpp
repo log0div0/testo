@@ -12,7 +12,7 @@ void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
 	auto pool_dir = testo_dir() / pool_name;
 	if (!fs::exists(pool_dir)) {
 		if (!fs::create_directories(pool_dir)) {
-			throw std::runtime_error(std::string("Can't create directory: ") + pool_dir.generic_string());
+			throw std::runtime_error("Can't create directory: " + pool_dir.generic_string());
 		}
 	}
 

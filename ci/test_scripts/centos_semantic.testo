@@ -80,7 +80,7 @@ test centos_semantic: centos_install_testo {
 			testo run /macro_call.testo --test_spec call_macro_starts_with_if 2>&1 > /dev/null | grep "Error: unexpected token \\\"if\\\", expected: }"
 			testo run /macro_call.testo --test_spec call_macro_starts_with_for 2>&1 > /dev/null | grep "Error: unexpected token \\\"for\\\", expected: }"
 			testo run /macro_call.testo --test_spec call_macro_starts_with_semicolon 2>&1 > /dev/null | grep "Error: unexpected token \\\";\\\", expected: }"
-			testo run /macro_call.testo --test_spec wrong_flash_macro2 2>&1 > /dev/null | grep "Error: The action \\\"type\\\" is not applicable to a flash drive"
+			testo run /macro_call.testo --test_spec wrong_flash_macro2 2>&1 > /dev/null | grep "Error: The action \\\"type \\\"lala\\\"\\\" is not applicable to a flash drive"
 			testo run /macro_call.testo --test_spec call_macro_test_outside_test1 2>&1 > /dev/null |  grep "Error: unexpected token \\\"test\\\", expected: }"
 		"""
 
@@ -168,27 +168,21 @@ test centos_semantic: centos_install_testo {
 			testo run /macro_call.testo --test_spec too_many_args 2>&1 > /dev/null | grep "Error: expected at most 4 args, 5 provided"
 			testo run /macro_call.testo --test_spec wrong_macro_0 2>&1 > /dev/null | grep "Error: duplicate macro arg: arg1"
 			testo run /macro_call.testo --test_spec wrong_macro_1 2>&1 > /dev/null | grep "Error: default value must be specified for macro arg arg3"
-			testo run /macro_call.testo --test_spec wrong_flash_macro 2>&1 > /dev/null | grep "Error: The action \\\"type\\\" is not applicable to a flash drive"
+			testo run /macro_call.testo --test_spec wrong_flash_macro 2>&1 > /dev/null | grep "Error: The action \\\"type \\\"lala\\\"\\\" is not applicable to a flash drive"
 		"""
 
 		exec bash """
 			set +o pipefail
-			testo run /for.testo --test_spec wrong_r1_0 2>&1 > /dev/null | grep "Can't convert string value \\\"30ms\\\" to NUMBER"
+			testo run /for.testo --test_spec wrong_r1_0 2>&1 > /dev/null | grep "Error: expected NUMBER, but got TIME INTERVAL \\\"30ms\\\""
 			testo run /for.testo --test_spec wrong_r1_1 2>&1 > /dev/null | grep "Can't convert range start -5 to a non-negative number"
 			testo run /for.testo --test_spec wrong_r1_2 2>&1 > /dev/null | grep "Can't convert range start -5 to a non-negative number"
-			testo run /for.testo --test_spec wrong_r2_0 2>&1 > /dev/null | grep "Can't convert string value \\\"30ms\\\" to NUMBER"
+			testo run /for.testo --test_spec wrong_r2_0 2>&1 > /dev/null | grep "Error: expected NUMBER, but got TIME INTERVAL \\\"30ms\\\""
 			testo run /for.testo --test_spec wrong_r2_1 2>&1 > /dev/null | grep "Can't convert range finish -5 to a non-negative number"
-			testo run /for.testo --test_spec wrong_r2_2 2>&1 > /dev/null | grep "Can't convert string value \\\"30ms\\\" to NUMBER"
+			testo run /for.testo --test_spec wrong_r2_2 2>&1 > /dev/null | grep "Error: expected NUMBER, but got TIME INTERVAL \\\"30ms\\\""
 			testo run /for.testo --test_spec wrong_r2_3 2>&1 > /dev/null | grep "Can't convert range finish -5 to a non-negative number"
 			testo run /for.testo --test_spec wrong_r2_4 2>&1 > /dev/null | grep "Can't convert range finish -5 to a non-negative number"
 			testo run /for.testo --test_spec wrong_start_finish_0 2>&1 > /dev/null | grep "Error: start of the range 5 is greater or equal to finish 4"
 			testo run /for.testo --test_spec wrong_start_finish_1 2>&1 > /dev/null | grep "Error: start of the range 0 is greater or equal to finish 0"
-		"""
-
-		#multiline attributes
-		exec bash """
-			set +o pipefail
-			testo run /0025.testo 2>&1 > /dev/null | grep "Can't accept multiline as an attr value"
 		"""
 
 		# check exit code

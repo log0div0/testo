@@ -118,25 +118,6 @@ test create_vm_disk_no_size {
 	vm_disk_no_size {}
 }
 
-machine vm_identical_disks {
-	cpus: 1
-	ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
-	disk first: {
-		size: 4Gb
-	}
-	disk second: {
-		size: 4Gb
-	}
-	disk first: {
-		size: 4Gb
-	}
-}
-
-test create_vm_identical_disks {
-	vm_identical_disks {}
-}
-
 machine vm_nic_no_attached_to {
 	cpus: 1
 	ram: 512Mb
@@ -210,30 +191,6 @@ machine vm_nic_incorrect_type {
 
 test create_vm_nic_incorrect_type {
 	vm_nic_incorrect_type {}
-}
-
-machine vm_identical_nic_names {
-	cpus: 1
-	ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
-	disk first: {
-		size: 4Gb
-	}
-	nic my_nic: {
-		attached_to: "my_network"
-	}
-
-	nic my_nic2: {
-		attached_to: "my_network"
-	}
-
-	nic my_nic: {
-		attached_to: "my_network"
-	}
-}
-
-test create_vm_identical_nic_names {
-	vm_identical_nic_names {}
 }
 
 machine vm_iso_does_not_exist {
@@ -317,59 +274,6 @@ test create_vm_unknown_network {
 	vm_unknown_network {}
 }
 
-
-machine vm_unknown_attr {
-	cpus: 1
-	ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
-	disk first: {
-		some_attr: 4Gb
-	}
-}
-
-test create_vm_unknown_attr {
-	vm_unknown_attr {}
-}
-
-machine vm_attr_requires_name {
-	cpus: 1
-	ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
-	disk: {
-		size: 4Gb
-	}
-}
-
-test create_vm_attr_requires_name {
-	vm_attr_requires_name {}
-}
-
-machine vm_attr_must_have_no_name {
-	cpus: 1
-	ram main_ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
-	disk main: {
-		size: 4Gb
-	}
-}
-
-test create_vm_attr_must_have_no_name {
-	vm_attr_must_have_no_name {}
-}
-
-machine vm_attr_type_mismatch {
-	cpus: 1
-	ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
-	disk main: {
-		size: 4
-	}
-}
-
-test create_vm_attr_type_mismatch {
-	vm_attr_type_mismatch {}
-}
-
 machine vm_attr_type_cant_convert {
 	cpus: 1
 	ram: 512Mb
@@ -381,20 +285,6 @@ machine vm_attr_type_cant_convert {
 
 test vm_attr_type_cant_convert {
 	vm_attr_type_cant_convert {}
-}
-
-machine vm_attr_diplucates {
-	cpus: 1
-	cpus: 2
-	ram: 512Mb
-	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
-	disk main: {
-		size: 4Gb
-	}
-}
-
-test create_vm_attr_diplucates {
-	vm_attr_diplucates {}
 }
 
 machine vm_negative_attribute {

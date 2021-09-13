@@ -14,7 +14,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 
 	~VisitorInterpreterActionMachine() {}
 
-	void visit_action(std::shared_ptr<AST::IAction> action) override;
+	void visit_action(std::shared_ptr<AST::Action> action) override;
 	void visit_copy(const IR::Copy& copy) override;
 	bool visit_check(const IR::Check& check) override;
 	void visit_abort(const IR::Abort& abort) override;
@@ -31,9 +31,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	std::string build_select_img_script(const IR::SelectImg& img);
 
 	bool visit_detect_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
-	Point visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot);
-	bool visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot);
-	bool visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, const stb::Image<stb::RGB>& screenshot);
+	bool visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot);
 	bool visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, const stb::Image<stb::RGB>& screenshot);
 	void visit_press(const IR::Press& press);
 	void visit_hold(const IR::Hold& hold);
@@ -66,11 +64,6 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	std::shared_ptr<IR::Machine> vmc;
 	std::shared_ptr<IR::Test> current_test;
 	coro::Timer timer;
-	struct KeyCombination {
-		std::string key;
-		bool hold_shift = false;
-	};
-	std::unordered_map<char32_t, KeyCombination> charmap;
 
 private:
 	template <typename Func>

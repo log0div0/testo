@@ -1,0 +1,20 @@
+
+machine vm_identical_nic_names {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	nic my_nic: {
+		attached_to: "my_network"
+	}
+
+	nic my_nic2: {
+		attached_to: "my_network"
+	}
+
+	nic my_nic: {
+		attached_to: "my_network"
+	}
+}

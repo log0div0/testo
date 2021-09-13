@@ -9,95 +9,95 @@ using namespace std::chrono_literals;
 HyperVVM::HyperVVM(const nlohmann::json& config_): VM(config_) {
 
 	scancodes.insert({
-		{"ESC", {1}},
-		{"ONE", {2}},
-		{"TWO", {3}},
-		{"THREE", {4}},
-		{"FOUR", {5}},
-		{"FIVE", {6}},
-		{"SIX", {7}},
-		{"SEVEN", {8}},
-		{"EIGHT", {9}},
-		{"NINE", {10}},
-		{"ZERO", {11}},
-		{"MINUS", {12}},
-		{"EQUAL", {13}},
-		{"BACKSPACE", {14}},
-		{"TAB", {15}},
-		{"Q", {16}},
-		{"W", {17}},
-		{"E", {18}},
-		{"R", {19}},
-		{"T", {20}},
-		{"Y", {21}},
-		{"U", {22}},
-		{"I", {23}},
-		{"O", {24}},
-		{"P", {25}},
-		{"LEFTBRACE", {26}},
-		{"RIGHTBRACE", {27}},
-		{"ENTER", {28}},
-		{"LEFTCTRL", {29}},
-		{"A", {30}},
-		{"S", {31}},
-		{"D", {32}},
-		{"F", {33}},
-		{"G", {34}},
-		{"H", {35}},
-		{"J", {36}},
-		{"K", {37}},
-		{"L", {38}},
-		{"SEMICOLON", {39}},
-		{"APOSTROPHE", {40}},
-		{"GRAVE", {41}},
-		{"LEFTSHIFT", {42}},
-		{"BACKSLASH", {43}},
-		{"Z", {44}},
-		{"X", {45}},
-		{"C", {46}},
-		{"V", {47}},
-		{"B", {48}},
-		{"N", {49}},
-		{"M", {50}},
-		{"COMMA", {51}},
-		{"DOT", {52}},
-		{"SLASH", {53}},
-		{"RIGHTSHIFT", {54}},
-		{"LEFTALT", {56}},
-		{"SPACE", {57}},
-		{"CAPSLOCK", {58}},
-		{"NUMLOCK", {69}}, //TODO: recheck
-		{"SCROLLLOCK", {70}},
+		{KeyboardButton::ESC, {1}},
+		{KeyboardButton::ONE, {2}},
+		{KeyboardButton::TWO, {3}},
+		{KeyboardButton::THREE, {4}},
+		{KeyboardButton::FOUR, {5}},
+		{KeyboardButton::FIVE, {6}},
+		{KeyboardButton::SIX, {7}},
+		{KeyboardButton::SEVEN, {8}},
+		{KeyboardButton::EIGHT, {9}},
+		{KeyboardButton::NINE, {10}},
+		{KeyboardButton::ZERO, {11}},
+		{KeyboardButton::MINUS, {12}},
+		{KeyboardButton::EQUALSIGN, {13}},
+		{KeyboardButton::BACKSPACE, {14}},
+		{KeyboardButton::TAB, {15}},
+		{KeyboardButton::Q, {16}},
+		{KeyboardButton::W, {17}},
+		{KeyboardButton::E, {18}},
+		{KeyboardButton::R, {19}},
+		{KeyboardButton::T, {20}},
+		{KeyboardButton::Y, {21}},
+		{KeyboardButton::U, {22}},
+		{KeyboardButton::I, {23}},
+		{KeyboardButton::O, {24}},
+		{KeyboardButton::P, {25}},
+		{KeyboardButton::LEFTBRACE, {26}},
+		{KeyboardButton::RIGHTBRACE, {27}},
+		{KeyboardButton::ENTER, {28}},
+		{KeyboardButton::LEFTCTRL, {29}},
+		{KeyboardButton::A, {30}},
+		{KeyboardButton::S, {31}},
+		{KeyboardButton::D, {32}},
+		{KeyboardButton::F, {33}},
+		{KeyboardButton::G, {34}},
+		{KeyboardButton::H, {35}},
+		{KeyboardButton::J, {36}},
+		{KeyboardButton::K, {37}},
+		{KeyboardButton::L, {38}},
+		{KeyboardButton::SEMICOLON, {39}},
+		{KeyboardButton::APOSTROPHE, {40}},
+		{KeyboardButton::GRAVE, {41}},
+		{KeyboardButton::LEFTSHIFT, {42}},
+		{KeyboardButton::BACKSLASH, {43}},
+		{KeyboardButton::Z, {44}},
+		{KeyboardButton::X, {45}},
+		{KeyboardButton::C, {46}},
+		{KeyboardButton::V, {47}},
+		{KeyboardButton::B, {48}},
+		{KeyboardButton::N, {49}},
+		{KeyboardButton::M, {50}},
+		{KeyboardButton::COMMA, {51}},
+		{KeyboardButton::DOT, {52}},
+		{KeyboardButton::SLASH, {53}},
+		{KeyboardButton::RIGHTSHIFT, {54}},
+		{KeyboardButton::LEFTALT, {56}},
+		{KeyboardButton::SPACE, {57}},
+		{KeyboardButton::CAPSLOCK, {58}},
+		{KeyboardButton::NUMLOCK, {69}}, //TODO: recheck
+		{KeyboardButton::SCROLLLOCK, {70}},
 
-		{"F1", {59}},
-		{"F2", {60}},
-		{"F3", {61}},
-		{"F4", {62}},
-		{"F5", {63}},
-		{"F6", {64}},
-		{"F7", {65}},
-		{"F8", {66}},
-		{"F9", {67}},
-		{"F10", {68}},
-		{"F11", {87}},
-		{"F12", {88}},
+		{KeyboardButton::F1, {59}},
+		{KeyboardButton::F2, {60}},
+		{KeyboardButton::F3, {61}},
+		{KeyboardButton::F4, {62}},
+		{KeyboardButton::F5, {63}},
+		{KeyboardButton::F6, {64}},
+		{KeyboardButton::F7, {65}},
+		{KeyboardButton::F8, {66}},
+		{KeyboardButton::F9, {67}},
+		{KeyboardButton::F10, {68}},
+		{KeyboardButton::F11, {87}},
+		{KeyboardButton::F12, {88}},
 
-		{"RIGHTCTRL", {97}},
-		{"RIGHTALT", {100}},
+		{KeyboardButton::RIGHTCTRL, {97}},
+		{KeyboardButton::RIGHTALT, {100}},
 
-		{"HOME", {224,71}},
-		{"UP", {224, 72}},
-		{"PAGEUP", {224,73}},
-		{"LEFT", {224,75}},
-		{"RIGHT", {224,77}},
-		{"END", {224,79}},
-		{"DOWN", {224,80}},
-		{"PAGEDOWN", {224,81}},
-		{"INSERT", {224,82}},
-		{"DELETE", {224,83}},
+		{KeyboardButton::HOME, {224,71}},
+		{KeyboardButton::UP, {224, 72}},
+		{KeyboardButton::PAGEUP, {224,73}},
+		{KeyboardButton::LEFT, {224,75}},
+		{KeyboardButton::RIGHT, {224,77}},
+		{KeyboardButton::END, {224,79}},
+		{KeyboardButton::DOWN, {224,80}},
+		{KeyboardButton::PAGEDOWN, {224,81}},
+		{KeyboardButton::INSERT, {224,82}},
+		{KeyboardButton::DELETE, {224,83}},
 
-		{"SCROLLUP", {177}},
-		{"SCROLLDOWN", {178}},
+		{KeyboardButton::SCROLLUP, {177}},
+		{KeyboardButton::SCROLLDOWN, {178}},
 	});
 }
 
@@ -259,10 +259,8 @@ void HyperVVM::rollback(const std::string& snapshot_name, const nlohmann::json& 
 	}
 }
 
-void HyperVVM::hold(const std::string& button_) {
+void HyperVVM::hold(KeyboardButton button) {
 	try {
-		std::string button = button_;
-		std::transform(button.begin(), button.end(), button.begin(), toupper);
 		auto keyboard = connect.machine(id()).keyboard();
 		keyboard.typeScancodes(scancodes.at(button));
 	} catch (const std::exception& error) {
@@ -270,10 +268,8 @@ void HyperVVM::hold(const std::string& button_) {
 	}
 }
 
-void HyperVVM::release(const std::string& button_) {
+void HyperVVM::release(KeyboardButton button) {
 	try {
-		std::string button = button_;
-		std::transform(button.begin(), button.end(), button.begin(), toupper);
 		std::vector<uint8_t> codes;
 		for (auto code: scancodes.at(button)) {
 			codes.push_back(code | 0x80);
@@ -298,7 +294,7 @@ void HyperVVM::mouse_move_rel(int x, int y) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
 
-void HyperVVM::mouse_hold(const MouseButton& button) {
+void HyperVVM::mouse_hold(MouseButton button) {
 	try {
 		auto mouse = connect.machine(id()).synthetic_mouse();
 		mouse.set_button_state((uint32_t)button, true);
@@ -307,7 +303,7 @@ void HyperVVM::mouse_hold(const MouseButton& button) {
 	}
 }
 
-void HyperVVM::mouse_release(const MouseButton& button) {
+void HyperVVM::mouse_release(MouseButton button) {
 	try {
 		auto mouse = connect.machine(id()).synthetic_mouse();
 		mouse.set_button_state((uint32_t)button, false);

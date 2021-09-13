@@ -6,7 +6,6 @@
 #include "backends/Environment.hpp"
 #include "IR/Program.hpp"
 #include <fmt/format.h>
-#include <codecvt>
 
 using namespace std::chrono_literals;
 
@@ -89,220 +88,55 @@ static std::string build_python_script(const std::string& body) {
 VisitorInterpreterActionMachine::VisitorInterpreterActionMachine(std::shared_ptr<IR::Machine> vmc, std::shared_ptr<StackNode> stack, Reporter& reporter, std::shared_ptr<IR::Test> current_test):
 	VisitorInterpreterAction(vmc, stack, reporter), vmc(vmc), current_test(current_test)
 {
-	charmap.insert({
-		{U'0', {"ZERO"}},
-		{U'1', {"ONE"}},
-		{U'2', {"TWO"}},
-		{U'3', {"THREE"}},
-		{U'4', {"FOUR"}},
-		{U'5', {"FIVE"}},
-		{U'6', {"SIX"}},
-		{U'7', {"SEVEN"}},
-		{U'8', {"EIGHT"}},
-		{U'9', {"NINE"}},
-		{U')', {"ZERO", true}},
-		{U'!', {"ONE", true}},
-		{U'@', {"TWO", true}},
-		{U'#', {"THREE", true}},
-		{U'$', {"FOUR", true}},
-		{U'%', {"FIVE", true}},
-		{U'^', {"SIX", true}},
-		{U'&', {"SEVEN", true}},
-		{U'*', {"EIGHT", true}},
-		{U'(', {"NINE", true}},
-		{U'a', {"A"}},
-		{U'b', {"B"}},
-		{U'c', {"C"}},
-		{U'd', {"D"}},
-		{U'e', {"E"}},
-		{U'f', {"F"}},
-		{U'g', {"G"}},
-		{U'h', {"H"}},
-		{U'i', {"I"}},
-		{U'j', {"J"}},
-		{U'k', {"K"}},
-		{U'l', {"L"}},
-		{U'm', {"M"}},
-		{U'n', {"N"}},
-		{U'o', {"O"}},
-		{U'p', {"P"}},
-		{U'q', {"Q"}},
-		{U'r', {"R"}},
-		{U's', {"S"}},
-		{U't', {"T"}},
-		{U'u', {"U"}},
-		{U'v', {"V"}},
-		{U'w', {"W"}},
-		{U'x', {"X"}},
-		{U'y', {"Y"}},
-		{U'z', {"Z"}},
-		{U'A', {"A", true}},
-		{U'B', {"B", true}},
-		{U'C', {"C", true}},
-		{U'D', {"D", true}},
-		{U'E', {"E", true}},
-		{U'F', {"F", true}},
-		{U'G', {"G", true}},
-		{U'H', {"H", true}},
-		{U'I', {"I", true}},
-		{U'J', {"J", true}},
-		{U'K', {"K", true}},
-		{U'L', {"L", true}},
-		{U'M', {"M", true}},
-		{U'N', {"N", true}},
-		{U'O', {"O", true}},
-		{U'P', {"P", true}},
-		{U'Q', {"Q", true}},
-		{U'R', {"R", true}},
-		{U'S', {"S", true}},
-		{U'T', {"T", true}},
-		{U'U', {"U", true}},
-		{U'V', {"V", true}},
-		{U'W', {"W", true}},
-		{U'X', {"X", true}},
-		{U'Y', {"Y", true}},
-		{U'Z', {"Z", true}},
 
-		{U'а', {"F"}},
-		{U'б', {"COMMA"}},
-		{U'в', {"D"}},
-		{U'г', {"U"}},
-		{U'д', {"L"}},
-		{U'е', {"T"}},
-		{U'ё', {"GRAVE"}},
-		{U'ж', {"SEMICOLON"}},
-		{U'з', {"P"}},
-		{U'и', {"B"}},
-		{U'й', {"Q"}},
-		{U'к', {"R"}},
-		{U'л', {"K"}},
-		{U'м', {"V"}},
-		{U'н', {"Y"}},
-		{U'о', {"J"}},
-		{U'п', {"G"}},
-		{U'р', {"H"}},
-		{U'с', {"C"}},
-		{U'т', {"N"}},
-		{U'у', {"E"}},
-		{U'ф', {"A"}},
-		{U'х', {"LEFTBRACE"}},
-		{U'ц', {"W"}},
-		{U'ч', {"X"}},
-		{U'ш', {"I"}},
-		{U'щ', {"O"}},
-		{U'ъ', {"RIGHTBRACE"}},
-		{U'ы', {"S"}},
-		{U'ь', {"M"}},
-		{U'э', {"APOSTROPHE"}},
-		{U'ю', {"DOT"}},
-		{U'я', {"Z"}},
-
-		{U'А', {"F", true}},
-		{U'Б', {"COMMA", true}},
-		{U'В', {"D", true}},
-		{U'Г', {"U", true}},
-		{U'Д', {"L", true}},
-		{U'Е', {"T", true}},
-		{U'Ё', {"GRAVE", true}},
-		{U'Ж', {"SEMICOLON", true}},
-		{U'З', {"P", true}},
-		{U'И', {"B", true}},
-		{U'Й', {"Q", true}},
-		{U'К', {"R", true}},
-		{U'Л', {"K", true}},
-		{U'М', {"V", true}},
-		{U'Н', {"Y", true}},
-		{U'О', {"J", true}},
-		{U'П', {"G", true}},
-		{U'Р', {"H", true}},
-		{U'С', {"C", true}},
-		{U'Т', {"N", true}},
-		{U'У', {"E", true}},
-		{U'Ф', {"A", true}},
-		{U'Х', {"LEFTBRACE", true}},
-		{U'Ц', {"W", true}},
-		{U'Ч', {"X", true}},
-		{U'Ш', {"I", true}},
-		{U'Щ', {"O", true}},
-		{U'Ъ', {"RIGHTBRACE", true}},
-		{U'Ы', {"S", true}},
-		{U'Ь', {"M", true}},
-		{U'Э', {"APOSTROPHE", true}},
-		{U'Ю', {"DOT", true}},
-		{U'Я', {"Z", true}},
-
-		{U'-', {"MINUS"}},
-		{U'_', {"MINUS", true}},
-		{U'=', {"EQUALSIGN"}},
-		{U'+', {"EQUALSIGN", true}},
-		{U'\'', {"APOSTROPHE"}},
-		{U'\"', {"APOSTROPHE", true}},
-		{U'\\', {"BACKSLASH"}},
-		{U'\n', {"ENTER"}},
-		{U'\t', {"TAB"}},
-		{U'|', {"BACKSLASH", true}},
-		{U',', {"COMMA"}},
-		{U'<', {"COMMA", true}},
-		{U'.', {"DOT"}},
-		{U'>', {"DOT", true}},
-		{U'/', {"SLASH"}},
-		{U'?', {"SLASH", true}},
-		{U';', {"SEMICOLON"}},
-		{U':', {"SEMICOLON", true}},
-		{U'[', {"LEFTBRACE"}},
-		{U'{', {"LEFTBRACE", true}},
-		{U']', {"RIGHTBRACE"}},
-		{U'}', {"RIGHTBRACE", true}},
-		{U'`', {"GRAVE"}},
-		{U'~', {"GRAVE", true}},
-		{U' ', {"SPACE"}}
-	});
 }
 
-void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::IAction> action) {
-	if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Abort>>(action)) {
-		visit_abort({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Print>>(action)) {
-		visit_print({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Type>>(action)) {
-		visit_type({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Wait>>(action)) {
-		visit_wait({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Sleep>>(action)) {
-		visit_sleep({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Press>>(action)) {
-		visit_press({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Hold>>(action)) {
-		visit_hold({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Release>>(action)) {
-		visit_release({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Mouse>>(action)) {
-		visit_mouse({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Plug>>(action)) {
-		visit_plug({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Start>>(action)) {
-		visit_start({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Stop>>(action)) {
-		visit_stop({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Shutdown>>(action)) {
-		visit_shutdown({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Exec>>(action)) {
-		visit_exec({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Copy>>(action)) {
-		visit_copy({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Screenshot>>(action)) {
-		visit_screenshot({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::MacroCall>>(action)) {
-		visit_macro_call({p->action, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::IfClause>>(action)) {
-		visit_if_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ForClause>>(action)) {
-		visit_for_clause(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::CycleControl>>(action)) {
-		throw CycleControlException(p->action->t);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::ActionBlock>>(action)) {
-		visit_action_block(p->action);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Action<AST::Empty>>(action)) {
+void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> action) {
+	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
+		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::ActionWithDelim>(action)) {
+		visit_action(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
+		visit_print({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
+		visit_type({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Wait>(action)) {
+		visit_wait({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
+		visit_sleep({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Press>(action)) {
+		visit_press({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Hold>(action)) {
+		visit_hold({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Release>(action)) {
+		visit_release({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Mouse>(action)) {
+		visit_mouse({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Plug>(action)) {
+		visit_plug({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Start>(action)) {
+		visit_start({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Stop>(action)) {
+		visit_stop({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Shutdown>(action)) {
+		visit_shutdown({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Exec>(action)) {
+		visit_exec({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
+		visit_copy({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Screenshot>(action)) {
+		visit_screenshot({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Action>>(action)) {
+		visit_macro_call({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::IfClause>(action)) {
+		visit_if_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::ForClause>(action)) {
+		visit_for_clause(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::CycleControl>(action)) {
+		throw CycleControlException(p->token);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Block<AST::Action>>(action)) {
+		visit_action_block(p);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Empty>(action)) {
 		;
 	} else {
 		throw std::runtime_error("Should never happen");
@@ -316,10 +150,10 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 		fs::path from = copy.from();
 		fs::path to = copy.to();
 
-		std::string wait_for = copy.timeout();
-		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for);
+		IR::TimeInterval wait_for = copy.timeout();
+		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for.str());
 
-		coro::Timeout timeout(time_to_milliseconds(wait_for));
+		coro::Timeout timeout(wait_for.value());
 
 		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -334,7 +168,7 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 		if(copy.ast_node->is_to_guest()) {
 			//Additional check since now we can't be sure the "from" actually exists
 			if (!fs::exists(from)) {
-				throw std::runtime_error(std::string(copy.ast_node->begin()) + ": Error: specified path doesn't exist: " + from.generic_string());
+				throw std::runtime_error("Specified path doesn't exist: " + from.generic_string());
 			}
 			ga->copy_to_guest(from, to);
 		} else {
@@ -358,7 +192,7 @@ void VisitorInterpreterActionMachine::visit_screenshot(const IR::Screenshot& scr
 
 		if (!fs::exists(destination.parent_path())) {
 			if (!fs::create_directories(destination.parent_path())) {
-				throw std::runtime_error(std::string("Can't create directory: ") + destination.parent_path().generic_string());
+				throw std::runtime_error("Can't create directory: " + destination.parent_path().generic_string());
 			}
 		}
 
@@ -370,15 +204,14 @@ void VisitorInterpreterActionMachine::visit_screenshot(const IR::Screenshot& scr
 
 bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	try {
-		std::string check_for = check.timeout();
-		std::string interval_str = check.interval();
-		auto text = template_parser.resolve(std::string(*check.ast_node->select_expr), check.stack);
+		IR::TimeInterval check_for = check.timeout();
+		IR::TimeInterval interval = check.interval();
 
-		reporter.check(vmc, text, check_for, interval_str);
+		reporter.check(vmc, check.select_expr().to_string(), check_for.str(), interval.str());
 
 		return screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 			return visit_detect_expr(check.ast_node->select_expr, screenshot);
-		}, time_to_milliseconds(check_for), time_to_milliseconds(interval_str));
+		}, check_for.value(), interval.value());
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(check.ast_node, current_controller));
@@ -392,8 +225,6 @@ void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
-static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 	try {
 		std::string text = type.text();
@@ -401,32 +232,30 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 			return;
 		}
 
-		std::string interval = type.interval();
+		IR::TimeInterval interval = type.interval();
 
-		reporter.type(vmc, text, interval);
+		reporter.type(vmc, text, interval.str());
 
-		bool shift_holded = false;
+		std::vector<KeyboardCommand> commands = KeyboardManager().type(text);
 
-		for (char32_t c: conv.from_bytes(text)) {
-			auto it = charmap.find(c);
-			if (it == charmap.end()) {
-				throw std::runtime_error("Unknown character to type");
+		for (size_t i = 0; i < commands.size(); ++i) {
+			if (i) {
+				if ((commands[i-1].action == KeyboardAction::Release) &&
+					(commands[i].action == KeyboardAction::Hold))
+				{
+					timer.waitFor(interval.value());
+				}
 			}
-			const KeyCombination& comb = it->second;
-			if (comb.hold_shift && !shift_holded) {
-				vmc->hold({"LEFTSHIFT"});
-				shift_holded = true;
+			switch (commands[i].action) {
+				case KeyboardAction::Hold:
+					vmc->hold(commands[i].button);
+					break;
+				case KeyboardAction::Release:
+					vmc->release(commands[i].button);
+					break;
+				default:
+					throw std::runtime_error("Should not be there");
 			}
-			if (!comb.hold_shift && shift_holded) {
-				vmc->release({"LEFTSHIFT"});
-				shift_holded = false;
-			}
-			vmc->press({comb.key});
-			timer.waitFor(time_to_milliseconds(interval));
-		}
-
-		if (shift_holded) {
-			vmc->release({"LEFTSHIFT"});
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(type.ast_node, current_controller));
@@ -435,15 +264,14 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 
 void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 	try {
-		std::string wait_for = wait.timeout();
-		std::string interval_str = wait.interval();
-		auto text = wait.select_expr();
+		IR::TimeInterval wait_for = wait.timeout();
+		IR::TimeInterval interval = wait.interval();
 
-		reporter.wait(vmc, text, wait_for, interval_str);
+		reporter.wait(vmc, wait.select_expr().to_string(), wait_for.str(), interval.str());
 
 		bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 			return visit_detect_expr(wait.ast_node->select_expr, screenshot);
-		}, time_to_milliseconds(wait_for), time_to_milliseconds(interval_str));
+		}, wait_for.value(), interval.value());
 
 		if (!early_exit) {
 			reporter.save_screenshot(vmc, vmc->get_last_screenshot());
@@ -580,62 +408,32 @@ bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, co
 	}
 }
 
-VisitorInterpreterActionMachine::Point VisitorInterpreterActionMachine::visit_select_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
-	auto value = eval_js(js.script(), screenshot);
-
-	if (value.is_object() && !value.is_array()) {
-		if (!value.count("x")) {
-			throw std::runtime_error("Object doesn't have the x propery");
-		}
-
-		if (!value.count("y")) {
-			throw std::runtime_error("Object doesn't have the y propery");
-		}
-
-		auto x = value.at("x").get<int32_t>();
-		auto y = value.at("y").get<int32_t>();
-	
-		return {x, y};
-	} else {
-		throw std::runtime_error("Can't process return value type. We expect a single object");
-	}
-}
-
-bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::ISelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot)  {
-	if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::ISelectable>>(select_expr)) {
-		return visit_detect_selectable(p->select_expr, screenshot);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectExpr<AST::SelectBinOp>>(select_expr)) {
-		return visit_detect_binop(p->select_expr, screenshot);
-	} else {
-		throw std::runtime_error("Unknown select expression type");
-	}
-}
-
-
-bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AST::ISelectable> selectable, const stb::Image<stb::RGB>& screenshot) {
-	bool is_negated = selectable->is_negated();
-
+bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_expr, const stb::Image<stb::RGB>& screenshot)  {
 	std::string script;
 
-	if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(selectable)) {
-		script = build_select_text_script({p->selectable, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(selectable)) {
-		return is_negated ^ visit_detect_js({p->selectable, stack}, screenshot);
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(selectable)) {
-		script = build_select_img_script({p->selectable, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(selectable)) {
-		throw std::runtime_error("Homm3 is not supported anymore");
-	} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectParentedExpr>>(selectable)) {
-		return is_negated ^ visit_detect_expr(p->selectable->select_expr, screenshot);
-	}  else {
-		throw std::runtime_error("Unknown selectable type");
+	if (auto p = std::dynamic_pointer_cast<AST::SelectNegationExpr>(select_expr)) {
+		return !visit_detect_expr(p->expr, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(select_expr)) {
+		script = build_select_text_script({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(select_expr)) {
+		return visit_detect_js({p, stack}, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(select_expr)) {
+		script = build_select_img_script({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(select_expr)) {
+		throw std::runtime_error("Homm3 is not supported anymore");;
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(select_expr)) {
+		return visit_detect_expr(p->select_expr, screenshot);
+	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
+		return visit_detect_binop(p, screenshot);
+	} else {
+		throw std::runtime_error("Unknown select expression type");
 	}
 
 	auto eval_result = eval_js(script, screenshot);
 	if (eval_result.is_array()) {
-		return is_negated ^ (bool)eval_result.size();
+		return (bool)eval_result.size();
 	} else if (eval_result.is_boolean()) {
-		return is_negated ^ (bool)eval_result;
+		return (bool)eval_result;
 	} else {
 		throw std::runtime_error("Uknown js return type: we expect array or boolean");
 	}
@@ -643,13 +441,13 @@ bool VisitorInterpreterActionMachine::visit_detect_selectable(std::shared_ptr<AS
 
 bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::SelectBinOp> binop, const stb::Image<stb::RGB>& screenshot) {
 	auto left_value = visit_detect_expr(binop->left, screenshot);
-	if (binop->t.type() == Token::category::double_ampersand) {
+	if (binop->op.type() == Token::category::double_ampersand) {
 		if (!left_value) {
 			return false;
 		} else {
 			return left_value && visit_detect_expr(binop->right, screenshot);
 		}
-	} else if (binop->t.type() == Token::category::double_vertical_bar) {
+	} else if (binop->op.type() == Token::category::double_vertical_bar) {
 		if (left_value) {
 			return true;
 		} else {
@@ -662,12 +460,11 @@ bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::Se
 
 void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 	try {
-		std::string interval = press.interval();
-		auto press_interval = time_to_milliseconds(interval);
+		IR::TimeInterval interval = press.interval();
 
 		for (auto key_spec: press.ast_node->keys) {
-			visit_key_spec({key_spec, stack}, press_interval);
-			timer.waitFor(press_interval);
+			visit_key_spec({key_spec, stack}, interval.value());
+			timer.waitFor(interval.value());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press.ast_node, current_controller));
@@ -676,8 +473,12 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 
 void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
 	try {
-		reporter.hold_key(vmc, std::string(*hold.ast_node->combination));
-		vmc->hold(hold.buttons());
+		auto buttons = hold.combination().buttons();
+
+		reporter.hold_key(vmc, hold.ast_node->combination->to_string());
+		for (KeyboardButton button: buttons) {
+			vmc->hold(button);
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(hold.ast_node, current_controller));
 	}
@@ -685,11 +486,13 @@ void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
 
 void VisitorInterpreterActionMachine::visit_release(const IR::Release& release) {
 	try {
-		auto buttons = release.buttons();
+		auto buttons = release.combination().buttons();
 
 		if (buttons.size()) {
-			reporter.release_key(vmc, std::string(*release.ast_node->combination));
-			vmc->release(release.buttons());
+			reporter.release_key(vmc, release.ast_node->combination->to_string());
+			for (KeyboardButton button: buttons) {
+				vmc->release(button);
+			}
 		} else {
 			reporter.release_key(vmc);
 			vmc->release();
@@ -700,29 +503,29 @@ void VisitorInterpreterActionMachine::visit_release(const IR::Release& release) 
 }
 
 void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::MouseSelectable& mouse_selectable) {
-	std::string timeout = mouse_selectable.timeout();
+	IR::TimeInterval timeout = mouse_selectable.timeout();
 	std::string where_to_go = mouse_selectable.where_to_go();
 
-	for (auto specifier: mouse_selectable.ast_node->specifiers) {
-		where_to_go += std::string(*specifier);
+	for (auto specifier: mouse_selectable.ast_node->mouse_additional_specifiers) {
+		where_to_go += specifier->to_string();
 	}
 
-	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout);
+	reporter.mouse_move_click_selectable(vmc, where_to_go, timeout.str());
 
 	bool early_exit = screenshot_loop([&](const stb::Image<stb::RGB>& screenshot) {
 		Point point;
 		try {
 			std::string script;
-			if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectJS>>(mouse_selectable.ast_node->selectable)) {
-				script = IR::SelectJS({p->selectable, stack}).script();
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectText>>(mouse_selectable.ast_node->selectable)) {
-				script = build_select_text_script({p->selectable, stack});
-				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectImg>>(mouse_selectable.ast_node->selectable)) {
-				script = build_select_img_script({p->selectable, stack});
-				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->specifiers);
-			} else if (auto p = std::dynamic_pointer_cast<AST::Selectable<AST::SelectHomm3>>(mouse_selectable.ast_node->selectable)) {
-				throw "Not supported\n";
+			if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->basic_select_expr)) {
+				script = IR::SelectJS(p, stack).script();
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->basic_select_expr)) {
+				script = build_select_text_script({p, stack});
+				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->basic_select_expr)) {
+				script = build_select_img_script({p, stack});
+				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
+			} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->basic_select_expr)) {
+				throw std::runtime_error("Not supported");
 			}
 
 			auto js_result = eval_js(script, screenshot);
@@ -738,10 +541,10 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 
 				auto x = js_result.at("x").get<int32_t>();
 				auto y = js_result.at("y").get<int32_t>();
-			
+
 				point.x = x;
 				point.y = y;
-				
+
 			} else {
 				throw std::runtime_error("Can't process return value type. We expect a single object");
 			}
@@ -751,7 +554,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 		} catch (const ContinueError&) {
 			return false;
 		}
-	}, time_to_milliseconds(timeout), 1s);
+	}, timeout.value(), 1s);
 
 	if (!early_exit) {
 		reporter.save_screenshot(vmc, vmc->get_last_screenshot());
@@ -760,13 +563,13 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 }
 
 void VisitorInterpreterActionMachine::visit_mouse(const IR::Mouse& mouse) {
-	if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseMoveClick>>(mouse.ast_node->event)) {
-		return visit_mouse_move_click({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseHold>>(mouse.ast_node->event)) {
-		return visit_mouse_hold({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseRelease>>(mouse.ast_node->event)) {
-		return visit_mouse_release({p->event, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::MouseEvent<AST::MouseWheel>>(mouse.ast_node->event)) {
+	if (auto p = std::dynamic_pointer_cast<AST::MouseMoveClick>(mouse.ast_node->event)) {
+		return visit_mouse_move_click({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseHold>(mouse.ast_node->event)) {
+		return visit_mouse_hold({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseRelease>(mouse.ast_node->event)) {
+		return visit_mouse_release({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::MouseWheel>(mouse.ast_node->event)) {
 		throw std::runtime_error("Not implemented yet");
 	} else {
 		throw std::runtime_error("Unknown mouse actions");
@@ -778,10 +581,10 @@ void VisitorInterpreterActionMachine::visit_mouse_move_click(const IR::MouseMove
 		reporter.mouse_move_click(vmc, mouse_move_click.event_type());
 
 		if (mouse_move_click.ast_node->object) {
-			if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseCoordinates>>(mouse_move_click.ast_node->object)) {
-				visit_mouse_move_coordinates({p->target, stack});
-			} else if (auto p = std::dynamic_pointer_cast<AST::MouseMoveTarget<AST::MouseSelectable>>(mouse_move_click.ast_node->object)) {
-				visit_mouse_move_selectable({p->target, stack});
+			if (auto p = std::dynamic_pointer_cast<AST::MouseCoordinates>(mouse_move_click.ast_node->object)) {
+				visit_mouse_move_coordinates({p, stack});
+			} else if (auto p = std::dynamic_pointer_cast<AST::MouseSelectable>(mouse_move_click.ast_node->object)) {
+				visit_mouse_move_selectable({p, stack});
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
@@ -793,16 +596,22 @@ void VisitorInterpreterActionMachine::visit_mouse_move_click(const IR::MouseMove
 			return;
 		}
 
-		if (mouse_move_click.event_type() == "click" || mouse_move_click.event_type() == "lclick") {
-			vmc->mouse_press({MouseButton::Left});
-		} else if (mouse_move_click.event_type() == "rclick") {
-			vmc->mouse_press({MouseButton::Right});
-		} else if (mouse_move_click.event_type() == "mclick") {
-			vmc->mouse_press({MouseButton::Middle});
-		} else if (mouse_move_click.event_type() == "dclick") {
-			vmc->mouse_press({MouseButton::Left});
+		auto mouse_press = [&](MouseButton button) {
+			vmc->mouse_hold(button);
 			timer.waitFor(std::chrono::milliseconds(60));
-			vmc->mouse_press({MouseButton::Left});
+			vmc->mouse_release();
+		};
+
+		if (mouse_move_click.event_type() == "click" || mouse_move_click.event_type() == "lclick") {
+			mouse_press(MouseButton::Left);
+		} else if (mouse_move_click.event_type() == "rclick") {
+			mouse_press(MouseButton::Right);
+		} else if (mouse_move_click.event_type() == "mclick") {
+			mouse_press(MouseButton::Middle);
+		} else if (mouse_move_click.event_type() == "dclick") {
+			mouse_press(MouseButton::Left);
+			timer.waitFor(std::chrono::milliseconds(60));
+			mouse_press(MouseButton::Left);
 		} else {
 			throw std::runtime_error("Unsupported click type");
 		}
@@ -827,16 +636,8 @@ void VisitorInterpreterActionMachine::visit_mouse_move_coordinates(const IR::Mou
 void VisitorInterpreterActionMachine::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
 	try {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
-		reporter.mouse_hold(vmc, mouse_hold.button());
-		if (mouse_hold.button() == "lbtn") {
-			vmc->mouse_hold({MouseButton::Left});
-		} else if (mouse_hold.button() == "rbtn") {
-			vmc->mouse_hold({MouseButton::Right});
-		} else if (mouse_hold.button() == "mbtn") {
-			vmc->mouse_hold({MouseButton::Middle});
-		} else {
-			throw std::runtime_error("Unknown mouse button: " + mouse_hold.button());
-		}
+		reporter.mouse_hold(vmc, ToString(mouse_hold.button()));
+		vmc->mouse_hold(mouse_hold.button());
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(mouse_hold.ast_node, current_controller));
 	}
@@ -856,10 +657,16 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 	try {
 		reporter.mouse_wheel(vmc, mouse_wheel->direction.value());
 
+		auto mouse_press = [&](MouseButton button) {
+			vmc->mouse_hold(button);
+			timer.waitFor(std::chrono::milliseconds(60));
+			vmc->mouse_release();
+		};
+
 		if (mouse_wheel->direction.value() == "up") {
-			vmc->mouse_press({MouseButton::WheelUp});
+			mouse_press(MouseButton::WheelUp);
 		} else if (mouse_wheel->direction.value() == "down") {
-			vmc->mouse_press({MouseButton::WheelDown});
+			mouse_press(MouseButton::WheelDown);
 		} else {
 			throw std::runtime_error("Unknown wheel direction");
 		}
@@ -870,43 +677,49 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 }
 
 void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval) {
+	std::vector<KeyboardButton> buttons = key_spec.combination().buttons();
 	uint32_t times = key_spec.times();
 
-	reporter.press_key(vmc, *(key_spec.ast_node->combination), times);
+	reporter.press_key(vmc, key_spec.combination().to_string(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
-		vmc->press(key_spec.ast_node->combination->get_buttons());
+		for (auto it = buttons.begin(); it != buttons.end(); ++it) {
+			vmc->hold(*it);
+		}
+		for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
+			vmc->release(*it);
+		}
 		timer.waitFor(interval);
 	}
 }
 
 void VisitorInterpreterActionMachine::visit_plug(const IR::Plug& plug) {
 	try {
-		if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugFlash>>(plug.ast_node->resource)) {
+		if (auto p = std::dynamic_pointer_cast<AST::PlugFlash>(plug.ast_node->resource)) {
 			if (plug.is_on()) {
-				return visit_plug_flash({p->resource, stack});
+				return visit_plug_flash({p, stack});
 			} else {
-				return visit_unplug_flash({p->resource, stack});
+				return visit_unplug_flash({p, stack});
 			}
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugDVD>>(plug.ast_node->resource)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugDVD>(plug.ast_node->resource)) {
 			if (plug.is_on()) {
-				return visit_plug_dvd({p->resource, stack});
+				return visit_plug_dvd({p, stack});
 			} else {
-				return visit_unplug_dvd({p->resource, stack});
+				return visit_unplug_dvd({p, stack});
 			}
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugHostDev>>(plug.ast_node->resource)) {
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugHostDev>(plug.ast_node->resource)) {
 			if (plug.is_on()) {
-				return visit_plug_hostdev({p->resource, stack});
+				return visit_plug_hostdev({p, stack});
 			} else {
-				return visit_unplug_hostdev({p->resource, stack});
+				return visit_unplug_hostdev({p, stack});
 			}
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugNIC>>(plug.ast_node->resource)) {
-			return visit_plug_nic({p->resource, stack}, plug.is_on());
-		} else if (auto p = std::dynamic_pointer_cast<AST::PlugResource<AST::PlugLink>>(plug.ast_node->resource)) {
-			return visit_plug_link({p->resource, stack}, plug.is_on());
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugNIC>(plug.ast_node->resource)) {
+			return visit_plug_nic({p, stack}, plug.is_on());
+		} else if (auto p = std::dynamic_pointer_cast<AST::PlugLink>(plug.ast_node->resource)) {
+			return visit_plug_link({p, stack}, plug.is_on());
 		} else {
-			throw std::runtime_error(std::string("unknown hardware type to plug/unplug: ") +
-				plug.ast_node->resource->t.value());
+			throw std::runtime_error("unknown hardware to plug/unplug: " +
+				plug.ast_node->resource->to_string());
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(plug.ast_node, current_controller));
@@ -1078,10 +891,10 @@ void VisitorInterpreterActionMachine::visit_stop(const IR::Stop& stop) {
 void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdown) {
 	try {
 		auto vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
-		std::string wait_for = shutdown.timeout();
-		reporter.shutdown(vmc, wait_for);
+		IR::TimeInterval wait_for = shutdown.timeout();
+		reporter.shutdown(vmc, wait_for.str());
 		vmc->vm()->power_button();
-		auto deadline = std::chrono::steady_clock::now() +  time_to_milliseconds(wait_for);
+		auto deadline = std::chrono::steady_clock::now() +  wait_for.value();
 		while (std::chrono::steady_clock::now() < deadline) {
 			if (vmc->vm()->state() == VmState::Stopped) {
 				return;
@@ -1096,7 +909,7 @@ void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdow
 
 void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 	try {
-		reporter.exec(vmc, exec.interpreter(), exec.timeout());
+		reporter.exec(vmc, exec.interpreter(), exec.timeout().str());
 
 		if (vmc->vm()->state() != VmState::Running) {
 			throw std::runtime_error(fmt::format("virtual machine is not running"));
@@ -1156,7 +969,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 
 		command += " " + guest_script_file.generic_string();
 
-		coro::Timeout timeout(time_to_milliseconds(exec.timeout()));
+		coro::Timeout timeout(exec.timeout().value());
 
 		auto result = ga->execute(command, [&](const std::string& output) {
 			reporter.exec_command_output(output);

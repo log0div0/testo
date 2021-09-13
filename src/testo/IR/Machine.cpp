@@ -1,5 +1,4 @@
 
-#include <coro/Timer.h>
 #include "Machine.hpp"
 #include "../Exceptions.hpp"
 #include "../backends/Environment.hpp"
@@ -344,66 +343,41 @@ fs::path Machine::get_metadata_dir() const {
 	return env->vm_metadata_dir() / id();
 }
 
-void Machine::press(const std::vector<std::string>& buttons) {
-	hold(buttons);
-	release({buttons.rbegin(), buttons.rend()});
+void Machine::hold(KeyboardButton button) {
+	auto it = std::find(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end(), button);
+	if (it != current_held_keyboard_buttons.end()) {
+		throw std::runtime_error("You can't hold an already held button: " + ToString(button));
+	}
+	vm()->hold(button);
+	current_held_keyboard_buttons.push_back(button);
 }
 
-void Machine::hold(const std::vector<std::string>& buttons) {
-	for (auto& button: buttons) {
-		auto it = std::find(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end(), button);
-		if (it != current_held_keyboard_buttons.end()) {
-			throw std::runtime_error("You can't hold an already held button: " + button);
-		}
-		vm()->hold(button);
-		current_held_keyboard_buttons.push_back(button);
+void Machine::release(KeyboardButton button) {
+	auto it = std::find(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end(), button);
+	if (it == current_held_keyboard_buttons.end()) {
+		throw std::runtime_error("You can't release a button that's not held: " + ToString(button));
 	}
-}
-
-void Machine::release(const std::vector<std::string>& buttons) {
-	for (auto& button: buttons) {
-		auto it = std::find(current_held_keyboard_buttons.begin(), current_held_keyboard_buttons.end(), button);
-		if (it == current_held_keyboard_buttons.end()) {
-			throw std::runtime_error("You can't release a button that's not held: " + button);
-		}
-		vm()->release(button);
-		current_held_keyboard_buttons.erase(it);
-	}
+	vm()->release(button);
+	current_held_keyboard_buttons.erase(it);
 }
 
 void Machine::release() {
 	if (!current_held_keyboard_buttons.size()) {
 		throw std::runtime_error("There is no held buttons to release");
 	}
-	release({current_held_keyboard_buttons.rbegin(), current_held_keyboard_buttons.rend()});
+	auto copy = current_held_keyboard_buttons;
+	for (auto it = copy.rbegin(); it != copy.rend(); ++it) {
+		release(*it);
+	}
 }
 
-void Machine::mouse_press(const std::vector<MouseButton>& buttons) {
-	if (buttons.size() > 1) {
-		throw std::runtime_error("Can't press more than 1 mouse button");
-	}
-
-	if (current_held_mouse_button != MouseButton::None) {
-		throw std::runtime_error("Can't press a mouse button with any already held mouse buttons");
-	}
-
-	vm()->mouse_hold(buttons[0]);
-	coro::Timer timer;
-	timer.waitFor(std::chrono::milliseconds(60));
-	vm()->mouse_release(buttons[0]);
-}
-
-void Machine::mouse_hold(const std::vector<MouseButton>& buttons) {
-	if (buttons.size() > 1) {
-		throw std::runtime_error("Can't hold more than 1 mouse button");
-	}
-
+void Machine::mouse_hold(MouseButton button) {
 	if (current_held_mouse_button != MouseButton::None) {
 		throw std::runtime_error("Can't hold a mouse button: there is an already held mouse button");
 	}
 
-	vm()->mouse_hold(buttons[0]);
-	current_held_mouse_button = buttons[0];
+	vm()->mouse_hold(button);
+	current_held_mouse_button = button;
 }
 
 void Machine::mouse_release() {
@@ -485,6 +459,13 @@ void Machine::validate_config() {
 		throw std::runtime_error("Field \"cpu\" is not specified");
 	}
 
+	{
+		int cpus = config.at("cpus");
+		if (cpus <= 0) {
+			throw std::runtime_error("CPUs number must be a positive interger");
+		}
+	}
+
 	if (!config.count("disk")) {
 		throw std::runtime_error("You must specify at least 1 disk");
 	}
@@ -498,27 +479,11 @@ void Machine::validate_config() {
 					disk.at("name").get<std::string>()));
 			}
 		}
-
-		for (uint32_t i = 0; i < disks.size(); i++) {
-			for (uint32_t j = i + 1; j < disks.size(); j++) {
-				if (disks[i].at("name") == disks[j].at("name")) {
-					throw std::runtime_error(fmt::format("Two disks have the identical name: \"{}\"",
-						disks[i].at("name").get<std::string>()));
-				}
-			}
-		}
 	}
 
 	if (config.count("shared_folder")) {
 		auto shared_folders = config.at("shared_folder");
-		for (uint32_t i = 0; i < shared_folders.size(); i++) {
-			for (uint32_t j = i + 1; j < shared_folders.size(); j++) {
-				if (shared_folders[i].at("name") == shared_folders[j].at("name")) {
-					throw std::runtime_error(fmt::format("Two shared folders have the identical name: \"{}\"",
-						shared_folders[i].at("name").get<std::string>()));
-				}
-			}
-		}
+
 		for (auto& shared_folder: shared_folders) {
 			if (!shared_folder.count("host_path")) {
 				throw std::runtime_error(fmt::format("Shared folder {} error: field \"host_path\" is not specified",
@@ -557,15 +522,6 @@ void Machine::validate_config() {
 				std::string mac = nic.at("mac").get<std::string>();
 				if (!is_mac_correct(mac)) {
 					throw std::runtime_error(fmt::format("Incorrect mac address: \"{}\"", mac));
-				}
-			}
-		}
-
-		for (uint32_t i = 0; i < nics.size(); i++) {
-			for (uint32_t j = i + 1; j < nics.size(); j++) {
-				if (nics[i].at("name") == nics[j].at("name")) {
-					throw std::runtime_error(fmt::format("Two NICs have the identical name: \"{}\"",
-						nics[i].at("name").get<std::string>()));
 				}
 			}
 		}
