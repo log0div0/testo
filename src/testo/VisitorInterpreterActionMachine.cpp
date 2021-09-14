@@ -402,10 +402,14 @@ std::string VisitorInterpreterActionMachine::build_select_img_script(const IR::S
 bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, const stb::Image<stb::RGB>& screenshot) {
 	auto value = eval_js(js.script(), screenshot);
 
-	if (value.is_boolean()) {
-		return (bool)value;
-	} else {
-	 	throw std::runtime_error("Can't process return value type. We expect a single boolean");
+	try {
+		if (value.is_boolean()) {
+			return (bool)value;
+		} else {
+		 	throw std::runtime_error("Can't process return value type. We expect a single boolean");
+		}
+	} catch (const std::exception&) {
+		std::throw_with_nested(Exception("Error while processing a response message from NN service:\n" + value.dump(4)));
 	}
 }
 
@@ -431,12 +435,16 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 	}
 
 	auto eval_result = eval_js(script, screenshot);
-	if (eval_result.is_array()) {
-		return (bool)eval_result.size();
-	} else if (eval_result.is_boolean()) {
-		return (bool)eval_result;
-	} else {
-		throw std::runtime_error("Uknown js return type: we expect array or boolean");
+	try {
+		if (eval_result.is_array()) {
+			return (bool)eval_result.size();
+		} else if (eval_result.is_boolean()) {
+			return (bool)eval_result;
+		} else {
+			throw std::runtime_error("Uknown js return type: we expect array or boolean");
+		}
+	} catch (const std::exception&) {
+		std::throw_with_nested(Exception("Error while processing a response message from NN service:\n" + eval_result.dump(4)));
 	}
 }
 
@@ -531,23 +539,27 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 
 			auto js_result = eval_js(script, screenshot);
 
-			if (js_result.is_object() && !js_result.is_array()) {
-				if (!js_result.count("x")) {
-					throw std::runtime_error("Object doesn't have the x propery");
+			try {
+				if (js_result.is_object() && !js_result.is_array()) {
+					if (!js_result.count("x")) {
+						throw std::runtime_error("Object doesn't have the x propery");
+					}
+
+					if (!js_result.count("y")) {
+						throw std::runtime_error("Object doesn't have the y propery");
+					}
+
+					auto x = js_result.at("x").get<int32_t>();
+					auto y = js_result.at("y").get<int32_t>();
+
+					point.x = x;
+					point.y = y;
+
+				} else {
+					throw std::runtime_error("Can't process return value type. We expect a single object");
 				}
-
-				if (!js_result.count("y")) {
-					throw std::runtime_error("Object doesn't have the y propery");
-				}
-
-				auto x = js_result.at("x").get<int32_t>();
-				auto y = js_result.at("y").get<int32_t>();
-
-				point.x = x;
-				point.y = y;
-
-			} else {
-				throw std::runtime_error("Can't process return value type. We expect a single object");
+			} catch (const std::exception&) {
+				std::throw_with_nested(Exception("Error while processing a response message from NN service:\n" + js_result.dump(4)));
 			}
 
 			vmc->vm()->mouse_move_abs(point.x, point.y);
