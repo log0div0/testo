@@ -84,8 +84,8 @@ Token Parser::eat(const std::vector<Token::category> types) {
 		}
 	}
 
-	std::string error_msg = "Error: unexpected token \"" +
-		LT(1).value() + "\", expected";
+	std::string error_msg = "Error: unexpected token " +
+		Token::type_to_string(LT(1).type()) + ", expected";
 
 	if (types.size() == 1) {
 		error_msg += ": " + Token::type_to_string(types[0]);
