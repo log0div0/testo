@@ -4,7 +4,7 @@
 #include "FlashDrive.hpp"
 #include "../Keyboard.hpp"
 #include "../Mouse.hpp"
-#include <guest_additions_common_stuff/GuestAdditions.hpp>
+#include <testo_guest_additions_protocol/GuestAdditions.hpp>
 #include <stb/Image.hpp>
 #include <nlohmann/json.hpp>
 

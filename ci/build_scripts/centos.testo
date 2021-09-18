@@ -123,15 +123,43 @@ test centos_build_onnxruntime_gpu: centos_install_cuda {
 	}
 }
 
+[no_snapshots: true]
+test centos_build_testo: centos_install_packages {
+	centos {
+		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
+		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
+		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
+		copyto "${TESTO_SRC_DIR}/src/testo" "/root/testo/src/testo"
+		copyto "${TESTO_SRC_DIR}/src/testo_guest_additions_protocol" "/root/testo/src/testo_guest_additions_protocol"
+		copyto "${TESTO_SRC_DIR}/src/testo_nn_service_protocol" "/root/testo/src/testo_nn_service_protocol"
+		copyto "${TESTO_SRC_DIR}/src/CMakeLists.txt" "/root/testo/src/CMakeLists.txt"
+		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
+		exec bash """
+			cd /root/
+			mkdir testo_build
+			cd testo_build
+			cmake ../testo \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCPACK_GENERATOR=RPM
+			make testo_unit_tests -j$(nproc)
+			./out/sbin/testo_unit_tests
+			make testo-package -j$(nproc)
+			ls out/pkg
+		""" timeout 30m
+		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo.rpm"
+	}
+}
 
 [no_snapshots: true]
-test centos_build_testo: centos_install_cuda {
+test centos_build_testo_nn_service: centos_install_cuda {
 	centos {
 		copyto "${TMP_DIR}/onnxruntime_dist_centos_gpu" "/root/onnxruntime_dist"
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
 		copyto "${TESTO_SRC_DIR}/lib" "/root/testo/lib"
-		copyto "${TESTO_SRC_DIR}/src" "/root/testo/src"
+		copyto "${TESTO_SRC_DIR}/src/testo_nn_service" "/root/testo/src/testo_nn_service"
+		copyto "${TESTO_SRC_DIR}/src/testo_nn_service_protocol" "/root/testo/src/testo_nn_service_protocol"
+		copyto "${TESTO_SRC_DIR}/src/CMakeLists.txt" "/root/testo/src/CMakeLists.txt"
 		copyto "${TESTO_SRC_DIR}/CMakeLists.txt" "/root/testo/CMakeLists.txt"
 		exec bash """
 			export PATH="$PATH:/usr/local/bin:/usr/local/cuda/bin"
@@ -144,10 +172,8 @@ test centos_build_testo: centos_install_cuda {
 				-DONNX_RUNTIME_DIR=/root/onnxruntime_dist \
 				-DUSE_CUDA=on
 			make testo-nn-service-package -j$(nproc)
-			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
-		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo.rpm"
 		copyfrom "/root/testo_build/out/pkg/testo-nn-service.rpm" "${OUT_DIR}/testo-nn-service.rpm"
 	}
 }

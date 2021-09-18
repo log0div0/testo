@@ -2,7 +2,7 @@
 #pragma once
 
 #include <coro/StreamSocket.h>
-#include <guest_additions_common_stuff/GuestAdditions.hpp>
+#include <testo_guest_additions_protocol/GuestAdditions.hpp>
 #include <hyperv/Machine.hpp>
 #ifdef WIN32
 #include <hyperv/AsioWin.hpp>

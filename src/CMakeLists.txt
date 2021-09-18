@@ -6,27 +6,18 @@ if (WIN32)
 	add_definitions(-D__PRETTY_FUNCTION__=__FUNCSIG__)
 endif()
 
-if (USE_CUDA)
-	add_definitions(-DUSE_CUDA=1)
-endif()
-
 if (APPLE)
 	include_directories(/usr/local/include)
 	link_directories(/usr/local/lib)
 endif()
 
-include_directories(${ONNX_RUNTIME_DIR}/include/onnxruntime/core/session/)
-
-if (USE_CUDA)
-	include_directories(${ONNX_RUNTIME_DIR}/include/onnxruntime/core/providers/cuda/)
-endif()
-
-link_directories(${ONNX_RUNTIME_DIR}/lib/)
-
 add_definitions(-DNN_SERVICE_PROCOTOL_VERSION="1.0")
 
-add_subdirectory(license)
-add_subdirectory(js)
-add_subdirectory(nn)
-add_subdirectory(nn_service)
-add_subdirectory(testo)
+add_subdirectory_if_exists(testo)
+
+if (TESTO_GUEST_ADDITIONS_HYPERVISOR)
+add_subdirectory_if_exists(testo_guest_additions)
+endif()
+
+add_subdirectory_if_exists(testo_guest_additions_protocol)
+add_subdirectory_if_exists(testo_nn_service)

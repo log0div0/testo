@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "../nn_service/Channel.hpp"
+#include "testo_nn_service_protocol/Channel.hpp"
 
 struct NNServiceClient {
 	NNServiceClient() = default;

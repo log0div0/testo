@@ -19,7 +19,7 @@ file(GLOB SRCS ${SRC_DIRS})
 list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 add_library(testo_core ${SRCS})
-target_link_libraries(testo_core coro pugixml stb os guest_additions_common_stuff)
+target_link_libraries(testo_core coro pugixml stb os testo_guest_additions_protocol)
 
 if(WIN32)
 	target_link_libraries(testo_core hyperv msft virtdisk++)
