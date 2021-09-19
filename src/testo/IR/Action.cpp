@@ -70,7 +70,11 @@ TimeInterval Type::interval() const {
 }
 
 KeyCombination Type::autoswitch() const {
-	return OptionSeq(ast_node->option_seq, stack).get<KeyCombination>("autoswitch", "TESTO_TYPE_DEFAULT_AUTOSWITCH");
+	return OptionSeq(ast_node->option_seq, stack).get<KeyCombination>("autoswitch");
+}
+
+bool Type::use_autoswitch() const {
+	return OptionSeq(ast_node->option_seq, stack).has("autoswitch");
 }
 
 SelectExpr Wait::select_expr() const {

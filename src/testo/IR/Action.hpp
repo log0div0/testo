@@ -54,6 +54,7 @@ struct Type: Action<AST::Type> {
 	std::string text() const;
 	TimeInterval interval() const;
 	KeyCombination autoswitch() const;
+	bool use_autoswitch() const;
 };
 
 struct Wait: Action<AST::Wait> {

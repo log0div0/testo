@@ -136,14 +136,26 @@ struct KeyboardCommand {
 
 bool operator==(const KeyboardCommand& a, const KeyboardCommand& b);
 
-struct KeyboardManager {
-	KeyboardManager();
+struct KeyboardLayout;
 
-	std::vector<KeyboardCommand> type(const std::string text);
+struct TextChunk {
+	const KeyboardLayout* layout;
+	std::string text;
+};
 
-private:
-	const CharDesc& find_char_desc(char32_t ch);
+bool operator==(const TextChunk& a, const TextChunk& b);
 
-	size_t current_layout_index = 0;
-	std::vector<const CharMap*> layouts;
+struct KeyboardLayout {
+	static const KeyboardLayout US;
+	static const KeyboardLayout RU;
+	static std::vector<TextChunk> split_text_by_layout(const std::string& text);
+	static std::vector<TextChunk> split_text_by_layout(const std::u32string& text);
+
+	std::vector<KeyboardCommand> type(const std::string& text) const;
+	std::vector<KeyboardCommand> type(const std::u32string& text) const;
+	const CharDesc& find_char_desc(char32_t ch) const;
+	bool can_type(char32_t ch) const;
+
+	std::string name;
+	CharMap char_map;
 };

@@ -308,11 +308,21 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 }
 
 void VisitorSemantic::visit_type(const IR::Type& type) {
+	std::vector<TextChunk> chunks = KeyboardLayout::split_text_by_layout(type.text());
+
+	if ((chunks.size() > 1) && !type.use_autoswitch()) {
+		throw ExceptionWithPos(type.ast_node->text->begin(), "Can't type the text by using a single keyboard layout. \
+			You probably should use the 'autoswitch' option");
+	}
+
 	current_test->cksum_input << "type "
 		<< "\"" << type.text() << "\""
-		<< " interval " << type.interval().value().count()
-		<< " autoswitch ";
-	visit_key_combination(type.autoswitch());
+		<< " interval " << type.interval().value().count();
+
+	if (type.use_autoswitch()) {
+		current_test->cksum_input << " autoswitch ";
+		visit_key_combination(type.autoswitch());
+	}
 	current_test->cksum_input << std::endl;
 }
 

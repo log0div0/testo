@@ -4,6 +4,8 @@
 #include <locale>
 #include <codecvt>
 #include <algorithm>
+#include <list>
+#include <cassert>
 
 const std::vector<std::string> kb_to_str = {
 	"ESC",
@@ -231,7 +233,7 @@ KeyboardButton ToKeyboardButton(const std::string& button) {
 	return it->second;
 }
 
-const CharMap US = {
+const KeyboardLayout KeyboardLayout::US = { "US", {
 	{U'0', {KeyboardButton::ZERO}},
 	{U'1', {KeyboardButton::ONE}},
 	{U'2', {KeyboardButton::TWO}},
@@ -334,9 +336,9 @@ const CharMap US = {
 	{U'X', {KeyboardButton::X, true}},
 	{U'Y', {KeyboardButton::Y, true}},
 	{U'Z', {KeyboardButton::Z, true}},
-};
+}};
 
-const CharMap RU = {
+const KeyboardLayout KeyboardLayout::RU = { "RU", {
 	{U'0', {KeyboardButton::ZERO}},
 	{U'1', {KeyboardButton::ONE}},
 	{U'2', {KeyboardButton::TWO}},
@@ -439,26 +441,83 @@ const CharMap RU = {
 	{U'Э', {KeyboardButton::APOSTROPHE, true}},
 	{U'Ю', {KeyboardButton::DOT, true}},
 	{U'Я', {KeyboardButton::Z, true}},
-};
+}};
 
 bool operator==(const KeyboardCommand& a, const KeyboardCommand& b) {
 	return (a.action == b.action) && (a.button == b.button);
 }
 
-KeyboardManager::KeyboardManager():
-	layouts({&US, &RU})
-{
-
+bool operator==(const TextChunk& a, const TextChunk& b) {
+	return (a.layout == b.layout) && (a.text == b.text);
 }
 
 static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 
-std::vector<KeyboardCommand> KeyboardManager::type(const std::string text) {
+std::vector<TextChunk> KeyboardLayout::split_text_by_layout(const std::string& text) {
+	return split_text_by_layout(conv.from_bytes(text));
+}
+
+std::list<const KeyboardLayout*> GetAvailableLayouts() {
+	return {&KeyboardLayout::US, &KeyboardLayout::RU};
+}
+
+struct Accumulator {
+	bool consume(char32_t ch) {
+		for (auto it = layouts.begin(); it != layouts.end();) {
+			if (!(*it)->can_type(ch)) {
+				layouts.erase(it++);
+			} else {
+				++it;
+			}
+		}
+		if (layouts.size()) {
+			layout = *layouts.begin();
+			str.push_back(ch);
+			return true;
+		} else {
+			if (!str.size()) {
+				throw std::runtime_error("Unable to type the character " + conv.to_bytes(ch));
+			}
+			return false;
+		}
+	}
+
+	TextChunk get_chunk() {
+		assert(layout);
+		assert(str.size());
+		return {layout, conv.to_bytes(str)};
+	}
+
+	std::list<const KeyboardLayout*> layouts = GetAvailableLayouts();
+	const KeyboardLayout* layout = nullptr;
+	std::u32string str;
+};
+
+std::vector<TextChunk> KeyboardLayout::split_text_by_layout(const std::u32string& text) {
+	std::vector<TextChunk> result;
+	Accumulator acc;
+	for (size_t i = 0; i < text.size();) {
+		if (!acc.consume(text[i])) {
+			result.push_back(acc.get_chunk());
+			acc = {};
+			continue;
+		}
+		++i;
+	}
+	result.push_back(acc.get_chunk());
+	return result;
+}
+
+std::vector<KeyboardCommand> KeyboardLayout::type(const std::string& text) const {
+	return type(conv.from_bytes(text));
+}
+
+std::vector<KeyboardCommand> KeyboardLayout::type(const std::u32string& text) const {
 	std::vector<KeyboardCommand> result;
 
 	bool shift_holded = false;
 
-	for (char32_t ch: conv.from_bytes(text)) {
+	for (char32_t ch: text) {
 		const CharDesc& char_desc = find_char_desc(ch);
 		if (char_desc.hold_shift && !shift_holded) {
 			result.push_back({KeyboardAction::Hold, KeyboardButton::LEFTSHIFT});
@@ -479,16 +538,14 @@ std::vector<KeyboardCommand> KeyboardManager::type(const std::string text) {
 	return result;
 }
 
-const CharDesc& KeyboardManager::find_char_desc(char32_t ch) {
-	size_t initial_layout_index = current_layout_index;
-	do {
-		const CharMap* layout = layouts[current_layout_index];
-		auto it = layout->find(ch);
-		if (it != layout->end()) {
-			return it->second;
-		}
-		current_layout_index = (current_layout_index + 1) % layouts.size();
-	} while (initial_layout_index != current_layout_index);
+const CharDesc& KeyboardLayout::find_char_desc(char32_t ch) const {
+	auto it = char_map.find(ch);
+	if (it != char_map.end()) {
+		return it->second;
+	}
+	throw std::runtime_error("Unable to type the character " + conv.to_bytes(ch) + " with " + name + " layout");
+}
 
-	throw std::runtime_error("Unknown character to type: " + conv.to_bytes(ch));
+bool KeyboardLayout::can_type(char32_t ch) const {
+	return char_map.find(ch) != char_map.end();
 }

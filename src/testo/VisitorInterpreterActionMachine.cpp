@@ -226,6 +226,38 @@ void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
+void VisitorInterpreterActionMachine::visit_key_combination(const IR::KeyCombination& key_combination) {
+	std::vector<KeyboardButton> buttons = key_combination.buttons();
+	for (auto it = buttons.begin(); it != buttons.end(); ++it) {
+		vmc->hold(*it);
+	}
+	for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
+		vmc->release(*it);
+	}
+}
+
+void VisitorInterpreterActionMachine::execute_keyboard_commands(const std::vector<KeyboardCommand>& commands, std::chrono::milliseconds interval) {
+	for (size_t i = 0; i < commands.size(); ++i) {
+		if (i) {
+			if ((commands[i-1].action == KeyboardAction::Release) &&
+				(commands[i].action == KeyboardAction::Hold))
+			{
+				timer.waitFor(interval);
+			}
+		}
+		switch (commands[i].action) {
+			case KeyboardAction::Hold:
+				vmc->hold(commands[i].button);
+				break;
+			case KeyboardAction::Release:
+				vmc->release(commands[i].button);
+				break;
+			default:
+				throw std::runtime_error("Should not be there");
+		}
+	}
+}
+
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 	try {
 		std::string text = type.text();
@@ -234,29 +266,20 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 		}
 
 		IR::TimeInterval interval = type.interval();
-
 		reporter.type(vmc, text, interval.str());
+		std::vector<TextChunk> chunks = KeyboardLayout::split_text_by_layout(text);
 
-		std::vector<KeyboardCommand> commands = KeyboardManager().type(text);
+		for (size_t j = 0; j < chunks.size();) {
+			if (j) {
+				timer.waitFor(interval.value());
+				visit_key_combination(type.autoswitch());
+				timer.waitFor(interval.value());
+			}
 
-		for (size_t i = 0; i < commands.size(); ++i) {
-			if (i) {
-				if ((commands[i-1].action == KeyboardAction::Release) &&
-					(commands[i].action == KeyboardAction::Hold))
-				{
-					timer.waitFor(interval.value());
-				}
-			}
-			switch (commands[i].action) {
-				case KeyboardAction::Hold:
-					vmc->hold(commands[i].button);
-					break;
-				case KeyboardAction::Release:
-					vmc->release(commands[i].button);
-					break;
-				default:
-					throw std::runtime_error("Should not be there");
-			}
+			const TextChunk& chunk = chunks[j];
+			execute_keyboard_commands(chunk.layout->type(chunk.text), interval.value());
+
+			++j;
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(type.ast_node, current_controller));
@@ -690,19 +713,15 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 }
 
 void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval) {
-	std::vector<KeyboardButton> buttons = key_spec.combination().buttons();
 	uint32_t times = key_spec.times();
 
 	reporter.press_key(vmc, key_spec.combination().to_string(), times);
 
 	for (uint32_t i = 0; i < times; i++) {
-		for (auto it = buttons.begin(); it != buttons.end(); ++it) {
-			vmc->hold(*it);
+		if (i) {
+			timer.waitFor(interval);
 		}
-		for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
-			vmc->release(*it);
-		}
-		timer.waitFor(interval);
+		visit_key_combination(key_spec.combination());
 	}
 }
 
