@@ -11,18 +11,6 @@
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
-void VisitorInterpreterConfig::validate() const {
-	ReporterConfig::validate();
-}
-
-void VisitorInterpreterConfig::dump(nlohmann::json& j) const {
-	ReporterConfig::dump(j);
-	j["stop_on_fail"] = stop_on_fail;
-	j["assume_yes"] = assume_yes;
-	j["invalidate"] = invalidate;
-	j["dry"] = dry;
-}
-
 VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
 	reporter = Reporter(config);
 
@@ -402,7 +390,7 @@ void VisitorInterpreter::visit_regular_command(const IR::RegularCommand& regular
 }
 
 void VisitorInterpreter::visit_macro_call(const IR::MacroCall& macro_call) {
-	reporter.macro_command_call(macro_call.ast_node->name, macro_call.args());
+	reporter.macro_command_call(macro_call);
 	macro_call.visit_interpreter<AST::Cmd>(this);
 }
 

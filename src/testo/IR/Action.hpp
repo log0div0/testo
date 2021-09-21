@@ -91,7 +91,7 @@ struct MouseCoordinates: Action<AST::MouseCoordinates> {
 
 struct MouseSelectable: Action<AST::MouseSelectable> {
 	using Action<AST::MouseSelectable>::Action;
-	std::string where_to_go() const;
+	std::string to_string() const;
 	TimeInterval timeout() const;
 };
 
@@ -120,8 +120,13 @@ struct MouseHold: Action<AST::MouseHold> {
 	MouseButton button() const;
 };
 
-struct MouseRelease:Action<AST::MouseRelease> {
+struct MouseRelease: Action<AST::MouseRelease> {
 	using Action<AST::MouseRelease>::Action;
+};
+
+struct MouseWheel: Action<AST::MouseWheel> {
+	using Action<AST::MouseWheel>::Action;
+	std::string direction() const;
 };
 
 struct Plug: Action<AST::Plug> {

@@ -6,6 +6,7 @@
 #include "IR/Action.hpp"
 #include "IR/Command.hpp"
 #include "IR/Expr.hpp"
+#include "Configs.hpp"
 
 #include <set>
 #include <unordered_set>
@@ -22,14 +23,6 @@ inline Tribool operator!(Tribool b) {
 			return Tribool::maybe;
 	}
 }
-
-struct VisitorSemanticConfig {
-	std::string prefix;
-
-	void validate() const;
-
-	virtual void dump(nlohmann::json& j) const;
-};
 
 struct VisitorSemantic {
 	VisitorSemantic(const VisitorSemanticConfig& config);

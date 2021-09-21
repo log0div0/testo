@@ -113,7 +113,7 @@ bool MouseCoordinates::y_is_relative() const {
 	return y().at(0) == '+' || y().at(0) == '-';
 }
 
-std::string MouseSelectable::where_to_go() const {
+std::string MouseSelectable::to_string() const {
 	std::string result;
 	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(ast_node->basic_select_expr)) {
 		result += "js selection \"";
@@ -134,11 +134,18 @@ std::string MouseSelectable::where_to_go() const {
 	} else {
 		throw std::runtime_error("Where to go is unapplicable");
 	}
+	for (auto specifier: ast_node->mouse_additional_specifiers) {
+		result += specifier->to_string();
+	}
 	return result;
 }
 
 TimeInterval MouseSelectable::timeout() const {
 	return OptionSeq(ast_node->option_seq, stack).get<TimeInterval>("timeout", "TESTO_MOUSE_MOVE_CLICK_DEFAULT_TIMEOUT");
+}
+
+std::string MouseWheel::direction() const {
+	return ast_node->direction.value();
 }
 
 std::string SelectJS::script() const {

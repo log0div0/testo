@@ -20,14 +20,6 @@ struct ControllerCreatonException: public Exception {
 	}
 };
 
-void VisitorSemanticConfig::validate() const {
-
-}
-
-void VisitorSemanticConfig::dump(nlohmann::json& j) const {
-	j["prefix"] = prefix;
-}
-
 VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
 	prefix = config.prefix;
 }

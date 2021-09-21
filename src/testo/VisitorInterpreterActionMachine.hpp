@@ -45,7 +45,7 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	void visit_mouse_move_coordinates(const IR::MouseCoordinates& coordinates);
 	void visit_mouse_hold(const IR::MouseHold& mouse_hold);
 	void visit_mouse_release(const IR::MouseRelease& mouse_release);
-	void visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mouse_wheel);
+	void visit_mouse_wheel(const IR::MouseWheel& mouse_wheel);
 	void visit_screenshot(const IR::Screenshot& screenshot);
 	void visit_plug(const IR::Plug& plug);
 	void visit_plug_nic(const IR::PlugNIC& plug_nic, bool is_on);

@@ -56,11 +56,11 @@ int do_main(int argc, char** argv) {
 	RunModeArgs run_args;
 
 	auto test_spec_filer = [&](const std::string& arg) {
-		run_args.test_name_filters.push_back({IR::TestNameFilter::Type::test_spec, arg});
+		run_args.test_name_filters.push_back({TestNameFilter::Type::test_spec, arg});
 		return true;
 	};
 	auto exclude_filer = [&](const std::string& arg) {
-		run_args.test_name_filters.push_back({IR::TestNameFilter::Type::exclude, arg});
+		run_args.test_name_filters.push_back({TestNameFilter::Type::exclude, arg});
 		return true;
 	};
 

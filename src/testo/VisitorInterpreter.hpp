@@ -7,17 +7,7 @@
 #include "IR/Macro.hpp"
 #include "Reporter.hpp"
 #include "TemplateLiterals.hpp"
-
-struct VisitorInterpreterConfig: ReporterConfig {
-	bool stop_on_fail = false;
-	bool assume_yes = false;
-	std::string invalidate;
-	bool dry = false;
-
-	void validate() const;
-
-	virtual void dump(nlohmann::json& j) const;
-};
+#include "Configs.hpp"
 
 struct VisitorInterpreter {
 	VisitorInterpreter(const VisitorInterpreterConfig& config);

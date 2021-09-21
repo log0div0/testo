@@ -5,76 +5,11 @@
 #include "../Exceptions.hpp"
 #include "../Parser.hpp"
 #include <wildcards.hpp>
+#include "../backends/Environment.hpp"
+#include "../VisitorSemantic.hpp"
+#include "../VisitorInterpreter.hpp"
 
 namespace IR {
-
-bool TestNameFilter::validate_test_name(const std::string& name) const {
-	switch (type) {
-		case Type::test_spec:
-			return wildcards::match(name, pattern);
-		case Type::exclude:
-			return !wildcards::match(name, pattern);
-		default:
-			throw std::runtime_error("Should not be there");
-	}
-}
-
-void to_json(nlohmann::json& j, const TestNameFilter& filter) {
-	switch (filter.type) {
-		case TestNameFilter::Type::test_spec:
-			j["type"] = "test_spec";
-			break;
-		case TestNameFilter::Type::exclude:
-			j["type"] = "exclude";
-			break;
-		default:
-			throw std::runtime_error("Should not be there");
-	}
-	j["pattern"] = filter.pattern;
-}
-
-bool ProgramConfig::validate_test_name(const std::string& name) const {
-	for (auto& filter: test_name_filters) {
-		if (!filter.validate_test_name(name)) {
-			return false;
-		}
-	}
-	return true;
-}
-
-void ProgramConfig::validate() const {
-	if (!fs::exists(target)) {
-		throw std::runtime_error("Error: target doesn't exist: " + target);
-	}
-
-	std::set<std::string> unique_param_names;
-
-	for (size_t i = 0; i < params_names.size(); ++i) {
-		auto result = unique_param_names.insert(params_names[i]);
-		if (!result.second) {
-			throw std::runtime_error("Error: param \"" + params_names[i] + "\" is defined multiple times as a command line argument");
-		}
-	}
-
-	VisitorSemanticConfig::validate();
-	VisitorInterpreterConfig::validate();
-	EnvironmentConfig::validate();
-}
-
-void ProgramConfig::dump(nlohmann::json& j) const {
-	VisitorSemanticConfig::dump(j);
-	VisitorInterpreterConfig::dump(j);
-	EnvironmentConfig::dump(j);
-
-	j["target"] = target;
-	j["test_name_filters"] = test_name_filters;
-	auto params = nlohmann::json::object();
-	for (size_t i = 0; i < params_names.size(); ++i) {
-		params[params_names.at(i)] = params_values.at(i);
-	}
-	j["params"] = params;
-	j["use_cpu"] = use_cpu;
-}
 
 Program::Program(const std::shared_ptr<AST::Program>& ast, const ProgramConfig& config_): config(config_) {
 	if (program != nullptr) {

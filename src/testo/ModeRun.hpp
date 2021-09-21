@@ -3,9 +3,9 @@
 
 #include <vector>
 #include <string>
-#include "IR/Program.hpp"
+#include "Configs.hpp"
 
-struct RunModeArgs: IR::ProgramConfig {
+struct RunModeArgs: ProgramConfig {
 	void validate() const;
 };
 

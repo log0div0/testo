@@ -5,7 +5,7 @@
 #include "Utils.hpp"
 
 void RunModeArgs::validate() const {
-	IR::ProgramConfig::validate();
+	ProgramConfig::validate();
 }
 
 int run_mode(const RunModeArgs& args) {

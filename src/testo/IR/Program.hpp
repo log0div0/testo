@@ -1,45 +1,14 @@
 
 #pragma once
 
-#include "../backends/Environment.hpp"
+#include "../Configs.hpp"
 #include "Test.hpp"
 #include "Macro.hpp"
 #include "Param.hpp"
-#include "../VisitorSemantic.hpp"
-#include "../VisitorInterpreter.hpp"
 #include <unordered_set>
 #include <unordered_map>
 
 namespace IR {
-
-struct TestNameFilter {
-	enum class Type {
-		test_spec,
-		exclude
-	};
-	Type type;
-	std::string pattern;
-
-	bool validate_test_name(const std::string& name) const;
-};
-
-void to_json(nlohmann::json& j, const TestNameFilter& filter);
-
-struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig, EnvironmentConfig {
-	std::string target;
-
-	std::vector<TestNameFilter> test_name_filters;
-
-	std::vector<std::string> params_names;
-	std::vector<std::string> params_values;
-
-	bool use_cpu = false;
-
-	bool validate_test_name(const std::string& name) const;
-	void validate() const;
-
-	virtual void dump(nlohmann::json& j) const;
-};
 
 struct Program {
 	Program(const std::shared_ptr<AST::Program>& ast, const ProgramConfig& config);
@@ -83,7 +52,6 @@ public:
 	std::vector<std::shared_ptr<Test>> all_selected_tests;
 	std::shared_ptr<StackNode> stack;
 	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
-	template_literals::Parser template_parser;
 
 private:
 	friend struct IR::MacroCall;

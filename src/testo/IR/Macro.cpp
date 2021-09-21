@@ -43,6 +43,10 @@ void Macro::validate() {
 	}
 }
 
+std::string MacroCall::macro_name() const {
+	return ast_node->name;
+}
+
 const std::shared_ptr<IR::Macro> MacroCall::get_macro() const {
 	auto macro = program->get_macro_or_null(ast_node->name.value());
 	if (!macro) {

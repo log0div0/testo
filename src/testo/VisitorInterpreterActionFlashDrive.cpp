@@ -37,13 +37,9 @@ void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::Actio
 
 void VisitorInterpreterActionFlashDrive::visit_copy(const IR::Copy& copy) {
 	try {
-		fs::path from = copy.from();
-		fs::path to = copy.to();
+		reporter.copy(current_controller, copy);
 
-		IR::TimeInterval wait_for = copy.timeout();
-		reporter.copy(current_controller, from.generic_string(), to.generic_string(), copy.ast_node->is_to_guest(), wait_for.str());
-
-		coro::Timeout timeout(wait_for.value());
+		coro::Timeout timeout(copy.timeout().value());
 
 		for (auto vmc: current_test->get_all_machines()) {
 			if (vmc->vm()->is_flash_plugged(fdc->fd())) {
@@ -54,12 +50,12 @@ void VisitorInterpreterActionFlashDrive::visit_copy(const IR::Copy& copy) {
 		//TODO: timeouts
 		if(copy.ast_node->is_to_guest()) {
 			//Additional check since now we can't be sure the "from" actually exists
-			if (!fs::exists(from)) {
-				throw std::runtime_error("Specified path doesn't exist: " + from.generic_string());
+			if (!fs::exists(copy.from())) {
+				throw std::runtime_error("Specified path doesn't exist: " + copy.from());
 			}
-			fdc->fd()->upload(from, to);
+			fdc->fd()->upload(copy.from(), copy.to());
 		} else {
-			fdc->fd()->download(from, to);
+			fdc->fd()->download(copy.from(), copy.to());
 		}
 
 	} catch (const std::exception& error) {

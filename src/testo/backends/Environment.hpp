@@ -4,17 +4,7 @@
 #include "VM.hpp"
 #include "FlashDrive.hpp"
 #include "Network.hpp"
-
-struct EnvironmentConfig {
-	
-	std::string nn_service_ip() const;
-	std::string nn_service_port() const;
-
-	void validate() const;
-	virtual void dump(nlohmann::json& j) const;
-
-	std::string nn_service_endpoint = "127.0.0.1:8156";
-};
+#include "../Configs.hpp"
 
 struct NNServiceClient;
 

@@ -36,6 +36,7 @@ struct Macro: Object<AST::Macro> {
 struct MacroCall: Node<AST::IMacroCall> {
 	using Node<AST::IMacroCall>::Node;
 
+	std::string macro_name() const;
 	const std::shared_ptr<IR::Macro> get_macro() const;
 	std::vector<std::pair<std::string, std::string>> args() const;
 	std::map<std::string, std::string> vars() const;

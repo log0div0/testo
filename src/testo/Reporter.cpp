@@ -17,14 +17,6 @@ std::string duration_to_str(Duration duration) {
 	return result;
 }
 
-void ReporterConfig::validate() const {
-}
-
-void ReporterConfig::dump(nlohmann::json& j) const {
-	j["report_folder"] = report_folder;
-	j["html"] = html;
-}
-
 Reporter::Reporter(const ReporterConfig& config) {
 	report_folder = config.report_folder;
 	html = config.html;
@@ -234,10 +226,10 @@ void Reporter::restore_snapshot(std::shared_ptr<IR::Controller> controller, cons
 	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
-void Reporter::print(std::shared_ptr<IR::Controller> controller, const std::string& message) {
+void Reporter::print(std::shared_ptr<IR::Controller> controller, const IR::Print& action) {
 	report_prefix(blue);
 	report(controller->name(), yellow);
-	report(fmt::format(": {}\n", message), blue);
+	report(fmt::format(": {}\n", action.message()), blue);
 }
 
 void Reporter::start(std::shared_ptr<IR::Machine> vmc) {
@@ -252,17 +244,19 @@ void Reporter::stop(std::shared_ptr<IR::Machine> vmc) {
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::shutdown(std::shared_ptr<IR::Machine> vmc, const std::string& timeout) {
+void Reporter::shutdown(std::shared_ptr<IR::Machine> vmc, const IR::Shutdown& action) {
 	report_prefix(blue);
 	report(fmt::format("Shutting down virtual machine "), blue);
 	report(fmt::format("{}", vmc->name()), yellow);
-	report(fmt::format(" with timeout {}\n", timeout), blue);
+	report(fmt::format(" with timeout {}\n", action.timeout().str()), blue);
 }
 
-void Reporter::press_key(std::shared_ptr<IR::Machine> vmc, const std::string& key, uint32_t times) {
+void Reporter::press_key(std::shared_ptr<IR::Machine> vmc, const IR::KeySpec& key_spec) {
 	report_prefix(blue);
 	report(fmt::format("Pressing key "), blue);
-	report(fmt::format("{} ", key), yellow);
+	report(fmt::format("{} ", key_spec.combination().to_string()), yellow);
+
+	auto times = key_spec.times();
 
 	if (times > 1) {
 		report(fmt::format("{} times ", times), blue);
@@ -272,19 +266,19 @@ void Reporter::press_key(std::shared_ptr<IR::Machine> vmc, const std::string& ke
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::hold_key(std::shared_ptr<IR::Machine> vmc, const std::string& key) {
+void Reporter::hold_key(std::shared_ptr<IR::Machine> vmc, const IR::Hold& action) {
 	report_prefix(blue);
 	report(fmt::format("Holding key "), blue);
-	report(fmt::format("{} ", key), yellow);
+	report(fmt::format("{} ", action.combination().to_string()), yellow);
 
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::release_key(std::shared_ptr<IR::Machine> vmc, const std::string& keys) {
+void Reporter::release_key(std::shared_ptr<IR::Machine> vmc, const IR::Release& action) {
 	report_prefix(blue);
 	report(fmt::format("Releasing key "), blue);
-	report(fmt::format("{} ", keys), yellow);
+	report(fmt::format("{} ", action.combination().to_string()), yellow);
 
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
@@ -299,26 +293,28 @@ void Reporter::release_key(std::shared_ptr<IR::Machine> vmc) {
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::type(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& interval) {
+void Reporter::type(std::shared_ptr<IR::Machine> vmc, const IR::Type& action) {
 	report_prefix(blue);
 	report(fmt::format("Typing "), blue);
-	report(fmt::format("\"{}\" ", text), yellow);
-	report(fmt::format("with interval {} in virtual machine ", interval), blue);
+	report(fmt::format("\"{}\" ", action.text()), yellow);
+	report(fmt::format("with interval {} in virtual machine ", action.interval().str()), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 
 }
 
-void Reporter::sleep(std::shared_ptr<IR::Controller> controller, const std::string& timeout) {
+void Reporter::sleep(std::shared_ptr<IR::Controller> controller, const IR::Sleep& action) {
 	report_prefix(blue);
 	report(fmt::format("Sleeping in {} ", controller->type()), blue);
 	report(fmt::format("{}", controller->name()), yellow);
-	report(fmt::format(" for {}\n", timeout), blue);
+	report(fmt::format(" for {}\n", action.timeout().str()), blue);
 }
 
-void Reporter::macro_action_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
+void Reporter::macro_action_call(std::shared_ptr<IR::Controller> controller, const IR::MacroCall& macro_call) {
 	report_prefix(blue);
 	report(fmt::format("Calling macro "), blue);
-	report(fmt::format("{}(", macro_name), yellow);
+	report(fmt::format("{}(", macro_call.macro_name()), yellow);
+
+	auto params = macro_call.args();
 
 	for (auto it = params.begin(); it != params.end(); ++it) {
 		report(fmt::format("{}=\"{}\"", it->first, it->second), yellow);
@@ -333,10 +329,12 @@ void Reporter::macro_action_call(std::shared_ptr<IR::Controller> controller, con
 	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
-void Reporter::macro_command_call(const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params) {
+void Reporter::macro_command_call(const IR::MacroCall& macro_call) {
 	report_prefix(blue);
 	report(fmt::format("Calling command macro "), blue);
-	report(fmt::format("{}(", macro_name), yellow);
+	report(fmt::format("{}(", macro_call.macro_name()), yellow);
+
+	auto params = macro_call.args();
 
 	for (auto it = params.begin(); it != params.end(); ++it) {
 		report(fmt::format("{}=\"{}\"", it->first, it->second), yellow);
@@ -349,18 +347,20 @@ void Reporter::macro_command_call(const std::string& macro_name, const std::vect
 	report(")\n", yellow);
 }
 
-void Reporter::wait(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
+void Reporter::wait(std::shared_ptr<IR::Machine> vmc, const IR::Wait& action) {
 	report_prefix(blue);
 	report(fmt::format("Waiting "), blue);
-	report(fmt::format("{} ", text), yellow);
-	report(fmt::format("for {} with interval {} in virtual machine ", timeout, interval), blue);
+	report(fmt::format("{} ", action.select_expr().to_string()), yellow);
+	report(fmt::format("for {} with interval {} in virtual machine ", action.timeout().str(), action.interval().str()), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::check(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval) {
+void Reporter::check(std::shared_ptr<IR::Machine> vmc, const IR::Check& action) {
+	std::string timeout = action.timeout().str();
+	std::string interval = action.interval().str();
 	report_prefix(blue);
 	report(fmt::format("Checking "), blue);
-	report(fmt::format("{}", text), yellow);
+	report(fmt::format("{}", action.select_expr().to_string()), yellow);
 	if (timeout != "1ms") {
 		report(fmt::format(" for {}", timeout), blue);
 	}
@@ -381,49 +381,51 @@ void Reporter::plug(std::shared_ptr<IR::Machine> vmc, const std::string& device,
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpreter, const std::string& timeout) {
+void Reporter::exec(std::shared_ptr<IR::Machine> vmc, const IR::Exec& action) {
 	report_prefix(blue);
-	report(fmt::format("Executing {} command in virtual machine ", interpreter), blue);
+	report(fmt::format("Executing {} command in virtual machine ", action.interpreter()), blue);
 	report(fmt::format("{}", vmc->name()), yellow);
-	report(fmt::format(" with timeout {}\n", timeout), blue);
+	report(fmt::format(" with timeout {}\n", action.timeout().str()), blue);
 }
 
-void Reporter::copy(std::shared_ptr<IR::Controller> controller, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout) {
-	std::string from_to = is_to_guest ? "to" : "from";
+void Reporter::copy(std::shared_ptr<IR::Controller> controller, const IR::Copy& action) {
+	std::string from_to = action.ast_node->is_to_guest() ? "to" : "from";
 
 	report_prefix(blue);
 	report(fmt::format("Copying "), blue);
-	report(fmt::format("{} ", from), yellow);
+	report(fmt::format("{} ", action.from()), yellow);
 	report(fmt::format("{} {} ", from_to, controller->type()), blue);
 	report(fmt::format("{} ", controller->name()), yellow);
 	report(fmt::format("to destination "), blue);
-	report(fmt::format("{} ", to), yellow);
-	report(fmt::format("with timeout {}\n", timeout), blue);
+	report(fmt::format("{} ", action.to()), yellow);
+	report(fmt::format("with timeout {}\n", action.timeout().str()), blue);
 }
 
-void Reporter::screenshot(std::shared_ptr<IR::Machine> controller, const std::string& destination) {
+void Reporter::screenshot(std::shared_ptr<IR::Machine> controller, const IR::Screenshot& action) {
 	report_prefix(blue);
 	report(fmt::format("Saving screenshot "), blue);
 	report(fmt::format("from virtual machine {} ", controller->name()), yellow);
 	report(fmt::format("to destination "), blue);
-	report(fmt::format("{}", destination), yellow);
+	report(fmt::format("{}", action.destination()), yellow);
 }
 
-void Reporter::mouse_move_click_coordinates(std::shared_ptr<IR::Machine> vmc, const std::string& x, const std::string& y) {
+void Reporter::mouse_move_click_coordinates(std::shared_ptr<IR::Machine> vmc, const IR::MouseCoordinates& coordinates) {
 	report("on coordinates ", blue);
-	report(fmt::format("{} {} ", x, y), yellow);
+	report(fmt::format("{} {} ", coordinates.x(), coordinates.y()), yellow);
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::mouse_move_click_selectable(std::shared_ptr<IR::Machine> vmc, const std::string& object, const std::string& timeout) {
+void Reporter::mouse_move_click_selectable(std::shared_ptr<IR::Machine> vmc, const IR::MouseSelectable& selectable) {
 	report("on ", blue);
-	report(fmt::format("{} ", object), yellow);
-	report(fmt::format("with timeout {} in virtual machine ", timeout), blue);
+	report(fmt::format("{} ", selectable.to_string()), yellow);
+	report(fmt::format("with timeout {} in virtual machine ", selectable.timeout().str()), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::mouse_move_click(std::shared_ptr<IR::Machine> vmc, std::string event) {
+void Reporter::mouse_move_click(std::shared_ptr<IR::Machine> vmc, const IR::MouseMoveClick& action) {
+	std::string event = action.event_type();
+
 	if (event == "move") {
 		event = "moving";
 	} else if (event == "click") {
@@ -446,7 +448,9 @@ void Reporter::mouse_no_object() {
 	report("\n", blue);
 }
 
-void Reporter::mouse_hold(std::shared_ptr<IR::Machine> vmc, std::string button) {
+void Reporter::mouse_hold(std::shared_ptr<IR::Machine> vmc, const IR::MouseHold& action) {
+	std::string button = ToString(action.button());
+
 	if (button == "lbtn") {
 		button = "left button";
 	} else if (button == "rbtn") {
@@ -471,10 +475,10 @@ void Reporter::mouse_release(std::shared_ptr<IR::Machine> vmc) {
 	report(fmt::format("{}\n", vmc->name()), yellow);
 }
 
-void Reporter::mouse_wheel(std::shared_ptr<IR::Machine> vmc, const std::string& direction) {
+void Reporter::mouse_wheel(std::shared_ptr<IR::Machine> vmc, const IR::MouseWheel& action) {
 	report_prefix(blue);
 	report(fmt::format("Mouse wheel "), blue);
-	report(fmt::format("{} ", direction), yellow);
+	report(fmt::format("{} ", action.direction()), yellow);
 
 	report("in virtual machine ", blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);

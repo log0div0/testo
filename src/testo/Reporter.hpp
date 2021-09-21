@@ -6,15 +6,10 @@
 #include <fstream>
 #include <iomanip>
 #include "IR/Test.hpp"
-
-struct ReporterConfig {
-	std::string report_folder;
-	bool html = false;
-
-	void validate() const;
-
-	virtual void dump(nlohmann::json& j) const;
-};
+#include "IR/Action.hpp"
+#include "IR/Macro.hpp"
+#include "IR/Expr.hpp"
+#include "Configs.hpp"
 
 struct Reporter {
 	Reporter() = default;
@@ -40,33 +35,33 @@ struct Reporter {
 	void restore_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot);
 
 	//both controller actions
-	void print(std::shared_ptr<IR::Controller> controller, const std::string& message);
-	void sleep(std::shared_ptr<IR::Controller> controller, const std::string& timeout);
-	void macro_action_call(std::shared_ptr<IR::Controller> controller, const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
-	void macro_command_call(const std::string& macro_name, const std::vector<std::pair<std::string, std::string>>& params);
+	void print(std::shared_ptr<IR::Controller> controller, const IR::Print& action);
+	void sleep(std::shared_ptr<IR::Controller> controller, const IR::Sleep& action);
+	void macro_action_call(std::shared_ptr<IR::Controller> controller, const IR::MacroCall& macro_call);
+	void macro_command_call(const IR::MacroCall& macro_call);
 
 	//vm actions
 	void start(std::shared_ptr<IR::Machine> vmc);
 	void stop(std::shared_ptr<IR::Machine> vmc);
-	void shutdown(std::shared_ptr<IR::Machine> vmc, const std::string& timeout);
-	void press_key(std::shared_ptr<IR::Machine> vmc, const std::string& key, uint32_t times);
-	void hold_key(std::shared_ptr<IR::Machine> vmc, const std::string& key);
-	void release_key(std::shared_ptr<IR::Machine> vmc, const std::string& key);
+	void shutdown(std::shared_ptr<IR::Machine> vmc, const IR::Shutdown& action);
+	void press_key(std::shared_ptr<IR::Machine> vmc, const IR::KeySpec& key_spec);
+	void hold_key(std::shared_ptr<IR::Machine> vmc, const IR::Hold& action);
+	void release_key(std::shared_ptr<IR::Machine> vmc, const IR::Release& action);
 	void release_key(std::shared_ptr<IR::Machine> vmc);
-	void type(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& interval);
-	void wait(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval);
-	void check(std::shared_ptr<IR::Machine> vmc, const std::string& text, const std::string& timeout, const std::string& interval);
+	void type(std::shared_ptr<IR::Machine> vmc, const IR::Type& action);
+	void wait(std::shared_ptr<IR::Machine> vmc, const IR::Wait& action);
+	void check(std::shared_ptr<IR::Machine> vmc, const IR::Check& action);
 	void plug(std::shared_ptr<IR::Machine> vmc, const std::string& device, const std::string& device_name, bool is_on);
-	void exec(std::shared_ptr<IR::Machine> vmc, const std::string& interpreter, const std::string& timeout);
-	void copy(std::shared_ptr<IR::Controller> controller, const std::string& from, const std::string& to, bool is_to_guest, const std::string& timeout);
-	void screenshot(std::shared_ptr<IR::Machine> controller, const std::string& destination);
-	void mouse_move_click_coordinates(std::shared_ptr<IR::Machine> vmc, const std::string& x, const std::string& y);
-	void mouse_move_click_selectable(std::shared_ptr<IR::Machine> vmc, const std::string& object, const std::string& timeout);
+	void exec(std::shared_ptr<IR::Machine> vmc, const IR::Exec& action);
+	void copy(std::shared_ptr<IR::Controller> controller, const IR::Copy& action);
+	void screenshot(std::shared_ptr<IR::Machine> controller, const IR::Screenshot& action);
+	void mouse_move_click_coordinates(std::shared_ptr<IR::Machine> vmc, const IR::MouseCoordinates& coordinates);
+	void mouse_move_click_selectable(std::shared_ptr<IR::Machine> vmc, const IR::MouseSelectable& selectable);
 	void mouse_no_object();
-	void mouse_move_click(std::shared_ptr<IR::Machine> vmc, std::string event);
-	void mouse_hold(std::shared_ptr<IR::Machine> vmc, std::string button);
+	void mouse_move_click(std::shared_ptr<IR::Machine> vmc, const IR::MouseMoveClick& action);
+	void mouse_hold(std::shared_ptr<IR::Machine> vmc, const IR::MouseHold& action);
 	void mouse_release(std::shared_ptr<IR::Machine> vmc);
-	void mouse_wheel(std::shared_ptr<IR::Machine> vmc, const std::string& direction);
+	void mouse_wheel(std::shared_ptr<IR::Machine> vmc, const IR::MouseWheel& action);
 
 	//negotiator
 	void exec_command_output(const std::string& text);

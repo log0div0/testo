@@ -13,20 +13,20 @@ void VisitorInterpreterAction::visit_action_block(std::shared_ptr<AST::Block<AST
 
 void VisitorInterpreterAction::visit_print(const IR::Print& print) {
 	try {
-		reporter.print(current_controller, print.message());
+		reporter.print(current_controller, print);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(print.ast_node, current_controller));
 	}
 }
 
 void VisitorInterpreterAction::visit_sleep(const IR::Sleep& sleep) {
-	reporter.sleep(current_controller, sleep.timeout().str());
+	reporter.sleep(current_controller, sleep);
 	coro::Timer timer;
 	timer.waitFor(sleep.timeout().value());
 }
 
 void VisitorInterpreterAction::visit_macro_call(const IR::MacroCall& macro_call) {
-	reporter.macro_action_call(current_controller, macro_call.ast_node->name, macro_call.args());
+	reporter.macro_action_call(current_controller, macro_call);
 	macro_call.visit_interpreter<AST::Action>(this);
 }
 
