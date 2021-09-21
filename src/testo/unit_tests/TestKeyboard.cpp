@@ -41,21 +41,66 @@ TEST_CASE("keyboard type Hello") {
 	REQUIRE(actual == expected);
 }
 
-TEST_CASE("keyboard split Hello") {
-	std::vector<TextChunk> actual = KeyboardLayout::split_text_by_layout("Hello");
-	std::vector<TextChunk> expected = {
-		{&KeyboardLayout::US, "Hello"}
+TEST_CASE("keyboard split - simple") {
+	std::vector<TypingPlan> actual = KeyboardLayout::build_typing_plan("Hello");
+	std::vector<TypingPlan> expected = {
+		{&KeyboardLayout::US, "", 		"Hel",		"",			"lo"},
 	};
 	REQUIRE(actual == expected);
 }
 
-TEST_CASE("keyboard split He№llo Мир!") {
-	std::vector<TextChunk> actual = KeyboardLayout::split_text_by_layout("He№llo Мир!");
-	std::vector<TextChunk> expected = {
-		{&KeyboardLayout::US, "He"},
-		{&KeyboardLayout::RU, "№"},
-		{&KeyboardLayout::US, "llo "},
-		{&KeyboardLayout::RU, "Мир!"}
+TEST_CASE("keyboard split - two layouts") {
+	std::vector<TypingPlan> actual = KeyboardLayout::build_typing_plan("He№llo Мир!");
+	std::vector<TypingPlan> expected = {
+		{&KeyboardLayout::US, "",		"He",		"f",		""},
+		{&KeyboardLayout::RU, "He",		"№",		"",			""},
+		{&KeyboardLayout::US, "",		"llo",		"",			" "},
+		{&KeyboardLayout::RU, "",		"Мир",		"",			"!"},
+	};
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE("keyboard split - multiline") {
+	std::vector<TypingPlan> actual = KeyboardLayout::build_typing_plan("Hello\nФJ\nМир!");
+	std::vector<TypingPlan> expected = {
+		{&KeyboardLayout::US, "",		"Hel",		"",			"lo\n"},
+		{&KeyboardLayout::RU, "",		"Ф",		"яф",		""},
+		{&KeyboardLayout::US, "Ф",		"J",		"f",		"\n"},
+		{&KeyboardLayout::RU, "",		"Мир",		"",			"!"},
+	};
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE("keyboard split - numbers") {
+	std::vector<TypingPlan> actual = KeyboardLayout::build_typing_plan("12345 Hello");
+	std::vector<TypingPlan> expected = {
+		{&KeyboardLayout::US, "", 		"",			"",			"12345 "},
+		{&KeyboardLayout::US, "", 		"Hel",		"",			"lo"},
+	};
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE("keyboard split - numbers 2") {
+	std::vector<TypingPlan> actual = KeyboardLayout::build_typing_plan("Hello 12345");
+	std::vector<TypingPlan> expected = {
+		{&KeyboardLayout::US, "", 		"Hel",		"",			"lo 12345"},
+	};
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE("keyboard split - spaces") {
+	std::vector<TypingPlan> actual = KeyboardLayout::build_typing_plan("H   ello");
+	std::vector<TypingPlan> expected = {
+		{&KeyboardLayout::US, "", 		"H",		"fw",		"   ello"},
+	};
+	REQUIRE(actual == expected);
+}
+
+TEST_CASE("keyboard split - spaces 2") {
+	std::vector<TypingPlan> actual = KeyboardLayout::build_typing_plan("Hello   М");
+	std::vector<TypingPlan> expected = {
+		{&KeyboardLayout::US, "", 		"Hel",		"",			"lo   "},
+		{&KeyboardLayout::RU, "", 		"М",		"яф",		""},
 	};
 	REQUIRE(actual == expected);
 }

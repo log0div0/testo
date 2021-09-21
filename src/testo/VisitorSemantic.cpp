@@ -308,7 +308,7 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 }
 
 void VisitorSemantic::visit_type(const IR::Type& type) {
-	std::vector<TextChunk> chunks = KeyboardLayout::split_text_by_layout(type.text());
+	std::vector<TypingPlan> chunks = KeyboardLayout::build_typing_plan(type.text());
 
 	if ((chunks.size() > 1) && !type.use_autoswitch()) {
 		throw ExceptionWithPos(type.ast_node->text->begin(), "Can't type the text by using a single keyboard layout. \

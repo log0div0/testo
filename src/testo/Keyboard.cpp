@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <list>
 #include <cassert>
+#include <iostream>
 
 const std::vector<std::string> kb_to_str = {
 	"ESC",
@@ -233,7 +234,7 @@ KeyboardButton ToKeyboardButton(const std::string& button) {
 	return it->second;
 }
 
-const KeyboardLayout KeyboardLayout::US = { "US", {
+const KeyboardLayout KeyboardLayout::US = { "US", U"fwz", {
 	{U'0', {KeyboardButton::ZERO}},
 	{U'1', {KeyboardButton::ONE}},
 	{U'2', {KeyboardButton::TWO}},
@@ -338,7 +339,7 @@ const KeyboardLayout KeyboardLayout::US = { "US", {
 	{U'Z', {KeyboardButton::Z, true}},
 }};
 
-const KeyboardLayout KeyboardLayout::RU = { "RU", {
+const KeyboardLayout KeyboardLayout::RU = { "RU", U"яфц", {
 	{U'0', {KeyboardButton::ZERO}},
 	{U'1', {KeyboardButton::ONE}},
 	{U'2', {KeyboardButton::TWO}},
@@ -447,72 +448,167 @@ bool operator==(const KeyboardCommand& a, const KeyboardCommand& b) {
 	return (a.action == b.action) && (a.button == b.button);
 }
 
-bool operator==(const TextChunk& a, const TextChunk& b) {
-	return (a.layout == b.layout) && (a.text == b.text);
+bool operator==(const TypingPlan& a, const TypingPlan& b) {
+	return (a.layout == b.layout)
+		&& (a.prefix == b.prefix)
+		&& (a.core == b.core)
+		&& (a.postfix == b.postfix)
+		&& (a.tail == b.tail)
+	;
+}
+
+std::ostream& operator<<(std::ostream& stream, const TypingPlan& x) {
+	return stream
+		<< "{"
+		<< x.layout->name << ", "
+		<< x.prefix << ", "
+		<< x.core << ", "
+		<< x.postfix << ", "
+		<< x.tail
+		<< "}"
+	;
+}
+
+std::string TypingPlan::what_to_search() const {
+	return prefix + core + postfix;
+}
+
+std::vector<KeyboardCommand> TypingPlan::start_typing() const {
+	return layout->type(core + postfix);
+}
+
+std::vector<KeyboardCommand> TypingPlan::rollback() const {
+	return layout->clear(core + postfix);
+}
+
+std::vector<KeyboardCommand> TypingPlan::finish_typing() const {
+	auto a = layout->clear(postfix);
+	auto b = layout->type(tail);
+	a.insert(a.end(), b.begin(), b.end());
+	return a;
+}
+
+std::vector<KeyboardCommand> TypingPlan::just_type_final_text() const {
+	return layout->type(core + tail);
 }
 
 static std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-
-std::vector<TextChunk> KeyboardLayout::split_text_by_layout(const std::string& text) {
-	return split_text_by_layout(conv.from_bytes(text));
-}
 
 std::list<const KeyboardLayout*> GetAvailableLayouts() {
 	return {&KeyboardLayout::US, &KeyboardLayout::RU};
 }
 
-struct Accumulator {
-	bool consume(char32_t ch) {
+static std::u32string common_chars = U"0123456789!%*()-_=+\\ \n\t";
+
+bool IsCommonChar(char32_t ch) {
+	for (char32_t x: common_chars) {
+		if (ch == x) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool IsWhiteSpace(char32_t ch) {
+	return (ch == U' ') || (ch == U'\t') || (ch == U'\n');
+}
+
+size_t FindNextNotCommonChar(const std::u32string& text, size_t i) {
+	size_t j = i + 1;
+	while ((j < text.size()) && IsCommonChar(text[j])) {
+		++j;
+	}
+	return j;
+}
+
+size_t FindRightBound(const std::u32string& text, size_t i, size_t end) {
+	size_t j = i + 1;
+	while ((j < end) && !IsWhiteSpace(text[j])) {
+		++j;
+	}
+	return j;
+}
+
+size_t FindLeftBound(const std::u32string& text, size_t i) {
+	ssize_t j = ssize_t(i) - 1;
+	while ((j >= 0) && !IsWhiteSpace(text[j])) {
+		--j;
+	}
+	return j + 1;
+}
+
+std::tuple<size_t, const KeyboardLayout*> ChooseLayout(const std::u32string& text, size_t i) {
+	std::list<const KeyboardLayout*> layouts = GetAvailableLayouts();
+	const KeyboardLayout* layout = nullptr;
+	while (i < text.size()) {
 		for (auto it = layouts.begin(); it != layouts.end();) {
-			if (!(*it)->can_type(ch)) {
+			if (!(*it)->can_type(text[i])) {
 				layouts.erase(it++);
 			} else {
 				++it;
 			}
 		}
-		if (layouts.size()) {
-			layout = *layouts.begin();
-			str.push_back(ch);
-			return true;
+		if (!layouts.size()) {
+			break;
 		} else {
-			if (!str.size()) {
-				throw std::runtime_error("Unable to type the character " + conv.to_bytes(ch));
-			}
-			return false;
-		}
-	}
-
-	TextChunk get_chunk() {
-		assert(layout);
-		assert(str.size());
-		return {layout, conv.to_bytes(str)};
-	}
-
-	std::list<const KeyboardLayout*> layouts = GetAvailableLayouts();
-	const KeyboardLayout* layout = nullptr;
-	std::u32string str;
-};
-
-std::vector<TextChunk> KeyboardLayout::split_text_by_layout(const std::u32string& text) {
-	std::vector<TextChunk> result;
-	Accumulator acc;
-	for (size_t i = 0; i < text.size();) {
-		if (!acc.consume(text[i])) {
-			result.push_back(acc.get_chunk());
-			acc = {};
-			continue;
+			layout = *layouts.begin();
 		}
 		++i;
 	}
-	result.push_back(acc.get_chunk());
+	if (!layout) {
+		throw std::runtime_error(__PRETTY_FUNCTION__);
+	}
+	return {i, layout};
+}
+
+std::vector<TypingPlan> KeyboardLayout::build_typing_plan(const std::string& text_) {
+	std::u32string text = conv.from_bytes(text_);
+
+	std::vector<TypingPlan> result;
+
+	for (size_t i = 0; i < text.size();) {
+		// step 1: detemine the layout of the next chunk
+
+		// special case: if the chunk starts with a common char: always use US layout,
+		// we don't even care about the actual layout on the target system
+		if (IsCommonChar(text[i])) {
+			size_t j = FindNextNotCommonChar(text, i);
+			result.push_back({&KeyboardLayout::US, "", "", "", conv.to_bytes(text.substr(i, j-i))});
+			i = j;
+			continue;
+		}
+
+		// general case: find the longest possible sequence, that can be
+		// typed with a single layout
+		auto [j, layout] = ChooseLayout(text, i);
+
+		// step 2: prepare a TypingPlan structure
+
+		size_t right_bound = FindRightBound(text, i, j);
+		size_t right_core = std::min(i+3, right_bound);
+		std::u32string core = text.substr(i, right_core-i);
+		std::u32string tail = text.substr(right_core, j-right_core);
+
+		size_t left_bound = FindLeftBound(text, i);
+		size_t left_core = std::max(ssize_t(left_bound), ssize_t(i)-ssize_t(3-core.size()));
+		std::u32string prefix = text.substr(left_core, i-left_core);
+		std::u32string postfix = layout->identifying_seq.substr(0, 3-core.size()-prefix.size());
+
+		result.push_back({layout,
+			conv.to_bytes(prefix),
+			conv.to_bytes(core),
+			conv.to_bytes(postfix),
+			conv.to_bytes(tail)});
+
+		i = j;
+	}
+
 	return result;
 }
 
-std::vector<KeyboardCommand> KeyboardLayout::type(const std::string& text) const {
-	return type(conv.from_bytes(text));
-}
+std::vector<KeyboardCommand> KeyboardLayout::type(const std::string& text_) const {
+	std::u32string text = conv.from_bytes(text_);
 
-std::vector<KeyboardCommand> KeyboardLayout::type(const std::u32string& text) const {
 	std::vector<KeyboardCommand> result;
 
 	bool shift_holded = false;
@@ -535,6 +631,17 @@ std::vector<KeyboardCommand> KeyboardLayout::type(const std::u32string& text) co
 		result.push_back({KeyboardAction::Release, KeyboardButton::LEFTSHIFT});
 	}
 
+	return result;
+}
+
+std::vector<KeyboardCommand> KeyboardLayout::clear(const std::string& text_) const {
+	std::u32string text = conv.from_bytes(text_);
+
+	std::vector<KeyboardCommand> result;
+	for (size_t i = 0; i < text.size(); ++i) {
+		result.push_back({KeyboardAction::Hold, KeyboardButton::BACKSPACE});
+		result.push_back({KeyboardAction::Release, KeyboardButton::BACKSPACE});
+	}
 	return result;
 }
 

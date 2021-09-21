@@ -19,8 +19,9 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	bool visit_check(const IR::Check& check) override;
 	void visit_abort(const IR::Abort& abort) override;
 
-	void visit_key_combination(const IR::KeyCombination& key_combination);
+	void visit_key_combination(const IR::KeyCombination& key_combination, std::chrono::milliseconds interval);
 	void execute_keyboard_commands(const std::vector<KeyboardCommand>& commands, std::chrono::milliseconds interval);
+	size_t get_number_of(const std::string& text);
 	void visit_type(const IR::Type& type);
 	void visit_wait(const IR::Wait& wait);
 	std::string visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier);
@@ -45,7 +46,6 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 	void visit_mouse_hold(const IR::MouseHold& mouse_hold);
 	void visit_mouse_release(const IR::MouseRelease& mouse_release);
 	void visit_mouse_wheel(std::shared_ptr<AST::MouseWheel> mouse_wheel);
-	void visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval);
 	void visit_screenshot(const IR::Screenshot& screenshot);
 	void visit_plug(const IR::Plug& plug);
 	void visit_plug_nic(const IR::PlugNIC& plug_nic, bool is_on);

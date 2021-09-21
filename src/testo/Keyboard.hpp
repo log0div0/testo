@@ -138,24 +138,36 @@ bool operator==(const KeyboardCommand& a, const KeyboardCommand& b);
 
 struct KeyboardLayout;
 
-struct TextChunk {
+struct TypingPlan {
 	const KeyboardLayout* layout;
-	std::string text;
+	std::string prefix;
+	std::string core;
+	std::string postfix;
+	std::string tail;
+
+	std::string what_to_search() const;
+
+	std::vector<KeyboardCommand> start_typing() const;
+	std::vector<KeyboardCommand> rollback() const;
+	std::vector<KeyboardCommand> finish_typing() const;
+	std::vector<KeyboardCommand> just_type_final_text() const;
 };
 
-bool operator==(const TextChunk& a, const TextChunk& b);
+bool operator==(const TypingPlan& a, const TypingPlan& b);
+std::ostream& operator<<(std::ostream& stream, const TypingPlan& x);
 
 struct KeyboardLayout {
 	static const KeyboardLayout US;
 	static const KeyboardLayout RU;
-	static std::vector<TextChunk> split_text_by_layout(const std::string& text);
-	static std::vector<TextChunk> split_text_by_layout(const std::u32string& text);
+
+	static std::vector<TypingPlan> build_typing_plan(const std::string& text);
 
 	std::vector<KeyboardCommand> type(const std::string& text) const;
-	std::vector<KeyboardCommand> type(const std::u32string& text) const;
+	std::vector<KeyboardCommand> clear(const std::string& text) const;
 	const CharDesc& find_char_desc(char32_t ch) const;
 	bool can_type(char32_t ch) const;
 
 	std::string name;
+	std::u32string identifying_seq;
 	CharMap char_map;
 };

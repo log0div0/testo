@@ -10,6 +10,24 @@
 
 using namespace std::chrono_literals;
 
+static std::string escape_text(const std::string& text) {
+	std::string final_text;
+
+	for (auto i: text) {
+		if (i == '"') {
+			final_text += '\\';
+		}
+
+		if (i == '\\') {
+			final_text += '\\';
+		}
+
+		final_text += i;
+	}
+
+	return final_text;
+}
+
 static std::string build_shell_script(const std::string& body) {
 	std::string script = "set -e; set -o pipefail; set -x;";
 	script += body;
@@ -226,7 +244,7 @@ void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
-void VisitorInterpreterActionMachine::visit_key_combination(const IR::KeyCombination& key_combination) {
+void VisitorInterpreterActionMachine::visit_key_combination(const IR::KeyCombination& key_combination, std::chrono::milliseconds interval) {
 	std::vector<KeyboardButton> buttons = key_combination.buttons();
 	for (auto it = buttons.begin(); it != buttons.end(); ++it) {
 		vmc->hold(*it);
@@ -234,6 +252,7 @@ void VisitorInterpreterActionMachine::visit_key_combination(const IR::KeyCombina
 	for (auto it = buttons.rbegin(); it != buttons.rend(); ++it) {
 		vmc->release(*it);
 	}
+	timer.waitFor(interval);
 }
 
 void VisitorInterpreterActionMachine::execute_keyboard_commands(const std::vector<KeyboardCommand>& commands, std::chrono::milliseconds interval) {
@@ -256,6 +275,20 @@ void VisitorInterpreterActionMachine::execute_keyboard_commands(const std::vecto
 				throw std::runtime_error("Should not be there");
 		}
 	}
+	if (commands.size()) {
+		timer.waitFor(interval);
+	}
+}
+
+size_t VisitorInterpreterActionMachine::get_number_of(const std::string& text) {
+	auto& screenshot = vmc->make_new_screenshot();
+
+	if (!screenshot.data) {
+		throw std::runtime_error("Failed to make a screenshot of the VM");
+	}
+
+	nlohmann::json json = eval_js("return find_text(\"" + escape_text(text) + "\").size()", screenshot);
+	return json.get<size_t>();
 }
 
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
@@ -267,17 +300,27 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 
 		IR::TimeInterval interval = type.interval();
 		reporter.type(vmc, text, interval.str());
-		std::vector<TextChunk> chunks = KeyboardLayout::split_text_by_layout(text);
+		std::vector<TypingPlan> chunks = KeyboardLayout::build_typing_plan(text);
 
 		for (size_t j = 0; j < chunks.size();) {
-			if (j) {
-				timer.waitFor(interval.value());
-				visit_key_combination(type.autoswitch());
-				timer.waitFor(interval.value());
-			}
+			const TypingPlan& chunk = chunks[j];
 
-			const TextChunk& chunk = chunks[j];
-			execute_keyboard_commands(chunk.layout->type(chunk.text), interval.value());
+			if (type.use_autoswitch() && (chunk.what_to_search().size() != 0)) {
+				size_t before = get_number_of(chunk.what_to_search());
+				execute_keyboard_commands(chunk.start_typing(), interval.value());
+				size_t after = get_number_of(chunk.what_to_search());
+				if ((before + 1) != after) {
+					execute_keyboard_commands(chunk.rollback(), interval.value());
+					visit_key_combination(type.autoswitch(), interval.value());
+					continue;
+				}
+				execute_keyboard_commands(chunk.finish_typing(), interval.value());
+				if (j != (chunks.size() - 1)) {
+					visit_key_combination(type.autoswitch(), interval.value());
+				}
+			} else {
+				execute_keyboard_commands(chunk.just_type_final_text(), interval.value());
+			}
 
 			++j;
 		}
@@ -397,21 +440,7 @@ std::string VisitorInterpreterActionMachine::visit_mouse_additional_specifiers(c
 
 std::string VisitorInterpreterActionMachine::build_select_text_script(const IR::SelectText& text) {
 	auto text_to_find = text.text();
-
-	std::string final_text;
-
-	for (auto i: text_to_find) {
-		if (i == '"') {
-			final_text += '\\';
-		}
-
-		if (i == '\\') {
-			final_text += '\\';
-		}
-
-		final_text += i;
-	}
-
+	std::string final_text = escape_text(text_to_find);
 	std::string result = fmt::format("return find_text(\"{}\")", final_text);
 	return result;
 }
@@ -494,9 +523,16 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 	try {
 		IR::TimeInterval interval = press.interval();
 
-		for (auto key_spec: press.ast_node->keys) {
-			visit_key_spec({key_spec, stack}, interval.value());
-			timer.waitFor(interval.value());
+		for (auto key_spec_: press.ast_node->keys) {
+			IR::KeySpec key_spec(key_spec_, stack);
+
+			uint32_t times = key_spec.times();
+
+			reporter.press_key(vmc, key_spec.combination().to_string(), times);
+
+			for (uint32_t i = 0; i < times; i++) {
+				visit_key_combination(key_spec.combination(), interval.value());
+			}
 		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(press.ast_node, current_controller));
@@ -709,19 +745,6 @@ void VisitorInterpreterActionMachine::visit_mouse_wheel(std::shared_ptr<AST::Mou
 
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(mouse_wheel, current_controller));
-	}
-}
-
-void VisitorInterpreterActionMachine::visit_key_spec(const IR::KeySpec& key_spec, std::chrono::milliseconds interval) {
-	uint32_t times = key_spec.times();
-
-	reporter.press_key(vmc, key_spec.combination().to_string(), times);
-
-	for (uint32_t i = 0; i < times; i++) {
-		if (i) {
-			timer.waitFor(interval);
-		}
-		visit_key_combination(key_spec.combination());
 	}
 }
 
