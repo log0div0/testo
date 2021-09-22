@@ -63,7 +63,8 @@ test win10_install_os_part_2: win10_install_os_part_1 {
 		wait "Какое имя вы хотите использовать?"
 		mouse move 0 0; sleep 5s
 		mouse click "Имя".from_bottom(0)
-		press LeftAlt+LeftShift; sleep 5s; type "user"; press Enter
+		mouse move 0 0; sleep 5s
+		type "user" autoswitch LeftAlt+LeftShift; press Enter
 
 		mouse move 0 0; sleep 5s
 		mouse click "Пароль".from_bottom(0)
@@ -129,8 +130,7 @@ test win10_enable_autologin: win10_activate {
 	win10 {
 		press LeftMeta+R
 		wait "Введите имя программы"
-		press LeftAlt+LeftShift; sleep 2s
-		type "netplwiz"; press Enter
+		type "netplwiz" autoswitch LeftAlt+LeftShift; press Enter
 		mouse click "Учетные записи пользователей"
 		mouse click "Требовать ввод имени пользователя и пароля"
 		mouse click "Применить"
@@ -150,8 +150,7 @@ test win10_enable_autologin: win10_activate {
 test win10_install_hyperv: win10_enable_autologin {
 	win10 {
 		mouse click "поиск"; sleep 2s
-		press LeftAlt+LeftShift; sleep 2s
-		type "PowerShell"; sleep 2s
+		type "PowerShell" autoswitch LeftAlt+LeftShift; sleep 2s
 		mouse click "Запуск от имени администратора"
 		wait "Разрешить этому приложению"
 		mouse click "Да".from_bottom(0)

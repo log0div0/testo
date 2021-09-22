@@ -29,8 +29,7 @@ test win10_test_ga_stop_service: win10_test_ga_install {
 	win10 {
 		press LeftMeta+R
 		wait "Выполнить"
-		press LeftAlt+LeftShift
-		type "services.msc"; press Enter
+		type "services.msc" autoswitch LeftAlt+LeftShift; press Enter
 		wait "Службы (локальные)"
 		mouse click "DNS-клиент"
 		press Down*20
@@ -50,9 +49,7 @@ test win10_test_ga_uninstall: win10_test_ga_install {
 		mouse click "Приложения и возможности"
 		mouse click "Искать в этом списке"
 		sleep 5s
-		press LeftAlt+LeftShift
-		sleep 5s
-		type "Testo"
+		type "Testo" autoswitch LeftAlt+LeftShift
 		press Down*3
 		mouse click "Закрыть".from_bottom(0)
 		sleep 5s
