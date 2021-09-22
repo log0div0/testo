@@ -284,6 +284,22 @@ size_t VisitorInterpreterActionMachine::get_number_of(const std::string& text) {
 	return json.get<size_t>();
 }
 
+struct LayoutSwitchCounter {
+	void increment() {
+		if (!tries) {
+			tries.reset(new size_t(0));
+		}
+		++*tries;
+		if (*tries > 10) {
+			throw std::runtime_error("Failed to switch the keyboard layout automatically");
+		}
+	}
+	void reset() {
+		tries.reset();
+	}
+	std::unique_ptr<size_t> tries;
+};
+
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 	try {
 		std::string text = type.text();
@@ -294,6 +310,7 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 		auto interval = type.interval().value();
 		reporter.type(vmc, type);
 		std::vector<TypingPlan> chunks = KeyboardLayout::build_typing_plan(text);
+		LayoutSwitchCounter counter;
 
 		for (size_t j = 0; j < chunks.size();) {
 			const TypingPlan& chunk = chunks[j];
@@ -302,11 +319,13 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 				size_t before = get_number_of(chunk.what_to_search());
 				execute_keyboard_commands(chunk.start_typing(), interval);
 				size_t after = get_number_of(chunk.what_to_search());
-				if ((before + 1) != after) {
+				if (!(before < after)) {
+					counter.increment();
 					execute_keyboard_commands(chunk.rollback(), interval);
 					visit_key_combination(type.autoswitch(), interval);
 					continue;
 				}
+				counter.reset();
 				execute_keyboard_commands(chunk.finish_typing(), interval);
 				if (j != (chunks.size() - 1)) {
 					visit_key_combination(type.autoswitch(), interval);

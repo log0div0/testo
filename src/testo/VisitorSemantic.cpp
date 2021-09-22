@@ -303,7 +303,7 @@ void VisitorSemantic::visit_type(const IR::Type& type) {
 
 	if (!type.use_autoswitch()) {
 		if (!KeyboardLayout::can_be_typed_using_a_single_layout(type.text())) {
-			throw ExceptionWithPos(type.ast_node->text->begin(), "Can't type the text by using a single keyboard layout. You probably should use the 'autoswitch' option");
+			throw ExceptionWithPos(type.ast_node->text->begin(), "Error: Can't type the text using a single keyboard layout. You probably should use the \"autoswitch\" option");
 		}
 	}
 
