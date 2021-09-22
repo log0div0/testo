@@ -300,11 +300,11 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 }
 
 void VisitorSemantic::visit_type(const IR::Type& type) {
-	std::vector<TypingPlan> chunks = KeyboardLayout::build_typing_plan(type.text());
 
-	if ((chunks.size() > 1) && !type.use_autoswitch()) {
-		throw ExceptionWithPos(type.ast_node->text->begin(), "Can't type the text by using a single keyboard layout. \
-			You probably should use the 'autoswitch' option");
+	if (!type.use_autoswitch()) {
+		if (!KeyboardLayout::can_be_typed_using_a_single_layout(type.text())) {
+			throw ExceptionWithPos(type.ast_node->text->begin(), "Can't type the text by using a single keyboard layout. You probably should use the 'autoswitch' option");
+		}
 	}
 
 	current_test->cksum_input << "type "

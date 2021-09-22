@@ -606,6 +606,17 @@ std::vector<TypingPlan> KeyboardLayout::build_typing_plan(const std::string& tex
 	return result;
 }
 
+bool KeyboardLayout::can_be_typed_using_a_single_layout(const std::string& text_) {
+	std::u32string text = conv.from_bytes(text_);
+	size_t n = 0;
+	for (size_t i = 0; i < text.size();) {
+		auto [j, layout] = ChooseLayout(text, i);
+		i = j;
+		++n;
+	}
+	return n <= 1;
+}
+
 std::vector<KeyboardCommand> KeyboardLayout::type(const std::string& text_) const {
 	std::u32string text = conv.from_bytes(text_);
 

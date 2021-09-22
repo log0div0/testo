@@ -161,6 +161,7 @@ struct KeyboardLayout {
 	static const KeyboardLayout RU;
 
 	static std::vector<TypingPlan> build_typing_plan(const std::string& text);
+	static bool can_be_typed_using_a_single_layout(const std::string& text);
 
 	std::vector<KeyboardCommand> type(const std::string& text) const;
 	std::vector<KeyboardCommand> clear(const std::string& text) const;
