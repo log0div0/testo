@@ -537,7 +537,7 @@ size_t FindLeftBound(const std::u32string& text, size_t i) {
 	return j + 1;
 }
 
-std::tuple<size_t, const KeyboardLayout*> ChooseLayout(const std::u32string& text, size_t i) {
+std::pair<size_t, const KeyboardLayout*> ChooseLayout(const std::u32string& text, size_t i) {
 	std::list<const KeyboardLayout*> layouts = GetAvailableLayouts();
 	const KeyboardLayout* layout = nullptr;
 	while (i < text.size()) {
@@ -580,7 +580,9 @@ std::vector<TypingPlan> KeyboardLayout::build_typing_plan(const std::string& tex
 
 		// general case: find the longest possible sequence, that can be
 		// typed with a single layout
-		auto [j, layout] = ChooseLayout(text, i);
+		auto pair = ChooseLayout(text, i);
+		size_t j = pair.first;
+		const KeyboardLayout* layout = pair.second;
 
 		// step 2: prepare a TypingPlan structure
 
@@ -610,7 +612,8 @@ bool KeyboardLayout::can_be_typed_using_a_single_layout(const std::string& text_
 	std::u32string text = conv.from_bytes(text_);
 	size_t n = 0;
 	for (size_t i = 0; i < text.size();) {
-		auto [j, layout] = ChooseLayout(text, i);
+		auto pair = ChooseLayout(text, i);
+		size_t j = pair.first;
 		i = j;
 		++n;
 	}
