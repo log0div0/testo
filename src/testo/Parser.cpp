@@ -581,14 +581,12 @@ std::shared_ptr<IKeyCombination> Parser::key_combination() {
 	}
 
 	std::vector<Token> buttons;
+	buttons.push_back(eat(Token::category::id));
 
-	do {
+	while (LA(1) == Token::category::plus) {
+		eat(Token::category::plus);
 		buttons.push_back(eat(Token::category::id));
-
-		if (LA(1) == Token::category::plus) {
-			eat(Token::category::plus);
-		}
-	} while (LA(1) == Token::category::id);
+	}
 
 	return std::make_shared<KeyCombination>(buttons);
 }
