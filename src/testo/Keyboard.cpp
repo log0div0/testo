@@ -530,7 +530,7 @@ size_t FindRightBound(const std::u32string& text, size_t i, size_t end) {
 }
 
 size_t FindLeftBound(const std::u32string& text, size_t i) {
-	ssize_t j = ssize_t(i) - 1;
+	int64_t j = int64_t(i) - 1;
 	while ((j >= 0) && !IsWhiteSpace(text[j])) {
 		--j;
 	}
@@ -590,7 +590,7 @@ std::vector<TypingPlan> KeyboardLayout::build_typing_plan(const std::string& tex
 		std::u32string tail = text.substr(right_core, j-right_core);
 
 		size_t left_bound = FindLeftBound(text, i);
-		size_t left_core = std::max(ssize_t(left_bound), ssize_t(i)-ssize_t(3-core.size()));
+		size_t left_core = std::max(int64_t(left_bound), int64_t(i)-int64_t(3-core.size()));
 		std::u32string prefix = text.substr(left_core, i-left_core);
 		std::u32string postfix = layout->identifying_seq.substr(0, 3-core.size()-prefix.size());
 
