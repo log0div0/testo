@@ -86,4 +86,5 @@ int _tmain(int argc, TCHAR *argv[]) {
 		spdlog::error(error.what());
 		return -1;
 	}
+	return 0;
 }

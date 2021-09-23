@@ -108,7 +108,11 @@ void setup_logs(const nlohmann::json& settings) {
 nlohmann::json load_settings(const std::string& settings_path) {
 	nlohmann::json settings;
 	if (!fs::exists(settings_path)) {
+		fs::create_directories(fs::path(settings_path).parent_path());
 		std::ofstream os(settings_path);
+		if (!os) {
+			throw std::runtime_error(std::string("Can't open settings file: ") + settings_path);
+		}
 		os << R"(
 {
 	"port": 8156,
@@ -151,5 +155,7 @@ void app_main(const nlohmann::json& settings) {
 		local_handler(settings);
 	} catch (const std::exception& error) {
 		spdlog::error(error.what());
+	} catch (...) {
+		spdlog::error("Unknown exception");
 	}
 }

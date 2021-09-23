@@ -109,7 +109,7 @@ void start(const StartArgs& args) {
 
 	coro::Application([&] {
 		app_main(settings);
-	});
+	}).run();
 }
 
 void stop() {
@@ -172,5 +172,7 @@ int main(int argc, char** argv) {
 		}
 	} catch (const std::exception& error) {
 		spdlog::error(error.what());
+		return 1;
 	}
+	return 0;
 }
