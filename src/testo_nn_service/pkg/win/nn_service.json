@@ -1,6 +1,0 @@
-{
-	"port": 8156,
-	"log_level": "info",
-	"license_path": "/opt/testo_license.lic",
-	"use_gpu": false
-}

@@ -1,14 +1,14 @@
 <CPackWiXPatch>
 	<CPackWiXFragment Id="#PRODUCT">
 		<DirectoryRef Id="INSTALL_ROOT">
-			<Component Id="RegistryEntries" Guid="{2e000d7a-2cc0-4144-ac40-9159c9721207}">
+			<Component Id="RegistryEntries" Guid="{1f48ead4-ee79-4c3b-9199-768df1288ff8}">
 				<RegistryKey Root="HKLM"
 							 Key="SOFTWARE\Testo Lang\Testo NN Service"
 							 Action="createAndRemoveOnUninstall">
 					<RegistryValue Name="InstallDir" Type="string" Value="[INSTALL_ROOT]"/>
 				</RegistryKey>
 			</Component>
-			<Component Id="EnvironmentVariables" Guid="{378465ad-e9f4-41b9-92b8-d133f6eac28b}">
+			<Component Id="EnvironmentVariables" Guid="{984796f7-cdf5-4211-a9d9-de89657cf7ba}">
 				<Environment Id="PATH" Name="PATH" Value="[INSTALL_ROOT]/bin" Permanent="no" Part="last" Action="set" System="yes" />
 				<CreateFolder/>
 			</Component>

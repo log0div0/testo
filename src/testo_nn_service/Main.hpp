@@ -24,7 +24,9 @@ namespace fs = ghc::filesystem;
 #include "license/License.hpp"
 
 #ifdef USE_CUDA
-void verify_license(const std::string& path_to_license) {
+void verify_license(const nlohmann::json& settings) {
+	std::string path_to_license = settings.at("license_path").get<std::string>();
+
 	if (!fs::exists(path_to_license)) {
 		throw std::runtime_error("File " + path_to_license + " does not exist");
 	}
@@ -58,9 +60,7 @@ void verify_license(const std::string& path_to_license) {
 }
 #endif
 
-nlohmann::json settings;
-
-void local_handler() {
+void local_handler(const nlohmann::json& settings) {
 	auto port = settings.value("port", 8156);
 	coro::TcpAcceptor acceptor(asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
 	spdlog::info(fmt::format("Listening on port {}", port));
@@ -85,7 +85,9 @@ void local_handler() {
 	});
 }
 
-void setup_logs(const fs::path& log_file_path) {
+void setup_logs(const nlohmann::json& settings) {
+	std::string log_file_path = settings.at("log_file").get<std::string>();
+
 	auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file_path);
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 	auto logger = std::make_shared<spdlog::logger>("basic_logger", spdlog::sinks_init_list{file_sink, console_sink});
@@ -101,4 +103,53 @@ void setup_logs(const fs::path& log_file_path) {
 		throw std::runtime_error("Only \"info\" and \"trace\" log levels are supported");
 	}
 	spdlog::set_default_logger(logger);
+}
+
+nlohmann::json load_settings(const std::string& settings_path) {
+	nlohmann::json settings;
+	if (!fs::exists(settings_path)) {
+		std::ofstream os(settings_path);
+		os << R"(
+{
+	"port": 8156,
+	"log_level": "info",
+	"license_path": "/opt/testo_license.lic",
+	"use_gpu": false
+}
+)";
+	}
+	std::ifstream is(settings_path);
+	if (!is) {
+		throw std::runtime_error(std::string("Can't open settings file: ") + settings_path);
+	}
+	is >> settings;
+	return settings;
+}
+
+void app_main(const nlohmann::json& settings) {
+	try {
+		setup_logs(settings);
+
+		bool use_gpu = settings.value("use_gpu", false);
+
+		if (use_gpu) {
+			if (!settings.count("license_path")) {
+				throw std::runtime_error("To start the program in GPU mode you must specify the path to the license file (license_path in the settings file)");
+			}
+#ifdef USE_CUDA
+			spdlog::info("Verifying license...");
+			verify_license(settings);
+			spdlog::info("License is OK");
+#endif
+		}
+
+		nn::onnx::Runtime onnx_runtime(!use_gpu);
+
+		spdlog::info("Starting testo nn service");
+		spdlog::info("Testo framework version: {}", TESTO_VERSION);
+		spdlog::info("GPU mode enabled: {}", use_gpu);
+		local_handler(settings);
+	} catch (const std::exception& error) {
+		spdlog::error(error.what());
+	}
 }

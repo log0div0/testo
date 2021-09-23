@@ -92,42 +92,6 @@ struct StartArgs {
 	bool foreground_mode = false; 
 };
 
-void app_main(const std::string& settings_path) {
-	try {
-		std::ifstream is(settings_path);
-		if (!is) {
-			throw std::runtime_error(std::string("Can't open settings file: ") + settings_path);
-		}
-		is >> settings;
-		setup_logs(LOG_FILE_PATH);
-	} catch (const std::exception& error) {
-		std::cout << error.what() << std::endl;
-		return;
-	}
-
-	try {
-		bool use_gpu = settings.value("use_gpu", false);
-
-		if (use_gpu) {
-			if (!settings.count("license_path")) {
-				throw std::runtime_error("To start the program in GPU mode you must specify the path to the license file (license_path in the settings file)");
-			}
-#ifdef USE_CUDA
-			verify_license(settings.at("license_path").get<std::string>());
-#endif
-		}
-
-		nn::onnx::Runtime onnx_runtime(!use_gpu);
-
-		spdlog::info("Starting testo nn service");
-		spdlog::info("Testo framework version: {}", TESTO_VERSION);
-		spdlog::info("GPU mode enabled: {}", use_gpu);
-		coro::Application(local_handler).run();
-	} catch (const std::exception& error) {
-		spdlog::error(error.what());
-	}
-}
-
 void start(const StartArgs& args) {
 	if (!args.foreground_mode) {
 		if (daemon(1, 0) < 0) {
@@ -137,7 +101,15 @@ void start(const StartArgs& args) {
 	auto pid  = getpid();
 	pid_file_t pid_t(pid); 
 
-	app_main(args.settings_path);
+	nlohmann::json settings = load_settings(args.settings_path);
+
+	if (!settings.count("log_file")) {
+		settings["log_file"] = LOG_FILE_PATH;
+	}
+
+	coro::Application([&] {
+		app_main(settings);
+	});
 }
 
 void stop() {
@@ -199,6 +171,6 @@ int main(int argc, char** argv) {
 				throw std::runtime_error("Unknown mode");
 		}
 	} catch (const std::exception& error) {
-		std::cerr << error.what() << std::endl;
+		spdlog::error(error.what());
 	}
 }

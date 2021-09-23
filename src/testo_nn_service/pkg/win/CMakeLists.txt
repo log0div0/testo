@@ -14,10 +14,6 @@ install(FILES
 	${CMAKE_SOURCE_DIR}/src/testo_nn_service/nn/TextRecognizer.onnx
 	DESTINATION share)
 
-install(FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/nn_service.json
-	DESTINATION .)
-
 include(InstallRequiredSystemLibraries)
 
 if (USE_CUDA)
