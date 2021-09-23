@@ -94,7 +94,7 @@ int do_main(int argc, char** argv) {
 		(option("--report_screenshots").set(report_screenshots)) % "DEPRECATED",
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(run_args.html)) % "Format stdout as html",
-		(option("--nn_service") & value("ip:port", run_args.nn_service_endpoint)) % "ip:port of the nn_service (defualt is 127.0.0.1:8156)",
+		(option("--nn_server") & value("ip:port", run_args.nn_server_endpoint)) % "ip:port of the nn_server (defualt is 127.0.0.1:8156)",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
 		(option("--dry").set(run_args.dry)) % "Do only semantic checks, do not actually run any tests",
 		any_other(wrong)

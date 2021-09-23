@@ -2,7 +2,7 @@
 #include "Main.hpp"
 #include <clipp.h>
 
-#define APP_NAME "testo_nn_service"
+#define APP_NAME "testo_nn_server"
 #define PID_FILE_PATH ("/var/run/" APP_NAME ".pid")
 #define LOG_FILE_PATH ("/var/log/" APP_NAME ".log")
 
@@ -88,7 +88,7 @@ enum class mode {
 };
 
 struct StartArgs {
-	std::string settings_path = "/etc/testo/nn_service.json";
+	std::string settings_path = "/etc/testo/nn_server.json";
 	bool foreground_mode = false; 
 };
 
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 
 		auto start_spec = (
 			command("start").set(selected_mode, mode::start),
-			(option("--settings_file") & value("path to file", start_args.settings_path)) % "Path to settings file (default is /etc/testo/nn_service.json",
+			(option("--settings_file") & value("path to file", start_args.settings_path)) % "Path to settings file (default is /etc/testo/nn_server.json",
 			(option("--foreground").set(start_args.foreground_mode)) % "Run in foreground"
 		);
 

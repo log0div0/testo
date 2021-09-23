@@ -1,25 +1,25 @@
 
 include "debian.testo"
 
-test debian_nn_service_checks: debian_install_testo {
+test debian_nn_server_service_checks: debian_install_testo {
 	debian {
 		exec bash """
-			service testo-nn-service status
+			service testo-nn-server status
 		"""
 
 		exec bash """
-			service testo-nn-service stop
-			!(service testo-nn-service status)
+			service testo-nn-server stop
+			!(service testo-nn-server status)
 		"""
 
 		exec bash """
-			service testo-nn-service start
-			service testo-nn-service status
+			service testo-nn-server start
+			service testo-nn-server status
 		"""
 
 		exec bash """
-			service testo-nn-service restart
-			service testo-nn-service status
+			service testo-nn-server restart
+			service testo-nn-server status
 		"""
 
 		stop; start
@@ -31,7 +31,7 @@ test debian_nn_service_checks: debian_install_testo {
 		sleep 3s
 
 		exec bash """
-			service testo-nn-service status
+			service testo-nn-server status
 		"""
 	}
 }

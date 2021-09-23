@@ -6,7 +6,7 @@
 #include "Network.hpp"
 #include "../Configs.hpp"
 
-struct NNServiceClient;
+struct NNClient;
 
 struct Environment {
 	Environment();
@@ -38,7 +38,7 @@ struct Environment {
 	virtual void validate_flash_drive_config(const nlohmann::json& config) = 0;
 	virtual void validate_network_config(const nlohmann::json& config) = 0;
 
-	std::unique_ptr<NNServiceClient> nn_client;
+	std::unique_ptr<NNClient> nn_client;
 };
 
 extern std::shared_ptr<Environment> env;

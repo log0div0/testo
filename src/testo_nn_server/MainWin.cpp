@@ -9,7 +9,7 @@ void StopApp() {
 	app->cancel();
 }
 
-#define SERVICE_NAME _T("Testo NN Service")
+#define SERVICE_NAME _T("Testo NN Server")
 
 void ControlHandler(DWORD request) {
 	switch(request)
@@ -44,13 +44,13 @@ void ServiceMain(int argc, char** argv) {
 		throw std::runtime_error("RegisterServiceCtrlHandler failed");
 	}
 
-	spdlog::info("NN service start");
+	spdlog::info("NN server start");
 	serviceStatus.dwCurrentState = SERVICE_RUNNING;
 	SetServiceStatus(serviceStatusHandle, &serviceStatus);
 	
 	app->run();
 	
-	spdlog::info("NN service stop");
+	spdlog::info("NN server stop");
 	serviceStatus.dwCurrentState = SERVICE_STOPPED;
 	SetServiceStatus(serviceStatusHandle, &serviceStatus);
 }
@@ -58,8 +58,8 @@ void ServiceMain(int argc, char** argv) {
 int _tmain(int argc, TCHAR *argv[]) {
 	try {
 		fs::path parent_folder = fs::path(winapi::get_module_file_name()).parent_path().parent_path();
-		fs::path settings_path = parent_folder / "nn_service.json";
-		fs::path logs_path = parent_folder / "nn_service_logs.txt";
+		fs::path settings_path = parent_folder / "nn_server.json";
+		fs::path logs_path = parent_folder / "nn_server_logs.txt";
 
 		nlohmann::json settings = load_settings(settings_path);
 

@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include "testo_nn_service_protocol/Channel.hpp"
+#include "testo_nn_server_protocol/Channel.hpp"
 
-struct NNServiceClient {
-	NNServiceClient() = default;
+struct NNClient {
+	NNClient() = default;
 
-	NNServiceClient(const std::string& ip, const std::string& port):
+	NNClient(const std::string& ip, const std::string& port):
 		endpoint(asio::ip::address::from_string(ip), std::stoul(port)),
 		channel(new Channel(Socket()))
 	{		

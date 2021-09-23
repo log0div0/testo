@@ -11,7 +11,7 @@ if (APPLE)
 	link_directories(/usr/local/lib)
 endif()
 
-add_definitions(-DNN_SERVICE_PROCOTOL_VERSION="1.0")
+add_definitions(-DNN_SERVER_PROCOTOL_VERSION="1.0")
 
 add_subdirectory_if_exists(testo)
 
@@ -20,4 +20,4 @@ add_subdirectory_if_exists(testo_guest_additions)
 endif()
 
 add_subdirectory_if_exists(testo_guest_additions_protocol)
-add_subdirectory_if_exists(testo_nn_service)
+add_subdirectory_if_exists(testo_nn_server)

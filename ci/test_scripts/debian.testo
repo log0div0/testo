@@ -139,10 +139,10 @@ test debian_prepare_2: debian_prepare_1 {
 test debian_install_testo: debian_prepare_2 {
 	debian {
 		copyto "${OUT_DIR}/testo.deb" "/home/${login}/testo.deb"
-		copyto "${OUT_DIR}/testo-nn-service.deb" "/home/${login}/testo-nn-service.deb"
+		copyto "${OUT_DIR}/testo-nn-server.deb" "/home/${login}/testo-nn-server.deb"
 		exec bash """
 			dpkg -i /home/${login}/testo.deb
-			dpkg -i /home/${login}/testo-nn-service.deb
+			dpkg -i /home/${login}/testo-nn-server.deb
 			testo version
 		"""
 	}

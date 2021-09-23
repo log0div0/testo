@@ -209,10 +209,10 @@ test centos_prepare_2: centos_prepare_1 {
 test centos_install_testo: centos_prepare_2 {
 	centos {
 		copyto "${OUT_DIR}/testo.rpm" "/home/${login}/testo.rpm"
-		copyto "${OUT_DIR}/testo-nn-service.rpm" "/home/${login}/testo-nn-service.rpm"
+		copyto "${OUT_DIR}/testo-nn-server.rpm" "/home/${login}/testo-nn-server.rpm"
 		exec bash """
 			rpm -i /home/${login}/testo.rpm
-			rpm -i /home/${login}/testo-nn-service.rpm
+			rpm -i /home/${login}/testo-nn-server.rpm
 			testo version
 		"""
 	}

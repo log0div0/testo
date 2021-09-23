@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CPACK_PACKAGE_NAME "Testo NN Service")
+set(CPACK_PACKAGE_NAME "Testo NN Server")
 set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 set(CPACK_WIX_UPGRADE_GUID "41DBA69D-9F7A-4BE2-8635-08C84492CA1D")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Testo Lang/Testo NN Service")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Testo Lang/Testo NN Server")
 
 file(TO_CMAKE_PATH "${ONNX_RUNTIME_DIR}/bin/onnxruntime.dll" ONNX_RUNTIME_DLL)
 install(PROGRAMS ${ONNX_RUNTIME_DLL} DESTINATION bin)
 
 install(FILES
-	${CMAKE_SOURCE_DIR}/src/testo_nn_service/nn/TextColorPicker.onnx
-	${CMAKE_SOURCE_DIR}/src/testo_nn_service/nn/TextDetector.onnx
-	${CMAKE_SOURCE_DIR}/src/testo_nn_service/nn/TextRecognizer.onnx
+	${CMAKE_SOURCE_DIR}/src/testo_nn_server/nn/TextColorPicker.onnx
+	${CMAKE_SOURCE_DIR}/src/testo_nn_server/nn/TextDetector.onnx
+	${CMAKE_SOURCE_DIR}/src/testo_nn_server/nn/TextRecognizer.onnx
 	DESTINATION share)
 
 include(InstallRequiredSystemLibraries)
@@ -47,10 +47,10 @@ set(CPACK_WIX_CUSTOM_XMLNS "difx=http://schemas.microsoft.com/wix/DifxAppExtensi
 
 set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 
-add_package(testo-nn-service-package)
-add_dependencies(testo-nn-service-package testo_nn_service)
+add_package(testo-nn-server-package)
+add_dependencies(testo-nn-server-package testo_nn_server)
 
 if (USE_CUDA)
 	install(TARGETS testo_request_license)
-	add_dependencies(testo-nn-service-package testo_request_license)
+	add_dependencies(testo-nn-server-package testo_request_license)
 endif()

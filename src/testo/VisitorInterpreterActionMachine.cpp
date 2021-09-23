@@ -2,7 +2,7 @@
 #include <coro/CheckPoint.h>
 #include <coro/Timeout.h>
 #include "VisitorInterpreterActionMachine.hpp"
-#include "NNServiceClient.hpp"
+#include "NNClient.hpp"
 #include "Exceptions.hpp"
 #include "backends/Environment.hpp"
 #include "IR/Program.hpp"
@@ -470,7 +470,7 @@ bool VisitorInterpreterActionMachine::visit_detect_js(const IR::SelectJS& js, co
 		 	throw std::runtime_error("Can't process return value type. We expect a single boolean");
 		}
 	} catch (const std::exception&) {
-		std::throw_with_nested(Exception("Error while processing a response message from NN service:\n" + value.dump(4)));
+		std::throw_with_nested(Exception("Error while processing a response message from NN server:\n" + value.dump(4)));
 	}
 }
 
@@ -505,7 +505,7 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 			throw std::runtime_error("Uknown js return type: we expect array or boolean");
 		}
 	} catch (const std::exception&) {
-		std::throw_with_nested(Exception("Error while processing a response message from NN service:\n" + eval_result.dump(4)));
+		std::throw_with_nested(Exception("Error while processing a response message from NN server:\n" + eval_result.dump(4)));
 	}
 }
 
@@ -620,7 +620,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 					throw std::runtime_error("Can't process return value type. We expect a single object");
 				}
 			} catch (const std::exception&) {
-				std::throw_with_nested(Exception("Error while processing a response message from NN service:\n" + js_result.dump(4)));
+				std::throw_with_nested(Exception("Error while processing a response message from NN server:\n" + js_result.dump(4)));
 			}
 
 			vmc->vm()->mouse_move_abs(point.x, point.y);

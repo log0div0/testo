@@ -2,7 +2,7 @@
 #include <spdlog/spdlog.h>
 
 #include "MessageHandler.hpp"
-#include "testo_nn_service_protocol/Messages.hpp"
+#include "testo_nn_server_protocol/Messages.hpp"
 
 #include "js/Runtime.hpp"
 #include "js/Tensor.hpp"

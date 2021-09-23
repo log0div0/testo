@@ -45,7 +45,7 @@ fs::path GetModelDir() {
 #endif
 #ifdef WIN32
 fs::path GetModelDir() {
-	winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Testo Lang\\Testo NN Service", KEY_QUERY_VALUE);
+	winapi::RegKey regkey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Testo Lang\\Testo NN Server", KEY_QUERY_VALUE);
 	return fs::path(regkey.get_str("InstallDir")) / "share";
 }
 #endif

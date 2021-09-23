@@ -1,5 +1,5 @@
 
-#include "NNServiceClient.hpp"
+#include "NNClient.hpp"
 #include "backends/Environment.hpp"
 #include "VisitorSemantic.hpp"
 #include "Exceptions.hpp"

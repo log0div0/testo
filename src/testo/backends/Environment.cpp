@@ -1,5 +1,5 @@
 
-#include "../NNServiceClient.hpp"
+#include "../NNClient.hpp"
 #include "Environment.hpp"
 
 void Environment::setup(const EnvironmentConfig& config) {
@@ -21,7 +21,7 @@ void Environment::setup(const EnvironmentConfig& config) {
 		}
 	}
 
-	nn_client = std::make_unique<NNServiceClient>(config.nn_service_ip(), config.nn_service_port());
+	nn_client = std::make_unique<NNClient>(config.nn_server_ip(), config.nn_server_port());
 }
 
 Environment::Environment() {

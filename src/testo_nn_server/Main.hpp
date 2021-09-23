@@ -145,7 +145,7 @@ void app_main(const nlohmann::json& settings) {
 
 		nn::onnx::Runtime onnx_runtime(!use_gpu);
 
-		spdlog::info("Starting testo nn service");
+		spdlog::info("Starting testo nn server");
 		spdlog::info("Testo framework version: {}", TESTO_VERSION);
 		spdlog::info("GPU mode enabled: {}", use_gpu);
 		local_handler(settings);

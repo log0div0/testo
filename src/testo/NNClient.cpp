@@ -1,5 +1,5 @@
 
-#include "NNServiceClient.hpp"
+#include "NNClient.hpp"
 
 #include <coro/Timer.h>
 #include <iostream>
@@ -22,7 +22,7 @@ bool check_system_code(const std::error_code& code) {
 	}
 }
 
-void NNServiceClient::establish_connection() {
+void NNClient::establish_connection() {
 	for (size_t i = 1; i <= tries; ++i) {
 		try {
 			channel->socket = Socket();
@@ -36,10 +36,10 @@ void NNServiceClient::establish_connection() {
 		
 	}
 	
-	throw std::runtime_error("Can't connect to the nn_service");
+	throw std::runtime_error("Can't connect to the nn_server");
 }
 
-nlohmann::json NNServiceClient::eval_js(const stb::Image<stb::RGB>* image, const std::string& script)
+nlohmann::json NNClient::eval_js(const stb::Image<stb::RGB>* image, const std::string& script)
 {
 	for (size_t i = 0; i < tries; ++i) {
 		try {
@@ -75,17 +75,17 @@ nlohmann::json NNServiceClient::eval_js(const stb::Image<stb::RGB>* image, const
 			return {};
 		} catch (const std::system_error& error) {
 			if (check_system_code(error.code())) {
-				std::cerr << "Lost the connection to the nn_service, reconnecting...\n";
+				std::cerr << "Lost the connection to the nn_server, reconnecting...\n";
 				establish_connection();
 			} else {
 				throw;
 			}
 		}
 	}
-	throw std::runtime_error("Can't request the nn_service to find the text");
+	throw std::runtime_error("Can't request the nn_server to find the text");
 }
 
-nlohmann::json NNServiceClient::validate_js(const std::string& script)
+nlohmann::json NNClient::validate_js(const std::string& script)
 {
 	for (size_t i = 0; i < tries; ++i) {
 		try {
@@ -94,12 +94,12 @@ nlohmann::json NNServiceClient::validate_js(const std::string& script)
 			return response;
 		} catch (const std::system_error& error) {
 			if (check_system_code(error.code())) {
-				std::cerr << "Lost the connection to the nn_service, reconnecting...\n";
+				std::cerr << "Lost the connection to the nn_server, reconnecting...\n";
 				establish_connection();
 			} else {
 				throw;
 			}
 		}
 	}
-	throw std::runtime_error("Can't request the nn_service to find the text");
+	throw std::runtime_error("Can't request the nn_server to find the text");
 }

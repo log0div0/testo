@@ -5,13 +5,13 @@
 
 struct EnvironmentConfig {
 
-	std::string nn_service_ip() const;
-	std::string nn_service_port() const;
+	std::string nn_server_ip() const;
+	std::string nn_server_port() const;
 
 	void validate() const;
 	virtual void dump(nlohmann::json& j) const;
 
-	std::string nn_service_endpoint = "127.0.0.1:8156";
+	std::string nn_server_endpoint = "127.0.0.1:8156";
 };
 
 struct VisitorSemanticConfig {

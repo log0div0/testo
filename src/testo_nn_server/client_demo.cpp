@@ -8,8 +8,8 @@
 #include <coro/Application.h>
 #include <coro/StreamSocket.h>
 
-#include "testo_nn_service_protocol/Channel.hpp"
-#include "testo_nn_service_protocol/Messages.hpp"
+#include "testo_nn_server_protocol/Channel.hpp"
+#include "testo_nn_server_protocol/Messages.hpp"
 #include "nn/TextTensor.hpp"
 #include "nn/ImgTensor.hpp"
 
@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
 			auto text_spec = (
 				command("text").set(selected_mode, mode::text),
 				value("input image", text_args.img_file),
-				required("--nn_service") & value("ip:port of the nn_service", text_args.ip_port),
+				required("--nn_server") & value("ip:port of the nn_server", text_args.ip_port),
 				option("--query") & value("the text to search for", text_args.query),
 				option("--fg") & value("foreground color", text_args.fg),
 				option("--bg") & value("background color", text_args.bg)
@@ -277,7 +277,7 @@ int main(int argc, char** argv) {
 				command("img").set(selected_mode, mode::img),
 				value("search image", img_args.img_file),
 				value("ref image", img_args.ref_file),
-				required("--nn_service") & value("ip:port of the nn_service", img_args.ip_port)
+				required("--nn_server") & value("ip:port of the nn_server", img_args.ip_port)
 			);
 
 			JSArgs js_args;
@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
 				command("js").set(selected_mode, mode::js),
 				value("search image", js_args.img_file),
 				value("script", js_args.script_file),
-				required("--nn_service") & value("ip:port of the nn_service", js_args.ip_port)
+				required("--nn_server") & value("ip:port of the nn_server", js_args.ip_port)
 			);
 
 			auto cli = (text_spec | img_spec | js_spec);

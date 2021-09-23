@@ -3,11 +3,11 @@
 ldconfig
 
 if [ -x "$(command -v update-rc.d)" ]; then
-	update-rc.d testo-nn-service defaults
+	update-rc.d testo-nn-server defaults
 fi
 
 if [ -x "$(command -v chkconfig)" ]; then
-	chkconfig testo-nn-service on
+	chkconfig testo-nn-server on
 fi
 
-service testo-nn-service start
+service testo-nn-server start

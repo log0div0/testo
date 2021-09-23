@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.0)
 
-set(CPACK_PACKAGE_NAME "testo-nn-service")
+set(CPACK_PACKAGE_NAME "testo-nn-server")
 set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 
 install(PROGRAMS
-	${CMAKE_CURRENT_SOURCE_DIR}/usr/sbin/testo-nn-service
+	${CMAKE_CURRENT_SOURCE_DIR}/usr/sbin/testo-nn-server
 	${CMAKE_CURRENT_SOURCE_DIR}/usr/sbin/testo-request-license
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-install(TARGETS testo_nn_service
+install(TARGETS testo_nn_server
 	DESTINATION /usr/libexec
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
@@ -20,7 +20,7 @@ install(TARGETS testo_request_license
 install(FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/init.d
 	DESTINATION /etc/init.d
-	RENAME testo-nn-service
+	RENAME testo-nn-server
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install(FILES
@@ -29,9 +29,9 @@ install(FILES
 	PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 install(FILES
-	${CMAKE_SOURCE_DIR}/src/testo_nn_service/nn/TextColorPicker.onnx
-	${CMAKE_SOURCE_DIR}/src/testo_nn_service/nn/TextDetector.onnx
-	${CMAKE_SOURCE_DIR}/src/testo_nn_service/nn/TextRecognizer.onnx
+	${CMAKE_SOURCE_DIR}/src/testo_nn_server/nn/TextColorPicker.onnx
+	${CMAKE_SOURCE_DIR}/src/testo_nn_server/nn/TextDetector.onnx
+	${CMAKE_SOURCE_DIR}/src/testo_nn_server/nn/TextRecognizer.onnx
 	DESTINATION /usr/share/testo
 	PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
@@ -59,5 +59,5 @@ set(CPACK_RPM_PACKAGE_PROVIDES "\
 	libonnxruntime.so.1.5.3(VERS_1.5.3)(64bit) \
 ")
 
-add_package(testo-nn-service-package)
-add_dependencies(testo-nn-service-package testo_nn_service testo_request_license)
+add_package(testo-nn-server-package)
+add_dependencies(testo-nn-server-package testo_nn_server testo_request_license)

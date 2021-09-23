@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "testo_nn_service_protocol/Channel.hpp"
+#include "testo_nn_server_protocol/Channel.hpp"
 #include "Value.hpp"
 #include <stb/Image.hpp>
 #include <vector>

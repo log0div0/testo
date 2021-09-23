@@ -3,7 +3,7 @@
 		<DirectoryRef Id="INSTALL_ROOT">
 			<Component Id="RegistryEntries" Guid="{1f48ead4-ee79-4c3b-9199-768df1288ff8}">
 				<RegistryKey Root="HKLM"
-							 Key="SOFTWARE\Testo Lang\Testo NN Service"
+							 Key="SOFTWARE\Testo Lang\Testo NN Server"
 							 Action="createAndRemoveOnUninstall">
 					<RegistryValue Name="InstallDir" Type="string" Value="[INSTALL_ROOT]"/>
 				</RegistryKey>
@@ -13,20 +13,20 @@
 				<CreateFolder/>
 			</Component>
 			<Directory Id="bin" Name="bin">
-				<Component Id="TestoNNService" Guid="{548b8f20-cbf3-4745-8c11-7f6a1088e3cc}">
-					<File Id='TestoNNServiceEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo_nn_service.exe' Vital='yes' >
+				<Component Id="TestoNNServer" Guid="{548b8f20-cbf3-4745-8c11-7f6a1088e3cc}">
+					<File Id='TestoNNServerEXE' Source='$(var.CMAKE_BINARY_DIR)/out/sbin/$(var.CMAKE_BUILD_TYPE)/testo_nn_server.exe' Vital='yes' >
 						<Permission ReadPermission="yes" Write="yes" TakeOwnership="yes" User="Everyone"/>
 					</File>
 					<ServiceInstall
-						Id="TestoNNerviceInstall"
+						Id="TestoNNServerServiceInstall"
 						Type="ownProcess"
-						Name="testo_nn_service"
-						DisplayName="Testo NN Service"
+						Name="testo_nn_server"
+						DisplayName="Testo NN Server"
 						Description="Detects text and images on screenshots"
 						Start="auto"
 						ErrorControl="normal"
 						/>
-					<ServiceControl Id="TestoNNServiceControl" Start="install" Stop="both" Remove="uninstall" Name="testo_nn_service" Wait="yes" />
+					<ServiceControl Id="TestoNNServerServiceControl" Start="install" Stop="both" Remove="uninstall" Name="testo_nn_server" Wait="yes" />
 				</Component>
 			</Directory>
 		</DirectoryRef>
@@ -34,6 +34,6 @@
 	<CPackWiXFragment Id="#PRODUCTFEATURE">
 		<ComponentRef Id="RegistryEntries"/>
 		<ComponentRef Id="EnvironmentVariables"/>
-		<ComponentRef Id="TestoNNService"/>
+		<ComponentRef Id="TestoNNServer"/>
 	</CPackWiXFragment>
 </CPackWiXPatch>

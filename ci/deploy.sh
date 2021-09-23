@@ -6,7 +6,7 @@ ssh -p 22334 root@testo-lang.ru "mkdir /var/www/testo-lang.ru/dist/v${1}"
 #scp -P 22334 $OUT_DIR/testo-cpu.msi root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-${1}-cpu.msi
 #scp -P 22334 $OUT_DIR/testo-gpu.msi root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-${1}-gpu.msi
 scp -P 22334 $OUT_DIR/testo.deb root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-${1}.deb
-scp -P 22334 $OUT_DIR/testo-nn-service.deb root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-nn-service-${1}.deb
+scp -P 22334 $OUT_DIR/testo-nn-server.deb root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-nn-server-${1}.deb
 #scp -P 22334 $OUT_DIR/testo-cpu.rpm root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-${1}-cpu.rpm
 #scp -P 22334 $OUT_DIR/testo-gpu.deb root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-${1}-gpu.deb
 #scp -P 22334 $OUT_DIR/testo-gpu.rpm root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-${1}-gpu.rpm
