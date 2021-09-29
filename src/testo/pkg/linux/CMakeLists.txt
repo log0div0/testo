@@ -31,7 +31,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 	libvirt-clients (>= 3.0.0), \
 	libvirt-daemon-system (>= 3.0.0), \
 	qemu (>= 2.8), \
-	qemu-kvm (>= 2.8), \
+	qemu-kvm, \
 	ebtables, \
 	dnsmasq-base, \
 	libguestfs0 (>= 1.34.6) \
@@ -39,7 +39,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "\
 
 set(CPACK_RPM_PACKAGE_REQUIRES "\
 	libvirt >= 3.0.0 \
-	qemu-kvm >= 2.8 \
+	qemu-kvm \
 	iptables-ebtables \
 	dnsmasq \
 	libguestfs >= 1.38.4 \
