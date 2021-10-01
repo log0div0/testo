@@ -12,6 +12,10 @@
 #include "backends/Environment.hpp"
 #endif
 
+#ifdef USE_BREAKPAD
+#include <client/linux/handler/exception_handler.h>
+#endif
+
 #include <iostream>
 
 #include "ModeClean.hpp"
@@ -32,7 +36,34 @@ enum class mode {
 	version
 };
 
+void check_privileges() {
+#ifdef __linux__
+	uid_t uid = geteuid();
+	if (uid != 0) {
+		throw std::runtime_error("Please run me as root");
+	}
+#endif
+}
+
 std::shared_ptr<Environment> env;
+
+void init_env(const std::string& hypervisor) {
+	if (hypervisor == "qemu") {
+#ifndef __linux__
+		throw std::runtime_error("Qemu is only supported on Linux");
+#else
+		env = std::make_shared<QemuEnvironment>();
+#endif
+	} else if (hypervisor == "hyperv") {
+#ifndef WIN32
+		throw std::runtime_error("HyperV is only supported on Windows");
+#else
+		env = std::make_shared<HyperVEnvironment>();
+#endif
+	} else {
+		throw std::runtime_error("Unknown hypervisor: " + hypervisor);
+	}
+}
 
 int do_main(int argc, char** argv) {
 
@@ -146,21 +177,15 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
-	if (hypervisor == "qemu") {
-#ifndef __linux__
-		throw std::runtime_error("Qemu is only supported on Linux");
-#else
-		env = std::make_shared<QemuEnvironment>();
+	check_privileges();
+#ifdef USE_BREAKPAD
+	::mkdir("/var/crash", 0755);
+	::mkdir("/var/crash/testo", 0755);
+	int testo_starter_fd = -1; // TODO:: add out-of-process support
+	google_breakpad::MinidumpDescriptor descriptor("/var/crash/testo");
+	google_breakpad::ExceptionHandler eh(descriptor, NULL, NULL, NULL, true, testo_starter_fd);
 #endif
-	} else if (hypervisor == "hyperv") {
-#ifndef WIN32
-		throw std::runtime_error("HyperV is only supported on Windows");
-#else
-		env = std::make_shared<HyperVEnvironment>();
-#endif
-	} else {
-		throw std::runtime_error("Unknown hypervisor: " + hypervisor);
-	}
+	init_env(hypervisor);
 
 	coro::CoroPool pool;
 	pool.exec([&] {
