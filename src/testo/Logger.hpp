@@ -4,18 +4,11 @@
 #include <spdlog/spdlog.h>
 
 struct Trace {
-	Trace(const std::string fn_name_): fn_name(std::move(fn_name_)) {
-		spdlog::trace(fn_name + " begin");
-	}
-	~Trace() {
-		if (std::uncaught_exception()) {
-			spdlog::trace(fn_name + " end (stack unwinding");
-		} else {
-			spdlog::trace(fn_name + " end");
-		}
-	}
+	Trace(const std::string fn_name_);
+	~Trace();
 
 private:
+	void print_message(const std::string& suffix);
 	std::string fn_name;
 };
 
