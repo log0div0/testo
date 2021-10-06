@@ -2,6 +2,7 @@
 #include <coro/Application.h>
 #include <coro/CoroPool.h>
 #include <coro/SignalSet.h>
+#include <coro/Finally.h>
 
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
@@ -214,6 +215,9 @@ int do_main(int argc, char** argv) {
 	google_breakpad::ExceptionHandler eh(descriptor, NULL, NULL, NULL, true, testo_starter_fd);
 #endif
 	init_env(hypervisor);
+	coro::Finally cleanup([&] {
+		env.reset();
+	});
 
 	coro::CoroPool pool;
 	pool.exec([&] {
