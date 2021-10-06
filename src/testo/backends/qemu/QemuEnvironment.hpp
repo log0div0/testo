@@ -7,6 +7,7 @@
 struct QemuEnvironment : public Environment {
 
 	QemuEnvironment();
+	~QemuEnvironment();
 
 	fs::path testo_dir() const override {
 		return "/var/lib/libvirt/testo";

@@ -1,10 +1,24 @@
 
 #include "NNClient.hpp"
+#include "Logger.hpp"
 
 #include <coro/Timer.h>
 #include <iostream>
 
 using namespace std::chrono_literals;
+
+NNClient::NNClient(const std::string& ip, const std::string& port):
+	endpoint(asio::ip::address::from_string(ip), std::stoul(port)),
+	channel(new Channel(Socket()))
+{
+	TRACE();
+
+	establish_connection();
+}
+
+NNClient::~NNClient() {
+	TRACE();
+}
 
 bool check_system_code(const std::error_code& code) {
 	int value = code.value();

@@ -4,18 +4,14 @@
 #include "testo_nn_server_protocol/Channel.hpp"
 
 struct NNClient {
-	NNClient() = default;
+	NNClient(const std::string& ip, const std::string& port);
+	~NNClient();
 
-	NNClient(const std::string& ip, const std::string& port):
-		endpoint(asio::ip::address::from_string(ip), std::stoul(port)),
-		channel(new Channel(Socket()))
-	{		
-		establish_connection();
-	}
+	NNClient(const NNClient& other) = delete;
+	NNClient& operator=(const NNClient& other) = delete;
 
 	nlohmann::json eval_js(const stb::Image<stb::RGB>* image, const std::string& script);
 	nlohmann::json validate_js(const std::string& script);
-
 
 private:
 	constexpr static int tries = 5;

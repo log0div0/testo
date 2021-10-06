@@ -7,6 +7,7 @@
 #include "Parser.hpp"
 #include <fmt/format.h>
 #include <wildcards.hpp>
+#include "Logger.hpp"
 
 struct ControllerCreatonException: public Exception {
 	ControllerCreatonException(std::shared_ptr<IR::Controller> controller): Exception({}) {
@@ -21,10 +22,17 @@ struct ControllerCreatonException: public Exception {
 };
 
 VisitorSemantic::VisitorSemantic(const VisitorSemanticConfig& config) {
+	TRACE();
 	prefix = config.prefix;
 }
 
+VisitorSemantic::~VisitorSemantic() {
+	TRACE();
+}
+
 void VisitorSemantic::visit() {
+	TRACE();
+
 	for (auto& test: IR::program->all_selected_tests) {
 		visit_test(test);
 	}

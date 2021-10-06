@@ -11,6 +11,7 @@
 
 struct VisitorInterpreter {
 	VisitorInterpreter(const VisitorInterpreterConfig& config);
+	~VisitorInterpreter();
 
 	void visit();
 	void visit_test(std::shared_ptr<IR::Test> test);

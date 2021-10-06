@@ -1,6 +1,5 @@
 
 #include "Program.hpp"
-#include <fmt/format.h>
 #include "../TemplateLiterals.hpp"
 #include "../Exceptions.hpp"
 #include "../Parser.hpp"
@@ -8,10 +7,13 @@
 #include "../backends/Environment.hpp"
 #include "../VisitorSemantic.hpp"
 #include "../VisitorInterpreter.hpp"
+#include "../Logger.hpp"
 
 namespace IR {
 
 Program::Program(const std::shared_ptr<AST::Program>& ast, const ProgramConfig& config_): config(config_) {
+	TRACE();
+
 	if (program != nullptr) {
 		throw std::runtime_error("Only one instance of IR::Program can exists");
 	}
@@ -24,16 +26,20 @@ Program::Program(const std::shared_ptr<AST::Program>& ast, const ProgramConfig& 
 }
 
 Program::~Program() {
+	TRACE();
+
 	program = nullptr;
 }
 
 void Program::validate() {
+	TRACE();
 	env->setup(config);
 	VisitorSemantic semantic(config);
 	semantic.visit();
 }
 
 void Program::run() {
+	TRACE();
 	VisitorInterpreter runner(config);
 	runner.visit();
 }
@@ -106,6 +112,7 @@ std::vector<std::string> testo_timeout_params = {
 };
 
 void Program::setup_stack() {
+	TRACE();
 	auto predefined = std::make_shared<StackNode>();
 	predefined->vars = testo_default_params;
 	stack = std::make_shared<StackNode>();
@@ -116,6 +123,7 @@ void Program::setup_stack() {
 }
 
 void Program::collect_top_level_objects(const std::shared_ptr<AST::Program>& ast) {
+	TRACE();
 	for (auto stmt: ast->stmts) {
 		visit_stmt(stmt);
 	}
@@ -240,6 +248,7 @@ bool check_if_time_interval(const std::string& time) {
 }
 
 void Program::validate_special_params() {
+	TRACE();
 	for (auto& param: testo_timeout_params) {
 		std::string value = stack->find_and_resolve_var(param);
 		if (!check_if_time_interval(value)) {
@@ -249,6 +258,7 @@ void Program::validate_special_params() {
 }
 
 void Program::setup_tests_parents() {
+	TRACE();
 	for (auto& test: ordered_tests) {
 		auto test_name = test->name();
 

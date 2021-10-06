@@ -3,6 +3,7 @@
 #include <rang.hpp>
 #include <fstream>
 #include <fmt/format.h>
+#include "Logger.hpp"
 
 template <typename Duration>
 std::string duration_to_str(Duration duration) {
@@ -18,15 +19,23 @@ std::string duration_to_str(Duration duration) {
 }
 
 Reporter::Reporter(const ReporterConfig& config) {
+	TRACE();
+
 	report_folder = config.report_folder;
 	html = config.html;
 	config.dump(this->config);
+}
+
+Reporter::~Reporter() {
+	TRACE();
 }
 
 const std::string tag_file = ".testo_report_folder";
 
 void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs, const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
 {
+	TRACE();
+
 	start_timestamp = std::chrono::system_clock::now();
 
 	if (!report_folder.empty()) {
@@ -74,6 +83,8 @@ void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs
 }
 
 void Reporter::finish() {
+	TRACE();
+
 	print_statistics();
 	if (!report_folder.empty()) {
 		auto path = fs::absolute(report_folder / "launches" / launch_id / "meta.json");
@@ -175,6 +186,8 @@ void Reporter::test_failed(const std::string& error_message) {
 
 void Reporter::print_statistics()
 {
+	TRACE();
+
 	auto passed_tests = get_stats(IR::TestRun::ExecStatus::Passed);
 	auto failed_tests = get_stats(IR::TestRun::ExecStatus::Failed);
 	auto skipped_tests = get_stats(IR::TestRun::ExecStatus::Skipped);
@@ -623,6 +636,8 @@ float Reporter::current_progress() const {
 }
 
 std::map<std::string, size_t> Reporter::get_stats(IR::TestRun::ExecStatus status) const {
+	TRACE();
+
 	std::map<std::string, size_t> result;
 	for (auto& test_run: tests_runs) {
 		if (test_run->exec_status == status) {
@@ -633,6 +648,8 @@ std::map<std::string, size_t> Reporter::get_stats(IR::TestRun::ExecStatus status
 }
 
 nlohmann::json Reporter::create_json_report() const {
+	TRACE();
+
 	nlohmann::json report = nlohmann::json::object();
 	report["tests_runs"] = nlohmann::json::array();
 	report["up_to_date_tests"] = nlohmann::json::array();

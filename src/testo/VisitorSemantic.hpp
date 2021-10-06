@@ -26,6 +26,7 @@ inline Tribool operator!(Tribool b) {
 
 struct VisitorSemantic {
 	VisitorSemantic(const VisitorSemanticConfig& config);
+	~VisitorSemantic();
 
 	void visit();
 	void visit_macro(std::shared_ptr<IR::Macro> macro);

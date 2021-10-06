@@ -16,6 +16,7 @@ struct Parser {
 
 	Parser(const fs::path& file, const std::string& input, bool allow_unparsed_nodes = true);
 	Parser(const std::vector<Token>& tokens, bool allow_unparsed_nodes = true);
+	~Parser();
 
 	std::shared_ptr<AST::Program> parse();
 	std::shared_ptr<AST::Block<AST::Cmd>> command_block();

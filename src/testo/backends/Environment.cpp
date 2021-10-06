@@ -1,5 +1,6 @@
 
 #include "../NNClient.hpp"
+#include "../Logger.hpp"
 #include "Environment.hpp"
 
 void Environment::setup(const EnvironmentConfig& config) {
@@ -25,9 +26,9 @@ void Environment::setup(const EnvironmentConfig& config) {
 }
 
 Environment::Environment() {
-
+	TRACE();
 }
 
 Environment::~Environment() {
-
+	TRACE();
 }

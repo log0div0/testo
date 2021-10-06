@@ -57,7 +57,7 @@ void ServiceMain(int argc, char** argv) {
 
 int _tmain(int argc, TCHAR *argv[]) {
 	try {
-		fs::path parent_folder = fs::path(winapi::get_module_file_name()).parent_path().parent_path();
+		fs::path parent_folder = fs::path(winapi::get_module_file_name()).parent_path();
 		fs::path settings_path = parent_folder / "nn_server.json";
 		fs::path logs_path = parent_folder / "nn_server_logs.txt";
 

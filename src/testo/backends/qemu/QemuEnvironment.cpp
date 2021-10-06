@@ -4,11 +4,19 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuNetwork.hpp"
 #include <fmt/format.h>
+#include "../../Logger.hpp"
 
 QemuEnvironment::QemuEnvironment(): qemu_connect(vir::connect_open("qemu:///system")) {
+	TRACE();
+}
+
+QemuEnvironment::~QemuEnvironment() {
+	TRACE();
 }
 
 void QemuEnvironment::prepare_storage_pool(const std::string& pool_name) {
+	TRACE();
+
 	auto pool_dir = testo_dir() / pool_name;
 	if (!fs::exists(pool_dir)) {
 		if (!fs::create_directories(pool_dir)) {

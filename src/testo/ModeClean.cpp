@@ -6,8 +6,11 @@
 #include "IR/FlashDrive.hpp"
 #include "IR/Machine.hpp"
 #include "Exceptions.hpp"
+#include "Logger.hpp"
 
 int clean_mode(const CleanModeArgs& args) {
+	TRACE();
+
 	//cleanup networks
 
 	std::vector<IR::Network> networks_to_delete;

@@ -13,8 +13,6 @@
 #include "nn/TextTensor.hpp"
 #include "nn/ImgTensor.hpp"
 
-#include <fmt/format.h>
-
 using namespace std::chrono_literals;
 
 void draw_rect(stb::Image<stb::RGB>& img, nn::Rect bbox, stb::RGB color) {

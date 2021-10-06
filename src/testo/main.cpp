@@ -6,6 +6,7 @@
 #ifdef WIN32
 #include "backends/hyperv/HypervEnvironment.hpp"
 #include <wmi/CoInitializer.hpp>
+#include <winapi/Functions.hpp>
 #elif __linux__
 #include "backends/qemu/QemuEnvironment.hpp"
 #elif __APPLE__
@@ -22,8 +23,13 @@
 #include "ModeRun.hpp"
 
 #include "Exceptions.hpp"
+#include "Logger.hpp"
 
 #include <clipp.h>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/sinks/stdout_sinks.h>
 
 using namespace clipp;
 
@@ -36,7 +42,26 @@ enum class mode {
 	version
 };
 
+void init_logs() {
+#ifdef __linux__
+	std::string log_file_path = "/var/log/testo.log";
+#else
+	fs::path parent_folder = fs::path(winapi::get_module_file_name()).parent_path();
+	fs::path logs_path = parent_folder / "testo.txt";
+	std::string log_file_path = logs_path.generic_string();
+#endif
+
+	auto max_size = 1048576 * 10;
+    auto max_files = 3;
+	auto logger = spdlog::rotating_logger_mt("basic_logger", log_file_path, max_size, max_files);
+	logger->set_level(spdlog::level::trace);
+	logger->flush_on(spdlog::level::trace);
+	spdlog::set_default_logger(logger);
+	spdlog::info("logger is initialized");
+}
+
 void check_privileges() {
+	TRACE();
 #ifdef __linux__
 	uid_t uid = geteuid();
 	if (uid != 0) {
@@ -48,6 +73,7 @@ void check_privileges() {
 std::shared_ptr<Environment> env;
 
 void init_env(const std::string& hypervisor) {
+	TRACE();
 	if (hypervisor == "qemu") {
 #ifndef __linux__
 		throw std::runtime_error("Qemu is only supported on Linux");
@@ -177,6 +203,8 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
+	init_logs();
+	TRACE();
 	check_privileges();
 #ifdef USE_BREAKPAD
 	::mkdir("/var/crash", 0755);

@@ -7,12 +7,13 @@
 #include "IR/Program.hpp"
 #include "Exceptions.hpp"
 #include "Parser.hpp"
+#include "Logger.hpp"
 
 #include <fmt/format.h>
 #include <wildcards.hpp>
 
-VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
-	reporter = Reporter(config);
+VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config): reporter(config) {
+	TRACE();
 
 	stop_on_fail = config.stop_on_fail;
 	assume_yes = config.assume_yes;
@@ -20,7 +21,13 @@ VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config) {
 	dry = config.dry;
 }
 
+VisitorInterpreter::~VisitorInterpreter() {
+	TRACE();
+}
+
 void VisitorInterpreter::invalidate_tests() {
+	TRACE();
+
 	if (!invalidate.length()) {
 		return;
 	}
@@ -36,6 +43,8 @@ void VisitorInterpreter::invalidate_tests() {
 }
 
 void VisitorInterpreter::check_cache_missed_tests() {
+	TRACE();
+
 	if (assume_yes) {
 		return;
 	}
@@ -70,6 +79,8 @@ void VisitorInterpreter::check_cache_missed_tests() {
 }
 
 void VisitorInterpreter::get_up_to_date_tests() {
+	TRACE();
+
 	for (auto& test: IR::program->all_selected_tests) {
 		if (test->cache_status() == IR::Test::CacheStatus::OK) {
 			up_to_date_tests.push_back(test);
@@ -125,6 +136,8 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(std::shared_pt
 }
 
 void VisitorInterpreter::build_test_plan() {
+	TRACE();
+
 	for (auto& test: IR::program->all_selected_tests) {
 		if (test->cache_status() == IR::Test::CacheStatus::OK) {
 			continue;
@@ -153,6 +166,8 @@ void VisitorInterpreter::build_test_plan() {
 }
 
 void VisitorInterpreter::init() {
+	TRACE();
+
 	invalidate_tests();
 	check_cache_missed_tests();
 	get_up_to_date_tests();
@@ -160,6 +175,8 @@ void VisitorInterpreter::init() {
 }
 
 void VisitorInterpreter::visit() {
+	TRACE();
+
 	init();
 
 	if (dry) {
@@ -399,6 +416,8 @@ void VisitorInterpreter::visit_macro_body(const std::shared_ptr<AST::Block<AST::
 }
 
 void VisitorInterpreter::stop_all_vms(std::shared_ptr<IR::Test> test) {
+	TRACE();
+
 	for (auto vmc: test->get_all_machines()) {
 		if (vmc->is_defined()) {
 			if (vmc->vm()->state() != VmState::Stopped) {
