@@ -1,9 +1,10 @@
 
 #include "Reporter.hpp"
 #include <rang.hpp>
-#include <fstream>
 #include <fmt/format.h>
 #include "Logger.hpp"
+#include "ReportWriterNative.hpp"
+#include "ReportWriterAllure.hpp"
 
 template <typename Duration>
 std::string duration_to_str(Duration duration) {
@@ -21,16 +22,25 @@ std::string duration_to_str(Duration duration) {
 Reporter::Reporter(const ReporterConfig& config) {
 	TRACE();
 
-	report_folder = config.report_folder;
+	if (config.report_folder.size()) {
+		switch (config.get_report_format()) {
+			case ReportFormat::Native:
+				report_writer = std::make_unique<ReportWriterNative>(config);
+				break;
+			case ReportFormat::Allure:
+				report_writer = std::make_unique<ReportWriterAllure>(config);
+				break;
+		}
+	} else {
+		report_writer = std::make_unique<ReportWriter>(config);
+	}
+
 	html = config.html;
-	config.dump(this->config);
 }
 
 Reporter::~Reporter() {
 	TRACE();
 }
-
-const std::string tag_file = ".testo_report_folder";
 
 void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs, const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
 {
@@ -38,32 +48,14 @@ void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs
 
 	start_timestamp = std::chrono::system_clock::now();
 
-	if (!report_folder.empty()) {
-		if (fs::exists(report_folder)) {
-			if (!fs::is_directory(report_folder)) {
-				throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a folder");
-			}
-			if (!fs::is_empty(report_folder)) {
-				if (!fs::exists(report_folder / tag_file)) {
-					throw std::runtime_error("Specified report folder " + report_folder.generic_string() + " is not a report folder");
-				}
-			}
-		}
-		fs::create_directories(report_folder / "launches" / launch_id);
-		std::ofstream(report_folder / tag_file);
-		output_file = std::ofstream(report_folder / "launches" / launch_id / "log.txt", std::ios_base::app);
-	}
+	report_writer->launch_begin();
 
 	for (auto test_run: _tests_runs) {
-		if (!report_folder.empty()) {
-			test_run->test->report(report_folder / "tests");
-		}
+		report_writer->initialize_test_run(test_run);
 		tests_runs.push_back(test_run);
 	}
 	for (auto test: _up_to_date_tests) {
-		if (!report_folder.empty()) {
-			test->report(report_folder / "tests");
-		}
+		report_writer->initialize_up_to_date_test(test);
 		up_to_date_tests.push_back(test);
 	}
 
@@ -86,26 +78,18 @@ void Reporter::finish() {
 	TRACE();
 
 	print_statistics();
-	if (!report_folder.empty()) {
-		auto path = fs::absolute(report_folder / "launches" / launch_id / "meta.json");
-		auto report = create_json_report();
-		std::ofstream file(path);
-		file << report.dump(2);
-	}
+	report_writer->launch_end();
 }
 
 void Reporter::prepare_environment() {
 	current_test_run = tests_runs.at(current_test_run_index);
+	current_test_run->start_timestamp = std::chrono::system_clock::now();
+
+	report_writer->test_begin(current_test_run);
 
 	report_prefix(blue);
 	report(fmt::format("Preparing the environment for test "), blue);
 	report(fmt::format("{}\n", current_test_run->test->name()), yellow);
-
-	current_test_run->start_timestamp = std::chrono::system_clock::now();
-
-	if (!report_folder.empty()) {
-		current_test_run->report_begin(report_folder / "tests_runs");
-	}
 }
 
 void Reporter::run_test() {
@@ -118,7 +102,7 @@ std::string join(const std::set<std::string>& set, const std::string& delimiter)
 	size_t i = 0;
 	std::string result;
 	for (auto& str: set) {
-		if (i == 0) {
+		if (i) {
 			result += delimiter;
 		}
 		result += str;
@@ -130,6 +114,8 @@ std::string join(const std::set<std::string>& set, const std::string& delimiter)
 void Reporter::skip_test() {
 	current_test_run = tests_runs.at(current_test_run_index);
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Skipped;
+
+	report_writer->test_skip(current_test_run);
 
 	std::set<std::string> unsuccessful_parents_names = current_test_run->get_unsuccessful_parents_names();
 
@@ -152,9 +138,7 @@ void Reporter::test_passed() {
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Passed;
 
-	if (!report_folder.empty()) {
-		current_test_run->report_end(report_folder / "tests_runs");
-	}
+	report_writer->test_end();
 
 	report_prefix(green, true);
 	report(fmt::format("Test "), green, true);
@@ -171,9 +155,7 @@ void Reporter::test_failed(const std::string& error_message) {
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Failed;
 
-	if (!report_folder.empty()) {
-		current_test_run->report_end(report_folder / "tests_runs");
-	}
+	report_writer->test_end();
 
 	report_prefix(red, true);
 	report(fmt::format("Test "), red, true);
@@ -201,7 +183,7 @@ void Reporter::print_statistics()
 	report(fmt::format("RUN SUCCESSFULLY: {}\n", passed_tests.size()), green, true);
 	report(fmt::format("FAILED: {}\n", failed_tests.size()), red, true);
 	for (auto kv: failed_tests) {
-		if (kv.second) {
+		if (kv.second > 1) {
 			report(fmt::format("\t - {} ({} times)\n", kv.first, kv.second), red);
 		} else {
 			report(fmt::format("\t - {}\n", kv.first), red);
@@ -209,7 +191,7 @@ void Reporter::print_statistics()
 	}
 	report(fmt::format("SKIPPED: {}\n", skipped_tests.size()), magenta, true);
 	for (auto kv: skipped_tests) {
-		if (kv.second) {
+		if (kv.second > 1) {
 			report(fmt::format("\t - {} ({} times)\n", kv.first, kv.second), magenta);
 		} else {
 			report(fmt::format("\t - {}\n", kv.first), magenta);
@@ -508,10 +490,7 @@ void Reporter::js_stdout(const std::string& _stdout) {
 }
 
 void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
-	if (report_folder.empty()) {
-		return;
-	}
-	current_test_run->report_screenshot(report_folder / "tests_runs", screenshot);
+	report_writer->report_screenshot(screenshot);
 	report_prefix(blue);
 	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
@@ -534,20 +513,16 @@ std::string newline_to_br(const std::string& str) {
 }
 
 void Reporter::report(const std::string& message, style color, bool is_bold) {
-	print_stdout(message, color, is_bold);
-	print_file(message);
+	print(message, color, is_bold);
+	report_writer->report(message);
 }
 
 void Reporter::report_prefix(style color, bool is_bold) {
-	print_stdout(fmt::format("{} ", progress()), color, is_bold);
-	if (current_test_run) {
-		print_file(fmt::format("[{}] ", current_test_run->test->name()));
-	} else {
-		print_file(fmt::format("[???] "));
-	}
+	print(fmt::format("{} ", progress()), color, is_bold);
+	report_writer->report_prefix();
 }
 
-void Reporter::print_stdout_html(const std::string& message, style color, bool is_bold) {
+void Reporter::print_html(const std::string& message, style color, bool is_bold) {
 	std::cout << "<span className=\"";
 	switch (color) {
 		case regular:
@@ -577,15 +552,15 @@ void Reporter::print_stdout_html(const std::string& message, style color, bool i
 	std::cout << "</span>" << std::endl;
 }
 
-void Reporter::print_stdout(const std::string& message, style color, bool is_bold) {
+void Reporter::print(const std::string& message, style color, bool is_bold) {
 	if (html) {
-		print_stdout_html(message, color, is_bold);
+		print_html(message, color, is_bold);
 	} else {
-		print_stdout_terminal(message, color, is_bold);
+		print_terminal(message, color, is_bold);
 	}
 }
 
-void Reporter::print_stdout_terminal(const std::string& message, style color, bool is_bold) {
+void Reporter::print_terminal(const std::string& message, style color, bool is_bold) {
 	std::cout << rang::style::reset;
 
 	switch (color) {
@@ -617,16 +592,6 @@ void Reporter::print_stdout_terminal(const std::string& message, style color, bo
 	std::cout << rang::style::reset;
 }
 
-void Reporter::print_file(const std::string& message) {
-	if (!report_folder.empty()) {
-		if (current_test_run) {
-			current_test_run->output_file << message;
-		} else {
-			output_file << message;
-		}
-	}
-}
-
 float Reporter::current_progress() const {
 	size_t total_tests_count = tests_runs.size() + up_to_date_tests.size();
 	if (total_tests_count == 0) {
@@ -645,37 +610,4 @@ std::map<std::string, size_t> Reporter::get_stats(IR::TestRun::ExecStatus status
 		}
 	}
 	return result;
-}
-
-nlohmann::json Reporter::create_json_report() const {
-	TRACE();
-
-	nlohmann::json report = nlohmann::json::object();
-	report["tests_runs"] = nlohmann::json::array();
-	report["up_to_date_tests"] = nlohmann::json::array();
-
-	for (auto test_run: tests_runs) {
-		report["tests_runs"].push_back(test_run->name);
-	}
-
-	for (auto test: up_to_date_tests) {
-		report["up_to_date_tests"].push_back(test->name());
-	}
-
-	auto start_timestamp_t = std::chrono::system_clock::to_time_t(start_timestamp);
-
-	std::stringstream ss1;
-	ss1 << std::put_time(std::localtime(&start_timestamp_t), "%FT%T%z");
-	report["start_timestamp"] = ss1.str();
-
-	auto stop_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	std::stringstream ss2;
-	ss2 << std::put_time(std::localtime(&stop_timestamp_t), "%FT%T%z");
-
-	report["stop_timestamp"] = ss2.str();
-	report["config"] = config;
-	report["working_dir"] = fs::current_path();
-
-	return report;
 }

@@ -47,11 +47,31 @@ void VisitorSemanticConfig::dump(nlohmann::json& j) const {
 	j["prefix"] = prefix;
 }
 
+void ReportConfig::validate() const {
+}
+
+void ReportConfig::dump(nlohmann::json& j) const {
+	j["report_folder"] = report_folder;
+}
+
+ReportFormat ReporterConfig::get_report_format() const {
+	if (report_format == "native") {
+		return ReportFormat::Native;
+	} else if (report_format == "allure") {
+		return ReportFormat::Allure;
+	} else {
+		throw std::runtime_error("Invalid report format: " + report_format);
+	}
+}
+
 void ReporterConfig::validate() const {
+	ReportConfig::validate();
+	get_report_format(); // will throw on error
 }
 
 void ReporterConfig::dump(nlohmann::json& j) const {
-	j["report_folder"] = report_folder;
+	ReportConfig::dump(j);
+	j["report_format"] = report_format;
 	j["html"] = html;
 }
 

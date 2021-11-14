@@ -4,8 +4,6 @@
 #include "Machine.hpp"
 #include "FlashDrive.hpp"
 #include "Network.hpp"
-#include <fstream>
-#include <sstream>
 
 namespace IR {
 
@@ -39,15 +37,11 @@ struct Test: Object<AST::Test> {
 
 	CacheStatus cache_status();
 
-	nlohmann::json meta();
-
 	nlohmann::json attrs;
 
 	std::set<std::shared_ptr<Machine>> mentioned_machines;
 	std::set<std::shared_ptr<Network>> mentioned_networks;
 	std::set<std::shared_ptr<FlashDrive>> mentioned_flash_drives;
-
-	void report(const fs::path& report_folder_);
 
 private:
 	CacheStatus _cache_status = CacheStatus::Unknown;
@@ -74,16 +68,6 @@ struct TestRun {
 	auto duration() const {
 		return stop_timestamp - start_timestamp;
 	}
-
-	std::ofstream output_file;
-
-	nlohmann::json meta();
-
-	void report_begin(const fs::path& report_folder);
-	void report_screenshot(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot);
-	void report_end(const fs::path& report_folder);
-
-	std::string name = generate_uuid_v4();
 };
 
 }

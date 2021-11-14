@@ -1,15 +1,15 @@
 
 #pragma once
 
-#include <nlohmann/json.hpp>
 #include <sstream>
-#include <fstream>
 #include <iomanip>
 #include "IR/Test.hpp"
 #include "IR/Action.hpp"
 #include "IR/Macro.hpp"
 #include "IR/Expr.hpp"
 #include "Configs.hpp"
+
+struct ReportWriter;
 
 struct Reporter {
 	Reporter(const ReporterConfig& config);
@@ -97,10 +97,9 @@ struct Reporter {
 	void report(const std::string& message, style color, bool is_bold = false);
 	void report_prefix(style color, bool is_bold = false);
 
-	void print_stdout(const std::string& message, style color, bool is_bold);
-	void print_stdout_html(const std::string& message, style color, bool is_bold);
-	void print_stdout_terminal(const std::string& message, style color, bool is_bold);
-	void print_file(const std::string& message);
+	void print(const std::string& message, style color, bool is_bold);
+	void print_html(const std::string& message, style color, bool is_bold);
+	void print_terminal(const std::string& message, style color, bool is_bold);
 
 	std::vector<std::shared_ptr<IR::TestRun>> tests_runs;
 	std::vector<std::shared_ptr<IR::Test>> up_to_date_tests;
@@ -112,14 +111,10 @@ private:
 	size_t current_test_run_index = 0;
 
 	float current_progress() const;
-	nlohmann::json create_json_report() const;
 
 	std::chrono::system_clock::time_point start_timestamp;
 
 	bool html;
 
-	fs::path report_folder;
-	std::string launch_id = generate_uuid_v4();
-	std::ofstream output_file;
-	nlohmann::json config = nlohmann::json::object();
+	std::unique_ptr<ReportWriter> report_writer;
 };

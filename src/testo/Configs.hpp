@@ -22,9 +22,23 @@ struct VisitorSemanticConfig {
 	virtual void dump(nlohmann::json& j) const;
 };
 
-struct ReporterConfig {
+struct ReportConfig {
 	std::string report_folder;
+
+	void validate() const;
+
+	virtual void dump(nlohmann::json& j) const;
+};
+
+enum class ReportFormat {
+	Native,
+	Allure
+};
+
+struct ReporterConfig: ReportConfig {
 	bool html = false;
+	std::string report_format = "native";
+	ReportFormat get_report_format() const;
 
 	void validate() const;
 
