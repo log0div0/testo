@@ -18,6 +18,8 @@ struct Test: Object<AST::Test> {
 
 	static std::list<std::shared_ptr<Test>> get_test_path(const std::shared_ptr<Test>& test);
 
+	fs::path get_source_file_path() const;
+
 	static std::string type_name() { return "test"; }
 	std::string name() const;
 	std::vector<std::string> parent_names() const;
@@ -29,7 +31,9 @@ struct Test: Object<AST::Test> {
 	std::set<std::shared_ptr<Machine>> get_all_machines() const;
 	std::set<std::shared_ptr<FlashDrive>> get_all_flash_drives() const;
 
+	std::string title() const;
 	std::string description() const;
+
 	bool snapshots_needed() const;
 
 	std::stringstream cksum_input;
@@ -68,6 +72,9 @@ struct TestRun {
 	auto duration() const {
 		return stop_timestamp - start_timestamp;
 	}
+
+	std::string failure_message;
+	std::string failure_stacktrace;
 };
 
 }

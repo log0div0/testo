@@ -78,6 +78,10 @@ void ReportWriterNative::report(const std::string& text) {
 	}
 }
 
+void ReportWriterNative::report_raw(const std::string& text) {
+	report(text);
+}
+
 void ReportWriterNative::report_screenshot(const stb::Image<stb::RGB>& screenshot) {
 	screenshot.write_png((report_folder / "tests_runs" / current_test_run_id / "screenshot.png").generic_string());
 }

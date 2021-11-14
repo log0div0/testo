@@ -28,7 +28,7 @@ struct Reporter {
 	void prepare_environment();
 	void run_test();
 	void test_passed();
-	void test_failed(const std::string& error_message);
+	void test_failed(const std::string& message, const std::string& stacktrace);
 
 	void print_statistics();
 
@@ -39,6 +39,7 @@ struct Reporter {
 
 	//both controller actions
 	void print(std::shared_ptr<IR::Controller> controller, const IR::Print& action);
+	void abort(std::shared_ptr<IR::Controller> controller, const IR::Abort& action);
 	void sleep(std::shared_ptr<IR::Controller> controller, const IR::Sleep& action);
 	void macro_action_call(std::shared_ptr<IR::Controller> controller, const IR::MacroCall& macro_call);
 	void macro_command_call(const IR::MacroCall& macro_call);
@@ -95,6 +96,7 @@ struct Reporter {
 	};
 
 	void report(const std::string& message, style color, bool is_bold = false);
+	void report_raw(const std::string& message, style color, bool is_bold = false);
 	void report_prefix(style color, bool is_bold = false);
 
 	void print(const std::string& message, style color, bool is_bold);

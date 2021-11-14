@@ -37,6 +37,17 @@ std::list<std::shared_ptr<IR::Test>> Test::get_test_path(const std::shared_ptr<I
 	return result;
 }
 
+fs::path Test::get_source_file_path() const {
+	return ast_node->begin().file;
+}
+
+std::string Test::title() const {
+	if (attrs.is_null()) {
+		return "";
+	}
+	return attrs.value("title", "");
+}
+
 std::string Test::description() const {
 	if (attrs.is_null()) {
 		return "";

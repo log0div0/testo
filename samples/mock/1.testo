@@ -6,6 +6,14 @@ flash bar {
 	fs: "ntfs"
 }
 
+[
+	title: "this is a title of test_a"
+	description: """this is a description of test_a
+		note that it's a multiline string"""
+	feature: "feature_1"
+	story: "story_1"
+	severity: "blocker"
+]
 test test_a {
 	foo {
 		print "test_a"
@@ -18,11 +26,16 @@ test test_b: test_a {
 	}
 }
 
-test test_c {
-	bar {
-		print "test_c"
+macro generate_some_tests() {
+	test test_c {
+		bar {
+			print "test_c"
+			abort "stop here"
+		}
 	}
 }
+
+generate_some_tests()
 
 test test_d: test_b, test_c {
 	bar {

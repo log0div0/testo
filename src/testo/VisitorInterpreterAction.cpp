@@ -19,6 +19,11 @@ void VisitorInterpreterAction::visit_print(const IR::Print& print) {
 	}
 }
 
+void VisitorInterpreterAction::visit_abort(const IR::Abort& abort) {
+	reporter.abort(current_controller, abort);
+	throw AbortException(abort.ast_node, current_controller, abort.message());
+}
+
 void VisitorInterpreterAction::visit_sleep(const IR::Sleep& sleep) {
 	reporter.sleep(current_controller, sleep);
 	coro::Timer timer;

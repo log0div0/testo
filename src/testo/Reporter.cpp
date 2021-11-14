@@ -149,9 +149,11 @@ void Reporter::test_passed() {
 	++current_test_run_index;
 }
 
-void Reporter::test_failed(const std::string& error_message) {
-	report(fmt::format("{}", error_message), red, true);
+void Reporter::test_failed(const std::string& message, const std::string& stacktrace) {
+	report_raw(fmt::format("{}", stacktrace), red, true);
 
+	current_test_run->failure_message = message;
+	current_test_run->failure_stacktrace = stacktrace;
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Failed;
 
@@ -225,6 +227,16 @@ void Reporter::print(std::shared_ptr<IR::Controller> controller, const IR::Print
 	report_prefix(blue);
 	report(controller->name(), yellow);
 	report(fmt::format(": {}\n", action.message()), blue);
+}
+
+void Reporter::abort(std::shared_ptr<IR::Controller> controller, const IR::Abort& action) {
+	report_prefix(blue);
+	report(fmt::format("Aborting with a message: {}\n", action.message()), blue);
+	if (std::shared_ptr<IR::Machine> vmc = std::dynamic_pointer_cast<IR::Machine>(controller)) {
+		if (vmc->vm()->state() == VmState::Running) {
+			report_writer->report_screenshot(vmc->make_new_screenshot());
+		}
+	}
 }
 
 void Reporter::start(std::shared_ptr<IR::Machine> vmc) {
@@ -480,20 +492,18 @@ void Reporter::mouse_wheel(std::shared_ptr<IR::Machine> vmc, const IR::MouseWhee
 }
 
 void Reporter::exec_command_output(const std::string& text) {
-	report(text, regular);
+	report_raw(text, regular);
 }
 
 void Reporter::js_stdout(const std::string& _stdout) {
-	report_prefix(blue);
-	report("JavaScript snippet stdout: \n", blue);
-	report(fmt::format("{}\n", _stdout), yellow);
+	report_raw(fmt::format("{}\n", _stdout), yellow);
 }
 
 void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
-	report_writer->report_screenshot(screenshot);
 	report_prefix(blue);
 	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
+	report_writer->report_screenshot(screenshot);
 }
 
 std::string newline_to_br(const std::string& str) {
@@ -515,6 +525,11 @@ std::string newline_to_br(const std::string& str) {
 void Reporter::report(const std::string& message, style color, bool is_bold) {
 	print(message, color, is_bold);
 	report_writer->report(message);
+}
+
+void Reporter::report_raw(const std::string& message, style color, bool is_bold) {
+	print(message, color, is_bold);
+	report_writer->report_raw(message);
 }
 
 void Reporter::report_prefix(style color, bool is_bold) {
