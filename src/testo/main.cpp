@@ -144,7 +144,7 @@ int do_main(int argc, char** argv) {
 		(option("--stop_on_fail").set(run_args.stop_on_fail)) % "Stop executing after first failed test",
 		(option("--assume_yes").set(run_args.assume_yes)) % "Quietly agree to run lost cache tests",
 		(option("--invalidate") & value("wildcard pattern", run_args.invalidate)) % "Invalidate specific tests",
-		(option("--report_folder") & value("/path/to/folder", run_args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
+		(option("--report_folder") & value("/path/to/folder", run_args.report_folder)) % "Save report.json in specified folder",
 		(option("--report_format") & value("format id", run_args.report_format)) % "The format of the report to be used (native, allure)",
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(run_args.html)) % "Format stdout as html",
