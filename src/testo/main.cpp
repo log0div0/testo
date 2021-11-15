@@ -134,9 +134,6 @@ int do_main(int argc, char** argv) {
 		option("--exclude") & value(exclude_filer, "wildcard pattern")
 	) % "Do not run specific tests";
 
-	bool report_logs = false;
-	bool report_screenshots = false;
-
 	auto run_spec = "run options" % (
 		command("run").set(selected_mode, mode::run),
 		value("input file or folder", run_args.target) % "Path to a file with testcases or to a folder with such files",
@@ -147,9 +144,8 @@ int do_main(int argc, char** argv) {
 		(option("--stop_on_fail").set(run_args.stop_on_fail)) % "Stop executing after first failed test",
 		(option("--assume_yes").set(run_args.assume_yes)) % "Quietly agree to run lost cache tests",
 		(option("--invalidate") & value("wildcard pattern", run_args.invalidate)) % "Invalidate specific tests",
-		(option("--report_folder") & value("/path/to/folder", run_args.report_folder)) % "Save report.json in specified folder. If folder exists it must be empty",
-		(option("--report_logs").set(report_logs)) % "DEPRECATED",
-		(option("--report_screenshots").set(report_screenshots)) % "DEPRECATED",
+		(option("--report_folder") & value("/path/to/folder", run_args.report_folder)) % "Save report.json in specified folder",
+		(option("--report_format") & value("format id", run_args.report_format)) % "The format of the report to be used (native, allure)",
 		(option("--content_cksum_maxsize") & value("Size in Megabytes", content_cksum_maxsize)) % "Maximum filesize for content-based consistency checking",
 		(option("--html").set(run_args.html)) % "Format stdout as html",
 		(option("--nn_server") & value("ip:port", run_args.nn_server_endpoint)) % "ip:port of the nn_server (defualt is 127.0.0.1:8156)",
@@ -229,12 +225,6 @@ int do_main(int argc, char** argv) {
 	if (selected_mode == mode::clean) {
 		return clean_mode(clean_args);
 	} else if (selected_mode == mode::run) {
-		if (report_logs) {
-			std::cout << "WARNING: --report_logs parameter is deprecated" << std::endl;
-		}
-		if (report_screenshots) {
-			std::cout << "WARNING: --report_screenshots parameter is deprecated" << std::endl;
-		}
 		run_args.params_names.push_back("TESTO_HYPERVISOR");
 		run_args.params_values.push_back(hypervisor);
 		return run_mode(run_args);

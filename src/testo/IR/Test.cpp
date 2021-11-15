@@ -37,6 +37,17 @@ std::list<std::shared_ptr<IR::Test>> Test::get_test_path(const std::shared_ptr<I
 	return result;
 }
 
+fs::path Test::get_source_file_path() const {
+	return ast_node->begin().file;
+}
+
+std::string Test::title() const {
+	if (attrs.is_null()) {
+		return "";
+	}
+	return attrs.value("title", "");
+}
+
 std::string Test::description() const {
 	if (attrs.is_null()) {
 		return "";
@@ -120,52 +131,6 @@ Test::CacheStatus Test::cache_status() {
 	return _cache_status;
 }
 
-std::string to_string(Test::CacheStatus status) {
-	switch (status) {
-		case Test::CacheStatus::Unknown:
-			return "unknown";
-		case Test::CacheStatus::Empty:
-			return "empty";
-		case Test::CacheStatus::OK:
-			return "ok";
-		case Test::CacheStatus::Miss:
-			return "miss";
-		default:
-			throw std::runtime_error("Invalid CacheStatus value");
-	}
-}
-
-nlohmann::json Test::meta() {
-	return {
-		{"name", name()},
-		{"parents", parent_names()},
-		{"snapshots_needed", snapshots_needed()},
-		{"description", description()},
-		{"cksum", cksum},
-		{"cache_status", to_string(cache_status())}
-	};
-}
-
-void Test::report(const fs::path& report_folder_) {
-	fs::path report_folder = report_folder_ / name();
-	fs::path meta_file = report_folder / "meta.json";
-	if (fs::exists(meta_file)) {
-		std::ifstream file(meta_file);
-		if (!file.is_open()) {
-			throw std::runtime_error("Failed to open file " + meta_file.generic_string());
-		}
-		nlohmann::json j;
-		file >> j;
-		if (j.at("cksum") != cksum) {
-			throw std::runtime_error("Can't write the report into an existing report folder because \"" + name() + "\" test's checksum has been changed");
-		}
-	} else {
-		fs::create_directories(report_folder);
-		std::ofstream file(meta_file);
-		file << meta().dump(2);
-	}
-}
-
 bool Test::is_cache_ok() const {
 	for (auto parent: parents) {
 		if (parent->cache_status() != CacheStatus::OK) {
@@ -240,52 +205,6 @@ std::set<std::string> TestRun::get_unsuccessful_parents_names() const {
 		}
 	}
 	return result;
-}
-
-std::string to_string(TestRun::ExecStatus status) {
-	switch (status) {
-		case TestRun::ExecStatus::Unknown:
-			return "unknown";
-		case TestRun::ExecStatus::Passed:
-			return "passed";
-		case TestRun::ExecStatus::Failed:
-			return "failed";
-		case TestRun::ExecStatus::Skipped:
-			return "skipped";
-		default:
-			throw std::runtime_error("Invalid ExecStatus value");
-	}
-}
-
-std::string timepoint_to_str(std::chrono::system_clock::time_point tp) {
-	auto t = std::chrono::system_clock::to_time_t(tp);
-	std::stringstream ss;
-	ss << std::put_time(std::localtime(&t), "%FT%T%z");
-	return ss.str();
-}
-
-nlohmann::json TestRun::meta() {
-	return {
-		{"test_name", test->name()},
-		{"exec_status", to_string(exec_status)},
-		{"start_timestamp", timepoint_to_str(start_timestamp)},
-		{"stop_timestamp", timepoint_to_str(stop_timestamp)}
-	};
-}
-
-void TestRun::report_begin(const fs::path& report_folder) {
-	fs::create_directories(report_folder / name);
-	output_file = std::ofstream(report_folder / name / "log.txt");
-}
-
-void TestRun::report_screenshot(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot) {
-	screenshot.write_png((report_folder / name / "screenshot.png").generic_string());
-}
-
-void TestRun::report_end(const fs::path& report_folder) {
-	output_file.close();
-	std::ofstream file(report_folder / name / "meta.json");
-	file << meta().dump(2);
 }
 
 }

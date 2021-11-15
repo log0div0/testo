@@ -230,13 +230,6 @@ bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
 	}
 }
 
-void VisitorInterpreterActionMachine::visit_abort(const IR::Abort& abort) {
-	if (vmc->vm()->state() == VmState::Running) {
-		reporter.save_screenshot(vmc, vmc->make_new_screenshot());
-	}
-	throw AbortException(abort.ast_node, current_controller, abort.message());
-}
-
 void VisitorInterpreterActionMachine::visit_key_combination(const IR::KeyCombination& key_combination, std::chrono::milliseconds interval) {
 	std::vector<KeyboardButton> buttons = key_combination.buttons();
 	for (auto it = buttons.begin(); it != buttons.end(); ++it) {

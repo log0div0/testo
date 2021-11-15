@@ -4,8 +4,6 @@
 #include "Machine.hpp"
 #include "FlashDrive.hpp"
 #include "Network.hpp"
-#include <fstream>
-#include <sstream>
 
 namespace IR {
 
@@ -20,6 +18,8 @@ struct Test: Object<AST::Test> {
 
 	static std::list<std::shared_ptr<Test>> get_test_path(const std::shared_ptr<Test>& test);
 
+	fs::path get_source_file_path() const;
+
 	static std::string type_name() { return "test"; }
 	std::string name() const;
 	std::vector<std::string> parent_names() const;
@@ -31,7 +31,9 @@ struct Test: Object<AST::Test> {
 	std::set<std::shared_ptr<Machine>> get_all_machines() const;
 	std::set<std::shared_ptr<FlashDrive>> get_all_flash_drives() const;
 
+	std::string title() const;
 	std::string description() const;
+
 	bool snapshots_needed() const;
 
 	std::stringstream cksum_input;
@@ -39,15 +41,11 @@ struct Test: Object<AST::Test> {
 
 	CacheStatus cache_status();
 
-	nlohmann::json meta();
-
 	nlohmann::json attrs;
 
 	std::set<std::shared_ptr<Machine>> mentioned_machines;
 	std::set<std::shared_ptr<Network>> mentioned_networks;
 	std::set<std::shared_ptr<FlashDrive>> mentioned_flash_drives;
-
-	void report(const fs::path& report_folder_);
 
 private:
 	CacheStatus _cache_status = CacheStatus::Unknown;
@@ -75,15 +73,8 @@ struct TestRun {
 		return stop_timestamp - start_timestamp;
 	}
 
-	std::ofstream output_file;
-
-	nlohmann::json meta();
-
-	void report_begin(const fs::path& report_folder);
-	void report_screenshot(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot);
-	void report_end(const fs::path& report_folder);
-
-	std::string name = generate_uuid_v4();
+	std::string failure_message;
+	std::string failure_stacktrace;
 };
 
 }

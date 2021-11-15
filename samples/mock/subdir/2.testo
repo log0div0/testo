@@ -1,5 +1,5 @@
 
-include "0.testo"
+include "../0.testo"
 
 test test_e: test_base {
 	foo {
