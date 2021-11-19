@@ -58,7 +58,7 @@ test win_install_cuda: win_install_guest_additions {
 		wait !"Installer has finished"
 		mouse rclick "cuda"
 		mouse click "Delete"
-		wait !"cuda"
+		wait !"cuda" timeout 30m
 		mouse rclick "Recycle Bin"
 		mouse click "Empty"
 		wait "Are you sure"

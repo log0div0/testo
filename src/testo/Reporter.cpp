@@ -125,7 +125,7 @@ void Reporter::skip_test() {
 	if (unsuccessful_parents_names.size() > 1) {
 		report(" because his parents ", red, true);
 	} else {
-		report(" because his parent", red, true);
+		report(" because his parent ", red, true);
 	}
 	report(join(unsuccessful_parents_names, ", "), yellow, true);
 	report(" failed or skipped\n", red, true);

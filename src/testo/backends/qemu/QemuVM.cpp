@@ -593,7 +593,11 @@ void QemuVM::install() {
 		if (config.count("nic")) {
 			auto nics = config.at("nic");
 			for (auto& nic: nics) {
+				auto enabled = nic.value("enabled", true);				
 				plug_nic(nic.at("name").get<std::string>());
+				if (!enabled) {
+					unplug_nic(nic.at("name").get<std::string>());
+				}
 			}
 		}
 	} catch (const std::exception& error) {
@@ -947,7 +951,8 @@ bool QemuVM::is_nic_plugged(const std::string& nic) const {
 		std::string pci_addr = nic_pci_map.at(nic);
 
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-			if (std::string(nic_node.attribute("type").value()) != "network") {
+			auto type = std::string(nic_node.attribute("type").value());
+			if (type != "network" && type != "direct") {
 				continue;
 			}
 
@@ -1078,7 +1083,8 @@ void QemuVM::unplug_nic(const std::string& nic) {
 		}
 
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-			if (std::string(nic_node.attribute("type").value()) != "network") {
+			auto type = std::string(nic_node.attribute("type").value());
+			if (type != "network" && type != "direct") {
 				continue;
 			}
 
@@ -1106,7 +1112,8 @@ bool QemuVM::is_link_plugged(const std::string& nic) const {
 		auto devices = config.first_child().child("devices");
 		std::string pci_addr = nic_pci_map.at(nic);
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-			if (std::string(nic_node.attribute("type").value()) != "network") {
+			auto type = std::string(nic_node.attribute("type").value());
+			if (type != "network" && type != "direct") {
 				continue;
 			}
 
@@ -1142,7 +1149,8 @@ void QemuVM::set_link(const std::string& nic, bool is_connected) {
 		auto devices = config.first_child().child("devices");
 		std::string pci_addr = nic_pci_map.at(nic);
 		for (auto nic_node = devices.child("interface"); nic_node; nic_node = nic_node.next_sibling("interface")) {
-			if (std::string(nic_node.attribute("type").value()) != "network") {
+			auto type = std::string(nic_node.attribute("type").value());
+			if (type != "network" && type != "direct") {
 				continue;
 			}
 

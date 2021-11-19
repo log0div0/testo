@@ -22,6 +22,11 @@ machine my_ubuntu_server {
 		attached_to: "internal"
 	}
 
+	nic bridge: {
+		attached_to_dev: "ens7"
+		enabled: false
+	}
+
 	qemu_enable_usb3: true
 }
 

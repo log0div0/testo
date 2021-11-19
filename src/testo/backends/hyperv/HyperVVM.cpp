@@ -160,7 +160,11 @@ void HyperVVM::install() {
 		if (config.count("nic")) {
 			auto nics = config.at("nic");
 			for (auto& nic: nics) {
+				auto enabled = nic.value("enabled", true);
 				plug_nic(nic.at("name").get<std::string>());
+				if (!enabled) {
+					unplug_nic(nic.at("name").get<std::string>());
+				}
 			}
 		}
 	} catch (const std::exception& error) {

@@ -6,6 +6,7 @@ test unplug_plug_nic {
 	my_ubuntu_server {
 		unplug nic nat
 		unplug nic internal
+		plug nic bridge
 		plug nic nat
 		start
 		abort "stop here"
@@ -38,4 +39,3 @@ test rollback_after_unplug_plug_link {
 		abort "stop here"
 	}
 }
-

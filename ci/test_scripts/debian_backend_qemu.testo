@@ -13,14 +13,18 @@ test debian_backend_qemu_unplug_plug_nic: debian_install_testo {
 
 		wait "Running"
 		mouse dclick "Running"
-		wait "Language" && "English"
+		#wait "Language" && "English"
 
+		wait "my_ubuntu_server on QEMU/KVM"
 		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
-		wait js "return find_text().match('NIC').size() == 1"
-		mouse click "NIC"
+		wait js "return find_text().match('NIC').size() == 2"
+		mouse click "NIC".from_top(0)
+		wait "Host device ens7: macvtap"
+		mouse move 0 0
+		mouse click "NIC".from_top(1)
 		wait "Virtual network 'internet': NAT"
-		mouse click "File".from_top(1).center_bottom().move_down(20)
-		wait "Language" && "English"
+		#mouse click "File".from_top(1).center_bottom().move_down(20)
+		#wait "Language" && "English"
 	}
 }
 
