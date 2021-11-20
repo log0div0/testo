@@ -531,7 +531,7 @@ std::shared_ptr<AST::Controller> Parser::controller() {
 				{"attached_to_dev", {false, [&]{ return string(); }}},
 				{"mac", {false, [&]{ return string(); }}},
 				{"adapter_type", {false, [&]{ return string(); }}},
-				{"enabled", {false, [&]{ return boolean(); }}},
+				{"plugged", {false, [&]{ return boolean(); }}},
 			}); }}},
 			{"disk", {true, [&]{ return attr_block({
 				{"size", {false, [&]{ return size(); }}},
