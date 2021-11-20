@@ -9,3 +9,9 @@ test test_base {
 		print "test_base"
 	}
 }
+
+test test_allure_xml_escape {
+	foo {
+		print "'hello' & <world>"
+	}
+}

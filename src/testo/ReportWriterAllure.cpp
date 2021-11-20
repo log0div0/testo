@@ -3,6 +3,34 @@
 #include "IR/Program.hpp"
 #include <chrono>
 
+std::string escape(const std::string& input) {
+	std::string output;
+	output.reserve(input.size());
+	for (char ch: input) {
+		switch (ch) {
+			case '"':
+				output += "&quot;";
+				break;
+			case '\'':
+				output += "&apos;";
+				break;
+			case '<':
+				output += "&lt;";
+				break;
+			case '>':
+				output += "&gt;";
+				break;
+			case '&':
+				output += "&amp;";
+				break;
+			default:
+				output.push_back(ch);
+				break;
+		}
+	}
+	return output;
+}
+
 Attachment::Attachment(const fs::path& report_folder, const std::string& str) {
 	title = "Output";
 	type = "text/plain";
@@ -32,7 +60,7 @@ std::string to_string(std::chrono::system_clock::time_point tp) {
 std::string Step::to_xml() const {
 	std::string xml = fmt::format(R"(<step start="{}" stop="{}" status="{}">
 		<name>{}</name>
-		<title>{}</title>)", to_string(start), to_string(stop), status, name, title);
+		<title>{}</title>)", to_string(start), to_string(stop), status, escape(name), escape(title));
 
 	xml += R"(<attachments>)";
 
@@ -51,7 +79,7 @@ std::string Failure::to_xml() const {
 	std::string xml = fmt::format(R"(<failure>
 		<message>{}</message>
 		<stack-trace>{}</stack-trace>
-	</failure>)", message, stacktrace);
+	</failure>)", escape(message), escape(stacktrace));
 	return xml;
 }
 
@@ -64,7 +92,7 @@ std::string TestSuite::to_xml() const {
 	std::string xml = fmt::format(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ns2:test-suite xmlns:ns2="urn:model.allure.qatools.yandex.ru">
 	<name>{}</name>
-	<test-cases>)", name);
+	<test-cases>)", escape(name));
 
 	for (auto& testcase: testcases) {
 		xml += testcase.to_xml();
@@ -98,13 +126,13 @@ void TestCase::add_label(const std::shared_ptr<IR::Test>& test, const std::strin
 std::string TestCase::to_xml() const {
 	std::string xml = fmt::format(R"(
 		<test-case status="{}" start="{}" stop="{}">
-			<name>{}</name>)", status, to_string(start), to_string(stop), name);
+			<name>{}</name>)", status, to_string(start), to_string(stop), escape(name));
 
 	if (title.size()) {
-		xml += fmt::format(R"(<title>{}</title>)", title);
+		xml += fmt::format(R"(<title>{}</title>)", escape(title));
 	}
 	if (description.size()) {
-		xml += fmt::format(R"(<description type="text">{}</description>)", description);
+		xml += fmt::format(R"(<description type="text">{}</description>)", escape(description));
 	}
 
 	xml += failure.to_xml();
