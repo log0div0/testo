@@ -82,14 +82,13 @@ inline std::ostream& operator<<(std::ostream& stream, const cmdline& cmdline) {
 	return stream;
 }
 
-void remove_handler() {
+void remote_handler(HostMessageHandler& message_handler) {
 #ifdef __QEMU__
 	std::shared_ptr<Channel> channel(new QemuLinuxChannel);
 	coro::Timer timer;
 	while (true) {
 		try {
-			MessageHandler message_handler(channel);
-			message_handler.run();
+			message_handler.run(channel);
 		} catch (const std::exception& error) {
 			spdlog::error("Error inside QemuLinuxChannel loop: {}", error.what());
 			timer.waitFor(100ms);
@@ -97,14 +96,15 @@ void remove_handler() {
 	}
 #elif __HYPERV__
 	coro::Acceptor<hyperv::VSocketProtocol> acceptor(hyperv::VSocketEndpoint(HYPERV_PORT));
-	acceptor.run([](coro::StreamSocket<hyperv::VSocketProtocol> socket) {
+	while (true) {
+		coro::StreamSocket<hyperv::VSocketProtocol> socket = acceptor.accept();
 		try {
-			std::shared_ptr<Channel> channel(new HyperVChannel(std::move(socket)));
-			MessageHandler message_handler(std::move(channel));
-			message_handler.run();
+			message_handler.run(std::make_shared<HyperVChannel>(std::move(socket)));
 		} catch (const std::exception& error) {
 			spdlog::error("Error inside remote acceptor loop: {}", error.what());
 		}
+	}
+	acceptor.run([]() {
 	});
 #else
 #error "Unknown hypervisor"
@@ -132,26 +132,39 @@ private:
 	Socket socket;
 };
 
-void local_handler() {
+void local_handler(CLIMessageHandler& message_handler) {
 	coro::Acceptor<asio::local::stream_protocol> acceptor("/var/run/testo-guest-additions.sock");
-	acceptor.run([](coro::StreamSocket<asio::local::stream_protocol> socket) {
+	while (true) {
+		coro::StreamSocket<asio::local::stream_protocol> socket = acceptor.accept();
 		try {
-			std::shared_ptr<Channel> channel(new LocalChannel(std::move(socket)));
-			MessageHandler message_handler(std::move(channel));
-			message_handler.run();
+			message_handler.run(std::make_shared<LocalChannel>(std::move(socket)));
 		} catch (const std::exception& error) {
 			spdlog::error("Error inside local acceptor loop: {}", error.what());
 		}
+	}
+}
+
+std::thread run_async(std::function<void()> fn_) {
+	return std::thread([fn = std::move(fn_)] {
+		coro::Application(fn).run();
 	});
+}
+
+void run_handlers() {
+	HostMessageHandler host_handler;
+	CLIMessageHandler cli_handler(&host_handler);
+
+	std::thread t1 = run_async([&] { remote_handler(host_handler); });
+	std::thread t2 = run_async([&] { local_handler(cli_handler); });
+
+	t1.join();
+	t2.join();
 }
 
 void app_main() {
 	try {
 		mount_permanent_shared_folders();
-		std::thread t1([]() {coro::Application(remove_handler).run();});
-		std::thread t2([]() {coro::Application(local_handler).run();});
-		t1.join();
-		t2.join();
+		run_handlers();
 	} catch (const std::exception& err) {
 		spdlog::error("app_main std error: {}", err.what());
 	} catch (const coro::CancelError&) {

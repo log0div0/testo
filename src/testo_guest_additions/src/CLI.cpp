@@ -6,7 +6,7 @@
 #include <testo_guest_additions_protocol/GuestAdditions.hpp>
 
 #ifdef __linux__
-struct GA: GuestAdditions {
+struct GA: CLIGuestAdditions {
 	GA() {
 		socket.connect("/var/run/testo-guest-additions.sock");
 	}
@@ -51,33 +51,26 @@ struct GetArgs {
 };
 
 void mount_mode(const MountArgs& args) {
-#if defined (__QEMU__) && defined(__linux__)
 	bool was_indeed_mounted = GA().mount(args.folder_name, fs::absolute(args.guest_path), args.permanent);
 	if (!was_indeed_mounted) {
 		std::cout << "The shared folder is already mounted" << std::endl;
 	}
-#else
-	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
-#endif
 }
 
 void umount_mode(const UmountArgs& args) {
-#if defined (__QEMU__) && defined(__linux__)
 	bool was_indeed_umounted = GA().umount(args.folder_name, args.permanent);
 	if (!was_indeed_umounted) {
 		std::cout << "The shared folder is already umounted" << std::endl;
 	}
-#else
-	throw std::runtime_error("Sorry, shared folders are not supported on this combination of the hypervisor and the operating system");
-#endif
 }
 
 void set_mode(const SetArgs& args) {
-
+	GA().set_var(args.var_name, args.var_value, args.global);
 }
 
 void get_mode(const GetArgs& args) {
-
+	std::string var_value = GA().get_var(args.var_name);
+	std::cout << var_value;
 }
 
 enum class mode {

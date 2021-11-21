@@ -22,7 +22,7 @@ struct GuestAdditions {
 	nlohmann::json get_shared_folder_status(const std::string& folder_name);
 	bool umount(const std::string& folder_name, bool permanent);
 
-private:
+protected:
 	void copy_file_to_guest(const fs::path& src, const fs::path& dst);
 	void copy_dir_to_guest(const fs::path& src, const fs::path& dst);
 
@@ -35,3 +35,8 @@ private:
 	virtual void recv_raw(uint8_t* data, size_t size) = 0;
 };
 
+struct CLIGuestAdditions: GuestAdditions
+{
+	void set_var(const std::string& var_name, const std::string& var_value, bool global);
+	std::string get_var(const std::string& var_name);
+};

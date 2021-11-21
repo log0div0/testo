@@ -26,14 +26,13 @@ std::shared_ptr<QemuWinChannel> g_qemu_win_channel;
 
 using namespace std::chrono_literals;
 
-void remove_handler() {
+void remote_handler(HostMessageHandler& message_handler) {
 #ifdef __QEMU__
 	g_qemu_win_channel.reset(new QemuWinChannel);
 	coro::Timer timer;
 	while (true) {
 		try {
-			MessageHandler message_handler(g_qemu_win_channel);
-			message_handler.run();
+			message_handler.run(g_qemu_win_channel);
 		} catch (const std::exception& error) {
 			spdlog::error("Error inside QemuWinChannel loop: {}", error.what());
 			timer.waitFor(100ms);
@@ -42,15 +41,14 @@ void remove_handler() {
 #elif __HYPERV__
 	hyperv::VSocketEndpoint endpoint(service_id);
 	coro::Acceptor<hyperv::VSocketProtocol> acceptor(endpoint);
-	acceptor.run([](coro::StreamSocket<hyperv::VSocketProtocol> socket) {
+	while (true) {
+		coro::StreamSocket<hyperv::VSocketProtocol> socket = acceptor.accept();
 		try {
-			std::shared_ptr<Channel> channel(new HyperVChannel(std::move(socket)));
-			MessageHandler message_handler(std::move(channel));
-			message_handler.run();
+			message_handler.run(std::make_shared<HyperVChannel>(std::move(socket)));
 		} catch (const std::exception& error) {
 			spdlog::error("Error inside acceptor loop: {}", error.what());
 		}
-	});
+	}
 #else
 #error "Unknown hypervisor"
 #endif
@@ -58,7 +56,8 @@ void remove_handler() {
 
 void app_main() {
 	try {
-		remove_handler();
+		HostMessageHandler host_handler;
+		remote_handler(host_handler);
 	} catch (const std::exception& err) {
 		spdlog::error("app_main std error: {}", err.what());
 	} catch (const coro::CancelError&) {

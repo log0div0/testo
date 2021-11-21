@@ -251,3 +251,28 @@ nlohmann::json GuestAdditions::recv() {
 
 	return response;
 }
+
+void CLIGuestAdditions::set_var(const std::string& var_name, const std::string& var_value, bool global) {
+	nlohmann::json request = {
+		{"method", "set_var"},
+		{"args", {
+			{"var_name", var_name},
+			{"var_value", var_value},
+			{"global", global},
+		}}
+	};
+	send(std::move(request));
+	auto response = recv();
+}
+
+std::string CLIGuestAdditions::get_var(const std::string& var_name) {
+	nlohmann::json request = {
+		{"method", "get_var"},
+		{"args", {
+			{"var_name", var_name},
+		}}
+	};
+	send(std::move(request));
+	auto response = recv();
+	return response.at("var_value");
+}

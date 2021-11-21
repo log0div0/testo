@@ -3,9 +3,10 @@
 #include <os/Process.hpp>
 #include <os/File.hpp>
 
-#include "base64.hpp"
-
+#include <base64.hpp>
+#include <scope_guard.hpp>
 #include <spdlog/spdlog.h>
+
 #include <stdexcept>
 #include <fstream>
 
@@ -23,17 +24,77 @@ std::map<std::string, std::string> get_environment_from_registry() {
 }
 #endif
 
-void MessageHandler::run() {
-	spdlog::info("Waiting for commands");
+ExecuteContext::ExecuteContext() {
+	mutex.lock();
+}
 
-	while (true) {
-		handle_message(channel->receive());
+ExecuteContext::~ExecuteContext() {
+	mutex.unlock();
+}
+
+void ExecuteContext::set_var(const std::string& var_name, const std::string& var_value, bool global) {
+	std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
+	if (!lock.try_lock()) {
+		throw std::runtime_error("Variables can be set only during 'exec' action");
+	}
+	vars[var_name] = var_value;
+	if (global) {
+		global_vars.insert(var_name);
 	}
 }
 
-void MessageHandler::handle_message(const nlohmann::json& command) {
-	std::string method_name = command.at("method").get<std::string>();
+std::string ExecuteContext::get_var(const std::string& var_name) {
+	std::unique_lock<std::mutex> lock(mutex, std::defer_lock);
+	if (!lock.try_lock()) {
+		throw std::runtime_error("Variables can be get only during 'exec' action");
+	}
+	auto it = vars.find(var_name);
+	if (it == vars.end()) {
+		throw std::runtime_error("Can't find a variable with a name " + var_name);
+	}
+	return it->second;
+}
 
+void ExecuteContext::unlock(const nlohmann::json& j) {
+	vars.clear();
+	global_vars.clear();
+
+	for (auto& item: j.items()) {
+		vars[item.key()] = item.value();
+	}
+
+	mutex.unlock();
+}
+
+nlohmann::json ExecuteContext::lock() {
+	mutex.lock();
+
+	nlohmann::json j = nlohmann::json::array();
+	for (auto& kv: vars) {
+		j.push_back({
+			{"name", kv.first},
+			{"value", kv.second},
+			{"global", (bool)global_vars.count(kv.first)},
+		});
+	}
+	return j;
+}
+
+void MessageHandler::run(std::shared_ptr<Channel> channel_) {
+	spdlog::info("Waiting for commands");
+
+	channel = channel_;
+	SCOPE_EXIT { channel = {}; };
+
+	while (true) {
+		command = channel->receive();
+		SCOPE_EXIT { command = {}; };
+
+		handle_message();
+	}
+}
+
+void MessageHandler::handle_message() {
 	if (command.count("version")) {
 		ver = command.at("version").get<std::string>();
 	} else {
@@ -43,25 +104,7 @@ void MessageHandler::handle_message(const nlohmann::json& command) {
 	spdlog::info("testo version = {}, testo guest additions version = {}", ver.to_string(), TESTO_VERSION);
 
 	try {
-		if (method_name == "check_avaliable") {
-			return handle_check_avaliable(command);
-		} else if (method_name == "get_tmp_dir") {
-			return handle_get_tmp_dir(command);
-		} else if (method_name == "copy_file") {
-			return handle_copy_file(command);
-		} else if (method_name == "copy_files_out") {
-			return handle_copy_files_out(command);
-		} else if (method_name == "execute") {
-			return handle_execute(command);
-		} else if (method_name == "mount") {
-			return handle_mount(command);
-		} else if (method_name == "get_shared_folder_status") {
-			return handle_get_shared_folder_status(command);
-		} else if (method_name == "umount") {
-			return handle_umount(command);
-		} else {
-			throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
-		}
+		do_handle_message(command.at("method").get<std::string>());
 	} catch (const std::exception& error) {
 		spdlog::error("Error in MessageHandler::handle_message: {}", error.what());
 #ifdef WIN32
@@ -75,6 +118,28 @@ void MessageHandler::handle_message(const nlohmann::json& command) {
 #else
 		send_error(error.what());
 #endif
+	}
+}
+
+void MessageHandler::do_handle_message(const std::string& method_name) {
+	if (method_name == "check_avaliable") {
+		return handle_check_avaliable();
+	} else if (method_name == "get_tmp_dir") {
+		return handle_get_tmp_dir();
+	} else if (method_name == "copy_file") {
+		return handle_copy_file();
+	} else if (method_name == "copy_files_out") {
+		return handle_copy_files_out();
+	} else if (method_name == "execute") {
+		return handle_execute();
+	} else if (method_name == "mount") {
+		return handle_mount();
+	} else if (method_name == "get_shared_folder_status") {
+		return handle_get_shared_folder_status();
+	} else if (method_name == "umount") {
+		return handle_umount();
+	} else {
+		throw std::runtime_error(std::string("Method ") + method_name + " is not supported");
 	}
 }
 
@@ -92,7 +157,7 @@ void MessageHandler::send_error(const std::string& error) {
 	channel->send(std::move(response));
 }
 
-void MessageHandler::handle_check_avaliable(const nlohmann::json& command) {
+void MessageHandler::handle_check_avaliable() {
 	spdlog::info("Checking avaliability call");
 
 	nlohmann::json response = {
@@ -104,7 +169,7 @@ void MessageHandler::handle_check_avaliable(const nlohmann::json& command) {
 	spdlog::info("Checking avaliability is OK");
 }
 
-void MessageHandler::handle_get_tmp_dir(const nlohmann::json& command) {
+void MessageHandler::handle_get_tmp_dir() {
 	spdlog::info("Getting tmp dir");
 
 	nlohmann::json response = {
@@ -118,7 +183,7 @@ void MessageHandler::handle_get_tmp_dir(const nlohmann::json& command) {
 	spdlog::info("Getting tmp dir is OK");
 }
 
-void MessageHandler::handle_copy_file(const nlohmann::json& command) {
+void MessageHandler::handle_copy_file() {
 	const nlohmann::json& args = command.at("args");
 
 	for (auto file: args) {
@@ -209,7 +274,7 @@ nlohmann::json MessageHandler::copy_directory_out(const fs::path& dir, const fs:
 	return files;
 }
 
-void MessageHandler::handle_copy_files_out(const nlohmann::json& command) {
+void MessageHandler::handle_copy_files_out() {
 	const nlohmann::json& args = command.at("args");
 
 	nlohmann::json files = nlohmann::json::array();
@@ -265,13 +330,42 @@ void MessageHandler::handle_copy_files_out(const nlohmann::json& command) {
 	spdlog::info("Copied FROM guest: " + src.generic_string());
 }
 
-void MessageHandler::handle_execute(const nlohmann::json& command) {
+void MessageHandler::handle_execute() {
 	const nlohmann::json& args = command.at("args");
-
 	auto cmd = args[0].get<std::string>();
 
 	spdlog::info("Executing command " + cmd);
 
+	int rc = 0;
+	nlohmann::json vars;
+	if (command.count("vars")) {
+		vars = command.at("vars");
+	} else {
+		vars = nlohmann::json::object();
+	}
+
+	{
+		exec_ctx.unlock(vars);
+		SCOPE_EXIT { vars = exec_ctx.lock(); };
+		rc = do_handle_execute(cmd);
+	}
+
+	nlohmann::json result = {
+		{"success", true},
+		{"result", {
+			{"status", "finished"},
+			{"exit_code", rc},
+			{"vars", vars},
+		}}
+	};
+
+	channel->send(std::move(result));
+
+	spdlog::info("Command finished: " + cmd);
+	spdlog::info("Return code: " + std::to_string(rc));
+}
+
+int MessageHandler::do_handle_execute(std::string cmd) {
 #if __linux__
 	cmd += " 2>&1";
 #endif
@@ -300,23 +394,10 @@ void MessageHandler::handle_execute(const nlohmann::json& command) {
 		}
 	}
 
-	int rc = process.wait();
-
-	nlohmann::json result = {
-		{"success", true},
-		{"result", {
-			{"status", "finished"},
-			{"exit_code", rc}
-		}}
-	};
-
-	channel->send(std::move(result));
-
-	spdlog::info("Command finished: " + cmd);
-	spdlog::info("Return code: " + std::to_string(rc));
+	return process.wait();
 }
 
-void MessageHandler::handle_mount(const nlohmann::json& command) {
+void MessageHandler::handle_mount() {
 	const nlohmann::json& args = command.at("args");
 	std::string folder_name = args.at("folder_name");
 	fs::path guest_path = args.at("guest_path").get<std::string>();
@@ -340,7 +421,7 @@ void MessageHandler::handle_mount(const nlohmann::json& command) {
 	spdlog::info("Mounting is OK");
 }
 
-void MessageHandler::handle_get_shared_folder_status(const nlohmann::json& command) {
+void MessageHandler::handle_get_shared_folder_status() {
 	const nlohmann::json& args = command.at("args");
 	std::string folder_name = args.at("folder_name");
 
@@ -358,7 +439,7 @@ void MessageHandler::handle_get_shared_folder_status(const nlohmann::json& comma
 	spdlog::info("Getting status is OK");
 }
 
-void MessageHandler::handle_umount(const nlohmann::json& command) {
+void MessageHandler::handle_umount() {
 	const nlohmann::json& args = command.at("args");
 	std::string folder_name = args.at("folder_name");
 	bool permanent = args.at("permanent");
@@ -379,4 +460,51 @@ void MessageHandler::handle_umount(const nlohmann::json& command) {
 	channel->send(std::move(result));
 
 	spdlog::info("Umounting is OK");
+}
+
+void CLIMessageHandler::do_handle_message(const std::string& method_name) {
+	if (method_name == "set_var") {
+		return handle_set_var();
+	} else if (method_name == "get_var") {
+		return handle_get_var();
+	} else {
+		return MessageHandler::do_handle_message(method_name);
+	}
+}
+
+void CLIMessageHandler::handle_set_var() {
+	const nlohmann::json& args = command.at("args");
+	std::string var_name = args.at("var_name");
+	std::string var_value = args.at("var_value");
+	bool global = args.at("global");
+
+	spdlog::info("Setting variable {} = {}", var_name, var_value);
+
+	host_handler->exec_ctx.set_var(var_name, var_value, global);
+
+	nlohmann::json result = {
+		{"success", true},
+	};
+
+	channel->send(std::move(result));
+
+	spdlog::info("Setting variable is OK");
+}
+
+void CLIMessageHandler::handle_get_var() {
+	const nlohmann::json& args = command.at("args");
+	std::string var_name = args.at("var_name");
+
+	spdlog::info("Getting variable {}", var_name);
+
+	std::string var_value = host_handler->exec_ctx.get_var(var_name);
+
+	nlohmann::json result = {
+		{"success", true},
+		{"var_value", var_value}
+	};
+
+	channel->send(std::move(result));
+
+	spdlog::info("Getting variable is OK");
 }
