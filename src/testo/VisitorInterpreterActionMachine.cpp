@@ -478,8 +478,6 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 		return visit_detect_js({p, stack}, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(select_expr)) {
 		script = build_select_img_script({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(select_expr)) {
-		throw std::runtime_error("Homm3 is not supported anymore");;
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(select_expr)) {
 		return visit_detect_expr(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
@@ -587,8 +585,6 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 			} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->basic_select_expr)) {
 				script = build_select_img_script({p, stack});
 				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
-			} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->basic_select_expr)) {
-				throw std::runtime_error("Not supported");
 			}
 
 			auto js_result = eval_js(script, screenshot);

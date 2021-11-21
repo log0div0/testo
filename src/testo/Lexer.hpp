@@ -133,7 +133,6 @@ private:
 	Token check();
 	Token js();
 	Token img();
-	Token homm3();
 	Token press();
 	Token mouse();
 	Token move();

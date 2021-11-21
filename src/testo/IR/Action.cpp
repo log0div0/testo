@@ -127,10 +127,6 @@ std::string MouseSelectable::to_string() const {
 		result += "image \"";
 		result += IR::SelectImg(p, stack).img_path().generic_string();
 		result += "\"";
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(ast_node->basic_select_expr)) {
-		result += "HOMM3 object \"";
-		result += IR::SelectHomm3(p, stack).id();
-		result += "\"";
 	} else {
 		throw std::runtime_error("Where to go is unapplicable");
 	}
@@ -160,10 +156,6 @@ fs::path SelectImg::img_path() const {
 	}
 
 	return path;
-}
-
-std::string SelectHomm3::id() const {
-	return String(ast_node->str, stack).text();
 }
 
 std::string SelectText::text() const {
