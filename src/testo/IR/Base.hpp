@@ -26,11 +26,14 @@ struct SelectExpr: Node<AST::SelectExpr> {
 };
 
 struct String: Node<AST::String> {
-	using Node<AST::String>::Node;
+	String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, bool variables_allowed = false);
 
 	std::string text() const;
 	std::string quoted_text() const;
 	nlohmann::json to_json() const;
+
+	std::string str() const;
+	bool can_resolve_variables() const;
 };
 
 template <typename ASTType, typename ParsedASTType>

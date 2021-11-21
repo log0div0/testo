@@ -3,6 +3,7 @@
 
 #include "Pos.hpp"
 #include "Token.hpp"
+#include "TemplateLiterals.hpp"
 #include <vector>
 #include <set>
 #include <memory>
@@ -39,6 +40,7 @@ struct String: public Node {
 	}
 
 	Token token;
+	template_literals::Resolver resolver;
 };
 
 template <Token::category category>

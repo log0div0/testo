@@ -295,7 +295,9 @@ struct LayoutSwitchCounter {
 
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 	try {
-		std::string text = type.text();
+		type.validate();
+
+		std::string text = type.text().str();
 		if (text.size() == 0) {
 			return;
 		}

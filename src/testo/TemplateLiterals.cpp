@@ -1,16 +1,17 @@
 
 #include "TemplateLiterals.hpp"
 #include "Exceptions.hpp"
+#include "IR/Program.hpp"
 #include <stdexcept>
 
 namespace template_literals {
 
-std::string Parser::resolve(const std::string& input, const std::shared_ptr<const StackNode>& stack) {
-	this->input = input;
+Resolver::Resolver(const std::string& input_): input(input_) {
 	current_pos = Pos(input);
+	tokens = tokenize();
+}
 
-	auto tokens = tokenize();
-
+std::string Resolver::resolve(const std::shared_ptr<const StackNode>& stack) const {
 	std::string result;
 
 	for (auto token: tokens) {
@@ -29,14 +30,23 @@ std::string Parser::resolve(const std::string& input, const std::shared_ptr<cons
 	return result;
 }
 
-void Parser::validate_sanity(const std::string& input) {
-	this->input = input;
-	current_pos = Pos(input);
-
-	auto tokens = tokenize();
+bool Resolver::has_variables() const {
+	for (auto token: tokens) {
+		if (token.type() == Token::category::var_ref) {
+			return true;
+		}
+	}
+	return false;
 }
 
-bool Parser::test_escaped() const {
+bool Resolver::can_resolve_variables() const {
+	if (!has_variables()) {
+		return true;
+	}
+	return IR::program && IR::program->var_set;
+}
+
+bool Resolver::test_escaped() const {
 	if (test_eof(1)) {
 		return false;
 	}
@@ -45,7 +55,7 @@ bool Parser::test_escaped() const {
 		(input[current_pos + 1] == '$'));
 }
 
-bool Parser::test_ref() const {
+bool Resolver::test_ref() const {
 	if (test_eof(1)) {
 		return false;
 	}
@@ -54,12 +64,12 @@ bool Parser::test_ref() const {
 	return (cur == '$' && (next == '{' || next == '<'));
 }
 
-bool Parser::test_id(size_t shift) const {
+bool Resolver::test_id(size_t shift) const {
 	return (isalpha(input[current_pos + shift]) ||
 		(input[current_pos + shift] == '_'));
 }
 
-Token Parser::ref() {
+Token Resolver::ref() {
 	Pos tmp_pos = current_pos;
 	std::string value;
 	value += input[current_pos];
@@ -107,7 +117,7 @@ Token Parser::ref() {
 	return Token(category, value, tmp_pos);
 }
 
-std::vector<Token> Parser::tokenize() {
+std::vector<Token> Resolver::tokenize() {
 	std::vector<Token> result;
 
 	std::string string_value;

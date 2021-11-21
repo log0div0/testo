@@ -40,6 +40,16 @@ struct UmountArgs {
 	bool permanent = false;
 };
 
+struct SetArgs {
+	std::string var_name;
+	std::string var_value;
+	bool global = false;
+};
+
+struct GetArgs {
+	std::string var_name;
+};
+
 void mount_mode(const MountArgs& args) {
 #if defined (__QEMU__) && defined(__linux__)
 	bool was_indeed_mounted = GA().mount(args.folder_name, fs::absolute(args.guest_path), args.permanent);
@@ -62,9 +72,19 @@ void umount_mode(const UmountArgs& args) {
 #endif
 }
 
+void set_mode(const SetArgs& args) {
+
+}
+
+void get_mode(const GetArgs& args) {
+
+}
+
 enum class mode {
 	mount,
 	umount,
+	set,
+	get
 };
 
 mode selected_mode;
@@ -90,7 +110,21 @@ int do_main(int argc, char** argv) {
 		option("--permanent").set(umount_args.permanent) % "Stop mounting this folder automatically after system reboot"
 	);
 
-	auto cli = (mount_spec | umount_spec);
+	SetArgs set_args;
+	auto set_spec = "set options:" % (
+		command("set").set(selected_mode, mode::set),
+		value("var_name", set_args.var_name) % "Name of the variable to be set",
+		value("var_value", set_args.var_value) % "Value of the variable",
+		option("--global").set(set_args.global) % "If this variable should be set for all VMs of the current test"
+	);
+
+	GetArgs get_args;
+	auto get_spec = "get options:" % (
+		command("get").set(selected_mode, mode::get),
+		value("var_name", set_args.var_name) % "Name of the variable to be get"
+	);
+
+	auto cli = (mount_spec | umount_spec | set_spec | get_spec);
 
 	if (!parse(argc, argv, cli)) {
 		std::cout << make_man_page(cli, argv[0]) << std::endl;
@@ -103,6 +137,12 @@ int do_main(int argc, char** argv) {
 			break;
 		case mode::umount:
 			umount_mode(umount_args);
+			break;
+		case mode::set:
+			set_mode(set_args);
+			break;
+		case mode::get:
+			get_mode(get_args);
 			break;
 		default:
 			throw std::runtime_error("Invalid mode");

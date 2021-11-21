@@ -1225,8 +1225,7 @@ std::shared_ptr<String> Parser::string() {
 	auto new_node = std::make_shared<String>(str);
 
 	try {
-		template_literals::Parser templ_parser;
-		templ_parser.validate_sanity(new_node->text());
+		new_node->resolver = template_literals::Resolver(new_node->text());
 	} catch (const std::runtime_error& error) {
 		std::throw_with_nested(ExceptionWithPos(new_node->begin(), "Error parsing string: \"" + new_node->text() + "\""));
 	}

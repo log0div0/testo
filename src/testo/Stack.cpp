@@ -5,7 +5,7 @@
 std::string StackNode::find_and_resolve_var(const std::string& name) const {
 	auto it = vars.find(name);
 	if (it != vars.end()) {
-		return template_literals::Parser().resolve(it->second, shared_from_this());
+		return template_literals::Resolver(it->second).resolve(shared_from_this());
 	}
 	if (!parent) {
 		throw std::runtime_error("param \"" + name + "\" is not defined");

@@ -308,15 +308,10 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 }
 
 void VisitorSemantic::visit_type(const IR::Type& type) {
-
-	if (!type.use_autoswitch()) {
-		if (!KeyboardLayout::can_be_typed_using_a_single_layout(type.text())) {
-			throw ExceptionWithPos(type.ast_node->text->begin(), "Error: Can't type the text using a single keyboard layout. You probably should use the \"autoswitch\" option");
-		}
-	}
+	type.validate();
 
 	current_test->cksum_input << "type "
-		<< "\"" << type.text() << "\""
+		<< "\"" << type.text().str() << "\""
 		<< " interval " << type.interval().value().count();
 
 	if (type.use_autoswitch()) {

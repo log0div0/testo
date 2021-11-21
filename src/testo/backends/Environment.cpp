@@ -32,3 +32,5 @@ Environment::Environment() {
 Environment::~Environment() {
 	TRACE();
 }
+
+std::shared_ptr<Environment> env;

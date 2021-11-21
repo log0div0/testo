@@ -51,10 +51,11 @@ struct Release: Action<AST::Release> {
 
 struct Type: Action<AST::Type> {
 	using Action<AST::Type>::Action;
-	std::string text() const;
+	String text() const;
 	TimeInterval interval() const;
 	KeyCombination autoswitch() const;
 	bool use_autoswitch() const;
+	void validate() const;
 };
 
 struct Wait: Action<AST::Wait> {

@@ -1,7 +1,6 @@
 
 #include "Base.hpp"
 #include "Program.hpp"
-#include "../TemplateLiterals.hpp"
 #include "../Exceptions.hpp"
 #include "../Lexer.hpp"
 
@@ -25,9 +24,17 @@ std::string SelectExpr::to_string() const {
 	}
 }
 
+String::String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, bool variables_allowed):
+	Node<AST::String>(ast_node, stack)
+{
+	if (ast_node->resolver.has_variables() && !variables_allowed) {
+		throw ExceptionWithPos(ast_node->begin(), "Error: variables are not allowed in this context");
+	}
+}
+
 std::string String::text() const {
 	try {
-		return template_literals::Parser().resolve(ast_node->text(), stack);
+		return ast_node->resolver.resolve(stack);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ExceptionWithPos(ast_node->begin(), "Error while resolving \"" + ast_node->text() + "\""));
 	}
@@ -52,6 +59,14 @@ std::string String::quoted_text() const {
 
 nlohmann::json String::to_json() const {
 	return text();
+}
+
+std::string String::str() const {
+	return text();
+}
+
+bool String::can_resolve_variables() const {
+	return ast_node->resolver.can_resolve_variables();
 }
 
 int32_t Number::value() const {

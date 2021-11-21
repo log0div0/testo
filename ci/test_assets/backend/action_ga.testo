@@ -11,6 +11,23 @@ test exec_timeout: install_ubuntu_server_guest_additions {
 }
 
 [no_snapshots: true]
+test exec_set_variable: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		exec bash """
+			TMP=`uname -r`
+			testo-guest-additions-cli set SOME_VARIABLE "$TMP"
+		"""
+
+		type "echo $<SOME_VARIABLE> > file.txt"
+		press Enter
+
+		exec bash """
+			cat file.txt | grep $<SOME_VARIABLE>
+		"""
+	}
+}
+
+[no_snapshots: true]
 test copyto_from_unexisting_runtime: install_ubuntu_server_guest_additions {
 	my_ubuntu_server {
 		copyto "/some/unexisting_shit" "/somewhere" nocheck

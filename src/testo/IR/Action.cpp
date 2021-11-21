@@ -61,8 +61,8 @@ KeyCombination Release::combination() const {
 	return {ast_node->combination, stack};
 }
 
-std::string Type::text() const {
-	return String(ast_node->text, stack).text();
+String Type::text() const {
+	return {ast_node->text, stack, true};
 }
 
 TimeInterval Type::interval() const {
@@ -75,6 +75,17 @@ KeyCombination Type::autoswitch() const {
 
 bool Type::use_autoswitch() const {
 	return OptionSeq(ast_node->option_seq, stack).has("autoswitch");
+}
+
+void Type::validate() const {
+	if (!text().can_resolve_variables()) {
+		return;
+	}
+	if (!use_autoswitch()) {
+		if (!KeyboardLayout::can_be_typed_using_a_single_layout(text().str())) {
+			throw ExceptionWithPos(ast_node->text->begin(), "Error: Can't type the text using a single keyboard layout. You probably should use the \"autoswitch\" option");
+		}
+	}
 }
 
 SelectExpr Wait::select_expr() const {

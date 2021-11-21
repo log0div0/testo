@@ -101,26 +101,26 @@ private:
 };
 
 
+struct Resolver {
+	Resolver() = default;
+	Resolver(const std::string& input);
 
-struct Parser {
-	Parser() = default;
-
-	std::string resolve(const std::string& input, const std::shared_ptr<const StackNode>& stack);
-
-	void validate_sanity(const std::string& input);
-
+	std::string resolve(const std::shared_ptr<const StackNode>& stack) const;
+	bool has_variables() const;
+	bool can_resolve_variables() const;
 
 private:
 	std::string input;
 	Pos current_pos;
+	std::vector<Token> tokens;
 
 	std::vector<Token> tokenize();
+	Token ref();
 
 	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input.length()); }
 	bool test_escaped() const;
 	bool test_ref() const;
 	bool test_id(size_t shift = 0) const;
-	Token ref();
 };
 
 }
