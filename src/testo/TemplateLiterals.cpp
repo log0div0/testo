@@ -14,8 +14,10 @@ std::string Parser::resolve(const std::string& input, const std::shared_ptr<cons
 	std::string result;
 
 	for (auto token: tokens) {
-		if (token.type() == Token::category::var_ref) {
+		if (token.type() == Token::category::param_ref) {
 			result += stack->find_and_resolve_var(token.value().substr(2, token.value().length() - 3));
+		} else if (token.type() == Token::category::var_ref) {
+			// TODO
 		} else if (token.type() == Token::category::regular_string) {
 			result += token.value();
 		} else {
@@ -43,11 +45,13 @@ bool Parser::test_escaped() const {
 		(input[current_pos + 1] == '$'));
 }
 
-bool Parser::test_var_ref() const {
+bool Parser::test_ref() const {
 	if (test_eof(1)) {
 		return false;
 	}
-	return (input[current_pos] == '$' && input[current_pos + 1] == '{');
+	char cur = input[current_pos];
+	char next = input[current_pos+1];
+	return (cur == '$' && (next == '{' || next == '<'));
 }
 
 bool Parser::test_id(size_t shift) const {
@@ -55,18 +59,22 @@ bool Parser::test_id(size_t shift) const {
 		(input[current_pos + shift] == '_'));
 }
 
-Token Parser::var_ref() {
+Token Parser::ref() {
 	Pos tmp_pos = current_pos;
 	std::string value;
 	value += input[current_pos];
 	current_pos.advance();
 
-	if (test_eof()) {
-		throw ExceptionWithPos(current_pos, "Error: unexpected end of line in var referencing, expected \"{\"");
-	}
-
-	if (input[current_pos] != '{') {
-		throw ExceptionWithPos(current_pos, std::string("Error: unexpected symbol in var referencing: ") + input[current_pos] + " expected \"{\"");
+	Token::category category;
+	char close_char;
+	if (input[current_pos] == '{') {
+		category = Token::category::param_ref;
+		close_char = '}';
+	} else if (input[current_pos] == '<') {
+		category = Token::category::var_ref;
+		close_char = '>';
+	} else {
+		throw std::runtime_error("Should not be there");
 	}
 
 	value += input[current_pos];
@@ -82,22 +90,21 @@ Token Parser::var_ref() {
 	current_pos.advance(shift);
 
 	if (test_eof()) {
-		throw ExceptionWithPos(current_pos, "Error: unexpected end of line in var referencing, expected \"}\"");
+		throw ExceptionWithPos(current_pos, std::string("Error: unexpected end of line in var referencing, expected \"") + close_char + "\"");
 	}
 
 	if (shift == 0) {
 		throw ExceptionWithPos(tmp_pos, "Error: empty var reference");
 	}
 
-
-	if (input[current_pos] != '}') {
-		throw ExceptionWithPos(current_pos, std::string("Error: unexpected symbol in var referencing: ") + input[current_pos] + " expected \"}\"");
+	if (input[current_pos] != close_char) {
+		throw ExceptionWithPos(current_pos, std::string("Error: unexpected symbol in var referencing: ") + input[current_pos] + " expected \"" + close_char + "\"");
 	}
 
 	value += input[current_pos];
 	current_pos.advance();
 
-	return Token(Token::category::var_ref, value, tmp_pos);
+	return Token(category, value, tmp_pos);
 }
 
 std::vector<Token> Parser::tokenize() {
@@ -112,11 +119,11 @@ std::vector<Token> Parser::tokenize() {
 	//And interrupt when a reference occurs
 	//This would work just fine while we have only two tokens
 	while (!test_eof()) {
-		if (test_var_ref()) {
+		if (test_ref()) {
 			if (string_value.length()) {
 				result.push_back(Token(Token::category::regular_string, string_value, string_start));
 			}
-			result.push_back(var_ref());
+			result.push_back(ref());
 			string_value = "";
 			string_start = current_pos;
 			continue;

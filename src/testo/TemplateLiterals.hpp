@@ -56,6 +56,7 @@ struct Token {
 	enum category {
 		eof,
 		regular_string,
+		param_ref,
 		var_ref,
 
 		//fake categories
@@ -117,9 +118,9 @@ private:
 
 	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input.length()); }
 	bool test_escaped() const;
-	bool test_var_ref() const;
+	bool test_ref() const;
 	bool test_id(size_t shift = 0) const;
-	Token var_ref();
+	Token ref();
 };
 
 }
