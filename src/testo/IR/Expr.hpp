@@ -23,6 +23,11 @@ struct Comparison: Expr<AST::Comparison> {
 	bool calculate() const;
 };
 
+struct StringExpr: Expr<AST::StringExpr> {
+	using Expr<AST::StringExpr>::Expr;
+	std::string text() const;
+};
+
 struct Check: Expr<AST::Check> {
 	using Expr<AST::Check>::Expr;
 	SelectExpr select_expr() const;

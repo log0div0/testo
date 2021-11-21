@@ -96,7 +96,7 @@ bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::Expr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::BinOp>(expr)) {
 		return visit_binop(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::StringExpr>(expr)) {
-		return (bool)template_parser.resolve(p->str->text(), stack).length();
+		return visit_string_expr({ p, stack });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Negation>(expr)) {
 		return !visit_expr(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Comparison>(expr)) {
@@ -130,6 +130,10 @@ bool VisitorInterpreterAction::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	} else {
 		throw std::runtime_error("Unknown binop operation");
 	}
+}
+
+bool VisitorInterpreterAction::visit_string_expr(const IR::StringExpr& string_expr) {
+	return string_expr.text().length();
 }
 
 bool VisitorInterpreterAction::visit_comparison(const IR::Comparison& comparison) {
