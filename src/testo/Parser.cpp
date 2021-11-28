@@ -191,7 +191,6 @@ bool Parser::test_string(size_t index) const {
 bool Parser::test_selectable() const {
 	return (test_string() || (LA(1) == Token::category::js)  ||
 		(LA(1) == Token::category::img) ||
-		(LA(1) == Token::category::homm3) ||
 		(LA(1) == Token::category::exclamation_mark) ||
 		(LA(1) == Token::category::lparen));
 }
@@ -1180,8 +1179,6 @@ std::shared_ptr<AST::BasicSelectExpr> Parser::basic_select_expr() {
 		return select_js();
 	} else if(LA(1) == Token::category::img) {
 		return select_img();
-	} else if(LA(1) == Token::category::homm3) {
-		return select_homm3();
 	} else {
 		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown selective object type: " + LT(1).value());
 	}
@@ -1213,12 +1210,6 @@ std::shared_ptr<SelectImg> Parser::select_img() {
 	return std::shared_ptr<SelectImg>(new SelectImg(img, img_path));
 }
 
-std::shared_ptr<SelectHomm3> Parser::select_homm3() {
-	Token homm3 = eat(Token::category::homm3);
-	auto id = string();
-	return std::shared_ptr<SelectHomm3>(new SelectHomm3(homm3, id));
-}
-
 std::shared_ptr<SelectText> Parser::select_text() {
 	auto text = string();
 	return std::shared_ptr<SelectText>(new SelectText({}, text));
@@ -1234,8 +1225,7 @@ std::shared_ptr<String> Parser::string() {
 	auto new_node = std::make_shared<String>(str);
 
 	try {
-		template_literals::Parser templ_parser;
-		templ_parser.validate_sanity(new_node->text());
+		new_node->resolver = template_literals::Resolver(new_node->text());
 	} catch (const std::runtime_error& error) {
 		std::throw_with_nested(ExceptionWithPos(new_node->begin(), "Error parsing string: \"" + new_node->text() + "\""));
 	}

@@ -67,8 +67,6 @@ void check_privileges() {
 #endif
 }
 
-std::shared_ptr<Environment> env;
-
 void init_env(const std::string& hypervisor) {
 	TRACE();
 	if (hypervisor == "qemu") {

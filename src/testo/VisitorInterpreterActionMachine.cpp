@@ -118,7 +118,7 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> 
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
-		visit_type({p, stack});
+		visit_type({p, stack, vmc->get_vars()});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Wait>(action)) {
 		visit_wait({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
@@ -140,7 +140,7 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> 
 	} else if (auto p = std::dynamic_pointer_cast<AST::Shutdown>(action)) {
 		visit_shutdown({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Exec>(action)) {
-		visit_exec({p, stack});
+		visit_exec({p, stack, vmc->get_vars()});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
 		visit_copy({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Screenshot>(action)) {
@@ -295,7 +295,9 @@ struct LayoutSwitchCounter {
 
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 	try {
-		std::string text = type.text();
+		type.validate();
+
+		std::string text = type.text().str();
 		if (text.size() == 0) {
 			return;
 		}
@@ -447,8 +449,9 @@ std::string VisitorInterpreterActionMachine::build_select_text_script(const IR::
 	return result;
 }
 
-std::string VisitorInterpreterActionMachine::build_select_img_script(const IR::SelectImg& img) {
-	std::string result = fmt::format("return find_img('{}')", img.img_path().generic_string());
+std::string VisitorInterpreterActionMachine::build_select_img_script(const IR::SelectImg& select) {
+	select.img().validate();
+	std::string result = fmt::format("return find_img('{}')", select.img().path().generic_string());
 	return result;
 }
 
@@ -473,13 +476,11 @@ bool VisitorInterpreterActionMachine::VisitorInterpreterActionMachine::visit_det
 	if (auto p = std::dynamic_pointer_cast<AST::SelectNegationExpr>(select_expr)) {
 		return !visit_detect_expr(p->expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(select_expr)) {
-		script = build_select_text_script({p, stack});
+		script = build_select_text_script({p, stack, vmc->get_vars()});
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(select_expr)) {
-		return visit_detect_js({p, stack}, screenshot);
+		return visit_detect_js({p, stack, vmc->get_vars()}, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(select_expr)) {
-		script = build_select_img_script({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(select_expr)) {
-		throw std::runtime_error("Homm3 is not supported anymore");;
+		script = build_select_img_script({p, stack, vmc->get_vars()});
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(select_expr)) {
 		return visit_detect_expr(p->select_expr, screenshot);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
@@ -580,15 +581,13 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 		try {
 			std::string script;
 			if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(mouse_selectable.ast_node->basic_select_expr)) {
-				script = IR::SelectJS(p, stack).script();
+				script = IR::SelectJS(p, stack, vmc->get_vars()).script();
 			} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->basic_select_expr)) {
-				script = build_select_text_script({p, stack});
+				script = build_select_text_script({p, stack, vmc->get_vars()});
 				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
 			} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->basic_select_expr)) {
-				script = build_select_img_script({p, stack});
+				script = build_select_img_script({p, stack, vmc->get_vars()});
 				script += visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
-			} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->basic_select_expr)) {
-				throw std::runtime_error("Not supported");
 			}
 
 			auto js_result = eval_js(script, screenshot);
@@ -651,7 +650,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_click(const IR::MouseMove
 			if (auto p = std::dynamic_pointer_cast<AST::MouseCoordinates>(mouse_move_click.ast_node->object)) {
 				visit_mouse_move_coordinates({p, stack});
 			} else if (auto p = std::dynamic_pointer_cast<AST::MouseSelectable>(mouse_move_click.ast_node->object)) {
-				visit_mouse_move_selectable({p, stack});
+				visit_mouse_move_selectable({p, stack, vmc->get_vars()});
 			} else {
 				throw std::runtime_error("Unknown mouse move target");
 			}
@@ -1015,11 +1014,23 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 
 		coro::Timeout timeout(exec.timeout().value());
 
-		auto result = ga->execute(command, [&](const std::string& output) {
+		nlohmann::json result = ga->execute(command, *vmc->get_vars(), [&](const std::string& output) {
 			reporter.exec_command_output(output);
 		});
-		if (result != 0) {
+		int exit_code = result.at("exit_code");
+		if (exit_code != 0) {
 			throw std::runtime_error(exec.interpreter() + " command failed");
+		}
+		if (result.count("vars")) {
+			for (auto& var: result.at("vars")) {
+				if (var.at("global")) {
+					for (auto vmc: current_test->get_all_machines()) {
+						vmc->set_var(var.at("name"), var.at("value"));
+					}
+				} else {
+					vmc->set_var(var.at("name"), var.at("value"));
+				}
+			}
 		}
 		ga->remove_from_guest(guest_script_file);
 

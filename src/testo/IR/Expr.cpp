@@ -16,17 +16,16 @@ std::string Defined::var() const {
 	return ast_node->var.value();
 }
 
-
 std::string Comparison::op() const {
 	return ast_node->op.value();
 }
 
 std::string Comparison::left() const {
-	return template_literals::Parser().resolve(ast_node->left->text(), stack);
+	return String(ast_node->left, stack).text();
 }
 
 std::string Comparison::right() const {
-	return template_literals::Parser().resolve(ast_node->right->text(), stack);
+	return String(ast_node->right, stack).text();
 }
 
 bool Comparison::calculate() const {
@@ -71,6 +70,10 @@ bool Comparison::calculate() const {
 	} else {
 		throw std::runtime_error("Unknown comparison op");
 	}
+}
+
+std::string StringExpr::text() const {
+	return String(ast_node->str, stack).text();
 }
 
 SelectExpr Check::select_expr() const {

@@ -53,6 +53,8 @@ public:
 	std::shared_ptr<StackNode> stack;
 	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
 
+	std::string resolve_top_level_param(const std::string& name) const;
+
 private:
 	friend struct IR::MacroCall;
 

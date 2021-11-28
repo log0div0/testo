@@ -114,11 +114,11 @@ std::vector<std::string> testo_timeout_params = {
 void Program::setup_stack() {
 	TRACE();
 	auto predefined = std::make_shared<StackNode>();
-	predefined->vars = testo_default_params;
+	predefined->params = testo_default_params;
 	stack = std::make_shared<StackNode>();
 	stack->parent = predefined;
 	for (size_t i = 0; i < config.params_names.size(); ++i) {
-		stack->vars[config.params_names.at(i)] = config.params_values.at(i);
+		stack->params[config.params_names.at(i)] = config.params_values.at(i);
 	}
 }
 
@@ -195,11 +195,11 @@ void Program::collect_macro(const std::shared_ptr<AST::Macro>& macro) {
 
 void Program::collect_param(const std::shared_ptr<AST::Param>& param_ast) {
 	auto param = insert_object(param_ast, params);
-	if (stack->vars.count(param->name())) {
+	if (stack->params.count(param->name())) {
 		throw ExceptionWithPos(param_ast->begin(), "Error: param \"" + param->name()
 			+ "\" is already defined as a command line argument");
 	}
-	stack->vars[param->name()] = param->value();
+	stack->params[param->name()] = param->value();
 }
 void Program::collect_machine(const std::shared_ptr<AST::Controller>& machine) {
 	insert_controller(machine, machines);
@@ -250,7 +250,7 @@ bool check_if_time_interval(const std::string& time) {
 void Program::validate_special_params() {
 	TRACE();
 	for (auto& param: testo_timeout_params) {
-		std::string value = stack->find_and_resolve_var(param);
+		std::string value = resolve_top_level_param(param);
 		if (!check_if_time_interval(value)) {
 			throw std::runtime_error("Can't convert parameter " + param + " value \"" + value + "\" to time interval");
 		}
@@ -298,6 +298,11 @@ void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
 
 		setup_test_parents(parent->second);
 	}
+}
+
+std::string Program::resolve_top_level_param(const std::string& name) const {
+	std::string param = stack->find_param(name);
+	return template_literals::Resolver(param).resolve(stack, nullptr);
 }
 
 Program* program = nullptr;

@@ -1,7 +1,5 @@
 
 #include "Base.hpp"
-#include "Program.hpp"
-#include "../TemplateLiterals.hpp"
 #include "../Exceptions.hpp"
 #include "../Lexer.hpp"
 
@@ -16,8 +14,6 @@ std::string SelectExpr::to_string() const {
 		return p->token.value() + String(p->str, stack).quoted_text();
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(ast_node)) {
 		return p->token.value() + String(p->str, stack).quoted_text();
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(ast_node)) {
-		return p->token.value() + String(p->str, stack).quoted_text();
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(ast_node)) {
 		return "(" + SelectExpr(p->select_expr, stack).to_string() + ")";
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(ast_node)) {
@@ -27,9 +23,22 @@ std::string SelectExpr::to_string() const {
 	}
 }
 
+String::String(std::shared_ptr<ASTType> ast_node_, std::shared_ptr<StackNode> stack_):
+	Node<AST::String>(std::move(ast_node_), std::move(stack_))
+{
+	if (ast_node->resolver.has_variables()) {
+		throw ExceptionWithPos(ast_node->begin(), "Error: variables are not allowed in this context");
+	}
+}
+
+String::String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+	Node<AST::String>(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_))
+{
+}
+
 std::string String::text() const {
 	try {
-		return template_literals::Parser().resolve(ast_node->text(), stack);
+		return ast_node->resolver.resolve(stack, var_map);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ExceptionWithPos(ast_node->begin(), "Error while resolving \"" + ast_node->text() + "\""));
 	}
@@ -54,6 +63,17 @@ std::string String::quoted_text() const {
 
 nlohmann::json String::to_json() const {
 	return text();
+}
+
+std::string String::str() const {
+	return text();
+}
+
+bool String::can_resolve_variables() const {
+	if (!ast_node->resolver.has_variables()) {
+		return true;
+	}
+	return var_map != nullptr;
 }
 
 int32_t Number::value() const {
@@ -164,8 +184,9 @@ nlohmann::json AttrBlock::to_json() const {
 	return config;
 }
 
-std::string OptionSeq::get_param(const std::string& name) {
-	return program->stack->find_and_resolve_var(name);
+std::string OptionSeq::resolve_param(const std::string& name) const {
+	std::string param = stack->find_param(name);
+	return template_literals::Resolver(param).resolve(stack, nullptr);
 }
 
 }

@@ -1,21 +1,20 @@
 
 #include "Stack.hpp"
-#include "TemplateLiterals.hpp"
 
-std::string StackNode::find_and_resolve_var(const std::string& name) const {
-	auto it = vars.find(name);
-	if (it != vars.end()) {
-		return template_literals::Parser().resolve(it->second, shared_from_this());
+std::string StackNode::find_param(const std::string& name) const {
+	auto it = params.find(name);
+	if (it != params.end()) {
+		return it->second;
 	}
 	if (!parent) {
 		throw std::runtime_error("param \"" + name + "\" is not defined");
 	}
-	return parent->find_and_resolve_var(name);
+	return parent->find_param(name);
 }
 
 bool StackNode::is_defined(const std::string& var) const {
-	auto it = vars.find(var);
-	if (it != vars.end()) {
+	auto it = params.find(var);
+	if (it != params.end()) {
 		return true;
 	}
 	if (!parent) {

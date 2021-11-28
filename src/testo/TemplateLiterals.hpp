@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Stack.hpp"
+#include "VarMap.hpp"
 #include <vector>
 #include <ostream>
 
@@ -9,7 +10,25 @@ namespace template_literals {
 
 struct Pos {
 	Pos() = default;
-	Pos(const std::string& input): input(input) {}
+	Pos(size_t offset_, const std::string& input_): offset(offset_), input(input_) {}
+
+	Pos(const Pos& other):
+		offset(other.offset),
+		line(other.line),
+		column(other.column),
+		input(other.input)
+	{}
+
+	Pos& operator=(const Pos& other) {
+		if (this == &other) {
+			return *this;
+		}
+		offset = other.offset;
+		line = other.line;
+		column = other.column;
+		input = other.input;
+		return *this;
+	}
 
 	void advance(size_t shift = 1) {
 		while (shift != 0) {
@@ -56,6 +75,7 @@ struct Token {
 	enum category {
 		eof,
 		regular_string,
+		param_ref,
 		var_ref,
 
 		//fake categories
@@ -100,26 +120,25 @@ private:
 };
 
 
+struct Resolver {
+	Resolver() = default;
+	Resolver(const std::string& input);
 
-struct Parser {
-	Parser() = default;
-
-	std::string resolve(const std::string& input, const std::shared_ptr<const StackNode>& stack);
-
-	void validate_sanity(const std::string& input);
-
+	std::string resolve(const std::shared_ptr<const StackNode>& stack, const std::shared_ptr<const VarMap>& var_map) const;
+	bool has_variables() const;
 
 private:
 	std::string input;
 	Pos current_pos;
+	std::vector<Token> tokens;
 
 	std::vector<Token> tokenize();
+	Token ref();
 
 	bool test_eof(size_t shift = 0) const { return ((current_pos + shift) >= input.length()); }
 	bool test_escaped() const;
-	bool test_var_ref() const;
+	bool test_ref() const;
 	bool test_id(size_t shift = 0) const;
-	Token var_ref();
 };
 
 }

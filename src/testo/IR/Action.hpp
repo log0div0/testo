@@ -50,11 +50,17 @@ struct Release: Action<AST::Release> {
 };
 
 struct Type: Action<AST::Type> {
-	using Action<AST::Type>::Action;
-	std::string text() const;
+	Type(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
+	String text() const;
 	TimeInterval interval() const;
 	KeyCombination autoswitch() const;
 	bool use_autoswitch() const;
+	void validate() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct Wait: Action<AST::Wait> {
@@ -90,29 +96,52 @@ struct MouseCoordinates: Action<AST::MouseCoordinates> {
 };
 
 struct MouseSelectable: Action<AST::MouseSelectable> {
-	using Action<AST::MouseSelectable>::Action;
+	MouseSelectable(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
 	std::string to_string() const;
 	TimeInterval timeout() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct SelectJS: Action<AST::SelectJS> {
-	using Action<AST::SelectJS>::Action;
+	SelectJS(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
 	std::string script() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
+};
+
+struct File: String {
+	using String::String;
+
+	fs::path path() const;
+	std::string signature() const;
+	void validate() const;
 };
 
 struct SelectImg: Action<AST::SelectImg> {
-	using Action<AST::SelectImg>::Action;
-	fs::path img_path() const;
-};
+	SelectImg(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
-struct SelectHomm3: Action<AST::SelectHomm3> {
-	using Action<AST::SelectHomm3>::Action;
-	std::string id() const;
+	File img() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct SelectText: Action<AST::SelectText> {
-	using Action<AST::SelectText>::Action;
+	SelectText(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
 	std::string text() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct MouseHold: Action<AST::MouseHold> {
@@ -175,10 +204,15 @@ struct Shutdown:Action<AST::Shutdown> {
 };
 
 struct Exec: Action<AST::Exec> {
-	using Action<AST::Exec>::Action;
+	Exec(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
 	std::string interpreter() const;
 	TimeInterval timeout() const;
 	std::string script() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct Copy: Action<AST::Copy> {

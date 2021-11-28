@@ -61,8 +61,8 @@ KeyCombination Release::combination() const {
 	return {ast_node->combination, stack};
 }
 
-std::string Type::text() const {
-	return String(ast_node->text, stack).text();
+String Type::text() const {
+	return {ast_node->text, stack, var_map};
 }
 
 TimeInterval Type::interval() const {
@@ -75,6 +75,17 @@ KeyCombination Type::autoswitch() const {
 
 bool Type::use_autoswitch() const {
 	return OptionSeq(ast_node->option_seq, stack).has("autoswitch");
+}
+
+void Type::validate() const {
+	if (!text().can_resolve_variables()) {
+		return;
+	}
+	if (!use_autoswitch()) {
+		if (!KeyboardLayout::can_be_typed_using_a_single_layout(text().str())) {
+			throw ExceptionWithPos(ast_node->text->begin(), "Error: Can't type the text using a single keyboard layout. You probably should use the \"autoswitch\" option");
+		}
+	}
 }
 
 SelectExpr Wait::select_expr() const {
@@ -117,19 +128,15 @@ std::string MouseSelectable::to_string() const {
 	std::string result;
 	if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(ast_node->basic_select_expr)) {
 		result += "js selection \"";
-		result += IR::SelectJS(p, stack).script();
+		result += IR::SelectJS(p, stack, var_map).script();
 		result += "\"";
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(ast_node->basic_select_expr)) {
 		result += "\"";
-		result += IR::SelectText(p, stack).text();
+		result += IR::SelectText(p, stack, var_map).text();
 		result += "\"";
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(ast_node->basic_select_expr)) {
 		result += "image \"";
-		result += IR::SelectImg(p, stack).img_path().generic_string();
-		result += "\"";
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(ast_node->basic_select_expr)) {
-		result += "HOMM3 object \"";
-		result += IR::SelectHomm3(p, stack).id();
+		result += IR::SelectImg(p, stack, var_map).img().str();
 		result += "\"";
 	} else {
 		throw std::runtime_error("Where to go is unapplicable");
@@ -149,11 +156,11 @@ std::string MouseWheel::direction() const {
 }
 
 std::string SelectJS::script() const {
-	return String(ast_node->str, stack).text();
+	return String(ast_node->str, stack, var_map).text();
 }
 
-fs::path SelectImg::img_path() const {
-	fs::path path = String(ast_node->str, stack).text();
+fs::path File::path() const {
+	fs::path path = text();
 
 	if (path.is_relative()) {
 		path = ast_node->begin().file.parent_path() / path;
@@ -162,12 +169,35 @@ fs::path SelectImg::img_path() const {
 	return path;
 }
 
-std::string SelectHomm3::id() const {
-	return String(ast_node->str, stack).text();
+std::string File::signature() const {
+	if (!can_resolve_variables()) {
+		return "\"" + text() + "\"";
+	}
+	return "\"" + path().generic_string() + "\" (file signature = " + file_signature(path()) + ")";
+}
+
+void File::validate() const {
+	if (!can_resolve_variables()) {
+		return;
+	}
+
+	fs::path img_path = path();
+
+	if (!fs::exists(img_path)) {
+		throw ExceptionWithPos(ast_node->begin(), "Error: specified image path does not exist: " + img_path.generic_string());
+	}
+
+	if (!fs::is_regular_file(img_path)) {
+		throw ExceptionWithPos(ast_node->begin(), "Error: specified image path does not lead to a regular file: " + img_path.generic_string());
+	}
+}
+
+File SelectImg::img() const {
+	return {ast_node->str, stack, var_map};
 }
 
 std::string SelectText::text() const {
-	return String(ast_node->str, stack).text();
+	return String(ast_node->str, stack, var_map).text();
 }
 
 MouseButton MouseHold::button() const {
@@ -221,7 +251,7 @@ IR::TimeInterval Exec::timeout() const {
 }
 
 std::string Exec::script() const {
-	return String(ast_node->commands, stack).text();
+	return String(ast_node->commands, stack, var_map).text();
 }
 
 std::string Copy::from() const {

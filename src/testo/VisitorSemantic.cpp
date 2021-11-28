@@ -227,7 +227,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
-		visit_type({p, stack});
+		visit_type({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Press>(action)) {
 		visit_press({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Hold>(action)) {
@@ -247,7 +247,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Shutdown>(action)) {
 		visit_shutdown({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Exec>(action)) {
-		visit_exec({p, stack});
+		visit_exec({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Copy>(action)) {
 		visit_copy({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Screenshot>(action)) {
@@ -308,15 +308,10 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 }
 
 void VisitorSemantic::visit_type(const IR::Type& type) {
-
-	if (!type.use_autoswitch()) {
-		if (!KeyboardLayout::can_be_typed_using_a_single_layout(type.text())) {
-			throw ExceptionWithPos(type.ast_node->text->begin(), "Error: Can't type the text using a single keyboard layout. You probably should use the \"autoswitch\" option");
-		}
-	}
+	type.validate();
 
 	current_test->cksum_input << "type "
-		<< "\"" << type.text() << "\""
+		<< "\"" << type.text().str() << "\""
 		<< " interval " << type.interval().value().count();
 
 	if (type.use_autoswitch()) {
@@ -493,24 +488,11 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	current_test->cksum_input << "js \"" << script << "\"";
 }
 
-void VisitorSemantic::visit_select_img(const IR::SelectImg& img) {
-	auto img_path = img.img_path();
-
-	if (!fs::exists(img_path)) {
-		throw ExceptionWithPos(img.ast_node->begin(), "Error: specified image path does not exist: " + img_path.generic_string());
-	}
-
-	if (!fs::is_regular_file(img_path)) {
-		throw ExceptionWithPos(img.ast_node->begin(), "Error: specified image path does not lead to a regular file: " + img_path.generic_string());
-	}
+void VisitorSemantic::visit_select_img(const IR::SelectImg& select) {
+	select.img().validate();
 
 	current_test->cksum_input
-		<< "img \"" << img_path.generic_string() << "\""
-		<< " (file signature = " << file_signature(img_path) << ")";
-}
-
-void VisitorSemantic::visit_select_homm3(const IR::SelectHomm3& homm3) {
-	throw std::runtime_error("HOMM3 is not supported anymore");
+		<< "img \"" << select.img().signature();
 }
 
 void VisitorSemantic::visit_select_text(const IR::SelectText& text) {
@@ -530,15 +512,12 @@ void VisitorSemantic::visit_mouse_move_selectable(const IR::MouseSelectable& mou
 		if (mouse_selectable.ast_node->mouse_additional_specifiers.size()) {
 			throw ExceptionWithPos(mouse_selectable.ast_node->mouse_additional_specifiers[0]->begin(), "Error: mouse specifiers are not supported for js selections");
 		}
-		visit_select_js({p, stack});
+		visit_select_js({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(mouse_selectable.ast_node->basic_select_expr)) {
-		visit_select_text({p, stack});
+		visit_select_text({p, stack, nullptr});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(mouse_selectable.ast_node->basic_select_expr)) {
-		visit_select_img({p, stack});
-		visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(mouse_selectable.ast_node->basic_select_expr)) {
-		visit_select_homm3({p, stack});
+		visit_select_img({p, stack, nullptr});
 		visit_mouse_additional_specifiers(mouse_selectable.ast_node->mouse_additional_specifiers);
 	}
 }
@@ -550,7 +529,7 @@ void VisitorSemantic::visit_mouse_move_click(const IR::MouseMoveClick& mouse_mov
 		if (auto p = std::dynamic_pointer_cast<AST::MouseCoordinates>(mouse_move_click.ast_node->object)) {
 			visit_mouse_move_coordinates({p, stack});
 		} else if (auto p = std::dynamic_pointer_cast<AST::MouseSelectable>(mouse_move_click.ast_node->object)) {
-			visit_mouse_move_selectable({p, stack});
+			visit_mouse_move_selectable({p, stack, nullptr});
 		}
 	}
 }
@@ -717,13 +696,11 @@ void VisitorSemantic::visit_detect_expr(std::shared_ptr<AST::SelectExpr> select_
 		current_test->cksum_input << "!";
 		visit_detect_expr(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(select_expr)) {
-		visit_select_text({p, stack});
+		visit_select_text({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(select_expr)) {
-		visit_select_js({p, stack});
+		visit_select_js({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(select_expr)) {
-		visit_select_img({p, stack});
-	} else if (auto p = std::dynamic_pointer_cast<AST::SelectHomm3>(select_expr)) {
-		visit_select_homm3({p, stack});
+		visit_select_img({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(select_expr)) {
 		visit_detect_parented(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(select_expr)) {
@@ -914,12 +891,12 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 	}
 	current_test->cksum_input << ") {" << std::endl;
 
-	std::map<std::string, std::string> vars;
+	std::map<std::string, std::string> params;
 	for (auto i: values) {
-		vars[for_clause->counter.value()] = i;
+		params[for_clause->counter.value()] = i;
 		auto new_stack = std::make_shared<StackNode>();
 		new_stack->parent = stack;
-		new_stack->vars = vars;
+		new_stack->params = params;
 		StackPusher<VisitorSemantic> new_ctx(this, new_stack);
 		visit_action(for_clause->cycle_body);
 	}

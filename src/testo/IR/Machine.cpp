@@ -191,6 +191,7 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 		metadata["parent"] = current_state;
 		metadata["opaque"] = opaque;
 		metadata["metadata_version"] = TESTO_CURRENT_METADATA_VERSION;
+		metadata["vars"] = *vars;
 
 		write_metadata_file(metadata_file, metadata);
 
@@ -214,6 +215,9 @@ void Machine::restore_snapshot(const std::string& snapshot) {
 	auto metadata = read_metadata_file(metadata_file);
 
 	vm()->rollback(snapshot, metadata.at("opaque"));
+	if (metadata.count("vars")) {
+		*vars = metadata.at("vars").get<std::map<std::string, std::string>>();
+	}
 	current_state = snapshot;
 }
 
@@ -545,6 +549,14 @@ const stb::Image<stb::RGB>& Machine::make_new_screenshot() {
 
 const stb::Image<stb::RGB>& Machine::get_last_screenshot() const {
 	return _last_screenshot;
+}
+
+std::shared_ptr<VarMap> Machine::get_vars() const {
+	return vars;
+}
+
+void Machine::set_var(const std::string& var_name, const std::string& var_value) {
+	(*vars)[var_name] = var_value;
 }
 
 }

@@ -106,14 +106,15 @@ void GuestAdditions::copy_dir_to_guest(const fs::path& src, const fs::path& dst)
 	}
 }
 
-int GuestAdditions::execute(const std::string& command,
+nlohmann::json GuestAdditions::execute(const std::string& command, const std::map<std::string, std::string>& vars,
 	const std::function<void(const std::string&)>& callback)
 {
 	nlohmann::json request = {
-			{"method", "execute"},
-			{"args", {
-				command
-			}}
+		{"method", "execute"},
+		{"args", {
+			command
+		}},
+		{"vars", vars},
 	};
 
 	send(std::move(request));
@@ -131,7 +132,7 @@ int GuestAdditions::execute(const std::string& command,
 			callback((char*)output.data());
 		}
 		if (result.at("status").get<std::string>() == "finished") {
-			return result.at("exit_code").get<int>();
+			return result;
 		}
 	}
 }
@@ -139,12 +140,12 @@ int GuestAdditions::execute(const std::string& command,
 void GuestAdditions::copy_file_to_guest(const fs::path& src, const fs::path& dst) {
 	try {
 		nlohmann::json request = {
-				{"method", "copy_file"},
-				{"args", {
-					{
-						{"path", dst.generic_string()},
-					}
-				}}
+			{"method", "copy_file"},
+			{"args", {
+				{
+					{"path", dst.generic_string()},
+				}
+			}}
 		};
 
 		os::File f = os::File::open_for_read(src);
@@ -250,4 +251,29 @@ nlohmann::json GuestAdditions::recv() {
 	}
 
 	return response;
+}
+
+void CLIGuestAdditions::set_var(const std::string& var_name, const std::string& var_value, bool global) {
+	nlohmann::json request = {
+		{"method", "set_var"},
+		{"args", {
+			{"var_name", var_name},
+			{"var_value", var_value},
+			{"global", global},
+		}}
+	};
+	send(std::move(request));
+	auto response = recv();
+}
+
+std::string CLIGuestAdditions::get_var(const std::string& var_name) {
+	nlohmann::json request = {
+		{"method", "get_var"},
+		{"args", {
+			{"var_name", var_name},
+		}}
+	};
+	send(std::move(request));
+	auto response = recv();
+	return response.at("var_value");
 }

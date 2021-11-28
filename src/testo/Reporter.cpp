@@ -303,7 +303,7 @@ void Reporter::release_key(std::shared_ptr<IR::Machine> vmc) {
 void Reporter::type(std::shared_ptr<IR::Machine> vmc, const IR::Type& action) {
 	report_prefix(blue);
 	report(fmt::format("Typing "), blue);
-	report(fmt::format("\"{}\" ", action.text()), yellow);
+	report(fmt::format("\"{}\" ", action.text().str()), yellow);
 	report(fmt::format("with interval {} in virtual machine ", action.interval().str()), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
 

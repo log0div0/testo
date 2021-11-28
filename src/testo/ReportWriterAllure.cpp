@@ -322,7 +322,7 @@ void ReportWriterAllure::launch_end() {
 
 void ReportWriterAllure::write_environment_file() {
 	std::ofstream file(report_folder / "environment.properties");
-	for (auto& kv: IR::program->stack->vars) {
+	for (auto& kv: IR::program->stack->params) {
 		file << kv.first << "=" << kv.second << std::endl;
 	}
 }

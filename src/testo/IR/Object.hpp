@@ -14,10 +14,10 @@ struct Object: Node<T> {
 		return this->ast_node->name.value();
 	}
 
-	std::shared_ptr<StackNode> new_stack(std::map<std::string, std::string> vars) {
+	std::shared_ptr<StackNode> new_stack(std::map<std::string, std::string> params) {
 		auto new_node = std::make_shared<StackNode>();
 		new_node->parent = this->stack;
-		new_node->vars = std::move(vars);
+		new_node->params = std::move(params);
 		return new_node;
 	}
 };

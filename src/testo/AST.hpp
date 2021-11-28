@@ -3,6 +3,7 @@
 
 #include "Pos.hpp"
 #include "Token.hpp"
+#include "TemplateLiterals.hpp"
 #include <vector>
 #include <set>
 #include <memory>
@@ -39,6 +40,7 @@ struct String: public Node {
 	}
 
 	Token token;
+	template_literals::Resolver resolver;
 };
 
 template <Token::category category>
@@ -152,10 +154,6 @@ struct SelectText: public BasicSelectExpr {
 };
 
 struct SelectImg: public BasicSelectExpr {
-	using BasicSelectExpr::BasicSelectExpr;
-};
-
-struct SelectHomm3: public BasicSelectExpr {
 	using BasicSelectExpr::BasicSelectExpr;
 };
 
