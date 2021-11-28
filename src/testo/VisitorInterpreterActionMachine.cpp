@@ -1013,11 +1013,23 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 
 		coro::Timeout timeout(exec.timeout().value());
 
-		auto result = ga->execute(command, [&](const std::string& output) {
+		nlohmann::json result = ga->execute(command, vmc->get_vars(), [&](const std::string& output) {
 			reporter.exec_command_output(output);
 		});
-		if (result != 0) {
+		int exit_code = result.at("exit_code");
+		if (exit_code != 0) {
 			throw std::runtime_error(exec.interpreter() + " command failed");
+		}
+		if (result.count("vars")) {
+			for (auto& var: result.at("vars")) {
+				if (var.at("global")) {
+					for (auto vmc: current_test->get_all_machines()) {
+						vmc->set_var(var.at("name"), var.at("value"));
+					}
+				} else {
+					vmc->set_var(var.at("name"), var.at("value"));
+				}
+			}
 		}
 		ga->remove_from_guest(guest_script_file);
 

@@ -15,7 +15,7 @@ struct GuestAdditions {
 	void copy_to_guest(const fs::path& src, const fs::path& dst);
 	void copy_from_guest(const fs::path& src, const fs::path& dst);
 	void remove_from_guest(const fs::path& path);
-	int execute(const std::string& command,
+	nlohmann::json execute(const std::string& command, const std::map<std::string, std::string>& vars,
 		const std::function<void(const std::string&)>& callback);
 	std::string get_tmp_dir();
 	bool mount(const std::string& folder_name, const fs::path& guest_path, bool permanent);
