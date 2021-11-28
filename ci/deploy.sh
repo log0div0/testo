@@ -2,8 +2,6 @@
 
 source "$(dirname "$0")/vars.sh"
 
-rsync -e "ssh -p 22334" -avz --info=progress2 $OUT_DIR/symbols root@testo-lang.ru:~
-
 ssh -p 22334 root@testo-lang.ru "mkdir -p /var/www/testo-lang.ru/dist/v${1}"
 
 rsync -e "ssh -p 22334" -avz --info=progress2 $OUT_DIR/testo.deb root@testo-lang.ru:/var/www/testo-lang.ru/dist/v${1}/testo-${1}.deb

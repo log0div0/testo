@@ -183,28 +183,9 @@ macro debian_build_testo_guest_additions(TESTO_GUEST_ADDITIONS_HYPERVISOR) {
 debian_build_testo_guest_additions("qemu")
 debian_build_testo_guest_additions("hyperv")
 
-test debian_build_breakpad: debian_install_packages {
-	debian {
-		exec bash """
-			cd /root/
-
-			git clone https://chromium.googlesource.com/breakpad/breakpad
-			cd breakpad
-			git checkout b324760c7f53667af128a6b77b790323da04fcb9
-
-			git clone https://chromium.googlesource.com/linux-syscall-support src/third_party/lss
-			cd src/third_party/lss
-			git checkout e1e7b0ad8ee99a875b272c8e33e308472e897660
-
-			cd /root/breakpad
-			./configure --prefix=
-			DESTDIR=/root/breakpad_dist make install -j$(nproc)
-		"""
-	}
-}
 
 [no_snapshots: true]
-test debian_build_testo: debian_build_breakpad {
+test debian_build_testo: debian_install_packages {
 	debian {
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
@@ -220,15 +201,13 @@ test debian_build_testo: debian_build_breakpad {
 			cd testo_build
 			cmake ../testo \
 				-DCMAKE_BUILD_TYPE=Release \
-				-DCPACK_GENERATOR=DEB \
-				-DBREAKPAD_DIR=/root/breakpad_dist
+				-DCPACK_GENERATOR=DEB
 			make testo_unit_tests -j$(nproc)
 			./out/sbin/testo_unit_tests
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
 		copyfrom "/root/testo_build/out/pkg/testo.deb" "${OUT_DIR}/testo.deb"
-		copyfrom "/root/testo_build/out/symbols" "${OUT_DIR}/symbols"
 	}
 }
 

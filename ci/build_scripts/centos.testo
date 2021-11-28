@@ -123,28 +123,8 @@ test centos_build_onnxruntime_gpu: centos_install_cuda {
 	}
 }
 
-test centos_build_breakpad: centos_install_packages {
-	centos {
-		exec bash """
-			cd /root/
-
-			git clone https://chromium.googlesource.com/breakpad/breakpad
-			cd breakpad
-			git checkout b324760c7f53667af128a6b77b790323da04fcb9
-
-			git clone https://chromium.googlesource.com/linux-syscall-support src/third_party/lss
-			cd src/third_party/lss
-			git checkout e1e7b0ad8ee99a875b272c8e33e308472e897660
-
-			cd /root/breakpad
-			./configure --prefix=
-			DESTDIR=/root/breakpad_dist make install -j$(nproc)
-		"""
-	}
-}
-
 [no_snapshots: true]
-test centos_build_testo: centos_build_breakpad {
+test centos_build_testo: centos_install_packages {
 	centos {
 		copyto "${TESTO_SRC_DIR}/3rd_party" "/root/testo/3rd_party"
 		copyto "${TESTO_SRC_DIR}/docs" "/root/testo/docs"
@@ -160,15 +140,13 @@ test centos_build_testo: centos_build_breakpad {
 			cd testo_build
 			cmake ../testo \
 				-DCMAKE_BUILD_TYPE=Release \
-				-DCPACK_GENERATOR=RPM \
-				-DBREAKPAD_DIR=/root/breakpad_dist
+				-DCPACK_GENERATOR=RPM
 			make testo_unit_tests -j$(nproc)
 			./out/sbin/testo_unit_tests
 			make testo-package -j$(nproc)
 			ls out/pkg
 		""" timeout 30m
 		copyfrom "/root/testo_build/out/pkg/testo.rpm" "${OUT_DIR}/testo.rpm"
-		copyfrom "/root/testo_build/out/symbols" "${OUT_DIR}/symbols"
 	}
 }
 

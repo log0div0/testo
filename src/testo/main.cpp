@@ -14,10 +14,6 @@
 #include "backends/Environment.hpp"
 #endif
 
-#ifdef USE_BREAKPAD
-#include <client/linux/handler/exception_handler.h>
-#endif
-
 #include <iostream>
 
 #include "ModeClean.hpp"
@@ -203,13 +199,6 @@ int do_main(int argc, char** argv) {
 	init_logs();
 	TRACE();
 	check_privileges();
-#ifdef USE_BREAKPAD
-	::mkdir("/var/crash", 0755);
-	::mkdir("/var/crash/testo", 0755);
-	int testo_starter_fd = -1; // TODO:: add out-of-process support
-	google_breakpad::MinidumpDescriptor descriptor("/var/crash/testo");
-	google_breakpad::ExceptionHandler eh(descriptor, NULL, NULL, NULL, true, testo_starter_fd);
-#endif
 	init_env(hypervisor);
 	coro::Finally cleanup([&] {
 		env.reset();
