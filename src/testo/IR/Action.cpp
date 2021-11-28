@@ -62,7 +62,7 @@ KeyCombination Release::combination() const {
 }
 
 String Type::text() const {
-	return {ast_node->text, stack, true};
+	return {ast_node->text, stack, var_map};
 }
 
 TimeInterval Type::interval() const {

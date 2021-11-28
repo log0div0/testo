@@ -3,6 +3,7 @@
 
 #include "../AST.hpp"
 #include "../Stack.hpp"
+#include "../VarMap.hpp"
 #include "../Parser.hpp"
 #include "../Exceptions.hpp"
 
@@ -26,7 +27,8 @@ struct SelectExpr: Node<AST::SelectExpr> {
 };
 
 struct String: Node<AST::String> {
-	String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, bool variables_allowed = false);
+	String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack);
+	String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_);
 
 	std::string text() const;
 	std::string quoted_text() const;
@@ -34,6 +36,9 @@ struct String: Node<AST::String> {
 
 	std::string str() const;
 	bool can_resolve_variables() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 template <typename ASTType, typename ParsedASTType>
@@ -140,7 +145,7 @@ struct OptionSeq : Node<AST::OptionSeq> {
 				throw std::runtime_error("Failed to cast \"" + name + "\" option to the target type");
 			}
 		} else {
-			std::string str = get_param(default_param);
+			std::string str = resolve_param(default_param);
 			p = T::ASTType::from_string(str);
 		}
 		return {p, stack};
@@ -165,7 +170,7 @@ struct OptionSeq : Node<AST::OptionSeq> {
 	}
 
 private:
-	static std::string get_param(const std::string& name);
+	std::string resolve_param(const std::string& name) const;
 };
 
 }

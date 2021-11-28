@@ -1,6 +1,5 @@
 
 #include "Base.hpp"
-#include "Program.hpp"
 #include "../Exceptions.hpp"
 #include "../Lexer.hpp"
 
@@ -24,17 +23,22 @@ std::string SelectExpr::to_string() const {
 	}
 }
 
-String::String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, bool variables_allowed):
-	Node<AST::String>(ast_node, stack)
+String::String(std::shared_ptr<ASTType> ast_node_, std::shared_ptr<StackNode> stack_):
+	Node<AST::String>(std::move(ast_node_), std::move(stack_))
 {
-	if (ast_node->resolver.has_variables() && !variables_allowed) {
+	if (ast_node->resolver.has_variables()) {
 		throw ExceptionWithPos(ast_node->begin(), "Error: variables are not allowed in this context");
 	}
 }
 
+String::String(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+	Node<AST::String>(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_))
+{
+}
+
 std::string String::text() const {
 	try {
-		return ast_node->resolver.resolve(stack);
+		return ast_node->resolver.resolve(stack, var_map);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ExceptionWithPos(ast_node->begin(), "Error while resolving \"" + ast_node->text() + "\""));
 	}
@@ -66,7 +70,10 @@ std::string String::str() const {
 }
 
 bool String::can_resolve_variables() const {
-	return ast_node->resolver.can_resolve_variables();
+	if (!ast_node->resolver.has_variables()) {
+		return true;
+	}
+	return var_map != nullptr;
 }
 
 int32_t Number::value() const {
@@ -177,8 +184,9 @@ nlohmann::json AttrBlock::to_json() const {
 	return config;
 }
 
-std::string OptionSeq::get_param(const std::string& name) {
-	return program->stack->find_and_resolve_var(name);
+std::string OptionSeq::resolve_param(const std::string& name) const {
+	std::string param = stack->find_param(name);
+	return template_literals::Resolver(param).resolve(stack, nullptr);
 }
 
 }

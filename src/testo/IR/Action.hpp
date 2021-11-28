@@ -50,12 +50,17 @@ struct Release: Action<AST::Release> {
 };
 
 struct Type: Action<AST::Type> {
-	using Action<AST::Type>::Action;
+	Type(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
 	String text() const;
 	TimeInterval interval() const;
 	KeyCombination autoswitch() const;
 	bool use_autoswitch() const;
 	void validate() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct Wait: Action<AST::Wait> {

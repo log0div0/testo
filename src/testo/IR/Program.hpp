@@ -2,7 +2,6 @@
 #pragma once
 
 #include "../Configs.hpp"
-#include "../VarSet.hpp"
 #include "Test.hpp"
 #include "Macro.hpp"
 #include "Param.hpp"
@@ -52,8 +51,9 @@ public:
 	std::vector<std::shared_ptr<Test>> ordered_tests;
 	std::vector<std::shared_ptr<Test>> all_selected_tests;
 	std::shared_ptr<StackNode> stack;
-	VarSet* var_set = nullptr;
 	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
+
+	std::string resolve_top_level_param(const std::string& name) const;
 
 private:
 	friend struct IR::MacroCall;

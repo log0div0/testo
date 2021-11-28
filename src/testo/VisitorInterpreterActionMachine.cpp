@@ -118,7 +118,7 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> 
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
-		visit_type({p, stack});
+		visit_type({p, stack, vmc->get_vars()});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Wait>(action)) {
 		visit_wait({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
@@ -1013,7 +1013,7 @@ void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
 
 		coro::Timeout timeout(exec.timeout().value());
 
-		nlohmann::json result = ga->execute(command, vmc->get_vars(), [&](const std::string& output) {
+		nlohmann::json result = ga->execute(command, *vmc->get_vars(), [&](const std::string& output) {
 			reporter.exec_command_output(output);
 		});
 		int exit_code = result.at("exit_code");

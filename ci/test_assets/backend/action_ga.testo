@@ -22,7 +22,7 @@ test exec_set_variable: install_ubuntu_server_guest_additions {
 		press Enter
 
 		exec bash """
-			cat file.txt | grep $<SOME_VARIABLE>
+			cat file.txt | grep "$<SOME_VARIABLE>"
 		"""
 	}
 }

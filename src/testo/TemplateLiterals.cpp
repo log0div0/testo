@@ -1,24 +1,34 @@
 
 #include "TemplateLiterals.hpp"
 #include "Exceptions.hpp"
-#include "IR/Program.hpp"
 #include <stdexcept>
 
 namespace template_literals {
 
 Resolver::Resolver(const std::string& input_): input(input_) {
-	current_pos = Pos(input);
+	current_pos = Pos(0, input);
 	tokens = tokenize();
 }
 
-std::string Resolver::resolve(const std::shared_ptr<const StackNode>& stack) const {
+std::string Resolver::resolve(const std::shared_ptr<const StackNode>& stack, const std::shared_ptr<const VarMap>& var_map) const {
 	std::string result;
 
 	for (auto token: tokens) {
 		if (token.type() == Token::category::param_ref) {
-			result += stack->find_and_resolve_var(token.value().substr(2, token.value().length() - 3));
+			std::string param_name = token.value().substr(2, token.value().length() - 3);
+			std::string param = stack->find_param(param_name);
+			result += Resolver(param).resolve(stack, var_map);
 		} else if (token.type() == Token::category::var_ref) {
-			// TODO
+			if (var_map) {
+				std::string var_name = token.value().substr(2, token.value().length() - 3);
+				auto it = var_map->find(var_name);
+				if (it == var_map->end()) {
+					throw std::runtime_error("Variable " + var_name + " does not exist");
+				}
+				result += it->second;
+			} else {
+				result += token.value();
+			}
 		} else if (token.type() == Token::category::regular_string) {
 			result += token.value();
 		} else {
@@ -37,13 +47,6 @@ bool Resolver::has_variables() const {
 		}
 	}
 	return false;
-}
-
-bool Resolver::can_resolve_variables() const {
-	if (!has_variables()) {
-		return true;
-	}
-	return IR::program && IR::program->var_set;
 }
 
 bool Resolver::test_escaped() const {

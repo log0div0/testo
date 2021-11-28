@@ -6,7 +6,7 @@
 #include <string>
 #include <stdexcept>
 
-struct StackNode: std::enable_shared_from_this<StackNode> {
+struct StackNode {
 	StackNode() = default;
 
 	StackNode(const StackNode& other) = delete;
@@ -14,11 +14,11 @@ struct StackNode: std::enable_shared_from_this<StackNode> {
 	StackNode(StackNode&& other) = delete;
 	StackNode& operator=(StackNode&& other) = delete;
 
-	std::string find_and_resolve_var(const std::string& name) const;
+	std::string find_param(const std::string& name) const;
 	bool is_defined(const std::string& var) const;
 
 	std::shared_ptr<StackNode> parent;
-	std::map<std::string, std::string> vars;
+	std::map<std::string, std::string> params;
 };
 
 template <typename StackHolder>

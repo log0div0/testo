@@ -65,14 +65,14 @@ void VisitorInterpreterAction::visit_for_clause(std::shared_ptr<AST::ForClause> 
 		throw std::runtime_error("Unknown counter list type");
 	}
 
-	std::map<std::string, std::string> vars;
+	std::map<std::string, std::string> params;
 	for (i = 0; i < values.size(); ++i) {
-		vars[for_clause->counter.value()] = values[i];
+		params[for_clause->counter.value()] = values[i];
 
 		try {
 			auto new_stack = std::make_shared<StackNode>();
 			new_stack->parent = stack;
-			new_stack->vars = vars;
+			new_stack->params = params;
 			StackPusher<VisitorInterpreterAction> new_ctx(this, new_stack);
 				visit_action(for_clause->cycle_body);
 

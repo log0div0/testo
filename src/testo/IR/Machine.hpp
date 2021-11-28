@@ -46,7 +46,7 @@ struct Machine: Controller {
 	const stb::Image<stb::RGB>& make_new_screenshot();
 	const stb::Image<stb::RGB>& get_last_screenshot() const;
 
-	const std::map<std::string, std::string>& get_vars() const;
+	std::shared_ptr<VarMap> get_vars() const;
 	void set_var(const std::string& var_name, const std::string& var_value);
 
 private:
@@ -59,7 +59,7 @@ private:
 
 	MouseButton current_held_mouse_button = MouseButton::None;
 	std::vector<KeyboardButton> current_held_keyboard_buttons;
-	std::map<std::string, std::string> vars;
+	std::shared_ptr<VarMap> vars = std::make_shared<VarMap>();
 };
 
 }

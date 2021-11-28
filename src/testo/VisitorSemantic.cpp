@@ -227,7 +227,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
-		visit_type({p, stack});
+		visit_type({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Press>(action)) {
 		visit_press({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Hold>(action)) {
@@ -900,12 +900,12 @@ void VisitorSemantic::visit_for_clause(std::shared_ptr<AST::ForClause> for_claus
 	}
 	current_test->cksum_input << ") {" << std::endl;
 
-	std::map<std::string, std::string> vars;
+	std::map<std::string, std::string> params;
 	for (auto i: values) {
-		vars[for_clause->counter.value()] = i;
+		params[for_clause->counter.value()] = i;
 		auto new_stack = std::make_shared<StackNode>();
 		new_stack->parent = stack;
-		new_stack->vars = vars;
+		new_stack->params = params;
 		StackPusher<VisitorSemantic> new_ctx(this, new_stack);
 		visit_action(for_clause->cycle_body);
 	}
