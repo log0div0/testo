@@ -104,8 +104,6 @@ void remote_handler(HostMessageHandler& message_handler) {
 			spdlog::error("Error inside remote acceptor loop: {}", error.what());
 		}
 	}
-	acceptor.run([]() {
-	});
 #else
 #error "Unknown hypervisor"
 #endif

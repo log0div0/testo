@@ -27,6 +27,23 @@ private:
 
 	coro::StreamSocket<asio::local::stream_protocol> socket;
 };
+#else
+struct GA: CLIGuestAdditions {
+	GA() {
+		// IMPLEMENT ME!!!!
+		throw std::runtime_error(__PRETTY_FUNCTION__);
+	}
+
+private:
+	void send_raw(const uint8_t* data, size_t size) override {
+		// IMPLEMENT ME!!!!
+		throw std::runtime_error(__PRETTY_FUNCTION__);
+	}
+	void recv_raw(uint8_t* data, size_t size) override {
+		// IMPLEMENT ME!!!!
+		throw std::runtime_error(__PRETTY_FUNCTION__);
+	}
+};
 #endif
 
 struct MountArgs {
