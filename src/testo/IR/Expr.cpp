@@ -77,7 +77,7 @@ std::string StringExpr::text() const {
 }
 
 SelectExpr Check::select_expr() const {
-	return SelectExpr(ast_node->select_expr, stack);
+	return SelectExpr(ast_node->select_expr, stack, var_map);
 }
 
 TimeInterval Check::timeout() const {

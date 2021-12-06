@@ -253,7 +253,7 @@ void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Screenshot>(action)) {
 		visit_screenshot({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Wait>(action)) {
-		visit_wait({p, stack});
+		visit_wait({p, stack, nullptr});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
 		visit_sleep({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Action>>(action)) {
@@ -759,7 +759,7 @@ Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::Expr> expr) {
 		current_test->cksum_input << "NOT ";
 		return !visit_expr(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Check>(expr)) {
-		return visit_check({ p, stack });
+		return visit_check({ p, stack, nullptr });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Defined>(expr)) {
 		return visit_defined({ p, stack });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Comparison>(expr)) {

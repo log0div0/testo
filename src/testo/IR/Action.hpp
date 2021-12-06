@@ -64,10 +64,15 @@ private:
 };
 
 struct Wait: Action<AST::Wait> {
-	using Action<AST::Wait>::Action;
+	Wait(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
 	SelectExpr select_expr() const;
 	TimeInterval timeout() const;
 	TimeInterval interval() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct Sleep: Action<AST::Sleep> {

@@ -89,7 +89,7 @@ void Type::validate() const {
 }
 
 SelectExpr Wait::select_expr() const {
-	return SelectExpr(ast_node->select_expr, stack);
+	return SelectExpr(ast_node->select_expr, stack, var_map);
 }
 
 TimeInterval Wait::timeout() const {

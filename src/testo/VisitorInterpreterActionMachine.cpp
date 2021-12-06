@@ -120,7 +120,7 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> 
 	} else if (auto p = std::dynamic_pointer_cast<AST::Type>(action)) {
 		visit_type({p, stack, vmc->get_vars()});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Wait>(action)) {
-		visit_wait({p, stack});
+		visit_wait({p, stack, vmc->get_vars()});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Sleep>(action)) {
 		visit_sleep({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Press>(action)) {

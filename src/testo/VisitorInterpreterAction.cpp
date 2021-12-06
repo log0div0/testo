@@ -104,7 +104,11 @@ bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::Expr> expr) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Defined>(expr)) {
 		return visit_defined({ p, stack });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Check>(expr)) {
-		return visit_check({ p, stack });
+		std::shared_ptr<IR::Machine> vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
+		if (!vmc) {
+			throw std::runtime_error("\"check\" expression is only available for VMs");
+		}
+		return visit_check({ p, stack, vmc->get_vars() });
 	} else if (auto p = std::dynamic_pointer_cast<AST::ParentedExpr>(expr)) {
 		return visit_expr(p->expr);
 	} else {

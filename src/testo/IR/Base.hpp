@@ -21,9 +21,13 @@ struct Node {
 };
 
 struct SelectExpr: Node<AST::SelectExpr> {
-	using Node<AST::SelectExpr>::Node;
+	SelectExpr(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	std::string to_string() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct String: Node<AST::String> {

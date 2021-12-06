@@ -24,6 +24,12 @@ test exec_set_variable: install_ubuntu_server_guest_additions {
 		exec bash """
 			cat /root/file.txt | grep "$<SOME_VARIABLE>"
 		"""
+
+		if (check "$<SOME_VARIABLE>") {
+			print "ура, товарищи!"
+		}
+
+		wait "$<SOME_VARIABLE>"
 	}
 }
 

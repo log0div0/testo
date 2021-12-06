@@ -7,17 +7,17 @@ namespace IR {
 
 std::string SelectExpr::to_string() const {
 	if (auto p = std::dynamic_pointer_cast<AST::SelectNegationExpr>(ast_node)) {
-		return "!" + SelectExpr(p->expr, stack).to_string();
+		return "!" + SelectExpr(p->expr, stack, var_map).to_string();
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectText>(ast_node)) {
-		return String(p->str, stack).quoted_text();
+		return String(p->str, stack, var_map).quoted_text();
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectJS>(ast_node)) {
-		return p->token.value() + String(p->str, stack).quoted_text();
+		return p->token.value() + String(p->str, stack, var_map).quoted_text();
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectImg>(ast_node)) {
-		return p->token.value() + String(p->str, stack).quoted_text();
+		return p->token.value() + String(p->str, stack, var_map).quoted_text();
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectParentedExpr>(ast_node)) {
-		return "(" + SelectExpr(p->select_expr, stack).to_string() + ")";
+		return "(" + SelectExpr(p->select_expr, stack, var_map).to_string() + ")";
 	} else if (auto p = std::dynamic_pointer_cast<AST::SelectBinOp>(ast_node)) {
-		return SelectExpr(p->left, stack).to_string() + " " + p->op.value() + " " + SelectExpr(p->right, stack).to_string();
+		return SelectExpr(p->left, stack, var_map).to_string() + " " + p->op.value() + " " + SelectExpr(p->right, stack, var_map).to_string();
 	} else {
 		throw std::runtime_error("Unknown select expression type");
 	}

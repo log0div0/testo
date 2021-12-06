@@ -29,10 +29,15 @@ struct StringExpr: Expr<AST::StringExpr> {
 };
 
 struct Check: Expr<AST::Check> {
-	using Expr<AST::Check>::Expr;
+	Check(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Expr(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+
 	SelectExpr select_expr() const;
 	TimeInterval timeout() const;
 	TimeInterval interval() const;
+
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 template <typename ASTType>
