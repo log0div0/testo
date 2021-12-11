@@ -58,10 +58,11 @@ textline_next:
 				if (words[b].rect.left > (words[a].rect.right + words[a].rect.height())) {
 					goto textline_finish;
 				}
-				int32_t mean_height = (words[a].rect.height() + words[b].rect.height()) / 2;
 				int32_t min_bottom = std::min(words[a].rect.bottom, words[b].rect.bottom);
+				int32_t max_bottom = std::max(words[a].rect.bottom, words[b].rect.bottom);
+				int32_t min_top = std::min(words[a].rect.top, words[b].rect.top);
 				int32_t max_top = std::max(words[a].rect.top, words[b].rect.top);
-				if ((min_bottom - max_top) >= (mean_height / 2)) {
+				if ((min_bottom - max_top) >= ((max_bottom - min_top) / 2)) {
 					visited_words[j] = true;
 					textline.rect |= words[b].rect;
 					a = b;
