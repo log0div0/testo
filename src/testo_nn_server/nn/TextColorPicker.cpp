@@ -90,16 +90,18 @@ bool TextColorPicker::match_color(const TextLine& textline, const std::string& c
 	if (color.size() == 0) {
 		return true;
 	}
-	std::vector<int> counters(colors.size(), 0);
+	std::vector<int> color_scores(colors.size(), 0);
 	for (int x = 0; x < out_w; ++x) {
 		int max_index = get_max_index(out[x] + c_off, colors.size());
-		counters[max_index] += 1;
+		color_scores[max_index] += 1;
 	}
-	int max_color = get_max_index(counters.data(), counters.size());
-	// for (size_t i = 0; i < counters.size(); ++i) {
-	// 	std::cout << colors[i] << " " << counters[i] << std::endl;
+
+	// for (size_t i = 0; i < color_scores.size(); ++i) {
+	// 	std::cout << colors[i] << " " << color_scores[i] << std::endl;
 	// }
-	return max_color == get_color_index(color);
+
+	int color_index = get_color_index(color);
+	return color_scores.at(color_index) != 0;
 }
 
 }
