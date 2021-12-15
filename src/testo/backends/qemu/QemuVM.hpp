@@ -60,6 +60,8 @@ private:
 	void attach_flash_drive(const std::string& img_path);
 	void detach_flash_drive();
 
+	bool is_target_free(const std::string& target);
+
 	std::string mouse_button_to_str(MouseButton btn);
 
 	std::set<std::string> plugged_nics() const;

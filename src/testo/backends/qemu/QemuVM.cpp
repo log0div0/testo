@@ -1204,7 +1204,7 @@ bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 				continue;
 			}
 
-			if (std::string(disk.child("target").attribute("dev").value()) == "sdb") {
+			if (std::string(disk.child("target").attribute("bus").value()) == "usb") {
 				result = disk.child("source").attribute("file").value();
 
 				//nullptr fd means "Any" flash drive
@@ -1219,8 +1219,31 @@ bool QemuVM::is_flash_plugged(std::shared_ptr<FlashDrive> fd) {
 		}
 
 		return false;
-	} catch (const std::string& error) {
+	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Checking if flash drive {} is plugged", fd->name())));
+	}
+}
+
+bool QemuVM::is_target_free(const std::string& target) {
+	try {
+		auto domain = qemu_connect.domain_lookup_by_name(id());
+
+		auto config = domain.dump_xml();
+		auto devices = config.first_child().child("devices");
+
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
+			if (std::string(disk.attribute("device").value()) != "disk") {
+				continue;
+			}
+
+			if (std::string(disk.child("target").attribute("dev").value()) == target) {
+				return false;
+			}
+		}
+
+		return true;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("is_target_free for target {}", target)));
 	}
 }
 
@@ -1228,13 +1251,35 @@ void QemuVM::attach_flash_drive(const std::string& img_path) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
+		const std::vector<std::string> targets = {
+			"sda",
+			"sdb",
+			"sdc",
+			"sdd",
+			"sde",
+			"sdf",
+		};
+
+		int free_target_index = -1;
+
+		for (size_t i = 0; i < targets.size(); i++) {
+			if (is_target_free(targets[i])) {
+				free_target_index = i;
+				break;
+			}
+		}
+
+		if (free_target_index < 0) {
+			throw std::runtime_error("Can't attach flash drive - no free slots");
+		}
+
 		std::string string_config = fmt::format(R"(
 			<disk type='file'>
 				<driver name='qemu' type='qcow2'/>
 				<source file='{}'/>
-				<target dev='sdb' bus='usb' removable='on'/>
+				<target dev='{}' bus='usb' removable='on'/>
 			</disk>
-			)", img_path);
+			)", img_path, targets[free_target_index]);
 
 		//we just need to create new device
 		//TODO: check if CURRENT is enough
@@ -1369,7 +1414,7 @@ void QemuVM::detach_flash_drive() {
 				continue;
 			}
 
-			if (std::string(disk.child("target").attribute("dev").value()) == "sdb") {
+			if (std::string(disk.child("target").attribute("bus").value()) == "usb") {
 				domain.detach_device(disk, flags);
 				break;
 			}
