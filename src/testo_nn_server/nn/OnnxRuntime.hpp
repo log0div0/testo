@@ -22,7 +22,8 @@ namespace onnx {
 struct Runtime {
 	Runtime(
 #ifdef USE_CUDA
-		bool use_cpu_ = false
+		bool use_cpu_ = false,
+		size_t gpu_id_ = 0
 #endif
 	);
 	~Runtime();

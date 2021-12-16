@@ -118,7 +118,8 @@ nlohmann::json load_settings(const std::string& settings_path) {
 	"port": 8156,
 	"log_level": "info",
 	"license_path": "/opt/testo_license.lic",
-	"use_gpu": false
+	"use_gpu": false,
+	"gpu_id": 0
 }
 )";
 	}
@@ -135,6 +136,7 @@ void app_main(const nlohmann::json& settings) {
 		setup_logs(settings);
 
 		bool use_gpu = settings.value("use_gpu", false);
+		size_t gpu_id = settings.value("gpu_id", 0);
 
 		if (use_gpu) {
 			if (!settings.count("license_path")) {
@@ -145,9 +147,11 @@ void app_main(const nlohmann::json& settings) {
 			verify_license(settings);
 			spdlog::info("License is OK");
 #endif
+		} else if (settings.count("gpu_id")) {
+			spdlog::info("Ignoring 'gpu_id' setting because GPU mode is disabled...");
 		}
 
-		nn::onnx::Runtime onnx_runtime(!use_gpu);
+		nn::onnx::Runtime onnx_runtime(!use_gpu, gpu_id);
 
 		spdlog::info("Starting testo nn server");
 		spdlog::info("Testo framework version: {}", TESTO_VERSION);
