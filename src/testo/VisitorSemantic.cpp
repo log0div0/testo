@@ -8,6 +8,7 @@
 #include <fmt/format.h>
 #include <wildcards.hpp>
 #include "Logger.hpp"
+#include "js/Context.hpp"
 
 struct ControllerCreatonException: public Exception {
 	ControllerCreatonException(std::shared_ptr<IR::Controller> controller): Exception({}) {
@@ -462,6 +463,17 @@ void VisitorSemantic::visit_mouse_move_coordinates(const IR::MouseCoordinates& c
 	current_test->cksum_input << coordinates.x() << " " << coordinates.y();
 }
 
+void validate_js(const std::string& js_script) {
+	js::Context js_ctx;
+	auto script = fmt::format("function __testo__() {{\n{}\n}}\nlet result = __testo__()\nJSON.stringify(result)", js_script);
+
+	try {
+		js_ctx.compile(script);
+	} catch (const std::exception& error) {
+		throw std::runtime_error(error.what());
+	}
+}
+
 void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	auto script = js.script();
 
@@ -470,17 +482,7 @@ void VisitorSemantic::visit_select_js(const IR::SelectJS& js) {
 	}
 
 	try {
-		auto validate_result = env->nn_client->validate_js(script);
-		auto type = validate_result.at("type").get<std::string>();
-		if (type == "error") {
-			throw std::runtime_error(validate_result.at("data").get<std::string>());
-		} else if (type == "validation_result") {
-			if (!validate_result.at("result").get<bool>()) {
-				throw std::runtime_error(validate_result.at("data").get<std::string>());
-			}
-		} else {
-			throw std::runtime_error(std::string("Unexpected message type: ") + type);
-		}
+		validate_js(script);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ExceptionWithPos(js.ast_node->begin(), "Error while validating js selection"));
 	}
