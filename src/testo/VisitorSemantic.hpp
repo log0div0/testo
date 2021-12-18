@@ -7,6 +7,7 @@
 #include "IR/Command.hpp"
 #include "IR/Expr.hpp"
 #include "Configs.hpp"
+#include "js/Context.hpp"
 
 #include <set>
 #include <unordered_set>
@@ -106,4 +107,7 @@ struct VisitorSemantic {
 	std::unordered_set<std::shared_ptr<IR::Network>> visited_networks;
 
 	std::shared_ptr<IR::Test> current_test;
+
+	void validate_js(const std::string& js_script);
+	js::Context js_ctx;
 };

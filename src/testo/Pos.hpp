@@ -8,9 +8,6 @@
 struct Pos {
 	Pos() = default;
 	Pos(const fs::path& file, std::shared_ptr<std::string> input): file(file), input(input) {
-		if (file.is_relative()) {
-			this->file = fs::canonical(file);
-		}
 	}
 
 	void advance(size_t shift = 1) {

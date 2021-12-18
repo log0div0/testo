@@ -54,6 +54,18 @@ public:
 	std::unordered_set<std::shared_ptr<IR::Macro>> visited_macros;
 
 	std::string resolve_top_level_param(const std::string& name) const;
+	template <typename T>
+	std::shared_ptr<T> get_top_level_param_ast(const std::string& name) const {
+		static std::map<std::string, std::shared_ptr<T>> cache;
+		auto it = cache.find(name);
+		if (it != cache.end()) {
+			return it->second;
+		}
+		std::string value = resolve_top_level_param(name);
+		std::shared_ptr<T> p = T::from_string(value);
+		cache[name] = p;
+		return p;
+	}
 
 private:
 	friend struct IR::MacroCall;

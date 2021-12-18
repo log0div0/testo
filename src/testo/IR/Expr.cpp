@@ -2,6 +2,7 @@
 #include "Program.hpp"
 #include "Expr.hpp"
 #include "Action.hpp"
+#include "OptionSeq.hpp"
 #include "../Utils.hpp"
 #include "../TemplateLiterals.hpp"
 

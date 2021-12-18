@@ -8,7 +8,6 @@
 #include <fmt/format.h>
 #include <wildcards.hpp>
 #include "Logger.hpp"
-#include "js/Context.hpp"
 
 struct ControllerCreatonException: public Exception {
 	ControllerCreatonException(std::shared_ptr<IR::Controller> controller): Exception({}) {
@@ -463,8 +462,7 @@ void VisitorSemantic::visit_mouse_move_coordinates(const IR::MouseCoordinates& c
 	current_test->cksum_input << coordinates.x() << " " << coordinates.y();
 }
 
-void validate_js(const std::string& js_script) {
-	js::Context js_ctx;
+void VisitorSemantic::validate_js(const std::string& js_script) {
 	auto script = fmt::format("function __testo__() {{\n{}\n}}\nlet result = __testo__()\nJSON.stringify(result)", js_script);
 
 	try {

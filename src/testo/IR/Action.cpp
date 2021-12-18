@@ -1,6 +1,7 @@
 
 #include "Action.hpp"
 #include "Program.hpp"
+#include "OptionSeq.hpp"
 #include "../TemplateLiterals.hpp"
 #include "../Exceptions.hpp"
 

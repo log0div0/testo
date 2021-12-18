@@ -184,9 +184,4 @@ nlohmann::json AttrBlock::to_json() const {
 	return config;
 }
 
-std::string OptionSeq::resolve_param(const std::string& name) const {
-	std::string param = stack->find_param(name);
-	return template_literals::Resolver(param).resolve(stack, nullptr);
-}
-
 }

@@ -51,8 +51,8 @@ void init_logs() {
 	auto max_size = 1048576 * 10;
     auto max_files = 3;
 	auto logger = spdlog::rotating_logger_mt("basic_logger", log_file_path, max_size, max_files);
-	logger->set_level(spdlog::level::trace);
-	logger->flush_on(spdlog::level::trace);
+	logger->set_level(spdlog::level::info);
+	logger->flush_on(spdlog::level::info);
 	spdlog::set_default_logger(logger);
 	spdlog::info("logger is initialized");
 }

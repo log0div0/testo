@@ -34,7 +34,7 @@ std::string generate_script(const fs::path& folder, const fs::path& current_pref
 }
 
 Parser Parser::load_dir(const fs::path& dir) {
-	return Parser(dir, generate_script(dir));
+	return Parser(fs::canonical(dir), generate_script(dir));
 }
 
 Parser Parser::load_file(const fs::path& file) {
@@ -46,7 +46,7 @@ Parser Parser::load_file(const fs::path& file) {
 
 	std::string input = std::string((std::istreambuf_iterator<char>(input_stream)), std::istreambuf_iterator<char>());
 
-	return Parser(file, input);
+	return Parser(fs::canonical(file), input);
 }
 
 Parser Parser::load(const fs::path& path) {
