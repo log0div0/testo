@@ -10,7 +10,7 @@ Trace::Trace(const std::string fn_name_): fn_name(std::move(fn_name_)) {
 
 Trace::~Trace() {
 	--trace_level;
-	if (std::uncaught_exception()) {
+	if (std::uncaught_exceptions()) {
 		print_message(" end (stack unwinding");
 	} else {
 		print_message(" end");

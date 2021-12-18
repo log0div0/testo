@@ -11,6 +11,7 @@
 #endif
 
 #include <memory>
+#include <string>
 
 namespace js {
 
