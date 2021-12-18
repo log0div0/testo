@@ -78,18 +78,21 @@ std::string file_signature(const fs::path& file) {
 		return "NOT_EXISTS";
 	}
 
-	if(fs::file_size(file) > (content_cksum_maxsize * 1024 * 1024)) {
+	auto file_size = fs::file_size(file);
+	if(file_size > (content_cksum_maxsize * 1024 * 1024)) {
 		auto time = fs::last_write_time(file);
 		auto last_modify_time = decltype(time)::clock::to_time_t(time);
 		char buf[32] = {};
 		std::strftime(buf, 32, "%Y.%m.%d %H:%m:%S", std::localtime(&last_modify_time));
 		return buf;
 	} else {
-		std::ifstream f(file.generic_string());
+		std::ifstream f(file, std::ios::binary);
 		if (!f) {
 			return "FAILED_TO_OPEN";
 		}
-		std::string str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+		static std::string str;
+		str.resize(file_size);
+		f.read(&str[0], file_size);
 		std::hash<std::string> h;
 		return to_hex(h(str));
 	}
