@@ -13,45 +13,40 @@ struct KeyCombination: MaybeUnparsed<AST::IKeyCombination, AST::KeyCombination> 
 	std::string to_string() const;
 };
 
-template <typename ASTType>
-struct Action: Node<ASTType> {
-	using Node<ASTType>::Node;
-};
-
-struct Abort: Action<AST::Abort> {
-	using Action<AST::Abort>::Action;
+struct Abort: Node<AST::Abort> {
+	using Node<AST::Abort>::Node;
 	std::string message() const;
 };
 
-struct Print: Action<AST::Print> {
-	using Action<AST::Print>::Action;
+struct Print: Node<AST::Print> {
+	using Node<AST::Print>::Node;
 	std::string message() const;
 };
 
-struct Press: Action<AST::Press> {
-	using Action<AST::Press>::Action;
+struct Press: Node<AST::Press> {
+	using Node<AST::Press>::Node;
 	TimeInterval interval() const;
 };
 
-struct KeySpec: Action<AST::KeySpec> {
-	using Action<AST::KeySpec>::Action;
+struct KeySpec: Node<AST::KeySpec> {
+	using Node<AST::KeySpec>::Node;
 	KeyCombination combination() const;
 	int32_t times() const;
 };
 
-struct Hold: Action<AST::Hold> {
-	using Action<AST::Hold>::Action;
+struct Hold: Node<AST::Hold> {
+	using Node<AST::Hold>::Node;
 	KeyCombination combination() const;
 };
 
-struct Release: Action<AST::Release> {
-	using Action<AST::Release>::Action;
+struct Release: Node<AST::Release> {
+	using Node<AST::Release>::Node;
 	KeyCombination combination() const;
 };
 
-struct Type: Action<AST::Type> {
+struct Type: Node<AST::Type> {
 	Type(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
-		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	String text() const;
 	TimeInterval interval() const;
@@ -63,9 +58,9 @@ private:
 	std::shared_ptr<VarMap> var_map;
 };
 
-struct Wait: Action<AST::Wait> {
+struct Wait: Node<AST::Wait> {
 	Wait(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
-		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	SelectExpr select_expr() const;
 	TimeInterval timeout() const;
@@ -75,23 +70,23 @@ private:
 	std::shared_ptr<VarMap> var_map;
 };
 
-struct Sleep: Action<AST::Sleep> {
-	using Action<AST::Sleep>::Action;
+struct Sleep: Node<AST::Sleep> {
+	using Node<AST::Sleep>::Node;
 	TimeInterval timeout() const;
 };
 
-struct Mouse: Action<AST::Mouse> {
-	using Action<AST::Mouse>::Action;
+struct Mouse: Node<AST::Mouse> {
+	using Node<AST::Mouse>::Node;
 };
 
-struct MouseMoveClick: Action<AST::MouseMoveClick> {
-	using Action<AST::MouseMoveClick>::Action;
+struct MouseMoveClick: Node<AST::MouseMoveClick> {
+	using Node<AST::MouseMoveClick>::Node;
 
 	std::string event_type() const;
 };
 
-struct MouseCoordinates: Action<AST::MouseCoordinates> {
-	using Action<AST::MouseCoordinates>::Action;
+struct MouseCoordinates: Node<AST::MouseCoordinates> {
+	using Node<AST::MouseCoordinates>::Node;
 
 	std::string x() const;
 	std::string y() const;
@@ -100,9 +95,9 @@ struct MouseCoordinates: Action<AST::MouseCoordinates> {
 	bool y_is_relative() const;
 };
 
-struct MouseSelectable: Action<AST::MouseSelectable> {
+struct MouseSelectable: Node<AST::MouseSelectable> {
 	MouseSelectable(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
-		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	std::string to_string() const;
 	TimeInterval timeout() const;
@@ -111,9 +106,9 @@ private:
 	std::shared_ptr<VarMap> var_map;
 };
 
-struct SelectJS: Action<AST::SelectJS> {
+struct SelectJS: Node<AST::SelectJS> {
 	SelectJS(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
-		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	std::string script() const;
 
@@ -129,9 +124,9 @@ struct File: String {
 	void validate() const;
 };
 
-struct SelectImg: Action<AST::SelectImg> {
+struct SelectImg: Node<AST::SelectImg> {
 	SelectImg(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
-		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	File img() const;
 
@@ -139,9 +134,9 @@ private:
 	std::shared_ptr<VarMap> var_map;
 };
 
-struct SelectText: Action<AST::SelectText> {
+struct SelectText: Node<AST::SelectText> {
 	SelectText(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
-		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	std::string text() const;
 
@@ -149,68 +144,68 @@ private:
 	std::shared_ptr<VarMap> var_map;
 };
 
-struct MouseHold: Action<AST::MouseHold> {
-	using Action<AST::MouseHold>::Action;
+struct MouseHold: Node<AST::MouseHold> {
+	using Node<AST::MouseHold>::Node;
 	MouseButton button() const;
 };
 
-struct MouseRelease: Action<AST::MouseRelease> {
-	using Action<AST::MouseRelease>::Action;
+struct MouseRelease: Node<AST::MouseRelease> {
+	using Node<AST::MouseRelease>::Node;
 };
 
-struct MouseWheel: Action<AST::MouseWheel> {
-	using Action<AST::MouseWheel>::Action;
+struct MouseWheel: Node<AST::MouseWheel> {
+	using Node<AST::MouseWheel>::Node;
 	std::string direction() const;
 };
 
-struct Plug: Action<AST::Plug> {
-	using Action<AST::Plug>::Action;
+struct Plug: Node<AST::Plug> {
+	using Node<AST::Plug>::Node;
 	bool is_on() const;
 };
 
-struct PlugFlash: Action<AST::PlugFlash> {
-	using Action<AST::PlugFlash>::Action;
+struct PlugFlash: Node<AST::PlugFlash> {
+	using Node<AST::PlugFlash>::Node;
 	std::string name() const;
 };
 
-struct PlugNIC: Action<AST::PlugNIC> {
-	using Action<AST::PlugNIC>::Action;
+struct PlugNIC: Node<AST::PlugNIC> {
+	using Node<AST::PlugNIC>::Node;
 	std::string name() const;
 };
 
-struct PlugLink: Action<AST::PlugLink> {
-	using Action<AST::PlugLink>::Action;
+struct PlugLink: Node<AST::PlugLink> {
+	using Node<AST::PlugLink>::Node;
 	std::string name() const;
 };
 
-struct PlugHostDev: Action<AST::PlugHostDev> {
-	using Action<AST::PlugHostDev>::Action;
+struct PlugHostDev: Node<AST::PlugHostDev> {
+	using Node<AST::PlugHostDev>::Node;
 	std::string type() const;
 	std::string addr() const;
 };
 
-struct PlugDVD: Action<AST::PlugDVD> {
-	using Action<AST::PlugDVD>::Action;
+struct PlugDVD: Node<AST::PlugDVD> {
+	using Node<AST::PlugDVD>::Node;
 	fs::path path() const;
 };
 
-struct Start:Action<AST::Start> {
-	using Action<AST::Start>::Action;
+struct Start:Node<AST::Start> {
+	using Node<AST::Start>::Node;
 };
 
-struct Stop:Action<AST::Stop> {
-	using Action<AST::Stop>::Action;
+struct Stop:Node<AST::Stop> {
+	using Node<AST::Stop>::Node;
 };
 
-struct Shutdown:Action<AST::Shutdown> {
-	using Action<AST::Shutdown>::Action;
+struct Shutdown:Node<AST::Shutdown> {
+	using Node<AST::Shutdown>::Node;
 
 	TimeInterval timeout() const;
 };
 
-struct Exec: Action<AST::Exec> {
+struct Exec: Node<AST::Exec> {
 	Exec(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
-		Action(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
+		Node(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 
 	std::string interpreter() const;
 	TimeInterval timeout() const;
@@ -220,21 +215,21 @@ private:
 	std::shared_ptr<VarMap> var_map;
 };
 
-struct Copy: Action<AST::Copy> {
-	using Action<AST::Copy>::Action;
+struct Copy: Node<AST::Copy> {
+	using Node<AST::Copy>::Node;
 	TimeInterval timeout() const;
 	std::string from() const;
 	std::string to() const;
 	bool nocheck() const;
 };
 
-struct Screenshot: Action<AST::Screenshot> {
-	using Action<AST::Screenshot>::Action;
+struct Screenshot: Node<AST::Screenshot> {
+	using Node<AST::Screenshot>::Node;
 	std::string destination() const;
 };
 
-struct CycleControl: Action<AST::CycleControl> {
-	using Action<AST::CycleControl>::Action;
+struct CycleControl: Node<AST::CycleControl> {
+	using Node<AST::CycleControl>::Node;
 	std::string type() const;
 };
 
