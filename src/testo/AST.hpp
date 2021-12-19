@@ -579,7 +579,7 @@ struct MouseMoveTarget: public Node {
 };
 
 struct MouseAdditionalSpecifier: public Node {
-	MouseAdditionalSpecifier(Token name_, Token lparen_, Token arg_, Token rparen_):
+	MouseAdditionalSpecifier(Token name_, Token lparen_, std::shared_ptr<Number> arg_, Token rparen_):
 		name(std::move(name_)), lparen(std::move(lparen_)), arg(std::move(arg_)), rparen(std::move(rparen_)) {}
 
 	Pos begin() const override {
@@ -593,7 +593,7 @@ struct MouseAdditionalSpecifier: public Node {
 	std::string to_string() const override {
 		std::string result = "." + name.value() + lparen.value();
 		if (arg) {
-			result += arg.value();
+			result += arg->to_string();
 		}
 		result += rparen.value();
 		return result;
@@ -627,7 +627,7 @@ struct MouseAdditionalSpecifier: public Node {
 
 	Token name;
 	Token lparen;
-	Token arg;
+	std::shared_ptr<Number> arg;
 	Token rparen;
 };
 

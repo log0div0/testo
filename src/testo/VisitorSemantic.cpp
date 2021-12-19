@@ -400,17 +400,15 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 	bool has_move = false;
 
 	for (auto specifier: specifiers) {
-		auto arg = specifier->arg;
-
 		current_test->cksum_input << specifier->to_string();
 		if (specifier->is_from()) {
-			if (!arg) {
+			if (!specifier->arg) {
 				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
-			auto i = std::stoi(arg.value());
-			if (i < 0) {
-				throw ExceptionWithPos(arg.begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
+			IR::Number arg(specifier->arg, stack);
+			if (arg.value() < 0) {
+				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
 			if (has_from) {
@@ -425,7 +423,7 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			has_from = true;
 			continue;
 		} if (specifier->is_centering()) {
-			if (arg) {
+			if (specifier->arg) {
 				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " must not have an argument");
 			}
 			if (has_center) {
@@ -437,13 +435,13 @@ void VisitorSemantic::visit_mouse_additional_specifiers(const std::vector<std::s
 			has_center = true;
 			continue;
 		} else if (specifier->is_moving()) {
-			if (!arg) {
+			if (!specifier->arg) {
 				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 
-			auto i = std::stoi(arg.value());
-			if (i < 0) {
-				throw ExceptionWithPos(arg.begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
+			IR::Number arg(specifier->arg, stack);
+			if (arg.value() < 0) {
+				throw ExceptionWithPos(specifier->begin(), "Error: specifier " + specifier->name.value() + " requires a non-negative number as an argument");
 			}
 			has_move = true;
 			continue;

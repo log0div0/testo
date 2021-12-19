@@ -355,16 +355,16 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 
 std::string VisitorInterpreterActionMachine::visit_mouse_specifier_from(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier) {
 	auto name = specifier->name.value();
-	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
+	IR::Number arg(specifier->arg, stack);
 
 	if (name == "from_top") {
-		return fmt::format(".from_top({})", arg);
+		return fmt::format(".from_top({})", arg.value());
 	} else if (name == "from_bottom") {
-		return fmt::format(".from_bottom({})", arg);
+		return fmt::format(".from_bottom({})", arg.value());
 	} else if (name == "from_left") {
-		return fmt::format(".from_left({})", arg);
+		return fmt::format(".from_left({})", arg.value());
 	} else if (name == "from_right") {
-		return fmt::format(".from_right({})", arg);
+		return fmt::format(".from_right({})", arg.value());
 	}
 
 	throw std::runtime_error("Should not be there");
@@ -402,16 +402,16 @@ std::string VisitorInterpreterActionMachine::visit_mouse_specifier_default_cente
 
 std::string VisitorInterpreterActionMachine::visit_mouse_specifier_moving(std::shared_ptr<AST::MouseAdditionalSpecifier> specifier) {
 	auto name = specifier->name.value();
-	auto arg = std::stoul(specifier->arg.value()); //should never fail since we have semantic checks
+	IR::Number arg(specifier->arg, stack);
 
 	if (name == "move_left") {
-		return fmt::format(".move_left({})", arg);
+		return fmt::format(".move_left({})", arg.value());
 	} else if (name == "move_right") {
-		return fmt::format(".move_right({})", arg);
+		return fmt::format(".move_right({})", arg.value());
 	} else if (name == "move_up") {
-		return fmt::format(".move_up({})", arg);
+		return fmt::format(".move_up({})", arg.value());
 	} else if (name == "move_down") {
-		return fmt::format(".move_down({})", arg);
+		return fmt::format(".move_down({})", arg.value());
 	}
 
 	throw std::runtime_error("Should not be there");

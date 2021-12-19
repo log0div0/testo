@@ -816,13 +816,9 @@ std::shared_ptr<MouseAdditionalSpecifier> Parser::mouse_additional_specifier() {
 	eat(Token::category::id);
 	Token lparen = eat(Token::category::lparen);
 
-	Token arg;
-	if (LA(1) != Token::category::rparen && LA(1) != Token::category::number) {
-		throw ExceptionWithPos(LT(1).begin(), "Error: you can use only numbers as arguments in cursor specifiers");
-	}
-
-	if (LA(1) == Token::category::number) {
-		arg = eat(Token::category::number);
+	std::shared_ptr<Number> arg;
+	if (LA(1) != Token::category::rparen) {
+		arg = number();
 	}
 
 	Token rparen = eat(Token::category::rparen);
