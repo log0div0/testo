@@ -51,9 +51,11 @@ struct QemuVM: public VM {
 	std::shared_ptr<GuestAdditions> guest_additions() override;
 
 	static const std::vector<std::string> disk_targets; //10 + a cdrom
-	static std::string preferable_video_model(vir::Connect& qemu_connect);
+	static std::string preferable_video_model(const vir::Connect& qemu_connect);
 
 private:
+	std::string compose_config() const;
+
 	void import_disk(const std::string& name, const fs::path& source);
 	void create_new_disk(const std::string& name, uint32_t size);
 	void create_disks();

@@ -375,13 +375,8 @@ QemuVM::~QemuVM() {
 	}
 }
 
-void QemuVM::install() {
+std::string QemuVM::compose_config() const {
 	try {
-		//now create disks
-		create_disks();
-
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-
 		std::string string_config = fmt::format(R"(
 			<domain type='kvm'>
 				<name>{}</name>
@@ -390,12 +385,6 @@ void QemuVM::install() {
 				<resource>
 					<partition>/machine</partition>
 				</resource>
-				<os>
-					<type>hvm</type>
-					<boot dev='cdrom'/>
-					<boot dev='hd'/>
-					<bootmenu enable='yes' timeout='1000'/>
-				</os>
 				<features>
 					<acpi/>
 					<apic/>
@@ -491,10 +480,6 @@ void QemuVM::install() {
 			}
 		}
 
-		if (!config.count("qemu_enable_usb3")) {
-			config["qemu_enable_usb3"] = false;
-		}
-
 		if (config.at("qemu_enable_usb3")) {
 			string_config += R"(
 				<controller type='usb' index='0' model='nec-xhci' ports='15'>
@@ -539,6 +524,7 @@ void QemuVM::install() {
 		size_t i = 0;
 
 		if (config.count("disk")) {
+			auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 			auto disks = config.at("disk");
 			for (i = 0; i < disks.size(); i++) {
 				auto& disk = disks[i];
@@ -573,10 +559,6 @@ void QemuVM::install() {
 			)", disk_targets[i]);
 		}
 
-		if (!config.count("qemu_spice_agent")) {
-			config["qemu_spice_agent"] = false;
-		}
-
 		if (config.at("qemu_spice_agent")) {
 			string_config += R"(
 			<channel type='spicevmc'>
@@ -585,6 +567,27 @@ void QemuVM::install() {
 		}
 
 		string_config += "\n </devices> \n </domain>";
+
+		return string_config;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Composing xml config")));
+	}
+}
+
+void QemuVM::install() {
+	try {
+		//now create disks
+		create_disks();
+
+		if (!config.count("qemu_enable_usb3")) {
+			config["qemu_enable_usb3"] = false;
+		}
+
+		if (!config.count("qemu_spice_agent")) {
+			config["qemu_spice_agent"] = false;
+		}
+
+		std::string string_config = compose_config();
 
 		pugi::xml_document xml_config;
 		xml_config.load_string(string_config.c_str());
@@ -1733,7 +1736,7 @@ void QemuVM::create_disks() {
 	}
 }
 
-std::string QemuVM::preferable_video_model(vir::Connect& qemu_connect) {
+std::string QemuVM::preferable_video_model(const vir::Connect& qemu_connect) {
 	auto dom_caps = qemu_connect.get_domain_capabilities();
 	auto models_node = dom_caps.first_child().child("devices").child("video").child("enum");
 
