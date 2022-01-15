@@ -10,6 +10,9 @@
 #include <string>
 #include <vector>
 
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
+
 namespace vir {
 
 struct Domain {
@@ -32,7 +35,10 @@ struct Domain {
 	Snapshot snapshot_create_xml(const pugi::xml_node& xml, std::initializer_list<virDomainSnapshotCreateFlags> flags = {});
 	void revert_to_snapshot(Snapshot& snap, std::initializer_list<virDomainSnapshotRevertFlags> = {});
 
+	void save(const fs::path& to);
+
 	pugi::xml_document dump_xml(std::initializer_list<virDomainXMLFlags> flags = {}) const;
+	std::string dump_xml_base64(std::initializer_list<virDomainXMLFlags> flags = {}) const;
 
 	std::string get_metadata(virDomainMetadataType type,
 		const std::string& uri,

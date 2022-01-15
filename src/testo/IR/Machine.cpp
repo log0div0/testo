@@ -430,6 +430,26 @@ void Machine::validate_config() {
 		config["loader"] = loader_file.generic_string();
 	}
 
+	if (config.count("nvram")) {
+		if (!config.at("nvram").count("source")) {
+			throw std::runtime_error("You need to specify a \"source\" attribute for nvram");
+		}
+
+		fs::path nvram_file = config.at("nvram").at("source").get<std::string>();
+		if (nvram_file.is_relative()) {
+			fs::path src_file(config.at("src_file").get<std::string>());
+			nvram_file = src_file.parent_path() / nvram_file;
+		}
+
+		if (!fs::exists(nvram_file)) {
+			throw std::runtime_error(fmt::format("Target nvram file \"{}\" does not exist", nvram_file.generic_string()));
+		}
+
+		nvram_file = fs::canonical(nvram_file);
+
+		config["nvram"]["source"] = nvram_file.generic_string();
+	}
+
 	if (config.count("disk")) {
 		auto& disks = config.at("disk");
 

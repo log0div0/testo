@@ -4,6 +4,9 @@
 #include <libvirt/virterror.h>
 #include <stdexcept>
 #include <thread>
+#include <sstream>
+#include <base64.hpp>
+
 namespace vir {
 
 Domain::Domain(virDomain* handle): handle(handle) {
@@ -168,6 +171,20 @@ pugi::xml_document Domain::dump_xml(std::initializer_list<virDomainXMLFlags> fla
 	result.load_string(xml);
 	free(xml);
 	return result;
+}
+
+std::string Domain::dump_xml_base64(std::initializer_list<virDomainXMLFlags> flags) const {
+	auto new_config = dump_xml(flags);
+	std::stringstream ss;
+	new_config.save(ss,"  ");
+	return base64_encode((uint8_t*)ss.str().c_str(), ss.str().length());
+}
+
+void Domain::save(const fs::path& to) {
+	int result = virDomainSave(handle, to.string().c_str());
+	if (result != 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
 }
 
 std::string Domain::get_metadata(virDomainMetadataType type,

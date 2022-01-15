@@ -50,10 +50,14 @@ struct QemuVM: public VM {
 
 	std::shared_ptr<GuestAdditions> guest_additions() override;
 
-	static const std::vector<std::string> disk_targets; //10 + a cdrom
+	static const std::vector<std::string> ide_disk_targets;
+	static const std::vector<std::string> scsi_disk_targets;
+
 	static std::string preferable_video_model(const vir::Connect& qemu_connect);
 
 private:
+	bool is_my_disk(const fs::path& disk_path) const;
+
 	std::string compose_config() const;
 
 	void import_disk(const std::string& name, const fs::path& source);
@@ -72,4 +76,20 @@ private:
 	std::unordered_map<std::string, std::string> nic_pci_map;
 	std::vector<uint8_t> screenshot_buffer;
 
+	bool use_external_snapshots() const;
+
+	fs::path disks_dir() const;
+	fs::path memory_dir() const;
+	fs::path nvram_dir() const;
+
+	fs::path current_nvram_path() const;
+	fs::path nvram_snapshot_path(const std::string& snapshot_name) const;
+	fs::path source_nvram_path() const;
+
+	fs::path memory_snapshot_path(const std::string& snapshot_name) const;
+
+	std::string disk_file_name(const std::string& name) const;
+	fs::path disk_path(const std::string& name) const;
+	std::string disk_snapshot_file_name(const std::string& disk_name, const std::string& snapshot_name) const;
+	fs::path disk_snapshot_path(const std::string& disk_name, const std::string& snapshot_name) const;
 };

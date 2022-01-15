@@ -3,12 +3,24 @@
 #include "QemuFlashDrive.hpp"
 #include "QemuGuestAdditions.hpp"
 #include "QemuEnvironment.hpp"
-#include <base64.hpp>
+
+#include <coro/Timer.h>
+#include <coro/Timeout.h>
+
+#include <os/Process.hpp>
 
 #include <fmt/format.h>
 #include <thread>
 
 using namespace std::chrono_literals;
+
+void create_img_with_backing_file(const fs::path& img, const fs::path& backing_file) {
+	os::Process::exec(fmt::format("qemu-img create -b \"{}\" -f qcow2 -F qcow2 \"{}\"", backing_file.generic_string(), img.generic_string()));
+}
+
+void create_empty_img(const fs::path& img, uint32_t size_in_megabytes) {
+	os::Process::exec(fmt::format("qemu-img create -f qcow2 \"{}\" {}M", img.generic_string(), size_in_megabytes));
+}
 
 const std::unordered_map<uint16_t, uint16_t> virKeyCodeTable_rfb = {
   {0x1, 0x1}, /* KEY_ESC */
@@ -250,11 +262,19 @@ const std::unordered_map<uint16_t, uint16_t> virKeyCodeTable_rfb = {
   {0xee, 0xf3}, /* KEY_WLAN */
   {0xef, 0xf4}, /* KEY_UWB */
 };
-const std::vector<std::string> QemuVM::disk_targets = {
+
+const std::vector<std::string> QemuVM::ide_disk_targets = {
 	"hda",
 	"hdb",
 	"hdc",
 	"hdd"
+};
+
+const std::vector<std::string> QemuVM::scsi_disk_targets = {
+	"sda",
+	"sdb",
+	"sdc",
+	"sdd"
 };
 
 const std::unordered_map<KeyboardButton, uint16_t> scancodes = {
@@ -375,6 +395,251 @@ QemuVM::~QemuVM() {
 	}
 }
 
+#ifdef __aarch64__
+std::string QemuVM::compose_config() const {
+	try {
+		std::string string_config = fmt::format(R"(
+<domain type='kvm'>
+	<name>{}</name>
+	<metadata>
+		<testo:is_testo_related xmlns:testo='http://testo' value='true'/>
+	</metadata>
+	<memory unit='MiB'>{}</memory>
+	<vcpu placement='static'>{}</vcpu>
+		)", id(), config.at("ram").get<uint32_t>(), config.at("cpus").get<uint32_t>());
+
+		string_config += R"(
+	<os>
+		<type arch='aarch64' machine='virt-5.0'>hvm</type>
+		)";
+
+		if (config.count("loader")) {
+			string_config += fmt::format(R"(
+		<loader readonly='yes' type='pflash'>{}</loader>
+			)", config.at("loader").get<std::string>());
+		} else {
+			string_config += R"(
+		<loader readonly='yes' type='pflash'>/usr/share/AAVMF/AAVMF_CODE.fd</loader>
+			)";
+		}
+
+		string_config += fmt::format(R"(
+		<nvram>{}</nvram>
+		<bootmenu enable='yes'/>
+	</os>
+		)", current_nvram_path().string());
+
+		string_config += fmt::format(R"(
+	<features>
+	</features>
+	<cpu mode='host-passthrough'>
+		<model fallback='forbid'/>
+		<topology sockets='1' cores='{}' threads='1'/>
+	</cpu>
+	<clock offset='utc'/>
+	<on_poweroff>destroy</on_poweroff>
+	<on_reboot>restart</on_reboot>
+	<on_crash>destroy</on_crash>
+	<devices>
+		<emulator>/usr/bin/qemu-system-aarch64</emulator>
+		)", config.at("cpus").get<uint32_t>());
+
+		size_t i = 0;
+
+		if (config.count("disk")) {
+			auto& disks = config.at("disk");
+			for (i = 0; i < disks.size(); i++) {
+				auto& disk = disks[i];
+				std::string disk_name = disk.at("name");
+				string_config += fmt::format(R"(
+		<disk type='file' device='disk'>
+			<driver name='qemu' type='qcow2'/>
+			<source file='{}'/>
+			<target dev='{}' bus='scsi'/>
+			<alias name='ua-{}'/>
+			<boot order='{}'/>
+		</disk>
+				)", disk_path(disk_name).generic_string(), scsi_disk_targets[i], disk_name, 2 + i);
+			}
+		}
+
+		if (config.count("iso")) {
+			string_config += fmt::format(R"(
+		<disk type='file' device='cdrom'>
+			<driver name='qemu' type='raw'/>
+			<source file='{}'/>
+			<target dev='{}' bus='scsi'/>
+			<readonly/>
+			<boot order='1'/>
+		</disk>
+			)", config.at("iso").get<std::string>(), scsi_disk_targets[i]);
+		} else {
+			string_config += fmt::format(R"(
+		<disk type='file' device='cdrom'>
+			<driver name='qemu' type='raw'/>
+			<target dev='{}' bus='scsi'/>
+			<readonly/>
+		</disk>
+			)", scsi_disk_targets[i]);
+		}
+
+		string_config += R"(
+
+		<controller type='scsi' index='0' model='virtio-scsi'>
+		</controller>
+
+		<controller type='pci' index='0' model='pcie-root'/>
+		<controller type='pci' index='1' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='1' port='0x8'/>
+		</controller>
+		<controller type='pci' index='2' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='2' port='0x9'/>
+		</controller>
+		<controller type='pci' index='3' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='3' port='0xa'/>
+		</controller>
+		<controller type='pci' index='4' model='pcie-to-pci-bridge'>
+			<model name='pcie-pci-bridge'/>
+		</controller>
+		<controller type='pci' index='5' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='5' port='0xb'/>
+		</controller>
+		<controller type='pci' index='6' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='6' port='0xc'/>
+		</controller>
+		<controller type='pci' index='7' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='7' port='0xd'/>
+		</controller>
+		<controller type='pci' index='8' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='8' port='0xe'/>
+		</controller>
+		<controller type='pci' index='9' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='9' port='0xf'/>
+		</controller>
+		<controller type='pci' index='10' model='pcie-root-port'>
+			<model name='pcie-root-port'/>
+			<target chassis='10' port='0x10'/>
+		</controller>
+		)";
+
+		string_config += R"(
+		<controller type='virtio-serial' index='0'>
+		</controller>
+		<controller type='usb' index='0' model='ich9-ehci1'>
+		</controller>
+		<controller type='usb' index='0' model='ich9-uhci1'>
+			<master startport='0'/>
+		</controller>
+		<controller type='usb' index='0' model='ich9-uhci2'>
+			<master startport='2'/>
+		</controller>
+		<controller type='usb' index='0' model='ich9-uhci3'>
+			<master startport='4'/>
+		</controller>
+		)";
+
+		if (config.count("shared_folder")) {
+			for (auto& shared_folder: config.at("shared_folder")) {
+				string_config += fmt::format(R"(
+		<filesystem type='mount' accessmode='mapped'>
+			<driver type='path' wrpolicy='immediate'/>
+			<source dir='{}'/>
+			<target dir='{}'/>
+				)", shared_folder.at("host_path").get<std::string>(),
+					shared_folder.at("name").get<std::string>()
+				);
+				if (shared_folder.value("readonly", false)) {
+					string_config += R"(
+			<readonly/>
+					)";
+				}
+				string_config += R"(
+		</filesystem>
+				)";
+			}
+		}
+
+		string_config += R"(
+		<serial type='pty'>
+			<target type='system-serial' port='0'>
+				<model name='pl011'/>
+			</target>
+		</serial>
+		<console type='pty'>
+			<target type='serial' port='0'/>
+		</console>
+		<channel type='unix'>
+			<target type='virtio' name='negotiator.0'/>
+		</channel>
+
+		<input type='tablet' bus='usb'>
+		</input>
+		<input type='keyboard' bus='usb'/>
+		<graphics type='spice' autoport='yes'>
+			<listen type='address'/>
+			<image compression='off'/>
+			<gl enable='no'/>
+		</graphics>
+		<sound model='ich6'>
+		</sound>
+		)";
+
+		string_config += R"(
+		<video>
+		)";
+
+		if (config.count("video")) {
+			auto videos = config.at("video");
+			for (auto& video: videos) {
+				auto video_model = video.value("adapter_type", video.value("qemu_mode", preferable_video_model(qemu_connect)));
+
+				string_config += fmt::format(R"(
+			<model type='{}' heads='1' primary='yes'/>
+				)", video_model);
+			}
+		} else {
+			string_config += fmt::format(R"(
+			<model type='{}' heads='1' primary='yes'/>
+			)", preferable_video_model(qemu_connect));
+		}
+
+		string_config += R"(
+		</video>
+		)";
+
+		if (config.at("qemu_spice_agent")) {
+			string_config += R"(
+		<channel type='spicevmc'>
+			<target type='virtio' name='com.redhat.spice.0'/>
+		</channel>
+			)";
+		}
+
+		string_config += R"(
+		<redirdev bus='usb' type='spicevmc'>
+		</redirdev>
+		<redirdev bus='usb' type='spicevmc'>
+		</redirdev>
+	</devices>
+</domain>
+		)";
+
+		return string_config;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error(fmt::format("Composing xml config")));
+	}
+}
+#endif
+
+#ifdef __x86_64__
 std::string QemuVM::compose_config() const {
 	try {
 		std::string string_config = fmt::format(R"(
@@ -464,7 +729,7 @@ std::string QemuVM::compose_config() const {
 
 		if (config.count("shared_folder")) {
 			for (auto& shared_folder: config.at("shared_folder")) {
-				std::string shared_folder_cfg = fmt::format(R"(
+				string_config += fmt::format(R"(
 					<filesystem type='mount' accessmode='mapped'>
 						<driver type='path' wrpolicy='immediate'/>
 						<source dir='{}'/>
@@ -473,10 +738,13 @@ std::string QemuVM::compose_config() const {
 					shared_folder.at("name").get<std::string>()
 				);
 				if (shared_folder.value("readonly", false)) {
-					shared_folder_cfg += "<readonly/>";
+					string_config += R"(
+						<readonly/>
+					)";
 				}
-				shared_folder_cfg += "</filesystem>";
-				string_config += shared_folder_cfg;
+				string_config += R"(
+					</filesystem>
+				)";
 			}
 		}
 
@@ -524,11 +792,10 @@ std::string QemuVM::compose_config() const {
 		size_t i = 0;
 
 		if (config.count("disk")) {
-			auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-			auto disks = config.at("disk");
+			auto& disks = config.at("disk");
 			for (i = 0; i < disks.size(); i++) {
 				auto& disk = disks[i];
-				fs::path volume_path = pool.path() / (id() + "@" + disk.at("name").get<std::string>() + ".img");
+				std::string disk_name = disk.at("name");
 				string_config += fmt::format(R"(
 					<disk type='file' device='disk'>
 						<driver name='qemu' type='qcow2'/>
@@ -536,7 +803,7 @@ std::string QemuVM::compose_config() const {
 						<target dev='{}' bus='ide'/>
 						<alias name='ua-{}'/>
 					</disk>
-				)", volume_path.generic_string(), disk_targets[i], disk.at("name").get<std::string>());
+				)", disk_path(disk_name).generic_string(), ide_disk_targets[i], disk_name);
 			}
 		}
 
@@ -548,7 +815,7 @@ std::string QemuVM::compose_config() const {
 					<target dev='{}' bus='ide'/>
 					<readonly/>
 				</disk>
-			)", config.at("iso").get<std::string>(), disk_targets[i]);
+			)", config.at("iso").get<std::string>(), ide_disk_targets[i]);
 		} else {
 			string_config += fmt::format(R"(
 				<disk type='file' device='cdrom'>
@@ -556,7 +823,7 @@ std::string QemuVM::compose_config() const {
 					<target dev='{}' bus='ide'/>
 					<readonly/>
 				</disk>
-			)", disk_targets[i]);
+			)", ide_disk_targets[i]);
 		}
 
 		if (config.at("qemu_spice_agent")) {
@@ -573,10 +840,10 @@ std::string QemuVM::compose_config() const {
 		std::throw_with_nested(std::runtime_error(fmt::format("Composing xml config")));
 	}
 }
+#endif
 
 void QemuVM::install() {
 	try {
-		//now create disks
 		create_disks();
 
 		if (!config.count("qemu_enable_usb3")) {
@@ -611,8 +878,12 @@ void QemuVM::install() {
 void QemuVM::undefine() {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
-		for (auto& snapshot: domain.snapshots({VIR_DOMAIN_SNAPSHOT_LIST_ROOTS})) {
-			snapshot.destroy({VIR_DOMAIN_SNAPSHOT_DELETE_CHILDREN});
+		if (use_external_snapshots()) {
+			remove_disks();
+		} else {
+			for (auto& snapshot: domain.snapshots({VIR_DOMAIN_SNAPSHOT_LIST_ROOTS})) {
+				snapshot.destroy({VIR_DOMAIN_SNAPSHOT_DELETE_CHILDREN});
+			}
 		}
 		domain.undefine();
 	} catch (const std::exception& error) {
@@ -640,19 +911,52 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 			suspend();
 		}
 
-		pugi::xml_document xml_config;
-		xml_config.load_string(fmt::format(R"(
-			<domainsnapshot>
-				<name>{}</name>
-			</domainsnapshot>
-			)", snapshot).c_str());
+		if (use_external_snapshots()) {
+			bool is_paused = domain.state() == VIR_DOMAIN_PAUSED;
 
-		auto snap = domain.snapshot_create_xml(xml_config);
+			if (is_paused) {
+				fs::create_directories(memory_snapshot_path(snapshot).parent_path());
+				domain.save(memory_snapshot_path(snapshot));
+			}
 
-		// If we created the _init snapshot
-		if (domain.snapshots().size() == 1) {
-			snap.destroy();
-			snap = domain.snapshot_create_xml(xml_config);
+			if (fs::exists(current_nvram_path())) {
+				fs_copy(current_nvram_path(), nvram_snapshot_path(snapshot));
+			} else {
+				throw std::runtime_error("File " + current_nvram_path().string() + " does not exist");
+			}
+
+
+			if (config.count("disk")) {
+				auto& disks = config.at("disk");
+				for (size_t i = 0; i < disks.size(); ++i) {
+					auto& disk = disks[i];
+					std::string disk_name = disk.at("name");
+					fs::path path = disk_path(disk_name);
+					fs::path snapshot_path = disk_snapshot_path(disk_name, snapshot);
+					fs::rename(path, snapshot_path);
+					create_img_with_backing_file(path, snapshot_path);
+				}
+			}
+
+			if (is_paused) {
+				qemu_connect.restore_domain(memory_snapshot_path(snapshot));
+				domain = qemu_connect.domain_lookup_by_name(id());
+			}
+		} else {
+			pugi::xml_document xml_config;
+			xml_config.load_string(fmt::format(R"(
+				<domainsnapshot>
+					<name>{}</name>
+				</domainsnapshot>
+				)", snapshot).c_str());
+
+			auto snap = domain.snapshot_create_xml(xml_config);
+
+			// If we created the _init snapshot
+			if (domain.snapshots().size() == 1) {
+				snap.destroy();
+				snap = domain.snapshot_create_xml(xml_config);
+			}
 		}
 
 		if (umounted_folders.size()) {
@@ -664,11 +968,8 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 			suspend();
 		}
 
-		auto new_config = domain.dump_xml();
-		std::stringstream ss;
-		new_config.save(ss,"  ");
 		auto result = nlohmann::json::object();
-		result["config"] = base64_encode((uint8_t*)ss.str().c_str(), ss.str().length());
+		result["config"] = domain.dump_xml_base64();
 		result["nics"] = nic_pci_map;
 		result["automaticaly_umounted_shared_folders"] = umounted_folders;
 		return result;
@@ -680,6 +981,13 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 
 void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque) {
 	try {
+		{
+			auto domain = qemu_connect.domain_lookup_by_name(id());
+			if (domain.state() != VIR_DOMAIN_SHUTOFF) {
+				domain.stop();
+			}
+		}
+
 		nic_pci_map.clear();
 
 		auto& nics = opaque.at("nics");
@@ -687,21 +995,36 @@ void QemuVM::rollback(const std::string& snapshot, const nlohmann::json& opaque)
 			nic_pci_map[it.key()] = it.value().get<std::string>();
 		}
 
-		std::string config_str = opaque.at("config");
-		auto config = base64_decode(config_str);
-		std::stringstream ss;
-		ss.write((const char*)&config[0], config.size());
+		auto domain = qemu_connect.domain_define_xml_base64(opaque.at("config"));
 
-		pugi::xml_document config_xml;
-		config_xml.load_string(ss.str().c_str());
+		if (use_external_snapshots()) {
+			if (fs::exists(nvram_snapshot_path(snapshot))) {
+				fs_copy(nvram_snapshot_path(snapshot), current_nvram_path());
+			} else {
+				throw std::runtime_error("File " + nvram_snapshot_path(snapshot).string() + " does not exist");
+			}
 
-		auto domain = qemu_connect.domain_define_xml(config_xml);
-		auto snap = domain.snapshot_lookup_by_name(snapshot);
+			if (config.count("disk")) {
+				auto& disks = config.at("disk");
+				for (size_t i = 0; i < disks.size(); ++i) {
+					auto& disk = disks[i];
+					std::string disk_name = disk.at("name");
+					fs::path path = disk_path(disk_name);
+					fs::path snapshot_path = disk_snapshot_path(disk_name, snapshot);
+					if (fs::exists(path)) {
+						fs::remove(path);
+					}
+					create_img_with_backing_file(path, snapshot_path);
+				}
+			}
 
-		if (domain.state() != VIR_DOMAIN_SHUTOFF) {
-			domain.stop();
+			if (fs::exists(memory_snapshot_path(snapshot))) {
+				qemu_connect.restore_domain(memory_snapshot_path(snapshot));
+			}
+		} else {
+			auto snap = domain.snapshot_lookup_by_name(snapshot);
+			domain.revert_to_snapshot(snap);
 		}
-		domain.revert_to_snapshot(snap);
 
 		if (opaque.count("automaticaly_umounted_shared_folders") && opaque.at("automaticaly_umounted_shared_folders").size() && (state() == VmState::Suspended)) {
 			resume();
@@ -1023,6 +1346,10 @@ void QemuVM::plug_nic(const std::string& nic) {
 				} else {
 					throw std::runtime_error("Should never happen");
 				}
+
+#ifdef __aarch64__
+				string_config += "<rom bar='off'/>";
+#endif
 
 				if (nic_json.count("mac")) {
 					string_config += fmt::format("\n<mac address='{}'/>", nic_json.at("mac").get<std::string>());
@@ -1561,8 +1888,22 @@ void QemuVM::suspend() {
 
 void QemuVM::resume() {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		domain.resume();
+		coro::Timeout timeout(10s);
+		coro::Timer timer;
+		while (true) {
+			{
+				auto domain = qemu_connect.domain_lookup_by_name(id());
+				domain.resume();
+			}
+			{
+				auto domain = qemu_connect.domain_lookup_by_name(id());
+				if (domain.state() == VIR_DOMAIN_RUNNING) {
+					return;
+				} else {
+					timer.waitFor(100ms);
+				}
+			}
+		}
 	}
 	catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Resuming vm"));
@@ -1593,14 +1934,34 @@ stb::Image<stb::RGB> QemuVM::screenshot() {
 
 bool QemuVM::has_snapshot(const std::string& snapshot) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		auto snapshots = domain.snapshots();
-		for (auto& snap: snapshots) {
-			if (snap.name() == snapshot) {
-				return true;
+		if (use_external_snapshots()) {
+			if (!fs::exists(nvram_snapshot_path(snapshot))) {
+				return false;
 			}
+
+			if (config.count("disk")) {
+				auto& disks = config.at("disk");
+				for (size_t i = 0; i < disks.size(); ++i) {
+					auto& disk = disks[i];
+					std::string disk_name = disk.at("name");
+					fs::path snapshot_path = disk_snapshot_path(disk_name, snapshot);
+					if (!fs::exists(snapshot_path)) {
+						return false;
+					}
+				}
+			}
+
+			return true;
+		} else {
+			auto domain = qemu_connect.domain_lookup_by_name(id());
+			auto snapshots = domain.snapshots();
+			for (auto& snap: snapshots) {
+				if (snap.name() == snapshot) {
+					return true;
+				}
+			}
+			return false;
 		}
-		return false;
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Checking whether vm has snapshot {}", snapshot)));
 	}
@@ -1608,9 +1969,31 @@ bool QemuVM::has_snapshot(const std::string& snapshot) {
 
 void QemuVM::delete_snapshot(const std::string& snapshot) {
 	try {
-		auto domain = qemu_connect.domain_lookup_by_name(id());
-		auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
-		vir_snapshot.destroy();
+		if (use_external_snapshots()) {
+			if (fs::exists(nvram_snapshot_path(snapshot))) {
+				fs::remove(nvram_snapshot_path(snapshot));
+			}
+
+			if (fs::exists(memory_snapshot_path(snapshot))) {
+				fs::remove(memory_snapshot_path(snapshot));
+			}
+
+			if (config.count("disk")) {
+				auto& disks = config.at("disk");
+				for (size_t i = 0; i < disks.size(); ++i) {
+					auto& disk = disks[i];
+					std::string disk_name = disk.at("name");
+					fs::path snapshot_path = disk_snapshot_path(disk_name, snapshot);
+					if (fs::exists(snapshot_path)) {
+						fs::remove(snapshot_path);
+					}
+				}
+			}
+		} else {
+			auto domain = qemu_connect.domain_lookup_by_name(id());
+			auto vir_snapshot = domain.snapshot_lookup_by_name(snapshot);
+			vir_snapshot.destroy();
+		}
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error("Deleting snapshot with children"));
 	}
@@ -1655,20 +2038,34 @@ std::shared_ptr<GuestAdditions> QemuVM::guest_additions() {
 	}
 }
 
+bool QemuVM::is_my_disk(const fs::path& path) const {
+	std::string disk_name = path.filename();
+	if (disk_name.find("@") == std::string::npos) {
+		return false;
+	}
+	std::string prefix = disk_name.substr(0, disk_name.find("@"));
+	return prefix == id();
+}
+
 void QemuVM::remove_disks() {
 	try {
-		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-
-		//TODO
-
-		for (auto& vol: pool.volumes()) {
-			std::string volume_name = vol.name();
-			if (volume_name.find("@") == std::string::npos) {
-				continue;
+		if (use_external_snapshots()) {
+			for (fs::path dir: {disks_dir(), memory_dir(), nvram_dir()}) {
+				for (auto& entry: fs::directory_iterator{dir}) {
+					if (is_my_disk(entry)) {
+						fs::remove(entry);
+					}
+				}
 			}
-			volume_name = volume_name.substr(0, volume_name.find("@"));
-			if (volume_name == id()) {
-				vol.erase();
+		} else {
+			auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+
+			//TODO
+
+			for (auto& vol: pool.volumes()) {
+				if (is_my_disk(vol.name())) {
+					vol.erase();
+				}
 			}
 		}
 	} catch (const std::exception& error) {
@@ -1677,58 +2074,66 @@ void QemuVM::remove_disks() {
 }
 
 void QemuVM::create_new_disk(const std::string& name, uint32_t size) {
-	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+	if (use_external_snapshots()) {
+		create_empty_img(disk_path(name), size);
+	} else {
+		pugi::xml_document xml_config;
+		xml_config.load_string(fmt::format(R"(
+			<volume type='file'>
+				<name>{}</name>
+				<source>
+				</source>
+				<capacity unit='M'>{}</capacity>
+				<target>
+					<path>{}</path>
+					<format type='qcow2'/>
+					<permissions>
+					</permissions>
+					<timestamps>
+					</timestamps>
+					<compat>1.1</compat>
+					<features>
+						<lazy_refcounts/>
+					</features>
+				</target>
+			</volume>
+		)", disk_file_name(name), size, disk_path(name).generic_string()).c_str());
 
-	fs::path disk_path = pool.path() / (name + ".img");
-
-	pugi::xml_document xml_config;
-	xml_config.load_string(fmt::format(R"(
-		<volume type='file'>
-			<name>{}.img</name>
-			<source>
-			</source>
-			<capacity unit='M'>{}</capacity>
-			<target>
-				<path>{}</path>
-				<format type='qcow2'/>
-				<permissions>
-				</permissions>
-				<timestamps>
-				</timestamps>
-				<compat>1.1</compat>
-				<features>
-					<lazy_refcounts/>
-				</features>
-			</target>
-		</volume>
-	)", name, size, disk_path.generic_string()).c_str());
-
-	auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+		auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+		auto volume = pool.volume_create_xml(xml_config, {VIR_STORAGE_VOL_CREATE_PREALLOC_METADATA});
+	}
 }
 
 void QemuVM::import_disk(const std::string& name, const fs::path& source) {
-	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
-	fs::path disk_path = pool.path() / (name + ".img");
-	fs_copy(source, disk_path);
+	if (use_external_snapshots()) {
+		create_img_with_backing_file(disk_path(name), source);
+	} else {
+		fs_copy(source, disk_path(name));
+	}
 
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
 	pool.refresh();
 }
 
 void QemuVM::create_disks() {
 	try {
-		if (!config.count("disk")) {
-			return;
+		if (use_external_snapshots()) {
+			fs::path nvram_src = source_nvram_path();
+			fs::path nvram_dst = current_nvram_path();
+			fs_copy(nvram_src, nvram_dst);
 		}
-		auto disks = config.at("disk");
-		for (size_t i = 0; i < disks.size(); ++i) {
-			auto& disk = disks[i];
-			std::string disk_name = id() + "@" + disk.at("name").get<std::string>();
+		if (config.count("disk")) {
+			auto& disks = config.at("disk");
+			for (size_t i = 0; i < disks.size(); ++i) {
+				auto& disk = disks[i];
+				std::string disk_name = disk.at("name");
 
-			if (disk.count("source")) {
-				fs::path source_disk = disk.at("source").get<std::string>();
-				import_disk(disk_name, source_disk);
-			} else {
-				create_new_disk(disk_name, disk.at("size").get<uint32_t>());
+				if (disk.count("source")) {
+					fs::path source_disk = disk.at("source").get<std::string>();
+					import_disk(disk_name, source_disk);
+				} else {
+					create_new_disk(disk_name, disk.at("size").get<uint32_t>());
+				}
 			}
 		}
 	} catch (const std::exception& error) {
@@ -1736,6 +2141,7 @@ void QemuVM::create_disks() {
 	}
 }
 
+#ifdef __x86_64__
 std::string QemuVM::preferable_video_model(const vir::Connect& qemu_connect) {
 	auto dom_caps = qemu_connect.get_domain_capabilities();
 	auto models_node = dom_caps.first_child().child("devices").child("video").child("enum");
@@ -1759,6 +2165,13 @@ std::string QemuVM::preferable_video_model(const vir::Connect& qemu_connect) {
 
 	throw std::runtime_error("Can't find any acceptable video model");
 }
+#endif
+
+#ifdef __aarch64__
+std::string QemuVM::preferable_video_model(const vir::Connect&) {
+	return "virtio";
+}
+#endif
 
 std::string QemuVM::mouse_button_to_str(MouseButton btn) {
 	switch (btn) {
@@ -1769,4 +2182,63 @@ std::string QemuVM::mouse_button_to_str(MouseButton btn) {
 		case WheelDown: return "wheel-down";
 		default: throw std::runtime_error("Unknown button: " + btn);
 	}
+}
+
+bool QemuVM::use_external_snapshots() const {
+#ifdef __aarch64__
+	return true;
+#else
+	return false;
+#endif
+}
+
+fs::path QemuVM::disks_dir() const {
+	auto pool = qemu_connect.storage_pool_lookup_by_name("testo-storage-pool");
+	return pool.path();
+}
+
+fs::path QemuVM::memory_dir() const {
+	return "/var/lib/libvirt/testo/ram/";
+}
+
+fs::path QemuVM::nvram_dir() const {
+	return "/var/lib/libvirt/testo/nvram/";
+}
+
+
+fs::path QemuVM::current_nvram_path() const {
+	return nvram_dir() / (id() + "@nvram");
+}
+
+fs::path QemuVM::nvram_snapshot_path(const std::string& snapshot_name) const {
+	return nvram_dir() / (id() + "@nvram." + snapshot_name);
+}
+
+fs::path QemuVM::source_nvram_path() const {
+	if (config.count("nvram")) {
+		if (config.at("nvram").count("source")) {
+			return config.at("nvram").at("source").get<std::string>();
+		}
+	}
+	return "/usr/share/AAVMF/AAVMF_VARS.fd";
+}
+
+fs::path QemuVM::memory_snapshot_path(const std::string& snapshot_name) const {
+	return memory_dir() / (id() + "@ram." + snapshot_name);
+}
+
+std::string QemuVM::disk_file_name(const std::string& name) const {
+	return id() + "@" + name  + ".img";
+}
+
+fs::path QemuVM::disk_path(const std::string& name) const {
+	return disks_dir() / disk_file_name(name);
+}
+
+std::string QemuVM::disk_snapshot_file_name(const std::string& disk_name, const std::string& snapshot_name) const {
+	return id() + "@" + disk_name + ".img." + snapshot_name;
+}
+
+fs::path QemuVM::disk_snapshot_path(const std::string& disk_name, const std::string& snapshot_name) const {
+	return disks_dir() / disk_snapshot_file_name(disk_name, snapshot_name);
 }

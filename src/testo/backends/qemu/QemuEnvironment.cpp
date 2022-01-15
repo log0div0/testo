@@ -84,8 +84,10 @@ void QemuEnvironment::validate_vm_config(const nlohmann::json& config) {
 	if (config.count("disk")) {
 		auto disks = config.at("disk");
 
-		if (disks.size() > QemuVM::disk_targets.size() - 1) {
-			throw std::runtime_error("Too many disks specified, maximum amount: " + std::to_string(QemuVM::disk_targets.size() - 1));
+		size_t max_disk_targets = std::min(QemuVM::ide_disk_targets.size(), QemuVM::scsi_disk_targets.size());
+
+		if (disks.size() > max_disk_targets - 1) {
+			throw std::runtime_error("Too many disks specified, maximum amount: " + std::to_string(max_disk_targets - 1));
 		}
 	}
 

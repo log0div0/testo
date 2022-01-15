@@ -525,6 +525,9 @@ std::shared_ptr<AST::Controller> Parser::controller() {
 			{"qemu_spice_agent", {false, [&]{ return boolean(); }}},
 			{"qemu_enable_usb3", {false, [&]{ return boolean(); }}},
 			{"loader", {false, [&]{ return string(); }}},
+			{"nvram", {false, [&]{ return attr_block({
+				{"source", {false, [&]{ return string(); }}},
+			}); }}},
 			{"nic", {true, [&]{ return attr_block({
 				{"attached_to", {false, [&]{ return id(); }}},
 				{"attached_to_dev", {false, [&]{ return string(); }}},

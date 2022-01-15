@@ -2,6 +2,8 @@
 #include "Connect.hpp"
 #include <libvirt/virterror.h>
 #include <stdexcept>
+#include <sstream>
+#include <base64.hpp>
 
 namespace vir {
 
@@ -93,6 +95,16 @@ Domain Connect::domain_define_xml(const pugi::xml_document& xml) {
 		throw std::runtime_error(virGetLastErrorMessage());
 	}
 	return result;
+}
+
+Domain Connect::domain_define_xml_base64(const std::string& config_str) {
+	auto config = base64_decode(config_str);
+	std::stringstream ss;
+	ss.write((const char*)&config[0], config.size());
+
+	pugi::xml_document config_xml;
+	config_xml.load_string(ss.str().c_str());
+	return domain_define_xml(config_xml);
 }
 
 StorageVolume Connect::storage_volume_lookup_by_path(const fs::path& path) const {
@@ -194,5 +206,14 @@ Stream Connect::new_stream(std::initializer_list<virStreamFlags> flags) {
 	}
 	return result;
 }
+
+
+void Connect::restore_domain(const fs::path& from) {
+	int result = virDomainRestore(handle, from.string().c_str());
+	if (result != 0) {
+		throw std::runtime_error(virGetLastErrorMessage());
+	}
+}
+
 
 }
