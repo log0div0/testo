@@ -11,4 +11,9 @@ for HYPERVISOR in qemu hyperv; do
 		${TMP_DIR}/${HYPERVISOR}/testo-guest-additions.rpm \
 		${TMP_DIR}/${HYPERVISOR}/testo-guest-additions-x64.msi \
 		${TMP_DIR}/${HYPERVISOR}/testo-guest-additions-x86.msi
+
+	sudo genisoimage -f -J -joliet-long -r -allow-lowercase -allow-multidot \
+		-o ${OUT_DIR}/arm/testo-guest-additions-${HYPERVISOR}.iso \
+		${TMP_DIR}/arm/${HYPERVISOR}/testo-guest-additions.deb \
+		${TMP_DIR}/arm/${HYPERVISOR}/testo-guest-additions.rpm
 done
