@@ -688,6 +688,7 @@ std::string QemuVM::compose_config() const {
 		}
 
 		string_config += R"(
+				<bootmenu enable='yes' timeout='1000'/>
 			</os>
 		)";
 
