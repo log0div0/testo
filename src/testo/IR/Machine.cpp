@@ -430,6 +430,7 @@ void Machine::validate_config() {
 		config["loader"] = loader_file.generic_string();
 	}
 
+#ifdef __aarch64__
 	if (config.count("nvram")) {
 		if (!config.at("nvram").count("source")) {
 			throw std::runtime_error("You need to specify a \"source\" attribute for nvram");
@@ -449,6 +450,7 @@ void Machine::validate_config() {
 
 		config["nvram"]["source"] = nvram_file.generic_string();
 	}
+#endif
 
 	if (config.count("disk")) {
 		auto& disks = config.at("disk");
