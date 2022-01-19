@@ -2052,6 +2052,9 @@ void QemuVM::remove_disks() {
 	try {
 		if (use_external_snapshots()) {
 			for (fs::path dir: {disks_dir(), memory_dir(), nvram_dir()}) {
+				if (!fs::exists(dir)) {
+					continue;
+				}
 				for (auto& entry: fs::directory_iterator{dir}) {
 					if (is_my_disk(entry)) {
 						fs::remove(entry);
