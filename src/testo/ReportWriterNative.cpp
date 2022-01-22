@@ -24,6 +24,7 @@ void ReportWriterNative::launch_begin() {
 	current_launch_meta["working_dir"] = fs::current_path();
 	current_launch_meta["tests_runs"] = nlohmann::json::array();
 	current_launch_meta["up_to_date_tests"] = nlohmann::json::array();
+	current_launch_meta["skipped_tests"] = nlohmann::json::array();
 
 	if (fs::exists(report_folder)) {
 		if (!fs::is_directory(report_folder)) {
@@ -51,7 +52,7 @@ void ReportWriterNative::initialize_up_to_date_test(const std::shared_ptr<IR::Te
 }
 
 void ReportWriterNative::test_skip(const std::shared_ptr<IR::TestRun>& test_run) {
-	// do nothing
+	current_launch_meta["skipped_tests"].push_back(test_run->test->name());
 }
 
 void ReportWriterNative::test_begin(const std::shared_ptr<IR::TestRun>& test_run) {
