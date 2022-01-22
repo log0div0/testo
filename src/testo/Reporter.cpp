@@ -128,7 +128,11 @@ void Reporter::skip_test() {
 		report(" because his parent ", red, true);
 	}
 	report(join(unsuccessful_parents_names, ", "), yellow, true);
-	report(" failed or skipped\n", red, true);
+	if (unsuccessful_parents_names.size() > 1) {
+		report(" are failed or skipped\n", red, true);
+	} else {
+		report(" is failed or skipped\n", red, true);
+	}
 
 	current_test_run = nullptr;
 	++current_test_run_index;

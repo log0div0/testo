@@ -66,7 +66,7 @@ void ReportWriterNative::report_prefix() {
 	if (current_test_run) {
 		report(fmt::format("[{}] ", current_test_run->test->name()));
 	} else {
-		report(fmt::format("[???] "));
+		report(fmt::format(">>> "));
 	}
 }
 
