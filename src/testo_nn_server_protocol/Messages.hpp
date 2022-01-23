@@ -13,7 +13,6 @@ inline void check_for_error(const nlohmann::json& json) {
 
 inline nlohmann::json create_ref_image_message(const stb::Image<stb::RGB>& ref_image) {
 	return {
-		{"version", NN_SERVER_PROCOTOL_VERSION},
 		{"type", "ref_image"},
 		{"image", nlohmann::json::binary(ref_image.write_png_mem())}
 	};
@@ -21,7 +20,6 @@ inline nlohmann::json create_ref_image_message(const stb::Image<stb::RGB>& ref_i
 
 inline nlohmann::json create_ref_image_request(const std::string& img_path) {
 	return {
-		{"version", NN_SERVER_PROCOTOL_VERSION},
 		{"type", "ref_image_request"},
 		{"data", img_path}
 	};
@@ -29,7 +27,6 @@ inline nlohmann::json create_ref_image_request(const std::string& img_path) {
 
 inline nlohmann::json create_js_eval_request(const stb::Image<stb::RGB>& screenshot, const std::string& script) {
 	return {
-		{"version", NN_SERVER_PROCOTOL_VERSION},
 		{"type", "js_eval"},
 		{"image", nlohmann::json::binary(screenshot.write_png_mem())},
 		{"js_script", script}
@@ -38,7 +35,6 @@ inline nlohmann::json create_js_eval_request(const stb::Image<stb::RGB>& screens
 
 inline nlohmann::json create_js_validate_request(const std::string& script) {
 	return {
-		{"version", NN_SERVER_PROCOTOL_VERSION},
 		{"type", "js_validate"},
 		{"js_script", script}
 	};
@@ -46,7 +42,6 @@ inline nlohmann::json create_js_validate_request(const std::string& script) {
 
 inline nlohmann::json create_error_message(const std::string& message, std::string _stdout = "") {
 	return {
-		{"version", NN_SERVER_PROCOTOL_VERSION},
 		{"type", "error"},
 		{"data", message},
 		{"stdout", _stdout}
@@ -55,7 +50,6 @@ inline nlohmann::json create_error_message(const std::string& message, std::stri
 
 inline nlohmann::json create_continue_error_message(const std::string& message, std::string _stdout = "") {
 	return {
-		{"version", NN_SERVER_PROCOTOL_VERSION},
 		{"type", "continue_error"},
 		{"data", message},
 		{"stdout", _stdout}
