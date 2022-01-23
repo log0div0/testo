@@ -24,7 +24,7 @@ endif()
 
 add_executable(testo_nn_server ${SRCS})
 
-target_link_libraries(testo_nn_server coro stb js nn license)
+target_link_libraries(testo_nn_server coro stb js nn license version_number)
 
 if (USE_CUDA)
 	target_link_libraries(testo_nn_server CUDA::cudart_static)

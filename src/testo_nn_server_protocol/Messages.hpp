@@ -33,7 +33,7 @@ inline nlohmann::json create_handshake_request(const VersionNumber& client_versi
 
 inline nlohmann::json create_handshake_response(const VersionNumber& server_version) {
 	return {
-		{"type", HANDSHAKE_REQUEST},
+		{"type", HANDSHAKE_RESPONSE},
 		{"server_version", server_version.to_string()},
 	};
 }

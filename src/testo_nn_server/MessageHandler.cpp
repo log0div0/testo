@@ -13,6 +13,8 @@
 
 using namespace std::chrono_literals;
 
+static const VersionNumber server_version(TESTO_VERSION);
+
 template <typename Duration>
 std::string duration_to_str(Duration duration) {
 
@@ -77,10 +79,12 @@ nlohmann::json MessageHandler::handle_request(nlohmann::json& request) {
 	nlohmann::json response;
 
 	auto type = request.at("type").get<std::string>();
-	if (type == JS_EVAL_REQUEST) {
-		response = handle_js_eval_request(request);
+	if (type == HANDSHAKE_REQUEST) {
+		response = handle_handshake(request);
+	 } else if (type == JS_EVAL_REQUEST) {
+		response = handle_js_eval(request);
 	} else if (type == JS_VALIDATE_REQUEST) {
-		response = handle_js_validate_request(request);
+		response = handle_js_validate(request);
 	} else {
 		throw std::runtime_error("Unexpected request type: " + type);
 	}
@@ -90,7 +94,12 @@ nlohmann::json MessageHandler::handle_request(nlohmann::json& request) {
 	return response;
 }
 
-nlohmann::json MessageHandler::handle_js_eval_request(nlohmann::json& request) {
+nlohmann::json MessageHandler::handle_handshake(nlohmann::json& request) {
+	client_version = request.at("client_version").get<std::string>();
+	return create_handshake_response(server_version);
+}
+
+nlohmann::json MessageHandler::handle_js_eval(nlohmann::json& request) {
 	stb::Image<stb::RGB> screenshot = get_image(request);
 	request["image"] = "omitted";
 
@@ -115,7 +124,7 @@ nlohmann::json MessageHandler::handle_js_eval_request(nlohmann::json& request) {
 }
 
 
-nlohmann::json MessageHandler::handle_js_validate_request(nlohmann::json& request) {
+nlohmann::json MessageHandler::handle_js_validate(nlohmann::json& request) {
 	spdlog::trace(fmt::format("Got a js_validate request \n{}\n", request.dump(4)));
 	js::Context js_ctx(nullptr, this);
 	auto script = fmt::format("function __testo__() {{\n{}\n}}\nlet result = __testo__()\nJSON.stringify(result)", request.at("js_script").get<std::string>());
@@ -128,3 +137,4 @@ nlohmann::json MessageHandler::handle_js_validate_request(nlohmann::json& reques
 		return create_js_validate_response(false, error.what());
 	}
 }
+
