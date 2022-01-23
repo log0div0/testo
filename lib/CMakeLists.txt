@@ -20,3 +20,4 @@ endif()
 
 add_subdirectory(stb)
 add_subdirectory(os)
+add_subdirectory(version_number)

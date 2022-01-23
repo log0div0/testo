@@ -7,7 +7,7 @@
 
 #include "Channel.hpp"
 #include "SharedFolder.hpp"
-#include <testo_guest_additions_protocol/VersionNumber.hpp>
+#include <version_number/VersionNumber.hpp>
 
 struct ExecuteContext {
 	ExecuteContext();

@@ -6,7 +6,7 @@
 #include <ghc/filesystem.hpp>
 namespace fs = ghc::filesystem;
 
-#include "VersionNumber.hpp"
+#include <version_number/VersionNumber.hpp>
 
 struct GuestAdditions {
 	virtual ~GuestAdditions() = default;

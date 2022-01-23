@@ -8,4 +8,4 @@ endif()
 
 file(GLOB_RECURSE SRCS *.cpp)
 add_library(testo_guest_additions_protocol STATIC ${SRCS})
-target_link_libraries(testo_guest_additions_protocol os)
+target_link_libraries(testo_guest_additions_protocol os version_number)
