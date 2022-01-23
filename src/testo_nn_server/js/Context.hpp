@@ -41,6 +41,7 @@ struct ContextRef {
 	Value new_object();
 	Value new_object_class(int class_id);
 	Value new_continue_error(const std::string& message);
+	Value new_exception_with_category(const std::string& message, const std::string& failure_category);
 
 	void set_class_proto(JSClassID class_id, Value obj);
 

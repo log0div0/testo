@@ -91,19 +91,18 @@ inline nlohmann::json create_js_validate_response(bool success, const std::strin
 
 // errors
 
-inline nlohmann::json create_error_response(const std::string& message, const std::string& _stdout = {}) {
+inline nlohmann::json create_error_response(const std::string& message, const std::string& failure_category) {
 	return {
 		{"type", ERROR_RESPONSE},
 		{"data", message},
-		{"stdout", _stdout},
+		{"failure_category", failure_category},
 	};
 }
 
-inline nlohmann::json create_continue_error_response(const std::string& message, const std::string& _stdout = {}) {
+inline nlohmann::json create_continue_error_response(const std::string& message) {
 	return {
 		{"type", CONTINUE_ERROR_RESPONSE},
 		{"data", message},
-		{"stdout", _stdout},
 	};
 }
 

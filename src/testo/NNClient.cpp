@@ -66,10 +66,11 @@ nlohmann::json NNClient::receive_response() {
 	nlohmann::json response = channel->recv();
 	std::string type = response.at("type");
 	if (type == ERROR_RESPONSE) {
-		std::string message = response.at("data").get<std::string>();
-		throw std::runtime_error(message);
+		std::string message = response.at("data");
+		std::string failure_category = response.at("failure_category");
+		throw ExceptionWithCategory(message, failure_category);
 	} else if (type == CONTINUE_ERROR_RESPONSE) {
-		std::string message = response.at("data").get<std::string>();
+		std::string message = response.at("data");
 		throw ContinueError(message);
 	}
 	return response;

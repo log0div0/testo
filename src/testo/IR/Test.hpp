@@ -75,6 +75,7 @@ struct TestRun {
 
 	std::string failure_message;
 	std::string failure_stacktrace;
+	std::string failure_category;
 };
 
 }

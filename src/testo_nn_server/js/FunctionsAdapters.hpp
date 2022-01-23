@@ -14,56 +14,51 @@ typedef Value JSCPPFunction(ContextRef ctx, const ValueRef this_val, const std::
 typedef Value JSCPPGetter(ContextRef ctx, ValueRef this_val);
 typedef Value JSCPPSetter(ContextRef ctx, ValueRef this_val, ValueRef val);
 
+template <typename Fn>
+JSValue FuncWrapper(JSContext *ctx, Fn&& fn) {
+	try {
+		return fn();
+	} catch (const ContinueError& error) {
+		ContextRef ctx_ref(ctx);
+		Value exception = ctx_ref.throw_(ctx_ref.new_continue_error(error.what()));
+		return exception.release();
+	} catch (const ExceptionWithCategory& error) {
+		ContextRef ctx_ref(ctx);
+		Value exception = ctx_ref.throw_(ctx_ref.new_exception_with_category(error.what(), error.failure_category));
+		return exception.release();
+	} catch (const std::exception& error) {
+		ContextRef ctx_ref(ctx);
+		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
+		return exception.release();
+	}
+}
+
 template <JSCPPFunction F>
 JSValue Func(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-	try {
+	return FuncWrapper(ctx, [&] {
 		std::vector<ValueRef> args;
 		for (int i = 0; i < argc; ++i) {
 			args.push_back(ValueRef(argv[i], ctx));
 		}
 		Value result = F(ctx, ValueRef(this_val, ctx), args);
 		return result.release();
-	} catch (const nn::ContinueError& error) {
-		ContextRef ctx_ref(ctx);
-		Value exception = ctx_ref.throw_(ctx_ref.new_continue_error(error.what()));
-		return exception.release();
-	} catch (const std::exception& error) {
-		ContextRef ctx_ref(ctx);
-		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
-		return exception.release();
-	}
+	});
 }
 
 template <JSCPPGetter F>
 JSValue Func(JSContext* ctx, JSValueConst this_val) {
-	try {
+	return FuncWrapper(ctx, [&] {
 		Value result = F(ctx, ValueRef(this_val, ctx));
 		return result.release();
-	} catch (const nn::ContinueError& error) {
-		ContextRef ctx_ref(ctx);
-		Value exception = ctx_ref.throw_(ctx_ref.new_continue_error(error.what()));
-		return exception.release();
-	} catch (const std::exception& error) {
-		ContextRef ctx_ref(ctx);
-		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
-		return exception.release();
-	}
+	});
 }
 
 template <JSCPPSetter F>
 JSValue Func(JSContext* ctx, JSValueConst this_val, JSValueConst val) {
-	try {
+	return FuncWrapper(ctx, [&] {
 		Value result = F(ctx, ValueRef(this_val, ctx), ValueRef(val, ctx));
 		return result.release();
-	} catch (const nn::ContinueError& error) {
-		ContextRef ctx_ref(ctx);
-		Value exception = ctx_ref.throw_(ctx_ref.new_continue_error(error.what()));
-		return exception.release();
-	} catch (const std::exception& error) {
-		ContextRef ctx_ref(ctx);
-		Value exception = ctx_ref.throw_(ctx_ref.new_string(error.what()));
-		return exception.release();
-	}
+	});
 }
 
 template <JSCPPFunction func>

@@ -42,7 +42,11 @@ Value ContextRef::eval(const std::string& script, bool compile_only) {
 		Value exception_val = get_exception();
 		if (exception_val.is_instance_of(get_global_object().get_property_str("ContinueError"))) {
 			std::string message = exception_val.get_property_str("message");
-			throw nn::ContinueError(message);
+			throw ContinueError(message);
+		} else if (exception_val.is_instance_of(get_global_object().get_property_str("ExceptionWithCategory"))) {
+			std::string message = exception_val.get_property_str("message");
+			std::string failure_category = exception_val.get_property_str("failure_category");
+			throw ExceptionWithCategory(message, failure_category);
 		} else {
 			std::string message;
 
@@ -136,6 +140,10 @@ Value ContextRef::new_continue_error(const std::string& message) {
 	return call_constructor(get_global_object().get_property_str("ContinueError"), {new_string(message)});
 }
 
+Value ContextRef::new_exception_with_category(const std::string& message, const std::string& failure_category) {
+	return call_constructor(get_global_object().get_property_str("ExceptionWithCategory"), {new_string(message), new_string(failure_category)});
+}
+
 void ContextRef::set_class_proto(JSClassID class_id, Value obj) {
 	JS_SetClassProto(handle, class_id, obj.release());
 }
@@ -200,6 +208,17 @@ Context::Context(const stb::Image<stb::RGB>* image, ContextEnv* env): ContextRef
 		}
 
 		ContinueError.prototype = Object.create(Error.prototype);
+
+		function ExceptionWithCategory(message, failure_category) {
+			if (!new.target) {
+				return new ExceptionWithCategory(message. failure_category);
+			}
+			this.name = "ExceptionWithCategory";
+			this.message = message;
+			this.failure_category = failure_category;
+		}
+
+		ExceptionWithCategory.prototype = Object.create(Error.prototype);
 	)");
 }
 

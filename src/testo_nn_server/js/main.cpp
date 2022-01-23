@@ -60,10 +60,15 @@ int main(int argc, char** argv) {
 		auto val = js_ctx.eval(script);
 
 		return 0;
-	} catch (const nn::ContinueError& error) {
-		std::cerr << "C++ ContinueError!" << std::endl;
+	} catch (const ContinueError& error) {
+		std::cerr << "ContinueError!" << std::endl;
 		std::cerr << error.what() << std::endl;
+	} catch (const ExceptionWithCategory& error) {
+		std::cerr << "ExceptionWithCategory!" << std::endl;
+		std::cerr << error.what() << std::endl;
+		std::cerr << error.failure_category << std::endl;
 	} catch (const std::exception& error) {
+		std::cerr << "std::exception!" << std::endl;
 		std::cerr << error << std::endl;
 	}
 }

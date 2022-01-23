@@ -1,24 +1,15 @@
 
 #pragma once
 
-#include <stdexcept>
 #include <vector>
 #include <algorithm>
 
 #include "nlohmann/json.hpp"
 
 #include "Point.hpp"
-
+#include "../Exceptions.hpp"
 
 namespace nn {
-
-struct ContinueError: std::runtime_error {
-	using std::runtime_error::runtime_error;
-};
-
-struct LogicError: std::runtime_error {
-	using std::runtime_error::runtime_error;
-};
 
 template <typename Object>
 struct Tensor {

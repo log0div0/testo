@@ -116,7 +116,10 @@ void ReportWriterNative::test_end() {
 		{"test_name", current_test_run->test->name()},
 		{"exec_status", to_string(current_test_run->exec_status)},
 		{"start_timestamp", to_string(current_test_run->start_timestamp)},
-		{"stop_timestamp", to_string(current_test_run->stop_timestamp)}
+		{"stop_timestamp", to_string(current_test_run->stop_timestamp)},
+		{"failure_message", current_test_run->failure_message},
+		{"failure_stacktrace", current_test_run->failure_stacktrace},
+		{"failure_category", current_test_run->failure_category},
 	};
 	file << current_test_run_meta.dump(2);
 	current_test_run = nullptr;

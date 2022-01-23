@@ -34,18 +34,16 @@ void MessageHandler::run() {
 			response = handle_request(request);
 		} catch (const std::system_error& error) {
 			throw;
-		} catch (const nn::ContinueError& continue_error) {
+		} catch (const ContinueError& continue_error) {
 			response = create_continue_error_response(continue_error.what());
 		} catch (const std::exception& error) {
 			if (request.count("image")) {
 				request["image"] = "omitted";
 			}
 			spdlog::error("Error while processing request \n{}:\n{}", request.dump(4), error.what());
-			response = create_error_response(error.what());
+			response = create_error_response(error.what(), GetFailureCategory(error));
 		}
-		if (!response.empty()) {
-			channel->send(response);
-		}
+		channel->send(response);
 	}
 }
 

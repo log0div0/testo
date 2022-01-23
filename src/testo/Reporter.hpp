@@ -28,7 +28,7 @@ struct Reporter {
 	void prepare_environment();
 	void run_test();
 	void test_passed();
-	void test_failed(const std::string& message, const std::string& stacktrace);
+	void test_failed(const std::string& message, const std::string& stacktrace, const std::string& failure_category);
 
 	void print_statistics();
 

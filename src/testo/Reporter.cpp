@@ -153,11 +153,12 @@ void Reporter::test_passed() {
 	++current_test_run_index;
 }
 
-void Reporter::test_failed(const std::string& message, const std::string& stacktrace) {
+void Reporter::test_failed(const std::string& message, const std::string& stacktrace, const std::string& failure_category) {
 	report_raw(fmt::format("{}", stacktrace), red, true);
 
 	current_test_run->failure_message = message;
 	current_test_run->failure_stacktrace = stacktrace;
+	current_test_run->failure_category = failure_category;
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Failed;
 

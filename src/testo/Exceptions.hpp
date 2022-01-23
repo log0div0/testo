@@ -33,8 +33,17 @@ struct TestFailedException: Exception {
 	TestFailedException(): Exception("At least one of the tests failed") {}
 };
 
+struct ExceptionWithCategory: Exception {
+	ExceptionWithCategory(const std::string& message, const std::string& failure_category_):
+		Exception(message), failure_category(failure_category_) {}
+
+	std::string failure_category;
+};
+
 struct ContinueError: std::runtime_error {
 	using std::runtime_error::runtime_error;
 };
 
 std::ostream& operator<<(std::ostream& stream, const std::exception& error);
+
+std::string GetFailureCategory(const std::exception& error);
