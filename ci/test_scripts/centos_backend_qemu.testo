@@ -329,7 +329,7 @@ test centos_backend_qemu_skip_failed: centos_install_testo {
 			output=$(testo run /opt/scripts/script.testo)
 			[[ $output == *"Test test_parent PASSED"* ]]
 			[[ $output == *"Test test_child1 FAILED"* ]]
-			[[ $output == *"Skipping test test_child2 because his parent test_child1 failed or skipped"* ]]
+			[[ $output == *"Skipping test test_child2 because his parent test_child1 is failed or skipped"* ]]
 			[[ $output == *"Test test_parent2 PASSED"* ]]
 		"""
 	}
@@ -345,8 +345,8 @@ test centos_backend_qemu_skip_failed2: centos_install_testo {
 			set +e
 			output=$(testo run /opt/scripts/script.testo)
 			[[ $output == *"Test test_parent FAILED"* ]]
-			[[ $output == *"Skipping test test_child1 because his parent test_parent failed or skipped"* ]]
-			[[ $output == *"Skipping test test_child2 because his parent test_parent failed or skipped"* ]]
+			[[ $output == *"Skipping test test_child1 because his parent test_parent is failed or skipped"* ]]
+			[[ $output == *"Skipping test test_child2 because his parent test_parent is failed or skipped"* ]]
 		"""
 	}
 }
