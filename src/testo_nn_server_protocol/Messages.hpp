@@ -3,7 +3,12 @@
 #include <nlohmann/json.hpp>
 #include <stb/Image.hpp>
 
+#include <version_number/VersionNumber.hpp>
+
 #include <string>
+
+#define HANDSHAKE_REQUEST "handshake_request"
+#define HANDSHAKE_RESPONSE "handshake_response"
 
 #define REF_IMAGE_REQUEST "ref_image_request"
 #define REF_IMAGE_RESPONSE "ref_image"
@@ -16,6 +21,22 @@
 
 #define ERROR_RESPONSE "error"
 #define CONTINUE_ERROR_RESPONSE "continue_error"
+
+// handshake
+
+inline nlohmann::json create_handshake_request(const VersionNumber& client_version) {
+	return {
+		{"type", HANDSHAKE_REQUEST},
+		{"client_version", client_version.to_string()},
+	};
+}
+
+inline nlohmann::json create_handshake_response(const VersionNumber& server_version) {
+	return {
+		{"type", HANDSHAKE_REQUEST},
+		{"server_version", server_version.to_string()},
+	};
+}
 
 // ref image
 

@@ -8,6 +8,10 @@
 
 using namespace std::chrono_literals;
 
+static const VersionNumber client_version(TESTO_VERSION);
+static const VersionNumber minimal_server_version(3, 2, 0);
+
+
 NNClient::NNClient(const std::string& ip, const std::string& port):
 	endpoint(asio::ip::address::from_string(ip), std::stoul(port)),
 	channel(new Channel(Socket()))
@@ -38,10 +42,24 @@ bool is_connection_lost(const std::error_code& code) {
 }
 
 void NNClient::establish_connection() {
-	return establish_connection_wrapper([&] {
+	establish_connection_wrapper([&] {
 		channel->socket = Socket();
 		channel->socket.connect(endpoint);
 	});
+
+	channel->send(create_handshake_request(client_version));
+	nlohmann::json response = channel->recv();
+	std::string type = response.at("type");
+	if (type == ERROR_RESPONSE) {
+		server_version = VersionNumber(3, 0, 0);
+	} else if (type == HANDSHAKE_RESPONSE) {
+		server_version = response.at("server_version").get<std::string>();
+	} else {
+		throw std::runtime_error(std::string("Unexpected message type: ") + type);
+	}
+	if (server_version < minimal_server_version) {
+		throw std::runtime_error("Testo NN Server has an incompatible version. You should update it to the version " + minimal_server_version.to_string() + " or higher");
+	}
 }
 
 nlohmann::json NNClient::receive_response() {
@@ -115,7 +133,7 @@ nlohmann::json NNClient::eval_js(const stb::Image<stb::RGB>* image, const std::s
 			} else if (type == JS_EVAL_RESPONSE) {
 				return response;
 			} else {
-				throw std::runtime_error(std::string("Unknown message type: ") + type);
+				throw std::runtime_error(std::string("Unexpected message type: ") + type);
 			}
 		}
 	});

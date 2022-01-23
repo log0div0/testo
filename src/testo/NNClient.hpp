@@ -24,4 +24,5 @@ private:
 
 	Endpoint endpoint;
 	std::shared_ptr<Channel> channel;
+	VersionNumber server_version;
 };
