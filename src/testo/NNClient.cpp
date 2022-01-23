@@ -1,6 +1,7 @@
 
 #include "NNClient.hpp"
 #include "Logger.hpp"
+#include "Exceptions.hpp"
 
 #include <coro/Timer.h>
 #include <iostream>
@@ -20,7 +21,7 @@ NNClient::~NNClient() {
 	TRACE();
 }
 
-bool check_system_code(const std::error_code& code) {
+bool is_connection_lost(const std::error_code& code) {
 	int value = code.value();
 	if (value == ECONNABORTED ||
 		value == ECONNRESET ||
@@ -37,83 +38,85 @@ bool check_system_code(const std::error_code& code) {
 }
 
 void NNClient::establish_connection() {
-	for (size_t i = 1; i <= tries; ++i) {
+	return establish_connection_wrapper([&] {
+		channel->socket = Socket();
+		channel->socket.connect(endpoint);
+	});
+}
+
+nlohmann::json NNClient::receive_response() {
+	nlohmann::json response = channel->recv();
+	std::string type = response.at("type");
+	if (type == ERROR_RESPONSE) {
+		std::string message = response.at("data").get<std::string>();
+		throw std::runtime_error(message);
+	} else if (type == CONTINUE_ERROR_RESPONSE) {
+		std::string message = response.at("data").get<std::string>();
+		throw ContinueError(message);
+	}
+	return response;
+}
+
+void NNClient::establish_connection_wrapper(const std::function<void()>& fn) {
+	for (size_t i = 0; i < establish_connection_tries; ++i) {
 		try {
-			channel->socket = Socket();
-			channel->socket.connect(endpoint);
-			return;
+			return fn();
 		} catch (const std::exception& error) {
 			std::cerr << error.what() << std::endl;
-			coro::Timer timer;
-			timer.waitFor(2s);
+			if (i < (establish_connection_tries - 1)) {
+				std::cerr << "Failed to connect to the server, reconnecting ...\n";
+				coro::Timer timer;
+				timer.waitFor(2s);
+			}
 		}
-		
 	}
-	
-	throw std::runtime_error("Can't connect to the nn_server");
+
+	throw std::runtime_error("Exceeding the number of attempts to connect to the server");
 }
 
-nlohmann::json NNClient::eval_js(const stb::Image<stb::RGB>* image, const std::string& script)
-{
-	for (size_t i = 0; i < tries; ++i) {
+nlohmann::json NNClient::rcp_wrapper(const std::function<nlohmann::json()>& fn) {
+	for (size_t i = 0; i < rpc_tries; ++i) {
 		try {
-			channel->send(create_js_eval_request(*image, script));
-
-			while (true) {
-				auto response = channel->recv();
-				auto type = response.at("type").get<std::string>();
-				if (type == "error") {
-					throw std::runtime_error(response.at("data").get<std::string>());
+			return fn();
+		} catch (const std::system_error& error) {
+			if (is_connection_lost(error.code())) {
+				std::cerr << error.what() << std::endl;
+				if (i < (rpc_tries - 1)) {
+					std::cerr << "Lost the connection to the server, reconnecting...\n";
+					establish_connection();
 				}
-				if (type == "ref_image_request") {
-					//handle this
-					std::string ref_file_path = response.at("data").get<std::string>();
+			} else {
+				throw;
+			}
+		}
+	}
+	throw std::runtime_error("Exceeding the number of attempts to execute RPC");
+}
 
-					stb::Image<stb::RGB> ref_image;
-					try {
-						ref_image = stb::Image<stb::RGB>(ref_file_path);
-					} catch (const std::exception& error) {
-						try {
-							channel->send(create_error_message(error.what()));
-						} catch (...) {}
-						throw;
-					}
+nlohmann::json NNClient::eval_js(const stb::Image<stb::RGB>* image, const std::string& script) {
+	return rcp_wrapper([&] {
+		channel->send(create_js_eval_request(*image, script));
 
-					channel->send(create_ref_image_message(ref_image));
-					continue;
+		while (true) {
+			nlohmann::json response = receive_response();
+			std::string type = response.at("type");
+			if (type == REF_IMAGE_REQUEST) {
+				std::string ref_file_path = response.at("data");
+
+				stb::Image<stb::RGB> ref_image;
+				try {
+					ref_image = stb::Image<stb::RGB>(ref_file_path);
+				} catch (const std::exception& error) {
+					std::throw_with_nested(std::runtime_error("NN server requested image " + ref_file_path + " but we failed to open the file"));
 				}
 
+				channel->send(create_ref_image_response(ref_image));
+				continue;
+			} else if (type == JS_EVAL_RESPONSE) {
 				return response;
-			}
-
-			return {};
-		} catch (const std::system_error& error) {
-			if (check_system_code(error.code())) {
-				std::cerr << "Lost the connection to the nn_server, reconnecting...\n";
-				establish_connection();
 			} else {
-				throw;
+				throw std::runtime_error(std::string("Unknown message type: ") + type);
 			}
 		}
-	}
-	throw std::runtime_error("Can't request the nn_server to find the text");
-}
-
-nlohmann::json NNClient::validate_js(const std::string& script)
-{
-	for (size_t i = 0; i < tries; ++i) {
-		try {
-			channel->send(create_js_validate_request(script));
-			auto response = channel->recv();
-			return response;
-		} catch (const std::system_error& error) {
-			if (check_system_code(error.code())) {
-				std::cerr << "Lost the connection to the nn_server, reconnecting...\n";
-				establish_connection();
-			} else {
-				throw;
-			}
-		}
-	}
-	throw std::runtime_error("Can't request the nn_server to find the text");
+	});
 }

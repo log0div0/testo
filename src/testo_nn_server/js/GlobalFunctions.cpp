@@ -39,23 +39,7 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 
 	std::string img_path = args.at(0);
 
-	ctx.channel()->send(create_ref_image_request(img_path));
-	nlohmann::json response;
-	try {
-		response = ctx.channel()->recv();
-	} catch (const std::exception& error) {
-		throw std::runtime_error("Couldn't get the ref image: " + std::string(error.what()));
-	}
-	
-	check_for_error(response);
-
-	auto type = response.at("type").get<std::string>();
-	if (type != "ref_image") {
-		throw std::runtime_error("Unexpected message type instead of \"ref_image\": " + type);
-	}
-
-	stb::Image<stb::RGB> ref_image;
-	ref_image = get_image(response);
+	stb::Image<stb::RGB> ref_image = ctx.env()->get_ref_image(img_path);
 	
 	nn::ImgTensor tensor = nn::find_img(ctx.image(), &ref_image);
 	return ImgTensor(ctx, tensor);

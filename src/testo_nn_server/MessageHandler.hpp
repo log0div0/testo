@@ -2,8 +2,9 @@
 #pragma once
 
 #include "testo_nn_server_protocol/Channel.hpp"
+#include "js/Context.hpp"
 
-struct MessageHandler {
+struct MessageHandler: js::ContextEnv {
 	MessageHandler(std::shared_ptr<Channel> channel_): channel(std::move(channel_)) {};
 	~MessageHandler() = default;
 
@@ -11,6 +12,8 @@ struct MessageHandler {
 	MessageHandler& operator=(const MessageHandler&) = delete;
 
 	void run();
+
+	stb::Image<stb::RGB> get_ref_image(const std::string& img_path) override;
 
 private:
 	nlohmann::json handle_request(nlohmann::json& request);

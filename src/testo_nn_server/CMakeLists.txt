@@ -15,8 +15,6 @@ endif()
 
 file(GLOB SRCS *.cpp)
 
-list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/client_demo.cpp)
-
 if (UNIX)
 	list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MainWin.cpp)
 endif()
@@ -32,12 +30,8 @@ if (USE_CUDA)
 	target_link_libraries(testo_nn_server CUDA::cudart_static)
 endif()
 
-add_executable(testo_nn_client_demo client_demo.cpp)
-target_link_libraries(testo_nn_client_demo stb coro)
-
 if (UNIX)
 	target_link_libraries(testo_nn_server pthread)
-	target_link_libraries(testo_nn_client_demo pthread)
 endif()
 
 add_subdirectory(license)

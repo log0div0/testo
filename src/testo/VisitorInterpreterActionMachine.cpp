@@ -1043,23 +1043,11 @@ nlohmann::json VisitorInterpreterActionMachine::eval_js(const std::string& scrip
 	try {
 		auto eval_result = env->nn_client->eval_js(&screenshot, script);
 
-		auto type = eval_result.at("type").get<std::string>();
-
-		if (type == "error") {
-			std::string message = eval_result.at("data").get<std::string>();
-			throw std::runtime_error(message);
-		} else if (type == "continue_error") {
-			std::string message = eval_result.at("data").get<std::string>();
-			throw ContinueError(message);
-		} else if (type == "eval_result") {
-			std::string output = eval_result.value("stdout", "");
-			if (output.length()) {
-				reporter.js_stdout(output);
-			}
-			return eval_result.at("data");
-		} else {
-			throw std::runtime_error(std::string("Unknown message type: ") + type);
+		std::string output = eval_result.value("stdout", "");
+		if (output.length()) {
+			reporter.js_stdout(output);
 		}
+		return eval_result.at("data");
 	} catch(const ContinueError& error) {
 		throw;
 	} catch(const std::exception& error) {

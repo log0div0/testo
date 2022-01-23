@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "testo_nn_server_protocol/Channel.hpp"
 #include "Value.hpp"
 #include <stb/Image.hpp>
 #include <vector>
@@ -9,11 +8,16 @@
 
 namespace js {
 
+struct ContextEnv {
+	virtual ~ContextEnv() {}
+	virtual stb::Image<stb::RGB> get_ref_image(const std::string& img_path) = 0;
+};
+
 struct ContextRef {
 	struct Opaque {
 		const stb::Image<stb::RGB>* image;
 		std::stringstream _stdout;
-		std::shared_ptr<Channel> channel;
+		ContextEnv* env;
 	};
 
 	ContextRef(JSContext* handle);
@@ -44,7 +48,7 @@ struct ContextRef {
 
 	const stb::Image<stb::RGB>* image() const;
 	std::stringstream& get_stdout();
-	std::shared_ptr<Channel> channel() const;
+	ContextEnv* env() const;
 
 protected:
 	void set_opaque(void* opaque);
@@ -56,7 +60,7 @@ protected:
 
 struct Context: ContextRef {
 	Context() = delete;
-	Context(const stb::Image<stb::RGB>* image, std::shared_ptr<Channel> channel = nullptr);
+	Context(const stb::Image<stb::RGB>* image, ContextEnv* env = nullptr);
 	~Context();
 
 	Context(const Context& other) = delete;

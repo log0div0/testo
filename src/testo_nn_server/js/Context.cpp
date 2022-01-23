@@ -156,7 +156,11 @@ const stb::Image<stb::RGB>* ContextRef::image() const {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
 	}
-	return ((Opaque*)get_opaque())->image;
+	const stb::Image<stb::RGB>* image = ((Opaque*)get_opaque())->image;
+	if (image == nullptr) {
+		throw std::runtime_error("Image is nullptr");
+	}
+	return image;
 }
 
 std::stringstream& ContextRef::get_stdout() {
@@ -166,17 +170,21 @@ std::stringstream& ContextRef::get_stdout() {
 	return ((Opaque*)get_opaque())->_stdout;
 }
 
-std::shared_ptr<Channel> ContextRef::channel() const {
+ContextEnv* ContextRef::env() const {
 	if (!get_opaque()) {
 		throw std::runtime_error("Context opaque is nullptr");
 	}
-	return ((Opaque*)get_opaque())->channel;
+	ContextEnv* env = ((Opaque*)get_opaque())->env;
+	if (env == nullptr) {
+		throw std::runtime_error("ContextEnv is nullptr");
+	}
+	return env;
 }
 
-Context::Context(const stb::Image<stb::RGB>* image, std::shared_ptr<Channel> channel): ContextRef(JS_NewContext(Runtime::instance().handle)) {
+Context::Context(const stb::Image<stb::RGB>* image, ContextEnv* env): ContextRef(JS_NewContext(Runtime::instance().handle)) {
 	// image может быть нулевым, если мы просто хотим скомпилировать js
 	opaque.image = image;
-	opaque.channel = channel;
+	opaque.env = env;
 	set_opaque((void*)&opaque);
 
 	register_global_functions();
