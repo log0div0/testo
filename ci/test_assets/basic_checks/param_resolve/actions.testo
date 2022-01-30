@@ -113,14 +113,14 @@ param copyto_param "200ms"
 [no_snapshots: true]
 test check_copyto_param {
 	my_ubuntu_server {
-		copyto "/opt/scripts/actions.testo" "/opt/scripts/actions.testo" timeout "${copyto_param}"
+		copyto "actions.testo" "/opt/scripts/actions.testo" timeout "${copyto_param}"
 	}
 }
 
 [no_snapshots: true]
 test check_copyto_token {
 	my_ubuntu_server {
-		copyto "/opt/scripts/actions.testo" "/opt/scripts/actions.testo" timeout 200ms
+		copyto "actions.testo" "/opt/scripts/actions.testo" timeout 200ms
 	}
 }
 
