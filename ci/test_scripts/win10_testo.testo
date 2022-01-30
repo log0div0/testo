@@ -1,7 +1,6 @@
 
 include "win10.testo"
 
-[no_snapshots: true]
 test win10_test_testo_install: win10_prepare {
 	win10 {
 		start
@@ -22,5 +21,20 @@ test win10_test_testo_install: win10_prepare {
 		wait !"Click the Finish button"
 
 		exec cmd "testo version"
+		shutdown
+	}
+}
+
+[no_snapshots: true]
+test win10_test_testo_basic_checks: win10_test_testo_install {
+	win10 {
+		start
+		wait "Корзина"
+		copyto "${TEST_ASSETS_DIR}/basic_checks" "C:\\basic_checks"
+		exec cmd """
+			cd C:\\basic_checks
+			set HYPERVISOR=hyperv
+			pytest
+		"""
 	}
 }

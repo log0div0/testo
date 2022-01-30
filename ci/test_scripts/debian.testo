@@ -109,7 +109,8 @@ test debian_prepare_1: debian_install_guest_additions {
 		exec bash """
 			sed -i '/cdrom/d' /etc/apt/sources.list
 			apt update
-			apt install -y libvirt0 libvirt-clients libvirt-daemon-system libguestfs0 qemu qemu-kvm ebtables dnsmasq-base virt-manager ovmf
+			apt install -y libvirt0 libvirt-clients libvirt-daemon-system libguestfs0 qemu qemu-kvm ebtables dnsmasq-base virt-manager ovmf python3-pip
+			pip3 install pytest
 		""" timeout 30m
 	}
 }
@@ -148,3 +149,13 @@ test debian_install_testo: debian_prepare_2 {
 	}
 }
 
+[no_snapshots: true]
+test debian_test_testo_basic_checks: debian_install_testo {
+	debian {
+		copyto "${TEST_ASSETS_DIR}/basic_checks" "/opt/basic_checks"
+		exec bash """
+			cd /opt/basic_checks
+			HYPERVISOR=qemu pytest
+		"""
+	}
+}
