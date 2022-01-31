@@ -128,6 +128,13 @@ macro exec_bash(script) {
 	wait "result is 0"
 }
 
+macro soft_reboot() {
+	shutdown
+	start
+	wait "user"; press Enter
+	wait "Password"; type "${password}"; press Enter
+}
+
 [no_snapshots: true]
 test centos_install_guest_additions: centos_install_os {
 	centos {
@@ -194,6 +201,7 @@ test centos_prepare_1: centos_install_guest_additions {
 			nmcli connection up `ls /proc/sys/net/ipv4/conf/ | grep ens`
 			yum -y install epel-release
 			yum -y install ntfsprogs
+			pip3 install pytest
 		""" timeout 30m
 	}
 }
@@ -202,6 +210,7 @@ test centos_prepare_1: centos_install_guest_additions {
 test centos_prepare_2: centos_prepare_1 {
 	centos {
 		copyto "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso" "/opt/ubuntu-16.04.6-server-amd64.iso"
+		soft_reboot()
 		open_virt_manager()
 	}
 }
@@ -214,6 +223,17 @@ test centos_install_testo: centos_prepare_2 {
 			rpm -i /home/${login}/testo.rpm
 			rpm -i /home/${login}/testo-nn-server.rpm
 			testo version
+		"""
+	}
+}
+
+[no_snapshots: true]
+test centos_test_testo_basic_checks: centos_install_testo {
+	centos {
+		copyto "${TEST_ASSETS_DIR}/basic_checks" "/opt/basic_checks"
+		exec bash """
+			cd /opt/basic_checks
+			HYPERVISOR=qemu pytest
 		"""
 	}
 }

@@ -53,8 +53,8 @@ flash my_flash {
 test for_copyto {
 	my_flash {
 		for (i IN RANGE 5) {
-			copyto "./000${i}.testo" "/000${i}.testo"
-			copyto "./0001.testo" "/1000.testo"
+			copyto "./000${i}.txt" "/000${i}.txt"
+			copyto "./0001.txt" "/1000.txt"
 		}
 	}
 }
