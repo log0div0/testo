@@ -43,6 +43,7 @@ struct Reporter {
 	void repl_begin(std::shared_ptr<IR::Controller> controller, const IR::REPL& repl);
 	void repl_end(std::shared_ptr<IR::Controller> controller, const IR::REPL& repl);
 	void abort(std::shared_ptr<IR::Controller> controller, const IR::Abort& action);
+	void bug(std::shared_ptr<IR::Controller> controller, const IR::Bug& action);
 	void sleep(std::shared_ptr<IR::Controller> controller, const IR::Sleep& action);
 	void macro_action_call(std::shared_ptr<IR::Controller> controller, const IR::MacroCall& macro_call);
 	void macro_command_call(const IR::MacroCall& macro_call);
@@ -76,7 +77,7 @@ struct Reporter {
 	//js
 	void js_stdout(const std::string& _stdout);
 
-	void save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot);
+	void timeout(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot);
 
 	std::string progress() const {
 		std::stringstream ss;

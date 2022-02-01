@@ -20,7 +20,7 @@ struct ReportWriter {
 	virtual void report_prefix(const std::shared_ptr<IR::TestRun>& test_run) {}
 	virtual void report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {}
 	virtual void report_raw(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {}
-	virtual void report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) {}
+	virtual void report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot, const std::string& tag) {}
 	virtual void test_end(const std::shared_ptr<IR::TestRun>& test_run) {}
 
 	virtual void launch_end() {}

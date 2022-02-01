@@ -644,6 +644,8 @@ std::shared_ptr<Action> Parser::action() {
 	std::shared_ptr<Action> action;
 	if (test_id("abort")) {
 		action = abort();
+	} else if (test_id("bug")) {
+		action = bug();
 	} else if (test_id("print")) {
 		action = print();
 	} else if (test_id("repl")) {
@@ -721,6 +723,14 @@ std::shared_ptr<Abort> Parser::abort() {
 	auto message = string();
 
 	return std::make_shared<Abort>(abort_token, message);
+}
+
+std::shared_ptr<Bug> Parser::bug() {
+	Token action_token = eat_id("bug");
+
+	auto bug_id = string();
+
+	return std::make_shared<Bug>(action_token, bug_id);
 }
 
 std::shared_ptr<Print> Parser::print() {

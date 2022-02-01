@@ -98,6 +98,7 @@ struct Parser {
 	std::shared_ptr<AST::Action> action();
 	std::shared_ptr<AST::Empty> empty_action();
 	std::shared_ptr<AST::Abort> abort();
+	std::shared_ptr<AST::Bug> bug();
 	std::shared_ptr<AST::Print> print();
 	std::shared_ptr<AST::REPL> repl();
 	std::shared_ptr<AST::Type> type();

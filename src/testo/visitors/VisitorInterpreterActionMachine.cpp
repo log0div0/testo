@@ -115,6 +115,8 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> 
 		visit_abort({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::ActionWithDelim>(action)) {
 		visit_action(p->action);
+	} else if (auto p = std::dynamic_pointer_cast<AST::Bug>(action)) {
+		visit_bug({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::REPL>(action)) {
@@ -347,7 +349,7 @@ void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
 		}, wait.timeout().value(), wait.interval().value());
 
 		if (!early_exit) {
-			reporter.save_screenshot(vmc, vmc->get_last_screenshot());
+			reporter.timeout(vmc, vmc->get_last_screenshot());
 			throw std::runtime_error("Timeout");
 		}
 	} catch (const std::exception& error) {
@@ -625,7 +627,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_selectable(const IR::Mous
 	}, mouse_selectable.timeout().value(), 1s);
 
 	if (!early_exit) {
-		reporter.save_screenshot(vmc, vmc->get_last_screenshot());
+		reporter.timeout(vmc, vmc->get_last_screenshot());
 		throw std::runtime_error("Timeout");
 	}
 }

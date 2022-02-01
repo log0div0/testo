@@ -81,6 +81,7 @@ struct TestRun {
 	std::set<std::shared_ptr<TestRun>> parents;
 	std::set<std::string> get_unsuccessful_parents_names() const;
 	std::set<std::string> unsuccessful_deps_names;
+	std::set<std::string> found_bugs;
 
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point stop_timestamp;

@@ -122,5 +122,6 @@ nlohmann::json ReportWriterNative::to_json(const std::shared_ptr<IR::TestRun>& t
 		{"failure_message", test_run->failure_message},
 		{"failure_stacktrace", test_run->failure_stacktrace},
 		{"failure_category", test_run->failure_category},
+		{"found_bugs", test_run->found_bugs},
 	};
 }

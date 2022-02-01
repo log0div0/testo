@@ -8,6 +8,8 @@
 void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::Action> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
 		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Bug>(action)) {
+		visit_bug({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
 		visit_print({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::REPL>(action)) {

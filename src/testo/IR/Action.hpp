@@ -18,6 +18,11 @@ struct Abort: Node<AST::Abort> {
 	std::string message() const;
 };
 
+struct Bug: Node<AST::Bug> {
+	using Node<AST::Bug>::Node;
+	std::string bug_id() const;
+};
+
 struct Print: Node<AST::Print> {
 	using Node<AST::Print>::Node;
 	std::string message() const;

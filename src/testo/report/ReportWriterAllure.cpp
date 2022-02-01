@@ -40,8 +40,8 @@ Attachment::Attachment(const fs::path& report_folder, const std::string& str) {
 	file << str;
 }
 
-Attachment::Attachment(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot) {
-	title = "Screenshot";
+Attachment::Attachment(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot, const std::string& tag) {
+	title = "Screenshot " + tag;
 	type = "image/png";
 	source = generate_uuid_v4() + "-attachment.png";
 	fs::path path = report_folder / source;
@@ -234,9 +234,9 @@ void ReportWriterAllure::report_raw(const std::shared_ptr<IR::TestRun>& test_run
 	}
 }
 
-void ReportWriterAllure::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) {
+void ReportWriterAllure::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot, const std::string& tag) {
 	if (current_testcase.steps.size()) {
-		current_testcase.steps.back().attachments.push_back(Attachment(report_folder, screenshot));
+		current_testcase.steps.back().attachments.push_back(Attachment(report_folder, screenshot, tag));
 	}
 }
 

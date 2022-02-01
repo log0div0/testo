@@ -428,6 +428,26 @@ struct Abort: public Action {
 	std::shared_ptr<String> message;
 };
 
+struct Bug: public Action {
+	Bug(Token bug_, std::shared_ptr<String> bug_id_):
+		bug(std::move(bug_)), bug_id(std::move(bug_id_)) {}
+
+	Pos begin() const override {
+		return bug.begin();
+	}
+
+	Pos end() const override {
+		return bug_id->end();
+	}
+
+	std::string to_string() const override {
+		return bug.value() + " " + bug_id->to_string();
+	}
+
+	Token bug;
+	std::shared_ptr<String> bug_id;
+};
+
 struct Print: public Action {
 	Print(Token print_, std::shared_ptr<String> message_):
 		print(std::move(print_)), message(std::move(message_)) {}

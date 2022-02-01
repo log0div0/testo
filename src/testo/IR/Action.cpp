@@ -34,6 +34,10 @@ std::string Abort::message() const {
 	return String(ast_node->message, stack).text();
 }
 
+std::string Bug::bug_id() const {
+	return String(ast_node->bug_id, stack).text();
+}
+
 std::string Print::message() const {
 	return String(ast_node->message, stack).text();
 }

@@ -46,8 +46,9 @@ void ReportWriterNativeLocal::report(const std::shared_ptr<IR::TestRun>& test_ru
 	}
 }
 
-void ReportWriterNativeLocal::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) {
-	screenshot.write_png((report_folder / "tests_runs" / test_run->id / "screenshot.png").generic_string());
+void ReportWriterNativeLocal::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot, const std::string& tag) {
+	const std::string name = "screenshot " + tag + ".png";
+	screenshot.write_png((report_folder / "tests_runs" / test_run->id / name).generic_string());
 }
 
 void ReportWriterNativeLocal::test_end(const std::shared_ptr<IR::TestRun>& test_run) {

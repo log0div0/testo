@@ -221,6 +221,22 @@ void Reporter::print_statistics()
 			report(fmt::format("\t - {}\n", kv.first), magenta);
 		}
 	}
+	std::map<std::string, size_t> detected_bugs;
+	for (auto& test_run: tests_runs) {
+		for (auto& bug_id: test_run->found_bugs) {
+			++detected_bugs[bug_id];
+		}
+	}
+	if (detected_bugs.size()) {
+		report(fmt::format("BUGS DETECTED: {}\n", detected_bugs.size()), red, true);
+		for (auto kv: detected_bugs) {
+			if (kv.second > 1) {
+				report(fmt::format("\t - {} ({} times)\n", kv.first, kv.second), red);
+			} else {
+				report(fmt::format("\t - {}\n", kv.first), red);
+			}
+		}
+	}
 }
 
 void Reporter::create_controller(std::shared_ptr<IR::Controller> controller) {
@@ -268,7 +284,19 @@ void Reporter::abort(std::shared_ptr<IR::Controller> controller, const IR::Abort
 	report(fmt::format("Aborting with a message: {}\n", action.message()), blue);
 	if (std::shared_ptr<IR::Machine> vmc = std::dynamic_pointer_cast<IR::Machine>(controller)) {
 		if (vmc->vm()->state() == VmState::Running) {
-			report_writer->report_screenshot(current_test_run, vmc->make_new_screenshot());
+			report_writer->report_screenshot(current_test_run, vmc->make_new_screenshot(), "abort");
+		}
+	}
+}
+
+void Reporter::bug(std::shared_ptr<IR::Controller> controller, const IR::Bug& action) {
+	current_test_run->found_bugs.insert(action.bug_id());
+	report_prefix(blue);
+	report(fmt::format("Detected bug: "), blue);
+	report(fmt::format("{}\n", action.bug_id()), yellow);
+	if (std::shared_ptr<IR::Machine> vmc = std::dynamic_pointer_cast<IR::Machine>(controller)) {
+		if (vmc->vm()->state() == VmState::Running) {
+			report_writer->report_screenshot(current_test_run, vmc->make_new_screenshot(), "bug " + action.bug_id());
 		}
 	}
 }
@@ -533,11 +561,11 @@ void Reporter::js_stdout(const std::string& _stdout) {
 	report_raw(fmt::format("{}\n", _stdout), yellow);
 }
 
-void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
+void Reporter::timeout(std::shared_ptr<IR::Machine> vmc, const stb::Image<stb::RGB>& screenshot) {
 	report_prefix(blue);
 	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
-	report_writer->report_screenshot(current_test_run, screenshot);
+	report_writer->report_screenshot(current_test_run, screenshot, "timeout");
 }
 
 std::string newline_to_br(const std::string& str) {

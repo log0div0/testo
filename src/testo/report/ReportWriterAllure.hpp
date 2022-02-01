@@ -5,7 +5,7 @@
 
 struct Attachment {
 	Attachment(const fs::path& report_folder, const std::string& str);
-	Attachment(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot);
+	Attachment(const fs::path& report_folder, const stb::Image<stb::RGB>& screenshot, const std::string& tag);
 
 	std::string to_xml() const;
 
@@ -81,7 +81,7 @@ struct ReportWriterAllure: ReportWriter {
 	virtual void report_prefix(const std::shared_ptr<IR::TestRun>& test_run) override;
 	virtual void report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) override;
 	virtual void report_raw(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) override;
-	virtual void report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) override;
+	virtual void report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot, const std::string& tag) override;
 	virtual void test_end(const std::shared_ptr<IR::TestRun>& test_run) override;
 
 	virtual void launch_end() override;

@@ -211,6 +211,8 @@ void VisitorSemantic::visit_action(std::shared_ptr<AST::Action> action) {
 void VisitorSemantic::visit_action_vm(std::shared_ptr<AST::Action> action) {
 	if (auto p = std::dynamic_pointer_cast<AST::Abort>(action)) {
 		visit_abort({p, stack});
+	} else if (auto p = std::dynamic_pointer_cast<AST::Bug>(action)) {
+		visit_bug({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::ActionWithDelim>(action)) {
 		visit_action_vm(p->action);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Print>(action)) {
@@ -294,6 +296,10 @@ void VisitorSemantic::visit_action_fd(std::shared_ptr<AST::Action> action) {
 
 void VisitorSemantic::visit_abort(const IR::Abort& abort) {
 	current_test->cksum_input << "abort \"" << abort.message() << "\"" << std::endl;
+}
+
+void VisitorSemantic::visit_bug(const IR::Bug& bug) {
+	current_test->cksum_input << "bug \"" << bug.bug_id() << "\"" << std::endl;
 }
 
 void VisitorSemantic::visit_print(const IR::Print& print) {

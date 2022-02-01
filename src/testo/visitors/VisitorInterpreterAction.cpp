@@ -90,6 +90,10 @@ void VisitorInterpreterAction::visit_abort(const IR::Abort& abort) {
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
+void VisitorInterpreterAction::visit_bug(const IR::Bug& bug) {
+	reporter.bug(current_controller, bug);
+}
+
 void VisitorInterpreterAction::visit_sleep(const IR::Sleep& sleep) {
 	reporter.sleep(current_controller, sleep);
 	coro::Timer timer;

@@ -54,6 +54,7 @@ struct VisitorInterpreterAction {
 	void visit_print(const IR::Print& print);
 	void visit_repl(const IR::REPL& repl);
 	void visit_abort(const IR::Abort& abort);
+	void visit_bug(const IR::Bug& abort);
 	void visit_sleep(const IR::Sleep& sleep);
 	void visit_macro_call(const IR::MacroCall& macro_call);
 	void visit_macro_body(const std::shared_ptr<AST::Block<AST::Action>>& macro_body);

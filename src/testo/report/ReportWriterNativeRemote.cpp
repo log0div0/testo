@@ -65,10 +65,11 @@ void ReportWriterNativeRemote::report(const std::shared_ptr<IR::TestRun>& test_r
 	wait_for_confirmation();
 }
 
-void ReportWriterNativeRemote::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) {
+void ReportWriterNativeRemote::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot, const std::string& tag) {
 	nlohmann::json msg = {
 		{"type", "report_screenshot"},
 		{"screenshot", screenshot.write_png_mem()},
+		{"tag", tag},
 	};
 	if (test_run) {
 		msg["current_test_run"] = to_json(test_run);
