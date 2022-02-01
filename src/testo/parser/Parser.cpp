@@ -111,7 +111,37 @@ Token Parser::eat(const std::vector<Token::category> types) {
 	throw ExceptionWithPos(LT(1).begin(), error_msg);
 }
 
-Token Parser::LT(size_t i) const {
+Token Parser::eat_id(const char* id) {
+	return eat_id(std::vector<const char*>{id});
+}
+
+Token Parser::eat_id(const std::vector<const char*> ids) {
+	Token token = eat(Token::category::id);
+	for (auto id: ids) {
+		if (token.value() == id) {
+			return token;
+		}
+	}
+
+	std::string error_msg = "Error: unexpected ID " +
+		token.value() + ", expected";
+
+	if (ids.size() == 1) {
+		error_msg += ": " + std::string(ids[0]);
+	} else {
+		error_msg += " one of the following IDs: ";
+		for (size_t i = 0; i != ids.size(); ++i) {
+			if (i) {
+				error_msg += " or ";
+			}
+			error_msg += ids[i];
+		}
+	}
+
+	throw ExceptionWithPos(token.begin(), error_msg);
+}
+
+const Token& Parser::LT(size_t i) const {
 	return lexers.back().tokens[lexers.back().p + i - 1];
 }
 
@@ -152,26 +182,7 @@ bool Parser::test_command(size_t index) const {
 }
 
 bool Parser::test_action(size_t index) const {
-	return ((LA(index) == Token::category::abort) ||
-		(LA(index) == Token::category::print) ||
-		(LA(index) == Token::category::repl) ||
-		(LA(index) == Token::category::type_) ||
-		(LA(index) == Token::category::wait) ||
-		(LA(index) == Token::category::sleep) ||
-		(LA(index) == Token::category::press) ||
-		(LA(index) == Token::category::hold) ||
-		(LA(index) == Token::category::release) ||
-		(LA(index) == Token::category::mouse) ||
-		(LA(index) == Token::category::plug) ||
-		(LA(index) == Token::category::unplug) ||
-		(LA(index) == Token::category::start) ||
-		(LA(index) == Token::category::stop) ||
-		(LA(index) == Token::category::shutdown) ||
-		(LA(index) == Token::category::exec) ||
-		(LA(index) == Token::category::copyto) ||
-		(LA(index) == Token::category::copyfrom) ||
-		(LA(index) == Token::category::screenshot) ||
-		(LA(index) == Token::category::lbrace) ||
+	return ((LA(index) == Token::category::lbrace) ||
 		(LA(index) == Token::category::if_) ||
 		(LA(index) == Token::category::for_) ||
 		(LA(index) == Token::category::break_) ||
@@ -184,14 +195,19 @@ bool Parser::test_counter_list() const {
 	return LA(1) == Token::category::RANGE;
 }
 
+bool Parser::test_id(const char* str) const {
+	return LT(1).value() == str;
+}
+
 bool Parser::test_string(size_t index) const {
 	return ((LA(index) == Token::category::quoted_string) ||
 		(LA(index) == Token::category::triple_quoted_string));
 }
 
 bool Parser::test_selectable() const {
-	return (test_string() || (LA(1) == Token::category::js)  ||
-		(LA(1) == Token::category::img) ||
+	return (test_string() ||
+		test_id("js") ||
+		test_id("img") ||
 		(LA(1) == Token::category::exclamation_mark) ||
 		(LA(1) == Token::category::lparen));
 }
@@ -626,39 +642,39 @@ std::shared_ptr<KeySpec> Parser::key_spec() {
 std::shared_ptr<Action> Parser::action() {
 	bool delim_required = true;
 	std::shared_ptr<Action> action;
-	if (LA(1) == Token::category::abort) {
+	if (test_id("abort")) {
 		action = abort();
-	} else if (LA(1) == Token::category::print) {
+	} else if (test_id("print")) {
 		action = print();
-	} else if (LA(1) == Token::category::repl) {
+	} else if (test_id("repl")) {
 		action = repl();
-	} else if (LA(1) == Token::category::type_) {
+	} else if (test_id("type")) {
 		action = type();
-	} else if (LA(1) == Token::category::wait) {
+	} else if (test_id("wait")) {
 		action = wait();
-	} else if (LA(1) == Token::category::sleep) {
+	} else if (test_id("sleep")) {
 		action = sleep();
-	} else if (LA(1) == Token::category::press) {
+	} else if (test_id("press")) {
 		action = press();
-	} else if (LA(1) == Token::category::hold) {
+	} else if (test_id("hold")) {
 		action = hold();
-	} else if (LA(1) == Token::category::release) {
+	} else if (test_id("release")) {
 		action = release();
-	} else if (LA(1) == Token::category::mouse) {
+	} else if (test_id("mouse")) {
 		action = mouse();
-	} else if ((LA(1) == Token::category::plug) || (LA(1) == Token::category::unplug)) {
+	} else if (test_id("plug") || test_id("unplug")) {
 		action = plug();
-	} else if (LA(1) == Token::category::start) {
+	} else if (test_id("start")) {
 		action = start();
-	} else if (LA(1) == Token::category::stop) {
+	} else if (test_id("stop")) {
 		action = stop();
-	} else if (LA(1) == Token::category::shutdown) {
+	} else if (test_id("shutdown")) {
 		action = shutdown();
-	} else if (LA(1) == Token::category::exec) {
+	} else if (test_id("exec")) {
 		action = exec();
-	} else if ((LA(1) == Token::category::copyto) || (LA(1) == Token::category::copyfrom)) {
+	} else if (test_id("copyto") || test_id("copyfrom")) {
 		action = copy();
-	} else if (LA(1) == Token::category::screenshot) {
+	} else if (test_id("screenshot")) {
 		action = screenshot();
 	} else if (LA(1) == Token::category::lbrace) {
 		delim_required = false;
@@ -700,7 +716,7 @@ std::shared_ptr<Empty> Parser::empty_action() {
 }
 
 std::shared_ptr<Abort> Parser::abort() {
-	Token abort_token = eat(Token::category::abort);
+	Token abort_token = eat_id("abort");
 
 	auto message = string();
 
@@ -708,7 +724,7 @@ std::shared_ptr<Abort> Parser::abort() {
 }
 
 std::shared_ptr<Print> Parser::print() {
-	Token print_token = eat(Token::category::print);
+	Token print_token = eat_id("print");
 
 	auto message = string();
 
@@ -716,7 +732,7 @@ std::shared_ptr<Print> Parser::print() {
 }
 
 std::shared_ptr<Type> Parser::type() {
-	Token type_token = eat(Token::category::type_);
+	Token type_token = eat_id("type");
 
 	auto text = string();
 	std::shared_ptr<OptionSeq> options = option_seq({
@@ -728,7 +744,7 @@ std::shared_ptr<Type> Parser::type() {
 }
 
 std::shared_ptr<Wait> Parser::wait() {
-	Token wait_token = eat(Token::category::wait);
+	Token wait_token = eat_id("wait");
 
 	if (!test_selectable()) {
 		throw ExceptionWithPos(LT(1).begin(), "Error: expexted an object to wait");
@@ -745,7 +761,7 @@ std::shared_ptr<Wait> Parser::wait() {
 }
 
 std::shared_ptr<AST::Sleep> Parser::sleep() {
-	Token sleep_token = eat(Token::category::sleep);
+	Token sleep_token = eat_id("sleep");
 
 	auto timeout = time_interval();
 
@@ -753,7 +769,7 @@ std::shared_ptr<AST::Sleep> Parser::sleep() {
 }
 
 std::shared_ptr<Press> Parser::press() {
-	Token press_token = eat(Token::category::press);
+	Token press_token = eat_id("press");
 
 	std::shared_ptr<List<KeySpec>> keys = not_empty_list<KeySpec>([&] { return key_spec(); });
 
@@ -765,7 +781,7 @@ std::shared_ptr<Press> Parser::press() {
 }
 
 std::shared_ptr<Hold> Parser::hold() {
-	Token hold_token = eat(Token::category::hold);
+	Token hold_token = eat_id("hold");
 
 	auto combination = key_combination();
 
@@ -773,7 +789,7 @@ std::shared_ptr<Hold> Parser::hold() {
 }
 
 std::shared_ptr<Release> Parser::release() {
-	Token release_token = eat(Token::category::release);
+	Token release_token = eat_id("release");
 
 	std::shared_ptr<AST::IKeyCombination> combination = nullptr;
 	if (LA(1) == Token::category::id) {
@@ -784,23 +800,23 @@ std::shared_ptr<Release> Parser::release() {
 }
 
 std::shared_ptr<AST::Mouse> Parser::mouse() {
-	Token mouse_token = eat(Token::category::mouse);
+	Token mouse_token = eat_id("mouse");
 
 	std::shared_ptr<MouseEvent> event = nullptr;
 
-	if (LA(1) == Token::category::move ||
-		LA(1) == Token::category::click ||
-		LA(1) == Token::category::lclick ||
-		LA(1) == Token::category::rclick ||
-		LA(1) == Token::category::mclick ||
-		LA(1) == Token::category::dclick)
+	if (test_id("move") ||
+		test_id("click") ||
+		test_id("lclick") ||
+		test_id("rclick") ||
+		test_id("mclick") ||
+		test_id("dclick"))
 	{
 		event = mouse_move_click();
-	} else if (LA(1) == Token::category::hold) {
+	} else if (test_id("hold")) {
 		event = mouse_hold();
-	} else if (LA(1) == Token::category::release) {
+	} else if (test_id("release")) {
 		event = mouse_release();
-	} else if (LA(1) == Token::category::wheel) {
+	} else if (test_id("wheel")) {
 		event = mouse_wheel();
 	} else {
 		throw ExceptionWithPos(LT(1).begin(), "Error: unknown mouse action: " + LT(1).value());
@@ -847,12 +863,12 @@ std::shared_ptr<MouseSelectable> Parser::mouse_selectable() {
 }
 
 std::shared_ptr<AST::MouseMoveClick> Parser::mouse_move_click() {
-	Token event_token = eat({Token::category::click,
-		Token::category::lclick,
-		Token::category::move,
-		Token::category::rclick,
-		Token::category::mclick,
-		Token::category::dclick});
+	Token event_token = eat_id({"click",
+		"lclick",
+		"move",
+		"rclick",
+		"mclick",
+		"dclick"});
 
 	std::shared_ptr<MouseMoveTarget> target = nullptr;
 
@@ -862,7 +878,7 @@ std::shared_ptr<AST::MouseMoveClick> Parser::mouse_move_click() {
 		target = mouse_coordinates();
 	}
 
-	if (event_token.type() == Token::category::move && !target) {
+	if (event_token.value() == "move" && !target) {
 		throw ExceptionWithPos(LT(1).begin(), "Error: you must specify a target to move the mouse cursor");
 	}
 
@@ -870,25 +886,19 @@ std::shared_ptr<AST::MouseMoveClick> Parser::mouse_move_click() {
 }
 
 std::shared_ptr<AST::MouseHold> Parser::mouse_hold() {
-	Token event_token = eat(Token::category::hold);
-	Token button = eat({Token::category::lbtn, Token::category::rbtn, Token::category::mbtn});
+	Token event_token = eat_id("hold");
+	Token button = eat_id({"lbtn", "rbtn", "mbtn"});
 	return std::make_shared<MouseHold>(event_token, button);
 }
 
 std::shared_ptr<AST::MouseRelease> Parser::mouse_release() {
-	Token event_token = eat(Token::category::release);
+	Token event_token = eat_id("release");
 	return std::make_shared<MouseRelease>(event_token);
 }
 
 std::shared_ptr<AST::MouseWheel> Parser::mouse_wheel() {
-	Token event_token = eat(Token::category::wheel);
-
-	Token direction = LT(1);
-	if (direction.value() != "up" && direction.value() != "down") {
-		throw ExceptionWithPos(direction.begin(), "Error: unknown wheel direction: " + direction.value());
-	}
-	eat(Token::category::id);
-
+	Token event_token = eat_id("wheel");
+	Token direction = eat_id({"up", "down"});
 	return std::make_shared<MouseWheel>(event_token, direction);
 }
 
@@ -902,13 +912,13 @@ std::shared_ptr<AST::PlugResource> Parser::plug_resource() {
 	std::shared_ptr<PlugResource> result = nullptr;
 	if (LA(1) == Token::category::flash) {
 		result = plug_resource_flash();
-	} else if (LA(1) == Token::category::dvd) {
+	} else if (test_id("dvd")) {
 		result = plug_resource_dvd();
-	} else if (LA(1) == Token::category::hostdev) {
+	} else if (test_id("hostdev")) {
 		result = plug_resource_hostdev();
-	} else if (LT(1).value() == "nic") {
+	} else if (test_id("nic")) {
 		result = plug_resource_nic();
-	} else if (LT(1).value() == "link") {
+	} else if (test_id("link")) {
 		result = plug_resource_link();
 	} else {
 		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown device type for plug/unplug: " + LT(1).value());
@@ -936,7 +946,7 @@ std::shared_ptr<AST::PlugLink> Parser::plug_resource_link() {
 }
 
 std::shared_ptr<AST::PlugDVD> Parser::plug_resource_dvd() {
-	Token dvd_token = eat(Token::category::dvd);
+	Token dvd_token = eat_id("dvd");
 
 	std::shared_ptr<AST::String> path = nullptr;
 
@@ -948,41 +958,35 @@ std::shared_ptr<AST::PlugDVD> Parser::plug_resource_dvd() {
 }
 
 std::shared_ptr<AST::PlugHostDev> Parser::plug_resource_hostdev() {
-	Token hostdev_token = eat(Token::category::hostdev);
-
-	if (LA(1) != Token::category::usb) {
-		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown usb device type for plug/unplug: " + LT(1).value());
-	}
-
-	Token type = eat(Token::category::usb);
+	Token hostdev_token = eat_id("hostdev");
+	Token type = eat_id("usb");
 	std::shared_ptr<AST::String> addr = string();
-
 	return std::make_shared<AST::PlugHostDev>(hostdev_token, type, addr);
 }
 
 std::shared_ptr<Plug> Parser::plug() {
-	Token plug_token = eat({Token::category::plug, Token::category::unplug});
+	Token plug_token = eat_id({"plug", "unplug"});
 	auto resource = plug_resource();
 	return std::make_shared<Plug>(plug_token, resource);
 }
 
 std::shared_ptr<Start> Parser::start() {
-	Token start_token = eat(Token::category::start);
+	Token start_token = eat_id("start");
 	return std::make_shared<Start>(start_token);
 }
 
 std::shared_ptr<Stop> Parser::stop() {
-	Token stop_token = eat(Token::category::stop);
+	Token stop_token = eat_id("stop");
 	return std::make_shared<Stop>(stop_token);
 }
 
 std::shared_ptr<REPL> Parser::repl() {
-	Token repl_token = eat(Token::category::repl);
+	Token repl_token = eat_id("repl");
 	return std::make_shared<REPL>(repl_token);
 }
 
 std::shared_ptr<Shutdown> Parser::shutdown() {
-	Token shutdown_token = eat(Token::category::shutdown);
+	Token shutdown_token = eat_id("shutdown");
 
 	std::shared_ptr<OptionSeq> options = option_seq({
 		{"timeout", [&]{ return time_interval(); }},
@@ -992,7 +996,7 @@ std::shared_ptr<Shutdown> Parser::shutdown() {
 }
 
 std::shared_ptr<Exec> Parser::exec() {
-	Token exec_token = eat(Token::category::exec);
+	Token exec_token = eat_id("exec");
 	Token process_token = eat(Token::category::id);
 
 	auto commands = string();
@@ -1005,7 +1009,7 @@ std::shared_ptr<Exec> Parser::exec() {
 }
 
 std::shared_ptr<Copy> Parser::copy() {
-	Token copy_token = eat({Token::category::copyto, Token::category::copyfrom});
+	Token copy_token = eat_id({"copyto", "copyfrom"});
 
 	auto from = string();
 	auto to = string();
@@ -1019,7 +1023,7 @@ std::shared_ptr<Copy> Parser::copy() {
 }
 
 std::shared_ptr<Screenshot> Parser::screenshot() {
-	Token screenshot_token = eat(Token::category::screenshot);
+	Token screenshot_token = eat_id("screenshot");
 	auto destination = string();
 	return std::make_shared<Screenshot>(screenshot_token, destination);
 }
@@ -1171,9 +1175,9 @@ std::shared_ptr<SelectSimpleExpr> Parser::select_simple_expr() {
 std::shared_ptr<AST::BasicSelectExpr> Parser::basic_select_expr() {
 	if (test_string()) {
 		return select_text();
-	} else if(LA(1) == Token::category::js) {
+	} else if(test_id("js")) {
 		return select_js();
-	} else if(LA(1) == Token::category::img) {
+	} else if(test_id("img")) {
 		return select_img();
 	} else {
 		throw ExceptionWithPos(LT(1).begin(), "Error: Unknown selective object type: " + LT(1).value());
@@ -1195,13 +1199,13 @@ std::shared_ptr<SelectBinOp> Parser::select_binop(std::shared_ptr<SelectExpr> le
 }
 
 std::shared_ptr<SelectJS> Parser::select_js() {
-	Token js = eat(Token::category::js);
+	Token js = eat_id("js");
 	auto script = string();
 	return std::shared_ptr<SelectJS>(new SelectJS(js, script));
 }
 
 std::shared_ptr<SelectImg> Parser::select_img() {
-	Token img = eat(Token::category::img);
+	Token img = eat_id("img");
 	auto img_path = string();
 	return std::shared_ptr<SelectImg>(new SelectImg(img, img_path));
 }
@@ -1260,7 +1264,7 @@ std::shared_ptr<Defined> Parser::defined() {
 }
 
 std::shared_ptr<Check> Parser::check() {
-	Token check_token = eat(Token::category::check);
+	Token check_token = eat_id("check");
 
 	std::shared_ptr<SelectExpr> select_expression(nullptr);
 
@@ -1293,7 +1297,7 @@ std::shared_ptr<Negation> Parser::negation() {
 std::shared_ptr<SimpleExpr> Parser::simple_expr() {
 	if (LA(1) == Token::category::NOT) {
 		return negation();
-	} else if (LA(1) == Token::category::check) {
+	} else if (test_id("check")) {
 		return check();
 	} else if(test_defined()) {
 		return defined();

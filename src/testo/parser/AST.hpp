@@ -941,7 +941,7 @@ struct Plug: public Action {
 	}
 
 	bool is_on() const {
-		return plug.type() == Token::category::plug;
+		return plug.value() == "plug";
 	}
 
 	Token plug;
@@ -1074,7 +1074,7 @@ struct Copy: public Action {
 	//return true if we copy to guest,
 	//false if from guest to host
 	bool is_to_guest() const {
-		return copy.type() == Token::category::copyto;
+		return copy.value() == "copyto";
 	}
 
 	Token copy;

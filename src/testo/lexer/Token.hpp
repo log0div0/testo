@@ -4,44 +4,12 @@
 #include "Pos.hpp"
 
 struct Token {
-	enum category {
+	enum class category {
 		none, //not initialized
 
 		eof,
 		newline,
 		id,
-		abort,
-		print,
-		repl,
-		type_,
-		wait,
-		sleep,
-		js,
-		img,
-		check,
-		press,
-		mouse,
-		move,
-		click,
-		lclick,
-		rclick,
-		mclick,
-		dclick,
-		hold,
-		release,
-		lbtn,
-		rbtn,
-		mbtn,
-		screenshot,
-		wheel,
-		plug,
-		unplug,
-		start,
-		stop,
-		shutdown,
-		exec,
-		copyto,
-		copyfrom,
 		for_,
 		test,
 		machine,
@@ -49,9 +17,6 @@ struct Token {
 		network,
 		param,
 		macro,
-		dvd,
-		hostdev,
-		usb,
 		if_,
 		else_,
 		IN_,
@@ -101,7 +66,7 @@ struct Token {
 	};
 
 	Token() {
-		_type = none;
+		_type = category::none;
 		_value = std::string("");
 	}
 
@@ -114,7 +79,7 @@ struct Token {
 		return _type;
 	}
 
-	std::string value() const {
+	const std::string& value() const {
 		return _value;
 	}
 
@@ -136,167 +101,99 @@ struct Token {
 
 	static std::string type_to_string(category type) {
 		switch (type) {
-		case eof:
+		case category::eof:
 			return "EOF";
-		case newline:
+		case category::newline:
 			return "NEWLINE";
-		case id:
+		case category::id:
 			return "IDENTIFIER";
-		case abort:
-			return "ACTION ABORT";
-		case print:
-			return "ACTION PRINT";
-		case type_:
-			return "ACTION TYPE";
-		case wait:
-			return "ACTION WAIT";
-		case sleep:
-			return "ACTION SLEEP";
-		case js:
-			return "JS";
-		case img:
-			return "IMG";
-		case check:
-			return "CHECK";
-		case press:
-			return "ACTION PRESS";
-		case mouse:
-			return "MOUSE EVENT";
-		case move:
-			return "MOVE";
-		case click:
-			return "ACTION CLICK";
-		case lclick:
-			return "ACTION LCLICK";
-		case rclick:
-			return "ACTION RCLICK";
-		case mclick:
-			return "ACTION MCLICK";
-		case dclick:
-			return "ACTION DCLICK";
-		case hold:
-			return "ACTION HOLD";
-		case release:
-			return "ACTION RELEASE";
-		case lbtn:
-			return "LBTN";
-		case rbtn:
-			return "RBTN";
-		case mbtn:
-			return "MBTN";
-		case screenshot:
-			return "SCREENSHOT";
-		case wheel:
-			return "WHEEL";
-		case plug:
-			return "ACTION PLUG";
-		case unplug:
-			return "ACTION UNPLUG";
-		case start:
-			return "ACTION START";
-		case stop:
-			return "ACTION STOP";
-		case shutdown:
-			return "ACTION SHUTDOWN";
-		case exec:
-			return "ACTION EXEC";
-		case copyto:
-			return "ACTION COPYTO";
-		case copyfrom:
-			return "ACTION COPYFROM";
-		case for_:
+		case category::for_:
 			return "FOR";
-		case test:
+		case category::test:
 			return "TEST";
-		case machine:
+		case category::machine:
 			return "MACHINE";
-		case flash:
+		case category::flash:
 			return "FLASH";
-		case network:
+		case category::network:
 			return "NETWORK";
-		case param:
+		case category::param:
 			return "PARAM";
-		case macro:
+		case category::macro:
 			return "MACRO";
-		case dvd:
-			return "DVD";
-		case hostdev:
-			return "HOSTDEV";
-		case usb:
-			return "USB";
-		case if_:
+		case category::if_:
 			return "IF";
-		case else_:
+		case category::else_:
 			return "ELSE";
-		case IN_:
+		case category::IN_:
 			return "IN";
-		case RANGE:
+		case category::RANGE:
 			return "RANGE";
-		case number:
+		case category::number:
 			return "NUMBER";
-		case time_interval:
+		case category::time_interval:
 			return "TIME INTERVAL";
-		case size:
+		case category::size:
 			return "SIZE";
-		case quoted_string:
+		case category::quoted_string:
 			return "QUOTED STRING";
-		case triple_quoted_string:
+		case category::triple_quoted_string:
 			return "TRIPLE QUOTED STRING";
-		case assign:
+		case category::assign:
 			return "=";
-		case exclamation_mark:
+		case category::exclamation_mark:
 			return "!";
-		case double_ampersand:
+		case category::double_ampersand:
 			return "&&";
-		case double_vertical_bar:
+		case category::double_vertical_bar:
 			return "||";
-		case dot:
+		case category::dot:
 			return ".";
-		case comma:
+		case category::comma:
 			return ",";
-		case plus:
+		case category::plus:
 			return "+";
-		case asterisk:
+		case category::asterisk:
 			return "*";
-		case lbrace:
+		case category::lbrace:
 			return "{";
-		case rbrace:
+		case category::rbrace:
 			return "}";
-		case lparen:
+		case category::lparen:
 			return "(";
-		case rparen:
+		case category::rparen:
 			return ")";
-		case lbracket:
+		case category::lbracket:
 			return "[";
-		case rbracket:
+		case category::rbracket:
 			return "]";
-		case semi:
+		case category::semi:
 			return ";";
-		case colon:
+		case category::colon:
 			return ":";
-		case DEFINED:
+		case category::DEFINED:
 			return "DEFINED";
-		case LESS:
+		case category::LESS:
 			return "LESS";
-		case GREATER:
+		case category::GREATER:
 			return "GREATER";
-		case EQUAL:
+		case category::EQUAL:
 			return "EQUAL";
-		case STRLESS:
+		case category::STRLESS:
 			return "STRLESS";
-		case STRGREATER:
+		case category::STRGREATER:
 			return "STRGREATER";
-		case STREQUAL:
+		case category::STREQUAL:
 			return "STREQUAL";
-		case NOT:
+		case category::NOT:
 			return "NOT";
-		case AND:
+		case category::AND:
 			return "AND";
-		case OR:
+		case category::OR:
 			return "OR";
-		case none:
+		case category::none:
 			return "NONE";
-		case boolean:
+		case category::boolean:
 			return "BOOLEAN CONSTANT";
 		default:
 			return "UNKNOWN TYPE";

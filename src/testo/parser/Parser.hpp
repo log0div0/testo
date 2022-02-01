@@ -42,10 +42,13 @@ struct Parser {
 	//inner helpers
 	Token eat(Token::category type);
 	Token eat(std::vector<Token::category> types);
+	Token eat_id(const char* id);
+	Token eat_id(std::vector<const char*> ids);
 
-	Token LT(size_t i) const;
+	const Token& LT(size_t i) const;
 	Token::category LA(size_t i) const;
 
+	bool test_id(const char* str) const;
 	bool test_stmt() const;
 	bool test_macro_call() const;
 	bool test_controller() const;
