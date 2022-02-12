@@ -1,36 +1,5 @@
 include "centos.testo"
 
-[no_snapshots: true]
-test centos_vm_create: centos_install_testo {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
-		exec bash """
-			set +o pipefail
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_no_cpus 2>&1 > /dev/null | grep "Field \\\"cpu\\\" is not specified"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_no_ram 2>&1 > /dev/null | grep "Field \\\"ram\\\" is not specified"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_no_disk 2>&1 > /dev/null | grep "You must specify at least 1 disk"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_too_many_disks 2>&1 > /dev/null | grep "Too many disks specified, maximum amount: 3"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_disk_no_size 2>&1 > /dev/null | grep "Either field \\\"size\\\" or \\\"source\\\" must be specified for the disk \\\"main\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_nic_no_attached_to 2>&1 > /dev/null | grep "Neither \\\"attached_to\\\" nor \\\"attached_to_dev\\\" is specified for the nic \\\"my_nic\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_nic_both_attached_to 2>&1 > /dev/null | grep "Can't specify both \\\"attached_to\\\" and \\\"attached_to_dev\\\" for the same nic \\\"my_nic\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_nic_incorrect_mac 2>&1 > /dev/null | grep "Incorrect mac address: \\\"AA:BB:CC:DD:EE:FF:AA\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_nic_incorrect_type 2>&1 > /dev/null | grep "NIC \\\"my_nic\\\" has unsupported adapter type: \\\"some_type\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_iso_does_not_exist 2>&1 > /dev/null | grep "Target iso file \\\"/opt/some_iso.iso\\\" does not exist"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_iso_does_not_exist_1 2>&1 > /dev/null | grep "Target iso file \\\"/opt/scripts/../some_iso.iso\\\" does not exist"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_loader_does_not_exist 2>&1 > /dev/null | grep "Target loader file \\\""/opt/some_loader.fd"\\\" does not exist"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist 2>&1 > /dev/null | grep "Source disk image \\\"/opt/some_image.img\\\" does not exist"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_image_does_not_exist_1 2>&1 > /dev/null | grep "Source disk image \\\"/opt/scripts/../some_image.img\\\" does not exist"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_network 2>&1 > /dev/null | grep "NIC \\\"my_nic\\\" is attached to an unknown network: \\\"some_network\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec vm_attr_type_cant_convert 2>&1 > /dev/null | grep "Error: expected SIZE, but got NUMBER \\\"4\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_negative_attribute 2>&1 > /dev/null | grep "CPUs number must be a positive interger"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_negative_attribute_2 2>&1 > /dev/null | grep "CPUs number must be a positive interger"
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_unknown_video_adapter_type 2>&1 > /dev/null | grep "Video \\\"main_video\\\" has unsupported adapter type: \\\"some_video_adapter_type\\\""
-			testo run /opt/scripts/vm_create.testo --test_spec create_vm_multiple_videos 2>&1 > /dev/null | grep "Multiple video devices are not supported at the moment"
-		""" timeout 30m
-	}
-}
-
-
 test centos_backend_qemu_create_simple_vm: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"

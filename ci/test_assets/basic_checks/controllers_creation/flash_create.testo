@@ -1,0 +1,33 @@
+
+machine basic_machine {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+flash unexisting_folder {
+	fs: "vfat"
+	size: 16Mb
+	folder: "/some/unexisting_folder"
+}
+
+test flash_unexisting_folder {
+	basic_machine {
+		plug flash unexisting_folder
+	}
+}
+
+flash not_a_folder {
+	fs: "vfat"
+	size: 16Mb
+	folder: "/opt/ubuntu-16.04.6-server-amd64.iso"
+}
+
+test flash_not_a_folder {
+	basic_machine {
+		plug flash not_a_folder
+	}
+}

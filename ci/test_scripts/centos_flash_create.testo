@@ -1,17 +1,5 @@
 include "centos.testo"
 
-[no_snapshots: true]
-test centos_flash_create: centos_install_testo {
-	centos {
-		copyto "${TEST_ASSETS_DIR}/flash_creation/flash_create.testo" "/opt/scripts/flash_create.testo"
-		exec bash """
-			set +o pipefail
-			testo run /opt/scripts/flash_create.testo --test_spec flash_unexisting_folder 2>&1 > /dev/null | grep "Target folder /some/unexisting_folder doesn't exist"
-			testo run /opt/scripts/flash_create.testo --test_spec flash_not_a_folder 2>&1 > /dev/null | grep "Specified folder /opt/ubuntu-16.04.6-server-amd64.iso is not a folder"
-		""" timeout 30m
-	}
-}
-
 test centos_backend_qemu_create_simple_flash: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/flash_creation/flash_create.testo" "/opt/scripts/flash_create.testo"

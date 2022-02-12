@@ -1,0 +1,294 @@
+
+network net1 {
+	mode: "internal"
+}
+
+network my_network {
+	mode: "internal"
+}
+
+machine vm_no_cpus {
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test create_vm_no_cpus {
+	vm_no_cpus {}
+}
+
+machine vm_no_ram {
+	cpus: 1
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test create_vm_no_ram {
+	vm_no_ram {}
+}
+
+machine vm_no_disk {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+}
+
+test create_vm_no_disk {
+	vm_no_disk {}
+}
+
+machine vm_too_many_disks{
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	disk second: {
+		size: 4Gb
+	}
+	disk third: {
+		size: 4Gb
+	}
+	disk fourth: {
+		size: 4Gb
+	}
+}
+
+test create_vm_too_many_disks {
+	vm_too_many_disks {}
+}
+
+machine vm_disk_no_size {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+
+	}
+}
+
+test create_vm_disk_no_size {
+	vm_disk_no_size {}
+}
+
+machine vm_nic_no_attached_to {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	nic my_nic: {
+
+	}
+}
+
+test create_vm_nic_no_attached_to {
+	vm_nic_no_attached_to {}
+}
+
+machine vm_nic_both_attached_to {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	nic my_nic: {
+		attached_to: "net1"
+		attached_to_dev: "eth0"
+	}
+}
+
+test create_vm_nic_both_attached_to {
+	vm_nic_both_attached_to {}
+}
+
+machine vm_nic_incorrect_mac {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	nic my_nic: {
+		attached_to: "my_network"
+		mac: "AA:BB:CC:DD:EE:FF:AA"
+	}
+}
+
+test create_vm_nic_incorrect_mac {
+	vm_nic_incorrect_mac {}
+}
+
+machine vm_nic_incorrect_type {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+	nic my_nic: {
+		attached_to: "my_network"
+		adapter_type: "some_type"
+	}
+}
+
+test create_vm_nic_incorrect_type {
+	vm_nic_incorrect_type {}
+}
+
+machine vm_iso_does_not_exist {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/some_iso.iso"
+	disk first: {
+		size: 4Gb
+	}
+}
+
+test create_vm_iso_does_not_exist {
+	vm_iso_does_not_exist {}
+}
+
+machine vm_iso_does_not_exist_1 {
+	cpus: 1
+	ram: 512Mb
+	iso: "../some_iso.iso"
+	disk first: {
+		size: 4Gb
+	}
+}
+
+test create_vm_iso_does_not_exist_1 {
+	vm_iso_does_not_exist_1 {}
+}
+
+machine vm_loader_does_not_exist {
+	cpus: 1
+	ram: 512Mb
+	loader: "/opt/some_loader.fd"
+	disk first: {
+		size: 4Gb
+	}
+}
+
+test create_vm_loader_does_not_exist {
+	vm_loader_does_not_exist {}
+}
+
+machine vm_image_does_not_exist {
+	cpus: 1
+	ram: 512Mb
+	disk first: {
+		source: "/opt/some_image.img"
+	}
+}
+
+test create_vm_image_does_not_exist {
+	vm_image_does_not_exist {}
+}
+
+machine vm_image_does_not_exist_1 {
+	cpus: 1
+	ram: 512Mb
+	disk first: {
+		source: "../some_image.img"
+	}
+}
+
+test create_vm_image_does_not_exist_1 {
+	vm_image_does_not_exist_1 {}
+}
+
+machine vm_unknown_network {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk first: {
+		size: 4Gb
+	}
+
+	nic my_nic: {
+		attached_to: "some_network"
+	}
+}
+
+test create_vm_unknown_network {
+	vm_unknown_network {}
+}
+
+machine vm_attr_type_cant_convert {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: "4"
+	}
+}
+
+test vm_attr_type_cant_convert {
+	vm_attr_type_cant_convert {}
+}
+
+machine vm_negative_attribute {
+	cpus: -7
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test create_vm_negative_attribute {
+	vm_negative_attribute {}
+}
+
+machine vm_negative_attribute_2 {
+	cpus: "-7"
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+}
+
+test create_vm_negative_attribute_2 {
+	vm_negative_attribute_2 {}
+}
+
+machine vm_unknown_video_adapter_type {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+	video main_video: {
+		adapter_type: "some_video_adapter_type"
+	}
+}
+
+test create_vm_unknown_video_adapter_type {
+	vm_unknown_video_adapter_type {}
+}
+
+machine vm_multiple_videos {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 4Gb
+	}
+
+	video video1: {}
+	video video2: {}
+}
+
+test create_vm_multiple_videos {
+	vm_multiple_videos {}
+}
