@@ -23,6 +23,10 @@ struct Print: Node<AST::Print> {
 	std::string message() const;
 };
 
+struct REPL: Node<AST::REPL> {
+	using Node<AST::REPL>::Node;
+};
+
 struct Press: Node<AST::Press> {
 	using Node<AST::Press>::Node;
 	TimeInterval interval() const;

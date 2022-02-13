@@ -4,6 +4,9 @@
 #include "Exceptions.hpp"
 #include "IR/Program.hpp"
 #include "Parser.hpp"
+#include <coro/Finally.h>
+
+extern std::atomic<bool> REPL_mode_is_active;
 
 void VisitorInterpreterAction::visit_action_block(std::shared_ptr<AST::Block<AST::Action>> action_block) {
 	for (auto action: action_block->items) {
@@ -16,6 +19,70 @@ void VisitorInterpreterAction::visit_print(const IR::Print& print) {
 		reporter.print(current_controller, print);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(ActionException(print.ast_node, current_controller));
+	}
+}
+
+// trim from start (in place)
+static inline void ltrim(std::string &s) {
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+		return !std::isspace(ch);
+	}));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+	s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+		return !std::isspace(ch);
+	}).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string &s) {
+	ltrim(s);
+	rtrim(s);
+}
+
+
+void VisitorInterpreterAction::visit_repl(const IR::REPL& repl) {
+	try {
+		reporter.repl_begin(current_controller, repl);
+		REPL_mode_is_active = true;
+		std::cout << "Now you can type commands line-by-line. Use Ctrl-C to exit REPL mode." << std::endl;
+		std::string all_lines;
+		while (true) {
+			std::cout << "> ";
+			std::string line;
+			std::getline(std::cin, line);
+			if (std::cin.fail() || std::cin.eof()) {
+				std::cin.clear();
+				break;
+			}
+			trim(line);
+			if (!line.size()) {
+				continue;
+			}
+			line += "\n";
+			try {
+				std::shared_ptr<AST::Action> ast_action = Parser(".", line, false).action();
+				visit_action(ast_action);
+				all_lines += line;
+			}
+			catch (const AbortException&) {
+				throw;
+			}
+			catch (const std::exception& error) {
+				std::stringstream ss;
+				ss << error << std::endl;
+				reporter.error(ss.str());
+			}
+		}
+		if (all_lines.size()) {
+			std::cout << "You have entered the following commands:" << std::endl;
+			std::cout << all_lines;
+		}
+		reporter.repl_end(current_controller, repl);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(ActionException(repl.ast_node, current_controller));
 	}
 }
 

@@ -949,6 +949,10 @@ struct CycleControl: public ElementaryAction {
 	using ElementaryAction::ElementaryAction;
 };
 
+struct REPL: public ElementaryAction {
+	using ElementaryAction::ElementaryAction;
+};
+
 struct Shutdown: public Action {
 	Shutdown(Token shutdown_, std::shared_ptr<OptionSeq> option_seq_):
 		shutdown(std::move(shutdown_)), option_seq(std::move(option_seq_)) {}

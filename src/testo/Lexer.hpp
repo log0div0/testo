@@ -127,6 +127,7 @@ private:
 	Token var_ref();
 	Token abort();
 	Token print();
+	Token repl();
 	Token type();
 	Token wait();
 	Token sleep();

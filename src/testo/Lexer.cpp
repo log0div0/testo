@@ -196,6 +196,8 @@ Token Lexer::id() {
 		return abort();
 	} else if (value == "print") {
 		return print();
+	} else if (value == "repl") {
+		return repl();
 	} else if (value == "type") {
 		return type();
 	} else if (value == "wait") {
@@ -328,6 +330,13 @@ Token Lexer::print() {
 	std::string value("print");
 	advance(value.length());
 	return Token(Token::category::print, value, tmp_pos, previous_pos);
+}
+
+Token Lexer::repl() {
+	Pos tmp_pos = current_pos;
+	std::string value("repl");
+	advance(value.length());
+	return Token(Token::category::repl, value, tmp_pos, previous_pos);
 }
 
 Token Lexer::type() {

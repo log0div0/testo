@@ -12,6 +12,7 @@ struct Token {
 		id,
 		abort,
 		print,
+		repl,
 		type_,
 		wait,
 		sleep,

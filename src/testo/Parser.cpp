@@ -154,6 +154,7 @@ bool Parser::test_command(size_t index) const {
 bool Parser::test_action(size_t index) const {
 	return ((LA(index) == Token::category::abort) ||
 		(LA(index) == Token::category::print) ||
+		(LA(index) == Token::category::repl) ||
 		(LA(index) == Token::category::type_) ||
 		(LA(index) == Token::category::wait) ||
 		(LA(index) == Token::category::sleep) ||
@@ -627,6 +628,8 @@ std::shared_ptr<Action> Parser::action() {
 		action = abort();
 	} else if (LA(1) == Token::category::print) {
 		action = print();
+	} else if (LA(1) == Token::category::repl) {
+		action = repl();
 	} else if (LA(1) == Token::category::type_) {
 		action = type();
 	} else if (LA(1) == Token::category::wait) {
@@ -975,6 +978,11 @@ std::shared_ptr<Start> Parser::start() {
 std::shared_ptr<Stop> Parser::stop() {
 	Token stop_token = eat(Token::category::stop);
 	return std::make_shared<Stop>(stop_token);
+}
+
+std::shared_ptr<REPL> Parser::repl() {
+	Token repl_token = eat(Token::category::repl);
+	return std::make_shared<REPL>(repl_token);
 }
 
 std::shared_ptr<Shutdown> Parser::shutdown() {

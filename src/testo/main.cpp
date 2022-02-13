@@ -30,6 +30,8 @@
 
 using namespace clipp;
 
+std::atomic<bool> REPL_mode_is_active = false;
+
 struct Interruption {};
 
 enum class mode {
@@ -87,6 +89,8 @@ void init_env(const std::string& hypervisor) {
 }
 
 int do_main(int argc, char** argv) {
+
+	srand(time(NULL));
 
 #ifdef WIN32
 	wmi::CoInitializer initializer;
@@ -204,9 +208,15 @@ int do_main(int argc, char** argv) {
 
 	coro::CoroPool pool;
 	pool.exec([&] {
-		coro::SignalSet set({SIGINT, SIGTERM});
-		set.wait();
-		throw Interruption();
+		while (true) {
+			coro::SignalSet set({SIGINT, SIGTERM});
+			int signal = set.wait();
+			if ((signal == SIGINT) && REPL_mode_is_active) {
+				REPL_mode_is_active = false;
+				continue;
+			}
+			throw Interruption();
+		}
 	});
 
 	if (selected_mode == mode::clean) {

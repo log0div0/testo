@@ -173,6 +173,10 @@ void Reporter::test_failed(const std::string& message, const std::string& stackt
 	++current_test_run_index;
 }
 
+void Reporter::error(const std::string& message) {
+	report_raw(fmt::format("{}", message), red, true);
+}
+
 void Reporter::print_statistics()
 {
 	TRACE();
@@ -232,6 +236,18 @@ void Reporter::print(std::shared_ptr<IR::Controller> controller, const IR::Print
 	report_prefix(blue);
 	report(controller->name(), yellow);
 	report(fmt::format(": {}\n", action.message()), blue);
+}
+
+void Reporter::repl_begin(std::shared_ptr<IR::Controller> controller, const IR::REPL& action) {
+	report_prefix(blue);
+	report(fmt::format("Entering REPL mode on "), blue);
+	report(fmt::format("{}\n", controller->name()), yellow);
+}
+
+void Reporter::repl_end(std::shared_ptr<IR::Controller> controller, const IR::REPL& action) {
+	report_prefix(blue);
+	report(fmt::format("Leaving REPL mode on "), blue);
+	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
 void Reporter::abort(std::shared_ptr<IR::Controller> controller, const IR::Abort& action) {

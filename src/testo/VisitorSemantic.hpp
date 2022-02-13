@@ -51,6 +51,7 @@ struct VisitorSemantic {
 	void visit_mouse(const IR::Mouse& mouse);
 	void visit_abort(const IR::Abort& abort);
 	void visit_print(const IR::Print& print);
+	void visit_repl(const IR::REPL& repl);
 	void visit_type(const IR::Type& type);
 	void visit_press(const IR::Press& press);
 	void visit_key_combination(const IR::KeyCombination& combination);
