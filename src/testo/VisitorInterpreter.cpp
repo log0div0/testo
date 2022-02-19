@@ -25,6 +25,14 @@ VisitorInterpreter::~VisitorInterpreter() {
 	TRACE();
 }
 
+void VisitorInterpreter::delete_snapshot_with_children(const std::shared_ptr<IR::Test>& test) {
+	for (auto& controller: test->get_all_controllers()) {
+		if (controller->is_defined() && controller->has_snapshot(test->name())) {
+			controller->delete_snapshot_with_children(test->name());
+		}
+	}
+}
+
 void VisitorInterpreter::invalidate_tests() {
 	TRACE();
 
@@ -33,11 +41,7 @@ void VisitorInterpreter::invalidate_tests() {
 	}
 	for (auto& test: IR::program->all_selected_tests) {
 		if (wildcards::match(test->name(), invalidate)) {
-			for (auto& controller: test->get_all_controllers()) {
-				if (controller->is_defined() && controller->has_snapshot(test->name())) {
-					controller->delete_snapshot_with_children(test->name());
-				}
-			}
+			delete_snapshot_with_children(test);
 		}
 	}
 }
@@ -88,7 +92,7 @@ void VisitorInterpreter::get_up_to_date_tests() {
 	}
 }
 
-std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(std::shared_ptr<IR::Test> test) {
+std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::shared_ptr<IR::Test>& test) {
 	// если тест up-to-date и есть снепшот - то запускать его точно не надо
 	if ((test->cache_status() == IR::Test::CacheStatus::OK) && (test->snapshots_needed())) {
 		return nullptr;
@@ -142,11 +146,7 @@ void VisitorInterpreter::build_test_plan() {
 		if (test->cache_status() == IR::Test::CacheStatus::OK) {
 			continue;
 		}
-		for (auto controller: test->get_all_controllers()) {
-			if (controller->is_defined() && controller->has_snapshot(test->name())) {
-				controller->delete_snapshot_with_children(test->name());
-			}
-		}
+		delete_snapshot_with_children(test);
 		bool is_leaf = true;
 		for (auto& other_test: IR::program->all_selected_tests) {
 			if (test == other_test) {
@@ -237,118 +237,128 @@ void VisitorInterpreter::visit() {
 	}
 }
 
-void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
+void VisitorInterpreter::restore_parents_controllers_if_needed(const std::shared_ptr<IR::Test>& test) {
+	for (auto parent: test->parents) {
+		for (auto controller: parent->get_all_controllers()) {
+			if (controller->current_state != parent->name()) {
+				reporter.restore_snapshot(controller, parent->name());
+				controller->restore_snapshot(parent->name());
+				coro::CheckPoint();
+			}
+		}
+	}
+}
+
+void VisitorInterpreter::create_networks_if_needed(const std::shared_ptr<IR::Test>& test) {
+	for (auto netc: test->get_all_networks()) {
+		if (netc->is_defined() &&
+			netc->check_config_relevance())
+		{
+			continue;
+		}
+		netc->create();
+	}
+}
+
+void VisitorInterpreter::install_new_controllers_if_needed(const std::shared_ptr<IR::Test>& test) {
+	for (auto controller: test->get_all_controllers()) {
+		//check if it's a new one
+		auto is_new = true;
+		for (auto parent: test->parents) {
+			auto parent_controller = parent->get_all_controllers();
+			if (parent_controller.find(controller) != parent_controller.end()) {
+				//not new, go to the next vmc
+				is_new = false;
+				break;
+			}
+		}
+
+		if (is_new) {
+			//Ok, here we need to do some refactoring
+			//If the config is relevant, and the init snapshot is avaliable
+			//we should restore init snapshot
+			//Otherwise we're creating the controller and taking init snapshot
+			if (controller->is_defined() &&
+				controller->has_snapshot("_init") &&
+				controller->check_metadata_version() &&
+				controller->check_config_relevance())
+			{
+				reporter.restore_snapshot(controller, "initial");
+				controller->restore_snapshot("_init");
+				coro::CheckPoint();
+			} else {
+				reporter.create_controller(controller);
+				controller->create();
+				reporter.take_snapshot(controller, "initial");
+				controller->create_snapshot("_init", "", true);
+				controller->current_state = "_init";
+				coro::CheckPoint();
+			}
+		}
+	}
+}
+
+void VisitorInterpreter::resume_parents_vms(const std::shared_ptr<IR::Test>& test) {
+	for (auto parent: test->parents) {
+		for (auto vmc: parent->get_all_machines()) {
+			if (vmc->vm()->state() == VmState::Suspended) {
+				vmc->vm()->resume();
+			}
+		}
+	}
+}
+
+void VisitorInterpreter::suspend_all_vms(const std::shared_ptr<IR::Test>& test) {
+	for (auto vmc: test->get_all_machines()) {
+		if (vmc->vm()->state() == VmState::Running) {
+			vmc->vm()->suspend();
+		}
+	}
+}
+
+void VisitorInterpreter::create_all_controllers_snapshots(const std::shared_ptr<IR::Test>& test) {
+	//we need to take snapshots in the right order
+	//1) all the vms - so we could check that all the fds are unplugged
+	for (auto controller: test->get_all_machines()) {
+		if (!controller->has_snapshot(test->name())) {
+			reporter.take_snapshot(controller, test->name());
+			controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
+			coro::CheckPoint();
+		}
+		controller->current_state = test->name();
+	}
+
+	//2) all the fdcs - the rest
+	for (auto controller: test->get_all_flash_drives()) {
+		if (!controller->has_snapshot(test->name())) {
+			reporter.take_snapshot(controller, test->name());
+			controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
+			coro::CheckPoint();
+		}
+		controller->current_state = test->name();
+	}
+}
+
+void VisitorInterpreter::visit_test(const std::shared_ptr<IR::Test>& test) {
 	try {
 		current_test = nullptr;
-		//Ok, we're not cached and we need to run the test
+
 		reporter.prepare_environment();
 
-		//we need to get all the vms in the correct state
-		//vms from parents - rollback them to parents if we need to
-		//We need to do it only if our current state is not the parent
-		for (auto parent: test->parents) {
-			for (auto controller: parent->get_all_controllers()) {
-				if (controller->current_state != parent->name()) {
-					reporter.restore_snapshot(controller, parent->name());
-					controller->restore_snapshot(parent->name());
-					coro::CheckPoint();
-				}
-			}
-		}
+		restore_parents_controllers_if_needed(test);
+		create_networks_if_needed(test);
+		install_new_controllers_if_needed(test);
 
-		//check all the networks
-
-		for (auto netc: test->get_all_networks()) {
-			if (netc->is_defined() &&
-				netc->check_config_relevance())
-			{
-				continue;
-			}
-			netc->create();
-		}
-
-		//new vms - install
-
-		for (auto controller: test->get_all_controllers()) {
-			//check if it's a new one
-			auto is_new = true;
-			for (auto parent: test->parents) {
-				auto parent_controller = parent->get_all_controllers();
-				if (parent_controller.find(controller) != parent_controller.end()) {
-					//not new, go to the next vmc
-					is_new = false;
-					break;
-				}
-			}
-
-			if (is_new) {
-				//Ok, here we need to do some refactoring
-				//If the config is relevant, and the init snapshot is avaliable
-				//we should restore init snapshot
-				//Otherwise we're creating the controller and taking init snapshot
-				if (controller->is_defined() &&
-					controller->has_snapshot("_init") &&
-					controller->check_metadata_version() &&
-					controller->check_config_relevance())
-				{
-					reporter.restore_snapshot(controller, "initial");
-					controller->restore_snapshot("_init");
-					coro::CheckPoint();
-				} else {
-					reporter.create_controller(controller);
-					controller->create();
-					reporter.take_snapshot(controller, "initial");
-					controller->create_snapshot("_init", "", true);
-					controller->current_state = "_init";
-					coro::CheckPoint();
-				}
-			}
-		}
-
-		for (auto parent: test->parents) {
-			for (auto vmc: parent->get_all_machines()) {
-				if (vmc->vm()->state() == VmState::Suspended) {
-					vmc->vm()->resume();
-				}
-			}
-		}
-
-		reporter.run_test();
-
-		//Everything is in the right state so we could actually do the test
+		resume_parents_vms(test);
 		{
+			reporter.run_test();
 			StackPusher<VisitorInterpreter> pusher(this, test->stack);
 			current_test = test;
 			visit_command_block(test->ast_node->cmd_block);
 		}
+		suspend_all_vms(test);
 
-		//But that's not everything - we need to create according snapshots to all included vms
-		for (auto vmc: test->get_all_machines()) {
-			if (vmc->vm()->state() == VmState::Running) {
-				vmc->vm()->suspend();
-			}
-		}
-
-		//we need to take snapshots in the right order
-		//1) all the vms - so we could check that all the fds are unplugged
-		for (auto controller: test->get_all_machines()) {
-			if (!controller->has_snapshot(test->name())) {
-				reporter.take_snapshot(controller, test->name());
-				controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
-				coro::CheckPoint();
-			}
-			controller->current_state = test->name();
-		}
-
-		//2) all the fdcs - the rest
-		for (auto controller: test->get_all_flash_drives()) {
-			if (!controller->has_snapshot(test->name())) {
-				reporter.take_snapshot(controller, test->name());
-				controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
-				coro::CheckPoint();
-			}
-			controller->current_state = test->name();
-		}
+		create_all_controllers_snapshots(test);
 
 		reporter.test_passed();
 
@@ -370,13 +380,13 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 	}
 }
 
-void VisitorInterpreter::visit_command_block(std::shared_ptr<AST::Block<AST::Cmd>> block) {
+void VisitorInterpreter::visit_command_block(const std::shared_ptr<AST::Block<AST::Cmd>>& block) {
 	for (auto command: block->items) {
 		visit_command(command);
 	}
 }
 
-void VisitorInterpreter::visit_command(std::shared_ptr<AST::Cmd> cmd) {
+void VisitorInterpreter::visit_command(const std::shared_ptr<AST::Cmd>& cmd) {
 	if (auto p = std::dynamic_pointer_cast<AST::RegularCmd>(cmd)) {
 		visit_regular_command({p, stack});
 	} else if (auto p = std::dynamic_pointer_cast<AST::MacroCall<AST::Cmd>>(cmd)) {
@@ -409,7 +419,7 @@ void VisitorInterpreter::visit_macro_body(const std::shared_ptr<AST::Block<AST::
 	visit_command_block(macro_body);
 }
 
-void VisitorInterpreter::stop_all_vms(std::shared_ptr<IR::Test> test) {
+void VisitorInterpreter::stop_all_vms(const std::shared_ptr<IR::Test>& test) {
 	TRACE();
 
 	for (auto vmc: test->get_all_machines()) {
