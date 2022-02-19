@@ -119,7 +119,7 @@ void Reporter::skip_test() {
 	current_test_run = tests_runs.at(current_test_run_index);
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Skipped;
 
-	report_writer->test_skip(current_test_run);
+	report_writer->test_skip_begin(current_test_run);
 
 	std::set<std::string> unsuccessful_parents_names = current_test_run->get_unsuccessful_parents_names();
 
@@ -138,6 +138,8 @@ void Reporter::skip_test() {
 		report(" is failed or skipped\n", red, true);
 	}
 
+	report_writer->test_skip_end(current_test_run);
+
 	current_test_run = nullptr;
 	++current_test_run_index;
 }
@@ -146,12 +148,12 @@ void Reporter::test_passed() {
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Passed;
 
-	report_writer->test_end(current_test_run);
-
 	report_prefix(green, true);
 	report(fmt::format("Test "), green, true);
 	report(current_test_run->test->name(), yellow, true);
 	report(fmt::format(" PASSED in {}\n", duration_to_str(current_test_run->duration())), green, true);
+
+	report_writer->test_end(current_test_run);
 
 	current_test_run = nullptr;
 	++current_test_run_index;
@@ -166,12 +168,12 @@ void Reporter::test_failed(const std::string& message, const std::string& stackt
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Failed;
 
-	report_writer->test_end(current_test_run);
-
 	report_prefix(red, true);
 	report(fmt::format("Test "), red, true);
 	report(current_test_run->test->name(), yellow, true);
 	report(fmt::format(" FAILED in {}\n", duration_to_str(current_test_run->duration())), red, true);
+
+	report_writer->test_end(current_test_run);
 
 	current_test_run = nullptr;
 	++current_test_run_index;

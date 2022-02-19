@@ -70,8 +70,11 @@ void ReportWriterNative::launch_begin(const std::vector<std::shared_ptr<IR::Test
 	}
 }
 
-void ReportWriterNative::test_skip(const std::shared_ptr<IR::TestRun>& test_run) {
+void ReportWriterNative::test_skip_begin(const std::shared_ptr<IR::TestRun>& test_run) {
 	current_launch_meta["skipped_tests"].push_back(test_run->test->name());
+}
+
+void ReportWriterNative::test_skip_end(const std::shared_ptr<IR::TestRun>& test_run) {
 }
 
 void ReportWriterNative::test_begin(const std::shared_ptr<IR::TestRun>& test_run) {

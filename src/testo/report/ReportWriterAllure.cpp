@@ -185,21 +185,23 @@ void ReportWriterAllure::launch_begin(const std::vector<std::shared_ptr<IR::Test
 	}
 }
 
-void ReportWriterAllure::test_skip(const std::shared_ptr<IR::TestRun>& test_run) {
-	TestCase testcase(test_run->test);
-	testcase.status = "skipped";
-	testcase.failure.message = "Some of the parent tests has failed";
+void ReportWriterAllure::test_skip_begin(const std::shared_ptr<IR::TestRun>& test_run) {
+	test_begin(test_run);
+}
+
+void ReportWriterAllure::test_skip_end(const std::shared_ptr<IR::TestRun>& test_run) {
+	current_testcase.stop = std::chrono::system_clock::now();
+	current_testcase.status = "skipped";
+	current_testcase.failure.message = "Some of the parent tests has failed";
 	for (auto& parent: test_run->get_unsuccessful_parents_names()) {
-		if (testcase.failure.stacktrace.size()) {
-			testcase.failure.stacktrace += ", ";
+		if (current_testcase.failure.stacktrace.size()) {
+			current_testcase.failure.stacktrace += ", ";
 		}
-		testcase.failure.stacktrace += parent;
+		current_testcase.failure.stacktrace += parent;
 	}
-	testcase.start = std::chrono::system_clock::now();
-	testcase.stop = std::chrono::system_clock::now();
 
 	TestSuite& testsuite = testsuites[test_run->test->get_source_file_path().parent_path()];
-	testsuite.testcases.push_back(testcase);
+	testsuite.testcases.push_back(current_testcase);
 }
 
 void ReportWriterAllure::test_begin(const std::shared_ptr<IR::TestRun>& test_run) {

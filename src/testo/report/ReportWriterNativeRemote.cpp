@@ -24,10 +24,19 @@ void ReportWriterNativeRemote::launch_begin(const std::vector<std::shared_ptr<IR
 	wait_for_confirmation();
 }
 
-void ReportWriterNativeRemote::test_skip(const std::shared_ptr<IR::TestRun>& test_run) {
-	ReportWriterNative::test_skip(test_run);
+void ReportWriterNativeRemote::test_skip_begin(const std::shared_ptr<IR::TestRun>& test_run) {
+	ReportWriterNative::test_skip_begin(test_run);
 	send({
-		{"type", "test_skip"},
+		{"type", "test_skip_begin"},
+		{"current_test_run", to_json(test_run)},
+	});
+	wait_for_confirmation();
+}
+
+void ReportWriterNativeRemote::test_skip_end(const std::shared_ptr<IR::TestRun>& test_run) {
+	ReportWriterNative::test_skip_end(test_run);
+	send({
+		{"type", "test_skip_end"},
 		{"current_test_run", to_json(test_run)},
 	});
 	wait_for_confirmation();
