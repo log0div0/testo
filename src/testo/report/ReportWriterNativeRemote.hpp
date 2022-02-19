@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "ReportWriterNative.hpp"
 #include <coro/StreamSocket.h>
+#include "ReportWriterNative.hpp"
 
 struct ReportWriterNativeRemote: ReportWriterNative {
 	ReportWriterNativeRemote(const ReportConfig& config);

@@ -1,7 +1,7 @@
 
 flash foo {
 	size: 2Mb
-	fs: "ntfs"
+	fs: "fat"
 }
 
 test root {

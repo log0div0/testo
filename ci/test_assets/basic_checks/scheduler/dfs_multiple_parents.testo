@@ -1,7 +1,7 @@
 
 flash foo {
 	size: 2Mb
-	fs: "ntfs"
+	fs: "fat"
 }
 
 test root { foo {} }
@@ -15,7 +15,7 @@ test A2: A { foo {} }
 
 flash bar {
 	size: 2Mb
-	fs: "ntfs"
+	fs: "fat"
 }
 
 test superroot { bar {} }

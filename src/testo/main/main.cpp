@@ -30,7 +30,7 @@
 
 using namespace clipp;
 
-std::atomic<bool> REPL_mode_is_active = false;
+std::atomic<bool> REPL_mode_is_active(false);
 
 struct Interruption {};
 

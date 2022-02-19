@@ -1,4 +1,5 @@
 
+#include <coro/StreamSocket.h>
 #include "Configs.hpp"
 #include "Utils.hpp"
 #include <wildcards.hpp>
@@ -6,6 +7,8 @@
 #include <set>
 
 namespace fs = ghc::filesystem;
+
+asio::ip::tcp::endpoint parse_tcp_endpoint(const std::string& endpoint);
 
 void EnvironmentConfig::validate() const {
 	parse_tcp_endpoint(nn_server_endpoint);

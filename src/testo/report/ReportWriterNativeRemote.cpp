@@ -1,6 +1,8 @@
 
 #include "ReportWriterNativeRemote.hpp"
 
+asio::ip::tcp::endpoint parse_tcp_endpoint(const std::string& endpoint);
+
 ReportWriterNativeRemote::ReportWriterNativeRemote(const ReportConfig& config): ReportWriterNative(config) {
 	endpoint = parse_tcp_endpoint(config.report_folder);
 }
@@ -87,7 +89,7 @@ void ReportWriterNativeRemote::test_end(const std::shared_ptr<IR::TestRun>& test
 void ReportWriterNativeRemote::launch_end() {
 	ReportWriterNative::launch_end();
 	send({
-		{"type", "test_skip"},
+		{"type", "launch_end"},
 		{"current_launch", current_launch_meta},
 	});
 	wait_for_confirmation();

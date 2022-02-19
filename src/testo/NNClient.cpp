@@ -12,6 +12,7 @@ using namespace std::chrono_literals;
 static const VersionNumber client_version(TESTO_VERSION);
 static const VersionNumber minimal_server_version(3, 2, 0);
 
+asio::ip::tcp::endpoint parse_tcp_endpoint(const std::string& endpoint);
 
 NNClient::NNClient(const std::string& endpoint_):
 	endpoint(parse_tcp_endpoint(endpoint_)),

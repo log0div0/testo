@@ -1,10 +1,10 @@
 
+#include "ReportWriterNativeRemote.hpp"
 #include "Reporter.hpp"
 #include <rang.hpp>
 #include <fmt/format.h>
 #include "../Logger.hpp"
 #include "ReportWriterNativeLocal.hpp"
-#include "ReportWriterNativeRemote.hpp"
 #include "ReportWriterAllure.hpp"
 
 template <typename Duration>
