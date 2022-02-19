@@ -67,6 +67,7 @@ struct TestRun {
 	};
 	ExecStatus exec_status = ExecStatus::Unknown;
 
+	std::string id = generate_uuid_v4();
 	std::shared_ptr<Test> test;
 
 	std::set<std::shared_ptr<TestRun>> parents;

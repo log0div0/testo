@@ -146,7 +146,7 @@ void Reporter::test_passed() {
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Passed;
 
-	report_writer->test_end();
+	report_writer->test_end(current_test_run);
 
 	report_prefix(green, true);
 	report(fmt::format("Test "), green, true);
@@ -166,7 +166,7 @@ void Reporter::test_failed(const std::string& message, const std::string& stackt
 	current_test_run->stop_timestamp = std::chrono::system_clock::now();
 	current_test_run->exec_status = IR::TestRun::ExecStatus::Failed;
 
-	report_writer->test_end();
+	report_writer->test_end(current_test_run);
 
 	report_prefix(red, true);
 	report(fmt::format("Test "), red, true);
@@ -259,7 +259,7 @@ void Reporter::abort(std::shared_ptr<IR::Controller> controller, const IR::Abort
 	report(fmt::format("Aborting with a message: {}\n", action.message()), blue);
 	if (std::shared_ptr<IR::Machine> vmc = std::dynamic_pointer_cast<IR::Machine>(controller)) {
 		if (vmc->vm()->state() == VmState::Running) {
-			report_writer->report_screenshot(vmc->make_new_screenshot());
+			report_writer->report_screenshot(current_test_run, vmc->make_new_screenshot());
 		}
 	}
 }
@@ -528,7 +528,7 @@ void Reporter::save_screenshot(std::shared_ptr<IR::Machine> vmc, const stb::Imag
 	report_prefix(blue);
 	report(fmt::format("Saved screenshot from vm "), blue);
 	report(fmt::format("{}\n", vmc->name()), yellow);
-	report_writer->report_screenshot(screenshot);
+	report_writer->report_screenshot(current_test_run, screenshot);
 }
 
 std::string newline_to_br(const std::string& str) {
@@ -549,17 +549,17 @@ std::string newline_to_br(const std::string& str) {
 
 void Reporter::report(const std::string& message, style color, bool is_bold) {
 	print(message, color, is_bold);
-	report_writer->report(message);
+	report_writer->report(current_test_run, message);
 }
 
 void Reporter::report_raw(const std::string& message, style color, bool is_bold) {
 	print(message, color, is_bold);
-	report_writer->report_raw(message);
+	report_writer->report_raw(current_test_run, message);
 }
 
 void Reporter::report_prefix(style color, bool is_bold) {
 	print(fmt::format("{} ", progress()), color, is_bold);
-	report_writer->report_prefix();
+	report_writer->report_prefix(current_test_run);
 }
 
 void Reporter::print_html(const std::string& message, style color, bool is_bold) {

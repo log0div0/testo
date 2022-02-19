@@ -10,9 +10,9 @@ struct ReportWriterNativeLocal: ReportWriterNative {
 		const std::vector<std::shared_ptr<IR::TestRun>>& tests_runs) override;
 
 	virtual void test_begin(const std::shared_ptr<IR::TestRun>& test_run) override;
-	virtual void report(const std::string& text) override;
-	virtual void report_screenshot(const stb::Image<stb::RGB>& screenshot) override;
-	virtual void test_end() override;
+	virtual void report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) override;
+	virtual void report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) override;
+	virtual void test_end(const std::shared_ptr<IR::TestRun>& test_run) override;
 
 	virtual void launch_end() override;
 

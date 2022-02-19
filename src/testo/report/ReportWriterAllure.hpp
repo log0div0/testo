@@ -76,11 +76,11 @@ struct ReportWriterAllure: ReportWriter {
 
 	virtual void test_skip(const std::shared_ptr<IR::TestRun>& test_run) override;
 	virtual void test_begin(const std::shared_ptr<IR::TestRun>& test_run) override;
-	virtual void report_prefix() override;
-	virtual void report(const std::string& text) override;
-	virtual void report_raw(const std::string& text) override;
-	virtual void report_screenshot(const stb::Image<stb::RGB>& screenshot) override;
-	virtual void test_end() override;
+	virtual void report_prefix(const std::shared_ptr<IR::TestRun>& test_run) override;
+	virtual void report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) override;
+	virtual void report_raw(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) override;
+	virtual void report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) override;
+	virtual void test_end(const std::shared_ptr<IR::TestRun>& test_run) override;
 
 	virtual void launch_end() override;
 
@@ -89,7 +89,6 @@ private:
 	void write_categories_file();
 
 	TestCase current_testcase;
-	std::shared_ptr<IR::TestRun> current_test_run;
 
 	std::map<fs::path, TestSuite> testsuites;
 

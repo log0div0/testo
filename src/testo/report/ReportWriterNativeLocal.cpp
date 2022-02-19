@@ -34,27 +34,27 @@ void ReportWriterNativeLocal::launch_begin(const std::vector<std::shared_ptr<IR:
 
 void ReportWriterNativeLocal::test_begin(const std::shared_ptr<IR::TestRun>& test_run) {
 	ReportWriterNative::test_begin(test_run);
-	fs::create_directories(report_folder / "tests_runs" / current_test_run_meta.at("id").get<std::string>());
-	current_test_run_output_file = std::ofstream(report_folder / "tests_runs" / current_test_run_meta.at("id").get<std::string>() / "log.txt");
+	fs::create_directories(report_folder / "tests_runs" / test_run->id);
+	current_test_run_output_file = std::ofstream(report_folder / "tests_runs" / test_run->id / "log.txt");
 }
 
-void ReportWriterNativeLocal::report(const std::string& text) {
-	if (current_test_run) {
+void ReportWriterNativeLocal::report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {
+	if (test_run) {
 		current_test_run_output_file << text;
 	} else {
 		current_launch_output_file << text;
 	}
 }
 
-void ReportWriterNativeLocal::report_screenshot(const stb::Image<stb::RGB>& screenshot) {
-	screenshot.write_png((report_folder / "tests_runs" / current_test_run_meta.at("id").get<std::string>() / "screenshot.png").generic_string());
+void ReportWriterNativeLocal::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) {
+	screenshot.write_png((report_folder / "tests_runs" / test_run->id / "screenshot.png").generic_string());
 }
 
-void ReportWriterNativeLocal::test_end() {
-	ReportWriterNative::test_end();
+void ReportWriterNativeLocal::test_end(const std::shared_ptr<IR::TestRun>& test_run) {
+	ReportWriterNative::test_end(test_run);
 	current_test_run_output_file.close();
-	std::ofstream file(report_folder / "tests_runs" / current_test_run_meta.at("id").get<std::string>() / "meta.json");
-	file << current_test_run_meta.dump(2);
+	std::ofstream file(report_folder / "tests_runs" / test_run->id / "meta.json");
+	file << to_json(test_run).dump(2);
 }
 
 void ReportWriterNativeLocal::launch_end() {

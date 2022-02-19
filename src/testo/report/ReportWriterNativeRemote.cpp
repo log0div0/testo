@@ -28,7 +28,7 @@ void ReportWriterNativeRemote::test_skip(const std::shared_ptr<IR::TestRun>& tes
 	ReportWriterNative::test_skip(test_run);
 	send({
 		{"type", "test_skip"},
-		{"current_test_run", current_test_run_meta},
+		{"current_test_run", to_json(test_run)},
 	});
 	wait_for_confirmation();
 }
@@ -37,40 +37,40 @@ void ReportWriterNativeRemote::test_begin(const std::shared_ptr<IR::TestRun>& te
 	ReportWriterNative::test_begin(test_run);
 	send({
 		{"type", "test_begin"},
-		{"current_test_run", current_test_run_meta},
+		{"current_test_run", to_json(test_run)},
 	});
 	wait_for_confirmation();
 }
 
-void ReportWriterNativeRemote::report(const std::string& text) {
+void ReportWriterNativeRemote::report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {
 	nlohmann::json msg = {
 		{"type", "report"},
 		{"text", text},
 	};
-	if (current_test_run) {
-		msg["current_test_run"] = current_test_run_meta;
+	if (test_run) {
+		msg["current_test_run"] = to_json(test_run);
 	}
 	send(msg);
 	wait_for_confirmation();
 }
 
-void ReportWriterNativeRemote::report_screenshot(const stb::Image<stb::RGB>& screenshot) {
+void ReportWriterNativeRemote::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) {
 	nlohmann::json msg = {
 		{"type", "report_screenshot"},
 		{"screenshot", screenshot.write_png_mem()},
 	};
-	if (current_test_run) {
-		msg["current_test_run"] = current_test_run_meta;
+	if (test_run) {
+		msg["current_test_run"] = to_json(test_run);
 	}
 	send(msg);
 	wait_for_confirmation();
 }
 
-void ReportWriterNativeRemote::test_end() {
-	ReportWriterNative::test_end();
+void ReportWriterNativeRemote::test_end(const std::shared_ptr<IR::TestRun>& test_run) {
+	ReportWriterNative::test_end(test_run);
 	send({
 		{"type", "test_end"},
-		{"current_test_run", current_test_run_meta},
+		{"current_test_run", to_json(test_run)},
 	});
 	wait_for_confirmation();
 }

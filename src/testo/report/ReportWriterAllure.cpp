@@ -203,12 +203,11 @@ void ReportWriterAllure::test_skip(const std::shared_ptr<IR::TestRun>& test_run)
 }
 
 void ReportWriterAllure::test_begin(const std::shared_ptr<IR::TestRun>& test_run) {
-	current_test_run = test_run;
 	current_testcase = TestCase(test_run->test);
 	current_testcase.start = std::chrono::system_clock::now();
 }
 
-void ReportWriterAllure::report_prefix() {
+void ReportWriterAllure::report_prefix(const std::shared_ptr<IR::TestRun>& test_run) {
 	if (current_testcase.steps.size()) {
 		current_testcase.steps.back().status = "passed";
 		current_testcase.steps.back().stop = std::chrono::system_clock::now();
@@ -221,30 +220,30 @@ void ReportWriterAllure::report_prefix() {
 	current_testcase.steps.push_back(step);
 }
 
-void ReportWriterAllure::report(const std::string& text) {
+void ReportWriterAllure::report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {
 	if (current_testcase.steps.size()) {
 		current_testcase.steps.back().title += text;
 	}
 }
 
-void ReportWriterAllure::report_raw(const std::string& text) {
+void ReportWriterAllure::report_raw(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {
 	if (current_testcase.steps.size()) {
 		current_testcase.steps.back().raw += text;
 	}
 }
 
-void ReportWriterAllure::report_screenshot(const stb::Image<stb::RGB>& screenshot) {
+void ReportWriterAllure::report_screenshot(const std::shared_ptr<IR::TestRun>& test_run, const stb::Image<stb::RGB>& screenshot) {
 	if (current_testcase.steps.size()) {
 		current_testcase.steps.back().attachments.push_back(Attachment(report_folder, screenshot));
 	}
 }
 
-void ReportWriterAllure::test_end() {
+void ReportWriterAllure::test_end(const std::shared_ptr<IR::TestRun>& test_run) {
 	current_testcase.stop = std::chrono::system_clock::now();
-	switch (current_test_run->exec_status) {
+	switch (test_run->exec_status) {
 		case IR::TestRun::ExecStatus::Passed:
 			current_testcase.status = "passed";
-			switch (current_test_run->test->cache_status()) {
+			switch (test_run->test->cache_status()) {
 				case IR::Test::CacheStatus::Empty:
 					current_testcase.failure.message = "No cache found";
 					break;
@@ -255,15 +254,15 @@ void ReportWriterAllure::test_end() {
 					current_testcase.failure.message = "Something weird has happened with the cache";
 					break;
 			}
-			current_testcase.failure.stacktrace = current_test_run->test->cksum_input.str();
+			current_testcase.failure.stacktrace = test_run->test->cksum_input.str();
 			if (current_testcase.steps.size()) {
 				current_testcase.steps.back().status = "passed";
 			}
 			break;
 		case IR::TestRun::ExecStatus::Failed:
 			current_testcase.status = "failed";
-			current_testcase.failure.message = current_test_run->failure_message;
-			current_testcase.failure.stacktrace = current_test_run->failure_stacktrace;
+			current_testcase.failure.message = test_run->failure_message;
+			current_testcase.failure.stacktrace = test_run->failure_stacktrace;
 			if (current_testcase.steps.size()) {
 				current_testcase.steps.back().status = "failed";
 			}
@@ -278,7 +277,7 @@ void ReportWriterAllure::test_end() {
 			current_testcase.steps.back().attachments.push_back(Attachment(report_folder, current_testcase.steps.back().raw));
 		}
 	}
-	TestSuite& testsuite = testsuites[current_test_run->test->get_source_file_path().parent_path()];
+	TestSuite& testsuite = testsuites[test_run->test->get_source_file_path().parent_path()];
 	testsuite.testcases.push_back(current_testcase);
 }
 

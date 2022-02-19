@@ -40,6 +40,13 @@ static std::string now() {
 	return ss.str();
 }
 
+static std::string to_string(std::chrono::system_clock::time_point tp) {
+	auto t = std::chrono::system_clock::to_time_t(tp);
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&t), "%FT%T%z");
+	return ss.str();
+}
+
 ReportWriterNative::ReportWriterNative(const ReportConfig& config): ReportWriter(config) {
 	current_launch_meta["id"] = generate_uuid_v4();
 	current_launch_meta["testo_version"] = TESTO_VERSION;
@@ -64,45 +71,26 @@ void ReportWriterNative::launch_begin(const std::vector<std::shared_ptr<IR::Test
 }
 
 void ReportWriterNative::test_skip(const std::shared_ptr<IR::TestRun>& test_run) {
-	current_test_run_meta = nlohmann::json::object();
-	current_test_run_meta["id"] = generate_uuid_v4();
-	current_test_run_meta["test_name"] = current_test_run->test->name();
-	current_test_run_meta["exec_status"] = to_string(current_test_run->exec_status);
-
 	current_launch_meta["skipped_tests"].push_back(test_run->test->name());
 }
 
 void ReportWriterNative::test_begin(const std::shared_ptr<IR::TestRun>& test_run) {
-	current_test_run = test_run;
-
-	current_test_run_meta = nlohmann::json::object();
-	current_test_run_meta["id"] = generate_uuid_v4();
-	current_test_run_meta["test_name"] = current_test_run->test->name();
-	current_test_run_meta["start_timestamp"] = now();
-
-	current_launch_meta["executed_tests"].push_back(current_test_run_meta["id"]);
+	current_launch_meta["executed_tests"].push_back(test_run->test->name());
 }
 
-void ReportWriterNative::report_prefix() {
-	if (current_test_run) {
-		report(fmt::format("[{}] ", current_test_run->test->name()));
+void ReportWriterNative::report_prefix(const std::shared_ptr<IR::TestRun>& test_run) {
+	if (test_run) {
+		report(test_run, fmt::format("[{}] ", test_run->test->name()));
 	} else {
-		report(fmt::format(">>> "));
+		report(test_run, fmt::format(">>> "));
 	}
 }
 
-void ReportWriterNative::report_raw(const std::string& text) {
-	report(text);
+void ReportWriterNative::report_raw(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {
+	report(test_run, text);
 }
 
-void ReportWriterNative::test_end() {
-	current_test_run_meta["stop_timestamp"] = now();
-	current_test_run_meta["exec_status"] = to_string(current_test_run->exec_status);
-	current_test_run_meta["failure_message"] = current_test_run->failure_message;
-	current_test_run_meta["failure_stacktrace"] = current_test_run->failure_stacktrace;
-	current_test_run_meta["failure_category"] = current_test_run->failure_category;
-
-	current_test_run = nullptr;
+void ReportWriterNative::test_end(const std::shared_ptr<IR::TestRun>& test_run) {
 }
 
 void ReportWriterNative::launch_end() {
@@ -118,5 +106,18 @@ nlohmann::json ReportWriterNative::to_json(const std::shared_ptr<IR::Test>& test
 		{"cksum", test->cksum},
 		{"cache_status", to_string(test->cache_status())},
 		{"source_file", test->get_source_file_path()}
+	};
+}
+
+nlohmann::json ReportWriterNative::to_json(const std::shared_ptr<IR::TestRun>& test_run) {
+	return {
+		{"id", test_run->id},
+		{"test_name", test_run->test->name()},
+		{"start_timestamp", to_string(test_run->start_timestamp)},
+		{"stop_timestamp", to_string(test_run->stop_timestamp)},
+		{"exec_status", to_string(test_run->exec_status)},
+		{"failure_message", test_run->failure_message},
+		{"failure_stacktrace", test_run->failure_stacktrace},
+		{"failure_category", test_run->failure_category},
 	};
 }
