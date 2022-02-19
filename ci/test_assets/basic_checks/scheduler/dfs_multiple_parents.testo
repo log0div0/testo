@@ -1,0 +1,27 @@
+
+flash foo {
+	size: 2Mb
+	fs: "ntfs"
+}
+
+test root { foo {} }
+test A: C1, root { foo {} }
+test B: root { foo {} }
+test A1: A { foo {} }
+test B1: B { foo {} }
+test B2: B { foo {} }
+test A2: A { foo {} }
+
+
+flash bar {
+	size: 2Mb
+	fs: "ntfs"
+}
+
+test superroot { bar {} }
+test D: superroot { bar {} }
+test D1: D { bar {} }
+test D2: D { bar {} }
+test C: superroot { bar {} }
+test C1: C { bar {} }
+test C2: C { bar {} }

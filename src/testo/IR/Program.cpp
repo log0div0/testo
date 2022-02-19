@@ -286,17 +286,24 @@ void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
 			throw ExceptionWithPos(test->ast_node->parents[i]->begin(), "Error: can't specify test as a parent to itself " + parent_name);
 		}
 
-		auto parent = tests.find(parent_name);
-		if (parent == tests.end()) {
+		auto it = tests.find(parent_name);
+		if (it == tests.end()) {
 			throw ExceptionWithPos(test->ast_node->parents[i]->begin(), "Error: unknown test: " + parent_name);
 		}
 
-		auto result = test->parents.insert(parent->second);
-		if (!result.second) {
+		auto parent = it->second;
+
+		if (std::find(test->parents.begin(), test->parents.end(), parent) == test->parents.end()) {
+			test->parents.push_back(parent);
+		} else {
 			throw ExceptionWithPos(test->ast_node->parents[i]->begin(), "Error: this test was already specified in parent list " + parent_name);
 		}
 
-		setup_test_parents(parent->second);
+		if (std::find_if(parent->children.begin(), parent->children.end(), [&](const auto& child) { return child.lock() == test; }) == parent->children.end()) {
+			parent->children.push_back(test);
+		}
+
+		setup_test_parents(parent);
 	}
 }
 

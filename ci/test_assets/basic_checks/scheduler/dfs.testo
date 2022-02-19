@@ -1,0 +1,47 @@
+
+flash foo {
+	size: 2Mb
+	fs: "ntfs"
+}
+
+test root {
+	foo {
+		print "root"
+	}
+}
+
+test A: root {
+	foo {
+		print "A"
+	}
+}
+
+test B: root {
+	foo {
+		print "B"
+	}
+}
+
+test A1: A {
+	foo {
+		print "A1"
+	}
+}
+
+test B1: B {
+	foo {
+		print "B1"
+	}
+}
+
+test B2: B {
+	foo {
+		print "B2"
+	}
+}
+
+test A2: A {
+	foo {
+		print "A2"
+	}
+}

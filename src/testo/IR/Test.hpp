@@ -24,7 +24,9 @@ struct Test: Object<AST::Test> {
 	std::string name() const;
 	std::vector<std::string> parent_names() const;
 
-	std::set<std::shared_ptr<Test>> parents;
+	// both in a fixed order to make test planning stable
+	std::vector<std::shared_ptr<Test>> parents;
+	std::vector<std::weak_ptr<Test>> children;
 
 	std::set<std::shared_ptr<Controller>> get_all_controllers() const;
 	std::set<std::shared_ptr<Network>> get_all_networks() const;

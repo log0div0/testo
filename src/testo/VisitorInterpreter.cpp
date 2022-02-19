@@ -139,29 +139,61 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::sha
 	return test_run;
 }
 
-void VisitorInterpreter::build_test_plan() {
-	TRACE();
-
+std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_topmost_uncached_tests() {
+	std::vector<std::shared_ptr<IR::Test>> result;
 	for (auto& test: IR::program->all_selected_tests) {
 		if (test->cache_status() == IR::Test::CacheStatus::OK) {
 			continue;
 		}
-		delete_snapshot_with_children(test);
-		bool is_leaf = true;
-		for (auto& other_test: IR::program->all_selected_tests) {
-			if (test == other_test) {
-				continue;
+		bool are_parents_cached = true;
+		for (auto& parent: test->parents) {
+			if (parent->cache_status() != IR::Test::CacheStatus::OK) {
+				are_parents_cached = false;
+				break;
 			}
-			for (auto& other_parent: other_test->parents) {
-				if (other_parent == test) {
-					is_leaf = false;
-					break;
+		}
+		if (are_parents_cached) {
+			result.push_back(test);
+		}
+	}
+	return result;
+}
+
+std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_leaf_tests_in_dfs_order(const std::vector<std::shared_ptr<IR::Test>>& topmost_uncached_tests) {
+	std::vector<std::shared_ptr<IR::Test>> result;
+	for (auto& test: topmost_uncached_tests) {
+		struct StackEntry {
+			std::shared_ptr<IR::Test> test;
+			size_t child_index;
+		};
+		std::stack<StackEntry> stack;
+		stack.push({test, 0});
+		while (stack.size()) {
+			if (stack.top().child_index == stack.top().test->children.size()) {
+				if (stack.top().test->children.size() == 0) {
+					if (std::find(result.begin(), result.end(), stack.top().test) == result.end()) {
+						result.push_back(stack.top().test);
+					}
 				}
+				stack.pop();
+			} else {
+				stack.push({stack.top().test->children.at(stack.top().child_index++).lock(), 0});
 			}
 		}
-		if (is_leaf) {
-			add_test_to_plan(test);
-		}
+	}
+	return result;
+}
+
+void VisitorInterpreter::build_test_plan() {
+	TRACE();
+
+	std::vector<std::shared_ptr<IR::Test>> topmost_uncached_tests = get_topmost_uncached_tests();
+	for (auto& test: topmost_uncached_tests) {
+		delete_snapshot_with_children(test);
+	}
+	std::vector<std::shared_ptr<IR::Test>> leaf_tests_in_dfs_order = get_leaf_tests_in_dfs_order(topmost_uncached_tests);
+	for (auto& test: leaf_tests_in_dfs_order) {
+		add_test_to_plan(test);
 	}
 }
 
