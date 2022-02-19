@@ -14,6 +14,8 @@ struct Controller: Object<AST::Controller> {
 
 	std::string name() const;
 
+	std::string note_was_declared_here() const;
+
 	std::string get_snapshot_cksum(const std::string& snapshot);
 	bool has_snapshot(const std::string& snapshot);
 	bool check_metadata_version();

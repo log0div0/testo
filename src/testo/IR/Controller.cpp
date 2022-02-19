@@ -13,6 +13,13 @@ bool Controller::is_defined() const {
 	return fs::exists(main_file());
 }
 
+std::string Controller::note_was_declared_here() const {
+	std::stringstream ss;
+	ss << macro_call_stack << std::string(ast_node->begin())
+		<< ": note: the " << type() << " " << name() << " was declared here";
+	return ss.str();
+}
+
 bool Controller::has_snapshot(const std::string& snapshot) {
 	fs::path metadata_file = get_metadata_dir();
 	metadata_file /= id() + "_" + snapshot;

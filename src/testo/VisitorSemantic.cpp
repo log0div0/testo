@@ -12,11 +12,8 @@
 struct ControllerCreatonException: public Exception {
 	ControllerCreatonException(std::shared_ptr<IR::Controller> controller): Exception({}) {
 		std::stringstream ss;
-		for (auto macro_call: controller->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
-		}
-
-		ss << std::string(controller->ast_node->begin()) << ": In the " << controller->type() << " \"" << controller->name() << "\" declaration";
+		ss << controller->macro_call_stack << std::string(controller->ast_node->begin())
+			<< ": In the " << controller->type() << " \"" << controller->name() << "\" declaration";
 		msg = ss.str();
 	}
 };
@@ -138,10 +135,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	} catch (const Exception& error) {
 		if (test->macro_call_stack.size()) {
 			std::stringstream ss;
-			for (auto macro_call: test->macro_call_stack) {
-				ss << std::string(macro_call->name.begin()) + std::string(": In a macro call ") << macro_call->name.value() << std::endl;
-			}
-
+			ss << test->macro_call_stack;
 			std::string msg = ss.str();
 			std::throw_with_nested(Exception(msg.substr(0, msg.length() - 1)));
 		} else {

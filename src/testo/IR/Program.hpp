@@ -25,7 +25,7 @@ struct Program {
 	const ProgramConfig& config;
 
 private:
-	std::vector<std::shared_ptr<AST::IMacroCall>> current_macro_call_stack;
+	MacroCallStack current_macro_call_stack;
 
 	std::unordered_map<std::string, std::shared_ptr<Test>> tests;
 	std::unordered_map<std::string, std::shared_ptr<Macro>> macros;
@@ -102,11 +102,7 @@ private:
 		if (!inserted.second) {
 			std::stringstream ss;
 			ss << std::string(ast_node->begin()) + ": Error: " + T::type_name() + " \"" + t->name() + "\" is already defined" << std::endl << std::endl;
-
-			for (auto macro_call: inserted.first->second->macro_call_stack) {
-				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") + macro_call->to_string() << std::endl;
-			}
-
+			ss << inserted.first->second->macro_call_stack;
 			ss << std::string(inserted.first->second->ast_node->begin()) << ": note: previous declaration was here";
 
 			throw Exception(ss.str());

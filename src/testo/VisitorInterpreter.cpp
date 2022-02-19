@@ -354,18 +354,10 @@ void VisitorInterpreter::visit_test(std::shared_ptr<IR::Test> test) {
 
 	} catch (const Exception& error) {
 		std::stringstream ss;
-		for (auto macro_call: test->macro_call_stack) {
-			ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
-		}
-
-		ss << error << std::endl;
+		ss << test->macro_call_stack << error << std::endl;
 
 		if (current_controller) {
-			ss << std::endl;
-			for (auto macro_call: current_controller->macro_call_stack) {
-				ss << std::string(macro_call->begin()) + std::string(": In a macro call ") << macro_call->to_string() << std::endl;
-			}
-			ss << std::string(current_controller->ast_node->begin()) << ": note: the " << current_controller->type() << " " << current_controller->name() << " was declared here\n\n";
+			ss << std::endl << current_controller->note_was_declared_here() << "\n\n";
 		}
 
 		std::string failure_category = GetFailureCategory(error);
