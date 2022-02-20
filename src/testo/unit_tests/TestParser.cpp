@@ -1,6 +1,6 @@
 
 #include <catch.hpp>
-#include "../Parser.hpp"
+#include "../parser/Parser.hpp"
 
 void TestParseStringifyActions(const std::string& str) {
 	auto block = Parser(".", str).action_block();

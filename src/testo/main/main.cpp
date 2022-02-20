@@ -5,13 +5,13 @@
 #include <coro/Finally.h>
 
 #ifdef WIN32
-#include "backends/hyperv/HypervEnvironment.hpp"
+#include "../backends/hyperv/HypervEnvironment.hpp"
 #include <wmi/CoInitializer.hpp>
 #include <winapi/Functions.hpp>
 #elif __linux__
-#include "backends/qemu/QemuEnvironment.hpp"
+#include "../backends/qemu/QemuEnvironment.hpp"
 #elif __APPLE__
-#include "backends/Environment.hpp"
+#include "../backends/Environment.hpp"
 #endif
 
 #include <iostream>
@@ -19,8 +19,8 @@
 #include "ModeClean.hpp"
 #include "ModeRun.hpp"
 
-#include "Exceptions.hpp"
-#include "Logger.hpp"
+#include "../Exceptions.hpp"
+#include "../Logger.hpp"
 
 #include <clipp.h>
 

@@ -1,13 +1,12 @@
 
 #pragma once
-#include "IR/Test.hpp"
-#include "IR/Action.hpp"
-#include "IR/Command.hpp"
-#include "IR/Expr.hpp"
-#include "IR/Macro.hpp"
-#include "Reporter.hpp"
-#include "TemplateLiterals.hpp"
-#include "Configs.hpp"
+#include "../IR/Test.hpp"
+#include "../IR/Action.hpp"
+#include "../IR/Command.hpp"
+#include "../IR/Expr.hpp"
+#include "../IR/Macro.hpp"
+#include "../report/Reporter.hpp"
+#include "../Configs.hpp"
 
 struct VisitorInterpreter {
 	VisitorInterpreter(const VisitorInterpreterConfig& config);

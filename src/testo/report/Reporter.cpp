@@ -2,7 +2,7 @@
 #include "Reporter.hpp"
 #include <rang.hpp>
 #include <fmt/format.h>
-#include "Logger.hpp"
+#include "../Logger.hpp"
 #include "ReportWriterNative.hpp"
 #include "ReportWriterAllure.hpp"
 

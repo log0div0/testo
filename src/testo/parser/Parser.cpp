@@ -1,10 +1,10 @@
 
 #include "Parser.hpp"
-#include "Utils.hpp"
-#include "TemplateLiterals.hpp"
+#include "../Utils.hpp"
+#include "../resolver/Resolver.hpp"
+#include "../Logger.hpp"
 #include <fstream>
 #include <fmt/format.h>
-#include "Logger.hpp"
 
 using namespace AST;
 
@@ -1232,7 +1232,7 @@ std::shared_ptr<String> Parser::string() {
 	auto new_node = std::make_shared<String>(str);
 
 	try {
-		new_node->resolver = template_literals::Resolver(new_node->text());
+		new_node->resolver = Resolver(new_node->text());
 	} catch (const std::runtime_error& error) {
 		std::throw_with_nested(ExceptionWithPos(new_node->begin(), "Error parsing string: \"" + new_node->text() + "\""));
 	}

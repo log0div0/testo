@@ -1,7 +1,7 @@
 
 #include "Base.hpp"
 #include "../Exceptions.hpp"
-#include "../Lexer.hpp"
+#include "../lexer/Lexer.hpp"
 
 namespace IR {
 

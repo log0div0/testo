@@ -142,3 +142,5 @@ private:
 };
 
 }
+
+using Resolver = template_literals::Resolver;

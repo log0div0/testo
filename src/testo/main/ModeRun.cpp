@@ -1,9 +1,9 @@
 
 #include "ModeRun.hpp"
-#include "IR/Program.hpp"
-#include "Parser.hpp"
-#include "Utils.hpp"
-#include "Logger.hpp"
+#include "../IR/Program.hpp"
+#include "../parser/Parser.hpp"
+#include "../Utils.hpp"
+#include "../Logger.hpp"
 
 void RunModeArgs::validate() const {
 	ProgramConfig::validate();

@@ -2,8 +2,8 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
-#include "IR/Test.hpp"
-#include "Configs.hpp"
+#include "../IR/Test.hpp"
+#include "../Configs.hpp"
 #include <fstream>
 
 struct ReportWriter {

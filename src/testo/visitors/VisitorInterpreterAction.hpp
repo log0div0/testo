@@ -1,13 +1,12 @@
 
 #pragma once
 
-#include "IR/Action.hpp"
-#include "IR/Expr.hpp"
-#include "IR/Controller.hpp"
-#include "IR/Macro.hpp"
-#include "IR/Expr.hpp"
-#include "Reporter.hpp"
-#include "TemplateLiterals.hpp"
+#include "../IR/Action.hpp"
+#include "../IR/Expr.hpp"
+#include "../IR/Controller.hpp"
+#include "../IR/Macro.hpp"
+#include "../IR/Expr.hpp"
+#include "../report/Reporter.hpp"
 
 struct ActionException: ExceptionWithPos {
 	ActionException(const std::shared_ptr<AST::Node>& node, const std::shared_ptr<IR::Controller>& controller):

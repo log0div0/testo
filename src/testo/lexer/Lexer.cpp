@@ -3,8 +3,8 @@
 #include <fstream>
 #include <stdexcept>
 #include <string.h>
-#include "Exceptions.hpp"
-#include "Logger.hpp"
+#include "../Exceptions.hpp"
+#include "../Logger.hpp"
 
 Lexer::Lexer(const fs::path& file, const std::string& input): input(new std::string(input)) {
 	TRACE();

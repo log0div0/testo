@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <string>
-#include "Configs.hpp"
+#include "../Configs.hpp"
 
 struct RunModeArgs: ProgramConfig {
 	void validate() const;

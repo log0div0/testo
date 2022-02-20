@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "Pos.hpp"
-#include "Token.hpp"
-#include "TemplateLiterals.hpp"
+#include "../lexer/Pos.hpp"
+#include "../lexer/Token.hpp"
+#include "../resolver/Resolver.hpp"
 #include <vector>
 #include <set>
 #include <memory>
@@ -40,7 +40,7 @@ struct String: public Node {
 	}
 
 	Token token;
-	template_literals::Resolver resolver;
+	Resolver resolver;
 };
 
 template <Token::category category>

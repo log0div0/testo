@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "Base.hpp"
 #include "../Mouse.hpp"
 #include "../Keyboard.hpp"
+#include "Base.hpp"
 
 namespace IR {
 

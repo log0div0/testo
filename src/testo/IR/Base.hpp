@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "../AST.hpp"
-#include "../Stack.hpp"
-#include "../VarMap.hpp"
-#include "../Parser.hpp"
+#include "../parser/AST.hpp"
+#include "../parser/Parser.hpp"
+#include "../resolver/Stack.hpp"
+#include "../resolver/VarMap.hpp"
 #include "../Exceptions.hpp"
 
 namespace IR {

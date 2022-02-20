@@ -1,9 +1,8 @@
 
 #include <coro/Timer.h>
 #include "VisitorInterpreterAction.hpp"
-#include "Exceptions.hpp"
-#include "IR/Program.hpp"
-#include "Parser.hpp"
+#include "../Exceptions.hpp"
+#include "../IR/Program.hpp"
 #include <coro/Finally.h>
 
 extern std::atomic<bool> REPL_mode_is_active;

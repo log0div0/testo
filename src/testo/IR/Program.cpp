@@ -1,13 +1,15 @@
 
 #include "Program.hpp"
-#include "../TemplateLiterals.hpp"
-#include "../Exceptions.hpp"
-#include "../Parser.hpp"
-#include <wildcards.hpp>
+
+#include "../visitors/VisitorSemantic.hpp"
+#include "../visitors/VisitorInterpreter.hpp"
 #include "../backends/Environment.hpp"
-#include "../VisitorSemantic.hpp"
-#include "../VisitorInterpreter.hpp"
+#include "../resolver/Resolver.hpp"
+#include "../parser/Parser.hpp"
+#include "../Exceptions.hpp"
 #include "../Logger.hpp"
+
+#include <wildcards.hpp>
 
 namespace IR {
 
@@ -309,7 +311,7 @@ void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
 
 std::string Program::resolve_top_level_param(const std::string& name) const {
 	std::string param = stack->find_param(name);
-	return template_literals::Resolver(param).resolve(stack, nullptr);
+	return Resolver(param).resolve(stack, nullptr);
 }
 
 Program* program = nullptr;

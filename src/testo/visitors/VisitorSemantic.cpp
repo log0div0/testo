@@ -1,13 +1,12 @@
 
-#include "NNClient.hpp"
-#include "backends/Environment.hpp"
+#include "../NNClient.hpp"
+#include "../backends/Environment.hpp"
 #include "VisitorSemantic.hpp"
-#include "Exceptions.hpp"
-#include "IR/Program.hpp"
-#include "Parser.hpp"
+#include "../IR/Program.hpp"
+#include "../Exceptions.hpp"
+#include "../Logger.hpp"
 #include <fmt/format.h>
 #include <wildcards.hpp>
-#include "Logger.hpp"
 
 struct ControllerCreatonException: public Exception {
 	ControllerCreatonException(std::shared_ptr<IR::Controller> controller): Exception({}) {

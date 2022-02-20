@@ -3,11 +3,11 @@
 
 #include <sstream>
 #include <iomanip>
-#include "IR/Test.hpp"
-#include "IR/Action.hpp"
-#include "IR/Macro.hpp"
-#include "IR/Expr.hpp"
-#include "Configs.hpp"
+#include "../IR/Test.hpp"
+#include "../IR/Action.hpp"
+#include "../IR/Macro.hpp"
+#include "../IR/Expr.hpp"
+#include "../Configs.hpp"
 
 struct ReportWriter;
 

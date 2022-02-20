@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include "IR/Test.hpp"
-#include "IR/Macro.hpp"
-#include "IR/Action.hpp"
-#include "IR/Command.hpp"
-#include "IR/Expr.hpp"
-#include "Configs.hpp"
-#include "js/Context.hpp"
+#include "../IR/Test.hpp"
+#include "../IR/Macro.hpp"
+#include "../IR/Action.hpp"
+#include "../IR/Command.hpp"
+#include "../IR/Expr.hpp"
+#include "../js/Context.hpp"
+#include "../Configs.hpp"
 
 #include <set>
 #include <unordered_set>

@@ -1,6 +1,6 @@
 
 #include "ReportWriterAllure.hpp"
-#include "IR/Program.hpp"
+#include "../IR/Program.hpp"
 #include <chrono>
 
 std::string escape(const std::string& input) {

@@ -1,12 +1,12 @@
 
-#include "backends/Environment.hpp"
 #include "ModeClean.hpp"
-#include "Utils.hpp"
-#include "IR/Network.hpp"
-#include "IR/FlashDrive.hpp"
-#include "IR/Machine.hpp"
-#include "Exceptions.hpp"
-#include "Logger.hpp"
+#include "../backends/Environment.hpp"
+#include "../Utils.hpp"
+#include "../IR/Network.hpp"
+#include "../IR/FlashDrive.hpp"
+#include "../IR/Machine.hpp"
+#include "../Exceptions.hpp"
+#include "../Logger.hpp"
 
 int clean_mode(const CleanModeArgs& args) {
 	TRACE();

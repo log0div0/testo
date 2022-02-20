@@ -4,10 +4,9 @@
 #include "VisitorInterpreter.hpp"
 #include "VisitorInterpreterActionMachine.hpp"
 #include "VisitorInterpreterActionFlashDrive.hpp"
-#include "IR/Program.hpp"
-#include "Exceptions.hpp"
-#include "Parser.hpp"
-#include "Logger.hpp"
+#include "../IR/Program.hpp"
+#include "../Exceptions.hpp"
+#include "../Logger.hpp"
 
 #include <fmt/format.h>
 #include <wildcards.hpp>

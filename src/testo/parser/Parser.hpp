@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include "Lexer.hpp"
+#include "../lexer/Lexer.hpp"
+#include "../lexer/Token.hpp"
+#include "../Utils.hpp"
+#include "../Exceptions.hpp"
 #include "AST.hpp"
-#include "Utils.hpp"
-#include "Token.hpp"
-#include "Exceptions.hpp"
 #include <set>
 #include <array>
 

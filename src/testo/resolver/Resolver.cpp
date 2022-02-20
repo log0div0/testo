@@ -1,6 +1,6 @@
 
-#include "TemplateLiterals.hpp"
-#include "Exceptions.hpp"
+#include "Resolver.hpp"
+#include "../Exceptions.hpp"
 #include <stdexcept>
 
 namespace template_literals {

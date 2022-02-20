@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
-#include "Utils.hpp"
+#include "../Utils.hpp"
 
 struct Pos {
 	Pos() = default;

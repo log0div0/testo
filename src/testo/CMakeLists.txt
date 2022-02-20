@@ -15,9 +15,15 @@ endif()
 
 list(APPEND SRC_DIRS "IR/*.cpp")
 list(APPEND SRC_DIRS "js/*.cpp")
+list(APPEND SRC_DIRS "lexer/*.cpp")
+list(APPEND SRC_DIRS "main/*.cpp")
+list(APPEND SRC_DIRS "parser/*.cpp")
+list(APPEND SRC_DIRS "report/*.cpp")
+list(APPEND SRC_DIRS "resolver/*.cpp")
+list(APPEND SRC_DIRS "visitors/*.cpp")
 
 file(GLOB SRCS ${SRC_DIRS})
-list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+list(REMOVE_ITEM SRCS ${CMAKE_CURRENT_SOURCE_DIR}/main/main.cpp)
 
 add_library(testo_core ${SRCS})
 target_link_libraries(testo_core coro pugixml stb os testo_guest_additions_protocol quickjs)
@@ -34,7 +40,7 @@ if(UNIX)
 	target_link_libraries(testo_core pthread)
 endif()
 
-add_executable(testo ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+add_executable(testo ${CMAKE_CURRENT_SOURCE_DIR}/main/main.cpp)
 target_link_libraries(testo testo_core)
 
 file(GLOB UNIT_TESTS_SRCS "unit_tests/*.cpp")

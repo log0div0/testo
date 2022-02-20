@@ -2,10 +2,10 @@
 #include <coro/CheckPoint.h>
 #include <coro/Timeout.h>
 #include "VisitorInterpreterActionMachine.hpp"
-#include "NNClient.hpp"
-#include "Exceptions.hpp"
-#include "backends/Environment.hpp"
-#include "IR/Program.hpp"
+#include "../NNClient.hpp"
+#include "../Exceptions.hpp"
+#include "../backends/Environment.hpp"
+#include "../IR/Program.hpp"
 #include <fmt/format.h>
 
 using namespace std::chrono_literals;

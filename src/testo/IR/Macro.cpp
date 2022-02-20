@@ -1,7 +1,7 @@
 
 #include "Macro.hpp"
 #include "Program.hpp"
-#include "../Parser.hpp"
+#include "../parser/Parser.hpp"
 #include "../Exceptions.hpp"
 
 namespace IR {
