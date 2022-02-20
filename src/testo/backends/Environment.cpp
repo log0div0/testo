@@ -22,7 +22,7 @@ void Environment::setup(const EnvironmentConfig& config) {
 		}
 	}
 
-	nn_client = std::make_unique<NNClient>(config.nn_server_ip(), config.nn_server_port());
+	nn_client = std::make_unique<NNClient>(config.nn_server_endpoint);
 }
 
 Environment::Environment() {

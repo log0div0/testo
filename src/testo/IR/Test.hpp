@@ -42,6 +42,9 @@ struct Test: Object<AST::Test> {
 	std::string cksum;
 
 	CacheStatus cache_status();
+	bool is_up_to_date() {
+		return cache_status() == IR::Test::CacheStatus::OK;
+	}
 
 	nlohmann::json attrs;
 

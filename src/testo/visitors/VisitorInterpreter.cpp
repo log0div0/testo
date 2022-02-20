@@ -81,19 +81,9 @@ void VisitorInterpreter::check_cache_missed_tests() {
 	}
 }
 
-void VisitorInterpreter::get_up_to_date_tests() {
-	TRACE();
-
-	for (auto& test: IR::program->all_selected_tests) {
-		if (test->cache_status() == IR::Test::CacheStatus::OK) {
-			up_to_date_tests.push_back(test);
-		}
-	}
-}
-
 std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::shared_ptr<IR::Test>& test) {
 	// если тест up-to-date и есть снепшот - то запускать его точно не надо
-	if ((test->cache_status() == IR::Test::CacheStatus::OK) && (test->snapshots_needed())) {
+	if (test->is_up_to_date() && test->snapshots_needed()) {
 		return nullptr;
 	}
 	// попробуем определить, может быть тест недавно выполнялся
@@ -141,12 +131,12 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::sha
 std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_topmost_uncached_tests() {
 	std::vector<std::shared_ptr<IR::Test>> result;
 	for (auto& test: IR::program->all_selected_tests) {
-		if (test->cache_status() == IR::Test::CacheStatus::OK) {
+		if (test->is_up_to_date()) {
 			continue;
 		}
 		bool are_parents_cached = true;
 		for (auto& parent: test->parents) {
-			if (parent->cache_status() != IR::Test::CacheStatus::OK) {
+			if (!parent->is_up_to_date()) {
 				are_parents_cached = false;
 				break;
 			}
@@ -201,7 +191,6 @@ void VisitorInterpreter::init() {
 
 	invalidate_tests();
 	check_cache_missed_tests();
-	get_up_to_date_tests();
 	build_test_plan();
 }
 
@@ -214,7 +203,7 @@ void VisitorInterpreter::visit() {
 		return;
 	}
 
-	reporter.init(tests_runs, up_to_date_tests);
+	reporter.init(IR::program->all_selected_tests, tests_runs);
 
 	for (size_t current_test_run_index = 0; current_test_run_index < tests_runs.size(); ++current_test_run_index) {
 		auto test_run = tests_runs.at(current_test_run_index);

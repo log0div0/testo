@@ -1,42 +1,18 @@
 
 #include "Configs.hpp"
+#include "Utils.hpp"
 #include <wildcards.hpp>
 #include <ghc/filesystem.hpp>
 #include <set>
 
 namespace fs = ghc::filesystem;
 
-std::string EnvironmentConfig::nn_server_ip() const {
-	auto semicolon_pos = nn_server_endpoint.find(":");
-	return nn_server_endpoint.substr(0, semicolon_pos);
-}
-
-std::string EnvironmentConfig::nn_server_port() const {
-	auto semicolon_pos = nn_server_endpoint.find(":");
-	return nn_server_endpoint.substr(semicolon_pos + 1, nn_server_endpoint.length() - 1);
-}
-
 void EnvironmentConfig::validate() const {
-	auto semicolon_pos = nn_server_endpoint.find(":");
-	if (semicolon_pos == std::string::npos) {
-		throw std::runtime_error("ip_port string is malformed: no semicolon");
-	}
-
-	auto port = nn_server_port();
-
-	try {
-		auto uport = std::stoul(port);
-		if (uport > 65535) {
-			throw std::runtime_error("");
-		}
-	} catch (const std::exception& error) {
-		throw std::runtime_error(std::string("nn_server port doesn't seem to be valid: ") + port);
-	}
+	parse_tcp_endpoint(nn_server_endpoint);
 }
 
 void EnvironmentConfig::dump(nlohmann::json& j) const {
-	j["nn_server_ip"] = nn_server_ip();
-	j["nn_server_port"] = nn_server_port();
+	j["nn_server_endpoint"] = nn_server_endpoint;
 }
 
 void VisitorSemanticConfig::validate() const {
@@ -55,8 +31,10 @@ void ReportConfig::dump(nlohmann::json& j) const {
 }
 
 ReportFormat ReporterConfig::get_report_format() const {
-	if (report_format == "native") {
-		return ReportFormat::Native;
+	if (report_format == "native_local") {
+		return ReportFormat::NativeLocal;
+	} else if (report_format == "native_remote") {
+		return ReportFormat::NativeRemote;
 	} else if (report_format == "allure") {
 		return ReportFormat::Allure;
 	} else {
@@ -152,5 +130,4 @@ void ProgramConfig::dump(nlohmann::json& j) const {
 		params[params_names.at(i)] = params_values.at(i);
 	}
 	j["params"] = params;
-	j["use_cpu"] = use_cpu;
 }

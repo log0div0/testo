@@ -10,10 +10,8 @@ struct ReportWriter {
 	ReportWriter(const ReportConfig& config) {}
 	virtual ~ReportWriter() {}
 
-	virtual void launch_begin() {}
-
-	virtual void initialize_test_run(const std::shared_ptr<IR::TestRun>& test_run) {}
-	virtual void initialize_up_to_date_test(const std::shared_ptr<IR::Test>& test) {}
+	virtual void launch_begin(const std::vector<std::shared_ptr<IR::Test>>& tests,
+		const std::vector<std::shared_ptr<IR::TestRun>>& tests_runs) {}
 
 	virtual void test_skip(const std::shared_ptr<IR::TestRun>& test_run) {}
 	virtual void test_begin(const std::shared_ptr<IR::TestRun>& test_run) {}

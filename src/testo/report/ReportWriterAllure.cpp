@@ -163,22 +163,26 @@ ReportWriterAllure::ReportWriterAllure(const ReportConfig& config): ReportWriter
 	report_folder = config.report_folder;
 }
 
-void ReportWriterAllure::launch_begin() {
+void ReportWriterAllure::launch_begin(const std::vector<std::shared_ptr<IR::Test>>& tests,
+	const std::vector<std::shared_ptr<IR::TestRun>>& tests_runs)
+{
 	fs::create_directories(report_folder);
 	write_environment_file();
 	write_categories_file();
-}
 
-void ReportWriterAllure::initialize_up_to_date_test(const std::shared_ptr<IR::Test>& test) {
-	TestCase testcase(test);
-	testcase.status = "unknown";
-	testcase.failure.message = "This test is cached";
-	testcase.failure.stacktrace = test->cksum_input.str();
-	testcase.start = std::chrono::system_clock::now();
-	testcase.stop = std::chrono::system_clock::now();
+	for (auto& test: tests) {
+		if (test->is_up_to_date()) {
+			TestCase testcase(test);
+			testcase.status = "unknown";
+			testcase.failure.message = "This test is cached";
+			testcase.failure.stacktrace = test->cksum_input.str();
+			testcase.start = std::chrono::system_clock::now();
+			testcase.stop = std::chrono::system_clock::now();
 
-	TestSuite& testsuite = testsuites[test->get_source_file_path().parent_path()];
-	testsuite.testcases.push_back(testcase);
+			TestSuite& testsuite = testsuites[test->get_source_file_path().parent_path()];
+			testsuite.testcases.push_back(testcase);
+		}
+	}
 }
 
 void ReportWriterAllure::test_skip(const std::shared_ptr<IR::TestRun>& test_run) {

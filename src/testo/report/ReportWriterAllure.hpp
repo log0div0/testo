@@ -71,9 +71,8 @@ struct TestSuite {
 struct ReportWriterAllure: ReportWriter {
 	ReportWriterAllure(const ReportConfig& config);
 
-	virtual void launch_begin() override;
-
-	virtual void initialize_up_to_date_test(const std::shared_ptr<IR::Test>& test) override;
+	virtual void launch_begin(const std::vector<std::shared_ptr<IR::Test>>& tests,
+		const std::vector<std::shared_ptr<IR::TestRun>>& tests_runs) override;
 
 	virtual void test_skip(const std::shared_ptr<IR::TestRun>& test_run) override;
 	virtual void test_begin(const std::shared_ptr<IR::TestRun>& test_run) override;

@@ -4,14 +4,10 @@
 #include <nlohmann/json.hpp>
 
 struct EnvironmentConfig {
-
-	std::string nn_server_ip() const;
-	std::string nn_server_port() const;
+	std::string nn_server_endpoint = "127.0.0.1:8156";
 
 	void validate() const;
 	virtual void dump(nlohmann::json& j) const;
-
-	std::string nn_server_endpoint = "127.0.0.1:8156";
 };
 
 struct VisitorSemanticConfig {
@@ -31,13 +27,14 @@ struct ReportConfig {
 };
 
 enum class ReportFormat {
-	Native,
+	NativeLocal,
+	NativeRemote,
 	Allure
 };
 
 struct ReporterConfig: ReportConfig {
 	bool html = false;
-	std::string report_format = "native";
+	std::string report_format = "native_local";
 	ReportFormat get_report_format() const;
 
 	void validate() const;
@@ -76,8 +73,6 @@ struct ProgramConfig: VisitorSemanticConfig, VisitorInterpreterConfig, Environme
 
 	std::vector<std::string> params_names;
 	std::vector<std::string> params_values;
-
-	bool use_cpu = false;
 
 	bool validate_test_name(const std::string& name) const;
 	void validate() const;

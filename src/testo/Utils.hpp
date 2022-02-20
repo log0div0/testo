@@ -9,6 +9,10 @@
 #include <ghc/filesystem.hpp>
 namespace fs = ghc::filesystem;
 
+#include <coro/StreamSocket.h>
+
+asio::ip::tcp::endpoint parse_tcp_endpoint(const std::string& str);
+
 void fs_copy(const fs::path& from, const fs::path& to);
 
 extern uint64_t content_cksum_maxsize;

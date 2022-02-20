@@ -2,6 +2,7 @@
 #include "NNClient.hpp"
 #include "Logger.hpp"
 #include "Exceptions.hpp"
+#include "Utils.hpp"
 
 #include <coro/Timer.h>
 #include <iostream>
@@ -12,8 +13,8 @@ static const VersionNumber client_version(TESTO_VERSION);
 static const VersionNumber minimal_server_version(3, 2, 0);
 
 
-NNClient::NNClient(const std::string& ip, const std::string& port):
-	endpoint(asio::ip::address::from_string(ip), std::stoul(port)),
+NNClient::NNClient(const std::string& endpoint_):
+	endpoint(parse_tcp_endpoint(endpoint_)),
 	channel(new Channel(Socket()))
 {
 	TRACE();

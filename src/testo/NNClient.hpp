@@ -4,7 +4,7 @@
 #include "testo_nn_server_protocol/Channel.hpp"
 
 struct NNClient {
-	NNClient(const std::string& ip, const std::string& port);
+	NNClient(const std::string& endpoint_);
 	~NNClient();
 
 	NNClient(const NNClient& other) = delete;

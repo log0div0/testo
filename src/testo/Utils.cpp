@@ -8,6 +8,29 @@
 #include <iomanip>
 #include <os/File.hpp>
 
+asio::ip::tcp::endpoint parse_tcp_endpoint(const std::string& endpoint) {
+	try {
+		auto semicolon_pos = endpoint.find(":");
+		if (semicolon_pos == std::string::npos) {
+			throw std::runtime_error("No semicolon found");
+		}
+		std::string ip = endpoint.substr(0, semicolon_pos);
+		std::string sport = endpoint.substr(semicolon_pos + 1, endpoint.length() - 1);
+		unsigned long uport = 0;
+		try {
+			uport = std::stoul(sport);
+			if (uport > 65535) {
+				throw std::runtime_error("Port number is greater than 65535");
+			}
+		} catch (const std::exception& error) {
+			std::throw_with_nested(std::runtime_error("Report server port doesn't seem to be valid: " + sport));
+		}
+		return asio::ip::tcp::endpoint(asio::ip::address::from_string(ip), uport);
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Failed to parse endpoint " + endpoint));
+	}
+}
+
 void fs_copy_file(const fs::path& from, const fs::path& to) {
 	os::File source = os::File::open_for_read(from);
 	os::File dest = os::File::open_for_write(to);

@@ -3,7 +3,8 @@
 #include <rang.hpp>
 #include <fmt/format.h>
 #include "../Logger.hpp"
-#include "ReportWriterNative.hpp"
+#include "ReportWriterNativeLocal.hpp"
+#include "ReportWriterNativeRemote.hpp"
 #include "ReportWriterAllure.hpp"
 
 template <typename Duration>
@@ -24,8 +25,11 @@ Reporter::Reporter(const ReporterConfig& config) {
 
 	if (config.report_folder.size()) {
 		switch (config.get_report_format()) {
-			case ReportFormat::Native:
-				report_writer = std::make_unique<ReportWriterNative>(config);
+			case ReportFormat::NativeLocal:
+				report_writer = std::make_unique<ReportWriterNativeLocal>(config);
+				break;
+			case ReportFormat::NativeRemote:
+				report_writer = std::make_unique<ReportWriterNativeRemote>(config);
 				break;
 			case ReportFormat::Allure:
 				report_writer = std::make_unique<ReportWriterAllure>(config);
@@ -42,21 +46,21 @@ Reporter::~Reporter() {
 	TRACE();
 }
 
-void Reporter::init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs, const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests)
+void Reporter::init(const std::vector<std::shared_ptr<IR::Test>>& _tests, const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs)
 {
 	TRACE();
 
 	start_timestamp = std::chrono::system_clock::now();
 
-	report_writer->launch_begin();
+	report_writer->launch_begin(_tests, _tests_runs);
 
 	for (auto test_run: _tests_runs) {
-		report_writer->initialize_test_run(test_run);
 		tests_runs.push_back(test_run);
 	}
-	for (auto test: _up_to_date_tests) {
-		report_writer->initialize_up_to_date_test(test);
-		up_to_date_tests.push_back(test);
+	for (auto test: _tests) {
+		if (test->is_up_to_date()) {
+			up_to_date_tests.push_back(test);
+		}
 	}
 
 	if (up_to_date_tests.size()) {

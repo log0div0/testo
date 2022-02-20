@@ -18,8 +18,8 @@ struct Reporter {
 	Reporter(const Reporter& other) = delete;
 	Reporter& operator=(const Reporter& other) = delete;
 
-	void init(const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs,
-		const std::vector<std::shared_ptr<IR::Test>>& _up_to_date_tests);
+	void init(const std::vector<std::shared_ptr<IR::Test>>& _tests,
+		const std::vector<std::shared_ptr<IR::TestRun>>& _tests_runs);
 
 	void finish();
 
