@@ -18,6 +18,40 @@ struct Node {
 	virtual std::string to_string() const = 0;
 };
 
+template <typename T>
+struct List: Node {
+	List() = default;
+	List(std::vector<std::shared_ptr<T>> items_): items(std::move(items_)) {}
+	Pos begin() const override {
+		return items.at(0)->begin();
+	}
+	Pos end() const override {
+		return items.at(items.size() - 1)->end();
+	}
+	std::string to_string() const override {
+		std::string result;
+		for (size_t i = 0; i < items.size(); ++i) {
+			if (i) {
+				result += ", ";
+			}
+			result += items[i]->to_string();
+		}
+		return result;
+	}
+	size_t size() const {
+		return items.size();
+	}
+	const std::shared_ptr<T>& at(size_t i) const {
+		return items.at(i);
+	}
+	const std::vector<std::shared_ptr<T>>& all() const {
+		return items;
+	}
+
+private:
+	std::vector<std::shared_ptr<T>> items;
+};
+
 struct String: public Node {
 	String(Token token_): token(std::move(token_)) {}
 
@@ -493,7 +527,7 @@ struct Sleep: public Action {
 };
 
 struct Press: public Action {
-	Press(Token press_, std::vector<std::shared_ptr<KeySpec>> keys_, std::shared_ptr<OptionSeq> option_seq_):
+	Press(Token press_, std::shared_ptr<List<KeySpec>> keys_, std::shared_ptr<OptionSeq> option_seq_):
 		press(std::move(press_)), keys(std::move(keys_)), option_seq(std::move(option_seq_)) {}
 
 	Pos begin() const override {
@@ -504,16 +538,12 @@ struct Press: public Action {
 		if (option_seq->size()) {
 			return option_seq->end();
 		} else {
-			return keys[keys.size() - 1]->end();
+			return keys->end();
 		}
 	}
 
 	std::string to_string() const override {
-		std::string result = press.value() + " " + keys[0]->to_string();
-
-		for (size_t i = 1; i < keys.size(); i++) {
-			result += ", " + keys[i]->to_string();
-		}
+		std::string result = press.value() + " " + keys->to_string();
 
 		if (option_seq->size()) {
 			result += " " + option_seq->to_string();
@@ -523,7 +553,7 @@ struct Press: public Action {
 	}
 
 	Token press;
-	std::vector<std::shared_ptr<KeySpec>> keys;
+	std::shared_ptr<List<KeySpec>> keys;
 	std::shared_ptr<OptionSeq> option_seq;
 };
 
@@ -1175,7 +1205,7 @@ struct MacroArg: public Node {
 struct Macro: public Stmt {
 	Macro(Token macro_,
 		Token name_,
-		std::vector<std::shared_ptr<MacroArg>> args_,
+		std::shared_ptr<List<MacroArg>> args_,
 		std::vector<Token> body_tokens_):
 			macro(std::move(macro_)), name(std::move(name_)), args(std::move(args_)),
 			body_tokens(std::move(body_tokens_)) {}
@@ -1189,30 +1219,28 @@ struct Macro: public Stmt {
 	}
 
 	std::string to_string() const override {
-		std::string result = macro.value() + " " + name.value() + "(";
-		for (auto arg: args) {
-			result += arg->to_string() + " ,";
-		}
-		result += ")";
+		std::string result = macro.value() + " " + name.value() + "(" + args->to_string() + ") {\n";
 
 		for (auto body_token: body_tokens) {
 			result += " ";
 			result += body_token.value();
 		}
 
+		result += "\n}";
+
 		return result;
 	}
 
 	Token macro;
 	Token name;
-	std::vector<std::shared_ptr<MacroArg>> args;
+	std::shared_ptr<List<MacroArg>> args;
 	std::vector<Token> body_tokens;
 
 	std::shared_ptr<IBlock> block;
 };
 
 struct IMacroCall {
-	IMacroCall(Token name_, Token lparen_, std::vector<std::shared_ptr<String>> args_, Token rparen_):
+	IMacroCall(Token name_, Token lparen_, std::shared_ptr<List<String>> args_, Token rparen_):
 		name(std::move(name_)), lparen(std::move(lparen_)), args(std::move(args_)), rparen(std::move(rparen_)) {}
 	virtual ~IMacroCall() {}
 
@@ -1225,26 +1253,19 @@ struct IMacroCall {
 	}
 
 	std::string to_string() const {
-		std::string result = name.value() + ("(");
-		for (size_t i = 0; i < args.size(); ++i) {
-			if (i) {
-				result += ", ";
-			}
-			result += args[i]->to_string();
-		}
-		result += ")";
+		std::string result = name.value() + "(" + args->to_string() + ")";
 		return result;
 	}
 
 	Token name;
 	Token lparen;
-	std::vector<std::shared_ptr<String>> args;
+	std::shared_ptr<List<String>> args;
 	Token rparen;
 };
 
 template <typename BaseType>
 struct MacroCall: public BaseType, IMacroCall {
-	MacroCall(Token name, Token lparen, std::vector<std::shared_ptr<String>> args, Token rparen):
+	MacroCall(Token name, Token lparen, std::shared_ptr<List<String>> args, Token rparen):
 		IMacroCall(std::move(name), std::move(lparen), std::move(args), std::move(rparen)) {}
 
 	Pos begin() const override {
@@ -1326,7 +1347,7 @@ struct Test: public Stmt {
 	Test(std::shared_ptr<AttrBlock> attrs_,
 		Token test_,
 		std::shared_ptr<Id> name_,
-		std::vector<std::shared_ptr<Id>> parents_,
+		std::shared_ptr<List<Id>> parents_,
 		std::shared_ptr<AST::Block<AST::Cmd>> cmd_block_
 	):
 		attrs(std::move(attrs_)),
@@ -1354,7 +1375,7 @@ struct Test: public Stmt {
 	std::shared_ptr<AttrBlock> attrs;
 	Token test;
 	std::shared_ptr<Id> name;
-	std::vector<std::shared_ptr<Id>> parents;
+	std::shared_ptr<List<Id>> parents;
 	std::shared_ptr<AST::Block<AST::Cmd>> cmd_block;
 };
 

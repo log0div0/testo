@@ -85,6 +85,9 @@ struct Parser {
 	std::shared_ptr<AST::Attr> attr(const AttrBlockSchema& schema);
 	std::shared_ptr<AST::AttrBlock> attr_block(const AttrBlockSchema& schema);
 
+	template <typename T>
+	std::shared_ptr<AST::List<T>> not_empty_list(const std::function<std::shared_ptr<T>()> cb);
+
 	std::shared_ptr<AST::Controller> controller();
 	std::shared_ptr<AST::Cmd> command();
 	std::shared_ptr<AST::IKeyCombination> key_combination();

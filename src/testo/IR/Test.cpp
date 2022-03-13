@@ -13,7 +13,7 @@ std::string Test::name() const {
 std::vector<std::string> Test::parent_names() const {
 	std::vector<std::string> result;
 
-	for (auto parent: ast_node->parents) {
+	for (auto parent: ast_node->parents->all()) {
 		result.push_back(Id(parent, stack).value());
 	}
 

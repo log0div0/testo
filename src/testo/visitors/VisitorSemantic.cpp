@@ -326,7 +326,7 @@ void VisitorSemantic::visit_press(const IR::Press& press) {
 	current_test->cksum_input << "press ";
 
 	int i = 0;
-	for (auto key_spec: press.ast_node->keys) {
+	for (auto key_spec: press.ast_node->keys->all()) {
 		if (i++) {
 			current_test->cksum_input << ",";
 		}

@@ -528,7 +528,7 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 	try {
 		IR::TimeInterval interval = press.interval();
 
-		for (auto key_spec_: press.ast_node->keys) {
+		for (auto key_spec_: press.ast_node->keys->all()) {
 			IR::KeySpec key_spec(key_spec_, stack);
 
 			uint32_t times = key_spec.times();

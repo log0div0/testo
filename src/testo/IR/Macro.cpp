@@ -22,16 +22,16 @@ std::shared_ptr<AST::Block<AST::Action>> parse_block(const std::vector<Token>& t
 }
 
 void Macro::validate() {
-	for (size_t i = 0; i < ast_node->args.size(); ++i) {
-		for (size_t j = i + 1; j < ast_node->args.size(); ++j) {
-			if (ast_node->args[i]->name() == ast_node->args[j]->name()) {
-				throw ExceptionWithPos(ast_node->args[j]->begin(), "Error: duplicate macro arg: " + ast_node->args[j]->name());
+	for (size_t i = 0; i < ast_node->args->size(); ++i) {
+		for (size_t j = i + 1; j < ast_node->args->size(); ++j) {
+			if (ast_node->args->at(i)->name() == ast_node->args->at(j)->name()) {
+				throw ExceptionWithPos(ast_node->args->at(j)->begin(), "Error: duplicate macro arg: " + ast_node->args->at(j)->name());
 			}
 		}
 	}
 
 	bool has_default = false;
-	for (auto arg: ast_node->args) {
+	for (auto arg: ast_node->args->all()) {
 		if (arg->default_value) {
 			has_default = true;
 			continue;
@@ -59,14 +59,14 @@ std::vector<std::pair<std::string, std::string>> MacroCall::args() const {
 	std::vector<std::pair<std::string, std::string>> args;
 	const std::shared_ptr<IR::Macro> macro = get_macro();
 
-	for (size_t i = 0; i < ast_node->args.size(); ++i) {
-		auto value = String(ast_node->args[i], stack).text();
-		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
+	for (size_t i = 0; i < ast_node->args->size(); ++i) {
+		auto value = String(ast_node->args->at(i), stack).text();
+		args.push_back(std::make_pair(macro->ast_node->args->at(i)->name(), value));
 	}
 
-	for (size_t i = ast_node->args.size(); i < macro->ast_node->args.size(); ++i) {
-		auto value = String(macro->ast_node->args[i]->default_value, stack).text();
-		args.push_back(std::make_pair(macro->ast_node->args[i]->name(), value));
+	for (size_t i = ast_node->args->size(); i < macro->ast_node->args->size(); ++i) {
+		auto value = String(macro->ast_node->args->at(i)->default_value, stack).text();
+		args.push_back(std::make_pair(macro->ast_node->args->at(i)->name(), value));
 	}
 
 	return args;

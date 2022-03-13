@@ -49,20 +49,20 @@ struct MacroCall: Node<AST::IMacroCall> {
 
 		uint32_t args_with_default = 0;
 
-		for (auto arg: macro->ast_node->args) {
+		for (auto arg: macro->ast_node->args->all()) {
 			if (arg->default_value) {
 				args_with_default++;
 			}
 		}
 
-		if (ast_node->args.size() < macro->ast_node->args.size() - args_with_default) {
+		if (ast_node->args->size() < macro->ast_node->args->size() - args_with_default) {
 			throw ExceptionWithPos(ast_node->name.begin(), fmt::format("Error: expected at least {} args, {} provided",
-				macro->ast_node->args.size() - args_with_default, ast_node->args.size()));
+				macro->ast_node->args->size() - args_with_default, ast_node->args->size()));
 		}
 
-		if (ast_node->args.size() > macro->ast_node->args.size()) {
+		if (ast_node->args->size() > macro->ast_node->args->size()) {
 			throw ExceptionWithPos(ast_node->name.begin(), fmt::format("Error: expected at most {} args, {} provided",
-				macro->ast_node->args.size(), ast_node->args.size()));
+				macro->ast_node->args->size(), ast_node->args->size()));
 		}
 
 		StackPusher<Visitor> new_ctx(visitor, macro->new_stack(vars()));

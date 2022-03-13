@@ -346,6 +346,7 @@ std::shared_ptr<Test> Parser::test() {
 	if (LA(1) == Token::category::lbracket) {
 		attrs = attr_block({
 			{"no_snapshots", {false, [&]{ return boolean(); }}},
+			{"depends_on", {false, [&]{ return not_empty_list<Id>([&] { return id(); }); }}},
 			{"title", {false, [&]{ return string(); }}},
 			{"description", {false, [&]{ return string(); }}},
 			{"feature", {false, [&]{ return string(); }}},
@@ -359,18 +360,14 @@ std::shared_ptr<Test> Parser::test() {
 
 	std::shared_ptr<Id> name = id();
 
-	std::vector<std::shared_ptr<Id>> parents;
+	std::shared_ptr<List<Id>> parents;
 
 	if (LA(1) == Token::category::colon) {
  		eat(Token::category::colon);
  		newline_list();
- 		parents.push_back(id());
-
- 		while (LA(1) == Token::category::comma) {
- 			eat(Token::category::comma);
- 			newline_list();
- 			parents.push_back(id());
- 		}
+ 		parents = not_empty_list<Id>([&] { return id(); });
+	} else {
+		parents = std::make_shared<List<Id>>();
 	}
 
 	newline_list();
@@ -420,18 +417,11 @@ std::shared_ptr<Macro> Parser::macro() {
 	Token name = eat(Token::category::id);
 	eat(Token::category::lparen);
 
-	std::vector<std::shared_ptr<MacroArg>> args;
-
-	if (LA(1) == Token::category::id) {
-		args.push_back(macro_arg());
-	}
-
-	while (LA(1) == Token::category::comma) {
-		if (args.empty()) {
-			eat(Token::category::rparen); //will cause failure
-		}
-		eat(Token::category::comma);
-		args.push_back(macro_arg());
+	std::shared_ptr<List<MacroArg>> args;
+	if (LA(1) != Token::category::rparen) {
+		args = not_empty_list<MacroArg>([&] { return macro_arg(); });
+	} else {
+		args = std::make_shared<List<MacroArg>>();
 	}
 
 	eat(Token::category::rparen);
@@ -504,6 +494,18 @@ std::shared_ptr<AttrBlock> Parser::attr_block(const AttrBlockSchema& schema) {
 	}
 
 	return std::make_shared<AttrBlock>(lbrace, rbrace, attrs);
+}
+
+template <typename T>
+std::shared_ptr<AST::List<T>> Parser::not_empty_list(const std::function<std::shared_ptr<T>()> cb) {
+	std::vector<std::shared_ptr<T>> items;
+	items.push_back(cb());
+	while (LA(1) == Token::category::comma) {
+		eat(Token::category::comma);
+		newline_list();
+		items.push_back(cb());
+	}
+	return std::make_shared<List<T>>(items);
 }
 
 std::shared_ptr<AST::Controller> Parser::controller() {
@@ -753,13 +755,7 @@ std::shared_ptr<AST::Sleep> Parser::sleep() {
 std::shared_ptr<Press> Parser::press() {
 	Token press_token = eat(Token::category::press);
 
-	std::vector<std::shared_ptr<KeySpec>> keys;
-	keys.push_back(key_spec());
-
-	while (LA(1) == Token::category::comma) {
-		eat(Token::category::comma);
-		keys.push_back(key_spec());
-	}
+	std::shared_ptr<List<KeySpec>> keys = not_empty_list<KeySpec>([&] { return key_spec(); });
 
 	std::shared_ptr<OptionSeq> options = option_seq({
 		{"interval", [&]{ return time_interval(); }},
@@ -1051,18 +1047,11 @@ std::shared_ptr<MacroCall<BaseType>> Parser::macro_call() {
 
 	auto lparen = eat(Token::category::lparen);
 
-	std::vector<std::shared_ptr<String>> params;
-
-	if (test_string()) {
-		params.push_back(string());
-	}
-
-	while (LA(1) == Token::category::comma) {
-		if (params.empty()) {
-			eat(Token::category::rparen); //will cause failure
-		}
-		eat(Token::category::comma);
-		params.push_back(string());
+	std::shared_ptr<List<String>> params;
+	if (LA(1) != Token::category::rparen) {
+		params = not_empty_list<String>([&] { return string(); });
+	} else {
+		params = std::make_shared<List<String>>();
 	}
 
 	auto rparen = eat(Token::category::rparen);
