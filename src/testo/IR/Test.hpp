@@ -49,7 +49,7 @@ struct Test: Object<AST::Test> {
 		return cache_status() == IR::Test::CacheStatus::OK;
 	}
 
-	nlohmann::json attrs;
+	const nlohmann::json& attrs() const;
 
 	std::set<std::shared_ptr<Machine>> mentioned_machines;
 	std::set<std::shared_ptr<Network>> mentioned_networks;
@@ -63,6 +63,7 @@ private:
 	std::optional<std::set<std::string>> external_dependencies;
 	std::set<std::string> _get_all_test_names_in_subtree();
 	std::set<std::string> _get_external_dependencies();
+	mutable nlohmann::json _attrs;
 };
 
 struct TestRun {

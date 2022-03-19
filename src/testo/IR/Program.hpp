@@ -42,6 +42,7 @@ public:
 	std::shared_ptr<FlashDrive> get_flash_drive_or_throw(const std::string& name);
 	std::shared_ptr<Network> get_network_or_throw(const std::string& name);
 
+	std::shared_ptr<Test> get_test_or_null(const std::string& name);
 	std::shared_ptr<Macro> get_macro_or_null(const std::string& name);
 	std::shared_ptr<Param> get_param_or_null(const std::string& name);
 	std::shared_ptr<Machine> get_machine_or_null(const std::string& name);

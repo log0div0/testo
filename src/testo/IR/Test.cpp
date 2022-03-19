@@ -41,33 +41,32 @@ fs::path Test::get_source_file_path() const {
 	return ast_node->begin().file;
 }
 
-std::string Test::title() const {
-	if (attrs.is_null()) {
-		return "";
+
+const nlohmann::json& Test::attrs() const {
+	if (_attrs.is_null()) {
+		if (ast_node->attrs) {
+			_attrs = IR::AttrBlock(ast_node->attrs, stack).to_json();
+		} else {
+			_attrs = nlohmann::json::object();
+		}
 	}
-	return attrs.value("title", "");
+	return _attrs;
+}
+
+std::string Test::title() const {
+	return attrs().value("title", "");
 }
 
 std::string Test::description() const {
-	if (attrs.is_null()) {
-		return "";
-	}
-	return attrs.value("description", "");
+	return attrs().value("description", "");
 }
 
 bool Test::snapshots_needed() const {
-	if (attrs.is_null()) {
-		return true;
-	}
-	return !attrs.value("no_snapshots", false);
+	return !attrs().value("no_snapshots", false);
 }
 
 std::vector<std::string> Test::depends_on() const {
-	if (attrs.is_null()) {
-		return {};
-	}
-
-	return attrs.value("depends_on", std::vector<std::string>());
+	return attrs().value("depends_on", std::vector<std::string>());
 }
 
 const std::set<std::string>& Test::get_all_test_names_in_subtree() {

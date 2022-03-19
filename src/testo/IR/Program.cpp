@@ -67,6 +67,15 @@ std::shared_ptr<Network> Program::get_network_or_throw(const std::string& name) 
 }
 
 
+std::shared_ptr<Test> Program::get_test_or_null(const std::string& name) {
+	for (auto& test: ordered_tests) {
+		if (test->name() == name) {
+			return test;
+		}
+	}
+	return nullptr;
+}
+
 std::shared_ptr<Macro> Program::get_macro_or_null(const std::string& name) {
 	return get_or_null(name, macros);
 }
@@ -306,6 +315,15 @@ void Program::setup_test_parents(const std::shared_ptr<Test>& test) {
 		}
 
 		setup_test_parents(parent);
+	}
+
+	for (auto& dep: test->depends_on()) {
+		std::shared_ptr<Test> dep_test = get_test_or_null(dep);
+		if (!dep_test) {
+			throw std::runtime_error("Test " + test->name() + " depends on unknown test " + dep);
+		}
+
+		setup_test_parents(dep_test);
 	}
 }
 

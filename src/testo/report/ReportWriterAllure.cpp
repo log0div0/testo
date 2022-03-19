@@ -118,8 +118,8 @@ TestCase::TestCase(const std::shared_ptr<IR::Test>& test) {
 }
 
 void TestCase::add_label(const std::shared_ptr<IR::Test>& test, const std::string& name) {
-	if (test->attrs.count(name)) {
-		labels.push_back({name, test->attrs.at(name)});
+	if (test->attrs().count(name)) {
+		labels.push_back({name, test->attrs().at(name)});
 	}
 }
 

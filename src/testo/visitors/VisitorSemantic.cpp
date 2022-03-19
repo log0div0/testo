@@ -101,10 +101,6 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	try {
 		StackPusher<VisitorSemantic> new_ctx(this, test->stack);
 
-		if (test->ast_node->attrs) {
-			test->attrs = IR::AttrBlock(test->ast_node->attrs, stack).to_json();
-		}
-
 		current_test = test;
 
 		current_test->cksum_input << "TEST NAME = " << test->name() << std::endl;

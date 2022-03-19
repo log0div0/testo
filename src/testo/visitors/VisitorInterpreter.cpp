@@ -183,8 +183,7 @@ struct DFSStackEntry {
 		});
 
 		if (it == children_to_visit.end()) {
-			// let's peek the first one just for example
-			throw_unresolved_error(children_to_visit.at(0));
+			throw_unresolved_error();
 		}
 
 		std::shared_ptr<IR::Test> next_test = *it;
@@ -204,14 +203,14 @@ private:
 		}
 		return result;
 	}
-	void throw_unresolved_error(const std::shared_ptr<IR::Test>& test) const {
-		std::string error_msg = "The test \"" + test->name() + "\" can't be executed because it depends on ";
+	void throw_unresolved_error() const {
+		std::string error_msg = "Can't decide which test to execute first because they depens on each other: ";
 		int i = 0;
-		for (auto dep: get_unresolved_dependencies(test)) {
+		for (auto test: children_to_visit) {
 			if (i++) {
 				error_msg += ", ";
 			}
-			error_msg += "\"" + dep + "\"";
+			error_msg += test->name();
 		}
 		throw std::runtime_error(error_msg);
 	}

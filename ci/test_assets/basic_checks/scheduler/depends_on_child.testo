@@ -1,0 +1,10 @@
+
+flash foo {
+	size: 2Mb
+	fs: "fat"
+}
+
+[depends_on: A1]
+test A { foo {} }
+
+test A1: A { foo {} }
