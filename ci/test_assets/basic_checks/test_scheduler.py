@@ -26,3 +26,14 @@ C2
 D
 D1
 D2""")
+
+def test_sheduler_depens_on():
+	must_succeed("/home/log0div0/work/testo_build/out/sbin/testo run scheduler/depends_on.testo --invalidate \\*", """TESTS TO RUN:
+B
+B1
+B11
+C
+C1
+A
+A2
+A1""")

@@ -137,4 +137,17 @@ struct AttrBlock: Node<AST::AttrBlock> {
 	nlohmann::json to_json() const;
 };
 
+template <typename T>
+struct List: Node<AST::List<typename T::ASTType>> {
+	using Node<AST::List<typename T::ASTType>>::Node;
+
+	nlohmann::json to_json() const {
+		nlohmann::json result = nlohmann::json::array();
+		for (auto& item: this->ast_node->all()) {
+			result.push_back(T(item, this->stack).to_json());
+		}
+		return result;
+	}
+};
+
 }

@@ -35,6 +35,9 @@ struct Test: Object<AST::Test> {
 
 	std::string title() const;
 	std::string description() const;
+	std::vector<std::string> depends_on() const;
+	const std::set<std::string>& get_all_test_names_in_subtree();
+	const std::set<std::string>& get_external_dependencies();
 
 	bool snapshots_needed() const;
 
@@ -56,6 +59,10 @@ private:
 	CacheStatus _cache_status = CacheStatus::Unknown;
 	bool is_cache_ok() const;
 	bool is_cache_miss() const;
+	std::optional<std::set<std::string>> all_test_names_in_subtree;
+	std::optional<std::set<std::string>> external_dependencies;
+	std::set<std::string> _get_all_test_names_in_subtree();
+	std::set<std::string> _get_external_dependencies();
 };
 
 struct TestRun {

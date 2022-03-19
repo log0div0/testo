@@ -62,6 +62,80 @@ bool Test::snapshots_needed() const {
 	return !attrs.value("no_snapshots", false);
 }
 
+std::vector<std::string> Test::depends_on() const {
+	if (attrs.is_null()) {
+		return {};
+	}
+
+	return attrs.value("depends_on", std::vector<std::string>());
+}
+
+const std::set<std::string>& Test::get_all_test_names_in_subtree() {
+	if (!all_test_names_in_subtree.has_value()) {
+		all_test_names_in_subtree.emplace(_get_all_test_names_in_subtree());
+	}
+	return all_test_names_in_subtree.value();
+
+}
+
+const std::set<std::string>& Test::get_external_dependencies() {
+	if (!external_dependencies.has_value()) {
+		external_dependencies.emplace(_get_external_dependencies());
+	}
+	return external_dependencies.value();
+
+}
+
+std::set<std::string> Test::_get_all_test_names_in_subtree() {
+	std::set<std::string> result = {name()};
+
+	for (auto& child: children) {
+		std::set<std::string> names = child.lock()->_get_all_test_names_in_subtree();
+		result.insert(names.begin(), names.end());
+	}
+
+	return result;
+}
+
+std::set<std::string> Test::_get_external_dependencies() {
+	std::set<std::string> result;
+
+	// push my deps in the list
+	std::vector<std::string> my_deps = depends_on();
+	result.insert(my_deps.begin(), my_deps.end());
+
+	// push child deps in the list
+	for (auto& child: children) {
+		std::set<std::string> child_deps = child.lock()->get_external_dependencies();
+		result.insert(child_deps.begin(), child_deps.end());
+	}
+
+	// early exit
+	if (!result.size()) {
+		return result;
+	}
+
+	std::set<std::string> all_names = get_all_test_names_in_subtree();
+
+	// my deps validation
+	for (auto& dep: my_deps) {
+		if (dep == name()) {
+			throw std::runtime_error("Test '" + name() + "' can't depend on itself");
+		} else {
+			if (all_names.count(dep)) {
+				throw std::runtime_error("Test '" + name() + "' can't depend on its child '" + dep + "'");
+			}
+		}
+	}
+
+	// remove internal deps
+	for (auto& name: all_names) {
+		result.erase(name);
+	}
+
+	return result;
+}
+
 std::set<std::shared_ptr<Controller>> Test::get_all_controllers() const {
 	std::set<std::shared_ptr<Controller>> all_controllers;
 	for (auto& machine: get_all_machines()) {

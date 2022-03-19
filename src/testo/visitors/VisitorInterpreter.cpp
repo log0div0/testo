@@ -148,26 +148,99 @@ std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_topmost_uncached_
 	return result;
 }
 
-std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_leaf_tests_in_dfs_order(const std::vector<std::shared_ptr<IR::Test>>& topmost_uncached_tests) {
-	std::vector<std::shared_ptr<IR::Test>> result;
-	for (auto& test: topmost_uncached_tests) {
-		struct StackEntry {
-			std::shared_ptr<IR::Test> test;
-			size_t child_index;
-		};
-		std::stack<StackEntry> stack;
-		stack.push({test, 0});
-		while (stack.size()) {
-			if (stack.top().child_index == stack.top().test->children.size()) {
-				if (stack.top().test->children.size() == 0) {
-					if (std::find(result.begin(), result.end(), stack.top().test) == result.end()) {
-						result.push_back(stack.top().test);
-					}
-				}
-				stack.pop();
-			} else {
-				stack.push({stack.top().test->children.at(stack.top().child_index++).lock(), 0});
+struct DFSStackEntry {
+	DFSStackEntry(const std::shared_ptr<IR::Test>& test_, std::set<std::string>& visited_tests_)
+		: visited_tests(visited_tests_), test(test_)
+	{
+		for (auto& child: test->children) {
+			children_to_visit.push_back(child.lock());
+		}
+	}
+	DFSStackEntry(const std::vector<std::shared_ptr<IR::Test>>& children_, std::set<std::string>& visited_tests_)
+		: visited_tests(visited_tests_), children_to_visit(children_)
+	{
+	}
+
+	std::set<std::string>& visited_tests;
+	std::shared_ptr<IR::Test> test;
+	std::vector<std::shared_ptr<IR::Test>> children_to_visit;
+
+	bool is_leaf() const {
+		return test->children.size() == 0;
+	}
+
+	bool is_finished() const {
+		return children_to_visit.size() == 0;
+	}
+
+	DFSStackEntry next() {
+		if (children_to_visit.size() == 0) {
+			throw std::runtime_error("Internal error: Do not call 'next()' method if `is_finished()` returns false");
+		}
+
+		auto it = std::find_if(children_to_visit.begin(), children_to_visit.end(), [&](const std::shared_ptr<IR::Test>& test) {
+			return get_unresolved_dependencies(test).size() == 0;
+		});
+
+		if (it == children_to_visit.end()) {
+			// let's peek the first one just for example
+			throw_unresolved_error(children_to_visit.at(0));
+		}
+
+		std::shared_ptr<IR::Test> next_test = *it;
+		children_to_visit.erase(it);
+		visited_tests.insert(next_test->name());
+
+		return { next_test, visited_tests };
+	}
+
+private:
+	std::vector<std::string> get_unresolved_dependencies(const std::shared_ptr<IR::Test>& test) const {
+		std::vector<std::string> result;
+		for (const std::string& dependency: test->get_external_dependencies()) {
+			if (!visited_tests.count(dependency)) {
+				result.push_back(dependency);
 			}
+		}
+		return result;
+	}
+	void throw_unresolved_error(const std::shared_ptr<IR::Test>& test) const {
+		std::string error_msg = "The test \"" + test->name() + "\" can't be executed because it depends on ";
+		int i = 0;
+		for (auto dep: get_unresolved_dependencies(test)) {
+			if (i++) {
+				error_msg += ", ";
+			}
+			error_msg += "\"" + dep + "\"";
+		}
+		throw std::runtime_error(error_msg);
+	}
+};
+
+std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_leaf_tests_in_dfs_order(const std::vector<std::shared_ptr<IR::Test>>& topmost_uncached_tests) {
+	std::set<std::string> visited_tests;
+	for (auto& test: IR::program->all_selected_tests) {
+		if (test->is_up_to_date()) {
+			visited_tests.insert(test->name());
+		}
+	}
+
+	std::vector<std::shared_ptr<IR::Test>> result;
+	std::stack<DFSStackEntry> stack;
+	stack.push({topmost_uncached_tests, visited_tests});
+	while (stack.size()) {
+		if (stack.top().is_finished()) {
+			if (stack.top().test && stack.top().is_leaf()) {
+				// in case of multiple inheritance we can reach a leaf test
+				// by multiple ways, so need the next check to avoid dublicates in
+				// the resulting array
+				if (std::find(result.begin(), result.end(), stack.top().test) == result.end()) {
+					result.push_back(stack.top().test);
+				}
+			}
+			stack.pop();
+		} else {
+			stack.push({stack.top().next()});
 		}
 	}
 	return result;

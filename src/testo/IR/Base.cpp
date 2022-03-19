@@ -171,6 +171,8 @@ nlohmann::json AttrBlock::to_json() const {
 			j = String(p, stack).to_json();
 		} else if (auto p = std::dynamic_pointer_cast<AST::AttrBlock>(attr->value)) {
 			j = AttrBlock(p, stack).to_json();
+		} else if (auto p = std::dynamic_pointer_cast<AST::List<AST::Id>>(attr->value)) {
+			j = List<Id>(p, stack).to_json();
 		} else {
 			throw ExceptionWithPos(attr->begin(), "Error: Unsupported type of attr \"" + attr->name() + "\"");
 		}
