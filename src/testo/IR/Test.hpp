@@ -59,8 +59,8 @@ private:
 	CacheStatus _cache_status = CacheStatus::Unknown;
 	bool is_cache_ok() const;
 	bool is_cache_miss() const;
-	std::optional<std::set<std::string>> all_test_names_in_subtree;
-	std::optional<std::set<std::string>> external_dependencies;
+	std::unique_ptr<std::set<std::string>> all_test_names_in_subtree;
+	std::unique_ptr<std::set<std::string>> external_dependencies;
 	std::set<std::string> _get_all_test_names_in_subtree();
 	std::set<std::string> _get_external_dependencies();
 	mutable nlohmann::json _attrs;
@@ -80,6 +80,7 @@ struct TestRun {
 
 	std::set<std::shared_ptr<TestRun>> parents;
 	std::set<std::string> get_unsuccessful_parents_names() const;
+	std::set<std::string> unsuccessful_deps_names;
 
 	std::chrono::system_clock::time_point start_timestamp;
 	std::chrono::system_clock::time_point stop_timestamp;

@@ -1,7 +1,7 @@
 from common import *
 
 def test_sheduler_dfs_basic():
-	must_succeed("testo run scheduler/dfs.testo --invalidate \\*", """TESTS TO RUN:
+	must_succeed("testo run scheduler/dfs_basic.testo --invalidate \\*", """TESTS TO RUN:
 root
 A
 A1
@@ -28,7 +28,7 @@ D1
 D2""")
 
 def test_sheduler_depens_on_basic():
-	must_succeed("/home/log0div0/work/testo_build/out/sbin/testo run scheduler/depends_on.testo --invalidate \\*", """TESTS TO RUN:
+	must_succeed("testo run scheduler/depends_on_basic.testo --invalidate \\*", """TESTS TO RUN:
 B
 B1
 B11
@@ -39,13 +39,37 @@ A2
 A1""")
 
 def test_sheduler_depens_on_itself():
-	must_fail("/home/log0div0/work/testo_build/out/sbin/testo run scheduler/depends_on_itself.testo --invalidate \\*", """Test 'A' can't depend on itself""")
+	must_fail("testo run scheduler/depends_on_itself.testo --invalidate \\*", """Test 'A' can't depend on itself""")
 
 def test_sheduler_depens_on_child():
-	must_fail("/home/log0div0/work/testo_build/out/sbin/testo run scheduler/depends_on_child.testo --invalidate \\*", """Test 'A' can't depend on its child 'A1'""")
+	must_fail("testo run scheduler/depends_on_child.testo --invalidate \\*", """Test 'A' can't depend on its child 'A1'""")
 
 def test_sheduler_depens_on_cyclic():
-	must_fail("/home/log0div0/work/testo_build/out/sbin/testo run scheduler/depends_on_cyclic.testo --invalidate \\*", """Can't decide which test to execute first because they depens on each other: A, B, C""")
+	must_fail("testo run scheduler/depends_on_cyclic.testo --invalidate \\*", """Can't decide which test to execute first because they depens on each other: A, B, C""")
 
 def test_sheduler_depens_on_unknown_test():
-	must_fail("/home/log0div0/work/testo_build/out/sbin/testo run scheduler/depends_on_unknown_test.testo --invalidate \\*", """Test A depends on unknown test B""")
+	must_fail("testo run scheduler/depends_on_unknown_test.testo --invalidate \\*", """Test A depends on unknown test B""")
+
+def test_sheduler_depens_on_multiple_deps():
+	must_succeed("testo run scheduler/depends_on_multiple_deps.testo --invalidate \\*", """TESTS TO RUN:
+B
+A
+C""")
+
+def test_sheduler_depens_on_unselected_test():
+	must_succeed("testo run scheduler/depends_on_unselected_test.testo --test_spec C --invalidate \\*", """TESTS TO RUN:
+A
+B
+C""")
+
+def test_sheduler_depens_on_skip_test_on_dep_fail():
+	out, err = must_fail("testo run scheduler/depends_on_skip_test_on_dep_fail.testo --invalidate \\*")
+	assert "Skipping test B because his dependency A_fail is failed or skipped" in out
+	assert "Skipping test C because his dependency B is failed or skipped" in out
+	assert """UP-TO-DATE: 0
+RUN SUCCESSFULLY: 1
+FAILED: 1
+	 - A_fail
+SKIPPED: 2
+	 - B
+	 - C""" in out

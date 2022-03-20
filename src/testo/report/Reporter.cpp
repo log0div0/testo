@@ -121,18 +121,25 @@ void Reporter::skip_test() {
 
 	report_writer->test_skip_begin(current_test_run);
 
-	std::set<std::string> unsuccessful_parents_names = current_test_run->get_unsuccessful_parents_names();
+	std::set<std::string> names = current_test_run->get_unsuccessful_parents_names();
+	std::string singular = "parent";
+	std::string plural = "parents";
+	if (names.size() == 0) {
+		names = current_test_run->unsuccessful_deps_names;
+		singular = "dependency";
+		plural = "dependencies";
+	}
 
 	report_prefix(red, true);
 	report(fmt::format("Skipping test "), red, true);
 	report(current_test_run->test->name(), yellow, true);
-	if (unsuccessful_parents_names.size() > 1) {
-		report(" because his parents ", red, true);
+	if (names.size() > 1) {
+		report(" because his " + plural + " ", red, true);
 	} else {
-		report(" because his parent ", red, true);
+		report(" because his " + singular + " ", red, true);
 	}
-	report(join(unsuccessful_parents_names, ", "), yellow, true);
-	if (unsuccessful_parents_names.size() > 1) {
+	report(join(names, ", "), yellow, true);
+	if (names.size() > 1) {
 		report(" are failed or skipped\n", red, true);
 	} else {
 		report(" is failed or skipped\n", red, true);

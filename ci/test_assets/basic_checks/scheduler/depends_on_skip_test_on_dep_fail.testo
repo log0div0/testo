@@ -1,0 +1,13 @@
+
+flash foo {
+	size: 2Mb
+	fs: "fat"
+}
+
+test A_fail { foo { abort "must fail"; } }
+test A_success { foo {} }
+
+[depends_on: A_fail, A_success]
+test B { foo {} }
+[depends_on: B]
+test C { foo {} }

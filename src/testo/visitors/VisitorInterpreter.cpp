@@ -285,13 +285,29 @@ void VisitorInterpreter::visit() {
 
 		for (auto parent: test_run->parents) {
 			if (parent->exec_status != IR::TestRun::ExecStatus::Passed) {
-				reporter.skip_test();
 				skip_test = true;
 				break;
 			}
 		}
 
+		for (auto dep: test_run->test->depends_on()) {
+			// "depends_on" attribute is used to order tests, that have side effects
+			// so we are interested only in the last test run of our dependency
+			// (so side effects are "fresh")
+			for (int64_t i = int64_t(current_test_run_index) - 1; i >= 0; --i) {
+				auto finished_test_run = tests_runs.at(i);
+				if (finished_test_run->test->name() == dep) {
+					if (finished_test_run->exec_status != IR::TestRun::ExecStatus::Passed) {
+						test_run->unsuccessful_deps_names.insert(dep);
+						skip_test = true;
+					}
+					break;
+				}
+			}
+		}
+
 		if (skip_test) {
+			reporter.skip_test();
 			continue;
 		}
 

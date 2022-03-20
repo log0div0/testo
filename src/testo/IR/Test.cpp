@@ -70,18 +70,18 @@ std::vector<std::string> Test::depends_on() const {
 }
 
 const std::set<std::string>& Test::get_all_test_names_in_subtree() {
-	if (!all_test_names_in_subtree.has_value()) {
-		all_test_names_in_subtree.emplace(_get_all_test_names_in_subtree());
+	if (!all_test_names_in_subtree) {
+		all_test_names_in_subtree = std::make_unique<std::set<std::string>>(_get_all_test_names_in_subtree());
 	}
-	return all_test_names_in_subtree.value();
+	return *all_test_names_in_subtree;
 
 }
 
 const std::set<std::string>& Test::get_external_dependencies() {
-	if (!external_dependencies.has_value()) {
-		external_dependencies.emplace(_get_external_dependencies());
+	if (!external_dependencies) {
+		external_dependencies = std::make_unique<std::set<std::string>>(_get_external_dependencies());
 	}
-	return external_dependencies.value();
+	return *external_dependencies;
 
 }
 
