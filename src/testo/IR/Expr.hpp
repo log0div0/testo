@@ -16,16 +16,16 @@ struct Defined: Expr<AST::Defined> {
 };
 
 struct Comparison: Expr<AST::Comparison> {
-	using Expr<AST::Comparison>::Expr;
+	Comparison(std::shared_ptr<ASTType> ast_node, std::shared_ptr<StackNode> stack, std::shared_ptr<VarMap> var_map_):
+		Expr(std::move(ast_node), std::move(stack)), var_map(std::move(var_map_)) {}
 	std::string op() const;
-	std::string left() const;
-	std::string right() const;
+	String left() const;
+	String right() const;
+	bool can_resolve_variables() const;
 	bool calculate() const;
-};
 
-struct StringExpr: Expr<AST::StringExpr> {
-	using Expr<AST::StringExpr>::Expr;
-	std::string text() const;
+private:
+	std::shared_ptr<VarMap> var_map;
 };
 
 struct Check: Expr<AST::Check> {

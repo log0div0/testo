@@ -166,11 +166,13 @@ bool VisitorInterpreterAction::visit_expr(std::shared_ptr<AST::Expr> expr) {
 	if (auto p = std::dynamic_pointer_cast<AST::BinOp>(expr)) {
 		return visit_binop(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::StringExpr>(expr)) {
-		return visit_string_expr({ p, stack });
+		std::shared_ptr<IR::Machine> vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
+		return visit_string_expr({ p->str, stack, vmc ? vmc->get_vars() : nullptr });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Negation>(expr)) {
 		return !visit_expr(p->expr);
 	} else if (auto p = std::dynamic_pointer_cast<AST::Comparison>(expr)) {
-		return visit_comparison({ p, stack });
+		std::shared_ptr<IR::Machine> vmc = std::dynamic_pointer_cast<IR::Machine>(current_controller);
+		return visit_comparison({ p, stack, vmc ? vmc->get_vars() : nullptr });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Defined>(expr)) {
 		return visit_defined({ p, stack });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Check>(expr)) {
@@ -206,7 +208,7 @@ bool VisitorInterpreterAction::visit_binop(std::shared_ptr<AST::BinOp> binop) {
 	}
 }
 
-bool VisitorInterpreterAction::visit_string_expr(const IR::StringExpr& string_expr) {
+bool VisitorInterpreterAction::visit_string_expr(const IR::String& string_expr) {
 	return string_expr.text().length();
 }
 

@@ -11,7 +11,7 @@ test exec_timeout: install_ubuntu_server_guest_additions {
 }
 
 [no_snapshots: true]
-test exec_set_variable: install_ubuntu_server_guest_additions {
+test exec_set_variable_1: install_ubuntu_server_guest_additions {
 	my_ubuntu_server {
 		exec bash """
 			TMP=`uname -r`
@@ -30,6 +30,31 @@ test exec_set_variable: install_ubuntu_server_guest_additions {
 		}
 
 		wait "$<SOME_VARIABLE>"
+	}
+}
+
+[no_snapshots: true]
+test exec_set_variable_2: install_ubuntu_server_guest_additions {
+	my_ubuntu_server {
+		exec bash """
+			testo-guest-additions-cli set SOME_VARIABLE "2"
+		"""
+
+		if ("$<SOME_VARIABLE>" STREQUAL "2") {
+			print "Success 1"
+		} else {
+			print "Fail 1"
+		}
+
+		exec bash """
+			testo-guest-additions-cli set SOME_ANOTHER_VARIABLE "3"
+		"""
+
+		if ("$<SOME_ANOTHER_VARIABLE>" STREQUAL "2") {
+			print "Success 2"
+		} else {
+			print "Fail 2"
+		}
 	}
 }
 

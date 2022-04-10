@@ -63,7 +63,7 @@ struct VisitorInterpreterAction {
 
 	bool visit_expr(std::shared_ptr<AST::Expr> expr);
 	bool visit_binop(std::shared_ptr<AST::BinOp> binop);
-	bool visit_string_expr(const IR::StringExpr& string_expr);
+	bool visit_string_expr(const IR::String& string_expr);
 	bool visit_comparison(const IR::Comparison& comparison);
 	bool visit_defined(const IR::Defined& defined);
 

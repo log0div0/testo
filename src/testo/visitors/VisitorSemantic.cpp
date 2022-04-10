@@ -764,13 +764,18 @@ Tribool VisitorSemantic::visit_expr(std::shared_ptr<AST::Expr> expr) {
 	} else if (auto p = std::dynamic_pointer_cast<AST::Defined>(expr)) {
 		return visit_defined({ p, stack });
 	} else if (auto p = std::dynamic_pointer_cast<AST::Comparison>(expr)) {
-		return visit_comparison({ p, stack });
+		return visit_comparison({ p, stack, nullptr });
 	} else if (auto p = std::dynamic_pointer_cast<AST::ParentedExpr>(expr)) {
 		return visit_parented_expr(p);
 	} else if (auto p = std::dynamic_pointer_cast<AST::StringExpr>(expr)) {
-		auto text = IR::String(p->str, stack).text();
+		IR::String str(p->str, stack, nullptr);
+		std::string text = str.text();
 		current_test->cksum_input << "\"" << text << "\"";
-		return text.length() ? Tribool::yes : Tribool::no;
+		if (str.can_resolve_variables()) {
+			return text.length() ? Tribool::yes : Tribool::no;
+		} else {
+			return Tribool::maybe;
+		}
 	} else {
 		throw Exception("Unknown expr type");
 	}
@@ -808,9 +813,13 @@ Tribool VisitorSemantic::visit_defined(const IR::Defined& defined) {
 }
 
 Tribool VisitorSemantic::visit_comparison(const IR::Comparison& comparison) {
-	current_test->cksum_input << comparison.left() << comparison.op() << comparison.right();
+	current_test->cksum_input << comparison.left().text() << comparison.op() << comparison.right().text();
 
-	return comparison.calculate() ? Tribool::yes : Tribool::no;
+	if (comparison.can_resolve_variables()) {
+		return comparison.calculate() ? Tribool::yes : Tribool::no;
+	} else {
+		return Tribool::maybe;
+	}
 }
 
 Tribool VisitorSemantic::visit_parented_expr(std::shared_ptr<AST::ParentedExpr> parented) {

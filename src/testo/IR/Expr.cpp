@@ -20,17 +20,21 @@ std::string Comparison::op() const {
 	return ast_node->op.value();
 }
 
-std::string Comparison::left() const {
-	return String(ast_node->left, stack).text();
+String Comparison::left() const {
+	return String(ast_node->left, stack, var_map);
 }
 
-std::string Comparison::right() const {
-	return String(ast_node->right, stack).text();
+String Comparison::right() const {
+	return String(ast_node->right, stack, var_map);
+}
+
+bool Comparison::can_resolve_variables() const {
+	return left().can_resolve_variables() && right().can_resolve_variables();
 }
 
 bool Comparison::calculate() const {
-	auto l = left();
-	auto r = right();
+	auto l = left().text();
+	auto r = right().text();
 	if (op() == "GREATER") {
 		if (!is_number(l)) {
 			throw ExceptionWithPos(ast_node->left->begin(), "Error: \"" + l + "\" is not an integer number");
@@ -70,10 +74,6 @@ bool Comparison::calculate() const {
 	} else {
 		throw std::runtime_error("Unknown comparison op");
 	}
-}
-
-std::string StringExpr::text() const {
-	return String(ast_node->str, stack).text();
 }
 
 SelectExpr Check::select_expr() const {
