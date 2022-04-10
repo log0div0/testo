@@ -14,7 +14,7 @@ struct ImgDetector {
 	ImgDetector& operator=(const ImgDetector&) = delete;
 
 	std::vector<Img> detect(const stb::Image<stb::RGB>* image, const std::string& ref_img_path);
-	std::vector<Img> detect(const stb::Image<stb::RGB>* image, const stb::Image<stb::RGB>* ref_img);
+	std::vector<Img> detect(const stb::Image<stb::RGB>* image, const stb::Image<stb::RGBA>* ref_img);
 
 private:
 	ImgDetector() = default;

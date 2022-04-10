@@ -39,7 +39,7 @@ Value find_img(ContextRef ctx, const ValueRef this_val, const std::vector<ValueR
 
 	std::string img_path = args.at(0);
 
-	stb::Image<stb::RGB> ref_image = ctx.env()->get_ref_image(img_path);
+	stb::Image<stb::RGBA> ref_image = ctx.env()->get_ref_image(img_path);
 	
 	nn::ImgTensor tensor = nn::find_img(ctx.image(), &ref_image);
 	return ImgTensor(ctx, tensor);

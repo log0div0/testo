@@ -10,7 +10,7 @@ namespace js {
 
 struct ContextEnv {
 	virtual ~ContextEnv() {}
-	virtual stb::Image<stb::RGB> get_ref_image(const std::string& img_path) = 0;
+	virtual stb::Image<stb::RGBA> get_ref_image(const std::string& img_path) = 0;
 };
 
 struct ContextRef {

@@ -14,7 +14,7 @@ struct MessageHandler: js::ContextEnv {
 
 	void run();
 
-	stb::Image<stb::RGB> get_ref_image(const std::string& img_path) override;
+	stb::Image<stb::RGBA> get_ref_image(const std::string& img_path) override;
 
 private:
 	nlohmann::json handle_request(nlohmann::json& request);

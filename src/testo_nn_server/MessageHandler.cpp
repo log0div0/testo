@@ -47,7 +47,7 @@ void MessageHandler::run() {
 	}
 }
 
-stb::Image<stb::RGB> MessageHandler::get_ref_image(const std::string& img_path)
+stb::Image<stb::RGBA> MessageHandler::get_ref_image(const std::string& img_path)
 {
 	if (!channel) {
 		throw std::runtime_error("Channel is nullptr");
@@ -67,7 +67,7 @@ stb::Image<stb::RGB> MessageHandler::get_ref_image(const std::string& img_path)
 		throw std::runtime_error("Unexpected message type instead of \"ref_image\": " + type);
 	}
 
-	stb::Image<stb::RGB> ref_image = get_image(response);
+	stb::Image<stb::RGBA> ref_image = get_image_with_alpha(response);
 	return ref_image;
 }
 

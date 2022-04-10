@@ -124,9 +124,9 @@ nlohmann::json NNClient::eval_js(const stb::Image<stb::RGB>* image, const std::s
 			if (type == REF_IMAGE_REQUEST) {
 				std::string ref_file_path = response.at("data");
 
-				stb::Image<stb::RGB> ref_image;
+				stb::Image<stb::RGBA> ref_image;
 				try {
-					ref_image = stb::Image<stb::RGB>(ref_file_path);
+					ref_image = stb::Image<stb::RGBA>(ref_file_path);
 				} catch (const std::exception& error) {
 					std::throw_with_nested(std::runtime_error("NN server requested image " + ref_file_path + " but we failed to open the file"));
 				}

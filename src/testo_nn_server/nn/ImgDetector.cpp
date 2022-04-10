@@ -10,7 +10,7 @@ ImgDetector& ImgDetector::instance() {
 	return instance;
 }
 
-bool is_sub_image_match(const stb::Image<stb::RGB>& img, const stb::Image<stb::RGB>& sub, int off_x, int off_y) {
+bool is_sub_image_match(const stb::Image<stb::RGB>& img, const stb::Image<stb::RGBA>& sub, int off_x, int off_y) {
 	int different_pixels_count = 0;
 	int max_different_pixels_count = (sub.h * sub.w) * 0.05f;
 	for (int y = 0; y < sub.h; ++y) {
@@ -28,11 +28,11 @@ bool is_sub_image_match(const stb::Image<stb::RGB>& img, const stb::Image<stb::R
 
 std::vector<Img> ImgDetector::detect(const stb::Image<stb::RGB>* srch_img, const std::string& ref_img_path)
 {
-	stb::Image<stb::RGB> icon(ref_img_path);
+	stb::Image<stb::RGBA> icon(ref_img_path);
 	return detect(srch_img, &icon);
 }
 
-std::vector<Img> ImgDetector::detect(const stb::Image<stb::RGB>* srch_img, const stb::Image<stb::RGB>* ref_img)
+std::vector<Img> ImgDetector::detect(const stb::Image<stb::RGB>* srch_img, const stb::Image<stb::RGBA>* ref_img)
 {
 	if (!srch_img->data) {
 		return {};

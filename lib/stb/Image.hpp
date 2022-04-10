@@ -89,7 +89,8 @@ struct RGB {
 		b = blend(b, other.b, other.a);
 	}
 
-	int max_channel_diff(const RGB& other) const {
+	template <typename Pixel>
+	int max_channel_diff(const Pixel& other) const {
 		return
 			std::max(
 				std::max(

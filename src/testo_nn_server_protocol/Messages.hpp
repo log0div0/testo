@@ -47,7 +47,7 @@ inline nlohmann::json create_ref_image_request(const std::string& img_path) {
 	};
 }
 
-inline nlohmann::json create_ref_image_response(const stb::Image<stb::RGB>& ref_image) {
+inline nlohmann::json create_ref_image_response(const stb::Image<stb::RGBA>& ref_image) {
 	return {
 		{"type", REF_IMAGE_RESPONSE},
 		{"image", nlohmann::json::binary(ref_image.write_png_mem())},
@@ -114,5 +114,14 @@ inline stb::Image<stb::RGB> get_image(const nlohmann::json& json) {
 	}
 
 	stb::Image<stb::RGB> result(json.at("image").get_binary().data(), json.at("image").get_binary().size());
+	return result;
+}
+
+inline stb::Image<stb::RGBA> get_image_with_alpha(const nlohmann::json& json) {
+	if (!json.count("image")) {
+		throw std::runtime_error("Message doesn't have image field");
+	}
+
+	stb::Image<stb::RGBA> result(json.at("image").get_binary().data(), json.at("image").get_binary().size());
 	return result;
 }
