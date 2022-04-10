@@ -62,9 +62,9 @@ test centos_backend_qemu_stop_offline_machine_nested: centos_install_testo {
 		copyto "${TEST_ASSETS_DIR}/backend/action_start_stop.testo" "/opt/scripts/action_start_stop.testo"
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_start_stop.testo --stop_on_fail --test_spec stop_offline_machine_nested)
+			set -e
 
 			[[ $output == *"In a macro call my_macro"* ]]
 			[[ $output == *"Error while performing action stop on virtual machine my_ubuntu_server2"* ]]
@@ -213,33 +213,33 @@ test centos_backend_qemu_wait: centos_install_testo {
 		copyto "${TEST_ASSETS_DIR}/backend/action_wait.testo" "/opt/scripts/action_wait.testo"
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_0)
+			set -e
 			[[ $output == *"Error while performing action wait !\\\"Unexisting text\\\""* ]]
 			[[ $output == *"Timeout"* ]]
 		"""
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_1)
-			[[ $output == *"Error while performing action wait !\\\"Unexisting text\\\""* ]]
+			set -e
+			[[ $output == *"Error while performing action wait !(!\\\"Unexisting text\\\""* ]]
 			[[ $output == *"Timeout"* ]]
 		"""
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_expr_bug_2)
+			set -e
 			[[ $output == *"Error while performing action wait !\\\"Lala\\\""* ]]
 			[[ $output == *"Timeout"* ]]
 		"""
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_wait.testo --stop_on_fail --test_spec wait_js_print)
+			set -e
 			[[ $output == *"Hello world!"* ]]
 		"""
 	}
@@ -252,9 +252,9 @@ test centos_backend_qemu_mouse: centos_install_testo {
 		copyto "${TEST_ASSETS_DIR}/backend/action_mouse.testo" "/opt/scripts/action_mouse.testo"
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_mouse.testo --stop_on_fail --test_spec mouse_js_print)
+			set -e
 			[[ $output == *"Hello world!"* ]]
 		"""
 	}

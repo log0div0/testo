@@ -134,9 +134,9 @@ test centos_backend_qemu_flash_copyto_from_not_exist_runtime: centos_backend_qem
 		copyto "${TEST_ASSETS_DIR}/backend/action_flash.testo" "/opt/scripts/action_flash.testo"
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_flash.testo --test_spec flash_copyto_from_doesnt_exist_runtime)
+			set -e
 			[[ $output == *"Preparing the environment for test flash_copyto_from_doesnt_exist_runtime"* ]]
 			[[ $output == *"Specified path doesn't exist: /tmp/lala.log"* ]]
 		"""
@@ -174,9 +174,9 @@ test centos_backend_qemu_flash_copyto_timeout: centos_backend_qemu_install_guest
 		"""
 
 		exec bash """
-			set +o pipefail
 			set +e
 			output=$(testo run /opt/scripts/action_flash.testo --stop_on_fail --test_spec flash_copyto_timeout)
+			set -e
 			[[ $output == *"Error while performing action copyto"* ]]
 			[[ $output == *"Timeout was triggered"* ]]
 		""" timeout 30m
