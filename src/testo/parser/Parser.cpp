@@ -557,6 +557,7 @@ std::shared_ptr<AST::Controller> Parser::controller() {
 			{"disk", {true, [&]{ return attr_block({
 				{"size", {false, [&]{ return size(); }}},
 				{"source", {false, [&]{ return string(); }}},
+				{"bus", {false, [&]{ return string(); }}},
 			}); }}},
 			{"video", {true, [&]{ return attr_block({
 				{"qemu_mode", {false, [&]{ return string(); }}}, // deprecated

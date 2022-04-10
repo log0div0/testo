@@ -263,19 +263,15 @@ const std::unordered_map<uint16_t, uint16_t> virKeyCodeTable_rfb = {
   {0xef, 0xf4}, /* KEY_UWB */
 };
 
-const std::vector<std::string> QemuVM::ide_disk_targets = {
-	"hda",
-	"hdb",
-	"hdc",
-	"hdd"
-};
+std::string get_ide_disk_target(int index) {
+	char last_letter = 'a' + index;
+	return std::string("hd") + last_letter;
+}
 
-const std::vector<std::string> QemuVM::scsi_disk_targets = {
-	"sda",
-	"sdb",
-	"sdc",
-	"sdd"
-};
+std::string get_scsi_disk_target(int index) {
+	char last_letter = 'a' + index;
+	return std::string("sd") + last_letter;
+}
 
 const std::unordered_map<KeyboardButton, uint16_t> scancodes = {
 	{KeyboardButton::ESC, 1},
@@ -444,12 +440,15 @@ std::string QemuVM::compose_config() const {
 		<emulator>/usr/bin/qemu-system-aarch64</emulator>
 		)", config.at("cpus").get<uint32_t>());
 
-		size_t i = 0;
+		size_t scsi_disk_counter = 0;
 
 		if (config.count("disk")) {
 			auto& disks = config.at("disk");
-			for (i = 0; i < disks.size(); i++) {
-				auto& disk = disks[i];
+			for (auto& disk: disks) {
+				std::string bus = disk.at("bus");
+				if (bus == "ide") {
+					throw std::runtime_error("IDE bus is not supported on ARM architecture");
+				}
 				std::string disk_name = disk.at("name");
 				string_config += fmt::format(R"(
 		<disk type='file' device='disk'>
@@ -459,7 +458,8 @@ std::string QemuVM::compose_config() const {
 			<alias name='ua-{}'/>
 			<boot order='{}'/>
 		</disk>
-				)", disk_path(disk_name).generic_string(), scsi_disk_targets[i], disk_name, 2 + i);
+				)", disk_path(disk_name).generic_string(), get_scsi_disk_target(scsi_disk_counter), disk_name, 2 + scsi_disk_counter);
+				++scsi_disk_counter;
 			}
 		}
 
@@ -472,7 +472,7 @@ std::string QemuVM::compose_config() const {
 			<readonly/>
 			<boot order='1'/>
 		</disk>
-			)", config.at("iso").get<std::string>(), scsi_disk_targets[i]);
+			)", config.at("iso").get<std::string>(), get_scsi_disk_target(scsi_disk_counter));
 		} else {
 			string_config += fmt::format(R"(
 		<disk type='file' device='cdrom'>
@@ -480,7 +480,7 @@ std::string QemuVM::compose_config() const {
 			<target dev='{}' bus='scsi'/>
 			<readonly/>
 		</disk>
-			)", scsi_disk_targets[i]);
+			)", get_scsi_disk_target(scsi_disk_counter));
 		}
 
 		string_config += R"(
@@ -696,6 +696,8 @@ std::string QemuVM::compose_config() const {
 			<devices>
 				<controller type='ide' index='0'>
 				</controller>
+				<controller type='scsi' index='0' model='virtio-scsi'>
+				</controller>
 				<controller type='virtio-serial' index='0'>
 				</controller>
 				<controller type='pci' index='0' model='pci-root'/>
@@ -790,21 +792,30 @@ std::string QemuVM::compose_config() const {
 			</video>
 		)";
 
-		size_t i = 0;
+		size_t ide_disk_counter = 0;
+		size_t scsi_disk_counter = 0;
 
 		if (config.count("disk")) {
 			auto& disks = config.at("disk");
-			for (i = 0; i < disks.size(); i++) {
-				auto& disk = disks[i];
+			for (auto& disk: disks) {
+				std::string bus = disk.at("bus");
+				std::string target;
+				if (bus == "ide") {
+					target = get_ide_disk_target(ide_disk_counter);
+					++ide_disk_counter;
+				} else {
+					target = get_scsi_disk_target(scsi_disk_counter);
+					++scsi_disk_counter;
+				}
 				std::string disk_name = disk.at("name");
 				string_config += fmt::format(R"(
 					<disk type='file' device='disk'>
 						<driver name='qemu' type='qcow2'/>
 						<source file='{}'/>
-						<target dev='{}' bus='ide'/>
+						<target dev='{}' bus='{}'/>
 						<alias name='ua-{}'/>
 					</disk>
-				)", disk_path(disk_name).generic_string(), ide_disk_targets[i], disk_name);
+				)", disk_path(disk_name).generic_string(), target, bus, disk_name);
 			}
 		}
 
@@ -816,7 +827,7 @@ std::string QemuVM::compose_config() const {
 					<target dev='{}' bus='ide'/>
 					<readonly/>
 				</disk>
-			)", config.at("iso").get<std::string>(), ide_disk_targets[i]);
+			)", config.at("iso").get<std::string>(), get_ide_disk_target(ide_disk_counter));
 		} else {
 			string_config += fmt::format(R"(
 				<disk type='file' device='cdrom'>
@@ -824,7 +835,7 @@ std::string QemuVM::compose_config() const {
 					<target dev='{}' bus='ide'/>
 					<readonly/>
 				</disk>
-			)", ide_disk_targets[i]);
+			)", get_ide_disk_target(ide_disk_counter));
 		}
 
 		if (config.at("qemu_spice_agent")) {

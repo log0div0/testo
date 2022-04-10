@@ -50,9 +50,6 @@ struct QemuVM: public VM {
 
 	std::shared_ptr<GuestAdditions> guest_additions() override;
 
-	static const std::vector<std::string> ide_disk_targets;
-	static const std::vector<std::string> scsi_disk_targets;
-
 	static std::string preferable_video_model(const vir::Connect& qemu_connect);
 
 private:

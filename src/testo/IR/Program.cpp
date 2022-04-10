@@ -107,6 +107,7 @@ std::map<std::string, std::string> testo_default_params = {
 	{"TESTO_EXEC_DEFAULT_TIMEOUT", "10m"},
 	{"TESTO_COPY_DEFAULT_TIMEOUT", "10m"},
 	{"TESTO_SHUTDOWN_DEFAULT_TIMEOUT", "1m"},
+	{"TESTO_DISK_DEFAULT_BUS", "scsi"},
 };
 
 std::vector<std::string> testo_timeout_params = {

@@ -1,5 +1,6 @@
 
 #include "Machine.hpp"
+#include "Program.hpp"
 #include "../Exceptions.hpp"
 #include "../backends/Environment.hpp"
 #include <fmt/format.h>
@@ -497,12 +498,19 @@ void Machine::validate_config() {
 	}
 
 	if (config.count("disk")) {
-		auto disks = config.at("disk");
+		auto& disks = config.at("disk");
 
 		for (auto& disk: disks) {
 			if (!(disk.count("size") ^ disk.count("source"))) {
 				throw std::runtime_error(fmt::format("Either field \"size\" or \"source\" must be specified for the disk \"{}\"",
 					disk.at("name").get<std::string>()));
+			}
+			if (!disk.count("bus")) {
+				disk["bus"] = IR::program->resolve_top_level_param("TESTO_DISK_DEFAULT_BUS");
+			}
+			std::string bus = disk.at("bus");
+			if ((bus != "ide") && (bus != "scsi")) {
+				throw std::runtime_error(fmt::format("Unsupported disk bus: " + bus));
 			}
 		}
 	}

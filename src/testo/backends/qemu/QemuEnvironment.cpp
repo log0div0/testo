@@ -82,12 +82,19 @@ std::shared_ptr<Network> QemuEnvironment::create_network(const nlohmann::json& c
 void QemuEnvironment::validate_vm_config(const nlohmann::json& config) {
 
 	if (config.count("disk")) {
-		auto disks = config.at("disk");
+		auto& disks = config.at("disk");
 
-		size_t max_disk_targets = std::min(QemuVM::ide_disk_targets.size(), QemuVM::scsi_disk_targets.size());
+		int ide_disk_count = 0;
+		for (auto& disk: disks) {
+			std::string bus = disk.at("bus");
+			if (bus == "ide") {
+				++ide_disk_count;
+			}
+		}
 
-		if (disks.size() > max_disk_targets - 1) {
-			throw std::runtime_error("Too many disks specified, maximum amount: " + std::to_string(max_disk_targets - 1));
+		const int max_ide_disk_count = 3; // one slot for CDROM, 3 slots are free
+		if (ide_disk_count > max_ide_disk_count) {
+			throw std::runtime_error("Too many IDE disks specified, maximum amount of IDE disks: " + std::to_string(max_ide_disk_count));
 		}
 	}
 
