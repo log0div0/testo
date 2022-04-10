@@ -1,5 +1,5 @@
 
-include "install_guest_additions.testo"
+include "../common/install_ubuntu_server.testo"
 
 [no_snapshots: true]
 test exec_timeout: install_ubuntu_server_guest_additions {

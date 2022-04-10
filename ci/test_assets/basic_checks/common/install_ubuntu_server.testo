@@ -1,5 +1,5 @@
 
-include "my_ubuntu_server.testo"
+include "definitions.testo"
 
 macro install_ubuntu_server(host_name, login, password) {
 	start
