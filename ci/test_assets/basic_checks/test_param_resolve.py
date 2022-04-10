@@ -70,16 +70,16 @@ def test_actions_param():
 	must_fail("testo run param_resolve/actions.testo --test_spec check_mouse_param --invalidate check_mouse_param", out='Mouse moving on "lala" with timeout 200ms in virtual machine my_ubuntu_server')
 	must_fail("testo run param_resolve/actions.testo --test_spec check_mouse_token --invalidate check_mouse_token", out='Mouse moving on "lala" with timeout 200ms in virtual machine my_ubuntu_server')
 
-	must_fail("testo run param_resolve/actions.testo --test_spec check_sleep_param_invalid", f"""{cwd}/param_resolve/actions.testo:30:9: Error while parsing "-7"
+	must_fail("testo run param_resolve/actions.testo --test_spec check_sleep_param_invalid", f"""{cwd}/param_resolve/actions.testo:16:9: Error while parsing "-7"
 	- Error: expected TIME INTERVAL, but got NUMBER "-7\"""")
 
-	must_fail("testo run param_resolve/actions.testo --test_spec check_type_param_invalid", f"""{cwd}/param_resolve/actions.testo:53:39: Error while parsing "interval"
+	must_fail("testo run param_resolve/actions.testo --test_spec check_type_param_invalid", f"""{cwd}/param_resolve/actions.testo:39:39: Error while parsing "interval"
 	- Error: expected TIME INTERVAL, but got IDENTIFIER "interval\"""")
 
-	must_fail("testo run param_resolve/actions.testo --test_spec check_wait_param_invalid", f"""{cwd}/param_resolve/actions.testo:77:39: Error while parsing "interval"
+	must_fail("testo run param_resolve/actions.testo --test_spec check_wait_param_invalid", f"""{cwd}/param_resolve/actions.testo:63:39: Error while parsing "interval"
 	- Error: expected TIME INTERVAL, but got IDENTIFIER "interval\"""")
 
-	must_fail("testo run param_resolve/actions.testo --test_spec check_shutdown_param_invalid", f"""{cwd}/param_resolve/actions.testo:100:20: Error while parsing ""
+	must_fail("testo run param_resolve/actions.testo --test_spec check_shutdown_param_invalid", f"""{cwd}/param_resolve/actions.testo:86:20: Error while parsing ""
 	- Error: expected TIME INTERVAL, but got EOF""")
 
 def test_param_not_defined():
@@ -105,7 +105,7 @@ def test_param_not_defined():
 	- param "not_defined" is not defined""")
 
 	must_fail("testo run param_resolve/not_defined.testo --test_spec flash_not_defined", f"""In a macro call plug_flash("undefined_flash")
-{cwd}/param_resolve/not_defined.testo:73:7: Error: unknown flash drive: undefined_flash""")
+{cwd}/param_resolve/not_defined.testo:59:7: Error: unknown flash drive: undefined_flash""")
 
 	must_fail("testo run param_resolve/not_defined.testo --test_spec dvd_not_defined", """Error while resolving "${not_defined}"
 	- param "not_defined" is not defined""")

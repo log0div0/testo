@@ -1,0 +1,26 @@
+network internet {
+	mode: "nat"
+}
+
+network internal {
+	mode: "internal"
+}
+
+machine my_ubuntu_server {
+	cpus: 1
+	ram: 512Mb
+	iso: "/opt/ubuntu-16.04.6-server-amd64.iso"
+	disk main: {
+		size: 4Gb
+	}
+
+	nic nat: {
+		attached_to: "internet"
+	}
+
+	nic my_nic: {
+		attached_to: "internal"
+	}
+
+	qemu_enable_usb3: true
+}
