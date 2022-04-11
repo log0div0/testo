@@ -37,6 +37,7 @@ struct Reporter {
 	void create_controller(std::shared_ptr<IR::Controller> controller);
 	void take_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot);
 	void restore_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot);
+	void delete_hypervisor_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot);
 
 	//both controller actions
 	void print(std::shared_ptr<IR::Controller> controller, const IR::Print& action);

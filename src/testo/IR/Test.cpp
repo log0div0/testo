@@ -1,6 +1,7 @@
 
 #include "Test.hpp"
 #include "Action.hpp"
+#include "Program.hpp"
 
 #include <iomanip>
 
@@ -59,10 +60,6 @@ std::string Test::title() const {
 
 std::string Test::description() const {
 	return attrs().value("description", "");
-}
-
-bool Test::snapshots_needed() const {
-	return !attrs().value("no_snapshots", false);
 }
 
 std::vector<std::string> Test::depends_on() const {
@@ -191,7 +188,7 @@ std::set<std::shared_ptr<FlashDrive>> Test::get_all_flash_drives() const {
 	return result;
 }
 
-Test::CacheStatus Test::cache_status() {
+Test::CacheStatus Test::cache_status() const {
 	if (_cache_status == CacheStatus::Unknown) {
 		if (is_cache_ok()) {
 			_cache_status = CacheStatus::OK;
@@ -266,6 +263,52 @@ bool Test::is_cache_miss() const {
 	}
 
 	return false;
+}
+
+void Test::add_snapshot_ref(const TestRun* test_run) {
+	snapshot_refs.insert(test_run);
+}
+void Test::remove_snapshot_ref(const TestRun* test_run) {
+	snapshot_refs.erase(test_run);
+}
+
+bool Test::can_delete_hypervisor_snaphots() const {
+	return (snapshot_refs.size() == 0) && (snapshot_policy() == SnapshotPolicy::Auto);
+}
+
+bool Test::is_hypervisor_snapshot_needed() const {
+	if (snapshot_policy() == SnapshotPolicy::Always) {
+		return true;
+	}
+	return (snapshot_refs.size() > 0) && (snapshot_policy() == SnapshotPolicy::Auto);
+}
+
+Test::SnapshotPolicy Test::snapshot_policy() const {
+	if (_snapshot_policy == SnapshotPolicy::Unknown) {
+		if (attrs().count("snapshots") && attrs().count("no_snapshots")) {
+			throw std::runtime_error("You can't use both 'snapshots' and 'no_snapshots' attributes at the same time. 'no_snapshots' is deprecated so use 'snapshots' instead");
+		}
+		if (attrs().count("no_snapshots")) {
+			bool no_snapshots = attrs().at("no_snapshots");
+			if (no_snapshots) {
+				_snapshot_policy = SnapshotPolicy::Never;
+			} else {
+				_snapshot_policy = SnapshotPolicy::Always;
+			}
+		} else {
+			std::string str = attrs().value("snapshots", IR::program->resolve_top_level_param("TESTO_SNAPSHOT_DEFAULT_POLICY"));
+			if (str == "always") {
+				_snapshot_policy = SnapshotPolicy::Always;
+			} else if (str == "auto") {
+				_snapshot_policy = SnapshotPolicy::Auto;
+			} else if (str == "never") {
+				_snapshot_policy = SnapshotPolicy::Never;
+			} else {
+				throw std::runtime_error("Unknown 'snapshot' attribute value: " + str);
+			}
+		}
+	}
+	return _snapshot_policy;
 }
 
 std::set<std::string> TestRun::get_unsuccessful_parents_names() const {

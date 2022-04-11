@@ -362,6 +362,7 @@ std::shared_ptr<Test> Parser::test() {
 	if (LA(1) == Token::category::lbracket) {
 		attrs = attr_block({
 			{"no_snapshots", {false, [&]{ return boolean(); }}},
+			{"snapshots", {false, [&]{ return string(); }}},
 			{"depends_on", {false, [&]{ return not_empty_list<Id>([&] { return id(); }); }}},
 			{"title", {false, [&]{ return string(); }}},
 			{"description", {false, [&]{ return string(); }}},

@@ -142,6 +142,13 @@ void FlashDrive::restore_snapshot(const std::string& snapshot) {
 	current_state = snapshot;
 }
 
+bool FlashDrive::has_hypervisor_snapshot(const std::string& snapshot) {
+	return fd()->has_snapshot(snapshot);
+}
+void FlashDrive::delete_hypervisor_snapshot(const std::string& snapshot) {
+	fd()->delete_snapshot(snapshot);
+}
+
 void FlashDrive::delete_snapshot_with_children(const std::string& snapshot)
 {
 	try {

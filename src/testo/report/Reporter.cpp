@@ -253,6 +253,15 @@ void Reporter::take_snapshot(std::shared_ptr<IR::Controller> controller, const s
 	report(fmt::format("{}\n", controller->name()), yellow);
 }
 
+void Reporter::delete_hypervisor_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot) {
+	report_prefix(blue);
+	report(fmt::format("Deleting snapshot "), blue);
+	report(snapshot, yellow);
+	report(fmt::format(" for {} ", controller->type()), blue);
+	report(fmt::format("{} ", controller->name()), yellow);
+	report(fmt::format("as we no longer need it\n"), blue);
+}
+
 void Reporter::restore_snapshot(std::shared_ptr<IR::Controller> controller, const std::string& snapshot) {
 	report_prefix(blue);
 	report(fmt::format("Restoring snapshot "), blue);

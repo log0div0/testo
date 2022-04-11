@@ -21,6 +21,8 @@ struct Controller: Object<AST::Controller> {
 	bool check_metadata_version();
 	virtual void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) = 0;
 	virtual void restore_snapshot(const std::string& snapshot) = 0;
+	virtual bool has_hypervisor_snapshot(const std::string& snapshot) = 0;
+	virtual void delete_hypervisor_snapshot(const std::string& snapshot) = 0;
 	virtual void delete_snapshot_with_children(const std::string& snapshot) = 0;
 
 	//To be called only if the

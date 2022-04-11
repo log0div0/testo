@@ -222,6 +222,13 @@ void Machine::restore_snapshot(const std::string& snapshot) {
 	current_state = snapshot;
 }
 
+bool Machine::has_hypervisor_snapshot(const std::string& snapshot) {
+	return vm()->has_snapshot(snapshot);
+}
+void Machine::delete_hypervisor_snapshot(const std::string& snapshot) {
+	vm()->delete_snapshot(snapshot);
+}
+
 void Machine::delete_snapshot_with_children(const std::string& snapshot)
 {
 	try {

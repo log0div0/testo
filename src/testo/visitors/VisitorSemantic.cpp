@@ -97,6 +97,24 @@ void VisitorSemantic::visit_macro(std::shared_ptr<IR::Macro> macro) {
 	macro->validate();
 }
 
+// just for backward compability
+std::ostream& operator<<(std::ostream& stream, const IR::Test::SnapshotPolicy snapshot_policy) {
+	switch (snapshot_policy) {
+		case IR::Test::SnapshotPolicy::Always:
+			stream << true;
+			break;
+		case IR::Test::SnapshotPolicy::Never:
+			stream << false;
+			break;
+		case IR::Test::SnapshotPolicy::Auto:
+			stream << "auto";
+			break;
+		default:
+			throw std::runtime_error("SnapshotPolicy is not initialized");
+	}
+	return stream;
+}
+
 void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 	try {
 		StackPusher<VisitorSemantic> new_ctx(this, test->stack);
@@ -117,7 +135,7 @@ void VisitorSemantic::visit_test(std::shared_ptr<IR::Test> test) {
 			current_test->cksum_input << parents_names.at(i);
 		}
 		current_test->cksum_input << std::endl;
-		current_test->cksum_input << "SNAPSHOT NEEDED = " << test->snapshots_needed() << std::endl;
+		current_test->cksum_input << "SNAPSHOT NEEDED = " << test->snapshot_policy() << std::endl;
 
 		visit_command_block(test->ast_node->cmd_block);
 

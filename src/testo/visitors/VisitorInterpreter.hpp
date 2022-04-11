@@ -46,6 +46,7 @@ private:
 	std::shared_ptr<IR::Test> current_test;
 	Reporter reporter;
 
+	void delete_parents_hypervisor_snapshots_if_needed(const std::shared_ptr<IR::Test>& test);
 	void restore_parents_controllers_if_needed(const std::shared_ptr<IR::Test>& test);
 	void create_networks_if_needed(const std::shared_ptr<IR::Test>& test);
 	void install_new_controllers_if_needed(const std::shared_ptr<IR::Test>& test);

@@ -13,6 +13,8 @@ struct FlashDrive: Controller {
 
 	virtual void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) override;
 	virtual void restore_snapshot(const std::string& snapshot) override;
+	virtual bool has_hypervisor_snapshot(const std::string& snapshot) override;
+	virtual void delete_hypervisor_snapshot(const std::string& snapshot) override;
 	virtual void delete_snapshot_with_children(const std::string& snapshot) override;
 
 	virtual bool check_config_relevance() override;

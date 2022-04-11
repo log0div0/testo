@@ -7,6 +7,8 @@
 
 namespace IR {
 
+struct TestRun;
+
 struct Test: Object<AST::Test> {
 
 	enum class CacheStatus {
@@ -14,6 +16,13 @@ struct Test: Object<AST::Test> {
 		Empty,
 		OK,
 		Miss
+	};
+
+	enum class SnapshotPolicy {
+		Unknown,
+		Always,
+		Never,
+		Auto
 	};
 
 	static std::list<std::shared_ptr<Test>> get_test_path(const std::shared_ptr<Test>& test);
@@ -39,13 +48,17 @@ struct Test: Object<AST::Test> {
 	const std::set<std::string>& get_all_test_names_in_subtree();
 	const std::set<std::string>& get_external_dependencies();
 
-	bool snapshots_needed() const;
+	void add_snapshot_ref(const TestRun* test_run);
+	void remove_snapshot_ref(const TestRun* test_run);
+	bool can_delete_hypervisor_snaphots() const;
+	bool is_hypervisor_snapshot_needed() const;
+	SnapshotPolicy snapshot_policy() const;
 
 	std::stringstream cksum_input;
 	std::string cksum;
 
-	CacheStatus cache_status();
-	bool is_up_to_date() {
+	CacheStatus cache_status() const;
+	bool is_up_to_date() const {
 		return cache_status() == IR::Test::CacheStatus::OK;
 	}
 
@@ -56,7 +69,9 @@ struct Test: Object<AST::Test> {
 	std::set<std::shared_ptr<FlashDrive>> mentioned_flash_drives;
 
 private:
-	CacheStatus _cache_status = CacheStatus::Unknown;
+	std::set<const TestRun*> snapshot_refs;
+	mutable CacheStatus _cache_status = CacheStatus::Unknown;
+	mutable SnapshotPolicy _snapshot_policy = SnapshotPolicy::Unknown;
 	bool is_cache_ok() const;
 	bool is_cache_miss() const;
 	std::unique_ptr<std::set<std::string>> all_test_names_in_subtree;

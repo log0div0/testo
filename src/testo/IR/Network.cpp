@@ -30,6 +30,14 @@ void Network::create_snapshot(const std::string& snapshot, const std::string& ck
 void Network::restore_snapshot(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }
+
+bool Network::has_hypervisor_snapshot(const std::string& snapshot) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+void Network::delete_hypervisor_snapshot(const std::string& snapshot) {
+	throw std::runtime_error(__PRETTY_FUNCTION__);
+}
+
 void Network::delete_snapshot_with_children(const std::string& snapshot) {
 	throw std::runtime_error(__PRETTY_FUNCTION__);
 }

@@ -33,6 +33,21 @@ static std::string to_string(IR::Test::CacheStatus status) {
 	}
 }
 
+static std::string to_string(IR::Test::SnapshotPolicy policy) {
+	switch (policy) {
+		case IR::Test::SnapshotPolicy::Unknown:
+			return "unknown";
+		case IR::Test::SnapshotPolicy::Always:
+			return "always";
+		case IR::Test::SnapshotPolicy::Never:
+			return "never";
+		case IR::Test::SnapshotPolicy::Auto:
+			return "auto";
+		default:
+			throw std::runtime_error("Invalid SnapshotPolicy value");
+	}
+}
+
 static std::string now() {
 	auto start_timestamp_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 	std::stringstream ss;
@@ -104,7 +119,7 @@ nlohmann::json ReportWriterNative::to_json(const std::shared_ptr<IR::Test>& test
 	return {
 		{"name", test->name()},
 		{"parents", test->parent_names()},
-		{"snapshots_needed", test->snapshots_needed()},
+		{"snapshots_policy", to_string(test->snapshot_policy())},
 		{"description", test->description()},
 		{"cksum", test->cksum},
 		{"cache_status", to_string(test->cache_status())},

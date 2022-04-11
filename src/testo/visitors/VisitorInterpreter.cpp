@@ -83,7 +83,7 @@ void VisitorInterpreter::check_cache_missed_tests() {
 
 std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::shared_ptr<IR::Test>& test) {
 	// если тест up-to-date и есть снепшот - то запускать его точно не надо
-	if (test->is_up_to_date() && test->snapshots_needed()) {
+	if (test->is_up_to_date() && (test->snapshot_policy() == IR::Test::SnapshotPolicy::Always)) {
 		return nullptr;
 	}
 	// попробуем определить, может быть тест недавно выполнялся
@@ -107,7 +107,7 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::sha
 	// контроллеры точно не в нужном состоянии, но
 	// если тест уже был запланирован, и тест создаст снепшоты,
 	// то мы сможем восстановить состояние контроллеров
-	if (test->snapshots_needed()) {
+	if (test->snapshot_policy() != IR::Test::SnapshotPolicy::Never) {
 		for (; it != tests_runs.rend(); ++it) {
 			auto test_run = *it;
 			if (test_run->test == test) {
@@ -121,6 +121,12 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::sha
 	for (auto& parent_test: test->parents) {
 		auto parent_test_run = add_test_to_plan(parent_test);
 		if (parent_test_run) {
+			if (parent_test_run != tests_runs.back()) {
+				// дополнительный прогон родительского теста не был добавлен в список
+				// вместо этого мы решили восстановить состояние родительских контроллеров
+				// из снепшотов
+				parent_test_run->test->add_snapshot_ref(test_run.get());
+			}
 			test_run->parents.insert(parent_test_run);
 		}
 	}
@@ -286,8 +292,8 @@ void VisitorInterpreter::visit() {
 		for (auto parent: test_run->parents) {
 			if (parent->exec_status != IR::TestRun::ExecStatus::Passed) {
 				skip_test = true;
-				break;
 			}
+			parent->test->remove_snapshot_ref(test_run.get());
 		}
 
 		for (auto dep: test_run->test->depends_on()) {
@@ -307,6 +313,7 @@ void VisitorInterpreter::visit() {
 		}
 
 		if (skip_test) {
+			delete_parents_hypervisor_snapshots_if_needed(test_run->test);
 			reporter.skip_test();
 			continue;
 		}
@@ -342,6 +349,20 @@ void VisitorInterpreter::visit() {
 	reporter.finish();
 	if (reporter.get_stats(IR::TestRun::ExecStatus::Failed).size()) {
 		throw TestFailedException();
+	}
+}
+
+void VisitorInterpreter::delete_parents_hypervisor_snapshots_if_needed(const std::shared_ptr<IR::Test>& test) {
+	for (auto parent: test->parents) {
+		if (parent->can_delete_hypervisor_snaphots()) {
+			for (auto controller: parent->get_all_controllers()) {
+				if (controller->has_hypervisor_snapshot(parent->name())) {
+					reporter.delete_hypervisor_snapshot(controller, parent->name());
+					controller->delete_hypervisor_snapshot(parent->name());
+					coro::CheckPoint();
+				}
+			}
+		}
 	}
 }
 
@@ -430,7 +451,7 @@ void VisitorInterpreter::create_all_controllers_snapshots(const std::shared_ptr<
 	for (auto controller: test->get_all_machines()) {
 		if (!controller->has_snapshot(test->name())) {
 			reporter.take_snapshot(controller, test->name());
-			controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
+			controller->create_snapshot(test->name(), test->cksum, test->is_hypervisor_snapshot_needed());
 			coro::CheckPoint();
 		}
 		controller->current_state = test->name();
@@ -440,7 +461,7 @@ void VisitorInterpreter::create_all_controllers_snapshots(const std::shared_ptr<
 	for (auto controller: test->get_all_flash_drives()) {
 		if (!controller->has_snapshot(test->name())) {
 			reporter.take_snapshot(controller, test->name());
-			controller->create_snapshot(test->name(), test->cksum, test->snapshots_needed());
+			controller->create_snapshot(test->name(), test->cksum, test->is_hypervisor_snapshot_needed());
 			coro::CheckPoint();
 		}
 		controller->current_state = test->name();
@@ -454,6 +475,7 @@ void VisitorInterpreter::visit_test(const std::shared_ptr<IR::Test>& test) {
 		reporter.prepare_environment();
 
 		restore_parents_controllers_if_needed(test);
+		delete_parents_hypervisor_snapshots_if_needed(test);
 		create_networks_if_needed(test);
 		install_new_controllers_if_needed(test);
 
