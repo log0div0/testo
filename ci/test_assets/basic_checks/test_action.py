@@ -10,7 +10,7 @@ def test_action_qa():
 	assert "Success 2" not in out
 	assert "Fail 2" in out
 
-	must_succeed("testo run action/action_qa.testo --assume_yes --test_spec exec_set_variable_1 --invalidate exec_set_variable_1", "ура, товарищи!")
+	must_succeed("testo run action/action_qa.testo --assume_yes --test_spec exec_set_variable_1 --invalidate exec_set_variable_1", "hello from exec_set_variable_1!")
 
 	out, err = must_fail("testo run action/action_qa.testo --assume_yes --test_spec exec_timeout")
 	assert "Error while performing action exec bash" in out

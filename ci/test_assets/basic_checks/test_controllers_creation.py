@@ -4,7 +4,7 @@ def test_vm_creation():
 	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_no_cpus", 						'Field "cpu" is not specified')
 	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_no_ram", 						'Field "ram" is not specified')
 	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_no_disk", 						'You must specify at least 1 disk')
-	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_too_many_disks", 				'Too many disks specified, maximum amount: 3')
+	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_too_many_disks", 				'Too many IDE disks specified, maximum amount of IDE disks: 3')
 	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_disk_no_size", 					'Either field "size" or "source" must be specified for the disk "main"')
 	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_nic_no_attached_to", 			'Neither "attached_to" nor "attached_to_dev" is specified for the nic "my_nic"')
 	must_fail("testo run controllers_creation/vm_create.testo --test_spec create_vm_nic_both_attached_to", 			'''Can't specify both "attached_to" and "attached_to_dev" for the same nic "my_nic"''')
