@@ -172,6 +172,12 @@ void Machine::create_snapshot(const std::string& snapshot, const std::string& ck
 		}
 
 		if (has_snapshot(snapshot)) {
+			if (get_snapshot_cksum(snapshot) == cksum) {
+				if (hypervisor_snapshot_needed && !has_hypervisor_snapshot(snapshot)) {
+					set_metadata("opaque", vm()->make_snapshot(snapshot));
+				}
+				return;
+			}
 			delete_snapshot_with_children(snapshot);
 		}
 
@@ -281,7 +287,7 @@ void Machine::delete_snapshot_with_children(const std::string& snapshot)
 }
 
 bool Machine::check_config_relevance() {
-	auto old_config = nlohmann::json::parse(get_metadata("vm_config"));
+	auto old_config = read_config_from_metadata(main_file());
 	auto new_config = config;
 	//So....
 
@@ -594,6 +600,10 @@ std::shared_ptr<VarMap> Machine::get_vars() const {
 
 void Machine::set_var(const std::string& var_name, const std::string& var_value) {
 	(*vars)[var_name] = var_value;
+}
+
+nlohmann::json Machine::read_config_from_metadata(const fs::path& metadata_file) {
+	return nlohmann::json::parse(get_metadata(metadata_file, "vm_config").get<std::string>());
 }
 
 }

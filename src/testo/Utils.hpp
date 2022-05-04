@@ -22,10 +22,6 @@ std::string normalized_mac(const std::string& mac);
 
 void replace_all(std::string& str, const std::string& from, const std::string& to);
 
-nlohmann::json read_metadata_file(const fs::path& file);
-void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
-std::string get_metadata(const fs::path& file, const std::string& key);
-
 std::pair<int, int> parse_usb_addr(const std::string& addr);
 
 template <typename T>

@@ -27,6 +27,8 @@ struct FlashDrive: Controller {
 
 	std::shared_ptr<::FlashDrive> fd() const;
 
+	static nlohmann::json read_config_from_metadata(const fs::path& metadata_file);
+
 private:
 	virtual std::string id() const override;
 	virtual fs::path get_metadata_dir() const override;

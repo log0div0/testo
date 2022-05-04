@@ -36,8 +36,8 @@ private:
 	void delete_snapshot_with_children(const std::shared_ptr<IR::Test>& test);
 	void invalidate_tests();
 	void check_cache_missed_tests();
-	std::vector<std::shared_ptr<IR::Test>> get_topmost_uncached_tests();
-	std::vector<std::shared_ptr<IR::Test>> get_leaf_tests_in_dfs_order(const std::vector<std::shared_ptr<IR::Test>>& topmost_uncached_tests);
+	std::list<std::shared_ptr<IR::Test>> get_topmost_uncached_tests();
+	std::vector<std::shared_ptr<IR::Test>> get_leaf_tests_in_dfs_order(const std::list<std::shared_ptr<IR::Test>>& topmost_uncached_tests);
 	std::shared_ptr<IR::TestRun> add_test_to_plan(const std::shared_ptr<IR::Test>& test);
 	void build_test_plan();
 	void init();

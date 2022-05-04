@@ -20,10 +20,15 @@ std::string Controller::note_was_declared_here() const {
 	return ss.str();
 }
 
-bool Controller::has_snapshot(const std::string& snapshot) {
+bool Controller::has_snapshot(const std::string& snapshot, bool hypervisor_snapshot_needed) {
 	fs::path metadata_file = get_metadata_dir();
 	metadata_file /= id() + "_" + snapshot;
-	return fs::exists(metadata_file);
+	bool has_metadata_snapshot = fs::exists(metadata_file);
+	if (hypervisor_snapshot_needed) {
+		return has_metadata_snapshot && has_hypervisor_snapshot(snapshot);
+	} else {
+		return has_metadata_snapshot;
+	}
 }
 
 bool Controller::check_metadata_version() {
@@ -75,23 +80,56 @@ bool Controller::has_key(const std::string& key) {
 	}
 }
 
-std::string Controller::get_metadata(const std::string& key) const {
-	try {
-		return ::get_metadata(main_file(), key);
+nlohmann::json Controller::get_metadata(const std::string& key) const {
+	return get_metadata(main_file(), key);
+}
 
+void Controller::set_metadata(const std::string& key, const nlohmann::json& value) {
+	set_metadata(main_file(), key, value);
+}
+
+nlohmann::json Controller::get_metadata(const fs::path& file, const std::string& key) {
+	try {
+		auto metadata = read_metadata_file(file);
+		if (!metadata.count(key)) {
+			throw std::runtime_error("Requested key is not present in metadata");
+		}
+		return metadata.at(key);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Getting metadata with key {}", key)));
 	}
 }
 
-void Controller::set_metadata(const std::string& key, const std::string& value) {
+void Controller::set_metadata(const fs::path& file, const std::string& key, const nlohmann::json& value) {
 	try {
-		auto metadata = read_metadata_file(main_file());
+		auto metadata = read_metadata_file(file);
 		metadata[key] = value;
-		write_metadata_file(main_file(), metadata);
+		write_metadata_file(file, metadata);
 	} catch (const std::exception& error) {
 		std::throw_with_nested(std::runtime_error(fmt::format("Setting metadata with key {}", key)));
 	}
+}
+
+nlohmann::json Controller::read_metadata_file(const fs::path& file) {
+	std::ifstream metadata_file_stream(file.generic_string());
+	if (!metadata_file_stream) {
+		throw std::runtime_error("Can't read metadata file " + file.generic_string());
+	}
+
+	nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
+	metadata_file_stream.close();
+	return result;
+}
+
+
+void Controller::write_metadata_file(const fs::path& file, const nlohmann::json& metadata) {
+	std::ofstream metadata_file_stream(file.generic_string());
+	if (!metadata_file_stream) {
+		throw std::runtime_error("Can't write metadata file " + file.generic_string());
+	}
+
+	metadata_file_stream << metadata;
+	metadata_file_stream.close();
 }
 
 fs::path Controller::main_file() const {

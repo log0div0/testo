@@ -51,6 +51,8 @@ struct Machine: Controller {
 	std::shared_ptr<VarMap> get_vars() const;
 	void set_var(const std::string& var_name, const std::string& var_value);
 
+	static nlohmann::json read_config_from_metadata(const fs::path& metadata_file);
+
 private:
 	stb::Image<stb::RGB> _last_screenshot;
 

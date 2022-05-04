@@ -104,6 +104,12 @@ void FlashDrive::create_snapshot(const std::string& snapshot, const std::string&
 {
 	try {
 		if (has_snapshot(snapshot)) {
+			if (get_snapshot_cksum(snapshot) == cksum) {
+				if (hypervisor_snapshot_needed && !has_hypervisor_snapshot(snapshot)) {
+					fd()->make_snapshot(snapshot);
+				}
+				return;
+			}
 			delete_snapshot_with_children(snapshot);
 		}
 
@@ -201,7 +207,7 @@ void FlashDrive::delete_snapshot_with_children(const std::string& snapshot)
 }
 
 bool FlashDrive::check_config_relevance() {
-	auto old_config = nlohmann::json::parse(get_metadata("fd_config"));
+	auto old_config = read_config_from_metadata(main_file());
 	auto new_config = config;
 
 	new_config.erase("src_file");
@@ -274,6 +280,10 @@ void FlashDrive::validate_config() {
 	// }
 
 	env->validate_flash_drive_config(config);
+}
+
+nlohmann::json FlashDrive::read_config_from_metadata(const fs::path& metadata_file) {
+	return nlohmann::json::parse(get_metadata(metadata_file, "fd_config").get<std::string>());
 }
 
 }

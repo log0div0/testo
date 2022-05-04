@@ -23,7 +23,7 @@ int clean_mode(const CleanModeArgs& args) {
 				try {
 					if (fs::path(file).filename() == fs::path(network_folder).filename()) {
 						IR::Network network;
-						network.config = nlohmann::json::parse(get_metadata(file, "network_config"));
+						network.config = IR::Network::read_config_from_metadata(file);
 						if (network.nw()->prefix() == args.prefix) {
 							networks_to_delete.push_back(network);
 							break;
@@ -44,7 +44,7 @@ int clean_mode(const CleanModeArgs& args) {
 				try {
 					if (fs::path(file).filename() == fs::path(flash_drive_folder).filename()) {
 						IR::FlashDrive flash_drive;
-						flash_drive.config = nlohmann::json::parse(get_metadata(file, "fd_config"));
+						flash_drive.config = IR::FlashDrive::read_config_from_metadata(file);
 						if (flash_drive.fd()->prefix() == args.prefix) {
 							flash_drives_to_delete.push_back(flash_drive);
 							break;
@@ -66,7 +66,7 @@ int clean_mode(const CleanModeArgs& args) {
 				try {
 					if (fs::path(file).filename() == fs::path(vm_folder).filename()) {
 						IR::Machine machine;
-						machine.config = nlohmann::json::parse(get_metadata(file, "vm_config"));
+						machine.config = IR::Machine::read_config_from_metadata(file);
 						if (machine.vm()->prefix() == args.prefix) {
 							machines_to_delete.push_back(machine);
 							break;

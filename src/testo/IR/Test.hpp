@@ -37,6 +37,8 @@ struct Test: Object<AST::Test> {
 	std::vector<std::shared_ptr<Test>> parents;
 	std::vector<std::weak_ptr<Test>> children;
 
+	std::list<std::shared_ptr<Test>> get_children() const;
+
 	std::set<std::shared_ptr<Controller>> get_all_controllers() const;
 	std::set<std::shared_ptr<Network>> get_all_networks() const;
 	std::set<std::shared_ptr<Machine>> get_all_machines() const;
@@ -52,6 +54,7 @@ struct Test: Object<AST::Test> {
 	void remove_snapshot_ref(const TestRun* test_run);
 	bool can_delete_hypervisor_snaphots() const;
 	bool is_hypervisor_snapshot_needed() const;
+	bool has_hypervisor_snapshot() const;
 	SnapshotPolicy snapshot_policy() const;
 
 	std::stringstream cksum_input;
@@ -61,6 +64,7 @@ struct Test: Object<AST::Test> {
 	bool is_up_to_date() const {
 		return cache_status() == IR::Test::CacheStatus::OK;
 	}
+	bool all_parents_are_up_to_date() const;
 
 	const nlohmann::json& attrs() const;
 

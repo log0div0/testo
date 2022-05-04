@@ -17,7 +17,7 @@ struct Controller: Object<AST::Controller> {
 	std::string note_was_declared_here() const;
 
 	std::string get_snapshot_cksum(const std::string& snapshot);
-	bool has_snapshot(const std::string& snapshot);
+	bool has_snapshot(const std::string& snapshot, bool hypervisor_snapshot_needed = false);
 	bool check_metadata_version();
 	virtual void create_snapshot(const std::string& snapshot, const std::string& cksum, bool hypervisor_snapshot_needed) = 0;
 	virtual void restore_snapshot(const std::string& snapshot) = 0;
@@ -27,8 +27,15 @@ struct Controller: Object<AST::Controller> {
 
 	//To be called only if the
 	virtual bool check_config_relevance() = 0;
-	void set_metadata(const std::string& key, const std::string& value);
-	std::string get_metadata(const std::string& key) const;
+
+	nlohmann::json get_metadata(const std::string& key) const;
+	void set_metadata(const std::string& key, const nlohmann::json& value);
+
+	static nlohmann::json get_metadata(const fs::path& file, const std::string& key);
+	static void set_metadata(const fs::path& file, const std::string& key, const nlohmann::json& value);
+
+	static nlohmann::json read_metadata_file(const fs::path& file);
+	static void write_metadata_file(const fs::path& file, const nlohmann::json& metadata);
 
 	virtual bool is_defined() const;
 	virtual void create() = 0;

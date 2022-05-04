@@ -83,7 +83,7 @@ void VisitorInterpreter::check_cache_missed_tests() {
 
 std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::shared_ptr<IR::Test>& test) {
 	// если тест up-to-date и есть снепшот - то запускать его точно не надо
-	if (test->is_up_to_date() && (test->snapshot_policy() == IR::Test::SnapshotPolicy::Always)) {
+	if (test->is_up_to_date() && test->has_hypervisor_snapshot()) {
 		return nullptr;
 	}
 	// попробуем определить, может быть тест недавно выполнялся
@@ -128,27 +128,40 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::sha
 				parent_test_run->test->add_snapshot_ref(test_run.get());
 			}
 			test_run->parents.insert(parent_test_run);
+		} else {
+			// the parent test is up-to-date
+			parent_test->add_snapshot_ref(test_run.get());
 		}
 	}
 	tests_runs.push_back(test_run);
 	return test_run;
 }
 
-std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_topmost_uncached_tests() {
-	std::vector<std::shared_ptr<IR::Test>> result;
+std::list<std::shared_ptr<IR::Test>> VisitorInterpreter::get_topmost_uncached_tests() {
+	std::list<std::shared_ptr<IR::Test>> root_tests;
 	for (auto& test: IR::program->all_selected_tests) {
-		if (test->is_up_to_date()) {
-			continue;
+		if (test->parents.size() == 0) {
+			root_tests.push_back(test);
 		}
-		bool are_parents_cached = true;
-		for (auto& parent: test->parents) {
-			if (!parent->is_up_to_date()) {
-				are_parents_cached = false;
-				break;
+	}
+
+	std::list<std::shared_ptr<IR::Test>> result;
+	std::set<std::shared_ptr<IR::Test>> visited_tests;
+	std::stack<std::list<std::shared_ptr<IR::Test>>> stack;
+	stack.push(std::move(root_tests));
+	while (stack.size()) {
+		if (stack.top().size() == 0) {
+			stack.pop();
+		} else {
+			std::shared_ptr<IR::Test> test = stack.top().front();
+			stack.top().pop_front();
+			if (test->all_parents_are_up_to_date()) {
+				if (test->is_up_to_date()) {
+					stack.push(test->get_children());
+				} else {
+					result.push_back(test);
+				}
 			}
-		}
-		if (are_parents_cached) {
-			result.push_back(test);
 		}
 	}
 	return result;
@@ -156,20 +169,17 @@ std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_topmost_uncached_
 
 struct DFSStackEntry {
 	DFSStackEntry(const std::shared_ptr<IR::Test>& test_, std::set<std::string>& visited_tests_)
-		: visited_tests(visited_tests_), test(test_)
+		: visited_tests(visited_tests_), test(test_), children_to_visit(test->get_children())
 	{
-		for (auto& child: test->children) {
-			children_to_visit.push_back(child.lock());
-		}
 	}
-	DFSStackEntry(const std::vector<std::shared_ptr<IR::Test>>& children_, std::set<std::string>& visited_tests_)
+	DFSStackEntry(const std::list<std::shared_ptr<IR::Test>>& children_, std::set<std::string>& visited_tests_)
 		: visited_tests(visited_tests_), children_to_visit(children_)
 	{
 	}
 
 	std::set<std::string>& visited_tests;
 	std::shared_ptr<IR::Test> test;
-	std::vector<std::shared_ptr<IR::Test>> children_to_visit;
+	std::list<std::shared_ptr<IR::Test>> children_to_visit;
 
 	bool is_leaf() const {
 		return test->children.size() == 0;
@@ -222,7 +232,7 @@ private:
 	}
 };
 
-std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_leaf_tests_in_dfs_order(const std::vector<std::shared_ptr<IR::Test>>& topmost_uncached_tests) {
+std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_leaf_tests_in_dfs_order(const std::list<std::shared_ptr<IR::Test>>& topmost_uncached_tests) {
 	std::set<std::string> visited_tests;
 	for (auto& test: IR::program->all_selected_tests) {
 		if (test->is_up_to_date()) {
@@ -254,7 +264,7 @@ std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_leaf_tests_in_dfs
 void VisitorInterpreter::build_test_plan() {
 	TRACE();
 
-	std::vector<std::shared_ptr<IR::Test>> topmost_uncached_tests = get_topmost_uncached_tests();
+	std::list<std::shared_ptr<IR::Test>> topmost_uncached_tests = get_topmost_uncached_tests();
 	for (auto& test: topmost_uncached_tests) {
 		delete_snapshot_with_children(test);
 	}
@@ -293,7 +303,9 @@ void VisitorInterpreter::visit() {
 			if (parent->exec_status != IR::TestRun::ExecStatus::Passed) {
 				skip_test = true;
 			}
-			parent->test->remove_snapshot_ref(test_run.get());
+		}
+		for (auto parent: test_run->test->parents) {
+			parent->remove_snapshot_ref(test_run.get());
 		}
 
 		for (auto dep: test_run->test->depends_on()) {
@@ -449,7 +461,7 @@ void VisitorInterpreter::create_all_controllers_snapshots(const std::shared_ptr<
 	//we need to take snapshots in the right order
 	//1) all the vms - so we could check that all the fds are unplugged
 	for (auto controller: test->get_all_machines()) {
-		if (!controller->has_snapshot(test->name())) {
+		if (!controller->has_snapshot(test->name(), test->is_hypervisor_snapshot_needed())) {
 			reporter.take_snapshot(controller, test->name());
 			controller->create_snapshot(test->name(), test->cksum, test->is_hypervisor_snapshot_needed());
 			coro::CheckPoint();
@@ -459,7 +471,7 @@ void VisitorInterpreter::create_all_controllers_snapshots(const std::shared_ptr<
 
 	//2) all the fdcs - the rest
 	for (auto controller: test->get_all_flash_drives()) {
-		if (!controller->has_snapshot(test->name())) {
+		if (!controller->has_snapshot(test->name(), test->is_hypervisor_snapshot_needed())) {
 			reporter.take_snapshot(controller, test->name());
 			controller->create_snapshot(test->name(), test->cksum, test->is_hypervisor_snapshot_needed());
 			coro::CheckPoint();
@@ -475,7 +487,6 @@ void VisitorInterpreter::visit_test(const std::shared_ptr<IR::Test>& test) {
 		reporter.prepare_environment();
 
 		restore_parents_controllers_if_needed(test);
-		delete_parents_hypervisor_snapshots_if_needed(test);
 		create_networks_if_needed(test);
 		install_new_controllers_if_needed(test);
 
@@ -488,6 +499,7 @@ void VisitorInterpreter::visit_test(const std::shared_ptr<IR::Test>& test) {
 		}
 		suspend_all_vms(test);
 
+		delete_parents_hypervisor_snapshots_if_needed(test);
 		create_all_controllers_snapshots(test);
 
 		reporter.test_passed();

@@ -283,6 +283,32 @@ bool Test::is_hypervisor_snapshot_needed() const {
 	return (snapshot_refs.size() > 0) && (snapshot_policy() == SnapshotPolicy::Auto);
 }
 
+bool Test::has_hypervisor_snapshot() const {
+	for (auto controller: get_all_controllers()) {
+		if (!controller->has_hypervisor_snapshot(name())) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Test::all_parents_are_up_to_date() const {
+	for (auto& parent: parents) {
+		if (!parent->is_up_to_date()) {
+			return false;
+		}
+	}
+	return true;
+}
+
+std::list<std::shared_ptr<Test>> Test::get_children() const {
+	std::list<std::shared_ptr<Test>> result;
+	for (auto& child: children) {
+		result.push_back(child.lock());
+	}
+	return result;
+}
+
 Test::SnapshotPolicy Test::snapshot_policy() const {
 	if (_snapshot_policy == SnapshotPolicy::Unknown) {
 		if (attrs().count("snapshots") && attrs().count("no_snapshots")) {

@@ -98,7 +98,7 @@ void Network::create() {
 }
 
 bool Network::check_config_relevance() {
-	auto old_config = nlohmann::json::parse(get_metadata("network_config"));
+	auto old_config = read_config_from_metadata(main_file());
 	auto new_config = config;
 
 	new_config.erase("src_file");
@@ -125,6 +125,10 @@ void Network::validate_config() {
 	}
 
 	env->validate_network_config(config);
+}
+
+nlohmann::json Network::read_config_from_metadata(const fs::path& metadata_file) {
+	return nlohmann::json::parse(get_metadata(metadata_file, "network_config").get<std::string>());
 }
 
 }
