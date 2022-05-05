@@ -1360,7 +1360,7 @@ void QemuVM::plug_nic(const std::string& nic) {
 				}
 
 #ifdef __aarch64__
-				string_config += "<rom bar='off'/>";
+				string_config += "<rom enabled='no'/>";
 #endif
 
 				if (nic_json.count("mac")) {
