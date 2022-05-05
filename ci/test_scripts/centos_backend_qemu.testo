@@ -93,7 +93,7 @@ test centos_backend_qemu_unplug_plug_nic: centos_install_testo {
 		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
 		wait js "return find_text().match('NIC').size() == 2"
 		mouse click "NIC".from_top(0)
-		wait "Host device ens7: macvtap"
+		wait "Host device ens8: macvtap"
 		mouse move 0 0
 		mouse click "NIC".from_top(1)
 		wait "Virtual network 'internet': NAT"
@@ -275,6 +275,7 @@ test centos_backend_qemu_pxe_boot: centos_install_testo {
 	}
 }
 
+[snapshots: "auto"]
 test centos_backend_qemu_install_ubuntu_server: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/common.testo" "/opt/scripts/common.testo"
@@ -285,6 +286,7 @@ test centos_backend_qemu_install_ubuntu_server: centos_install_testo {
 	}
 }
 
+[snapshots: "auto"]
 test centos_backend_qemu_install_guest_additions: centos_backend_qemu_install_ubuntu_server {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/backend/install_guest_additions.testo" "/opt/scripts/install_guest_additions.testo"

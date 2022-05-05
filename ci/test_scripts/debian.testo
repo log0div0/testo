@@ -136,6 +136,7 @@ test debian_prepare_2: debian_prepare_1 {
 	}
 }
 
+[snapshots: "auto"]
 test debian_install_testo: debian_prepare_2 {
 	debian {
 		copyto "${OUT_DIR}/testo.deb" "/home/${login}/testo.deb"
@@ -147,14 +148,3 @@ test debian_install_testo: debian_prepare_2 {
 		"""
 	}
 }
-
-#[no_snapshots: true]
-#test debian_test_testo_basic_checks: debian_install_testo {
-#	debian {
-#		copyto "${TEST_ASSETS_DIR}/basic_checks" "/opt/basic_checks"
-#		exec bash """
-#			cd /opt/basic_checks
-#			HYPERVISOR=qemu python3 -m pytest
-#		"""
-#	}
-#}

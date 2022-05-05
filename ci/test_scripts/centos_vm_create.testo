@@ -1,5 +1,6 @@
 include "centos.testo"
 
+[snapshots: "auto"]
 test centos_backend_qemu_create_simple_vm: centos_install_testo {
 	centos {
 		copyto "${TEST_ASSETS_DIR}/vm_creation/vm_create.testo" "/opt/scripts/vm_create.testo"
@@ -76,7 +77,11 @@ test centos_backend_qemu_create_usb2_1: centos_install_testo {
 		mouse dclick "basic_machine_usb2_1"
 		wait "Language"
 		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
-		mouse click "Controller PCI 0"; press Down
+		mouse click "Overview"
+		sleep 2s
+		press Down*50
+		sleep 2s
+		mouse click "Controller USB 0"
 		wait "USB 2"
 	}
 }
@@ -94,7 +99,11 @@ test centos_backend_qemu_create_usb2_2: centos_install_testo {
 		mouse dclick "basic_machine_usb2_2"
 		wait "Language"
 		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
-		mouse click "Controller PCI 0"; press Down
+		mouse click "Overview"
+		sleep 2s
+		press Down*50
+		sleep 2s
+		mouse click "Controller USB 0"
 		wait "USB 2"
 	}
 }
@@ -113,7 +122,11 @@ test centos_backend_qemu_create_usb3: centos_install_testo {
 		mouse dclick "basic_machine_usb3"
 		wait "Language"
 		mouse click "Virtual".from_top(1).center_bottom().move_down(20)
-		mouse click "Controller PCI 0"; press Down
+		mouse click "Overview"
+		sleep 2s
+		press Down*50
+		sleep 2s
+		mouse click "Controller USB 0"
 		wait "USB 3"
 	}
 }

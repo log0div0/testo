@@ -1,6 +1,7 @@
 
 include "debian.testo"
 
+[snapshots: "never"]
 test debian_nn_server_service_checks: debian_install_testo {
 	debian {
 		exec bash """

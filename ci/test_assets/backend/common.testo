@@ -23,7 +23,7 @@ machine my_ubuntu_server {
 	}
 
 	nic bridge: {
-		attached_to_dev: "ens7"
+		attached_to_dev: "ens8"
 		plugged: false
 	}
 

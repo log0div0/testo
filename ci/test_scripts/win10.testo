@@ -106,69 +106,10 @@ test win10_install_os_part_2: win10_install_os_part_1 {
 	}
 }
 
-[no_snapshots: true]
-test win10_activate: win10_install_os_part_2 {
+[snapshots: "auto"]
+test win10_test_ga_install: win10_install_os_part_2 {
 	win10 {
-		mouse move "Activator"
-		sleep 5s
-		mouse click
-		sleep 5s
-		mouse dclick
-		wait "Разрешить этому приложению"
-		mouse click "Да".from_bottom(0)
-		mouse click "HWID"
-		sleep 5s
-		mouse click "KMS38"
-		mouse click "Активировать Windows 10"
-		wait "Срок активации"
-		press LeftAlt+F4
-	}
-}
-
-[no_snapshots: true]
-test win10_enable_autologin: win10_activate {
-	win10 {
-		press LeftMeta+R
-		wait "Введите имя программы"
-		type "netplwiz" autoswitch LeftAlt+LeftShift; press Enter
-		mouse click "Учетные записи пользователей"
-		mouse click "Требовать ввод имени пользователя и пароля"
-		mouse click "Применить"
-		wait "Автоматический вход в систему"
-		type "1111"; press Tab
-		type "1111"; press Enter
-		wait !"Автоматический вход в систему"
-		press LeftAlt+F4
-		wait !"Учетные записи пользователей"
-		shutdown
-		start
-		wait "Корзина"
-	}
-}
-
-[no_snapshots: true]
-test win10_install_hyperv: win10_enable_autologin {
-	win10 {
-		mouse click "поиск"; sleep 2s
-		type "PowerShell" autoswitch LeftAlt+LeftShift; sleep 2s
-		mouse click "Запуск от имени администратора"
-		wait "Разрешить этому приложению"
-		mouse click "Да".from_bottom(0)
-		wait "Администратор: Windows PowerShell"
-		type "Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All"
-		press Enter
-		wait "Вы хотите перезапустить компьютер сейчас"
-		press Enter
-		wait "Работа с обновлениями"
-		wait "Корзина" timeout 10m
-	}
-}
-
-[no_snapshots: true]
-test win10_install_guest_additions: win10_install_hyperv {
-	win10 {
-		plug dvd "${ISO_DIR}/testo-guest-additions.iso"
-		sleep 5s
+		plug dvd "${OUT_DIR}/testo-guest-additions-${TESTO_HYPERVISOR}.iso"
 		mouse click "CD-дисковод"
 		sleep 5s
 		mouse click "Выполнить autorun"
@@ -190,21 +131,40 @@ test win10_install_guest_additions: win10_install_hyperv {
 }
 
 [no_snapshots: true]
-test win10_install_python: win10_install_guest_additions {
+test win10_test_ga_stop_service: win10_test_ga_install {
 	win10 {
-		exec cmd """
-			curl https://www.python.org/ftp/python/3.8.7/python-3.8.7-amd64.exe -o C:\\Users\\user\\Downloads\\python.exe
-			C:\\Users\\user\\Downloads\\python.exe /quiet InstallAllUsers=1 PrependPath=1
-		"""
-		exec cmd """
-			pip install pytest
-		"""
+		press LeftMeta+R
+		wait "Выполнить"
+		type "services.msc" autoswitch LeftAlt+LeftShift; press Enter
+		wait "Службы (локальные)"
+		mouse click "DNS-клиент"
+		press Down*20
+		mouse dclick "Testo Guest Additions"
+		wait "Свойства: Testo Guest Additions"
+		exec cmd """type "C:\\Program Files\\Testo Lang\\Testo Guest Additions\\testo-guest-additions.txt""""
+		mouse click "Остановить".from_left(1)
+		wait "Остановлена"
 	}
 }
 
-test win10_prepare: win10_install_python {
+[snapshots: "auto"]
+test win10_test_testo_install: win10_test_ga_install {
 	win10 {
-		copyto "${ISO_DIR}/ubuntu-16.04.6-server-amd64.iso" "C:\\ubuntu-16.04.6-server-amd64.iso"
-		shutdown
+		copyto "${OUT_DIR}/testo.msi" "C:\\Users\\user\\Desktop\\testo.msi"
+		mouse dclick "testo"
+		wait "Welcome to the Testo Setup"; press Enter
+		mouse click "I accept the terms";
+		mouse click "Next"
+		wait "Destination Folder"; press Enter
+		wait "Ready to install"; press Enter
+		wait "Разрешить этому приложению"
+		mouse click "Да".from_bottom(0)
+		wait "Click the Finish button"
+		sleep 2s
+		mouse click "Click the Finish button"
+		press Enter
+		wait !"Click the Finish button"
+
+		exec cmd "testo version"
 	}
 }

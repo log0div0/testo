@@ -15,7 +15,7 @@ test centos_backend_qemu_clean_nothing: centos_install_testo {
 [no_snapshots: true]
 test centos_backend_qemu_clean_entities: centos_install_testo {
 	centos {
-		exec bash "ip l s ens7 down"
+		exec bash "ip l s ens8 down"
 
 		copyto "${TEST_ASSETS_DIR}/clean/clean_preparations.testo" "/opt/scripts/clean_preparations.testo"
 		exec bash """
@@ -54,7 +54,7 @@ test centos_backend_qemu_clean_entities: centos_install_testo {
 [no_snapshots: true]
 test centos_backend_qemu_clean_entities_prefix: centos_install_testo {
 	centos {
-		exec bash "ip l s ens7 down"
+		exec bash "ip l s ens8 down"
 		copyto "${TEST_ASSETS_DIR}/clean/clean_preparations.testo" "/opt/scripts/clean_preparations.testo"
 		exec bash """
 			sudo testo run /opt/scripts/clean_preparations.testo
