@@ -1573,11 +1573,8 @@ bool QemuVM::is_target_free(const std::string& target) {
 		auto config = domain.dump_xml();
 		auto devices = config.first_child().child("devices");
 
-		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk")) {
-			if (std::string(disk.attribute("device").value()) != "disk") {
-				continue;
-			}
-
+		for (auto disk = devices.child("disk"); disk; disk = disk.next_sibling("disk"))
+		{
 			if (std::string(disk.child("target").attribute("dev").value()) == target) {
 				return false;
 			}
@@ -1593,19 +1590,10 @@ void QemuVM::attach_flash_drive(const std::string& img_path) {
 	try {
 		auto domain = qemu_connect.domain_lookup_by_name(id());
 
-		const std::vector<std::string> targets = {
-			"sda",
-			"sdb",
-			"sdc",
-			"sdd",
-			"sde",
-			"sdf",
-		};
-
 		int free_target_index = -1;
 
-		for (size_t i = 0; i < targets.size(); i++) {
-			if (is_target_free(targets[i])) {
+		for (size_t i = 0; i < 20; i++) {
+			if (is_target_free(get_scsi_disk_target(i))) {
 				free_target_index = i;
 				break;
 			}
@@ -1621,7 +1609,7 @@ void QemuVM::attach_flash_drive(const std::string& img_path) {
 				<source file='{}'/>
 				<target dev='{}' bus='usb' removable='on'/>
 			</disk>
-			)", img_path, targets[free_target_index]);
+			)", img_path, get_scsi_disk_target(free_target_index));
 
 		//we just need to create new device
 		//TODO: check if CURRENT is enough
