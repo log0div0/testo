@@ -77,6 +77,7 @@ void ReportWriterNative::launch_begin(const std::vector<std::shared_ptr<IR::Test
 	current_launch_meta["executed_tests"] = nlohmann::json::array();
 	current_launch_meta["up_to_date_tests"] = nlohmann::json::array();
 	current_launch_meta["skipped_tests"] = nlohmann::json::array();
+	current_launch_meta["num_of_tests_runs"] = tests_runs.size();
 
 	for (auto test: tests) {
 		if (test->is_up_to_date()) {
