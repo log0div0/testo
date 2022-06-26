@@ -41,7 +41,7 @@ enum class mode {
 	version
 };
 
-void init_logs() {
+void init_logs(const std::string& log_level_str) {
 #ifdef __linux__
 	std::string log_file_path = "/var/log/testo.log";
 #else
@@ -50,11 +50,20 @@ void init_logs() {
 	std::string log_file_path = logs_path.generic_string();
 #endif
 
+	spdlog::level::level_enum log_level;
+	if (log_level_str == "info") {
+		log_level = spdlog::level::info;
+	} else if (log_level_str == "trace") {
+		log_level = spdlog::level::trace;
+	} else {
+		throw std::runtime_error("Unsupported log level: " + log_level_str);
+	}
+
 	auto max_size = 1048576 * 10;
     auto max_files = 3;
 	auto logger = spdlog::rotating_logger_mt("basic_logger", log_file_path, max_size, max_files);
-	logger->set_level(spdlog::level::info);
-	logger->flush_on(spdlog::level::info);
+	logger->set_level(log_level);
+	logger->flush_on(log_level);
 	spdlog::set_default_logger(logger);
 	spdlog::info("logger is initialized");
 }
@@ -106,6 +115,8 @@ int do_main(int argc, char** argv) {
 	std::string hypervisor = "vsphere";
 #endif
 
+	std::string log_level = "trace";
+
 	mode selected_mode;
 	std::vector<std::string> wrong;
 
@@ -148,6 +159,7 @@ int do_main(int argc, char** argv) {
 		(option("--html").set(run_args.html)) % "Format stdout as html",
 		(option("--nn_server") & value("ip:port", run_args.nn_server_endpoint)) % "ip:port of the nn_server (defualt is 127.0.0.1:8156)",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
+		(option("--log_level") & value("log level", log_level)) % "Log level (info, trace)",
 		(option("--dry").set(run_args.dry)) % "Do only semantic checks, do not actually run any tests",
 		any_other(wrong)
 	);
@@ -159,6 +171,7 @@ int do_main(int argc, char** argv) {
 		(option("--prefix") & value("prefix", clean_args.prefix)) % "Add a prefix to all entities, thus forming a namespace",
 		(option("--assume_yes").set(clean_args.assume_yes)) % "Quietly agree to erase all the virtual entities",
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
+		(option("--log_level") & value("log level", log_level)) % "Log level (info, trace)",
 		any_other(wrong)
 	);
 
@@ -198,7 +211,7 @@ int do_main(int argc, char** argv) {
 		return 0;
 	}
 
-	init_logs();
+	init_logs(log_level);
 	TRACE();
 	check_privileges();
 	init_env(hypervisor);

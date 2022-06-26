@@ -7,12 +7,10 @@
 #include "../Logger.hpp"
 
 Lexer::Lexer(const fs::path& file, const std::string& input): input(new std::string(input)) {
-	TRACE();
 	current_pos = Pos(file, this->input);
 }
 
 Lexer::~Lexer() {
-	TRACE();
 }
 
 void Lexer::advance(size_t shift) {

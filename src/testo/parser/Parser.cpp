@@ -62,22 +62,17 @@ Parser Parser::load(const fs::path& path) {
 
 Parser::Parser(const fs::path& file, const std::string& input, bool allow_unparsed_nodes_): allow_unparsed_nodes(allow_unparsed_nodes_)
 {
-	TRACE();
-
 	Ctx ctx(file, input);
 	lexers.push_back(ctx);
 }
 
 Parser::Parser(const std::vector<Token>& tokens, bool allow_unparsed_nodes_): allow_unparsed_nodes(allow_unparsed_nodes_)
 {
-	TRACE();
-
 	Ctx ctx(tokens);
 	lexers.push_back(ctx);
 }
 
 Parser::~Parser() {
-	TRACE();
 }
 
 Token Parser::eat(Token::category type) {

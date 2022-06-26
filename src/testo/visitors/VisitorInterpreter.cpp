@@ -138,6 +138,8 @@ std::shared_ptr<IR::TestRun> VisitorInterpreter::add_test_to_plan(const std::sha
 }
 
 std::list<std::shared_ptr<IR::Test>> VisitorInterpreter::get_topmost_uncached_tests() {
+	TRACE();
+
 	std::list<std::shared_ptr<IR::Test>> root_tests;
 	for (auto& test: IR::program->all_selected_tests) {
 		if (test->parents.size() == 0) {
@@ -233,6 +235,8 @@ private:
 };
 
 std::vector<std::shared_ptr<IR::Test>> VisitorInterpreter::get_leaf_tests_in_dfs_order(const std::list<std::shared_ptr<IR::Test>>& topmost_uncached_tests) {
+	TRACE();
+
 	std::set<std::string> visited_tests;
 	for (auto& test: IR::program->all_selected_tests) {
 		if (test->is_up_to_date()) {
@@ -365,6 +369,7 @@ void VisitorInterpreter::visit() {
 }
 
 void VisitorInterpreter::delete_parents_hypervisor_snapshots_if_needed(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
 	for (auto parent: test->parents) {
 		if (parent->can_delete_hypervisor_snaphots()) {
 			for (auto controller: parent->get_all_controllers()) {
@@ -379,6 +384,7 @@ void VisitorInterpreter::delete_parents_hypervisor_snapshots_if_needed(const std
 }
 
 void VisitorInterpreter::restore_parents_controllers_if_needed(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
 	for (auto parent: test->parents) {
 		for (auto controller: parent->get_all_controllers()) {
 			if (controller->current_state != parent->name()) {
@@ -391,6 +397,7 @@ void VisitorInterpreter::restore_parents_controllers_if_needed(const std::shared
 }
 
 void VisitorInterpreter::create_networks_if_needed(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
 	for (auto netc: test->get_all_networks()) {
 		if (netc->is_defined() &&
 			netc->check_config_relevance())
@@ -402,6 +409,7 @@ void VisitorInterpreter::create_networks_if_needed(const std::shared_ptr<IR::Tes
 }
 
 void VisitorInterpreter::install_new_controllers_if_needed(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
 	for (auto controller: test->get_all_controllers()) {
 		//check if it's a new one
 		auto is_new = true;
@@ -440,6 +448,7 @@ void VisitorInterpreter::install_new_controllers_if_needed(const std::shared_ptr
 }
 
 void VisitorInterpreter::resume_parents_vms(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
 	for (auto parent: test->parents) {
 		for (auto vmc: parent->get_all_machines()) {
 			if (vmc->vm()->state() == VmState::Suspended) {
@@ -450,6 +459,7 @@ void VisitorInterpreter::resume_parents_vms(const std::shared_ptr<IR::Test>& tes
 }
 
 void VisitorInterpreter::suspend_all_vms(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
 	for (auto vmc: test->get_all_machines()) {
 		if (vmc->vm()->state() == VmState::Running) {
 			vmc->vm()->suspend();
@@ -458,6 +468,7 @@ void VisitorInterpreter::suspend_all_vms(const std::shared_ptr<IR::Test>& test) 
 }
 
 void VisitorInterpreter::create_all_controllers_snapshots(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
 	//we need to take snapshots in the right order
 	//1) all the vms - so we could check that all the fds are unplugged
 	for (auto controller: test->get_all_machines()) {
@@ -481,6 +492,8 @@ void VisitorInterpreter::create_all_controllers_snapshots(const std::shared_ptr<
 }
 
 void VisitorInterpreter::visit_test(const std::shared_ptr<IR::Test>& test) {
+	TRACE();
+
 	try {
 		current_test = nullptr;
 

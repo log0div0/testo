@@ -4,6 +4,7 @@
 #include "../Exceptions.hpp"
 #include "../IR/Program.hpp"
 #include <coro/Finally.h>
+#include "../Logger.hpp"
 
 extern std::atomic<bool> REPL_mode_is_active;
 
@@ -14,6 +15,7 @@ void VisitorInterpreterAction::visit_action_block(std::shared_ptr<AST::Block<AST
 }
 
 void VisitorInterpreterAction::visit_print(const IR::Print& print) {
+	TRACE();
 	try {
 		reporter.print(current_controller, print);
 	} catch (const std::exception& error) {
@@ -43,6 +45,7 @@ static inline void trim(std::string &s) {
 
 
 void VisitorInterpreterAction::visit_repl(const IR::REPL& repl) {
+	TRACE();
 	try {
 		reporter.repl_begin(current_controller, repl);
 		REPL_mode_is_active = true;
@@ -86,30 +89,36 @@ void VisitorInterpreterAction::visit_repl(const IR::REPL& repl) {
 }
 
 void VisitorInterpreterAction::visit_abort(const IR::Abort& abort) {
+	TRACE();
 	reporter.abort(current_controller, abort);
 	throw AbortException(abort.ast_node, current_controller, abort.message());
 }
 
 void VisitorInterpreterAction::visit_bug(const IR::Bug& bug) {
+	TRACE();
 	reporter.bug(current_controller, bug);
 }
 
 void VisitorInterpreterAction::visit_sleep(const IR::Sleep& sleep) {
+	TRACE();
 	reporter.sleep(current_controller, sleep);
 	coro::Timer timer;
 	timer.waitFor(sleep.timeout().value());
 }
 
 void VisitorInterpreterAction::visit_macro_call(const IR::MacroCall& macro_call) {
+	TRACE();
 	reporter.macro_action_call(current_controller, macro_call);
 	macro_call.visit_interpreter<AST::Action>(this);
 }
 
 void VisitorInterpreterAction::visit_macro_body(const std::shared_ptr<AST::Block<AST::Action>>& macro_body) {
+	TRACE();
 	visit_action_block(macro_body);
 }
 
 void VisitorInterpreterAction::visit_if_clause(std::shared_ptr<AST::IfClause> if_clause) {
+	TRACE();
 	bool expr_result;
 	try {
 		expr_result = visit_expr(if_clause->expr);
@@ -125,6 +134,8 @@ void VisitorInterpreterAction::visit_if_clause(std::shared_ptr<AST::IfClause> if
 }
 
 void VisitorInterpreterAction::visit_for_clause(std::shared_ptr<AST::ForClause> for_clause) {
+	TRACE();
+
 	uint32_t i = 0;
 
 	std::vector<std::string> values;

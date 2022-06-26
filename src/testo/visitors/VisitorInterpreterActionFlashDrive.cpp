@@ -3,6 +3,7 @@
 #include <coro/Timeout.h>
 #include "VisitorInterpreterActionFlashDrive.hpp"
 #include "../Exceptions.hpp"
+#include "../Logger.hpp"
 #include <fmt/format.h>
 
 void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::Action> action) {
@@ -40,6 +41,7 @@ void VisitorInterpreterActionFlashDrive::visit_action(std::shared_ptr<AST::Actio
 }
 
 void VisitorInterpreterActionFlashDrive::visit_copy(const IR::Copy& copy) {
+	TRACE();
 	try {
 		reporter.copy(current_controller, copy);
 

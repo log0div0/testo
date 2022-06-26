@@ -4,6 +4,7 @@
 #include "VisitorInterpreterActionMachine.hpp"
 #include "../NNClient.hpp"
 #include "../Exceptions.hpp"
+#include "../Logger.hpp"
 #include "../backends/Environment.hpp"
 #include "../IR/Program.hpp"
 #include <fmt/format.h>
@@ -169,6 +170,7 @@ void VisitorInterpreterActionMachine::visit_action(std::shared_ptr<AST::Action> 
 }
 
 void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
+	TRACE();
 	try {
 		reporter.copy(current_controller, copy);
 
@@ -199,6 +201,7 @@ void VisitorInterpreterActionMachine::visit_copy(const IR::Copy& copy) {
 }
 
 void VisitorInterpreterActionMachine::visit_screenshot(const IR::Screenshot& screenshot) {
+	TRACE();
 	try {
 		fs::path destination = screenshot.destination();
 		reporter.screenshot(vmc, screenshot);
@@ -222,6 +225,7 @@ void VisitorInterpreterActionMachine::visit_screenshot(const IR::Screenshot& scr
 }
 
 bool VisitorInterpreterActionMachine::visit_check(const IR::Check& check) {
+	TRACE();
 	try {
 		reporter.check(vmc, check);
 
@@ -298,6 +302,7 @@ struct LayoutSwitchCounter {
 };
 
 void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
+	TRACE();
 	try {
 		type.validate();
 
@@ -341,6 +346,7 @@ void VisitorInterpreterActionMachine::visit_type(const IR::Type& type) {
 }
 
 void VisitorInterpreterActionMachine::visit_wait(const IR::Wait& wait) {
+	TRACE();
 	try {
 		reporter.wait(vmc, wait);
 
@@ -527,6 +533,7 @@ bool VisitorInterpreterActionMachine::visit_detect_binop(std::shared_ptr<AST::Se
 }
 
 void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
+	TRACE();
 	try {
 		IR::TimeInterval interval = press.interval();
 
@@ -547,6 +554,7 @@ void VisitorInterpreterActionMachine::visit_press(const IR::Press& press) {
 }
 
 void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
+	TRACE();
 	try {
 		auto buttons = hold.combination().buttons();
 
@@ -560,6 +568,7 @@ void VisitorInterpreterActionMachine::visit_hold(const IR::Hold& hold) {
 }
 
 void VisitorInterpreterActionMachine::visit_release(const IR::Release& release) {
+	TRACE();
 	try {
 		auto buttons = release.combination().buttons();
 
@@ -647,6 +656,7 @@ void VisitorInterpreterActionMachine::visit_mouse(const IR::Mouse& mouse) {
 }
 
 void VisitorInterpreterActionMachine::visit_mouse_move_click(const IR::MouseMoveClick& mouse_move_click) {
+	TRACE();
 	try {
 		reporter.mouse_move_click(vmc, mouse_move_click);
 
@@ -702,6 +712,7 @@ void VisitorInterpreterActionMachine::visit_mouse_move_coordinates(const IR::Mou
 }
 
 void VisitorInterpreterActionMachine::visit_mouse_hold(const IR::MouseHold& mouse_hold) {
+	TRACE();
 	try {
 		reporter.mouse_hold(vmc, mouse_hold);
 		vmc->mouse_hold(mouse_hold.button());
@@ -711,6 +722,7 @@ void VisitorInterpreterActionMachine::visit_mouse_hold(const IR::MouseHold& mous
 }
 
 void VisitorInterpreterActionMachine::visit_mouse_release(const IR::MouseRelease& mouse_release) {
+	TRACE();
 	try {
 		reporter.mouse_release(vmc);
 		vmc->mouse_release();
@@ -720,6 +732,7 @@ void VisitorInterpreterActionMachine::visit_mouse_release(const IR::MouseRelease
 }
 
 void VisitorInterpreterActionMachine::visit_mouse_wheel(const IR::MouseWheel& mouse_wheel) {
+	TRACE();
 	try {
 		reporter.mouse_wheel(vmc, mouse_wheel);
 
@@ -776,6 +789,8 @@ void VisitorInterpreterActionMachine::visit_plug(const IR::Plug& plug) {
 }
 
 void VisitorInterpreterActionMachine::visit_plug_nic(const IR::PlugNIC& plug_nic, bool is_on) {
+	TRACE();
+
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 	auto nic = plug_nic.name();
@@ -807,6 +822,8 @@ void VisitorInterpreterActionMachine::visit_plug_nic(const IR::PlugNIC& plug_nic
 }
 
 void VisitorInterpreterActionMachine::visit_plug_link(const IR::PlugLink& plug_link, bool is_on) {
+	TRACE();
+
 	//we have to do it only while interpreting because we can't be sure we know
 	//the vmc while semantic analisys
 
@@ -839,6 +856,8 @@ void VisitorInterpreterActionMachine::visit_plug_link(const IR::PlugLink& plug_l
 }
 
 void VisitorInterpreterActionMachine::visit_plug_dvd(const IR::PlugDVD& plug_dvd) {
+	TRACE();
+
 	auto path = plug_dvd.path();
 	reporter.plug(vmc, "dvd", path.generic_string(), true);
 
@@ -850,6 +869,8 @@ void VisitorInterpreterActionMachine::visit_plug_dvd(const IR::PlugDVD& plug_dvd
 }
 
 void VisitorInterpreterActionMachine::visit_unplug_dvd(const IR::PlugDVD& plug_dvd) {
+	TRACE();
+
 	reporter.plug(vmc, "dvd", "", false);
 
 	if (!vmc->vm()->is_dvd_plugged()) {
@@ -872,6 +893,8 @@ void VisitorInterpreterActionMachine::visit_unplug_dvd(const IR::PlugDVD& plug_d
 }
 
 void VisitorInterpreterActionMachine::visit_plug_flash(const IR::PlugFlash& plug_flash) {
+	TRACE();
+
 	auto fdc = IR::program->get_flash_drive_or_throw(plug_flash.name());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), true);
@@ -891,6 +914,8 @@ void VisitorInterpreterActionMachine::visit_plug_flash(const IR::PlugFlash& plug
 }
 
 void VisitorInterpreterActionMachine::visit_unplug_flash(const IR::PlugFlash& plug_flash) {
+	TRACE();
+
 	auto fdc = IR::program->get_flash_drive_or_throw(plug_flash.name());
 
 	reporter.plug(vmc, "flash drive", fdc->name(), false);
@@ -902,16 +927,22 @@ void VisitorInterpreterActionMachine::visit_unplug_flash(const IR::PlugFlash& pl
 }
 
 void VisitorInterpreterActionMachine::visit_plug_hostdev(const IR::PlugHostDev& plug_hostdev) {
+	TRACE();
+
 	reporter.plug(vmc, "hostdev usb", plug_hostdev.addr(), true);
 	vmc->vm()->plug_hostdev_usb(plug_hostdev.addr());
 }
 
 void VisitorInterpreterActionMachine::visit_unplug_hostdev(const IR::PlugHostDev& plug_hostdev) {
+	TRACE();
+
 	reporter.plug(vmc, "hostdev usb", plug_hostdev.addr(), false);
 	vmc->vm()->unplug_hostdev_usb(plug_hostdev.addr());
 }
 
 void VisitorInterpreterActionMachine::visit_start(const IR::Start& start) {
+	TRACE();
+
 	try {
 		reporter.start(vmc);
 		vmc->vm()->start();
@@ -929,6 +960,8 @@ void VisitorInterpreterActionMachine::visit_start(const IR::Start& start) {
 }
 
 void VisitorInterpreterActionMachine::visit_stop(const IR::Stop& stop) {
+	TRACE();
+
 	try {
 		reporter.stop(vmc);
 		vmc->vm()->stop();
@@ -938,6 +971,8 @@ void VisitorInterpreterActionMachine::visit_stop(const IR::Stop& stop) {
 }
 
 void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdown) {
+	TRACE();
+
 	try {
 		reporter.shutdown(vmc, shutdown);
 		vmc->vm()->power_button();
@@ -955,6 +990,8 @@ void VisitorInterpreterActionMachine::visit_shutdown(const IR::Shutdown& shutdow
 }
 
 void VisitorInterpreterActionMachine::visit_exec(const IR::Exec& exec) {
+	TRACE();
+
 	try {
 		reporter.exec(vmc, exec);
 

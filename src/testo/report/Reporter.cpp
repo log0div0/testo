@@ -687,8 +687,6 @@ float Reporter::current_progress() const {
 }
 
 std::map<std::string, size_t> Reporter::get_stats(IR::TestRun::ExecStatus status) const {
-	TRACE();
-
 	std::map<std::string, size_t> result;
 	for (auto& test_run: tests_runs) {
 		if (test_run->exec_status == status) {
