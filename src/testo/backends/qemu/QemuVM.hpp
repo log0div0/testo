@@ -44,7 +44,7 @@ struct QemuVM: public VM {
 
 	bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) override;
 	bool has_snapshot(const std::string& snapshot) override;
-	void delete_snapshot(const std::string& snapshot) override;
+	void delete_snapshot(const std::string& snapshot, bool snapshot_has_children) override;
 	bool is_defined() const override;
 	VmState state() const override;
 

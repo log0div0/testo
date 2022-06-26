@@ -235,7 +235,7 @@ bool HyperVVM::has_snapshot(const std::string& snapshot_name) {
 	}
 }
 
-void HyperVVM::delete_snapshot(const std::string& snapshot_name) {
+void HyperVVM::delete_snapshot(const std::string& snapshot_name, bool snapshot_has_children) {
 	try {
 		connect.machine(id()).snapshot(snapshot_name).destroy();
 	} catch (const std::exception& error) {

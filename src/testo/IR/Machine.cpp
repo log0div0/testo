@@ -232,7 +232,7 @@ bool Machine::has_hypervisor_snapshot(const std::string& snapshot) {
 	return vm()->has_snapshot(snapshot);
 }
 void Machine::delete_hypervisor_snapshot(const std::string& snapshot) {
-	vm()->delete_snapshot(snapshot);
+	vm()->delete_snapshot(snapshot, true);
 }
 
 void Machine::delete_snapshot_with_children(const std::string& snapshot)
@@ -253,7 +253,7 @@ void Machine::delete_snapshot_with_children(const std::string& snapshot)
 		//Delete the hypervisor child if we have one
 
 		if (vm()->has_snapshot(snapshot)) {
-			vm()->delete_snapshot(snapshot);
+			vm()->delete_snapshot(snapshot, false);
 		}
 
 		//Ok, now we need to get our parent

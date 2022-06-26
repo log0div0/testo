@@ -52,7 +52,7 @@ struct VM {
 
 	virtual bool is_flash_plugged(std::shared_ptr<FlashDrive> fd) = 0;
 	virtual bool has_snapshot(const std::string& snapshot) = 0;
-	virtual void delete_snapshot(const std::string& snapshot) = 0;
+	virtual void delete_snapshot(const std::string& snapshot, bool snapshot_has_children) = 0;
 	virtual bool is_defined() const = 0;
 	virtual VmState state() const = 0;
 

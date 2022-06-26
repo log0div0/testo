@@ -1967,9 +1967,17 @@ bool QemuVM::has_snapshot(const std::string& snapshot) {
 	}
 }
 
-void QemuVM::delete_snapshot(const std::string& snapshot) {
+void QemuVM::delete_snapshot(const std::string& snapshot, bool snapshot_has_children) {
 	try {
-		if (use_external_snapshots()) {
+		if (use_external_snapshots())
+		{
+			if (snapshot_has_children) {
+				// if we merge this snaphot into children the disk space consumption will encrease
+				// so we do not want to delete the shapshot here
+				// in the end the snapshot will be deleted by remove_disks() method
+				return;
+			}
+
 			if (fs::exists(nvram_snapshot_path(snapshot))) {
 				fs::remove(nvram_snapshot_path(snapshot));
 			}
