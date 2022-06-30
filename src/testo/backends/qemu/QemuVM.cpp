@@ -955,6 +955,14 @@ nlohmann::json QemuVM::make_snapshot(const std::string& snapshot) {
 				domain = qemu_connect.domain_lookup_by_name(id());
 			}
 		} else {
+			auto snapshots = domain.snapshots();
+			for (auto& snap: snapshots) {
+				if (snap.name() == snapshot) {
+					snap.destroy({VIR_DOMAIN_SNAPSHOT_DELETE_CHILDREN});
+					break;
+				}
+			}
+
 			pugi::xml_document xml_config;
 			xml_config.load_string(fmt::format(R"(
 				<domainsnapshot>
@@ -2003,7 +2011,7 @@ void QemuVM::delete_snapshot(const std::string& snapshot, bool snapshot_has_chil
 			vir_snapshot.destroy();
 		}
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Deleting snapshot with children"));
+		std::throw_with_nested(std::runtime_error("Deleting snapshot " + snapshot + " with children"));
 	}
 }
 

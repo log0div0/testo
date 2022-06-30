@@ -23,11 +23,18 @@ std::string Controller::note_was_declared_here() const {
 bool Controller::has_snapshot(const std::string& snapshot, bool hypervisor_snapshot_needed) {
 	fs::path metadata_file = get_metadata_dir();
 	metadata_file /= id() + "_" + snapshot;
-	bool has_metadata_snapshot = fs::exists(metadata_file);
+	if (!fs::exists(metadata_file)) {
+		return false;
+	}
+	try {
+		read_metadata_file(metadata_file);
+	} catch (const std::exception&) {
+		return false;
+	}
 	if (hypervisor_snapshot_needed) {
-		return has_metadata_snapshot && has_hypervisor_snapshot(snapshot);
+		return has_hypervisor_snapshot(snapshot);
 	} else {
-		return has_metadata_snapshot;
+		return true;
 	}
 }
 
@@ -116,9 +123,13 @@ nlohmann::json Controller::read_metadata_file(const fs::path& file) {
 		throw std::runtime_error("Can't read metadata file " + file.generic_string());
 	}
 
-	nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
-	metadata_file_stream.close();
-	return result;
+	try {
+		nlohmann::json result = nlohmann::json::parse(metadata_file_stream);
+		metadata_file_stream.close();
+		return result;
+	} catch (const std::exception& error) {
+		std::throw_with_nested(std::runtime_error("Failed to parse file " + file.generic_string()));
+	}
 }
 
 

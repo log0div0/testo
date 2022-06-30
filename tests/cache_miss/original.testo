@@ -1,28 +1,24 @@
 
 include "../common/definitions.testo"
 
-[no_snapshots: true]
 test test_parent {
 	my_ubuntu_server {
 		print "Hello parent"
 	}
 }
 
-[no_snapshots: true]
 test test_child1: test_parent {
 	my_ubuntu_server {
 		print "Hello child1"
 	}
 }
 
-[no_snapshots: true]
 test test_child2: test_parent {
 	my_ubuntu_server {
 		print "Hello child1"
 	}
 }
 
-[no_snapshots: true]
 test test_child3: test_child1 {
 	my_ubuntu_server {
 		print "Hello child3"

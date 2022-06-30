@@ -263,17 +263,20 @@ void Machine::delete_snapshot_with_children(const std::string& snapshot)
 		if (parent.length()) {
 			fs::path parent_metadata_file = get_metadata_dir();
 			parent_metadata_file /= vm()->id() + "_" + parent;
+			try {
+				auto parent_metadata = read_metadata_file(parent_metadata_file);
+				auto& children = parent_metadata.at("children");
 
-			auto parent_metadata = read_metadata_file(parent_metadata_file);
-			auto& children = parent_metadata.at("children");
-
-			for (auto it = children.begin(); it != children.end(); ++it) {
-				if (it.value() == snapshot) {
-					children.erase(it);
-					break;
+				for (auto it = children.begin(); it != children.end(); ++it) {
+					if (it.value() == snapshot) {
+						children.erase(it);
+						break;
+					}
 				}
+				write_metadata_file(parent_metadata_file, parent_metadata);
+			} catch (const std::exception& error) {
+				std::cerr << "WARNING: something wrong with file " << parent_metadata_file.generic_string() << std::endl;
 			}
-			write_metadata_file(parent_metadata_file, parent_metadata);
 		}
 
 		//Now we can delete the metadata file
@@ -282,7 +285,7 @@ void Machine::delete_snapshot_with_children(const std::string& snapshot)
 		}
 
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("deleting snapshot"));
+		std::throw_with_nested(std::runtime_error("deleting snapshot " + snapshot));
 	}
 }
 

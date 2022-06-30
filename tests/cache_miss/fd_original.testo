@@ -1,26 +1,29 @@
 
-include "../common/definitions.testo"
+flash foo {
+	size: 2Mb
+	fs: "fat"
+}
 
 test test_parent {
-	my_ubuntu_server {
-		print "Hello parent modified"
+	foo {
+		print "Hello parent"
 	}
 }
 
 test test_child1: test_parent {
-	my_ubuntu_server {
+	foo {
 		print "Hello child1"
 	}
 }
 
 test test_child2: test_parent {
-	my_ubuntu_server {
+	foo {
 		print "Hello child1"
 	}
 }
 
 test test_child3: test_child1 {
-	my_ubuntu_server {
+	foo {
 		print "Hello child3"
 	}
 }

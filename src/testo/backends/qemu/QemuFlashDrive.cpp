@@ -163,7 +163,7 @@ bool QemuFlashDrive::has_snapshot(const std::string& snapshot) {
 		}
 		return false;
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive umount from host"));
+		std::throw_with_nested(std::runtime_error("Flash drive check if snapshot " + snapshot + " exists"));
 	}
 }
 
@@ -171,7 +171,7 @@ void QemuFlashDrive::make_snapshot(const std::string& snapshot) {
 	try {
 		os::Process::exec("qemu-img snapshot -c " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive making snapshot"));
+		std::throw_with_nested(std::runtime_error("Flash drive making snapshot" + snapshot));
 	}
 }
 
@@ -179,7 +179,7 @@ void QemuFlashDrive::delete_snapshot(const std::string& snapshot) {
 	try {
 		os::Process::exec("qemu-img snapshot -d " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive deleting snapshot"));
+		std::throw_with_nested(std::runtime_error("Flash drive deleting snapshot" + snapshot));
 	}
 }
 
@@ -187,7 +187,7 @@ void QemuFlashDrive::rollback(const std::string& snapshot) {
 	try {
 		os::Process::exec("qemu-img snapshot -a " + snapshot + " " + img_path().generic_string());
 	} catch (const std::exception& error) {
-		std::throw_with_nested(std::runtime_error("Flash drive rolling back"));
+		std::throw_with_nested(std::runtime_error("Flash drive rolling back" + snapshot));
 	}
 }
 
