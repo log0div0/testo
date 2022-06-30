@@ -325,6 +325,7 @@ void VisitorSemantic::visit_print(const IR::Print& print) {
 }
 
 void VisitorSemantic::visit_repl(const IR::REPL& repl) {
+	current_test->has_repls = true;
 	current_test->cksum_input << "repl \"" << rand() << "\"" << std::endl;
 }
 

@@ -7,6 +7,13 @@ def test_simple_test_spec():
 	assert "test2\n" not in out
 	assert "test3\n" not in out
 
+def test_skip_tests_with_repl():
+	out, err = must_succeed('testo run test_spec_exclude/skip_tests_with_repl.testo --skip_tests_with_repl --invalidate \\*')
+	assert "Skipping test test_A" in out
+	assert "Skipping test test_B" in out
+	assert "Running test test_C" in out
+	assert "Skipping test test_D" in out
+
 def test_wildcard_test_spec():
 	out, err = must_succeed('testo run test_spec_exclude/test_spec_exclude.testo --test_spec *test1*')
 	assert "test121\n" in out

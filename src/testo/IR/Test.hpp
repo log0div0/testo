@@ -72,6 +72,8 @@ struct Test: Object<AST::Test> {
 	std::set<std::shared_ptr<Network>> mentioned_networks;
 	std::set<std::shared_ptr<FlashDrive>> mentioned_flash_drives;
 
+	bool has_repls = false;
+
 private:
 	std::set<const TestRun*> snapshot_refs;
 	mutable CacheStatus _cache_status = CacheStatus::Unknown;

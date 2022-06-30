@@ -133,16 +133,20 @@ void Reporter::skip_test() {
 	report_prefix(red, true);
 	report(fmt::format("Skipping test "), red, true);
 	report(current_test_run->test->name(), yellow, true);
-	if (names.size() > 1) {
-		report(" because his " + plural + " ", red, true);
+	if (names.size() == 0 && current_test_run->test->has_repls) {
+		report(" because it has a REPL action\n", red, true);
 	} else {
-		report(" because his " + singular + " ", red, true);
-	}
-	report(join(names, ", "), yellow, true);
-	if (names.size() > 1) {
-		report(" are failed or skipped\n", red, true);
-	} else {
-		report(" is failed or skipped\n", red, true);
+		if (names.size() > 1) {
+			report(" because his " + plural + " ", red, true);
+		} else {
+			report(" because his " + singular + " ", red, true);
+		}
+		report(join(names, ", "), yellow, true);
+		if (names.size() > 1) {
+			report(" are failed or skipped\n", red, true);
+		} else {
+			report(" is failed or skipped\n", red, true);
+		}
 	}
 
 	report_writer->test_skip_end(current_test_run);

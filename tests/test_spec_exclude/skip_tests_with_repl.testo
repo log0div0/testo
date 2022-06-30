@@ -1,0 +1,27 @@
+
+flash foo {
+	size: 2Mb
+	fs: "fat"
+}
+
+test test_A {
+	foo {
+		repl
+	}
+}
+
+test test_B: test_A {
+
+}
+
+test test_C {
+	foo {
+		print "hello"
+	}
+}
+
+test test_D: test_C {
+	foo {
+		repl
+	}
+}

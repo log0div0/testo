@@ -67,6 +67,7 @@ void VisitorInterpreterConfig::dump(nlohmann::json& j) const {
 	j["invalidate"] = invalidate;
 	j["dry"] = dry;
 	j["ignore_repl"] = ignore_repl;
+	j["skip_tests_with_repl"] = skip_tests_with_repl;
 }
 
 bool TestNameFilter::validate_test_name(const std::string& name) const {

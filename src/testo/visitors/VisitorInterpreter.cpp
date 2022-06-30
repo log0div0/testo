@@ -19,6 +19,7 @@ VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config): 
 	invalidate = config.invalidate;
 	dry = config.dry;
 	ignore_repl = config.ignore_repl;
+	skip_tests_with_repl = config.skip_tests_with_repl;
 }
 
 VisitorInterpreter::~VisitorInterpreter() {
@@ -303,6 +304,10 @@ void VisitorInterpreter::visit() {
 
 		//Check if one of the parents failed. If it did, just fail
 		bool skip_test = false;
+
+		if (test_run->test->has_repls && skip_tests_with_repl) {
+			skip_test = true;
+		}
 
 		for (auto parent: test_run->parents) {
 			if (parent->exec_status != IR::TestRun::ExecStatus::Passed) {
