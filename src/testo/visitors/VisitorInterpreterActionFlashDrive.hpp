@@ -4,8 +4,14 @@
 #include "VisitorInterpreterAction.hpp"
 
 struct VisitorInterpreterActionFlashDrive: public VisitorInterpreterAction {
-	VisitorInterpreterActionFlashDrive(std::shared_ptr<IR::FlashDrive> fdc, std::shared_ptr<StackNode> stack, Reporter& reporter,  std::shared_ptr<IR::Test> current_test):
-		VisitorInterpreterAction(fdc, stack, reporter), fdc(fdc), current_test(current_test) {}
+	VisitorInterpreterActionFlashDrive(
+		std::shared_ptr<IR::FlashDrive> fdc,
+		std::shared_ptr<StackNode> stack,
+		Reporter& reporter,
+		std::shared_ptr<IR::Test> current_test,
+		bool ignore_repl
+	):
+		VisitorInterpreterAction(fdc, stack, reporter, ignore_repl), fdc(fdc), current_test(current_test) {}
 
 	~VisitorInterpreterActionFlashDrive() {}
 

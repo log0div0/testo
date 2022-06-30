@@ -18,6 +18,7 @@ VisitorInterpreter::VisitorInterpreter(const VisitorInterpreterConfig& config): 
 	assume_yes = config.assume_yes;
 	invalidate = config.invalidate;
 	dry = config.dry;
+	ignore_repl = config.ignore_repl;
 }
 
 VisitorInterpreter::~VisitorInterpreter() {
@@ -554,11 +555,11 @@ void VisitorInterpreter::visit_command(const std::shared_ptr<AST::Cmd>& cmd) {
 void VisitorInterpreter::visit_regular_command(const IR::RegularCommand& regular_command) {
 	if (auto current_controller = IR::program->get_machine_or_null(regular_command.entity())) {
 		this->current_controller = current_controller;
-		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+		VisitorInterpreterActionMachine(current_controller, stack, reporter, current_test, ignore_repl).visit_action(regular_command.ast_node->action);
 		this->current_controller = nullptr;
 	} else if (auto current_controller = IR::program->get_flash_drive_or_null(regular_command.entity())) {
 		this->current_controller = current_controller;
-		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test).visit_action(regular_command.ast_node->action);
+		VisitorInterpreterActionFlashDrive(current_controller, stack, reporter, current_test, ignore_repl).visit_action(regular_command.ast_node->action);
 		this->current_controller = nullptr;
 	} else {
 		throw std::runtime_error("Should never happen");

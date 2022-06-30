@@ -105,8 +105,14 @@ static std::string build_python_script(const std::string& body) {
 	return result;
 }
 
-VisitorInterpreterActionMachine::VisitorInterpreterActionMachine(std::shared_ptr<IR::Machine> vmc, std::shared_ptr<StackNode> stack, Reporter& reporter, std::shared_ptr<IR::Test> current_test):
-	VisitorInterpreterAction(vmc, stack, reporter), vmc(vmc), current_test(current_test)
+VisitorInterpreterActionMachine::VisitorInterpreterActionMachine(
+	std::shared_ptr<IR::Machine> vmc,
+	std::shared_ptr<StackNode> stack,
+	Reporter& reporter,
+	std::shared_ptr<IR::Test> current_test,
+	bool ignore_repl
+):
+	VisitorInterpreterAction(vmc, stack, reporter, ignore_repl), vmc(vmc), current_test(current_test)
 {
 
 }

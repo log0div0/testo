@@ -30,6 +30,7 @@ private:
 	bool assume_yes;
 	std::string invalidate;
 	bool dry;
+	bool ignore_repl;
 
 	std::vector<std::shared_ptr<IR::TestRun>> tests_runs;
 

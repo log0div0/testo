@@ -47,6 +47,7 @@ struct VisitorInterpreterConfig: ReporterConfig {
 	bool assume_yes = false;
 	std::string invalidate;
 	bool dry = false;
+	bool ignore_repl = false;
 
 	void validate() const;
 

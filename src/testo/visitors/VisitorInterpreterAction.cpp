@@ -46,6 +46,9 @@ static inline void trim(std::string &s) {
 
 void VisitorInterpreterAction::visit_repl(const IR::REPL& repl) {
 	TRACE();
+	if (ignore_repl) {
+		return;
+	}
 	try {
 		reporter.repl_begin(current_controller, repl);
 		REPL_mode_is_active = true;

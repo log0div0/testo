@@ -10,7 +10,12 @@ struct VisitorInterpreterActionMachine: public VisitorInterpreterAction {
 		int32_t x, y;
 	};
 
-	VisitorInterpreterActionMachine(std::shared_ptr<IR::Machine> vmc, std::shared_ptr<StackNode> stack, Reporter& reporter, std::shared_ptr<IR::Test> current_test);
+	VisitorInterpreterActionMachine(
+		std::shared_ptr<IR::Machine> vmc,
+		std::shared_ptr<StackNode> stack,
+		Reporter& reporter,
+		std::shared_ptr<IR::Test> current_test,
+		bool ignore_repl);
 
 	~VisitorInterpreterActionMachine() {}
 

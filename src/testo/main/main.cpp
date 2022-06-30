@@ -161,6 +161,7 @@ int do_main(int argc, char** argv) {
 		(option("--hypervisor") & value("hypervisor type", hypervisor)) % "Hypervisor type (qemu, hyperv)",
 		(option("--log_level") & value("log level", log_level)) % "Log level (info, trace)",
 		(option("--dry").set(run_args.dry)) % "Do only semantic checks, do not actually run any tests",
+		(option("--ignore_repl").set(run_args.ignore_repl)) % "Do don enter interactive mode, just ignore it",
 		any_other(wrong)
 	);
 

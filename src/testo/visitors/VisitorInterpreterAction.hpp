@@ -41,8 +41,13 @@ struct CycleControlException: std::exception {
 };
 
 struct VisitorInterpreterAction {
-	VisitorInterpreterAction(std::shared_ptr<IR::Controller> controller, std::shared_ptr<StackNode> stack, Reporter& reporter):
-		current_controller(controller), stack(stack), reporter(reporter) {}
+	VisitorInterpreterAction(
+		std::shared_ptr<IR::Controller> controller,
+		std::shared_ptr<StackNode> stack,
+		Reporter& reporter,
+		bool ignore_repl
+	):
+		current_controller(controller), stack(stack), reporter(reporter), ignore_repl(ignore_repl) {}
 
 	virtual ~VisitorInterpreterAction() {}
 
@@ -70,4 +75,5 @@ struct VisitorInterpreterAction {
 	std::shared_ptr<IR::Controller> current_controller;
 	std::shared_ptr<StackNode> stack;
 	Reporter& reporter;
+	bool ignore_repl;
 };

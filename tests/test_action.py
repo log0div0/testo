@@ -23,3 +23,8 @@ def test_action_qa():
 		os.remove("/tmp/something")
 
 	must_succeed("testo run action/action_qa.testo --assume_yes --test_spec copyto_nocheck --invalidate copyto_nocheck")
+
+def test_action_ignore_repl():
+	out, err = must_succeed("testo run action/action_repl.testo --test_spec test_with_repl --invalidate test_with_repl --ignore_repl")
+	assert "before repl" in out
+	assert "after repl" in out
