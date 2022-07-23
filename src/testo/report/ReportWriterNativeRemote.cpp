@@ -54,9 +54,10 @@ void ReportWriterNativeRemote::test_begin(const std::shared_ptr<IR::TestRun>& te
 }
 
 void ReportWriterNativeRemote::report(const std::shared_ptr<IR::TestRun>& test_run, const std::string& text) {
+	std::vector<uint8_t> binary_text(text.begin(), text.end());
 	nlohmann::json msg = {
 		{"type", "report"},
-		{"text", text},
+		{"text", binary_text},
 	};
 	if (test_run) {
 		msg["current_test_run"] = to_json(test_run);
