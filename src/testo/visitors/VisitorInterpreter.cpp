@@ -41,6 +41,9 @@ void VisitorInterpreter::invalidate_tests() {
 		return;
 	}
 	for (auto& test: IR::program->all_selected_tests) {
+		if (test->name().at(0) == '_') {
+			continue;
+		}
 		if (wildcards::match(test->name(), invalidate)) {
 			delete_snapshot_with_children(test);
 		}
