@@ -1,8 +1,0 @@
-
-network net1 {
-	mode: "internal"
-}
-
-param domain_name "mydomain.com"
-param ad_user_login "FooBar"
-param ad_user_default_password "ThisIsDefaultPassword1!"
