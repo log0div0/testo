@@ -1,0 +1,132 @@
+
+include "os_installation.testo"
+
+flash my_super_flash {
+	fs: "ntfs"
+	size: 16Mb
+	folder: "./dist"
+}
+
+test install_my_super_app: win10_prepare {
+	win10 {
+		# Plug the flash drive and open it in the file browser
+		plug flash my_super_flash
+		mouse click "USB Drive (E:)"
+		sleep 5s
+		mouse click "Open folder to view files"
+
+		# Run the MySuperApp installator
+		mouse dclick "MySuperApp"
+
+		# Welcome screen
+		wait "The installer will guide you through the steps"
+		mouse click "Next".from_bottom(0)
+
+		# Installation folder selection screen
+		wait "Select Installation Folder"
+		mouse click "Everyone"
+		mouse click "Next".from_bottom(0)
+
+		# Confirm the settings screen
+		wait "Confirm Installation"
+		mouse click "Next".from_bottom(0)
+
+		# Allow the installator to make changes to the system
+		wait "Do you want to allow this app"
+		mouse click "Yes".from_bottom(0)
+
+		# Installation complete screen
+		wait "Installation complete"
+
+		# Close the installator
+		mouse click "Close".from_bottom(0)
+		wait !"Installation complete"
+
+		# Open the file browser
+		press LeftAlt + F4
+		wait !"USB Drive (E:)"
+
+		# Unplug the flash drive at the end of the test
+		unplug flash my_super_flash
+	}
+}
+
+[no_snapshots: true]
+test test_desktop_icon: install_my_super_app {
+	win10 {
+		# Run the MySuperApp with the Desktop icon
+		mouse dclick "MySuperApp"
+
+		# Make sure that MySuperApp actually started
+		wait "MySuperApp is working!"
+	}
+}
+
+[no_snapshots: true]
+test test_context_menu: install_my_super_app {
+	win10 {
+		# Right-click on some Desktop empty place
+		mouse move 300 200
+		mouse rclick
+
+		# Create a new text file
+		mouse move "New"
+		mouse click "Text Document".from_bottom(0)
+		wait "New Text"
+		press Enter
+
+		# Right-click on the freshly created text file
+		mouse rclick "New Text"
+
+		# Make sure that the installator added the neccessary keys
+		# to the Windows register. We should see the new context menu
+		# entry
+		mouse click "Open with My Super App"
+
+		# Make sure that MySuperApp started with the specified arguments
+		wait "Opened New Text Document.txt"
+	}
+}
+
+[no_snapshots: true]
+test uninstall_my_super_app: install_my_super_app {
+	win10 {
+		# Open the "Apps & Features" window
+		mouse click "Type here to search"
+		wait "Top apps"
+		type "Apps & Features"
+		wait "System settings"
+		press Enter
+
+		# Find "My Super App" through the search
+		mouse click "Search this list"
+		sleep 5s
+		type "My Super App"
+		wait "1 app found"
+
+		# Scroll down a little
+		press Down
+		sleep 5s
+
+		# Launch the MySuperApp uninstallation
+		mouse click "My Super App".from_bottom(0)
+		mouse click "Uninstall"
+
+		# Confirm that we want MySuperApp uninstalled
+		wait "This app and its related"
+		mouse click "Uninstall".from_bottom(1)
+
+		# The UAC window shows up, but it's not active.
+		# We should bring it to focus.
+		sleep 5s
+		press LeftAlt+Tab
+
+		# Allow the installator to make changes to the system
+		wait "Do you want to allow"
+		mouse click "Yes"
+
+		# After the installator finished its work,
+		# MySuperApp should be gone from the program list.
+		wait "We couldn't find"
+	}
+}

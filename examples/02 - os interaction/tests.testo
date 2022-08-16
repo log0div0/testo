@@ -1,0 +1,101 @@
+
+include "os_installation.testo"
+
+flash my_super_flash {
+	fs: "ntfs"
+	size: 16Mb
+	folder: "./dist"
+}
+
+[no_snapshots: true]
+test run_as_user: win10_prepare {
+	win10 {
+		# Plug the flash and open it in the file browser
+		plug flash my_super_flash
+		mouse click "USB Drive (E:)"
+		sleep 5s
+		mouse click "Open folder to view files"
+
+		# Launch MySuperApp and make sure it starts OK
+		mouse dclick "MySuperApp"
+		wait "Users count: 6"
+
+		# MySuperApp must inform the user that it is not
+		# run under the admin privileges.
+		wait "You need to run this app"
+
+		# Open the "Computer Management" window
+		mouse click "Type here to search"
+		wait "Top apps"
+		type "Computer Management"
+		wait "Open"
+		press Enter
+
+		# Open the new user creation window
+		mouse click "Local Users"
+		wait "Users" && "Groups"
+		mouse rclick "Users".from_right(1)
+		mouse click "New User"
+		wait "User name"
+
+		# Create a new user
+		type "MySuperUser"
+		mouse click "Create"
+
+		# Close the new user creation window
+		mouse click "Close"
+		wait !"User name"
+
+		# Close the "Computer Management" window
+		press LeftAlt+F4
+		wait !"Computer Management"
+
+		# Make sure that the Windows-added user
+		# is listed in the MySuperApp
+		wait "Users count: 7" && "MySuperUser"
+
+		# Unplug the flash drive at the end of the test
+		unplug flash my_super_flash
+	}
+}
+
+[no_snapshots: true]
+test run_as_admin: win10_prepare {
+	win10 {
+		# Plug the flash and open it in the file browser
+		plug flash my_super_flash
+		mouse click "USB Drive (E:)"
+		sleep 5s
+		mouse click "Open folder to view files"
+
+		# Launch MySuperApp under admin privileges and make sure it starts OK
+		mouse rclick "MySuperApp"
+		mouse click "Run as administrator"
+		wait "Do you want"
+		mouse click "Yes"
+		wait "Users count: 6"
+
+		# Add a new user with MySuperApp
+		mouse click "Enter user name here".right_center().move_right(40)
+		type "MyAwesomeUser"
+		mouse click "Add!"
+		wait "Users count: 7"
+
+		# Open the "Computer Management" window
+		mouse click "Type here to search"
+		wait "Top apps"
+		type "Computer Management"
+		wait "Open"
+		press Enter
+
+		# Open the users list and make sure that
+		# newly added MyAwesomeUser is there
+		mouse click "Local Users"
+		wait "Users" && "Groups"
+		mouse dclick "Users".from_right(1)
+		wait "MyAwesomeUser"
+
+		# Unplug the flash drive at the end of the test
+		unplug flash my_super_flash
+	}
+}
