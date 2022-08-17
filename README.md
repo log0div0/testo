@@ -46,6 +46,10 @@ wait "Complete"
 
 ### Guest additions
 
+## Usage samples
+
+## Features
+
 ## Downloads
 
 ## Installation
