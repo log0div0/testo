@@ -1,4 +1,4 @@
-# Simple automation for complex tests
+# Testo
 
 This is an official repository of the E2E-tests automatization framework called Testo. 
 
