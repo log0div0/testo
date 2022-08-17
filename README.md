@@ -1,6 +1,26 @@
 # Testo
 
-This is an official repository of the E2E-tests automatization framework called Testo. 
+Testo is an end-to-end-tests automatization framework.
+
+- [Motivation](#motivation)
+- [What is Testo?](#what-is-testo)
+- [Framework overview](#framework-overview)
+  - [Language for test scenarios](#language-for-test-scenarios)
+  - [Interpreter](#interpreter)
+  - [Nueral networks server](#nueral-networks-server)
+  - [Guest additions](#guest-additions)
+  - [Reporting tools](#reporting-tools)
+  - [Syntax highlighting](#syntax-highlighting)
+- [Features](#features)
+- [Downloads](#downloads)
+- [Installation](#installation)
+  - [Debian/Ubuntu](#debianubuntu)
+  - [CentOS](#centos)
+  - [Windows](#windows)
+- [Documentation](#documentation)
+- [Building from source](#building-from-source)
+- [Credits](#credits)
+- [License](#license)
 
 ## Motivation
 
