@@ -20,46 +20,6 @@
 
 namespace fs = ghc::filesystem;
 
-#include "license/GetDeviceInfo.hpp"
-#include "license/License.hpp"
-
-#ifdef USE_CUDA
-void verify_license(const nlohmann::json& settings) {
-	std::string path_to_license = settings.at("license_path").get<std::string>();
-
-	if (!fs::exists(path_to_license)) {
-		throw std::runtime_error("File " + path_to_license + " does not exist");
-	}
-
-	std::string container = license::read_file(path_to_license);
-	nlohmann::json license = license::unpack(container, "r81TRDt5DSrvRZ3Ivrw9piJP+5KqgBlMXw5jKOPkSSc=");
-
-	license::Date not_before(license.at("not_before").get<std::string>());
-	license::Date not_after(license.at("not_after").get<std::string>());
-	license::Date now(std::chrono::system_clock::now());
-	license::Date release_date(TESTO_RELEASE_DATE);
-
-	if (now < release_date) {
-		throw std::runtime_error("System time is incorrect");
-	}
-
-	if (now < not_before) {
-		throw std::runtime_error("The license period has not yet come");
-	}
-
-	if (now > not_after) {
-		throw std::runtime_error("The license period has already ended");
-	}
-
-	auto info = GetDeviceInfo(0);
-
-	std::string device_uuid = license.at("device_uuid");
-	if (info.uuid_str != device_uuid) {
-		throw std::runtime_error("The graphics accelerator does not match the one specified in the license");
-	}
-}
-#endif
-
 void local_handler(const nlohmann::json& settings) {
 	auto port = settings.value("port", 8156);
 	coro::TcpAcceptor acceptor(asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
@@ -117,7 +77,6 @@ nlohmann::json load_settings(const std::string& settings_path) {
 {
 	"port": 8156,
 	"log_level": "info",
-	"license_path": "/opt/testo_license.lic",
 	"use_gpu": false,
 	"gpu_id": 0
 }
@@ -138,16 +97,7 @@ void app_main(const nlohmann::json& settings) {
 		bool use_gpu = settings.value("use_gpu", false);
 		size_t gpu_id = settings.value("gpu_id", 0);
 
-		if (use_gpu) {
-			if (!settings.count("license_path")) {
-				throw std::runtime_error("To start the program in GPU mode you must specify the path to the license file (license_path in the settings file)");
-			}
-#ifdef USE_CUDA
-			spdlog::info("Verifying license...");
-			verify_license(settings);
-			spdlog::info("License is OK");
-#endif
-		} else if (settings.count("gpu_id")) {
+		if (!use_gpu && settings.count("gpu_id")) {
 			spdlog::info("Ignoring 'gpu_id' setting because GPU mode is disabled...");
 		}
 

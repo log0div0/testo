@@ -49,8 +49,3 @@ set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 
 add_package(testo-nn-server-package)
 add_dependencies(testo-nn-server-package testo_nn_server)
-
-if (USE_CUDA)
-	install(TARGETS testo_request_license)
-	add_dependencies(testo-nn-server-package testo_request_license)
-endif()

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_definitions(-DTESTO_VERSION="${TESTO_VERSION}")
-add_definitions(-DTESTO_RELEASE_DATE="${TESTO_RELEASE_DATE}")
 
 list(APPEND SRC_DIRS "*.cpp")
 

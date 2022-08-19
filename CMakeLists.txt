@@ -5,7 +5,6 @@ cmake_policy(SET CMP0091 NEW)
 project(testo)
 
 set(TESTO_VERSION "3.6.7")
-set(TESTO_RELEASE_DATE "2022.01.15")
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 

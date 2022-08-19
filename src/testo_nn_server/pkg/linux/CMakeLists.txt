@@ -5,19 +5,12 @@ set(CPACK_PACKAGE_VERSION "${TESTO_VERSION}")
 
 install(PROGRAMS
 	${CMAKE_CURRENT_SOURCE_DIR}/usr/sbin/testo-nn-server
-	${CMAKE_CURRENT_SOURCE_DIR}/usr/sbin/testo-request-license
 	DESTINATION /usr/sbin
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
 install(TARGETS testo_nn_server
 	DESTINATION /usr/libexec
 	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-
-if (USE_CUDA)
-	install(TARGETS testo_request_license
-		DESTINATION /usr/libexec
-		PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
-endif()
 
 install(FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/init.d
@@ -63,7 +56,3 @@ set(CPACK_RPM_PACKAGE_PROVIDES "\
 
 add_package(testo-nn-server-package)
 add_dependencies(testo-nn-server-package testo_nn_server)
-
-if (USE_CUDA)
-	add_dependencies(testo-nn-server-package testo_request_license)
-endif()
