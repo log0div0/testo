@@ -12,7 +12,7 @@ Testo is an end-to-end-tests automatization framework.
   - [Reporting tools](#reporting-tools)
   - [Neural networks and dataset generators](#neural-networks-and-dataset-generators)
   - [Syntax highlighting](#syntax-highlighting)
-- [Features](#features)
+- [Current status](#current-status)
 - [Downloads](#downloads)
 - [Installation](#installation)
   - [Debian/Ubuntu](#debianubuntu)
@@ -167,11 +167,19 @@ Testo guest additions are available for any combination of QEMU/Hyper-V hypervis
 
 ### Reporting tools
 
+When running tests using `testo` interpreter, you can add a `--report_format` command line parameter to specify the desired report format. It can have the following options:
+
+1) `allure`. After the test run is completed, the interpreter will create a folder in a format that can be viewed by [Allure framework](https://docs.qameta.io/allure-report/).
+2) `native_remote`. In this case the interpreter will connect to your (custom) server and will transmit to it information about the progress of the tests in real time. See [testo-jira-plugin](https://github.com/log0div0/testo-jira-plugin) as an example of using such report format.
+3) `native_local` - After the test run is completed, the interpreter will create a folder that contains a set of json files that can be used later to upload test result somewhere else.
+
+We recommend to use `allure` report format as the most simple and convenient way to view the test results. Here are a couple of screenshots of what the test results look like in [Allure framework](https://docs.qameta.io/allure-report/):
+
 ### Neural networks and dataset generators
 
 ### Syntax highlighting
 
-## Features
+## Current status
 
 ## Downloads
 
