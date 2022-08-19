@@ -7,9 +7,10 @@ Testo is an end-to-end-tests automatization framework.
 - [Framework overview](#framework-overview)
   - [Language for test scenarios](#language-for-test-scenarios)
   - [Interpreter](#interpreter)
-  - [Nueral networks server](#nueral-networks-server)
+  - [Neural networks server](#neural-networks-server)
   - [Guest additions](#guest-additions)
   - [Reporting tools](#reporting-tools)
+  - [Neural networks and dataset generators](#neural-networks-and-dataset-generators)
   - [Syntax highlighting](#syntax-highlighting)
 - [Features](#features)
 - [Downloads](#downloads)
@@ -125,11 +126,48 @@ It worth mentioning here that Testo-lang is heavily inspired by another language
 
 You can read more about caching system and test hierarchy in the documentation.
 
-### Nueral networks server
+### Neural networks server
+
+Neural networks are used in Testo to determine whether some object is depicted on the screen of VM and if so, where exactly it's placed. For example the action
+
+```
+wait "Hello world"
+```
+
+make the interpreter to use neural network to determine whether "Hello world" text is on the screen. And the action
+
+```
+mouse click img "path/to/icon.png"
+```
+
+ask neural network where exactly the icon is depicted so the interpreter can place a mouse upon the specified icon.
+
+Initially neural networks were a part of the Testo-lang interpreter. But then we decided to split apart the interpreter and neural networks so that they could be run on separate computers. You see, neural networks can be accelerated significantly with the help of a modern GPU. On the other hand, hypervisors usually run on powerful servers that don't have any GPU. Now it's a common practice to have a dedicated computer running Testo neural network server and multiple computers with a hypervisor running Testo interpreter that makes requests to the server. But still nothing prevents you from running them both on the same computer.
 
 ### Guest additions
 
+If you've ever used VirtualBox or VMware hypervisors you're probably familiar with VirtualBox guest additions and WMware tools. They provide convenient integration of the host and guest OS. Usually they allow to automatically change the screen resolution of the guest and, for example, to copy files from the host to the guest or vice versa.
+
+Testo framework provides similar Testo guest additions. They are used for two tasks:
+
+- to run arbitrary `bash` or `cmd` commands on the guest OS:
+
+```
+exec bash "echo Hello $USER"
+```
+
+- and to copy files between the guest and the host:
+
+```
+copyto "/host/file.txt" "/guest/file.txt"
+copyfrom "/guest/file.txt" "/host/file.txt"
+```
+
+Testo guest additions are available for any combination of QEMU/Hyper-V hypervisors and Linux/Windows guest OS.
+
 ### Reporting tools
+
+### Neural networks and dataset generators
 
 ### Syntax highlighting
 
