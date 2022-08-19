@@ -75,7 +75,7 @@ machine my_super_vm {
 }
 ```
 
-This snippet instructs Testo-lang interpreter to create a virtual machine with 2Gb RAM, 2 CPU cores and 5Gb of disk space. The ISO “ubuntu_server.iso” is inserted in the virtual DVD-drive of the virtual machine, so when the machine is powered on, the Ubuntu Server installation pops up.
+This snippet instructs Testo-lang interpreter to create a virtual machine with 2Gb RAM, 2 CPU cores and 5Gb of disk space. The ISO “ubuntu_server.iso” is inserted in the virtual DVD-drive of the virtual machine, so when the machine is powered on, the Ubuntu Server installation menu pops up.
 
 As soon as you have at least one virtual machine you can start writing the actual tests:
 
@@ -99,9 +99,31 @@ This may seem counter-intuitive at first, because we consider the OS installatio
 
 Looking ahead, I'll say that you don't have to install OS as a part of a test scenario. You can use a pre-installed VM image.
 
-In fact, Testo-lang is heavily inspired by another language called CMake. Indeed, running tests with Testo-lang is very much like building a program from source codes. If you have ever compiled a program using CMake or simular build system, then you know that the program is rebuilt only if its source codes have been changes since the last build. Similar mechanism of "incremental test running" takes place in Testo-lang as well: the test is running only if its scenario or its dependencies have been changed. That's one of the main reasons why we decided to make our own language at all. 
-
 ### Interpreter
+
+Once you have a test scenario you can run it with Testo-lang interpreter:
+
+```
+testo run my_super_file.testo
+```
+
+The interpreter will create and manage virtual machines, virtual networks and virtual flash drives for you. At the moment it works with QEMU on Linux and Hyper-V on Windows (Hyper-V support is experimental). Despite the support of totally different hypervisors we try to keep Testo-lang hypervisor-independent, i.e. the same test scenario should run the same way on different OS and hypervisors.
+
+Testo-lang interpreter has the same capabilities as most of existing (unit) testing frameworks:
+
+- selecting the tests that you want to run
+- defining parameters for the tests
+- choosing the report format and the path where to save the report
+
+All this can be done via command line agruments of `testo`, for example:
+
+```
+testo run my_super_file.testo --test_spec test_* --param NAME value --report_format=allure --report_folder=/some/path
+```
+
+It worth mentioning here that Testo-lang is heavily inspired by another language called CMake. Indeed, running tests with Testo-lang interpreter is very much like building a program from source codes. If you have ever compiled a program using CMake or simular build system, then you know that the program is rebuilt only if its source codes have been changes since the last build. Similar mechanism of "incremental test running" takes place in Testo-lang as well: the test is running only if its scenario or its dependencies have been changed. That's one of the main reasons why we decided to make our own language at all.
+
+You can read more about caching system and test hierarchy in the documentation.
 
 ### Nueral networks server
 
