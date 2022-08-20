@@ -20,6 +20,7 @@ Testo is an end-to-end-tests automatization framework.
   - [Windows](#windows)
 - [Documentation](#documentation)
 - [Building from source](#building-from-source)
+- [Running tests](#running-tests)
 - [Credits](#credits)
 - [License](#license)
 
@@ -173,9 +174,13 @@ When running tests using `testo` interpreter, you can add a `--report_format` co
 2) `native_remote`. In this case the interpreter will connect to your (custom) server and will transmit to it information about the progress of the tests in real time. See [testo-jira-plugin](https://github.com/log0div0/testo-jira-plugin) as an example of using such report format.
 3) `native_local` - After the test run is completed, the interpreter will create a folder that contains a set of json files that can be used later to upload test result somewhere else.
 
-We recommend to use `allure` report format as the most simple and convenient way to view the test results. Here are a couple of screenshots of what the test results look like in [Allure framework](https://docs.qameta.io/allure-report/):
+We recommend to use `allure` report format as the most simple and convenient way to view the test results. Here is a screenshot of what the test results look like in [Allure framework](https://docs.qameta.io/allure-report/):
+
+![Allure report](https://github.com/log0div0/testo/raw/master/docs/home_page_assets/allure_report.png)
 
 ### Neural networks and dataset generators
+
+![Dataset editor](https://github.com/log0div0/testo/raw/master/docs/home_page_assets/dataset_editor.png)
 
 ### Syntax highlighting
 
@@ -194,6 +199,8 @@ We recommend to use `allure` report format as the most simple and convenient way
 ## Documentation
 
 ## Building from source
+
+## Running tests
 
 ## Credits
 
