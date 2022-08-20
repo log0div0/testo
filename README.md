@@ -12,7 +12,8 @@ Testo is an end-to-end-tests automation framework.
   - [Reporting tools](#reporting-tools)
   - [Neural networks and dataset generators](#neural-networks-and-dataset-generators)
   - [Syntax highlighting](#syntax-highlighting)
-- [Current status](#current-status)
+- [Features](#features)
+- [Roadmap](#roadmap)
 - [Downloads](#downloads)
 - [Installation](#installation)
   - [Debian/Ubuntu](#debianubuntu)
@@ -193,7 +194,33 @@ This leads us to the need to train our own neural networks. Testo framework incl
 
 Plugins are available for [VS Code](https://github.com/testo-lang/testo-vscode) and [Sublime Text](https://github.com/testo-lang/testo-sublime).
 
-## Current status
+## Features
+
+- Creating VMs from scratch or importing existing VM images
+- Ability to use multiples VMs in the same test
+- Cache system based on VM snapshots
+- Test dependency management
+- Virtual flash drives (only QEMU at the moment) and virtual networks support
+- Macros & params 
+- Detecting text and images on VM screen with simple sintax
+- Javascript support for more complicated queries
+- Keyboard and mouse support
+- Automatic keyboard layout switching when typing muti-language text
+- Shared forlders support (only QEMU at the moment)
+- QEMU & Hyper-V support (Hyper-V support is experimental)
+- Linux & Windows as guest and host OS support 
+- Copying files between host and guest OS
+- Running arbitrary `bash` or `cmd` commands on guest OS
+- Different report formats
+- ARM64 support (only interpreter and only for Linux)
+- REPL mode 
+
+## Roadmap
+
+- [ ] Support for seaching for icons on VM screen using a template image (At the moment Neural network server contains a stub that compare VM screenshot and template image pixel by pixel. This requires a template image to be exactly the same size and color as the icon on the screen)
+- [ ] Neural networks for searching UI elements like buttons, scroll bars, tabs, etc.
+- [ ] Support for more complex visual-qeuries to make it possible, for example to pick a certain cell in a table.
+- [ ] Support for running tests on a clusters of computers
 
 ## Downloads
 
