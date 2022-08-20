@@ -1,6 +1,6 @@
 # Testo
 
-Testo is an end-to-end-tests automatization framework.
+Testo is an end-to-end-tests automation framework.
 
 - [Motivation](#motivation)
 - [What is Testo?](#what-is-testo)
@@ -171,16 +171,14 @@ Testo guest additions are available for any combination of QEMU/Hyper-V hypervis
 When running tests using `testo` interpreter, you can add a `--report_format` command line parameter to specify the desired report format. It can have the following options:
 
 1) `allure`. After the test run is completed, the interpreter will create a folder in a format that can be viewed by [Allure framework](https://docs.qameta.io/allure-report/).
-2) `native_remote`. In this case the interpreter will connect to your (custom) server and will transmit to it information about the progress of the tests in real time. See [testo-jira-plugin](https://github.com/log0div0/testo-jira-plugin) as an example of using such report format.
+2) `native_remote`. In this case the interpreter will connect to your (custom) server and will transmit to it information about the progress of the tests in real time. See [testo-jira-plugin](https://github.com/testo-lang/testo-jira-plugin) as an example of using such report format.
 3) `native_local` - After the test run is completed, the interpreter will create a folder that contains a set of json files that can be used later to upload test result somewhere else.
 
 We recommend to use `allure` report format as the most simple and convenient way to view the test results. Here is a screenshot of what the test results look like in [Allure framework](https://docs.qameta.io/allure-report/):
 
-![Allure report](https://github.com/log0div0/testo/raw/master/docs/home_page_assets/allure_report.png)
+![Allure report](https://github.com/log0div0/testo/raw/master/allure_screenshot.png)
 
 ### Neural networks and dataset generators
-
-![Dataset editor](https://github.com/log0div0/testo/raw/master/docs/home_page_assets/dataset_editor.png)
 
 ### Syntax highlighting
 
