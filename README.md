@@ -224,6 +224,8 @@ Plugins are available for [VS Code](https://github.com/testo-lang/testo-vscode) 
 
 ## Downloads
 
+See [releases](https://github.com/log0div0/testo/releases) page for downloads and release notes.
+
 ## Installation
 
 ### Debian/Ubuntu
