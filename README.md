@@ -180,7 +180,18 @@ We recommend to use `allure` report format as the most simple and convenient way
 
 ### Neural networks and dataset generators
 
+Detection and recognition of text/icons/GUI on VM screenshots is rather different from detection objects on photos of the real world. On the one hand objects on screenshots usually are very small, maybe just a few pixels. Sometimes it's difficult to recognize some UI element even for a human. On the other hand screenshots themselves may be very large which greatly increases the execution time of the neural network. There are other domain-specific factors that need to be taken into account, for example anti-aliasing while [font rasterization](https://en.wikipedia.org/wiki/Font_rasterization).
+
+This leads us to the need to train our own neural networks. Testo framework includes a set of tools, that help to do it.
+
+- [Dataset editor](https://github.com/log0div0/testo/tree/master/nn/dataset/editor) for manual dataset labeling based on [Electron](https://www.electronjs.org/)
+- [Utils](https://github.com/log0div0/testo/tree/master/nn/renderer) for dataset augmentation written in C++
+- [Scripts](https://github.com/log0div0/testo/tree/master/nn/trainer) for neural network training based on [Pytorch](https://pytorch.org/)
+- [Neural network server](https://github.com/log0div0/testo/tree/master/src/testo_nn_server) for neural network inferencing based on [ONNX Runtime](https://onnxruntime.ai/)
+
 ### Syntax highlighting
+
+Plugins are available for [VS Code](https://github.com/testo-lang/testo-vscode) and [Sublime Text](https://github.com/testo-lang/testo-sublime).
 
 ## Current status
 
