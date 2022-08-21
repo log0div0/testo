@@ -219,7 +219,7 @@ Plugins are available for [VS Code](https://github.com/testo-lang/testo-vscode) 
 
 - [ ] Support for seaching for icons on VM screen using a template image (At the moment Neural network server contains a stub that compare VM screenshot and template image pixel by pixel. This requires a template image to be exactly the same size and color as the icon on the screen)
 - [ ] Neural networks for searching UI elements like buttons, scroll bars, tabs, etc.
-- [ ] Support for more complex visual-qeuries to make it possible, for example to pick a certain cell in a table.
+- [ ] Support for more complex visual-queries to make it possible, for example to pick a certain cell in a table.
 - [ ] Support for running tests on a clusters of computers
 
 ## Downloads
