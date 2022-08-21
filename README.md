@@ -199,7 +199,7 @@ Plugins are available for [VS Code](https://github.com/testo-lang/testo-vscode) 
 - Creating VMs from scratch or importing existing VM images
 - Ability to use multiples VMs in the same test
 - Cache system based on VM snapshots
-- Test dependency management
+- Automatic test dependency management
 - Virtual flash drives (only QEMU at the moment) and virtual networks support
 - Macros & params 
 - Detecting text and images on VM screen with simple sintax
