@@ -274,6 +274,10 @@ testo version
 
 ## Documentation
 
+- [Tutorials](https://github.com/log0div0/testo/tree/master/docs/tutorials) folder is the best place for a start.
+- [Reference](https://github.com/log0div0/testo/tree/master/docs/reference) can be used if you want to see the details.
+- [Examples](https://github.com/testo-lang/testo-examples) repo contains a couple of basic use-cases of Testo framework. This repo also contains source codes of apps that are being tested.
+
 ## Building from source
 
 ## Running tests
