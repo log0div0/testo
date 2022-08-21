@@ -280,6 +280,40 @@ testo version
 
 ## Building from source
 
+Probably the most simple way to build Testo is to let Testo to build itself. We have written tests that setup the buld environment on all supporterd operating systems and build Testo packages from source codes. This tests can be found in the [ci](https://github.com/log0div0/testo/tree/master/ci) folder.
+
+In any case, I'll dublicate the instructions for building the project here.
+
+1. Download or build from sources [ONNX Runtime](https://onnxruntime.ai/).
+2. Install dev packages:
+
+Ubuntu/Debian
+
+```
+apt -y install git gcc g++ make libssl-dev python3-dev libvirt-dev libguestfs-dev rpm cmake
+```
+
+CentOS:
+
+```
+yum -y install git gcc gcc-c++ make openssl-devel python3-devel libvirt-devel rpm-build libguestfs-devel cmake
+```
+
+Windows: Visual Studio, Git, CMake, Python, Wix
+
+3. Build Testo packages
+
+```
+mkdir testo_build
+cd testo_build
+cmake ../testo \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCPACK_GENERATOR=DEB \
+  -DONNX_RUNTIME_DIR=/path/to/onnxruntime_dist \
+  -DUSE_CUDA=on
+make testo-package testo-nn-server-package -j$(nproc)
+```
+
 ## Running tests
 
 ## Credits
