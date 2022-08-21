@@ -1,0 +1,109 @@
+param guest_additions_pkg "testo-guest-additions*"
+param default_password "1111"
+
+param client_hostname "client"
+param client_login "client-login"
+
+param server_hostname "server"
+param server_login "server-login"
+
+network internet_16 {
+	mode: "nat"
+}
+
+network LAN_16 {
+	mode: "internal"
+}
+
+machine client_16 {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 5Gb
+	}
+	iso: "${ISO_DIR}/ubuntu_server_16.iso"
+
+	nic nat: {
+		attached_to: "internet_16"
+	}
+
+	nic server_side: {
+		attached_to: "LAN_16"
+		mac: "52:54:00:00:00:AA"
+	}
+}
+
+machine server_16 {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 5Gb
+	}
+	iso: "${ISO_DIR}/ubuntu_server_16.iso"
+
+	nic nat: {
+		attached_to: "internet_16"
+	}
+
+	nic client_side: {
+		attached_to: "LAN_16"
+		mac: "52:54:00:00:00:BB"
+	}
+}
+
+flash exchange_flash_16 {
+	fs: "ntfs"
+	size: 8Mb
+	folder: "./folder_to_copy"
+}
+
+network internet_20 {
+	mode: "nat"
+}
+
+network LAN_20 {
+	mode: "internal"
+}
+
+machine client_20 {
+	cpus: 1
+	ram: 1Gb
+	disk main: {
+		size: 8Gb
+	}
+	iso: "${ISO_DIR}/ubuntu_server_20.iso"
+
+	nic nat: {
+		attached_to: "internet_20"
+	}
+
+	nic server_side: {
+		attached_to: "LAN_20"
+		mac: "52:54:00:00:00:AA"
+	}
+}
+
+machine server_20 {
+	cpus: 1
+	ram: 1Gb
+	disk main: {
+		size: 8Gb
+	}
+	iso: "${ISO_DIR}/ubuntu_server_20.iso"
+
+	nic nat: {
+		attached_to: "internet_20"
+	}
+
+	nic client_side: {
+		attached_to: "LAN_20"
+		mac: "52:54:00:00:00:BB"
+	}
+}
+
+flash exchange_flash_20 {
+	fs: "ntfs"
+	size: 8Mb
+	folder: "./folder_to_copy"
+}
+

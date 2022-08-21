@@ -1,0 +1,16 @@
+
+machine my_ubuntu {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 5Gb
+	}
+	iso: "/opt/iso/ubuntu_server.iso"
+}
+
+test my_first_test {
+	my_ubuntu {
+		start
+		abort "Stop here"
+	}
+}

@@ -1,0 +1,50 @@
+
+machine my_ubuntu {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 5Gb
+	}
+	iso: "/opt/iso/ubuntu_server.iso"
+}
+
+test my_first_test {
+	my_ubuntu {
+		start
+		wait "English"
+		press Enter
+		# The actions can be separated with a newline
+		# or a semicolon
+		wait "Install Ubuntu Server"; press Enter;
+		wait "Choose the language";	press Enter
+		wait "Select your location"; press Enter
+		wait "Detect keyboard layout?";	press Enter
+		wait "Country of origin for the keyboard"; press Enter
+		wait "Keyboard layout"; press Enter
+		wait "No network interfaces detected" timeout 5m; press Enter
+		wait "Hostname:" timeout 30s; press Backspace*36; type "my-ubuntu"; press Enter
+		wait "Full name for the new user"; type "my-ubuntu-login"; press Enter
+		wait "Username for your account"; press Enter
+		wait "Choose a password for the new user"; type "1111"; press Enter
+		wait "Re-enter password to verify"; type "1111"; press Enter
+		wait "Use weak password?"; press Left, Enter
+		wait "Encrypt your home directory?"; press Enter
+
+		wait "Select your timezone" timeout 2m; press Enter
+		wait "Partitioning method"; press Enter
+		wait "Select disk to partition"; press Enter
+		wait "Write the changes to disks and configure LVM?"; press Left, Enter
+		wait "Amount of volume group to use for guided partitioning"; press Enter
+		wait "Write the changes to disks?"; press Left, Enter
+		wait "HTTP proxy information" timeout 3m; press Enter
+		wait "How do you want to manage upgrades" timeout 6m; press Enter
+		wait "Choose software to install"; press Enter
+		wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
+		wait "Installation complete" timeout 1m;
+
+		unplug dvd; press Enter
+		wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
+		wait "Password:"; type "1111"; press Enter
+		wait "Welcome to Ubuntu"
+	}
+}

@@ -1,0 +1,63 @@
+param guest_additions_pkg "testo-guest-additions*"
+param default_password "1111"
+
+param client_hostname "client"
+param client_login "client-login"
+
+param server_hostname "server"
+param server_login "server-login"
+
+macro generate_bench(version, ram_size, disk_size) {
+	network "internet_${version}" {
+		mode: "nat"
+	}
+
+	network "LAN_${version}" {
+		mode: "internal"
+	}
+
+	machine "client_${version}" {
+		cpus: 1
+		ram: "${ram_size}"
+		disk main: {
+			size: "${disk_size}"
+		}
+		iso: "${ISO_DIR}/ubuntu_server_${version}.iso"
+
+		nic nat: {
+			attached_to: "internet_${version}"
+		}
+
+		nic server_side: {
+			attached_to: "LAN_${version}"
+			mac: "52:54:00:00:00:AA"
+		}
+	}
+
+	machine "server_${version}" {
+		cpus: 1
+		ram: "${ram_size}"
+		disk main: {
+			size: "${disk_size}"
+		}
+		iso: "${ISO_DIR}/ubuntu_server_${version}.iso"
+
+		nic nat: {
+			attached_to: "internet_${version}"
+		}
+
+		nic client_side: {
+			attached_to: "LAN_${version}"
+			mac: "52:54:00:00:00:BB"
+		}
+	}
+
+	flash "exchange_flash_${version}" {
+		fs: "ntfs"
+		size: 8Mb
+		folder: "./folder_to_copy"
+	}
+}
+
+generate_bench("16", "512Mb", "5Gb")
+generate_bench("20", "1Gb", "8Gb")

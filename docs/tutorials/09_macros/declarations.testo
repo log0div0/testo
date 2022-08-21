@@ -1,0 +1,58 @@
+network internet {
+	mode: "nat"
+}
+
+network LAN {
+	mode: "internal"
+}
+
+param guest_additions_pkg "testo-guest-additions*"
+param default_password "1111"
+
+param client_hostname "client"
+param client_login "client-login"
+
+machine client {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 5Gb
+	}
+	iso: "${ISO_DIR}/ubuntu_server.iso"
+
+	nic nat: {
+		attached_to: "internet"
+	}
+
+	nic server_side: {
+		attached_to: "LAN"
+		mac: "52:54:00:00:00:AA"
+	}
+}
+
+param server_hostname "server"
+param server_login "server-login"
+
+machine server {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 5Gb
+	}
+	iso: "${ISO_DIR}/ubuntu_server.iso"
+
+	nic nat: {
+		attached_to: "internet"
+	}
+
+	nic client_side: {
+		attached_to: "LAN"
+		mac: "52:54:00:00:00:BB"
+	}
+}
+
+flash exchange_flash {
+	fs: "ntfs"
+	size: 8Mb
+	folder: "./folder_to_copy"
+}

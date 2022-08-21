@@ -1,0 +1,153 @@
+include "macros.testo"
+
+test server_16_install_ubuntu {
+	server_16 install_ubuntu_server("16", "nat", "${server_hostname}", "${server_login}")
+}
+
+test server_16_install_guest_additions: server_16_install_ubuntu {
+	server_16 install_guest_additions("${server_hostname}", "${server_login}")
+}
+
+test server_16_unplug_nat: server_16_install_guest_additions {
+	server_16 unplug_nic("${server_hostname}", "${server_login}", "nat")
+}
+
+test server_16_prepare: server_16_unplug_nat {
+	server_16 {
+		copyto "./rename_net_16.sh" "/opt/rename_net.sh"
+		exec bash """
+			chmod +x /opt/rename_net.sh
+			/opt/rename_net.sh 52:54:00:00:00:bb client_side
+			ip a a 192.168.1.1/24 dev client_side
+			ip l s client_side up
+			ip ad
+		"""
+	}
+}
+
+test client_16_install_ubuntu {
+	client_16 install_ubuntu_server("16", "nat", "${client_hostname}", "${client_login}")
+}
+
+test client_16_install_guest_additions: client_16_install_ubuntu {
+	client_16 install_guest_additions("${client_hostname}", "${client_login}")
+}
+
+test client_16_unplug_nat: client_16_install_guest_additions {
+	client_16 unplug_nic("${client_hostname}", "${client_login}", "nat")
+}
+
+test client_16_prepare: client_16_unplug_nat {
+	client_16 {
+		process_flash("exchange_flash_16", "cp /media/rename_net_16.sh /opt/rename_net.sh")
+
+		exec bash """
+			chmod +x /opt/rename_net.sh
+			/opt/rename_net.sh 52:54:00:00:00:aa server_side
+			ip a a 192.168.1.2/24 dev server_side
+			ip l s server_side up
+			ip ad
+		"""
+	}
+}
+
+test test_ping_16: client_16_prepare, server_16_prepare {
+	client_16 exec bash "ping 192.168.1.2 -c5"
+	server_16 exec bash "ping 192.168.1.1 -c5"
+}
+
+# Take a note, that the test is inherited not from
+# the test_ping, but from the client_prepare and
+# server_prepare tests.
+# Which means that test_ping and exchange_files_with_flash
+# both lay on the samy tests tree level
+test exchange_files_with_flash_16: client_16_prepare, server_16_prepare {
+	#Create a file to be transferred
+	client_16 exec bash "echo \"Hello from client!\" > /tmp/copy_me_to_server.txt"
+	copy_file_with_flash("client_16", "server_16", "exchange_flash_16", "/tmp/copy_me_to_server.txt", "/tmp/copy_me_to_server.txt")
+	server_16 exec bash "cat /tmp/copy_me_to_server.txt"
+}
+
+
+test server_20_install_ubuntu {
+	server_20 install_ubuntu_server("20", "nat", "${server_hostname}", "${server_login}")
+}
+
+test server_20_install_guest_additions: server_20_install_ubuntu {
+	server_20 install_guest_additions("${server_hostname}", "${server_login}")
+	server_20 {
+		exec bash """
+			ip l s ens7 up
+			dhclient ens7
+			apt install -y net-tools
+		"""
+	}
+}
+
+test server_20_unplug_nat: server_20_install_guest_additions {
+	server_20 unplug_nic("${server_hostname}", "${server_login}", "nat")
+}
+
+test server_20_prepare: server_20_unplug_nat {
+	server_20 {
+		copyto "./rename_net_20.sh" "/opt/rename_net.sh"
+		exec bash """
+			chmod +x /opt/rename_net.sh
+			/opt/rename_net.sh 52:54:00:00:00:bb client_side
+			ip a a 192.168.1.1/24 dev client_side
+			ip l s client_side up
+			ip ad
+		"""
+	}
+}
+
+test client_20_install_ubuntu {
+	client_20 install_ubuntu_server("20", "nat", "${client_hostname}", "${client_login}")
+}
+
+test client_20_install_guest_additions: client_20_install_ubuntu {
+	client_20 install_guest_additions("${client_hostname}", "${client_login}")
+	client_20 {
+		exec bash """
+			ip l s ens7 up
+			dhclient ens7
+			apt install -y net-tools
+		"""
+	}
+}
+
+test client_20_unplug_nat: client_20_install_guest_additions {
+	client_20 unplug_nic("${client_hostname}", "${client_login}", "nat")
+}
+
+test client_20_prepare: client_20_unplug_nat {
+	client_20 {
+		process_flash("exchange_flash_20", "cp /media/rename_net_20.sh /opt/rename_net.sh")
+
+		exec bash """
+			chmod +x /opt/rename_net.sh
+			/opt/rename_net.sh 52:54:00:00:00:aa server_side
+			ip a a 192.168.1.2/24 dev server_side
+			ip l s server_side up
+			ip ad
+		"""
+	}
+}
+
+test test_ping_20: client_20_prepare, server_20_prepare {
+	client_20 exec bash "ping 192.168.1.2 -c5"
+	server_20 exec bash "ping 192.168.1.1 -c5"
+}
+
+# Take a note, that the test is inherited not from
+# the test_ping, but from the client_prepare and
+# server_prepare tests.
+# Which means that test_ping and exchange_files_with_flash
+# both lay on the samy tests tree level
+test exchange_files_with_flash_20: client_20_prepare, server_20_prepare {
+	#Create a file to be transferred
+	client_20 exec bash "echo \"Hello from client!\" > /tmp/copy_me_to_server.txt"
+	copy_file_with_flash("client_20", "server_20", "exchange_flash_20", "/tmp/copy_me_to_server.txt", "/tmp/copy_me_to_server.txt")
+	server_20 exec bash "cat /tmp/copy_me_to_server.txt"
+}
+

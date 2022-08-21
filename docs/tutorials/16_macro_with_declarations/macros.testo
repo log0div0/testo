@@ -1,0 +1,144 @@
+include "declarations_with_macros.testo"
+
+macro install_ubuntu_server_16(hostname, login, password = "${default_password}") {
+	start
+	wait "English"
+	press Enter
+	# The actions can be separated with a newline
+	# or a semicolon
+	wait "Install Ubuntu Server"; press Enter;
+	wait "Choose the language";	press Enter
+	wait "Select your location"; press Enter
+	wait "Detect keyboard layout?";	press Enter
+	wait "Country of origin for the keyboard"; press Enter
+	wait "Keyboard layout"; press Enter
+	#wait "No network interfaces detected" timeout 5m; press Enter
+	wait "Primary network interface"; press Enter
+	wait "Hostname:" timeout 5m; press Backspace*36; type "${hostname}"; press Enter
+	wait "Full name for the new user"; type "${login}"; press Enter
+	wait "Username for your account"; press Enter
+	wait "Choose a password for the new user"; type "${password}"; press Enter
+	wait "Re-enter password to verify"; type "${password}"; press Enter
+	wait "Use weak password?"; press Left, Enter
+	wait "Encrypt your home directory?"; press Enter
+
+	#wait "Select your timezone" timeout 2m; press Enter
+	wait "Is this time zone correct?" timeout 2m; press Enter
+	wait "Partitioning method"; press Enter
+	wait "Select disk to partition"; press Enter
+	wait "Write the changes to disks and configure LVM?"; press Left, Enter
+	wait "Amount of volume group to use for guided partitioning"; press Enter
+	wait "Write the changes to disks?"; press Left, Enter
+	wait "HTTP proxy information" timeout 3m; press Enter
+	wait "How do you want to manage upgrades" timeout 6m; press Enter
+	wait "Choose software to install"; press Enter
+	wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
+	wait "Installation complete" timeout 1m;
+
+	unplug dvd; press Enter
+	wait "${hostname} login:" timeout 2m; type "${login}"; press Enter
+	wait "Password:"; type "${password}"; press Enter
+	wait "Welcome to Ubuntu"
+}
+
+macro install_ubuntu_server_20(nat_interface, hostname, login, password = "${default_password}") {
+	unplug nic "${nat_interface}"
+	start
+	if (check "Language" timeout 5s) {
+		press Enter
+		wait "Install Ubuntu Server"; press Enter
+	}
+	wait "Welcome!" timeout 5m; press Enter
+
+	wait "Please select your keyboard layout"; press Enter
+	wait "Configure at least one interface"; press Enter
+	wait "Proxy address"; press Enter
+	wait "Mirror address"; press Enter
+	wait "Continue without updating"; press Enter
+	wait "Use an entire disk"; press Down*5; wait js "find_text().match('Done').match_background('green').size() > 0"; press Enter
+	wait "FILE SYSTEM SUMMARY"; press Enter
+	wait "Confirm destructive action"; press Down, Enter
+	wait "Enter the username"; type "${login}"; press Tab
+	type "${hostname}"; press Tab
+	type "${login}"; press Tab
+	type "${password}"; press Tab
+	type "${password}"; press Enter*2
+	wait "SSH Setup"; press Tab, Enter
+	wait "Installing system"
+	wait "Installation complete!" timeout 15m
+	press Enter
+	wait "Please remove the installation medium"
+	unplug dvd; press Enter
+	wait "${hostname} login" timeout 3m
+
+	stop; plug nic "${nat_interface}"; start
+
+	wait "GNU GRUB"; press Enter	
+
+	wait "${hostname} login" timeout 3m
+	type "${login}"; press Enter
+	wait "Password"; type "${password}"; press Enter
+
+	wait "${login}@${hostname}"
+}
+
+macro install_ubuntu_server(version, nat_interface, hostname, login, password = "${default_password}") {
+	if ("${version}" STREQUAL "16") {
+		install_ubuntu_server_16("${hostname}", "${login}", "${password}")
+	} else if ("${version}" STREQUAL "20") {
+		install_ubuntu_server_20("${nat_interface}","${hostname}", "${login}", "${password}")
+	} else {
+		abort "Unknown version:  ${version}"
+	}
+}
+
+
+macro install_guest_additions(hostname, login, password="${default_password}") {
+	plug dvd "${ISO_DIR}/testo-guest-additions.iso"
+
+	type "sudo su"; press Enter;
+	# Take a note that you may reference params in any part of the string
+	wait "password for ${login}"; type "${password}"; press Enter
+	wait "root@${hostname}"
+
+	type "mount /dev/cdrom /media"; press Enter
+	wait "read-only"; type "dpkg -i /media/${guest_additions_pkg}"; press Enter;
+	wait "Setting up testo-guest-additions"
+	type "umount /media"; press Enter;
+	# Give a little time for the umount to do its job
+	sleep 2s
+	unplug dvd
+}
+
+macro unplug_nic(hostname, login, nic_name, password="${default_password}") {
+	shutdown
+	unplug nic "${nic_name}"
+	start
+
+	wait "${hostname} login:" timeout 2m; type "${login}"; press Enter
+	wait "Password:"; type "${password}"; press Enter
+	wait "Welcome to Ubuntu"
+}
+
+# A macro encapsulating several actions:
+# 1) Plugging a flash drive
+# 2) Mounting the flash drive into the filesystem
+# 3) Executing a bash script
+# 4) Unmounting the flash drive from the filesystem
+# 5) Unplugging the flash drive
+macro process_flash(flash_name, command) {
+	plug flash "${flash_name}"
+	sleep 5s
+	exec bash "mount /dev/sdb1 /media"
+	exec bash "${command}"
+	exec bash "umount /media"
+	unplug flash "${flash_name}"
+}
+
+# A command macro suitable for copying a file between arbitrary vms
+# Copies a file from vm to /media/filename on the flash
+# Copies a file from the flash to another vm
+macro copy_file_with_flash(vm_from, vm_to, copy_flash, file_from, file_to) {
+	"${vm_from}" process_flash("${copy_flash}", "cp ${file_from} /media/$(basename ${file_from})")
+	"${vm_to}" process_flash("${copy_flash}", "cp /media/$(basename ${file_from}) ${file_to}")
+}

@@ -1,0 +1,88 @@
+
+network internet {
+	mode: "nat"
+}
+
+machine ubuntu_desktop {
+	cpus: 1
+	ram: 2Gb
+	iso: "${ISO_DIR}/ubuntu_desktop.iso"
+	disk main: {
+		size: 10Gb
+	}
+	nic internet: {
+		attached_to: "internet"
+		adapter_type: "e1000"
+	}
+
+	qemu_spice_agent: true
+}
+
+param login "desktop"
+param hostname "desktop-PC"
+param password "1111"
+
+test install_ubuntu {
+	ubuntu_desktop {
+		start
+		wait "English"
+		press Enter
+		wait "Try Ubuntu without installing"; press Down, Enter
+		wait "Welcome" timeout 5m
+		mouse click "Continue".center_bottom()
+		wait "Keyboard layout"
+		mouse click "Continue".center_bottom()
+		wait "Updates and other software"
+		mouse click "Minimal installation"
+		mouse click "Download updates while installing"; mouse click "Continue"
+		wait "Installation type"; mouse move 0 0; mouse click "Install Now".center_bottom()
+		wait "Write the changes to disks?"; mouse click "Continue".from_bottom(0).center_bottom()
+		wait "Where are you?"; mouse click "Continue".center_bottom()
+		wait "Who are you?";
+
+		mouse click "Your name".right_center().move_right(20); type "${login}"
+		mouse click "Your computer's name".right_center().move_right(20); press LeftCtrl + A, Delete;  type "${hostname}"
+		mouse click "password:".from_top(0).right_center().move_right(20); type "${password}"
+		mouse click "password:".from_top(1).right_center().move_right(20); type "${password}"
+		mouse click "Continue".center_bottom()
+		mouse click "Restart Now" timeout 10m
+		wait "Please remove the installation medium" timeout 2m;
+		unplug dvd; stop; start
+		wait "${login}" && "Not listed?" timeout 3m
+
+		mouse click "${login}";
+		wait "Password"; type "${password}"; mouse click "Sign In"
+		wait "Welcome to Ubuntu"
+	}
+}
+
+test mouse_demo: install_ubuntu {
+	ubuntu_desktop {
+		mouse click "Welcome to Ubuntu"
+		mouse click "Quit"
+
+		# Create a folder
+		mouse rclick 400 300
+		mouse click "New Folder"
+		wait "Folder name"; type "My folder"; mouse click "Create"
+		wait "My folder" && !"Create"
+
+		# Move the folder to trash
+		mouse move "My folder";
+		mouse hold lbtn
+		mouse move 200 300
+		mouse move "Trash"
+		mouse release
+		wait !"My folder"
+
+		# Empty trash
+		mouse move 0 0
+		mouse dclick "Trash"
+		# Check if our folder actually is in the trash
+		wait "My folder"
+		mouse click "Empty"
+		mouse click "Empty Trash"
+		mouse move 0 0
+		wait "Trash is Empty"
+	}
+}

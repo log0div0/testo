@@ -1,0 +1,76 @@
+include "macros.testo"
+
+macro generate_tests(version) {
+
+	test "server_${version}_install_ubuntu" {
+		"server_${version}" install_ubuntu_server("${version}", "nat", "${server_hostname}", "${server_login}")
+	}
+
+	test "server_${version}_install_guest_additions": "server_${version}_install_ubuntu" {
+		"server_${version}" install_guest_additions("${server_hostname}", "${server_login}")
+	}
+
+	test "server_${version}_unplug_nat": "server_${version}_install_guest_additions" {
+		"server_${version}" unplug_nic("${server_hostname}", "${server_login}", "nat")
+	}
+
+	test "server_${version}_prepare": "server_${version}_unplug_nat" {
+		"server_${version}" {
+			copyto "./rename_net_${version}.sh" "/opt/rename_net.sh"
+			exec bash """
+				chmod +x /opt/rename_net.sh
+				/opt/rename_net.sh 52:54:00:00:00:bb client_side
+				ip a a 192.168.1.1/24 dev client_side
+				ip l s client_side up
+				ip ad
+			"""
+		}
+	}
+
+	test "client_${version}_install_ubuntu" {
+		"client_${version}" install_ubuntu_server("${version}", "nat", "${client_hostname}", "${client_login}")
+	}
+
+	test "client_${version}_install_guest_additions": "client_${version}_install_ubuntu" {
+		"client_${version}" install_guest_additions("${client_hostname}", "${client_login}")
+	}
+
+	test "client_${version}_unplug_nat": "client_${version}_install_guest_additions" {
+		"client_${version}" unplug_nic("${client_hostname}", "${client_login}", "nat")
+	}
+
+	test "client_${version}_prepare": "client_${version}_unplug_nat" {
+		"client_${version}" {
+			process_flash("exchange_flash_${version}", "cp /media/rename_net_${version}.sh /opt/rename_net.sh")
+
+			exec bash """
+				chmod +x /opt/rename_net.sh
+				/opt/rename_net.sh 52:54:00:00:00:aa server_side
+				ip a a 192.168.1.2/24 dev server_side
+				ip l s server_side up
+				ip ad
+			"""
+		}
+	}
+
+	test "test_ping_${version}": "client_${version}_prepare", "server_${version}_prepare" {
+		"client_${version}" exec bash "ping 192.168.1.2 -c5"
+		"server_${version}" exec bash "ping 192.168.1.1 -c5"
+	}
+
+	# Take a note, that the test is inherited not from
+	# the test_ping, but from the client_prepare and
+	# server_prepare tests.
+	# Which means that test_ping and exchange_files_with_flash
+	# both lay on the samy tests tree level
+	test "exchange_files_with_flash_${version}": "client_${version}_prepare", "server_${version}_prepare" {
+		#Create a file to be transferred
+		"client_${version}" exec bash "echo \"Hello from client!\" > /tmp/copy_me_to_server.txt"
+		copy_file_with_flash("client_${version}", "server_${version}", "exchange_flash_${version}", "/tmp/copy_me_to_server.txt", "/tmp/copy_me_to_server.txt")
+		"server_${version}" exec bash "cat /tmp/copy_me_to_server.txt"
+	}
+}
+
+generate_tests("16")
+generate_tests("20")
+

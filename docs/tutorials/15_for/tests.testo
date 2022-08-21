@@ -1,0 +1,42 @@
+include "macros.testo"
+
+test server_install_ubuntu {
+	server install_ubuntu("${server_hostname}", "${server_login}")
+}
+
+test server_prepare: server_install_ubuntu {
+	server {
+		install_guest_additions("${server_hostname}", "${server_login}")
+		exec bash "apt install -y vifm"
+	}
+}
+
+macro vifm_select(menu_entry) {
+	if (check js "find_text().match('${menu_entry}').match_background('blue').size() == 1") {
+		print "Entry ${menu_entry} is already selected"
+		press Enter
+	} else {
+		press g*2
+
+		for (i IN RANGE 0 50) {
+			if (check js "find_text().match('${menu_entry}').match_background('blue').size() == 1") {
+				print "Got to entry ${menu_entry} in ${i} steps"
+				press Enter
+				break
+			}
+			press Down
+		} else {
+			abort "Menu entry ${menu_entry} doesn't exist!"
+		}
+	}
+}
+
+test cycles_demo: server_prepare {
+	server {
+		type "vifm /"; press Enter
+		sleep 2s
+		vifm_select("usr")
+		vifm_select("sbin")
+		abort "stop here"
+	}
+}

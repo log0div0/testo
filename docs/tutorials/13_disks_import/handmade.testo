@@ -1,0 +1,24 @@
+
+network internet {
+	mode: "nat"
+}
+
+machine ubuntu_desktop {
+	cpus: 1
+	ram: 2Gb
+	disk main: {
+		source: "${VM_DISK_POOL_DIR}/handmade.qcow2"
+	}
+	nic internet: {
+		attached_to: "internet"
+		adapter_type: "e1000"
+	}
+}
+
+test check_handmane_ubuntu {
+	ubuntu_desktop {
+		start
+		wait "Handmade" timeout 3m
+	}
+}
+
