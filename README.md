@@ -280,14 +280,19 @@ testo version
 
 ## Building from source
 
-Probably the most simple way to build Testo is to let Testo to build itself. We have written tests that setup the buld environment on all supporterd operating systems and build Testo packages from source codes. This tests can be found in the [ci](https://github.com/log0div0/testo/tree/master/ci) folder.
+Probably the most simple way to build Testo is to let Testo to build itself. We have written tests that set up the buld environment on all supported operating systems and build Testo packages from source codes. This tests can be found in the [ci](https://github.com/log0div0/testo/tree/master/ci) folder and run with the following command:
+
+```
+cd ci
+sudo ./build_testo.sh
+```
 
 In any case, I'll dublicate the instructions for building the project here.
 
 1. Download or build from sources [ONNX Runtime](https://onnxruntime.ai/).
 2. Install dev packages:
 
-Ubuntu/Debian
+Ubuntu/Debian:
 
 ```
 apt -y install git gcc g++ make libssl-dev python3-dev libvirt-dev libguestfs-dev rpm cmake
@@ -315,6 +320,20 @@ make testo-package testo-nn-server-package -j$(nproc)
 ```
 
 ## Running tests
+
+Testo framework has two levels of tests. Most basic and simple tests are placed in [tests](https://github.com/log0div0/testo/tree/master/tests) directory. This tests are based on [pytest](https://docs.pytest.org/) framework and can be run with the following command:
+
+```
+cd tests
+sudo pytest
+```
+
+More complex tests that involve interaction with OS or `virt-manager` are written on Testo-lang, i.e. Testo Framework is used to test itself. This leads to nested virtualization, so this tests are much slower and require much more memory. They can be found in [ci](https://github.com/log0div0/testo/tree/master/ci) and run with the following command:
+
+```
+cd ci
+sudo ./test.sh
+```
 
 ## Credits
 
