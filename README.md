@@ -350,7 +350,7 @@ Next libraries are used in Testo framework:
 - [base64](https://stackoverflow.com/questions/180947/base64-decode-snippet-in-c) - two functions borrowed from StackOverflow. Originally written by René Nyffenegger, zlib/libpng license as I can guess.
 - [Catch2](https://github.com/catchorg/Catch2) - a modern, C++-native, test framework for unit-tests, TDD and BDD. Boost Software License.
 - [CLIPP](https://github.com/muellan/clipp) - command line interfaces for modern C++. MIT License.
-- [rang](https://github.com/agauniyal/rang) - a Minimal, Header only Modern c++ library for terminal goodies. [Unlicense](https://unlicense.org/) license.
+- [rang](https://github.com/agauniyal/rang) - a Minimal, Header only Modern c++ library for terminal goodies. The Unlicense.
 - [ScopeGuard](https://github.com/Neargye/scope_guard) - Scope Guard & Defer C++. MIT License.
 - [stb](https://github.com/nothings/stb) - single-file public domain (or MIT licensed) libraries for C/C++.
 - [wildcards](https://github.com/zemasoft/wildcards) - a simple C++ header-only template library implementing matching using wildcards. Boost Software License.
