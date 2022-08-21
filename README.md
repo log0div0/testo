@@ -340,7 +340,7 @@ sudo ./test.sh
 Next libraries are used in Testo framework:
 
 - [Asio](https://think-async.com/Asio/) - a cross-platform C++ library for network and low-level I/O programming. Boost Software License.
-- [Coro](https://github.com/log0div0/coro) - a coroutine library that works on top of Asio
+- [Coro](https://github.com/log0div0/coro) - a coroutine library that works on top of Asio. MIT License.
 - [fmt](https://fmt.dev/) - a modern formatting library. MIT license.
 - [ghc](https://github.com/gulrak/filesystem) - an implementation of C++17 std::filesystem for C++11 /C++14/C++17/C++20 on Windows, macOS, Linux and FreeBSD. MIT license.
 - [json](https://github.com/nlohmann/json) - JSON for Modern C++. MIT License.
