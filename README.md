@@ -337,4 +337,24 @@ sudo ./test.sh
 
 ## Credits
 
+Next libraries are used in Testo framework:
+
+- [Asio](https://think-async.com/Asio/) - a cross-platform C++ library for network and low-level I/O programming. Boost Software License.
+- [Coro](https://github.com/log0div0/coro) - a coroutine library that works on top of Asio
+- [fmt](https://fmt.dev/) - a modern formatting library. MIT license.
+- [ghc](https://github.com/gulrak/filesystem) - an implementation of C++17 std::filesystem for C++11 /C++14/C++17/C++20 on Windows, macOS, Linux and FreeBSD. MIT license.
+- [json](https://github.com/nlohmann/json) - JSON for Modern C++. MIT License.
+- [pugixml](https://pugixml.org/) - a light-weight C++ XML processing library. MIT License.
+- [QuickJS](https://bellard.org/quickjs/) - a small and embeddable Javascript engine. MIT license.
+- [spdlog](https://github.com/gabime/spdlog) - a fast C++ logging library. MIT License.
+- [base64](https://stackoverflow.com/questions/180947/base64-decode-snippet-in-c) - two functions borrowed from StackOverflow. Originally written by René Nyffenegger, zlib/libpng license as I can guess.
+- [Catch2](https://github.com/catchorg/Catch2) - a modern, C++-native, test framework for unit-tests, TDD and BDD. Boost Software License.
+- [CLIPP](https://github.com/muellan/clipp) - command line interfaces for modern C++. MIT License.
+- [rang](https://github.com/agauniyal/rang) - a Minimal, Header only Modern c++ library for terminal goodies. [Unlicense](https://unlicense.org/) license.
+- [ScopeGuard](https://github.com/Neargye/scope_guard) - Scope Guard & Defer C++. MIT License.
+- [stb](https://github.com/nothings/stb) - single-file public domain (or MIT licensed) libraries for C/C++.
+- [wildcards](https://github.com/zemasoft/wildcards) - a simple C++ header-only template library implementing matching using wildcards. Boost Software License.
+
 ## License
+
+MIT License
