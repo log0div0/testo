@@ -228,11 +228,49 @@ See [releases](https://github.com/log0div0/testo/releases) page for downloads an
 
 ## Installation
 
+Make sure that you have Intel VT feature (if you have an Intel CPU) or AMD-V feature (if you have an AMD CPU) enabled in BIOS. Testo won't run without the CPU virtualization feature enabled.
+
+Note that Testo interpreter and Testo NN server can be installed on separate computers. It's recommended to install Testo NN server on a computer with Nvidia GPU.
+
 ### Debian/Ubuntu
+
+```
+sudo apt install libvirt0 libvirt-clients libvirt-daemon-system libguestfs0 qemu qemu-kvm ebtables dnsmasq-base
+sudo dpkg -i testo-nn-server.deb testo.deb
+testo version
+```
+
+It is also recommended (though not necessary) to install the package `virt-manager` - a GUI client for QEMU/KVM hypervisor. With virt-manager you can much easier observe the test runs, as well as control virtual machines manually when necessary. You can install the `virt-manager` with the command:
+
+```
+sudo apt install virt-manager
+```
 
 ### CentOS
 
+```
+sudo yum -y install qemu-kvm libvirt libguestfs iptables-ebtables dnsmasq
+sudo rpm -i testo-nn-server.rpm testo.rpm
+testo version
+```
+
+It is also recommended (though not necessary) to install the package `virt-manager` - a GUI client for QEMU/KVM hypervisor. With virt-manager you can much easier observe the test runs, as well as control virtual machines manually when necessary. You can install the `virt-manager` with the command:
+
+```
+sudo yum -y install virt-manager
+```
+
 ### Windows
+
+Pay attention that Testo framework for Hyper-V works in experimental mode. Some actions and features are not available.
+
+1. [Install](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v) the Hyper-V hypervisor.
+2. Download and launch the Testo framework installation files. Then follow the instructions.
+3. Open the command shell (cmd) and run the command
+
+``` bash
+testo version
+```
 
 ## Documentation
 
