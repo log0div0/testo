@@ -625,7 +625,7 @@ test my_new_test {
 
 In interactive mode you can type actions (like `type`, `wait` and so on) one-by-one and see the result in real time. Press Ctrl-C to exit interactive mode. The interpreter will print for you the list of succeeded actions which you can copy-paste in the test scenario file.
 
-Apart from that this mode can be useful in debugging purposes.
+Apart from that this mode can be useful in debugging purposes as `repl` action can be placed anywhere in the test.
 
 ## bug
 
