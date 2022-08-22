@@ -1,4 +1,6 @@
-# Virtual Machines Actions
+# Actions
+
+This pages contains the list of all available actions that can be applyed to virtual machines. Some of them can also be applyed to virtual flash drives, to be more precise they are `copyto`, `copyfrom`, `abort` and `print`.
 
 ## start
 
@@ -8,8 +10,6 @@ Starts a virtual machine. The virtual Machine must be stopped at the moment of t
 start
 ```
 
-**Arguments**: no
-
 ## stop
 
 Stops a virtual machine, simulating power failure. The virtual machine must be running at the moment of the call. Trying to stop an already stopped virtual machine results in an error.
@@ -17,8 +17,6 @@ Stops a virtual machine, simulating power failure. The virtual machine must be r
 ```text
 stop
 ```
-
-**Arguments**: no
 
 ## shutdown
 
@@ -30,7 +28,7 @@ shutdown [timeout timeout_time_spec]
 
 **Arguments**:
 
-- `timeout_time_spec` - Type: time interval or string. Timeout for the virtual machine to stop. Default value - 1 min. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available.
+- `timeout_time_spec` - Type: time interval or string. Timeout for the virtual machine to stop. Default value - 1 min. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 **Examples**:
 
