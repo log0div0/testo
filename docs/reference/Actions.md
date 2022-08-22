@@ -613,8 +613,28 @@ print <message>
 
 - `message` - Type: string. Message to print.
 
-## Macro call
+## repl
 
-Call the `macro_name` macro. The macro must be declared before the calling. The macro must consist of actions (not commands) applicable to virtual machines.
+Switches the interpreter to the interactive mode. This action is highly useful for writing new tests. You can start with a blank test that consists of the only repl action:
 
-Macro calls are described [here](Macros.md#macro-call).
+```
+test my_new_test {
+   repl
+}
+```
+
+In interactive mode you can type actions (like `type`, `wait` and so on) one-by-one and see the result in real time. Press Ctrl-C to exit interactive mode. The interpreter will print for you the list of succeeded actions which you can copy-paste in the test scenario file.
+
+Apart from that this mode can be useful in debugging purposes.
+
+## bug
+
+Add a mention about the bug to the report. This action does not fail the test. It's used mainly in conjunction with JIRA or TFS.
+
+```
+bug <bug_id>
+```
+
+**Arguments**:
+
+- bug_id  - Type: string. Bug to report about.
