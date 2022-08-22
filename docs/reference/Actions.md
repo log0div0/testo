@@ -54,7 +54,7 @@ press <key_spec1>[,key_spec2][,key_spec3]... [interval interval_time_spec]
 **Arguments**:
 
 - `key_spec` - Key specification to press.
-- `interval_time_spec` - Type: time interval or string. Sleep time interval between the key pressings. Default value: `30ms`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available. Default value can be changed with the `TESTO_PRESS_DEFAULT_INTERVAL` param. See [here](param#special-(reserved)-params) for more information.
+- `interval_time_spec` - Type: time interval or string. Sleep time interval between the key pressings. Default value: `30ms`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available. Default value can be changed with the `TESTO_PRESS_DEFAULT_INTERVAL` param. See [here](Params.md#special-reserved-params) for more information.
 
 ### Key specification
 
@@ -64,13 +64,13 @@ Key specification is a special language clause and looks like this:
 <key_id1>[+key_id2][+key_id3]...[*number]
 ```
 
-`key_id` is an identifier containing the name of a key. See [here](keys) for a complete list of key values. `key_id` is **case-insensitive**, so for example `enter` is treated the same way as `Enter` or `ENTER`.
+`key_id` is an identifier containing the name of a key. See [here](Language%20lexical%20elements.md#keyboard-key-literals) for a complete list of key values. `key_id` is **case-insensitive**, so for example `enter` is treated the same way as `Enter` or `ENTER`.
 
 Key specification consists of two parts: combination of the keyboard keys **pressed simultaneously** and the number of times to press this combination. The combination part must contatin at least one `key_id`. To press several keys simultaneously you need to add more `key_ids` and divide keys with the "+" sign. The number part shows how many times the combination part must be pressed.
 
-The number part (`number`) may be either a positive integer or a string. If the string type is used, the value inside the string must be convertible to a positive integer. Inside the string [param referencing](param#param-referencing) is available.
+The number part (`number`) may be either a positive integer or a string. If the string type is used, the value inside the string must be convertible to a positive integer. Inside the string [param referencing](Params.md#param-referencing) is available.
 
-Key spec examples:
+**Key spec examples:**
 
 - `Down` - press "Down arrow" key one time.
 - `LEFTCTRL + alt + Delete` - press keys Ctrl Alt Delete simultaneously one time.
@@ -81,7 +81,7 @@ Key spec examples:
 **`press` action examples**
 
 ```testo
-  #Press "Down" 6 times, then press Enter 1 time
+  # press "Down" 6 times, then press Enter 1 time
   press Down*6, Enter
 
   # send key combination Ctrl Alt Delete, then press Down 2 times, then Enter 3 times
@@ -91,7 +91,6 @@ Key spec examples:
 ## hold
 
 Hold down keyboard keys specified in `key_spec` in a virtual machine. The keys will be held until explicit call of the [`release`](#release) action. The virtual machine must be running.
-
 
 ```text
 hold <key_spec>
@@ -136,21 +135,21 @@ The `release` action has some restrictions:
 **Examples**
 
 ```testo
-#Hold down left ctrl and left alt
+# Hold down left ctrl and left alt
 hold LeftCtrl + LeftAlt
 
 press Delete
 
-#Release only left ctrl
+# Release only left ctrl
 release LeftCtrl
 
-#Release all the keys being held down (e.g. left alt)
+# Release all the keys being held down (e.g. left alt)
 release
 ```
 
 ## type
 
-Type a text specified in `string` using the virtual machine keyboard. The virtual machine must be running. All the newline characters ('\n') in the specified text are  transformed to the `Enter` key pressings. All the tab characters ('\t') a transformed to the `Tab` key pressings.
+Type a text specified in `text` using the virtual machine keyboard. The virtual machine must be running. All the newline characters ('\n') in the specified text are transformed to the `Enter` key pressings. All the tab characters ('\t') a transformed to the `Tab` key pressings.
 
 ```text
 type <text> [interval interval_time_spec] [autoswitch <autoswitch_key_spec>]
@@ -158,8 +157,8 @@ type <text> [interval interval_time_spec] [autoswitch <autoswitch_key_spec>]
 
 **Arguments**:
 
-- `text` - Type: string. The text to type. Inside the string [param referencing](param#param-referencing) is available.
-- `interval_time_spec` - Type: time interval or string. Sleep time interval between the key pressings when typing the text. Default value: `30ms`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available. Default value can be changed with the `TESTO_TYPE_DEFAULT_INTERVAL` param. See [here](param#special-(reserved)-params) for more information.
+- `text` - Type: string. The text to type. Inside the string [param referencing](Params.md#param-referencing) is available.
+- `interval_time_spec` - Type: time interval or string. Sleep time interval between the key pressings when typing the text. Default value: `30ms`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available. Default value can be changed with the `TESTO_TYPE_DEFAULT_INTERVAL` param. See [here](Params.md#special-reserved-params) for more information.
 - `autoswitch_key_spec` - Type: key combination. Enables keyboard layout autoswitching mode (see below). The key combination that Testo will press when trying to change the current keyboard layout.
 
 **Keyboard layout autoswitching mode**
@@ -180,15 +179,10 @@ type "Hello Мир!" autoswitch LeftShift + LeftAlt
 
 The algorithm here is the following:
 
-1. Before typing the multi-layout text, Testo tries to estimate the current keyboard layout. To do that, Testo would type random symbols and constantly check the screen state, waiting for enough information to make the decision about the current layout. If Testo failed to estimate the current layout in 10 attemts, an error would be generated.
+1. Before typing the multi-layout text, Testo tries to estimate the current keyboard layout. To do that, Testo would type a few symbols and constantly check the screen state, waiting for enough information to make the decision about the current layout. If Testo failed to estimate the current layout in 10 attemts, an error would be generated.
 2. Testo starts typing the text, switching automatically between layouts when necessary using the key combination specified in `autoswitch_key_spec`.
 
-> At the moment this autoswitching mode supports only Russian-English layout switching. Any other layout is not supported.
-
-> Without the `autoswitch` keyword this mode is not enabled and `type` would work as usual.
-
 > Trying to type multi-layout text without `autoswitch` keyword will lead to an error.
-
 
 **Examples**:
 
@@ -215,7 +209,7 @@ type "Привет world!" autoswitch LeftShift + LeftAlt
 
 ## mouse
 
-Mouse-related actions are documented [here](mouse).
+Mouse-related actions are documented [here](Mouse%20actions.md).
 
 ## sleep
 
@@ -227,9 +221,10 @@ sleep <timeout timeout_time_spec>
 
 **Arguments**
 
-- `timeout_time_spec` - Type: time interval or string. Time period to sleep. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available.
+- `timeout_time_spec` - Type: time interval or string. Time period to sleep. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 **Examples**:
+
 ```testo
   sleep 10s
 
@@ -248,8 +243,8 @@ wait <select_expr> [timeout timeout_time_spec] [interval interval_time_spec]
 **Arguments**:
 
 - `select_expr` - Select expression (an event) to wait.
-- `timeout_time_spec` - Type: time interval or string. Timeout for the `select_expr` to appear on the screen. Default value: `1m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available. Default value can be changed with the `TESTO_WAIT_DEFAULT_TIMEOUT` param. See [here](param#special-(reserved)-params) for more information.
-- `interval_time_spec` - Type: time interval or string. Time interval between the screen checks for the expected event to appear. Default value: `1s`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available. Default value can be changed with the `TESTO_WAIT_DEFAULT_INTERVAL` param. See [here](param#special-(reserved)-params) for more information.
+- `timeout_time_spec` - Type: time interval or string. Timeout for the `select_expr` to appear on the screen. Default value: `1m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available. Default value can be changed with the `TESTO_WAIT_DEFAULT_TIMEOUT` param. See [here](Params.md#special-reserved-params) for more information.
+- `interval_time_spec` - Type: time interval or string. Time interval between the screen checks for the expected event to appear. Default value: `1s`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available. Default value can be changed with the `TESTO_WAIT_DEFAULT_INTERVAL` param. See [here](Params.md#special-reserved-params) for more information.
 
 ### Select expressions for the `wait` and `check` actions
 
@@ -262,7 +257,8 @@ If you just want (or check) to simply wait for a text to appear on the screen, a
 ```testo
 wait "Extected string"
 ```
-Inside the string [param referencing](param#param-referencing) is available, like this:
+
+Inside the string [param referencing](Params.md#param-referencing) is available, like this:
 
 ```testo
 wait "Extected string with a param value ${param}"
@@ -278,8 +274,6 @@ If you need wait (or check) for an image to appear on the screen, then you shoul
 wait img "/path/to/img/to/be/searched"
 ```
 
-See more informations about image detection [here](/en/docs/lang/detect_img).
-
 **Complex javascript-based checks**
 
 For more elaborate screen checks in the `wait` (or `check`) you can use javascript selections. These selections look like javascript code snippets which must return a bool-value `true` or `false`.
@@ -287,12 +281,12 @@ For more elaborate screen checks in the `wait` (or `check`) you can use javascri
 If the javascript returned `true` - then `wait` and `check` actions are considered complete, and test control goes to the next action. Otherwise `wait` and `check` processing continues until a `true` is returned or a timeout is due. Any other returned value is treated as an error and the test will fail.
 
 ```testo
-return wait js "find_text('Hello world').match_color('blue', 'gray').size() == 1"
+wait js "return find_text('Hello world').match_color('blue', 'gray').size() == 1"
 ```
 
 The example above waits for a text "Hello world" with blue charecters and gray background to appear on the screen. Such a string could represent, for example, a selected menu entry.
 
-For more information about javascript-selections see [here](../js/general).
+For more information about javascript-selections see [here](Javascript%20selectors.md).
 
 **Using several checks together in the same action**
 
@@ -304,7 +298,7 @@ Checks may be combined together into whole select expressions with logical conne
 wait "Hello world" && img "${IMG_DIR}/my_icon.png"
 ```
 
-Wait for simultaious presence of the text "Hello world" and the image, which path depends on the value of the `IMG_DIR` param.
+Wait for simultaious absense of the text "Hello world" and presence of the image, which path depends on the value of the `IMG_DIR` param.
 
 ```testo
 # works if the param value "wait_timeout" is convertible to a time interval
@@ -320,12 +314,6 @@ Wait for either of two events:
 2. Presence of the text `Menu entry` on the screen. `Menu entry` must have the grey background and the character color determined by the `foreground_colour` param value.
 
 Check frequency is determined by the value of the `wait_interval` param. Maximum waiting time is 10 minutes.
-
-## Macro call
-
-Call the `macro_name` macro. The macro must be declared before the calling. The macro must consist of actions (not commands) applicable to virtual machines.
-
-Macro calls are described [here](macro#macro-call).
 
 ## plug
 
@@ -343,7 +331,7 @@ plug flash <flash_name>
 
 **Arguments**:
 
-- `flash_name` - Type: identifier or string. The name of the virtual flash drive to insert. The flash drive must be declared and not be inserted in any virtual machine. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](param#param-referencing) is available.
+- `flash_name` - Type: identifier or string. The name of the virtual flash drive to insert. The flash drive must be declared and not be inserted in any virtual machine. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 **Examples**:
 
@@ -373,7 +361,7 @@ plug nic <nic_name>
 
 **Arguments**:
 
-- `nic_name` - Type: identifier or string. The name of the NIC to insert. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](param#param-referencing) is available.
+- `nic_name` - Type: identifier or string. The name of the NIC to insert. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 ```testo
   plug nic internet_nic
@@ -399,7 +387,7 @@ plug link <nic_name>
 
 **Arguments**:
 
-- `nic_name` - Type: identifier or string. The name of the NIC to plug the link into. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](param#param-referencing) is available.
+- `nic_name` - Type: identifier or string. The name of the NIC to plug the link into. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 > Trying to plug an already plugged link will result in an error.
 
@@ -429,7 +417,7 @@ plug hostdev usb <usb_device_address>
 
 **Arguments**:
 
-- `usb_device_address` - Type: string. The USB address of the device to be plugged. The address must be represented as `"Bus_num-Device_num"`, where `Bus_num` and `Device_num` are decimal numbers (for instance, `"3-1"`). Inside the string [param referencing](param#param-referencing) is available.
+- `usb_device_address` - Type: string. The USB address of the device to be plugged. The address must be represented as `"Bus_num-Device_num"`, where `Bus_num` and `Device_num` are decimal numbers (for instance, `"3-1"`). Inside the string [param referencing](Params.md#param-referencing) is available.
 
 > An attempt to plug an already plugged USB device will result in an error.
 
@@ -457,7 +445,7 @@ unplug flash <flash_name>
 
 **Arguments**:
 
-- `flash_name` - Type: identifier or string. The name of the virtual flash drive to remove. The flash drive must be declared and inserted into current virtual machine. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](param#param-referencing) is available.
+- `flash_name` - Type: identifier or string. The name of the virtual flash drive to remove. The flash drive must be declared and inserted into current virtual machine. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 > All plugged flash drives must be unplugged before the end of the test. It is not allowed to finish a test with plugged flash drives.
 
@@ -473,7 +461,7 @@ unplug nic <nic_name>
 
 **Arguments**:
 
-- `nic_name` - Type: identifier or string. The name of the NIC to detach. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](param#param-referencing) is available.
+- `nic_name` - Type: identifier or string. The name of the NIC to detach. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 > Plugging/Unplugging NICs requires that a virtual machine must be turned off.
 
@@ -489,7 +477,7 @@ unplug link <nic_name>
 
 **Arguments**:
 
-- `nic_name` - Type: identifier or string. The name of the NIC to unplug the link from. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](param#param-referencing) is available.
+- `nic_name` - Type: identifier or string. The name of the NIC to unplug the link from. The NIC with this name must be declared in the virtual machine configuration. If the string type is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 > Trying to unplug an already unplugged link will result in an error.
 
@@ -500,8 +488,6 @@ Remove the current iso-image from the DVD-drive of the Virtual Machine.
 ```text
 unplug dvd
 ```
-
-**Arguments**: no
 
 > Trying to remove the iso-image from an empty DVD-drive will result in an error.
 
@@ -517,7 +503,7 @@ unplug hostdev usb <usb_device_address>
 
 **Arguments**:
 
-- `usb_device_address` - Type: string. The USB address of the device to be unplugged. The address must be represented as `"Bus_num-Device_num"`, where `Bus_num` and `Device_num` are decimal numbers (for instance, `"3-1"`). Inside the string [param referencing](param#param-referencing) is available.
+- `usb_device_address` - Type: string. The USB address of the device to be unplugged. The address must be represented as `"Bus_num-Device_num"`, where `Bus_num` and `Device_num` are decimal numbers (for instance, `"3-1"`). Inside the string [param referencing](Params.md#param-referencing) is available.
 
 > An attempt to unplug a not-plugged USB device will result in an error.
 
@@ -533,7 +519,7 @@ exec <interpreter> <script> [timeout timeout_time_spec]
 
 - `interpreter` - Type: identifier. The name of the interpreter to execute the script. At the moment the next values are allowed: `bash`, `cmd`, `python`, `python2` and `python3`. The interpreter must be installed and available inside the virtual machine OS.
 - `script` - Type: string. The script to execute.
-- `timeout_time_spec` - Type: time interval or string. Timeout for the script to execute. Default value: `10m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available. Default value can be changed with the `TESTO_EXEC_DEFAULT_TIMEOUT` param. See [here](param#special-(reserved)-params) for more information.
+- `timeout_time_spec` - Type: time interval or string. Timeout for the script to execute. Default value: `10m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available. Default value can be changed with the `TESTO_EXEC_DEFAULT_TIMEOUT` param. See [here](Params.md#special-reserved-params) for more information.
 
 **Examples**:
 
@@ -561,13 +547,13 @@ copyto <from> <to> [nocheck] [timeout timeout_time_spec]
 - `from`- Type: string. Path to the file or directory on the Host. The path must exist.
 - `to` - Type: string. **Full** destination path on the virtual machine.
 - `nocheck` - Type: identifier with fixed value. The presence of this specifier disables the semantic checking of the file existence on the host. This way you can run tests with `copyto` actions even if the `from` file doesn't exist on the host at the moment of running. It is assumed that the file will be there at the actual moment of `copyto` execution.
-- `timeout_time_spec` - Type: time interval or string. Timeout for copying to complete. Default value: `10m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available. Default value can be changed with the `TESTO_COPY_DEFAULT_TIMEOUT` param. See [here](param#special-(reserved)-params) for more information.
+- `timeout_time_spec` - Type: time interval or string. Timeout for copying to complete. Default value: `10m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available. Default value can be changed with the `TESTO_COPY_DEFAULT_TIMEOUT` param. See [here](Params.md#special-reserved-params) for more information.
 
 > You must specify the full destination path in the `to` argument. For example, if you need to copy the file `/home/user/some_file.txt` on the virtual machine destination `/path/on/vm/some_file.txt` you should call `copyto` like this: `copyto /home/user/some_file.txt /path/on/vm/some_file.txt`. Copying directories falls under the same rules.
 
 > Copying links is not allowed.
 
-> You should remember that with the `nocheck` specifier the `from` files' integrity is not included in the test cache. Which means that changing the `from` files won't lead to the test cache invalidation.
+> You should keep in mind that with the `nocheck` specifier the `from` files' integrity is not included in the test cache. Which means that changing the `from` files won't lead to the test cache invalidation.
 
 ## copyfrom
 
@@ -581,8 +567,7 @@ copyfrom <from> <to> [timeout timeout_time_spec]
 
 - `from`- Type: string. Path to the file or directory on the virtual machine. The path must exist.
 - `to` - Type: string. **Full** destination path on the Host.
-- `timeout_time_spec` - Type: time interval or string. Timeout for copying to complete. Default value: `10m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](param#param-referencing) is available. Default value can be changed with the `TESTO_COPY_DEFAULT_TIMEOUT` param. See [here](param#special-(reserved)-params) for more information.
-
+- `timeout_time_spec` - Type: time interval or string. Timeout for copying to complete. Default value: `10m`. If the string type is used, the value inside the string must be convertible to a time interval. Inside the string [param referencing](Params.md#param-referencing) is available. Default value can be changed with the `TESTO_COPY_DEFAULT_TIMEOUT` param. See [here](Params.md#special-reserved-params) for more information.
 
 > You must specify the full destination path in the `to` argument (see `copyto` action notes).
 
@@ -627,3 +612,9 @@ print <message>
 **Arguments**:
 
 - `message` - Type: string. Message to print.
+
+## Macro call
+
+Call the `macro_name` macro. The macro must be declared before the calling. The macro must consist of actions (not commands) applicable to virtual machines.
+
+Macro calls are described [here](Macros.md#macro-call).
