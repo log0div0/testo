@@ -15,23 +15,23 @@ There are some differences between snippets used for the `wait` (and `check`) an
 
 ## JS-selectors for the `wait` and `check`
 
-When used in the [`wait`](/en/docs/lang/actions_vm#wait) actions and the [`check`](/en/docs/lang/if#expressions) conditional expressions, JS-selectors must return a **boolean**: `true` or `false`.
+When used in the [`wait`](Actions.md#wait) actions and the [`check`](Conditions.md#expressions) conditional expressions, JS-selectors must return a **boolean**: `true` or `false`.
 
-Returning a `true` means that the specified event is found on the screen and the waiting (checking) must be finished. A wait with JS-selector returned a `true` finishes successfully and a `check` expression returns `true`.
+Returning a `true` means that the specified event is found on the screen and the waiting (checking) must be finished. A [`check`](Conditions.md#expressions) expression returns `true` in this situation.
 
-Returning a `false` means that the event hasn't happened on the screen yet and the searching must continue. A wait or a check with a JS-selector, which returned `false`,  sleeps for the `time_interval` specified for them. After that it tries to process the JS-selector one more time with another screenshot.
+Returning a `false` means that the event hasn't happened on the screen yet and the searching must continue. In this case the interpreter will sleep for the `time_interval` specified for the [`wait`](Actions.md#wait) or [`check`](Conditions.md#expressions) action. After that it tries to process the JS-selector one more time with another screenshot.
 
-If the `timeout` time interval is exceeded, a wait action generates an error and the test fails. A check expression returns `false` in the same situation.
+If the `timeout` time interval is exceeded, a [`wait`](Actions.md#wait) action generates an error and the test fails. A [`check`](Conditions.md#expressions) expression returns `false` in this situation.
 
 ## JS-selectors for the `mouse` actions
 
-When used in the [`mouse`](/en/docs/lang/mouse) actions, JS-selectors must return a **Point**: an object (of any class, it doesn't matter) with the `x` and `y` properties with numbers as their values.
+When used in the [`mouse`](Mouse%20actions.md) actions, JS-selectors must return a **Point**: an object (of any class, it doesn't matter) with the `x` and `y` properties with numbers as their values.
 
-Returning a point means that the JS-selector found the destination to move the cursor to. So the `mouse` action finishes waiting and moves the cursor to the returned point.
+Returning a point means that the JS-selector found the destination to move the cursor to. So the [`mouse`](Mouse%20actions.md) action finishes waiting and moves the cursor to the returned point.
 
-If the JS-selector is not ready to return a point (the expected event hasn't happend on the screen yet) it should throw [`ContinueError`](exceptions), which will force the `mouse` action to sleep a little bit and try to process the JS-selector one more time with another screenshot.
+If the JS-selector is not ready to return a point (the expected event hasn't happend on the screen yet) it should throw [`ContinueError`](#ContinueError), which will force the [`mouse`](Mouse%20actions.md) action to sleep a little bit and try to process the JS-selector one more time with another screenshot.
 
-If a `mouse` action contains a JS-selector with `ContinueError` exceptions and the processing time of this selector exceeds the `mouse` action timeout (1 minute by default), then a timeout error will be generated.
+If a [`mouse`](Mouse%20actions.md) action contains a JS-selector and the processing time of this selector exceeds the [`mouse`](Mouse%20actions.md) action timeout (1 minute by default), then a timeout error will be generated.
 
 # Built-in global functions
 
@@ -41,28 +41,21 @@ Prints all the arguments to the stdout. Could come handy when debugging.
 
 **Arguments**: an arbitrary number of arguments of any types
 
-**Return value** - no
+## find_text(text)
 
-## find_text(value)
-
-Finds and returns all the textlines with the value `value` (case sensitive) on the virtual machine screen. A textline is a sequence of characters aligned horizontally. Textlines where characters have big horizontal space between them are consdired different textlines. For example, if there are 3 textlines "Install the software", "Install" and "Do not install" on the screen, then `find_text("Install")` returns new `TextTensor` with two 2 instances of the same text: "Install" (one from "Install" and the other from "Install the Software"). "Do not install" won't get into new Tensor because "install" does not match "Install"). Both instances will have the same text but different coordinates.
+Finds and returns all the textlines with the value `text` (case sensitive) on the virtual machine screen. A textline is a sequence of characters aligned horizontally. Textlines where characters have big horizontal space between them are consdired different textlines. For example, if there are 3 textlines "Install the software", "Install" and "Do not install" on the screen, then `find_text("Install")` returns new `TextTensor` with two 2 instances of the same text: "Install" (one from "Install" and the other from "Install the Software"). "Do not install" won't get into new Tensor because "install" does not match "Install" (strictly speaking it depends on the font of the text, on how difficult to make distinction between uppercase I and lowercase i). Both instances will have the same text but different coordinates.
 
 **Arguments**:
 
-- `value <string>` - the string value to match.
+- `text` - the text to match.
 
-
-**Return value** - an object of the class [`TextTensor`](text_tensor), with an array containing all the strings with matched value.
-
+**Return value** - an object of the class [`TextTensor`](#TextTensor), with an array containing all the matched text lines.
 
 ## find_text()
 
-Same as `fine_text(value)`, but returns all the textlines found on the screen.
+Same as `fine_text(text)`, but returns all the textlines found on the screen.
 
-**Arguments**: no
-
-
-**Return value** - an object of the class [`TextTensor`](text_tensor), with an array containing all the strings on the screen.
+**Return value** - an object of the class [`TextTensor`](#TextTensor), with an array containing all the text lines on the screen.
 
 ## find_img(path_to_template)
 
@@ -70,10 +63,9 @@ Finds and returns all the images matching the template located in `path_to_templ
 
 **Arguments**:
 
-- `path_to_template <string>` - path to the template file on the disk.
+- `path_to_template` - path to the template file on the disk.
 
-
-**Return value** - an object of the class [`ImgTensor`](img_tensor), with all the images found matching the specified template.
+**Return value** - an object of the class [`ImgTensor`](#ImgTensor), with all the images found matching the specified template.
 
 # Exceptions
 
@@ -81,9 +73,53 @@ Finds and returns all the images matching the template located in `path_to_templ
 
 Interrupt the processing of the current JS-selector and try again a bit later. May be applied only inside the `mouse` actions (not applicable in the `wait` and `check` expressions).
 
-If a `mouse` action contains a JS-selector with a `ContinueError` exception and the processing time of this selector exceeds the `mouse` action timeout (1 minute by default), then the timeout error will be generated.
+# Class Tensor
+
+It's a base class for TextTensor and ImgTensor
+
+## Methods
+
+### from_top(index)
+### from_bottom(index)
+### from_left(index)
+### from_right(index)
+
+Select the textline with the specified index from the array of textlines sorted from top to bottom.
+
+**Arguments**:
+
+- `index <integer>` - the index of the textline to be selected. With the `index == 0` the "uppermost" textline on the screen will be selected.
+
+**Return value** - new object of `TextTensor`, containing just one selected textline.
+
+> Textlines are sorted by the Y coordinate of the top edge of the textlines.
+
+### center()
+### left_bottom()
+### left_center()
+### left_top()
+### center_bottom()
+### center_top()
+### right_bottom()
+### right_center()
+### right_top()
+
+Return a Point with the coordinates of the geometric center of the textline.
 
 **Arguments**: no
+
+**Return value** - new object `Point`, containing the coordinates of the geometic center of the textline.
+
+> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
+
+## Properties
+
+### `x <integer>`
+### `y <integer>`
+
+The X or Y coordinate value (the bigger `x` or `y` means more towards the right/bottom).
+
+> This property is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
 
 # Class TextTensor
 
@@ -132,317 +168,9 @@ Return all the textline instances on the screen with background color matching t
 
 **Return value** - new object of `TextTensor` with the strings which background color matches the `value`.
 
-### from_top(index)
-
-Select the textline with the specified index from the array of textlines sorted from top to bottom.
-
-**Arguments**:
-
-- `index <integer>` - the index of the textline to be selected. With the `index == 0` the "uppermost" textline on the screen will be selected.
-
-**Return value** - new object of `TextTensor`, containing just one selected textline.
-
-> Textlines are sorted by the Y coordinate of the top edge of the textlines.
-
-### from_bottom(index)
-
-Select the textline with the specified index from the array of textlines sorted from bottom to top.
-
-**Arguments**:
-
-- `index <integer>` - the index of the textline to be selected. With the `index == 0` the "lowermost" textline on the screen will be selected.
-
-**Return value** - new object of `TextTensor`, containing just one selected textline.
-
-> Textlines are sorted by the Y coordinate of the bottom edge of the textlines.
-
-### from_left(index)
-
-Select the textline with the specified index from the array of textlines sorted from left to right.
-
-**Arguments**:
-
-- `index <integer>` - the index of the textline to be selected. With the `index == 0` the most left textline on the screen will be selected.
-
-**Return value** - new object of `TextTensor`, containing just one selected textline.
-
-> Textlines are sorted by the X coordinate of the left edge of the textlines.
-
-### from_right(index)
-
-Select the textline with the specified index from the array of textlines sorted from right to left.
-
-**Arguments**:
-
-- `index <integer>` - the index of the textline to be selected. With the `index == 0` the most right textline on the screen will be selected.
-
-**Return value** - new object of `TextTensor`, containing just one selected textline.
-
-> Textlines are sorted by the X coordinate of the right edge of the textlines.
-
-### center()
-
-Return a Point with the coordinates of the geometric center of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the geometic center of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### left_bottom()
-
-Return a Point with the coordinates of the bottom left corner of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the bottom left corner of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### left_center()
-
-Return a Point with the coordinates of the center of the left edge of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the left edge of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### left_top()
-
-Return a Point with the coordinates of the top left corner of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the top left corner of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### center_bottom()
-
-Return a Point with the coordinates of the center of the left edge of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the left edge of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### center_top()
-
-Return a Point with the coordinates of the center of the top edge of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the top edge of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### right_bottom()
-
-Return a Point with the coordinates of the bottom right corner of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the bottom right corner of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### right_center()
-
-Return a Point with the coordinates of the center of the right edge of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the right edge of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### right_top()
-
-Return a Point with the coordinates of the top right corner of the textline.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the top right corner of the textline.
-
-> This method is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-## Properties
-
-### `x <integer>`
-
-The X coordinate value (the bigger `x` means more towards the right).
-
-> This property is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-### `y <integer>`
-
-The Y coordinate value (the bigger `y` means more towards the bottom)
-
-> This property is accessible only when the current `TextTensor` contains exactly one textline. Otherwise an error is generated.
-
-
 # Class ImgTensor
 
 Class `ImgTensor` contains the information about images on the screen. Could be obtained with a [`find_img`](global_funcs#find_img()) global function call.
-
-## Methods
-
-### from_top(index)
-
-Select the image with the specified index from the array of images sorted from top to bottom.
-
-**Arguments**:
-
-- `index <integer>` - the index of the image to be selected. With the `index == 0` the "uppermost" image on the screen will be selected.
-
-**Return value** - new object of `ImgTensor`, containing just one selected image.
-
-> Images are sorted by the Y coordinate of the top edge of the images.
-
-### from_bottom(index)
-
-Select the image with the specified index from the array of images sorted from bottom to top.
-
-**Arguments**:
-
-- `index <integer>` - the index of the image to be selected. With the `index == 0` the "lowermost" image on the screen will be selected.
-
-**Return value** - new object of `ImgTensor`, containing just one selected image.
-
-> Images are sorted by the Y coordinate of the bottom edge of the images.
-
-### from_left(index)
-
-Select the image with the specified index from the array of images sorted from left to right.
-
-**Arguments**:
-
-- `index <integer>` - the index of the image to be selected. With the `index == 0` the most left image on the screen will be selected.
-
-**Return value** - new object of `ImgTensor`, containing just one selected image.
-
-> Images are sorted by the X coordinate of the left edge of the images.
-
-### from_right(index)
-
-Select the image with the specified index from the array of images sorted from right to left.
-
-**Arguments**:
-
-- `index <integer>` - the index of the image to be selected. With the `index == 0` the most right image on the screen will be selected.
-
-**Return value** - new object of `ImgTensor`, containing just one selected image.
-
-> Images are sorted by the X coordinate of the right edge of the images.
-
-### center()
-
-Return a Point with the coordinates of the geometric center of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the geometic center of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### left_bottom()
-
-Return a Point with the coordinates of the bottom left corner of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the bottom left corner of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### left_center()
-
-Return a Point with the coordinates of the center of the left edge of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the left edge of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### left_top()
-
-Return a Point with the coordinates of the top left corner of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the top left corner of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### center_bottom()
-
-Return a Point with the coordinates of the center of the left edge of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the left edge of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### center_top()
-
-Return a Point with the coordinates of the center of the top edge of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the top edge of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### right_bottom()
-
-Return a Point with the coordinates of the bottom right corner of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the bottom right corner of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### right_center()
-
-Return a Point with the coordinates of the center of the right edge of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the center of the right edge of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### right_top()
-
-Return a Point with the coordinates of the top right corner of the image.
-
-**Arguments**: no
-
-**Return value** - new object `Point`, containing the coordinates of the top right corner of the image.
-
-> This method is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-## Properties
-
-### `x <integer>`
-
-The X coordinate value (the bigger `x` means more towards the right).
-
-> This property is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
-### `y <integer>`
-
-The Y coordinate value (the bigger `y` means more towards the bottom)
-
-> This property is accessible only when the current `ImgTensor` contains exactly one image. Otherwise an error is generated.
-
 
 # Class Point
 
@@ -450,43 +178,13 @@ The `Point` class contains the information about a point on the virtual machine 
 
 ## Methods
 
-### move_up(N)
+### move_up(N) / move_down(N) / move_right(N) / move_left(N)
 
 Returns a new Point with the `y` coordinate reduced by N pixels compared to the current object.
 
 **Arguments**:
 
 - `N <integer>` - Number of pixels for the new Point to be "higher" than the current Point object.
-
-**Return value** - a `Point` object with the new coordinates.
-
-### move_down(N)
-
-Returns a new Point with the `y` coordinate increased by N pixels compared to the current object.
-
-**Arguments**:
-
-- `N <integer>` - Number of pixels for the new Point to be "lower" than the current Point object.
-
-**Return value** - a `Point` object with the new coordinates.
-
-### move_right(N)
-
-Returns a new Point with the `x` coordinate increased by N pixels compared to the current object.
-
-**Arguments**:
-
-- `N <integer>` - Number of pixels for the new Point to be to the right from the current Point object.
-
-**Return value** - a `Point` object with the new coordinates.
-
-### move_left(N)
-
-Returns a new Point with the `x` coordinate decreased by N pixels compared to the current object.
-
-**Arguments**:
-
-- `N <integer>` - Number of pixels for the new Point to be to the left from the current Point object.
 
 **Return value** - a `Point` object with the new coordinates.
 

@@ -1,6 +1,6 @@
 # Conditions
 
-Testo language supports condition management with an `if` clause. If-statements can be placed at the same level as actions - e.g. in [commands](test#commands-syntax) body. If-statements have the next syntax:
+Testo language supports condition management with an `if` clause. If-statements can be placed at the same level as actions - e.g. in [commands](Tests.md#commands-syntax) body. If-statements have the next syntax:
 
 ```text
 if (expression) {
@@ -17,7 +17,7 @@ if (expression) {
 
 The syntax is pretty much straightforward: an `if` clause consists of an `expression` which may be evaluated into either `true` or `false`. If the expression value is `true`, the main action block is run. If the exression is equal to `false`, then the `else` action block is reached (if there is any `else` clause).
 
-Inside both action blocks ("main" and "else") all the actions, conditions and cycles are allowed.
+Inside both action blocks ("main" and "else") all the actions, nested conditions and loops are allowed.
 
 Conditions may be stacked as follows:
 
@@ -36,7 +36,7 @@ if (expression) {
 
 Expressions are entities which could be evaluated into a `true` or a `false`. At the moment expressions are used only inside the `if` clause.
 
-Possible expressions in Testo-lang is listed below:
+Possible expressions in Testo-lang are listed below:
 
 - A string. An empty (zero-length) string is treated as a `false`, othwerwise as a `true`.
 - A negation (`NOT <expr>`). Logical complement to the `expr`.
@@ -44,7 +44,7 @@ Possible expressions in Testo-lang is listed below:
 - Comparisons. Described below.
 - Logical conjunction (`<expr1> AND <expr2>`). Returns `true` if both `expr1` AND `expr2` are `true`. False otherwise.
 - Logical disjunction (`<exrp1> OR <expr2>`). Returns `true` if one or both of `expr1` and `expr2` are `true`. False otherwise.
-- **Only for if statements placed in virtual machines commands**. Checking the contents of screen with select expressions (`check <select_expr> [timeout timeout_spec] [interval interval_spec]`). For `select_expr` specifications see [here](/en/docs/lang/actions_vm#wait). The checks go on until the `select_expr` is found (`check` result is `true`) or the timeout is triggered (`check` result is `false`). Default timeout is `1ms` which means just one instant check will be performed. You can adjust the checks frequency with the `interval` argument (default value is `1s`).
+- **Only for if statements placed in virtual machines commands**. Checking the contents of screen with select expressions (`check <select_expr> [timeout timeout_spec] [interval interval_spec]`). For `select_expr` specifications see [here](Actions.md#wait). The checks go on until the `select_expr` is found (`check` result is `true`) or the timeout is triggered (`check` result is `false`). Default timeout is `1ms` which means just one instant check will be performed. You can adjust the checks frequency with the `interval` argument (default value is `1s`).
 
 You can use parentheses to group up the expressions.
 

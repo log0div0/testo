@@ -2,17 +2,17 @@
 
 ## Overview
 
-> **Virtual flash drives are unavailable for Hyper-V**.
+> **Virtual flash drives are unavailable for Hyper-V at the moment**.
 
 Virtual flash drives are mostly used for two purposes:
 1. Transferring data between virtual machines.
 2. Transeffring data between a virtual machine and a host.
 
-You can insert a virtual flash drive to a virtual machine with actions [`(un)plug flash`](actions_vm#plug-flash) of the virtual machine commands. However, to transfer data between the Host and a virtual machine, you need the actions [`copyto`](actions_fd#copyto) and [`copyfrom`](actions_fd#copyfrom) of the flash drive commands.
+You can insert a virtual flash drive to a virtual machine with actions [`(un)plug flash`](Actions.md#plug-flash) of the virtual machine commands. However, to transfer data between the Host and a virtual machine, you need the actions [`copyto`](Actions.md#copyto) and [`copyfrom`](Actions.md#copyfrom) of the flash drive commands.
 
 There is also an opportunity to copy some data on the flash drive from the Host at the moment of this flash drive creation. It can be done with the optional `folder` attribute.
 
-You can learn more about virtual flash drives in [this](/en/docs/tutorials/qemu/08_flash) tutorial.
+You can learn more about virtual flash drives in the [tutorial](../tutorials/08%20-%20flash).
 
 ## Declaration syntax
 
@@ -29,19 +29,20 @@ flash <name> {
 
 > The declaration itself does not mean the actual creation of the flash drive. The actual creation happens when the first test mentioning this virtual flash drive is run.
 
-> Virtual flash drives can also be defined inside macros. See [here](macros#macros-with-declarations) for more information.
+> Virtual flash drives can also be defined inside macros. See [here](Macros.md#macros-with-declarations) for more information.
 
 Virtual Flash Drives, just like virtual machines, require unique entity-identifier `name`.
 
-A virtual flash drive declaration is similar to a virtual machine [declaration](machine), but has a different set of attributes:
+A virtual flash drive declaration is similar to a virtual machine [declaration](Machines.md), but has a different set of attributes:
 
 **Mandatory virtual flash drive attributes**:
 
-- `size` - Type: memory size specifier or string. Flash drive size. If a string is used, the value inside the string must be convertible to a memory size literal. Inside the string [param referencing](param#param-referencing) is available.
-- `fs` - Type: string. Filesystem type to format flash drive with. Possible values: `ntfs`, `fat`, `vfat`, `etx3`, `ext4`. Inside the string [param referencing](param#param-referencing) is available.
+- `size` - Type: memory size specifier or string. Flash drive size. If a string is used, the value inside the string must be convertible to a memory size literal. Inside the string [param referencing](Params.md#param-referencing) is available.
+- `fs` - Type: string. Filesystem type to format flash drive with. Possible values: `ntfs`, `fat`, `vfat`, `etx3`, `ext4`. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 **Optional Virtual Flash Drive attributes**
-- `folder` - Type: string. Path to a folder on the Host to copy on the flash drive right after its creation. Inside the string [param referencing](param#param-referencing) is available.
+
+- `folder` - Type: string. Path to a folder on the Host to copy on the flash drive right after its creation. Inside the string [param referencing](Params.md#param-referencing) is available.
 
 The `folder` attribute can be used to copy a folder from the Host to the flash drive after its creation. After the copying **the contents** of the folder will be placed in the root `/` directory on the flash. The folder itself isn't copied. You may consider `folder` as a mount-point for the virtual flash drive filesystem.
 
@@ -71,7 +72,7 @@ In the second configuration the flash drive name depends on the `flash_name` par
 
 ## Virtual flash drives caching
 
-Virtual flash drives have a caching mechanism in Testo Framework, helping to check the integrity of their configuration. If the configuration has changed since the last Testo running (and therefore the cache is lost), then the flash drive must be re-created, and all the tests involving this flash drive must be re-run. This is one of the checks performed when [evaluating](test#validating-the-test-cache) the cache integrity.
+Virtual flash drives have a caching mechanism in Testo Framework, helping to check the integrity of their configuration. If the configuration has changed since the last Testo running (and therefore the cache is lost), then the flash drive must be re-created, and all the tests involving this flash drive must be re-run. This is one of the checks performed when [evaluating](Tests.md#validating-the-test-cache) the cache integrity.
 
 The complete flash drives cache consistency checklist is this:
 
