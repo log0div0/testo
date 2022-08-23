@@ -177,7 +177,7 @@ When running tests using `testo` interpreter, you can add a `--report_format` co
 
 We recommend to use `allure` report format as the most simple and convenient way to view the test results. Here is a screenshot of what the test results look like in [Allure framework](https://docs.qameta.io/allure-report/):
 
-![Allure report](https://github.com/log0div0/testo/raw/master/allure_screenshot.png)
+![Allure report](allure_screenshot.png)
 
 ### Neural networks and dataset generators
 
@@ -185,10 +185,10 @@ Detection and recognition of text/icons/GUI on VM screenshots is rather differen
 
 This leads us to the need to train our own neural networks. Testo framework includes a set of tools, that help to do it.
 
-- [Dataset editor](https://github.com/log0div0/testo/tree/master/nn/dataset/editor) for manual dataset labeling based on [Electron](https://www.electronjs.org/)
-- [Utils](https://github.com/log0div0/testo/tree/master/nn/renderer) for dataset augmentation written in C++
-- [Scripts](https://github.com/log0div0/testo/tree/master/nn/trainer) for neural network training based on [Pytorch](https://pytorch.org/)
-- [Neural network server](https://github.com/log0div0/testo/tree/master/src/testo_nn_server) for neural network inferencing based on [ONNX Runtime](https://onnxruntime.ai/)
+- [Dataset editor](nn/dataset/editor) for manual dataset labeling based on [Electron](https://www.electronjs.org/)
+- [Utils](nn/renderer) for dataset augmentation written in C++
+- [Scripts](nn/trainer) for neural network training based on [Pytorch](https://pytorch.org/)
+- [Neural network server](src/testo_nn_server) for neural network inferencing based on [ONNX Runtime](https://onnxruntime.ai/)
 
 ### Syntax highlighting
 
@@ -274,13 +274,13 @@ testo version
 
 ## Documentation
 
-- [Tutorials](https://github.com/log0div0/testo/tree/master/docs/tutorials) folder is the best place for a start.
-- [Reference](https://github.com/log0div0/testo/tree/master/docs/reference) can be used if you want to see the details.
+- [Tutorials](docs/tutorials) folder is the best place for a start.
+- [Reference](docs/reference) can be used if you want to see the details.
 - [Examples](https://github.com/testo-lang/testo-examples) repo contains a couple of basic use-cases of Testo framework. This repo also contains source codes of apps that are being tested.
 
 ## Building from source
 
-Probably the most simple way to build Testo is to let Testo to build itself. We have written tests that set up the buld environment on all supported operating systems and build Testo packages from source codes. This tests can be found in the [ci](https://github.com/log0div0/testo/tree/master/ci) folder and run with the following command:
+Probably the most simple way to build Testo is to let Testo to build itself. We have written tests that set up the buld environment on all supported operating systems and build Testo packages from source codes. This tests can be found in the [`ci`](ci) folder and run with the following command:
 
 ```
 cd ci
@@ -321,14 +321,14 @@ make testo-package testo-nn-server-package -j$(nproc)
 
 ## Running tests
 
-Testo framework has two levels of tests. Most basic and simple tests are placed in [tests](https://github.com/log0div0/testo/tree/master/tests) directory. This tests are based on [pytest](https://docs.pytest.org/) framework and can be run with the following command:
+Testo framework has two levels of tests. Most basic and simple tests are placed in [`tests`](tests) directory. This tests are based on [pytest](https://docs.pytest.org/) framework and can be run with the following command:
 
 ```
 cd tests
 sudo pytest
 ```
 
-More complex tests that involve interaction with OS or `virt-manager` are written on Testo-lang, i.e. Testo Framework is used to test itself. This leads to nested virtualization, so this tests are much slower and require much more memory. They can be found in [ci](https://github.com/log0div0/testo/tree/master/ci) and run with the following command:
+More complex tests that involve interaction with OS or `virt-manager` are written on Testo-lang, i.e. Testo Framework is used to test itself. This leads to nested virtualization, so this tests are much slower and require much more memory. They can be found in [`ci`](ci) and run with the following command:
 
 ```
 cd ci
