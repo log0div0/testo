@@ -13,17 +13,17 @@ network <name> {
 
 > The declaration itself does not mean the actual creation of the virtual network . The actual creation happens when the first virtual machine with a NIC attached to this netowrk is created.
 
-> Virtual networks can also be defined inside macros. See [here](macros#macros-with-declarations) for more information.
+> Virtual networks can also be defined inside macros. See [here](Macros.md#macros-with-declarations) for more information.
 
-A virtual network declaration is similar to a virtual machine [declaration](machine), but has a different set of attributes:
+A virtual network declaration is similar to a [virtual machine](Machines.md) declaration, but has a different set of attributes:
 
 **Mandatory network attributes**
 
-- `mode` - Type: string. Network type. Inside the string [param referencing](param#param-referencing) is available. Possible values:
+- `mode` - Type: string. Network type. Possible values:
   - `nat` - The network is NAT'ing to the default route of the Host. If the Host has the Internet access (via the default gateway), this network mode will provide the Internet access to the VM as well.
   - `internal`  The network is isolated from the Host routes. This mode is used to create connections between various virtual machines in the Test Bench.
 
-Configuration example
+## Example
 
 ```testo
 network example_network {
