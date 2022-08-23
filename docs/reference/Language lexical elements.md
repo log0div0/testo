@@ -1,4 +1,4 @@
-# Testo lang basic syntax
+# Language lexical elements
 
 ## Literals
 
@@ -49,7 +49,7 @@ of multiline string
 """
 ```
 
-You can [reference](param) params inside strings. For example,
+You can reference [params](Params.md) inside strings. For example,
 
 ```testo
 """This is an example of ${VAR_REF}
@@ -62,6 +62,7 @@ with `VAR_REF`'s value "some value" will be translated to
 ```testo
 """This is an example of some value
 string concatenation
+"""
 ```
 
 ### Boolean literals
@@ -89,40 +90,12 @@ Invalid identifiers: `example with spaces`, `5example`
 
 Some identifiers are reserved as key words. It is not allowed to use them when naming entities.
 
-- `abort` - Action "abort the test".
-- `print` - Action "print a message".
-- `type` - Action "type a text on the virtual keyboard".
-- `wait` - Action "wait an event to happen on the virtual machine screen".
-- `sleep` - Action "sleep for some time".
-- `mouse` - Mouse-related action.
-- `move` - Action "move the virtual mouse cursor".
-- `click` - Action "press the left mouse button".
-- `lclick` - The same as `click`.
-- `rclick` - Action "press the right mouse button".
-- `dclick` - Action "double-click the left mouse button".
-- `hold` - Action "press down and hold a button".
-- `release` - Action "release a button".
-- `lbtn` - Left mouse button specifier for `mouse hold` actions.
-- `rbtn` - Right mouse button specifier for `mouse hold` actions.
-- `check` - Check for an event on the virtual machine screen.
-- `press` - Action "press a keyboard button".
-- `plug` - Action "plug a device".
-- `unplug` - Action "unplug a device".
-- `start` - Action "power on a virtaul machine".
-- `stop` - Action "power off a virtual machine".
-- `shutdown` - Action "send the SIGTERM signal to the virtual machine OS".
-- `exec` - Action "execute a script on the virtual machine".
-- `copyto` - Action "copy files from the Host to a virtual machine or a flash drive".
-- `copyfrom` - Action "copy files from a virtual machine or a flash drive to the Host".
-- `timeout` - Timeout specifier for some actions.
-- `interval` - Time between iterations for some actions.
 - `test` - Beginning of a test declaration.
 - `machine` - Beginning of a virtual machine declaration.
 - `flash` - Beginning of a virtual flash drive declaration.
 - `network` - Beginning of a virtual network declaration.
 - `param` - Beginning of a param declaration.
 - `macro` - Beginning of a macro declaration.
-- `dvd` - DVD-drive specifier for the actions `plug` and `unplug`.
 - `if` - Beginning of an `if` statement.
 - `else` - Beginning of an optional `else` clause for `if` and `for` statements.
 - `for` - Beginning of a `for` statement.
@@ -131,8 +104,6 @@ Some identifiers are reserved as key words. It is not allowed to use them when n
 - `break` - "Exit the cycle" statement.
 - `continue` - "Go to the next cycle iteration" statement.
 - `include` - Include another .testo file directive.
-- `js` - The beginning of a javascript-snippet for a `wait` if `check`.
-- `img` - Follows `wait` and `check` when you want to detect an image on the screen.
 - `DEFINED` - Checking if a param is defined.
 - `LESS` - "Less" comparison for two integer-convertible strings.
 - `GREATER` - "Greater" comparison for two integer-convertible strings.
@@ -148,106 +119,106 @@ Some identifiers are reserved as key words. It is not allowed to use them when n
 
 ## Keyboard key literals
 
-- ESC
-- ONE
-- TWO
-- THREE
-- FOUR
-- FIVE
-- SIX
-- SEVEN
-- EIGHT
-- NINE
-- ZERO
-- A
-- B
-- C
-- D
-- E
-- F
-- G
-- H
-- I
-- J
-- K
-- L
-- M
-- N
-- O
-- P
-- Q
-- R
-- S
-- T
-- U
-- V
-- W
-- X
-- Y
-- Z
-- MINUS
-- EQUALSIGN
-- BACKSPACE
-- TAB
-- LEFTBRACE
-- RIGHTBRACE
-- ENTER
-- LEFTCTRL
-- SEMICOLON
-- APOSTROPHE
-- GRAVE
-- LEFTSHIFT
-- BACKSLASH
-- COMMA
-- DOT
-- SLASH
-- RIGHTSHIFT
-- LEFTALT
-- SPACE
-- CAPSLOCK
-- F1
-- F2
-- F3
-- F4
-- F5
-- F6
-- F7
-- F8
-- F9
-- F10
-- F11
-- F12
-- NUMLOCK
-- KP_0 (Num Pad 0)
-- KP_1 (Num Pad 1)
-- KP_2 (Num Pad 2)
-- KP_3 (Num Pad 3)
-- KP_4 (Num Pad 4)
-- KP_5 (Num Pad 5)
-- KP_6 (Num Pad 6)
-- KP_7 (Num Pad 7)
-- KP_8 (Num Pad 8)
-- KP_9 (Num Pad 9)
-- KP_PLUS (Num Pad +)
-- KP_MINUS (Num Pad -)
-- KP_SLASH (Num Pad /)
-- KP_ASTERISK (Num Pad \*)
-- KP_ENTER (Num Pad Enter)
-- KP_DOT (Num Pad .)
-- SCROLLLOCK
-- RIGHTCTRL
-- RIGHTALT
-- HOME
-- UP
-- PAGEUP
-- LEFT
-- RIGHT
-- END
-- DOWN
-- PAGEDOWN
-- INSERT
-- DELETE
-- LEFTMETA
-- RIGHTMETA
-- SCROLLUP
-- SCROLLDOWN
+- `ESC`
+- `ONE`
+- `TWO`
+- `THREE`
+- `FOUR`
+- `FIVE`
+- `SIX`
+- `SEVEN`
+- `EIGHT`
+- `NINE`
+- `ZERO`
+- `A`
+- `B`
+- `C`
+- `D`
+- `E`
+- `F`
+- `G`
+- `H`
+- `I`
+- `J`
+- `K`
+- `L`
+- `M`
+- `N`
+- `O`
+- `P`
+- `Q`
+- `R`
+- `S`
+- `T`
+- `U`
+- `V`
+- `W`
+- `X`
+- `Y`
+- `Z`
+- `MINUS`
+- `EQUALSIGN`
+- `BACKSPACE`
+- `TAB`
+- `LEFTBRACE`
+- `RIGHTBRACE`
+- `ENTER`
+- `LEFTCTRL`
+- `SEMICOLON`
+- `APOSTROPHE`
+- `GRAVE`
+- `LEFTSHIFT`
+- `BACKSLASH`
+- `COMMA`
+- `DOT`
+- `SLASH`
+- `RIGHTSHIFT`
+- `LEFTALT`
+- `SPACE`
+- `CAPSLOCK`
+- `F1`
+- `F2`
+- `F3`
+- `F4`
+- `F5`
+- `F6`
+- `F7`
+- `F8`
+- `F9`
+- `F10`
+- `F11`
+- `F12`
+- `NUMLOCK`
+- `KP_0` (Num Pad 0)
+- `KP_1` (Num Pad 1)
+- `KP_2` (Num Pad 2)
+- `KP_3` (Num Pad 3)
+- `KP_4` (Num Pad 4)
+- `KP_5` (Num Pad 5)
+- `KP_6` (Num Pad 6)
+- `KP_7` (Num Pad 7)
+- `KP_8` (Num Pad 8)
+- `KP_9` (Num Pad 9)
+- `KP_PLUS` (Num Pad +)
+- `KP_MINUS` (Num Pad -)
+- `KP_SLASH` (Num Pad /)
+- `KP_ASTERISK` (Num Pad \*)
+- `KP_ENTER` (Num Pad Enter)
+- `KP_DOT` (Num Pad .)
+- `SCROLLLOCK`
+- `RIGHTCTRL`
+- `RIGHTALT`
+- `HOME`
+- `UP`
+- `PAGEUP`
+- `LEFT`
+- `RIGHT`
+- `END`
+- `DOWN`
+- `PAGEDOWN`
+- `INSERT`
+- `DELETE`
+- `LEFTMETA`
+- `RIGHTMETA`
+- `SCROLLUP`
+- `SCROLLDOWN`

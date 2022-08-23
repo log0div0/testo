@@ -1,4 +1,4 @@
-# Main concepts
+# Javascript selectors
 
 JS-selectors come in handy when you want to perform an especially tricky mouse move action or to wait a really complex event to appear on the screen. Basically JS-selectors let you extend default Testo-lang possibilities and write your own screen-searching logic, no matter how elaborate.
 
