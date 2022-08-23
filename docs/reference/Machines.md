@@ -13,11 +13,11 @@ machine <name> {
 
 > The declaration itself does not mean the actual creation of the virtual machine. The actual creation happens when the first test mentioning this virtual machine is run.
 
-> Virtual machines can also be defined inside macros. See [here](macros#macros-with-declarations) for more information.
+> Virtual machines can also be defined inside macros. See [here](Macros.md#macros-with-declarations) for more information.
 
 Basically, a virtual machine declaration is a set of configuratoin attributes, some of which are mandatory. Attributes must be separated by newlines. At the end of the declaration another newline has to be placed.
 
-For each virtual machine a `<name>` must be specified in the form of an [identifier](lexems#identifiers) or a string. If a string is used, the value inside the string must be convertible to an identifier. Inside the string [param referencing](param#param-referencing) is available. The virtual machine's name must be unique for all the virtual resoruces' names (e.g. virtual machines, virtual flash drives and virtual networks).
+For each virtual machine a `<name>` must be specified in the form of an [identifier](Language%20lexical%20elements.md#identifiers) or a string. If a string is used, the value inside the string must be convertible to an identifier. The virtual machine's name must be unique for all the virtual resoruces' names (e.g. virtual machines, virtual flash drives and virtual networks).
 
 An attribute consists of an attribute's name, instance's name (only for several attributes) and a value (mandatory). Attribute names and instances' names are identifiers. At the moment, the only attributes requiring names for the instances, are the `nic` and `disk` attributes. Values' types depend on the attribute and can be one of:
 
@@ -29,16 +29,16 @@ An attribute consists of an attribute's name, instance's name (only for several 
 
 For a virtual machine there is a set of **mandatory** attributes:
 
-- `cpus` - Type: positive number or string. Number of cores for a virtual processor. If a string is used, the value inside the string must be convertible to positive integer. Inside the string [param referencing](param#param-referencing) is available.
-- `ram` - Type: memory size literal or string. The amount of RAM for the virtual machine. If a string is used, the value inside the string must be convertible to a memory size literal. Inside the string [param referencing](param#param-referencing) is available.
+- `cpus` - Type: positive number or string. Number of cores for a virtual processor. If a string is used, the value inside the string must be convertible to positive integer.
+- `ram` - Type: memory size literal or string. The amount of RAM for the virtual machine. If a string is used, the value inside the string must be convertible to a memory size literal.
 - at least one `disk` attribute - Type: attribute block. Requires an instance's name. A disk drive coniguration.
 
 **Optional attributes**:
 
-- `iso` - Type: string. Path to the iso-image to be plugged into the DVD-drive after the virtual machine creation. Could be unplugged afterwards with an `unplug dvd` action. Inside the string [param referencing](param#param-referencing) is available.
-- One or more `nic` - Type: attribute block. NIC configuration. Requires an instance's name. A NIC configuration.
-- Exactly one `video` attribute - Type: attribute block. Requires an instance's name. Video device configuration. **Unavailable for Hyper-V**.
-- `loader` - Type: string. Path to a custom loader blob file. Inside the string [param referencing](param#param-referencing) is available. **Unavailable for Hyper-V**.
+- `iso` - Type: string. Path to the iso-image to be plugged into the DVD-drive after the virtual machine creation. Could be unplugged afterwards with an `unplug dvd` action.
+- One or more `nic` - Type: attribute block. NIC configuration. Requires an instance's name.
+- Exactly one `video` attribute - Type: attribute block. Video device configuration. Requires an instance's name. **Unavailable for Hyper-V**.
+- `loader` - Type: string. Path to a custom loader blob file. **Unavailable for Hyper-V**.
 - `qemu_enable_usb3` - Type: boolean. Enables USB 3 controller for the virtual machine. When the value is `false`, USB 2 controller is enabled instead.  Default value: `true`. **Unavailable for Hyper-V**.
 
 ## Disks configuration
@@ -47,9 +47,13 @@ Virtual machine disks configuration is done with the `disk` attributes. For each
 
 > You can specify several disks for a virtual machine. Just remember to choose unique names for each disk.
 
+The following attributes are common for both modes:
+
+- `bus` - Type: string. The name of bus the disk should be attached to. Possible values: `IDE` (default for amd64, not available on arm64) and `SCSI`.
+
 ### Blank disk creation mode
 
-In this mode a new blank disk is created for the virtual machine. To activate this mode you have to specify the `size` attribute in the inner block of the `disk` attribute. The `size` attribute must be a **memory size literal** or a **string**. If a string is used, the value inside the string must be convertible to a memory size literal. Inside the string [param referencing](param#param-referencing) is available.
+In this mode a new blank disk is created for the virtual machine. To activate this mode you have to specify the `size` attribute in the inner block of the `disk` attribute. The `size` attribute must be a **memory size literal** or a **string**. If a string is used, the value inside the string must be convertible to a memory size literal.
 
 ### Impoting an existing disk image
 
@@ -57,13 +61,13 @@ In this mode a copy of some **existing** disk image will be created for the virt
 
 > At the moment only `qcow2` disk images for QEMU and `vhdx` disk images for Hyper-V are supported.
 
-> The original disk image will stay intact. When importing a disk image a copy is created.
+> The original disk image will stay intact. When importing a disk image a copy is created (on arm64 the original disk is used as a backing file).
 
 > If the original disk image belong to a virtual machine, this machine must be powered off when test scripts run.
 
 > Attributes `size` and `source` are mutually exclusive. When one is used the other becomes disabled automatically.
 
-> IMPORTANT NOTE! Please, do NOT install testo-guest-additions manually while preparing a virtual machine template! It could lead to unexpected results. Please, istall testo-guest-additions **INSIDE** test scripts only!
+> IMPORTANT NOTE! Please, do NOT install testo-guest-additions manually while preparing a virtual machine template! It could lead to unexpected results. Please, istall testo-guest-additions during tests execution only!
 
 ## NICs configuration
 
@@ -78,8 +82,8 @@ Network Interface Cards (NICs) configuration is done with the `nic` attributes. 
 
 **Optional** `nic` attributes:
 
-- `adapter_type` - Type: string. A model for the NIC. Different NIC models are run by different drivers. Possible values: `ne2k_pci`, `i82551`, `i82557b`, `i82559er`, `rtl8139`, `e1000`, `pcnet`, `virtio`, `sungem`. If not specified, the hypervisor-default model will be selected. For QEMU the default value is `rtl8139`. Inside the string [param referencing](param#param-referencing) is available. **Unavailable for Hyper-V**.
-- `mac` - Type: string. MAC-address for the NIC. The value must be a valid MAC address (like `00:11:22:33:44:55`). If not specified, a random MAC-address will be generated for the NIC. Inside the string [param referencing](param#param-referencing) is available.
+- `adapter_type` - Type: string. A model for the NIC. Different NIC models are run by different drivers. Possible values on Linux: `ne2k_pci`, `i82551`, `i82557b`, `i82559er`, `rtl8139`, `e1000`, `pcnet`, `virtio`, `sungem`. If not specified, the hypervisor-default model will be selected. For QEMU the default value is `rtl8139`.  **Unavailable for Hyper-V**.
+- `mac` - Type: string. MAC-address for the NIC. The value must be a valid MAC address (like `00:11:22:33:44:55`). If not specified, a random MAC-address will be generated for the NIC.
 
 > Virtual machines are created with all the NICs attached and the links plugged into them. You can detach the NIC with the `unplug nic` action and unplug the virtual link from the NIC with the `unplug link` action.
 
@@ -87,9 +91,9 @@ Network Interface Cards (NICs) configuration is done with the `nic` attributes. 
 
 > Unavailable for Hyper-V.
 
-Virtual machines are always created with exactly one video device. By default, the model for this devies is picked based on the current hypervisor capabilities. In the most cases, the `vmvga` model is picked. If, foir some reason, you want to choose some other model, you can specify it explicitly.
+Virtual machines are always created with exactly one video device. By default, the model for this devies is picked based on the current hypervisor capabilities. In the most cases, the `vmvga` model is picked. If, for some reason, you want to choose some other model, you can specify it explicitly.
 
-To do so you sohuld use the `video` attribute instance of the virtual machine configuration. The attribute's instance must have a name.
+To do so you should use the `video` attribute instance of the virtual machine configuration. The attribute's instance must have a name.
 
 > At the moment it is possible to use only one instance of the `video` attribute.
 
@@ -97,7 +101,7 @@ To do so you sohuld use the `video` attribute instance of the virtual machine co
 
 `video` attribute takes a block of inner attributes as a value. There is only one inner attribute available at the moment:
 
-- `adapter_type` - Type: string. Video device model. Possible values: `vmvga`, `qxl`, `cirrus`, `virtio`. Inside the string [param referencing](param#param-referencing) is available.
+- `adapter_type` - Type: string. Video device model. Possible values: `vmvga`, `qxl`, `cirrus`, `virtio`.
 
 ## Bootloader configuration
 
@@ -113,13 +117,13 @@ For example, you can enable UEFI in a virtual machine with following steps:
 
 > Unavailable for Hyper-V
 
-> Requires the Testo guest additions installed in the virtual machine
+> Requires the Testo guest additions to be installed on the virtual machine
 
 Shared folders is yet another way for virtual machines to interact with the Host (aside from virtual flash drives and the guest additions). To use shared folders you have to do two steps:
 
-### 1. shared_folder attribute block
+### 1. Add `shared_folder` attribute block
 
-To enable shared_folder mechanism it is required to specify one or more `shared_folder` attribute blocks in the virtual machine declaration:
+To enable shared folders it is required to specify one or more `shared_folder` attribute blocks in the virtual machine declaration:
 
 ```testo
 shared_folder my_folder: {
@@ -132,13 +136,13 @@ Keep in mind that this attribute block must be named (all shared_folders names m
 
 **Mandatory `shared_folder` attributes**
 
-- `host_path` - Type: string. A path to the shared folder on the Host side. **The folder must exist**. Inside the string [param referencing](param#param-referencing) is available.
+- `host_path` - Type: string. A path to the shared folder on the Host side. **The folder must exist**.
 
 **Optional `shared_folder` attributes**
 
 - `readonly` - Type: boolean. Specifies whether the `readonly` mode must be enabled for the shared folder. With `readonly` enabled the virtual machine wouldn't be able to write data to this folder during test running. Default value: `false`.
 
-### 2. Mounting the folder inside the VM
+### 2. Mount the folder inside the VM
 
 You have to enable the shared folder inside the virtual machine as well. To do this you need to mount the folder with the following guest-additions command (this command should be executed inside the VM):
 
@@ -153,7 +157,7 @@ Where
 
 After this step the folder becomes available for data transferring between the Host and the VM.
 
-> A shared folder is unmounted automatically before the snapshot creation (at the end of a test), and then mounted back automatically. The goal of that is to bypass a nasty bug in QEMU related to creating a snapshot of a virtual machine with a shared folder mounted.
+> A shared folder is unmounted automatically before the snapshot creation (at the end of a test), and then mounted back automatically. The goal of that is to bypass a nasty bug in QEMU which occurs when a snapshot of a virtual machine with a shared folder mounted is created.
 
 > You should make the shared folder available for read/write for the `qemu` process on the Host side. One way to achieve that is to add the line `user = "your_user"` at the end of the `/etc/libvirt/qemu.conf`, where `your_user` is the user owning the shared folder (on the Host). Don't forget to reboot the Host after that.
 
@@ -167,7 +171,7 @@ Below you can see a complete example of a virtual machine configuration. Here ar
 2. Two disks are created for the virtual machine: the `main` is copied (imported) from the existing disk image (from the manually created and prepared virtual machine `my_hand_mand_vm`) and the `secondary` is created empty, with the size specified in the `size_amount` param.
 3. The virtual machine has 3 NICs: the `nat` will be used to connect the VM with the Internet and the `WAN` and the `LAN` will be used for isolated local area networks (`net1` and `net2`), presumably connecting the VM with other VMs.
 
-Take notice that the `iso`, disk main's `source` and disk secondary's `size` attributes' values are calculated based on the `ISO_DIR`, `VM_DISK_POOL_DIR` and `size_amount` params respectively. If any of these params is not defined (it is assumed that these params are to be passed as `--param` command line arguments) an error will be generated. For the `size` attribute an additional rule takes place: `size_amount` param value must be convertable to a memory size literal (for example, "2Gb"). Otherwise an errow will be generated.
+Take notice that the `iso`, disk main's `source` and disk secondary's `size` attributes' values are calculated based on the `ISO_DIR`, `VM_DISK_POOL_DIR` and `size_amount` params respectively. If any of these params is not defined an error will be generated. For the `size` attribute an additional rule takes place: `size_amount` param value must be convertable to a memory size literal (for example, "2Gb"). Otherwise an errow will be generated.
 
 ```testo
 machine example_machine {
@@ -180,6 +184,7 @@ machine example_machine {
 	}
 
 	disk secondary: {
+		bus: "SCSI"
 		size: "${size_amount}"
 	}
 
@@ -222,7 +227,7 @@ machine example_machine {
 
 ## Virtual machines caching
 
-There is a cachine mechanism for virtual machines in the Testo Framework. This helps to check the integrity of vms' configurations. If a configuration has changed since the last Testo run (and therefore the cache is lost), then the virtual machine must be re-created, and all the tests involving this virtual machine must be re-run. This is one of the checks performed when [evaluating](test#validating-the-test-cache) the cache integrity.
+There is a cachine mechanism for virtual machines in the Testo Framework. This helps to check the integrity of VMs' configurations. If a configuration has changed since the last Testo run (and therefore the cache is lost), then the virtual machine must be re-created, and all the tests involving this virtual machine must be re-run. This is one of the checks performed when [evaluating](Tests.md#validating-the-test-cache) the cache integrity.
 
 The complete virtual machines cache consistency checklist is this:
 
