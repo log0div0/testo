@@ -7,19 +7,19 @@ There are three types of macros in Testo-lang: macros with actions, macros with 
 A macro declaration has the following syntax:
 
 ```text
-macro <name> ([arg1, arg2, ... argn="default_value1", argn+1="default_value2" ...]) {
+macro <name> ([arg1, arg2, ..., argn="default_value"]) {
 	<macro_body>
 }
 ```
 
-Macros require a unique for all the macros `<name>`, which must be an identifier. Macros could take arguments, which could be referenced inside a macro's body. At the moment only string arguments are allowed. Arguments could also have default values. Inside default values param [referencing](param#param-referencing) is available.
+Macros require a unique for all the macros `<name>`, which must be an identifier. Macros could take arguments, which could be referenced inside a macro's body. At the moment only string arguments are allowed. Arguments could also have default values. Inside default values [param referencing](Params.md#param-referencing) is available.
 
 ## Macros with actions
 
 A macro with action is, quite simply, is a macro consisting solely of actions. The declaration for this type of macros looks like this:
 
 ```text
-macro <name> ([arg1, arg2, ... argn="default_value1", argn+1="default_value2" ...]) {
+macro <name> ([arg1, arg2, ..., argn="default_value"]) {
 	action1
 	action2
 	...
@@ -55,7 +55,7 @@ test my_test {
 		unplug_nic("internet")
 		start
 
-		#we specify only one argument because
+		# we specify only one argument because
 		# the root has the default_password password
 		login("root")
 		...
@@ -65,17 +65,17 @@ test my_test {
 
 ## Macros with commands
 
-A macro with commands is a macro with the body consisting of commands. You can check out the command syntax [here](test#commands-syntax). The declaration of such a macro looks like this:
+A macro with commands is a macro with the body consisting of commands. You can check out the command syntax [here](Tests.md#commands-syntax). The declaration of such a macro looks like this:
 
 ```text
-macro <name> ([arg1, arg2, ... argn="default_value1", argn+1="default_value2" ...]) {
+macro <name> ([arg1, arg2, ..., argn="default_value"]) {
 	command1
 	command2
 	...
 }
 ```
 
-A command consists of two parts: a virtual entity (flash drive of virtual machine) name and an action (or a block of actions) which must be applied to this entity. The entity name can be represented two ways: as an indentifier (`client`) and as a string (`"client"`).
+A command consists of two parts: a virtual entity (flash drive of virtual machine) name and an action (or a block of actions) which must be applied to this entity. The entity name can be represented two ways: as an indentifier (`some_id`) and as a string (`"some_id"`).
 
 The string representation could be especially useful in some cases, because you can use reference macro arguments inside the strings. Using string entity name representation allows you to pass the virtual entities' names inside macros. Let's consider the following example:
 
@@ -105,14 +105,14 @@ Take notice, that the macro consists of commands, but the names of entities are 
 
 You can find the call example for this macro below.
 
-> A macro must consist either solely of actions, or solely of commands. Macros with commands and actions are prohibited.
+> A macro must consist either solely of actions, or solely of commands. Macros with commands and actions mixed together are prohibited.
 
 ## Macros with declarations
 
 A macro with declarations is a macro with the body consisting of declarations of tests, virtual machines, flash drives and networks. The declaration of such a macro looks like this:
 
 ```text
-macro <name> ([arg1, arg2, ... argn="default_value1", argn+1="default_value2" ...]) {
+macro <name> ([arg1, arg2, ..., argn="default_value"]) {
 	declaration_1
 	declaration_2
 	...
@@ -124,7 +124,7 @@ Where `declaration_i` can be either of the following:
 - Virtual machine declaration;
 - Virtual flash drive declaration;
 - Virtual network declaration;
-- Another macro with statements call.
+- A call of another macro with statements.
 
 Declaring macros and params inside a macro is **prohibited**. It is also prohibited to use the `include` directive inside a macro.
 
@@ -153,7 +153,7 @@ macro generate_tests(bits, memory) {
 	}
 
 	test "vm_${bits}_prepare_os": "vm_${bits}_install_os" {
-		"vm_${bits}_prepare_os" prepare()
+		"vm_${bits}" prepare()
 	}
 
 }
@@ -161,7 +161,7 @@ macro generate_tests(bits, memory) {
 
 This macro allows you to parameterize not only the virtual bench (although it consists of only one virtual machine), but also the tests involving this bench. The virtual machine has its name, RAM amount and ISO-path parameterized (we assume that there are different ISO-images for different architectures). The tests have their names (and their parent's names) parameterized, as well as virtual machines' names inside the tests. The test `"vm_${bits}_install_os"` has the OS with corresponding architecture installation (we assume that the installation process is pretty similar and can be encapsulated inside a macro with actions `install_os()`). The `"vm_${bits}_prepare_os"` test just invokes the `prepare()` macro which performs the same actions to prepare the OS.
 
-At the same time you can divide this macro into two: one for the virtual machines delcaration and one for the tests declaration:
+At the same time you can divide this macro into two: one for the virtual machines declaration and one for the tests declaration:
 
 ```testo
 macro generate_vms(bits, memory) {
@@ -195,20 +195,19 @@ macro generate_tests(bits) {
 
 ## Macro call
 
-A macro call can be either an action, command or a declaration - depending on the macro's body. If the macro contains commands, then it must be called as a command. If the macro contains actions, then it is to be called insed other [commands'](test#commands-syntax) body. Otherwise the macro should contain declarations, in which case it must be called either at the global level (with all the other declarations), or inside another macro with declarations (see example 5 below).
+A macro call can be either an action, command or a declaration - depending on the macro's body. If the macro contains commands, then it must be called as a command. If the macro contains actions, then it must be called as an action. If the macro contains declarations it must be called either at the global level (with all the other declarations), or inside another macro with declarations (see example 5 below).
 
 > An attempt to call a macro in a wrong place will lead to an error. For example, an attempt to call a macro with declarations as an action is an error.
 
 A macro call has the following syntax:
 
 ```text
-<macro_name> ([param1, param2, ...])
+<macro_name>([param1, param2, ...])
 ```
 
 **Arguments**:
 
 The number of passed arguments must not exceed the number of arguments in the corresponding macro declaration. If default arguments are used in macro declaration, you can omit one or more trailing arguments. Only string arguments are allowed.
-
 
 **Example 1**
 
@@ -327,7 +326,7 @@ macro generate_tests(bits, memory) {
 	}
 
 	test "vm_${bits}_prepare_os": "vm_${bits}_install_os" {
-		"vm_${bits}_prepare_os" prepare()
+		"vm_${bits}" prepare()
 	}
 
 }
