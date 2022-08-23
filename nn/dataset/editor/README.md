@@ -16,4 +16,4 @@ npm run dev ../validate
 
 ## Screenshot
 
-![Screenshot](https://github.com/log0div0/testo/raw/master/nn/dataset/editor/editor_screenshot.png)
+![Screenshot](editor_screenshot.png)
