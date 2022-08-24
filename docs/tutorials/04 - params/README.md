@@ -2,11 +2,11 @@
 
 ## What you're going to learn
 
-In this guide we will focus our attention on the param feature of Testo-lang.
+In this tutorial we will focus our attention on the param feature of Testo-lang.
 
 ## Introduction
 
-During the previous guides we've written quite a lot of code for our test scripts, and it's not hard to see that there are several string constants that occur several times in the scripts. For example, `my-ubuntu-login` can be seen multiple times (during Ubuntu installation, then at the login attempts). If we'd decided to change the login to some other value we'd need to search all the file and replace the value several times.
+During the previous tutorials we've written quite a lot of code for our test scripts, and it's not hard to see that there are several string constants that occur mutiple times in the scripts. For example, `my-ubuntu-login` can be seen multiple times (during Ubuntu installation, then at the login attempts). If we'd decided to change the login to some other value we'd need to search all the file and replace the value several times.
 
 We can also note that the paths to the Ubuntu Server and Guest Additions are absolute, which is not very convenient. If the ISO-images were located elsewhere, we'd need to adjust the test script. All that is certainly brings certain mess to the test scripts.
 
@@ -16,7 +16,39 @@ To solve this problem Testo-lang has the [params](../../reference/Params.md) mec
 
 Let's remember how our script looks at the moment:
 
-<Snippet id="snippet1"/>
+```testo
+...
+
+test ubuntu_installation {
+	my_ubuntu {
+		start
+		...
+		wait "Hostname:" timeout 30s; press Backspace*36; type "my-ubuntu"; press Enter
+		wait "Full name for the new user"; type "my-ubuntu-login"; press Enter
+		wait "Username for your account"; press Enter
+		wait "Choose a password for the new user"; type "1111"; press Enter
+		wait "Re-enter password to verify"; type "1111"; press Enter
+		...
+		unplug dvd; press Enter
+		wait "login:" timeout 2m; type "my-ubuntu-login"; press Enter
+		wait "Password:"; type "1111"; press Enter
+		wait "Welcome to Ubuntu"
+	}
+}
+
+test guest_additions_installation: ubuntu_installation {
+	my_ubuntu {
+		plug dvd "/opt/iso/testo-guest-additions.iso"
+
+		type "sudo su"; press Enter;
+		wait "password for my-ubuntu-login"; type "1111"; press Enter
+		wait "root@my-ubuntu"
+		...
+	}
+}
+
+...
+```
 
 We can see a few strings that occur several time during the script: `my-ubuntu` (hostname), `my-ubuntu-login` (login) and `1111` (password). Obviously, the more elaborate our script gets, the more such repeated constants will take place - and the easier it will be to make a mistake. So let's try to avoid that and declare three params:
 
@@ -103,23 +135,23 @@ test guest_additions_installation: ubuntu_installation {
 
 We changed our test script in such a manner that the paths to the Ubuntu Server and Guest Additions iso-images now contain a reference to the `ISO_DIR` param (you could also take a note that params are referencable inside the virtual machine declarations too). But we haven't declared the `ISO_DIR` param anywhere. If we tried to run the test script now, the same way we're used to, we would see an error:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 Since the `ISO_DIR` param hasn't been declared, Testo can't resolve the reference to it and generates an error. So we'll try to pass the param `ISO_DIR` through a command line argument:
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 If the iso-images location changes for some reason (for example, the script is run on another computer), all we'll have to do is to change one command-line argument value when running the script, the script itself doesn't need to be modified.
 
-If you've completed the guide 3 and run the script the way it was at the end of the previous guide, then now (after the new run) you'll see the next output:
+If you've completed the tutorial 3 and run the script the way it was at the end of the previous tutorial, then now (after the new run) you'll see the next output:
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
-Which means no tests were run. The reason is that all the tests are **cached** now, and there is no need to run them again. We will focus on caching mechanism in Testo-lang in the next guide, in which we'll provide a detailed explanation about how the tests managed to remain cached, despite the seemingly large changes in them.
+Which means no tests were run. The reason is that all the tests are **cached** now, and there is no need to run them again. We will focus on caching mechanism in Testo-lang in the next tutorial, in which we'll provide a detailed explanation about how the tests managed to remain cached, despite the seemingly large changes in them.
 
 But right now to make sure that out test script is still funcitonal, we need to run the interpeter with thw new command-line argument `--invalidate`, which resets the cache of the specified tests.
 
-<Asset id="terminal4"/>
+![](imgs/terminal4.svg)
 
 ## Conclusions
 
@@ -128,3 +160,5 @@ You can make your test scripts more flexible and neater with params.
 First, you can "rename" frequently used string constants so you can navigate through them easily.
 
 Second, you can control the test scripts run with the command-line arguments, not changing the test scripts themselves.
+
+See the full test listing [here](params.testo)
