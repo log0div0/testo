@@ -202,3 +202,5 @@ test my_first_test {
 Now we can remove the brekpoint `abort "stop here"` at the end of the test and, thus, finally, complete the test `my_first_test`.
 
 Congratulations! You've just developed a test script which installs the Ubuntu Server 16.04 on a freshly created virtual machine from complete scratch!
+
+See the full test listing [here](ubuntu_installation.testo)
