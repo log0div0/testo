@@ -1,17 +1,8 @@
-# Guide 5. Caching
+# Tutorial 5. Caching
 
 ## What you're going to learn
 
 In this guide you're going to learn about tests caching in Testo-lang.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-4. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-5. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-6. (Recommended) [Guide 4](04_params) is complete.
 
 ## Introduction
 
@@ -30,7 +21,7 @@ If a test fails for some reason, no cache is created for it (naturally) and all 
 
 The first complete tests run could take a while. You can draw a parallel between the first run and compilation of a big project from the source. After a time-consuming first complete compilation, all the new builds usually take lesser time, thanks to the incremental compilation (when only the object files with modified sources are recompiled). Testo Framework adopts a similar approach.
 
-With the second run, Testo first validates the cache for the already successfully-run tests. A lot of [factors](/en/docs/lang/test#validating-the-test-cache) are taken into consideration, the main of which are:
+With the second run, Testo first validates the cache for the already successfully-run tests. A lot of [factors](../../reference/Tests.md#validating-the-test-cache) are taken into consideration, the main of which are:
 
 1. Have the test scripts been modified or not (not significant changes are not considered);
 2. Have the configurations for the virtual machines or flash drives involved in the test been modified or not;
@@ -51,7 +42,7 @@ In the last guide we've encountered a situation when all the tests were cached a
 
 Let's take a look at our test hierarchy which we've developed during the last guide.
 
-<img src="/static/docs/tutorials/qemu/03_guest_additions/tests_tree.svg"/>
+![tests tree](imgs/tests_tree.svg)
 
 First we need to run all the tests to make sure they are all cached. If any tests weren't cached, then let them complete, and run the Testo again with the same arguments.
 
@@ -177,7 +168,7 @@ You also may create a big file (greater than 1 megabyte) and make sure that its 
 
 > The same checksum calculation alrorithm is applied to the iso-images mentioned in `plug dvd` actions, and to the virtual flash drives `folder` attribute (if there is any). Virtual flash drives are explained in the future guides.
 
-> There are other factors involved in test checksum calculations. For example, virtual machines and flash drives configurations. You can find all these factors in the [documentation](/en/docs/lang/test#validating-the-test-cache). In particular, iso-images in the `iso` attribute of virtual machines also affect the cache validation.
+> There are other factors involved in test checksum calculations. For example, virtual machines and flash drives configurations. You can find all these factors in the [documentation](../../reference/Tests.md#validating-the-test-cache). In particular, iso-images in the `iso` attribute of virtual machines also affect the cache validation.
 
 > There is a possibility to adjust the threshold of the file size that changes the checksum alrogithm. It is done with the `--content_cksum_maxsize` command line argument.
 
@@ -192,5 +183,3 @@ For example, if you want to reset the cache for all the tests related to guest a
 ## Conclusions
 
 Caching is an important part of the Testo Framework and is aimed to save as much time as possible for the second and following test runs. Cache lets Testo run only the tests that need to be run (has been modified in some way).
-
-You can find the complete test scripts for this guide [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/05%20-%20caching).

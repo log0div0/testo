@@ -1,18 +1,8 @@
-# Guide 11. No snapshots
+# Tutorial 11. No snapshots
 
 ## What you're going to learn
 
 In this guide you're going to learn about the tests without the hypervisor snapshots in Testo Framework. With this kind of tests you can save a lot of disk space.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. Host has the Internet access.
-4. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-5. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-6. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-7. (Recommended) [Guide 10](10_if) is complete.
 
 ## Introduction
 
@@ -26,7 +16,7 @@ And so, to save you some disk space, there is a feature in Testo-lang that gives
 
 Let's take a look at the tests hierarchy we've got to this point:
 
-<img src="/static/docs/tutorials/qemu/11_no_snapshots/test_hierarchy.svg"/>
+![test hierarchy](imgs/test_hierarchy.svg)
 
 We have 10 tests in total, at the end of each test snapshots are created. We already consume a huge amount of disk space as it is. Of course, we want to fix this issue.
 
@@ -49,7 +39,7 @@ test exchange_files_with_flash: client_prepare, server_prepare {
 }
 ```
 
-We just used a new Testo-lang feature: [tests attributes](/en/docs/lang/test). At the moment there're only two available test attributes: `no_snaphots` and `description`. The `description` attribute is not so much interesting - it allows you to create a human-readable test description, which may be stored in the tests report (if you tell Testo to create such a report with the `--report_folder` command-line argument). But the `no_snapshots` attribute is more meaningful, and we're going to set its value to `true`.
+We just used a new Testo-lang feature: [tests attributes](../../reference/Tests.md). At the moment there're only two available test attributes: `no_snaphots` and `description`. The `description` attribute is not so much interesting - it allows you to create a human-readable test description, which may be stored in the tests report (if you tell Testo to create such a report with the `--report_folder` command-line argument). But the `no_snapshots` attribute is more meaningful, and we're going to set its value to `true`.
 
 Let's run the script:
 
@@ -63,7 +53,7 @@ But what's now? Now the hypervisor snapshots hadn't been created at the end of t
 
 So what do we see? All the tests remained cached and nothing had been run! And that's with two of our tests missing the hypervisor snapshots (which you could see for yourself in the virtual manager):
 
-![No snapshots](/static/docs/tutorials/qemu/11_no_snapshots/no_snapshots.png)
+![No snapshots](imgs/no_snapshots.png)
 
 Why does this happen? Let's sort this out.
 
@@ -117,7 +107,7 @@ Testo restores the `client` machine into the `client_install_guest_additions` st
 
 When the `client` machine is in the correct state, we can, finally, run the `client_prepare` test itself. The whole process may be visualized as this:
 
-<img src="/static/docs/tutorials/qemu/11_no_snapshots/search_en.svg"/>
+![search](imgs/search_en.svg)
 
 If the `client_install_guest_additions` also had the `no_snapshots` attribute, the resulting test plan to run the `client_prepare` test would've looked like this: `client_install_guest_additions->client_unplug_nat->client_prepare`.
 
@@ -175,5 +165,3 @@ The rules above are not universal and you should just keep them in mind as a gen
 ## Conclusions
 
 In Testo-lang the `no_snapshots` feature allows you to save some disk space, but potentially compromises the tests running time. However, if this feature is well-applied, the damage to run time might be insignificant or just nonexistent at all. So before appliying this feature you should consider which tests are going to be run often and which are going to be cached most of the time.
-
-You can find the complete test scripts [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/11%20-%20no_snapshots).

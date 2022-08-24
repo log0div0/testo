@@ -1,4 +1,4 @@
-# Guide 1. The very first test
+# Tutorial 1. The very first test
 
 ## What you're going to learn
 
@@ -10,9 +10,9 @@ In this guide you're going to learn:
 
 ## Preconditions
 
-1. Testo Framework is installed.
+1. Testo Framework is [installed](../../../README.md#installation).
 3. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the test scripts have to be adjusted accordingly.
-4. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
+4. (Recommended) [Syntax highlighting](../../../README.md#syntax-highlighting) for your text editor is set up.
 
 ## Introduction
 
@@ -40,7 +40,7 @@ All the test scrits are stored in regular text files with the `.testo` extension
 
 And so, developing a test script starts with the virtual test bench declaration. To declare a virtual entity you should use special directives: `machine` (virtual machine declaration), `flash` (virtual flash drive declaration) and `network` (virtual network declaration). In this guide we will use only a virtual machine declaration.
 
-Let's create an empty file `~/testo/hello_world.testo` and declare our own first [virtual machine](/en/docs/lang/machine):
+Let's create an empty file `~/testo/hello_world.testo` and declare our own first [virtual machine](../../reference/Machines.md):
 
 ```testo
 machine my_ubuntu {
@@ -64,7 +64,7 @@ A virtual machine has several attributes. Some attributes are mandatory, some ar
 
 Our first virtual machine is Ubuntu Server 16.04 with 1 CPU core, 512 MB of RAM and 1 hard disk with 5 GB size. With the `iso` attrbiute we specify the installation image of the Ubuntu Server, which is mounted in virtual DVD-drive right after its creation.
 
-You could also notice, that we used [special literals](/en/docs/lang/lexems#memory-size-literals), which lets us specify the memory amount in a simple and convenient way.
+You could also notice, that we used [special literals](../../reference/Language%20lexical%20elements.md#memory-size-literals), which lets us specify the memory amount in a simple and convenient way.
 
 We will get accustomed to other optional attributes in the future guides.
 
@@ -84,7 +84,7 @@ Now you could open the virtual manager and check the list of created virtual mac
 
 The actual virtual machine creation is done during **test** runs. In Testo Framework tests contain not just the actual testing actions with virtual machines, but **all** the actions being done with virtual machines, even if you are 100% certain that these actions could not fail in any way. In other words, **if you want to do something with a virtual machine - do it inside the tests**.
 
-A [test](/en/docs/lang/test) declaration starts with the `test` keyword. Each test must have a unique name. Let's add a test declaration to our file `~/testo/hello_world.testo`
+A [test](../../reference/Tests.md) declaration starts with the `test` keyword. Each test must have a unique name. Let's add a test declaration to our file `~/testo/hello_world.testo`
 
 ```testo
 machine my_ubuntu {
@@ -108,7 +108,7 @@ A test itself is just basically a set of commands. A command has two parts:
 
 Commands with flash drives are described in future guides. Right now we're going to focus on the virtual machine commands.
 
-In our first test there is only one command. In this command the [`start`](/en/docs/lang/actions_vm#start) action is applied to the virtual machine `my_ubuntu`. Let's run this test and see what we've got.
+In our first test there is only one command. In this command the [`start`](../../reference/Actions.md#start) action is applied to the virtual machine `my_ubuntu`. Let's run this test and see what we've got.
 
 <Asset id="terminal2"/>
 
@@ -137,7 +137,7 @@ If you open machines list in virt manager now, you'll see a new machine - `ubunt
 
 As a matter of fact, the virtual machine had been powered on during the test and then was staged in that state with the `my_first_test` snapshot. You may open the snapshots menu of the virtual machine and see that for yourself.
 
-![Snapshot list for my_ubuntu virtual machine](/static/docs/tutorials/qemu/01_hello_world/snapshots.png)
+![Snapshot list for my_ubuntu virtual machine](imgs/snapshots.png)
 
 But at the end of the test `my_first_test` Testo detected, that `my_ubuntu` virtual machine won't be used anymore and powered it off to save the system resources. And that's why we see our virtual machine in the powered off state.
 
@@ -147,7 +147,7 @@ But what if we want to take a look at our virtual machine in the state it was at
 
 We need to take 2 steps to do that.
 
-First, let's add a new action to the test: [`abort`](/en/docs/lang/actions_vm#abort)
+First, let's add a new action to the test: [`abort`](../../reference/Actions.md#abort)
 
 ```testo
 test my_first_test {
@@ -174,7 +174,7 @@ And still, there is a way to abort the tests run when any error occurs. To do th
 
 And now, at last, in the virtual manager we can find our machine in the next state:
 
-![Ubuntu started](/static/docs/tutorials/qemu/01_hello_world/ubuntu_started.png)
+![Ubuntu started](imgs/ubuntu_started.png)
 
 The combination `abort` + `stop_on_fail` constitues the breakpoint mechanism in Testo. With such "breakpoints" you can stop the tests runs and take a look at your virtual test bench at any moment you like.
 
@@ -187,7 +187,3 @@ During tests run Testo created a virtual machine (`my_ubuntu`), which will exist
 the virtual machine `my_ubuntu` is gone.
 
 > `testo clean` doesn't delete manually created entities. Only the Testo-created infrastructure is erased.
-
-## Complete test script
-
-You can find the complete test scripts for this guide [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/01%20-%20hello%20world).

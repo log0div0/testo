@@ -1,19 +1,10 @@
-# Guide 3. Guest Additions
+# Tutorial 3. Guest Additions
 
 ## What you're going to learn
 
 In this guide you're going to learn:
 1. Test hierarchy basics.
 2. Testo Guest Additions installation routine.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the test scripts have to be adjusted accordingly.
-4. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-5. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-6. (Recommended) [Guide 2](02_ubuntu_installation) is complete.
 
 ## Introduction
 
@@ -38,7 +29,7 @@ exec bash "command_to_execute"
 
 and just rely on the exit code of the bash script.
 
-To overcome this problem, the Testo Framework comes with the Guest Additions iso-image. The Guest Additions support various guest operating systems, including, but not limited to: Linux-based Ubuntu and CentOS, as well as Windows 7 and 10. When the Guest Additions are installed in the virtual machine, you unlock new high-level actions in your test scripts: [`exec`](/en/docs/lang/actions_vm#exec) - execute a script (bash, python or cmd) on the virtual machine, [`copyto`](/en/docs/lang/actions_vm#copyto) - copy files from the Host to the guest and [`copyfrom`](/en/docs/lang/actions_vm#copyfrom) - copy files from the guest to the Host.
+To overcome this problem, the Testo Framework comes with the Guest Additions iso-image. The Guest Additions support various guest operating systems, including, but not limited to: Linux-based Ubuntu and CentOS, as well as Windows 7 and 10. When the Guest Additions are installed in the virtual machine, you unlock new high-level actions in your test scripts: [`exec`](../../reference/Actions.md#exec) - execute a script (bash, python or cmd) on the virtual machine, [`copyto`](../../reference/Actions.md#copyto) - copy files from the Host to the guest and [`copyfrom`](../../reference/Actions.md#copyfrom) - copy files from the guest to the Host.
 
 Guest Additions are recommended for installation in a virtual machine in two cases:
 1. If the virtual machine is secondary and you don't care much about it.
@@ -72,7 +63,7 @@ test ubuntu_installation {
 
 Don't run the new script just yet, we'll do that in a jiffy. Right now let's proceed to the guest additions installation automation.
 
-But first we need to learn what the tests [hiearchy](/en/docs/getting_started/test_policy) is. All the tests are organized in a tree based on the "testing from the simple to the complex" concept. Tests can have a "parent-children" connection, where the "simpler" test plays the role of the parent and the "more complex" test plays the role of the child. A test may have multiple parents and multiple children. A child is not going run until **all** his parents are completed successfully.  The most simple tests that don't depend on anything (and have no parents) are called **base** tests, otherwise a test is called **derived**. In our guides the `ubuntu_installation` test is an example of a base test.
+But first we need to learn what the tests [hiearchy](../../reference/Tests.md#organizing-the-tests) is. All the tests are organized in a tree based on the "testing from the simple to the complex" concept. Tests can have a "parent-children" connection, where the "simpler" test plays the role of the parent and the "more complex" test plays the role of the child. A test may have multiple parents and multiple children. A child is not going run until **all** his parents are completed successfully.  The most simple tests that don't depend on anything (and have no parents) are called **base** tests, otherwise a test is called **derived**. In our guides the `ubuntu_installation` test is an example of a base test.
 
 The "child-parent" connection is created like this:
 
@@ -119,7 +110,7 @@ test guest_additions_installation: ubuntu_installation {
 
 Try to run this script (don't forget the `--sto_on_fail` command line argument), wait for the breakpoint to trigger and open the virtual machine properties with the virt-manager. In the CDROM section you'll find the information about the iso-image you've just plugged.
 
-![CDROM plugged](/static/docs/tutorials/qemu/03_guest_additions/plugged_cdrom.png)
+![CDROM plugged](imgs/plugged_cdrom.png)
 
 Now we need to mount the DVD-drive into the Ubuntu filesystem. Since we'd need the root privileges to do that, let's enter the sudo mode first.
 
@@ -159,7 +150,7 @@ test guest_additions_installation: ubuntu_installation {
 }
 ```
 
-Take a note, that we used a new action: [`sleep`](/en/docs/lang/actions_vm#sleep). This aciton works exactly how you'd exect it to work: just waits unconditionally for the specified amount of time.
+Take a note, that we used a new action: [`sleep`](../../reference/Actions.md#sleep). This aciton works exactly how you'd exect it to work: just waits unconditionally for the specified amount of time.
 
 You may now remove the `abort` at the end of the test to complete it.
 
@@ -201,12 +192,10 @@ test guest_additions_demo: guest_additions_installation {
 
 <Asset id="terminal5"/>
 
-We will learn other actions that come with the guest additions installation in the future guides. For instance, `copyto` actions are considered in [guide 5](05_caching).
+We will learn other actions that come with the guest additions installation in the future guides. For instance, `copyto` actions are considered in the [tutorial 5](../05%20-%20caching).
 
 ## Conclusion
 
 At the end of this guide we've got the next tests tree.
 
 <img src="/static/docs/tutorials/qemu/03_guest_additions/tests_tree.svg"/>
-
-You can find the complete test scripts for this guide [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/03%20-%20guest%20additions).

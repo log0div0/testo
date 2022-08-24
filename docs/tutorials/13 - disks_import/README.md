@@ -1,16 +1,8 @@
-# Guide 13. Importing disk images
+# Tutorial 13. Importing disk images
 
 ## What you're going to learn
 
 In this guide you're going to learn how to "import" manually prepared virtual machines into your test scripts.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. [Ubuntu Desktop 18.04](https://releases.ubuntu.com/18.04.4/ubuntu-18.04.4-desktop-amd64.iso) image is downloaded.
-4. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-5. (Recommended) [Guide 12](12_mouse) is complete.
 
 ## Introduction
 
@@ -33,7 +25,7 @@ Well, let's get right to it.
 
 For starters, open virt-manager and create a new virtual machine (we're going to call it `handmade`). The configuration may be arbitrary (just don't forget to specify the Ubuntu Desktop iso image), with the exception for the main disk size:
 
-![Disk size](/static/docs/tutorials/qemu/13_disks_import/ubuntu_desktop_disk.png)
+![Disk size](imgs/ubuntu_desktop_disk.png)
 
 This is the disk we'll later import into the `ubuntu_desktop` machine, so let's give it the size of 10 Gigabytes (just like in the previous guide).
 
@@ -41,7 +33,7 @@ When the virtual machine is created, just install the OS manually.
 
 After the virtual machine is installed, let's do a super-quick "setup" for it. To mimick a setup let's create an empty folder `Handmade_folder` on the Desktop, so later on we could make sure that we actually imported the `handmade` machine successfully.
 
-![Handmade folder](/static/docs/tutorials/qemu/13_disks_import/Handmade_folder.png)
+![Handmade folder](imgs/Handmade_folder.png)
 
 Now turn off the `handmade` machine, since we're ready to import the results into the test scripts.
 
@@ -98,7 +90,7 @@ As a matter of fact, the cache validity rules for imported disk images are exact
 
 So let's try this out: start the `handmade` machine and change the screen resolution:
 
-![Handmade folder new resolution](/static/docs/tutorials/qemu/13_disks_import/Handmade_folder_new_resolution.png)
+![Handmade folder new resolution](imgs/Handmade_folder_new_resolution.png)
 
 That's actually all you need to do! Just turn off the `handmade` machine now and run the test scripts again:
 
@@ -109,5 +101,3 @@ As we can see, the cache is lost and the test is re-run. So basically every chan
 ## Conclusions
 
 There are two approaches to virtual bench deploying in Testo Framework: doing everything from scratch and importing existing virtual machines' disks into the test scripts. Importing existing disks may be convenient and useful if you don't want to spend your time automating preparatory tests. "Imported" virtual machines have the same caching rules as regular ones.
-
-You can find the complete test scripts [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/13%20-%20disks%20import).

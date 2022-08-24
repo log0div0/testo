@@ -1,4 +1,4 @@
-# Guide 7. Linking up virtual machines
+# Tutorial 7. Linking up virtual machines
 
 ## What you're going to learn
 
@@ -9,23 +9,13 @@ In this guide you're going to learn:
 3. Some additional `nic` subattributes.
 4. More information about virtual networks.
 
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. Host has the Internet access.
-4. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-5. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-6. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-7. (Recommended) [Guide 6](06_nat) is complete.
-
 ## Introduction
 
 In the last guide we learned about the virtual networks `nat` mode, which allows you to provide the Internet access to virtual machines. But, obviously, virtual networks could (and should) be used for linking up virtual machines with each other as well. That's what we're going to do in this guide. Additionally we'll discover a few little tricks to make our test scripts more convenient and easier to read.
 
 At the end of this guide we're going to get the following test bench:
 
-<img src="/static/docs/tutorials/qemu/07_ping/network.svg"/>
+![network](imgs/network.svg)
 
 ## What to begin with?
 
@@ -199,7 +189,7 @@ Now let's run our script.
 
 Look at that: Ubunstu installation broke up. Again. Why? Because now we have multiple NICs plugged into the virtual machine, so we get a new screen we haven't been expecting in the test script:
 
-![Primary NIC](/static/docs/tutorials/qemu/07_ping/primary_nic.png)
+![Primary NIC](imgs/primary_nic.png)
 
 The primary interface is listed at the top, so we just need to press Enter. Let's adjust our test script a little.
 
@@ -220,8 +210,8 @@ In the preparatory tests, when we're doing the most basic setups with the virtua
 
 In Testo-lang you have two options with NICs:
 
-1. Plug/unplug the "virtual link" from the NIC ([`plug/unplug link`](/en/docs/lang/actions_vm#plug-link)).
-2. Plug/unplug the NIC altogether ([`plug/unplug nic`](/en/docs/lang/actions_vm#plug-nic)).
+1. Plug/unplug the "virtual link" from the NIC ([`plug/unplug link`](../../reference/Actions.md#plug-link)).
+2. Plug/unplug the NIC altogether ([`plug/unplug nic`](../../reference/Actions.md#plug-nic)).
 
 You can plug/unplug links at any time (doesn't matter whether the machine is powered on or stopped), but plugging/unplugging NICs is available only when the virtual machine is powered off.
 
@@ -241,7 +231,7 @@ test server_unplug_nat: server_install_guest_additions {
 }
 ```
 
-This test begins with stopping the virtual machine. Generally speaking, there are two ways to stop a virtual machine from the outside: the [`stop`](/en/docs/lang/actions_vm#stop) action (mimicking power failure) and the [`shutdown`](/en/docs/lang/actions_vm#shutdown) action (mimicking pressing the power button on the machine). The `shutdown` action is somewhat more preferable.
+This test begins with stopping the virtual machine. Generally speaking, there are two ways to stop a virtual machine from the outside: the [`stop`](../../reference/Actions.md#stop) action (mimicking power failure) and the [`shutdown`](../../reference/Actions.md#shutdown) action (mimicking pressing the power button on the machine). The `shutdown` action is somewhat more preferable.
 
 When the machine is stopped, we unplug (right from the virtual PCI-express slot) the `nat` NIC and power on our machine again. The test is finished with a successful system login.
 
@@ -370,6 +360,4 @@ You can simplify the NICs distibguishing inside the test scripts by assigning fi
 
 Tests hierarchy looks like this at the moment:
 
-<img src="/static/docs/tutorials/qemu/07_ping/test_hierarchy.svg"/>
-
-You can find the complete test scripts and NIC-renaming bash script [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/07%20-%20ping).
+![test hierarchy](imgs/test_hierarchy.svg)

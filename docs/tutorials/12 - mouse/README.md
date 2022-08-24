@@ -1,19 +1,12 @@
-# Guide 12. Mouse control
+# Tutorial 12. Mouse control
 
 ## What you're going to learn
 
 In this guide you're going to learn about the mouse control basics in Testo-lang.
 
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. [Ubuntu Desktop 18.04](https://releases.ubuntu.com/18.04.4/ubuntu-18.04.4-desktop-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_desktop.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-4. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-
 ## Introduction
 
-With Testo you can control the mouse cursor (when it's available in the virtual machine OS). At first look, this process may seem a little confusing, but as soon as you catch the main [concepts](/en/docs/lang/mouse#a-text-on-the-screen-with-additional-specifiers) of cursor positioning, you won't forget them ever again. It's like bicycle riding - you just need to grasp it once.
+With Testo you can control the mouse cursor (when it's available in the virtual machine OS). At first look, this process may seem a little confusing, but as soon as you catch the main [concepts](../../reference/Mouse%20actions.md#a-text-on-the-screen-with-additional-specifiers) of cursor positioning, you won't forget them ever again. It's like bicycle riding - you just need to grasp it once.
 
 To try out the mouse control, we're going to automate the Ubuntu Desktop 18.04 installation. And we're going to do this using the mouse as much as possible.
 
@@ -76,11 +69,11 @@ test install_ubuntu {
 
 We're going to see this screen:
 
-![Welcome](/static/docs/tutorials/qemu/12_mouse/welcome.png)
+![Welcome](imgs/welcome.png)
 
 > Keep in mind that sometimes the Ubuntu Desktop installation starts another way: the first screen we're seeing already has the GUI and prompt us to select `Try Ubuntu` or `Install Ubuntu`. Try to apply your knowledge from the previous guides and modify the script so it would work in both cases.
 
-Obviously, to continue the installation we need to press the `Continue` button. We're going to use the mouse cursor to do this. And we're going to control the cursor with the [`mouse click`](/en/docs/lang/mouse#mouse-click(lckick,-rclick,-dclick)).
+Obviously, to continue the installation we need to press the `Continue` button. We're going to use the mouse cursor to do this. And we're going to control the cursor with the [`mouse click`](../../references/Mouse%20actions.md#mouse-clicklckick-rclick-dclick)).
 
 ```testo
 test install_ubuntu {
@@ -104,7 +97,7 @@ Looks not so hard, doesn't it? Most times your mouse control actions will look j
 
 So we move on to the next screen:
 
-![Keyboard Layout](/static/docs/tutorials/qemu/12_mouse/keyboard_layout.png)
+![Keyboard Layout](imgs/keyboard_layout.png)
 
 Let's focus on a very interesting moment. As we've mentioined before, the `mouse click "Continue"` aciton means moving the cursor to the center of the `Continue` text. So the action worked as planned, the button has been pressed and now at the next screen we need to do just the same thing: press the "Continue" button. So let's do it, shall we?
 
@@ -128,7 +121,7 @@ But the thing is, the second `mouse click "Continue"` action might not work! The
 
 ## Positioning the cursor inside the text instance
 
-So our goal is the following: on the `Welcome` screen we need to click the `Continue` button in such a manner that the cursor image doesn't block the `Continue` text on the next screen `Keyboard layout`. To achieve this goal we'd need a [specifier](/en/docs/lang/mouse#a-text-on-the-screen-with-additional-specifiers) for positioning the cursor inside the text instance.
+So our goal is the following: on the `Welcome` screen we need to click the `Continue` button in such a manner that the cursor image doesn't block the `Continue` text on the next screen `Keyboard layout`. To achieve this goal we'd need a [specifier](../../references/Mouse%20actions.md#a-text-on-the-screen-with-additional-specifiers) for positioning the cursor inside the text instance.
 
 By default, the `mouse click "Continue"` action moves the cursor at the center of the `Continue` text. But to make the `Continue` text visible in the next screen, we need to move the cursor not at the center, but somewhere where it wouldn't stay in the way. To do that we could apply (for example) the `center_bottom` specifier, which would move the cursor at the center of the bottom edge of the text. The usage looks like this:
 
@@ -149,7 +142,7 @@ test install_ubuntu {
 
 Now the `Keyboard layout` screen looks like this:
 
-![Keyboard Layout 2](/static/docs/tutorials/qemu/12_mouse/keyboard_layout_2.png)
+![Keyboard Layout 2](imgs/keyboard_layout_2.png)
 
 As we can see, now the cursor doesn't block the `Continue` text, and we can easily detect ahd click the button again:
 
@@ -171,7 +164,7 @@ test install_ubuntu {
 
 On the next screen:
 
-![Updates](/static/docs/tutorials/qemu/12_mouse/updates.png)
+![Updates](imgs/updates.png)
 
 We're going to select the minimal installation and disable the updates:
 
@@ -187,7 +180,7 @@ Take a note, that we deliberately clicked on the `Continue` center so the cursor
 
 So we're on the installation type selection screen, and the cursor, once again, has blocked the text we want to click on.
 
-![Installation type](/static/docs/tutorials/qemu/12_mouse/installation_type.png)
+![Installation type](imgs/installation_type.png)
 
 This time we're going to move the cursor aside using the absolute coordinates:
 
@@ -199,7 +192,7 @@ mouse move 0 0;
 mouse click "Install Now".center_bottom()
 ```
 
-We used a new action `mouse move`, which works exactly the same as the `mouse click`, but doesn't do a click. You can move the cursor based both on object detection (`mouse move "Continue"` and so on) and on absolute [coordinates](/en/docs/lang/mouse#coordinates).
+We used a new action `mouse move`, which works exactly the same as the `mouse click`, but doesn't do a click. You can move the cursor based both on object detection (`mouse move "Continue"` and so on) and on absolute [coordinates](../../references/Mouse%20actions.md#coordinates).
 
 Coordinates in the upper left corner of the screen are equal to X: 0 and Y: 0. To move the cursor to a right or a bottom corner of the screen you'd need to know the current screen resolution. For example, if the screen resolution was 800x600, then the bottom right corner coordinates would be X:799 and Y:599. The behaviour is undefined if you try to push the cursor beyond the screen limits.
 
@@ -209,7 +202,7 @@ Therefore, the `mouse move 0 0` action basically means "Move the cursor to the u
 
 The next screen we see:
 
-![Write changes](/static/docs/tutorials/qemu/12_mouse/write_changes_to_disk.png)
+![Write changes](imgs/write_changes_to_disk.png)
 
 We need to click the `Continue` button once again. But if we try to do so as we're used to:
 
@@ -226,7 +219,7 @@ We'll see, it leads to an error:
 
 So what's the deal? The deal is that there're two `Continue` text instances on the screen:
 
-![Write changes 2](/static/docs/tutorials/qemu/12_mouse/write_changes_to_disk_2.png)
+![Write changes 2](imgs/write_changes_to_disk_2.png)
 
 > Despite that the one `Continue` text instance starts with the capital "C" and the other - with the small "c", the detection engine sometimes could think that they are the same text (even though the engine is case-sensitive). This happens sometimes, no need to worry.
 
@@ -253,7 +246,7 @@ Previously, when the screen had only one instance of the expected text, this ste
 
 Sooner than later we're going to see the screen with the login and password prompts.
 
-![Who are you](/static/docs/tutorials/qemu/12_mouse/who_are_you.png)
+![Who are you](imgs/who_are_you.png)
 
 Of course, we could've entered all the values using the keyboard only (we can switch the current input field with a `press Tab` action), but for educational purposes we'ge going to do this with the mouse.
 
@@ -281,7 +274,7 @@ The positioning logic is this:
 
 When the login is typed, the generated hostname appears and it look absolutely terrifying. We definetely don't want to leave it like this:
 
-![Hostname](/static/docs/tutorials/qemu/12_mouse/hostname.png)
+![Hostname](imgs/hostname.png)
 
 We're going to fix this the same way:
 
@@ -333,7 +326,7 @@ The `mouse click` action encapsulates both the waiting for the text to appear an
 
 Keep in mind, that unlike in the Ubuntu Server installation, we shouldn't unplug the installation media when the "Installation complete" screen shows up (this leads to the virtual machine freezing up). So we just need to reboot the machine, wait the following screen to appear and only then remove the media:
 
-![Please remove](/static/docs/tutorials/qemu/12_mouse/please_remove.png)
+![Please remove](imgs/please_remove.png)
 
 To trigger the reboot process we can just press Enter, or use the `stop, start` combination.
 
@@ -345,7 +338,7 @@ unplug dvd; stop; start
 
 Finally, we need to login into the freshly installed OS to make sure that everything is OK. The login screen looks like this:
 
-![Login](/static/docs/tutorials/qemu/12_mouse/login.png)
+![Login](imgs/login.png)
 
 To wait for the login screen we could've have used the `wait "${login}"` action. But we've chosen the `desktop` as the login, and there is a chance that the `desktop` text could appear on the screen during the OS boot, before the login screen shows up. To ensure that the `wait` action doesn't trigger false-positively before needed, we're going to make the select expression more specific like this: `wait "${login} && "Not listed?"`. This `wait` triggers only when both `${login}` and `Not listed` are on the screen at the same time, which can't occur during the OS boot.
 
@@ -368,7 +361,7 @@ To exercise the mouse control a little bit more, let's develop a test in which w
 
 First let's get rid of this obtrusive screen:
 
-![Welcome to Ubuntu](/static/docs/tutorials/qemu/12_mouse/welcome_to_ubuntu.png)
+![Welcome to Ubuntu](imgs/welcome_to_ubuntu.png)
 
 ```testo
 test mouse_demo: install_ubuntu {
@@ -402,7 +395,7 @@ test mouse_demo: install_ubuntu {
 
 As we all know, to create a folder we need to do a right-click on the desktop empty space. To do a right-click we have to use the `mouse rclick` aciton, and to specify the click destination we just use some coordinates "somewhere on the desktop" (our current screen resolution is 1024x768). After that, we make sure that the folder is indeed created (the `My folder` text is present, but the `Create` text is absent).
 
-![Folder created](/static/docs/tutorials/qemu/12_mouse/folder_created.png)
+![Folder created](imgs/folder_created.png)
 
 Now we want to remove the folder and move it to the Trash bin. We're going to do so like this:
 
@@ -451,5 +444,3 @@ Take a look at the `mouse dclick` action - the convenient way to perform a doubl
 ## Conclusions
 
 Mouse control in Testo-lang is done with the `mouse` actions. The `mouse` actions are designed in such a way that the simple controls would look short and easy, but if you had to add some complexity to your clicks and movements, you could do it in the most convenient manner. Try to practise a little, and you'll find that it's not that hard.
-
-You can find the complete test scripts [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/12%20-%20mouse).

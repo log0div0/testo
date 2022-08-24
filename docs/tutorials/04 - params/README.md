@@ -1,17 +1,8 @@
-# Guide 4. Params
+# Tutorial 4. Params
 
 ## What you're going to learn
 
-In this guide we will focus our attention on the param feature in Testo-lang.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-4. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-5. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-6. (Recommended) [Guide 3](03_guest_additions) is complete.
+In this guide we will focus our attention on the param feature of Testo-lang.
 
 ## Introduction
 
@@ -19,7 +10,7 @@ During the previous guides we've written quite a lot of code for our test script
 
 We can also note that the paths to the Ubuntu Server and Guest Additions are absolute, which is not very convenient. If the ISO-images were located elsewhere, we'd need to adjust the test script. All that is certainly brings certain mess to the test scripts.
 
-To solve this problem Testo-lang has the [params](/en/docs/lang/param) mechanism. Params basically are global string constants. Let's take a look at them.
+To solve this problem Testo-lang has the [params](../../reference/Params.md) mechanism. Params basically are global string constants. Let's take a look at them.
 
 ## What to begin with?
 
@@ -137,5 +128,3 @@ You can make your test scripts more flexible and neater with params.
 First, you can "rename" frequently used string constants so you can navigate through them easily.
 
 Second, you can control the test scripts run with the command-line arguments, not changing the test scripts themselves.
-
-You can find the complete test scripts for this guide [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/04%20-%20params).

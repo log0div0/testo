@@ -1,26 +1,14 @@
-# Guide 16. Macros with declarations
+# Tutorial 16. Macros with declarations
 
 ## What you're going to learn
 
 In this guide you're going to learn about the last type of macros available in Testo-lang: macros with declarations.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. Host has the Internet access.
-4. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server_16.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-5. [Ubuntu server 20.04](https://releases.ubuntu.com/20.04/ubuntu-20.04.1-live-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server_20.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-6. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server iso-images.
-7. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-8. (Recommended) [Guide 9](09_macros) is complete.
 
 ## Introduction
 
 Macros play a big role on Testo-lang. They allow you to put similar snippets of code into named blocks which you can reference later without the need to worry about their actual contents. In the 9th guide we've already got accustomed to the macros with actions and macros with commands. With macros we reduced the amount of copy-pasta in our code dramatically.
 
 But there is one more type of macros which you need to learn to use the Test-lang capabilities to their fullest - macros with declarations. With this type of macros you can group up a bunch of tests or even whole tests benches!
-
 
 ## What to begin with?
 
@@ -758,7 +746,5 @@ After that we can try out out new script and check that everythings works as pla
 ## Conclusions
 
 With macros it is possible to group up not only actions and commands, but whole declarations (virtual test benches and tests) as well. If you need to generate a bunch of similar-looking tests, then macros with declaration are really worth the considerations to do just that.
-
-You can find the complete test scripts [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/16%20-%20macros_with_declarations).
 
 Congratulations! You've learned all the Testo-lang basics and may now proceed to creating your own test scripts!

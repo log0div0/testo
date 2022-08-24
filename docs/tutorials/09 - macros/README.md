@@ -1,20 +1,10 @@
-# Guide 9. Macros
+# Tutorial 9. Macros
 
 ## What you're going to learn
 
 In this guide you're going to learn about:
 1. Macros in Testo-lang.
 2. How to distribute your scripts among several .testo files.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. Host has the Internet access.
-4. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-5. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-6. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-7. (Recommended) [Guide 8](08_flash) is complete.
 
 ## Introduction
 
@@ -79,7 +69,7 @@ test server_install_ubuntu {
 
 For the `client`, the picture is not much different: `client` instead of `server`, different `hostname` and `login` values. Aside from that, everything looks exactly the same. This is the perfect candidate for our first macro.
 
-Let's declare our first [macro](/en/docs/lang/macro) and name it `install_ubuntu`. The declaration must be placed at the global level, where all the other declaraions go.
+Let's declare our first [macro](../../reference/Macros.md) and name it `install_ubuntu`. The declaration must be placed at the global level, where all the other declaraions go.
 
 ```testo
 macro install_ubuntu(hostname, login, password) {
@@ -202,7 +192,7 @@ macro install_guest_additions(hostname, login, password="${default_password}") {
 }
 ```
 
-In this macro we can see a situation worth noticing and explaining. Inside the macro body we reference the `ISO_DIR` and `guest_aditions_pkg`, even though they are not present in the argument list. But we still can reference them, because of the param resolving [algorithm](/en/docs/lang/param#resolving-algorithm):
+In this macro we can see a situation worth noticing and explaining. Inside the macro body we reference the `ISO_DIR` and `guest_aditions_pkg`, even though they are not present in the argument list. But we still can reference them, because of the param resolving [algorithm](../../reference/Params.md#resolve-order):
 
 1. When the reference is encountered inside a macro, Testo checks whether a macro argument or a global param is being referenced. If a macro argument is referenced, the algorithm returns its value and the resolving stops. In our case the algorithms stops at this step when referencing `${hostname}`, `${login}` and `${password}`.
 2. If a global param (including params specified with the `--param` command line arguments) is referenced, its value is returned and the resolving stops. In our case the algorithm stops at this step when referencing `${ISO_DIR}` and `${guest_additions_pkg}`.
@@ -278,7 +268,7 @@ test client_unplug_nat: client_install_guest_additions {
 
 This macro may be used to unplug any NIC, not just the `nat`.
 
-In the [documentation](/en/docs/lang/actions_vm) you will find which actions allow strings arguments instead of regular tokens.
+In the [documentation](../../reference/Actions.md) you will find which actions allow strings arguments instead of regular tokens.
 
 ## process_flash macro
 
@@ -387,7 +377,7 @@ Of course, you can (and should) use this macro in the future to copy any file be
 
 ## Macros with declarations
 
-In Testo-lang it is also possible to use macros with declarations. This topic is covered [here](16_macro_with_declarations).
+In Testo-lang it is also possible to use macros with declarations. This topic is covered the [tutorial 16](../16%20-%20macro%20with%20declarations).
 
 ## `include` directive
 
@@ -427,5 +417,3 @@ Now everything looks perfect: there is no duplicated code and everything is in i
 Macros and the `include` directive are a great way to simplify and streamline your test scripts. The more code you develop, the more important it is to distribute your code among different files, othwerwise you risk to turn your tests into a one big mess.
 
 And if you do everything carefully, you may even avoid cache losses, since the caching in Testo doesn't care much for macros, but rather for the actions in them.
-
-You can find the complete test scripts [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/09%20-%20macros).

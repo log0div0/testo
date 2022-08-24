@@ -1,20 +1,10 @@
-# Guide 10. If clause
+# Tutorial 10. If clause
 
 ## What you're going to learn
 
 In this guide you're going to learn about:
 1. If-statements in Testo-lang.
 2. Complex select expressions in the `wait` actions.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. Host has the Internet access.
-4. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-5. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-6. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-7. (Recommended) [Guide 9](09_macros) is complete.
 
 ## Introduction
 
@@ -28,7 +18,7 @@ You may remember several occasions when we had to adjust the Ubuntu Server insta
 
 But what if we want our macro to work in any conditions? What if we want our macro to install the Ubuntu Server successfully no matter what the virtual machine configuration is?
 
-Obviously, the macro needs to apply the actions a bit differently, depending on the current situation. And there is a tool in the Testo-lang just for that - the [`if-else` statements](/en/docs/lang/if). You can control the action flow based on string constants, params' values and the actual screen contents. In this guide we're going to try out both simple if-expressions and more complex ones, with screen contents checks.
+Obviously, the macro needs to apply the actions a bit differently, depending on the current situation. And there is a tool in the Testo-lang just for that - the [`if-else` statements](../../reference/Conditions.md). You can control the action flow based on string constants, params' values and the actual screen contents. In this guide we're going to try out both simple if-expressions and more complex ones, with screen contents checks.
 
 ## What to begin with?
 
@@ -171,7 +161,7 @@ Turns out, we can't be sure beforehand what screen is going to appear after the 
 
 To achieve that, we're going to do something which resembles a `switch-case` clause in other languages, but looks a bit different.
 
-For starters, we make use of the `wait` feature to wait not a single textline, but whole seleciton expressions (see [here](/en/docs/lang/actions_vm#select-expressions-for-the-wait-and-check-actions) for more information):
+For starters, we make use of the `wait` feature to wait not a single textline, but whole seleciton expressions (see [here](../../reference/Actions.md#select-expressions-for-the-wait-and-check-actions) for more information):
 
 ```testo
 wait "Keyboard layout"; press Enter
@@ -249,6 +239,4 @@ If the `HTTP_PROXY` is defined, we need to type its value and then press Enter.
 
 With if-statements you can control the action flow depending on various circumstances (including the different screen contents). With this tool you can develop more flexible and generalized macros and tests.
 
-> Of course, we haven't learned the whole possibilities of the if-statements in this guide. In the if-statements you can use the whole selection expressions, including unary and binary operators, comparisons and so on. For more information see the [documentation](/en/docs/lang/if).
-
-You can find the complete test scripts [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/10%20-%20if).
+> Of course, we haven't learned the whole possibilities of the if-statements in this guide. In the if-statements you can use the whole selection expressions, including unary and binary operators, comparisons and so on. For more information see the [documentation](../../reference/Conditions.md).

@@ -1,4 +1,4 @@
-# Guide 6. Internet access in virtual machines
+# Tutorial 6. Internet access in virtual machines
 
 ## What you're going to learn
 
@@ -6,16 +6,6 @@ In this guide you're going to:
 
 1. Learn about virtual networks and Network Interface Cards (NICs).
 2. Learn how to provide the Internet access to virtual machines inside your test scripts.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. The Host has the Internet access.
-4. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-5. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-6. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-7. (Recommended) [Guide 5](05_caching) is complete.
 
 ## Introduction
 
@@ -27,7 +17,7 @@ Generally, virtual networks in Testo-lang could be used for 2 purposes: to link 
 
 At the moment we have a set of test scripts with the Ubuntu OS and guest additions installations on the virtual machine `my_ubuntu`. Usually, there is little use in a "bare" Ubuntu Server and most of the times you want to install some additional software on your server. Yes, theoretically you could've prepared all the necessary software beforehand and copy it inside the guest via `copyto`, but it is so much easier to use the usual Ubuntu package repository. Obviously, you'd need the Internet access for this to happen.
 
-To connect your virtual machine to the Internet, first you need to declare a virtual network which will serve for this purpose. To declare a virtual network, the [`network`](/en/docs/lang/network) keyword is used:
+To connect your virtual machine to the Internet, first you need to declare a virtual network which will serve for this purpose. To declare a virtual network, the [`network`](../../reference/Networks.md) keyword is used:
 
 ```testo
 network internet {
@@ -72,7 +62,7 @@ In any case, after a few minutes you're going to find out that the `ubuntu_insta
 
 Indeed, if you open virtual manager and check out the virtual machine screen, you'll see this:
 
-![Hostname](/static/docs/tutorials/qemu/06_nat/hostname.png)
+![Hostname](imgs/hostname.png)
 
 The reason for this screen to appear is that we added the NIC to `my_ubuntu`, so now, naturally, the warning about not detecting any interfaces doesn't show up.
 
@@ -97,7 +87,7 @@ If you don't have any issues with the proxy server (or if you don't use it at al
 
 Instead of the screen with the time zone selection you'll see another screen:
 
-![Timezone](/static/docs/tutorials/qemu/06_nat/timezone.png)
+![Timezone](imgs/timezone.png)
 
 The reason is that, thanks to the Internet access, Ubunstu Server installator now can detect your current timezone automatically. So let's change our script a little bit more:
 
@@ -134,5 +124,3 @@ In the `exec bash` action output we can clearly see the successful run of the `a
 ## Conclusions
 
 Testo Framework allows you to connect your virtual machines to the Internet. This is done with the help of virtual networks, which could be also used to link up virtual machines with each other. Linking up machines with each other is the main highlight of the next guide.
-
-You can find the complete test scripts for this guide [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/06%20-%20nat).

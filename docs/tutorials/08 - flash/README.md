@@ -1,18 +1,8 @@
-# Guide 8. Flash Drives
+# Tutorial 8. Flash Drives
 
 ## What you're going to learn
 
 In this guide you're going to learn about virtual flash drives in Testo Framework.
-
-## Preconditions
-
-1. Testo Framework is installed.
-2. Virt manager is installed.
-3. Host has the Internet access.
-4. [Ubuntu server 16.04](https://releases.ubuntu.com/16.04/ubuntu-16.04.7-server-amd64.iso) image is downloaded and located here: `/opt/iso/ubuntu_server.iso`. The location may be different, but in this case the `ISO_DIR` command-line param has to be adjusted accordingly.
-5. Testo guest additions iso image is downloaded and located in the same folder as Ubuntu Server 16.04 iso-image.
-6. (Recommended) Testo-lang [syntax highlight](/en/docs/getting_started/getting_started#setting-up-testo-lang-syntax-highlighting) for Sublime Text 3 is set up.
-7. (Recommended) [Guide 7](07_ping) is complete.
 
 ## Introduction
 
@@ -34,7 +24,7 @@ In this guide we're going to learn all about the virtual flash drives and how to
 
 ## What to begin with?
 
-Let's assume that we need to transfer a file from the `client` machine to the `server`, and for some reason we don't want to use the network for that. In this case a virtual flash drive may come in handy. But first we need to declare it with the [`flash`](/en/docs/lang/flash) directive.
+Let's assume that we need to transfer a file from the `client` machine to the `server`, and for some reason we don't want to use the network for that. In this case a virtual flash drive may come in handy. But first we need to declare it with the [`flash`](../../reference/Flash%20drives.md) directive.
 
 ```testo
 flash exchange_flash {
@@ -169,7 +159,7 @@ Of course, if the virtual machine has the guest additions installed, the transfe
 
 Starting from the version 2.1.0 of Testo-lang, you can address flash drives in commands, just like virtual machines.
 
-There are several actions you can apply to virtual flash drives, that are also applicable to virtual machines. For instance, you can call the [`copyto`](/en/docs/actions_fd#copyto)(copy files from the Host to the flash drive) and [`copyfrom`](/en/docs/actions_fd#copyfrom)(copy files from the flash drive to the Host) actions with virtual flash drives as subjects. The `copyto` and `copyfrom` actions for virtual machines require the guest additions to be installed in them, but at the same time these actions work always when applyed to virtual flash drives. The only thing you need to keep in mind is that the flash drive must not be plugged in any virtual machine when calling `copyto`/`copyfrom` actions.
+There are several actions you can apply to virtual flash drives, that are also applicable to virtual machines. For instance, you can call the [`copyto`](../../reference/Actions.md#copyto)(copy files from the Host to the flash drive) and [`copyfrom`](../../reference/Actions.md#copyfrom)(copy files from the flash drive to the Host) actions with virtual flash drives as subjects. The `copyto` and `copyfrom` actions for virtual machines require the guest additions to be installed in them, but at the same time these actions work always when applyed to virtual flash drives. The only thing you need to keep in mind is that the flash drive must not be plugged in any virtual machine when calling `copyto`/`copyfrom` actions.
 
 So let's imagine, that at the end of the `exchange_files_with_flash` test we want to copy the `copy_me_to_server.txt` file from the flash drive to the Host. This file is already placed in the `exchange_flash` flash drive since we've put it there during the test. So the only thing left to do is to call the `copyfrom` action for the `exchange_flash` flash drive.
 
@@ -227,6 +217,4 @@ Virtual flash drives, alongside with virtual machines and networks, are all the 
 
 The tests hierarchy looks like this at the moment:
 
-<img src="/static/docs/tutorials/qemu/08_flash/test_hierarchy.svg"/>
-
-You can find the complete test scripts [here](https://github.com/testo-lang/testo-tutorials/tree/master/qemu/08%20-%20flash).
+![test hierarchy](imgs/test_hierarchy.svg)
