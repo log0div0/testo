@@ -2,11 +2,11 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn the most basic virtual machine actions in Testo lang: `wait`, `type`, `press`. Additionally you're going to learn how to eject the DVD-drive from a virtual machine.
+In this tutorial you're going to learn the most basic virtual machine actions in Testo lang: `wait`, `type`, `press`. Additionally you're going to learn how to eject the DVD-drive from a virtual machine.
 
 ## Introduction
 
-The last guide ended with the successful declaration of the virtual machine `my_ubuntu` and development of the very first test, where the virtual machine is just created and started. But now new questions come to mind: what to do next with the virtual machine? How to automate the OS installation?
+The last tutorial ended with the successful declaration of the virtual machine `my_ubuntu` and development of the very first test, where the virtual machine is just created and started. But now new questions come to mind: what to do next with the virtual machine? How to automate the OS installation?
 
 As previously mentioned, Testo Framework is aimed at mimicking a human, working with a computer. When developing test scripts, you could use a lot of actions that a real human would do when sitting behind a monitor with a keyboard and a mouse.
 
@@ -21,6 +21,7 @@ When the user recognizes this screen, he understands that now he has to take som
 Now it's the time to press Enter again... and wait for the next screen... This routine repeats until the the Ubunstu Server installation is complete.
 
 To think about it, the concept of a human working with a computer could be represented as a two-step process:
+
 1. Waiting for an event to appear (screen contents detection).
 2. A reaction to this event (pressing keys on the keyboard for example).
 
@@ -28,7 +29,7 @@ The main concept of Testo-lang is to automate and formalize such an algorithm.
 
 ## What to begin with?
 
-Let's try to understand this concept with an example. For that, let's go back to the script we've developed in the guide 1.
+Let's try to understand this concept with an example. For that, let's go back to the script we've developed in the tutorial 1.
 
 ```testo
 machine my_ubuntu {
@@ -66,11 +67,9 @@ test my_first_test {
 
 The `wait` action blocks the test run and returns the control only when the "English" text is detected. Let's try to run this test
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
-Keep in mind that the `abort` action is still there, prividing us with the breakpoint in our test script. This makes the test development process more convinient: we can always see the virtual machine state at the moment the `abort` triggers.
-
-> The `wait` action is working just fine with cyrillic letters. Instead of `wait "English` you could have used `wait "Русский"`.
+Keep in mind that the `abort` action is still there, providing us with the breakpoint in our test script. This makes the test development process more convinient: we can always see the virtual machine state at the moment the `abort` triggers.
 
 Now when we've made sure that a certain screen is really in front of us (on the monitor) we're ready to make some reaction to this event. In our case we need to press the Enter key to select English language. There is the [`press`](../../reference/Actions.md#press) action in the Testo-lang, allowing you to press a keyboard button(s).
 
@@ -87,7 +86,7 @@ test my_first_test {
 
 Output:
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 Now if you open the `my_ubuntu` virtual machine in virtual manager, you'll find out that the Ubuntu installation has, indeed, moved a bit further: now we can see the second screen with the installation choices.
 
@@ -95,7 +94,7 @@ Just like a moment ago, first we need to make sure that we really can see the ex
 
 Now you can see the pattern: developing a test script is a combination of "wait for something" - "react" actions. It looks something like this:
 
-![action flow](imgs/action_flow.svg")
+![action flow](imgs/action_flow.svg)
 
 ## wait timeout
 
@@ -127,7 +126,7 @@ test my_first_test {
 
 Output:
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 We can see the error has moved up a bit: not on the `abort` action, but on the `wait`.
 
@@ -149,8 +148,8 @@ test my_first_test {
 		wait "Keyboard layout"; press Enter
 		wait "No network interfaces detected" timeout 5m
 
-		#Take notice of that you you want to press several keys one after another
-		#you can combine them in one press action using a comma
+		# Take notice of that you you want to press several keys one after another
+		# you can combine them in one press action using a comma
 		press Right, Enter
 		wait "Hostname:"
 		abort "Stop here"
@@ -168,7 +167,7 @@ To achieve that, we need to do 2 things:
 1. Erase the current value.
 2. Enter the new value.
 
-To erase the existing value we need to press the Backspace key at least 6 times. But it would look pretty messy to just duplicate the `press` action 6 times, so instead you can use a single `press` action like this: `press Backspace*6`
+To erase the existing value we need to press the Backspace key at least 6 times. But it would look pretty messy to just duplicate the `press` action 6 times, so instead you can use a single `press` action like this: `press Backspace*6`. In fact nothing prevents us from pressing the backspace buttom more than 6 times (for example 20 times) as we usually do when we enter the text manualy.
 
 Now we need to enter a new Hostname value (`my-ubuntu`, for example). Though it is possible to do that with only the `press` actions (`press m; press y...`), it would look super ugly. But, luckily, in Testo-lang you can use the [`type`](../../reference/Actions.md#type) action to type text on the keyboard.
 
@@ -178,11 +177,11 @@ Likewise a bit later you can enter the login (`type "my-ubuntu-login"`) and pass
 
 ## Completing the installation
 
-Finallym at some point we're going to see the Installation Complete screen, prompting us to remove the installation media and press Enter to continue.
+Finally at some point we're going to see the Installation Complete screen, prompting us to remove the installation media and press Enter to continue.
 
 ![Installation Complete](imgs/installation_complete.png)
 
-So how can you remove the installation media (e.g. "eject" the DVD-drive)? Testo Framework has actions mimicking hardware manipulations, mainly the plugging (action [`plug`](../../reference/Actions.md#plug)) and the unplugging (action [`unplug`](../../reference/Actions.md#unplug)) different devices. Right now we are going to use the `unplug dvd` action, which "ejects" the virtual DVD-drive, thus removing the mounted iso-image. Other plug/unplug possibilities will be explained in future guides.
+So how can you remove the installation media (e.g. "eject" the DVD-drive)? Testo Framework has actions mimicking hardware manipulations, mainly the plugging ([`plug`](../../reference/Actions.md#plug) action) and the unplugging ([`unplug`](../../reference/Actions.md#unplug) action) different devices. Right now we are going to use the `unplug dvd` action, which "ejects" the virtual DVD-drive, thus removing the mounted iso-image. Other plug/unplug possibilities will be explained in the future tutorials.
 
 After ejecting the DVD-drive, all that's left to do is to wait for the restart to complete. We can reckon that the installation completed successfully, if after the restart the login prompt appears (`wait "login"`). Just to be absolutely sure, at the end of the test we're going to login in the system with the login/password we specified.
 
