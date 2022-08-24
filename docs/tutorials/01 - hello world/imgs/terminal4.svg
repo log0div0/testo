@@ -75,11 +75,23 @@
 					<div class="green button"></div>
 				</div>
 				<div class="main" style="height: 430px;">
-					<span class="">user$ sudo testo run ~/testo/hello_world.testo<br/></span>
-					<span class="bold blue">PROCESSED TOTAL 0 TESTS IN 0h:0m:0s<br/></span>
-					<span class="bold blue">UP-TO-DATE: 0<br/></span>
-					<span class="bold green">RUN SUCCESSFULLY: 0<br/></span>
-					<span class="bold red">FAILED: 0<br/></span>
+					<span class="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail<br/></span>
+					<span class="blue bold">TESTS TO RUN:<br/></span>
+					<span class="magenta ">my_first_test<br/></span>
+					<span class="blue ">[  0%] Preparing the environment for test </span>
+					<span class="yellow ">my_first_test<br/></span>
+					<span class="blue ">[  0%] Restoring snapshot </span>
+					<span class="yellow ">initial</span>
+					<span class="blue "> for virtual machine </span>
+					<span class="yellow ">my_ubuntu<br/></span>
+					<span class="blue ">[  0%] Running test </span>
+					<span class="yellow ">my_first_test<br/></span>
+					<span class="blue ">[  0%] Starting virtual machine </span>
+					<span class="yellow ">my_ubuntu<br/></span>
+					<span class="red bold">/home/alex/testo/hello_world.testo:14:3: Caught abort action on virtual machine my_ubuntu with message: Stop here<br/></span>
+					<span class="red bold">[100%] Test </span>
+					<span class="yellow bold">my_first_test</span>
+					<span class="red bold"> FAILED in 0h:0m:1s<br/></span>
 					<span class="">user$ </span>
 				</div>
 			</div>

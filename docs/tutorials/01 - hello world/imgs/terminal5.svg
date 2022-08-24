@@ -75,12 +75,14 @@
 					<div class="green button"></div>
 				</div>
 				<div class="main" style="height: 430px;">
-					<span class="">user$ sudo testo run ~/testo/hello_world.testo<br/></span>
-					<span class="bold blue">PROCESSED TOTAL 0 TESTS IN 0h:0m:0s<br/></span>
-					<span class="bold blue">UP-TO-DATE: 0<br/></span>
-					<span class="bold green">RUN SUCCESSFULLY: 0<br/></span>
-					<span class="bold red">FAILED: 0<br/></span>
-					<span class="">user$ </span>
+					<span className="">user$ sudo testo clean<br/></span>
+					<span className="">Testo is about to erase the following entities:<br/></span>
+					<span className="">Virtual machines:<br/></span>
+					<span className="">		- my_ubuntu<br/></span>
+					<span className=""><br/></span>
+					<span className="">Do you confirm erasing these entities? [y/N]: y<br/></span>
+					<span className="">Deleted virtual machine my_ubuntu<br/></span>
+					<span className="">user$ </span>
 				</div>
 			</div>
 		</div>

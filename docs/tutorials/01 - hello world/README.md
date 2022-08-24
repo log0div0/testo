@@ -110,7 +110,7 @@ Commands with flash drives are described in future guides. Right now we're going
 
 In our first test there is only one command. In this command the [`start`](../../reference/Actions.md#start) action is applied to the virtual machine `my_ubuntu`. Let's run this test and see what we've got.
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 We can see that the `my_first_test` test is queued into `TESTS TO RUN`, which means that Testo is ready to run this test. After that the actual test run begins.
 
@@ -160,7 +160,7 @@ test my_first_test {
 
 Our test still has only one command, but this command now has an action block as the action. The new `abort` action stops the test run with an error message. Let's try to run this test now:
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 We can see a warning about the cache loss for the test `my_first_test`. Caching is explained in the future guides, for now it is enough to just accept the warning.
 
@@ -170,7 +170,7 @@ However, if we open virtual manager and take a look at the `my_ubuntu` virtual m
 
 And still, there is a way to abort the tests run when any error occurs. To do that you need to pass the command line argument `--stop_on_fail`.
 
-<Asset id="terminal4"/>
+![](imgs/terminal4.svg)
 
 And now, at last, in the virtual manager we can find our machine in the next state:
 
@@ -182,7 +182,7 @@ The combination `abort` + `stop_on_fail` constitues the breakpoint mechanism in 
 
 During tests run Testo created a virtual machine (`my_ubuntu`), which will exist in the Host filesystem indefinitely long. If we want to clear the disk space and get rid of the created machine, we should use the Testo cleaning mode. With just a simple command
 
-<Asset id="terminal5"/>
+![](imgs/terminal5.svg)
 
 the virtual machine `my_ubuntu` is gone.
 
