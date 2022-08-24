@@ -74,7 +74,7 @@ So we've declared our first virtual test bench for the first test project. Let's
 
 If everything is done correctly, you should see the following interpreter's output:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 We can see, that even though we haven't written a single test just yet, the `.testo` file is still can be interpreted. However, no tests are run at the moment (obviously).
 

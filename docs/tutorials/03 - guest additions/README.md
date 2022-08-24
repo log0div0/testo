@@ -79,7 +79,7 @@ Let's make sure that a child test really depends on the parent test.
 
 To do that, let's run our script file, but this time we're going to use a new command-line argument `--test_spec`. This argument specifies the tests we want to run (instead of running all of the tests). After the run we'll see something like this:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 At the begin of the output we can see, that the Testo Framework is shceduled the `ubuntu_installation` test to run, despite the fact that we only asked to run the `guest_additions_installation` test. It happened because we want to run a child test, but the parent test hasn't run successfully just yet. And therefore, Testo Framework automatically queues the parent test first, and only after that - the child test.
 
