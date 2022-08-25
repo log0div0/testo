@@ -2,7 +2,7 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn about the tests without the hypervisor snapshots in Testo Framework. With this kind of tests you can save a lot of disk space.
+In this tutorial you're going to learn about the tests without the hypervisor snapshots in Testo Framework. With this kind of tests you can save a lot of disk space.
 
 ## Introduction
 
@@ -10,7 +10,7 @@ As you could've noticed, the tests caching plays a huge role in Testo Framework.
 
 But this approach has a downside as well: every snapshot takes a lot of disk space, and you could run out of this space pretty fast. The situation gets worse when you consider the fact that at the end of the test all virtual entities get their own snapshot. For example, if a test involves 5 virtual machines and 2 flash dirves, then you'll get 5 virtual machine snapshots and 2 flash drive snapshots.
 
-And so, to save you some disk space, there is a feature in Testo-lang that gives you the opportunity to create tests without the **hypervisor** snapshots, with only light-weight metadata files. With this feature used properly you'll save a ton of disk space without any significant damage to the test runs, and that is the topic of the today' guide.
+And so, to save you some disk space, there is a feature in Testo-lang that gives you the opportunity to create tests without the **hypervisor** snapshots, with only light-weight metadata files. With this feature used properly you'll save a ton of disk space without any significant damage to the test runs, and that is the topic of the today' tutorial.
 
 ## What to begin with?
 
@@ -43,13 +43,13 @@ We just used a new Testo-lang feature: [tests attributes](../../reference/Tests.
 
 Let's run the script:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 We can see that both of our modified tests had lost their cache and was run again. The reason is that test attributes are included in tests checksums.
 
 But what's now? Now the hypervisor snapshots hadn't been created at the end of the test, so we could've assumed that the tests wouldn't going to be cached again, and they would be running all the time, right? Wrong! Let's run the tests again:
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 So what do we see? All the tests remained cached and nothing had been run! And that's with two of our tests missing the hypervisor snapshots (which you could see for yourself in the virtual manager):
 
@@ -85,15 +85,15 @@ test client_unplug_nat: client_install_guest_additions {
 
 Now let's run this test and nothing more.
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 Let's also make sure that the test is cached, despite the `no_snapshots: true` attribute:
 
-<Asset id="terminal4"/>
+![](imgs/terminal4.svg)
 
 And now run the test `client_prepare`, which depends on the `client_unplug_nat` test:
 
-<Asset id="terminal5"/>
+![](imgs/terminal5.svg)
 
 We can see a very peculiar thing: the `client_unplug_nat` test is marked both as `UP-TO-DATE` and as `TEST TO RUN`. Let's sort this out.
 
@@ -113,7 +113,7 @@ If the `client_install_guest_additions` also had the `no_snapshots` attribute, t
 
 And now let's try to run all the tests at once:
 
-<Asset id="terminal6"/>
+![](imgs/terminal6.svg)
 
 So what do we see? We can see that despite the `client_unplug_nat` test now has no hypervisor snapshots, the **leaf-tests** run as usual: because we still have the virtual machine snapshots from the `client_prepare` test.
 
@@ -133,7 +133,7 @@ But let's demonstrate what's going to happen if we push the limit too far.
 
 Let's add the `no_snapshots` attribute to the `client_prepare` and `server_prepare` tests and run everything:
 
-<Asset id="terminal7"/>
+![](imgs/terminal7.svg)
 
 Just look at how big the `TESTS TO RUN` queue had got! We can see that the `server_unplug_nat`, `client_unplug_nat`, `server_prepare` and `client_prepare` are scheduled to run two times each! Let's figure out what's happening:
 
