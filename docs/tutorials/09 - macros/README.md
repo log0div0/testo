@@ -2,7 +2,7 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn about:
+In this tutorial you're going to learn about:
 1. Macros in Testo-lang.
 2. How to distribute your scripts among several .testo files.
 
@@ -14,7 +14,7 @@ It is a natural desire to clean the mess up a little bit and "hide" similar line
 
 In Testo-lang a macro basically is a named **action**, **command** or **declaration** block. A macro call is also an **action**, **command** or **declaration** (depending on the macro type). With macros you can group up similar pieces of code into named blocks, so that your scripts are more streamlined and easier to maintain. Macros can take arguments (and default-valued arguments as well) which can be referenced inside the macro body as usual params.
 
-And of course you can distribute your scripts among different files. Script files are then linked with each other with the `include` directive, which we're going to see in action in this guide.
+And of course you can distribute your scripts among different files. Script files are then linked with each other with the `include` directive, which we're going to see in action in this tutorial.
 
 ## What to begin with?
 
@@ -134,7 +134,7 @@ Neat and clean, isn't it? Keep in mind, that the declared macro is a macro with 
 
 Let's try to run it!
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 And so what are we seeing? The tests remained cached, even though we'd changed the base tests quite a lot (seemingly). However, the thing is, when tests checksums are being calculated, Testo Framework doesn't care much for macros: it just "unfolds" the macro body and places the actions instead of the macro call. Since the actions in the tests hadn't **actually** changed (we just moved them into the macro, which is not a significant change), the test checksum remained intact, and therefore the tests are still cached.
 
@@ -165,7 +165,7 @@ test client_install_ubuntu {
 
 Try to run the script now, and you'll find out that the tests are still cached. The reason is the same: only the "unfolded" macros are taken into consideration when test checksums are calculated.
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 ## Guest additions installation
 
@@ -212,7 +212,7 @@ test client_install_guest_additions: client_install_ubuntu {
 
 And still everything is cached:
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 ## unplug_nat macro
 
