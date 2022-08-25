@@ -2,7 +2,7 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn about the mouse control basics in Testo-lang.
+In this tutorial you're going to learn about the mouse control basics in Testo-lang.
 
 ## Introduction
 
@@ -12,7 +12,7 @@ To try out the mouse control, we're going to automate the Ubuntu Desktop 18.04 i
 
 ## What to begin with?
 
-Let's leave alone for now the bench we've been developing for 10 guides straight and create a new test script file. We'going to call it `mouse.testo` and it's going to contain all the necessary code for this guide (there's not going to be too much code in here, so there's no need to distribute it among several files).
+Let's leave alone for now the bench we've been developing for 10 tutorials straight and create a new test script file. We'going to call it `mouse.testo` and it's going to contain all the necessary code for this tutorial (there's not going to be too much code in here, so there's no need to distribute it among several files).
 
 We begin with the already-known basics:
 
@@ -48,7 +48,7 @@ test install_ubuntu {
 }
 ```
 
-We're creating a new virtual machine named `ubuntu_desktop`. Because of the GUI, it needs a little more RAM than the `ubuntu_server` machine from the previous guides. It also needs more disk space (10 Gigabytes should be enough). We declare beforehand some already known params: `login`, `hostname`, `password` and proceed straight to the installation automation.
+We're creating a new virtual machine named `ubuntu_desktop`. Because of the GUI, it needs a little more RAM than the `ubuntu_server` machine from the previous tutorials. It also needs more disk space (10 Gigabytes should be enough). We declare beforehand some already known params: `login`, `hostname`, `password` and proceed straight to the installation automation.
 
 The first two screens doesn't have any GUI-contents, so we process them as usual, the routine is self-explanatory. To get to the first GUI screen we'll need the following script:
 
@@ -65,13 +65,13 @@ test install_ubuntu {
 }
 ```
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 We're going to see this screen:
 
 ![Welcome](imgs/welcome.png)
 
-> Keep in mind that sometimes the Ubuntu Desktop installation starts another way: the first screen we're seeing already has the GUI and prompt us to select `Try Ubuntu` or `Install Ubuntu`. Try to apply your knowledge from the previous guides and modify the script so it would work in both cases.
+> Keep in mind that sometimes the Ubuntu Desktop installation starts another way: the first screen we're seeing already has the GUI and prompt us to select `Try Ubuntu` or `Install Ubuntu`. Try to apply your knowledge from the previous tutorials and modify the script so it would work in both cases.
 
 Obviously, to continue the installation we need to press the `Continue` button. We're going to use the mouse cursor to do this. And we're going to control the cursor with the [`mouse click`](../../references/Mouse%20actions.md#mouse-clicklckick-rclick-dclick)).
 
@@ -215,7 +215,7 @@ mouse click "Continue".center_bottom()
 
 We'll see, it leads to an error:
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 So what's the deal? The deal is that there're two `Continue` text instances on the screen:
 
@@ -425,7 +425,7 @@ Take a closer look to the `mouse hold` and `mouse release` actions. The `mouse h
 2. You must release all held down buttons before the end of the test.
 3. You can't click anything if any of your mouse buttons is held.
 
-And the final task in this guide: empty the Trash bin. The solution script is self-explanatory:
+And the final task in this tutorial: empty the Trash bin. The solution script is self-explanatory:
 
 ```testo
 #Empty trash
