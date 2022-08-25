@@ -2,17 +2,17 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn about the last type of macros available in Testo-lang: macros with declarations.
+In this tutorial you're going to learn about the last type of macros available in Testo-lang: macros with declarations.
 
 ## Introduction
 
-Macros play a big role on Testo-lang. They allow you to put similar snippets of code into named blocks which you can reference later without the need to worry about their actual contents. In the 9th guide we've already got accustomed to the macros with actions and macros with commands. With macros we reduced the amount of copy-pasta in our code dramatically.
+Macros play a big role on Testo-lang. They allow you to put similar snippets of code into named blocks which you can reference later without the need to worry about their actual contents. In the 9th tutorial we've already got accustomed to the macros with actions and macros with commands. With macros we reduced the amount of copy-pasta in our code dramatically.
 
 But there is one more type of macros which you need to learn to use the Test-lang capabilities to their fullest - macros with declarations. With this type of macros you can group up a bunch of tests or even whole tests benches!
 
 ## What to begin with?
 
-To grasp the concept of macros with declarations, we should go back to the 9th part of our guides (the guide which introduces macros). Let's  take a look at our script we'd got at the end of the guide.
+To grasp the concept of macros with declarations, we should go back to the 9th part of our tutorials (the tutorial which introduces macros). Let's  take a look at our script we'd got at the end of the tutorial.
 
 `declarations.testo`:
 
@@ -193,7 +193,7 @@ test exchange_files_with_flash: client_prepare, server_prepare {
 }
 ```
 
-Looks good and elegant, doesn't it? Indeed, we've come a long way in that guide: we managed to organize all the code into a good shape, minimizing the amount of copy-pasta.
+Looks good and elegant, doesn't it? Indeed, we've come a long way in that tutorial: we managed to organize all the code into a good shape, minimizing the amount of copy-pasta.
 
 But let's consider this: what if we need to check that our tests run OK not only with Ubuntu Server 16.04, but Ubuntu Server 20.04 as well? The current virtual machines have Ubuntu Server 16.04 onboard, so to test Ubuntu 20.04 we'd need another two VMs (don't forget to rename the old ones so we won't get confused). To complete the picture let's also imagine we want to connect the new VMs with a new set of networks. Finally, we'd like to use a new virtual usb stick to copy files:
 
@@ -564,7 +564,7 @@ test exchange_files_with_flash_20: client_20_prepare, server_20_prepare {
 
 Let's make sure this works:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 All done! We're managed to do the job, but once again we're forced to do copy-paste: we virtually duplicated the code for virtual machines, networks, flash drives and the tests themselves.
 
