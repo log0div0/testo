@@ -2,11 +2,11 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn how to "import" manually prepared virtual machines into your test scripts.
+In this tutorial you're going to learn how to "import" manually prepared virtual machines into your test scripts.
 
 ## Introduction
 
-In all our previous guides we've sticked to the concept of deploying the test benches from scratch. The virtual machines we created were absolutely blank: just a bunch of virtualized hardware with nothing installed. We had to automate everything: OS and guest additions installation, the network setups and so on. This approach has some great benefits to it:
+In all our previous tutorials we've sticked to the concept of deploying the test benches from scratch. The virtual machines we created were absolutely blank: just a bunch of virtualized hardware with nothing installed. We had to automate everything: OS and guest additions installation, the network setups and so on. This approach has some great benefits to it:
 1. All you need to deploy the test bench is a set of ISO-images and some small additional files you can keep in a VCS. So you can easily move the test bench to a new computer: just download the repository and the iso-images.
 2. The test scripts are basically a documentation for the deploying process of the test bench: just read the scripts and you'll know what exactly happens to the test bench. From the very beginning!
 3. You can easily adjust the test bench preparation steps. Just change any actions you want (in any part of the preparation process) and Testo will do the rest to get the test bench into the state you want it to be.
@@ -15,11 +15,11 @@ However, the approach has some downsides as well:
 1. Sometimes the preparations are just too large and tedious to automate, and, therefore, developing the test scripts from scratch is just too long and ineffective.
 2. Sometimes you want to just focus on the actual tests for the SUT and you don't want to spend your time automating the secondary virtual machines setups. Maybe it would be so much easier for you to just do some manual job preparing your secondary virtual machines and then just import the results into the test scripts.
 
-So the Testo Framework gives you the opportunity to take a different approach for deploying the test becnhes: you may prepare a virtual machine yourself (or just get it from somewhere) and then import its disk into a virtual machine in your test scripts. This way you can start the scripts not from scratch, but from the point you see as the most preferable. And this is what we're going to learn about in this guide.
+So the Testo Framework gives you the opportunity to take a different approach for deploying the test becnhes: you may prepare a virtual machine yourself (or just get it from somewhere) and then import its disk into a virtual machine in your test scripts. This way you can start the scripts not from scratch, but from the point you see as the most preferable. And this is what we're going to learn about in this tutorial.
 
 ## What to begin with?
 
-Let's take, for instance, the Ubuntu Desktop 18.04 installation. In the previous guide we've managed to automate the installation for this OS using mostly the mouse. But let's assume that we don't want to automate the OS installation. That we just want to do it manually one time, then stage our efforts and import the result as the starting point for the `ubuntu_desktop` machine.
+Let's take, for instance, the Ubuntu Desktop 18.04 installation. In the previous tutorial we've managed to automate the installation for this OS using mostly the mouse. But let's assume that we don't want to automate the OS installation. That we just want to do it manually one time, then stage our efforts and import the result as the starting point for the `ubuntu_desktop` machine.
 
 Well, let's get right to it.
 
@@ -27,7 +27,7 @@ For starters, open virt-manager and create a new virtual machine (we're going to
 
 ![Disk size](imgs/ubuntu_desktop_disk.png)
 
-This is the disk we'll later import into the `ubuntu_desktop` machine, so let's give it the size of 10 Gigabytes (just like in the previous guide).
+This is the disk we'll later import into the `ubuntu_desktop` machine, so let's give it the size of 10 Gigabytes (just like in the previous tutorial).
 
 When the virtual machine is created, just install the OS manually.
 
@@ -72,7 +72,7 @@ We also developed a very basic `chack_handmade_ubuntu` test, in which we're goin
 
 Let's run the script (take a look at the `VM_DISK_POOL_DIR` param value - this is the default path to the disk images of the virtual machines created with virt-manager).
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 We can see that the test passed successfully, which means, that the `Handmade_folder` was detected after all. The manually-created virtual machine import is complete!
 
@@ -82,7 +82,7 @@ Despite the fact that we imported an existing disk image (its copy, to be precis
 
 We can make sure that everything is cached if we just run the tests one more time:
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 But what if for some reason we want to change the starting state of the `ubuntu_desktop` machine? Let's assume, that aside from the `Handmade_folder` on the Desktop, we also want to change the screen resolution from 1024x768 to 800x600. How can this be done?
 
@@ -94,7 +94,7 @@ So let's try this out: start the `handmade` machine and change the screen resolu
 
 That's actually all you need to do! Just turn off the `handmade` machine now and run the test scripts again:
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 As we can see, the cache is lost and the test is re-run. So basically every change you do in the original "source" virtual machine is instantly reflected in the test scripts.
 
