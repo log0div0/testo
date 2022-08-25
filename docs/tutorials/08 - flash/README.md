@@ -2,7 +2,7 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn about virtual flash drives in Testo Framework.
+In this tutorial you're going to learn about virtual flash drives in Testo Framework.
 
 ## Introduction
 
@@ -20,7 +20,7 @@ There is an important **restriction** when using virtual flash drives: at the en
 
 At the moment, there is also an another restriction: you can't plug two or more flash drives at the same virtual machine simultaneously.
 
-In this guide we're going to learn all about the virtual flash drives and how to use them.
+In this tutorial we're going to learn all about the virtual flash drives and how to use them.
 
 ## What to begin with?
 
@@ -87,11 +87,11 @@ On the `server` side, we perform the same plug/mount actions and then print the 
 
 Let's try to run this script (all tests must be cached before the run, otherwise the following stdout may differ):
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 As we can see, at the beginnig of the test the virtual flash drive is created. The file transferring works as expected, and in the end we can read a Hello from the client printed on the server.
 
-As we already mentioned, at the end of the test the flash drive state is staged, so if some new files are written to the flash drvie in the children tests, these files won't show up in the parent tests.
+As we already mentioned, at the end of the test the flash drive state is staged, so if some new files are written to the flash drive in the children tests, these files won't show up in the parent tests.
 
 It is really important to unplug all the plugged flash drives at the end of the test. If this is not done - an error will be generated when staging the test bench.
 
@@ -141,7 +141,7 @@ test client_prepare: client_unplug_nat {
 
 Run the script:
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 All the tests passed successfully, so we can be sure that the `rename_net.sh` was copied inside the virtual machine just as planned.
 
@@ -149,7 +149,7 @@ A couple of interesting notes:
 
 1. The `exhange` flash drive was re-created. The reason is that its configuration has been changed (we added the `folder` attribute). If the configuration had stayed intact, the flash drive would have been restored to the snapshot `initial`.
 2. The `test_ping` test was scheduled to run, even though we didn't touch it. It happened because we've changed the `client_prepare` test, which is a parent to the `test_ping` test.
-3. Files in the directory specified in the `folder` attribute, are a part of the checksum for any test which has a `plug` action with the flash drive.  So if you try to change the `folder_to_copy` contents (just modify a little the `rename_net.sh` file), then the `client_prepare` test will be re-run. We suggest you take a look at that by yourself.
+3. Files in the directory specified in the `folder` attribute, are a part of the checksum for any test which has a `plug` action with the flash drive. So if you try to change the `folder_to_copy` contents (just modify a little the `rename_net.sh` file), then the `client_prepare` test will be re-run. We suggest you take a look at that by yourself.
 
 ## Copying files from the virtual machine using a flash drive
 
@@ -201,7 +201,7 @@ test exchange_files_with_flash: client_prepare, server_prepare {
 
 We can see at the end of the test the new command that addresses not a virtual machine - but a flash drive. The `copyfrom` action extracts the `copy_me_to_server.txt` file from the flash drive to the Host. So after the test run we can check out the file's contents on the Host:
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 There are two things that you need to keep in mind when using commands with flash drives:
 1. The flash drive must not be plugged in any virtual machine during  `copyfrom`/`copyto` actions.
@@ -209,7 +209,7 @@ There are two things that you need to keep in mind when using commands with flas
 
 We suggest you to learn about the `copyto` action for flash drives by yourself. As an exersice you may modify the `client_prepare` test in such a manner, that the copying of the `./folder_to_copy` folder would take place inside the test itself, not at the flash drive creation moment.
 
-> The last task (copying a file from the virtual machine to the Host) will stay in this guide only and won't go out to the future guides.
+> The last task (copying a file from the virtual machine to the Host) will stay in this tutorial only and won't go out to the future tutorials.
 
 ## Conclusions
 
@@ -218,3 +218,5 @@ Virtual flash drives, alongside with virtual machines and networks, are all the 
 The tests hierarchy looks like this at the moment:
 
 ![test hierarchy](imgs/test_hierarchy.svg)
+
+See the full test listing [here](flash.testo).
