@@ -1,0 +1,116 @@
+<svg fill="none" viewBox="0 0 1000 700" width="1000" height="700" xmlns="http://www.w3.org/2000/svg">
+	<foreignObject width="100%" height="100%">
+		<div xmlns="http://www.w3.org/1999/xhtml">
+			<style>
+.terminal {
+	margin: 1em 0;
+}
+
+.terminal .header {
+	background: #E0E8F0;
+	height: 30px;
+	border-radius: 8px 8px 0 0;
+	padding-left: 10px;
+}
+
+.terminal .header .button {
+	width: 12px;
+	height: 12px;
+	margin: 10px 4px 0 0;
+	display: inline-block;
+	border-radius: 8px;
+}
+
+.terminal .header .button.green {
+	background: #3BB662;
+}
+
+.terminal .header .button.yellow {
+	background: #E5C30F;
+}
+
+.terminal .header .button.red {
+	background: #E75448;
+}
+
+.terminal .main {
+	color: rgba(255, 255, 255, 0.9);
+	font-family: "Roboto Mono", "Menlo", "Consolas", monospace;
+	font-size: 16px;
+	line-height: 125%;
+	background: #1d3042;
+	padding: 7px;
+	border-radius: 0 0 8px 8px;
+	overflow: auto;
+}
+
+.terminal .main .red {
+	color: #dc5a5a;
+}
+
+.terminal .main .blue {
+	color: #349fbf;
+}
+
+.terminal .main .green {
+	color: #67bb48;
+}
+
+.terminal .main .magenta {
+	color: #a855ab;
+}
+
+.terminal .main .yellow {
+	color: #d6de68;
+}
+
+.terminal .main .bold {
+	font-weight: 700;
+}
+			</style>
+			<div class="terminal">
+				<div class="header">
+					<div class="red button"></div>
+					<div class="yellow button"></div>
+					<div class="green button"></div>
+				</div>
+				<div class="main" style="height: 630px;">
+					<span class="">user$ sudo testo run ~/testo/hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso<br/></span>
+					<span class="blue bold">TESTS TO RUN:<br/></span>
+					<span class="magenta ">ubuntu_installation<br/></span>
+					<span class="magenta ">guest_additions_installation<br/></span>
+					<span class="magenta ">check_internet<br/></span>
+					...<br/>
+					<span class="blue ">[ 67%] Executing bash command in virtual machine </span>
+					<span class="yellow ">my_ubuntu</span>
+					<span class="blue "> with timeout 10m<br/></span>
+					<span class=" ">+ apt update<br/></span>
+					<span class=" "><br/></span>
+					<span class=" ">WARNING: apt does not have a stable CLI interface. Use with caution in scripts.<br/></span>
+					<span class=" "><br/></span>
+					<span class=" ">Hit:1 http://security.ubuntu.com/ubuntu xenial-security InRelease<br/></span>
+					<span class=" ">Hit:2 http://us.archive.ubuntu.com/ubuntu xenial InRelease<br/></span>
+					<span class=" ">Hit:3 http://us.archive.ubuntu.com/ubuntu xenial-updates InRelease<br/></span>
+					<span class=" ">Hit:4 http://us.archive.ubuntu.com/ubuntu xenial-backports InRelease<br/></span>
+					<span class=" ">Reading package lists...<br/></span>
+					<span class=" ">Building dependency tree...<br/></span>
+					<span class=" ">Reading state information...<br/></span>
+					<span class=" ">150 packages can be upgraded. Run 'apt list --upgradable' to see them.<br/></span>
+					<span class="blue ">[ 67%] Taking snapshot </span>
+					<span class="yellow ">check_internet</span>
+					<span class="blue "> for virtual machine </span>
+					<span class="yellow ">my_ubuntu<br/></span>
+					<span class="green bold">[100%] Test </span>
+					<span class="yellow bold">check_internet</span>
+					<span class="green bold"> PASSED in 0h:0m:7s<br/></span>
+					<span class="blue bold">PROCESSED TOTAL 3 TESTS IN 0h:5m:39s<br/></span>
+					<span class="blue bold">UP-TO-DATE: 0<br/></span>
+					<span class="green bold">RUN SUCCESSFULLY: 3<br/></span>
+					<span class="red bold">FAILED: 0<br/></span>
+					<span class="">user$ </span>
+
+				</div>
+			</div>
+		</div>
+	</foreignObject>
+</svg>

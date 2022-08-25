@@ -2,16 +2,16 @@
 
 ## What you're going to learn
 
-In this guide you're going to:
+In this tutorial you're going to:
 
 1. Learn about virtual networks and Network Interface Cards (NICs).
 2. Learn how to provide the Internet access to virtual machines inside your test scripts.
 
 ## Introduction
 
-Aside from virtual machines, there are two other virtual entities available in Testo-lang: virtual flash drives and virtual networks. Virtual flash drives are described in the future guides; right now we're going to focus on the virtual networks.
+Aside from virtual machines, there are two other virtual entities available in Testo-lang: virtual flash drives and virtual networks. Virtual flash drives are described in the future tutorials; right now we're going to focus on the virtual networks.
 
-Generally, virtual networks in Testo-lang could be used for 2 purposes: to link up virtual machines with each other and to provide the Internet access to a virtual machine. Linking up machines is explained in the next guide, so in this guide we're going to learn about the Internet access.
+Generally, virtual networks in Testo-lang could be used for 2 purposes: to link up virtual machines with each other and to provide the Internet access to a virtual machine. Linking up machines is explained in the next tutorial, so in this tutorial we're going to learn about the Internet access.
 
 ## What to begin with?
 
@@ -44,9 +44,9 @@ machine my_ubuntu {
 }
 ```
 
-The `nic` attribute must have a name (just like the `disk` attribute). The reason for that is that you can add several NICs to a virtual machine and unique names is the way to distinguish them (which will see in action in the next guide).
+The `nic` attribute must have a name (just like the `disk` attribute). The reason for that is that you can add several NICs to a virtual machine and unique names is the way to distinguish them (which will see in action in the next tutorial).
 
-Aside from the name, you may to specify a bunch of subattributes, and only one of them is mandatory: `attached_to`, which specifies the virtual network name you want to attach the NIC to.
+Aside from the name, you may specify a bunch of subattributes, and only one of them is mandatory: `attached_to`, which specifies the virtual network name you want to attach the NIC to.
 
 > Keep in mind that the `internet` network must be declared before referencing it in the `attached_to` subattribute.
 
@@ -54,9 +54,9 @@ Aside from the name, you may to specify a bunch of subattributes, and only one o
 
 Let's run our test script:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
-If your tests are cached at the moment, you'll see that the `ubuntu_installation` test has lost its cache and needs to be re-run. It could seem strange, since we haven't modified the test itself, and its cache should've stayed intact. Hovewer, in the last guide we've mentioned that the cache validity depends on the involved virtual machines configurations integrity. Since we've changed the `my_ubuntu` configuration, all the tests referencing this virtual machine must be run again.
+If your tests are cached at the moment, you'll see that the `ubuntu_installation` test has lost its cache and needs to be re-run. It could seem strange, since we haven't modified the test itself, and its cache should've stayed intact. Hovewer, in the last tutorial we've mentioned that the cache validity depends on the involved virtual machines configurations integrity. Since we've changed the `my_ubuntu` configuration, all the tests referencing this virtual machine must be run again.
 
 In any case, after a few minutes you're going to find out that the `ubuntu_installation` test now fails. The output gives us a hint, that Testo couldn't detect the "No network interfaces detected" text in 5 minutes.
 
@@ -83,7 +83,7 @@ And run the script again.
 
 If you don't have any issues with the proxy server (or if you don't use it at all), then the test script might fail one more time.
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 Instead of the screen with the time zone selection you'll see another screen:
 
@@ -117,10 +117,12 @@ test check_internet: guest_additions_installation {
 
 Run the script and you'll see the next output:
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 In the `exec bash` action output we can clearly see the successful run of the `apt update` bash command. Which means that we are connected to the Internet!
 
 ## Conclusions
 
-Testo Framework allows you to connect your virtual machines to the Internet. This is done with the help of virtual networks, which could be also used to link up virtual machines with each other. Linking up machines with each other is the main highlight of the next guide.
+Testo Framework allows you to connect your virtual machines to the Internet. This is done with the help of virtual networks, which could be also used to link up virtual machines with each other. Linking up machines with each other is the main highlight of the next tutorial.
+
+See the full test listing [here](nat.testo)
