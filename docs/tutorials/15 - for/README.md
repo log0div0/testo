@@ -2,11 +2,11 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn about `for` clauses in Testo-lang.
+In this tutorial you're going to learn about `for` clauses in Testo-lang.
 
 ## Introduction
 
-Our guides are getting to the end, we've learned about all the main features available in Testo-lang, except for one, which we're going to focus on in this guide: loops.
+Our tutorials are getting to the end, we've learned about all the main features available in Testo-lang, except for one, which we're going to focus on in this tutorial: loops.
 
 Up until this moment we've been developing tests without loops - there weren't just any need in them. But, of course, sometimes you may encounter a task when you have to do several repeatable actions - and that's where loops come in handy.
 
@@ -16,13 +16,13 @@ For instance, let's consider the Ubuntu Server language selection, which we've s
 
 ![Language](imgs/language.png)
 
-We've been clicking Enter all these times, assuming we'd needed the English language and it was selected by default. But what if we need to pick a different language? If we needed to pick the Russian language, we would need to press Down 29 times to select it. But what if we don't want to count the times we need to press Down to pick the language of our choice? We just want to call a `select_menu("Русский")` macro and not worry about the implementation. In this guide we're going to develop just such a macro.
+We've been clicking Enter all these times, assuming we'd needed the English language and it was selected by default. But what if we need to pick a different language? If we needed to pick the Russian language, we would need to press Down 29 times to select it. But what if we don't want to count the times we need to press Down to pick the language of our choice? We just want to call a `select_menu("Русский")` macro and not worry about the implementation. In this tutorial we're going to develop just such a macro.
 
 ## What to begin with?
 
-The goal of this guide is to automate the interaction with [Vifm](https://www.tecmint.com/vifm-commandline-based-file-manager-for-linux/) using loops. We've picked this exact file manager bacause it's the most simple and suitable for loops introduction. With certain efforts you could automate the interaction with any file manager you like in the exact same fashion.
+The goal of this tutorial is to automate the interaction with [Vifm](https://www.tecmint.com/vifm-commandline-based-file-manager-for-linux/) using loops. We've picked this exact file manager bacause it's the most simple and suitable for loops introduction. With certain efforts you could automate the interaction with any file manager you like in the exact same fashion.
 
-For starters, let's clean up the script file of the things we won't need in this guide. Keep only one virtual machine (server), the OS and guest additions installation. We're also going to add the Vifm file manager installation from the Ubuntu repository. In the `loops_demo` test we're going to demonstrate the loops in action. For now let's just run Vifm and exit.
+For starters, let's clean up the script file of the things we won't need in this tutorial. Keep only one virtual machine (server), the OS and guest additions installation. We're also going to add the Vifm file manager installation from the Ubuntu repository. In the `loops_demo` test we're going to demonstrate the loops in action. For now let's just run Vifm and exit.
 
 ```testo
 test server_install_ubuntu {
@@ -159,7 +159,7 @@ We can see it's gotten much shorter and neater. Now in order to navigate inside 
 
 Run the script and you'll see this output:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 And that's how the loops could make your life a little easier in certain circumstances.
 
