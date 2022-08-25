@@ -2,18 +2,18 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn the basic concepts of JS-selectors in Testo-lang, including:
+In this tutorial you're going to learn the basic concepts of JS-selectors in Testo-lang, including:
 
 1. How to do not obvious and really complex checks of screen contents in the `wait` actions and `check` expressions using JS-selectors.
 2. How to place the mouse cursor on the screen using JS-selectors if the specifiers are not enough for you.
 
 ## Introduction
 
-In the previous guides we've learned the `wait`, `check` and `mouse` basics. As you could've noticed, most times these actions look simple and short, but at the same time, if needed, they could easily be expanded to perform a relatively complex logic. For instance, if you had to detect the simultaneous presence of several textlines on the screen, you might use a `wait` action with the `&&` operator. Or, if you had to move the mouse cursor 50 pixels to the right of a text, you might use the `right_center` and `move_right(50)` specifiers.
+In the previous tutorials we've learned the `wait`, `check` and `mouse` basics. As you could've noticed, most times these actions look simple and short, but at the same time, if needed, they could easily be expanded to perform a relatively complex logic. For instance, if you had to detect the simultaneous presence of several textlines on the screen, you might use a `wait` action with the `&&` operator. Or, if you had to move the mouse cursor 50 pixels to the right of a text, you might use the `right_center` and `move_right(50)` specifiers.
 
 But if the built-in Testo-lang syntax constructs are not enough for you? How to check, that there are exactly 3 instances of a textline on the screen? How to move the cursor based not on one, but on two or more objects on the screen? The examples are endless, and of course sometimes you'd feel that Testo-lang built-in possibilities somehow can't deliver you the flexibility you want to get.
 
-Well, in this quite rare cases you still have the one last tool to use: [JS-selectors](../../reference/Javascript%20selectors.md). What are JS-selectors? Basically, a JS-selector is a little piece of javascript code (a snippet) which can be placed in a `wait`, `check` or `mouse` actions. Inside these snippets you can get the information about the objects on the screen (via global built-in fuctions) and then implement whatever logic you want. The javascript result determines the outcome of the action (or the expression) in which it is used. And this is what we're going to learn about in this guide.
+Well, in this quite rare cases you still have the one last tool to use: [JS-selectors](../../reference/Javascript%20selectors.md). What are JS-selectors? Basically, a JS-selector is a little piece of javascript code (a snippet) which can be placed in a `wait`, `check` or `mouse` actions. Inside these snippets you can get the information about the objects on the screen (via global built-in fuctions) and then implement whatever logic you want. The javascript result determines the outcome of the action (or the expression) in which it is used. And this is what we're going to learn about in this tutorial.
 
 ## What to begin with?
 
@@ -221,7 +221,7 @@ test install_ubuntu_desktop {
 }
 ```
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 Let's create a new test in which we're going to launch the LibreOffice Calc:
 
