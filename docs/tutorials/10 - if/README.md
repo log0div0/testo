@@ -2,13 +2,13 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn about:
+In this tutorial you're going to learn about:
 1. If-statements in Testo-lang.
 2. Complex select expressions in the `wait` actions.
 
 ## Introduction
 
-In the previous guide we managed to improve our code so it would be cleaner and simpler to navigate through. However, there is at least one more moment that can be improved.
+In the previous tutorial we managed to improve our code so it would be cleaner and simpler to navigate through. However, there is at least one more moment that can be improved.
 
 You may remember several occasions when we had to adjust the Ubuntu Server installation test. We had to do it because the installation process depends on the virtual machine configuration: does the machine have any NICs, does it have the Internet access and so on. At the moment the `install_ubuntu` macro works fine only in the following conditions:
 
@@ -18,7 +18,7 @@ You may remember several occasions when we had to adjust the Ubuntu Server insta
 
 But what if we want our macro to work in any conditions? What if we want our macro to install the Ubuntu Server successfully no matter what the virtual machine configuration is?
 
-Obviously, the macro needs to apply the actions a bit differently, depending on the current situation. And there is a tool in the Testo-lang just for that - the [`if-else` statements](../../reference/Conditions.md). You can control the action flow based on string constants, params' values and the actual screen contents. In this guide we're going to try out both simple if-expressions and more complex ones, with screen contents checks.
+Obviously, the macro needs to apply the actions a bit differently, depending on the current situation. And there is a tool in the Testo-lang just for that - the [`if-else` statements](../../reference/Conditions.md). You can control the action flow based on string constants, params' values and the actual screen contents. In this tutorial we're going to try out both simple if-expressions and more complex ones, with screen contents checks.
 
 ## What to begin with?
 
@@ -55,7 +55,7 @@ macro install_ubuntu(hostname, login, password = "${default_password}") {
 
 So we're going to combine both possible cases inside a single `if` clause.
 
-> Keep in mind that for now we're not considering the best possible solution for the problem. The best solution (checking the screen contents) is considered a bit later in this guide. The current proposal is for educational puproses.
+> Keep in mind that for now we're not considering the best possible solution for the problem. The best solution (checking the screen contents) is considered a bit later in this tutorial. The current proposal is for educational puproses.
 
 ```testo
 macro install_ubuntu(hostname, login, password="${default_password}", is_weak_password="") {
@@ -75,7 +75,7 @@ We've added a new macro argument - `is_weak_password` - to control the macro act
 
 We developed the macro in such a way, that the `${default_password}` needs to be strong enough for the macro to work. The current `${default_password}` value (`1111`) is not suitable, so the macro wouldn't work if called with the default value arguments. Let's see for ourselves.
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 As we'd expected, the test didn't go as planned at all. Therefore, we need to adjust the `default_password` value to make it a strong enough password:
 
@@ -85,7 +85,7 @@ param default_password "ThisIsStrongPassword"
 
 Run the script again. Keep in mind, that we run **only** the base test `sever_install_ubuntu`:
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 So the Ubuntu Installation test is OK once again. Now let's assume, that for some reason we want to set the weak password on the `client` machine. To do that, we just need to modify the macro call in the `client_install_ubuntu` test like this:
 
@@ -97,7 +97,7 @@ test client_install_ubuntu {
 
 In this call we explicitly pass the `1111` password instead of the `default_password`. To give the macro a hint that the password is, indeed, weak, we pass a non-zero-length string as the fourth argument.
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 We can see, that our solution works as planned, and now the `install_ubuntu` macro works equally good both with weak and strong passwords. But, of course, controlling the action flow this way is not very convenient. If our macro had more if-branches (and that's going to happen pretty soon), we would have to add more "hint" arguments, and in the end their number would be so high that the macro would have been simply unusable.
 
@@ -134,7 +134,7 @@ test client_install_ubuntu {
 }
 ```
 
-<Asset id="terminal4"/>
+![](imgs/terminal4.svg)
 
 Both tests passed successfully, so now it's time to move on.
 
@@ -239,4 +239,4 @@ If the `HTTP_PROXY` is defined, we need to type its value and then press Enter.
 
 With if-statements you can control the action flow depending on various circumstances (including the different screen contents). With this tool you can develop more flexible and generalized macros and tests.
 
-> Of course, we haven't learned the whole possibilities of the if-statements in this guide. In the if-statements you can use the whole selection expressions, including unary and binary operators, comparisons and so on. For more information see the [documentation](../../reference/Conditions.md).
+> Of course, we haven't learned the whole possibilities of the if-statements in this tutorial. In the if-statements you can use the whole selection expressions, including unary and binary operators, comparisons and so on. For more information see the [documentation](../../reference/Conditions.md).
