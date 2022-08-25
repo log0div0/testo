@@ -2,7 +2,7 @@
 
 ## What you're going to learn
 
-In this guide you're going to learn:
+In this tutorial you're going to learn:
 
 1. How to operate multiple virtual machines in a single test.
 2. `plug/unplug nic` actions.
@@ -11,9 +11,9 @@ In this guide you're going to learn:
 
 ## Introduction
 
-In the last guide we learned about the virtual networks `nat` mode, which allows you to provide the Internet access to virtual machines. But, obviously, virtual networks could (and should) be used for linking up virtual machines with each other as well. That's what we're going to do in this guide. Additionally we'll discover a few little tricks to make our test scripts more convenient and easier to read.
+In the last tutorial we learned about the virtual networks `nat` mode, which allows you to provide the Internet access to virtual machines. But, obviously, virtual networks could (and should) be used for linking up virtual machines with each other as well. That's what we're going to do in this tutorial. Additionally we'll discover a few little tricks to make our test scripts more convenient and easier to read.
 
-At the end of this guide we're going to get the following test bench:
+At the end of this tutorial we're going to get the following test bench:
 
 ![network](imgs/network.svg)
 
@@ -28,19 +28,102 @@ From this moment on, there will be two virtual machines in our test cases, playi
 
 You should get the following script:
 
-<Snippet id="snippet1"/>
+```testo
+network internet {
+	mode: "nat"
+}
+
+machine server {
+	cpus: 1
+	ram: 512Mb
+	disk main: {
+		size: 5Gb
+	}
+	iso: "\${ISO_DIR}/ubuntu_server.iso"
+
+	nic nat: {
+		attached_to: "internet"
+	}
+}
+
+param server_hostname "server"
+param server_login "server-login"
+param default_password "1111"
+
+test server_install_ubuntu {
+	server {
+		start
+		wait "English"
+		press Enter
+		# The actions can be separated with a newline
+		# or a semicolon
+		wait "Install Ubuntu Server"; press Enter;
+		wait "Choose the language";	press Enter
+		wait "Select your location"; press Enter
+		wait "Detect keyboard layout?";	press Enter
+		wait "Country of origin for the keyboard"; press Enter
+		wait "Keyboard layout"; press Enter
+		#wait "No network interfaces detected" timeout 5m; press Enter
+		wait "Hostname:" timeout 5m; press Backspace*36; type "\${server_hostname}"; press Enter
+		wait "Full name for the new user"; type "\${server_login}"; press Enter
+		wait "Username for your account"; press Enter
+		wait "Choose a password for the new user"; type "\${default_password}"; press Enter
+		wait "Re-enter password to verify"; type "\${default_password}"; press Enter
+		wait "Use weak password?"; press Left, Enter
+		wait "Encrypt your home directory?"; press Enter
+
+		#wait "Select your timezone" timeout 2m; press Enter
+		wait "Is this time zone correct?" timeout 2m; press Enter
+		wait "Partitioning method"; press Enter
+		wait "Select disk to partition"; press Enter
+		wait "Write the changes to disks and configure LVM?"; press Left, Enter
+		wait "Amount of volume group to use for guided partitioning"; press Enter
+		wait "Write the changes to disks?"; press Left, Enter
+		wait "HTTP proxy information" timeout 3m; press Enter
+		wait "How do you want to manage upgrades" timeout 6m; press Enter
+		wait "Choose software to install"; press Enter
+		wait "Install the GRUB boot loader to the master boot record?" timeout 10m; press Enter
+		wait "Installation complete" timeout 1m;
+
+		unplug dvd; press Enter
+		wait "server_login:" timeout 2m; type "\${server_login}"; press Enter
+		wait "Password:"; type "\${default_password}"; press Enter
+		wait "Welcome to Ubuntu"
+	}
+}
+
+param guest_additions_pkg "testo-guest-additions*"
+test server_install_guest_additions: server_install_ubuntu {
+	server {
+		plug dvd "\${ISO_DIR}/testo-guest-additions.iso"
+
+		type "sudo su"; press Enter;
+		# Take a note that you may reference params in any part of the string
+		wait "password for \${server_login}"; type "\${default_password}"; press Enter
+		wait "root@\${server_hostname}"
+
+		type "mount /dev/cdrom /media"; press Enter
+		wait "mounting read-only"; type "dpkg -i /media/\${guest_additions_pkg}"; press Enter;
+		wait "Setting up testo-guest-additions"
+		type "umount /media"; press Enter;
+		# Give a little time for the umount to do its job
+		sleep 2s
+		unplug dvd
+	}
+}
+```
 
 Since we've renamed our virtual machine into `server`, Testo treats is as a brand new machine, therefore all the tests must run again, including the virtual machine creation.
 
 But we need to keep in mind that the old virtual machine, `my_ubuntu`, **wouldn't go anywhere automatically**. Testo Framework "thinks" that this virtual machine may be of some use for you in the future, and thus shouldn't be removed. Still, we, as humans, understand that we won't need `my_ubuntu` anymore, so let's delete it:
 
-<Asset id="terminal1"/>
+![](imgs/terminal1.svg)
 
 You can see that the virtual network `internet` was deleted as well.
 
 Now, before doing anything else, it's good to make sure we didn't break anything with our changes.
 
-<Asset id="terminal2"/>
+![](imgs/terminal2.svg)
 
 ## Declaring the second virtual machine
 
@@ -181,11 +264,11 @@ test client_install_guest_additions: client_install_ubuntu {
 }
 ```
 
-We can see a lot of duplicated code, but we shouldn't fret about that. Later we'll learn about macros, which allow to group up frequently-used actions into named blocks, and our sript will get much shorter.
+We can see a lot of duplicated code, but we shouldn't worry about that. Later we'll learn about macros, which allow to group up frequently-used actions into named blocks, and our sript will get much shorter.
 
 Now let's run our script.
 
-<Asset id="terminal3"/>
+![](imgs/terminal3.svg)
 
 Look at that: Ubunstu installation broke up. Again. Why? Because now we have multiple NICs plugged into the virtual machine, so we get a new screen we haven't been expecting in the test script:
 
@@ -235,7 +318,7 @@ This test begins with stopping the virtual machine. Generally speaking, there ar
 
 When the machine is stopped, we unplug (right from the virtual PCI-express slot) the `nat` NIC and power on our machine again. The test is finished with a successful system login.
 
-<Asset id="terminal4"/>
+![](imgs/terminal4.svg)
 
 After the test is complete, we may open the virtual machine properties (with virtual manager) and make sure that it has only one NIC.
 
@@ -255,15 +338,15 @@ test client_unplug_nat: client_install_guest_additions {
 }
 ```
 
-<Asset id="terminal5"/>
+![](imgs/terminal5.svg)
 
 So we've now got two virtual machines with no redundant NICs and linked them up with the virtual network. We have just one preparatory step left to do.
 
 ## Renaming NICs inside the OS
 
-By default, the NICs are given pretty uninformative names inside the OS (`ens3`, `ens4` and so on). Of course it would be much more convenient if we had them named accordingly to their names in the virtual machine declaration: `client_side`, `server side` and so on. We can actually achieve that with renaming NICs inside the OS based on the MAC, which we already know.
+By default, the NICs are given pretty uninformative names inside the OS (`ens3`, `ens4` and so on). Of course it would be much more convenient if we had them named accordingly to their names in the virtual machine declaration: `client_side`, `server_side` and so on. We can actually achieve that with renaming NICs inside the OS based on the MAC, which we already know.
 
-Renaming can be done with (for example), the following bash-script (download link is available at the end of the guide).
+Renaming can be done with (for example), the following bash-script (download link is available at the end of the tutorial).
 
 ``` bash
 #!/bin/bash
@@ -306,7 +389,7 @@ test server_prepare: server_unplug_nat {
 }
 ```
 
-<Asset id="terminal6"/>
+![](imgs/terminal6.svg)
 
 In the `ip` command output we can see that the remaining NIC is named clear and neat: `client_side`.
 
@@ -329,8 +412,6 @@ test server_prepare: server_unplug_nat {
 
 And repeat all these steps with the `client` virtual machine.
 
-<Asset id="terminal7"/>
-
 ## Pinging!
 
 Finally, all things are set up and we can check that `client` and `server` can ping each other.
@@ -346,7 +427,7 @@ test test_ping: client_prepare, server_prepare {
 
 Final script run
 
-<Asset id="terminal8"/>
+![](imgs/terminal8.svg)
 
 We can see that the ping command runs great, which means that we managed to setup a test bench with two linked up virtual machines!
 
@@ -361,3 +442,5 @@ You can simplify the NICs distibguishing inside the test scripts by assigning fi
 Tests hierarchy looks like this at the moment:
 
 ![test hierarchy](imgs/test_hierarchy.svg)
+
+See the full test listing [here](ping.testo)

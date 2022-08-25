@@ -1,0 +1,93 @@
+<svg fill="none" viewBox="0 0 1000 500" width="1000" height="500" xmlns="http://www.w3.org/2000/svg">
+	<foreignObject width="100%" height="100%">
+		<div xmlns="http://www.w3.org/1999/xhtml">
+			<style>
+.terminal {
+	margin: 1em 0;
+}
+
+.terminal .header {
+	background: #E0E8F0;
+	height: 30px;
+	border-radius: 8px 8px 0 0;
+	padding-left: 10px;
+}
+
+.terminal .header .button {
+	width: 12px;
+	height: 12px;
+	margin: 10px 4px 0 0;
+	display: inline-block;
+	border-radius: 8px;
+}
+
+.terminal .header .button.green {
+	background: #3BB662;
+}
+
+.terminal .header .button.yellow {
+	background: #E5C30F;
+}
+
+.terminal .header .button.red {
+	background: #E75448;
+}
+
+.terminal .main {
+	color: rgba(255, 255, 255, 0.9);
+	font-family: "Roboto Mono", "Menlo", "Consolas", monospace;
+	font-size: 16px;
+	line-height: 125%;
+	background: #1d3042;
+	padding: 7px;
+	border-radius: 0 0 8px 8px;
+	overflow: auto;
+}
+
+.terminal .main .red {
+	color: #dc5a5a;
+}
+
+.terminal .main .blue {
+	color: #349fbf;
+}
+
+.terminal .main .green {
+	color: #67bb48;
+}
+
+.terminal .main .magenta {
+	color: #a855ab;
+}
+
+.terminal .main .yellow {
+	color: #d6de68;
+}
+
+.terminal .main .bold {
+	font-weight: 700;
+}
+			</style>
+			<div class="terminal">
+				<div class="header">
+					<div class="red button"></div>
+					<div class="yellow button"></div>
+					<div class="green button"></div>
+				</div>
+				<div class="main" style="height: 430px;">
+					<span class="">user$ sudo testo clean<br/></span>
+					<span class="">Testo is about to erase the following entities:<br/></span>
+					<span class="">Virtual networks:<br/></span>
+					<span class="">		- internet<br/></span>
+					<span class="">Virtual machines:<br/></span>
+					<span class="">		- my_ubuntu<br/></span>
+					<span class=""><br/></span>
+					<span class="">Do you confirm erasing these entities? [y/N]: y<br/></span>
+					<span class="">Deleted network internet<br/></span>
+					<span class="">Deleted virtual machine my_ubuntu<br/></span>
+					<span class="">user$ </span>
+				</div>
+			</div>
+		</div>
+	</foreignObject>
+</svg>

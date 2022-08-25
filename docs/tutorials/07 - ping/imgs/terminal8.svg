@@ -1,0 +1,129 @@
+<svg fill="none" viewBox="0 0 1000 700" width="1000" height="700" xmlns="http://www.w3.org/2000/svg">
+	<foreignObject width="100%" height="100%">
+		<div xmlns="http://www.w3.org/1999/xhtml">
+			<style>
+.terminal {
+	margin: 1em 0;
+}
+
+.terminal .header {
+	background: #E0E8F0;
+	height: 30px;
+	border-radius: 8px 8px 0 0;
+	padding-left: 10px;
+}
+
+.terminal .header .button {
+	width: 12px;
+	height: 12px;
+	margin: 10px 4px 0 0;
+	display: inline-block;
+	border-radius: 8px;
+}
+
+.terminal .header .button.green {
+	background: #3BB662;
+}
+
+.terminal .header .button.yellow {
+	background: #E5C30F;
+}
+
+.terminal .header .button.red {
+	background: #E75448;
+}
+
+.terminal .main {
+	color: rgba(255, 255, 255, 0.9);
+	font-family: "Roboto Mono", "Menlo", "Consolas", monospace;
+	font-size: 16px;
+	line-height: 125%;
+	background: #1d3042;
+	padding: 7px;
+	border-radius: 0 0 8px 8px;
+	overflow: auto;
+}
+
+.terminal .main .red {
+	color: #dc5a5a;
+}
+
+.terminal .main .blue {
+	color: #349fbf;
+}
+
+.terminal .main .green {
+	color: #67bb48;
+}
+
+.terminal .main .magenta {
+	color: #a855ab;
+}
+
+.terminal .main .yellow {
+	color: #d6de68;
+}
+
+.terminal .main .bold {
+	font-weight: 700;
+}
+			</style>
+			<div class="terminal">
+				<div class="header">
+					<div class="red button"></div>
+					<div class="yellow button"></div>
+					<div class="green button"></div>
+				</div>
+				<div class="main" style="height: 630px;">
+					<span class="">user$ sudo testo run hello_world.testo --stop_on_fail --param ISO_DIR /opt/iso --test_spec test_ping<br/></span>
+					...<br/>
+					<span class="blue ">[ 89%] Executing bash command in virtual machine </span>
+					<span class="yellow ">client</span>
+					<span class="blue "> with timeout 10m<br/></span>
+					<span class=" ">+ ping 192.168.1.2 -c5<br/></span>
+					<span class=" ">PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.<br/></span>
+					<span class=" ">64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=0.056 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=0.036 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=0.046 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.2: icmp_seq=4 ttl=64 time=0.046 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.2: icmp_seq=5 ttl=64 time=0.043 ms<br/></span>
+					<span class=" "><br/></span>
+					<span class=" ">--- 192.168.1.2 ping statistics ---<br/></span>
+					<span class=" ">5 packets transmitted, 5 received, 0% packet loss, time 3998ms<br/></span>
+					<span class=" ">rtt min/avg/max/mdev = 0.036/0.045/0.056/0.008 ms<br/></span>
+					<span class="blue ">[ 89%] Executing bash command in virtual machine </span>
+					<span class="yellow ">server</span>
+					<span class="blue "> with timeout 10m<br/></span>
+					<span class=" ">+ ping 192.168.1.1 -c5<br/></span>
+					<span class=" ">PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.<br/></span>
+					<span class=" ">64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=0.057 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.1: icmp_seq=2 ttl=64 time=0.038 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.1: icmp_seq=3 ttl=64 time=0.042 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.1: icmp_seq=4 ttl=64 time=0.043 ms<br/></span>
+					<span class=" ">64 bytes from 192.168.1.1: icmp_seq=5 ttl=64 time=0.042 ms<br/></span>
+					<span class=" "><br/></span>
+					<span class=" ">--- 192.168.1.1 ping statistics ---<br/></span>
+					<span class=" ">5 packets transmitted, 5 received, 0% packet loss, time 3998ms<br/></span>
+					<span class=" ">rtt min/avg/max/mdev = 0.038/0.044/0.057/0.008 ms<br/></span>
+					<span class="blue ">[ 89%] Taking snapshot </span>
+					<span class="yellow ">test_ping</span>
+					<span class="blue "> for virtual machine </span>
+					<span class="yellow ">client<br/></span>
+					<span class="blue ">[ 89%] Taking snapshot </span>
+					<span class="yellow ">test_ping</span>
+					<span class="blue "> for virtual machine </span>
+					<span class="yellow ">server<br/></span>
+					<span class="green bold">[100%] Test </span>
+					<span class="yellow bold">test_ping</span>
+					<span class="green bold"> PASSED in 0h:0m:16s<br/></span>
+					<span class="blue bold">PROCESSED TOTAL 9 TESTS IN 0h:0m:16s<br/></span>
+					<span class="blue bold">UP-TO-DATE: 8<br/></span>
+					<span class="green bold">RUN SUCCESSFULLY: 1<br/></span>
+					<span class="red bold">FAILED: 0<br/></span>
+					<span class="">user$ </span>
+
+				</div>
+			</div>
+		</div>
+	</foreignObject>
+</svg>
