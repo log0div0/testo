@@ -49,7 +49,7 @@ You see, a lot of E2E testing actually happens inside virtual machines. And any 
 
 And it doesn’t matter whether you’re testing a XAML-app, Qt-app, Electron-app, a web page or even a console application. You just click on the virtual machine’s screen and you don’t really care about the app’s internal design.
 
-As you can guess this test scenario can be automated. Hypervisor API can be used to create virtual machines and to control keyboard/mouse input. Artificial neural networks can be used to detect whether some text (or UI element) is represented on the screen of the virtual machine and if so, where exactly it is located. If we combine a hypervisor API and nueral networks together, and add a simple language for writing down test scenarios we get Testo framework.
+As you can guess, this test scenario can be automated. Hypervisor API can be used to create virtual machines and to control keyboard/mouse input. Artificial neural networks can be used to detect whether some text (or UI element) is present on the screen of the virtual machine and if so, where exactly it is located. If we combine a hypervisor API and nueral networks together, and add a simple language for writing down test scenarios we get Testo framework.
 
 For example, the test scenario described above can be written as follows:
 
@@ -63,9 +63,9 @@ wait "Complete"
 
 ### Language for test scenarios
 
-A special language was developed for compact recording of test scenarios. We call it Testo-lang. I'm not going to go into details here because there is an extensive documentation for that, but I'll say a few words about Testo-lang so that you have an idea of what it looks like.
+We deleoped a simple language to quickly and simply write down your E2E test scenarios. We call it Testo-lang. We're not going to dive into details here because there is an extensive documentation for that, but we'll say a few words about Testo-lang so that you have an idea of what it looks like.
 
-As it was said, a test scenario is essentially a sequence of simple actions under a virtual machine. You don't need to create virtual machines manually. Instead you declare them as part of a test scenario:
+As it was said, a test scenario is essentially a sequence of simple actions with a virtual machine. You don't need to create virtual machines manually. Instead you declare them as part of a test scenario:
 
 ```
 machine my_super_vm {
@@ -98,7 +98,7 @@ test my_super_test {
 
 This snippet declares a single test called `my_super_test` which uses only one virtual machine - `my_super_vm`. When running this test, the virual machine will be turned on first (`start` action). After that Testo-lang interpreter will wait for the "Language" text to appear on the screen of the virtual machine. If the text does not appear in a reasonable time - the test will fail. Then Testo-lang interpreter will press "Enter" key on virtual machine's keyboard. And so on.
 
-This may seem counter-intuitive at first, because we consider the OS installation is just yet another test, on a line with any other regular software-checking tests. But it gets more reasonable if you imagine that you might develop the actual OS itself! Maybe you’re developing some custom OS (another Linux-based distribution, for example), or it’s just a simple just-for-fun toy OS. In any case, we do not make any distinction between testing OS and an application running inside of OS. The whole virtual machine is a system under test (SUT). That greatly simplifies testing application that actively interacting with OS or consist of several executable files.  
+This may seem counter-intuitive at first, because we consider the OS installation as just yet another test, on a line with any other regular software-checking tests. But it gets more reasonable if you imagine that you might develop the actual OS itself! Maybe you’re developing some custom OS (another Linux-based distribution, for example), or it’s just a simple just-for-fun toy OS. In any case, we do not make any distinction between testing OS and an application running inside of OS. The whole virtual machine is a system under test (SUT). That greatly simplifies testing application that actively interacting with OS or consist of several executable files.
 
 Looking ahead, I'll say that you don't have to install OS as a part of a test scenario. You can use a pre-installed VM image.
 
@@ -124,7 +124,7 @@ All this can be done via command line agruments of `testo`, for example:
 testo run my_super_file.testo --test_spec test_* --param NAME value --report_format=allure --report_folder=/some/path
 ```
 
-It worth mentioning here that Testo-lang is heavily inspired by another language called CMake. Indeed, running tests with Testo-lang interpreter is very much like building a program from source codes. If you have ever compiled a program using CMake or simular build system, then you know that the program is rebuilt only if its source codes have been changes since the last build. Similar mechanism of "incremental test running" takes place in Testo-lang as well: the test is running only if its scenario or its dependencies have been changed. That's one of the main reasons why we decided to make our own language at all.
+It worth mentioning here that Testo-lang is heavily inspired by another language called CMake. Indeed, running tests with Testo-lang interpreter is very much like building a program from source code. If you have ever compiled a program using CMake or simular build system, then you know that the program is rebuilt only if its  code was changed since the last build. Similar mechanism of "incremental test running" takes place in Testo-lang as well: **a test runs only if its scenario or its dependencies have been changed**. That's one of the main reasons why we decided to make our own language.
 
 You can read more about caching system and test hierarchy in the documentation.
 
@@ -276,11 +276,11 @@ testo version
 
 - [Tutorials](docs/tutorials) folder is the best place for a start.
 - [Reference](docs/reference) can be used if you want to see the details.
-- [Examples](https://github.com/testo-lang/testo-examples) repo contains a couple of basic use-cases of Testo framework. This repo also contains source codes of apps that are being tested.
+- [Examples](https://github.com/testo-lang/testo-examples) repo contains a couple of basic use-cases of Testo framework. This repo also contains source code of apps that are being tested.
 
 ## Building from source
 
-Probably the most simple way to build Testo is to let Testo to build itself. We have written tests that set up the buld environment on all supported operating systems and build Testo packages from source codes. This tests can be found in the [`ci`](ci) folder and run with the following command:
+Probably the most simple way to build Testo is to let Testo to build itself. We have written tests that set up the buld environment on all supported operating systems and build Testo packages from source code. This tests can be found in the [`ci`](ci) folder and run with the following command:
 
 ```
 cd ci
