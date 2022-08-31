@@ -358,4 +358,3 @@ Next libraries are used in Testo framework:
 ## License
 
 MIT License
-test commit
